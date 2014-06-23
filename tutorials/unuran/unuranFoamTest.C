@@ -9,7 +9,7 @@
 #if defined(__CINT__) && !defined(__MAKECINT__)
 {
    TString macroFileName = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
-   gSystem->CompileMacro(macroFileName, "k");
+   gSystem->CompileMacro(macroFileName, "f");  // force re-compilation
    unuranFoamTest();
 }
 #else
