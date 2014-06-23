@@ -74,7 +74,7 @@ SVector<T,D>::SVector(const SVector<T,D>& rhs) {
 template <class T, unsigned int D>
 template <class InputIterator>
 SVector<T,D>::SVector(InputIterator begin, InputIterator end) {
-   assert( begin + D == end);
+   assert(begin + D == end);
    std::copy(begin, end, fArray);
 }
 
@@ -88,7 +88,11 @@ SVector<T,D>::SVector(InputIterator begin, unsigned int size) {
 #else
 
 template <class T, unsigned int D>
+#ifdef NDEBUG
+SVector<T,D>::SVector(const T* a, unsigned int) {
+#else
 SVector<T,D>::SVector(const T* a, unsigned int len) {
+#endif
    assert(len == D);
    for(unsigned int i=0; i<D; ++i)
       fArray[i] = a[i];
@@ -96,7 +100,7 @@ SVector<T,D>::SVector(const T* a, unsigned int len) {
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const_iterator ibegin, const_iterator iend) {
-   assert( ibegin + D == iend);
+   assert(ibegin + D == iend);
    std::copy(ibegin, iend, fArray);
 }
 
