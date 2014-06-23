@@ -28,7 +28,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
   # Compile macro, then add to CTest.
   if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+")
     string(REPLACE "+" "" compile_name "${ARG_MACRO}")
-    get_filename_component(realfp ${compile_name} ABSOLUTE)
+    get_filename_component(realfp ${compile_name} REALPATH)
 
     ROOTTEST_COMPILE_MACRO(${compile_name})
 
@@ -42,7 +42,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
 
   # Add interpreted macro to CTest.
   elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx")
-    get_filename_component(realfp ${ARG_MACRO} ABSOLUTE)
+    get_filename_component(realfp ${ARG_MACRO} REALPATH)
     if(DEFINED ARG_MACROARG)
       set(realfp "${realf}(${ARG_MACROARG})") 
     endif()
@@ -51,7 +51,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
     
   # Add python script to CTest.
   elseif(ARG_MACRO MATCHES "[.]py")
-    get_filename_component(realfp ${ARG_MACRO} ABSOLUTE)
+    get_filename_component(realfp ${ARG_MACRO} REALPATH)
     set(command ${python_cmd} ${realfp})
 
   elseif(DEFINED ARG_MACRO)
