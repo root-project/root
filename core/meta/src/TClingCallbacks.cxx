@@ -48,6 +48,7 @@ extern "C" {
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    Decl* TCling__GetObjectDecl(TObject *obj);
    int TCling__AutoLoadCallback(const char* className);
+   int TCling__AutoParseCallback(const char* className);
 //    int TCling__IsAutoLoadNamespaceCandidate(const char* name);
    int TCling__IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* name);
    int TCling__CompileMacro(const char *fileName, const char *options);
@@ -275,8 +276,8 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
 
 bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
    if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
-   if (ClassTemplateSpecializationDecl* Specialization 
-       = dyn_cast<ClassTemplateSpecializationDecl>(Tag)) {
+   if (auto* Specialization
+       = dyn_cast<RecordDecl>(Tag)) {
       Sema &SemaR = m_Interpreter->getSema();
       ASTContext& C = SemaR.getASTContext();
       Preprocessor &PP = SemaR.getPreprocessor();
@@ -303,10 +304,11 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
                                           C.getTypeDeclType(Specialization),
                                           *m_Interpreter,
                                           *tNormCtxt);                                               
-      // This would mean it is probably a template. Try autoload template.
-      if (TCling__AutoLoadCallback(Name.c_str())) {
+      // Autoparse implies autoload
+      if (TCling__AutoParseCallback(Name.c_str())) {
          return true;
       }
+
    }
    
    return false;

@@ -4411,3 +4411,203 @@ void ROOT::TMetaUtils::ReplaceAll(std::string& str, const std::string& from, con
       }
    }
 }
+
+//______________________________________________________________________________
+int ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(const clang::Decl& decl, std::string& defString)
+{
+   // Take the namespaces which enclose the decl and put them around the
+   // definition string.
+   // For example, if the definition string is "myClass" which is enclosed by
+   // the namespaces ns1 and ns2, one would get:
+   // namespace ns2{ namespace ns1 { class myClass; } }
+
+   std::list<std::pair<std::string,bool> > enclosingNamespaces;
+   ROOT::TMetaUtils::ExtractEnclosingNameSpaces(decl,enclosingNamespaces);
+   // Check if we have enclosing namespaces
+   // FIXME: this should be active also for classes
+   for (auto const & encNs : enclosingNamespaces){
+      auto nsName= encNs.first;
+      std::string isInline ((encNs.second ? "inline ":""));
+      defString = isInline + "namespace " + nsName + " { " + defString + " }";
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+int ROOT::TMetaUtils::AST2SourceTools::PrepareArgsForFwdDecl(std::string& templateArgs,
+                          const clang::TemplateParameterList& tmplParamList,
+                          const cling::Interpreter& interpreter)
+{
+   // Loop over the template parameters and build a string for template arguments
+   // using the fully qualified name
+   // There are different cases:
+   // Case 1: a simple template parameter
+   //   E.g. template<typename T> class A;
+   // Case 2: a non-type: either an integer or an enum
+   //   E.g. template<int I, Foo > class A; where Foo is enum Foo {red, blue};
+   // 2 sub cases here:
+   //   SubCase 2.a: the parameter is an enum: bail out, cannot be treated.
+   //   SubCase 2.b: use the fully qualified name
+   // Case 3: a TemplateTemplate argument
+   //   E.g. template <template <typename> class T> class container { };
+
+   static const char* paramPackWarning="Template parameter pack found: autoload of variadic templates is not supported yet.\n";
+
+   templateArgs="<";
+   for (auto prmIt = tmplParamList.begin();
+        prmIt != tmplParamList.end(); prmIt++){
+
+      if (prmIt != tmplParamList.begin())
+         templateArgs += ", ";
+
+      auto nDecl = *prmIt;
+      std::string typeName;
+
+      if(nDecl->isParameterPack ()){
+         ROOT::TMetaUtils::Warning(0,paramPackWarning);
+         return 1;
+      }
+
+      // Case 1
+      if (llvm::isa<clang::TemplateTypeParmDecl>(nDecl)){
+         typeName = "typename " + (*prmIt)->getNameAsString();
+      }
+      // Case 2
+      else if (auto nttpd = llvm::dyn_cast<clang::NonTypeTemplateParmDecl>(nDecl)){
+         auto theType = nttpd->getType();
+         // If this is an enum, use int as it is impossible to fwd declare and
+         // this makes sense since it is not a type...
+         if (theType.getAsString().find("enum") != std::string::npos){
+            std::string astDump;
+            llvm::raw_string_ostream ostream(astDump);
+            nttpd->dump(ostream);
+            ostream.flush();
+            ROOT::TMetaUtils::Warning(0,"Forward declarations of templates with enums as template parameters. The responsible class is: %s\n", astDump.c_str());
+            return 1;
+         } else {
+            ROOT::TMetaUtils::GetFullyQualifiedTypeName(typeName,
+                                                        theType,
+                                                        interpreter);
+         }
+      }
+      // Case 3: TemplateTemplate argument
+      else if (auto ttpd = llvm::dyn_cast<clang::TemplateTemplateParmDecl>(nDecl)){
+         int retCode = FwdDeclFromTmplDecl(*ttpd,interpreter,typeName);
+         if (retCode!=0){
+            std::string astDump;
+            llvm::raw_string_ostream ostream(astDump);
+            ttpd->dump(ostream);
+            ostream.flush();
+            ROOT::TMetaUtils::Error(0,"Cannot reconstruct template template parameter forward declaration for %s\n", astDump.c_str());
+            return 1;
+         }
+      }
+
+   templateArgs += typeName;
+   }
+
+   templateArgs+=">";
+   return 0;
+}
+
+//______________________________________________________________________________
+int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTmplDecl(const clang::TemplateDecl& templDecl,
+                                                           const cling::Interpreter& interpreter,
+                                                           std::string& defString)
+{
+   // Convert a tmplt decl to its fwd decl
+
+   std::string templatePrefixString;
+   auto tmplParamList= templDecl.getTemplateParameters();
+   if (!tmplParamList){ // Should never happen
+      Error(0,
+            "Cannot extract template parameter list for %s",
+            templDecl.getNameAsString().c_str());
+      return 1;
+   }
+
+   int retCode = PrepareArgsForFwdDecl(templatePrefixString,*tmplParamList,interpreter);
+   if (retCode!=0){
+      Warning(0,
+               "Problems with arguments for forward declaration of class %s",
+               templDecl.getNameAsString().c_str());
+      return retCode;
+   }
+   templatePrefixString = "template " + templatePrefixString + " ";
+
+   defString = templatePrefixString + "class " + templDecl.getNameAsString() + ";";
+   return EncloseInNamespaces(templDecl, defString);
+}
+
+//______________________________________________________________________________
+int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDecl& recordDecl,
+                                                          const cling::Interpreter& interpreter,
+                                                          std::string& defString)
+{
+   // Convert a rcd decl to its fwd decl
+   // If this is a template specialisation, treat in the proper way
+
+   if (auto tmplSpecDeclPtr = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&recordDecl)){
+      if (auto tmplDeclPtr = tmplSpecDeclPtr->getSpecializedTemplate()){
+         return FwdDeclFromTmplDecl(*tmplDeclPtr,interpreter,defString);
+      }
+   }
+
+   defString = "class " + recordDecl.getNameAsString() + ";";
+   return EncloseInNamespaces(recordDecl, defString);
+}
+
+//______________________________________________________________________________
+int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionDecl& fcnDecl,
+                                                          const cling::Interpreter& interpreter,
+                                                          std::string& defString)
+{
+   // Do not treat if this is a template function or a method
+
+   if (clang::FunctionDecl::TemplatedKind::TK_NonTemplate != fcnDecl.getTemplatedKind() ||
+       llvm::isa<clang::CXXMethodDecl>(fcnDecl))
+      return 1;
+
+   // Extract the fwd declaration of a function
+   defString = fcnDecl.getNameAsString();
+
+   // Treat parameters   
+   std::string paramString;
+   auto paramArray = fcnDecl.parameters ();
+   unsigned int pCounter=0;
+   std::string parmTypeAsString;
+   for (auto const & paramptr : paramArray){
+      ROOT::TMetaUtils::GetFullyQualifiedTypeName(parmTypeAsString, paramptr->getType(), interpreter);
+      paramString += parmTypeAsString+" p"+std::to_string(pCounter);
+      // For the moment, if it has a def arg or an arg is not a pod, bail out.
+      auto& ctxt = paramptr->getASTContext();
+      if (paramptr->hasDefaultArg() || !paramptr->getType().isPODType(ctxt)){
+         defString="";
+         return 1;
+      }
+      paramString+=", ";
+   pCounter++;
+   }
+
+   const auto size = paramString.size();
+   if (size>2)
+      paramString.erase(size-2,size);
+
+   defString+="("+paramString+");";
+
+   // Now the return type
+   const auto retQt = fcnDecl.getReturnType ();
+   std::string retQtAsString;
+   ROOT::TMetaUtils::GetFullyQualifiedTypeName(retQtAsString, retQt, interpreter);
+   defString = retQtAsString + " " + defString;
+
+   return EncloseInNamespaces(fcnDecl, defString);
+}
+
+//______________________________________________________________________________
+int ROOT::TMetaUtils::AST2SourceTools::GetEnclosingNamespaces(const clang::Decl& decl, std::string& defString)
+{
+   // Get the namespaces around the decl
+   return EncloseInNamespaces(decl, defString);
+}
+

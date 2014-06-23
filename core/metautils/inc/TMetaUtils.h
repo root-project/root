@@ -48,6 +48,7 @@ namespace clang {
    class TypeDecl;
    class TypedefNameDecl;
    class Attr;
+   class FunctionDecl;
 }
 
 namespace cling {
@@ -658,9 +659,38 @@ void Warning(const char *location, const char *va_(fmt), ...);
 //______________________________________________________________________________
 void Fatal(const char *location, const char *va_(fmt), ...);
 
+//______________________________________________________________________________
+namespace AST2SourceTools {
 
-   } // namespace TMetaUtils
+//______________________________________________________________________________
+int PrepareArgsForFwdDecl(std::string& templateArgs,
+                          const clang::TemplateParameterList& tmplParamList,
+                          const cling::Interpreter& interpreter);
 
+//______________________________________________________________________________
+int EncloseInNamespaces(const clang::Decl& decl, std::string& defString);
+
+//______________________________________________________________________________
+int FwdDeclFromRcdDecl(const clang::RecordDecl& recordDecl, 
+                       const cling::Interpreter& interpreter,
+                       std::string& defString);
+
+//______________________________________________________________________________
+int FwdDeclFromTmplDecl(const clang::TemplateDecl& tmplDecl,
+                        const cling::Interpreter& interpreter,
+                        std::string& defString);
+
+//______________________________________________________________________________
+int GetEnclosingNamespaces(const clang::Decl& decl, std::string& defString);
+
+//______________________________________________________________________________
+int FwdDeclFromFcnDecl(const clang::FunctionDecl& fcnDecl,
+                       const cling::Interpreter& interpreter,
+                       std::string& defString);
+
+} // namespace AST2SourceTools
+
+} // namespace TMetaUtils
 
 } // namespace ROOT
 

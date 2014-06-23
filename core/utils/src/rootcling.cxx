@@ -2187,13 +2187,14 @@ static bool InjectModuleUtilHeader(const char* argv0,
 }
 
 //______________________________________________________________________________
-static int GenerateModule(TModuleGenerator& modGen,
-                          clang::CompilerInstance* CI,
-                          const std::string& currentDirectory,
-                          const std::string& fwdDeclnArgsToKeepString,
-                          const std::string& headersClassesMapString,
-                          std::ostream& dictStream,
-                          bool inlineInputHeader)
+int GenerateModule(TModuleGenerator& modGen,
+                   clang::CompilerInstance* CI,
+                   const std::string& currentDirectory,
+                   const std::string& fwdDeclnArgsToKeepString,
+                   const std::string& headersClassesMapString,
+                   const std::string& fwdDeclString,
+                   std::ostream& dictStream,
+                   bool inlineInputHeader)
 {
    // Generate the clang module given the arguments.
    // Two codepaths are present:
@@ -2206,7 +2207,8 @@ static int GenerateModule(TModuleGenerator& modGen,
    modGen.WriteRegistrationSource(dictStream,
                                   inlineInputHeader,
                                   fwdDeclnArgsToKeepString,
-                                  headersClassesMapString);
+                                  headersClassesMapString,
+                                  fwdDeclString);
 
    // Disable clang::Modules for now.
    if (!modGen.IsPCH())
@@ -2652,191 +2654,6 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
 }
 
 //______________________________________________________________________________
-// Fwd Declare the routine
-int ExtractTemplateDefinition(const clang::TemplateDecl& templDecl,
-                              cling::Interpreter& interpreter,
-                              std::string& definitionStr,
-                              const clang::RecordDecl* rDecl);
-
-//______________________________________________________________________________
-int PrepareArgsForFwdDecl(std::string& templateArgs,
-                          const clang::TemplateParameterList& tmplParamList,
-                          cling::Interpreter& interpreter)
-{
-   // Loop over the template parameters and build a string for template arguments
-   // using the fully qualified name
-   // There are different cases:
-   // Case 1: a simple template parameter
-   //   E.g. template<typename T> class A;
-   // Case 2: a non-type: either an integer or an enum
-   //   E.g. template<int I, Foo > class A; where Foo is enum Foo {red, blue};
-   // 2 sub cases here:
-   //   SubCase 2.a: the parameter is an enum: bail out, cannot be treated.
-   //   SubCase 2.b: use the fully qualified name
-   // Case 3: a TemplateTemplate argument
-   //   E.g. template <template <typename> class T> class container { };
-
-   static const char* paramPackWarning="Template parameter pack found: autoload of variadic templates is not supported yet.\n";
-
-   templateArgs="<";
-   for (clang::TemplateParameterList::const_iterator prmIt = tmplParamList.begin();
-        prmIt != tmplParamList.end(); prmIt++){
-
-      if (prmIt != tmplParamList.begin())
-         templateArgs += ", ";
-
-      clang::NamedDecl* nDecl = *prmIt;
-      std::string typeName;
-
-      if(nDecl->isParameterPack ()){
-         ROOT::TMetaUtils::Warning(0,paramPackWarning);
-         return 1;
-      }
-
-   // Case 1
-      if (llvm::isa<clang::TemplateTypeParmDecl>(nDecl)){
-         typeName = "typename " + (*prmIt)->getNameAsString();
-      }
-      // Case 2
-      else if (const clang::NonTypeTemplateParmDecl* nttpd = llvm::dyn_cast<clang::NonTypeTemplateParmDecl>(nDecl)){
-         const clang::QualType &theType = nttpd->getType();
-         // If this is an enum, use int as it is impossible to fwd declare and
-         // this makes sense since it is not a type...
-         if (theType.getAsString().find("enum") != std::string::npos){
-            std::string astDump;
-            llvm::raw_string_ostream ostream(astDump);
-            nttpd->dump(ostream);
-            ostream.flush();
-            ROOT::TMetaUtils::Warning(0,"Forward declarations of templates with enums as template parameters. The responsible class is: %s\n", astDump.c_str());
-            return 1;
-         } else {
-            ROOT::TMetaUtils::GetFullyQualifiedTypeName(typeName,
-                                                        theType,
-                                                        interpreter);
-         }
-      }
-      // Case 3: TemplateTemplate argument
-      else if (const clang::TemplateTemplateParmDecl* ttpd = llvm::dyn_cast<clang::TemplateTemplateParmDecl>(nDecl)){
-         int retCode = ExtractTemplateDefinition(*ttpd,interpreter,typeName,NULL);
-         if (retCode!=0){
-            std::string astDump;
-            llvm::raw_string_ostream ostream(astDump);
-            ttpd->dump(ostream);
-            ostream.flush();
-            ROOT::TMetaUtils::Error(0,"Cannot reconstruct template template parameter forward declaration for %s\n", astDump.c_str());
-            return 1;
-         }
-      }
-
-   templateArgs += typeName;
-   }
-
-   templateArgs+=">";
-   return 0;
-}
-
-//______________________________________________________________________________
-void EncloseInNamespaces(const clang::Decl& decl,
-                         std::string& definitionStr)
-{
-   // Take the namespaces which enclose the decl and put them around the
-   // definition string.
-   // For example, if the definition string is "myClass" which is enclosed by
-   // the namespaces ns1 and ns2, one would get:
-   // namespace ns2{ namespace ns1 { class myClass; } }
-
-   // Before everyting
-
-   std::list<std::pair<std::string,bool> > enclosingNamespaces;
-   ROOT::TMetaUtils::ExtractEnclosingNameSpaces(decl,enclosingNamespaces);
-   // Check if we have enclosing namespaces
-   // FIXME: this should be active also for classes
-   for (std::list<std::pair<std::string, bool> >::const_iterator enclosingNamespaceIt = enclosingNamespaces.begin();
-      enclosingNamespaceIt != enclosingNamespaces.end(); enclosingNamespaceIt++){
-      const std::string& nsName= enclosingNamespaceIt->first;
-      const std::string isInline ((enclosingNamespaceIt->second ? "inline ":""));
-      definitionStr = isInline + "namespace " + nsName + " { " + definitionStr + " }";
-   }
-}
-
-//______________________________________________________________________________
-int ExtractNamespacesDefinition(const clang::RecordDecl& rDecl,
-                                std::string& definitionStr)
-{
-   // Extract the namespace definition for rDecl
-
-   const clang::RecordDecl* definition = rDecl.getDefinition();
-   if (!definition)
-      return 1;
-   EncloseInNamespaces(*definition, definitionStr);
-
-
-   return 0;
-}
-
-//______________________________________________________________________________
-int ExtractDefinitionFromRecordDecl(const clang::RecordDecl& rDecl,
-                                    cling::Interpreter& interpreter,
-                                    std::string& definitionStr)
-{
-   // Detect if the rDecl is a template instance.
-   const clang::ClassTemplateSpecializationDecl* tmplSpecDecl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (&rDecl);
-   if (!tmplSpecDecl){
-      return 1;
-   }
-
-   const clang::TemplateDecl* templDecl = tmplSpecDecl->getSpecializedTemplate();
-   if (!templDecl){ // Should never happen
-      TMetaUtils::Error(0, "%s does not seem to be a template", rDecl.getNameAsString().c_str());
-      return 1;
-   }
-
-   const clang::RecordDecl* definition = rDecl.getDefinition();
-
-   return ExtractTemplateDefinition (*templDecl,interpreter,definitionStr,definition);
-}
-
-//______________________________________________________________________________
-int ExtractTemplateDefinition(const clang::TemplateDecl& templDecl,
-                              cling::Interpreter& interpreter,
-                              std::string& definitionStr,
-                              const clang::RecordDecl* definition = NULL)
-{
-
-   // Operate on the template declaration in order to get its forward declaration
-
-   const clang::TemplateParameterList *tmplParamList= templDecl.getTemplateParameters();
-   if (!tmplParamList){ // Should never happen
-      TMetaUtils::Error(0, "Cannot extract template parameter list for %s", templDecl.getNameAsString().c_str());
-      return 1;
-   }
-
-   std::string templateArgs;
-
-   //PrepareArgsForFwdDecl(templateArgs);
-   int retCode = PrepareArgsForFwdDecl(templateArgs,*tmplParamList,interpreter);
-   if (retCode!=0){
-      TMetaUtils::Warning(0, "Problems encountered while preparing arguments for forward declaration of class %s", templDecl.getNameAsString().c_str());
-      return retCode;
-   }
-
-   definitionStr="template "+templateArgs+" class "+templDecl.getNameAsString();
-
-   // iterate over the nested namespaces and complete the definition
-   if (definition){
-
-      definitionStr += " ;";
-
-      // Check if we have enclosing namespaces
-      // FIXME: this should be active also for classes
-      EncloseInNamespaces(*definition, definitionStr);
-   }
-
-
-   return 0;
-}
-
-//______________________________________________________________________________
 template <class T>
 bool AppendIfNotThere(const T& el, std::list<T>& el_list)
 {
@@ -2866,10 +2683,9 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
    std::string attrName,attrValue;
    bool isClassSelected;
    // Loop on selected classes and put them in a list
-   for (RScanner::ClassColl_t::const_iterator selClassesIter = scan.fSelectedClasses.begin();
-        selClassesIter!= scan.fSelectedClasses.end(); selClassesIter++){
+   for (auto const & selClass: scan.fSelectedClasses){
       isClassSelected = true;
-      std::string normalizedName(selClassesIter->GetNormalizedName());
+      std::string normalizedName(selClass.GetNormalizedName());
       if (normalizedName.size()!=0 && !classesSet.insert(normalizedName).second){
          std::cerr << "FATAL: A class with normalized name " << normalizedName
                    << " was already selected. This means that two different instances of"
@@ -2881,24 +2697,25 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
       classesList.push_back(normalizedName);
       // Allow to autoload with the name of the class as it was specified in the 
       // selection xml or linkdef
-      const char* reqName(selClassesIter->GetRequestedName());
-      const clang::RecordDecl* rDecl = selClassesIter->GetRecordDecl();
+      const char* reqName(selClass.GetRequestedName());
+      const clang::RecordDecl* rDecl = selClass.GetRecordDecl();
 
       // Get always the containing namespace, put it in the list if not there
       std::string fwdDeclaration;
-      int retCode = ExtractNamespacesDefinition(*rDecl, fwdDeclaration);
+      int retCode = ROOT::TMetaUtils::AST2SourceTools::GetEnclosingNamespaces(*rDecl, fwdDeclaration);
       if (retCode==0) AppendIfNotThere(fwdDeclaration,fwdDeclarationsList);
 
       // Get template definition and put it in if not there
-      fwdDeclaration = "";
-      retCode = ExtractDefinitionFromRecordDecl(*rDecl,interpreter,fwdDeclaration);
-      // Linear search. Probably optimisable
-      if (retCode==0) AppendIfNotThere(fwdDeclaration,fwdDeclarationsList);
+      if (llvm::isa<clang::ClassTemplateSpecializationDecl>(rDecl)){
+         fwdDeclaration = "";
+         retCode = ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(*rDecl,interpreter,fwdDeclaration);
+         // Linear search. Probably optimisable
+         if (retCode==0) AppendIfNotThere(fwdDeclaration,fwdDeclarationsList);
+      }
 
 
       // Loop on attributes, if rootmap=false, don't put it in the list!
-      for (clang::RecordDecl::attr_iterator ait = rDecl->attr_begin ();
-           ait != rDecl->attr_end ();++ait){
+      for (auto ait = rDecl->attr_begin (); ait != rDecl->attr_end ();++ait){
          if ( 0==ROOT::TMetaUtils::extractPropertyNameVal(*ait,attrName,attrValue) &&
               attrName=="rootmap" &&
               attrValue=="false"){
@@ -3320,16 +3137,13 @@ void CheckForMinusW(const char* arg,
 std::string GetFwdDeclnArgsToKeepString(const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt,
                                         cling::Interpreter& interp)
 {
+   using namespace ROOT::TMetaUtils::AST2SourceTools;
    std::string fwdDecl;
    std::string initStr("{");
    auto& fwdDeclnArgsToSkipColl = normCtxt.GetTemplNargsToKeepMap();
    for (auto& strigNargsToKeepPair : fwdDeclnArgsToSkipColl){
       auto& clTemplDecl = *strigNargsToKeepPair.first;
-      ExtractTemplateDefinition(clTemplDecl,
-                                interp,
-                                fwdDecl);
-      fwdDecl+=" ;";
-      EncloseInNamespaces(clTemplDecl,fwdDecl);
+      FwdDeclFromTmplDecl(clTemplDecl , interp, fwdDecl);
       initStr+="{\""+
                fwdDecl+"\", "
                +std::to_string(strigNargsToKeepPair.second)
@@ -3484,6 +3298,57 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
       headersDeclsMap[ROOT::TMetaUtils::GetQualifiedName(*var)] = headers;
    }
 }
+
+//______________________________________________________________________________
+std::string GenerateFwdDeclString(const RScanner& scan,
+                          const cling::Interpreter& interp)
+{
+   // Generate the fwd declarations of the selected entities
+
+   using namespace ROOT::TMetaUtils::AST2SourceTools;
+
+   const char* emptyString="\"\"";
+
+   std::string fwdDeclString;
+   std::string buffer;
+   std::unordered_set<std::string> fwdDecls;
+
+   for (auto const & annRcd : scan.fSelectedClasses){
+      const auto rcdDeclPtr = annRcd.GetRecordDecl();
+      int retCode = FwdDeclFromRcdDecl(*rcdDeclPtr,interp,buffer);
+      if (-1 == retCode) {
+         ROOT::TMetaUtils::Error("GenerateFwdDeclString",
+                                 "Error generating fwd decl for class %s\n",
+                                 annRcd.GetNormalizedName());
+         return emptyString;
+      }
+      if (retCode == 0 && fwdDecls.insert(buffer).second)
+         fwdDeclString+="\""+buffer+"\"\n";
+   }
+
+   for (auto const & tdNameDeclPtr : scan.fSelectedTypedefs){
+      EncloseInNamespaces(*tdNameDeclPtr,buffer);
+      if (fwdDecls.insert(buffer).second)
+         fwdDeclString+="\""+buffer+"\"\n";
+   }
+
+   for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
+      int retCode = FwdDeclFromFcnDecl(*fcnDeclPtr, interp, buffer);
+      if (-1 == retCode){
+         ROOT::TMetaUtils::Error("GenerateFwdDeclString",
+                                 "Error generating fwd decl for function  %s\n",
+                                 fcnDeclPtr->getNameAsString().c_str());
+         return emptyString;
+      }
+      if (retCode == 0 && fwdDecls.insert(buffer).second)
+         fwdDeclString+="\""+buffer+"\"\n";
+   }
+
+   if (fwdDeclString.empty()) fwdDeclString=emptyString;
+
+   return fwdDeclString;
+}
+
 //______________________________________________________________________________
 const std::string GenerateStringFromHeadersForClasses (const HeadersDeclsMap_t& headersClassesMap,
                                                        const std::string& detectedUmbrella,
@@ -3495,12 +3360,12 @@ const std::string GenerateStringFromHeadersForClasses (const HeadersDeclsMap_t& 
    if (genreflex::verbose)
       std::cout << "Class-headers Mapping:\n";
    std::string headersClassesMapString="static const char* classesHeaders[]={\n";
-   for (auto& classHeaders : headersClassesMap){
+   for (auto const & classHeaders : headersClassesMap){
       if (genreflex::verbose)
          std::cout << " o " << classHeaders.first << " --> ";
       headersClassesMapString+="\"";
       headersClassesMapString+=classHeaders.first+"\"";
-      for (auto& header : classHeaders.second){
+      for (auto const & header : classHeaders.second){
          headerName = (detectedUmbrella==header || payLoadOnly) ? "payloadCode" : "\""+header+"\"";
          headersClassesMapString+=", "+ headerName;
          if (genreflex::verbose)
@@ -4407,12 +4272,18 @@ int RootCling(int argc,
       const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,
                                                                                       detectedUmbrella,
                                                                                       true);
-
+      const std::string fwdDeclsString =
+#ifndef ROOT_STAGE1_BUILD
+      GenerateFwdDeclString(scan,interp);
+#else
+      "\"\"";
+#endif
       GenerateModule(modGen,
                      CI,
                      currentDirectory,
                      fwdDeclnArgsToKeepString,
                      headersClassesMapString,
+                     fwdDeclsString,
                      dictStream,
                      inlineInputHeader);
    }
