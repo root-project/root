@@ -6,8 +6,8 @@
 #  CHIRP_INCLUDE_DIRS (not cached)
 #  CHIRP_LIBRARIES
 
-find_path(CHIRP_INCLUDE_DIR NAMES chirp.h  HINTS ${CCTOOLS_DIR}/include/cctools $ENV{CCTOOLS_DIR}/inlcude/cctools)
-find_library(CHIRP_LIBRARY NAMES chirp_client HINTS ${CCTOOLS_DIR}/lib $ENV{CCTOOLS_DIR}/lib)
+find_path(CHIRP_INCLUDE_DIR NAMES chirp.h  HINTS ${CHIRP_DIR}/include/cctools $ENV{CHIRP_DIR}/inlcude/cctools)
+find_library(CHIRP_LIBRARY NAMES chirp_client HINTS ${CHIRP_DIR}/lib $ENV{CHIRP_DIR}/lib)
 
 set(CHIRP_INCLUDE_DIRS ${CHIRP_INCLUDE_DIR})
 set(CHIRP_LIBRARIES ${CHIRP_LIBRARY})
