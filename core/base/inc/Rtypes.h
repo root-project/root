@@ -32,8 +32,8 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <snprintf.h>   // part of stdio.h on systems that have it
-#include <strlcpy.h>    // part of string.h on systems that have it
+#include "snprintf.h"   // part of stdio.h on systems that have it
+#include "strlcpy.h"    // part of string.h on systems that have it
 
 
 
