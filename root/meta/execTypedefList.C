@@ -109,7 +109,7 @@ int execTypedefList() {
    int res;
 
    // Just in case we have a small pch.
-   const char *whatToLoad [] = { "TPainter3dAlgorithms", "TGHtml", "TLego", "TAuthenticate", "TGFileBrowser", "TFitEditor", "TProofDraw", "TChainIndex", "TF1", "TGeoBoolNode", "TShape", "TXMLEngine" };
+   const char *whatToLoad [] = { "TPainter3dAlgorithms", "TLego", "TAuthenticate", "TProofDraw", "TChainIndex", "TF1", "TGeoBoolNode", "TShape", "TXMLEngine" };
    for(unsigned int i = 0 ; i < sizeof(whatToLoad) / sizeof(const char*); ++i) {
       gInterpreter->AutoLoad(whatToLoad[i]);
       gInterpreter->AutoParse(whatToLoad[i]);
