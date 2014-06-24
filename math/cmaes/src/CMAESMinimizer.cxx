@@ -251,6 +251,14 @@ namespace ROOT
       return true;
     }
 
+    bool TCMAESMinimizer::SetVariableStepSize(unsigned int ivar, double step)
+    {
+      if (ivar > fInitialX.size())
+	return false;
+      fInitialSigma[ivar] = step;
+      return true;
+    }
+    
     bool TCMAESMinimizer::SetVariableLowerLimit(unsigned int ivar, double lower)
     {
       if (ivar > fLBounds.size())
@@ -285,6 +293,14 @@ namespace ROOT
     bool TCMAESMinimizer::FixVariable(unsigned int ivar)
     {
       fFixedVariables.insert(std::pair<int,double>(ivar,fInitialX.at(ivar))); // XXX: sets initial variable.
+    }
+
+    bool TCMAESMinimizer::IsFixedVariable(unsigned int ivar) const
+    {
+      std::map<int,double>::const_iterator mit;
+      if ((mit=fFixedVariables.find(ivar))!=fFixedVariables.end())
+	return true;
+      return false;
     }
     
     bool TCMAESMinimizer::GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings &varObj) const

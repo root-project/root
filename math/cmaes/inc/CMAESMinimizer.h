@@ -94,7 +94,7 @@ namespace ROOT
       // set variable values
       virtual bool SetVariableValues(const double * val);
       /// set the step size of an already existing variable
-      //virtual bool SetVariableStepSize(unsigned int ivar, double step );
+      virtual bool SetVariableStepSize(unsigned int ivar, double step );
       /// set the lower-limit of an already existing variable 
       virtual bool SetVariableLowerLimit(unsigned int ivar, double lower);
       /// set the upper-limit of an already existing variable 
@@ -107,7 +107,7 @@ namespace ROOT
       //virtual bool ReleaseVariable(unsigned int ivar);
       /// query if an existing variable is fixed (i.e. considered constant in the minimization)
       /// note that by default all variables are not fixed 
-      //virtual bool IsFixedVariable(unsigned int ivar)  const;
+      virtual bool IsFixedVariable(unsigned int ivar)  const;
       /// get variable settings in a variable object (like ROOT::Fit::ParamsSettings)
       virtual bool GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings & varObj) const;
       /// get name of variables (override if minimizer support storing of variable names)
