@@ -68,7 +68,7 @@ public:
 	double fdiff = _fmin.at(i)-stats._fmin.at(i);
 	double ffdiff = fabs(fdiff);
 	// should compare to tolerance but unable to access it.
-	if (ffdiff < 1e-2) // ftol appears to default to 0.01
+	if (ffdiff < 1e-2 || fdiff < -1e-2) // ftol appears to default to 0.01
 	  ++_found;
 	if (ffdiff > 1e-2 && fdiff < 0.0) // ftol as 0.01
 	  ++_isuccs;
@@ -117,8 +117,8 @@ public:
     static std::string sep = "\t";
     static std::string ext = ".dat";
     std::ofstream fout(_name+ext,std::ofstream::out|std::ofstream::app);
-    fout << "#dim\tsuccs\tfails\tcpu_avg\tcpu_std\tbudget_avg\tbudget_std\tbest_fmin\tequal_fmin\tfail_fmin\n";
-    fout << _dim << sep << _succs << sep << _fails << sep << _cpu_avg << sep << _cpu_std << sep << _budget_avg << sep << _budget_std << sep << _isuccs << sep << _iequals << sep << _ifails << std::endl;
+    fout << "#dim\tfound\tsuccs\tfails\tcpu_avg\tcpu_std\tbudget_avg\tbudget_std\tbest_fmin\tequal_fmin\tfail_fmin\n";
+    fout << _dim << sep << _found << sep << _succs << sep << _fails << sep << _cpu_avg << sep << _cpu_std << sep << _budget_avg << sep << _budget_std << sep << _isuccs << sep << _iequals << sep << _ifails << std::endl;
     fout.close();
   }
   
@@ -935,6 +935,7 @@ void run_experiments(const int &n=1)
   for (size_t i=0;i<acmaes_stats.size();i++)
     {
       acmaes_stats.at(i).diff(minuit2_stats.at(i));
+      minuit2_stats.at(i).diff(acmaes_stats.at(i));
       acmaes_stats.at(i).print_diff(std::cout);
       acmaes_stats.at(i).print_avg_to_file();
       minuit2_stats.at(i).print_avg_to_file();
