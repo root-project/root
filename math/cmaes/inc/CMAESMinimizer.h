@@ -122,8 +122,8 @@ namespace ROOT
 	  status code different than zero is set 
 	  (retrieved by the derived method Minimizer::Status() )" 
 	  
-	  status = 1    : Covariance was made pos defined
-	  status = 2    : Hesse is invalid
+	  status = 1    : Covariance was made pos defined -> not yet implemented in libcmaes
+	  status = 2    : Hesse is invalid => Not Applicable, kept for correspondence with Minuit2
 	  status = 3    : Edm is above max 
 	  status = 4    : Reached call limit
 	  status = 5    : Any other failure 
