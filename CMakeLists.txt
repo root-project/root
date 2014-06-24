@@ -95,4 +95,4 @@ include(RoottestCTest)
 include(RootCTestMacros)
 
 message("-- Scanning subdirectories for tests...")
-ROOTTEST_FIND_TESTDIRS()
+ROOTTEST_ADD_TESTDIRS()

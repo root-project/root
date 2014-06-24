@@ -48,4 +48,4 @@ ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execReadTmplt
                   OUTREF execReadTmplt.ref
                   DEPPENDS roottest-root-meta-tclass-execTmpltD32 roottest-root-meta-tclass-execTmpltD32)
 
-ROOTTEST_FIND_TESTDIRS()
+ROOTTEST_ADD_TESTDIRS()

@@ -8,12 +8,12 @@
 
 #-------------------------------------------------------------------------------
 #
-#  function ROOTTEST_FIND_TESTDIRS( )
+#  function ROOTTEST_ADD_TESTDIRS( )
 #
 #  Scans all subdirectories for CMakeLists.txt files. Each subdirectory that
 #  contains a CMakeLists.txt file is then added as a subdirectory. 
 #-------------------------------------------------------------------------------
-function(ROOTTEST_FIND_TESTDIRS )
+function(ROOTTEST_ADD_TESTDIRS )
 
   set(dirs "")
 

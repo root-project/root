@@ -104,4 +104,4 @@ ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execMissingCheckSum
                   MACRO execMissingCheckSum.cxx+
                   OUTREF execMissingCheckSum.ref)
 
-ROOTTEST_FIND_TESTDIRS()
+ROOTTEST_ADD_TESTDIRS()

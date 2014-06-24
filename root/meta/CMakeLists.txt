@@ -12,4 +12,4 @@ ROOTTEST_ADD_AUTOMACROS(DEPENDS TmpltInt0.C TmpltInt1.C TmpltFloat.C
                        WILLFAIL roottest-root-meta-execTypedefList-auto
                                 roottest-root-meta-execOptionList-auto)
 
-ROOTTEST_FIND_TESTDIRS()
+ROOTTEST_ADD_TESTDIRS()

@@ -37,4 +37,4 @@ ROOTTEST_ADD_TEST(roottest-cling-template-smalltest-compiled
                   MACRO smalltest.C+
                   LABELS roottest regression cling)
 
-ROOTTEST_FIND_TESTDIRS()
+ROOTTEST_ADD_TESTDIRS()
