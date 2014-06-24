@@ -461,6 +461,14 @@ namespace ROOT
       return &fValues.front();
     }
 
+    double TCMAESMinimizer::Edm() const
+    {
+      // XXX: cannot recompute it here as there's no access to the optimizer itself.
+      //      instead this is returning the value computed at the end of last optimization call
+      //      and stored within the solution object.
+      return fCMAsols._edm;
+    }
+    
     const double* TCMAESMinimizer::Errors() const
     {
       fErrors.clear();
