@@ -5,10 +5,13 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 project(tutorials)
 find_package(ROOT REQUIRED)
 
-include(${ROOT_USE_FILE})
 
 if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
-  set(ROOT_root_CMD ${ROOT_BINARY_DIR}/root)
+  set(ROOT_root_CMD root.exe)
+  set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
+                   ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
+                   ROOTSYS=${CMAKE_BINARY_DIR}
+                   PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
 endif()
 
 #---Definition of the helper function--------------------------------
@@ -39,7 +42,8 @@ if(NOT ROOT_unuran_FOUND)
 endif()
 
 if(NOT ROOT_xml_FOUND)
-  set(xml_veto  xml/*.C)
+  set(xml_veto  xml/*.C
+                histfactory/*.C)   # histfactory requires xml
 endif()
 
 if(NOT ROOT_fitsio_FOUND)
@@ -47,14 +51,27 @@ if(NOT ROOT_fitsio_FOUND)
 endif()
 
 if(NOT ROOT_mathmore_FOUND)
-  set(mathmore_veto math/quasirandom.C math/exampleMultiRoot.C)
+  set(mathmore_veto 
+      math/quasirandom.C 
+      math/exampleMultiRoot.C
+      math/Bessel.C
+      math/LegendreAssoc.C
+      math/Legendre.C
+      math/mathmoreIntegration.C
+      math/tStudent.C
+      math/normalDist.C)
 endif()
 
 if(NOT ROOT_fftw3_FOUND)
   set(fftw3_veto roofit/rf208_convolution.C
                  roofit/rf210_angularconv.C
                  roofit/rf211_paramconv.C
-                 roofit/rf512_wsfactory_oper.C)
+                 roofit/rf512_wsfactory_oper.C
+                 fft/FFT.C)
+endif()
+
+if(NOT GRAPHVIZ_FOUND)
+  set(gviz_veto graphs/graphstruct.C)
 endif()
 
 #---These ones requires a display to run-----------------------------
@@ -63,40 +80,38 @@ set(gui_veto fit/fitpanel_playback.C
              geom/*.C
              gl/*.C
              gui/*.C
-             hist/exec1.C hist/exec2.C
+             hist/exec1.C 
+             hist/exec2.C
              image/*.C
              graphics/psview.C graphics/gtime.C
              graphics/graph_edit_playback.C
+             roostats/ModelInspector.C
              tree/tvdemo.C
              eve/*.C)
 
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
   htmlex.C
-  rootalias.C
-  rootlogon.C
-  rootlogoff.C
-  fft/FFT.C
-  fit/fit1_C.C  fit/TwoHistoFit2D.C fit/line3Dfit.C fit/MDF.C
-  foam/*.C
-  graphs/graphstruct.C
+  rootalias.C          # Helper macro
+  rootlogon.C          # Helper macro
+  rootlogoff.C         # Helper macro
+  rootmarks.C          # Instrumentation. Not a standalone tutorial
+  memstat/memstat.C    # Instrumentation. Not a standalone tutorial
   html/*.C
-  math/Bessel.C math/LegendreAssoc.C math/Legendre.C
-  math/mathmoreIntegration.C math/normalDist.C math/tStudent.C
-  math/testUnfold2.C math/pca.C
   net/*.C
   proof/*.C
   pythia/*.C
   sql/*.C
-  tree/hsimpleProxy.C tree/tree0.C tree/tree2a.C tree/tree4.C
-  roostats/rs401d_FeldmanCousins.C
+  tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
+  tree/tree0.C 
+  tree/tree2a.C 
+  tree/tree4.C
+  roostats/rs401d_FeldmanCousins.C  # Takes too much time
   roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
-  tree/copytree2.C tree/copytree3.C tree/copytree.C
-  math/testUnfold4.C
-  fit/minuit2FitBench.C
-  fit/minuit2FitBench2D.C
-  roostats/*.C
+  tree/copytree2.C 
+  tree/copytree3.C 
+  tree/copytree.C
   http/*.C)
   
 set(all_veto hsimple.C
@@ -108,7 +123,8 @@ set(all_veto hsimple.C
              ${xml_veto}
              ${fitsio_veto}
              ${mathmore_veto}
-             ${fftw3_veto})
+             ${fftw3_veto}
+             ${gviz_veto})
              
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
@@ -120,16 +136,19 @@ message(STATUS "${veto}/${total} tutorials have been vetoed for various reasons"
 list(REMOVE_ITEM tutorials ${tutorials_veto})
 
 #---Special return code------------------------------------------------
-set(returncode_1 fit/fit2a.C fit/graph2dfit.C fit/multidimfit.C
+set(returncode_1 fit/fit2a.C fit/graph2dfit.C 
                  graphics/archi.C graphics/arrow.C
                  graphics/crown.C graphics/diamond.C
                  graphics/earth.C graphics/ellipse.C
                  graphics/event.C graphics/pavetext.C
                  graphics/tmathtext.C graphics/tmathtext2.C
                  graphs/exclusiongraph.C graphs/multigraph.C
-                 graphs/multipalette.C 
+                 graphs/multipalette.C
+                 graphs/graphstruct.C
                  hist/ContourList.C hist/hstack.C 
+                 hist/h2proj.C hist/hbars.C
                  hist/th2polyBoxes.C
+                 tree/h1analysis.C
                  io/fildir.C 
                  math/chi2test.C )
 #---Dependencies------------------------------------------------------
@@ -138,6 +157,15 @@ set(math-testUnfold5c-depends tutorial-math-testUnfold5b)
 set(math-testUnfold5b-depends tutorial-math-testUnfold5a)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
+set(histfactory-example-depends tutorial-histfactory-makeExample)
+set(io-readCode-depends tutorial-io-importCode)
+#--many roostats tutorials depending on having creating the file first with histfactory 
+foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
+               StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo 
+               StandardHypoTestInvDemo StandardProfileInspectorDemo StandardTestStatDistributionDemo
+               OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands)
+  set(roostats-${tname}-depends tutorial-roostats-StandardProfileLikelihoodDemo)
+endforeach()
 
 #---Loop over all tutorials and define the corresponding test---------
 
@@ -156,8 +184,44 @@ foreach(t ${tutorials})
                 COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
                 LABELS tutorial
-                DEPENDS tutorial-hsimple ${${name}-depends})
+                DEPENDS tutorial-hsimple ${${tname}-depends}
+                ENVIRONMENT ${ROOT_environ})
 endforeach()
+
+
+#---Python tutorials-----------------------------------------------------
+if(ROOT_python_FOUND)
+  find_package(PythonInterp REQUIRED)
+
+  file(GLOB pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} pyroot/*.py)
+  set(pyveto pyroot/demo.py         # requires GUI
+             pyroot/fit1_py.py      # not a tutorial
+             pyroot/gui_ex.py       # requires GUI
+             pyroot/mrt.py          # not really a tutorial
+             pyroot/na49geomfile.py # ????
+             pyroot/na49visible.py  # ????
+             pyroot/parse_CSV_file_with_TTree_ReadStream.py # not a tutorial
+             pyroot/qtexample.py    # requires GUI/Qt
+             )
+  list(REMOVE_ITEM pytutorials ${pyveto})
+
+  #---Python tutorials dependencies--------------------------------------
+  set(pyroot-hsimple-depends tutorial-hsimple)
+  set(pyroot-ntuple1-depends tutorial-pyroot-hsimple)
+  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple)
+
+  foreach(t ${pytutorials})
+    string(REPLACE ".py" "" tname ${t})
+    string(REPLACE "/" "-" tname ${tname})
+    ROOT_ADD_TEST(tutorial-${tname}
+                COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t} -b
+                PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
+                LABELS tutorial
+                DEPENDS ${${tname}-depends}
+                ENVIRONMENT ${ROOT_environ})
+  endforeach()
+endif()
+
 
 
                    

@@ -5,7 +5,7 @@
 PLATFORM      = linux
 
 DEBUGFLAGS    = -g
-OPTFLAGS      = -O2
+OPTFLAGS      = -O2 -DNDEBUG
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         =
@@ -17,15 +17,15 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -std=c++11 -pipe -Wall -fsigned-char -fPIC \
+CXXFLAGS      = -std=c++11 -m32 -pipe -Wall -fsigned-char -fPIC \
                 -I/usr/X11/include $(EXTRA_CXXFLAGS)
-CFLAGS        = -pipe -Wall -fPIC -fsigned-char \
+CFLAGS        = -pipe -m32 -Wall -fPIC -fsigned-char \
                 -I/usr/X11/include $(EXTRA_CFLAGS)
 COMPILER      = gnu
 
 # Linker:
 LD            = g++
-LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+LDFLAGS       = -m32 $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
@@ -42,7 +42,7 @@ ifeq ($(F77),)
 # only needed to get default compiler in ./configure
 F77           = gfortran
 endif
-F77FLAGS      = -fPIC -std=legacy
+F77FLAGS      = -m32 -fPIC -std=legacy
 F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.$(SOEXT))
 F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a) -lnsl
 endif
@@ -52,7 +52,7 @@ ifeq ($(F77),)
 # only needed to get default compiler in ./configure
 F77           = g77
 endif
-F77FLAGS      = -fPIC
+F77FLAGS      = -m32 -fPIC
 ifneq ($(shell $(F77) -print-file-name=libg2c.so),libg2c.so)
 F77LIBS      := $(shell $(F77) -print-file-name=libg2c.so) -lnsl
 else

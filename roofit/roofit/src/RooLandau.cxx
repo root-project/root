@@ -28,6 +28,8 @@
 #include "RooLandau.h"
 #include "RooRandom.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooLandau)
@@ -71,7 +73,7 @@ Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVa
 //_____________________________________________________________________________
 void RooLandau::generateEvent(Int_t code)
 {
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
   Double_t xgen ;
   while(1) {    
     xgen = RooRandom::randomGenerator()->Landau(mean,sigma);

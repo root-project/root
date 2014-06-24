@@ -32,6 +32,8 @@
 #include "RooRealConstant.h"
 #include "RooRandom.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooGaussModel) 
@@ -220,7 +222,7 @@ Double_t RooGaussModel::evaluate() const
   // *** 6th form: Convolution with (t/tau)*exp(-t/tau), used for linBasis ***
   if (basisType==linBasis) {
     if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 6th form tau = " << tau << endl ;
-    assert(basisSign==Plus);  // This should only be for positive times
+    R__ASSERT(basisSign==Plus);  // This should only be for positive times
 
     Double_t f0 = std::exp(-xprime+c*c) * RooMath::erfc(-u+c);
     Double_t f1 = std::exp(-u*u);
@@ -230,7 +232,7 @@ Double_t RooGaussModel::evaluate() const
   // *** 7th form: Convolution with (t/tau)^2*exp(-t/tau), used for quadBasis ***
   if (basisType==quadBasis) {
     if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 7th form tau = " << tau << endl ;
-    assert(basisSign==Plus);  // This should only be for positive times
+    R__ASSERT(basisSign==Plus);  // This should only be for positive times
 
     Double_t f0 = std::exp(-xprime+c*c) * RooMath::erfc(-u+c);
     Double_t f1 = std::exp(-u*u);
@@ -238,7 +240,7 @@ Double_t RooGaussModel::evaluate() const
     return ( x2c2*x2c2*f0 + (2*c/rootpi)*x2c2*f1 + 2*c*c*f0 );
   }
 
-  assert(0) ;
+  R__ASSERT(0) ;
   return 0 ;
 }
 
@@ -305,7 +307,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
   Double_t ssfInt(1.0) ;
 
   // Code must be 1 or 2
-  assert(code==1||code==2) ;
+  R__ASSERT(code==1||code==2) ;
   if (code==2) ssfInt = (ssf.max(rangeName)-ssf.min(rangeName)) ;
 
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
@@ -447,7 +449,7 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
 		  (2*c*c*(2*c*c-1) + 2)*expc2*f3 - (4*c*c-2)*expc2*f4 + expc2*f5
                 )*ssfInt;
   }
-  assert(0) ;
+  R__ASSERT(0) ;
   return 0 ;
 }
 
@@ -495,7 +497,7 @@ Int_t RooGaussModel::getGenerator(const RooArgSet& directVars, RooArgSet &genera
 //_____________________________________________________________________________
 void RooGaussModel::generateEvent(Int_t code)
 {
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
   Double_t xmin = x.min();
   Double_t xmax = x.max();
   TRandom *generator = RooRandom::randomGenerator();

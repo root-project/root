@@ -29,6 +29,8 @@
 #include "Math/SpecFunc.h"
 #include "TMath.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooLegendre)
@@ -117,7 +119,7 @@ Double_t RooLegendre::analyticalIntegral(Int_t code, const char* ) const
 {
   // this was verified to match mathematica for 
   // l1 in [0,2], m1 in [0,l1], l2 in [l1,4], m2 in [0,l2]
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
   if ( _m1==_m2 )                 return ( _l1 == _l2) ?  TMath::Factorial(_l1+_m2)/TMath::Factorial(_l1-_m1)*double(2)/(2*_l1+1) : 0.;
   if ( (_l1+_l2-_m1-_m2)%2 != 0 ) return 0; // these combinations are odd under x -> -x
 
@@ -151,10 +153,10 @@ Int_t RooLegendre::getMaxVal( const RooArgSet& /*vars*/) const {
 
 namespace {
     inline double maxSingle(int i, int j) {
-        assert(j<=i);
+        R__ASSERT(j<=i);
         //   x0 : 1 (ordinary Legendre)
         if (j==0) return 1;
-        assert(i<3);
+        R__ASSERT(i<3);
         //   11: 1
         if (i<2) return 1;
         //   21: 3   22: 3

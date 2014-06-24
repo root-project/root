@@ -33,6 +33,8 @@
 #include "RooMath.h"
 #include "TMath.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooCBShape)
@@ -114,7 +116,7 @@ Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
   static const double sqrtPiOver2 = 1.2533141373;
   static const double sqrt2 = 1.4142135624;
 
-  assert(code==1);
+  R__ASSERT(code==1);
   double result = 0.0;
   bool useLog = false;
   
@@ -192,7 +194,7 @@ Int_t RooCBShape::getMaxVal(const RooArgSet& vars) const
 //_____________________________________________________________________________
 Double_t RooCBShape::maxVal(Int_t code) const
 {
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
 
   // The maximum value for given (m0,alpha,n,sigma)
   return 1.0 ;

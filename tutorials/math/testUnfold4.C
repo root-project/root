@@ -166,6 +166,11 @@ void testUnfold4()
         } */
      //========================
      // unfolding
+     
+     // switch off info messages
+#ifndef DEBUG
+     gErrorIgnoreLevel = 1001;
+#endif
 
      TUnfoldSys unfold(histGenDetMC,TUnfold::kHistMapOutputHoriz,
                        TUnfold::kRegModeSize,TUnfold::kEConstraintNone);

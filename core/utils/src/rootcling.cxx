@@ -653,7 +653,7 @@ const char *GetExePath()
 #ifdef __APPLE__
       exepath = _dyld_get_image_name(0);
 #endif
-#ifdef __linux
+#if defined(__linux) || defined(__linux__)
       char linkname[PATH_MAX];  // /proc/<pid>/exe
       char buf[PATH_MAX];     // exe path name
       pid_t pid;
@@ -4342,18 +4342,16 @@ int RootCling(int argc,
       if (doSplit){
          GenerateNecessaryIncludes(splitDictStream,includeForSource,extraIncludes);
       }
-   }
-
-   if (!onepcm && !interpreteronly){
-      // The order of addition to the list of constructor type
-      // is significant.  The list is sorted by with the highest
-      // priority first.
-      constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("TRootIOCtor", interp));
-      constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("", interp));
-
 #ifndef ROOT_STAGE1_BUILD
       InitializeStreamerInfoROOTFile(modGen.GetModuleFileName().c_str());
 #endif
+      // The order of addition to the list of constructor type
+      // is significant.  The list is sorted by with the highest
+      // priority first.
+      if (!interpreteronly){
+         constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("TRootIOCtor", interp));
+         constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("", interp));
+         }
    }
 
    int retCode(0);

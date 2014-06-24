@@ -33,6 +33,8 @@
 #include "RooGenContext.h"
 #include "RooAbsAnaConvPdf.h"
 
+#include "TError.h"
+
 #include <algorithm>
 using namespace std ;
 
@@ -188,7 +190,7 @@ Double_t RooTruthModel::evaluate() const
     return exp(-fabs((Double_t)x)/tau)*cosh(x*dg/2) ;
   }
   default:
-    assert(0) ;
+    R__ASSERT(0) ;
   }
 
   return 0 ;
@@ -244,7 +246,7 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
 
 
   // Code must be 1
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
 
   // Unconvoluted PDF
   if (_basisCode==noBasis) return 1 ;
@@ -323,10 +325,10 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
       return result ;
     }
   default:
-    assert(0) ;
+    R__ASSERT(0) ;
   }
 
-  assert(0) ;
+  R__ASSERT(0) ;
   return 0 ;
 }
 
@@ -360,7 +362,7 @@ void RooTruthModel::generateEvent(Int_t code)
   // x=0 for all events following definition
   // of delta function
 
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
   Double_t zero(0.) ;
   x = zero ;
   return;

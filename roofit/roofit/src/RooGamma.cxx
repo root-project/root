@@ -50,6 +50,8 @@
 #include <Math/PdfFuncMathCore.h>
 #include <Math/ProbFuncMathCore.h>
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooGamma)
@@ -101,7 +103,7 @@ Int_t RooGamma::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, c
 //_____________________________________________________________________________
 Double_t RooGamma::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
 
  //integral of the Gamma distribution via ROOT::Math
   Double_t integral = ROOT::Math::gamma_cdf(x.max(rangeName), gamma, beta, mu) - ROOT::Math::gamma_cdf(x.min(rangeName), gamma, beta, mu);
@@ -125,7 +127,7 @@ Int_t RooGamma::getGenerator(const RooArgSet& directVars, RooArgSet &generateVar
 //_____________________________________________________________________________
 void RooGamma::generateEvent(Int_t code)
 {
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
 //algorithm adapted from code example in:
 //Marsaglia, G. and Tsang, W. W.
 //A Simple Method for Generating Gamma Variables

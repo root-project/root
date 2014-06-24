@@ -5,7 +5,7 @@
 PLATFORM      = linux
 
 DEBUGFLAGS    = -g
-OPTFLAGS      = -O
+OPTFLAGS      = -O -DNDEBUG
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         =
@@ -25,7 +25,7 @@ COMPILER      = gnu
 
 # Linker:
 LD            = g++
-LDFLAGS       = -m64 $(OPT) $(EXTRA_LDFLAGS)
+LDFLAGS       = -m64 -Wl,-E $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 

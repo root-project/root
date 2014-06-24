@@ -1774,8 +1774,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
             pClass = MakeClassFromVarName(name, context);
             break;
          default:
-            assert(0);
-            break;
+            Fatal("TTabCom::Hook","Conext case %d not handled",context);
+            return 0; // Avoid warning about uninitialized pClass.
          }
          if (!pClass) {
             pos = -2;
@@ -1804,8 +1804,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
             pos = Complete("[^> ]*$", pList, "(", out);
             break;
          default:
-            assert(0);
-            break;
+            Fatal("TTabCom::Hook","Conext case %d not handled",context);
+            return 0; // Avoid warning about uninitialized pClass.
          }
 
          delete pList;
@@ -1954,8 +1954,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
             pClass = MakeClassFromClassName(name);
             break;
          default:
-            assert(0);
-            break;
+            Fatal("TTabCom::Hook","Conext case %d not handled",context);
+            return 0; // Avoid warning about uninitialized pClass.
          }
          if (!pClass) {
             pos = -2;
@@ -2089,8 +2089,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
       /*                                                                */
       /******************************************************************/
    default:
-      assert(0);
-      break;
+      Fatal("TTabCom::Hook","Conext case %d not handled",context);
+      return 0; // Avoid warning about uninitialized pClass.
    }
 
    return pos;
@@ -2433,8 +2433,8 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
          context = kCXX_IndirectProto;
          break;
       default:
-         assert(0);
-         break;
+         Fatal("TTabCom::MakeClassFromVarName","Conext case %d not handled",context);
+         return 0; // Avoid warning about uninitialized pClass.
          }
 
          // 2. fix the operator.
@@ -2480,8 +2480,8 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
             context = kCXX_DirectProto;
             break;
          default:
-            assert(0);
-            break;
+            Fatal("TTabCom::MakeClassFromVarName","Conext case %d not handled",context);
+            return 0; // Avoid warning about uninitialized pClass.
          }
 
          // 2. fix the operator.

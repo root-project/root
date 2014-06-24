@@ -19,6 +19,8 @@
 #include "Ttypes.h"
 #include "TInterpreter.h"
 
+#include "TError.h"
+
 //______________________________________________________________________________
 //
 // TTableDescriptor - run-time descriptor of the TTable object rows.
@@ -107,7 +109,7 @@ Int_t TTableDescriptor::AddAt(const void *c)
 
    if (!c) return -1;
    TDataSet *cmnt = MakeCommentField();
-   assert(cmnt!=0);
+   R__ASSERT(cmnt!=0);
 
    return TTable::AddAt(c);
 }
@@ -143,7 +145,7 @@ void TTableDescriptor::AddAt(const tableDescriptor_st &element,const char *comme
 
    TTable::AddAt(&element,indx);
    TDataSet *cmnt = MakeCommentField();
-   assert(cmnt!=0);
+   R__ASSERT(cmnt!=0);
    TDataSet *comment = new TDataSet(element.fColumnName);
    comment->SetTitle(commentText);
    cmnt->AddAtAndExpand(comment,indx);
@@ -269,7 +271,7 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
          elementDescriptor.fType = TTable::GetTypeId(typeName);
       } else {
          TDataType *memberType = member->GetDataType();
-         assert(memberType!=0);
+         R__ASSERT(memberType!=0);
          elementDescriptor.fTypeSize = memberType->Size();
          elementDescriptor.fType = TTable::GetTypeId(memberType->GetTypeName());
       }
@@ -315,7 +317,7 @@ TTableDescriptor *TTableDescriptor::MakeDescriptor(const char *structName)
    TTableDescriptor *dsc = 0;
    TClass *cl = TClass::GetClass(structName, kTRUE);
 //    TClass *cl = new TClass(structName,1,0,0);
-   assert(cl!=0);
+   R__ASSERT(cl!=0);
    dsc = new TTableDescriptor(cl);
    return dsc;
 }

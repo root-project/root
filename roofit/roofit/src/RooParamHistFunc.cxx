@@ -14,6 +14,8 @@
 #include <math.h> 
 #include "TMath.h" 
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooParamHistFunc) 
@@ -222,7 +224,7 @@ Double_t RooParamHistFunc::analyticalIntegralWN(Int_t code, const RooArgSet* /*n
   // Implement analytical integrations by doing appropriate weighting from  component integrals
   // functions to integrators of components
 
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
 
   RooFIter iter = _p.fwdIterator() ;
   RooAbsReal* p ;

@@ -33,6 +33,7 @@
 #include "TGraphAsymmErrors.h"
 #include "TCanvas.h"
 #include "TLine.h"
+#include "TSystem.h"
 #include "TROOT.h"
 
 #include "RooStats/AsymptoticCalculator.h"
@@ -122,38 +123,37 @@ void StandardHypoTestDemo(const char* infile = "",
   // First part is just to access a user-defined file 
   // or create the standard example file if it doesn't exist
   ////////////////////////////////////////////////////////////
-  const char* filename = "";
-  if (!strcmp(infile,""))
-    filename = "results/example_combined_GaussExample_model.root";
-  else
-    filename = infile;
-  // Check if example input file exists
-  TFile *file = TFile::Open(filename);
-
-  // if input file was specified byt not found, quit
-  if(!file && strcmp(infile,"")){
-    cout <<"file not found" << endl;
-    return;
-  } 
-
-  // if default file not found, try to create it
-  if(!file ){
-    // Normally this would be run on the command line
-    cout <<"will run standard hist2workspace example"<<endl;
-    gROOT->ProcessLine(".! prepareHistFactory .");
-    gROOT->ProcessLine(".! hist2workspace config/example.xml");
-    cout <<"\n\n---------------------"<<endl;
-    cout <<"Done creating example input"<<endl;
-    cout <<"---------------------\n\n"<<endl;
-  }
-
-  // now try to access the file again
-  file = TFile::Open(filename);
-  if(!file){
-    // if it is still not there, then we can't continue
-    cout << "Not able to run hist2workspace to create example input" <<endl;
-    return;
-  }
+   const char* filename = "";
+   if (!strcmp(infile,"")) {
+      filename = "results/example_combined_GaussExample_model.root";
+      bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
+      // if file does not exists generate with histfactory
+      if (!fileExist) {
+#ifdef _WIN32
+         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
+         return;
+#endif
+         // Normally this would be run on the command line
+         cout <<"will run standard hist2workspace example"<<endl;
+         gROOT->ProcessLine(".! prepareHistFactory .");
+         gROOT->ProcessLine(".! hist2workspace config/example.xml");
+         cout <<"\n\n---------------------"<<endl;
+         cout <<"Done creating example input"<<endl;
+         cout <<"---------------------\n\n"<<endl;
+      }
+      
+   }
+   else
+      filename = infile;
+   
+   // Try to open the file
+   TFile *file = TFile::Open(filename);
+   
+   // if input file was specified byt not found, quit
+   if(!file ){
+      cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
+      return;
+   }
 
   
   /////////////////////////////////////////////////////////////

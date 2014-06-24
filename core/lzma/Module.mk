@@ -158,6 +158,10 @@ else
 			LZMACC="$$LZMACC -m64"; \
 			LZMA_CFLAGS="-m64"; \
 		fi; \
+		if [ $(ARCH) = "linuxppcgcc" ]; then \
+			LZMACC="$$LZMACC -m32"; \
+			LZMA_CFLAGS="-m32"; \
+		fi; \
 		if [ $(ARCH) = "hpuxia64acc" ]; then \
 			LZMACC="cc"; \
 			LZMA_CFLAGS="+DD64 -Ae +W863"; \

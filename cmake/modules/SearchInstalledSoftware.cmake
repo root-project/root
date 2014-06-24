@@ -820,9 +820,37 @@ if(builtin_ftgl)
   set(FTGL_LIBRARIES FTGL)
 endif()
 
+#---Check for chirp--------------------------------------------------------------------
+if(chirp)
+  find_package(chirp)
+  if(NOT CHIRP_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "chirp library not found and is required (chirp option enabled)")
+    else()
+      message(STATUS "chirp library not found. Set variable CHIRP_DIR to point to your chirp installation")
+      message(STATUS "For the time being switching OFF 'chirp' option")
+      set(chirp OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+#---Check for hdfs--------------------------------------------------------------------
+if(hdfs)
+  find_package(hdfs)
+  if(NOT HDFS_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "hdfs library not found and is required (hdfs option enabled)")
+    else()
+      message(STATUS "hdfs library not found. Set variable HDFS_DIR to point to your hdfs installation")
+      message(STATUS "For the time being switching OFF 'hdfs' option")
+      set(hdfs OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Check for DavIx library-----------------------------------------------------------
 if(davix)
-  set(DAVIX_VERSION 0.2.7)
+  set(DAVIX_VERSION 0.2.10)
   message(STATUS "Downloading and building Davix version ${DAVIX_VERSION}")
     ExternalProject_Add(
       DAVIX
@@ -857,7 +885,7 @@ if(vc)
 endif()
 
 #---Report non implemented options---------------------------------------------------
-foreach(opt afs chirp clarens glite hdfs pch peac sapdb srp geocad)
+foreach(opt afs clarens glite pch peac sapdb srp geocad)
   if(${opt})
     message(STATUS ">>> Option '${opt}' not implemented yet! Signal your urgency to pere.mato@cern.ch")
     set(${opt} OFF CACHE BOOL "" FORCE)

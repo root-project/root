@@ -269,22 +269,29 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   else()
     set(deduced_arg_module ${dict_base_name})
   endif()
+  
+  #---Set the library output directory-----------------------
+  if(DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+    set(library_output_dir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+  else()
+    set(library_output_dir ${CMAKE_CURRENT_BINARY_DIR})
+  endif()
 
   if(ARG_MODULE)
     set(library_name ${libprefix}${ARG_MODULE}${libsuffix})
     if(ARG_MULTIDICT)
-      set(newargs -s ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${library_name} -multiDict)
-      set(pcm_name ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${libprefix}${ARG_MODULE}_${dictionary}_rdict.pcm)
-      set(rootmap_name ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${libprefix}${deduced_arg_module}.rootmap)
+      set(newargs -s ${library_output_dir}/${library_name} -multiDict)
+      set(pcm_name ${library_output_dir}/${libprefix}${ARG_MODULE}_${dictionary}_rdict.pcm)
+      set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
     else()
-      set(newargs -s ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${library_name})
-      set(pcm_name ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${libprefix}${ARG_MODULE}_rdict.pcm)
-      set(rootmap_name ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${libprefix}${ARG_MODULE}.rootmap)
+      set(newargs -s ${library_output_dir}/${library_name})
+      set(pcm_name ${library_output_dir}/${libprefix}${ARG_MODULE}_rdict.pcm)
+      set(rootmap_name ${library_output_dir}/${libprefix}${ARG_MODULE}.rootmap)
     endif()
   else()
     set(library_name ${libprefix}${deduced_arg_module}${libsuffix})
     set(pcm_name ${dictionary}_rdict.pcm)
-    set(rootmap_name ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${libprefix}${deduced_arg_module}.rootmap)
+    set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
   endif()
 
   set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
@@ -515,7 +522,15 @@ function(ROOT_GENERATE_ROOTMAP library)
   CMAKE_PARSE_ARGUMENTS(ARG "" "LIBRARY" "LINKDEF;DEPENDENCIES" ${ARGN})
   get_filename_component(libname ${library} NAME_WE)
   get_filename_component(path ${library} PATH)
-  set(outfile ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${libprefix}${libname}.rootmap)
+  
+  #---Set the library output directory-----------------------
+  if(DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+    set(library_output_dir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+  else()
+    set(library_output_dir ${CMAKE_CURRENT_BINARY_DIR})
+  endif()
+
+  set(outfile ${library_output_dir}/${libprefix}${libname}.rootmap)
   foreach( f ${ARG_LINKDEF})
     if( IS_ABSOLUTE ${f})
       set(_linkdef ${_linkdef} ${f})
@@ -678,7 +693,7 @@ endmacro()
 function(ROOT_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR"
                              "TIMEOUT;BUILD;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC"
-                             "COMMAND;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;CMPOUTPUT;FAILREGEX;LABELS"
+                             "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;CMPOUTPUT;FAILREGEX;LABELS"
                             ${ARGN})
 
   #- Handle COMMAND argument
@@ -691,22 +706,21 @@ function(ROOT_ADD_TEST test)
     list(GET ARG_COMMAND 0 _prg)
     list(REMOVE_AT ARG_COMMAND 0)
 
-    find_program(_exe ${_prg})
-
-    if(_exe)
-      set(_cmd ${_exe} ${ARG_COMMAND})
-    else()
-      if(TARGET ${_prg})
-	    set(_prg "$<TARGET_FILE:${_prg}>")
-	  else()
-        if(NOT IS_ABSOLUTE ${_prg})
-          set(_prg ${CMAKE_CURRENT_BINARY_DIR}/${_prg})
-        endif()
-	  endif()
+    if(TARGET ${_prg})                                 # if command is a target, get the actual executable
+      set(_prg "$<TARGET_FILE:${_prg}>")
       set(_cmd ${_prg} ${ARG_COMMAND})
+    else()
+      find_program(_exe ${_prg})
+      if(_exe)                                         # if the command is found in the system, use it
+        set(_cmd ${_exe} ${ARG_COMMAND})
+      elseif(NOT IS_ABSOLUTE ${_prg})                  # if not absolute, assume is found in current binary dir
+        set(_prg ${CMAKE_CURRENT_BINARY_DIR}/${_prg})
+        set(_cmd ${_prg} ${ARG_COMMAND})
+      else()                                           # take as it is
+        set(_cmd ${_prg} ${ARG_COMMAND})
+      endif()
+      unset(_exe CACHE)
     endif()
-
-    unset(_exe CACHE)
 
     string(REPLACE ";" "^" _cmd "${_cmd}")
   endif()
@@ -779,6 +793,12 @@ function(ROOT_ADD_TEST test)
     string(REPLACE ";" "#" _env "${ARG_ENVIRONMENT}")
     string(REPLACE "=" "@" _env "${_env}")
     set(_command ${_command} -DENV=${_env})
+  endif()
+
+  #- Copy files to the build directory.
+  if(ARG_COPY_TO_BUILDDIR)
+    string(REPLACE ";" "^" _copy_files "${ARG_COPY_TO_BUILDDIR}")
+    set(_command ${_command} -DCOPY=${_copy_files})
   endif()
 
   #- Locate the test driver

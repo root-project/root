@@ -117,6 +117,8 @@ public:
    EListViewMode       GetViewMode() const { return fViewMode; }
    void                SetUserData(void *userData) { fUserData = userData; }
    void               *GetUserData() const { return fUserData; }
+   virtual TGString  **GetSubnames() const { return fSubnames; }
+   virtual TGString   *GetSubname(Int_t idx) const { if (fSubnames) return fSubnames[idx]; else return 0; }
    virtual void        SetSubnames(const char* n1="",const char* n2="",const char* n3="",
                                    const char* n4="",const char* n5="",const char* n6="",
                                    const char* n7="",const char* n8="",const char* n9="",

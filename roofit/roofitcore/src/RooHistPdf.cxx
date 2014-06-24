@@ -35,7 +35,7 @@
 #include "RooWorkspace.h"
 #include "RooGlobalFunc.h"
 
-
+#include "TError.h"
 
 using namespace std;
 
@@ -505,7 +505,7 @@ Int_t RooHistPdf::getMaxVal(const RooArgSet& vars) const
 //_____________________________________________________________________________
 Double_t RooHistPdf::maxVal(Int_t code) const 
 {
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
 
   Double_t max(-1) ;
   for (Int_t i=0 ; i<_dataHist->numEntries() ; i++) {

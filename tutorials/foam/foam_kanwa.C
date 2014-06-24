@@ -3,9 +3,31 @@
 //      root -l foam_kanwa.C
 //_____________________________________________________________________________
 
+#include "Riostream.h"
+#include "TFoam.h"
+#include "TCanvas.h"
+#include "TH2.h"
+#include "TMath.h"
+#include "TFoamIntegrand.h"
+#include "TRandom3.h"
+
+//_____________________________________________________________________________
+Double_t sqr(Double_t x){return x*x;};
+//_____________________________________________________________________________
+Double_t Camel2(Int_t nDim, Double_t *Xarg){
+// 2-dimensional distribution for Foam, normalized to one (within 1e-5)
+  Double_t x=Xarg[0];
+  Double_t y=Xarg[1];
+  Double_t GamSq= sqr(0.100e0);
+  Double_t Dist= 0;
+  Dist +=exp(-(sqr(x-1./3) +sqr(y-1./3))/GamSq)/GamSq/TMath::Pi();
+  Dist +=exp(-(sqr(x-2./3) +sqr(y-2./3))/GamSq)/GamSq/TMath::Pi();
+  return 0.5*Dist;
+}// Camel2
+//_____________________________________________________________________________
+
 Int_t foam_kanwa(){
   cout<<"--- kanwa started ---"<<endl;
-  gSystem->Load("libFoam.so");
   TH2D  *hst_xy = new TH2D("hst_xy" ,  "x-y plot", 50,0,1.0, 50,0,1.0);
   Double_t *MCvect =new Double_t[2]; // 2-dim vector generated in the MC run
   //
@@ -49,17 +71,3 @@ Int_t foam_kanwa(){
   return 0;
 }//kanwa
 
-//_____________________________________________________________________________
-Double_t sqr(Double_t x){return x*x;};
-//_____________________________________________________________________________
-Double_t Camel2(Int_t nDim, Double_t *Xarg){
-// 2-dimensional distribution for Foam, normalized to one (within 1e-5)
-  Double_t x=Xarg[0];
-  Double_t y=Xarg[1];
-  Double_t GamSq= sqr(0.100e0);
-  Double_t Dist= 0;
-  Dist +=exp(-(sqr(x-1./3) +sqr(y-1./3))/GamSq)/GamSq/TMath::Pi();
-  Dist +=exp(-(sqr(x-2./3) +sqr(y-2./3))/GamSq)/GamSq/TMath::Pi();
-  return 0.5*Dist;
-}// Camel2
-//_____________________________________________________________________________

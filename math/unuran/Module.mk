@@ -114,6 +114,9 @@ $(UNRCFG):	$(UNURANETAG)
 		if [ "$(ARCH)" = "linuxppc64gcc" ]; then \
 			ACC="$$ACC -m64 -fPIC"; \
 		fi; \
+		if [ "$(ARCH)" = "linuxppcgcc" ]; then \
+		        ACC="$$ACC -m32 -fPIC"; \
+		fi; \
 		if [ "$(ARCH)" = "linuxx8664gcc" ]; then \
 			ACFLAGS="-m64 -fPIC"; \
 		fi; \

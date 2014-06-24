@@ -35,6 +35,8 @@
 #include "RooMath.h"
 #include "TMath.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooGExpModel) 
@@ -276,7 +278,7 @@ Double_t RooGExpModel::evaluate() const
     //cout << "7th form " << "x= " << x << " result= " << result << endl;
     return result;
   }
-  assert(0) ;
+  R__ASSERT(0) ;
   return 0 ;
   }
 
@@ -552,7 +554,7 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) con
   Double_t ssfInt(1.0) ;
 
   // Code must be 1 or 2
-  assert(code==1||code==2) ;
+  R__ASSERT(code==1||code==2) ;
   if (code==2) {
     ssfInt = (ssf.max(rangeName)-ssf.min(rangeName)) ;
   }
@@ -688,7 +690,7 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) con
   
     }
 
-  assert(0) ;
+  R__ASSERT(0) ;
   return 1 ;
 }
 
@@ -822,7 +824,7 @@ Int_t RooGExpModel::getGenerator(const RooArgSet& directVars, RooArgSet &generat
 //_____________________________________________________________________________
 void RooGExpModel::generateEvent(Int_t code)
 {
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
   Double_t xgen ;
   while(1) {
     Double_t xgau = RooRandom::randomGenerator()->Gaus(0,(sigma*ssf));

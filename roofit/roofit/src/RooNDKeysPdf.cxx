@@ -44,6 +44,8 @@
 // END_HTML
 //
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooNDKeysPdf)
@@ -92,7 +94,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
     if (!dynamic_cast<RooAbsReal*>(var)) {
       coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: variable " << var->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
-      assert(0) ;
+      R__ASSERT(0) ;
     }
     _varList.add(*var) ;
     _varName.push_back(var->GetName());
@@ -124,7 +126,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
     if (!dynamic_cast<RooAbsReal*>(var)) {
       coutE(InputArguments) << "RhhNDKeysPdf::ctor(" << GetName() << ") ERROR: variable " << var->GetName() 
 			    << " is not of type RooAbsReal" << endl ;
-      assert(0) ;
+      R__ASSERT(0) ;
     }
     _varList.add(*var) ;
     _varName.push_back(var->GetName());
@@ -135,7 +137,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
   if( _varList.getSize() != rho.GetNrows() ) {
     coutE(InputArguments) << "ERROR:  RhhNDKeysPdf::RhhNDKeysPdf() : The vector-size of rho is different from that of varList."
 			  << "Unable to create the PDF." << endl;
-    assert ( _varList.getSize()==rho.GetNrows() );
+    R__ASSERT ( _varList.getSize()==rho.GetNrows() );
   }
 
   // negative width factor will serve as a switch in initialize()
@@ -398,13 +400,13 @@ RooNDKeysPdf::initialize() const
   if(_nDim==0) {
     coutE(InputArguments) << "ERROR:  RooNDKeysPdf::initialize() : The observable list is empty. "
 			  << "Unable to begin generating the PDF." << endl;
-    assert (_nDim!=0);
+    R__ASSERT (_nDim!=0);
   }
 
   if(_nEvents==0) {
     coutE(InputArguments) << "ERROR:  RooNDKeysPdf::initialize() : The input data set is empty. "
 			  << "Unable to begin generating the PDF." << endl;
-    assert (_nEvents!=0);
+    R__ASSERT (_nEvents!=0);
   }
 
   _d         = static_cast<Double_t>(_nDim);
@@ -1058,7 +1060,7 @@ RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 
   // determine which observables need to be integrated over ...
   Int_t nComb = 1 << (_nDim); 
-  assert(code>=1 && code<nComb) ;
+  R__ASSERT(code>=1 && code<nComb) ;
 
   vector<Bool_t> doInt(_nDim,kTRUE);
 

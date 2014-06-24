@@ -9,6 +9,7 @@
 
 #include "Minuit2/LAVector.h"
 #include "Minuit2/LASymMatrix.h"
+#include "TError.h"
 
 namespace ROOT {
 
@@ -30,9 +31,9 @@ LAVector eigenvalues(const LASymMatrix& mat) {
          tmp(i*nrow + j) = mat(i,j);
       }
          
-         int info = mneigen(tmp.Data(), nrow, nrow, work.size(), work.Data(), 1.e-6);
+   int info = mneigen(tmp.Data(), nrow, nrow, work.size(), work.Data(), 1.e-6);
    
-   assert(info == 0);
+   R__ASSERT(info == 0);
    
    LAVector result(nrow);
    for(unsigned int i = 0; i < nrow; i++) result(i) = work(i);

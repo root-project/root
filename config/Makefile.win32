@@ -4,7 +4,7 @@
 
 PLATFORM      = win32
 
-OPTFLAGS      = -O2 
+OPTFLAGS      = -O2 -DNDEBUG
 DEBUGFLAGS    = -Z7
 
 # Compiler version:

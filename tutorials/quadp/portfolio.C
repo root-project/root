@@ -355,8 +355,8 @@ void portfolio()
     h2->Fill(stocks[i],weight2[i]);
   }
 
-  h1->Draw("BAR2");
-  h2->Draw("BAR2SAME");
+  h1->Draw("BAR2 HIST");
+  h2->Draw("BAR2SAME HIST");
 
   TLegend *legend2 = new TLegend(0.50,0.65,0.70,0.82);
   legend2->AddEntry(h1,"high risk","f");

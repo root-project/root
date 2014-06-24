@@ -45,9 +45,10 @@
 
 
 void testAll() {
-  int i, N = 5000000;
+  int i, N = 2000000;
   float cpn = 1000000000./N;
-  double x,y;
+  int N1 = N/10; float cpn1 = cpn*10;  // for TRandom1
+  double x,y;  
   TRandom *rsave = gRandom;
   TRandom *r0 = new TRandom();
   TRandom *r1 = new TRandom1();
@@ -64,10 +65,10 @@ void testAll() {
   }
   printf("Rndm.............. %8.3f",sw.CpuTime()*cpn);
   sw.Start();
-  for (i=0;i<N;i++) {
+  for (i=0;i<N1;i++) {
      x = r1->Rndm(i);
   }
-  printf(" %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn1);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Rndm(i);
@@ -87,10 +88,10 @@ void testAll() {
   }
   printf("RndmArray......... %8.3f",sw.CpuTime()*cpn);
   sw.Start();
-  for (i=0;i<N;i+=NR) {
+  for (i=0;i<N1;i+=NR) {
      r1->RndmArray(NR,rn);
   }
-  printf(" %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn1);
   sw.Start();
   for (i=0;i<N;i+=NR) {
      r2->RndmArray(NR,rn);
@@ -108,10 +109,10 @@ void testAll() {
   }
   printf("Gaus.............. %8.3f",sw.CpuTime()*cpn);
   sw.Start();
-  for (i=0;i<N;i++) {
+  for (i=0;i<N1;i++) {
      x = r1->Gaus(0,1);
   }
-  printf(" %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn1);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Gaus(0,1);
@@ -129,10 +130,10 @@ void testAll() {
   }
   printf("Rannor............ %8.3f",sw.CpuTime()*cpn);
   sw.Start();
-  for (i=0;i<N;i+=2) {
+  for (i=0;i<N1;i+=2) {
      r1->Rannor(x,y);
   }
-  printf(" %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn1);
   sw.Start();
   for (i=0;i<N;i+=2) {
      r2->Rannor(x,y);
@@ -150,10 +151,10 @@ void testAll() {
   }
   printf("Landau............ %8.3f",sw.CpuTime()*cpn);
   sw.Start();
-  for (i=0;i<N;i++) {
+  for (i=0;i<N1;i++) {
      x = r1->Landau(0,1);
   }
-  printf(" %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn1);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Landau(0,1);
@@ -171,10 +172,10 @@ void testAll() {
   }
   printf("Exponential....... %8.3f",sw.CpuTime()*cpn);
   sw.Start();
-  for (i=0;i<N;i++) {
+  for (i=0;i<N1;i++) {
      x = r1->Exp(1);
   }
-  printf(" %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn1);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Exp(1);
@@ -192,10 +193,10 @@ void testAll() {
   }
   printf("Binomial(5,0.5)... %8.3f",sw.CpuTime()*cpn);
   sw.Start();
-  for (i=0;i<N;i++) {
+  for (i=0;i<N1;i++) {
      x = r1->Binomial(5,0.5);
   }
-  printf(" %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn1);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Binomial(5,0.5);
@@ -213,10 +214,10 @@ void testAll() {
   }
   printf("Binomial(15,0.5).. %8.3f",sw.CpuTime()*cpn);
   sw.Start();
-  for (i=0;i<N;i++) {
+  for (i=0;i<N1;i++) {
      x = r1->Binomial(15,0.5);
   }
-  printf(" %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn1);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Binomial(15,0.5);
@@ -234,10 +235,10 @@ void testAll() {
   }
   printf("Poisson(3)........ %8.3f",sw.CpuTime()*cpn);
   sw.Start();
-  for (i=0;i<N;i++) {
+  for (i=0;i<N1;i++) {
      x = r1->Poisson(3);
   }
-  printf(" %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn1);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Poisson(3);
@@ -255,10 +256,10 @@ void testAll() {
   }
   printf("Poisson(10)....... %8.3f",sw.CpuTime()*cpn);
   sw.Start();
-  for (i=0;i<N;i++) {
+  for (i=0;i<N1;i++) {
      x = r1->Poisson(10);
   }
-  printf(" %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn1);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Poisson(10);
@@ -276,10 +277,10 @@ void testAll() {
   }
   printf("Poisson(70)....... %8.3f",sw.CpuTime()*cpn);
   sw.Start();
-  for (i=0;i<N;i++) {
+  for (i=0;i<N1;i++) {
      x = r1->Poisson(70);
   }
-  printf(" %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn1);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Poisson(70);
@@ -297,10 +298,10 @@ void testAll() {
   }
   printf("Poisson(100)...... %8.3f",sw.CpuTime()*cpn);
   sw.Start();
-  for (i=0;i<N;i++) {
+  for (i=0;i<N1;i++) {
      x = r1->Poisson(100);
   }
-  printf(" %8.3f",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn1);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r2->Poisson(100);
@@ -656,7 +657,7 @@ int testRandom3() {
    }
 
 
-void testrandom()
+void testrandom(double scale=0.1)
 {
   testRandom3();
   testAll();

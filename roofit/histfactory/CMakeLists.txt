@@ -14,6 +14,15 @@ ROOT_LINKER_LIBRARY(HistFactory  *.cxx G__HistFactory.cxx LIBRARIES Core
 ROOT_EXECUTABLE(hist2workspace MakeModelAndMeasurements.cxx hist2workspace.cxx
 			       LIBRARIES HistFactory RooFit RooFitCore Tree RIO Matrix Hist ${ROOT_MATHMORE_LIBRARY} ${GSL_LIBRARIES} MathCore 
                                          Graf Gpad Minuit Foam RooStats XMLParser)
+                                         
+
+file(COPY config/prepareHistFactory DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prepareHistFactory
+                PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                            GROUP_EXECUTE GROUP_READ
+                            WORLD_EXECUTE WORLD_READ
+                DESTINATION ${CMAKE_INSTALL_BINDIR})
+
 
 #ROOT_INSTALL_HEADERS()
 install(DIRECTORY inc/RooStats/HistFactory/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/RooStats/HistFactory 

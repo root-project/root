@@ -28,6 +28,8 @@
 #include "RooRandom.h"
 #include "RooDataSet.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooKeysPdf)
@@ -299,7 +301,7 @@ Int_t RooKeysPdf::getAnalyticalIntegral(
 
 Double_t RooKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-  assert(1 == code);
+  R__ASSERT(1 == code);
   // this code is based on _lookupTable and uses linear interpolation, just as
   // evaluate(); integration is done using the trapez rule
   const Double_t xmin = std::max(_lo, _x.min(rangeName));
@@ -345,7 +347,7 @@ Int_t RooKeysPdf::getMaxVal(const RooArgSet& vars) const
 
 Double_t RooKeysPdf::maxVal(Int_t code) const
 {
-  assert(1 == code);
+  R__ASSERT(1 == code);
   Double_t max = -std::numeric_limits<Double_t>::max();
   for (Int_t i = 0; i <= _nPoints; ++i)
     if (max < _lookupTable[i]) max = _lookupTable[i];

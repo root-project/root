@@ -24,6 +24,8 @@
 #include "TMath.h"
 #include "Math/ProbFuncMathCore.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooPoisson) 
@@ -133,7 +135,7 @@ Int_t RooPoisson::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 //_____________________________________________________________________________
 Double_t RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  assert(code == 1 || code == 2) ;
+  R__ASSERT(code == 1 || code == 2) ;
 
   if(_protectNegative && mean<0) 
     return exp(-2*mean); // make it fall quickly
@@ -225,7 +227,7 @@ void RooPoisson::generateEvent(Int_t code)
 {
   // Implement internal generator using TRandom::Poisson 
 
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
   Double_t xgen ;
   while(1) {    
     xgen = RooRandom::randomGenerator()->Poisson(mean);

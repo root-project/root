@@ -22,6 +22,10 @@ add_custom_target(move_headers ALL ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
                                    -DCOMPONENTS="headers\;tutorials"
                                    -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake )
 
+#---Test products should not be poluting the standard destinations--------------------------------
+unset(CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+unset(CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
+unset(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
 
 #--Add all subdirectories with tests-----------------------------------------------------------
 

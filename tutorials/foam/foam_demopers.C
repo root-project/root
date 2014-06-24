@@ -4,11 +4,24 @@
 //
 // Next type root -l foam_demopers.C from shell command line
 //
+#include "Riostream.h"
+#include "TFile.h"
+#include "TFoam.h"
+#include "TROOT.h"
+#include "TSystem.h"
+#include "TFoamIntegrand.h"
+
 
 Int_t foam_demopers()
 {
-  gSystem->Load("libFoam.so");
-  gROOT->ProcessLine(".L foam_demo.C+");
+   
+  gSystem->Load("libFoam");
+   
+  // need to load the foam_demo tutorial for the definition of the function
+  TString macroName = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+  macroName.ReplaceAll("foam_demopers.C","foam_demo.C");
+  gROOT->ProcessLine(TString::Format(".L %s+",macroName.Data()));
+
   //******************************************
   cout<<"====================== TestVector ================================"<<endl;
   TFile fileA("foam_demo.root");
@@ -27,6 +40,17 @@ Int_t foam_demopers()
   //*******************************************
 //  FoamX->PrintCells();
   FoamX->CheckAll(1);
+   
+ //N.B. the integrand functions need to be reset
+ // because cannot be made persistent
+#ifdef __CINT__
+ // this can be done only in CINT
+ TFoamIntegrand    *rho= new TFDISTR();
+#else
+   // this should be done with AClic or Cling
+   TFoamIntegrand * rho = (TFoamIntegrand*) gROOT->ProcessLine("return new TFDISTR();");
+#endif
+ FoamX->SetRho(rho);
 
  Double_t *MCvect =new Double_t[2]; // 2-dim vector generated in the MC run
 

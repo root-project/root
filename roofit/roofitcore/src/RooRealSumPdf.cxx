@@ -45,6 +45,8 @@
 #include <memory>
 #include <algorithm>
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooRealSumPdf)
@@ -127,7 +129,7 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
   if (!(inFuncList.getSize()==inCoefList.getSize()+1 || inFuncList.getSize()==inCoefList.getSize())) {
     coutE(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName() 
 			  << ") number of pdfs and coefficients inconsistent, must have Nfunc=Ncoef or Nfunc=Ncoef+1" << endl ;
-    assert(0) ;
+    R__ASSERT(0) ;
   }
 
   _funcIter  = _funcList.createIterator() ;
@@ -158,7 +160,7 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgLi
   if (func) {
     if (!dynamic_cast<RooAbsReal*>(func)) {
       coutE(InputArguments) << "RooRealSumPdf::RooRealSumPdf(" << GetName() << ") last func " << coef->GetName() << " is not of type RooAbsReal, fatal error" << endl ;
-      assert(0) ;
+      R__ASSERT(0) ;
     }
     _funcList.add(*func) ;  
   } else {
@@ -375,9 +377,9 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
      std::auto_ptr<RooArgSet> nset(  _normIntMgr.nameSet1ByIndex(code-1)->select(*vars) );
      RooArgSet dummy;
      Int_t code2 = getAnalyticalIntegralWN(*iset,dummy,nset.get(),rangeName);
-     assert(code==code2); // must have revived the right (sterilized) slot...
+     R__ASSERT(code==code2); // must have revived the right (sterilized) slot...
      cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
-     assert(cache!=0);
+     R__ASSERT(cache!=0);
   }
 
   RooFIter funcIntIter = cache->_funcIntList.fwdIterator() ;
@@ -393,9 +395,9 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     func    = (RooAbsReal*)funcIter.next() ;
     Double_t coefVal = coef->getVal(normSet2) ;
     if (coefVal) {
-      assert(func);
+      R__ASSERT(func);
       if (func->isSelectedComp()) {
-    assert(funcInt);
+    R__ASSERT(funcInt);
 	value += funcInt->getVal()*coefVal ;
       }
       lastCoef -= coef->getVal(normSet2) ;
@@ -406,7 +408,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     // Add last func with correct coefficient
     funcInt = (RooAbsReal*) funcIntIter.next() ;
     if (func->isSelectedComp()) {
-      assert(funcInt);
+      R__ASSERT(funcInt);
       value += funcInt->getVal()*lastCoef ;
     }
     
@@ -430,7 +432,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
       funcNorm = (RooAbsReal*)funcNormIter.next() ;
       Double_t coefVal = coef->getVal(normSet2) ;
       if (coefVal) {
-	assert(funcNorm);
+	R__ASSERT(funcNorm);
 	normVal += funcNorm->getVal()*coefVal ;
       }
     }
@@ -438,7 +440,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     // Add last func with correct coefficient
     if (!_haveLastCoef) {
       funcNorm = (RooAbsReal*) funcNormIter.next() ;
-      assert(funcNorm);
+      R__ASSERT(funcNorm);
       normVal += funcNorm->getVal()*lastCoef ;
     }      
   }

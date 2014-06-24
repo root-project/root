@@ -3052,7 +3052,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
             TBranchElement *branchEl = (TBranchElement *)leafcur->GetBranch();
             Int_t type = branchEl->GetStreamerType();
             if (type==-1) {
-               cl =  branchEl->GetInfo()->GetClass();
+               cl = branchEl->GetInfo() ? branchEl->GetInfo()->GetClass() : 0;
             } else if (type>60 || type==0) {
                // Case of an object data member.  Here we allow for the
                // variable name to be ommitted.  Eg, for Event.root with split
@@ -3220,7 +3220,7 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char
       TBranchElement* branchEl = (TBranchElement*) branch;
       Int_t type = branchEl->GetStreamerType();
       if (type == -1) {
-         cl = branchEl->GetInfo()->GetClass();
+         cl = branchEl->GetInfo() ? branchEl->GetInfo()->GetClass() : 0;
       } else if (type > 60) {
          // Case of an object data member.  Here we allow for the
          // variable name to be ommitted.  Eg, for Event.root with split

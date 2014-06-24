@@ -115,6 +115,7 @@ EOT
           check_cygwin git
           check_cygwin python
           check_cygwin wget
+          check_cygwin unzip
           # Check Windows registry for keys that prove an MS Visual Studio 11.0 installation
           check_cygwin msvc
           cat <<- EOT
@@ -156,8 +157,9 @@ EOT
           compile ${workdir}/cling-$(get_DIST)$(get_BIT)-${VERSION}
           install_prefix
           test_cling
-          # NSIS compilation support TBA
-          # build_nsi
+          get_nsis
+          make_nsi
+          build_nsis
           # cleanup
         fi
         ;;
@@ -194,8 +196,9 @@ EOT
           compile ${workdir}/cling-$(get_DIST)$(get_BIT)-${VERSION}
           install_prefix
           test_cling
-          # NSIS compilation support TBA
-          # build_nsi
+          get_nsis
+          make_nsi
+          build_nsis
           # cleanup
         fi
         ;;

@@ -35,6 +35,8 @@
 #include "RooStreamParser.h"
 #include "RooArgList.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooEfficiency)
@@ -113,7 +115,7 @@ Int_t RooEfficiency::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 //_____________________________________________________________________________
 Double_t RooEfficiency::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
 {
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
   return 1.0 ;
 }
 

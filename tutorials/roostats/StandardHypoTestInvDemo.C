@@ -39,6 +39,7 @@
 #include "TCanvas.h"
 #include "TLine.h"
 #include "TROOT.h"
+#include "TSystem.h"
 
 #include "RooStats/AsymptoticCalculator.h"
 #include "RooStats/HybridCalculator.h"
@@ -59,7 +60,7 @@
 
 using namespace RooFit;
 using namespace RooStats;
-
+using namespace std; 
 
 bool plotHypoTestResult = true;          // plot test statistic result at each point
 bool writeResult = true;                 // write HypoTestInverterResult in a file 
@@ -197,7 +198,7 @@ RooStats::HypoTestInvTool::SetParameter(const char * name, bool value){
    if (s_name.find("GenerateBinned") != std::string::npos) mGenerateBinned = value;
    if (s_name.find("UseProof") != std::string::npos) mUseProof = value;
    if (s_name.find("Rebuild") != std::string::npos) mRebuild = value;
-   if (s_name.find("ReuseAltToys") != std::string::npos) mReUseAltToys = value;
+   if (s_name.find("ReuseAltToys") != std::string::npos) mReuseAltToys = value;
 
    return;
 }
@@ -321,42 +322,38 @@ StandardHypoTestInvDemo(const char * infile = 0,
 
   
   
-   TString fileName(infile);
-   if (fileName.IsNull()) { 
-      fileName = "results/example_combined_GaussExample_model.root";
-      std::cout << "Use standard file generated with HistFactory : " << fileName << std::endl;
+   TString filename(infile);
+   if (filename.IsNull()) {
+      filename = "results/example_combined_GaussExample_model.root";
+      bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
+      // if file does not exists generate with histfactory
+      if (!fileExist) {
+#ifdef _WIN32
+         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
+         return;
+#endif
+         // Normally this would be run on the command line
+         cout <<"will run standard hist2workspace example"<<endl;
+         gROOT->ProcessLine(".! prepareHistFactory .");
+         gROOT->ProcessLine(".! hist2workspace config/example.xml");
+         cout <<"\n\n---------------------"<<endl;
+         cout <<"Done creating example input"<<endl;
+         cout <<"---------------------\n\n"<<endl;
+      }
+      
    }
-  
-   // open file and check if input file exists
-   TFile * file = TFile::Open(fileName); 
-  
-   // if input file was specified but not found, quit
-   if(!file && !TString(infile).IsNull()){
-      cout <<"file " << fileName << " not found" << endl;
-      return;
-   } 
-  
-   // if default file not found, try to create it
+   else
+      filename = infile;
+   
+   // Try to open the file
+   TFile *file = TFile::Open(filename);
+   
+   // if input file was specified byt not found, quit
    if(!file ){
-      // Normally this would be run on the command line
-      cout <<"will run standard hist2workspace example"<<endl;
-      gROOT->ProcessLine(".! prepareHistFactory .");
-      gROOT->ProcessLine(".! hist2workspace config/example.xml");
-      cout <<"\n\n---------------------"<<endl;
-      cout <<"Done creating example input"<<endl;
-      cout <<"---------------------\n\n"<<endl;
-    
-      // now try to access the file again
-      file = TFile::Open(fileName);
-    
-   }
-  
-   if(!file){
-      // if it is still not there, then we can't continue
-      cout << "Not able to run hist2workspace to create example input" <<endl;
+      cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
    }
-  
+
 
 
    HypoTestInvTool calc;
@@ -386,7 +383,7 @@ StandardHypoTestInvDemo(const char * infile = 0,
 
    RooWorkspace * w = dynamic_cast<RooWorkspace*>( file->Get(wsName) );
    HypoTestInverterResult * r = 0;  
-   std::cout << w << "\t" << fileName << std::endl;
+   std::cout << w << "\t" << filename << std::endl;
    if (w != NULL) {
       r = calc.RunInverter(w, modelSBName, modelBName,
                            dataName, calculatorType, testStatType, useCLs,
@@ -399,10 +396,10 @@ StandardHypoTestInvDemo(const char * infile = 0,
    }
    else { 
       // case workspace is not present look for the inverter result
-      std::cout << "Reading an HypoTestInverterResult with name " << wsName << " from file " << fileName << std::endl;
+      std::cout << "Reading an HypoTestInverterResult with name " << wsName << " from file " << filename << std::endl;
       r = dynamic_cast<HypoTestInverterResult*>( file->Get(wsName) ); //
       if (!r) { 
-         std::cerr << "File " << fileName << " does not contain a workspace or an HypoTestInverterResult - Exit " 
+         std::cerr << "File " << filename << " does not contain a workspace or an HypoTestInverterResult - Exit " 
                    << std::endl;
          file->ls();
          return; 
@@ -479,8 +476,13 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
       }
 
       // get (if existing) rebuilt UL distribution
-      TFile * fileULDist = TFile::Open("RULDist.root"); 
-      TObject * ulDist = (fileULDist) ? fileULDist->Get("RULDist") : 0;  
+      TString uldistFile = "RULDist.root";
+      TObject * ulDist = 0;
+      bool existULDist = !gSystem->AccessPathName(uldistFile);
+      if (existULDist) {
+         TFile * fileULDist = TFile::Open(uldistFile);
+         if (fileULDist) ulDist= fileULDist->Get("RULDist");
+      }
 
       TFile * fileOut = new TFile(mResultFileName,"RECREATE");
       r->Write();
@@ -523,7 +525,7 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
    if (mPlotHypoTestResult) { 
       TCanvas * c2 = new TCanvas();
       if (nEntries > 1) { 
-         int ny = TMath::CeilNint( sqrt(nEntries) );
+         int ny = TMath::CeilNint(TMath::Sqrt(nEntries));
          int nx = TMath::CeilNint(double(nEntries)/ny);
          c2->Divide( nx,ny);
       }
@@ -770,8 +772,10 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    HypoTestCalculatorGeneric *  hc = 0;
    if (type == 0) hc = new FrequentistCalculator(*data, *bModel, *sbModel);
    else if (type == 1) hc = new HybridCalculator(*data, *bModel, *sbModel);
-   else if (type == 2 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, false, mAsimovBins);
-   else if (type == 3 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, true, mAsimovBins);  // for using Asimov data generated with nominal values 
+   // else if (type == 2 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, false, mAsimovBins);
+   // else if (type == 3 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, true, mAsimovBins);  // for using Asimov data generated with nominal values 
+   else if (type == 2 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, false );
+   else if (type == 3 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, true );  // for using Asimov data generated with nominal values 
    else {
       Error("StandardHypoTestInvDemo","Invalid - calculator type = %d supported values are only :\n\t\t\t 0 (Frequentist) , 1 (Hybrid) , 2 (Asymptotic) ",type);
       return 0;
