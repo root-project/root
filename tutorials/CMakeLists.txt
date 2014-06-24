@@ -112,6 +112,8 @@ set(extra_veto
   tree/copytree2.C 
   tree/copytree3.C 
   tree/copytree.C
+  tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
+  tree/h1chain.C
   http/*.C)
   
 set(all_veto hsimple.C
@@ -148,7 +150,6 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  hist/ContourList.C hist/hstack.C 
                  hist/h2proj.C 
                  hist/th2polyBoxes.C
-                 tree/h1analysis.C
                  io/fildir.C 
                  math/chi2test.C )
 #---Dependencies------------------------------------------------------
