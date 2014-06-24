@@ -6,8 +6,7 @@ ROOTTEST_ADD_TEST(roottest-cling-templateMembers-runduplicate
 
 ROOTTEST_ADD_TEST(roottest-cling-templateMembers-runoperatorEqual
                   MACRO runoperatorEqual.C
-                  TEST_OUTREF_CINTSPECIFIC
-                  OUTREF operatorEqual.ref
+                  OUTREF_CINTSPECIFIC operatorEqual.ref
                   OUTCNVCMD grep -v FILE
                   OUTCNV runoperatorEqual_convert.sh
                   DEPENDS operatorEqual.C

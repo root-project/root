@@ -24,8 +24,7 @@ ROOTTEST_ADD_TEST(roottest-cling-function-runlongArgTest
 
 ROOTTEST_ADD_TEST(roottest-cling-function-runstaticfunc
                   MACRO runstaticfunc.C
-                  TEST_OUTREF_CINTSPECIFIC
-                  OUTREF staticfunc.ref
+                  OUTREF_CINTSPECIFIC staticfunc.ref
                   OUTCNV staticfunc_convert.sh
                   LABELS roottest regression cling)
 
