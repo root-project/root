@@ -58,10 +58,9 @@
 #include "RooStats/HypoTestInverterResult.h"
 #include "RooStats/HypoTestInverterPlot.h"
 
-
 using namespace RooFit;
 using namespace RooStats;
-
+using namespace std; 
 
 bool plotHypoTestResult = true;          // plot test statistic result at each point
 bool writeResult = true;                 // write HypoTestInverterResult in a file 
@@ -323,8 +322,8 @@ StandardHypoTestInvDemo(const char * infile = 0,
 
   
   
-   TString fileName(infile);
-   if (fileName.IsNull()) {
+   TString filename(infile);
+   if (filename.IsNull()) {
       filename = "results/example_combined_GaussExample_model.root";
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
@@ -384,7 +383,7 @@ StandardHypoTestInvDemo(const char * infile = 0,
 
    RooWorkspace * w = dynamic_cast<RooWorkspace*>( file->Get(wsName) );
    HypoTestInverterResult * r = 0;  
-   std::cout << w << "\t" << fileName << std::endl;
+   std::cout << w << "\t" << filename << std::endl;
    if (w != NULL) {
       r = calc.RunInverter(w, modelSBName, modelBName,
                            dataName, calculatorType, testStatType, useCLs,
@@ -397,10 +396,10 @@ StandardHypoTestInvDemo(const char * infile = 0,
    }
    else { 
       // case workspace is not present look for the inverter result
-      std::cout << "Reading an HypoTestInverterResult with name " << wsName << " from file " << fileName << std::endl;
+      std::cout << "Reading an HypoTestInverterResult with name " << wsName << " from file " << filename << std::endl;
       r = dynamic_cast<HypoTestInverterResult*>( file->Get(wsName) ); //
       if (!r) { 
-         std::cerr << "File " << fileName << " does not contain a workspace or an HypoTestInverterResult - Exit " 
+         std::cerr << "File " << filename << " does not contain a workspace or an HypoTestInverterResult - Exit " 
                    << std::endl;
          file->ls();
          return; 
