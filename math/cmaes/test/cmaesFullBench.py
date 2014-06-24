@@ -17,8 +17,8 @@ for f in datfiles:
     dat = loadtxt(f,dtype=float,comments='#')
 
     # best f-min
-    bestfmin1 = dat[0,7]+dat[0,8]
-    bestfmin2 = dat[0,8]+dat[0,9]
+    bestfmin1 = dat[0,8]
+    bestfmin2 = dat[1,8]
 
     # successes and failures
     cmaAvg = [dat[0,1],0.0,0.0,bestfmin1]
@@ -27,13 +27,13 @@ for f in datfiles:
     minStd = [0.0,0.0,0.0,0.0]
 
     # budget and cpu averages
-    cmaAvg2 = [0.0,dat[0,3]*1000.0,dat[0,5],0.0]
-    cmaStd2 = [0.0,dat[0,4]*1000.0,dat[0,6],0.0]
-    minAvg2 = [0.0,dat[1,3]*1000.0,dat[1,5],0.0]
-    minStd2 = [0.0,dat[1,4]*1000.0,dat[1,6],0.0]
+    cmaAvg2 = [0.0,dat[0,4]*1000.0,dat[0,6],0.0]
+    cmaStd2 = [0.0,dat[0,5]*1000.0,dat[0,7],0.0]
+    minAvg2 = [0.0,dat[1,4]*1000.0,dat[1,6],0.0]
+    minStd2 = [0.0,dat[1,5]*1000.0,dat[1,7],0.0]
 
     if runs == -1:
-        runs = dat[0,1]+dat[0,2] # get the number of runs once.
+        runs = dat[0,2]+dat[0,3] # get the number of runs once.
     
     ## necessary variables
     #ind = np.arange(N)                # the x locations for the groups
@@ -70,7 +70,7 @@ for f in datfiles:
     ax2.set_ylim(0)
     #axarr[i,j].set_ylabel('Scores')
     axarr[i,j].set_title(f,fontsize=12)
-    xTickMarks = ["Found","CPU avg (ms)","Budget avg","best fmin"]
+    xTickMarks = ["Found","CPU avg (ms)","Budget avg","wins"]
     axarr[i,j].set_xticks(ind+width)
     xtickNames = axarr[i,j].set_xticklabels(xTickMarks)
     plt.setp(xtickNames, rotation=45, fontsize=10)
