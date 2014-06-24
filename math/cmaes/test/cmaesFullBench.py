@@ -11,26 +11,30 @@ fig, axarr = plt.subplots(3,3)
 
 i = 0
 j = 0
+N = 4
+runs = -1
 for f in datfiles:
-#    print i, j
-    
-    ## the data
     dat = loadtxt(f,dtype=float,comments='#')
-#    print dat
-    
-    N = 4
-#    print N
-    
-    cmaAvg = [dat[0,1],0.0,0.0,dat[0,7]];
-    cmaStd = [0.0,0.0,0.0,0.0];
-    minAvg = [dat[1,1],0.0,0.0,dat[1,1]+dat[1,2]-dat[0,7]];
-    minStd = [0.0,0.0,0.0,0.0];
 
-    cmaAvg2 = [0.0,dat[0,3]*1000.0,dat[0,5],0.0];
-    cmaStd2 = [0.0,dat[0,4]*1000.0,dat[0,6],0.0];
-    minAvg2 = [0.0,dat[1,3]*1000.0,dat[1,5],0.0];
-    minStd2 = [0.0,dat[1,4]*1000.0,dat[1,6],0.0];
+    # best f-min
+    bestfmin1 = dat[0,7]+dat[0,8]
+    bestfmin2 = dat[0,8]+dat[0,9]
 
+    # successes and failures
+    cmaAvg = [dat[0,1],0.0,0.0,bestfmin1]
+    cmaStd = [0.0,0.0,0.0,0.0]
+    minAvg = [dat[1,1],0.0,0.0,bestfmin2]
+    minStd = [0.0,0.0,0.0,0.0]
+
+    # budget and cpu averages
+    cmaAvg2 = [0.0,dat[0,3]*1000.0,dat[0,5],0.0]
+    cmaStd2 = [0.0,dat[0,4]*1000.0,dat[0,6],0.0]
+    minAvg2 = [0.0,dat[1,3]*1000.0,dat[1,5],0.0]
+    minStd2 = [0.0,dat[1,4]*1000.0,dat[1,6],0.0]
+
+    if runs == -1:
+        runs = dat[0,1]+dat[0,2] # get the number of runs once.
+    
     ## necessary variables
     #ind = np.arange(N)                # the x locations for the groups
     ind = array([2,1,0,3])
@@ -59,6 +63,7 @@ for f in datfiles:
                       error_kw=dict(elinewidth=2,ecolor='black'))
 
     # axes and labels
+    axarr[i,j].set_yscale("log",nonposy='clip')
     axarr[i,j].set_xlim(-width,len(ind)+width)
     axarr[i,j].set_ylim(0)
     ax2.set_xlim(-width,len(ind)+width)
@@ -78,4 +83,5 @@ for f in datfiles:
         j = j + 1
 
 plt.tight_layout()
+plt.suptitle('aCMA-ES / Minuit2 Benchmark Suite / ' + str(len(datfiles)) + ' experiments / ' + str(int(runs)) + ' runs on each')
 plt.show()

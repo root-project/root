@@ -68,10 +68,12 @@ public:
 	double fdiff = _fmin.at(i)-stats._fmin.at(i);
 	double ffdiff = fabs(fdiff);
 	// should compare to tolerance but unable to access it.
-	if (ffdiff < 1e-2 || fdiff < 0.0) // ftol appears to default to 0.01
+	if (ffdiff < 1e-2) // ftol appears to default to 0.01
 	  ++_found;
-	if (fdiff <= 0.0)
+	if (ffdiff > 1e-2 && fdiff < 0.0) // ftol as 0.01
 	  ++_isuccs;
+	else if (ffdiff < 1e-2)
+	  ++_iequals;
 	else ++_ifails;
 	_fdiff.push_back(fdiff);
 	_cputime_diff.push_back(_cputime.at(i)-stats._cputime.at(i));
@@ -115,8 +117,8 @@ public:
     static std::string sep = "\t";
     static std::string ext = ".dat";
     std::ofstream fout(_name+ext,std::ofstream::out|std::ofstream::app);
-    fout << "#dim\tsuccs\tfails\tcpu_avg\tcpu_std\tbudget_avg\tbudget_std\tbest_fmin\n";
-    fout << _dim << sep << _succs << sep << _fails << sep << _cpu_avg << sep << _cpu_std << sep << _budget_avg << sep << _budget_std << sep << _isuccs << std::endl;
+    fout << "#dim\tsuccs\tfails\tcpu_avg\tcpu_std\tbudget_avg\tbudget_std\tbest_fmin\tequal_fmin\tfail_fmin\n";
+    fout << _dim << sep << _succs << sep << _fails << sep << _cpu_avg << sep << _cpu_std << sep << _budget_avg << sep << _budget_std << sep << _isuccs << sep << _iequals << sep << _ifails << std::endl;
     fout.close();
   }
   
@@ -135,7 +137,7 @@ public:
   double _budget_std = 0.0;
 
   // diff
-  int _found = 0;
+  int _found = 0; /* number of times the correct minima was found. */
   std::vector<double> _fdiff;
   std::vector<double> _cputime_diff;
   std::vector<double> _cputime_ratio;
@@ -145,8 +147,9 @@ public:
   double _cputime_ratio_avg = 1.0;
   double _budget_diff_avg = 0.0;
   double _budget_ratio_avg = 1.0;
-  int _isuccs = 0;
+  int _isuccs = 0; /* number of times the best f-min among the two algorithms, was found. */
   int _ifails = 0;
+  int _iequals = 0; /* number of times the same fmin was found. */
 };
 
 std::ostream& operator<<(std::ostream &out, const expstats &stats)
