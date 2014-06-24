@@ -256,7 +256,7 @@ namespace ROOT
       
       
       /// return reference to the objective function
-      ///virtual const ROOT::Math::IGenFunction & Function() const; 
+      //virtual const ROOT::Math::IGenFunction & Function() const; 
       
       /// print result of minimization
       virtual void PrintResults(); 
@@ -267,27 +267,8 @@ namespace ROOT
       
       /// set storage level   = 1 : store all iteration states (default)
       ///                     = 0 : store only first and last state to save memory
+      //TODO.
       void SetStorageLevel(int level); 
-      
-      /// return the minimizer state (containing values, step size , etc..)
-      //const ROOT::Minuit2::MnUserParameterState & State() { return fState; }
-      
-    protected: 
-      
-      // protected function for accessing the internal Minuit2 object. Needed for derived classes
-      
-      //virtual const ROOT::Minuit2::ModularFunctionMinimizer * GetMinimizer() const { return fMinimizer; } 
-      
-      //TODO.
-      //virtual void SetMinimizer( ROOT::Minuit2::ModularFunctionMinimizer * m)  { fMinimizer = m; } 
-      
-      //TODO.
-      //void SetMinimizerType( ROOT::Minuit2::EMinimizerType type);
-      
-      //virtual const  ROOT::Minuit2::FCNBase * GetFCN() const { return fMinuitFCN; } 
-      
-      /// examine the minimum result 
-      //bool ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & min); 
       
     private: 
       unsigned int fDim = 0;       // dimension of the function to be minimized 
