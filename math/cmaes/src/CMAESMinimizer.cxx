@@ -455,10 +455,14 @@ namespace ROOT
 	  fCMAparams = cmaparams;
 	}
       Info("CMAESMinimizer","optimization status=%i",fCMAsols._run_status);
-      if (fCMAsols._run_status >= 0)
-	fStatus = 0; //TODO: convert so that to match that of Minuit2 ?
+      if (fCMAsols._edm > 10*fTol) // XXX: max edm seems to be left to each minimizer's internal implementation...
+	fStatus = 3;
+      else if (fCMAsols._run_status == 0 || fCMAsols._run_status == 1)
+	fStatus = 0;
+      else if (fCMAsols._run_status == 7 || fCMAsols._run_status == 9)
+	fStatus = 4; // reached budget limit.
       else fStatus = 5;
-      return fCMAsols._run_status >= 0;
+      return fCMAsols._run_status >= 0; // above 0 are partial successes at worst.
     }
 
     double TCMAESMinimizer::MinValue() const
