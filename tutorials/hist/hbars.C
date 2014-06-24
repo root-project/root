@@ -1,13 +1,28 @@
 // Example of bar charts with 1-d histograms
 // Author: Rene Brun
-{
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
-   dir.ReplaceAll("hbars.C","../tree/cernbuild.C");
-   dir.ReplaceAll("/./","/");
-   if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());
-   TFile *f = (TFile*)gROOT->ProcessLineFast("cernbuild(1)");
-   if (!f) return;
+void hbars() {
+   cout << gSystem->DirName(gInterpreter->GetCurrentMacroName()) << endl;
+   // try to open first the file cernstaff.root in tutorials/tree directory
+   TString filedir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   filedir += TString("/../tree/");
+   TString filename = filedir + "cernstaff.root";
+   bool fileNotFound = gSystem->AccessPathName(filename); // note opposite return code
+   // if file is not found try to generate it uing the macro tree/cernbuild.C
+   if (fileNotFound) {
+      TString macroName = filedir + "cernbuild.C";
+      if (!gInterpreter->IsLoaded(macroName)) gInterpreter->LoadMacro(macroName);
+      gROOT->ProcessLineFast("cernbuild()");
+   }
+   TFile * f = TFile::Open(filename);
+   if (!f) {
+      Error("hbars","file cernstaff.root not found");
+      return; 
+   }
    TTree *T = (TTree*)f->Get("T");
+   if (!T) { 
+      Error("hbars","Tree T is not present in file %s",f->GetName() );
+      return;
+   }
    T->SetFillColor(45);
    TCanvas *c1 = new TCanvas("c1","histograms with bars",700,800);
    c1->SetFillColor(42);
@@ -40,5 +55,4 @@
    
    c1->cd();
    delete f;
-   return c1;
 }
