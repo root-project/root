@@ -134,8 +134,7 @@ namespace ROOT
       virtual double MinValue() const;
       
       /// return expected distance reached from the minimum
-      //TODO.
-      virtual double Edm() const { return -1.0;/*return fState.Edm();*/ }
+      virtual double Edm() const;
       
       /// return  pointer to X values at the minimum 
       virtual const double *  X() const; 
