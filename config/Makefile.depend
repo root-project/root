@@ -346,7 +346,7 @@ GEOMPAINTERLIBEXTRA     = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
 GEOMBUILDERLIBEXTRA     = lib/libGeom.lib  lib/libGraf3d.lib lib/libGpad.lib \
                           lib/libGraf.lib lib/libGui.lib lib/libGed.lib
 QTROOTLIBEXTRA          = lib/libGui.lib lib/libGQt.lib
-GQTLIBEXTRA             = lib/libGui.lib libGpad.lib lib/libGraf.lib \
+GQTLIBEXTRA             = lib/libGui.lib lib/libGpad.lib lib/libGraf.lib \
                           lib/libRint.lib
 RUBYLIBEXTRA            = lib/libHist.lib lib/libMathCore.lib
 GUIBLDLIBEXTRA          = lib/libGui.lib lib/libGraf.lib lib/libMathCore.lib
