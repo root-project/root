@@ -149,7 +149,7 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphs/multipalette.C
                  graphs/graphstruct.C
                  hist/ContourList.C hist/hstack.C 
-                 hist/h2proj.C hist/hbars.C
+                 hist/h2proj.C 
                  hist/th2polyBoxes.C
                  tree/h1analysis.C
                  io/fildir.C 
