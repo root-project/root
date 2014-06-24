@@ -60,7 +60,7 @@
 
 using namespace RooFit;
 using namespace RooStats;
-
+using namespace std; 
 
 bool plotHypoTestResult = true;          // plot test statistic result at each point
 bool writeResult = true;                 // write HypoTestInverterResult in a file 
@@ -198,7 +198,7 @@ RooStats::HypoTestInvTool::SetParameter(const char * name, bool value){
    if (s_name.find("GenerateBinned") != std::string::npos) mGenerateBinned = value;
    if (s_name.find("UseProof") != std::string::npos) mUseProof = value;
    if (s_name.find("Rebuild") != std::string::npos) mRebuild = value;
-   if (s_name.find("ReuseAltToys") != std::string::npos) mReUseAltToys = value;
+   if (s_name.find("ReuseAltToys") != std::string::npos) mReuseAltToys = value;
 
    return;
 }
@@ -322,8 +322,8 @@ StandardHypoTestInvDemo(const char * infile = 0,
 
   
   
-   TString fileName(infile);
-   if (fileName.IsNull()) {
+   TString filename(infile);
+   if (filename.IsNull()) {
       filename = "results/example_combined_GaussExample_model.root";
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
@@ -383,7 +383,7 @@ StandardHypoTestInvDemo(const char * infile = 0,
 
    RooWorkspace * w = dynamic_cast<RooWorkspace*>( file->Get(wsName) );
    HypoTestInverterResult * r = 0;  
-   std::cout << w << "\t" << fileName << std::endl;
+   std::cout << w << "\t" << filename << std::endl;
    if (w != NULL) {
       r = calc.RunInverter(w, modelSBName, modelBName,
                            dataName, calculatorType, testStatType, useCLs,
@@ -396,10 +396,10 @@ StandardHypoTestInvDemo(const char * infile = 0,
    }
    else { 
       // case workspace is not present look for the inverter result
-      std::cout << "Reading an HypoTestInverterResult with name " << wsName << " from file " << fileName << std::endl;
+      std::cout << "Reading an HypoTestInverterResult with name " << wsName << " from file " << filename << std::endl;
       r = dynamic_cast<HypoTestInverterResult*>( file->Get(wsName) ); //
       if (!r) { 
-         std::cerr << "File " << fileName << " does not contain a workspace or an HypoTestInverterResult - Exit " 
+         std::cerr << "File " << filename << " does not contain a workspace or an HypoTestInverterResult - Exit " 
                    << std::endl;
          file->ls();
          return; 
@@ -525,7 +525,7 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
    if (mPlotHypoTestResult) { 
       TCanvas * c2 = new TCanvas();
       if (nEntries > 1) { 
-         int ny = TMath::CeilNint( sqrt(nEntries) );
+         int ny = TMath::CeilNint(TMath::Sqrt(nEntries));
          int nx = TMath::CeilNint(double(nEntries)/ny);
          c2->Divide( nx,ny);
       }
@@ -772,8 +772,10 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    HypoTestCalculatorGeneric *  hc = 0;
    if (type == 0) hc = new FrequentistCalculator(*data, *bModel, *sbModel);
    else if (type == 1) hc = new HybridCalculator(*data, *bModel, *sbModel);
-   else if (type == 2 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, false, mAsimovBins);
-   else if (type == 3 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, true, mAsimovBins);  // for using Asimov data generated with nominal values 
+   // else if (type == 2 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, false, mAsimovBins);
+   // else if (type == 3 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, true, mAsimovBins);  // for using Asimov data generated with nominal values 
+   else if (type == 2 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, false );
+   else if (type == 3 ) hc = new AsymptoticCalculator(*data, *bModel, *sbModel, true );  // for using Asimov data generated with nominal values 
    else {
       Error("StandardHypoTestInvDemo","Invalid - calculator type = %d supported values are only :\n\t\t\t 0 (Frequentist) , 1 (Hybrid) , 2 (Asymptotic) ",type);
       return 0;
