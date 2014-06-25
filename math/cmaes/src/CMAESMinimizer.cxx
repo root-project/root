@@ -126,7 +126,7 @@ namespace ROOT
 	MATH_ERROR_MSG("TCMAESMinimizer::SetVariable","ivar out of range");
 	return false;
       }
-      if (ivar == fInitialX.size() ) { 
+      if (ivar == fInitialX.size() ) {
 	fInitialX.push_back(val); 
 	fNames.push_back(name);	
 	fInitialSigma.push_back(step);
@@ -140,7 +140,7 @@ namespace ROOT
 	  fVariablesType.push_back(0);
 	}
       }
-      else { 
+      else {
 	if (step==0.) {
 	  if (fInitialSigma[ivar]!=0.) { //Constraining a free variable.
 	    fFreeDim--; 
@@ -346,7 +346,7 @@ namespace ROOT
 	return false;
       }
       if (fDim > fInitialX.size()) {
-	std::cout << "fDim=" << fDim << " / fInitialX size=" << fInitialX.size() << std::endl;
+	std::cout << "fDim=" << fDim << " / fInitialX size=" << fInitialX.size() << " / freeDim=" << fFreeDim << std::endl;
 	MATH_ERROR_MSG("TCMAESMinimizer::Minimize","Dimension larger than initial X size's");
 	return false;
       }
