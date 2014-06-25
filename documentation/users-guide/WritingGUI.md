@@ -189,7 +189,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p,UInt_t w,UInt_t h) {
    fMain->AddFrame(hframe, new TGLayoutHints(kLHintsCenterX,
                                              2,2,2,2));
 
-   / Set a name to the main frame
+   // Set a name to the main frame
    fMain->SetWindowName("Simple Example");
 
    // Map all subwindows of main frame
