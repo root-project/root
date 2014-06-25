@@ -1221,8 +1221,19 @@ void TCling::RegisterModule(const char* modulename,
                modulename, fwdDeclsCode) ;
       }
       else if (T){
+         // Loop over all decls in the transaction and go through them all
+         // to mark them properly.
+         // In order to do that, we first iterate over all the DelayedCallInfos
+         // within the transaction. Then we loop over all Decls in the DeclGroupRef
+         // contained in the DelayedCallInfos. For each decl, we traverse.
          ExtLexicalStorageAdder elsa;
-         elsa.TraverseDecl(T->getFirstDecl().getSingleDecl());
+         for (auto dciIt = T->decls_begin();dciIt!=T->decls_end();dciIt++){
+            cling::Transaction::DelayCallInfo& dci = *dciIt;
+            for(auto dit = dci.m_DGR.begin(); dit != dci.m_DGR.end(); ++dit) {
+               clang::Decl* declPtr = *dit;
+               elsa.TraverseDecl(declPtr);
+            }
+         }
       }
       
       // Now we register all the headers necessary for the class
