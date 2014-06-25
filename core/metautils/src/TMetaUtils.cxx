@@ -4558,6 +4558,50 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
 }
 
 //______________________________________________________________________________
+int ROOT::TMetaUtils::AST2SourceTools::GetDefArg(const clang::ParmVarDecl& par,
+                                                 std::string& valAsString)
+{
+   // Get the default value as string.
+   // Limited at the moment to:
+   // - Integers
+   // - Booleans
+
+   auto defArgExprPtr = par.getDefaultArg();
+   auto& ctxt = par.getASTContext();
+   if(!defArgExprPtr->isEvaluatable(ctxt)){
+      return -1;
+   }
+
+   auto defArgType = par.getType();
+
+   // The value is a boolean
+   if (defArgType->isBooleanType()){
+      bool result;
+      defArgExprPtr->EvaluateAsBooleanCondition (result,ctxt);
+      valAsString=std::to_string(result);
+      return 0;
+   }
+
+   // The value is an integer
+   if (defArgType->isIntegerType()){
+      llvm::APSInt result;
+      defArgExprPtr->EvaluateAsInt(result,ctxt);
+      auto uintVal = *result.getRawData();
+      if (result.isNegative()){
+         long long int intVal=uintVal*-1;
+         valAsString=std::to_string(intVal);
+      } else {
+         valAsString=std::to_string(uintVal);
+      }
+
+      return 0;
+   }
+
+   return -1;
+
+}
+
+//______________________________________________________________________________
 int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionDecl& fcnDecl,
                                                           const cling::Interpreter& interpreter,
                                                           std::string& defString)
@@ -4581,9 +4625,19 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionD
       paramString += parmTypeAsString+" p"+std::to_string(pCounter);
       // For the moment, if it has a def arg or an arg is not a pod, bail out.
       auto& ctxt = paramptr->getASTContext();
-      if (paramptr->hasDefaultArg() || !paramptr->getType().isPODType(ctxt)){
-         defString="";
-         return 1;
+      if (paramptr->hasDefaultArg()){
+         if (!paramptr->getType().isPODType(ctxt)){
+            defString="";
+            return 1;
+         }
+         std::string defVal;
+         if (0==GetDefArg(*paramptr,defVal)){
+            paramString+="="+defVal;
+         } else {
+            defString="";
+            return 1;
+         }
+
       }
       paramString+=", ";
    pCounter++;
@@ -4597,6 +4651,11 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionD
 
    // Now the return type
    const auto retQt = fcnDecl.getReturnType ();
+   auto& ctxt = fcnDecl.getASTContext();
+   if (!retQt.isPODType(ctxt)){
+      defString="";
+      return 1;
+   }
    std::string retQtAsString;
    ROOT::TMetaUtils::GetFullyQualifiedTypeName(retQtAsString, retQt, interpreter);
    defString = retQtAsString + " " + defString;

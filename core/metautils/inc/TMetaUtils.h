@@ -24,6 +24,7 @@
 
 namespace clang {
    class ASTContext;
+   class Attr;
    class ClassTemplateDecl;
    class ClassTemplateSpecializationDecl;
    class CompilerInstance;
@@ -35,6 +36,7 @@ namespace clang {
    class FunctionDecl;
    class Module;
    class NamedDecl;
+   class ParmVarDecl;
    class QualType;
    class RecordDecl;
    class SourceLocation;
@@ -47,8 +49,6 @@ namespace clang {
    class Type;
    class TypeDecl;
    class TypedefNameDecl;
-   class Attr;
-   class FunctionDecl;
 }
 
 namespace cling {
@@ -682,6 +682,9 @@ int FwdDeclFromTmplDecl(const clang::TemplateDecl& tmplDecl,
 
 //______________________________________________________________________________
 int GetEnclosingNamespaces(const clang::Decl& decl, std::string& defString);
+
+//______________________________________________________________________________
+int GetDefArg(const clang::ParmVarDecl& par, std::string& valAsString);
 
 //______________________________________________________________________________
 int FwdDeclFromFcnDecl(const clang::FunctionDecl& fcnDecl,
