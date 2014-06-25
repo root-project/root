@@ -1106,7 +1106,7 @@ namespace {
                  "Adding external lexical storage to class %s",
                  rcd->getNameAsString().c_str());
          rcd->setHasExternalLexicalStorage();
-         return true;
+         return false;
       }
    };
 
