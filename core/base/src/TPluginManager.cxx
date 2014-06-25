@@ -588,8 +588,8 @@ TPluginHandler *TPluginManager::FindHandler(const char *base, const char *uri)
 
    while ((h = (TPluginHandler*) next())) {
       if (h->CanHandle(base, uri)) {
-         if (gDebug > 0)
-            Info("FindHandler", "found plugin for %s", h->GetClass());
+	/*if (gDebug > 0)
+	  Info("FindHandler", "found plugin for %s", h->GetClass());*/
          return h;
       }
    }
