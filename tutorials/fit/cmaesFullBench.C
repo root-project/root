@@ -256,7 +256,7 @@ public:
     _ef = [this](const std::string &fitter)
       {
 	std::string ename = "lorentz_fit";
-	expstats stats(ename,6);
+	expstats stats(ename,6,_lambda);
 	TVirtualFitter::SetDefaultFitter(fitter.c_str());
 	//ROOT::Fit::FitConfig::SetDefaultMinimizer(fitter);
 	
@@ -360,7 +360,7 @@ public:
 	Double_t cputime = timer.CpuTime();
 	printf("%s : RT=%7.3f s, Cpu=%7.3f s\n",fitter.c_str(),timer.RealTime(),cputime);
 	delete fitFcn;
-	expstats stats(ename,r->NTotalParameters());
+	expstats stats(ename,r->NTotalParameters(),_lambda);
 	stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
 	std::cout << "gauss2D_fit stats: " << stats << std::endl;
 	return stats;
@@ -436,7 +436,7 @@ public:
 	TFitResultPtr r = _h2->Fit("f2","SN0");
 	timer.Stop();
 	Double_t cputime = timer.CpuTime();
-	expstats stats("fit2a",r->NTotalParameters());
+	expstats stats("fit2a",r->NTotalParameters(),_lambda);
 	stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
 	return stats;
       };
@@ -512,7 +512,7 @@ public:
 	TFitResultPtr r2 = _h2->Fit(_func,"S0");
 	timer2.Stop();
 	Double_t cputime2 = timer2.CpuTime();
-	expstats stats("fit2dhist",r1->NTotalParameters());
+	expstats stats("fit2dhist",r1->NTotalParameters(),_lambda);
 	stats.add_exp(r1->Status()==0,r1->MinFcnValue(),r1->Parameters(),cputime1,r1->NCalls());
 	stats.add_exp(r2->Status()==0,r2->MinFcnValue(),r2->Parameters(),cputime2,r2->NCalls());
 	return stats; 
@@ -678,7 +678,7 @@ public:
 	// create before the parameter settings in order to fix or set range on them
 	rfitter.Config().SetParamsSettings(6,par0);
 	// fix 5-th parameter  
-	rfitter.Config().ParSettings(4).Fix();
+	//rfitter.Config().ParSettings(4).Fix();  // weird random crash, not yet understood: fitter tries to set variable 4 instead of 5, sometimes...
 	// set limits on the third and 4-th parameter
 	rfitter.Config().ParSettings(2).SetLimits(-10,-1.E-4);
 	rfitter.Config().ParSettings(3).SetLimits(0,10000);
@@ -694,6 +694,7 @@ public:
 	// (specify optionally data size and flag to indicate that is a chi2 fit)
 	TStopwatch timer;
 	timer.Start();
+	std::cout << "starting\n";
 	rfitter.FitFCN(6,globalChi2,0,dataB.Size()+dataSB.Size(),true);
 	timer.Stop();
 	Double_t cputime = timer.CpuTime();
@@ -701,8 +702,10 @@ public:
 	//result.Print(std::cout);
 	
 	delete fSB;
-	expstats stats("combined",r.NTotalParameters());
+	expstats stats("combined",r.NTotalParameters(),_lambda);
 	stats.add_exp(r.Status()==0,r.MinFcnValue(),r.Parameters(),cputime,r.NCalls());
+	std::cout << "combined stats: " << stats << std::endl;
+	//std::cout << "fmin=" << r.MinFcnValue() << std::endl;
 	return stats;
       };
   }
@@ -806,7 +809,7 @@ public:
 	    std::cout << "Good fit : p-value  = " << prob << std::endl;
 	}
 	else Error("exampleFit3D","3D fit failed");
-	expstats stats("example3D",res.NTotalParameters());
+	expstats stats("example3D",res.NTotalParameters(),_lambda);
 	stats.add_exp(res.Status()==0,res.MinFcnValue(),res.Parameters(),cputime,res.NCalls());
 	delete f3;
 	return stats;
@@ -863,7 +866,7 @@ public:
 	TFitResultPtr r = _h2->Fit("f2","S0");
 	timer.Stop();
 	Double_t cputime = timer.CpuTime();
-	expstats stats("fit2",r->NTotalParameters());
+	expstats stats("fit2",r->NTotalParameters(),_lambda);
 	stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
 	return stats;
       };
@@ -915,12 +918,12 @@ void run_experiments(const int &n=1)
   std::vector<expstats> acmaes_stats;
   std::vector<expstats> minuit2_stats;
   std::map<std::string,experiment*> mexperiments;
-  mexperiments.insert(std::pair<std::string,experiment*>(ggauss_fit._name,&ggauss_fit));
-  /*mexperiments.insert(std::pair<std::string,experiment*>(glorentz_fit._name,&glorentz_fit));
+  /*mexperiments.insert(std::pair<std::string,experiment*>(ggauss_fit._name,&ggauss_fit));
+  mexperiments.insert(std::pair<std::string,experiment*>(glorentz_fit._name,&glorentz_fit));
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2._name,&gfit2));
-  mexperiments.insert(std::pair<std::string,experiment*>(ggauss2D_fit._name,&ggauss2D_fit));
+  mexperiments.insert(std::pair<std::string,experiment*>(ggauss2D_fit._name,&ggauss2D_fit));*/
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2a._name,&gfit2a));
-  mexperiments.insert(std::pair<std::string,experiment*>(gfit2dhist._name,&gfit2dhist));
+  /*mexperiments.insert(std::pair<std::string,experiment*>(gfit2dhist._name,&gfit2dhist));
   mexperiments.insert(std::pair<std::string,experiment*>(gcombined_fit._name,&gcombined_fit));
   mexperiments.insert(std::pair<std::string,experiment*>(gex3d._name,&gex3d));*/
   int nexp = mexperiments.size();
@@ -940,7 +943,7 @@ void run_experiments(const int &n=1)
 	      }
 	    else
 	      {
-		acmaes_stats.at(cn*(j+1)+j).merge((*mit).second->_ef("acmaes_l"+std::to_string(lambdas.at(j))));
+		acmaes_stats.at(cn*(lambdas.size())+j).merge((*mit).second->_ef("acmaes_l"+std::to_string(lambdas.at(j))));
 	      }
 	    (*mit).second->Cleanup();
 	  }
@@ -961,13 +964,13 @@ void run_experiments(const int &n=1)
     {
       for (size_t j=0;j<lambdas.size();j++)
 	{
-	  int k = i*nexp+j;
+	  int k = i*lambdas.size()+j;
 	  std::cout << "k=" << k << std::endl;
 	  acmaes_stats.at(k).diff(minuit2_stats.at(i));
 	  acmaes_stats.at(k).print_diff(std::cout);
 	  acmaes_stats.at(k).print_avg_to_file();
 	}
-      minuit2_stats.at(i).diff(acmaes_stats.at(0));
+      minuit2_stats.at(i).diff(acmaes_stats.at(i*lambdas.size()));
       minuit2_stats.at(i).print_avg_to_file();
     }
 }
