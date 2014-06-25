@@ -24,8 +24,9 @@ class expstats
 {
 public:
   expstats(const std::string &name,
-	   const int &dim):
-    _name(name),_dim(dim) {}
+	   const int &dim,
+	   const int &lambda=-1):
+    _name(name),_dim(dim),_lambda(lambda) {}
   ~expstats() {}
 
   void add_exp(const bool &succ,
@@ -60,7 +61,7 @@ public:
   {
     if (_fmin.size() != stats._fmin.size())
       {
-	std::cout << "Error: diff requires same size sets\n";
+	std::cout << "Error: diff requires same size sets: lhs=" << _fmin.size() << " / rhs=" << stats._fmin.size() << std::endl;
 	return;
       }
     for (size_t i=0;i<_fmin.size();i++)
@@ -98,13 +99,13 @@ public:
   
   std::ostream& print(std::ostream &out) const
   {
-    out << _name << " / dim=" << _dim << " / succs=" << _succs << " / fails=" << _fails << " / cpu_avg=" << _cpu_avg << " / budget_avg=" << _budget_avg << std::endl;
+    out << _name << " / dim=" << _dim << " / lambda=" << _lambda << " / succs=" << _succs << " / fails=" << _fails << " / cpu_avg=" << _cpu_avg << " / budget_avg=" << _budget_avg << std::endl;
     return out;
   }
 
   std::ostream& print_diff(std::ostream &out) const
   {
-    out << _name << " / dim=" << _dim << " / found=" << _found << "/" << _fdiff.size() << " / isuccs=" << _isuccs << " / ifails=" << _ifails << " / cpu_diff_avg=" << _cputime_diff_avg << " / cpu_ratio_avg=" << _cputime_ratio_avg << " / budget_diff_avg=" << _budget_diff_avg << " / budget_ratio_avg=" << _budget_ratio_avg << std::endl;
+    out << _name << " / dim=" << _dim << " / lambda=" << _lambda << " / found=" << _found << "/" << _fdiff.size() << " / isuccs=" << _isuccs << " / ifails=" << _ifails << " / cpu_diff_avg=" << _cputime_diff_avg << " / cpu_ratio_avg=" << _cputime_ratio_avg << " / budget_diff_avg=" << _budget_diff_avg << " / budget_ratio_avg=" << _budget_ratio_avg << std::endl;
     for (size_t i=0;i<_fdiff.size();i++)
       {
 	out << "#" << i << " - " << _name << ": " << "fdiff=" << _fdiff.at(i) << " / cputime_diff=" << _cputime_diff.at(i) << " / cputime_ratio=" << _cputime_ratio.at(i) << " / budget_diff=" << _budget_diff.at(i) << " / budget_ratio=" << _budget_ratio.at(i) << std::endl;
@@ -117,8 +118,8 @@ public:
     static std::string sep = "\t";
     static std::string ext = ".dat";
     std::ofstream fout(_name+ext,std::ofstream::out|std::ofstream::app);
-    fout << "#dim\tfound\tsuccs\tfails\tcpu_avg\tcpu_std\tbudget_avg\tbudget_std\tbest_fmin\tequal_fmin\tfail_fmin\n";
-    fout << _dim << sep << _found << sep << _succs << sep << _fails << sep << _cpu_avg << sep << _cpu_std << sep << _budget_avg << sep << _budget_std << sep << _isuccs << sep << _iequals << sep << _ifails << std::endl;
+    fout << "#dim\tlambda\tfound\tsuccs\tfails\tcpu_avg\tcpu_std\tbudget_avg\tbudget_std\tbest_fmin\tequal_fmin\tfail_fmin\n";
+    fout << _dim << sep << _lambda << sep << _found << sep << _succs << sep << _fails << sep << _cpu_avg << sep << _cpu_std << sep << _budget_avg << sep << _budget_std << sep << _isuccs << sep << _iequals << sep << _ifails << std::endl;
     fout.close();
   }
   
@@ -136,6 +137,8 @@ public:
   double _budget_avg = 0.0;
   double _budget_std = 0.0;
 
+  int _lambda = -1;
+  
   // diff
   int _found = 0; /* number of times the correct minima was found. */
   std::vector<double> _fdiff;
@@ -166,6 +169,13 @@ public:
     :_name(name)
   {}
 
+  void set_lambda(const int &lambda)
+  {
+    ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default("cmaes");
+    opts.SetIntValue("lambda",lambda);
+    _lambda = lambda;
+  }
+  
   virtual ~experiment() {}
 
   virtual void Setup() {}
@@ -174,6 +184,7 @@ public:
   
   ExpFunc _ef;
   std::string _name;
+  int _lambda = -1;
 };
 
 /*- gauss_fit -*/
@@ -210,7 +221,7 @@ public:
 	delete h1;
 	delete h1bis;
 	
-	expstats stats(ename,r1->NTotalParameters());
+	expstats stats(ename,r1->NTotalParameters(),_lambda);
 	stats.add_exp(r1->Status()==0,r1->MinFcnValue(),r1->Parameters(),cputime1,r1->NCalls());
 	stats.add_exp(r2->Status()==0,r2->MinFcnValue(),r2->Parameters(),cputime2,r2->NCalls());
 	std::cout << "gaus_fit stats: " << stats << std::endl;
@@ -297,8 +308,8 @@ public:
 
   virtual void Setup()
   {
-    ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default("cmaes");
-    opts.SetIntValue("lambda",500);
+    //ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default("cmaes");
+    //opts.SetIntValue("lambda",500);
     _fitFcn->SetNpx(200);
     _fitFcn->SetParameters(1,1,1,6,.03,1);
     _fitFcn->Update();
@@ -313,8 +324,8 @@ public:
 
   virtual void Cleanup()
   {
-    ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default("cmaes");
-    opts.SetIntValue("lambda",-1);
+    //ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default("cmaes");
+    //opts.SetIntValue("lambda",-1);
     for (int i=0;i<_npass;i++)
       delete _histos.at(i);
     _histos.clear();
@@ -900,44 +911,63 @@ fit2_e gfit2;
 
 void run_experiments(const int &n=1)
 {
+  std::vector<int> lambdas = {-1, 5, 10, 20, 40, 80, 160, 320, 640, 1280};
   std::vector<expstats> acmaes_stats;
   std::vector<expstats> minuit2_stats;
   std::map<std::string,experiment*> mexperiments;
   mexperiments.insert(std::pair<std::string,experiment*>(ggauss_fit._name,&ggauss_fit));
-  mexperiments.insert(std::pair<std::string,experiment*>(glorentz_fit._name,&glorentz_fit));
+  /*mexperiments.insert(std::pair<std::string,experiment*>(glorentz_fit._name,&glorentz_fit));
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2._name,&gfit2));
   mexperiments.insert(std::pair<std::string,experiment*>(ggauss2D_fit._name,&ggauss2D_fit));
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2a._name,&gfit2a));
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2dhist._name,&gfit2dhist));
   mexperiments.insert(std::pair<std::string,experiment*>(gcombined_fit._name,&gcombined_fit));
-  mexperiments.insert(std::pair<std::string,experiment*>(gex3d._name,&gex3d));
+  mexperiments.insert(std::pair<std::string,experiment*>(gex3d._name,&gex3d));*/
+  int nexp = mexperiments.size();
+  int cn = 0;
   std::map<std::string,experiment*>::iterator mit = mexperiments.begin();
   while(mit!=mexperiments.end())
   {
     for (int i=0;i<n;i++)
-    {
-      (*mit).second->Setup();
-      if (i == 0)
-	{
-	  acmaes_stats.push_back((*mit).second->_ef("acmaes"));
+      {
+	for (int j=0;j<(int)lambdas.size();j++)
+	  {
+	    (*mit).second->set_lambda(lambdas.at(j));
+	    (*mit).second->Setup();
+	    if (i == 0)
+	      {
+		acmaes_stats.push_back((*mit).second->_ef("acmaes_l"+std::to_string(lambdas.at(j))));
+	      }
+	    else
+	      {
+		acmaes_stats.at(cn*(j+1)+j).merge((*mit).second->_ef("acmaes_l"+std::to_string(lambdas.at(j))));
+	      }
+	    (*mit).second->Cleanup();
+	  }
+	(*mit).second->set_lambda(-1); // N/A to Minuit2
+	(*mit).second->Setup();
+	if (i == 0)
 	  minuit2_stats.push_back((*mit).second->_ef("Minuit2"));
-	}
-      else
-	{
-	  acmaes_stats.back().merge((*mit).second->_ef("acmaes"));
-	  minuit2_stats.back().merge((*mit).second->_ef("Minuit2"));
-	}
-      (*mit).second->Cleanup();
-    }
+	else minuit2_stats.back().merge((*mit).second->_ef("Minuit2"));
+	(*mit).second->Cleanup();
+      }
+    ++cn;
     ++mit;
   }
-  
-  for (size_t i=0;i<acmaes_stats.size();i++)
+
+  std::cout << "nexp=" << nexp << " / stats size=" << acmaes_stats.size() << std::endl;
+
+  for (size_t i=0;i<minuit2_stats.size();i++)
     {
-      acmaes_stats.at(i).diff(minuit2_stats.at(i));
-      minuit2_stats.at(i).diff(acmaes_stats.at(i));
-      acmaes_stats.at(i).print_diff(std::cout);
-      acmaes_stats.at(i).print_avg_to_file();
+      for (size_t j=0;j<lambdas.size();j++)
+	{
+	  int k = i*nexp+j;
+	  std::cout << "k=" << k << std::endl;
+	  acmaes_stats.at(k).diff(minuit2_stats.at(i));
+	  acmaes_stats.at(k).print_diff(std::cout);
+	  acmaes_stats.at(k).print_avg_to_file();
+	}
+      minuit2_stats.at(i).diff(acmaes_stats.at(0));
       minuit2_stats.at(i).print_avg_to_file();
     }
 }
