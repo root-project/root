@@ -19,6 +19,8 @@
 #include "llvm/ADT/StringRef.h"
 
 #include <string>
+#include <unordered_set>
+
 //#include <atomic>
 #include <stdlib.h>
 
@@ -49,6 +51,7 @@ namespace clang {
    class Type;
    class TypeDecl;
    class TypedefNameDecl;
+   struct PrintingPolicy;
 }
 
 namespace cling {
@@ -684,12 +687,17 @@ int FwdDeclFromTmplDecl(const clang::TemplateDecl& tmplDecl,
 int GetEnclosingNamespaces(const clang::Decl& decl, std::string& defString);
 
 //______________________________________________________________________________
-int GetDefArg(const clang::ParmVarDecl& par, std::string& valAsString);
+int GetDefArg(const clang::ParmVarDecl& par, std::string& valAsString, const clang::PrintingPolicy& pp);
 
 //______________________________________________________________________________
 int FwdDeclFromFcnDecl(const clang::FunctionDecl& fcnDecl,
                        const cling::Interpreter& interpreter,
                        std::string& defString);
+//______________________________________________________________________________
+int FwdDeclFromTypeDefNameDecl(const clang::TypedefNameDecl& tdnDecl,
+                               const cling::Interpreter& interpreter,
+                               std::string& fwdDeclString,
+                               std::unordered_set<std::string>* fwdDeclSet=nullptr);
 
 } // namespace AST2SourceTools
 

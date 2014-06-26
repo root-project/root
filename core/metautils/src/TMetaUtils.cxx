@@ -18,6 +18,11 @@
 //______________________________________________________________________________
 
 #include <algorithm>
+#include <iostream>
+#include <sstream>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unordered_set>
 
 #include "RConfigure.h"
 #include "RConfig.h"
@@ -25,11 +30,6 @@
 #include "compiledata.h"
 
 #include "RStl.h"
-
-#include <iostream>
-#include <sstream>
-#include <stdlib.h>
-#include <stdio.h>
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -4558,8 +4558,50 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
 }
 
 //______________________________________________________________________________
+int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::TypedefNameDecl& tdnDecl,
+                                                                  const cling::Interpreter& interpreter,
+                                                                  std::string& fwdDeclString,
+                                                                  std::unordered_set<std::string>* fwdDeclSetPtr)
+{
+
+   std::string buffer = tdnDecl.getNameAsString();
+   std::string underlyingName;
+   auto underlyingType = tdnDecl.getUnderlyingType();
+   ROOT::TMetaUtils::GetFullyQualifiedTypeName(underlyingName,
+                                               underlyingType,
+                                               interpreter);
+   buffer="typedef "+underlyingName+" "+buffer+";";
+   EncloseInNamespaces(tdnDecl,buffer);
+
+   // Start Recursion if the underlying type is a TypedefNameDecl
+   if (auto underlyingTdnTypePtr = llvm::dyn_cast<clang::TypedefType>(underlyingType.getTypePtr())){
+      std::string tdnFwdDecl;
+      std::cout << tdnDecl.getNameAsString() << "Is a typedef in a typedef\n";
+      auto underlyingTdnDeclPtr = underlyingTdnTypePtr->getDecl();
+      FwdDeclFromTypeDefNameDecl(*underlyingTdnDeclPtr,
+                                 interpreter,
+                                 tdnFwdDecl,
+                                 fwdDeclSetPtr);
+      if (!fwdDeclSetPtr || fwdDeclSetPtr->insert(tdnFwdDecl).second)
+         fwdDeclString+=tdnFwdDecl;
+   } else if (auto CXXRcdDeclPtr = underlyingType->getAsCXXRecordDecl()){
+      std::string classFwdDecl;
+      FwdDeclFromRcdDecl(*CXXRcdDeclPtr,
+                         interpreter,
+                         classFwdDecl);
+      if (!fwdDeclSetPtr || fwdDeclSetPtr->insert(classFwdDecl).second)
+         fwdDeclString+=classFwdDecl;
+   }
+
+   fwdDeclString+=buffer;
+
+   return 0;
+}
+
+//______________________________________________________________________________
 int ROOT::TMetaUtils::AST2SourceTools::GetDefArg(const clang::ParmVarDecl& par,
-                                                 std::string& valAsString)
+                                                 std::string& valAsString,
+                                                 const clang::PrintingPolicy& ppolicy)
 {
    // Get the default value as string.
    // Limited at the moment to:
@@ -4597,18 +4639,27 @@ int ROOT::TMetaUtils::AST2SourceTools::GetDefArg(const clang::ParmVarDecl& par,
       return 0;
    }
 
-   return -1;
+   // The value is something else. We go for the generalised printer
+   llvm::raw_string_ostream rso(valAsString);
+   defArgExprPtr->printPretty(rso,nullptr,ppolicy);
+   valAsString = rso.str();
+   // We can be in presence of a string. Let's escape the characters properly.
+   ROOT::TMetaUtils::ReplaceAll(valAsString,"\\\"","__TEMP__VAL__");
+   ROOT::TMetaUtils::ReplaceAll(valAsString,"\"","\\\"");
+   ROOT::TMetaUtils::ReplaceAll(valAsString,"__TEMP__VAL__","\\\"");
 
+   return 0;
 }
 
 //______________________________________________________________________________
 int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionDecl& fcnDecl,
-                                                          const cling::Interpreter& interpreter,
+                                                          const cling::Interpreter& interp,
                                                           std::string& defString)
 {
    // Transform a function decl into a C++ forward declaration
    // In some situation, we bail out:
-   // - A parameter or the return value is not a pod
+   // - CANNOT FWD DECLARE FUNCTIONS TWICE IF DEF ARGS PRESENT: if def args present
+   // - A parameter or the return value is not built-in
    // - The function is a template, a method or extern C
 
    if (clang::FunctionDecl::TemplatedKind::TK_NonTemplate != fcnDecl.getTemplatedKind() ||
@@ -4625,17 +4676,22 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionD
    unsigned int pCounter=0;
    std::string parmTypeAsString;
    for (auto const & paramptr : paramArray){
-      ROOT::TMetaUtils::GetFullyQualifiedTypeName(parmTypeAsString, paramptr->getType(), interpreter);
+      ROOT::TMetaUtils::GetFullyQualifiedTypeName(parmTypeAsString, paramptr->getType(), interp);
       paramString += parmTypeAsString+" p"+std::to_string(pCounter);
-      // For the moment, if it has a def arg or an arg is not a pod, bail out.
-      auto& ctxt = paramptr->getASTContext();
+      // For the moment, if it has a def arg or an arg is not built-in
       if (paramptr->hasDefaultArg()){
-         if (!paramptr->getType().isPODType(ctxt)){
+
+         // FIXME: here until we don't cope with def arguments
+         defString="";
+         return 1;
+
+         auto pointeeTypePtr = ROOT::TMetaUtils::GetUnderlyingType(paramptr->getType());
+         if (!pointeeTypePtr->isBuiltinType()){
             defString="";
             return 1;
          }
          std::string defVal;
-         if (0==GetDefArg(*paramptr,defVal)){
+         if (0==GetDefArg(*paramptr,defVal,interp.getCI()->getSema().getPrintingPolicy ())){
             paramString+="="+defVal;
          } else {
             defString="";
@@ -4660,8 +4716,9 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionD
       defString="";
       return 1;
    }
+
    std::string retQtAsString;
-   ROOT::TMetaUtils::GetFullyQualifiedTypeName(retQtAsString, retQt, interpreter);
+   ROOT::TMetaUtils::GetFullyQualifiedTypeName(retQtAsString, retQt, interp);
    defString = retQtAsString + " " + defString;
 
    return EncloseInNamespaces(fcnDecl, defString);

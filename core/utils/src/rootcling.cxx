@@ -3313,6 +3313,8 @@ std::string GenerateFwdDeclString(const RScanner& scan,
    std::string buffer;
    std::unordered_set<std::string> fwdDecls;
 
+   // Classes
+
    for (auto const & annRcd : scan.fSelectedClasses){
       const auto rcdDeclPtr = annRcd.GetRecordDecl();
       int retCode = FwdDeclFromRcdDecl(*rcdDeclPtr,interp,buffer);
@@ -3326,20 +3328,21 @@ std::string GenerateFwdDeclString(const RScanner& scan,
          fwdDeclString+="\""+buffer+"\"\n";
    }
 
+   // Typedefs
+
    for (auto const & tdNameDeclPtr : scan.fSelectedTypedefs){
-      buffer = tdNameDeclPtr->getNameAsString();
+      buffer="";
+      FwdDeclFromTypeDefNameDecl(*tdNameDeclPtr,
+                                 interp,
+                                 buffer,
+                                 &fwdDecls);
       if (fwdDecls.insert(buffer).second){
-         std::string underlyingName;
-         auto underlyingType = tdNameDeclPtr->getUnderlyingType();
-         ROOT::TMetaUtils::GetFullyQualifiedTypeName(underlyingName,
-                                                     underlyingType,
-                                                     interp);
-         buffer="typedef "+underlyingName+" "+buffer+";";
-         EncloseInNamespaces(*tdNameDeclPtr,buffer);
          fwdDeclString+="\""+buffer+"\"\n";
+
       }
    }
 
+   // Functions
    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
       int retCode = FwdDeclFromFcnDecl(*fcnDeclPtr, interp, buffer);
       if (-1 == retCode){
