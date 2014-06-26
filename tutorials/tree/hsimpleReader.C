@@ -6,12 +6,21 @@
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 
-void hsimpleReader() {
+class TVirtualPad;
+
+TVirtualPad* hsimpleReader() {
    // Create a histogram for the values we read.
    TH1F *myHist = new TH1F("h1","ntuple",100,-4,4);
 
    // Open the file containing the tree.
-   TFile *myFile = TFile::Open("hsimple.root");
+   TFile *myFile = TFile::Open("$ROOTSYS/tutorials/hsimple.root");
+   if (!myFile || myFile->IsZombie()) {
+      gROOT->ProcessLine(".x $ROOTSYS/tutorials/hsimple.C");
+      myFile = TFile::Open("$ROOTSYS/tutorials/hsimple.root");
+      if (!myFile || myFile->IsZombie()) {
+         return 0;
+      }
+   }
    // Create a TTreeReader for the tree, for instance by passing the
    // TTree's name and the TDirectory / TFile it is in.
    TTreeReader myReader("ntuple", myFile);
@@ -29,4 +38,8 @@ void hsimpleReader() {
    }
 
    myHist->Draw();
+
+   // For the ROOT reference guide of TTreeReader (which uses this macro),
+   // return the resulting canvas:
+   return gPad;
 }
