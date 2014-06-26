@@ -4410,9 +4410,9 @@ Int_t TCling::AutoLoad(const char* cls)
 {
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
-   if (gDebug > 1) {
+   if (gDebug > 2) {
       Info("TCling::AutoLoad",
-           "Trying to autoload for %s\n", cls);
+           "Trying to autoload for %s", cls);
    }
    R__LOCKGUARD(gInterpreterMutex);
    Int_t status = 0;
@@ -4511,7 +4511,7 @@ Int_t TCling::AutoParse(const char* cls)
 
    if (gDebug > 1) {
       Info("TCling::AutoParse",
-           "Trying to autoparse for %s\n", cls);
+           "Trying to autoparse for %s", cls);
    }
 
    // The catalogue of headers is in the dictionary
