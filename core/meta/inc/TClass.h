@@ -261,6 +261,7 @@ protected:
    void                      GetMissingDictionariesForBaseClasses(TCollection& result, TCollection& visited, bool recurse);
    void                      GetMissingDictionariesForMembers(TCollection& result, TCollection& visited, bool recurse);
    void                      GetMissingDictionariesWithRecursionCheck(TCollection& result, TCollection& visited, bool recurse);
+   void                      GetMissingDictionariesForPairElements(TCollection& result, TCollection& visited, bool recurse);
 
 public:
    TClass();

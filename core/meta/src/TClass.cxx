@@ -3446,6 +3446,20 @@ void TClass::GetMissingDictionariesForMembers(TCollection& result, TCollection& 
    }
 }
 
+void TClass::GetMissingDictionariesForPairElements(TCollection& result, TCollection& visited, bool recurse)
+{
+   // Pair is a special case and we have to check its elements for missing dictionaries
+   // Pair is a transparent container so we should always look at its.
+
+   TVirtualStreamerInfo *SI = (TVirtualStreamerInfo*)this->GetStreamerInfo();
+   for (int i = 0; i < 2; i++) {
+      TClass* pairElement = ((TStreamerElement*)SI->GetElements()->At(i))->GetClass();
+      if (pairElement) {
+         pairElement->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
+      }
+   }
+}
+
 //______________________________________________________________________________
 void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, TCollection& visited, bool recurse)
 {
@@ -3456,7 +3470,11 @@ void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, TColl
    static TClassRef sCIString("string");
    if (this == sCIString) return;
 
-   if (strncmp(fName, "pair<", 5) == 0) return;
+   // Special treatment for pair.
+   if (strncmp(fName, "pair<", 5) == 0) {
+      GetMissingDictionariesForPairElements(result, visited, recurse);
+      return;
+   }
 
    if (!HasDictionary()) {
       result.Add(this);
@@ -3503,15 +3521,18 @@ void TClass::GetMissingDictionaries(THashTable& result, bool recurse)
    static TClassRef sCIString("string");
    if (this == sCIString) return;
 
-   if (strncmp(fName, "pair<", 5) == 0) return;
+   THashTable visited;
 
-   THashTable visitedClasses;
+   if (strncmp(fName, "pair<", 5) == 0) {
+      GetMissingDictionariesForPairElements(result, visited, recurse);
+      return;
+   }
 
    if (!HasDictionary()) {
       result.Add(this);
    }
 
-   visitedClasses.Add(this);
+   visited.Add(this);
 
    //Check whether a custom streamer
    if (!TestBit(TClass::kHasCustomStreamerMember)) {
@@ -3521,12 +3542,12 @@ void TClass::GetMissingDictionaries(THashTable& result, bool recurse)
          TClass* t = 0;
          if ((t = GetCollectionProxy()->GetValueClass())) {
             if (!t->HasDictionary()) {
-               t->GetMissingDictionariesWithRecursionCheck(result, visitedClasses, recurse);
+               t->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
             }
          }
       } else {
-         GetMissingDictionariesForMembers(result, visitedClasses, recurse);
-         GetMissingDictionariesForBaseClasses(result, visitedClasses, recurse);
+         GetMissingDictionariesForMembers(result, visited, recurse);
+         GetMissingDictionariesForBaseClasses(result, visited, recurse);
       }
    }
 }
