@@ -3301,7 +3301,7 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
 
 //______________________________________________________________________________
 std::string GenerateFwdDeclString(const RScanner& scan,
-                          const cling::Interpreter& interp)
+                                  const cling::Interpreter& interp)
 {
    // Generate the fwd declarations of the selected entities
 
@@ -3327,9 +3327,17 @@ std::string GenerateFwdDeclString(const RScanner& scan,
    }
 
    for (auto const & tdNameDeclPtr : scan.fSelectedTypedefs){
-      EncloseInNamespaces(*tdNameDeclPtr,buffer);
-      if (fwdDecls.insert(buffer).second)
+      buffer = tdNameDeclPtr->getNameAsString();
+      if (fwdDecls.insert(buffer).second){
+         std::string underlyingName;
+         auto underlyingType = tdNameDeclPtr->getUnderlyingType();
+         ROOT::TMetaUtils::GetFullyQualifiedTypeName(underlyingName,
+                                                     underlyingType,
+                                                     interp);
+         buffer="typedef "+underlyingName+" "+buffer+";";
+         EncloseInNamespaces(*tdNameDeclPtr,buffer);
          fwdDeclString+="\""+buffer+"\"\n";
+      }
    }
 
    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
