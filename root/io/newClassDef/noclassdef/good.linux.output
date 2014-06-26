@@ -2,10 +2,10 @@ THIS FILE NEEDS TO BE ADAPTED TO NEW Dump() LAYOUT
 SEE ROOT @ 6883a7fe83 / roottest @ aa20b1e
 
 Writing Hit
-Warning in <TClass::TClass>: no dictionary for class crap is available
+Warning in <TClass::TClass>: no dictionary for class BaseWithNoDict is available
 Warning in <TClass::TClass>: no dictionary for class RootPCnodict is available
 Warning in <Build>: RootCaloHit: RootPCnodict has no streamer or dictionary, data member "mynocell" will not be saved
-Warning in <Build>: RootPCellID: base class crap has no streamer or dictionary it will not be saved
+Warning in <Build>: RootPCellID: base class BaseWithNoDict has no streamer or dictionary it will not be saved
 Warning in <TBufferFile::WriteObjectAny>: An object of type class RootPCnodict (from type_info) passed through a RootPCellID pointer was truncated (due a missing dictionary)!!!
 Warning in <WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
 

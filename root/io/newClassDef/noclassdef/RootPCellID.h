@@ -10,9 +10,9 @@ using std::vector;
 
 class TBuffer;
 
-class crap {};
+class BaseWithNoDict {};
 
-class RootPCellID : public crap {
+class RootPCellID : public BaseWithNoDict {
 
 public:
 

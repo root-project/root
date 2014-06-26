@@ -1,5 +1,5 @@
 Writing Hit
-Warning in <TClass::TClass>: no dictionary for class crap is available
+Warning in <TClass::TClass>: no dictionary for class BaseWithNoDict is available
 Warning in <TClass::TClass>: no dictionary for class RootPCnodict is available
 Warning in <TStreamerInfo::Build:>: RootCaloHit: RootPCnodict has no streamer or dictionary, data member "mynocell" will not be saved
 Warning in <TStreamerInfo::Build:>: RootPCellID: base class crap has no streamer or dictionary it will not be saved
