@@ -4606,10 +4606,14 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionD
                                                           const cling::Interpreter& interpreter,
                                                           std::string& defString)
 {
-   // Do not treat if this is a template function or a method
+   // Transform a function decl into a C++ forward declaration
+   // In some situation, we bail out:
+   // - A parameter or the return value is not a pod
+   // - The function is a template, a method or extern C
 
    if (clang::FunctionDecl::TemplatedKind::TK_NonTemplate != fcnDecl.getTemplatedKind() ||
-       llvm::isa<clang::CXXMethodDecl>(fcnDecl))
+       llvm::isa<clang::CXXMethodDecl>(fcnDecl) ||
+       fcnDecl.isExternC())
       return 1;
 
    // Extract the fwd declaration of a function
@@ -4652,7 +4656,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionD
    // Now the return type
    const auto retQt = fcnDecl.getReturnType ();
    auto& ctxt = fcnDecl.getASTContext();
-   if (!retQt.isPODType(ctxt)){
+   if (!retQt.isPODType(ctxt) && !retQt->isVoidType()){
       defString="";
       return 1;
    }
