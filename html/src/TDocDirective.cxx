@@ -533,6 +533,9 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
          tags.Remove(tags.Length()-1); // trailing line break
       tags += "</pre></div></div><div class=\"clear\"></div></div><pre>";
       result = tags;
+      // Protect the nested comments from being stripped by a
+      // TDocParser::ProcessComment() in the call stack.
+      result.ReplaceAll("<span class=\"comment\">", "<span class=\"codecomment\">");
    }
 
    return kTRUE;
