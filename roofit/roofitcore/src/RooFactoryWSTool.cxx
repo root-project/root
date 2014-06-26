@@ -814,6 +814,8 @@ RooAbsArg* RooFactoryWSTool::process(const char* expr)
   //                         see the definitions below
 
 
+//   cout << "RooFactoryWSTool::process() " << expr << endl ;
+
   // First perform basic syntax check
   if (checkSyntax(expr)) {
     return 0 ;
