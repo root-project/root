@@ -181,7 +181,7 @@ StatDialogBDT::StatDialogBDT( const TGWindow* p, TString wfile, TString methName
 
    fInput->Connect("ValueSet(Long_t)","StatDialogBDT",this, "SetItree()");
 
-   fDrawButton->Connect("Clicked()","TGNumberEntry",fInput, "ValueSet(Long_t)");
+   fDrawButton->Connect("ValueSet(Long_t)","TGNumberEntry",fInput, "Clicked()");
    fDrawButton->Connect("Clicked()", "StatDialogBDT", this, "Redraw()");   
 
    fCloseButton->Connect("Clicked()", "StatDialogBDT", this, "Close()");

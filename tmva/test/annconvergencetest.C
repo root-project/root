@@ -8,35 +8,11 @@
 
 // input: - Input file (result from TMVA),
 //        - use of TMVA plotting TStyle
-void annconvergencetest( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
-{
-   // set style and remove existing canvas'
-   TMVAGlob::Initialize( useTMVAStyle );
-  
-   // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
-
-   // get all titles of the method likelihood
-   TList titles;
-   UInt_t ninst = TMVAGlob::GetListOfTitles("Method_MLP",titles);
-   if (ninst==0) {
-      cout << "Could not locate directory 'Method_MLP' in file " << fin << endl;
-      return;
-   }
-   // loop over all titles
-   TIter keyIter(&titles);
-   TDirectory *lhdir;
-   TKey *key;
-   while ((key = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
-      lhdir = (TDirectory *)key->ReadObj();
-      annconvergencetest( lhdir );
-   }
-}
 
 void annconvergencetest( TDirectory *lhdir )
 {
    TString jobName = lhdir->GetName();
-   static icanvas = -1;
+   static int icanvas = -1;
    icanvas++;
    TCanvas* c = new TCanvas( Form("MLPConvergenceTest_%s",jobName.Data()), Form("MLP Convergence Test, %s",jobName.Data()), 
                              100 + (icanvas)*40, 0 + (icanvas+1)*20, 600, 580*0.8  );
@@ -64,8 +40,8 @@ void annconvergencetest( TDirectory *lhdir )
    estimatorHistTrain->GetXaxis()->SetTitleOffset( 1.20 );
    estimatorHistTrain->GetYaxis()->SetTitleOffset( 1.65 );
 
-   estimatorHistTrain->Draw();
-   estimatorHistTest ->Draw("same");
+   estimatorHistTrain->Draw("hist");
+   estimatorHistTest ->Draw("samehist");
 
    // need a legend
    TLegend *legend= new TLegend( 1 - c->GetRightMargin() - 0.45, 1-c->GetTopMargin() - 0.20, 
@@ -82,4 +58,30 @@ void annconvergencetest( TDirectory *lhdir )
 
    TString fname = "plots/annconvergencetest";
    TMVAGlob::imgconv( c, fname );
+}
+
+void annconvergencetest( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
+{
+   // set style and remove existing canvas'
+   TMVAGlob::Initialize( useTMVAStyle );
+  
+   // checks if file with name "fin" is already open, and if not opens one
+   TFile* file = TMVAGlob::OpenFile( fin );  
+
+   // get all titles of the method likelihood
+   TList titles;
+   TString metmlp="Method_MLP"; 
+   UInt_t ninst = TMVAGlob::GetListOfTitles(metmlp,titles);
+   if (ninst==0) {
+      cout << "Could not locate directory 'Method_MLP' in file " << fin << endl;
+      return;
+   }
+   // loop over all titles
+   TIter keyIter(&titles);
+   TDirectory *lhdir;
+   TKey *key;
+   while ((key = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
+      lhdir = (TDirectory *)key->ReadObj();
+      annconvergencetest( lhdir );
+   }
 }

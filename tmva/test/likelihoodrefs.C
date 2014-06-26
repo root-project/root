@@ -19,7 +19,8 @@ void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
 
    // get all titles of the method likelihood
    TList titles;
-   UInt_t ninst = TMVAGlob::GetListOfTitles("Method_Likelihood",titles);
+   TString metlike="Method_Likelihood";
+   UInt_t ninst = TMVAGlob::GetListOfTitles(metlike,titles);
    if (ninst==0) {
       cout << "Could not locate directory 'Method_Likelihood' in file " << fin << endl;
       return;
@@ -140,7 +141,7 @@ void likelihoodrefs( TDirectory *lhdir ) {
 
             // check for KDE
             if (h == 0 && b == 0) {
-               TString hspline = pname + Form( "_smoothed_hist_from_KDE", i );
+               TString hspline = pname +"_smoothed_hist_from_KDE";
                h = (TH1F*)lhdir->Get( hspline );
                if (h) {
                   b = (TH1F*)lhdir->Get( hspline.ReplaceAll("_sig","_bgd") );
