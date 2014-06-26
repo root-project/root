@@ -46,7 +46,10 @@ TProtoClass::TProtoClass(TClass* cl):
       TClass* clRD = rd->GetDataMember()->GetClass();
       if (clRD != clCurrent) {
          clCurrent = clRD;
-         fPRealData->AddLast(new TObjString(clRD->GetName()));
+         TObjString *clstr = new TObjString(clRD->GetName());
+         if (rd->TestBit(TRealData::kTransient))
+            clstr->SetBit(TRealData::kTransient);
+         fPRealData->AddLast(clstr);
       }
       fPRealData->AddLast(new TProtoRealData(rd));
    }
@@ -119,7 +122,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
       for (TObject* element: *fPRealData) {
          if (element->IsA() == TObjString::Class()) {
             currentRDClass = TClass::GetClass(element->GetName());
-            if (!currentRDClass) {
+            if (!currentRDClass && !element->TestBit(TRealData::kTransient)) {
                Error("TProtoClass::FillTClass()", "Cannot find TClass for %s; skipping its members.",
                      element->GetName());
             }
@@ -151,6 +154,7 @@ TProtoClass::TProtoRealData::TProtoRealData(const TRealData* rd):
 {
    // Initialize this from a TRealData object.
    SetBit(kIsObject, rd->IsObject());
+   SetBit(TRealData::kTransient, rd->TestBit(TRealData::kTransient));
 }
 
 //______________________________________________________________________________
