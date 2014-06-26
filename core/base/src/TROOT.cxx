@@ -279,6 +279,10 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    gROOT      = this;
    gDirectory = 0;
+  
+   // initialize gClassTable is not already done
+   if (!gClassTable) new TClassTable;
+  
    SetName(name);
    SetTitle(title);
 

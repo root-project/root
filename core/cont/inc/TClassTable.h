@@ -46,6 +46,7 @@ namespace ROOT {
 class TClassTable : public TObject {
 
 friend  void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
+friend  class TROOT;
 
 private:
    typedef ROOT::TMapTypeToClassRec IdMap_t;
