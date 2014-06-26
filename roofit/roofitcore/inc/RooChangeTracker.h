@@ -48,6 +48,7 @@ protected:
 
   mutable TIterator* _realSetIter ;     //! do not persist
   mutable TIterator* _catSetIter ;     //! do not persist
+  Bool_t        _init ; //!
 
   Double_t evaluate() const { return 1 ; }
 
