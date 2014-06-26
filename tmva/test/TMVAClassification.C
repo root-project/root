@@ -204,7 +204,7 @@ void TMVAClassification( TString myMethodList = "" )
    TString fname = "./tmva_class_example.root";
    
    if (gSystem->AccessPathName( fname ))  // file does not exist in local directory
-      gSystem->Exec("wget http://root.cern.ch/files/tmva_class_example.root");
+      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
    
    TFile *input = TFile::Open( fname );
    
