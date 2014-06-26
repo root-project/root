@@ -5,7 +5,7 @@
 # notice that the resultant file is a couple of bytes smaller, because the
 # code below strips all white-spaces, whereas the .C version does not.
 
-import re, array
+import re, array, os
 from ROOT import *
 
 
@@ -40,7 +40,8 @@ def fillTree():
    tree.Branch( 'Nation', AddressOf( staff, 'Nation' ), 'Nation/C' )
 
  # note that the branches Division and Nation cannot be on the first branch
-   for line in open( 'cernstaff.dat' ).readlines():
+   fname = os.path.join(os.path.dirname(__file__),'../tree/cernstaff.dat')
+   for line in open(fname).readlines():
       t = filter( lambda x: x, re.split( '\s+', line ) )
       staff.Category = int(t[0])             # assign as integers
       staff.Flag     = int(t[1])

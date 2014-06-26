@@ -96,7 +96,7 @@ set(extra_veto
   rootlogon.C          # Helper macro
   rootlogoff.C         # Helper macro
   rootmarks.C          # Instrumentation. Not a standalone tutorial
-  memstat/memstat.C    # Instrumentation. Not a standalone tutorial
+  memstat/memstatExample.C   # Instrumentation. Not a standalone tutorial
   html/*.C
   net/*.C
   proof/*.C
