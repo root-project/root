@@ -101,6 +101,7 @@ This results in thresholds that become very large.
 #include "TH1F.h"
 #include "TCanvas.h"
 #include "TSystem.h"
+#include <iostream>
 
 #include "RooWorkspace.h"
 #include "RooSimultaneous.h"
@@ -117,8 +118,10 @@ This results in thresholds that become very large.
 
 using namespace RooFit;
 using namespace RooStats;
+using namespace std; 
 
-bool useProof = false;
+bool useProof = true;  // flag to control whether to use Proof
+int nworkers = 0;   // number of workers (default use all available cores)
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -252,7 +255,7 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
   // add the additional line to the LinkDef.h file,
   // and recompile root.
   if (useProof) {
-     ProofConfig pc(*w, 4, "workers=4",false); 
+     ProofConfig pc(*w, nworkers, "",false); 
      if(mc->GetGlobalObservables()){
         cout << "will use global observables for unconditional ensemble"<<endl;
         mc->GetGlobalObservables()->Print();
@@ -370,7 +373,6 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
       RooArgSet *allVars = mc->GetPdf()->getVariables();
       *allVars = *values;
       delete allVars;
-      delete values;
       delete one;
     } else {      
       RooDataSet* one = simPdf->generateSimGlobal(*mc->GetGlobalObservables(),1);
@@ -378,7 +380,6 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
       RooArgSet *allVars = mc->GetPdf()->getVariables();
       *allVars = *values;
       delete allVars;
-      delete values;
       delete one;
 
     }
