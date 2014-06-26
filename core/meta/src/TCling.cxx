@@ -766,7 +766,7 @@ namespace{
    // during its lifetime
    class clangDiagSuppr {
    public:
-      clangDiagSuppr(clang::DiagnosticsEngine& diag): fDiagEngine(diag){         
+      clangDiagSuppr(clang::DiagnosticsEngine& diag): fDiagEngine(diag){
          fOldDiagValue = fDiagEngine.getIgnoreAllWarnings();
          fDiagEngine.setIgnoreAllWarnings(true);
       }
@@ -1139,6 +1139,16 @@ void TCling::RegisterModule(const char* modulename,
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
    if (fromRootCling) return;
 
+   // Treat Aclic Libs in a special way. Do not delay the parsing.
+   bool oldfHeaderParsingOnDemand=fHeaderParsingOnDemand;
+   if (oldfHeaderParsingOnDemand &&
+       strstr(modulename, "_ACLiC_dict") != nullptr){
+      if (gDebug>1)
+         Info("TCling::RegisterModule",
+              "Header parsing on demand is active but this is an Aclic library. Disabling it for this library.");
+      fHeaderParsingOnDemand=false;
+   }
+
 
    // Make sure we relookup symbols that were search for before we loaded
    // their autoparse information.  We could be more subtil and remove only
@@ -1366,6 +1376,7 @@ void TCling::RegisterModule(const char* modulename,
    }
 
    SetClassAutoloading(oldAutoloadValue);
+   fHeaderParsingOnDemand=oldfHeaderParsingOnDemand;
 }
 
 //______________________________________________________________________________
