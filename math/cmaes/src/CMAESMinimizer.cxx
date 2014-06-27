@@ -95,8 +95,10 @@ namespace ROOT
     {
       std::cout << "clearing up minimizer\n";
       fCMAsols = CMASolutions();
-      fCMAparams = CMAParameters<GenoPheno<NoBoundStrategy,linScalingStrategy>>();
-      fCMAparamsb = CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>>();
+      fCMAparams = CMAParameters<GenoPheno<NoBoundStrategy,NoScalingStrategy>>();
+      fCMAparams_b = CMAParameters<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>();
+      fCMAparams_l = CMAParameters<GenoPheno<NoBoundStrategy,linScalingStrategy>>();
+      fCMAparams_lb = CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>>();
       fDim = 0; fFreeDim = 0;
       fLBounds.clear();
       fUBounds.clear();
@@ -338,6 +340,31 @@ namespace ROOT
 	  return i;
       return -1;
     }
+
+    template <class TGenoPheno>
+    void TCMAESMinimizer::SetMParameters(CMAParameters<TGenoPheno> &cmaparams,
+					 const int &maxiter, const int &maxfevals,
+					 const int &noisy, const int &nrestarts,
+					 const double &ftarget,
+					 const std::string &fplot)
+    {
+      cmaparams._algo = fMinimizer;
+      if (gDebug > 0)
+	cmaparams._quiet = false;
+      else cmaparams._quiet = true;
+      for (auto mit=fFixedVariables.begin();mit!=fFixedVariables.end();mit++)
+	cmaparams.set_fixed_p((*mit).first,(*mit).second);
+      cmaparams.set_ftolerance(fTol);
+      cmaparams.set_max_iter(maxiter);
+      cmaparams.set_max_fevals(maxfevals);
+      if (noisy > 0)
+	cmaparams.set_noisy();
+      if (nrestarts > 0)
+	cmaparams.set_restarts(nrestarts);
+      if (ftarget > 0.0)
+	cmaparams.set_ftarget(ftarget);
+      cmaparams._fplot = fplot;
+    }
     
     bool TCMAESMinimizer::Minimize()
     {
@@ -371,7 +398,7 @@ namespace ROOT
 	};
 
       // gradient function.
-      std::cout << "fWithGradient=" << fWithGradient << std::endl;
+      //std::cout << "fWithGradient=" << fWithGradient << std::endl;
       GradFunc gfit = nullptr;
       if (fWithGradient)
 	{
@@ -397,7 +424,7 @@ namespace ROOT
       dVec vscaling = dVec::Constant(fDim,1.0);
       for (size_t i=0;i<fInitialSigma.size();i++)
 	vscaling(i) /= fInitialSigma.at(i);
-      std::cerr << "lscaling=" << vscaling.transpose() << std::endl;
+      //std::cerr << "lscaling=" << vscaling.transpose() << std::endl;
       dVec vshift = dVec::Constant(fDim,0.0);
 
       int lambda = -1;
@@ -417,65 +444,58 @@ namespace ROOT
 	  cmaesOpt->GetValue("restarts",nrestarts);
 	  cmaesOpt->GetValue("ftarget",ftarget);
 	  cmaesOpt->GetValue("fplot",fplot);
+	  cmaesOpt->GetValue("lscaling",fWithLinearScaling);
 	}
       
       if (gDebug > 0)
 	{
-	  std::cout << "Running CMA-ES with dim=" << fDim << " / sigma0=" << sigma0scaled << " / lambda=" << lambda << " / fTol=" << fTol << " / with_bounds=" << fWithBounds << " / maxiter=" << maxiter << " / maxfevals=" << maxfevals << std::endl;
+	  std::cout << "Running CMA-ES with dim=" << fDim << " / sigma0=" << sigma0scaled << " / lambda=" << lambda << " / fTol=" << fTol << " / with_bounds=" << fWithBounds << " / with_gradient=" << fWithGradient << " / linear_scaling=" << fWithLinearScaling << " / maxiter=" << maxiter << " / maxfevals=" << maxfevals << std::endl;
 	  std::cout << "x0=";
 	  std::copy(fInitialX.begin(),fInitialX.end(),std::ostream_iterator<double>(std::cout," "));
 	  std::cout << std::endl;
 	}
 
-      if (fWithBounds)
+      if (fWithLinearScaling)
 	{
-	  Info("CMAESMinimizer","Minimizing with bounds");
-	  //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
-	  //GenoPheno<pwqBoundStrategy,linScalingStrategy> gp(&fLBounds.front(),&fUBounds.front(),fDim);
-	  GenoPheno<pwqBoundStrategy,linScalingStrategy> gp(vscaling,vshift,&fLBounds.front(),&fUBounds.front());
-	  CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,0,gp);
-	  cmaparams._algo = fMinimizer;
-	  if (gDebug > 0)
-	    cmaparams._quiet = false;
-	  else cmaparams._quiet = true;
-	  for (auto mit=fFixedVariables.begin();mit!=fFixedVariables.end();mit++)
-	    cmaparams.set_fixed_p((*mit).first,(*mit).second);
-	  cmaparams.set_ftolerance(fTol);
-	  cmaparams.set_max_iter(maxiter);
-	  cmaparams.set_max_fevals(maxfevals);
-	  if (noisy > 0)
-	    cmaparams.set_noisy();
-	  if (nrestarts > 0)
-	    cmaparams.set_restarts(nrestarts);
-	  if (ftarget > 0.0)
-	    cmaparams.set_ftarget(ftarget);
-	  cmaparams._fplot = fplot;
-	  fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy,linScalingStrategy>>(ffit,cmaparams);
-	  fCMAparamsb = cmaparams;
+	  if (fWithBounds)
+	    {
+	      Info("CMAESMinimizer","Minimizing with bounds");
+	      //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
+	      //GenoPheno<pwqBoundStrategy,linScalingStrategy> gp(&fLBounds.front(),&fUBounds.front(),fDim);
+	      GenoPheno<pwqBoundStrategy,linScalingStrategy> gp(vscaling,vshift,&fLBounds.front(),&fUBounds.front());
+	      CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,0,gp);
+	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot);
+	      fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy,linScalingStrategy>>(ffit,cmaparams);
+	      fCMAparams_lb = cmaparams;
+	    }
+	  else
+	    {
+	      //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
+	      GenoPheno<NoBoundStrategy,linScalingStrategy> gp(vscaling,vshift);
+	      CMAParameters<GenoPheno<NoBoundStrategy,linScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,0,gp);
+	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot);
+	      fCMAsols = libcmaes::cmaes<GenoPheno<NoBoundStrategy,linScalingStrategy>>(ffit,cmaparams);
+	      fCMAparams_l = cmaparams;
+	    }
 	}
       else
 	{
-	  //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
-	  GenoPheno<NoBoundStrategy,linScalingStrategy> gp(vscaling,vshift);
-	  CMAParameters<GenoPheno<NoBoundStrategy,linScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,0,gp);
-	  cmaparams._algo = fMinimizer;
-	  if (gDebug > 0)
-	    cmaparams._quiet = false;
-	  else cmaparams._quiet = true;
-	  for (auto mit=fFixedVariables.begin();mit!=fFixedVariables.end();mit++)
-	    cmaparams.set_fixed_p((*mit).first,(*mit).second);
-	  cmaparams.set_ftolerance(fTol);
-	  cmaparams.set_max_iter(maxiter);
-	  cmaparams.set_max_fevals(maxfevals);
-	  if (noisy > 0)
-	    cmaparams.set_noisy();
-	  if (nrestarts > 0)
-	    cmaparams.set_restarts(nrestarts);
-	  if (ftarget > 0.0)
-	    cmaparams.set_ftarget(ftarget);
-	  cmaparams._fplot = fplot;
-	  fCMAsols = libcmaes::cmaes<GenoPheno<NoBoundStrategy,linScalingStrategy>>(ffit,cmaparams);
-	  fCMAparams = cmaparams;
+	  if (fWithBounds)
+	    {
+	      Info("CMAESMinimizer","Minimizing with bounds");
+	      GenoPheno<pwqBoundStrategy,NoScalingStrategy> gp(&fLBounds.front(),&fUBounds.front(),fDim);
+	      CMAParameters<GenoPheno<pwqBoundStrategy,NoScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,0,gp);
+	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot);
+	      fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>(ffit,cmaparams);
+	      fCMAparams_b = cmaparams;
+	    }
+	  else
+	    {
+	      CMAParameters<GenoPheno<NoBoundStrategy,NoScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,0);
+	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot);
+	      fCMAsols = libcmaes::cmaes<GenoPheno<NoBoundStrategy,NoScalingStrategy>>(ffit,cmaparams);
+	      fCMAparams = cmaparams;
+	    }
 	}
       Info("CMAESMinimizer","optimization status=%i",fCMAsols._run_status);
       if (fCMAsols._edm > 10*fTol) // XXX: max edm seems to be left to each minimizer's internal implementation...
@@ -499,13 +519,17 @@ namespace ROOT
       Candidate bc = fCMAsols.best_candidate();
 
       dVec x;
-      if (fWithBounds)
+      if (fWithLinearScaling)
 	{
-	  x = bc.get_x_pheno<GenoPheno<pwqBoundStrategy,linScalingStrategy>>(fCMAparamsb);
+	  if (fWithBounds)
+	    x = bc.get_x_pheno<GenoPheno<pwqBoundStrategy,linScalingStrategy>>(fCMAparams_lb);
+	  else x = bc.get_x_pheno<GenoPheno<NoBoundStrategy,linScalingStrategy>>(fCMAparams_l);
 	}
       else
 	{
-	  x = bc.get_x_pheno<GenoPheno<NoBoundStrategy,linScalingStrategy>>(fCMAparams);
+	  if (fWithBounds)
+	    x = bc.get_x_pheno<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>(fCMAparams_b);
+	  else x = bc.get_x_dvec();
 	}
       for (int i=0;i<fDim;i++)
 	fValues.push_back(x(i));
@@ -581,15 +605,31 @@ namespace ROOT
       if (gDebug > 0)
 	std::cerr << "Computing 'Minos' confidence interval with profile likelihood on parameter " << i << " / samplesize=" << samplesize << " / with_bounds=" << fWithBounds << std::endl;
       pli le;
-      if (!fWithBounds)
+      if (fWithLinearScaling)
 	{
-	  fCMAparams.set_automaxiter(true);
-	  le = errstats<GenoPheno<NoBoundStrategy,linScalingStrategy>>::profile_likelihood(ffit,fCMAparams,fCMAsols,i,false,samplesize,fUp);
+	  if (!fWithBounds)
+	    {
+	      fCMAparams_l.set_automaxiter(true);
+	      le = errstats<GenoPheno<NoBoundStrategy,linScalingStrategy>>::profile_likelihood(ffit,fCMAparams_l,fCMAsols,i,false,samplesize,fUp);
+	    }
+	  else
+	    {
+	      fCMAparams_lb.set_automaxiter(true);
+	      le = errstats<GenoPheno<pwqBoundStrategy,linScalingStrategy>>::profile_likelihood(ffit,fCMAparams_lb,fCMAsols,i,false,samplesize);
+	    }
 	}
       else
 	{
-	  fCMAparamsb.set_automaxiter(true);
-	  le = errstats<GenoPheno<pwqBoundStrategy,linScalingStrategy>>::profile_likelihood(ffit,fCMAparamsb,fCMAsols,i,false,samplesize);
+	  if (!fWithBounds)
+	    {
+	      fCMAparams_l.set_automaxiter(true);
+	      le = errstats<GenoPheno<NoBoundStrategy,NoScalingStrategy>>::profile_likelihood(ffit,fCMAparams,fCMAsols,i,false,samplesize,fUp);
+	    }
+	  else
+	    {
+	      fCMAparams_lb.set_automaxiter(true);
+	      le = errstats<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>::profile_likelihood(ffit,fCMAparams_b,fCMAsols,i,false,samplesize);
+	    }
 	}
       errLow = le._errmin;
       errUp = le._errmax;

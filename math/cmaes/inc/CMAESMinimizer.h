@@ -115,6 +115,13 @@ namespace ROOT
       /// get index of variable given a variable given a name
       /// return -1 if variable is not found
       virtual int VariableIndex(const std::string & name) const;
+
+      template <class TGenoPheno>
+	void SetMParameters(CMAParameters<TGenoPheno> &cmaparams,
+			    const int &maxiter, const int &maxfevals,
+			    const int &noisy, const int &nrestarts,
+			    const double &ftarget,
+			    const std::string &fplot);
       
       /** 
 	  method to perform the minimization. 
@@ -284,13 +291,16 @@ namespace ROOT
       std::vector<double> fInitialSigma; // User-set Initial step-size for each variables.
       std::map<int,double> fFixedVariables; // fixed variables and values.
       CMASolutions fCMAsols;
-      CMAParameters<GenoPheno<NoBoundStrategy,linScalingStrategy>> fCMAparams; // params no bounds.
-      CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> fCMAparamsb; // params with bounds.
+      CMAParameters<GenoPheno<NoBoundStrategy,NoScalingStrategy>> fCMAparams; // params no bounds.
+      CMAParameters<GenoPheno<pwqBoundStrategy,NoScalingStrategy>> fCMAparams_b; // params with bounds.
+      CMAParameters<GenoPheno<NoBoundStrategy,linScalingStrategy>> fCMAparams_l; // params no bounds + linear scaling.
+      CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> fCMAparams_lb; // params with bounds + linear scaling.
       mutable std::vector<double> fGlobalCC; // vector of global correlation coefficients.
       mutable std::vector<double> fValues; // X values.
       mutable std::vector<double> fErrors; // X errors.
       bool fWithBounds = false; // whether using box-type constraints as required by parameters.
       bool fWithGradient = false; // whether to use gradient information when available.
+      int fWithLinearScaling = 0; // wheter to use linear scaling of objective function parameters. */
     };
     
   }  // end namespace cmaes
