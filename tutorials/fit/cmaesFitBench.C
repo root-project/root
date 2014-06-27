@@ -47,7 +47,7 @@ Double_t fitFunction(Double_t *x, Double_t *par) {
   return background(x,par) + lorentzianPeak(x,&par[3]);
 }
 
-void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {   
+void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass, Double_t sigma, Int_t lambda) {   
    printf("\n*********************************************************************************\n");
    printf("\t %s \n",fitter);
    printf("*********************************************************************************\n");
@@ -58,8 +58,10 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    TVirtualFitter::SetDefaultFitter(fitter);
    //ROOT::Fit::FitConfig::SetDefaultMinimizer(fitter);
    ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default(fitter);
-   opts.SetIntValue("lambda",100);
-
+   opts.SetIntValue("lambda",lambda);
+   opts.SetIntValue("lscaling",1);
+   opts.SetRealValue("sigma",sigma);
+   
    pad->SetGrid();
    pad->SetLogy();
    fitFcn->SetParameters(1,1,1,6,.03,1);
@@ -75,7 +77,7 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
          histo->Fill(fitFcn->GetRandom());
       }
       //histo->Print("all");
-      histo->Fit(fitFcn,"Q0");  // from TH1.cxx: Q: quiet, 0: do not plot 
+      //histo->Fit(fitFcn,"Q0");  // from TH1.cxx: Q: quiet, 0: do not plot 
    }
 
    histo->Fit(fitFcn,"V"); // E: use Minos, V: verbose.
@@ -92,9 +94,13 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    p->SetTextColor(kRed+3);
    p->SetFillColor(kYellow-8);
    pad->Update();
+
+   //delete p;
+   //delete histo;
+   delete gRandom;
 }
 
-void cmaesFitBench(Int_t npass=20) {
+void cmaesFitBench(Int_t npass=20, Double_t sigma=0.1, Int_t lambda=-1) {
   if (!libloaded)
     {
       gSystem->Load("/usr/lib/x86_64-linux-gnu/libglog.so");
@@ -113,19 +119,21 @@ void cmaesFitBench(Int_t npass=20) {
     
    //with Minuit2
    c1->cd(1);
-   DoFit("Minuit2",gPad,npass);
+   DoFit("Minuit2",gPad,npass,sigma,lambda);
    
    //with Fumili
    c1->cd(2);
-   DoFit("Fumili",gPad,npass);
+   DoFit("Fumili",gPad,npass,sigma,lambda);
 
    //with cmaes
    c1->cd(3);
-   DoFit("cmaes",gPad,npass);
+   DoFit("cmaes",gPad,npass,sigma,lambda);
    
    //with acmaes
    c1->cd(4);
-   DoFit("acmaes",gPad,npass);
+   DoFit("acmaes",gPad,npass,sigma,lambda);
      
    //c1->SaveAs("FitBench.root");
+   //delete c1;
+   delete fitFcn;
 }
