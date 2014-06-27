@@ -393,7 +393,7 @@ namespace ROOT
 	}
       
       double sigma0 = *std::min_element(fInitialSigma.begin(),fInitialSigma.end());
-      double sigma0scaled = 1e-1;
+      double sigma0scaled = 1e-1; // default value.
       dVec vscaling = dVec::Constant(fDim,1.0);
       for (size_t i=0;i<fInitialSigma.size();i++)
 	vscaling(i) /= fInitialSigma.at(i);
@@ -411,6 +411,7 @@ namespace ROOT
       //TODO: set hyper-parameters according to IOptions object.
       if (cmaesOpt)
 	{
+	  cmaesOpt->GetValue("sigma",sigma0scaled);
 	  cmaesOpt->GetValue("lambda",lambda);
 	  cmaesOpt->GetValue("noisy",noisy);
 	  cmaesOpt->GetValue("restarts",nrestarts);
