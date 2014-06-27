@@ -175,6 +175,12 @@ public:
     opts.SetIntValue("lambda",lambda);
     _lambda = lambda;
   }
+
+  void set_lscaling(const int &lscaling)
+  {
+    ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default("cmaes");
+    opts.SetIntValue("lscaling",lscaling);
+  }
   
   virtual ~experiment() {}
 
@@ -214,7 +220,7 @@ public:
 	Double_t cputime1 = timer.CpuTime();
 	TStopwatch timer2;
 	timer2.Start();
-	TFitResultPtr r2 = h1bis->Fit("gaus","QLES0");
+	TFitResultPtr r2 = h1bis->Fit("gaus","QLS0"); // E for Minos
 	timer2.Stop();
 	Double_t cputime2 = timer2.CpuTime();
 	
@@ -912,8 +918,12 @@ public:
 };
 fit2_e gfit2;
 
-void run_experiments(const int &n=1)
+void run_experiments(const int &n=1,
+		     const int &lscaling=0)
 {
+  std::cout << "Proceeding with " << n << " runs on every problems\n";
+  if (lscaling > 0)
+    std::cout << "Linear scaling of parameters in ON\n";
   std::vector<int> lambdas = {-1, 5, 10, 20, 40, 80, 160, 320, 640, 1280};
   std::vector<expstats> acmaes_stats;
   std::vector<expstats> minuit2_stats;
@@ -936,6 +946,7 @@ void run_experiments(const int &n=1)
 	for (int j=0;j<(int)lambdas.size();j++)
 	  {
 	    (*mit).second->set_lambda(lambdas.at(j));
+	    (*mit).second->set_lscaling(lscaling);
 	    (*mit).second->Setup();
 	    if (i == 0)
 	      {
