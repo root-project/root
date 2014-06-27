@@ -26,10 +26,10 @@ ClassImp(TAliEnFind);
 //______________________________________________________________________________
 TAliEnFind::TAliEnFind(const TString &basePath, const TString &fileName,
   const TString &anchor, const Bool_t archSubst, const TString &treeName,
-  const TString &regexp) :
+  const TString &regexp, const TString &query) :
   fBasePath(basePath), fFileName(fileName), fTreeName(treeName),
-  fRegexpRaw(regexp), fAnchor(anchor), fArchSubst(archSubst), fRegexp(0),
-  fSearchId(""), fGridResult(0)
+  fRegexpRaw(regexp), fAnchor(anchor), fQuery(query), fArchSubst(archSubst),
+  fRegexp(0), fSearchId(""), fGridResult(0)
 {
    // Constructor
 
@@ -47,6 +47,7 @@ TAliEnFind::TAliEnFind(const TAliEnFind &src) : TObject()
    fFileName = src.fFileName;
    fAnchor = src.fAnchor;
    fArchSubst = src.fArchSubst;
+   fQuery = src.fQuery;
    fTreeName = src.fTreeName;
    fRegexpRaw = src.fRegexpRaw;
 
@@ -68,6 +69,7 @@ TAliEnFind &TAliEnFind::operator=(const TAliEnFind &rhs)
       fFileName = rhs.fFileName;
       fAnchor = rhs.fAnchor;
       fArchSubst = rhs.fArchSubst;
+      fQuery = rhs.fQuery;
       fTreeName = rhs.fTreeName;
 
       SetRegexp(rhs.fRegexpRaw);
@@ -125,7 +127,13 @@ TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
          TString temp;
          temp.Form("/%s$", fFileName.Data());
          reArchSubst = new TPMERegexp(temp.Data());
-         substWith.Form("/root_archive.zip#%s", fFileName.Data());
+         if (fQuery) {
+            substWith.Form("/root_archive.zip?%s#%s", fQuery.Data(),
+               fFileName.Data());
+         }
+         else {
+            substWith.Form("/root_archive.zip#%s", fFileName.Data());
+         }
       }
 
       TIter it(fGridResult);
@@ -150,6 +158,10 @@ TGridResult *TAliEnFind::GetGridResult(Bool_t forceNewQuery)
             os->SetString(tUrl.Data());
          }
          else if (fAnchor) {
+            if (fQuery) {
+               tUrl.Append("?");
+               tUrl.Append(fQuery);
+            }
             tUrl.Append("#");
             tUrl.Append(fAnchor);
             os->SetString(tUrl.Data());
@@ -434,12 +446,13 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
     TString basePath;
     TString fileName;
     TString anchor;
+    TString query;
     TString treeName;
     TString regexp;
 
     // Custom search URI
-    if (!ParseCustomFindUri(uri, basePath, fileName, anchor,
-      treeName, regexp)) {
+    if (!ParseCustomFindUri(uri, basePath, fileName, anchor, query, treeName,
+      regexp)) {
       Error("GetFindCommandsFromUri", "Malformed AliEn find command");
       return NULL;
     }
@@ -447,7 +460,7 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
     findCommands = new TList();
     findCommands->SetOwner();
     findCommands->Add( new TAliEnFind(basePath, fileName, anchor, kFALSE,
-      treeName, regexp) );
+      treeName, regexp, query) );
 
   }
   else {  // Data or Sim
@@ -596,8 +609,8 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
 
 //______________________________________________________________________________
 Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
-   TString &basePath, TString &fileName, TString &anchor, TString &treeName,
-   TString &regexp)
+   TString &basePath, TString &fileName, TString &anchor, TString &query,
+   TString &treeName, TString &regexp)
 {
 
   // Copy URI to a dummy URI parsed to look for unrecognized stuff; initial
@@ -639,6 +652,15 @@ Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
   else {
     checkUri.ReplaceAll(reAnchor[2], "");
     anchor = reAnchor[3];
+  }
+
+  // Query string (optional)
+  TPMERegexp reQuery("(^|;)(Query=([^; ]+))(;|$)");
+  if (reQuery.Match(uri) != 5)
+    query = "";
+  else {
+    checkUri.ReplaceAll(reQuery[2], "");
+    query = reQuery[3];
   }
 
   // Tree name (optional)

@@ -51,6 +51,7 @@ class TAliEnFind : public TObject {
       TString      fTreeName;
       TString      fRegexpRaw;
       TString      fAnchor;
+      TString      fQuery;
       Bool_t       fArchSubst;
       TPMERegexp  *fRegexp;
       TString      fSearchId;
@@ -63,7 +64,8 @@ class TAliEnFind : public TObject {
 
       TAliEnFind(const TString &basePath = "", const TString &fileName = "",
          const TString &anchor = "", const Bool_t archSubst = kFALSE,
-         const TString &treeName = "", const TString &regexp = "");
+         const TString &treeName = "", const TString &regexp = "",
+         const TString &query = "");
 
       TAliEnFind(const TAliEnFind &src);
       TAliEnFind &operator=(const TAliEnFind &rhs);
@@ -111,7 +113,7 @@ class TDataSetManagerAliEn : public TDataSetManager {
       static std::vector<Int_t> *ExpandRunSpec(TString &runSpec);
 
       static Bool_t ParseCustomFindUri(TString &uri, TString &basePath,
-         TString &fileName, TString &anchor, TString &treeName,
+         TString &fileName, TString &anchor, TString &query, TString &treeName,
          TString &regexp);
 
       static Bool_t ParseOfficialDataUri(TString &uri, Bool_t sim,
