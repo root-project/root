@@ -41,17 +41,34 @@ TProtoClass::TProtoClass(TClass* cl):
    // fPRealData encodes all TProtoRealData objects with a
    // TObjString to signal a new class.
    TClass* clCurrent = cl;
+   TRealData* precRd=nullptr;
    for (auto realDataObj: *cl->GetListOfRealData()) {
       TRealData *rd = (TRealData*)realDataObj;
+      if(!precRd) precRd = rd;
       TClass* clRD = rd->GetDataMember()->GetClass();
       if (clRD != clCurrent) {
          clCurrent = clRD;
          TObjString *clstr = new TObjString(clRD->GetName());
-         if (rd->TestBit(TRealData::kTransient))
+         if (precRd->TestBit(TRealData::kTransient)){
             clstr->SetBit(TRealData::kTransient);
+         }
          fPRealData->AddLast(clstr);
+      precRd=rd;
       }
       fPRealData->AddLast(new TProtoRealData(rd));
+   }
+
+   if (gDebug>2){
+      for (auto dataPtr : *fPRealData){
+         const auto classType = dataPtr->IsA();
+         const auto dataPtrName = dataPtr->GetName();
+         if (classType == TProtoRealData::Class())
+            Info("TProtoClass","Data is a protorealdata: %s", dataPtrName);
+         if (classType == TObjString::Class())
+            Info("TProtoClass","Data is a objectstring: %s", dataPtrName);
+         if (dataPtr->TestBit(TRealData::kTransient))
+            Info("TProtoClass","And is transient");
+      }
    }
 
    cl->CalculateStreamerOffset();
