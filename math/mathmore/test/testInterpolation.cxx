@@ -10,6 +10,7 @@
 #include "TCanvas.h"
 #include "TLegend.h"
 #include "TApplication.h"
+#include "TList.h"
 #include "Math/Interpolator.h"
 #include <iostream>
 #include <string>
@@ -17,11 +18,11 @@
 
 #include <cmath>
 
-bool showGraphics = false;
+bool showGraphics = true; 
 
 TGraph *grorig = 0;
 
-void interpolate( const  ROOT::Math::Interpolator & itp ) { 
+void interpolate( const  ROOT::Math::Interpolator & itp, bool drawSame = false ) { 
 
    std::string type = itp.Type(); 
    std::cout << "\n" << type << "  interpolation:" << std::endl;
@@ -41,16 +42,31 @@ void interpolate( const  ROOT::Math::Interpolator & itp ) {
       i++; 
    }
 
-   TGraph *gr = new TGraph(n,xcoord,ycoord);
-   gr->SetMarkerColor(kBlue);
-   gr->SetMarkerStyle(7);
-   gr->Draw("CP");
-   TLegend * l = new TLegend(0.1,0.7,0.4,0.9); 
-   l->AddEntry(grorig,"original data"); 
-   l->AddEntry(gr,type.c_str());
-   l->Draw();
+   if (showGraphics) {
+      TGraph *gr = new TGraph(n,xcoord,ycoord);
+      gr->SetMarkerColor(kBlue);
+      if (drawSame)     gr->SetMarkerColor(kGreen);
+      gr->SetMarkerStyle(7);
+      gr->Draw("CP");
+      if (!drawSame) { 
+         TLegend * l = new TLegend(0.1,0.7,0.4,0.9); 
+         l->SetName("legend");
+         l->AddEntry(grorig,"original data"); 
+         l->AddEntry(gr,type.c_str());
+         l->Draw();
+      }
+      else if (gPad) { 
+         TLegend * l = (TLegend*)  gPad->GetListOfPrimitives()->FindObject("legend");
+         if (l) { 
+            l->AddEntry(gr, type.c_str() );
+            l->Draw(); 
+         }
+      }
+   }      
+   if (gPad) gPad->Update(); 
 
    return;
+
 }
 
 
@@ -138,7 +154,7 @@ void testInterpolation() {
 
    ROOT::Math::Interpolator itp7; 
    itp7.SetData(x,y);
-   interpolate(itp7);
+   interpolate(itp7,true);
 
 
 }
@@ -149,6 +165,7 @@ int main(int argc, char **argv)
    using std::cerr;
    using std::cout;
    using std::endl;
+   showGraphics = false;
 
   // Parse command line arguments 
   for (Int_t i=1 ;  i<argc ; i++) {
