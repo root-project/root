@@ -89,6 +89,7 @@ class TProtoClass;
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
+#include "clang/Parse/Parser.h"
 
 #include "cling/Interpreter/ClangInternalState.h"
 #include "cling/Interpreter/DynamicLibraryManager.h"
@@ -4490,6 +4491,24 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
 {
    // Parse the payload or header.
 
+   // Save state of the PP
+   Sema &SemaR = interpreter->getSema();
+   ASTContext& C = SemaR.getASTContext();
+   Preprocessor &PP = SemaR.getPreprocessor();
+   Parser& P = const_cast<Parser&>(interpreter->getParser());
+   Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+   Parser::ParserCurTokRestoreRAII savedCurToken(P);
+   // After we have saved the token reset the current one to something which
+   // is safe (semi colon usually means empty decl)
+   Token& Tok = const_cast<Token&>(P.getCurToken());
+   Tok.setKind(tok::semi);
+
+   // We can't PushDeclContext, because we go up and the routine that pops
+   // the DeclContext assumes that we drill down always.
+   // We have to be on the global context. At that point we are in a
+   // wrapper function so the parent context must be the global.
+   Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
+                                          SemaR.TUScope);
    std::string code = "#define __ROOTCLING__ 1\n"
       "#undef ClassDef\n"
       "#define ClassDef(name,id) \\\n"
