@@ -284,8 +284,8 @@ namespace ROOT
       std::vector<double> fInitialSigma; // User-set Initial step-size for each variables.
       std::map<int,double> fFixedVariables; // fixed variables and values.
       CMASolutions fCMAsols;
-      CMAParameters<> fCMAparams; // params no bounds.
-      CMAParameters<GenoPheno<pwqBoundStrategy>> fCMAparamsb; // params with bounds.
+      CMAParameters<GenoPheno<NoBoundStrategy,linScalingStrategy>> fCMAparams; // params no bounds.
+      CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> fCMAparamsb; // params with bounds.
       mutable std::vector<double> fGlobalCC; // vector of global correlation coefficients.
       mutable std::vector<double> fValues; // X values.
       mutable std::vector<double> fErrors; // X errors.
