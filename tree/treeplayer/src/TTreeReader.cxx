@@ -25,11 +25,60 @@
  Roottest contains an
  <a href="http://root.cern.ch/gitweb?p=roottest.git;a=tree;f=root/tree/reader;hb=HEAD">example</a>
  showing the full power.
- Usually it is as simple as this:
+
+A simpler analysis example - the one from the tutorials - can be found below:
+it histograms a function of the px and py branches.</p>
+&nbsp;
+<div class="code"><pre class="_listing"><span class="codecomment">// A simple <a href="./TTreeReader.html">TTreeReader</a> use: read data from hsimple.root (written by hsimple.C)</span>
+&nbsp;
+<span class="cpp">#include "<a href="./TFile.h">TFile.h</a>"</span>
+<span class="cpp">#include "<a href="./TH1F.h">TH1F.h</a>"</span>
+<span class="cpp">#include "<a href="./TTreeReader.h">TTreeReader.h</a>"</span>
+<span class="cpp">#include "<a href="./TTreeReaderValue.h">TTreeReaderValue.h</a>"</span>
+&nbsp;
+<span class="keyword">class</span> <a href="./TVirtualPad.html">TVirtualPad</a>;
+&nbsp;
+void hsimpleReader() {
+   <span class="codecomment">// Create a histogram for the values we read.</span>
+   <a href="./TH1F.html">TH1F</a> *myHist = <span class="keyword">new</span> <a href="./TH1F.html">TH1F</a>(<span class="string">"h1"</span>, <span class="string">"ntuple"</span>, 100, -4, 4);
+&nbsp;
+   <span class="codecomment">// Open the file containing the tree.</span>
+   <a href="./TFile.html">TFile</a> *myFile = <a href="./TFile.html">TFile</a>::<a href="./TFile.html#TFile:Open" title="TFile* TFile::Open(const char* name, Option_t* option = &quot;&quot;, const char* ftitle = &quot;&quot;, Int_t compress = 1, Int_t netopt = 0) or overloads">Open</a>(<span class="string">"$ROOTSYS/tutorials/hsimple.root"</span>);
+&nbsp;
+   <span class="codecomment">// Create a <a href="./TTreeReader.html">TTreeReader</a> for the tree, for instance by passing the</span>
+   <span class="codecomment">// <a href="./TTree.html">TTree</a>'s name and the <a href="./TDirectory.html">TDirectory</a> / <a href="./TFile.html">TFile</a> it is in.</span>
+   <a href="./TTreeReader.html">TTreeReader</a> myReader(<span class="string">"ntuple"</span>, myFile);
+&nbsp;
+   <span class="codecomment">// The branch <span class="string">"px"</span> contains floats; access them as myPx.</span>
+   TTreeReaderValue&lt;<a href="./ListOfTypes.html#Float_t">Float_t</a>&gt; myPx(myReader, <span class="string">"px"</span>);
+   <span class="codecomment">// The branch <span class="string">"py"</span> contains floats, too; access those as myPy.</span>
+   TTreeReaderValue&lt;<a href="./ListOfTypes.html#Float_t">Float_t</a>&gt; myPy(myReader, <span class="string">"py"</span>);
+&nbsp;
+   <span class="codecomment">// Loop over all entries of the <a href="./TTree.html">TTree</a> or <a href="./TChain.html">TChain</a>.</span>
+   <span class="keyword">while</span> (myReader.<a href="./TTreeReader.html#TTreeReader:Next" title="Bool_t TTreeReader::Next()">Next</a>()) {
+      <span class="codecomment">// Just access the data as if myPx and myPy were iterators (note the <span class="string">'*'</span></span>
+      <span class="codecomment">// in front of them):</span>
+      myHist-&gt;Fill(*myPx + *myPy);
+   }
+&nbsp;
+   myHist-&gt;<a href="./TObject.html#TObject:Draw" title="void TObject::Draw(Option_t* option = &quot;&quot;)">Draw</a>();
+}
+</pre></div>
+<div class="clear"></div>
+<p>
+<br/>
+</p>
+
+<p>A more complete example including error handling and a few combinations of
+TTreeReaderValue and TTreeReaderArray would look like this:</p>
+
+<div class="clear"></div>
+
 <div class="code">
 <table><tr><td>
 <pre class="_listing">
 <span class="cpp">#include &lt;<a href="TFile.h">TFile.h</a>&gt;</span>
+<span class="cpp">#include &lt;<a href="TH1.h">TH1.h</a>&gt;</span>
 <span class="cpp">#include &lt;<a href="TTreeReader.h">TTreeReader.h</a>&gt;</span>
 <span class="cpp">#include &lt;<a href="TTreeReaderValue.h">TTreeReaderValue.h</a>&gt;</span>
 <span class="cpp">#include &lt;<a href="TTreeReaderArray.h">TTreeReaderArray.h</a>&gt;</span>
@@ -140,22 +189,12 @@
             hist-&gt;Fill(taus[iTau].eta(), currentWeight);
          }
       }
-   }
+   } <span class="comment">// TTree entry / event loop
 }
 </pre></td></tr></table></div>
-
-<div class="clear">
-</div>
-
-&nbsp;
-
-<p>A simpler analysis example - the one from the tutorials - can be found below, in
-the Source tab: it histograms a function of the px and py branches:</p>
+<div class="clear"></div>
 END_HTML
-
-BEGIN_MACRO(source)
-../../../tutorials/tree/hsimpleReader.C
-END_MACRO */
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 ClassImp(TTreeReader)

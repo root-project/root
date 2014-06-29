@@ -8,7 +8,7 @@
 
 class TVirtualPad;
 
-TVirtualPad* hsimpleReader() {
+void hsimpleReader() {
    // Create a histogram for the values we read.
    TH1F *myHist = new TH1F("h1","ntuple",100,-4,4);
 
@@ -18,7 +18,7 @@ TVirtualPad* hsimpleReader() {
       gROOT->ProcessLine(".x $ROOTSYS/tutorials/hsimple.C");
       myFile = TFile::Open("$ROOTSYS/tutorials/hsimple.root");
       if (!myFile || myFile->IsZombie()) {
-         return 0;
+         return;
       }
    }
    // Create a TTreeReader for the tree, for instance by passing the
@@ -38,8 +38,4 @@ TVirtualPad* hsimpleReader() {
    }
 
    myHist->Draw();
-
-   // For the ROOT reference guide of TTreeReader (which uses this macro),
-   // return the resulting canvas:
-   return gPad;
 }
