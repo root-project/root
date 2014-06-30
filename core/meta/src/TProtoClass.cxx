@@ -41,14 +41,34 @@ TProtoClass::TProtoClass(TClass* cl):
    // fPRealData encodes all TProtoRealData objects with a
    // TObjString to signal a new class.
    TClass* clCurrent = cl;
+   TRealData* precRd=nullptr;
    for (auto realDataObj: *cl->GetListOfRealData()) {
       TRealData *rd = (TRealData*)realDataObj;
+      if(!precRd) precRd = rd;
       TClass* clRD = rd->GetDataMember()->GetClass();
       if (clRD != clCurrent) {
          clCurrent = clRD;
-         fPRealData->AddLast(new TObjString(clRD->GetName()));
+         TObjString *clstr = new TObjString(clRD->GetName());
+         if (precRd->TestBit(TRealData::kTransient)){
+            clstr->SetBit(TRealData::kTransient);
+         }
+         fPRealData->AddLast(clstr);
+      precRd=rd;
       }
       fPRealData->AddLast(new TProtoRealData(rd));
+   }
+
+   if (gDebug>2){
+      for (auto dataPtr : *fPRealData){
+         const auto classType = dataPtr->IsA();
+         const auto dataPtrName = dataPtr->GetName();
+         if (classType == TProtoRealData::Class())
+            Info("TProtoClass","Data is a protorealdata: %s", dataPtrName);
+         if (classType == TObjString::Class())
+            Info("TProtoClass","Data is a objectstring: %s", dataPtrName);
+         if (dataPtr->TestBit(TRealData::kTransient))
+            Info("TProtoClass","And is transient");
+      }
    }
 
    cl->CalculateStreamerOffset();
@@ -119,7 +139,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
       for (TObject* element: *fPRealData) {
          if (element->IsA() == TObjString::Class()) {
             currentRDClass = TClass::GetClass(element->GetName());
-            if (!currentRDClass) {
+            if (!currentRDClass && !element->TestBit(TRealData::kTransient)) {
                Error("TProtoClass::FillTClass()", "Cannot find TClass for %s; skipping its members.",
                      element->GetName());
             }
@@ -151,6 +171,7 @@ TProtoClass::TProtoRealData::TProtoRealData(const TRealData* rd):
 {
    // Initialize this from a TRealData object.
    SetBit(kIsObject, rd->IsObject());
+   SetBit(TRealData::kTransient, rd->TestBit(TRealData::kTransient));
 }
 
 //______________________________________________________________________________

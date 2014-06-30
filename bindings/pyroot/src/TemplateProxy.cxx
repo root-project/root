@@ -230,7 +230,7 @@ namespace {
       for ( Int_t i = 0; i < nArgs; ++i ) {
          PyObject* itemi = PyTuple_GET_ITEM( args, i );
          if ( PyType_Check( itemi ) ) isType = kTRUE;
-         else if ( ! isType && PyString_Check( itemi ) ) nStrings += 1;
+         else if ( ! isType && PyBytes_Check( itemi ) ) nStrings += 1;
       // special case for arrays
          PyObject* pytc = PyObject_GetAttr( itemi, PyStrings::gTypeCode );
          if ( ! ( pytc && PyROOT_PyUnicode_Check( pytc ) ) ) {
@@ -256,7 +256,7 @@ namespace {
                default:  ptrname = "void*";  // TODO: verify if this is right
             }
             if ( ptrname ) {
-               PyObject* pyptrname = PyString_FromString( ptrname );
+               PyObject* pyptrname = PyBytes_FromString( ptrname );
                PyTuple_SET_ITEM( tpArgs, i, pyptrname );
             // string added, but not counted towards nStrings
             } else {

@@ -417,7 +417,6 @@ void TDocParser::Convert(std::ostream& out, std::istream& in, const char* relpat
       Strip(fLineStripped);
 
       DecorateKeywords(fLineSource);
-      ProcessComment();
 
       // Changes in this bit of code have consequences for:
       // * module index,

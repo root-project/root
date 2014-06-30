@@ -20,6 +20,8 @@
 # Uncomment the following line to trace the execution of the shell commands
 # set -o xtrace
 
+SIGNING_USER=$(gpg --fingerprint | grep uid | sed s/"uid *"//g | tr -s " ")
+
 function tarball_deb {
   box_draw "Compressing compiled binaries to produce a bzip2 tarball"
   cd ${workdir}
@@ -165,8 +167,6 @@ EOF
 
   echo "Create file: debian/changelog"
 
-  SIGNING_USER=$(gpg --fingerprint | grep uid | sed s/"uid *"//g | tr -s " ")
-
   cat >> ${prefix}/debian/changelog << EOF
 cling (${VERSION}-1) unstable; urgency=low
 
@@ -207,26 +207,15 @@ EOF
   debuild
 }
 
-function cleanup_deb {
-  box_draw "Clean up"
-  mkdir -pv "${workdir}"/cling-"${VERSION}"-1
-  mv -v "${workdir}"/cling_"${VERSION}"*.deb "${workdir}"/cling-"${VERSION}"-1
-  mv -v "${workdir}"/cling_"${VERSION}"*.changes "${workdir}"/cling-"${VERSION}"-1
-  mv -v "${workdir}"/cling_"${VERSION}"*.build "${workdir}"/cling-"${VERSION}"-1
-  mv -v "${workdir}"/cling_"${VERSION}"*.dsc "${workdir}"/cling-"${VERSION}"-1
-  mv -v "${workdir}"/cling_"${VERSION}"*.debian.tar.gz "${workdir}"/cling-"${VERSION}"-1
-
-  rm -f "${workdir}"/cling_"${VERSION}"*.orig.tar.bz2
-  rm -Rf ${workdir}/builddir
-  rm -Rf ${prefix}
-  rm -Rf ${workdir}/install_tmp
-}
-
 function check_ubuntu {
   if [ $(dpkg-query -W -f='${Status}' ${1} 2>/dev/null | grep -c "ok installed") -eq 0 ];
   then
     printf "%-10s\t\t[NOT INSTALLED]\n" "${1}"
   else
-    printf "%-10s\t\t[OK]\n" "${1}"
+    if [ ${1} = "gnupg" -a "${SIGNING_USER}" = "" ]; then
+      printf "%-10s\t\t[INSTALLED - NOT SETUP]\n" "${1}"
+    else
+      printf "%-10s\t\t[OK]\n" "${1}"
+    fi
   fi
 }

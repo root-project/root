@@ -50,9 +50,11 @@ function get_nsis {
     tail -1)
   echo "Latest version of NSIS is: "${NSIS_VERSION}
   box_draw "Download NSIS compiler (makensis.exe)"
-  wget "http://sourceforge.net/projects/nsis/files/NSIS%203%20Pre-release/${NSIS_VERSION}/nsis-${NSIS_VERSION}.zip"
-  unzip -d ${workdir}/install_tmp nsis-${NSIS_VERSION}.zip
-  chmod -R 775 ${workdir}/install_tmp/nsis-${NSIS_VERSION}
+  wget "http://sourceforge.net/projects/nsis/files/NSIS%203%20Pre-release/${NSIS_VERSION}/nsis-${NSIS_VERSION}.zip" -P ${TMP_PREFIX}/nsis
+  wget "http://stahlworks.com/dev/unzip.exe" -P ${TMP_PREFIX}/nsis
+  chmod 775 ${TMP_PREFIX}/nsis/unzip.exe
+  ${TMP_PREFIX}/nsis/unzip.exe $(cygpath -wa ${TMP_PREFIX}/nsis/nsis-${NSIS_VERSION}.zip) -d $(cygpath -wa ${TMP_PREFIX}/nsis/)
+  chmod -R 775 ${TMP_PREFIX}/nsis/nsis-${NSIS_VERSION}
 }
 
 function make_nsi {
@@ -104,8 +106,8 @@ InstallDir "C:\\Cling\\cling-\${VERSION}"
 !define MUI_HEADERIMAGE
 
 ; Theme
-!define MUI_ICON "$(cygpath --windows --absolute ${CLING_SRC_DIR}/tools/packaging/windows/LLVM.ico)"
-!define MUI_UNICON "$(cygpath --windows --absolute ${workdir}/install_tmp/nsis-${NSIS_VERSION}/Contrib/Graphics/Icons/orange-uninstall.ico)"
+!define MUI_ICON "$(cygpath -wa ${CLING_SRC_DIR}/tools/packaging/windows/LLVM.ico)"
+!define MUI_UNICON "$(cygpath -wa ${TMP_PREFIX}/nsis/nsis-${NSIS_VERSION}/Contrib/Graphics/Icons/orange-uninstall.ico)"
 
 !insertmacro MUI_PAGE_WELCOME
 
@@ -129,6 +131,11 @@ InstallDir "C:\\Cling\\cling-\${VERSION}"
 !insertmacro MUI_LANGUAGE "English"
 
 ###############################################################################
+
+Function .onInit
+  Call DetectWinVer
+  Call CheckPrevVersion
+FunctionEnd
 
 ; file section
 Section "MainFiles"
@@ -197,10 +204,84 @@ EOF
  Delete "\$INSTDIR\*.*"
  RmDir "\$INSTDIR"
 SectionEnd
+
+; Function to detect Windows version and abort if Cling is unsupported in the current platform
+Function DetectWinVer
+  Push \$0
+  Push \$1
+  ReadRegStr \$0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" CurrentVersion
+  IfErrors is_error is_winnt
+is_winnt:
+  StrCpy \$1 \$0 1
+  StrCmp \$1 4 is_error ; Aborting installation for Windows versions older than Windows 2000
+  StrCmp \$0 "5.0" is_error ; Removing Windows 2000 as supported Windows version
+  StrCmp \$0 "5.1" is_winnt_XP
+  StrCmp \$0 "5.2" is_winnt_2003
+  StrCmp \$0 "6.0" is_winnt_vista
+  StrCmp \$0 "6.1" is_winnt_7
+  StrCmp \$0 "6.2" is_winnt_8
+  StrCmp \$1 6 is_winnt_8 ; Checking for future versions of Windows 8
+  Goto is_error
+
+is_winnt_XP:
+is_winnt_2003:
+is_winnt_vista:
+is_winnt_7:
+is_winnt_8:
+  Goto done
+is_error:
+  StrCpy \$1 \$0
+  ReadRegStr \$0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" ProductName
+  IfErrors 0 +4
+  ReadRegStr \$0 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion" Version
+  IfErrors 0 +2
+  StrCpy \$0 "Unknown"
+  MessageBox MB_ICONSTOP|MB_OK "This version of Cling cannot be installed on this system. Cling is supported only on Windows NT systems. Current system: \$0 (version: \$1)"
+  Abort
+done:
+  Pop \$1
+  Pop \$0
+FunctionEnd
+
+; Function to check any previously installed version of Cling in the system
+Function CheckPrevVersion
+  Push \$0
+  Push \$1
+  Push \$2
+  IfFileExists "\$INSTDIR\bin\cling.exe" 0 otherver
+  MessageBox MB_OK|MB_ICONSTOP "Another Cling installation (with the same version) has been detected. Please uninstall it first."
+  Abort
+otherver:
+  StrCpy \$0 0
+  StrCpy \$2 ""
+loop:
+  EnumRegKey \$1 \${PRODUCT_ROOT_KEY} "\${PRODUCT_KEY}" \$0
+  StrCmp \$1 "" loopend
+  IntOp \$0 \$0 + 1
+  StrCmp \$2 "" 0 +2
+  StrCpy \$2 "\$1"
+  StrCpy \$2 "\$2, \$1"
+  Goto loop
+loopend:
+  ReadRegStr \$1 \${PRODUCT_ROOT_KEY} "\${PRODUCT_KEY}" "Version"
+  IfErrors finalcheck
+  StrCmp \$2 "" 0 +2
+  StrCpy \$2 "\$1"
+  StrCpy \$2 "\$2, \$1"
+finalcheck:
+  StrCmp \$2 "" done
+  MessageBox MB_YESNO|MB_ICONEXCLAMATION "Another Cling installation (version \$2) has been detected. It is recommended to uninstall it if you intend to use the same installation directory. Do you want to proceed with the installation anyway?" IDYES done IDNO 0
+  Abort
+done:
+  ClearErrors
+  Pop \$2
+  Pop \$1
+  Pop \$0
+FunctionEnd
 EOF
 }
 
 function build_nsis {
   box_draw "Building NSIS executable from cling.nsi"
-  ${workdir}/install_tmp/nsis-${NSIS_VERSION}/makensis.exe -V3 $(cygpath --windows --absolute ${workdir}/cling.nsi)
+  ${TMP_PREFIX}/nsis-${NSIS_VERSION}/nsis/makensis.exe -V3 $(cygpath --windows --absolute ${workdir}/cling.nsi)
 }

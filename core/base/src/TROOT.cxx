@@ -211,12 +211,14 @@ namespace {
                          const char** headers,
                          const char** includePaths,
                          const char* payloadCode,
+                         const char* fwdDeclCode,
                          void (*triggerFunc)(),
                          const TROOT::FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                          const char** classesHeaders): 
                            fModuleName(moduleName),
                            fHeaders(headers),
                            fPayloadCode(payloadCode),
+                           fFwdDeclCode(fwdDeclCode),
                            fIncludePaths(includePaths),
                            fTriggerFunc(triggerFunc),
                            fClassesHeaders(classesHeaders),
@@ -225,6 +227,7 @@ namespace {
       const char* fModuleName; // module name
       const char** fHeaders; // 0-terminated array of header files
       const char* fPayloadCode; // Additional code to be given to cling at library load
+      const char* fFwdDeclCode; // Additional code to let cling know about selected classes and functions
       const char** fIncludePaths; // 0-terminated array of header files      
       void (*fTriggerFunc)(); // Pointer to the dict initialization used to find the library name
       const char** fClassesHeaders; // 0-terminated list of classes and related header files
@@ -386,6 +389,10 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    ROOT::gROOTLocal = this;
    gDirectory = 0;
+  
+   // initialize gClassTable is not already done
+   if (!gClassTable) new TClassTable;
+  
    SetName(name);
    SetTitle(title);
 
@@ -1710,6 +1717,7 @@ void TROOT::InitInterpreter()
                                    li->fHeaders,
                                    li->fIncludePaths,
                                    li->fPayloadCode,
+                                   li->fFwdDeclCode,
                                    li->fTriggerFunc,
                                    li->fFwdNargsToKeepColl,
                                    li->fClassesHeaders);
@@ -2138,6 +2146,7 @@ void TROOT::RegisterModule(const char* modulename,
                            const char** headers,                           
                            const char** includePaths,
                            const char* payloadCode,
+                           const char* fwdDeclCode,
                            void (*triggerFunc)(),
                            const TInterpreter::FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                            const char** classesHeaders)
@@ -2207,11 +2216,11 @@ void TROOT::RegisterModule(const char* modulename,
    
    // Now register with TCling.
    if (gCling) {
-      gCling->RegisterModule(modulename, headers, includePaths, payloadCode,
+      gCling->RegisterModule(modulename, headers, includePaths, payloadCode, fwdDeclCode,
                              triggerFunc, fwdDeclsArgToSkip, classesHeaders);
    } else {
       GetModuleHeaderInfoBuffer()
-         .push_back(ModuleHeaderInfo_t (modulename, headers, includePaths, payloadCode,
+         .push_back(ModuleHeaderInfo_t (modulename, headers, includePaths, payloadCode, fwdDeclCode,
                                         triggerFunc, fwdDeclsArgToSkip,classesHeaders));
    }
 }

@@ -25,6 +25,8 @@ function platform_init {
 
   if [ "${OS}" = "Cygwin" ]; then
     DIST="Win"
+    SHLIBEXT=".dll"
+    EXEEXT=".exe"
 
   elif [ "{$OS}" = "Darwin" ]; then
     OS="Mac OS"
@@ -112,31 +114,73 @@ function fetch_llvm {
   LLVMRevision=$(wget -q -O- https://raw.githubusercontent.com/ani07nov/cling/master/LastKnownGoodLLVMSVNRevision.txt)
   echo "Last known good LLVM revision is: ${LLVMRevision}"
 
-  if [ -d "${srcdir}" ]; then
-    cd "${srcdir}"
+  function get_fresh_llvm {
+    # ${LLVM_GIT_URL} can be overridden. More information in README.md.
+    LLVM_GIT_URL=${LLVM_GIT_URL:-"http://root.cern.ch/git/llvm.git"}
+    git clone ${LLVM_GIT_URL} ${srcdir}
+    cd ${srcdir}
+    git checkout ROOT-patches-r${LLVMRevision}
+  }
+
+  function update_old_llvm {
     git clean -f -x -d
     git fetch --tags
     git checkout ROOT-patches-r${LLVMRevision}
     git pull origin refs/tags/ROOT-patches-r${LLVMRevision}
+  }
+
+  if [ -d ${srcdir} ]; then
+    cd ${srcdir}
+    if [ ! -z ${LLVM_GIT_URL} ]; then
+      grep -q ${LLVM_GIT_URL} ${srcdir}/.git/config
+      if [ ${?} = 0 ]; then
+        update_old_llvm
+      else
+        cd ${workdir}
+        rm -Rf ${srcdir}
+        get_fresh_llvm
+      fi
+    else
+      update_old_llvm
+    fi
   else
-    git clone http://root.cern.ch/git/llvm.git "${srcdir}"
-    cd "${srcdir}"
-    git checkout tags/ROOT-patches-r${LLVMRevision}
+    get_fresh_llvm
   fi
 }
 
 # Fetch the sources for the vendor clone of Clang
 function fetch_clang {
-  if [ -d "${srcdir}/tools/clang" ]; then
-    cd "${srcdir}/tools/clang"
+  function get_fresh_clang {
+    # ${CLANG_GIT_URL} can be overridden. More information in README.md.
+    CLANG_GIT_URL=${CLANG_GIT_URL:-"http://root.cern.ch/git/clang.git"}
+    git clone ${CLANG_GIT_URL} ${srcdir}/tools/clang
+    cd ${srcdir}/tools/clang
+    git checkout ROOT-patches-r${LLVMRevision}
+  }
+
+  function update_old_clang {
     git clean -f -x -d
     git fetch --tags
     git checkout ROOT-patches-r${LLVMRevision}
     git pull origin refs/tags/ROOT-patches-r${LLVMRevision}
+  }
+
+  if [ -d ${srcdir}/tools/clang ]; then
+    cd ${srcdir}/tools/clang
+    if [ ! -z ${CLANG_GIT_URL} ]; then
+      grep -q ${CLANG_GIT_URL} ${srcdir}/tools/clang/.git/config
+      if [ ${?} = 0 ]; then
+        update_old_clang
+      else
+        cd ${srcdir}/tools
+        rm -Rf ${srcdir}/tools/clang
+        get_fresh_clang
+      fi
+    else
+      update_old_clang
+    fi
   else
-    git clone http://root.cern.ch/git/clang.git  "${srcdir}/tools/clang"
-    cd "${srcdir}/tools/clang"
-    git checkout ROOT-patches-r${LLVMRevision}
+    get_fresh_clang
   fi
 }
 
@@ -153,6 +197,8 @@ function fetch_cling {
       checkout_branch=$(git describe --match v* --abbrev=0 --tags | head -n 1)
     elif [ ${1} = "master" ]; then
       checkout_branch="master"
+    else
+      checkout_branch="${1}"
     fi
 
     git checkout ${checkout_branch}
@@ -166,6 +212,8 @@ function fetch_cling {
       checkout_branch=$(git describe --match v* --abbrev=0 --tags | head -n 1)
     elif [ ${1} = "master" ]; then
       checkout_branch="master"
+    else
+      checkout_branch="${1}"
     fi
 
     git checkout ${checkout_branch}
@@ -208,6 +256,23 @@ function set_version {
   fi
 }
 
+function set_ext {
+  box_draw "Set binary/library extensions"
+  if [ "${LLVM_OBJ_ROOT}" = "" ]; then
+    LLVM_OBJ_ROOT=${workdir}/builddir
+  fi
+
+  if [ ! -f ${LLVM_OBJ_ROOT}/test/lit.site.cfg ]; then
+    make -C ${LLVM_OBJ_ROOT}/test lit.site.cfg
+  fi
+
+  SHLIBEXT=$(grep "^config.llvm_shlib_ext = " ${LLVM_OBJ_ROOT}/test/lit.site.cfg | sed -e "s|config.llvm_shlib_ext = ||g" -e 's|"||g')
+  EXEEXT=$(grep "^config.llvm_exe_ext = " ${LLVM_OBJ_ROOT}/test/lit.site.cfg | sed -e "s|config.llvm_exe_ext = ||g" -e 's|"||g')
+
+  echo "EXEEXT: ${EXEEXT}"
+  echo "SHLIBEXT: ${SHLIBEXT}"
+}
+
 function compile {
   prefix=${1}
   python=$(type -p python)
@@ -221,36 +286,39 @@ function compile {
 
   if [ "${OS}" = "Cygwin" ]; then
     box_draw "Configuring Cling with CMake and generating Visual Studio 11 project files"
-    cmake -G "Visual Studio 11" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(cygpath --windows --absolute ${workdir}/install_tmp) ../$(basename ${srcdir})
+    cmake -G "Visual Studio 11" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(cygpath --windows --absolute ${TMP_PREFIX}) ../$(basename ${srcdir})
 
     box_draw "Building Cling (using ${cores} cores)"
     cmake --build . --target clang --config Release
     cmake --build . --target cling --config Release
+
     box_draw "Install compiled binaries to prefix (using ${cores} cores)"
     cmake --build . --target INSTALL --config Release
   else
     box_draw "Configuring Cling for compilation"
-    ${srcdir}/configure --disable-compiler-version-checks --with-python=${python} --enable-targets=host --prefix=${workdir}/install_tmp --enable-optimized=yes --enable-cxx11
+    ${srcdir}/configure --disable-compiler-version-checks --with-python=${python} --enable-targets=host --prefix=${TMP_PREFIX} --enable-optimized=yes --enable-cxx11
 
     box_draw "Building Cling (using ${cores} cores)"
     make -j${cores}
+
+    box_draw "Install compiled binaries to prefix (using ${cores} cores)"
+    make install -j${cores} prefix=${TMP_PREFIX}
   fi
 }
 
 function install_prefix {
-    if [ "${OS}" = "Cygwin" ]; then
-      box_draw "Install compiled binaries to prefix (using ${cores} cores)"
-      cmake --build . --target INSTALL --config Release
-    else
-      box_draw "Install compiled binaries to prefix (using ${cores} cores)"
-      make install -j${cores}
-    fi
 
-    for f in $(find ${workdir}/install_tmp -type f -printf "%P\n"); do
-      grep -q $(echo $f | sed "s|${workdir}/install_tmp/||g")[[:space:]] ${HOST_CLING_SRC_DIR}/dist-files.mk
+    set_ext
+    box_draw "Filtering Cling's libraries and binaries"
+    echo "This is going to take a while. Please wait."
+    sed -i "s|@EXEEXT@|${EXEEXT}|g" ${HOST_CLING_SRC_DIR}/dist-files.mk
+    sed -i "s|@SHLIBEXT@|${SHLIBEXT}|g" ${HOST_CLING_SRC_DIR}/dist-files.mk
+
+    for f in $(find ${TMP_PREFIX} -type f -printf "%P\n"); do
+      grep -q $(echo $f | sed "s|${TMP_PREFIX}||g")[[:space:]] ${HOST_CLING_SRC_DIR}/dist-files.mk
       if [ ${?} = 0 ]; then
         mkdir -p ${prefix}/$(dirname $f)
-        cp ${workdir}/install_tmp/$f ${prefix}/$f
+        cp ${TMP_PREFIX}/$f ${prefix}/$f
       fi
     done
 }
@@ -270,13 +338,43 @@ function tarball {
 }
 
 function cleanup {
+  # Newline is required to align boxes prooperly when SIGINT is encountered
+  echo ""
   box_draw "Clean up"
   echo "Remove directory: ${workdir}/builddir"
   rm -Rf ${workdir}/builddir
-  echo "Remove directory: ${prefix}"
-  rm -Rf ${prefix}
-  echo "Remove directory: ${workdir}/install_prefix"
-  rm -Rf ${workdir}/install_tmp
+
+  if [ -d "${prefix}" ]; then
+    echo "Remove directory: ${prefix}"
+    rm -Rf ${prefix}
+  fi
+
+  echo "Remove directory: ${TMP_PREFIX}"
+  rm -Rf ${TMP_PREFIX}
+
+  if [ "${VALUE}" = "deb" -o "${PARAM}" = "--deb-tag" ]; then
+    echo "Create output directory: ${workdir}/cling-${VERSION}-1"
+    mkdir -p ${workdir}/cling-${VERSION}-1
+
+    if [ "$(ls -A ${workdir}/cling_${VERSION}* 2> /dev/null)" != "" ]; then
+      echo "Moving Debian package files to ${workdir}/cling-${VERSION}-1"
+      mv -v ${workdir}/cling_${VERSION}* ${workdir}/cling-${VERSION}-1
+    fi
+
+    if [ "$(ls -A ${workdir}/cling-${VERSION}-1 2> /dev/null)" = "" ]; then
+      echo "Removing empty directory: ${workdir}/cling-${VERSION}-1"
+      rm -Rf ${workdir}/cling-${VERSION}-1
+    fi
+  fi
+
+  if [ -f "${workdir}/cling.nsi" ]; then
+    echo "Remove file: cling.nsi"
+    rm -Rf ${workdir}/cling.nsi
+  fi
+
+  # Reset trap on SIGEXIT, or else function "cleanup" will be executed twice.
+  trap - EXIT
+  exit
 }
 
 # Initialize variables with details of the platform and Operating System

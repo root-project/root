@@ -22,9 +22,11 @@
 # Uncomment the following line to trace the execution of the shell commands
 # set -o xtrace
 
-# TODO: Change workdir to a suitable path on your system (or Electric Commander)
-workdir=~/ec/build
+# ${workdir} can be overridden. More information in README.md.
+workdir=${workdir:-~/ec/build}
+
 srcdir=${workdir}/cling-src
+TMP_PREFIX="/var/tmp/cling_obj"
 CLING_SRC_DIR=${srcdir}/tools/cling
 HOST_CLING_SRC_DIR=$(dirname $(readlink -f ${0}))
 
@@ -33,6 +35,9 @@ source ${HOST_CLING_SRC_DIR}/indep.sh
 source ${HOST_CLING_SRC_DIR}/debian/debianize.sh
 source ${HOST_CLING_SRC_DIR}/windows/windows_dep.sh
 
+# Trap exceptions, call function "cleanup" and exit
+trap cleanup EXIT HUP INT QUIT TERM ERR
+
 function usage {
 	cat <<- EOT
   Cling Packaging Tool
@@ -40,21 +45,32 @@ function usage {
   Usage: ${0##/*/} [options]
 
   Options:
-  -h|--help				Display this message and exit
-  -c|--check-requirements		Check if packages required by the script are installed
-  --current-dev={tar,deb}		Compile the latest development snapshot and produce a tarball/Debian package
-  --last-stable={tar,deb}		Compile the last stable snapshot and produce a tarball/Debian package
-  --tarball-tag={tag}			Compile the snapshot of a given tag and produce a tarball
-  --deb-tag={tag}			Compile the snapshot of a given tag and produce a Debian package
+  -h|--help			Display this message and exit
+  -c|--check-requirements	Check if packages required by the script are installed
+  --current-dev={pkg-format}	Compile the latest development snapshot and produce a package in the given format
+  --last-stable={pkg-format}	Compile the last stable snapshot and produce a package in the given format
+  --tarball-tag={tag}		Compile the snapshot of a given tag and produce a tarball
+  --deb-tag={tag}		Compile the snapshot of a given tag and produce a Debian package
+  --nsis-tag={tag}		Compile the snapshot of a given tag and produce an NSIS installer
 
+  Supported values of "pkg-format": tar | deb | nsis
+  Supported values of "tag": Any Git tag in Cling's repository. Example, v0.1
 EOT
+  # Reset trap on SIGEXIT. Nothing to cleanup here.
+  trap - EXIT
+  exit
+
 }
 
-while [ "${1}" != "" ]; do
+while true; do
+  if [ "${1}" = "" ]; then
+    echo "Error: No arguments passed"
+    usage
+  fi
+
   if [ "${#}" != "1" ]; then
     echo "Error: cannot handle multiple switches"
     usage
-    exit
   fi
 
   echo "Cling Packaging Tool (CPT)"
@@ -71,17 +87,18 @@ while [ "${1}" != "" ]; do
   VALUE=$(echo ${1} | awk -F= '{print $2}')
 
   # Cannot cross-compile for Windows from any other OS
-  if [ "${OS}" != "Cygwin" -a "${VALUE}" = "nsis" ]; then
+  if [ "${OS}" != "Cygwin" -a "${VALUE}" = "nsis" ] || [ "${OS}" != "Cygwin" -a "${PARAM}" = "--nsis-tag" ]; then
     echo "Error: Cross-compilation for Windows not supported (yet)"
+    # Reset trap on SIGEXIT. Nothing to cleanup here.
+    trap - EXIT
     exit
   fi
 
   case ${PARAM} in
     -h | --help)
         usage
-        exit
         ;;
-    --check-requirements)
+    -c | --check-requirements)
         box_draw "Check if required softwares are available on this system"
         if [ "${DIST}" = "Ubuntu" ]; then
           check_ubuntu git
@@ -108,6 +125,8 @@ EOT
                 ;;
             esac
           done
+          # Reset trap on SIGEXIT. Nothing to cleanup here.
+          trap - EXIT
           exit
         elif [ "${OS}" = "Cygwin" ]; then
           check_cygwin cygwin # Doesn't make much sense. This is for the appeasement of users.
@@ -115,7 +134,6 @@ EOT
           check_cygwin git
           check_cygwin python
           check_cygwin wget
-          check_cygwin unzip
           # Check Windows registry for keys that prove an MS Visual Studio 11.0 installation
           check_cygwin msvc
           cat <<- EOT
@@ -124,13 +142,11 @@ Refer to the documentation of CPT for information on setting up your Windows env
 
 EOT
         fi
-
         ;;
     --current-dev)
         if [ "${VALUE}" = "" ]; then
           echo "Error: Expected a value"
           usage
-          exit
         fi
         fetch_llvm
         fetch_clang
@@ -152,7 +168,7 @@ EOT
           test_cling
           tarball_deb
           debianize
-          cleanup_deb
+          cleanup
 	elif [ "${VALUE}" = "nsis" ]; then
           compile ${workdir}/cling-$(get_DIST)$(get_BIT)-${VERSION}
           install_prefix
@@ -160,14 +176,13 @@ EOT
           get_nsis
           make_nsi
           build_nsis
-          # cleanup
+          cleanup
         fi
         ;;
     --last-stable)
         if [ "${VALUE}" = "" ]; then
           echo "Error: Expected a value"
           usage
-          exit
         fi
         fetch_llvm
         fetch_clang
@@ -191,7 +206,7 @@ EOT
           test_cling
           tarball_deb
           debianize
-          cleanup_deb
+          cleanup
 	elif [ "${VALUE}" = "nsis" ]; then
           compile ${workdir}/cling-$(get_DIST)$(get_BIT)-${VERSION}
           install_prefix
@@ -199,14 +214,18 @@ EOT
           get_nsis
           make_nsi
           build_nsis
-          # cleanup
+          cleanup
         fi
         ;;
     --tarball-tag)
+        if [ "${VALUE}" = "" ]; then
+          echo "Error: Expected a value"
+          usage
+        fi
         fetch_llvm
         fetch_clang
         fetch_cling ${VALUE}
-        VERSION=$(echo ${VALUE} | sed s/v//g)
+        set_version
         compile ${workdir}/cling-$(get_DIST)-$(get_REVISION)-$(get_BIT)bit-${VERSION}
         install_prefix
         test_cling
@@ -214,21 +233,51 @@ EOT
         cleanup
         ;;
     --deb-tag)
+        if [ "${VALUE}" = "" ]; then
+          echo "Error: Expected a value"
+          usage
+        fi
         fetch_llvm
         fetch_clang
         fetch_cling ${VALUE}
-        VERSION=$(echo ${VALUE} | sed s/v//g)
+        set_version
         compile ${workdir}/cling-${VERSION}
         install_prefix
         test_cling
         tarball_deb
         debianize
-        cleanup_deb
+        cleanup
+        ;;
+    --nsis-tag)
+        if [ "${VALUE}" = "" ]; then
+          echo "Error: Expected a value"
+          usage
+        fi
+        fetch_llvm
+        fetch_clang
+        fetch_cling ${VALUE}
+        set_version
+        compile ${workdir}/cling-$(get_DIST)$(get_BIT)-${VERSION}
+        install_prefix
+        test_cling
+        get_nsis
+        make_nsi
+        build_nsis
+        cleanup
+        ;;
+    --make-proper)
+        # This is an internal option in CPT, meant to be integrated into
+        # Cling's build system.
+
+        prefix=$(grep "LLVM_PREFIX=" ${LLVM_OBJ_ROOT}/config.log | sed -e "s|LLVM_PREFIX=||g" -e "s|'||g")
+        set_version
+        install_prefix
+        # Cleanup
+        rm -Rf ${TMP_PREFIX}
         ;;
     *)
         echo "Error: unknown parameter \"${PARAM}\""
         usage
-        exit 1
         ;;
   esac
   shift

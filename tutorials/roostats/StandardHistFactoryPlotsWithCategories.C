@@ -38,12 +38,17 @@ gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=merged.pdf `ls *pdf`
 #include "TSystem.h"
 #include "RooWorkspace.h"
 #include "RooAbsData.h"
+#include "RooRealVar.h"
+#include "RooPlot.h"
+#include "RooSimultaneous.h"
+#include "RooCategory.h"
 
 #include "RooStats/ModelConfig.h"
 #include "RooStats/ProfileInspector.h"
 
 using namespace RooFit;
 using namespace RooStats;
+using namespace std; 
 
 void StandardHistFactoryPlotsWithCategories(const char* infile = "",
 		      const char* workspaceName = "combined",
@@ -141,7 +146,7 @@ void StandardHistFactoryPlotsWithCategories(const char* infile = "",
   RooSimultaneous* simPdf = NULL;
   if(strcmp(mc->GetPdf()->ClassName(),"RooSimultaneous")==0){
     cout <<"Is a simultaneous PDF"<<endl;
-    simPdf = (RooSimultaneous)(mc->GetPdf());
+    simPdf = (RooSimultaneous *)(mc->GetPdf());
   } else {
     cout <<"Is not a simultaneous PDF"<<endl;
   }
@@ -176,7 +181,7 @@ void StandardHistFactoryPlotsWithCategories(const char* infile = "",
 
     TIterator* it = mc->GetNuisanceParameters()->createIterator();
     RooRealVar* var = NULL;
-    while(var = (RooRealVar*) it->Next()){
+    while( (var = (RooRealVar*) it->Next()) != NULL){
       RooPlot* frame = obs->frame();
       frame->SetYTitle(var->GetName());
       data->plotOn(frame,MarkerSize(1));
@@ -225,7 +230,7 @@ void StandardHistFactoryPlotsWithCategories(const char* infile = "",
 	  
 	if(strcmp(var->GetName(),"Lumi")==0){
 	  cout <<"working on lumi"<<endl;
-	  var->setVal(combined->var("nominalLumi")->getVal());
+	  var->setVal(w->var("nominalLumi")->getVal());
 	  var->Print();
 	} else{
 	  var->setVal(0);
@@ -240,7 +245,7 @@ void StandardHistFactoryPlotsWithCategories(const char* infile = "",
 
 	if(strcmp(var->GetName(),"Lumi")==0){
 	  cout <<"working on lumi"<<endl;
-	  var->setVal(combined->var("nominalLumi")->getVal()+0.05);
+	  var->setVal(w->var("nominalLumi")->getVal()+0.05);
 	  var->Print();
 	} else{
 	  var->setVal(nSigmaToVary);
@@ -253,7 +258,7 @@ void StandardHistFactoryPlotsWithCategories(const char* infile = "",
 
 	if(strcmp(var->GetName(),"Lumi")==0){
 	  cout <<"working on lumi"<<endl;
-	  var->setVal(combined->var("nominalLumi")->getVal()-0.05);
+	  var->setVal(w->var("nominalLumi")->getVal()-0.05);
 	  var->Print();
 	} else{
 	  var->setVal(-nSigmaToVary);
@@ -269,7 +274,7 @@ void StandardHistFactoryPlotsWithCategories(const char* infile = "",
 	// set them back to normal
 	if(strcmp(var->GetName(),"Lumi")==0){
 	  cout <<"working on lumi"<<endl;
-	  var->setVal(combined->var("nominalLumi")->getVal());
+	  var->setVal(w->var("nominalLumi")->getVal());
 	  var->Print();
 	} else{
 	  var->setVal(0);

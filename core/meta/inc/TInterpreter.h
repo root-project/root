@@ -137,6 +137,7 @@ public:
                                    const char** /*headers*/,
                                    const char** /*includePaths*/,
                                    const char* /*payloadCode*/,
+                                   const char* /*fwdDeclsCode*/,
                                    void (* /*triggerFunc*/)(),
                                    const FwdDeclArgsToKeepCollection_t& fwdDeclArgsToKeep,
                                    const char** classesHeaders) = 0;

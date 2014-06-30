@@ -380,7 +380,7 @@ void TStreamerInfo::Build()
             dsize = sizeof(char*);
          }
          if (dtype == kOther_t || dtype == kNoType_t) {
-            Error("Build", "%s, unknown type: %s %s\n", GetName(), dmFull, dmName);
+            Error("Build", "%s, unknown type: %s %s", GetName(), dmFull, dmName);
             continue;            
          } else if (dmIsPtr && (dtype != kCharStar)) {
             if (dmCounter) {

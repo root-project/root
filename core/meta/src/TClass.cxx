@@ -5582,7 +5582,7 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
             name = TClassEdit::ShortType( name, TClassEdit::kDropStlDefault );
          il = name.Length();
          for (int i=0; i<il; i++) id = id*3+name[i];
-         if (code > kNoBaseCheckSum && !isSTL) {
+         if (code > kNoBaseCheckSum && !isSTL && tbc->GetClassPointer()) {
             id = id*3 + tbc->GetClassPointer()->GetCheckSum();
          }
       }/*EndBaseLoop*/

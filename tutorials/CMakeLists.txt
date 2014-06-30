@@ -96,7 +96,7 @@ set(extra_veto
   rootlogon.C          # Helper macro
   rootlogoff.C         # Helper macro
   rootmarks.C          # Instrumentation. Not a standalone tutorial
-  memstat/memstat.C    # Instrumentation. Not a standalone tutorial
+  memstat/memstatExample.C   # Instrumentation. Not a standalone tutorial
   html/*.C
   net/*.C
   proof/*.C
@@ -112,6 +112,8 @@ set(extra_veto
   tree/copytree2.C 
   tree/copytree3.C 
   tree/copytree.C
+  tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
+  tree/h1chain.C
   http/*.C)
   
 set(all_veto hsimple.C
@@ -146,9 +148,8 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphs/multipalette.C
                  graphs/graphstruct.C
                  hist/ContourList.C hist/hstack.C 
-                 hist/h2proj.C hist/hbars.C
+                 hist/h2proj.C 
                  hist/th2polyBoxes.C
-                 tree/h1analysis.C
                  io/fildir.C 
                  math/chi2test.C )
 #---Dependencies------------------------------------------------------
@@ -159,6 +160,8 @@ set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 set(histfactory-example-depends tutorial-histfactory-makeExample)
 set(io-readCode-depends tutorial-io-importCode)
+set(fit-fit1-depends tutorial-hist-fillrandom)
+set(foam-foam_demopers-depends tutorial-foam-foam_demo)
 #--many roostats tutorials depending on having creating the file first with histfactory 
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
                StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo 
@@ -202,6 +205,7 @@ if(ROOT_python_FOUND)
              pyroot/na49visible.py  # ????
              pyroot/parse_CSV_file_with_TTree_ReadStream.py # not a tutorial
              pyroot/qtexample.py    # requires GUI/Qt
+             pyroot/numberEntry.py  # requires GUI
              )
   list(REMOVE_ITEM pytutorials ${pyveto})
 
@@ -209,6 +213,7 @@ if(ROOT_python_FOUND)
   set(pyroot-hsimple-depends tutorial-hsimple)
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple)
   set(pyroot-benchmarks-depends tutorial-pyroot-hsimple)
+  set(pyroot-fit1-depends tutorial-pyroot-fillrandom)
 
   foreach(t ${pytutorials})
     string(REPLACE ".py" "" tname ${t})

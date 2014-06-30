@@ -190,6 +190,7 @@ public: // Public Interface
                           const char** headers,
                           const char** includePaths,
                           const char* payloadCode,
+                          const char* fwdDeclsCode,
                           void (*triggerFunc)(),
                           const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                           const char** classesHeaders);

@@ -59,7 +59,7 @@
 //- data -----------------------------------------------------------------------
 static PyObject* nullptr_repr( PyObject* )
 {
-   return PyString_FromString( "nullptr" );
+   return PyBytes_FromString( "nullptr" );
 }
 
 static void nullptr_dealloc( PyObject* )

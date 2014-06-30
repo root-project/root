@@ -655,10 +655,10 @@ img.latex {
 }
 
 /* Source pages */
-span.comment, span.keyword, span.cpp, span.string {
+span.comment, span.codecomment, span.keyword, span.cpp, span.string {
    font-weight: normal;
 }
-span.comment {
+span.codecomment, span.comment {
    background-color: #eeeeee;
    color: Green;
 }

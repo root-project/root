@@ -272,6 +272,7 @@ public:
                                     const char** headers,
                                     const char** includePaths,
                                     const char* payLoadCode,
+                                    const char* fwdDeclCode,
                                     void (*triggerFunc)(),
                                     const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                                     const char** classesHeaders);

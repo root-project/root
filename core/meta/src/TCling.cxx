@@ -89,6 +89,7 @@ class TProtoClass;
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
+#include "clang/Parse/Parser.h"
 
 #include "cling/Interpreter/ClangInternalState.h"
 #include "cling/Interpreter/DynamicLibraryManager.h"
@@ -766,7 +767,7 @@ namespace{
    // during its lifetime
    class clangDiagSuppr {
    public:
-      clangDiagSuppr(clang::DiagnosticsEngine& diag): fDiagEngine(diag){         
+      clangDiagSuppr(clang::DiagnosticsEngine& diag): fDiagEngine(diag){
          fOldDiagValue = fDiagEngine.getIgnoreAllWarnings();
          fDiagEngine.setIgnoreAllWarnings(true);
       }
@@ -1091,10 +1092,38 @@ bool TCling::LoadPCM(TString pcmFileName,
 }
 
 //______________________________________________________________________________
+
+namespace {
+   using namespace clang;
+
+   class ExtLexicalStorageAdder: public RecursiveASTVisitor<ExtLexicalStorageAdder>{
+      // This class is to be considered an helper for autoparsing.
+      // It visits the AST and marks all classes (in all of their redeclarations)
+      // with the setHasExternalLexicalStorage method.
+   public:
+      bool VisitRecordDecl(clang::RecordDecl* rcd){
+         if (gDebug > 1)
+            Info("ExtLexicalStorageAdder",
+                 "Adding external lexical storage to class %s",
+                 rcd->getNameAsString().c_str());
+         auto reDeclPtr = rcd->getMostRecentDecl();
+         do {
+            reDeclPtr->setHasExternalLexicalStorage();
+         } while ((reDeclPtr = reDeclPtr->getPreviousDecl()));
+
+         return false;
+      }
+   };
+
+
+}
+
+//______________________________________________________________________________
 void TCling::RegisterModule(const char* modulename,
                             const char** headers,
                             const char** includePaths,
                             const char* payloadCode,
+                            const char* fwdDeclsCode,
                             void (*triggerFunc)(),
                             const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                             const char** classesHeaders)
@@ -1115,6 +1144,16 @@ void TCling::RegisterModule(const char* modulename,
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
    if (fromRootCling) return;
 
+   // Treat Aclic Libs in a special way. Do not delay the parsing.
+   bool oldfHeaderParsingOnDemand=fHeaderParsingOnDemand;
+   if (oldfHeaderParsingOnDemand &&
+       strstr(modulename, "_ACLiC_dict") != nullptr){
+      if (gDebug>1)
+         Info("TCling::RegisterModule",
+              "Header parsing on demand is active but this is an Aclic library. Disabling it for this library.");
+      fHeaderParsingOnDemand=false;
+   }
+
 
    // Make sure we relookup symbols that were search for before we loaded
    // their autoparse information.  We could be more subtil and remove only
@@ -1131,14 +1170,12 @@ void TCling::RegisterModule(const char* modulename,
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
       TCling::AddIncludePath(*inclPath);
    }
-
+   cling::Transaction* T = 0;
    // Put the template decls and the number of arguments to skip in the TNormalizedCtxt
    for (auto& fwdDeclArgToSkipPair : fwdDeclsArgToSkip){
-      cling::Transaction* T = 0;
       const std::string& fwdDecl = fwdDeclArgToSkipPair.first;
       const int nArgsToSkip = fwdDeclArgToSkipPair.second;
-      cling::Interpreter::CompilationResult compRes = 
-                                    fInterpreter->declare(fwdDecl.c_str(), &T);
+      auto compRes = fInterpreter->declare(fwdDecl.c_str(), &T);
       assert(cling::Interpreter::kSuccess == compRes &&
             "A fwd declaration could not be compiled");
       if (compRes!=cling::Interpreter::kSuccess){
@@ -1187,13 +1224,40 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
-   // Now we register all the headers necessary for the class
-   // Typical format of the array:
-   //    {"A", "classes.h", "@",
-   //     "vector<A>", "vector", "@",
-   //     "myClass", payloadCode, "@",
-   //    nullptr};
    if (fHeaderParsingOnDemand){
+      // We now parse the forward declarations. All the classes are then modified
+      // in order for them to have an external lexical storage.
+      auto compRes = fInterpreter->declare(fwdDeclsCode, &T);
+      assert(cling::Interpreter::kSuccess == compRes &&
+            "The forward declarations could not be compiled");
+      if (compRes!=cling::Interpreter::kSuccess){
+         Warning("TCling::RegisterModule",
+               "Problems in compiling forward declarations for module %s: '%s'",
+               modulename, fwdDeclsCode) ;
+      }
+      else if (T){
+         // Loop over all decls in the transaction and go through them all
+         // to mark them properly.
+         // In order to do that, we first iterate over all the DelayedCallInfos
+         // within the transaction. Then we loop over all Decls in the DeclGroupRef
+         // contained in the DelayedCallInfos. For each decl, we traverse.
+         ExtLexicalStorageAdder elsa;
+         for (auto dciIt = T->decls_begin();dciIt!=T->decls_end();dciIt++){
+            cling::Transaction::DelayCallInfo& dci = *dciIt;
+            for(auto dit = dci.m_DGR.begin(); dit != dci.m_DGR.end(); ++dit) {
+               clang::Decl* declPtr = *dit;
+               elsa.TraverseDecl(declPtr);
+            }
+         }
+      }
+      
+      // Now we register all the headers necessary for the class
+      // Typical format of the array:
+      //    {"A", "classes.h", "@",
+      //     "vector<A>", "vector", "@",
+      //     "myClass", payloadCode, "@",
+      //    nullptr};
+
       std::string temp;
       for (const char** classesHeader = classesHeaders; *classesHeader; ++classesHeader) {
          temp=*classesHeader;
@@ -1207,7 +1271,7 @@ void TCling::RegisterModule(const char* modulename,
             theTemplateHash = fStringHashFunction(templateName);
             addTemplate = true;
          }
-         size_t theHash = fStringHashFunction(*classesHeader);
+         size_t theHash = fStringHashFunction(temp);
          classesHeader++;
          for (const char** classesHeader_inner = classesHeader; 0!=strcmp(*classesHeader_inner,"@"); ++classesHeader_inner,++classesHeader){
             // This is done in order to distinguish headers from files and from the payloadCode
@@ -1215,6 +1279,9 @@ void TCling::RegisterModule(const char* modulename,
                fPayloads.insert(theHash);
                if (addTemplate) fPayloads.insert(theTemplateHash);
             }
+            if (gDebug > 1)
+               Info("TCling::RegisterModule",
+                     "Adding a header for %s", temp.c_str());
             fClassesHeadersMap[theHash].push_back(*classesHeader_inner);
             if (addTemplate) {
                if (fClassesHeadersMap.find(theTemplateHash) == fClassesHeadersMap.end()) {
@@ -1314,6 +1381,7 @@ void TCling::RegisterModule(const char* modulename,
    }
 
    SetClassAutoloading(oldAutoloadValue);
+   fHeaderParsingOnDemand=oldfHeaderParsingOnDemand;
 }
 
 //______________________________________________________________________________
@@ -4358,6 +4426,10 @@ Int_t TCling::AutoLoad(const char* cls)
 {
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
+   if (gDebug > 2) {
+      Info("TCling::AutoLoad",
+           "Trying to autoload for %s", cls);
+   }
    R__LOCKGUARD(gInterpreterMutex);
    Int_t status = 0;
    if (!gROOT || !gInterpreter || gROOT->TestBit(TObject::kInvalidObject)) {
@@ -4372,7 +4444,6 @@ Int_t TCling::AutoLoad(const char* cls)
    if (fAutoLoadCallBack) {
       int success = (*(AutoLoadCallBack_t)fAutoLoadCallBack)(cls);
       if (success) {
-//          AutoParse(cls);
          SetClassAutoloading(oldvalue);
          return success;
       }
@@ -4413,11 +4484,6 @@ Int_t TCling::AutoLoad(const char* cls)
       delete tokens;
    }
 
-//    if (!status) {
-//       if (AutoParse(cls))
-//          status = 1;
-//    }
-
    SetClassAutoloading(oldvalue);
    return status;
 }
@@ -4429,6 +4495,24 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
 {
    // Parse the payload or header.
 
+   // Save state of the PP
+   Sema &SemaR = interpreter->getSema();
+   ASTContext& C = SemaR.getASTContext();
+   Preprocessor &PP = SemaR.getPreprocessor();
+   Parser& P = const_cast<Parser&>(interpreter->getParser());
+   Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+   Parser::ParserCurTokRestoreRAII savedCurToken(P);
+   // After we have saved the token reset the current one to something which
+   // is safe (semi colon usually means empty decl)
+   Token& Tok = const_cast<Token&>(P.getCurToken());
+   Tok.setKind(tok::semi);
+
+   // We can't PushDeclContext, because we go up and the routine that pops
+   // the DeclContext assumes that we drill down always.
+   // We have to be on the global context. At that point we are in a
+   // wrapper function so the parent context must be the global.
+   Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
+                                          SemaR.TUScope);
    std::string code = "#define __ROOTCLING__ 1\n"
       "#undef ClassDef\n"
       "#define ClassDef(name,id) \\\n"
@@ -4455,8 +4539,14 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
 Int_t TCling::AutoParse(const char* cls)
 {
    // Parse the headers relative to the class
+   // Returns 1 in case of success, 0 in case of failure
 
-   if (!fHeaderParsingOnDemand) return 0;
+   if (!fHeaderParsingOnDemand) return AutoLoad(cls);
+
+   if (gDebug > 1) {
+      Info("TCling::AutoParse",
+           "Trying to autoparse for %s", cls);
+   }
 
    // The catalogue of headers is in the dictionary
    AutoLoad(cls);
@@ -4470,8 +4560,16 @@ Int_t TCling::AutoParse(const char* cls)
    Int_t nHheadersParsed = 0;
    std::size_t normNameHash(fStringHashFunction(cls));
    // If the class was not looked up
+   if (gDebug > 1) {
+      Info("TCling::AutoParse",
+           "Starting autoparse for %s\n", cls);
+   }
    if (fLookedUpClasses.insert(normNameHash).second) {
-      const std::vector<const char*>& hNamesPtrs = fClassesHeadersMap[normNameHash];
+      auto const & hNamesPtrs = fClassesHeadersMap[normNameHash];
+      if (gDebug > 1) {
+         Info("TCling::AutoParse",
+              "We can proceed for %s. We have %s headers.\n", cls, std::to_string(hNamesPtrs.size()).c_str());
+      }
       for (auto& hName : hNamesPtrs){
          if (fParsedPayloadsAddresses.count(hName) == 1 ) continue;
          if (0 != fPayloads.count(normNameHash)) {
@@ -4525,7 +4623,7 @@ Int_t TCling::AutoParse(const char* cls)
 
    SetClassAutoloading(oldvalue);
 
-   return nHheadersParsed;
+   return nHheadersParsed>0?1:0;
 }
 
 

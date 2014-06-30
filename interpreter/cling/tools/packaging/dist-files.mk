@@ -18,13 +18,8 @@
 ###############################################################################
 
 BIN_FILES := \
-  bin/cling \
-  bin/cling.exe 
+  bin/cling@EXEEXT@ 
 # CAUTION: The trailing space above is needed. DO NOT delete.
-# TODO: This is currently hard-coded. There must be a platform agnostic way to
-#       guess the extension of binaries (and libraries ?) after compilation,
-#       like in this case .exe. At present there is little need for such a
-#       mechanism since cling.exe is the only case we are dealing with.
 
 DOCS_FILES := \
   docs/llvm/html/cling/cling.html \
@@ -976,7 +971,6 @@ INCLUDE_LLVM_FILES := \
   include/llvm/Support/InstIterator.h \
   include/llvm/Support/LeakDetector.h \
   include/llvm/Support/LEB128.h \
-  include/llvm/Support/LICENSE.TXT \
   include/llvm/Support/LineIterator.h \
   include/llvm/Support/Locale.h \
   include/llvm/Support/LockFileManager.h \

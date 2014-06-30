@@ -139,7 +139,7 @@ if(ROOT_mathmore_FOUND)
 endif()
 
 #--stressMathCore----------------------------------------------------------------------------------
-ROOT_GENERATE_DICTIONARY(TrackMathCoreDictionary ${CMAKE_CURRENT_SOURCE_DIR}/TrackMathCore.h MODULE TrackMathCoreDictionary LINKDEF TrackMathCoreLinkDef.h)
+ROOT_GENERATE_DICTIONARY(TrackMathCoreDictionary ${CMAKE_CURRENT_SOURCE_DIR}/TrackMathCore.h MODULE TrackMathCoreDict LINKDEF TrackMathCoreLinkDef.h)
 ROOT_LINKER_LIBRARY(TrackMathCoreDict TrackMathCoreDictionary.cxx LIBRARIES Core MathCore RIO GenVector)
 ROOT_EXECUTABLE(stressMathCore stressMathCore.cxx LIBRARIES MathCore Hist RIO Tree GenVector)
 ROOT_ADD_TEST(test-stressmathcore COMMAND stressMathCore FAILREGEX "FAILED|Error in")

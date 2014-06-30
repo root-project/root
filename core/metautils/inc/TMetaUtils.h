@@ -19,11 +19,14 @@
 #include "llvm/ADT/StringRef.h"
 
 #include <string>
+#include <unordered_set>
+
 //#include <atomic>
 #include <stdlib.h>
 
 namespace clang {
    class ASTContext;
+   class Attr;
    class ClassTemplateDecl;
    class ClassTemplateSpecializationDecl;
    class CompilerInstance;
@@ -35,6 +38,7 @@ namespace clang {
    class FunctionDecl;
    class Module;
    class NamedDecl;
+   class ParmVarDecl;
    class QualType;
    class RecordDecl;
    class SourceLocation;
@@ -47,7 +51,7 @@ namespace clang {
    class Type;
    class TypeDecl;
    class TypedefNameDecl;
-   class Attr;
+   struct PrintingPolicy;
 }
 
 namespace cling {
@@ -658,9 +662,46 @@ void Warning(const char *location, const char *va_(fmt), ...);
 //______________________________________________________________________________
 void Fatal(const char *location, const char *va_(fmt), ...);
 
+//______________________________________________________________________________
+namespace AST2SourceTools {
 
-   } // namespace TMetaUtils
+//______________________________________________________________________________
+int PrepareArgsForFwdDecl(std::string& templateArgs,
+                          const clang::TemplateParameterList& tmplParamList,
+                          const cling::Interpreter& interpreter);
 
+//______________________________________________________________________________
+int EncloseInNamespaces(const clang::Decl& decl, std::string& defString);
+
+//______________________________________________________________________________
+int FwdDeclFromRcdDecl(const clang::RecordDecl& recordDecl, 
+                       const cling::Interpreter& interpreter,
+                       std::string& defString);
+
+//______________________________________________________________________________
+int FwdDeclFromTmplDecl(const clang::TemplateDecl& tmplDecl,
+                        const cling::Interpreter& interpreter,
+                        std::string& defString);
+
+//______________________________________________________________________________
+int GetEnclosingNamespaces(const clang::Decl& decl, std::string& defString);
+
+//______________________________________________________________________________
+int GetDefArg(const clang::ParmVarDecl& par, std::string& valAsString, const clang::PrintingPolicy& pp);
+
+//______________________________________________________________________________
+int FwdDeclFromFcnDecl(const clang::FunctionDecl& fcnDecl,
+                       const cling::Interpreter& interpreter,
+                       std::string& defString);
+//______________________________________________________________________________
+int FwdDeclFromTypeDefNameDecl(const clang::TypedefNameDecl& tdnDecl,
+                               const cling::Interpreter& interpreter,
+                               std::string& fwdDeclString,
+                               std::unordered_set<std::string>* fwdDeclSet=nullptr);
+
+} // namespace AST2SourceTools
+
+} // namespace TMetaUtils
 
 } // namespace ROOT
 
