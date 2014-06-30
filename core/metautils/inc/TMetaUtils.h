@@ -676,7 +676,8 @@ int EncloseInNamespaces(const clang::Decl& decl, std::string& defString);
 //______________________________________________________________________________
 int FwdDeclFromRcdDecl(const clang::RecordDecl& recordDecl, 
                        const cling::Interpreter& interpreter,
-                       std::string& defString);
+                       std::string& defString,
+                       bool acceptStl=false);
 
 //______________________________________________________________________________
 int FwdDeclFromTmplDecl(const clang::TemplateDecl& tmplDecl,
