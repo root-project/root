@@ -463,7 +463,7 @@ bool Minuit2Minimizer::Minimize() {
       
    }
 
-   // set a minimizer tracer object (defult for printlevel=10, from gROOT for printLevel=11)
+   // set a minimizer tracer object (default for printlevel=10, from gROOT for printLevel=11)
    // use some special print levels
    MnTraceObject * traceObj = 0;
 #ifdef USE_ROOT_ERROR 

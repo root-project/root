@@ -71,7 +71,7 @@ TGraphErrors* HypoTestInverterPlot::MakePlot(Option_t * opt)
 
    TString option(opt);
    option.ToUpper();
-   int type = 0; // use defult
+   int type = 0; // use default
    if (option.Contains("CLB")) type = 1; // CLb
    else if (option.Contains("CLS+B") || option.Contains("CLSPLUSB")) type = 2; // CLs+b
    else if (option.Contains("CLS" )) type = 3; // CLs

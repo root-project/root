@@ -2529,7 +2529,7 @@ TH1D* TH2::QuantilesX( Double_t prob, const char * name) const
 {
    // Compute the X distribution of quantiles in the other variable Y
    // name is the name of the returned histogram
-   // prob is the probability content for the quantile (0.5 is the defult for the median)
+   // prob is the probability content for the quantile (0.5 is the default for the median)
    // An approximate error for the quantile is computed assuming that the distribution in
    // the other variable is normal.
    
@@ -2542,7 +2542,7 @@ TH1D* TH2::QuantilesY( Double_t prob, const char * name) const
 {
    // Compute the Y distribution of quantiles in the other variable X
    // name is the name of the returned histogram
-   // prob is the probability content for the quantile (0.5 is the defult for the median)
+   // prob is the probability content for the quantile (0.5 is the default for the median)
    // An approximate error for the quantile is computed assuming that the distribution in
    // the other variable is normal.
 
