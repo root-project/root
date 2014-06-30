@@ -3343,17 +3343,17 @@ std::string GenerateFwdDeclString(const RScanner& scan,
    }
 
    // Functions
-   for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
-      int retCode = FwdDeclFromFcnDecl(*fcnDeclPtr, interp, buffer);
-      if (-1 == retCode){
-         ROOT::TMetaUtils::Error("GenerateFwdDeclString",
-                                 "Error generating fwd decl for function  %s\n",
-                                 fcnDeclPtr->getNameAsString().c_str());
-         return emptyString;
-      }
-      if (retCode == 0 && fwdDecls.insert(buffer).second)
-         fwdDeclString+="\""+buffer+"\"\n";
-   }
+//    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
+//       int retCode = FwdDeclFromFcnDecl(*fcnDeclPtr, interp, buffer);
+//       if (-1 == retCode){
+//          ROOT::TMetaUtils::Error("GenerateFwdDeclString",
+//                                  "Error generating fwd decl for function  %s\n",
+//                                  fcnDeclPtr->getNameAsString().c_str());
+//          return emptyString;
+//       }
+//       if (retCode == 0 && fwdDecls.insert(buffer).second)
+//          fwdDeclString+="\""+buffer+"\"\n";
+//    }
 
    if (fwdDeclString.empty()) fwdDeclString=emptyString;
 
