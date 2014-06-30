@@ -1109,7 +1109,7 @@ namespace {
          auto reDeclPtr = rcd->getMostRecentDecl();
          do {
             reDeclPtr->setHasExternalLexicalStorage();
-         } while (reDeclPtr = reDeclPtr->getPreviousDecl());
+         } while ((reDeclPtr = reDeclPtr->getPreviousDecl()));
 
          return false;
       }
