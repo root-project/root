@@ -4547,6 +4547,11 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
    // Convert a rcd decl to its fwd decl
    // If this is a template specialisation, treat in the proper way
 
+   // Do not fwd declare the templates in the stl.
+   if(ROOT::TMetaUtils::IsStdClass(recordDecl)){
+      return 0;
+   }
+
    if (auto tmplSpecDeclPtr = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&recordDecl)){
       if (auto tmplDeclPtr = tmplSpecDeclPtr->getSpecializedTemplate()){
          return FwdDeclFromTmplDecl(*tmplDeclPtr,interpreter,defString);
@@ -4574,9 +4579,13 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
    EncloseInNamespaces(tdnDecl,buffer);
 
    // Start Recursion if the underlying type is a TypedefNameDecl
-   if (auto underlyingTdnTypePtr = llvm::dyn_cast<clang::TypedefType>(underlyingType.getTypePtr())){
+   // Note: the simple cast w/o the getSingleStepDesugaredType call
+   // does not work in case the typedef is in a namespace.
+   auto& ctxt = tdnDecl.getASTContext();
+   auto underlyingUnderlyingType = underlyingType.getSingleStepDesugaredType(ctxt);
+   if (auto underlyingTdnTypePtr = llvm::dyn_cast<clang::TypedefType>(underlyingUnderlyingType.getTypePtr())){
       std::string tdnFwdDecl;
-      std::cout << tdnDecl.getNameAsString() << "Is a typedef in a typedef\n";
+
       auto underlyingTdnDeclPtr = underlyingTdnTypePtr->getDecl();
       FwdDeclFromTypeDefNameDecl(*underlyingTdnDeclPtr,
                                  interpreter,
