@@ -51,9 +51,9 @@ fast:                            build complete system without creating
                                  building the system with no further
                                  development)
 
-rootcint:                        build all CINT related components
+rootcling:                       build all cling related components
 
-rootlibs:                        build all ROOT libraries (includes rootcint)
+rootlibs:                        build all ROOT libraries (includes rootcling)
 
 rootexecs:                       build all ROOT executables (includes rootlibs)
 
@@ -121,8 +121,7 @@ Porting to a new platform
 - add platform case to the file config/root-config.in
 - add platform case to the file test/Makefile
 - add platform case to base/inc/RConfig.h
-- add platform case to cint/inc/G__ci.h
-- add platform case to utils/src/rootcint.cxx
+- add platform case to utils/src/rootcling.cxx
 
 
 Adding a new module
