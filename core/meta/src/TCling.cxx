@@ -1098,15 +1098,19 @@ namespace {
 
    class ExtLexicalStorageAdder: public RecursiveASTVisitor<ExtLexicalStorageAdder>{
       // This class is to be considered an helper for autoparsing.
-      // It visits the AST and marks all classes with the
-      // setHasExternalLexicalStorage method.
+      // It visits the AST and marks all classes (in all of their redeclarations)
+      // with the setHasExternalLexicalStorage method.
    public:
       bool VisitRecordDecl(clang::RecordDecl* rcd){
          if (gDebug > 1)
             Info("ExtLexicalStorageAdder",
                  "Adding external lexical storage to class %s",
                  rcd->getNameAsString().c_str());
-         rcd->setHasExternalLexicalStorage();
+         auto reDeclPtr = rcd->getMostRecentDecl();
+         do {
+            reDeclPtr->setHasExternalLexicalStorage();
+         } while (reDeclPtr = reDeclPtr->getPreviousDecl());
+
          return false;
       }
    };
