@@ -148,7 +148,7 @@ GSLNLSMinimizer::GSLNLSMinimizer( int type ) :
 
    fEdm = -1; 
 
-   // defult tolerance and max iterations
+   // default tolerance and max iterations
    int niter = ROOT::Math::MinimizerOptions::DefaultMaxIterations();
    if (niter <= 0) niter = 100; 
    SetMaxIterations(niter); 
