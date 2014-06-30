@@ -85,9 +85,12 @@ bool CloseStreamerInfoROOTFile()
       // If the class is not persistent we return success.
       if (cl->GetClassVersion() == 0)
          continue;
+
+      // Let's include also proxied collections in order to delay parsing as long as possible.
+      // In the first implementations, proxied collections did not result in a protoclass.
       // If this is a proxied collection then offsets are not needed.
-      if (cl->GetCollectionProxy())
-         continue;
+//       if (cl->GetCollectionProxy())
+//          continue;
       cl->Property(); // Force initialization of the bits and property fields.
 
       protoClasses.AddLast(new TProtoClass(cl));
