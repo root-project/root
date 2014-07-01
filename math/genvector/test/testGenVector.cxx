@@ -719,7 +719,25 @@ int testVectorUtil() {
    double perp2 = Perp2(v,u);
    iret |= compare(perp2, vp.Mag2(),"perp2",1 );
 
-  if (iret == 0) std::cout << "\t\t\t\tOK\n"; 
+   // test rotations
+   double angle = 1; 
+   XYZVector vr1 = RotateX(v,angle);
+   XYZVector vr2 = RotationX(angle) * v; 
+   iret |= compare(vr1.Y(), vr2.Y(),"y",1 );
+   iret |= compare(vr1.Z(), vr2.Z(),"z",1 );
+
+   vr1 = RotateY(v,angle);
+   vr2 = RotationY(angle) * v; 
+   iret |= compare(vr1.X(), vr2.X(),"x",1 );
+   iret |= compare(vr1.Z(), vr2.Z(),"z",1 );
+
+   vr1 = RotateZ(v,angle);
+   vr2 = RotationZ(angle) * v; 
+   iret |= compare(vr1.X(), vr2.X(),"x",1 );
+   iret |= compare(vr1.Y(), vr2.Y(),"y",1 );
+
+
+  if (iret == 0) std::cout << "\t\t\tOK\n"; 
   else std::cout << "\t\t\t\t\t\tFAILED\n"; 
   return iret; 
 
