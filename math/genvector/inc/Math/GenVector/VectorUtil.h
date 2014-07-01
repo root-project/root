@@ -290,7 +290,7 @@ namespace ROOT {
 	double sina = sin(alpha);
 	double cosa = cos(alpha);
 	double x2 = v.X() * cosa - v.Y() * sina; 
-	double y2 = v.Y() * cosa - v.X() * sina;
+	double y2 = v.Y() * cosa + v.X() * sina;
 	Vector vrot; 
 	vrot.SetXYZ(x2, y2, v.Z());
 	return vrot; 
