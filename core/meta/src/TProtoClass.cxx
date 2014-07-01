@@ -33,41 +33,43 @@ TProtoClass::TProtoClass(TClass* cl):
    // Initialize a TProtoClass from a TClass.
    fPRealData = new TList();
 
-   // Build the list of RealData before we access it:
-   cl->BuildRealData(0, true /*isTransient*/);
-   // The data members are ordered as follows:
-   // - this class's data members,
-   // - foreach base: base class's data members.
-   // fPRealData encodes all TProtoRealData objects with a
-   // TObjString to signal a new class.
-   TClass* clCurrent = cl;
-   TRealData* precRd=nullptr;
-   for (auto realDataObj: *cl->GetListOfRealData()) {
-      TRealData *rd = (TRealData*)realDataObj;
-      if(!precRd) precRd = rd;
-      TClass* clRD = rd->GetDataMember()->GetClass();
-      if (clRD != clCurrent) {
-         clCurrent = clRD;
-         TObjString *clstr = new TObjString(clRD->GetName());
-         if (precRd->TestBit(TRealData::kTransient)){
-            clstr->SetBit(TRealData::kTransient);
+   if (!cl->GetCollectionProxy()) {
+      // Build the list of RealData before we access it:
+      cl->BuildRealData(0, true /*isTransient*/);
+      // The data members are ordered as follows:
+      // - this class's data members,
+      // - foreach base: base class's data members.
+      // fPRealData encodes all TProtoRealData objects with a
+      // TObjString to signal a new class.
+      TClass* clCurrent = cl;
+      TRealData* precRd = nullptr;
+      for (auto realDataObj: *cl->GetListOfRealData()) {
+         TRealData *rd = (TRealData*)realDataObj;
+         if (!precRd) precRd = rd;
+         TClass* clRD = rd->GetDataMember()->GetClass();
+         if (clRD != clCurrent) {
+            clCurrent = clRD;
+            TObjString *clstr = new TObjString(clRD->GetName());
+            if (precRd->TestBit(TRealData::kTransient)) {
+               clstr->SetBit(TRealData::kTransient);
+            }
+            fPRealData->AddLast(clstr);
+            precRd = rd;
          }
-         fPRealData->AddLast(clstr);
-      precRd=rd;
+         fPRealData->AddLast(new TProtoRealData(rd));
       }
-      fPRealData->AddLast(new TProtoRealData(rd));
-   }
 
-   if (gDebug>2){
-      for (auto dataPtr : *fPRealData){
-         const auto classType = dataPtr->IsA();
-         const auto dataPtrName = dataPtr->GetName();
-         if (classType == TProtoRealData::Class())
-            Info("TProtoClass","Data is a protorealdata: %s", dataPtrName);
-         if (classType == TObjString::Class())
-            Info("TProtoClass","Data is a objectstring: %s", dataPtrName);
-         if (dataPtr->TestBit(TRealData::kTransient))
-            Info("TProtoClass","And is transient");
+      if (gDebug > 2) {
+         for (auto dataPtr : *fPRealData) {
+            const auto classType = dataPtr->IsA();
+            const auto dataPtrName = dataPtr->GetName();
+            if (classType == TProtoRealData::Class())
+               Info("TProtoClass","Data is a protorealdata: %s", dataPtrName);
+            if (classType == TObjString::Class())
+               Info("TProtoClass","Data is a objectstring: %s", dataPtrName);
+            if (dataPtr->TestBit(TRealData::kTransient))
+               Info("TProtoClass","And is transient");
+         }
       }
    }
 
@@ -97,7 +99,7 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
 Bool_t TProtoClass::FillTClass(TClass* cl) {
    // Move data from this TProtoClass into cl.
    if (cl->fRealData || cl->fBase || cl->fData || cl->fSizeof != -1 || cl->fCanSplit >= 0
-       || cl->fProperty !=(-1) ) {
+       || cl->fProperty != (-1) ) {
       Error("FillTClass", "TClass %s already initialized!", cl->GetName());
       return kFALSE;
    }
