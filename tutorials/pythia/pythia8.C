@@ -10,9 +10,9 @@
 //
 void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
 {
-   char *p8dataenv = gSystem->Getenv("PYTHIA8DATA"); 
+   const char *p8dataenv = gSystem->Getenv("PYTHIA8DATA");
    if (!p8dataenv) {
-      char *p8env = gSystem->Getenv("PYTHIA8"); 
+      const char *p8env = gSystem->Getenv("PYTHIA8");
       if (!p8env) {
          Error("pythia8.C", 
                "Environment variable PYTHIA8 must contain path to pythia directory!");
@@ -23,7 +23,7 @@ void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
       gSystem->Setenv("PYTHIA8DATA", p8d);
    }
       
-   char* path = gSystem->ExpandPathName("$PYTHIA8DATA");
+   const char* path = gSystem->ExpandPathName("$PYTHIA8DATA");
    if (gSystem->AccessPathName(path)) {
          Error("pythia8.C", 
                "Environment variable PYTHIA8DATA must contain path to $PYTHIA8/xmldoc directory !");
@@ -46,15 +46,14 @@ void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
 // Create pythia8 object
    TPythia8* pythia8 = new TPythia8();
     
-// Configure    
-   pythia8->ReadString("SoftQCD:minBias = on");
-   pythia8->ReadString("SoftQCD:singleDiffractive = on");
-   pythia8->ReadString("SoftQCD:doubleDiffractive = on");
+// Configure
+   pythia8->ReadString("HardQCD:all = on");
+
 
 // Initialize 
     
    pythia8->Initialize(2212 /* p */, 2212 /* p */, 14000. /* TeV */);
-    
+
 // Event loop
    for (Int_t iev = 0; iev < nev; iev++) {
       pythia8->GenerateEvent();
@@ -72,14 +71,14 @@ void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
          if (charge == 0.) continue;
          Float_t eta = part->Eta();
          Float_t pt  = part->Pt();
-    
+
          etaH->Fill(eta);
          if (pt > 0.) ptH->Fill(pt, 1./(2. * pt));
       }
    }
 
    pythia8->PrintStatistics();
-    
+
    TCanvas* c1 = new TCanvas("c1","Pythia8 test example",800,800);
    c1->Divide(1, 2);
    c1->cd(1);
