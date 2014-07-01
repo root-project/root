@@ -3102,7 +3102,7 @@ void TEfficiency::SetBetaBinParameters(Int_t bin, Double_t alpha, Double_t beta)
    // doing this I get h1->fN which is available only for a TH1D 
    UInt_t n = h1->GetBin(h1->GetNbinsX()+1, h1->GetNbinsY()+1, h1->GetNbinsZ()+1 ) + 1;
 
-   // in case vector is not created do with defult alpha, beta params
+   // in case vector is not created do with default alpha, beta params
    if (fBeta_bin_params.size() != n )       
       fBeta_bin_params = std::vector<std::pair<Double_t, Double_t> >(n, std::make_pair(fBeta_alpha, fBeta_beta) ); 
 

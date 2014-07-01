@@ -36,8 +36,6 @@ it histograms a function of the px and py branches.</p>
 <span class="cpp">#include "<a href="./TTreeReader.h">TTreeReader.h</a>"</span>
 <span class="cpp">#include "<a href="./TTreeReaderValue.h">TTreeReaderValue.h</a>"</span>
 &nbsp;
-<span class="keyword">class</span> <a href="./TVirtualPad.html">TVirtualPad</a>;
-&nbsp;
 void hsimpleReader() {
    <span class="codecomment">// Create a histogram for the values we read.</span>
    <a href="./TH1F.html">TH1F</a> *myHist = <span class="keyword">new</span> <a href="./TH1F.html">TH1F</a>(<span class="string">"h1"</span>, <span class="string">"ntuple"</span>, 100, -4, 4);

@@ -4542,19 +4542,58 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTmplDecl(const clang::Template
 //______________________________________________________________________________
 int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDecl& recordDecl,
                                                           const cling::Interpreter& interpreter,
-                                                          std::string& defString)
+                                                          std::string& defString,
+                                                          bool acceptStl)
 {
    // Convert a rcd decl to its fwd decl
    // If this is a template specialisation, treat in the proper way
 
+   // Do not fwd declare the templates in the stl.
+   if (ROOT::TMetaUtils::IsStdClass(recordDecl) && !acceptStl)
+      return 0;
+
+   // We may need to fwd declare the arguments of the template
+   std::string argsFwdDecl;
+
    if (auto tmplSpecDeclPtr = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&recordDecl)){
-      if (auto tmplDeclPtr = tmplSpecDeclPtr->getSpecializedTemplate()){
-         return FwdDeclFromTmplDecl(*tmplDeclPtr,interpreter,defString);
+      std::string singlArgFwdDecl;
+      for(auto arg : tmplSpecDeclPtr->getTemplateArgs().asArray()){
+         // We do nothing in presence of ints, bools, templates.
+         // We should probably in presence of templates though...
+         if (clang::TemplateArgument::Type != arg.getKind()) continue;
+         auto argQualType = arg.getAsType();
+         // Recursively remove all *
+         while (llvm::isa<clang::PointerType>(argQualType.getTypePtr()))
+            argQualType = argQualType->getPointeeType();
+         if (llvm::isa<clang::RecordType>(argQualType)){
+            // Remove the * and &
+            auto argNakedTypePtr = ROOT::TMetaUtils::GetUnderlyingType(argQualType);
+            // Now we cannot but have a RecordType
+            auto argRecTypePtr = llvm::cast<clang::RecordType>(argNakedTypePtr);
+            if (auto argRecDeclPtr = argRecTypePtr->getDecl()){
+               FwdDeclFromRcdDecl(*argRecDeclPtr,interpreter,singlArgFwdDecl,acceptStl);
+               argsFwdDecl += singlArgFwdDecl;
+            }
+         }
       }
+
+      if (acceptStl){
+         defString=argsFwdDecl;
+         return 0;
+      }
+
+      int retCode=0;
+      if (auto tmplDeclPtr = tmplSpecDeclPtr->getSpecializedTemplate()){
+         retCode = FwdDeclFromTmplDecl(*tmplDeclPtr,interpreter,defString);
+      }
+      defString = argsFwdDecl + defString;
+      return retCode;
    }
 
    defString = "class " + recordDecl.getNameAsString() + ";";
-   return EncloseInNamespaces(recordDecl, defString);
+   int retCode =  EncloseInNamespaces(recordDecl, defString);
+   defString = argsFwdDecl + defString;
+   return retCode;
 }
 
 //______________________________________________________________________________
@@ -4574,9 +4613,13 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
    EncloseInNamespaces(tdnDecl,buffer);
 
    // Start Recursion if the underlying type is a TypedefNameDecl
-   if (auto underlyingTdnTypePtr = llvm::dyn_cast<clang::TypedefType>(underlyingType.getTypePtr())){
+   // Note: the simple cast w/o the getSingleStepDesugaredType call
+   // does not work in case the typedef is in a namespace.
+   auto& ctxt = tdnDecl.getASTContext();
+   auto underlyingUnderlyingType = underlyingType.getSingleStepDesugaredType(ctxt);
+   if (auto underlyingTdnTypePtr = llvm::dyn_cast<clang::TypedefType>(underlyingUnderlyingType.getTypePtr())){
       std::string tdnFwdDecl;
-      std::cout << tdnDecl.getNameAsString() << "Is a typedef in a typedef\n";
+
       auto underlyingTdnDeclPtr = underlyingTdnTypePtr->getDecl();
       FwdDeclFromTypeDefNameDecl(*underlyingTdnDeclPtr,
                                  interpreter,
@@ -4588,7 +4631,8 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
       std::string classFwdDecl;
       FwdDeclFromRcdDecl(*CXXRcdDeclPtr,
                          interpreter,
-                         classFwdDecl);
+                         classFwdDecl,
+                         true /* acceptStl*/);
       if (!fwdDeclSetPtr || fwdDeclSetPtr->insert(classFwdDecl).second)
          fwdDeclString+=classFwdDecl;
    }

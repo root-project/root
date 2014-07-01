@@ -2332,7 +2332,7 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
 {
    // Return Integral of function between a and b using the given parameter values and
    // relative and absolute tolerance.
-   // The defult integrator defined in ROOT::Math::IntegratorOneDimOptions::DefaultIntegrator() is used
+   // The default integrator defined in ROOT::Math::IntegratorOneDimOptions::DefaultIntegrator() is used
    // If ROOT contains the MathMore library the default integrator is set to be
    // the adaptive ROOT::Math::GSLIntegrator (based on QUADPACK) or otherwise the
    // ROOT::Math::GaussIntegrator is used
@@ -2595,7 +2595,7 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, In
    //
    // Method:
    //
-   //    The defult method used is the Genz-Mallik adaptive multidimensional algorithm
+   //    The default method used is the Genz-Mallik adaptive multidimensional algorithm
    //    using the class ROOT::Math::AdaptiveIntegratorMultiDim
    //    (see the reference documentation of the class)
    //   Other methods can be used by setting ROOT::Math::IntegratorMultiDimOptions::SetDefaultIntegrator()

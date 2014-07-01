@@ -509,7 +509,7 @@ public:
       Fast Invertion of a square Matrix ( this method changes the current matrix).
       Return true if inversion is successfull.
       The method used is based on direct inversion using the Cramer rule for 
-      matrices upto 5x5. Afterwards the same defult algorithm of Invert() is used. 
+      matrices upto 5x5. Afterwards the same default algorithm of Invert() is used. 
       Note that this method is faster but can suffer from much larger numerical accuracy 
       when the condition of the matrix is large
    */

@@ -2341,10 +2341,10 @@ void AddPlatformDefines(std::vector<std::string>& clingArgs)
 }
 
 //______________________________________________________________________________
-void ExtractFileName(const std::string& path, std::string& filename)
+std::string ExtractFileName(const std::string& path)
 {
    // Extract the filename from a fullpath
-   filename = llvm::sys::path::filename (path);
+   return llvm::sys::path::filename (path);
 }
 
 //______________________________________________________________________________
@@ -3343,17 +3343,17 @@ std::string GenerateFwdDeclString(const RScanner& scan,
    }
 
    // Functions
-   for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
-      int retCode = FwdDeclFromFcnDecl(*fcnDeclPtr, interp, buffer);
-      if (-1 == retCode){
-         ROOT::TMetaUtils::Error("GenerateFwdDeclString",
-                                 "Error generating fwd decl for function  %s\n",
-                                 fcnDeclPtr->getNameAsString().c_str());
-         return emptyString;
-      }
-      if (retCode == 0 && fwdDecls.insert(buffer).second)
-         fwdDeclString+="\""+buffer+"\"\n";
-   }
+//    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
+//       int retCode = FwdDeclFromFcnDecl(*fcnDeclPtr, interp, buffer);
+//       if (-1 == retCode){
+//          ROOT::TMetaUtils::Error("GenerateFwdDeclString",
+//                                  "Error generating fwd decl for function  %s\n",
+//                                  fcnDeclPtr->getNameAsString().c_str());
+//          return emptyString;
+//       }
+//       if (retCode == 0 && fwdDecls.insert(buffer).second)
+//          fwdDeclString+="\""+buffer+"\"\n";
+//    }
 
    if (fwdDeclString.empty()) fwdDeclString=emptyString;
 
@@ -4581,8 +4581,7 @@ int invokeRootCling(const std::string& verbosity,
                ROOT::TMetaUtils::Warning(0,
             "*** genreflex: No rootmap lib and several header specified!\n");
       }
-      std::string cleanHeaderName;
-      ExtractFileName(headersNames[0],cleanHeaderName);
+      std::string cleanHeaderName = ExtractFileName(headersNames[0]);
       newRootmapLibName = "lib";
       newRootmapLibName+=cleanHeaderName;
       changeExtension(newRootmapLibName,gLibraryExtension);
@@ -5168,7 +5167,7 @@ int GenReflex(int argc, char **argv)
       }
       // Target lib has precedence over rootmap lib
       if (options[ROOTMAP]){
-         rootmapLibName = options[TARGETLIB].arg;
+         rootmapLibName = ExtractFileName(options[TARGETLIB].arg);
       }
    }
 
@@ -5294,8 +5293,7 @@ int main(int argc, char **argv)
 
    const std::string exePath ( GetExePath() );
 
-   std::string exeName;
-   ExtractFileName(exePath,exeName);
+   std::string exeName = ExtractFileName(exePath);
 
    // Select according to the name of the executable the procedure to follow:
    // 1) RootCling

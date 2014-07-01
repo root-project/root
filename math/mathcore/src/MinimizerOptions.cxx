@@ -47,11 +47,11 @@ void MinimizerOptions::SetDefaultErrorDef(double up) {
    Minim::gDefaultErrorDef = up; 
 }
 void MinimizerOptions::SetDefaultTolerance(double tol) {
-   // set the defult tolerance
+   // set the default tolerance
    Minim::gDefaultTolerance = tol; 
 }
 void MinimizerOptions::SetDefaultPrecision(double prec) {
-   // set the defult precision
+   // set the default precision
    Minim::gDefaultPrecision = prec; 
 }
 void MinimizerOptions::SetDefaultMaxFunctionCalls(int maxcall) {

@@ -42,7 +42,7 @@ namespace RooStats {
 
    public:
 
-      // defult constructor 
+      // default constructor 
       explicit LikelihoodInterval(const char* name = 0);
 
       /// construct the interval from a Profile Likelihood object, parameter of interest and optionally a snapshot of 

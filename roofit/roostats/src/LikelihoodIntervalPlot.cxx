@@ -441,7 +441,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          hist2D->SetContour(nLevels,contLevels);
          if (fLineColor) hist2D->SetLineColor(fLineColor);
          
-         // defult options for drawing a second histogram 
+         // default options for drawing a second histogram 
          TString tmpOpt = opt; 
          tmpOpt.ReplaceAll("same","");
          if (tmpOpt.Length() < 3) opt += "cont3";

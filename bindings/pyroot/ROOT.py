@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 04/22/14
+# Last: 06/29/14
 
 """PyROOT user module.
 
@@ -336,8 +336,7 @@ if not '__IPYTHON__' in __builtins__:
 ### call EndOfLineAction after each interactive command (to update display etc.)
 _orig_dhook = sys.displayhook
 def _displayhook( v ):
-# TODO: EndOfLineAction currently unresolvable (#98656?)
-#   _root.gInterpreter.EndOfLineAction()
+   _root.gInterpreter.EndOfLineAction()
    return _orig_dhook( v )
 
 
@@ -616,6 +615,9 @@ del ModuleFacade
 ### b/c of circular references, the facade needs explicit cleanup ---------------
 import atexit
 def cleanup():
+ # save for later
+   isCocoa = _root.gSystem.InheritsFrom( 'TMacOSXSystem' )
+
  # restore hooks
    import sys
    sys.displayhook = sys.__displayhook__
@@ -659,6 +661,7 @@ def cleanup():
  # order of static object destruction; so far it only seemed needed for
  # sockets with PROOF, whereas files should not be touched this early ...
    gROOT = sys.modules[ 'libPyROOT' ].gROOT
+   if isCocoa: gROOT.GetListOfCanvases().Delete()
    gROOT.CloseFiles()
    del gROOT
 
