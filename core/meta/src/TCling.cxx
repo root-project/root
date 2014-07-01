@@ -4703,7 +4703,7 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    TString lib;
    Ssiz_t posLib = 0;
    while (libs.Tokenize(lib, posLib)) {
-      if (Load(lib, kFALSE /*system*/) < 0) {
+      if (gSystem->Load(lib, "", kFALSE /*system*/) < 0) {
          // The library load failed, all done.
          //fprintf(stderr, "load failed: %s\n", errmsg.c_str());
          return 0;
