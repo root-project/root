@@ -421,6 +421,8 @@ namespace ROOT
       
       double sigma0 = *std::min_element(fInitialSigma.begin(),fInitialSigma.end());
       double sigma0scaled = 1e-1; // default value.
+      if (!fWithLinearScaling)
+	sigma0scaled = sigma0;
       dVec vscaling = dVec::Constant(fDim,1.0);
       for (size_t i=0;i<fInitialSigma.size();i++)
 	vscaling(i) /= fInitialSigma.at(i);
