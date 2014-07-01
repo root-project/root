@@ -4397,10 +4397,6 @@ const clang::RecordDecl* ROOT::TMetaUtils::ExtractEnclosingScopes(const clang::D
    if (auto enclosingClassPtr =
              clang::dyn_cast<clang::RecordDecl>(enclosingDeclCtxt)){
       return enclosingClassPtr;
-//       scopeType = 2;
-//       enclosingSc.push_back(std::make_pair(enclosingClassPtr->getNameAsString(),scopeType));
-//       ExtractEnclosingScopes(*enclosingClassPtr, enclosingSc);
-
    }
 
    return nullptr;
@@ -4684,12 +4680,11 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
    // Start Recursion if the underlying type is a TypedefNameDecl
    // Note: the simple cast w/o the getSingleStepDesugaredType call
    // does not work in case the typedef is in a namespace.
-//    auto& ctxt = tdnDecl.getASTContext();
-//    auto underlyingUnderlyingType = underlyingType.getSingleStepDesugaredType(ctxt);
+   auto& ctxt = tdnDecl.getASTContext();
+   auto immediatelyUnderlyingType = underlyingType.getSingleStepDesugaredType(ctxt);
 
-   if (auto underlyingTdnTypePtr = llvm::dyn_cast<clang::TypedefType>(underlyingType.getTypePtr())){
+   if (auto underlyingTdnTypePtr = llvm::dyn_cast<clang::TypedefType>(immediatelyUnderlyingType.getTypePtr())){
       std::string tdnFwdDecl;
-
       auto underlyingTdnDeclPtr = underlyingTdnTypePtr->getDecl();
       FwdDeclFromTypeDefNameDecl(*underlyingTdnDeclPtr,
                                  interpreter,
@@ -4697,7 +4692,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
                                  fwdDeclSetPtr);
       if (!fwdDeclSetPtr || fwdDeclSetPtr->insert(tdnFwdDecl).second)
          fwdDeclString+=tdnFwdDecl;
-   } else if (auto CXXRcdDeclPtr = underlyingType->getAsCXXRecordDecl()){
+   } else if (auto CXXRcdDeclPtr = immediatelyUnderlyingType->getAsCXXRecordDecl()){
       std::string classFwdDecl;
       FwdDeclFromRcdDecl(*CXXRcdDeclPtr,
                          interpreter,
