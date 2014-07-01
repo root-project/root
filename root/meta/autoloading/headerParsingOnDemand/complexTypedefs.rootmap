@@ -1,0 +1,19 @@
+{ decls }
+namespace GaudiAlg {  }
+namespace std {  }
+
+class B;template <typename T> class myTempl;
+
+[ libcomplexTypedefs_dictrflx.so ]
+# List of selected classes
+class GaudiAlg::HistoID
+class GaudiAlg::ID
+class IServicePtrs
+class myTempl<B***>
+class vector<IService*>
+header complexTypedefs.h
+# List of selected typedefs and classes in which they are defined
+typedef GaudiAlg::HistoID
+typedef IServicePtrs
+typedef GaudiAlg::HistoID
+typedef IServicePtrs

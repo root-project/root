@@ -50,6 +50,8 @@ endif
 
 export HEADER_PARSING_ON_DEMAND:=1
 
+execCheckComplexTypedefs.log : libcomplexTypedefs_dictrflx.$(DllSuf)
+
 FullheaderParsingOnDemand.log: libFullheaderParsingOnDemand_dictrflx.$(DllSuf)
 
 # The greps are there to find a common denominator among all platforms for 
