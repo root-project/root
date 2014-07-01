@@ -632,6 +632,9 @@ void ExtractEnclosingNameSpaces(const clang::Decl&,
                                 std::list<std::pair<std::string,bool> >&);
 
 //______________________________________________________________________________
+const clang::RecordDecl* ExtractEnclosingScopes(const clang::Decl& decl,
+                                          std::list<std::pair<std::string,unsigned int> >& enclosingSc);
+//______________________________________________________________________________
 // Kind of stl container
 ROOT::ESTLType STLKind(const llvm::StringRef type);
 
@@ -674,6 +677,9 @@ int PrepareArgsForFwdDecl(std::string& templateArgs,
 int EncloseInNamespaces(const clang::Decl& decl, std::string& defString);
 
 //______________________________________________________________________________
+const clang::RecordDecl* EncloseInScopes(const clang::Decl& decl, std::string& defString);
+
+//______________________________________________________________________________
 int FwdDeclFromRcdDecl(const clang::RecordDecl& recordDecl, 
                        const cling::Interpreter& interpreter,
                        std::string& defString,
@@ -683,10 +689,6 @@ int FwdDeclFromRcdDecl(const clang::RecordDecl& recordDecl,
 int FwdDeclFromTmplDecl(const clang::TemplateDecl& tmplDecl,
                         const cling::Interpreter& interpreter,
                         std::string& defString);
-
-//______________________________________________________________________________
-int GetEnclosingNamespaces(const clang::Decl& decl, std::string& defString);
-
 //______________________________________________________________________________
 int GetDefArg(const clang::ParmVarDecl& par, std::string& valAsString, const clang::PrintingPolicy& pp);
 

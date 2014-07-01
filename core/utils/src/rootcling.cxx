@@ -2702,7 +2702,7 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
 
       // Get always the containing namespace, put it in the list if not there
       std::string fwdDeclaration;
-      int retCode = ROOT::TMetaUtils::AST2SourceTools::GetEnclosingNamespaces(*rDecl, fwdDeclaration);
+      int retCode = ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(*rDecl, fwdDeclaration);
       if (retCode==0) AppendIfNotThere(fwdDeclaration,fwdDeclarationsList);
 
       // Get template definition and put it in if not there
@@ -3332,11 +3332,11 @@ std::string GenerateFwdDeclString(const RScanner& scan,
 
    for (auto const & tdNameDeclPtr : scan.fSelectedTypedefs){
       buffer="";
-      FwdDeclFromTypeDefNameDecl(*tdNameDeclPtr,
-                                 interp,
-                                 buffer,
-                                 &fwdDecls);
-      if (fwdDecls.insert(buffer).second){
+      int retCode = FwdDeclFromTypeDefNameDecl(*tdNameDeclPtr,
+                                               interp,
+                                               buffer,
+                                               &fwdDecls);
+      if (retCode == 0 && fwdDecls.insert(buffer).second){
          fwdDeclString+="\""+buffer+"\"\n";
 
       }

@@ -4376,6 +4376,38 @@ void ROOT::TMetaUtils::ExtractCtxtEnclosingNameSpaces(const clang::DeclContext& 
 }
 
 //______________________________________________________________________________
+const clang::RecordDecl* ROOT::TMetaUtils::ExtractEnclosingScopes(const clang::Decl& decl,
+                                                                  std::list<std::pair<std::string,unsigned int> >& enclosingSc)
+{
+   // Extract the names and types of containing scopes.
+   // Stop if a class is met and return its pointer.
+
+   const clang::DeclContext* enclosingDeclCtxt = decl.getDeclContext();
+   if (!enclosingDeclCtxt) return 0;
+
+   unsigned int scopeType;
+
+   if (auto enclosingNamespacePtr =
+             clang::dyn_cast<clang::NamespaceDecl>(enclosingDeclCtxt)){
+      scopeType= enclosingNamespacePtr->isInline() ? 1 : 0; // inline or simple namespace
+      enclosingSc.push_back(std::make_pair(enclosingNamespacePtr->getNameAsString(),scopeType));
+      return ExtractEnclosingScopes(*enclosingNamespacePtr, enclosingSc);
+   }
+
+   if (auto enclosingClassPtr =
+             clang::dyn_cast<clang::RecordDecl>(enclosingDeclCtxt)){
+      return enclosingClassPtr;
+//       scopeType = 2;
+//       enclosingSc.push_back(std::make_pair(enclosingClassPtr->getNameAsString(),scopeType));
+//       ExtractEnclosingScopes(*enclosingClassPtr, enclosingSc);
+
+   }
+
+   return nullptr;
+
+}
+
+//______________________________________________________________________________
 void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& clingArgs )
 {
    // Organise the parameters for cling in order to guarantee relocatability
@@ -4413,7 +4445,8 @@ void ROOT::TMetaUtils::ReplaceAll(std::string& str, const std::string& from, con
 }
 
 //______________________________________________________________________________
-int ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(const clang::Decl& decl, std::string& defString)
+int ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(const clang::Decl& decl,
+                                                           std::string& defString)
 {
    // Take the namespaces which enclose the decl and put them around the
    // definition string.
@@ -4421,16 +4454,38 @@ int ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(const clang::Decl& de
    // the namespaces ns1 and ns2, one would get:
    // namespace ns2{ namespace ns1 { class myClass; } }
 
-   std::list<std::pair<std::string,bool> > enclosingNamespaces;
-   ROOT::TMetaUtils::ExtractEnclosingNameSpaces(decl,enclosingNamespaces);
+   auto rcd = EncloseInScopes(decl, defString);
+   return rcd ? 1:0;
+}
+
+//______________________________________________________________________________
+const clang::RecordDecl* ROOT::TMetaUtils::AST2SourceTools::EncloseInScopes(const clang::Decl& decl,
+                                                                            std::string& defString)
+{
+   // Take the scopes which enclose the decl and put them around the
+   // definition string.
+   // If a class is encountered, bail out.
+
+   std::list<std::pair<std::string,unsigned int> > enclosingNamespaces;
+   auto rcdPtr = ROOT::TMetaUtils::ExtractEnclosingScopes(decl,enclosingNamespaces);
+
+   if (rcdPtr) return rcdPtr;
+
    // Check if we have enclosing namespaces
-   // FIXME: this should be active also for classes
-   for (auto const & encNs : enclosingNamespaces){
-      auto nsName= encNs.first;
-      std::string isInline ((encNs.second ? "inline ":""));
-      defString = isInline + "namespace " + nsName + " { " + defString + " }";
+   static const std::string scopeType [] = {"namespace ", "inline namespace ", "class "};
+
+   std::string scopeName;
+   std::string scopeContent;
+   unsigned int scopeIndex;
+   for (auto const & encScope : enclosingNamespaces){
+      scopeIndex = encScope.second;
+      scopeName = encScope.first;
+      scopeContent = " { " + defString + " }";
+      defString = scopeType[scopeIndex] +
+                  scopeName +
+                  scopeContent;
    }
-   return 0;
+   return nullptr;
 }
 
 //______________________________________________________________________________
@@ -4546,7 +4601,8 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
                                                           bool acceptStl)
 {
    // Convert a rcd decl to its fwd decl
-   // If this is a template specialisation, treat in the proper way
+   // If this is a template specialisation, treat in the proper way.
+   // If it is contained in a class, just fwd declare the class.
 
    // Do not fwd declare the templates in the stl.
    if (ROOT::TMetaUtils::IsStdClass(recordDecl) && !acceptStl)
@@ -4591,9 +4647,13 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
    }
 
    defString = "class " + recordDecl.getNameAsString() + ";";
-   int retCode =  EncloseInNamespaces(recordDecl, defString);
+   const clang::RecordDecl* rcd =  EncloseInScopes(recordDecl, defString);
+
+   if (rcd){
+      FwdDeclFromRcdDecl(*rcd, interpreter,defString);
+   }
    defString = argsFwdDecl + defString;
-   return retCode;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -4602,6 +4662,9 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
                                                                   std::string& fwdDeclString,
                                                                   std::unordered_set<std::string>* fwdDeclSetPtr)
 {
+   // Extract "forward declaration" of a typedef.
+   // If the typedef is contained in a class, just fwd declare the class.
+   // If not, fwd declare the typedef and all the dependent typedefs and types if necessary.
 
    std::string buffer = tdnDecl.getNameAsString();
    std::string underlyingName;
@@ -4610,14 +4673,21 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
                                                underlyingType,
                                                interpreter);
    buffer="typedef "+underlyingName+" "+buffer+";";
-   EncloseInNamespaces(tdnDecl,buffer);
+   const clang::RecordDecl* rcd=EncloseInScopes(tdnDecl,buffer);
+   if (rcd) {
+      // We do not need the whole series of scopes, just the class.
+      // It is enough to trigger an uncomplete type autoload/parse callback
+      // for example: MyClass::blabla::otherNs::myTypedef
+      return FwdDeclFromRcdDecl(*rcd, interpreter,fwdDeclString,fwdDeclSetPtr);
+   }
 
    // Start Recursion if the underlying type is a TypedefNameDecl
    // Note: the simple cast w/o the getSingleStepDesugaredType call
    // does not work in case the typedef is in a namespace.
-   auto& ctxt = tdnDecl.getASTContext();
-   auto underlyingUnderlyingType = underlyingType.getSingleStepDesugaredType(ctxt);
-   if (auto underlyingTdnTypePtr = llvm::dyn_cast<clang::TypedefType>(underlyingUnderlyingType.getTypePtr())){
+//    auto& ctxt = tdnDecl.getASTContext();
+//    auto underlyingUnderlyingType = underlyingType.getSingleStepDesugaredType(ctxt);
+
+   if (auto underlyingTdnTypePtr = llvm::dyn_cast<clang::TypedefType>(underlyingType.getTypePtr())){
       std::string tdnFwdDecl;
 
       auto underlyingTdnDeclPtr = underlyingTdnTypePtr->getDecl();
@@ -4767,11 +4837,3 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionD
 
    return EncloseInNamespaces(fcnDecl, defString);
 }
-
-//______________________________________________________________________________
-int ROOT::TMetaUtils::AST2SourceTools::GetEnclosingNamespaces(const clang::Decl& decl, std::string& defString)
-{
-   // Get the namespaces around the decl
-   return EncloseInNamespaces(decl, defString);
-}
-
