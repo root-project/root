@@ -4532,7 +4532,24 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
             "#undef __ROOTCLING__\n"
             + gInterpreterClassDef +
             "#endif");
-   return interpreter->parseForModule(code);
+
+   cling::Interpreter::CompilationResult cr;
+   {
+      // scope within which diagnostics are de-activated
+      // For now we disable diagnostics because we saw them already at
+      // dictionary generation time. That won't be an issue with the PCMs.
+
+      clangDiagSuppr diagSuppr(SemaR.getDiagnostics());
+
+      #if defined(R__MUST_REVISIT)
+      #if R__MUST_REVISIT(6,2)
+      Warning("TCling::RegisterModule","Diagnostics suppression should be gone by now.");
+      #endif
+      #endif
+
+      cr = interpreter->parseForModule(code);
+   }
+   return cr;
 }
 
 //______________________________________________________________________________
