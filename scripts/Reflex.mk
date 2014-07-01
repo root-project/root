@@ -13,7 +13,7 @@ else
 GENREFLEX = genreflex
 endif
 
-.PRECIOUS: %_rflx.cpp %_cint.cpp %.o
+.PRECIOUS: %_rflx.cpp %_cling.cpp %.o
 
 # The dictionary:
 %_rflx.cpp: %_selection.xml %.h $(ROOTCINT) $(ROOTV)
@@ -25,6 +25,6 @@ endif
 lib%_dictrflx.$(DllSuf): %_rflx.$(ObjSuf) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(BuildFromObj)
 
-lib%_dictcint.$(DllSuf): %_cint.$(ObjSuf) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+lib%_dictcint.$(DllSuf): %_cling.$(ObjSuf) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(BuildFromObj)
 
