@@ -156,7 +156,7 @@ public:
    /**
       Likelihood fit (unbinned or unbinned) depending on the type of data
       If Binned default is extended
-      If Unbinned defult is NOT extended (for backward compatibility)
+      If Unbinned default is NOT extended (for backward compatibility)
     */
    template <class Data> 
    bool LikelihoodFit(const Data & data ) { 
