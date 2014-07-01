@@ -2863,9 +2863,9 @@ int GenerateFullDict(std::ostream& dictStream,
             // coverity[fun_call_w_exception] - that's just fine.
             RStl::Instance().GenerateTClassFor( selClass.GetNormalizedName(), CRD, interp, normCtxt);
          } else {
-            EmitStreamerInfo(selClass.GetNormalizedName());
             ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
          }
+         EmitStreamerInfo(selClass.GetNormalizedName());
       }
    }
 
