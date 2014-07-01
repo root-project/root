@@ -1841,10 +1841,10 @@ Double_t TEfficiency::Combine(Double_t& up,Double_t& low,Int_t n,
    //  TF1* p1 = new TF1("p1","TMath::BetaDist(x,19,9)",0,1);
    //  TF1* p2 = new TF1("p2","TMath::BetaDist(x,4,8)",0,1);
    //  TF1* comb = new TF1("comb2","TMath::BetaDist(x,[0],[1])",0,1);
-   //  double norm = 1./(0.6*0.6+0.4*0.4); // weight normalization
+   //  double nrm = 1./(0.6*0.6+0.4*0.4); // weight normalization
    //  double a = 0.6*18.0 + 0.4*3.0 + 1.0;  // new alpha parameter of combined beta dist.
    //  double b = 0.6*10+0.4*7+1.0;  // new beta parameter of combined beta dist.
-   //  comb->SetParameters(norm*a ,norm *b );
+   //  comb->SetParameters(nrm*a ,nrm *b );
    //  TF1* const1 = new TF1("const1","0.05",0,1);
    //  TF1* const2 = new TF1("const2","0.95",0,1);
    //
