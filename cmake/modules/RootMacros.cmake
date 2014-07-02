@@ -287,9 +287,13 @@ endmacro(ROOTTEST_GENERATE_DICTIONARY)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "SELECTION;ROOTMAPNAME" "LIBRARIES;OPTIONS"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP" "SELECTION;LIBNAME" "LIBRARIES;OPTIONS"  ${ARGN})
 
   set(CMAKE_ROOTTEST_DICT ON)
+
+  if(ARG_NO_ROOTMAP)
+    set(CMAKE_ROOTTEST_NOROOTMAP ON)
+  endif()
 
   set(ROOT_genreflex_cmd ${ROOT_BINARY_DIR}/genreflex)
 
@@ -311,11 +315,16 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL MODULE ${gensrcdict})
 
-  set_property(TARGET ${targetname_libgen}
-              PROPERTY OUTPUT_NAME ${dictionary}_dictrflx)
+  if(ARG_LIBNAME)
+    set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
+    set_property(TARGET ${targetname_libgen}
+                 PROPERTY OUTPUT_NAME ${ARG_LIBNAME})
+  else()
+    set_property(TARGET ${targetname_libgen}
+                 PROPERTY OUTPUT_NAME ${dictionary}_dictrflx)
+  endif()
 
   add_dependencies(${targetname_libgen}
-   #                ${ROOT_LIBRARIES}
                    ${targetname_dictgen})
 
   target_link_libraries(${targetname_libgen}
