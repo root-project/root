@@ -104,7 +104,7 @@ public:
    double ErrorDef() const { return  fErrorDef; }
 
    /// return extra options (NULL pointer if they are not present)
-   IOptions * ExtraOptions() const { return fExtraOptions; }
+   const IOptions * ExtraOptions() const { return fExtraOptions; }
 
    /// type of minimizer
    const std::string & MinimizerType() const { return fMinimType; }
