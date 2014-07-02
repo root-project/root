@@ -3,7 +3,7 @@ void basic2() {
 //   This macro is a variant of basic.C
 //Author: Rene Brun   
 
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("basic2.C","");
    dir.ReplaceAll("/./","/");
    

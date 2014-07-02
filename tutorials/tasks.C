@@ -11,7 +11,7 @@
 
 void tasks()
 {
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("tasks.C","");
    dir.ReplaceAll("/./","/");
    gROOT->LoadMacro(dir +"MyTasks.cxx+");

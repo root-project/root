@@ -11,7 +11,7 @@
 
 void CompareMasses()
 {
-  TString massWidthFile = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+  TString massWidthFile = gSystem->UnixPathName(__FILE__);
   massWidthFile.ReplaceAll("CompareMasses.C","mass_width_2008.mc.txt");
 
   FILE* file = fopen(massWidthFile.Data(),"r");

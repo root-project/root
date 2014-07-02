@@ -25,7 +25,7 @@ TFile *hsimple(Int_t get=0)
 //  write access to this directory, otherwise the file is created in $PWD
 
    TString filename = "hsimple.root";
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("hsimple.C","");
    dir.ReplaceAll("/./","/");
    TFile *hfile = 0;

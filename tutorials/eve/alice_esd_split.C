@@ -83,7 +83,7 @@
 
 void alice_esd_split()
 {
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("alice_esd_split.C","");
    dir.ReplaceAll("/./","/");
    gROOT->LoadMacro(dir +"SplitGLView.C+");

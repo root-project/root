@@ -6,7 +6,7 @@
 
    //Add the tutorials directory to the macro path
    //This is necessary in case this macro is executed from another user directory
-   TString dirName = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   TString dirName = gSystem->UnixPathName(__FILE__);
    dirName.ReplaceAll("demos.C","");
    dirName.ReplaceAll("/./","");
    const char *current = gROOT->GetMacroPath();

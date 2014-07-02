@@ -15,7 +15,7 @@ void FITS_tutorial2()
    if (!gROOT->IsBatch()) {
       //printf("Press ENTER to start..."); getchar();
    }
-   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->DirName(__FILE__);
 
    // Open primary HDU from file
    TFITSHDU *hdu = new TFITSHDU(dir+"/sample2.fits");

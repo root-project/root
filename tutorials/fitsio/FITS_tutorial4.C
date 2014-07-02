@@ -16,7 +16,7 @@ void FITS_tutorial4()
    if (!gROOT->IsBatch()) {
       //printf("Press ENTER to start..."); getchar();
    }
-   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->DirName(__FILE__);
 
    //Open the table extension number 1)
    TFITSHDU *hdu = new TFITSHDU(dir+"/sample2.fits[1][DATAMAX > 2e-15]");

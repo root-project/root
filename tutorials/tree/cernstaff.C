@@ -1,7 +1,7 @@
 // Playing with a Tree containing variables of type character
 // Author: Rene Brun
 void cernstaff () {
-   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->DirName(__FILE__);
    if (gSystem->AccessPathName(dir+"/cernstaff.root")) {
       gROOT->SetMacroPath(dir);
       gROOT->ProcessLine(".x cernbuild.C");

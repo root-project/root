@@ -48,7 +48,7 @@ void ParseContext(TXMLNode *node)
 void DOMRecursive()
 {
   TDOMParser *domParser = new TDOMParser();
-  TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+  TString dir = gSystem->DirName(__FILE__);
   domParser->SetValidate(false); // do not validate with DTD
   domParser->ParseFile(dir+"/person.xml");
 

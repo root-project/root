@@ -28,7 +28,7 @@ void TestSPlot()
 //
 //Authors: Anna Kreshuk, Muriel Pivc
 
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("TestSPlot.C","");
    dir.ReplaceAll("/./","/");
    TString dataFile = Form("%sTestSPlot_toyMC.dat",dir.Data());
