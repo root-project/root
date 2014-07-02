@@ -24,7 +24,7 @@ if(WIN32)
 elseif(cocoa)
   set(gllibs "-framework OpenGL")
 else()
-  set(gllibs ${OPENGL_LIBRARIES})
+  set(gllibs ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
 endif()
 
 if(MACOSX_GLU_DEPRECATED)
