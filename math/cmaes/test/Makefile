@@ -15,7 +15,6 @@ ifeq ($(PLATFORM),win32)
 EXTRALIBS        = "$(ROOTSYS)/lib/libcmaesroot.lib"
 else
 EXTRALIBS        = -lcmaesroot -lglog -lgflags
-CXXFLAGS += -g -L/home/beniz/lib -L/usr/lib -L/usr/lib/x86_64-linux-gnu/
 endif
 
 # for using with MPI

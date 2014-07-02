@@ -2163,6 +2163,8 @@ if test $# -gt 0 ; then
       --with-rfio-libdir=*)    shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
       --with-sqlite-incdir=*)  sqliteincdir=$optarg  ; enable_sqlite="yes"  ;;
       --with-sqlite-libdir=*)  sqlitelibdir=$optarg  ; enable_sqlite="yes"  ;;
+      --with-cmaes-incdir=*)   cmaesincdir=$optarg   ; enable_cmaes="yes"   ;;
+      --with-cmaes-libdir=*)   cmaeslibdir=$optarg   ; enable_cmaes="yes"   ;;
       --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
       --with-srp-libdir=*)     srplibdir=$optarg     ; enable_srp="yes"     ;;
@@ -6591,10 +6593,12 @@ fi
 #
 ### echo %%% libcmaes support - Third party libraries
 #
-check_header "cmaes.h" $HOME/include/libcmaes /usr/include/libcmaes
+#check_header "cmaes.h" $HOME/include/libcmaes /usr/include/libcmaes
+check_header "cmaes.h" "$cmaesincdir" /usr/include/libcmaes
 cmaesinc=$found_hdr
 cmaesincdir=$found_dir
-check_library "libcmaes" "yes" $HOME/lib /usr/lib
+check_library "libcmaes" "yes" "$cmaeslibdir" /usr/lib
+# $HOME/lib /usr/lib
 cmaeslib=$found_lib
 cmaeslibdir=$found_dir
 
