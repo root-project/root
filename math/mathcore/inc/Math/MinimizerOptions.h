@@ -43,6 +43,7 @@ public:
    static void SetDefaultMaxIterations(int maxiter);
    static void SetDefaultStrategy(int strat);
    static void SetDefaultPrintLevel(int level);
+   static void SetDefaultExtraOptions(const IOptions * extraoptions);
 
    static const std::string & DefaultMinimizerType();
    static const std::string & DefaultMinimizerAlgo();
@@ -53,6 +54,7 @@ public:
    static int DefaultMaxIterations();
    static int DefaultStrategy();
    static int DefaultPrintLevel();
+   static IOptions * DefaultExtraOptions();
 
    /// retrieve extra options - if not existing create a IOptions
    static ROOT::Math::IOptions & Default(const char * name);
@@ -66,10 +68,7 @@ public:
 public:
 
    // constructor using the default options
-   // pass optionally a pointer to the additional options
-   // otehrwise look if they exist for this default minimizer
-   // and in that case they are copied in the constructed instance
-   MinimizerOptions(IOptions * extraOpts = 0);
+   MinimizerOptions();
 
    // destructor
    ~MinimizerOptions();
@@ -80,7 +79,7 @@ public:
    /// assignment operators
    MinimizerOptions & operator=(const MinimizerOptions & opt);
 
-   /** non-static methods for  retrivieng options */
+   /** non-static methods for retrieving options */
 
    /// set print level
    int PrintLevel() const { return fLevel; }
@@ -145,7 +144,7 @@ public:
    void SetMinimizerAlgorithm(const char *type) { fAlgoType = type; }
 
    /// set extra options (in this case pointer is cloned)
-   void  SetExtraOptions(const IOptions & opt);
+   void SetExtraOptions(const IOptions & opt);
 
 
 private:
