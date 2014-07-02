@@ -37,8 +37,7 @@ ROOT_ADD_TEST(tmva-executables-build COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BI
 #set(Boost-depends tmva-createData)
 
 #---Loop over all tutorials and define the corresponding test---------
-foreach(t TMVAClassification.C
-          Boost.C )
+foreach(t Boost.C )
   string(REPLACE ".C" "" tname ${t})
   string(REPLACE "/" "-" tname ${tname})
   ROOT_ADD_TEST(tmva-${tname}
@@ -47,6 +46,12 @@ foreach(t TMVAClassification.C
                 DEPENDS ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ})
 endforeach()
+
+#---Special ones requiring special options or arguments----------------
+ROOT_ADD_TEST(tmva-TMVAClassification
+                COMMAND ${ROOT_root_CMD} -b -l -n -q "${CMAKE_CURRENT_SOURCE_DIR}/TMVAClassification.C(\"BDTG\")"
+                FAILREGEX "Error in" "error:" "segmentation violation"
+                ENVIRONMENT ${ROOT_environ})
 
 
 
