@@ -11,6 +11,8 @@ CORETEAM=build/unix/git_coreteam.py
 
 $ROOTEXE -q -b -l $SCRIPT
 
+ncpu=`bin/root-config --ncpu`
+
 python $CORETEAM
 if [ "$?" -eq "0" ] ; then
    mv rootcoreteam.h rootx/src/rootcoreteam.h
@@ -28,16 +30,16 @@ echo ""
 echo "New version is `cat build/version_number`. Updating dependencies..."
 
 # compile all files that were out-of-date prior to makeversion.sh
-make -o core/base/inc/RVersion.h
+make -j $ncpu -o core/base/inc/RVersion.h
 
 # touch all files that don't need recompilation (need to do this 3 times
 # to walk through chain of dependencies)
-make -s -t; make -s -t; make -s -t
+make -j $ncpu -s -t; make -j $ncpu -s -t; make -j $ncpu -s -t
 
 # recompile only core/base/src/TROOT.cxx
 touch core/base/src/TROOT.cxx
 touch core/base/inc/TVersionCheck.h
 touch rootx/src/rootxx.cxx
-make -j `bin/root-config --ncpu`
+make -j $ncpu
 
 echo "root-config --version reports: `bin/root-config --prefix=. --version`"
