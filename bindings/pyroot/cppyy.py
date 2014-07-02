@@ -115,6 +115,7 @@ if not _builtin_cppyy:
          if type(attr) is _backend.PropertyProxy:
             setattr( cls.__class__, name, attr )
             return attr.__get__(cls)
+         setattr( cls, name, attr )
          return attr
 
    class _stdmeta( type ):
