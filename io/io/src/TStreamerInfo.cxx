@@ -3109,7 +3109,7 @@ static void R__WriteMoveConstructorBody(FILE *file, const TString &protoname, TI
    fprintf(file,"{\n");
    fprintf(file,"   // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).\n");
    fprintf(file,"   // Use at your own risk!\n");
-   fprintf(file,"   if (&rhs) {} // avoid warning about unused parameter\n");
+   fprintf(file,"   (void)rhs; // avoid warning about unused parameter\n");
    next.Reset();
    Bool_t defMod = kFALSE;
    while ((element = (TStreamerElement*)next())) {
