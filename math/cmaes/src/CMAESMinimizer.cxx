@@ -410,14 +410,16 @@ namespace ROOT
 	    };
 	}
 
-      if (fWithBounds)
+      //debug
+      /*if (fWithBounds)
 	{
 	  std::cout << "bounds:\n";
 	  std::copy(fLBounds.begin(),fLBounds.end(),std::ostream_iterator<double>(std::cout," "));
 	  std::cout << std::endl;
 	  std::copy(fUBounds.begin(),fUBounds.end(),std::ostream_iterator<double>(std::cout," "));
 	  std::cout << std::endl;
-	}
+	  }*/
+      //debug
       
       double sigma0 = *std::min_element(fInitialSigma.begin(),fInitialSigma.end());
       double sigma0scaled = 1e-1; // default value.
@@ -437,7 +439,7 @@ namespace ROOT
       double ftarget = -1.0;
       std::string fplot;
       
-      //TODO: set hyper-parameters according to IOptions object.
+      // set hyper-parameters according to IOptions object.
       if (cmaesOpt)
 	{
 	  cmaesOpt->GetValue("sigma",sigma0scaled);
@@ -463,7 +465,6 @@ namespace ROOT
 	    {
 	      Info("CMAESMinimizer","Minimizing with bounds");
 	      //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
-	      //GenoPheno<pwqBoundStrategy,linScalingStrategy> gp(&fLBounds.front(),&fUBounds.front(),fDim);
 	      GenoPheno<pwqBoundStrategy,linScalingStrategy> gp(vscaling,vshift,&fLBounds.front(),&fUBounds.front());
 	      CMAParameters<GenoPheno<pwqBoundStrategy,linScalingStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0scaled,lambda,0,gp);
 	      SetMParameters(cmaparams,maxiter,maxfevals,noisy,nrestarts,ftarget,fplot);
@@ -549,10 +550,26 @@ namespace ROOT
     const double* TCMAESMinimizer::Errors() const
     {
       fErrors.clear();
-      //std::cout << "diag=" << fCMAsols._cov.diagonal() << std::endl;
-      const double* diag = fCMAsols._cov.diagonal().data();
+      //const double* diag = fCMAsols._cov.diagonal().data();
+      dVec vgdiag;
+      if (fWithLinearScaling)
+	{
+	  if (fWithBounds)
+	    {
+	      vgdiag = fCMAparams_lb._gp.pheno(dVec(fCMAsols._sigma*fCMAsols._cov.diagonal()));
+	    }
+	  else
+	    {
+	      vgdiag = fCMAparams_l._gp.pheno(dVec(fCMAsols._sigma*fCMAsols._cov.diagonal()));
+	    }
+	}
+      else if (fWithBounds)
+	{
+	  vgdiag = fCMAparams_b._gp.pheno(dVec(fCMAsols._sigma*fCMAsols._cov.diagonal()));
+	}
+      else vgdiag = fCMAsols._sigma*fCMAsols._cov.diagonal();
       for (int i=0;i<fDim;i++)
-	fErrors.push_back(std::sqrt(std::abs(diag[i]))); // abs for numerical errors that bring the sqrt below 0.
+	fErrors.push_back(std::sqrt(std::abs(vgdiag(i)))); // abs for numerical errors that bring the sqrt below 0.
       return &fErrors.front();
     }
     
@@ -655,10 +672,17 @@ namespace ROOT
       std::cout << "CMAESMinimizer : Valid minimum - status = " << fStatus << std::endl;
       std::cout << "FVAL  = " << MinValue() << std::endl;
       std::cout << "Nfcn  = " << NCalls() << std::endl;
+      std::cout << "Edm   = " << Edm() << std::endl;
+      std::map<int,double>::const_iterator mit;
       for (unsigned int i=0;i<fDim;i++)
 	{
-	  std::cout << fNames.at(i) << "\t  = " << X()[i] << std::endl;
-	  //TODO: error bounds.
+	  std::cout << fNames.at(i) << "\t  = " << X()[i] << "\t";
+	  std::cout << "+/-  " << fErrors.at(i);
+	  if ((mit=fFixedVariables.find(i))!=fFixedVariables.end())
+	    std::cout << "\t(fixed)";
+	  else if (fVariablesType.at(i) > 1)
+	    std::cout << "\t(limited)";
+	  std::cout << std::endl;	  
 	}
     }
     
