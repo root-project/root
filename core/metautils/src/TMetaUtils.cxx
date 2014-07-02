@@ -4591,6 +4591,55 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTmplDecl(const clang::Template
 }
 
 //______________________________________________________________________________
+static int TreatSingleTemplateArg(const clang::TemplateArgument& arg,
+                                  std::string& argsFwdDecl,
+                                  const  cling::Interpreter& interpreter,
+                                  bool acceptStl=false)
+{
+   using namespace ROOT::TMetaUtils::AST2SourceTools;
+
+   // We do nothing in presence of ints, bools, templates.
+   // We should probably in presence of templates though...
+   if (clang::TemplateArgument::Type != arg.getKind()) return 0;
+
+   std::string singlArgFwdDecl;
+
+   auto argQualType = arg.getAsType();
+
+   // Recursively remove all *
+   while (llvm::isa<clang::PointerType>(argQualType.getTypePtr())) argQualType = argQualType->getPointeeType();
+
+   auto argTypePtr = argQualType.getTypePtr();
+
+   // Bail out on enums
+   if (llvm::isa<clang::EnumType>(argTypePtr)){
+      return 1;
+   }
+
+   // Treat typedefs which are arguments
+   if (llvm::isa<clang::TypedefType>(argTypePtr)){
+      auto tdTypePtr = llvm::dyn_cast<clang::TypedefType>(argTypePtr);
+      FwdDeclFromTypeDefNameDecl(*tdTypePtr->getDecl(),
+                                 interpreter,
+                                 singlArgFwdDecl);
+      argsFwdDecl += singlArgFwdDecl;
+      return 0;
+   }
+
+   if (llvm::isa<clang::RecordType>(argQualType)){
+      // Now we cannot but have a RecordType
+      auto argRecTypePtr = llvm::cast<clang::RecordType>(argTypePtr);
+      if (auto argRecDeclPtr = argRecTypePtr->getDecl()){
+         FwdDeclFromRcdDecl(*argRecDeclPtr,interpreter,singlArgFwdDecl,acceptStl);
+         argsFwdDecl += singlArgFwdDecl;
+      }
+      return 0;
+   }
+
+   return 1;
+}
+
+//______________________________________________________________________________
 int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDecl& recordDecl,
                                                           const cling::Interpreter& interpreter,
                                                           std::string& defString,
@@ -4608,25 +4657,10 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
    std::string argsFwdDecl;
 
    if (auto tmplSpecDeclPtr = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&recordDecl)){
-      std::string singlArgFwdDecl;
       for(auto arg : tmplSpecDeclPtr->getTemplateArgs().asArray()){
-         // We do nothing in presence of ints, bools, templates.
-         // We should probably in presence of templates though...
-         if (clang::TemplateArgument::Type != arg.getKind()) continue;
-         auto argQualType = arg.getAsType();
-         // Recursively remove all *
-         while (llvm::isa<clang::PointerType>(argQualType.getTypePtr()))
-            argQualType = argQualType->getPointeeType();
-         if (llvm::isa<clang::RecordType>(argQualType)){
-            // Remove the * and &
-            auto argNakedTypePtr = ROOT::TMetaUtils::GetUnderlyingType(argQualType);
-            // Now we cannot but have a RecordType
-            auto argRecTypePtr = llvm::cast<clang::RecordType>(argNakedTypePtr);
-            if (auto argRecDeclPtr = argRecTypePtr->getDecl()){
-               FwdDeclFromRcdDecl(*argRecDeclPtr,interpreter,singlArgFwdDecl,acceptStl);
-               argsFwdDecl += singlArgFwdDecl;
-            }
-         }
+         int retCode = TreatSingleTemplateArg(arg, argsFwdDecl, interpreter, acceptStl);
+         if (retCode!=0) // A sign we must bail out
+            return retCode;
       }
 
       if (acceptStl){
@@ -4665,9 +4699,13 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
    std::string buffer = tdnDecl.getNameAsString();
    std::string underlyingName;
    auto underlyingType = tdnDecl.getUnderlyingType();
-   ROOT::TMetaUtils::GetFullyQualifiedTypeName(underlyingName,
-                                               underlyingType,
-                                               interpreter);
+
+   TNormalizedCtxt nCtxt(interpreter.getLookupHelper());
+   ROOT::TMetaUtils::GetNormalizedName(underlyingName,
+                                       underlyingType,
+                                       interpreter,
+                                       nCtxt);
+
    buffer="typedef "+underlyingName+" "+buffer+";";
    const clang::RecordDecl* rcd=EncloseInScopes(tdnDecl,buffer);
    if (rcd) {
@@ -4694,10 +4732,14 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
          fwdDeclString+=tdnFwdDecl;
    } else if (auto CXXRcdDeclPtr = immediatelyUnderlyingType->getAsCXXRecordDecl()){
       std::string classFwdDecl;
-      FwdDeclFromRcdDecl(*CXXRcdDeclPtr,
-                         interpreter,
-                         classFwdDecl,
-                         true /* acceptStl*/);
+      int retCode = FwdDeclFromRcdDecl(*CXXRcdDeclPtr,
+                                       interpreter,
+                                       classFwdDecl,
+                                       true /* acceptStl*/);
+      if (retCode!=0){ // bail out
+         return 0;
+      }
+
       if (!fwdDeclSetPtr || fwdDeclSetPtr->insert(classFwdDecl).second)
          fwdDeclString+=classFwdDecl;
    }
