@@ -29,6 +29,19 @@ namespace std {
 }
 #endif
 
+#if defined(__CYGWIN__)
+// std::to_string is missing on cygwin with gcc 4.8.2-2 and 4.8.3
+#include <sstream>
+namespace std {
+  template <typename T>
+  string to_string(T value) {
+    ostringstream os;
+    os << value;
+    return os.str();
+  }
+}
+#endif
+
 namespace cling {
    class Interpreter;
 }
