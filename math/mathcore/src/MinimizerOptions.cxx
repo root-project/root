@@ -34,10 +34,11 @@ namespace Math {
       static int  gDefaultMaxIter  = 0;
       static int  gDefaultStrategy  = 1;
       static int  gDefaultPrintLevel  = 0;
+      static IOptions * gDefaultExtraOptions = 0; // pointer to default extra options
    }
 
 
-void MinimizerOptions::SetDefaultMinimizer(const char * type, const char * algo ) {
+void MinimizerOptions::SetDefaultMinimizer(const char * type, const char * algo) {
    // set the default minimizer type and algorithm
    if (type) Minim::gDefaultMinimizer = std::string(type);
    if (algo) Minim::gDefaultMinimAlgo = std::string(algo);
@@ -70,6 +71,11 @@ void MinimizerOptions::SetDefaultPrintLevel(int level) {
    // set the default printing level
    Minim::gDefaultPrintLevel = level;
 }
+void MinimizerOptions::SetDefaultExtraOptions(const IOptions * extraoptions) {
+   // set the pointer to default extra options
+   delete Minim::gDefaultExtraOptions;
+   Minim::gDefaultExtraOptions = (extraoptions) ? extraoptions->Clone() : 0;
+}
 
 const std::string & MinimizerOptions::DefaultMinimizerAlgo() { return Minim::gDefaultMinimAlgo; }
 double MinimizerOptions::DefaultErrorDef()         { return Minim::gDefaultErrorDef; }
@@ -79,6 +85,7 @@ int    MinimizerOptions::DefaultMaxFunctionCalls() { return Minim::gDefaultMaxCa
 int    MinimizerOptions::DefaultMaxIterations()    { return Minim::gDefaultMaxIter; }
 int    MinimizerOptions::DefaultStrategy()         { return Minim::gDefaultStrategy; }
 int    MinimizerOptions::DefaultPrintLevel()       { return Minim::gDefaultPrintLevel; }
+IOptions * MinimizerOptions::DefaultExtraOptions() { return Minim::gDefaultExtraOptions; }
 
 const std::string & MinimizerOptions::DefaultMinimizerType()
 {
@@ -99,7 +106,7 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
 }
 
 
-MinimizerOptions::MinimizerOptions(IOptions * extraOpts):
+MinimizerOptions::MinimizerOptions():
    fLevel( Minim::gDefaultPrintLevel),
    fMaxCalls( Minim::gDefaultMaxCalls ),
    fMaxIter( Minim::gDefaultMaxIter ),
@@ -107,7 +114,7 @@ MinimizerOptions::MinimizerOptions(IOptions * extraOpts):
    fErrorDef(  Minim::gDefaultErrorDef ),
    fTolerance( Minim::gDefaultTolerance ),
    fPrecision( Minim::gDefaultPrecision ),
-   fExtraOptions(extraOpts)
+   fExtraOptions(0)
 {
    // constructor using  the default options
 
@@ -125,7 +132,9 @@ MinimizerOptions::MinimizerOptions(IOptions * extraOpts):
       fAlgoType = "BFGS2";
 
    // check if extra options exists (copy them if needed)
-   if (!fExtraOptions) {
+   if (Minim::gDefaultExtraOptions)
+      fExtraOptions = Minim::gDefaultExtraOptions->Clone();
+   else {
       IOptions * gopts = FindDefault( fMinimType.c_str() );
       if (gopts) fExtraOptions = gopts->Clone();
    }
@@ -150,19 +159,19 @@ MinimizerOptions & MinimizerOptions::operator=(const MinimizerOptions & opt) {
    fMinimType = opt.fMinimType;
    fAlgoType = opt.fAlgoType;
 
-   if (fExtraOptions) delete fExtraOptions;
-   fExtraOptions = 0;
-   if (opt.fExtraOptions)  fExtraOptions =  (opt.fExtraOptions)->Clone();
+   delete fExtraOptions;
+   fExtraOptions = (opt.fExtraOptions) ? (opt.fExtraOptions)->Clone() : 0;
+
    return *this;
 }
 
 MinimizerOptions::~MinimizerOptions() {
-   if (fExtraOptions) delete fExtraOptions;
+   delete fExtraOptions;
 }
 
 void MinimizerOptions::SetExtraOptions(const IOptions & opt) {
    // set extra options (clone the passed one)
-   if (fExtraOptions) delete fExtraOptions;
+   delete fExtraOptions;
    fExtraOptions = opt.Clone();
 }
 
