@@ -67,6 +67,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
+$(call stripsrc,$(BASEDIRS)/TROOT.o): $(RGITCOMMITH)
 $(call stripsrc,$(BASEDIRS)/TPRegexp.o): $(PCREDEP)
 $(call stripsrc,$(BASEDIRS)/TPRegexp.o): CXXFLAGS += $(PCREINC)
 

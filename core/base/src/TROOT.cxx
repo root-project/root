@@ -63,6 +63,8 @@
 #include "RConfig.h"
 #include "RConfigure.h"
 #include "RConfigOptions.h"
+#include "RVersion.h"
+#include "RGitCommit.h"
 
 #include <string>
 #include <map>

@@ -515,6 +515,7 @@ endif
 ##### Compiler directives and run-control file #####
 
 COMPILEDATA   = include/compiledata.h
+RGITCOMMITH  := include/RGitCommit.h
 ROOTRC        = etc/system.rootrc
 ROOTMAP       = etc/system.rootmap
 ROOTPCH       = etc/allDict.cxx.pch
@@ -790,6 +791,18 @@ $(COMPILEDATA): $(ROOT_SRCDIR)/config/Makefile.$(ARCH) config/Makefile.comp Make
 	   "$(LIBDIR)" "$(BOOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" \
 	   "$(MAKESHAREDLIB)" "$(MAKEEXE)" "$(ARCH)" "$(ROOTBUILD)" \
 	   "$(EXPLICITLINK)"
+
+# We rebuild GITCOMMITH only when we would re-link libCore anyway.
+# Thus it depends on all dependencies of libCore (minus TROOT.o
+# - the only #includer of GOREGITH - to avoid circular dependencies).
+$(RGITCOMMITH): $(filter-out core/base/src/TROOT.o,$(COREO)) $(COREDO) $(PCREDEP) $(CORELIBDEP)
+	@echo '#ifndef ROOT_RGITCOMMIT_H' > $@.tmp
+	@echo '#define ROOT_RGITCOMMIT_H' >> $@.tmp
+	@echo '#define ROOT_GIT_BRANCH "'`head -n 1 etc/gitinfo.txt | tail -n1`'"' >> $@.tmp
+	@echo '#define ROOT_GIT_COMMIT "'`head -n 2 etc/gitinfo.txt | tail -n1`'"' >> $@.tmp
+	@echo '#endif' >> $@.tmp
+	@diff $@.tmp $@ > /dev/null 2>&1 ; status=$?;\
+	 if [ "$status" -ne "0" ]; then cp $@.tmp $@; fi
 
 ifeq ($(HOST),)
 build/dummy.d: config Makefile $(ALLHDRS) $(RMKDEP) $(BINDEXP)
