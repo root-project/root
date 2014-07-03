@@ -267,6 +267,7 @@ public:
    TClass();
    TClass(const char *name, Bool_t silent = kFALSE);
    TClass(const char *name, Version_t cversion, Bool_t silent = kFALSE);
+   TClass(const char *name, Version_t cversion, EState theState, Bool_t silent = kFALSE);
    TClass(ClassInfo_t *info, Version_t cversion,
           const char *dfil, const char *ifil = 0,
           Int_t dl = 0, Int_t il = 0, Bool_t silent = kFALSE);

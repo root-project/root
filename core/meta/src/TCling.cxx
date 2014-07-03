@@ -5381,6 +5381,16 @@ int TCling::SetClassAutoloading(int autoload) const
 }
 
 //______________________________________________________________________________
+int TCling::SetClassAutoparsing(int autoparse)
+{
+   // Enable/Disable the Autoparsing of headers.
+   // Returns the old value, i.e whether it was enabled or not.
+   bool oldVal = fHeaderParsingOnDemand;
+   fHeaderParsingOnDemand = autoparse;
+   return oldVal;
+}
+
+//______________________________________________________________________________
 void TCling::SetErrmsgcallback(void* p) const
 {
    // Set a callback to receive error messages.

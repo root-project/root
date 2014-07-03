@@ -23,6 +23,7 @@
 #include "TList.h"
 #include "TListOfDataMembers.h"
 #include "TRealData.h"
+#include "TInterpreter.h"
 
 //______________________________________________________________________________
 TProtoClass::TProtoClass(TClass* cl):
@@ -140,10 +141,15 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    if (fPRealData) {
       for (TObject* element: *fPRealData) {
          if (element->IsA() == TObjString::Class()) {
+            int autoparsingOldval=gInterpreter->SetClassAutoparsing(false);
             currentRDClass = TClass::GetClass(element->GetName());
+            gInterpreter->SetClassAutoparsing(autoparsingOldval);
             if (!currentRDClass && !element->TestBit(TRealData::kTransient)) {
-               Error("TProtoClass::FillTClass()", "Cannot find TClass for %s; skipping its members.",
-                     element->GetName());
+               if (gDebug>1)
+                  Info("FillTClass()",
+                       "Cannot find TClass for %s; Creating an empty one in the kForwardDeclared state.",
+                       element->GetName());
+               currentRDClass = new TClass(element->GetName(),1,TClass::kForwardDeclared, true /*silent*/);
             }
          } else {
             if (!currentRDClass) continue;
@@ -187,10 +193,10 @@ TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass) const
 {
    // Create a TRealData from this, with its data member coming from dmClass.
    TDataMember* dm = (TDataMember*)dmClass->GetListOfDataMembers()->FindObject(GetName());
-   if (!dm) {
-      Error("TProtoClass::TProtoRealData::CreateRealData()",
-            "Cannot find data member %s::%s!", dmClass->GetName(), GetName());
-      return 0;
+   if (!dm && dmClass->GetState()!=TClass::kForwardDeclared) {
+      Error("CreateRealData",
+           "Cannot find data member %s::%s!", dmClass->GetName(), GetName());
+      return nullptr;
    }
    TRealData* rd = new TRealData(GetTitle(), fOffset, dm);
    rd->SetIsObject(TestBit(kIsObject));
