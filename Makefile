@@ -801,8 +801,13 @@ $(RGITCOMMITH): $(filter-out core/base/src/TROOT.o,$(COREO)) $(COREDO) $(PCREDEP
 	@echo '#define ROOT_GIT_BRANCH "'`head -n 1 etc/gitinfo.txt | tail -n1`'"' >> $@.tmp
 	@echo '#define ROOT_GIT_COMMIT "'`head -n 2 etc/gitinfo.txt | tail -n1`'"' >> $@.tmp
 	@echo '#endif' >> $@.tmp
-	@diff $@.tmp $@ > /dev/null 2>&1 ; status=$?;\
-	 if [ "$status" -ne "0" ]; then cp $@.tmp $@; fi
+	@if test -r $@; then \
+	  if ! diff $@.tmp $@ > /dev/null 2>&1; then \
+	    mv $@.tmp $@; \
+	  fi; \
+	else \
+	    mv $@.tmp $@; \
+	fi
 
 ifeq ($(HOST),)
 build/dummy.d: config Makefile $(ALLHDRS) $(RMKDEP) $(BINDEXP)
