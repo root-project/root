@@ -92,14 +92,7 @@ public:
    */ 
    Minimizer () : 
       fValidError(false),
-      fDebug(MinimizerOptions::DefaultPrintLevel()), 
-      fStrategy(MinimizerOptions::DefaultStrategy()), 
-      fStatus(-1),
-      fMaxCalls(MinimizerOptions::DefaultMaxFunctionCalls()), 
-      fMaxIter(MinimizerOptions::DefaultMaxIterations()), 
-      fTol(MinimizerOptions::DefaultTolerance()), 
-      fPrec(MinimizerOptions::DefaultPrecision()), 
-      fUp(MinimizerOptions::DefaultErrorDef() )
+      fStatus(-1)
    {} 
 
    /** 
@@ -424,92 +417,72 @@ public:
    /** minimizer configuration parameters **/
 
    /// set print level
-   int PrintLevel() const { return fDebug; }
+   int PrintLevel() const { return fOptions.PrintLevel(); }
 
    ///  max number of function calls
-   unsigned int MaxFunctionCalls() const { return fMaxCalls; } 
+   unsigned int MaxFunctionCalls() const { return fOptions.MaxFunctionCalls(); } 
 
    /// max iterations
-   unsigned int MaxIterations() const { return fMaxIter; } 
+   unsigned int MaxIterations() const { return fOptions.MaxIterations(); } 
 
    /// absolute tolerance 
-   double Tolerance() const { return  fTol; }
+   double Tolerance() const { return  fOptions.Tolerance(); }
 
    /// precision of minimizer in the evaluation of the objective function
    /// ( a value <=0 corresponds to the let the minimizer choose its default one)
-   double Precision() const { return fPrec; }
+   double Precision() const { return fOptions.Precision(); }
    
    /// strategy 
-   int Strategy() const { return fStrategy; }
+   int Strategy() const { return fOptions.Strategy(); }
 
    /// status code of minimizer 
    int Status() const { return fStatus; } 
 
    /// return the statistical scale used for calculate the error
    /// is typically 1 for Chi2 and 0.5 for likelihood minimization
-   double ErrorDef() const { return fUp; } 
+   double ErrorDef() const { return fOptions.ErrorDef(); } 
 
    ///return true if Minimizer has performed a detailed error validation (e.g. run Hesse for Minuit)
    bool IsValidError() const { return fValidError; }
 
    /// retrieve the minimizer options (implement derived class if needed)
    virtual MinimizerOptions  Options() const { 
-      MinimizerOptions opt; 
-      opt.SetPrintLevel(fDebug);
-      opt.SetStrategy(fStrategy);
-      opt.SetMaxFunctionCalls(fMaxCalls);
-      opt.SetMaxIterations(fMaxIter);
-      opt.SetTolerance(fTol);
-      opt.SetPrecision(fPrec);
-      opt.SetErrorDef(fUp);
-      return opt;
+      return fOptions;
    }
 
    /// set print level
-   void SetPrintLevel(int level) { fDebug = level; }
+   void SetPrintLevel(int level) { fOptions.SetPrintLevel(level); }
 
    ///set maximum of function calls 
-   void SetMaxFunctionCalls(unsigned int maxfcn) { if (maxfcn > 0) fMaxCalls = maxfcn; }
+   void SetMaxFunctionCalls(unsigned int maxfcn) { if (maxfcn > 0) fOptions.SetMaxFunctionCalls(maxfcn); }
 
    /// set maximum iterations (one iteration can have many function calls) 
-   void SetMaxIterations(unsigned int maxiter) { if (maxiter > 0) fMaxIter = maxiter; } 
+   void SetMaxIterations(unsigned int maxiter) { if (maxiter > 0) fOptions.SetMaxIterations(maxiter); } 
 
    /// set the tolerance
-   void SetTolerance(double tol) { fTol = tol; }
+   void SetTolerance(double tol) { fOptions.SetTolerance(tol); }
 
    /// set in the minimizer the objective function evaluation precision 
    /// ( a value <=0 means the minimizer will choose its optimal value automatically, i.e. default case)
-   void SetPrecision(double prec) { fPrec = prec; }
+   void SetPrecision(double prec) { fOptions.SetPrecision(prec); }
 
    ///set the strategy 
-   void SetStrategy(int strategyLevel) { fStrategy = strategyLevel; }  
+   void SetStrategy(int strategyLevel) { fOptions.SetStrategy(strategyLevel); }  
 
    /// set scale for calculating the errors
-   void SetErrorDef(double up) { fUp = up; }
+   void SetErrorDef(double up) { fOptions.SetErrorDef(up); }
 
    /// flag to check if minimizer needs to perform accurate error analysis (e.g. run Hesse for Minuit)
    void SetValidError(bool on) { fValidError = on; } 
 
    /// set all options in one go
-   void SetOptions(const MinimizerOptions & opt) { 
-      fDebug = opt.PrintLevel();
-      fStrategy = opt.Strategy();
-      fMaxCalls = opt.MaxFunctionCalls();
-      fMaxIter = opt.MaxIterations();
-      fTol = opt.Tolerance();
-      fPrec = opt.Precision();
-      fUp = opt.ErrorDef();
+   void SetOptions(const MinimizerOptions & opt) {
+      fOptions = opt;
    }
 
    /// reset the defaut options (defined in MinimizerOptions)
-   void SetDefaultOptions() { 
-      fDebug = MinimizerOptions::DefaultPrintLevel();
-      fStrategy = MinimizerOptions::DefaultStrategy();
-      fMaxCalls = MinimizerOptions::DefaultMaxFunctionCalls();
-      fMaxIter = MinimizerOptions::DefaultMaxIterations();
-      fTol = MinimizerOptions::DefaultTolerance();
-      fPrec = MinimizerOptions::DefaultPrecision();
-      fUp = MinimizerOptions::DefaultErrorDef();
+   void SetDefaultOptions() {
+      fOptions.ResetToDefaultOptions();
    }
 
 protected: 
@@ -522,15 +495,8 @@ protected:
  
 
    bool fValidError;            // flag to control if errors have been validated (Hesse has been run in case of Minuit)
-   int fDebug;                  // print level
-   int fStrategy;               // minimizer strategy
+   MinimizerOptions fOptions;   // minimizer options
    int fStatus;                 // status of minimizer    
-   unsigned int fMaxCalls;      // max number of function calls 
-   unsigned int fMaxIter;       // max number or iterations used to find the minimum
-   double fTol;                 // tolerance (absolute)
-   double fPrec;                // precision
-   double fUp;                  // error scale 
-
 }; 
 
    } // end namespace Math

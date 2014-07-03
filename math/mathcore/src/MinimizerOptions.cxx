@@ -107,37 +107,11 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
 
 
 MinimizerOptions::MinimizerOptions():
-   fLevel( Minim::gDefaultPrintLevel),
-   fMaxCalls( Minim::gDefaultMaxCalls ),
-   fMaxIter( Minim::gDefaultMaxIter ),
-   fStrategy( Minim::gDefaultStrategy ),
-   fErrorDef(  Minim::gDefaultErrorDef ),
-   fTolerance( Minim::gDefaultTolerance ),
-   fPrecision( Minim::gDefaultPrecision ),
    fExtraOptions(0)
 {
    // constructor using  the default options
 
-   fMinimType = MinimizerOptions::DefaultMinimizerType();
-
-   fAlgoType =  Minim::gDefaultMinimAlgo;
-
-   // case of Fumili2 and TMinuit
-   if (fMinimType == "TMinuit") fMinimType = "Minuit";
-   else if (fMinimType == "Fumili2") {
-      fMinimType = "Minuit2";
-      fAlgoType = "Fumili";
-   }
-   else if (fMinimType == "GSLMultiMin" && fAlgoType == "Migrad")
-      fAlgoType = "BFGS2";
-
-   // check if extra options exists (copy them if needed)
-   if (Minim::gDefaultExtraOptions)
-      fExtraOptions = Minim::gDefaultExtraOptions->Clone();
-   else {
-      IOptions * gopts = FindDefault( fMinimType.c_str() );
-      if (gopts) fExtraOptions = gopts->Clone();
-   }
+   ResetToDefaultOptions();
 }
 
 
@@ -167,6 +141,39 @@ MinimizerOptions & MinimizerOptions::operator=(const MinimizerOptions & opt) {
 
 MinimizerOptions::~MinimizerOptions() {
    delete fExtraOptions;
+}
+
+void MinimizerOptions::ResetToDefaultOptions() {
+   fLevel = Minim::gDefaultPrintLevel;
+   fMaxCalls = Minim::gDefaultMaxCalls;
+   fMaxIter = Minim::gDefaultMaxIter;
+   fStrategy = Minim::gDefaultStrategy;
+   fErrorDef =  Minim::gDefaultErrorDef;
+   fTolerance = Minim::gDefaultTolerance;
+   fPrecision = Minim::gDefaultPrecision;
+
+   fMinimType = MinimizerOptions::DefaultMinimizerType();
+
+   fAlgoType =  Minim::gDefaultMinimAlgo;
+
+   // case of Fumili2 and TMinuit
+   if (fMinimType == "TMinuit") fMinimType = "Minuit";
+   else if (fMinimType == "Fumili2") {
+      fMinimType = "Minuit2";
+      fAlgoType = "Fumili";
+   }
+   else if (fMinimType == "GSLMultiMin" && fAlgoType == "Migrad")
+      fAlgoType = "BFGS2";
+
+   delete fExtraOptions;
+   fExtraOptions = 0;
+   // check if extra options exists (copy them if needed)
+   if (Minim::gDefaultExtraOptions)
+      fExtraOptions = Minim::gDefaultExtraOptions->Clone();
+   else {
+      IOptions * gopts = FindDefault( fMinimType.c_str() );
+      if (gopts) fExtraOptions = gopts->Clone();
+   }
 }
 
 void MinimizerOptions::SetExtraOptions(const IOptions & opt) {

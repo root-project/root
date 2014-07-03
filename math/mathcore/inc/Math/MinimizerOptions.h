@@ -115,6 +115,7 @@ public:
    void Print(std::ostream & os = std::cout) const;
 
    /** non-static methods for setting options */
+   void ResetToDefaultOptions();
 
    /// set print level
    void SetPrintLevel(int level) { fLevel = level; }
