@@ -4592,7 +4592,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTmplDecl(const clang::Template
 
 //______________________________________________________________________________
 static int TreatSingleTemplateArg(const clang::TemplateArgument& arg,
-                                  std::string& argsFwdDecl,
+                                  std::string& argFwdDecl,
                                   const  cling::Interpreter& interpreter,
                                   bool acceptStl=false)
 {
@@ -4601,8 +4601,6 @@ static int TreatSingleTemplateArg(const clang::TemplateArgument& arg,
    // We do nothing in presence of ints, bools, templates.
    // We should probably in presence of templates though...
    if (clang::TemplateArgument::Type != arg.getKind()) return 0;
-
-   std::string singlArgFwdDecl;
 
    auto argQualType = arg.getAsType();
 
@@ -4616,13 +4614,15 @@ static int TreatSingleTemplateArg(const clang::TemplateArgument& arg,
       return 1;
    }
 
+   // If this is a built-in, just return: fwd decl not necessary.
+   if (llvm::isa<clang::BuiltinType>(argTypePtr)){
+      return 0;
+   }
+
    // Treat typedefs which are arguments
    if (llvm::isa<clang::TypedefType>(argTypePtr)){
       auto tdTypePtr = llvm::dyn_cast<clang::TypedefType>(argTypePtr);
-      FwdDeclFromTypeDefNameDecl(*tdTypePtr->getDecl(),
-                                 interpreter,
-                                 singlArgFwdDecl);
-      argsFwdDecl += singlArgFwdDecl;
+      FwdDeclFromTypeDefNameDecl(*tdTypePtr->getDecl(), interpreter, argFwdDecl);
       return 0;
    }
 
@@ -4630,8 +4630,7 @@ static int TreatSingleTemplateArg(const clang::TemplateArgument& arg,
       // Now we cannot but have a RecordType
       auto argRecTypePtr = llvm::cast<clang::RecordType>(argTypePtr);
       if (auto argRecDeclPtr = argRecTypePtr->getDecl()){
-         FwdDeclFromRcdDecl(*argRecDeclPtr,interpreter,singlArgFwdDecl,acceptStl);
-         argsFwdDecl += singlArgFwdDecl;
+         FwdDeclFromRcdDecl(*argRecDeclPtr,interpreter,argFwdDecl,acceptStl);
       }
       return 0;
    }
@@ -4657,10 +4656,25 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
    std::string argsFwdDecl;
 
    if (auto tmplSpecDeclPtr = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&recordDecl)){
+      std::string argFwdDecl;
+      if (ROOT::TMetaUtils::gErrorIgnoreLevel == ROOT::TMetaUtils::kInfo)
+         std::cout << "Class " << recordDecl.getNameAsString()
+                   << " is a template specialisation. Treating its arguments.\n";
       for(auto arg : tmplSpecDeclPtr->getTemplateArgs().asArray()){
-         int retCode = TreatSingleTemplateArg(arg, argsFwdDecl, interpreter, acceptStl);
-         if (retCode!=0) // A sign we must bail out
+         int retCode = TreatSingleTemplateArg(arg, argFwdDecl, interpreter, acceptStl);
+         if (ROOT::TMetaUtils::gErrorIgnoreLevel == ROOT::TMetaUtils::kInfo){
+            std::cout << " o Template argument ";
+            if (retCode==0){
+               std::cout << "successfully treated. Arg fwd decl: " << argFwdDecl << std::endl;
+            } else {
+               std::cout << "could not be treated. Abort fwd declaration generation.\n";
+            }
+         }
+
+         if (retCode!=0){ // A sign we must bail out
             return retCode;
+         }
+         argsFwdDecl+=argFwdDecl;
       }
 
       if (acceptStl){
@@ -4732,6 +4746,9 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
          fwdDeclString+=tdnFwdDecl;
    } else if (auto CXXRcdDeclPtr = immediatelyUnderlyingType->getAsCXXRecordDecl()){
       std::string classFwdDecl;
+      if (ROOT::TMetaUtils::gErrorIgnoreLevel == ROOT::TMetaUtils::kInfo)
+         std::cout << "Typedef " << tdnDecl.getNameAsString() << " hides a class: "
+                   << CXXRcdDeclPtr->getNameAsString() << std::endl;
       int retCode = FwdDeclFromRcdDecl(*CXXRcdDeclPtr,
                                        interpreter,
                                        classFwdDecl,
