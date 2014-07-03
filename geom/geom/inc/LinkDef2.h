@@ -36,5 +36,6 @@
 #pragma link C++ class TGeoBranchArray+;
 #pragma link C++ class TGeoExtension+;
 #pragma link C++ class TGeoRCExtension+;
+#pragma link C++ class TGeoParallelWorld+;
 
 #endif

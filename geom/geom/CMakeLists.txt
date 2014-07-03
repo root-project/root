@@ -22,7 +22,7 @@ set(headers1 TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h
              TGeoBuilder.h TGeoNavigator.h)
 set(headers2 TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h
              TGeoUniformMagField.h TGeoGlobalMagField.h TGeoBranchArray.h
-             TGeoExtension.h)
+             TGeoExtension.h TGeoParallelWorld.h)
 
 
 ROOT_GENERATE_DICTIONARY(G__${libname}1 ${headers1} LINKDEF LinkDef1.h)
