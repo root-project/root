@@ -592,6 +592,8 @@ if(builtin_xrootd)
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                -DCMAKE_CXX_FLAGS=${__cxxflags}
+               -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+               -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
   set(_LIBDIR_DEFAULT "lib")
@@ -644,6 +646,8 @@ if(cling)
                  -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                  -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                  -DLLVM_NOCLING=ON
+                 -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+                 -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
       INSTALL_COMMAND ${CMAKE_COMMAND} -P <BINARY_DIR>/cmake_install.cmake
       LOG_INSTALL 1
     )
@@ -724,6 +728,8 @@ if(cling)
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+               -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+               -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
     INSTALL_COMMAND ${CMAKE_COMMAND} -P <BINARY_DIR>/cmake_install.cmake
     LOG_INSTALL 1
   )
