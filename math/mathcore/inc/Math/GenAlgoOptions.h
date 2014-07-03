@@ -25,7 +25,7 @@ namespace ROOT {
 //_______________________________________________________________________________
 /** 
     class implementing generic options for a numerical algorithm
-    Just store the otions in a maps of string-value pair 
+    Just store the options in a map of string-value pairs 
 
     @ingroup NumAlgo
 */

@@ -89,6 +89,7 @@
 #pragma link C++ class ROOT::Math::IntegratorMultiDimOptions+;
 #pragma link C++ class ROOT::Math::BaseIntegratorOptions+;
 #pragma link C++ class ROOT::Math::IOptions+;
+#pragma link C++ class ROOT::Math::GenAlgoOptions+;
 #pragma link C++ class ROOT::Math::IntegratorOneDim+;
 #pragma link C++ class ROOT::Math::IntegratorMultiDim+;
 #pragma link C++ class ROOT::Math::VirtualIntegrator+;
