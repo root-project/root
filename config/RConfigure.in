@@ -11,6 +11,7 @@
 #define ROOTDATADIR   "@datadir@"
 #define ROOTDOCDIR    "@docdir@"
 #define ROOTMACRODIR  "@macrodir@"
+#define ROOTTUTDIR    "@tutdir@"
 #define ROOTSRCDIR    "@srcdir@"
 #define ROOTICONPATH  "@iconpath@"
 #define EXTRAICONPATH "@extraiconpath@"

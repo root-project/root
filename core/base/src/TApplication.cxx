@@ -866,8 +866,8 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
          Error("ProcessLine", "Cannot show demos in batch mode!");
          return 1;
       }
-#ifdef ROOTDOCDIR
-      ProcessLine(".x " ROOTDOCDIR "/tutorials/demos.C");
+#ifdef ROOTTUTDIR
+      ProcessLine(".x " ROOTTUTDIR "/demos.C");
 #else
       ProcessLine(".x $(ROOTSYS)/tutorials/demos.C");
 #endif
