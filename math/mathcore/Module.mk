@@ -53,6 +53,7 @@ MATHCOREDH2  := $(MODDIRI)/TRandom.h \
                 $(MODDIRI)/Math/BasicMinimizer.h \
                 $(MODDIRI)/Math/IntegratorOptions.h \
                 $(MODDIRI)/Math/IOptions.h \
+                $(MODDIRI)/Math/GenAlgoOptions.h \
                 $(MODDIRI)/Math/Integrator.h \
                 $(MODDIRI)/Math/VirtualIntegrator.h \
                 $(MODDIRI)/Math/AllIntegrationTypes.h \
