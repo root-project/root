@@ -19,18 +19,23 @@
 
 // ROOT
 #include "TClass.h"
+#include "TFunction.h"
 #include "TMethod.h"
+
+#include "TClonesArray.h"
 #include "TCollection.h"
 #include "TDirectory.h"
-#include "TSeqCollection.h"
-#include "TClonesArray.h"
-#include "TObject.h"
-#include "TFunction.h"
 #include "TError.h"
+#include "TObject.h"
+#include "TObjArray.h"
+#include "TSeqCollection.h"
 
 #include "TTree.h"
 #include "TBranch.h"
+#include "TBranchElement.h"
 #include "TLeaf.h"
+#include "TStreamerElement.h"
+#include "TStreamerInfo.h"
 
 // Standard
 #include <stdexcept>
@@ -1249,9 +1254,23 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
       if ( branch ) {
       // found a branched object, wrap its address for the object it represents
+
+      // for partial return of a split object
+         if ( branch->InheritsFrom(TBranchElement::Class()) ) {
+            TBranchElement* be = (TBranchElement*)branch;
+            if ( be->GetCurrentClass() != be->GetTargetClass() && 0 <= be->GetID() ) {
+               Long_t offset = ((TStreamerElement*)be->GetInfo()->GetElements()->At(be->GetID()))->GetOffset();
+               return BindRootObjectNoCast( be->GetObject() + offset, be->GetCurrentClass() );
+            }
+         }
+
+      // for return of a full object
          TClass* klass = TClass::GetClass( branch->GetClassName() );
          if ( klass && branch->GetAddress() )
             return BindRootObjectNoCast( *(char**)branch->GetAddress(), klass );
+
+      // indicate failure by returning a typed null-object
+         return BindRootObjectNoCast( NULL, klass );
       }
 
    // if not, try leaf
