@@ -33,6 +33,7 @@ class TGeoMedium;
 class TGeoShape;
 class TVirtualGeoPainter;
 class THashList;
+class TGeoParallelWorld;
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
@@ -133,8 +134,9 @@ private :
    Int_t                *fValuePNEId;       //[fSizePNEId] array of pointers to PN entries with ID's
    Int_t                 fMaxThreads;       //! Max number of threads
    Bool_t                fMultiThread;      //! Flag for multi-threading
+   Bool_t                fUsePWNav;         // Activate usage of parallel world in navigation
+   TGeoParallelWorld    *fParallelWorld;    // Parallel world
 //--- private methods
-
    Bool_t                IsLoopingVolumes() const     {return fLoopVolumes;}
    void                  Init();
    Bool_t                InitArrayPNE() const;
@@ -542,7 +544,13 @@ public:
    Bool_t                 PopPoint(Int_t index) {return GetCurrentNavigator()->PopPoint(index);}
    void                   PopDummy(Int_t ipop=9999) {return GetCurrentNavigator()->PopDummy(ipop);}
 
-   ClassDef(TGeoManager, 13)          // geometry manager
+   //--- parallel world navigation
+   TGeoParallelWorld    *CreateParallelWorld(const char *name);
+   TGeoParallelWorld    *GetParallelWorld() const {return fParallelWorld;}
+   void                  SetUseParallelWorldNav(Bool_t flag);
+   Bool_t                IsParallelWorldNav() const {return fUsePWNav;}
+
+   ClassDef(TGeoManager, 14)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;
