@@ -48,7 +48,7 @@ RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataH
 
 
 //_____________________________________________________________________________
-RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, const RooAbsArg& x, RooDataHist& dh, Bool_t paramRelative) :
+RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, const RooAbsArg& /*x*/, RooDataHist& dh, Bool_t paramRelative) :
   RooAbsReal(name,title), 
   _x("x","x",this),
   _p("p","p",this),
