@@ -794,6 +794,22 @@ Long_t TApplication::ProcessRemote(const char *line, Int_t *)
    return 1;
 }
 
+namespace {
+   static int PrintFile(const char* filename) {
+      TString sFileName(filename);
+      gSystem->ExpandPathName(sFileName);
+      if (gSystem->AccessPathName(sFileName)) {
+         Error("ProcessLine()", "Cannot find file %s", filename);
+         return 1;
+      }
+      std::ifstream instr(sFileName);
+      TString content;
+      content.ReadFile(instr);
+      Printf("%s", content.Data());
+      return 0;
+   }
+}
+
 //______________________________________________________________________________
 Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 {
@@ -827,7 +843,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       return 0;
    }
 
-   if (!strncmp(line, "?", 1)) {
+   if (!strncmp(line, "?", 1) || !strncmp(line, ".help", 5)) {
       Help(line);
       return 1;
    }
