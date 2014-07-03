@@ -832,6 +832,36 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       return 1;
    }
 
+   if (!strncmp(line, ".demo", 5)) {
+      if (gROOT->IsBatch()) {
+         Error("ProcessLine", "Cannot show demos in batch mode!");
+         return 1;
+      }
+#ifdef ROOTTUTDIR
+      ProcessLine(".x " ROOTTUTDIR "/demos.C");
+#else
+      ProcessLine(".x $(ROOTSYS)/tutorials/demos.C");
+#endif
+      return 0;
+   }
+
+   if (!strncmp(line, ".license", 8)) {
+#ifdef ROOTDOCDIR
+      return PrintFile(ROOTDOCDIR "/LICENSE");
+#else
+      return PrintFile("$(ROOTSYS)/LICENSE");
+#endif
+   }
+
+   if (!strncmp(line, ".credits", 8)) {
+#ifdef ROOTDOCDIR
+      return PrintFile(ROOTDOCDIR "/CREDITS");
+#else
+      return PrintFile("$(ROOTSYS)/README/CREDITS");
+#endif
+     
+   }
+
    if (!strncmp(line, ".pwd", 4)) {
       if (gDirectory)
          Printf("Current directory: %s", gDirectory->GetPath());
