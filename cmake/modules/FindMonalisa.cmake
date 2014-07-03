@@ -13,7 +13,8 @@ endif()
 
 find_path(MONALISA_INCLUDE_DIR ApMon.h
   ${MONALISA_DIR}/include
-  /usr/local/include 
+  $ENV{MONALISA_DIR}/include
+  /usr/local/include
   /opt/alien/api/include 
   /opt/monalisa/include 
   /usr/include
@@ -22,7 +23,8 @@ find_path(MONALISA_INCLUDE_DIR ApMon.h
 
 find_library(MONALISA_LIBRARY NAMES apmoncpp PATHS
   ${MONALISA_DIR}/lib
-  /usr/local/lib 
+  $ENV{MONALISA_DIR}/lib
+  /usr/local/lib
   /opt/alien/api/lib
   /opt/monalisa/lib 
   /usr/lib
