@@ -64,14 +64,24 @@ TPave::TPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 {
    // Pave normal constructor.
    //
-   // a PAVE is a box with a bordersize and a shadow option
-   // the bordersize is in pixels
-   //  option = "T" Top frame
-   //  option = "B" Bottom frame
-   //  option = "R" Right frame
-   //  option = "L" Left frame
+   // a PAVE is a box with a bordersize and a shadow option the border
+   // size is in pixels.
+   //
+   //  option = "TR" Top and Right shadows are drawn.
+   //  option = "TL" Top and Left shadows are drawn.
+   //  option = "BR" Bottom and Right shadows are drawn.
+   //  option = "BL" Bottom and Left shadows are drawn.
+   //
+   //  If none of these four above options is specified the default the
+   //  option "BR" will be used to draw the border. To produces a pave
+   //  without any border it is enough to specify the option "NB" (no border).
+   //
    //  option = "NDC" x1,y1,x2,y2 are given in NDC
    //  option = "ARC" corners are rounded
+   //
+   // In case of option "ARC", the corner radius is specified
+   // via TPave::SetCornerRadius(rad) where rad is given in percent
+   // of the pave height (default value is 0.2).
 
    fBorderSize   = bordersize;
    fOption       = option;
@@ -270,15 +280,21 @@ void TPave::Paint(Option_t *option)
 {
    // Paint this pave with its current attributes.
    //
-   //  option = "T" Top frame
-   //  option = "B" Bottom frame
-   //  option = "R" Right frame
-   //  option = "L" Left frame
+   //  option = "TR" Top and Right shadows are drawn.
+   //  option = "TL" Top and Left shadows are drawn.
+   //  option = "BR" Bottom and Right shadows are drawn.
+   //  option = "BL" Bottom and Left shadows are drawn.
+   //
+   //  If none of these four above options is specified the default the
+   //  option "BR" will be used to draw the border. To produces a pave
+   //  without any border it is enough to specify the option "NB" (no border).
+   //
    //  option = "NDC" x1,y1,x2,y2 are given in NDC
    //  option = "ARC" corners are rounded
-   //      In case of option "ARC", the corner radius is specified
-   //      via TPave::SetCornerRadius(rad) where rad is given in percent
-   //      of the pave height (default value is 0.2).
+   //
+   // In case of option "ARC", the corner radius is specified
+   // via TPave::SetCornerRadius(rad) where rad is given in percent
+   // of the pave height (default value is 0.2).
 
    // Convert from NDC to pad coordinates
    ConvertNDCtoPad();
