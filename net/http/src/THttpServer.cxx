@@ -16,9 +16,8 @@
 #include <string>
 #include <cstdlib>
 
-//extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm);
-//const Int_t kMAXBUF = 0xffffff;
-
+extern "C" unsigned long crc32(unsigned long crc, const unsigned char* buf, unsigned int buflen);
+extern "C" unsigned long R__memcompress(char* tgt, unsigned long tgtsize, char* src, unsigned long srcsize);
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -39,6 +38,7 @@ THttpCallArg::THttpCallArg() :
    fCond(),
    fContentType(),
    fContentEncoding(),
+   fExtraHeader(),
    fContent(),
    fBinData(0),
    fBinDataLength(0)
@@ -55,6 +55,20 @@ THttpCallArg::~THttpCallArg()
       free(fBinData);
       fBinData = 0;
    }
+}
+
+
+//______________________________________________________________________________
+void THttpCallArg::SetBinData(void* data, Long_t length)
+{
+   // set binary data for http call
+
+   if (fBinData) free(fBinData);
+   fBinData = data;
+   fBinDataLength = length;
+
+   // string content must be cleared in any case
+   fContent.Clear();
 }
 
 //______________________________________________________________________________
@@ -82,9 +96,9 @@ void THttpCallArg::SetPathAndFileName(const char *fullpath)
 }
 
 //______________________________________________________________________________
-void THttpCallArg::FillHttpHeader(TString &hdr, Bool_t normal)
+void THttpCallArg::FillHttpHeader(TString &hdr, const char* header)
 {
-   const char *header = normal ? "HTTP/1.1" : "Status:";
+   if (header==0) header = "HTTP/1.1";
 
    if ((fContentType.Length() == 0) || Is404()) {
       hdr.Form("%s 404 Not Found\r\n"
@@ -100,8 +114,17 @@ void THttpCallArg::FillHttpHeader(TString &hdr, Bool_t normal)
             header,
             GetContentType(),
             GetContentLength());
-   if (fContentEncoding.Length() > 0)
-      hdr.Append(TString::Format("Content-Encoding: %s\r\n", fContentEncoding.Data()));
+
+   if (fContentEncoding.Length() > 0) {
+      hdr.Append("Content-Encoding: ");
+      hdr.Append(fContentEncoding);
+      hdr.Append("\r\n");
+   }
+
+   if (fExtraHeader.Length() > 0) {
+      hdr.Append(fExtraHeader);
+      hdr.Append("\r\n");
+   }
 
    hdr.Append("\r\n");
 }
@@ -429,15 +452,19 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       return;
    }
 
-   TString buf = arg->fFileName;
-
-   if (IsFileRequested(arg->fFileName.Data(), buf)) {
-      arg->fContent = buf;
+   if (IsFileRequested(arg->fFileName.Data(), arg->fContent)) {
       arg->SetFile();
       return;
    }
 
-   if (arg->fFileName == "h.xml")  {
+   TString filename = arg->fFileName;
+   Bool_t iszip = kFALSE;
+   if (filename.EndsWith(".gz")) {
+      filename.Resize(filename.Length()-3);
+      iszip = kTRUE;
+   }
+
+   if (filename == "h.xml")  {
 
       arg->fContent.Form(
          "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
@@ -454,11 +481,9 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
       arg->fContent.Append("</dabc>\n");
       arg->SetXml();
+   } else
 
-      return;
-   }
-
-   if (arg->fFileName == "h.json")  {
+   if (filename == "h.json")  {
 
       arg->fContent.Append("{\n");
 
@@ -473,63 +498,81 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
       arg->fContent.Append("\n}\n");
       arg->SetJson();
+   } else
 
-      return;
-   }
-
-   if (fSniffer->Produce(arg->fPathName.Data(), arg->fFileName.Data(), arg->fQuery.Data(), arg->fBinData, arg->fBinDataLength)) {
+   if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), arg->fBinData, arg->fBinDataLength)) {
       // define content type base on extension
-      arg->SetContentType(GetMimeType(arg->fFileName.Data()));
-      return;
+      arg->SetContentType(GetMimeType(filename.Data()));
+   } else {
+      // request is not processed
+      arg->Set404();
    }
 
-   /*
-     if (arg->fFileName == "get.json.gz") {
-        if (fSniffer->ProduceJson(arg->fPathName.Data(), arg->fQuery.Data(), arg->fContent)) {
+   if (arg->Is404()) return;
 
-           Int_t fObjlen = arg->fContent.Length();
-           Int_t cxlevel = 5;
-           Int_t cxAlgorithm = 0;
 
-           Int_t nbuffers = 1 + (fObjlen - 1)/kMAXBUF;
-           Int_t buflen = fObjlen + 9*nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
-           if (buflen<512) buflen = 512;
+   if (iszip) {
 
-           void* fBuffer = malloc(buflen);
+      char *objbuf = (char*) arg->GetContent();
+      Long_t objlen = arg->GetContentLength();
 
-           char *objbuf = (char*) arg->fContent.Data();
-           char *bufcur = (char*) fBuffer;
-           Int_t noutot = 0;
-           Int_t nzip   = 0;
-           for (Int_t i = 0; i < nbuffers; ++i) {
-              Int_t bufmax = kMAXBUF, nout(0);
-              if (i == nbuffers - 1) bufmax = fObjlen - nzip;
-              R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
-              if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
-                 Error("", "Fail to compress data");
-                 free(fBuffer);
-                 return;
-              }
-              bufcur += nout;
-              noutot += nout;
-              objbuf += kMAXBUF;
-              nzip   += kMAXBUF;
-           }
+      unsigned long objcrc = crc32(0, NULL, 0);
+      objcrc = crc32(objcrc, (const unsigned char*) objbuf, objlen);
 
-           Info("Compress", "Original size %d compressed %d", fObjlen, noutot);
+      // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
+      Int_t buflen = 10 + objlen + 8;
+      if (buflen<512) buflen = 512;
 
-           arg->fBinData = fBuffer;
-           arg->fBinDataLength = noutot;
-           arg->fContent.Clear();
+      void* buffer = malloc(buflen);
 
-           arg->SetEncoding("gzip");
-           arg->SetJson();
-           return;
-        }
-     }
-   */
+      char *bufcur = (char*) buffer;
 
-   arg->Set404();
+      *bufcur++ = 0x1f;  // first byte of ZIP identifier
+      *bufcur++ = 0x8b;  // second byte of ZIP identifier
+      *bufcur++ = 0x08;  // compression method
+      *bufcur++ = 0x00;  // FLAG - empty, no any file names
+      *bufcur++ = 0;    // empty timestamp
+      *bufcur++ = 0;    //
+      *bufcur++ = 0;    //
+      *bufcur++ = 0;    //
+      *bufcur++ = 0;    // XFL (eXtra FLags)
+      *bufcur++ = 3;    // OS   3 means Unix
+      //strcpy(bufcur, "get.json");
+      //bufcur += strlen("get.json")+1;
+
+      char dummy[8];
+      memcpy(dummy, bufcur-6, 6);
+
+      // R__memcompress fills first 6 bytes with own header, therefore just overwrite them
+      unsigned long ziplen = R__memcompress(bufcur-6, objlen + 6, objbuf, objlen);
+
+      memcpy(bufcur-6, dummy, 6);
+
+      bufcur += (ziplen-6); // jump over compressed data (6 byte is extra ROOT header)
+
+      *bufcur++ = objcrc & 0xff;    // CRC32
+      *bufcur++ = (objcrc >> 8) & 0xff;
+      *bufcur++ = (objcrc >> 16) & 0xff;
+      *bufcur++ = (objcrc >> 24) & 0xff;
+
+      *bufcur++ = objlen & 0xff;  // original data length
+      *bufcur++ = (objlen >> 8) & 0xff;  // original data length
+      *bufcur++ = (objlen >> 16) & 0xff;  // original data length
+      *bufcur++ = (objlen >> 24) & 0xff;  // original data length
+
+      arg->SetBinData(buffer, bufcur - (char*) buffer);
+
+      arg->SetEncoding("gzip");
+   }
+
+   if (filename == "root.bin") {
+      // only for binary data master version is important
+      // it allows to detect if streamer info was modified
+      const char* parname = fSniffer->IsStreamerInfoItem(arg->fPathName.Data()) ? "BVersion" : "MVersion";
+      arg->SetExtraHeader(parname, Form("%u", (unsigned) fSniffer->GetStreamerInfoHash()));
+
+      printf("Set header parameter %s = %u\n", parname, (unsigned) fSniffer->GetStreamerInfoHash());
+   }
 }
 
 //______________________________________________________________________________

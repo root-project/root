@@ -45,6 +45,7 @@ protected:
 
    TString fContentType;        //! type of content
    TString fContentEncoding;    //! type of content encoding
+   TString fExtraHeader;        //! extra line which could be append to http response
    TString fContent;            //! text content (if any)
 
    void *fBinData;              //! binary data, assigned with http call
@@ -54,6 +55,8 @@ protected:
    {
       return fBinData && fBinDataLength > 0;
    }
+
+   void SetBinData(void* data, Long_t length);
 
 public:
 
@@ -126,8 +129,16 @@ public:
       fContentEncoding = typ;
    }
 
+   void SetExtraHeader(const char* name, const char* value)
+   {
+      if ((name!=0) && (value!=0))
+         fExtraHeader.Form("%s: %s", name, value);
+      else
+         fExtraHeader.Clear();
+   }
+
    // Fill http header
-   void FillHttpHeader(TString &buf, Bool_t normal = kTRUE);
+   void FillHttpHeader(TString &buf, const char* header = 0);
 
    // these methods used to return results of http request processing
 

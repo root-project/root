@@ -32,54 +32,12 @@
 
 #include <stdlib.h>
 
-#pragma pack(push, 4)
-
-
-// binary header of data, delivered by the sniffer
-struct BinDataHeader {
-   UInt_t typ;              ///< type of the binary header (1 for the moment)
-   UInt_t version;          ///< version of data in binary data
-   UInt_t master_version;   ///< version of master object for that binary data
-   UInt_t zipped;           ///< length of unzipped data
-   UInt_t payload;          ///< length of payload (not including header)
-
-   void reset()
-   {
-      typ = 1;
-      version = 0;
-      master_version = 0;
-      zipped = 0;
-      payload = 0;
-   }
-
-   /** \brief returns true if content of buffer is zipped */
-   bool is_zipped() const
-   {
-      return (zipped > 0) && (payload > 0);
-   }
-
-   /** \brief returns pointer on raw data (just after header) */
-   void *rawdata() const
-   {
-      return (char *) this + sizeof(BinDataHeader);
-   }
-};
-
-#pragma pack(pop)
-
-
-
-extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src,
-                                        int *tgtsize, char *tgt, int *irep,
-                                        int compressionAlgorithm);
 
 const char *dabc_prop_kind = "dabc:kind";
 const char *dabc_prop_masteritem = "dabc:master";
 const char *dabc_prop_more = "dabc:more";
 const char *dabc_prop_realname = "dabc:realname"; // real object name
 const char *dabc_prop_itemname = "dabc:itemname"; // item name in dabc hierarchy
-
-Long_t gExcludeProperty = kIsStatic | kIsEnum | kIsUnion;
 
 // ============================================================================
 
@@ -395,8 +353,7 @@ TRootSniffer::TRootSniffer(const char *name, const char *objpath) :
    TNamed(name, "sniffer of root objects"),
    fObjectsPath(objpath),
    fMemFile(0),
-   fSinfoSize(0),
-   fCompression(5)
+   fSinfoSize(0)
 {
    // constructor
 }
@@ -454,7 +411,7 @@ void TRootSniffer::ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl,
    while ((obj = iter()) != 0) {
       TDataMember *member = dynamic_cast<TDataMember *>(obj);
       // exclude enum or static variables
-      if ((member == 0) || (member->Property() & gExcludeProperty)) continue;
+      if ((member == 0) || (member->Property() & (kIsStatic | kIsEnum | kIsUnion))) continue;
 
       char *member_ptr = ptr + cloffset + member->GetOffset();
       if (member->IsaPointer()) member_ptr = *((char **) member_ptr);
@@ -985,96 +942,11 @@ Bool_t TRootSniffer::ProduceBinary(const char *path, const char *, void *&ptr,
       gFile = oldfile;
    }
 
-   if (!CreateBindData(sbuf, ptr, length)) return kFALSE;
+   if (sbuf==0) return kFALSE;
 
-   BinDataHeader *hdr = (BinDataHeader *) ptr;
-
-   if (istreamerinfo) {
-      hdr->version = fSinfoSize;
-      hdr->master_version = 0;
-   } else {
-      hdr->version = 0;
-      hdr->master_version = fSinfoSize;
-   }
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TRootSniffer::CreateBindData(TBufferFile *sbuf, void *&ptr,
-                                    Long_t &length)
-{
-   // create binary data from TBufferFile
-   // If compression enabled, data also will be zipped
-
-   if (sbuf == 0) return kFALSE;
-
-   Bool_t with_zip = fCompression > 0;
-
-   const Int_t kMAXBUF = 0xffffff;
-   Int_t noutot = 0;
-   Int_t fObjlen = sbuf->Length();
-   Int_t nbuffers = 1 + (fObjlen - 1) / kMAXBUF;
-   Int_t buflen = TMath::Max(512, fObjlen + 9 * nbuffers + 28);
-   if (buflen < fObjlen) buflen = fObjlen;
-
-   ptr = malloc(sizeof(BinDataHeader) + buflen);
-
-   if (ptr == 0) {
-      Error("CreateBinData", "Cannot create buffer of size %u",
-            (unsigned)(sizeof(BinDataHeader) + buflen));
-      delete sbuf;
-      return kFALSE;
-   }
-
-   BinDataHeader *hdr = (BinDataHeader *) ptr;
-   hdr->reset();
-
-   char *fBuffer = ((char *) ptr) + sizeof(BinDataHeader);
-
-   if (with_zip) {
-      Int_t cxAlgorithm = 0;
-
-      char *objbuf = sbuf->Buffer();
-      char *bufcur = fBuffer; // start writing from beginning
-
-      Int_t nzip   = 0;
-      Int_t bufmax = 0;
-      Int_t nout = 0;
-
-      for (Int_t i = 0; i < nbuffers; ++i) {
-         if (i == nbuffers - 1)
-            bufmax = fObjlen - nzip;
-         else
-            bufmax = kMAXBUF;
-         R__zipMultipleAlgorithm(fCompression, &bufmax, objbuf, &bufmax,
-                                 bufcur, &nout, cxAlgorithm);
-         if (nout == 0 || nout >= fObjlen) {
-            // this happens when the buffer cannot be compressed
-            Error("CreateBindData", "Fail to zip buffer");
-            noutot = 0;
-            with_zip = false;
-            break;
-         }
-         bufcur += nout;
-         noutot += nout;
-         objbuf += kMAXBUF;
-         nzip   += kMAXBUF;
-      }
-   }
-
-   if (with_zip) {
-      hdr->zipped = (UInt_t) fObjlen;
-      hdr->payload = (UInt_t) noutot;
-   } else {
-      memcpy(fBuffer, sbuf->Buffer(), fObjlen);
-      hdr->zipped = 0;
-      hdr->payload = (UInt_t) fObjlen;
-   }
-
-   length = sizeof(BinDataHeader) + hdr->payload;
-
-   delete sbuf;
+   ptr = malloc(sbuf->Length());
+   memcpy(ptr, sbuf->Buffer(), sbuf->Length());
+   length = sbuf->Length();
 
    return kTRUE;
 }
@@ -1198,7 +1070,9 @@ Bool_t TRootSniffer::Produce(const char *path, const char *file,
    //   "root.xml"  - xml representation
    //   "root.json" - json representation
 
-   if ((file == 0) || (*file == 0) || (strcmp(file, "root.bin") == 0))
+   if ((file == 0) || (*file == 0)) return kFALSE;
+
+   if (strcmp(file, "root.bin") == 0)
       return ProduceBinary(path, options, ptr, length);
 
    if (strcmp(file, "root.png") == 0)
