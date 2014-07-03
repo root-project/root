@@ -32,9 +32,10 @@ End_Html
 Begin_Macro(GUI)
 {
    gROOT->ProcessLine(".x $ROOTSYS/tutorials/graphics/arrow.C");
+   TCanvas *c1 = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("c1");
    c1->SetBorderMode(0);
    c1->ToggleEditor();
-   c1->Selected(c1,TArrow,1);
+   c1->Selected(c1, new TArrow(), 1);
    TRootCanvas *r = (TRootCanvas*)c1->GetCanvasImp();
    r->SetWindowSize(700,500);
    return r->GetMainFrame();
