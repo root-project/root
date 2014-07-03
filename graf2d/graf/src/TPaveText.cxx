@@ -59,16 +59,25 @@ TPaveText::TPaveText(): TPave(), TAttText()
 TPaveText::TPaveText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_t *option)
            :TPave(x1,y1,x2,y2,4,option), TAttText(22,0,gStyle->GetTextColor(),gStyle->GetTextFont(),0)
 {
-   // pavetext normal constructor.
+   // PaveText normal constructor.
    //
-   // a PaveText is a Pave with several lines of text
-   // The Pave is by default defined with bordersize=5 and option ="br".
-   //  option = "T" Top frame
-   //  option = "B" Bottom frame
-   //  option = "R" Right frame
-   //  option = "L" Left frame
+   // A PaveText is a Pave with several lines of text
+   //
+   //  option = "TR" Top and Right shadows are drawn.
+   //  option = "TL" Top and Left shadows are drawn.
+   //  option = "BR" Bottom and Right shadows are drawn.
+   //  option = "BL" Bottom and Left shadows are drawn.
+   //
+   //  If none of these four above options is specified the default the
+   //  option "BR" will be used to draw the border. To produces a pave
+   //  without any border it is enough to specify the option "NB" (no border).
+   //
    //  option = "NDC" x1,y1,x2,y2 are given in NDC
    //  option = "ARC" corners are rounded
+   //
+   // In case of option "ARC", the corner radius is specified
+   // via TPave::SetCornerRadius(rad) where rad is given in percent
+   // of the pave height (default value is 0.2).
    //
    // The individual text items are entered via AddText
    // By default, text items inherits from the default pavetext AttText.
@@ -209,7 +218,11 @@ void TPaveText::Draw(Option_t *option)
 {
    // Draw this pavetext with its current attributes.
 
-   AppendPad(option);
+   Option_t *opt;
+   if (option && strlen(option)) opt = option;
+   else                          opt = GetOption();
+   
+   AppendPad(opt);
 }
 
 
