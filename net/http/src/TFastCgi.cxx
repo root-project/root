@@ -288,13 +288,13 @@ void *TFastCgi::run_func(void *args)
       TString hdr;
 
       if (!engine->GetServer()->ExecuteHttp(&arg) || arg.Is404()) {
-         arg.FillHttpHeader(hdr, kFALSE);
+         arg.FillHttpHeader(hdr, "Status:");
          FCGX_FPrintF(request.out, hdr.Data());
       } else if (arg.IsFile()) {
          FCGX_ROOT_send_file(&request, (const char *) arg.GetContent());
       } else {
 
-         arg.FillHttpHeader(hdr, kFALSE);
+         arg.FillHttpHeader(hdr, "Status:");
          FCGX_FPrintF(request.out, hdr.Data());
 
          FCGX_PutStr((const char *) arg.GetContent(),
