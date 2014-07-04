@@ -515,7 +515,7 @@ endif
 ##### Compiler directives and run-control file #####
 
 COMPILEDATA   = include/compiledata.h
-RGITCOMMITH  := include/RGitCommit.h
+RGITCOMMITH  := core/base/src/RGitCommit.h
 ROOTRC        = etc/system.rootrc
 ROOTMAP       = etc/system.rootmap
 ROOTPCH       = etc/allDict.cxx.pch
