@@ -1174,7 +1174,7 @@ void TClass::Init(const char *name, Version_t cversion,
 
       // We can no longer reproduce this case, to check whether we are, we use
       // this code:
-      Info("Init","A bad replacement for %s was requested\n",name);
+      // Fatal("Init","A bad replacement for %s was requested\n",name);
       return;
    }
 
@@ -1251,7 +1251,7 @@ void TClass::Init(const char *name, Version_t cversion,
             fHasRootPcmInfo = kTRUE;
          }
       }
-      if (!fHasRootPcmInfo && fState!=kForwardDeclared && gInterpreter->CheckClassInfo(fName)) {
+      if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName)) {
          gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
          if (!fClassInfo) {
             if (IsZombie()) {
