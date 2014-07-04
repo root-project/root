@@ -28,10 +28,14 @@ BASEH3       := $(patsubst %,$(MODDIRI)/%,$(BASEH3))
 BASEH1       := $(filter-out $(BASEH3),$(BASEH1))
 BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 BASEDICTH    := $(BASEH1) $(BASEH3)
-BASES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+ROOTAS       := $(MODDIRS)/roota.cxx
+ROOTAO       := $(call stripsrc,$(ROOTAS:.cxx=.o))
+BASES        := $(filter-out $(ROOTAS),\
+		$(filter-out $(MODDIRS)/G__%,\
+		$(wildcard $(MODDIRS)/*.cxx)))
 BASEO        := $(call stripsrc,$(BASES:.cxx=.o))
 
-BASEDEP      := $(BASEO:.o=.d)
+BASEDEP      := $(BASEO:.o=.d) $(ROOTAO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(BASEH))
