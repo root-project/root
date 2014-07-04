@@ -9,13 +9,12 @@ git co $CURVERS
 # generate etc/gitinfo.txt
 build/unix/gitinfo.sh
 
-#git archive -v -o ../$TARFILE --prefix=root/ master
-git archive -v -o ../$TARFILE --prefix=root/ $CURVERS
+git archive -v -o ../$TARFILE --prefix=root-$ROOTVERS/ $CURVERS
 
 mkdir -p etc/root/etc
 cp etc/gitinfo.txt etc/root/etc/
 cd etc
-tar -r -vf ../../$TARFILE root/etc/gitinfo.txt
+tar -r -vf ../../$TARFILE root-$ROOTVERS/etc/gitinfo.txt
 cd ..
 rm -rf etc/root
 cd ..
