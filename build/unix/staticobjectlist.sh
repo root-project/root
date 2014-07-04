@@ -24,7 +24,7 @@ excl="main proof/proofd net/rootd net/xrootd rootx \
       proof/proofx math/fftw gui/qtgsi sql/odbc io/castor math/unuran \
       geom/gdml montecarlo/g4root graf2d/gviz graf3d/gviz3d graf3d/eve \
       net/glite misc/minicern misc/memstat net/bonjour graf2d/fitsio \
-      net/davix net/netxng net/http"
+      net/davix net/netxng net/http proof/pq2"
 
 objs=""
 gobjs=""

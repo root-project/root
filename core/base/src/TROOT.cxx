@@ -1644,7 +1644,8 @@ void TROOT::InitInterpreter()
 
    // usedToIdentifyRootClingByDlSym is available when TROOT is part of
    // rootcling.
-   if (!dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")) {
+   if (!dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")
+       && !dlsym(RTLD_DEFAULT, "usedToIdentifyStaticRoot")) {
       // Make sure no llvm symbols are visible before loading libCling. If they
       // exist libCling will use those and not ours, causing havoc in the
       // interpreter. Look for an extern "C" symbol to avoid mangling; look for a

@@ -4426,6 +4426,12 @@ Int_t TCling::AutoLoad(const char* cls)
 {
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
+
+   if (gClassTable->GetDict(cls)) {
+      // The library is alreday loaded as the class's dictionary is known.
+      return 0;
+   }
+
    if (gDebug > 2) {
       Info("TCling::AutoLoad",
            "Trying to autoload for %s", cls);
@@ -4435,7 +4441,7 @@ Int_t TCling::AutoLoad(const char* cls)
    if (!gROOT || !gInterpreter || gROOT->TestBit(TObject::kInvalidObject)) {
       return status;
    }
-   if (fClingCallbacks && !fClingCallbacks->IsAutoloadingEnabled ()) {
+   if (fClingCallbacks && !fClingCallbacks->IsAutoloadingEnabled()) {
       return 0;
    }
    // Prevent the recursion when the library dictionary are loaded.
