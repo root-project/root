@@ -30,6 +30,7 @@ class TGeoMatrix;
 class TGeoVolume;
 class TGeoNode;
 class TGeoShape;
+class TGeoNavigator;
 
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //
@@ -81,6 +82,7 @@ public:
    
  
    Bool_t            IsAligned() const {return TObject::TestBit(kGeoPNodeAligned);}
+   Bool_t            IsMatchingState(TGeoNavigator *nav) const;
    Bool_t            IsVolAttributes() const {return TObject::TestBit(kGeoPNodeVolAtt);}
    Bool_t            IsVisible() const {return TObject::TestBit(kGeoPNodeVisible);}
    Bool_t            IsVisibleFull() const {return TObject::TestBit(kGeoPNodeFull);}

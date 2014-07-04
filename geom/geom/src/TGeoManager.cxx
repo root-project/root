@@ -3131,6 +3131,7 @@ void TGeoManager::RefreshPhysicalNodes(Bool_t lock)
    TIter next(gGeoManager->GetListOfPhysicalNodes());
    TGeoPhysicalNode *pn;
    while ((pn=(TGeoPhysicalNode*)next())) pn->Refresh();
+   if (fParallelWorld && fParallelWorld->IsClosed()) fParallelWorld->RefreshPhysicalNodes();
    if (lock) LockGeometry();
 }
 

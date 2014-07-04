@@ -1698,6 +1698,7 @@ TGeoVolume *TGeoVolume::CloneVolume() const
    // copy extensions
    vol->SetUserExtension(fUserExtension);
    vol->SetFWExtension(fFWExtension);
+   vol->SetOverlappingCandidate(IsOverlappingCandidate());
    return vol;
 }
 
@@ -1767,6 +1768,7 @@ TGeoVolume *TGeoVolume::MakeCopyVolume(TGeoShape *newshape)
    CloneNodesAndConnect(vol);
 //   ((TObject*)vol)->SetBit(kVolumeImportNodes);
    ((TObject*)vol)->SetBit(kVolumeClone);
+   vol->SetOverlappingCandidate(IsOverlappingCandidate());
    return vol;       
 }    
 

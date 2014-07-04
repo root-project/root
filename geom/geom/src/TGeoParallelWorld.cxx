@@ -35,8 +35,9 @@ TGeoParallelWorld::TGeoParallelWorld(const char *name, TGeoManager *mgr)
                   : TNamed(name,""),
                     fGeoManager(mgr),
                     fPhysical(0),
-                    fVolume(new TGeoVolume()),
-                    fIsClosed(kFALSE)
+                    fVolume(new TGeoVolumeAssembly(name)),
+                    fIsClosed(kFALSE),
+                    fUseOverlaps(kFALSE)
 {
 // Default constructor
 }
@@ -46,7 +47,6 @@ TGeoParallelWorld::~TGeoParallelWorld()
 {
 // Destructor
    delete fPhysical;
-   delete fVolume;
 }
 
 //_____________________________________________________________________________
@@ -54,13 +54,18 @@ void TGeoParallelWorld::AddNode(TGeoPhysicalNode *pnode)
 {
 // Add a node normally to this world. Overlapping nodes not allowed
    if (fIsClosed) Fatal("AddNode", "Cannot add nodes to a closed parallel geometry");
-   if (pnode->GetVolume()->IsAssembly()) {
-      Error("AddNode", "Assemblies not allowed in parallel world, Physical node %s not added",
-             pnode->GetName());
-      return;
-   }   
    if (!fPhysical) fPhysical = new TObjArray(256);
    fPhysical->Add(pnode);
+}
+
+//_____________________________________________________________________________
+void TGeoParallelWorld::AddOverlap(TGeoVolume *vol)
+{
+// To use this optimization, the user should declare the full list of volumes
+// which may overlap with any of the physical nodes of the parallel world. Better
+// be done before misalignment
+   fUseOverlaps = kTRUE;
+   vol->SetOverlappingCandidate(kTRUE);
 }
 
 //_____________________________________________________________________________
@@ -92,9 +97,10 @@ void TGeoParallelWorld::RefreshPhysicalNodes()
    TIter next(fPhysical);
    Int_t copy = 0;
    while ((pnode = (TGeoPhysicalNode*)next())) {
-      fVolume->AddNode(pnode->GetVolume(), copy++, pnode->GetMatrix());
+      fVolume->AddNode(pnode->GetVolume(), copy++, new TGeoHMatrix(*pnode->GetMatrix()));
    }
    // Voxelize the volume
+   fVolume->GetShape()->ComputeBBox();
    fVolume->Voxelize("ALL");
 }   
 
@@ -103,11 +109,14 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNode(Double_t point[3])
 {
 // Finds physical node containing the point
    if (!fIsClosed) Fatal("FindNode", "Parallel geometry must be closed first");
+   TGeoNavigator *nav = fGeoManager->GetCurrentNavigator();
+   // Fast return if not in an overlapping candidate
+   if (fUseOverlaps && !nav->GetCurrentVolume()->IsOverlappingCandidate()) return 0;
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
    Int_t id;
    Int_t ncheck = 0;
    // get the list of nodes passing thorough the current voxel
-   TGeoNodeCache *cache = fGeoManager->GetCurrentNavigator()->GetCache();
+   TGeoNodeCache *cache = nav->GetCache();
    TGeoStateInfo &info = *cache->GetInfo();
    Int_t *check_list = voxels->GetCheckList(point, ncheck, info);
    cache->ReleaseInfo(); // no hierarchical use
@@ -135,6 +144,16 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
 // Same functionality as TGeoNavigator::FindNextDaughterBoundary for the
 // parallel world
    if (!fIsClosed) Fatal("FindNode", "Parallel geometry must be closed first");
+   TGeoPhysicalNode *pnode = 0;
+   TGeoNavigator *nav = fGeoManager->GetCurrentNavigator();
+   // Fast return if not in an overlapping candidate
+   if (fUseOverlaps && !nav->GetCurrentVolume()->IsOverlappingCandidate()) return 0;
+   TIter next(fPhysical);
+   // Ignore the request if the current state in the main geometry matches one
+   // of the physical nodes in the parallel geometry
+   while ((pnode = (TGeoPhysicalNode*)next())) {
+      if (pnode->IsMatchingState(nav)) return 0;
+   }   
    Double_t snext = TGeoShape::Big();
    step = stepmax;
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
@@ -142,7 +161,6 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
    Int_t nd = fVolume->GetNdaughters();
    Int_t i;
    TGeoNode *current;
-   TGeoPhysicalNode *pnode = 0;
    Double_t lpoint[3], ldir[3];
    const Double_t tolerance = TGeoShape::Tolerance();
    if (nd<5) {
@@ -170,7 +188,7 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
    Int_t ncheck = 0;
    Int_t sumchecked = 0;
    Int_t *vlist = 0;
-   TGeoNodeCache *cache = fGeoManager->GetCurrentNavigator()->GetCache();
+   TGeoNodeCache *cache = nav->GetCache();
    TGeoStateInfo &info = *cache->GetInfo();
    cache->ReleaseInfo(); // no hierarchical use
    voxels->SortCrossedVoxels(point, dir, info);
@@ -198,6 +216,9 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
 Double_t TGeoParallelWorld::Safety(Double_t point[3], Double_t safmax)
 {
 // Compute safety for the parallel world
+   TGeoNavigator *nav = fGeoManager->GetCurrentNavigator();
+   // Fast return if not in an overlapping candidate
+   if (fUseOverlaps && !nav->GetCurrentVolume()->IsOverlappingCandidate()) return TGeoShape::Big();
    Double_t local[3];
    Double_t safe = safmax;
    Double_t safnext;
