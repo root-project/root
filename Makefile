@@ -1065,7 +1065,7 @@ distclean-xrootd:
 	   make distclean-proofd
 
 version: $(ROOTEXE)
-	@cd "$(ROOT_SRCDIR)"; $(MAKEVERSION)
+	@cd "$(ROOT_SRCDIR)"; $(MAKEVERSION) $(ROOT_OBJDIR)
 
 staticlib: $(ROOTALIB)
 
