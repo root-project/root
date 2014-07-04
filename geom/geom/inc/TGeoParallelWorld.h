@@ -35,13 +35,14 @@ protected :
    TObjArray         *fPhysical;       // array of physical nodes
    TGeoVolume        *fVolume;         // helper volume
    Bool_t             fIsClosed;       // Closed flag
+   Bool_t             fUseOverlaps;    // Activated if user defined overlapping candidates
 
    TGeoParallelWorld(const TGeoParallelWorld&); 
    TGeoParallelWorld& operator=(const TGeoParallelWorld&);
 
 public:
    // constructors
-   TGeoParallelWorld() : TNamed(),fGeoManager(0),fPhysical(0),fVolume(0),fIsClosed(kFALSE) {}
+   TGeoParallelWorld() : TNamed(),fGeoManager(0),fPhysical(0),fVolume(0),fIsClosed(kFALSE),fUseOverlaps(kFALSE) {}
    TGeoParallelWorld(const char *name, TGeoManager *mgr);
 
    // destructor
@@ -49,6 +50,9 @@ public:
    // API for adding components nodes
 //   void              AddNode(TGeoVolume *vol, TGeoMatrix *matrix=0);
    void              AddNode(TGeoPhysicalNode *pnode);
+   // Adding overlap candidates can improve performance
+   void              AddOverlap(TGeoVolume *vol);
+   
    
    // Closing a parallel geometry is mandatory
    Bool_t            CloseGeometry();
