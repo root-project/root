@@ -5,29 +5,24 @@
 #
 # Author: Fons Rademakers, 28/4/2000
 
-ROOTEXE=bin/root.exe
+ROOTEXE=$1/bin/root.exe
 SCRIPT=build/version.cxx
 CORETEAM=build/unix/git_coreteam.py
 VERSION=`cat build/version_number`
 
-$ROOTEXE -q -b -l $SCRIPT
+$ROOTEXE -q -b -l $SCRIPT || exit 1
 
-python $CORETEAM
-if [ "$?" -eq "0" ] ; then
-    mv rootcoreteam.h rootx/src/rootcoreteam.h
-else
-    echo "ERROR in $0: cannot run python $CORETEAM"
-    exit 1
-fi
+python $CORETEAM || exit 1
+mv rootcoreteam.h rootx/src/rootcoreteam.h
 
 if test "x`uname | grep -i cygwin`" != "x"; then
     dos2unix core/base/inc/RVersion.h
     dos2unix rootx/src/rootcoreteam.h
 fi
 
-echo "Committing in changes."
+echo "Committing changes."
 git commit core/base/inc/RVersion.h rootx/src/rootcoreteam.h build/version_number \
-  -m "Update ROOT version files to v$VERSION."
+  -m "Update ROOT version files to v$VERSION." || exit 1
 
 echo "Update also doc/vXXX/index.html to $VERSION."
 echo ""
