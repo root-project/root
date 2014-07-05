@@ -1756,6 +1756,7 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
 
    if (!dict) {
       // Try to remove the ROOT typedefs
+      // Note currently this can lead to autoloading and autoparsing.
       resolved = TClassEdit::ResolveTypedef(classname,kTRUE);
       if (resolved != classname) {
          dict = TClassTable::GetDict(resolved.Data());
