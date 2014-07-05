@@ -1136,7 +1136,7 @@ static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent, con
 
    if (load && cl==0) {
       // Create an Emulated class for this container.
-      cl = gInterpreter->GenerateTClass(defaultname.c_str(), silent);
+      cl = gInterpreter->GenerateTClass(defaultname.c_str(), kTRUE, silent);
    }
 
    return cl;
