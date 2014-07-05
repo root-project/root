@@ -4429,7 +4429,8 @@ Int_t TCling::AutoLoad(const char* cls)
 
    if (gClassTable->GetDict(cls)) {
       // The library is alreday loaded as the class's dictionary is known.
-      return 0;
+      // Return success.
+      return 1;
    }
 
    if (gDebug > 2) {
