@@ -107,13 +107,17 @@ Int_t
 NdbMTReacDesc::FindMT( Int_t MT )
 {
 	/* Make a linear search */
-	if (shrt)
-		for (int i=0; i<mt.GetSize(); i++)
-			if (mt[i] == MT)
+	if (shrt){
+		for (int i=0; i<mt.GetSize(); i++){
+			if (mt[i] == MT){
 				return i;
-			else
-			if (mt[i] > MT)
-				break;
+			} else {
+				if (mt[i] > MT){
+					break;
+				}
+			}
+		}
+        }
 	return -1;
 } // FindMT
 
