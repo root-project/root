@@ -110,7 +110,7 @@ private:
    Int_t             fNVirtualInfoLoc;   //! Number of virtual info location to update.
    ULong_t          *fVirtualInfoLoc;    //![fNVirtualInfoLoc] Location of the pointer to the TStreamerInfo inside the object (when emulated)
 #if __cplusplus >= 201103L
-   std::atomic<ULong_t> fLiveCount;         //! Number of outstanding pointer to this StreamerInfo.
+   std::atomic<ULong_t> fLiveCount;      //! Number of outstanding pointer to this StreamerInfo.
 #else
    ULong_t           fLiveCount;         //! Number of outstanding pointer to this StreamerInfo.
 #endif
