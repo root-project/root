@@ -581,7 +581,9 @@ TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
          fBaseVersion = -1;
       }
       fBaseCheckSum = fBaseClass->GetCheckSum();
-   } else fBaseVersion = 0;
+   } else {
+      fBaseVersion = 0;
+   }
    fNewBaseClass = 0;
    Init();
 }
