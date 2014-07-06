@@ -280,9 +280,13 @@ void TStreamerInfo::Build()
          element = new TStreamerBase(bname, btitle, offset);
          TClass* clm = element->GetClassPointer();
          if (!clm) {
-            Error("Build", "%s, unknown type: %s %s\n", GetName(), bname, btitle);
-            delete element;
-            element = 0;
+            // We have no information about the class yet, except that since it
+            // is a base class, we know it is a class.  So let's create it (in v5
+            // it would have been created as a side effect of the dictionary of
+            // for the derived class having a forward declaration of the base class).
+            clm = new TClass(bname,1,TClass::kForwardDeclared, true /*silent*/);
+            Warning("Build", "%s: base class %s has no streamer or dictionary it will not be saved", GetName(), clm->GetName());
+            element->Init(0);
          } else {
             // Now part of the TStreamerBase constructor.
             // clm->GetStreamerInfo();
