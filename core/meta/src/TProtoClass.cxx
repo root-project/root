@@ -106,6 +106,24 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    }
    if (gDebug > 1) Info("FillTClass","Loading TProtoClass for %s - %s",cl->GetName(),GetName());
 
+   if (fPRealData) {
+
+      // A first loop to retrieve the mother classes before starting to
+      // fill this TClass instance. This is done in order to avoid recursions
+      // for example in presence of daughter and mother class present in two
+      // dictionaries compiled in two different libraries which are not linked
+      // one with each other.
+      for (TObject* element: *fPRealData) {
+         if (element->IsA() == TObjString::Class()) {
+            if (gDebug > 1) Info("","Treating beforehand mother class %s",element->GetName());
+            int autoparsingOldval=gInterpreter->SetClassAutoparsing(false);
+            TClass::GetClass(element->GetName());
+            gInterpreter->SetClassAutoparsing(autoparsingOldval);
+         }
+      }
+   }
+
+
    // Copy only the TClass bits.
    // not bit 13 and below and not bit 24 and above, just Bits 14 - 23
    UInt_t newbits = TestBits(0x00ffc000);
@@ -141,9 +159,12 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    if (fPRealData) {
       for (TObject* element: *fPRealData) {
          if (element->IsA() == TObjString::Class()) {
-            int autoparsingOldval=gInterpreter->SetClassAutoparsing(false);
-            currentRDClass = TClass::GetClass(element->GetName());
-            gInterpreter->SetClassAutoparsing(autoparsingOldval);
+            // We now check for the TClass entry, w/o loading. Indeed we did that above.
+            // If the class is not found, it means that really it was not selected and we 
+            // replace it with an empty placeholder with the status of kForwardDeclared.
+            // Interactivity will be of course possible but if IO is attempted, a warning
+            // will be issued.
+            currentRDClass = TClass::GetClass(element->GetName(), false /* Load */ );
             if (!currentRDClass && !element->TestBit(TRealData::kTransient)) {
                if (gDebug>1)
                   Info("FillTClass()",
