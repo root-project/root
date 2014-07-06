@@ -2972,8 +2972,7 @@ Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
       }  else if (version == 1 && fParent && ((TFile*)fParent)->GetVersion()<40000 && cl && cl->GetClassVersion() != 0) {
          // We could have a file created using a Foreign class before
          // the introduction of the CheckSum.  We need to check
-         if ((!cl->IsLoaded() || cl->IsForeign()) &&
-	     Class_Has_StreamerInfo(cl) ) {
+         if ((!cl->IsLoaded() || cl->IsForeign()) && Class_Has_StreamerInfo(cl) ) {
 
             const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
             const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : 0;
@@ -3631,10 +3630,10 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
       ninfos = infos->GetSize();
    }
    if (version < -1 || version >= ninfos) {
-     Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
-	   cl->GetName(), version, Length() );
-     CheckByteCount(start, count, cl);
-     return 0;
+      Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+            cl->GetName(), version, Length() );
+      CheckByteCount(start, count, cl);
+      return 0;
    }
    
    //---------------------------------------------------------------------------
@@ -3835,12 +3834,12 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
       R__LOCKGUARD(gCINTMutex);
       sinfo = (TStreamerInfo*)const_cast<TClass*>(cl)->GetCurrentStreamerInfo();
       if(sinfo == 0) {
-	 const_cast<TClass*>(cl)->BuildRealData(pointer);
-	 sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
-	 const_cast<TClass*>(cl)->SetCurrentStreamerInfo(sinfo);
-	 const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
-	 if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",cl->GetName(),cl->GetClassVersion());
-	 sinfo->Build();
+         const_cast<TClass*>(cl)->BuildRealData(pointer);
+         sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
+         const_cast<TClass*>(cl)->SetCurrentStreamerInfo(sinfo);
+         const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
+         if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",cl->GetName(),cl->GetClassVersion());
+         sinfo->Build();
       }
    } else if (!sinfo->IsCompiled()) {
       const_cast<TClass*>(cl)->BuildRealData(pointer);
