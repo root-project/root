@@ -3842,8 +3842,12 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
          sinfo->Build();
       }
    } else if (!sinfo->IsCompiled()) {
-      const_cast<TClass*>(cl)->BuildRealData(pointer);
-      sinfo->BuildOld();
+      R__LOCKGUARD(gCINTMutex);
+      // Redo the test in case we have been victim of a data race on fBits.
+      if (!sinfo->IsCompiled()) {
+         const_cast<TClass*>(cl)->BuildRealData(pointer);
+         sinfo->BuildOld();
+      }
    }
 
    //write the class version number and reserve space for the byte count
