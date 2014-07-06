@@ -3655,11 +3655,15 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
          // Therefore it was read in from a file and we have to do schema evolution?
          // Or it didn't have a dictionary before, but does now?
          R__LOCKGUARD(gCINTMutex);
-         guess->BuildOld();
+         // Re-test to make sure we did not get the 'wrong' result early because
+         // of the potential data races on fBits.
+         if (!guess->IsCompiled()) guess->BuildOld();
       } else if (guess->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
          // Undo optimization if the global flag tells us to.
          R__LOCKGUARD(gCINTMutex);
-        guess->Compile();
+         // Re-test to make sure we did not get the 'wrong' result early because
+         // of the potential data races on fBits.
+         if (guess->IsOptimized()) guess->Compile();
       }
       return guess;
    }
