@@ -63,10 +63,8 @@
 #include "TVirtualStreamerInfo.h"
 #include "TSchemaRuleSet.h"
 
-extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm);
-extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
-extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
-const Int_t kMAXBUF = 0xffffff;
+#include "RZip.h"
+
 const Int_t kTitleMax = 32000;
 #if 0
 const Int_t kMAXFILEBUFFER = 262144;
@@ -253,7 +251,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
    Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
    Int_t cxAlgorithm = GetFile() ? GetFile()->GetCompressionAlgorithm() : 0;
    if (cxlevel > 0 && fObjlen > 256) {
-      Int_t nbuffers = 1 + (fObjlen - 1)/kMAXBUF;
+      Int_t nbuffers = 1 + (fObjlen - 1)/kMAXZIPBUF;
       Int_t buflen = TMath::Max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
       char *objbuf = fBufferRef->Buffer() + fKeylen;
@@ -262,7 +260,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
       nzip   = 0;
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
-         else               bufmax = kMAXBUF;
+         else               bufmax = kMAXZIPBUF;
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
             fBuffer = fBufferRef->Buffer();
@@ -273,8 +271,8 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
          }
          bufcur += nout;
          noutot += nout;
-         objbuf += kMAXBUF;
-         nzip   += kMAXBUF;
+         objbuf += kMAXZIPBUF;
+         nzip   += kMAXZIPBUF;
       }
       Create(noutot);
       fBufferRef->SetBufferOffset(0);
@@ -344,7 +342,7 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
    Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
    Int_t cxAlgorithm = GetFile() ? GetFile()->GetCompressionAlgorithm() : 0;
    if (cxlevel > 0 && fObjlen > 256) {
-      Int_t nbuffers = 1 + (fObjlen - 1)/kMAXBUF;
+      Int_t nbuffers = 1 + (fObjlen - 1)/kMAXZIPBUF;
       Int_t buflen = TMath::Max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
       char *objbuf = fBufferRef->Buffer() + fKeylen;
@@ -353,7 +351,7 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
       nzip   = 0;
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
-         else               bufmax = kMAXBUF;
+         else               bufmax = kMAXZIPBUF;
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
             fBuffer = fBufferRef->Buffer();
@@ -364,8 +362,8 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
          }
          bufcur += nout;
          noutot += nout;
-         objbuf += kMAXBUF;
-         nzip   += kMAXBUF;
+         objbuf += kMAXZIPBUF;
+         nzip   += kMAXZIPBUF;
       }
       Create(noutot);
       fBufferRef->SetBufferOffset(0);
@@ -791,7 +789,7 @@ TObject *TKey::ReadObj()
       while (1) {
          Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
          if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
+         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
          if (!nout) break;
          noutot += nout;
          if (noutot >= fObjlen) break;
@@ -921,7 +919,7 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
       while (1) {
          Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
          if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
+         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
          if (!nout) break;
          noutot += nout;
          if (noutot >= fObjlen) break;
@@ -1068,7 +1066,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       while (1) {
          Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
          if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
+         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
          if (!nout) break;
          noutot += nout;
          if (noutot >= fObjlen) break;
@@ -1158,7 +1156,7 @@ Int_t TKey::Read(TObject *obj)
       while (1) {
          Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
          if (hc!=0) break;
-         R__unzip(&nin, bufcur, &nbuf, objbuf, &nout);
+         R__unzip(&nin, bufcur, &nbuf, (unsigned char*) objbuf, &nout);
          if (!nout) break;
          noutot += nout;
          if (noutot >= fObjlen) break;

@@ -5,31 +5,13 @@
 # of the core subdirectory.
 
 Set(ZipOldHeaders
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/Bits.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/Tailor.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZDeflate.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZIP.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZTrees.h
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/Compression.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/inc/RZip.h
 )
 
 Set(ZipOldSource
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ZDeflate.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ZInflate.c
-)
-
-Set(ZipNewHeaders
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/crc32.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/deflate.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/inffast.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/inffixed.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/inflate.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/inftrees.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/trees.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/zconf.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/zlib.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/gzguts.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/zutil.h
 )
 
 Set(ZipNewSource
@@ -53,7 +35,7 @@ Set(ZipNewSource
 # Depending on the system either the old and the new
 # or only the old compression is build
 if(builtin_zlib)
-  set(ZLIB_HEADERS ${ZipNewHeaders} ${ZipOldHeaders})
+  set(ZLIB_HEADERS ${ZipOldHeaders})
   set(ZLIB_SRCS ${ZipNewSource} ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx)
 else()
   set(ZLIB_HEADERS ${ZipOldHeaders})

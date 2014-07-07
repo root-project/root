@@ -12,17 +12,17 @@
 #ifndef ROOT_RZip
 #define ROOT_RZip
 
-#include "Rtypes.h"
+extern "C" unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int len);
 
-extern "C" ULong_t R__crc32(ULong_t crc, const UChar_t* buf, UInt_t len);
+extern "C" unsigned long R__memcompress(char *tgt, unsigned long tgtsize, char *src, unsigned long srcsize);
 
-extern "C" ULong_t R__memcompress(Char_t* tgt, ULong_t tgtsize, Char_t* src, ULong_t srcsize);
+extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm);
 
-extern "C" void R__zipMultipleAlgorithm(Int_t cxlevel, Int_t *srcsize, Char_t *src, Int_t *tgtsize, Char_t *tgt, Int_t *irep, Int_t compressionAlgorithm);
+extern "C" void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep);
 
-extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
+extern "C" void R__unzip(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
 
-extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
+extern "C" int R__unzip_header(int *srcsize, unsigned char *src, int *tgtsize);
 
 enum { kMAXZIPBUF = 0xffffff };
 
