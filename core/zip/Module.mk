@@ -68,6 +68,7 @@ include/%.h:    $(ZIPDIRI)/%.h
 		cp $< $@
 
 $(ZIPO) : CFLAGS += -I$(ZIPDIRI)
+$(ZIPO) : CXXFLAGS += -I$(ZIPDIRI)
 
 $(ZIPDS):      $(ZIPDICTH) $(ZIPL) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
