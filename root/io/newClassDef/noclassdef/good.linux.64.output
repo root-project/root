@@ -157,9 +157,9 @@ index                         2
 *myArrVar                     ->0                 ![index]  WAITING on Vicktor's implementation [index]
 *objVarArr                    ->0                 ![index]  Not implemented yet ... will it ever?
 mynocell                                          
-mynocell.nodict               55                  
-mynocell.id                   7                   
-mynocell.base[5]              noRe                
+mynocell.nodict               0                   
+mynocell.id                   0                   
+mynocell.base[5]              none                
 *mycellnull                   ->0                 
 *mycellfix                                        
 *mycellvirt                                       
@@ -192,9 +192,9 @@ fUniqueID                     0                   object unique identifier
 fBits                         0x03000000          bit field status word
 base 	t e s t 
 id 	3
-base 	n o R e 
-id 	7
-noRequestedDict 	55
+base 	n o n e 
+id 	0
+noRequestedDict 	0
 base 	f i x 1 
 id 	4
 fix 	33
@@ -427,9 +427,9 @@ index                         2
 *myArrVar                     ->0                 ![index]  WAITING on Vicktor's implementation [index]
 *objVarArr                    ->0                 ![index]  Not implemented yet ... will it ever?
 mynocell                                          
-mynocell.nodict               55                  
-mynocell.id                   7                   
-mynocell.base[5]              noRe                
+mynocell.nodict               0                   
+mynocell.id                   0                   
+mynocell.base[5]              none                
 *mycellnull                   ->0                 
 *mycellfix                                        
 *mycellvirt                                       
@@ -462,9 +462,9 @@ fUniqueID                     0                   object unique identifier
 fBits                         0x03000000          bit field status word
 base 	t e s t 
 id 	3
-base 	n o R e 
-id 	7
-noRequestedDict 	55
+base 	n o n e 
+id 	0
+noRequestedDict 	0
 base 	f i x 1 
 id 	4
 fix 	33
