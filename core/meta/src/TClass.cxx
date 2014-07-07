@@ -1489,6 +1489,8 @@ Bool_t TClass::AddRule( const char *rule )
       return kFALSE;
    }
 
+   R__LOCKGUARD(gCINTMutex);
+
    TClass *cl = TClass::GetClass( ruleobj->GetTargetClass() );
    if (!cl) {
       // Create an empty emulated class for now.
