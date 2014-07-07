@@ -12,7 +12,6 @@
 #include <iostream>
 #include <cmath>
 #include <typeinfo>
-#define HAVE_UNURAN
 #ifdef HAVE_UNURAN
 #include "UnuRanDist.h"
 #endif

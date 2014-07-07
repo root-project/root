@@ -28,6 +28,7 @@ set(TestMathMoreSource
 
 if(ROOT_unuran_FOUND)
   list(APPEND Libraries Unuran)
+  add_definitions(-DHAVE_UNURAN)
 endif()
 
 
