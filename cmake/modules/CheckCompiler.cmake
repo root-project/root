@@ -57,8 +57,9 @@ else()
 endif()
 
 #---Set a default build type for single-configuration CMake generators if no build type is set------
+set(CMAKE_CONFIGURATION_TYPES Release MinSizeRel Debug RelWithDebInfo)
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "" FORCE)
+  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build, options are: Release, MinSizeRel, Debug, RelWithDebInfo." FORCE)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
