@@ -120,7 +120,7 @@ function(ROOT_GET_SOURCES variable cwd )
     endif()
     if(files)
       foreach(s ${files})
-        if(fp MATCHES "[*]" AND s MATCHES "(^|/)G__") # Eliminate G__* files only when using wildcards
+        if(s MATCHES "${cwd}/G__") # Eliminate G__* files only when using wildcards
         else()
           set(sources ${sources} ${s})
         endif()
