@@ -23,7 +23,10 @@ ROOT_GENERATE_DICTIONARY(G__Core
                          OPTIONS ${dict_opts}
                          LINKDEF LinkDef.h)
                          
-ROOT_OBJECT_LIBRARY(Base G__Core.cxx *.cxx)
+
+ROOT_GLOB_FILES(sources FILTER "(^|/)roota.cxx" ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+
+ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${sources})
 
 if(builtin_pcre)
   add_dependencies(Base PCRE)
