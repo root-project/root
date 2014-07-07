@@ -40,10 +40,7 @@
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
 #include "TStreamerInfoActions.h"
-
-extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm);
-extern "C" void R__unzip(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
-extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
+#include "RZip.h"
 
 #ifdef R__VISUAL_CPLUSPLUS
 #define FLong64    "%I64d"
@@ -546,7 +543,7 @@ void TBufferXML::XmlReadBlock(XMLNodePointer_t blocknode)
 
       int srcsize;
       int tgtsize;
-      int status = R__unzip_header(&srcsize, (unsigned char*) fUnzipBuffer, &tgtsize);
+      int status = R__unzip_header(&srcsize, (UChar_t*) fUnzipBuffer, &tgtsize);
 
       int unzipRes = 0;
       if (status == 0) {
