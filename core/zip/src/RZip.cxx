@@ -13,7 +13,7 @@
 
 #include "zlib.h"
 
-ULong_t R__crc32(ULong_t crc, const UChar_t* buf, UInt_t len)
+unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int len)
 {
    return crc32(crc, buf, len);
 }

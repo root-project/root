@@ -18,6 +18,7 @@
 #include "TTreeCache.h"
 #include "TVirtualPerfStats.h"
 #include "TTimeStamp.h"
+#include "RZip.h"
 
 // TODO: Copied from TBranch.cxx
 #if (__GNUC__ >= 3) || defined(__INTEL_COMPILER)
@@ -32,11 +33,6 @@
   #define R__likely(expr) expr
 #endif
 
-extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm);
-extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
-extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
-
-const Int_t  kMAXBUF = 0xFFFFFF;
 const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest bytes of
                                               // the fEntryOffset are used to stored displacement.
 
@@ -564,7 +560,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
             goto AfterBuffer;
          }
 
-         R__unzip(&nin, rawCompressedObjectBuffer, &nbuf, rawUncompressedObjectBuffer, &nout);
+         R__unzip(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout);
          if (!nout) break;
          noutot += nout;
          nintot += nin;
@@ -960,7 +956,7 @@ Int_t TBasket::WriteBuffer()
    Int_t cxlevel = fBranch->GetCompressionLevel();
    Int_t cxAlgorithm = fBranch->GetCompressionAlgorithm();
    if (cxlevel > 0) {
-      Int_t nbuffers = 1 + (fObjlen - 1) / kMAXBUF;
+      Int_t nbuffers = 1 + (fObjlen - 1) / kMAXZIPBUF;
       Int_t buflen = fKeylen + fObjlen + 9 * nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
       InitializeCompressedBuffer(buflen, file);
       if (!fCompressedBufferRef) {
@@ -975,7 +971,7 @@ Int_t TBasket::WriteBuffer()
       nzip   = 0;
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
-         else bufmax = kMAXBUF;
+         else bufmax = kMAXZIPBUF;
          //compress the buffer
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
 
@@ -999,8 +995,8 @@ Int_t TBasket::WriteBuffer()
          }
          bufcur += nout;
          noutot += nout;
-         objbuf += kMAXBUF;
-         nzip   += kMAXBUF;
+         objbuf += kMAXZIPBUF;
+         nzip   += kMAXZIPBUF;
       }
       nout = noutot;
       Create(noutot,file);
