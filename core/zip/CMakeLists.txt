@@ -36,10 +36,10 @@ Set(ZipNewSource
 # or only the old compression is build 
 if(builtin_zlib)
   set(ZLIB_HEADERS ${ZipOldHeaders}) 
-  set(ZLIB_SRCS ${ZipNewSource} ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx) 
+  set(ZLIB_SRCS ${ZipNewSource} ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx ${CMAKE_CURRENT_SOURCE_DIR}/src/RZip.cxx) 
 else()
   set(ZLIB_HEADERS ${ZipOldHeaders}) 
-  set(ZLIB_SRCS ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx) 
+  set(ZLIB_SRCS ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx ${CMAKE_CURRENT_SOURCE_DIR}/src/RZip.cxx) 
 endif()
 
 # Define all the header files which should be installed when
