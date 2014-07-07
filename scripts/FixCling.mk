@@ -15,6 +15,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundPrintfIssues"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncReturnInt"
 CALLROOTEXE += -e "\#define ClingWorkAroundLackOfModule"
 CALLROOTEXE += -e "\#define ClingWorkAroundProxyConfusion"
+
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForNamespaces"
@@ -25,6 +26,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
 CALLROOTEXE += -e "\#define ClingWorkAroundScriptClassDef"
 CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
+CALLROOTEXE += -e "\#define ClingWorkAroundFunctionForwardDeclarations"
 
 # AutoParsing issues
 CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseUsingNamespace"
@@ -106,6 +108,7 @@ ClingWorkAroundNoDotInclude = yes              # See trello card about .include
 ClingWorkAroundScriptClassDef = yes            # See https://sft.its.cern.ch/jira/browse/ROOT-4769
 ClingWorkAroundMultipleInclude = yes           # File are included each time a module that contains them is 
                                                # loaded.  Should go away with the modules
+ClingWorkAroundFunctionForwardDeclarations = yes # See https://sft.its.cern.ch/jira/browse/ROOT-6463
 ClingWorkAroundUnnamedDetection = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-4791
 #ClingWorkAroundIncorrectTearDownOrder = yes    # See https://sft.its.cern.ch/jira/browse/ROOT-4768
 ClingWorkAroundNoPrivateClassIO = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-4865
