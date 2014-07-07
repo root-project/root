@@ -138,6 +138,8 @@ TUUID::TUUID()
    static TTHREAD_TLS(UShort_t) clockseq;
    static TTHREAD_TLS(Bool_t) firstTime = kTRUE;
    if (firstTime) {
+      R__LOCKGUARD2(gROOTMutex); // rand and random are not thread safe.
+
       if (gSystem) {
          // try to get a unique seed per process
          UInt_t seed = (UInt_t) (Long64_t(gSystem->Now()) + gSystem->GetPid());
