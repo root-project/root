@@ -83,4 +83,9 @@ $(ROOTCLINGUTILO): CXXFLAGS += -UR__HAVE_CONFIG -I$(UTILSDIRS) -I$(METAUTILSDIRS
 	   $(ROOTCLINGCXXFLAGS)
 $(ROOTCLINGTCLINGO): CXXFLAGS += -I$(METADIRS)
 
+# the -rdynamic flag is needed on cygwin to make symbols visible to dlsym
+ifneq (,$(filter $(ARCH),win32gcc win64gcc))
+$(ROOTCLINGEXE): LDFLAGS += -rdynamic
+endif
+
 endif # ifneq ($(HOST),)

@@ -225,7 +225,7 @@ void GeneticMinimizer::SetOptions(const ROOT::Math::MinimizerOptions & opt)
    fParameters.fConvCrit = 10.*opt.Tolerance(); // use a factor of 10 to have default as Minuit
 
    // set genetic parameter from minimizer options 
-   ROOT::Math::IOptions * geneticOpt = opt.ExtraOptions(); 
+   const ROOT::Math::IOptions * geneticOpt = opt.ExtraOptions(); 
    if (!geneticOpt) { 
       Warning("GeneticMinimizer::SetOptions", "No specific genetic minimizer options have been set"); 
       return; 

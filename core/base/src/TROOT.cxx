@@ -1136,7 +1136,7 @@ static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent, con
 
    if (load && cl==0) {
       // Create an Emulated class for this container.
-      cl = gInterpreter->GenerateTClass(defaultname.c_str(), silent);
+      cl = gInterpreter->GenerateTClass(defaultname.c_str(), kTRUE, silent);
    }
 
    return cl;
@@ -1644,7 +1644,8 @@ void TROOT::InitInterpreter()
 
    // usedToIdentifyRootClingByDlSym is available when TROOT is part of
    // rootcling.
-   if (!dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")) {
+   if (!dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")
+       && !dlsym(RTLD_DEFAULT, "usedToIdentifyStaticRoot")) {
       // Make sure no llvm symbols are visible before loading libCling. If they
       // exist libCling will use those and not ours, causing havoc in the
       // interpreter. Look for an extern "C" symbol to avoid mangling; look for a
@@ -1755,6 +1756,7 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
 
    if (!dict) {
       // Try to remove the ROOT typedefs
+      // Note currently this can lead to autoloading and autoparsing.
       resolved = TClassEdit::ResolveTypedef(classname,kTRUE);
       if (resolved != classname) {
          dict = TClassTable::GetDict(resolved.Data());

@@ -9,7 +9,7 @@ PLATFORM=$1
 CXX=$2
 CC=$3
 LD=$4
-LDFLAGS=$5
+LDFLAGS="$5 -Wl,-E "
 XLIBS=$6
 SYSLIBS=$7
 EXTRALIBS=$8
@@ -21,18 +21,17 @@ PROOFAEXE=bin/proofserva
 
 rm -f $ROOTAEXE $PROOFAEXE
 
-gobjs=`$STATICOBJECTLIST -d`
-
 # If linking with Cocoa framework, then don't use XLIBS
 if echo $EXTRALIBS | grep ' Cocoa' > /dev/null 2>& 1 ; then
     XLIBS=
 fi
 
 echo "Making $ROOTAEXE..."
-echo $LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $gobjs $ROOTALIB \
-   $XLIBS $SYSLIBS $EXTRALIBS
-$LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $gobjs $ROOTALIB \
-   $XLIBS $SYSLIBS $EXTRALIBS
+CMD="$LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o \
+  -Wl,--no-as-needed -Wl,--whole-archive $ROOTALIB -Wl,--as-needed -Wl,--no-whole-archive \
+   $XLIBS $SYSLIBS $EXTRALIBS"
+echo $CMD
+$CMD
 
 linkstat=$?
 if [ $linkstat -ne 0 ]; then
@@ -40,10 +39,11 @@ if [ $linkstat -ne 0 ]; then
 fi
 
 echo "Making $PROOFAEXE..."
-echo $LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o $gobjs $ROOTALIB \
-   $XLIBS $SYSLIBS $EXTRALIBS
-$LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o $gobjs $ROOTALIB \
-   $XLIBS $SYSLIBS $EXTRALIBS
+CMD="$LD $LDFLAGS -o $PROOFAEXE main/src/pmain.o \
+  -Wl,--no-as-needed -Wl,--whole-archive $ROOTALIB -Wl,--as-needed -Wl,--no-whole-archive \
+   $XLIBS $SYSLIBS $EXTRALIBS"
+echo $CMD
+$CMD
 
 linkstat=$?
 if [ $linkstat -ne 0 ]; then

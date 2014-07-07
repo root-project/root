@@ -316,6 +316,7 @@ public:
   /// \returns true if this source location comes before 'Loc', false otherwise.
   bool isBeforeInTranslationUnitThan(FullSourceLoc Loc) const {
     assert(Loc.isValid());
+    if (!SrcMgr) return true; // assume command line is before Loc
     assert(SrcMgr == Loc.SrcMgr && "Loc comes from another SourceManager!");
     return isBeforeInTranslationUnitThan((SourceLocation)Loc);
   }

@@ -724,7 +724,7 @@ Long_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *erro
       TString lineWithNr = TString::Format("#line 1 \"%s%d\"\n", filestem, fNcmd - 1);
       int res = ProcessLine(lineWithNr + line, kFALSE, error);
       if (*error == TInterpreter::kProcessing)
-         SetPrompt("root [%d] ? ");
+         SetPrompt("root (cont'ed, cancel with .@) [%d]");
       else
          SetPrompt("root [%d] ");
       return res;

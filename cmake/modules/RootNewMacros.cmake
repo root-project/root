@@ -163,8 +163,15 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
   endif()
 
   set(gensrcdict ${dictionary}.cxx)
-  set(rootmapname ${dictionary}Dict.rootmap)
-  set(rootmapopts --rootmap=${rootmapname} --rootmap-lib=${libprefix}${dictionary}Dict)
+
+  #---roottest compability---------------------------------
+  if(CMAKE_ROOTTEST_NOROOTMAP)
+    set(rootmapname )
+    set(rootmapopts )
+  else()
+    set(rootmapname ${dictionary}Dict.rootmap)
+    set(rootmapopts --rootmap=${rootmapname} --rootmap-lib=${libprefix}${dictionary}Dict)
+  endif()
 
   set(include_dirs -I${CMAKE_CURRENT_SOURCE_DIR})
   get_directory_property(incdirs INCLUDE_DIRECTORIES)

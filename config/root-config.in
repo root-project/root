@@ -523,15 +523,6 @@ while test $# -gt 0; do
          exit 1
       fi
       ;;
-    --svn-revision)
-      ### Output the version number.  If RVersion.h can not be found, give up.
-      if test -r ${incdir}/RVersion.h; then
-         out="$out `sed -n 's,.*ROOT_SVN_REVISION *\([0-9]*\).*,\1,p' < ${incdir}/RVersion.h`"
-      else
-         echo "cannot read ${incdir}/RVersion.h"
-         exit 1
-      fi
-      ;;
     --python-version)
       out="$out @pythonvers@"
       ;;

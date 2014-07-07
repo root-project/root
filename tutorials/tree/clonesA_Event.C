@@ -9,10 +9,10 @@
 #ifndef CLONESA_EVENT_SECOND_RUN
 
 void clonesA_Event() {
-   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->DirName(__FILE__);
    gROOT->ProcessLine(TString(".L ")+dir+"/clonesA_Event.cxx+");
 #define CLONESA_EVENT_SECOND_RUN yes
-   gROOT->ProcessLine(TString("#include \"")+gInterpreter->GetCurrentMacroName()+"\"");
+   gROOT->ProcessLine("#include \"" __FILE__ "\"");
    gROOT->ProcessLine("clonesA_Event(true)");
 }
 

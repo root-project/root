@@ -96,10 +96,11 @@ public:
       kVolumeOverlap =     BIT(17),
       kVolumeImportNodes = BIT(18),
       kVolumeMulti   =     BIT(19),
-      kVoxelsXYZ     =     BIT(20),
-      kVoxelsCyl     =     BIT(21),
+      kVoxelsXYZ     =     BIT(20), // not used
+      kVoxelsCyl     =     BIT(21), // not used
       kVolumeClone   =     BIT(22),
-      kVolumeAdded   =     BIT(23)
+      kVolumeAdded   =     BIT(23),
+      kVolumeOC      =     BIT(21)  // overlapping candidates
    };
    // constructors
    TGeoVolume();
@@ -158,6 +159,7 @@ public:
    Bool_t          IsActive() const {return TGeoAtt::IsActive();}
    Bool_t          IsActiveDaughters() const {return TGeoAtt::IsActiveDaughters();}
    Bool_t          IsAdded()     const {return TObject::TestBit(kVolumeAdded);}
+   Bool_t          IsOverlappingCandidate() const {return TObject::TestBit(kVolumeOC);}
    Bool_t          IsReplicated() const {return TObject::TestBit(kVolumeReplicated);}
    Bool_t          IsSelected() const  {return TObject::TestBit(kVolumeSelected);}
    Bool_t          IsCylVoxels() const {return TObject::TestBit(kVoxelsCyl);}
@@ -226,6 +228,7 @@ public:
    void            SetCurrentPoint(Double_t x, Double_t y, Double_t z);
    void            SetCylVoxels(Bool_t flag=kTRUE) {TObject::SetBit(kVoxelsCyl, flag); TObject::SetBit(kVoxelsXYZ, !flag);}
    void            SetNodes(TObjArray *nodes) {fNodes = nodes; TObject::SetBit(kVolumeImportNodes);}
+   void            SetOverlappingCandidate(Bool_t flag) {TObject::SetBit(kVolumeOC,flag);}
    void            SetShape(const TGeoShape *shape);
    void            SetTransparency(Char_t transparency=0) {if (fMedium) fMedium->GetMaterial()->SetTransparency(transparency);} // *MENU*
    void            SetField(TObject *field)          {fField = field;}

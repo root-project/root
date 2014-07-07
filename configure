@@ -7563,6 +7563,7 @@ sed \
     -e "s|@prefix@|$prefix|"               \
     -e "s|@srcdir@|$srcdir|"               \
     -e "s|@ttffontdir@|$fontdir|"          \
+    -e "s|@tutdir@|$tutdir|"               \
     -e "s|@setresuid@|$setresuid|"         \
     -e "s|@hasmathmore@|$hasmathmore|"     \
     -e "s|@haspthread@|$haspthread|"       \

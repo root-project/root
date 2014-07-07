@@ -10,7 +10,7 @@ void FITS_tutorial6()
    printf("We are going to open a table from a FITS file\n");
    printf("and dump its columns.\n\n");
   
-   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->DirName(__FILE__);
 
    //Open the table
    TFITSHDU *hdu = new TFITSHDU(dir+"/sample4.fits[1]");

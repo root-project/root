@@ -19,7 +19,7 @@ TFile *cernbuild(Int_t get=0, Int_t print=1) {
    //The input file cern.dat is a copy of the CERN staff data base
    //from 1988
    TString filename = "cernstaff.root";
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("cernbuild.C","");
    dir.ReplaceAll("/./","/");
    FILE *fp = fopen(Form("%scernstaff.dat",dir.Data()),"r");

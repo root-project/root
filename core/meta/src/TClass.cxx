@@ -974,6 +974,34 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
 }
 
 //______________________________________________________________________________
+TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t silent) :
+   TDictionary(name),
+   fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
+   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fAllPubMethod(0), fClassMenuList(0),
+   fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
+   fInstanceCount(0), fOnHeap(0),
+   fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
+   fTypeInfo(0), fShowMembers(0),
+   fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
+   fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
+   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
+   fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE), fVersionUsed(kFALSE),
+   fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fState(theState),
+   fCurrentInfo(0), fRefStart(0), fRefProxy(0),
+   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+{
+   // Create a TClass object. This object does not contain anything. We mimic
+   // the case of a class fwd declared in the interpreter.
+   R__LOCKGUARD2(gInterpreterMutex);
+   if (theState != kForwardDeclared && theState != kEmulated)
+      ::Fatal("TClass::TClass",
+              "A TClass entry cannot be initialized in a state different from kForwardDeclared or kEmulated.");
+   Init(name, cversion, 0, 0, 0, 0, -1, -1, 0, silent);
+}
+
+//______________________________________________________________________________
 TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il, Bool_t silent) :
    TDictionary(""),
@@ -1146,7 +1174,7 @@ void TClass::Init(const char *name, Version_t cversion,
 
       // We can no longer reproduce this case, to check whether we are, we use
       // this code:
-      //    Fatal("Init","A bad replacement for %s was requested\n",name);
+      // Fatal("Init","A bad replacement for %s was requested\n",name);
       return;
    }
 
@@ -1198,7 +1226,10 @@ void TClass::Init(const char *name, Version_t cversion,
       }
       fClassInfo = gInterpreter->ClassInfo_Factory(givenInfo);
    }
-   if (!fClassInfo) {
+   // We need to check if the class it is not fwd declared for the cases where we
+   // created a TClass directly in the kForwardDeclared state. Indeed in those cases
+   // fClassInfo will always be nullptr.
+   if (fState!=kForwardDeclared && !fClassInfo) {
 
       if (fState == kHasTClassInit) {
          // If the TClass is being generated from a ROOT dictionary,
@@ -1235,6 +1266,8 @@ void TClass::Init(const char *name, Version_t cversion,
       if (fState == kHasTClassInit) {
          ::Error("TClass::TClass", "no interpreter information for class %s is available eventhough it has a TClass initialization routine.", fName.Data());
       } else {
+         // In this case we initialised this TClass instance starting from the fwd declared state
+         // and we know we have no dictionary: no need to warn
          ::Warning("TClass::TClass", "no dictionary for class %s is available", fName.Data());
       }
    }
@@ -3446,6 +3479,20 @@ void TClass::GetMissingDictionariesForMembers(TCollection& result, TCollection& 
    }
 }
 
+void TClass::GetMissingDictionariesForPairElements(TCollection& result, TCollection& visited, bool recurse)
+{
+   // Pair is a special case and we have to check its elements for missing dictionaries
+   // Pair is a transparent container so we should always look at its.
+
+   TVirtualStreamerInfo *SI = (TVirtualStreamerInfo*)this->GetStreamerInfo();
+   for (int i = 0; i < 2; i++) {
+      TClass* pairElement = ((TStreamerElement*)SI->GetElements()->At(i))->GetClass();
+      if (pairElement) {
+         pairElement->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
+      }
+   }
+}
+
 //______________________________________________________________________________
 void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, TCollection& visited, bool recurse)
 {
@@ -3456,7 +3503,11 @@ void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, TColl
    static TClassRef sCIString("string");
    if (this == sCIString) return;
 
-   if (strncmp(fName, "pair<", 5) == 0) return;
+   // Special treatment for pair.
+   if (strncmp(fName, "pair<", 5) == 0) {
+      GetMissingDictionariesForPairElements(result, visited, recurse);
+      return;
+   }
 
    if (!HasDictionary()) {
       result.Add(this);
@@ -3503,15 +3554,18 @@ void TClass::GetMissingDictionaries(THashTable& result, bool recurse)
    static TClassRef sCIString("string");
    if (this == sCIString) return;
 
-   if (strncmp(fName, "pair<", 5) == 0) return;
+   THashTable visited;
 
-   THashTable visitedClasses;
+   if (strncmp(fName, "pair<", 5) == 0) {
+      GetMissingDictionariesForPairElements(result, visited, recurse);
+      return;
+   }
 
    if (!HasDictionary()) {
       result.Add(this);
    }
 
-   visitedClasses.Add(this);
+   visited.Add(this);
 
    //Check whether a custom streamer
    if (!TestBit(TClass::kHasCustomStreamerMember)) {
@@ -3521,12 +3575,12 @@ void TClass::GetMissingDictionaries(THashTable& result, bool recurse)
          TClass* t = 0;
          if ((t = GetCollectionProxy()->GetValueClass())) {
             if (!t->HasDictionary()) {
-               t->GetMissingDictionariesWithRecursionCheck(result, visitedClasses, recurse);
+               t->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
             }
          }
       } else {
-         GetMissingDictionariesForMembers(result, visitedClasses, recurse);
-         GetMissingDictionariesForBaseClasses(result, visitedClasses, recurse);
+         GetMissingDictionariesForMembers(result, visited, recurse);
+         GetMissingDictionariesForBaseClasses(result, visited, recurse);
       }
    }
 }

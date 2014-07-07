@@ -10,7 +10,7 @@
 #if defined(__CINT__) && !defined(__MAKECINT__)
 {
    std::cout << "Using ACliC to run this macro since it uses custom classes" << std::endl;
-   TString macroFileName = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   TString macroFileName = gSystem->UnixPathName(__FILE__);
    gSystem->CompileMacro(macroFileName, "k");
    foam_demo();
 }

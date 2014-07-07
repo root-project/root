@@ -787,7 +787,7 @@ TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
    fClingCallbacks(0), fAutoLoadCallBack(0),
-   fTransactionCount(0), fHeaderParsingOnDemand(getenv("HEADER_PARSING_ON_DEMAND"))
+   fTransactionCount(0), fHeaderParsingOnDemand(true)
 {
    // Initialize the cling interpreter interface.
 
@@ -4426,6 +4426,13 @@ Int_t TCling::AutoLoad(const char* cls)
 {
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
+
+   if (gClassTable->GetDict(cls)) {
+      // The library is alreday loaded as the class's dictionary is known.
+      // Return success.
+      return 1;
+   }
+
    if (gDebug > 2) {
       Info("TCling::AutoLoad",
            "Trying to autoload for %s", cls);
@@ -4435,7 +4442,7 @@ Int_t TCling::AutoLoad(const char* cls)
    if (!gROOT || !gInterpreter || gROOT->TestBit(TObject::kInvalidObject)) {
       return status;
    }
-   if (fClingCallbacks && !fClingCallbacks->IsAutoloadingEnabled ()) {
+   if (fClingCallbacks && !fClingCallbacks->IsAutoloadingEnabled()) {
       return 0;
    }
    // Prevent the recursion when the library dictionary are loaded.
@@ -4532,7 +4539,24 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
             "#undef __ROOTCLING__\n"
             + gInterpreterClassDef +
             "#endif");
-   return interpreter->parseForModule(code);
+
+   cling::Interpreter::CompilationResult cr;
+   {
+      // scope within which diagnostics are de-activated
+      // For now we disable diagnostics because we saw them already at
+      // dictionary generation time. That won't be an issue with the PCMs.
+
+      clangDiagSuppr diagSuppr(SemaR.getDiagnostics());
+
+      #if defined(R__MUST_REVISIT)
+      #if R__MUST_REVISIT(6,2)
+      Warning("TCling::RegisterModule","Diagnostics suppression should be gone by now.");
+      #endif
+      #endif
+
+      cr = interpreter->parseForModule(code);
+   }
+   return cr;
 }
 
 //______________________________________________________________________________
@@ -4686,7 +4710,7 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    TString lib;
    Ssiz_t posLib = 0;
    while (libs.Tokenize(lib, posLib)) {
-      if (Load(lib, kFALSE /*system*/) < 0) {
+      if (gSystem->Load(lib, "", kFALSE /*system*/) < 0) {
          // The library load failed, all done.
          //fprintf(stderr, "load failed: %s\n", errmsg.c_str());
          return 0;
@@ -5360,6 +5384,16 @@ int TCling::SetClassAutoloading(int autoload) const
    assert(fClingCallbacks && "We must have callbacks!");
    bool oldVal =  fClingCallbacks->IsAutoloadingEnabled();
    fClingCallbacks->SetAutoloadingEnabled(autoload);
+   return oldVal;
+}
+
+//______________________________________________________________________________
+int TCling::SetClassAutoparsing(int autoparse)
+{
+   // Enable/Disable the Autoparsing of headers.
+   // Returns the old value, i.e whether it was enabled or not.
+   bool oldVal = fHeaderParsingOnDemand;
+   fHeaderParsingOnDemand = autoparse;
    return oldVal;
 }
 

@@ -1,9 +1,9 @@
 // Example of bar charts with 1-d histograms
 // Author: Rene Brun
 void hbars() {
-   cout << gSystem->DirName(gInterpreter->GetCurrentMacroName()) << endl;
+   cout << gSystem->DirName(__FILE__) << endl;
    // try to open first the file cernstaff.root in tutorials/tree directory
-   TString filedir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   TString filedir = gSystem->DirName(__FILE__);
    filedir += TString("/../tree/");
    TString filename = filedir + "cernstaff.root";
    bool fileNotFound = gSystem->AccessPathName(filename); // note opposite return code

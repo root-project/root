@@ -319,6 +319,7 @@
 #include "TQObject.h"
 #include "TMath.h"
 #include "TEnv.h"
+#include "TGeoParallelWorld.h"
 
 // statics and globals
 
@@ -404,6 +405,8 @@ TGeoManager::TGeoManager()
       fValuePNEId = 0;
       fMultiThread = kFALSE;
       fMaxThreads = 0;
+      fUsePWNav = kFALSE;
+      fParallelWorld = 0;
       ClearThreadsMap();
    } else {
       Init();
@@ -501,6 +504,8 @@ void TGeoManager::Init()
    fValuePNEId = 0;
    fMultiThread = kFALSE;
    fMaxThreads = 0;
+   fUsePWNav = kFALSE;
+   fParallelWorld = 0;
    ClearThreadsMap();
 }
 
@@ -569,7 +574,9 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fKeyPNEId(0),
   fValuePNEId(0),
   fMaxThreads(0),
-  fMultiThread(kFALSE)
+  fMultiThread(kFALSE),
+  fUsePWNav(kFALSE),
+  fParallelWorld(0)
 {
    //copy constructor
    for(Int_t i=0; i<1024; i++)
@@ -650,6 +657,8 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fValuePNEId = 0;
       fMultiThread = kFALSE;
       fMaxThreads = 0;
+      fUsePWNav = kFALSE;
+      fParallelWorld = 0;
       ClearThreadsMap();
       ClearThreadData();
    }
@@ -700,6 +709,7 @@ TGeoManager::~TGeoManager()
       delete [] fKeyPNEId;
       delete [] fValuePNEId;
    }
+   delete fParallelWorld;
    fIsGeomCleaning = kFALSE;
    gGeoIdentity = 0;
    gGeoManager = 0;
@@ -3113,6 +3123,7 @@ void TGeoManager::RefreshPhysicalNodes(Bool_t lock)
    TIter next(gGeoManager->GetListOfPhysicalNodes());
    TGeoPhysicalNode *pn;
    while ((pn=(TGeoPhysicalNode*)next())) pn->Refresh();
+   if (fParallelWorld && fParallelWorld->IsClosed()) fParallelWorld->RefreshPhysicalNodes();
    if (lock) LockGeometry();
 }
 
@@ -3749,5 +3760,36 @@ void TGeoManager::TopToMaster(const Double_t *top, Double_t *master) const
    GetCurrentNavigator()->LocalToMaster(top, master);
 }
 
+//______________________________________________________________________________
+TGeoParallelWorld *TGeoManager::CreateParallelWorld(const char *name)
+{
+// Create a parallel world for prioritized navigation. This can be populated
+// with physical nodes and can be navigated independently using its API. 
+// In case the flag SetUseParallelWorldNav is set, any navigation query in the
+// main geometry is checked against the parallel geometry, which gets priority
+// in case of overlaps with the main geometry volumes.
+   fParallelWorld = new TGeoParallelWorld(name, this);
+   return fParallelWorld;
+}   
 
-
+//______________________________________________________________________________
+void TGeoManager::SetUseParallelWorldNav(Bool_t flag)
+{
+// Activate/deactivate usage of parallel world navigation. Can only be done if
+// there is a parallel world. Activating navigation will automatically close
+// the parallel geometry.
+   if (!fParallelWorld) {
+      Error("SetUseParallelWorldNav", "No parallel world geometry defined. Use CreateParallelWorld.");
+      return;
+   }
+   if (!flag) {
+      fUsePWNav = flag;
+      return;
+   }   
+   if (!fClosed) {
+      Error("SetUseParallelWorldNav", "The geometry must be closed first");
+      return;
+   }
+   // Closing the parallel world geometry is mandatory
+   if (fParallelWorld->CloseGeometry()) fUsePWNav=kTRUE;
+}

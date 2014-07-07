@@ -516,7 +516,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       }
 
       TString id(gSystem->BaseName(outFileName));
-      id = id.SubString(0, id.Length()-4); // remove ".gif"
+      id = id(0, id.Length()-4); // remove ".gif"
       // TODO: we need an accessible version of the source, i.e. visible w/o javascript
       TString tags("</pre><div class=\"tabs\">\n"
                "<a id=\"" + id + "_A0\" class=\"tabsel\" href=\"" + gSystem->BaseName(outFileName) + "\" onclick=\"javascript:return SetDiv('" + id + "',0);\">Picture</a>\n"

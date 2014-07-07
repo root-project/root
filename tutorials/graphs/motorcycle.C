@@ -41,7 +41,7 @@ void motorcycle()
 
 
 // data taken from R library MASS: mcycle.txt
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("motorcycle.C","");
    dir.ReplaceAll("/./","/");
 

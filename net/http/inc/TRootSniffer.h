@@ -93,7 +93,6 @@ protected:
    TString fObjectsPath; //! path for registered objects
    TMemFile *fMemFile;   //! file used to manage streamer infos
    Int_t fSinfoSize;     //! number of elements in streamer info, used as version
-   Int_t fCompression;   //! compression level when doing zip
 
    void ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char *ptr, unsigned long int cloffset);
 
@@ -107,8 +106,6 @@ protected:
 
    void CreateMemFile();
 
-   Bool_t CreateBindData(TBufferFile *sbuf, void *&ptr, Long_t &length);
-
 public:
 
    TRootSniffer(const char *name, const char *objpath = "online");
@@ -120,11 +117,6 @@ public:
    Bool_t RegisterObject(const char *subfolder, TObject *obj);
 
    Bool_t UnregisterObject(TObject *obj);
-
-   void SetCompression(Int_t lvl)
-   {
-      fCompression = lvl;
-   }
 
    /** Method scans normal objects, registered in ROOT */
    void ScanHierarchy(const char *topname, const char *path, TRootSnifferStore *store);

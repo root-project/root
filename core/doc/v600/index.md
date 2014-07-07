@@ -101,6 +101,13 @@ Please `#include` the header instead.
 
 ### TInterpreter
 
+### TInterpreter
+
+`TInterpreter::GetCurrentMacroName()` has a slightly different behavior in ROOT
+6 than in ROOT 5. In ROOT 5 it was a synonym for `__FILE__` (so please use
+`__FILE__` to get the old value); in ROOT 6 it returns the currently executing
+(.x) source file. For nested execution it returns the innermost one.
+
 The following are no longer supported and are now only issuing error
 messages:
 

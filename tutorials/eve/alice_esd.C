@@ -82,7 +82,7 @@
 
 void alice_esd()
 {
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("alice_esd.C","");
    dir.ReplaceAll("/./","/");
    gROOT->LoadMacro(dir +"MultiView.C+");

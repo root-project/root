@@ -5,7 +5,7 @@
 
 void pythia_display()
 {
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("pythia_display.C","");
    dir.ReplaceAll("/./","/");
    gROOT->LoadMacro(dir +"MultiView.C+");

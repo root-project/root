@@ -227,7 +227,7 @@ void DOMParsePerson()
 {
    PersonList personlist;
    gROOT->ProcessLine(".O 0");
-   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->DirName(__FILE__);
    if (personlist.ParseFile(dir+"/person.xml") == 0)
       cout << personlist << endl;
 }

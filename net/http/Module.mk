@@ -44,6 +44,8 @@ ALLMAPS     += $(HTTPMAP)
 # include all dependency files
 INCLUDEFILES += $(HTTPDEP)
 
+HTTPLIBEXTRA += $(ZLIBLIBDIR) $(ZLIBCLILIB)
+
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 

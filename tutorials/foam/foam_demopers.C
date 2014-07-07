@@ -18,7 +18,7 @@ Int_t foam_demopers()
   gSystem->Load("libFoam");
    
   // need to load the foam_demo tutorial for the definition of the function
-  TString macroName = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+  TString macroName = gSystem->UnixPathName(__FILE__);
   macroName.ReplaceAll("foam_demopers.C","foam_demo.C");
   gROOT->ProcessLine(TString::Format(".L %s+",macroName.Data()));
 

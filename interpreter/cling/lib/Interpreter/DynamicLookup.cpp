@@ -659,7 +659,18 @@ namespace cling {
     for (unsigned int i = 0; i < Addresses.size(); ++i) {
 
       Expr* UnOp
-        = m_Sema->BuildUnaryOp(S, m_NoSLoc, UO_AddrOf, Addresses[i]).take();
+        = m_Sema->BuildUnaryOp(S, Addresses[i]->getLocStart(), UO_AddrOf,
+                               Addresses[i]).take();
+      if (!UnOp) {
+        // Not good, return what we had.
+        llvm::errs() << "Error while creating dynamic expression for:\n  ";
+        SubTree->printPretty(llvm::errs(), 0 /*PrinterHelper*/,
+                             m_Context->getPrintingPolicy(), 2);
+        llvm::errs() <<
+          "\nwith internal representation (look for <dependent type>):\n";
+        SubTree->dump(llvm::errs(), m_Sema->getSourceManager());
+        return SubTree;
+      }
       m_Sema->ImpCastExprToType(UnOp,
                                 m_Context->getPointerType(m_Context->VoidPtrTy),
                                 CK_BitCast);

@@ -20,7 +20,7 @@ void FITS_tutorial5()
       //printf("\n");
    }
   
-   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->DirName(__FILE__);
 
    //Open the table
    TFITSHDU *hdu = new TFITSHDU(dir+"/sample4.fits[1]");

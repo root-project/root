@@ -592,6 +592,8 @@ if(builtin_xrootd)
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                -DCMAKE_CXX_FLAGS=${__cxxflags}
+               -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+               -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
   set(_LIBDIR_DEFAULT "lib")
@@ -644,6 +646,8 @@ if(cling)
                  -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                  -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                  -DLLVM_NOCLING=ON
+                 -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+                 -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
       INSTALL_COMMAND ${CMAKE_COMMAND} -P <BINARY_DIR>/cmake_install.cmake
       LOG_INSTALL 1
     )
@@ -724,6 +728,8 @@ if(cling)
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+               -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+               -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
     INSTALL_COMMAND ${CMAKE_COMMAND} -P <BINARY_DIR>/cmake_install.cmake
     LOG_INSTALL 1
   )
@@ -850,18 +856,39 @@ endif()
 
 #---Check for DavIx library-----------------------------------------------------------
 if(davix)
-  set(DAVIX_VERSION 0.2.10)
-  message(STATUS "Downloading and building Davix version ${DAVIX_VERSION}")
+  if(builtin_davix)
+    set(DAVIX_VERSION 0.3.1)
+    message(STATUS "Downloading and building Davix version ${DAVIX_VERSION}")
     ExternalProject_Add(
       DAVIX
-      URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-${DAVIX_VERSION}.tar.gz
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DLIB_SUFFIX=
+      PREFIX DAVIX
+      URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
+      INSTALL_DIR ${CMAKE_BINARY_DIR}/DAVIX-install
+      PATCH_COMMAND patch -p0 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} 
+                 -DBOOST_EXTERNAL=OFF
+                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                 -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+                 -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+                 -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+                 -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
     )
-    set(DAVIX_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/davix)
-    set(DAVIX_LIBRARY -L${CMAKE_BINARY_DIR}/lib -ldavix)
+    #--TODO we need to install the dynamic library or build the static (which currently fails)
+    set(DAVIX_INCLUDE_DIR ${CMAKE_BINARY_DIR}/DAVIX-install/include/davix)
+    set(DAVIX_LIBRARY -L${CMAKE_BINARY_DIR}/DAVIX-install/lib -ldavix)
     set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
     set(DAVIX_LIBRARIES ${DAVIX_LIBRARY})
+  else()
+    message(STATUS "Looking for DAVIX")
+    find_package(Davix)
+    if(NOT DAVIX_FOUND)
+      message(STATUS "Davix not found. You can enable the option 'builtin_davix' to build the library internally'")
+      message(STATUS "                 For the time being switching off 'davix' option")
+      set(davix OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
 endif()
 
 #---Check for vc and its compatibility-----------------------------------------------

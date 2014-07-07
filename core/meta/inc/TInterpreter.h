@@ -204,6 +204,7 @@ public:
    virtual void   SetAlloclockfunc(void (*)()) const {;}
    virtual void   SetAllocunlockfunc(void (*)()) const {;}
    virtual int    SetClassAutoloading(int) const {return 0;}
+   virtual int    SetClassAutoparsing(int) {return 0;};
    virtual void   SetErrmsgcallback(void * /* p */) const {;}
    virtual void   Setgvp(Long_t) const {;}
    virtual void   SetRTLD_NOW() const {;}

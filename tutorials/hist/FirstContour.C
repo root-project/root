@@ -7,7 +7,7 @@ void FirstContour()
    //accessed and displayed into a separate canvas.
    //Author: Rene Brun
    
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("FirstContour.C","../hsimple.C");
    dir.ReplaceAll("/./","/");
    if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());

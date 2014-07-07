@@ -15,7 +15,7 @@ void FITS_tutorial3()
    
    // Open extensions 1 to 5 from file
    //printf("Press ENTER to see a canvas with all images within the file:"); getchar();
-   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->DirName(__FILE__);
   
    TCanvas *c = new TCanvas("c1", "FITS tutorial #1", 800, 700);
    c->Divide(2,3);

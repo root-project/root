@@ -74,6 +74,7 @@ double nToysRatio = 2;                   // ratio Ntoys S+b/ntoysB
 double maxPOI = -1;                      // max value used of POI (in case of auto scan) 
 bool useProof = false;                   // use Proof Lite when using toys (for freq or hybrid)
 int nworkers = 0;                        // number of worker for ProofLite (default use all available cores) 
+bool enableDetailedOutput = false;       // enable detailed output with all fit information for each toys (output will be written in result file)
 bool rebuild = false;                    // re-do extra toys for computing expected limits and rebuild test stat
                                          // distributions (N.B this requires much more CPU (factor is equivalent to nToyToRebuild)
 int nToyToRebuild = 100;                 // number of toys used to rebuild 
@@ -142,7 +143,8 @@ namespace RooStats {
       bool mGenerateBinned;
       bool mUseProof;
       bool mRebuild;
-      bool mReuseAltToys; 
+      bool mReuseAltToys;
+      bool mEnableDetOutput; 
       int     mNWorkers;
       int     mNToyToRebuild;
       int     mRebuildParamValues; 
@@ -165,6 +167,7 @@ RooStats::HypoTestInvTool::HypoTestInvTool() : mPlotHypoTestResult(true),
                                                mUseVectorStore(true),
                                                mGenerateBinned(false),
                                                mUseProof(false),
+                                               mEnableDetOutput(false),
                                                mRebuild(false),
                                                mReuseAltToys(false),
                                                mNWorkers(4),
@@ -197,6 +200,7 @@ RooStats::HypoTestInvTool::SetParameter(const char * name, bool value){
    if (s_name.find("UseVectorStore") != std::string::npos) mUseVectorStore = value;
    if (s_name.find("GenerateBinned") != std::string::npos) mGenerateBinned = value;
    if (s_name.find("UseProof") != std::string::npos) mUseProof = value;
+   if (s_name.find("EnableDetailedOutput") != std::string::npos) mEnableDetOutput = value;
    if (s_name.find("Rebuild") != std::string::npos) mRebuild = value;
    if (s_name.find("ReuseAltToys") != std::string::npos) mReuseAltToys = value;
 
@@ -367,6 +371,7 @@ StandardHypoTestInvDemo(const char * infile = 0,
    calc.SetParameter("NToysRatio", nToysRatio);
    calc.SetParameter("MaxPOI", maxPOI);
    calc.SetParameter("UseProof", useProof);
+   calc.SetParameter("EnableDetailedOutput", enableDetailedOutput);
    calc.SetParameter("NWorkers", nworkers);
    calc.SetParameter("Rebuild", rebuild);
    calc.SetParameter("ReuseAltToys", reuseAltToys);
@@ -454,6 +459,13 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
    std::cout << " expected limit (-2 sig) " << r->GetExpectedUpperLimit(-2) << std::endl;
    std::cout << " expected limit (+2 sig) " << r->GetExpectedUpperLimit(2) << std::endl;
   
+
+   // detailed output 
+   if (mEnableDetOutput) {
+      mWriteResult=true; 
+      Info("StandardHypoTestInvDemo","detailed output will be written in output result file"); 
+   }
+
   
    // write result in a file 
    if (r != NULL && mWriteResult) {
@@ -484,9 +496,11 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
          if (fileULDist) ulDist= fileULDist->Get("RULDist");
       }
 
+
       TFile * fileOut = new TFile(mResultFileName,"RECREATE");
       r->Write();
       if (ulDist) ulDist->Write(); 
+      Info("StandardHypoTestInvDemo","HypoTestInverterResult has been written in the file %s",mResultFileName.Data()); 
 
       fileOut->Close();                                                                     
    }   
@@ -536,6 +550,8 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
          pl->Draw();
       }
    }
+
+
 }
 
 
@@ -736,6 +752,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    RooArgSet altParams(*bModel->GetSnapshot());
    if (bModel->GetNuisanceParameters()) altParams.add(*bModel->GetNuisanceParameters());
    if (bModel->GetSnapshot()) slrts.SetAltParameters(altParams);
+   if (mEnableDetOutput) slrts.EnableDetailedOutput();
   
    // ratio of profile likelihood - need to pass snapshot for the alt
    RatioOfProfiledLikelihoodsTestStat 
@@ -744,12 +761,14 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    if (testStatType == 11) ropl.SetSubtractMLE(true);
    ropl.SetPrintLevel(mPrintLevel);
    ropl.SetMinimizer(minimizerType.c_str());
+   if (mEnableDetOutput) ropl.EnableDetailedOutput();
   
    ProfileLikelihoodTestStat profll(*sbModel->GetPdf());
    if (testStatType == 3) profll.SetOneSided(true);
    if (testStatType == 4) profll.SetSigned(true);
    profll.SetMinimizer(minimizerType.c_str());
    profll.SetPrintLevel(mPrintLevel);
+   if (mEnableDetOutput) profll.EnableDetailedOutput();
 
    profll.SetReuseNLL(mOptimize);
    slrts.SetReuseNLL(mOptimize);
@@ -914,7 +933,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    calc.SetVerbose(true);
   
    // can speed up using proof-lite
-   if (mUseProof && mNWorkers > 1) { 
+   if (mUseProof) { 
       ProofConfig pc(*w, mNWorkers, "", kFALSE);
       toymcs->SetProofConfig(&pc);    // enable proof
    }

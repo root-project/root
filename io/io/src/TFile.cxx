@@ -366,7 +366,9 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fArchive       = 0;
    if (fIsRootFile && fOption != "NEW" && fOption != "CREATE"
        && fOption != "RECREATE") {
-      fArchive = TArchiveFile::Open(fUrl.GetUrl(), this);
+      // If !gPluginMgr then we are at startup and cannot handle plugins
+      // as TArchiveFile yet.
+      fArchive = gPluginMgr ? TArchiveFile::Open(fUrl.GetUrl(), this) : 0;
       if (fArchive) {
         fname1 = fArchive->GetArchiveName();
          // if no archive member is specified then this TFile is just used

@@ -137,8 +137,8 @@ private: // Data Members
 
    bool fHeaderParsingOnDemand;
 
-
 public: // Public Interface
+
    virtual ~TCling();
    TCling(const char* name, const char* title);
 
@@ -281,6 +281,7 @@ public: // Public Interface
    virtual void   SetAlloclockfunc(void (*)()) const;
    virtual void   SetAllocunlockfunc(void (*)()) const;
    virtual int    SetClassAutoloading(int) const;
+   virtual int    SetClassAutoparsing(int) ;
    virtual void   SetErrmsgcallback(void* p) const;
    virtual void   Setgvp(Long_t) const;
    virtual void   SetRTLD_NOW() const;

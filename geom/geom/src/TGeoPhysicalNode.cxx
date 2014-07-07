@@ -501,6 +501,21 @@ Bool_t TGeoPhysicalNode::SetPath(const char *path)
    return kTRUE;
 }
 
+//_____________________________________________________________________________
+Bool_t TGeoPhysicalNode::IsMatchingState(TGeoNavigator *nav) const
+{
+// Checks if a given navigator state matches this physical node
+   TGeoNodeCache *cache = nav->GetCache();
+   if (!cache) {
+      Fatal("SetBranchAsState","no state available");
+      return kFALSE;
+   }
+   TGeoNode **branch = (TGeoNode **) cache->GetBranch();
+   for (Int_t i=0; i<=fLevel; i++)
+      if (fNodes->At(i) != branch[i]) return kFALSE;
+   return kTRUE;   
+}   
+
 ClassImp(TGeoPNEntry)
 
 //_____________________________________________________________________________

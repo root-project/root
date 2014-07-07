@@ -97,6 +97,6 @@ void SAXHandler()
    SaxHandler *saxHandler = new SaxHandler();
 
    saxParser->ConnectToHandler("SaxHandler", saxHandler);
-   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   TString dir = gSystem->DirName(__FILE__);
    saxParser->ParseFile(dir+"/saxexample.xml");
 }

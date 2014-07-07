@@ -2702,7 +2702,7 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
 
       // Get always the containing namespace, put it in the list if not there
       std::string fwdDeclaration;
-      int retCode = ROOT::TMetaUtils::AST2SourceTools::GetEnclosingNamespaces(*rDecl, fwdDeclaration);
+      int retCode = ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(*rDecl, fwdDeclaration);
       if (retCode==0) AppendIfNotThere(fwdDeclaration,fwdDeclarationsList);
 
       // Get template definition and put it in if not there
@@ -2863,9 +2863,9 @@ int GenerateFullDict(std::ostream& dictStream,
             // coverity[fun_call_w_exception] - that's just fine.
             RStl::Instance().GenerateTClassFor( selClass.GetNormalizedName(), CRD, interp, normCtxt);
          } else {
-            EmitStreamerInfo(selClass.GetNormalizedName());
             ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
          }
+         EmitStreamerInfo(selClass.GetNormalizedName());
       }
    }
 
@@ -3332,11 +3332,11 @@ std::string GenerateFwdDeclString(const RScanner& scan,
 
    for (auto const & tdNameDeclPtr : scan.fSelectedTypedefs){
       buffer="";
-      FwdDeclFromTypeDefNameDecl(*tdNameDeclPtr,
-                                 interp,
-                                 buffer,
-                                 &fwdDecls);
-      if (fwdDecls.insert(buffer).second){
+      int retCode = FwdDeclFromTypeDefNameDecl(*tdNameDeclPtr,
+                                               interp,
+                                               buffer,
+                                               &fwdDecls);
+      if (retCode == 0 && fwdDecls.insert(buffer).second){
          fwdDeclString+="\""+buffer+"\"\n";
 
       }
