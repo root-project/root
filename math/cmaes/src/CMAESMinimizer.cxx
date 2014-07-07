@@ -354,7 +354,7 @@ namespace ROOT
       else cmaparams._quiet = true;
       for (auto mit=fFixedVariables.begin();mit!=fFixedVariables.end();mit++)
 	cmaparams.set_fixed_p((*mit).first,(*mit).second);
-      cmaparams.set_ftolerance(fTol);
+      cmaparams.set_ftolerance(Tolerance());
       cmaparams.set_max_iter(maxiter);
       cmaparams.set_max_fevals(maxfevals);
       if (noisy > 0)
@@ -432,8 +432,8 @@ namespace ROOT
       dVec vshift = dVec::Constant(fDim,0.0);
 
       int lambda = -1;
-      int maxiter = fMaxIter > 0 ? fMaxIter : -1;
-      int maxfevals = 100*fMaxCalls; // CMA-ES requires much more calls than Minuit.
+      int maxiter = MaxIterations() > 0 ? MaxIterations() : -1;
+      int maxfevals = 100*MaxFunctionCalls(); // CMA-ES requires much more calls than Minuit. //TODO: set into options...
       int noisy = 0;
       int nrestarts = -1;
       double ftarget = -1.0;
@@ -453,7 +453,7 @@ namespace ROOT
       
       if (gDebug > 0)
 	{
-	  std::cout << "Running CMA-ES with dim=" << fDim << " / sigma0=" << sigma0scaled << " / lambda=" << lambda << " / fTol=" << fTol << " / with_bounds=" << fWithBounds << " / with_gradient=" << fWithGradient << " / linear_scaling=" << fWithLinearScaling << " / maxiter=" << maxiter << " / maxfevals=" << maxfevals << std::endl;
+	  std::cout << "Running CMA-ES with dim=" << fDim << " / sigma0=" << sigma0scaled << " / lambda=" << lambda << " / fTol=" << Tolerance() << " / with_bounds=" << fWithBounds << " / with_gradient=" << fWithGradient << " / linear_scaling=" << fWithLinearScaling << " / maxiter=" << maxiter << " / maxfevals=" << maxfevals << std::endl;
 	  std::cout << "x0=";
 	  std::copy(fInitialX.begin(),fInitialX.end(),std::ostream_iterator<double>(std::cout," "));
 	  std::cout << std::endl;
@@ -501,7 +501,7 @@ namespace ROOT
 	    }
 	}
       Info("CMAESMinimizer","optimization status=%i",fCMAsols._run_status);
-      if (fCMAsols._edm > 10*fTol) // XXX: max edm seems to be left to each minimizer's internal implementation...
+      if (fCMAsols._edm > 10*Tolerance()) // XXX: max edm seems to be left to each minimizer's internal implementation...
 	fStatus = 3;
       else if (fCMAsols._run_status == 0 || fCMAsols._run_status == 1)
 	fStatus = 0;
@@ -629,7 +629,7 @@ namespace ROOT
 	  if (!fWithBounds)
 	    {
 	      fCMAparams_l.set_automaxiter(true);
-	      le = errstats<GenoPheno<NoBoundStrategy,linScalingStrategy>>::profile_likelihood(ffit,fCMAparams_l,fCMAsols,i,false,samplesize,fUp);
+	      le = errstats<GenoPheno<NoBoundStrategy,linScalingStrategy>>::profile_likelihood(ffit,fCMAparams_l,fCMAsols,i,false,samplesize,ErrorDef());
 	    }
 	  else
 	    {
@@ -642,7 +642,7 @@ namespace ROOT
 	  if (!fWithBounds)
 	    {
 	      fCMAparams_l.set_automaxiter(true);
-	      le = errstats<GenoPheno<NoBoundStrategy,NoScalingStrategy>>::profile_likelihood(ffit,fCMAparams,fCMAsols,i,false,samplesize,fUp);
+	      le = errstats<GenoPheno<NoBoundStrategy,NoScalingStrategy>>::profile_likelihood(ffit,fCMAparams,fCMAsols,i,false,samplesize,ErrorDef());
 	    }
 	  else
 	    {
