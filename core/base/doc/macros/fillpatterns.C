@@ -1,3 +1,25 @@
+void box(Int_t pat, Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
+{
+   // Draw an box using the fill pattern "pat" with the "pat" value
+   // written on top.
+
+   TBox b;
+   b.SetFillColor(1);
+   b.SetFillStyle(pat); b.DrawBox(x1,y1,x2,y2);
+   b.SetFillStyle(0)  ; b.DrawBox(x1,y1,x2,y2);
+   b.SetFillColor(0)  ; b.SetFillStyle(1000)  ;
+   Double_t dx = (x2-x1)/3;
+   Double_t dy = (y2-y1)/3;
+   Double_t h  = (y2-y1)/2.5;
+   b.DrawBox(x1+dx, y1+dy, x2-dx, y2-dy);
+   b.SetFillStyle(0);
+   b.DrawBox(x1+dx, y1+dy, x2-dx, y2-dy);
+
+   TLatex l;
+   l.SetTextAlign(22); l.SetTextSize(h);
+   l.DrawLatex((x1+x2)/2, (y1+y2)/2, Form("%d",pat));
+}
+
 TCanvas * fillpatterns()
 {
    // Fill patterns example. This macro shows the available fill patterns.
@@ -53,26 +75,4 @@ TCanvas * fillpatterns()
       y = y-bh-db;
    }
    return Pat;
-}
-
-box(Int_t pat, Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
-{
-   // Draw an box using the fill pattern "pat" with the "pat" value
-   // written on top.
-
-   TBox b;
-   b.SetFillColor(1);
-   b.SetFillStyle(pat); b.DrawBox(x1,y1,x2,y2);
-   b.SetFillStyle(0)  ; b.DrawBox(x1,y1,x2,y2);
-   b.SetFillColor(0)  ; b.SetFillStyle(1000)  ;
-   Double_t dx = (x2-x1)/3;
-   Double_t dy = (y2-y1)/3;
-   Double_t h  = (y2-y1)/2.5;
-   b.DrawBox(x1+dx, y1+dy, x2-dx, y2-dy);
-   b.SetFillStyle(0);
-   b.DrawBox(x1+dx, y1+dy, x2-dx, y2-dy);
-
-   TLatex l;
-   l.SetTextAlign(22); l.SetTextSize(h);
-   l.DrawLatex((x1+x2)/2, (y1+y2)/2, Form("%d",pat));
 }
