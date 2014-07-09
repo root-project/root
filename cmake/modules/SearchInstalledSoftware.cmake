@@ -626,6 +626,12 @@ if(cling)
   if(NOT DEFINED LLVM_BUILD_TYPE)
     set(LLVM_BUILD_TYPE Release)
   endif()
+  if(LLVM_BUILD_TYPE STREQUAL "Debug")
+    set(LLVM_ENABLE_ASSERTIONS "YES")
+  else()
+    set(LLVM_ENABLE_ASSERTIONS "NO")
+  endif()
+
   if(builtin_llvm)
     set(LLVM_SOURCE_DIR ${CMAKE_SOURCE_DIR}/interpreter/llvm/src)
     set(LLVM_INSTALL_DIR ${CMAKE_BINARY_DIR}/LLVM-install)
@@ -640,6 +646,7 @@ if(cling)
                  -DLLVM_TARGETS_TO_BUILD=X86
                  -DLLVM_FORCE_USE_OLD_TOOLCHAIN=ON
                  -DCMAKE_BUILD_TYPE=${LLVM_BUILD_TYPE}
+                 -DLLVM_ENABLE_ASSERTIONS=${LLVM_ENABLE_ASSERTIONS}
                  -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -723,6 +730,7 @@ if(cling)
                -DCLING_PATH_TO_LLVM_BUILD=${CMAKE_BINARY_DIR}/LLVM-install
                -DLLVM_FORCE_USE_OLD_TOOLCHAIN=ON
                -DCMAKE_BUILD_TYPE=${LLVM_BUILD_TYPE}
+               -DLLVM_ENABLE_ASSERTIONS=${LLVM_ENABLE_ASSERTIONS}
                -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
