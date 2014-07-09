@@ -475,9 +475,6 @@ Bool_t THashTableIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
-   if (nullptr == (&aIter))
-      return fListCursor;
-
    if (aIter.IsA() == THashTableIter::Class()) {
       const THashTableIter &iter(dynamic_cast<const THashTableIter &>(aIter));
       return (fListCursor != iter.fListCursor);
@@ -489,9 +486,6 @@ Bool_t THashTableIter::operator!=(const TIterator &aIter) const
 Bool_t THashTableIter::operator!=(const THashTableIter &aIter) const
 {
    // This operator compares two THashTableIter objects.
-
-   if (nullptr == (&aIter))
-      return fListCursor;
 
    return (fListCursor != aIter.fListCursor);
 }

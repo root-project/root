@@ -671,9 +671,6 @@ Bool_t TBtreeIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
-   if (nullptr == (&aIter))
-      return (fCurCursor < fTree->GetSize());
-
    if (aIter.IsA() == TBtreeIter::Class()) {
       const TBtreeIter &iter(dynamic_cast<const TBtreeIter &>(aIter));
       return (fCurCursor != iter.fCurCursor);
@@ -686,8 +683,6 @@ Bool_t TBtreeIter::operator!=(const TBtreeIter &aIter) const
 {
    // This operator compares two TBtreeIter objects.
 
-   if (nullptr == (&aIter))
-      return (fCurCursor < fTree->GetSize());
    return (fCurCursor != aIter.fCurCursor);
 }
 
