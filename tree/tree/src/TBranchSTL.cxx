@@ -527,7 +527,7 @@ Int_t TBranchSTL::GetExpectedType(TClass *&expectedClass,EDataType &expectedType
       // Case of an object data member.  Here we allow for the
       // variable name to be ommitted.  Eg, for Event.root with split
       // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-      TStreamerElement* element = (TStreamerElement*) GetInfo()->GetElems()[fID];
+      TStreamerElement* element = GetInfo()->GetElem(fID);
       if (element) {
          expectedClass = element->GetClassPointer();
          if (!expectedClass) {
@@ -628,8 +628,7 @@ void TBranchSTL::Print(const char *option) const
    } else if (strncmp(option,"debugInfo",strlen("debugInfo"))==0)  {
       Printf("Branch %s uses:\n",GetName());
       if (fID>=0) {
-         ULong_t* elems = GetInfo()->GetElems();
-         ((TStreamerElement*) elems[fID])->ls();
+         GetInfo()->GetElem(fID)->ls();
       }
       for (Int_t i = 0; i < fBranches.GetEntriesFast(); ++i) {
          TBranchElement* subbranch = (TBranchElement*)fBranches.At(i);

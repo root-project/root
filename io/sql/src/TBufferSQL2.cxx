@@ -594,7 +594,7 @@ void TBufferSQL2::SetStreamerElementNumber(Int_t number)
    }
    TStreamerElement* elem = info->GetStreamerElementReal(number, 0);
 
-   Int_t comp_type = info->GetTypes()[number];
+   Int_t comp_type = info->GetType(number);
 
    Int_t elem_type = elem->GetType();
 

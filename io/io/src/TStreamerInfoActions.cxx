@@ -78,13 +78,13 @@ namespace TStreamerInfoActions
       // Inform the user what we are about to stream.
 
       TStreamerInfo *info = (TStreamerInfo*)fInfo;
-      TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[fElemId];
+      TStreamerElement *aElement = (TStreamerElement*)info->GetElem(fElemId);
       TString sequenceType;
       aElement->GetSequenceType(sequenceType);
 
       printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
              " %s, offset=%d (%s)\n",
-             info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetTypes()[fElemId],
+             info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetType(fElemId),
              aElement->ClassName(), fOffset, sequenceType.Data());
    }
 
@@ -95,13 +95,13 @@ namespace TStreamerInfoActions
       if (gDebug > 1) {
          // Idea: We should print the name of the action function.
          TStreamerInfo *info = (TStreamerInfo*)fInfo;
-         TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[fElemId];
+         TStreamerElement *aElement = (TStreamerElement*)info->GetElem(fElemId);
          TString sequenceType;
          aElement->GetSequenceType(sequenceType);
       
          printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
                 " %s, bufpos=%d, arr=%p, offset=%d (%s)\n",
-                info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetTypes()[fElemId],
+                info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetType(fElemId),
                 aElement->ClassName(), buf.Length(), addr, fOffset, sequenceType.Data());
       }
    }
@@ -137,13 +137,13 @@ namespace TStreamerInfoActions
       TBitsConfiguration(TVirtualStreamerInfo *info, UInt_t id, Int_t offset = 0) : TConfiguration(info,id,offset),fObjectOffset(0) {};
       void PrintDebug(TBuffer &, void *) const {
          TStreamerInfo *info = (TStreamerInfo*)fInfo;
-         TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[fElemId];
+         TStreamerElement *aElement = (TStreamerElement*)info->GetElem(fElemId);
          TString sequenceType;
          aElement->GetSequenceType(sequenceType);
 
          printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
                 " %s, offset=%d (%s)\n",
-                info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetTypes()[fElemId],
+                info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetType(fElemId),
                 aElement->ClassName(), fOffset, sequenceType.Data());
       }
 
@@ -828,10 +828,10 @@ namespace TStreamerInfoActions
          if (gDebug > 1) {
             // Idea: We should print the name of the action function.
             TStreamerInfo *info = (TStreamerInfo*)fInfo;
-            TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[fElemId];
+            TStreamerElement *aElement = (TStreamerElement*)info->GetElem(fElemId);
             fprintf(stdout,"StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
                    " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
-                   info->GetClass()->GetName(),aElement->GetName(),fElemId,info->GetTypes()[fElemId],
+                   info->GetClass()->GetName(),aElement->GetName(),fElemId,info->GetType(fElemId),
                    aElement->ClassName(),b.Length(),addr, 0,b.PeekDataCache() ? b.PeekDataCache()->GetObjectAt(0) : 0);
          }            
 
@@ -852,11 +852,11 @@ namespace TStreamerInfoActions
       Int_t bufpos = b.Length();
       TVirtualArray *cached = b.PeekDataCache();
       if (cached==0) {
-         TStreamerElement *aElement = (TStreamerElement*)conf->fInfo->GetElems()[conf->fElemId];
+         TStreamerElement *aElement = (TStreamerElement*)conf->fInfo->GetElem(conf->fElemId);
          TStreamerInfo *info = (TStreamerInfo*)conf->fInfo;
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
          char *ptr = (char*)addr;
-         info->ReadBufferSkip(b,&ptr,config->fElemId,info->GetTypes()[config->fElemId]+TStreamerInfo::kSkip,aElement,1,0);
+         info->ReadBufferSkip(b,&ptr,config->fElemId,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,1,0);
       } else {
          config->fAction(b, (*cached)[0]);
       }
@@ -874,12 +874,12 @@ namespace TStreamerInfoActions
 
       TVirtualArray *cached = b.PeekDataCache();
       if (cached==0) {
-         TStreamerElement *aElement = (TStreamerElement*)config->fInfo->GetElems()[config->fElemId];
+         TStreamerElement *aElement = (TStreamerElement*)config->fInfo->GetElem(config->fElemId);
          TStreamerInfo *info = (TStreamerInfo*)config->fInfo;
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
          char *ptr = (char*)start;
          UInt_t n = (((void**)end)-((void**)start));
-         info->ReadBufferSkip(b,&ptr,config->fElemId,info->GetTypes()[config->fElemId]+TStreamerInfo::kSkip,aElement,n,0);
+         info->ReadBufferSkip(b,&ptr,config->fElemId,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,n,0);
       } else {
          TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
@@ -900,12 +900,12 @@ namespace TStreamerInfoActions
       Int_t bufpos = b.Length();
       TVirtualArray *cached = b.PeekDataCache();
       if (cached==0) {
-         TStreamerElement *aElement = (TStreamerElement*)config->fInfo->GetElems()[config->fElemId];
+         TStreamerElement *aElement = (TStreamerElement*)config->fInfo->GetElem(config->fElemId);
          TStreamerInfo *info = (TStreamerInfo*)config->fInfo;         
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
          char *ptr = (char*)start;
          UInt_t n = (((char*)end)-((char*)start))/((TVectorLoopConfig*)loopconf)->fIncrement;
-         info->ReadBufferSkip(b,&ptr,config->fElemId,info->GetTypes()[config->fElemId]+TStreamerInfo::kSkip,aElement,n,0);
+         info->ReadBufferSkip(b,&ptr,config->fElemId,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,n,0);
       } else {
          TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
@@ -926,13 +926,13 @@ namespace TStreamerInfoActions
       Int_t bufpos = b.Length();
       TVirtualArray *cached = b.PeekDataCache();
       if (cached==0) {
-         TStreamerElement *aElement = (TStreamerElement*)config->fInfo->GetElems()[config->fElemId];
+         TStreamerElement *aElement = (TStreamerElement*)config->fInfo->GetElem(config->fElemId);
          TStreamerInfo *info = (TStreamerInfo*)config->fInfo;
          
          TVirtualCollectionProxy *proxy = ((TGenericLoopConfig*)loopconfig)->fProxy;
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
          UInt_t n = proxy->Size();
-         info->ReadBufferSkip(b, *proxy,config->fElemId,info->GetTypes()[config->fElemId]+TStreamerInfo::kSkip,aElement,n,0);
+         info->ReadBufferSkip(b, *proxy,config->fElemId,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,n,0);
       } else {
          TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
@@ -1107,7 +1107,7 @@ namespace TStreamerInfoActions
          
          //      // Idea: need to cache this result!
          //      TStreamerInfo *info = (TStreamerInfo*)config->fInfo;
-         //      TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[config->fElemId];
+         //      TStreamerElement *aElement = (TStreamerElement*)info->GetElem(config->fElemId);
          //
          //      *Int_t clversion = ((TStreamerBase*)aElement)->Get BaseVersion();
          //      *TClass *cle = aElement->GetNewBaseClass();
@@ -2277,18 +2277,6 @@ void TStreamerInfo::Compile()
       }
    }
 
-   delete[] fType;
-   fType = 0;
-   delete[] fNewType;
-   fNewType = 0;
-   delete[] fOffset;
-   fOffset = 0;
-   delete[] fLength;
-   fLength = 0;
-   delete[] fElem;
-   fElem = 0;
-   delete[] fMethod;
-   fMethod = 0;
    delete[] fComp;
    fComp = 0;
 
@@ -2300,9 +2288,6 @@ void TStreamerInfo::Compile()
    }
    Int_t ndata = fElements->GetEntries();
 
-   fOffset = new Int_t[ndata+1];
-   fType   = new Int_t[ndata+1];
-
    SetBit(kIsCompiled);
    if (!fReadObjectWise) fReadObjectWise = new TStreamerInfoActions::TActionSequence(this,ndata);
    if (!fWriteObjectWise) fWriteObjectWise = new TStreamerInfoActions::TActionSequence(this,ndata);
@@ -2313,15 +2298,11 @@ void TStreamerInfo::Compile()
       if (fClass->TestBit(TClass::kIsEmulation) && fNVirtualInfoLoc!=0) {
          fSize = sizeof(TStreamerInfo*);
       }
+      fComp = new TCompInfo[1];
       return;
    }
 
-
    fComp = new TCompInfo[ndata];
-   fNewType = new Int_t[ndata];
-   fLength = new Int_t[ndata];
-   fElem = new ULong_t[ndata];
-   fMethod = new ULong_t[ndata];
 
    TStreamerElement* element;
    TStreamerElement* previous = 0;
@@ -2378,24 +2359,24 @@ void TStreamerInfo::Compile()
       if (element->GetArrayLength()) {
          asize /= element->GetArrayLength();
       }
-      fType[fNdata] = element->GetType();
-      fNewType[fNdata] = element->GetNewType();
-      fOffset[fNdata] = element->GetOffset();
-      fLength[fNdata] = element->GetArrayLength();
-      fElem[fNdata] = (ULong_t) element;
-      fMethod[fNdata] = element->GetMethod();
+      fComp[fNdata].fType = element->GetType();
+      fComp[fNdata].fNewType = element->GetNewType();
+      fComp[fNdata].fOffset = element->GetOffset();
+      fComp[fNdata].fLength = element->GetArrayLength();
+      fComp[fNdata].fElem = element;
+      fComp[fNdata].fMethod = element->GetMethod();
       // try to group consecutive members of the same type
       if (!TestBit(kCannotOptimize) 
           && (keep >= 0) 
           && (element->GetType() < 10) 
-          && (fType[fNdata] == fNewType[fNdata]) 
-          && (fMethod[keep] == 0) 
+          && (fComp[fNdata].fType == fComp[fNdata].fNewType) 
+          && (fComp[keep].fMethod == 0)
           && (element->GetType() > 0) 
           && (element->GetArrayDim() == 0) 
-          && (fType[keep] < kObject) 
-          && (fType[keep] != kCharStar) /* do not optimize char* */ 
-          && (element->GetType() == (fType[keep]%kRegrouped)) 
-          && ((element->GetOffset()-fOffset[keep]) == (fLength[keep])*asize)
+          && (fComp[keep].fType < kObject)
+          && (fComp[keep].fType != kCharStar) /* do not optimize char* */
+          && (element->GetType() == (fComp[keep].fType%kRegrouped))
+          && ((element->GetOffset()-fComp[keep].fOffset) == (fComp[keep].fLength)*asize)
           && ((fOldVersion<6) || !previous || /* In version of TStreamerInfo less than 6, the Double32_t were merged even if their annotation (aka factor) were different */
               ((element->GetFactor() == previous->GetFactor())
                && (element->GetXmin() == previous->GetXmin())
@@ -2405,36 +2386,36 @@ void TStreamerInfo::Compile()
           && (element->TestBit(TStreamerElement::kCache) == previous->TestBit(TStreamerElement::kCache))
           ) 
       {
-         if (fLength[keep] == 0) {
-            fLength[keep]++;
+         if (fComp[keep].fLength == 0) {
+            fComp[keep].fLength++;
          }
-         fLength[keep]++;
-         fType[keep] = element->GetType() + kRegrouped;
+         fComp[keep].fLength++;
+         fComp[keep].fType = element->GetType() + kRegrouped;
          isOptimized = kTRUE;
       } else {
-         if (fNewType[fNdata] != fType[fNdata]) {
-            if (fNewType[fNdata] > 0) {
-               if ( (fNewType[fNdata] == kObjectp || fNewType[fNdata] == kAnyp
-                     || fNewType[fNdata] == kObject || fNewType[fNdata] == kAny
-                     || fNewType[fNdata] == kTObject || fNewType[fNdata] == kTNamed || fNewType[fNdata] == kTString)
-                   && (fType[fNdata] == kObjectp || fType[fNdata] == kAnyp
-                       || fType[fNdata] == kObject || fType[fNdata] == kAny
-                       || fType[fNdata] == kTObject || fType[fNdata] == kTNamed || fType[fNdata] == kTString )
+         if (fComp[fNdata].fNewType != fComp[fNdata].fType) {
+            if (fComp[fNdata].fNewType > 0) {
+               if ( (fComp[fNdata].fNewType == kObjectp || fComp[fNdata].fNewType == kAnyp
+                     || fComp[fNdata].fNewType == kObject || fComp[fNdata].fNewType == kAny
+                     || fComp[fNdata].fNewType == kTObject || fComp[fNdata].fNewType == kTNamed || fComp[fNdata].fNewType == kTString)
+                   && (fComp[fNdata].fType == kObjectp || fComp[fNdata].fType == kAnyp
+                       || fComp[fNdata].fType == kObject || fComp[fNdata].fType == kAny
+                       || fComp[fNdata].fType == kTObject || fComp[fNdata].fType == kTNamed || fComp[fNdata].fType == kTString )
                    ) {
-                  fType[fNdata] = fNewType[fNdata];
-               } else if (fType[fNdata] != kCounter) {
-                  fType[fNdata] += kConv;
+                  fComp[fNdata].fType = fComp[fNdata].fNewType;
+               } else if (fComp[fNdata].fType != kCounter) {
+                  fComp[fNdata].fType += kConv;
                }
             } else {
-               if (fType[fNdata] == kCounter) {
+               if (fComp[fNdata].fType == kCounter) {
                   Warning("Compile", "Counter %s should not be skipped from class %s", element->GetName(), GetName());
                }
-               fType[fNdata] += kSkip;
+               fComp[fNdata].fType += kSkip;
             }
          }
          keep = fNdata;
-         if (fLength[keep] == 0) {
-            fLength[keep] = 1;
+         if (fComp[fNdata].fLength == 0) {
+            fComp[fNdata].fLength = 1;
          }
          fNdata++;
       }
@@ -2461,7 +2442,7 @@ void TStreamerInfo::Compile()
    }
 
    for (i = 0; i < fNdata; ++i) {
-      element = (TStreamerElement*) fElem[i];
+      element = (TStreamerElement*) fComp[i].fElem;
       if (!element) {
          continue;
       }
@@ -2511,50 +2492,50 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
 
    if (element->TestBit(TStreamerElement::kWrite)) return;
 
-   switch (fType[i]) {
+   switch (fComp[i].fType) {
       // read basic types
-      case TStreamerInfo::kBool:    fReadObjectWise->AddAction( ReadBasicType<Bool_t>, new TConfiguration(this,i,fOffset[i]) );    break;
-      case TStreamerInfo::kChar:    fReadObjectWise->AddAction( ReadBasicType<Char_t>, new TConfiguration(this,i,fOffset[i]) );    break;
-      case TStreamerInfo::kShort:   fReadObjectWise->AddAction( ReadBasicType<Short_t>, new TConfiguration(this,i,fOffset[i]) );   break;
-      case TStreamerInfo::kInt:     fReadObjectWise->AddAction( ReadBasicType<Int_t>, new TConfiguration(this,i,fOffset[i]) );     break;
-      case TStreamerInfo::kLong:    fReadObjectWise->AddAction( ReadBasicType<Long_t>, new TConfiguration(this,i,fOffset[i]) );    break;
-      case TStreamerInfo::kLong64:  fReadObjectWise->AddAction( ReadBasicType<Long64_t>, new TConfiguration(this,i,fOffset[i]) );  break;
-      case TStreamerInfo::kFloat:   fReadObjectWise->AddAction( ReadBasicType<Float_t>, new TConfiguration(this,i,fOffset[i]) );   break;
-      case TStreamerInfo::kDouble:  fReadObjectWise->AddAction( ReadBasicType<Double_t>, new TConfiguration(this,i,fOffset[i]) );  break;
-      case TStreamerInfo::kUChar:   fReadObjectWise->AddAction( ReadBasicType<UChar_t>, new TConfiguration(this,i,fOffset[i]) );   break;
-      case TStreamerInfo::kUShort:  fReadObjectWise->AddAction( ReadBasicType<UShort_t>, new TConfiguration(this,i,fOffset[i]) );  break;
-      case TStreamerInfo::kUInt:    fReadObjectWise->AddAction( ReadBasicType<UInt_t>, new TConfiguration(this,i,fOffset[i]) );    break;
-      case TStreamerInfo::kULong:   fReadObjectWise->AddAction( ReadBasicType<ULong_t>, new TConfiguration(this,i,fOffset[i]) );   break;
-      case TStreamerInfo::kULong64: fReadObjectWise->AddAction( ReadBasicType<ULong64_t>, new TConfiguration(this,i,fOffset[i]) ); break;
-      case TStreamerInfo::kBits:    fReadObjectWise->AddAction( ReadBasicType<BitsMarker>, new TBitsConfiguration(this,i,fOffset[i]) );     break;
+      case TStreamerInfo::kBool:    fReadObjectWise->AddAction( ReadBasicType<Bool_t>, new TConfiguration(this,i,fComp[i].fOffset) );    break;
+      case TStreamerInfo::kChar:    fReadObjectWise->AddAction( ReadBasicType<Char_t>, new TConfiguration(this,i,fComp[i].fOffset) );    break;
+      case TStreamerInfo::kShort:   fReadObjectWise->AddAction( ReadBasicType<Short_t>, new TConfiguration(this,i,fComp[i].fOffset) );   break;
+      case TStreamerInfo::kInt:     fReadObjectWise->AddAction( ReadBasicType<Int_t>, new TConfiguration(this,i,fComp[i].fOffset) );     break;
+      case TStreamerInfo::kLong:    fReadObjectWise->AddAction( ReadBasicType<Long_t>, new TConfiguration(this,i,fComp[i].fOffset) );    break;
+      case TStreamerInfo::kLong64:  fReadObjectWise->AddAction( ReadBasicType<Long64_t>, new TConfiguration(this,i,fComp[i].fOffset) );  break;
+      case TStreamerInfo::kFloat:   fReadObjectWise->AddAction( ReadBasicType<Float_t>, new TConfiguration(this,i,fComp[i].fOffset) );   break;
+      case TStreamerInfo::kDouble:  fReadObjectWise->AddAction( ReadBasicType<Double_t>, new TConfiguration(this,i,fComp[i].fOffset) );  break;
+      case TStreamerInfo::kUChar:   fReadObjectWise->AddAction( ReadBasicType<UChar_t>, new TConfiguration(this,i,fComp[i].fOffset) );   break;
+      case TStreamerInfo::kUShort:  fReadObjectWise->AddAction( ReadBasicType<UShort_t>, new TConfiguration(this,i,fComp[i].fOffset) );  break;
+      case TStreamerInfo::kUInt:    fReadObjectWise->AddAction( ReadBasicType<UInt_t>, new TConfiguration(this,i,fComp[i].fOffset) );    break;
+      case TStreamerInfo::kULong:   fReadObjectWise->AddAction( ReadBasicType<ULong_t>, new TConfiguration(this,i,fComp[i].fOffset) );   break;
+      case TStreamerInfo::kULong64: fReadObjectWise->AddAction( ReadBasicType<ULong64_t>, new TConfiguration(this,i,fComp[i].fOffset) ); break;
+      case TStreamerInfo::kBits:    fReadObjectWise->AddAction( ReadBasicType<BitsMarker>, new TBitsConfiguration(this,i,fComp[i].fOffset) );     break;
       case TStreamerInfo::kFloat16: {
          if (element->GetFactor() != 0) {
-            fReadObjectWise->AddAction( ReadBasicType_WithFactor<float>, new TConfWithFactor(this,i,fOffset[i],element->GetFactor(),element->GetXmin()) );
+            fReadObjectWise->AddAction( ReadBasicType_WithFactor<float>, new TConfWithFactor(this,i,fComp[i].fOffset,element->GetFactor(),element->GetXmin()) );
          } else {
             Int_t nbits = (Int_t)element->GetXmin();
             if (!nbits) nbits = 12;
-            fReadObjectWise->AddAction( ReadBasicType_NoFactor<float>, new TConfNoFactor(this,i,fOffset[i],nbits) );               
+            fReadObjectWise->AddAction( ReadBasicType_NoFactor<float>, new TConfNoFactor(this,i,fComp[i].fOffset,nbits) );               
          }
          break;
       }
       case TStreamerInfo::kDouble32: {
          if (element->GetFactor() != 0) {
-            fReadObjectWise->AddAction( ReadBasicType_WithFactor<double>, new TConfWithFactor(this,i,fOffset[i],element->GetFactor(),element->GetXmin()) );
+            fReadObjectWise->AddAction( ReadBasicType_WithFactor<double>, new TConfWithFactor(this,i,fComp[i].fOffset,element->GetFactor(),element->GetXmin()) );
          } else {
             Int_t nbits = (Int_t)element->GetXmin();
             if (!nbits) {
-               fReadObjectWise->AddAction( ConvertBasicType<float,double>::Action, new TConfiguration(this,i,fOffset[i]) );
+               fReadObjectWise->AddAction( ConvertBasicType<float,double>::Action, new TConfiguration(this,i,fComp[i].fOffset) );
             } else {
-               fReadObjectWise->AddAction( ReadBasicType_NoFactor<double>, new TConfNoFactor(this,i,fOffset[i],nbits) );
+               fReadObjectWise->AddAction( ReadBasicType_NoFactor<double>, new TConfNoFactor(this,i,fComp[i].fOffset,nbits) );
             }
          }
          break;
       }
-      case TStreamerInfo::kTNamed:  fReadObjectWise->AddAction( ReadTNamed, new TConfiguration(this,i,fOffset[i]) );    break;
+      case TStreamerInfo::kTNamed:  fReadObjectWise->AddAction( ReadTNamed, new TConfiguration(this,i,fComp[i].fOffset) );    break;
          // Idea: We should calculate the CanIgnoreTObjectStreamer here and avoid calling the
          // Streamer alltogether.
-      case TStreamerInfo::kTObject: fReadObjectWise->AddAction( ReadTObject, new TConfiguration(this,i,fOffset[i]) );    break;
-      case TStreamerInfo::kTString: fReadObjectWise->AddAction( ReadTString, new TConfiguration(this,i,fOffset[i]) );    break;
+      case TStreamerInfo::kTObject: fReadObjectWise->AddAction( ReadTObject, new TConfiguration(this,i,fComp[i].fOffset) );    break;
+      case TStreamerInfo::kTString: fReadObjectWise->AddAction( ReadTString, new TConfiguration(this,i,fComp[i].fOffset) );    break;
       case TStreamerInfo::kSTL: {
          TClass *newClass = element->GetNewClass();
          TClass *oldClass = element->GetClassPointer();
@@ -2564,60 +2545,60 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
             if (fOldVersion<3){   // case of old TStreamerInfo
                if (newClass && newClass != oldClass) {
                   if (element->GetStreamer()) {
-                     fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseChangedClass,ReadSTLObjectWiseStreamerV2>, new TConfigSTL(this,i,fOffset[i],1,oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+                     fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseChangedClass,ReadSTLObjectWiseStreamerV2>, new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
                   } else {
-                     fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseChangedClass,ReadSTLObjectWiseFastArrayV2>, new TConfigSTL(this,i,fOffset[i],1,oldClass,newClass,element->GetTypeName(),isSTLbase));                     
+                     fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseChangedClass,ReadSTLObjectWiseFastArrayV2>, new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,newClass,element->GetTypeName(),isSTLbase));                     
                   }
                } else {
                   if (element->GetStreamer()) {
-                     fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseStreamerV2>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+                     fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseStreamerV2>, new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
                   } else {
-                     fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArrayV2>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase));
+                     fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArrayV2>, new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,element->GetTypeName(),isSTLbase));
                   }                  
                }
             } else {
                if (newClass && newClass != oldClass) {
                   if (element->GetStreamer()) {
-                     fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseChangedClass,ReadSTLObjectWiseStreamer>, new TConfigSTL(this,i,fOffset[i],1,oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+                     fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseChangedClass,ReadSTLObjectWiseStreamer>, new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
                   } else {
                      if (oldClass->GetCollectionProxy() == 0 || oldClass->GetCollectionProxy()->GetValueClass() || oldClass->GetCollectionProxy()->HasPointers() ) {
-                        fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseChangedClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],1,oldClass,newClass,element->GetTypeName(),isSTLbase));
+                        fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseChangedClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,newClass,element->GetTypeName(),isSTLbase));
                      } else {
                         switch (SelectLooper(*newClass->GetCollectionProxy())) {
                         case kVectorLooper:
-                           fReadObjectWise->AddAction(GetConvertCollectionReadAction<VectorLooper>(oldClass->GetCollectionProxy()->GetType(), newClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,newClass,element->GetTypeName(),isSTLbase)));
+                           fReadObjectWise->AddAction(GetConvertCollectionReadAction<VectorLooper>(oldClass->GetCollectionProxy()->GetType(), newClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,newClass,element->GetTypeName(),isSTLbase)));
                            break;
                         case kAssociativeLooper:
-                           fReadObjectWise->AddAction(GetConvertCollectionReadAction<AssociativeLooper>(oldClass->GetCollectionProxy()->GetType(), newClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,newClass,element->GetTypeName(),isSTLbase)));
+                           fReadObjectWise->AddAction(GetConvertCollectionReadAction<AssociativeLooper>(oldClass->GetCollectionProxy()->GetType(), newClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,newClass,element->GetTypeName(),isSTLbase)));
                            break;
                         case kVectorPtrLooper:
                         case kGenericLooper:
                         default:
                            // For now TBufferXML would force use to allocate the data buffer each time and copy into the real thing.
-                           fReadObjectWise->AddAction(GetConvertCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), newClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,newClass,element->GetTypeName(),isSTLbase)));
+                           fReadObjectWise->AddAction(GetConvertCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), newClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,newClass,element->GetTypeName(),isSTLbase)));
                            break;
                         }
                      }             
                   }
                } else {
                   if (element->GetStreamer()) {
-                     fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseStreamer>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+                     fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseStreamer>, new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
                   } else {
                      if (oldClass->GetCollectionProxy() == 0 || oldClass->GetCollectionProxy()->GetValueClass() || oldClass->GetCollectionProxy()->HasPointers() ) {
-                        fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase));
+                        fReadObjectWise->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,element->GetTypeName(),isSTLbase));
                      } else {
                         switch (SelectLooper(*oldClass->GetCollectionProxy())) {
                         case kVectorLooper:
-                           fReadObjectWise->AddAction(GetNumericCollectionReadAction<VectorLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
+                           fReadObjectWise->AddAction(GetNumericCollectionReadAction<VectorLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,element->GetTypeName(),isSTLbase)));
                            break;
                         case kAssociativeLooper:
-                           fReadObjectWise->AddAction(GetNumericCollectionReadAction<AssociativeLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
+                           fReadObjectWise->AddAction(GetNumericCollectionReadAction<AssociativeLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,element->GetTypeName(),isSTLbase)));
                            break;
                         case kVectorPtrLooper:
                         case kGenericLooper:
                         default:
                            // For now TBufferXML would force use to allocate the data buffer each time and copy into the real thing.
-                           fReadObjectWise->AddAction(GetNumericCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase)));
+                           fReadObjectWise->AddAction(GetNumericCollectionReadAction<GenericLooper>(oldClass->GetCollectionProxy()->GetType(), new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,element->GetTypeName(),isSTLbase)));
                            break;
                         }
                      }
@@ -2628,29 +2609,29 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
             if (fOldVersion<3){   // case of old TStreamerInfo
                if (newClass && newClass != oldClass) {
                   if (element->GetStreamer()) {
-                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseChangedClass,ReadSTLObjectWiseStreamerV2>, new TConfigSTL(this,i,fOffset[i],element->GetArrayLength(),oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseChangedClass,ReadSTLObjectWiseStreamerV2>, new TConfigSTL(this,i,fComp[i].fOffset,element->GetArrayLength(),oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
                   } else {
-                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseChangedClass,ReadSTLObjectWiseFastArrayV2>, new TConfigSTL(this,i,fOffset[i],element->GetArrayLength(),oldClass,newClass,element->GetTypeName(),isSTLbase));                     
+                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseChangedClass,ReadSTLObjectWiseFastArrayV2>, new TConfigSTL(this,i,fComp[i].fOffset,element->GetArrayLength(),oldClass,newClass,element->GetTypeName(),isSTLbase));                     
                   }
                } else {
                   if (element->GetStreamer()) {
-                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseSameClass,ReadSTLObjectWiseStreamerV2>, new TConfigSTL(this,i,fOffset[i],element->GetArrayLength(),oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseSameClass,ReadSTLObjectWiseStreamerV2>, new TConfigSTL(this,i,fComp[i].fOffset,element->GetArrayLength(),oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
                   } else {
-                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseSameClass,ReadSTLObjectWiseFastArrayV2>, new TConfigSTL(this,i,fOffset[i],element->GetArrayLength(),oldClass,element->GetTypeName(),isSTLbase));
+                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseSameClass,ReadSTLObjectWiseFastArrayV2>, new TConfigSTL(this,i,fComp[i].fOffset,element->GetArrayLength(),oldClass,element->GetTypeName(),isSTLbase));
                   }                  
                }
             } else {
                if (newClass && newClass != oldClass) {
                   if (element->GetStreamer()) {
-                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseChangedClass,ReadSTLObjectWiseStreamer>, new TConfigSTL(this,i,fOffset[i],element->GetArrayLength(),oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseChangedClass,ReadSTLObjectWiseStreamer>, new TConfigSTL(this,i,fComp[i].fOffset,element->GetArrayLength(),oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
                   } else {
-                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseChangedClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],element->GetArrayLength(),oldClass,newClass,element->GetTypeName(),isSTLbase));                     
+                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseChangedClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fComp[i].fOffset,element->GetArrayLength(),oldClass,newClass,element->GetTypeName(),isSTLbase));                     
                   }
                } else {
                   if (element->GetStreamer()) {
-                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseSameClass,ReadSTLObjectWiseStreamer>, new TConfigSTL(this,i,fOffset[i],element->GetArrayLength(),oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseSameClass,ReadSTLObjectWiseStreamer>, new TConfigSTL(this,i,fComp[i].fOffset,element->GetArrayLength(),oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
                   } else {
-                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],element->GetArrayLength(),oldClass,element->GetTypeName(),isSTLbase));
+                     fReadObjectWise->AddAction(ReadSTL<ReadArraySTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,fComp[i].fOffset,element->GetArrayLength(),oldClass,element->GetTypeName(),isSTLbase));
                   }
                }
             }
@@ -2659,66 +2640,66 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
       }
 
       case TStreamerInfo::kConv + TStreamerInfo::kBool:
-         AddReadConvertAction<Bool_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<Bool_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kChar:
-         AddReadConvertAction<Char_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<Char_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kShort:
-         AddReadConvertAction<Short_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<Short_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kInt:
-         AddReadConvertAction<Int_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<Int_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kLong:
-         AddReadConvertAction<Long_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<Long_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kLong64:
-         AddReadConvertAction<Long64_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<Long64_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kFloat:
-         AddReadConvertAction<Float_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<Float_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kDouble:
-         AddReadConvertAction<Double_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<Double_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kUChar:
-         AddReadConvertAction<UChar_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<UChar_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kUShort:
-         AddReadConvertAction<UShort_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<UShort_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kUInt:
-         AddReadConvertAction<UInt_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<UInt_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kULong:
-         AddReadConvertAction<ULong_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<ULong_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kULong64:
-         AddReadConvertAction<ULong64_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<ULong64_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kBits:
-         AddReadConvertAction<BitsMarker>(fReadObjectWise, fNewType[i], new TBitsConfiguration(this,i,fOffset[i]) );
+         AddReadConvertAction<BitsMarker>(fReadObjectWise, fComp[i].fNewType, new TBitsConfiguration(this,i,fComp[i].fOffset) );
          break;
       case TStreamerInfo::kConv + TStreamerInfo::kFloat16: {
          if (element->GetFactor() != 0) {
-            AddReadConvertAction<WithFactorMarker<float> >(fReadObjectWise, fNewType[i], new TConfWithFactor(this,i,fOffset[i],element->GetFactor(),element->GetXmin()) );
+            AddReadConvertAction<WithFactorMarker<float> >(fReadObjectWise, fComp[i].fNewType, new TConfWithFactor(this,i,fComp[i].fOffset,element->GetFactor(),element->GetXmin()) );
          } else {
             Int_t nbits = (Int_t)element->GetXmin();
             if (!nbits) nbits = 12;
-            AddReadConvertAction<NoFactorMarker<float> >(fReadObjectWise, fNewType[i], new TConfNoFactor(this,i,fOffset[i],nbits) );               
+            AddReadConvertAction<NoFactorMarker<float> >(fReadObjectWise, fComp[i].fNewType, new TConfNoFactor(this,i,fComp[i].fOffset,nbits) );               
          }
          break;
       }
       case TStreamerInfo::kConv + TStreamerInfo::kDouble32: {
          if (element->GetFactor() != 0) {
-            AddReadConvertAction<WithFactorMarker<double> >(fReadObjectWise, fNewType[i], new TConfWithFactor(this,i,fOffset[i],element->GetFactor(),element->GetXmin()) );
+            AddReadConvertAction<WithFactorMarker<double> >(fReadObjectWise, fComp[i].fNewType, new TConfWithFactor(this,i,fComp[i].fOffset,element->GetFactor(),element->GetXmin()) );
          } else {
             Int_t nbits = (Int_t)element->GetXmin();
             if (!nbits) {
-               AddReadConvertAction<Float_t>(fReadObjectWise, fNewType[i], new TConfiguration(this,i,fOffset[i]) );
+               AddReadConvertAction<Float_t>(fReadObjectWise, fComp[i].fNewType, new TConfiguration(this,i,fComp[i].fOffset) );
             } else {
-               AddReadConvertAction<NoFactorMarker<double> >(fReadObjectWise, fNewType[i], new TConfNoFactor(this,i,fOffset[i],nbits) );
+               AddReadConvertAction<NoFactorMarker<double> >(fReadObjectWise, fComp[i].fNewType, new TConfNoFactor(this,i,fComp[i].fOffset,nbits) );
             }
          }
          break;
@@ -2736,10 +2717,10 @@ void TStreamerInfo::AddReadAction(Int_t i, TStreamerElement* element)
       // This is for streaming via a TClonesArray (or a vector of pointers of this type).
 
       if (element->TestBit(TStreamerElement::kCache)) {
-         TConfiguredAction action( GetCollectionReadAction<VectorLooper>(this,element,fType[i],i,fOffset[i]) );
+         TConfiguredAction action( GetCollectionReadAction<VectorLooper>(this,element,fComp[i].fType,i,fComp[i].fOffset) );
          fReadMemberWise->AddAction( UseCacheVectorPtrLoop, new TConfigurationUseCache(this,action,element->TestBit(TStreamerElement::kRepeat)) );
       } else {
-         fReadMemberWise->AddAction( GetCollectionReadAction<VectorPtrLooper>(this,element,fType[i],i,fOffset[i]) );
+         fReadMemberWise->AddAction( GetCollectionReadAction<VectorPtrLooper>(this,element,fComp[i].fType,i,fComp[i].fOffset) );
       }
    }
 }
@@ -2755,50 +2736,50 @@ void TStreamerInfo::AddWriteAction(Int_t i, TStreamerElement *element )
       // Skip artificial element used for reading purposes.
       return;
    }
-   switch (fType[i]) {
+   switch (fComp[i].fType) {
       // write basic types
-      case TStreamerInfo::kBool:    fWriteObjectWise->AddAction( WriteBasicType<Bool_t>, new TConfiguration(this,i,fOffset[i]) );    break;
-      case TStreamerInfo::kChar:    fWriteObjectWise->AddAction( WriteBasicType<Char_t>, new TConfiguration(this,i,fOffset[i]) );    break;
-      case TStreamerInfo::kShort:   fWriteObjectWise->AddAction( WriteBasicType<Short_t>, new TConfiguration(this,i,fOffset[i]) );   break;
-      case TStreamerInfo::kInt:     fWriteObjectWise->AddAction( WriteBasicType<Int_t>, new TConfiguration(this,i,fOffset[i]) );     break;
-      case TStreamerInfo::kLong:    fWriteObjectWise->AddAction( WriteBasicType<Long_t>, new TConfiguration(this,i,fOffset[i]) );    break;
-      case TStreamerInfo::kLong64:  fWriteObjectWise->AddAction( WriteBasicType<Long64_t>, new TConfiguration(this,i,fOffset[i]) );  break;
-      case TStreamerInfo::kFloat:   fWriteObjectWise->AddAction( WriteBasicType<Float_t>, new TConfiguration(this,i,fOffset[i]) );   break;
-      case TStreamerInfo::kDouble:  fWriteObjectWise->AddAction( WriteBasicType<Double_t>, new TConfiguration(this,i,fOffset[i]) );  break;
-      case TStreamerInfo::kUChar:   fWriteObjectWise->AddAction( WriteBasicType<UChar_t>, new TConfiguration(this,i,fOffset[i]) );   break;
-      case TStreamerInfo::kUShort:  fWriteObjectWise->AddAction( WriteBasicType<UShort_t>, new TConfiguration(this,i,fOffset[i]) );  break;
-      case TStreamerInfo::kUInt:    fWriteObjectWise->AddAction( WriteBasicType<UInt_t>, new TConfiguration(this,i,fOffset[i]) );    break;
-      case TStreamerInfo::kULong:   fWriteObjectWise->AddAction( WriteBasicType<ULong_t>, new TConfiguration(this,i,fOffset[i]) );   break;
-      case TStreamerInfo::kULong64: fWriteObjectWise->AddAction( WriteBasicType<ULong64_t>, new TConfiguration(this,i,fOffset[i]) ); break;
-       // case TStreamerInfo::kBits:    fWriteObjectWise->AddAction( WriteBasicType<BitsMarker>, new TConfiguration(this,i,fOffset[i]) );    break;
+      case TStreamerInfo::kBool:    fWriteObjectWise->AddAction( WriteBasicType<Bool_t>, new TConfiguration(this,i,fComp[i].fOffset) );    break;
+      case TStreamerInfo::kChar:    fWriteObjectWise->AddAction( WriteBasicType<Char_t>, new TConfiguration(this,i,fComp[i].fOffset) );    break;
+      case TStreamerInfo::kShort:   fWriteObjectWise->AddAction( WriteBasicType<Short_t>, new TConfiguration(this,i,fComp[i].fOffset) );   break;
+      case TStreamerInfo::kInt:     fWriteObjectWise->AddAction( WriteBasicType<Int_t>, new TConfiguration(this,i,fComp[i].fOffset) );     break;
+      case TStreamerInfo::kLong:    fWriteObjectWise->AddAction( WriteBasicType<Long_t>, new TConfiguration(this,i,fComp[i].fOffset) );    break;
+      case TStreamerInfo::kLong64:  fWriteObjectWise->AddAction( WriteBasicType<Long64_t>, new TConfiguration(this,i,fComp[i].fOffset) );  break;
+      case TStreamerInfo::kFloat:   fWriteObjectWise->AddAction( WriteBasicType<Float_t>, new TConfiguration(this,i,fComp[i].fOffset) );   break;
+      case TStreamerInfo::kDouble:  fWriteObjectWise->AddAction( WriteBasicType<Double_t>, new TConfiguration(this,i,fComp[i].fOffset) );  break;
+      case TStreamerInfo::kUChar:   fWriteObjectWise->AddAction( WriteBasicType<UChar_t>, new TConfiguration(this,i,fComp[i].fOffset) );   break;
+      case TStreamerInfo::kUShort:  fWriteObjectWise->AddAction( WriteBasicType<UShort_t>, new TConfiguration(this,i,fComp[i].fOffset) );  break;
+      case TStreamerInfo::kUInt:    fWriteObjectWise->AddAction( WriteBasicType<UInt_t>, new TConfiguration(this,i,fComp[i].fOffset) );    break;
+      case TStreamerInfo::kULong:   fWriteObjectWise->AddAction( WriteBasicType<ULong_t>, new TConfiguration(this,i,fComp[i].fOffset) );   break;
+      case TStreamerInfo::kULong64: fWriteObjectWise->AddAction( WriteBasicType<ULong64_t>, new TConfiguration(this,i,fComp[i].fOffset) ); break;
+       // case TStreamerInfo::kBits:    fWriteObjectWise->AddAction( WriteBasicType<BitsMarker>, new TConfiguration(this,i,fComp[i].fOffset) );    break;
      /*case TStreamerInfo::kFloat16: {
          if (element->GetFactor() != 0) {
-            fWriteObjectWise->AddAction( WriteBasicType_WithFactor<float>, new TConfWithFactor(this,i,fOffset[i],element->GetFactor(),element->GetXmin()) );
+            fWriteObjectWise->AddAction( WriteBasicType_WithFactor<float>, new TConfWithFactor(this,i,fComp[i].fOffset,element->GetFactor(),element->GetXmin()) );
          } else {
             Int_t nbits = (Int_t)element->GetXmin();
             if (!nbits) nbits = 12;
-            fWriteObjectWise->AddAction( WriteBasicType_NoFactor<float>, new TConfNoFactor(this,i,fOffset[i],nbits) );               
+            fWriteObjectWise->AddAction( WriteBasicType_NoFactor<float>, new TConfNoFactor(this,i,fComp[i].fOffset,nbits) );               
          }
          break;
       } */
      /*case TStreamerInfo::kDouble32: {
         if (element->GetFactor() != 0) {
-           fWriteObjectWise->AddAction( WriteBasicType_WithFactor<double>, new TConfWithFactor(this,i,fOffset[i],element->GetFactor(),element->GetXmin()) );
+           fWriteObjectWise->AddAction( WriteBasicType_WithFactor<double>, new TConfWithFactor(this,i,fComp[i].fOffset,element->GetFactor(),element->GetXmin()) );
         } else {
            Int_t nbits = (Int_t)element->GetXmin();
            if (!nbits) {
-              fWriteObjectWise->AddAction( ConvertBasicType<float,double>, new TConfiguration(this,i,fOffset[i]) );
+              fWriteObjectWise->AddAction( ConvertBasicType<float,double>, new TConfiguration(this,i,fComp[i].fOffset) );
            } else {
-              fWriteObjectWise->AddAction( WriteBasicType_NoFactor<double>, new TConfNoFactor(this,i,fOffset[i],nbits) );
+              fWriteObjectWise->AddAction( WriteBasicType_NoFactor<double>, new TConfNoFactor(this,i,fComp[i].fOffset,nbits) );
            }
         }
         break;
      } */
-     //case TStreamerInfo::kTNamed:  fWriteObjectWise->AddAction( WriteTNamed, new TConfiguration(this,i,fOffset[i]) );    break;
+     //case TStreamerInfo::kTNamed:  fWriteObjectWise->AddAction( WriteTNamed, new TConfiguration(this,i,fComp[i].fOffset) );    break;
         // Idea: We should calculate the CanIgnoreTObjectStreamer here and avoid calling the
         // Streamer alltogether.
-     //case TStreamerInfo::kTObject: fWriteObjectWise->AddAction( WriteTObject, new TConfiguration(this,i,fOffset[i]) );    break;
-     //case TStreamerInfo::kTString: fWriteObjectWise->AddAction( WriteTString, new TConfiguration(this,i,fOffset[i]) );    break;
+     //case TStreamerInfo::kTObject: fWriteObjectWise->AddAction( WriteTObject, new TConfiguration(this,i,fComp[i].fOffset) );    break;
+     //case TStreamerInfo::kTString: fWriteObjectWise->AddAction( WriteTString, new TConfiguration(this,i,fComp[i].fOffset) );    break;
      /*case TStreamerInfo::kSTL: {
         TClass *newClass = element->GetNewClass();
         TClass *oldClass = element->GetClassPointer();
@@ -2807,29 +2788,29 @@ void TStreamerInfo::AddWriteAction(Int_t i, TStreamerElement *element )
         if (element->GetArrayLength() <= 1) {
            if (newClass && newClass != oldClass) {
               if (element->GetStreamer()) {
-                 fWriteObjectWise->AddAction(WriteSTL<WriteSTLMemberWiseChangedClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(this,i,fOffset[i],1,oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+                 fWriteObjectWise->AddAction(WriteSTL<WriteSTLMemberWiseChangedClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
               } else {
-                 fWriteObjectWise->AddAction(WriteSTL<WriteSTLMemberWiseChangedClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],1,oldClass,newClass,element->GetTypeName(),isSTLbase));                     
+                 fWriteObjectWise->AddAction(WriteSTL<WriteSTLMemberWiseChangedClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,newClass,element->GetTypeName(),isSTLbase));                     
               }
            } else {
               if (element->GetStreamer()) {
-                 fWriteObjectWise->AddAction(WriteSTL<WriteSTLMemberWiseSameClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+                 fWriteObjectWise->AddAction(WriteSTL<WriteSTLMemberWiseSameClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
               } else {
-                 fWriteObjectWise->AddAction(WriteSTL<WriteSTLMemberWiseSameClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],1,oldClass,element->GetTypeName(),isSTLbase));
+                 fWriteObjectWise->AddAction(WriteSTL<WriteSTLMemberWiseSameClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(this,i,fComp[i].fOffset,1,oldClass,element->GetTypeName(),isSTLbase));
               }                  
            }                  
         } else {
            if (newClass && newClass != oldClass) {
               if (element->GetStreamer()) {
-                 fWriteObjectWise->AddAction(WriteSTL<WriteArraySTLMemberWiseChangedClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(this,i,fOffset[i],element->GetArrayLength(),oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+                 fWriteObjectWise->AddAction(WriteSTL<WriteArraySTLMemberWiseChangedClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(this,i,fComp[i].fOffset,element->GetArrayLength(),oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
               } else {
-                 fWriteObjectWise->AddAction(WriteSTL<WriteArraySTLMemberWiseChangedClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],element->GetArrayLength(),oldClass,newClass,element->GetTypeName(),isSTLbase));                     
+                 fWriteObjectWise->AddAction(WriteSTL<WriteArraySTLMemberWiseChangedClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(this,i,fComp[i].fOffset,element->GetArrayLength(),oldClass,newClass,element->GetTypeName(),isSTLbase));                     
               }
            } else {
               if (element->GetStreamer()) {
-                 fWriteObjectWise->AddAction(WriteSTL<WriteArraySTLMemberWiseSameClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(this,i,fOffset[i],element->GetArrayLength(),oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+                 fWriteObjectWise->AddAction(WriteSTL<WriteArraySTLMemberWiseSameClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(this,i,fComp[i].fOffset,element->GetArrayLength(),oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
               } else {
-                 fWriteObjectWise->AddAction(WriteSTL<WriteArraySTLMemberWiseSameClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(this,i,fOffset[i],element->GetArrayLength(),oldClass,element->GetTypeName(),isSTLbase));
+                 fWriteObjectWise->AddAction(WriteSTL<WriteArraySTLMemberWiseSameClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(this,i,fComp[i].fOffset,element->GetArrayLength(),oldClass,element->GetTypeName(),isSTLbase));
               }                  
            }                                    
         }
@@ -2851,10 +2832,10 @@ void TStreamerInfo::AddWriteAction(Int_t i, TStreamerElement *element )
 
 #if defined(CDJ_NO_COMPILE)
       if (element->TestBit(TStreamerElement::kCache)) {
-         TConfiguredAction action( GetCollectionWriteAction<VectorLooper>(this,element,fType[i],i,fOffset[i]) );
+         TConfiguredAction action( GetCollectionWriteAction<VectorLooper>(this,element,fComp[i].fType,i,fComp[i].fOffset) );
          fWriteMemberWise->AddAction( UseCacheVectorPtrLoop, new TConfigurationUseCache(this,action,element->TestBit(TStreamerElement::kRepeat)) );
       } else {
-         fWriteMemberWise->Addaction( GetCollectionWriteAction<VectorPtrLooper>(this,element,fType[i],i,fOffset[i]) );
+         fWriteMemberWise->Addaction( GetCollectionWriteAction<VectorPtrLooper>(this,element,fComp[i].fType,i,fComp[i].fOffset) );
       }
 #else
       fWriteMemberWise->AddAction( VectorPtrLooper::GenericWrite, new TGenericConfiguration(this,i) );
