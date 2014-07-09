@@ -11,7 +11,7 @@
        hadd -f targetfile source1 source2 ...
          (targetfile is overwritten if it exists)
 
-  When -the -f option is specified, one can also specify the compression
+  When the -f option is specified, one can also specify the compression
   level of the target file. By default the compression level is 1, but
   if "-f0" is specified, the target file will not be compressed.
   if "-f6" is specified, the compression level 6 will be used.
