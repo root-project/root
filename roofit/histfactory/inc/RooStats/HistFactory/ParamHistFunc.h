@@ -95,7 +95,7 @@ protected:
   Int_t _numBins;
   mutable std::map<Int_t, Int_t> _binMap;
   mutable RooDataHist _dataSet;
-  Bool_t _Normalized;
+  Bool_t _normalized;
 
   // std::vector< Double_t > _nominalVals; // The nominal vals when gamma = 1.0 ( = 1.0 by default)
   RooArgList   _ownedList ;       // List of owned components

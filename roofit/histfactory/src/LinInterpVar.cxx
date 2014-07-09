@@ -77,7 +77,8 @@ LinInterpVar::LinInterpVar(const char* name, const char* title,
 //_____________________________________________________________________________
 LinInterpVar::LinInterpVar(const char* name, const char* title) :
   RooAbsReal(name, title),
-  _paramList("paramList","List of coefficients",this)
+  _paramList("paramList","List of coefficients",this), 
+  _nominal(0)
 {
   // Constructor of flat polynomial function
 

@@ -46,6 +46,8 @@ namespace HistFactory {
 
   public:
 
+    OverallSys() : fLow(0), fHigh(0) {} 
+
     void SetName( const std::string& Name ) { fName = Name; }
     std::string GetName() { return fName; }
 
@@ -160,6 +162,8 @@ namespace HistFactory {
 
   public:
 
+    HistoFactor() : fhLow(NULL), fhHigh(NULL) {;}
+
     void SetName( const std::string& Name ) { fName = Name; }
     std::string GetName() { return fName; }
     
@@ -212,6 +216,8 @@ namespace HistFactory {
   class ShapeSys {
 
   public:
+
+    ShapeSys() :  fConstraintType(Constraint::Gaussian), fhError(NULL) {}
 
     void SetName( const std::string& Name ) { fName = Name; }
     std::string GetName() { return fName; }

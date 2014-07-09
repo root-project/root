@@ -84,7 +84,7 @@ ClassImp(ParamHistFunc);
 
 
 //_____________________________________________________________________________
-ParamHistFunc::ParamHistFunc() : _numBins(0)
+ParamHistFunc::ParamHistFunc() : _numBins(0), _normalized(false)
 {
   ;
 }
@@ -97,7 +97,8 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _dataVars("!dataVars","data Vars",       this),
   _paramSet("!paramSet","bin parameters",  this),
   _numBins(0),
-  _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars) 
+  _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars),
+  _normalized(false)
 {
   
   // Create a function which returns binewise-values
@@ -142,7 +143,8 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _dataVars("!dataVars","data Vars",       this),
   _paramSet("!paramSet","bin parameters",  this),
   _numBins(0),
-  _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars, Hist) 
+  _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars, Hist),
+  _normalized(false)
 {
 
   // Create a function which returns binewise-values
@@ -203,7 +205,8 @@ ParamHistFunc::ParamHistFunc(const ParamHistFunc& other, const char* name) :
   _paramSet("!paramSet", this, other._paramSet),
   _numBins( other._numBins ),
   _binMap( other._binMap ),
-  _dataSet( other._dataSet )
+  _dataSet( other._dataSet ),
+  _normalized( other._normalized)
 {
   ;
   // Copy constructor
