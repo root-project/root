@@ -103,23 +103,6 @@ namespace {
 }
 
 //______________________________________________________________________________
-#ifdef R__BROKEN_FUNCTION_TEMPLATES
-template <class T>
-Int_t TStreamerInfo__WriteBufferAuxImp(TStreamerInfo *thisVar,
-                                       TBuffer &b, const T &arr, Int_t first,
-                                       Int_t narr, Int_t eoffset, Int_t arrayMode,
-                                       ULong_t *fMethod, ULong_t *fElem,Int_t *fLength,
-                                       TClass *fClass, Int_t *fOffset, Int_t * /*fNewType*/,
-                                       Int_t fNdata, Int_t *fType, TStreamerElement *& /*fgElement*/,
-                                       TStreamerInfo::TCompInfo *fComp)
-{
-   //  The object at pointer is serialized to the buffer b
-   //  if (arrayMode & 1) ptr is a pointer to array of pointers to the objects
-   //  otherwise it is a pointer to a pointer to a single object.
-   //  This also means that T is of a type such that arr[i] is a pointer to an
-   //  object.  Currently the only anticipated instantiation are for T==char**
-   //  and T==TVirtualCollectionProxy
-#else
 template <class T>
 Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
                                     Int_t narr, Int_t eoffset, Int_t arrayMode)
@@ -132,7 +115,6 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
    //  and T==TVirtualCollectionProxy
 
    TStreamerInfo *thisVar = this;
-#endif
 
    Bool_t needIncrement = !( arrayMode & 2 );
    arrayMode = arrayMode & (~2);
@@ -829,41 +811,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
    return 0;
 }
 
-#ifdef R__BROKEN_FUNCTION_TEMPLATES
-// Support for non standard compilers
-
-Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, char ** const &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode)
-{
-  return TStreamerInfo__WriteBufferAuxImp(this,b,arr,first,narr,eoffset,mode,
-                                          fMethod,fElem,fLength,fClass,fOffset,fNewType,
-                                          fNdata,fType,fgElement,fComp);
-}
-
-Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const TVirtualCollectionProxy &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode)
-{
-  return TStreamerInfo__WriteBufferAuxImp(this,b,arr,first,narr,eoffset,mode,
-                                          fMethod,fElem,fLength,fClass,fOffset,fNewType,
-                                          fNdata,fType,fgElement,fComp);
-}
-
-Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const TPointerCollectionAdapter &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode)
-{
-  return TStreamerInfo__WriteBufferAuxImp(this,b,arr,first,narr,eoffset,mode,
-                                          fMethod,fElem,fLength,fClass,fOffset,fNewType,
-                                          fNdata,fType,fgElement,fComp);
-}
-
-Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const TVirtualArray &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode)
-{
-   return TStreamerInfo__WriteBufferAuxImp(this,b,arr,first,narr,eoffset,mode,
-                                           fMethod,fElem,fLength,fClass,fOffset,fNewType,
-                                           fNdata,fType,fgElement,fComp);
-}
-#else
-
 template Int_t TStreamerInfo::WriteBufferAux<char**>(TBuffer &b, char ** const &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
-
-#endif
 
 //______________________________________________________________________________
 Int_t TStreamerInfo::WriteBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset)
