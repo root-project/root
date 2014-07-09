@@ -40,9 +40,9 @@ using namespace ROOT;
 using namespace clang;
 
 TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
-                                   const char* shLibFileName):
+                                   const std::string& shLibFileName):
    fCI(CI),
-   fIsPCH(!strcmp(shLibFileName, "etc/allDict.cxx")),
+   fIsPCH(shLibFileName == "etc/allDict.cxx"),
    fDictionaryName(llvm::sys::path::stem(shLibFileName)),
    fModuleDirName(llvm::sys::path::parent_path(shLibFileName))
 {

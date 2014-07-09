@@ -3918,12 +3918,12 @@ int RootCling(int argc,
    if (multiDict){
 
       std::string newName=llvm::sys::path::parent_path(sharedLibraryPathName).str();
-      newName+=gPathSeparator;
+      if (!newName.empty())
+         newName+=gPathSeparator;
       newName+=llvm::sys::path::stem(sharedLibraryPathName);
       newName+="_";
       newName+=llvm::sys::path::stem(dictpathname);
       newName+=llvm::sys::path::extension(sharedLibraryPathName);
-      //std::cout << "New name is " << newName << std::endl;
       sharedLibraryPathName=newName;
    }
 
@@ -3935,7 +3935,7 @@ int RootCling(int argc,
    pcmArgs.push_back(incCurDir);
 
    TModuleGenerator modGen(interp.getCI(),
-                           sharedLibraryPathName.c_str());
+                           sharedLibraryPathName);
 
    interp.declare("#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"");
 
