@@ -158,7 +158,8 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
 //_____________________________________________________________________________
 FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title) :
   RooAbsReal(name, title),
-  _paramList("paramList","List of coefficients",this)
+  _paramList("paramList","List of coefficients",this), 
+  _nominal(0), _interpBoundary(1.)
 {
   // Constructor of flat polynomial function
   _logInit = kFALSE ;
