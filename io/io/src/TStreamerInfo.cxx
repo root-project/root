@@ -126,12 +126,6 @@ TStreamerInfo::TStreamerInfo()
    fClass    = 0;
    fElements = 0;
    fComp     = 0;
-   fType     = 0;
-   fNewType  = 0;
-   fOffset   = 0;
-   fLength   = 0;
-   fElem     = 0;
-   fMethod   = 0;
    fCheckSum = 0;
    fNdata    = 0;
    fSize     = 0;
@@ -159,12 +153,6 @@ TStreamerInfo::TStreamerInfo(TClass *cl)
    fClass    = cl;
    fElements = new TObjArray();
    fComp     = 0;
-   fType     = 0;
-   fNewType  = 0;
-   fOffset   = 0;
-   fLength   = 0;
-   fElem     = 0;
-   fMethod   = 0;
    fCheckSum = 0;
    fNdata    = 0;
    fSize     = 0;
@@ -186,12 +174,6 @@ TStreamerInfo::~TStreamerInfo()
 {
    // TStreamerInfo dtor.
 
-   delete [] fType;    fType   =0;
-   delete [] fNewType; fNewType=0;
-   delete [] fOffset;  fOffset =0;
-   delete [] fLength;  fLength =0;
-   delete [] fElem;    fElem   =0;
-   delete [] fMethod;  fMethod =0;
    delete [] fComp;    fComp   =0;
    delete [] fVirtualInfoLoc; fVirtualInfoLoc =0;
 
@@ -240,7 +222,7 @@ void TStreamerInfo::Build()
    fCheckSum = fClass->GetCheckSum();
 
    Bool_t needAllocClass = kFALSE;
-   Bool_t wasCompiled = fOffset != 0;
+   Bool_t wasCompiled = fComp != 0;
    const ROOT::TSchemaMatch* rules = 0;
    if (fClass->GetSchemaRules()) {
        rules = fClass->GetSchemaRules()->FindRules(fClass->GetName(), fClassVersion);
@@ -1671,7 +1653,7 @@ void TStreamerInfo::BuildOld()
                infobase = (TStreamerInfo*)base->GetBaseStreamerInfo();
             }
 
-            if (infobase && infobase->GetTypes() == 0) {
+            if (infobase && infobase->fComp == 0) {
                infobase->BuildOld();
             }
 
@@ -2305,12 +2287,6 @@ void TStreamerInfo::Clear(Option_t *option)
    opt.ToLower();
 
    if (opt.Contains("build")) {
-      delete [] fType;     fType    = 0;
-      delete [] fNewType;  fNewType = 0;
-      delete [] fOffset;   fOffset  = 0;
-      delete [] fLength;   fLength  = 0;
-      delete [] fElem;     fElem    = 0;
-      delete [] fMethod;   fMethod  = 0;
       delete [] fComp;     fComp    = 0;
       fNdata = 0;
       fSize = 0;
@@ -3844,7 +3820,7 @@ TStreamerElement* TStreamerInfo::GetStreamerElementReal(Int_t i, Int_t j) const
    if (i < 0 || i >= fNdata) return 0;
    if (j < 0) return 0;
    if (!fElements) return 0;
-   TStreamerElement *se = (TStreamerElement*)fElem[i];
+   TStreamerElement *se = (TStreamerElement*)fComp[i].fElem;
    if (!se) return 0;
    Int_t nelems = fElements->GetEntriesFast();
    for (Int_t ise=0;ise < nelems;ise++) {
@@ -3973,13 +3949,13 @@ T TStreamerInfo::GetTypedValue(char *pointer, Int_t i, Int_t j, Int_t len) const
       atype = i;
    } else {
       if (i < 0) return 0;
-      ladd  = pointer + fOffset[i];
-      atype = fNewType[i];
-      len = ((TStreamerElement*)fElem[i])->GetArrayLength();
+      ladd  = pointer + fComp[i].fOffset;
+      atype = fComp[i].fNewType;
+      len = ((TStreamerElement*)fComp[i].fElem)->GetArrayLength();
       if (atype == kSTL) {
-         TClass *newClass = ((TStreamerElement*)fElem[i])->GetNewClass();
+         TClass *newClass = ((TStreamerElement*)fComp[i].fElem)->GetNewClass();
          if (newClass == 0) {
-            newClass = ((TStreamerElement*)fElem[i])->GetClassPointer();
+            newClass = ((TStreamerElement*)fComp[i].fElem)->GetClassPointer();
          }
          TClass *innerClass = newClass->GetCollectionProxy()->GetValueClass();
          if (innerClass) {
@@ -4014,8 +3990,8 @@ T TStreamerInfo::GetTypedValueClones(TClonesArray *clones, Int_t i, Int_t j, int
    if (j >= nc) return 0;
 
    char *pointer = (char*)clones->UncheckedAt(j);
-   char *ladd    = pointer + eoffset + fOffset[i];
-   return GetTypedValueAux<T>(fType[i],ladd,k,((TStreamerElement*)fElem[i])->GetArrayLength());
+   char *ladd    = pointer + eoffset + fComp[i].fOffset;
+   return GetTypedValueAux<T>(fComp[i].fType,ladd,k,((TStreamerElement*)fComp[i].fElem)->GetArrayLength());
 }
 
 //______________________________________________________________________________
@@ -4033,8 +4009,8 @@ T TStreamerInfo::GetTypedValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_t 
    if (j >= nc) return 0;
 
    char *pointer = (char*)cont->At(j);
-   char *ladd    = pointer + eoffset + fOffset[i];
-   return GetTypedValueAux<T>(fType[i],ladd,k,((TStreamerElement*)fElem[i])->GetArrayLength());
+   char *ladd    = pointer + eoffset + fComp[i].fOffset;
+   return GetTypedValueAux<T>(fComp[i].fType,ladd,k,((TStreamerElement*)fComp[i].fElem)->GetArrayLength());
 }
 
 //______________________________________________________________________________
@@ -4054,8 +4030,8 @@ T TStreamerInfo::GetTypedValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int_t
    char **ptr = (char**)cont->At(j);
    char *pointer = *ptr;
 
-   char *ladd    = pointer + eoffset + fOffset[i];
-   return GetTypedValueAux<T>(fType[i],ladd,k,((TStreamerElement*)fElem[i])->GetArrayLength());
+   char *ladd    = pointer + eoffset + fComp[i].fOffset;
+   return GetTypedValueAux<T>(fComp[i].fType,ladd,k,((TStreamerElement*)fComp[i].fElem)->GetArrayLength());
 }
 
 //______________________________________________________________________________
@@ -4165,7 +4141,7 @@ void TStreamerInfo::ls(Option_t *option) const
          obj->ls(option);
    }
    for (Int_t i=0;i < fNdata;i++) {
-      TStreamerElement *element = (TStreamerElement*)fElem[i];
+      TStreamerElement *element = (TStreamerElement*)fComp[i].fElem;
       TString sequenceType;
       element->GetSequenceType(sequenceType);
       if (sequenceType.Length()) {
@@ -4173,7 +4149,7 @@ void TStreamerInfo::ls(Option_t *option) const
          sequenceType += "]";
       }
       Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",
-             i,element->GetName(),fType[i],fOffset[i],fLength[i],fMethod[i],
+             i,element->GetName(),fComp[i].fType,fComp[i].fOffset,fComp[i].fLength,fComp[i].fMethod,
              sequenceType.Data());
    }
 }
@@ -4599,11 +4575,11 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
          }
          return;
       }
-      ladd  = pointer + fOffset[i];
-      atype = fNewType[i];
-      aleng = fLength[i];
-      aElement  = (TStreamerElement*)fElem[i];
-      count = (Int_t*)(pointer+fMethod[i]);
+      ladd  = pointer + fComp[i].fOffset;
+      atype = fComp[i].fNewType;
+      aleng = fComp[i].fLength;
+      aElement  = (TStreamerElement*)fComp[i].fElem;
+      count = (Int_t*)(pointer+fComp[i].fMethod);
    }
    if (aleng > lenmax) aleng = lenmax;
 
@@ -4621,16 +4597,16 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
    Int_t nc = clones->GetEntriesFast();
    if (nc > lenmax) nc = lenmax;
 
-   Int_t offset = eoffset + fOffset[i];
-   TStreamerElement *aElement  = (TStreamerElement*)fElem[i];
-   int aleng = fLength[i];
+   Int_t offset = eoffset + fComp[i].fOffset;
+   TStreamerElement *aElement  = (TStreamerElement*)fComp[i].fElem;
+   int aleng = fComp[i].fLength;
    if (aleng > lenmax) aleng = lenmax;
 
    for (Int_t k=0;k < nc;k++) {
       char *pointer = (char*)clones->UncheckedAt(k);
       char *ladd = pointer+offset;
-      Int_t *count = (Int_t*)(pointer+fMethod[i]);
-      PrintValueAux(ladd,fNewType[i],aElement, aleng, count);
+      Int_t *count = (Int_t*)(pointer+fComp[i].fMethod);
+      PrintValueAux(ladd,fComp[i].fNewType,aElement, aleng, count);
       if (k < nc-1) printf(", ");
    }
    printf("\n");
@@ -4646,16 +4622,16 @@ void TStreamerInfo::PrintValueSTL(const char *name, TVirtualCollectionProxy *con
    Int_t nc = cont->Size();
    if (nc > lenmax) nc = lenmax;
 
-   Int_t offset = eoffset + fOffset[i];
-   TStreamerElement *aElement  = (TStreamerElement*)fElem[i];
-   int aleng = fLength[i];
+   Int_t offset = eoffset + fComp[i].fOffset;
+   TStreamerElement *aElement  = (TStreamerElement*)fComp[i].fElem;
+   int aleng = fComp[i].fLength;
    if (aleng > lenmax) aleng = lenmax;
 
    for (Int_t k=0;k < nc;k++) {
       char *pointer = (char*)cont->At(k);
       char *ladd = pointer+offset;
-      Int_t *count = (Int_t*)(pointer+fMethod[i]);
-      PrintValueAux(ladd,fNewType[i],aElement, aleng, count);
+      Int_t *count = (Int_t*)(pointer+fComp[i].fMethod);
+      PrintValueAux(ladd,fComp[i].fNewType,aElement, aleng, count);
       if (k < nc-1) printf(", ");
    }
    printf("\n");

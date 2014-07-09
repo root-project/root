@@ -61,11 +61,18 @@ class TStreamerInfo : public TVirtualStreamerInfo {
       TCompInfo(const TCompInfo&); // Not implemented
       TCompInfo& operator=(const TCompInfo&); // Not implemented
    public:
-      TClass          *fClass;
-      TClass          *fNewClass;
-      TString          fClassName;
-      TMemberStreamer *fStreamer;
-      TCompInfo() : fClass(0), fNewClass(0), fClassName(""), fStreamer(0) {};
+      Int_t             fType;
+      Int_t             fNewType;
+      Int_t             fOffset;
+      Int_t             fLength;
+      TStreamerElement *fElem;
+      ULong_t           fMethod;
+      TClass           *fClass;
+      TClass           *fNewClass;
+      TString           fClassName;
+      TMemberStreamer  *fStreamer;
+      TCompInfo() : fType(0), fNewType(0), fOffset(0), fLength(0), fElem(0), fMethod(0),
+                    fClass(0), fNewClass(0), fClassName(), fStreamer(0) {};
       ~TCompInfo() {};
       void Update(const TClass *oldcl, TClass *newcl);
    };
@@ -96,12 +103,6 @@ private:
    Int_t             fNumber;            //!Unique identifier
    Int_t             fNdata;             //!number of optmized types
    Int_t             fSize;              //!size of the persistent class
-   Int_t            *fType;              //![fNdata]
-   Int_t            *fNewType;           //![fNdata]
-   Int_t            *fOffset;            //![fNdata]
-   Int_t            *fLength;            //![fNdata]
-   ULong_t          *fElem;              //![fNdata]
-   ULong_t          *fMethod;            //![fNdata]
    TCompInfo        *fComp;              //![fNdata] additional info
    TClass           *fClass;             //!pointer to class
    TObjArray        *fElements;          //Array of TStreamerElements
@@ -218,25 +219,25 @@ public:
    Int_t               GetClassVersion() const {return fClassVersion;}
    Int_t               GetDataMemberOffset(TDataMember *dm, TMemberStreamer *&streamer) const;
    TObjArray          *GetElements() const {return fElements;}
-   ULong_t            *GetElems()   const {return fElem;}
+   TStreamerElement   *GetElem(Int_t id) const {return fComp[id].fElem;}
    TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Bool_t forCollection) { return forCollection ? fReadMemberWise : fReadObjectWise; }
    TStreamerInfoActions::TActionSequence *GetReadObjectWiseActions() { return fReadObjectWise; }
    TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions(Bool_t forCollection) { return forCollection ? fWriteMemberWise : fWriteObjectWise; }
    TStreamerInfoActions::TActionSequence *GetWriteObjectWiseActions() { return fWriteObjectWise; }
    Int_t               GetNdata()   const {return fNdata;}
    Int_t               GetNumber()  const {return fNumber;}
-   Int_t              *GetLengths() const {return fLength;}
-   ULong_t            *GetMethods() const {return fMethod;}
-   Int_t              *GetNewTypes() const {return fNewType;}
+   Int_t               GetLength(Int_t id) const {return fComp[id].fLength;}
+   ULong_t             GetMethod(Int_t id) const {return fComp[id].fMethod;}
+   Int_t               GetNewType(Int_t id) const {return fComp[id].fNewType;}
    Int_t               GetOffset(const char *) const;
-   Int_t              *GetOffsets() const {return fOffset;}
+   Int_t               GetOffset(Int_t id) const {return fComp[id].fOffset;}
    Version_t           GetOldVersion() const {return fOldVersion;}
    Int_t               GetOnFileClassVersion() const {return fOnFileClassVersion;}
    Int_t               GetSize()    const;
    Int_t               GetSizeElements()    const;
    TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const;
    TStreamerElement   *GetStreamerElementReal(Int_t i, Int_t j) const;
-   Int_t              *GetTypes()   const {return fType;}
+   Int_t               GetType(Int_t id)   const {return fComp[id].fType;}
    template <typename T> T GetTypedValue(char *pointer, Int_t i, Int_t j, Int_t len) const;
    template <typename T> T GetTypedValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
    template <typename T> T GetTypedValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;

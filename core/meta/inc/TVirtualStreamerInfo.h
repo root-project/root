@@ -124,15 +124,15 @@ public:
    virtual TClass     *GetClass() const  = 0;
    virtual UInt_t      GetCheckSum() const = 0;
    virtual Int_t       GetClassVersion() const = 0;
-   virtual ULong_t    *GetElems()   const = 0;
+   virtual TStreamerElement *GetElem(Int_t id) const = 0;
    virtual TObjArray  *GetElements() const = 0;
    virtual Int_t       GetOffset(const char *) const = 0;
-   virtual Int_t      *GetOffsets() const = 0;
+   virtual Int_t       GetOffset(Int_t id) const = 0;
    virtual Version_t   GetOldVersion() const = 0;
    virtual Int_t       GetOnFileClassVersion() const = 0;
    virtual Int_t       GetNumber()  const = 0;
    virtual Int_t       GetSize()    const = 0;
-   virtual TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const = 0;
+   virtual TStreamerElement *GetStreamerElement(const char*datamember, Int_t& offset) const = 0;
            Bool_t      IsBuilt() const { return fIsBuilt; }
            Bool_t      IsCompiled() const { return TestBit(kIsCompiled); }
            Bool_t      IsOptimized() const { return fOptimized; }

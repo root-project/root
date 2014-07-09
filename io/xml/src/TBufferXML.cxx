@@ -1039,7 +1039,7 @@ void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t number)
          return;
       }
 
-      comp_type = info->GetTypes()[number];
+      comp_type = info->GetType(number);
 
       elem = info->GetStreamerElementReal(number, 0);
    } else if (elem) {

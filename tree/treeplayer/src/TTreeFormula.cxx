@@ -902,7 +902,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
          case TStreamerInfo::kSTLp:
          case TStreamerInfo::kObjectp:
          case TStreamerInfo::kObjectP: {
-            element = (TStreamerElement *)info->GetElems()[branchEl->GetID()];
+            element = info->GetElem(branchEl->GetID());
             if (element) cl = element->GetClassPointer();
          }
          break;
@@ -914,7 +914,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:  {
-            element = (TStreamerElement *)info->GetElems()[branchEl->GetID()];
+            element = info->GetElem(branchEl->GetID());
             if (element){
                cl = element->GetClassPointer();
             }
@@ -980,7 +980,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
             TFormLeafInfo* collectioninfo;
             if ( count->GetID() >= 0 ) {
                TStreamerElement *collectionElement =
-                  (TStreamerElement *)count->GetInfo()->GetElems()[count->GetID()];
+                  count->GetInfo()->GetElem(count->GetID());
                TClass *collectionCl = collectionElement->GetClassPointer();
 
                collectioninfo =
@@ -3058,8 +3058,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
                // Case of an object data member.  Here we allow for the
                // variable name to be ommitted.  Eg, for Event.root with split
                // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-               TStreamerElement* element = (TStreamerElement*)
-                  branchEl->GetInfo()->GetElems()[branchEl->GetID()];
+               TStreamerElement* element = branchEl->GetInfo()->GetElem(branchEl->GetID());
                if (element) cl = element->GetClassPointer();
                else cl = 0;
             }
@@ -3140,7 +3139,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
                      TStreamerInfo *bel_info = branchEl->GetInfo();
                      TClass * mother_cl = ((TBranchElement*)branch)->GetInfo()->GetClass();
                      TStreamerElement *bel_element =
-                        (TStreamerElement *)bel_info->GetElems()[branchEl->GetID()];
+                        bel_info->GetElem(branchEl->GetID());
                      leafinfo = new TFormLeafInfoClones(mother_cl, 0, bel_element, kTRUE);
                   }
 
@@ -3226,7 +3225,7 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char
          // Case of an object data member.  Here we allow for the
          // variable name to be ommitted.  Eg, for Event.root with split
          // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-         TStreamerElement* element = (TStreamerElement*) branchEl->GetInfo()->GetElems()[branchEl->GetID()];
+         TStreamerElement* element = branchEl->GetInfo()->GetElem(branchEl->GetID());
          if (element) {
             cl = element->GetClassPointer();
          } else {
@@ -3261,7 +3260,7 @@ Bool_t TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char
             //clones = *((TClonesArray**) bc->GetAddress());
             clones = (TClonesArray*) bc->GetObject();
          } else if (!leafcur || !leafcur->IsOnTerminalBranch()) {
-            TStreamerElement* element = (TStreamerElement*) bc->GetInfo()->GetElems()[bc->GetID()];
+            TStreamerElement* element = bc->GetInfo()->GetElem(bc->GetID());
             if (element->IsaPointer()) {
                clones = *((TClonesArray**) bc->GetAddress());
                //clones = *((TClonesArray**) bc->GetObject());
@@ -3567,11 +3566,11 @@ TClass* TTreeFormula::EvalClass(Int_t oper) const
             TStreamerInfo * info = branch->GetInfo();
             Int_t id = branch->GetID();
             if (id>=0) {
-               if (info==0 || info->GetElems()==0) {
+               if (info==0 || !info->IsCompiled()) {
                   // we probably do not have a way to know the class of the object.
                   return 0;
                }
-               TStreamerElement* elem = (TStreamerElement*)info->GetElems()[id];
+               TStreamerElement* elem = (TStreamerElement*)info->GetElem(id);
                if (elem==0) {
                   // we probably do not have a way to know the class of the object.
                   return 0;
@@ -4419,7 +4418,7 @@ Double_t TTreeFormula::GetValueFromMethod(Int_t i, TLeaf* leaf) const
       if (id > -1) {
          TStreamerInfo* info = branch->GetInfo();
          if (info) {
-            offset = info->GetOffsets()[id];
+            offset = info->GetOffset(id);
          } else {
             Warning("GetValueFromMethod", "No streamer info for branch %s.", branch->GetName());
          }
@@ -4479,7 +4478,7 @@ void* TTreeFormula::GetValuePointerFromMethod(Int_t i, TLeaf* leaf) const
       if (id > -1) {
          TStreamerInfo* info = branch->GetInfo();
          if (info) {
-            offset = info->GetOffsets()[id];
+            offset = info->GetOffset(id);
          } else {
             Warning("GetValuePointerFromMethod", "No streamer info for branch %s.", branch->GetName());
          }
@@ -4686,13 +4685,13 @@ Bool_t  TTreeFormula::IsLeafString(Int_t code) const
             TBranchElement * br = (TBranchElement*)leaf->GetBranch();
             Int_t bid = br->GetID();
             if (bid < 0) return kFALSE;
-            if (br->GetInfo()==0 || br->GetInfo()->GetElems()==0) {
+            if (br->GetInfo()==0 || !br->GetInfo()->IsCompiled()) {
                // Case where the file is corrupted is some ways.
                // We can not get to the actual type of the data
                // let's assume it is NOT a string.
                return kFALSE;
             }
-            TStreamerElement * elem = (TStreamerElement*) br->GetInfo()->GetElems()[bid];
+            TStreamerElement * elem = (TStreamerElement*) br->GetInfo()->GetElem(bid);
             if (!elem) {
                // Case where the file is corrupted is some ways.
                // We can not get to the actual type of the data
@@ -5619,7 +5618,7 @@ Bool_t TTreeFormula::SwitchToFormLeafInfo(Int_t code)
             // sub branch of a TClonesArray
             TStreamerInfo *info = br->GetInfo();
             TClass* cl = info->GetClass();
-            TStreamerElement *element = (TStreamerElement *)info->GetElems()[br->GetID()];
+            TStreamerElement *element = (TStreamerElement *)info->GetElem(br->GetID());
             TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(cl, 0, element, kTRUE);
             Int_t offset;
             info->GetStreamerElement(element->GetName(),offset);
@@ -5635,7 +5634,7 @@ Bool_t TTreeFormula::SwitchToFormLeafInfo(Int_t code)
             TFormLeafInfo* collectioninfo;
             if ( count->GetID() >= 0 ) {
                TStreamerElement *collectionElement =
-                  (TStreamerElement *)count->GetInfo()->GetElems()[count->GetID()];
+                  (TStreamerElement *)count->GetInfo()->GetElem(count->GetID());
                TClass *collectionCl = collectionElement->GetClassPointer();
 
                collectioninfo =
@@ -5648,7 +5647,7 @@ Bool_t TTreeFormula::SwitchToFormLeafInfo(Int_t code)
 
             TStreamerInfo *info = br->GetInfo();
             TClass* cl = info->GetClass();
-            TStreamerElement *element = (TStreamerElement *)info->GetElems()[br->GetID()];
+            TStreamerElement *element = (TStreamerElement *)info->GetElem(br->GetID());
             Int_t offset;
             info->GetStreamerElement(element->GetName(),offset);
             collectioninfo->fNext = new TFormLeafInfo(cl,offset+br->GetOffset(),element);
