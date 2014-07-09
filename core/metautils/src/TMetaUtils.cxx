@@ -4656,6 +4656,10 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
                                        interpreter,
                                        nCtxt);
 
+   // Heuristic: avoid entities like myclass<myType1, myType2::xyz>
+   if (underlyingName.find(">::") != std::string::npos)
+      return 0;
+
    buffer="typedef "+underlyingName+" "+buffer+";";
    const clang::RecordDecl* rcd=EncloseInScopes(tdnDecl,buffer);
    if (rcd) {
