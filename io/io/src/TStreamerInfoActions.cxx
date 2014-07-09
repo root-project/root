@@ -2279,6 +2279,10 @@ void TStreamerInfo::Compile()
 
    delete[] fComp;
    fComp = 0;
+   delete[] fCompFull;
+   fCompFull = 0;
+   delete[] fCompOpt;
+   fCompOpt = 0;
 
    if (fReadObjectWise) {
       fReadObjectWise->fActions.clear();
@@ -2302,7 +2306,15 @@ void TStreamerInfo::Compile()
       return;
    }
 
-   fComp = new TCompInfo[ndata];
+   // At most half of the elements can be used to hold optimized versions.
+   // We use the bottom to hold the optimized-into elements and the non-optimized elements
+   // and the top to hold the original copy of the optimized out elements.
+   fNslots = ndata + ndata/2 + 1;
+   Int_t optiOut = 0;
+
+   fComp = new TCompInfo[fNslots];
+   fCompFull = new TCompInfo*[ndata];
+   fCompOpt  = new TCompInfo*[ndata];
 
    TStreamerElement* element;
    TStreamerElement* previous = 0;
@@ -2314,6 +2326,7 @@ void TStreamerInfo::Compile()
    }
 
    Bool_t isOptimized = kFALSE;
+   Bool_t previousOptimized = kFALSE;
 
    for (i = 0; i < ndata; ++i) {
       element = (TStreamerElement*) fElements->At(i);
@@ -2386,12 +2399,24 @@ void TStreamerInfo::Compile()
           && (element->TestBit(TStreamerElement::kCache) == previous->TestBit(TStreamerElement::kCache))
           ) 
       {
+         if (!previousOptimized) {
+            // The element was not yet optimized we first need to copy it into
+            // the set of original copies.
+            fComp[fNslots - (++optiOut) ] = fComp[keep];   // Copy the optimized out elements.
+            fCompFull[i-1] = &(fComp[fNslots - optiOut]); // Reset the pointer in the full list.
+         }
+         fComp[fNslots - (++optiOut) ] = fComp[fNdata]; // Copy the optimized out elements.
+         fCompFull[i] = &(fComp[fNslots - optiOut]);
+
+         R__ASSERT( keep < (fNslots - optiOut) );
+
          if (fComp[keep].fLength == 0) {
             fComp[keep].fLength++;
          }
          fComp[keep].fLength++;
          fComp[keep].fType = element->GetType() + kRegrouped;
          isOptimized = kTRUE;
+         previousOptimized = kTRUE;
       } else {
          if (fComp[fNdata].fNewType != fComp[fNdata].fType) {
             if (fComp[fNdata].fNewType > 0) {
@@ -2413,11 +2438,17 @@ void TStreamerInfo::Compile()
                fComp[fNdata].fType += kSkip;
             }
          }
+         fCompOpt[fNdata] = &(fComp[fNdata]);
+         fCompFull[i] = &(fComp[fNdata]);
+
+         R__ASSERT( fNdata < (fNslots - optiOut) );
+
          keep = fNdata;
-         if (fComp[fNdata].fLength == 0) {
-            fComp[fNdata].fLength = 1;
+         if (fComp[keep].fLength == 0) {
+            fComp[keep].fLength = 1;
          }
          fNdata++;
+         previousOptimized = kFALSE;
       }
       // The test 'fMethod[keep] == 0' fails to detect a variable size array
       // if the counter happens to have an offset of zero, so let's explicitly

@@ -58,20 +58,20 @@ class TStreamerInfo : public TVirtualStreamerInfo {
    class TCompInfo {
    // Class used to cache information (see fComp)
    private:
-      TCompInfo(const TCompInfo&); // Not implemented
-      TCompInfo& operator=(const TCompInfo&); // Not implemented
+      // TCompInfo(const TCompInfo&) = default;
+      // TCompInfo& operator=(const TCompInfo&) = default;
    public:
       Int_t             fType;
       Int_t             fNewType;
       Int_t             fOffset;
       Int_t             fLength;
-      TStreamerElement *fElem;
+      TStreamerElement *fElem;     // Not Owned
       ULong_t           fMethod;
-      TClass           *fClass;
-      TClass           *fNewClass;
+      TClass           *fClass;    // Not Owned
+      TClass           *fNewClass; // Not Owned
       TString           fClassName;
-      TMemberStreamer  *fStreamer;
-      TCompInfo() : fType(0), fNewType(0), fOffset(0), fLength(0), fElem(0), fMethod(0),
+      TMemberStreamer  *fStreamer; // Not Owned
+      TCompInfo() : fType(-1), fNewType(0), fOffset(0), fLength(0), fElem(0), fMethod(0),
                     fClass(0), fNewClass(0), fClassName(), fStreamer(0) {};
       ~TCompInfo() {};
       void Update(const TClass *oldcl, TClass *newcl);
@@ -79,7 +79,7 @@ class TStreamerInfo : public TVirtualStreamerInfo {
 
 protected:
    //---------------------------------------------------------------------------
-   // Adatper class used to handle streaming collection of pointers
+   // Adapter class used to handle streaming collection of pointers
    //---------------------------------------------------------------------------
    class TPointerCollectionAdapter
    {
@@ -101,9 +101,12 @@ private:
    Int_t             fClassVersion;      //Class version identifier
    Int_t             fOnFileClassVersion;//!Class version identifier as stored on file.
    Int_t             fNumber;            //!Unique identifier
-   Int_t             fNdata;             //!number of optmized types
    Int_t             fSize;              //!size of the persistent class
-   TCompInfo        *fComp;              //![fNdata] additional info
+   Int_t             fNdata;             //!number of optimized elements
+   Int_t             fNslots;            //!total numbrer of slots in fComp.
+   TCompInfo        *fComp;              //![fNslots with less than fElements->GetEntries()*1.5 used] Compiled info
+   TCompInfo       **fCompOpt;           //![fNdata]
+   TCompInfo       **fCompFull;          //![fElements->GetEntries()]
    TClass           *fClass;             //!pointer to class
    TObjArray        *fElements;          //Array of TStreamerElements
    Version_t         fOldVersion;        //! Version of the TStreamerInfo object read from the file

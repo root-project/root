@@ -126,8 +126,11 @@ TStreamerInfo::TStreamerInfo()
    fClass    = 0;
    fElements = 0;
    fComp     = 0;
+   fCompFull = 0;
+   fCompOpt  = 0;
    fCheckSum = 0;
    fNdata    = 0;
+   fNslots   = 0;
    fSize     = 0;
    fClassVersion = 0;
    fOnFileClassVersion = 0;
@@ -153,8 +156,11 @@ TStreamerInfo::TStreamerInfo(TClass *cl)
    fClass    = cl;
    fElements = new TObjArray();
    fComp     = 0;
+   fCompFull = 0;
+   fCompOpt  = 0;
    fCheckSum = 0;
    fNdata    = 0;
+   fNslots   = 0;
    fSize     = 0;
    fClassVersion = fClass->GetClassVersion();
    fOnFileClassVersion = 0;
@@ -175,6 +181,8 @@ TStreamerInfo::~TStreamerInfo()
    // TStreamerInfo dtor.
 
    delete [] fComp;    fComp   =0;
+   delete [] fCompFull; fCompFull = 0;
+   delete [] fCompOpt;  fCompOpt  = 0;
    delete [] fVirtualInfoLoc; fVirtualInfoLoc =0;
 
    delete fReadObjectWise;
@@ -2343,7 +2351,10 @@ void TStreamerInfo::Clear(Option_t *option)
 
    if (opt.Contains("build")) {
       delete [] fComp;     fComp    = 0;
+      delete [] fCompFull; fCompFull= 0;
+      delete [] fCompOpt;  fCompOpt = 0;
       fNdata = 0;
+      fNslots= 0;
       fSize = 0;
       ResetBit(kIsCompiled);
       ResetBit(kBuildOldUsed);
@@ -3892,12 +3903,12 @@ TStreamerElement* TStreamerInfo::GetStreamerElementReal(Int_t i, Int_t j) const
    //  of this array, one can call:
    //     TStreamerElement *el = GetStreamerElementReal(0,1);
    //     const char* membername = el->GetName();
-   //  This function is typically called from Tbuffer, TXmlBuffer
+   //  This function is typically called from TBuffer, TXmlBuffer
 
    if (i < 0 || i >= fNdata) return 0;
    if (j < 0) return 0;
    if (!fElements) return 0;
-   TStreamerElement *se = (TStreamerElement*)fComp[i].fElem;
+   TStreamerElement *se = (TStreamerElement*)fCompOpt[i]->fElem;
    if (!se) return 0;
    Int_t nelems = fElements->GetEntriesFast();
    for (Int_t ise=0;ise < nelems;ise++) {
@@ -4026,13 +4037,13 @@ T TStreamerInfo::GetTypedValue(char *pointer, Int_t i, Int_t j, Int_t len) const
       atype = i;
    } else {
       if (i < 0) return 0;
-      ladd  = pointer + fComp[i].fOffset;
-      atype = fComp[i].fNewType;
-      len = ((TStreamerElement*)fComp[i].fElem)->GetArrayLength();
+      ladd  = pointer + fCompFull[i]->fOffset;
+      atype = fCompFull[i]->fNewType;
+      len = ((TStreamerElement*)fCompFull[i]->fElem)->GetArrayLength();
       if (atype == kSTL) {
-         TClass *newClass = ((TStreamerElement*)fComp[i].fElem)->GetNewClass();
+         TClass *newClass = ((TStreamerElement*)fCompFull[i]->fElem)->GetNewClass();
          if (newClass == 0) {
-            newClass = ((TStreamerElement*)fComp[i].fElem)->GetClassPointer();
+            newClass = ((TStreamerElement*)fCompFull[i]->fElem)->GetClassPointer();
          }
          TClass *innerClass = newClass->GetCollectionProxy()->GetValueClass();
          if (innerClass) {
@@ -4067,8 +4078,8 @@ T TStreamerInfo::GetTypedValueClones(TClonesArray *clones, Int_t i, Int_t j, int
    if (j >= nc) return 0;
 
    char *pointer = (char*)clones->UncheckedAt(j);
-   char *ladd    = pointer + eoffset + fComp[i].fOffset;
-   return GetTypedValueAux<T>(fComp[i].fType,ladd,k,((TStreamerElement*)fComp[i].fElem)->GetArrayLength());
+   char *ladd    = pointer + eoffset + fCompFull[i]->fOffset;
+   return GetTypedValueAux<T>(fCompFull[i]->fType,ladd,k,((TStreamerElement*)fCompFull[i]->fElem)->GetArrayLength());
 }
 
 //______________________________________________________________________________
@@ -4086,8 +4097,8 @@ T TStreamerInfo::GetTypedValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_t 
    if (j >= nc) return 0;
 
    char *pointer = (char*)cont->At(j);
-   char *ladd    = pointer + eoffset + fComp[i].fOffset;
-   return GetTypedValueAux<T>(fComp[i].fType,ladd,k,((TStreamerElement*)fComp[i].fElem)->GetArrayLength());
+   char *ladd    = pointer + eoffset + fCompFull[i]->fOffset;
+   return GetTypedValueAux<T>(fCompFull[i]->fType,ladd,k,((TStreamerElement*)fCompFull[i]->fElem)->GetArrayLength());
 }
 
 //______________________________________________________________________________
@@ -4107,8 +4118,8 @@ T TStreamerInfo::GetTypedValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int_t
    char **ptr = (char**)cont->At(j);
    char *pointer = *ptr;
 
-   char *ladd    = pointer + eoffset + fComp[i].fOffset;
-   return GetTypedValueAux<T>(fComp[i].fType,ladd,k,((TStreamerElement*)fComp[i].fElem)->GetArrayLength());
+   char *ladd    = pointer + eoffset + fCompFull[i]->fOffset;
+   return GetTypedValueAux<T>(fCompFull[i]->fType,ladd,k,((TStreamerElement*)fCompFull[i]->fElem)->GetArrayLength());
 }
 
 //______________________________________________________________________________
@@ -4242,7 +4253,7 @@ void TStreamerInfo::ls(Option_t *option) const
          obj->ls(option);
    }
    for (Int_t i=0;i < fNdata;i++) {
-      TStreamerElement *element = (TStreamerElement*)fComp[i].fElem;
+      TStreamerElement *element = (TStreamerElement*)fCompOpt[i]->fElem;
       TString sequenceType;
       element->GetSequenceType(sequenceType);
       if (sequenceType.Length()) {
@@ -4250,7 +4261,7 @@ void TStreamerInfo::ls(Option_t *option) const
          sequenceType += "]";
       }
       Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",
-             i,element->GetName(),fComp[i].fType,fComp[i].fOffset,fComp[i].fLength,fComp[i].fMethod,
+             i,element->GetName(),fCompOpt[i]->fType,fCompOpt[i]->fOffset,fCompOpt[i]->fLength,fCompOpt[i]->fMethod,
              sequenceType.Data());
    }
 }
@@ -4676,11 +4687,11 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
          }
          return;
       }
-      ladd  = pointer + fComp[i].fOffset;
-      atype = fComp[i].fNewType;
-      aleng = fComp[i].fLength;
-      aElement  = (TStreamerElement*)fComp[i].fElem;
-      count = (Int_t*)(pointer+fComp[i].fMethod);
+      ladd  = pointer + fCompFull[i]->fOffset;
+      atype = fCompFull[i]->fNewType;
+      aleng = fCompFull[i]->fLength;
+      aElement  = (TStreamerElement*)fCompFull[i]->fElem;
+      count = (Int_t*)(pointer+fCompFull[i]->fMethod);
    }
    if (aleng > lenmax) aleng = lenmax;
 
@@ -4698,16 +4709,16 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
    Int_t nc = clones->GetEntriesFast();
    if (nc > lenmax) nc = lenmax;
 
-   Int_t offset = eoffset + fComp[i].fOffset;
-   TStreamerElement *aElement  = (TStreamerElement*)fComp[i].fElem;
-   int aleng = fComp[i].fLength;
+   Int_t offset = eoffset + fCompFull[i]->fOffset;
+   TStreamerElement *aElement  = (TStreamerElement*)fCompFull[i]->fElem;
+   int aleng = fCompFull[i]->fLength;
    if (aleng > lenmax) aleng = lenmax;
 
    for (Int_t k=0;k < nc;k++) {
       char *pointer = (char*)clones->UncheckedAt(k);
       char *ladd = pointer+offset;
-      Int_t *count = (Int_t*)(pointer+fComp[i].fMethod);
-      PrintValueAux(ladd,fComp[i].fNewType,aElement, aleng, count);
+      Int_t *count = (Int_t*)(pointer+fCompFull[i]->fMethod);
+      PrintValueAux(ladd,fCompFull[i]->fNewType,aElement, aleng, count);
       if (k < nc-1) printf(", ");
    }
    printf("\n");
@@ -4723,16 +4734,16 @@ void TStreamerInfo::PrintValueSTL(const char *name, TVirtualCollectionProxy *con
    Int_t nc = cont->Size();
    if (nc > lenmax) nc = lenmax;
 
-   Int_t offset = eoffset + fComp[i].fOffset;
-   TStreamerElement *aElement  = (TStreamerElement*)fComp[i].fElem;
-   int aleng = fComp[i].fLength;
+   Int_t offset = eoffset + fCompFull[i]->fOffset;
+   TStreamerElement *aElement  = (TStreamerElement*)fCompFull[i]->fElem;
+   int aleng = fCompFull[i]->fLength;
    if (aleng > lenmax) aleng = lenmax;
 
    for (Int_t k=0;k < nc;k++) {
       char *pointer = (char*)cont->At(k);
       char *ladd = pointer+offset;
-      Int_t *count = (Int_t*)(pointer+fComp[i].fMethod);
-      PrintValueAux(ladd,fComp[i].fNewType,aElement, aleng, count);
+      Int_t *count = (Int_t*)(pointer+fCompFull[i]->fMethod);
+      PrintValueAux(ladd,fCompFull[i]->fNewType,aElement, aleng, count);
       if (k < nc-1) printf(", ");
    }
    printf("\n");
@@ -5076,7 +5087,7 @@ void TStreamerInfo::Update(const TClass *oldcl, TClass *newcl)
    while ((element = (TStreamerElement*)nextElement())) {
       element->Update(oldcl,newcl);
    }
-   for (Int_t i=0;i < fNdata;i++) {
+   for (Int_t i=0;i < fNslots;i++) {
       fComp[i].Update(oldcl,newcl);
    }
 }
@@ -5086,10 +5097,12 @@ void TStreamerInfo::TCompInfo::Update(const TClass *oldcl, TClass *newcl)
 {
    // Update the TClass pointer cached in this object.
 
-   if (fClass == oldcl)
-      fClass = newcl;
-   else if (fClass == 0)
-      fClass = TClass::GetClass(fClassName);
+   if (fType != -1) {
+      if (fClass == oldcl)
+         fClass = newcl;
+      else if (fClass == 0)
+         fClass = TClass::GetClass(fClassName);
+   }
 }
 
 
