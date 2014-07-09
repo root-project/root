@@ -259,12 +259,11 @@ const char *rootClingHelp =
 #endif
 
 #ifdef WIN32
- const std::string gPathSeparator ("\\");
  const std::string gLibraryExtension (".dll");
 #else
- const std::string gPathSeparator ("/");
  const std::string gLibraryExtension (".so"); // no dylib for the moment
 #endif
+const std::string gPathSeparator (ROOT::TMetaUtils::GetPathSeparator());
 
 #ifdef __APPLE__
 #include <libgen.h> // Needed for basename

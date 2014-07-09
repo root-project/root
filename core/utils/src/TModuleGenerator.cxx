@@ -339,11 +339,29 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out,
    // If necessary, inline the headers
    std::string inlinedHeaders;
    if (inlineHeaders){
-      for (auto& hdrName : fHeaders){
-         std::ifstream headerFile(hdrName.c_str());
-         const std::string headerFileAsStr((std::istreambuf_iterator<char>(headerFile)),
-                                            std::istreambuf_iterator<char>());
-         inlinedHeaders += headerFileAsStr;
+      std::string hdrFullPath;
+      for (auto const & hdrName : fHeaders){
+         hdrFullPath=hdrName;
+         bool headerFound=false;
+         if (!llvm::sys::fs::exists(hdrFullPath)){
+            for (auto const & incDir : fCompI ){
+               hdrFullPath=incDir+ROOT::TMetaUtils::GetPathSeparator()+hdrName;
+               if (llvm::sys::fs::exists(hdrFullPath)){
+                  headerFound=true;
+                  break;
+               }
+            }
+         } else {
+            headerFound=true;
+         }
+         if (!headerFound){
+            ROOT::TMetaUtils::Error(0,"Cannot find header %s: cannot inline it.\n", hdrName.c_str());
+         } else {
+            std::ifstream headerFile(hdrFullPath.c_str());
+            const std::string headerFileAsStr((std::istreambuf_iterator<char>(headerFile)),
+                                             std::istreambuf_iterator<char>());
+            inlinedHeaders += headerFileAsStr;
+         }
       }
 
    } else{
