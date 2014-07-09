@@ -463,7 +463,7 @@ fBits                         0x03000000  bit field status word
 base 	t e s t 
 id 	3
 base 	n o n e 
-id 	o
+id 	0
 noRequestedDict 	0
 base 	f i x 1 
 id 	4
