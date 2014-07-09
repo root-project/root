@@ -370,9 +370,9 @@ macro(vc_set_preferred_compiler_flags)
       vc_add_compiler_flag(Vc_DEFINITIONS "-Wno-local-type-template-args")
       vc_add_compiler_flag(Vc_DEFINITIONS "-Wno-unnamed-type-template-args")
 
-#      if(NOT DEFINED Vc_INSIDE_ROOT)  # ROOT has to set this up
+      if(NOT DEFINED Vc_INSIDE_ROOT)  # ROOT has to set this up
          AddCompilerFlag(-stdlib=libc++)
-#      endif()
+      endif()
    endif()
 
    if(NOT Vc_COMPILER_IS_MSVC)
