@@ -4130,6 +4130,9 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
 void TStreamerInfo::ls(Option_t *option) const
 {
    //  List the TStreamerElement list and also the precomputed tables
+   //  if option contains the string "incOrig", also prints the original
+   //  (non-optimized elements in the list of compiled elements.
+
    if (fClass && (fName != fClass->GetName())) {
       if (fClass->IsVersioned()) {
          Printf("\nStreamerInfo for conversion to %s from: %s, version=%d, checksum=0x%x",fClass->GetName(),GetName(),fClassVersion,GetCheckSum());
@@ -4151,10 +4154,20 @@ void TStreamerInfo::ls(Option_t *option) const
       while ((obj = next()))
          obj->ls(option);
    }
-   for (Int_t i=0;i < fNdata;i++) {
+   Bool_t wantOrig = strstr(option,"incOrig") != 0;
+   Bool_t optimized = kFALSE;
+   for (Int_t i=0,j=0;i < fNdata;++i,++j) {
       TStreamerElement *element = (TStreamerElement*)fCompOpt[i]->fElem;
       TString sequenceType;
       element->GetSequenceType(sequenceType);
+      optimized = fCompOpt[i]->fType != element->GetType() && fCompOpt[i]->fType != element->GetNewType();
+      if (optimized) {
+         // This was optimized.
+         if (sequenceType.Length() != 0) {
+            sequenceType += ',';
+         }
+         sequenceType += "optimized";
+      }
       if (sequenceType.Length()) {
          sequenceType.Prepend(" [");
          sequenceType += "]";
@@ -4162,6 +4175,23 @@ void TStreamerInfo::ls(Option_t *option) const
       Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",
              i,element->GetName(),fCompOpt[i]->fType,fCompOpt[i]->fOffset,fCompOpt[i]->fLength,fCompOpt[i]->fMethod,
              sequenceType.Data());
+      if (optimized && wantOrig) {
+         Bool_t done;
+         do {
+            element = (TStreamerElement*)fCompFull[j]->fElem;
+            element->GetSequenceType(sequenceType);
+            if (sequenceType.Length()) {
+               sequenceType.Prepend(" [");
+               sequenceType += "]";
+            }
+            Printf("      j=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",
+                   j,element->GetName(),fCompFull[j]->fType,fCompFull[j]->fOffset,fCompFull[j]->fLength,fCompFull[j]->fMethod,
+                   sequenceType.Data());
+            ++j;
+            done = j >= fElements->GetEntries() || ( (i+1 < fNdata) && fCompOpt[i+1]->fElem == fCompFull[j+1]->fElem );
+         } while (!done);
+
+      }
    }
 }
 
