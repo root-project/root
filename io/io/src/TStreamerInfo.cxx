@@ -5012,7 +5012,7 @@ void TStreamerInfo::TCompInfo::Update(const TClass *oldcl, TClass *newcl)
    if (fClass == oldcl)
       fClass = newcl;
    else if (fClass == 0)
-      fClass =TClass::GetClass(fClassName);
+      fClass = TClass::GetClass(fClassName);
 }
 
 
