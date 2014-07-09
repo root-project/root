@@ -6,17 +6,27 @@
 # system will complain at startup, making the test fail. Clearly for backwards
 # compatibility reasons the current behaviour should be preserved :)
 
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(FullheaderParsingOnDemand FullheaderParsingOnDemand.h SELECTION FullheaderParsingOnDemand_selection.xml)
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(FullheaderParsingOnDemand
+                                    FullheaderParsingOnDemand.h
+                                    SELECTION FullheaderParsingOnDemand_selection.xml
+                                    LIBNAME libFullheaderParsingOnDemand_dictrflx
+                                    NO_ROOTMAP)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-autoloading-headerParsingOnDemand-runFullheaderParsingOnDemand
+                  COPY_TO_BUILDDIR headerParsingOnDemand.rootmap
                   MACRO runFullheaderParsingOnDemand.C
                   OUTREF headerParsingOnDemand.ref
                   OUTCNV FullheaderParsingOnDemand_convert.sh
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(complexTypedefs complexTypedefs.h SELECTION complexTypedefs_selection.xml)
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(complexTypedefs
+                                    complexTypedefs.h
+                                    SELECTION complexTypedefs_selection.xml
+                                    LIBNAME libcomplexTypedefs_dictrflx
+                                    NO_ROOTMAP)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-autoloading-headerParsingOnDemand-execCheckComplexTypedefs
+                  COPY_TO_BUILDDIR complexTypedefs.rootmap
                   MACRO execCheckComplexTypedefs.C
                   OUTREF execCheckComplexTypedefs.ref
                   DEPENDS ${GENERATE_REFLEX_TEST})
