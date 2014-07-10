@@ -3587,7 +3587,7 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
    //We assume that the class was written with a standard streamer
    //We attempt to recover if a version count was not written
    Version_t v = ReadVersion(&start,&count);
-   void *ptr = &object;
+
    if (count) {
       TStreamerInfo *sinfo = 0;
       if( onFileClass ) {
@@ -3597,12 +3597,13 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
       }
 
       sinfo = (TStreamerInfo*)cl->GetStreamerInfo(v);
-      sinfo->ReadBuffer(*this,(char**)ptr,-1);
+      ApplySequence(*(sinfo->GetReadObjectWiseActions()), object);
       if (sinfo->IsRecovered()) count=0;
       CheckByteCount(start,count,cl);
    } else {
       SetBufferOffset(start);
-      ((TStreamerInfo*)cl->GetStreamerInfo())->ReadBuffer(*this,(char**)ptr,-1);
+      TStreamerInfo *sinfo = ((TStreamerInfo*)cl->GetStreamerInfo());
+      ApplySequence(*(sinfo->GetReadObjectWiseActions()), object);
    }
    return 0;
 }

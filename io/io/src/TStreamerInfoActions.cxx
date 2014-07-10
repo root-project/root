@@ -164,7 +164,7 @@ namespace TStreamerInfoActions
    {
       char *obj = (char*)addr;
       TGenericConfiguration *conf = (TGenericConfiguration*)config;
-      return ((TStreamerInfo*)conf->fInfo)->ReadBuffer(buf, &obj, conf->fElemId, 1, config->fOffset, 2);
+      return ((TStreamerInfo*)conf->fInfo)->ReadBuffer(buf, &obj, &(conf->fCompInfo), /*first*/ 0, /*last*/ 1, /*narr*/ 1, config->fOffset, 2);
    }
 
    Int_t GenericWriteAction(TBuffer &buf, void *addr, const TConfiguration *config)
@@ -524,7 +524,7 @@ namespace TStreamerInfoActions
                subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
                subinfo->Compile();
             }
-            subinfo->ReadBuffer(buf, *oldProxy, -1, nobjects, 0, 1);
+            subinfo->ReadBufferSTL(buf, oldProxy, nobjects, /* offset */ 0, /* v7 */ kFALSE);
          }
          oldProxy->Commit(env);
       }
@@ -605,7 +605,7 @@ namespace TStreamerInfoActions
                   subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
                   subinfo->Compile();
                }
-               subinfo->ReadBuffer(buf, *oldProxy, -1, nobjects, 0, 1);
+               subinfo->ReadBufferSTL(buf, oldProxy, nobjects, /* offset */ 0, /* v7 */ kFALSE);
             }
             oldProxy->Commit(env);
          }
@@ -856,7 +856,7 @@ namespace TStreamerInfoActions
          TStreamerInfo *info = (TStreamerInfo*)conf->fInfo;
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
          char *ptr = (char*)addr;
-         info->ReadBufferSkip(b,&ptr,config->fElemId,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,1,0);
+         info->ReadBufferSkip(b,&ptr,config->fCompInfo,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,1,0);
       } else {
          config->fAction(b, (*cached)[0]);
       }
@@ -879,7 +879,7 @@ namespace TStreamerInfoActions
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
          char *ptr = (char*)start;
          UInt_t n = (((void**)end)-((void**)start));
-         info->ReadBufferSkip(b,&ptr,config->fElemId,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,n,0);
+         info->ReadBufferSkip(b,&ptr,config->fCompInfo,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,n,0);
       } else {
          TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
@@ -905,7 +905,7 @@ namespace TStreamerInfoActions
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
          char *ptr = (char*)start;
          UInt_t n = (((char*)end)-((char*)start))/((TVectorLoopConfig*)loopconf)->fIncrement;
-         info->ReadBufferSkip(b,&ptr,config->fElemId,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,n,0);
+         info->ReadBufferSkip(b,&ptr,config->fCompInfo,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,n,0);
       } else {
          TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
@@ -932,7 +932,7 @@ namespace TStreamerInfoActions
          TVirtualCollectionProxy *proxy = ((TGenericLoopConfig*)loopconfig)->fProxy;
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
          UInt_t n = proxy->Size();
-         info->ReadBufferSkip(b, *proxy,config->fElemId,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,n,0);
+         info->ReadBufferSkip(b, *proxy,config->fCompInfo,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,n,0);
       } else {
          TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
@@ -1102,7 +1102,7 @@ namespace TStreamerInfoActions
          for(void *iter = start; iter != end; iter = (char*)iter + incr, ++i ) {
             arrptr[i] = (char*)iter;
          }
-         ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, arrptr, config->fElemId, n, config->fOffset, 1|2 );
+         ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, arrptr, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, /*narr*/ n, config->fOffset, 1|2 );
          delete [] arrptr;
 
          //      // Idea: need to cache this result!
@@ -1139,7 +1139,7 @@ namespace TStreamerInfoActions
          for(void *iter = start; iter != end; iter = (char*)iter + incr, ++i ) {
             arrptr[i] = (char*)iter;
          }
-         ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, arrptr, config->fElemId, n, config->fOffset, 1|2 );
+         ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, arrptr, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, /*narr*/ n, config->fOffset, 1|2 );
          delete [] arrptr;
          return 0;
       }
@@ -1469,7 +1469,7 @@ namespace TStreamerInfoActions
       {
          Int_t n = ( ((void**)end) - ((void**)iter) );
          char **arr = (char**)iter;
-         return ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, arr, config->fElemId, n, config->fOffset, 1|2 );
+         return ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, arr, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, /*narr*/ n, config->fOffset, 1|2 );
       }
 
       static INLINE_TEMPLATE_ARGS Int_t GenericWrite(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
@@ -1825,7 +1825,7 @@ namespace TStreamerInfoActions
       {
          TGenericLoopConfig *loopconfig = (TGenericLoopConfig*)loopconf;
          TVirtualCollectionProxy *proxy = loopconfig->fProxy;
-         return ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, *proxy, config->fElemId, proxy->Size(), config->fOffset, 1|2 );
+         return ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, *proxy, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, /*narr*/ proxy->Size(), config->fOffset, 1|2 );
       }
 
       static INLINE_TEMPLATE_ARGS Int_t GenericWrite(TBuffer &buf, void *, const void *, const TLoopConfiguration * loopconf, const TConfiguration *config)
