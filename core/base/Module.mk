@@ -76,6 +76,8 @@ $(RGITCOMMITH): $(BASEDIRS)/TROOT.cxx $(BASEDIRI)/TROOT.h
 $(call stripsrc,$(BASEDIRS)/TPRegexp.o): $(PCREDEP)
 $(call stripsrc,$(BASEDIRS)/TPRegexp.o): CXXFLAGS += $(PCREINC)
 
+$(call stripsrc,$(BASEDIRS)/TROOT.o): CXXFLAGS += -Icore/base/src
+
 ifeq ($(GCC_MAJOR),4)
 ifeq ($(GCC_MINOR),1)
 $(call stripsrc,$(BASEDIRS)/TString.o): CXXFLAGS += -Wno-strict-aliasing
