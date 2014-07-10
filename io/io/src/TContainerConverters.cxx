@@ -203,7 +203,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
 
       if (objdummy.TestBit(TClonesArray::kBypassStreamer)) {
 
-         subinfo->ReadBufferSTL(b,proxy,nobjects,-1,0);
+         subinfo->ReadBufferSTL(b,proxy,nobjects,0);
 
       } else {
          for (Int_t i = 0; i < nobjects; i++) {

@@ -270,16 +270,16 @@ public:
    void                PrintValueSTL(const char *name, TVirtualCollectionProxy *cont, Int_t i, Int_t eoffset, Int_t lenmax=1000) const;
 
    template <class T>
-   Int_t               ReadBuffer(TBuffer &b, const T &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
+   Int_t               ReadBuffer(TBuffer &b, const T &arrptr, TCompInfo *const*const compinfo, Int_t first, Int_t last, Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
    template <class T>
-   Int_t               ReadBufferSkip(TBuffer &b, const T &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   Int_t               ReadBufferSkip(TBuffer &b, const T &arrptr, const TCompInfo *compinfo,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    template <class T>
-   Int_t               ReadBufferConv(TBuffer &b, const T &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   Int_t               ReadBufferConv(TBuffer &b, const T &arrptr, const TCompInfo *compinfo,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    template <class T>
-   Int_t               ReadBufferArtificial(TBuffer &b, const T &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   Int_t               ReadBufferArtificial(TBuffer &b, const T &arrptr, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
 
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
-   Int_t               ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset );
+   Int_t               ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t eoffset, Bool_t v7 = kTRUE );
    void                SetCheckSum(UInt_t checksum) {fCheckSum = checksum;}
    void                SetClass(TClass *cl) {fClass = cl;}
    void                SetClassVersion(Int_t vers) {fClassVersion=vers;}
