@@ -33,6 +33,8 @@ void XMLReader::PopulateMap(){
    XMLReader::fgMapTagNames["/class"] = kEndClass;
    XMLReader::fgMapTagNames["struct"] = kClass;
    XMLReader::fgMapTagNames["/struct"] = kEndClass;
+   XMLReader::fgMapTagNames["namespace"] = kClass;
+   XMLReader::fgMapTagNames["/namespace"] = kEndClass;
    XMLReader::fgMapTagNames["function"] = kFunction;
    XMLReader::fgMapTagNames["variable"] = kVariable;
    XMLReader::fgMapTagNames["enum"] = kEnum;
