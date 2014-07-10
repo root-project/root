@@ -121,7 +121,7 @@ public:
 
    virtual void       TagStreamerInfo(TVirtualStreamerInfo* info);
    virtual void       IncrementLevel(TVirtualStreamerInfo* info);
-   virtual void       SetStreamerElementNumber(Int_t) {}
+   virtual void       SetStreamerElementNumber(TStreamerElement*,Int_t) {}
    virtual void       DecrementLevel(TVirtualStreamerInfo*);
    TVirtualStreamerInfo  *GetInfo() {return (TVirtualStreamerInfo*)fInfo;}
    virtual void       ClassBegin(const TClass*, Version_t = -1) {}

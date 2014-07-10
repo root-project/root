@@ -753,10 +753,11 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
    TMemberStreamer *pstreamer=0;
    Int_t isPreAlloc = 0;
    for (Int_t i=first;i<last;i++) {
-      if (needIncrement) b.SetStreamerElementNumber(i);
       TStreamerElement * aElement  = (TStreamerElement*)compinfo[i]->fElem;
       fgElement = aElement;
 
+      if (needIncrement) b.SetStreamerElementNumber(aElement,compinfo[i]->fType);
+   
       if (aElement->TestBit(TStreamerElement::kWrite)) continue;
 
       if (R__TestUseCache<T>(aElement)) {

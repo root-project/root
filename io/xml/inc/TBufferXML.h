@@ -74,7 +74,7 @@ public:
    virtual void     SkipObjectAny();
 
    virtual void     IncrementLevel(TVirtualStreamerInfo*);
-   virtual void     SetStreamerElementNumber(Int_t);
+   virtual void     SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_type);
    virtual void     DecrementLevel(TVirtualStreamerInfo*);
    
    virtual void     ClassBegin(const TClass*, Version_t = -1);
@@ -260,7 +260,7 @@ protected:
    TXMLStackObj*    Stack(Int_t depth = 0);
 
    void             WorkWithClass(TStreamerInfo* info, const TClass* cl = 0);
-   void             WorkWithElement(TStreamerElement* elem, Int_t number);
+   void             WorkWithElement(TStreamerElement* elem, Int_t comp_type);
    Bool_t           VerifyNode(XMLNodePointer_t node, const char* name, const char* errinfo = 0);
    Bool_t           VerifyStackNode(const char* name, const char* errinfo = 0);
    

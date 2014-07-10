@@ -1,4 +1,4 @@
-// @(#)root/sql:$Id$
+// @(#)root/sql
 // Author: Sergey Linev  20/11/2005
 
 
@@ -82,7 +82,7 @@ protected:
    TSQLStructure*   Stack(Int_t depth = 0);
 
    void             WorkWithClass(const char* classname, Version_t classversion); 
-   void             WorkWithElement(TStreamerElement* elem, Int_t number);
+   void             WorkWithElement(TStreamerElement* elem, Int_t comp_type);
 
    Int_t            SqlReadArraySize();
    Bool_t           SqlObjectInfo(Long64_t objid, TString& clname, Version_t& version);
@@ -160,7 +160,7 @@ public:
    virtual void     SkipObjectAny();
 
    virtual void     IncrementLevel(TVirtualStreamerInfo*);
-   virtual void     SetStreamerElementNumber(Int_t);
+   virtual void     SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_type);
    virtual void     DecrementLevel(TVirtualStreamerInfo*);
    
    virtual void     ClassBegin(const TClass*, Version_t = -1);

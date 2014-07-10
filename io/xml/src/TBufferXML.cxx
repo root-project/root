@@ -992,17 +992,17 @@ void TBufferXML::DecrementLevel(TVirtualStreamerInfo* info)
 }
 
 //______________________________________________________________________________
-void TBufferXML::SetStreamerElementNumber(Int_t number)
+void TBufferXML::SetStreamerElementNumber(TStreamerElement *elem, Int_t comptype)
 {
    // Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
    // and add/verify next element of xml structure
    // This calls allows separate data, correspondent to one class member, from another
 
-   WorkWithElement(0, number);
+   WorkWithElement(elem, comptype);
 }
 
 //______________________________________________________________________________
-void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t number)
+void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t comp_type)
 {
    //to be documented by Sergey
    CheckVersionBuf();
@@ -1029,27 +1029,16 @@ void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t number)
       return;
    }
 
-   Int_t comp_type = 0;
-
-   if ((number>=0) && (elem==0)) {
-
-      TStreamerInfo* info = stack->fInfo;
-      if (!stack->IsStreamerInfo()) {
-         Error("SetStreamerElementNumber", "Problem in Inc/Dec level");
-         return;
-      }
-
-      comp_type = info->GetType(number);
-
-      elem = info->GetStreamerElementReal(number, 0);
-   } else if (elem) {
-      comp_type = elem->GetType();
-   }
-
-   if (elem==0) {
-      Error("SetStreamerElementNumber", "streamer info returns elem = 0");
+   if (!elem) {
+      Error("SetStreamerElementNumber", "Problem in Inc/Dec level");
       return;
    }
+   TStreamerInfo* info = stack->fInfo;
+   if (!stack->IsStreamerInfo()) {
+      Error("SetStreamerElementNumber", "Problem in Inc/Dec level");
+      return;
+   }
+   Int_t number = info->GetElements()->IndexOf(elem);
 
    if (gDebug>4) Info("SetStreamerElementNumber", "    Next element %s", elem->GetName());
 
@@ -1057,10 +1046,11 @@ void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t number)
 
    fExpectedChain = isBasicType && (comp_type - elem->GetType() == TStreamerInfo::kOffsetL);
 
-   if (fExpectedChain && (gDebug>3))
+   if (fExpectedChain && (gDebug>3)) {
       Info("SetStreamerElementNumber",
            "    Expects chain for elem %s number %d",
             elem->GetName(), number);
+   }
 
    fCanUseCompact = isBasicType && ((elem->GetType()==comp_type) ||
                                     (elem->GetType()==comp_type-TStreamerInfo::kConv) ||
@@ -1915,17 +1905,16 @@ Int_t TBufferXML::ReadStaticArrayDouble32(Double_t  *d, TStreamerElement * /*ele
       fExpectedChain = kFALSE;                                            \
       Int_t startnumber = Stack(0)->fElemNumber;                          \
       TStreamerInfo* info = Stack(1)->fInfo;                              \
-      Int_t number = 0;                                                   \
       Int_t index = 0;                                                    \
       while (index<n) {                                                   \
-        elem = info->GetStreamerElementReal(startnumber, number++);       \
+        elem = (TStreamerElement*)info->GetElements()->At(startnumber++); \
         if (elem->GetType()<TStreamerInfo::kOffsetL) {                    \
            if (index>0) { PopStack(); ShiftStack("chainreader"); VerifyElemNode(elem); }  \
            fCanUseCompact = kTRUE;                                        \
            XmlReadBasic(vname[index]);                                    \
            index++;                                                       \
         } else {                                                          \
-           if (!VerifyItemNode(xmlio::Array,"ReadFastArray")) return;   \
+           if (!VerifyItemNode(xmlio::Array,"ReadFastArray")) return;     \
            PushStack(StackNode());                                        \
            Int_t elemlen = elem->GetArrayLength();                        \
            TXMLReadArrayContent((vname+index), elemlen);                  \
@@ -1935,7 +1924,7 @@ Int_t TBufferXML::ReadStaticArrayDouble32(Double_t  *d, TStreamerElement * /*ele
         }                                                                 \
       }                                                                   \
    } else {                                                               \
-      if (!VerifyItemNode(xmlio::Array,"ReadFastArray")) return;        \
+      if (!VerifyItemNode(xmlio::Array,"ReadFastArray")) return;          \
       PushStack(StackNode());                                             \
       TXMLReadArrayContent(vname, n);                                     \
       PopStack();                                                         \
@@ -2295,17 +2284,16 @@ void TBufferXML::WriteArrayDouble32(const Double_t  *d, Int_t n, TStreamerElemen
       TStreamerInfo* info = Stack(1)->fInfo;                              \
       Int_t startnumber = Stack(0)->fElemNumber;                          \
       fExpectedChain = kFALSE;                                            \
-      Int_t number = 0;                                                   \
       Int_t index = 0;                                                    \
       while (index<n) {                                                   \
-        elem = info->GetStreamerElementReal(startnumber, number++);       \
+        elem =(TStreamerElement*)info->GetElements()->At(startnumber++);  \
         if (elem->GetType()<TStreamerInfo::kOffsetL) {                    \
           if(index>0) { PopStack(); CreateElemNode(elem); }               \
           fCanUseCompact = kTRUE;                                         \
           XmlWriteBasic(vname[index]);                                    \
           index++;                                                        \
         } else {                                                          \
-          XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array);      \
+          XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array);        \
           Int_t elemlen = elem->GetArrayLength();                         \
           PushStack(arrnode);                                             \
           TXMLWriteArrayContent((vname+index), elemlen);                  \
@@ -2314,7 +2302,7 @@ void TBufferXML::WriteArrayDouble32(const Double_t  *d, Int_t n, TStreamerElemen
         }                                                                 \
       }                                                                   \
    } else {                                                               \
-      XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array);          \
+      XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array);            \
       PushStack(arrnode);                                                 \
       TXMLWriteArrayContent(vname, n);                                    \
       PopStack();                                                         \
@@ -3143,7 +3131,7 @@ Int_t TBufferXML::ApplySequence(const TStreamerInfoActions::TActionSequence &seq
           iter != end;
           ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter).PrintDebug(*this,obj);
          (*iter)(*this,obj);
       }
@@ -3155,7 +3143,7 @@ Int_t TBufferXML::ApplySequence(const TStreamerInfoActions::TActionSequence &seq
           iter != end;
           ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter)(*this,obj);
       }
    }
@@ -3180,7 +3168,7 @@ Int_t TBufferXML::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequenc
           iter != end;
           ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter).PrintDebug(*this,*(char**)start_collection);  // Warning: This limits us to TClonesArray and vector of pointers.
          (*iter)(*this,start_collection,end_collection);
       }
@@ -3192,7 +3180,7 @@ Int_t TBufferXML::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequenc
           iter != end;
           ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter)(*this,start_collection,end_collection);
       }
    }
@@ -3222,7 +3210,7 @@ Int_t TBufferXML::ApplySequence(const TStreamerInfoActions::TActionSequence &seq
           iter != end;
           ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter).PrintDebug(*this,arr0);
          (*iter)(*this,start_collection,end_collection,loopconfig);
       }
@@ -3234,7 +3222,7 @@ Int_t TBufferXML::ApplySequence(const TStreamerInfoActions::TActionSequence &seq
           iter != end;
           ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter)(*this,start_collection,end_collection,loopconfig);
       }
    }
