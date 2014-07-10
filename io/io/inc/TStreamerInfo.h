@@ -76,6 +76,11 @@ class TStreamerInfo : public TVirtualStreamerInfo {
       ~TCompInfo() {};
       void Update(const TClass *oldcl, TClass *newcl);
    };
+   friend class TStreamerInfoActions::TActionSequence;
+
+public:
+   // make the opaque pointer public.
+   typedef TCompInfo TCompInfo_t;
 
 protected:
    //---------------------------------------------------------------------------
@@ -103,6 +108,7 @@ private:
    Int_t             fNumber;            //!Unique identifier
    Int_t             fSize;              //!size of the persistent class
    Int_t             fNdata;             //!number of optimized elements
+   Int_t             fNfulldata;         //!number of elements
    Int_t             fNslots;            //!total numbrer of slots in fComp.
    TCompInfo        *fComp;              //![fNslots with less than fElements->GetEntries()*1.5 used] Compiled info
    TCompInfo       **fCompOpt;           //![fNdata]
@@ -144,8 +150,11 @@ private:
 private:
    TStreamerInfo(const TStreamerInfo&);            // TStreamerInfo are copiable.  Not Implemented.
    TStreamerInfo& operator=(const TStreamerInfo&); // TStreamerInfo are copiable.  Not Implemented.
-   void AddReadAction(Int_t index, TStreamerElement* element);
-   void AddWriteAction(Int_t index, TStreamerElement* element);
+   void AddReadAction(Int_t index, TCompInfo *compinfo);
+   void AddWriteAction(Int_t index, TCompInfo *compinfo);
+   void AddReadMemberWiseAction(Int_t index, TCompInfo *compinfo);
+   void AddWriteMemberWiseAction(Int_t index, TCompInfo *compinfo);
+
 public:
 
    //status bits
@@ -275,10 +284,13 @@ public:
    void                SetClass(TClass *cl) {fClass = cl;}
    void                SetClassVersion(Int_t vers) {fClassVersion=vers;}
    void                TagFile(TFile *fFile);
+private:
+   // Try to remove those functions from the public interface.
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
-   Int_t               WriteBufferSTL   (TBuffer &b, TVirtualCollectionProxy *cont,   Int_t nc, Int_t first, Int_t eoffset );
-   Int_t               WriteBufferSTLPtrs( TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset );
+   Int_t               WriteBufferSTL   (TBuffer &b, TVirtualCollectionProxy *cont,   Int_t nc);
+   Int_t               WriteBufferSTLPtrs( TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset);
+public:
    virtual void        Update(const TClass *oldClass, TClass *newClass);
 
    virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name, Bool_t silent);
@@ -288,9 +300,10 @@ public:
 
    static TStreamerElement   *GetCurrentElement();
 
-
+public:
+   // For access by the StreamerInfoActions.
    template <class T>
-   Int_t               WriteBufferAux      (TBuffer &b, const T &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
+   Int_t               WriteBufferAux      (TBuffer &b, const T &arr, TCompInfo *const*const compinfo, Int_t first, Int_t last, Int_t narr,Int_t eoffset,Int_t mode);
 
    //WARNING this class version must be the same as TVirtualStreamerInfo
    ClassDef(TStreamerInfo,9)  //Streamer information for one class version

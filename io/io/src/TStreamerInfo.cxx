@@ -130,6 +130,7 @@ TStreamerInfo::TStreamerInfo()
    fCompOpt  = 0;
    fCheckSum = 0;
    fNdata    = 0;
+   fNfulldata= 0;
    fNslots   = 0;
    fSize     = 0;
    fClassVersion = 0;
@@ -160,6 +161,7 @@ TStreamerInfo::TStreamerInfo(TClass *cl)
    fCompOpt  = 0;
    fCheckSum = 0;
    fNdata    = 0;
+   fNfulldata= 0;
    fNslots   = 0;
    fSize     = 0;
    fClassVersion = fClass->GetClassVersion();
@@ -506,7 +508,7 @@ void TStreamerInfo::Build()
          infoalloc->BuildCheck();
          infoalloc->BuildOld();
          TClass *allocClass = infoalloc->GetClass();
-         
+
          {
             TIter next(fElements);
             TStreamerElement* element;
@@ -529,10 +531,10 @@ void TStreamerInfo::Build()
             }
             }
          }
-         
+
          TStreamerElement *el = new TStreamerArtificial("@@alloc","", 0, TStreamerInfo::kCacheNew, allocClass->GetName());
          R__TObjArray_InsertAt( fElements, el, 0 );
-         
+
          el = new TStreamerArtificial("@@dealloc","", 0, TStreamerInfo::kCacheDelete, allocClass->GetName());
          fElements->Add( el );
       }
@@ -558,7 +560,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
       fClass = new TClass(GetName(), fClassVersion, 0, 0, -1, -1);
       fClass->SetBit(TClass::kIsEmulation);
       array = fClass->GetStreamerInfos();
-     
+
       // Case of a custom collection (the user provided a CollectionProxy
       // for a class that is not an STL collection).
       if (GetElements()->GetEntries() == 1) {
@@ -648,7 +650,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
                        GetName());
             }
             SetBit(kCanDelete);
-            return;         
+            return;
          }
       }
 
@@ -1545,14 +1547,14 @@ void TStreamerInfo::BuildOld()
          element = (TStreamerElement*)next();
          element->SetNewType( element->GetType() );
          element->SetNewClass( fClass );
-      } else if (((TStreamerElement*)fElements->At(0))->GetType() == TStreamerInfo::kSTL && 
+      } else if (((TStreamerElement*)fElements->At(0))->GetType() == TStreamerInfo::kSTL &&
                  strcmp( ((TStreamerElement*)fElements->At(0))->GetTypeName(),GetName()) != 0) {
          // We have a collection that was proxied but does not have a collection proxy,
          // let's put one in place just for fun ... humm however we have no clue what is the value
          // type ....
-         
+
          // For now wild guess ....
-         
+
       }
    }
 
@@ -1714,7 +1716,7 @@ void TStreamerInfo::BuildOld()
                   Error("BuildOld", "Could not find STL base class: %s for %s\n", element->GetName(), GetName());
                   continue;
                } else if (bc->GetClassPointer()->GetCollectionProxy()
-                          && !bc->GetClassPointer()->IsLoaded() 
+                          && !bc->GetClassPointer()->IsLoaded()
                           && bc->GetClassPointer()->GetCollectionProxy()->GetCollectionType() != TClassEdit::kVector) {
                   Error("BuildOld","The class \"%s\" is compiled and its base class \"%s\" is a collection and we do not have a dictionary for it, we will not be able to read or write this base class.",GetName(),bc->GetName());
                   offset = kMissing;
@@ -1811,7 +1813,7 @@ void TStreamerInfo::BuildOld()
             if (dmClassName.Index("const ")==0) dmClassName.Remove(0,6);
             TClass *elemDm = TClass::GetClass(dmClassName.Data());
             if (elemDm && elemDm->GetCollectionProxy()
-                && !elemDm->IsLoaded() 
+                && !elemDm->IsLoaded()
                 && elemDm->GetCollectionProxy()->GetCollectionType() != TClassEdit::kVector) {
                Error("BuildOld","The class \"%s\" is compiled and for its data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dm->GetName(),elemDm->GetName());
                offset = kMissing;
@@ -2192,7 +2194,7 @@ void TStreamerInfo::BuildOld()
                next(); // move the cursor passed the insert object.
                copy->SetBit(TStreamerElement::kRepeat);
                element = copy;
-               
+
                // Warning("BuildOld","%s::%s is not set from the version %d of %s (You must add a rule for it)\n",GetName(), element->GetName(), GetClassVersion(), GetName() );
             } else {
                // If the element is just cached and not repeat, we need to inject an element
@@ -2299,6 +2301,7 @@ void TStreamerInfo::Clear(Option_t *option)
       delete [] fCompFull; fCompFull= 0;
       delete [] fCompOpt;  fCompOpt = 0;
       fNdata = 0;
+      fNfulldata = 0;
       fNslots= 0;
       fSize = 0;
       ResetBit(kIsCompiled);
@@ -2363,10 +2366,10 @@ namespace {
          if (fDataType < TStreamerInfo::kObject) {
             // For simple type, let compare the data type
             if (fDataType != other.fDataType) {
-               if ( (fDataType == 4 && other.fDataType == 16) 
+               if ( (fDataType == 4 && other.fDataType == 16)
                     || (fDataType == 16 && other.fDataType == 4) ) {
                   // long and 'long long' have the same  file format
-               } else if ( (fDataType == 14 && other.fDataType == 17) 
+               } else if ( (fDataType == 14 && other.fDataType == 17)
                            || (fDataType == 17 && other.fDataType == 14) ) {
                   // unsigned long and 'unsigned long long' have the same  file format
                } else if ( (fDataType == 3 && other.fDataType == 6)
@@ -2378,7 +2381,7 @@ namespace {
                } else {
                   return kTRUE;
                }
-            } 
+            }
          } else if (fClassName != other.fClassName) {
             if ( (fClassName == "long" && (other.fClassName == "long long" || other.fClassName == "Long64_t"))
                   || ( (fClassName == "long long" || fClassName == "Long64_t") && other.fClassName == "long") ) {
@@ -2567,7 +2570,7 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
             done = kTRUE;
             break;
          }
-      } 
+      }
       if (TClassEdit::IsSTLCont(localClass)) {
          localClass = TClassEdit::ShortType( localClass, TClassEdit::kDropStlDefault );
          otherClass = TClassEdit::ShortType( otherClass, TClassEdit::kDropStlDefault );
@@ -3962,11 +3965,11 @@ T TStreamerInfo::GetTypedValue(char *pointer, Int_t i, Int_t j, Int_t len) const
       if (i < 0) return 0;
       ladd  = pointer + fCompFull[i]->fOffset;
       atype = fCompFull[i]->fNewType;
-      len = ((TStreamerElement*)fCompFull[i]->fElem)->GetArrayLength();
+      len = fCompFull[i]->fElem->GetArrayLength();
       if (atype == kSTL) {
-         TClass *newClass = ((TStreamerElement*)fCompFull[i]->fElem)->GetNewClass();
+         TClass *newClass = fCompFull[i]->fElem->GetNewClass();
          if (newClass == 0) {
-            newClass = ((TStreamerElement*)fCompFull[i]->fElem)->GetClassPointer();
+            newClass = fCompFull[i]->fElem->GetClassPointer();
          }
          TClass *innerClass = newClass->GetCollectionProxy()->GetValueClass();
          if (innerClass) {
@@ -4154,43 +4157,63 @@ void TStreamerInfo::ls(Option_t *option) const
       while ((obj = next()))
          obj->ls(option);
    }
-   Bool_t wantOrig = strstr(option,"incOrig") != 0;
-   Bool_t optimized = kFALSE;
-   for (Int_t i=0,j=0;i < fNdata;++i,++j) {
-      TStreamerElement *element = (TStreamerElement*)fCompOpt[i]->fElem;
-      TString sequenceType;
-      element->GetSequenceType(sequenceType);
-      optimized = fCompOpt[i]->fType != element->GetType() && fCompOpt[i]->fType != element->GetNewType();
-      if (optimized) {
-         // This was optimized.
-         if (sequenceType.Length() != 0) {
-            sequenceType += ',';
+   if (strstr(option,"full") != 0) {
+      for (Int_t i=0; i < fNfulldata; ++i) {
+         TStreamerElement *element = (TStreamerElement*)fCompFull[i]->fElem;
+         TString sequenceType;
+         element->GetSequenceType(sequenceType);
+         // by definition of the loop (i+1) <= fNdata
+         if (sequenceType.Length()) {
+            sequenceType.Prepend(" [");
+            sequenceType += "]";
          }
-         sequenceType += "optimized";
+         Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",
+                i,element->GetName(),fCompFull[i]->fType,fCompFull[i]->fOffset,fCompFull[i]->fLength,fCompFull[i]->fMethod,
+                sequenceType.Data());
       }
-      if (sequenceType.Length()) {
-         sequenceType.Prepend(" [");
-         sequenceType += "]";
-      }
-      Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",
-             i,element->GetName(),fCompOpt[i]->fType,fCompOpt[i]->fOffset,fCompOpt[i]->fLength,fCompOpt[i]->fMethod,
-             sequenceType.Data());
-      if (optimized && wantOrig) {
-         Bool_t done;
-         do {
-            element = (TStreamerElement*)fCompFull[j]->fElem;
-            element->GetSequenceType(sequenceType);
-            if (sequenceType.Length()) {
-               sequenceType.Prepend(" [");
-               sequenceType += "]";
-            }
-            Printf("      j=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",
-                   j,element->GetName(),fCompFull[j]->fType,fCompFull[j]->fOffset,fCompFull[j]->fLength,fCompFull[j]->fMethod,
-                   sequenceType.Data());
-            ++j;
-            done = j >= fElements->GetEntries() || ( (i+1 < fNdata) && fCompOpt[i+1]->fElem == fCompFull[j+1]->fElem );
-         } while (!done);
 
+   } else {
+      Bool_t wantOrig = strstr(option,"incOrig") != 0;
+      Bool_t optimized = kFALSE;
+      for (Int_t i=0,j=0;i < fNdata;++i,++j) {
+         TStreamerElement *element = (TStreamerElement*)fCompOpt[i]->fElem;
+         TString sequenceType;
+         element->GetSequenceType(sequenceType);
+         // by definition of the loop (i+1) <= fNdata
+         optimized = (j+1) < fNfulldata  &&
+                     ( (i+1) == fNdata
+                      || ( fCompOpt[i+1]->fElem != fCompFull[j+1]->fElem ) );
+         if (optimized) {
+            // This was optimized.
+            if (sequenceType.Length() != 0) {
+               sequenceType += ',';
+            }
+            sequenceType += "optimized";
+         }
+         if (sequenceType.Length()) {
+            sequenceType.Prepend(" [");
+            sequenceType += "]";
+         }
+         Printf("   i=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",
+                i,element->GetName(),fCompOpt[i]->fType,fCompOpt[i]->fOffset,fCompOpt[i]->fLength,fCompOpt[i]->fMethod,
+                sequenceType.Data());
+         if (optimized && wantOrig) {
+            Bool_t done;
+            do {
+               element = (TStreamerElement*)fCompFull[j]->fElem;
+               element->GetSequenceType(sequenceType);
+               if (sequenceType.Length()) {
+                  sequenceType.Prepend(" [");
+                  sequenceType += "]";
+               }
+               Printf("      j=%2d, %-15s type=%3d, offset=%3d, len=%d, method=%ld%s",
+                      j,element->GetName(),fCompFull[j]->fType,fCompFull[j]->fOffset,fCompFull[j]->fLength,fCompFull[j]->fMethod,
+                      sequenceType.Data());
+               ++j;
+               done = j >= fNfulldata || ( (i+1 < fNdata) && fCompOpt[i+1]->fElem == fCompFull[j+1]->fElem );
+            } while (!done);
+
+         }
       }
    }
 }
@@ -4290,7 +4313,7 @@ void* TStreamerInfo::New(void *obj)
                TVirtualStreamerInfo *einfo = cle->GetStreamerInfoAbstractEmulated();
                if (einfo) einfo->New(eaddr);
             } else {
-               cle->New(eaddr);               
+               cle->New(eaddr);
             }
             break;
          }
@@ -4477,7 +4500,7 @@ void TStreamerInfo::DestructorImpl(void* obj, Bool_t dtorOnly)
       if (etype == kObject || etype == kAny ||
           etype == kTObject || etype == kTString || etype == kTNamed) {
          // A data member is destroyed, but not deleted.
-         cle->Destructor(eaddr, kTRUE); 
+         cle->Destructor(eaddr, kTRUE);
      }
 
       if (etype == kSTL) {

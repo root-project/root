@@ -23,13 +23,15 @@ namespace TStreamerInfoActions {
       // Base class of the Configurations.
    protected:
    public:
+      typedef TStreamerInfo::TCompInfo_t TCompInfo_t;
       TVirtualStreamerInfo *fInfo;    // TStreamerInfo form which the action is derived
       UInt_t                fElemId;  // Identifier of the TStreamerElement
+      TCompInfo_t          *fCompInfo;// Access to compiled information (for legacy code)
       Int_t                 fOffset;  // Offset within the object
       UInt_t                fLength;  // Number of element in a fixed length array.
    public:
-      TConfiguration(TVirtualStreamerInfo *info, UInt_t id, Int_t offset) : fInfo(info), fElemId(id), fOffset(offset),fLength(1) {};
-      TConfiguration(TVirtualStreamerInfo *info, UInt_t id, Int_t offset, UInt_t length) : fInfo(info), fElemId(id), fOffset(offset),fLength(length) {};
+      TConfiguration(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset) : fInfo(info), fElemId(id), fCompInfo(compinfo), fOffset(offset),fLength(1) {};
+      TConfiguration(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, UInt_t length) : fInfo(info), fElemId(id), fCompInfo(compinfo), fOffset(offset),fLength(length) {};
       virtual ~TConfiguration() {};
       
       virtual void AddToOffset(Int_t delta);
