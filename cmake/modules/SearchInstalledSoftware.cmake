@@ -870,12 +870,17 @@ if(davix)
     ExternalProject_Add(
       DAVIX
       PREFIX DAVIX
-      URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
+      #URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
+      GIT_REPOSITORY http://git.cern.ch/pub/davix  GIT_TAG 0_3_0_branch
+      UPDATE_COMMAND git submodule update --recursive 
       INSTALL_DIR ${CMAKE_BINARY_DIR}/DAVIX-install
-      PATCH_COMMAND patch -p0 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
+      PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} 
                  -DBOOST_EXTERNAL=OFF
+                 -DSTATIC_LIBRARY=ON
+                 -DSHARED_LIBRARY=OFF
+                 -DENABLE_TOOLS=OFF
                  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                  -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
@@ -885,9 +890,11 @@ if(davix)
     )
     #--TODO we need to install the dynamic library or build the static (which currently fails)
     set(DAVIX_INCLUDE_DIR ${CMAKE_BINARY_DIR}/DAVIX-install/include/davix)
-    set(DAVIX_LIBRARY -L${CMAKE_BINARY_DIR}/DAVIX-install/lib -ldavix)
+    set(DAVIX_LIBRARY ${CMAKE_BINARY_DIR}/DAVIX-install/lib/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
-    set(DAVIX_LIBRARIES ${DAVIX_LIBRARY})
+    foreach(l davix neon boost_static_internal)
+      list(APPEND DAVIX_LIBRARIES ${CMAKE_BINARY_DIR}/DAVIX-install/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+    endforeach()
   else()
     message(STATUS "Looking for DAVIX")
     find_package(Davix)
