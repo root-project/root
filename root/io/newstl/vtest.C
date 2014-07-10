@@ -15,5 +15,5 @@ void vreadtest(const char*dirname, int nEntry = 0) {
    const char* testname = "vector";
    typedef vectorHolder holder;
 
-   read<holder>(dirname, testname, nEntry);
+   read<holder>(dirname, testname, nEntry, true);
 }
