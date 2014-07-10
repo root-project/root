@@ -324,7 +324,6 @@ Double32_t
 double_t
 Double_t
 Drawable_t
-EDataMode
 EGetLineMode
 ErrorHandlerFunc_t
 fd_mask
@@ -357,10 +356,6 @@ GContext_t
 gid_t
 GlobusAuth_t
 Handle_t
-Html_16_t
-Html_32_t
-Html_u16_t
-Html_u8_t
 IdMap_t
 id_t
 ifstream
@@ -666,8 +661,6 @@ new_handler
 nlink_t
 off_t
 ofstream
-OldProofServAuthSetup_t
-OldSlaveAuthSetup_t
 Option_t
 ostringstream
 pair<basic_string<char>,double>::first_type
@@ -814,7 +807,6 @@ Pattern_t
 pid_t
 Pixel_t
 Pixmap_t
-PrintProgress_t
 pthread_attr_t
 pthread_condattr_t
 pthread_cond_t
@@ -1016,7 +1008,6 @@ TBranchSTL::BranchMap_t
 TBtree::Iterator_t
 TBufferFile::InfoList_t
 TColorGradient::SizeType_t
-TDSetElement::FriendsList_t
 TElementActionD
 TElementActionF
 TElementPosActionD
@@ -1110,8 +1101,6 @@ TMatrixFSub_const
 TMatrixFSym
 TMatrixFSymLazy
 tm_t
-TProofMgr_t
-TSlave_t
 TStreamerInfoActions::TStreamerInfoAction_t
 TStreamerInfoActions::TStreamerInfoLoopAction_t
 TStreamerInfoActions::TStreamerInfoVecPtrLoopAction_t
