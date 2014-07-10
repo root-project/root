@@ -1070,7 +1070,7 @@ releasenotes:
 	@$(MAKERELNOTES)
 
 $(ROOTPCH): $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
-	@$(MAKEONEPCM) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH)
+	@$(MAKEONEPCM) $(ROOT_SRCDIR) "$(filter-out graf2d/qt math/fftw math/foam math/fumili math/mlp math/quadp math/splot math/unuran math/vc math/vdt,$(filter interpreter/% core/% io/io net/net math/% hist/% tree/% graf2d/% graf3d/gl gui/gui gui/fitpanel rootx bindings/pyroot roofit/% tmva main,$(MODULES)))" $(CLINGETCPCH)
 
 ifeq ($(BUILDX11),yes)
 ifeq ($(BUILDASIMAGE),yes)
