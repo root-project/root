@@ -131,7 +131,7 @@ public:
 
    virtual void       TagStreamerInfo(TVirtualStreamerInfo* info) = 0;
    virtual void       IncrementLevel(TVirtualStreamerInfo* info) = 0;
-   virtual void       SetStreamerElementNumber(Int_t) = 0;
+   virtual void       SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_type) = 0;
    virtual void       DecrementLevel(TVirtualStreamerInfo*) = 0;
 
    virtual void       ClassBegin(const TClass*, Version_t = -1) = 0;

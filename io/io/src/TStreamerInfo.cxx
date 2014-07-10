@@ -3800,6 +3800,9 @@ TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_
 //______________________________________________________________________________
 TStreamerElement* TStreamerInfo::GetStreamerElementReal(Int_t i, Int_t j) const
 {
+   //
+   //  This routine is obsolete and should not longer be used.
+   //
    //  TStreamerInfo  holds two types of data structures
    //    -TObjArray* fElements; containing the list of all TStreamerElement
    //       objects for this class version.
@@ -3830,6 +3833,8 @@ TStreamerElement* TStreamerInfo::GetStreamerElementReal(Int_t i, Int_t j) const
    //     TStreamerElement *el = GetStreamerElementReal(0,1);
    //     const char* membername = el->GetName();
    //  This function is typically called from TBuffer, TXmlBuffer
+
+   ::Obsolete("TStreamerInfo::GetStreamerElementReal", "v5-34-20", "v6-00-02");
 
    if (i < 0 || i >= fNdata) return 0;
    if (j < 0) return 0;

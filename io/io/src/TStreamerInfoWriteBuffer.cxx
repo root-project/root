@@ -138,8 +138,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
    for (Int_t i=first;i<last;i++) {
 
-      if (needIncrement) b.SetStreamerElementNumber(i);
       TStreamerElement *aElement = (TStreamerElement*)compinfo[i]->fElem;
+
+      if (needIncrement) b.SetStreamerElementNumber(aElement,compinfo[i]->fType);
 
       Int_t ioffset = eoffset+compinfo[i]->fOffset;
 

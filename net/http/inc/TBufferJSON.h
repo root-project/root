@@ -145,7 +145,7 @@ public:
 
    // these methods used in streamer info to indicate currently streamed element,
    virtual void     IncrementLevel(TVirtualStreamerInfo *);
-   virtual void     SetStreamerElementNumber(Int_t);
+   virtual void     SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_type);
    virtual void     DecrementLevel(TVirtualStreamerInfo *);
 
    virtual void     ClassBegin(const TClass *, Version_t = -1);
@@ -496,7 +496,7 @@ protected:
    TJSONStackObj   *Stack(Int_t depth = 0);
 
    void             WorkWithClass(TStreamerInfo *info, const TClass *cl = 0);
-   void             WorkWithElement(TStreamerElement *elem, Int_t number);
+   void             WorkWithElement(TStreamerElement *elem, Int_t comp_type);
 
    void             PerformPostProcessing(TJSONStackObj *stack, const TStreamerElement *elem = 0);
 
