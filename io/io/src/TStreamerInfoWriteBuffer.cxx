@@ -90,7 +90,7 @@
 
 // Helper function for TStreamerInfo::WriteBuffer
 namespace {
-   template <class T> Bool_t R__TestUseCache(TStreamerElement *element) 
+   template <class T> Bool_t R__TestUseCache(TStreamerElement *element)
    {
       return element->TestBit(TStreamerElement::kCache);
    }
@@ -117,7 +117,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
    Bool_t needIncrement = !( arrayMode & 2 );
    arrayMode = arrayMode & (~2);
-   
+
    if (needIncrement) b.IncrementLevel(this);
 
    //mark this class as being used in the current file
@@ -510,7 +510,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
                TClass* vClass = proxy ? proxy->GetValueClass() : 0;
 
-               if (!b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming) 
+               if (!b.TestBit(TBuffer::kCannotHandleMemberWiseStreaming)
                    && proxy && vClass
                    && GetStreamMemberWise()
                    && cl->CanSplit()
@@ -794,7 +794,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
          case TStreamerInfo::kArtificial:
 #if 0
             ROOT::TSchemaRule::WriteFuncPtr_t writefunc = ((TStreamerArtificialElement*)aElement)->GetWriteFunc();
-            if (writefunc) { 
+            if (writefunc) {
                DOLOOP( writefunc(arr[k]+eoffset, b) );
             }
 #endif

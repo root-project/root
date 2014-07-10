@@ -183,7 +183,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkip + TStreamerInfo::kULong64:   SkipCBasicType(ULong64_t);
       case TStreamerInfo::kSkip + TStreamerInfo::kBits:      {
          UInt_t dummy;
-         DOLOOP{ 
+         DOLOOP{
             b >> dummy;
             if ((dummy & kIsReferenced) != 0) {
                UShort_t pidf;
@@ -437,7 +437,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
      }                                                                    \
      break;                                                               \
    }
-   
+
 #define ConvCBasicPointer(name,ReadArrayFunc)                                           \
    {                                                                      \
       Char_t isArray;                                                     \
@@ -566,7 +566,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
                                                               ConvCBasicType(Long64_t,b >> u);
 #else
-                                                              ConvCBasicType(ULong64_t,b >> u);         
+                                                              ConvCBasicType(ULong64_t,b >> u);
 #endif
                                                            } else {
                                                               ConvCBasicType(ULong_t,b >> u);
@@ -617,13 +617,13 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
             }
          } break;
       }
-         
+
          // convert array of basic types  array[8]
       case TStreamerInfo::kConvL + TStreamerInfo::kBool:    ConvCBasicArray(Bool_t,ReadFastArray);
       case TStreamerInfo::kConvL + TStreamerInfo::kChar:    ConvCBasicArray(Char_t,ReadFastArray);
       case TStreamerInfo::kConvL + TStreamerInfo::kShort:   ConvCBasicArray(Short_t,ReadFastArray);
       case TStreamerInfo::kConvL + TStreamerInfo::kInt:     ConvCBasicArray(Int_t,ReadFastArray);
-      case TStreamerInfo::kConvL + TStreamerInfo::kLong:    
+      case TStreamerInfo::kConvL + TStreamerInfo::kLong:
          if (fComp[i].fNewType==TStreamerInfo::kLong64 || fComp[i].fNewType==TStreamerInfo::kULong64) {
             ConvCBasicArray(Long64_t,ReadFastArray);
          } else {
@@ -637,7 +637,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConvL + TStreamerInfo::kUChar:   ConvCBasicArray(UChar_t,ReadFastArray);
       case TStreamerInfo::kConvL + TStreamerInfo::kUShort:  ConvCBasicArray(UShort_t,ReadFastArray);
       case TStreamerInfo::kConvL + TStreamerInfo::kUInt:    ConvCBasicArray(UInt_t,ReadFastArray);
-      case TStreamerInfo::kConvL + TStreamerInfo::kULong:   
+      case TStreamerInfo::kConvL + TStreamerInfo::kULong:
          if (fComp[i].fNewType==TStreamerInfo::kLong64 || fComp[i].fNewType==TStreamerInfo::kULong64) {
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
             ConvCBasicArray(Long64_t,ReadFastArray)
@@ -658,7 +658,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConvP + TStreamerInfo::kChar:    ConvCBasicPointer(Char_t,ReadFastArray);
       case TStreamerInfo::kConvP + TStreamerInfo::kShort:   ConvCBasicPointer(Short_t,ReadFastArray);
       case TStreamerInfo::kConvP + TStreamerInfo::kInt:     ConvCBasicPointer(Int_t,ReadFastArray);
-      case TStreamerInfo::kConvP + TStreamerInfo::kLong:    
+      case TStreamerInfo::kConvP + TStreamerInfo::kLong:
          if (fComp[i].fNewType==TStreamerInfo::kLong64 || fComp[i].fNewType==TStreamerInfo::kULong64) {
             ConvCBasicPointer(Long64_t,ReadFastArray);
          } else {
@@ -672,7 +672,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConvP + TStreamerInfo::kUChar:   ConvCBasicPointer(UChar_t,ReadFastArray);
       case TStreamerInfo::kConvP + TStreamerInfo::kUShort:  ConvCBasicPointer(UShort_t,ReadFastArray);
       case TStreamerInfo::kConvP + TStreamerInfo::kUInt:    ConvCBasicPointer(UInt_t,ReadFastArray);
-      case TStreamerInfo::kConvP + TStreamerInfo::kULong:   
+      case TStreamerInfo::kConvP + TStreamerInfo::kULong:
          if (fComp[i].fNewType==TStreamerInfo::kLong64 || fComp[i].fNewType==TStreamerInfo::kULong64) {
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
             ConvCBasicPointer(Long64_t,ReadFastArray)
@@ -726,7 +726,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
    TStreamerInfo *thisVar = this;
    Bool_t needIncrement = !( arrayMode & 2 );
    arrayMode = arrayMode & (~2);
-   
+
    if (needIncrement) b.IncrementLevel(thisVar);
 
    Int_t last;
@@ -1123,7 +1123,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   // Collection was saved member-wise
 
                   vers &= ~( TBufferFile::kStreamedMemberWise );
-                  
+
                   TClass *newClass = aElement->GetNewClass();
                   TClass *oldClass = aElement->GetClassPointer();
                   if( vers < 9 && newClass && newClass!=oldClass ) {
@@ -1140,7 +1140,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                   TVirtualCollectionProxy *newProxy = (newClass ? newClass->GetCollectionProxy() : 0);
                   TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
                   TStreamerInfo *subinfo = 0;
-                  
+
                   if( newProxy ) {
                      // coverity[dererence] oldProxy->GetValueClass() can not be null since this was streamed memberwise.
                      subinfo = (TStreamerInfo*)newProxy->GetValueClass()->GetConversionStreamerInfo( oldProxy->GetValueClass(), vClVersion );
@@ -1253,12 +1253,12 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                         subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
                         subinfo->Compile();
                      }
-                     
+
                      DOLOOP {
                         int objectSize = cle->Size();
                         char *obj = arr[k]+ioffset;
                         char *end = obj + fComp[i].fLength*objectSize;
-                        
+
                         for(; obj<end; obj+=objectSize) {
                            TVirtualCollectionProxy::TPushPop helper( newProxy, obj );
                            Int_t nobjects;
@@ -1348,7 +1348,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                // embed it in the bytestream even in the member-wise case.
                // For now rely, on the StreamerElement:
                TStreamerInfo *binfo = ((TStreamerInfo*)((TStreamerBase*)aElement)->GetBaseStreamerInfo());
-               if (!binfo->TestBit(kCannotOptimize) && binfo->IsCompiled()) { 
+               if (!binfo->TestBit(kCannotOptimize) && binfo->IsCompiled()) {
                   binfo->SetBit(kCannotOptimize);
                   binfo->Compile();
                }
