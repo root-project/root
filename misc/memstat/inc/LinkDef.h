@@ -14,10 +14,10 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ namespace memstat;
+#pragma link C++ namespace Memstat;
 
 #pragma link C++ class TMemStat;
-#pragma link C++ class memstat::TMemStatMng;
+#pragma link C++ class Memstat::TMemStatMng;
 
 
 //#pragma link C++ function Memstat::dig2bytes(Long64_t);

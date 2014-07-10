@@ -19,7 +19,7 @@
 using namespace std;
 
 //______________________________________________________________________________
-string memstat::dig2bytes(Long64_t bytes)
+string Memstat::dig2bytes(Long64_t bytes)
 {
    // This function creates a string representation of the number of bytes,
    // represented as a number in B, kB, MB or GB depending on the value.

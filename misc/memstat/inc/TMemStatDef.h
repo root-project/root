@@ -13,7 +13,7 @@
 
 #include <stddef.h>
 
-namespace memstat {
+namespace Memstat {
    const size_t g_BTStackLevel = 50;
 }
 #endif

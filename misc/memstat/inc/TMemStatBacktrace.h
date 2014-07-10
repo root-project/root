@@ -19,7 +19,7 @@
 
 class TString;
 
-namespace memstat {
+namespace Memstat {
    //
    // Backtrace functions
    //

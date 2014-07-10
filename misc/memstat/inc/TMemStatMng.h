@@ -33,7 +33,7 @@ class TFile;
 class TH1I;
 class TObjArray;
 
-namespace memstat {
+namespace Memstat {
 
    class TMemStatFAddrContainer {
       typedef std::map<ULong_t, Int_t> Container_t;
