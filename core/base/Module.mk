@@ -67,6 +67,12 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
+$(call stripsrc,$(BASEDIRS)/TROOT.o): $(RGITCOMMITH)
+# RGITCOMMITH depends on COREO *except* for TROOT.o (because of circular
+# dependencies). But a rebuild of TROOT.o should trigger a rebuild of
+# RGITCOMMITH, too - thus add these dependencies here.
+$(RGITCOMMITH): $(BASEDIRS)/TROOT.cxx $(BASEDIRI)/TROOT.h
+
 $(call stripsrc,$(BASEDIRS)/TPRegexp.o): $(PCREDEP)
 $(call stripsrc,$(BASEDIRS)/TPRegexp.o): CXXFLAGS += $(PCREINC)
 

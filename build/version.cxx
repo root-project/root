@@ -7,7 +7,6 @@ int version()
    // Author: Fons Rademakers   11/10/99
 
    const char *in  = "build/version_number";
-   const char *inr = "etc/gitinfo.txt";
 
    FILE *fp = fopen(in, "r");
    if (!fp) {
@@ -19,19 +18,6 @@ int version()
    if (vers[strlen(vers)-1] == '\n') vers[strlen(vers)-1] = 0;
    fclose(fp);
 
-   fp = fopen(inr, "r");
-   if (!fp) {
-      printf("version.cxx: can not open input file %s\n", inr);
-      return 1;
-   }
-   char branch[2048];
-   fgets(branch, sizeof(branch), fp);
-   if (branch[strlen(branch)-1] == '\n') branch[strlen(branch)-1] = 0;
-   char revs[42];
-   fgets(revs, sizeof(revs), fp);
-   if (revs[strlen(revs)-1] == '\n') revs[strlen(revs)-1] = 0;
-   fclose(fp);
-   
    const char *out = "core/base/inc/RVersion.h";
    fp = fopen(out, "w");
    if (!fp) {
@@ -60,10 +46,9 @@ int version()
    fprintf(fp, "#define ROOT_RELEASE \"%s\"\n", vers);
    fprintf(fp, "#define ROOT_RELEASE_DATE \"%s\"\n", __DATE__);
    fprintf(fp, "#define ROOT_RELEASE_TIME \"%s\"\n", __TIME__);
-   fprintf(fp, "#define ROOT_GIT_COMMIT \"%s\"\n", revs);
-   fprintf(fp, "#define ROOT_GIT_BRANCH \"%s\"\n", branch);
-   fprintf(fp, "#define ROOT_VERSION_CODE %d\n", vers_code);
    fprintf(fp, "#define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))\n");
+   fprintf(fp, "#define ROOT_VERSION_CODE ROOT_VERSION(%d,%d,%d) /* %d */\n",
+           xx, yy, zz, vers_code);
    fprintf(fp, "\n#endif\n");
 
    fclose(fp);
