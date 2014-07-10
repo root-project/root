@@ -1683,7 +1683,10 @@ void TBranchElement::FillLeavesMemberCounter(TBuffer& b)
       Error("FillLeaves", "Cannot get streamer info for branch '%s'", GetName());
       return;
    }
-   Int_t n = si->WriteBufferAux(b, &fObject, fID, 1, 0, 0);
+   // Since info is not null, fFillActionSequence is not null either.
+   b.ApplySequence(*fFillActionSequence, fObject);
+   // Int_t n = si->WriteBufferAux(b, &fObject, fID, 1, 0, 0);
+   Int_t n = *(Int_t*)(fObject + si->GetOffset(fID)); // or  GetInfoImp()->GetTypedValue<Int_t>(&fObject, fID, j, -1);
    if (n > fMaximum) {
       fMaximum = n;
    }
