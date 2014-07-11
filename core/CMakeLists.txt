@@ -78,7 +78,6 @@ add_custom_command(OUTPUT  ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp)
 set_source_files_properties(${CMAKE_BINARY_DIR}/RGitCommit.h.tmp PROPERTIES GENERATED TRUE)
-message("dep_targets=${dep_targets}")
 add_dependencies(gitcommit ${dep_targets})
 
 set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
