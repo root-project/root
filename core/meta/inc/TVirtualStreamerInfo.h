@@ -126,9 +126,11 @@ public:
    virtual UInt_t      GetCheckSum() const = 0;
    virtual Int_t       GetClassVersion() const = 0;
    virtual TStreamerElement *GetElem(Int_t id) const = 0;
+   virtual TStreamerElement *GetElement(Int_t id) const = 0;
    virtual TObjArray  *GetElements() const = 0;
    virtual Int_t       GetOffset(const char *) const = 0;
    virtual Int_t       GetOffset(Int_t id) const = 0;
+   virtual Int_t       GetElementOffset(Int_t id) const = 0;
    virtual Version_t   GetOldVersion() const = 0;
    virtual Int_t       GetOnFileClassVersion() const = 0;
    virtual Int_t       GetNumber()  const = 0;

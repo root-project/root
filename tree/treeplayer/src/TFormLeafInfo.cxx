@@ -198,7 +198,7 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t& instance)
    Int_t offset = 0;
    if (id > -1) {
       // Branch is *not* a top-level branch.
-      offset = info->GetOffset(id);
+      offset = info->TStreamerInfo::GetElementOffset(id);
    }
    char* address = 0;
    // Branch is *not* a top-level branch.
@@ -215,7 +215,8 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t& instance)
    } else {
       Int_t type = -1;
       if (id > -1) {
-         type = info->GetNewType(id);
+         // Note this is somewhat slow
+         type = info->TStreamerInfo::GetElement(id)->GetNewType();
       }
       switch (type) {
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
@@ -928,7 +929,7 @@ T TFormLeafInfo::ReadValueImpl(char *thisobj, Int_t instance)
 //______________________________________________________________________________
 TFormLeafInfoDirect::TFormLeafInfoDirect(TBranchElement * from) :
    TFormLeafInfo(from->GetInfo()->GetClass(),0,
-                 from->GetInfo()->GetElem(from->GetID()))
+                 from->GetInfo()->GetElement(from->GetID()))
 {
    // Constructor.
 }
