@@ -4202,9 +4202,7 @@ void TStreamerInfo::ls(Option_t *option) const
          TString sequenceType;
          element->GetSequenceType(sequenceType);
          // by definition of the loop (i+1) <= fNdata
-         optimized = (j+1) < fNfulldata  &&
-                     ( (i+1) == fNdata
-                      || ( fCompOpt[i+1]->fElem != fCompFull[j+1]->fElem ) );
+         optimized = TStreamerInfo::kOffsetL < fCompOpt[i]->fType && fCompOpt[i]->fType < TStreamerInfo::kOffsetP && fCompOpt[i]->fLength > fCompOpt[i]->fElem->GetArrayLength();
          if (optimized) {
             // This was optimized.
             if (sequenceType.Length() != 0) {
