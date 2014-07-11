@@ -174,14 +174,15 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
 
    DebugPrint("%s\n", smsg.Data());
 
-#ifdef __APPLE__
-   if (__crashreporter_info__)
-      delete [] __crashreporter_info__;
-   __crashreporter_info__ = StrDup(smsg);
-#endif
-
    fflush(stderr);
    if (abort_bool) {
+
+#ifdef __APPLE__
+      if (__crashreporter_info__)
+         delete [] __crashreporter_info__;
+      __crashreporter_info__ = StrDup(smsg);
+#endif
+
       DebugPrint("aborting\n");
       fflush(stderr);
       if (gSystem) {
