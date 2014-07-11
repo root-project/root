@@ -106,13 +106,3 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
-##### cintdlls ######
-ifneq ($(ARCH),win32)
-$(CINTDIRDLLS)/pthread.dll: cint/cint/lib/pthread/pthd.h $(ROOTCLINGSTAGE1DEP) $(CINTTMP)
-	@$(MAKECINTDLL) $(PLATFORM) C pthread pthread pthd.h \
-           "$(CINTTMP)" "$(ROOTCLINGSTAGE1)" \
-	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
-	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(THREADLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB) $(CINTDLLLIBLINK)" \
-	   "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)" \
-	   "$(CXXOUT)" 
-endif
