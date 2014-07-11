@@ -3544,10 +3544,6 @@ void TBufferFile::ForceWriteInfoClones(TClonesArray *a)
    // one must disable the option BypassStreamer.
 
    TStreamerInfo *sinfo = (TStreamerInfo*)a->GetClass()->GetStreamerInfo();
-   if (sinfo->IsOptimized()) {
-      sinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-      sinfo->Compile();
-   }
    ForceWriteInfo(sinfo,kFALSE);
 }
 

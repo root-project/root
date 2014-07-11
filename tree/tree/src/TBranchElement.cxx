@@ -1955,7 +1955,7 @@ void TBranchElement::InitInfo()
          // FIXME: Check that the found streamer info checksum matches our branch class checksum here.
          // Check to see if the class code was unloaded/reloaded
          // since we were created.
-	 R__LOCKGUARD(gCINTMutex);
+         R__LOCKGUARD(gCINTMutex);
          if (fCheckSum && (cl->IsForeign() || (!cl->IsLoaded() && (fClassVersion == 1) && cl->GetStreamerInfos()->At(1) && (fCheckSum != ((TVirtualStreamerInfo*) cl->GetStreamerInfos()->At(1))->GetCheckSum())))) {
             // Try to compensate for a class that got unloaded on us.
             // Search through the streamer infos by checksum
@@ -1989,12 +1989,10 @@ void TBranchElement::InitInfo()
 
    if (fInfo) {
 
-      if ( GetID()>-1 && (!fInfo->IsCompiled() || fInfo->IsOptimized()) ) {
+      if ( GetID()>-1 && !fInfo->IsCompiled() ) {
          // Streamer info has not yet been compiled.
-         //
-         // Optimizing does not work with splitting.
-         fInfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-         fInfo->Compile();
+
+         Error("InitInfo","StreamerInfo is not compiled.");
       }
       if (!fInit) {
          // We were read in from a file, figure out what our fID should be,
@@ -5477,18 +5475,7 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
       return 0;
    }
 
-   //
-   //  Rebuild the streamer info for cl unoptimized
-   //  so that each data member has its own streamer
-   //  element.  This allows each data member to have
-   //  its own branch and thus be stored and queried
-   //  independently in the tree.
-   //
    TStreamerInfo* sinfo = fTree->BuildStreamerInfo(cl);
-   if (sinfo && splitlevel > 0 && (!sinfo->IsCompiled() || sinfo->IsOptimized()) ) {
-      sinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-      sinfo->Compile();
-   }
 
    //
    //  Do nothing if we couldn't build the streamer info for cl.
