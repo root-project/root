@@ -198,6 +198,20 @@ TStreamerInfo::~TStreamerInfo()
 }
 
 //______________________________________________________________________________
+namespace {
+   // Makes sure kBuildOldUsed set once Build or BuildOld finishes
+   struct TPreventBuildOldGuard {
+      TPreventBuildOldGuard(TStreamerInfo* info): fInfo(info) {
+         fInfo->SetBit(TStreamerInfo::kBuildOldUsed);
+      }
+      TPreventBuildOldGuard() {
+         fInfo->ResetBit(TStreamerInfo::kBuildOldUsed);
+      }
+      TStreamerInfo* fInfo;
+   };
+}
+
+//______________________________________________________________________________
 void TStreamerInfo::Build()
 {
    // Build the I/O data structure for the current class version.
@@ -210,6 +224,9 @@ void TStreamerInfo::Build()
 
    // This is used to avoid unwanted recursive call to Build
    fIsBuilt = kTRUE;
+
+   // This is used to avoid unwanted recursive call to BuildOld.
+   TPreventBuildOldGuard buildOldGuard(this);
 
    if (fClass->GetCollectionProxy()) {
       TVirtualCollectionProxy *proxy = fClass->GetCollectionProxy();
@@ -1475,10 +1492,10 @@ namespace {
       return 0;
    }
 
-   //Makes sure kBuildOldUsed set once BuildOld finishes
-   struct BuildOldGuard {
-      BuildOldGuard(TStreamerInfo* info): fInfo(info) {}
-      ~BuildOldGuard() {
+   // Makes sure kBuildOldUsed set once BuildOld finishes
+   struct TBuildOldGuard {
+      TBuildOldGuard(TStreamerInfo* info): fInfo(info) {}
+      ~TBuildOldGuard() {
          fInfo->SetBit(TStreamerInfo::kBuildOldUsed);
       }
       TStreamerInfo* fInfo;
@@ -1491,8 +1508,8 @@ void TStreamerInfo::BuildOld()
    // rebuild the TStreamerInfo structure
 
    R__LOCKGUARD(gCINTMutex);
-   if( TestBit(kBuildOldUsed) && !IsOptimized() ) return;
-   BuildOldGuard buildOldGuard(this);
+   if ( TestBit(kBuildOldUsed) ) return;
+   TBuildOldGuard buildOldGuard(this);
 
    if (gDebug > 0) {
       printf("\n====>Rebuilding TStreamerInfo for class: %s, version: %d\n", GetName(), fClassVersion);
@@ -2178,7 +2195,7 @@ void TStreamerInfo::BuildOld()
                if (!infoalloc) {
                   Error("BuildOld","Unable to create the StreamerInfo for %s.",TString::Format("%s@@%d",GetName(),GetOnFileClassVersion()).Data());
                } else {
-	          infoalloc->SetBit(kBuildOldUsed,false);
+                  infoalloc->SetBit(kBuildOldUsed,false);
                   infoalloc->BuildCheck();
                   infoalloc->BuildOld();
                   allocClass = infoalloc->GetClass();
@@ -4731,7 +4748,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
          R__b.ClassEnd(TStreamerInfo::Class());
          R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
          ResetBit(kIsCompiled);
-	 ResetBit(kBuildOldUsed);
+         ResetBit(kBuildOldUsed);
          return;
       }
       //====process old versions before automatic schema evolution
