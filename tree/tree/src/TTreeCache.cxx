@@ -41,6 +41,7 @@
 //   referenced by the list are put in the cache.                       //
 //                                                                      //
 //  The learning period is started or restarted when:
+//     - A TTree automatically creates a cache
 //     - TTree::SetCacheSize is called for the first time.
 //     - TTree::SetCacheSize is called a second time with a different size.
 //     - TTreeCache::StartLearningPhase is called.
@@ -87,11 +88,16 @@
 //     HOW TO USE the TreeCache
 //     =========================
 //
-//  A few use cases are discussed below. It is not simple to activate the cache
-//  by default (except case1 below) because there are many possible configurations.
-//  In some applications you know a priori the list of branches to read.
-//  In other applications the analysis loop calls several layers of user functions
-//  where it is impossible to predict a priori which branches will be used. This
+//  A few use cases are discussed below. A cache may be created with automatic sizing
+//  when a TTree is used:
+//
+//  Caches are created and automatically sized for TTrees when TTreeCache.Size or
+//  the environment variable ROOT_TTREECACHE_SIZE is set to a sizing factor.
+//
+//  But there are many possible configurations where manual control may be wanted.
+//  In some applications you know a priori the list of branches to read. In other
+//  applications the analysis loop calls several layers of user functions where it
+//  is impossible to predict a priori which branches will be used. This
 //  is probably the most frequent case. In this case ROOT I/O will flag used
 //  branches automatically when a branch buffer is read during the learning phase.
 //  The TreeCache interface provides functions to instruct the cache about the used
@@ -228,6 +234,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TSystem.h"
+#include "TEnv.h"
 #include "TTreeCache.h"
 #include "TChain.h"
 #include "TList.h"
@@ -267,7 +275,8 @@ TTreeCache::TTreeCache() : TFileCacheRead(),
    fFirstEntry(-1),
    fReadDirectionSet(kFALSE),
    fEnabled(kTRUE),
-   fPrefillType(TTreeCache::kNoPrefill)
+   fPrefillType(GetConfiguredPrefillType()),
+   fAutoSized(kFALSE)
 {
    // Default Constructor.
 }
@@ -295,7 +304,8 @@ TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->Get
    fFirstEntry(-1),
    fReadDirectionSet(kFALSE),
    fEnabled(kTRUE),
-   fPrefillType(TTreeCache::kNoPrefill)
+   fPrefillType(GetConfiguredPrefillType()),
+   fAutoSized(kFALSE)
 {
    // Constructor.
 
@@ -332,7 +342,7 @@ void TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
    // the expected TTree), then prefill the cache.  (We expect that in future
    // release the Prefill-ing will be the default so we test for that inside the
    // LearnPrefill call).
-   if (fNbranches == 0 && b->GetReadEntry() == fEntryMin) LearnPrefill();
+   if (fNbranches == 0 && fEntryMin >= 0 && b->GetReadEntry() == fEntryMin) LearnPrefill();
 
    //Is branch already in the cache?
    Bool_t isNew = kTRUE;
@@ -855,6 +865,25 @@ Bool_t TTreeCache::FillBuffer()
    return kTRUE;
 }
 
+//______________________________________________________________________________
+TTreeCache::EPrefillType TTreeCache::GetConfiguredPrefillType() const
+{
+   // Return the desired prefill type from the environment or resource variable
+   // 0 - No prefill
+   // 1 - All branches
+
+   const char *stcp;
+   Int_t s = 0;
+
+   if (!(stcp = gSystem->Getenv("ROOT_TTREECACHE_PREFILL")) || !*stcp) {
+      s = gEnv->GetValue("TTreeCache.Prefill", 0);
+   } else {
+      s = TString(stcp).Atoi();
+   }
+
+   return static_cast<TTreeCache::EPrefillType>(s);
+}
+
 //_____________________________________________________________________________
 Double_t TTreeCache::GetEfficiency() const
 {
@@ -890,14 +919,6 @@ Int_t TTreeCache::GetLearnEntries()
    //see SetLearnEntries
 
    return fgLearnEntries;
-}
-
-//_____________________________________________________________________________
-TTree *TTreeCache::GetTree() const
-{
-   //return Tree in the cache
-   if (fNbranches <= 0) return 0;
-   return ((TBranch*)(fBranches->UncheckedAt(0)))->GetTree();
 }
 
 //_____________________________________________________________________________
@@ -1095,6 +1116,8 @@ void TTreeCache::SetLearnPrefill(TTreeCache::EPrefillType type /* = kNoPrefill *
    // The two value currently supported are:
    //   TTreeCache::kNoPrefill    disable the prefilling
    //   TTreeCache::kAllBranches  fill the cache with baskets from all branches.
+   // The default prefilling behavior can be controlled by setting
+   // TTreeCache.Prefill or the environment variable ROOT_TTREECACHE_PREFILL.
 
    fPrefillType = type;
 }

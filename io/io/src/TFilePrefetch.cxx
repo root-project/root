@@ -315,7 +315,9 @@ void TFilePrefetch::SetFile(TFile *file)
    // - clear all blocks from prefetching and read list
    // - reset the file pointer
   
-   fSemChangeFile->Wait();
+   if (!fThreadJoined) {
+     fSemChangeFile->Wait();
+   }
 
    if (fFile) {
      // Remove all pending and read blocks
@@ -329,7 +331,9 @@ void TFilePrefetch::SetFile(TFile *file)
    }
       
    fFile = file;
-   fSemChangeFile->Post();
+   if (!fThreadJoined) {
+     fSemChangeFile->Post();
+   }
 }
 
 

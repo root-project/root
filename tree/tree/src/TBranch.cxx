@@ -1195,6 +1195,9 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    // See IMPORTANT REMARKS in TTree::GetEntry.
    //
 
+   // Remember which entry we are reading.
+   fReadEntry = entry;
+
    Bool_t enabled = !TestBit(kDoNotProcess) || getall;
    TBasket *basket; // will be initialized in the if/then clauses.
    Long64_t first;
@@ -1273,8 +1276,6 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    }
 
    // Int_t bufbegin = buf->Length();
-   // Remember which entry we are reading.
-   fReadEntry = entry;
    (this->*fReadLeaves)(*buf);
    return buf->Length() - bufbegin;
 }
@@ -1285,6 +1286,9 @@ Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/, TClonesArray* li
    // Read all leaves of an entry and export buffers to real objects in a TClonesArray list.
    //
    // Returns total number of bytes read.
+
+   // Remember which entry we are reading.
+   fReadEntry = entry;
 
    if (TestBit(kDoNotProcess)) {
       return 0;
@@ -1341,8 +1345,6 @@ Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/, TClonesArray* li
       bufbegin = basket->GetKeylen() + ((entry-first) * basket->GetNevBufSize());
       buf->SetBufferOffset(bufbegin);
    }
-   // Remember which entry we are reading.
-   fReadEntry = entry;
    TLeaf* leaf = (TLeaf*) fLeaves.UncheckedAt(0);
    leaf->ReadBasketExport(*buf, li, nentries);
    nbytes = buf->Length() - bufbegin;

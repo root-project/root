@@ -86,6 +86,7 @@ class TVirtualIndex;
 class TBranchRef;
 class TBasket;
 class TStreamerInfo;
+class TTreeCache;
 class TTreeCloner;
 class TFileMergeInfo;
 
@@ -140,6 +141,8 @@ protected:
    TBranchRef    *fBranchRef;         //  Branch supporting the TRefTable (if any)
    UInt_t         fFriendLockStatus;  //! Record which method is locking the friend recursion
    TBuffer       *fTransientBuffer;   //! Pointer to the current transient buffer.
+   Bool_t         fCacheDoAutoInit;   //! true if cache auto creation or resize check is needed
+   Bool_t         fCacheUserSet;      //! true if the cache setting was explicitly given by user
 
    static Int_t     fgBranchStyle;      //  Old/New branch style
    static Long64_t  fgMaxTreeSize;      //  Maximum size of a file containg a Tree
@@ -161,8 +164,12 @@ protected:
    Int_t    SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr);
    virtual TLeaf   *GetLeafImpl(const char* branchname, const char* leafname);
 
+   Long64_t         GetCacheAutoSize(Bool_t withDefault = kFALSE) const;
    char             GetNewlineValue(istream &inputStream);
+   TTreeCache      *GetReadCache(TFile *file, Bool_t create = kFALSE);
    void             ImportClusterRanges(TTree *fromtree);
+   void             MoveReadCache(TFile *src, TDirectory *dir);
+   void             SetCacheSizeAux(Bool_t autocache = kTRUE, Long64_t cacheSize = 0);
 
    class TFriendLock {
       // Helper class to prevent infinite recursion in the
