@@ -53,7 +53,7 @@ public :
    virtual void    SetOption(const char *option) {  }
    virtual void    SetObject(TObject *obj) { }
    virtual void    SetInputList(TList *input) { }
-   virtual TList  *GetOutputList() const { }
+   virtual TList  *GetOutputList() const { return 0; }
    virtual void    SlaveTerminate() { }
    virtual void    Terminate() { }
 
@@ -86,7 +86,7 @@ void writefiles(Double_t f) {
    fillTree(50);
    output->Write();
    delete output;
-   TFile *output = new TFile("autocache2.root","RECREATE");
+   output = new TFile("autocache2.root","RECREATE");
    fillTree(50*f);
    output->Write();
    delete output;
@@ -148,7 +148,7 @@ int runone(const Long64_t *cSizep=0) {
    printf("Reported cache size from TTree: %lld\n", T->GetCacheSize());
    TTreeCache *pf = dynamic_cast<TTreeCache*>(file->GetCacheRead(T));
    if (pf) {
-     printf("Reported buffer size from TTreeCache: %lld\n", pf->GetBufferSize());
+     printf("Reported buffer size from TTreeCache: %d\n", pf->GetBufferSize());
      printf("PrintCacheStats output:\n");
      T->PrintCacheStats("");
      printf("-- end of PrintCacheStats output --\n");
