@@ -18,6 +18,7 @@ void na49view() {
    na49title->Draw();
    //
    TFile *nageom = new TFile("na49.root");
+   if (!nageom || nageom->IsZombie()) return;
    TGeometry *n49 =(TGeometry*)gROOT->FindObject("na49");
    n49->SetBomb(1.2);
    n49->cd();     //Set current geometry
