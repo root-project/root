@@ -4155,12 +4155,6 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
          // Re-test to make sure we did not get the 'wrong' result early because
          // of the potential data races on fBits.
          if (!guess->IsCompiled()) guess->BuildOld();
-      } else if (guess->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
-         // Undo optimization if the global flag tells us to.
-         R__LOCKGUARD(gCINTMutex);
-         // Re-test to make sure we did not get the 'wrong' result early because
-         // of the potential data races on fBits.
-         if (guess->IsOptimized()) guess->Compile();
       }
       return guess;
    }
@@ -4221,9 +4215,6 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
          // Therefore it was read in from a file and we have to do schema evolution?
          // Or it didn't have a dictionary before, but does now?
          sinfo->BuildOld();
-      } else if (sinfo->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
-         // Undo optimization if the global flag tells us to.
-         sinfo->Compile();
       }
    }
    // Cache the current info if we now have it.
@@ -6289,9 +6280,6 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
       // Therefore it was read in from a file and we have to do schema evolution?
       // Or it didn't have a dictionary before, but does now?
       info->BuildOld();
-   } else if (info->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
-      // Undo optimization if the global flag tells us to.
-      info->Compile();
    }
 
    //----------------------------------------------------------------------------
@@ -6381,9 +6369,6 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
       // Therefore it was read in from a file and we have to do schema evolution?
       // Or it didn't have a dictionary before, but does now?
       info->BuildOld();
-   } else if (info->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
-      // Undo optimization if the global flag tells us to.
-      info->Compile();
    }
 
    //----------------------------------------------------------------------------

@@ -2401,14 +2401,6 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */, Boo
    cl->BuildRealData(pointer);
    TStreamerInfo* sinfo = (TStreamerInfo*)cl->GetStreamerInfo(cl->GetClassVersion());
 
-   if (sinfo && !canOptimize && (!sinfo->IsCompiled() || sinfo->IsOptimized()) ) {
-      // Streamer info has not yet been compiled.
-      //
-      // Optimizing does not work with splitting.
-      sinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-      sinfo->Compile();
-   }
-
    // Create StreamerInfo for all base classes.
    TBaseClass* base = 0;
    TIter nextb(cl->GetListOfBases());

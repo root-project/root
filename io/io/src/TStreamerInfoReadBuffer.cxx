@@ -1150,10 +1150,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                      newProxy = oldProxy;
                   }
                   if (subinfo) {
-                     if (subinfo->IsOptimized()) {
-                        subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-                        subinfo->Compile();
-                     }
                      DOLOOP {
                         void* env;
                         void **contp = (void**)(arr[k]+ioffset);
@@ -1246,11 +1242,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                      newProxy = oldProxy;
                   }
                   if (subinfo) {
-                     if (subinfo->IsOptimized()) {
-                        subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-                        subinfo->Compile();
-                     }
-
                      DOLOOP {
                         int objectSize = cle->Size();
                         char *obj = arr[k]+ioffset;
@@ -1341,10 +1332,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                // embed it in the bytestream even in the member-wise case.
                // For now rely, on the StreamerElement:
                TStreamerInfo *binfo = ((TStreamerInfo*)((TStreamerBase*)aElement)->GetBaseStreamerInfo());
-               if (!binfo->TestBit(kCannotOptimize) && binfo->IsCompiled()) {
-                  binfo->SetBit(kCannotOptimize);
-                  binfo->Compile();
-               }
                binfo->ReadBuffer(b,arr,binfo->fCompFull,0,binfo->fNfulldata,narr,ioffset,arrayMode);
             }
             continue;

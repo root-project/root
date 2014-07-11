@@ -522,10 +522,6 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                   UInt_t pos = b.WriteVersionMemberWise(this->IsA(),kTRUE);
                   b.WriteVersion( vClass, kFALSE );
                   TStreamerInfo *subinfo = (TStreamerInfo*)vClass->GetStreamerInfo();
-                  if (subinfo->IsOptimized()) {
-                     subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-                     subinfo->Compile();
-                  }
                   DOLOOP {
                      char **contp = (char**)(arr[k]+ioffset);
                      for(int j=0;j<compinfo[i]->fLength;++j) {
@@ -572,10 +568,6 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                   UInt_t pos = b.WriteVersionMemberWise(this->IsA(),kTRUE);
                   b.WriteVersion( vClass, kFALSE );
                   TStreamerInfo *subinfo = (TStreamerInfo*)vClass->GetStreamerInfo();
-                  if (subinfo->IsOptimized()) {
-                     subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-                     subinfo->Compile();
-                  }
                   DOLOOP {
                      char *obj = (char*)(arr[k]+ioffset);
                      Int_t n = compinfo[i]->fLength;
@@ -644,10 +636,6 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
             } else {
                TClass *cl                 = compinfo[i]->fClass;
                TStreamerInfo *binfo = ((TStreamerInfo*)cl->GetStreamerInfo());
-//               if (!binfo->TestBit(kCannotOptimize) && binfo->IsCompiled()) {
-//                  binfo->SetBit(kCannotOptimize);
-//                  binfo->Compile();
-//               }
                binfo->WriteBufferAux(b,arr,binfo->fCompFull,0,binfo->fNfulldata,narr,ioffset,arrayMode);
             }
             continue;

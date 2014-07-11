@@ -520,10 +520,6 @@ namespace TStreamerInfoActions
             // coverity[dereference] since this is a member streaming action by definition the collection contains objects.
             TStreamerInfo *subinfo = (TStreamerInfo*)oldProxy->GetValueClass()->GetStreamerInfo( 0 );
 
-            if (subinfo->IsOptimized()) {
-               subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-               subinfo->Compile();
-            }
             subinfo->ReadBufferSTL(buf, oldProxy, nobjects, /* offset */ 0, /* v7 */ kFALSE);
          }
          oldProxy->Commit(env);
@@ -601,10 +597,6 @@ namespace TStreamerInfoActions
                // coverity[dereference] since this is a member streaming action by definition the collection contains objects.
                TStreamerInfo *subinfo = (TStreamerInfo*)oldProxy->GetValueClass()->GetStreamerInfo( 0 );
 
-               if (subinfo->IsOptimized()) {
-                  subinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-                  subinfo->Compile();
-               }
                subinfo->ReadBufferSTL(buf, oldProxy, nobjects, /* offset */ 0, /* v7 */ kFALSE);
             }
             oldProxy->Commit(env);
@@ -2357,30 +2349,7 @@ void TStreamerInfo::Compile()
          // when it is making branches for a split object.
          continue;
       }
-      if (TestBit(kCannotOptimize) && element->IsBase())
-      {
-         // Make sure the StreamerInfo for the base class is also
-         // not optimized.
-         TClass *bclass = element->GetClassPointer();
-         TStreamerInfo *binfo;
-         if (element->IsA() == TStreamerBase::Class()) {
-            binfo = ((TStreamerInfo*)((TStreamerBase*)element)->GetBaseStreamerInfo());
-         } else {
-            binfo = ((TStreamerInfo*)bclass->GetStreamerInfo(0));
-         }
-         if (binfo) {
-            // binfo might be null in cases where:
-            // a) the class on file inherit from an abstract class
-            // b) the class in memory does no longer inherit from an abstract class
-            // c) the abstract class is still loaded in memory
-            binfo->SetBit(kCannotOptimize);
-            if (binfo->IsOptimized())
-            {
-               // Optimizing does not work with splitting.
-               binfo->Compile();
-            }
-         }
-      }
+
       Int_t asize = element->GetSize();
       if (element->GetArrayLength()) {
          asize /= element->GetArrayLength();
@@ -2916,11 +2885,6 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       return new TStreamerInfoActions::TActionSequence(0,0);
    }
 
-   if (info->IsOptimized()) {
-      // For now insures that the StreamerInfo is not optimized
-      info->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-      info->Compile();
-   }
    TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(info);
 
    UInt_t ndata = info->GetElements()->GetEntries();
@@ -3035,11 +2999,6 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
          return new TStreamerInfoActions::TActionSequence(0,0);
       }
 
-      if (info->IsOptimized()) {
-         // For now insures that the StreamerInfo is not optimized
-         info->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-         info->Compile();
-      }
       UInt_t ndata = info->GetElements()->GetEntries();
       TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(info);
       TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(info,ndata);
