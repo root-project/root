@@ -123,10 +123,12 @@ private:
 #else
    ULong_t           fLiveCount;         //! Number of outstanding pointer to this StreamerInfo.
 #endif
-   TStreamerInfoActions::TActionSequence *fReadObjectWise;      //! List of read action resulting from the compilation.
-   TStreamerInfoActions::TActionSequence *fReadMemberWise;      //! List of read action resulting from the compilation for use in member wise streaming.
-   TStreamerInfoActions::TActionSequence *fWriteObjectWise;     //! List of write action resulting from the compilation.
-   TStreamerInfoActions::TActionSequence *fWriteMemberWise;     //! List of write action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fReadObjectWise;        //! List of read action resulting from the compilation.
+   TStreamerInfoActions::TActionSequence *fReadMemberWise;        //! List of read action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fReadMemberWiseVecPtr;  //! List of read action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fWriteObjectWise;       //! List of write action resulting from the compilation.
+   TStreamerInfoActions::TActionSequence *fWriteMemberWise;       //! List of write action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fWriteMemberWiseVecPtr; //! List of write action resulting from the compilation for use in member wise streaming.
 
 #if __cplusplus >= 201103L
    static std::atomic<Int_t>             fgCount;     //Number of TStreamerInfo instances
@@ -150,10 +152,10 @@ private:
 private:
    TStreamerInfo(const TStreamerInfo&);            // TStreamerInfo are copiable.  Not Implemented.
    TStreamerInfo& operator=(const TStreamerInfo&); // TStreamerInfo are copiable.  Not Implemented.
-   void AddReadAction(Int_t index, TCompInfo *compinfo);
-   void AddWriteAction(Int_t index, TCompInfo *compinfo);
-   void AddReadMemberWiseAction(Int_t index, TCompInfo *compinfo);
-   void AddWriteMemberWiseAction(Int_t index, TCompInfo *compinfo);
+   void AddReadAction(TStreamerInfoActions::TActionSequence *readSequence, Int_t index, TCompInfo *compinfo);
+   void AddWriteAction(TStreamerInfoActions::TActionSequence *writeSequence, Int_t index, TCompInfo *compinfo);
+   void AddReadMemberWiseVecPtrAction(TStreamerInfoActions::TActionSequence *readSequence, Int_t index, TCompInfo *compinfo);
+   void AddWriteMemberWiseVecPtrAction(TStreamerInfoActions::TActionSequence *writeSequence, Int_t index, TCompInfo *compinfo);
 
 public:
 
@@ -235,9 +237,9 @@ public:
    TStreamerElement   *GetElem(Int_t id) const {return fComp[id].fElem;}  // Return the element for the list of optimized elements (max GetNdata())
    TStreamerElement   *GetElement(Int_t id) const {return (TStreamerElement*)fElements->At(id);} // Return the element for the complete list of elements (max GetElements()->GetEntries())
    Int_t               GetElementOffset(Int_t id) const {return fCompFull[id]->fOffset;}
-   TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Bool_t forCollection) { return forCollection ? fReadMemberWise : fReadObjectWise; }
+   TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Bool_t forCollection) { return forCollection ? fReadMemberWiseVecPtr : fReadMemberWise; }
    TStreamerInfoActions::TActionSequence *GetReadObjectWiseActions() { return fReadObjectWise; }
-   TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions(Bool_t forCollection) { return forCollection ? fWriteMemberWise : fWriteObjectWise; }
+   TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions(Bool_t forCollection) { return forCollection ? fWriteMemberWiseVecPtr : fWriteMemberWise; }
    TStreamerInfoActions::TActionSequence *GetWriteObjectWiseActions() { return fWriteObjectWise; }
    Int_t               GetNdata()   const {return fNdata;}
    Int_t               GetNelement() const { return fElements->GetEntries(); }
