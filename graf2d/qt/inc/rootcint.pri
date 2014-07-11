@@ -8,9 +8,6 @@
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
-# This file may be distributed under the terms of the Q Public License
-# as defined by Trolltech AS of Norway and appearing in the file
-# LICENSE.QPL included in the packaging of this file.
 #-------------------------------------------------------------------------
 #
 # Usage:
