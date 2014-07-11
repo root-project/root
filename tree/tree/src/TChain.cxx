@@ -1516,7 +1516,9 @@ Long64_t TChain::LoadTree(Long64_t entry)
          tpf = 0;
       }
    } else {
-      this->SetCacheSize(fCacheSize);
+      if (fCacheUserSet) {
+         this->SetCacheSize(fCacheSize);
+      }
    }
 
    // Check if fTreeOffset has really been set.
@@ -2197,6 +2199,9 @@ void TChain::SetCacheSize(Long64_t cacheSize)
 {
    // Set the cache size of the underlying TTree,
    // See TTree::SetCacheSize.
+
+   // remember user has requested this cache setting
+   fCacheUserSet = kTRUE;
 
    if (fTree) {
       fTree->SetCacheSize(cacheSize);
