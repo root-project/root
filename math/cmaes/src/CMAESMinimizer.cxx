@@ -355,6 +355,7 @@ namespace ROOT
       else cmaparams._quiet = true;
       for (auto mit=fFixedVariables.begin();mit!=fFixedVariables.end();mit++)
 	cmaparams.set_fixed_p((*mit).first,(*mit).second);
+      cmaparams.set_edm(true); // always activate EDM computation.
       cmaparams.set_ftolerance(Tolerance());
       cmaparams.set_max_iter(maxiter);
       cmaparams.set_max_fevals(maxfevals);
