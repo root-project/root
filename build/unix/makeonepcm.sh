@@ -6,14 +6,15 @@
 # Copyright (c) 2013 Rene Brun and Fons Rademakers
 # Author: Fons Rademakers, 19/2/2013
 
-echo
-echo Generating the one large pcm, patience...
-echo
-
 srcdir=$1
 shift
 modules=$1
 shift
+
+echo
+echo Generating the one large pcm for $modules, patience...
+echo
+
 
 rm -f include/allHeaders.h include/allHeaders.h.pch include/allLinkDef.h all.h cppflags.txt include/allLinkDef.h
 

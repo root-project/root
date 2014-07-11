@@ -542,9 +542,6 @@ Bool_t TOrdCollectionIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
-   if (nullptr == (&aIter))
-      return (fCurCursor < fCol->GetSize());
-
    if (aIter.IsA() == TOrdCollectionIter::Class()) {
       const TOrdCollectionIter &iter(dynamic_cast<const TOrdCollectionIter &>(aIter));
       return (fCurCursor != iter.fCurCursor);
@@ -556,9 +553,6 @@ Bool_t TOrdCollectionIter::operator!=(const TIterator &aIter) const
 Bool_t TOrdCollectionIter::operator!=(const TOrdCollectionIter &aIter) const
 {
    // This operator compares two TOrdCollectionIter objects.
-
-   if (nullptr == (&aIter))
-      return (fCurCursor < fCol->GetSize());
 
    return (fCurCursor != aIter.fCurCursor);
 }

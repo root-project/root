@@ -571,9 +571,6 @@ Bool_t TMapIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
-   if (nullptr == (&aIter))
-      return fCursor->operator*();
-
    if (aIter.IsA() == TMapIter::Class()) {
       const TMapIter &iter(dynamic_cast<const TMapIter &>(aIter));
       return (fCursor->operator*() != iter.fCursor->operator*());
@@ -585,9 +582,6 @@ Bool_t TMapIter::operator!=(const TIterator &aIter) const
 Bool_t TMapIter::operator!=(const TMapIter &aIter) const
 {
    // This operator compares two TMapIter objects.
-
-   if (nullptr == (&aIter))
-      return fCursor->operator*();
 
    return (fCursor->operator*() != aIter.fCursor->operator*());
 }

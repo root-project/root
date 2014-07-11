@@ -521,6 +521,7 @@ endif
 ##### Compiler directives and run-control file #####
 
 COMPILEDATA   = include/compiledata.h
+RGITCOMMITH  := core/base/src/RGitCommit.h
 ROOTRC        = etc/system.rootrc
 ROOTMAP       = etc/system.rootmap
 ROOTPCH       = etc/allDict.cxx.pch
@@ -796,6 +797,23 @@ $(COMPILEDATA): $(ROOT_SRCDIR)/config/Makefile.$(ARCH) config/Makefile.comp Make
 	   "$(LIBDIR)" "$(BOOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" \
 	   "$(MAKESHAREDLIB)" "$(MAKEEXE)" "$(ARCH)" "$(ROOTBUILD)" \
 	   "$(EXPLICITLINK)"
+
+# We rebuild GITCOMMITH only when we would re-link libCore anyway.
+# Thus it depends on all dependencies of libCore (minus TROOT.o
+# - the only #includer of GOREGITH - to avoid circular dependencies).
+$(RGITCOMMITH): $(filter-out core/base/src/TROOT.o,$(COREO)) $(COREDO) $(PCREDEP) $(CORELIBDEP)
+	@echo '#ifndef ROOT_RGITCOMMIT_H' > $@.tmp
+	@echo '#define ROOT_RGITCOMMIT_H' >> $@.tmp
+	@echo '#define ROOT_GIT_BRANCH "'`head -n 1 etc/gitinfo.txt | tail -n1`'"' >> $@.tmp
+	@echo '#define ROOT_GIT_COMMIT "'`head -n 2 etc/gitinfo.txt | tail -n1`'"' >> $@.tmp
+	@echo '#endif' >> $@.tmp
+	@if test -r $@; then \
+	  if ! diff $@.tmp $@ > /dev/null 2>&1; then \
+	    mv $@.tmp $@; \
+	  fi; \
+	else \
+	    mv $@.tmp $@; \
+	fi
 
 ifeq ($(HOST),)
 build/dummy.d: config Makefile $(ALLHDRS) $(RMKDEP) $(BINDEXP)
@@ -1076,7 +1094,7 @@ releasenotes:
 	@$(MAKERELNOTES)
 
 $(ROOTPCH): $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
-	@$(MAKEONEPCM) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH)
+	@$(MAKEONEPCM) $(ROOT_SRCDIR) "$(filter-out graf2d/qt math/fftw math/foam math/fumili math/mlp math/quadp math/splot math/unuran math/vc math/vdt,$(filter interpreter/% core/% io/io net/net math/% hist/% tree/% graf2d/% graf3d/gl gui/gui gui/fitpanel rootx bindings/pyroot roofit/% tmva main,$(MODULES)))" $(CLINGETCPCH)
 
 ifeq ($(BUILDX11),yes)
 ifeq ($(BUILDASIMAGE),yes)

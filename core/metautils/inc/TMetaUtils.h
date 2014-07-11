@@ -666,6 +666,9 @@ void Warning(const char *location, const char *va_(fmt), ...);
 void Fatal(const char *location, const char *va_(fmt), ...);
 
 //______________________________________________________________________________
+const std::string& GetPathSeparator();
+
+//______________________________________________________________________________
 namespace AST2SourceTools {
 
 //______________________________________________________________________________

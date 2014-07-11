@@ -1718,7 +1718,7 @@ namespace HistFactory{
     for(unsigned int i=0; i<likelihoodTermNames.size(); ++i){
       RooAbsArg* proto_arg = (proto->arg(likelihoodTermNames[i].c_str())); 
       if( proto_arg==NULL ) {
-	std::cout << "Error: Cannot find arg set: " << constraintTermNames.at(i)
+	std::cout << "Error: Cannot find arg set: " << likelihoodTermNames.at(i)
 		  << " in workspace: " << proto->GetName() << std::endl;
 	throw hf_exc();
       }

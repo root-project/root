@@ -24,7 +24,7 @@
 
 class TObject;
 
-namespace memstat {
+namespace Memstat {
    std::string dig2bytes(Long64_t bytes);
 
 //______________________________________________________________________________

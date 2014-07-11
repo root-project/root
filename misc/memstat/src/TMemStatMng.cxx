@@ -26,7 +26,7 @@
 #include "TMemStatBacktrace.h"
 #include "TMemStatMng.h"
 
-using namespace memstat;
+using namespace Memstat;
 
 ClassImp(TMemStatMng)
 

@@ -90,7 +90,7 @@
 ClassImp(TMemStat)
 
 using namespace std;
-using namespace memstat;
+using namespace Memstat;
 
 _INIT_TOP_STACK;
 
@@ -114,7 +114,7 @@ TMemStat::TMemStat(Option_t* option, Int_t buffersize, Int_t maxcalls): fIsActiv
    {
       string opt(option);
       transform(opt.begin(), opt.end(), opt.begin(),
-                memstat::ToLower_t());
+                Memstat::ToLower_t());
 
       useBuiltin = (opt.find("gnubuiltin") != string::npos) ? kTRUE : kFALSE;
    }

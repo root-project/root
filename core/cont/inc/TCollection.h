@@ -160,7 +160,16 @@ public:
    Option_t          *GetOption() const { return fIterator ? fIterator->GetOption() : ""; }
    void               Reset() { if (fIterator) fIterator->Reset(); }
    TIter             &operator++() { Next(); return *this; }
-   Bool_t             operator!=(const TIter &aIter) const { return ((*fIterator) != *(aIter.fIterator)); }
+   Bool_t             operator==(const TIter &aIter) const {
+      if (fIterator == nullptr)
+         return aIter.fIterator == nullptr || **aIter.fIterator == nullptr;
+      if (aIter.fIterator == nullptr)
+         return fIterator == nullptr || **fIterator == nullptr;
+      return *fIterator == *aIter.fIterator;
+   }
+   Bool_t             operator!=(const TIter &aIter) const {
+      return !(*this == aIter);
+   }
    TObject           *operator*() const { return *(*fIterator); }
    TIter             &Begin();
    static TIter       End();

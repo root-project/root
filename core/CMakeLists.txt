@@ -45,6 +45,49 @@ add_subdirectory(zip)
 add_subdirectory(lzma)
 add_subdirectory(base)
 
+set(objectlibs $<TARGET_OBJECTS:Base>
+               $<TARGET_OBJECTS:Clib>
+               $<TARGET_OBJECTS:Cont>
+               $<TARGET_OBJECTS:Lzma>
+               $<TARGET_OBJECTS:Zip>
+               $<TARGET_OBJECTS:MetaUtils>
+               $<TARGET_OBJECTS:Meta>
+               $<TARGET_OBJECTS:TextInput>
+               ${macosx_objects}
+               ${unix_objects}
+               ${winnt_objects})
+
+#---Generation of RGitCommit.h-----------------------------------------------------------
+foreach(exp ${objectlibs})
+  string(REGEX REPLACE "^[$]<TARGET_OBJECTS:(.+)>" "\\1" lib ${exp})
+  get_target_property(objs ${lib} OBJECTS)
+  list(APPEND dep_objects ${objs})
+  list(APPEND dep_targets ${lib})
+endforeach()
+
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
+                   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp ${CMAKE_BINARY_DIR}/include/RGitCommit.h
+                   COMMENT ""
+                   DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+add_custom_command(OUTPUT  ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/gitinfo.sh ${CMAKE_SOURCE_DIR}
+                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/githeader.sh RGitCommit.h.tmp
+                   COMMENT "Recording the git revision now"
+                   DEPENDS ${dep_objects}
+                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp)
+set_source_files_properties(${CMAKE_BINARY_DIR}/RGitCommit.h.tmp PROPERTIES GENERATED TRUE)
+message("dep_targets=${dep_targets}")
+add_dependencies(gitcommit ${dep_targets})
+
+set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
+                            PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
+
+ROOT_OBJECT_LIBRARY(BaseTROOT ${CMAKE_SOURCE_DIR}/core/base/src/TROOT.cxx ${CMAKE_BINARY_DIR}/include/RGitCommit.h)
+add_dependencies(BaseTROOT gitcommit)
+#----------------------------------------------------------------------------------------
+
 if(WIN32)
    set(corelinklibs shell32.lib WSock32.lib Oleaut32.lib Iphlpapi.lib)
 elseif(cocoa)
@@ -53,21 +96,10 @@ endif()
 add_subdirectory(utils)
 
 #-------------------------------------------------------------------------------
-
-
 ROOT_LINKER_LIBRARY(Core
-                    $<TARGET_OBJECTS:Base>
-                    $<TARGET_OBJECTS:Clib>
-                    $<TARGET_OBJECTS:Cont>
-                    $<TARGET_OBJECTS:Lzma>
-                    $<TARGET_OBJECTS:Zip>
-                    $<TARGET_OBJECTS:MetaUtils>
-                    $<TARGET_OBJECTS:Meta>
-                    $<TARGET_OBJECTS:TextInput>
-                    ${macosx_objects}
-                    ${unix_objects}
-                    ${winnt_objects}
-                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY} 
+                    $<TARGET_OBJECTS:BaseTROOT>
+                    ${objectlibs}
+                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
                               ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs} )
 
 add_dependencies(Core TEXTINPUT_DICTIONARY)
@@ -75,3 +107,5 @@ add_dependencies(Core TEXTINPUT_DICTIONARY)
 if(cling)
   add_dependencies(Core CLING)
 endif()
+
+#----------------------------------------------------------------------------------------

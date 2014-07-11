@@ -881,9 +881,6 @@ Bool_t TObjArrayIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
-   if (nullptr == (&aIter))
-      return (fCurCursor < fArray->Capacity());
-
    if (aIter.IsA() == TObjArrayIter::Class()) {
       const TObjArrayIter &iter(dynamic_cast<const TObjArrayIter &>(aIter));
       return (fCurCursor != iter.fCurCursor);
@@ -895,9 +892,6 @@ Bool_t TObjArrayIter::operator!=(const TIterator &aIter) const
 Bool_t TObjArrayIter::operator!=(const TObjArrayIter &aIter) const
 {
    // This operator compares two TObjArrayIter objects.
-
-   if (nullptr == (&aIter))
-      return (fCurCursor < fArray->Capacity());
 
    return (fCurCursor != aIter.fCurCursor);
 }

@@ -931,9 +931,6 @@ Bool_t TRefArrayIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
-   if (nullptr == (&aIter))
-      return (fCurCursor < fArray->Capacity());
-
    if (aIter.IsA() == TRefArrayIter::Class()) {
       const TRefArrayIter &iter(dynamic_cast<const TRefArrayIter &>(aIter));
       return (fCurCursor != iter.fCurCursor);
@@ -945,9 +942,6 @@ Bool_t TRefArrayIter::operator!=(const TIterator &aIter) const
 Bool_t TRefArrayIter::operator!=(const TRefArrayIter &aIter) const
 {
    // This operator compares two TRefArrayIter objects.
-
-   if (nullptr == (&aIter))
-      return (fCurCursor < fArray->Capacity());
 
    return (fCurCursor != aIter.fCurCursor);
 }

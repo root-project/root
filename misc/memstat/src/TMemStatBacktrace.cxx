@@ -55,7 +55,7 @@ void *g_global_stack_end = NULL;
 
 #endif
 
-namespace memstat {
+namespace Memstat {
 
 
 //______________________________________________________________________________

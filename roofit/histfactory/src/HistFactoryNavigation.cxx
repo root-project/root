@@ -149,6 +149,7 @@ namespace RooStats {
 
       // Set the PDF member
       fModel = model;
+      fObservables = observables; 
 
       // Get the observables
       if( !observables ) {

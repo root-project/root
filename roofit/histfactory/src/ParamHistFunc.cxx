@@ -97,7 +97,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _dataVars("!dataVars","data Vars",       this),
   _paramSet("!paramSet","bin parameters",  this),
   _numBins(0),
-  _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars) 
+  _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars)
 {
   
   // Create a function which returns binewise-values
@@ -142,7 +142,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _dataVars("!dataVars","data Vars",       this),
   _paramSet("!paramSet","bin parameters",  this),
   _numBins(0),
-  _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars, Hist) 
+  _dataSet( (std::string(name)+"_dataSet").c_str(), "", vars, Hist)
 {
 
   // Create a function which returns binewise-values

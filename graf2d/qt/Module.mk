@@ -150,22 +150,3 @@ ifeq (,$(QT4))
 else
 	$(QTMOCEXE) $(GQTCXXFLAGS) $< -o $@
 endif
-
-
-##### cintdlls ######
-
-# qtcint is not longer part of the cintdlls
-# cintdlls: $(CINTDIRDLLS)/qtcint.dll
-
-qtcint: lib/qtcint.dll
-
-lib/qtcint.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/cint/lib/qt/qtcint.h \
-                cint/cint/lib/qt/qtclasses.h cint/cint/lib/qt/qtglobals.h \
-                cint/cint/lib/qt/qtfunctions.h
-	$(MAKECINTDLL) $(PLATFORM) C++ qtcint qt \
-	  " -p $(GQTCXXFLAGS) qtcint.h " \
-           "$(CINTTMP)" "$(ROOTCLINGSTAGE2)" \
-	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" \
-           "$(CINTCXXFLAGS) $(GQTCXXFLAGS)" "$(CINTCFLAGS)" \
-           "$(LDFLAGS)" "$(QTLIBDIR) $(QTLIB) $(CINTDLLLIBLINK)" "$(SOFLAGS)" \
-           "$(SOEXT)" "$(COMPILER)" "$(CXXOUT)"

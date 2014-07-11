@@ -4363,6 +4363,20 @@ void ROOT::TMetaUtils::ReplaceAll(std::string& str, const std::string& from, con
 }
 
 //______________________________________________________________________________
+const std::string& ROOT::TMetaUtils::GetPathSeparator()
+{
+   // Return the separator suitable for this platform.
+   // To be replaced at the next llvm upgrade by
+   // const StringRef llvm::sys::path::get_separator()
+#ifdef WIN32
+   static const std::string gPathSeparator ("\\");
+#else
+   static const std::string gPathSeparator ("/");
+#endif
+   return gPathSeparator;
+}
+
+//______________________________________________________________________________
 int ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(const clang::Decl& decl,
                                                            std::string& defString)
 {
@@ -4641,6 +4655,10 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
                                        underlyingType,
                                        interpreter,
                                        nCtxt);
+
+   // Heuristic: avoid entities like myclass<myType1, myType2::xyz>
+   if (underlyingName.find(">::") != std::string::npos)
+      return 0;
 
    buffer="typedef "+underlyingName+" "+buffer+";";
    const clang::RecordDecl* rcd=EncloseInScopes(tdnDecl,buffer);

@@ -10,6 +10,7 @@ add_definitions(${CLING_CXXFLAGS} -Wno-shadow -Wno-unused-parameter)
 ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           src/TModuleGenerator.cxx src/rootcling.cxx src/rootclingTCling.cxx
                           ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
+                          $<TARGET_OBJECTS:BaseTROOT>
                           $<TARGET_OBJECTS:MetaLLVM>
                           $<TARGET_OBJECTS:Clib>
                           $<TARGET_OBJECTS:MetaUtils> 
@@ -43,11 +44,11 @@ install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
                   DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
 
 add_custom_command(OUTPUT rootcling_tmp.cxx
-                   COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx rootcling_tmp.cxx
+                   COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx ${CMAKE_CURRENT_BINARY_DIR}/rootcling_tmp.cxx
                    DEPENDS  ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx)
 set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=\"\\\"${CMAKE_BINARY_DIR}/etc/cling\\\"\"")
 ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/DictSelectionReader.cxx
-                              src/TModuleGenerator.cxx rootcling_tmp.cxx
+                              src/TModuleGenerator.cxx ${CMAKE_CURRENT_BINARY_DIR}/rootcling_tmp.cxx
                               ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
                               $<TARGET_OBJECTS:Clib> 
                               $<TARGET_OBJECTS:MetaUtils> 

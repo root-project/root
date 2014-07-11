@@ -1,9 +1,8 @@
-{
+void fildir() {
    //
    // This macro displays the ROOT Directory data structure
    //Author: Rene Brun
-   
-   gROOT->Reset();
+
    c1 = new TCanvas("c1","ROOT FilDir description",700,900);
    c1->Range(1,1,19,24.5);
    TPaveLabel title(4,23,16,24.2,"ROOT File/Directory/Key description");

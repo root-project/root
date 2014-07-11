@@ -471,9 +471,6 @@ Bool_t TViewPubFunctionsIter::operator!=(const TIterator &aIter) const
 {
    // This operator compares two TIterator objects.
 
-   if (nullptr == (&aIter))
-      return 0 != *(fFuncIter);
-
    const TViewPubFunctionsIter *iter = dynamic_cast<const TViewPubFunctionsIter*>(&aIter);
    if (iter) {
       return (fClassIter != iter->fClassIter || fFuncIter != iter->fFuncIter);
@@ -485,9 +482,6 @@ Bool_t TViewPubFunctionsIter::operator!=(const TIterator &aIter) const
 Bool_t TViewPubFunctionsIter::operator!=(const TViewPubFunctionsIter &aIter) const
 {
    // This operator compares two TViewPubFunctionsIter objects.
-
-   if (nullptr == (&aIter))
-      return 0 != *(fFuncIter);
 
    return (fClassIter != aIter.fClassIter || fFuncIter != aIter.fFuncIter);
 }
