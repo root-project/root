@@ -1,13 +1,13 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog multi.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog multi.root autocache1.root autocache2.root autocache.err
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += multiTree mytest cachedchain
+TEST_TARGETS += multiTree mytest cachedchain autocache
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -64,6 +64,14 @@ cachedchain.log: runcachedchain.C
 	| grep -v -e 'no dictionary for class' -e 'trying to read an emulated class (AliESDEvent)'  > cachedchain.log
 
 cachedchain: cachedchain.log
+	$(TestDiff)
+
+autocache.log: runautocache.C
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runautocache.C > autocache.out 2> autocache.err
+	$(CMDECHO) grep -v -e 'no dictionary for class' -e 'trying to read an emulated class (AliESDEvent)' autocache.err >> autocache.out || true
+	$(CMDECHO) mv autocache.out autocache.log
+
+autocache: autocache.log
 	$(TestDiff)
 
 multiTree: multiTree.log
