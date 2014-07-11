@@ -2590,9 +2590,15 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                   if (declCtxt && !templateName.getAsQualifiedTemplateName()){
                      clang::NamespaceDecl* ns = clang::dyn_cast<clang::NamespaceDecl>(declCtxt);
                      clang::NestedNameSpecifier* nns;
-                     if (ns) nns = cling::utils::TypeName::CreateNestedNameSpecifier(Ctx, ns);
-                     else nns = cling::utils::TypeName::CreateNestedNameSpecifier(Ctx,llvm::dyn_cast<clang::TagDecl>(declCtxt),
-                                                                                  false /*FullyQualified*/);
+                     if (ns) {
+                        nns = cling::utils::TypeName::CreateNestedNameSpecifier(Ctx, ns);
+                     } else if (clang::TagDecl* TD = llvm::dyn_cast<clang::TagDecl>(declCtxt)) {
+                        nns = cling::utils::TypeName::CreateNestedNameSpecifier(Ctx,TD, false /*FullyQualified*/);
+                     } else {
+                        // TU scope
+                        desArgs.push_back(*I);
+                        continue;
+                     }
                      clang::TemplateName templateNameWithNSS ( Ctx.getQualifiedTemplateName(nns, false, templateDecl) );
                      desArgs.push_back(clang::TemplateArgument(templateNameWithNSS));
                      mightHaveChanged = true;
