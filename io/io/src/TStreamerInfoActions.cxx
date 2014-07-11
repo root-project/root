@@ -78,13 +78,13 @@ namespace TStreamerInfoActions
       // Inform the user what we are about to stream.
 
       TStreamerInfo *info = (TStreamerInfo*)fInfo;
-      TStreamerElement *aElement = (TStreamerElement*)info->GetElem(fElemId);
+      TStreamerElement *aElement = fCompInfo->fElem;
       TString sequenceType;
       aElement->GetSequenceType(sequenceType);
 
       printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
              " %s, offset=%d (%s)\n",
-             info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetType(fElemId),
+             info->GetClass()->GetName(), aElement->GetName(), fElemId, fCompInfo->fType,
              aElement->ClassName(), fOffset, sequenceType.Data());
    }
 
@@ -95,13 +95,13 @@ namespace TStreamerInfoActions
       if (gDebug > 1) {
          // Idea: We should print the name of the action function.
          TStreamerInfo *info = (TStreamerInfo*)fInfo;
-         TStreamerElement *aElement = (TStreamerElement*)info->GetElem(fElemId);
+         TStreamerElement *aElement = fCompInfo->fElem;
          TString sequenceType;
          aElement->GetSequenceType(sequenceType);
 
          printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
                 " %s, bufpos=%d, arr=%p, offset=%d (%s)\n",
-                info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetType(fElemId),
+                info->GetClass()->GetName(), aElement->GetName(), fElemId, fCompInfo->fType,
                 aElement->ClassName(), buf.Length(), addr, fOffset, sequenceType.Data());
       }
    }
@@ -137,13 +137,13 @@ namespace TStreamerInfoActions
       TBitsConfiguration(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset = 0) : TConfiguration(info,id,compinfo,offset),fObjectOffset(0) {};
       void PrintDebug(TBuffer &, void *) const {
          TStreamerInfo *info = (TStreamerInfo*)fInfo;
-         TStreamerElement *aElement = (TStreamerElement*)info->GetElem(fElemId);
+         TStreamerElement *aElement = fCompInfo->fElem;
          TString sequenceType;
          aElement->GetSequenceType(sequenceType);
 
          printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
                 " %s, offset=%d (%s)\n",
-                info->GetClass()->GetName(), aElement->GetName(), fElemId, info->GetType(fElemId),
+                info->GetClass()->GetName(), aElement->GetName(), fElemId, fCompInfo->fType,
                 aElement->ClassName(), fOffset, sequenceType.Data());
       }
 
@@ -828,10 +828,10 @@ namespace TStreamerInfoActions
          if (gDebug > 1) {
             // Idea: We should print the name of the action function.
             TStreamerInfo *info = (TStreamerInfo*)fInfo;
-            TStreamerElement *aElement = (TStreamerElement*)info->GetElem(fElemId);
+            TStreamerElement *aElement = fCompInfo->fElem;
             fprintf(stdout,"StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
                    " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
-                   info->GetClass()->GetName(),aElement->GetName(),fElemId,info->GetType(fElemId),
+                   info->GetClass()->GetName(),aElement->GetName(),fElemId,fCompInfo->fType,
                    aElement->ClassName(),b.Length(),addr, 0,b.PeekDataCache() ? b.PeekDataCache()->GetObjectAt(0) : 0);
          }
 
@@ -852,11 +852,11 @@ namespace TStreamerInfoActions
       Int_t bufpos = b.Length();
       TVirtualArray *cached = b.PeekDataCache();
       if (cached==0) {
-         TStreamerElement *aElement = (TStreamerElement*)conf->fInfo->GetElem(conf->fElemId);
+         TStreamerElement *aElement = conf->fCompInfo->fElem;
          TStreamerInfo *info = (TStreamerInfo*)conf->fInfo;
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
          char *ptr = (char*)addr;
-         info->ReadBufferSkip(b,&ptr,config->fCompInfo,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,1,0);
+         info->ReadBufferSkip(b,&ptr,config->fCompInfo,config->fCompInfo->fType+TStreamerInfo::kSkip,aElement,1,0);
       } else {
          config->fAction(b, (*cached)[0]);
       }
@@ -874,12 +874,12 @@ namespace TStreamerInfoActions
 
       TVirtualArray *cached = b.PeekDataCache();
       if (cached==0) {
-         TStreamerElement *aElement = (TStreamerElement*)config->fInfo->GetElem(config->fElemId);
+         TStreamerElement *aElement = config->fCompInfo->fElem;
          TStreamerInfo *info = (TStreamerInfo*)config->fInfo;
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
          char *ptr = (char*)start;
          UInt_t n = (((void**)end)-((void**)start));
-         info->ReadBufferSkip(b,&ptr,config->fCompInfo,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,n,0);
+         info->ReadBufferSkip(b,&ptr,config->fCompInfo,conf->fCompInfo->fType+TStreamerInfo::kSkip,aElement,n,0);
       } else {
          TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
@@ -900,12 +900,12 @@ namespace TStreamerInfoActions
       Int_t bufpos = b.Length();
       TVirtualArray *cached = b.PeekDataCache();
       if (cached==0) {
-         TStreamerElement *aElement = (TStreamerElement*)config->fInfo->GetElem(config->fElemId);
+         TStreamerElement *aElement = config->fCompInfo->fElem;
          TStreamerInfo *info = (TStreamerInfo*)config->fInfo;
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
          char *ptr = (char*)start;
          UInt_t n = (((char*)end)-((char*)start))/((TVectorLoopConfig*)loopconf)->fIncrement;
-         info->ReadBufferSkip(b,&ptr,config->fCompInfo,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,n,0);
+         info->ReadBufferSkip(b,&ptr,config->fCompInfo,config->fCompInfo->fType+TStreamerInfo::kSkip,aElement,n,0);
       } else {
          TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
@@ -926,13 +926,13 @@ namespace TStreamerInfoActions
       Int_t bufpos = b.Length();
       TVirtualArray *cached = b.PeekDataCache();
       if (cached==0) {
-         TStreamerElement *aElement = (TStreamerElement*)config->fInfo->GetElem(config->fElemId);
+         TStreamerElement *aElement = config->fCompInfo->fElem;
          TStreamerInfo *info = (TStreamerInfo*)config->fInfo;
 
          TVirtualCollectionProxy *proxy = ((TGenericLoopConfig*)loopconfig)->fProxy;
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
          UInt_t n = proxy->Size();
-         info->ReadBufferSkip(b, *proxy,config->fCompInfo,info->GetType(config->fElemId)+TStreamerInfo::kSkip,aElement,n,0);
+         info->ReadBufferSkip(b, *proxy,config->fCompInfo,config->fCompInfo->fType+TStreamerInfo::kSkip,aElement,n,0);
       } else {
          TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
@@ -2259,12 +2259,15 @@ void TStreamerInfo::Compile()
    // Store predigested information into local arrays. This saves a huge amount
    // of time compared to an explicit iteration on all elements.
 
+   if (IsCompiled()) {
+      //Error("Compile","can only be called once; this first call generates both the optimized and memberwise actions.");
+      return;
+   }
    R__LOCKGUARD(gCINTMutex);
 
    // fprintf(stderr,"Running Compile for %s %d %d req=%d,%d\n",GetName(),fClassVersion,fOptimized,CanOptimize(),TestBit(kCannotOptimize));
 
    // if (IsCompiled() && (!fOptimized || (CanOptimize() && !TestBit(kCannotOptimize)))) return;
-
    fOptimized = kFALSE;
    fNdata = 0;
    fNfulldata = 0;
@@ -2278,12 +2281,7 @@ void TStreamerInfo::Compile()
       }
    }
 
-   delete[] fComp;
-   fComp = 0;
-   delete[] fCompFull;
-   fCompFull = 0;
-   delete[] fCompOpt;
-   fCompOpt = 0;
+   assert(fComp == 0 && fCompFull == 0 && fCompOpt == 0);
 
    if (fReadObjectWise) {
       fReadObjectWise->fActions.clear();

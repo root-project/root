@@ -757,7 +757,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
       fgElement = aElement;
 
       if (needIncrement) b.SetStreamerElementNumber(aElement,compinfo[i]->fType);
-   
+
       if (aElement->TestBit(TStreamerElement::kWrite)) continue;
 
       if (R__TestUseCache<T>(aElement)) {

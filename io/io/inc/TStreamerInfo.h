@@ -231,12 +231,15 @@ public:
    Int_t               GetClassVersion() const {return fClassVersion;}
    Int_t               GetDataMemberOffset(TDataMember *dm, TMemberStreamer *&streamer) const;
    TObjArray          *GetElements() const {return fElements;}
-   TStreamerElement   *GetElem(Int_t id) const {return fComp[id].fElem;}
+   TStreamerElement   *GetElem(Int_t id) const {return fComp[id].fElem;}  // Return the element for the list of optimized elements (max GetNdata())
+   TStreamerElement   *GetElement(Int_t id) const {return (TStreamerElement*)fElements->At(id);} // Return the element for the complete list of elements (max GetElements()->GetEntries())
+   Int_t               GetElementOffset(Int_t id) const {return fCompFull[id]->fOffset;}
    TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Bool_t forCollection) { return forCollection ? fReadMemberWise : fReadObjectWise; }
    TStreamerInfoActions::TActionSequence *GetReadObjectWiseActions() { return fReadObjectWise; }
    TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions(Bool_t forCollection) { return forCollection ? fWriteMemberWise : fWriteObjectWise; }
    TStreamerInfoActions::TActionSequence *GetWriteObjectWiseActions() { return fWriteObjectWise; }
    Int_t               GetNdata()   const {return fNdata;}
+   Int_t               GetNelement() const { return fElements->GetEntries(); }
    Int_t               GetNumber()  const {return fNumber;}
    Int_t               GetLength(Int_t id) const {return fComp[id].fLength;}
    ULong_t             GetMethod(Int_t id) const {return fComp[id].fMethod;}
