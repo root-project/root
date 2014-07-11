@@ -130,7 +130,7 @@ namespace {
 template <typename returnType>
 returnType sv_to(const cling::Value& val)
 {
-   QualType QT = val.getType();
+   QualType QT = val.getType().getDesugaredType(val.getASTContext());
    if (QT->isMemberPointerType()) {
       const MemberPointerType* MPT = QT->getAs<MemberPointerType>();
       if (MPT->isMemberDataPointer()) {
