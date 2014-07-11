@@ -118,6 +118,7 @@
 <li><a href="#HP29">Drawing using OpenGL</li></a>
 <ul>
 <li><a href="#HP29a">General information: plot types and supported options</li></a>
+<li><a href="#HP290">TH3 as color boxes</li></a>
 <li><a href="#HP29b">TH3 as boxes (spheres)</li></a>
 <li><a href="#HP29c">TH3 as iso-surface(s)</li></a>
 <li><a href="#HP29d">TF3 (implicit function)</li></a>
@@ -2710,6 +2711,19 @@ Cylindrical coordinates system.
 
 <tr><th valign=top>"SPH"</th><td>
 Spherical coordinates system.
+</td></tr>
+
+</table>
+
+<a name="HP290"></a><h4><u>TH3 as color boxes</u></h4>
+
+The supported option is:
+
+<table border=0>
+
+<tr><th valign=top>"GLCOL" </th><td>
+H3 is drawn using semi-transparent colored boxes. 
+See <tt>$ROOTSYS/tutorials/gl/glvox1.C</tt>.
 </td></tr>
 
 </table>
