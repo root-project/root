@@ -116,12 +116,14 @@ namespace ROOT
       /// return -1 if variable is not found
       virtual int VariableIndex(const std::string & name) const;
 
+      // sets libcmaes parameter object based on options.
       template <class TGenoPheno>
 	void SetMParameters(CMAParameters<TGenoPheno> &cmaparams,
 			    const int &maxiter, const int &maxfevals,
 			    const int &noisy, const int &nrestarts,
 			    const double &ftarget,
-			    const std::string &fplot);
+			    const std::string &fplot,
+			    const bool &withnumgradient);
       
       /** 
 	  method to perform the minimization. 
