@@ -164,7 +164,10 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
             // replace it with an empty placeholder with the status of kForwardDeclared.
             // Interactivity will be of course possible but if IO is attempted, a warning
             // will be issued.
+            int autoparsingOldval=gInterpreter->SetClassAutoparsing(false);
+            // Disable autoparsing which might be triggered par the use of ResolvedTypedef.
             currentRDClass = TClass::GetClass(element->GetName(), false /* Load */ );
+            gInterpreter->SetClassAutoparsing(autoparsingOldval);
             if (!currentRDClass && !element->TestBit(TRealData::kTransient)) {
                if (gDebug>1)
                   Info("FillTClass()",
