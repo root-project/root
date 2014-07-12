@@ -2181,7 +2181,7 @@ if test $# -gt 0 ; then
       --with-f77=*)            altf77=$optarg        ;;
       --with-ld=*)             altld=$optarg         ;;
       --with-gcc-toolchain=*)  gcctoolchain=$optarg  ;;
-      --with-clang) altcc=clang; altcxx=clang++; altld=clang++ ;;
+      --with-clang) altcc=clang; altcxx=clang++; altld=clang++; altccset=1 ;;
       --with-hostcc=*)         hostcc=$optarg        ;;
       --with-hostcxx=*)        hostcxx=$optarg       ;;
       --with-hostld=*)         hostld=$optarg        ;;
