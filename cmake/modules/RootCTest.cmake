@@ -16,13 +16,14 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/e
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons)
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts)
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros)
+execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tutorials ${CMAKE_BINARY_DIR}/tutorials)
+execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/cint/reflex/python/genreflex ${CMAKE_BINARY_DIR}/lib/python/genreflex)
+
 
 #---Install the headers which are needed to run the tests from the binary tree-----------------
 add_custom_target(move_headers ALL ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
-                                   -DCOMPONENTS="headers\;tutorials"
+                                   -DCOMPONENTS="headers"
                                    -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake )
-
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/cint/reflex/python/genreflex ${CMAKE_BINARY_DIR}/lib/python/genreflex)
 
 #--Add all subdirectories with tests-----------------------------------------------------------
 

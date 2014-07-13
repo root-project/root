@@ -16,6 +16,17 @@ if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
   endif()
 endif()
 
+#---Provide a rootlogon.C file in the current build directory that
+#   will affect the way we run all tutorials.
+#   This overwrites the existing rootlogon.C and rootalias.C in the
+#   tutorials directory which is copied to the build area.
+#-------------------------------------------------------------------
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogon.C "{
+  // Needed by ACLiC to use the current dicrectory for scratch area
+  gSystem->SetBuildDir(\".\", kTRUE);
+}")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootalias.C "")
+
 #---Definition of the helper function--------------------------------
 function(ROOT_ADD_TUTORIAL macrofile rc)
   string(REPLACE ".C" "" name ${macrofile})
@@ -164,6 +175,7 @@ set(histfactory-example-depends tutorial-histfactory-makeExample)
 set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
 set(foam-foam_demopers-depends tutorial-foam-foam_demo)
+set(tree-staff-depends  tutorial-tree-cernbuild)
 #--many roostats tutorials depending on having creating the file first with histfactory 
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
                StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo 
@@ -181,10 +193,13 @@ set(io-double32-aclic +)
 set(tree-hvector-aclic +)
 set(math-testrandom-aclic +)
 
-#---Loop over all tutorials and define the corresponding test---------
-
+#---Define the primordial tutorials-----------------------------------
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
                 PASSRC 1 FAILREGEX "Error in" "error:" LABELS tutorial)
+ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
+                FAILREGEX "Error in" "error:" LABELS tutorial)
+
+#---Loop over all tutorials and define the corresponding test---------
 foreach(t ${tutorials})
   list(FIND returncode_1 ${t} index)
   if(index EQUAL -1)
@@ -195,7 +210,7 @@ foreach(t ${tutorials})
   string(REPLACE ".C" "" tname ${t})
   string(REPLACE "/" "-" tname ${tname})
   ROOT_ADD_TEST(tutorial-${tname} 
-                COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
+                COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}
@@ -221,10 +236,10 @@ if(ROOT_python_FOUND)
   list(REMOVE_ITEM pytutorials ${pyveto})
 
   #---Python tutorials dependencies--------------------------------------
-  set(pyroot-hsimple-depends tutorial-hsimple)
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple)
   set(pyroot-benchmarks-depends tutorial-pyroot-hsimple)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom)
+  set(pyroot-na49view-depends tutorial-geom-geometry)
 
   foreach(t ${pytutorials})
     string(REPLACE ".py" "" tname ${t})
