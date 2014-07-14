@@ -65,6 +65,7 @@ class THashTable;
 class TInterpreterValue;
 class TMethod;
 class TObjArray;
+class TType;
 
 namespace ROOT {
    namespace TMetaUtils {
@@ -143,6 +144,8 @@ public: // Public Interface
    TCling(const char* name, const char* title);
 
    cling::Interpreter *GetInterpreter() { return fInterpreter; }
+   void   *GetBackendInterpreter() const;
+   ROOT::TMetaUtils::TNormalizedCtxt *GetNormalizedCtxt() const { return fNormalizedCtxt; }
 
    void    AddIncludePath(const char* path);
    void   *GetAutoLoadCallBack() const { return fAutoLoadCallBack; }
@@ -480,6 +483,43 @@ public: // Public Interface
    virtual const char* TypedefInfo_TrueName(TypedefInfo_t* tinfo) const;
    virtual const char* TypedefInfo_Name(TypedefInfo_t* tinfo) const;
    virtual const char* TypedefInfo_Title(TypedefInfo_t* tinfo) const;
+
+   virtual bool Type_Bool(void* obj) const;
+   virtual bool Type_CheckType(void* obj, bool noComponents = false) const;
+   virtual void Type_Delete(void* obj) const;
+   virtual void Type_Dump(void* obj) const;
+   virtual TType* Type_Factory() const;
+   virtual TType* Type_Factory(const char* name) const;
+   virtual TType* Type_Factory(const std::string& name) const;
+   virtual TType* Type_Factory(const std::type_info& ti) const;
+   virtual TType* Type_GetParent(void* obj) const;
+   virtual void Type_Init(void* obj, const char* name) const;
+   virtual void Type_Init(void* obj, const std::string& name) const;
+   virtual void Type_Init(void* obj, const std::type_info& ti) const;
+   virtual void Type_InitWithTypeInfoName(void* obj, const char* name) const;
+   virtual bool Type_IsAbstract(void* obj) const;
+   virtual bool Type_IsArray(void* obj) const;
+   virtual bool Type_IsClass(void* obj) const;
+   virtual bool Type_IsConst(void* obj) const;
+   virtual bool Type_IsDynamicClass(void* obj) const;
+   virtual bool Type_IsEnum(void* obj) const;
+   virtual bool Type_IsFundamental(void* obj) const;
+   virtual bool Type_IsPointer(void* obj) const;
+   virtual bool Type_IsReference(void* obj) const;
+   virtual bool Type_IsStruct(void* obj) const;
+   virtual bool Type_IsTemplateInstance(void* obj) const;
+   virtual bool Type_IsTypedef(void* obj) const;
+   virtual bool Type_IsUnion(void* obj) const;
+   virtual bool Type_IsValid(void* obj) const;
+   virtual bool Type_IsVirtual(void* obj) const;
+   virtual std::string Type_QualifiedName(void* obj) const;
+   virtual unsigned long Type_Size(void* obj) const;
+   virtual unsigned long Type_ArraySize(void* obj) const;
+   virtual TType* Type_FinalType(void* obj) const;
+   virtual TType* Type_ToType(void* obj) const;
+   virtual const std::type_info* Type_TypeInfo(void* obj) const;
+   virtual unsigned long Type_ArrayDim(void* obj) const;
+   virtual unsigned long Type_MaxIndex(void* obj, unsigned long dim) const;
 
    std::set<TClass*>& GetModTClasses() { return fModTClasses; }
 
