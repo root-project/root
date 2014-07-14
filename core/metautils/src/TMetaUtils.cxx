@@ -4522,7 +4522,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTmplDecl(const clang::Template
    int retCode = PrepareArgsForFwdDecl(templatePrefixString,*tmplParamList,interpreter);
    if (retCode!=0){
       Warning(0,
-               "Problems with arguments for forward declaration of class %s",
+               "Problems with arguments for forward declaration of class %s\n",
                templDecl.getNameAsString().c_str());
       return retCode;
    }
