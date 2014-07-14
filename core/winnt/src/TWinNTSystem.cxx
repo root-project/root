@@ -1037,8 +1037,13 @@ fGUIThreadHandle(0), fGUIThreadId(0)
             check_path = buf;
             check_path += "\\etc";
          }
-         if (buf[0])
+         if (buf[0]) {
             Setenv("ROOTSYS", buf);
+            TString path = buf;
+            path += "\\bin;";
+            path += Getenv("PATH");
+            Setenv("PATH", path.Data());
+         }
       }
    }
 #endif
