@@ -15,4 +15,4 @@ except NameError:
    macrodir = ''         # in case of p2.2
 
 # use ROOT macro to make sure that bench numbers get updated in one place
-ROOT.gROOT.Macro( os.path.join( macrodir, os.pardir, 'rootmarks.C' ) )
+ROOT.gROOT.Macro( ROOT.gSystem.UnixPathName( os.path.join( macrodir, os.pardir, 'rootmarks.C' ) ) )
