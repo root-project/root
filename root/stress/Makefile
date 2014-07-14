@@ -194,7 +194,6 @@ test/hsimple.C: $(ROOT_LOC)/tutorials/hsimple.C
 # returns a TFile*, so root.exe's return code is not very helpful
 hsimple.root: test/hsimple.C
 	$(CMDECHO) $(CALLROOTEXE) -l -b -q $< || true > /dev/null 2>&1
-	$(CMDECHO) cp -f test/$@ $@
 stressGraphics.ref: test/stressGraphics.ref
 	$(CMDECHO) cp -f $< $@
 earth.dat: $(ROOT_LOC)/tutorials/graphics/earth.dat
