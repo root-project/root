@@ -13,7 +13,9 @@
 #include <iostream>
 #include <iterator>
 #include <vector>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 // ThreadPool
 #include "TThreadPool.h"
 // ROOT
@@ -35,7 +37,7 @@ class TTestTask: public TThreadPoolTaskImp<TTestTask, EProc>
 public:
    bool runTask(EProc /*_param*/) {
       m_tid = TThread::SelfId();
-      sleep(g_sleeptime);
+      TThread::Sleep(g_sleeptime, 0L);
       return true;
    }
    unsigned long threadID() const {
