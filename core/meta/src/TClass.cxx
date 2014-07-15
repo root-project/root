@@ -3283,7 +3283,18 @@ TList *TClass::GetListOfBases()
    // Return list containing the TBaseClass(es) of a class.
 
    if (!fBase) {
-      if (fCanLoadClassInfo) LoadClassInfo();
+      if (fCanLoadClassInfo) {
+         if (fState == kHasTClassInit) {
+            // The bases are in our ProtoClass; we don't need the class info.
+            TProtoClass *proto = TClassTable::GetProto(GetName());
+            if (proto && proto->FillTClass(this)) {
+               fHasRootPcmInfo = kTRUE;
+            }
+         }
+         if (!fHasRootPcmInfo) {
+            LoadClassInfo();
+         }
+      }
       if (!fClassInfo) return 0;
 
       if (!gInterpreter)
