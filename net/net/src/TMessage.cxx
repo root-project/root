@@ -25,11 +25,7 @@
 #include "Bytes.h"
 #include "TFile.h"
 #include "TProcessID.h"
-
-extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm);
-extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
-extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
-const Int_t kMAXBUF = 0xffffff;
+#include "RZip.h"
 
 Bool_t TMessage::fgEvolution = kFALSE;
 
@@ -319,7 +315,7 @@ Int_t TMessage::Compress()
 
    Int_t hdrlen   = 2*sizeof(UInt_t);
    Int_t messlen  = Length() - hdrlen;
-   Int_t nbuffers = 1 + (messlen - 1) / kMAXBUF;
+   Int_t nbuffers = 1 + (messlen - 1) / kMAXZIPBUF;
    Int_t chdrlen  = 3*sizeof(UInt_t);   // compressed buffer header length
    Int_t buflen   = TMath::Max(512, chdrlen + messlen + 9*nbuffers);
    fBufComp       = new char[buflen];
@@ -332,7 +328,7 @@ Int_t TMessage::Compress()
       if (i == nbuffers - 1)
          bufmax = messlen - nzip;
       else
-         bufmax = kMAXBUF;
+         bufmax = kMAXZIPBUF;
       R__zipMultipleAlgorithm(compressionLevel, &bufmax, messbuf, &bufmax, bufcur, &nout, compressionAlgorithm);
       if (nout == 0 || nout >= messlen) {
          //this happens when the buffer cannot be compressed
@@ -344,8 +340,8 @@ Int_t TMessage::Compress()
       }
       bufcur  += nout;
       noutot  += nout;
-      messbuf += kMAXBUF;
-      nzip    += kMAXBUF;
+      messbuf += kMAXZIPBUF;
+      nzip    += kMAXZIPBUF;
    }
    fBufCompCur = bufcur;
    fCompPos    = fBufCur;
@@ -392,7 +388,7 @@ Int_t TMessage::Uncompress()
    while (1) {
       Int_t hc = R__unzip_header(&nin, bufcur, &nbuf);
       if (hc!=0) break;
-      R__unzip(&nin, bufcur, &nbuf, messbuf, &nout);
+      R__unzip(&nin, bufcur, &nbuf, (unsigned char*) messbuf, &nout);
       if (!nout) break;
       noutot += nout;
       if (noutot >= buflen - hdrlen) break;
