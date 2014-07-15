@@ -7,6 +7,10 @@ ROOT_USE_PACKAGE(io/io)
 include_directories(${LIBXML2_INCLUDE_DIR})
 add_definitions(${LIBXML2_DEFINITIONS})
 
+if(WIN32)
+  set(LIBXML2_LIBRARIES ${LIBXML2_LIBRARIES} ws2_32.lib)
+endif()
+
 ROOT_GENERATE_DICTIONARY(G__XMLParser *.h  LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(XMLParser LINKDEF LinkDef.h )
 

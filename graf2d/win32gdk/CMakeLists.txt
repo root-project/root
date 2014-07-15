@@ -8,17 +8,17 @@ include_directories(${FREETYPE_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/gdk/src
 					${CMAKE_CURRENT_BINARY_DIR}/gdk/src/glib)
 
 set(iconvlib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/iconv-1.3.lib)
-set(iconvdll  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/iconv-1.3.dll)
+set(iconvdll  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/iconv-1.3.dll)
 set(iconvliba ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/iconv/iconv-1.3.lib)
 set(iconvdlla ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/iconv/iconv-1.3.dll)
 
 set(gliblib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/glib-1.3.lib)
-set(glibdll  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/glib-1.3.dll)
+set(glibdll  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/glib-1.3.dll)
 set(glibliba ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/glib/glib-1.3.lib)
 set(glibdlla ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/glib/glib-1.3.dll)
 
 set(gdklib   ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/gdk-1.3.lib)
-set(gdkdll   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/gdk-1.3.dll)
+set(gdkdll   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gdk-1.3.dll)
 set(gdkliba  ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/gdk/gdk-1.3.lib)
 set(gdkdlla  ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/gdk/gdk-1.3.dll)
 
