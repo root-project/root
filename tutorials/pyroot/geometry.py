@@ -10,6 +10,6 @@ except NameError:
 ROOT.gROOT.Reset()
 
 # the na49.C file was generated, so no python conversion is provided
-ROOT.gROOT.Macro( os.path.join( macrodir, os.pardir, 'geom', 'na49.C' ) )
+ROOT.gROOT.Macro( ROOT.gSystem.UnixPathName( os.path.join( macrodir, os.pardir, 'geom', 'na49.C' ) ) )
 execfile( os.path.join( macrodir, 'na49visible.py' ) )
 execfile( os.path.join( macrodir, 'na49geomfile.py' ) )
