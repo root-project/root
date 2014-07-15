@@ -439,11 +439,11 @@ function(ROOT_LINKER_LIBRARY library)
   endif()
   if(WIN32 AND ARG_TYPE STREQUAL SHARED)
     if(CMAKE_GENERATOR MATCHES "Visual Studio")
-      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug/lib${library}.pdb
+      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
               CONFIGURATIONS Debug
               DESTINATION ${CMAKE_INSTALL_BINDIR}
               COMPONENT libraries)
-      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/RelWithDebInfo/lib${library}.pdb
+      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
               CONFIGURATIONS RelWithDebInfo
               DESTINATION ${CMAKE_INSTALL_BINDIR}
               COMPONENT libraries)
@@ -671,29 +671,6 @@ function(REFLEX_BUILD_DICTIONARY dictionary headerfiles selectionfile )
   set(mergedRootMap ${CMAKE_INSTALL_PREFIX}/${lib}/${CMAKE_PROJECT_NAME}Dict.rootmap)
   set(srcRootMap ${CMAKE_CURRENT_BINARY_DIR}/${rootmapname})
   install(CODE "EXECUTE_PROCESS(COMMAND ${merge_rootmap_cmd} --do-merge --input-file ${srcRootMap} --merged-file ${mergedRootMap})")
-endfunction()
-
-#---------------------------------------------------------------------------------------------------
-#---SET_RUNTIME_PATH( var [LD_LIBRARY_PATH | PATH] )
-#---------------------------------------------------------------------------------------------------
-function( SET_RUNTIME_PATH var pathname)
-  set( dirs ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR})
-  get_property(found_packages GLOBAL PROPERTY PACKAGES_FOUND)
-  get_property(found_projects GLOBAL PROPERTY PROJECTS_FOUND)
-  foreach( package ${found_projects} ${found_packages} )
-     foreach( env ${${package}_environment})
-         if(env MATCHES "^${pathname}[+]=.*")
-            string(REGEX REPLACE "^${pathname}[+]=(.+)" "\\1"  val ${env})
-            set(dirs ${dirs} ${val})
-         endif()
-     endforeach()
-  endforeach()
-  if(WIN32)
-    string(REPLACE ";" "[:]" dirs "${dirs}")
-  else()
-    string(REPLACE ";" ":" dirs "${dirs}")
-  endif()
-  set(${var} "${dirs}" PARENT_SCOPE)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
