@@ -118,9 +118,14 @@ if(CMD)
 
     execute_process(COMMAND ${_cmd} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
     
-    message("-- BEGIN TEST OUTPUT --")
+    string(REGEX REPLACE "([.]*)[;][-][e][;]([^;]+)([.]*)" "\\1;-e '\\2\\3'" res "${_cmd}")
+    string(REPLACE ";" " " res "${res}")
+    message("\n-- TEST COMMAND -- ")
+    message("\ncd ${CWD}")
+    message("\n${res}")
+    message("\n-- BEGIN TEST OUTPUT --")
     message("${_outvar}")
-    message("-- END TEST OUTPUT --")
+    message("\n-- END TEST OUTPUT --")
 
     file(WRITE ${OUT} "${_outvar}")
 
@@ -134,7 +139,7 @@ if(CMD)
       set(_outvar, "")
       string(REPLACE "^" ";" _outcnvcmd "${CNVCMD}^${OUT}")
       execute_process(COMMAND ${_outcnvcmd} ${_chkout} ${_chkerr} RESULT_VARIABLE _rc)
-      file(WRITE ${OUT} ${_outvar})
+      file(WRITE ${OUT} "${_outvar}")
 
       if(DEFINED RC AND (NOT _rc EQUAL RC))
         message(FATAL_ERROR "error code: ${_rc}")
