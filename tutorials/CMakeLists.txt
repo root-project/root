@@ -25,7 +25,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogon.C "{
   gSystem->SetBuildDir(\".\", kTRUE);
 }")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootalias.C "")
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogoff.C "")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogoff.C "{}")
 
 #---Definition of the helper function--------------------------------
 function(ROOT_ADD_TUTORIAL macrofile rc)
