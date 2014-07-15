@@ -580,15 +580,8 @@ void TTeXDump::NewPage()
    }
 
    if(!fBoundingBox) {
-      DefineMarkers();
       PrintStr("\\begin{tikzpicture}@");
-      /*
-      PrintStr("\\draw[help lines] (0,0) grid (");
-      WriteReal(fXsize, kFALSE);
-      PrintStr(",");
-      WriteReal(fYsize, kFALSE);
-      PrintStr(");@");
-      */
+      DefineMarkers();
       fBoundingBox = kTRUE;
    }
 }
