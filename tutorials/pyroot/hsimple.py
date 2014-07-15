@@ -28,10 +28,10 @@ c1.GetFrame().SetBorderMode( -1 )
 # pictures, graphics objects, detector geometries, tracks, events, etc..
 # This file is now becoming the current directory.
 
-hfile = gROOT.FindObject( 'hsimple.root' )
+hfile = gROOT.FindObject( 'py-hsimple.root' )
 if hfile:
    hfile.Close()
-hfile = TFile( 'hsimple.root', 'RECREATE', 'Demo ROOT file with histograms' )
+hfile = TFile( 'py-hsimple.root', 'RECREATE', 'Demo ROOT file with histograms' )
 
 # Create some histograms, a profile histogram and an ntuple
 hpx    = TH1F( 'hpx', 'This is the px distribution', 100, -4, 4 )

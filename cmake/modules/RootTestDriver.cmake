@@ -100,6 +100,8 @@ endif()
 
 if(CMD)
   #---Execute the actual test ------------------------------------------------------------------------
+  string (REPLACE ";" " " _strcmd "${_cmd}")
+  message("Command: ${_strcmd}")
   if(OUT)
 
     # log stdout

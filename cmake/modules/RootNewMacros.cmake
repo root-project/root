@@ -688,12 +688,12 @@ macro(ROOT_CHECK_OUT_OF_SOURCE_BUILD)
 endmacro()
 
 #----------------------------------------------------------------------------
-# function ROOT_ADD_TEST( <name> COMMAND cmd [arg1... ]
+# function ROOT_ADD_TEST( <name> COMMAND cmd [arg1... ] 
 #                        [PRECMD cmd [arg1...]] [POSTCMD cmd [arg1...]]
 #                        [OUTPUT outfile] [ERROR errfile]
 #                        [ENVIRONMENT var1=val1 var2=val2 ...
 #                        [DEPENDS test1 ...]
-#                        [TIMEOUT seconds]
+#                        [TIMEOUT seconds] 
 #                        [DEBUG]
 #                        [SOURCE_DIR dir] [BINARY_DIR dir]
 #                        [WORKING_DIR dir]
