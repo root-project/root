@@ -278,9 +278,6 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
    // Clang needs Tag's complete definition. Can we parse it?
    if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
 
-   if (!Tag->hasExternalLexicalStorage())
-      return false;
-
    if (RecordDecl* RD = dyn_cast<RecordDecl>(Tag)) {
       Sema &SemaR = m_Interpreter->getSema();
       ASTContext& C = SemaR.getASTContext();
