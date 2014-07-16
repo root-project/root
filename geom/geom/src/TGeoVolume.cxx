@@ -17,7 +17,7 @@
 //End_Html
 
 ////////////////////////////////////////////////////////////////////////////////
-//   TGeoVolume - the base class representing solids. 
+//   TGeoVolume, TGeoVolumeMulti, TGeoVolumeAssembly - the volume classes
 //
 //   Volumes are the basic objects used in building the geometrical hierarchy.
 // They represent unpositioned objects but store all information about the
@@ -203,8 +203,8 @@
 // a wire inside, but their dimensions are different. However, we would like all
 // to be represented by a single volume family, since they have the same properties.
 //
-//   Volume families
-// ------------------
+//   Volume families (TGeoVolumeMulti)
+// -----------------------------------
 // A volume family is represented by the class TGeoVolumeMulti. It represents
 // a class of volumes having the same shape type and each member will be 
 // identified by the same name and volume ID. Any operation applied to a 
@@ -329,8 +329,18 @@
 // to geometrical modelers and it was introduced just to support conversions of 
 // GEANT3 geometries, therefore its extensive usage should be avoided.
 //
-//   The following picture represent how a simple geometry tree is built in
-// memory.
+//   Volume assemblies (TGeoVolumeAssembly)
+// ----------------------------------------
+//
+// Assemblies a volumes that have neither a shape or a material/medium. Assemblies
+// behave exactly like normal volumes grouping several daughters together, but
+// the daughters can never extrude the assembly since this has no shape. However,
+// a bounding box and a voxelization structure are built for assemblies as for
+// normal volumes, so that navigation is still optimized. Assemblies are useful
+// for grouping hierarchically volumes which are otherwise defined in a flat 
+// manner, but also to avoid clashes between container shapes. 
+// To define an assembly one should just input a name, then start adding other
+// volumes (or volume assemblies) as content.
 
 #include "Riostream.h"
 #include "TString.h"
