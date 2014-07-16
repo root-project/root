@@ -20,16 +20,19 @@
 #include "TBaseClass.h"
 #include "TClass.h"
 #include "TDataMember.h"
+#include "TEnum.h"
+#include "TInterpreter.h"
 #include "TList.h"
 #include "TListOfDataMembers.h"
+#include "TListOfEnums.h"
 #include "TRealData.h"
-#include "TInterpreter.h"
 
 //______________________________________________________________________________
 TProtoClass::TProtoClass(TClass* cl):
    TNamed(*cl), fBase(cl->GetListOfBases()), fData(cl->GetListOfDataMembers()),
-   fSizeof(cl->Size()), fCanSplit(cl->fCanSplit), fStreamerType(cl->fStreamerType),
-   fProperty(cl->fProperty),fClassProperty(cl->fClassProperty)
+   fEnums(cl->GetListOfEnums()), fSizeof(cl->Size()), fCanSplit(cl->fCanSplit),
+   fStreamerType(cl->fStreamerType), fProperty(cl->fProperty),
+   fClassProperty(cl->fClassProperty)
 {
    // Initialize a TProtoClass from a TClass.
    fPRealData = new TList();
@@ -94,12 +97,15 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
    delete fBase; fBase = 0;
    if (fData) fData->Delete(opt);
    delete fData; fData = 0;
+   if (fEnums) fEnums->Delete(opt);
+   delete fEnums; fEnums = 0;
 }
 
 //______________________________________________________________________________
 Bool_t TProtoClass::FillTClass(TClass* cl) {
    // Move data from this TProtoClass into cl.
-   if (cl->fRealData || cl->fBase || cl->fData || cl->fSizeof != -1 || cl->fCanSplit >= 0
+   if (cl->fRealData || cl->fBase || cl->fData || cl->fEnums
+       || cl->fSizeof != -1 || cl->fCanSplit >= 0
        || cl->fProperty != (-1) ) {
       Error("FillTClass", "TClass %s already initialized!", cl->GetName());
       return kFALSE;
@@ -134,6 +140,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    cl->fTitle = this->fTitle;
    cl->fBase = fBase;
    cl->fData = (TListOfDataMembers*)fData;
+   cl->fEnums = (TListOfEnums*)fEnums;
    cl->fRealData = new TList(); // FIXME: this should really become a THashList!
 
    cl->fSizeof = fSizeof;
@@ -153,6 +160,12 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
          ((TDataMember*)dm)->SetClass(cl);
       }
       ((TListOfDataMembers*)cl->fData)->SetClass(cl);
+   }
+   if (cl->fEnums) {
+      for (auto en: *cl->fEnums) {
+         ((TEnum*)en)->SetClass(cl);
+      }
+      ((TListOfEnums*)cl->fEnums)->SetClass(cl);
    }
 
    TClass* currentRDClass = cl;
@@ -190,6 +203,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
 
    fBase = 0;
    fData = 0;
+   fEnums = 0;
    if (fPRealData) fPRealData->Delete();
    delete fPRealData;
    fPRealData = 0;
