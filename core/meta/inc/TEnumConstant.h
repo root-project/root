@@ -40,7 +40,7 @@ public:
    Long64_t     GetValue() const { return fValue; }
    const TEnum *GetType() const { return fEnum; }
 
-   ClassDef(TEnumConstant,1)  //Enum type constant
+   ClassDef(TEnumConstant,2)  //Enum type constant
 };
 
 #endif

@@ -30,8 +30,8 @@
 ClassImp(TListOfEnums)
 
 //______________________________________________________________________________
-TListOfEnums::TListOfEnums(TClass *cl) : fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE),
-              fLastLoadMarker(0)
+TListOfEnums::TListOfEnums(TClass *cl /*=0*/) :
+   fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE), fLastLoadMarker(0)
 {
    // Constructor.
 
@@ -56,7 +56,7 @@ void TListOfEnums::MapObject(TObject *obj)
    // Add pair<id, object> to the map of functions and their ids.
 
    TEnum *e = dynamic_cast<TEnum*>(obj);
-   if (e) {
+   if (e && e->GetDeclId()) {
       fIds->Add((Long64_t)e->GetDeclId(),(Long64_t)e);
    }
 }

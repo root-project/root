@@ -37,12 +37,12 @@ class TListOfEnums : public THashList
 {
 private:
    typedef TDictionary::DeclId_t DeclId_t;
-   TClass    *fClass; // Context of this list.  Not owned.
+   TClass    *fClass; //! Context of this list.  Not owned.
 
-   TExMap    *fIds;      // Map from DeclId_t to TEnum*
-   THashList *fUnloaded; // Holder of TEnum for unloaded Enums.
-   Bool_t     fIsLoaded; // Mark whether Load was executed.
-   ULong64_t  fLastLoadMarker; // Represent interpreter state when we last did a full load.
+   TExMap    *fIds;      //! Map from DeclId_t to TEnum*
+   THashList *fUnloaded; //! Holder of TEnum for unloaded Enums.
+   Bool_t     fIsLoaded; //! Mark whether Load was executed.
+   ULong64_t  fLastLoadMarker; //! Represent interpreter state when we last did a full load.
 
    TListOfEnums(const TListOfEnums&);              // not implemented
    TListOfEnums& operator=(const TListOfEnums&);   // not implemented
@@ -52,7 +52,7 @@ private:
 
 public:
 
-   TListOfEnums(TClass *cl);
+   TListOfEnums(TClass *cl = 0);
    ~TListOfEnums();
 
    virtual void Clear(Option_t *option);
@@ -81,8 +81,9 @@ public:
    void Load();
    void Unload();
    void Unload(TEnum *e);
+   void       SetClass(TClass* cl) { fClass = cl; }
 
-   ClassDef(TListOfEnums,0);  // List of TDataMembers for a class
+   ClassDef(TListOfEnums,2);  // List of TDataMembers for a class
 };
 
 #endif // ROOT_TListOfEnums
