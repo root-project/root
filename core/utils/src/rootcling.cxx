@@ -323,6 +323,14 @@ static void EmitTypedefs(const std::vector<clang::TypedefNameDecl*>& tdvec) {
    for (const auto td: tdvec)
       AddTypedefToROOTFile(td->getQualifiedNameAsString().c_str());
 }
+static void EmitEnums(const std::vector<clang::EnumDecl*>& enumvec) {
+   for (const auto en: enumvec) {
+      // Enums within tag decls are processed as part of the tag.
+      if (clang::isa<clang::TranslationUnitDecl>(en->getDeclContext())
+          || clang::isa<clang::LinkageSpecDecl>(en->getDeclContext()))
+         AddEnumToROOTFile(en->getQualifiedNameAsString().c_str());
+   }
+}
 #else
 static void EmitStreamerInfo(const char*) { }
 #endif
@@ -2870,7 +2878,10 @@ int FinalizeStreamerInfoWriting(cling::Interpreter& interp)
                          "#include \"TProtoClass.h\"\n"
                          "#include \"TBaseClass.h\"\n"
                          "#include \"TListOfDataMembers.h\"\n"
+                         "#include \"TListOfEnums.h\"\n"
                          "#include \"TDataMember.h\"\n"
+                         "#include \"TEnum.h\"\n"
+                         "#include \"TEnumConstant.h\"\n"
                          "#include \"TDictAttributeMap.h\"\n"
                          "#include \"TMessageHandler.h\"\n"
                            );
@@ -2950,6 +2961,7 @@ int GenerateFullDict(std::ostream& dictStream,
 
 #ifndef ROOT_STAGE1_BUILD
    EmitTypedefs(scan.fSelectedTypedefs);
+   EmitEnums(scan.fSelectedEnums);
    // Make up for skipping RegisterModule, now that dictionary parsing
    // is done and these headers cannot be selected anymore.
    int finRetCode = FinalizeStreamerInfoWriting(interp);
@@ -3333,6 +3345,7 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
                             const RScanner::TypedefColl_t tDefDecls,
                             const RScanner::FunctionColl_t funcDecls,
                             const RScanner::VariableColl_t varDecls,
+                            const RScanner::EnumColl_t enumDecls,
                             HeadersDeclsMap_t& headersClassesMap,
                             HeadersDeclsMap_t& headersDeclsMap,
                             const cling::Interpreter& interp)
@@ -3385,6 +3398,12 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
    for (auto& var : varDecls){
       std::list<std::string> headers = {ROOT::TMetaUtils::GetFileName(*var, interp)};
       headersDeclsMap[ROOT::TMetaUtils::GetQualifiedName(*var)] = headers;
+   }
+
+   // The same for the enums:
+   for (auto& en: enumDecls){
+      std::list<std::string> headers = {ROOT::TMetaUtils::GetFileName(*en, interp)};
+      headersDeclsMap[ROOT::TMetaUtils::GetQualifiedName(*en)] = headers;
    }
 }
 
@@ -4344,6 +4363,7 @@ int RootCling(int argc,
                              scan.fSelectedTypedefs,
                              scan.fSelectedFunctions,
                              scan.fSelectedVariables,
+                             scan.fSelectedEnums,
                              headersClassesMap,
                              headersDeclsMap,
                              interp);

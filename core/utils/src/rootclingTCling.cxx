@@ -12,17 +12,21 @@
 // Provides bindings to TCling (compiled with rtti) from rootcling (compiled
 // without rtti).
 
-#include "TCling.h"
-#include "TROOT.h"
-#include "TFile.h"
+#include "rootclingTCling.h"
+
 #include "TClass.h"
+#include "TCling.h"
+#include "TEnum.h"
+#include "TFile.h"
+#include "TProtoClass.h"
+#include "TROOT.h"
 #include "TStreamerInfo.h"
 #include <iostream>
-#include "TProtoClass.h"
 
 std::string gPCMFilename;
 std::vector<std::string> gClassesToStore;
 std::vector<std::string> gTypedefsToStore;
+std::vector<std::string> gEnumsToStore;
 std::vector<std::string> gAncestorPCMsNames;
 
 extern "C"
@@ -61,6 +65,12 @@ void AddTypedefToROOTFile(const char* tdname)
 }
 
 extern "C"
+void AddEnumToROOTFile(const char* enumname)
+{
+   gEnumsToStore.push_back(enumname);
+}
+
+extern "C"
 void AddAncestorPCMROOTFile(const char* pcmName)
 {
    gAncestorPCMsNames.emplace_back(pcmName);
@@ -75,7 +85,7 @@ bool CloseStreamerInfoROOTFile()
    TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
 
    TObjArray protoClasses;
-   for (const auto normName: gClassesToStore) {
+   for (const auto& normName: gClassesToStore) {
       TClass* cl = TClass::GetClass(normName.c_str(), kTRUE /*load*/);
       if (!cl) {
          std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find class "
@@ -97,10 +107,10 @@ bool CloseStreamerInfoROOTFile()
    }
 
    TObjArray typedefs;
-   for (const auto dtname: gTypedefsToStore) {
+   for (const auto& dtname: gTypedefsToStore) {
       TDataType* dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(dtname.c_str());
       if (!dt) {
-         std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find class "
+         std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find typedef "
                    << dtname << '\n';
          return false;
       }
@@ -111,6 +121,18 @@ bool CloseStreamerInfoROOTFile()
       }
    }
 
+   TObjArray enums;
+   for (const auto& enumname: gEnumsToStore) {
+      TEnum* en = (TEnum*)gROOT->GetListOfEnums()->FindObject(enumname.c_str());
+      if (!en) {
+         std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find enum "
+                   << enumname << '\n';
+         return false;
+      }
+      en->Property(); // Force initialization of the bits and property fields.
+      enums.AddLast(en);
+   }
+
    // Don't use TFile::Open(); we don't need plugins.
    TFile dictFile(gPCMFilename.c_str(), "RECREATE");
    if (dictFile.IsZombie())
@@ -119,6 +141,7 @@ bool CloseStreamerInfoROOTFile()
    protoClasses.Write("__ProtoClasses", TObject::kSingleKey);
    protoClasses.Delete();
    typedefs.Write("__Typedefs", TObject::kSingleKey);
+   enums.Write("__Enums", TObject::kSingleKey);
 
    dictFile.WriteObjectAny(&gAncestorPCMsNames, "std::vector<std::string>", "__AncestorPCMsNames");
 
