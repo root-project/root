@@ -3332,10 +3332,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    rcint += "/bin/";
 #else
    rcint += "\\bin\\";
-   if (gSystem->Getenv("CMAKE_CONFIG_TYPE")) {
-      rcint += gSystem->Getenv("CMAKE_CONFIG_TYPE");
-      rcint += "\\";
-   }
 #endif
 #else
    rcint = ROOTBINDIR;
