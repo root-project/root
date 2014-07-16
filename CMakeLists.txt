@@ -48,6 +48,7 @@ ROOT_SHOW_OPTIONS()
 
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
+add_subdirectory (interpreter)
 add_subdirectory (core)
 add_subdirectory (build)
 add_subdirectory (math)

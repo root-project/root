@@ -530,7 +530,6 @@ if(fitsio)
   endif()
 endif()
 
-
 #---Check Shadow password support----------------------------------------------------
 if(shadowpw)
   if(NOT EXISTS /etc/shadow)  #---TODO--The test always succeeds because the actual file is protected
@@ -616,150 +615,36 @@ else()
   set(netxng OFF)
 endif()
 
-#---Check for cling and llvm ----------------------------------------------------------------
+#---Check for cling and llvm --------------------------------------------------------
 find_library(CMAKE_TINFO_LIBS NAMES tinfo ncurses)
 mark_as_advanced(CMAKE_TINFO_LIBS)
 if(NOT CMAKE_TINFO_LIBS)
   set(CMAKE_TINFO_LIBS "")   #  Often if not found is still OK
 endif()
+
 if(cling)
-  if(NOT DEFINED LLVM_BUILD_TYPE)
-    set(LLVM_BUILD_TYPE Release)
-  endif()
-  if(ROOT_BUILD_TYPE STREQUAL "Debug")
-    set(LLVM_ENABLE_ASSERTIONS "YES")
-  else()
-    if(LLVM_BUILD_TYPE STREQUAL "Debug")
-      set(LLVM_ENABLE_ASSERTIONS "YES")
-    else()
-      set(LLVM_ENABLE_ASSERTIONS "NO")
-    endif()
-  endif()
-
   if(builtin_llvm)
-    set(LLVM_SOURCE_DIR ${CMAKE_SOURCE_DIR}/interpreter/llvm/src)
-    set(LLVM_INSTALL_DIR ${CMAKE_BINARY_DIR}/LLVM-install)
-    ExternalProject_Add(
-      LLVM
-      PREFIX LLVM
-      SOURCE_DIR ${LLVM_SOURCE_DIR}
-      INSTALL_DIR ${CMAKE_BINARY_DIR}/LLVM-install
-      CMAKE_ARGS -DLLVM_INCLUDE_TESTS=OFF
-                 -DLLVM_INCLUDE_EXAMPLES=OFF
-                 -DLLVM_BUILD_TOOLS=OFF
-                 -DLLVM_TARGETS_TO_BUILD=X86
-                 -DLLVM_FORCE_USE_OLD_TOOLCHAIN=ON
-                 -DCMAKE_BUILD_TYPE=${LLVM_BUILD_TYPE}
-                 -DLLVM_ENABLE_ASSERTIONS=${LLVM_ENABLE_ASSERTIONS}
-                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                 -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-                 -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-                 -DLLVM_NOCLING=ON
-                 -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-                 -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -P <BINARY_DIR>/cmake_install.cmake
-      LOG_INSTALL 1
-    )
-    ExternalProject_Get_Property(LLVM STAMP_DIR BINARY_DIR)
-    file(REMOVE ${STAMP_DIR}/LLVM-build)     # Deleting stamp file to force a configure
-
-    #---The list of libraires is optatined by runnning 'llvm-config --libs'
-    set(LLVM_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LLVM-install/include)
-    set(LLVM_LIBRARIES ${BINARY_DIR}/lib/libclangFrontend.a
-                       ${BINARY_DIR}/lib/libclangSerialization.a
-                       ${BINARY_DIR}/lib/libclangDriver.a
-                       ${BINARY_DIR}/lib/libclangCodeGen.a
-                       ${BINARY_DIR}/lib/libclangParse.a
-                       ${BINARY_DIR}/lib/libclangSema.a
-                       ${BINARY_DIR}/lib/libclangAnalysis.a
-                       ${BINARY_DIR}/lib/libclangRewriteCore.a
-                       ${BINARY_DIR}/lib/libclangAST.a
-                       ${BINARY_DIR}/lib/libclangBasic.a
-                       ${BINARY_DIR}/lib/libclangEdit.a
-                       ${BINARY_DIR}/lib/libclangLex.a
-                       ${BINARY_DIR}/lib/libLLVMInstrumentation.a
-                       ${BINARY_DIR}/lib/libLLVMIRReader.a
-                       ${BINARY_DIR}/lib/libLLVMAsmParser.a
-                       ${BINARY_DIR}/lib/libLLVMDebugInfo.a
-                       ${BINARY_DIR}/lib/libLLVMOption.a
-                       ${BINARY_DIR}/lib/libLLVMLTO.a
-                       ${BINARY_DIR}/lib/libLLVMLinker.a
-                       ${BINARY_DIR}/lib/libLLVMipo.a
-                       ${BINARY_DIR}/lib/libLLVMVectorize.a
-                       ${BINARY_DIR}/lib/libLLVMBitWriter.a
-                       ${BINARY_DIR}/lib/libLLVMTableGen.a
-                       ${BINARY_DIR}/lib/libLLVMX86Disassembler.a
-                       ${BINARY_DIR}/lib/libLLVMX86AsmParser.a
-                       ${BINARY_DIR}/lib/libLLVMX86CodeGen.a
-                       ${BINARY_DIR}/lib/libLLVMX86Desc.a
-                       ${BINARY_DIR}/lib/libLLVMX86Info.a
-                       ${BINARY_DIR}/lib/libLLVMX86AsmPrinter.a
-                       ${BINARY_DIR}/lib/libLLVMX86Utils.a
-                       ${BINARY_DIR}/lib/libLLVMSelectionDAG.a
-                       ${BINARY_DIR}/lib/libLLVMAsmPrinter.a
-                       ${BINARY_DIR}/lib/libLLVMMCDisassembler.a
-                       ${BINARY_DIR}/lib/libLLVMMCParser.a
-                       ${BINARY_DIR}/lib/libLLVMInterpreter.a
-                       ${BINARY_DIR}/lib/libLLVMMCJIT.a
-                       ${BINARY_DIR}/lib/libLLVMJIT.a
-                       ${BINARY_DIR}/lib/libLLVMCodeGen.a
-                       ${BINARY_DIR}/lib/libLLVMObjCARCOpts.a
-                       ${BINARY_DIR}/lib/libLLVMScalarOpts.a
-                       ${BINARY_DIR}/lib/libLLVMInstCombine.a
-                       ${BINARY_DIR}/lib/libLLVMTransformUtils.a
-                       ${BINARY_DIR}/lib/libLLVMipa.a
-                       ${BINARY_DIR}/lib/libLLVMAnalysis.a
-                       ${BINARY_DIR}/lib/libLLVMRuntimeDyld.a
-                       ${BINARY_DIR}/lib/libLLVMExecutionEngine.a
-                       ${BINARY_DIR}/lib/libLLVMTarget.a
-                       ${BINARY_DIR}/lib/libLLVMMC.a
-                       ${BINARY_DIR}/lib/libLLVMObject.a
-                       ${BINARY_DIR}/lib/libLLVMBitReader.a
-                       ${BINARY_DIR}/lib/libLLVMCore.a
-                       ${BINARY_DIR}/lib/libLLVMSupport.a )
-    file(READ ${LLVM_SOURCE_DIR}/configure _filestr)
+    file(READ ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/configure _filestr)
     string(REGEX REPLACE ".*PACKAGE_VERSION='([0-9]+[.][0-9]+).*" "\\1" LLVM_VERSION ${_filestr})
+    set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/include
+                          ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include
+                          ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/clang/include
+                          ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include)
+    set(LLVM_LIBRARIES clangDriver clangFrontend)
   else()
-    find_package(LLVM REQUIRED)
+    find_package(LLVM REQUIRED)  # should define the same variables LLVM_XXXX
   endif()
 
-  ExternalProject_Add(
-    CLING
-    PREFIX CLING
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/interpreter/cling
-    INSTALL_DIR ${CMAKE_BINARY_DIR}/CLING-install
-    CMAKE_ARGS -DCLING_PATH_TO_LLVM_SOURCE=${CMAKE_SOURCE_DIR}/interpreter/llvm/src
-               -DCLING_PATH_TO_LLVM_BUILD=${CMAKE_BINARY_DIR}/LLVM-install
-               -DLLVM_FORCE_USE_OLD_TOOLCHAIN=ON
-               -DCMAKE_BUILD_TYPE=${LLVM_BUILD_TYPE}
-               -DLLVM_ENABLE_ASSERTIONS=${LLVM_ENABLE_ASSERTIONS}
-               -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-               -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-               -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-               -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-    INSTALL_COMMAND ${CMAKE_COMMAND} -P <BINARY_DIR>/cmake_install.cmake
-    LOG_INSTALL 1
-  )
-  ExternalProject_Get_Property(CLING STAMP_DIR BINARY_DIR)
-  file(REMOVE ${STAMP_DIR}/CLING-build)     # Deleting stamp file to force a configure
-  set(CLING_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CLING-install/include)
-  set(CLING_LIBRARIES ${BINARY_DIR}/lib/libclingInterpreter.a
-                      ${BINARY_DIR}/lib/libclingMetaProcessor.a
-                      ${BINARY_DIR}/lib/libclingUtils.a
-                      ${LLVM_LIBRARIES})
-  #--Additional flags obtained from llvm-config --cxxflags
+  set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
   set(CLING_CXXFLAGS "-fvisibility-inlines-hidden -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
   if (CMAKE_COMPILER_IS_GNUCXX)
     set(CLING_CXXFLAGS "${CLING_CXXFLAGS} -Wno-missing-field-initializers")
   endif()
-  add_dependencies(CLING LLVM)
+  #---These are the libraries that we link ROOT with CLING---------------------------
+  set(CLING_LIBRARIES clingInterpreter clingMetaProcessor clingUtils)
+  add_custom_target(CLING)
+  add_dependencies(CLING ${CLING_LIBRARIES} clang-headers)
 endif()
-
 
 #---Check for gfal-------------------------------------------------------------------
 if(gfal)
