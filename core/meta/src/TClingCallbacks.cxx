@@ -275,9 +275,12 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
 }
 
 bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
+   // Clang needs Tag's complete definition. Can we parse it?
    if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
-   if (auto* Specialization
-       = dyn_cast<RecordDecl>(Tag)) {
+
+   assert(Tag->hasExternalLexicalStorage() && "Tag has no external storage");
+
+   if (RecordDecl* RD = dyn_cast<RecordDecl>(Tag)) {
       Sema &SemaR = m_Interpreter->getSema();
       ASTContext& C = SemaR.getASTContext();
       Preprocessor &PP = SemaR.getPreprocessor();
@@ -301,16 +304,16 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
       const ROOT::TMetaUtils::TNormalizedCtxt* tNormCtxt = NULL;
       TCling__GetNormalizedContext(tNormCtxt);
       ROOT::TMetaUtils::GetNormalizedName(Name,
-                                          C.getTypeDeclType(Specialization),
+                                          C.getTypeDeclType(RD),
                                           *m_Interpreter,
-                                          *tNormCtxt);                                               
+                                          *tNormCtxt);
       // Autoparse implies autoload
       if (TCling__AutoParseCallback(Name.c_str())) {
+         // We have read it; remember that.
+         Tag->setHasExternalLexicalStorage(false);
          return true;
       }
-
    }
-   
    return false;
 }
 
