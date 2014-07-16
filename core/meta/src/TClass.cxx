@@ -3324,7 +3324,17 @@ TList *TClass::GetListOfDataMembers(Bool_t load /* = kTRUE */)
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   if (!fData) fData = new TListOfDataMembers(this);
+   if (!fData) {
+      if (fCanLoadClassInfo && fState == kHasTClassInit) {
+         // The members are in our ProtoClass; we don't need the class info.
+         TProtoClass *proto = TClassTable::GetProto(GetName());
+         if (proto && proto->FillTClass(this)) {
+            fHasRootPcmInfo = kTRUE;
+            return fData;
+         }
+      }
+      fData = new TListOfDataMembers(this);
+   }
    if (Property() & (kIsClass|kIsStruct|kIsUnion)) {
       // If the we have a class or struct or union, the order
       // of data members is the list is essential since it determines their
