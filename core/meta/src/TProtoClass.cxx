@@ -179,7 +179,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
          } else {
             if (!currentRDClass) continue;
             TProtoRealData* prd = (TProtoRealData*)element;
-            if (TRealData* rd = prd->CreateRealData(currentRDClass)) {
+            if (TRealData* rd = prd->CreateRealData(currentRDClass, cl)) {
                cl->fRealData->AddLast(rd);
             }
          }
@@ -214,13 +214,15 @@ TProtoClass::TProtoRealData::~TProtoRealData()
 }
 
 //______________________________________________________________________________
-TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass) const
+TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
+                                                       TClass* parent) const
 {
    // Create a TRealData from this, with its data member coming from dmClass.
    TDataMember* dm = (TDataMember*)dmClass->GetListOfDataMembers()->FindObject(GetName());
    if (!dm && dmClass->GetState()!=TClass::kForwardDeclared) {
       Error("CreateRealData",
-           "Cannot find data member %s::%s!", dmClass->GetName(), GetName());
+            "Cannot find data member %s::%s for parent %s!", dmClass->GetName(),
+            GetName(), parent->GetName());
       return nullptr;
    }
    TRealData* rd = new TRealData(GetTitle(), fOffset, dm);

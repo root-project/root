@@ -1209,7 +1209,7 @@ void TClass::Init(const char *name, Version_t cversion,
    Bool_t isStl = TClassEdit::IsSTLCont(fName);
 
    if (!gInterpreter) {
-      ::Fatal("TClass::TClass", "gInterpreter not initialized");
+      ::Fatal("TClass::Init", "gInterpreter not initialized");
    }
 
    if (givenInfo) {
@@ -1264,11 +1264,11 @@ void TClass::Init(const char *name, Version_t cversion,
    if (!silent && (!fClassInfo && !fCanLoadClassInfo) && !isStl && fName.First('@')==kNPOS &&
        !TClassEdit::IsInterpreterDetail(fName.Data()) ) {
       if (fState == kHasTClassInit) {
-         ::Error("TClass::TClass", "no interpreter information for class %s is available eventhough it has a TClass initialization routine.", fName.Data());
+         ::Error("TClass::Init", "no interpreter information for class %s is available eventhough it has a TClass initialization routine.", fName.Data());
       } else {
          // In this case we initialised this TClass instance starting from the fwd declared state
          // and we know we have no dictionary: no need to warn
-         ::Warning("TClass::TClass", "no dictionary for class %s is available", fName.Data());
+         ::Warning("TClass::Init", "no dictionary for class %s is available", fName.Data());
       }
    }
 
@@ -5076,7 +5076,7 @@ void TClass::LoadClassInfo() const
    gInterpreter->AutoParse(GetName());
    if (!fClassInfo) gInterpreter->SetClassInfo(const_cast<TClass*>(this));   // sets fClassInfo pointer
    if (!fClassInfo) {
-      ::Error("TClass::TClass", "no interpreter information for class %s is available eventhough it has a TClass initialization routine.", fName.Data());
+      ::Error("TClass::LoadClassInfo", "no interpreter information for class %s is available eventhough it has a TClass initialization routine.", fName.Data());
    }
    fCanLoadClassInfo = kFALSE;
 }
