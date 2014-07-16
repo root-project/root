@@ -305,16 +305,23 @@ const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::NamespaceDecl *D
 }
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::EnumDecl *D) const
-{
-   // Currently rootcling does not need any information enums.
+{  
+   // Currently rootcling does not need any information on enums, except
+   // for the PCM / proto classes that register them to build TEnums without
+   // parsing. This can be removed once (real) PCMs are available.
    // Note that the code below was *not* properly matching the case
    //   typedef enum { ... } abc;
    // as the typedef is stored as an anonymous EnumDecl in clang.
    // It is likely that using a direct lookup on the name would
    // return the appropriate typedef (and then we would need to
    // select 'both' the typedef and the anonymous enums.
-   return 0;
-#if 0
+
+#if defined(R__MUST_REVISIT)
+# if R__MUST_REVISIT(6,4)
+   "Can become no-op once PCMs are available."
+# endif
+#endif
+
    std::string str_name;   // name of the Decl
    std::string qual_name;  // fully qualified name of the Decl
    GetDeclName(D, str_name, qual_name);
@@ -333,7 +340,8 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::EnumDecl *D) cons
          return IsLinkdefEnumSelected(D, qual_name);
       return IsEnumSelected(D, qual_name);
    }
-#endif
+
+   return 0;
 }
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::VarDecl* D) const

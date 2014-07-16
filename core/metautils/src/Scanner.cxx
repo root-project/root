@@ -889,61 +889,19 @@ bool RScanner::VisitTypedefNameDecl(clang::TypedefNameDecl* D)
 bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
 {
    DumpDecl(D, "");
-
-   bool ret = true;
+   
+   if (fScanType == EScanType::kOnePCM)
+      return true;
 
    if(fSelectionRules.IsDeclSelected(D)) {
-
+      fSelectedEnums.push_back(D);
 #ifdef SELECTION_DEBUG
       if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
 #endif
-
-      clang::DeclContext *ctx = D->getDeclContext();
-
-      clang::Decl* parent = dyn_cast<clang::Decl> (ctx);
-      if (!parent) {
-         ShowWarning("Could not cast parent context to parent Decl","");
-         return false;
-      }
-
-      std::string qual_name;
-      GetDeclQualName(D,qual_name);
-      if (fVerboseLevel > 0) std::cout<<"\tSelected enum -> " << qual_name << "\n";
-
-      //if ((fSelectionRules.isSelectionXMLFile() && ctx->isRecord()) || (fSelectionRules.isLinkdefFile() && ctx->isRecord() && fSelectionRules.IsDeclSelected(parent))) {
-      if (ctx->isRecord() && fSelectionRules.IsDeclSelected(parent)) {
-         //if (ctx->isRecord() && fSelectionRules.IsDeclSelected(parent)){
-
-
-         //if (ctx->isRecord()){
-         std::string items;
-
-         // should we do it that way ?!
-         // Here we create a string with all the enum entries in the form of name=value couples
-         for (clang::EnumDecl::enumerator_iterator I = D->enumerator_begin(), E = D->enumerator_end(); I != E; ++I) {
-            if (items != "")
-               items = items + ";";
-            items = items + I->getNameAsString();
-            items = items + "=" + APIntToStr(I->getInitVal());
-
-            //if (I->getInitExpr())
-            //items += "=" + APIntToStr(I->getInitVal());
-         }
-         ret = true;
-      }
-      else
-      {
-         // ::enum_name, at least according to genreflex output!
-         ret = true;
-      }
-   }
-   else {
-#ifdef SELECTION_DEBUG
-      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
-#endif
    }
 
-   return ret;
+   return true;
+
 }
 
 //______________________________________________________________________________
