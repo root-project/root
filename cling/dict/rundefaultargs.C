@@ -84,12 +84,10 @@ private:
       cout << s << endl;
    }
 
-#ifdef ClingWorkAroundScriptClassDef
-   ClassDefNV(TDefaultArgs,0);
-#else
    ClassDef(TDefaultArgs,0);
-#endif
 };
+
+ClassImp(TDefaultArgs)
 
 void rundefaultargs() 
 {
