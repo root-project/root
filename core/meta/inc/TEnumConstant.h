@@ -37,8 +37,9 @@ public:
    TEnumConstant(DataMemberInfo_t *info, const char* name, Long64_t value, TEnum* type);
    virtual ~TEnumConstant();
 
-   Long64_t     GetValue() const { return fValue; }
-   const TEnum *GetType() const { return fEnum; }
+   virtual void *GetAddress() const { return (void*)fValue; }
+   Long64_t      GetValue() const { return fValue; }
+   const TEnum  *GetType() const { return fEnum; }
 
    ClassDef(TEnumConstant,2)  //Enum type constant
 };
