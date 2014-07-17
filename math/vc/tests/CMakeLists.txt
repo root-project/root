@@ -6,6 +6,7 @@ add_definitions(-DCOMPILE_FOR_UNIT_TESTS) # -DVC_CHECK_ALIGNMENT)
 if(Vc_COMPILER_IS_MSVC)
    AddCompilerFlag("/wd4267") # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
    AddCompilerFlag("/wd4723") # Disable warning "potential divide by 0" (suppress doesn't work)
+   AddCompilerFlag("/wd4290") # Disable warning "C++ exception specification ignored except to indicate a function is not __declspec(nothrow)"
 endif()
 
 if(DEFINED Vc_INSIDE_ROOT)
