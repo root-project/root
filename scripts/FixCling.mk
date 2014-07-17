@@ -24,7 +24,6 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 CALLROOTEXE += -e "\#define ClingWorkAroundJITandInline"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndVirtual"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndInline"
-CALLROOTEXE += -e "\#define ClingWorkAroundScriptClassDef"
 CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundFunctionForwardDeclarations"
 
@@ -105,7 +104,6 @@ ClingWorkAroundNoDotNamespace = yes            # See https://sft.its.cern.ch/jir
 ClingWorkAroundJITandInline = yes              # JIT does not instantiate inline even-though they are used (but not actually inlined)
 ClingWorkAroundValuePrinterNotFullyQualified = yes # See https://sft.its.cern.ch/jira/browse/ROOT-4774
 ClingWorkAroundNoDotInclude = yes              # See trello card about .include
-ClingWorkAroundScriptClassDef = yes            # See https://sft.its.cern.ch/jira/browse/ROOT-4769
 ClingWorkAroundMultipleInclude = yes           # File are included each time a module that contains them is 
                                                # loaded.  Should go away with the modules
 ClingWorkAroundFunctionForwardDeclarations = yes # See https://sft.its.cern.ch/jira/browse/ROOT-6463
