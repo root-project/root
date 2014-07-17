@@ -888,7 +888,9 @@ TCling::TCling(const char *name, const char *title)
    } else {
       fInterpreter->declare("#include \"Rtypes.h\"\n"
                             + gInterpreterClassDef
-                            + "#include <string>\n"
+                            + "#undef ClassImp\n"
+                            "#define ClassImp(X)\n"
+                            "#include <string>\n"
                             "using namespace std;");
    }
 
