@@ -167,7 +167,7 @@
 // One needs to know that navigation inside geometry parts MANY nodes is much 
 // slower. Any overlapping part can be defined based on composite shapes - this
 // is always recommended. 
-
+//
 //   Replicating volumes
 // -----------------------
 //
