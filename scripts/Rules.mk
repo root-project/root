@@ -847,51 +847,55 @@ SUMMARYDIFF= > $(SUMMARY).$@.diff.log || handleError.sh --cmd=diff --result=$$? 
 SUMMARYDIFF_STAR= > $(SUMMARY).$*.diff.log || handleError.sh --cmd=diff --result=$$? --log=$(SUMMARY).$*.diff.log --test=$@  
 endif
 
+define PathDiff
+	( cd $(ROOTTEST_HOME) && diff $(1) "$(subst $(ROOTTEST_HOME),,$(CURDIR))/$(2)" "$(subst $(ROOTTEST_HOME),,$(CURDIR))/$(3)" )
+endef
+
 define TestDiffCintSpecific
 	$(CMDECHO) if [ -f $@.ref$(ROOTBITS)-$(CINT_VERSION) ]; then \
-	   diff -u -b $@.ref$(ROOTBITS)-$(CINT_VERSION) $< ; \
+	   $(call PathDiff,-u -b,$@.ref$(ROOTBITS)-$(CINT_VERSION).$<) ; \
 	elif  [ -f $@.ref-$(CINT_VERSION) ]; then \
-	   diff -u -b $@.ref-$(CINT_VERSION) $< ; \
+	   $(call PathDiff,-u -b,$@.ref-$(CINT_VERSION),$<)\
 	elif [ -f $@.ref$(ROOTBITS) ]; then \
-	   diff -u -b $@.ref$(ROOTBITS) $< ; \
+	   $(call PathDiff,-u -b,$@.ref$(ROOTBITS),$<); \
 	else \
-	   diff -u -b $@.ref $< ; \
+	   $(call PathDiff,-u -b,$@.ref,$<); \
 	fi $(SUMMARYDIFF)
 endef
 
 define TestDiffCintSpecificW
 	$(CMDECHO) if [ -f $@.ref$(ROOTBITS)-$(CINT_VERSION) ]; then \
-	   diff -u -b -w $@.ref$(ROOTBITS)-$(CINT_VERSION) $< ; \
+	   $(call PathDiff,-u -b -w,$@.ref$(ROOTBITS)-$(CINT_VERSION),$<) ; \
 	elif  [ -f $@.ref-$(CINT_VERSION) ]; then \
-	   diff -u -b -w $@.ref-$(CINT_VERSION) $< ; \
+	   $(call PathDiff,-u -b -w,$@.ref-$(CINT_VERSION),$<); \
 	elif [ -f $@.ref$(ROOTBITS) ]; then \
-	   diff -u -b -w $@.ref$(ROOTBITS) $< ; \
+	   $(call PathDiff,-u -b -w,$@.ref$(ROOTBITS),$<); \
 	else \
-	   diff -u -b -w $@.ref $< ; \
+	   $(call PathDiff,-u -b -w,$@.ref,$<); \
 	fi $(SUMMARYDIFF)
 endef
 
 define TestDiff
 	$(CMDECHO) if [ -f $@.ref$(ROOTBITS) ]; then \
-	   diff -u -b $@.ref$(ROOTBITS) $< ; \
+	   $(call PathDiff,-u -b,$@.ref$(ROOTBITS),$<) ; \
 	else \
-	   diff -u -b $@.ref $< ; \
+	   $(call PathDiff,-u -b,$@.ref,$<) ; \
 	fi $(SUMMARYDIFF)
 endef
 
 define TestDiffW
 	$(CMDECHO) if [ -f $@.ref$(ROOTBITS) ]; then \
-	   diff -u -b -w $@.ref$(ROOTBITS) $< ; \
+	   $(call PathDiff,-u -b -w,$@.ref$(ROOTBITS),$<); \
 	else \
-	   diff -u -b -w $@.ref $< ; \
+	   $(call PathDiff,-u -b -w,$@.ref,$<); \
 	fi $(SUMMARYDIFF)
 endef
 
 define SuccessTestDiff
 	$(CMDECHO) if [ -f $(subst .success,.ref$(ROOTBITS),$@) ]; then \
-	   diff -u -b $(EXTRA_DIFFOPTS) $(subst .success,.ref$(ROOTBITS),$@) $< ; \
+	   $(call PathDiff,-u -b $(EXTRA_DIFFOPTS),$(subst .success,.ref$(ROOTBITS),$@),$<) ; \
 	else \
-	   diff -u -b $(EXTRA_DIFFOPTS) $(subst .success,.ref,$@) $< ; \
+	   $(call PathDiff,-u -b $(EXTRA_DIFFOPTS),$(subst .success,.ref,$@),$<) ; \
 	fi $(SUMMARYDIFF_STAR)
 endef
 
