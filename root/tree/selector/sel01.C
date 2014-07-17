@@ -68,7 +68,7 @@ Bool_t sel01::Process(Long64_t entry)
    //
    // The return value is currently not used.
 
-#ifdef __CINT__
+#ifdef __CLING__
    fprintf(stderr,"Running Interpreted Process %lld\n",entry);
 #else
    fprintf(stderr,"Running Compiled Process %lld\n",entry);
