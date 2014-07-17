@@ -880,8 +880,20 @@ function(ROOT_ADD_TEST test)
 endfunction()
 
 #----------------------------------------------------------------------------
-# function ROOT_ADD_TEST_SUBDIRECTORY( <name> )
+# ROOT_ADD_TEST_SUBDIRECTORY( <name> )
+#----------------------------------------------------------------------------
 function(ROOT_ADD_TEST_SUBDIRECTORY subdir)
   file(RELATIVE_PATH subdir ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${subdir})
   set_property(GLOBAL APPEND PROPERTY ROOT_TEST_SUBDIRS ${subdir})
 endfunction()
+
+#----------------------------------------------------------------------------
+# ROOT_ADD_BUILTIN_DEPENDENCIES(target EXTERNAL)
+#----------------------------------------------------------------------------
+macro(ROOT_ADD_BUILTIN_DEPENDENCIES target EXTERNAL)
+  add_custom_command(OUTPUT ${${EXTERNAL}_LIBRARIES} DEPENDS ${EXTERNAL})
+  add_custom_target(${EXTERNAL}LIBS DEPENDS ${${EXTERNAL}_LIBRARIES})
+  add_dependencies(${target} ${EXTERNAL}LIBS)
+endmacro()
+
+

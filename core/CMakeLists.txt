@@ -106,5 +106,11 @@ add_dependencies(Core TEXTINPUT_DICTIONARY)
 if(cling)
   add_dependencies(Core CLING)
 endif()
+if(builtin_pcre)
+  add_dependencies(Core PCRE)
+endif()
+if(builtin_lzma)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(Core LZMA)
+endif()
 
 #----------------------------------------------------------------------------------------
