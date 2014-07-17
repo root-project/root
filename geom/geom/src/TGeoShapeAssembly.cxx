@@ -95,7 +95,7 @@ void TGeoShapeAssembly::ComputeBBox()
    fOrigin[1] = 0.5*(ymin+ymax);
    fDZ = 0.5*(zmax-zmin);
    fOrigin[2] = 0.5*(zmin+zmax);   
-   fBBoxOK = kTRUE;      
+   if (fDX>0 && fDY>0 && fDZ>0) fBBoxOK = kTRUE;
 }   
 
 //_____________________________________________________________________________   
