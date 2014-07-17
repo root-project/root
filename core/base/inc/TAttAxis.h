@@ -68,6 +68,7 @@ public:
    virtual void     SetLabelOffset(Float_t offset=0.005);             // *MENU*
    virtual void     SetLabelSize(Float_t size=0.04);                  // *MENU*
    virtual void     SetTickLength(Float_t length=0.03);               // *MENU*
+   virtual void     SetTickSize(Float_t size=0.03) {SetTickLength(size);}
    virtual void     SetTitleOffset(Float_t offset=1);                 // *MENU*
    virtual void     SetTitleSize(Float_t size=0.04);                  // *MENU*
    virtual void     SetTitleColor(Color_t color=1);                   // *MENU*

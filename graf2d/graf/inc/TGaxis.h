@@ -123,6 +123,7 @@ public:
    virtual void        SetNoExponent(Bool_t noExponent=kTRUE);  // *MENU*
    virtual void        SetDecimals(Bool_t dot=kTRUE);  // *MENU*
    void                SetTickSize(Float_t ticksize) {fTickSize = ticksize;} // *MENU*
+   void                SetTickLength(Float_t ticklength) {SetTickSize(ticklength);}
    void                SetGridLength(Float_t gridlength) {fGridLength = gridlength;}
    void                SetTimeFormat(const char *tformat);
    void                SetTimeOffset(Double_t toffset, Option_t *option="local");
