@@ -1,7 +1,6 @@
 project(minuit2-tests)
 find_package(ROOT REQUIRED)
 
-include(${ROOT_USE_FILE})
 include_directories(${ROOT_INCLUDE_DIRS})
 
 set(TestSource
