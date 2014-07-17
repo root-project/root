@@ -1,7 +1,7 @@
 
 Processing runnestedClones3.C...
-Warning in <TClass::TClass>: no dictionary for class GTTrack is available
-Warning in <TClass::TClass>: no dictionary for class MVDhit is available
+Warning in <TClass::Init>: no dictionary for class GTTrack is available
+Warning in <TClass::Init>: no dictionary for class MVDhit is available
 ***********************************
 *    Row   * Instance * GTT2.mvdr *
 ***********************************

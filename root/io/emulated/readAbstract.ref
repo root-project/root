@@ -1,6 +1,6 @@
 
 Processing readAbstract.cxx+...
-Warning in <TClass::TClass>: no dictionary for class Concrete is available
+Warning in <TClass::Init>: no dictionary for class Concrete is available
 ************************************
 *    Row   * obj.Abstr * obj.fData *
 ************************************

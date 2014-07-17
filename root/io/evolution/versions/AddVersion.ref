@@ -194,7 +194,7 @@ StreamerInfo for class: MyClass, version=1, checksum=0x6fc1e7b8
 
 Processing runAddVersion.cxx(2,"1")...
 Loading myclass1.root
-Warning in <TClass::TClass>: no dictionary for class MyClass is available
+Warning in <TClass::Init>: no dictionary for class MyClass is available
 OBJ: TObjArray	TObjArray	An array of objects : 0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
@@ -224,7 +224,7 @@ StreamerInfo for class: MyClass, checksum=0x423a847
 
 Processing runAddVersion.cxx(2,"2")...
 Loading myclass1.root
-Warning in <TClass::TClass>: no dictionary for class MyClass is available
+Warning in <TClass::Init>: no dictionary for class MyClass is available
 OBJ: TObjArray	TObjArray	An array of objects : 0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
@@ -254,7 +254,7 @@ StreamerInfo for class: MyClass, checksum=0x423a847
 
 Processing runAddVersion.cxx(2,"3")...
 Loading myclass1.root
-Warning in <TClass::TClass>: no dictionary for class MyClass is available
+Warning in <TClass::Init>: no dictionary for class MyClass is available
 OBJ: TObjArray	TObjArray	An array of objects : 0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
@@ -284,7 +284,7 @@ StreamerInfo for class: MyClass, version=3, checksum=0xc6af8da
 
 Processing runAddVersion.cxx(2,"4")...
 Loading myclass1.root
-Warning in <TClass::TClass>: no dictionary for class MyClass is available
+Warning in <TClass::Init>: no dictionary for class MyClass is available
 OBJ: TObjArray	TObjArray	An array of objects : 0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
@@ -328,7 +328,7 @@ StreamerInfo for class: MyClass, version=2, checksum=0x423a847
 
 Processing runAddVersion.cxx(2,"5")...
 Loading myclass1.root
-Warning in <TClass::TClass>: no dictionary for class MyClass is available
+Warning in <TClass::Init>: no dictionary for class MyClass is available
 OBJ: TObjArray	TObjArray	An array of objects : 0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56
@@ -358,7 +358,7 @@ StreamerInfo for class: MyClass, checksum=0x423a847
 
 Processing runAddVersion.cxx(2,"6")...
 Loading myclass1.root
-Warning in <TClass::TClass>: no dictionary for class MyClass is available
+Warning in <TClass::Init>: no dictionary for class MyClass is available
 OBJ: TObjArray	TObjArray	An array of objects : 0
 
 StreamerInfo for class: MyClass, version=1, checksum=0x75bd56

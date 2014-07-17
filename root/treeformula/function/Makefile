@@ -31,7 +31,7 @@ prova.root: lista_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l lista.C+ > prova_root.log
 
 nestedHists.log: prova.root
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l runnestedHists.C  2>&1 | grep -v 'Warning in <TClass::TClass>: no dictionary for class' > nestedHists.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runnestedHists.C  2>&1 | grep -v 'Warning in <TClass::Init>: no dictionary for class' > nestedHists.log
 
 nestedHists: nestedHists.log 
 	$(TestDiff)

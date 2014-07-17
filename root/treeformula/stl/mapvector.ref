@@ -1,6 +1,6 @@
 
 Processing runmapvector.C...
-Warning in <TClass::TClass>: no dictionary for class MyEvent is available
+Warning in <TClass::Init>: no dictionary for class MyEvent is available
 ***********************************
 *    Row   * Instance * data.firs *
 ***********************************

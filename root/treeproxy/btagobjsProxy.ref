@@ -1,6 +1,6 @@
 
 Processing runbtagobjs.C(5)...
-Warning in <TClass::TClass>: no dictionary for class BTagJet is available
+Warning in <TClass::Init>: no dictionary for class BTagJet is available
 jets.wSV0:  10
 jets.wSV0:  10
 jets.wSV0:  10
@@ -11,4 +11,4 @@ jets.wSV0:  10
 jets.wSV0:  10
 jets.wSV0:  10
 jets.wSV0:  10
-(int)0
+(int) 0

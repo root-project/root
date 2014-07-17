@@ -4,7 +4,7 @@
 CLEAN_TARGETS += filltree.output arrayDrawTest.output myTree.root $(ALL_LIBRARIES) *.log  NtpRecord.root *.clog twodim*.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += vectorInVector indexLoad vectorOfvector ScanString multidim twodimvar arrayDrawTest arrayEventListTest boolOptTest indexMultiDimTest nestedind
+TEST_TARGETS += vectorInVector indexLoad vectorOfvector ScanString multidim twodimvar arrayDrawTest arrayEventListTest boolOptTest indexMultiDim nestedind
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -48,8 +48,8 @@ indexMultiDim.log: indexMultiDim.C orange.root
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q indexMultiDim.C > indexMultiDim.log 2>&1 || \
 		diff -b indexMultiDim.ref indexMultiDim.log
 
-indexMultiDimTest: indexMultiDim.log
-	$(CMDECHO) diff -bw indexMultiDim.ref indexMultiDim.log
+indexMultiDim: indexMultiDim.log
+	$(TestDiffW)
 
 testWithFailure:
 ifeq ($(FAIL),)

@@ -1,6 +1,6 @@
 
 Processing execReader.cxx+...
-Warning in <TClass::TClass>: no dictionary for class EventFormat_p1 is available
+Warning in <TClass::Init>: no dictionary for class EventFormat_p1 is available
 Info in <fileReader>: Opened the input file
 Info in <fileReader>: Input tree accessed
 edm::EventFormat:

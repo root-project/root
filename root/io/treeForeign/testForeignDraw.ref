@@ -1,7 +1,7 @@
 
 Processing Run.C...
-Warning in <TClass::TClass>: no dictionary for class Wrapper is available
-Warning in <TClass::TClass>: no dictionary for class MyClass is available
+Warning in <TClass::Init>: no dictionary for class Wrapper is available
+Warning in <TClass::Init>: no dictionary for class MyClass is available
 ******************************************************************************
 *Tree    :T         : T                                                      *
 *        :          : Tree compression factor =   1.10                       *

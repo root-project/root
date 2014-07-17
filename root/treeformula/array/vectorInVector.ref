@@ -1,16 +1,16 @@
 
 Processing runvectorInVector.C...
-Warning in <TClass::TClass>: no dictionary for class edm::Counter<unsigned int> is available
-Warning in <TClass::TClass>: no dictionary for class edm::EventID is available
-Warning in <TClass::TClass>: no dictionary for class edm::Event is available
-Warning in <TClass::TClass>: no dictionary for class CaloTower is available
-Warning in <TClass::TClass>: no dictionary for class CaloLayer is available
-Warning in <TClass::TClass>: no dictionary for class CaloCrystal is available
-Warning in <TClass::TClass>: no dictionary for class edm::RCPID is available
-Warning in <TClass::TClass>: no dictionary for class edm::Provenance is available
-Warning in <TClass::TClass>: no dictionary for class edm::EDProductImpl is available
-Warning in <TClass::TClass>: no dictionary for class edm::EDProductBase is available
-Warning in <TClass::TClass>: no dictionary for class edm::EDProduct<vector<CaloTower> > is available
+Warning in <TClass::Init>: no dictionary for class edm::Counter<unsigned int> is available
+Warning in <TClass::Init>: no dictionary for class edm::EventID is available
+Warning in <TClass::Init>: no dictionary for class edm::Event is available
+Warning in <TClass::Init>: no dictionary for class CaloTower is available
+Warning in <TClass::Init>: no dictionary for class CaloLayer is available
+Warning in <TClass::Init>: no dictionary for class CaloCrystal is available
+Warning in <TClass::Init>: no dictionary for class edm::RCPID is available
+Warning in <TClass::Init>: no dictionary for class edm::Provenance is available
+Warning in <TClass::Init>: no dictionary for class edm::EDProductImpl is available
+Warning in <TClass::Init>: no dictionary for class edm::EDProductBase is available
+Warning in <TClass::Init>: no dictionary for class edm::EDProduct<vector<CaloTower> > is available
 ***********************************
 *    Row   * Instance * CaloTower *
 ***********************************

@@ -14,11 +14,11 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-forwardDeclAndFake: t01.out
-		  $(CMDECHO)diff -bw t01.out t01.good
+forwardDeclAndFake: forwardDeclAndFake.log
+	$(TestDiffW)
 
-t01.out: t01.C
-		  $(CMDECHO)$(CALLROOTEXE) -q -b -l t01.C > t01.out 2>&1 
+forwardDeclAndFake.log: t01.C
+	$(CMDECHO)$(CALLROOTEXE) -q -b -l t01.C > $@ 2>&1 
 
 testWithFailure:
 ifeq ($(FAIL),)

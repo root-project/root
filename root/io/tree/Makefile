@@ -15,12 +15,12 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-missingClass: read.out
-	$(CMDECHO) diff -bw read.ref read.out
+missingClass: missingClass.log
+	$(TestDiffW)
 
 
-read.out: test.root copy.root read.C
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b read.C > read.out 2>&1 
+missingClass.log: test.root copy.root read.C
+	$(CMDECHO) $(CALLROOTEXE) -q -l -b read.C > $@ 2>&1 
 
 testWithFailure:
 ifeq ($(FAIL),)

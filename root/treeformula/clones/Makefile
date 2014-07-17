@@ -18,7 +18,7 @@ nestedClones2.log: digiRun.C
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b digiRun.C >nestedClones2.log 2>&1
 
 nestedClones2: nestedClones2.log
-	$(CMDECHO) diff -b nestedClones2.log nestedClones2.ref
+	$(TestDiff)
 
 mytest:
 	$(CMDECHO) echo mytest > /dev/null

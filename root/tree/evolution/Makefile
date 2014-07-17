@@ -97,17 +97,23 @@ ReadList.log:  $(ROOTCORELIBS) MyClassList_cxx.$(DllSuf) ReadList.C clonesfile.r
 
 ReadNolib.log:  $(ROOTCORELIBS) ReadNolib.C clonesfile.root vectorfile.root listfile.root
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l ReadNolib.C > ReadNolib.raw.log 2>&1 ; result=$$? ; \
-		cat ReadNolib.raw.log | grep -v 'Warning in <TClass::TClass>: no dictionary for class' > ReadNolib.log ; \
+		cat ReadNolib.raw.log | grep -v 'Warning in <TClass::Init>: no dictionary for class' > ReadNolib.log ; \
 		test $$result -eq 0 || handleError.sh --result=$$? --log=ReadNoLib.log
 
 containerEvolution.log: $(ROOTCORELIBS) MyClassClones_cxx.$(DllSuf) MyClassVector_cxx.$(DllSuf) MyClassList_cxx.$(DllSuf)
 
-containerEvolution: containerEvolution.log ReadClones.log ReadVector.log ReadList.log ReadNolib.log
-	$(CMDECHO) diff -b -w ReadClones.ref ReadClones.log
-	$(CMDECHO) diff -b -w ReadVector.ref ReadVector.log
-	$(CMDECHO) diff -b -w ReadList.ref ReadList.log
-	$(CMDECHO) diff -b -w ReadNolib.ref ReadNolib.log
+containerEvolution: containerEvolution.log ReadClones ReadVector ReadList ReadNolib
 	$(TestDiff)
+
+.PHONY: ReadClones ReadVector ReadList ReadNolib
+ReadClones: ReadClones.log
+	$(TestDiffW)
+ReadVector: ReadVector.log
+	$(TestDiffW)
+ReadList: ReadList.log
+	$(TestDiffW)
+ReadNolib: ReadNolib.log
+	$(TestDiffW)
 
 SimpleOne_C.$(DllSuf): Simple.h
 SimpleTwo_C.$(DllSuf): Simple.h

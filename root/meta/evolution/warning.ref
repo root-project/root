@@ -1,7 +1,7 @@
 
 Processing checkWarn.C(0)...
-Warning in <TClass::TClass>: no dictionary for class data is available
-Warning in <TClass::TClass>: no dictionary for class Tdata is available
+Warning in <TClass::Init>: no dictionary for class data is available
+Warning in <TClass::Init>: no dictionary for class Tdata is available
 Warning in <TClass::PostLoadCheck>: 
    The StreamerInfo version 1 for the class Tdata which was read
    from a file previously opened has the same version as the active class
@@ -19,8 +19,8 @@ StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
    i= 0, myvar_one       type=103, offset=99999, len=1, method=0
 
 Processing checkWarn.C(1)...
-Warning in <TClass::TClass>: no dictionary for class data is available
-Warning in <TClass::TClass>: no dictionary for class Tdata is available
+Warning in <TClass::Init>: no dictionary for class data is available
+Warning in <TClass::Init>: no dictionary for class Tdata is available
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset= n/a type= 3                     
@@ -76,8 +76,8 @@ vs
 Processing checkWarn.C(4)...
 No warning is expected from the 1st 4 files opening since we
 can not distinguish an emulated ClassDef(name,1) from a foreign class
-Warning in <TClass::TClass>: no dictionary for class data is available
-Warning in <TClass::TClass>: no dictionary for class Tdata is available
+Warning in <TClass::Init>: no dictionary for class data is available
+Warning in <TClass::Init>: no dictionary for class Tdata is available
 Warning in <TStreamerInfo::BuildCheck>: 
    The class Tdata transitioned from not having a specified class version
    to having a specified class version (the current class version is 1).
@@ -102,8 +102,8 @@ the on-file layout version 2:
    int three; //
 
 Processing checkWarn.C(10)...
-Warning in <TClass::TClass>: no dictionary for class data is available
-Warning in <TClass::TClass>: no dictionary for class Tdata is available
+Warning in <TClass::Init>: no dictionary for class data is available
+Warning in <TClass::Init>: no dictionary for class Tdata is available
 Warning in <TClass::PostLoadCheck>: 
    The StreamerInfo version 1 for the class Tdata which was read
    from a file previously opened has the same version as the active class
@@ -121,8 +121,8 @@ StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
    i= 0, myvar_one       type=103, offset=99999, len=1, method=0
 
 Processing checkWarn.C(11)...
-Warning in <TClass::TClass>: no dictionary for class data is available
-Warning in <TClass::TClass>: no dictionary for class Tdata is available
+Warning in <TClass::Init>: no dictionary for class data is available
+Warning in <TClass::Init>: no dictionary for class Tdata is available
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset= n/a type= 3                     
@@ -140,8 +140,8 @@ the on-file layout version 1:
    int myvar_one; //
 
 Processing checkWarn.C(12)...
-Warning in <TClass::TClass>: no dictionary for class data is available
-Warning in <TClass::TClass>: no dictionary for class Tdata is available
+Warning in <TClass::Init>: no dictionary for class data is available
+Warning in <TClass::Init>: no dictionary for class Tdata is available
 Warning in <TClass::PostLoadCheck>: 
    The StreamerInfo version 1 for the class Tdata which was read
    from a file previously opened has the same version as the active class
@@ -159,8 +159,8 @@ StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
    i= 0, myvar_one       type=103, offset=99999, len=1, method=0
 
 Processing checkWarn.C(13)...
-Warning in <TClass::TClass>: no dictionary for class data is available
-Warning in <TClass::TClass>: no dictionary for class Tdata is available
+Warning in <TClass::Init>: no dictionary for class data is available
+Warning in <TClass::Init>: no dictionary for class Tdata is available
 
 StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
   int            myvar_one       offset= n/a type= 3                     

@@ -1,14 +1,14 @@
 
 Processing read.C...
-Warning in <TClass::TClass>: no dictionary for class Holder is available
-Warning in <TClass::TClass>: no dictionary for class MidLevel is available
-Warning in <TClass::TClass>: no dictionary for class TopLevel is available
-Warning in <TClass::TClass>: no dictionary for class TObjTopLevel is available
-Warning in <TClass::TClass>: no dictionary for class Bottom is available
-Warning in <TClass::TClass>: no dictionary for class BottomDouble is available
-Warning in <TClass::TClass>: no dictionary for class Side is available
-Warning in <TClass::TClass>: no dictionary for class TObjFirst is available
-Warning in <TClass::TClass>: no dictionary for class TObjSecond is available
+Warning in <TClass::Init>: no dictionary for class Holder is available
+Warning in <TClass::Init>: no dictionary for class MidLevel is available
+Warning in <TClass::Init>: no dictionary for class TopLevel is available
+Warning in <TClass::Init>: no dictionary for class TObjTopLevel is available
+Warning in <TClass::Init>: no dictionary for class Bottom is available
+Warning in <TClass::Init>: no dictionary for class BottomDouble is available
+Warning in <TClass::Init>: no dictionary for class Side is available
+Warning in <TClass::Init>: no dictionary for class TObjFirst is available
+Warning in <TClass::Init>: no dictionary for class TObjSecond is available
 Error in <TBufferFile::ReadObject>: trying to read an emulated class (TObjTopLevel) to store in a compiled pointer (TObject)
 Error in <TBufferFile::ReadObject>: trying to read an emulated class (TObjTopLevel) to store in a compiled pointer (TObject)
 Testing Directory
