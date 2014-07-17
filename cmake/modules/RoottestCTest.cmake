@@ -58,3 +58,5 @@ set(ClingWorkAroundAutoParseDeclaration             TRUE)
 set(ClingWorkAroundMissingUnloading                 TRUE)
 set(ClingWorkAroundJITandInline                     TRUE)
 set(ClingWorkAroundBrokenUnnamedReturn              TRUE)
+
+set(PYROOT_EXTRAFLAGS --fixcling)
