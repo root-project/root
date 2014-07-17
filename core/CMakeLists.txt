@@ -145,6 +145,6 @@ if(builtin_pcre)
   add_dependencies(Core PCRE)
 endif()
 if(builtin_lzma)
-  add_dependencies(Core LZMA)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(Core LZMA)
 endif()
 

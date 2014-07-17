@@ -105,7 +105,7 @@ if(builtin_lzma)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --with-pic --disable-shared CFLAGS=${LZMA_CFLAGS}
       BUILD_IN_SOURCE 1)
-    set(LZMA_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -llzma)
+    set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   endif()
 endif()
@@ -190,7 +190,7 @@ if(asimage)
 endif()
 
 #---Check for GSL library---------------------------------------------------------------
-if(mathmore)
+if(mathmore OR builtin_gsl)
   message(STATUS "Looking for GSL")
   if(NOT builtin_gsl)
     find_package(GSL 1.10)
@@ -207,10 +207,13 @@ if(mathmore)
       GSL
       URL http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no
     )
     set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-    set(GSL_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -lgsl -lgslcblas -lm)
+    foreach(l gsl gslcblas)
+      list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+    endforeach()
+    set(mathmore ON CACHE BOOL "" FORCE)
   endif()
 endif()
 
@@ -518,7 +521,7 @@ if(fftw3)
 endif()
 
 #---Check for fitsio-------------------------------------------------------------------
-if(fitsio)
+if(fitsio OR builtin_cfitsio)
   if(builtin_cfitsio)
     set(cfitsio_version 3.280)
     string(REPLACE "." "" cfitsio_version_no_dots ${cfitsio_version})
@@ -531,7 +534,8 @@ if(fitsio)
       BUILD_IN_SOURCE 1
     )
     set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-    set(CFITSIO_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -lcfitsio)
+    set(CFITSIO_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(fitsio ON CACHE BOOL "" FORCE)
   else()
     message(STATUS "Looking for CFITSIO")  
     find_package(CFITSIO)
@@ -704,31 +708,45 @@ if(builtin_ftgl)
 endif()
 
 #---Check for DavIx library-----------------------------------------------------------
-if(davix)
+if(davix OR builtin_davix)
   if(builtin_davix)
+    if(NOT davix)
+      set(davix ON CACHE BOOL "" FORCE)
+    endif()
     set(DAVIX_VERSION 0.3.1)
     message(STATUS "Downloading and building Davix version ${DAVIX_VERSION}")
+    string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")                      # Otherwise it produces tones of warnings
+    string(REPLACE "-W " "" __cxxflags "${__cxxflags} -Wno-unused-const-variable")
+    string(REPLACE "-Wall " "" __cflags "${CMAKE_C_FLAGS}")                          # Otherwise it produces tones of warnings
+    string(REPLACE "-W " "" __cflags "${__cflags} -Wno-format -Wno-implicit-function-declaration")
     ExternalProject_Add(
       DAVIX
       PREFIX DAVIX
-      URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
+      #URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
+      GIT_REPOSITORY http://git.cern.ch/pub/davix  GIT_TAG 0_3_0_branch
+      UPDATE_COMMAND git submodule update --recursive 
       INSTALL_DIR ${CMAKE_BINARY_DIR}/DAVIX-install
-      PATCH_COMMAND patch -p0 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
+      #PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} 
                  -DBOOST_EXTERNAL=OFF
+                 -DSTATIC_LIBRARY=ON
+                 -DSHARED_LIBRARY=OFF
+                 -DENABLE_TOOLS=OFF
                  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                 -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-                 -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+                 -DCMAKE_C_FLAGS=${__cflags}
+                 -DCMAKE_CXX_FLAGS=${__cxxflags}
                  -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                  -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
     )
     #--TODO we need to install the dynamic library or build the static (which currently fails)
     set(DAVIX_INCLUDE_DIR ${CMAKE_BINARY_DIR}/DAVIX-install/include/davix)
-    set(DAVIX_LIBRARY -L${CMAKE_BINARY_DIR}/DAVIX-install/lib -ldavix)
+    set(DAVIX_LIBRARY ${CMAKE_BINARY_DIR}/DAVIX-install/lib/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
-    set(DAVIX_LIBRARIES ${DAVIX_LIBRARY})
+    foreach(l davix neon boost_static_internal)
+      list(APPEND DAVIX_LIBRARIES ${CMAKE_BINARY_DIR}/DAVIX-install/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+    endforeach()
   else()
     message(STATUS "Looking for DAVIX")
     find_package(Davix)
