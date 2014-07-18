@@ -12,6 +12,7 @@
 #   OUT   File to collect stdout and stderr.
 #   ENV   Environment VAR1=Value1;VAR2=Value2.
 #   CWD   Current working directory.
+#   SYS   Value of ROOTSYS
 #   DBG   Debug flag.
 #   RC    Return code for success.
 #
@@ -68,6 +69,11 @@ if(ENV)
       message(STATUS "testdriver[ENV]:${var}==>${val}")
     endif()
   endforeach()
+endif()
+
+if(WIN32 AND SYS)
+  file(TO_NATIVE_PATH ${SYS}/bin _path)
+  set(ENV{PATH} "${_path};$ENV{PATH}")
 endif()
 
 #---Execute pre-command-----------------------------------------------------------------------------

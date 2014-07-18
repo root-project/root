@@ -629,8 +629,6 @@ function(ROOT_ADD_TEST test)
 
   if(ARG_WORKING_DIR)
     set(_command ${_command} -DCWD=${ARG_WORKING_DIR})
-  else()
-    set(_command ${_command} -DCWD=${CMAKE_CURRENT_BINARY_DIR})
   endif()
 
   if(ARG_DEBUG)
@@ -663,6 +661,8 @@ function(ROOT_ADD_TEST test)
   if(ARG_CHECKERR)
     set(_command ${_command} -DCHECKERR=true)
   endif()
+ 
+  set(_command ${_command} -DSYS=${ROOTSYS})
 
   #- Handle ENVIRONMENT argument
   if(ARG_ENVIRONMENT)
