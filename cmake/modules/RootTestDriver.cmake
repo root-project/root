@@ -12,6 +12,7 @@
 #   OUT   File to collect stdout and stderr.
 #   ENV   Environment VAR1=Value1;VAR2=Value2.
 #   CWD   Current working directory.
+#   SYS   Value of ROOTSYS
 #   DBG   Debug flag.
 #   RC    Return code for success.
 #
@@ -77,17 +78,20 @@ if(ENV)
   endforeach()
 endif()
 
+if(WIN32 AND SYS)
+  file(TO_NATIVE_PATH ${SYS}/bin _path)
+  set(ENV{PATH} "${_path};$ENV{PATH}")
+endif()
+
+#---Copy files to current direcotory----------------------------------------------------------------
 if(COPY)
   foreach(copyfile ${_copy_files})
-
     execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${copyfile} ${CMAKE_CURRENT_BINARY_DIR}
                     RESULT_VARIABLE _rc)
-
     if(_rc)
       message(FATAL_ERROR "Copying file ${copyfile} to ${CMAKE_CURRENT_BINARY_DIR} failed! Error code : ${_rc}")
     endif()
   endforeach()
-
 endif()
 
 #---Execute pre-command-----------------------------------------------------------------------------
