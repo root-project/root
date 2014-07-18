@@ -101,8 +101,6 @@ ROOT_LINKER_LIBRARY(Core
                     LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
                               ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs} )
 
-add_dependencies(Core TEXTINPUT_DICTIONARY)
-
 if(cling)
   add_dependencies(Core CLING)
 endif()
