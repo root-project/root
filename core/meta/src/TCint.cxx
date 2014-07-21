@@ -1468,7 +1468,7 @@ Long_t TCint::ExecuteMacro(const char *filename, EErrorCode *error)
 {
    // Execute a CINT macro.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(fLockProcessLine ? gCINTMutex : 0);
 
    return TApplication::ExecuteFile(filename, (int*)error);
 }
@@ -2470,6 +2470,7 @@ Long_t TCint::GetExecByteCode() const
 Long_t TCint::Getgvp() const
 {
    // Interface to CINT function
+   R__LOCKGUARD(gCINTMutex);
 
    return (Long_t)G__getgvp();
 }

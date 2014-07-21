@@ -27,7 +27,8 @@
 #include "TRef.h"
 #include <algorithm>
 
-R__EXTERN TTree *gTree;
+#include "ThreadLocalStorage.h"
+R__EXTERN TTHREAD_TLS(TTree*) gTree;
 
 ClassImp(TVirtualBranchBrowsable);
 
@@ -166,12 +167,11 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
 
          // check if we're in a sub-branch of this class
          // we can only find out asking the streamer given our ID
-         ULong_t *elems=0;
          TStreamerElement *element=0;
          if (be->GetID()>=0 && be->GetInfo() 
-            && (be->GetID() < be->GetInfo()->GetNdata())
-            && ((elems=be->GetInfo()->GetElems()))
-            && ((element=(TStreamerElement *)elems[be->GetID()]))) {
+            && (be->GetID() < be->GetInfo()->GetNelement())
+            && be->GetInfo()->IsCompiled()
+            && (element=be->GetInfo()->GetElement(be->GetID()))) {
             // if contained is set (i.e. GetClonesName was successful),
             // this element containes the container, otherwise it's the 
             // contained

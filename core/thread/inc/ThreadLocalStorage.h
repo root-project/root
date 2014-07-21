@@ -4,6 +4,7 @@
  *                         University of Stuttgart.  All rights reserved.
  * Author: Rainer Keller, HLRS
  * Modified: Fons Rademakers, CERN
+ * Modified: Philippe Canal, FNAL
  *
  * Thread-local storage (TLS) is not supported on all environments.
  * This header file and test-program shows how to abstract away, using either
@@ -60,8 +61,105 @@
 #  define R__HAS_DECLSPEC_THREAD
 #endif
 
+#ifdef __cplusplus
 
-#if defined(R__HAS___THREAD)
+#ifdef __CINT__
+
+#  define TTHREAD_TLS(type) type
+
+#elif __cplusplus >= 201103L
+
+#  define TTHREAD_TLS(type) thread_local type
+
+#elif defined(R__HAS_THREAD_LOCAL)
+
+#  define TTHREAD_TLS(type) thread_local type
+
+#elif defined(R__HAS___THREAD)
+
+#  define TTHREAD_TLS(type)  __thread type
+
+#elif defined(R__HAS_DECLSPEC_THREAD)
+
+#  define TTHREAD_TLS(type) __declspec(thread) type
+
+#elif defined(R__HAS_PTHREAD)
+
+#include <assert.h>
+#include <pthread.h>
+
+template <typename type> class TThreadTLSWrapper
+{
+private:
+   pthread_key_t  fKey;
+   pthread_once_t fOnce;
+   type           fInitValue;
+   
+   static void key_delete(void *arg) {
+      assert (NULL != arg);
+      delete (type*)(arg);
+   }
+   static void key_create() {
+      int _ret;
+      _ret = pthread_key_create(&(fKey),_key_delete);
+      _ret = _ret; /* To get rid of warnings in case of NDEBUG */
+      assert (0 == _ret);
+   }
+
+public:
+   TThreadTLSWrapper(const type &value) : fInitValue(value) {
+
+      PTHREAD_ONCE_INIT;
+ 
+      void *_ptr;
+      (void) pthread_once(&(fOnce), _##name##_key_create);
+   }
+
+   ~TThreadTLSWrapper() {
+      pthread_key_delete(fKey);
+   }
+
+   type& operator get() {
+      void *_ptr = pthread_getspecific(fKey);
+      if (!ptr) {
+         _ptr = new type(value);
+         assert (NULL != _ptr);
+         (void) pthread_setspecific(fKey, _ptr);
+      }
+      return *(type*)ptr;
+   }
+
+   type& operator=(const type &in) {
+      type &ptr = get();
+      ptr = in;
+      return ptr;
+   }
+
+   operator T&() {
+      return get();
+   }
+
+};
+
+#  define TTHREAD_TLS_INIT(type) TThreadTLSWrapper<type>
+
+#else
+
+#error "No Thread Local Storage (TLS) technology for this platform specified."
+
+#endif
+
+#else // __cplusplus
+
+#if defined(R__HAS_THREAD_LOCAL)
+
+#  define TTHREAD_TLS_DECLARE(type,name)
+#  define TTHREAD_TLS_INIT(type,name,value) thread_local type name = (value)
+#  define TTHREAD_TLS_SET(type,name,value)  name = (value)
+#  define TTHREAD_TLS_GET(type,name)        (name)
+#  define TTHREAD_TLS_FREE(name)
+
+#elif defined(R__HAS___THREAD)
 
 #  define TTHREAD_TLS_DECLARE(type,name)
 #  define TTHREAD_TLS_INIT(type,name,value) static __thread type name = (value)
@@ -73,14 +171,6 @@
 
 #  define TTHREAD_TLS_DECLARE(type,name)
 #  define TTHREAD_TLS_INIT(type,name,value) static __declspec(thread) type name = (value)
-#  define TTHREAD_TLS_SET(type,name,value)  name = (value)
-#  define TTHREAD_TLS_GET(type,name)        (name)
-#  define TTHREAD_TLS_FREE(name)
-
-#elif defined(R__HAS_THREAD_LOCAL)
-
-#  define TTHREAD_TLS_DECLARE(type,name)
-#  define TTHREAD_TLS_INIT(type,name,value) thread_local type name = (value)
 #  define TTHREAD_TLS_SET(type,name,value)  name = (value)
 #  define TTHREAD_TLS_GET(type,name)        (name)
 #  define TTHREAD_TLS_FREE(name)
@@ -136,6 +226,8 @@
 #error "No Thread Local Storage (TLS) technology for this platform specified."
 
 #endif
+
+#endif // __cplusplus
 
 #endif
 

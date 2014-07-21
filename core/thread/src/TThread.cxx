@@ -33,6 +33,7 @@
 #include "TInterpreter.h"
 #include "TError.h"
 #include "Varargs.h"
+#include "ThreadLocalStorage.h"
 
 TThreadImp     *TThread::fgThreadImp = 0;
 Long_t          TThread::fgMainId = 0;
@@ -304,6 +305,16 @@ void TThread::Init()
    gGlobalMutex = new TMutex(kTRUE);
    gCint->SetAlloclockfunc(CINT_alloc_lock);
    gCint->SetAllocunlockfunc(CINT_alloc_unlock);
+
+   //To avoid deadlocks, gCintMutex and gROOTMutex need
+   // to point at the same instance
+   {
+     R__LOCKGUARD(gGlobalMutex);
+     if (!gCINTMutex) {
+       gCINTMutex = gGlobalMutex->Factory(kTRUE);
+     }
+     gROOTMutex = gCINTMutex;
+   }
 }
 
 //______________________________________________________________________________
@@ -449,7 +460,10 @@ TThread *TThread::Self()
 {
    // Static method returning pointer to current thread.
 
-   return GetThread(SelfId());
+   static TTHREAD_TLS(TThread*) self = 0;
+
+   if (!self) self = GetThread(SelfId());
+   return self;
 }
 
 

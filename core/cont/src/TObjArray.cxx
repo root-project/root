@@ -53,6 +53,7 @@
 #include "TObjArray.h"
 #include "TError.h"
 #include "TROOT.h"
+#include "TVirtualMutex.h"
 #include <stdlib.h>
 
 ClassImp(TObjArray)
@@ -338,15 +339,25 @@ void TObjArray::Delete(Option_t *)
    // list (of Primitives of the canvas) that was connecting it 
    // (indirectly) to the list of cleanups.
    // So let's temporarily add the current list and remove it later.
-   bool needRegister = fSize && TROOT::Initialized() && !gROOT->GetListOfCleanups()->FindObject(this);
-   if (needRegister) gROOT->GetListOfCleanups()->Add(this);
+   bool needRegister = fSize && TROOT::Initialized();
+   if(needRegister) {
+      R__LOCKGUARD2(gROOTMutex);
+      needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
+   }
+   if (needRegister) {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfCleanups()->Add(this);
+   }
    for (Int_t i = 0; i < fSize; i++) {
       if (fCont[i] && fCont[i]->IsOnHeap()) {
          TCollection::GarbageCollect(fCont[i]);
          fCont[i] = 0;
       }
    }
-   if (needRegister) ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
+   if (needRegister) {
+      R__LOCKGUARD2(gROOTMutex);
+      ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
+   }
 
    Init(fSize, fLowerBound);
 }

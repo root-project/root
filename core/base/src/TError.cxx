@@ -35,6 +35,7 @@
 #include "TString.h"
 #include "TEnv.h"
 #include "TVirtualMutex.h"
+#include "ThreadLocalStorage.h"
 
 // Mutex for error and error format protection
 // (exported to be used for similar cases in other classes)
@@ -62,10 +63,8 @@ static void DebugPrint(const char *fmt, ...)
 {
    // Print debugging message to stderr and, on Windows, to the system debugger.
 
-   static Int_t buf_size = 2048;
-   static char *buf = 0;
-
-   R__LOCKGUARD2(gErrorMutex);
+   static TTHREAD_TLS(Int_t) buf_size = 2048;
+   static TTHREAD_TLS(char*) buf = 0;
 
    va_list ap;
    va_start(ap, fmt);
@@ -89,6 +88,9 @@ again:
       goto again;
    }
    va_end(ap);
+
+   // Serialize the actual printing.
+   R__LOCKGUARD2(gErrorMutex);
 
    fprintf(stderr, "%s", buf);
 
@@ -198,10 +200,8 @@ void ErrorHandler(Int_t level, const char *location, const char *fmt, va_list ap
 {
    // General error handler function. It calls the user set error handler.
 
-   R__LOCKGUARD2(gErrorMutex);
-
-   static Int_t buf_size = 2048;
-   static char *buf = 0;
+   static TTHREAD_TLS(Int_t) buf_size(2048);
+   static TTHREAD_TLS(char*) buf(0);
 
    int vc = 0;
    va_list sap;
@@ -234,9 +234,9 @@ again:
       va_end(ap);
 
    char *bp;
-   if (level >= kSysError && level < kFatal)
+   if (level >= kSysError && level < kFatal) {
       bp = Form("%s (%s)", buf, gSystem->GetError());
-   else
+   } else
       bp = buf;
 
    if (level != kFatal)

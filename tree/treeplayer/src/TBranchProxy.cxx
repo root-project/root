@@ -248,7 +248,7 @@ Bool_t ROOT::TBranchProxy::Setup()
          TStreamerInfo * info = be->GetInfo();
          Int_t id = be->GetID();
          if (id>=0) {
-            fOffset = info->GetOffsets()[id];
+            fOffset = info->GetElementOffset(id);
             fElement = (TStreamerElement*)info->GetElements()->At(id);
             fIsaPointer = fElement->IsaPointer();
             fClass = fElement->GetClassPointer();

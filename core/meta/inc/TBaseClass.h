@@ -42,6 +42,8 @@ private:
    BaseClassInfo_t   *fInfo;      //pointer to CINT base class info
    TClassRef          fClassPtr;  //pointer to the base class TClass
    TClass            *fClass;     //pointer to parent class
+   mutable Long_t     fProperty;  //!Cache property of the baseClassInfo.
+   mutable Long_t     fOffset;    //!Cache offset of the baseClassInfo.
 
 public:
    TBaseClass(BaseClassInfo_t *info = 0, TClass *cl = 0);

@@ -111,6 +111,8 @@
 #include "TInetAddress.h"
 #include "TMD5.h"
 #include "Bytes.h"
+#include "TVirtualMutex.h"
+#include "ThreadLocalStorage.h"
 #include <string.h>
 #include <stdlib.h>
 #ifdef R__WIN32
@@ -132,10 +134,12 @@ TUUID::TUUID()
 {
    // Create a UUID.
 
-   static uuid_time_t time_last;
-   static UShort_t    clockseq;
-   static Bool_t firstTime = kTRUE;
+   static TTHREAD_TLS(uuid_time_t) time_last;
+   static TTHREAD_TLS(UShort_t) clockseq;
+   static TTHREAD_TLS(Bool_t) firstTime = kTRUE;
    if (firstTime) {
+      R__LOCKGUARD2(gROOTMutex); // rand and random are not thread safe.
+
       if (gSystem) {
          // try to get a unique seed per process
          UInt_t seed = (UInt_t) (Long64_t(gSystem->Now()) + gSystem->GetPid());
@@ -321,9 +325,9 @@ void TUUID::GetCurrentTime(uuid_time_t *timestamp)
 
    const UShort_t uuids_per_tick = 1024;
 
-   static uuid_time_t time_last;
-   static UShort_t    uuids_this_tick;
-   static Bool_t      init = kFALSE;
+   static TTHREAD_TLS(uuid_time_t) time_last;
+   static TTHREAD_TLS(UShort_t)    uuids_this_tick;
+   static TTHREAD_TLS(Bool_t)      init = kFALSE;
 
    if (!init) {
       GetSystemTime(&time_last);

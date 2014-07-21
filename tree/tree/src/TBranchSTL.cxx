@@ -17,6 +17,8 @@
 #include "TBasket.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
+#include "TInterpreter.h"  // For gCINTMutex
+#include "TVirtualMutex.h"
 #include <string>
 #include <utility>
 
@@ -525,7 +527,7 @@ Int_t TBranchSTL::GetExpectedType(TClass *&expectedClass,EDataType &expectedType
       // Case of an object data member.  Here we allow for the
       // variable name to be ommitted.  Eg, for Event.root with split
       // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-      TStreamerElement* element = (TStreamerElement*) GetInfo()->GetElems()[fID];
+      TStreamerElement* element = GetInfo()->GetElement(fID);
       if (element) {
          expectedClass = element->GetClassPointer();
          if (!expectedClass) {
@@ -561,6 +563,9 @@ TStreamerInfo* TBranchSTL::GetInfo() const
       // If the checksum is there and we're dealing with the foreign class
       //------------------------------------------------------------------------
       if( fClCheckSum && !cl->IsVersioned() ) {
+         // NOTE: We do not need a R__LOCKGUARD2 since the TClass constructor
+         //  is guaranteed to set the gCINTMutex if it is not already available.
+         R__LOCKGUARD(gCINTMutex);
          //---------------------------------------------------------------------
          // Loop over the infos
          //---------------------------------------------------------------------
@@ -579,8 +584,10 @@ TStreamerInfo* TBranchSTL::GetInfo() const
             }
          }
       }
-      fInfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-      fInfo->BuildOld();
+      if((*fInfo).IsOptimized()) {
+	(*fInfo).SetBit(TVirtualStreamerInfo::kCannotOptimize);
+	(*fInfo).BuildOld();
+      }
    }
    return fInfo;
 }
@@ -621,8 +628,7 @@ void TBranchSTL::Print(const char *option) const
    } else if (strncmp(option,"debugInfo",strlen("debugInfo"))==0)  {
       Printf("Branch %s uses:\n",GetName());
       if (fID>=0) {
-         ULong_t* elems = GetInfo()->GetElems();
-         ((TStreamerElement*) elems[fID])->ls();
+         GetInfo()->GetElement(fID)->ls();
       }
       for (Int_t i = 0; i < fBranches.GetEntriesFast(); ++i) {
          TBranchElement* subbranch = (TBranchElement*)fBranches.At(i);
@@ -672,7 +678,7 @@ void TBranchSTL::SetAddress( void* addr )
       // Get the appropriate streamer element
       //------------------------------------------------------------------------
       GetInfo();
-      TStreamerElement *el = (TStreamerElement*)fInfo->GetElements()->At( fID );
+      TStreamerElement *el = (TStreamerElement*)(*fInfo).GetElements()->At( fID );
 
       //------------------------------------------------------------------------
       // Set up the addresses

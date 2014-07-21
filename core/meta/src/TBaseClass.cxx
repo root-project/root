@@ -13,6 +13,8 @@
 #include "TClass.h"
 #include "TInterpreter.h"
 
+#include "TVirtualMutex.h" // For R__LOCKGUARD
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 //  Each class (see TClass) has a linked list of its base class(es).    //
@@ -29,7 +31,7 @@
 ClassImp(TBaseClass)
 
 //______________________________________________________________________________
-TBaseClass::TBaseClass(BaseClassInfo_t *info, TClass *cl) : TDictionary()
+TBaseClass::TBaseClass(BaseClassInfo_t *info, TClass *cl) : TDictionary(), fProperty(-1), fOffset(-2)
 {
    // Default TBaseClass ctor. TBaseClasses are constructed in TClass
    // via a call to TCint::CreateListOfBaseClasses().
@@ -71,7 +73,11 @@ Int_t TBaseClass::GetDelta() const
 {
    // Get offset from "this" to part of base class.
 
-   return (Int_t)gCint->BaseClassInfo_Offset(fInfo);
+   if (fOffset == -2 && fInfo) {
+      R__LOCKGUARD(gCINTMutex);
+      fOffset = gCint->BaseClassInfo_Offset(fInfo);
+   }
+   return (Int_t)fOffset;
 }
 
 //______________________________________________________________________________
@@ -107,5 +113,9 @@ Long_t TBaseClass::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
 
-   return gCint->BaseClassInfo_Property(fInfo);
+   if (fProperty == -1 && fInfo) {
+      R__LOCKGUARD(gCINTMutex);
+      fProperty = gCint->BaseClassInfo_Property(fInfo);
+   }
+   return fProperty;
 }

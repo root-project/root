@@ -118,11 +118,18 @@
 #include "TSchemaRuleSet.h"
 #include "TThreadSlots.h"
 
+#if __cplusplus >= 201103L
+std::atomic<Long64_t> TFile::fgBytesRead{0};
+std::atomic<Long64_t> TFile::fgBytesWrite{0};
+std::atomic<Long64_t> TFile::fgFileCounter{0};
+std::atomic<Int_t>    TFile::fgReadCalls{0};
+#else
 Long64_t TFile::fgBytesRead  = 0;
 Long64_t TFile::fgBytesWrite = 0;
 Long64_t TFile::fgFileCounter = 0;
-Int_t    TFile::fgReadaheadSize = 256000;
 Int_t    TFile::fgReadCalls = 0;
+#endif
+Int_t    TFile::fgReadaheadSize = 256000;
 Bool_t   TFile::fgReadInfo = kTRUE;
 TList   *TFile::fgAsyncOpenRequests = 0;
 TString  TFile::fgCacheFileDir;
@@ -4570,6 +4577,7 @@ TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(const char* name)
    }
 
    // Check also the list of files open
+   R__LOCKGUARD2(gROOTMutex);
    TSeqCollection *of = gROOT->GetListOfFiles();
    if (of && (of->GetSize() > 0)) {
       TIter nxf(of);
@@ -4616,6 +4624,7 @@ const TUrl *TFile::GetEndpointUrl(const char* name)
    }
 
    // Check also the list of files open
+   R__LOCKGUARD2(gROOTMutex);
    TSeqCollection *of = gROOT->GetListOfFiles();
    if (of && (of->GetSize() > 0)) {
       TIter nxf(of);

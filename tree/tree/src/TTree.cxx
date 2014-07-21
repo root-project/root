@@ -377,7 +377,8 @@
 Int_t    TTree::fgBranchStyle = 1;  // Use new TBranch style with TBranchElement.
 Long64_t TTree::fgMaxTreeSize = 100000000000LL;
 
-TTree* gTree;
+#include "ThreadLocalStorage.h"
+TTHREAD_TLS(TTree*) gTree;
 
 ClassImp(TTree)
 
@@ -2408,14 +2409,6 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */, Boo
    }
    cl->BuildRealData(pointer);
    TStreamerInfo* sinfo = (TStreamerInfo*)cl->GetStreamerInfo(cl->GetClassVersion());
-
-   if (sinfo && !canOptimize && (!sinfo->IsCompiled() || sinfo->IsOptimized()) ) {
-      // Streamer info has not yet been compiled.
-      //
-      // Optimizing does not work with splitting.
-      sinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-      sinfo->Compile();
-   }
 
    // Create StreamerInfo for all base classes.
    TBaseClass* base = 0;

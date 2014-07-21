@@ -52,6 +52,8 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TVirtualMutex.h"
+#include "ThreadLocalStorage.h"
+
 
 #if defined(R__WIN32)
 #define strtoull _strtoui64
@@ -62,9 +64,6 @@ namespace std { using ::list; }
 #endif
 
 ClassImp(TString)
-
-// Mutex for string format protection
-TVirtualMutex *gStringMutex = 0;
 
 // Amount to shift hash values to avoid clustering
 const UInt_t kHashShift = 5;
@@ -2345,24 +2344,15 @@ TString TString::Format(const char *va_(fmt), ...)
 
 //---- Global String Handling Functions ----------------------------------------
 
-static const int cb_size  = 4096;
-static const int fld_size = 2048;
-
-// a circular formating buffer
-static char gFormbuf[cb_size];       // some slob for form overflow
-static char *gBfree  = gFormbuf;
-static char *gEndbuf = &gFormbuf[cb_size-1];
-
 //______________________________________________________________________________
 static char *SlowFormat(const char *format, va_list ap, int hint)
 {
    // Format a string in a formatting buffer (using a printf style
    // format descriptor).
 
-   static char *slowBuffer  = 0;
-   static int   slowBufferSize = 0;
-
-   R__LOCKGUARD2(gStringMutex);
+   static const int fld_size = 2048;
+   static TTHREAD_TLS(char*) slowBuffer(0);
+   static TTHREAD_TLS(int) slowBufferSize(0);
 
    if (hint == -1) hint = fld_size;
    if (hint > slowBufferSize) {
@@ -2408,8 +2398,18 @@ static char *Format(const char *format, va_list ap)
    // Format a string in a circular formatting buffer (using a printf style
    // format descriptor).
 
-   R__LOCKGUARD2(gStringMutex);
+   static const int cb_size  = 4096;
+   static const int fld_size = 2048;
 
+   // a circular formating buffer
+   static TTHREAD_TLS(char) gFormbuf[cb_size]; // some slob for form overflow
+   static TTHREAD_TLS(char*) gBfree(0);
+   static TTHREAD_TLS(char*) gEndbuf(0);
+
+   if (gBfree == 0) {
+      gBfree = gFormbuf;
+      gEndbuf = &gFormbuf[cb_size-1];
+   }
    char *buf = gBfree;
 
    if (buf+fld_size > gEndbuf)

@@ -34,7 +34,9 @@
 #include <string.h>
 #include <snprintf.h>   // part of stdio.h on systems that have it
 #include <strlcpy.h>    // part of string.h on systems that have it
-
+#if __cplusplus >= 201103L
+#include <atomic>
+#endif
 
 
 //---- forward declared class types --------------------------------------------
@@ -268,12 +270,17 @@ namespace ROOT {
 #include "TGenericClassInfo.h"
 #endif
 
+#if __cplusplus >= 201103L
+typedef std::atomic<TClass*> atomic_TClass_ptr;
+#else
+typedef TClass* atomic_TClass_ptr;
+#endif
 // Common part of ClassDef definition.
 // DeclFileLine() is not part of it since CINT uses that as trigger for
 // the class comment string.
 #define _ClassDef_(name,id) \
 private: \
-   static TClass *fgIsA; \
+   static atomic_TClass_ptr fgIsA; \
 public: \
    static TClass *Class(); \
    static const char *Class_Name(); \
@@ -290,7 +297,7 @@ public: \
 // Version without any virtual functions.
 #define _ClassDefNV_(name,id) \
 private: \
-static TClass *fgIsA; \
+static atomic_TClass_ptr fgIsA; \
 public: \
 static TClass *Class(); \
 static const char *Class_Name(); \

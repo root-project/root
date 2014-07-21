@@ -39,7 +39,12 @@
 namespace std {} using namespace std;
 
 const Int_t kMaxLen = 1024;
+
+#if __cplusplus >= 201103L
+static thread_local TString gIncludeName(kMaxLen);
+#else
 static TString gIncludeName(kMaxLen);
+#endif
 
 extern void *gMmallocDesc;
 
@@ -295,7 +300,11 @@ const char *TStreamerElement::GetFullName() const
    // Note that this function stores the name into a static array.
    // You should copy the result.
 
+#if __cplusplus >= 201103L
+   static thread_local TString name(kMaxLen);
+#else
    static TString name(kMaxLen);
+#endif
    char cdim[20];
    name = GetName();
    for (Int_t i=0;i<fArrayDim;i++) {

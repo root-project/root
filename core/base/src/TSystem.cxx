@@ -64,6 +64,15 @@ static Int_t *gLibraryVersion    = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionIdx = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionMax = 256;
 
+#if __cplusplus >= 201103L
+thread_local TString TSystem::fgLastErrorString;
+#else
+// Because of
+//   error: ‘TSystem::fgLastErrorString’ cannot be thread-local because it has non-POD type ‘TString’
+// we can not rely on the platform independent thread local
+TString TSystem::fgLastErrorString;
+#endif
+
 ClassImp(TProcessEventTimer)
 
 //______________________________________________________________________________
@@ -246,7 +255,7 @@ void TSystem::SetErrorStr(const char *errstr)
    // library that does not use standard errno).
 
    ResetErrno();   // so GetError() uses the fLastErrorString
-   fLastErrorString = errstr;
+   fgLastErrorString = errstr;
 }
 
 //______________________________________________________________________________
@@ -254,8 +263,8 @@ const char *TSystem::GetError()
 {
    // Return system error string.
 
-   if (GetErrno() == 0 && fLastErrorString != "")
-      return fLastErrorString;
+   if (GetErrno() == 0 && fgLastErrorString != "")
+      return fgLastErrorString;
    return Form("errno: %d", GetErrno());
 }
 

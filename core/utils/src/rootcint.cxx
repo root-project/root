@@ -2398,7 +2398,7 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
    (*dictSrcOut) << "//_______________________________________"
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
-   (*dictSrcOut) << "TClass *" << clsname.c_str() << "::fgIsA = 0;  // static to hold class pointer" << std::endl
+   (*dictSrcOut) << "atomic_TClass_ptr " << clsname.c_str() << "::fgIsA(0);  // static to hold class pointer" << std::endl
                  << std::endl
 
                  << "//_______________________________________"
@@ -2433,8 +2433,8 @@ void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) (*dictSrcOut) << "template <> ";
    (*dictSrcOut) << "TClass *" << clsname.c_str() << "::Class()" << std::endl << "{" << std::endl;
-   (*dictSrcOut) << "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
-   (*dictSrcOut) << cl.Fullname() << "*)0x0)->GetClass();" << std::endl
+   (*dictSrcOut) << "   if (!fgIsA) { R__LOCKGUARD2(gCINTMutex); if(!fgIsA) {fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
+   (*dictSrcOut) << cl.Fullname() << "*)0x0)->GetClass();} }" << std::endl
                  << "   return fgIsA;" << std::endl
                  << "}" << std::endl << std::endl;
 
@@ -4942,6 +4942,8 @@ int main(int argc, char **argv)
    (*dictSrcOut) << "#include \"TClass.h\"" << std::endl
                  << "#include \"TBuffer.h\"" << std::endl
                  << "#include \"TMemberInspector.h\"" << std::endl
+                 << "#include \"TInterpreter.h\"" << std::endl
+                 << "#include \"TVirtualMutex.h\"" << std::endl
                  << "#include \"TError.h\"" << std::endl << std::endl
                  << "#ifndef G__ROOT" << std::endl
                  << "#define G__ROOT" << std::endl

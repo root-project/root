@@ -1,4 +1,4 @@
-// @(#)root/io:$Id$
+// @(#)root/io:$Id: 56ae10c519627872e1dd40872fd459c2dd89acf6 $
 // Author: Philippe Canal  11/11/2004
 
 /*************************************************************************
@@ -35,7 +35,7 @@ TConvertClonesArrayToProxy::TConvertClonesArrayToProxy(
    Bool_t isPointer, Bool_t isPrealloc) :
       fIsPointer(isPointer),
       fIsPrealloc(isPrealloc),
-      fProxy(proxy?proxy->Generate():0)
+      fCollectionClass(proxy?proxy->GetCollectionClass():0)
 {
    // Constructor.
 
@@ -48,7 +48,6 @@ TConvertClonesArrayToProxy::~TConvertClonesArrayToProxy()
 {
    // Destructor.
 
-   delete fProxy;
 }
 
 //________________________________________________________________________
@@ -56,7 +55,10 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
 {
    // Read a TClonesArray from the TBuffer b and load it into a (stl) collection
 
-   TStreamerInfo *subinfo = (TStreamerInfo*)fProxy->GetValueClass()->GetStreamerInfo();
+   // For thread-safety we need to go through TClass::GetCollectionProxy
+   // to get a thread local proxy.
+   TVirtualCollectionProxy *proxy = fCollectionClass->GetCollectionProxy();
+   TStreamerInfo *subinfo = (TStreamerInfo*)proxy->GetValueClass()->GetStreamerInfo();
    R__ASSERT(subinfo);
 
    Int_t   nobjects, dummy;
@@ -74,9 +76,9 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
       char *addr = (char*)pmember;
       for(Int_t k=0; k<size; ++k, addr += fOffset ) {
          if (*(void**)addr && TStreamerInfo::CanDelete()) {
-            fProxy->GetValueClass()->Destructor(*(void**)addr,kFALSE); // call delete and desctructor
+            proxy->GetValueClass()->Destructor(*(void**)addr,kFALSE); // call delete and desctructor
          }
-         //*(void**)addr = fProxy->New();
+         //*(void**)addr = proxy->New();
          //TClonesArray *clones = (TClonesArray*)ReadObjectAny(TClonesArray::Class());
       }
    }
@@ -120,7 +122,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
 
                // No object found at this location in map. It might have been skipped
                // as part of a skipped object. Try to explicitly read the object.
-               b.MapObject(*(void**)addr, fProxy->GetCollectionClass(), 0);
+               b.MapObject(*(void**)addr, fCollectionClass, 0);
                Int_t currentpos = b.Length();
                b.SetBufferOffset( tag - kMapOffset );
 
@@ -129,19 +131,19 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
 
                if (objptr==0) continue;
 
-               clRef = fProxy->GetCollectionClass();
+               clRef = fCollectionClass;
 
             }
             R__ASSERT(clRef);
             if (clRef==TClonesArray::Class()) {
                Error("TConvertClonesArrayToProxy",
                   "Object refered to has not been converted from TClonesArray to %s",
-                  fProxy->GetCollectionClass()->GetName());
+                  fCollectionClass->GetName());
                continue;
-            } else if (clRef!=fProxy->GetCollectionClass()) {
+            } else if (clRef!=fCollectionClass) {
                Error("TConvertClonesArrayToProxy",
                   "Object refered to is of type %s instead of %s",
-                  clRef->GetName(),fProxy->GetCollectionClass()->GetName());
+                  clRef->GetName(),fCollectionClass->GetName());
                continue;
             }
             *(void**)addr = objptr;
@@ -151,13 +153,13 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
             Warning("TConvertClonesArrayToProxy",
                     "Only the TClonesArray part of %s will be read into %s!\n",
                     (clRef!=((TClass*)-1)&&clRef) ? clRef->GetName() : "N/A",
-                    fProxy->GetCollectionClass()->GetName());
+                    fCollectionClass->GetName());
          } else {
-            *(void**)addr = fProxy->New();
+            *(void**)addr = proxy->New();
             if (b.GetBufferVersion()>0) {
-               b.MapObject(*(void**)addr, fProxy->GetCollectionClass(), startpos+kMapOffset);
+               b.MapObject(*(void**)addr, fCollectionClass, startpos+kMapOffset);
             } else {
-               b.MapObject(*(void**)addr, fProxy->GetCollectionClass(), b.GetMapCount() );
+               b.MapObject(*(void**)addr, fCollectionClass, b.GetMapCount() );
             }
          }
       }
@@ -196,23 +198,23 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
       if (cl != subinfo->GetClass()) {
          Error("TClonesArray::Conversion to vector","Bad class");
       }
-      TVirtualCollectionProxy::TPushPop helper( fProxy, obj );
-      env = fProxy->Allocate(nobjects,true);
+      TVirtualCollectionProxy::TPushPop helper( proxy, obj );
+      env = proxy->Allocate(nobjects,true);
 
       if (objdummy.TestBit(TClonesArray::kBypassStreamer)) {
 
-         subinfo->ReadBufferSTL(b,fProxy,nobjects,-1,0);
+         subinfo->ReadBufferSTL(b,proxy,nobjects,0);
 
       } else {
          for (Int_t i = 0; i < nobjects; i++) {
             b >> nch;
             if (nch) {
-               void* elem = fProxy->At(i);
+               void* elem = proxy->At(i);
                b.StreamObject(elem,subinfo->GetClass());
             }
          }
       }
-      fProxy->Commit(env);
+      proxy->Commit(env);
       b.CheckByteCount(start, bytecount,TClonesArray::Class());
    }
 }
@@ -223,24 +225,26 @@ TConvertMapToProxy::TConvertMapToProxy(TClassStreamer *streamer,
    fIsPointer(isPointer),
    fIsPrealloc(isPrealloc),
    fSizeOf(0),
-   fProxy(0),
-   fCollectionStreamer(0)
+   fCollectionClass(0)
 {
    // Constructor.
 
    TCollectionClassStreamer *middleman = dynamic_cast<TCollectionClassStreamer*>(streamer);
    if (middleman) {
-      fProxy = middleman->GetXYZ();
-      fCollectionStreamer = dynamic_cast<TGenCollectionStreamer*>(middleman->GetXYZ());
+      TVirtualCollectionProxy *proxy = middleman->GetXYZ();
+      TGenCollectionStreamer *collStreamer = dynamic_cast<TGenCollectionStreamer*>(proxy);
+
+      fCollectionClass = proxy->GetCollectionClass();
 
       if (isPointer) fSizeOf = sizeof(void*);
-      else fSizeOf = fProxy->GetCollectionClass()->Size();
+      else fSizeOf = fCollectionClass->Size();
 
-      if (fProxy->GetValueClass()->GetStreamerInfo() == 0
-          || fProxy->GetValueClass()->GetStreamerInfo()->GetElements()->At(1) == 0 ) {
+      if (proxy->GetValueClass()->GetStreamerInfo() == 0
+          || proxy->GetValueClass()->GetStreamerInfo()->GetElements()->At(1) == 0 ) {
          // We do not have enough information on the pair (or its not a pair).
-         fCollectionStreamer = 0;
+         collStreamer = 0;
       }
+      if (!collStreamer) fCollectionClass = 0;
    }
 }
 
@@ -252,7 +256,13 @@ void TConvertMapToProxy::operator()(TBuffer &b, void *pmember, Int_t size)
    // Read a std::map or std::multimap from the TBuffer b and load it into a (stl) collection
 
    R__ASSERT(b.IsReading());
-   R__ASSERT(fCollectionStreamer);
+   R__ASSERT(fCollectionClass);
+
+   // For thread-safety we need to go through TClass::GetStreamer
+   // to get a thread local proxy.
+   TCollectionClassStreamer *middleman = dynamic_cast<TCollectionClassStreamer*>(fCollectionClass->GetStreamer());
+   TVirtualCollectionProxy *proxy = middleman->GetXYZ();
+   TGenCollectionStreamer *collStreamer = dynamic_cast<TGenCollectionStreamer*>(proxy);
 
    Bool_t needAlloc = fIsPointer && !fIsPrealloc;
 
@@ -262,9 +272,9 @@ void TConvertMapToProxy::operator()(TBuffer &b, void *pmember, Int_t size)
       char *addr = (char*)pmember;
       for(Int_t k=0; k<size; ++k, addr += fSizeOf ) {
          if (*(void**)addr && TStreamerInfo::CanDelete()) {
-            fProxy->GetValueClass()->Destructor(*(void**)addr,kFALSE); // call delete and desctructor
+            proxy->GetValueClass()->Destructor(*(void**)addr,kFALSE); // call delete and desctructor
          }
-         //*(void**)addr = fProxy->New();
+         //*(void**)addr = proxy->New();
          //TClonesArray *clones = (TClonesArray*)ReadObjectAny(TClonesArray::Class());
       }
    }
@@ -284,8 +294,8 @@ void TConvertMapToProxy::operator()(TBuffer &b, void *pmember, Int_t size)
       if (fIsPointer) obj = *(void**)addr;
       else obj = addr;
 
-      TVirtualCollectionProxy::TPushPop env(fProxy, obj);
-      fCollectionStreamer->StreamerAsMap(b);
+      TVirtualCollectionProxy::TPushPop env(proxy, obj);
+      collStreamer->StreamerAsMap(b);
 
    }
 }

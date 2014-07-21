@@ -536,7 +536,7 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
             case G__BIT_ISCLASS:
                DOLOOP(
                   char **where = (char**)(void*) & i;
-                  pinfo->ReadBuffer(b, where, -1);
+                  b.ApplySequence(*(pinfo->GetReadObjectWiseActions()), where);
                );
          }
 #undef DOLOOP
@@ -553,7 +553,7 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
             case G__BIT_ISCLASS:
                DOLOOP(
                   char **where = (char**)(void*) & i;
-                  pinfo->ReadBuffer(b, where, -1);
+                  b.ApplySequence(*(pinfo->GetReadObjectWiseActions()), where);
                );
                fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                fDestruct(fEnv->fStart,fEnv->fSize);
