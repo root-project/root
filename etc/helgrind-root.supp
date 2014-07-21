@@ -1,0 +1,393 @@
+{
+   GreedyCleanup - To be investigated.
+   Helgrind:UnlockUnlocked
+   fun:pthread_mutex_unlock
+   ...
+   fun:_ZN7TThread7CleanUpEv
+}
+{
+   GreedyCleanup Part 2 - To be investigated.
+   Helgrind:PthAPIerror
+   fun:pthread_mutex_unlock
+   ...
+   fun:_ZN7TThread7CleanUpEv
+}
+{
+   GreedyCleanup Part 3 - To be investigated.
+   Helgrind:UnlockForeign
+   fun:pthread_mutex_unlock
+   ...
+   fun:_ZN7TThread7CleanUpEv
+}
+
+
+{
+   Due to TClass::fVersionUsed which is a std::atomic<bool> ... may hide other problems.
+   Helgrind:Race
+   fun:_ZN11TBufferFile11ReadVersionEPjS0_PK6TClass
+}
+{
+   Due to TClass::fVersionUsed which is a std::atomic<bool> ... may hide other problems.
+   Helgrind:Race
+   fun:_ZN11TBufferFile24ReadVersionForMemberWiseEPK6TClass
+}
+{
+   Due to TClass::fVersionUsed which is a std::atomic<bool> ... may hide other problems.
+   Helgrind:Race
+   fun:_ZN13TStreamerInfo10BuildCheckEP5TFile
+}
+{
+   Due to TClass::fVersionUsed which is a std::atomic<bool> ... may hide other problems.
+   Helgrind:Race
+   fun:_ZN11TBufferFile12WriteVersionEPK6TClassb
+}
+
+{
+   Due to TClass::fLastReadInfo which is an std::atomic ... may hide other problems.
+   Helgrind:Race
+   fun:_ZNK6TClass16FindStreamerInfoEj
+}
+{
+   Due to TClass::fLastReadInfo which is an std::atomic ... may hide other problems.
+   Helgrind:Race
+   fun:_ZNK6TClass15GetStreamerInfoEi
+}
+
+{
+   *::Class use *::fgIsA which is an std::atomic
+   Helgrind:Race
+   fun:_ZN*5ClassEv
+}
+
+{
+   Use a global static atomic.
+   Helgrind:Race
+   fun:_ZN11TUnixSystem7UnixNowEv
+}
+{
+   This function can only be called after the value (fOffsetStreamer) has been properly (locked) initialized ... May hide other problems.
+   Helgrind:Race
+   fun:_ZN11TBufferFile13ReadObjectAnyEPK6TClass
+}
+
+{
+   This function can only be called after the value (fOffsetStreamer) has been properly (locked) initialized
+   Helgrind:Race
+   fun:_ZNK6TClass26StreamerTObjectInitializedEPvR7TBufferPKS_
+}
+{
+   If we get the wrong result (the data race is real is expansive to avoid for fBits), we test again after taking the lock
+   Helgrind:Race
+   fun:_ZNK7TObject7TestBitEj
+   fun:_ZNK20TVirtualStreamerInfo10IsCompiledEv
+}
+
+{
+   kIsRecovered can not change after the require initialization (behind lock), (note) but a race during the setting of a different bit 'might' do the wrong thing.
+   Helgrind:Race
+   fun:_ZN11TBufferFile15ReadClassBufferEPK6TClassPvS2_
+}
+{
+   Also about fBits
+   Helgrind:Race
+   fun:_ZN13TStreamerInfo7CompileEv
+}
+{
+   Also about fBits
+   Helgrind:Race
+   fun:_ZNK7TObject7TestBitEj
+   fun:_ZNK20TVirtualStreamerInfo10IsCompiledEv
+}
+{
+   Also about fBits
+   Helgrind:Race
+   fun:_ZN13TStreamerInfo10BuildCheckEP5TFile
+}
+
+{
+   TStreamerInfo is not yet published so there is no possible race.
+   Helgrind:Race
+   ...
+   fun:_ZN5TFile16ReadStreamerInfoEv
+}
+
+{
+   std::atomic is 'atomic'
+   Helgrind:Race
+   fun:_ZNKSt13__atomic_base*loadESt12memory_order
+}
+{
+   std::atomic is 'atomic'
+   Helgrind:Race
+   fun:_ZNSt13__atomic_base*storeES1_St12memory_order
+}
+
+{
+   pthread unlock 1
+   Helgrind:Race
+   fun:pthread_mutex_unlock
+   fun:pthread_mutex_unlock
+}
+{
+   pthread unlock 2
+   Helgrind:Race
+   fun:__lll_unlock_wake
+   fun:_L_unlock_657
+   fun:pthread_mutex_unlock
+   fun:pthread_mutex_unlock
+}
+{
+   pthread lock wait 1
+   Helgrind:Race
+   fun:__lll_lock_wait
+   fun:_L_lock_892
+   fun:pthread_mutex_lock
+   fun:pthread_mutex_lock
+}
+{
+   pthread lock 1
+   Helgrind:Race
+   fun:pthread_mutex_lock
+   fun:pthread_mutex_lock
+}
+{
+   helgrind-glibc2X-005 Inspired by https://bugs.kde.org/show_bug.cgi?id=179624
+   Helgrind:Race
+   obj:/lib*/libpthread-2.*so*
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:pthread_cond_signal@@GLIBC_2.3.2
+   fun:_ZN15TPosixCondition6SignalEv
+   fun:_ZN10TCondition6SignalEv
+}
+{
+   TUrl and strncmp
+   Helgrind:Race
+   fun:__strncmp_sse42
+   fun:_ZN4TUrl6SetUrlEPKcb
+}
+{
+   G__defined_tagname and strstr
+   Helgrind:Race
+   fun:__strstr_sse42
+   fun:G__defined_tagname
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:__strstr_sse42
+   fun:_ZNK7TSystem14SplitAclicModeEPKcR7TStringS3_S3_
+}
+{
+   TClassEdit_strncmp
+   Helgrind:Race
+   fun:__strncmp_sse42
+   fun:_ZN10TClassEdit7STLKindEPKc
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:__strncmp_sse42
+   fun:_ZN10TClassEdit9CleanTypeEPKciPS1_
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:__strncmp_sse42
+   fun:_ZN6TClass8GetClassEPKcbb
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:__strncmp_sse42
+   fun:_ZN6TClass8GetClassEPKcbb
+}
+
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   ...
+   fun:__tz_convert
+   fun:_ZN7TDatime3Set*
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   ...
+   fun:printf
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   ...
+   fun:fprintf
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:_Unwind_ForcedUnwind
+   fun:__pthread_unwind
+   fun:pthread_exit
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:pthread_join
+   fun:pthread_join_WRK
+   fun:pthread_join
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:my_memcmp
+   fun:pthread_mutex_destroy
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:__pthread_mutex_cond_lock
+   fun:pthread_cond_timedwait@@GLIBC_2.3.2
+   fun:pthread_cond_timedwait_WRK
+   fun:pthread_cond_timedwait@*
+   fun:_ZN15TPosixCondition9TimedWaitEmm
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:pthread_mutex_destroy
+   fun:pthread_mutex_destroy
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:pthread_create@@GLIBC_2.2.5
+   fun:pthread_create_WRK
+   fun:pthread_create@*
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:clone
+   fun:do_clone.clone.0
+   fun:pthread_create@@GLIBC_2.2.5
+   fun:pthread_create_WRK
+   fun:pthread_create@*
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:readdir
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:start_thread
+   fun:clone
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:__sigsetjmp
+   fun:start_thread
+   fun:clone
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:_pthread_cleanup_push
+   fun:pthread_join
+   fun:pthread_join_WRK
+   fun:pthread_join
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:__pthread_unwind
+   fun:pthread_exit
+}
+
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:__free_tcb
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:unwind_stop
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:__pthread_cleanup_upto
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:arena_thread_freeres
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:__free_stacks
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:pthread_exit
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:__sigjmp_save
+   fun:start_thread
+   fun:clone
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   ...
+   fun:fclose*
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   ...
+   fun:__fopen_internal
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:getc
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:fgetpos*
+   fun:_Z18G__make_ifunctableR18G__FastAllocString
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:fgetpos*
+   fun:G__exec_statement
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:fsetpos*
+   fun:G__interpret_func
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:srand
+}
+{
+   <insert_a_suppression_name_here>
+   Helgrind:Race
+   fun:__new_exitfn
+   fun:__cxa_atexit
+}
