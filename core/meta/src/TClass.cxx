@@ -3375,7 +3375,7 @@ TList *TClass::GetListOfBases()
 
       R__LOCKGUARD(gInterpreterMutex);
       if(!fBase) {
- 	 gInterpreter->CreateListOfBaseClasses(this);
+         gInterpreter->CreateListOfBaseClasses(this);
       }
    }
    return fBase;
@@ -4550,7 +4550,7 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
 
       Bool_t statsave = GetObjectStat();
       if(statsave) {
-	SetObjectStat(kFALSE);
+         SetObjectStat(kFALSE);
       }
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo && !quiet) {
@@ -4565,7 +4565,7 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
       // FIXME: Mistake?  See note above at the GetObjectStat() call.
       // Allow TObject's to be registered again.
       if(statsave) {
-	SetObjectStat(statsave);
+         SetObjectStat(statsave);
       }
 
       // Register the object for special handling in the destructor.
@@ -4636,7 +4636,7 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       // as a result of creating this object.
       Bool_t statsave = GetObjectStat();
       if(statsave) {
-	SetObjectStat(kFALSE);
+         SetObjectStat(kFALSE);
       }
 
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
@@ -4652,7 +4652,7 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       // ???BUG???
       // Allow TObject's to be registered again.
       if(statsave) {
-	SetObjectStat(statsave);
+         SetObjectStat(statsave);
       }
 
       // Register the object for special handling in the destructor.
@@ -4724,7 +4724,7 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       // as a result of creating this object.
       Bool_t statsave = GetObjectStat();
       if(statsave) {
-	SetObjectStat(kFALSE);
+         SetObjectStat(kFALSE);
       }
 
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
@@ -4740,7 +4740,7 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       // ???BUG???
       // Allow TObject's to be registered again.
       if(statsave) {
-	SetObjectStat(statsave);
+         SetObjectStat(statsave);
       }
 
       // Register the object for special handling in the destructor.
@@ -4811,7 +4811,7 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       // as a result of creating this object.
       Bool_t statsave = GetObjectStat();
       if(statsave) {
-	SetObjectStat(kFALSE);
+         SetObjectStat(kFALSE);
       }
 
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
@@ -4827,7 +4827,7 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       // ???BUG???
       // Allow TObject's to be registered again.
       if(statsave) {
-	SetObjectStat(statsave);
+         SetObjectStat(statsave);
       }
 
       if (fStreamerType & kEmulatedStreamer) {
@@ -4872,10 +4872,10 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       // or it will be interpreted, otherwise we fail
       // because there is no destructor code at all.
       if (dtorOnly) {
-	 R__LOCKGUARD2(gInterpreterMutex);
+         R__LOCKGUARD2(gInterpreterMutex);
          gCling->ClassInfo_Destruct(fClassInfo,p);
       } else {
-	 R__LOCKGUARD2(gInterpreterMutex);
+         R__LOCKGUARD2(gInterpreterMutex);
          gCling->ClassInfo_Delete(fClassInfo,p);
       }
    } else if (!HasInterpreterInfo() && fCollectionProxy) {
@@ -4897,21 +4897,21 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       R__LOCKGUARD2(gOVRMutex);
 
       {
-	 RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
-	 if (iter == gObjectVersionRepository.end()) {
-	    // No, it wasn't, skip special version handling.
-	    //Error("Destructor2", "Attempt to delete unregistered object of class '%s' at address %p!", GetName(), p);
-	    inRepo = kFALSE;
-	 } else {
-	    //objVer = iter->second;
-	    for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
-	       Version_t ver = iter->second.fVersion;
-	       knownVersions.insert(ver);
-	        if (ver == fClassVersion && this == iter->second.fClass) {
-		   verFound = kTRUE;
-		}
-	    }
-	 }
+         RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
+         if (iter == gObjectVersionRepository.end()) {
+            // No, it wasn't, skip special version handling.
+            //Error("Destructor2", "Attempt to delete unregistered object of class '%s' at address %p!", GetName(), p);
+            inRepo = kFALSE;
+         } else {
+            //objVer = iter->second;
+            for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
+               Version_t ver = iter->second.fVersion;
+               knownVersions.insert(ver);
+               if (ver == fClassVersion && this == iter->second.fClass) {
+                  verFound = kTRUE;
+               }
+            }
+         }
       }
 
       if (!inRepo || verFound) {
@@ -5010,21 +5010,21 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       // Was this array object allocated through TClass?
       std::multiset<Version_t> knownVersions;
       {
-	 R__LOCKGUARD2(gOVRMutex);
-	 RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
-	 if (iter == gObjectVersionRepository.end()) {
-	    // No, it wasn't, we cannot know what to do.
-	    //Error("DeleteArray", "Attempt to delete unregistered array object, element type '%s', at address %p!", GetName(), p);
-	   inRepo = kFALSE;
-	 } else {
-	    for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
-	       Version_t ver = iter->second.fVersion;
-	       knownVersions.insert(ver);
-	       if (ver == fClassVersion && this == iter->second.fClass ) {
-		  verFound = kTRUE;
-	       }
-	    }
-	 }
+         R__LOCKGUARD2(gOVRMutex);
+         RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
+         if (iter == gObjectVersionRepository.end()) {
+            // No, it wasn't, we cannot know what to do.
+            //Error("DeleteArray", "Attempt to delete unregistered array object, element type '%s', at address %p!", GetName(), p);
+            inRepo = kFALSE;
+         } else {
+            for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
+               Version_t ver = iter->second.fVersion;
+               knownVersions.insert(ver);
+               if (ver == fClassVersion && this == iter->second.fClass ) {
+                  verFound = kTRUE;
+               }
+            }
+         }
       }
 
       if (!inRepo || verFound) {
