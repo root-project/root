@@ -15,8 +15,10 @@ if(WIN32)
 else()
   ROOT_EXECUTABLE(proofd proofd.cxx ${CMAKE_SOURCE_DIR}/core/clib/src/strlcat.c 
                          LIBRARIES ${XROOTD_LIBRARIES} rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES} ${CRYPTLIBS} )
-  ROOT_EXECUTABLE(xproofd X*.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
+  if (NOT XROOTD_NOMAIN)
+     ROOT_EXECUTABLE(xproofd X*.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
                          LIBRARIES ${XROOTD_LIBRARIES} ${SYSLIBS})
+  endif ()
   ROOT_LINKER_LIBRARY(XrdProofd X*.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
                          LIBRARIES ${XROOTD_LIBRARIES} rpdutil ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
   set_target_properties(XrdProofd PROPERTIES LINK_INTERFACE_LIBRARIES "" )
@@ -24,7 +26,9 @@ endif()
 
 if(builtin_xrootd)
   add_dependencies(XrdProofd XROOTD)
-  add_dependencies(xproofd XROOTD)
+  if (NOT XROOTD_NOMAIN)
+     add_dependencies(xproofd XROOTD)
+  endif ()
   add_dependencies(proofd XROOTD)
 endif()
 

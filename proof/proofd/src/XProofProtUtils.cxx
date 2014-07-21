@@ -30,8 +30,10 @@
 #   endif
 #endif
 #ifndef WIN32
-#include <sys/types.h>
-#include <netinet/in.h>
+#  include <sys/types.h>
+#  ifndef ROOT_XrdFour
+#     include <netinet/in.h>
+#  endif
 #endif
 #include "XrdSys/XrdSysPlatform.hh"
 #include "XProofProtocol.h"

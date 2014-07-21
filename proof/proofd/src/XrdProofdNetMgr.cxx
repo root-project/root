@@ -22,8 +22,12 @@
 
 #include "XrdProofdNetMgr.h"
 
-#include "XpdSysDNS.h"
-
+#include "XrdProofdXrdVers.h"
+#ifndef ROOT_XrdFour
+#  include "XpdSysDNS.h"
+#else
+#  include "XrdNet/XrdNetAddr.hh"
+#endif
 #include "Xrd/XrdBuffer.hh"
 #include "XrdClient/XrdClientConst.hh"
 #include "XrdClient/XrdClientEnv.hh"
@@ -1050,13 +1054,21 @@ bool XrdProofdNetMgr::IsLocal(const char *host, bool checkport)
       XrdClientUrlInfo uu(host);
       if (uu.Port <= 0) uu.Port = 1093;
       // Fully qualified name
+#ifndef ROOT_XrdFour      
       char *fqn = XrdSysDNS::getHostName(uu.Host.c_str());
+#else
+      XrdNetAddr aNA;
+      aNA.Set(uu.Host.c_str());
+      char *fqn = (char *) aNA.Name();
+#endif
       if (fqn && (strstr(fqn, "localhost") || !strcmp(fqn, "127.0.0.1") ||
                   !strcmp(fMgr->Host(), fqn))) {
          if (!checkport || (uu.Port == fMgr->Port()))
             rc = 1;
       }
+#ifndef ROOT_XrdFour      
       SafeFree(fqn);
+#endif
    }
    // Done
    return rc;

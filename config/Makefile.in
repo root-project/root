@@ -274,6 +274,8 @@ XRDVERSION     := @xrdversion@
 HASXRDUTILS    := @hasxrdutils@
 XRDINCPRIVATE  := @xrdincprivate@
 BUILDNETXNG    := @buildnetxng@
+BUILDXPROOFD   := @buildxproofd@
+BUILDXRDCLT    := @buildxrdclt@
 
 SRPLIBDIR      := @srplibdir@
 SRPLIB         := @srplib@

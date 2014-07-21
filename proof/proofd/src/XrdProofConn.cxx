@@ -21,7 +21,12 @@
 //////////////////////////////////////////////////////////////////////////
 #include "XrdProofdXrdVers.h"
 
+#ifndef ROOT_XrdFour
 #include "XpdSysDNS.h"
+#else
+#include "XrdNet/XrdNetAddr.hh"
+#endif
+
 #include "XpdSysError.h"
 #include "XpdSysPlugin.h"
 #include "XpdSysPthread.h"
@@ -65,8 +70,11 @@
 #include "XrdProofdTrace.h"
 
 #ifndef WIN32
-#include <sys/socket.h>
+#ifndef ROOT_XrdFour
+#  include <sys/socket.h>
+#endif
 #include <sys/types.h>
+#include <netdb.h>
 #include <pwd.h>
 #else
 #include <process.h>
@@ -74,7 +82,7 @@
 #endif
 
 // Security handle
-typedef XrdSecProtocol *(*XrdSecGetProt_t)(const char *, const struct sockaddr &,
+typedef XrdSecProtocol *(*secGetProt_t)(const char *, const struct sockaddr &,
                                            const XrdSecParameters &, XrdOucErrInfo *);
 
 XrdClientConnectionMgr *XrdProofConn::fgConnMgr = 0;
@@ -334,7 +342,15 @@ int XrdProofConn::TryConnect(int)
    int logid;
    logid = -1;
 
+   // The first time find the default port
+   static int servdef = -1;
+   if (servdef < 0) {
+      struct servent *ent = getservbyname("proofd", "tcp");
+      servdef = (ent) ? (int)ntohs(ent->s_port) : 1093;
+   }
+
    // Resolve the DNS information
+#ifndef ROOT_XrdFour
    char *haddr[10] = {0}, *hname[10] = {0};
    int naddr = XrdSysDNS::getAddrName(fUrl.Host.c_str(), 10, haddr, hname);
 
@@ -348,12 +364,23 @@ int XrdProofConn::TryConnect(int)
       TRACE(HDBG, "found host "<<fUrl.Host<<" with addr " << fUrl.HostAddr);
    }
 
-   // Set port: the first time find the default
-   static int servdef = -1;
-   if (servdef < 0) {
-      struct servent *ent = getservbyname("proofd", "tcp");
-      servdef = (ent) ? (int)ntohs(ent->s_port) : 1093;
+#else
+   XrdNetAddr aNA;
+   aNA.Set(fUrl.Host.c_str());
+   fUrl.Host = (const char *) aNA.Name();
+   char ha[256] = {0};
+   if (aNA.Format(ha, 256) <= 0) {
+      TRACE(DBG, "failure resolving address name " <<URLTAG);
+      fLogConnID = logid;
+      fConnected = 0;
+      return -1;      
    }
+   fUrl.HostAddr = (const char *) ha; // 
+   // Notify
+   TRACE(HDBG, "found host "<<fUrl.Host<<" with addr " << fUrl.HostAddr);
+#endif
+
+   // Set the port
    fUrl.Port = (fUrl.Port <= 0) ? servdef : fUrl.Port;
 
    // Connect
@@ -1232,12 +1259,18 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
    // Prepare host/IP information of the remote xrootd. This is required
    // for the authentication.
    struct sockaddr_in netaddr;
+#ifndef ROOT_XrdFour
    char **hosterrmsg = 0;
    if (XrdSysDNS::getHostAddr((char *)fUrl.HostAddr.c_str(),
                                 (struct sockaddr &)netaddr, hosterrmsg) <= 0) {
       TRACE(XERR, "getHostAddr: "<< *hosterrmsg);
       return protocol;
    }
+#else
+   XrdNetAddr aNA;
+   aNA.Set(fUrl.HostAddr.c_str());
+   memcpy(&netaddr, aNA.NetAddr(), sizeof(struct sockaddr_in));
+#endif
    netaddr.sin_port   = fUrl.Port;
    //
    // Variables for negotiation
@@ -1276,7 +1309,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
    }
    //
    // Cycle through the security protocols accepted by the server
-   while ((protocol = (*((XrdSecGetProt_t)fgSecGetProtocol))((char *)fUrl.Host.c_str(),
+   while ((protocol = (*((secGetProt_t)fgSecGetProtocol))((char *)fUrl.Host.c_str(),
                                           (const struct sockaddr &)netaddr, Parms, 0))) {
       //
       // Protocol name

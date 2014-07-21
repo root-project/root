@@ -72,7 +72,7 @@ ifeq ($(PLATFORM),win32)
 PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
 else
 ifeq ($(HASXRDUTILS),no)
-PROOFXLIBEXTRA += $(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdNet -lXrdClient \
+PROOFXLIBEXTRA += $(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdNet \
                   -lpthread
 # Starting from Jul 2010 XrdNet has been split in two libs:
 #    XrdNet and XrdNetUtil
@@ -87,8 +87,14 @@ ifeq ($(XRDNETUTIL),yes)
 PROOFXLIBEXTRA += -lXrdNetUtil
 endif
 else
-PROOFXLIBEXTRA += $(XROOTDDIRL) -lXrdUtils -lXrdClient
+PROOFXLIBEXTRA += $(XROOTDDIRL) -lXrdUtils
 endif
+ifeq ($(BUILDXRDCLT),yes)
+PROOFXLIBEXTRA += -L$(LPATH) -lXrdClient
+else
+PROOFXLIBEXTRA += $(XROOTDDIRL) -lXrdClient
+endif
+
 endif
 
 ##### local rules #####

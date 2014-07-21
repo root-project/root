@@ -28,7 +28,6 @@
 #include "Xrd/XrdPoll.hh"
 #include "Xrd/XrdScheduler.hh"
 #include "XrdNet/XrdNet.hh"
-#include "XrdNet/XrdNetPeer.hh"
 #include "XrdOuc/XrdOucRash.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPriv.hh"
@@ -1734,13 +1733,13 @@ void XrdProofdProofServMgr::ParseCreateBuffer(XrdProofdProtocol *p,
 }
 
 //_________________________________________________________________________________
-int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
+int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
 {
    // Handle a request to create a new session
-   XPDLOC(SMGR, "ProofServMgr::CreateFork")
+   XPDLOC(SMGR, "ProofServMgr::Create")
 
    int psid = -1, rc = 0;
-   XPD_SETRESP(p, "CreateFork");
+   XPD_SETRESP(p, "Create");
 
    TRACEP(p, DBG, "enter");
    XrdOucString msg;
@@ -2308,6 +2307,7 @@ int XrdProofdProofServMgr::CreateSockPath(XrdProofdProofServ *xps,
    return 0;
 }
 
+#if 0
 //_________________________________________________________________________________
 int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
 {
@@ -2594,6 +2594,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    // Over
    return 0;
 }
+#endif
 
 //_________________________________________________________________________________
 void XrdProofdProofServMgr::SendErrLog(const char *errlog, XrdProofdResponse *r)
@@ -2776,6 +2777,7 @@ int XrdProofdProofServMgr::Recover(XpdClientSessions *cl)
    return nr;
 }
 
+#ifndef ROOT_XrdFour
 //______________________________________________________________________________
 int XrdProofdProofServMgr::AcceptPeer(XrdProofdProofServ *xps,
                                       int to, XrdOucString &msg)
@@ -2886,6 +2888,115 @@ int XrdProofdProofServMgr::SetupProtocol(XrdNetPeer &peerpsrv,
    // Done
    return 0;
 }
+
+#else
+
+//______________________________________________________________________________
+int XrdProofdProofServMgr::AcceptPeer(XrdProofdProofServ *xps,
+                                      int to, XrdOucString &msg)
+{
+   // Accept a callback from a starting-up server and setup the related protocol
+   // object. Used for old servers.
+   // Return 0 if successful or -1 in case of failure.
+   XPDLOC(SMGR, "ProofServMgr::AcceptPeer")
+
+   // We will get back a peer to initialize a link
+   XrdNetAddr netaddr;
+
+   // Check inputs
+   if (!xps || !xps->UNIXSock()) {
+      XPDFORM(msg, "session pointer undefined or socket invalid: %p", xps);
+      return -1;
+   }
+   TRACE(REQ, "waiting for server callback for "<<to<<" secs ... on "<<xps->UNIXSockPath());
+
+   // Perform regular accept
+   if (!(xps->UNIXSock()->Accept(netaddr, 0, to))) {
+      msg = "timeout";
+      return -1;
+   }
+
+   // Setup the protocol serving this peer
+   if (SetupProtocol(netaddr, xps, msg) != 0) {
+      msg = "could not assert connected peer: ";
+      return -1;
+   }
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofdProofServMgr::SetupProtocol(XrdNetAddr &netaddr,
+                                         XrdProofdProofServ *xps, XrdOucString &msg)
+{
+   // Setup the protocol object serving the peer described by 'peerpsrv'
+   XPDLOC(SMGR, "ProofServMgr::SetupProtocol")
+
+   // We will get back a peer to initialize a link
+   XrdLink   *linkpsrv = 0;
+   XrdProtocol *xp = 0;
+   int lnkopts = 0;
+   bool go = 1;
+
+   // Allocate a new network object
+   if (!(linkpsrv = XrdLink::Alloc(netaddr, lnkopts))) {
+      msg = "could not allocate network object: ";
+      go = 0;
+   }
+
+   if (go) {
+      TRACE(DBG, "connection accepted: matching protocol ... ");
+      // Get a protocol object off the stack (if none, allocate a new one)
+      XrdProofdProtocol *p = new XrdProofdProtocol();
+      if (!(xp = p->Match(linkpsrv))) {
+         msg = "match failed: protocol error: ";
+         go = 0;
+      }
+      delete p;
+   }
+
+   if (go) {
+      // Save path into the protocol instance: it may be needed during Process
+      XrdOucString apath(xps->AdminPath());
+      apath += ".status";
+      ((XrdProofdProtocol *)xp)->SetAdminPath(apath.c_str());
+      // Take a short-cut and process the initial request as a sticky request
+      if (xp->Process(linkpsrv) != 0) {
+         msg = "handshake with internal link failed: ";
+         go = 0;
+      }
+   }
+
+   // Attach this link to the appropriate poller and enable it.
+   if (go && !XrdPoll::Attach(linkpsrv)) {
+      msg = "could not attach new internal link to poller: ";
+      go = 0;
+   }
+
+   if (!go) {
+      // Close the link
+      if (linkpsrv)
+         linkpsrv->Close();
+      return -1;
+   }
+
+   // Tight this protocol instance to the link
+   linkpsrv->setProtocol(xp);
+
+   TRACE(REQ, "Protocol "<<xp<<" attached to link "<<linkpsrv<<" ("<< netaddr.Name() <<")");
+
+   // Schedule it
+   fMgr->Sched()->Schedule((XrdJob *)linkpsrv);
+
+   // Save the protocol in the session instance
+   xps->SetProtocol((XrdProofdProtocol *)xp);
+
+   // Done
+   return 0;
+}
+
+#endif
 
 //______________________________________________________________________________
 int XrdProofdProofServMgr::Detach(XrdProofdProtocol *p)

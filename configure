@@ -1539,6 +1539,8 @@ PROOFDXINETDIN=${ac_srcdir}/config/proofd.xinetd.in
 PROOFDXINETDOUT=etc/daemons/proofd.xinetd
 PROOFSERVIN=${ac_srcdir}/config/proofserv.in
 PROOFSERVOUT=main/src/proofserv.sh
+XPROOFDIN=${ac_srcdir}/config/xproofd.in
+XPROOFDOUT=main/src/xproofd.sh
 ROOTHELPIN=${ac_srcdir}/config/root-help.el.in
 ROOTHELPOUT=build/misc/root-help.el
 ROOTSIN=${ac_srcdir}/config/roots.in
@@ -2303,6 +2305,7 @@ if test "x$noact" = "xno"; then
     cp -f $PROOFDXINETDIN proofd.xinetd.tmp
     cp -f $PROOFSERVIN proofserv.tmp
     cp -f $ROOTSIN roots.tmp
+    cp -f $XPROOFDIN xproofd.tmp
 fi
 
 ######################################################################
@@ -4902,7 +4905,9 @@ if test "x$enable_xrootd" = "xyes" ; then
    else
       xrdver="unknown"
    fi
-
+   if test "x$xrdver" = "x\"unknown\"" ; then
+      xrdver="unknown"
+   fi
    if test ! "x$xrdver" = "xunknown"; then
       tmpver=`echo $xrdver | sed -e 's|"\(.*\)"|\1|' -e 's|^v||' -e 's|-.*||'`
       if test "x$tmpver" = "xuntagged" ; then
@@ -4928,19 +4933,25 @@ if test "x$enable_xrootd" = "xyes" ; then
          fi
          if test "x$oldver" = "xyes" ; then
             decver=`echo $tmpver | sed 's|[^0-9]||g' | cut -c1-8`
-	 fi
+	       fi
       fi
+   fi
+   if test "x$xrdver" = "xunknown" ; then
+      decver=9999999999
+      xrdver="unknown"
    fi
    # Protect against 3.3.0, first version with 'include/xrootd/private'
    if [ $decver -eq 300030000 ] ; then
       echo "Cannot build against version $xrdver (missing headers)"
       enable_xrootd="no"
    else
-      echo "$xrdver"
+      echo "$xrdver ($decver)"
    fi
 fi
 
 xrdincprivate="no"
+buildxproofd="yes"
+buildxrdclt="no"
 if test "x$enable_xrootd" = "xyes" ; then
 
    extraxrdflags="-DROOTXRDVERS=$decver"
@@ -4954,11 +4965,16 @@ if test "x$enable_xrootd" = "xyes" ; then
    # Release date of version 3.1.0 containing the new lib packaging
    decreftre=300000000
    decrefutils=300010000
+   decreffour=400000000
    if [ $decver -lt $decreftre ] ; then
       decrefutils=20111021
    fi
    decrefnetut=20100729
-   if [ $decver -ge $decrefutils ] ; then
+   if [ $decver -ge $decreffour ] ; then
+      xrdlibs="libXrdUtils libXrdClient"
+      hasxrdutils="yes"
+      buildxproofd="no"
+   elif [ $decver -ge $decrefutils ] ; then
       xrdlibs="libXrdMain libXrdUtils libXrdClient"
       hasxrdutils="yes"
    elif [ $decver -ge $decrefnetut ] ; then
@@ -4973,9 +4989,13 @@ if test "x$enable_xrootd" = "xyes" ; then
       # Check if packaging has libXrdUtils or the old libXrdOuc, libXrdSys, ...
       check_library $ll "$enable_shared" "$xrdlibdir" "$xrdlibdir"
       if test "x$found_lib" = "x" ; then
-         enable_xrootd="no"
-         xrdincdir=""
-         xrdlibdir=""
+         if test "x$ll" = "xlibXrdClient" ; then
+            buildxrdclt="yes"
+         else
+            enable_xrootd="no"
+            xrdincdir=""
+            xrdlibdir=""
+         fi
          break
       else
          xrdlibext="$found_ext"
@@ -7393,6 +7413,8 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@afdsmgrdapmon@|$afdsmgrdapmon|"      \
     -e "s|@buildglite@|$enable_glite|"          \
     -e "s|@buildcocoa@|$enable_cocoa|"          \
+    -e "s|@buildxproofd@|$buildxproofd|"        \
+    -e "s|@buildxrdclt@|$buildxrdclt|"        \
     -e "s|@buildnetxng@|$buildnetxng|"          \
     -e "s|@c++11@|$enable_cxx11|"               \
     -e "s|@libc++@|$enable_libcxx|"             \
@@ -7682,6 +7704,19 @@ sed -e "s|@bindir@|$bindir2|" \
 chmod a+x $PROOFSERVOUT
 rm -f proofserv.tmp
 result "done"
+
+#---------------------------------------------------------------------
+# config/xproofd.in
+#
+if test "x$buildxproofd" = "xno" ; then
+   message "Writing $XPROOFDOUT"
+   sed -e "s|@libdir@|$libdir2|" \
+       -e "s|@bindir@|$bindir2|" \
+        < xproofd.tmp > $XPROOFDOUT
+   chmod a+x $XPROOFDOUT
+   rm -f xproofd.tmp
+   result "done"
+fi
 
 #---------------------------------------------------------------------
 # main/src/roots.sh

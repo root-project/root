@@ -501,7 +501,9 @@ configure_file(${CMAKE_SOURCE_DIR}/config/genreflex-rootcint.in ${CMAKE_RUNTIME_
 configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/root-help.el.in root-help.el @ONLY)
-
+if (XROOTD_FOUND AND XROOTD_NOMAIN)
+  configure_file(${CMAKE_SOURCE_DIR}/config/xproofd.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd @ONLY)
+endif()
 if(WIN32)
   set(thisrootbat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat)
   configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.bat ${thisrootbat} @ONLY)
@@ -523,6 +525,14 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
                           GROUP_EXECUTE GROUP_READ 
                           WORLD_EXECUTE WORLD_READ 
               DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+if (XROOTD_FOUND AND XROOTD_NOMAIN)
+   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd
+                 PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ 
+                             GROUP_EXECUTE GROUP_READ 
+                             WORLD_EXECUTE WORLD_READ 
+                 DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 install(FILES ${CMAKE_BINARY_DIR}/include/RConfigOptions.h
               ${CMAKE_BINARY_DIR}/include/compiledata.h 

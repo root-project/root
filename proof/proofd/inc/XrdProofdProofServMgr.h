@@ -27,6 +27,14 @@
 
 #include "XpdSysPthread.h"
 
+#include "XrdProofdXrdVers.h"
+#ifndef ROOT_XrdFour
+#  include <sys/types.h>
+#  include <sys/socket.h>
+#  include "XrdNet/XrdNetPeer.hh"
+#else
+#  include "XrdNet/XrdNetAddr.hh"
+#endif
 #include "XrdOuc/XrdOucHash.hh"
 #include "XrdOuc/XrdOucString.hh"
 
@@ -183,12 +191,16 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
                                       XrdProofdProtocol *p, int pid, XrdOucString &emsg);
    int                CreateSockPath(XrdProofdProofServ *xps, XrdProofdProtocol *p,
                                      unsigned int seq, XrdOucString &emsg);
-   int                CreateFork(XrdProofdProtocol *p);
+//   int                CreateFork(XrdProofdProtocol *p);
    int                CreateProofServEnvFile(XrdProofdProtocol *p,
                                             void *input, const char *envfn, const char *rcfn);
    int                CreateProofServRootRc(XrdProofdProtocol *p,
                                             void *input, const char *rcfn);
+#ifndef ROOT_XrdFour
    int                SetupProtocol(XrdNetPeer &peerpsrv,
+#else
+   int                SetupProtocol(XrdNetAddr &netaddr,
+#endif
                                     XrdProofdProofServ *xps, XrdOucString &e);
    void               ParseCreateBuffer(XrdProofdProtocol *p,  XrdProofdProofServ *xps,
                                         XrdOucString &tag, XrdOucString &ord,

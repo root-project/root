@@ -298,10 +298,12 @@ ifeq ($(BUILDTMVA),yes)
 MODULES      += tmva math/genetic
 endif
 ifeq ($(HASXRD),yes)
+ifeq ($(BUILDXRDCLT),no)
 ifeq ($(ARCH),win32)
 MODULES      += proof/proofd
 endif
 MODULES      += proof/proofx
+endif
 endif
 ifeq ($(BUILDAFDSMGRD),yes)
 MODULES      += proof/afdsmgrd

@@ -55,8 +55,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#ifndef ROOT_XrdFour
+#	include <sys/socket.h>
+#	include <netinet/in.h>
+#endif
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <pwd.h>

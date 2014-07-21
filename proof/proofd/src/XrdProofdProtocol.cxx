@@ -167,6 +167,8 @@ int XrdProofdProtCfg::DoDirective(XrdProofdDirective *d,
    return 0;
 }
 
+XrdVERSIONINFO(XrdgetProtocol,xproofd);
+XrdVERSIONINFO(XrdgetProtocolPort,xproofd);
 
 extern "C" {
 //_________________________________________________________________________________
