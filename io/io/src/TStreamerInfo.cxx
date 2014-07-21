@@ -72,7 +72,7 @@
 
 #include "TStreamerInfoActions.h"
 
-TTHREAD_TLS(TStreamerElement*) TStreamerInfo::fgElement = nullptr;
+TTHREAD_TLS(TStreamerElement*) TStreamerInfo::fgElement = 0;
 #if __cplusplus >= 201103L
 std::atomic<Int_t>   TStreamerInfo::fgCount{0};
 #else
