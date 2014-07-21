@@ -8,6 +8,8 @@
 #  XROOTD_LIBRARIES - The libraries needed to use XROOTD
 #  XROOTD_CFLAGS - Additional compilation flags (defines)
 #  XROOTD_OLDPACK - old-style packaging for XROOTD libraries
+#  XROOTD_NOMAIN - No main available: xproofd not build
+#  XROOTD_NOOLDCLNT - No old client available: use built-in version
 #
 
 if(XROOTD_XrdClient_LIBRARY AND XROOTD_INCLUDE_DIR)
@@ -83,20 +85,55 @@ if(XROOTD_FOUND)
       list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdNetUtil_LIBRARY})
     endif ()
   else()
-    foreach(l XrdMain XrdUtils XrdClient)
-      find_library(XROOTD_${l}_LIBRARY
-         NAMES ${l}
-         HINTS ${searchpath}
-         PATH_SUFFIXES lib)
-      list(APPEND XROOTD_LIBRARIES ${XROOTD_${l}_LIBRARY})
-    endforeach()
+
+    # libXrdMain (dropped in versions >= 4)
+    find_library(XROOTD_XrdMain_LIBRARY
+       NAMES XrdMain
+       HINTS ${searchpath}
+       PATH_SUFFIXES lib)
+    if (XROOTD_XrdMain_LIBRARY)
+       list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdMain_LIBRARY})
+    else ()
+       set(XROOTD_NOMAIN TRUE)
+       if(NOT XROOTD_FIND_QUIETLY)
+          message(STATUS "             libXrdMain not found: xproofd will be a wrapper around xrootd")
+       endif () 
+    endif ()
+
+    # libXrdUtils
+    find_library(XROOTD_XrdUtils_LIBRARY
+       NAMES XrdUtils
+       HINTS ${searchpath}
+       PATH_SUFFIXES lib)
+    if (XROOTD_XrdUtils_LIBRARY)
+       list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdUtils_LIBRARY})
+    endif ()
+
+    # libXrdClient (old client; will be dropped at some point)
+    find_library(XROOTD_XrdClient_LIBRARY
+       NAMES XrdClient
+       HINTS ${searchpath}
+       PATH_SUFFIXES lib)
+    if (XROOTD_XrdClient_LIBRARY)
+       list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdClient_LIBRARY})
+    else ()
+       set(XROOTD_NOOLDCLNT TRUE)
+       if(NOT XROOTD_FIND_QUIETLY)
+          message(STATUS "             libXrdClient not found: use built-in")
+       endif () 
+    endif ()
+
+    # libXrdCl
     if(${xrdversnum} GREATER 300030000)
-      find_library(XROOTD_XrdCl_LIBRARY
-         NAMES XrdCl
-         HINTS ${searchpath}
-         PATH_SUFFIXES lib)
-      list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdCl_LIBRARY})
-    endif()
+       find_library(XROOTD_XrdCl_LIBRARY
+          NAMES XrdCl
+          HINTS ${searchpath}
+          PATH_SUFFIXES lib)
+       if (XROOTD_XrdCl_LIBRARY)
+          list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdCl_LIBRARY})
+       endif ()
+    endif ()
+
   endif()
 
   if(XROOTD_LIBRARIES)

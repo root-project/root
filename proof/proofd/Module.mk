@@ -124,10 +124,22 @@ XPCONNO      := $(call stripsrc,$(MODDIRS)/XrdProofConn.o \
                 $(MODDIRS)/XrdProofPhyConn.o \
                 $(MODDIRS)/XProofProtUtils.o)
 
-# Extra include paths and libs
+# # Starting from version 4, libXrdMain has been removed and xrootd has been
+# # restructured so that it can load a different default protocol. The xproofd
+# # cannot be build and becomes a wrapper around xrootd.
+# BUILDXPROOFD  :=
+# ifneq ($(XRDVERSION),)
+# BUILDXPROOFD  := $(shell if test $(XRDVERSION) -lt 400000000; then \
+#                             echo "yes"; \
+#                          fi)
+# endif
+ifeq ($(BUILDXPROOFD),yes)
 XPROOFDEXELIBS :=
 XPROOFDEXESYSLIBS :=
 XPROOFDEXE     := bin/xproofd
+endif
+
+# Extra include paths and libs
 ifeq ($(HASXRD),yes)
 XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
 XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
@@ -138,10 +150,12 @@ endif
 
 ifeq ($(HASXRDUTILS),no)
 
-XPDLIBEXTRA    += $(XROOTDDIRL) -lXrdClient -lXrdNet -lXrdOuc \
+XPDLIBEXTRA    += $(XROOTDDIRL) -lXrdNet -lXrdOuc \
                   -lXrdSys -lXrdSut
-XPROOFDEXELIBS := $(XROOTDDIRL) -lXrd -lXrdClient -lXrdNet -lXrdOuc \
+ifeq ($(BUILDXPROOFD),yes)
+XPROOFDEXELIBS := $(XROOTDDIRL) -lXrd -lXrdNet -lXrdOuc \
                   -lXrdSys -lXrdSut
+endif
 # Starting from Jul 2010 XrdNet has been split in two libs:
 #    XrdNet and XrdNetUtil
 # both are needed
@@ -153,21 +167,37 @@ XRDNETUTIL     := $(shell if test $(XRDVERSION) -gt 20100729; then \
 endif
 ifeq ($(XRDNETUTIL),yes)
 XPDLIBEXTRA    += -lXrdNetUtil
+ifeq ($(BUILDXPROOFD),yes)
 XPROOFDEXELIBS += -lXrdNetUtil
+endif
 endif
 
 else
 
-XPDLIBEXTRA    += $(XROOTDDIRL) -lXrdClient -lXrdUtils
-XPROOFDEXELIBS := $(XROOTDDIRL) -lXrdMain -lXrdClient -lXrdUtils
+XPDLIBEXTRA    += $(XROOTDDIRL) -lXrdUtils
+ifeq ($(BUILDXPROOFD),yes)
+XPROOFDEXELIBS := $(XROOTDDIRL) -lXrdMain -lXrdUtils
+endif
 
 endif
-XPDLIBEXTRA    +=  $(DNSSDLIB)
-XPROOFDEXELIBS +=  $(DNSSDLIB)
 
+ifeq ($(BUILDXRDCLT),yes)
+XPDLIBEXTRA += -L$(LPATH) -lXrdClient
+XPROOFDEXELIBS += -L$(LPATH) -lXrdClient
+else
+XPDLIBEXTRA += $(XROOTDDIRL) -lXrdClient
+XPROOFDEXELIBS += $(XROOTDDIRL) -lXrdClient
+endif
+
+XPDLIBEXTRA    +=  $(DNSSDLIB)
+
+ifeq ($(BUILDXPROOFD),yes)
+XPROOFDEXELIBS +=  $(DNSSDLIB)
 ifeq ($(PLATFORM),solaris)
 XPROOFDEXESYSLIBS := -lsendfile
 endif
+endif
+
 endif
 
 # used in the main Makefile

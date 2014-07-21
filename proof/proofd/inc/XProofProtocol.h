@@ -282,8 +282,19 @@ struct XPClientInterruptRequest {
    kXR_int32 dlen;
 };
 
+struct XPClientLoginRequest {
+   kXR_char  streamid[2];
+   kXR_unt16 requestid;
+   kXR_int32 pid;
+   kXR_char username[8];
+   kXR_char reserved[2];
+   kXR_char capver[1];
+   kXR_char role[1];
+   kXR_int32  dlen;
+};
+
 typedef union {
-   struct ClientLoginRequest login;
+   struct XPClientLoginRequest login;
    struct ClientAuthRequest auth;
    struct XPClientProofRequest proof;
    struct XPClientReadbufRequest readbuf;

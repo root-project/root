@@ -30,6 +30,9 @@
 #include "XpdSysError.h"
 
 #include "Xrd/XrdBuffer.hh"
+#ifdef ROOT_XrdFour
+#include "XrdNet/XrdNetAddrInfo.hh"
+#endif
 #include "XrdOuc/XrdOucErrInfo.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSec/XrdSecInterface.hh"
@@ -477,7 +480,11 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
    // string indicating host-only authentication, or a null indicating no
    // authentication. We can then optimize of each case.
    if (needauth && fCIA) {
+#ifdef ROOT_XrdFour
+      const char *pp = fCIA->getParms(i, (XrdNetAddrInfo *) p->Link()->NetAddr());
+#else
       const char *pp = fCIA->getParms(i, p->Link()->Name());
+#endif
       if (pp && i ) {
          response->SendI((kXR_int32)XPROOFD_VERSBIN, (void *)pp, i);
          p->SetStatus((XPD_NEED_MAP | XPD_NEED_AUTH));
@@ -1059,7 +1066,6 @@ int XrdProofdClientMgr::Auth(XrdProofdProtocol *p)
    // Analyse client authentication info
    XPDLOC(CMGR, "ClientMgr::Auth")
 
-   struct sockaddr netaddr;
    XrdSecCredentials cred;
    XrdSecParameters *parm = 0;
    XrdOucErrInfo     eMsg;
@@ -1077,8 +1083,13 @@ int XrdProofdClientMgr::Auth(XrdProofdProtocol *p)
 
    // If we have no auth protocol, try to get it
    if (!p->AuthProt()) {
-      p->Link()->Name(&netaddr);
       XrdSecProtocol *ap = 0;
+#ifdef ROOT_XrdFour
+      XrdNetAddr netaddr(p->Link()->NetAddr());
+#else
+      struct sockaddr netaddr;
+      p->Link()->Name(&netaddr);
+#endif
       if (!(ap = fCIA->getProtocol(p->Link()->Host(), netaddr, &cred, &eMsg))) {
          eText = eMsg.getErrText(rc);
          TRACEP(p, XERR, "user authentication failed; "<<eText);

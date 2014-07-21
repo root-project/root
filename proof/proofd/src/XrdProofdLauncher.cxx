@@ -193,7 +193,11 @@ XrdNetPeer *XrdProofdLauncher::SetupPeer(ProofdLaunch_t *in, int &pid, rpdunix *
    // Create the peer object
    peer = new XrdNetPeer();
    peer->fd = uconn->exportfd();
+#ifdef ROOT_XrdFour
+   memcpy(&(peer->Inet.Addr), uconn->address(), sizeof(peer->Inet.Addr));
+#else
    memcpy(&(peer->InetAddr), uconn->address(), sizeof(peer->InetAddr));
+#endif
    peer->InetName = 0;
    delete uconn;
    
