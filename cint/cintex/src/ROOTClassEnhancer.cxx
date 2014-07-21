@@ -185,8 +185,8 @@ namespace ROOT { namespace Cintex {
       fType = CleanType(t);
       fName = CintName(fType);
       {
-	R__LOCKGUARD2(gCintexMutex);
-	rootEnhancerInfos().push_back(this);
+         R__LOCKGUARD2(gCintexMutex);
+         rootEnhancerInfos().push_back(this);
       }
       fMyType = &t.TypeInfo();
       fIsVirtual = TypeGet().IsVirtual();
@@ -384,20 +384,20 @@ namespace ROOT { namespace Cintex {
       const std::type_info& typ = typeid(*p);
 
       if ( &typ == fMyType )  {
-	return Tclass();
+         return Tclass();
       }
       {
-	 R__LOCKGUARD2(gCintexMutex);
+         R__LOCKGUARD2(gCintexMutex);
          if ( &typ == fLastType )  {
             return fLastClass;
          }
 
          // Check if TypeNth is already in sub-class cache
-	 TClass* findClass = fSub_types[&typ];
+         TClass* findClass = fSub_types[&typ];
          if ( 0 != findClass )  {
- 	    fLastClass = findClass;
+            fLastClass = findClass;
             fLastType = &typ;
-	    return fLastClass;
+            return fLastClass;
          }
       }
       // Last resort: lookup root class
@@ -409,8 +409,8 @@ namespace ROOT { namespace Cintex {
       returnValue = ROOT::GetROOT()->GetClass(nam.c_str());
       {
          R__LOCKGUARD2(gCintexMutex);
-	 fLastClass = returnValue;
-	 fSub_types[fLastType=&typ] = fLastClass;
+         fLastClass = returnValue;
+         fSub_types[fLastType=&typ] = fLastClass;
       }
       //std::cout << "Cintex: IsA:" << TypeNth.Name(SCOPED) << " dynamic:" << dtype.Name(SCOPED) << std::endl;
       return returnValue;
