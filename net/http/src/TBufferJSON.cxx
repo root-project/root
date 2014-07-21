@@ -861,7 +861,7 @@ void TBufferJSON::SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_ty
    // This calls allows separate data, correspondent to one class member, from another
 
    if (gDebug > 3)
-      Info("SetStreamerElementNumber", "Number %d", number);
+      Info("SetStreamerElementNumber", "Element name %s", elem->GetName());
 
    WorkWithElement(elem, comp_type);
 }
