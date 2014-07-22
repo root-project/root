@@ -89,6 +89,10 @@ local void R__flush_outbuf OF((unsigned w, unsigned size));
 /* ===========================================================================
  * Local data used by the "bit string" routines.
  */
+#ifdef _MSC_VER  
+#define __thread __declspec( thread )  
+#endif
+
 local __thread FILE *zfile; /* output zip file */
 
 local __thread unsigned short bi_buf;
@@ -565,3 +569,7 @@ void R__error(char *msg)
   if (verbose) fprintf(stderr,"R__zip: %s\n",msg);
   error_flag = 1;
 }
+
+#ifdef _MSC_VER  
+#undef __thread
+#endif
