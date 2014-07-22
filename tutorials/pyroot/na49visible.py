@@ -28,15 +28,16 @@ ROOT.TF3A.SetLineColor( 3 )
 ROOT.OGB3.SetLineColor( 3 )
 
 #   Copy shape attributes (colors,etc) in nodes referencing the shapse
-CAVE1 = ROOT.gGeometry.FindObject( 'CAVE1' )
-CAVE1.ImportShapeAttributes( )
+if hasattr(ROOT, 'gGeometry') and ROOT.gGeometry:
+   CAVE1 = ROOT.gGeometry.FindObject( 'CAVE1' )
+   CAVE1.ImportShapeAttributes( )
 
-#  Set Node attributes
-CAVE1.SetVisibility( 2 )   # node is not drawn but its sons are drawn
-ROOT.gGeometry.FindObject( 'VT1_1' ).SetVisibility( -4 )  # Node is not drawn.
+   #  Set Node attributes
+   CAVE1.SetVisibility( 2 )   # node is not drawn but its sons are drawn
+   ROOT.gGeometry.FindObject( 'VT1_1' ).SetVisibility( -4 )  # Node is not drawn.
                                                           # Its immediate sons are drawn
-ROOT.gGeometry.FindObject( 'VT2_1' ).SetVisibility( -4 )
-ROOT.gGeometry.FindObject( 'MTL_1' ).SetVisibility( -4 )
-ROOT.gGeometry.FindObject( 'MTR_1' ).SetVisibility( -4 )
-ROOT.gGeometry.FindObject( 'TOFR1' ).SetVisibility( -4 )
+   ROOT.gGeometry.FindObject( 'VT2_1' ).SetVisibility( -4 )
+   ROOT.gGeometry.FindObject( 'MTL_1' ).SetVisibility( -4 )
+   ROOT.gGeometry.FindObject( 'MTR_1' ).SetVisibility( -4 )
+   ROOT.gGeometry.FindObject( 'TOFR1' ).SetVisibility( -4 )
 

@@ -60,6 +60,11 @@ if(NOT ROOT_xml_FOUND)
                 histfactory/*.C)   # histfactory requires xml
 endif()
 
+if(WIN32)
+  set(histfactory_veto histfactory/*.C
+                       roostats/StandardFrequentistDiscovery.C) # histfactory doesn't work on Windows
+endif()
+
 if(NOT ROOT_fitsio_FOUND)
   set(fitsio_veto  fitsio/*.C)
 endif()
@@ -139,7 +144,8 @@ set(all_veto hsimple.C
              ${fitsio_veto}
              ${mathmore_veto}
              ${fftw3_veto}
-             ${gviz_veto})
+             ${gviz_veto}
+             ${histfactory_veto})
              
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
