@@ -25,7 +25,11 @@
 #include <ctype.h>
 
 #include "ThreadLocalStorage.h"
+#ifdef WIN32
+R__EXTERN TTree *gTree;
+#else
 R__EXTERN TTHREAD_TLS(TTree*) gTree;
+#endif
 
 ClassImp(TLeaf)
 
