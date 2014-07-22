@@ -2,6 +2,7 @@ ROOT_USE_PACKAGE(core/base)
 ROOT_USE_PACKAGE(core/meta)
 ROOT_USE_PACKAGE(core/clib)
 ROOT_USE_PACKAGE(core/cont)
+ROOT_USE_PACKAGE(core/thread)
 ROOT_USE_PACKAGE(cint/cint)
 
 set(CINTSTLDLLNAMES
