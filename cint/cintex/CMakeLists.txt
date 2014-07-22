@@ -4,7 +4,8 @@
 
 ROOT_USE_PACKAGE(cint/reflex)
 ROOT_USE_PACKAGE(core/metautils)
-  
+ROOT_USE_PACKAGE(core/thread)
+
 #---Cintex library----------------------------------------------------------
 ROOT_LINKER_LIBRARY(Cintex *.cxx LIBRARIES Core DEPENDENCIES Reflex)  
 ROOT_GENERATE_ROOTMAP(Cintex LINKDEF LinkDef.h DEPENDENCIES Reflex)
