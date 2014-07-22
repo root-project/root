@@ -167,8 +167,10 @@ int XrdProofdProtCfg::DoDirective(XrdProofdDirective *d,
    return 0;
 }
 
+#if (ROOTXRDVERS >= 300000000)
 XrdVERSIONINFO(XrdgetProtocol,xproofd);
 XrdVERSIONINFO(XrdgetProtocolPort,xproofd);
+#endif
 
 extern "C" {
 //_________________________________________________________________________________
