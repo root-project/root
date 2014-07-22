@@ -7508,7 +7508,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildglite@|$enable_glite|"          \
     -e "s|@buildcocoa@|$enable_cocoa|"          \
     -e "s|@buildxproofd@|$buildxproofd|"        \
-    -e "s|@buildxrdclt@|$buildxrdclt|"        \
+    -e "s|@buildxrdclt@|$buildxrdclt|"          \
     -e "s|@buildnetxng@|$buildnetxng|"          \
     -e "s|@c++11@|$enable_cxx11|"               \
     -e "s|@libc++@|$enable_libcxx|"             \
@@ -7808,9 +7808,9 @@ if test "x$buildxproofd" = "xno" ; then
        -e "s|@bindir@|$bindir2|" \
         < xproofd.tmp > $XPROOFDOUT
    chmod a+x $XPROOFDOUT
-   rm -f xproofd.tmp
    result "done"
 fi
+rm -f xproofd.tmp
 
 #---------------------------------------------------------------------
 # main/src/roots.sh
