@@ -1085,7 +1085,7 @@ Bool_t TMVA::Tools::AddComment( void* node, const char* comment ) {
    if( node == 0 ) return kFALSE;
    return gTools().xmlengine().AddComment(node, comment);
 }
- //_______________________________________________________________________
+//_______________________________________________________________________
 void* TMVA::Tools::GetParent( void* child)
 {
    // get parent node
@@ -1408,7 +1408,7 @@ void TMVA::Tools::TMVACitation( MsgLogger& logger, ECitation citType )
    case kHtmlLink:
       logger << kINFO << "  " << Endl;
       logger << kINFO << gTools().Color("bold") 
-         << "Thank you for using TMVA!" << gTools().Color("reset") << Endl;
+             << "Thank you for using TMVA!" << gTools().Color("reset") << Endl;
       logger << kINFO << gTools().Color("bold") 
              << "For citation information, please visit: http://tmva.sf.net/citeTMVA.html"
              << gTools().Color("reset") << Endl; 
@@ -1425,17 +1425,17 @@ Bool_t TMVA::Tools::HistoHasEquidistantBins(const TH1& h)
 std::vector<TMatrixDSym*>*
 TMVA::Tools::CalcCovarianceMatrices( const std::vector<const Event*>& events, Int_t maxCls, VariableTransformBase* transformBase )
 {
-    std::vector<Event*> eventVector;
-    for (std::vector<const Event*>::const_iterator it = events.begin(), itEnd = events.end(); it != itEnd; ++it)
-    {
-	eventVector.push_back (new Event(*(*it)));
-    }
-    std::vector<TMatrixDSym*>* returnValue = CalcCovarianceMatrices (eventVector, maxCls, transformBase);
-    for (std::vector<Event*>::const_iterator it = eventVector.begin(), itEnd = eventVector.end(); it != itEnd; ++it)
-    {
-	delete (*it);
-    }
-    return returnValue;
+   std::vector<Event*> eventVector;
+   for (std::vector<const Event*>::const_iterator it = events.begin(), itEnd = events.end(); it != itEnd; ++it)
+   {
+      eventVector.push_back (new Event(*(*it)));
+   }
+   std::vector<TMatrixDSym*>* returnValue = CalcCovarianceMatrices (eventVector, maxCls, transformBase);
+   for (std::vector<Event*>::const_iterator it = eventVector.begin(), itEnd = eventVector.end(); it != itEnd; ++it)
+   {
+      delete (*it);
+   }
+   return returnValue;
 }
 
 //_______________________________________________________________________
@@ -1498,11 +1498,11 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
       std::vector<Char_t> mask; // entries with kTRUE must not be transformed
       // Bool_t hasMaskedEntries = kFALSE;
       if (transformBase) {
-	 /* hasMaskedEntries = */ transformBase->GetInput (ev, input, mask);
+         /* hasMaskedEntries = */ transformBase->GetInput (ev, input, mask);
       } else {
-	 for (ivar=0; ivar<nvars; ++ivar) {
-	    input.push_back (ev->GetValue(ivar));
-	 }
+         for (ivar=0; ivar<nvars; ++ivar) {
+            input.push_back (ev->GetValue(ivar));
+         }
       }
        
       if (maxCls > 1) {
@@ -1576,40 +1576,40 @@ Double_t TMVA::Tools::Mean ( Iterator first,  Iterator last,  WeightIterator w)
    int i = 0;
    if (w==NULL)
    {
-       while ( first != last ) 
-       {
-	   // if ( *w < 0) {
-	   //    ::Error("TMVA::Tools::Mean","w[%d] = %.4e < 0 ?!",i,*w);
-	   //    return 0;
-	   // } // SURE, why wouldn't you allow for negative event weights here ?? :)
-	   sum  += (*first);
-	   sumw += 1.0 ;
-	   ++first;
-	   ++i;
-       }
-       if (sumw <= 0) {
-	   ::Error("TMVA::Tools::Mean","sum of weights <= 0 ?! that's a bit too much of negative event weights :) ");
-	   return 0;
-       }
+      while ( first != last ) 
+      {
+         // if ( *w < 0) {
+         //    ::Error("TMVA::Tools::Mean","w[%d] = %.4e < 0 ?!",i,*w);
+         //    return 0;
+         // } // SURE, why wouldn't you allow for negative event weights here ?? :)
+         sum  += (*first);
+         sumw += 1.0 ;
+         ++first;
+         ++i;
+      }
+      if (sumw <= 0) {
+         ::Error("TMVA::Tools::Mean","sum of weights <= 0 ?! that's a bit too much of negative event weights :) ");
+         return 0;
+      }
    }
    else
    {
-       while ( first != last ) 
-       {
-	   // if ( *w < 0) {
-	   //    ::Error("TMVA::Tools::Mean","w[%d] = %.4e < 0 ?!",i,*w);
-	   //    return 0;
-	   // } // SURE, why wouldn't you allow for negative event weights here ?? :)
-	   sum  += (*w) * (*first);
-	   sumw += (*w) ;
-	   ++w;
-	   ++first;
-	   ++i;
-       }
-       if (sumw <= 0) {
-	   ::Error("TMVA::Tools::Mean","sum of weights <= 0 ?! that's a bit too much of negative event weights :) ");
-	   return 0;
-       }
+      while ( first != last ) 
+      {
+         // if ( *w < 0) {
+         //    ::Error("TMVA::Tools::Mean","w[%d] = %.4e < 0 ?!",i,*w);
+         //    return 0;
+         // } // SURE, why wouldn't you allow for negative event weights here ?? :)
+         sum  += (*w) * (*first);
+         sumw += (*w) ;
+         ++w;
+         ++first;
+         ++i;
+      }
+      if (sumw <= 0) {
+         ::Error("TMVA::Tools::Mean","sum of weights <= 0 ?! that's a bit too much of negative event weights :) ");
+         return 0;
+      }
    }
    return sum/sumw;
 }
@@ -1640,24 +1640,24 @@ Double_t TMVA::Tools::RMS(Iterator first, Iterator last, WeightIterator w)
    Double_t adouble;
    if (w==NULL)
    {
-       while ( first != last ) {
-	   adouble=Double_t(*first);
-	   sum  += adouble; 
-	   sum2 += adouble*adouble;
-	   sumw += 1.0;
-	   ++first;
-       }
+      while ( first != last ) {
+         adouble=Double_t(*first);
+         sum  += adouble; 
+         sum2 += adouble*adouble;
+         sumw += 1.0;
+         ++first;
+      }
    }
    else
    {
-       while ( first != last ) {
-	   adouble=Double_t(*first);
-	   sum  += adouble * (*w); 
-	   sum2 += adouble*adouble * (*w);
-	   sumw += (*w);
-	   ++first;
-	   ++w;
-       }
+      while ( first != last ) {
+         adouble=Double_t(*first);
+         sum  += adouble * (*w); 
+         sum2 += adouble*adouble * (*w);
+         sumw += (*w);
+         ++first;
+         ++w;
+      }
    }
    Double_t norm = 1./sumw;
    Double_t mean = sum*norm;
@@ -1677,4 +1677,29 @@ Double_t TMVA::Tools::RMS(Long64_t n, const T *a, const Double_t *w)
    } else {
       return TMath::RMS(a, a+n);
    }
+}
+
+
+TH1* TMVA::Tools::GetCumulativeDist( TH1* h)
+{
+   // get the cumulative distribution of a histogram
+   TH1* cumulativeDist= (TH1*) h->Clone(Form("%sCumul",h->GetTitle()));
+   //cumulativeDist->Smooth(5); // with this, I get less beautiful ROC curves, hence out!
+
+   Float_t partialSum = 0;
+   Float_t inverseSum = 0.;
+   
+   Float_t val;
+   for (Int_t ibinEnd=1, ibin=cumulativeDist->GetNbinsX(); ibin >=ibinEnd ; ibin--){
+      val = cumulativeDist->GetBinContent(ibin);
+      if (val>0) inverseSum += val;
+   }
+   inverseSum = 1/inverseSum; // as I learned multiplications are much faster than division, and later I need one per bin. Well, not that it would really matter here I guess :)
+
+   for (Int_t ibinEnd=1, ibin=cumulativeDist->GetNbinsX(); ibin >=ibinEnd ; ibin--){
+      val = cumulativeDist->GetBinContent(ibin);
+      if (val>0) partialSum += val;
+      cumulativeDist->SetBinContent(ibin,partialSum*inverseSum);
+   }
+   return cumulativeDist;
 }

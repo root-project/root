@@ -271,6 +271,8 @@ namespace TMVA {
       int xmlenginebuffersize() { return 10000000; }
       TXMLEngine* fXMLEngine;
 
+      TH1*       GetCumulativeDist( TH1* h);
+
    private:
 
       // utilities for correlation ratio
