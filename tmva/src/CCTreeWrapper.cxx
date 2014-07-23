@@ -113,7 +113,7 @@ TMVA::CCTreeWrapper::~CCTreeWrapper( ) {
 //_______________________________________________________________________
 void TMVA::CCTreeWrapper::InitTree( CCTreeNode* t )
 {
-    // initialize the node t and all its descendants
+   // initialize the node t and all its descendants
    Double_t s = t->GetDTNode()->GetNSigEvents();
    Double_t b = t->GetDTNode()->GetNBkgEvents();
    //   Double_t s = t->GetDTNode()->GetNSigEvents_unweighted();

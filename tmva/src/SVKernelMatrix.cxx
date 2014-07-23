@@ -2,28 +2,28 @@
 // Author: Andrzej Zemla
 
 /**********************************************************************************
-* Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
-* Package: TMVA                                                                  *
-* Class  : SVKernelMatrix                                                        *
-* Web    : http://tmva.sourceforge.net                                           *
-*                                                                                *
-* Description:                                                                   *
-*      Implementation                                                            *
-*                                                                                *
-* Authors (alphabetical):                                                        *
-*      Marcin Wolter  <Marcin.Wolter@cern.ch> - IFJ PAN, Krakow, Poland          *
-*      Andrzej Zemla  <azemla@cern.ch>        - IFJ PAN, Krakow, Poland          *
-*      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *
-*                                                                                *
-* Copyright (c) 2005:                                                            *
-*      CERN, Switzerland                                                         *
-*      MPI-K Heidelberg, Germany                                                 *
-*      PAN, Krakow, Poland                                                       *
-*                                                                                *
-* Redistribution and use in source and binary forms, with or without             *
-* modification, are permitted according to the terms listed in LICENSE           *
-* (http://tmva.sourceforge.net/LICENSE)                                          *
-**********************************************************************************/
+ * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
+ * Package: TMVA                                                                  *
+ * Class  : SVKernelMatrix                                                        *
+ * Web    : http://tmva.sourceforge.net                                           *
+ *                                                                                *
+ * Description:                                                                   *
+ *      Implementation                                                            *
+ *                                                                                *
+ * Authors (alphabetical):                                                        *
+ *      Marcin Wolter  <Marcin.Wolter@cern.ch> - IFJ PAN, Krakow, Poland          *
+ *      Andrzej Zemla  <azemla@cern.ch>        - IFJ PAN, Krakow, Poland          *
+ *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *
+ *                                                                                *
+ * Copyright (c) 2005:                                                            *
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
+ *      PAN, Krakow, Poland                                                       *
+ *                                                                                *
+ * Redistribution and use in source and binary forms, with or without             *
+ * modification, are permitted according to the terms listed in LICENSE           *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
+ **********************************************************************************/
 
 #include "TMVA/SVKernelMatrix.h"
 #include "TMVA/SVKernelFunction.h"

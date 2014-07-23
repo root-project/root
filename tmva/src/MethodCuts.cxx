@@ -30,61 +30,61 @@
 
 //_______________________________________________________________________
 /* Begin_Html
-  Multivariate optimisation of signal efficiency for given background
-  efficiency, applying rectangular minimum and maximum requirements.
+   Multivariate optimisation of signal efficiency for given background
+   efficiency, applying rectangular minimum and maximum requirements.
 
-  <p>
-  Also implemented is a "decorrelate/diagonlized cuts approach",
-  which improves over the uncorrelated cuts ansatz by
-  transforming linearly the input variables into a diagonal space,
-  using the square-root of the covariance matrix.
+   <p>
+   Also implemented is a "decorrelate/diagonlized cuts approach",
+   which improves over the uncorrelated cuts ansatz by
+   transforming linearly the input variables into a diagonal space,
+   using the square-root of the covariance matrix.
 
-  <p>
-  <font size="-1">
-  Other optimisation criteria, such as maximising the signal significance-
-  squared, S^2/(S+B), with S and B being the signal and background yields,
-  correspond to a particular point in the optimised background rejection
-  versus signal efficiency curve. This working point requires the knowledge
-  of the expected yields, which is not the case in general. Note also that
-  for rare signals, Poissonian statistics should be used, which modifies
-  the significance criterion.
-  </font>
+   <p>
+   <font size="-1">
+   Other optimisation criteria, such as maximising the signal significance-
+   squared, S^2/(S+B), with S and B being the signal and background yields,
+   correspond to a particular point in the optimised background rejection
+   versus signal efficiency curve. This working point requires the knowledge
+   of the expected yields, which is not the case in general. Note also that
+   for rare signals, Poissonian statistics should be used, which modifies
+   the significance criterion.
+   </font>
 
-  <p>
-  The rectangular cut of a volume in the variable space is performed using
-  a binary tree to sort the training events. This provides a significant
-  reduction in computing time (up to several orders of magnitudes, depending
-  on the complexity of the problem at hand).
+   <p>
+   The rectangular cut of a volume in the variable space is performed using
+   a binary tree to sort the training events. This provides a significant
+   reduction in computing time (up to several orders of magnitudes, depending
+   on the complexity of the problem at hand).
 
-  <p>
-  Technically, optimisation is achieved in TMVA by two methods:
+   <p>
+   Technically, optimisation is achieved in TMVA by two methods:
 
-  <ol>
-  <li>Monte Carlo generation using uniform priors for the lower cut value,
-  and the cut width, thrown within the variable ranges.
+   <ol>
+   <li>Monte Carlo generation using uniform priors for the lower cut value,
+   and the cut width, thrown within the variable ranges.
 
-  <li>A Genetic Algorithm (GA) searches for the optimal ("fittest") cut sample.
-  The GA is configurable by many external settings through the option
-  string. For difficult cases (such as many variables), some tuning
-  may be necessary to achieve satisfying results
-  </ol>
+   <li>A Genetic Algorithm (GA) searches for the optimal ("fittest") cut sample.
+   The GA is configurable by many external settings through the option
+   string. For difficult cases (such as many variables), some tuning
+   may be necessary to achieve satisfying results
+   </ol>
 
-  <p>
-  <font size="-1">
-  Attempts to use Minuit fits (Simplex ot Migrad) instead have not shown
-  superior results, and often failed due to convergence at local minima.
-  </font>
+   <p>
+   <font size="-1">
+   Attempts to use Minuit fits (Simplex ot Migrad) instead have not shown
+   superior results, and often failed due to convergence at local minima.
+   </font>
 
-  <p>
-  The tests we have performed so far showed that in generic applications,
-  the GA is superior to MC sampling, and hence GA is the default method.
-  It is worthwhile trying both anyway.
+   <p>
+   The tests we have performed so far showed that in generic applications,
+   the GA is superior to MC sampling, and hence GA is the default method.
+   It is worthwhile trying both anyway.
 
-  <b>Decorrelated (or "diagonalized") Cuts</b>
+   <b>Decorrelated (or "diagonalized") Cuts</b>
 
-  <p>
-  See class description for Method Likelihood for a detailed explanation.
-End_Html */
+   <p>
+   See class description for Method Likelihood for a detailed explanation.
+   End_Html */
 //
 
 #include <iostream>
@@ -120,7 +120,7 @@ REGISTER_METHOD(Cuts)
 
 ClassImp(TMVA::MethodCuts)
 
-const Double_t TMVA::MethodCuts::fgMaxAbsCutVal = 1.0e30;
+   const Double_t TMVA::MethodCuts::fgMaxAbsCutVal = 1.0e30;
 
 //_______________________________________________________________________
 TMVA::MethodCuts::MethodCuts( const TString& jobName,
@@ -388,12 +388,12 @@ void TMVA::MethodCuts::ProcessOptions()
 
    // options output
    Log() << kINFO << Form("Use optimization method: \"%s\"", 
-                            (fFitMethod == kUseMonteCarlo) ? "Monte Carlo" : 
-                            (fFitMethod == kUseMonteCarlo) ? "Monte-Carlo-Event sampling" : 
-                            (fFitMethod == kUseEventScan)  ? "Full Event Scan (slow)" :
-                            (fFitMethod == kUseMinuit)     ? "MINUIT" : "Genetic Algorithm" ) << Endl;
+                          (fFitMethod == kUseMonteCarlo) ? "Monte Carlo" : 
+                          (fFitMethod == kUseMonteCarlo) ? "Monte-Carlo-Event sampling" : 
+                          (fFitMethod == kUseEventScan)  ? "Full Event Scan (slow)" :
+                          (fFitMethod == kUseMinuit)     ? "MINUIT" : "Genetic Algorithm" ) << Endl;
    Log() << kINFO << Form("Use efficiency computation method: \"%s\"", 
-                            (fEffMethod == kUseEventSelection) ? "Event Selection" : "PDF" ) << Endl;
+                          (fEffMethod == kUseEventSelection) ? "Event Selection" : "PDF" ) << Endl;
 
    // cut ranges
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
@@ -409,13 +409,13 @@ void TMVA::MethodCuts::ProcessOptions()
       else if (fAllVarsI[ivar] == "FSmart" )                         theFitP = kForceSmart;
       else {
          Log() << kFATAL << "unknown value \'" << fAllVarsI[ivar]
-                 << "\' for fit parameter option " << Form("VarProp[%i]",ivar) << Endl;
+               << "\' for fit parameter option " << Form("VarProp[%i]",ivar) << Endl;
       }
       (*fFitParams)[ivar] = theFitP;
       
       if (theFitP != kNotEnforced) 
          Log() << kINFO << "Use \"" << fAllVarsI[ivar] 
-                 << "\" cuts for variable: " << "'" << (*fInputVars)[ivar] << "'" << Endl;
+               << "\" cuts for variable: " << "'" << (*fInputVars)[ivar] << "'" << Endl;
    }
 }
 
@@ -430,7 +430,7 @@ Double_t TMVA::MethodCuts::GetMvaValue( Double_t* err, Double_t* errUpper )
    // sanity check
    if (fCutMin == NULL || fCutMax == NULL || fNbins == 0) {
       Log() << kFATAL << "<Eval_Cuts> fCutMin/Max have zero pointer. "
-              << "Did you book Cuts ?" << Endl;
+            << "Did you book Cuts ?" << Endl;
    }
 
    const Event* ev = GetEvent();
@@ -496,11 +496,11 @@ void TMVA::MethodCuts::PrintCuts( Double_t effS ) const
    Log() << kINFO << "Corresponding background efficiency       : " << fEffBvsSLocal->GetBinContent( ibin ) << Endl;
    if (GetTransformationHandler().GetNumOfTransformations() == 1) {
       Log() << kINFO << "Transformation applied to input variables : \"" 
-              << GetTransformationHandler().GetNameOfLastTransform() << "\"" << Endl;
+            << GetTransformationHandler().GetNameOfLastTransform() << "\"" << Endl;
    }
    else if (GetTransformationHandler().GetNumOfTransformations() > 1) {
       Log() << kINFO << "[ More than one (=" << GetTransformationHandler().GetNumOfTransformations() << ") "
-              << " transformations applied in transformation chain; cuts applied on transformed quantities ] " << Endl;
+            << " transformations applied in transformation chain; cuts applied on transformed quantities ] " << Endl;
    }
    else {
       Log() << kINFO << "Transformation applied to input variables : None"  << Endl;
@@ -509,12 +509,12 @@ void TMVA::MethodCuts::PrintCuts( Double_t effS ) const
    Log() << Endl;
    for (UInt_t ivar=0; ivar<cutsMin.size(); ivar++) {
       Log() << kINFO 
-              << "Cut[" << std::setw(2) << ivar << "]: " 
-              << std::setw(10) << cutsMin[ivar] 
-              << " < " 
-              << std::setw(maxL) << (*varVec)[ivar]
-              << " <= " 
-              << std::setw(10) << cutsMax[ivar] << Endl;
+            << "Cut[" << std::setw(2) << ivar << "]: " 
+            << std::setw(10) << cutsMin[ivar] 
+            << " < " 
+            << std::setw(maxL) << (*varVec)[ivar]
+            << " <= " 
+            << std::setw(10) << cutsMax[ivar] << Endl;
    }
    for (UInt_t i=0; i<maxLine; i++) Log() << "-";
    Log() << Endl;
@@ -754,8 +754,8 @@ void  TMVA::MethodCuts::Train( void )
                evt2 = ev2->GetValue( ivar );
                
                if (nbreak++ > 10000) Log() << kFATAL << "<MCEvents>: could not find signal events" 
-                                             << " after 10000 trials - do you have signal events in your sample ?" 
-                                             << Endl;
+                                           << " after 10000 trials - do you have signal events in your sample ?" 
+                                           << Endl;
                isSignal = 1;
             }
 
@@ -961,7 +961,7 @@ void TMVA::MethodCuts::MatchCutsToPars( std::vector<Double_t>& pars,
 {
    // translate the cuts into parameters (obsolete function)
    if (ibin < 1 || ibin > fNbins) Log() << kFATAL << "::MatchCutsToPars: bin error: "
-                                          << ibin << Endl;
+                                        << ibin << Endl;
    
    const UInt_t nvar = GetNvar();
    Double_t *cutMin = new Double_t[nvar];
@@ -1038,7 +1038,7 @@ void TMVA::MethodCuts::GetEffsfromSelection( Double_t* cutMin, Double_t* cutMax,
    // sanity check
    if (nTotS == 0 && nTotB == 0) {
       Log() << kFATAL << "<GetEffsfromSelection> fatal error in zero total number of events:"
-              << " nTotS, nTotB: " << nTotS << " " << nTotB << " ***" << Endl;
+            << " nTotS, nTotB: " << nTotS << " " << nTotB << " ***" << Endl;
    }
 
    // efficiencies
@@ -1199,7 +1199,7 @@ void  TMVA::MethodCuts::ReadWeightsFromStream( std::istream& istr )
    // sanity check
    if (dummyInt != Data()->GetNVariables()) {
       Log() << kFATAL << "<ReadWeightsFromStream> fatal error: mismatch "
-              << "in number of variables: " << dummyInt << " != " << Data()->GetNVariables() << Endl;
+            << "in number of variables: " << dummyInt << " != " << Data()->GetNVariables() << Endl;
    }
    //SetNvar(dummyInt);
 
@@ -1350,10 +1350,10 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
    Float_t tmpeffS, tmpeffB;
    void* ch = gTools().GetChild(wghtnode,"Bin");
    while (ch) {
-//       if (strcmp(gTools().GetName(ch),"Bin") !=0) {
-//          ch = gTools().GetNextChild(ch);
-//          continue;
-//       }
+      //       if (strcmp(gTools().GetName(ch),"Bin") !=0) {
+      //          ch = gTools().GetNextChild(ch);
+      //          continue;
+      //       }
 
       gTools().ReadAttr( ch, "ibin", tmpbin  );
       gTools().ReadAttr( ch, "effS", tmpeffS );
@@ -1414,8 +1414,8 @@ Double_t TMVA::MethodCuts::GetTrainingEfficiency(const TString& theString)
    // sanity check
    if (list->GetSize() != 2) {
       Log() << kFATAL << "<GetTrainingEfficiency> wrong number of arguments"
-              << " in string: " << theString
-              << " | required format, e.g., Efficiency:0.05" << Endl;
+            << " in string: " << theString
+            << " | required format, e.g., Efficiency:0.05" << Endl;
       return -1;
    }
 
@@ -1531,8 +1531,8 @@ Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETree
    if (list->GetSize() > 2) {
       delete list;
       Log() << kFATAL << "<GetEfficiency> wrong number of arguments"
-              << " in string: " << theString
-              << " | required format, e.g., Efficiency:0.05, or empty string" << Endl;
+            << " in string: " << theString
+            << " | required format, e.g., Efficiency:0.05, or empty string" << Endl;
       return -1;
    }
    

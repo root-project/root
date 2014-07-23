@@ -862,17 +862,17 @@ void TMVA::RuleEnsemble::RuleResponseStats()
       }
       // Fill tagging probabilities
       if (ntag>0 && neve > 0) { // should always be the case, but let's make sure and keep coverity quiet
-	 fRulePTag.push_back(Double_t(ntag)/Double_t(neve));
-	 fRulePSS.push_back(Double_t(nss)/Double_t(ntag));
-	 fRulePSB.push_back(Double_t(nsb)/Double_t(ntag));
-	 fRulePBS.push_back(Double_t(nbs)/Double_t(ntag));
-	 fRulePBB.push_back(Double_t(nbb)/Double_t(ntag));
+         fRulePTag.push_back(Double_t(ntag)/Double_t(neve));
+         fRulePSS.push_back(Double_t(nss)/Double_t(ntag));
+         fRulePSB.push_back(Double_t(nsb)/Double_t(ntag));
+         fRulePBS.push_back(Double_t(nbs)/Double_t(ntag));
+         fRulePBB.push_back(Double_t(nbb)/Double_t(ntag));
       }
       //
    }
    fRuleFSig = (nsig>0) ? static_cast<Double_t>(nsig)/static_cast<Double_t>(nsig+nbkg) : 0;
    for ( UInt_t v=0; v<nvars; v++) {
-     fRuleVarFrac[v] =  (nrules>0) ? Double_t(varcnt[v])/Double_t(nrules) : 0;
+      fRuleVarFrac[v] =  (nrules>0) ? Double_t(varcnt[v])/Double_t(nrules) : 0;
    }
 }
 

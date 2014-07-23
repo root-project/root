@@ -51,7 +51,7 @@ ClassImp(TMVA::PDEFoamTarget)
 
 //_____________________________________________________________________
 TMVA::PDEFoamTarget::PDEFoamTarget()
-   : PDEFoam()
+: PDEFoam()
    , fTarget(0)
 {
    // Default constructor for streamer, user should not use it.

@@ -50,7 +50,7 @@ ClassImp(TMVA::PDEFoamTargetDensity)
 
 //_____________________________________________________________________
 TMVA::PDEFoamTargetDensity::PDEFoamTargetDensity()
-   : PDEFoamDensityBase()
+: PDEFoamDensityBase()
    , fTarget(0)
 {}
 

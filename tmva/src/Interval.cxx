@@ -39,33 +39,33 @@
 //  Note: **bin** counting starts from ZERO unlike in ROOT histograms       //
 //////////////////////////////////////////////////////////////////////////////
 /* Begin_Html
-<center><h2>the TMVA::Interval Class</h2></center>
+   <center><h2>the TMVA::Interval Class</h2></center>
 
-<ul>
+   <ul>
    <li> Interval definition, continuous and discrete
    <ul>
-         <li>  Interval(min,max)  : a continous interval [min,max]
-         <li>  Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers:<br>
-         min, min+step, min+2*step,...., min+(n-1)*step=max <br>
-         e.g.: Interval(1,5,5)=1,2,3,4,5                    <br>
-         Interval(.5,1.,6)= .5, .6., .7, .8, .9, 1.0        <br>
+   <li>  Interval(min,max)  : a continous interval [min,max]
+   <li>  Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers:<br>
+   min, min+step, min+2*step,...., min+(n-1)*step=max <br>
+   e.g.: Interval(1,5,5)=1,2,3,4,5                    <br>
+   Interval(.5,1.,6)= .5, .6., .7, .8, .9, 1.0        <br>
 
    </ul>
-</ul>
-<pre>
+   </ul>
+   <pre>
 
-    Example:   Interval(.5,1.,6) 
+   Example:   Interval(.5,1.,6) 
 
-             [ min                           max ]                       
-         ------------------------------------------------------------
-                |     |     |     |     |     |
-               .5    .6    .7    .8    .9    1.0            
+   [ min                           max ]                       
+   ------------------------------------------------------------
+   |     |     |     |     |     |
+   .5    .6    .7    .8    .9    1.0            
  
-         bin    0     1     2     3     4     5  
+   bin    0     1     2     3     4     5  
 
 
-</pre>
-End_Html */
+   </pre>
+   End_Html */
 
 #include "TMath.h"
 #include "TRandom3.h"
@@ -129,7 +129,7 @@ Double_t TMVA::Interval::GetElement( Int_t bin ) const
       Log() << kFATAL << "bin " << bin << " out of range: interval *bins* count from 0 to " << fNbins-1  << Endl;
       return 0.0;
    }
-      return fMin + ( (Double_t(bin)/(fNbins-1)) *(fMax - fMin) );
+   return fMin + ( (Double_t(bin)/(fNbins-1)) *(fMax - fMin) );
 }
 
 //_______________________________________________________________________

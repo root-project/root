@@ -154,9 +154,9 @@ void TMVA::RuleFitParams::Init()
    }
    //
    Log() << kVERBOSE << "Path constr. - event index range = [ " << fPathIdx1 << ", " << fPathIdx2 << " ]"
-           << ", effective N(events) = " << fNEveEffPath << Endl;
+         << ", effective N(events) = " << fNEveEffPath << Endl;
    Log() << kVERBOSE << "Error estim. - event index range = [ " << fPerfIdx1 << ", " << fPerfIdx2 << " ]"
-           << ", effective N(events) = " << fNEveEffPerf << Endl;
+         << ", effective N(events) = " << fNEveEffPerf << Endl;
    //
    if (fRuleEnsemble->DoRules()) 
       Log() << kDEBUG << "Number of rules in ensemble: " << fNRules << Endl;
@@ -434,7 +434,7 @@ Int_t TMVA::RuleFitParams::FindGDTau()
 
    if (fGDOfsTst.size()<1)
       Log() << kFATAL << "BUG! FindGDTau() has been called BEFORE InitGD()." << Endl;
-  //
+   //
    Log() << kINFO << "Estimating the cutoff parameter tau. The estimated time is a pessimistic maximum." << Endl;
    //
    // Find how many points to scan and how often to calculate the error
@@ -468,7 +468,7 @@ Int_t TMVA::RuleFitParams::FindGDTau()
          //         ErrorRateRocTst( );
          itauMin = RiskPerfTst();
          Log() << kVERBOSE << Form("%4d",ip+1) << ". tau = " << Form("%4.4f",fGDTauVec[itauMin])
-                 << " => error rate = " << fGDErrTst[itauMin] << Endl;
+               << " => error rate = " << fGDErrTst[itauMin] << Endl;
       }
       ip++;
       doloop = ((ip<nscan) && (fGDNTauTstOK>3));
@@ -488,7 +488,7 @@ Int_t TMVA::RuleFitParams::FindGDTau()
    fRuleEnsemble->SetLinCoefficients( fGDCoefLinTst[itauMin] );
    fRuleEnsemble->SetOffset( fGDOfsTst[itauMin] );
    Log() << kINFO << "Best path found with tau = " << Form("%4.4f",fGDTau)
-           << " after " << timer.GetElapsedTime() << "      " << Endl;
+         << " after " << timer.GetElapsedTime() << "      " << Endl;
 
    return nscan;
 }
@@ -518,7 +518,7 @@ void TMVA::RuleFitParams::MakeGDPath()
    //
 
    Log() << kINFO << "GD path scan - the scan stops when the max num. of steps is reached or a min is found"
-           << Endl;
+         << Endl;
    Log() << kVERBOSE << "Number of events used per path step = " << fPathIdx2-fPathIdx1+1 << Endl;
    Log() << kVERBOSE << "Number of events used for error estimation = " << fPerfIdx2-fPerfIdx1+1 << Endl;
 
@@ -725,19 +725,19 @@ void TMVA::RuleFitParams::MakeGDPath()
          if (isDebug) fGDNtuple->Fill();
          if (isVerbose) {
             Log() << kVERBOSE << "ParamsIRE : "
-                    << std::setw(10)
-                    << Form("%8d",iloop+1) << " "
-                    << Form("%4.4f",fNTRisk) << " "
-                    << Form("%4.4f",riskPerf)  << " "
-                    << Form("%4.4f",fNTRisk+riskPerf)  << " "
-//                     << Form("%4.4f",fsigave+fbkgave) << " "
-//                     << Form("%4.4f",fsigave) << " "
-//                     << Form("%4.4f",fsigrms) << " "
-//                     << Form("%4.4f",fbkgave) << " "
-//                     << Form("%4.4f",fbkgrms) << " "
+                  << std::setw(10)
+                  << Form("%8d",iloop+1) << " "
+                  << Form("%4.4f",fNTRisk) << " "
+                  << Form("%4.4f",riskPerf)  << " "
+                  << Form("%4.4f",fNTRisk+riskPerf)  << " "
+               //                     << Form("%4.4f",fsigave+fbkgave) << " "
+               //                     << Form("%4.4f",fsigave) << " "
+               //                     << Form("%4.4f",fsigrms) << " "
+               //                     << Form("%4.4f",fbkgave) << " "
+               //                     << Form("%4.4f",fbkgrms) << " "
 
                //                    << Form("%4.4f",fRuleEnsemble->CoefficientRadius())
-                    << Endl;
+                  << Endl;
          }
       }
       iloop++;
@@ -950,7 +950,7 @@ Double_t TMVA::RuleFitParams::ErrorRateReg()
    }
    if (fFstar.size()!=neve) {
       Log() << kFATAL << "--- RuleFitParams::ErrorRateReg() - F* not initialized! BUG!!!"
-              << " Fstar.size() = " << fFstar.size() << " , N(events) = " << neve << Endl;
+            << " Fstar.size() = " << fFstar.size() << " , N(events) = " << neve << Endl;
    }
    //
    Double_t sF;
@@ -1227,11 +1227,11 @@ UInt_t TMVA::RuleFitParams::RiskPerfTst()
    }
    fGDNTauTstOK = nok;
    Log() << kVERBOSE << "TAU: "
-           << itaumin << "   "
-           << nok     << "   "
-           << minx    << "   "
-           << maxx    << "   "
-           << sigx    << Endl;
+         << itaumin << "   "
+         << nok     << "   "
+         << minx    << "   "
+         << maxx    << "   "
+         << sigx    << Endl;
    //
    return itaumin;
 }
@@ -1464,7 +1464,7 @@ void TMVA::RuleFitParams::UpdateCoefficients()
             fRuleEnsemble->SetLinCoefficient(i,lcoef);
          }
       }
-   // Set the offset
+      // Set the offset
       Double_t offset = CalcAverageResponse();
       fRuleEnsemble->SetOffset( offset );
    }

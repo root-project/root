@@ -102,7 +102,7 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
    }
    catch(std::string error) {
       Log() << kERROR << "Couldn't initialize the tree meta data because of error ("
-              << error << ")" << Endl;
+            << error << ")" << Endl;
       return NULL;
    }
 
@@ -113,7 +113,7 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
    }
    catch(std::string error) {
       Log() << kERROR << "Error optimzing pruning sequence ("
-              << error << ")" << Endl;
+            << error << ")" << Endl;
       return NULL;
    }
 
@@ -190,9 +190,9 @@ void CostComplexityPruneTool::InitTreePruningMetaData( DecisionTreeNode* n ) {
       n->SetCC(n->GetAlpha());
    }
 
-//    DecisionTreeNode* R = (DecisionTreeNode*)mdt->GetRoot();
-//    Double_t x = R->GetAlphaMinSubtree();
-//    Log() << "alphaMin(Root) = " << x << Endl;
+   //    DecisionTreeNode* R = (DecisionTreeNode*)mdt->GetRoot();
+   //    Double_t x = R->GetAlphaMinSubtree();
+   //    Log() << "alphaMin(Root) = " << x << Endl;
 }
 
 
@@ -246,8 +246,8 @@ void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
 
       // descend to the weakest link
       while(t->GetAlphaMinSubtree() < t->GetAlpha()) {
-//          std::cout << t->GetAlphaMinSubtree() << "  " << t->GetAlpha()<< "  "
-//                    << t->GetAlphaMinSubtree()- t->GetAlpha()<<  " t==R?" << int(t == R) << std::endl;
+         //          std::cout << t->GetAlphaMinSubtree() << "  " << t->GetAlpha()<< "  "
+         //                    << t->GetAlphaMinSubtree()- t->GetAlpha()<<  " t==R?" << int(t == R) << std::endl;
          //      while(  (t->GetAlphaMinSubtree() - t->GetAlpha()) < epsilon)  {
          //         if(TMath::Abs(t->GetAlphaMinSubtree() - t->GetLeft()->GetAlphaMinSubtree())/TMath::Abs(t->GetAlphaMinSubtree()) < epsilon) {
          if(TMath::Abs(t->GetAlphaMinSubtree() - t->GetLeft()->GetAlphaMinSubtree()) < epsilon) {
@@ -264,12 +264,12 @@ void CostComplexityPruneTool::Optimize( DecisionTree* dt, Double_t weights ) {
 
       DecisionTreeNode* n = t;
 
-//       Log() << kDEBUG  << "alpha[" << k << "]: " << alpha << Endl;
-//       Log() << kDEBUG  << "===========================" << Endl
-//               << "Pruning branch listed below the node" << Endl;
-//       t->Print( Log() );
-//       Log() << kDEBUG << "===========================" << Endl;
-//       t->PrintRecPrune( Log() );
+      //       Log() << kDEBUG  << "alpha[" << k << "]: " << alpha << Endl;
+      //       Log() << kDEBUG  << "===========================" << Endl
+      //               << "Pruning branch listed below the node" << Endl;
+      //       t->Print( Log() );
+      //       Log() << kDEBUG << "===========================" << Endl;
+      //       t->PrintRecPrune( Log() );
 
       dt->PruneNodeInPlace(t); // prune the branch rooted at node t
 

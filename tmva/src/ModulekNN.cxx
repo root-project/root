@@ -316,7 +316,7 @@ Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, con
    
    for (std::map<Short_t, UInt_t>::const_iterator it = fCount.begin(); it != fCount.end(); ++it) {
       Log() << kINFO << "<Fill> Class " << it->first << " has " << std::setw(8) 
-              << it->second << " events" << Endl;
+            << it->second << " events" << Endl;
    }
    
    return kTRUE;
@@ -543,7 +543,7 @@ void TMVA::kNN::ModulekNN::ComputeMetric(const UInt_t ifrac)
    const UInt_t rfrac = 100 - (100 - ifrac)/2;
 
    Log() << kINFO << "Computing scale factor for 1d distributions: " 
-           << "(ifrac, bottom, top) = (" << ifrac << "%, " << lfrac << "%, " << rfrac << "%)" << Endl;   
+         << "(ifrac, bottom, top) = (" << ifrac << "%, " << lfrac << "%, " << rfrac << "%)" << Endl;   
 
    fVarScale.clear();
    

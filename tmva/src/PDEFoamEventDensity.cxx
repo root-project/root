@@ -51,7 +51,7 @@ ClassImp(TMVA::PDEFoamEventDensity)
 
 //_____________________________________________________________________
 TMVA::PDEFoamEventDensity::PDEFoamEventDensity()
-   : PDEFoamDensityBase()
+: PDEFoamDensityBase()
 {}
 
 //_____________________________________________________________________

@@ -53,12 +53,12 @@ TMVA::FitterBase::FitterBase( IFitterTarget& target,
                               const TString& name, 
                               const std::vector<Interval*> ranges, 
                               const TString& theOption ) 
-   : Configurable( theOption ),
-     fFitterTarget( target ),
-     fRanges( ranges ),
-     fNpars( ranges.size() ),
-     fLogger( new MsgLogger("FitterBase", kINFO) ),
-     fClassName( name )
+: Configurable( theOption ),
+   fFitterTarget( target ),
+   fRanges( ranges ),
+   fNpars( ranges.size() ),
+   fLogger( new MsgLogger("FitterBase", kINFO) ),
+   fClassName( name )
 {
    // constructor   
    SetConfigName( GetName() );

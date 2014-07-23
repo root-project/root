@@ -262,15 +262,15 @@ Bool_t TMVA::DataSetFactory::CheckTTreeFormula( TTreeFormula* ttf,
       worked = kFALSE;
    }
    if( expression.Contains("$") ) 
-       hasDollar = kTRUE;
+      hasDollar = kTRUE;
    else
    {
-       for (int i = 0, iEnd = ttf->GetNcodes (); i < iEnd; ++i)
-       {
-           TLeaf* leaf = ttf->GetLeaf (i);
-           if (!leaf->IsOnTerminalBranch())
-               hasDollar = kTRUE;
-       }
+      for (int i = 0, iEnd = ttf->GetNcodes (); i < iEnd; ++i)
+      {
+         TLeaf* leaf = ttf->GetLeaf (i);
+         if (!leaf->IsOnTerminalBranch())
+            hasDollar = kTRUE;
+      }
    }
    return worked;
 }
@@ -1180,7 +1180,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
       if (splitMode.Contains( "RANDOM" )){
          UInt_t sizeTraining  = eventVectorTraining.size();
          if( sizeTraining > UInt_t(requestedTraining) ){
-           std::vector<UInt_t> indicesTraining( sizeTraining );
+            std::vector<UInt_t> indicesTraining( sizeTraining );
             // make indices
             std::generate( indicesTraining.begin(), indicesTraining.end(), TMVA::Increment<UInt_t>(0) );
             // shuffle indices
@@ -1282,7 +1282,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
          itTarget = trainingEventVector->begin() - 1; // start one before begin
          // loop over source
          for( itEvent = tmpEventVector[Types::kTraining].at(cls).begin(), itEventEnd = tmpEventVector[Types::kTraining].at(cls).end(); itEvent != itEventEnd; ++itEvent ){
-//            if( std::distance( itTarget, trainingEventVector->end()) < Int_t(cls+1) ) {
+            //            if( std::distance( itTarget, trainingEventVector->end()) < Int_t(cls+1) ) {
             if( (trainingEventVector->end() - itTarget) < Int_t(cls+1) ) {
                itTarget = trainingEventVector->end();
                trainingEventVector->insert( itTarget, itEvent, itEventEnd ); // fill in the rest without mixing
@@ -1296,7 +1296,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
          itTarget = testingEventVector->begin() - 1;
          // loop over source
          for( itEvent = tmpEventVector[Types::kTesting].at(cls).begin(), itEventEnd = tmpEventVector[Types::kTesting].at(cls).end(); itEvent != itEventEnd; ++itEvent ){
-//             if( std::distance( itTarget, testingEventVector->end()) < Int_t(cls+1) ) {
+            //             if( std::distance( itTarget, testingEventVector->end()) < Int_t(cls+1) ) {
             if( ( testingEventVector->end() - itTarget ) < Int_t(cls+1) ) {
                itTarget = testingEventVector->end();
                testingEventVector->insert( itTarget, itEvent, itEventEnd ); // fill in the rest without mixing

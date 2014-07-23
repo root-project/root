@@ -40,8 +40,8 @@ TMVA::MinuitFitter::MinuitFitter( IFitterTarget& target,
                                   const TString& name, 
                                   std::vector<TMVA::Interval*>& ranges, 
                                   const TString& theOption ) 
-   : TMVA::FitterBase( target, name, ranges, theOption ),
-     TMVA::IFitterTarget( )
+: TMVA::FitterBase( target, name, ranges, theOption ),
+   TMVA::IFitterTarget( )
 {
    // constructor
 
@@ -129,7 +129,7 @@ Double_t TMVA::MinuitFitter::Run( std::vector<Double_t>& pars )
    // sanity check
    if ((Int_t)pars.size() != GetNpars())
       Log() << kFATAL << "<Run> Mismatch in number of parameters: (a)"
-              << GetNpars() << " != " << pars.size() << Endl;
+            << GetNpars() << " != " << pars.size() << Endl;
 
    // timing of MC   
    Timer* timer = 0;
@@ -172,7 +172,7 @@ Double_t TMVA::MinuitFitter::Run( std::vector<Double_t>& pars )
    // sanity check
    if (GetNpars() != nparx) {
       Log() << kFATAL << "<Run> Mismatch in number of parameters: "
-              << GetNpars() << " != " << nparx << Endl;
+            << GetNpars() << " != " << nparx << Endl;
    }
 
    // retrieve parameters
@@ -188,7 +188,7 @@ Double_t TMVA::MinuitFitter::Run( std::vector<Double_t>& pars )
    // get elapsed time   
    if (!fBatch) { 
       Log() << kINFO << "Elapsed time: " << timer->GetElapsedTime() 
-           << "                            " << Endl;  
+            << "                            " << Endl;  
       delete timer;
    }
 

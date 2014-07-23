@@ -52,7 +52,7 @@ ClassImp(TMVA::PDEFoamDiscriminantDensity)
 
 //_____________________________________________________________________
 TMVA::PDEFoamDiscriminantDensity::PDEFoamDiscriminantDensity()
-   : PDEFoamDensityBase()
+: PDEFoamDensityBase()
    , fClass(0)
 {}
 

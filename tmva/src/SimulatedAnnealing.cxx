@@ -44,21 +44,21 @@ ClassImp(TMVA::SimulatedAnnealing)
 
 //_______________________________________________________________________
 TMVA::SimulatedAnnealing::SimulatedAnnealing( IFitterTarget& target, const std::vector<Interval*>& ranges )
-   : fKernelTemperature     (kIncreasingAdaptive),
-     fFitterTarget          ( target ),
-     fRandom                ( new TRandom3(100) ),
-     fRanges                ( ranges ),
-     fMaxCalls              ( 500000 ),
-     fInitialTemperature    ( 1000 ),
-     fMinTemperature        ( 0 ),
-     fEps                   ( 1e-10 ),
-     fTemperatureScale      ( 0.06 ),
-     fAdaptiveSpeed         ( 1.0 ),
-     fTemperatureAdaptiveStep( 0.0 ),
-     fUseDefaultScale       ( kFALSE ),
-     fUseDefaultTemperature ( kFALSE ),
-     fLogger( new MsgLogger("SimulatedAnnealing") ),
-     fProgress(0.0)
+: fKernelTemperature     (kIncreasingAdaptive),
+   fFitterTarget          ( target ),
+   fRandom                ( new TRandom3(100) ),
+   fRanges                ( ranges ),
+   fMaxCalls              ( 500000 ),
+   fInitialTemperature    ( 1000 ),
+   fMinTemperature        ( 0 ),
+   fEps                   ( 1e-10 ),
+   fTemperatureScale      ( 0.06 ),
+   fAdaptiveSpeed         ( 1.0 ),
+   fTemperatureAdaptiveStep( 0.0 ),
+   fUseDefaultScale       ( kFALSE ),
+   fUseDefaultTemperature ( kFALSE ),
+   fLogger( new MsgLogger("SimulatedAnnealing") ),
+   fProgress(0.0)
 {
    // constructor
    fKernelTemperature = kIncreasingAdaptive;
@@ -180,7 +180,7 @@ void TMVA::SimulatedAnnealing::GenerateNewTemperature( Double_t& currentTemperat
 {
    // generate new temperature
    if      (fKernelTemperature == kSqrt) {
-         currentTemperature = fInitialTemperature/(Double_t)TMath::Sqrt(Iter+2) * fTemperatureScale;
+      currentTemperature = fInitialTemperature/(Double_t)TMath::Sqrt(Iter+2) * fTemperatureScale;
    }
    else if (fKernelTemperature == kLog) {
       currentTemperature = fInitialTemperature/(Double_t)TMath::Log(Iter+2) * fTemperatureScale;
@@ -323,8 +323,8 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
    if (fUseDefaultScale) SetDefaultScale();
 
    Log() << kINFO
-           << "Temperatur scale = "      << fTemperatureScale  
-           << ", current temperature = " << currentTemperature  << Endl;
+         << "Temperatur scale = "      << fTemperatureScale  
+         << ", current temperature = " << currentTemperature  << Endl;
 
    bestParameters = parameters;
    bestFit        = currentFit = fFitterTarget.EstimatorFunction( bestParameters );
@@ -374,7 +374,7 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
 
    // get elapsed time   
    Log() << kINFO << "Elapsed time: " << timer.GetElapsedTime() 
-           << "                            " << Endl;  
+         << "                            " << Endl;  
    
    // supose this minimum is the best one, now just try to improve it
 

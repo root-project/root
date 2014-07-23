@@ -168,7 +168,7 @@ const TMVA::Event* TMVA::TransformationHandler::InverseTransform( const Event* e
    UInt_t nvars = 0, ntgts = 0, nspcts = 0;
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt() ) { // shouldn't be the transformation called in the inverse order for the inversetransformation?????
       if (trf->IsCreated()) {
-         trf->CountVariableTypes( nvars, ntgts, nspcts );	 
+         trf->CountVariableTypes( nvars, ntgts, nspcts );    
          if( !(suppressIfNoTargets && ntgts==0) )
             trEv = trf->InverseTransform(ev, (*rClsIt) );
       }
@@ -184,9 +184,9 @@ const TMVA::Event* TMVA::TransformationHandler::InverseTransform( const Event* e
    //    UInt_t nvars = 0, ntgts = 0, nspcts = 0;
    //    while (VariableTransformBase *trf = (VariableTransformBase*) trIt() ) { // shouldn't be the transformation called in the inverse order for the inversetransformation?????
    //       if (trf->IsCreated()) {
-   // 	 trf->CountVariableTypes( nvars, ntgts, nspcts );	 
-   // 	 if( !(suppressIfNoTargets && ntgts==0) )
-   // 	    trEv = trf->InverseTransform(ev, (*rClsIt) );
+   //     trf->CountVariableTypes( nvars, ntgts, nspcts );   
+   //     if( !(suppressIfNoTargets && ntgts==0) )
+   //        trEv = trf->InverseTransform(ev, (*rClsIt) );
    //       }
    //       else break;
    //       rClsIt++;
@@ -215,10 +215,10 @@ const std::vector<TMVA::Event*>* TMVA::TransformationHandler::CalcTransformation
    std::vector< Int_t >::iterator rClsIt = fTransformationsReferenceClasses.begin();
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt()) {
       if (trf->PrepareTransformation(*transformedEvents)) {
-        for (UInt_t ievt = 0; ievt<transformedEvents->size(); ievt++) {  // loop through all events
-          *(*transformedEvents)[ievt] = *trf->Transform((*transformedEvents)[ievt],(*rClsIt));
-        }
-        rClsIt++;
+         for (UInt_t ievt = 0; ievt<transformedEvents->size(); ievt++) {  // loop through all events
+            *(*transformedEvents)[ievt] = *trf->Transform((*transformedEvents)[ievt],(*rClsIt));
+         }
+         rClsIt++;
       }
    }
    
@@ -230,10 +230,10 @@ const std::vector<TMVA::Event*>* TMVA::TransformationHandler::CalcTransformation
    //sometimes, the actual transformed event vector is not used for anything but the previous
    //CalcStat and PlotVariables calles, in that case, we delete it again (and return NULL)
    if (!createNewVector) {  // if we don't want that newly created event vector to persist, then delete it
-     for ( UInt_t ievt = 0; ievt<transformedEvents->size(); ievt++)
-       delete (*transformedEvents)[ievt];
-     delete transformedEvents;
-     transformedEvents=NULL;
+      for ( UInt_t ievt = 0; ievt<transformedEvents->size(); ievt++)
+         delete (*transformedEvents)[ievt];
+      delete transformedEvents;
+      transformedEvents=NULL;
    }
 
    return transformedEvents; // give back the newly created event collection (containing the transformed events)

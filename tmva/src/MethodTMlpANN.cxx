@@ -27,19 +27,19 @@
 //_______________________________________________________________________
 /* Begin_Html
 
-  This is the TMVA TMultiLayerPerceptron interface class. It provides the
-  training and testing the ROOT internal MLP class in the TMVA framework.<be>
+   This is the TMVA TMultiLayerPerceptron interface class. It provides the
+   training and testing the ROOT internal MLP class in the TMVA framework.<be>
 
-  Available learning methods:<br>
-  <ul>
-  <li>Stochastic      </li>
-  <li>Batch           </li>
-  <li>SteepestDescent </li>
-  <li>RibierePolak    </li>
-  <li>FletcherReeves  </li>
-  <li>BFGS            </li>
-  </ul>
-End_Html */
+   Available learning methods:<br>
+   <ul>
+   <li>Stochastic      </li>
+   <li>Batch           </li>
+   <li>SteepestDescent </li>
+   <li>RibierePolak    </li>
+   <li>FletcherReeves  </li>
+   <li>BFGS            </li>
+   </ul>
+   End_Html */
 //
 //  See the TMultiLayerPerceptron class description
 //  for details on this ANN.
@@ -81,11 +81,11 @@ REGISTER_METHOD(TMlpANN)
 ClassImp(TMVA::MethodTMlpANN)
 
 //_______________________________________________________________________
-TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName,
-                                    const TString& methodTitle,
-                                    DataSetInfo& theData,
-                                    const TString& theOption,
-                                    TDirectory* theTargetDir) :
+   TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName,
+                                       const TString& methodTitle,
+                                       DataSetInfo& theData,
+                                       const TString& theOption,
+                                       TDirectory* theTargetDir) :
    TMVA::MethodBase( jobName, Types::kTMlpANN, methodTitle, theData, theOption, theTargetDir ),
    fMLP(0),
    fLocalTrainingTree(0),

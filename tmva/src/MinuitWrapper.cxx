@@ -33,9 +33,9 @@ ClassImp(TMVA::MinuitWrapper)
 
 //_______________________________________________________________________
 TMVA::MinuitWrapper::MinuitWrapper( IFitterTarget& target, Int_t maxpar )
-   : TMinuit( maxpar ),
-     fFitterTarget( target ),
-     fNumPar( maxpar )
+: TMinuit( maxpar ),
+   fFitterTarget( target ),
+   fNumPar( maxpar )
 {
    // constructor
    for ( Int_t i=0; i< maxpar; i++ ) {

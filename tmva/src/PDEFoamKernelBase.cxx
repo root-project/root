@@ -46,7 +46,7 @@ ClassImp(TMVA::PDEFoamKernelBase)
 
 //_____________________________________________________________________
 TMVA::PDEFoamKernelBase::PDEFoamKernelBase()
-   : TObject()
+: TObject()
    , fLogger(new MsgLogger("PDEFoamKernelBase"))
 {
    // Default constructor for streamer

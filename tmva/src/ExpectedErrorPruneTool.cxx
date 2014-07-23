@@ -65,70 +65,70 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
    if(IsAutomatic()) { 
       Log() << kFATAL << "Sorry autmoatic pruning strength determination is not implemented yet" << Endl;
       /*
-      dt->ApplyValidationSample(validationSample);
-      Double_t weights = dt->GetSumWeights(validationSample);
-      // set the initial prune strength
-      fPruneStrength = 1.0e-3; //! FIXME somehow make this automatic, it depends strongly on the tree structure
-      // better to set it too small, it will be increased automatically
-      fDeltaPruneStrength = 1.0e-5;
-      Int_t nnodes = this->CountNodes((DecisionTreeNode*)dt->GetRoot());
+        dt->ApplyValidationSample(validationSample);
+        Double_t weights = dt->GetSumWeights(validationSample);
+        // set the initial prune strength
+        fPruneStrength = 1.0e-3; //! FIXME somehow make this automatic, it depends strongly on the tree structure
+        // better to set it too small, it will be increased automatically
+        fDeltaPruneStrength = 1.0e-5;
+        Int_t nnodes = this->CountNodes((DecisionTreeNode*)dt->GetRoot());
 
-      Bool_t forceStop = kFALSE;
-      Int_t errCount = 0,
-         lastNodeCount = nnodes;
+        Bool_t forceStop = kFALSE;
+        Int_t errCount = 0,
+        lastNodeCount = nnodes;
 
-      // find the maxiumum prune strength that still leaves the root's daughter nodes
+        // find the maxiumum prune strength that still leaves the root's daughter nodes
       
-      while ( nnodes > 1 && !forceStop ) {
-         fPruneStrength += fDeltaPruneStrength;
-         Log() << "----------------------------------------------------" << Endl;
-         FindListOfNodes((DecisionTreeNode*)dt->GetRoot());
-         for( UInt_t i = 0; i < fPruneSequence.size(); i++ )
-            fPruneSequence[i]->SetTerminal(); // prune all the nodes from the sequence
-         // test the quality of the pruned tree
-         Double_t quality = 1.0 - dt->TestPrunedTreeQuality()/weights;
-         fQualityMap.insert(std::make_pair<const Double_t,Double_t>(quality,fPruneStrength));
+        while ( nnodes > 1 && !forceStop ) {
+        fPruneStrength += fDeltaPruneStrength;
+        Log() << "----------------------------------------------------" << Endl;
+        FindListOfNodes((DecisionTreeNode*)dt->GetRoot());
+        for( UInt_t i = 0; i < fPruneSequence.size(); i++ )
+        fPruneSequence[i]->SetTerminal(); // prune all the nodes from the sequence
+        // test the quality of the pruned tree
+        Double_t quality = 1.0 - dt->TestPrunedTreeQuality()/weights;
+        fQualityMap.insert(std::make_pair<const Double_t,Double_t>(quality,fPruneStrength));
 
-         nnodes = CountNodes((DecisionTreeNode*)dt->GetRoot()); // count the number of nodes in the pruned tree
+        nnodes = CountNodes((DecisionTreeNode*)dt->GetRoot()); // count the number of nodes in the pruned tree
 
-         Log() << "Prune strength : " << fPruneStrength << Endl;
-         Log() << "Had " << lastNodeCount << " nodes, now have " << nnodes << Endl;
-         Log() << "Quality index is: " << quality << Endl;
+        Log() << "Prune strength : " << fPruneStrength << Endl;
+        Log() << "Had " << lastNodeCount << " nodes, now have " << nnodes << Endl;
+        Log() << "Quality index is: " << quality << Endl;
 
-         if (lastNodeCount == nnodes) errCount++;
-         else {
-            errCount=0; // reset counter
-            if ( nnodes < lastNodeCount / 2 ) {
-               Log() << "Decreasing fDeltaPruneStrength to " << fDeltaPruneStrength/2.0
-                     << " because the number of nodes in the tree decreased by a factor of 2." << Endl;
-               fDeltaPruneStrength /= 2.;
-            }
-         }
-         lastNodeCount = nnodes;
-         if (errCount > 20) {
-            Log() << "Increasing fDeltaPruneStrength to " << fDeltaPruneStrength*2.0
-                  << " because the number of nodes in the tree didn't change." << Endl;
-            fDeltaPruneStrength *= 2.0;
-         }
-         if (errCount > 40) {
-            Log() << "Having difficulty determining the optimal prune strength, bailing out!" << Endl;
-            forceStop = kTRUE;
-         }
-         // reset the tree for the next iteration
-         for( UInt_t i = 0; i < fPruneSequence.size(); i++ )
-            fPruneSequence[i]->SetTerminal(false);
-         fPruneSequence.clear();
-      }
-      // from the set of pruned trees, find the one with the optimal quality index
-      std::multimap<Double_t,Double_t>::reverse_iterator it = fQualityMap.rend(); ++it;
-      fPruneStrength = it->second;
-      FindListOfNodes((DecisionTreeNode*)dt->GetRoot());
+        if (lastNodeCount == nnodes) errCount++;
+        else {
+        errCount=0; // reset counter
+        if ( nnodes < lastNodeCount / 2 ) {
+        Log() << "Decreasing fDeltaPruneStrength to " << fDeltaPruneStrength/2.0
+        << " because the number of nodes in the tree decreased by a factor of 2." << Endl;
+        fDeltaPruneStrength /= 2.;
+        }
+        }
+        lastNodeCount = nnodes;
+        if (errCount > 20) {
+        Log() << "Increasing fDeltaPruneStrength to " << fDeltaPruneStrength*2.0
+        << " because the number of nodes in the tree didn't change." << Endl;
+        fDeltaPruneStrength *= 2.0;
+        }
+        if (errCount > 40) {
+        Log() << "Having difficulty determining the optimal prune strength, bailing out!" << Endl;
+        forceStop = kTRUE;
+        }
+        // reset the tree for the next iteration
+        for( UInt_t i = 0; i < fPruneSequence.size(); i++ )
+        fPruneSequence[i]->SetTerminal(false);
+        fPruneSequence.clear();
+        }
+        // from the set of pruned trees, find the one with the optimal quality index
+        std::multimap<Double_t,Double_t>::reverse_iterator it = fQualityMap.rend(); ++it;
+        fPruneStrength = it->second;
+        FindListOfNodes((DecisionTreeNode*)dt->GetRoot());
 
-      // adjust the step size for the next tree automatically
-      fPruneStrength = 1.0e-3;
-      fDeltaPruneStrength = (fPruneStrength - 1.0)/(Double_t)fQualityMap.size();
+        // adjust the step size for the next tree automatically
+        fPruneStrength = 1.0e-3;
+        fDeltaPruneStrength = (fPruneStrength - 1.0)/(Double_t)fQualityMap.size();
 
-      return new PruningInfo(it->first, it->second, fPruneSequence);
+        return new PruningInfo(it->first, it->second, fPruneSequence);
       */
       return NULL;
    }

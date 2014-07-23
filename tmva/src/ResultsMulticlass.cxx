@@ -134,7 +134,7 @@ std::vector<Double_t> TMVA::ResultsMulticlass::GetBestMultiClassCuts(UInt_t targ
    for( std::vector<Double_t>::iterator it = result.begin(); it<result.end(); it++ ){
       Log() << kINFO << "  cutValue[" <<dsi->GetClassInfo( n )->GetName()  << "] = " << (*it) << ";"<< Endl;
       n++;
-	}
+   }
    
    return result;
 }
@@ -181,31 +181,31 @@ void  TMVA::ResultsMulticlass::CreateMulticlassHistos( TString prefix, Int_t nbi
    /*
    //fill fine binned histos for testing
    if(prefix.Contains("Test")){
-      std::vector<std::vector<TH1F*> > histos_highbin;
-      for (UInt_t iCls = 0; iCls < dsi->GetNClasses(); iCls++) {
-         histos_highbin.push_back(std::vector<TH1F*>(0));
-         for (UInt_t jCls = 0; jCls < dsi->GetNClasses(); jCls++) {
-            TString name(Form("%s_%s_prob_for_%s_HIGHBIN",prefix.Data(),
-                              dsi->GetClassInfo( jCls )->GetName().Data(),
-                              dsi->GetClassInfo( iCls )->GetName().Data()));
-            histos_highbin.at(iCls).push_back(new TH1F(name,name,nbins_high,xmin,xmax));
-         }
-      }
+   std::vector<std::vector<TH1F*> > histos_highbin;
+   for (UInt_t iCls = 0; iCls < dsi->GetNClasses(); iCls++) {
+   histos_highbin.push_back(std::vector<TH1F*>(0));
+   for (UInt_t jCls = 0; jCls < dsi->GetNClasses(); jCls++) {
+   TString name(Form("%s_%s_prob_for_%s_HIGHBIN",prefix.Data(),
+   dsi->GetClassInfo( jCls )->GetName().Data(),
+   dsi->GetClassInfo( iCls )->GetName().Data()));
+   histos_highbin.at(iCls).push_back(new TH1F(name,name,nbins_high,xmin,xmax));
+   }
+   }
       
-      for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
-         const Event* ev = ds->GetEvent(ievt);
-         Int_t cls = ev->GetClass();
-         Float_t w = ev->GetWeight();
-         for (UInt_t jCls = 0; jCls < dsi->GetNClasses(); jCls++) {
-            histos_highbin.at(cls).at(jCls)->Fill(fMultiClassValues[ievt][jCls],w);
-         }
-      }
-      for (UInt_t iCls = 0; iCls < dsi->GetNClasses(); iCls++) {
-         for (UInt_t jCls = 0; jCls < dsi->GetNClasses(); jCls++) {
-            gTools().NormHist( histos_highbin.at(iCls).at(jCls) );
-            Store(histos_highbin.at(iCls).at(jCls));
-         }
-      }
+   for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
+   const Event* ev = ds->GetEvent(ievt);
+   Int_t cls = ev->GetClass();
+   Float_t w = ev->GetWeight();
+   for (UInt_t jCls = 0; jCls < dsi->GetNClasses(); jCls++) {
+   histos_highbin.at(cls).at(jCls)->Fill(fMultiClassValues[ievt][jCls],w);
+   }
+   }
+   for (UInt_t iCls = 0; iCls < dsi->GetNClasses(); iCls++) {
+   for (UInt_t jCls = 0; jCls < dsi->GetNClasses(); jCls++) {
+   gTools().NormHist( histos_highbin.at(iCls).at(jCls) );
+   Store(histos_highbin.at(iCls).at(jCls));
+   }
+   }
    }
    */
 }

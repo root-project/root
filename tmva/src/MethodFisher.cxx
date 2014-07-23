@@ -33,72 +33,72 @@
 
 //_______________________________________________________________________
 /* Begin_Html
-  Fisher and Mahalanobis Discriminants (Linear Discriminant Analysis)
+   Fisher and Mahalanobis Discriminants (Linear Discriminant Analysis)
 
-  <p>
-  In the method of Fisher discriminants event selection is performed
-  in a transformed variable space with zero linear correlations, by
-  distinguishing the mean values of the signal and background
-  distributions.<br></p>
+   <p>
+   In the method of Fisher discriminants event selection is performed
+   in a transformed variable space with zero linear correlations, by
+   distinguishing the mean values of the signal and background
+   distributions.<br></p>
 
-  <p>
-  The linear discriminant analysis determines an axis in the (correlated)
-  hyperspace of the input variables
-  such that, when projecting the output classes (signal and background)
-  upon this axis, they are pushed as far as possible away from each other,
-  while events of a same class are confined in a close vicinity.
-  The linearity property of this method is reflected in the metric with
-  which "far apart" and "close vicinity" are determined: the covariance
-  matrix of the discriminant variable space.
-  </p>
+   <p>
+   The linear discriminant analysis determines an axis in the (correlated)
+   hyperspace of the input variables
+   such that, when projecting the output classes (signal and background)
+   upon this axis, they are pushed as far as possible away from each other,
+   while events of a same class are confined in a close vicinity.
+   The linearity property of this method is reflected in the metric with
+   which "far apart" and "close vicinity" are determined: the covariance
+   matrix of the discriminant variable space.
+   </p>
 
-  <p>
-  The classification of the events in signal and background classes
-  relies on the following characteristics (only): overall sample means,
-  <i><my:o>x</my:o><sub>i</sub></i>, for each input variable, <i>i</i>,
-  class-specific sample means, <i><my:o>x</my:o><sub>S(B),i</sub></i>,
-  and total covariance matrix <i>T<sub>ij</sub></i>. The covariance matrix
-  can be decomposed into the sum of a <i>within-</i> (<i>W<sub>ij</sub></i>)
-  and a <i>between-class</i> (<i>B<sub>ij</sub></i>) class matrix. They describe
-  the dispersion of events relative to the means of their own class (within-class
-  matrix), and relative to the overall sample means (between-class matrix).
-  The Fisher coefficients, <i>F<sub>i</sub></i>, are then given by <br>
-  <center>
-  <img vspace=6 src="gif/tmva_fisherC.gif" align="bottom" >
-  </center>
-  where in TMVA is set <i>N<sub>S</sub>=N<sub>B</sub></i>, so that the factor
-  in front of the sum simplifies to &frac12;.
-  The Fisher discriminant then reads<br>
-  <center>
-  <img vspace=6 src="gif/tmva_fisherD.gif" align="bottom" >
-  </center>
-  The offset <i>F</i><sub>0</sub> centers the sample mean of <i>x</i><sub>Fi</sub>
-  at zero. Instead of using the within-class matrix, the Mahalanobis variant
-  determines the Fisher coefficients as follows:<br>
-  <center>
-  <img vspace=6 src="gif/tmva_mahaC.gif" align="bottom" >
-  </center>
-  with resulting <i>x</i><sub>Ma</sub> that are very similar to the
-  <i>x</i><sub>Fi</sub>. <br></p>
+   <p>
+   The classification of the events in signal and background classes
+   relies on the following characteristics (only): overall sample means,
+   <i><my:o>x</my:o><sub>i</sub></i>, for each input variable, <i>i</i>,
+   class-specific sample means, <i><my:o>x</my:o><sub>S(B),i</sub></i>,
+   and total covariance matrix <i>T<sub>ij</sub></i>. The covariance matrix
+   can be decomposed into the sum of a <i>within-</i> (<i>W<sub>ij</sub></i>)
+   and a <i>between-class</i> (<i>B<sub>ij</sub></i>) class matrix. They describe
+   the dispersion of events relative to the means of their own class (within-class
+   matrix), and relative to the overall sample means (between-class matrix).
+   The Fisher coefficients, <i>F<sub>i</sub></i>, are then given by <br>
+   <center>
+   <img vspace=6 src="gif/tmva_fisherC.gif" align="bottom" >
+   </center>
+   where in TMVA is set <i>N<sub>S</sub>=N<sub>B</sub></i>, so that the factor
+   in front of the sum simplifies to &frac12;.
+   The Fisher discriminant then reads<br>
+   <center>
+   <img vspace=6 src="gif/tmva_fisherD.gif" align="bottom" >
+   </center>
+   The offset <i>F</i><sub>0</sub> centers the sample mean of <i>x</i><sub>Fi</sub>
+   at zero. Instead of using the within-class matrix, the Mahalanobis variant
+   determines the Fisher coefficients as follows:<br>
+   <center>
+   <img vspace=6 src="gif/tmva_mahaC.gif" align="bottom" >
+   </center>
+   with resulting <i>x</i><sub>Ma</sub> that are very similar to the
+   <i>x</i><sub>Fi</sub>. <br></p>
 
-  TMVA provides two outputs for the ranking of the input variables:<br><p></p>
-  <ul>
-  <li> <u>Fisher test:</u> the Fisher analysis aims at simultaneously maximising
-  the between-class separation, while minimising the within-class dispersion.
-  A useful measure of the discrimination power of a variable is hence given
-  by the diagonal quantity: <i>B<sub>ii</sub>/W<sub>ii</sub></i>.
-  </li>
+   TMVA provides two outputs for the ranking of the input variables:<br><p></p>
+   <ul>
+   <li> <u>Fisher test:</u> the Fisher analysis aims at simultaneously maximising
+   the between-class separation, while minimising the within-class dispersion.
+   A useful measure of the discrimination power of a variable is hence given
+   by the diagonal quantity: <i>B<sub>ii</sub>/W<sub>ii</sub></i>.
+   </li>
 
-  <li> <u>Discrimination power:</u> the value of the Fisher coefficient is a
-  measure of the discriminating power of a variable. The discrimination power
-  of set of input variables can therefore be measured by the scalar
-  <center>
-  <img vspace=6 src="gif/tmva_discpower.gif" align="bottom" >
-  </center>
-  </li>
-  </ul>
-  The corresponding numbers are printed on standard output.
-  End_Html */
+   <li> <u>Discrimination power:</u> the value of the Fisher coefficient is a
+   measure of the discriminating power of a variable. The discrimination power
+   of set of input variables can therefore be measured by the scalar
+   <center>
+   <img vspace=6 src="gif/tmva_discpower.gif" align="bottom" >
+   </center>
+   </li>
+   </ul>
+   The corresponding numbers are printed on standard output.
+   End_Html */
 //_______________________________________________________________________
 
 #include <iomanip>
@@ -460,17 +460,17 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
 
    if ( TMath::Abs(invCov.Determinant()) < 10E-24 ) {
       Log() << kWARNING << "<GetFisherCoeff> matrix is almost singular with deterninant="
-              << TMath::Abs(invCov.Determinant()) 
-              << " did you use the variables that are linear combinations or highly correlated?" 
-              << Endl;
+            << TMath::Abs(invCov.Determinant()) 
+            << " did you use the variables that are linear combinations or highly correlated?" 
+            << Endl;
    }
    if ( TMath::Abs(invCov.Determinant()) < 10E-120 ) {
       theMat->Print();
       Log() << kFATAL << "<GetFisherCoeff> matrix is singular with determinant="
-              << TMath::Abs(invCov.Determinant())  
-              << " did you use the variables that are linear combinations? \n" 
-              << " do you any clue as to what went wrong in above printout of the covariance matrix? " 
-              << Endl;
+            << TMath::Abs(invCov.Determinant())  
+            << " did you use the variables that are linear combinations? \n" 
+            << " do you any clue as to what went wrong in above printout of the covariance matrix? " 
+            << Endl;
    }
 
    invCov.Invert();
@@ -570,13 +570,13 @@ void TMVA::MethodFisher::PrintCoefficients( void )
       // Print normalisation expression (see Tools.cxx): "2*(x - xmin)/(xmax - xmin) - 1.0"
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
          Log() << kINFO 
-                 << std::setw(maxL+9) << TString("[") + GetInputLabel(ivar) + "]' = 2*(" 
-                 << std::setw(maxL+2) << TString("[") + GetInputLabel(ivar) + "]"
-                 << std::setw(3) << (GetXmin(ivar) > 0 ? " - " : " + ")
-                 << std::setw(6) << TMath::Abs(GetXmin(ivar)) << std::setw(3) << ")/"
-                 << std::setw(6) << (GetXmax(ivar) -  GetXmin(ivar) )
-                 << std::setw(3) << " - 1"
-                 << Endl;
+               << std::setw(maxL+9) << TString("[") + GetInputLabel(ivar) + "]' = 2*(" 
+               << std::setw(maxL+2) << TString("[") + GetInputLabel(ivar) + "]"
+               << std::setw(3) << (GetXmin(ivar) > 0 ? " - " : " + ")
+               << std::setw(6) << TMath::Abs(GetXmin(ivar)) << std::setw(3) << ")/"
+               << std::setw(6) << (GetXmax(ivar) -  GetXmin(ivar) )
+               << std::setw(3) << " - 1"
+               << Endl;
       }
       Log() << kINFO << "The TMVA Reader will properly account for this normalisation, but if the" << Endl;
       Log() << kINFO << "Fisher classifier is applied outside the Reader, the transformation must be" << Endl;

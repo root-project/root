@@ -50,7 +50,7 @@ ClassImp(TMVA::SeparationBase)
 
 
 TMVA::SeparationBase::SeparationBase() :
-   fName(""),
+fName(""),
    fPrecisionCut(TMath::Sqrt(std::numeric_limits<double>::epsilon()))
 {
    // default constructor

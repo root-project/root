@@ -54,9 +54,9 @@ TMVA::OptimizeConfigParameters::OptimizeConfigParameters(MethodBase * const meth
    fNotDoneYet(kFALSE)
 {
    // Constructor which sets either "Classification or Regression"
-  std::string name = "OptimizeConfigParameters_";
-  name += std::string(GetMethod()->GetName());
-  fLogger = new MsgLogger(name);
+   std::string name = "OptimizeConfigParameters_";
+   name += std::string(GetMethod()->GetName());
+   fLogger = new MsgLogger(name);
    if (fMethod->DoRegression()){
       Log() << kFATAL << " ERROR: Sorry, Regression is not yet implement for automatic parameter optimization"
             << " --> exit" << Endl;
@@ -117,7 +117,7 @@ std::map<TString,Double_t> TMVA::OptimizeConfigParameters::optimize()
    else if (fOptimizationFitType == "FitGA" || fOptimizationFitType == "Minuit" ) this->optimizeFit();
    else {
       Log() << kFATAL << "You have chosen as optimization type " << fOptimizationFitType
-                << " that is not (yet) coded --> exit()" << Endl;
+            << " that is not (yet) coded --> exit()" << Endl;
    }
    
    Log() << kINFO << "For " << GetMethod()->GetName() << " the optimized Parameters are: " << Endl;
@@ -182,11 +182,11 @@ void TMVA::OptimizeConfigParameters::optimizeScan()
    for (UInt_t i=0; i<v.size(); i++) {
       Ntot *= v[i].size();
       Nindividual.push_back(v[i].size());
-    }
+   }
    //loop on the total number of differnt combinations
    
    for (int i=0; i<Ntot; i++){
-       UInt_t index=0;
+      UInt_t index=0;
       std::vector<int> indices = GetScanIndices(i, Nindividual );
       for (it=fTuneParameters.begin(), index=0; index< indices.size(); index++, it++){
          currentParameters[it->first] = v[index][indices[index]];
@@ -196,14 +196,14 @@ void TMVA::OptimizeConfigParameters::optimizeScan()
       for (std::map<TString,Double_t>::iterator it_print=currentParameters.begin(); 
            it_print!=currentParameters.end(); it_print++){
          Log() << kINFO << "  " << it_print->first  << " = " << it_print->second << Endl;
-       }
+      }
 
       GetMethod()->Reset();
       GetMethod()->SetTuneParameters(currentParameters);
       // now do the training for the current parameters:
       GetMethod()->BaseDir()->cd();
       if (i==0) GetMethod()->GetTransformationHandler().CalcTransformations(
-                                                                  GetMethod()->Data()->GetEventCollection());
+                                                                            GetMethod()->Data()->GetEventCollection());
       Event::SetIsTraining(kTRUE);
       GetMethod()->Train();
       Event::SetIsTraining(kFALSE);
@@ -233,8 +233,8 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
    for (it=fTuneParameters.begin(); it != fTuneParameters.end(); it++){
       ranges.push_back(new TMVA::Interval(*(it->second))); 
       pars.push_back( (it->second)->GetMean() );  // like this the order is "right". Always keep the
-                                                 // order in the vector "pars" the same as the iterator
-                                                 // iterates through the tuneParameters !!!!
+      // order in the vector "pars" the same as the iterator
+      // iterates through the tuneParameters !!!!
    }
 
    // create the fitter
@@ -242,15 +242,15 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
    FitterBase* fitter = NULL;
 
    if ( fOptimizationFitType == "Minuit"  ) {
-     TString opt="";
-     fitter = new MinuitFitter(  *this, 
-                                 "FitterMinuit_BDTOptimize", 
-                                 ranges, opt );
+      TString opt="";
+      fitter = new MinuitFitter(  *this, 
+                                  "FitterMinuit_BDTOptimize", 
+                                  ranges, opt );
    }else if ( fOptimizationFitType == "FitGA"  ) {
-     TString opt="PopSize=20:Steps=30:Cycles=3:ConvCrit=0.01:SaveBestCycle=5";
-     fitter = new GeneticFitter( *this, 
-                                 "FitterGA_BDTOptimize", 
-                                 ranges, opt );
+      TString opt="PopSize=20:Steps=30:Cycles=3:ConvCrit=0.01:SaveBestCycle=5";
+      fitter = new GeneticFitter( *this, 
+                                  "FitterGA_BDTOptimize", 
+                                  ranges, opt );
    } else {
       Log() << kWARNING << " you did not specify a valid OptimizationFitType " 
             << " will use the default (FitGA) " << Endl;
@@ -326,8 +326,8 @@ Double_t TMVA::OptimizeConfigParameters::EstimatorFunction( std::vector<Double_t
 //_______________________________________________________________________
 Double_t TMVA::OptimizeConfigParameters::GetFOM()
 {
-  // Return the Figure of Merit (FOM) used in the parameter 
-  //  optimization process
+   // Return the Figure of Merit (FOM) used in the parameter 
+   //  optimization process
   
    Double_t fom=0;
    if (fMethod->DoRegression()){

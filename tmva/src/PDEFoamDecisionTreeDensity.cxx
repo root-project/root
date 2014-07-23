@@ -50,7 +50,7 @@ ClassImp(TMVA::PDEFoamDecisionTreeDensity)
 
 //_____________________________________________________________________
 TMVA::PDEFoamDecisionTreeDensity::PDEFoamDecisionTreeDensity()
-   : PDEFoamDensityBase()
+: PDEFoamDensityBase()
    , fClass(0)
 {}
 

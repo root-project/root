@@ -1019,7 +1019,7 @@ void TMVA::Factory::TrainAllMethods()
             else methCat->fDataSetManager = fDataSetManager;
          }
          //ToDo, Do we need to fill the DataSetManager of MethodBoost here too?
-	 
+    
          m->SetAnalysisType(fAnalysisType);
          m->SetupMethod();
          m->ReadStateFromFile();

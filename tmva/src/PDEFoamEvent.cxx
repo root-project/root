@@ -47,7 +47,7 @@ ClassImp(TMVA::PDEFoamEvent)
 
 //_____________________________________________________________________
 TMVA::PDEFoamEvent::PDEFoamEvent()
-   : PDEFoam()
+: PDEFoam()
 {
    // Default constructor for streamer, user should not use it.
 }

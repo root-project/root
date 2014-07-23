@@ -61,10 +61,10 @@ Bool_t TMVA::ClassifierFactory::Register( const std::string &name, Creator creat
    // registers a classifier creator function under the method type name
 
    if(fCalls.find(name) != fCalls.end())
-      {
-         std::cerr << "ClassifierFactory<>::Register - " << name << " already exists" << std::endl;
-         return false;
-      }
+   {
+      std::cerr << "ClassifierFactory<>::Register - " << name << " already exists" << std::endl;
+      return false;
+   }
 
    return fCalls.insert(CallMap::value_type(name, creator)).second;
 }
