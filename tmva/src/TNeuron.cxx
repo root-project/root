@@ -313,10 +313,10 @@ void TMVA::TNeuron::PrintLinks(TObjArray* links) const
       synapse = (TSynapse*)links->At(i);
       Log() << kDEBUG <<  
          "\t\t\tweighta: " << synapse->GetWeight()
-           << "\t\tw-value: " << synapse->GetWeightedValue()
-           << "\t\tw-delta: " << synapse->GetWeightedDelta()
-           << "\t\tl-rate: "  << synapse->GetLearningRate()
-           << Endl;
+            << "\t\tw-value: " << synapse->GetWeightedValue()
+            << "\t\tw-delta: " << synapse->GetWeightedDelta()
+            << "\t\tl-rate: "  << synapse->GetLearningRate()
+            << Endl;
    }
 }
 

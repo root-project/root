@@ -110,9 +110,11 @@ public:
       purS->SetFillStyle( 0 );
       purS->SetLineWidth( 2 );
       purS->SetLineStyle( 5 );
+      purS->SetLineColor( 6 );
       effpurS->SetFillStyle( 0 );
       effpurS->SetLineWidth( 2 );
       effpurS->SetLineStyle( 6 );
+      effpurS->SetLineColor( 3 );
    }
 
    ClassDef(MethodInfo,0)

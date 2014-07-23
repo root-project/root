@@ -73,7 +73,7 @@ Double_t TMVA::GeneticRange::Random( Bool_t near, Double_t value, Double_t sprea
    //                        With mirror = true, the value gets "reflected" on the boundaries.
    //
    if (fInterval->GetNbins() > 0) {   // discrete interval
-       return RandomDiscrete();
+      return RandomDiscrete();
    }
    else if (fFrom == fTo) {
       return fFrom;

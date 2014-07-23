@@ -65,16 +65,16 @@ ClassImp(TMVA::MethodHMatrix)
 
 
 //_______________________________________________________________________
-TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName,
-                                    const TString& methodTitle,
-                                    DataSetInfo& theData,
-                                    const TString& theOption,
-                                    TDirectory* theTargetDir )
+   TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName,
+                                       const TString& methodTitle,
+                                       DataSetInfo& theData,
+                                       const TString& theOption,
+                                       TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, Types::kHMatrix, methodTitle, theData, theOption, theTargetDir )
-  ,fInvHMatrixS(0) 
-  ,fInvHMatrixB(0) 
-  ,fVecMeanS(0)    
-  ,fVecMeanB(0)    
+   ,fInvHMatrixS(0) 
+   ,fInvHMatrixB(0) 
+   ,fVecMeanS(0)    
+   ,fVecMeanB(0)    
 {
    // standard constructor for the H-Matrix method
 }
@@ -84,10 +84,10 @@ TMVA::MethodHMatrix::MethodHMatrix( DataSetInfo& theData,
                                     const TString& theWeightFile,
                                     TDirectory* theTargetDir )
    : TMVA::MethodBase( Types::kHMatrix, theData, theWeightFile, theTargetDir )
-  ,fInvHMatrixS(0) 
-  ,fInvHMatrixB(0) 
-  ,fVecMeanS(0)    
-  ,fVecMeanB(0)    
+   ,fInvHMatrixS(0) 
+   ,fInvHMatrixB(0) 
+   ,fVecMeanS(0)    
+   ,fVecMeanB(0)    
 {
    // constructor from weight file
 }
@@ -162,18 +162,18 @@ void TMVA::MethodHMatrix::Train( void )
             << Endl;
    }
 
-    if (TMath::Abs(fInvHMatrixS->Determinant()) < 10E-120) {
-       Log() << kFATAL << "<Train> H-matrix  S is singular with deterinant= "
-             << TMath::Abs(fInvHMatrixS->Determinant())
-             << " did you use the variables that are linear combinations ???"
-             << Endl;
-    }
-    if (TMath::Abs(fInvHMatrixB->Determinant()) < 10E-120) {
-       Log() << kFATAL << "<Train> H-matrix  B is singular with deterinant= "
-             << TMath::Abs(fInvHMatrixB->Determinant())
-             << " did you use the variables that are linear combinations ???"
-             << Endl;
-    }
+   if (TMath::Abs(fInvHMatrixS->Determinant()) < 10E-120) {
+      Log() << kFATAL << "<Train> H-matrix  S is singular with deterinant= "
+            << TMath::Abs(fInvHMatrixS->Determinant())
+            << " did you use the variables that are linear combinations ???"
+            << Endl;
+   }
+   if (TMath::Abs(fInvHMatrixB->Determinant()) < 10E-120) {
+      Log() << kFATAL << "<Train> H-matrix  B is singular with deterinant= "
+            << TMath::Abs(fInvHMatrixB->Determinant())
+            << " did you use the variables that are linear combinations ???"
+            << Endl;
+   }
 
    // invert matrix
    fInvHMatrixS->Invert();
@@ -402,12 +402,12 @@ void TMVA::MethodHMatrix::MakeClassSpecific( std::ostream& fout, const TString& 
       fout << "   Transform(inputValuesBgd," << backgroundClass << ");" << std::endl;
    }
 
-//   fout << "   for(uint i=0; i<GetNvar(); ++i) std::cout << inputValuesSig.at(i) << \"  \" << inputValuesBgd.at(i) << std::endl; " << std::endl;
+   //   fout << "   for(uint i=0; i<GetNvar(); ++i) std::cout << inputValuesSig.at(i) << \"  \" << inputValuesBgd.at(i) << std::endl; " << std::endl;
 
    fout << "   double s = GetChi2( inputValuesSig, " << Types::kSignal << " );" << std::endl;
    fout << "   double b = GetChi2( inputValuesBgd, " << Types::kBackground << " );" << std::endl;
 
-//   fout << "   std::cout << s << \"  \" << b << std::endl; " << std::endl;
+   //   fout << "   std::cout << s << \"  \" << b << std::endl; " << std::endl;
 
    fout << "   " << std::endl;
    fout << "   if (s+b <= 0) std::cout << \"Problem in class " << className << "::GetMvaValue__: s+b = \"" << std::endl;

@@ -321,7 +321,7 @@ void TMVA::Rule::PrintLogger(const char *title) const
    //
    if (title) Log() << kINFO << title;
    Log() << kINFO
-           << "Importance  = " << Form("%1.4f", fImportance/fImportanceRef) << Endl;
+         << "Importance  = " << Form("%1.4f", fImportance/fImportanceRef) << Endl;
 
    for ( UInt_t i=0; i<nvars; i++) {
       

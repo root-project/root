@@ -35,8 +35,8 @@
 ClassImp(TMVA::VariableIdentityTransform)
 
 //_______________________________________________________________________
-   TMVA::VariableIdentityTransform::VariableIdentityTransform( DataSetInfo& dsi )
-      : VariableTransformBase( dsi, Types::kIdentity, "Id" )
+TMVA::VariableIdentityTransform::VariableIdentityTransform( DataSetInfo& dsi )
+: VariableTransformBase( dsi, Types::kIdentity, "Id" )
 {
    // constructor
 }

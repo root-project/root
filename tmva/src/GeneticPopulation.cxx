@@ -64,11 +64,11 @@ TMVA::GeneticPopulation::GeneticPopulation(const std::vector<Interval*>& ranges,
 
    vector<Double_t> newEntry( fRanges.size() );
    for ( int i = 0; i < size; ++i )
-      {
-         for ( unsigned int rIt = 0; rIt < fRanges.size(); ++rIt )
-            newEntry[rIt] = fRanges[rIt]->Random();
-         fGenePool[i] = TMVA::GeneticGenes( newEntry);
-      }
+   {
+      for ( unsigned int rIt = 0; rIt < fRanges.size(); ++rIt )
+         newEntry[rIt] = fRanges[rIt]->Random();
+      fGenePool[i] = TMVA::GeneticGenes( newEntry);
+   }
 
    fPopulationSizeLimit = size;
 }
@@ -123,10 +123,10 @@ void TMVA::GeneticPopulation::MakeChildren()
 #pragma omp for
 #endif
    for ( int it = 0; it < (int) (fGenePool.size() / 2); ++it )
-      {
-         Int_t pos = (Int_t)fRandomGenerator->Integer( fGenePool.size()/2 );
-         fGenePool[(fGenePool.size() / 2) + it] = MakeSex( fGenePool[it], fGenePool[pos] );
-      }
+   {
+      Int_t pos = (Int_t)fRandomGenerator->Integer( fGenePool.size()/2 );
+      fGenePool[(fGenePool.size() / 2) + it] = MakeSex( fGenePool[it], fGenePool[pos] );
+   }
 }
 
 //_______________________________________________________________________
@@ -203,19 +203,19 @@ void TMVA::GeneticPopulation::Print( Int_t untilIndex )
    //
 
    for ( unsigned int it = 0; it < fGenePool.size(); ++it )
-      {
-         Int_t n=0;
-         if (untilIndex >= -1 ) {
-            if (untilIndex == -1 ) return;
-            untilIndex--;
-         }
-         Log() << "fitness: " << fGenePool[it].GetFitness() << "    ";
-         for (vector< Double_t >::iterator vec = fGenePool[it].GetFactors().begin(); 
-              vec < fGenePool[it].GetFactors().end(); vec++ ) {
-            Log() << "f_" << n++ << ": " << (*vec) << "     ";
-         }
-         Log() << Endl;
+   {
+      Int_t n=0;
+      if (untilIndex >= -1 ) {
+         if (untilIndex == -1 ) return;
+         untilIndex--;
       }
+      Log() << "fitness: " << fGenePool[it].GetFitness() << "    ";
+      for (vector< Double_t >::iterator vec = fGenePool[it].GetFactors().begin(); 
+           vec < fGenePool[it].GetFactors().end(); vec++ ) {
+         Log() << "f_" << n++ << ": " << (*vec) << "     ";
+      }
+      Log() << Endl;
+   }
 }
 
 //_______________________________________________________________________

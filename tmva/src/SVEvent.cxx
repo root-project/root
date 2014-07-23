@@ -33,18 +33,18 @@
 ClassImp(TMVA::SVEvent)
 
 TMVA::SVEvent::SVEvent()
-   : fDataVector(0),
-     fCweight(1.), 
-     fAlpha(0),
-     fAlpha_p(0),
-     fErrorCache(0),
-     fNVar(0),
-     fTypeFlag(0),
-     fIdx(0),
-     fNs(0),
-     fIsShrinked(0),
-     fLine(0),
-     fTarget(0)   
+: fDataVector(0),
+   fCweight(1.), 
+   fAlpha(0),
+   fAlpha_p(0),
+   fErrorCache(0),
+   fNVar(0),
+   fTypeFlag(0),
+   fIdx(0),
+   fNs(0),
+   fIsShrinked(0),
+   fLine(0),
+   fTarget(0)   
 {
 }
 

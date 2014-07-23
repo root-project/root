@@ -31,76 +31,76 @@
 //_______________________________________________________________________
 /* Begin_Html
 
-  Likelihood analysis ("non-parametric approach")
+   Likelihood analysis ("non-parametric approach")
 
-  <p>
-  Also implemented is a "diagonalized likelihood approach",
-  which improves over the uncorrelated likelihood ansatz by
-  transforming linearly the input variables into a diagonal space,
-  using the square-root of the covariance matrix
+   <p>
+   Also implemented is a "diagonalized likelihood approach",
+   which improves over the uncorrelated likelihood ansatz by
+   transforming linearly the input variables into a diagonal space,
+   using the square-root of the covariance matrix
 
-  <p>
-  The method of maximum likelihood is the most straightforward, and
-  certainly among the most elegant multivariate analyser approaches.
-  We define the likelihood ratio, <i>R<sub>L</sub></i>, for event
-  <i>i</i>, by:<br>
-  <center>
-  <img vspace=6 src="gif/tmva_likratio.gif" align="bottom" >
-  </center>
-  Here the signal and background likelihoods, <i>L<sub>S</sub></i>,
-  <i>L<sub>B</sub></i>, are products of the corresponding probability
-  densities, <i>p<sub>S</sub></i>, <i>p<sub>B</sub></i>, of the
-  <i>N</i><sub>var</sub> discriminating variables used in the MVA: <br>
-  <center>
-  <img vspace=6 src="gif/tmva_lik.gif" align="bottom" >
-  </center>
-  and accordingly for L<sub>B</sub>.
-  In practise, TMVA uses polynomial splines to estimate the probability
-  density functions (PDF) obtained from the distributions of the
-  training variables.<br>
+   <p>
+   The method of maximum likelihood is the most straightforward, and
+   certainly among the most elegant multivariate analyser approaches.
+   We define the likelihood ratio, <i>R<sub>L</sub></i>, for event
+   <i>i</i>, by:<br>
+   <center>
+   <img vspace=6 src="gif/tmva_likratio.gif" align="bottom" >
+   </center>
+   Here the signal and background likelihoods, <i>L<sub>S</sub></i>,
+   <i>L<sub>B</sub></i>, are products of the corresponding probability
+   densities, <i>p<sub>S</sub></i>, <i>p<sub>B</sub></i>, of the
+   <i>N</i><sub>var</sub> discriminating variables used in the MVA: <br>
+   <center>
+   <img vspace=6 src="gif/tmva_lik.gif" align="bottom" >
+   </center>
+   and accordingly for L<sub>B</sub>.
+   In practise, TMVA uses polynomial splines to estimate the probability
+   density functions (PDF) obtained from the distributions of the
+   training variables.<br>
 
-  <p>
-  Note that in TMVA the output of the likelihood ratio is transformed
-  by<br>
-  <center>
-  <img vspace=6 src="gif/tmva_likratio_trans.gif" align="bottom"/>
-  </center>
-  to avoid the occurrence of heavy peaks at <i>R<sub>L</sub></i>=0,1.
+   <p>
+   Note that in TMVA the output of the likelihood ratio is transformed
+   by<br>
+   <center>
+   <img vspace=6 src="gif/tmva_likratio_trans.gif" align="bottom"/>
+   </center>
+   to avoid the occurrence of heavy peaks at <i>R<sub>L</sub></i>=0,1.
 
-  <b>Decorrelated (or "diagonalized") Likelihood</b>
+   <b>Decorrelated (or "diagonalized") Likelihood</b>
 
-  <p>
-  The biggest drawback of the Likelihood approach is that it assumes
-  that the discriminant variables are uncorrelated. If it were the case,
-  it can be proven that the discrimination obtained by the above likelihood
-  ratio is optimal, ie, no other method can beat it. However, in most
-  practical applications of MVAs correlations are present. <br><p></p>
+   <p>
+   The biggest drawback of the Likelihood approach is that it assumes
+   that the discriminant variables are uncorrelated. If it were the case,
+   it can be proven that the discrimination obtained by the above likelihood
+   ratio is optimal, ie, no other method can beat it. However, in most
+   practical applications of MVAs correlations are present. <br><p></p>
 
-  <p>
-  Linear correlations, measured from the training sample, can be taken
-  into account in a straightforward manner through the square-root
-  of the covariance matrix. The square-root of a matrix
-  <i>C</i> is the matrix <i>C&prime;</i> that multiplied with itself
-  yields <i>C</i>: <i>C</i>=<i>C&prime;C&prime;</i>. We compute the
-  square-root matrix (SQM) by means of diagonalising (<i>D</i>) the
-  covariance matrix: <br>
-  <center>
-  <img vspace=6 src="gif/tmva_sqm.gif" align="bottom" >
-  </center>
-  and the linear transformation of the linearly correlated into the
-  uncorrelated variables space is then given by multiplying the measured
-  variable tuple by the inverse of the SQM. Note that these transformations
-  are performed for both signal and background separately, since the
-  correlation pattern is not the same in the two samples.
+   <p>
+   Linear correlations, measured from the training sample, can be taken
+   into account in a straightforward manner through the square-root
+   of the covariance matrix. The square-root of a matrix
+   <i>C</i> is the matrix <i>C&prime;</i> that multiplied with itself
+   yields <i>C</i>: <i>C</i>=<i>C&prime;C&prime;</i>. We compute the
+   square-root matrix (SQM) by means of diagonalising (<i>D</i>) the
+   covariance matrix: <br>
+   <center>
+   <img vspace=6 src="gif/tmva_sqm.gif" align="bottom" >
+   </center>
+   and the linear transformation of the linearly correlated into the
+   uncorrelated variables space is then given by multiplying the measured
+   variable tuple by the inverse of the SQM. Note that these transformations
+   are performed for both signal and background separately, since the
+   correlation pattern is not the same in the two samples.
 
-  <p>
-  The above diagonalisation is complete for linearly correlated,
-  Gaussian distributed variables only. In real-world examples this
-  is not often the case, so that only little additional information
-  may be recovered by the diagonalisation procedure. In these cases,
-  non-linear methods must be applied.
+   <p>
+   The above diagonalisation is complete for linearly correlated,
+   Gaussian distributed variables only. In real-world examples this
+   is not often the case, so that only little additional information
+   may be recovered by the diagonalisation procedure. In these cases,
+   non-linear methods must be applied.
 
-End_Html */
+   End_Html */
 //_______________________________________________________________________
 
 #include <iomanip>
@@ -127,11 +127,11 @@ REGISTER_METHOD(Likelihood)
 ClassImp(TMVA::MethodLikelihood)
 
 //_______________________________________________________________________
-TMVA::MethodLikelihood::MethodLikelihood( const TString& jobName,
-                                          const TString& methodTitle,
-                                          DataSetInfo& theData,
-                                          const TString& theOption,
-                                          TDirectory* theTargetDir ) :
+   TMVA::MethodLikelihood::MethodLikelihood( const TString& jobName,
+                                             const TString& methodTitle,
+                                             DataSetInfo& theData,
+                                             const TString& theOption,
+                                             TDirectory* theTargetDir ) :
    TMVA::MethodBase( jobName, Types::kLikelihood, methodTitle, theData, theOption, theTargetDir ),
    fEpsilon       ( 1.e3 * DBL_MIN ),
    fTransformLikelihoodOutput( kFALSE ),

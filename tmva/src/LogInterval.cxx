@@ -21,57 +21,57 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 /* Begin_Html
-<center><h2>the TMVA::Interval Class</h2></center>
+   <center><h2>the TMVA::Interval Class</h2></center>
 
-<ul>
+   <ul>
    <li> LogInterval definition, continuous and discrete
    <ul>
-         <li>  LogInterval(min,max)  : a continous interval [min,max]
-         <li>  LogInterval(min,max,n): a "discrete interval" [min,max], i.e the n numbers:<br>
-         1,10,100,1000  <br>
-         1,2,4,8,16,32,64,128,512,1024 <br>
-         or alike .. <br>
+   <li>  LogInterval(min,max)  : a continous interval [min,max]
+   <li>  LogInterval(min,max,n): a "discrete interval" [min,max], i.e the n numbers:<br>
+   1,10,100,1000  <br>
+   1,2,4,8,16,32,64,128,512,1024 <br>
+   or alike .. <br>
 
    </ul>
-</ul>
-<pre>
-    Example:             
- LogInterval(1,10000,5)                                          
-     i=0 --> 1               note: StepSize(ibin=0) =  not defined !!  
-     i=1 --> 10                    StepSize(ibin=1) = 9              
-     i=2 --> 100                   StepSize(ibin=2) = 99                         
-     i=3 --> 1000                  StepSize(ibin=3) = 999                     
-     i=4 --> 10000                 StepSize(ibin=4) = 9999                 
+   </ul>
+   <pre>
+   Example:             
+   LogInterval(1,10000,5)                                          
+   i=0 --> 1               note: StepSize(ibin=0) =  not defined !!  
+   i=1 --> 10                    StepSize(ibin=1) = 9              
+   i=2 --> 100                   StepSize(ibin=2) = 99                         
+   i=3 --> 1000                  StepSize(ibin=3) = 999                     
+   i=4 --> 10000                 StepSize(ibin=4) = 9999                 
                                                 
- LogInterval(1,1000,11)                     
-    i=0 --> 1                           
-    i=1 --> 1.99526                 
-    i=2 --> 3.98107             
-    i=3 --> 7.94328         
-    i=4 --> 15.8489      
-    i=5 --> 31.6228      
-    i=6 --> 63.0957      
-    i=7 --> 125.893      
-    i=8 --> 251.189      
-    i=9 --> 501.187      
-    i=10 --> 1000        
+   LogInterval(1,1000,11)                     
+   i=0 --> 1                           
+   i=1 --> 1.99526                 
+   i=2 --> 3.98107             
+   i=3 --> 7.94328         
+   i=4 --> 15.8489      
+   i=5 --> 31.6228      
+   i=6 --> 63.0957      
+   i=7 --> 125.893      
+   i=8 --> 251.189      
+   i=9 --> 501.187      
+   i=10 --> 1000        
                          
- LogInterval(1,1024,11)  
-    i=0 --> 1            
-    i=1 --> 2            
-    i=2 --> 4            
-    i=3 --> 8            
-    i=4 --> 16           
-    i=5 --> 32           
-    i=6 --> 64           
-    i=7 --> 128          
-    i=8 --> 256          
-    i=9 --> 512          
-    i=10 --> 1024        
+   LogInterval(1,1024,11)  
+   i=0 --> 1            
+   i=1 --> 2            
+   i=2 --> 4            
+   i=3 --> 8            
+   i=4 --> 16           
+   i=5 --> 32           
+   i=6 --> 64           
+   i=7 --> 128          
+   i=8 --> 256          
+   i=9 --> 512          
+   i=10 --> 1024        
 
 
-</pre>
-End_Html */
+   </pre>
+   End_Html */
 
 #include "TMath.h"
 #include "TRandom3.h"
@@ -84,7 +84,7 @@ ClassImp(TMVA::LogInterval)
 TMVA::MsgLogger* TMVA::LogInterval::fgLogger = 0;
 //_______________________________________________________________________
 TMVA::LogInterval::LogInterval( Double_t min, Double_t max, Int_t nbins ) :
-TMVA::Interval(min,max,nbins)
+   TMVA::Interval(min,max,nbins)
 {
    if (!fgLogger) fgLogger = new MsgLogger("LogInterval");
    if (min<=0) Log() << kFATAL << "logarithmic intervals have to have Min>0 !!" << Endl;

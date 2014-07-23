@@ -52,7 +52,7 @@ ClassImp(TMVA::VariableDecorrTransform)
 
 //_______________________________________________________________________
 TMVA::VariableDecorrTransform::VariableDecorrTransform( DataSetInfo& dsi )
-  : VariableTransformBase( dsi, Types::kDecorrelated, "Deco" )
+: VariableTransformBase( dsi, Types::kDecorrelated, "Deco" )
 { 
    // constructor
 }
@@ -200,14 +200,14 @@ const TMVA::Event* TMVA::VariableDecorrTransform::Transform( const TMVA::Event* 
       UInt_t numMasked = std::count(mask.begin(), mask.end(), (Char_t)kTRUE);
       UInt_t numOK     = std::count(mask.begin(), mask.end(), (Char_t)kFALSE);
       if( numMasked>0 && numOK>0 ){
-	 Log() << kFATAL << "You mixed variables and targets in the decorrelation transformation. This is not possible." << Endl;
+         Log() << kFATAL << "You mixed variables and targets in the decorrelation transformation. This is not possible." << Endl;
       }
       SetOutput( fTransformedEvent, input, mask, ev );
       return fTransformedEvent;
    }
 
    TVectorD vec( nvar );
-  for (Int_t ivar=0; ivar<nvar; ivar++) vec(ivar) = input.at(ivar);
+   for (Int_t ivar=0; ivar<nvar; ivar++) vec(ivar) = input.at(ivar);
 
    // diagonalise variable vectors
    vec *= *m;

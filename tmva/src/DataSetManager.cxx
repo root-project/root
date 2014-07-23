@@ -63,7 +63,7 @@ TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput )
 TMVA::DataSetManager::~DataSetManager()
 {
    // destructor
-//   fDataSetInfoCollection.SetOwner(); // DSMTEST --> created a segfault because the DataSetInfo-objects got deleted twice
+   //   fDataSetInfoCollection.SetOwner(); // DSMTEST --> created a segfault because the DataSetInfo-objects got deleted twice
 
    TMVA::DataSetFactory::destroyInstance();
    

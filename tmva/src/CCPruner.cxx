@@ -31,7 +31,7 @@
 #include <limits>
 #include <math.h>
 
- using namespace TMVA;
+using namespace TMVA;
 
 //_______________________________________________________________________
 CCPruner::CCPruner( DecisionTree* t_max, const EventList* validationSample,

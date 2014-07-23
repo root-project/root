@@ -64,7 +64,7 @@ TMVA::MethodCompositeBase::MethodCompositeBase( const TString& jobName,
                                                 DataSetInfo& theData,
                                                 const TString& theOption,
                                                 TDirectory* theTargetDir )
-   : TMVA::MethodBase( jobName, methodType, methodTitle, theData, theOption, theTargetDir ),
+: TMVA::MethodBase( jobName, methodType, methodTitle, theData, theOption, theTargetDir ),
    fCurrentMethodIdx(0), fCurrentMethod(0)
 {}
 
@@ -74,7 +74,7 @@ TMVA::MethodCompositeBase::MethodCompositeBase( Types::EMVA methodType,
                                                 const TString& weightFile,
                                                 TDirectory* theTargetDir )
    : TMVA::MethodBase( methodType, dsi, weightFile, theTargetDir ),
-   fCurrentMethodIdx(0), fCurrentMethod(0)     
+     fCurrentMethodIdx(0), fCurrentMethod(0)     
 {}
 
 //_______________________________________________________________________
@@ -180,7 +180,7 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
          ((TMVA::MethodBoost*)this)->BookMethod( Types::Instance().GetMethodType( methodTypeName), methodName,  optionString );
       }
       fMethods.push_back(ClassifierFactory::Instance().Create(
-         std::string(methodTypeName),jobName, methodName,DataInfo(),optionString));
+                                                              std::string(methodTypeName),jobName, methodName,DataInfo(),optionString));
 
       fMethodWeight.push_back(methodWeight);
       MethodBase* meth = dynamic_cast<MethodBase*>(fMethods.back());
@@ -211,7 +211,7 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( std::istream& istr )
    // text streamer
    TString var, dummy;
    TString methodName, methodTitle=GetMethodName(),
-    jobName=GetJobName(),optionString=GetOptions();
+      jobName=GetJobName(),optionString=GetOptions();
    UInt_t methodNum; Double_t methodWeight;
    // and read the Weights (BDT coefficients)
    // coverity[tainted_data_argument]

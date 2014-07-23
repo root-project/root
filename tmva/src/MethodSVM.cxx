@@ -73,8 +73,8 @@ REGISTER_METHOD(SVM)
 ClassImp(TMVA::MethodSVM)
 
 //_______________________________________________________________________
-TMVA::MethodSVM::MethodSVM( const TString& jobName, const TString& methodTitle, DataSetInfo& theData,
-                            const TString& theOption, TDirectory* theTargetDir )
+   TMVA::MethodSVM::MethodSVM( const TString& jobName, const TString& methodTitle, DataSetInfo& theData,
+                               const TString& theOption, TDirectory* theTargetDir )
    : MethodBase( jobName, Types::kSVM, methodTitle, theData, theOption, theTargetDir )
    , fCost(0)
    , fTolerance(0)

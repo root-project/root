@@ -41,7 +41,7 @@ ClassImp(TMVA::PDEFoamKernelTrivial)
 
 //_____________________________________________________________________
 TMVA::PDEFoamKernelTrivial::PDEFoamKernelTrivial()
-   : PDEFoamKernelBase()
+: PDEFoamKernelBase()
 {
    // Default constructor for streamer
 }

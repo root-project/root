@@ -33,17 +33,17 @@
 //_______________________________________________________________________
 /* Begin_Html
 
-  Plugins analysis                       
+   Plugins analysis                       
   
-  <p>
-  The MethodPlugins is actually not a real method, but it is just a wrapper to call the TPluginsManager of ROOT and find 
-  a external method which can be used to extend TMVA by another classifier. The only methods which are actually really implemented are the 
-  constructors which fulfill the plugins handling. The others will produce FATAL warnings and stop TMVA execution.
-  <p>
-  Right after the constructor, the additional method 'getPlugedinMethod()' is called, which returns the method loaded by the plugin manager,
-  and the MethodPlugins object is already deleted.
+   <p>
+   The MethodPlugins is actually not a real method, but it is just a wrapper to call the TPluginsManager of ROOT and find 
+   a external method which can be used to extend TMVA by another classifier. The only methods which are actually really implemented are the 
+   constructors which fulfill the plugins handling. The others will produce FATAL warnings and stop TMVA execution.
+   <p>
+   Right after the constructor, the additional method 'getPlugedinMethod()' is called, which returns the method loaded by the plugin manager,
+   and the MethodPlugins object is already deleted.
 
-End_Html */
+   End_Html */
 //_______________________________________________________________________
 
 #include "TPluginManager.h"
@@ -75,10 +75,10 @@ namespace
       else myMethodTitle = methodTitle;
       pluginHandler = pluginManager->FindHandler("TMVA@@MethodBase", myMethodTitle);
       if(!pluginHandler)
-         { 
-            std::cerr <<  "Couldn't find plugin handler for TMVA@@MethodBase and " << methodTitle << std::endl;
-            return 0;
-         }
+      { 
+         std::cerr <<  "Couldn't find plugin handler for TMVA@@MethodBase and " << methodTitle << std::endl;
+         return 0;
+      }
       //std::cout << "pluginHandler found myMethodTitle=" << myMethodTitle<<std::endl;
       if (pluginHandler->LoadPlugin() == 0) {
          if(jobName=="" && methodTitle=="") { 
@@ -92,10 +92,10 @@ namespace
       }
       //std::cout << "plugin done" << std::endl;
       return 0; // end of function should never be reached. This is here to silence the compiler
-	}
+   }
 
    Bool_t RegisteredMethod = TMVA::ClassifierFactory::Instance(). 
-                          Register("Plugins", CreateMethodPlugins);                         
+                       Register("Plugins", CreateMethodPlugins);                         
    Bool_t AddedTypeMapping = TMVA::Types::Instance().AddTypeMapping(TMVA::Types::kPlugins, "Plugins"); 
 
 }

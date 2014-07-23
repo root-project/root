@@ -52,11 +52,11 @@ REGISTER_METHOD(KNN)
 ClassImp(TMVA::MethodKNN)
 
 //_______________________________________________________________________
-TMVA::MethodKNN::MethodKNN( const TString& jobName,
-                            const TString& methodTitle,
-                            DataSetInfo& theData, 
-                            const TString& theOption,
-                            TDirectory* theTargetDir ) 
+   TMVA::MethodKNN::MethodKNN( const TString& jobName,
+                               const TString& methodTitle,
+                               DataSetInfo& theData, 
+                               const TString& theOption,
+                               TDirectory* theTargetDir ) 
    : TMVA::MethodBase(jobName, Types::kKNN, methodTitle, theData, theOption, theTargetDir)
    , fSumOfWeightsS(0)
    , fSumOfWeightsB(0)
@@ -854,14 +854,14 @@ Double_t TMVA::MethodKNN::getKernelRadius(const kNN::List &rlist) const
    const UInt_t knn = static_cast<UInt_t>(fnkNN);
 
    for (kNN::List::const_iterator lit = rlist.begin(); lit != rlist.end(); ++lit)
-      {
-         if (!(lit->second > 0.0)) continue;         
+   {
+      if (!(lit->second > 0.0)) continue;         
       
-         if (kradius < lit->second || kradius < 0.0) kradius = lit->second;
+      if (kradius < lit->second || kradius < 0.0) kradius = lit->second;
       
-         ++kcount;
-         if (kcount >= knn) break;
-      }
+      ++kcount;
+      if (kcount >= knn) break;
+   }
    
    return kradius;
 }
@@ -877,29 +877,29 @@ const std::vector<Double_t> TMVA::MethodKNN::getRMS(const kNN::List &rlist, cons
    const UInt_t knn = static_cast<UInt_t>(fnkNN);
 
    for (kNN::List::const_iterator lit = rlist.begin(); lit != rlist.end(); ++lit)
-      {
-         if (!(lit->second > 0.0)) continue;         
+   {
+      if (!(lit->second > 0.0)) continue;         
       
-         const kNN::Node<kNN::Event> *node_ = lit -> first;
-         const kNN::Event &event_ = node_-> GetEvent();
+      const kNN::Node<kNN::Event> *node_ = lit -> first;
+      const kNN::Event &event_ = node_-> GetEvent();
       
-         if (rvec.empty()) {
-            rvec.insert(rvec.end(), event_.GetNVar(), 0.0);
-         }
-         else if (rvec.size() != event_.GetNVar()) {
-            Log() << kFATAL << "Wrong number of variables, should never happen!" << Endl;
-            rvec.clear();
-            return rvec;
-         }
-
-         for(unsigned int ivar = 0; ivar < event_.GetNVar(); ++ivar) {
-            const Double_t diff_ = event_.GetVar(ivar) - event_knn.GetVar(ivar);
-            rvec[ivar] += diff_*diff_;
-         }
-
-         ++kcount;
-         if (kcount >= knn) break;
+      if (rvec.empty()) {
+         rvec.insert(rvec.end(), event_.GetNVar(), 0.0);
       }
+      else if (rvec.size() != event_.GetNVar()) {
+         Log() << kFATAL << "Wrong number of variables, should never happen!" << Endl;
+         rvec.clear();
+         return rvec;
+      }
+
+      for(unsigned int ivar = 0; ivar < event_.GetNVar(); ++ivar) {
+         const Double_t diff_ = event_.GetVar(ivar) - event_knn.GetVar(ivar);
+         rvec[ivar] += diff_*diff_;
+      }
+
+      ++kcount;
+      if (kcount >= knn) break;
+   }
 
    if (kcount < 1) {
       Log() << kFATAL << "Bad event kcount = " << kcount << Endl;

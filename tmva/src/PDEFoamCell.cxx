@@ -41,19 +41,19 @@ ClassImp(TMVA::PDEFoamCell)
 
 //_____________________________________________________________________
 TMVA::PDEFoamCell::PDEFoamCell()
-   : TObject(),
-     fDim(0),
-     fSerial(0),
-     fStatus(1),
-     fParent(0),
-     fDaught0(0),
-     fDaught1(0),
-     fXdiv(0.0),
-     fBest(0),
-     fVolume(0.0),
-     fIntegral(0.0),
-     fDrive(0.0),
-     fElement(0)
+: TObject(),
+   fDim(0),
+   fSerial(0),
+   fStatus(1),
+   fParent(0),
+   fDaught0(0),
+   fDaught1(0),
+   fXdiv(0.0),
+   fBest(0),
+   fVolume(0.0),
+   fIntegral(0.0),
+   fDrive(0.0),
+   fElement(0)
 {
    // Default constructor for streamer
 }

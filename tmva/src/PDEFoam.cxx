@@ -931,8 +931,8 @@ void TMVA::PDEFoam::PrintCell(Long_t iCell)
    TVectorD *vec = (TVectorD*)fCells[iCell]->GetElement();
    if (vec != NULL){
       for (Int_t i=0; i<vec->GetNrows(); i++){
-	 if (i>0) Log() << ", ";
-	 Log() << GetCellElement(fCells[iCell], i);
+         if (i>0) Log() << ", ";
+         Log() << GetCellElement(fCells[iCell], i);
       }
    } else
       Log() << "not set";
@@ -1057,7 +1057,7 @@ std::vector<Float_t> TMVA::PDEFoam::GetCellValue( const std::map<Int_t,Float_t>&
    std::vector<Float_t> cell_values;
    cell_values.reserve(cells.size());
    for (std::vector<PDEFoamCell*>::const_iterator cell_it=cells.begin();
-	cell_it != cells.end(); ++cell_it)
+        cell_it != cells.end(); ++cell_it)
       cell_values.push_back(GetCellValue(*cell_it, cv));
 
    return cell_values;
@@ -1223,7 +1223,7 @@ TH1D* TMVA::PDEFoam::Draw1Dim( ECellValue cell_value, Int_t nbin, PDEFoamKernelB
    // avoid plotting of wrong dimensions
    if ( GetTotDim()!=1 )
       Log() << kFATAL << "<Draw1Dim>: function can only be used for 1-dimensional foams!"
-	    << Endl;
+            << Endl;
 
    TString hname("h_1dim");
    TH1D* h1=(TH1D*)gDirectory->Get(hname);
@@ -1239,10 +1239,10 @@ TH1D* TMVA::PDEFoam::Draw1Dim( ECellValue cell_value, Int_t nbin, PDEFoamKernelB
       txvec.push_back( VarTransform(0, h1->GetBinCenter(ibinx)) );
       Float_t val = 0;
       if (kernel != NULL) {
-	 // get cell value using the kernel
-	 val = kernel->Estimate(this, txvec, cell_value);
+         // get cell value using the kernel
+         val = kernel->Estimate(this, txvec, cell_value);
       } else {
-	 val = GetCellValue(FindCell(txvec), cell_value);
+         val = GetCellValue(FindCell(txvec), cell_value);
       }
       // fill value to histogram
       h1->SetBinContent(ibinx, val + h1->GetBinContent(ibinx));
@@ -1277,7 +1277,7 @@ TH2D* TMVA::PDEFoam::Project2( Int_t idim1, Int_t idim2, ECellValue cell_value, 
        (idim2>=GetTotDim()) || (idim2<0) ||
        (idim1==idim2) )
       Log() << kFATAL << "<Project2>: wrong dimensions given: "
-	    << idim1 << ", " << idim2 << Endl;
+            << idim1 << ", " << idim2 << Endl;
 
    // root can not handle too many bins in one histogram --> catch this
    // Furthermore, to have more than 1000 bins in the histogram doesn't make
@@ -1306,43 +1306,43 @@ TH2D* TMVA::PDEFoam::Project2( Int_t idim1, Int_t idim2, ECellValue cell_value, 
    // loop over all histogram bins (2-dim)
    for (Int_t xbin = 1; xbin <= h1->GetNbinsX(); ++xbin) {
       for (Int_t ybin = 1; ybin <= h1->GetNbinsY(); ++ybin) {
-	 // calculate the phase space point, which corresponds to this
-	 // bin combination
-	 std::map<Int_t, Float_t> txvec;
-	 txvec[idim1] = VarTransform(idim1, h1->GetXaxis()->GetBinCenter(xbin));
-	 txvec[idim2] = VarTransform(idim2, h1->GetYaxis()->GetBinCenter(ybin));
+         // calculate the phase space point, which corresponds to this
+         // bin combination
+         std::map<Int_t, Float_t> txvec;
+         txvec[idim1] = VarTransform(idim1, h1->GetXaxis()->GetBinCenter(xbin));
+         txvec[idim2] = VarTransform(idim2, h1->GetYaxis()->GetBinCenter(ybin));
 
-	 // find the cells, which corresponds to this phase space
-	 // point
-	 std::vector<TMVA::PDEFoamCell*> cells = FindCells(txvec);
+         // find the cells, which corresponds to this phase space
+         // point
+         std::vector<TMVA::PDEFoamCell*> cells = FindCells(txvec);
 
-	 // loop over cells and fill the histogram with the cell
-	 // values
-	 Float_t sum_cv = 0; // sum of the cell values
-	 for (std::vector<TMVA::PDEFoamCell*>::const_iterator it = cells.begin();
-	      it != cells.end(); ++it) {
-	    // get cell position and size
-	    PDEFoamVect cellPosi(GetTotDim()), cellSize(GetTotDim());
-	    (*it)->GetHcub(cellPosi,cellSize);
-	    // Create complete event vector from txvec.  The missing
-	    // coordinates of txvec are set to the cell center.
-	    std::vector<Float_t> tvec;
-	    for (Int_t i=0; i<GetTotDim(); ++i) {
-	       if ( i != idim1 && i != idim2 )
-	 	  tvec.push_back(cellPosi[i] + 0.5*cellSize[i]);
-	       else
-	 	  tvec.push_back(txvec[i]);
-	    }
-	    if (kernel != NULL) {
-	       // get the cell value using the kernel
-	       sum_cv += kernel->Estimate(this, tvec, cell_value);
-	    } else {
-	       sum_cv += GetCellValue(FindCell(tvec), cell_value);
-	    }
-	 }
+         // loop over cells and fill the histogram with the cell
+         // values
+         Float_t sum_cv = 0; // sum of the cell values
+         for (std::vector<TMVA::PDEFoamCell*>::const_iterator it = cells.begin();
+              it != cells.end(); ++it) {
+            // get cell position and size
+            PDEFoamVect cellPosi(GetTotDim()), cellSize(GetTotDim());
+            (*it)->GetHcub(cellPosi,cellSize);
+            // Create complete event vector from txvec.  The missing
+            // coordinates of txvec are set to the cell center.
+            std::vector<Float_t> tvec;
+            for (Int_t i=0; i<GetTotDim(); ++i) {
+               if ( i != idim1 && i != idim2 )
+                  tvec.push_back(cellPosi[i] + 0.5*cellSize[i]);
+               else
+                  tvec.push_back(txvec[i]);
+            }
+            if (kernel != NULL) {
+               // get the cell value using the kernel
+               sum_cv += kernel->Estimate(this, tvec, cell_value);
+            } else {
+               sum_cv += GetCellValue(FindCell(tvec), cell_value);
+            }
+         }
 
-	 // fill the bin content
-	 h1->SetBinContent(xbin, ybin, sum_cv + h1->GetBinContent(xbin, ybin));
+         // fill the bin content
+         h1->SetBinContent(xbin, ybin, sum_cv + h1->GetBinContent(xbin, ybin));
       }
    }
 
@@ -1384,7 +1384,7 @@ Float_t TMVA::PDEFoam::GetCellValue(const PDEFoamCell* cell, ECellValue cv)
             Log() << kWARNING << "<GetCellDensity(cell)>: WARNING: cell volume"
                   << " close to zero!"
                   << " cell volume: " << volume << Endl;
-	 }
+         }
       }
    }
       return 0;
@@ -1397,7 +1397,7 @@ Float_t TMVA::PDEFoam::GetCellValue(const PDEFoamCell* cell, ECellValue cv)
 
    case kRmsOvMean:
       if (cell->GetIntg() != 0)
-	 return cell->GetDriv()/cell->GetIntg();
+         return cell->GetDriv()/cell->GetIntg();
       else
          return 0;
 
@@ -1447,10 +1447,10 @@ void TMVA::PDEFoam::SetCellElement( PDEFoamCell *cell, UInt_t i, Double_t value 
       // dynamic_cast doesn't seem to work here ?!
       vec = (TVectorD*)cell->GetElement();
       if (!vec)
-	 Log() << kFATAL << "<SetCellElement> ERROR: cell element is not a TVectorD*" << Endl;
+         Log() << kFATAL << "<SetCellElement> ERROR: cell element is not a TVectorD*" << Endl;
       // check vector size and resize if necessary
       if (i >= (UInt_t) vec->GetNrows())
-	 vec->ResizeTo(0,i);
+         vec->ResizeTo(0,i);
       // set element i to value
       (*vec)(i) = value;
    }

@@ -76,12 +76,12 @@ ClassImp(TMVA::PDEFoamDensityBase)
 
 //_____________________________________________________________________
 TMVA::PDEFoamDensityBase::PDEFoamDensityBase()
-   : TObject(),
-     fBox(),
-     fBoxVolume(1.0),
-     fBoxHasChanged(kTRUE),
-     fBst(new TMVA::BinarySearchTree()),
-     fLogger(new MsgLogger("PDEFoamDensityBase"))
+: TObject(),
+   fBox(),
+   fBoxVolume(1.0),
+   fBoxHasChanged(kTRUE),
+   fBst(new TMVA::BinarySearchTree()),
+   fLogger(new MsgLogger("PDEFoamDensityBase"))
 {}
 
 //_____________________________________________________________________

@@ -38,7 +38,7 @@ ClassImp(TMVA::TSpline2)
 
 //_______________________________________________________________________
 TMVA::TSpline2::TSpline2( const TString& title, TGraph* theGraph )
-   : fGraph( theGraph ) // not owned by TSpline2
+: fGraph( theGraph ) // not owned by TSpline2
 {
    // constructor from TGraph
    // TSpline is a TNamed object

@@ -56,7 +56,7 @@ ClassImp(TMVA::PDEFoamDiscriminant)
 
 //_____________________________________________________________________
 TMVA::PDEFoamDiscriminant::PDEFoamDiscriminant()
-   : PDEFoam()
+: PDEFoam()
    , fClass(0)
 {
    // Default constructor for streamer, user should not use it.

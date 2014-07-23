@@ -506,100 +506,100 @@ Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
       
       //TODO check this conditions, are they proper
       if((caseA == kFALSE) && (b_alpha_i > 0 || (b_alpha_i_p == 0 && deltafi > 0)) && (b_alpha_j > 0 || (b_alpha_j_p == 0 && deltafi < 0)))
-         {
-            //compute low, high w.r.t a_i, a_j
-            low  = TMath::Max( null, gamma - b_cost_j );
-            high = TMath::Min( b_cost_i , gamma);
+      {
+         //compute low, high w.r.t a_i, a_j
+         low  = TMath::Max( null, gamma - b_cost_j );
+         high = TMath::Min( b_cost_i , gamma);
          
-            if(low<high){
-               tmp_alpha_j = b_alpha_j - (deltafi/eta);
-               tmp_alpha_j = TMath::Min(tmp_alpha_j,high      );
-               tmp_alpha_j = TMath::Max(low        ,tmp_alpha_j);
-               tmp_alpha_i = b_alpha_i - (tmp_alpha_j - b_alpha_j);
+         if(low<high){
+            tmp_alpha_j = b_alpha_j - (deltafi/eta);
+            tmp_alpha_j = TMath::Min(tmp_alpha_j,high      );
+            tmp_alpha_j = TMath::Max(low        ,tmp_alpha_j);
+            tmp_alpha_i = b_alpha_i - (tmp_alpha_j - b_alpha_j);
             
-               //update Li & Lj if change is significant (??)
-               if( IsDiffSignificant(b_alpha_j,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i,tmp_alpha_i, epsilon)){
-                  b_alpha_j = tmp_alpha_j;
-                  b_alpha_i = tmp_alpha_i;
-               }
-            
+            //update Li & Lj if change is significant (??)
+            if( IsDiffSignificant(b_alpha_j,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i,tmp_alpha_i, epsilon)){
+               b_alpha_j = tmp_alpha_j;
+               b_alpha_i = tmp_alpha_i;
             }
-            else
-               terminated = kTRUE;
-         
-            caseA = kTRUE;
+            
          }
+         else
+            terminated = kTRUE;
+         
+         caseA = kTRUE;
+      }
       else if((caseB==kFALSE) && (b_alpha_i>0 || (b_alpha_i_p==0 && deltafi >2*epsilon )) && (b_alpha_j_p>0 || (b_alpha_j==0 && deltafi>2*epsilon)))
-         {
-            //compute LH w.r.t. a_i, a_j*
-            low  = TMath::Max( null, gamma );  //TODO 
-            high = TMath::Min( b_cost_i , b_cost_j + gamma);
+      {
+         //compute LH w.r.t. a_i, a_j*
+         low  = TMath::Max( null, gamma );  //TODO 
+         high = TMath::Min( b_cost_i , b_cost_j + gamma);
 
          
-            if(low<high){
-               tmp_alpha_j = b_alpha_j_p - ((deltafi-2*epsilon)/eta);
-               tmp_alpha_j = TMath::Min(tmp_alpha_j,high);
-               tmp_alpha_j = TMath::Max(low,tmp_alpha_j);
-               tmp_alpha_i = b_alpha_i - (tmp_alpha_j - b_alpha_j_p);
+         if(low<high){
+            tmp_alpha_j = b_alpha_j_p - ((deltafi-2*epsilon)/eta);
+            tmp_alpha_j = TMath::Min(tmp_alpha_j,high);
+            tmp_alpha_j = TMath::Max(low,tmp_alpha_j);
+            tmp_alpha_i = b_alpha_i - (tmp_alpha_j - b_alpha_j_p);
             
-               //update alphai alphaj_p
-               if( IsDiffSignificant(b_alpha_j_p,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i,tmp_alpha_i, epsilon)){
-                  b_alpha_j_p = tmp_alpha_j;
-                  b_alpha_i   = tmp_alpha_i;
-               }
+            //update alphai alphaj_p
+            if( IsDiffSignificant(b_alpha_j_p,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i,tmp_alpha_i, epsilon)){
+               b_alpha_j_p = tmp_alpha_j;
+               b_alpha_i   = tmp_alpha_i;
             }
-            else
-               terminated = kTRUE;
-         
-            caseB = kTRUE;
          }
+         else
+            terminated = kTRUE;
+         
+         caseB = kTRUE;
+      }
       else if((caseC==kFALSE) && (b_alpha_i_p>0 || (b_alpha_i==0 && deltafi < -2*epsilon )) && (b_alpha_j>0 || (b_alpha_j_p==0 && deltafi< -2*epsilon)))
-         {
-            //compute LH w.r.t. alphai_p alphaj
-            low  = TMath::Max(null, -gamma  );
-            high = TMath::Min(b_cost_i, -gamma+b_cost_j);
+      {
+         //compute LH w.r.t. alphai_p alphaj
+         low  = TMath::Max(null, -gamma  );
+         high = TMath::Min(b_cost_i, -gamma+b_cost_j);
          
-            if(low<high){
-               tmp_alpha_j = b_alpha_j - ((deltafi+2*epsilon)/eta);
-               tmp_alpha_j = TMath::Min(tmp_alpha_j,high      );
-               tmp_alpha_j = TMath::Max(low        ,tmp_alpha_j);
-               tmp_alpha_i = b_alpha_i_p - (tmp_alpha_j - b_alpha_j);
+         if(low<high){
+            tmp_alpha_j = b_alpha_j - ((deltafi+2*epsilon)/eta);
+            tmp_alpha_j = TMath::Min(tmp_alpha_j,high      );
+            tmp_alpha_j = TMath::Max(low        ,tmp_alpha_j);
+            tmp_alpha_i = b_alpha_i_p - (tmp_alpha_j - b_alpha_j);
             
-               //update alphai_p alphaj
-               if( IsDiffSignificant(b_alpha_j,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i_p,tmp_alpha_i, epsilon)){
-                  b_alpha_j     = tmp_alpha_j;
-                  b_alpha_i_p   = tmp_alpha_i;
-               } 
-            }
-            else
-               terminated = kTRUE;
-         
-            caseC = kTRUE;
+            //update alphai_p alphaj
+            if( IsDiffSignificant(b_alpha_j,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i_p,tmp_alpha_i, epsilon)){
+               b_alpha_j     = tmp_alpha_j;
+               b_alpha_i_p   = tmp_alpha_i;
+            } 
          }
+         else
+            terminated = kTRUE;
+         
+         caseC = kTRUE;
+      }
       else if((caseD == kFALSE) && 
               (b_alpha_i_p>0 || (b_alpha_i==0 && deltafi <0 )) && 
               (b_alpha_j_p>0 || (b_alpha_j==0 && deltafi >0 )))
-         {
-            //compute LH w.r.t. alphai_p alphaj_p
-            low  = TMath::Max(null,-gamma - b_cost_j);
-            high = TMath::Min(b_cost_i, -gamma);
+      {
+         //compute LH w.r.t. alphai_p alphaj_p
+         low  = TMath::Max(null,-gamma - b_cost_j);
+         high = TMath::Min(b_cost_i, -gamma);
          
-            if(low<high){
-               tmp_alpha_j = b_alpha_j_p + (deltafi/eta);
-               tmp_alpha_j = TMath::Min(tmp_alpha_j,high      );
-               tmp_alpha_j = TMath::Max(low        ,tmp_alpha_j);
-               tmp_alpha_i = b_alpha_i_p - (tmp_alpha_j - b_alpha_j_p);
+         if(low<high){
+            tmp_alpha_j = b_alpha_j_p + (deltafi/eta);
+            tmp_alpha_j = TMath::Min(tmp_alpha_j,high      );
+            tmp_alpha_j = TMath::Max(low        ,tmp_alpha_j);
+            tmp_alpha_i = b_alpha_i_p - (tmp_alpha_j - b_alpha_j_p);
             
-               if( IsDiffSignificant(b_alpha_j_p,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i_p,tmp_alpha_i, epsilon)){
-                  b_alpha_j_p   = tmp_alpha_j;
-                  b_alpha_i_p   = tmp_alpha_i;
-               } 
-            }
-            else
-               terminated = kTRUE;
-         
-            caseD = kTRUE;
+            if( IsDiffSignificant(b_alpha_j_p,tmp_alpha_j, epsilon) ||  IsDiffSignificant(b_alpha_i_p,tmp_alpha_i, epsilon)){
+               b_alpha_j_p   = tmp_alpha_j;
+               b_alpha_i_p   = tmp_alpha_i;
+            } 
          }
+         else
+            terminated = kTRUE;
+         
+         caseD = kTRUE;
+      }
       else
          terminated = kTRUE;
    }

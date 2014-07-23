@@ -27,8 +27,8 @@
 
 //________________________________________________________________________
 /* Begin_Html
-Base Class for all classes that need option parsing
-End_Html */
+   Base Class for all classes that need option parsing
+   End_Html */
 //________________________________________________________________________
 
 #include <string>
@@ -64,13 +64,13 @@ ClassImp(TMVA::Configurable)
 
 //_______________________________________________________________________
 TMVA::Configurable::Configurable( const TString& theOption)
-   : fOptions                    ( theOption ),
-     fLooseOptionCheckingEnabled ( kTRUE ),
-     fLastDeclaredOption         ( 0 ),
-     fConfigName                 ( "Configurable" ), // must be replaced by name of class that uses the configurable
-     fConfigDescription          ( "No description" ),
-     fReferenceFile              ( "None" ),
-     fLogger                     ( new MsgLogger(this) )
+: fOptions                    ( theOption ),
+   fLooseOptionCheckingEnabled ( kTRUE ),
+   fLastDeclaredOption         ( 0 ),
+   fConfigName                 ( "Configurable" ), // must be replaced by name of class that uses the configurable
+   fConfigDescription          ( "No description" ),
+   fReferenceFile              ( "None" ),
+   fLogger                     ( new MsgLogger(this) )
 {
    // constructor
    fListOfOptions.SetOwner();
@@ -179,7 +179,7 @@ void TMVA::Configurable::ParseOptions()
          if (decOpt!=0) {
             if (decOpt->IsSet())
                Log() << kWARNING << "Value for option " << decOpt->GetName() 
-                       << " was previously set to " << decOpt->GetValue() << Endl;
+                     << " was previously set to " << decOpt->GetValue() << Endl;
 
             if (!decOpt->HasPreDefinedVal() || (decOpt->HasPreDefinedVal() && decOpt->IsPreDefinedVal(optval)) ) {
                if (decOpt->IsArrayOpt()) { // arrays
@@ -191,19 +191,19 @@ void TMVA::Configurable::ParseOptions()
                      // since we don't know what else is comming we just put everthing into a map
                      if (!decOpt->SetValue(optval, idx))
                         Log() << kFATAL << "Index " << idx << " too large for option " << decOpt->TheName()
-                                << ", allowed range is [0," << decOpt->GetArraySize()-1 << "]" << Endl;
+                              << ", allowed range is [0," << decOpt->GetArraySize()-1 << "]" << Endl;
                   }
                } 
                else { // no arrays
                   if (idx!=-1)
                      Log() << kFATAL << "Option " << decOpt->TheName()
-                             << " is not an array, but you specified an index" << Endl;
+                           << " is not an array, but you specified an index" << Endl;
                   decOpt->SetValue(optval);
                }
                paramParsed = kTRUE;
             }
             else Log() << kFATAL << "Option " << decOpt->TheName() 
-                         << " does not have predefined value: \"" << optval << "\"" << Endl;               
+                       << " does not have predefined value: \"" << optval << "\"" << Endl;               
          }
       }
 
@@ -233,7 +233,7 @@ void TMVA::Configurable::ParseOptions()
          else {
             if (optionExists && hasNotSign) {
                Log() << kFATAL << "Negating a non-boolean variable " << optname
-                       << ", please check the opions for method: " << GetName() << Endl;
+                     << ", please check the opions for method: " << GetName() << Endl;
             }
          }
       }
@@ -285,8 +285,8 @@ void TMVA::Configurable::CheckForUnusedOptions() const
    }
    if (unusedOptions != "") {
       Log() << kFATAL
-              << "The following options were specified, but could not be interpreted: \'"
-              << unusedOptions << "\', please check!" << Endl;
+            << "The following options were specified, but could not be interpreted: \'"
+            << unusedOptions << "\', please check!" << Endl;
    }
 }
 

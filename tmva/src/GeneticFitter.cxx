@@ -41,7 +41,7 @@ TMVA::GeneticFitter::GeneticFitter( IFitterTarget& target,
                                     const TString& name, 
                                     const std::vector<TMVA::Interval*>& ranges, 
                                     const TString& theOption ) 
-   : FitterBase( target, name, ranges, theOption )
+: FitterBase( target, name, ranges, theOption )
 {
    // constructor
 
