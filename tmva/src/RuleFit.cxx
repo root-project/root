@@ -45,8 +45,8 @@ ClassImp(TMVA::RuleFit)
 
 //_______________________________________________________________________
 TMVA::RuleFit::RuleFit( const MethodBase *rfbase )
-   : fVisHistsUseImp( kTRUE ),
-     fLogger( new MsgLogger("RuleFit") )
+: fVisHistsUseImp( kTRUE ),
+   fLogger( new MsgLogger("RuleFit") )
 {
    // constructor
    Initialize( rfbase );
@@ -104,12 +104,12 @@ void TMVA::RuleFit::Initialize(  const MethodBase *rfbase )
       UInt_t nevents = fMethodRuleFit->Data()->GetNTrainingEvents();
       std::vector<const TMVA::Event*> tmp;
       for (Long64_t ievt=0; ievt<nevents; ievt++) {
-        const Event *event = fMethodRuleFit->GetEvent(ievt);
-        tmp.push_back(event);
+         const Event *event = fMethodRuleFit->GetEvent(ievt);
+         tmp.push_back(event);
       }      
       SetTrainingEvents( tmp );
    }
-     //     SetTrainingEvents( fMethodRuleFit->GetTrainingEvents() );
+   //     SetTrainingEvents( fMethodRuleFit->GetTrainingEvents() );
 
    InitNEveEff();
 
@@ -236,7 +236,7 @@ void TMVA::RuleFit::MakeForest()
          frnd = 100*rndGen.Uniform( fMethodRuleFit->GetMinFracNEve(), 0.5*fMethodRuleFit->GetMaxFracNEve() );
          Int_t     iclass = 0; // event class being treated as signal during training
          Bool_t    useRandomisedTree = !useBoost;  
-         dt = new DecisionTree( fMethodRuleFit->GetSeparationBase(), frnd, fMethodRuleFit->GetNCuts(), iclass, useRandomisedTree);
+         dt = new DecisionTree( fMethodRuleFit->GetSeparationBase(), frnd, fMethodRuleFit->GetNCuts(), &(fMethodRuleFit->DataInfo()), iclass, useRandomisedTree);
          dt->SetNVars(fMethodBase->GetNvar());
 
          BuildTree(dt); // reads fNTreeSample events from fTrainingEventsRndm
@@ -264,9 +264,9 @@ void TMVA::RuleFit::MakeForest()
       }
 
       Log() << kDEBUG << "Built tree with minimum cut at N = " << frnd <<"% events" 
-              << " => N(nodes) = " << fForest.back()->GetNNodes()
-              << " ; n(tries) = " << ntries
-              << Endl;
+            << " => N(nodes) = " << fForest.back()->GetNNodes()
+            << " ; n(tries) = " << ntries
+            << Endl;
    }
 
    // Now restore event weights
@@ -424,8 +424,8 @@ void TMVA::RuleFit::SetTrainingEvents( const std::vector<const Event *>& el )
    // fraction events per tree
    fNTreeSample = static_cast<UInt_t>(neve*fMethodRuleFit->GetTreeEveFrac());
    Log() << kDEBUG << "Number of events per tree : " << fNTreeSample
-           << " ( N(events) = " << neve << " )"
-           << " randomly drawn without replacement" << Endl;
+         << " ( N(events) = " << neve << " )"
+         << " randomly drawn without replacement" << Endl;
 }
 
 //_______________________________________________________________________

@@ -39,6 +39,7 @@
 #include <algorithm>
 #include <exception>
 #include <iomanip>
+#include <limits>
 
 #include "TMVA/MsgLogger.h"
 #include "TMVA/DecisionTreeNode.h"
@@ -151,7 +152,10 @@ Bool_t TMVA::DecisionTreeNode::GoesRight(const TMVA::Event & e) const
    // first check if the fisher criterium is used or ordinary cuts:
    if (GetNFisherCoeff() == 0){
       
-      result = (e.GetValue(this->GetSelector()) > this->GetCutValue() );
+      result = (e.GetValue(this->GetSelector()) >= this->GetCutValue() );
+      result = !( (this->GetCutValue() - e.GetValue(this->GetSelector()) ) >= std::numeric_limits<double>::epsilon() );
+      //      if ( TMath::Abs(e.GetValue(this->GetSelector()) - this->GetCutValue()) < 0.2  && !result )
+      //      std::cout << e.GetValue(this->GetSelector()) << "  ? >= ? " << this->GetCutValue() << " result="<<result << std::endl;
 
    }else{
       
@@ -398,7 +402,7 @@ Float_t TMVA::DecisionTreeNode::GetSampleMin(UInt_t ivar) const {
    // that pass/end up in this node
    if (fTrainInfo && ivar < fTrainInfo->fSampleMin.size()) return fTrainInfo->fSampleMin[ivar];
    else *fgLogger << kFATAL << "You asked for Min of the event sample in node for variable "
-                 << ivar << " that is out of range" << Endl;
+                  << ivar << " that is out of range" << Endl;
    return -9999;
 }
 
@@ -408,7 +412,7 @@ Float_t TMVA::DecisionTreeNode::GetSampleMax(UInt_t ivar) const {
    // that pass/end up in this node
    if (fTrainInfo && ivar < fTrainInfo->fSampleMin.size()) return fTrainInfo->fSampleMax[ivar];
    else *fgLogger << kFATAL << "You asked for Max of the event sample in node for variable "
-                 << ivar << " that is out of range" << Endl;
+                  << ivar << " that is out of range" << Endl;
    return 9999;
 }
 
