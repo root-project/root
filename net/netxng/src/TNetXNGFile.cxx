@@ -403,7 +403,7 @@ Bool_t TNetXNGFile::ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
    std::vector<XRootDStatus*> *statuses;
    TSemaphore                 *semaphore;
    Int_t                       totalBytes = 0;
-   Int_t                       offset     = 0;
+   Long64_t                    offset     = 0;
 
    Double_t start = 0;
    if (gPerfStats) start = TTimeStamp();
@@ -481,13 +481,13 @@ Bool_t TNetXNGFile::ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
 
       if (!st->IsOK()) {
          Error("ReadBuffers", "%s", st->ToStr().c_str());
-         delete statuses;
-         delete semaphore;
          for( ; it != chunkLists.end(); ++it )
          {
             st = statuses->at( it - chunkLists.begin() );
             delete st;
          }
+         delete statuses;
+         delete semaphore;
 
          return kTRUE;
       }
