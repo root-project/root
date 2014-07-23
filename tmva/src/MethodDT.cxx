@@ -115,11 +115,11 @@ REGISTER_METHOD(DT)
 ClassImp(TMVA::MethodDT)
 
 //_______________________________________________________________________
-TMVA::MethodDT::MethodDT( const TString& jobName,
-                          const TString& methodTitle,
-                          DataSetInfo& theData,
-                          const TString& theOption,
-                          TDirectory* theTargetDir ) :
+   TMVA::MethodDT::MethodDT( const TString& jobName,
+                             const TString& methodTitle,
+                             DataSetInfo& theData,
+                             const TString& theOption,
+                             TDirectory* theTargetDir ) :
    TMVA::MethodBase( jobName, Types::kDT, methodTitle, theData, theOption, theTargetDir )
    , fTree(0)
    , fSepType(0)
@@ -270,16 +270,16 @@ void TMVA::MethodDT::ProcessOptions()
 
    if (this->Data()->HasNegativeEventWeights()){
       Log() << kINFO << " You are using a Monte Carlo that has also negative weights. "
-              << "That should in principle be fine as long as on average you end up with "
-              << "something positive. For this you have to make sure that the minimal number "
+            << "That should in principle be fine as long as on average you end up with "
+            << "something positive. For this you have to make sure that the minimal number "
             << "of (un-weighted) events demanded for a tree node (currently you use: MinNodeSize="
             <<fMinNodeSizeS
             <<", (or the deprecated equivalent nEventsMin) you can set this via the " 
             <<"MethodDT option string when booking the "
-              << "classifier) is large enough to allow for reasonable averaging!!! "
+            << "classifier) is large enough to allow for reasonable averaging!!! "
             << " If this does not help.. maybe you want to try the option: IgnoreNegWeightsInTraining  "
-              << "which ignores events with negative weight in the training. " << Endl
-              << Endl << "Note: You'll get a WARNING message during the training if that should ever happen" << Endl;
+            << "which ignores events with negative weight in the training. " << Endl
+            << Endl << "Note: You'll get a WARNING message during the training if that should ever happen" << Endl;
    }
    
    if (fRandomisedTrees){
@@ -317,7 +317,7 @@ void TMVA::MethodDT::SetMinNodeSize(TString sizeInPercent){
    if (sizeInPercent.IsAlnum()) SetMinNodeSize(sizeInPercent.Atof());
    else {
       Log() << kERROR << "I had problems reading the option MinNodeEvents, which\n"
-           << "after removing a possible % sign now reads " << sizeInPercent << Endl;
+            << "after removing a possible % sign now reads " << sizeInPercent << Endl;
    }
 }
 
@@ -358,12 +358,12 @@ TMVA::MethodDT::~MethodDT( void )
 void TMVA::MethodDT::Train( void )
 {
    TMVA::DecisionTreeNode::fgIsTraining=true;
-   fTree = new DecisionTree( fSepType, fMinNodeSize, fNCuts, 0, 
+   fTree = new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), 0, 
                              fRandomisedTrees, fUseNvars, fUsePoissonNvars,fMaxDepth,0 );
    fTree->SetNVars(GetNvar());
    if (fRandomisedTrees) Log()<<kWARNING<<" randomised Trees do not work yet in this framework," 
-                                << " as I do not know how to give each tree a new random seed, now they"
-                                << " will be all the same and that is not good " << Endl;
+                              << " as I do not know how to give each tree a new random seed, now they"
+                              << " will be all the same and that is not good " << Endl;
    fTree->SetAnalysisType( GetAnalysisType() );
 
    //fTree->BuildTree(GetEventCollection(Types::kTraining));
@@ -371,13 +371,13 @@ void TMVA::MethodDT::Train( void )
    UInt_t nevents = Data()->GetNTrainingEvents();
    std::vector<const TMVA::Event*> tmp;
    for (Long64_t ievt=0; ievt<nevents; ievt++) {
-     const Event *event = GetEvent(ievt);
-     tmp.push_back(event);
+      const Event *event = GetEvent(ievt);
+      tmp.push_back(event);
    }
    fTree->BuildTree(tmp);
    if (fPruneMethod != DecisionTree::kNoPruning) fTree->PruneTree();
 
-    TMVA::DecisionTreeNode::fgIsTraining=false;
+   TMVA::DecisionTreeNode::fgIsTraining=false;
 }
 
 //_______________________________________________________________________
@@ -402,77 +402,77 @@ Double_t TMVA::MethodDT::PruneTree( )
    else if (fAutomatic &&  fPruneMethod != DecisionTree::kCostComplexityPruning){
       /*
 
-      Double_t alpha = 0;
-      Double_t delta = fDeltaPruneStrength;
+        Double_t alpha = 0;
+        Double_t delta = fDeltaPruneStrength;
       
-      DecisionTree*  dcopy;
-      std::vector<Double_t> q;
-      multimap<Double_t,Double_t> quality;
-      Int_t nnodes=fTree->GetNNodes();
+        DecisionTree*  dcopy;
+        std::vector<Double_t> q;
+        multimap<Double_t,Double_t> quality;
+        Int_t nnodes=fTree->GetNNodes();
 
-      // find the maxiumum prune strength that still leaves some nodes 
-      Bool_t forceStop = kFALSE;
-      Int_t troubleCount=0, previousNnodes=nnodes;
+        // find the maxiumum prune strength that still leaves some nodes 
+        Bool_t forceStop = kFALSE;
+        Int_t troubleCount=0, previousNnodes=nnodes;
 
 
-      nnodes=fTree->GetNNodes();
-      while (nnodes > 3 && !forceStop) {
-         dcopy = new DecisionTree(*fTree);
-         dcopy->SetPruneStrength(alpha+=delta);
-         dcopy->PruneTree();
-         q.push_back(TestTreeQuality(dcopy));
-         quality.insert(std::pair<const Double_t,Double_t>(q.back(),alpha));
-         nnodes=dcopy->GetNNodes();
-         if (previousNnodes == nnodes) troubleCount++;
-         else { 
-            troubleCount=0; // reset counter
-            if (nnodes < previousNnodes / 2 ) fDeltaPruneStrength /= 2.;
-         }
-         previousNnodes = nnodes;
-         if (troubleCount > 20) {
-            if (methodIndex == 0 && fPruneStrength <=0) {//maybe you need larger stepsize ??
-               fDeltaPruneStrength *= 5;
-               Log() << kINFO << "<PruneTree> trouble determining optimal prune strength"
-                       << " for Tree " << methodIndex
-                       << " --> first try to increase the step size"
-                       << " currently Prunestrenght= " << alpha 
-                       << " stepsize " << fDeltaPruneStrength << " " << Endl;
-               troubleCount = 0;   // try again
-               fPruneStrength = 1; // if it was for the first time.. 
-            } else if (methodIndex == 0 && fPruneStrength <=2) {//maybe you need much larger stepsize ??
-               fDeltaPruneStrength *= 5;
-               Log() << kINFO << "<PruneTree> trouble determining optimal prune strength"
-                       << " for Tree " << methodIndex
-                       << " -->  try to increase the step size even more.. "
-                       << " if that still didn't work, TRY IT BY HAND"  
-                       << " currently Prunestrenght= " << alpha 
-                       << " stepsize " << fDeltaPruneStrength << " " << Endl;
-               troubleCount = 0;   // try again
-               fPruneStrength = 3; // if it was for the first time.. 
-            } else {
-               forceStop=kTRUE;
-               Log() << kINFO << "<PruneTree> trouble determining optimal prune strength"
-                       << " for Tree " << methodIndex << " at tested prune strength: " << alpha << " --> abort forced, use same strength as for previous tree:"
-                       << fPruneStrength << Endl;
-            }
-         }
-         if (fgDebugLevel==1) Log() << kINFO << "Pruneed with ("<<alpha
-                                      << ") give quality: " << q.back()
-                                      << " and #nodes: " << nnodes  
-                                      << Endl;
-         delete dcopy;
-      }
-      if (!forceStop) {
-         multimap<Double_t,Double_t>::reverse_iterator it=quality.rend();
-         it++;
-         fPruneStrength = it->second;
-         // adjust the step size for the next tree.. think that 20 steps are sort of
-         // fine enough.. could become a tunable option later..
-         fDeltaPruneStrength *= Double_t(q.size())/20.;
-      }
+        nnodes=fTree->GetNNodes();
+        while (nnodes > 3 && !forceStop) {
+        dcopy = new DecisionTree(*fTree);
+        dcopy->SetPruneStrength(alpha+=delta);
+        dcopy->PruneTree();
+        q.push_back(TestTreeQuality(dcopy));
+        quality.insert(std::pair<const Double_t,Double_t>(q.back(),alpha));
+        nnodes=dcopy->GetNNodes();
+        if (previousNnodes == nnodes) troubleCount++;
+        else { 
+        troubleCount=0; // reset counter
+        if (nnodes < previousNnodes / 2 ) fDeltaPruneStrength /= 2.;
+        }
+        previousNnodes = nnodes;
+        if (troubleCount > 20) {
+        if (methodIndex == 0 && fPruneStrength <=0) {//maybe you need larger stepsize ??
+        fDeltaPruneStrength *= 5;
+        Log() << kINFO << "<PruneTree> trouble determining optimal prune strength"
+        << " for Tree " << methodIndex
+        << " --> first try to increase the step size"
+        << " currently Prunestrenght= " << alpha 
+        << " stepsize " << fDeltaPruneStrength << " " << Endl;
+        troubleCount = 0;   // try again
+        fPruneStrength = 1; // if it was for the first time.. 
+        } else if (methodIndex == 0 && fPruneStrength <=2) {//maybe you need much larger stepsize ??
+        fDeltaPruneStrength *= 5;
+        Log() << kINFO << "<PruneTree> trouble determining optimal prune strength"
+        << " for Tree " << methodIndex
+        << " -->  try to increase the step size even more.. "
+        << " if that still didn't work, TRY IT BY HAND"  
+        << " currently Prunestrenght= " << alpha 
+        << " stepsize " << fDeltaPruneStrength << " " << Endl;
+        troubleCount = 0;   // try again
+        fPruneStrength = 3; // if it was for the first time.. 
+        } else {
+        forceStop=kTRUE;
+        Log() << kINFO << "<PruneTree> trouble determining optimal prune strength"
+        << " for Tree " << methodIndex << " at tested prune strength: " << alpha << " --> abort forced, use same strength as for previous tree:"
+        << fPruneStrength << Endl;
+        }
+        }
+        if (fgDebugLevel==1) Log() << kINFO << "Pruneed with ("<<alpha
+        << ") give quality: " << q.back()
+        << " and #nodes: " << nnodes  
+        << Endl;
+        delete dcopy;
+        }
+        if (!forceStop) {
+        multimap<Double_t,Double_t>::reverse_iterator it=quality.rend();
+        it++;
+        fPruneStrength = it->second;
+        // adjust the step size for the next tree.. think that 20 steps are sort of
+        // fine enough.. could become a tunable option later..
+        fDeltaPruneStrength *= Double_t(q.size())/20.;
+        }
 
-      fTree->SetPruneStrength(fPruneStrength);
-      fTree->PruneTree();
+        fTree->SetPruneStrength(fPruneStrength);
+        fTree->PruneTree();
       */
    } 
    else {
@@ -490,11 +490,11 @@ Double_t TMVA::MethodDT::TestTreeQuality( DecisionTree *dt )
    // test the tree quality.. in terms of Miscalssification
    Double_t SumCorrect=0,SumWrong=0;
    for (Long64_t ievt=0; ievt<Data()->GetNEvents(); ievt++)
-      {
-         const Event * ev = Data()->GetEvent(ievt);
-         if ((dt->CheckEvent(ev) > dt->GetNodePurityLimit() ) == DataInfo().IsSignal(ev)) SumCorrect+=ev->GetWeight();
-         else SumWrong+=ev->GetWeight();
-      }
+   {
+      const Event * ev = Data()->GetEvent(ievt);
+      if ((dt->CheckEvent(ev) > dt->GetNodePurityLimit() ) == DataInfo().IsSignal(ev)) SumCorrect+=ev->GetWeight();
+      else SumWrong+=ev->GetWeight();
+   }
    Data()->SetCurrentType(Types::kTraining);
    return  SumCorrect / (SumCorrect + SumWrong);
 }
