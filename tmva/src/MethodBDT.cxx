@@ -143,7 +143,7 @@ REGISTER_METHOD(BDT)
 
 ClassImp(TMVA::MethodBDT)
 
-const Int_t TMVA::MethodBDT::fgDebugLevel = 0;
+   const Int_t TMVA::MethodBDT::fgDebugLevel = 0;
 
 //_______________________________________________________________________
 TMVA::MethodBDT::MethodBDT( const TString& jobName,
@@ -533,14 +533,14 @@ void TMVA::MethodBDT::ProcessOptions()
          fSepType = NULL;
       }
       if (fUseFisherCuts){
-	Log() << kWARNING << "Sorry, UseFisherCuts is not available for regression analysis, I will ignore it!" << Endl;
-	fUseFisherCuts = kFALSE;
+         Log() << kWARNING << "Sorry, UseFisherCuts is not available for regression analysis, I will ignore it!" << Endl;
+         fUseFisherCuts = kFALSE;
       }
       if (fNCuts < 0) {
-	Log() << kWARNING << "Sorry, the option of nCuts<0 using a more elaborate node splitting algorithm " << Endl;
-	Log() << kWARNING << "is not implemented for regression analysis ! " << Endl;
-	Log() << kWARNING << "--> I switch do default nCuts = 20 and use standard node splitting"<<Endl;
-	fNCuts=20;
+         Log() << kWARNING << "Sorry, the option of nCuts<0 using a more elaborate node splitting algorithm " << Endl;
+         Log() << kWARNING << "is not implemented for regression analysis ! " << Endl;
+         Log() << kWARNING << "--> I switch do default nCuts = 20 and use standard node splitting"<<Endl;
+         fNCuts=20;
       }
    }
    if (fRandomisedTrees){
@@ -550,10 +550,10 @@ void TMVA::MethodBDT::ProcessOptions()
    }
 
    if (fUseFisherCuts) {
-     Log() << kWARNING << "Sorry, when using the option UseFisherCuts, the other option nCuts<0 (i.e. using" << Endl;
-     Log() << kWARNING << " a more elaborate node splitting algorithm) is not implemented. I will switch o " << Endl;
-     Log() << kWARNING << "--> I switch do default nCuts = 20 and use standard node splitting WITH possible Fisher criteria"<<Endl;
-     fNCuts=20;
+      Log() << kWARNING << "Sorry, when using the option UseFisherCuts, the other option nCuts<0 (i.e. using" << Endl;
+      Log() << kWARNING << " a more elaborate node splitting algorithm) is not implemented. I will switch o " << Endl;
+      Log() << kWARNING << "--> I switch do default nCuts = 20 and use standard node splitting WITH possible Fisher criteria"<<Endl;
+      fNCuts=20;
    }
    
    if (fNTrees==0){
@@ -721,7 +721,7 @@ void TMVA::MethodBDT::InitEventSample( void )
 
       std::vector<const TMVA::Event*> tmpEventSample;
       for (Long64_t ievt=0; ievt<nevents; ievt++) {
-         //	 const Event *event = new Event(*(GetEvent(ievt)));
+         //  const Event *event = new Event(*(GetEvent(ievt)));
          Event* event = new Event( *GetTrainingEvent(ievt) );
          tmpEventSample.push_back(event);
       }
@@ -739,7 +739,7 @@ void TMVA::MethodBDT::InitEventSample( void )
          // const Event* event = new Event( *GetTrainingEvent(ievt) );
          Event* event = new Event( *GetTrainingEvent(ievt) );
          if (fDoPreselection){
-           if (TMath::Abs(ApplyPreselectionCuts(event)) > 0.05) continue;
+            if (TMath::Abs(ApplyPreselectionCuts(event)) > 0.05) continue;
          }
 
          if (event->GetWeight() < 0 && (IgnoreEventsWithNegWeightsInTraining() || fNoNegWeightsInTraining)){
@@ -770,7 +770,7 @@ void TMVA::MethodBDT::InitEventSample( void )
                            << "or with the boosting. Please remove negative events from training "
                            << "using the option *IgnoreEventsWithNegWeightsInTraining* in case you "
                            << "observe problems with the boosting"
-                        << Endl;
+                           << Endl;
                   }
                }
             }
@@ -854,13 +854,13 @@ void TMVA::MethodBDT::InitEventSample( void )
 
    //just for debug purposes..
    /*
-   sumSigW=0;
-   sumBkgW=0;
-   for (UInt_t ievt=0; ievt<fEventSample.size(); ievt++) {
-      if ((DataInfo().IsSignal(fEventSample[ievt])) ) sumSigW += fEventSample[ievt]->GetWeight();
-      else sumBkgW += fEventSample[ievt]->GetWeight();
-   }
-   Log() << kWARNING << "sigSumW="<<sumSigW<<"bkgSumW="<<sumBkgW<< Endl;
+     sumSigW=0;
+     sumBkgW=0;
+     for (UInt_t ievt=0; ievt<fEventSample.size(); ievt++) {
+     if ((DataInfo().IsSignal(fEventSample[ievt])) ) sumSigW += fEventSample[ievt]->GetWeight();
+     else sumBkgW += fEventSample[ievt]->GetWeight();
+     }
+     Log() << kWARNING << "sigSumW="<<sumSigW<<"bkgSumW="<<sumBkgW<< Endl;
    */
 }
 
@@ -944,16 +944,16 @@ void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
          }
          
          if (iMin > -1) { 
-            //	    std::cout << "Happily pairing .. weight before : " << negEvents[nev]->GetWeight() << " and " << fEventSample[iMin]->GetWeight();
-	    Double_t newWeight = (negEvents[nev]->GetWeight() + fEventSample[iMin]->GetWeight());
+            //     std::cout << "Happily pairing .. weight before : " << negEvents[nev]->GetWeight() << " and " << fEventSample[iMin]->GetWeight();
+            Double_t newWeight = (negEvents[nev]->GetWeight() + fEventSample[iMin]->GetWeight());
             if (newWeight > 0){
-	       negEvents[nev]->SetBoostWeight( 0 );
-	       fEventSample[iMin]->SetBoostWeight( newWeight/fEventSample[iMin]->GetOriginalWeight() );  // note the weight*boostweight should be "newWeight"
-	    } else {
-	       negEvents[nev]->SetBoostWeight( newWeight/negEvents[nev]->GetOriginalWeight() ); // note the weight*boostweight should be "newWeight"
-	       fEventSample[iMin]->SetBoostWeight( 0 );
-	    }	      
-	    //	    std::cout << " and afterwards " <<  negEvents[nev]->GetWeight() <<  " and the paired " << fEventSample[iMin]->GetWeight() << " dist="<<minDist<< std::endl;
+               negEvents[nev]->SetBoostWeight( 0 );
+               fEventSample[iMin]->SetBoostWeight( newWeight/fEventSample[iMin]->GetOriginalWeight() );  // note the weight*boostweight should be "newWeight"
+            } else {
+               negEvents[nev]->SetBoostWeight( newWeight/negEvents[nev]->GetOriginalWeight() ); // note the weight*boostweight should be "newWeight"
+               fEventSample[iMin]->SetBoostWeight( 0 );
+            }        
+            //     std::cout << " and afterwards " <<  negEvents[nev]->GetWeight() <<  " and the paired " << fEventSample[iMin]->GetWeight() << " dist="<<minDist<< std::endl;
          } else Log() << kFATAL << "preprocessing didn't find event to pair with the negative weight ... probably a bug" << Endl;
          weight = negEvents[nev]->GetWeight();
       }
@@ -1219,9 +1219,9 @@ void TMVA::MethodBDT::Train()
          }
          UInt_t nClasses = DataInfo().GetNClasses();
          for (UInt_t i=0;i<nClasses;i++){            
-            fForest.push_back( new DecisionTree( fSepType, fMinNodeSize, fNCuts, i,
+            fForest.push_back( new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), i,
                                                  fRandomisedTrees, fUseNvars, fUsePoissonNvars, fMaxDepth,
-                                                 itree*nClasses+i, fNodePurityLimit, itree*nClasses+i));
+                                                 itree*nClasses+i, fNodePurityLimit, itree*nClasses+1));
             fForest.back()->SetNVars(GetNvar());
             if (fUseFisherCuts) {
                fForest.back()->SetUseFisherCuts();
@@ -1243,7 +1243,7 @@ void TMVA::MethodBDT::Train()
          }
       }
       else{
-         fForest.push_back( new DecisionTree( fSepType, fMinNodeSize, fNCuts, fSignalClass,
+         fForest.push_back( new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), fSignalClass,
                                               fRandomisedTrees, fUseNvars, fUsePoissonNvars, fMaxDepth,
                                               itree, fNodePurityLimit, itree));
          fForest.back()->SetNVars(GetNvar());
@@ -1367,7 +1367,7 @@ void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample
                }
                Double_t p_cls = 1.0/(1.0+norm);
                Double_t res = ((*e)->GetClass()==i)?(1.0-p_cls):(-p_cls);
-	       const_cast<TMVA::Event*>(*e)->SetTarget(i,res);
+               const_cast<TMVA::Event*>(*e)->SetTarget(i,res);
             }
          }
       }
@@ -1405,7 +1405,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
    for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
  
       if(temp[i].first<=fTransitionPoint)
-	 const_cast<TMVA::Event*>(*e)->SetTarget(0,fWeightedResiduals[*e].first);
+         const_cast<TMVA::Event*>(*e)->SetTarget(0,fWeightedResiduals[*e].first);
       else
          const_cast<TMVA::Event*>(*e)->SetTarget(0,fTransitionPoint*(fWeightedResiduals[*e].first<0?-1.0:1.0));
       i++;
@@ -1622,10 +1622,10 @@ void TMVA::MethodBDT::BoostMonitor(Int_t iTree)
    std::vector<TH1F*> hS;
    std::vector<TH1F*> hB;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
-     hS.push_back(new TH1F(Form("SigVar%dAtTree%d",ivar,iTree),Form("SigVar%dAtTree%d",ivar,iTree),100,DataInfo().GetVariableInfo(ivar).GetMin(),DataInfo().GetVariableInfo(ivar).GetMax()));
-     hB.push_back(new TH1F(Form("BkgVar%dAtTree%d",ivar,iTree),Form("BkgVar%dAtTree%d",ivar,iTree),100,DataInfo().GetVariableInfo(ivar).GetMin(),DataInfo().GetVariableInfo(ivar).GetMax()));
-     results->Store(hS.back(),hS.back()->GetTitle());
-     results->Store(hB.back(),hB.back()->GetTitle());
+      hS.push_back(new TH1F(Form("SigVar%dAtTree%d",ivar,iTree),Form("SigVar%dAtTree%d",ivar,iTree),100,DataInfo().GetVariableInfo(ivar).GetMin(),DataInfo().GetVariableInfo(ivar).GetMax()));
+      hB.push_back(new TH1F(Form("BkgVar%dAtTree%d",ivar,iTree),Form("BkgVar%dAtTree%d",ivar,iTree),100,DataInfo().GetVariableInfo(ivar).GetMin(),DataInfo().GetVariableInfo(ivar).GetMax()));
+      results->Store(hS.back(),hS.back()->GetTitle());
+      results->Store(hB.back(),hB.back()->GetTitle());
    }
    
 
@@ -1642,11 +1642,11 @@ void TMVA::MethodBDT::BoostMonitor(Int_t iTree)
 
    for (UInt_t iev=0; iev < fEventSample.size(); iev++){
       if (fEventSample[iev]->GetClass() == signalClassNr) {
-        tmpBoostWeights=tmpBoostWeightsS;
-        h=&hS;
+         tmpBoostWeights=tmpBoostWeightsS;
+         h=&hS;
       }else{
-        tmpBoostWeights=tmpBoostWeightsB;
-        h=&hB;
+         tmpBoostWeights=tmpBoostWeightsB;
+         h=&hB;
       }
       tmpBoostWeights->Fill(fEventSample[iev]->GetBoostWeight());
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
@@ -2011,16 +2011,16 @@ void TMVA::MethodBDT::GetBaggedSubSample(std::vector<const TMVA::Event*>& eventS
    return;
 
    /*
-   UInt_t nevents = fEventSample.size();
+     UInt_t nevents = fEventSample.size();
    
-   if (!fSubSample.empty()) fSubSample.clear();
-   TRandom3 *trandom   = new TRandom3(fForest.size()+1);
+     if (!fSubSample.empty()) fSubSample.clear();
+     TRandom3 *trandom   = new TRandom3(fForest.size()+1);
 
-   for (UInt_t ievt=0; ievt<nevents; ievt++) { // recreate new random subsample
-      if(trandom->Rndm()<fBaggedSampleFraction)
-         fSubSample.push_back(fEventSample[ievt]);
-   }
-   delete trandom;
+     for (UInt_t ievt=0; ievt<nevents; ievt++) { // recreate new random subsample
+     if(trandom->Rndm()<fBaggedSampleFraction)
+     fSubSample.push_back(fEventSample[ievt]);
+     }
+     delete trandom;
    */
 
 }
@@ -2089,7 +2089,7 @@ Double_t TMVA::MethodBDT::AdaBoostR2( std::vector<const TMVA::Event*>& eventSamp
       }else{
          Log() << kERROR << " The error rate in the BDT boosting is > 0.5. ("<< err
                << ") That should not happen, but is possible for regression trees, and"
-	       << " should trigger a stop for the boosting. please check your code (i.e... the BDT code), I "
+               << " should trigger a stop for the boosting. please check your code (i.e... the BDT code), I "
                << " stop boosting " <<  Endl;
          return -1;
       }
@@ -2196,35 +2196,35 @@ void TMVA::MethodBDT::ReadWeightsFromXML(void* parent) {
 
    
    if (gTools().HasAttr( parent, Form("PreselectionLowBkgVar%d",0))) {
-     fIsLowBkgCut.resize(GetNvar()); 
-     fLowBkgCut.resize(GetNvar());   
-     fIsLowSigCut.resize(GetNvar()); 
-     fLowSigCut.resize(GetNvar());   
-     fIsHighBkgCut.resize(GetNvar());
-     fHighBkgCut.resize(GetNvar());  
-     fIsHighSigCut.resize(GetNvar());
-     fHighSigCut.resize(GetNvar());  
+      fIsLowBkgCut.resize(GetNvar()); 
+      fLowBkgCut.resize(GetNvar());   
+      fIsLowSigCut.resize(GetNvar()); 
+      fLowSigCut.resize(GetNvar());   
+      fIsHighBkgCut.resize(GetNvar());
+      fHighBkgCut.resize(GetNvar());  
+      fIsHighSigCut.resize(GetNvar());
+      fHighSigCut.resize(GetNvar());  
 
-     Bool_t tmpBool;
-     Double_t tmpDouble;
-     for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
-       gTools().ReadAttr( parent, Form("PreselectionLowBkgVar%d",ivar), tmpBool);
-       fIsLowBkgCut[ivar]=tmpBool;
-       gTools().ReadAttr( parent, Form("PreselectionLowBkgVar%dValue",ivar), tmpDouble);
-       fLowBkgCut[ivar]=tmpDouble;
-       gTools().ReadAttr( parent, Form("PreselectionLowSigVar%d",ivar), tmpBool);    
-       fIsLowSigCut[ivar]=tmpBool;
-       gTools().ReadAttr( parent, Form("PreselectionLowSigVar%dValue",ivar), tmpDouble); 
-       fLowSigCut[ivar]=tmpDouble;
-       gTools().ReadAttr( parent, Form("PreselectionHighBkgVar%d",ivar), tmpBool);   
-       fIsHighBkgCut[ivar]=tmpBool;
-       gTools().ReadAttr( parent, Form("PreselectionHighBkgVar%dValue",ivar), tmpDouble);
-       fHighBkgCut[ivar]=tmpDouble;
-       gTools().ReadAttr( parent, Form("PreselectionHighSigVar%d",ivar),tmpBool);   
-       fIsHighSigCut[ivar]=tmpBool;
-       gTools().ReadAttr( parent, Form("PreselectionHighSigVar%dValue",ivar), tmpDouble);
-       fHighSigCut[ivar]=tmpDouble;  
-     }
+      Bool_t tmpBool;
+      Double_t tmpDouble;
+      for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
+         gTools().ReadAttr( parent, Form("PreselectionLowBkgVar%d",ivar), tmpBool);
+         fIsLowBkgCut[ivar]=tmpBool;
+         gTools().ReadAttr( parent, Form("PreselectionLowBkgVar%dValue",ivar), tmpDouble);
+         fLowBkgCut[ivar]=tmpDouble;
+         gTools().ReadAttr( parent, Form("PreselectionLowSigVar%d",ivar), tmpBool);    
+         fIsLowSigCut[ivar]=tmpBool;
+         gTools().ReadAttr( parent, Form("PreselectionLowSigVar%dValue",ivar), tmpDouble); 
+         fLowSigCut[ivar]=tmpDouble;
+         gTools().ReadAttr( parent, Form("PreselectionHighBkgVar%d",ivar), tmpBool);   
+         fIsHighBkgCut[ivar]=tmpBool;
+         gTools().ReadAttr( parent, Form("PreselectionHighBkgVar%dValue",ivar), tmpDouble);
+         fHighBkgCut[ivar]=tmpDouble;
+         gTools().ReadAttr( parent, Form("PreselectionHighSigVar%d",ivar),tmpBool);   
+         fIsHighSigCut[ivar]=tmpBool;
+         gTools().ReadAttr( parent, Form("PreselectionHighSigVar%dValue",ivar), tmpDouble);
+         fHighSigCut[ivar]=tmpDouble;  
+      }
    }
 
 
@@ -2296,8 +2296,8 @@ Double_t TMVA::MethodBDT::GetMvaValue( Double_t* err, Double_t* errUpper, UInt_t
    // decision trees.
    const Event* ev = GetEvent();
    if (fDoPreselection) {
-     Double_t val = ApplyPreselectionCuts(ev);
-     if (TMath::Abs(val)>0.05) return val; 
+      Double_t val = ApplyPreselectionCuts(ev);
+      if (TMath::Abs(val)>0.05) return val; 
    }
    return PrivateGetMvaValue(ev, err, errUpper, useNTrees);
 
@@ -2420,14 +2420,14 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
          count++;
          rVal+=vtemp[0][i];
       }
-//      fRegressionReturnVal->push_back( rVal/Double_t(count));
+      //      fRegressionReturnVal->push_back( rVal/Double_t(count));
       evT->SetTarget(0, rVal/Double_t(count) );
    }
    else if(fBoostType=="Grad"){
       for (UInt_t itree=0; itree<fForest.size(); itree++) {
          myMVA += fForest[itree]->CheckEvent(ev,kFALSE);
       }
-//      fRegressionReturnVal->push_back( myMVA+fBoostWeights[0]);
+      //      fRegressionReturnVal->push_back( myMVA+fBoostWeights[0]);
       evT->SetTarget(0, myMVA+fBoostWeights[0] );
    }
    else{
@@ -2436,7 +2436,7 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
          myMVA += fBoostWeights[itree] * fForest[itree]->CheckEvent(ev,kFALSE);
          norm  += fBoostWeights[itree];
       }
-//      fRegressionReturnVal->push_back( ( norm > std::numeric_limits<double>::epsilon() ) ? myMVA /= norm : 0 );
+      //      fRegressionReturnVal->push_back( ( norm > std::numeric_limits<double>::epsilon() ) ? myMVA /= norm : 0 );
       evT->SetTarget(0, ( norm > std::numeric_limits<double>::epsilon() ) ? myMVA /= norm : 0 );
    }
 
@@ -2741,16 +2741,16 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
    fout << "   // test event if it decends the tree at this node to the right" << std::endl;
    fout << "   bool result;" << std::endl;
    if (fUseFisherCuts){
-     fout << "   if (fNFisherCoeff == 0){" << std::endl;
-     fout << "     result = (inputValues[fSelector] > fCutValue );" << std::endl;
-     fout << "   }else{" << std::endl;
-     fout << "     double fisher = fFisherCoeff.at(fFisherCoeff.size()-1);" << std::endl;
-     fout << "     for (unsigned int ivar=0; ivar<fFisherCoeff.size()-1; ivar++)" << std::endl;
-     fout << "       fisher += fFisherCoeff.at(ivar)*inputValues.at(ivar);" << std::endl;
-     fout << "     result = fisher > fCutValue;" << std::endl;
-     fout << "   }" << std::endl;
+      fout << "   if (fNFisherCoeff == 0){" << std::endl;
+      fout << "     result = (inputValues[fSelector] > fCutValue );" << std::endl;
+      fout << "   }else{" << std::endl;
+      fout << "     double fisher = fFisherCoeff.at(fFisherCoeff.size()-1);" << std::endl;
+      fout << "     for (unsigned int ivar=0; ivar<fFisherCoeff.size()-1; ivar++)" << std::endl;
+      fout << "       fisher += fFisherCoeff.at(ivar)*inputValues.at(ivar);" << std::endl;
+      fout << "     result = fisher > fCutValue;" << std::endl;
+      fout << "   }" << std::endl;
    }else{
-     fout << "     result = (inputValues[fSelector] > fCutValue );" << std::endl;
+      fout << "     result = (inputValues[fSelector] > fCutValue );" << std::endl;
    }
    fout << "   if (fCutType == true) return result; //the cuts are selecting Signal ;" << std::endl;
    fout << "   else return !result;" << std::endl;
@@ -2793,14 +2793,14 @@ void TMVA::MethodBDT::MakeClassInstantiateNode( DecisionTreeNode *n, std::ostrea
    fout << ", " <<  std::endl
         << std::setprecision(6);
    if (fUseFisherCuts){
-     fout << n->GetNFisherCoeff() << ", ";
-     for (UInt_t i=0; i< GetNVariables()+1; i++) {
-       if (n->GetNFisherCoeff() == 0 ){
-         fout <<  "0, ";
-       }else{
-         fout << n->GetFisherCoeff(i) << ", ";
-       }
-     }
+      fout << n->GetNFisherCoeff() << ", ";
+      for (UInt_t i=0; i< GetNVariables()+1; i++) {
+         if (n->GetNFisherCoeff() == 0 ){
+            fout <<  "0, ";
+         }else{
+            fout << n->GetFisherCoeff(i) << ", ";
+         }
+      }
    }
    fout << n->GetSelector() << ", "
         << n->GetCutValue() << ", "
