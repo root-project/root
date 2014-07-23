@@ -36,5 +36,6 @@
 #pragma link C++ class TMVA::VariableGaussTransform+;
 #pragma link C++ class TMVA::VariableNormalizeTransform+;
 #pragma link C++ class TMVA::VariableRearrangeTransform+;
+#pragma link C++ class TMVA::ROCCalc+;
 
 #endif
