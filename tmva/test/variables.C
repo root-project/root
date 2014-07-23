@@ -94,7 +94,7 @@ void variables( TString fin = "TMVA.root", TString dirName = "InputVariables_Id"
       TH1 *bgd = (TH1*)dir->Get(bgname);
       if (bgd == NULL) {
          cout << "ERROR!!! couldn't find background histo for" << hname << endl;
-         exit;
+         return;
       }
 
       // this is set but not stored during plot creation in MVA_Factory
