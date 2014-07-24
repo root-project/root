@@ -252,15 +252,34 @@ Float_t TMVA::Event::GetSpectator( UInt_t ivar) const
 const std::vector<Float_t>& TMVA::Event::GetValues() const
 {
    // return value vector
-   if (fVariableArrangement!=0) {
-      assert(0);
-   }
-   if (fDynamic) {
-      fValues.clear();
-      for (std::vector<Float_t*>::const_iterator it = fValuesDynamic->begin(), itEnd=fValuesDynamic->end()-GetNSpectators(); 
-           it != itEnd; ++it) { 
-         Float_t val = *(*it); 
-         fValues.push_back( val ); 
+   if (fVariableArrangement==0) {
+
+      if (fDynamic) {
+         fValues.clear();
+         for (std::vector<Float_t*>::const_iterator it = fValuesDynamic->begin(), itEnd=fValuesDynamic->end()-GetNSpectators(); 
+              it != itEnd; ++it) { 
+            Float_t val = *(*it); 
+            fValues.push_back( val ); 
+         }
+      }
+   }else{
+      UInt_t mapIdx;
+      if (fDynamic) {
+         fValues.clear();
+         for (UInt_t i=0; i< fVariableArrangement->size(); i++){
+            mapIdx = (*fVariableArrangement)[i];
+            fValues.push_back(*((*fValuesDynamic).at(mapIdx)));
+         }
+      } else {
+         // hmm now you have a problem, as you do not want to mess with the original event variables
+         // (change them permanently) ... guess the only way is to add a 'fValuesRearranged' array, 
+         // and living with the fact that it 'doubles' the Event size :(
+         fValuesRearranged.clear();
+         for (UInt_t i=0; i< fVariableArrangement->size(); i++){
+             mapIdx = (*fVariableArrangement)[i];
+             fValuesRearranged.push_back(fValues.at(mapIdx));
+         }
+         return fValuesRearranged;
       }
    }
    return fValues;
