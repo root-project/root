@@ -119,6 +119,7 @@ protected:
    void   PreProcessFormula(TString &formula);
    void   ProcessFormula(TString &formula);
    Bool_t PrepareFormula(TString &formula);
+   void   DoAddParameter(const TString &name, Double_t value, bool processFormula);
 
 
 public:
@@ -134,7 +135,7 @@ public:
                   TFormula(const TFormula &formula);
                   TFormula(const char *name, Int_t nparams, Int_t ndims);
    
-   void           AddParameter(const TString &name, Double_t value);
+   void           AddParameter(const TString &name, Double_t value) { DoAddParameter(name,value,true); }
    void           AddVariable(const TString &name, Double_t value);
    void           AddVariables(const pair<TString,Double_t> *vars, const Int_t size);
    void           Copy(TObject &f1) const;

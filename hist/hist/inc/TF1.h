@@ -191,6 +191,8 @@ public:
    TF1(const TF1 &f1);
    TF1& operator=(const TF1 &rhs);
    virtual   ~TF1();
+   virtual void     AddParameter(const TString &name, Double_t value) { fFormula->AddParameter(name,value); }
+   //virtual void     AddParameters(const pair<TString,Double_t> *pairs, Int_t size) { fFormula->AddParameters(pairs,size); } 
    virtual void     AddVariable(const TString &name, Double_t value) { fFormula->AddVariable(name,value); }
    virtual void     AddVariables(const pair<TString,Double_t> *pairs, Int_t size) { fFormula->AddVariables(pairs,size); } 
    virtual void     Browse(TBrowser *b);
@@ -204,7 +206,7 @@ public:
    virtual TF1     *DrawCopy(Option_t *option="") const;
    virtual TObject *DrawDerivative(Option_t *option="al"); // *MENU*
    virtual TObject *DrawIntegral(Option_t *option="al");   // *MENU*
-   virtual void     DrawF1(const char *formula, Double_t xmin, Double_t xmax, Option_t *option="");
+   virtual void     DrawF1(Double_t xmin, Double_t xmax, Option_t *option="");
    virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0) const;
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params=0);
    // for using TF1 as a callable object (functor)

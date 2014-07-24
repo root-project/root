@@ -1284,14 +1284,14 @@ TObject *TF1::DrawIntegral(Option_t *option)
 
 
 //______________________________________________________________________________
-void TF1::DrawF1(const char *formula, Double_t xmin, Double_t xmax, Option_t *option)
+void TF1::DrawF1(Double_t xmin, Double_t xmax, Option_t *option)
 {
-   // Draw formula between xmin and xmax.
+//    // Draw function between xmin and xmax.
 
-   //if(Compile(formula)) return ;
-   SetRange(xmin, xmax);
+//    //if(Compile(formula)) return ;
+    SetRange(xmin, xmax);
 
-   Draw(option);
+    Draw(option);
 }
 
 

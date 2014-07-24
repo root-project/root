@@ -23,6 +23,7 @@
 #include "TInterpreter.h"
 #include "TFormula.h"
 #include <cassert>
+#include <iostream>
 
 // #define __STDC_LIMIT_MACROS
 // #define __STDC_CONSTANT_MACROS
@@ -176,7 +177,7 @@ TFormula::TFormula(const char *name, Int_t nparams, Int_t ndims)
    for(Int_t i = 0; i < nparams; ++i)
    {
       TString parName = TString::Format("%d",i);
-      AddParameter(parName,0);
+      DoAddParameter(parName,0,false);
    }
 }
 
@@ -371,10 +372,12 @@ void TFormula::InputFormulaIntoCling()
 }
 void TFormula::FillDefaults()
 {
-   //*-*    
+   //*-* 
    //*-*    Fill structures with default variables, constants and function shortcuts
    //*-*    
-#ifdef ROOT_CPLUSPLUS11
+//#ifdef ROOT_CPLUSPLUS11
+   
+
    const TString defvars[] = { "x","y","z","t"};
    const pair<TString,Double_t> defconsts[] = { {"pi",TMath::Pi()}, {"sqrt2",TMath::Sqrt2()},
          {"infinity",TMath::Infinity()}, {"e",TMath::E()}, {"ln10",TMath::Ln10()},
@@ -390,7 +393,8 @@ void TFormula::FillDefaults()
          {"binomial","TMath::Binomial"},{"abs","TMath::Abs"} }; 
    for(auto var : defvars)
    {
-      fVars[var] = TFormulaVariable(var,0,fVars.size());
+      int pos = fVars.size();
+      fVars[var] = TFormulaVariable(var,0,pos);
       fClingVariables.push_back(0);
    }
    for(auto con : defconsts)
@@ -401,7 +405,10 @@ void TFormula::FillDefaults()
    {
       fFunctionsShortcuts[fun.first] = fun.second;
    }
+
+/*** - old code tu support C++03 
 #else
+
    TString  defvarsNames[] = {"x","y","z","t"};
    Int_t    defvarsLength = sizeof(defvarsNames)/sizeof(TString);
 
@@ -421,8 +428,8 @@ void TFormula::FillDefaults()
    {
       TString var = defvarsNames[i];
       Double_t value = 0;
-      unsigned int size = fVars.size();
-      fVars[var] = TFormulaVariable(var,value,size);
+      unsigned int pos = fVars.size();
+      fVars[var] = TFormulaVariable(var,value,pos);
       fClingVariables.push_back(value);
    }
 
@@ -437,6 +444,7 @@ void TFormula::FillDefaults()
    }
 
 #endif 
+***/
 
 }
 
@@ -850,7 +858,7 @@ void TFormula::ExtractFunctors(TString &formula)
          }
          i++;
 
-         AddParameter(param,0);
+         DoAddParameter(param,0,false);
          TString replacement = TString::Format("{[%s]}",param.Data());
          formula.Replace(tmp,i - tmp, replacement,replacement.Length());
          fFuncs.push_back(TFormulaFunction(param));
@@ -1016,9 +1024,11 @@ void TFormula::ProcessFormula(TString &formula)
          {
             TString name = (*paramsIt).second.GetName();
             TString pattern = TString::Format("{[%s]}",fun.GetName());
+            std::cout << "pattern is " << pattern << std::endl;
             if(formula.Index(pattern) != kNPOS)
             {
                TString replacement = TString::Format("p[%d]",(*paramsIt).second.fArrayPos);
+               std::cout << "replace pattern  " << pattern << " with " << replacement << std::endl;
                formula.ReplaceAll(pattern,replacement);
                
             }
@@ -1072,6 +1082,19 @@ void TFormula::ProcessFormula(TString &formula)
       }
 
    }
+   // clean up un-used default variables 
+   auto itvar = fVars.begin(); 
+   do
+   {
+      if ( ! itvar->second.fFound ) {
+         //std::cout << "Erase variable " << itvar->first << std::endl;
+         itvar = fVars.erase(itvar);
+      }
+      else 
+         itvar++;
+   }
+   while( itvar != fVars.end() ); 
+
 }
 const TObject* TFormula::GetLinearPart(Int_t i)
 {
@@ -1208,13 +1231,15 @@ void TFormula::SetVariable(const TString &name, Double_t value)
    fClingVariables[fVars[name].fArrayPos] = value;
 }
 
-void TFormula::AddParameter(const TString &name, Double_t value)
+void TFormula::DoAddParameter(const TString &name, Double_t value, Bool_t processFormula)
 {
    //*-*    
    //*-*    Adds parameter to known parameters.
    //*-*    User should use SetParameter, because parameters are added during initialization part,
    //*-*    and after that adding new will be pointless.
    //*-*    
+
+   std::cout << "adding parameter " << name << std::endl;
 
    if(fParams.find(name) != fParams.end() )
    {
@@ -1234,8 +1259,14 @@ void TFormula::AddParameter(const TString &name, Double_t value)
    {
       fNpar++;
       //TFormulaVariable(name,value,fParams.size());
-      fParams.insert(pair<TString,TFormulaVariable>(name,TFormulaVariable(name,value,fParams.size())));
+      int pos = fParams.size(); 
+      fParams.insert(pair<TString,TFormulaVariable>(name,TFormulaVariable(name,value,pos)));
       fClingParameters.push_back(value);
+      if (processFormula) { 
+         // replace first in input parameter name with [name]
+         fClingInput.ReplaceAll(name,TString::Format("[%s]",name.Data() ) );
+         ProcessFormula(fClingInput);
+      }
    }
 
 } 
@@ -1443,43 +1474,46 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params)
 Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t)
 {
    //*-*    
-   //*-*    Sets 4 default variables x, y, z, t and evaluate formula.
+   //*-*    Sets first 4  variables (e.g. x, y, z, t) and evaluate formula.
    //*-*    
-   if(fNdim >= 1) SetVariable("x",x);
-   if(fNdim >= 2) SetVariable("y",y);
-   if(fNdim >= 3) SetVariable("z",z);
-   if(fNdim >= 4) SetVariable("t",t);
+   if(fNdim >= 1) fClingVariables[0] = x;
+   if(fNdim >= 2) fClingVariables[1] = y;
+   if(fNdim >= 3) fClingVariables[2] = z;
+   if(fNdim >= 4) fClingVariables[3] = t;
    return Eval();
 }
 Double_t TFormula::Eval(Double_t x, Double_t y , Double_t z)
 {
    //*-*    
-   //*-*    Sets 3 default variables x, y, z and evaluate formula.
+   //*-*    Sets first 3  variables (e.g. x, y, z) and evaluate formula.
    //*-*    
 
-   if(fNdim >= 1) SetVariable("x",x);
-   if(fNdim >= 2) SetVariable("y",y);
-   if(fNdim >= 3) SetVariable("z",z);
+   if(fNdim >= 1) fClingVariables[0] = x;
+   if(fNdim >= 2) fClingVariables[1] = y;
+   if(fNdim >= 3) fClingVariables[2] = z;
+   // if(fNdim >= 1) SetVariable("x",x);
+   // if(fNdim >= 2) SetVariable("y",y);
+   // if(fNdim >= 3) SetVariable("z",z);
 
    return Eval();
 }
 Double_t TFormula::Eval(Double_t x, Double_t y)
 {
    //*-*    
-   //*-*    Sets 2 default variables x, y and evaluate formula.
+   //*-*    Sets first 2  variables (e.g. x and y) and evaluate formula.
    //*-*    
 
-   if(fNdim >= 1) SetVariable("x",x);
-   if(fNdim >= 2) SetVariable("y",y);
+   if(fNdim >= 1) fClingVariables[0] = x;
+   if(fNdim >= 2) fClingVariables[1] = y;
    return Eval();
 }
 Double_t TFormula::Eval(Double_t x)
 {
    //*-*    
-   //*-*    Sets 1 default variable x and evaluate formula.
+   //*-*    Sets first variable (e.g. x) and evaluate formula.
    //*-*    
 
-   SetVariable("x",x);
+   if(fNdim >= 1) fClingVariables[0] = x;
    return Eval();
 }
 Double_t TFormula::Eval()
@@ -1505,19 +1539,20 @@ Double_t TFormula::Eval()
       }
       return -1;
    }
-   if(!fAllParametersSetted)
-   {
-      Warning("Eval","Not all parameters are setted.");
-      for(map<TString,TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); ++it)
-      {
-         pair<TString,TFormulaVariable> param = *it;
-         if(!param.second.fFound)
-         {
-            printf("%s has default value %lf\n",param.first.Data(),param.second.GetInitialValue());
-         }
-      }  
+   // This is not needed (we can always use the default values)
+   // if(!fAllParametersSetted)
+   // {
+   //    Warning("Eval","Not all parameters are setted.");
+   //    for(map<TString,TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); ++it)
+   //    {
+   //       pair<TString,TFormulaVariable> param = *it;
+   //       if(!param.second.fFound)
+   //       {
+   //          printf("%s has default value %lf\n",param.first.Data(),param.second.GetInitialValue());
+   //       }
+   //    }  
 
-   }
+   // }
    Double_t result = 0;
    void* args[2]; 
    double * vars = fClingVariables.data();
@@ -1557,4 +1592,30 @@ void TFormula::Print(Option_t *option) const
       printf("Expression passed to Cling:\n");
       printf("\t%s\n",fClingInput.Data() );
    }
+   if(!fReadyToExecute)
+   {
+      Warning("Print","Formula is not ready to execute. Missing parameters/variables");
+      for(list<TFormulaFunction>::const_iterator it = fFuncs.begin(); it != fFuncs.end(); ++it)
+      {
+         TFormulaFunction fun = *it;
+         if(!fun.fFound)
+         {
+            printf("%s is uknown.\n",fun.GetName());
+         }
+      }
+   }
+   if(!fAllParametersSetted)
+   {
+      Info("Print","Not all parameters are setted.");
+      for(map<TString,TFormulaVariable>::const_iterator it = fParams.begin(); it != fParams.end(); ++it)
+      {
+         pair<TString,TFormulaVariable> param = *it;
+         if(!param.second.fFound)
+         {
+            printf("%s has default value %lf\n",param.first.Data(),param.second.GetInitialValue());
+         }
+      }  
+
+   }
+
 } 
