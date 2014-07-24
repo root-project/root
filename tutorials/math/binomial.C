@@ -48,7 +48,7 @@ void binomialFancy() {
        for(Int_t k=0; k<=j; k++)
           res2+=TMath::Power(x,k)*TMath::Power(y,j-k)*TMath::Binomial(j,k);
        if((err=TMath::Abs(res1-res2)/TMath::Abs(res1))>1e-10)
- 	      printf("res1=%e res2=%e x=%e y=%e err=%e j=%d\n",res1,res2,x,y,err,j);
+          printf("res1=%e res2=%e x=%e y=%e err=%e j=%d\n",res1,res2,x,y,err,j);
        serr +=err;
      }
   }

@@ -142,23 +142,21 @@ public:
   
   double operator()(const std::vector<double>& par) const {
 
-    double sumoflogs = 0.0; 
-    std::vector<double> vecElements =  Elements(par);
-    unsigned int vecElementsSize = vecElements.size();
-
-    for (unsigned int i = 0; i < vecElementsSize; ++i) { 
-      double tmp = vecElements[i]; 
-      //for max likelihood probability have to be positive
-      assert(tmp >= 0);
-      if ( tmp < FLT_MIN*5 )
-	tmp = FLT_MIN*5; 
-
-      sumoflogs -= std::log(tmp);
-      //std::cout << " i " << tmp << " lik " << sumoflogs << std::endl;
-    }
-      
-
-    return sumoflogs; 
+     double sumoflogs = 0.0;
+     std::vector<double> vecElements =  Elements(par);
+     unsigned int vecElementsSize = vecElements.size();
+     
+     for (unsigned int i = 0; i < vecElementsSize; ++i) {
+        double tmp = vecElements[i];
+        //for max likelihood probability have to be positive
+        assert(tmp >= 0);
+        if ( tmp < FLT_MIN*5 )
+        tmp = FLT_MIN*5;
+        
+        sumoflogs -= std::log(tmp);
+        //std::cout << " i " << tmp << " lik " << sumoflogs << std::endl;
+     }
+     return sumoflogs;
   }
   
 

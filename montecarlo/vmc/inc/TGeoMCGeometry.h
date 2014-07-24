@@ -115,8 +115,8 @@ public:
    //virtual void  DrawOneSpec(const char* name);
    //virtual void  Gsatt(const char* name, const char* att, Int_t val);
    //virtual void  Gdraw(const char*,Double_t theta, Double_t phi,
-   //		        Double_t psi, Double_t u0, Double_t v0,
-   //		        Double_t ul, Double_t vl);
+   //          Double_t psi, Double_t u0, Double_t v0,
+   //          Double_t ul, Double_t vl);
 
    // Euclid
    //virtual void  WriteEuclid(const char*, const char*, Int_t, Int_t);

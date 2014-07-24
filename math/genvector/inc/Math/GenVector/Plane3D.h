@@ -63,8 +63,8 @@ namespace Math {
       Plane3D ( ) : fA(0), fB(0), fC(1.), fD(0) { }
 
       /**
-         generic constructors from the four scalar values describing the plane
-	 according to the equation ax + by + cz + d = 0
+       generic constructors from the four scalar values describing the plane
+       according to the equation ax + by + cz + d = 0
          \param a scalar value 
          \param b scalar value 
          \param c scalar value 
@@ -73,9 +73,9 @@ namespace Math {
       Plane3D(const Scalar & a, const Scalar & b, const Scalar & c, const Scalar & d);
 
       /**
-         constructor a Plane3D from a normal vector and a point coplanar to the plane
-	 \param n normal expressed as a ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
-	 \param p point  expressed as a  ROOT::Math::PositionVector3D<Cartesian3D<double> >
+       constructor a Plane3D from a normal vector and a point coplanar to the plane
+       \param n normal expressed as a ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
+       \param p point  expressed as a  ROOT::Math::PositionVector3D<Cartesian3D<double> >
       */
       Plane3D(const Vector & n, const Point & p ) 
       {
@@ -84,10 +84,10 @@ namespace Math {
        
 
       /**
-         Construct from a generic DisplacementVector3D (normal vector) and PositionVector3D (point coplanar to 
-         the plane)
-	 \param n normal expressed as a generic ROOT::Math::DisplacementVector3D
-	 \param p point  expressed as a generic ROOT::Math::PositionVector3D
+       Construct from a generic DisplacementVector3D (normal vector) and PositionVector3D (point coplanar to
+       the plane)
+       \param n normal expressed as a generic ROOT::Math::DisplacementVector3D
+       \param p point  expressed as a generic ROOT::Math::PositionVector3D
       */
       template<class T1, class T2, class U>
       Plane3D( const  DisplacementVector3D<T1,U> & n, const  PositionVector3D<T2,U> & p)  
@@ -96,21 +96,20 @@ namespace Math {
       }
 
       /**
-         constructor from three Cartesian point belonging to the plane
-	 \param p1 point1  expressed as a generic ROOT::Math::PositionVector3D
-	 \param p2 point2  expressed as a generic ROOT::Math::PositionVector3D
-	 \param p3 point3  expressed as a generic ROOT::Math::PositionVector3D
-
+       constructor from three Cartesian point belonging to the plane
+       \param p1 point1  expressed as a generic ROOT::Math::PositionVector3D
+       \param p2 point2  expressed as a generic ROOT::Math::PositionVector3D
+       \param p3 point3  expressed as a generic ROOT::Math::PositionVector3D
       */
       Plane3D(const Point & p1, const Point & p2, const Point & p3  ) { 
          BuildFrom3Points(p1,p2,p3);
       }
 
       /**
-         constructor from three generic point belonging to the plane
-	 \param p1 point1 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
-	 \param p2 point2 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
-	 \param p3 point3 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
+       constructor from three generic point belonging to the plane
+       \param p1 point1 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
+       \param p2 point2 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
+       \param p3 point3 expressed as  ROOT::Math::DisplacementVector3D<Cartesian3D<double> >
       */
       template <class T1, class T2, class T3, class U>
       Plane3D(const  PositionVector3D<T1,U> & p1, const  PositionVector3D<T2,U> & p2, const  PositionVector3D<T3,U> & p3  )  
@@ -169,8 +168,8 @@ namespace Math {
       }
 
       /** 
-	  Return the Hesse Distance (distance from the origin) of the plane or 
-          the d coefficient expressed in normalize form 
+       Return the Hesse Distance (distance from the origin) of the plane or
+       the d coefficient expressed in normalize form
       */
       Scalar HesseDistance() const { 
          return fD; 
@@ -178,41 +177,41 @@ namespace Math {
 
 
       /**
-	 Return the signed distance to a Point. 
-	 The distance is signed positive if the Point is in the same side of the 
-	 normal vector to the plane.   
-	 \param p Point expressed in Cartesian Coordinates 
-      */
-      Scalar Distance(const Point & p) const; 
+       Return the signed distance to a Point.
+       The distance is signed positive if the Point is in the same side of the
+       normal vector to the plane.
+       \param p Point expressed in Cartesian Coordinates
+       */
+      Scalar Distance(const Point & p) const;
 
       /**
-	 Return the distance to a Point described with generic coordinates
-	 \param p Point expressed as generic ROOT::Math::PositionVector3D 
-      */
-      template <class T, class U> 
-      Scalar Distance(const PositionVector3D<T,U> & p) const { 
+       Return the distance to a Point described with generic coordinates
+       \param p Point expressed as generic ROOT::Math::PositionVector3D
+       */
+      template <class T, class U>
+      Scalar Distance(const PositionVector3D<T,U> & p) const {
          return Distance( Point(p.X(), p.Y(), p.Z() ) );
       }
 
       /**
-	 Return the projection of a Cartesian point to a plane
-	 \param p Point expressed as PositionVector3D<Cartesian3D<double> >
-      */
-      Point ProjectOntoPlane(const Point & p) const; 
+       Return the projection of a Cartesian point to a plane
+       \param p Point expressed as PositionVector3D<Cartesian3D<double> >
+       */
+      Point ProjectOntoPlane(const Point & p) const;
 
       /**
-	 Return the projection of a point to a plane
-	 \param p Point expressed as generic ROOT::Math::PositionVector3D
-      */
-      template <class T, class U> 
-      PositionVector3D<T,U> ProjectOntoPlane(const PositionVector3D<T,U> & p) const { 
+       Return the projection of a point to a plane
+       \param p Point expressed as generic ROOT::Math::PositionVector3D
+       */
+      template <class T, class U>
+      PositionVector3D<T,U> ProjectOntoPlane(const PositionVector3D<T,U> & p) const {
          Point pxyz = ProjectOntoPlane(Point(p.X(), p.Y(), p.Z() ) );
          PositionVector3D<T,U> p2;
-         p2.SetXYZ( pxyz.X(), pxyz.Y(), pxyz.Z() );  
+         p2.SetXYZ( pxyz.X(), pxyz.Y(), pxyz.Z() );
          return p2;
       }
-
-
+      
+      
 
       // ------------------- Equality -----------------
 

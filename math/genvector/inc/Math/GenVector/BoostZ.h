@@ -49,9 +49,9 @@ public:
 
    enum EBoostMatrixIndex {
       kXX =  0, kXY =  1, kXZ =  2, kXT =  3
-    	      , kYY =  4, kYZ =  5, kYT =  6
-    		        , kZZ =  7, kZT =  8
-    			          , kTT =  9
+      , kYY =  4, kYZ =  5, kYT =  6
+      , kZZ =  7, kZT =  8
+      , kTT =  9
    };
 
    // ========== Constructors and Assignment =====================

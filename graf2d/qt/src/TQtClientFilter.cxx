@@ -205,7 +205,7 @@ static inline UInt_t MapKeySym(const QKeyEvent &qev)
 {
    UInt_t text = 0;;
    Qt::Key key = Qt::Key(qev.key());
-   for (int i = 0; gKeyQMap[i].fKeySym; i++) {	// any other keys
+   for (int i = 0; gKeyQMap[i].fKeySym; i++) { // any other keys
       if (key ==  gKeyQMap[i].fQKeySym) {
          return   UInt_t(gKeyQMap[i].fKeySym);
       }
@@ -251,18 +251,18 @@ static inline void MapEvent(const QMoveEvent &qev, Event_t &ev)
 //______________________________________________________________________________________
 static inline void MapEvent(const QResizeEvent &qev, Event_t &ev)
 {
-   ev.fWidth  = qev.size().width();	   // width and
-   ev.fHeight = qev.size().height();	// height of exposed area
+   ev.fWidth  = qev.size().width();    // width and
+   ev.fHeight = qev.size().height();   // height of exposed area
 }
 //______________________________________________________________________________________
 static inline void MapEvent(const QPaintEvent &qev, Event_t &ev)
 {
    ev.fX = qev.rect().x();
    ev.fY = qev.rect().y();
-   ev.fWidth  = qev.rect().width();	  // width and
+   ev.fWidth  = qev.rect().width();   // width and
    ev.fHeight = qev.rect().height();  // height of exposed area
    ev.fCount  = 0;
-   //         ev.fCount = xev.expose.count;	// number of expose events still to come
+   //         ev.fCount = xev.expose.count; // number of expose events still to come
 }
 //______________________________________________________________________________________
 static inline void MapEvent(const TQUserEvent &qev, Event_t &ev)
@@ -357,8 +357,8 @@ void TQtClientFilter::AddKeyEvent( const QKeyEvent &keyEvent, TQtClientWidget *f
      evt.fTime      = QTime::currentTime().msec ();
      evt.fX         = frame->x();
      evt.fY         = frame->y();
-     evt.fWidth     = frame->width();	// width and
-     evt.fHeight    = frame->height();	// height excluding the frame
+     evt.fWidth     = frame->width();  // width and
+     evt.fHeight    = frame->height(); // height excluding the frame
 
      QPoint pointRoot = frame->mapToGlobal(QPoint(0,0));
      evt.fXRoot     = pointRoot.x();
@@ -410,8 +410,8 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
    evt.fTime      = QTime::currentTime().msec ();
    evt.fX         = frame->x();
    evt.fY         = frame->y();
-   evt.fWidth     = frame->width();	// width and
-   evt.fHeight    = frame->height();	// height excluding the frame
+   evt.fWidth     = frame->width();    // width and
+   evt.fHeight    = frame->height();   // height excluding the frame
   
    QPoint pointRoot = frame->mapToGlobal(QPoint(0,0));
    evt.fXRoot     = pointRoot.x();

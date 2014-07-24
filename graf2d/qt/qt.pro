@@ -80,14 +80,14 @@ CREATE_ROOT_DICT_FOR_CLASSES  = $$GQTH1 $$GQTDIRI/LinkDef.h
 
 win32 {
 #  copy from rootlibs.pri for GQt project
-   LIBS	+=                                                                                                \
+   LIBS +=                                                                                                \
       -include:_G__cpp_setupG__Hist       -include:_G__cpp_setupG__Graf1  -include:_G__cpp_setupG__G3D     \
       -include:_G__cpp_setupG__GPad       -include:_G__cpp_setupG__Tree   -include:_G__cpp_setupG__Rint    \
       -include:_G__cpp_setupG__PostScript -include:_G__cpp_setupG__Matrix -include:_G__cpp_setupG__Physics \
       -include:_G__cpp_setupG__Gui1       -include:_G__cpp_setupG__Geom1   
     
    
-   LIBS	+=                                                                                         \
+   LIBS +=                                                                                         \
     $(ROOTSYS)/lib/libCore.lib   $(ROOTSYS)/lib/libCint.lib     $(ROOTSYS)/lib/libHist.lib         \
     $(ROOTSYS)/lib/libGraf.lib   $(ROOTSYS)/lib/libGraf3d.lib   $(ROOTSYS)/lib/libGpad.lib         \
     $(ROOTSYS)/lib/libTree.lib   $(ROOTSYS)/lib/libRint.lib     $(ROOTSYS)/lib/libPostscript.lib   \

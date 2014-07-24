@@ -80,7 +80,7 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, double ticks ) 
   if ( (sd1 + sd2 == sd1) != (sd1 + sd2 == sd2) ) {
     ret=5;
     std::cout << "\nInfinity discrepancy in " << coord << "(): "
-	      << sd1 << " != " << sd2 << "\n";
+              << sd1 << " != " << sd2 << "\n";
     std::cout.precision (pr);
     return ret;
   }
@@ -291,9 +291,9 @@ int coordinates3D () {
   ret |= test3D (XYZVector ( -.01, 16.0, .01 )   ,2000 ); 
   ret |= test3D (XYZVector ( -.01, -16.0, .01 )  ,2000 ); 
   ret |= test3D (XYZVector ( 1.0, 2.0, 30.0 )    ,10 );  
-  	// NOTE -- these larger erros are likely the results of treating
-	//         the vector in a ctor or assignment as foreign... 
-	// NO -- I'm fouling up the value of x() !!!!!
+   // NOTE -- these larger erros are likely the results of treating
+   //         the vector in a ctor or assignment as foreign...
+   // NO -- I'm fouling up the value of x() !!!!!
 // As we push to higher z with zero rho, some accuracy loss is expected
   ret |= test3D (XYZVector ( 0.0, 0.0, 15.0 )    ,30 );
   ret |= test3D (XYZVector ( 0.0, 0.0, -15.0 )   ,30 );

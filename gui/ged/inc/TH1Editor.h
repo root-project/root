@@ -52,9 +52,9 @@ protected:
    TGRadioButton       *fDim0;            // 3D-Plot RadioButton
    TGLayoutHints       *fDimlh;           // layout hints for 2D-Plot RadioButton
    TGLayoutHints       *fDim0lh;          // layout hints for 3D-Plot RadioButton
-   TGComboBox	         *fTypeCombo;       // histogram type combo box
-   TGComboBox 	        *fCoordsCombo;     // Coordinate System combo box
-   TGComboBox 	        *fErrorCombo;      // Error combo box
+   TGComboBox          *fTypeCombo;       // histogram type combo box
+   TGComboBox          *fCoordsCombo;     // Coordinate System combo box
+   TGComboBox          *fErrorCombo;      // Error combo box
    TGCheckButton       *fHistOnOff;       // Draw a simple histogram with default options
    TGCheckButton       *fAddMarker;       // Draw a Marker on top of each bin
    TGCheckButton       *fAddB;            // Draw a Bar Chart

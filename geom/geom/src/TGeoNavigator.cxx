@@ -17,14 +17,14 @@
 // allowed for a single geometry.
 // A default navigator is provided for any geometry but one may add several 
 // others for parallel navigation:
-//	
-//	TGeoNavigator *navig = new TGeoNavigator(gGeoManager);
-//	Int_t inav = gGeoManager->AddNavigator(navig);
-//	gGeoManager->SetCurrentNavigator(inav);
 //
-//	.... and then switch back to the default navigator:
+// TGeoNavigator *navig = new TGeoNavigator(gGeoManager);
+// Int_t inav = gGeoManager->AddNavigator(navig);
+// gGeoManager->SetCurrentNavigator(inav);
 //
-//	gGeoManager->SetCurrentNavigator(0);
+// .... and then switch back to the default navigator:
+//
+// gGeoManager->SetCurrentNavigator(0);
 //_____________________________________________________________________________
 
 #include "TGeoNavigator.h"

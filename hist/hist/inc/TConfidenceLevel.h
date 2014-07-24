@@ -76,7 +76,7 @@ class TConfidenceLevel : public TObject {
    static const Double_t fgMCL5S1S;
    static const Double_t fgMCL3S2S;
    static const Double_t fgMCL5S2S;
-   ClassDef(TConfidenceLevel, 1)	// output for TLimit functions
+   ClassDef(TConfidenceLevel, 1) // output for TLimit functions
 };
 
 #endif

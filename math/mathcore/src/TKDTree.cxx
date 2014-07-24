@@ -427,9 +427,9 @@ void TKDTree<Index, Value>::Build()
    fOffset = fNPoints-filled;
 
    //
-   // 	printf("Row0      %d\n", fRowT0);
-   // 	printf("CrossNode %d\n", fCrossNode);
-   // 	printf("Offset    %d\n", fOffset);
+   //    printf("Row0      %d\n", fRowT0);
+   //    printf("CrossNode %d\n", fCrossNode);
+   //    printf("Offset    %d\n", fOffset);
    //
    //
    //4.
@@ -690,38 +690,38 @@ void TKDTree<Index, Value>::FindPoint(Value * point, Index &index, Int_t &iter){
   // find the index of point
   // works only if we keep fData pointers
 
-  Int_t stackNode[128];
-  Int_t currentIndex =0;
-  stackNode[0] = 0;
-  iter =0;
-  //
-  while (currentIndex>=0){
-    iter++;
-    Int_t inode    = stackNode[currentIndex];
-    currentIndex--;
-    if (IsTerminal(inode)){
-      // investigate terminal node
-      Int_t indexIP  = (inode >= fCrossNode) ? (inode-fCrossNode)*fBucketSize : (inode-fNNodes)*fBucketSize+fOffset;
-      printf("terminal %d indexP %d\n", inode, indexIP);
-      for (Int_t ibucket=0;ibucket<fBucketSize;ibucket++){
-	Bool_t isOK    = kTRUE;
-	indexIP+=ibucket;
-	printf("ibucket %d index %d\n", ibucket, indexIP);
-	if (indexIP>=fNPoints) continue;
-	Int_t index0   = fIndPoints[indexIP];
-	for (Int_t idim=0;idim<fNDim;idim++) if (fData[idim][index0]!=point[idim]) isOK = kFALSE;
-	if (isOK) index = index0;
+   Int_t stackNode[128];
+   Int_t currentIndex =0;
+   stackNode[0] = 0;
+   iter =0;
+   //
+   while (currentIndex>=0){
+      iter++;
+      Int_t inode    = stackNode[currentIndex];
+      currentIndex--;
+      if (IsTerminal(inode)){
+         // investigate terminal node
+         Int_t indexIP  = (inode >= fCrossNode) ? (inode-fCrossNode)*fBucketSize : (inode-fNNodes)*fBucketSize+fOffset;
+         printf("terminal %d indexP %d\n", inode, indexIP);
+         for (Int_t ibucket=0;ibucket<fBucketSize;ibucket++){
+            Bool_t isOK    = kTRUE;
+            indexIP+=ibucket;
+            printf("ibucket %d index %d\n", ibucket, indexIP);
+            if (indexIP>=fNPoints) continue;
+            Int_t index0   = fIndPoints[indexIP];
+            for (Int_t idim=0;idim<fNDim;idim++) if (fData[idim][index0]!=point[idim]) isOK = kFALSE;
+            if (isOK) index = index0;
+         }
+         continue;
       }
-      continue;
-    }
 
-    if (point[fAxis[inode]]<=fValue[inode]){
-      currentIndex++;
-      stackNode[currentIndex]=(inode*2)+1;
-    }
-    if (point[fAxis[inode]]>=fValue[inode]){
-      currentIndex++;
-      stackNode[currentIndex]=(inode*2)+2;
+      if (point[fAxis[inode]]<=fValue[inode]){
+         currentIndex++;
+         stackNode[currentIndex]=(inode*2)+1;
+      }
+      if (point[fAxis[inode]]>=fValue[inode]){
+         currentIndex++;
+         stackNode[currentIndex]=(inode*2)+2;
     }
   }
   //

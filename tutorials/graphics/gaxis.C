@@ -1,5 +1,5 @@
 {
-//Simple example illustrating how to draw TGaxis objects in various formats.	
+//Simple example illustrating how to draw TGaxis objects in various formats.
 //To see the output of this macro, click begin_html <a href="gif/gaxis.gif" >here</a> end_html
 //Author: Rene Brun
 

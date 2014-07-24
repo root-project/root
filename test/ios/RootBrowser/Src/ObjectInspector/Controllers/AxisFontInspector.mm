@@ -84,7 +84,7 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 {
 #pragma unused(interfaceOrientation)
 
-	return YES;
+   return YES;
 }
 
 #pragma mark - ObjectInspectorComponent.
@@ -143,7 +143,7 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 - (NSInteger) numberOfComponentsInPickerView : (UIPickerView *) pickerView
 {
 #pragma unused(pickerView)
-	return 1;
+   return 1;
 }
 
 #pragma mark font name picker's delegate.

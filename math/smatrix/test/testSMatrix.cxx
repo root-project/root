@@ -1024,14 +1024,14 @@ int test18() {
   int iret =0;
   // data for a 7x7 sym matrix to invert
   SMatrix<double,7,7,MatRepSym<double,7> > S;
-  for (int i = 0; i < 7; ++i) {
-    for (int j = 0; j <= i; ++j) { 
-      if (i == j) 
-	S(i,j) = 10*double(std::rand())/(RAND_MAX); // generate between 0,10
-      else
-	S(i,j) = 2*double(std::rand())/(RAND_MAX)-1; // generate between -1,1
-    }
-  }
+   for (int i = 0; i < 7; ++i) {
+      for (int j = 0; j <= i; ++j) {
+         if (i == j)
+         S(i,j) = 10*double(std::rand())/(RAND_MAX); // generate between 0,10
+         else
+         S(i,j) = 2*double(std::rand())/(RAND_MAX)-1; // generate between -1,1
+      }
+   }
   int ifail = 0;
   SMatrix<double,7,7,MatRepSym<double,7> > Sinv = S.Inverse(ifail);
   iret |= compare(ifail,0,"sym7x7 inversion");
@@ -1048,14 +1048,14 @@ int test18() {
 
   // now test inversion of general 
   SMatrix<double,7> M;
-  for (int i = 0; i < 7; ++i) {
-    for (int j = 0; j < 7; ++j) { 
-      if (i == j) 
-	M(i,j) = 10*double(std::rand())/(RAND_MAX); // generate between 0,10
-      else
-	M(i,j) = 2*double(std::rand())/(RAND_MAX)-1; // generate between -1,1
-    }
-  }
+   for (int i = 0; i < 7; ++i) {
+      for (int j = 0; j < 7; ++j) {
+         if (i == j)
+         M(i,j) = 10*double(std::rand())/(RAND_MAX); // generate between 0,10
+         else
+         M(i,j) = 2*double(std::rand())/(RAND_MAX)-1; // generate between -1,1
+      }
+   }
   ifail = 0;
   SMatrix<double,7 > Minv = M.Inverse(ifail);
   iret |= compare(ifail,0,"7x7 inversion");
@@ -1080,12 +1080,12 @@ int test19() {
   // data for a 7x7 sym matrix to invert
   SMatrix<float,7,7,MatRepSym<float,7> > S;
   for (int i = 0; i < 7; ++i) {
-    for (int j = 0; j <= i; ++j) { 
-      if (i == j) 
-	S(i,j) = 10*float(std::rand())/(RAND_MAX); // generate between 0,10
-      else
-	S(i,j) = 2*float(std::rand())/(RAND_MAX)-1; // generate between -1,1
-    }
+     for (int j = 0; j <= i; ++j) {
+        if (i == j)
+        S(i,j) = 10*float(std::rand())/(RAND_MAX); // generate between 0,10
+        else
+        S(i,j) = 2*float(std::rand())/(RAND_MAX)-1; // generate between -1,1
+     }
   }
   int ifail = 0;
   SMatrix<float,7,7,MatRepSym<float,7> > Sinv = S.Inverse(ifail);
@@ -1106,14 +1106,14 @@ int test19() {
 
   // now test inversion of general 
   SMatrix<float,7> M;
-  for (int i = 0; i < 7; ++i) {
-    for (int j = 0; j < 7; ++j) { 
-      if (i == j) 
-	M(i,j) = 10*float(std::rand())/(RAND_MAX); // generate between 0,10
-      else
-	M(i,j) = 2*float(std::rand())/(RAND_MAX)-1; // generate between -1,1
-    }
-  }
+   for (int i = 0; i < 7; ++i) {
+      for (int j = 0; j < 7; ++j) {
+         if (i == j)
+         M(i,j) = 10*float(std::rand())/(RAND_MAX); // generate between 0,10
+         else
+         M(i,j) = 2*float(std::rand())/(RAND_MAX)-1; // generate between -1,1
+      }
+   }
   ifail = 0;
   SMatrix<float,7 > Minv = M.Inverse(ifail);
   iret |= compare(ifail,0,"7x7 inversion");

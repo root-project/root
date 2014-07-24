@@ -32,7 +32,7 @@ public:
   virtual FunctionGradient operator()(const MinimumParameters&) const;
 
   virtual FunctionGradient operator()(const MinimumParameters&,
-				      const FunctionGradient&) const;
+                                      const FunctionGradient&) const;
 
   virtual bool CheckGradient() const;
 

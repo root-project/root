@@ -20,9 +20,9 @@ struct LDAP;
 struct LDAPMessage;
 struct LDAPMod;
 
-#define LDAP_VERSION1	1
-#define LDAP_VERSION2	2
-#define LDAP_VERSION3	3
+#define LDAP_VERSION1 1
+#define LDAP_VERSION2 2
+#define LDAP_VERSION3 3
 
 const int LDAP_PORT              = 389;
 

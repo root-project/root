@@ -178,7 +178,7 @@ class TMultiLayerPerceptron : public TObject {
    Int_t fReset;                   //! number of epochs between two resets of the search direction to the steepest descent - Default=50
    Bool_t fTrainingOwner;          //! internal flag whether one has to delete fTraining or not
    Bool_t fTestOwner;              //! internal flag whether one has to delete fTest or not
-   ClassDef(TMultiLayerPerceptron, 4)	// a Neural Network
+   ClassDef(TMultiLayerPerceptron, 4) // a Neural Network
 };
 
 #endif

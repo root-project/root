@@ -64,7 +64,7 @@
 {
 #pragma unused(interfaceOrientation)
 
-	return YES;
+   return YES;
 }
 
 #pragma mark - ObjectInspectorComponent's protocol.

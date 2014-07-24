@@ -323,11 +323,11 @@ inline T Lmag(const VecExpr<A,T,4>& rhs) {
 template <class T>
 inline SVector<T,3> Cross(const SVector<T,3>& lhs, const SVector<T,3>& rhs) {
   return SVector<T,3>(lhs.apply(1)*rhs.apply(2) -
-		      lhs.apply(2)*rhs.apply(1),
-		      lhs.apply(2)*rhs.apply(0) -
-		      lhs.apply(0)*rhs.apply(2),
-		      lhs.apply(0)*rhs.apply(1) -
-		      lhs.apply(1)*rhs.apply(0));
+                      lhs.apply(2)*rhs.apply(1),
+                      lhs.apply(2)*rhs.apply(0) -
+                      lhs.apply(0)*rhs.apply(2),
+                      lhs.apply(0)*rhs.apply(1) -
+                      lhs.apply(1)*rhs.apply(0));
 }
 
 //==============================================================================
@@ -336,11 +336,11 @@ inline SVector<T,3> Cross(const SVector<T,3>& lhs, const SVector<T,3>& rhs) {
 template <class A, class T>
 inline SVector<T,3> Cross(const VecExpr<A,T,3>& lhs, const SVector<T,3>& rhs) {
   return SVector<T,3>(lhs.apply(1)*rhs.apply(2) -
-		      lhs.apply(2)*rhs.apply(1),
-		      lhs.apply(2)*rhs.apply(0) -
-		      lhs.apply(0)*rhs.apply(2),
-		      lhs.apply(0)*rhs.apply(1) -
-		      lhs.apply(1)*rhs.apply(0));
+                      lhs.apply(2)*rhs.apply(1),
+                      lhs.apply(2)*rhs.apply(0) -
+                      lhs.apply(0)*rhs.apply(2),
+                      lhs.apply(0)*rhs.apply(1) -
+                      lhs.apply(1)*rhs.apply(0));
 }
 
 //==============================================================================
@@ -349,11 +349,11 @@ inline SVector<T,3> Cross(const VecExpr<A,T,3>& lhs, const SVector<T,3>& rhs) {
 template <class T, class A>
 inline SVector<T,3> Cross(const SVector<T,3>& lhs, const VecExpr<A,T,3>& rhs) {
   return SVector<T,3>(lhs.apply(1)*rhs.apply(2) -
-		      lhs.apply(2)*rhs.apply(1),
-		      lhs.apply(2)*rhs.apply(0) -
-		      lhs.apply(0)*rhs.apply(2),
-		      lhs.apply(0)*rhs.apply(1) -
-		      lhs.apply(1)*rhs.apply(0));
+                      lhs.apply(2)*rhs.apply(1),
+                      lhs.apply(2)*rhs.apply(0) -
+                      lhs.apply(0)*rhs.apply(2),
+                      lhs.apply(0)*rhs.apply(1) -
+                      lhs.apply(1)*rhs.apply(0));
 }
 
 //==============================================================================
@@ -362,11 +362,11 @@ inline SVector<T,3> Cross(const SVector<T,3>& lhs, const VecExpr<A,T,3>& rhs) {
 template <class A, class B, class T>
 inline SVector<T,3> Cross(const VecExpr<A,T,3>& lhs, const VecExpr<B,T,3>& rhs) {
   return SVector<T,3>(lhs.apply(1)*rhs.apply(2) -
-		      lhs.apply(2)*rhs.apply(1),
-		      lhs.apply(2)*rhs.apply(0) -
-		      lhs.apply(0)*rhs.apply(2),
-		      lhs.apply(0)*rhs.apply(1) -
-		      lhs.apply(1)*rhs.apply(0));
+                      lhs.apply(2)*rhs.apply(1),
+                      lhs.apply(2)*rhs.apply(0) -
+                      lhs.apply(0)*rhs.apply(2),
+                      lhs.apply(0)*rhs.apply(1) -
+                      lhs.apply(1)*rhs.apply(0));
 }
 
 

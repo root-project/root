@@ -50,7 +50,7 @@ namespace test {
       {
          fWatch.Start();
       } 
-	
+
       ~Timer() { 
          fWatch.Stop();
          printTime(fWatch,fName);
@@ -63,11 +63,11 @@ namespace test {
 
 
    private: 
-	
+
       std::string fName;
       double * fTime; 
       TStopwatch fWatch; 
-	
+
    }; 
 }
 
@@ -243,7 +243,7 @@ double invert( const std::vector<M* >  & matlist, double & time,std::string s) {
    test::Timer t(time,s);
    int nloop = matlist.size(); 
    double sum = 0;
-   for (int l = 0; l < nloop; l++) 	
+   for (int l = 0; l < nloop; l++)
    {
       const M & m = *(matlist[l]); 
       bool ok = TestInverter<M,T>::Inv(m,result);
@@ -265,14 +265,14 @@ double invert2( const std::vector<M* >  & matlist, double & time,std::string s) 
    // copy vector of matrices 
    int nloop = matlist.size(); 
    std::vector<M *> vmat(nloop); 
-   for (int l = 0; l < nloop; l++) 	
+   for (int l = 0; l < nloop; l++)
    {
       vmat[l] = new M( *matlist[l] );
    }
 
    test::Timer t(time,s);
    double sum = 0;
-   for (int l = 0; l < nloop; l++) 	
+   for (int l = 0; l < nloop; l++)
    {
       M & m = *(vmat[l]); 
       bool ok = TestInverter<M,T>::Inv2(m);

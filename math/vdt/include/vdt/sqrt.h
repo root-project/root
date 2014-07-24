@@ -67,16 +67,16 @@ inline double isqrt (double x) {return 1./std::sqrt(x);}
 /// Sqrt implmentation from Quake3
 inline float fast_isqrtf_general(float x, const uint32_t ISQRT_ITERATIONS) {
 
-	const float threehalfs = 1.5f;
-	const float x2 = x * 0.5f;
-	float y  = x;
-	uint32_t i  = details::sp2uint32(y);
-	i  = 0x5f3759df - ( i >> 1 );
-	y  = details::uint322sp(i);
-	for (uint32_t j=0;j<ISQRT_ITERATIONS;++j)
-		y  *= ( threehalfs - ( x2 * y * y ) );
+   const float threehalfs = 1.5f;
+   const float x2 = x * 0.5f;
+   float y  = x;
+   uint32_t i  = details::sp2uint32(y);
+   i  = 0x5f3759df - ( i >> 1 );
+   y  = details::uint322sp(i);
+   for (uint32_t j=0;j<ISQRT_ITERATIONS;++j)
+      y  *= ( threehalfs - ( x2 * y * y ) );
 
-	return y;
+   return y;
 }
 
 //------------------------------------------------------------------------------

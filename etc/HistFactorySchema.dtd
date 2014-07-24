@@ -11,9 +11,9 @@
 <!-- Input files detailing the channels. One channel per file -->
 <!ELEMENT Function  EMPTY>
 <!ATTLIST Function 
-	  Name                 CDATA         #REQUIRED
-	  Expression           CDATA         #REQUIRED
-	  Dependents           CDATA         #REQUIRED
+     Name                 CDATA         #REQUIRED
+     Expression           CDATA         #REQUIRED
+     Dependents           CDATA         #REQUIRED
 >
 
 <!-- Input files detailing the channels. One channel per file -->
@@ -105,7 +105,7 @@ For this element there is no sublemenents so the setting will only have local ef
 <!-- Systematics for which the variation is provided by histograms -->
 <!ELEMENT StatError EMPTY>
 <!ATTLIST StatError
-	  Activate          CDATA            #REQUIRED
+     Activate          CDATA            #REQUIRED
           HistoName         CDATA            #IMPLIED
           InputFile         CDATA            #IMPLIED
           HistoPath         CDATA            #IMPLIED

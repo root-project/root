@@ -74,11 +74,11 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
    MnAlgebraicSymMatrix mat(n);
    double dcovar = 1.;
    if(st.HasCovariance()) {
-      for(unsigned int i = 0; i < n; i++)	
+      for(unsigned int i = 0; i < n; i++)
          for(unsigned int j = i; j < n; j++) mat(i,j) = st.IntCovariance()(i,j);
       dcovar = 0.;
    } else {
-      for(unsigned int i = 0; i < n; i++)	
+      for(unsigned int i = 0; i < n; i++)
          mat(i,i) = (fabs(dgrad.G2()(i)) > prec.Eps2() ? 1./dgrad.G2()(i) : 1.);
    }
    MinimumError err(mat, dcovar);
@@ -168,11 +168,11 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradie
    MnAlgebraicSymMatrix mat(n);
    double dcovar = 1.;
    if(st.HasCovariance()) {
-      for(unsigned int i = 0; i < n; i++)	
+      for(unsigned int i = 0; i < n; i++)
          for(unsigned int j = i; j < n; j++) mat(i,j) = st.IntCovariance()(i,j);
       dcovar = 0.;
    } else {
-      for(unsigned int i = 0; i < n; i++)	
+      for(unsigned int i = 0; i < n; i++)
          mat(i,i) = (fabs(dgrad.G2()(i)) > prec.Eps2() ? 1./dgrad.G2()(i) : 1.);
    }
    MinimumError err(mat, dcovar);

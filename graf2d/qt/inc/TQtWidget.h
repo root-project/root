@@ -102,8 +102,8 @@ class  TQtWidget : public QWidget {
 #endif
 private:
 
-    TQtWidget(const TQtWidget&);
-	 void operator=(const TQtWidget&);
+   TQtWidget(const TQtWidget&);
+   void operator=(const TQtWidget&);
    //----- Private bits, clients can only test but not change them
    UInt_t         fBits;       //bit field status word
    enum {

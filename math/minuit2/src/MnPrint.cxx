@@ -174,7 +174,7 @@ std::ostream& operator<<(std::ostream& os, const MnUserCovariance& matrix) {
       for (unsigned int i = 0; i < n; i++) {
          double di = matrix(i,i);
          for (unsigned int j = 0; j < n; j++) {
-            double dj = matrix(j,j);	
+            double dj = matrix(j,j);
             os.width(13); os << matrix(i,j)/sqrt(fabs(di*dj));
          }
          os << std::endl;

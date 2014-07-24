@@ -947,7 +947,7 @@ void stress_determinant(Int_t msize)
     cout << "\nCheck to see that the determinant of the unit matrix is one";
   m.UnitMatrix();
   if (gVerbose)
-    cout << "\n	determinant is " << m.Determinant();
+    cout << "\n determinant is " << m.Determinant();
   ok &= ( m.Determinant() == 1 ) ? kTRUE : kFALSE;
 
   if (gVerbose)
@@ -958,7 +958,7 @@ void stress_determinant(Int_t msize)
         m(i,j) = ( i==j ? pattern : 0 );
   }
   if (gVerbose)
-    cout << "\n	determinant is " << m.Determinant() << " should be " << TMath::Power(pattern,(double)m.GetNrows()) <<endl;
+    cout << "\n\tdeterminant is " << m.Determinant() << " should be " << TMath::Power(pattern,(double)m.GetNrows()) <<endl;
   ok &= ( TMath::Abs(m.Determinant()-TMath::Power(pattern,(double)m.GetNrows())) < DBL_EPSILON  ) ? kTRUE : kFALSE;
 
   if (gVerbose)
@@ -1019,7 +1019,7 @@ void stress_determinant(Int_t msize)
   {
     if (gVerbose)
       cout << "\nCheck the determinant for the singular matrix"
-              "\n	defined as above with zero first row";
+              "\n\tdefined as above with zero first row";
     m.Zero();
     {
       for (Int_t i = m.GetRowLwb()+1; i <= m.GetRowUpb(); i++)
@@ -1027,7 +1027,7 @@ void stress_determinant(Int_t msize)
           m(i,j) = ( i==(m.GetColUpb()+m.GetColLwb()-j) ? pattern : 0 );
     }
     if (gVerbose)
-      cout << "\n	determinant is " << m.Determinant();
+      cout << "\n\tdeterminant is " << m.Determinant();
     ok &= ( m.Determinant() == 0 ) ? kTRUE : kFALSE;
   }
 

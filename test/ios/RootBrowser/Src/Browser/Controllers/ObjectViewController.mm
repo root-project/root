@@ -347,7 +347,7 @@ enum Mode {
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
 #pragma unused(interfaceOrientation)
-	return YES;
+   return YES;
 }
 
 #pragma mark - editor (object inspector) related methods.
@@ -722,24 +722,24 @@ enum Mode {
 {
    assert(filename != nullptr && "createPDFFileWithPage:fileName, parameter 'filename' is null");
 
-	CFStringRef path = CFStringCreateWithCString (NULL, filename, kCFStringEncodingUTF8);
-	CFURLRef url = CFURLCreateWithFileSystemPath (NULL, path, kCFURLPOSIXPathStyle, 0);
-	CFRelease(path);
-	// This dictionary contains extra options mostly for 'signing' the PDF
-	CFMutableDictionaryRef myDictionary = CFDictionaryCreateMutable(NULL, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+   CFStringRef path = CFStringCreateWithCString (NULL, filename, kCFStringEncodingUTF8);
+   CFURLRef url = CFURLCreateWithFileSystemPath (NULL, path, kCFURLPOSIXPathStyle, 0);
+   CFRelease(path);
+   // This dictionary contains extra options mostly for 'signing' the PDF
+   CFMutableDictionaryRef myDictionary = CFDictionaryCreateMutable(NULL, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
 
-	CFDictionarySetValue(myDictionary, kCGPDFContextTitle, CFSTR("PDF File"));
-	CFDictionarySetValue(myDictionary, kCGPDFContextCreator, CFSTR("Timur Pocheptsov"));
-	// Create our PDF Context with the CFURL, the CGRect we provide, and the above defined dictionary
-	CGContextRef ctx = CGPDFContextCreateWithURL (url, &pageRect, myDictionary);
-	// Cleanup our mess
-	CFRelease(myDictionary);
-	CFRelease(url);
-	// Done creating our PDF Context, now it's time to draw to it
-	
-	// Starts our first page
-	CGContextBeginPage (ctx, &pageRect);	
-	// Draws a black rectangle around the page inset by 50 on all sides
+   CFDictionarySetValue(myDictionary, kCGPDFContextTitle, CFSTR("PDF File"));
+   CFDictionarySetValue(myDictionary, kCGPDFContextCreator, CFSTR("Timur Pocheptsov"));
+   // Create our PDF Context with the CFURL, the CGRect we provide, and the above defined dictionary
+   CGContextRef ctx = CGPDFContextCreateWithURL (url, &pageRect, myDictionary);
+   // Cleanup our mess
+   CFRelease(myDictionary);
+   CFRelease(url);
+   // Done creating our PDF Context, now it's time to draw to it
+   
+   // Starts our first page
+   CGContextBeginPage (ctx, &pageRect);
+   // Draws a black rectangle around the page inset by 50 on all sides
    CGContextSetRGBFillColor(ctx, 1.f, 0.4f, 0.f, 1.f);
    CGContextFillRect(ctx, pageRect);
 
@@ -753,8 +753,8 @@ enum Mode {
    padToSave->Paint();
 
    CGContextEndPage(ctx);
-	// We are done with our context now, so we release it
-	CGContextRelease (ctx);
+   // We are done with our context now, so we release it
+   CGContextRelease (ctx);
 }
 
 #pragma mark - MFMailComposeViewController delegate
@@ -762,11 +762,11 @@ enum Mode {
 //___________________________________________________________
 - (void) sendEmail
 {
-	NSArray * const paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-	NSString * const saveDirectory = [paths objectAtIndex : 0];
+   NSArray * const paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+   NSString * const saveDirectory = [paths objectAtIndex : 0];
    NSString * const saveFileName = [NSString stringWithFormat:@"%s.pdf", fileContainer->GetObject(currentObject)->GetName()];
-	NSString * const newFilePath = [saveDirectory stringByAppendingPathComponent : saveFileName];
-	const char *filename = [newFilePath UTF8String];
+   NSString * const newFilePath = [saveDirectory stringByAppendingPathComponent : saveFileName];
+   const char *filename = [newFilePath UTF8String];
    
    [self createPDFFileWithPage: CGRectMake(0, 0, 600, 600) fileName : filename];
 

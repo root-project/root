@@ -22,13 +22,13 @@ MA  02110-1301  USA
 ******************************************************************************/
 
 /*******************************************************************************
-*                                            									       *
+*                                                                              *
 *       Simple RSA public key code.                                            *
 *       Adaptation in library for ROOT by G. Ganis, July 2003                  *
 *       (gerardo.ganis@cern.ch)                                                *
-*									                                                    *
-*       Header used by internal rsa functions                                   *
-*									                                                    *
+*                                                                              *
+*       Header used by internal rsa functions                                  *
+*                                                                              *
 *******************************************************************************/
 
 #include <stdio.h>
@@ -45,10 +45,10 @@ typedef  rsa_NUMBER (*RSA_genprim_t)(int, int);
 typedef  int    (*RSA_genrsa_t)(rsa_NUMBER, rsa_NUMBER, rsa_NUMBER *, rsa_NUMBER *, rsa_NUMBER *);
 typedef  int    (*RSA_encode_t)(char *, int, rsa_NUMBER, rsa_NUMBER);
 typedef  int    (*RSA_decode_t)(char *, int, rsa_NUMBER, rsa_NUMBER);
-typedef  int	(*RSA_num_sput_t)(rsa_NUMBER*, char*, int );
-typedef  int	(*RSA_num_fput_t)(rsa_NUMBER*, FILE* );
-typedef  int	(*RSA_num_sget_t)(rsa_NUMBER*, char* );
-typedef  int	(*RSA_num_fget_t)(rsa_NUMBER*, FILE* );
+typedef  int   (*RSA_num_sput_t)(rsa_NUMBER*, char*, int );
+typedef  int   (*RSA_num_fput_t)(rsa_NUMBER*, FILE* );
+typedef  int   (*RSA_num_sget_t)(rsa_NUMBER*, char* );
+typedef  int   (*RSA_num_fget_t)(rsa_NUMBER*, FILE* );
 typedef  void   (*RSA_assign_t)(rsa_NUMBER *, rsa_NUMBER *);
 typedef  int    (*RSA_cmp_t)(rsa_NUMBER *, rsa_NUMBER *);
 

@@ -45,8 +45,8 @@ ClassImp(TProfile2D)
 //      e(I,J)  =  s(I,J)/sqrt(L(I,J))
 //
 //  In the special case where s(I,J) is zero (eg, case of 1 entry only in one cell)
-//  the bin error e(I,J) is computed from the average of the s(I,J) for all cells 
-//  if the static function TProfile2D::Approximate has been called. 
+//  the bin error e(I,J) is computed from the average of the s(I,J) for all cells
+//  if the static function TProfile2D::Approximate has been called.
 //  This simple/crude approximation was suggested in order to keep the cell
 //  during a fit operation. But note that this approximation is not the default behaviour.
 //
@@ -67,8 +67,8 @@ ClassImp(TProfile2D)
 //______________________________________________________________________________
 TProfile2D::TProfile2D() : TH2D()
 {
-//*-*-*-*-*-*Default constructor for Profile2D histograms*-*-*-*-*-*-*-*-*
-//*-*        ============================================
+   //*-*-*-*-*-*Default constructor for Profile2D histograms*-*-*-*-*-*-*-*-*
+   //*-*        ============================================
    fTsumwz = fTsumwz2 = 0;
    fScaling = kFALSE;
    BuildOptions(0,0,"");
@@ -77,37 +77,37 @@ TProfile2D::TProfile2D() : TH2D()
 //______________________________________________________________________________
 TProfile2D::~TProfile2D()
 {
-//*-*-*-*-*-*Default destructor for Profile2D histograms*-*-*-*-*-*-*-*-*
-//*-*        ===========================================
+   //*-*-*-*-*-*Default destructor for Profile2D histograms*-*-*-*-*-*-*-*-*
+   //*-*        ===========================================
 
 }
 
 //______________________________________________________________________________
 TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,Double_t xlow,Double_t xup,Int_t ny,Double_t ylow,Double_t yup,Option_t *option)
-    : TH2D(name,title,nx,xlow,xup,ny,ylow,yup)
+: TH2D(name,title,nx,xlow,xup,ny,ylow,yup)
 {
-//*-*-*-*-*-*Normal Constructor for Profile histograms*-*-*-*-*-*-*-*-*-*
-//*-*        ==========================================
-//
-//  The first eight parameters are similar to TH2D::TH2D.
-//  All values of z are accepted at filling time.
-//  To fill a profile2D histogram, one must use TProfile2D::Fill function.
-//
-//  Note that when filling the profile histogram the function Fill
-//  checks if the variable z is betyween fZmin and fZmax.
-//  If a minimum or maximum value is set for the Z scale before filling,
-//  then all values below zmin or above zmax will be discarded.
-//  Setting the minimum or maximum value for the Z scale before filling
-//  has the same effect as calling the special TProfile2D constructor below
-//  where zmin and zmax are specified.
-//
-//  H(I,J) is printed as the cell contents. The errors computed are s(I,J) if CHOPT='S'
-//  (spread option), or e(I,J) if CHOPT=' ' (error on mean).
-//
-//        See TProfile2D::BuildOptions for explanation of parameters
-//
-//   see other constructors below with all possible combinations of
-//   fix and variable bin size like in TH2D.
+   //*-*-*-*-*-*Normal Constructor for Profile histograms*-*-*-*-*-*-*-*-*-*
+   //*-*        ==========================================
+   //
+   //  The first eight parameters are similar to TH2D::TH2D.
+   //  All values of z are accepted at filling time.
+   //  To fill a profile2D histogram, one must use TProfile2D::Fill function.
+   //
+   //  Note that when filling the profile histogram the function Fill
+   //  checks if the variable z is betyween fZmin and fZmax.
+   //  If a minimum or maximum value is set for the Z scale before filling,
+   //  then all values below zmin or above zmax will be discarded.
+   //  Setting the minimum or maximum value for the Z scale before filling
+   //  has the same effect as calling the special TProfile2D constructor below
+   //  where zmin and zmax are specified.
+   //
+   //  H(I,J) is printed as the cell contents. The errors computed are s(I,J) if CHOPT='S'
+   //  (spread option), or e(I,J) if CHOPT=' ' (error on mean).
+   //
+   //        See TProfile2D::BuildOptions for explanation of parameters
+   //
+   //   see other constructors below with all possible combinations of
+   //   fix and variable bin size like in TH2D.
 
    BuildOptions(0,0,option);
    if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
@@ -115,27 +115,27 @@ TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,Double_t xlow
 
 //______________________________________________________________________________
 TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,const Double_t *xbins,Int_t ny,Double_t ylow,Double_t yup,Option_t *option)
-    : TH2D(name,title,nx,xbins,ny,ylow,yup)
+: TH2D(name,title,nx,xbins,ny,ylow,yup)
 {
-//  Create a 2-D Profile with variable bins in X and fix bins in Y
+   //  Create a 2-D Profile with variable bins in X and fix bins in Y
 
    BuildOptions(0,0,option);
 }
 
 //______________________________________________________________________________
 TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,Double_t xlow,Double_t xup,Int_t ny,const Double_t *ybins,Option_t *option)
-    : TH2D(name,title,nx,xlow,xup,ny,ybins)
+: TH2D(name,title,nx,xlow,xup,ny,ybins)
 {
-//  Create a 2-D Profile with fix bins in X and variable bins in Y
+   //  Create a 2-D Profile with fix bins in X and variable bins in Y
 
    BuildOptions(0,0,option);
 }
 
 //______________________________________________________________________________
 TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,const Double_t *xbins,Int_t ny,const Double_t *ybins,Option_t *option)
-    : TH2D(name,title,nx,xbins,ny,ybins)
+: TH2D(name,title,nx,xbins,ny,ybins)
 {
-//  Create a 2-D Profile with variable bins in X and variable bins in Y
+   //  Create a 2-D Profile with variable bins in X and variable bins in Y
 
    BuildOptions(0,0,option);
 }
@@ -143,17 +143,17 @@ TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,const Double_
 
 //______________________________________________________________________________
 TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,Double_t xlow,Double_t xup,Int_t ny, Double_t ylow,Double_t yup,Double_t zlow,Double_t zup,Option_t *option)
-    : TH2D(name,title,nx,xlow,xup,ny,ylow,yup)
+: TH2D(name,title,nx,xlow,xup,ny,ylow,yup)
 {
-//*-*-*-*-*-*Constructor for Profile2D histograms with range in z*-*-*-*-*-*
-//*-*        ====================================================
-//  The first eight parameters are similar to TH2D::TH2D.
-//  Only the values of Z between ZMIN and ZMAX will be considered at filling time.
-//  zmin and zmax will also be the maximum and minimum values
-//  on the z scale when drawing the profile2D.
-//
-//        See TProfile2D::BuildOptions for more explanations on errors
-//
+   //*-*-*-*-*-*Constructor for Profile2D histograms with range in z*-*-*-*-*-*
+   //*-*        ====================================================
+   //  The first eight parameters are similar to TH2D::TH2D.
+   //  Only the values of Z between ZMIN and ZMAX will be considered at filling time.
+   //  zmin and zmax will also be the maximum and minimum values
+   //  on the z scale when drawing the profile2D.
+   //
+   //        See TProfile2D::BuildOptions for more explanations on errors
+   //
 
    BuildOptions(zlow,zup,option);
    if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
@@ -163,19 +163,19 @@ TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,Double_t xlow
 //______________________________________________________________________________
 void TProfile2D::BuildOptions(Double_t zmin, Double_t zmax, Option_t *option)
 {
-//*-*-*-*-*-*-*Set Profile2D histogram structure and options*-*-*-*-*-*-*-*-*
-//*-*          =============================================
-//
-//    zmin:  minimum value allowed for z 
-//    zmax:  maximum value allowed for z 
-//            if (zmin = zmax = 0) there are no limits on the allowed z values (zmin = -inf, zmax = +inf)
-//
-//    option:  this is the option for the computation of the t error of the profile ( TProfile2D::GetBinError )
-//             possible values for the options are documented in TProfile2D::SetErrorOption
+   //*-*-*-*-*-*-*Set Profile2D histogram structure and options*-*-*-*-*-*-*-*-*
+   //*-*          =============================================
+   //
+   //    zmin:  minimum value allowed for z
+   //    zmax:  maximum value allowed for z
+   //            if (zmin = zmax = 0) there are no limits on the allowed z values (zmin = -inf, zmax = +inf)
+   //
+   //    option:  this is the option for the computation of the t error of the profile ( TProfile2D::GetBinError )
+   //             possible values for the options are documented in TProfile2D::SetErrorOption
 
-//   See TProfile::BuildOptions  for a detailed  deescription
-//
-//
+   //   See TProfile::BuildOptions  for a detailed  deescription
+   //
+   //
 
    SetErrorOption(option);
 
@@ -227,11 +227,11 @@ Bool_t TProfile2D::Add(const TH1 *h1, Double_t c1)
 //______________________________________________________________________________
 Bool_t TProfile2D::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 {
-//*-*-*-*-*Replace contents of this profile2D by the addition of h1 and h2*-*-*
-//*-*      ===============================================================
-//
-//   this = c1*h1 + c2*h2
-//
+   //*-*-*-*-*Replace contents of this profile2D by the addition of h1 and h2*-*-*
+   //*-*      ===============================================================
+   //
+   //   this = c1*h1 + c2*h2
+   //
 
    if (!h1 || !h2) {
       Error("Add","Attempt to add a non-existing profile");
@@ -252,14 +252,14 @@ Bool_t TProfile2D::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 //______________________________________________________________________________
 void TProfile2D::Approximate(Bool_t approx)
 {
-//     static function
-// set the fgApproximate flag. When the flag is true, the function GetBinError
-// will approximate the bin error with the average profile error on all bins
-// in the following situation only
-//  - the number of bins in the profile2D is less than 10404 (eg 100x100)
-//  - the bin number of entries is small ( <5)
-//  - the estimated bin error is extremely small compared to the bin content
-//  (see TProfile2D::GetBinError)
+   //     static function
+   // set the fgApproximate flag. When the flag is true, the function GetBinError
+   // will approximate the bin error with the average profile error on all bins
+   // in the following situation only
+   //  - the number of bins in the profile2D is less than 10404 (eg 100x100)
+   //  - the bin number of entries is small ( <5)
+   //  - the estimated bin error is extremely small compared to the bin content
+   //  (see TProfile2D::GetBinError)
 
    fgApproximate = approx;
 }
@@ -268,12 +268,12 @@ void TProfile2D::Approximate(Bool_t approx)
 //______________________________________________________________________________
 Int_t TProfile2D::BufferEmpty(Int_t action)
 {
-// Fill histogram with all entries in the buffer.
-// action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
-// action =  0 histogram is filled from the buffer
-// action =  1 histogram is filled and buffer is deleted
-//             The buffer is automatically deleted when the number of entries
-//             in the buffer is greater than the number of entries in the histogram
+   // Fill histogram with all entries in the buffer.
+   // action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
+   // action =  0 histogram is filled from the buffer
+   // action =  1 histogram is filled and buffer is deleted
+   //             The buffer is automatically deleted when the number of entries
+   //             in the buffer is greater than the number of entries in the histogram
 
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
@@ -332,12 +332,12 @@ Int_t TProfile2D::BufferEmpty(Int_t action)
 //______________________________________________________________________________
 Int_t TProfile2D::BufferFill(Double_t x, Double_t y, Double_t z, Double_t w)
 {
-// accumulate arguments in buffer. When buffer is full, empty the buffer
-// fBuffer[0] = number of entries in buffer
-// fBuffer[1] = w of first entry
-// fBuffer[2] = x of first entry
-// fBuffer[3] = y of first entry
-// fBuffer[4] = z of first entry
+   // accumulate arguments in buffer. When buffer is full, empty the buffer
+   // fBuffer[0] = number of entries in buffer
+   // fBuffer[1] = w of first entry
+   // fBuffer[2] = x of first entry
+   // fBuffer[3] = y of first entry
+   // fBuffer[4] = z of first entry
 
    if (!fBuffer) return -3;
    Int_t nbentries = (Int_t)fBuffer[0];
@@ -365,10 +365,10 @@ Int_t TProfile2D::BufferFill(Double_t x, Double_t y, Double_t z, Double_t w)
 //______________________________________________________________________________
 void TProfile2D::Copy(TObject &obj) const
 {
-//*-*-*-*-*-*-*-*Copy a Profile2D histogram to a new profile2D histogram*-*-*-*
-//*-*            =======================================================
+   //*-*-*-*-*-*-*-*Copy a Profile2D histogram to a new profile2D histogram*-*-*-*
+   //*-*            =======================================================
 
-   try { 
+   try {
       TProfile2D & pobj = dynamic_cast<TProfile2D&>(obj);
 
       TH2D::Copy(pobj);
@@ -384,7 +384,7 @@ void TProfile2D::Copy(TObject &obj) const
       pobj.fErrorMode = fErrorMode;
       pobj.fTsumwz    = fTsumwz;
       pobj.fTsumwz2   = fTsumwz2;
-      
+
    } catch(...) {
       Fatal("Copy","Cannot copy a TProfile2D in a %s",obj.IsA()->GetName());
    }
@@ -405,12 +405,12 @@ Bool_t TProfile2D::Divide(TF1 *, Double_t )
 //______________________________________________________________________________
 Bool_t TProfile2D::Divide(const TH1 *h1)
 {
-//*-*-*-*-*-*-*-*-*-*-*Divide this profile2D by h1*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===========================
-//
-//   this = this/h1
-//
-//   This function return kFALSE if the divide operation failed
+   //*-*-*-*-*-*-*-*-*-*-*Divide this profile2D by h1*-*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*                  ===========================
+   //
+   //   this = this/h1
+   //
+   //   This function return kFALSE if the divide operation failed
 
 
    if (!h1) {
@@ -426,7 +426,7 @@ Bool_t TProfile2D::Divide(const TH1 *h1)
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-//*-*- Check profile compatibility
+   //*-*- Check profile compatibility
    Int_t nx = GetNbinsX();
    if (nx != p1->GetNbinsX()) {
       Error("Divide","Attempt to divide profiles with different number of bins");
@@ -438,10 +438,10 @@ Bool_t TProfile2D::Divide(const TH1 *h1)
       return kFALSE;
    }
 
-//*-*- Reset statistics
+   //*-*- Reset statistics
    fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
 
-//*-*- Loop on bins (including underflows/overflows)
+   //*-*- Loop on bins (including underflows/overflows)
    Int_t bin,binx,biny;
    Double_t *cu1 = p1->GetW();
    Double_t *er1 = p1->GetW2();
@@ -478,8 +478,8 @@ Bool_t TProfile2D::Divide(const TH1 *h1)
       }
    }
    // mantaining the correct sum of weights square is not supported when dividing
-   // bin error resulting from division of profile needs to be checked 
-   if (fBinSumw2.fN) { 
+   // bin error resulting from division of profile needs to be checked
+   if (fBinSumw2.fN) {
       Warning("Divide","Cannot preserve during the division of profiles the sum of bin weight square");
       fBinSumw2 = TArrayD();
    }
@@ -490,12 +490,12 @@ Bool_t TProfile2D::Divide(const TH1 *h1)
 //______________________________________________________________________________
 Bool_t TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 {
-//*-*-*-*-*Replace contents of this profile2D by the division of h1 by h2*-*-*
-//*-*      ==============================================================
-//
-//   this = c1*h1/(c2*h2)
-//
-//   This function return kFALSE if the divide operation failed
+   //*-*-*-*-*Replace contents of this profile2D by the division of h1 by h2*-*-*
+   //*-*      ==============================================================
+   //
+   //   this = c1*h1/(c2*h2)
+   //
+   //   This function return kFALSE if the divide operation failed
 
    TString opt = option;
    opt.ToLower();
@@ -519,7 +519,7 @@ Bool_t TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-//*-*- Check histogram compatibility
+   //*-*- Check histogram compatibility
    Int_t nx = GetNbinsX();
    if (nx != p1->GetNbinsX() || nx != p2->GetNbinsX()) {
       Error("Divide","Attempt to divide profiles with different number of bins");
@@ -535,10 +535,10 @@ Bool_t TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2
       return kFALSE;
    }
 
-//*-*- Reset statistics
+   //*-*- Reset statistics
    fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
 
-//*-*- Loop on bins (including underflows/overflows)
+   //*-*- Loop on bins (including underflows/overflows)
    Int_t bin,binx,biny;
    Double_t *cu1 = p1->GetW();
    Double_t *cu2 = p2->GetW();
@@ -572,7 +572,7 @@ Bool_t TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2
          fTsumwz2 += z*z;
          Double_t e1 = er1[bin];
          Double_t e2 = er2[bin];
-       //Double_t b22= b2*b2*d2;
+         //Double_t b22= b2*b2*d2;
          Double_t b22= b2*b2*TMath::Abs(c2);
          if (!b2) fSumw2.fArray[bin] = 0;
          else {
@@ -592,8 +592,8 @@ Bool_t TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2
 //______________________________________________________________________________
 TH1 *TProfile2D::DrawCopy(Option_t *option) const
 {
-//*-*-*-*-*-*-*-*Draw a copy of this profile2D histogram*-*-*-*-*-*-*-*-*-*-*
-//*-*            =======================================
+   //*-*-*-*-*-*-*-*Draw a copy of this profile2D histogram*-*-*-*-*-*-*-*-*-*-*
+   //*-*            =======================================
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
@@ -607,8 +607,8 @@ TH1 *TProfile2D::DrawCopy(Option_t *option) const
 //______________________________________________________________________________
 Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z)
 {
-//*-*-*-*-*-*-*-*-*-*-*Fill a Profile2D histogram (no weights)*-*-*-*-*-*-*-*
-//*-*                  =======================================
+   //*-*-*-*-*-*-*-*-*-*-*Fill a Profile2D histogram (no weights)*-*-*-*-*-*-*-*
+   //*-*                  =======================================
 
    if (fBuffer) return BufferFill(x,y,z,1);
 
@@ -622,8 +622,8 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z)
    binx =fXaxis.FindBin(x);
    biny =fYaxis.FindBin(y);
    if (binx <0 || biny <0) return -1;
-   bin = GetBin(binx, biny); 
-   fArray[bin] += z; 
+   bin = GetBin(binx, biny);
+   fArray[bin] += z;
    fSumw2.fArray[bin] += z*z;
    fBinEntries.fArray[bin] += 1;
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += 1;
@@ -648,8 +648,8 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z)
 //______________________________________________________________________________
 Int_t TProfile2D::Fill(Double_t x, const char *namey, Double_t z)
 {
-// Fill a Profile2D histogram (no weights)
-//
+   // Fill a Profile2D histogram (no weights)
+   //
    Int_t bin,binx,biny;
 
    if (fZmin != fZmax) {
@@ -685,8 +685,8 @@ Int_t TProfile2D::Fill(Double_t x, const char *namey, Double_t z)
 //______________________________________________________________________________
 Int_t TProfile2D::Fill(const char *namex, const char *namey, Double_t z)
 {
-// Fill a Profile2D histogram (no weights)
-//
+   // Fill a Profile2D histogram (no weights)
+   //
    Int_t bin,binx,biny;
 
    if (fZmin != fZmax) {
@@ -721,8 +721,8 @@ Int_t TProfile2D::Fill(const char *namex, const char *namey, Double_t z)
 //______________________________________________________________________________
 Int_t TProfile2D::Fill(const char *namex, Double_t y, Double_t z)
 {
-// Fill a Profile2D histogram (no weights)
-//
+   // Fill a Profile2D histogram (no weights)
+   //
    Int_t bin,binx,biny;
 
    if (fZmin != fZmax) {
@@ -758,8 +758,8 @@ Int_t TProfile2D::Fill(const char *namex, Double_t y, Double_t z)
 //______________________________________________________________________________
 Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
 {
-//*-*-*-*-*-*-*-*-*-*-*Fill a Profile2D histogram with weights*-*-*-*-*-*-*-*
-//*-*                  =======================================
+   //*-*-*-*-*-*-*-*-*-*-*Fill a Profile2D histogram with weights*-*-*-*-*-*-*-*
+   //*-*                  =======================================
 
    if (fBuffer) return BufferFill(x,y,z,w);
 
@@ -800,8 +800,8 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
 //______________________________________________________________________________
 Double_t TProfile2D::GetBinContent(Int_t bin) const
 {
-//*-*-*-*-*-*-*Return bin content of a Profile2D histogram*-*-*-*-*-*-*-*-*
-//*-*          ===========================================
+   //*-*-*-*-*-*-*Return bin content of a Profile2D histogram*-*-*-*-*-*-*-*-*
+   //*-*          ===========================================
 
    if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
 
@@ -814,8 +814,8 @@ Double_t TProfile2D::GetBinContent(Int_t bin) const
 //______________________________________________________________________________
 Double_t TProfile2D::GetBinEntries(Int_t bin) const
 {
-//*-*-*-*-*-*-*Return bin entries of a Profile2D histogram*-*-*-*-*-*-*-*-*
-//*-*          ===========================================
+   //*-*-*-*-*-*-*Return bin entries of a Profile2D histogram*-*-*-*-*-*-*-*-*
+   //*-*          ===========================================
 
    if (fBuffer) ((TProfile2D*)this)->BufferEmpty();
 
@@ -826,14 +826,14 @@ Double_t TProfile2D::GetBinEntries(Int_t bin) const
 //______________________________________________________________________________
 Double_t TProfile2D::GetBinEffectiveEntries(Int_t bin)
 {
-//            Return bin effective entries for a weighted filled Profile histogram. 
-//            In case of an unweighted profile, it is equivalent to the number of entries per bin   
-//            The effective entries is defined as the square of the sum of the weights divided by the 
-//            sum of the weights square. 
-//            TProfile::Sumw2() must be called before filling the profile with weights. 
-//            Only by calling this method the  sum of the square of the weights per bin is stored. 
-//  
-//*-*          =========================================
+   //            Return bin effective entries for a weighted filled Profile histogram.
+   //            In case of an unweighted profile, it is equivalent to the number of entries per bin
+   //            The effective entries is defined as the square of the sum of the weights divided by the
+   //            sum of the weights square.
+   //            TProfile::Sumw2() must be called before filling the profile with weights.
+   //            Only by calling this method the  sum of the square of the weights per bin is stored.
+   //
+   //*-*          =========================================
 
    return TProfileHelper::GetBinEffectiveEntries(this, bin);
 }
@@ -841,22 +841,22 @@ Double_t TProfile2D::GetBinEffectiveEntries(Int_t bin)
 //______________________________________________________________________________
 Double_t TProfile2D::GetBinError(Int_t bin) const
 {
-// *-*-*-*-*-*-*Return bin error of a Profile2D histogram*-*-*-*-*-*-*-*-*
-//
-// Computing errors: A moving field
-// =================================
-// The computation of errors for a TProfile2D has evolved with the versions
-// of ROOT. The difficulty is in computing errors for bins with low statistics.
-// - prior to version 3.10, we had no special treatment of low statistic bins.
-//   As a result, these bins had huge errors. The reason is that the
-//   expression eprim2 is very close to 0 (rounding problems) or 0.
-// - The algorithm is modified/protected for the case
-//   when a TProfile2D is projected (ProjectionX). The previous algorithm
-//   generated a N^2 problem when projecting a TProfile2D with a large number of
-//   bins (eg 100000).
-// - in version 3.10/02, a new static function TProfile::Approximate
-//   is introduced to enable or disable (default) the approximation.
-//   (see also comments in TProfile::GetBinError)
+   // *-*-*-*-*-*-*Return bin error of a Profile2D histogram*-*-*-*-*-*-*-*-*
+   //
+   // Computing errors: A moving field
+   // =================================
+   // The computation of errors for a TProfile2D has evolved with the versions
+   // of ROOT. The difficulty is in computing errors for bins with low statistics.
+   // - prior to version 3.10, we had no special treatment of low statistic bins.
+   //   As a result, these bins had huge errors. The reason is that the
+   //   expression eprim2 is very close to 0 (rounding problems) or 0.
+   // - The algorithm is modified/protected for the case
+   //   when a TProfile2D is projected (ProjectionX). The previous algorithm
+   //   generated a N^2 problem when projecting a TProfile2D with a large number of
+   //   bins (eg 100000).
+   // - in version 3.10/02, a new static function TProfile::Approximate
+   //   is introduced to enable or disable (default) the approximation.
+   //   (see also comments in TProfile::GetBinError)
 
    return TProfileHelper::GetBinError((TProfile2D*)this, bin);
 }
@@ -864,8 +864,8 @@ Double_t TProfile2D::GetBinError(Int_t bin) const
 //______________________________________________________________________________
 Option_t *TProfile2D::GetErrorOption() const
 {
-//*-*-*-*-*-*-*-*-*-*Return option to compute profile2D errors*-*-*-*-*-*-*-*
-//*-*                =========================================
+   //*-*-*-*-*-*-*-*-*-*Return option to compute profile2D errors*-*-*-*-*-*-*-*
+   //*-*                =========================================
 
    if (fErrorMode == kERRORSPREAD)  return "s";
    if (fErrorMode == kERRORSPREADI) return "i";
@@ -908,7 +908,7 @@ void TProfile2D::GetStats(Double_t *stats) const
       Int_t lastBinY  = fYaxis.GetLast();
       // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
       if (fgStatOverflows) {
-        if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
+         if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
             if (firstBinX == 1) firstBinX = 0;
             if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
          }
@@ -922,7 +922,7 @@ void TProfile2D::GetStats(Double_t *stats) const
          for (binx = firstBinX; binx <= lastBinX; binx++) {
             bin = GetBin(binx,biny);
             w         = fBinEntries.fArray[bin];
-            w2        = (fBinSumw2.fN ? fBinSumw2.fArray[bin] : w );  
+            w2        = (fBinSumw2.fN ? fBinSumw2.fArray[bin] : w );
             x         = fXaxis.GetBinCenter(binx);
             stats[0] += w;
             stats[1] += w2;
@@ -951,7 +951,7 @@ void TProfile2D::GetStats(Double_t *stats) const
 //___________________________________________________________________________
 void TProfile2D::LabelsDeflate(Option_t *ax)
 {
-// Reduce the number of bins for this axis to the number of bins having a label.
+   // Reduce the number of bins for this axis to the number of bins having a label.
 
    TProfileHelper::LabelsDeflate(this, ax);
 }
@@ -959,9 +959,9 @@ void TProfile2D::LabelsDeflate(Option_t *ax)
 //___________________________________________________________________________
 void TProfile2D::LabelsInflate(Option_t *ax)
 {
-// Double the number of bins for axis.
-// Refill histogram
-// This function is called by TAxis::FindBin(const char *label)
+   // Double the number of bins for axis.
+   // Refill histogram
+   // This function is called by TAxis::FindBin(const char *label)
 
    TProfileHelper::LabelsInflate(this, ax);
 }
@@ -969,14 +969,14 @@ void TProfile2D::LabelsInflate(Option_t *ax)
 //___________________________________________________________________________
 void TProfile2D::LabelsOption(Option_t *option, Option_t *ax)
 {
-//  Set option(s) to draw axis with labels
-//  option = "a" sort by alphabetic order
-//         = ">" sort by decreasing values
-//         = "<" sort by increasing values
-//         = "h" draw labels horizonthal
-//         = "v" draw labels vertical
-//         = "u" draw labels up (end of label right adjusted)
-//         = "d" draw labels down (start of label left adjusted)
+   //  Set option(s) to draw axis with labels
+   //  option = "a" sort by alphabetic order
+   //         = ">" sort by decreasing values
+   //         = "<" sort by increasing values
+   //         = "h" draw labels horizonthal
+   //         = "v" draw labels vertical
+   //         = "u" draw labels up (end of label right adjusted)
+   //         = "d" draw labels down (start of label left adjusted)
 
 
    TAxis *axis = GetXaxis();
@@ -1160,11 +1160,11 @@ Bool_t TProfile2D::Multiply(TF1 *, Double_t )
 //______________________________________________________________________________
 Bool_t TProfile2D::Multiply(const TH1 *)
 {
-//*-*-*-*-*-*-*-*-*-*-*Multiply this profile2D by h1*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =============================
-//
-//   this = this*h1
-//
+   //*-*-*-*-*-*-*-*-*-*-*Multiply this profile2D by h1*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*                  =============================
+   //
+   //   this = this*h1
+   //
    Error("Multiply","Multiplication of profile2D histograms not implemented");
    return kFALSE;
 }
@@ -1173,11 +1173,11 @@ Bool_t TProfile2D::Multiply(const TH1 *)
 //______________________________________________________________________________
 Bool_t TProfile2D::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option_t *)
 {
-//*-*-*-*-*Replace contents of this profile2D by multiplication of h1 by h2*-*
-//*-*      ================================================================
-//
-//   this = (c1*h1)*(c2*h2)
-//
+   //*-*-*-*-*Replace contents of this profile2D by multiplication of h1 by h2*-*
+   //*-*      ================================================================
+   //
+   //   this = (c1*h1)*(c2*h2)
+   //
 
    Error("Multiply","Multiplication of profile2D histograms not implemented");
    return kFALSE;
@@ -1186,39 +1186,39 @@ Bool_t TProfile2D::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option
 //______________________________________________________________________________
 TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
 {
-//*-*-*-*-*Project this profile2D into a 2-D histogram along X,Y*-*-*-*-*-*-*
-//*-*      =====================================================
-//
-//   The projection is always of the type TH2D.
-//
-//   if option "E" is specified  the errors of the projected histogram are computed and set 
-//      to be equal to the errors of the profile.
-//      Option "E" is defined as the default one in the header file. 
-//   if option "" is specified the histogram errors are simply the sqrt of its content
-//   if option "B" is specified, the content of bin of the returned histogram
-//      will be equal to the GetBinEntries(bin) of the profile,
-//   if option "C=E" the bin contents of the projection are set to the
-//       bin errors of the profile
-//   if option "W" is specified the bin content of the projected histogram  is set to the 
-//       product of the bin content of the profile and the entries. 
-//       With this option the returned histogram will be equivalent to the one obtained by 
-//       filling directly a TH2D using the 3-rd value as a weight. 
-//       This option makes sense only for profile filled with all weights =1. 
-//       When the profile is weighted (filled with weights different than 1) the  
-//       bin error of the projected histogram (obtained using this option "W") cannot be 
-//       correctly computed from the information stored in the profile. In that case the 
-//       obtained histogram contains as bin error square the weighted sum of the square of the 
-//       profiled observable (TProfile2D::fSumw2[bin] ) 
+   //*-*-*-*-*Project this profile2D into a 2-D histogram along X,Y*-*-*-*-*-*-*
+   //*-*      =====================================================
+   //
+   //   The projection is always of the type TH2D.
+   //
+   //   if option "E" is specified  the errors of the projected histogram are computed and set
+   //      to be equal to the errors of the profile.
+   //      Option "E" is defined as the default one in the header file.
+   //   if option "" is specified the histogram errors are simply the sqrt of its content
+   //   if option "B" is specified, the content of bin of the returned histogram
+   //      will be equal to the GetBinEntries(bin) of the profile,
+   //   if option "C=E" the bin contents of the projection are set to the
+   //       bin errors of the profile
+   //   if option "W" is specified the bin content of the projected histogram  is set to the
+   //       product of the bin content of the profile and the entries.
+   //       With this option the returned histogram will be equivalent to the one obtained by
+   //       filling directly a TH2D using the 3-rd value as a weight.
+   //       This option makes sense only for profile filled with all weights =1.
+   //       When the profile is weighted (filled with weights different than 1) the
+   //       bin error of the projected histogram (obtained using this option "W") cannot be
+   //       correctly computed from the information stored in the profile. In that case the
+   //       obtained histogram contains as bin error square the weighted sum of the square of the
+   //       profiled observable (TProfile2D::fSumw2[bin] )
 
 
    TString opt = option;
    opt.ToLower();
-   
+
    // Create the projection histogram
    // name of projected histogram is by default name of orginal histogram + _pxy
-   TString pname(name); 
+   TString pname(name);
    if (pname.IsNull() || pname == "_pxy")
-      pname = TString(GetName() ) + TString("_pxy"); 
+      pname = TString(GetName() ) + TString("_pxy");
 
 
    Int_t nx = fXaxis.GetNbins();
@@ -1251,7 +1251,7 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
    for (binx =0;binx<=nx+1;binx++) {
       for (biny =0;biny<=ny+1;biny++) {
          bin = GetBin(binx,biny);
-         
+
          if (binEntries)         cont = GetBinEntries(bin);
          else if (cequalErrors)  cont = GetBinError(bin);
          else if (binWeight)     cont = GetBinContent(bin) * GetBinEntries(bin);
@@ -1262,12 +1262,12 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
          // if option E projected histogram errors are same as profile
          if (computeErrors ) h1->SetBinError(bin , GetBinError(bin) );
          // in case of option W bin error is deduced from bin sum of z**2 values of profile
-         // this is correct only if the profile is unweighted 
+         // this is correct only if the profile is unweighted
          if (binWeight)      h1->GetSumw2()->fArray[bin] = fSumw2.fArray[bin];
          // in case of bin entries and profile is weighted, we need to set also the bin error
          if (binEntries && fBinSumw2.fN ) {
             R__ASSERT(  h1->GetSumw2() );
-            h1->GetSumw2()->fArray[bin] =  fBinSumw2.fArray[bin]; 
+            h1->GetSumw2()->fArray[bin] =  fBinSumw2.fArray[bin];
          }
       }
    }
@@ -1319,7 +1319,7 @@ TProfile *TProfile2D::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin
 }
 
 //______________________________________________________________________________
-TProfile * TProfile2D::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const { 
+TProfile * TProfile2D::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const {
    // implementation of ProfileX or ProfileY for a TProfile2D
    // Do correctly the combination of the bin averages when doing the projection
 
@@ -1329,25 +1329,25 @@ TProfile * TProfile2D::DoProfile(bool onX, const char *name, Int_t firstbin, Int
 
    TString expectedName = ( onX ? "_pfx" : "_pfy" );
 
-   TString pname(name); 
+   TString pname(name);
    if (pname.IsNull() || name == expectedName)
-      pname = TString(GetName() ) + expectedName; 
+      pname = TString(GetName() ) + expectedName;
 
    const TAxis& outAxis = ( onX ? fXaxis : fYaxis );
    const TArrayD *bins = outAxis.GetXbins();
    Int_t firstOutBin = outAxis.GetFirst();
    Int_t lastOutBin = outAxis.GetLast();
 
-   TProfile  * p1 = 0; 
-   // case of fixed bins 
+   TProfile  * p1 = 0;
+   // case of fixed bins
    if (bins->fN == 0) {
-      if (originalRange)  
+      if (originalRange)
          p1 =  new TProfile(pname,GetTitle(), outAxis.GetNbins(), outAxis.GetXmin(), outAxis.GetXmax(), opt );
-      else 
+      else
          p1 =  new TProfile(pname,GetTitle(), lastOutBin-firstOutBin+1,
                             outAxis.GetBinLowEdge(firstOutBin),outAxis.GetBinUpEdge(lastOutBin), opt);
-   } else { 
-      // case of variable bins 
+   } else {
+      // case of variable bins
       if (originalRange )
          p1 = new TProfile(pname,GetTitle(),outAxis.GetNbins(),bins->fArray,opt);
       else
@@ -1355,15 +1355,15 @@ TProfile * TProfile2D::DoProfile(bool onX, const char *name, Int_t firstbin, Int
 
    }
 
-   if (fBinSumw2.fN) p1->Sumw2(); 
+   if (fBinSumw2.fN) p1->Sumw2();
 
-   // make projection in a 2D first 
+   // make projection in a 2D first
    TH2D * h2dW = ProjectionXY("h2temp-W","W");
    TH2D * h2dN = ProjectionXY("h2temp-N","B");
 
    h2dW->SetDirectory(0); h2dN->SetDirectory(0);
 
-       
+
    TString opt1 = (originalRange) ? "o" : "";
    TH1D * h1W = (onX) ? h2dW->ProjectionX("h1temp-W",firstbin,lastbin,opt1) : h2dW->ProjectionY("h1temp-W",firstbin,lastbin,opt1);
    TH1D * h1N = (onX) ? h2dN->ProjectionX("h1temp-N",firstbin,lastbin,opt1) : h2dN->ProjectionY("h1temp-N",firstbin,lastbin,opt1);
@@ -1371,26 +1371,26 @@ TProfile * TProfile2D::DoProfile(bool onX, const char *name, Int_t firstbin, Int
 
 
    // fill the bin content
-   R__ASSERT( h1W->fN == p1->fN ); 
-   R__ASSERT( h1N->fN == p1->fN ); 
+   R__ASSERT( h1W->fN == p1->fN );
+   R__ASSERT( h1N->fN == p1->fN );
    R__ASSERT( h1W->GetSumw2()->fN != 0); // h1W should always be a weighted histogram since h2dW is
    for (int i = 0; i < p1->fN ; ++i) {
       p1->fArray[i] = h1W->GetBinContent(i);   // array of profile is sum of all values
       p1->GetSumw2()->fArray[i]  = h1W->GetSumw2()->fArray[i];   // array of content square of profile is weight square of the W projected histogram
-      p1->SetBinEntries(i, h1N->GetBinContent(i) );          
+      p1->SetBinEntries(i, h1N->GetBinContent(i) );
       if (fBinSumw2.fN) p1->GetBinSumw2()->fArray[i] = h1N->GetSumw2()->fArray[i];    // sum of weight squares are stored to compute errors in h1N histogram
    }
    // delete the created histograms
-   delete h2dW; 
-   delete h2dN; 
-   delete h1W; 
-   delete h1N; 
+   delete h2dW;
+   delete h2dN;
+   delete h1W;
+   delete h1N;
 
    // Also we need to set the entries since they have not been correctly calculated during the projection
    // we can only set them to the effective entries
    p1->SetEntries( p1->GetEffectiveEntries() );
 
-   return p1; 
+   return p1;
 }
 
 
@@ -1413,8 +1413,8 @@ void TProfile2D::PutStats(Double_t *stats)
 //______________________________________________________________________________
 void TProfile2D::Reset(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*Reset contents of a Profile2D histogram*-*-*-*-*-*-*-*
-//*-*                =======================================
+   //*-*-*-*-*-*-*-*-*-*Reset contents of a Profile2D histogram*-*-*-*-*-*-*-*
+   //*-*                =======================================
    TH2D::Reset(option);
    fBinEntries.Reset();
    fBinSumw2.Reset();
@@ -1428,14 +1428,14 @@ void TProfile2D::Reset(Option_t *option)
 //______________________________________________________________________________
 void TProfile2D::RebinAxis(Double_t x, TAxis *axis)
 {
-// Profile histogram is resized along axis such that x is in the axis range.
-// The new axis limits are recomputed by doubling iteratively
-// the current axis range until the specified value x is within the limits.
-// The algorithm makes a copy of the histogram, then loops on all bins
-// of the old histogram to fill the rebinned histogram.
-// Takes into account errors (Sumw2) if any.
-// The bit kCanRebin must be set before invoking this function.
-//  Ex:  h->SetBit(TH1::kCanRebin);
+   // Profile histogram is resized along axis such that x is in the axis range.
+   // The new axis limits are recomputed by doubling iteratively
+   // the current axis range until the specified value x is within the limits.
+   // The algorithm makes a copy of the histogram, then loops on all bins
+   // of the old histogram to fill the rebinned histogram.
+   // Takes into account errors (Sumw2) if any.
+   // The bit kCanRebin must be set before invoking this function.
+   //  Ex:  h->SetBit(TH1::kCanRebin);
 
    TProfile2D* hold = TProfileHelper::RebinAxis(this, x, axis);
    if ( hold ) {
@@ -1481,12 +1481,12 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
       Double_t ymin  = fYaxis.GetXmin();
       Double_t ymax  = fYaxis.GetXmax();
       if ((nxgroup <= 0) || (nxgroup > nxbins)) {
-	 Error("Rebin", "Illegal value of nxgroup=%d",nxgroup);
-	 return 0;
+         Error("Rebin", "Illegal value of nxgroup=%d",nxgroup);
+         return 0;
       }
       if ((nygroup <= 0) || (nygroup > nybins)) {
-	 Error("Rebin", "Illegal value of nygroup=%d",nygroup);
-	 return 0;
+         Error("Rebin", "Illegal value of nygroup=%d",nygroup);
+         return 0;
       }
 
       Int_t newxbins = nxbins/nxgroup;
@@ -1494,10 +1494,10 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
 
       //warning if bins are added to the overflow bin
       if(newxbins*nxgroup != nxbins) {
-	 Warning("Rebin", "nxgroup=%d should be an exact divider of nxbins=%d",nxgroup,nxbins);
+         Warning("Rebin", "nxgroup=%d should be an exact divider of nxbins=%d",nxgroup,nxbins);
       }
       if(newybins*nygroup != nybins) {
-	 Warning("Rebin", "nygroup=%d should be an exact divider of nybins=%d",nygroup,nybins);
+         Warning("Rebin", "nygroup=%d should be an exact divider of nybins=%d",nygroup,nybins);
       }
 
       //save old bin contents in new arrays
@@ -1510,44 +1510,44 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
       Double_t *en1 = GetB();
       Double_t *ew1 = GetB2();
       for(Int_t ibin=0; ibin < (nxbins+2)*(nybins+2); ibin++){
-	 oldBins[ibin]   = cu1[ibin];
-	 oldCount[ibin]  = en1[ibin];
-	 oldErrors[ibin] = er1[ibin];
-	 if (ew1 && fBinSumw2.fN) oldBinw2[ibin]  = ew1[ibin];
+         oldBins[ibin]   = cu1[ibin];
+         oldCount[ibin]  = en1[ibin];
+         oldErrors[ibin] = er1[ibin];
+         if (ew1 && fBinSumw2.fN) oldBinw2[ibin]  = ew1[ibin];
       }
 
       // create a clone of the old profile if newname is specified
       TProfile2D *hnew = this;
       if(newname && strlen(newname) > 0) {
-	 hnew = (TProfile2D*)Clone(newname);
+         hnew = (TProfile2D*)Clone(newname);
       }
 
-      // in case of nxgroup/nygroup not an exact divider of nxbins/nybins, 
-      // top limit is changed (see NOTE in method comment) 
+      // in case of nxgroup/nygroup not an exact divider of nxbins/nybins,
+      // top limit is changed (see NOTE in method comment)
       if(newxbins*nxgroup != nxbins) {
-	 xmax = fXaxis.GetBinUpEdge(newxbins*nxgroup);
-	 hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
+         xmax = fXaxis.GetBinUpEdge(newxbins*nxgroup);
+         hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
       }
       if(newybins*nygroup != nybins) {
-	 ymax = fYaxis.GetBinUpEdge(newybins*nygroup);
-	 hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
+         ymax = fYaxis.GetBinUpEdge(newybins*nygroup);
+         hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
       }
 
       //rebin the axis
       if((fXaxis.GetXbins()->GetSize() > 0) || (fYaxis.GetXbins()->GetSize() > 0)){
-	 Double_t* xbins = new Double_t[newxbins+1];
-	 Double_t* ybins = new Double_t[newybins+1];
-	 for(Int_t i=0; i < newxbins+1; i++)
-	    xbins[i] = fXaxis.GetBinLowEdge(1+i*nxgroup);
-	 for(Int_t j=0; j < newybins+1; j++)
-	    ybins[j] = fYaxis.GetBinLowEdge(1+j*nygroup);
-	 hnew->SetBins(newxbins,xbins,newybins,ybins);
-	 delete [] xbins;
-	 delete [] ybins;
+         Double_t* xbins = new Double_t[newxbins+1];
+         Double_t* ybins = new Double_t[newybins+1];
+         for(Int_t i=0; i < newxbins+1; i++)
+            xbins[i] = fXaxis.GetBinLowEdge(1+i*nxgroup);
+         for(Int_t j=0; j < newybins+1; j++)
+            ybins[j] = fYaxis.GetBinLowEdge(1+j*nygroup);
+         hnew->SetBins(newxbins,xbins,newybins,ybins);
+         delete [] xbins;
+         delete [] ybins;
       }
       //fixed bin size
       else{
-	 hnew->SetBins(newxbins,xmin,xmax,newybins,ymin,ymax);
+         hnew->SetBins(newxbins,xmin,xmax,newybins,ymin,ymax);
       }
 
       //merge bins
@@ -1563,31 +1563,31 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
       //global bin number
       Int_t bin;
       for(Int_t xbin = 1; xbin <= newxbins; xbin++){
-	 oldybin = 1;
-	 for(Int_t ybin = 1; ybin <= newybins; ybin++){
-	    binContent = 0;
-	    binCount   = 0;
-	    binError   = 0;
-	    binSumw2   = 0;
-	    for(Int_t i=0; i < nxgroup; i++){
-	       if(oldxbin + i > nxbins) break;
-	       for(Int_t j=0; j < nygroup; j++){
-		  if(oldybin + j > nybins) break;
-		  bin = oldxbin + i + (nxbins+2)*(oldybin+j);
-		  binContent += oldBins[bin];
-		  binCount += oldCount[bin];
-		  binError += oldErrors[bin];
-		  if(fBinSumw2.fN) binSumw2 += oldBinw2[bin];
-	       }
-	    }
-	    bin = xbin + (newxbins + 2)*ybin;
-	    cu2[bin] = binContent;
-	    er2[bin] = binError;
-	    en2[bin] = binCount;
-	    if(fBinSumw2.fN) ew2[bin] = binSumw2;
-	    oldybin += nygroup;
-	 }
-	 oldxbin += nxgroup;
+         oldybin = 1;
+         for(Int_t ybin = 1; ybin <= newybins; ybin++){
+            binContent = 0;
+            binCount   = 0;
+            binError   = 0;
+            binSumw2   = 0;
+            for(Int_t i=0; i < nxgroup; i++){
+               if(oldxbin + i > nxbins) break;
+               for(Int_t j=0; j < nygroup; j++){
+                  if(oldybin + j > nybins) break;
+                  bin = oldxbin + i + (nxbins+2)*(oldybin+j);
+                  binContent += oldBins[bin];
+                  binCount += oldCount[bin];
+                  binError += oldErrors[bin];
+                  if(fBinSumw2.fN) binSumw2 += oldBinw2[bin];
+               }
+            }
+            bin = xbin + (newxbins + 2)*ybin;
+            cu2[bin] = binContent;
+            er2[bin] = binError;
+            en2[bin] = binCount;
+            if(fBinSumw2.fN) ew2[bin] = binSumw2;
+            oldybin += nygroup;
+         }
+         oldxbin += nxgroup;
       }
 
       //copy the underflow bin in x and y (0,0)
@@ -1602,14 +1602,14 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
       binError   = 0;
       binSumw2   = 0;
       for(Int_t i=oldxbin; i <= nxbins+1; i++){
-	 for(Int_t j=oldybin; j <= nybins+1; j++){
-	    //global bin number
-	    bin = i + (nxbins+2)*j;
-	    binContent += oldBins[bin];
-	    binCount += oldCount[bin];
-	    binError += oldErrors[bin];
-	    if(fBinSumw2.fN) binSumw2 += oldBinw2[bin];
-	 }
+         for(Int_t j=oldybin; j <= nybins+1; j++){
+            //global bin number
+            bin = i + (nxbins+2)*j;
+            binContent += oldBins[bin];
+            binCount += oldCount[bin];
+            binError += oldErrors[bin];
+            if(fBinSumw2.fN) binSumw2 += oldBinw2[bin];
+         }
       }
       bin = (newxbins+2)*(newybins+2)-1;
       cu2[bin] = binContent;
@@ -1622,11 +1622,11 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
       binError   = 0;
       binSumw2   = 0;
       for(Int_t i=oldxbin; i <= nxbins+1; i++){
-	 bin = i;
-	 binContent += oldBins[bin];
-	 binCount += oldCount[bin];
-	 binError += oldErrors[bin];
-	 if(fBinSumw2.fN) binSumw2 += oldBinw2[bin];
+         bin = i;
+         binContent += oldBins[bin];
+         binCount += oldCount[bin];
+         binError += oldErrors[bin];
+         if(fBinSumw2.fN) binSumw2 += oldBinw2[bin];
       }
       bin = newxbins + 1;
       cu2[bin] = binContent;
@@ -1639,11 +1639,11 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
       binError   = 0;
       binSumw2   = 0;
       for(Int_t i=oldybin; i <= nybins+1; i++){
-	 bin = i*(nxbins + 2);
-	 binContent += oldBins[bin];
-	 binCount += oldCount[bin];
-	 binError += oldErrors[bin];
-	 if(fBinSumw2.fN) binSumw2 += oldBinw2[bin];
+         bin = i*(nxbins + 2);
+         binContent += oldBins[bin];
+         binCount += oldCount[bin];
+         binError += oldErrors[bin];
+         if(fBinSumw2.fN) binSumw2 += oldBinw2[bin];
       }
       bin = (newxbins + 2)*(newybins + 1);
       cu2[bin] = binContent;
@@ -1656,85 +1656,85 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
       Int_t ufbin, ofbin;
       Int_t oldxbin2 = 1;
       for(Int_t xbin = 1; xbin <= newxbins; xbin++){
-	 binContentuf = 0;
-	 binCountuf   = 0;
-	 binErroruf   = 0;
-	 binSumw2uf   = 0;
-	 binContentof = 0;
-	 binCountof   = 0;
-	 binErrorof   = 0;
-	 binSumw2of   = 0;
-	 for(Int_t i = 0; i < nxgroup; i++){
-	    //index of under/overflow bin for y in old binning
-	    ufbin = (oldxbin2 + i);
-	    binContentuf += oldBins[ufbin];
-	    binCountuf   += oldCount[ufbin];
-	    binErroruf   += oldErrors[ufbin];
-	    if(fBinSumw2.fN) binSumw2uf   += oldBinw2[ufbin];
-	    for(Int_t j = oldybin; j <= nybins+1; j++)
-	    {
-	       ofbin = ufbin + j*(nxbins + 2);
-	       binContentof += oldBins[ofbin];
-	       binCountof   += oldCount[ofbin];
-	       binErrorof   += oldErrors[ofbin];
-	       if(fBinSumw2.fN) binSumw2of   += oldBinw2[ofbin];
-	    }
-	 }
-	 //index of under/overflow bin for y in new binning
-	 ufbin = xbin;
-	 ofbin = ufbin + (newybins + 1)*(newxbins + 2);
-	 cu2[ufbin] = binContentuf;
-	 er2[ufbin] = binErroruf;
-	 en2[ufbin] = binCountuf;
-	 if(fBinSumw2.fN) ew2[ufbin] = binSumw2uf;
-	 cu2[ofbin] = binContentof;
-	 er2[ofbin] = binErrorof;
-	 en2[ofbin] = binCountof;
-	 if(fBinSumw2.fN) ew2[ofbin] = binSumw2of;
-	 
-	 oldxbin2 += nxgroup;
+         binContentuf = 0;
+         binCountuf   = 0;
+         binErroruf   = 0;
+         binSumw2uf   = 0;
+         binContentof = 0;
+         binCountof   = 0;
+         binErrorof   = 0;
+         binSumw2of   = 0;
+         for(Int_t i = 0; i < nxgroup; i++){
+            //index of under/overflow bin for y in old binning
+            ufbin = (oldxbin2 + i);
+            binContentuf += oldBins[ufbin];
+            binCountuf   += oldCount[ufbin];
+            binErroruf   += oldErrors[ufbin];
+            if(fBinSumw2.fN) binSumw2uf   += oldBinw2[ufbin];
+            for(Int_t j = oldybin; j <= nybins+1; j++)
+            {
+               ofbin = ufbin + j*(nxbins + 2);
+               binContentof += oldBins[ofbin];
+               binCountof   += oldCount[ofbin];
+               binErrorof   += oldErrors[ofbin];
+               if(fBinSumw2.fN) binSumw2of   += oldBinw2[ofbin];
+            }
+         }
+         //index of under/overflow bin for y in new binning
+         ufbin = xbin;
+         ofbin = ufbin + (newybins + 1)*(newxbins + 2);
+         cu2[ufbin] = binContentuf;
+         er2[ufbin] = binErroruf;
+         en2[ufbin] = binCountuf;
+         if(fBinSumw2.fN) ew2[ufbin] = binSumw2uf;
+         cu2[ofbin] = binContentof;
+         er2[ofbin] = binErrorof;
+         en2[ofbin] = binCountof;
+         if(fBinSumw2.fN) ew2[ofbin] = binSumw2of;
+
+         oldxbin2 += nxgroup;
       }
       //calculate under/overflow contents in x for the new y bins
       Int_t oldybin2 = 1;
       for(Int_t ybin = 1; ybin <= newybins; ybin++){
-	 binContentuf = 0;
-	 binCountuf   = 0;
-	 binErroruf   = 0;
-	 binSumw2uf   = 0;
-	 binContentof = 0;
-	 binCountof   = 0;
-	 binErrorof   = 0;
-	 binSumw2of   = 0;
-	 for(Int_t i = 0; i < nygroup; i++){
-	    //index of under/overflow bin for x in old binning
-	    ufbin = (oldybin2 + i)*(nxbins+2);
-	    binContentuf += oldBins[ufbin];
-	    binCountuf   += oldCount[ufbin];
-	    binErroruf   += oldErrors[ufbin];
-	    if(fBinSumw2.fN) binSumw2uf   += oldBinw2[ufbin];
-	    for(Int_t j = oldxbin; j <= nxbins+1; j++)
-	    {
-	       ofbin = j + ufbin;
-	       binContentof += oldBins[ofbin];
-	       binCountof   += oldCount[ofbin];
-	       binErrorof   += oldErrors[ofbin];
-	       if(fBinSumw2.fN) binSumw2of   += oldBinw2[ofbin];
-	    }
-	 }
-	 //index of under/overflow bin for x in new binning
-	 ufbin = ybin * (newxbins + 2);
-	 ofbin = newxbins + 1 + ufbin;
-	 cu2[ufbin] = binContentuf;
-	 er2[ufbin] = binErroruf;
-	 en2[ufbin] = binCountuf;
-	 if(fBinSumw2.fN) ew2[ufbin] = binSumw2uf;
-	 cu2[ofbin] = binContentof;
-	 er2[ofbin] = binErrorof;
-	 en2[ofbin] = binCountof;
-	 if(fBinSumw2.fN) ew2[ofbin] = binSumw2of;
+         binContentuf = 0;
+         binCountuf   = 0;
+         binErroruf   = 0;
+         binSumw2uf   = 0;
+         binContentof = 0;
+         binCountof   = 0;
+         binErrorof   = 0;
+         binSumw2of   = 0;
+         for(Int_t i = 0; i < nygroup; i++){
+            //index of under/overflow bin for x in old binning
+            ufbin = (oldybin2 + i)*(nxbins+2);
+            binContentuf += oldBins[ufbin];
+            binCountuf   += oldCount[ufbin];
+            binErroruf   += oldErrors[ufbin];
+            if(fBinSumw2.fN) binSumw2uf   += oldBinw2[ufbin];
+            for(Int_t j = oldxbin; j <= nxbins+1; j++)
+            {
+               ofbin = j + ufbin;
+               binContentof += oldBins[ofbin];
+               binCountof   += oldCount[ofbin];
+               binErrorof   += oldErrors[ofbin];
+               if(fBinSumw2.fN) binSumw2of   += oldBinw2[ofbin];
+            }
+         }
+         //index of under/overflow bin for x in new binning
+         ufbin = ybin * (newxbins + 2);
+         ofbin = newxbins + 1 + ufbin;
+         cu2[ufbin] = binContentuf;
+         er2[ufbin] = binErroruf;
+         en2[ufbin] = binCountuf;
+         if(fBinSumw2.fN) ew2[ufbin] = binSumw2uf;
+         cu2[ofbin] = binContentof;
+         er2[ofbin] = binErrorof;
+         en2[ofbin] = binCountof;
+         if(fBinSumw2.fN) ew2[ofbin] = binSumw2of;
 
-	 oldybin2 += nygroup;
-	 }
+         oldybin2 += nygroup;
+      }
 
       delete [] oldBins;
       delete [] oldCount;
@@ -1746,24 +1746,24 @@ TProfile2D * TProfile2D::Rebin2D(Int_t nxgroup ,Int_t nygroup,const char * newna
    //nxgroup == nygroup == 1
    else{
       if((newname) && (strlen(newname) > 0))
-	 return (TProfile2D*)Clone(newname);
+         return (TProfile2D*)Clone(newname);
       else
-	 return this;
-   }   
+         return this;
+   }
 }
 
 //______________________________________________________________________________
 TProfile2D * TProfile2D::RebinX(Int_t ngroup,const char * newname ) {
-// Rebin only the X axis
-// see Rebin2D
+   // Rebin only the X axis
+   // see Rebin2D
 
    return Rebin2D(ngroup,1,newname);
 }
 
 //______________________________________________________________________________
 TProfile2D * TProfile2D::RebinY(Int_t ngroup,const char * newname ) {
-// Rebin only the Y axis
-// see Rebin2D
+   // Rebin only the Y axis
+   // see Rebin2D
 
    return Rebin2D(1,ngroup,newname);
 }
@@ -1783,15 +1783,15 @@ void TProfile2D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
    out <<"   "<<ClassName()<<" *";
 
    out << GetName() << " = new " << ClassName() << "(" << quote
-       << GetName() << quote << "," << quote<< GetTitle() << quote
-       << "," << GetXaxis()->GetNbins();
+   << GetName() << quote << "," << quote<< GetTitle() << quote
+   << "," << GetXaxis()->GetNbins();
    out << "," << GetXaxis()->GetXmin()
-       << "," << GetXaxis()->GetXmax();
+   << "," << GetXaxis()->GetXmax();
    out << "," << GetYaxis()->GetNbins();
    out << "," << GetYaxis()->GetXmin()
-       << "," << GetYaxis()->GetXmax();
+   << "," << GetYaxis()->GetXmax();
    out << "," << fZmin
-       << "," << fZmax;
+   << "," << fZmax;
    out << ");" << endl;
 
 
@@ -1826,13 +1826,13 @@ void TProfile2D::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 //______________________________________________________________________________
 void TProfile2D::Scale(Double_t c1, Option_t * option)
 {
-// *-*-*-*-*Multiply this profile2D by a constant c1*-*-*-*-*-*-*-*-*
-// *-*      ========================================
-//
-//   this = c1*this
-//
-// This function uses the services of TProfile2D::Add
-//
+   // *-*-*-*-*Multiply this profile2D by a constant c1*-*-*-*-*-*-*-*-*
+   // *-*      ========================================
+   //
+   //   this = c1*this
+   //
+   // This function uses the services of TProfile2D::Add
+   //
 
    TProfileHelper::Scale(this, c1, option);
 }
@@ -1840,8 +1840,8 @@ void TProfile2D::Scale(Double_t c1, Option_t * option)
 //______________________________________________________________________________
 void TProfile2D::SetBinEntries(Int_t bin, Double_t w)
 {
-//*-*-*-*-*-*-*-*-*Set the number of entries in bin*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              ================================
+   //*-*-*-*-*-*-*-*-*Set the number of entries in bin*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*              ================================
 
    TProfileHelper::SetBinEntries(this, bin, w);
 }
@@ -1849,8 +1849,8 @@ void TProfile2D::SetBinEntries(Int_t bin, Double_t w)
 //______________________________________________________________________________
 void TProfile2D::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax)
 {
-//*-*-*-*-*-*-*-*-*Redefine  x and y axis parameters*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              ===========================
+   //*-*-*-*-*-*-*-*-*Redefine  x and y axis parameters*-*-*-*-*-*-*-*-*-*-*-*
+   //*-*              ===========================
 
    TH1::SetBins(nx,xmin, xmax,ny, ymin,ymax);
    fBinEntries.Set(fNcells);
@@ -1860,8 +1860,8 @@ void TProfile2D::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Doubl
 //______________________________________________________________________________
 void TProfile2D::SetBins(Int_t nx,  const Double_t *xbins, Int_t ny, const Double_t *ybins)
 {
-//*-*-*-*-*-*-*-*-*Redefine  x and y axis parameters for variable bin sizes -*-*-*-*-*-*-*
-//*-*              ===========================
+   //*-*-*-*-*-*-*-*-*Redefine  x and y axis parameters for variable bin sizes -*-*-*-*-*-*-*
+   //*-*              ===========================
    TH1::SetBins(nx,xbins,ny,ybins);
    fBinEntries.Set(fNcells);
    if (fBinSumw2.fN) fBinSumw2.Set(fNcells);
@@ -1873,13 +1873,13 @@ void TProfile2D::SetBinsLength(Int_t n)
    // Set total number of bins including under/overflow
    // Reallocate bin contents array
    TH2D::SetBinsLength(n);
-   TProfileHelper::BuildArray(this);   
+   TProfileHelper::BuildArray(this);
 }
 
 //______________________________________________________________________________
 void TProfile2D::SetBuffer(Int_t buffersize, Option_t *)
 {
-// set the buffer size in units of 8 bytes (double)
+   // set the buffer size in units of 8 bytes (double)
 
    if (fBuffer) {
       BufferEmpty();
@@ -1899,30 +1899,30 @@ void TProfile2D::SetBuffer(Int_t buffersize, Option_t *)
 //______________________________________________________________________________
 void TProfile2D::SetErrorOption(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*Set option to compute profile2D errors*-*-*-*-*-*-*-*
-//*-*                =======================================
-//    The computation of the bin errors is based on the parameter option:
-//    option:
-//     ' '  (Default) The bin errors are the standard error on the mean of the bin profiled values (Z), 
-//                    i.e. the standard error of the bin contents.
-//                    Note that if TProfile::Approximate()  is called, an approximation is used when 
-//                    the spread in Z is 0 and the number of bin entries  is > 0
-//
-//     's'            The bin errors are the standard deviations of the Z bin values 
-//                    Note that if TProfile::Approximate()  is called, an approximation is used when 
-//                    the spread in Z is 0 and the number of bin entries is > 0
-//
-//     'i'            Errors are as in default case (standard errors of the bin contents)
-//                    The only difference is for the case when the spread in Z is zero. 
-//                    In this case for N > 0 the error is  1./SQRT(12.*N) 
-//
-//     'g'            Errors are 1./SQRT(W)  for W not equal to 0 and 0 for W = 0.
-//                    W is the sum in the bin of the weights of the profile. 
-//                    This option is for combining measurements z +/- dz,  
-//                    and  the profile is filled with values y and weights z = 1/dz**2
-//
-//   See TProfile::BuildOptions for a detailed explanation of all options
-
+   //*-*-*-*-*-*-*-*-*-*Set option to compute profile2D errors*-*-*-*-*-*-*-*
+   //*-*                =======================================
+   //    The computation of the bin errors is based on the parameter option:
+   //    option:
+   //     ' '  (Default) The bin errors are the standard error on the mean of the bin profiled values (Z),
+   //                    i.e. the standard error of the bin contents.
+   //                    Note that if TProfile::Approximate()  is called, an approximation is used when
+   //                    the spread in Z is 0 and the number of bin entries  is > 0
+   //
+   //     's'            The bin errors are the standard deviations of the Z bin values
+   //                    Note that if TProfile::Approximate()  is called, an approximation is used when
+   //                    the spread in Z is 0 and the number of bin entries is > 0
+   //
+   //     'i'            Errors are as in default case (standard errors of the bin contents)
+   //                    The only difference is for the case when the spread in Z is zero.
+   //                    In this case for N > 0 the error is  1./SQRT(12.*N)
+   //
+   //     'g'            Errors are 1./SQRT(W)  for W not equal to 0 and 0 for W = 0.
+   //                    W is the sum in the bin of the weights of the profile. 
+   //                    This option is for combining measurements z +/- dz,  
+   //                    and  the profile is filled with values y and weights z = 1/dz**2
+   //
+   //   See TProfile::BuildOptions for a detailed explanation of all options
+   
    TProfileHelper::SetErrorOption(this, option);
 }
 
@@ -1930,7 +1930,7 @@ void TProfile2D::SetErrorOption(Option_t *option)
 void TProfile2D::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TProfile2D.
-
+   
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -1954,7 +1954,7 @@ void TProfile2D::Streamer(TBuffer &R__b)
       }
       R__b.CheckByteCount(R__s, R__c, TProfile2D::IsA());
       //====end of old versions
-
+      
    } else {
       R__b.WriteClassBuffer(TProfile2D::Class(),this);
    }
@@ -1971,6 +1971,6 @@ void TProfile2D::Sumw2(Bool_t flag)
    //  This function is automatically called when the histogram is created
    //  if the static function TH1::SetDefaultSumw2 has been called before.
    //  If flag is false the structure is deleted 
-
+   
    TProfileHelper::Sumw2(this, flag);
 }

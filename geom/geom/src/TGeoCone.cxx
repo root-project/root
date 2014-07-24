@@ -1457,7 +1457,7 @@ Double_t TGeoConeSeg::DistToCons(const Double_t *point, const Double_t *dir, Dou
          if (phi < 0 ) phi+=360.;
          ddp = phi-phi1;
          if (ddp < 0) ddp+=360.;
-//	 printf("snxt1=%f phi=%f ddp=%f\n", snxt, phi, ddp);
+         // printf("snxt1=%f phi=%f ddp=%f\n", snxt, phi, ddp);
          if (ddp<=dphi) return snxt;
       }
    }
@@ -1474,7 +1474,7 @@ Double_t TGeoConeSeg::DistToCons(const Double_t *point, const Double_t *dir, Dou
          if (phi < 0 ) phi+=360.;
          ddp = phi-phi1;
          if (ddp < 0) ddp+=360.;
-//	 printf("snxt2=%f phi=%f ddp=%f\n", snxt, phi, ddp);
+         // printf("snxt2=%f phi=%f ddp=%f\n", snxt, phi, ddp);
          if (ddp<=dphi) return snxt;
       }
    }

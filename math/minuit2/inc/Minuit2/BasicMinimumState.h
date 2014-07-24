@@ -28,10 +28,10 @@ class BasicMinimumState {
 public:
 
   BasicMinimumState(unsigned int n) : 
-    fParameters(MinimumParameters(n)), fError(MinimumError(n)), 
+    fParameters(MinimumParameters(n)), fError(MinimumError(n)),
     fGradient(FunctionGradient(n)), fEDM(0.), fNFcn(0) {}
   BasicMinimumState(const MinimumParameters& states, const MinimumError& err, 
-	       const FunctionGradient& grad, double edm, int nfcn) : 
+                    const FunctionGradient& grad, double edm, int nfcn) :
     fParameters(states), fError(err), fGradient(grad), fEDM(edm), fNFcn(nfcn) {}
   
   BasicMinimumState(const MinimumParameters& states, double edm, int nfcn) : fParameters(states), fError(MinimumError(states.Vec().size())), fGradient(FunctionGradient(states.Vec().size())), fEDM(edm), fNFcn(nfcn) {}

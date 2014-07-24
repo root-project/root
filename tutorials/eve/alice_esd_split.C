@@ -99,7 +99,7 @@ void       update_projections();
 
 void       alice_esd_read();
 TEveTrack* esd_make_track(TEveTrackPropagator* trkProp, Int_t index, AliESDtrack* at,
-			  AliExternalTrackParam* tp=0);
+                          AliExternalTrackParam* tp=0);
 Bool_t     trackIsOn(AliESDtrack* t, Int_t mask);
 void       trackGetPos(AliExternalTrackParam* tp, Double_t r[3]);
 void       trackGetMomentum(AliExternalTrackParam* tp, Double_t p[3]);
@@ -460,9 +460,9 @@ void alice_esd_read()
 
 //______________________________________________________________________________
 TEveTrack* esd_make_track(TEveTrackPropagator*   trkProp,
-			  Int_t                  index,
-			  AliESDtrack*           at,
-			  AliExternalTrackParam* tp)
+                          Int_t                  index,
+                          AliESDtrack*           at,
+                          AliExternalTrackParam* tp)
 {
    // Helper function creating TEveTrack from AliESDtrack.
    //

@@ -14,7 +14,7 @@ void splines (Int_t np=23, Double_t a=-0.5, Double_t b=31)
 
   // Define the original function
   TF1 *f=new TF1("f","sin(x)*sin(x/10)",
-		 a-0.05*(b-a),b+0.05*(b-a));
+                 a-0.05*(b-a),b+0.05*(b-a));
   // Draw function
   f->Draw("lc");
 
@@ -25,19 +25,19 @@ void splines (Int_t np=23, Double_t a=-0.5, Double_t b=31)
   dx = xx2-xx1;
   dy = yy2-yy1;
   line5=new TLine(xx1+dx*0.3,yy1+dy*1.02,
-		  xx1+dx*0.38,yy1+dy*1.02);
+                  xx1+dx*0.38,yy1+dy*1.02);
   line5->SetLineColor(kRed);
   line5->SetLineWidth(2);
   text5 = new TText(xx1+dx*0.4,
-		    yy1+dy*1.03,"quintic spline");
+                    yy1+dy*1.03,"quintic spline");
   text5->SetTextAlign(12);
   text5->SetTextSize(0.04);
   line3=new TLine(xx1+dx*0.67,yy1+dy*1.02,
-		  xx1+dx*0.75,yy1+dy*1.02);
+                  xx1+dx*0.75,yy1+dy*1.02);
   line3->SetLineColor(kGreen);
   line3->SetLineWidth(2);
   text3 = new TText(xx1+dx*0.77,
-		    yy1+dy*1.03,"third spline");
+                    yy1+dy*1.03,"third spline");
   text3->SetTextAlign(12);
   text3->SetTextSize(0.04);
   textn = new TText(xx1+dx*0.8,yy1+dy*0.91," ");
@@ -67,9 +67,9 @@ void splines (Int_t np=23, Double_t a=-0.5, Double_t b=31)
     Double_t eps=(b-a)*1.e-5;
     if(spline5) delete spline5;
     spline5 = new TSpline5("Test",xx,f,nnp,"b1e1b2e2",
-			   f->Derivative(a),f->Derivative(b),
-			   (f->Derivative(a+eps)-f->Derivative(a))/eps,
-			   (f->Derivative(b)-f->Derivative(b-eps))/eps);
+                           f->Derivative(a),f->Derivative(b),
+                           (f->Derivative(a+eps)-f->Derivative(a))/eps,
+                           (f->Derivative(b)-f->Derivative(b-eps))/eps);
 
     spline5->SetLineColor(kRed);
     spline5->SetLineWidth(3);
@@ -80,7 +80,7 @@ void splines (Int_t np=23, Double_t a=-0.5, Double_t b=31)
     // Evaluate third spline coefficients
     if(spline3) delete spline3;
     spline3 = new TSpline3("Test",xx,yy,nnp,"b1e1",
-			   f->Derivative(a),f->Derivative(b));
+                           f->Derivative(a),f->Derivative(b));
 
     spline3->SetLineColor(kGreen);
     spline3->SetLineWidth(3);

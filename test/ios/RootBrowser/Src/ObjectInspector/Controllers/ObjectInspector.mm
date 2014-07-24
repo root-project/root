@@ -90,7 +90,7 @@ namespace {
 {
 #pragma unused(interfaceOrientation)
 
-	return YES;
+   return YES;
 }
 
 //____________________________________________________________________________________________________

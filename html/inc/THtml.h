@@ -420,7 +420,7 @@ protected:
    mutable TModuleDefinition *fModuleDef; // object translating classes to module names
    mutable TFileDefinition* fFileDef; // object translating classes to file names
    mutable TFileSysDB    *fLocalFiles; // files found locally for a given source path
-   Bool_t		fBatch; // Whether to enable GUI output
+   Bool_t  fBatch; // Whether to enable GUI output
 
    ClassDef(THtml,0)  //Convert class(es) into HTML file(s)
 };

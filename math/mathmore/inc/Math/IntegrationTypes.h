@@ -52,17 +52,17 @@ namespace Math {
 
 
     /**
-	 enumeration specifying the Gauss-KronRod integration rule for ADAPTIVE integration type
-	 @ingroup Integration
+     enumeration specifying the Gauss-KronRod integration rule for ADAPTIVE integration type
+     @ingroup Integration
     */
     // Gauss KronRod Adaptive rule
 
     enum GKRule { kGAUSS15 = 1,
-		  kGAUSS21 = 2,
-		  kGAUSS31 = 3,
-		  kGAUSS41 = 4,
-		  kGAUSS51 = 5,
-		  kGAUSS61 = 6
+       kGAUSS21 = 2,
+       kGAUSS31 = 3,
+       kGAUSS41 = 4,
+       kGAUSS51 = 5,
+       kGAUSS61 = 6
     };
 
 

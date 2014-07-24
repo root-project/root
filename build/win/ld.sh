@@ -57,7 +57,7 @@ if [ "$dll" != "" -a -f $dll.manifest ]; then
 fi
 
 if [ "$dll" != "" ]; then
-	rm -f "${dll}.res"
+   rm -f "${dll}.res"
 fi
 
 exit 0

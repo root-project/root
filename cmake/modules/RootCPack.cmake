@@ -83,21 +83,21 @@ cpack_add_install_type(developer DISPLAY_NAME "Developer Installation")
 cpack_add_component(applications 
     DISPLAY_NAME "ROOT Applications" 
     DESCRIPTION "ROOT executables such as root.exe"
-	  INSTALL_TYPES full minimal developer)
+     INSTALL_TYPES full minimal developer)
 
 cpack_add_component(libraries 
     DISPLAY_NAME "ROOT Libraries" 
     DESCRIPTION "All ROOT libraries and dictionaries"
-	  INSTALL_TYPES full minimal developer)
+     INSTALL_TYPES full minimal developer)
 
 cpack_add_component(headers 
     DISPLAY_NAME "C++ Headers" 
     DESCRIPTION "These are needed to do any development"
-	  INSTALL_TYPES full developer)
-	  
+     INSTALL_TYPES full developer)
+     
 cpack_add_component(tests 
     DISPLAY_NAME "ROOT Tests and Tutorials" 
     DESCRIPTION "These are needed to do any test and tutorial"
-	  INSTALL_TYPES full developer)
+     INSTALL_TYPES full developer)
 
 

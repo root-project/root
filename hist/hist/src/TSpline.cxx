@@ -1856,7 +1856,7 @@ void TSpline5::SetPoint(Int_t i, Double_t x, Double_t y)
 
 //______________________________________________________________________________
 void TSpline5::SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d,
-			     Double_t e, Double_t f)
+                             Double_t e, Double_t f)
 {
    // set point coefficient number i
    

@@ -133,7 +133,7 @@ void TFumiliFCN::Calculate_gradient_and_hessian(const std::vector<double> & p)  
             nRejected++; 
             continue;
          }
-         Calculate_numerical_gradient_of_integral( x, x2, fval); 	
+         Calculate_numerical_gradient_of_integral( x, x2, fval);
          
       }
       else { 
@@ -174,8 +174,6 @@ void TFumiliFCN::Calculate_gradient_and_hessian(const std::vector<double> & p)  
    
    // reset the number of fitting data points
    if (nRejected != 0)  fFunc->SetNumberFitPoints(nMeasurements-nRejected);
-   
-	
 }
 
 
@@ -326,12 +324,12 @@ void TFumiliBinLikelihoodFCN::Calculate_element(int i, const FumiliFitData & poi
          fj =  2.* fFunctionGradient[j] * ( 1.0 - value*invFval); 
       
       
-      // 	    if ( ( ! (fj <= 0) )  && ( ! ( fj > 0) ) ) { 
-      // 	      std::cout << "fj is nan -- " << fj << "  " << j << " x " << x[0] << " f(x) = " << fval << "  inv =  " << invFval << "gradient = " 
-      // 			<< fFunctionGradient[j] << "  " << fFunctionGradient[j]/fval << std::endl;
-      // 	      fj = 0; 
+      //        if ( ( ! (fj <= 0) )  && ( ! ( fj > 0) ) ) {
+      //          std::cout << "fj is nan -- " << fj << "  " << j << " x " << x[0] << " f(x) = " << fval << "  inv =  " << invFval << "gradient = "
+      //          << fFunctionGradient[j] << "  " << fFunctionGradient[j]/fval << std::endl;
+      //          fj = 0;
       
-      // 	    }
+      //        }
       
       grad[j] += fj;
       
@@ -375,8 +373,8 @@ void TFumiliUnbinLikelihoodFCN::Calculate_element(int , const FumiliFitData &, d
       if ( fval < kPrecision &&  std::fabs(fFunctionGradient[j]) < kPrecision ) 
          fj = 2.0; 
       else 
-         fj =  2.* invFval * fFunctionGradient[j]; 
-    	
+         fj =  2.* invFval * fFunctionGradient[j];
+
       grad[j] -= fj;
       
       for (unsigned int k = j; k < npar; ++ k) { 

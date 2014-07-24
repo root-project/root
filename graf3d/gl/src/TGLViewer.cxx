@@ -560,7 +560,7 @@ void TGLViewer::DoDraw(Bool_t swap_buffers)
 
    if (fGLDevice == -1 && (fViewport.Width() <= 1 || fViewport.Height() <= 1)) {
       if (gDebug > 2) {
-	 Info("TGLViewer::DoDraw()", "zero surface area, draw skipped.");
+         Info("TGLViewer::DoDraw()", "zero surface area, draw skipped.");
       }
       return;
    }

@@ -54,14 +54,14 @@ void write(int n) {
 
   timer.Start();
   for (int i = 0; i < n; ++i) { 
-        double Px = R.Gaus(0,10);
-	double Py = R.Gaus(0,10);
-	double Pz = R.Gaus(0,10);
-	double E  = R.Gaus(100,10);
-	//CylindricalEta4D<double> & c = v1->Coordinates();
-	//c.SetValues(Px,pY,pZ,E);
-	v1->SetCoordinates(Px,Py,Pz,E);
-	t1.Fill(); 
+     double Px = R.Gaus(0,10);
+     double Py = R.Gaus(0,10);
+     double Pz = R.Gaus(0,10);
+     double E  = R.Gaus(100,10);
+     //CylindricalEta4D<double> & c = v1->Coordinates();
+     //c.SetValues(Px,pY,pZ,E);
+     v1->SetCoordinates(Px,Py,Pz,E);
+     t1.Fill(); 
   }
 
   f1.Write();

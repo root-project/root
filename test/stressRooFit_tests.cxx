@@ -1484,10 +1484,10 @@ public:
     TPluginHandler *h;
     if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFFT"))) {
       if (h->LoadPlugin() == -1) {
-	gROOT->ProcessLine("new TNamed ;") ;
-	return kFALSE;
+         gROOT->ProcessLine("new TNamed ;") ;
+         return kFALSE;
       } else {
-	return kTRUE ;
+         return kTRUE ;
       }
     }
     return kFALSE ;
@@ -6070,7 +6070,7 @@ public:
   // to speed up the study at the expemse of some precision
 
   RooMCStudy* mcstudy = new RooMCStudy(model,x,Binned(kTRUE),Silence(),Extended(),
-				       FitOptions(Save(kTRUE),PrintEvalErrors(0))) ;
+                                       FitOptions(Save(kTRUE),PrintEvalErrors(0))) ;
   
 
   // G e n e r a t e   a n d   f i t   e v e n t s
@@ -6290,7 +6290,7 @@ public:
   // Configure manager to perform binned extended likelihood fits (Binned(),Extended()) on data generated
   // with a Poisson fluctuation on Nobs (Extended())
   RooMCStudy* mcs = new RooMCStudy(model,mjjj,Binned(),Silence(),Extended(kTRUE),
-				   FitOptions(Extended(kTRUE),PrintEvalErrors(-1))) ;
+                                   FitOptions(Extended(kTRUE),PrintEvalErrors(-1))) ;
 
 
 

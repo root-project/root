@@ -49,19 +49,19 @@ void principal(Int_t n=10, Int_t m=10000)
     // First we create the un-correlated, random variables, according
     // to one of three distributions 
     for (Int_t j = 0; j < n - c; j++) {
-      if (j % 3 == 0)
-	data[j] = random->Gaus(5,1);
-      else if (j % 3 == 1)
-	data[j] = random->Poisson(8);
-      else 
-	data[j] = random->Exp(2);
+       if (j % 3 == 0)
+          data[j] = random->Gaus(5,1);
+       else if (j % 3 == 1)
+          data[j] = random->Poisson(8);
+       else
+          data[j] = random->Exp(2);
     }
 
     // Then we create the correlated variables
     for (Int_t j = 0 ; j < c; j++) {
-      data[n - c + j] = 0;
-      for (Int_t k = 0; k < n - c - j; k++)
-	data[n - c + j] += data[k];
+       data[n - c + j] = 0;
+       for (Int_t k = 0; k < n - c - j; k++)
+          data[n - c + j] += data[k];
     }
     
     // Finally we're ready to add this datapoint to the PCA

@@ -63,7 +63,7 @@ public :
      Construct from rho eta and phi values
    */
   CylindricalEta3D(Scalar rho, Scalar eta, Scalar phi) :  
-  				fRho(rho), fEta(eta), fPhi(phi) { Restrict(); }
+             fRho(rho), fEta(eta), fPhi(phi) { Restrict(); }
 
   /**
      Construct from any Vector or coordinate system implementing 
@@ -71,10 +71,10 @@ public :
     */ 
   template <class CoordSystem > 
   explicit CylindricalEta3D( const CoordSystem & v ) : 
-    	fRho(v.Rho() ),  fEta(v.Eta() ),  fPhi(v.Phi() )  
+     fRho(v.Rho() ),  fEta(v.Eta() ),  fPhi(v.Phi() )
   {  
     static Scalar bigEta = 
-    			-.3f *std::log(std::numeric_limits<Scalar>::epsilon());
+         -.3f *std::log(std::numeric_limits<Scalar>::epsilon());
     if ( std::fabs(fEta) > bigEta ) {
        fRho *= v.Z()/Z(); // This gives a small absolute adjustment in rho,
        // which, for large eta, results in a significant
@@ -123,7 +123,7 @@ public :
       get internal data into 3 Scalar numbers
    */ 
    void GetCoordinates(Scalar& rho, Scalar& eta, Scalar& phi) const 
-   {rho=fRho; eta=fEta; phi=fPhi;}  				
+   {rho=fRho; eta=fEta; phi=fPhi;}
 
 private:
    inline static Scalar pi() { return M_PI; } 
@@ -148,7 +148,7 @@ public:
    T R()     const { return fRho > 0          ? fRho*std::cosh(fEta) :
       fEta >  etaMax<T>() ?  fEta - etaMax<T>()   :
       fEta < -etaMax<T>() ? -fEta - etaMax<T>()   :
-      0		   ; }
+      0     ; }
    T Mag2()  const { return R()*R();              }
    T Perp2() const { return fRho*fRho;            }
    T Theta() const { return  fRho >  0 ? 2* std::atan( std::exp( - fEta ) ) :

@@ -57,7 +57,7 @@ int main(int argc,char *argv[])
       cout << "The solution appears to be correct." <<endl;
     } else {
       cout << endl << "The solution may be wrong "
-	"(or the generated problem may be ill conditioned.)" <<endl;
+           "(or the generated problem may be ill conditioned.)" <<endl;
     }
     delete temp;
   } else {

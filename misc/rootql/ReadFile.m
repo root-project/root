@@ -475,12 +475,12 @@ int ReadFile(NSString *fullPath, NSMutableString *html, QLPreviewRequestRef prev
    }
 
    // Check for cancel
-	if (QLPreviewRequestIsCancelled(preview)) {
+   if (QLPreviewRequestIsCancelled(preview)) {
       free(fh.uuid);
       free(fh.title);
       close(fd);
-		return -1;
-	}
+      return -1;
+   }
 
    if (ReadKeys(fd, &fh, html, preview) == -1) {
       free(fh.uuid);

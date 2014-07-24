@@ -347,7 +347,7 @@ public:
    virtual void     SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax,
                             Int_t nz, Double_t zmin, Double_t zmax);
    virtual void     SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t * yBins, Int_t nz,
-			    const Double_t *zBins);
+                            const Double_t *zBins);
    virtual void     SetBinsLength(Int_t = -1) { } //redefined in derived classes
    virtual void     SetBinErrorOption(EBinErrorOpt type) { fBinStatErrOpt = type; }
    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");

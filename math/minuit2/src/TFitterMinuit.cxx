@@ -213,7 +213,7 @@ int  TFitterMinuit::Minimize( int nfcn, double edmval)  {
    return ExamineMinimum(min);
 }
 
-Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){	
+Int_t TFitterMinuit::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
    // execute the command (Fortran Minuit compatible interface)
    
 #ifdef DEBUG

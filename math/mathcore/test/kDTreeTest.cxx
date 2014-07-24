@@ -74,7 +74,7 @@ void TestBuild(const Int_t npoints, const Int_t bsize){
    Float_t end = Mem();
    printf("Memory leak %f KB\n", end-before);
    delete[] data0;
-   return;	
+   return;
 }
 
 //______________________________________________________________________
@@ -330,32 +330,32 @@ void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
     Int_t nfound = 0;
     for (Int_t kloop = 0;kloop<nloop;kloop++){
       if (kloop==0){
-	counteriter = 0;
-	counterfound= 0;
-	countern    = 0;
+   counteriter = 0;
+   counterfound= 0;
+   countern    = 0;
       }
       for (Int_t i=0;i<npoints;i++){
-	Float_t point[2]={data[0][i],data[1][i]};
-	Float_t delta[2]={drangey,drangez};
-	Int_t iter  =0;
-	nfound =0;
-	Int_t bnode =0;
-	//kdtree->FindBNode(point,delta, bnode);
-	//continue;
-	kdtree->FindInRangeA(point,delta,res,nfound,iter,bnode);
-	if (kloop==0){
-	  //Bool_t isOK = kTRUE;
-	  Bool_t isOK = kFALSE;
-	  for (Int_t ipoint=0;ipoint<nfound;ipoint++)
-	    if (res[ipoint]==i) isOK =kTRUE;
-	  counteriter+=iter;
-	  counterfound+=nfound;
-	  if (isOK) {
-	    countern++;
-	  }else{
-	    printf("Bug\n");
-	  }
-	}
+   Float_t point[2]={data[0][i],data[1][i]};
+   Float_t delta[2]={drangey,drangez};
+   Int_t iter  =0;
+   nfound =0;
+   Int_t bnode =0;
+   //kdtree->FindBNode(point,delta, bnode);
+   //continue;
+   kdtree->FindInRangeA(point,delta,res,nfound,iter,bnode);
+   if (kloop==0){
+     //Bool_t isOK = kTRUE;
+     Bool_t isOK = kFALSE;
+     for (Int_t ipoint=0;ipoint<nfound;ipoint++)
+       if (res[ipoint]==i) isOK =kTRUE;
+     counteriter+=iter;
+     counterfound+=nfound;
+     if (isOK) {
+       countern++;
+     }else{
+       printf("Bug\n");
+     }
+   }
       }
     }
     

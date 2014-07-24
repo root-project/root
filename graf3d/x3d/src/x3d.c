@@ -1677,25 +1677,25 @@ register float PX, PY, QX, QY, dx, dy;
 
    switch(Pclip){
 
-      case 1 :			 /*  00001  */
+      case 1 :      /*  00001  */
          clipWithTop(PX, PY, dx, dy, V)
          if((PX < -H) || (PX > H))
             return 0;
          break;
 
-      case 2 :			 /*  00010  */
+      case 2 :      /*  00010  */
          clipWithBottom(PX, PY, dx, dy, V)
          if((PX < -H) || (PX > H))
             return 0;
          break;
 
-      case 4 :			 /*  00100  */
+      case 4 :      /*  00100  */
          clipWithLeftSide(PX, PY, dx, dy, H)
          if((PY < -V) || (PY > V))
             return 0;
          break;
 
-      case 5 :			 /*  00101  */
+      case 5 :          /*  00101  */
          clipWithTop(PX, PY, dx, dy, V)
          if((PX < -H) || (PX > H)){
             clipWithLeftSide(PX, PY, dx, dy, H)
@@ -1704,7 +1704,7 @@ register float PX, PY, QX, QY, dx, dy;
             }
          break;
 
-      case 6 :			 /*  00110  */
+      case 6 :          /*  00110  */
          clipWithBottom(PX, PY, dx, dy, V)
          if((PX < -H) || (PX > H)){
             clipWithLeftSide(PX, PY, dx, dy, H)
@@ -1713,13 +1713,13 @@ register float PX, PY, QX, QY, dx, dy;
             }
          break;
 
-      case 8 :			 /*  01000  */
+      case 8 :          /*  01000  */
          clipWithRightSide(PX, PY, dx, dy, H)
          if((PY < -V) || (PY > V))
             return 0;
          break;
 
-      case 9 :			 /*  01001  */
+      case 9 :          /*  01001  */
          clipWithTop(PX, PY, dx, dy, V)
          if((PX < -H) || (PX > H)){
             clipWithRightSide(PX, PY, dx, dy, H)
@@ -1728,7 +1728,7 @@ register float PX, PY, QX, QY, dx, dy;
             }
          break;
 
-      case 10 :			 /*  01010  */
+      case 10 :          /*  01010  */
          clipWithBottom(PX, PY, dx, dy, V)
          if((PX < -H) || (PX > H)){
             clipWithRightSide(PX, PY, dx, dy, H)
@@ -1743,59 +1743,59 @@ register float PX, PY, QX, QY, dx, dy;
 
    switch(Qclip){
 
-      case 1 : 		 /*  00001  */
+      case 1 :        /*  00001  */
          clipWithTop(QX, QY, dx, dy, V)
          break;
 
-      case 2 : 		 /*  00010  */
+      case 2 :        /*  00010  */
          clipWithBottom(QX, QY, dx, dy, V)
          break;
 
-      case 4 : 		 /*  00100  */
+      case 4 :        /*  00100  */
          clipWithLeftSide(QX, QY, dx, dy, H)
          break;
 
-      case 5 : 		 /*  00101  */
+      case 5 :        /*  00101  */
          clipWithTop(QX, QY, dx, dy, V)
          if(QX < -H)
             clipWithLeftSide(QX, QY, dx, dy, H)
          break;
 
-      case 6 : 		 /*  00110  */
+      case 6 :        /*  00110  */
          clipWithBottom(QX, QY, dx, dy, V)
          if(QX < -H)
             clipWithLeftSide(QX, QY, dx, dy, H)
          break;
 
-      case 8 : 		 /*  01000  */
+      case 8 :        /*  01000  */
          clipWithRightSide(QX, QY, dx, dy, H)
          break;
 
-      case 9 : 		 /*  01001  */
+      case 9 :        /*  01001  */
          clipWithTop(QX, QY, dx, dy, V)
          if(QX > H)
             clipWithRightSide(QX, QY, dx, dy, H)
          break;
 
-      case 10 : 		 /*  01010  */
+      case 10 :        /*  01010  */
          clipWithBottom(QX, QY, dx, dy, V)
          if(QX > H)
             clipWithRightSide(QX, QY, dx, dy, H)
          break;
 
-      case 21 : 		 /*  10101  */
+      case 21 :        /*  10101  */
          clipWithTop(QX, QY, dx, dy, V)
          if(QX < -H)
             clipWithLeftSide(QX, QY, dx, dy, H)
          break;
 
-      case 22 : 		 /*  10110  */
+      case 22 :        /*  10110  */
          clipWithBottom(QX, QY, dx, dy, V)
          if(QX < -H)
             clipWithLeftSide(QX, QY, dx, dy, H)
          break;
 
-      case 23 : 		 /*  10111  */
+      case 23 :        /*  10111  */
          if(QY < PY)
             clipWithTop(QX, QY, dx, dy, V)
          else
@@ -1804,19 +1804,19 @@ register float PX, PY, QX, QY, dx, dy;
             clipWithLeftSide(QX, QY, dx, dy, H)
          break;
 
-      case 25 : 		 /*  11001  */
+      case 25 :        /*  11001  */
          clipWithTop(QX, QY, dx, dy, V)
          if(QX > H)
             clipWithRightSide(QX, QY, dx, dy, H)
          break;
 
-      case 26 : 		 /*  11010  */
+      case 26 :        /*  11010  */
          clipWithBottom(QX, QY, dx, dy, V)
          if(QX > H)
             clipWithRightSide(QX, QY, dx, dy, H)
          break;
 
-      case 27 : 		 /*  11011  */
+      case 27 :        /*  11011  */
          if(QY < PY)
             clipWithTop(QX, QY, dx, dy, V)
          else
@@ -1825,7 +1825,7 @@ register float PX, PY, QX, QY, dx, dy;
             clipWithRightSide(QX, QY, dx, dy, H)
          break;
 
-      case 29 : 		 /*  11101  */
+      case 29 :        /*  11101  */
          if(QX < PX)
             clipWithRightSide(QX, QY, dx, dy, H)
          else
@@ -1834,7 +1834,7 @@ register float PX, PY, QX, QY, dx, dy;
             clipWithTop(QX, QY, dx, dy, V)
          break;
 
-      case 30 : 		 /*  11110  */
+      case 30 :        /*  11110  */
          if(QX < PX)
             clipWithRightSide(QX, QY, dx, dy, H)
          else
@@ -1843,7 +1843,7 @@ register float PX, PY, QX, QY, dx, dy;
             clipWithBottom(QX, QY, dx, dy, V)
          break;
 
-      case 31 : 		 /*  11111  */
+      case 31 :        /*  11111  */
          if(QX < PX)
             clipWithRightSide(QX, QY, dx, dy, H)
          else
@@ -3144,7 +3144,7 @@ Window   parent;
  *  Print help
  */
     if (!strcmp(string, "help")) {
-		puts("**** x3d QUICK HELP **************************************\n");
+      puts("**** x3d QUICK HELP **************************************\n");
         puts(" QUIT                    q Q     MOVE OBJECT DOWN      u U" );
         puts(" TOGGLE CONTROLS STYLE   o O     MOVE OBJECT UP        i I" );
         puts(" TOGGLE STEREO DISPLAY   s S     MOVE OBJECT RIGHT     h H" );
@@ -3155,25 +3155,25 @@ Window   parent;
         puts(" ROTATE ABOUT Y      y Y b B     AUTOROTATE ABOUT Y  4 5 6" );
         puts(" ROTATE ABOUT Z      z Z c C     AUTOROTATE ABOUT Z  7 8 9\n");
         puts(" ADJUST FOCUS        [ ] { }     HIDDEN LINE MODE      e E" );
-	puts(" WIREFRAME MODE          w W     HIDDEN SURFACE MODE   r R\n");
+   puts(" WIREFRAME MODE          w W     HIDDEN SURFACE MODE   r R\n");
         puts(" POINTER MOVEMENT WITH LEFT BUTTON :\n");
         puts(" ROTATE OBJECT ABOUT X   Vertical" );
         puts(" ROTATE OBJECT ABOUT Z   Horizontal\n");
 
         return 0L;
-	}
-	else if ((indx = (char *) strstr(string, "hull:")) != NULL) {
-	    strcpy (filename, indx + 5);
-	    if (strlen(filename)) export = 1;
+   }
+   else if ((indx = (char *) strstr(string, "hull:")) != NULL) {
+       strcpy (filename, indx + 5);
+       if (strlen(filename)) export = 1;
     }
-	else if ((indx = (char *) strstr(string, "java:")) != NULL) {
-	    strcpy (filename, indx + 5);
-	    if (strlen(filename)) export = 2;
+   else if ((indx = (char *) strstr(string, "java:")) != NULL) {
+       strcpy (filename, indx + 5);
+       if (strlen(filename)) export = 2;
     }
-	else if (string) {
-	    strcat(title, "/");
-	    strcat(title, string);
-	}
+   else if (string) {
+       strcat(title, "/");
+       strcat(title, string);
+   }
 
     switch( export ) {
         case 1: /* hull */
@@ -3220,16 +3220,16 @@ Window   parent;
     xMin = yMin = zMin =  999999;
     xMax = yMax = zMax = -999999;
 
-	for (i = 0; i < gSize3D.numPoints; i++) {
-	    xMin = xMin <= points[i].x ? xMin : points[i].x;
-	    xMax = xMax >= points[i].x ? xMax : points[i].x;
+   for (i = 0; i < gSize3D.numPoints; i++) {
+       xMin = xMin <= points[i].x ? xMin : points[i].x;
+       xMax = xMax >= points[i].x ? xMax : points[i].x;
 
-	    yMin = yMin <= points[i].y ? yMin : points[i].y;
-	    yMax = yMax >= points[i].y ? yMax : points[i].y;
+       yMin = yMin <= points[i].y ? yMin : points[i].y;
+       yMax = yMax >= points[i].y ? yMax : points[i].y;
 
-	    zMin = zMin <= points[i].z ? zMin : points[i].z;
-	    zMax = zMax >= points[i].z ? zMax : points[i].z;
-	}
+       zMin = zMin <= points[i].z ? zMin : points[i].z;
+       zMax = zMax >= points[i].z ? zMax : points[i].z;
+   }
 
 /*
  *  Compute the range & center of the object
@@ -3245,15 +3245,15 @@ Window   parent;
 /*
  *  Compute the correctionFactor, rescale & put the object in the center
  */
-	correctionFactor = 6000.0 / (xRange > zRange ? xRange : zRange);
+   correctionFactor = 6000.0 / (xRange > zRange ? xRange : zRange);
 
-	for (i = 0; i < gSize3D.numPoints; i++) {
-	    points[i].x = (points[i].x - xCenter) * correctionFactor;
-	    points[i].y = (points[i].y - yCenter) * correctionFactor;
-	    points[i].z = (points[i].z - zCenter) * correctionFactor;
-	}
+   for (i = 0; i < gSize3D.numPoints; i++) {
+       points[i].x = (points[i].x - xCenter) * correctionFactor;
+       points[i].y = (points[i].y - yCenter) * correctionFactor;
+       points[i].z = (points[i].z - zCenter) * correctionFactor;
+   }
 
-	deltaMove = (float) (xRange >= zRange ? xRange : zRange) / 20.0 * correctionFactor;
+   deltaMove = (float) (xRange >= zRange ? xRange : zRange) / 20.0 * correctionFactor;
 
 /*
  *  Calculate the bounding cube

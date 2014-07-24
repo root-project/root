@@ -58,7 +58,7 @@
 {
 #pragma unused(interfaceOrientation)
 
-	return YES;
+   return YES;
 }
 
 #pragma mark - Inspector's actions.

@@ -9,12 +9,12 @@ class NdbThermalNeutron : public NdbMF
 protected:
 
 public:
-	NdbThermalNeutron()
-		: NdbMF(7, "Thermal neutron scattering law data") {}
+   NdbThermalNeutron()
+      : NdbMF(7, "Thermal neutron scattering law data") {}
 
-	~NdbThermalNeutron() {}
+   ~NdbThermalNeutron() {}
 
-	ClassDef(NdbThermalNeutron,1)
+   ClassDef(NdbThermalNeutron,1)
 }; // NdbThermalNeutron
 
 #endif

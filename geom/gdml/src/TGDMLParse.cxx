@@ -1736,10 +1736,10 @@ XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, 
       z1 = Evaluate(zcut1line);
    }
    if (zcut2 == "") {
-	   z2 = radius;
+      z2 = radius;
    } else {
-	   zcut2line = TString::Format("(%s)*%s", zcut2.Data(), retunit.Data());
-	   z2 = Evaluate(zcut2line);
+      zcut2line = TString::Format("(%s)*%s", zcut2.Data(), retunit.Data());
+      z2 = Evaluate(zcut2line);
    }
 
    TGeoSphere *sph = new TGeoSphere(0, radius);

@@ -27,10 +27,10 @@ public:
   ~MnParabolaFactory() {}
 
   MnParabola operator()(const MnParabolaPoint&, const MnParabolaPoint&, 
-			const MnParabolaPoint&) const;
+                        const MnParabolaPoint&) const;
 
   MnParabola operator()(const MnParabolaPoint&, double, 
-			const MnParabolaPoint&) const;
+                        const MnParabolaPoint&) const;
 
 private: 
   

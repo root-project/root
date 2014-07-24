@@ -78,7 +78,7 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
 #pragma unused(interfaceOrientation)
-	return YES;
+   return YES;
 }
 
 //____________________________________________________________________________________________________

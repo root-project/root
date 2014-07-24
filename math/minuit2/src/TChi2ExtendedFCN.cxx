@@ -73,7 +73,7 @@ double TChi2ExtendedFCN::operator()(const std::vector<double>& par) const {
       if (error2 == 0) error2 = 1;
       
       double tmp = ( y -functionValue );
-	  	  
+
       chi2 += tmp*tmp/error2;
    }
    

@@ -116,7 +116,7 @@ inline double fast_exp(double initial_x){
 
 /// Exponential Function single precision
 inline float fast_expf(float initial_x) {
-	
+
     float x = initial_x;
 
     float z = details::fpfloor( details::LOG2EF * x +0.5f ); /* floor() truncates toward -infinity. */

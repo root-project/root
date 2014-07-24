@@ -14,14 +14,14 @@
 
 #include <QtCore/QObject>
  
-class TQtCanvasPainter : public QObject 
+class TQtCanvasPainter : public QObject
 {
-    protected:
-       TQtCanvasPainter(){}
-   	public:
-       TQtCanvasPainter(QObject *p) : QObject(p) {}
-	   virtual ~TQtCanvasPainter() {}
-	   virtual void paintEvent(QPainter &painter, QPaintEvent *e=0) = 0;
+protected:
+   TQtCanvasPainter(){}
+public:
+   TQtCanvasPainter(QObject *p) : QObject(p) {}
+   virtual ~TQtCanvasPainter() {}
+   virtual void paintEvent(QPainter &painter, QPaintEvent *e=0) = 0;
 };
 
 #endif

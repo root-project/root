@@ -63,30 +63,29 @@ public:
   */
 
   FumiliStandardChi2FCN(const ParametricFunction& modelFCN, const std::vector<double>& meas,
-	   const std::vector<double>& pos,
-	   const std::vector<double>& mvar)
+                        const std::vector<double>& pos,
+                        const std::vector<double>& mvar)
     { //this->fModelFCN = &modelFunction; 
-    this->SetModelFunction(modelFCN); 
+       this->SetModelFunction(modelFCN);
 
-    assert(meas.size() == pos.size());
-    assert(meas.size() == mvar.size());
-    fMeasurements = meas;
-    std::vector<double> x(1); 
-    unsigned int n = mvar.size(); 
-    fPositions.reserve( n);
-    // correct for variance == 0
-    fInvErrors.resize(n);
-    for (unsigned int i = 0; i < n; ++i)  
-    { 
-      x[0] = pos[i];
-      fPositions.push_back(x);
-      // PAW/ROOT hack : use 1 for 0 entries bins
-      if (mvar[i] == 0) 
-	fInvErrors[i] = 1; 
-      else 
-	fInvErrors[i] = 1.0/std::sqrt(mvar[i]); 
-    }
-
+       assert(meas.size() == pos.size());
+       assert(meas.size() == mvar.size());
+       fMeasurements = meas;
+       std::vector<double> x(1);
+       unsigned int n = mvar.size();
+       fPositions.reserve( n);
+       // correct for variance == 0
+       fInvErrors.resize(n);
+       for (unsigned int i = 0; i < n; ++i)
+       {
+          x[0] = pos[i];
+          fPositions.push_back(x);
+          // PAW/ROOT hack : use 1 for 0 entries bins
+          if (mvar[i] == 0)
+          fInvErrors[i] = 1;
+          else
+          fInvErrors[i] = 1.0/std::sqrt(mvar[i]);
+       }
   }
 
 
@@ -108,26 +107,26 @@ public:
   */
 
   FumiliStandardChi2FCN(const ParametricFunction& modelFCN, const std::vector<double>& meas,
-	   const std::vector<std::vector<double> >& pos,
-	   const std::vector<double>& mvar)
-    { //this->fModelFCN = &modelFunction; 
-    this->SetModelFunction(modelFCN); 
-
-    assert(meas.size() == pos.size());
-    assert(meas.size() == mvar.size());
-    fMeasurements = meas;
-    fPositions = pos;
-    // correct for variance == 0
-    unsigned int n = mvar.size(); 
-    fInvErrors.resize(n);
-    for (unsigned int i = 0; i < n; ++i)  
-    { 
-      // PAW/ROOT hack : use 1 for 0 entries bins
-      if (mvar[i] == 0) 
-	fInvErrors[i] = 1; 
-      else 
-	fInvErrors[i] = 1.0/std::sqrt(mvar[i]); 
-    }
+                        const std::vector<std::vector<double> >& pos,
+                        const std::vector<double>& mvar)
+   { //this->fModelFCN = &modelFunction;
+      this->SetModelFunction(modelFCN);
+      
+      assert(meas.size() == pos.size());
+      assert(meas.size() == mvar.size());
+      fMeasurements = meas;
+      fPositions = pos;
+      // correct for variance == 0
+      unsigned int n = mvar.size();
+      fInvErrors.resize(n);
+      for (unsigned int i = 0; i < n; ++i)
+      {
+         // PAW/ROOT hack : use 1 for 0 entries bins
+         if (mvar[i] == 0)
+         fInvErrors[i] = 1;
+         else
+         fInvErrors[i] = 1.0/std::sqrt(mvar[i]);
+      }
 
   }
 

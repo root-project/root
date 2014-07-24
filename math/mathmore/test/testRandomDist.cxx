@@ -106,8 +106,8 @@ void testPoisson( R & r,double mu,TH1D & h) {
   w.Stop();
   if (fillHist) { fillHist=false; return; }  
   std::cout << "Poisson - mu = " << mu << "\t\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << "\t(ns/call)" << std::endl;
   // fill histogram the second pass
   fillHist = true; 
   testPoisson(r,mu,h);
@@ -135,8 +135,8 @@ unsigned int genPoisson( R & r, double mu) {
     double x,y,v;
     do { 
       do { 
-	y = std::tan( pi * r.Rndm() );
-	x = sqm * y + m - 1.;
+         y = std::tan( pi * r.Rndm() );
+         x = sqm * y + m - 1.;
       }
       while (x <= 0); 
       v = r.Rndm(); 
@@ -202,8 +202,8 @@ unsigned int genPoisson2( R & r, double mu) {
     
     do {
       do {
-	y = std::tan(pi*r.Rndm());
-	em = sq*y + mu;
+         y = std::tan(pi*r.Rndm());
+         em = sq*y + mu;
       } while( em < 0.0 );
 
       em = std::floor(em);
@@ -235,8 +235,8 @@ void testPoisson2( R & r,double mu,TH1D & h) {
   w.Stop();
   if (fillHist) { fillHist=false; return; }  
   std::cout << "Poisson \t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << "\t(ns/call)" << std::endl;
   // fill histogram the second pass
   fillHist = true; 
   testPoisson2(r,mu,h);
@@ -261,8 +261,8 @@ void testPoissonCLHEP( R & r, double mu,TH1D & h) {
   w.Stop();
   if (fillHist) { fillHist=false; return; }  
   std::cout << "Poisson - mu = " << mu << "\t\t" << findName(r) <<"\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+           << "\t(ns/call)" << std::endl;
   // fill histogram the second pass
   fillHist = true; 
   testPoissonCLHEP(r,mu,h);
@@ -288,8 +288,8 @@ void testGausCLHEP( R & r,double mu,double sigma,TH1D & h) {
   w.Stop();
   if (fillHist) { fillHist=false; return; }  
   std::cout << "Gaussian - mu,sigma = " << mu << " , " << sigma << "\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << "\t(ns/call)" << std::endl;
   // fill histogram the second pass
   fillHist = true; 
   testGausCLHEP(r,mu,sigma,h);
@@ -313,8 +313,8 @@ void testFlatCLHEP( R & r,TH1D & h) {
   w.Stop();
   if (fillHist) { fillHist=false; return; }  
   std::cout << "Flat - [0,1]           \t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << "\t(ns/call)" << std::endl;
   // fill histogram the second pass
   fillHist = true; 
   testFlatCLHEP<R>(r,h);
@@ -342,8 +342,8 @@ void testFlat( R & r,TH1D & h) {
   w.Stop();
   if (fillHist) { fillHist=false; return; }  
   std::cout << "Flat - [0,1]       \t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << "\t(ns/call)" << std::endl;
   // fill histogram the second pass
   fillHist = true; 
   testFlat(r,h);
@@ -369,8 +369,8 @@ void testGaus( R & r,double mu,double sigma,TH1D & h) {
   w.Stop();
   if (fillHist) { fillHist=false; return; }  
   std::cout << "Gaussian - mu,sigma = " << mu << " , " << sigma << "\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << "\t(ns/call)" << std::endl;
   // fill histogram the second pass
   fillHist = true; 
   testGaus(r,mu,sigma,h);
@@ -396,8 +396,8 @@ void testLandau( R & r,TH1D & h) {
   w.Stop();
   if (fillHist) { fillHist=false; return; }  
   std::cout << "Landau " << "\t\t\t\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << "\t(ns/call)" << std::endl;
   // fill histogram the second pass
   fillHist = true; 
   testLandau(r,h);
@@ -423,8 +423,8 @@ void testBreitWigner( R & r,double mu,double gamma,TH1D & h) {
   w.Stop();
   if (fillHist) { fillHist=false; return; }  
   std::cout << "Breit-Wigner - m,g = " << mu << " , " << gamma << "\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << "\t(ns/call)" << std::endl;
   // fill histogram the second pass
   fillHist = true; 
   testBreitWigner(r,mu,gamma,h);
@@ -449,8 +449,8 @@ void testBinomial( R & r,int ntot,double p,TH1D & h) {
   w.Stop();
   if (fillHist) { fillHist=false; return; }  
   std::cout << "Binomial - ntot,p = " << ntot << " , " << p << "\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << "\t(ns/call)" << std::endl;
   // fill histogram the second pass
   fillHist = true; 
   testBinomial(r,ntot,p,h);
@@ -474,8 +474,8 @@ void testBinomialCLHEP( R & r,int ntot,double p,TH1D & h) {
   w.Stop();
   if (fillHist) { fillHist=false; return; }  
   std::cout << "Binomial - ntot,p = " << ntot << " , " << p << "\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << "\t(ns/call)" << std::endl;
   // fill histogram the second pass
   fillHist = true; 
   testBinomialCLHEP(r,ntot,p,h);
@@ -557,8 +557,8 @@ void testExp( R & r,TH1D & h) {
   w.Stop();
   if (fillHist) { fillHist=false; return; }  
   std::cout << "Exponential " << "\t\t\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << "\t(ns/call)" << std::endl;
   // fill histogram the second pass
   fillHist = true; 
   testExp(r,h);
@@ -585,8 +585,8 @@ void testCircle( R & r,TH1D & h) {
   if (fillHist) { fillHist=false; return; }  
 
   std::cout << "Circle " << "\t\t\t\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << "\t(ns/call)" << std::endl;   
   // fill histogram the second pass
   fillHist = true; 
   testCircle(r,h);
@@ -648,8 +648,8 @@ void testSphere( R & r,TH1D & h1, TH1D & h2 ) {
   if (fillHist) { fillHist=false; return; }  
 
   std::cout << "Sphere " << "\t\t\t\t"<< findName(r) << "\tTime = " << w.RealTime()*1.0E9/NEVT << " \t" 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << "\t(ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << "\t(ns/call)" << std::endl;
 
   // fill histogram the second pass
   fillHist = true; 

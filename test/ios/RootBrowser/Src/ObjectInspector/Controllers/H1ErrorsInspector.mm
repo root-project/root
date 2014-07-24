@@ -56,7 +56,7 @@ RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
 #pragma unused(interfaceOrientation)
-	return YES;
+   return YES;
 }
 
 #pragma mark - Pickerview delegate/data source.
@@ -86,7 +86,7 @@ RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::
 - (NSInteger) numberOfComponentsInPickerView : (UIPickerView *) pickerView
 {
 #pragma unused(pickerView)
-	return 1;
+   return 1;
 }
 
 //____________________________________________________________________________________________________

@@ -58,7 +58,7 @@ public:
   
    ///constructor for double limited Parameter
    ParameterSettings(const std::string &  name, double val, double err, 
-		  double min, double max) : 
+                     double min, double max) :
       fValue(val), fStepSize(err), fFix(false), 
       fLowerLimit(0.), fUpperLimit(0.), fHasLowerLimit(false), fHasUpperLimit(false), 
       fName(name) 

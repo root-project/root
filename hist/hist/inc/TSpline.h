@@ -136,10 +136,10 @@ private:
 };
 
 inline TSplinePoly3::TSplinePoly3(TSplinePoly3 const &other)
-:
-		    TSplinePoly(other), fB(0), fC(0), fD(0)
+   :
+  TSplinePoly(other), fB(0), fC(0), fD(0)
 {
-  CopyPoly(other);
+   CopyPoly(other);
 }
 
 //______________________________________________________________________________
@@ -302,7 +302,7 @@ public:
    virtual  void     SavePrimitive(ostream &out, Option_t *option = "");
    virtual  void     SetPoint(Int_t i, Double_t x, Double_t y);
    virtual  void     SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d,
-				   Double_t e, Double_t f);
+                                   Double_t e, Double_t f);
    static void Test();
 
    ClassDef (TSpline5,2) // Class to create quintic natural splines

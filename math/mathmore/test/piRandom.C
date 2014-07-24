@@ -53,9 +53,9 @@ void generate( R & r, TH1D * h) {
     for (int ievt = 0; ievt < n; ievt+=1000 ) { 
       r.RndmArray(2000,rn);
       for (int i=0; i < 1000; i++) { 
-	x=rn[2*i];
-	y=rn[2*i+1];
-	if ( ( x*x + y*y ) <= 1.0 ) n1++;
+         x=rn[2*i];
+         y=rn[2*i+1];
+         if ( ( x*x + y*y ) <= 1.0 ) n1++;
       }
     }
     double piEstimate = 4.0 * double(n1)/double(n);
@@ -66,7 +66,7 @@ void generate( R & r, TH1D * h) {
   w.Stop();
   std::cout << std::endl; 
   std::cout << "Random:  " << typeid(r).name() 
-	    << "\n\tTime = " << w.RealTime() << "  " << w.CpuTime() << std::endl;   
+            << "\n\tTime = " << w.RealTime() << "  " << w.CpuTime() << std::endl;
   std::cout << "Time/call:  " << w.CpuTime()/(2*n)*1.0E9 << std::endl; 
 }
 

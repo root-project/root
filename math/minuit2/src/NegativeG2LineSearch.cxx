@@ -103,7 +103,7 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
       } while(iter++ < 2*n && iterate);
    
    MnAlgebraicSymMatrix mat(n);
-   for(unsigned int i = 0; i < n; i++)	
+   for(unsigned int i = 0; i < n; i++)
       mat(i,i) = (fabs(dgrad.G2()(i)) > prec.Eps2() ? 1./dgrad.G2()(i) : 1.);
    
    MinimumError err(mat, 1.);

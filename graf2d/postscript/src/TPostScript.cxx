@@ -12,223 +12,223 @@
 
 //______________________________________________________________________________
 /* Begin_Html
-<center><h2>TPostScript: Graphics interface to PostScript</h2></center>
-This code was initially developed in the context of HIGZ and PAW
-by Olivier Couet and Pierre Juillot. It has been converted to a C++ class by
-Rene Brun.
+ <center><h2>TPostScript: Graphics interface to PostScript</h2></center>
+ This code was initially developed in the context of HIGZ and PAW
+ by Olivier Couet and Pierre Juillot. It has been converted to a C++ class by
+ Rene Brun.
 
-<P>To generate a Postscript (or encapsulated ps) file corresponding to
-a single image in a canvas, you can:
+ <P>To generate a Postscript (or encapsulated ps) file corresponding to
+ a single image in a canvas, you can:
 
-<UL>
-<LI>Select the <B>Print PostScript</B> item in the canvas <B>File</B> menu.
-By default, a Postscript file with the name of the canvas.ps is generated.
+ <UL>
+ <LI>Select the <B>Print PostScript</B> item in the canvas <B>File</B> menu.
+ By default, a Postscript file with the name of the canvas.ps is generated.
 
-<br>
-<LI>Click in the canvas area, near the edges, with the right mouse button
-and select the <B>Print</B> item. You can select the name of the Postscript
-file. If the file name is xxx.ps, you will generate a Postscript file named
-xxx.ps. If the file name is xxx.eps, you generate an encapsulated Postscript
-file instead.
-<br>
+ <br>
+ <LI>Click in the canvas area, near the edges, with the right mouse button
+ and select the <B>Print</B> item. You can select the name of the Postscript
+ file. If the file name is xxx.ps, you will generate a Postscript file named
+ xxx.ps. If the file name is xxx.eps, you generate an encapsulated Postscript
+ file instead.
+ <br>
 
-<LI>In your program (or macro), you can type:
+ <LI>In your program (or macro), you can type:
 
-<P><TT><B>
-c1-&gt;Print(&quot;xxx.ps&quot;)</B> or <B>c1-&gt;Print(&quot;xxx.eps&quot;)
-</B></TT>
+ <P><TT><B>
+ c1-&gt;Print(&quot;xxx.ps&quot;)</B> or <B>c1-&gt;Print(&quot;xxx.eps&quot;)
+ </B></TT>
 
-<P>This will generate a file corresponding to the picture in the canvas
-pointed by <tt><B>c1</B></tt>.
+ <P>This will generate a file corresponding to the picture in the canvas
+ pointed by <tt><B>c1</B></tt>.
 
-<P><TT><B>pad1-&gt;Print(&quot;xxx.ps&quot;)</B></TT>
+ <P><TT><B>pad1-&gt;Print(&quot;xxx.ps&quot;)</B></TT>
 
-<P>prints only the picture in the pad pointed by <tt><B>pad1</B></tt>. The size
-of the Postscript picture, by default, is computed to keep the aspect ratio
-of the picture on the screen, where the size along x is always 20cm. You
-can set the size of the PostScript picture before generating the picture
-with a command such as:
+ <P>prints only the picture in the pad pointed by <tt><B>pad1</B></tt>. The size
+ of the Postscript picture, by default, is computed to keep the aspect ratio
+ of the picture on the screen, where the size along x is always 20cm. You
+ can set the size of the PostScript picture before generating the picture
+ with a command such as:
 
-<PRE>
-   TPostScript myps(&quot;myfile.ps&quot;,111)
-   myps.Range(xsize,ysize);
-   object-&gt;Draw();
-   myps.Close();
-</PRE>
+ <PRE>
+ TPostScript myps(&quot;myfile.ps&quot;,111)
+ myps.Range(xsize,ysize);
+ object-&gt;Draw();
+ myps.Close();
+ </PRE>
 
-<P>You can set the default paper size with:
-<PRE>
-   gStyle-&gt;SetPaperSize(xsize,ysize);
-</PRE>
-<P>You can resume writing again in this file with <tt><B>myps.Open();</B></tt>.
-Note that you may have several Postscript files opened simultaneously.
-</UL>
+ <P>You can set the default paper size with:
+ <PRE>
+ gStyle-&gt;SetPaperSize(xsize,ysize);
+ </PRE>
+ <P>You can resume writing again in this file with <tt><B>myps.Open();</B></tt>.
+ Note that you may have several Postscript files opened simultaneously.
+ </UL>
 
-<H2>Output type</H2>
+ <H2>Output type</H2>
 
-The output type allows to define how the PostScript output will looks like.
-It allows to define the page format (A4, Legal etc..), the orientation
-(Portrait, Landscape) and the number of images (zones) per page.
-The output type has the following form:
-<pre>
-                        [Format][Nx][Ny][Type]
-</pre>
-Where:
-<ul>
-   <li> Format : Is an integer between 0 and 99 defining the page format.
-        Example:
-   <br> Format = 3 the paper is in the standard A3 format.
-   <br> Format = n (1<n<98) is an An format.
-   <br> Format = 4 and Format=0 are the same and define an A4 page.
-   <br> The A0 format is selected by Format=99.
-   <br> The US format Letter is selected by Format = 100.
-   <br> The US format Legal is selected by Format = 200.
-   <br> The US format Ledger is selected by Format = 300.
+ The output type allows to define how the PostScript output will looks like.
+ It allows to define the page format (A4, Legal etc..), the orientation
+ (Portrait, Landscape) and the number of images (zones) per page.
+ The output type has the following form:
+ <pre>
+ [Format][Nx][Ny][Type]
+ </pre>
+ Where:
+ <ul>
+ <li> Format : Is an integer between 0 and 99 defining the page format.
+ Example:
+ <br> Format = 3 the paper is in the standard A3 format.
+ <br> Format = n (1<n<98) is an An format.
+ <br> Format = 4 and Format=0 are the same and define an A4 page.
+ <br> The A0 format is selected by Format=99.
+ <br> The US format Letter is selected by Format = 100.
+ <br> The US format Legal is selected by Format = 200.
+ <br> The US format Ledger is selected by Format = 300.
 
-   <li> Nx, Ny : Specify respectively the number of zones on the x and y axis.
-   Nx and Ny are integers between 1 and 9.
+ <li> Nx, Ny : Specify respectively the number of zones on the x and y axis.
+ Nx and Ny are integers between 1 and 9.
 
-   <li> Type : Can be equal to:
-   <ul>
-   <li> 1 : Portrait mode with a small margin at the bottom of the page.
-   <li> 2 : Landscape mode with a small margin at the bottom of the page.
-   <li> 4 : Portrait mode with a large margin at the bottom of the page.
-   <li> 5 : Landscape mode with a large margin at the bottom of the page.
-            The large margin is useful for some PostScript printers (very often
-            for the colour printers) as they need more space to grip the paper
-            for mechanical reasons. Note that some PostScript colour printers
-            can also use the so called special A4 format permitting the full
-            usage of the A4 area; in this case larger margins are not necessary
-            and Type=1 or 2 can be used.
-   <li> 3 : Encapsulated PostScript. This Type permits the generation of files
-            which can be included in other documents, for example in LaTeX
-            files.
-   </ul>
-</ul>
+ <li> Type : Can be equal to:
+ <ul>
+ <li> 1 : Portrait mode with a small margin at the bottom of the page.
+ <li> 2 : Landscape mode with a small margin at the bottom of the page.
+ <li> 4 : Portrait mode with a large margin at the bottom of the page.
+ <li> 5 : Landscape mode with a large margin at the bottom of the page.
+ The large margin is useful for some PostScript printers (very often
+ for the colour printers) as they need more space to grip the paper
+ for mechanical reasons. Note that some PostScript colour printers
+ can also use the so called special A4 format permitting the full
+ usage of the A4 area; in this case larger margins are not necessary
+ and Type=1 or 2 can be used.
+ <li> 3 : Encapsulated PostScript. This Type permits the generation of files
+ which can be included in other documents, for example in LaTeX
+ files.
+ </ul>
+ </ul>
 
-<H2>Making several pictures in the same Postscript file: case 1</H2>
-<P>The following macro is an example illustrating how to open a Postscript
-file and draw several pictures. The generation of a new Postscript page
-is automatic when <tt><B>TCanvas::Clear</B></tt> is called by
-<tt><b>object-&gt;Draw()</b></tt>.
-<PRE>
-{
-   TFile f(&quot;hsimple.root&quot;);
-   TCanvas c1(&quot;c1&quot;,&quot;canvas&quot;,800,600);
+ <H2>Making several pictures in the same Postscript file: case 1</H2>
+ <P>The following macro is an example illustrating how to open a Postscript
+ file and draw several pictures. The generation of a new Postscript page
+ is automatic when <tt><B>TCanvas::Clear</B></tt> is called by
+ <tt><b>object-&gt;Draw()</b></tt>.
+ <PRE>
+ {
+ TFile f(&quot;hsimple.root&quot;);
+ TCanvas c1(&quot;c1&quot;,&quot;canvas&quot;,800,600);
 
-   <b>// select postscript output type</b>
-   <b>// type = 111   portrait  ps</b>
-   <b>// type = 112   landscape ps</b>
-   <b>// type = 113   eps</b>
-   Int_t type = 111;
+ <b>// select postscript output type</b>
+ <b>// type = 111   portrait  ps</b>
+ <b>// type = 112   landscape ps</b>
+ <b>// type = 113   eps</b>
+ Int_t type = 111;
 
-   <b>// create a postscript file and set the paper size</b>
-   TPostScript ps(&quot;test.ps&quot;,type);
-   ps.Range(16,24);  //set x,y of printed page
+ <b>// create a postscript file and set the paper size</b>
+ TPostScript ps(&quot;test.ps&quot;,type);
+ ps.Range(16,24);  //set x,y of printed page
 
-   <b>// draw 3 histograms from file hsimple.root on separate pages</b>
-   hpx-&gt;Draw();
-   c1.Update();      //force drawing in a macro
-   hprof-&gt;Draw();
-   c1.Update();
-   hpx-&gt;Draw(&quot;lego1&quot;);
-   c1.Update();
-   ps.Close();
-}
-</PRE>
+ <b>// draw 3 histograms from file hsimple.root on separate pages</b>
+ hpx-&gt;Draw();
+ c1.Update();      //force drawing in a macro
+ hprof-&gt;Draw();
+ c1.Update();
+ hpx-&gt;Draw(&quot;lego1&quot;);
+ c1.Update();
+ ps.Close();
+ }
+ </PRE>
 
-<H2>Making several pictures in the same Postscript file: case 2</H2>
-<P>This example shows 2 pages. The canvas is divided.
-<tt><B>TPostScript::NewPage</B></tt> must be called before starting a new
-picture.<tt><b>object-&gt;Draw</b></tt> does not clear the canvas in this case
-because we clear only the pads and not the main canvas.
-Note that <tt><b>c1-&gt;Update</b></tt> must be called at the end of the first
-picture.
-<PRE>
-{
-   TFile *f1 = new TFile("hsimple.root");
-   TCanvas *c1 = new TCanvas("c1");
-   TPostScript *ps = new TPostScript("file.ps",112);
-   c1-&gt;Divide(2,1);
-<b>// picture 1</b>
-   ps-&gt;NewPage();
-   c1-&gt;cd(1);
-   hpx-&gt;Draw();
-   c1-&gt;cd(2);
-   hprof-&gt;Draw();
-   c1-&gt;Update();
+ <H2>Making several pictures in the same Postscript file: case 2</H2>
+ <P>This example shows 2 pages. The canvas is divided.
+ <tt><B>TPostScript::NewPage</B></tt> must be called before starting a new
+ picture.<tt><b>object-&gt;Draw</b></tt> does not clear the canvas in this case
+ because we clear only the pads and not the main canvas.
+ Note that <tt><b>c1-&gt;Update</b></tt> must be called at the end of the first
+ picture.
+ <PRE>
+ {
+ TFile *f1 = new TFile("hsimple.root");
+ TCanvas *c1 = new TCanvas("c1");
+ TPostScript *ps = new TPostScript("file.ps",112);
+ c1-&gt;Divide(2,1);
+ <b>// picture 1</b>
+ ps-&gt;NewPage();
+ c1-&gt;cd(1);
+ hpx-&gt;Draw();
+ c1-&gt;cd(2);
+ hprof-&gt;Draw();
+ c1-&gt;Update();
 
-<b>// picture 2</b>
-   ps-&gt;NewPage();
-   c1-&gt;cd(1);
-   hpxpy-&gt;Draw();
-   c1-&gt;cd(2);
-   ntuple-&gt;Draw("px");
-   c1-&gt;Update();
-   ps-&gt;Close();
+ <b>// picture 2</b>
+ ps-&gt;NewPage();
+ c1-&gt;cd(1);
+ hpxpy-&gt;Draw();
+ c1-&gt;cd(2);
+ ntuple-&gt;Draw("px");
+ c1-&gt;Update();
+ ps-&gt;Close();
 
-<b>// invoke Postscript viewer</b>
-   gSystem-&gt;Exec("gs file.ps");
-}
-</PRE>
+ <b>// invoke Postscript viewer</b>
+ gSystem-&gt;Exec("gs file.ps");
+ }
+ </PRE>
 
-<H2>Making several pictures in the same Postscript file: case 3</H2>
-<b>This is the recommended way</b>. If the Postscript file name finishes with
-"(", the file remains opened (it is not closed). If the Postscript file name
-finishes with ")" and the file has been opened with "(", the file is closed.
-<P>Example:
-<PRE>
-{
-   TCanvas c1("c1");
-   h1.Draw();
-   c1.Print("c1.ps(");  // write canvas and keep the ps file open
-   h2.Draw();
-   c1.Print("c1.ps");   // canvas is added to "c1.ps"
-   h3.Draw();
-   c1.Print("c1.ps)");  // canvas is added to "c1.ps" and ps file is closed
-}
-</PRE>
-The <tt>TCanvas::Print("file.ps(")</tt> mechanism is very useful, but it can
-be a little inconvenient to have the action of opening/closing a file being
-atomic with printing a page. Particularly if pages are being generated in some
-loop one needs to detect the special cases of first and last page and then
-munge the argument to Print() accordingly.
-<BR>The "[" and "]" can be used instead of "(" and ")" as shown below.
-<P>Example:
-<PRE>
-   c1.Print("file.ps[");        // No actual print, just open file.ps
+ <H2>Making several pictures in the same Postscript file: case 3</H2>
+ <b>This is the recommended way</b>. If the Postscript file name finishes with
+ "(", the file remains opened (it is not closed). If the Postscript file name
+ finishes with ")" and the file has been opened with "(", the file is closed.
+ <P>Example:
+ <PRE>
+ {
+ TCanvas c1("c1");
+ h1.Draw();
+ c1.Print("c1.ps(");  // write canvas and keep the ps file open
+ h2.Draw();
+ c1.Print("c1.ps");   // canvas is added to "c1.ps"
+ h3.Draw();
+ c1.Print("c1.ps)");  // canvas is added to "c1.ps" and ps file is closed
+ }
+ </PRE>
+ The <tt>TCanvas::Print("file.ps(")</tt> mechanism is very useful, but it can
+ be a little inconvenient to have the action of opening/closing a file being
+ atomic with printing a page. Particularly if pages are being generated in some
+ loop one needs to detect the special cases of first and last page and then
+ munge the argument to Print() accordingly.
+ <BR>The "[" and "]" can be used instead of "(" and ")" as shown below.
+ <P>Example:
+ <PRE>
+ c1.Print("file.ps[");        // No actual print, just open file.ps
 
-   for (int i=0; i<10; ++i) {
-      // fill canvas for context i
-      // ...
+ for (int i=0; i<10; ++i) {
+ // fill canvas for context i
+ // ...
 
-      c1.Print("file.ps");      // Actually print canvas to the file
-   }
+ c1.Print("file.ps");      // Actually print canvas to the file
+ }
 
-   c1.Print("file.ps]");        // No actual print, just close the file
-</PRE>
+ c1.Print("file.ps]");        // No actual print, just close the file
+ </PRE>
 
-<H2>Color Model</H2>
-TPostScript support two color model RGB and CMYK. CMY and CMYK models are
-subtractive color models unlike RGB which is an additive. They are mainly
-used for printing purposes. CMY means Cyan Magenta Yellow to convert RGB
-to CMY it is enough to do: C=1-R, M=1-G and Y=1-B. CMYK has one more
-component K (black). The conversion from RGB to CMYK is:
-<PRE>
+ <H2>Color Model</H2>
+ TPostScript support two color model RGB and CMYK. CMY and CMYK models are
+ subtractive color models unlike RGB which is an additive. They are mainly
+ used for printing purposes. CMY means Cyan Magenta Yellow to convert RGB
+ to CMY it is enough to do: C=1-R, M=1-G and Y=1-B. CMYK has one more
+ component K (black). The conversion from RGB to CMYK is:
+ <PRE>
  Double_t Black   = TMath::Min(TMath::Min(1-Red,1-Green),1-Blue);
  Double_t Cyan    = (1-Red-Black)/(1-Black);
  Double_t Magenta = (1-Green-Black)/(1-Black);
  Double_t Yellow  = (1-Blue-Black)/(1-Black);
-</PRE>
-CMYK add the black component which allows to have a better quality for black
-printing. PostScript support the CMYK model.
-<br>
-To change the color model use gStyle->SetColorModelPS(c).
-<ul>
-<li> c = 0 means TPostScript will use RGB color model (default)
-<li> c = 1 means TPostScript will use CMYK color model
-</ul>
-End_Html */
+ </PRE>
+ CMYK add the black component which allows to have a better quality for black
+ printing. PostScript support the CMYK model.
+ <br>
+ To change the color model use gStyle->SetColorModelPS(c).
+ <ul>
+ <li> c = 0 means TPostScript will use RGB color model (default)
+ <li> c = 1 means TPostScript will use CMYK color model
+ </ul>
+ End_Html */
 
 #ifdef WIN32
 #pragma optimize("",off)
@@ -332,7 +332,7 @@ TPostScript::TPostScript() : TVirtualPS()
 
 //______________________________________________________________________________
 TPostScript::TPostScript(const char *fname, Int_t wtype)
-            :TVirtualPS(fname, wtype)
+:TVirtualPS(fname, wtype)
 {
    // Initialize the PostScript interface
    //
@@ -523,9 +523,9 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t /*H*/, Double_t x1, Double_t x2,
    Int_t iy1 = YtoPS(y1);
 
    Float_t wt = (288/2.54)*gPad->GetAbsWNDC()*
-                fXsize*((x2 - x1)/(gPad->GetX2()-gPad->GetX1()));
+   fXsize*((x2 - x1)/(gPad->GetX2()-gPad->GetX1()));
    Float_t ht = (288/2.54)*gPad->GetAbsHNDC()*
-                fYsize*((y2 - y1)/(gPad->GetY2()-gPad->GetY1()));
+   fYsize*((y2 - y1)/(gPad->GetY2()-gPad->GetY1()));
 
    fLastCellRed     = 300;
    fLastCellGreen   = 300;
@@ -1176,11 +1176,11 @@ void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
    //  If nn<0 the line is clipped as a fill area.
 
    static Float_t dyhatch[24] = {.0075,.0075,.0075,.0075,.0075,.0075,.0075,.0075,
-                                 .01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,
-                                 .015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015};
+      .01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,
+      .015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015};
    static Float_t anglehatch[24] = {180, 90,135, 45,150, 30,120, 60,
-                                    180, 90,135, 45,150, 30,120, 60,
-                                    180, 90,135, 45,150, 30,120, 60};
+      180, 90,135, 45,150, 30,120, 60,
+      180, 90,135, 45,150, 30,120, 60};
    Int_t  i, n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy, fais, fasi;
    fais = fasi = n = 0;
    Int_t jxd0 = XtoPS(xw[0]);
@@ -1287,11 +1287,11 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    // If nn<0 the line is clipped as a fill area.
 
    static Float_t dyhatch[24] = {.0075,.0075,.0075,.0075,.0075,.0075,.0075,.0075,
-                                 .01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,
-                                 .015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015};
+      .01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,
+      .015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015};
    static Float_t anglehatch[24] = {180, 90,135, 45,150, 30,120, 60,
-                                    180, 90,135, 45,150, 30,120, 60,
-                                    180, 90,135, 45,150, 30,120, 60};
+      180, 90,135, 45,150, 30,120, 60,
+      180, 90,135, 45,150, 30,120, 60};
    Int_t  i, n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy, fais, fasi;
    fais = fasi = n = 0;
    Int_t jxd0 = XtoPS(xw[0]);
@@ -1406,103 +1406,103 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 //______________________________________________________________________________
 Bool_t TPostScript::FontEmbedType1(const char *filename)
 {
-	std::ifstream font_file(filename, std::ios::binary);
+   std::ifstream font_file(filename, std::ios::binary);
 
-	// We cannot read directly using iostream iterators due to
-	// signedness
-	font_file.seekg(0, std::ios::end);
+   // We cannot read directly using iostream iterators due to
+   // signedness
+   font_file.seekg(0, std::ios::end);
 
-	const size_t font_file_length = font_file.tellg();
+   const size_t font_file_length = font_file.tellg();
 
-	font_file.seekg(0, std::ios::beg);
+   font_file.seekg(0, std::ios::beg);
 
-	std::vector<unsigned char> font_data(font_file_length, '\0');
+   std::vector<unsigned char> font_data(font_file_length, '\0');
 
-	font_file.read(reinterpret_cast<char *>(&font_data[0]),
-				   font_file_length);
+   font_file.read(reinterpret_cast<char *>(&font_data[0]),
+                  font_file_length);
 
-	std::string font_name;
-	std::string postscript_string =
-		mathtext::font_embed_postscript_t::font_embed_type_1(
-			font_name, font_data);
+   std::string font_name;
+   std::string postscript_string =
+   mathtext::font_embed_postscript_t::font_embed_type_1(
+                                                        font_name, font_data);
 
-	if (!postscript_string.empty()) {
-		PrintRaw(postscript_string.size(), postscript_string.data());
-		PrintStr("@");
+   if (!postscript_string.empty()) {
+      PrintRaw(postscript_string.size(), postscript_string.data());
+      PrintStr("@");
 
-		return true;
-	}
+      return true;
+   }
 
-	return false;
+   return false;
 }
 
 
 //______________________________________________________________________________
 Bool_t TPostScript::FontEmbedType2(const char *filename)
 {
-	std::ifstream font_file(filename, std::ios::binary);
+   std::ifstream font_file(filename, std::ios::binary);
 
-	// We cannot read directly using iostream iterators due to
-	// signedness
-	font_file.seekg(0, std::ios::end);
+   // We cannot read directly using iostream iterators due to
+   // signedness
+   font_file.seekg(0, std::ios::end);
 
-	const size_t font_file_length = font_file.tellg();
+   const size_t font_file_length = font_file.tellg();
 
-	font_file.seekg(0, std::ios::beg);
+   font_file.seekg(0, std::ios::beg);
 
-	std::vector<unsigned char> font_data(font_file_length, '\0');
+   std::vector<unsigned char> font_data(font_file_length, '\0');
 
-	font_file.read(reinterpret_cast<char *>(&font_data[0]),
-				   font_file_length);
+   font_file.read(reinterpret_cast<char *>(&font_data[0]),
+                  font_file_length);
 
-	std::string font_name;
-	std::string postscript_string =
-		mathtext::font_embed_postscript_t::font_embed_type_2(
-			font_name, font_data);
+   std::string font_name;
+   std::string postscript_string =
+   mathtext::font_embed_postscript_t::font_embed_type_2(
+                                                        font_name, font_data);
 
-	if (!postscript_string.empty()) {
-		PrintRaw(postscript_string.size(), postscript_string.data());
-		PrintStr("@");
+   if (!postscript_string.empty()) {
+      PrintRaw(postscript_string.size(), postscript_string.data());
+      PrintStr("@");
 
-		return true;
-	}
+      return true;
+   }
 
-	return false;
+   return false;
 }
 
 
 //______________________________________________________________________________
 Bool_t TPostScript::FontEmbedType42(const char *filename)
 {
-	std::ifstream font_file(filename, std::ios::binary);
+   std::ifstream font_file(filename, std::ios::binary);
 
-	// We cannot read directly using iostream iterators due to
-	// signedness
-	font_file.seekg(0, std::ios::end);
+   // We cannot read directly using iostream iterators due to
+   // signedness
+   font_file.seekg(0, std::ios::end);
 
-	const size_t font_file_length = font_file.tellg();
+   const size_t font_file_length = font_file.tellg();
 
-	font_file.seekg(0, std::ios::beg);
+   font_file.seekg(0, std::ios::beg);
 
-	std::vector<unsigned char> font_data(font_file_length, '\0');
+   std::vector<unsigned char> font_data(font_file_length, '\0');
 
-	font_file.read(reinterpret_cast<char *>(&font_data[0]),
-				   font_file_length);
+   font_file.read(reinterpret_cast<char *>(&font_data[0]),
+                  font_file_length);
 
-	std::string font_name;
-	std::string postscript_string =
-		mathtext::font_embed_postscript_t::font_embed_type_42(
-			font_name, font_data);
+   std::string font_name;
+   std::string postscript_string =
+   mathtext::font_embed_postscript_t::font_embed_type_42(
+                                                         font_name, font_data);
 
-	if (!postscript_string.empty()) {
-		PrintRaw(postscript_string.size(), postscript_string.data());
-		PrintStr("@");
+   if (!postscript_string.empty()) {
+      PrintRaw(postscript_string.size(), postscript_string.data());
+      PrintStr("@");
 
-		return true;
-	}
-	fprintf(stderr, "%s:%d:\n", __FILE__, __LINE__);
+      return true;
+   }
+   fprintf(stderr, "%s:%d:\n", __FILE__, __LINE__);
 
-	return false;
+   return false;
 }
 
 
@@ -1512,38 +1512,38 @@ void TPostScript::FontEmbed(void)
    // Embed font in PS file.
 
    static const char *fonttable[32][2] = {
-	   { "Root.TTFont.0", "FreeSansBold.otf" },
-	   { "Root.TTFont.1", "FreeSerifItalic.otf" },
-	   { "Root.TTFont.2", "FreeSerifBold.otf" },
-	   { "Root.TTFont.3", "FreeSerifBoldItalic.otf" },
-	   { "Root.TTFont.4", "FreeSans.otf" },
-	   { "Root.TTFont.5", "FreeSansOblique.otf" },
-	   { "Root.TTFont.6", "FreeSansBold.otf" },
-	   { "Root.TTFont.7", "FreeSansBoldOblique.otf" },
-	   { "Root.TTFont.8", "FreeMono.otf" },
-	   { "Root.TTFont.9", "FreeMonoOblique.otf" },
-	   { "Root.TTFont.10", "FreeMonoBold.otf" },
-	   { "Root.TTFont.11", "FreeMonoBoldOblique.otf" },
-	   { "Root.TTFont.12", "symbol.ttf" },
-	   { "Root.TTFont.13", "FreeSerif.otf" },
-	   { "Root.TTFont.14", "wingding.ttf" },
-	   { "Root.TTFont.15", "symbol.ttf" },
-	   { "Root.TTFont.STIXGen", "STIXGeneral.otf" },
-	   { "Root.TTFont.STIXGenIt", "STIXGeneralItalic.otf" },
-	   { "Root.TTFont.STIXGenBd", "STIXGeneralBol.otf" },
-	   { "Root.TTFont.STIXGenBdIt", "STIXGeneralBolIta.otf" },
-	   { "Root.TTFont.STIXSiz1Sym", "STIXSiz1Sym.otf" },
-	   { "Root.TTFont.STIXSiz1SymBd", "STIXSiz1SymBol.otf" },
-	   { "Root.TTFont.STIXSiz2Sym", "STIXSiz2Sym.otf" },
-	   { "Root.TTFont.STIXSiz2SymBd", "STIXSiz2SymBol.otf" },
-	   { "Root.TTFont.STIXSiz3Sym", "STIXSiz3Sym.otf" },
-	   { "Root.TTFont.STIXSiz3SymBd", "STIXSiz3SymBol.otf" },
-	   { "Root.TTFont.STIXSiz4Sym", "STIXSiz4Sym.otf" },
-	   { "Root.TTFont.STIXSiz4SymBd", "STIXSiz4SymBol.otf" },
-	   { "Root.TTFont.STIXSiz5Sym", "STIXSiz5Sym.otf" },
-	   { "Root.TTFont.ME", "DroidSansFallback.ttf" },
-	   { "Root.TTFont.CJKMing", "DroidSansFallback.ttf" },
-	   { "Root.TTFont.CJKCothic", "DroidSansFallback.ttf" }
+      { "Root.TTFont.0", "FreeSansBold.otf" },
+      { "Root.TTFont.1", "FreeSerifItalic.otf" },
+      { "Root.TTFont.2", "FreeSerifBold.otf" },
+      { "Root.TTFont.3", "FreeSerifBoldItalic.otf" },
+      { "Root.TTFont.4", "FreeSans.otf" },
+      { "Root.TTFont.5", "FreeSansOblique.otf" },
+      { "Root.TTFont.6", "FreeSansBold.otf" },
+      { "Root.TTFont.7", "FreeSansBoldOblique.otf" },
+      { "Root.TTFont.8", "FreeMono.otf" },
+      { "Root.TTFont.9", "FreeMonoOblique.otf" },
+      { "Root.TTFont.10", "FreeMonoBold.otf" },
+      { "Root.TTFont.11", "FreeMonoBoldOblique.otf" },
+      { "Root.TTFont.12", "symbol.ttf" },
+      { "Root.TTFont.13", "FreeSerif.otf" },
+      { "Root.TTFont.14", "wingding.ttf" },
+      { "Root.TTFont.15", "symbol.ttf" },
+      { "Root.TTFont.STIXGen", "STIXGeneral.otf" },
+      { "Root.TTFont.STIXGenIt", "STIXGeneralItalic.otf" },
+      { "Root.TTFont.STIXGenBd", "STIXGeneralBol.otf" },
+      { "Root.TTFont.STIXGenBdIt", "STIXGeneralBolIta.otf" },
+      { "Root.TTFont.STIXSiz1Sym", "STIXSiz1Sym.otf" },
+      { "Root.TTFont.STIXSiz1SymBd", "STIXSiz1SymBol.otf" },
+      { "Root.TTFont.STIXSiz2Sym", "STIXSiz2Sym.otf" },
+      { "Root.TTFont.STIXSiz2SymBd", "STIXSiz2SymBol.otf" },
+      { "Root.TTFont.STIXSiz3Sym", "STIXSiz3Sym.otf" },
+      { "Root.TTFont.STIXSiz3SymBd", "STIXSiz3SymBol.otf" },
+      { "Root.TTFont.STIXSiz4Sym", "STIXSiz4Sym.otf" },
+      { "Root.TTFont.STIXSiz4SymBd", "STIXSiz4SymBol.otf" },
+      { "Root.TTFont.STIXSiz5Sym", "STIXSiz5Sym.otf" },
+      { "Root.TTFont.ME", "DroidSansFallback.ttf" },
+      { "Root.TTFont.CJKMing", "DroidSansFallback.ttf" },
+      { "Root.TTFont.CJKCothic", "DroidSansFallback.ttf" }
    };
 
    PrintStr("%%IncludeResource: ProcSet (FontSetInit)@");
@@ -1551,38 +1551,38 @@ void TPostScript::FontEmbed(void)
    // try to load font (font must be in Root.TTFontPath resource)
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 #ifdef TTFFONTDIR
-									   TTFFONTDIR
+                                       TTFFONTDIR
 #else // TTFFONTDIR
-									   "$(ROOTSYS)/fonts"
+                                       "$(ROOTSYS)/fonts"
 #endif // TTFFONTDIR
-									   );
+                                       );
 
    for (Int_t fontid = 1; fontid < 30; fontid++) {
-		if (fontid != 15) {
-			const char *filename = gEnv->GetValue(
-				fonttable[fontid][0], fonttable[fontid][1]);
-			char *ttfont = gSystem->Which(ttpath, filename,
-										  kReadPermission);
+      if (fontid != 15) {
+         const char *filename = gEnv->GetValue(
+                                               fonttable[fontid][0], fonttable[fontid][1]);
+         char *ttfont = gSystem->Which(ttpath, filename,
+                                       kReadPermission);
 
-			if(!ttfont) {
-				Error("TPostScript::FontEmbed",
-					  "font %d (filename `%s') not found in path",
-					  fontid, filename);
-			} else {
-				if (FontEmbedType2(ttfont)) {
-					// nothing
-				} else if(FontEmbedType1(ttfont)) {
-					// nothing
-				} else if(FontEmbedType42(ttfont)) {
-					// nothing
-				} else {
-					Error("TPostScript::FontEmbed",
-						  "failed to embed font %d (filename `%s')",
-						  fontid, filename);
-				}
-				delete [] ttfont;
-			}
-		}
+         if(!ttfont) {
+            Error("TPostScript::FontEmbed",
+                  "font %d (filename `%s') not found in path",
+                  fontid, filename);
+         } else {
+            if (FontEmbedType2(ttfont)) {
+               // nothing
+            } else if(FontEmbedType1(ttfont)) {
+               // nothing
+            } else if(FontEmbedType42(ttfont)) {
+               // nothing
+            } else {
+               Error("TPostScript::FontEmbed",
+                     "failed to embed font %d (filename `%s')",
+                     fontid, filename);
+            }
+            delete [] ttfont;
+         }
+      }
    }
    PrintStr("%%IncludeResource: font Times-Roman@");
    PrintStr("%%IncludeResource: font Times-Italic@");
@@ -1598,7 +1598,7 @@ void TPostScript::FontEmbed(void)
    PrintStr("%%IncludeResource: font Courier-BoldOblique@");
    PrintStr("%%IncludeResource: font Symbol@");
    PrintStr("%%IncludeResource: font ZapfDingbats@");
-	
+
    fFontEmbed = kTRUE;
 }
 
@@ -1753,7 +1753,7 @@ void TPostScript::Initialize()
       PrintStr("%%Pages: (atend)@");
    }
    else {
-         if (!strchr(pstitle,'\n')) {
+      if (!strchr(pstitle,'\n')) {
          PrintFast(2,": ");
          PrintStr(pstitle);
       }
@@ -1979,7 +1979,7 @@ void TPostScript::NewPage()
 
    //   Compute pad conversion coefficients
    if (gPad) {
-//     if (!gPad->GetPadPaint()) gPad->Update();
+      //     if (!gPad->GetPadPaint()) gPad->Update();
       Double_t ww   = gPad->GetWw();
       Double_t wh   = gPad->GetWh();
       fYsize       = fXsize*wh/ww;
@@ -2121,9 +2121,9 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
    // been defined in the current file (see label 200).
    if (fPatterns[ipat] == 0) {
 
-   // Define the Patterns. Line width must be 1
-   // Setting fLineWidth to -1 will force the line width definition next time
-   // TPostScript::SetLineWidth will be called.
+      // Define the Patterns. Line width must be 1
+      // Setting fLineWidth to -1 will force the line width definition next time
+      // TPostScript::SetLineWidth will be called.
       fLineWidth = -1;
       PrintFast(5," 1 lw");
       PrintStr(" << /PatternType 1 /PaintType 2 /TilingType 1");
@@ -2441,8 +2441,8 @@ void TPostScript::SetLineJoin( Int_t linejoin )
    //
    //Begin_Html
    /*
-   <img src="gif/linejoin.gif">
-   */
+    <img src="gif/linejoin.gif">
+    */
    //End_Html
    //
    // To change the line join behaviour just do:
@@ -2564,37 +2564,37 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    // at position xx,yy in world coordinates.
 
    static const char *psfont[31][2] = {
-	   { "Root.PSFont.1",             "/Times-Italic" },
-	   { "Root.PSFont.2",             "/Times-Bold" },
-	   { "Root.PSFont.3",             "/Times-BoldItalic" },
-	   { "Root.PSFont.4",             "/Helvetica" },
-	   { "Root.PSFont.5",             "/Helvetica-Oblique" },
-	   { "Root.PSFont.6",             "/Helvetica-Bold" },
-	   { "Root.PSFont.7",             "/Helvetica-BoldOblique" },
-	   { "Root.PSFont.8",             "/Courrier" },
-	   { "Root.PSFont.9",             "/Courrier-Oblique" },
-	   { "Root.PSFont.10",            "/Courrier-Bold" },
-	   { "Root.PSFont.11",            "/Courrier-BoldOblique" },
-	   { "Root.PSFont.12",            "/Symbol" },
-	   { "Root.PSFont.13",            "/Times-Roman" },
-	   { "Root.PSFont.14",            "/ZapfDingbats" },
-	   { "Root.PSFont.15",            "/Symbol" },
-	   { "Root.PSFont.STIXGen",       "/STIXGeneral" },
-	   { "Root.PSFont.STIXGenIt",     "/STIXGeneral-Italic" },
-	   { "Root.PSFont.STIXGenBd",     "/STIXGeneral-Bold" },
-	   { "Root.PSFont.STIXGenBdIt",   "/STIXGeneral-BoldItalic" },
-	   { "Root.PSFont.STIXSiz1Sym",   "/STIXSize1Symbols" },
-	   { "Root.PSFont.STIXSiz1SymBd", "/STIXSize1Symbols-Bold" },
-	   { "Root.PSFont.STIXSiz2Sym",   "/STIXSize2Symbols" },
-	   { "Root.PSFont.STIXSiz2SymBd", "/STIXSize2Symbols-Bold" },
-	   { "Root.PSFont.STIXSiz3Sym",   "/STIXSize3Symbols" },
-	   { "Root.PSFont.STIXSiz3SymBd", "/STIXSize3Symbols-Bold" },
-	   { "Root.PSFont.STIXSiz4Sym",   "/STIXSize4Symbols" },
-	   { "Root.PSFont.STIXSiz4SymBd", "/STIXSize4Symbols-Bold" },
-	   { "Root.PSFont.STIXSiz5Sym",   "/STIXSize5Symbols" },
-	   { "Root.PSFont.ME",            "/DroidSansFallback" },
-	   { "Root.PSFont.CJKMing",       "/DroidSansFallback" },
-	   { "Root.PSFont.CJKGothic",     "/DroidSansFallback" }
+      { "Root.PSFont.1",             "/Times-Italic" },
+      { "Root.PSFont.2",             "/Times-Bold" },
+      { "Root.PSFont.3",             "/Times-BoldItalic" },
+      { "Root.PSFont.4",             "/Helvetica" },
+      { "Root.PSFont.5",             "/Helvetica-Oblique" },
+      { "Root.PSFont.6",             "/Helvetica-Bold" },
+      { "Root.PSFont.7",             "/Helvetica-BoldOblique" },
+      { "Root.PSFont.8",             "/Courrier" },
+      { "Root.PSFont.9",             "/Courrier-Oblique" },
+      { "Root.PSFont.10",            "/Courrier-Bold" },
+      { "Root.PSFont.11",            "/Courrier-BoldOblique" },
+      { "Root.PSFont.12",            "/Symbol" },
+      { "Root.PSFont.13",            "/Times-Roman" },
+      { "Root.PSFont.14",            "/ZapfDingbats" },
+      { "Root.PSFont.15",            "/Symbol" },
+      { "Root.PSFont.STIXGen",       "/STIXGeneral" },
+      { "Root.PSFont.STIXGenIt",     "/STIXGeneral-Italic" },
+      { "Root.PSFont.STIXGenBd",     "/STIXGeneral-Bold" },
+      { "Root.PSFont.STIXGenBdIt",   "/STIXGeneral-BoldItalic" },
+      { "Root.PSFont.STIXSiz1Sym",   "/STIXSize1Symbols" },
+      { "Root.PSFont.STIXSiz1SymBd", "/STIXSize1Symbols-Bold" },
+      { "Root.PSFont.STIXSiz2Sym",   "/STIXSize2Symbols" },
+      { "Root.PSFont.STIXSiz2SymBd", "/STIXSize2Symbols-Bold" },
+      { "Root.PSFont.STIXSiz3Sym",   "/STIXSize3Symbols" },
+      { "Root.PSFont.STIXSiz3SymBd", "/STIXSize3Symbols-Bold" },
+      { "Root.PSFont.STIXSiz4Sym",   "/STIXSize4Symbols" },
+      { "Root.PSFont.STIXSiz4SymBd", "/STIXSize4Symbols-Bold" },
+      { "Root.PSFont.STIXSiz5Sym",   "/STIXSize5Symbols" },
+      { "Root.PSFont.ME",            "/DroidSansFallback" },
+      { "Root.PSFont.CJKMing",       "/DroidSansFallback" },
+      { "Root.PSFont.CJKGothic",     "/DroidSansFallback" }
    };
 
    const Double_t kDEGRAD = TMath::Pi()/180.;
@@ -2710,9 +2710,9 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    if(txalh == 3) PrintStr(Form(" %d 0 t ", -psCharsLength));
    PrintStr(gEnv->GetValue(psfont[font-1][0], psfont[font-1][1]));
    if (font != 15) {
-     PrintStr(Form(" findfont %g sf 0 0 m ",fontsize));
+      PrintStr(Form(" findfont %g sf 0 0 m ",fontsize));
    } else {
-     PrintStr(Form(" findfont %g sf 0 0 m ita ",fontsize));
+      PrintStr(Form(" findfont %g sf 0 0 m ita ",fontsize));
    }
 
    if (kerning) {
@@ -2770,42 +2770,42 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
    // at position xx,yy in world coordinates.
 
    static const char *psfont[31][2] = {
-	   { "Root.PSFont.1", "/FreeSerifItalic" },
-	   { "Root.PSFont.2", "/FreeSerifBold" },
-	   { "Root.PSFont.3", "/FreeSerifBoldItalic" },
-	   { "Root.PSFont.4", "/FreeSans" },
-	   { "Root.PSFont.5", "/FreeSansOblique" },
-	   { "Root.PSFont.6", "/FreeSansBold" },
-	   { "Root.PSFont.7", "/FreeSansBoldOblique" },
-	   { "Root.PSFont.8", "/FreeMono" },
-	   { "Root.PSFont.9", "/FreeMonoOblique" },
-	   { "Root.PSFont.10", "/FreeMonoBold" },
-	   { "Root.PSFont.11", "/FreeMonoBoldOblique" },
-	   { "Root.PSFont.12", "/SymbolMT" },
-	   { "Root.PSFont.13", "/FreeSerif" },
-	   { "Root.PSFont.14", "/Wingdings-Regular" },
-	   { "Root.PSFont.15", "/SymbolMT" },
-	   { "Root.PSFont.STIXGen", "/STIXGeneral" },
-	   { "Root.PSFont.STIXGenIt", "/STIXGeneral-Italic" },
-	   { "Root.PSFont.STIXGenBd", "/STIXGeneral-Bold" },
-	   { "Root.PSFont.STIXGenBdIt", "/STIXGeneral-BoldItalic" },
-	   { "Root.PSFont.STIXSiz1Sym", "/STIXSize1Symbols" },
-	   { "Root.PSFont.STIXSiz1SymBd", "/STIXSize1Symbols-Bold" },
-	   { "Root.PSFont.STIXSiz2Sym", "/STIXSize2Symbols" },
-	   { "Root.PSFont.STIXSiz2SymBd", "/STIXSize2Symbols-Bold" },
-	   { "Root.PSFont.STIXSiz3Sym", "/STIXSize3Symbols" },
-	   { "Root.PSFont.STIXSiz3SymBd", "/STIXSize3Symbols-Bold" },
-	   { "Root.PSFont.STIXSiz4Sym", "/STIXSize4Symbols" },
-	   { "Root.PSFont.STIXSiz4SymBd", "/STIXSize4Symbols-Bold" },
-	   { "Root.PSFont.STIXSiz5Sym", "/STIXSize5Symbols" },
-	   { "Root.PSFont.ME", "/DroidSansFallback" },
-	   { "Root.PSFont.CJKMing", "/DroidSansFallback" },
-	   { "Root.PSFont.CJKGothic", "/DroidSansFallback" }
+      { "Root.PSFont.1", "/FreeSerifItalic" },
+      { "Root.PSFont.2", "/FreeSerifBold" },
+      { "Root.PSFont.3", "/FreeSerifBoldItalic" },
+      { "Root.PSFont.4", "/FreeSans" },
+      { "Root.PSFont.5", "/FreeSansOblique" },
+      { "Root.PSFont.6", "/FreeSansBold" },
+      { "Root.PSFont.7", "/FreeSansBoldOblique" },
+      { "Root.PSFont.8", "/FreeMono" },
+      { "Root.PSFont.9", "/FreeMonoOblique" },
+      { "Root.PSFont.10", "/FreeMonoBold" },
+      { "Root.PSFont.11", "/FreeMonoBoldOblique" },
+      { "Root.PSFont.12", "/SymbolMT" },
+      { "Root.PSFont.13", "/FreeSerif" },
+      { "Root.PSFont.14", "/Wingdings-Regular" },
+      { "Root.PSFont.15", "/SymbolMT" },
+      { "Root.PSFont.STIXGen", "/STIXGeneral" },
+      { "Root.PSFont.STIXGenIt", "/STIXGeneral-Italic" },
+      { "Root.PSFont.STIXGenBd", "/STIXGeneral-Bold" },
+      { "Root.PSFont.STIXGenBdIt", "/STIXGeneral-BoldItalic" },
+      { "Root.PSFont.STIXSiz1Sym", "/STIXSize1Symbols" },
+      { "Root.PSFont.STIXSiz1SymBd", "/STIXSize1Symbols-Bold" },
+      { "Root.PSFont.STIXSiz2Sym", "/STIXSize2Symbols" },
+      { "Root.PSFont.STIXSiz2SymBd", "/STIXSize2Symbols-Bold" },
+      { "Root.PSFont.STIXSiz3Sym", "/STIXSize3Symbols" },
+      { "Root.PSFont.STIXSiz3SymBd", "/STIXSize3Symbols-Bold" },
+      { "Root.PSFont.STIXSiz4Sym", "/STIXSize4Symbols" },
+      { "Root.PSFont.STIXSiz4SymBd", "/STIXSize4Symbols-Bold" },
+      { "Root.PSFont.STIXSiz5Sym", "/STIXSize5Symbols" },
+      { "Root.PSFont.ME", "/DroidSansFallback" },
+      { "Root.PSFont.CJKMing", "/DroidSansFallback" },
+      { "Root.PSFont.CJKGothic", "/DroidSansFallback" }
    };
 
    Int_t len = wcslen(chars);
    if (len<=0) return;
-   
+
    const Double_t kDEGRAD = TMath::Pi()/180.;
    Double_t x = xx;
    Double_t y = yy;
@@ -2931,35 +2931,35 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
    // Output text.
    if (len > 1) PrintStr(Form("%d ", len));
    for(Int_t i = 0; i < len; i++) {
-	   // Adobe Glyph Naming Convention
-	   // http://www.adobe.com/devnet/opentype/archives/glyph.html
+      // Adobe Glyph Naming Convention
+      // http://www.adobe.com/devnet/opentype/archives/glyph.html
 #include "AdobeGlyphList.h"
-	   const wchar_t *lower = std::lower_bound(
-			adobe_glyph_ucs, adobe_glyph_ucs + nadobe_glyph,
-			chars[i]);
-	   if(lower <  adobe_glyph_ucs + nadobe_glyph &&
-		  *lower == chars[i]) {
-		   // Named glyph from AGL 1.2
-		   const unsigned long index =
-			   lower - adobe_glyph_ucs;
-		   PrintStr(Form("/%s ", adobe_glyph_name[index]));
-	   }
-	   else if((unsigned int)chars[i] < 0xffff) {
-		   // Unicode BMP
-		   PrintStr(Form("/uni%04X ",
-						 (unsigned int)chars[i]));
-	   }
-	   else {
-		   // Unicode supplemental planes
-		   PrintStr(Form("/u%04X ",
-						 (unsigned int)chars[i]));
-	   }
+      const wchar_t *lower = std::lower_bound(
+                                              adobe_glyph_ucs, adobe_glyph_ucs + nadobe_glyph,
+                                              chars[i]);
+      if(lower <  adobe_glyph_ucs + nadobe_glyph &&
+         *lower == chars[i]) {
+         // Named glyph from AGL 1.2
+         const unsigned long index =
+         lower - adobe_glyph_ucs;
+         PrintStr(Form("/%s ", adobe_glyph_name[index]));
+      }
+      else if((unsigned int)chars[i] < 0xffff) {
+         // Unicode BMP
+         PrintStr(Form("/uni%04X ",
+                       (unsigned int)chars[i]));
+      }
+      else {
+         // Unicode supplemental planes
+         PrintStr(Form("/u%04X ",
+                       (unsigned int)chars[i]));
+      }
    }
    if(len > 1) {
-	   PrintStr("{glyphshow} repeat ");
+      PrintStr("{glyphshow} repeat ");
    }
    else {
-	   PrintStr("glyphshow ");
+      PrintStr("glyphshow ");
    }
 
    PrintStr("NC");
@@ -3069,7 +3069,7 @@ void TPostScript::Zone()
       fIXzone++;
       if( fIXzone > fNXzone) { fIXzone=1; fIYzone++; }
    }
-
+   
    // Picture Initialisation
    SaveRestore(1);
    if (fgLineJoin) {

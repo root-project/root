@@ -164,7 +164,7 @@ Double_t Tester::TestByIndex() {      // benchmark access by index
     timer.Stop();
   } else {
     cout << "Class " << GetName()
-	 << " doesn't support access by index" << endl;
+     << " doesn't support access by index" << endl;
   }
   CleanUp();
   return timer.CpuTime();
@@ -255,19 +255,19 @@ int main(int argc,char **argv)
   TObjArray array(ntests);                         // Array of collections
 
   array.Add(new Tester(nobjects,ntimes,moda,
-			new TObjArray()));         // Add TObjArray
+                       new TObjArray()));         // Add TObjArray
   j++;
   deltas[j] = ((Tester*)(array[j]))->DoTest();
   if(deltas[j] < smin) { idx=j; smin=deltas[j]; }
 
   array.Add(new Tester(nobjects,ntimes,moda,
-	    new TClonesArray("TNamed",nobjects)));  // Add TClonesArray
+                       new TClonesArray("TNamed",nobjects)));  // Add TClonesArray
   j++;
   deltas[j] = ((Tester*)(array[j]))->DoTest();
   if(deltas[j] < smin) { idx=j; smin=deltas[j]; }
 
   array.Add(new Tester(nobjects,ntimes,moda,
-	    new TBtree()));                       // Add TBTree
+                       new TBtree()));                       // Add TBTree
   j++;
   deltas[j] = ((Tester*)(array[j]))->DoTest();
   if(deltas[j] < smin) { idx=j; smin=deltas[j]; }
@@ -275,31 +275,31 @@ int main(int argc,char **argv)
   if(moda != 1) {   // Skip classes without operator[] from index test
 
     array.Add(new Tester(nobjects,ntimes,moda,
-	      new TOrdCollection()));            // Add TOrdCollection
+                         new TOrdCollection()));            // Add TOrdCollection
     j++;
     deltas[j] = ((Tester*)(array[j]))->DoTest();
     if(deltas[j] < smin) { idx=j; smin=deltas[j]; }
 
     array.Add(new Tester(nobjects,ntimes,moda,
-	      new TList()));                     // Add TList
+                         new TList()));                     // Add TList
     j++;
     deltas[j] = ((Tester*)(array[j]))->DoTest();
     if(deltas[j] < smin) { idx=j; smin=deltas[j]; }
 
     array.Add(new Tester(nobjects,ntimes,moda,
-	      new TSortedList()));               // Add TSortedList
+                         new TSortedList()));               // Add TSortedList
     j++;
     deltas[j] = ((Tester*)(array[j]))->DoTest();
     if(deltas[j] < smin) { idx=j; smin=deltas[j]; }
 
     array.Add(new Tester(nobjects,ntimes,moda,
-	      new THashList()));                 // Add THashList
+                         new THashList()));                 // Add THashList
     j++;
     deltas[j] = ((Tester*)(array[j]))->DoTest();
     if(deltas[j] < smin) { idx=j; smin=deltas[j]; }
 
     array.Add(new Tester(nobjects,ntimes,moda,
-	      new THashTable()));                // Add THashTable
+                         new THashTable()));                // Add THashTable
     j++;
     deltas[j] = ((Tester*)(array[j]))->DoTest();
     if(deltas[j] < smin) { idx=j; smin=deltas[j]; }
@@ -327,8 +327,8 @@ int main(int argc,char **argv)
   Printf("\tAverage (msec)\tRatio\t\tClassName");
 
   for (int i=0;i<j;i++) {
-    Printf("\t%f\t%f\t%s",
-	   deltas[i],deltas[i]/smin,array[i]->GetName());
+     Printf("\t%f\t%f\t%s",
+            deltas[i],deltas[i]/smin,array[i]->GetName());
   }
   array.Delete();
   return 0;

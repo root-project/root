@@ -52,7 +52,7 @@ extern const std::string VERSION;
 extern const std::string gUserAgent;
 
 // The prefix that is used to find the variables in the gEnv
-#define ENVPFX	"Davix."
+#define ENVPFX "Davix."
 
 ClassImp(TDavixSystem)
 

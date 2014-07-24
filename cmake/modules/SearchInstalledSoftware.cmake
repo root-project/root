@@ -34,7 +34,7 @@ if(NOT builtin_freetype)
     set(FREETYPE_INCLUDE_DIR ${FREETYPE_INCLUDE_DIR_freetype2})
   else()
     message(STATUS "FreeType not found. Switching on builtin_freetype option")
-    set(builtin_freetype ON CACHE BOOL "" FORCE) 	
+    set(builtin_freetype ON CACHE BOOL "" FORCE)
   endif()
 endif()
 if(builtin_freetype)  
@@ -54,7 +54,7 @@ if(NOT builtin_pcre)
   if(PCRE_FOUND)
   else()
     message(STATUS "PCRE not found. Switching on builtin_pcre option")
-    set(builtin_pcre ON CACHE BOOL "" FORCE) 	
+    set(builtin_pcre ON CACHE BOOL "" FORCE)
   endif() 
 endif()
 if(builtin_pcre)
@@ -73,7 +73,7 @@ if(NOT builtin_lzma)
   if(LZMA_FOUND)
   else()
     message(STATUS "LZMA not found. Switching on builtin_lzma option")
-    set(builtin_lzma ON CACHE BOOL "" FORCE) 	
+    set(builtin_lzma ON CACHE BOOL "" FORCE)
   endif() 
 endif()
 if(builtin_lzma)
@@ -81,14 +81,14 @@ if(builtin_lzma)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
     ExternalProject_Add(
-	  LZMA
-	  URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz 
-	  URL_MD5  65693dc257802b6778c28ed53ecca678
-	  PREFIX LZMA
-	  INSTALL_DIR ${CMAKE_BINARY_DIR}
+     LZMA
+     URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz 
+     URL_MD5  65693dc257802b6778c28ed53ecca678
+     PREFIX LZMA
+     INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND "" BUILD_COMMAND ""
-	  INSTALL_COMMAND cmake -E copy lib/liblzma.dll <INSTALL_DIR>/bin
-	  BUILD_IN_SOURCE 1)
+     INSTALL_COMMAND cmake -E copy lib/liblzma.dll <INSTALL_DIR>/bin
+     BUILD_IN_SOURCE 1)
     install(FILES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
@@ -163,7 +163,7 @@ if(NOT builtin_afterimage)
   find_package(AfterImage)
   if(NOT AFTERIMAGE_FOUND)
     message(STATUS "AfterImage not found. Switching on builtin_afterimage option")
-    set(builtin_afterimage ON CACHE BOOL "" FORCE) 	
+    set(builtin_afterimage ON CACHE BOOL "" FORCE)    
   endif()
 endif()
 

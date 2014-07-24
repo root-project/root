@@ -32,7 +32,7 @@ public:
 
   double Int2ext(double Value, double Upper, double Lower) const;
   double Ext2int(double Value, double Upper, double Lower, 
-		 const MnMachinePrecision&) const;
+                 const MnMachinePrecision&) const;
   double DInt2Ext(double Value, double Upper, double Lower) const;
 
 private:

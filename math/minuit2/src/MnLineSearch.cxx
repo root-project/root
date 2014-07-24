@@ -267,9 +267,9 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
          if(fabs(p0.X() - slam) < toler9 || 
             fabs(p1.X() - slam) < toler9 || 
             fabs(p2.X() - slam) < toler9) {
-            //   	std::cout<<"f1, f2, f3= "<<p0.Y()<<", "<<p1.Y()<<", "<<p2.Y()<<std::endl;
-            //   	std::cout<<"x1, x2, x3= "<<p0.X()<<", "<<p1.X()<<", "<<p2.X()<<std::endl;
-            //   	std::cout<<"x, f= "<<xvmin<<", "<<fvmin<<std::endl;
+            //   std::cout<<"f1, f2, f3= "<<p0.Y()<<", "<<p1.Y()<<", "<<p2.Y()<<std::endl;
+            //   std::cout<<"x1, x2, x3= "<<p0.X()<<", "<<p1.X()<<", "<<p2.X()<<std::endl;
+            //   std::cout<<"x, f= "<<xvmin<<", "<<fvmin<<std::endl;
             return MnParabolaPoint(xvmin, fvmin);
          }
          
@@ -284,13 +284,13 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
          // if latest point worse than all three previous, cut step
          if(f3 > p0.Y() && f3 > p1.Y() && f3 > p2.Y()) {
             if (debug) { 
-               	std::cout<<"f3 worse than all three previous"<<std::endl;
+               std::cout<<"f3 worse than all three previous"<<std::endl;
             }
             if(slam > xvmin) overal = std::min(overal, slam-toler8);
-            if(slam < xvmin) undral = std::max(undral, slam+toler8);	
+            if(slam < xvmin) undral = std::max(undral, slam+toler8);
             slam = 0.5*(slam + xvmin);
             if (debug) { 
-               	std::cout<<"new slam= "<<slam<<std::endl;
+               std::cout<<"new slam= "<<slam<<std::endl;
             }
             iterate = true;
             niter++;
@@ -312,7 +312,7 @@ MnParabolaPoint MnLineSearch::operator()(const MnFcn& fcn, const MinimumParamete
          xvmin = slam;
       } else {
          if(slam > xvmin) overal = std::min(overal, slam-toler8);
-         if(slam < xvmin) undral = std::max(undral, slam+toler8);	
+         if(slam < xvmin) undral = std::max(undral, slam+toler8);
       }
       
       niter++;

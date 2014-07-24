@@ -18,56 +18,56 @@
 #include <TGTextEntry.h>
 #include <TGFileDialog.h>
 
-#define PRGNAME	"XSGui"
+#define PRGNAME   "XSGui"
 #define VERSION "1.0a"
-#define AUTHOR	"V.Vlachoudis"
-#define DATE	"Jun-1999"
-#define EMAIL	"V.Vlachoudis@cern.ch"
+#define AUTHOR   "V.Vlachoudis"
+#define DATE   "Jun-1999"
+#define EMAIL   "V.Vlachoudis@cern.ch"
 
-#define ABOUT	PRGNAME" "VERSION"\n" \
-		AUTHOR" "DATE \
-		EMAIL
+#define ABOUT   PRGNAME" "VERSION"\n" \
+      AUTHOR" "DATE \
+      EMAIL
 
 /* ---- Define all the available commands ----- */
 enum TCommandIdentifiers {
-	M_FILE_OPEN,
-	M_FILE_SAVE,
-	M_FILE_SAVEAS,
-	M_FILE_CLOSE,
-	M_FILE_PRINT,
-	M_FILE_PRINT_SETUP,
-	M_FILE_EXIT,
+   M_FILE_OPEN,
+   M_FILE_SAVE,
+   M_FILE_SAVEAS,
+   M_FILE_CLOSE,
+   M_FILE_PRINT,
+   M_FILE_PRINT_SETUP,
+   M_FILE_EXIT,
 
-	M_ELEM_REACTION,
-	M_ELEM_MODIFY,
-	M_ELEM_CLEAR,
+   M_ELEM_REACTION,
+   M_ELEM_MODIFY,
+   M_ELEM_CLEAR,
 
-	M_OPTION_ZOOM,
-	M_OPTION_SETUP,
+   M_OPTION_ZOOM,
+   M_OPTION_SETUP,
 
-	M_HELP_ABOUT,
+   M_HELP_ABOUT,
 };
 
 /* --- Define the Help for each menu item --- */
 // WARNING!!! MUST BE IN ALIGN WITH TCommandsIdentifiers
 #ifdef __XSGUI_CXX
-static const char	*menuTip[] = {
-	"Open a file",
-	"Save drawing",
-	"Save drawing as",
-	"Close current drawing",
-	"Print drawing",
-	"Printer Setup",
-	"Exit from program",
+static const char   *menuTip[] = {
+   "Open a file",
+   "Save drawing",
+   "Save drawing as",
+   "Close current drawing",
+   "Print drawing",
+   "Printer Setup",
+   "Exit from program",
 
-	"Select a Reaction",
-	"Edit/Modify/Delete the current graphs",
-	"Clear Current Graph",
+   "Select a Reaction",
+   "Edit/Modify/Delete the current graphs",
+   "Clear Current Graph",
 
-	"Zoom current image",
-	"General graphic options",
+   "Zoom current image",
+   "General graphic options",
 
-	"About the program"
+   "About the program"
 };
 #endif
 
@@ -75,29 +75,29 @@ static const char	*menuTip[] = {
 class XSGui : public TGMainFrame
 {
 private:
-	TGMenuBar		*menuBar;
+   TGMenuBar      *menuBar;
 
-	TGPopupMenu		*fileMenu,
-				*elemMenu,
-				*optMenu,
-				*helpMenu;
+   TGPopupMenu      *fileMenu,
+            *elemMenu,
+            *optMenu,
+            *helpMenu;
 
-	TGLayoutHints		*menuBarLayout,
-				*menuBarItemLayout,
-				*menuBarHelpLayout;
+   TGLayoutHints      *menuBarLayout,
+            *menuBarItemLayout,
+            *menuBarHelpLayout;
 
-	TGStatusBar		*statusBar;
+   TGStatusBar      *statusBar;
 
 public:
-	XSGui(const TGWindow *p, UInt_t w, UInt_t h);
-	virtual ~XSGui();
+   XSGui(const TGWindow *p, UInt_t w, UInt_t h);
+   virtual ~XSGui();
 
-	virtual void	CloseWindow();
-	virtual Bool_t	ProcessMessage(Long_t msg, Long_t param, Long_t);
+   virtual void   CloseWindow();
+   virtual Bool_t   ProcessMessage(Long_t msg, Long_t param, Long_t);
 
-		Bool_t	ProcessMenuMessage( Long_t param );
+      Bool_t   ProcessMenuMessage( Long_t param );
 
-	//ClassDef(XSGui,1)
+   //ClassDef(XSGui,1)
 }; // XSGui
 
 #endif

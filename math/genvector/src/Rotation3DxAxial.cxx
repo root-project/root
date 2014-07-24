@@ -43,8 +43,8 @@ Rotation3D Rotation3D::operator * (const RotationZ  & rz) const {
    return Rotation3D
       (
        fM[kXX]*c + fM[kXY]*s, fM[kXY]*c - fM[kXX]*s,   fM[kXZ] 
-       , fM[kYX]*c + fM[kYY]*s, fM[kYY]*c - fM[kYX]*s,	fM[kYZ] 
-       , fM[kZX]*c + fM[kZY]*s, fM[kZY]*c - fM[kZX]*s,	fM[kZZ] 
+       , fM[kYX]*c + fM[kYY]*s, fM[kYY]*c - fM[kYX]*s, fM[kYZ]
+       , fM[kZX]*c + fM[kZY]*s, fM[kZY]*c - fM[kZX]*s, fM[kZZ] 
        ); 
 }
 

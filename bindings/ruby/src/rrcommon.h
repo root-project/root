@@ -32,11 +32,11 @@
 
 /* FIXME: This is from SWIG. */
 #ifdef __cplusplus
-#  ifndef RUBY_METHOD_FUNC	/* These definitions should work for Ruby 1.4.6 */
+#  ifndef RUBY_METHOD_FUNC   /* These definitions should work for Ruby 1.4.6 */
 #    define VALUEFUNC(f) ((VALUE (*)()) f)
 #    define VOIDFUNC(f)  ((void (*)()) f)
 #  else
-#    ifndef ANYARGS		/* These definitions should work for Ruby 1.6 */
+#    ifndef ANYARGS      /* These definitions should work for Ruby 1.6 */
 #      define VALUEFUNC(f) ((VALUE (*)()) f)
 #      define VOIDFUNC(f)  ((RUBY_DATA_FUNC) f)
 #    else /* These definitions should work for Ruby 1.7 */

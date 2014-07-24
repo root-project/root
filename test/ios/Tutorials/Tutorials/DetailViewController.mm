@@ -409,7 +409,7 @@ enum class AppMode {
       transition.timingFunction = [CAMediaTimingFunction functionWithName : kCAMediaTimingFunctionEaseInEaseOut];
       // Now to set the type of transition.
       transition.type = kCATransitionReveal;
-		transition.subtype = kCATransitionFromLeft;
+      transition.subtype = kCATransitionFromLeft;
       // Finally, to avoid overlapping transitions we assign ourselves as the delegate for the animation and wait for the
       // -animationDidStop:finished: message. When it comes in, we will flag that we are no longer transitioning.
       inTransition = YES;

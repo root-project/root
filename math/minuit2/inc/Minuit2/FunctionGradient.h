@@ -31,7 +31,7 @@ public:
    fData(MnRefCountedPointer<BasicFunctionGradient>(new BasicFunctionGradient(grd))) {}
 
   FunctionGradient(const MnAlgebraicVector& grd, const MnAlgebraicVector& g2,
-		   const MnAlgebraicVector& gstep) : 
+                   const MnAlgebraicVector& gstep) :
    fData(MnRefCountedPointer<BasicFunctionGradient>(new BasicFunctionGradient(grd, g2, gstep))) {}
   
   ~FunctionGradient() {}

@@ -17,24 +17,24 @@
 //
 
 typedef enum {kRootino=0,kDown=1,kDownBar=-1,kUp=2,kUpBar=-2,kStrange=3,
-	  kStrangeBar=-3,kCharm=4,kCharmBar=-4,kBottom=5,
-	  kBottomBar=-5,kTop=6,kTopBar=-6,kGluon=21,kPythia92=92,
-	  kDd1=1103,kDd1Bar=-1103,kUd0=2101,kUd0Bar=-2101,kUd1=2103,
-	  kUd1Bar=-2103,kUu1=2203,kUu1Bar=-2203,kSd0=3101,kSd0Bar=-3101,
-	  kSd1=3103,kSd1Bar=-3103,kSu0=3201,kSu0Bar=-3201,kSu1=3203,
-	  kSu1Bar=-3203,kSearches0=7,kElectron=11,kPositron=-11,kNuE=12,
-	  kNuEBar=-12,kMuonMinus=13,kMuonPlus=-13,kNuMu=14,kNuMuBar=-14,
-	  kTauMinus=15,kTauPlus=-15,kNuTau=16,kNuTauBar=-16,kGamma=22,
-	  kZ0=23,kWPlus=24,kWMinus=-24,kPi0=111,kRho770_0=113,
-	  kA2_1320_0=115,kRho3_1690_0=117,kK0Long=130,kPiPlus=211,
-	  kPiMinus=-211,kRho770Plus=213,kRho770Minus=-213,
-	  kA2_1320Plus=215,kProton=2212,kProtonBar=-2212,
-	  kNeutron=2112,kNeutronBar=-2112,kK0Short=310,kK0=311,
-	  kK0Bar=-311,kKPlus=321,kKMinus=-321,kLambda0=3122,
-	  kLambda1520=3124,kLambda0Bar=-3122,kSigmaMinus=3112,kSigmaBarPlus=-3112,
-	  kSigmaPlus=3222,kSigmaBarMinus=-3222,kSigma0=3212,
-	  kSigma0Bar=-3212,kXiMinus=3312,kXiPlusBar=-3312,
-          kOmegaMinus=3334,kOmegaPlusBar=-3334}
+   kStrangeBar=-3,kCharm=4,kCharmBar=-4,kBottom=5,
+   kBottomBar=-5,kTop=6,kTopBar=-6,kGluon=21,kPythia92=92,
+   kDd1=1103,kDd1Bar=-1103,kUd0=2101,kUd0Bar=-2101,kUd1=2103,
+   kUd1Bar=-2103,kUu1=2203,kUu1Bar=-2203,kSd0=3101,kSd0Bar=-3101,
+   kSd1=3103,kSd1Bar=-3103,kSu0=3201,kSu0Bar=-3201,kSu1=3203,
+   kSu1Bar=-3203,kSearches0=7,kElectron=11,kPositron=-11,kNuE=12,
+   kNuEBar=-12,kMuonMinus=13,kMuonPlus=-13,kNuMu=14,kNuMuBar=-14,
+   kTauMinus=15,kTauPlus=-15,kNuTau=16,kNuTauBar=-16,kGamma=22,
+   kZ0=23,kWPlus=24,kWMinus=-24,kPi0=111,kRho770_0=113,
+   kA2_1320_0=115,kRho3_1690_0=117,kK0Long=130,kPiPlus=211,
+   kPiMinus=-211,kRho770Plus=213,kRho770Minus=-213,
+   kA2_1320Plus=215,kProton=2212,kProtonBar=-2212,
+   kNeutron=2112,kNeutronBar=-2112,kK0Short=310,kK0=311,
+   kK0Bar=-311,kKPlus=321,kKMinus=-321,kLambda0=3122,
+   kLambda1520=3124,kLambda0Bar=-3122,kSigmaMinus=3112,kSigmaBarPlus=-3112,
+   kSigmaPlus=3222,kSigmaBarMinus=-3222,kSigma0=3212,
+   kSigma0Bar=-3212,kXiMinus=3312,kXiPlusBar=-3312,
+   kOmegaMinus=3334,kOmegaPlusBar=-3334}
 PDG_t;
 
 /*
@@ -508,11 +508,11 @@ PDG_t;
                                       -1.,kFALSE, -1.,
                                      0.0,"Baryon", -5114));
    "Sigma(b)*+","Sigma(b)*+",
-				       -1.,kFALSE, -1.,
-				       1.0,"Baryon", 5214));
+                   -1.,kFALSE, -1.,
+                   1.0,"Baryon", 5214));
    "Sigma(b)*+ bar","Sigma(b)*+ bar",
-				       -1.,kFALSE, -1.,
-				       -1.0,"Baryon", -5214));
+                   -1.,kFALSE, -1.,
+                   -1.0,"Baryon", -5214));
    "Ksi(b)-","Ksi(b)-",
                                       -1.,kFALSE, -1.,
                                      -1.0,"Baryon", 5132));
@@ -1153,7 +1153,7 @@ PDG_t;
    "chi(b1)(2P)0","M080",
                                       10.2552,kTRUE, .0,
                                      0.0,"Meson", 70553));
-	    */
+       */
 
 
 #endif //ROOT_TPDGCode

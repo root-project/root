@@ -10,8 +10,8 @@ class FTGlyph;
  * FTGLExtrdFont is a specialisation of the FTFont class for handling
  * extruded Polygon fonts
  *
- * @see		FTFont
- * @see		FTGLPolygonFont
+ * @see  FTFont
+ * @see  FTGLPolygonFont
  */
 class FTGL_EXPORT FTGLExtrdFont : public FTFont
 {
@@ -35,23 +35,23 @@ class FTGL_EXPORT FTGLExtrdFont : public FTFont
          * Destructor
          */
         ~FTGLExtrdFont();
-		
+
         /**
          * Set the extrusion distance for the font. 
          *
          * @param d  The extrusion distance.
          */
         void Depth( float d) { depth = d;}
-		
+
     private:
         /**
          * Construct a FTPolyGlyph.
          *
          * @param glyphIndex The glyph index NOT the char code.
-         * @return	An FTExtrdGlyph or <code>null</code> on failure.
+         * @return An FTExtrdGlyph or <code>null</code> on failure.
          */
         inline virtual FTGlyph* MakeGlyph( unsigned int glyphIndex);
-		
+
         /**
          * The extrusion distance for the font. 
          */
@@ -59,5 +59,5 @@ class FTGL_EXPORT FTGLExtrdFont : public FTFont
 };
 
 
-#endif	//	__FTGLExtrdFont__
+#endif // __FTGLExtrdFont__
 

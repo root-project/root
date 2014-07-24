@@ -67,14 +67,14 @@ void piRandom(const char *name, Random *r, Long64_t n, Int_t color) {
       i += NR2;
       r->RndmArray(NR,rn);
       for (Int_t j=0;j<NR;j+=2) {
-          if (rn[j]*rn[j]+rn[j+1]*rn[j+1] <= 1) npi++;
-	  if (rn[j] < 0.001) h2->Fill(rn[j],rn[j+1]);
+         if (rn[j]*rn[j]+rn[j+1]*rn[j+1] <= 1) npi++;
+         if (rn[j] < 0.001) h2->Fill(rn[j],rn[j+1]);
       }
 //       r1 = r->Rndm();
 //       r2 = r->Rndm();
       //  if (r1*r1+r2*r2 <= 1) npi++;
       if (i && i % (n/10) == 0) {
-	  gSystem->ProcessEvents();
+         gSystem->ProcessEvents();
          Double_t norm = 4./Double_t(i);
          diffpi   = norm*npi - pi;
          gr->SetPoint(k,i,diffpi);

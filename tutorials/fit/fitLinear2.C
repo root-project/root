@@ -27,7 +27,7 @@ void fitLinear2()
    for (i=0; i<n; i++){
       x[0 + i*5] = rand.Uniform(-10, 10);
       x[1 + i*5] = rand.Uniform(-10, 10);
-      x[2 + i*5] = rand.Uniform(-10, 10);		  
+      x[2 + i*5] = rand.Uniform(-10, 10);
       x[3 + i*5] = rand.Uniform(-10, 10);
       x[4 + i*5] = rand.Uniform(-10, 10);
       e[i] = 0.01;
@@ -56,7 +56,7 @@ void fitLinear2()
    for (i=n; i<n*2; i++) {
       x[0+i*5] = rand.Uniform(-10, 10);
       x[1+i*5] = rand.Uniform(-10, 10);
-      x[2+i*5] = rand.Uniform(-10, 10);		  
+      x[2+i*5] = rand.Uniform(-10, 10);
       x[3+i*5] = rand.Uniform(-10, 10);
       x[4+i*5] = rand.Uniform(-10, 10);
       e[i] = 0.01;

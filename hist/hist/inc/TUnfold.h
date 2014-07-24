@@ -208,7 +208,7 @@ public:
    virtual Double_t DoUnfold(Double_t tau); // Unfold with given choice of tau
    virtual Int_t ScanLcurve(Int_t nPoint,Double_t tauMin,
                             Double_t tauMax,TGraph **lCurve,
-			    TSpline **logTauX=0,TSpline **logTauY=0); // scan the L curve using successive calls to DoUnfold(Double_t) at various tau
+                            TSpline **logTauX=0,TSpline **logTauY=0); // scan the L curve using successive calls to DoUnfold(Double_t) at various tau
    void GetProbabilityMatrix(TH2 *A,EHistMap histmap) const; // get the matrix A of probabilities
    void GetNormalisationVector(TH1 *s,const Int_t *binMap=0) const; // get the vector of normalisation factors, equivalent to the initial bias vector
 

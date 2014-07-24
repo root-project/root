@@ -118,7 +118,7 @@ void TBackCompFitter::Clear(Option_t*) {
 
 
 
-Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){	
+Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
    // execute the command (Fortran Minuit compatible interface)
    
 #ifdef DEBUG

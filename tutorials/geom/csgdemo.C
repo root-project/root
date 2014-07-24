@@ -12,8 +12,8 @@ void csgdemo ()
    bar->AddButton("Union ", "s_union()", "A + B ");
    bar->AddButton("Intersection ", "s_intersection()","A * B ");
    bar->AddButton("Difference ", "s_difference()","A - B ");
-	//These two buttons are disabled cause of bugs
-	bar->AddButton("Complex composite", "complex_1()","(A * B) + (C - D)");
+   //These two buttons are disabled cause of bugs
+   bar->AddButton("Complex composite", "complex_1()","(A * B) + (C - D)");
    bar->Show();
 
    gROOT->SaveContext();
@@ -22,9 +22,9 @@ void csgdemo ()
 //______________________________________________________________________________
 void MakePicture()
 {
-	gGeoManager->GetGeomPainter()->SetRaytracing(kFALSE);
-	gPad->Modified();
-	gPad->Update();
+   gGeoManager->GetGeomPainter()->SetRaytracing(kFALSE);
+   gPad->Modified();
+   gPad->Update();
 }
 
 

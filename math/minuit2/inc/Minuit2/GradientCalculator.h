@@ -31,7 +31,7 @@ public:
   virtual FunctionGradient operator()(const MinimumParameters&) const = 0;
 
   virtual FunctionGradient operator()(const MinimumParameters&,
-				      const FunctionGradient&) const = 0;
+                                      const FunctionGradient&) const = 0;
 };
 
   }  // namespace Minuit2

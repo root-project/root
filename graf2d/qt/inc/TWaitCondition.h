@@ -33,7 +33,7 @@ class TWaitCondition
    public:
      TWaitCondition()  {}
      ~TWaitCondition() {}
-	  bool wait (unsigned long time=ULONG_MAX ) { if (time) {/* Wait() */}  return TRUE;}
+     bool wait (unsigned long time=ULONG_MAX ) { if (time) {/* Wait() */}  return TRUE;}
      void wakeOne () { /* Release();*/  }
 };
 

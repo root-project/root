@@ -1,7 +1,7 @@
 const Int_t Ns = 7;
 
 void add_blobs(TEveElement* p, Float_t rad, Float_t height, Float_t size,
-	       Int_t level)
+               Int_t level)
 {
   if (level <= 0) return;
 
@@ -11,8 +11,8 @@ void add_blobs(TEveElement* p, Float_t rad, Float_t height, Float_t size,
     x->SetShape(new TGeoSphere(0, size));
     Double_t phi = TMath::TwoPi() * i / Ns;
     x->RefMainTrans().SetPos(rad*TMath::Cos(phi),
-			     rad*TMath::Sin(phi),
-			     height);
+                             rad*TMath::Sin(phi),
+                             height);
     x->SetMainColor(TColor::GetColorPalette
                     (gRandom->Integer(TColor::GetNumberOfColors())));
     p->AddElement(x);

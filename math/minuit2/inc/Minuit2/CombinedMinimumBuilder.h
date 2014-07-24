@@ -24,7 +24,7 @@ class CombinedMinimumBuilder : public MinimumBuilder {
 public:
 
    CombinedMinimumBuilder() : fVMMinimizer(VariableMetricMinimizer()), 
-			     fSimplexMinimizer(SimplexMinimizer()) {}
+      fSimplexMinimizer(SimplexMinimizer()) {}
 
    ~CombinedMinimumBuilder() {}
 

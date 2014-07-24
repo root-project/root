@@ -58,11 +58,11 @@ const float MAXNUMF = 3.4028234663852885981170418348451692544e38f;
 
 /// Used to switch between different type of interpretations of the data (64 bits)
 union ieee754{
-	ieee754 () {};
-	ieee754 (double thed) {d=thed;};
-	ieee754 (uint64_t thell) {ll=thell;};
-	ieee754 (float thef) {f[0]=thef;};
-	ieee754 (uint32_t thei) {i[0]=thei;};
+   ieee754 () {};
+   ieee754 (double thed) {d=thed;};
+   ieee754 (uint64_t thell) {ll=thell;};
+   ieee754 (float thef) {f[0]=thef;};
+   ieee754 (uint32_t thei) {i[0]=thei;};
   double d;
   float f[2];
   uint32_t i[2];

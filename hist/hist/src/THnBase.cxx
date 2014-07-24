@@ -43,9 +43,9 @@ ClassImp(THnBase);
 //______________________________________________________________________________
 THnBase::THnBase(const char* name, const char* title, Int_t dim,
                  const Int_t* nbins, const Double_t* xmin, const Double_t* xmax):
-   TNamed(name, title), fNdimensions(dim), fAxes(dim), fBrowsables(dim),
-   fEntries(0), fTsumw(0), fTsumw2(-1.), fTsumwx(dim), fTsumwx2(dim),
-   fIntegral(0), fIntegralStatus(kNoInt)
+TNamed(name, title), fNdimensions(dim), fAxes(dim), fBrowsables(dim),
+fEntries(0), fTsumw(0), fTsumw2(-1.), fTsumwx(dim), fTsumwx2(dim),
+fIntegral(0), fIntegralStatus(kNoInt)
 {
    // Construct a THnBase with "dim" dimensions,
    // "nbins" holds the number of bins for each dimension;
@@ -103,13 +103,13 @@ void THnBase::Init(const char* name, const char* title,
       TAxis* reqaxis = (TAxis*)axis->Clone();
       if (!keepTargetAxis && axis->TestBit(TAxis::kAxisRange)) {
          Int_t binFirst = axis->GetFirst();
-	 // The lowest egde of the underflow is meaningless.
-	 if (binFirst == 0)
-	   binFirst = 1;
+         // The lowest egde of the underflow is meaningless.
+         if (binFirst == 0)
+            binFirst = 1;
          Int_t binLast = axis->GetLast();
-	 // The overflow edge is implicit.
-	 if (binLast > axis->GetNbins())
-	   binLast = axis->GetNbins();
+         // The overflow edge is implicit.
+         if (binLast > axis->GetNbins())
+            binLast = axis->GetNbins();
          Int_t nBins = binLast - binFirst + 1;
          if (axis->GetXbins()->GetSize()) {
             // non-uniform bins:
@@ -134,8 +134,8 @@ void THnBase::Init(const char* name, const char* title,
 
 //______________________________________________________________________________
 TH1* THnBase::CreateHist(const char* name, const char* title,
-                           const TObjArray* axes,
-                           Bool_t keepTargetAxis ) const {
+                         const TObjArray* axes,
+                         Bool_t keepTargetAxis ) const {
    // Create an empty histogram with name and title with a given
    // set of axes. Create a TH1D/TH2D/TH3D, depending on the number
    // of elements in axes.
@@ -217,21 +217,21 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
        && cname[2] >= '1' && cname[2] <= '3' && cname[4] == 0) {
 
 #define R__THNBCASE(TAG)                                                \
-      if (sparse) {                                                     \
-         s = new _NAME2_(THnSparse,TAG)(name, title, ndim, nbins,       \
-                                        minRange, maxRange, chunkSize); \
-      } else {                                                          \
-         s = new _NAME2_(THn,TAG)(name, title, ndim, nbins,             \
-                                  minRange, maxRange);                  \
-      }                                                                 \
-      break;
+if (sparse) {                                                     \
+s = new _NAME2_(THnSparse,TAG)(name, title, ndim, nbins,       \
+minRange, maxRange, chunkSize); \
+} else {                                                          \
+s = new _NAME2_(THn,TAG)(name, title, ndim, nbins,             \
+minRange, maxRange);                  \
+}                                                                 \
+break;
 
       switch (cname[3]) {
-      case 'F': R__THNBCASE(F);
-      case 'D': R__THNBCASE(D);
-      case 'I': R__THNBCASE(I);
-      case 'S': R__THNBCASE(S);
-      case 'C': R__THNBCASE(C);
+         case 'F': R__THNBCASE(F);
+         case 'D': R__THNBCASE(D);
+         case 'I': R__THNBCASE(I);
+         case 'S': R__THNBCASE(S);
+         case 'C': R__THNBCASE(C);
       }
 #undef R__THNBCASE
    }
@@ -276,7 +276,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
          else if (hn->InheritsFrom(THnSparseC::Class())) bintype = 'C';
          else {
             hn->Error("CreateHnAny", "Type %s not implemented; please inform the ROOT team!",
-                  hn->IsA()->GetName());
+                      hn->IsA()->GetName());
             return 0;
          }
          type = TClass::GetClass(TString::Format("THn%c", bintype));
@@ -301,12 +301,12 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
       }
    } else {
       hn->Error("CreateHnAny", "Unhandled type %s, not deriving from THn nor THnSparse!",
-            hn->IsA()->GetName());
+                hn->IsA()->GetName());
       return 0;
    }
    if (!type) {
       hn->Error("CreateHnAny", "Unhandled type %s, please inform the ROOT team!",
-            hn->IsA()->GetName());
+                hn->IsA()->GetName());
       return 0;
    }
 
@@ -341,24 +341,24 @@ void THnBase::Add(const TH1* hist, Double_t c /*=1.*/)
 //______________________________________________________________________________
 TFitResultPtr THnBase::Fit(TF1 *f ,Option_t *option ,Option_t *goption)
 {
-//   Fit a THnSparse with function f
-// 
-//   since the data is sparse by default a likelihood fit is performed 
-//   merging all the regions with empty bins for betetr performance efficiency
-// 
-//  Since the THnSparse is not drawn no graphics options are passed 
-//  Here is the list of possible options 
-// 
-//                = "I"  Use integral of function in bin instead of value at bin center
-//                = "X"  Use chi2 method (default is log-likelihood method)
-//                = "U"  Use a User specified fitting algorithm (via SetFCN)
-//                = "Q"  Quiet mode (minimum printing)
-//                = "V"  Verbose mode (default is between Q and V)
-//                = "E"  Perform better Errors estimation using Minos technique
-//                = "B"  Use this option when you want to fix one or more parameters
-//                       and the fitting function is like "gaus", "expo", "poln", "landau".
-//                = "M"  More. Improve fit results
-//                = "R"  Use the Range specified in the function range
+   //   Fit a THnSparse with function f
+   //
+   //   since the data is sparse by default a likelihood fit is performed
+   //   merging all the regions with empty bins for betetr performance efficiency
+   //
+   //  Since the THnSparse is not drawn no graphics options are passed
+   //  Here is the list of possible options
+   //
+   //                = "I"  Use integral of function in bin instead of value at bin center
+   //                = "X"  Use chi2 method (default is log-likelihood method)
+   //                = "U"  Use a User specified fitting algorithm (via SetFCN)
+   //                = "Q"  Quiet mode (minimum printing)
+   //                = "V"  Verbose mode (default is between Q and V)
+   //                = "E"  Perform better Errors estimation using Minos technique
+   //                = "B"  Use this option when you want to fix one or more parameters
+   //                       and the fitting function is like "gaus", "expo", "poln", "landau".
+   //                = "M"  More. Improve fit results
+   //                = "R"  Use the Range specified in the function range
 
 
    Foption_t fitOption;
@@ -370,15 +370,15 @@ TFitResultPtr THnBase::Fit(TF1 *f ,Option_t *option ,Option_t *goption)
    fitOption.Nostore = true;
    // Use likelihood fit if not specified
    if (!fitOption.Chi2) fitOption.Like = true;
-   // create range and minimizer options with default values 
-   ROOT::Fit::DataRange range(GetNdimensions()); 
+   // create range and minimizer options with default values
+   ROOT::Fit::DataRange range(GetNdimensions());
    for ( int i = 0; i < GetNdimensions(); ++i ) {
       TAxis *axis = GetAxis(i);
       range.AddRange(i, axis->GetXmin(), axis->GetXmax());
    }
-   ROOT::Math::MinimizerOptions minOption; 
-   
-   return ROOT::Fit::FitObject(this, f , fitOption , minOption, goption, range); 
+   ROOT::Math::MinimizerOptions minOption;
+
+   return ROOT::Fit::FitObject(this, f , fitOption , minOption, goption, range);
 }
 
 //______________________________________________________________________________
@@ -453,10 +453,10 @@ TObject* THnBase::ProjectionAny(Int_t ndim, const Int_t* dim,
 
    TString name(GetName());
    name +="_proj";
-   
+
    for (Int_t d = 0; d < ndim; ++d) {
-     name += "_";
-     name += dim[d];
+      name += "_";
+      name += dim[d];
    }
 
    TString title(GetTitle());
@@ -498,7 +498,7 @@ TObject* THnBase::ProjectionAny(Int_t ndim, const Int_t* dim,
    if (wantNDim)
       ret = hn = CloneEmpty(name, title, &newaxes, keepTargetAxis);
    else
-      ret = hist = CreateHist(name, title, &newaxes, keepTargetAxis); 
+      ret = hist = CreateHist(name, title, &newaxes, keepTargetAxis);
 
    if (keepTargetAxis) {
       // make the whole axes visible, i.e. unset the range
@@ -796,7 +796,7 @@ void THnBase::Multiply(TF1* f, Double_t c)
    // Only bins inside the function range are recomputed.
    // IMPORTANT NOTE: If you intend to use the errors of this histogram later
    // you should call Sumw2 before making this operation.
-   // This is particularly important if you fit the histogram after 
+   // This is particularly important if you fit the histogram after
    // calling Multiply()
 
    Int_t* coord = new Int_t[fNdimensions];
@@ -828,7 +828,7 @@ void THnBase::Multiply(TF1* f, Double_t c)
          SetBinError(i, c * fvalue * error);
       }
    }
-   
+
    delete [] x;
    delete [] coord;
 }
@@ -1015,31 +1015,31 @@ void THnBase::SetTitle(const char *title)
    // To insert the character ";" in one of the titles, one should use "#;"
    // or "#semicolon".
 
-  fTitle = title;
-  fTitle.ReplaceAll("#;",2,"#semicolon",10);
-  
-  Int_t endHistTitle = fTitle.First(';');
-  if (endHistTitle >= 0) {
-     // title contains a ';' so parse the axis titles
-     Int_t posTitle = endHistTitle + 1;
-     Int_t lenTitle = fTitle.Length();
-     Int_t dim = 0;
-     while (posTitle > 0 && posTitle < lenTitle && dim < fNdimensions){
-        Int_t endTitle = fTitle.Index(";", posTitle);
-        TString axisTitle = fTitle(posTitle, endTitle - posTitle);
-        axisTitle.ReplaceAll("#semicolon", 10, ";", 1);
-        GetAxis(dim)->SetTitle(axisTitle);
-        dim++;
-        if (endTitle > 0)
-           posTitle = endTitle + 1;
-        else
-           posTitle = -1;
-     }
-     // Remove axis titles from histogram title
-     fTitle.Remove(endHistTitle, lenTitle - endHistTitle);
-  }
-  
-  fTitle.ReplaceAll("#semicolon", 10, ";", 1);
+   fTitle = title;
+   fTitle.ReplaceAll("#;",2,"#semicolon",10);
+
+   Int_t endHistTitle = fTitle.First(';');
+   if (endHistTitle >= 0) {
+      // title contains a ';' so parse the axis titles
+      Int_t posTitle = endHistTitle + 1;
+      Int_t lenTitle = fTitle.Length();
+      Int_t dim = 0;
+      while (posTitle > 0 && posTitle < lenTitle && dim < fNdimensions){
+         Int_t endTitle = fTitle.Index(";", posTitle);
+         TString axisTitle = fTitle(posTitle, endTitle - posTitle);
+         axisTitle.ReplaceAll("#semicolon", 10, ";", 1);
+         GetAxis(dim)->SetTitle(axisTitle);
+         dim++;
+         if (endTitle > 0)
+            posTitle = endTitle + 1;
+         else
+            posTitle = -1;
+      }
+      // Remove axis titles from histogram title
+      fTitle.Remove(endHistTitle, lenTitle - endHistTitle);
+   }
+
+   fTitle.ReplaceAll("#semicolon", 10, ";", 1);
 
 }
 
@@ -1235,7 +1235,7 @@ Bool_t THnBase::PrintBin(Long64_t idx, Int_t* bin, Option_t* options) const
    // If "options" contains:
    //   '0': only print bins with an error or content != 0
    // Return whether the bin was printed (depends on options)
-   
+
    Double_t v = -42;
    if (idx == -1) {
       idx = GetBin(bin);
@@ -1428,7 +1428,7 @@ ClassImp(ROOT::THnBaseBrowsable);
 
 //______________________________________________________________________________
 ROOT::THnBaseBrowsable::THnBaseBrowsable(THnBase* hist, Int_t axis):
-   fHist(hist), fAxis(axis), fProj(0)
+fHist(hist), fAxis(axis), fProj(0)
 {
    // Construct a THnBaseBrowsable.
    TString axisName = hist->GetAxis(axis)->GetName();

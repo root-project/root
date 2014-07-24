@@ -70,35 +70,35 @@ const float T24M1 = 16777215.;
 //------------------------------------------------------------------------------
 
 inline double get_sin_px(const double x){
-	double px=C1sin;
-	px *= x;
-	px += C2sin;
-	px *= x;
-	px += C3sin;
-	px *= x;
-	px += C4sin;
-	px *= x;
-	px += C5sin;
-	px *= x;
-	px += C6sin;
-	return px;
+   double px=C1sin;
+   px *= x;
+   px += C2sin;
+   px *= x;
+   px += C3sin;
+   px *= x;
+   px += C4sin;
+   px *= x;
+   px += C5sin;
+   px *= x;
+   px += C6sin;
+   return px;
 }
 
 //------------------------------------------------------------------------------
 
 inline double get_cos_px(const double x){
-	double px=C1cos;
-	px *= x;
-	px += C2cos;
-	px *= x;
-	px += C3cos;
-	px *= x;
-	px += C4cos;
-	px *= x;
-	px += C5cos;
-	px *= x;
-	px += C6cos;
-	return px;
+   double px=C1cos;
+   px *= x;
+   px += C2cos;
+   px *= x;
+   px += C3cos;
+   px *= x;
+   px += C4cos;
+   px *= x;
+   px += C5cos;
+   px *= x;
+   px += C6cos;
+   return px;
 }
 
 
@@ -205,7 +205,7 @@ inline void fast_sincosf_m45_45( const float x, float & s, float &c ) {
 
 /// Single precision sincos
 inline void fast_sincosf( const float xx, float & s, float &c ) {
-	
+
 
     int j;
     const float x = details::reduce2quadrant(xx,j);

@@ -114,8 +114,8 @@ namespace Math {
 //     template<unigned int D>
 //     struct Creator { 
 //       static const RowOffsets<D> & Offsets() {
-// 	static RowOffsets<D> off;
-// 	return off;
+//          static RowOffsets<D> off;
+//           return off;
 //       }
 
    /**
@@ -160,78 +160,78 @@ static const int fOff9x9[] = {0, 1, 3, 6, 10, 15, 21, 28, 36, 1, 2, 4, 7, 11, 16
 static const int fOff10x10[] = {0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 1, 2, 4, 7, 11, 16, 22, 29, 37, 46, 3, 4, 5, 8, 12, 17, 23, 30, 38, 47, 6, 7, 8, 9, 13, 18, 24, 31, 39, 48, 10, 11, 12, 13, 14, 19, 25, 32, 40, 49, 15, 16, 17, 18, 19, 20, 26, 33, 41, 50, 21, 22, 23, 24, 25, 26, 27, 34, 42, 51, 28, 29, 30, 31, 32, 33, 34, 35, 43, 52, 36, 37, 38, 39, 40, 41, 42, 43, 44, 53, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54};
 
 template<>
-	struct RowOffsets<1> {
-	  RowOffsets() {}
-	  int operator()(unsigned int , unsigned int ) const { return 0; } // Just one element
-	  int apply(unsigned int ) const { return 0; }
-	};
+   struct RowOffsets<1> {
+      RowOffsets() {}
+      int operator()(unsigned int , unsigned int ) const { return 0; } // Just one element
+      int apply(unsigned int ) const { return 0; }
+   };
 
 template<>
-	struct RowOffsets<2> {
-	  RowOffsets() {}
-	  int operator()(unsigned int i, unsigned int j) const { return i+j; /*fOff2x2[i*2+j];*/ }
-	  int apply(unsigned int i) const { return fOff2x2[i]; }
-	};
+   struct RowOffsets<2> {
+      RowOffsets() {}
+      int operator()(unsigned int i, unsigned int j) const { return i+j; /*fOff2x2[i*2+j];*/ }
+      int apply(unsigned int i) const { return fOff2x2[i]; }
+   };
 
 template<>
-	struct RowOffsets<3> {
-	  RowOffsets() {}
-	  int operator()(unsigned int i, unsigned int j) const { return fOff3x3[i*3+j]; }
-	  int apply(unsigned int i) const { return fOff3x3[i]; }
-	};
+   struct RowOffsets<3> {
+      RowOffsets() {}
+      int operator()(unsigned int i, unsigned int j) const { return fOff3x3[i*3+j]; }
+      int apply(unsigned int i) const { return fOff3x3[i]; }
+   };
 
 template<>
-	struct RowOffsets<4> {
-	  RowOffsets() {}
-	  int operator()(unsigned int i, unsigned int j) const { return fOff4x4[i*4+j]; }
-	  int apply(unsigned int i) const { return fOff4x4[i]; }
-	};
+   struct RowOffsets<4> {
+     RowOffsets() {}
+     int operator()(unsigned int i, unsigned int j) const { return fOff4x4[i*4+j]; }
+     int apply(unsigned int i) const { return fOff4x4[i]; }
+   };
 
-	template<>
-	struct RowOffsets<5> {
-	  inline RowOffsets() {}
-	  inline int operator()(unsigned int i, unsigned int j) const { return fOff5x5[i*5+j]; }
-//	int operator()(unsigned int i, unsigned int j) const {
-//	  if(j <= i) return (i * (i + 1)) / 2 + j;
-//		else return (j * (j + 1)) / 2 + i;
-//	  }  
-	inline int apply(unsigned int i) const { return fOff5x5[i]; }
-	};
-
-template<>
-	struct RowOffsets<6> {
-	  RowOffsets() {}
-	  int operator()(unsigned int i, unsigned int j) const { return fOff6x6[i*6+j]; }
-	  int apply(unsigned int i) const { return fOff6x6[i]; }
-	};
+   template<>
+   struct RowOffsets<5> {
+     inline RowOffsets() {}
+     inline int operator()(unsigned int i, unsigned int j) const { return fOff5x5[i*5+j]; }
+//   int operator()(unsigned int i, unsigned int j) const {
+//     if(j <= i) return (i * (i + 1)) / 2 + j;
+//      else return (j * (j + 1)) / 2 + i;
+//     }  
+   inline int apply(unsigned int i) const { return fOff5x5[i]; }
+   };
 
 template<>
-	struct RowOffsets<7> {
-	  RowOffsets() {}
-	  int operator()(unsigned int i, unsigned int j) const { return fOff7x7[i*7+j]; }
-	  int apply(unsigned int i) const { return fOff7x7[i]; }
-	};
+   struct RowOffsets<6> {
+     RowOffsets() {}
+     int operator()(unsigned int i, unsigned int j) const { return fOff6x6[i*6+j]; }
+     int apply(unsigned int i) const { return fOff6x6[i]; }
+   };
 
 template<>
-	struct RowOffsets<8> {
-	  RowOffsets() {}
-	  int operator()(unsigned int i, unsigned int j) const { return fOff8x8[i*8+j]; }
-	  int apply(unsigned int i) const { return fOff8x8[i]; }
-	};
+   struct RowOffsets<7> {
+     RowOffsets() {}
+     int operator()(unsigned int i, unsigned int j) const { return fOff7x7[i*7+j]; }
+     int apply(unsigned int i) const { return fOff7x7[i]; }
+   };
 
 template<>
-	struct RowOffsets<9> {
-	  RowOffsets() {}
-	  int operator()(unsigned int i, unsigned int j) const { return fOff9x9[i*9+j]; }
-	  int apply(unsigned int i) const { return fOff9x9[i]; }
-	};
+   struct RowOffsets<8> {
+     RowOffsets() {}
+     int operator()(unsigned int i, unsigned int j) const { return fOff8x8[i*8+j]; }
+     int apply(unsigned int i) const { return fOff8x8[i]; }
+   };
 
 template<>
-	struct RowOffsets<10> {
-	  RowOffsets() {}
-	  int operator()(unsigned int i, unsigned int j) const { return fOff10x10[i*10+j]; }
-	  int apply(unsigned int i) const { return fOff10x10[i]; }
-	};
+   struct RowOffsets<9> {
+     RowOffsets() {}
+     int operator()(unsigned int i, unsigned int j) const { return fOff9x9[i*9+j]; }
+     int apply(unsigned int i) const { return fOff9x9[i]; }
+   };
+
+template<>
+   struct RowOffsets<10> {
+     RowOffsets() {}
+     int operator()(unsigned int i, unsigned int j) const { return fOff10x10[i*10+j]; }
+     int apply(unsigned int i) const { return fOff10x10[i]; }
+   };
 
 //_________________________________________________________________________________
    /**

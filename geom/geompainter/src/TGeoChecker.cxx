@@ -327,7 +327,7 @@ void TGeoChecker::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
                strncpy(cdir,"Forward",10);
                bug->Fill();
             }
-	         break;
+            break;
          }
       }
       
@@ -354,7 +354,7 @@ void TGeoChecker::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
    fTimer->Stop();
 
    printf("CPU time/point = %5.2emus: Real time/point = %5.2emus\n",
-	       1000000.*fTimer->CpuTime()/itry,1000000.*fTimer->RealTime()/itry);
+          1000000.*fTimer->CpuTime()/itry,1000000.*fTimer->RealTime()/itry);
    bug->Write();
    delete bug;
    bug=0;
@@ -403,7 +403,7 @@ void TGeoChecker::CheckBoundaryReference(Int_t icheck)
       for (Int_t i=0;i<nentries;i++) {
          bug->GetEntry(i);
          printf("%-9s error push=%g p=%5.4f %5.4f %5.4f s=%5.4f dot=%5.4f path=%s\n",
-	             cdir,push,xyz[0],xyz[1],xyz[2],1.,1.,path);
+                cdir,push,xyz[0],xyz[1],xyz[2],1.,1.,path);
       }
    } else {
       if (icheck>=nentries) return;
@@ -411,7 +411,7 @@ void TGeoChecker::CheckBoundaryReference(Int_t icheck)
       TGeoManager::SetVerboseLevel(5);
       bug->GetEntry(icheck);
       printf("%-9s error push=%g p=%5.4f %5.4f %5.4f s=%5.4f dot=%5.4f path=%s\n",
-	          cdir,push,xyz[0],xyz[1],xyz[2],1.,1.,path);
+             cdir,push,xyz[0],xyz[1],xyz[2],1.,1.,path);
       fGeoManager->SetCurrentPoint(xyz);
       fGeoManager->SetCurrentDirection(dir);
       fGeoManager->FindNode();

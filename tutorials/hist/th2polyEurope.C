@@ -39,21 +39,21 @@ void th2polyEurope(Int_t npoints=500000)
    const Int_t nx = 36;
    // see http://en.wikipedia.org/wiki/Area_and_population_of_European_countries
    char *countries[nx] = { "france",     "spain",  "sweden",  "germany",       "finland",
-                           "norway",     "poland", "italy",   "yugoslavia",    "united_kingdom",
-			   "romania",    "belarus","greece",  "czechoslovakia","bulgaria",
-			   "iceland",    "hungary","portugal","austria",       "ireland",
-			   "lithuania",  "latvia", "estonia", "denmark",       "netherlands",
-                           "switzerland","moldova","belgium", "albania",       "cyprus",
-			   "luxembourg", "andorra","malta",   "liechtenstein", "san_marino",
-			   "monaco" };
+      "norway",     "poland", "italy",   "yugoslavia",    "united_kingdom",
+      "romania",    "belarus","greece",  "czechoslovakia","bulgaria",
+      "iceland",    "hungary","portugal","austria",       "ireland",
+      "lithuania",  "latvia", "estonia", "denmark",       "netherlands",
+      "switzerland","moldova","belgium", "albania",       "cyprus",
+      "luxembourg", "andorra","malta",   "liechtenstein", "san_marino",
+      "monaco" };
    Float_t surfaces[nx] = { 547030,        505580,   449964,      357021,        338145,
-                            324220,        312685,   301230,      255438,        244820,
-			    237500,        207600,   131940,      127711,        110910,
-			    103000,         93030,    89242,       83870,         70280,
-			     65200,         64589,    45226,       43094,         41526,
-			     41290,         33843,    30528,       28748,          9250,
-			      2586,           468,      316,         160,            61,
-                                 2};
+      324220,        312685,   301230,      255438,        244820,
+      237500,        207600,   131940,      127711,        110910,
+      103000,         93030,    89242,       83870,         70280,
+      65200,         64589,    45226,       43094,         41526,
+      41290,         33843,    30528,       28748,          9250,
+      2586,           468,      316,         160,            61,
+      2};
 
    TH1F *h = new TH1F("h","Countries surfaces (in km^{2})",3,0,3);
    for (i=0; i<nx; i++) h->Fill(countries[i], surfaces[i]);

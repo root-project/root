@@ -768,11 +768,11 @@ TQtApplication *TGQt::CreateQtApplicationImp()
       //    app = new TQtApplication(gApplication->ApplicationName(),gApplication->Argc(),gApplication->Argv());
       static TString argvString (
 #ifdef ROOTBINDIR
-				 ROOTBINDIR "/root.exe"
+             ROOTBINDIR "/root.exe"
 #else
-				 "$ROOTSYS/bin/root.exe"
+             "$ROOTSYS/bin/root.exe"
 #endif
-				 );
+             );
       gSystem->ExpandPathName(argvString);
       static char *argv[] = {(char *)argvString.Data()};
       static int nArg = 1;
@@ -958,9 +958,9 @@ Bool_t TGQt::Init(void* /*display*/)
 // Load the local ROOT font
        QString fontdir =
 #ifdef TTFFONTDIR
-    		TTFFONTDIR
+         TTFFONTDIR
 #else
-		  "$ROOTSYS/fonts"
+         "$ROOTSYS/fonts"
 #endif
         ;
         QString symbolFontFile = fontdir + "/" + QString(fSymbolFontFamily).toLower() + ".ttf";
@@ -974,11 +974,11 @@ Bool_t TGQt::Init(void* /*display*/)
         qDebug() << " Make sure your local \"~/.fonts.conf\" or \"/etc/fonts/fonts.conf\" file points to \""
                  <<
 #ifdef TTFFONTDIR
-		TTFFONTDIR
+               TTFFONTDIR
 #else
-		"$ROOTSYS/fonts"
+               "$ROOTSYS/fonts"
 #endif
-		<< "\" directory to get the proper support for ROOT TLatex class";
+                 << "\" directory to get the proper support for ROOT TLatex class";
         // create a custom codec
         new QSymbolCodec();
     }
@@ -1373,14 +1373,14 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    // The reason of the problem has not been found yet.
    // By some reason TBox::ExecuteEvent messes y2 and y1
    if (y2 > y1) {
-	   // swap them :-(()
-	   int swap = y1;
-	   y1=y2; y2=swap;
+      // swap them :-(()
+      int swap = y1;
+      y1=y2; y2=swap;
    }
    if (x1 > x2) {
-	   // swap them :-(()
-	   int swap = x1;
-	   x1=x2; x2=swap;
+      // swap them :-(()
+      int swap = x1;
+      x1=x2; x2=swap;
    }
    if ( (fSelectedWindow->devType() ==  QInternal::Widget) && fFeedBackMode && fFeedBackWidget) {
       fFeedBackWidget->SetGeometry(x1,y2,x2-x1,y1-y2,(TQtWidget *)fSelectedWindow);
@@ -1528,7 +1528,7 @@ void  TGQt::DrawPolyMarker(int n, TPoint *xy)
    TQtLock lock;
    if (fSelectedWindow) {
       TQtPainter p(this,TQtPainter::kNone);
-		fQtMarker->DrawPolyMarker(p,n,xy);
+      fQtMarker->DrawPolyMarker(p,n,xy);
    }
 }
 //______________________________________________________________________________
@@ -2099,9 +2099,9 @@ void  TGQt::SetDrawMode(TVirtualX::EDrawMode mode)
             fFeedBackWidget = new TQtFeedBackWidget;
             fFeedBackWidget->setFrameStyle(QFrame::Box);
          }
-	 // This makes no sense on X11 yet due the
-	 // TQtWidget::setAttribute(Qt::WA_PaintOnScreen) flag
-	 // TQtWidget keeps painting itself over the feedback windows. Wierd !!!
+         // This makes no sense on X11 yet due the
+         // TQtWidget::setAttribute(Qt::WA_PaintOnScreen) flag
+         // TQtWidget keeps painting itself over the feedback windows. Wierd !!!
          // reparent if needed
          fFeedBackWidget->SetParent(0);
          fFeedBackWidget->SetParent((TQtWidget *)fSelectedWindow);
@@ -2246,8 +2246,8 @@ void  TGQt::SetMarkerColor( Color_t cindex)
    //*-*  cindex : color index defined my IXSETCOL
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-	if (fQtMarker->GetColor() != cindex)
-		fQtMarker->SetColor(fMarkerColor = UpdateColor(cindex));
+   if (fQtMarker->GetColor() != cindex)
+      fQtMarker->SetColor(fMarkerColor = UpdateColor(cindex));
 }
 
 //______________________________________________________________________________

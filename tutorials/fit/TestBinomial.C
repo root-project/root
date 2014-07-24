@@ -132,8 +132,8 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
      TCanvas* cEvt;
      if (plot) {
        cEvt = new TCanvas(Form("cEnv%d",iloop),
-			  Form("plots for experiment %d", iloop),
-			  1000, 600);
+                          Form("plots for experiment %d", iloop),
+                          1000, 600);
        cEvt->Divide(1,2);
        cEvt->cd(1);
        hM2D->DrawCopy("HIST");
@@ -145,29 +145,29 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
        Int_t status = 0;
        switch (fit) {
        case 0:
-	 hM2E->Fit(fM2Fit, "RN");
-	 if (plot) {
-	   hM2E->DrawCopy("E");
-	   fM2Fit->DrawCopy("SAME");
-	 }
-	 break;
+          hM2E->Fit(fM2Fit, "RN");
+          if (plot) {
+             hM2E->DrawCopy("E");
+             fM2Fit->DrawCopy("SAME");
+          }
+          break;
        case 1:
-	 if (fM2Fit2) delete fM2Fit2;
-	 fM2Fit2 = dynamic_cast<TF1*>(fM2Fit->Clone("fM2Fit2"));
-	 if (fM2Fit2->GetParameter(0) >= 1.0)
-	   fM2Fit2->SetParameter(0, 0.95);
-	 fM2Fit2->SetParLimits(0, 0.0, 1.0);
-	 TBinomialEfficiencyFitter bef(hM2N, hM2D);
-	 status = bef.Fit(fM2Fit2,"RI");
-	 if (status!=0) {
-	   std::cerr << "Error performing binomial efficiency fit, result = "
-		     << status << std::endl;
-	   continue;
-	 }
-	 if (plot) {
-	   fM2Fit2->SetLineColor(kRed);
-	   fM2Fit2->DrawCopy("SAME");
-	 }
+          if (fM2Fit2) delete fM2Fit2;
+          fM2Fit2 = dynamic_cast<TF1*>(fM2Fit->Clone("fM2Fit2"));
+          if (fM2Fit2->GetParameter(0) >= 1.0)
+          fM2Fit2->SetParameter(0, 0.95);
+          fM2Fit2->SetParLimits(0, 0.0, 1.0);
+          TBinomialEfficiencyFitter bef(hM2N, hM2D);
+          status = bef.Fit(fM2Fit2,"RI");
+          if (status!=0) {
+             std::cerr << "Error performing binomial efficiency fit, result = "
+             << status << std::endl;
+             continue;
+          }
+          if (plot) {
+             fM2Fit2->SetLineColor(kRed);
+             fM2Fit2->DrawCopy("SAME");
+          }
        }
 
        if (status != 0) break;
@@ -179,13 +179,13 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
        Double_t fwidth = fM2Fit->GetParameter(2);
        Double_t ewidth = fM2Fit->GetParError(2);
        if (fit == 1) {
-	 fnorm = fM2Fit2->GetParameter(0);
-	 enorm = fM2Fit2->GetParError(0);
-	 fthreshold = fM2Fit2->GetParameter(1);
-	 ethreshold = fM2Fit2->GetParError(1);
-	 fwidth = fM2Fit2->GetParameter(2);
-	 ewidth = fM2Fit2->GetParError(2);
-	 hChisquared->Fill(fM2Fit2->GetProb());
+          fnorm = fM2Fit2->GetParameter(0);
+          enorm = fM2Fit2->GetParError(0);
+          fthreshold = fM2Fit2->GetParameter(1);
+          ethreshold = fM2Fit2->GetParError(1);
+          fwidth = fM2Fit2->GetParameter(2);
+          ewidth = fM2Fit2->GetParError(2);
+          hChisquared->Fill(fM2Fit2->GetProb());
        }
 
        TH1D* h = dynamic_cast<TH1D*>(hbiasNorm[fit]);

@@ -208,7 +208,7 @@ namespace Math {
       double Integral(const IGenFunction & f);
    
       /**
-	evaluate the Cauchy principal value of the integral of  a previously defined function f over 
+       evaluate the Cauchy principal value of the integral of  a previously defined function f over
         the defined interval (a,b) with a singularity at c 
         @param a lower interval value
         @param b lower interval value
@@ -217,7 +217,7 @@ namespace Math {
       double IntegralCauchy(double a, double b, double c);
 
       /**
-	evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b) 
+       evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b)
         with a singularity at c 
         @param f integration function. The function type must implement the mathlib::IGenFunction interface
         @param a lower interval value

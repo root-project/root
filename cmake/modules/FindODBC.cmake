@@ -28,7 +28,7 @@ else()
     /usr/local/include
     /usr/local/include/odbc
     /usr/local/odbc/include
-	$ENV{ODBC_DIR}/include
+   $ENV{ODBC_DIR}/include
     DOC "Specify the directory containing sql.h."
   )
 
@@ -39,7 +39,7 @@ else()
     /usr/local/lib
     /usr/local/lib/odbc
     /usr/local/odbc/lib
-	$ENV{ODBC_DIR}/lib
+   $ENV{ODBC_DIR}/lib
     DOC "Specify the ODBC driver manager library here."
   )
   if(ODBC_LIBRARY AND ODBC_INCLUDE_DIR)

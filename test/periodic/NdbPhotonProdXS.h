@@ -9,12 +9,12 @@ class NdbPhotonProdXS : public NdbMF
 protected:
 
 public:
-	NdbPhotonProdXS()
-		: NdbMF(13, "Cross sections for photon production") {}
+   NdbPhotonProdXS()
+      : NdbMF(13, "Cross sections for photon production") {}
 
-	~NdbPhotonProdXS() {}
+   ~NdbPhotonProdXS() {}
 
-	ClassDef(NdbPhotonProdXS,1)
+   ClassDef(NdbPhotonProdXS,1)
 }; // NdbPhotonProdXS
 
 #endif

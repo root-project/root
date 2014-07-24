@@ -144,26 +144,28 @@ TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0),fAlpha(255)
 //______________________________________________________________________________
 TQtBrush::TQtBrush(const TAttFill &rootFillAttributes)
 {
-	// TQtBrush ctor from ROOT TAttFill object
-	SetFillAttributes(rootFillAttributes);
+   // TQtBrush ctor from ROOT TAttFill object
+   SetFillAttributes(rootFillAttributes);
 
 }
 //______________________________________________________________________________
 TQtBrush::~TQtBrush() 
 {
-	// TQtBrush dtor
+   // TQtBrush dtor
 }
+
 //______________________________________________________________________________
 TQtBrush &TQtBrush::operator=(const TAttFill &rootFillAttributes)
 {
-	SetFillAttributes(rootFillAttributes);
+   SetFillAttributes(rootFillAttributes);
    return *this;
 }
+
 //______________________________________________________________________________
 void  TQtBrush::SetFillAttributes(const TAttFill &rootFillAttributes)
 {
-	SetColor(rootFillAttributes.GetFillColor());
-	SetStyle(rootFillAttributes.GetFillStyle());
+   SetColor(rootFillAttributes.GetFillColor());
+   SetStyle(rootFillAttributes.GetFillStyle());
 }
 
 //______________________________________________________________________________
@@ -179,7 +181,7 @@ void TQtBrush::SetColor(const QColor &qtcolor)
 {
    // remember the user's alpha value and set the  brush color
    fAlpha = qtcolor.alpha();
-	fBackground = qtcolor;
+   fBackground = qtcolor;
    SetColorOwn();
 }
 
@@ -189,13 +191,13 @@ void TQtBrush::SetColorOwn()
   // Set the brush color and adjust its alpha value from fStyle
   // Take in account the new transperency if needed
 
-  static const int opaqAlpha = QColor(0,0,0).alpha(); // Qt   alpha range is  [0:255]
-  static const float opaqFactor = opaqAlpha/100.;     // ROOT alpha range is  [0:100]
-  if (fAlpha >=0 ) {
-	  int alpha = ( fStyle == 4) ? int(opaqFactor*fFasi) : fAlpha;
-	  if (fBackground.alpha() != alpha) fBackground.setAlpha(alpha);
-	  setColor(fBackground);
-  }
+   static const int opaqAlpha = QColor(0,0,0).alpha(); // Qt   alpha range is  [0:255]
+   static const float opaqFactor = opaqAlpha/100.;     // ROOT alpha range is  [0:100]
+   if (fAlpha >=0 ) {
+      int alpha = ( fStyle == 4) ? int(opaqFactor*fFasi) : fAlpha;
+      if (fBackground.alpha() != alpha) fBackground.setAlpha(alpha);
+      setColor(fBackground);
+   }
 }
 
 //______________________________________________________________________________
@@ -213,7 +215,7 @@ void TQtBrush::SetStyle(int sty, int fasi)
   case 0:
     setStyle(Qt::NoBrush);                          // hollow
     fBackground = Qt::transparent;
-	 fAlpha = 0;
+    fAlpha = 0;
     break;
   case 1:                                           // solid
     setStyle(Qt::SolidPattern);
@@ -247,7 +249,7 @@ void TQtBrush::SetStyle(int sty, int fasi)
      break;
   case 4:                                      // transparent
      if (!fasi)    setStyle(Qt::NoBrush);      // the window is transparent
-	  else          setStyle(Qt::SolidPattern);
+     else          setStyle(Qt::SolidPattern);
      break;
   default:                                          // solid  - default
       setStyle(Qt::SolidPattern);

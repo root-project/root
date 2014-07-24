@@ -499,7 +499,7 @@ public:
 class TGeoPatternSphPhi : public TGeoPatternFinder
 {
 private:
-	Double_t           *fSinCos;         //! Sincos table
+   Double_t           *fSinCos;         //! Sincos table
 
 protected:
    TGeoPatternSphPhi(const TGeoPatternSphPhi& pfc); // Not implemented 

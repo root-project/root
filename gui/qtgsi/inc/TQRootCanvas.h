@@ -21,7 +21,7 @@
 // @short Graphic Qt Widget based Canvas
 //
 // @authors Denis Bertini <d.bertini@gsi.de>
-//	   M. AL-Turany  <m.al-turany@gsi.de>
+//    M. AL-Turany  <m.al-turany@gsi.de>
 //version 2.0
 //////////////////////////////////////////////////////////////////////
 

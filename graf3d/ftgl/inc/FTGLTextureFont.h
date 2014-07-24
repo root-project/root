@@ -46,12 +46,12 @@ class  FTGL_EXPORT FTGLTextureFont : public FTFont
          */
         virtual bool FaceSize( const unsigned int size, const unsigned int res = 72);
 
-	/**
+         /**
          * Prepare for rendering
          */
         virtual void PreRender();
 
-	/**
+         /**
          * Cleanup after rendering
          */
         virtual void PostRender();

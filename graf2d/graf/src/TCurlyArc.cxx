@@ -402,7 +402,7 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          rLx = gPad->AbsPixeltoX(px1+r1);
          rRx = gPad->AbsPixeltoX(px1-r1);
          fR1 = TMath::Abs(rRx-rLx)/2;
-		}
+      }
       Build();
       gPad->Modified(kTRUE);
       if (!opaque) gVirtualX->SetLineColor(-1);

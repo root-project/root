@@ -169,8 +169,8 @@ void TGraphEdge::Layout()
       fArrY =  bz.ep.y;
       for (j=0; j<fN[i+1]; j++) {
          fX[k] = bz.list[j].x;
-	 fY[k] = bz.list[j].y;
-	 k++;
+         fY[k] = bz.list[j].y;
+         k++;
       }
    }
 }
@@ -220,7 +220,7 @@ void TGraphEdge::SaveAttributes(ostream &out, const char* name)
 {
    // Save attributes as a C++ statement(s) on output stream out
    // called by TGraphStruct::SavePrimitive.
-	       
+
    SaveLineAttributes(out,name,1,1,1);
 }
 

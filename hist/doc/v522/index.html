@@ -20,11 +20,11 @@ Modify implementation of the Fit function in the histograms and data classes to 
 
   <h4>TBackCompFitter</h4>
   New class providing a backward compatible implementation of the 
-	  <tt>TVirtualFitter</tt> using the new fitting class. It is wrapping the functionality of the <tt>ROOT::Math::Fitter</tt> and it 
-	  can be used to retrieve the fit information (result and
-	  configuration) via the
-	  TVirtualFitter API from <tt>FitConfig</tt> and <tt>FitResult</tt>. A static instance of this class 
-	  is created after calling the histograms and graph Fit methods in order to retrieve the full fit information after having fit. This instace will be deleted only when the next fit is executed.
+     <tt>TVirtualFitter</tt> using the new fitting class. It is wrapping the functionality of the <tt>ROOT::Math::Fitter</tt> and it
+     can be used to retrieve the fit information (result and
+     configuration) via the
+     TVirtualFitter API from <tt>FitConfig</tt> and <tt>FitResult</tt>. A static instance of this class
+     is created after calling the histograms and graph Fit methods in order to retrieve the full fit information after having fit. This instace will be deleted only when the next fit is executed.
   This gives full backward compatibility functionality in fitting.
   This class in addition to the TVirtualFitter provides the following functionality:
   <ul>

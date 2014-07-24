@@ -22,11 +22,11 @@ MA  02110-1301  USA
 ******************************************************************************/
 
 /*******************************************************************************
-*                                            									       *
+*                                                                              *
 *       Simple RSA public key code.                                            *
 *       Adaptation in library for ROOT by G. Ganis, July 2003                  *
 *       (gerardo.ganis@cern.ch)                                                *
-*									                                                    *
+*                                                                               *
 *******************************************************************************/
 
 #include <stdio.h>
@@ -50,113 +50,113 @@ typedef long off_t;
 #include "rsalib.h"
 
 /********************************************************************************
- *								                                             	        *
+ *                                                                                *
  * arith.c                                                                      *
  *                                                                              *
  ********************************************************************************/
 
 /*
- *	!!!!!!!!!!!!!!!!!!!!!!!!!!!! ACHTUNG !!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *	Es findet keinerlei Ueberpruefung auf Bereichsueberschreitung
- *	statt. Alle Werte muessen natuerliche Zahlen aus dem Bereich
- *		0 ... (rsa_MAXINT+1)^rsa_MAXLEN-1 sein.
+ *   !!!!!!!!!!!!!!!!!!!!!!!!!!!! ACHTUNG !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *   Es findet keinerlei Ueberpruefung auf Bereichsueberschreitung
+ *   statt. Alle Werte muessen natuerliche Zahlen aus dem Bereich
+ *      0 ... (rsa_MAXINT+1)^rsa_MAXLEN-1 sein.
  *
  *
- *	Bei keiner Funktion oder Hilsfunktion werden Annahmen getroffen,
- *	ueber die Verschiedenheit von Eingabe- & Ausgabe-Werten.
+ *   Bei keiner Funktion oder Hilsfunktion werden Annahmen getroffen,
+ *   ueber die Verschiedenheit von Eingabe- & Ausgabe-Werten.
  *
  *
- *		Funktionen:
+ *      Funktionen:
  *
- *	a_add( s1, s2, d )
- *		rsa_NUMBER *s1,*s2,*d;
- *			*d = *s1 + *s2;
+ *   a_add( s1, s2, d )
+ *      rsa_NUMBER *s1,*s2,*d;
+ *         *d = *s1 + *s2;
  *
- *	a_assign( *d, *s )
- *		rsa_NUMBER *d,*s;
- *			*d = *s;
+ *   a_assign( *d, *s )
+ *      rsa_NUMBER *d,*s;
+ *         *d = *s;
  *
- * int	a_cmp( c1, c2 )
- *		rsa_NUMBER *c1,*c2;
- *			 1 :	falls *c1 >  *c2
- *			 0 :	falls *c1 == *c2
- *			-1 :	falls *c1 <  *c2
+ * int   a_cmp( c1, c2 )
+ *      rsa_NUMBER *c1,*c2;
+ *          1 :   falls *c1 >  *c2
+ *          0 :   falls *c1 == *c2
+ *         -1 :   falls *c1 <  *c2
  *
- *	a_div( d1, d2, q, r )
- *		rsa_NUMBER *d1,*d2,*q,*r;
- *			*q = *d1 / *d2 Rest *r;
+ *   a_div( d1, d2, q, r )
+ *      rsa_NUMBER *d1,*d2,*q,*r;
+ *         *q = *d1 / *d2 Rest *r;
  *
- *	a_div2( n )
- *		rsa_NUMBER *n;
- *			*n /= 2;
+ *   a_div2( n )
+ *      rsa_NUMBER *n;
+ *         *n /= 2;
  *
- *	a_ggt( a, b, f )
- *		rsa_NUMBER *a,*b,*f;
- *			*f = ( *a, *b );
+ *   a_ggt( a, b, f )
+ *      rsa_NUMBER *a,*b,*f;
+ *         *f = ( *a, *b );
  *
- *	a_imult( n, m, d )
- *		rsa_NUMBER *n;
- *		rsa_INT m;
- *		rsa_NUMBER *d;
- *			*d = *n * m
+ *   a_imult( n, m, d )
+ *      rsa_NUMBER *n;
+ *      rsa_INT m;
+ *      rsa_NUMBER *d;
+ *         *d = *n * m
  *
- *	a_mult( m1, m2, d )
- *		rsa_NUMBER *m1,*m2,*d;
- *			*d = *m1 * *m2;
+ *   a_mult( m1, m2, d )
+ *      rsa_NUMBER *m1,*m2,*d;
+ *         *d = *m1 * *m2;
  *
- *	a_sub( s1, s2, d )
- *		rsa_NUMBER *s1,*s2,*d;
- *			*d = *s1 - *s2;
+ *   a_sub( s1, s2, d )
+ *      rsa_NUMBER *s1,*s2,*d;
+ *         *d = *s1 - *s2;
  *
- *		Modulare Funktionen
- *	m_init( n, o )
- *		rsa_NUMBER *n,*o;
- *			Initialsierung der Modularen Funktionen
- *			o != 0 : *o = alter Wert
+ *      Modulare Funktionen
+ *   m_init( n, o )
+ *      rsa_NUMBER *n,*o;
+ *         Initialsierung der Modularen Funktionen
+ *         o != 0 : *o = alter Wert
  *
- *	m_add( s1, s2, d )
- *		rsa_NUMBER *s1, *s2, *d;
- *			*d = *s1 + *s2;
+ *   m_add( s1, s2, d )
+ *      rsa_NUMBER *s1, *s2, *d;
+ *         *d = *s1 + *s2;
  *
- *	m_mult( m1, m2, d )
- *		rsa_NUMBER *m1,*m2,*d;
+ *   m_mult( m1, m2, d )
+ *      rsa_NUMBER *m1,*m2,*d;
  *
- *	m_exp( x, n, z )
- *		rsa_NUMBER *x,*n,*z;
- *			*z = *x exp *n;
+ *   m_exp( x, n, z )
+ *      rsa_NUMBER *x,*n,*z;
+ *         *z = *x exp *n;
  *
  *
- *		Hilfs-Funktionen:
+ *      Hilfs-Funktionen:
  *
- * int	n_bits( n, b )
- *		rsa_NUMBER *n;
- *		int b;
- *			return( unterste b Bits der Dualdarstellung von n)
+ * int   n_bits( n, b )
+ *      rsa_NUMBER *n;
+ *      int b;
+ *         return( unterste b Bits der Dualdarstellung von n)
  *
- *	n_div( d1, z2, q, r )
- *		rsa_NUMBER *d1,z2[rsa_MAXBIT],*q,*r;
- *			*q = *d1 / z2[0] Rest *r;
- *			z2[i] = z2[0] * 2^i,  i=0..rsa_MAXBIT-1
+ *   n_div( d1, z2, q, r )
+ *      rsa_NUMBER *d1,z2[rsa_MAXBIT],*q,*r;
+ *         *q = *d1 / z2[0] Rest *r;
+ *         z2[i] = z2[0] * 2^i,  i=0..rsa_MAXBIT-1
  *
- * int	n_cmp( i1, i2, l )
- *		rsa_INT i1[l], i2[l];
- *			 1 :	falls i1 >  i2
- *			 0 :	falls i1 == i2
- *			-1 :	falls i1 <  i2
+ * int   n_cmp( i1, i2, l )
+ *      rsa_INT i1[l], i2[l];
+ *          1 :   falls i1 >  i2
+ *          0 :   falls i1 == i2
+ *         -1 :   falls i1 <  i2
  *
- * int	n_mult( n, m, d, l)
- *		rsa_INT n[l], m, d[];
- *			d = m * n;
- *			return( sizeof(d) ); d.h. 'l' oder 'l+1'
+ * int   n_mult( n, m, d, l)
+ *      rsa_INT n[l], m, d[];
+ *         d = m * n;
+ *         return( sizeof(d) ); d.h. 'l' oder 'l+1'
  *
- * int	n_sub( p1, p2, p3, l, lo )
- *		rsa_INT p1[l], p2[lo], p3[];
- *			p3 = p1 - p2;
- *			return( sizeof(p3) ); d.h. '<= min(l,lo)'
+ * int   n_sub( p1, p2, p3, l, lo )
+ *      rsa_INT p1[l], p2[lo], p3[];
+ *         p3 = p1 - p2;
+ *         return( sizeof(p3) ); d.h. '<= min(l,lo)'
  *
- * int	n_bitlen( n )
- * 		rsa_NUMBER *n;
- *			return( sizeof(n) in bits )
+ * int   n_bitlen( n )
+ *       rsa_NUMBER *n;
+ *         return( sizeof(n) in bits )
  *
  */
 
@@ -217,7 +217,7 @@ rsa_NUMBER a_two = {
  */
 int n_cmp(rsa_INT *i1, rsa_INT *i2, int l)
 {
-   i1 += (l-1);			/* Pointer ans Ende		*/
+   i1 += (l-1);         /* Pointer ans Ende      */
    i2 += (l-1);
 
    for (;l--;)
@@ -237,7 +237,7 @@ int a_cmp(rsa_NUMBER *c1, rsa_NUMBER *c2)
    if ( (l=c1->n_len) != c2->n_len)
       return( l - c2->n_len);
 
-   /* vergleiche als arrays	*/
+   /* vergleiche als arrays   */
    return( n_cmp( c1->n_part, c2->n_part, l) );
 }
 
@@ -248,7 +248,7 @@ void a_assign(rsa_NUMBER *d, rsa_NUMBER *s)
 {
    int l;
 
-   if (s == d)			/* nichts zu kopieren		*/
+   if (s == d)         /* nichts zu kopieren      */
       return;
 
    if ((l=s->n_len))
@@ -267,7 +267,7 @@ void a_add(rsa_NUMBER *s1, rsa_NUMBER *s2, rsa_NUMBER *d)
    rsa_INT *p1,*p2,*p3;
    rsa_INT b;
 
-   /* setze s1 auch die groessere Zahl	*/
+   /* setze s1 auch die groessere Zahl   */
    l = s1->n_len;
    if ( (l=s1->n_len) < s2->n_len) {
       rsa_NUMBER *tmp = s1;
@@ -287,32 +287,32 @@ void a_add(rsa_NUMBER *s1, rsa_NUMBER *s2, rsa_NUMBER *d)
    sum = 0;
 
    while (l --) {
-      if (lo) {		/* es ist noch was von s2 da	*/
+      if (lo) {      /* es ist noch was von s2 da   */
          lo--;
          b = *p2++;
       }
       else
-         b = 0;		/* ansonten 0 nehmen		*/
+         b = 0;      /* ansonten 0 nehmen      */
 
       sum += (rsa_LONG)*p1++ + (rsa_LONG)b;
       *p3++ = rsa_TOINT(sum);
 
-      if (sum > (rsa_LONG)rsa_MAXINT) {	/* carry merken		*/
+      if (sum > (rsa_LONG)rsa_MAXINT) {   /* carry merken      */
          sum = 1;
       }
       else
          sum = 0;
 
-      if (!lo && same && !sum)	/* nichts mehr zu tuen	*/
+      if (!lo && same && !sum)   /* nichts mehr zu tuen   */
          break;
    }
 
-   if (sum) {		/* letztes carry beruecksichtigen	*/
+   if (sum) {      /* letztes carry beruecksichtigen   */
       ld++;
       *p3 = sum;
    }
 
-   d->n_len = ld;			/* Laenge setzen		*/
+   d->n_len = ld;         /* Laenge setzen      */
 }
 
 /*
@@ -327,20 +327,20 @@ int n_sub(rsa_INT *p1, rsa_INT *p2, rsa_INT *p3, int l, int lo)
    rsa_LONG dif;
    rsa_LONG a,b;
 
-   same = (p1 == p3);			/* frueher Abbruch moeglich */
+   same = (p1 == p3);         /* frueher Abbruch moeglich */
 
    for (lc=1, ld=0; l--; lc++) {
       a = (rsa_LONG)*p1++;
-      if (lo) {			/* ist noch was von p2 da ? */
+      if (lo) {         /* ist noch was von p2 da ? */
          lo--;
          b = (rsa_LONG)*p2++;
       }
       else
-         b=0;			/* ansonten 0 nehmen	*/
+         b=0;         /* ansonten 0 nehmen   */
 
-      if (over)			/* frueherer Overflow	*/
+      if (over)         /* frueherer Overflow   */
          b++;
-      if ( b > a) {			/* jetzt Overflow ?	*/
+      if ( b > a) {         /* jetzt Overflow ?   */
          over = 1;
          dif = (rsa_MAXINT +1) + a;
       }
@@ -351,10 +351,10 @@ int n_sub(rsa_INT *p1, rsa_INT *p2, rsa_INT *p3, int l, int lo)
       dif -= b;
       *p3++ = (rsa_INT)dif;
 
-      if (dif)			/* Teil != 0 : Laenge neu */
+      if (dif)         /* Teil != 0 : Laenge neu */
          ld = lc;
-      if (!lo && same && !over) {	/* nichts mehr zu tuen	*/
-         if (l > 0)		/* Laenge korrigieren	*/
+      if (!lo && same && !over) {   /* nichts mehr zu tuen   */
+         if (l > 0)      /* Laenge korrigieren   */
             ld = lc + l;
          break;
       }
@@ -387,7 +387,7 @@ int n_mult(rsa_INT *n, rsa_INT m, rsa_INT *d, int l)
       mul  = rsa_DIVMAX1( mul );
    }
 
-   if (mul) {		/* carry  ? */
+   if (mul) {      /* carry  ? */
       l++;
       *d = mul;
    }
@@ -413,10 +413,10 @@ void a_imult(rsa_NUMBER *n, rsa_INT m, rsa_NUMBER *d)
  */
 void a_mult(rsa_NUMBER *m1, rsa_NUMBER *m2, rsa_NUMBER *d)
 {
-   static rsa_INT id[ rsa_MAXLEN ];		/* Zwischenspeicher	*/
-   rsa_INT *vp;					/* Pointer darin	*/
-   rsa_LONG sum;				/* Summe fuer jede Stelle */
-   rsa_LONG tp1;				/* Zwischenspeicher fuer m1 */
+   static rsa_INT id[ rsa_MAXLEN ];      /* Zwischenspeicher   */
+   rsa_INT *vp;               /* Pointer darin   */
+   rsa_LONG sum;            /* Summe fuer jede Stelle */
+   rsa_LONG tp1;            /* Zwischenspeicher fuer m1 */
    rsa_INT *p2;
    rsa_INT *p1;
    int l1,l2,ld,lc,l,i,j;
@@ -444,7 +444,7 @@ void a_mult(rsa_NUMBER *m1, rsa_NUMBER *m2, rsa_NUMBER *d)
       *vp++ += (rsa_INT)sum;
    }
 
-   /* jetzt alle Uebertraege beruecksichtigen	*/
+   /* jetzt alle Uebertraege beruecksichtigen   */
    ld = 0;
    for (lc=0, vp=id, p1=d->n_part; lc++ < l;) {
       if ( (*p1++ = *vp++))
@@ -463,8 +463,8 @@ void a_mult(rsa_NUMBER *m1, rsa_NUMBER *m2, rsa_NUMBER *d)
  */
 void n_div(rsa_NUMBER *d1, rsa_NUMBER *z2, rsa_NUMBER *q, rsa_NUMBER *r)
 {
-   static	rsa_NUMBER dummy_rest;  /* Dummy Variable, falls r = 0 */
-   static	rsa_NUMBER dummy_quot;  /* Dummy Variable, falla q = 0 */
+   static   rsa_NUMBER dummy_rest;  /* Dummy Variable, falls r = 0 */
+   static   rsa_NUMBER dummy_quot;  /* Dummy Variable, falla q = 0 */
    rsa_INT *i1,*i1e,*i3;
    int l2,ld,l,lq;
 #if rsa_MAXINT != 1
@@ -480,16 +480,16 @@ void n_div(rsa_NUMBER *d1, rsa_NUMBER *z2, rsa_NUMBER *q, rsa_NUMBER *r)
    if (!q)
       q = &dummy_quot;
 
-   a_assign( r, d1 );	/* Kopie von d1 in den Rest		*/
+   a_assign( r, d1 );   /* Kopie von d1 in den Rest      */
 
-   l2= z2->n_len;		/* Laenge von z2[0]			*/
-   l = r->n_len - l2;	/* Laenge des noch ''rechts'' liegenden
-                           Stuecks von d1			*/
-   lq= l +1;		/* Laenge des Quotienten		*/
+   l2= z2->n_len;      /* Laenge von z2[0]         */
+   l = r->n_len - l2;   /* Laenge des noch ''rechts'' liegenden
+                           Stuecks von d1         */
+   lq= l +1;      /* Laenge des Quotienten      */
    i3= q->n_part + l;
    i1= r->n_part + l;
-   ld = l2;		/* aktuelle Laenge des ''Vergleichsstuecks''
-                           von d1				*/
+   ld = l2;      /* aktuelle Laenge des ''Vergleichsstuecks''
+                           von d1            */
    i1e= i1 + (ld-1);
 
    for (; l >= 0; ld++, i1--, i1e--, l--, i3--) {
@@ -502,7 +502,7 @@ void n_div(rsa_NUMBER *d1, rsa_NUMBER *z2, rsa_NUMBER *q, rsa_NUMBER *r)
 
       if ( ld > l2 || (ld == l2 && n_cmp( i1, z2->n_part, l2) >= 0) ) {
 #if rsa_MAXINT != 1
-         /* nach 2er-Potenzen zerlegen	*/
+         /* nach 2er-Potenzen zerlegen   */
          for (pw=rsa_MAXBIT-1, z=(rsa_INT)rsa_HIGHBIT; pw >= 0; pw--, z /= 2) {
             if ( ld > (l2t= z2[pw].n_len)
                  || (ld == l2t
@@ -512,7 +512,7 @@ void n_div(rsa_NUMBER *d1, rsa_NUMBER *z2, rsa_NUMBER *q, rsa_NUMBER *r)
             }
          }
 #else
-         /* bei rsa_MAXINT == 1 alles viel einfacher	*/
+         /* bei rsa_MAXINT == 1 alles viel einfacher   */
          ld = n_sub( i1, z2->n_part, i1, ld, l2 );
          (*i3) ++;
 #endif
@@ -524,7 +524,7 @@ void n_div(rsa_NUMBER *d1, rsa_NUMBER *z2, rsa_NUMBER *q, rsa_NUMBER *r)
    lq -= l;
    ld += l;
 
-   if (lq>0 && !q->n_part[lq -1])	/* evtl. Laenge korrigieren	*/
+   if (lq>0 && !q->n_part[lq -1])   /* evtl. Laenge korrigieren   */
       lq--;
 
    q->n_len = lq;
@@ -605,7 +605,7 @@ void a_div2(rsa_NUMBER *n)
 
 
 /*
- *	MODULO-FUNKTIONEN
+ *   MODULO-FUNKTIONEN
  */
 
 static rsa_NUMBER g_mod_z2[ rsa_MAXBIT ];
@@ -676,7 +676,7 @@ void a_ggt(rsa_NUMBER *a, rsa_NUMBER *b, rsa_NUMBER *f)
    if ( a_cmp( &t[at], &t[bt]) < 0) {
       tmp= at; at= bt; bt= tmp;
    }
-   /* euklidischer Algorithmus		*/
+   /* euklidischer Algorithmus      */
    while ( t[bt].n_len) {
       a_div( &t[at], &t[bt], rsa_NUM0P, &t[at] );
       tmp= at; at= bt; bt= tmp;
@@ -733,63 +733,63 @@ int n_bitlen(rsa_NUMBER *n)
 
 
 /*******************************************************************************
- *									       *
+ *                                  *
  * prim.c                                                                       *
  *                                                                              *
  ********************************************************************************/
 
 /*
- *		RSA
+ *      RSA
  *
- *	p,q prim
- *	p != q
- *	n = p*q
- *	phi = (p -1)*(q -1)
- *	e,d aus 0...n-1
- *	e*d == 1 mod phi
+ *   p,q prim
+ *   p != q
+ *   n = p*q
+ *   phi = (p -1)*(q -1)
+ *   e,d aus 0...n-1
+ *   e*d == 1 mod phi
  *
- *	m aus 0...n-1 sei eine Nachricht
+ *   m aus 0...n-1 sei eine Nachricht
  *
- *	Verschluesseln:
- *		E(x) = x^e mod n		( n,e oeffendlich )
+ *   Verschluesseln:
+ *      E(x) = x^e mod n      ( n,e oeffendlich )
  *
- *	Entschluesseln:
- *		D(x) = x^d mod n		( d geheim )
+ *   Entschluesseln:
+ *      D(x) = x^d mod n      ( d geheim )
  *
  *
- *	Sicherheit:
+ *   Sicherheit:
  *
- *		p,q sollten bei mind. 10^100 liegen.
- *		(d,phi) == 1, das gilt fuer alle Primzahlen > max(p,q).
- *		Allerdings sollte d moeglichst gross sein ( d < phi-1 )
- *		um direktes Suchen zu verhindern.
+ *      p,q sollten bei mind. 10^100 liegen.
+ *      (d,phi) == 1, das gilt fuer alle Primzahlen > max(p,q).
+ *      Allerdings sollte d moeglichst gross sein ( d < phi-1 )
+ *      um direktes Suchen zu verhindern.
  */
 
 
 /*
- *		FUNKTIONEN um RSA Schluessel zu generieren.
+ *      FUNKTIONEN um RSA Schluessel zu generieren.
  *
- * int	p_prim( n, m )
- *		rsa_NUMBER *n;
- *		int m;
- *			0 : n ist nicht prim
- *			1 : n ist mit Wahrscheinlichkeit (1-1/2^m) prim
- *		ACHTUNG !!!!
- *		p_prim benutzt m_init
+ * int   p_prim( n, m )
+ *      rsa_NUMBER *n;
+ *      int m;
+ *         0 : n ist nicht prim
+ *         1 : n ist mit Wahrscheinlichkeit (1-1/2^m) prim
+ *      ACHTUNG !!!!
+ *      p_prim benutzt m_init
  *
- *	inv( d, phi, e )
- *		rsa_NUMBER *d,*phi,*e;
- *			*e = *d^-1 (mod phi)
- *		ACHTUNG !!!!
- *		p_prim benutzt m_init
+ *   inv( d, phi, e )
+ *      rsa_NUMBER *d,*phi,*e;
+ *         *e = *d^-1 (mod phi)
+ *      ACHTUNG !!!!
+ *      p_prim benutzt m_init
  */
 
 /*
  * Prototypes
  */
-static int	jak_f( rsa_NUMBER* );
-static int	jak_g( rsa_NUMBER*, rsa_NUMBER* );
-static int	jakobi( rsa_NUMBER*, rsa_NUMBER* );
+static int   jak_f( rsa_NUMBER* );
+static int   jak_g( rsa_NUMBER*, rsa_NUMBER* );
+static int   jakobi( rsa_NUMBER*, rsa_NUMBER* );
 
 /*
  * Hilfs-Funktion fuer jakobi
@@ -836,10 +836,10 @@ static int jakobi(rsa_NUMBER *a, rsa_NUMBER *n)
     * b > 1
     *
     * J( a, b) =
-    * a == 1	:	1
-    * a == 2	:	f(n)
-    * a == 2*b	:	J(b,n)*J(2,n) ( == J(b,n)*f(n) )
-    * a == 2*b -1	:	J(n % a,a)*g(a,n)
+    * a == 1   :   1
+    * a == 2   :   f(n)
+    * a == 2*b   :   J(b,n)*J(2,n) ( == J(b,n)*f(n) )
+    * a == 2*b -1   :   J(n % a,a)*g(a,n)
     *
     */
 
@@ -852,16 +852,16 @@ static int jakobi(rsa_NUMBER *a, rsa_NUMBER *n)
          ret *= jak_f( &t[nt] );
          break;
       }
-      if ( ! t[at].n_len )		/* Fehler :-)	*/
+      if ( ! t[at].n_len )      /* Fehler :-)   */
          abort();
-      if ( t[at].n_part[0] & 1) {	/* a == 2*b -1	*/
+      if ( t[at].n_part[0] & 1) {   /* a == 2*b -1   */
          int tmp;
 
          ret *= jak_g( &t[at], &t[nt] );
          a_div( &t[nt], &t[at], rsa_NUM0P, &t[nt] );
          tmp = at; at = nt; nt = tmp;
       }
-      else {				/* a == 2*b	*/
+      else {            /* a == 2*b   */
          ret *= jak_f( &t[nt] );
          a_div2( &t[at] );
       }
@@ -877,8 +877,8 @@ static int jakobi(rsa_NUMBER *a, rsa_NUMBER *n)
  *  0 -> n nicht prim
  *  1 -> n prim mit  (1-1/2^m) Wahrscheinlichkeit.
  *
- *	ACHTUNG !!!!!!
- *	p_prim benutzt m_init !!
+ *   ACHTUNG !!!!!!
+ *   p_prim benutzt m_init !!
  *
  */
 int p_prim(rsa_NUMBER *n, int m)
@@ -890,15 +890,15 @@ int p_prim(rsa_NUMBER *n, int m)
    if (a_cmp(n,&a_two) <= 0 || m <= 0)
       abort();
 
-   a_sub( n, &a_one, &n1 );	/* n1 = -1    mod n		*/
+   a_sub( n, &a_one, &n1 );   /* n1 = -1    mod n      */
    a_assign( &n2, &n1 );
-   a_div2( &n2 );			/* n2 = ( n -1) / 2		*/
+   a_div2( &n2 );         /* n2 = ( n -1) / 2      */
 
    m_init( n, rsa_NUM0P );
 
    w = 1;
    for (; w && m; m--) {
-      /* ziehe zufaellig a aus 2..n-1		*/
+      /* ziehe zufaellig a aus 2..n-1      */
       do {
          for (i=n->n_len-1, p=a.n_part; i; i--)
             *p++ = (rsa_INT)aux_rand();
@@ -909,13 +909,13 @@ int p_prim(rsa_NUMBER *n, int m)
          a.n_len = i;
       } while ( a_cmp( &a, n) >= 0 || a_cmp( &a, &a_two) < 0 );
 
-      /* jetzt ist a fertig			*/
+      /* jetzt ist a fertig         */
 
       /*
        * n ist nicht prim wenn gilt:
-       *	(a,n) != 1
+       *   (a,n) != 1
        * oder
-       *	a^( (n-1)/2) != J(a,n)   mod n
+       *   a^( (n-1)/2) != J(a,n)   mod n
        *
        */
 
@@ -940,11 +940,11 @@ int p_prim(rsa_NUMBER *n, int m)
 
 /*
  * Berechne mulitiplikatives Inverses zu d (mod phi)
- *	d relativ prim zu phi ( d < phi )
- *	d.h. (d,phi) == 1
+ *   d relativ prim zu phi ( d < phi )
+ *   d.h. (d,phi) == 1
  *
- *	ACHTUNG !!!!
- *	inv benutzt m_init
+ *   ACHTUNG !!!!
+ *   inv benutzt m_init
  */
 void inv(rsa_NUMBER *d, rsa_NUMBER *phi, rsa_NUMBER *e)
 {
@@ -953,7 +953,7 @@ void inv(rsa_NUMBER *d, rsa_NUMBER *phi, rsa_NUMBER *e)
 
    /*
     * Berlekamp-Algorithmus
-    *	( fuer diesen Spezialfall vereinfacht )
+    *   ( fuer diesen Spezialfall vereinfacht )
     */
 
    if (a_cmp(phi,d) <= 0)
@@ -975,10 +975,10 @@ void inv(rsa_NUMBER *d, rsa_NUMBER *phi, rsa_NUMBER *e)
       m_add( &p[i0], &p[i2], &p[i0] );
    } while (r[i0].n_len);
 
-   if ( a_cmp( &r[i1], &a_one) )	/* r[i1] == (d,phi) muss 1 sein	*/
+   if ( a_cmp( &r[i1], &a_one) )   /* r[i1] == (d,phi) muss 1 sein   */
       abort();
 
-   if ( k & 1 )	/* falsches ''Vorzeichen''	*/
+   if ( k & 1 )   /* falsches ''Vorzeichen''   */
       a_sub( phi, &p[i1], e );
    else
       a_assign( e, &p[i1] );
@@ -986,7 +986,7 @@ void inv(rsa_NUMBER *d, rsa_NUMBER *phi, rsa_NUMBER *e)
 
 
 /*******************************************************************************
- *									       *
+ *                                  *
  * rnd.c                                                                       *
  *                                                                              *
  ********************************************************************************/
@@ -1030,7 +1030,7 @@ void init_rnd()
 
 
 /*******************************************************************************
- *									       *
+ *                                  *
  * aux.c                                                                       *
  *                                                                              *
  ********************************************************************************/

@@ -384,7 +384,7 @@ void GSLMCIntegrator::SetParameters(const MiserParameters &p)
       MATH_ERROR_MSG("GSLIntegrator::SetParameters"," Parameters not matching integration type");
 }
 
-	
+
 void GSLMCIntegrator::DoInitialize ( )
 {
    //    initialize by setting  integration type 

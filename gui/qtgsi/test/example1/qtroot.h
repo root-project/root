@@ -41,127 +41,127 @@ class QResizeEvent;
 class QPaintEvent;
 
 /**
-* 
-*           Main Qt&Root Application Window:
-*
-*           Simple Example how to use a QMainWindow class 
-*           embedding a ROOT Canvas attached as its Central Widget.      
-*
-*
-* @short Simple example using 
-*        QMainWindow together with an QRootCanvas  
-*        
-*  
-* Services:
-* Simple example  
-* @li Creates a Menu for file actions (save, browse, close, ect...)  
-* @li Creates a Toolbar with actions managed by QAction class
-* @li Creates a QRootCanvas and stick it  as central Widget in QMainWindows
-* @li Actions ( execute(), clear()) are defined as slots managed by this
-*              QMainApplication. This slots functions acts on the ROOT Objects
-*               directly ( histograms, ntuples, ect...)
-*
-* @see QRootCanvas, QMainWindow, QPopupMenu, QAction, QString
-*
-* @authors Denis Bertini <d.bertini@gsi.de> 
-* @version 2.0
-*
-*/
+ *
+ *           Main Qt&Root Application Window:
+ *
+ *           Simple Example how to use a QMainWindow class
+ *           embedding a ROOT Canvas attached as its Central Widget.
+ *
+ *
+ * @short Simple example using
+ *        QMainWindow together with an QRootCanvas
+ *
+ *
+ * Services:
+ * Simple example
+ * @li Creates a Menu for file actions (save, browse, close, ect...)
+ * @li Creates a Toolbar with actions managed by QAction class
+ * @li Creates a QRootCanvas and stick it  as central Widget in QMainWindows
+ * @li Actions ( execute(), clear()) are defined as slots managed by this
+ *              QMainApplication. This slots functions acts on the ROOT Objects
+ *               directly ( histograms, ntuples, ect...)
+ *
+ * @see QRootCanvas, QMainWindow, QPopupMenu, QAction, QString
+ *
+ * @authors Denis Bertini <d.bertini@gsi.de>
+ * @version 2.0
+ *
+ */
 
 
 class ApplicationWindow: public Q3MainWindow
 {
-    Q_OBJECT
+   Q_OBJECT
 public:
-    ApplicationWindow();
-    ~ApplicationWindow();
+   ApplicationWindow();
+   ~ApplicationWindow();
 
 protected:
-    void closeEvent( QCloseEvent* ce);
-    
-protected slots:
-      void myclose(){
-	   close(); 
-      }
+   void closeEvent( QCloseEvent* ce);
+
+   protected slots:
+   void myclose(){
+      close();
+   }
    /**
-      New incoming functionality documentation
-    */   
-    void newDoc();
+    New incoming functionality documentation
+    */
+   void newDoc();
    /**
-     IO  Loading:
-             @li ascii data files (Qt or ROOT streamers)
-             @li Root binary files(ROOT streamer)
-             @ etc...
-   */  
- 
-    void load();
+    IO  Loading:
+    @li ascii data files (Qt or ROOT streamers)
+    @li Root binary files(ROOT streamer)
+    @ etc...
+    */
+
+   void load();
    /**
-     IO  Loading function:
+    IO  Loading function:
 
-             @li ascii data files (Qt or ROOT streamers)
-             @li Root binary files(ROOT streamer)
-             @ etc...
-   */  
-    void load( const char *fileName );
+    @li ascii data files (Qt or ROOT streamers)
+    @li Root binary files(ROOT streamer)
+    @ etc...
+    */
+   void load( const char *fileName );
    /**
-      Saving results function:
+    Saving results function:
 
-             @li ascii data files
-             @li histograms, ntuples, Objects using
-                           @li ROOT based IO (Root format)
-                           @li Qt Based  IO (Qt format)?
+    @li ascii data files
+    @li histograms, ntuples, Objects using
+    @li ROOT based IO (Root format)
+    @li Qt Based  IO (Qt format)?
 
-             @ etc...
-   */ 
+    @ etc...
+    */
 
-    void save();
+   void save();
    /**
-       saving pictures, in different supported formats
-   */ 
-    void saveAs();
-    /**
-       print results in a specified format
-    */ 
-    void print();
-    /**
-       online help about Qt&Root Main Application
-    */ 
-    void about();
-    /**
-       online help about this Qt based Application
-    */ 
-    void aboutQt();
-    /**
-      Main slot action upon ROOT classes
-             @li histograms
-             @li ntuples
-    */   
-    void execute();
+    saving pictures, in different supported formats
+    */
+   void saveAs();
+   /**
+    print results in a specified format
+    */
+   void print();
+   /**
+    online help about Qt&Root Main Application
+    */
+   void about();
+   /**
+    online help about this Qt based Application
+    */
+   void aboutQt();
+   /**
+    Main slot action upon ROOT classes
+    @li histograms
+    @li ntuples
+    */
+   void execute();
 
-     /**
-      Main slot to reinitialize the objects
-            @li histograms
-            @li ntuples
-     */ 
+   /**
+    Main slot to reinitialize the objects
+    @li histograms
+    @li ntuples
+    */
 
-    void clear_histo(); 
-    void closeQtRoot(){
+   void clear_histo();
+   void closeQtRoot(){
       qDebug("QtRoot:  closing qt wins \n");
-      close(); 
+      close();
       qDebug("QtRoot:  exiting root \n");
-      gSystem->Exit(0); 
-    }
+      gSystem->Exit(0);
+   }
 
 private:
-    QString filename;
-    QPrinter *printer;
-    TQRootCanvas *aCanvas,*aCanvas2;     
-    TH1F* histo; 
-    TF1 *sqroot; 
-    TFormula *form1; 
-    TPad* pad1,*pad2; 
-    QTabWidget* tab;
-    QWidget* central;
+   QString filename;
+   QPrinter *printer;
+   TQRootCanvas *aCanvas,*aCanvas2;
+   TH1F* histo;
+   TF1 *sqroot;
+   TFormula *form1;
+   TPad* pad1,*pad2;
+   QTabWidget* tab;
+   QWidget* central;
 };
 
 #endif

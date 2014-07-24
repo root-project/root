@@ -33,11 +33,11 @@ public:
   {}
 
   ~FumiliGradientCalculator() {}
-	       
+
   FunctionGradient operator()(const MinimumParameters&) const;
 
   FunctionGradient operator()(const MinimumParameters&,
-				      const FunctionGradient&) const;
+                              const FunctionGradient&) const;
 
   const MnUserTransformation& Trafo() const {return fTransformation;} 
 

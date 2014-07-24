@@ -107,7 +107,7 @@ public :
    /**
       get internal data into 3 Scalar numbers
    */ 
-   void GetCoordinates(Scalar& r, Scalar& theta, Scalar& phi) const {r=fR; theta=fTheta; phi=fPhi;}  				
+   void GetCoordinates(Scalar& r, Scalar& theta, Scalar& phi) const {r=fR; theta=fTheta; phi=fPhi;}
 
    
    Scalar R()     const { return fR;}

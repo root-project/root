@@ -73,8 +73,8 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   if (!dryRun) {
     if (TString(refFile).Contains("http:")) {
       if (writeRef) {
-	cout << "stressRooFit ERROR: reference file must be local file in writing mode" << endl ;
-	return 1;
+         cout << "stressRooFit ERROR: reference file must be local file in writing mode" << endl ;
+         return 1;
       }
       fref = new TWebFile(refFile) ;
     } else {
@@ -176,7 +176,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   for (list<RooUnitTest*>::iterator iter = testList.begin () ; iter != testList.end() ; ++iter) {
     if (oneTest<0 || oneTest==i) {
       if (doDump) {
-	(*iter)->setDebug(kTRUE) ;
+         (*iter)->setDebug(kTRUE) ;
       }
       Int_t status = (*iter)->isTestAvailable()?(*iter)->runTest():-1;
       StatusPrint( i,(*iter)->GetName(), status);

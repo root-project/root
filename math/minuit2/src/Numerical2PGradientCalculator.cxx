@@ -157,9 +157,9 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
          //       std::cout<<" "<<step<<std::endl;
          //       std::cout<<"step: "<<step<<std::endl;
          if(fabs((step-stepb4)/step) < StepTolerance()) {
-            //  	std::cout<<"(step-stepb4)/step"<<std::endl;
-            //  	std::cout<<"j= "<<j<<std::endl;
-            //  	std::cout<<"step= "<<step<<std::endl;
+            //    std::cout<<"(step-stepb4)/step"<<std::endl;
+            //    std::cout<<"j= "<<j<<std::endl;
+            //    std::cout<<"step= "<<step<<std::endl;
             break;
          }
          gstep(i) = step;
@@ -180,10 +180,10 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
          g2(i) = (fs1 + fs2 - 2.*fcnmin)/step/step;
          
          if(fabs(grdb4-grd(i))/(fabs(grd(i))+dfmin/step) < GradTolerance())  {
-            //  	std::cout<<"j= "<<j<<std::endl;
-            //  	std::cout<<"step= "<<step<<std::endl;
-            //  	std::cout<<"fs1, fs2: "<<fs1<<" "<<fs2<<std::endl;
-            //  	std::cout<<"fs1-fs2: "<<fs1-fs2<<std::endl;
+            //    std::cout<<"j= "<<j<<std::endl;
+            //    std::cout<<"step= "<<step<<std::endl;
+            //    std::cout<<"fs1, fs2: "<<fs1<<" "<<fs2<<std::endl;
+            //    std::cout<<"fs1-fs2: "<<fs1-fs2<<std::endl;
             break;
          }
       }

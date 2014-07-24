@@ -187,7 +187,7 @@ int QSymbolCodec::heuristicContentMatch(const char* chars, int len) const
    int score = 0;
    for (int i=0; i<len; i++) {
       if( c[i] > 64 && c[i] < 255 ) 
-         //	    if ( symbol_to_unicode[c[i] - 0x80] != 0xFFFD)
+         //     if ( symbol_to_unicode[c[i] - 0x80] != 0xFFFD)
          score++;
       else
          return -1;

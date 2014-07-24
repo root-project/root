@@ -11,17 +11,17 @@
  *
  * @author Manuel Schiller
  * @date Aug 29 2008
- * 	initial release inside LHCb
+ *    initial release inside LHCb
  * @date May 7 2009
- *	factored code to provide a nice Cholesky decomposition class, along
- *	with separate methods for solving a single linear system and to
- *	obtain the inverse matrix from the decomposition
+ * factored code to provide a nice Cholesky decomposition class, along
+ * with separate methods for solving a single linear system and to
+ * obtain the inverse matrix from the decomposition
  * @date July 15th 2013
- * 	provide a version of that class which works if the dimension of the
- * 	problem is only known at run time
+ *    provide a version of that class which works if the dimension of the
+ *    problem is only known at run time
  * @date September 30th 2013
- * 	provide routines to access the result of the decomposition L and its
- * 	inverse
+ *    provide routines to access the result of the decomposition L and its
+ *    inverse
  */
 
 #include <cmath>
@@ -180,21 +180,21 @@ public:
     */
    template<class M> bool getL(M& m) const
    {
-       if (!fOk) return false;
-       for (unsigned i = 0; i < N; ++i) {
-	   // zero upper half of matrix
-	   for (unsigned j = i + 1; j < N; ++j)
-	       m(i, j) = F(0);
-	   // copy the rest
-	   for (unsigned j = 0; j <= i; ++j)
-	       m(i, j) = fL[i * (i + 1) / 2 + j];
-	   // adjust the diagonal - we save 1/L(i, i) in that position, so
-	   // convert to what caller expects
-	   m(i, i) = F(1) / m(i, i);
-       }
-       return true;
+      if (!fOk) return false;
+      for (unsigned i = 0; i < N; ++i) {
+         // zero upper half of matrix
+         for (unsigned j = i + 1; j < N; ++j)
+         m(i, j) = F(0);
+         // copy the rest
+         for (unsigned j = 0; j <= i; ++j)
+         m(i, j) = fL[i * (i + 1) / 2 + j];
+         // adjust the diagonal - we save 1/L(i, i) in that position, so
+         // convert to what caller expects
+         m(i, i) = F(1) / m(i, i);
+      }
+      return true;
    }
-
+   
    /** @brief obtain the decomposed matrix L
     *
     * @returns if the decomposition was successful
@@ -205,15 +205,15 @@ public:
     */
    template<typename G> bool getL(G* m) const
    {
-       if (!fOk) return false;
-       // copy L
-       for (unsigned i = 0; i < (N * (N + 1)) / 2; ++i)
-	   m[i] = fL[i];
-       // adjust diagonal - we save 1/L(i, i) in that position, so convert to
-       // what caller expects
-       for (unsigned i = 0; i < N; ++i)
-	   m[(i * (i + 1)) / 2 + i] = F(1) / fL[(i * (i + 1)) / 2 + i];
-       return true;
+      if (!fOk) return false;
+      // copy L
+      for (unsigned i = 0; i < (N * (N + 1)) / 2; ++i)
+         m[i] = fL[i];
+      // adjust diagonal - we save 1/L(i, i) in that position, so convert to
+      // what caller expects
+      for (unsigned i = 0; i < N; ++i)
+         m[(i * (i + 1)) / 2 + i] = F(1) / fL[(i * (i + 1)) / 2 + i];
+      return true;
    }
 
    /** @brief obtain the inverse of the decomposed matrix L
@@ -224,25 +224,25 @@ public:
     */
    template<class M> bool getLi(M& m) const
    {
-       if (!fOk) return false;
-       for (unsigned i = 0; i < N; ++i) {
-	   // zero lower half of matrix
-	   for (unsigned j = i + 1; j < N; ++j)
-	       m(j, i) = F(0);
-	   // copy the rest
-	   for (unsigned j = 0; j <= i; ++j)
-	       m(j, i) = fL[i * (i + 1) / 2 + j];
-       }
-       // invert the off-diagonal part of what we just copied
-       for (unsigned i = 1; i < N; ++i) {
-	   for (unsigned j = 0; j < i; ++j) {
-	       typename M::value_type tmp = F(0);
-	       for (unsigned k = i; k-- > j;)
-		   tmp -= m(k, i) * m(j, k);
-	       m(j, i) = tmp * m(i, i);
-	   }
-       }
-       return true;
+      if (!fOk) return false;
+      for (unsigned i = 0; i < N; ++i) {
+         // zero lower half of matrix
+         for (unsigned j = i + 1; j < N; ++j)
+            m(j, i) = F(0);
+         // copy the rest
+         for (unsigned j = 0; j <= i; ++j)
+         m(j, i) = fL[i * (i + 1) / 2 + j];
+      }
+      // invert the off-diagonal part of what we just copied
+      for (unsigned i = 1; i < N; ++i) {
+         for (unsigned j = 0; j < i; ++j) {
+            typename M::value_type tmp = F(0);
+            for (unsigned k = i; k-- > j;)
+               tmp -= m(k, i) * m(j, k);
+            m(j, i) = tmp * m(i, i);
+         }
+      }
+      return true;
    }
 
    /** @brief obtain the inverse of the decomposed matrix L
@@ -255,22 +255,22 @@ public:
     */
    template<typename G> bool getLi(G* m) const
    {
-       if (!fOk) return false;
-       // copy L
-       for (unsigned i = 0; i < (N * (N + 1)) / 2; ++i)
-	   m[i] = fL[i];
-       // invert the off-diagonal part of what we just copied
-       G* base1 = &m[1];
-       for (unsigned i = 1; i < N; base1 += ++i) {
-	   for (unsigned j = 0; j < i; ++j) {
-	       G tmp = F(0);
-	       const G *base2 = &m[(i * (i - 1)) / 2];
-	       for (unsigned k = i; k-- > j; base2 -= k)
-		   tmp -= base1[k] * base2[j];
-	       base1[j] = tmp * base1[i];
-	   }
-       }
-       return true;
+      if (!fOk) return false;
+      // copy L
+      for (unsigned i = 0; i < (N * (N + 1)) / 2; ++i)
+         m[i] = fL[i];
+      // invert the off-diagonal part of what we just copied
+      G* base1 = &m[1];
+      for (unsigned i = 1; i < N; base1 += ++i) {
+         for (unsigned j = 0; j < i; ++j) {
+            G tmp = F(0);
+            const G *base2 = &m[(i * (i - 1)) / 2];
+            for (unsigned k = i; k-- > j; base2 -= k)
+            tmp -= base1[k] * base2[j];
+            base1[j] = tmp * base1[i];
+         }
+      }
+      return true;
    }
 };
 
@@ -418,19 +418,19 @@ public:
     */
    template<class M> bool getL(M& m) const
    {
-       if (!fOk) return false;
-       for (unsigned i = 0; i < fN; ++i) {
-	   // zero upper half of matrix
-	   for (unsigned j = i + 1; j < fN; ++j)
-	       m(i, j) = F(0);
-	   // copy the rest
-	   for (unsigned j = 0; j <= i; ++j)
-	       m(i, j) = fL[i * (i + 1) / 2 + j];
-	   // adjust the diagonal - we save 1/L(i, i) in that position, so
-	   // convert to what caller expects
-	   m(i, i) = F(1) / m(i, i);
-       }
-       return true;
+      if (!fOk) return false;
+      for (unsigned i = 0; i < fN; ++i) {
+         // zero upper half of matrix
+         for (unsigned j = i + 1; j < fN; ++j)
+            m(i, j) = F(0);
+         // copy the rest
+         for (unsigned j = 0; j <= i; ++j)
+            m(i, j) = fL[i * (i + 1) / 2 + j];
+         // adjust the diagonal - we save 1/L(i, i) in that position, so
+         // convert to what caller expects
+         m(i, i) = F(1) / m(i, i);
+      }
+      return true;
    }
 
    /** @brief obtain the decomposed matrix L
@@ -446,11 +446,11 @@ public:
        if (!fOk) return false;
        // copy L
        for (unsigned i = 0; i < (fN * (fN + 1)) / 2; ++i)
-	   m[i] = fL[i];
+          m[i] = fL[i];
        // adjust diagonal - we save 1/L(i, i) in that position, so convert to
        // what caller expects
        for (unsigned i = 0; i < fN; ++i)
-	   m[(i * (i + 1)) / 2 + i] = F(1) / fL[(i * (i + 1)) / 2 + i];
+          m[(i * (i + 1)) / 2 + i] = F(1) / fL[(i * (i + 1)) / 2 + i];
        return true;
    }
 
@@ -462,25 +462,25 @@ public:
     */
    template<class M> bool getLi(M& m) const
    {
-       if (!fOk) return false;
-       for (unsigned i = 0; i < fN; ++i) {
-	   // zero lower half of matrix
-	   for (unsigned j = i + 1; j < fN; ++j)
-	       m(j, i) = F(0);
-	   // copy the rest
-	   for (unsigned j = 0; j <= i; ++j)
-	       m(j, i) = fL[i * (i + 1) / 2 + j];
-       }
-       // invert the off-diagonal part of what we just copied
-       for (unsigned i = 1; i < fN; ++i) {
-	   for (unsigned j = 0; j < i; ++j) {
-	       typename M::value_type tmp = F(0);
-	       for (unsigned k = i; k-- > j;)
-		   tmp -= m(k, i) * m(j, k);
-	       m(j, i) = tmp * m(i, i);
-	   }
-       }
-       return true;
+      if (!fOk) return false;
+      for (unsigned i = 0; i < fN; ++i) {
+         // zero lower half of matrix
+         for (unsigned j = i + 1; j < fN; ++j)
+            m(j, i) = F(0);
+         // copy the rest
+         for (unsigned j = 0; j <= i; ++j)
+            m(j, i) = fL[i * (i + 1) / 2 + j];
+      }
+      // invert the off-diagonal part of what we just copied
+      for (unsigned i = 1; i < fN; ++i) {
+         for (unsigned j = 0; j < i; ++j) {
+            typename M::value_type tmp = F(0);
+            for (unsigned k = i; k-- > j;)
+               tmp -= m(k, i) * m(j, k);
+            m(j, i) = tmp * m(i, i);
+         }
+      }
+      return true;
    }
 
    /** @brief obtain the inverse of the decomposed matrix L
@@ -494,21 +494,21 @@ public:
    template<typename G> bool getLi(G* m) const
    {
        if (!fOk) return false;
-       // copy L
-       for (unsigned i = 0; i < (fN * (fN + 1)) / 2; ++i)
-	   m[i] = fL[i];
-       // invert the off-diagonal part of what we just copied
-       G* base1 = &m[1];
-       for (unsigned i = 1; i < fN; base1 += ++i) {
-	   for (unsigned j = 0; j < i; ++j) {
-	       G tmp = F(0);
-	       const G *base2 = &m[(i * (i - 1)) / 2];
-	       for (unsigned k = i; k-- > j; base2 -= k)
-		   tmp -= base1[k] * base2[j];
-	       base1[j] = tmp * base1[i];
-	   }
-       }
-       return true;
+      // copy L
+      for (unsigned i = 0; i < (fN * (fN + 1)) / 2; ++i)
+         m[i] = fL[i];
+      // invert the off-diagonal part of what we just copied
+      G* base1 = &m[1];
+      for (unsigned i = 1; i < fN; base1 += ++i) {
+         for (unsigned j = 0; j < i; ++j) {
+            G tmp = F(0);
+            const G *base2 = &m[(i * (i - 1)) / 2];
+            for (unsigned k = i; k-- > j; base2 -= k)
+              tmp -= base1[k] * base2[j];
+            base1[j] = tmp * base1[i];
+         }
+      }
+      return true;
    }
 };
 
@@ -549,7 +549,7 @@ namespace CholeskyDecompHelpers {
          // cache starting address of rows of L for speed reasons
          F *base1 = &dst[0];
          for (unsigned i = 0; i < N; base1 += ++i) {
-            F tmpdiag = F(0.0);	// for element on diagonale
+            F tmpdiag = F(0.0); // for element on diagonale
             // calculate off-diagonal elements
             F *base2 = &dst[0];
             for (unsigned j = 0; j < i; base2 += ++j) {

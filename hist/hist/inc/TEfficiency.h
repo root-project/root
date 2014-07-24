@@ -37,16 +37,16 @@ class TEfficiency: public TNamed, public TAttLine, public TAttFill, public TAttM
 public:  
       //enumaration type for different statistic options for calculating confidence intervals
       //kF* ... frequentist methods; kB* ... bayesian methods      
-      enum EStatOption {
-	 kFCP = 0,                         //Clopper-Pearson interval (recommended by PDG)
-	 kFNormal,                         //normal approximation
-	 kFWilson,                         //Wilson interval
-	 kFAC,                             //Agresti-Coull interval
-	 kFFC,                             //Feldman-Cousins interval
-	 kBJeffrey,                        //Jeffrey interval (Prior ~ Beta(0.5,0.5)
-	 kBUniform,                        //Prior ~ Uniform = Beta(1,1)
-	 kBBayesian                        //user specified Prior ~ Beta(fBeta_alpha,fBeta_beta)
-      };
+   enum EStatOption {
+      kFCP = 0,                         //Clopper-Pearson interval (recommended by PDG)
+      kFNormal,                         //normal approximation
+      kFWilson,                         //Wilson interval
+      kFAC,                             //Agresti-Coull interval
+      kFFC,                             //Feldman-Cousins interval
+      kBJeffrey,                        //Jeffrey interval (Prior ~ Beta(0.5,0.5)
+      kBUniform,                        //Prior ~ Uniform = Beta(1,1)
+      kBBayesian                        //user specified Prior ~ Beta(fBeta_alpha,fBeta_beta)
+   };
 
 protected:
 
@@ -66,7 +66,7 @@ protected:
       Double_t      fWeight;                 //weight for all events (default = 1)
 
       enum{
-	 kIsBayesian       = BIT(14),              //bayesian statistics are used
+         kIsBayesian       = BIT(14),              //bayesian statistics are used
          kPosteriorMode    = BIT(15),              //use posterior mean for best estimate (Bayesian statistics)
          kShortestInterval = BIT(16),              // use shortest interval
          kUseBinPrior      = BIT(17),              // use a different prior for each bin
@@ -81,20 +81,20 @@ public:
       TEfficiency();   
       TEfficiency(const TH1& passed,const TH1& total);
       TEfficiency(const char* name,const char* title,Int_t nbins,
-		   const Double_t* xbins);
+                  const Double_t* xbins);
       TEfficiency(const char* name,const char* title,Int_t nbins,Double_t xlow,
-		   Double_t xup);
+                  Double_t xup);
       TEfficiency(const char* name,const char* title,Int_t nbinsx,
-		   Double_t xlow,Double_t xup,Int_t nbinsy,Double_t ylow,
-		   Double_t yup);
+                  Double_t xlow,Double_t xup,Int_t nbinsy,Double_t ylow,
+                  Double_t yup);
       TEfficiency(const char* name,const char* title,Int_t nbinsx,
-		   const Double_t* xbins,Int_t nbinsy,const Double_t* ybins);
+                  const Double_t* xbins,Int_t nbinsy,const Double_t* ybins);
       TEfficiency(const char* name,const char* title,Int_t nbinsx,
-		   Double_t xlow,Double_t xup,Int_t nbinsy,Double_t ylow,
-		   Double_t yup,Int_t nbinsz,Double_t zlow,Double_t zup);
+                  Double_t xlow,Double_t xup,Int_t nbinsy,Double_t ylow,
+                  Double_t yup,Int_t nbinsz,Double_t zlow,Double_t zup);
       TEfficiency(const char* name,const char* title,Int_t nbinsx,
-		   const Double_t* xbins,Int_t nbinsy,const Double_t* ybins,
-		   Int_t nbinsz,const Double_t* zbins);      
+                  const Double_t* xbins,Int_t nbinsy,const Double_t* ybins,
+                  Int_t nbinsz,const Double_t* zbins);
       TEfficiency(const TEfficiency& heff);
       ~TEfficiency();
       
@@ -152,7 +152,7 @@ public:
       Bool_t        SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax,
                             Int_t nz, Double_t zmin, Double_t zmax);
       Bool_t        SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t * yBins, Int_t nz,
-			    const Double_t *zBins);
+                            const Double_t *zBins);
 
       void          SetTitle(const char* title);
       Bool_t        SetTotalEvents(Int_t bin,Int_t events);
@@ -170,8 +170,8 @@ public:
       static Bool_t CheckConsistency(const TH1& pass,const TH1& total,Option_t* opt="");
       static Bool_t CheckEntries(const TH1& pass,const TH1& total,Option_t* opt="");
       static Double_t Combine(Double_t& up,Double_t& low,Int_t n,const Int_t* pass,const Int_t* total,
-			      Double_t alpha,Double_t beta,Double_t level=0.683,
-			      const Double_t* w=0,Option_t* opt="");
+                              Double_t alpha,Double_t beta,Double_t level=0.683,
+                              const Double_t* w=0,Option_t* opt="");
       static TGraphAsymmErrors* Combine(TCollection* pList,Option_t* opt="",Int_t n=0,const Double_t* w=0);
       
       //calculating boundaries of confidence intervals

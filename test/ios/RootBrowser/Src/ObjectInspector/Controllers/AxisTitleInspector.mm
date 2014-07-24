@@ -62,7 +62,7 @@ const float tabBarHeight = 49.f;
 {
 #pragma unused(interfaceOrientation)
 
-	return YES;
+   return YES;
 }
 
 #pragma mark - ObjectInspectorComponent.

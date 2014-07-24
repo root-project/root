@@ -8,8 +8,8 @@
       <gjob:Category>Development</gjob:Category>
 
       <gjob:Update>
-	<gjob:Status>Open</gjob:Status>
-	<gjob:Modified>Mon, 07 Jun 1999 20:27:45 -0400 MET DST</gjob:Modified>
+         <gjob:Status>Open</gjob:Status>
+         <gjob:Modified>Mon, 07 Jun 1999 20:27:45 -0400 MET DST</gjob:Modified>
         <gjob:Salary>USD 0.00</gjob:Salary>
       </gjob:Update>
 
@@ -20,17 +20,17 @@
 
       <gjob:Contact>
         <gjob:Person>Nathan Clemons</gjob:Person>
-	<gjob:Email>nathan@windsofstorm.net</gjob:Email>
+        <gjob:Email>nathan@windsofstorm.net</gjob:Email>
         <gjob:Company>
-	</gjob:Company>
+        </gjob:Company>
         <gjob:Organisation>
-	</gjob:Organisation>
+        </gjob:Organisation>
         <gjob:Webpage>
-	</gjob:Webpage>
-	<gjob:Snailmail>
-	</gjob:Snailmail>
-	<gjob:Phone>
-	</gjob:Phone>
+        </gjob:Webpage>
+        <gjob:Snailmail>
+        </gjob:Snailmail>
+        <gjob:Phone>
+        </gjob:Phone>
       </gjob:Contact>
 
       <gjob:Requirements>

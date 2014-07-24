@@ -147,7 +147,7 @@ IGenFunction * Polynomial::Clone() const {
     f->SetParameters( Parameters() ); 
     return f; 
 }
-	
+
 
 const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
 
@@ -176,9 +176,9 @@ const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
       int nr = gsl_poly_complex_solve_quadratic(Parameters()[2], Parameters()[1], Parameters()[0], &z1, &z2); 
       if ( nr != 2) { 
 #ifdef DEBUG
-	std::cout << "Polynomial quadratic ::-  FAILED to find roots" << std::endl; 
+         std::cout << "Polynomial quadratic ::-  FAILED to find roots" << std::endl;
 #endif
-	return fRoots;
+         return fRoots;
       } 
       fRoots.push_back(std::complex<double>(z1.dat[0],z1.dat[1]) ); 
       fRoots.push_back(std::complex<double>(z2.dat[0],z2.dat[1]) );       
@@ -194,9 +194,9 @@ const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
       int nr = gsl_poly_complex_solve_cubic(a, b, c, &z1, &z2, &z3); 
       if (nr != 3) { 
 #ifdef DEBUG
-	std::cout << "Polynomial  cubic::-  FAILED to find roots" << std::endl; 
+         std::cout << "Polynomial  cubic::-  FAILED to find roots" << std::endl;
 #endif
-	return fRoots; 
+         return fRoots;
 
       }
       fRoots.push_back(std::complex<double> (z1.dat[0],z1.dat[1]) ); 
@@ -216,9 +216,9 @@ const std::vector< std::complex <double> > &  Polynomial::FindRoots(){
       int nr = gsl_poly_complex_solve_quartic(a, b, c, d, &z1, &z2, &z3, & z4); 
       if (nr != 4) { 
 #ifdef DEBUG
-	std::cout << "Polynomial quartic ::-  FAILED to find roots" << std::endl; 
+         std::cout << "Polynomial quartic ::-  FAILED to find roots" << std::endl;
 #endif
-	return fRoots;
+         return fRoots;
       } 
       fRoots.push_back(std::complex<double> (z1.dat[0],z1.dat[1]) ); 
       fRoots.push_back(std::complex<double> (z2.dat[0],z2.dat[1]) ); 

@@ -251,12 +251,12 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
          prop->SetMagFieldObj(mf);
          prop->SetMaxR(1000);
          prop->SetMaxZ(1000);
-	 prop->SetRnrDaughters(kTRUE);
-	 prop->SetRnrDecay(kTRUE);
-	 prop->RefPMAtt().SetMarkerStyle(4);
+         prop->SetRnrDaughters(kTRUE);
+         prop->SetRnrDecay(kTRUE);
+         prop->RefPMAtt().SetMarkerStyle(4);
          list->SetElementName(Form("%s, CMS field", list->GetElementName()));
 
-      
+
          TEveRecTrackD *rc = new TEveRecTrackD();
          rc->fV.Set(0.027667, 0.007919, 0.895964);
          rc->fP.Set(3.903134, 2.252232, -3.731366);
@@ -274,8 +274,8 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
          track->AddPathMark(TEvePathMarkD(TEvePathMarkD::kDecay,
                   TEveVectorD(2.249656e+02, 5.835767e+02, -5.565275e+02)));
 
-	 track->SetRnrPoints(kTRUE);
-	 track->SetMarkerStyle(4);
+         track->SetRnrPoints(kTRUE);
+         track->SetMarkerStyle(4);
 
          break;
       }
@@ -290,10 +290,10 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
          prop->SetMagFieldObj(mf);
          prop->SetMaxR(1000);
          prop->SetMaxZ(1000);
-	 prop->SetRnrReferences(kTRUE);
-	 prop->SetRnrDaughters(kTRUE);
-	 prop->SetRnrDecay(kTRUE);
-	 prop->RefPMAtt().SetMarkerStyle(4);
+         prop->SetRnrReferences(kTRUE);
+         prop->SetRnrDaughters(kTRUE);
+         prop->SetRnrDecay(kTRUE);
+         prop->RefPMAtt().SetMarkerStyle(4);
          list->SetElementName(Form("%s, CMS field", list->GetElementName()));
       
          TEveRecTrackD *rc = new TEveRecTrackD();
@@ -320,8 +320,8 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
          track->AddPathMark(TEvePathMarkD(TEvePathMarkD::kDecay,
                   TEveVectorD(1.884976e+02, 7.202000e+02, 7.919290e+01)));
 
-	 track->SetRnrPoints(kTRUE);
-	 track->SetMarkerStyle(4);
+         track->SetRnrPoints(kTRUE);
+         track->SetMarkerStyle(4);
 
          break;
       }
@@ -332,10 +332,10 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
          prop->SetMagFieldObj(new TEveMagFieldDuo(350, -3.5, 2.0));
          prop->SetMaxR(1000);
          prop->SetMaxZ(1000);
-	 prop->SetRnrReferences(kTRUE);
-	 prop->SetRnrDaughters(kTRUE);
-	 prop->SetRnrDecay(kTRUE);
-	 prop->RefPMAtt().SetMarkerStyle(4);
+         prop->SetRnrReferences(kTRUE);
+         prop->SetRnrDaughters(kTRUE);
+         prop->SetRnrDecay(kTRUE);
+         prop->RefPMAtt().SetMarkerStyle(4);
          list->SetElementName(Form("%s, Some ILC Detector field",
                                    list->GetElementName()));
 
@@ -352,8 +352,8 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
          track->AddPathMark(TEvePathMarkD(TEvePathMarkD::kDecay,
                   TEveVectorD(6.527213e+02, 1.473249e+02, -8.348498e+01)));
 
-	 track->SetRnrPoints(kTRUE);
-	 track->SetMarkerStyle(4);
+         track->SetRnrPoints(kTRUE);
+         track->SetMarkerStyle(4);
 
          break;
       }

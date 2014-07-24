@@ -89,8 +89,8 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
 
 /*
 MinimumError DavidonErrorUpdator::Update(const MinimumState& s0, 
-					 const MinimumParameters& p1,
-					 const FunctionGradient& g1) const {
+                const MinimumParameters& p1,
+                const FunctionGradient& g1) const {
 
   const MnAlgebraicSymMatrix& v0 = s0.Error().InvHessian();
   MnAlgebraicVector dx = p1.Vec() - s0.Vec();

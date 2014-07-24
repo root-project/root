@@ -142,14 +142,14 @@ elif [ $PLATFORM = "macosx" ]; then
    fi
    if [ $LIB != $BUNDLE ]; then
        if [ $macosx_minor -ge 4 ]; then
-	   cmd="ln -fs `basename $LIB` $BUNDLE"
+          cmd="ln -fs `basename $LIB` $BUNDLE"
        elif [ $macosx_minor -ge 3 ]; then
-	   cmd="$LD $LDFLAGS -bundle -undefined dynamic_lookup -o \
+          cmd="$LD $LDFLAGS -bundle -undefined dynamic_lookup -o \
                 $BUNDLE $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
                 -ldl $EXTRA $EXPLLNKCORE"
        else
-	   cmd="$LD $LDFLAGS -bundle -undefined suppress -o $BUNDLE \
-	        $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
+          cmd="$LD $LDFLAGS -bundle -undefined suppress -o $BUNDLE \
+               $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
                 -ldl $EXTRA $EXPLLNKCORE"
        fi
        echo $cmd
@@ -216,17 +216,17 @@ fi
 if [ "x$MAJOR" != "x" ]; then
     if [ -f $LIB.$MAJOR.$MINOR ]; then
         # Versioned library has format foo.so.3.05
-	ln -fs $SONAME.$MAJOR.$MINOR $LIB.$MAJOR
-	ln -fs $SONAME.$MAJOR        $LIB
+       ln -fs $SONAME.$MAJOR.$MINOR $LIB.$MAJOR
+       ln -fs $SONAME.$MAJOR        $LIB
     elif [ -f $LIBVERS ]; then
-	# Versioned library has format foo.3.05.so
-	source_file=`echo $SONAME | sed "s/.*\./&${MINOR}./"`
-	LIBNOMAJORMINOR=`echo $LIB|sed 's,\.'$MAJOR'\.'$MINOR',,'`
-	if [ $LIB != $LIBNOMAJORMINOR ]; then
-	    LIBNOMINOR=`echo $LIB|sed 's,\.'$MINOR',,'`
-	    ln -fs $source_file $LIBNOMINOR
-	    ln -fs $source_file $LIBNOMAJORMINOR
-	fi
+        # Versioned library has format foo.3.05.so
+        source_file=`echo $SONAME | sed "s/.*\./&${MINOR}./"`
+        LIBNOMAJORMINOR=`echo $LIB|sed 's,\.'$MAJOR'\.'$MINOR',,'`
+        if [ $LIB != $LIBNOMAJORMINOR ]; then
+           LIBNOMINOR=`echo $LIB|sed 's,\.'$MINOR',,'`
+           ln -fs $source_file $LIBNOMINOR
+           ln -fs $source_file $LIBNOMAJORMINOR
+        fi
     fi
 fi
 

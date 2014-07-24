@@ -26,37 +26,37 @@
 //#ifdef TEX
 /**   
 
-	A variable names bgamma appears in several places in this file. A few
-	words of elaboration are needed to make its meaning clear.  On page 69
-	of Misner, Thorne and Wheeler, (Exercise 2.7) the elements of the matrix
-	for a general Lorentz boost are given as
+   A variable names bgamma appears in several places in this file. A few
+   words of elaboration are needed to make its meaning clear.  On page 69
+   of Misner, Thorne and Wheeler, (Exercise 2.7) the elements of the matrix
+   for a general Lorentz boost are given as
 
-	\f[	\Lambda^{j'}_k = \Lambda^{k'}_j
-			     = (\gamma - 1) n^j n^k + \delta^{jk}  \f]
+   \f[   \Lambda^{j'}_k = \Lambda^{k'}_j
+              = (\gamma - 1) n^j n^k + \delta^{jk}  \f]
 
-	where the n^i are unit vectors in the direction of the three spatial
-	axes.  Using the definitions, \f$ n^i = \beta_i/\beta \f$ , then, for example,
+   where the n^i are unit vectors in the direction of the three spatial
+   axes.  Using the definitions, \f$ n^i = \beta_i/\beta \f$ , then, for example,
 
-	\f[	\Lambda_{xy} = (\gamma - 1) n_x n_y
-			     = (\gamma - 1) \beta_x \beta_y/\beta^2  \f]
+   \f[   \Lambda_{xy} = (\gamma - 1) n_x n_y
+              = (\gamma - 1) \beta_x \beta_y/\beta^2  \f]
 
-	By definition, \f[	\gamma^2 = 1/(1 - \beta^2)  \f]
+   By definition, \f[   \gamma^2 = 1/(1 - \beta^2)  \f]
 
-	so that	\f[	\gamma^2 \beta^2 = \gamma^2 - 1  \f]
+   so that   \f[   \gamma^2 \beta^2 = \gamma^2 - 1  \f]
 
-	or	\f[	\beta^2 = (\gamma^2 - 1)/\gamma^2  \f]
+   or   \f[   \beta^2 = (\gamma^2 - 1)/\gamma^2  \f]
 
-	If we insert this into the expression for \f$ \Lambda_{xy} \f$, we get
+   If we insert this into the expression for \f$ \Lambda_{xy} \f$, we get
 
-	\f[	\Lambda_{xy} = (\gamma - 1) \gamma^2/(\gamma^2 - 1) \beta_x \beta_y \f]
+   \f[   \Lambda_{xy} = (\gamma - 1) \gamma^2/(\gamma^2 - 1) \beta_x \beta_y \f]
 
-	or, finally
+   or, finally
 
-	\f[	\Lambda_{xy} = \gamma^2/(\gamma+1) \beta_x \beta_y  \f]
+   \f[   \Lambda_{xy} = \gamma^2/(\gamma+1) \beta_x \beta_y  \f]
 
-	The expression \f$ \gamma^2/(\gamma+1) \f$ is what we call <em>bgamma</em> in the code below.
+   The expression \f$ \gamma^2/(\gamma+1) \f$ is what we call <em>bgamma</em> in the code below.
 
-	\class ROOT::Math::Boost
+   \class ROOT::Math::Boost
 */
 //#endif
 
@@ -126,14 +126,14 @@ void Boost::Rectify() {
    // this forms an "exact" orthosymplectic matrix for the Lorentz Rotation
    // again.
    
-   if (fM[kTT] <= 0) {	
+   if (fM[kTT] <= 0) {
       GenVector::Throw ( 
                               "Attempt to rectify a boost with non-positive gamma");
       return;
    }    
    DisplacementVector3D< Cartesian3D<Scalar> > beta ( fM[kXT], fM[kYT], fM[kZT] );
    beta /= fM[kTT];
-   if ( beta.mag2() >= 1 ) {			    
+   if ( beta.mag2() >= 1 ) {    
       beta /= ( beta.R() * ( 1.0 + 1.0e-16 ) );  
    }
    SetComponents ( beta );

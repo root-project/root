@@ -108,7 +108,7 @@ public:
    const TUrl&     GetUrl() const { return fUrl; }
 
    // Modifiers
-   virtual Bool_t	ReadBuffers(char* buf, Long64_t* pos, Int_t* len, Int_t nbuf);
+   virtual Bool_t ReadBuffers(char* buf, Long64_t* pos, Int_t* len, Int_t nbuf);
 
    ClassDef(TS3WebFile, 0)  // Read a ROOT file from a S3 server
 };

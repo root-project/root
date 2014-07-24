@@ -218,7 +218,7 @@ void TGeoScaledShape::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) c
 // Returns numbers of vertices, segments and polygons composing the shape mesh.
    fShape->GetMeshNumbers(nvert, nsegs, npols);
 }
-	
+
 //_____________________________________________________________________________
 void TGeoScaledShape::InspectShape() const
 {

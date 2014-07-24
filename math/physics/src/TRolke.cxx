@@ -223,7 +223,7 @@ void TRolke::SetPoissonBkgBinomEff(Int_t x, Int_t y, Int_t z, Double_t tau, Int_
 //    tau : ratio parameter (read TRolke.cxx for details)
 //    m   : number of MC events generated
    SetModelParameters(
-	 x  ,       //   Int_t x,
+         x  ,       //   Int_t x,
          y  ,       //   Int_t y,
          z  ,       //   Int_t z,
          0  ,       //   Double_t bm,
@@ -383,7 +383,7 @@ bool TRolke::GetLimits(Double_t& low, Double_t& high)
    if ((f_mid<1)||(f_mid>7)) {
       std::cerr << "TRolke - Error: Model id "<< f_mid<<std::endl;
       if (f_mid<1) {
- 	 std::cerr << "TRolke - Please specify a model with e.g. 'SetGaussBkgGaussEff' (read the docs in Rolke.cxx )"<<std::endl; 
+         std::cerr << "TRolke - Please specify a model with e.g. 'SetGaussBkgGaussEff' (read the docs in Rolke.cxx )"<<std::endl;
       }
       return false;
    }
@@ -431,12 +431,12 @@ Double_t TRolke::GetBackground()
          break;
       case 6:
       case 7:
-	 background = f_b;
+         background = f_b;
          break;
       default:
-	 std::cerr << "TRolke::GetBackground(): Model NR: " <<
-	    f_mid << " unknown"<<std::endl;
-	 return 0;
+         std::cerr << "TRolke::GetBackground(): Model NR: " <<
+         f_mid << " unknown"<<std::endl;
+         return 0;
    }
    return background;
 }
@@ -633,7 +633,7 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
       fNumWarningsDeprecated2++;
    }
    SetModelParameters(
-	 x,
+         x,
          y,
          z,
          bm,
@@ -942,9 +942,9 @@ Double_t TRolke::Likelihood(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t bm,
       case 7:
          return EvalLikeMod7(mu, x, em, sde, b, what);
       default:
-	 std::cerr << "TRolke::Likelihood(...): Model NR: " <<
-	    f_mid << " unknown"<<std::endl;
-	 return 0;
+         std::cerr << "TRolke::Likelihood(...): Model NR: " <<
+         f_mid << " unknown"<<std::endl;
+         return 0;
    }
 
    return 0;

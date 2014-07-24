@@ -95,7 +95,7 @@ bool CanScaleMarker(Style_t style)
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
 #pragma unused(interfaceOrientation)
-	return YES;
+   return YES;
 }
 
 #pragma mark - Horizontal picker delegate.

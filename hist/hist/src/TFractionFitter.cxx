@@ -149,12 +149,12 @@ ClassImp(TFractionFitter)
 
 //______________________________________________________________________________
 TFractionFitter::TFractionFitter() :
-   fFitDone(kFALSE),
-   fLowLimitX(0), fHighLimitX(0),
-   fLowLimitY(0), fHighLimitY(0),
-   fLowLimitZ(0), fHighLimitZ(0),
-   fData(0), fIntegralData(0),
-   fPlot(0) 
+fFitDone(kFALSE),
+fLowLimitX(0), fHighLimitX(0),
+fLowLimitY(0), fHighLimitY(0),
+fLowLimitZ(0), fHighLimitZ(0),
+fData(0), fIntegralData(0),
+fPlot(0)
 {
    // TFractionFitter default constructor.
 
@@ -170,7 +170,7 @@ TFractionFitter::TFractionFitter() :
 
 //______________________________________________________________________________
 TFractionFitter::TFractionFitter(TH1* data, TObjArray  *MCs, Option_t *option) :
-  fFitDone(kFALSE), fChisquare(0), fPlot(0)  {
+fFitDone(kFALSE), fChisquare(0), fPlot(0)  {
    // TFractionFitter constructor. Does a complete initialisation (including
    // consistency checks, default fit range as the whole histogram but without
    // under- and overflows, and declaration of the fit parameters). Note that
@@ -180,8 +180,8 @@ TFractionFitter::TFractionFitter(TH1* data, TObjArray  *MCs, Option_t *option) :
    //     MCs:  array of TH1* corresponding template distributions
    //    Option:  can be used to control the print level of the minimization algorithm
    //             option = "Q"  : quite - no message is printed
-   //             option = "V"  : verbose - max print out 
-   //             option = ""   : default: print initial fraction values and result 
+   //             option = "V"  : verbose - max print out
+   //             option = ""   : default: print initial fraction values and result
 
    fData = data;
    // Default: include all of the histogram (but without under- and overflows)
@@ -216,16 +216,16 @@ TFractionFitter::TFractionFitter(TH1* data, TObjArray  *MCs, Option_t *option) :
    fractionFitter->SetObjectFit(this);
    fractionFitter->SetFCN(TFractionFitFCN);
 
-   // set print level 
+   // set print level
    TString opt(option);
    opt.ToUpper();
    double plist[1];
-   if (opt.Contains("Q") ) { 
+   if (opt.Contains("Q") ) {
       plist[0] = -1;
       fractionFitter->ExecuteCommand("SET PRINT",plist,1);
       fractionFitter->ExecuteCommand("SET NOW",plist,0);
    }
-   else if (opt.Contains("V") ) { 
+   else if (opt.Contains("V") ) {
       plist[0] =  1;
       fractionFitter->ExecuteCommand("SET PRINT",plist,1);
    }
@@ -240,7 +240,7 @@ TFractionFitter::TFractionFitter(TH1* data, TObjArray  *MCs, Option_t *option) :
 
 //______________________________________________________________________________
 TFractionFitter::~TFractionFitter() {
-  // TFractionFitter default destructor
+   // TFractionFitter default destructor
 
    delete fractionFitter;
    delete[] fIntegralMCs;
@@ -407,8 +407,8 @@ void TFractionFitter::ExcludeBin(Int_t bin) {
    int excluded = fExcludedBins.size();
    for (int b = 0; b < excluded; ++b) {
       if (fExcludedBins[b] == bin) {
-	 Error("ExcludeBin", "bin %d already excluded", bin);
-	 return;
+         Error("ExcludeBin", "bin %d already excluded", bin);
+         return;
       }
    }
    fExcludedBins.push_back(bin);
@@ -422,12 +422,12 @@ void TFractionFitter::IncludeBin(Int_t bin) {
    // The bin numbering to be used is that of TH1::GetBin().
 
    for (std::vector<Int_t>::iterator it = fExcludedBins.begin();
-	it != fExcludedBins.end(); ++it) {
+        it != fExcludedBins.end(); ++it) {
       if (*it == bin) {
-  	 fExcludedBins.erase(it);
-	 // This call serves to properly (re)determine the number of degrees of freeom
-	 CheckConsistency();
-	 return;
+         fExcludedBins.erase(it);
+         // This call serves to properly (re)determine the number of degrees of freeom
+         CheckConsistency();
+         return;
       }
    }
    Error("IncludeBin", "bin %d was not excluded", bin);
@@ -438,7 +438,7 @@ bool TFractionFitter::IsExcluded(Int_t bin) const {
    // Function for internal use, checking whether the given bin is
    // excluded from the fit or not.
 
-   for (unsigned int b = 0; b < fExcludedBins.size(); ++b) 
+   for (unsigned int b = 0; b < fExcludedBins.size(); ++b)
       if (fExcludedBins[b] == bin) return true;
    return false;
 }
@@ -489,7 +489,7 @@ void TFractionFitter::CheckConsistency() {
    for (z = minZ; z <= maxZ; ++z) {
       for (y = minY; y <= maxY; ++y) {
          for (x = minX; x <= maxX; ++x) {
-	    if (IsExcluded(fData->GetBin(x, y, z))) continue;
+            if (IsExcluded(fData->GetBin(x, y, z))) continue;
             fNpfits++;
             fIntegralData += fData->GetBinContent(x, y, z);
          }
@@ -525,11 +525,11 @@ void TFractionFitter::CheckConsistency() {
          for (y = minY; y <= maxY; ++y) {
             for (x = minX; x <= maxX; ++x) {
                Int_t bin = fData->GetBin(x, y, z);
-	            if (IsExcluded(bin)) continue;
+               if (IsExcluded(bin)) continue;
                Double_t MCEvents = h->GetBinContent(bin);
                if (MCEvents < 0) {
-                  Error("CheckConsistency", "Number of MC events (bin = %d, par = %d) cannot be negative: " 
-                     " their distribution is binomial (see paper)", bin, par);
+                  Error("CheckConsistency", "Number of MC events (bin = %d, par = %d) cannot be negative: "
+                        " their distribution is binomial (see paper)", bin, par);
                }
                fIntegralMCs[par] += MCEvents;
             }
@@ -586,7 +586,7 @@ void TFractionFitter::ErrorAnalysis(Double_t UP) {
    fractionFitter->ExecuteCommand("SET ERRDEF",plist,1);
    Int_t status = fractionFitter->ExecuteCommand("MINOS",0,0);
    if (status != 0) {
-       Error("ErrorAnalysis","Error return from MINOS: %d",status);
+      Error("ErrorAnalysis","Error return from MINOS: %d",status);
    }
 }
 
@@ -672,7 +672,7 @@ void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
          for (z = minZ; z <= maxZ; ++z) {
             for (y = minY; y <= maxY; ++y) {
                for (x = minX; x <= maxX; ++x) {
-		  if (IsExcluded(fData->GetBin(x, y, z))) continue;
+                  if (IsExcluded(fData->GetBin(x, y, z))) continue;
                   Double_t weight = hw->GetBinContent(x, y, z);
                   if (weight <= 0) {
                      Error("ComputeFCN","Invalid weight encountered for MC source %d",mc);
@@ -697,7 +697,7 @@ void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
       for (y = minY; y <= maxY; ++y) {
          for (x = minX; x <= maxX; ++x) {
             bin = fData->GetBin(x, y, z);
-	    if (IsExcluded(bin)) continue;
+            if (IsExcluded(bin)) continue;
 
             // Solve for the "predictions"
             int k0 = 0;
@@ -720,8 +720,8 @@ void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
                prediction += fFractions[mc]*weight*binPrediction;
                result -= binPrediction;
                if (binContent > 0 && binPrediction > 0)
-                 result += binContent*TMath::Log(binPrediction);
- 
+                  result += binContent*TMath::Log(binPrediction);
+
                if (flag == 3) {
                   ((TH1*)fAji.At(mc))->SetBinContent(bin, binPrediction);
                }
@@ -775,13 +775,13 @@ void TFractionFitter::FindPrediction(int bin, Double_t &t_i, int& k_0, Double_t 
    // Case one or more of the MC bin contents == 0 -> find largest fraction
    // k_0 stores the source index of the largest fraction
    k_0 = 0;
-   Double_t maxWgtFrac = wgtFrac[0]; 
+   Double_t maxWgtFrac = wgtFrac[0];
    for (Int_t par = 1; par < fNpar; ++par) {
       if (wgtFrac[par] > maxWgtFrac) {
          k_0 = par;
          maxWgtFrac = wgtFrac[par];
       }
-   } 
+   }
    Double_t t_min = -1 / maxWgtFrac; // t_i cannot be smaller than this value (see paper, par 5)
 
    // Determine if there are more sources which have the same maximum contribution (fraction)
@@ -814,7 +814,7 @@ void TFractionFitter::FindPrediction(int bin, Double_t &t_i, int& k_0, Double_t 
    // The equation that needs to be solved:
    //    func(t_i) = \sum\limits_j{\frac{ p_j a_{ji} }{1 + p_j t_i}} - \frac{d_i}{1 - t_i} = 0
    t_i = 0; Double_t step = 0.2;
-   Int_t maxIter = 100000; // maximum number of iterations 
+   Int_t maxIter = 100000; // maximum number of iterations
    for(Int_t i = 0; i < maxIter; ++i) {
       if (t_i >= 1 || t_i < t_min) {
          step /= 10;
@@ -828,7 +828,7 @@ void TFractionFitter::FindPrediction(int bin, Double_t &t_i, int& k_0, Double_t 
          deriv -= a_ji[par] * r * r;
       }
       if (TMath::Abs(func) < 1e-12) return; // solution found
-      Double_t delta = - func / deriv; // update delta 
+      Double_t delta = - func / deriv; // update delta
       if (TMath::Abs(delta) > step)
          delta = (delta > 0) ? step : -step; // correct delta if it becomes too large
       t_i += delta;
@@ -872,7 +872,7 @@ Double_t TFractionFitter::GetChisquare() const
    // chi2 = -2*ln(lambda).
    // This parameter can be shown to follow a Chi-square distribution. See for
    // example S. Baker and R. Cousins, "Clarification of the use of chi-square
-   // and likelihood functions in fits to histograms", Nucl. Instr. Meth. A221, 
+   // and likelihood functions in fits to histograms", Nucl. Instr. Meth. A221,
    // pp. 437-442 (1984)
 
    return fChisquare;
@@ -894,7 +894,7 @@ Int_t TFractionFitter::GetNDF() const
 Double_t TFractionFitter::GetProb() const
 {
    // return the fit probability
-   
+
    Int_t ndf = fNpfits - fNpar;
    if (ndf <= 0) return 0;
    return TMath::Prob(fChisquare,ndf);
@@ -913,18 +913,18 @@ void TFractionFitter::ComputeChisquareLambda()
    }
 
    // fPlot must be initialized and filled. Leave this to the GetPlot() method.
-   if (! fPlot) 
-     GetPlot();
+   if (! fPlot)
+      GetPlot();
 
    Int_t minX, maxX, minY, maxY, minZ, maxZ;
    GetRanges(minX, maxX, minY, maxY, minZ, maxZ);
-   
+
    Double_t logLyn = 0; // likelihood of prediction
    Double_t logLmn = 0; // likelihood of data ("true" distribution)
    for(Int_t x = minX; x <= maxX; x++) {
       for(Int_t y = minY; y <= maxY; y++) {
          for(Int_t z = minZ; z <= maxZ; z++) {
-	    if (IsExcluded(fData->GetBin(x, y, z))) continue;
+            if (IsExcluded(fData->GetBin(x, y, z))) continue;
             Double_t di = fData->GetBinContent(x, y, z);
             Double_t fi = fPlot->GetBinContent(x, y, z);
             if(fi != 0) logLyn += di * TMath::Log(fi) - fi;
@@ -950,7 +950,7 @@ TH1* TFractionFitter::GetMCPrediction(Int_t parm) const
    // Return the adjusted MC template (Aji) for template (parm).
    // Note that the (Aji) times fractions only sum to the total prediction
    // of the fit if all weights are 1.
-
+   
    CheckParNo(parm);
    if ( !fFitDone ) {
       Error("GetMCPrediction","Fit not yet performed");

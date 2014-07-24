@@ -37,12 +37,12 @@ class FTGL_EXPORT FTGLOutlineFont : public FTFont
          */
         ~FTGLOutlineFont();
         
-	/**
+        /**
          * Prepare for rendering
          */
         virtual void PreRender();
 
-	/**
+        /**
          * Cleanup after rendering
          */
         virtual void PostRender();

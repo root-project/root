@@ -754,7 +754,7 @@ static VALUE drr_singleton_missing(int argc, VALUE argv[], VALUE self)
    /* Call a singleton method.  */
    char * methname = (char*) rb_id2name (rb_to_id(argv[0]));
    char * classname = (char *) rb_class2name(self);
-	
+
    rb_scan_args (argc, argv, "0*", &inargs);
    nargs = RARRAY_LEN(inargs) - 1;
 

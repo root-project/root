@@ -911,19 +911,19 @@ void TFoam::Grow()
          Int_t kEcho=10;
          if(fLastCe>=10000) kEcho=100;
          if( (fLastCe%kEcho)==0) {
-	   if (fChat>0) {
-	     if(fDim<10)
-	       cout<<fDim<<flush;
-             else
-	       cout<<"."<<flush;
-	     if( (fLastCe%(100*kEcho))==0)  cout<<"|"<<fLastCe<<endl<<flush;
-	   }
-	 }
+            if (fChat>0) {
+               if(fDim<10)
+                  cout<<fDim<<flush;
+               else
+                  cout<<"."<<flush;
+               if( (fLastCe%(100*kEcho))==0)  cout<<"|"<<fLastCe<<endl<<flush;
+            }
+         }
       }
       if( Divide( newCell )==0) break;  // and divide it into two
    }
    if (fChat>0) {
-     cout<<endl<<flush;
+      cout<<endl<<flush;
    }
    CheckAll(0);   // set arg=1 for more info
 }// Grow

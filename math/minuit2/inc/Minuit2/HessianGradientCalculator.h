@@ -34,7 +34,7 @@ class HessianGradientCalculator : public GradientCalculator {
 public:
   
   HessianGradientCalculator(const MnFcn& fcn, const MnUserTransformation& par,
-			    const MnStrategy& stra) : 
+                            const MnStrategy& stra) :
     fFcn(fcn), fTransformation(par), fStrategy(stra) {}
   
   virtual ~HessianGradientCalculator() {}
@@ -42,7 +42,7 @@ public:
   virtual FunctionGradient operator()(const MinimumParameters&) const;
 
   virtual FunctionGradient operator()(const MinimumParameters&,
-				      const FunctionGradient&) const;
+                                      const FunctionGradient&) const;
 
   std::pair<FunctionGradient, MnAlgebraicVector> DeltaGradient(const MinimumParameters&, const FunctionGradient&) const;
 

@@ -48,7 +48,7 @@ void buildAPI_XML_TestModel(TString prefix)
   HistFactory::Sample Background1("background1","background1","HistFactory_input.root","API_vs_XML/SignalRegion/");
   Background1.ActivateStatError();
   Background1.AddHistoSys("bkg1_shape_unc","background1_Low","HistFactory_input.root","API_vs_XML/SignalRegion/",
-   			  "background1_High","HistFactory_input.root","API_vs_XML/SignalRegion/");
+                          "background1_High","HistFactory_input.root","API_vs_XML/SignalRegion/");
   Background1.AddOverallSys("bkg_unc",0.9,1.1);
   SignalRegion.AddSample(Background1);
 

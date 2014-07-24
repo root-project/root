@@ -9,12 +9,12 @@ class NdbFormFactors : public NdbMF
 protected:
 
 public:
-	NdbFormFactors()
-		: NdbMF(27, "Atomic form factors or scattering functions "
-			"for photo-atomic interactions") {}
-	~NdbFormFactors() {}
+   NdbFormFactors()
+      : NdbMF(27, "Atomic form factors or scattering functions "
+         "for photo-atomic interactions") {}
+   ~NdbFormFactors() {}
 
-	ClassDef(NdbFormFactors,1)
+   ClassDef(NdbFormFactors,1)
 
 }; // NdbFormFactors
 

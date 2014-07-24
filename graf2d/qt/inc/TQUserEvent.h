@@ -35,7 +35,7 @@ public:
    Event_t *data() const { return fEvent;}
    void setData(Event_t *ev) { delete data(); fEvent=ev;}
    TQUserEvent(const Event_t &pData) : QEvent(Type(QEvent::User+Type(1))),
-		   fEvent(0)
+                                       fEvent(0)
 #else
    TQUserEvent(const Event_t &pData) : QCustomEvent(Id(),0)
 #endif

@@ -42,7 +42,7 @@ friend class TWebSocket;
 friend class TWebSystem;
 
 private:
-	TWebFile() : fSocket(0) { }
+   TWebFile() : fSocket(0) { }
 
 protected:
    mutable Long64_t  fSize;             // file size

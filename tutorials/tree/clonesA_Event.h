@@ -55,7 +55,7 @@ class TMrbSubevent_Caen:public TObject {
    Int_t fTimeStamp;            // time stamp, same as fUniqueID
    TUsrHitBuffer fHitBuffer;    // hit buffer to store subevent data
 
-   ClassDef(TMrbSubevent_Caen, 1)	// [Analyze] Base class for subevents: CAEN data stored in hit buffer
+   ClassDef(TMrbSubevent_Caen, 1) // [Analyze] Base class for subevents: CAEN data stored in hit buffer
 };
 
 //______________________________________________________

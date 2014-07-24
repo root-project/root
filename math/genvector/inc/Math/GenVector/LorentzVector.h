@@ -48,7 +48,7 @@ namespace ROOT {
         DisplacementVector in 4D.  The Minkowski components could be viewed as
         v and t, or for kinematic 4-vectors, as p and E.
 
-	@ingroup GenVector
+     @ingroup GenVector
     */
     template< class CoordSystem >
     class LorentzVector {
@@ -595,11 +595,11 @@ namespace ROOT {
              else { 
                 GenVector::Throw ("LorentzVector::Beta() - beta computed for LorentzVector with t = 0. Return an Infinite result");
                 return 1./E();
-             }	  
+             }
           }
           if ( M2() <= 0 ) {     
              GenVector::Throw ("LorentzVector::Beta() - beta computed for non-timelike LorentzVector . Result is physically meaningless" );
-          }	  
+          }  
           return P() / E();
        }  
        /** 

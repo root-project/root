@@ -23,7 +23,7 @@ void limit() {
 // Create a new canvas.
   TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",200,10,700,500);
   c1->SetFillColor(42);
-	  
+  
 // Create some histograms
   TH1D* background = new TH1D("background","The expected background",30,-4,4);
   TH1D* signal     = new TH1D("signal","the expected signal",30,-4,4);

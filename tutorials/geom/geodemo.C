@@ -765,7 +765,7 @@ void torus(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    pt->SetTextSize(0.044);
    pt->Draw();
    c->cd(1);
-}	 
+}
 
 //______________________________________________________________________________
 void trd1(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
@@ -1726,11 +1726,11 @@ void SavePicture(const char *name, TObject *objcanvas, TObject *objvol, Double_t
    switch (iaxis) {
       case 0:
          sprintf(fname,"t_%s.gif",name);
-	 break;
+      break;
       default:
          if (step==0) sprintf(fname,"t_%sdiv%s.gif", name,vol->GetShape()->GetAxisName(iaxis));
          else sprintf(fname,"t_%sdivstep%s.gif", name,vol->GetShape()->GetAxisName(iaxis));
-   }	 
+   } 
    c->Print(fname);
 }
 

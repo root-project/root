@@ -13,8 +13,8 @@
 //                                                                      //
 // TGenerator                                                           //
 //                                                                      //
-// Is an base class, that defines the interface of ROOT to various   	//
-// event generators. Every event generator should inherit from       	//
+// Is an base class, that defines the interface of ROOT to various      //
+// event generators. Every event generator should inherit from          //
 // TGenerator or its subclasses.                                        //
 //                                                                      //
 // Derived class can overload the member  function GenerateEvent        //
@@ -35,7 +35,7 @@
 //      Int_t    nhep;             // # of particles                    //
 //      Int_t    isthep[4000];     // Status flag of i'th particle      //
 //      Int_t    idhep[4000];      // PDG # of particle                 //
-//      Int_t    jmohep[4000][2];  // 1st & 2nd mother particle #	      //
+//      Int_t    jmohep[4000][2];  // 1st & 2nd mother particle #       //
 //      Int_t    jdahep[4000][2];  // 1st & 2nd daughter particle #     //
 //      Double_t phep[4000][5];    // 4-momentum and 1 word             //
 //      Double_t vhep[4000][4];    // 4-position of production          //

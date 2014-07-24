@@ -175,7 +175,7 @@ namespace ROOT
            virtual void             GetClosestPoints(const point_type& rRef,UInt_t nPoints,std::vector<std::pair<const _DataPoint*,Double_t> >& vFoundPoints) const;
            virtual void             GetPointsWithinDist(const point_type& rRef,value_type fDist,std::vector<const _DataPoint*>& vFoundPoints) const;
            virtual Bool_t           Insert(const point_type& rPoint);
-      		                  
+
            const Cut*               fCut;     //pointer to cut object owned by this node
         };  
 
@@ -212,8 +212,8 @@ namespace ROOT
     
         protected:
            virtual BinNode*                        Clone();
-				            
-           // intrinsic bin properties	            
+
+           // intrinsic bin properties            
            std::vector<tBoundary>                  fBoundaries;    //bin boundaries
            Double_t                                fSumw;          //sum of weights
            Double_t                                fSumw2;         //sum of weights^2

@@ -1,5 +1,5 @@
-#ifndef		__FTOutlineGlyph__
-#define		__FTOutlineGlyph__
+#ifndef  __FTOutlineGlyph__
+#define  __FTOutlineGlyph__
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -39,19 +39,19 @@ class FTGL_EXPORT FTOutlineGlyph : public FTGlyph
         /**
          * Renders this glyph at the current pen position.
          *
-         * @param pen	The current pen position.
-         * @return		The advance distance for this glyph.
+         * @param pen The current pen position.
+         * @return    The advance distance for this glyph.
          */
         virtual const FTPoint& Render( const FTPoint& pen);
         
-    private:		
+    private:
         /**
          * OpenGL display list
          */
         GLuint glList;
-	
+
 };
 
 
-#endif	//	__FTOutlineGlyph__
+#endif // __FTOutlineGlyph__
 

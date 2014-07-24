@@ -86,7 +86,7 @@ void TSVDUnfoldExample()
       datatrue->Fill(xt);
       Double_t x = Reconstruct( xt, R );
       if (x != cutdummy) 
-	data->Fill(x);
+      data->Fill(x);
    }
 
    cout << "Created toy distributions and errors for: " << endl;

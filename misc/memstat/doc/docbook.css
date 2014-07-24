@@ -119,7 +119,7 @@
     h1 tt.computeroutput { font-size: 140% }
     h2 tt.computeroutput { font-size: 140% }
     h3 tt.computeroutput { font-size: 130% }
-    h4 tt.computeroutput { font-size: 130% }	
+    h4 tt.computeroutput { font-size: 130% }
     h5 tt.computeroutput { font-size: 130% }
     h6 tt.computeroutput { font-size: 130% }
 
@@ -221,10 +221,10 @@
        float: right;
        padding: 0.5pc;
     }
-	
+
     /* Code on toc */
     .toc .computeroutput { font-size: 120% }
-	
+
 /*=============================================================================
     Tables
 =============================================================================*/
@@ -584,19 +584,19 @@
 
 sup,
 sub {
-	height: 0;
-	line-height: 1;
-	vertical-align: baseline;
-	_vertical-align: bottom;
-	position: relative;
-	
+   height: 0;
+   line-height: 1;
+   vertical-align: baseline;
+   _vertical-align: bottom;
+   position: relative;
+
 }
 
 sup {
-	bottom: 1ex;
+   bottom: 1ex;
 }
 
 sub {
-	top: .5ex;
+   top: .5ex;
 }
 

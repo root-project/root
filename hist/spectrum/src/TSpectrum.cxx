@@ -305,9 +305,9 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option,
    </pre>
    Specify the option "goff" to disable the storage and drawing of the
    polymarker.
-	 <p>
-	 To disable the final drawing of the histogram with the search results (in case 
-	 you want to draw it yourself) specify "nodraw" in the options parameter.
+    <p>
+   To disable the final drawing of the histogram with the search results (in case
+   you want to draw it yourself) specify "nodraw" in the options parameter.
    End_Html */
 
    if (hin == 0) return 0;
@@ -332,11 +332,11 @@ Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option,
       markov = kFALSE;
       opt.ReplaceAll("nomarkov","");
    }
-	 Bool_t draw = kTRUE;
-	 if (opt.Contains("nodraw")) {
-		 draw = kFALSE;
-		 opt.ReplaceAll("nodraw","");
-	 }
+   Bool_t draw = kTRUE;
+   if (opt.Contains("nodraw")) {
+      draw = kFALSE;
+      opt.ReplaceAll("nodraw","");
+   }
    if (dimension == 1) {
       Int_t first = hin->GetXaxis()->GetFirst();
       Int_t last  = hin->GetXaxis()->GetLast();

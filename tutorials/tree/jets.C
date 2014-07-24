@@ -48,9 +48,9 @@ void read() {
       if (ev) continue; //dump first event only
       cout << " Event: "<< ev
            << "  Jets: " << event->GetNjet()
-	   << "  Tracks: " << event->GetNtrack()
-	   << "  Hits A: " << event->GetNhitA()
-	   << "  Hits B: " << event->GetNhitB() << endl;
+           << "  Tracks: " << event->GetNtrack()
+           << "  Hits A: " << event->GetNhitA()
+           << "  Hits B: " << event->GetNhitB() << endl;
   }
 }
 

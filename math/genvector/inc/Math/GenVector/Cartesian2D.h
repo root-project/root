@@ -3,8 +3,8 @@
 
  /**********************************************************************
   *                                                                    *
-  * Copyright (c) 2005 , LCG ROOT MathLib Team 			       *
-  *                    & FNAL LCG ROOT Mathlib Team  		       *
+  * Copyright (c) 2005 , LCG ROOT MathLib Team                         *
+  *                    & FNAL LCG ROOT Mathlib Team                    *
   *                                                                    *
   *                                                                    *
   **********************************************************************/

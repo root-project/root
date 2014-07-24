@@ -258,8 +258,8 @@ bool performance()
     p[0] = N;
     for (unsigned int i=0; i < N; i++)
     { 
-	a[i] = -1.;//-TMath::Pi();
-	b[i] = 1;//TMath::Pi();
+       a[i] = -1.;//-TMath::Pi();
+       b[i] = 1;//TMath::Pi();
     }
     //x[N] = N;
     double val0, err0; 

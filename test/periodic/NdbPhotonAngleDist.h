@@ -9,12 +9,12 @@ class NdbPhotonAngleDist : public NdbMF
 protected:
 
 public:
-	NdbPhotonAngleDist()
-		: NdbMF(14, "Angular distributions for photon production") {}
+   NdbPhotonAngleDist()
+      : NdbMF(14, "Angular distributions for photon production") {}
 
-	~NdbPhotonAngleDist() {}
+   ~NdbPhotonAngleDist() {}
 
-	ClassDef(NdbPhotonAngleDist,1)
+   ClassDef(NdbPhotonAngleDist,1)
 }; // NdbPhotonAngleDist
 
 #endif

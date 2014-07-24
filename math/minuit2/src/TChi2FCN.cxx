@@ -83,7 +83,7 @@ double TChi2FCN::operator()(const std::vector<double>& par) const {
       
       if (!fFunc->RejectedPoint() ) { 
          // calculat chi2 if point is not rejected
-         double tmp = ( y -fval )* invError;  	  
+         double tmp = ( y -fval )* invError;
          chi2 += tmp*tmp;
       }
       else 

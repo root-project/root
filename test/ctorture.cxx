@@ -11,8 +11,8 @@ Double_t Error(TComplex a, TComplex b)
 {return 2*TComplex::Abs(a-b)/(a.Rho()+b.Rho());}
 
 void Verify(const TComplex a, const TComplex b, 
-	   Double_t epsmin, Double_t epsmax, 
-	   const char* where, Int_t & ifail, Double_t &serr)
+            Double_t epsmin, Double_t epsmax,
+            const char* where, Int_t & ifail, Double_t &serr)
 {
   Double_t err=Error(a,b);
   serr+=err;
@@ -25,7 +25,7 @@ void Verify(const TComplex a, const TComplex b,
     }
   }
 }
-   	   
+
 void Summary(const char* title, Int_t ifail, Double_t serr, Int_t np)
 {
   printf("Results for %s\n",title);
@@ -193,9 +193,9 @@ int main () {
   for(i=0; i<np; i++) {
     a=TComplex(10*(1-2*gRandom->Rndm()),10*(1-2*gRandom->Rndm()));
     while (TComplex::Abs(
-			 e=TComplex(10*(1-2*gRandom->Rndm()),
-				    10*(1-2*gRandom->Rndm()))
-			 )<0.1) { }
+                         e=TComplex(10*(1-2*gRandom->Rndm()),
+                                    10*(1-2*gRandom->Rndm()))
+                         )<0.1) { }
     b=TComplex::Power(a,1./e);
     c=TComplex::Power(b,e);
     Verify(a,c,2e-14,1.,title,ifail,serr);
@@ -221,9 +221,9 @@ int main () {
   strlcpy(title,"Power R-C",20);
   for(i=0; i<np; i++) {
     while (TComplex::Abs(
-			 a=TComplex(10*(1-2*gRandom->Rndm()),
-				    10*(1-2*gRandom->Rndm()))
-			 )<0.1) { }
+                         a=TComplex(10*(1-2*gRandom->Rndm()),
+                                    10*(1-2*gRandom->Rndm()))
+                         )<0.1) { }
     x=10*(1-2*gRandom->Rndm());
     b=TComplex::Power(x,1./a);
     c=TComplex::Power(b,a);

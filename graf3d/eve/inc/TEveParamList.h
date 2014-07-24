@@ -36,7 +36,7 @@ public:
 
       FloatConfig_t(TString name, Double_t value, Double_t min, Double_t max, Bool_t selector = kFALSE):
          fValue(value), fMin(min), fMax(max), fName(name), fSelector(selector) {}
-      FloatConfig_t():	fValue(0), fMin(0), fMax(0), fName(""), fSelector(kFALSE) {}
+      FloatConfig_t(): fValue(0), fMin(0), fMax(0), fName(""), fSelector(kFALSE) {}
    };
    typedef std::vector<FloatConfig_t>       FloatConfigVec_t;
    typedef FloatConfigVec_t::iterator       FloatConfigVec_i;

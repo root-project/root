@@ -38,12 +38,12 @@ class FTGL_EXPORT FTGLPixmapFont : public FTFont
          */
         ~FTGLPixmapFont();
         
-	/**
+        /**
          * Prepare for rendering
          */
         virtual void PreRender();
 
-	/**
+        /**
          * Cleanup after rendering
          */
         virtual void PostRender();

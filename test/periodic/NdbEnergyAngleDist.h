@@ -9,12 +9,12 @@ class NdbEnergyAngleDist : public NdbMF
 protected:
 
 public:
-	NdbEnergyAngleDist()
-		: NdbMF(6, "Energy-angle distributions for emitted particles") {}
+   NdbEnergyAngleDist()
+      : NdbMF(6, "Energy-angle distributions for emitted particles") {}
 
-	~NdbEnergyAngleDist() {}
+   ~NdbEnergyAngleDist() {}
 
-	ClassDef(NdbEnergyAngleDist,1)
+   ClassDef(NdbEnergyAngleDist,1)
 
 }; // NdbEnergyAngleDist
 

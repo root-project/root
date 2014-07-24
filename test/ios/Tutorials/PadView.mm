@@ -134,17 +134,17 @@
 
    CGImageRef cgImage = image.CGImage;
 
-	const size_t pixelsW = CGImageGetWidth(cgImage);
-	const size_t pixelsH = CGImageGetHeight(cgImage);
-	//Declare the number of bytes per row. Each pixel in the bitmap
-	//is represented by 4 bytes; 8 bits each of red, green, blue, and
-	//alpha.
-	const int bitmapBytesPerRow = pixelsW * 4;
-	const int bitmapByteCount = bitmapBytesPerRow * pixelsH;
-	
-	//Use the generic RGB color space.
-	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	if (!colorSpace) {
+   const size_t pixelsW = CGImageGetWidth(cgImage);
+   const size_t pixelsH = CGImageGetHeight(cgImage);
+   //Declare the number of bytes per row. Each pixel in the bitmap
+   //is represented by 4 bytes; 8 bits each of red, green, blue, and
+   //alpha.
+   const int bitmapBytesPerRow = pixelsW * 4;
+   const int bitmapByteCount = bitmapBytesPerRow * pixelsH;
+   
+   //Use the generic RGB color space.
+   CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+   if (!colorSpace) {
       //Log error: color space allocation failed.
       return NO;
    }

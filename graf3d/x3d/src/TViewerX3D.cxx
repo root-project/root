@@ -437,7 +437,7 @@ Int_t TViewerX3D::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
          x3dBuff->polys     = buffer.fPols;
          FillX3DBuffer(x3dBuff);
          delete [] x3dBuff->points;
-	 delete x3dBuff;
+         delete x3dBuff;
          break;
       }
       default: {
@@ -509,7 +509,7 @@ void TViewerX3D::PaintPolyMarker(const TBuffer3D & buffer) const
          FillX3DBuffer(x3dBuff);
          delete [] x3dBuff->points;
          delete [] x3dBuff->segs;
-	 delete x3dBuff;
+         delete x3dBuff;
          break;
       }
    }

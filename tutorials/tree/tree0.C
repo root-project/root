@@ -79,7 +79,7 @@ void tree0() {
     e->b.e=eb;
     e->a.t=gRandom->Rndm();  // random
     e->b.t=e->a.t + gRandom->Gaus(0.,.1);  // identical to a.t but a gaussian
-					   // 'resolution' was added with sigma .1
+                                           // 'resolution' was added with sigma .1
 
     tree->Fill();  // fill the tree with the current event
   }  

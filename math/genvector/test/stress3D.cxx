@@ -46,7 +46,7 @@ public:
     int pr = std::cout.precision(8);
     std::cout << s << "\t" << " time = " << time.RealTime() << "\t(sec)\t" 
       //    << time.CpuTime() 
-	      << std::endl;
+              << std::endl;
     std::cout.precision(pr);
   }
 

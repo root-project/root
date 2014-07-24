@@ -180,7 +180,7 @@ const unsigned colorIndices[16] = {
 - (NSInteger) numberOfComponentsInPickerView : (UIPickerView *) pickerView
 {
    //We have two pickers, each with exactly one 'wheel'.
-	return 1;
+   return 1;
 }
 
 #pragma mark UIPickerViewDelegate
@@ -188,7 +188,7 @@ const unsigned colorIndices[16] = {
 // tell the picker which view to use for a given component and row, we have an array of views to show
 //_________________________________________________________________
 - (UIView *) pickerView : (UIPickerView *) pickerView viewForRow : (NSInteger) row
-		  forComponent : (NSInteger) component reusingView : (UIView *) view
+           forComponent : (NSInteger) component reusingView : (UIView *) view
 {
 #pragma unused(component)
 

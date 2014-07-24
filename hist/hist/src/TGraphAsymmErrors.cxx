@@ -595,7 +595,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
    //number of total and passed events
    Int_t t = 0 , p = 0;
    Double_t tw = 0, tw2 = 0, pw = 0, pw2 = 0; // for the case of weights
-   //loop over all bins and fill the graph
+                                              //loop over all bins and fill the graph
    for (Int_t b=1; b<=nbins; ++b) {
 
       // default value when total =0;
@@ -604,47 +604,47 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       upper = 0;
 
       // special case in case of weights we have to consider the sum of weights and the sum of weight squares
-       if(bEffective) {
-          tw =  total->GetBinContent(b);
-          tw2 = total->GetSumw2()->At(b);
-          pw =  pass->GetBinContent(b);
-          pw2 = pass->GetSumw2()->At(b);
+      if(bEffective) {
+         tw =  total->GetBinContent(b);
+         tw2 = total->GetSumw2()->At(b);
+         pw =  pass->GetBinContent(b);
+         pw2 = pass->GetSumw2()->At(b);
 
-	  if(bPoissonRatio)
-	  {
-	    tw += pw;
-	    tw2 += pw2;
-	  }
+         if(bPoissonRatio)
+         {
+            tw += pw;
+            tw2 += pw2;
+         }
 
-          if (tw <= 0 && !plot0Bins) continue; // skip bins with total <= 0
+         if (tw <= 0 && !plot0Bins) continue; // skip bins with total <= 0
 
-          // in the case of weights have the formula only for
-          // the normal and  bayesian statistics (see below)
+         // in the case of weights have the formula only for
+         // the normal and  bayesian statistics (see below)
 
-       }
+      }
 
-       //use bin contents
-       else {
-          t = int( total->GetBinContent(b) + 0.5);
-          p = int(pass->GetBinContent(b) + 0.5);
+      //use bin contents
+      else {
+         t = int( total->GetBinContent(b) + 0.5);
+         p = int(pass->GetBinContent(b) + 0.5);
 
-	  if(bPoissonRatio)
-	    t += p;
-	  
-          if (!t && !plot0Bins) continue; // skip bins with total = 0
-       }
+         if(bPoissonRatio)
+            t += p;
+
+         if (!t && !plot0Bins) continue; // skip bins with total = 0
+      }
 
 
       //using bayesian statistics
-      if(bIsBayesian) {         
+      if(bIsBayesian) {
          double aa,bb;
 
-         if (bEffective && tw2 <= 0) { 
-            // case of bins with zero errors 
-            eff = pw/tw; 
+         if (bEffective && tw2 <= 0) {
+            // case of bins with zero errors
+            eff = pw/tw;
             low = eff; upper = eff;
          }
-         else { 
+         else {
 
             if (bEffective) {
                // tw/tw2 renormalize the weights
@@ -660,7 +660,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
                eff = TEfficiency::BetaMode(aa,bb);
             else
                eff = TEfficiency::BetaMean(aa,bb);
-            
+
             if (useShortestInterval) {
                TEfficiency::BetaShortestInterval(conf,aa,bb,low,upper);
             }
@@ -705,18 +705,18 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       // treat as Poisson ratio
       if(bPoissonRatio && eff != 1)
       {
-	Double_t cor = 1./pow(1 - eff,2);
-	Double_t ratio = eff/(1 - eff);
-	low = ratio - cor * (eff - low);
-	upper = ratio + cor * (upper - eff);
-	eff = ratio;
+         Double_t cor = 1./pow(1 - eff,2);
+         Double_t ratio = eff/(1 - eff);
+         low = ratio - cor * (eff - low);
+         upper = ratio + cor * (upper - eff);
+         eff = ratio;
       }
       //Set the point center and its errors
       SetPoint(npoint,pass->GetBinCenter(b),eff);
       SetPointError(npoint,
-      pass->GetBinCenter(b)-pass->GetBinLowEdge(b),
-      pass->GetBinLowEdge(b)-pass->GetBinCenter(b)+pass->GetBinWidth(b),
-      eff-low,upper-eff);
+                    pass->GetBinCenter(b)-pass->GetBinLowEdge(b),
+                    pass->GetBinLowEdge(b)-pass->GetBinCenter(b)+pass->GetBinWidth(b),
+                    eff-low,upper-eff);
       npoint++;//we have added a point to the graph
    }
 

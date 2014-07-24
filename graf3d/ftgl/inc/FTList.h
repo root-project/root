@@ -88,11 +88,11 @@ class FTGL_EXPORT FTList
         struct Node
         {
             Node()
-            :	next(NULL)
+            : next(NULL)
             {}
 
             Node( const value_type& item)
-            :	next(NULL)
+            : next(NULL)
             {
                 payload = item;
             }

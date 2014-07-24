@@ -70,7 +70,7 @@ namespace Math {
          }
 
       }
-	    
+
    };
 
    /** 
@@ -354,7 +354,7 @@ namespace Math {
    struct PlaceMatrix
    {
       static void Evaluate(SMatrix<T,D1,D2,R1>& lhs,  const SMatrix<T,D3,D4,R2>& rhs, 
-			   unsigned int row, unsigned int col) {
+                           unsigned int row, unsigned int col) {
 
          assert(row+D3 <= D1 && col+D4 <= D2);
          const unsigned int offset = row*D2+col;
@@ -421,7 +421,7 @@ namespace Math {
          for(unsigned int i=0; i<D3; ++i) {
             for(unsigned int j=0; j<=i; ++j) 
                lhs.fRep(row+i,col+j) = rhs(i,j);
-         }	  
+         }
       }
    }; // struct PlaceMatrix
 
@@ -454,7 +454,7 @@ namespace Math {
    struct RetrieveMatrix
    {
       static void Evaluate(SMatrix<T,D1,D2,R1>& lhs,  const SMatrix<T,D3,D4,R2>& rhs, 
-			   unsigned int row, unsigned int col) {
+                           unsigned int row, unsigned int col) {
          STATIC_CHECK( D1 <= D3,Smatrix_nrows_too_small); 
          STATIC_CHECK( D2 <= D4,Smatrix_ncols_too_small); 
 
@@ -495,7 +495,7 @@ namespace Math {
 
          for(unsigned int i=0; i<D1; ++i) {
             for(unsigned int j=0; j<=i; ++j) 
-               lhs(i,j) = rhs(i+row,j+col );	
+               lhs(i,j) = rhs(i+row,j+col );
          }
       }
 
@@ -521,7 +521,7 @@ namespace Math {
                      // we assume iterator is well bounded within matrix
                      lhs.fRep[i*D2+j] = *itr++;
                   }
-	      
+
             }
             else { // upper 
                for (unsigned int i = 0; i < D1; ++i) 
@@ -531,7 +531,7 @@ namespace Math {
                      else
                         return;
                   }
-	  
+
             }
          }
          // case of filling the full matrix
@@ -541,7 +541,7 @@ namespace Math {
             std::copy(begin, end, lhs.fRep.Array() );
          }
       }
-	
+
    }; // struct AssignItr
 
    /**

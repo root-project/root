@@ -320,13 +320,13 @@ void TQRootCanvas::dropEvent( QDropEvent *Event )
          }
       }
       else
-	cout << "object " << 
+         cout << "object " <<
 #if  (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
-	  str.data() 
+         str.data()
 #else 
-	  str
+         str
 #endif
-	     <<  " not found by ROOT" << endl;
+         <<  " not found by ROOT" << endl;
    }
 }
 

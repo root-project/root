@@ -810,44 +810,44 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
          // increment/decrement X slice
          td.fVoxSlices[0]=dind[0];
          if (iforced) {
-         // we have to recompute Y and Z slices
+            // we have to recompute Y and Z slices
             if (dslice>td.fVoxLimits[1]) return 0;
             if (dslice>td.fVoxLimits[2]) return 0;
             if ((dslice>dmin[1]) && td.fVoxInc[1]) {
                xptnew = point[1]+dslice/td.fVoxInvdir[1];
-//               printf("   recomputing Y slice, pos=%g\n", xptnew);
+               //               printf("   recomputing Y slice, pos=%g\n", xptnew);
                while (1) {
                   td.fVoxSlices[1] += td.fVoxInc[1];
                   if (td.fVoxInc[1]==1) {
-  		     if (td.fVoxSlices[1]<-1 || td.fVoxSlices[1]>fIby-2) break; // outside range
+                     if (td.fVoxSlices[1]<-1 || td.fVoxSlices[1]>fIby-2) break; // outside range
                      if (fYb[td.fVoxSlices[1]+1]>=xptnew) break;
                   } else {
                      if (td.fVoxSlices[1]<0 || td.fVoxSlices[1]>fIby-1) break; // outside range
                      if (fYb[td.fVoxSlices[1]]<= xptnew) break;
                   }
                }
-//               printf("   %i/%i\n", td.fVoxSlices[1], fIby-2);
+               //               printf("   %i/%i\n", td.fVoxSlices[1], fIby-2);
             }
-            if ((dslice>dmin[2]) && td.fVoxInc[2]) {             
+            if ((dslice>dmin[2]) && td.fVoxInc[2]) {
                xptnew = point[2]+dslice/td.fVoxInvdir[2];
-//               printf("   recomputing Z slice, pos=%g\n", xptnew);
+               //               printf("   recomputing Z slice, pos=%g\n", xptnew);
                while (1) {
                   td.fVoxSlices[2] += td.fVoxInc[2];
                   if (td.fVoxInc[2]==1) {
-  		     if (td.fVoxSlices[2]<-1 || td.fVoxSlices[2]>fIbz-2) break; // outside range
+                     if (td.fVoxSlices[2]<-1 || td.fVoxSlices[2]>fIbz-2) break; // outside range
                      if (fZb[td.fVoxSlices[2]+1]>=xptnew) break;
                   } else {
                      if (td.fVoxSlices[2]<0 || td.fVoxSlices[2]>fIbz-1) break; // outside range
                      if (fZb[td.fVoxSlices[2]]<= xptnew) break;
                   }
-               }          
-//               printf("   %i/%i\n", td.fVoxSlices[2], fIbz-2);
+               }
+               //               printf("   %i/%i\n", td.fVoxSlices[2], fIbz-2);
             }
          }
-         // new indices are set -> Get new candidates   
+         // new indices are set -> Get new candidates
          if (fPriority[0]==1) {
-         // we are entering the unique slice on this axis
-         //---> intersect and store Y and Z
+            // we are entering the unique slice on this axis
+            //---> intersect and store Y and Z
             if (fPriority[1]==2) {
                if (td.fVoxSlices[1]<0 || td.fVoxSlices[1]>=fIby-1) return td.fVoxCheckList; // outside range
                ndd[0] = fNsliceY[td.fVoxSlices[1]];
@@ -1034,27 +1034,27 @@ Int_t *TGeoVoxelFinder::GetNextCandidates(const Double_t *point, Int_t &ncheck, 
          // increment/decrement Z slice
          td.fVoxSlices[2]=dind[2];
          if (iforced) {
-         // we have to recompute Y and X slices
+            // we have to recompute Y and X slices
             if (dslice>td.fVoxLimits[1]) return 0;
             if (dslice>td.fVoxLimits[0]) return 0;
             if ((dslice>dmin[1]) && td.fVoxInc[1]) {
                xptnew = point[1]+dslice/td.fVoxInvdir[1];
-//               printf("   recomputing Y slice, pos=%g\n", xptnew);
+               //               printf("   recomputing Y slice, pos=%g\n", xptnew);
                while (1) {
                   td.fVoxSlices[1] += td.fVoxInc[1];
                   if (td.fVoxInc[1]==1) {
-  		     if (td.fVoxSlices[1]<-1 || td.fVoxSlices[1]>fIby-2) break; // outside range
+                     if (td.fVoxSlices[1]<-1 || td.fVoxSlices[1]>fIby-2) break; // outside range
                      if (fYb[td.fVoxSlices[1]+1]>=xptnew) break;
                   } else {
                      if (td.fVoxSlices[1]<0 || td.fVoxSlices[1]>fIby-1) break; // outside range
                      if (fYb[td.fVoxSlices[1]]<= xptnew) break;
                   }
                }
-//               printf("   %i/%i\n", td.fVoxSlices[1], fIby-2);
+               //               printf("   %i/%i\n", td.fVoxSlices[1], fIby-2);
             }
-            if ((dslice>dmin[0]) && td.fVoxInc[0]) {             
+            if ((dslice>dmin[0]) && td.fVoxInc[0]) {
                xptnew = point[0]+dslice/td.fVoxInvdir[0];
-//               printf("   recomputing X slice, pos=%g\n", xptnew);
+               //               printf("   recomputing X slice, pos=%g\n", xptnew);
                while (1) {
                   td.fVoxSlices[0] += td.fVoxInc[0];
                   if (td.fVoxInc[0]==1) {

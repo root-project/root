@@ -54,10 +54,10 @@ class writer(object):
 
     def addBox(self, name, dx, dy, dz):
         self.solids[2].append(['box',{'name':name, 'x':dx, 'y':dy, 'z':dz, 'lunit':'cm'},[]])
-	
+
     def addParaboloid(self, name, rlo, rhi, dz):
         self.solids[2].append(['paraboloid',{'name':name, 'rlo':rlo, 'rhi':rhi, 'dz':dz, 'lunit':'cm'},[]])
-	
+
     def addArb8(self, name, v1x, v1y, v2x, v2y, v3x, v3y, v4x, v4y, v5x, v5y, v6x, v6y, v7x, v7y, v8x, v8y, dz):
         self.solids[2].append(['arb8',{'name':name, 'v1x':v1x, 'v1y':v1y, 'v2x':v2x, 'v2y':v2y, 'v3x':v3x, 'v3y':v3y, 'v4x':v4x, 'v4y':v4y, 'v5x':v5x, 'v5y':v5y, 'v6x':v6x, 'v6y':v6y, 'v7x':v7x, 'v7y':v7y, 'v8x':v8x, 'v8y':v8y, 'dz':dz, 'lunit':'cm'},[]])
 
@@ -80,7 +80,7 @@ class writer(object):
         self.solids[2].append(['trap', {'name':name, 'z':z, 'theta':theta, 'phi':phi,
                                         'x1':x1, 'x2':x2, 'x3':x3, 'x4':x4,
                                         'y1':y1, 'y2':y2, 'alpha1':alpha1, 'alpha2':alpha2, 'lunit':'cm', 'aunit':'deg'}, []])
-					
+
     def addTwistedTrap(self, name, z, theta, phi, y1, x1, x2, alpha1, y2, x3, x4, alpha2, twist):
         self.solids[2].append(['twistTrap', {'name':name, 'z':z, 'theta':theta, 'phi':phi,
                                              'x1':x1, 'x2':x2, 'x3':x3, 'x4':x4,
@@ -93,7 +93,7 @@ class writer(object):
     def addTube(self, name, rmin, rmax, z, startphi, deltaphi):
         self.solids[2].append(['tube',{'name':name, 'rmin':rmin, 'rmax':rmax,
                                        'z':z, 'startphi':startphi, 'deltaphi':deltaphi, 'lunit':'cm', 'aunit':'deg'},[]])
-				       
+
     def addCutTube(self, name, rmin, rmax, z, startphi, deltaphi, lowX, lowY, lowZ, highX, highY, highZ):
         self.solids[2].append(['cutTube',{'name':name, 'rmin':rmin, 'rmax':rmax,
                                           'z':z, 'startphi':startphi, 'deltaphi':deltaphi,

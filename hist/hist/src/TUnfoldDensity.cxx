@@ -239,8 +239,8 @@ TUnfoldDensity::TUnfoldDensity
    // set up the regularisation here
    if(regmode !=kRegModeNone) {
       RegularizeDistribution
-	(regmode,densityMode,regularisationDistribution,
-	 regularisationAxisSteering);
+      (regmode,densityMode,regularisationDistribution,
+       regularisationAxisSteering);
    }
 }
 
@@ -360,9 +360,9 @@ void TUnfoldDensity::RegularizeOneDistribution
        <<"\n";
 #endif
    Info("RegularizeOneDistribution","regularizing %s regMode=%d"
-	" densityMode=%d axisSteering=%s",
-	binning->GetName(),(Int_t) regmode,(Int_t)densityMode,
-	axisSteering ? axisSteering : "");
+        " densityMode=%d axisSteering=%s",
+        binning->GetName(),(Int_t) regmode,(Int_t)densityMode,
+        axisSteering ? axisSteering : "");
    Int_t startBin=binning->GetStartBin();
    Int_t endBin=startBin+ binning->GetDistributionNumberOfBins();
    std::vector<Double_t> factor(endBin-startBin);
@@ -854,7 +854,7 @@ TH2 *TUnfoldDensity::GetRhoIJtotal
          if(e_i>0.0) e_i=TMath::Sqrt(e_i);
          else e_i=0.0;
          for(Int_t j=0;j<=r->GetNbinsY()+1;j++) {
-	   if(i==j) continue;
+            if(i==j) continue;
             Double_t e_j=r->GetBinContent(j,j);
             if(e_j>0.0) e_j=TMath::Sqrt(e_j);
             else e_j=0.0;
@@ -867,11 +867,11 @@ TH2 *TUnfoldDensity::GetRhoIJtotal
          }
       }
       for(Int_t i=0;i<=r->GetNbinsX()+1;i++) {
-	if(r->GetBinContent(i,i)>0.0) {
-	  r->SetBinContent(i,i,1.0);
-	} else {
-	  r->SetBinContent(i,i,0.0);
-	}
+         if(r->GetBinContent(i,i)>0.0) {
+            r->SetBinContent(i,i,1.0);
+         } else {
+            r->SetBinContent(i,i,0.0);
+         }
       }
    }
    return r;

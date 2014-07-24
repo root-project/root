@@ -190,9 +190,9 @@ Bool_t TGLRotateManip::HandleButton(const Event_t& event, const TGLCamera& camer
          // Work out ring follow direction - if clicked on back or front of ring.
          // If plane/eye angle very shallow force to front
 
-			/* DISABLED - Force onto front always */
-			fShallowFront = kTRUE;
-			/*
+         /* DISABLED - Force onto front always */
+         fShallowFront = kTRUE;
+         /*
          if ((planeEyeAngle > -shallowDelta/3.0) && (planeEyeAngle < shallowDelta/3.0) ||
              Dot(fRingLine.Vector(), camera.FrustumPlane(TGLCamera::kNear).Norm()) < 0.0) {
             fShallowFront = kTRUE;

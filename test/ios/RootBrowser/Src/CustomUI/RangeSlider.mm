@@ -50,13 +50,13 @@
       minThumb = [[UIImageView alloc] initWithImage : [UIImage imageNamed : @"handle.png"] highlightedImage : [UIImage imageNamed : @"handle-hover.png"]];
       minThumb.frame = CGRectMake(0.f, 0.f, self.frame.size.height,self.frame.size.height);
       minThumb.contentMode = UIViewContentModeCenter;
-		minThumb.center = CGPointMake([self xForValue : selectedMinimumValue], self.frame.size.height / 2);
-		[self addSubview : minThumb];
+      minThumb.center = CGPointMake([self xForValue : selectedMinimumValue], self.frame.size.height / 2);
+      [self addSubview : minThumb];
         
       maxThumb = [[UIImageView alloc] initWithImage : [UIImage imageNamed : @"handle.png"] highlightedImage : [UIImage imageNamed : @"handle-hover.png"]];
       maxThumb.frame = CGRectMake(0.f, 0.f, self.frame.size.height, self.frame.size.height);
       maxThumb.contentMode = UIViewContentModeCenter;
-		maxThumb.center = CGPointMake([self xForValue : selectedMaximumValue], self.frame.size.height / 2);
+      maxThumb.center = CGPointMake([self xForValue : selectedMaximumValue], self.frame.size.height / 2);
       [self addSubview : maxThumb];
 
       [self updateTrackHighlight];

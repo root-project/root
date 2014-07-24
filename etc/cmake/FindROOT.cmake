@@ -44,7 +44,7 @@ endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(ROOT DEFAULT_MSG ROOT_CONFIG_EXECUTABLE
-    ROOTSYS ROOT_VERSION ROOT_INCLUDE_DIR ROOT_LIBRARIES	ROOT_LIBRARY_DIR)
+    ROOTSYS ROOT_VERSION ROOT_INCLUDE_DIR ROOT_LIBRARIES   ROOT_LIBRARY_DIR)
 
 mark_as_advanced(ROOT_CONFIG_EXECUTABLE)
 
@@ -64,7 +64,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   get_directory_property(incdirs INCLUDE_DIRECTORIES)
   set(includedirs) 
   foreach( d ${incdirs})    
-  	set(includedirs ${includedirs} -I${d})
+     set(includedirs ${includedirs} -I${d})
   endforeach()
   #---Get the list of header files-------------------------
   set(headerfiles)

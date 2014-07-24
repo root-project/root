@@ -113,7 +113,7 @@ public :
       get internal data into 4 Scalar numbers
    */ 
    void GetCoordinates(Scalar& px, Scalar& py, Scalar& pz, Scalar& e) const 
-   { px=fX; py=fY; pz=fZ; e=fT;}  				
+   { px=fX; py=fY; pz=fZ; e=fT;}
 
    // --------- Coordinates and Coordinate-like Scalar properties -------------
 
