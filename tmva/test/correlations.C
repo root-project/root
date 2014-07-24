@@ -1,4 +1,7 @@
 #include "tmvaglob.C"
+#include "TH1.h"
+#include "TH2.h"
+#include "TPaletteAxis.h"
 
 // this macro plots the correlation matrix of the various input
 // variables used in TMVA (e.g. running TMVAnalysis.C).  Signal and
@@ -24,7 +27,7 @@ void correlations( TString fin = "TMVA.root", Bool_t isRegression = kFALSE,
    const Int_t width = 600;
    for (Int_t ic=0; ic<ncls; ic++) {
 
-      TH2* h2 = file->Get( hName[ic] );
+      TH2* h2 = dynamic_cast<TH2*> (file->Get( hName[ic] ));
       if(!h2) {
          cout << "Did not find histogram " << hName[ic] << " in " << fin << endl;
          continue;
