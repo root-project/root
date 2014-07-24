@@ -185,24 +185,24 @@ public:
       kMissing     = 99999
    };
 
-//	Some comments about EReadWrite
-//	kBase    : base class element
-//	kOffsetL : fixed size array
-//	kOffsetP : pointer to object
-//	kCounter : counter for array size
-//	kCharStar: pointer to array of char
-//	kBits    : TObject::fBits in case of a referenced object
-//	kObject  : Class  derived from TObject
-//	kObjectp : Class* derived from TObject and with    comment field //->Class
-//	kObjectP : Class* derived from TObject and with NO comment field //->Class
-//	kAny     : Class  not derived from TObject
-//	kAnyp    : Class* not derived from TObject with    comment field //->Class
-//	kAnyP    : Class* not derived from TObject with NO comment field //->Class
+// Some comments about EReadWrite
+// kBase    : base class element
+// kOffsetL : fixed size array
+// kOffsetP : pointer to object
+// kCounter : counter for array size
+// kCharStar: pointer to array of char
+// kBits    : TObject::fBits in case of a referenced object
+// kObject  : Class  derived from TObject
+// kObjectp : Class* derived from TObject and with    comment field //->Class
+// kObjectP : Class* derived from TObject and with NO comment field //->Class
+// kAny     : Class  not derived from TObject
+// kAnyp    : Class* not derived from TObject with    comment field //->Class
+// kAnyP    : Class* not derived from TObject with NO comment field //->Class
 // kAnyPnoVT: Class* not derived from TObject with NO comment field //->Class and Class has NO virtual table
 // kSTLp    : Pointer to STL container.
-//	kTString	: TString, special case
-//	kTObject	: TObject, special case
-//	kTNamed  : TNamed , special case
+// kTString : TString, special case
+// kTObject : TObject, special case
+// kTNamed  : TNamed , special case
 
 
 

@@ -502,7 +502,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
          return false;
          break;
    }
-	
+
    return true;
 }
 

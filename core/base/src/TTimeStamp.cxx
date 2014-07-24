@@ -413,15 +413,15 @@ Int_t TTimeStamp::GetZoneOffset()
 #else
 #if !defined(R__FBSD) && !defined(R__OBSD)
    return  timezone;   // unix has extern long int
-#else	 
-   time_t tp = 0;	 
-   time(&tp);	 
-#ifdef _REENTRANT	 
-   struct tm buf;	 
-   return -localtime_r(&tp, &buf)->tm_gmtoff;	 
-#else	 
-   return -localtime(&tp)->tm_gmtoff;	 
-#endif	 
+#else
+   time_t tp = 0;
+   time(&tp);
+#ifdef _REENTRANT
+   struct tm buf;
+   return -localtime_r(&tp, &buf)->tm_gmtoff;
+#else
+   return -localtime(&tp)->tm_gmtoff;
+#endif 
 #endif  
 #endif
 #else

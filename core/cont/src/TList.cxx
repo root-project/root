@@ -419,11 +419,11 @@ void TList::Delete(Option_t *option)
       bool needRegister = fFirst && TROOT::Initialized();
       if(needRegister) {
          R__LOCKGUARD2(gROOTMutex);
-	 needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
+         needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
       }
       if (needRegister) {
          R__LOCKGUARD2(gROOTMutex);
-	 gROOT->GetListOfCleanups()->Add(this);
+         gROOT->GetListOfCleanups()->Add(this);
       }
       while (fFirst) {
          TObjLink *tlk = fFirst;
@@ -439,8 +439,8 @@ void TList::Delete(Option_t *option)
       }
 
       if (needRegister) {
-	 R__LOCKGUARD2(gROOTMutex);
-	 ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
+         R__LOCKGUARD2(gROOTMutex);
+         ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
       }
 
       fFirst = fLast = fCache = 0;

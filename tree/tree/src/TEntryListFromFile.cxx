@@ -112,7 +112,7 @@ Long64_t TEntryListFromFile::GetEntry(Int_t index)
          if (index >= fListOffset[itree] && fListOffset[itree]!=fListOffset[itree+1])
             break;
       }
-      LoadList(itree);	
+      LoadList(itree);
    }
    else if (index >= fListOffset[fTreeNumber+1]){
       //this entry is in one of following lists

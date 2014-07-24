@@ -798,7 +798,7 @@ void TBufferSQL::insert_test(const char* dsn, const char* usr,
    stmt = con->CreateStatement(0, odbc::ResultSet::CONCUR_READ_ONLY);
 
    ptr = stmt->ExecuteQuery(sql.Data()); 
-   if(!ptr) printf("No recorSet found!");	
+   if(!ptr) printf("No recorSet found!");
 
    ptr->Next();
    ptr->MoveToInsertRow();

@@ -4826,13 +4826,13 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
    } else {
       // resident size does not require any calculation. Virtual size
       // needs to be adjusted if traversing memory objects do not include the
-   	// globally shared text and data regions
-   	mach_port_t object_name;
-   	vm_address_t address;
-   	vm_region_top_info_data_t info;
-   	vm_size_t vsize, vprvt, rsize, size;
-   	rsize = ti.resident_size;
-   	vsize = ti.virtual_size;
+      // globally shared text and data regions
+      mach_port_t object_name;
+      vm_address_t address;
+      vm_region_top_info_data_t info;
+      vm_size_t vsize, vprvt, rsize, size;
+      rsize = ti.resident_size;
+      vsize = ti.virtual_size;
       vprvt = 0;
       for (address = 0; ; address += size) {
          // get memory region

@@ -45,35 +45,35 @@ PTR
 mmalloc_detach (md)
      PTR md;
 {
-  struct mdesc mtemp;
+   struct mdesc mtemp;
 
-  if (md != NULL)
-    {
+   if (md != NULL)
+   {
 
       mtemp = *(struct mdesc *) md;
 
       /* Now unmap all the pages associated with this region by asking for a
-	 negative increment equal to the current size of the region. */
+       negative increment equal to the current size of the region. */
 
       if ((mtemp.morecore (&mtemp, mtemp.base - mtemp.breakval)) == NULL)
-	{
-	  /* Update the original malloc descriptor with any changes */
-	  /* *(struct mdesc *) md = mtemp;  don't update, just unmapped (rdm) */
-          ;
-	}
+      {
+         /* Update the original malloc descriptor with any changes */
+         /* *(struct mdesc *) md = mtemp;  don't update, just unmapped (rdm) */
+         ;
+      }
       else
-	{
-	  if (mtemp.flags & MMALLOC_DEVZERO)
-	    {
+      {
+         if (mtemp.flags & MMALLOC_DEVZERO)
+         {
 #ifndef WIN32
-              close (mtemp.fd);
+            close (mtemp.fd);
 #else
-              CloseHandle(mtemp.fd);
+            CloseHandle(mtemp.fd);
 #endif
-	    }
-	  md = NULL;
-	}
-    }
-
-  return (md);
+         }
+         md = NULL;
+      }
+   }
+   
+   return (md);
 }

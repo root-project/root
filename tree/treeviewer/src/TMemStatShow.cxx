@@ -331,17 +331,17 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
          if (dbin > nbytes) dbin = nbytes;
          //fill bytes in the first page
          h->AddBinContent(bin,100*dbin/dv);
-	 //fill bytes in full following pages
+         //fill bytes in full following pages
          nb = Int_t((nbytes-dbin)/dv);
-	 if (bin+nb >nbins) nb = nbins-bin;
+         if (bin+nb >nbins) nb = nbins-bin;
          for (j=1;j<=nb;j++) h->AddBinContent(bin+j,100);
-	 //fill the bytes remaining in last page
+         //fill the bytes remaining in last page
          rest = nbytes-nb*dv-dbin;
-	 if (rest > 0) h->AddBinContent(bin+nb+1,100*rest/dv);
-	 //we save nbytes at pos. This info will be used when we free this slot
+         if (rest > 0) h->AddBinContent(bin+nb+1,100*rest/dv);
+         //we save nbytes at pos. This info will be used when we free this slot
          //if (nbold[ipos] > 0) printf("reallocating %d bytes (was %lld) at %lld, entry=%d\n",nbytes,nbold[ipos],ipos,i);
          if (nbold[ipos] == 0) {
-            nleaks++;            
+            nleaks++;
             //save the Tree entry number where we made this allocation
             ientry[ipos] = i;
          }
@@ -349,27 +349,27 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
       } else {
          fgHfree->Fill(pos);
          nbytes = nbold[ipos];
-	 if (bin+nb >nbins) nb = nbins-bin;
-	 nbold[ipos] = 0; nleaks--;
+         if (bin+nb >nbins) nb = nbins-bin;
+         nbold[ipos] = 0; nleaks--;
          fgHdiff->Fill(i-ientry[ipos]);
-	 if (nbytes <= 0) continue;
+         if (nbytes <= 0) continue;
          //fill bytes free in the first page
          if (dbin > nbytes) dbin = nbytes;
-	 h->AddBinContent(bin,-100*dbin/dv);
-	 //fill bytes free in full following pages
-	 nb = Int_t((nbytes-dbin)/dv);
-	 if (bin+nb >nbins) nb = nbins-bin;
+         h->AddBinContent(bin,-100*dbin/dv);
+         //fill bytes free in full following pages
+         nb = Int_t((nbytes-dbin)/dv);
+         if (bin+nb >nbins) nb = nbins-bin;
          for (j=1;j<=nb;j++) h->AddBinContent(bin+j,-100);
-	 //fill the bytes free in  in last page
-	 rest = nbytes-nb*dv-dbin;
-	 if (rest > 0) h->AddBinContent(bin+nb+1,-100*rest/dv);
+         //fill the bytes free in  in last page
+         rest = nbytes-nb*dv-dbin;
+         if (rest > 0) h->AddBinContent(bin+nb+1,-100*rest/dv);
 
       }
       if (time -updateLast > update) {
          //update canvas at regular intervals
-	 updateLast = time;
+         updateLast = time;
          h->SetEntries(i);
-	 fgC1->Modified();
+         fgC1->Modified();
          pvt->GetListOfLines()->Delete();
          Double_t mbytes = 0;
          Int_t nonEmpty = 0;
@@ -386,8 +386,8 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
          pvt->AddText(Form("page occupancy = %f per cent",occupancy));
          pvt->AddText("(for non empty pages only)");
          ptime->SetLabel(Form("%g sec",time));
-         
-	 fgC1->Update();
+
+         fgC1->Update();
          gSystem->ProcessEvents();
       }
    }
@@ -511,11 +511,11 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
       for (l=1;l<=nleaks;l++) {
          btstring = "";
          TMemStatShow::FillBTString(l,1,btstring);
-	 if (nchlabel > 0) {	 
+         if (nchlabel > 0) {
             if (!strncmp(btstring.Data()+2,label,nchlabel)) nl++;
-	 } else {
-	    if (btstring.Length() == 0) nl++;
-	 }
+         } else {
+            if (btstring.Length() == 0) nl++;
+         }
       }
       Double_t yr = ylow +(lb-0.5)*dy;
       tnl.DrawText(xr,yr,Form("%d",nl));

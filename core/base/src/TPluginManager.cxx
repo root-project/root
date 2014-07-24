@@ -483,16 +483,15 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
    {
       R__LOCKGUARD2(gInterpreterMutex);
       if (!fBasesLoaded) {
-	 fBasesLoaded = new THashTable();
-	 fBasesLoaded->SetOwner();
-      
+         fBasesLoaded = new THashTable();
+         fBasesLoaded->SetOwner();      
       }
       TString sbase = base;
       if (sbase != "") {
-	 sbase.ReplaceAll("::", "@@");
-	 if (fBasesLoaded->FindObject(sbase))
-	    return;
-	 fBasesLoaded->Add(new TObjString(sbase));
+         sbase.ReplaceAll("::", "@@");
+         if (fBasesLoaded->FindObject(sbase))
+            return;
+         fBasesLoaded->Add(new TObjString(sbase));
       }
 
       TPH__IsReadingDirs() = kTRUE;
@@ -505,38 +504,38 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
 #endif
       TString d;
       for (Int_t i = 0; i < dirs->GetEntriesFast(); i++) {
-	 d = ((TObjString*)dirs->At(i))->GetString();
-	 // check if directory already scanned
-	 Int_t skip = 0;
-	 for (Int_t j = 0; j < i; j++) {
-	    TString pd = ((TObjString*)dirs->At(j))->GetString();
-	    if (pd == d) {
-	       skip++;
-	       break;
-	    }
-	 }
-	 if (!skip) {
-	    if (sbase != "") {
-	       const char *p = gSystem->ConcatFileName(d, sbase);
-	       LoadHandlerMacros(p);
-	       delete [] p;
-	    } else {
-	       void *dirp = gSystem->OpenDirectory(d);
-	       if (dirp) {
-		  if (gDebug > 0)
-		     Info("LoadHandlersFromPluginDirs", "%s", d.Data());
-		  const char *f1;
-		  while ((f1 = gSystem->GetDirEntry(dirp))) {
-		     TString f = f1;
-		     const char *p = gSystem->ConcatFileName(d, f);
-		     LoadHandlerMacros(p);
-		     fBasesLoaded->Add(new TObjString(f));
-		     delete [] p;
-		  }
-	       }
-	       gSystem->FreeDirectory(dirp);
-	    }
-	 }
+         d = ((TObjString*)dirs->At(i))->GetString();
+         // check if directory already scanned
+         Int_t skip = 0;
+         for (Int_t j = 0; j < i; j++) {
+            TString pd = ((TObjString*)dirs->At(j))->GetString();
+            if (pd == d) {
+               skip++;
+               break;
+            }
+         }
+         if (!skip) {
+            if (sbase != "") {
+               const char *p = gSystem->ConcatFileName(d, sbase);
+               LoadHandlerMacros(p);
+               delete [] p;
+            } else {
+               void *dirp = gSystem->OpenDirectory(d);
+               if (dirp) {
+                  if (gDebug > 0)
+                     Info("LoadHandlersFromPluginDirs", "%s", d.Data());
+                  const char *f1;
+                  while ((f1 = gSystem->GetDirEntry(dirp))) {
+                     TString f = f1;
+                     const char *p = gSystem->ConcatFileName(d, f);
+                     LoadHandlerMacros(p);
+                     fBasesLoaded->Add(new TObjString(f));
+                     delete [] p;
+                  }
+               }
+               gSystem->FreeDirectory(dirp);
+            }
+         }
       }
       TPH__IsReadingDirs() = kFALSE;
    }
@@ -554,8 +553,8 @@ void TPluginManager::AddHandler(const char *base, const char *regexp,
    {
       R__LOCKGUARD2(gPluginManagerMutex);
       if (!fHandlers) {
-	 fHandlers = new TList;
-	 fHandlers->SetOwner();
+         fHandlers = new TList;
+         fHandlers->SetOwner();
       }
    }
    // make sure there is no previous handler for the same case
@@ -585,10 +584,10 @@ void TPluginManager::RemoveHandler(const char *base, const char *regexp)
 
    while ((h = (TPluginHandler*) next())) {
       if (h->fBase == base) {
-	 if (!regexp || h->fRegexp == regexp) {
-	    fHandlers->Remove(h);
-	    delete h;
-	 }
+         if (!regexp || h->fRegexp == regexp) {
+            fHandlers->Remove(h);
+            delete h;
+         }
       }
    }
 }

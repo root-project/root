@@ -15,7 +15,7 @@
 #pragma link C++ class string::iterator;
 #pragma link C++ class string::const_iterator;
 #else
-#include "dll_stl/str.h" 	 
+#include "dll_stl/str.h" 
 #endif
 
 #pragma extra_include "vector";

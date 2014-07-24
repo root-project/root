@@ -4482,7 +4482,6 @@ int RootCling(int argc,
    // Before returning, rename the files
    return tmpCatalog.commit();
 
-
 }
 
 namespace genreflex{
