@@ -24,7 +24,7 @@ class FTGL_EXPORT FTTesselation
          * Default constructor
          */
         FTTesselation( GLenum m)
-        :	meshType(m)
+        : meshType(m)
         {
             pointList.reserve( 128);
         }
@@ -79,8 +79,8 @@ class FTGL_EXPORT FTTesselation
  */
 class FTGL_EXPORT FTMesh
 {
-	typedef FTVector<FTTesselation*> TesselationVector;
-	typedef FTList<FTPoint> PointList;
+   typedef FTVector<FTTesselation*> TesselationVector;
+   typedef FTList<FTPoint> PointList;
 
     public:
         /**

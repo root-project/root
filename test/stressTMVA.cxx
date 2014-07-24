@@ -1791,8 +1791,8 @@ namespace UnitTesting
   {
   public:
     MethodUnitTestWithROCLimits(const TMVA::Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
-								double lowLimit = 0., double upLimit = 1.,
-								const std::string & name="", const std::string & filename="", std::ostream* osptr = &std::cout);
+                                double lowLimit = 0., double upLimit = 1.,
+                                const std::string & name="", const std::string & filename="", std::ostream* osptr = &std::cout);
     virtual ~MethodUnitTestWithROCLimits();
     
     virtual void run();
@@ -1806,7 +1806,7 @@ namespace UnitTesting
      TMVA::Types::EMVA _methodType;
      TString _methodTitle;
      TString _methodOption;
-	
+
      double _upROCLimit;
      double _lowROCLimit;
      double _ROCValue;
@@ -1839,7 +1839,7 @@ using namespace UnitTesting;
 using namespace TMVA;
 
 MethodUnitTestWithROCLimits::MethodUnitTestWithROCLimits(const Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
-														double lowLimit, double upLimit,
+                                                         double lowLimit, double upLimit,
                                                          const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */ ) :
    UnitTest((string)methodTitle, __FILE__), _methodType(theMethod) , _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit), _VariableNames(0), _TreeVariableNames(0)
 {
@@ -1920,7 +1920,7 @@ void MethodUnitTestWithROCLimits::run()
   
   // FIXME:: make options string mutable?
   factory->PrepareTrainingAndTestTree( mycuts, mycutb,
-				       "nTrain_Signal=1000:nTrain_Background=1000:nTest_Signal=5000:nTest_Background=5000:SplitMode=Random:NormMode=NumEvents:!V" );
+                                      "nTrain_Signal=1000:nTrain_Background=1000:nTest_Signal=5000:nTest_Background=5000:SplitMode=Random:NormMode=NumEvents:!V" );
  
   factory->BookMethod(_methodType, _methodTitle, _methodOption);
 
@@ -2518,7 +2518,7 @@ using namespace UnitTesting;
 using namespace TMVA;
 
 MethodUnitTestWithComplexData::MethodUnitTestWithComplexData(const TString& treestring, const TString& preparestring, const Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
-														double lowLimit, double upLimit,
+                                                             double lowLimit, double upLimit,
                                                              const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */) :
    UnitTest(string("ComplexData_")+(string)methodTitle+(string)treestring, __FILE__),  _methodType(theMethod) , _treeString(treestring), _prepareString(preparestring), _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit)
 {
@@ -2536,7 +2536,7 @@ bool MethodUnitTestWithComplexData::ROCIntegralWithinInterval()
 
 void MethodUnitTestWithComplexData::run()
 {
-	// FIXME:: create _this_ file or rather somewhere else?
+  // FIXME:: create _this_ file or rather somewhere else?
   TString outfileName( "weights/TMVA.root" );
   TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
 

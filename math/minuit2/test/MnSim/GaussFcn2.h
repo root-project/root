@@ -24,11 +24,11 @@ class GaussFcn2 : public FCNBase {
 public:
 
   GaussFcn2(const std::vector<double>& meas,
-	  const std::vector<double>& pos,
-	  const std::vector<double>& mvar) : fMeasurements(meas),
-					     fPositions(pos),
-					     fMVariances(mvar), 
-					     fMin(0.) {Init();}
+            const std::vector<double>& pos,
+            const std::vector<double>& mvar) : fMeasurements(meas),
+   fPositions(pos),
+   fMVariances(mvar),
+   fMin(0.) {Init();}
   ~GaussFcn2() {}
 
   virtual void Init();

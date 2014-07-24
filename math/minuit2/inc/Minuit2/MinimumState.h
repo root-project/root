@@ -40,7 +40,7 @@ public:
   /** state with parameters, Gradient and covariance (from Gradient methods 
       such as Migrad) */
   MinimumState(const MinimumParameters& states, const MinimumError& err, 
-	       const FunctionGradient& grad, double edm, int nfcn) : 
+               const FunctionGradient& grad, double edm, int nfcn) :
     fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(states, err, grad, edm, nfcn))) {}
   
   ~MinimumState() {}

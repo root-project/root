@@ -127,7 +127,7 @@ void *EvaluateResidual(void * ptr) {
       // eventually add possibility of excluding some points (like singularity) 
       if (fval > - std::numeric_limits<double>::max() && fval < std::numeric_limits<double>::max() ) { 
          // calculat chi2 point
-         double tmp = ( y -fval )* invError;  	  
+         double tmp = ( y -fval )* invError;
          chi2 += tmp*tmp;
       }
       else 

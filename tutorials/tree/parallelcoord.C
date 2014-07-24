@@ -36,7 +36,7 @@ void parallelcoord() {
    r = new TRandom();;
 
    new TCanvas("c1", "c1",0,0,800,700);
-   gStyle->SetPalette(1);      	
+   gStyle->SetPalette(1);
 
    nt = new TNtuple("nt","Demo ntuple","x:y:z:u:v:w");
 

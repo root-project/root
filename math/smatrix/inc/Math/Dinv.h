@@ -81,17 +81,17 @@ public:
 
       /* Initialized data */
      unsigned int work[n+1] = {0};
-
+     
      typename MatrixRep::value_type det(0.0);
-      
-      if (DfactMatrix(rhs,det,work) != 0) {
-	std::cerr << "Dfact_matrix failed!!" << std::endl;
-	return false;
-      }
-
-      int ifail =  DfinvMatrix(rhs,work); 
-      if (ifail == 0) return true; 
-      return false; 
+     
+     if (DfactMatrix(rhs,det,work) != 0) {
+        std::cerr << "Dfact_matrix failed!!" << std::endl;
+        return false;
+     }
+     
+     int ifail =  DfinvMatrix(rhs,work);
+     if (ifail == 0) return true;
+     return false;
   } // Dinv
 
 

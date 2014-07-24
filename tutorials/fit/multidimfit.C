@@ -231,7 +231,7 @@ Int_t multidimfit(bool doFit = true)
 
     for (j = 0; j < nVars; j++) 
       if (x[j] < xMin[j] || x[j] > xMax[j])
-	break;
+    break;
 
     // If we get through the loop above, all variables are in range 
     if (j == nVars)  

@@ -53,9 +53,9 @@ namespace Roots {
 //________________________________________________________________________________________________________
      /**
         Roots::Bisection
-	Bisection algorithm, simplest algorithm for bracketing the roots of a function, but slowest one.
-	See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Bracketing-Algorithms.html">GSL manual</A> for more information
-	@ingroup RootFinders
+      Bisection algorithm, simplest algorithm for bracketing the roots of a function, but slowest one.
+      See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Bracketing-Algorithms.html">GSL manual</A> for more information
+      @ingroup RootFinders
      */
 
    class Bisection : public GSLRootFinder {
@@ -101,7 +101,7 @@ namespace Roots {
       Brent-Dekker algorithm which combines an interpolation strategy with the bisection algorithm 
       See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Bracketing-Algorithms.html">
       GSL manual</A> for more information
-	
+
       @ingroup RootFinders
    */
 

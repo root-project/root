@@ -20,9 +20,9 @@ namespace Cephes {
 
 
 
-/*							
+/*
  *
- *	Inverse of Normal distribution function
+ * Inverse of Normal distribution function
  *
  *
  *
@@ -173,7 +173,7 @@ double ndtri( double y0 )
 
 
 
-/*							
+/*
  *
  *      Inverse of complemented imcomplete gamma integral
  *
@@ -362,7 +362,7 @@ done:
 }
 
 
-/*							
+/*
  *
  *      Inverse of imcomplete beta integral
  *

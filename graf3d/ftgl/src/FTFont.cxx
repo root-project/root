@@ -277,22 +277,22 @@ void FTFont::Render( const char* string, float w_max, float w_fade )
     const unsigned char* c = (unsigned char*)string;
     pen.X(0); pen.Y(0);
 
-    while( *c)
-    {
-        if(CheckGlyph( *c))
-        {
-            pen = glyphList->Render( *c, *(c + 1), pen);
-            w += pen.X();
-	    if(w > w_max)
-	        break;
-	    if(w > w_fade)
-	    {
-	        col[3] = alpha_fac * (w_max - w);
-	        glColor4fv(col);
-	    }
-        }
-        ++c;
-    }
+   while( *c)
+   {
+      if(CheckGlyph( *c))
+      {
+         pen = glyphList->Render( *c, *(c + 1), pen);
+         w += pen.X();
+         if(w > w_max)
+            break;
+         if(w > w_fade)
+         {
+            col[3] = alpha_fac * (w_max - w);
+            glColor4fv(col);
+         }
+      }
+      ++c;
+   }
 
     if (pre_post) PostRender();
 }

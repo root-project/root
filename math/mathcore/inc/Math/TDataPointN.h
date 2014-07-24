@@ -56,7 +56,7 @@ public:
    bool        Less(TDataPointN& rPoint,unsigned int iAxis) const;
    void        SetCoordinate(unsigned int iAxis,value_type fValue);
    void        SetWeight(float fWeight) {m_fWeight = fWeight;}
-	       
+       
 private:       
    value_type*   m_vCoordinates;
    value_type    m_fWeight;

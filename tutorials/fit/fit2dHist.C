@@ -213,7 +213,7 @@ int fit2dHist(int option=1) {
     // fit independently
     h1->Fit(func);
     h2->Fit(func);
-  }	     
+  }
 
   // Create a new canvas.
   TCanvas * c1 = new TCanvas("c1","Two HIstogram Fit example",100,10,900,800);

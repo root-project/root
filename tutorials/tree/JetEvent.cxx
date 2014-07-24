@@ -72,14 +72,14 @@ void JetEvent::Build(Int_t jetm, Int_t trackm, Int_t hitam, Int_t hitbm) {
          track->fPx = gRandom->Gaus(0,1);
          track->fPy = gRandom->Gaus(0,1);
          track->fPz = gRandom->Gaus(0,5);
-	 jet->fTracks.Add(track);
+         jet->fTracks.Add(track);
          Int_t nhitsA = (Int_t)gRandom->Gaus(hitam,5);
          for (Int_t ha=0;ha<nhitsA;ha++) {
             hit = AddHitA();
             hit->fX = 10000*j + 100*t +ha;
             hit->fY = 10000*j + 100*t +ha+0.1;
             hit->fZ = 10000*j + 100*t +ha+0.2;
-	    track->fHits.Add(hit);
+            track->fHits.Add(hit);
          }
          Int_t nhitsB = (Int_t)gRandom->Gaus(hitbm,2);
          for (Int_t hb=0;hb<nhitsB;hb++) {
@@ -87,7 +87,7 @@ void JetEvent::Build(Int_t jetm, Int_t trackm, Int_t hitam, Int_t hitbm) {
             hit->fX = 20000*j + 100*t +hb+0.3;
             hit->fY = 20000*j + 100*t +hb+0.4;
             hit->fZ = 20000*j + 100*t +hb+0.5;
-	    track->fHits.Add(hit);
+            track->fHits.Add(hit);
          }
          track->fNhit = nhitsA + nhitsB;
       }

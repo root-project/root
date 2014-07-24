@@ -146,7 +146,7 @@ MnUserCovariance MnUserTransformation::Int2extCovariance(const MnAlgebraicVector
       for(unsigned int j = i; j < vec.size(); j++) {
          double dxdj = 1.;
          if(fParameters[fExtOfInt[j]].HasLimits()) {
-            // 	dxdj = 0.5*fabs((fParameters[fExtOfInt[j]].Upper() - fParameters[fExtOfInt[j]].Lower())*cos(vec(j)));
+            //   dxdj = 0.5*fabs((fParameters[fExtOfInt[j]].Upper() - fParameters[fExtOfInt[j]].Lower())*cos(vec(j)));
             dxdj = DInt2Ext(j, vec(j));
          }
          result(i,j) = dxdi*cov(i,j)*dxdj;

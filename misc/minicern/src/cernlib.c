@@ -114,7 +114,7 @@ void cfget_(int *lundes, int *medium, int *nwrec, int *nwtak, char *mbuf,
 
    *astat = 0;   
    if (*nwtak <= 0) return;   
-		     
+     
    fildes = *lundes;   
    nbdo = *nwrec * 4;   
    nbdn = read (fildes, mbuf, nbdo);   

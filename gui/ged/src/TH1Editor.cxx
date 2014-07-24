@@ -948,7 +948,7 @@ void TH1Editor::DoAddMarker(Bool_t on)
             dum.Remove(strstr(dum.Data(),"P")-dum.Data(),1);
          if (str.Contains("POL")) str = dum + "POL";
          if (str.Contains("SPH")) str = dum + "SPH";
-         if (str.Contains("PSR")) str = dum + "PSR";	 
+         if (str.Contains("PSR")) str = dum + "PSR";
       } else if (str.Contains("P")) str.Remove(str.First("P"),1); 
       if ((str=="HIST") || (str=="") || 
           (fAddB->GetState()==kButtonDown) || 
@@ -1077,7 +1077,7 @@ void TH1Editor::DoAddBar(Bool_t on)
             case(kPER_40): { 
                str += "BAR4"; 
                break;
-            }	 
+            }
          }
          ShowFrame(f10);
          ShowFrame(f11);
@@ -1134,7 +1134,7 @@ void TH1Editor::DoAddSimple(Bool_t on)
    } else if (fAddSimple->GetState()==kButtonUp) {
       if (str.Contains("HIST")) {
          str.Remove(strstr(str.Data(),"HIST")-str.Data(),4);
-         fAddMarker->SetState(kButtonUp);	 
+         fAddMarker->SetState(kButtonUp);
          fMake=kTRUE;
       }
    }
@@ -1210,7 +1210,7 @@ void TH1Editor::DoHistSimple()
             HideFrame(f10);  
             HideFrame(f11);
             HideFrame(f12);
-         }	    
+         }
       } 
       if (fAddBar->GetState() == kButtonDisabled){
          ShowFrame(f10);  
@@ -1227,7 +1227,7 @@ void TH1Editor::DoHistSimple()
       if (fErrorCombo->GetSelected()!=kERRORS_NO) {
          fAddCombo->RemoveEntries(kADD_SIMPLE,kADD_FILL);
          lb = fAddCombo->GetListBox();
-         lb->Resize(lb->GetWidth(),19);	 
+         lb->Resize(lb->GetWidth(),19);
          Disconnect(fAddCombo);
          fAddCombo->Select(kADD_NONE);
          fAddCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoHistChanges()"); 
@@ -1239,7 +1239,7 @@ void TH1Editor::DoHistSimple()
          if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_FILL)==-1) {
             ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Fill Area",kADD_FILL);
             lb = fAddCombo->GetListBox();
-            lb->Resize(lb->GetWidth(),76);	 
+            lb->Resize(lb->GetWidth(),76);
          }    
       }
       if (fAddSimple->GetState()==kButtonDown) str+="HIST";
@@ -1339,19 +1339,19 @@ void TH1Editor::DoHistChanges()
             fAddSimple->SetState(kButtonUp);
          fAddCombo->RemoveEntries(kADD_SIMPLE,kADD_FILL);
          lb = fAddCombo->GetListBox();
-         lb->Resize(lb->GetWidth(),19);	 
+         lb->Resize(lb->GetWidth(),19);
          Disconnect(fAddCombo);
          fAddCombo->Select(kADD_NONE);
          fAddCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoHistChanges()");
          if (fAddBar->GetState()==kButtonDown) {
-            ShowFrame(f10);	
+            ShowFrame(f10);
             ShowFrame(f11);
             ShowFrame(f12);
          } else {
             HideFrame(f10);
             HideFrame(f11);
             HideFrame(f12);
-         }	    
+         }
       } else {
          Bool_t on = fMake;
          fMake=kFALSE;
@@ -1370,7 +1370,7 @@ void TH1Editor::DoHistChanges()
          if (((TGLBContainer*)((TGListBox*)fAddCombo->GetListBox())->GetContainer())->GetPos(kADD_FILL)==-1) { 
             ((TGListBox*)fAddCombo->GetListBox())->AddEntry("Fill Area",kADD_FILL);
             lb = fAddCombo->GetListBox();
-            lb->Resize(lb->GetWidth(),76);	
+            lb->Resize(lb->GetWidth(),76);
          }
          fMake=on;
       }
@@ -2402,7 +2402,7 @@ void TH1Editor::ChangeErrorCombo(Int_t i)
          if (!((fErrorCombo->GetSelected()== kERRORS_NO) || (fErrorCombo->GetSelected()== kERRORS_SIMPLE))) 
             fErrorCombo->Select(kERRORS_NO);
          TGListBox* lb = fErrorCombo->GetListBox();
-         lb->Resize(lb->GetWidth(),36);	 
+         lb->Resize(lb->GetWidth(),36);
          break;
       }
       case 1: {   
@@ -2412,7 +2412,7 @@ void TH1Editor::ChangeErrorCombo(Int_t i)
             fErrorCombo->AddEntry("Fill", kERRORS_FILL);   
             fErrorCombo->AddEntry("Contour", kERRORS_CONTOUR);
             TGListBox* lb = fErrorCombo->GetListBox();
-            lb->Resize(lb->GetWidth(),100);	 
+            lb->Resize(lb->GetWidth(),100);
          }
          break;
       }

@@ -474,8 +474,8 @@ void TEveTrackPropagator::Update(const TEveVector4D& v, const TEveVectorD& p,
          using namespace TMath;
 
          Float_t a = fgkB2C * fMagFieldObj->GetMaxFieldMagD() * Abs(fH.fCharge);
-	 if (a > kAMin)
-	 {
+         if (a > kAMin)
+         {
             fH.fR = p.Mag() / a;
 
             // get phi step, compare fDelta with MaxAng
@@ -494,11 +494,11 @@ void TEveTrackPropagator::Update(const TEveVector4D& v, const TEveVectorD& p,
                fH.fPhiStep *= fH.fMaxStep / fH.fRKStep;
                fH.fRKStep   = fH.fMaxStep;
             }
-	 }
-	 else
-	 {
+         }
+         else
+         {
             fH.fRKStep = fH.fMaxStep;
-	 }
+         }
       }
    }
 }
@@ -1240,27 +1240,27 @@ void TEveTrackPropagator::StepRungeKutta(Double_t step,
 {
   // Wrapper to step with method RungeKutta.
 
-  ///	******************************************************************
-  ///	*								 *
-  ///	*  Runge-Kutta method for tracking a particle through a magnetic *
-  ///	*  field. Uses Nystroem algorithm (See Handbook Nat. Bur. of	 *
-  ///	*  Standards, procedure 25.5.20)				 *
-  ///	*								 *
-  ///	*  Input parameters						 *
-  ///	*	CHARGE    Particle charge				 *
-  ///	*	STEP	  Step size					 *
-  ///	*	VECT	  Initial co-ords,direction cosines,momentum	 *
-  ///	*  Output parameters						 *
-  ///	*	VOUT	  Output co-ords,direction cosines,momentum	 *
-  ///	*  User routine called  					 *
-  ///	*	CALL GUFLD(X,F) 					 *
-  ///	*								 *
-  ///	*    ==>Called by : <USER>, GUSWIM				 *
-  ///	*	Authors    R.Brun, M.Hansroul  *********		 *
-  ///	*		   V.Perevoztchikov (CUT STEP implementation)	 *
-  ///	*								 *
-  ///	*								 *
-  ///	******************************************************************
+  /// ******************************************************************
+  /// *                                                                *
+  /// *  Runge-Kutta method for tracking a particle through a magnetic *
+  /// *  field. Uses Nystroem algorithm (See Handbook Nat. Bur. of     *
+  /// *  Standards, procedure 25.5.20)                                 *
+  /// *                                                                *
+  /// *  Input parameters                                              *
+  /// *         CHARGE    Particle charge                              *
+  /// *         STEP      Step size                                    *
+  /// *         VECT      Initial co-ords,direction cosines,momentum   *
+  /// *  Output parameters                                             *
+  /// *         VOUT      Output co-ords,direction cosines,momentum    *
+  /// *  User routine called                                           *
+  /// *         CALL GUFLD(X,F)                                        *
+  /// *                                                                *
+  /// *    ==>Called by : <USER>, GUSWIM                               *
+  /// *         Authors    R.Brun, M.Hansroul  *********               *
+  /// *                     V.Perevoztchikov (CUT STEP implementation) *
+  /// *                                                                *
+  /// *                                                                *
+  /// ******************************************************************
 
   Double_t h2, h4, f[4];
   Double_t /* xyzt[3], */ a, b, c, ph,ph2;

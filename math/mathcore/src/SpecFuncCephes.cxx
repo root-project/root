@@ -225,7 +225,7 @@ double lgam( double x )
       z = q * std::sin( ROOT::Math::Pi() * z );
       if( z == 0 )
          return (std::numeric_limits<double>::infinity());
-/*	z = log(ROOT::Math::Pi()) - log( z ) - w;*/
+/* z = log(ROOT::Math::Pi()) - log( z ) - w;*/
       z = std::log(ROOT::Math::Pi()) - std::log( z ) - w;
       return( z );
    }
@@ -604,7 +604,7 @@ double incbcf( double a, double b, double x )
    thresh = 3.0 * kMACHEP;
    do
    {
-	
+
       xk = -( x * k1 * k2 )/( k3 * k4 );
       pk = pkm1 +  pkm2 * xk;
       qk = qkm1 +  qkm2 * xk;
@@ -698,7 +698,7 @@ double incbd( double a, double b, double x )
    thresh = 3.0 * kMACHEP;
    do
    {
-	
+
       xk = -( z * k1 * k2 )/( k3 * k4 );
       pk = pkm1 +  pkm2 * xk;
       qk = qkm1 +  qkm2 * xk;

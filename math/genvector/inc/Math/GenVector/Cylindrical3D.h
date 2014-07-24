@@ -107,7 +107,7 @@ public :
       get internal data into 3 Scalar numbers ( rho, z , phi)
    */ 
    void GetCoordinates(Scalar& rho, Scalar& zz, Scalar& phi) const 
-   {rho=fRho; zz=fZ; phi=fPhi;}  				
+   {rho=fRho; zz=fZ; phi=fPhi;}
 
 private:
    inline static Scalar pi() { return M_PI; } 

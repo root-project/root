@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------
 //
-//	Convoluted Landau and Gaussian Fitting Function
+// Convoluted Landau and Gaussian Fitting Function
 //         (using ROOT's Landau and Gauss functions)
 //
 //  Based on a Fortran code by R.Fruehwirth (fruhwirth@hephy.oeaw.ac.at)

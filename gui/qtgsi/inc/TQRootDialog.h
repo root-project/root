@@ -20,7 +20,7 @@
 // member function. It is called by the TQCanvasMenu class
 // @see TQCanvasMenu, QList, QVBox, TMethod, TCanvas
 // @authors Denis Bertini <d.bertini@gsi.de>
-//	   M. AL-Turany  <m.al-turany@gsi.de>
+//    M. AL-Turany  <m.al-turany@gsi.de>
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__

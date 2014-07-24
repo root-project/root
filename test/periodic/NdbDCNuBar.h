@@ -9,11 +9,11 @@ class NdbDCNuBar : public NdbMF
 protected:
 
 public:
-	NdbDCNuBar()
-		: NdbMF(31, "Data covariances for nu(bar)") {}
-	~NdbDCNuBar() {}
+   NdbDCNuBar()
+      : NdbMF(31, "Data covariances for nu(bar)") {}
+   ~NdbDCNuBar() {}
 
-	ClassDef(NdbDCNuBar,1)
+   ClassDef(NdbDCNuBar,1)
 
 }; // NdbDCNuBar
 

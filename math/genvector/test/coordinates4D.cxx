@@ -3,7 +3,7 @@
 // Tests that each form of 4-vector has all the properties that stem from
 // owning and forwarding to a 4D coordinates instance 
 //
-// 6/28/05 m fischler	
+// 6/28/05 m fischler   
 //         from contents of test_coordinates.h by L. Moneta.
 //
 // =================================================================
@@ -71,8 +71,8 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, double ticks ) 
       ret=3;
       std::cout << "\nAbsolute discrepancy in " << coord << "(): "
                 << ss1 << " != " << ss2 << "\n"
-	        << "   (Allowed discrepancy is " << ticks*epsilon 
-		<< ")\nDifference is " << diff/epsilon << " ticks\n";
+                << "   (Allowed discrepancy is " << ticks*epsilon
+                << ")\nDifference is " << diff/epsilon << " ticks\n";
     }
     std::cout.precision (pr);
     return ret;
@@ -83,7 +83,7 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, double ticks ) 
   if ( (sd1 + sd2 == sd1) != (sd1 + sd2 == sd2) ) {
     ret=5;
     std::cout << "\nInfinity discrepancy in " << coord << "(): "
-	      << sd1 << " != " << sd2 << "\n";
+              << sd1 << " != " << sd2 << "\n";
     std::cout.precision (pr);
     return ret;
   }
@@ -92,7 +92,7 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, double ticks ) 
     ret=9;
     std::cout << "\nDiscrepancy in " << coord << "(): "
               << ss1 << " != " << ss2 << "\n"
-	      << "   (Allowed discrepancy is " << ticks*epsilon*ss1 
+              << "   (Allowed discrepancy is " << ticks*epsilon*ss1
               << ")\nDifference is " << (diff/denom)/epsilon << " ticks\n";
   }
   std::cout.precision (pr);
@@ -127,8 +127,8 @@ int compare4D (const V1 & v1, const V2 & v2, double ticks) {
     std::cout << "Discrepancy detected (see above) is between:\n  "
               << CoordinateTraits<CoordType1>::name() << " and\n  "
               << CoordinateTraits<CoordType2>::name() << "\n"
-	      << "with v = (" << v1.x() << ", " << v1.y() << ", " 
-	      << v1.z() << ", " << v1.t() << ")\n";
+              << "with v = (" << v1.x() << ", " << v1.y() << ", "
+              << v1.z() << ", " << v1.t() << ")\n";
   }
   else { 
     std::cout << ".";
@@ -160,32 +160,32 @@ int test4D ( const LorentzVector<C> & v, double ticks ) {
   double eta;
   if (rho != 0) {
     eta = -std::log(std::tan(theta/2)); 
-	#ifdef TRACE1
-	std::cout <<  ":::: rho != 0\n" 
-	          <<  ":::: theta = " <<  theta 
-		  <<"/n:::: tan(theta/2) = " << std::tan(theta/2)
-	          <<"\n:::: eta = " << eta << "\n";
-	#endif
+   #ifdef TRACE1
+   std::cout <<  ":::: rho != 0\n" 
+             <<  ":::: theta = " <<  theta 
+        <<"/n:::: tan(theta/2) = " << std::tan(theta/2)
+             <<"\n:::: eta = " << eta << "\n";
+   #endif
   } else if (v.z() == 0) {
     eta = 0;
-	#ifdef TRACE1
-	std::cout <<  ":::: v.z() == 0\n" 
-	          <<"\n:::: eta = " << eta << "\n";
-	#endif
+   #ifdef TRACE1
+   std::cout <<  ":::: v.z() == 0\n" 
+             <<"\n:::: eta = " << eta << "\n";
+   #endif
   } else if (v.z() > 0) {
     eta = v.z() + etaMax<long double>();
-	#ifdef TRACE1
-	std::cout <<  ":::: v.z() > 0\n" 
-	          <<  ":::: etaMax =  " << etaMax<long double>() 
-	          <<"\n:::: eta = " << eta << "\n";
-	#endif
+   #ifdef TRACE1
+   std::cout <<  ":::: v.z() > 0\n" 
+             <<  ":::: etaMax =  " << etaMax<long double>() 
+             <<"\n:::: eta = " << eta << "\n";
+   #endif
   } else {
     eta = v.z() - etaMax<long double>();
-	#ifdef TRACE1
-	std::cout <<  ":::: v.z() < 0\n" 
-	          <<  ":::: etaMax =  " << etaMax<long double>() 
-	          <<"\n:::: eta = " << eta << "\n";
-	#endif
+   #ifdef TRACE1
+   std::cout <<  ":::: v.z() < 0\n" 
+             <<  ":::: etaMax =  " << etaMax<long double>() 
+             <<"\n:::: eta = " << eta << "\n";
+   #endif
   }
 
 

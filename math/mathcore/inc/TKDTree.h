@@ -11,7 +11,7 @@
 template <typename Index, typename Value> class TKDTree : public TObject
 {
 public:
-	
+
    TKDTree();
    TKDTree(Index npoints, Index ndim, UInt_t bsize);
    TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **data);

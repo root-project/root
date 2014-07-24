@@ -3,8 +3,8 @@
 
  /**********************************************************************
   *                                                                    *
-  * Copyright (c) 2005 , LCG ROOT MathLib Team 			       *
-  *                    & FNAL LCG ROOT Mathlib Team  		       *
+  * Copyright (c) 2005 , LCG ROOT MathLib Team                         *
+  *                    & FNAL LCG ROOT Mathlib Team                    *
   *                                                                    *
   *                                                                    *
   **********************************************************************/
@@ -110,7 +110,7 @@ public :
    /**
       get internal data into 3 Scalar numbers
    */ 
-   void GetCoordinates(Scalar& xx, Scalar& yy, Scalar& zz) const {xx=fX; yy=fY; zz=fZ;}  				
+   void GetCoordinates(Scalar& xx, Scalar& yy, Scalar& zz) const {xx=fX; yy=fY; zz=fZ;}
 
    Scalar X()     const { return fX;}
    Scalar Y()     const { return fY;}

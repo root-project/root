@@ -64,7 +64,7 @@ else
       TAR=tar
    else
       if [ "x`which gtar 2>/dev/null | awk '{if ($1~/gtar/) print $1;}'`" != "x" ]; then
-	 TAR=gtar
+         TAR=gtar
       fi
    fi
    if [ "x${TAR}" != "x" ]; then

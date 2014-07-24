@@ -35,13 +35,13 @@ MinimumSeed SimplexSeedGenerator::operator()(const MnFcn& fcn, const GradientCal
    FunctionGradient dgrad = igc(pa);
    MnAlgebraicSymMatrix mat(n);
    double dcovar = 1.;
-   for(unsigned int i = 0; i < n; i++)	
+   for(unsigned int i = 0; i < n; i++)
       mat(i,i) = (fabs(dgrad.G2()(i)) > prec.Eps2() ? 1./dgrad.G2()(i) : 1.);
    MinimumError err(mat, dcovar);
    double edm = VariableMetricEDMEstimator().Estimate(dgrad, err);
    MinimumState state(pa, err, dgrad, edm, fcn.NumOfCalls());
    
-   return MinimumSeed(state, st.Trafo());		     
+   return MinimumSeed(state, st.Trafo());     
 }
 
 MinimumSeed SimplexSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradientCalculator& gc, const MnUserParameterState& st, const MnStrategy& stra) const {

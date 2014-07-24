@@ -101,13 +101,13 @@ void  FumiliStandardMaximumLikelihoodFCN::EvaluateAll( const std::vector<double>
       
       for (int j = 0; j < npar; ++j) { 
          if ( std::fabs(mfg[j]) < minDouble ) {
-            // 	std::cout << "SMALL values: grad =  " << mfg[j] << "  "  << minDouble << " f(x) = " << fval 
-            // 		  << " params " << j << " p0 = " << par[0] << " p1 = " << par[1] <<  std::endl;
+            //  std::cout << "SMALL values: grad =  " << mfg[j] << "  "  << minDouble << " f(x) = " << fval
+            //    << " params " << j << " p0 = " << par[0] << " p1 = " << par[1] <<  std::endl;
             if (mfg[j] < 0)  
                mfg[j] =  -minDouble;
             else 
                mfg[j] =  minDouble;
-         }	  
+         }
          
          double dfj = invFval * mfg[j]; 
          // to avoid summing infinite and nan later when calculating the Hessian
@@ -120,7 +120,7 @@ void  FumiliStandardMaximumLikelihoodFCN::EvaluateAll( const std::vector<double>
          
          grad[j] -= dfj;
          //       if ( ! ( dfj > 0) && ! ( dfj <= 0 ) ) 
-         // 	std::cout << " nan : dfj = " << dfj << " fval =  " << fval << " invF = " << invFval << " grad = " << mfg[j] << " par[j] = " << par[j] << std::endl;  
+         // std::cout << " nan : dfj = " << dfj << " fval =  " << fval << " invF = " << invFval << " grad = " << mfg[j] << " par[j] = " << par[j] << std::endl;
          
          //std::cout << " x = "  << currentPosition[0] <<  " par[j] = " << par[j] << " : dfj = " << dfj << " fval =  " << fval << " invF = " << invFval << " grad = " << mfg[j] << " deriv = " << grad[j] << std::endl;  
          
@@ -148,9 +148,9 @@ void  FumiliStandardMaximumLikelihoodFCN::EvaluateAll( const std::vector<double>
             
             
             h[idx] += dfj * dfk; 
-            // 	if ( ( ! ( h[idx] > 0) && ! ( h[idx] <= 0 ) ) ) 
-            // 	  std::cout << " nan : dfj = " << dfj << " fval =  " << fval << " invF = " << invFval << " gradj = " << mfg[j] 
-            // 		    << " dfk = " << dfk << " gradk =  "<< mfg[k]  << " hess_jk = " << h[idx] << " par[k] = " << par[k] << std::endl;    
+            // if ( ( ! ( h[idx] > 0) && ! ( h[idx] <= 0 ) ) )
+            //   std::cout << " nan : dfj = " << dfj << " fval =  " << fval << " invF = " << invFval << " gradj = " << mfg[j]
+            //     << " dfk = " << dfk << " gradk =  "<< mfg[k]  << " hess_jk = " << h[idx] << " par[k] = " << par[k] << std::endl;
          }
          
       } // end param loop  

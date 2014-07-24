@@ -5,7 +5,7 @@
 #    makeresource.sh <FILENAME>
 # it will generate <FILENAME>.rc to be compiled with
 #    %.res: %.rc
-#		     rc -fo"$@" $< $CXXFLAGS
+#           rc -fo"$@" $< $CXXFLAGS
 # This .res file can then be passed to the linker like an object file.
 #
 # Author: Axel, 2009.
@@ -17,16 +17,16 @@ RC=$FILENAME.rc
 FILESTEM=${FILEBASE%.*}
 
 if [ "x`echo $FILENAME| grep -i '\.DLL$'`" = "x${FILENAME}" ]; then
-	RCFILETYPE=VFT_DLL
-	RCFILETITLE=library
+   RCFILETYPE=VFT_DLL
+   RCFILETITLE=library
 else
-	RCFILETYPE=VFT_APP
-	RCFILETITLE=application
+   RCFILETYPE=VFT_APP
+   RCFILETITLE=application
 fi
 if [ "$FILEBASE" = "root.exe" ]; then
-	RCFILEICON="101 ICON \"icons/RootIcon.ico\""
+   RCFILEICON="101 ICON \"icons/RootIcon.ico\""
 else
-	RCFILEICON=
+   RCFILEICON=
 fi
 
 # Use gitinfo.txt: more precise than the info in Rversion.h

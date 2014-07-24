@@ -429,7 +429,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
       if (invError > 0) { 
          nPoints++;
 
-         double tmp = ( y -fval )* invError;  	  
+         double tmp = ( y -fval )* invError;
          double resval = tmp * tmp;
          
 
@@ -640,7 +640,7 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
    }         
 
 
-   double resval =   ( y -fval )* invError;  	   
+   double resval =   ( y -fval )* invError;
 
    // avoid infinities or nan in  resval
    resval = CorrectValue(resval);
@@ -792,7 +792,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & dat
          } 
  
          // calculate derivative point contribution
-         double tmp = - 2.0 * ( y -fval )* invError * invError * gradFunc[ipar];  	  
+         double tmp = - 2.0 * ( y -fval )* invError * invError * gradFunc[ipar];
          g[ipar] += tmp;
       
       }

@@ -105,7 +105,7 @@ private:
 
    // Model
    TGLViewer        *fViewer;
-   Bool_t	     fIsInPad;
+   Bool_t            fIsInPad;
 
    void ConnectSignals2Slots();
 

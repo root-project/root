@@ -24,7 +24,7 @@
 
 namespace mathtext {
 
-	class surface_t;
+   class surface_t;
 
 	/**
 	 * Hierarchical representation of mathematical formulae
@@ -505,17 +505,16 @@ namespace mathtext {
 		inline void tree_view(void) const
 		{
 			std::vector<bool> branch;
+         tree_view(_math_list, branch, true);
+      }
+      friend class math_text_renderer_t;
+   };
 
-			tree_view(_math_list, branch, true);
-		}
-		friend class math_text_renderer_t;
-	};
-
-	/**
-	 * Returns the TeX-formatted scientific representation of a real
-	 * number
-	 */
-	extern std::string tex_form(const double x);
+   /**
+    * Returns the TeX-formatted scientific representation of a real
+    * number
+    */
+   extern std::string tex_form(const double x);
 
 }
 

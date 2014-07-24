@@ -140,9 +140,9 @@ public:
                   Scalar  tx, Scalar  ty, Scalar  tz, Scalar tt)
  {
     SetComponents (xx, xy, xz, xt, 
-    		   yx, yy, yz, yt, 
+                   yx, yy, yz, yt,
                    zx, zy, zz, zt,
-		   tx, ty, tz, tt);
+                   tx, ty, tz, tt);
  }
 
   /** 

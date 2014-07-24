@@ -79,33 +79,33 @@ gcc version 4.2.1 (Apple Inc. build 5646) (dot 1)
 </literallayout>
 </para>
   <table>
-		<title>General comparison</title>
-  		<tgroup cols="9">
-    		<thead>
-      	<row>
-        		<entry>algorithm / OS</entry>
-        		<entry>Linix 64b (opt.<footnote id="opt"><para><emphasis role="bold">opt.</emphasis> means that TMemStat compiled with the default ROOT optimization flags and the same valid for a test script.
+     <title>General comparison</title>
+     <tgroup cols="9">
+        <thead>
+           <row>
+              <entry>algorithm / OS</entry>
+              <entry>Linix 64b (opt.<footnote id="opt"><para><emphasis role="bold">opt.</emphasis> means that TMemStat compiled with the default ROOT optimization flags and the same valid for a test script.
 </para></footnote>)</entry>
             <entry>Linux 64b (debug<footnote id="debug"><para><emphasis role="bold">debug</emphasis> means that TMemStat library is compiled with “make ROOTBUILD=debug” and a test script compiled by ACLIC with C++g option.
 </para></footnote>)</entry>
-        		<entry>Linux 32b (opt.<footnoteref linkend="opt" />)</entry>  
+              <entry>Linux 32b (opt.<footnoteref linkend="opt" />)</entry>  
             <entry>Linux 32b (debug <footnoteref linkend="debug" />)</entry>
-        		<entry>MacOSX 10.5 (opt<footnoteref linkend="opt" />)</entry>  
-        		<entry>MacOSX 10.5 (debug<footnoteref linkend="debug" />)</entry>  
+              <entry>MacOSX 10.5 (opt<footnoteref linkend="opt" />)</entry>  
+              <entry>MacOSX 10.5 (debug<footnoteref linkend="debug" />)</entry>  
             <entry>MacOSX 10.6 (opt.<footnoteref linkend="opt" />)</entry>
-        		<entry>MacOSX 10.6 (debug<footnoteref linkend="debug" />)</entry>  
+              <entry>MacOSX 10.6 (debug<footnoteref linkend="debug" />)</entry>  
        </row>
-    		</thead>
-    		<tbody>
-      		<row>
+          </thead>
+          <tbody>
+            <row>
               <entry>backtrace</entry>
-        			<entry>Ok.</entry>    
+                 <entry>Ok.</entry>    
               <entry>Ok.</entry>
               <entry>-</entry>
-        			<entry>-</entry>    
+                 <entry>-</entry>    
               <entry>-</entry>
               <entry>-</entry>
-        			<entry>Ok. <footnote id="mac_optim">
+                 <entry>Ok. <footnote id="mac_optim">
   <para>
 Works, but if the malloc/free is called in a loop, than we get two unique backtraces for each loop. Probably there is a partial optimization, and compiler unrolls the first iteration outside of the loop. This is why we actually get two calls for malloc/free, one before the loop and another is in the loop. I checked, that it doesn’t matter how many iteration we do, 10 or 100000. We always get two different back traces.
 Sometimes we even can get full loop unroll, which means we get as many return address as iterations in the loop.
@@ -115,18 +115,18 @@ What else we could expect, if the code was really optimized and compiler unrolle
 </footnote>
 </entry>    
               <entry>Ok.</entry>
-      		</row>
-      		<row>
+            </row>
+            <row>
               <entry>builtin</entry>
-        			<entry>X</entry>    
+                 <entry>X</entry>    
               <entry>Ok.</entry>
               <entry>-</entry>
-        			<entry>-</entry>    
+                 <entry>-</entry>    
               <entry>-</entry>
               <entry>-</entry>
-        			<entry>Ok. <footnoteref linkend="mac_optim"/></entry>    
+                 <entry>Ok. <footnoteref linkend="mac_optim"/></entry>    
               <entry>Ok.</entry>
-      		</row>   
+            </row>   
         </tbody>
       </tgroup>
   </table>

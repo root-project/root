@@ -45,7 +45,7 @@ public:
 #ifndef __CINT__
       , std::vector<Long_t>(map)
 #endif
-    , fTable(map.fTable)	{;}
+    , fTable(map.fTable) {;}
    virtual ~TTableMap(){;}
    Bool_t  IsValid() const;
    Bool_t  IsFolder() const;

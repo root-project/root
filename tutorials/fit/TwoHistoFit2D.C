@@ -152,18 +152,18 @@ int TwoHistoFit2D(bool global = true) {
   for (int ix = 1; ix <= nbinX1; ++ix) { 
     for (int iy = 1; iy <= nbinY1; ++iy) { 
       if ( h1->GetBinContent(ix,iy) > 0 ) { 
-	coords.push_back( std::make_pair(xaxis1->GetBinCenter(ix), yaxis1->GetBinCenter(iy) ) );
-	values.push_back( h1->GetBinContent(ix,iy) );
-	errors.push_back( h1->GetBinError(ix,iy) );
+         coords.push_back( std::make_pair(xaxis1->GetBinCenter(ix), yaxis1->GetBinCenter(iy) ) );
+         values.push_back( h1->GetBinContent(ix,iy) );
+         errors.push_back( h1->GetBinError(ix,iy) );
       }
     }
   }
   for (int ix = 1; ix <= nbinX2; ++ix) { 
     for (int iy = 1; iy <= nbinY2; ++iy) { 
       if ( h2->GetBinContent(ix,iy) > 0 ) { 
-	coords.push_back( std::make_pair(xaxis2->GetBinCenter(ix), yaxis2->GetBinCenter(iy) ) );
-	values.push_back( h2->GetBinContent(ix,iy) );
-	errors.push_back( h2->GetBinError(ix,iy) );
+         coords.push_back( std::make_pair(xaxis2->GetBinCenter(ix), yaxis2->GetBinCenter(iy) ) );
+         values.push_back( h2->GetBinContent(ix,iy) );
+         errors.push_back( h2->GetBinError(ix,iy) );
       }
     }
   }
@@ -214,7 +214,7 @@ int TwoHistoFit2D(bool global = true) {
     h2->Fit(func);
   }
 
-	     
+     
 
   // Create a new canvas.
   TCanvas * c1 = new TCanvas("c1","Two HIstogram Fit example",100,10,900,800);

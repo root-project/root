@@ -219,7 +219,7 @@ public:
    ClassDef(TEve3DProjection, 0); // 3D scaling "projection"
 };
 
-// AMT: temporary workaround till root pactches are integrated in CMSSW 	 
-#define TEVEPROJECTIONS_DISPLACE_ORIGIN_MODE	 
-	 
+// AMT: temporary workaround till root pactches are integrated in CMSSW
+#define TEVEPROJECTIONS_DISPLACE_ORIGIN_MODE
+ 
 #endif

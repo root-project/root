@@ -22,7 +22,7 @@ public:
 //     data members
 //------------------------------------------------------------------------------
 protected:
-   TObjArray*  fListOfParticles;		// list of (non-owned) particles
+   TObjArray*  fListOfParticles;  // list of (non-owned) particles
 
    TParticleClassPDG(const TParticleClassPDG& pcp): TNamed(pcp), fListOfParticles(pcp.fListOfParticles) { }
    TParticleClassPDG& operator=(const TParticleClassPDG& pcp) 
@@ -60,7 +60,7 @@ public:
    Bool_t IsFolder() const { return kTRUE; }
    virtual void   Browse(TBrowser* b);
 
-   ClassDef(TParticleClassPDG,1)		// PDG static particle definition
+   ClassDef(TParticleClassPDG,1)  // PDG static particle definition
 };
 
 #endif

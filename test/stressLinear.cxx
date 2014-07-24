@@ -1319,15 +1319,15 @@ void mstress_determinant(Int_t msize)
   // Next test disabled because it produces (of course) a Warning
   if (0) {
     if (gVerbose)
-      std::cout << "\nCheck the determinant for the singular matrix"
-              "\n	defined as above with zero first row" << std::endl;
+       std::cout << "\nCheck the determinant for the singular matrix"
+                    "\n\tdefined as above with zero first row" << std::endl;
     m.Zero();
     {
       for (Int_t i = m.GetRowLwb()+1; i <= m.GetRowUpb(); i++)
         for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
           m(i,j) = ( i==(m.GetColUpb()+m.GetColLwb()-j) ? pattern : 0 );
     }
-    std::cout << "\n	determinant is " << m.Determinant();
+    std::cout << "\n\tdeterminant is " << m.Determinant();
     ok &= ( m.Determinant() == 0 ) ? kTRUE : kFALSE;
   }
 
@@ -3889,16 +3889,16 @@ class MakeMatrix : public TMatrixDLazy {
 
 public:
   MakeMatrix(Int_t nrows,Int_t ncols,
-  	     const Double_t *_array,Int_t _no_elems)
+             const Double_t *_array,Int_t _no_elems)
     :TMatrixDLazy(nrows,ncols), array(_array), no_elems(_no_elems) {}
   MakeMatrix(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-  	     const Double_t *_array,Int_t _no_elems)
+             const Double_t *_array,Int_t _no_elems)
     : TMatrixDLazy(row_lwb,row_upb,col_lwb,col_upb),
       array(_array), no_elems(_no_elems) {}
 };
 #else
 TMatrixD MakeMatrix(Int_t nrows,Int_t ncols,
-  	            const Double_t *_array,Int_t _no_elems)
+                    const Double_t *_array,Int_t _no_elems)
 {
   TMatrixD m(nrows,ncols,_array);
   return m;

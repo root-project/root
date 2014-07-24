@@ -75,9 +75,9 @@ public:
   */
 
   virtual MinimumError Update(const MinimumState& fMinimumState, 
-			      const MinimumParameters& fMinimumParameters,
-			      const GradientCalculator& fGradientCalculator, 
-			      double lambda) const;
+                              const MinimumParameters& fMinimumParameters,
+                              const GradientCalculator& fGradientCalculator,
+                              double lambda) const;
 
 
 
@@ -95,7 +95,7 @@ public:
   */
 
   virtual MinimumError Update(const MinimumState&, const MinimumParameters&,
-			      const FunctionGradient&) const;
+                              const FunctionGradient&) const;
 
 
 

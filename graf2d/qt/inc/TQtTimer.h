@@ -31,22 +31,22 @@ class  TQtTimer : public QTimer  {
      Q_OBJECT
 #endif
 private:
-	 void operator=(const TQtTimer &);
-    TQtTimer(const TQtTimer &);
+   void operator=(const TQtTimer &);
+   TQtTimer(const TQtTimer &);
 protected:
-  static TQtTimer *fgQTimer;
-  int fCounter;     
-  TQtTimer (QObject *mother=0): QTimer(mother),fCounter(0)
-  {}
+   static TQtTimer *fgQTimer;
+   int fCounter;
+   TQtTimer (QObject *mother=0): QTimer(mother),fCounter(0)
+   {}
 
 protected slots:
-  virtual void AwakeRootEvent();
- 
+   virtual void AwakeRootEvent();
+   
 public:
-  virtual ~TQtTimer(){}
-  static TQtTimer *Create(QObject *parent=0);
-  static TQtTimer *QtTimer();
-  ClassDef(TQtTimer,0) // QTimer to awake the ROOT event loop from Qt event loop
+   virtual ~TQtTimer(){}
+   static TQtTimer *Create(QObject *parent=0);
+   static TQtTimer *QtTimer();
+   ClassDef(TQtTimer,0) // QTimer to awake the ROOT event loop from Qt event loop
 };
 
 

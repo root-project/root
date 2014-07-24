@@ -103,8 +103,8 @@ const unsigned colorIndices[16] = {
 //_________________________________________________________________
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    // Return YES for supported orientations
-	return YES;
+   // Return YES for supported orientations
+   return YES;
 }
 
 #pragma mark - editing.
@@ -194,7 +194,7 @@ const unsigned colorIndices[16] = {
 //_________________________________________________________________
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
 {
-	return 1;
+   return 1;
 }
 
 #pragma mark UIPickerViewDelegate
@@ -202,7 +202,7 @@ const unsigned colorIndices[16] = {
 // tell the picker which view to use for a given component and row, we have an array of views to show
 //_________________________________________________________________
 - (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row
-		  forComponent:(NSInteger)component reusingView:(UIView *)view
+          forComponent:(NSInteger)component reusingView:(UIView *)view
 {
    if (pickerView == colorPicker_)
       return [colors_ objectAtIndex : row];

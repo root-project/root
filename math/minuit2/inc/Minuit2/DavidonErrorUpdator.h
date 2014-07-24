@@ -31,7 +31,7 @@ public:
   virtual ~DavidonErrorUpdator() {}
 
   virtual MinimumError Update(const MinimumState&, const MinimumParameters&,
-			      const FunctionGradient&) const;
+                              const FunctionGradient&) const;
 
 private:
 

@@ -557,17 +557,17 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
          break;
       }
       case Qt::MidButton:   rootButton = kButton2Down; break;
-      default: break;
+         default: break;
       };
       if (rootButton != kNoEvent) {
          e->accept();
-	 if (rootButton == kButton3Down) {
-           bool lastvalue = c->TestBit(kNoContextMenu);
-           c->SetBit(kNoContextMenu);
-	   c->HandleInput(rootButton, e->x(), e->y());
-           c->SetBit(kNoContextMenu, lastvalue);
+         if (rootButton == kButton3Down) {
+            bool lastvalue = c->TestBit(kNoContextMenu);
+            c->SetBit(kNoContextMenu);
+            c->HandleInput(rootButton, e->x(), e->y());
+            c->SetBit(kNoContextMenu, lastvalue);
          } else {
-	   c->HandleInput(rootButton, e->x(), e->y());
+            c->HandleInput(rootButton, e->x(), e->y());
          }
          EmitSignal(kMousePressEvent);
          return;

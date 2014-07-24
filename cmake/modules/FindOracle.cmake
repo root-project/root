@@ -77,31 +77,31 @@ IF (NOT DEFINED ORACLE_OCI_VERSION)
     IF(SQLPLUS_EXECUTABLE)
        get_filename_component(bindir ${SQLPLUS_EXECUTABLE} PATH)         # sqlplus executable needs its shared libraries
        set(ENV{LD_LIBRARY_PATH} ${bindir}/../lib:$ENV{LD_LIBRARY_PATH})
-		EXECUTE_PROCESS(COMMAND ${SQLPLUS_EXECUTABLE} -version OUTPUT_VARIABLE sqlplus_out)
-		STRING(REGEX MATCH "([0-9.]+)" sqlplus_version ${sqlplus_out})
-		MESSAGE(STATUS "Found sqlplus version: ${sqlplus_version}")
+      EXECUTE_PROCESS(COMMAND ${SQLPLUS_EXECUTABLE} -version OUTPUT_VARIABLE sqlplus_out)
+      STRING(REGEX MATCH "([0-9.]+)" sqlplus_version ${sqlplus_out})
+      MESSAGE(STATUS "Found sqlplus version: ${sqlplus_version}")
 
-		# WARNING!
-		# MATCHES operator is using Cmake regular expression.
-		# so the e.g. 9.* does not expand like shell file mask
-		# but as "9 and then any sequence of characters"
-		IF (${sqlplus_version} MATCHES "8.*")
-			SET(ORACLE_OCI_VERSION "8I")
-		ELSEIF (${sqlplus_version} MATCHES "9.*")
-			SET(ORACLE_OCI_VERSION "9")
+      # WARNING!
+      # MATCHES operator is using Cmake regular expression.
+      # so the e.g. 9.* does not expand like shell file mask
+      # but as "9 and then any sequence of characters"
+      IF (${sqlplus_version} MATCHES "8.*")
+         SET(ORACLE_OCI_VERSION "8I")
+      ELSEIF (${sqlplus_version} MATCHES "9.*")
+         SET(ORACLE_OCI_VERSION "9")
 # do not change the order of the ora10 checking!
-		ELSEIF (${sqlplus_version} MATCHES "10.2.*")
-			SET(ORACLE_OCI_VERSION "10G_R2")
-		ELSEIF (${sqlplus_version} MATCHES "10.*")
-			SET(ORACLE_OCI_VERSION "10G")
-		ELSEIF (${sqlplus_version} MATCHES "11.*")
-			SET(ORACLE_OCI_VERSION "11G")
-		ELSE (${sqlplus_version} MATCHES "8.*")
-			SET(ORACLE_OCI_VERSION "10G_R2")
-		ENDIF (${sqlplus_version} MATCHES "8.*")
+      ELSEIF (${sqlplus_version} MATCHES "10.2.*")
+         SET(ORACLE_OCI_VERSION "10G_R2")
+      ELSEIF (${sqlplus_version} MATCHES "10.*")
+         SET(ORACLE_OCI_VERSION "10G")
+      ELSEIF (${sqlplus_version} MATCHES "11.*")
+         SET(ORACLE_OCI_VERSION "11G")
+      ELSE (${sqlplus_version} MATCHES "8.*")
+         SET(ORACLE_OCI_VERSION "10G_R2")
+      ENDIF (${sqlplus_version} MATCHES "8.*")
 
-		MESSAGE(STATUS "Guessed ORACLE_OCI_VERSION value: ${ORACLE_OCI_VERSION}")
-	ENDIF()
+      MESSAGE(STATUS "Guessed ORACLE_OCI_VERSION value: ${ORACLE_OCI_VERSION}")
+   ENDIF()
 ENDIF (NOT DEFINED ORACLE_OCI_VERSION)
 
 

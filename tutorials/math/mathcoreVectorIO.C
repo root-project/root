@@ -37,12 +37,12 @@ void write(int n) {
   R.SetSeed(1);
   timer.Start();
   double s = 0; 
-  for (int i = 0; i < n; ++i) { 
-        s  += R.Gaus(0,10);
-	s  += R.Gaus(0,10);
-	s  += R.Gaus(0,10);
-	s  += R.Gaus(100,10);
-  }
+   for (int i = 0; i < n; ++i) {
+      s  += R.Gaus(0,10);
+      s  += R.Gaus(0,10);
+      s  += R.Gaus(0,10);
+      s  += R.Gaus(100,10);
+   }
 
   timer.Stop();
   std::cout << s/double(n) << std::endl;
@@ -58,17 +58,17 @@ void write(int n) {
   t1.Branch("LV branch","ROOT::Math::XYZTVector",&v1);
 
   R.SetSeed(1);
-  timer.Start();
-  for (int i = 0; i < n; ++i) { 
-        double Px = R.Gaus(0,10);
-	double Py = R.Gaus(0,10);
-	double Pz = R.Gaus(0,10);
-	double E  = R.Gaus(100,10);
-	//CylindricalEta4D<double> & c = v1->Coordinates();
-	//c.SetValues(Px,pY,pZ,E);
-	v1->SetCoordinates(Px,Py,Pz,E);
-	t1.Fill(); 
-  }
+   timer.Start();
+   for (int i = 0; i < n; ++i) {
+      double Px = R.Gaus(0,10);
+      double Py = R.Gaus(0,10);
+      double Pz = R.Gaus(0,10);
+      double E  = R.Gaus(100,10);
+      //CylindricalEta4D<double> & c = v1->Coordinates();
+      //c.SetValues(Px,pY,pZ,E);
+      v1->SetCoordinates(Px,Py,Pz,E);
+      t1.Fill(); 
+   }
 
   f1.Write();
   timer.Stop();
@@ -90,12 +90,12 @@ void write(int n) {
   R.SetSeed(1);
   timer.Start();
   for (int i = 0; i < n; ++i) { 
-        double Px = R.Gaus(0,10);
-	double Py = R.Gaus(0,10);
-	double Pz = R.Gaus(0,10);
-	double E  = R.Gaus(100,10);
-	v2->SetPxPyPzE(Px,Py,Pz,E);
-	t2.Fill(); 
+     double Px = R.Gaus(0,10);
+     double Py = R.Gaus(0,10);
+     double Pz = R.Gaus(0,10);
+     double E  = R.Gaus(100,10);
+     v2->SetPxPyPzE(Px,Py,Pz,E);
+     t2.Fill(); 
   }
 
   f2.Write();

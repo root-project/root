@@ -42,30 +42,30 @@ void fcn(Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
 void Ifit()
 {
 // The z values
-	z[0]=1;
-	z[1]=0.96;
-	z[2]=0.89;
-	z[3]=0.85;
-	z[4]=0.78;
+   z[0]=1;
+   z[1]=0.96;
+   z[2]=0.89;
+   z[3]=0.85;
+   z[4]=0.78;
 // The errors on z values
         Float_t error = 0.01;
-	errorz[0]=error;
-	errorz[1]=error;
-	errorz[2]=error;
-	errorz[3]=error;
-	errorz[4]=error;
+   errorz[0]=error;
+   errorz[1]=error;
+   errorz[2]=error;
+   errorz[3]=error;
+   errorz[4]=error;
 // the x values
-	x[0]=1.5751;
-	x[1]=1.5825;
-	x[2]=1.6069;
-	x[3]=1.6339;
-	x[4]=1.6706;
+   x[0]=1.5751;
+   x[1]=1.5825;
+   x[2]=1.6069;
+   x[3]=1.6339;
+   x[4]=1.6706;
 // the y values
-	y[0]=1.0642;
-	y[1]=0.97685;
-	y[2]=1.13168;
-	y[3]=1.128654;
-	y[4]=1.44016;
+   y[0]=1.0642;
+   y[1]=0.97685;
+   y[2]=1.13168;
+   y[3]=1.128654;
+   y[4]=1.44016;
 
    TMinuit *gMinuit = new TMinuit(5);  //initialize TMinuit with a maximum of 5 params
    gMinuit->SetFCN(fcn);

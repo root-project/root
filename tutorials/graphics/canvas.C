@@ -115,5 +115,5 @@
 // Try to change the canvas size.
 // In the canvas "File" menu, select the option "Print" to produce
 // a PostScript file with a copy of the canvas.
-	
+
 }

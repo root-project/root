@@ -127,21 +127,21 @@
 //_________________________________________________________________
 - (BOOL) fillPickingBufferFromCGImage : (CGImageRef) cgImage
 {
-	const size_t pixelsW = CGImageGetWidth(cgImage);
-	const size_t pixelsH = CGImageGetHeight(cgImage);
-	//Declare the number of bytes per row. Each pixel in the bitmap
-	//is represented by 4 bytes; 8 bits each of red, green, blue, and
-	//alpha.
-	const int bitmapBytesPerRow = pixelsW * 4;
-	const int bitmapByteCount = bitmapBytesPerRow * pixelsH;
-	
-	//Use the generic RGB color space.
-	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	if (!colorSpace) {
+   const size_t pixelsW = CGImageGetWidth(cgImage);
+   const size_t pixelsH = CGImageGetHeight(cgImage);
+   //Declare the number of bytes per row. Each pixel in the bitmap
+   //is represented by 4 bytes; 8 bits each of red, green, blue, and
+   //alpha.
+   const int bitmapBytesPerRow = pixelsW * 4;
+   const int bitmapByteCount = bitmapBytesPerRow * pixelsH;
+   
+   //Use the generic RGB color space.
+   CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+   if (!colorSpace) {
       //Log error: color space allocation failed.
       return NO;
    }
-	
+   
    unsigned char *buffer = (unsigned char*)malloc(bitmapByteCount);
    if (!buffer) {
       //Log error: memory allocation failed.
@@ -149,31 +149,31 @@
       return NO;
    }
 
-	// Create the bitmap context. We want pre-multiplied ARGB, 8-bits 
-	// per component. Regardless of what the source image format is 
-	// (CMYK, Grayscale, and so on) it will be converted over to the format
-	// specified here by CGBitmapContextCreate.
+   // Create the bitmap context. We want pre-multiplied ARGB, 8-bits 
+   // per component. Regardless of what the source image format is 
+   // (CMYK, Grayscale, and so on) it will be converted over to the format
+   // specified here by CGBitmapContextCreate.
    CGContextRef ctx = CGBitmapContextCreate(buffer, pixelsW, pixelsH, 8, bitmapBytesPerRow, colorSpace, kCGImageAlphaPremultipliedFirst);
 
    CGColorSpaceRelease(colorSpace);
 
-	if (!ctx) {
+   if (!ctx) {
       //Log error: bitmap context creation failed.
       free(buffer);
       return NO;
    }
-	
-	const CGRect rect = CGRectMake(0.f, 0.f, pixelsW, pixelsH); 
-	//Draw the image to the bitmap context. Once we draw, the memory 
-	//allocated for the context for rendering will then contain the 
-	//raw image data in the specified color space.
+   
+   const CGRect rect = CGRectMake(0.f, 0.f, pixelsW, pixelsH); 
+   //Draw the image to the bitmap context. Once we draw, the memory 
+   //allocated for the context for rendering will then contain the 
+   //raw image data in the specified color space.
    
    CGContextSetAllowsAntialiasing(ctx, 0);//Check, if I need this for a bitmap.
-	CGContextDrawImage(ctx, rect, cgImage);
+   CGContextDrawImage(ctx, rect, cgImage);
 
    pad->SetSelectionBuffer(pixelsW, pixelsH, buffer);
-	// When finished, release the context
-	CGContextRelease(ctx); 
+   // When finished, release the context
+   CGContextRelease(ctx); 
    free(buffer);
 
    return YES;

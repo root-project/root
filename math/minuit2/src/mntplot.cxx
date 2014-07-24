@@ -9,7 +9,7 @@
 
 /* mnplot.F -- translated by f2c (version 20010320).
    You must link the resulting object file with the libraries:
-	-lf2c -lm   (in that order)
+   -lf2c -lm   (in that order)
 */
 
 #include <math.h>
@@ -159,7 +159,7 @@ L350:
       printf("                  %s",(const char*)ctemp);
       goto L400;
 L380:
-         //  	ctemp = cline;
+         //   ctemp = cline;
          memcpy(ctemp, cline, 120);
       printf(" %14.7g ..%s",yprt,(const char*)ctemp);
       linodd = 0;

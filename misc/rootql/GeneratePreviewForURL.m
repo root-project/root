@@ -19,27 +19,27 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
    NSDate *startDate = [NSDate date];
 #endif
 
-	// Get the posix-style path for the thing we are quicklooking at
-	NSString *fullPath = (NSString*)CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+   // Get the posix-style path for the thing we are quicklooking at
+   NSString *fullPath = (NSString*)CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
 
 #ifdef DEBUG
    NSLog(@"GeneratePreviewForURL %@", fullPath);
 #endif
 
    // Check for cancel
-	if (QLPreviewRequestIsCancelled(preview)) {
-		[pool release];
-		return noErr;
-	}
+   if (QLPreviewRequestIsCancelled(preview)) {
+      [pool release];
+      return noErr;
+   }
 
    // Set properties for the preview data
-	NSMutableDictionary *props = [[[NSMutableDictionary alloc] init] autorelease];
+   NSMutableDictionary *props = [[[NSMutableDictionary alloc] init] autorelease];
    [props setObject: @"UTF-8" forKey: (NSString *)kQLPreviewPropertyTextEncodingNameKey];
    [props setObject: @"text/html" forKey: (NSString *)kQLPreviewPropertyMIMETypeKey];
-	//[props setObject: [NSString stringWithFormat: @"Contents of %@", fullPath] forKey: (NSString *)kQLPreviewPropertyDisplayNameKey];
+   //[props setObject: [NSString stringWithFormat: @"Contents of %@", fullPath] forKey: (NSString *)kQLPreviewPropertyDisplayNameKey];
    [props setObject: [NSString stringWithFormat: @"Contents of %s", basename((char*)[fullPath UTF8String])] forKey: (NSString *)kQLPreviewPropertyDisplayNameKey];
 
-	// Build the HTML
+   // Build the HTML
    NSMutableString *html = [[[NSMutableString alloc] init] autorelease];
    [html appendString: @"<html>"];
    [html appendString: @"<head><style type=\"text/css\">"];
@@ -61,10 +61,10 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
 #endif
 
    // Check for cancel
-	if (QLPreviewRequestIsCancelled(preview)) {
-		[pool release];
-		return noErr;
-	}
+   if (QLPreviewRequestIsCancelled(preview)) {
+      [pool release];
+      return noErr;
+   }
 
    // Now let WebKit do its thing
    QLPreviewRequestSetDataRepresentation(preview, (CFDataRef)[html dataUsingEncoding: NSUTF8StringEncoding], kUTTypeHTML, (CFDictionaryRef)props);

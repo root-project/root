@@ -50,10 +50,10 @@ class PowerLawChi2FCN : public FCNBase {
 public:
 
   PowerLawChi2FCN(const std::vector<double>& meas,
-	      const std::vector<double>& pos,
-	      const std::vector<double>& mvar) : fMeasurements(meas),
-						 fPositions(pos),
-						 fMVariances(mvar) {}
+                  const std::vector<double>& pos,
+                  const std::vector<double>& mvar) : fMeasurements(meas),
+   fPositions(pos),
+   fMVariances(mvar) {}
 
   ~PowerLawChi2FCN() {}
 
@@ -82,8 +82,8 @@ class PowerLawLogLikeFCN : public FCNBase {
 public:
 
   PowerLawLogLikeFCN(const std::vector<double>& meas, 
-		     const std::vector<double>& pos) : 
-    fMeasurements(meas), fPositions(pos) {}
+                     const std::vector<double>& pos) :
+   fMeasurements(meas), fPositions(pos) {}
   
   ~PowerLawLogLikeFCN() {}
   

@@ -105,7 +105,7 @@ static bool Dsfact(MatRepStd<T,n,idim>& rhs, T& det) {
       const unsigned int lj = l + jpi;
 
       for (i = 1; i <= j; ++i) {
-	rhs[lj + arrayOffset] -= rhs[l + i * idim + arrayOffset] * rhs[i + jpi + arrayOffset];
+         rhs[lj + arrayOffset] -= rhs[l + i * idim + arrayOffset] * rhs[i + jpi + arrayOffset];
       } // for i
     } // for l
   } // for j

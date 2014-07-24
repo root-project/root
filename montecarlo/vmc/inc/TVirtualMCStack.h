@@ -50,11 +50,11 @@ public:
    // weight     - particle weight
    // is         - generation status code
    virtual void  PushTrack(Int_t toBeDone, Int_t parent, Int_t pdg,
-  	              Double_t px, Double_t py, Double_t pz, Double_t e,
-                      Double_t vx, Double_t vy, Double_t vz, Double_t tof,
-                      Double_t polx, Double_t poly, Double_t polz,
-                      TMCProcess mech, Int_t& ntr, Double_t weight,
-                      Int_t is) = 0;
+                           Double_t px, Double_t py, Double_t pz, Double_t e,
+                           Double_t vx, Double_t vy, Double_t vz, Double_t tof,
+                           Double_t polx, Double_t poly, Double_t polz,
+                           TMCProcess mech, Int_t& ntr, Double_t weight,
+                           Int_t is) = 0;
 
    // The stack has to provide two pop mechanisms:
    // The first pop mechanism required.

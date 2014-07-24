@@ -42,7 +42,7 @@ class FumiliBuilder : public MinimumBuilder {
 public:
 
   FumiliBuilder() : fEstimator(VariableMetricEDMEstimator()), 
-			    fErrorUpdator(FumiliErrorUpdator()) {}
+   fErrorUpdator(FumiliErrorUpdator()) {}
 
   ~FumiliBuilder() {}
 

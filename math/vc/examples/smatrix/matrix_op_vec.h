@@ -16,14 +16,14 @@ using namespace ROOT::Math;
 std::vector<float> gV; 
 
 void initValues() { 
-  gV.reserve(10*NLOOP); 
-  TRandom3 r; 
-  std::cout << "init smearing vector ";
-  for (int l = 0; l < 10*NLOOP; l++) 	
-    {
-      gV.push_back( r.Rndm() );  
-    } 
-  std::cout << " with size  " << gV.size() << std::endl;
+   gV.reserve(10*NLOOP);
+   TRandom3 r;
+   std::cout << "init smearing vector ";
+   for (int l = 0; l < 10*NLOOP; l++)
+   {
+      gV.push_back( r.Rndm() );
+   } 
+   std::cout << " with size  " << gV.size() << std::endl;
 
 }
 
@@ -45,7 +45,7 @@ void testVeq(const V * v, double & time, V * result) {
   Stype tmp = 0.0;  
   test::Timer t(time,"V=V ");
   for (int l = 0; l < 10*NLOOP; l++)  {
-     for (int k = 0; k < NLIST; k++) {	
+     for (int k = 0; k < NLIST; k++) {
         result[k] = v[k];  
      }
      tmp += SumOfElements(result[NLIST-1]);
@@ -59,7 +59,7 @@ void testMeq(const M * m, double & time, M * result) {
   Stype tmp = 0.0;  
   test::Timer t(time,"M=M ");
   for (int l = 0; l < NLOOP; l++)  {
-     for (int k = 0; k < NLIST; k++) {	
+     for (int k = 0; k < NLIST; k++) {
         result[k] = m[k];  
      }
      tmp += SumOfElements(result[NLIST-1]);
@@ -74,8 +74,8 @@ template<class V>
 void testVad(const V * v1, const V * v2, double & time, V * result) { 
    Stype tmp = 0.0;  
    test::Timer t(time,"V+V ");
-   for (int l = 0; l < 10*NLOOP; l++) {	
-      for (int k = 0; k < NLIST; k++) {	
+   for (int l = 0; l < 10*NLOOP; l++) {
+      for (int k = 0; k < NLIST; k++) {
          result[k] = v1[k] + v2[k];  
       }
      tmp += SumOfElements(result[NLIST-1]);
@@ -88,8 +88,8 @@ template<class M>
 void testMad(const M * m1, const M * m2, double & time, M * result) {  
   Stype tmp = 0.0;  
   test::Timer t(time,"M+M ");;
-  for (int l = 0; l < NLOOP; l++) { 	
-     for (int k = 0; k < NLIST; k++) {	
+   for (int l = 0; l < NLOOP; l++) {
+      for (int k = 0; k < NLIST; k++) {
         result[k] = m1[k]; 
         result[k] += m2[k];  
      }
@@ -103,8 +103,8 @@ template<class V, class T>
 void testVscale(const V * v, T a, double & time, V * result) {  
   Stype tmp = 0.0;  
   test::Timer t(time,"a*V ");;
-  for (int l = 0; l < NLOOP; l++) {	
-     for (int k = 0; k < NLIST; k++) {	
+   for (int l = 0; l < NLOOP; l++) {
+      for (int k = 0; k < NLIST; k++) {
         result[k] = a * v[k];   // v1 * a does not exist in ROOT   
      }
      tmp += SumOfElements(result[NLIST-1]);
@@ -118,8 +118,8 @@ template<class M, class T>
 void testMscale(const M * m1, T a, double & time, M * result) {  
   Stype tmp = 0.0;  
   test::Timer t(time,"a*M ");;
-  for (int l = 0; l < NLOOP; l++) { 	
-     for (int k = 0; k < NLIST; k++) {	
+   for (int l = 0; l < NLOOP; l++) {
+      for (int k = 0; k < NLIST; k++) {
         result[k] = m1[k]; result[k] *= a;
      }
      tmp += SumOfElements(result[NLIST-1]);
@@ -133,8 +133,8 @@ template<class M, class V>
 void testMV(const M * mat, const V * v, double & time, V * result) {  
   Stype tmp = 0.0;  
   test::Timer t(time,"M*V ");
-  for (int l = 0; l < NLOOP; l++) {	
-     for (int k = 0; k < NLIST; k++) {	
+   for (int l = 0; l < NLOOP; l++) {
+      for (int k = 0; k < NLIST; k++) {
         result[k] = mat[k] * v[k];  
      }
      tmp += SumOfElements(result[NLIST-1]);
@@ -148,7 +148,7 @@ void testGMV(const M * mat, const V * v1, const V *v2, double & time, V * result
   Stype tmp = 0.0;  
   test::Timer t(time,"M*V+");
   for (int l = 0; l < NLOOP; l++) {
-     for (int k = 0; k < NLIST; k++) {	
+     for (int k = 0; k < NLIST; k++) {
         result[k] = mat[k] * v1[k] + v2[k];  
      }
      tmp += SumOfElements(result[NLIST-1]);
@@ -163,7 +163,7 @@ void testMM(const A * a, const B * b, const C * c, double & time, C * result) {
   Stype tmp = 0.0;  
   test::Timer t(time,"M*M ");
   for (int l = 0; l < NLOOP; l++) { 
-     for (int k = 0; k < NLIST; k++) {	
+     for (int k = 0; k < NLIST; k++) {
         result[k] = a[k] * b[k] + c[k];  
      }
      tmp += SumOfElements(result[NLIST-1]);
@@ -180,8 +180,8 @@ template<class V, class T>
 void testDot_S(const V * v1, const V * v2, T * result, double & time) {  
   Stype tmp = 0.0;  
   test::Timer t(time,"dot ");
-  for (int l = 0; l < 10*NLOOP; l++)  {	
-     for (int k = 0; k < NLIST; k++) {	
+   for (int l = 0; l < 10*NLOOP; l++)  {
+      for (int k = 0; k < NLIST; k++) {
         result[k] = Dot(v1[k],v2[k]);  
      }
      tmp += result[NLIST-1];
@@ -193,7 +193,7 @@ void testDot_S(const V * v1, const V * v2, T * result, double & time) {
 // double testDot_S(const std::vector<V*> & w1, const std::vector<V*> & w2, double & time) {  
 //   test::Timer t(time,"dot ");
 //   double result=0; 
-//   for (int l = 0; l < NLOOP; l++) 	
+//   for (int l = 0; l < NLOOP; l++)
 //     {
 //       V & v1 = *w1[l]; 
 //       V & v2 = *w2[l]; 
@@ -206,8 +206,8 @@ template<class M, class V, class T>
 void testInnerProd_S(const M * a, const V * v, T * result, double & time) {  
   Stype tmp = 0.0;  
   test::Timer t(time,"prod");
-  for (int l = 0; l < 10*NLOOP; l++)  {	
-     for (int k = 0; k < NLIST; k++) {	
+   for (int l = 0; l < 10*NLOOP; l++)  {
+      for (int k = 0; k < NLIST; k++) {
         result[k] = Similarity(v[k],a[k]);  
      }
      tmp += result[NLIST-1];
@@ -222,8 +222,8 @@ void  testInv_S( const M * m,  double & time, M * result){
   test::Timer t(time,"inv ");
   int ierr = 0;
   int ifail = 0;
-  for (int l = 0; l < NLOOP; l++) { 	
-     for (int k = 0; k < NLIST; k++) {	
+   for (int l = 0; l < NLOOP; l++) {
+      for (int k = 0; k < NLIST; k++) {
         result[k] = m[k].Inverse(ifail);
         ierr += ifail;
       //result = mtmp.Inverse(ifail);
@@ -241,8 +241,8 @@ void  testInvFast_S( const M * m,  double & time, M * result){
   test::Timer t(time,"invF");
   int ierr = 0;
   int ifail = 0;
-  for (int l = 0; l < NLOOP; l++) { 	
-     for (int k = 0; k < NLIST; k++) {	
+   for (int l = 0; l < NLOOP; l++) {
+      for (int k = 0; k < NLIST; k++) {
         result[k] = m[k].InverseFast(ifail);
         ierr += ifail;
       //result = mtmp.Inverse(ifail);
@@ -260,8 +260,8 @@ void  testInvChol_S( const M * m,  double & time, M * result){
   test::Timer t(time,"invC");
   int ierr = 0;
   int ifail = 0;
-  for (int l = 0; l < NLOOP; l++) { 	
-     for (int k = 0; k < NLIST; k++) {	
+   for (int l = 0; l < NLOOP; l++) {
+      for (int k = 0; k < NLIST; k++) {
         result[k] = m[k].InverseChol(ifail);
         ierr += ifail;
       //result = mtmp.Inverse(ifail);
@@ -280,7 +280,7 @@ void testATBA_S(const A * a, const B * b, double & time, C * result) {
   Stype tmp = 0.0;  
   test::Timer t(time,"At*M*A");
   for (int l = 0; l < NLOOP; l++) {
-     for (int k = 0; k < NLIST; k++) {	
+     for (int k = 0; k < NLIST; k++) {
         C tmp = b[k] * Transpose(a[k]);
         result[k] = a[k] * tmp; 
      }
@@ -295,7 +295,7 @@ void testATBA_S2(const A * a, const B * b, double & time, C * result) {
   Stype tmp = 0.0;  
   test::Timer t(time,"At*M*A");
   for (int l = 0; l < NLOOP; l++) { 
-     for (int k = 0; k < NLIST; k++) {	
+     for (int k = 0; k < NLIST; k++) {
         //result = Transpose(a) * b * a;  
         //result = a * b * Transpose(a);  
         //result = a * b * a;  
@@ -312,7 +312,7 @@ void testMT_S(const A * a, double & time, C * result) {
   Stype tmp = 0.0;  
   test::Timer t(time,"Transp");
   for (int l = 0; l < NLOOP; l++)  {
-     for (int k = 0; k < NLIST; k++) {	
+     for (int k = 0; k < NLIST; k++) {
       //result = Transpose(a) * b * a;  
       //result = a * b * Transpose(a);  
       //result = a * b * a;  
@@ -395,7 +395,7 @@ double testDot_T(const V & v1, const V & v2, double & time) {
   V vtmp = v2;
   test::Timer t(time,"dot ");
   double result=0; 
-  for (int l = 0; l < 10*NLOOP; l++) 	
+  for (int l = 0; l < 10*NLOOP; l++)
     {
       vtmp[0] = gV[l];
       result = Dot(v1,vtmp);
@@ -420,7 +420,7 @@ template<class M>
 void  testInv_T(const M & m,  double & time, M& result){ 
   M mtmp = m;
   test::Timer t(time,"inv ");
-  for (int l = 0; l < NLOOP; l++) 	
+  for (int l = 0; l < NLOOP; l++)
     {
       mtmp(0,0) = gV[l]; 
       memcpy(result.GetMatrixArray(),mtmp.GetMatrixArray(),mtmp.GetNoElements()*sizeof(Double_t));
@@ -432,7 +432,7 @@ template<class M>
 void  testInv_T2(const M & m,  double & time, M& result){ 
   M mtmp = m;
   test::Timer t(time,"inv2");
-  for (int l = 0; l < NLOOP; l++) 	
+  for (int l = 0; l < NLOOP; l++)
     {
       memcpy(result.GetMatrixArray(),mtmp.GetMatrixArray(),mtmp.GetNoElements()*sizeof(Double_t));
       result.InvertFast();  
@@ -471,7 +471,7 @@ template<class A, class B, class C>
 void testATBA_T2(const A & a, const B & b, double & time, C & result) {  
   B btmp = b;
   test::Timer t(time,"At*M*A");
-  for (int l = 0; l < NLOOP; l++) 	
+  for (int l = 0; l < NLOOP; l++)
     {
       btmp(0,0) = gV[l]; 
       memcpy(result.GetMatrixArray(),btmp.GetMatrixArray(),btmp.GetNoElements()*sizeof(Double_t));
@@ -497,7 +497,7 @@ template<class A, class C>
 void testMT_T(const A & a, double & time, C & result) {  
   A atmp = a;
   test::Timer t(time,"Transp");
-  for (int l = 0; l < NLOOP; l++) 	
+  for (int l = 0; l < NLOOP; l++)
     {
       atmp(0,0) = gV[l];
       result.Transpose(atmp);
@@ -514,7 +514,7 @@ double testDot_C(const V & v1, const V & v2, double & time) {
   V vtmp =  v2;
   test::Timer t(time,"dot ");
   double result=0; 
-  for (int l = 0; l < 10*NLOOP; l++) 	
+  for (int l = 0; l < 10*NLOOP; l++)
     {
       vtmp[0] = gV[l];
       result = dot(v1,vtmp);  
@@ -527,7 +527,7 @@ double testInnerProd_C(const M & a, const V & v, double & time) {
   V vtmp = v; 
   test::Timer t(time,"prod");
   double result=0; 
-  for (int l = 0; l < NLOOP; l++) 	
+  for (int l = 0; l < NLOOP; l++)
     {
       vtmp[0] = gV[l];
       V tmp = a*vtmp; 
@@ -542,7 +542,7 @@ template<class M>
 void testMeq_C(const M & m, double & time, M & result) {  
   M mtmp = m;
   test::Timer t(time,"M=M ");
-  for (int l = 0; l < NLOOP; l++) 	
+   for (int l = 0; l < NLOOP; l++)
     {
       mtmp(1,1) = gV[l];
       result = mtmp;  
@@ -554,7 +554,7 @@ template<class M>
 void testMad_C(const M & m1, const M & m2, double & time, M & result) {  
   M mtmp = m2;
   test::Timer t(time,"M+M ");;
-  for (int l = 0; l < NLOOP; l++) 	
+   for (int l = 0; l < NLOOP; l++)
     {
       mtmp(1,1) = gV[l]; 
       result = m1; result += mtmp;  
@@ -567,7 +567,7 @@ template<class M>
 void testMscale_C(const M & m1, double a, double & time, M & result) {  
   M mtmp = m1;
   test::Timer t(time,"a*M ");;
-  for (int l = 0; l < NLOOP; l++) 	
+   for (int l = 0; l < NLOOP; l++)
     {
       mtmp(1,1) = gV[l];
       result = mtmp * a;  
@@ -580,7 +580,7 @@ template<class A, class B, class C>
 void testMM_C(const A & a, const B & b, const C & c, double & time, C & result) {  
   B btmp = b; 
   test::Timer t(time,"M*M ");
-  for (int l = 0; l < NLOOP; l++) 	
+   for (int l = 0; l < NLOOP; l++)
     {
       btmp(1,1) = gV[l];
       result = a * btmp + c;
@@ -594,7 +594,7 @@ void  testInv_C( const M & a,  double & time, M& result){
   M mtmp = a;
   test::Timer t(time,"inv ");
   int ifail = 0; 
-  for (int l = 0; l < NLOOP; l++) 	
+   for (int l = 0; l < NLOOP; l++)
     {
       mtmp(1,1) = gV[l]; 
       result = mtmp.inverse(ifail); 
@@ -607,7 +607,7 @@ template<class A, class B, class C>
 void testATBA_C(const A & a, const B & b, double & time, C & result) {  
   B btmp = b;
   test::Timer t(time,"At*M*A");
-  for (int l = 0; l < NLOOP; l++) 	
+   for (int l = 0; l < NLOOP; l++)
     {
       btmp(1,1) = gV[l];
       //result = a.T() * b * a;  
@@ -620,7 +620,7 @@ template<class A, class B, class C>
 void testATBA_C2(const A & a, const B & b, double & time, C & result) { 
   B btmp = b; 
   test::Timer t(time,"At*M*A");
-  for (int l = 0; l < NLOOP; l++) 	
+   for (int l = 0; l < NLOOP; l++)
     {
       btmp(1,1) = gV[l]; 
       result = btmp.similarity(a); 
@@ -632,7 +632,7 @@ template<class A, class C>
 void testMT_C(const A & a, double & time, C & result) {  
   A atmp = a;
   test::Timer t(time,"Transp");
-  for (int l = 0; l < NLOOP; l++) 	
+   for (int l = 0; l < NLOOP; l++)
     {
       atmp(1,1) = gV[l];
       result  = atmp.T();

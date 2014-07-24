@@ -111,14 +111,14 @@ class TUnfoldBinning : public TNamed {
    virtual Double_t GetBinFactor(Int_t iBin) const; // return user factor
    void GetBinUnderflowOverflowStatus(Int_t iBin,Int_t *uStatus,Int_t *oStatus) const; // return bit map indicating underflow and overflow status
    void GetBinNeighbours(Int_t globalBin,Int_t axis,
-		       Int_t *prev,Double_t *distPrev,
-		       Int_t *next,Double_t *distNext) const; // get neighbour bins along an axis
+                         Int_t *prev,Double_t *distPrev,
+                         Int_t *next,Double_t *distNext) const; // get neighbour bins along an axis
    /********************* access by bin number, given an axis steering ******/
    enum { MAXDIM=32 };
    const TUnfoldBinning *GetBinLocation(Int_t binTHxx,const char *axisSteering,
                                   Int_t axisBins[MAXDIM]) const; //  locate a given THxx bin for a given axis steering
    void DecodeAxisSteering(const char *axisSteering,const char *options,
-			     Int_t *isOptionGiven) const; // decode axis steering options
+                           Int_t *isOptionGiven) const; // decode axis steering options
    /********************** access distribution properties *************/
    inline Int_t GetDistributionNumberOfBins(void) const { return fDistributionSize; } // number of bins in the distribution possibly including under/overflow
    inline Int_t GetDistributionDimension(void) const {  return fAxisList->GetEntriesFast(); } // query dimension of this node's distribution

@@ -9,7 +9,7 @@
 
 /* dspr.f -- translated by f2c (version 20010320).
    You must link the resulting object file with the libraries:
-	-lf2c -lm   (in that order)
+   -lf2c -lm   (in that order)
 */
 
 namespace ROOT {
@@ -127,7 +127,7 @@ int mndspr(const char* uplo, unsigned int n, double alpha,
       info = 1;
    } 
    //     else if (n < 0) {
-   // 	info = 2;
+   //    info = 2;
    //     } 
    else if (incx == 0) {
       info = 5;

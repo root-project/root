@@ -85,7 +85,7 @@ struct Pydat3_t {
 };
 
 struct Pydat4_t {
-  char  CHAF[2][500][16];	// here I needed manual intervention
+  char  CHAF[2][500][16]; // here I needed manual intervention
 };
 
 struct Pydatr_t {
@@ -97,7 +97,7 @@ struct Pysubs_t {
   int    MSEL;
   int    MSELPD;
   int    MSUB[500];
-  int    KFIN[81][2];		//
+  int    KFIN[81][2];  //
   double CKIN[200];
 };
 
@@ -121,7 +121,7 @@ struct Pyint2_t {
 };
 
 struct Pyint3_t {
-  double XSFX[81][2];		//
+  double XSFX[81][2];  //
   int    ISIG[3][1000];
   double SIGH[1000];
 };

@@ -137,14 +137,14 @@ namespace Math {
     }
 
     /** 
-	set the random generator seed 
+     set the random generator seed
      */ 
     void SetSeed(unsigned int seed) { 
       return  fEngine.SetSeed(seed);
     }
     
     /** Random  Distributions 
-	Use naming and signatures compatible with ROOT TRandom
+     Use naming and signatures compatible with ROOT TRandom
      **/
 
     /**

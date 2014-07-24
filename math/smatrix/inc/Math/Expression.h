@@ -134,7 +134,7 @@ private:
 template <class T, unsigned int D, unsigned int D2> class MatRepStd;
 
 template <class ExprType, class T, unsigned int D, unsigned int D2 = 1,
-	  class R1=MatRepStd<T,D,D2> >
+     class R1=MatRepStd<T,D,D2> >
 class Expr {
 public:
   typedef T  value_type;
@@ -185,18 +185,18 @@ public:
     os.setf(std::ios::right,std::ios::adjustfield);
       os << "[ ";
       for (unsigned int i=0; i < D; ++i) {
-	unsigned int d2 = D2; // to avoid some annoying warnings in case of vectors (D2 = 0)
-        for (unsigned int j=0; j < D2; ++j) {
-          os << std::setw(12) << this->operator() (i,j);
-          if ((!((j+1)%12)) && (j < d2-1))
+         unsigned int d2 = D2; // to avoid some annoying warnings in case of vectors (D2 = 0)
+         for (unsigned int j=0; j < D2; ++j) {
+            os << std::setw(12) << this->operator() (i,j);
+            if ((!((j+1)%12)) && (j < d2-1))
             os << std::endl << "         ...";
-        }
-        if (i != D - 1)
-          os << std::endl  << "  ";
+         }
+         if (i != D - 1)
+         os << std::endl  << "  ";
       }
-      os << " ]";
-
-    return os;
+     os << " ]";
+     
+     return os;
   }
 
 private:

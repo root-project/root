@@ -9,11 +9,11 @@ class NdbResParam : public NdbMF
 protected:
 
 public:
-	NdbResParam()
-		: NdbMF(2, "Resonance prameter data") {}
-	~NdbResParam() {}
+   NdbResParam()
+      : NdbMF(2, "Resonance prameter data") {}
+   ~NdbResParam() {}
 
-	ClassDef(NdbResParam,1)
+   ClassDef(NdbResParam,1)
 }; // NdbResParam
 
 #endif

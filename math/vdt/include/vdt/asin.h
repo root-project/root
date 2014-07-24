@@ -58,57 +58,57 @@ const double QX4asin = 1.395105614657485689735E2;
 const double QX5asin = -4.918853881490881290097E1;
 
 inline double getRX(const double x){
-	double rx = RX1asin;
-	rx*= x;
-	rx+= RX2asin;
-	rx*= x;    
-	rx+= RX3asin;
-	rx*= x;    
-	rx+= RX4asin;
-	rx*= x;    
-	rx+= RX5asin;
-	return rx;
+   double rx = RX1asin;
+   rx*= x;
+   rx+= RX2asin;
+   rx*= x;    
+   rx+= RX3asin;
+   rx*= x;    
+   rx+= RX4asin;
+   rx*= x;    
+   rx+= RX5asin;
+   return rx;
 }
 inline double getSX(const double x){
-	double sx = x;
-	sx+= SX1asin;
-	sx*= x;    
-	sx+= SX2asin;
-	sx*= x;    
-	sx+= SX3asin;
-	sx*= x;    
-	sx+= SX4asin;
-	return sx;
+   double sx = x;
+   sx+= SX1asin;
+   sx*= x;    
+   sx+= SX2asin;
+   sx*= x;    
+   sx+= SX3asin;
+   sx*= x;    
+   sx+= SX4asin;
+   return sx;
 }
 
 inline double getPX(const double x){
-	double px = PX1asin;
-	px*= x;
-	px+= PX2asin;
-	px*= x;    
-	px+= PX3asin;
-	px*= x;    
-	px+= PX4asin;
-	px*= x;    
-	px+= PX5asin;
-	px*= x;    
-	px+= PX6asin;
-	return px;
+   double px = PX1asin;
+   px*= x;
+   px+= PX2asin;
+   px*= x;    
+   px+= PX3asin;
+   px*= x;    
+   px+= PX4asin;
+   px*= x;    
+   px+= PX5asin;
+   px*= x;    
+   px+= PX6asin;
+   return px;
 }
 
 inline double getQX(const double x){
-	double qx = x;
-	qx+= QX1asin;
-	qx*= x;    
-	qx+= QX2asin;
-	qx*= x;    
-	qx+= QX3asin;
-	qx*= x;    
-	qx+= QX4asin;
-	qx*= x;    
-	qx+= QX5asin;
-	return qx;
-	}
+   double qx = x;
+   qx+= QX1asin;
+   qx*= x;    
+   qx+= QX2asin;
+   qx*= x;    
+   qx+= QX3asin;
+   qx*= x;    
+   qx+= QX4asin;
+   qx*= x;    
+   qx+= QX5asin;
+   return qx;
+   }
 }
 
 }
@@ -117,38 +117,38 @@ namespace vdt{
 
 // asin double precision --------------------------------------------------------
 /// Double Precision asin
-inline double fast_asin(double x){	
+inline double fast_asin(double x){   
 
-	const uint64_t sign_mask = details::getSignMask(x);
-	x = std::fabs(x);
-	const double a = x;
-	
-	
-	double zz = 1.0 - a;
-	double px = details::getRX(zz);
-	double qx = details::getSX(zz);
+   const uint64_t sign_mask = details::getSignMask(x);
+   x = std::fabs(x);
+   const double a = x;
+   
+   
+   double zz = 1.0 - a;
+   double px = details::getRX(zz);
+   double qx = details::getSX(zz);
 
-	const double p = zz * px/qx;
+   const double p = zz * px/qx;
 
-	zz = std::sqrt(zz+zz);
-	double z = details::PIO4 - zz;
-	zz = zz * p - details::MOREBITS;
-	z -= zz;
-	z += details::PIO4;
-	
-	if( a < 0.625 ){
-		zz = a * a;
-		px = details::getPX(zz);
-		qx = details::getQX(zz);
-		z = zz*px/qx;    
-		z = a * z + a;
-	}
-	
+   zz = std::sqrt(zz+zz);
+   double z = details::PIO4 - zz;
+   zz = zz * p - details::MOREBITS;
+   z -= zz;
+   z += details::PIO4;
+   
+   if( a < 0.625 ){
+      zz = a * a;
+      px = details::getPX(zz);
+      qx = details::getQX(zz);
+      z = zz*px/qx;    
+      z = a * z + a;
+   }
+   
 
-	// Linear approx, not sooo needed but seable. Price is cheap though
-	double res = a < 1e-8? a : z ;
-        // Restore Sign	
-	return details::dpORuint64(res,sign_mask);
+   // Linear approx, not sooo needed but seable. Price is cheap though
+   double res = a < 1e-8? a : z ;
+        // Restore Sign   
+   return details::dpORuint64(res,sign_mask);
 
 }
 

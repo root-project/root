@@ -96,7 +96,7 @@ public:
     int pr = std::cout.precision(8);
     std::cout << s << "\t" << " time = " << time.RealTime() << "\t(sec)\t" 
       //    << time.CpuTime() 
-	      << std::endl;
+     << std::endl;
     std::cout.precision(pr);
   }
 
@@ -123,7 +123,7 @@ public:
       double pt = r.Exp(10.);
       double m = r.Uniform(0,10.); 
       if ( i%50 == 0 ) 
-	m = r.BreitWigner(1.,0.01); 
+         m = r.BreitWigner(1.,0.01);
 
       double E = sqrt( m*m + pt*pt*cosh(eta)*cosh(eta) );
     
@@ -284,15 +284,14 @@ int testAnalysis( const std::vector<V *> & dataV, TStopwatch & tim, double& t,  
     if (cutPtEta(v1,ptMin, etaMax) ) { 
       double delta; 
       for (unsigned int j = i +1; j < n; ++j) {
-	V & v2 = *(dataV[j]); 
-	delta = VectorUtil::DeltaR(v1,v2);
-	if (delta < deltaMax) { 
-	  V v3 = v1 + v2; 
-	  nsel++;
-	  if ( cutPtEtaAndMass(v3)) 
-	    nsel2++; 
-	}
-	
+         V & v2 = *(dataV[j]);
+         delta = VectorUtil::DeltaR(v1,v2);
+         if (delta < deltaMax) {
+            V v3 = v1 + v2;
+            nsel++;
+            if ( cutPtEtaAndMass(v3))
+            nsel2++;
+         }
       }
     }
   }
@@ -317,8 +316,8 @@ int testAnalysis2( const std::vector<V *> & dataV, TStopwatch & tim, double& t, 
     V  & v1 = *(dataV[i]); 
     if ( cutPtEta(v1, ptMin, etaMax) ) { 
       for (unsigned int j = i +1; j < n; ++j) {
-	V & v2 = *(dataV[j]); 
-	if ( VectorUtil::DeltaR(v1,v2) < 0.5) nsel++;
+         V & v2 = *(dataV[j]);
+         if ( VectorUtil::DeltaR(v1,v2) < 0.5) nsel++;
       }
     }
   }
@@ -578,9 +577,9 @@ int main(int argc,const char *argv[]) {
       // for TLR need to loop 
       std::cout << " TLorentzRotation: " << std::endl;
       for (int i = 0; i < 4; ++i) {
-	for (int j = 0; j < 4; ++j)
-	  std::cout << lr1(i,j) << "  ";
-	std::cout << "\n";
+         for (int j = 0; j < 4; ++j)
+         std::cout << lr1(i,j) << "  ";
+         std::cout << "\n";
       }
       std::cout << "\n";
       std::cout << "LorentzRotation :\n"  << lr2 << std::endl; 

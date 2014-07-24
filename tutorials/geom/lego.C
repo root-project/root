@@ -28,11 +28,11 @@ void lego()
 
        
  // create volume
- 		TGeoVolume *top=geom->MakeBox("top",Air,100,100,100); 
+   TGeoVolume *top=geom->MakeBox("top",Air,100,100,100);
    geom->SetTopVolume(top);   
    geom->SetTopVisible(0); 
-		// If you want to see the boundary, please input the number, 1 instead of 0.
-		// Like this, geom->SetTopVisible(1); 
+   // If you want to see the boundary, please input the number, 1 instead of 0.
+   // Like this, geom->SetTopVisible(1);
 
  
 //----------------------------------------------------------------------

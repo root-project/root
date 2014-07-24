@@ -49,7 +49,7 @@ void CALLBACK ftglEnd( FTMesh* mesh)
 
 
 FTMesh::FTMesh()
-:	currentTesselation(0),
+: currentTesselation(0),
     err(0)
 {
     tesselationList.reserve( 16);

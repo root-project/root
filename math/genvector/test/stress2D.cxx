@@ -89,7 +89,7 @@ public:
     int pr = std::cout.precision(8);
     std::cout << s << "\t" << " time = " << time.RealTime() << "\t(sec)\t" 
       //    << time.CpuTime() 
-	      << std::endl;
+            << std::endl;
     std::cout.precision(pr);
   }
 
@@ -417,15 +417,14 @@ double testDeltaPhi( const std::vector<V *> & dataV, TStopwatch & tim, double& t
 //     if (cutPtEta(v1,ptMin, etaMax) ) { 
 //       double delta; 
 //       for (unsigned int j = i +1; j < n; ++j) {
-// 	V & v2 = *(dataV[j]); 
-// 	delta = VectorUtil::DeltaR(v1,v2);
-// 	if (delta < deltaMax) { 
-// 	  V v3 = v1 + v2; 
-// 	  nsel++;
-// 	  if ( cutPtEtaAndMass(v3)) 
-// 	    nsel2++; 
-// 	}
-	
+//    V & v2 = *(dataV[j]);
+//    delta = VectorUtil::DeltaR(v1,v2);
+//    if (delta < deltaMax) {
+//      V v3 = v1 + v2;
+//      nsel++;
+//      if ( cutPtEtaAndMass(v3))
+//        nsel2++;
+//    }
 //       }
 //     }
 //   }
@@ -450,8 +449,8 @@ double testDeltaPhi( const std::vector<V *> & dataV, TStopwatch & tim, double& t
 //     V  & v1 = *(dataV[i]); 
 //     if ( cutPtEta(v1, ptMin, etaMax) ) { 
 //       for (unsigned int j = i +1; j < n; ++j) {
-// 	V & v2 = *(dataV[j]); 
-// 	if ( VectorUtil::DeltaR(v1,v2) < 0.5) nsel++;
+//    V & v2 = *(dataV[j]);
+//    if ( VectorUtil::DeltaR(v1,v2) < 0.5) nsel++;
 //       }
 //     }
 //   }

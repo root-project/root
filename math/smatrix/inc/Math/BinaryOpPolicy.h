@@ -33,8 +33,8 @@ namespace ROOT {
     struct MultPolicy
     {
       enum { 
-	N1 = R1::kRows,
-	N2 = R2::kCols
+         N1 = R1::kRows,
+         N2 = R2::kCols
       };
       typedef MatRepStd<T, N1, N2> RepType;
     };
@@ -46,8 +46,8 @@ namespace ROOT {
     struct AddPolicy
     {
       enum { 
-	N1 = R1::kRows,
-	N2 = R1::kCols
+         N1 = R1::kRows,
+         N2 = R1::kCols
       };
       typedef MatRepStd<typename R1::value_type, N1, N2 > RepType;  
     };
@@ -65,8 +65,8 @@ namespace ROOT {
     struct TranspPolicy
     {
       enum { 
-	N1 = R::kRows,
-	N2 = R::kCols
+         N1 = R::kRows,
+         N2 = R::kCols
       };
       typedef MatRepStd<T, N2, N1> RepType;
     };

@@ -126,7 +126,7 @@ template<typename Vec> void maskedStore()
     const int count = 256 * 1024 / sizeof(T);
     const int outerCount = count / Vec::Size;
     Vc::Memory<Vec> array(count);
-	array.setZero();
+    array.setZero();
     const T nullValue = 0;
     const T setValue = 170;
     const Vec x(setValue);

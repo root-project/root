@@ -67,13 +67,13 @@ void BoostX::Rectify() {
    // this forms an "exact" orthosymplectic matrix for the Lorentz Rotation
    // again.
    
-   if (fGamma <= 0) {	
+   if (fGamma <= 0) {
       GenVector::Throw ( 
                               "Attempt to rectify a boost with non-positive gamma");
       return;
    }    
    Scalar beta = fBeta;
-   if ( beta >= 1 ) {			    
+   if ( beta >= 1 ) {    
       beta /= ( beta * ( 1.0 + 1.0e-16 ) );  
    }
    SetComponents ( beta );

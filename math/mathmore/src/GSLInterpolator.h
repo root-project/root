@@ -74,7 +74,7 @@ namespace Math {
       {
          assert(fAccel);
          double y = 0; 
-	 static unsigned int nErrors = 0;
+         static unsigned int nErrors = 0;
          if (fResetNErrors) { nErrors = 0; fResetNErrors = false;}
          int ierr = gsl_spline_eval_e(fSpline, x, fAccel, &y );  
          if (ierr){
@@ -83,7 +83,7 @@ namespace Math {
                 MATH_WARN_MSG("GSLInterpolator::Eval",gsl_strerror(ierr) ) //Trying to suppress errors B Zimmerman 11-11-11
              else if(nErrors == 4)
                 MATH_WARN_MSG("GSLInterpolator::Eval","Suppressing additional warnings");             
-	 } 
+         }
          return y;
       }
       
@@ -91,14 +91,14 @@ namespace Math {
       {
          assert(fAccel);
          double deriv = 0; 
-	 static unsigned int nErrors = 0;
+         static unsigned int nErrors = 0;
          if (fResetNErrors) { nErrors = 0; fResetNErrors = false;}
          int ierr = gsl_spline_eval_deriv_e(fSpline, x, fAccel, &deriv );  
          if (ierr){
             ++nErrors;
             if(nErrors < 5)
                MATH_WARN_MSG("GSLInterpolator::Deriv",gsl_strerror(ierr) )
-	    else if(nErrors == 4)
+            else if(nErrors == 4)
                MATH_WARN_MSG("GSLInterpolator::Deriv","Suppressing additional warnings");
          }
          return deriv;
@@ -107,7 +107,7 @@ namespace Math {
       double Deriv2( double x ) const {  
          assert(fAccel);
          double deriv2 = 0; 
-	 static unsigned int nErrors = 0;
+         static unsigned int nErrors = 0;
          if (fResetNErrors) { nErrors = 0; fResetNErrors = false;}
          int ierr = gsl_spline_eval_deriv2_e(fSpline, x, fAccel, &deriv2 );  
          if (ierr){
@@ -116,7 +116,7 @@ namespace Math {
                MATH_WARN_MSG("GSLInterpolator::Deriv2",gsl_strerror(ierr) )
              else if(nErrors == 4)
                 MATH_WARN_MSG("GSLInterpolator::Deriv2","Suppressing additional warnings");
-         }				
+         }
          return deriv2;
       }
       
@@ -124,14 +124,14 @@ namespace Math {
          if ( a > b) return -Integ(b,a);  // gsl will report an error in this case
          assert(fAccel);
          double result = 0; 
-	 static unsigned int nErrors = 0;
+         static unsigned int nErrors = 0;
          if (fResetNErrors) { nErrors = 0; fResetNErrors = false;}
          int ierr = gsl_spline_eval_integ_e(fSpline, a, b, fAccel, &result );  
          if (ierr){
             ++nErrors;
             if(nErrors < 5)
                MATH_WARN_MSG("GSLInterpolator::Integ",gsl_strerror(ierr) )
-	    else if(nErrors == 4)
+            else if(nErrors == 4)
                MATH_WARN_MSG("GSLInterpolator::Integ","Suppress additional warnings" )
          }
          return result;

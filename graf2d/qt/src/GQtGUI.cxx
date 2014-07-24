@@ -358,8 +358,8 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
 #endif /* not QT_VERSION */
       default:
 #if QT_VERSION < 0x40000
-	      fROp = Qt::CopyROP;
-	      break;
+         fROp = Qt::CopyROP;
+         break;
 #else /* QT_VERSION */
         fROp = QPainter::CompositionMode_Source; //Qt::CopyROP;
         break;
@@ -371,9 +371,9 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
         // Fons said this must be like this. 4/07/2003 Valeri Fine
         SETBIT(fMask, kROp);
 #if QT_VERSION < 0x40000
-	fROp = Qt::CopyROP;
+        fROp = Qt::CopyROP;
 #else /* QT_VERSION */
-	fROp = QPainter::CompositionMode_Source; // Qt::CopyROP;
+        fROp = QPainter::CompositionMode_Source; // Qt::CopyROP;
 #endif /* QT_VERSION */
    };
 
@@ -390,7 +390,7 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
       // xmask |= GDK_GC_FOREGROUND;
       // QColor paletteBackgroundColor - the background color of the widget
        SetForeground(gval.fForeground);
-	 // fprintf(stderr," kGCForeground %s \root.exen", (const char*)QtColor(gval.fForeground).name());
+      // fprintf(stderr," kGCForeground %s \root.exen", (const char*)QtColor(gval.fForeground).name());
    }
    if ((rootMask & kGCBackground)) {
        SetBackground(gval.fBackground);
@@ -2361,7 +2361,7 @@ static KeyQSymbolMap_t gKeyQMap[] = {
 //______________________________________________________________________________________
 static inline Int_t MapKeySym(int key, bool toQt=true)
 {
-   for (int i = 0; gKeyQMap[i].fKeySym; i++) {	// any other keys
+   for (int i = 0; gKeyQMap[i].fKeySym; i++) { // any other keys
       if (toQt) {
         if (key ==  gKeyQMap[i].fKeySym ) {
            return   UInt_t(gKeyQMap[i].fQKeySym);
@@ -2782,14 +2782,14 @@ void TGQt::IntersectRegion(Region_t rega, Region_t regb, Region_t result)
    // Compute the intersection of rega and regb and return result region.
    // The output region may be the same as the result region.
 
-	if( !rega || !regb || !result )
-		return;
+   if( !rega || !regb || !result )
+      return;
 
-	QRegion& a = *(QRegion*) rega;
-	QRegion& b = *(QRegion*) regb;
-	QRegion& r = *(QRegion*) result;
+   QRegion& a = *(QRegion*) rega;
+   QRegion& b = *(QRegion*) regb;
+   QRegion& r = *(QRegion*) result;
 
-	r = a & b;
+   r = a & b;
 }
 //______________________________________________________________________________
 void TGQt::SubtractRegion(Region_t rega, Region_t regb, Region_t result)
@@ -2825,21 +2825,21 @@ Bool_t TGQt::EmptyRegion(Region_t reg)
    // Return true if the region is empty.
 
    if( !reg )
-		return true;
+      return true;
 
-	QRegion& r = *(QRegion*) reg;
+   QRegion& r = *(QRegion*) reg;
 
-	return r.isEmpty();
+   return r.isEmpty();
 }
 //______________________________________________________________________________
 Bool_t TGQt::PointInRegion(Int_t x, Int_t y, Region_t reg)
 {
    // Returns true if the point x,y is in the region.
-	if( !reg )
-		return false;
+   if( !reg )
+      return false;
 
-	QRegion& r = *(QRegion*) reg;
-	return r.contains( QPoint(x, y) );
+   QRegion& r = *(QRegion*) reg;
+   return r.contains( QPoint(x, y) );
 }
 //______________________________________________________________________________
 Bool_t TGQt::EqualRegion(Region_t rega, Region_t regb)
@@ -2859,16 +2859,16 @@ void TGQt::GetRegionBox(Region_t reg, Rectangle_t *rect)
 {
    // Return smallest enclosing rectangle.
 
-	if( !reg || !rect )
-		return;
+   if( !reg || !rect )
+      return;
 
-	QRegion& r = *(QRegion*) reg;
-	QRect rc   = r.boundingRect();
+   QRegion& r = *(QRegion*) reg;
+   QRect rc   = r.boundingRect();
 
-	rect->fX      = rc.x();
-	rect->fY      = rc.y();
-	rect->fWidth  = rc.width();
-	rect->fHeight = rc.height();
+   rect->fX      = rc.x();
+   rect->fY      = rc.y();
+   rect->fWidth  = rc.width();
+   rect->fHeight = rc.height();
 }
 //______________________________________________________________________________
 char **TGQt::ListFonts(const char *fontname, Int_t max, Int_t &count)

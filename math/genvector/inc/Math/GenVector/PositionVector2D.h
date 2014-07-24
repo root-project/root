@@ -252,8 +252,8 @@ namespace ROOT {
        // need to specialize to exclude those with a different tags 
 
        /**
-          Return the scalar (Dot) product of this with a displacement vector in 
-	  any coordinate system, but with the same tag
+        Return the scalar (Dot) product of this with a displacement vector in
+        any coordinate system, but with the same tag
        */
        template< class OtherCoords >
        Scalar Dot( const  DisplacementVector2D<OtherCoords,Tag> & v) const {

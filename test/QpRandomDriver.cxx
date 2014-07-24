@@ -56,8 +56,8 @@ int main(int argc,char *argv[])
     if (SolutionMatches(vars,soln,temp,1e-4)) {
       std::cout << "The solution appears to be correct." <<std::endl;
     } else {
-      std::cout << std::endl << "The solution may be wrong "
-	"(or the generated problem may be ill conditioned.)" <<std::endl;
+       std::cout << std::endl << "The solution may be wrong "
+            "(or the generated problem may be ill conditioned.)" <<std::endl;
     }
     delete temp;
   } else {

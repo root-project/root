@@ -23,12 +23,12 @@ namespace ROOT {
 inline ABObj<MT,MAT1,T>  operator-(const ABObj<MT,MAT1,T>& m) {\
   return ABObj<MT,MAT1,T> (m.Obj(), T(-1.)*m.f());\
 }\
-			  \
-inline ABObj<MT,ABSum<ABObj<MT,MAT1,T>, ABObj<MT,MAT1,T> >,T>  operator+(const ABObj<MT,MAT1,T>& a, const ABObj<MT,MAT1,T>& b) {	  \
-  return ABObj<MT,ABSum<ABObj<MT,MAT1,T>, ABObj<MT,MAT1,T> >,T>(ABSum<ABObj<MT,MAT1,T>, ABObj<MT,MAT1,T> >(a, b));			  \
-}													       \
-inline ABObj<MT,ABSum<ABObj<MT,MAT1,T>, ABObj<MT,MAT1,T> >,T>  operator-(const ABObj<MT,MAT1,T>& a, const ABObj<MT,MAT1,T>& b) {	       \
-  return ABObj<MT,ABSum<ABObj<MT,MAT1,T>, ABObj<MT,MAT1,T> >,T>(ABSum<ABObj<MT,MAT1,T>, ABObj<MT,MAT1,T> >(a,ABObj<MT,MAT1,T> (b.Obj(),T(-1.)*b.f())));	       \
+         \
+inline ABObj<MT,ABSum<ABObj<MT,MAT1,T>, ABObj<MT,MAT1,T> >,T>  operator+(const ABObj<MT,MAT1,T>& a, const ABObj<MT,MAT1,T>& b) {    \
+  return ABObj<MT,ABSum<ABObj<MT,MAT1,T>, ABObj<MT,MAT1,T> >,T>(ABSum<ABObj<MT,MAT1,T>, ABObj<MT,MAT1,T> >(a, b));     \
+}                    \
+inline ABObj<MT,ABSum<ABObj<MT,MAT1,T>, ABObj<MT,MAT1,T> >,T>  operator-(const ABObj<MT,MAT1,T>& a, const ABObj<MT,MAT1,T>& b) {        \
+  return ABObj<MT,ABSum<ABObj<MT,MAT1,T>, ABObj<MT,MAT1,T> >,T>(ABSum<ABObj<MT,MAT1,T>, ABObj<MT,MAT1,T> >(a,ABObj<MT,MAT1,T> (b.Obj(),T(-1.)*b.f())));        \
 }
 
 OP_ADD1(vec,LAVector,double)

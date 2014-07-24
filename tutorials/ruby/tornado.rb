@@ -22,9 +22,9 @@ view.SetRange(0, 0, 0, 4.0*rng, 2.0*rng, rng)
 
 polymarkers = []
 
-d.step(numberOfCircles * d, d) do |j|	
-	# create a PolyMarker3D
-	pm3d = TPolyMarker3D.new( numberOfPoints )
+d.step(numberOfCircles * d, d) do |j|
+   # create a PolyMarker3D
+   pm3d = TPolyMarker3D.new( numberOfPoints )
  	# set points
 	for  i in 1..numberOfPoints  do
 		csin = Math.sin( 2*Math::PI / numberOfPoints * i ) + 1

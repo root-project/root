@@ -43,7 +43,7 @@ class TimeStampCounter
 inline void TimeStampCounter::Start()
 {
 #ifdef _MSC_VER
-	unsigned int tmp;
+    unsigned int tmp;
     m_start.a = __rdtscp(&tmp);
 #else
     asm volatile("rdtscp" : "=a"(m_start.b[0]), "=d"(m_start.b[1]) :: "ecx" );
@@ -53,7 +53,7 @@ inline void TimeStampCounter::Start()
 inline void TimeStampCounter::Stop()
 {
 #ifdef _MSC_VER
-	unsigned int tmp;
+    unsigned int tmp;
     m_end.a = __rdtscp(&tmp);
 #else
     asm volatile("rdtscp" : "=a"(m_end.b[0]), "=d"(m_end.b[1]) :: "ecx" );

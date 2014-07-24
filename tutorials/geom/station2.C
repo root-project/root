@@ -27,8 +27,8 @@ void station2()
    TGeoVolume *top=geom->MakeBox("top",Air,1000,1000,1000);   
    geom->SetTopVolume(top);       
    geom->SetTopVisible(0); 
-		// If you want to see the boundary, please input the number, 1 instead of 0.
-		// Like this, geom->SetTopVisible(1); 
+   // If you want to see the boundary, please input the number, 1 instead of 0.
+   // Like this, geom->SetTopVisible(1);
 
 
    TGeoVolume *b1=geom->MakeBox("b1",Iron,1,2,3);

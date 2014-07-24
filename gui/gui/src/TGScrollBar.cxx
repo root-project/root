@@ -62,7 +62,7 @@ ClassImp(TGVScrollBar)
 class TSBRepeatTimer : public TTimer {
 private:
    TGScrollBar   *fScrollBar;   // scroll bar
-   Int_t 			      fSmallInc;    // step
+   Int_t          fSmallInc;    // step
 public:
    TSBRepeatTimer(TGScrollBar *s, Long_t ms, Int_t inc) : TTimer(ms, kTRUE) 
       { fScrollBar = s;  fSmallInc = inc; }

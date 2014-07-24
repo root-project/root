@@ -138,9 +138,9 @@ void generate( R & r, bool array=true) {
       r.RndmArray(1000,x);
       r.RndmArray(1000,y);
       for (int j = 0; j < 1000; ++j) 
-	if ( ( x[j]*x[j] + y[j]*y[j] ) <= 1.0 ) n1++;
+       if ( ( x[j]*x[j] + y[j]*y[j] ) <= 1.0 ) n1++;
     }
-  }	
+  }
   else {
     for (int i = 0; i < n; ++i) { 
       x=r.Uniform();
@@ -152,8 +152,8 @@ void generate( R & r, bool array=true) {
 
   printName(r); 
   std::cout << "\tTime = " << w.RealTime()*1.0E9/NEVT << "  " 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << " (ns/call)" << std::endl;   
+            << w.CpuTime()*1.0E9/NEVT
+            << " (ns/call)" << std::endl;   
   double piEstimate = 4.0 * double(n1)/double(n);
   double delta = piEstimate-PI; 
   double sigma = std::sqrt( PI * (4 - PI)/double(n) );

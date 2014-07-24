@@ -67,7 +67,7 @@ The distribution can be initialized from a TF1 or from a vector of probabilities
     <pre>
       // create distribution from a vector of probabilities
          double pv[NSize] = {0.1,0.2,.......};
-      TUnuranDiscrDist  dist(pv, pv+NSize);	
+      TUnuranDiscrDist  dist(pv, pv+NSize);
       // the recommended method for discrete distribution is 
       unr.Init(dist, "method=dgt");
       // sample N times (generate N random numbers)       

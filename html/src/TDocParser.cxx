@@ -430,9 +430,9 @@ void TDocParser::Convert(std::ostream& out, std::istream& in, const char* relpat
          }
       } else {
          // Write source for source and interpreted directives if they exist.
-         if (fLineComment.Length() ) { 	 
-            GetDocOutput()->AdjustSourcePath(fLineComment, relpath); 	 
-            out << fLineComment << std::endl; 	 
+         if (fLineComment.Length() ) {
+            GetDocOutput()->AdjustSourcePath(fLineComment, relpath);
+            out << fLineComment << std::endl;
          } else if (!InContext(kDirective)) {
             GetDocOutput()->AdjustSourcePath(fLineSource, relpath);
             out << fLineSource << std::endl;

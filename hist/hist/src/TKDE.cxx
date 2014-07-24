@@ -10,15 +10,15 @@
  **********************************************************************/
 //////////////////////////////////////////////////////////////////////////////
 /*
-    Kernel Density Estimation class.
-    The three main references are (1) "Scott DW, Multivariate Density Estimation. Theory, Practice and Visualization. New York: Wiley",
-    (2) "Jann Ben - ETH Zurich, Switzerland -, Univariate kernel density estimation document for KDENS:
-         Stata module for univariate kernel density estimation."
-    (3) "Hardle W, Muller M, Sperlich S, Werwatz A, Nonparametric and Semiparametric Models. Springer."
-   The algorithm is briefly described in (4) "Cranmer KS, Kernel Estimation in High-Energy
-   Physics. Computer Physics Communications 136:198-207,2001" - e-Print Archive: hep ex/0011057.
-   A binned version is also implemented to address the performance issue due to its data size dependance.
-*/
+ Kernel Density Estimation class.
+ The three main references are (1) "Scott DW, Multivariate Density Estimation. Theory, Practice and Visualization. New York: Wiley",
+ (2) "Jann Ben - ETH Zurich, Switzerland -, Univariate kernel density estimation document for KDENS:
+ Stata module for univariate kernel density estimation."
+ (3) "Hardle W, Muller M, Sperlich S, Werwatz A, Nonparametric and Semiparametric Models. Springer."
+ The algorithm is briefly described in (4) "Cranmer KS, Kernel Estimation in High-Energy
+ Physics. Computer Physics Communications 136:198-207,2001" - e-Print Archive: hep ex/0011057.
+ A binned version is also implemented to address the performance issue due to its data size dependance.
+ */
 
 
 #include <functional>
@@ -63,26 +63,26 @@ private:
 };
 
 TKDE::TKDE(UInt_t events, const Double_t* data, Double_t xMin, Double_t xMax, const Option_t* option, Double_t rho) :
-   fData(events, 0.0),
-   fEvents(events, 0.0),
-   fPDF(0),
-   fUpperPDF(0),
-   fLowerPDF(0),
-   fApproximateBias(0),
-   fGraph(0),
-   fNewData(false),
-   fUseMinMaxFromData((xMin >= xMax)),
-   fNBins(events < 10000 ? 100: events / 10),
-   fNEvents(events),
-   fUseBinsNEvents(10000),
-   fMean(0.0),
-   fSigma(0.0),
-   fXMin(xMin),
-   fXMax(xMax),
-   fAdaptiveBandwidthFactor(1.0),
-   fCanonicalBandwidths(std::vector<Double_t>(kTotalKernels, 0.0)),
-   fKernelSigmas2(std::vector<Double_t>(kTotalKernels, -1.0)),
-   fSettedOptions(std::vector<Bool_t>(4, kFALSE))
+fData(events, 0.0),
+fEvents(events, 0.0),
+fPDF(0),
+fUpperPDF(0),
+fLowerPDF(0),
+fApproximateBias(0),
+fGraph(0),
+fNewData(false),
+fUseMinMaxFromData((xMin >= xMax)),
+fNBins(events < 10000 ? 100: events / 10),
+fNEvents(events),
+fUseBinsNEvents(10000),
+fMean(0.0),
+fSigma(0.0),
+fXMin(xMin),
+fXMax(xMax),
+fAdaptiveBandwidthFactor(1.0),
+fCanonicalBandwidths(std::vector<Double_t>(kTotalKernels, 0.0)),
+fKernelSigmas2(std::vector<Double_t>(kTotalKernels, -1.0)),
+fSettedOptions(std::vector<Bool_t>(4, kFALSE))
 {
    //Class constructor
    SetOptions(option, rho);
@@ -469,9 +469,9 @@ void TKDE::InitFromNewData() {
    Double_t midspread = ComputeMidspread();
    SetMean();
    SetSigma(midspread);
-//    if (fUseBins) {
-// } // bin usage is not supported in this case
-//
+   //    if (fUseBins) {
+   // } // bin usage is not supported in this case
+   //
    fWeightSize = fNEvents / (fXMax - fXMin);
    if (fUseMirroring) {
       SetMirroredEvents();
@@ -583,13 +583,13 @@ TF1* TKDE::GetFunction(UInt_t npx, Double_t xMin, Double_t xMax) {
 }
 
 TF1* TKDE::GetUpperFunction(Double_t confidenceLevel, UInt_t npx, Double_t xMin, Double_t xMax) {
-    // Returns the PDF upper estimate (upper confidence interval limit)
-    return GetPDFUpperConfidenceInterval(confidenceLevel,npx,xMin,xMax);
+   // Returns the PDF upper estimate (upper confidence interval limit)
+   return GetPDFUpperConfidenceInterval(confidenceLevel,npx,xMin,xMax);
 }
 
 TF1* TKDE::GetLowerFunction(Double_t confidenceLevel, UInt_t npx, Double_t xMin, Double_t xMax) {
-    // Returns the PDF lower estimate (lower confidence interval limit)
-    return GetPDFLowerConfidenceInterval(confidenceLevel,npx,xMin,xMax);
+   // Returns the PDF lower estimate (lower confidence interval limit)
+   return GetPDFLowerConfidenceInterval(confidenceLevel,npx,xMin,xMax);
 }
 
 TF1* TKDE::GetApproximateBias(UInt_t npx, Double_t xMin, Double_t xMax) {
@@ -638,10 +638,10 @@ Double_t TKDE::GetRAMISE() const {
 }
 
 TKDE::TKernel::TKernel(Double_t weight, TKDE* kde) :
-   // Internal class constructor
-   fKDE(kde),
-   fNWeights(kde->fData.size()),
-   fWeights(fNWeights, weight)
+// Internal class constructor
+fKDE(kde),
+fNWeights(kde->fData.size()),
+fWeights(fNWeights, weight)
 {}
 
 void TKDE::TKernel::ComputeAdaptiveWeights() {
@@ -659,7 +659,7 @@ void TKDE::TKernel::ComputeAdaptiveWeights() {
    Double_t kAPPROX_GEO_MEAN = 0.241970724519143365; // 1 / TMath::Power(2 * TMath::Pi(), .5) * TMath::Exp(-.5). Approximated geometric mean over pointwise data (the KDE function is substituted by the "real Gaussian" pdf) and proportional to sigma. Used directly when the mirroring is enabled, otherwise computed from the data
    fKDE->fAdaptiveBandwidthFactor = fKDE->fUseMirroring ? kAPPROX_GEO_MEAN / fKDE->fSigmaRob : std::sqrt(std::exp(fKDE->fAdaptiveBandwidthFactor / fKDE->fData.size()));
    transform(weights.begin(), weights.end(), fWeights.begin(), std::bind2nd(std::multiplies<Double_t>(), fKDE->fAdaptiveBandwidthFactor));
- }
+}
 
 Double_t TKDE::TKernel::GetWeight(Double_t x) const {
    // Returns the bandwidth
@@ -686,24 +686,24 @@ void TKDE::SetBinCountData() {
 
 void TKDE::Draw(const Option_t* opt) {
    // Draws either the KDE functions or its errors
-   // Possible options: 
+   // Possible options:
    //                    ""  (default) - draw just the kde
    //                    "same" draw on top of existing pad
    //                    "Errors" draw a TGraphErrors with the point and errors
    //                    "confidenceinterval" draw KDE + conf interval functions (default is 95%)
    //                    "confidenceinterval@0.90" draw KDE + conf interval functions at 90%
-   //                      Extra options can be passed in opt for drawing the TF1 or the TGraph 
+   //                      Extra options can be passed in opt for drawing the TF1 or the TGraph
    //
-   //NOTE:  The functions GetDrawnFunction(), GetDrawnUpperFunction(), GetDrawnLowerFunction() 
-   //  and GetGraphWithErrors() return the corresponding drawn objects (which are maneged by the TKDE) 
+   //NOTE:  The functions GetDrawnFunction(), GetDrawnUpperFunction(), GetDrawnLowerFunction()
+   //  and GetGraphWithErrors() return the corresponding drawn objects (which are maneged by the TKDE)
    // They can be used to changes style, color, etc...
 
    // TString plotOpt = "";
    // TString drawOpt = "";
-   // LM : this is too complicates - skip it - not needed for just 
+   // LM : this is too complicates - skip it - not needed for just
    // three options
    // SetDrawOptions(opt, plotOpt, drawOpt);
-   TString plotOpt = opt; 
+   TString plotOpt = opt;
    plotOpt.ToLower();
    TString drawOpt = plotOpt;
    if(gPad && !plotOpt.Contains("same")) {
@@ -713,7 +713,7 @@ void TKDE::Draw(const Option_t* opt) {
       drawOpt.ReplaceAll("errors","");
       DrawErrors(drawOpt);
    }
-   else if (plotOpt.Contains("confidenceinterval") || 
+   else if (plotOpt.Contains("confidenceinterval") ||
             plotOpt.Contains("confinterval")) {
       // parse level option
       drawOpt.ReplaceAll("confidenceinterval","");
@@ -723,13 +723,13 @@ void TKDE::Draw(const Option_t* opt) {
       // coverity [secure_coding : FALSE]
       if (s != 0) sscanf(s,"interval@%lf",&level);
       if((level <= 0) || (level >= 1)) {
-	 Warning("Draw","given confidence level %.3lf is invalid - use default 0.95",level);
+         Warning("Draw","given confidence level %.3lf is invalid - use default 0.95",level);
          level = 0.95;
       }
       DrawConfidenceInterval(drawOpt,level);
    }
    else {
-      if (fPDF) delete fPDF; 
+      if (fPDF) delete fPDF;
       fPDF = GetKDEFunction();
       fPDF->Draw(drawOpt);
    }
@@ -970,7 +970,7 @@ TKDE::KernelIntegrand::KernelIntegrand(const TKDE* kde, EIntegralResult intRes) 
 Double_t TKDE::KernelIntegrand::operator()(Double_t x) const {
    // Internal class unary function
    if (fIntegralResult == kNorm) {
-     return std::pow((*fKDE->fKernelFunction)(x), 2);
+      return std::pow((*fKDE->fKernelFunction)(x), 2);
    } else if (fIntegralResult == kMu) {
       return x * (*fKDE->fKernelFunction)(x);
    } else if (fIntegralResult == kSigma2) {
@@ -991,7 +991,7 @@ TF1* TKDE::GetKDEFunction(UInt_t npx, Double_t xMin , Double_t xMax) {
    if (npx > 0) pdf->SetNpx(npx);
    pdf->SetTitle(title);
    TF1 * f =  (TF1*)pdf->Clone();
-   delete pdf; 
+   delete pdf;
    return f;
 }
 
@@ -1006,7 +1006,7 @@ TF1* TKDE::GetPDFUpperConfidenceInterval(Double_t confidenceLevel, UInt_t npx, D
    TF1 * f =  (TF1*)upperPDF->Clone();
    delete upperPDF;
    return f;
-   }
+}
 
 TF1* TKDE::GetPDFLowerConfidenceInterval(Double_t confidenceLevel, UInt_t npx, Double_t xMin , Double_t xMax) {
    // Returns the upper estimated density

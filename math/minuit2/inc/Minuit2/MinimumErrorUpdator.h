@@ -27,7 +27,7 @@ public:
   virtual ~MinimumErrorUpdator() {}
 
   virtual MinimumError Update(const MinimumState&, const MinimumParameters&,
-			      const FunctionGradient&) const = 0;
+                              const FunctionGradient&) const = 0;
 
 };
 

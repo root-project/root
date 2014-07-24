@@ -463,7 +463,7 @@ const TBuffer3D & TSPHE::GetBuffer3D(Int_t reqSections) const
             buffer.fPols[indx++] = (2*k+ 3)*m+j;
             buffer.fPols[indx++] = nz*2*m+(2*k+3)*n+j+1;
          }
-       	 
+
          if (specialCase) {
             buffer.fPols[indx++] = c;
             buffer.fPols[indx++] = 4;
@@ -471,7 +471,7 @@ const TBuffer3D & TSPHE::GetBuffer3D(Int_t reqSections) const
             buffer.fPols[indx++] = nz*2*m+(2*k+2)*n+j;
             buffer.fPols[indx++] = (2*k+2)*m+j;
             buffer.fPols[indx++] = nz*2*m+(2*k+2)*n;
-   	    
+
             buffer.fPols[indx++] = c+1;
             buffer.fPols[indx++] = 4;
             buffer.fPols[indx++] = (2*k+1)*m+j;
@@ -492,8 +492,8 @@ const TBuffer3D & TSPHE::GetBuffer3D(Int_t reqSections) const
             buffer.fPols[indx++] = indx2+2*(k+1)*n;
             buffer.fPols[indx++] = indx2+2*nz*n+2*k;
             buffer.fPols[indx++] = indx2+(2*k+3)*n;
-   	    
-   	      buffer.fPols[indx++] = c+2;
+
+            buffer.fPols[indx++] = c+2;
             buffer.fPols[indx++] = 4;
             buffer.fPols[indx++] = k==0 ? indx2+n-1 : indx2+2*nz*n+2*(k-1)+1;
             buffer.fPols[indx++] = indx2+(2*k+3)*n+n-1;

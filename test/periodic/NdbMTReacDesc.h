@@ -15,32 +15,32 @@
 class NdbMTReacDesc : public TObject
 {
 protected:
-	TArrayI	mt;		// MT number
-	char	**shrt;		//!	Short description (n,f)
-	char	**desc;		//!	Long description
-	char	**comment;	//!	Comments on reaction	
+   TArrayI   mt;      // MT number
+   char   **shrt;      //!   Short description (n,f)
+   char   **desc;      //!   Long description
+   char   **comment;   //!   Comments on reaction
 
 public:
-	NdbMTReacDesc() {
-		shrt = NULL;
-		desc = NULL;
-		comment = NULL;
-	}
-	NdbMTReacDesc(const char *filename);
-	~NdbMTReacDesc();
+   NdbMTReacDesc() {
+      shrt = NULL;
+      desc = NULL;
+      comment = NULL;
+   }
+   NdbMTReacDesc(const char *filename);
+   ~NdbMTReacDesc();
 
-		void	Init(const char *filename);
+   void   Init(const char *filename);
 
-	// --- Access functions ---
-	inline	Int_t	GetSize()	const	{ return mt.GetSize(); }	
-	inline	Int_t	MT(Int_t i)		{ return mt[i]; }
+   // --- Access functions ---
+   inline   Int_t   GetSize()   const   { return mt.GetSize(); }
+   inline   Int_t   MT(Int_t i)      { return mt[i]; }
 
-		Int_t	FindMT(Int_t MT);
-		char*	GetShort(Int_t MT);
-		char*	GetDescription(Int_t MT);
-		char*	GetComment(Int_t MT);
+   Int_t   FindMT(Int_t MT);
+   char*   GetShort(Int_t MT);
+   char*   GetDescription(Int_t MT);
+   char*   GetComment(Int_t MT);
 
-	ClassDef(NdbMTReacDesc,1)
+   ClassDef(NdbMTReacDesc,1)
 
 }; // NdbMTReacDesc
 

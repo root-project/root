@@ -256,13 +256,13 @@ int testNdimFit() {
 
    // generate the true parameters 
 //       for (int j = 0;  j < NGaus; ++j) {   
-// 	 double a = j+1;
+//          double a = j+1;
 //          double mu = double(j)/NGaus; 
 //          double s  = 1.0 + double(j)/NGaus;  
 //          truePar[3*j] = a; 
 //          truePar[3*j+1] = mu; 
 //          truePar[3*j+2] = s;
-// 	 tot += a;
+//          tot += a;
 //       }
    truePar[0] = 0.2; // % second  gaussian
    truePar[1] = 0.05;  // % third gaussian ampl
@@ -285,23 +285,23 @@ int testNdimFit() {
    std::cout << " True amplitude gaussians " << a << "  " << b << "  " << c << std::endl;
    for (Int_t i=0;i<NPoints;i++) {
       for (int j = 0;  j < N; ++j) { 
-	if (r.Rndm() < a ) { 
-	  double mu = truePar[2]; 
-	  double s  = truePar[3];  
-	  x[j] = r.Gaus(mu,s);
-	}
-	else if (r.Rndm() < b ) { 
-	  double mu = truePar[4]; 
-	  double s  = truePar[5];  
-	  x[j] = r.Gaus(mu,s);
-	}
-        else { 
-	  double mu = truePar[6]; 
-	  double s  = truePar[7];  
-	  x[j] = r.Gaus(mu,s);
-        }
+         if (r.Rndm() < a ) {
+            double mu = truePar[2];
+            double s  = truePar[3];
+            x[j] = r.Gaus(mu,s);
+         }
+         else if (r.Rndm() < b ) {
+            double mu = truePar[4];
+            double s  = truePar[5];
+            x[j] = r.Gaus(mu,s);
+         }
+         else {
+            double mu = truePar[6];
+            double s  = truePar[7];
+            x[j] = r.Gaus(mu,s);
+         }
       }
-
+      
       ev = i;
       t1.Fill();
       

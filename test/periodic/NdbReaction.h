@@ -11,15 +11,15 @@
 class NdbReaction : public NdbMF
 {
 protected:
-	TObjArray	reac;		// List of reaction Cross Sections
+   TObjArray reac; // List of reaction Cross Sections
 
 public:
-	NdbReaction()
-		: NdbMF(3, "Reaction cross sections"),
-		  reac() { }
-	~NdbReaction() {}
+   NdbReaction()
+      : NdbMF(3, "Reaction cross sections"),
+        reac() { }
+   ~NdbReaction() {}
 
-	ClassDef(NdbReaction,1)
+   ClassDef(NdbReaction,1)
 }; // NdbReaction
 
 #endif

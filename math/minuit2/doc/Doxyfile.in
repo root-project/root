@@ -385,7 +385,7 @@ RECURSIVE              = YES
 EXCLUDE                = @top_srcdir@/cmt \
                          @top_srcdir@/config \
                          @top_srcdir@/build \
-			 @top_srcdir@/test
+                         @top_srcdir@/test
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or directories 
 # that are symbolic links (a Unix filesystem feature) are excluded from the input.

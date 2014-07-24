@@ -3218,7 +3218,7 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
                   }
                }
                Int_t binNew = hnew->GetBin( xover *(newxbins+1),
-                                            yover*(newybins+1), zover*(newzbins+1) );
+                                           yover*(newybins+1), zover*(newzbins+1) );
                hnew->SetBinContent(binNew,binContent);
                if (oldSumw2) hnew->fSumw2.fArray[binNew] = binSumw2;
             }
@@ -3258,8 +3258,8 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
             hnew->SetBinContent(xbin,0,zbin,binContent0);
             hnew->SetBinContent(xbin,newybins+1,zbin,binContent2);
             if (oldSumw2) {
-            hnew->SetBinError(xbin,0,zbin,TMath::Sqrt(binError0));
-            hnew->SetBinError(xbin,newybins+1,zbin,TMath::Sqrt(binError2) );
+               hnew->SetBinError(xbin,0,zbin,TMath::Sqrt(binError0));
+               hnew->SetBinError(xbin,newybins+1,zbin,TMath::Sqrt(binError2) );
             }
             oldzbin2 += nzgroup;
          }
@@ -3294,8 +3294,8 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
             hnew->SetBinContent(0,ybin,zbin,binContent0);
             hnew->SetBinContent(newxbins+1,ybin,zbin,binContent2);
             if (oldSumw2) {
-            hnew->SetBinError(0,ybin,zbin,TMath::Sqrt(binError0));
-            hnew->SetBinError(newxbins+1,ybin,zbin,TMath::Sqrt(binError2) );
+               hnew->SetBinError(0,ybin,zbin,TMath::Sqrt(binError0));
+               hnew->SetBinError(newxbins+1,ybin,zbin,TMath::Sqrt(binError2) );
             }
             oldzbin2 += nzgroup;
          }
@@ -3330,8 +3330,8 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
             hnew->SetBinContent(xbin,ybin,0,binContent0);
             hnew->SetBinContent(xbin,ybin,newzbins+1,binContent2);
             if (oldSumw2) {
-            hnew->SetBinError(xbin,ybin,0,TMath::Sqrt(binError0));
-            hnew->SetBinError(xbin,ybin,newzbins+1,TMath::Sqrt(binError2) );
+               hnew->SetBinError(xbin,ybin,0,TMath::Sqrt(binError0));
+               hnew->SetBinError(xbin,ybin,newzbins+1,TMath::Sqrt(binError2) );
             }
             oldybin2 += nygroup;
          }
@@ -3519,11 +3519,11 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
    fZaxis.SetTitleSize(zTitleSize);
    fZaxis.SetTitleColor(zTitleColor);
    fZaxis.SetTitleFont(zTitleFont);
-
+   
    //restore statistics and entries  modified by SetBinContent
    hnew->SetEntries(entries);
    if (!resetStat) hnew->PutStats(stat);
-
+   
    delete [] oldBins;
    if (oldSumw2) delete [] oldSumw2;
    return hnew;

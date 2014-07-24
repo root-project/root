@@ -93,7 +93,7 @@ public:
                     (for example the function object itself)
    */
    void SetFunction( GSLFuncPointer f, void * p = 0);
-	
+
    /** 
        Computes the numerical derivative at a point x using an adaptive central 
        difference algorithm with a step size h. 

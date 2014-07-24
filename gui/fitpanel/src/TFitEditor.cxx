@@ -1317,11 +1317,11 @@ void TFitEditor::UpdateGUI()
       Int_t ixmax = fXaxis->GetLast();
 
       if (ixmin > 1 || ixmax < ixrange) {
-	fSliderX->SetRange(ixmin,ixmax);
-	fSliderX->SetPosition(ixmin, ixmax);
+         fSliderX->SetRange(ixmin,ixmax);
+         fSliderX->SetPosition(ixmin, ixmax);
       } else {
-	fSliderX->SetRange(1,ixrange);
-	fSliderX->SetPosition(ixmin,ixmax);
+         fSliderX->SetRange(1,ixrange);
+         fSliderX->SetPosition(ixmin,ixmax);
       }
       
       fSliderX->SetScale(5);
@@ -1369,11 +1369,11 @@ void TFitEditor::UpdateGUI()
       }
 
       if (iymin > 1 || iymax < iyrange) {
-	fSliderY->SetRange(iymin,iymax);
-	fSliderY->SetPosition(iymin, iymax);
+         fSliderY->SetRange(iymin,iymax);
+         fSliderY->SetPosition(iymin, iymax);
       } else {
-	fSliderY->SetRange(1,iyrange);
-	fSliderY->SetPosition(iymin,iymax);
+         fSliderY->SetRange(1,iyrange);
+         fSliderY->SetPosition(iymin,iymax);
       }
 
       fSliderY->SetScale(5);
@@ -1418,11 +1418,11 @@ void TFitEditor::UpdateGUI()
       }
 
       if (izmin > 1 || izmax < izrange) {
-	fSliderZ->SetRange(izmin,izmax);
-	fSliderZ->SetPosition(izmin, izmax);
+         fSliderZ->SetRange(izmin,izmax);
+         fSliderZ->SetPosition(izmin, izmax);
       } else {
-	fSliderZ->SetRange(1,izrange);
-	fSliderZ->SetPosition(izmin,izmax);
+         fSliderZ->SetRange(1,izrange);
+         fSliderZ->SetPosition(izmin,izmax);
       }
 
       fSliderZ->SetScale(5);

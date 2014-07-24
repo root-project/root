@@ -142,7 +142,7 @@ public:
     {
       assert(pWS_XML->data("obsData"));
       if(!CompareData(*pWS_API->data("obsData"),*pWS_XML->data("obsData")))
-	return kFALSE;
+         return kFALSE;
     }
     else
       return kFALSE;
@@ -151,7 +151,7 @@ public:
     {
       assert(pWS_XML->data("asimovData"));
       if(!CompareData(*pWS_API->data("asimovData"),*pWS_XML->data("asimovData")))
-	return kFALSE;
+        return kFALSE;
     }
     else
       return kFALSE;
@@ -161,20 +161,20 @@ public:
     {
       assert(pMC_XML->GetParametersOfInterest());
       if(_verb > 0)
-	Info("testCode","comparing PoIs");
+         Info("testCode","comparing PoIs");
       if(!CompareParameters(*pMC_API->GetParametersOfInterest(),*pMC_XML->GetParametersOfInterest()))
-	return kFALSE;
+         return kFALSE;
     }
-    else
+     else
       assert(!pMC_XML->GetParametersOfInterest());
 
     if(pMC_API->GetObservables())
     {
       assert(pMC_XML->GetObservables());
       if(_verb > 0)
-	Info("testCode","comparing observables");
+         Info("testCode","comparing observables");
       if(!CompareParameters(*pMC_API->GetObservables(),*pMC_XML->GetObservables()))
-	return kFALSE;
+         return kFALSE;
     }
     else
       assert(!pMC_XML->GetObservables());
@@ -183,9 +183,9 @@ public:
     {
       assert(pMC_XML->GetGlobalObservables());
       if(_verb > 0)
-	Info("testCode","comparing global observables");
+         Info("testCode","comparing global observables");
       if(!CompareParameters(*pMC_API->GetGlobalObservables(),*pMC_XML->GetGlobalObservables()))
-	return kFALSE;
+         return kFALSE;
     }
     else
       assert(!pMC_XML->GetGlobalObservables());
@@ -194,9 +194,9 @@ public:
     {
       assert(pMC_XML->GetConditionalObservables());
       if(_verb > 0)
-	Info("testCode","comparing conditional observables");
+         Info("testCode","comparing conditional observables");
       if(!CompareParameters(*pMC_API->GetConditionalObservables(),*pMC_XML->GetConditionalObservables()))
-	return kFALSE;
+         return kFALSE;
     }
     else
       assert(!pMC_XML->GetConditionalObservables());
@@ -205,9 +205,9 @@ public:
     {
       assert(pMC_XML->GetNuisanceParameters());
       if(_verb > 0)
-	Info("testCode","comparing nuisance parameters");
+         Info("testCode","comparing nuisance parameters");
       if(!CompareParameters(*pMC_API->GetNuisanceParameters(),*pMC_XML->GetNuisanceParameters()))
-	return kFALSE;
+         return kFALSE;
     }
     else
       assert(!pMC_XML->GetNuisanceParameters());
@@ -292,14 +292,14 @@ private:
       if (!par) continue;  // do not test RooCategory
       if(!TMath::AreEqualAbs(rData1.mean(*par),rData2.mean(*par),fTolerance))
       {
-	Warning("CompareData","data sets have different means for \"%s\": %.3f vs %.3f",par->GetName(),rData1.mean(*par),rData2.mean(*par));
-	return kFALSE;
+         Warning("CompareData","data sets have different means for \"%s\": %.3f vs %.3f",par->GetName(),rData1.mean(*par),rData2.mean(*par));
+         return kFALSE;
       }
 
       if(!TMath::AreEqualAbs(rData1.sigma(*par),rData2.sigma(*par),fTolerance))
       {
-	Warning("CompareData","data sets have different sigmas for \"%s\": %.3f vs %.3f",par->GetName(),rData1.sigma(*par),rData2.sigma(*par));
-	return kFALSE;
+         Warning("CompareData","data sets have different sigmas for \"%s\": %.3f vs %.3f",par->GetName(),rData1.sigma(*par),rData2.sigma(*par));
+         return kFALSE;
       }
     }
 
@@ -323,65 +323,65 @@ private:
       // checks only for RooRealVars implemented
       arg1 = dynamic_cast<RooRealVar*>(obj);
       if(!arg1)
-	continue;
+         continue;
       
       arg2 = (RooRealVar*)rPars2.find(arg1->GetName());
       
       if(!arg2)
       {
-	Warning("CompareParameters","did not find observable with name \"%s\"",arg1->GetName());
-	return kFALSE;
+         Warning("CompareParameters","did not find observable with name \"%s\"",arg1->GetName());
+         return kFALSE;
       }
 
       if(!TMath::AreEqualAbs(arg1->getMin(),arg2->getMin(),fTolerance))
       {
-	Warning("CompareParameters","parameters with name \"%s\" have different minima: %.3f vs %.3f",arg1->GetName(),arg1->getMin(),arg2->getMin());
-	return kFALSE;
+         Warning("CompareParameters","parameters with name \"%s\" have different minima: %.3f vs %.3f",arg1->GetName(),arg1->getMin(),arg2->getMin());
+         return kFALSE;
       }
 
       if(!TMath::AreEqualAbs(arg1->getMax(),arg2->getMax(),fTolerance))
       {
-	Warning("CompareParameters","parameters with name \"%s\" have different maxima: %.3f vs %.3f",arg1->GetName(),arg1->getMax(),arg2->getMax());
-	return kFALSE;
+         Warning("CompareParameters","parameters with name \"%s\" have different maxima: %.3f vs %.3f",arg1->GetName(),arg1->getMax(),arg2->getMax());
+         return kFALSE;
       }
 
       if(arg1->getBins() != arg2->getBins())
       {
-	Warning("CompareParameters","parameters with name \"%s\" have different number of bins: %d vs %d",arg1->GetName(),arg1->getBins(),arg2->getBins());
-	return kFALSE;
+         Warning("CompareParameters","parameters with name \"%s\" have different number of bins: %d vs %d",arg1->GetName(),arg1->getBins(),arg2->getBins());
+         return kFALSE;
       }
 
       if(arg1->isConstant() != arg2->isConstant())
       {
-	Warning("CompareParameters","parameters with name \"%s\" have different constness",arg1->GetName());
-	return kFALSE;
+         Warning("CompareParameters","parameters with name \"%s\" have different constness",arg1->GetName());
+         return kFALSE;
       }
 
       if(bAllowForError)
       {
          if(!TMath::AreEqualAbs(arg1->getVal(),arg2->getVal(), TMath::Max(fTolerance,0.1*TMath::Min(arg1->getError(),arg2->getError()))))
-	{
-	  Warning("CompareParameters","parameters with name \"%s\" have different values: %.3f +/- %.3f vs %.3f +/- %.3f",arg1->GetName(),arg1->getVal(),arg1->getError(),arg2->getVal(),arg2->getError());
-	  return kFALSE;
-	}
+         {
+            Warning("CompareParameters","parameters with name \"%s\" have different values: %.3f +/- %.3f vs %.3f +/- %.3f",arg1->GetName(),arg1->getVal(),arg1->getError(),arg2->getVal(),arg2->getError());
+            return kFALSE;
+         }
       }
       else
-      {
-	if(!TMath::AreEqualAbs(arg1->getVal(),arg2->getVal(),fTolerance))
-	{
-	  Warning("CompareParameters","parameters with name \"%s\" have different values: %.3f vs %.3f",arg1->GetName(),arg1->getVal(),arg2->getVal());
-	  return kFALSE;
-	}
+       {
+          if(!TMath::AreEqualAbs(arg1->getVal(),arg2->getVal(),fTolerance))
+          {
+             Warning("CompareParameters","parameters with name \"%s\" have different values: %.3f vs %.3f",arg1->GetName(),arg1->getVal(),arg2->getVal());
+             return kFALSE;
+          }
 
-	if(!TMath::AreEqualAbs(arg1->getError(),arg2->getError(),fTolerance))
-	{
-	  Warning("CompareParameters","parameters with name \"%s\" have different errors: %.3f vs %.3f",arg1->GetName(),arg1->getError(),arg2->getError());
-	  return kFALSE;
-	}
-      }
+          if(!TMath::AreEqualAbs(arg1->getError(),arg2->getError(),fTolerance))
+          {
+             Warning("CompareParameters","parameters with name \"%s\" have different errors: %.3f vs %.3f",arg1->GetName(),arg1->getError(),arg2->getError());
+             return kFALSE;
+          }
+       }
     }
-
-    return kTRUE;
+     
+     return kTRUE;
   }
 
   Bool_t ComparePDF(RooAbsPdf& rPDF1,RooAbsPdf& rPDF2,const RooArgSet& rAllObservables,RooAbsData& rTestData)

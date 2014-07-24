@@ -774,7 +774,7 @@ public:
    // Return the parameters of the secondary track number isec produced
    // in the current step
    virtual void     GetSecondary(Int_t isec, Int_t& particleId,
-   		       TLorentzVector& position, TLorentzVector& momentum) =0;
+                                 TLorentzVector& position, TLorentzVector& momentum) =0;
 
    // Return the VMC code of the process that has produced the secondary
    // particles in the current step

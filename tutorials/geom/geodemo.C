@@ -927,7 +927,7 @@ void torus(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    pt->SetTextSize(0.044);
    pt->Draw();
    c->cd(1);
-}	 
+}
 
 //______________________________________________________________________________
 void trd1(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
@@ -1806,4 +1806,3 @@ void align()
       gPad->Update();
    }   
 }
-

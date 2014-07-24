@@ -47,16 +47,16 @@ namespace ROOT {
 
 //__________________________________________________________________________________________
     /**
-              Class describing a generic position vector (point) in 3 dimensions.
-              This class is templated on the type of Coordinate system.
-              One example is the XYZPoint which is a vector based on
-              double precision x,y,z data members by using the
-              ROOT::Math::Cartesian3D<double> Coordinate system.
-	      The class is having also an extra template parameter, the coordinate system tag, 
-	      to be able to identify (tag) vector described in different reference coordinate system, 
-	      like global or local coordinate systems.   
+     Class describing a generic position vector (point) in 3 dimensions.
+     This class is templated on the type of Coordinate system.
+     One example is the XYZPoint which is a vector based on
+     double precision x,y,z data members by using the
+     ROOT::Math::Cartesian3D<double> Coordinate system.
+     The class is having also an extra template parameter, the coordinate system tag,
+     to be able to identify (tag) vector described in different reference coordinate system,
+     like global or local coordinate systems.
 
-	      @ingroup GenVector
+     @ingroup GenVector
     */
 
     template <class CoordSystem, class Tag = DefaultCoordinateSystemTag >
@@ -369,8 +369,8 @@ namespace ROOT {
       // need to specialize to exclude those with a different tags 
 
      /**
-          Return the scalar (Dot) product of this with a displacement vector in 
-	  any coordinate system, but with the same tag
+      Return the scalar (Dot) product of this with a displacement vector in
+      any coordinate system, but with the same tag
       */
       template< class OtherCoords >
       Scalar Dot( const  DisplacementVector3D<OtherCoords,Tag> & v) const {

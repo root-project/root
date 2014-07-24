@@ -101,7 +101,7 @@
 //         for fixed lambda=0
 //  or
 //   (b) constrained: stationary point is found as a function of x and lambda
-//                                                                      
+//
 // The constraint can be useful to reduce biases on the result x
 // in cases where the vector y follows non-Gaussian probability densities
 // (example: Poisson statistics at counting experiments in particle physics)
@@ -145,7 +145,7 @@
 //
 //    epsilon_j = sum_i A_ij    vector of efficiencies
 //
-//    E^-1  = ((A# Vyy^-1 A)+tau^2 Lsquared) 
+//    E^-1  = ((A# Vyy^-1 A)+tau^2 Lsquared)
 //
 //    x = E (A# Vyy^-1 y + tau^2 Lsquared x0 +lambda/2 * epsilon) is the result
 //
@@ -181,7 +181,7 @@
 //
 // Within TUnfold a simple version of the L-curve analysis is available.
 // It tests a given number of points in a predefined tau-range and searches
-// for the maximum of the curvature in the L-curve (kink position). 
+// for the maximum of the curvature in the L-curve (kink position).
 // if no tau range is given, the range of the scan is determined automatically
 //
 //  A nice overview of the L-curve method is given in:
@@ -189,7 +189,7 @@
 //   (2000) by P. C. Hansen, in Computational Inverse Problems in
 //   Electrocardiology, ed. P. Johnston,
 //   Advances in Computational Bioengineering
-//   http://www.imm.dtu.dk/~pch/TR/Lcurve.ps 
+//   http://www.imm.dtu.dk/~pch/TR/Lcurve.ps
 //
 // Alternative Regularisation conditions
 // =====================================
@@ -201,7 +201,7 @@
 //    x:  unfolding output
 //    x0: the bias distribution, by default calculated from
 //        the input matrix A. There is a method SetBias() to change the
-//        bias distribution. 
+//        bias distribution.
 //        The 3rd argument to DoUnfold() is a scale factor applied to the bias
 //          bias_default[j] = sum_i A[i][j]
 //          x0[j] = scaleBias*bias[j]
@@ -211,8 +211,8 @@
 //             and Monte Carlo
 //
 // If the regularisation is strong, i.e. large parameter tau,
-// then the distribution x or its derivatives will look like the bias 
-// distribution. If the parameter tau is small, the distribution x is 
+// then the distribution x or its derivatives will look like the bias
+// distribution. If the parameter tau is small, the distribution x is
 // independent of the bias.
 //
 // Three basic types of regularisation are implemented in TUnfold
@@ -229,11 +229,11 @@
 // Sometimes the bias is not discussed,  equivalent to a bias scale factor
 // of zero.
 //
-// The regularisation schemes kRegModeDerivative and 
+// The regularisation schemes kRegModeDerivative and
 // kRegModeCurvature have the nice feature that they create correlations
-// between x-bins, whereas the non-regularized unfolding tends to create 
+// between x-bins, whereas the non-regularized unfolding tends to create
 // negative correlations between bins. For these regularisation schemes the
-// parameter tau could be tuned such that the correlations are smallest, 
+// parameter tau could be tuned such that the correlations are smallest,
 // as an alternative to the L-curve method.
 //
 // If kRegModeSize is chosen or if x is a smooth function through all bins,
@@ -254,7 +254,7 @@
 // For ultimate flexibility, the regularisation condition can be set on each
 // bin individually
 //  -> give  kRegModeNone  in the constructor and use
-//      RegularizeSize()        regularize one bin   
+//      RegularizeSize()        regularize one bin
 //      RegularizeDerivative()  regularize the slope given by two bins
 //      RegularizeCurvature()   regularize the curvature given by three bins
 //      AddRegularisationCondition()
@@ -263,21 +263,21 @@
 ///////////////////////////////////////////////////////////////////////////
 
 /*
-  This file is part of TUnfold.
+ This file is part of TUnfold.
 
-  TUnfold is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+ TUnfold is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
 
-  TUnfold is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+ TUnfold is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ You should have received a copy of the GNU General Public License
+ along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <iostream>
 #include <TMatrixD.h>
@@ -290,7 +290,7 @@
 #include <map>
 #include <vector>
 
-// this option saves the spline of the L curve curvature to a file 
+// this option saves the spline of the L curve curvature to a file
 // named splinec.ps for debugging
 
 //#define DEBUG
@@ -434,7 +434,7 @@ Double_t TUnfold::DoUnfold(void)
    if(!fVyyInv) {
       GetInputInverseEmatrix(0);
       if(fConstraint != kEConstraintNone) {
-	fNdf--;
+         fNdf--;
       }
    }
    //
@@ -451,7 +451,7 @@ Double_t TUnfold::DoUnfold(void)
    TMatrixDSparse *rhs=MultiplyMSparseM(AtVyyinv,fY);
    TMatrixDSparse *lSquared=MultiplyMSparseTranspMSparse(fL,fL);
    if (fBiasScale != 0.0) {
-     TMatrixDSparse *rhs2=MultiplyMSparseM(lSquared,fX0);
+      TMatrixDSparse *rhs2=MultiplyMSparseM(lSquared,fX0);
       AddMSparse(rhs, fTauSquared * fBiasScale ,rhs2);
       DeleteMatrix(&rhs2);
    }
@@ -547,9 +547,9 @@ Double_t TUnfold::DoUnfold(void)
          rows[i]=0;
          cols[i]=i;
          data[i]=one_over_epsEeps;
-      } 
+      }
       TMatrixDSparse *temp=CreateSparseMatrix
-         (1,GetNy(),GetNy(),rows,cols,data);
+      (1,GetNy(),GetNy(),rows,cols,data);
       delete[] data;
       delete[] rows;
       delete[] cols;
@@ -642,7 +642,7 @@ Double_t TUnfold::DoUnfold(void)
    if(fConstraint != kEConstraintNone) {
       // add correction to fDXDAM[0]
       TMatrixDSparse *temp1=MultiplyMSparseMSparseTranspVector
-         (Eepsilon,Eepsilon,0);
+      (Eepsilon,Eepsilon,0);
       AddMSparse(fDXDAM[0], -one_over_epsEeps,temp1);
       DeleteMatrix(&temp1);
       // add correction to fDXDAZ[0]
@@ -655,7 +655,7 @@ Double_t TUnfold::DoUnfold(void)
          data[i]=lambda_half;
       }
       TMatrixDSparse *temp2=CreateSparseMatrix
-         (GetNy(),1,GetNy(),rows,cols,data);
+      (GetNy(),1,GetNy(),rows,cols,data);
       delete[] data;
       delete[] rows;
       delete[] cols;
@@ -696,12 +696,12 @@ Double_t TUnfold::DoUnfold(void)
       for(int ik=Vxx_rows[ix];ik<Vxx_rows[ix+1];ik++) {
          if(ix==Vxx_cols[ik]) {
             Double_t rho_squared =
-               1. - 1. / (VxxInvDiag(ix) * Vxx_data[ik]);
+            1. - 1. / (VxxInvDiag(ix) * Vxx_data[ik]);
             if (rho_squared > rho_squared_max)
                rho_squared_max = rho_squared;
             if(rho_squared>0.0) {
                rho_sum += TMath::Sqrt(rho_squared);
-               n_rho++;               
+               n_rho++;
             }
             break;
          }
@@ -988,13 +988,13 @@ TMatrixDSparse *TUnfold::MultiplyMSparseMSparseTranspVector
                   Int_t v_index=v_rows[k1];
                   if(v_index<v_rows[k1+1]) {
                      data_r[num_r] += data_m1[index_m1] * data_m2[index_m2]
-                        * v_data[v_index];
+                     * v_data[v_index];
                   } else {
                      data_r[num_r] =0.0;
                   }
                } else if(v) {
                   data_r[num_r] += data_m1[index_m1] * data_m2[index_m2]
-                     * (*v)(k1,0);
+                  * (*v)(k1,0);
                } else {
                   data_r[num_r] += data_m1[index_m1] * data_m2[index_m2];
                }
@@ -1043,10 +1043,10 @@ void TUnfold::AddMSparse(TMatrixDSparse *dest,Double_t f,
       Int_t i_dest=dest_rows[row];
       Int_t i_src=src_rows[row];
       while((i_dest<dest_rows[row+1])||(i_src<src_rows[row+1])) {
-         Int_t col_dest=(i_dest<dest_rows[row+1]) ? 
-            dest_cols[i_dest] : dest->GetNcols();
+         Int_t col_dest=(i_dest<dest_rows[row+1]) ?
+         dest_cols[i_dest] : dest->GetNcols();
          Int_t col_src =(i_src <src_rows[row+1] ) ?
-            src_cols [i_src] :  src->GetNcols();
+         src_cols [i_src] :  src->GetNcols();
          result_rows[n]=row;
          if(col_dest<col_src) {
             result_cols[n]=col_dest;
@@ -1084,12 +1084,12 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
 {
    // get the inverse or pseudo-inverse of a sparse matrix
    //    A: the original matrix
-   //    rank: 
+   //    rank:
    //      if(rankPtr==0)
    //          rerturn the inverse if it exists, or return NULL
    //      else
    //          return the pseudo-invers
-   //          and return the rank of the matrix in *rankPtr 
+   //          and return the rank of the matrix in *rankPtr
    // the matrix inversion is optimized for the case
    // where a large submatrix of A is diagonal
 
@@ -1383,7 +1383,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
                B_row[BnumEl]=i;
                B_col[BnumEl]=j;
                B_data[BnumEl]=a_data[indexA];
-               BnumEl++;               
+               BnumEl++;
             }
          }
       }
@@ -1407,7 +1407,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
          minusBD2inv=MultiplyMSparseMSparse(B,D2inv);
          if(minusBD2inv) {
             Int_t mbd2_nMax=minusBD2inv->GetRowIndexArray()
-               [minusBD2inv->GetNrows()];
+            [minusBD2inv->GetNrows()];
             Double_t *mbd2_data=minusBD2inv->GetMatrixArray();
             for(Int_t i=0;i<mbd2_nMax;i++) {
                mbd2_data[i] = -  mbd2_data[i];
@@ -1416,7 +1416,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
       }
       if(minusBD2inv && F) {
          TMatrixDSparse *minusBD2invBt=
-            MultiplyMSparseMSparseTranspVector(minusBD2inv,B,0);
+         MultiplyMSparseMSparseTranspVector(minusBD2inv,B,0);
          AddMSparse(F,1.,minusBD2invBt);
          DeleteMatrix(&minusBD2invBt);
       }
@@ -1434,7 +1434,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
                if(f_cols[indexF]>=i) c(f_cols[indexF],i)=f_data[indexF];
             }
             // calculate diagonal element
-	    Double_t c_ii=c(i,i);
+            Double_t c_ii=c(i,i);
             for(Int_t j=0;j<i;j++) {
                Double_t c_ij=c(i,j);
                c_ii -= c_ij*c_ij;
@@ -1443,8 +1443,8 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
                nErrorF++;
                break;
             }
-	    c_ii=TMath::Sqrt(c_ii);
-	    c(i,i)=c_ii;
+            c_ii=TMath::Sqrt(c_ii);
+            c(i,i)=c_ii;
             // off-diagonal elements
             for(Int_t j=i+1;j<nF;j++) {
                Double_t c_ji=c(j,i);
@@ -1485,7 +1485,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
             }
             TMatrixDSparse cInvSparse(cinv);
             Finv=MultiplyMSparseTranspMSparse
-               (&cInvSparse,&cInvSparse);
+            (&cInvSparse,&cInvSparse);
          }
          DeleteMatrix(&F);
       }
@@ -1515,7 +1515,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
          if(D2inv) E=new TMatrixDSparse(*D2inv);
          if(G && minusBD2inv) {
             TMatrixDSparse *minusBD2invTransG=
-               MultiplyMSparseTranspMSparse(minusBD2inv,G);
+            MultiplyMSparseTranspMSparse(minusBD2inv,G);
             if(E) {
                AddMSparse(E,1.,minusBD2invTransG);
                DeleteMatrix(&minusBD2invTransG);
@@ -1662,8 +1662,8 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
          }
          TMatrixDSparse V(Eigen.GetEigenVectors());
          TMatrixDSparse *VDVt=MultiplyMSparseMSparseTranspVector
-            (&V,&V,&inverseEV);
-         
+         (&V,&V,&inverseEV);
+
          // pack matrix VDVt to r
          const Int_t *vdvt_rows=VDVt->GetRowIndexArray();
          const Int_t *vdvt_cols=VDVt->GetColIndexArray();
@@ -1686,7 +1686,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
    if(rankPtr) {
       *rankPtr=rankD1+rankD2Block;
    }
-      
+
 
    DeleteMatrix(&D2inv);
    DeleteMatrix(&Finv);
@@ -1698,8 +1698,8 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
    delete [] isZero;
 
    TMatrixDSparse *r=(rNumEl>=0) ?
-      CreateSparseMatrix(A->GetNrows(),A->GetNrows(),rNumEl,
-                         rEl_row,rEl_col,rEl_data) : 0;
+   CreateSparseMatrix(A->GetNrows(),A->GetNrows(),rNumEl,
+                      rEl_row,rEl_col,rEl_data) : 0;
    delete [] rEl_data;
    delete [] rEl_col;
    delete [] rEl_row;
@@ -1728,19 +1728,19 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
             if(TMath::Abs(ar(i,j)-ar(j,i))>
                epsilonA2*(TMath::Abs(ar(i,j))+TMath::Abs(ar(j,i)))) {
                std::cout<<"Ar is not symmetric Ar("<<i<<","<<j<<")="<<ar(i,j)
-                        <<" Ar("<<j<<","<<i<<")="<<ar(j,i)<<"\n";
+               <<" Ar("<<j<<","<<i<<")="<<ar(j,i)<<"\n";
             }
             // ara should be equal a
             if(TMath::Abs(ara(i,j)-a(i,j))>
                epsilonA2*(TMath::Abs(ara(i,j))+TMath::Abs(a(i,j)))) {
                std::cout<<"ArA is not equal A ArA("<<i<<","<<j<<")="<<ara(i,j)
-                        <<" A("<<i<<","<<j<<")="<<a(i,j)<<"\n";
+               <<" A("<<i<<","<<j<<")="<<a(i,j)<<"\n";
             }
             // ara should be equal a
             if(TMath::Abs(rar(i,j)-R(i,j))>
                epsilonA2*(TMath::Abs(rar(i,j))+TMath::Abs(R(i,j)))) {
                std::cout<<"rAr is not equal r rAr("<<i<<","<<j<<")="<<rar(i,j)
-                        <<" r("<<i<<","<<j<<")="<<R(i,j)<<"\n";
+               <<" r("<<i<<","<<j<<")="<<R(i,j)<<"\n";
             }
          }
       }
@@ -1766,7 +1766,7 @@ TUnfold::TUnfold(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
 {
    // set up unfolding matrix and initial regularisation scheme
    //    hist_A:  matrix that describes the migrations
-   //    histmap: mapping of the histogram axes to the unfolding output 
+   //    histmap: mapping of the histogram axes to the unfolding output
    //    regmode: global regularisation mode
    //    constraint: type of constraint to use
    // data members initialized to something different from zero:
@@ -1843,12 +1843,12 @@ TUnfold::TUnfold(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
          fSumOverY[nx] = sum;
          if (histmap == kHistMapOutputHoriz) {
             fSumOverY[nx] +=
-               hist_A->GetBinContent(ix, 0) +
-               hist_A->GetBinContent(ix, ny + 1);
+            hist_A->GetBinContent(ix, 0) +
+            hist_A->GetBinContent(ix, ny + 1);
          } else {
             fSumOverY[nx] +=
-               hist_A->GetBinContent(0, ix) +
-               hist_A->GetBinContent(ny + 1, ix);
+            hist_A->GetBinContent(0, ix) +
+            hist_A->GetBinContent(ny + 1, ix);
          }
          nx++;
       } else {
@@ -1898,11 +1898,11 @@ TUnfold::TUnfold(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
       }
       if(nskipped==(2-underflowBin-overflowBin)) {
          Info("TUnfold","underflow and overflow bin "
-	      "do not depend on the input data");
+              "do not depend on the input data");
       } else {
          Warning("TUnfold","%d output bins "
                  "do not depend on the input data %s",nDisconnected,
-                 static_cast<const char *>(binlist));         
+                 static_cast<const char *>(binlist));
       }
    }
    // store bias as matrix
@@ -2004,7 +2004,7 @@ Bool_t TUnfold::AddRegularisationCondition
    Double_t data[3];
    Int_t nEle=0;
 
-   if(i2>=0) {   
+   if(i2>=0) {
       data[nEle]=f2;
       indices[nEle]=i2;
       nEle++;
@@ -2025,7 +2025,7 @@ Bool_t TUnfold::AddRegularisationCondition
 Bool_t TUnfold::AddRegularisationCondition
 (Int_t nEle,const Int_t *indices,const Double_t *rowData)
 {
-   // add a regularisation condition 
+   // add a regularisation condition
    // the arguments are used to form one row (k) of the matrix L
    //   L(k,indices[0])=rowData[0]
    //    ...
@@ -2100,7 +2100,7 @@ Int_t TUnfold::RegularizeSize(int bin, Double_t scale)
 }
 
 Int_t TUnfold::RegularizeDerivative(int left_bin, int right_bin,
-                                   Double_t scale)
+                                    Double_t scale)
 {
    // add regularisation on the difference of two bins
    //   left_bin: 1st bin
@@ -2116,9 +2116,9 @@ Int_t TUnfold::RegularizeDerivative(int left_bin, int right_bin,
 }
 
 Int_t TUnfold::RegularizeCurvature(int left_bin, int center_bin,
-                                  int right_bin,
-                                  Double_t scale_left,
-                                  Double_t scale_right)
+                                   int right_bin,
+                                   Double_t scale_left,
+                                   Double_t scale_right)
 {
    // add regularisation on the curvature through 3 bins (2nd derivative)
    //   left_bin: 1st bin
@@ -2133,14 +2133,14 @@ Int_t TUnfold::RegularizeCurvature(int left_bin, int center_bin,
    if(fRegMode!=kRegModeCurvature) fRegMode=kRegModeMixed;
 
    return AddRegularisationCondition
-      (left_bin,-scale_left,
-       center_bin,scale_left+scale_right,
-       right_bin,-scale_right)
-          ? 0 : 1;
+   (left_bin,-scale_left,
+    center_bin,scale_left+scale_right,
+    right_bin,-scale_right)
+   ? 0 : 1;
 }
 
 Int_t TUnfold::RegularizeBins(int start, int step, int nbin,
-                             ERegMode regmode)
+                              ERegMode regmode)
 {
    // set regulatisation on a 1-dimensional curve
    //   start: first bin
@@ -2180,7 +2180,7 @@ Int_t TUnfold::RegularizeBins(int start, int step, int nbin,
 }
 
 Int_t TUnfold::RegularizeBins2D(int start_bin, int step1, int nbin1,
-                               int step2, int nbin2, ERegMode regmode)
+                                int step2, int nbin2, ERegMode regmode)
 {
    // set regularisation on a 2-dimensional grid of bins
    //     start: first bin
@@ -2188,9 +2188,9 @@ Int_t TUnfold::RegularizeBins2D(int start_bin, int step1, int nbin1,
    //     nbin1: number of bins in 1st direction
    //     step2: distance between bins in 2nd direction
    //     nbin2: number of bins in 2nd direction
-    // return value:
+   // return value:
    //   number of errors (i.e. conditions which have been skipped)
-  // modifies data member fL
+   // modifies data member fL
 
    Int_t nError = 0;
    for (Int_t i1 = 0; i1 < nbin1; i1++) {
@@ -2228,199 +2228,199 @@ Int_t TUnfold::SetInput(const TH1 *input, Double_t scaleBias,
                         Double_t oneOverZeroError,const TH2 *hist_vyy,
                         const TH2 *hist_vyy_inv)
 {
-  // Define the input data for subsequent calls to DoUnfold(Double_t)
-  //   input:   input distribution with errors
-  //   scaleBias:  scale factor applied to the bias
-  //   oneOverZeroError: for bins with zero error, this number defines 1/error.
-  //   hist_vyy: if non-zero, defines the data covariance matrix
-  //             otherwise it is calculated from the data errors
-  //   hist_vyy_inv: if non-zero and if hist_vyy  is set, defines the inverse of the data covariance matrix
-  // Return value: number of bins with bad error
-  //                 +10000*number of unconstrained output bins
-  //         Note: return values>=10000 are fatal errors, 
-  //               for the given input, the unfolding can not be done!
-  // Data members modified:
-  //   fY, fVyy, , fBiasScale
-  // Data members cleared
-  //   fVyyInv, fNdf
-  //   + see ClearResults
+   // Define the input data for subsequent calls to DoUnfold(Double_t)
+   //   input:   input distribution with errors
+   //   scaleBias:  scale factor applied to the bias
+   //   oneOverZeroError: for bins with zero error, this number defines 1/error.
+   //   hist_vyy: if non-zero, defines the data covariance matrix
+   //             otherwise it is calculated from the data errors
+   //   hist_vyy_inv: if non-zero and if hist_vyy  is set, defines the inverse of the data covariance matrix
+   // Return value: number of bins with bad error
+   //                 +10000*number of unconstrained output bins
+   //         Note: return values>=10000 are fatal errors,
+   //               for the given input, the unfolding can not be done!
+   // Data members modified:
+   //   fY, fVyy, , fBiasScale
+   // Data members cleared
+   //   fVyyInv, fNdf
+   //   + see ClearResults
 
-  DeleteMatrix(&fVyyInv);
-  fNdf=0;
+   DeleteMatrix(&fVyyInv);
+   fNdf=0;
 
-  fBiasScale = scaleBias;
+   fBiasScale = scaleBias;
 
    // delete old results (if any)
-  ClearResults();
+   ClearResults();
 
-  // construct error matrix and inverted error matrix of measured quantities
-  // from errors of input histogram or use error matrix
+   // construct error matrix and inverted error matrix of measured quantities
+   // from errors of input histogram or use error matrix
 
-  Int_t *rowVyyN=new Int_t[GetNy()*GetNy()+1];
-  Int_t *colVyyN=new Int_t[GetNy()*GetNy()+1];
-  Double_t *dataVyyN=new Double_t[GetNy()*GetNy()+1];
+   Int_t *rowVyyN=new Int_t[GetNy()*GetNy()+1];
+   Int_t *colVyyN=new Int_t[GetNy()*GetNy()+1];
+   Double_t *dataVyyN=new Double_t[GetNy()*GetNy()+1];
 
-  Int_t *rowVyy1=new Int_t[GetNy()];
-  Int_t *colVyy1=new Int_t[GetNy()];
-  Double_t *dataVyy1=new Double_t[GetNy()];
-  Double_t *dataVyyDiag=new Double_t[GetNy()];
+   Int_t *rowVyy1=new Int_t[GetNy()];
+   Int_t *colVyy1=new Int_t[GetNy()];
+   Double_t *dataVyy1=new Double_t[GetNy()];
+   Double_t *dataVyyDiag=new Double_t[GetNy()];
 
-  Int_t nError=0;
-  Int_t nVyyN=0;
-  Int_t nVyy1=0;
-  for (Int_t iy = 0; iy < GetNy(); iy++) {
-     // diagonals
-     Double_t dy2;
-     if(!hist_vyy) {
-        Double_t dy = input->GetBinError(iy + 1);
-        dy2=dy*dy;
-        if (dy2 <= 0.0) {
-           nError++;
-           if(oneOverZeroError>0.0) {
-              dy2 = 1./ ( oneOverZeroError*oneOverZeroError);
-           }
-        }
-     } else {
-        dy2 = hist_vyy->GetBinContent(iy+1,iy+1);
-     }
-     rowVyyN[nVyyN] = iy;
-     colVyyN[nVyyN] = iy;
-     rowVyy1[nVyy1] = iy;
-     colVyy1[nVyy1] = 0;
-     dataVyyDiag[iy] = dy2;
-     if(dy2>0.0) {
-        dataVyyN[nVyyN++] = dy2;
-        dataVyy1[nVyy1++] = dy2;
-     }
-  }
-  if(hist_vyy) {
-     // non-diagonal elements
-     for (Int_t iy = 0; iy < GetNy(); iy++) {
-        // ignore rows where the diagonal is zero
-        if(dataVyyDiag[iy]<=0.0) continue;
-        for (Int_t jy = 0; jy < GetNy(); jy++) {
-           // skip diagonal elements
-           if(iy==jy) continue;
-           // ignore columns where the diagonal is zero
-           if(dataVyyDiag[jy]<=0.0) continue;
+   Int_t nError=0;
+   Int_t nVyyN=0;
+   Int_t nVyy1=0;
+   for (Int_t iy = 0; iy < GetNy(); iy++) {
+      // diagonals
+      Double_t dy2;
+      if(!hist_vyy) {
+         Double_t dy = input->GetBinError(iy + 1);
+         dy2=dy*dy;
+         if (dy2 <= 0.0) {
+            nError++;
+            if(oneOverZeroError>0.0) {
+               dy2 = 1./ ( oneOverZeroError*oneOverZeroError);
+            }
+         }
+      } else {
+         dy2 = hist_vyy->GetBinContent(iy+1,iy+1);
+      }
+      rowVyyN[nVyyN] = iy;
+      colVyyN[nVyyN] = iy;
+      rowVyy1[nVyy1] = iy;
+      colVyy1[nVyy1] = 0;
+      dataVyyDiag[iy] = dy2;
+      if(dy2>0.0) {
+         dataVyyN[nVyyN++] = dy2;
+         dataVyy1[nVyy1++] = dy2;
+      }
+   }
+   if(hist_vyy) {
+      // non-diagonal elements
+      for (Int_t iy = 0; iy < GetNy(); iy++) {
+         // ignore rows where the diagonal is zero
+         if(dataVyyDiag[iy]<=0.0) continue;
+         for (Int_t jy = 0; jy < GetNy(); jy++) {
+            // skip diagonal elements
+            if(iy==jy) continue;
+            // ignore columns where the diagonal is zero
+            if(dataVyyDiag[jy]<=0.0) continue;
 
-           rowVyyN[nVyyN] = iy;
-           colVyyN[nVyyN] = jy;
-           dataVyyN[nVyyN]= hist_vyy->GetBinContent(iy+1,jy+1);
-           if(dataVyyN[nVyyN] == 0.0) continue;
-           nVyyN ++;
-        }
-     }
-     if(hist_vyy_inv) {
-        Warning("SetInput",
-                "inverse of input covariance is taken from user input");
-        Int_t *rowVyyInv=new Int_t[GetNy()*GetNy()+1];
-        Int_t *colVyyInv=new Int_t[GetNy()*GetNy()+1];
-        Double_t *dataVyyInv=new Double_t[GetNy()*GetNy()+1];
-        Int_t nVyyInv=0;
-        for (Int_t iy = 0; iy < GetNy(); iy++) {
-           for (Int_t jy = 0; jy < GetNy(); jy++) {
-              rowVyyInv[nVyyInv] = iy;
-              colVyyInv[nVyyInv] = jy;
-              dataVyyInv[nVyyInv]= hist_vyy_inv->GetBinContent(iy+1,jy+1);
-              if(dataVyyInv[nVyyInv] == 0.0) continue;
-              nVyyInv ++;
-           }
-        }
-        fVyyInv=CreateSparseMatrix
-           (GetNy(),GetNy(),nVyyInv,rowVyyInv,colVyyInv,dataVyyInv);
-        delete [] rowVyyInv;
-        delete [] colVyyInv;
-        delete [] dataVyyInv;
-     }
-  }
-  DeleteMatrix(&fVyy);
-  fVyy = CreateSparseMatrix
-     (GetNy(),GetNy(),nVyyN,rowVyyN,colVyyN,dataVyyN);
+            rowVyyN[nVyyN] = iy;
+            colVyyN[nVyyN] = jy;
+            dataVyyN[nVyyN]= hist_vyy->GetBinContent(iy+1,jy+1);
+            if(dataVyyN[nVyyN] == 0.0) continue;
+            nVyyN ++;
+         }
+      }
+      if(hist_vyy_inv) {
+         Warning("SetInput",
+                 "inverse of input covariance is taken from user input");
+         Int_t *rowVyyInv=new Int_t[GetNy()*GetNy()+1];
+         Int_t *colVyyInv=new Int_t[GetNy()*GetNy()+1];
+         Double_t *dataVyyInv=new Double_t[GetNy()*GetNy()+1];
+         Int_t nVyyInv=0;
+         for (Int_t iy = 0; iy < GetNy(); iy++) {
+            for (Int_t jy = 0; jy < GetNy(); jy++) {
+               rowVyyInv[nVyyInv] = iy;
+               colVyyInv[nVyyInv] = jy;
+               dataVyyInv[nVyyInv]= hist_vyy_inv->GetBinContent(iy+1,jy+1);
+               if(dataVyyInv[nVyyInv] == 0.0) continue;
+               nVyyInv ++;
+            }
+         }
+         fVyyInv=CreateSparseMatrix
+         (GetNy(),GetNy(),nVyyInv,rowVyyInv,colVyyInv,dataVyyInv);
+         delete [] rowVyyInv;
+         delete [] colVyyInv;
+         delete [] dataVyyInv;
+      }
+   }
+   DeleteMatrix(&fVyy);
+   fVyy = CreateSparseMatrix
+   (GetNy(),GetNy(),nVyyN,rowVyyN,colVyyN,dataVyyN);
 
-  delete[] rowVyyN;
-  delete[] colVyyN;
-  delete[] dataVyyN;
+   delete[] rowVyyN;
+   delete[] colVyyN;
+   delete[] dataVyyN;
 
-  TMatrixDSparse *vecV=CreateSparseMatrix
-     (GetNy(),1,nVyy1,rowVyy1,colVyy1, dataVyy1);
+   TMatrixDSparse *vecV=CreateSparseMatrix
+   (GetNy(),1,nVyy1,rowVyy1,colVyy1, dataVyy1);
 
-  delete[] rowVyy1;
-  delete[] colVyy1;
-  delete[] dataVyy1;
+   delete[] rowVyy1;
+   delete[] colVyy1;
+   delete[] dataVyy1;
 
-  //
-  // get input vector
-  DeleteMatrix(&fY);
-  fY = new TMatrixD(GetNy(), 1);
-  for (Int_t i = 0; i < GetNy(); i++) {
-     (*fY) (i, 0) = input->GetBinContent(i + 1);
-  }
-  // simple check whether unfolding is possible, given the matrices fA and  fV
-  TMatrixDSparse *mAtV=MultiplyMSparseTranspMSparse(fA,vecV);
-  DeleteMatrix(&vecV);
-  Int_t nError2=0;
-  for (Int_t i = 0; i <mAtV->GetNrows();i++) {
-     if(mAtV->GetRowIndexArray()[i]==
-        mAtV->GetRowIndexArray()[i+1]) {
-        nError2 ++;
-     }
-  }
-  if(nError>0) {
-     if(oneOverZeroError !=0.0) {
-        if(nError>1) {
-           Warning("SetInput","%d/%d input bins have zero error,"
-                   " 1/error set to %lf.",nError,GetNy(),oneOverZeroError);
-        } else {
-           Warning("SetInput","One input bin has zero error,"
-                   " 1/error set to %lf.",oneOverZeroError);
-        }
-     } else {
-        if(nError>1) {
-           Warning("SetInput","%d/%d input bins have zero error,"
-                   " and are ignored.",nError,GetNy());
-        } else {
-           Warning("SetInput","One input bin has zero error,"
-                   " and is ignored.");
-        }
-     }
-     fIgnoredBins=nError;
-  }
-  if(nError2>0) {
-     // check whether data points with zero error are responsible
-     if(oneOverZeroError<=0.0) {
-        //const Int_t *a_rows=fA->GetRowIndexArray();
-        //const Int_t *a_cols=fA->GetColIndexArray();
-        for (Int_t col = 0; col <mAtV->GetNrows();col++) {
-           if(mAtV->GetRowIndexArray()[col]==
-              mAtV->GetRowIndexArray()[col+1]) {
-              TString binlist("no data to constrain output bin ");
-              binlist += GetOutputBinName(fXToHist[col]);
-              /* binlist +=" depends on ignored input bins ";
-              for(Int_t row=0;row<fA->GetNrows();row++) {
-                 if(dataVyyDiag[row]>0.0) continue;
-                 for(Int_t i=a_rows[row];i<a_rows[row+1];i++) {
-                    if(a_cols[i]!=col) continue;
-                    binlist +=" ";
-                    binlist +=row;
-                 }
-                 } */
-              Warning("SetInput","%s",binlist.Data());
-           }
-        }
-     }
-     if(nError2>1) {
-        Error("SetInput","%d/%d output bins are not constrained by any data.",
-                nError2,mAtV->GetNrows());
-     } else {
-        Error("SetInput","One output bins is not constrained by any data.");
-     }
-  }
-  DeleteMatrix(&mAtV);
+   //
+   // get input vector
+   DeleteMatrix(&fY);
+   fY = new TMatrixD(GetNy(), 1);
+   for (Int_t i = 0; i < GetNy(); i++) {
+      (*fY) (i, 0) = input->GetBinContent(i + 1);
+   }
+   // simple check whether unfolding is possible, given the matrices fA and  fV
+   TMatrixDSparse *mAtV=MultiplyMSparseTranspMSparse(fA,vecV);
+   DeleteMatrix(&vecV);
+   Int_t nError2=0;
+   for (Int_t i = 0; i <mAtV->GetNrows();i++) {
+      if(mAtV->GetRowIndexArray()[i]==
+         mAtV->GetRowIndexArray()[i+1]) {
+         nError2 ++;
+      }
+   }
+   if(nError>0) {
+      if(oneOverZeroError !=0.0) {
+         if(nError>1) {
+            Warning("SetInput","%d/%d input bins have zero error,"
+                    " 1/error set to %lf.",nError,GetNy(),oneOverZeroError);
+         } else {
+            Warning("SetInput","One input bin has zero error,"
+                    " 1/error set to %lf.",oneOverZeroError);
+         }
+      } else {
+         if(nError>1) {
+            Warning("SetInput","%d/%d input bins have zero error,"
+                    " and are ignored.",nError,GetNy());
+         } else {
+            Warning("SetInput","One input bin has zero error,"
+                    " and is ignored.");
+         }
+      }
+      fIgnoredBins=nError;
+   }
+   if(nError2>0) {
+      // check whether data points with zero error are responsible
+      if(oneOverZeroError<=0.0) {
+         //const Int_t *a_rows=fA->GetRowIndexArray();
+         //const Int_t *a_cols=fA->GetColIndexArray();
+         for (Int_t col = 0; col <mAtV->GetNrows();col++) {
+            if(mAtV->GetRowIndexArray()[col]==
+               mAtV->GetRowIndexArray()[col+1]) {
+               TString binlist("no data to constrain output bin ");
+               binlist += GetOutputBinName(fXToHist[col]);
+               /* binlist +=" depends on ignored input bins ";
+                for(Int_t row=0;row<fA->GetNrows();row++) {
+                if(dataVyyDiag[row]>0.0) continue;
+                for(Int_t i=a_rows[row];i<a_rows[row+1];i++) {
+                if(a_cols[i]!=col) continue;
+                binlist +=" ";
+                binlist +=row;
+                }
+                } */
+               Warning("SetInput","%s",binlist.Data());
+            }
+         }
+      }
+      if(nError2>1) {
+         Error("SetInput","%d/%d output bins are not constrained by any data.",
+               nError2,mAtV->GetNrows());
+      } else {
+         Error("SetInput","One output bins is not constrained by any data.");
+      }
+   }
+   DeleteMatrix(&mAtV);
 
-  delete[] dataVyyDiag;
+   delete[] dataVyyDiag;
 
-  return nError+10000*nError2;
+   return nError+10000*nError2;
 }
 
 Double_t TUnfold::DoUnfold(Double_t tau)
@@ -2442,352 +2442,352 @@ Double_t TUnfold::DoUnfold(Double_t tau)
 
 Int_t TUnfold::ScanLcurve(Int_t nPoint,
                           Double_t tauMin,Double_t tauMax,
-			  TGraph **lCurve,TSpline **logTauX,
-			  TSpline **logTauY)
+                          TGraph **lCurve,TSpline **logTauX,
+                          TSpline **logTauY)
 {
-  // scan the L curve
-  //   nPoint: number of points on the resulting curve
-  //   tauMin: smallest tau value to study
-  //   tauMax: largest tau value to study
-  //   lCurve: the L curve as graph
-  //   logTauX: output spline of x-coordinates vs tau for the L curve
-  //   logTauY: output spline of y-coordinates vs tau for the L curve
-  // return value: the coordinate number (0..nPoint-1) with the "best" choice
-  //     of tau
-  typedef std::map<Double_t,std::pair<Double_t,Double_t> > XYtau_t;
-  XYtau_t curve;
+   // scan the L curve
+   //   nPoint: number of points on the resulting curve
+   //   tauMin: smallest tau value to study
+   //   tauMax: largest tau value to study
+   //   lCurve: the L curve as graph
+   //   logTauX: output spline of x-coordinates vs tau for the L curve
+   //   logTauY: output spline of y-coordinates vs tau for the L curve
+   // return value: the coordinate number (0..nPoint-1) with the "best" choice
+   //     of tau
+   typedef std::map<Double_t,std::pair<Double_t,Double_t> > XYtau_t;
+   XYtau_t curve;
 
-  //==========================================================
-  // algorithm:
-  //  (1) do the unfolding for nPoint-1 points
-  //      and store the results in the map
-  //        curve
-  //    (1a) store minimum and maximum tau to curve
-  //    (1b) insert additional points, until nPoint-1 values
-  //          have been calculated
-  //
-  //  (2) determine the best choice of tau
-  //      do the unfolding for this point
-  //      and store the result in
-  //        curve
-  //  (3) return the result in
-  //       lCurve logTauX logTauY
+   //==========================================================
+   // algorithm:
+   //  (1) do the unfolding for nPoint-1 points
+   //      and store the results in the map
+   //        curve
+   //    (1a) store minimum and maximum tau to curve
+   //    (1b) insert additional points, until nPoint-1 values
+   //          have been calculated
+   //
+   //  (2) determine the best choice of tau
+   //      do the unfolding for this point
+   //      and store the result in
+   //        curve
+   //  (3) return the result in
+   //       lCurve logTauX logTauY
 
-  //==========================================================
-  //  (1) do the unfolding for nPoint-1 points
-  //      and store the results in
-  //        curve
-  //    (1a) store minimum and maximum tau to curve
+   //==========================================================
+   //  (1) do the unfolding for nPoint-1 points
+   //      and store the results in
+   //        curve
+   //    (1a) store minimum and maximum tau to curve
 
-  if((tauMin<=0)||(tauMax<=0.0)||(tauMin>=tauMax)) {
-     // here no range is given, has to be determined automatically
-     // the maximum tau is determined from the chi**2 values 
-     // observed from unfolding without regulatisation
+   if((tauMin<=0)||(tauMax<=0.0)||(tauMin>=tauMax)) {
+      // here no range is given, has to be determined automatically
+      // the maximum tau is determined from the chi**2 values
+      // observed from unfolding without regulatisation
 
-     // first unfolding, without regularisation
-     DoUnfold(0.0);
+      // first unfolding, without regularisation
+      DoUnfold(0.0);
 
-     // if the number of degrees of freedom is too small, create an error
-     if(GetNdf()<=0) {
-        Error("ScanLcurve","too few input bins, NDF<=0 %d",GetNdf());  
-     }
-
-     Double_t x0=GetLcurveX();
-     Double_t y0=GetLcurveY();
-     Info("ScanLcurve","logtau=-Infinity X=%lf Y=%lf",x0,y0);
-     if(!TMath::Finite(x0)) {
-        Fatal("ScanLcurve","problem (too few input bins?) X=%f",x0);
-     }
-     if(!TMath::Finite(y0)) {
-        Fatal("ScanLcurve","problem (missing regularisation?) Y=%f",y0);
-     }
-     {
-        // unfolding guess maximum tau and store it
-        Double_t logTau=
-           0.5*(TMath::Log10(fChi2A+3.*TMath::Sqrt(GetNdf()+1.0))
-                -GetLcurveY());
-        DoUnfold(TMath::Power(10.,logTau));
-        if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
-           Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
-                 GetLcurveX(),GetLcurveY());
-        }
-        curve[logTau]=std::make_pair(GetLcurveX(),GetLcurveY());
-        Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
-             logTau,GetLcurveX(),GetLcurveY());
-     }
-     if((*curve.begin()).second.first<x0) {
-        // if the point at tau==0 seems numerically unstable,
-        // try to find the minimum chi**2 as start value
-        //
-        // "unstable" means that there is a finite tau where the
-        // unfolding chi**2 is smaller than for the case of no
-        // regularisation. Ideally this should never happen
-        do {
-           x0=GetLcurveX();
-           Double_t logTau=(*curve.begin()).first-0.5;
-           DoUnfold(TMath::Power(10.,logTau));
-           if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
-              Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
-                    GetLcurveX(),GetLcurveY());
-           }
-           curve[logTau]=std::make_pair(GetLcurveX(),GetLcurveY());
-           Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
-                logTau,GetLcurveX(),GetLcurveY());
-        }
-        while(((int)curve.size()<(nPoint-1)/2)&&
-              ((*curve.begin()).second.first<x0));
-     } else {
-        // minimum tau is chosen such that is less than
-        // 1% different from the case of no regularusation
-        // log10(1.01) = 0.00432
-
-        // here, more than one point are inserted if necessary
-        while(((int)curve.size()<nPoint-1)&&
-              (((*curve.begin()).second.first-x0>0.00432)||
-               ((*curve.begin()).second.second-y0>0.00432)||
-               (curve.size()<2))) {
-           Double_t logTau=(*curve.begin()).first-0.5;
-           DoUnfold(TMath::Power(10.,logTau));
-           if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
-              Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
-                    GetLcurveX(),GetLcurveY());
-           }
-           curve[logTau]=std::make_pair(GetLcurveX(),GetLcurveY());
-           Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
-                logTau,GetLcurveX(),GetLcurveY());
-        }
-     }
-  } else {
-     Double_t logTauMin=TMath::Log10(tauMin);
-     Double_t logTauMax=TMath::Log10(tauMax);
-     if(nPoint>1) {
-        // insert maximum tau
-        DoUnfold(TMath::Power(10.,logTauMax));
-        if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
-           Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
-                 GetLcurveX(),GetLcurveY());
-        }
-        Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
-             logTauMax,GetLcurveX(),GetLcurveY());
-        curve[logTauMax]=std::make_pair(GetLcurveX(),GetLcurveY());
-     }
-     // insert minimum tau
-     DoUnfold(TMath::Power(10.,logTauMin));
-     if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
-        Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
-              GetLcurveX(),GetLcurveY());
-     }
-     Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
-          logTauMin,GetLcurveX(),GetLcurveY());
-     curve[logTauMin]=std::make_pair(GetLcurveX(),GetLcurveY());
-  }
-
-
-  //==========================================================
-  //    (1b) insert additional points, until nPoint-1 values
-  //          have been calculated
-
-  while(int(curve.size())<nPoint-1) {
-    // insert additional points, such that the sizes of the delta(XY) vectors
-    // are getting smaller and smaller
-    XYtau_t::const_iterator i0,i1;
-    i0=curve.begin();
-    i1=i0;
-    Double_t logTau=(*i0).first;
-    Double_t distMax=0.0;
-    for(i1++;i1!=curve.end();i1++) {
-      const std::pair<Double_t,Double_t> &xy0=(*i0).second;
-      const std::pair<Double_t,Double_t> &xy1=(*i1).second;
-      Double_t dx=xy1.first-xy0.first;
-      Double_t dy=xy1.second-xy0.second;
-      Double_t d=TMath::Sqrt(dx*dx+dy*dy);
-      if(d>=distMax) {
-        distMax=d;
-        logTau=0.5*((*i0).first+(*i1).first);
+      // if the number of degrees of freedom is too small, create an error
+      if(GetNdf()<=0) {
+         Error("ScanLcurve","too few input bins, NDF<=0 %d",GetNdf());
       }
-      i0=i1;
-    }
-    DoUnfold(TMath::Power(10.,logTau));
-    if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
-       Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
-             GetLcurveX(),GetLcurveY());
-    }
-    Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",logTau,GetLcurveX(),GetLcurveY());
-    curve[logTau]=std::make_pair(GetLcurveX(),GetLcurveY());
-  }
 
-  //==========================================================
-  //  (2) determine the best choice of tau
-  //      do the unfolding for this point
-  //      and store the result in
-  //        curve
-  XYtau_t::const_iterator i0,i1;
-  i0=curve.begin();
-  i1=i0;
-  i1++;
-  Double_t logTauFin=(*i0).first;
-  if( ((int)curve.size())<nPoint) {
-    // set up splines and determine (x,y) curvature in each point
-    Double_t *cTi=new Double_t[curve.size()-1];
-    Double_t *cCi=new Double_t[curve.size()-1];
-    Int_t n=0;
-    {
-      Double_t *lXi=new Double_t[curve.size()];
-      Double_t *lYi=new Double_t[curve.size()];
-      Double_t *lTi=new Double_t[curve.size()];
-      for( XYtau_t::const_iterator i=curve.begin();i!=curve.end();i++) {
-        lXi[n]=(*i).second.first;
-        lYi[n]=(*i).second.second;
-        lTi[n]=(*i).first;
-        n++;
+      Double_t x0=GetLcurveX();
+      Double_t y0=GetLcurveY();
+      Info("ScanLcurve","logtau=-Infinity X=%lf Y=%lf",x0,y0);
+      if(!TMath::Finite(x0)) {
+         Fatal("ScanLcurve","problem (too few input bins?) X=%f",x0);
       }
-      TSpline3 *splineX=new TSpline3("x vs tau",lTi,lXi,n);
-      TSpline3 *splineY=new TSpline3("y vs tau",lTi,lYi,n);
-      // calculate (x,y) curvature for all points
-      // the curvature is stored in the array cCi[] as a function of cTi[] 
-      for(Int_t i=0;i<n-1;i++) {
-        Double_t ltau,xy,bi,ci,di;
-        splineX->GetCoeff(i,ltau,xy,bi,ci,di);
-        Double_t tauBar=0.5*(lTi[i]+lTi[i+1]);
-        Double_t dTau=0.5*(lTi[i+1]-lTi[i]);
-        Double_t dx1=bi+dTau*(2.*ci+3.*di*dTau);
-        Double_t dx2=2.*ci+6.*di*dTau;
-        splineY->GetCoeff(i,ltau,xy,bi,ci,di);
-        Double_t dy1=bi+dTau*(2.*ci+3.*di*dTau);
-        Double_t dy2=2.*ci+6.*di*dTau;
-        cTi[i]=tauBar;
-        cCi[i]=(dy2*dx1-dy1*dx2)/TMath::Power(dx1*dx1+dy1*dy1,1.5);
+      if(!TMath::Finite(y0)) {
+         Fatal("ScanLcurve","problem (missing regularisation?) Y=%f",y0);
       }
-      delete splineX;
-      delete splineY;
-      delete[] lXi;
-      delete[] lYi;
-      delete[] lTi;
-    }
-    // create curvature Spline
-    TSpline3 *splineC=new TSpline3("L curve curvature",cTi,cCi,n-1);
-    // find the maximum of the curvature
-    // if the parameter iskip is non-zero, then iskip points are
-    // ignored when looking for the largest curvature
-    // (there are problems with the curvature determined from the first
-    //  few points of splineX,splineY in the algorithm above)
-    Int_t iskip=0;
-    if(n>4) iskip=1;
-    if(n>7) iskip=2;
-    Double_t cCmax=cCi[iskip];
-    Double_t cTmax=cTi[iskip];
-    for(Int_t i=iskip;i<n-2-iskip;i++) {
-      // find maximum on this spline section
-      // check boundary conditions for x[i+1]
-      Double_t xMax=cTi[i+1];
-      Double_t yMax=cCi[i+1];
-      if(cCi[i]>yMax) {
-        yMax=cCi[i];
-        xMax=cTi[i];
+      {
+         // unfolding guess maximum tau and store it
+         Double_t logTau=
+         0.5*(TMath::Log10(fChi2A+3.*TMath::Sqrt(GetNdf()+1.0))
+              -GetLcurveY());
+         DoUnfold(TMath::Power(10.,logTau));
+         if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+            Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+                  GetLcurveX(),GetLcurveY());
+         }
+         curve[logTau]=std::make_pair(GetLcurveX(),GetLcurveY());
+         Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
+              logTau,GetLcurveX(),GetLcurveY());
       }
-      // find maximum for x[i]<x<x[i+1]
-      // get spline coefficiencts and solve equation
-      //   derivative(x)==0
-      Double_t x,y,b,c,d;
-      splineC->GetCoeff(i,x,y,b,c,d);
-      // coefficiencts of quadratic equation
-      Double_t m_p_half=-c/(3.*d);
-      Double_t q=b/(3.*d);
-      Double_t discr=m_p_half*m_p_half-q;
-      if(discr>=0.0) {
-        // solution found
-        discr=TMath::Sqrt(discr);
-        Double_t xx;
-        if(m_p_half>0.0) {
-          xx = m_p_half + discr;
-        } else {
-          xx = m_p_half - discr;
-        }
-        Double_t dx=cTi[i+1]-x;
-        // check first solution
-        if((xx>0.0)&&(xx<dx)) {
-          y=splineC->Eval(x+xx);
-          if(y>yMax) {
-            yMax=y;
-            xMax=x+xx;
-          }
-        }
-        // second solution
-        if(xx !=0.0) {
-          xx= q/xx;
-        } else {
-          xx=0.0;
-        }
-        // check second solution
-        if((xx>0.0)&&(xx<dx)) {
-          y=splineC->Eval(x+xx);
-          if(y>yMax) {
-            yMax=y;
-            xMax=x+xx;
-          }
-        }
-      }
-      // check whether this local minimum is a global minimum
-      if(yMax>cCmax) {
-        cCmax=yMax;
-        cTmax=xMax;
-      }
-    }
-#ifdef DEBUG_LCURVE
-    {
-      TCanvas lcc;
-      lcc.Divide(1,1);
-      lcc.cd(1);
-      splineC->Draw();
-      lcc.SaveAs("splinec.ps");
-    }
-#endif
-    delete splineC;
-    delete[] cTi;
-    delete[] cCi;
-    logTauFin=cTmax;
-    DoUnfold(TMath::Power(10.,logTauFin));
-    if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
-       Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
-             GetLcurveX(),GetLcurveY());
-    }
-    Info("ScanLcurve","Result logtau=%lf X=%lf Y=%lf",
-         logTauFin,GetLcurveX(),GetLcurveY());
-    curve[logTauFin]=std::make_pair(GetLcurveX(),GetLcurveY());
-  }
+      if((*curve.begin()).second.first<x0) {
+         // if the point at tau==0 seems numerically unstable,
+         // try to find the minimum chi**2 as start value
+         //
+         // "unstable" means that there is a finite tau where the
+         // unfolding chi**2 is smaller than for the case of no
+         // regularisation. Ideally this should never happen
+         do {
+            x0=GetLcurveX();
+            Double_t logTau=(*curve.begin()).first-0.5;
+            DoUnfold(TMath::Power(10.,logTau));
+            if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+               Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+                     GetLcurveX(),GetLcurveY());
+            }
+            curve[logTau]=std::make_pair(GetLcurveX(),GetLcurveY());
+            Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
+                 logTau,GetLcurveX(),GetLcurveY());
+         }
+         while(((int)curve.size()<(nPoint-1)/2)&&
+               ((*curve.begin()).second.first<x0));
+      } else {
+         // minimum tau is chosen such that is less than
+         // 1% different from the case of no regularusation
+         // log10(1.01) = 0.00432
 
-
-  //==========================================================
-  //  (3) return the result in
-  //       lCurve logTauX logTauY
-
-  Int_t bestChoice=-1;
-  if(curve.size()>0) {
-    Double_t *x=new Double_t[curve.size()];
-    Double_t *y=new Double_t[curve.size()];
-    Double_t *logT=new Double_t[curve.size()];
-    int n=0;
-    for( XYtau_t::const_iterator i=curve.begin();i!=curve.end();i++) {
-      if(logTauFin==(*i).first) {
-        bestChoice=n;
+         // here, more than one point are inserted if necessary
+         while(((int)curve.size()<nPoint-1)&&
+               (((*curve.begin()).second.first-x0>0.00432)||
+                ((*curve.begin()).second.second-y0>0.00432)||
+                (curve.size()<2))) {
+                  Double_t logTau=(*curve.begin()).first-0.5;
+                  DoUnfold(TMath::Power(10.,logTau));
+                  if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+                     Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+                           GetLcurveX(),GetLcurveY());
+                  }
+                  curve[logTau]=std::make_pair(GetLcurveX(),GetLcurveY());
+                  Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
+                       logTau,GetLcurveX(),GetLcurveY());
+               }
       }
-      x[n]=(*i).second.first;
-      y[n]=(*i).second.second;
-      logT[n]=(*i).first;
-      n++;
-    }
-    if(lCurve) {
-       (*lCurve)=new TGraph(n,x,y); 
-       (*lCurve)->SetTitle("L curve");
+   } else {
+      Double_t logTauMin=TMath::Log10(tauMin);
+      Double_t logTauMax=TMath::Log10(tauMax);
+      if(nPoint>1) {
+         // insert maximum tau
+         DoUnfold(TMath::Power(10.,logTauMax));
+         if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+            Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+                  GetLcurveX(),GetLcurveY());
+         }
+         Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
+              logTauMax,GetLcurveX(),GetLcurveY());
+         curve[logTauMax]=std::make_pair(GetLcurveX(),GetLcurveY());
+      }
+      // insert minimum tau
+      DoUnfold(TMath::Power(10.,logTauMin));
+      if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+         Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+               GetLcurveX(),GetLcurveY());
+      }
+      Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
+           logTauMin,GetLcurveX(),GetLcurveY());
+      curve[logTauMin]=std::make_pair(GetLcurveX(),GetLcurveY());
    }
-    if(logTauX) (*logTauX)=new TSpline3("log(chi**2)%log(tau)",logT,x,n);
-    if(logTauY) (*logTauY)=new TSpline3("log(reg.cond)%log(tau)",logT,y,n);
-    delete[] x;
-    delete[] y;
-    delete[] logT;
-  }
 
-  return bestChoice;
+
+   //==========================================================
+   //    (1b) insert additional points, until nPoint-1 values
+   //          have been calculated
+
+   while(int(curve.size())<nPoint-1) {
+      // insert additional points, such that the sizes of the delta(XY) vectors
+      // are getting smaller and smaller
+      XYtau_t::const_iterator i0,i1;
+      i0=curve.begin();
+      i1=i0;
+      Double_t logTau=(*i0).first;
+      Double_t distMax=0.0;
+      for(i1++;i1!=curve.end();i1++) {
+         const std::pair<Double_t,Double_t> &xy0=(*i0).second;
+         const std::pair<Double_t,Double_t> &xy1=(*i1).second;
+         Double_t dx=xy1.first-xy0.first;
+         Double_t dy=xy1.second-xy0.second;
+         Double_t d=TMath::Sqrt(dx*dx+dy*dy);
+         if(d>=distMax) {
+            distMax=d;
+            logTau=0.5*((*i0).first+(*i1).first);
+         }
+         i0=i1;
+      }
+      DoUnfold(TMath::Power(10.,logTau));
+      if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+         Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+               GetLcurveX(),GetLcurveY());
+      }
+      Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",logTau,GetLcurveX(),GetLcurveY());
+      curve[logTau]=std::make_pair(GetLcurveX(),GetLcurveY());
+   }
+
+   //==========================================================
+   //  (2) determine the best choice of tau
+   //      do the unfolding for this point
+   //      and store the result in
+   //        curve
+   XYtau_t::const_iterator i0,i1;
+   i0=curve.begin();
+   i1=i0;
+   i1++;
+   Double_t logTauFin=(*i0).first;
+   if( ((int)curve.size())<nPoint) {
+      // set up splines and determine (x,y) curvature in each point
+      Double_t *cTi=new Double_t[curve.size()-1];
+      Double_t *cCi=new Double_t[curve.size()-1];
+      Int_t n=0;
+      {
+         Double_t *lXi=new Double_t[curve.size()];
+         Double_t *lYi=new Double_t[curve.size()];
+         Double_t *lTi=new Double_t[curve.size()];
+         for( XYtau_t::const_iterator i=curve.begin();i!=curve.end();i++) {
+            lXi[n]=(*i).second.first;
+            lYi[n]=(*i).second.second;
+            lTi[n]=(*i).first;
+            n++;
+         }
+         TSpline3 *splineX=new TSpline3("x vs tau",lTi,lXi,n);
+         TSpline3 *splineY=new TSpline3("y vs tau",lTi,lYi,n);
+         // calculate (x,y) curvature for all points
+         // the curvature is stored in the array cCi[] as a function of cTi[]
+         for(Int_t i=0;i<n-1;i++) {
+            Double_t ltau,xy,bi,ci,di;
+            splineX->GetCoeff(i,ltau,xy,bi,ci,di);
+            Double_t tauBar=0.5*(lTi[i]+lTi[i+1]);
+            Double_t dTau=0.5*(lTi[i+1]-lTi[i]);
+            Double_t dx1=bi+dTau*(2.*ci+3.*di*dTau);
+            Double_t dx2=2.*ci+6.*di*dTau;
+            splineY->GetCoeff(i,ltau,xy,bi,ci,di);
+            Double_t dy1=bi+dTau*(2.*ci+3.*di*dTau);
+            Double_t dy2=2.*ci+6.*di*dTau;
+            cTi[i]=tauBar;
+            cCi[i]=(dy2*dx1-dy1*dx2)/TMath::Power(dx1*dx1+dy1*dy1,1.5);
+         }
+         delete splineX;
+         delete splineY;
+         delete[] lXi;
+         delete[] lYi;
+         delete[] lTi;
+      }
+      // create curvature Spline
+      TSpline3 *splineC=new TSpline3("L curve curvature",cTi,cCi,n-1);
+      // find the maximum of the curvature
+      // if the parameter iskip is non-zero, then iskip points are
+      // ignored when looking for the largest curvature
+      // (there are problems with the curvature determined from the first
+      //  few points of splineX,splineY in the algorithm above)
+      Int_t iskip=0;
+      if(n>4) iskip=1;
+      if(n>7) iskip=2;
+      Double_t cCmax=cCi[iskip];
+      Double_t cTmax=cTi[iskip];
+      for(Int_t i=iskip;i<n-2-iskip;i++) {
+         // find maximum on this spline section
+         // check boundary conditions for x[i+1]
+         Double_t xMax=cTi[i+1];
+         Double_t yMax=cCi[i+1];
+         if(cCi[i]>yMax) {
+            yMax=cCi[i];
+            xMax=cTi[i];
+         }
+         // find maximum for x[i]<x<x[i+1]
+         // get spline coefficiencts and solve equation
+         //   derivative(x)==0
+         Double_t x,y,b,c,d;
+         splineC->GetCoeff(i,x,y,b,c,d);
+         // coefficiencts of quadratic equation
+         Double_t m_p_half=-c/(3.*d);
+         Double_t q=b/(3.*d);
+         Double_t discr=m_p_half*m_p_half-q;
+         if(discr>=0.0) {
+            // solution found
+            discr=TMath::Sqrt(discr);
+            Double_t xx;
+            if(m_p_half>0.0) {
+               xx = m_p_half + discr;
+            } else {
+               xx = m_p_half - discr;
+            }
+            Double_t dx=cTi[i+1]-x;
+            // check first solution
+            if((xx>0.0)&&(xx<dx)) {
+               y=splineC->Eval(x+xx);
+               if(y>yMax) {
+                  yMax=y;
+                  xMax=x+xx;
+               }
+            }
+            // second solution
+            if(xx !=0.0) {
+               xx= q/xx;
+            } else {
+               xx=0.0;
+            }
+            // check second solution
+            if((xx>0.0)&&(xx<dx)) {
+               y=splineC->Eval(x+xx);
+               if(y>yMax) {
+                  yMax=y;
+                  xMax=x+xx;
+               }
+            }
+         }
+         // check whether this local minimum is a global minimum
+         if(yMax>cCmax) {
+            cCmax=yMax;
+            cTmax=xMax;
+         }
+      }
+#ifdef DEBUG_LCURVE
+      {
+         TCanvas lcc;
+         lcc.Divide(1,1);
+         lcc.cd(1);
+         splineC->Draw();
+         lcc.SaveAs("splinec.ps");
+      }
+#endif
+      delete splineC;
+      delete[] cTi;
+      delete[] cCi;
+      logTauFin=cTmax;
+      DoUnfold(TMath::Power(10.,logTauFin));
+      if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+         Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+               GetLcurveX(),GetLcurveY());
+      }
+      Info("ScanLcurve","Result logtau=%lf X=%lf Y=%lf",
+           logTauFin,GetLcurveX(),GetLcurveY());
+      curve[logTauFin]=std::make_pair(GetLcurveX(),GetLcurveY());
+   }
+
+
+   //==========================================================
+   //  (3) return the result in
+   //       lCurve logTauX logTauY
+
+   Int_t bestChoice=-1;
+   if(curve.size()>0) {
+      Double_t *x=new Double_t[curve.size()];
+      Double_t *y=new Double_t[curve.size()];
+      Double_t *logT=new Double_t[curve.size()];
+      int n=0;
+      for( XYtau_t::const_iterator i=curve.begin();i!=curve.end();i++) {
+         if(logTauFin==(*i).first) {
+            bestChoice=n;
+         }
+         x[n]=(*i).second.first;
+         y[n]=(*i).second.second;
+         logT[n]=(*i).first;
+         n++;
+      }
+      if(lCurve) {
+         (*lCurve)=new TGraph(n,x,y);
+         (*lCurve)->SetTitle("L curve");
+      }
+      if(logTauX) (*logTauX)=new TSpline3("log(chi**2)%log(tau)",logT,x,n);
+      if(logTauY) (*logTauY)=new TSpline3("log(reg.cond)%log(tau)",logT,y,n);
+      delete[] x;
+      delete[] y;
+      delete[] logT;
+   }
+
+   return bestChoice;
 }
 
 void TUnfold::GetNormalisationVector(TH1 *out,const Int_t *binMap) const
@@ -2843,7 +2843,7 @@ void TUnfold::GetFoldedOutput(TH1 *out,const Int_t *binMap) const
    //          ...
 
    ClearHistogram(out);
-  
+
    TMatrixDSparse *AVxx=MultiplyMSparseMSparse(fA,fVxx);
 
    const Int_t *rows_A=fA->GetRowIndexArray();
@@ -2852,7 +2852,7 @@ void TUnfold::GetFoldedOutput(TH1 *out,const Int_t *binMap) const
    const Int_t *rows_AVxx=AVxx->GetRowIndexArray();
    const Int_t *cols_AVxx=AVxx->GetColIndexArray();
    const Double_t *data_AVxx=AVxx->GetMatrixArray();
-   
+
    for (Int_t i = 0; i < GetNy(); i++) {
       Int_t destI = binMap ? binMap[i+1] : i+1;
       if(destI<0) continue;
@@ -2935,7 +2935,7 @@ void TUnfold::GetInput(TH1 *out,const Int_t *binMap) const
 
 void TUnfold::GetInputInverseEmatrix(TH2 *out)
 {
-   // calculate the inverse of the contribution to the error matrix 
+   // calculate the inverse of the contribution to the error matrix
    // corresponding to the input data
    if(!fVyyInv) {
       Int_t rank=0;
@@ -2986,8 +2986,8 @@ void TUnfold::GetLsquared(TH2 *out) const
    const Double_t *data=lSquared->GetMatrixArray();
    for (Int_t i = 0; i < GetNx(); i++) {
       for (Int_t cindex = rows[i]; cindex < rows[i+1]; cindex++) {
-        Int_t j=cols[cindex];
-        out->SetBinContent(fXToHist[i], fXToHist[j],data[cindex]);
+         Int_t j=cols[cindex];
+         out->SetBinContent(fXToHist[i], fXToHist[j],data[cindex]);
       }
    }
    DeleteMatrix(&lSquared);
@@ -3004,9 +3004,9 @@ void TUnfold::GetL(TH2 *out) const
    const Double_t *data=fL->GetMatrixArray();
    for (Int_t row = 0; row < GetNr(); row++) {
       for (Int_t cindex = rows[row]; cindex < rows[row+1]; cindex++) {
-        Int_t col=cols[cindex];
-        Int_t indexH=fXToHist[col];
-        out->SetBinContent(indexH,row+1,data[cindex]);
+         Int_t col=cols[cindex];
+         Int_t indexH=fXToHist[col];
+         out->SetBinContent(indexH,row+1,data[cindex]);
       }
    }
 }
@@ -3039,14 +3039,14 @@ Int_t TUnfold::GetNpar(void) const
 
 Double_t TUnfold::GetLcurveX(void) const
 {
-  // return value on x axis of L curve
-  return TMath::Log10(fChi2A);
+   // return value on x axis of L curve
+   return TMath::Log10(fChi2A);
 }
 
 Double_t TUnfold::GetLcurveY(void) const
 {
-  // return value on y axis of L curve
-  return TMath::Log10(fLXsquared);
+   // return value on y axis of L curve
+   return TMath::Log10(fLXsquared);
 }
 
 void TUnfold::GetOutput(TH1 *output,const Int_t *binMap) const
@@ -3059,15 +3059,15 @@ void TUnfold::GetOutput(TH1 *output,const Int_t *binMap) const
    //        binMap[0] : destination of underflow bin
    //        binMap[1] : destination of first bin
    //          ...
-   
+
    ClearHistogram(output);
    /* Int_t nbin=output->GetNbinsX();
-   Double_t *c=new Double_t[nbin+2];
-   Double_t *e2=new Double_t[nbin+2];
-   for(Int_t i=0;i<nbin+2;i++) {
-      c[i]=0.0;
-      e2[i]=0.0;
-      } */
+    Double_t *c=new Double_t[nbin+2];
+    Double_t *e2=new Double_t[nbin+2];
+    for(Int_t i=0;i<nbin+2;i++) {
+    c[i]=0.0;
+    e2[i]=0.0;
+    } */
 
    std::map<Int_t,Double_t> e2;
 
@@ -3081,7 +3081,7 @@ void TUnfold::GetOutput(TH1 *output,const Int_t *binMap) const
       Int_t srcBinI=fHistToX[i]; // matrix row index
       if((destBinI>=0)&&(srcBinI>=0)) {
          output->SetBinContent
-            (destBinI, (*fX)(srcBinI,0)+ output->GetBinContent(destBinI));
+         (destBinI, (*fX)(srcBinI,0)+ output->GetBinContent(destBinI));
          // here we loop over the columns of the error matrix
          //   j: counts histogram bins
          //   index: counts sparse matrix index
@@ -3179,7 +3179,7 @@ void TUnfold::ErrorMatrixToHist(TH2 *ematrix,const TMatrixDSparse *emat,
                   } else {
                      // add this bin
                      Double_t e2= ematrix->GetBinContent(destBinI,destBinJ)
-                        + data_emat[index_vxx];
+                     + data_emat[index_vxx];
                      ematrix->SetBinContent(destBinI,destBinJ,e2);
                      j++;
                      index_vxx++;
@@ -3215,7 +3215,7 @@ void TUnfold::GetRhoIJ(TH2 *rhoij,const Int_t *binMap) const
    //        binMap[1] : destination of first bin
    //          ...
    GetEmatrix(rhoij,binMap);
-   Int_t nbin=rhoij->GetNbinsX();  
+   Int_t nbin=rhoij->GetNbinsX();
    Double_t *e=new Double_t[nbin+2];
    for(Int_t i=0;i<nbin+2;i++) {
       e[i]=TMath::Sqrt(rhoij->GetBinContent(i,i));
@@ -3261,7 +3261,7 @@ Double_t TUnfold::GetRhoI(TH1 *rhoi,const Int_t *binMap,TH2 *invEmat) const
       const Int_t *rows_VxxInv=fVxxInv->GetRowIndexArray();
       const Int_t *cols_VxxInv=fVxxInv->GetColIndexArray();
       const Double_t *data_VxxInv=fVxxInv->GetMatrixArray();
-      
+
       for(Int_t i=0;i<GetNx();i++) {
          Int_t destI=fXToHist[i];
          Double_t e_ii=0.0,einv_ii=0.0;
@@ -3403,7 +3403,7 @@ Double_t TUnfold::GetRhoIFromMatrix(TH1 *rhoi,const TMatrixDSparse *eOrig,
          //std::cout<<i<<" "<<localBinToHist[i]<<" "<<rho<<"\n";
          rhoi->SetBinContent(localBinToHist[i],rho);
       }
-         
+      
       DeleteMatrix(&einvSparse);
       delete [] localBinToHist;
    }

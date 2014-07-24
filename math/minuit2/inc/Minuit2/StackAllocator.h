@@ -109,14 +109,14 @@ public:
       int previousBlock = ReadInt( nextBlock - sizeof(int));
       if ( nextBlock == fStackOffset) { 
           // deallocating last allocated
-	  fStackOffset = previousBlock;
+         fStackOffset = previousBlock;
       }
       else {
           // overwrite previous adr of next block
-	  int nextNextBlock = ReadInt(nextBlock);
-	  WriteInt( nextNextBlock - sizeof(int), previousBlock); 
-	  // overwrite head of deleted block
-	  WriteInt( previousBlock, nextNextBlock);
+         int nextNextBlock = ReadInt(nextBlock);
+         WriteInt( nextNextBlock - sizeof(int), previousBlock);
+         // overwrite head of deleted block
+         WriteInt( previousBlock, nextNextBlock);
       }
       fBlockCount--;
 
@@ -149,8 +149,8 @@ public:
   int ToInt( void* p) {
       unsigned char* pc = static_cast<unsigned char*>(p);
 
-      // std::cout << "toInt: p = " << p << " fStack = " << (void*) fStack << std::endl;
-	  // VC 7.1 warning:conversin from __w64 int to int
+     // std::cout << "toInt: p = " << p << " fStack = " << (void*) fStack << std::endl;
+     // VC 7.1 warning:conversin from __w64 int to int
       int userBlock = pc - fStack;
       return userBlock - sizeof(int); // correct for starting int
   }
@@ -163,8 +163,8 @@ public:
 
   void CheckOverflow( int n) {
       if (fStackOffset + n >= default_size) {
-	//std::cout << " no more space on stack allocator" << std::endl;
-	  throw StackOverflow();
+         //std::cout << " no more space on stack allocator" << std::endl;
+         throw StackOverflow();
       }
   }
 
@@ -177,29 +177,29 @@ public:
       int end = fStackOffset;
       int nblocks = 0;
       while (beg < fStackOffset) {
-	  end = ReadInt( beg);
+         end = ReadInt( beg);
 
-	  // std::cout << "beg = " << beg << " end = " << end 
-	  //     << " fStackOffset = " << fStackOffset << std::endl;
-
-	  int beg2 = ReadInt( end - sizeof(int));
-	  if ( beg != beg2) {
-	    //std::cout << "  beg != beg2 " << std::endl;
-	      return false;
-	  }
-	  nblocks++;
-	  beg = end;
+         // std::cout << "beg = " << beg << " end = " << end
+         //     << " fStackOffset = " << fStackOffset << std::endl;
+         
+         int beg2 = ReadInt( end - sizeof(int));
+         if ( beg != beg2) {
+            //std::cout << "  beg != beg2 " << std::endl;
+            return false;
+         }
+         nblocks++;
+         beg = end;
       }
-      if (end != fStackOffset) {
-	//std::cout << " end != fStackOffset" << std::endl;
-	  return false;
-      }
-      if (nblocks != fBlockCount) {
-	//std::cout << "nblocks != fBlockCount" << std::endl;
-	  return false;
-      }
-      //std::cout << "Allocator is in consistent state, nblocks = " << nblocks << std::endl;
-      return true;
+     if (end != fStackOffset) {
+        //std::cout << " end != fStackOffset" << std::endl;
+        return false;
+     }
+     if (nblocks != fBlockCount) {
+        //std::cout << "nblocks != fBlockCount" << std::endl;
+        return false;
+     }
+     //std::cout << "Allocator is in consistent state, nblocks = " << nblocks << std::endl;
+     return true;
   }
 
 private:

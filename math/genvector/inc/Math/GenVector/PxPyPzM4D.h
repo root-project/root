@@ -139,7 +139,7 @@ public :
       get internal data into 4 Scalar numbers
    */ 
    void GetCoordinates(Scalar& px, Scalar& py, Scalar& pz, Scalar& m) const 
-   { px=fX; py=fY; pz=fZ; m=fM;}  				
+   { px=fX; py=fY; pz=fZ; m=fM;}
 
    // --------- Coordinates and Coordinate-like Scalar properties -------------
 
@@ -157,7 +157,7 @@ public :
    // other coordinate representation
    /**
       Energy 
-   */ 				  
+    */
    Scalar E()  const { return std::sqrt(E2() ); }
 
    Scalar T() const { return E();}

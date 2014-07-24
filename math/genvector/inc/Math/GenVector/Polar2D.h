@@ -96,7 +96,7 @@ public :
    /**
       get internal data into 2 Scalar numbers
    */ 
-   void GetCoordinates(Scalar& r, Scalar& phi) const {r=fR; phi=fPhi;}  				
+   void GetCoordinates(Scalar& r, Scalar& phi) const {r=fR; phi=fPhi;}
 
    
    Scalar R()     const { return fR;}

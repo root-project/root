@@ -39,8 +39,8 @@ class Numerical2PGradientCalculator : public GradientCalculator {
 public:
   
   Numerical2PGradientCalculator(const MnFcn& fcn, 
-				const MnUserTransformation& par,
-				const MnStrategy& stra) : 
+                                const MnUserTransformation& par,
+                                const MnStrategy& stra) :
     fFcn(fcn), fTransformation(par), fStrategy(stra) {}
   
   virtual ~Numerical2PGradientCalculator() {}
@@ -56,7 +56,7 @@ public:
 
 
   virtual FunctionGradient operator()(const MinimumParameters&,
-				      const FunctionGradient&) const;
+                                      const FunctionGradient&) const;
 
   const MnFcn& Fcn() const {return fFcn;}
   const MnUserTransformation& Trafo() const {return fTransformation;} 

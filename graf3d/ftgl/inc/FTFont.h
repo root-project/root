@@ -195,12 +195,12 @@ class FTGL_EXPORT FTFont
          */
         float Advance( const char* string);
 
-	/**
+        /**
          * Prepare for rendering
          */
         virtual void PreRender() { preRenderCalled = true; }
 
-	/**
+        /**
          * Cleanup after rendering
          */
         virtual void PostRender() { preRenderCalled = false; }
@@ -216,8 +216,8 @@ class FTGL_EXPORT FTFont
          * Render a string of characters
          * 
          * @param string    'C' style string to be output.   
-	 * @param w_max     maximum width of text
-	 * @param w_fade    width at which text starts to fade
+         * @param w_max     maximum width of text
+         * @param w_fade    width at which text starts to fade
          */
         virtual void Render( const char* string, float w_max, float w_fade );
 

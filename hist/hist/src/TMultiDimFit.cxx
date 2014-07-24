@@ -6,205 +6,205 @@
 //
 // Begin_Html
 /*
-</pre>
-<H1><A NAME="SECTION00010000000000000000">
-Multidimensional Fits in ROOT</A>
-</H1>
+ </pre>
+ <H1><A NAME="SECTION00010000000000000000">
+ Multidimensional Fits in ROOT</A>
+ </H1>
 
-<H1><A NAME="SECTION00020000000000000000"></A>
-<A NAME="sec:overview"></A><BR>
-Overview
-</H1>
+ <H1><A NAME="SECTION00020000000000000000"></A>
+ <A NAME="sec:overview"></A><BR>
+ Overview
+ </H1>
 
-<P>
-A common problem encountered in different fields of applied science is
-to find an expression for one physical quantity in terms of several
-others, which are directly measurable.
+ <P>
+ A common problem encountered in different fields of applied science is
+ to find an expression for one physical quantity in terms of several
+ others, which are directly measurable.
 
-<P>
-An example in high energy physics is the evaluation of the momentum of
-a charged particle from the observation of its trajectory in a magnetic
-field.  The problem is to relate the momentum of the particle to the
-observations, which may consists of of positional measurements at
-intervals along the particle trajectory.
+ <P>
+ An example in high energy physics is the evaluation of the momentum of
+ a charged particle from the observation of its trajectory in a magnetic
+ field.  The problem is to relate the momentum of the particle to the
+ observations, which may consists of of positional measurements at
+ intervals along the particle trajectory.
 
-<P>
-The exact functional relationship between the measured quantities
-(e.g., the space-points) and the dependent quantity (e.g., the
-momentum) is in general not known, but one possible way of solving the
-problem, is to find an expression which reliably approximates the
-dependence of the momentum on the observations.
+ <P>
+ The exact functional relationship between the measured quantities
+ (e.g., the space-points) and the dependent quantity (e.g., the
+ momentum) is in general not known, but one possible way of solving the
+ problem, is to find an expression which reliably approximates the
+ dependence of the momentum on the observations.
 
-<P>
-This explicit function of the observations can be obtained by a
-<I>least squares</I> fitting procedure applied to a representive
-sample of the data, for which the dependent quantity (e.g., momentum)
-and the independent observations are known. The function can then be
-used to compute the quantity of interest for new observations of the
-independent variables.
+ <P>
+ This explicit function of the observations can be obtained by a
+ <I>least squares</I> fitting procedure applied to a representive
+ sample of the data, for which the dependent quantity (e.g., momentum)
+ and the independent observations are known. The function can then be
+ used to compute the quantity of interest for new observations of the
+ independent variables.
 
-<P>
-This class <TT>TMultiDimFit</TT> implements such a procedure in
-ROOT. It is largely based on the CERNLIB MUDIFI package
-[<A
+ <P>
+ This class <TT>TMultiDimFit</TT> implements such a procedure in
+ ROOT. It is largely based on the CERNLIB MUDIFI package
+ [<A
  HREF="TMultiFimFit.html#mudifi">2</A>]. Though the basic concepts are still sound, and
-therefore kept, a few implementation details have changed, and this
-class can take advantage of MINUIT [<A
+ therefore kept, a few implementation details have changed, and this
+ class can take advantage of MINUIT [<A
  HREF="TMultiFimFit.html#minuit">4</A>] to improve the errors
-of the fitting, thanks to the class <TT>TMinuit</TT>.
+ of the fitting, thanks to the class <TT>TMinuit</TT>.
 
-<P>
-In [<A
+ <P>
+ In [<A
  HREF="TMultiFimFit.html#wind72">5</A>] and [<A
  HREF="TMultiFimFit.html#wind81">6</A>] H. Wind demonstrates the utility
-of this procedure in the context of tracking, magnetic field
-parameterisation, and so on. The outline of the method used in this
-class is based on Winds discussion, and I refer these two excellents
-text for more information.
+ of this procedure in the context of tracking, magnetic field
+ parameterisation, and so on. The outline of the method used in this
+ class is based on Winds discussion, and I refer these two excellents
+ text for more information.
 
-<P>
-And example of usage is given in
-<A NAME="tex2html1"
-  HREF="
-  ./examples/multidimfit.C"><TT>$ROOTSYS/tutorials/fit/multidimfit.C</TT></A>.
+ <P>
+ And example of usage is given in
+ <A NAME="tex2html1"
+ HREF="
+ ./examples/multidimfit.C"><TT>$ROOTSYS/tutorials/fit/multidimfit.C</TT></A>.
 
-<P>
+ <P>
 
-<H1><A NAME="SECTION00030000000000000000"></A>
-<A NAME="sec:method"></A><BR>
-The Method
-</H1>
+ <H1><A NAME="SECTION00030000000000000000"></A>
+ <A NAME="sec:method"></A><BR>
+ The Method
+ </H1>
 
-<P>
-Let <IMG
+ <P>
+ Let <IMG
  WIDTH="18" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img7.gif"
  ALT="$ D$"> by the dependent quantity of interest, which depends smoothly
-on the observable quantities <!-- MATH
+ on the observable quantities <!-- MATH
  $x_1, \ldots, x_N$
  -->
-<IMG
+ <IMG
  WIDTH="80" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img8.gif"
  ALT="$ x_1, \ldots, x_N$">, which we'll denote by
-<!-- MATH
+ <!-- MATH
  $\mathbf{x}$
  -->
-<IMG
+ <IMG
  WIDTH="14" HEIGHT="13" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img9.gif"
  ALT="$ \mathbf{x}$">. Given a training sample of <IMG
  WIDTH="21" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img10.gif"
  ALT="$ M$"> tuples of the form,
-(<A NAME="tex2html2"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:AddRow"><TT>TMultiDimFit::AddRow</TT></A>)
-<!-- MATH
+ (<A NAME="tex2html2"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:AddRow"><TT>TMultiDimFit::AddRow</TT></A>)
+ <!-- MATH
  \begin{displaymath}
-\left(\mathbf{x}_j, D_j, E_j\right)\quad,
-\end{displaymath}
+ \left(\mathbf{x}_j, D_j, E_j\right)\quad,
+ \end{displaymath}
  -->
-<P></P><DIV ALIGN="CENTER">
-<IMG
+ <P></P><DIV ALIGN="CENTER">
+ <IMG
  WIDTH="108" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img11.gif"
  ALT="$\displaystyle \left(\mathbf{x}_j, D_j, E_j\right)\quad,
-$">
-</DIV><P></P>
-where <!-- MATH
+ $">
+ </DIV><P></P>
+ where <!-- MATH
  $\mathbf{x}_j = (x_{1,j},\ldots,x_{N,j})$
  -->
-<IMG
+ <IMG
  WIDTH="148" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img12.gif"
  ALT="$ \mathbf{x}_j = (x_{1,j},\ldots,x_{N,j})$"> are <IMG
  WIDTH="19" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img13.gif"
  ALT="$ N$"> independent
-variables, <IMG
+ variables, <IMG
  WIDTH="24" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img14.gif"
  ALT="$ D_j$"> is the known, quantity dependent at <!-- MATH
  $\mathbf{x}_j$
  -->
-<IMG
+ <IMG
  WIDTH="20" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img15.gif"
  ALT="$ \mathbf{x}_j$">,
-and <IMG
+ and <IMG
  WIDTH="23" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img16.gif"
  ALT="$ E_j$"> is the square error in <IMG
  WIDTH="24" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img14.gif"
  ALT="$ D_j$">, the class
-<A NAME="tex2html3"
-  HREF="./TMultiDimFit.html"><TT>TMultiDimFit</TT></A>
-will
-try to find the parameterization
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="Dp"></A><!-- MATH
+ <A NAME="tex2html3"
+ HREF="./TMultiDimFit.html"><TT>TMultiDimFit</TT></A>
+ will
+ try to find the parameterization
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="Dp"></A><!-- MATH
  \begin{equation}
-D_p(\mathbf{x}) = \sum_{l=1}^{L} c_l \prod_{i=1}^{N} p_{li}\left(x_i\right)
-  = \sum_{l=1}^{L} c_l F_l(\mathbf{x})
-\end{equation}
+ D_p(\mathbf{x}) = \sum_{l=1}^{L} c_l \prod_{i=1}^{N} p_{li}\left(x_i\right)
+ = \sum_{l=1}^{L} c_l F_l(\mathbf{x})
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="274" HEIGHT="65" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img17.gif"
  ALT="$\displaystyle D_p(\mathbf{x}) = \sum_{l=1}^{L} c_l \prod_{i=1}^{N} p_{li}\left(x_i\right) = \sum_{l=1}^{L} c_l F_l(\mathbf{x})$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(1)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-such that
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="S"></A><!-- MATH
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (1)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ such that
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="S"></A><!-- MATH
  \begin{equation}
-S \equiv \sum_{j=1}^{M} \left(D_j - D_p\left(\mathbf{x}_j\right)\right)^2
-\end{equation}
+ S \equiv \sum_{j=1}^{M} \left(D_j - D_p\left(\mathbf{x}_j\right)\right)^2
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="172" HEIGHT="65" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img18.gif"
  ALT="$\displaystyle S \equiv \sum_{j=1}^{M} \left(D_j - D_p\left(\mathbf{x}_j\right)\right)^2$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(2)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-is minimal. Here <!-- MATH
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (2)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ is minimal. Here <!-- MATH
  $p_{li}(x_i)$
  -->
-<IMG
+ <IMG
  WIDTH="48" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img19.gif"
  ALT="$ p_{li}(x_i)$"> are monomials, or Chebyshev or Legendre
-polynomials, labelled <!-- MATH
+ polynomials, labelled <!-- MATH
  $l = 1, \ldots, L$
  -->
-<IMG
+ <IMG
  WIDTH="87" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img20.gif"
  ALT="$ l = 1, \ldots, L$">, in each variable
-<IMG
+ <IMG
  WIDTH="18" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img21.gif"
  ALT="$ x_i$">, <!-- MATH
  $i=1, \ldots, N$
  -->
-<IMG
+ <IMG
  WIDTH="91" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img22.gif"
  ALT="$ i=1, \ldots, N$">.
 
-<P>
-So what <TT>TMultiDimFit</TT> does, is to determine the number of
-terms <IMG
+ <P>
+ So what <TT>TMultiDimFit</TT> does, is to determine the number of
+ terms <IMG
  WIDTH="15" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img23.gif"
  ALT="$ L$">, and then <IMG
@@ -217,79 +217,79 @@ terms <IMG
  WIDTH="15" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img23.gif"
  ALT="$ L$">
-coefficients <IMG
+ coefficients <IMG
  WIDTH="16" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img25.gif"
  ALT="$ c_l$">, so that <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$"> is minimal
-(<A NAME="tex2html4"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:FindParameterization"><TT>TMultiDimFit::FindParameterization</TT></A>).
+ (<A NAME="tex2html4"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:FindParameterization"><TT>TMultiDimFit::FindParameterization</TT></A>).
 
-<P>
-Of course it's more than a little unlikely that <IMG
+ <P>
+ Of course it's more than a little unlikely that <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$"> will ever become
-exact zero as a result of the procedure outlined below. Therefore, the
-user is asked to provide a minimum relative error <IMG
+ exact zero as a result of the procedure outlined below. Therefore, the
+ user is asked to provide a minimum relative error <IMG
  WIDTH="11" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img27.gif"
  ALT="$ \epsilon$">
-(<A NAME="tex2html5"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:SetMinRelativeError"><TT>TMultiDimFit::SetMinRelativeError</TT></A>), and <IMG
+ (<A NAME="tex2html5"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:SetMinRelativeError"><TT>TMultiDimFit::SetMinRelativeError</TT></A>), and <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$">
-will be considered minimized when
-<!-- MATH
+ will be considered minimized when
+ <!-- MATH
  \begin{displaymath}
-R = \frac{S}{\sum_{j=1}^M D_j^2} < \epsilon
-\end{displaymath}
+ R = \frac{S}{\sum_{j=1}^M D_j^2} < \epsilon
+ \end{displaymath}
  -->
-<P></P><DIV ALIGN="CENTER">
-<IMG
+ <P></P><DIV ALIGN="CENTER">
+ <IMG
  WIDTH="132" HEIGHT="51" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img28.gif"
  ALT="$\displaystyle R = \frac{S}{\sum_{j=1}^M D_j^2} &lt; \epsilon
-$">
-</DIV><P></P>
+ $">
+ </DIV><P></P>
 
-<P>
-Optionally, the user may impose a functional expression by specifying
-the powers of each variable in <IMG
+ <P>
+ Optionally, the user may impose a functional expression by specifying
+ the powers of each variable in <IMG
  WIDTH="15" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img23.gif"
  ALT="$ L$"> specified functions <!-- MATH
  $F_1, \ldots,
-F_L$
+ F_L$
  -->
-<IMG
+ <IMG
  WIDTH="79" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img29.gif"
  ALT="$ F_1, \ldots,
-F_L$"> (<A NAME="tex2html6"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:SetPowers"><TT>TMultiDimFit::SetPowers</TT></A>). In that case, only the
-coefficients <IMG
+ F_L$"> (<A NAME="tex2html6"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:SetPowers"><TT>TMultiDimFit::SetPowers</TT></A>). In that case, only the
+ coefficients <IMG
  WIDTH="16" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img25.gif"
  ALT="$ c_l$"> is calculated by the class.
 
-<P>
+ <P>
 
-<H2><A NAME="SECTION00031000000000000000"></A>
-<A NAME="sec:selection"></A><BR>
-Limiting the Number of Terms
-</H2>
+ <H2><A NAME="SECTION00031000000000000000"></A>
+ <A NAME="sec:selection"></A><BR>
+ Limiting the Number of Terms
+ </H2>
 
-<P>
-As always when dealing with fits, there's a real chance of
-<I>over fitting</I>. As is well-known, it's always possible to fit an
-<IMG
+ <P>
+ As always when dealing with fits, there's a real chance of
+ <I>over fitting</I>. As is well-known, it's always possible to fit an
+ <IMG
  WIDTH="46" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img30.gif"
  ALT="$ N-1$"> polynomial in <IMG
@@ -304,62 +304,62 @@ As always when dealing with fits, there's a real chance of
  ALT="$ (x,y)$"> with <!-- MATH
  $\chi^2 = 0$
  -->
-<IMG
+ <IMG
  WIDTH="50" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img33.gif"
  ALT="$ \chi^2 = 0$">, but
-the polynomial is not likely to fit new data at all
-[<A
+ the polynomial is not likely to fit new data at all
+ [<A
  HREF="TMultiFimFit.html#bevington">1</A>]. Therefore, the user is asked to provide an upper
-limit, <IMG
+ limit, <IMG
  WIDTH="41" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img34.gif"
  ALT="$ L_{max}$"> to the number of terms in <IMG
  WIDTH="25" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img35.gif"
  ALT="$ D_p$">
-(<A NAME="tex2html7"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:SetMaxTerms"><TT>TMultiDimFit::SetMaxTerms</TT></A>).
+ (<A NAME="tex2html7"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:SetMaxTerms"><TT>TMultiDimFit::SetMaxTerms</TT></A>).
 
-<P>
-However, since there's an infinite number of <IMG
+ <P>
+ However, since there's an infinite number of <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img24.gif"
  ALT="$ F_l$"> to choose from, the
-user is asked to give the maximum power. <IMG
+ user is asked to give the maximum power. <IMG
  WIDTH="49" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img36.gif"
  ALT="$ P_{max,i}$">, of each variable
-<IMG
+ <IMG
  WIDTH="18" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img21.gif"
  ALT="$ x_i$"> to be considered in the minimization of <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$">
-(<A NAME="tex2html8"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:SetMaxPowers"><TT>TMultiDimFit::SetMaxPowers</TT></A>).
+ (<A NAME="tex2html8"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:SetMaxPowers"><TT>TMultiDimFit::SetMaxPowers</TT></A>).
 
-<P>
-One way of obtaining values for the maximum power in variable <IMG
+ <P>
+ One way of obtaining values for the maximum power in variable <IMG
  WIDTH="10" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img37.gif"
  ALT="$ i$">, is
-to perform a regular fit to the dependent quantity <IMG
+ to perform a regular fit to the dependent quantity <IMG
  WIDTH="18" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img7.gif"
  ALT="$ D$">, using a
-polynomial only in <IMG
+ polynomial only in <IMG
  WIDTH="18" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img21.gif"
  ALT="$ x_i$">. The maximum power is <IMG
  WIDTH="49" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img36.gif"
  ALT="$ P_{max,i}$"> is then the
-power that does not significantly improve the one-dimensional
-least-square fit over <IMG
+ power that does not significantly improve the one-dimensional
+ least-square fit over <IMG
  WIDTH="18" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img21.gif"
  ALT="$ x_i$"> to <IMG
@@ -368,137 +368,137 @@ least-square fit over <IMG
  ALT="$ D$"> [<A
  HREF="TMultiFimFit.html#wind72">5</A>].
 
-<P>
-There are still a huge amount of possible choices for <IMG
+ <P>
+ There are still a huge amount of possible choices for <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img24.gif"
  ALT="$ F_l$">; in fact
-there are <!-- MATH
+ there are <!-- MATH
  $\prod_{i=1}^{N} (P_{max,i} + 1)$
  -->
-<IMG
+ <IMG
  WIDTH="125" HEIGHT="39" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img38.gif"
  ALT="$ \prod_{i=1}^{N} (P_{max,i} + 1)$"> possible
-choices. Obviously we need to limit this. To this end, the user is
-asked to set a <I>power control limit</I>, <IMG
+ choices. Obviously we need to limit this. To this end, the user is
+ asked to set a <I>power control limit</I>, <IMG
  WIDTH="17" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img39.gif"
  ALT="$ Q$">
-(<A NAME="tex2html9"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:SetPowerLimit"><TT>TMultiDimFit::SetPowerLimit</TT></A>), and a function
-<IMG
+ (<A NAME="tex2html9"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:SetPowerLimit"><TT>TMultiDimFit::SetPowerLimit</TT></A>), and a function
+ <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img24.gif"
  ALT="$ F_l$"> is only accepted if
-<!-- MATH
+ <!-- MATH
  \begin{displaymath}
-Q_l = \sum_{i=1}^{N} \frac{P_{li}}{P_{max,i}} < Q
-\end{displaymath}
+ Q_l = \sum_{i=1}^{N} \frac{P_{li}}{P_{max,i}} < Q
+ \end{displaymath}
  -->
-<P></P><DIV ALIGN="CENTER">
-<IMG
+ <P></P><DIV ALIGN="CENTER">
+ <IMG
  WIDTH="151" HEIGHT="65" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img40.gif"
  ALT="$\displaystyle Q_l = \sum_{i=1}^{N} \frac{P_{li}}{P_{max,i}} &lt; Q
-$">
-</DIV><P></P>
-where <IMG
+ $">
+ </DIV><P></P>
+ where <IMG
  WIDTH="24" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img41.gif"
  ALT="$ P_{li}$"> is the leading power of variable <IMG
  WIDTH="18" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img21.gif"
  ALT="$ x_i$"> in function
-<IMG
+ <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img24.gif"
  ALT="$ F_l$">. (<A NAME="tex2html10"
-  HREF="
+ HREF="
 
-./TMultiDimFit.html#TMultiDimFit:MakeCandidates"><TT>TMultiDimFit::MakeCandidates</TT></A>). So the number of
-functions increase with <IMG
+ ./TMultiDimFit.html#TMultiDimFit:MakeCandidates"><TT>TMultiDimFit::MakeCandidates</TT></A>). So the number of
+ functions increase with <IMG
  WIDTH="17" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img39.gif"
  ALT="$ Q$"> (1, 2 is fine, 5 is way out).
 
-<P>
+ <P>
 
-<H2><A NAME="SECTION00032000000000000000">
-Gram-Schmidt Orthogonalisation</A>
-</H2>
+ <H2><A NAME="SECTION00032000000000000000">
+ Gram-Schmidt Orthogonalisation</A>
+ </H2>
 
-<P>
-To further reduce the number of functions in the final expression,
-only those functions that significantly reduce <IMG
+ <P>
+ To further reduce the number of functions in the final expression,
+ only those functions that significantly reduce <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$"> is chosen. What
-`significant' means, is chosen by the user, and will be
-discussed below (see&nbsp;<A HREF="TMultiFimFit.html#sec:selectiondetail">2.3</A>).
+ `significant' means, is chosen by the user, and will be
+ discussed below (see&nbsp;<A HREF="TMultiFimFit.html#sec:selectiondetail">2.3</A>).
 
-<P>
-The functions <IMG
+ <P>
+ The functions <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img24.gif"
  ALT="$ F_l$"> are generally not orthogonal, which means one will
-have to evaluate all possible <IMG
+ have to evaluate all possible <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img24.gif"
  ALT="$ F_l$">'s over all data-points before
-finding the most significant [<A
+ finding the most significant [<A
  HREF="TMultiFimFit.html#bevington">1</A>]. We can, however, do
-better then that. By applying the <I>modified Gram-Schmidt
-  orthogonalisation</I> algorithm [<A
+ better then that. By applying the <I>modified Gram-Schmidt
+ orthogonalisation</I> algorithm [<A
  HREF="TMultiFimFit.html#wind72">5</A>] [<A
  HREF="TMultiFimFit.html#golub">3</A>] to the
-functions <IMG
+ functions <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img24.gif"
  ALT="$ F_l$">, we can evaluate the contribution to the reduction of
-<IMG
+ <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$"> from each function in turn, and we may delay the actual inversion
-of the curvature-matrix
-(<A NAME="tex2html11"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:MakeGramSchmidt"><TT>TMultiDimFit::MakeGramSchmidt</TT></A>).
+ of the curvature-matrix
+ (<A NAME="tex2html11"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:MakeGramSchmidt"><TT>TMultiDimFit::MakeGramSchmidt</TT></A>).
 
-<P>
-So we are let to consider an <IMG
+ <P>
+ So we are let to consider an <IMG
  WIDTH="52" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img42.gif"
  ALT="$ M\times L$"> matrix <!-- MATH
  $\mathsf{F}$
  -->
-<IMG
+ <IMG
  WIDTH="13" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img43.gif"
  ALT="$ \mathsf{F}$">, an
-element of which is given by
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="eq:Felem"></A><!-- MATH
+ element of which is given by
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="eq:Felem"></A><!-- MATH
  \begin{equation}
-f_{jl} = F_j\left(x_{1j} , x_{2j}, \ldots, x_{Nj}\right)
-  = F_l(\mathbf{x}_j)\,  \quad\mbox{with}~j=1,2,\ldots,M,
-\end{equation}
+ f_{jl} = F_j\left(x_{1j} , x_{2j}, \ldots, x_{Nj}\right)
+ = F_l(\mathbf{x}_j)\,  \quad\mbox{with}~j=1,2,\ldots,M,
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="260" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img44.gif"
  ALT="$\displaystyle f_{jl} = F_j\left(x_{1j} , x_{2j}, \ldots, x_{Nj}\right) = F_l(\mathbf{x}_j) $">&nbsp; &nbsp;with<IMG
  WIDTH="120" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img45.gif"
  ALT="$\displaystyle &nbsp;j=1,2,\ldots,M,$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(3)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-where <IMG
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (3)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ where <IMG
  WIDTH="12" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img46.gif"
  ALT="$ j$"> labels the <IMG
@@ -508,7 +508,7 @@ where <IMG
  WIDTH="9" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img47.gif"
  ALT="$ l$"> labels
-<IMG
+ <IMG
  WIDTH="15" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img23.gif"
  ALT="$ L$"> functions of <IMG
@@ -521,471 +521,471 @@ where <IMG
  WIDTH="23" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img49.gif"
  ALT="$ f_{jl}$"> is
-the term (or function) numbered <IMG
+ the term (or function) numbered <IMG
  WIDTH="9" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img47.gif"
  ALT="$ l$"> evaluated at the data point
-<IMG
+ <IMG
  WIDTH="12" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img46.gif"
  ALT="$ j$">. We have to normalise <!-- MATH
  $\mathbf{x}_j$
  -->
-<IMG
+ <IMG
  WIDTH="20" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img15.gif"
  ALT="$ \mathbf{x}_j$"> to <IMG
  WIDTH="48" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img50.gif"
  ALT="$ [-1,1]$"> for this to
-succeed [<A
+ succeed [<A
  HREF="TMultiFimFit.html#wind72">5</A>]
-(<A NAME="tex2html12"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:MakeNormalized"><TT>TMultiDimFit::MakeNormalized</TT></A>). We then define a
-matrix <!-- MATH
+ (<A NAME="tex2html12"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:MakeNormalized"><TT>TMultiDimFit::MakeNormalized</TT></A>). We then define a
+ matrix <!-- MATH
  $\mathsf{W}$
  -->
-<IMG
+ <IMG
  WIDTH="19" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img51.gif"
  ALT="$ \mathsf{W}$"> of which the columns <!-- MATH
  $\mathbf{w}_j$
  -->
-<IMG
+ <IMG
  WIDTH="24" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img52.gif"
  ALT="$ \mathbf{w}_j$"> are given by
-<BR>
-<DIV ALIGN="CENTER"><A NAME="eq:wj"></A><!-- MATH
+ <BR>
+ <DIV ALIGN="CENTER"><A NAME="eq:wj"></A><!-- MATH
  \begin{eqnarray}
-\mathbf{w}_1 &=& \mathbf{f}_1 = F_1\left(\mathbf x_1\right)\\
-  \mathbf{w}_l &=& \mathbf{f}_l - \sum^{l-1}_{k=1} \frac{\mathbf{f}_l \bullet
-  \mathbf{w}_k}{\mathbf{w}_k^2}\mathbf{w}_k\,.
-\end{eqnarray}
+ \mathbf{w}_1 &=& \mathbf{f}_1 = F_1\left(\mathbf x_1\right)\\
+ \mathbf{w}_l &=& \mathbf{f}_l - \sum^{l-1}_{k=1} \frac{\mathbf{f}_l \bullet
+ \mathbf{w}_k}{\mathbf{w}_k^2}\mathbf{w}_k\,.
+ \end{eqnarray}
  -->
-<TABLE CELLPADDING="0" ALIGN="CENTER" WIDTH="100%">
-<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
+ <TABLE CELLPADDING="0" ALIGN="CENTER" WIDTH="100%">
+ <TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
  WIDTH="25" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img53.gif"
  ALT="$\displaystyle \mathbf{w}_1$"></TD>
-<TD WIDTH="10" ALIGN="CENTER" NOWRAP><IMG
+ <TD WIDTH="10" ALIGN="CENTER" NOWRAP><IMG
  WIDTH="16" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img54.gif"
  ALT="$\displaystyle =$"></TD>
-<TD ALIGN="LEFT" NOWRAP><IMG
+ <TD ALIGN="LEFT" NOWRAP><IMG
  WIDTH="87" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img55.gif"
  ALT="$\displaystyle \mathbf{f}_1 = F_1\left(\mathbf x_1\right)$"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(4)</TD></TR>
-<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
+ <TD WIDTH=10 ALIGN="RIGHT">
+ (4)</TD></TR>
+ <TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
  WIDTH="22" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img56.gif"
  ALT="$\displaystyle \mathbf{w}_l$"></TD>
-<TD WIDTH="10" ALIGN="CENTER" NOWRAP><IMG
+ <TD WIDTH="10" ALIGN="CENTER" NOWRAP><IMG
  WIDTH="16" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img54.gif"
  ALT="$\displaystyle =$"></TD>
-<TD ALIGN="LEFT" NOWRAP><IMG
+ <TD ALIGN="LEFT" NOWRAP><IMG
  WIDTH="138" HEIGHT="66" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img57.gif"
  ALT="$\displaystyle \mathbf{f}_l - \sum^{l-1}_{k=1} \frac{\mathbf{f}_l \bullet
-\mathbf{w}_k}{\mathbf{w}_k^2}\mathbf{w}_k .$"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(5)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-and <!-- MATH
+ \mathbf{w}_k}{\mathbf{w}_k^2}\mathbf{w}_k .$"></TD>
+ <TD WIDTH=10 ALIGN="RIGHT">
+ (5)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ and <!-- MATH
  $\mathbf{w}_{l}$
  -->
-<IMG
+ <IMG
  WIDTH="22" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img58.gif"
  ALT="$ \mathbf{w}_{l}$"> is the component of <!-- MATH
  $\mathbf{f}_{l}$
  -->
-<IMG
+ <IMG
  WIDTH="15" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img59.gif"
  ALT="$ \mathbf{f}_{l}$"> orthogonal
-to <!-- MATH
+ to <!-- MATH
  $\mathbf{w}_{1}, \ldots, \mathbf{w}_{l-1}$
  -->
-<IMG
+ <IMG
  WIDTH="97" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img60.gif"
  ALT="$ \mathbf{w}_{1}, \ldots, \mathbf{w}_{l-1}$">. Hence we obtain
-[<A
+ [<A
  HREF="TMultiFimFit.html#golub">3</A>],
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="eq:worto"></A><!-- MATH
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="eq:worto"></A><!-- MATH
  \begin{equation}
-\mathbf{w}_k\bullet\mathbf{w}_l = 0\quad\mbox{if}~k \neq l\quad.
-\end{equation}
+ \mathbf{w}_k\bullet\mathbf{w}_l = 0\quad\mbox{if}~k \neq l\quad.
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="87" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img61.gif"
  ALT="$\displaystyle \mathbf{w}_k\bullet\mathbf{w}_l = 0$">&nbsp; &nbsp;if<IMG
  WIDTH="65" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img62.gif"
  ALT="$\displaystyle &nbsp;k \neq l\quad.$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(6)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (6)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
 
-<P>
-We now take as a new model <!-- MATH
+ <P>
+ We now take as a new model <!-- MATH
  $\mathsf{W}\mathbf{a}$
  -->
-<IMG
+ <IMG
  WIDTH="28" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img63.gif"
  ALT="$ \mathsf{W}\mathbf{a}$">. We thus want to
-minimize
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="eq:S"></A><!-- MATH
+ minimize
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="eq:S"></A><!-- MATH
  \begin{equation}
-S\equiv \left(\mathbf{D} - \mathsf{W}\mathbf{a}\right)^2\quad,
-\end{equation}
+ S\equiv \left(\mathbf{D} - \mathsf{W}\mathbf{a}\right)^2\quad,
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="136" HEIGHT="38" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img64.gif"
  ALT="$\displaystyle S\equiv \left(\mathbf{D} - \mathsf{W}\mathbf{a}\right)^2\quad,$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(7)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-where <!-- MATH
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (7)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ where <!-- MATH
  $\mathbf{D} = \left(D_1,\ldots,D_M\right)$
  -->
-<IMG
+ <IMG
  WIDTH="137" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img65.gif"
  ALT="$ \mathbf{D} = \left(D_1,\ldots,D_M\right)$"> is a vector of the
-dependent quantity in the sample. Differentiation with respect to
-<IMG
+ dependent quantity in the sample. Differentiation with respect to
+ <IMG
  WIDTH="19" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img66.gif"
  ALT="$ a_j$"> gives, using&nbsp;(<A HREF="TMultiFimFit.html#eq:worto">6</A>),
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="eq:dS"></A><!-- MATH
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="eq:dS"></A><!-- MATH
  \begin{equation}
-\mathbf{D}\bullet\mathbf{w}_l - a_l\mathbf{w}_l^2 = 0
-\end{equation}
+ \mathbf{D}\bullet\mathbf{w}_l - a_l\mathbf{w}_l^2 = 0
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="134" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img67.gif"
  ALT="$\displaystyle \mathbf{D}\bullet\mathbf{w}_l - a_l\mathbf{w}_l^2 = 0$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(8)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-or
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="eq:dS2"></A><!-- MATH
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (8)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ or
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="eq:dS2"></A><!-- MATH
  \begin{equation}
-a_l = \frac{\mathbf{D}_l\bullet\mathbf{w}_l}{\mathbf{w}_l^2}
-\end{equation}
+ a_l = \frac{\mathbf{D}_l\bullet\mathbf{w}_l}{\mathbf{w}_l^2}
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="95" HEIGHT="51" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img68.gif"
  ALT="$\displaystyle a_l = \frac{\mathbf{D}_l\bullet\mathbf{w}_l}{\mathbf{w}_l^2}$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(9)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-Let <IMG
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (9)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ Let <IMG
  WIDTH="21" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img69.gif"
  ALT="$ S_j$"> be the sum of squares of residuals when taking <IMG
  WIDTH="12" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img46.gif"
  ALT="$ j$"> functions
-into account. Then
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="eq:Sj"></A><!-- MATH
+ into account. Then
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="eq:Sj"></A><!-- MATH
  \begin{equation}
-S_l = \left[\mathbf{D} - \sum^l_{k=1} a_k\mathbf{w}_k\right]^2
-      = \mathbf{D}^2 - 2\mathbf{D} \sum^l_{k=1} a_k\mathbf{w}_k
-        + \sum^l_{k=1} a_k^2\mathbf{w}_k^2
-\end{equation}
+ S_l = \left[\mathbf{D} - \sum^l_{k=1} a_k\mathbf{w}_k\right]^2
+ = \mathbf{D}^2 - 2\mathbf{D} \sum^l_{k=1} a_k\mathbf{w}_k
+ + \sum^l_{k=1} a_k^2\mathbf{w}_k^2
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="394" HEIGHT="72" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img70.gif"
  ALT="$\displaystyle S_l = \left[\mathbf{D} - \sum^l_{k=1} a_k\mathbf{w}_k\right]^2 = ...
-...2 - 2\mathbf{D} \sum^l_{k=1} a_k\mathbf{w}_k + \sum^l_{k=1} a_k^2\mathbf{w}_k^2$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(10)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-Using (<A HREF="TMultiFimFit.html#eq:dS2">9</A>), we see that
-<BR>
-<DIV ALIGN="CENTER"><A NAME="eq:sj2"></A><!-- MATH
+ ...2 - 2\mathbf{D} \sum^l_{k=1} a_k\mathbf{w}_k + \sum^l_{k=1} a_k^2\mathbf{w}_k^2$"></TD>
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (10)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ Using (<A HREF="TMultiFimFit.html#eq:dS2">9</A>), we see that
+ <BR>
+ <DIV ALIGN="CENTER"><A NAME="eq:sj2"></A><!-- MATH
  \begin{eqnarray}
-S_l &=& \mathbf{D}^2 - 2 \sum^l_{k=1} a_k^2\mathbf{w}_k^2 +
-          \sum^j_{k=1} a_k^2\mathbf{w}_k^2\nonumber\\
-      &=& \mathbf{D}^2 - \sum^l_{k=1} a_k^2\mathbf{w}_k^2\nonumber\\
-      &=& \mathbf{D}^2 - \sum^l_{k=1} \frac{\left(\mathbf D\bullet \mathbf
-  w_k\right)}{\mathbf w_k^2}
-\end{eqnarray}
+ S_l &=& \mathbf{D}^2 - 2 \sum^l_{k=1} a_k^2\mathbf{w}_k^2 +
+ \sum^j_{k=1} a_k^2\mathbf{w}_k^2\nonumber\\
+ &=& \mathbf{D}^2 - \sum^l_{k=1} a_k^2\mathbf{w}_k^2\nonumber\\
+ &=& \mathbf{D}^2 - \sum^l_{k=1} \frac{\left(\mathbf D\bullet \mathbf
+ w_k\right)}{\mathbf w_k^2}
+ \end{eqnarray}
  -->
-<TABLE CELLPADDING="0" ALIGN="CENTER" WIDTH="100%">
-<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
+ <TABLE CELLPADDING="0" ALIGN="CENTER" WIDTH="100%">
+ <TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT"><IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img71.gif"
  ALT="$\displaystyle S_l$"></TD>
-<TD WIDTH="10" ALIGN="CENTER" NOWRAP><IMG
+ <TD WIDTH="10" ALIGN="CENTER" NOWRAP><IMG
  WIDTH="16" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img54.gif"
  ALT="$\displaystyle =$"></TD>
-<TD ALIGN="LEFT" NOWRAP><IMG
+ <TD ALIGN="LEFT" NOWRAP><IMG
  WIDTH="201" HEIGHT="67" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img72.gif"
  ALT="$\displaystyle \mathbf{D}^2 - 2 \sum^l_{k=1} a_k^2\mathbf{w}_k^2 +
-\sum^j_{k=1} a_k^2\mathbf{w}_k^2$"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-&nbsp;</TD></TR>
-<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT">&nbsp;</TD>
-<TD WIDTH="10" ALIGN="CENTER" NOWRAP><IMG
+ \sum^j_{k=1} a_k^2\mathbf{w}_k^2$"></TD>
+ <TD WIDTH=10 ALIGN="RIGHT">
+ &nbsp;</TD></TR>
+ <TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT">&nbsp;</TD>
+ <TD WIDTH="10" ALIGN="CENTER" NOWRAP><IMG
  WIDTH="16" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img54.gif"
  ALT="$\displaystyle =$"></TD>
-<TD ALIGN="LEFT" NOWRAP><IMG
+ <TD ALIGN="LEFT" NOWRAP><IMG
  WIDTH="108" HEIGHT="66" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img73.gif"
  ALT="$\displaystyle \mathbf{D}^2 - \sum^l_{k=1} a_k^2\mathbf{w}_k^2$"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-&nbsp;</TD></TR>
-<TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT">&nbsp;</TD>
-<TD WIDTH="10" ALIGN="CENTER" NOWRAP><IMG
+ <TD WIDTH=10 ALIGN="RIGHT">
+ &nbsp;</TD></TR>
+ <TR VALIGN="MIDDLE"><TD NOWRAP ALIGN="RIGHT">&nbsp;</TD>
+ <TD WIDTH="10" ALIGN="CENTER" NOWRAP><IMG
  WIDTH="16" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img54.gif"
  ALT="$\displaystyle =$"></TD>
-<TD ALIGN="LEFT" NOWRAP><IMG
+ <TD ALIGN="LEFT" NOWRAP><IMG
  WIDTH="137" HEIGHT="66" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img74.gif"
  ALT="$\displaystyle \mathbf{D}^2 - \sum^l_{k=1} \frac{\left(\mathbf D\bullet \mathbf
-w_k\right)}{\mathbf w_k^2}$"></TD>
-<TD WIDTH=10 ALIGN="RIGHT">
-(11)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
+ w_k\right)}{\mathbf w_k^2}$"></TD>
+ <TD WIDTH=10 ALIGN="RIGHT">
+ (11)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
 
-<P>
-So for each new function <IMG
+ <P>
+ So for each new function <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img24.gif"
  ALT="$ F_l$"> included in the model, we get a
-reduction of the sum of squares of residuals of <!-- MATH
+ reduction of the sum of squares of residuals of <!-- MATH
  $a_l^2\mathbf{w}_l^2$
  -->
-<IMG
+ <IMG
  WIDTH="40" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img75.gif"
  ALT="$ a_l^2\mathbf{w}_l^2$">,
-where <!-- MATH
+ where <!-- MATH
  $\mathbf{w}_l$
  -->
-<IMG
+ <IMG
  WIDTH="22" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img76.gif"
  ALT="$ \mathbf{w}_l$"> is given by (<A HREF="TMultiFimFit.html#eq:wj">4</A>) and <IMG
  WIDTH="17" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img77.gif"
  ALT="$ a_l$"> by
-(<A HREF="TMultiFimFit.html#eq:dS2">9</A>). Thus, using the Gram-Schmidt orthogonalisation, we
-can decide if we want to include this function in the final model,
-<I>before</I> the matrix inversion.
+ (<A HREF="TMultiFimFit.html#eq:dS2">9</A>). Thus, using the Gram-Schmidt orthogonalisation, we
+ can decide if we want to include this function in the final model,
+ <I>before</I> the matrix inversion.
 
-<P>
+ <P>
 
-<H2><A NAME="SECTION00033000000000000000"></A>
-<A NAME="sec:selectiondetail"></A><BR>
-Function Selection Based on Residual
-</H2>
+ <H2><A NAME="SECTION00033000000000000000"></A>
+ <A NAME="sec:selectiondetail"></A><BR>
+ Function Selection Based on Residual
+ </H2>
 
-<P>
-Supposing that <IMG
+ <P>
+ Supposing that <IMG
  WIDTH="42" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img78.gif"
  ALT="$ L-1$"> steps of the procedure have been performed, the
-problem now is to consider the <!-- MATH
+ problem now is to consider the <!-- MATH
  $L^{\mbox{th}}$
  -->
-<IMG
+ <IMG
  WIDTH="31" HEIGHT="20" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img79.gif"
  ALT="$ L^{\mbox{th}}$"> function.
 
-<P>
-The sum of squares of residuals can be written as
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="eq:sums"></A><!-- MATH
+ <P>
+ The sum of squares of residuals can be written as
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="eq:sums"></A><!-- MATH
  \begin{equation}
-S_L = \textbf{D}^T\bullet\textbf{D} -
-  \sum^L_{l=1}a^2_l\left(\textbf{w}_l^T\bullet\textbf{w}_l\right)
-\end{equation}
+ S_L = \textbf{D}^T\bullet\textbf{D} -
+ \sum^L_{l=1}a^2_l\left(\textbf{w}_l^T\bullet\textbf{w}_l\right)
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="232" HEIGHT="65" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img80.gif"
  ALT="$\displaystyle S_L = \textbf{D}^T\bullet\textbf{D} - \sum^L_{l=1}a^2_l\left(\textbf{w}_l^T\bullet\textbf{w}_l\right)$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(12)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-where the relation (<A HREF="TMultiFimFit.html#eq:dS2">9</A>) have been taken into account. The
-contribution of the <!-- MATH
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (12)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ where the relation (<A HREF="TMultiFimFit.html#eq:dS2">9</A>) have been taken into account. The
+ contribution of the <!-- MATH
  $L^{\mbox{th}}$
  -->
-<IMG
+ <IMG
  WIDTH="31" HEIGHT="20" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img79.gif"
  ALT="$ L^{\mbox{th}}$"> function to the reduction of S, is
-given by
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="eq:dSN"></A><!-- MATH
+ given by
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="eq:dSN"></A><!-- MATH
  \begin{equation}
-\Delta S_L = a^2_L\left(\textbf{w}_L^T\bullet\textbf{w}_L\right)
-\end{equation}
+ \Delta S_L = a^2_L\left(\textbf{w}_L^T\bullet\textbf{w}_L\right)
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="154" HEIGHT="36" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img81.gif"
  ALT="$\displaystyle \Delta S_L = a^2_L\left(\textbf{w}_L^T\bullet\textbf{w}_L\right)$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(13)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (13)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
 
-<P>
-Two test are now applied to decide whether this <!-- MATH
+ <P>
+ Two test are now applied to decide whether this <!-- MATH
  $L^{\mbox{th}}$
  -->
-<IMG
+ <IMG
  WIDTH="31" HEIGHT="20" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img79.gif"
  ALT="$ L^{\mbox{th}}$">
-function is to be included in the final expression, or not.
+ function is to be included in the final expression, or not.
 
-<P>
+ <P>
 
-<H3><A NAME="SECTION00033100000000000000"></A>
-<A NAME="testone"></A><BR>
-Test 1
-</H3>
+ <H3><A NAME="SECTION00033100000000000000"></A>
+ <A NAME="testone"></A><BR>
+ Test 1
+ </H3>
 
-<P>
-Denoting by <IMG
+ <P>
+ Denoting by <IMG
  WIDTH="43" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img82.gif"
  ALT="$ H_{L-1}$"> the subspace spanned by
-<!-- MATH
+ <!-- MATH
  $\textbf{w}_1,\ldots,\textbf{w}_{L-1}$
  -->
-<IMG
+ <IMG
  WIDTH="102" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img83.gif"
  ALT="$ \textbf{w}_1,\ldots,\textbf{w}_{L-1}$"> the function <!-- MATH
  $\textbf{w}_L$
  -->
-<IMG
+ <IMG
  WIDTH="27" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img5.gif"
  ALT="$ \textbf {w}_L$"> is
-by construction (see (<A HREF="TMultiFimFit.html#eq:wj">4</A>)) the projection of the function
-<IMG
+ by construction (see (<A HREF="TMultiFimFit.html#eq:wj">4</A>)) the projection of the function
+ <IMG
  WIDTH="24" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img84.gif"
  ALT="$ F_L$"> onto the direction perpendicular to <IMG
  WIDTH="43" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img82.gif"
  ALT="$ H_{L-1}$">. Now, if the
-length of <!-- MATH
+ length of <!-- MATH
  $\textbf{w}_L$
  -->
-<IMG
+ <IMG
  WIDTH="27" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img5.gif"
  ALT="$ \textbf {w}_L$"> (given by <!-- MATH
  $\textbf{w}_L\bullet\textbf{w}_L$
  -->
-<IMG
+ <IMG
  WIDTH="65" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img85.gif"
  ALT="$ \textbf{w}_L\bullet\textbf{w}_L$">)
-is very small compared to the length of <!-- MATH
+ is very small compared to the length of <!-- MATH
  $\textbf{f}_L$
  -->
-<IMG
+ <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img3.gif"
  ALT="$ \textbf {f}_L$"> this new
-function can not contribute much to the reduction of the sum of
-squares of residuals. The test consists then in calculating the angle
-<IMG
+ function can not contribute much to the reduction of the sum of
+ squares of residuals. The test consists then in calculating the angle
+ <IMG
  WIDTH="12" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img1.gif"
  ALT="$ \theta $"> between the two vectors <!-- MATH
  $\textbf{w}_L$
  -->
-<IMG
+ <IMG
  WIDTH="27" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img5.gif"
  ALT="$ \textbf {w}_L$"> and <!-- MATH
  $\textbf{f}_L$
  -->
-<IMG
+ <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img3.gif"
  ALT="$ \textbf {f}_L$">
-(see also figure&nbsp;<A HREF="TMultiFimFit.html#fig:thetaphi">1</A>) and requiring that it's
-<I>greater</I> then a threshold value which the user must set
-(<A NAME="tex2html14"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:SetMinAngle"><TT>TMultiDimFit::SetMinAngle</TT></A>).
+ (see also figure&nbsp;<A HREF="TMultiFimFit.html#fig:thetaphi">1</A>) and requiring that it's
+ <I>greater</I> then a threshold value which the user must set
+ (<A NAME="tex2html14"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:SetMinAngle"><TT>TMultiDimFit::SetMinAngle</TT></A>).
 
-<P>
+ <P>
 
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="fig:thetaphi"></A><A NAME="519"></A>
-<TABLE>
-<CAPTION ALIGN="BOTTOM"><STRONG>Figure 1:</STRONG>
-(a) Angle <IMG
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="fig:thetaphi"></A><A NAME="519"></A>
+ <TABLE>
+ <CAPTION ALIGN="BOTTOM"><STRONG>Figure 1:</STRONG>
+ (a) Angle <IMG
  WIDTH="12" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img1.gif"
  ALT="$ \theta $"> between <!-- MATH
  $\textbf{w}_l$
  -->
-<IMG
+ <IMG
  WIDTH="22" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img2.gif"
  ALT="$ \textbf {w}_l$"> and
-      <!-- MATH
+ <!-- MATH
  $\textbf{f}_L$
  -->
-<IMG
+ <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img3.gif"
  ALT="$ \textbf {f}_L$">, (b) angle <IMG
@@ -994,744 +994,744 @@ squares of residuals. The test consists then in calculating the angle
  ALT="$ \phi $"> between <!-- MATH
  $\textbf{w}_L$
  -->
-<IMG
+ <IMG
  WIDTH="27" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img5.gif"
  ALT="$ \textbf {w}_L$"> and
-      <!-- MATH
+ <!-- MATH
  $\textbf{D}$
  -->
-<IMG
+ <IMG
  WIDTH="18" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img6.gif"
  ALT="$ \textbf {D}$"></CAPTION>
-<TR><TD><IMG
+ <TR><TD><IMG
  WIDTH="466" HEIGHT="172" BORDER="0"
  SRC="gif/multidimfit_img86.gif"
  ALT="\begin{figure}\begin{center}
-\begin{tabular}{p{.4\textwidth}p{.4\textwidth}}
-\...
-... \put(80,100){$\mathbf{D}$}
-\end{picture} \end{tabular} \end{center}\end{figure}"></TD></TR>
-</TABLE>
-</DIV><P></P>
+ \begin{tabular}{p{.4\textwidth}p{.4\textwidth}}
+ \...
+ ... \put(80,100){$\mathbf{D}$}
+ \end{picture} \end{tabular} \end{center}\end{figure}"></TD></TR>
+ </TABLE>
+ </DIV><P></P>
 
-<P>
+ <P>
 
-<H3><A NAME="SECTION00033200000000000000"></A> <A NAME="testtwo"></A><BR>
-Test 2
-</H3>
+ <H3><A NAME="SECTION00033200000000000000"></A> <A NAME="testtwo"></A><BR>
+ Test 2
+ </H3>
 
-<P>
-Let <!-- MATH
+ <P>
+ Let <!-- MATH
  $\textbf{D}$
  -->
-<IMG
+ <IMG
  WIDTH="18" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img6.gif"
  ALT="$ \textbf {D}$"> be the data vector to be fitted. As illustrated in
-figure&nbsp;<A HREF="TMultiFimFit.html#fig:thetaphi">1</A>, the <!-- MATH
+ figure&nbsp;<A HREF="TMultiFimFit.html#fig:thetaphi">1</A>, the <!-- MATH
  $L^{\mbox{th}}$
  -->
-<IMG
+ <IMG
  WIDTH="31" HEIGHT="20" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img79.gif"
  ALT="$ L^{\mbox{th}}$"> function <!-- MATH
  $\textbf{w}_L$
  -->
-<IMG
+ <IMG
  WIDTH="27" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img5.gif"
  ALT="$ \textbf {w}_L$">
-will contribute significantly to the reduction of <IMG
+ will contribute significantly to the reduction of <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$">, if the angle
-<!-- MATH
+ <!-- MATH
  $\phi^\prime$
  -->
-<IMG
+ <IMG
  WIDTH="18" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img87.gif"
  ALT="$ \phi^\prime$"> between <!-- MATH
  $\textbf{w}_L$
  -->
-<IMG
+ <IMG
  WIDTH="27" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img5.gif"
  ALT="$ \textbf {w}_L$"> and <!-- MATH
  $\textbf{D}$
  -->
-<IMG
+ <IMG
  WIDTH="18" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img6.gif"
  ALT="$ \textbf {D}$"> is smaller than
-an upper limit <IMG
+ an upper limit <IMG
  WIDTH="14" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img4.gif"
  ALT="$ \phi $">, defined by the user
-(<A NAME="tex2html15"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:SetMaxAngle"><TT>TMultiDimFit::SetMaxAngle</TT></A>)
+ (<A NAME="tex2html15"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:SetMaxAngle"><TT>TMultiDimFit::SetMaxAngle</TT></A>)
 
-<P>
-However, the method automatically readjusts the value of this angle
-while fitting is in progress, in order to make the selection criteria
-less and less difficult to be fulfilled. The result is that the
-functions contributing most to the reduction of <IMG
+ <P>
+ However, the method automatically readjusts the value of this angle
+ while fitting is in progress, in order to make the selection criteria
+ less and less difficult to be fulfilled. The result is that the
+ functions contributing most to the reduction of <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$"> are chosen first
-(<A NAME="tex2html16"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:TestFunction"><TT>TMultiDimFit::TestFunction</TT></A>).
+ (<A NAME="tex2html16"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:TestFunction"><TT>TMultiDimFit::TestFunction</TT></A>).
 
-<P>
-In case <IMG
+ <P>
+ In case <IMG
  WIDTH="14" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img4.gif"
  ALT="$ \phi $"> isn't defined, an alternative method of
-performing this second test is used: The <!-- MATH
+ performing this second test is used: The <!-- MATH
  $L^{\mbox{th}}$
  -->
-<IMG
+ <IMG
  WIDTH="31" HEIGHT="20" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img79.gif"
  ALT="$ L^{\mbox{th}}$"> function
-<!-- MATH
+ <!-- MATH
  $\textbf{f}_L$
  -->
-<IMG
+ <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img3.gif"
  ALT="$ \textbf {f}_L$"> is accepted if (refer also to equation&nbsp;(<A HREF="TMultiFimFit.html#eq:dSN">13</A>))
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="eq:dSN2"></A><!-- MATH
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="eq:dSN2"></A><!-- MATH
  \begin{equation}
-\Delta S_L > \frac{S_{L-1}}{L_{max}-L}
-\end{equation}
+ \Delta S_L > \frac{S_{L-1}}{L_{max}-L}
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="129" HEIGHT="51" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img88.gif"
  ALT="$\displaystyle \Delta S_L &gt; \frac{S_{L-1}}{L_{max}-L}$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(14)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-where  <IMG
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (14)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ where  <IMG
  WIDTH="40" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img89.gif"
  ALT="$ S_{L-1}$"> is the sum of the <IMG
  WIDTH="42" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img78.gif"
  ALT="$ L-1$"> first residuals from the
-<IMG
+ <IMG
  WIDTH="42" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img78.gif"
  ALT="$ L-1$"> functions previously accepted; and <IMG
  WIDTH="41" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img34.gif"
  ALT="$ L_{max}$"> is the total number
-of functions allowed in the final expression of the fit (defined by
-user).
+ of functions allowed in the final expression of the fit (defined by
+ user).
 
-<P>
->From this we see, that by restricting <IMG
+ <P>
+ >From this we see, that by restricting <IMG
  WIDTH="41" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img34.gif"
  ALT="$ L_{max}$"> -- the number of
-terms in the final model -- the fit is more difficult to perform,
-since the above selection criteria is more limiting.
+ terms in the final model -- the fit is more difficult to perform,
+ since the above selection criteria is more limiting.
 
-<P>
-The more coefficients we evaluate, the more the sum of squares of
-residuals <IMG
+ <P>
+ The more coefficients we evaluate, the more the sum of squares of
+ residuals <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$"> will be reduced. We can evaluate <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$"> before inverting
-<!-- MATH
+ <!-- MATH
  $\mathsf{B}$
  -->
-<IMG
+ <IMG
  WIDTH="15" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img90.gif"
  ALT="$ \mathsf{B}$"> as shown below.
 
-<P>
+ <P>
 
-<H2><A NAME="SECTION00034000000000000000">
-Coefficients and Coefficient Errors</A>
-</H2>
+ <H2><A NAME="SECTION00034000000000000000">
+ Coefficients and Coefficient Errors</A>
+ </H2>
 
-<P>
-Having found a parameterization, that is the <IMG
+ <P>
+ Having found a parameterization, that is the <IMG
  WIDTH="19" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img24.gif"
  ALT="$ F_l$">'s and <IMG
  WIDTH="15" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img23.gif"
  ALT="$ L$">, that
-minimizes <IMG
+ minimizes <IMG
  WIDTH="15" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img26.gif"
  ALT="$ S$">, we still need to determine the coefficients
-<IMG
+ <IMG
  WIDTH="16" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img25.gif"
  ALT="$ c_l$">. However, it's a feature of how we choose the significant
-functions, that the evaluation of the <IMG
+ functions, that the evaluation of the <IMG
  WIDTH="16" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img25.gif"
  ALT="$ c_l$">'s becomes trivial
-[<A
+ [<A
  HREF="TMultiFimFit.html#wind72">5</A>]. To derive <!-- MATH
  $\mathbf{c}$
  -->
-<IMG
+ <IMG
  WIDTH="12" HEIGHT="13" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img91.gif"
  ALT="$ \mathbf{c}$">, we first note that
-equation&nbsp;(<A HREF="TMultiFimFit.html#eq:wj">4</A>) can be written as
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="eq:FF"></A><!-- MATH
+ equation&nbsp;(<A HREF="TMultiFimFit.html#eq:wj">4</A>) can be written as
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="eq:FF"></A><!-- MATH
  \begin{equation}
-\mathsf{F} = \mathsf{W}\mathsf{B}
-\end{equation}
+ \mathsf{F} = \mathsf{W}\mathsf{B}
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="60" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img92.gif"
  ALT="$\displaystyle \mathsf{F} = \mathsf{W}\mathsf{B}$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(15)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-where
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="eq:bij"></A><!-- MATH
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (15)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ where
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="eq:bij"></A><!-- MATH
  \begin{equation}
-b_{ij} = \left\{\begin{array}{rcl}
-    \frac{\mathbf{f}_j \bullet \mathbf{w}_i}{\mathbf{w}_i^2}
-    & \mbox{if} & i < j\\
-    1 & \mbox{if} & i = j\\
-    0 & \mbox{if} & i > j
-  \end{array}\right.
-\end{equation}
+ b_{ij} = \left\{\begin{array}{rcl}
+ \frac{\mathbf{f}_j \bullet \mathbf{w}_i}{\mathbf{w}_i^2}
+ & \mbox{if} & i < j\\
+ 1 & \mbox{if} & i = j\\
+ 0 & \mbox{if} & i > j
+ \end{array}\right.
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="187" HEIGHT="79" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img93.gif"
  ALT="$\displaystyle b_{ij} = \left\{\begin{array}{rcl} \frac{\mathbf{f}_j \bullet \ma...
-...f} &amp; i &lt; j\  1 &amp; \mbox{if} &amp; i = j\  0 &amp; \mbox{if} &amp; i &gt; j \end{array}\right.$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(16)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-Consequently, <!-- MATH
+ ...f} &amp; i &lt; j\  1 &amp; \mbox{if} &amp; i = j\  0 &amp; \mbox{if} &amp; i &gt; j \end{array}\right.$"></TD>
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (16)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ Consequently, <!-- MATH
  $\mathsf{B}$
  -->
-<IMG
+ <IMG
  WIDTH="15" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img90.gif"
  ALT="$ \mathsf{B}$"> is an upper triangle matrix, which can be
-readily inverted. So we now evaluate
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="eq:FFF"></A><!-- MATH
+ readily inverted. So we now evaluate
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="eq:FFF"></A><!-- MATH
  \begin{equation}
-\mathsf{F}\mathsf{B}^{-1} = \mathsf{W}
-\end{equation}
+ \mathsf{F}\mathsf{B}^{-1} = \mathsf{W}
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="77" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img94.gif"
  ALT="$\displaystyle \mathsf{F}\mathsf{B}^{-1} = \mathsf{W}$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(17)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-The model <!-- MATH
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (17)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ The model <!-- MATH
  $\mathsf{W}\mathbf{a}$
  -->
-<IMG
+ <IMG
  WIDTH="28" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img63.gif"
  ALT="$ \mathsf{W}\mathbf{a}$"> can therefore be written as
-<!-- MATH
+ <!-- MATH
  \begin{displaymath}
-(\mathsf{F}\mathsf{B}^{-1})\mathbf{a} =
-\mathsf{F}(\mathsf{B}^{-1}\mathbf{a})\,.
-\end{displaymath}
+ (\mathsf{F}\mathsf{B}^{-1})\mathbf{a} =
+ \mathsf{F}(\mathsf{B}^{-1}\mathbf{a})\,.
+ \end{displaymath}
  -->
-<P></P><DIV ALIGN="CENTER">
-<IMG
+ <P></P><DIV ALIGN="CENTER">
+ <IMG
  WIDTH="148" HEIGHT="35" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img95.gif"
  ALT="$\displaystyle (\mathsf{F}\mathsf{B}^{-1})\mathbf{a} =
-\mathsf{F}(\mathsf{B}^{-1}\mathbf{a}) .
-$">
-</DIV><P></P>
-The original model <!-- MATH
+ \mathsf{F}(\mathsf{B}^{-1}\mathbf{a}) .
+ $">
+ </DIV><P></P>
+ The original model <!-- MATH
  $\mathsf{F}\mathbf{c}$
  -->
-<IMG
+ <IMG
  WIDTH="21" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img96.gif"
  ALT="$ \mathsf{F}\mathbf{c}$"> is therefore identical with
-this if
-<P></P>
-<DIV ALIGN="CENTER"><A NAME="eq:id:cond"></A><!-- MATH
+ this if
+ <P></P>
+ <DIV ALIGN="CENTER"><A NAME="eq:id:cond"></A><!-- MATH
  \begin{equation}
-\mathbf{c} = \left(\mathsf{B}^{-1}\mathbf{a}\right) =
-  \left[\mathbf{a}^T\left(\mathsf{B}^{-1}\right)^T\right]^T\,.
-\end{equation}
+ \mathbf{c} = \left(\mathsf{B}^{-1}\mathbf{a}\right) =
+ \left[\mathbf{a}^T\left(\mathsf{B}^{-1}\right)^T\right]^T\,.
+ \end{equation}
  -->
-<TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
-<TR VALIGN="MIDDLE">
-<TD NOWRAP ALIGN="CENTER"><IMG
+ <TABLE CELLPADDING="0" WIDTH="100%" ALIGN="CENTER">
+ <TR VALIGN="MIDDLE">
+ <TD NOWRAP ALIGN="CENTER"><IMG
  WIDTH="214" HEIGHT="51" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img97.gif"
  ALT="$\displaystyle \mathbf{c} = \left(\mathsf{B}^{-1}\mathbf{a}\right) = \left[\mathbf{a}^T\left(\mathsf{B}^{-1}\right)^T\right]^T .$"></TD>
-<TD NOWRAP WIDTH="10" ALIGN="RIGHT">
-(18)</TD></TR>
-</TABLE></DIV>
-<BR CLEAR="ALL"><P></P>
-The reason we use <!-- MATH
+ <TD NOWRAP WIDTH="10" ALIGN="RIGHT">
+ (18)</TD></TR>
+ </TABLE></DIV>
+ <BR CLEAR="ALL"><P></P>
+ The reason we use <!-- MATH
  $\left(\mathsf{B}^{-1}\right)^T$
  -->
-<IMG
+ <IMG
  WIDTH="56" HEIGHT="42" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img98.gif"
  ALT="$ \left(\mathsf{B}^{-1}\right)^T$"> rather then
-<!-- MATH
+ <!-- MATH
  $\mathsf{B}^{-1}$
  -->
-<IMG
+ <IMG
  WIDTH="32" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img99.gif"
  ALT="$ \mathsf{B}^{-1}$"> is to save storage, since
-<!-- MATH
+ <!-- MATH
  $\left(\mathsf{B}^{-1}\right)^T$
  -->
-<IMG
+ <IMG
  WIDTH="56" HEIGHT="42" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img98.gif"
  ALT="$ \left(\mathsf{B}^{-1}\right)^T$"> can be stored in the same matrix as
-<!-- MATH
+ <!-- MATH
  $\mathsf{B}$
  -->
-<IMG
+ <IMG
  WIDTH="15" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img90.gif"
  ALT="$ \mathsf{B}$">
-(<A NAME="tex2html17"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:MakeCoefficients"><TT>TMultiDimFit::MakeCoefficients</TT></A>). The errors in
-the coefficients is calculated by inverting the curvature matrix
-of the non-orthogonal functions <IMG
+ (<A NAME="tex2html17"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:MakeCoefficients"><TT>TMultiDimFit::MakeCoefficients</TT></A>). The errors in
+ the coefficients is calculated by inverting the curvature matrix
+ of the non-orthogonal functions <IMG
  WIDTH="23" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img100.gif"
  ALT="$ f_{lj}$"> [<A
  HREF="TMultiFimFit.html#bevington">1</A>]
-(<A NAME="tex2html18"
-  HREF="
+ (<A NAME="tex2html18"
+ HREF="
 
-./TMultiDimFit.html#TMultiDimFit:MakeCoefficientErrors"><TT>TMultiDimFit::MakeCoefficientErrors</TT></A>).
+ ./TMultiDimFit.html#TMultiDimFit:MakeCoefficientErrors"><TT>TMultiDimFit::MakeCoefficientErrors</TT></A>).
 
-<P>
+ <P>
 
-<H2><A NAME="SECTION00035000000000000000"></A>
-<A NAME="sec:considerations"></A><BR>
-Considerations
-</H2>
+ <H2><A NAME="SECTION00035000000000000000"></A>
+ <A NAME="sec:considerations"></A><BR>
+ Considerations
+ </H2>
 
-<P>
-It's important to realize that the training sample should be
-representive of the problem at hand, in particular along the borders
-of the region of interest. This is because the algorithm presented
-here, is a <I>interpolation</I>, rahter then a <I>extrapolation</I>
-[<A
+ <P>
+ It's important to realize that the training sample should be
+ representive of the problem at hand, in particular along the borders
+ of the region of interest. This is because the algorithm presented
+ here, is a <I>interpolation</I>, rahter then a <I>extrapolation</I>
+ [<A
  HREF="TMultiFimFit.html#wind72">5</A>].
 
-<P>
-Also, the independent variables <IMG
+ <P>
+ Also, the independent variables <IMG
  WIDTH="18" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img101.gif"
  ALT="$ x_{i}$"> need to be linear
-independent, since the procedure will perform poorly if they are not
-[<A
+ independent, since the procedure will perform poorly if they are not
+ [<A
  HREF="TMultiFimFit.html#wind72">5</A>]. One can find an linear transformation from ones
-original variables <IMG
+ original variables <IMG
  WIDTH="16" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img102.gif"
  ALT="$ \xi_{i}$"> to a set of linear independent variables
-<IMG
+ <IMG
  WIDTH="18" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img101.gif"
  ALT="$ x_{i}$">, using a <I>Principal Components Analysis</I>
-<A NAME="tex2html19"
-  HREF="./TPrincipal.html">(see <TT>TPrincipal</TT>)</A>, and
-then use the transformed variable as input to this class [<A
+ <A NAME="tex2html19"
+ HREF="./TPrincipal.html">(see <TT>TPrincipal</TT>)</A>, and
+ then use the transformed variable as input to this class [<A
  HREF="TMultiFimFit.html#wind72">5</A>]
-[<A
+ [<A
  HREF="TMultiFimFit.html#wind81">6</A>].
 
-<P>
-H. Wind also outlines a method for parameterising a multidimensional
-dependence over a multidimensional set of variables. An example
-of the method from [<A
+ <P>
+ H. Wind also outlines a method for parameterising a multidimensional
+ dependence over a multidimensional set of variables. An example
+ of the method from [<A
  HREF="TMultiFimFit.html#wind72">5</A>], is a follows (please refer to
-[<A
+ [<A
  HREF="TMultiFimFit.html#wind72">5</A>] for a full discussion):
 
-<P>
+ <P>
 
-<OL>
-<LI>Define <!-- MATH
+ <OL>
+ <LI>Define <!-- MATH
  $\mathbf{P} = (P_1, \ldots, P_5)$
  -->
-<IMG
+ <IMG
  WIDTH="123" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img103.gif"
  ALT="$ \mathbf{P} = (P_1, \ldots, P_5)$"> are the 5 dependent
-  quantities that define a track.
-</LI>
-<LI>Compute, for <IMG
+ quantities that define a track.
+ </LI>
+ <LI>Compute, for <IMG
  WIDTH="21" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img10.gif"
  ALT="$ M$"> different values of <!-- MATH
  $\mathbf{P}$
  -->
-<IMG
+ <IMG
  WIDTH="17" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img104.gif"
  ALT="$ \mathbf{P}$">, the tracks
-  through the magnetic field, and determine the corresponding
-  <!-- MATH
+ through the magnetic field, and determine the corresponding
+ <!-- MATH
  $\mathbf{x} = (x_1, \ldots, x_N)$
  -->
-<IMG
+ <IMG
  WIDTH="123" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img105.gif"
  ALT="$ \mathbf{x} = (x_1, \ldots, x_N)$">.
-</LI>
-<LI>Use the simulated observations to determine, with a simple
-  approximation, the values of <!-- MATH
+ </LI>
+ <LI>Use the simulated observations to determine, with a simple
+ approximation, the values of <!-- MATH
  $\mathbf{P}_j$
  -->
-<IMG
+ <IMG
  WIDTH="23" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img106.gif"
  ALT="$ \mathbf{P}_j$">. We call these values
-  <!-- MATH
+ <!-- MATH
  $\mathbf{P}^\prime_j, j = 1, \ldots, M$
  -->
-<IMG
+ <IMG
  WIDTH="122" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img107.gif"
  ALT="$ \mathbf{P}^\prime_j, j = 1, \ldots, M$">.
-</LI>
-<LI>Determine from <!-- MATH
+ </LI>
+ <LI>Determine from <!-- MATH
  $\mathbf{x}$
  -->
-<IMG
+ <IMG
  WIDTH="14" HEIGHT="13" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img9.gif"
  ALT="$ \mathbf{x}$"> a set of at least five relevant
-  coordinates <!-- MATH
+ coordinates <!-- MATH
  $\mathbf{x}^\prime$
  -->
-<IMG
+ <IMG
  WIDTH="18" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img108.gif"
  ALT="$ \mathbf{x}^\prime$">, using contrains, <I>or
-    alternative:</I>
-</LI>
-<LI>Perform a Principal Component Analysis (using
-  <A NAME="tex2html20"
-  HREF="./TPrincipal.html"><TT>TPrincipal</TT></A>), and use
+ alternative:</I>
+ </LI>
+ <LI>Perform a Principal Component Analysis (using
+ <A NAME="tex2html20"
+ HREF="./TPrincipal.html"><TT>TPrincipal</TT></A>), and use
 
-to get a linear transformation
-  <!-- MATH
+ to get a linear transformation
+ <!-- MATH
  $\mathbf{x} \rightarrow \mathbf{x}^\prime$
  -->
-<IMG
+ <IMG
  WIDTH="53" HEIGHT="16" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img109.gif"
  ALT="$ \mathbf{x} \rightarrow \mathbf{x}^\prime$">, so that
-  <!-- MATH
+ <!-- MATH
  $\mathbf{x}^\prime$
  -->
-<IMG
+ <IMG
  WIDTH="18" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img108.gif"
  ALT="$ \mathbf{x}^\prime$"> are constrained and linear independent.
-</LI>
-<LI>Perform a Principal Component Analysis on
-  <!-- MATH
+ </LI>
+ <LI>Perform a Principal Component Analysis on
+ <!-- MATH
  $Q_i = P_i / P^\prime_i\, i = 1, \ldots, 5$
  -->
-<IMG
+ <IMG
  WIDTH="210" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img110.gif"
  ALT="$ Q_i = P_i / P^prime_i  i = 1, \ldots, 5$">, to get linear
-  indenpendent (among themselves, but not independent of
-  <!-- MATH
+ indenpendent (among themselves, but not independent of
+ <!-- MATH
  $\mathbf{x}$
  -->
-<IMG
+ <IMG
  WIDTH="14" HEIGHT="13" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img9.gif"
  ALT="$ \mathbf{x}$">) quantities <!-- MATH
  $\mathbf{Q}^\prime$
  -->
-<IMG
+ <IMG
  WIDTH="22" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img111.gif"
  ALT="$ \mathbf{Q}^\prime$">
-</LI>
-<LI>For each component <!-- MATH
+ </LI>
+ <LI>For each component <!-- MATH
  $Q^\prime_i$
  -->
-<IMG
+ <IMG
  WIDTH="22" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img112.gif"
  ALT="$ Q^\prime_i$"> make a mutlidimensional fit,
-  using <!-- MATH
+ using <!-- MATH
  $\mathbf{x}^\prime$
  -->
-<IMG
+ <IMG
  WIDTH="18" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img108.gif"
  ALT="$ \mathbf{x}^\prime$"> as the variables, thus determing a set of
-  coefficents <!-- MATH
+ coefficents <!-- MATH
  $\mathbf{c}_i$
  -->
-<IMG
+ <IMG
  WIDTH="17" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img113.gif"
  ALT="$ \mathbf{c}_i$">.
-</LI>
-</OL>
+ </LI>
+ </OL>
 
-<P>
-To process data, using this parameterisation, do
+ <P>
+ To process data, using this parameterisation, do
 
-<OL>
-<LI>Test wether the observation <!-- MATH
+ <OL>
+ <LI>Test wether the observation <!-- MATH
  $\mathbf{x}$
  -->
-<IMG
+ <IMG
  WIDTH="14" HEIGHT="13" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img9.gif"
  ALT="$ \mathbf{x}$"> within the domain of
-  the parameterization, using the result from the Principal Component
-  Analysis.
-</LI>
-<LI>Determine <!-- MATH
+ the parameterization, using the result from the Principal Component
+ Analysis.
+ </LI>
+ <LI>Determine <!-- MATH
  $\mathbf{P}^\prime$
  -->
-<IMG
+ <IMG
  WIDTH="21" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img114.gif"
  ALT="$ \mathbf{P}^\prime$"> as before.
-</LI>
-<LI>Detetmine <!-- MATH
+ </LI>
+ <LI>Detetmine <!-- MATH
  $\mathbf{x}^\prime$
  -->
-<IMG
+ <IMG
  WIDTH="18" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img108.gif"
  ALT="$ \mathbf{x}^\prime$"> as before.
-</LI>
-<LI>Use the result of the fit to determind <!-- MATH
+ </LI>
+ <LI>Use the result of the fit to determind <!-- MATH
  $\mathbf{Q}^\prime$
  -->
-<IMG
+ <IMG
  WIDTH="22" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img111.gif"
  ALT="$ \mathbf{Q}^\prime$">.
-</LI>
-<LI>Transform back to <!-- MATH
+ </LI>
+ <LI>Transform back to <!-- MATH
  $\mathbf{P}$
  -->
-<IMG
+ <IMG
  WIDTH="17" HEIGHT="14" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img104.gif"
  ALT="$ \mathbf{P}$"> from <!-- MATH
  $\mathbf{Q}^\prime$
  -->
-<IMG
+ <IMG
  WIDTH="22" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img111.gif"
  ALT="$ \mathbf{Q}^\prime$">, using
-  the result from the Principal Component Analysis.
-</LI>
-</OL>
+ the result from the Principal Component Analysis.
+ </LI>
+ </OL>
 
-<P>
+ <P>
 
-<H2><A NAME="SECTION00036000000000000000"></A>
-<A NAME="sec:testing"></A><BR>
-Testing the parameterization
-</H2>
+ <H2><A NAME="SECTION00036000000000000000"></A>
+ <A NAME="sec:testing"></A><BR>
+ Testing the parameterization
+ </H2>
 
-<P>
-The class also provides functionality for testing the, over the
-training sample, found parameterization
-(<A NAME="tex2html21"
-  HREF="
-  ./TMultiDimFit.html#TMultiDimFit:Fit"><TT>TMultiDimFit::Fit</TT></A>). This is done by passing
-the class a test sample of <IMG
+ <P>
+ The class also provides functionality for testing the, over the
+ training sample, found parameterization
+ (<A NAME="tex2html21"
+ HREF="
+ ./TMultiDimFit.html#TMultiDimFit:Fit"><TT>TMultiDimFit::Fit</TT></A>). This is done by passing
+ the class a test sample of <IMG
  WIDTH="25" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img115.gif"
  ALT="$ M_t$"> tuples of the form <!-- MATH
  $(\mathbf{x}_{t,j},
-D_{t,j}, E_{t,j})$
+ D_{t,j}, E_{t,j})$
  -->
-<IMG
+ <IMG
  WIDTH="111" HEIGHT="31" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img116.gif"
  ALT="$ (\mathbf{x}_{t,j},
-D_{t,j}, E_{t,j})$">, where <!-- MATH
+ D_{t,j}, E_{t,j})$">, where <!-- MATH
  $\mathbf{x}_{t,j}$
  -->
-<IMG
+ <IMG
  WIDTH="29" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img117.gif"
  ALT="$ \mathbf{x}_{t,j}$"> are the independent
-variables, <IMG
+ variables, <IMG
  WIDTH="33" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img118.gif"
  ALT="$ D_{t,j}$"> the known, dependent quantity, and <IMG
  WIDTH="31" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img119.gif"
  ALT="$ E_{t,j}$"> is
-the square error in <IMG
+ the square error in <IMG
  WIDTH="33" HEIGHT="29" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img118.gif"
  ALT="$ D_{t,j}$">
-(<A NAME="tex2html22"
-  HREF="
+ (<A NAME="tex2html22"
+ HREF="
 
-./TMultiDimFit.html#TMultiDimFit:AddTestRow"><TT>TMultiDimFit::AddTestRow</TT></A>).
+ ./TMultiDimFit.html#TMultiDimFit:AddTestRow"><TT>TMultiDimFit::AddTestRow</TT></A>).
 
-<P>
-The parameterization is then evaluated at every <!-- MATH
+ <P>
+ The parameterization is then evaluated at every <!-- MATH
  $\mathbf{x}_t$
  -->
-<IMG
+ <IMG
  WIDTH="19" HEIGHT="28" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img120.gif"
  ALT="$ \mathbf{x}_t$"> in the
-test sample, and
-<!-- MATH
+ test sample, and
+ <!-- MATH
  \begin{displaymath}
-S_t \equiv \sum_{j=1}^{M_t} \left(D_{t,j} -
-  D_p\left(\mathbf{x}_{t,j}\right)\right)^2
-\end{displaymath}
+ S_t \equiv \sum_{j=1}^{M_t} \left(D_{t,j} -
+ D_p\left(\mathbf{x}_{t,j}\right)\right)^2
+ \end{displaymath}
  -->
-<P></P><DIV ALIGN="CENTER">
-<IMG
+ <P></P><DIV ALIGN="CENTER">
+ <IMG
  WIDTH="194" HEIGHT="66" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img121.gif"
  ALT="$\displaystyle S_t \equiv \sum_{j=1}^{M_t} \left(D_{t,j} -
-D_p\left(\mathbf{x}_{t,j}\right)\right)^2
-$">
-</DIV><P></P>
-is evaluated. The relative error over the test sample
-<!-- MATH
+ D_p\left(\mathbf{x}_{t,j}\right)\right)^2
+ $">
+ </DIV><P></P>
+ is evaluated. The relative error over the test sample
+ <!-- MATH
  \begin{displaymath}
-R_t = \frac{S_t}{\sum_{j=1}^{M_t} D_{t,j}^2}
-\end{displaymath}
+ R_t = \frac{S_t}{\sum_{j=1}^{M_t} D_{t,j}^2}
+ \end{displaymath}
  -->
-<P></P><DIV ALIGN="CENTER">
-<IMG
+ <P></P><DIV ALIGN="CENTER">
+ <IMG
  WIDTH="118" HEIGHT="51" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img122.gif"
  ALT="$\displaystyle R_t = \frac{S_t}{\sum_{j=1}^{M_t} D_{t,j}^2}
-$">
-</DIV><P></P>
-should not be to low or high compared to <IMG
+ $">
+ </DIV><P></P>
+ should not be to low or high compared to <IMG
  WIDTH="16" HEIGHT="15" ALIGN="BOTTOM" BORDER="0"
  SRC="gif/multidimfit_img123.gif"
  ALT="$ R$"> from the training
-sample. Also, multiple correlation coefficient from both samples should
-be fairly close, otherwise one of the samples is not representive of
-the problem. A large difference in the reduced <IMG
+ sample. Also, multiple correlation coefficient from both samples should
+ be fairly close, otherwise one of the samples is not representive of
+ the problem. A large difference in the reduced <IMG
  WIDTH="21" HEIGHT="33" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/multidimfit_img124.gif"
  ALT="$ \chi^2$"> over the two
-samples indicate an over fit, and the maximum number of terms in the
-parameterisation should be reduced.
+ samples indicate an over fit, and the maximum number of terms in the
+ parameterisation should be reduced.
 
-<P>
-It's possible to use <A NAME="tex2html23"
-  HREF="./TMinuit.html"><I>Minuit</I></A>
-[<A
+ <P>
+ It's possible to use <A NAME="tex2html23"
+ HREF="./TMinuit.html"><I>Minuit</I></A>
+ [<A
  HREF="TMultiFimFit.html#minuit">4</A>] to further improve the fit, using the test sample.
 
-<P>
-<DIV ALIGN="RIGHT">
-Christian Holm
-<BR>  November 2000, NBI
+ <P>
+ <DIV ALIGN="RIGHT">
+ Christian Holm
+ <BR>  November 2000, NBI
 
-</DIV>
+ </DIV>
 
-<P>
+ <P>
 
-<H2><A NAME="SECTION00040000000000000000">
-Bibliography</A>
-</H2><DL COMPACT><DD><P></P><DT><A NAME="bevington">1</A>
-<DD>
-Philip&nbsp;R. Bevington and D.&nbsp;Keith Robinson.
-<BR><EM>Data Reduction and Error Analysis for the Physical Sciences</EM>.
-<BR>McGraw-Hill, 2 edition, 1992.
+ <H2><A NAME="SECTION00040000000000000000">
+ Bibliography</A>
+ </H2><DL COMPACT><DD><P></P><DT><A NAME="bevington">1</A>
+ <DD>
+ Philip&nbsp;R. Bevington and D.&nbsp;Keith Robinson.
+ <BR><EM>Data Reduction and Error Analysis for the Physical Sciences</EM>.
+ <BR>McGraw-Hill, 2 edition, 1992.
 
-<P></P><DT><A NAME="mudifi">2</A>
-<DD>
-Ren&#233; Brun et&nbsp;al.
-<BR>Mudifi.
-<BR>Long writeup DD/75-23, CERN, 1980.
+ <P></P><DT><A NAME="mudifi">2</A>
+ <DD>
+ Ren&#233; Brun et&nbsp;al.
+ <BR>Mudifi.
+ <BR>Long writeup DD/75-23, CERN, 1980.
 
-<P></P><DT><A NAME="golub">3</A>
-<DD>
-Gene&nbsp;H. Golub and Charles&nbsp;F. van Loan.
-<BR><EM>Matrix Computations</EM>.
-<BR>John Hopkins Univeristy Press, Baltimore, 3 edition, 1996.
+ <P></P><DT><A NAME="golub">3</A>
+ <DD>
+ Gene&nbsp;H. Golub and Charles&nbsp;F. van Loan.
+ <BR><EM>Matrix Computations</EM>.
+ <BR>John Hopkins Univeristy Press, Baltimore, 3 edition, 1996.
 
-<P></P><DT><A NAME="minuit">4</A>
-<DD>
-F.&nbsp;James.
-<BR>Minuit.
-<BR>Long writeup D506, CERN, 1998.
+ <P></P><DT><A NAME="minuit">4</A>
+ <DD>
+ F.&nbsp;James.
+ <BR>Minuit.
+ <BR>Long writeup D506, CERN, 1998.
 
-<P></P><DT><A NAME="wind72">5</A>
-<DD>
-H.&nbsp;Wind.
-<BR>Function parameterization.
-<BR>In <EM>Proceedings of the 1972 CERN Computing and Data Processing
-  School</EM>, volume 72-21 of <EM>Yellow report</EM>. CERN, 1972.
+ <P></P><DT><A NAME="wind72">5</A>
+ <DD>
+ H.&nbsp;Wind.
+ <BR>Function parameterization.
+ <BR>In <EM>Proceedings of the 1972 CERN Computing and Data Processing
+ School</EM>, volume 72-21 of <EM>Yellow report</EM>. CERN, 1972.
 
-<P></P><DT><A NAME="wind81">6</A>
-<DD>
-H.&nbsp;Wind.
-<BR>1. principal component analysis, 2. pattern recognition for track
-  finding, 3. interpolation and functional representation.
-<BR>Yellow report EP/81-12, CERN, 1981.
-</DL>
-<pre>
+ <P></P><DT><A NAME="wind81">6</A>
+ <DD>
+ H.&nbsp;Wind.
+ <BR>1. principal component analysis, 2. pattern recognition for track
+ finding, 3. interpolation and functional representation.
+ <BR>Yellow report EP/81-12, CERN, 1981.
+ </DL>
+ <pre>
  */
 //End_Html
 //
@@ -1781,7 +1781,7 @@ TMultiDimFit::TMultiDimFit()
    fMinQuantity            = 0;
    fSumSqQuantity          = 0;
    fSumSqAvgQuantity       = 0;
-   
+
    fNVariables             = 0;
    fSampleSize             = 0;
    fTestSampleSize         = 0;
@@ -1792,34 +1792,34 @@ TMultiDimFit::TMultiDimFit()
    fMinRelativeError       = 0;
    fMaxPowers              = 0;
    fPowerLimit             = 0;
-   
+
    fMaxFunctions           = 0;
    fFunctionCodes          = 0;
    fMaxStudy               = 0;
    fMaxFuncNV              = 0;
-   
+
    fMaxPowersFinal         = 0;
    fPowers                 = 0;
    fPowerIndex             = 0;
-   
+
    fMaxResidual            = 0;
    fMinResidual            = 0;
    fMaxResidualRow         = 0;
    fMinResidualRow         = 0;
-   fSumSqResidual          = 0; 
-   
-   fNCoefficients          = 0;    
+   fSumSqResidual          = 0;
+
+   fNCoefficients          = 0;
    fRMS                    = 0;
    fChi2                   = 0;
    fParameterisationCode   = 0;
-   
+
    fError                  = 0;
    fTestError              = 0;
    fPrecision              = 0;
    fTestPrecision          = 0;
    fCorrelationCoeff       = 0;
    fTestCorrelationCoeff   = 0;
-   
+
    fHistograms             = 0;
    fHistogramMask          = 0;
    fBinVarX                = 100;
@@ -1830,7 +1830,7 @@ TMultiDimFit::TMultiDimFit()
    fShowCorrelation        = kFALSE;
    fIsUserFunction         = kFALSE;
    fIsVerbose              = kFALSE;
-   
+
 }
 
 
@@ -1838,13 +1838,13 @@ TMultiDimFit::TMultiDimFit()
 TMultiDimFit::TMultiDimFit(Int_t dimension,
                            EMDFPolyType type,
                            Option_t *option)
-  : TNamed("multidimfit","Multi-dimensional fit object"),
-    fQuantity(dimension),
-    fSqError(dimension),
-    fVariables(dimension*100),
-    fMeanVariables(dimension),
-    fMaxVariables(dimension),
-    fMinVariables(dimension)
+: TNamed("multidimfit","Multi-dimensional fit object"),
+fQuantity(dimension),
+fSqError(dimension),
+fVariables(dimension*100),
+fMeanVariables(dimension),
+fMaxVariables(dimension),
+fMinVariables(dimension)
 {
    // Constructor
    // Second argument is the type of polynomials to use in
@@ -1867,7 +1867,7 @@ TMultiDimFit::TMultiDimFit(Int_t dimension,
    fMinQuantity            = 0;
    fSumSqQuantity          = 0;
    fSumSqAvgQuantity       = 0;
-   
+
    fNVariables             = dimension;
    fSampleSize             = 0;
    fTestSampleSize         = 0;
@@ -1878,34 +1878,34 @@ TMultiDimFit::TMultiDimFit(Int_t dimension,
    fMinRelativeError       = 0.01;
    fMaxPowers              = new Int_t[dimension];
    fPowerLimit             = 1;
-   
+
    fMaxFunctions           = 0;
    fFunctionCodes          = 0;
    fMaxStudy               = 0;
    fMaxFuncNV              = 0;
-   
+
    fMaxPowersFinal         = new Int_t[dimension];
    fPowers                 = 0;
    fPowerIndex             = 0;
-   
+
    fMaxResidual            = 0;
    fMinResidual            = 0;
    fMaxResidualRow         = 0;
    fMinResidualRow         = 0;
-   fSumSqResidual          = 0; 
-   
-   fNCoefficients          = 0;    
+   fSumSqResidual          = 0;
+
+   fNCoefficients          = 0;
    fRMS                    = 0;
    fChi2                   = 0;
    fParameterisationCode   = 0;
-   
+
    fError                  = 0;
    fTestError              = 0;
    fPrecision              = 0;
    fTestPrecision          = 0;
    fCorrelationCoeff       = 0;
    fTestCorrelationCoeff   = 0;
-   
+
    fHistograms             = 0;
    fHistogramMask          = 0;
    fBinVarX                = 100;
@@ -2064,10 +2064,10 @@ void TMultiDimFit::AddTestRow(const Double_t *x, Double_t D, Double_t E)
 
       if (x[i] > fMaxVariables(i))
          Warning("AddTestRow", "variable %d (row: %d) too large: %f > %f",
-         i, fTestSampleSize, x[i], fMaxVariables(i));
+                 i, fTestSampleSize, x[i], fMaxVariables(i));
       if (x[i] < fMinVariables(i))
          Warning("AddTestRow", "variable %d (row: %d) too small: %f < %f",
-         i, fTestSampleSize, x[i], fMinVariables(i));
+                 i, fTestSampleSize, x[i], fMinVariables(i));
    }
 }
 
@@ -2224,7 +2224,7 @@ Double_t TMultiDimFit::Eval(const Double_t *x, const Double_t* coeff) const
          // Evaluate the factor (polynomial) in the j-th variable.
          Int_t    p  =  fPowers[fPowerIndex[i] * fNVariables + j];
          Double_t y  =  1 + 2. / (fMaxVariables(j) - fMinVariables(j))
-            * (x[j] - fMaxVariables(j));
+         * (x[j] - fMaxVariables(j));
          term        *= EvalFactor(p,y);
       }
       // Add this term to the final result
@@ -2245,7 +2245,7 @@ Double_t TMultiDimFit::EvalError(const Double_t *x, const Double_t* coeff) const
    Int_t    i, j;
 
    for (i = 0; i < fNCoefficients; i++) {
-     //     std::cout << "Error coef " << i << " -> " << fCoefficientsRMS(i) << std::endl;
+      //     std::cout << "Error coef " << i << " -> " << fCoefficientsRMS(i) << std::endl;
    }
    for (i = 0; i < fNCoefficients; i++) {
       // Evaluate the ith term in the expansion
@@ -2254,9 +2254,9 @@ Double_t TMultiDimFit::EvalError(const Double_t *x, const Double_t* coeff) const
          // Evaluate the factor (polynomial) in the j-th variable.
          Int_t    p  =  fPowers[fPowerIndex[i] * fNVariables + j];
          Double_t y  =  1 + 2. / (fMaxVariables(j) - fMinVariables(j))
-            * (x[j] - fMaxVariables(j));
+         * (x[j] - fMaxVariables(j));
          term        *= EvalFactor(p,y);
-	 //	 std::cout << "i,j " << i << ", " << j << "  "  << p << "  " << y << "  " << EvalFactor(p,y) << "  " << term << std::endl;
+         //	 std::cout << "i,j " << i << ", " << j << "  "  << p << "  " << y << "  " << EvalFactor(p,y) << "  " << term << std::endl;
       }
       // Add this term to the final result
       returnValue += term*term;
@@ -2304,9 +2304,9 @@ Double_t TMultiDimFit::EvalFactor(Int_t p, Double_t x) const
          for (i = 3; i <= p; i++) {
             p3 = p2 * x;
             if (fPolyType == kLegendre)
-            p3 = ((2 * i - 3) * p2 * x - (i - 2) * p1) / (i - 1);
+               p3 = ((2 * i - 3) * p2 * x - (i - 2) * p1) / (i - 1);
             else if (fPolyType == kChebyshev)
-            p3 = 2 * x * p2 - p1;
+               p3 = 2 * x * p2 - p1;
             p1 = p2;
             p2 = p3;
          }
@@ -2386,9 +2386,9 @@ void TMultiDimFit::Fit(Option_t *option)
    }
 
    fFitter = TVirtualFitter::Fitter(0,fNCoefficients);
-   if (!fFitter) { 
+   if (!fFitter) {
       Error("Fit", "Vannot create Fitter");
-      delete [] x; 
+      delete [] x;
       return;
    }
    fFitter->SetFCN(mdfHelper);
@@ -2403,7 +2403,7 @@ void TMultiDimFit::Fit(Option_t *option)
       Double_t startVal = fCoefficients(i);
       Double_t startErr = fCoefficientsRMS(i);
       fFitter->SetParameter(i, Form("coeff%02d",i),
-         startVal, startErr, 0, 0);
+                            startVal, startErr, 0, 0);
    }
 
    // arglist[0]           = 0;
@@ -2414,7 +2414,7 @@ void TMultiDimFit::Fit(Option_t *option)
    for (i = 0; i < fNCoefficients; i++) {
       Double_t val = 0, err = 0, low = 0, high = 0;
       fFitter->GetParameter(i, Form("coeff%02d",i),
-         val, err, low, high);
+                            val, err, low, high);
       fCoefficients(i)    = val;
       fCoefficientsRMS(i) = err;
    }
@@ -2582,7 +2582,7 @@ Double_t TMultiDimFit::MakeChi2(const Double_t* coeff)
 
       // Calculate contribution to Chic square
       fChi2 += 1. / TMath::Max(fTestSqError(i),1e-20)
-         * (fTestQuantity(i) - f) * (fTestQuantity(i) - f);
+      * (fTestQuantity(i) - f) * (fTestQuantity(i) - f);
    }
 
    // Clean up
@@ -2663,7 +2663,7 @@ void TMultiDimFit::MakeCoefficientErrors()
       for (j = 0; j < fNCoefficients; j++)
          f += fCoefficients(j) * fFunctions(j,i);
       fChi2 += 1. / TMath::Max(fSqError(i),1e-20) * (fQuantity(i) - f)
-         * (fQuantity(i) - f);
+      * (fQuantity(i) - f);
    }
 
    // Invert the curvature matrix
@@ -2748,20 +2748,20 @@ void TMultiDimFit::MakeCoefficients()
 
    // If we use histograms, fill some more
    if (TESTBIT(fHistogramMask,HIST_RD) ||
-      TESTBIT(fHistogramMask,HIST_RTRAI) ||
-      TESTBIT(fHistogramMask,HIST_RX)) {
-         for (i = 0; i < fSampleSize; i++) {
-            if (TESTBIT(fHistogramMask,HIST_RD))
-               ((TH2D*)fHistograms->FindObject("res_d"))->Fill(fQuantity(i),
-               fResiduals(i));
-            if (TESTBIT(fHistogramMask,HIST_RTRAI))
-               ((TH1D*)fHistograms->FindObject("res_train"))->Fill(fResiduals(i));
+       TESTBIT(fHistogramMask,HIST_RTRAI) ||
+       TESTBIT(fHistogramMask,HIST_RX)) {
+      for (i = 0; i < fSampleSize; i++) {
+         if (TESTBIT(fHistogramMask,HIST_RD))
+            ((TH2D*)fHistograms->FindObject("res_d"))->Fill(fQuantity(i),
+                                                            fResiduals(i));
+         if (TESTBIT(fHistogramMask,HIST_RTRAI))
+            ((TH1D*)fHistograms->FindObject("res_train"))->Fill(fResiduals(i));
 
-            if (TESTBIT(fHistogramMask,HIST_RX))
-               for (j = 0; j < fNVariables; j++)
-                  ((TH2D*)fHistograms->FindObject(Form("res_x_%d",j)))
-                  ->Fill(fVariables(i * fNVariables + j),fResiduals(i));
-         }
+         if (TESTBIT(fHistogramMask,HIST_RX))
+            for (j = 0; j < fNVariables; j++)
+               ((TH2D*)fHistograms->FindObject(Form("res_x_%d",j)))
+               ->Fill(fVariables(i * fNVariables + j),fResiduals(i));
+      }
    } // If histograms
 
 }
@@ -2795,7 +2795,7 @@ void TMultiDimFit::MakeCorrelation()
          k =  j * fNVariables + i;
          ddotXi += fQuantity(j) * (fVariables(k) - fMeanVariables(i));
          xiNorm += (fVariables(k) - fMeanVariables(i))
-            * (fVariables(k) - fMeanVariables(i));
+         * (fVariables(k) - fMeanVariables(i));
       }
       fCorrelationMatrix(i,0) = ddotXi / TMath::Sqrt(d2 * xiNorm);
 
@@ -2807,12 +2807,12 @@ void TMultiDimFit::MakeCorrelation()
             // l =  j * fNVariables + k;  // G.Q.
             l =  k * fNVariables + j; // G.Q.
             m =  k * fNVariables + i; // G.Q.
-            // G.Q.        xidotXj += (fVariables(i) - fMeanVariables(i))
-            // G.Q.          * (fVariables(l) - fMeanVariables(j));
+                                      // G.Q.        xidotXj += (fVariables(i) - fMeanVariables(i))
+                                      // G.Q.          * (fVariables(l) - fMeanVariables(j));
             xidotXj += (fVariables(m) - fMeanVariables(i))
-               * (fVariables(l) - fMeanVariables(j));  // G.Q. modified index for Xi
+            * (fVariables(l) - fMeanVariables(j));  // G.Q. modified index for Xi
             xjNorm  += (fVariables(l) - fMeanVariables(j))
-               * (fVariables(l) - fMeanVariables(j));
+            * (fVariables(l) - fMeanVariables(j));
          }
          //fCorrelationMatrix(i+1,j) = xidotXj / TMath::Sqrt(xiNorm * xjNorm);
          fCorrelationMatrix(i,j+1) = xidotXj / TMath::Sqrt(xiNorm * xjNorm);
@@ -2862,7 +2862,7 @@ Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
       // Calculate (f_fNCoefficients dot w_j) / w_j^2
       for (k = 0; k < fSampleSize; k++) {
          fdw += fFunctions(fNCoefficients, k) * fOrthFunctions(j,k)
-            / fOrthFunctionNorms(j);
+         / fOrthFunctionNorms(j);
       }
 
       fOrthCurvatureMatrix(fNCoefficients,j) = fdw;
@@ -2874,18 +2874,18 @@ Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
    for (j = 0; j < fSampleSize; j++) {
       // calculate squared length of w_fNCoefficients
       fOrthFunctionNorms(fNCoefficients) +=
-         fOrthFunctions(fNCoefficients,j)
-         * fOrthFunctions(fNCoefficients,j);
+      fOrthFunctions(fNCoefficients,j)
+      * fOrthFunctions(fNCoefficients,j);
 
       // calculate D dot w_fNCoefficients in A
       fOrthCoefficients(fNCoefficients) += fQuantity(j)
-         * fOrthFunctions(fNCoefficients, j);
+      * fOrthFunctions(fNCoefficients, j);
    }
 
    // First test, but only if didn't user specify
    if (!fIsUserFunction)
       if (TMath::Sqrt(fOrthFunctionNorms(fNCoefficients) / (f2 + 1e-10))
-         < TMath::Sin(fMinAngle*DEGRAD))
+          < TMath::Sin(fMinAngle*DEGRAD))
          return 0;
 
    // The result found by this code for the first residual is always
@@ -2941,9 +2941,9 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
       for (i = 0; i < fNVariables; i++)
          if (!fHistograms->FindObject(Form("x_%d_orig",i)))
             fHistograms->Add(new TH1D(Form("x_%d_orig",i),
-            Form("Original variable # %d",i),
-            fBinVarX, fMinVariables(i),
-            fMaxVariables(i)));
+                                      Form("Original variable # %d",i),
+                                      fBinVarX, fMinVariables(i),
+                                      fMaxVariables(i)));
    }
 
    // Histogram of original dependent variable
@@ -2951,7 +2951,7 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
       SETBIT(fHistogramMask,HIST_DORIG);
       if (!fHistograms->FindObject("d_orig"))
          fHistograms->Add(new TH1D("d_orig", "Original Quantity",
-         fBinVarX, fMinQuantity, fMaxQuantity));
+                                   fBinVarX, fMinQuantity, fMaxQuantity));
    }
 
    // Histograms of normalized variables
@@ -2960,8 +2960,8 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
       for (i = 0; i < fNVariables; i++)
          if (!fHistograms->FindObject(Form("x_%d_norm",i)))
             fHistograms->Add(new TH1D(Form("x_%d_norm",i),
-            Form("Normalized variable # %d",i),
-            fBinVarX, -1,1));
+                                      Form("Normalized variable # %d",i),
+                                      fBinVarX, -1,1));
    }
 
    // Histogram of shifted dependent variable
@@ -2969,8 +2969,8 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
       SETBIT(fHistogramMask,HIST_DSHIF);
       if (!fHistograms->FindObject("d_shifted"))
          fHistograms->Add(new TH1D("d_shifted", "Shifted Quantity",
-         fBinVarX, fMinQuantity - fMeanQuantity,
-         fMaxQuantity - fMeanQuantity));
+                                   fBinVarX, fMinQuantity - fMeanQuantity,
+                                   fMaxQuantity - fMeanQuantity));
    }
 
    // Residual from training sample versus independent variables
@@ -2979,11 +2979,11 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
       for (i = 0; i < fNVariables; i++)
          if (!fHistograms->FindObject(Form("res_x_%d",i)))
             fHistograms->Add(new TH2D(Form("res_x_%d",i),
-            Form("Computed residual versus x_%d", i),
-            fBinVarX, -1,    1,
-            fBinVarY,
-            fMinQuantity - fMeanQuantity,
-            fMaxQuantity - fMeanQuantity));
+                                      Form("Computed residual versus x_%d", i),
+                                      fBinVarX, -1,    1,
+                                      fBinVarY,
+                                      fMinQuantity - fMeanQuantity,
+                                      fMaxQuantity - fMeanQuantity));
    }
 
    // Residual from training sample versus. dependent variable
@@ -2991,13 +2991,13 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
       SETBIT(fHistogramMask,HIST_RD);
       if (!fHistograms->FindObject("res_d"))
          fHistograms->Add(new TH2D("res_d",
-         "Computed residuals vs Quantity",
-         fBinVarX,
-         fMinQuantity - fMeanQuantity,
-         fMaxQuantity - fMeanQuantity,
-         fBinVarY,
-         fMinQuantity - fMeanQuantity,
-         fMaxQuantity - fMeanQuantity));
+                                   "Computed residuals vs Quantity",
+                                   fBinVarX,
+                                   fMinQuantity - fMeanQuantity,
+                                   fMaxQuantity - fMeanQuantity,
+                                   fBinVarY,
+                                   fMinQuantity - fMeanQuantity,
+                                   fMaxQuantity - fMeanQuantity));
    }
 
    // Residual from training sample
@@ -3005,18 +3005,18 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
       SETBIT(fHistogramMask,HIST_RTRAI);
       if (!fHistograms->FindObject("res_train"))
          fHistograms->Add(new TH1D("res_train",
-         "Computed residuals over training sample",
-         fBinVarX, fMinQuantity - fMeanQuantity,
-         fMaxQuantity - fMeanQuantity));
+                                   "Computed residuals over training sample",
+                                   fBinVarX, fMinQuantity - fMeanQuantity,
+                                   fMaxQuantity - fMeanQuantity));
 
    }
    if (opt.Contains("r4") || opt.Contains("a")) {
       SETBIT(fHistogramMask,HIST_RTEST);
       if (!fHistograms->FindObject("res_test"))
          fHistograms->Add(new TH1D("res_test",
-         "Distribution of residuals from test",
-         fBinVarX,fMinQuantity - fMeanQuantity,
-         fMaxQuantity - fMeanQuantity));
+                                   "Distribution of residuals from test",
+                                   fBinVarX,fMinQuantity - fMeanQuantity,
+                                   fMaxQuantity - fMeanQuantity));
    }
 }
 
@@ -3121,7 +3121,7 @@ void TMultiDimFit::MakeNormalized()
    for (i = 0; i < fNVariables; i++) {
       Double_t range = 1. / (fMaxVariables(i) - fMinVariables(i));
       fMeanVariables(i) = 1 + 2 * range * (fMeanVariables(i)
-         - fMaxVariables(i));
+                                           - fMaxVariables(i));
    }
 }
 
@@ -3234,7 +3234,7 @@ void TMultiDimFit::MakeParameterization()
       // Calculate control parameter from this function
       for (j = 0; j < fNVariables; j++) {
          if (fNCoefficients == 1
-            || fMaxPowersFinal[j] <= fPowers[i * fNVariables + j] - 1)
+             || fMaxPowersFinal[j] <= fPowers[i * fNVariables + j] - 1)
             fMaxPowersFinal[j] = fPowers[i * fNVariables + j] - 1;
       }
       Double_t s = EvalControl(&fPowers[i * fNVariables]);
@@ -3242,16 +3242,16 @@ void TMultiDimFit::MakeParameterization()
       // Print the statistics about this function
       if (fIsVerbose) {
          std::cout << std::setw(5)  << fNCoefficients << " "
-            << std::setw(10) << std::setprecision(4) << squareResidual << " "
-            << std::setw(10) << std::setprecision(4) << dResidur << " "
-            << std::setw(7)  << std::setprecision(3) << fMaxAngle << " "
-            << std::setw(7)  << std::setprecision(3) << s << " "
-            << std::setw(5)  << i << " "
-            << std::setw(10) << std::setprecision(4)
-            << fOrthCoefficients(fNCoefficients-1) << " "
-            << std::setw(10) << std::setprecision(4)
-            << fOrthFunctionNorms(fNCoefficients-1) << " "
-            << std::flush;
+         << std::setw(10) << std::setprecision(4) << squareResidual << " "
+         << std::setw(10) << std::setprecision(4) << dResidur << " "
+         << std::setw(7)  << std::setprecision(3) << fMaxAngle << " "
+         << std::setw(7)  << std::setprecision(3) << s << " "
+         << std::setw(5)  << i << " "
+         << std::setw(10) << std::setprecision(4)
+         << fOrthCoefficients(fNCoefficients-1) << " "
+         << std::setw(10) << std::setprecision(4)
+         << fOrthFunctionNorms(fNCoefficients-1) << " "
+         << std::flush;
          for (j = 0; j < fNVariables; j++)
             std::cout << " " << fPowers[i * fNVariables + j] - 1 << std::flush;
          std::cout << std::endl;
@@ -3263,7 +3263,7 @@ void TMultiDimFit::MakeParameterization()
       }
 
       Double_t err  = TMath::Sqrt(TMath::Max(1e-20,squareResidual) /
-         fSumSqAvgQuantity);
+                                  fSumSqAvgQuantity);
       if (err < fMinRelativeError) {
          fParameterisationCode = PARAM_RELERR;
          break;
@@ -3309,24 +3309,24 @@ void TMultiDimFit::MakeRealCode(const char *filename,
    outFile << "// -*- mode: c++ -*-" << std::endl;
    // Info about creator
    outFile << "// " << std::endl
-      << "// File " << filename
-      << " generated by TMultiDimFit::MakeRealCode" << std::endl;
+   << "// File " << filename
+   << " generated by TMultiDimFit::MakeRealCode" << std::endl;
    // Time stamp
    TDatime date;
    outFile << "// on " << date.AsString() << std::endl;
    // ROOT version info
    outFile << "// ROOT version " << gROOT->GetVersion()
-      << std::endl << "//" << std::endl;
+   << std::endl << "//" << std::endl;
    // General information on the code
    outFile << "// This file contains the function " << std::endl
-      << "//" << std::endl
-      << "//    double  " << prefix << "MDF(double *x); " << std::endl
-      << "//" << std::endl
-      << "// For evaluating the parameterization obtained" << std::endl
-      << "// from TMultiDimFit and the point x" << std::endl
-      << "// " << std::endl
-      << "// See TMultiDimFit class documentation for more "
-      << "information " << std::endl << "// " << std::endl;
+   << "//" << std::endl
+   << "//    double  " << prefix << "MDF(double *x); " << std::endl
+   << "//" << std::endl
+   << "// For evaluating the parameterization obtained" << std::endl
+   << "// from TMultiDimFit and the point x" << std::endl
+   << "// " << std::endl
+   << "// See TMultiDimFit class documentation for more "
+   << "information " << std::endl << "// " << std::endl;
    // Header files
    if (isMethod)
       // If these are methods, we need the class header
@@ -3336,19 +3336,19 @@ void TMultiDimFit::MakeRealCode(const char *filename,
    // Now for the data
    //
    outFile << "//" << std::endl
-      << "// Static data variables"  << std::endl
-      << "//" << std::endl;
+   << "// Static data variables"  << std::endl
+   << "//" << std::endl;
    outFile << cv_qual << "int    " << prefix << "gNVariables    = "
-      << fNVariables << ";" << std::endl;
+   << fNVariables << ";" << std::endl;
    outFile << cv_qual << "int    " << prefix << "gNCoefficients = "
-      << fNCoefficients << ";" << std::endl;
+   << fNCoefficients << ";" << std::endl;
    outFile << cv_qual << "double " << prefix << "gDMean         = "
-      << fMeanQuantity << ";" << std::endl;
+   << fMeanQuantity << ";" << std::endl;
 
    // Assignment to mean vector.
    outFile << "// Assignment to mean vector." << std::endl;
    outFile << cv_qual << "double " << prefix
-      << "gXMean[] = {" << std::endl;
+   << "gXMean[] = {" << std::endl;
    for (i = 0; i < fNVariables; i++)
       outFile << (i != 0 ? ", " : "  ") << fMeanVariables(i) << std::flush;
    outFile << " };" << std::endl << std::endl;
@@ -3356,7 +3356,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
    // Assignment to minimum vector.
    outFile << "// Assignment to minimum vector." << std::endl;
    outFile << cv_qual << "double " << prefix
-      << "gXMin[] = {" << std::endl;
+   << "gXMin[] = {" << std::endl;
    for (i = 0; i < fNVariables; i++)
       outFile << (i != 0 ? ", " : "  ") << fMinVariables(i) << std::flush;
    outFile << " };" << std::endl << std::endl;
@@ -3364,7 +3364,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
    // Assignment to maximum vector.
    outFile << "// Assignment to maximum vector." << std::endl;
    outFile << cv_qual << "double " << prefix
-      << "gXMax[] = {" << std::endl;
+   << "gXMax[] = {" << std::endl;
    for (i = 0; i < fNVariables; i++)
       outFile << (i != 0 ? ", " : "  ") << fMaxVariables(i) << std::flush;
    outFile << " };" << std::endl << std::endl;
@@ -3372,7 +3372,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
    // Assignment to coefficients vector.
    outFile << "// Assignment to coefficients vector." << std::endl;
    outFile << cv_qual << "double " << prefix
-      << "gCoefficient[] = {" << std::flush;
+   << "gCoefficient[] = {" << std::flush;
    for (i = 0; i < fNCoefficients; i++)
       outFile << (i != 0 ? "," : "") << std::endl
       << "  " << fCoefficients(i) << std::flush;
@@ -3381,7 +3381,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
    // Assignment to error coefficients vector.
    outFile << "// Assignment to error coefficients vector." << std::endl;
    outFile << cv_qual << "double " << prefix
-      << "gCoefficientRMS[] = {" << std::flush;
+   << "gCoefficientRMS[] = {" << std::flush;
    for (i = 0; i < fNCoefficients; i++)
       outFile << (i != 0 ? "," : "") << std::endl
       << "  " << fCoefficientsRMS(i) << std::flush;
@@ -3389,18 +3389,18 @@ void TMultiDimFit::MakeRealCode(const char *filename,
 
    // Assignment to powers vector.
    outFile << "// Assignment to powers vector." << std::endl
-      << "// The powers are stored row-wise, that is" << std::endl
-      << "//  p_ij = " << prefix
-      << "gPower[i * NVariables + j];" << std::endl;
+   << "// The powers are stored row-wise, that is" << std::endl
+   << "//  p_ij = " << prefix
+   << "gPower[i * NVariables + j];" << std::endl;
    outFile << cv_qual << "int    " << prefix
-      << "gPower[] = {" << std::flush;
+   << "gPower[] = {" << std::flush;
    for (i = 0; i < fNCoefficients; i++) {
       for (j = 0; j < fNVariables; j++) {
          if (j != 0) outFile << std::flush << "  ";
          else        outFile << std::endl << "  ";
          outFile << fPowers[fPowerIndex[i] * fNVariables + j]
          << (i == fNCoefficients - 1 && j == fNVariables - 1 ? "" : ",")
-            << std::flush;
+         << std::flush;
       }
    }
    outFile << std::endl << "};" << std::endl << std::endl;
@@ -3410,49 +3410,49 @@ void TMultiDimFit::MakeRealCode(const char *filename,
    // Finally we reach the function itself
    //
    outFile << "// " << std::endl
-      << "// The "
-      << (isMethod ? "method " : "function ")
-      << "  double " << prefix
-      << "MDF(double *x)"
-      << std::endl << "// " << std::endl;
+   << "// The "
+   << (isMethod ? "method " : "function ")
+   << "  double " << prefix
+   << "MDF(double *x)"
+   << std::endl << "// " << std::endl;
    outFile << "double " << prefix
-      << "MDF(double *x) {" << std::endl
-      << "  double returnValue = " << prefix << "gDMean;" << std::endl
-      << "  int    i = 0, j = 0, k = 0;" << std::endl
-      << "  for (i = 0; i < " << prefix << "gNCoefficients ; i++) {"
-      << std::endl
-      << "    // Evaluate the ith term in the expansion" << std::endl
-      << "    double term = " << prefix << "gCoefficient[i];"
-      << std::endl
-      << "    for (j = 0; j < " << prefix << "gNVariables; j++) {"
-      << std::endl
-      << "      // Evaluate the polynomial in the jth variable." << std::endl
-      << "      int power = "<< prefix << "gPower["
-      << prefix << "gNVariables * i + j]; " << std::endl
-      << "      double p1 = 1, p2 = 0, p3 = 0, r = 0;" << std::endl
-      << "      double v =  1 + 2. / ("
-      << prefix << "gXMax[j] - " << prefix
-      << "gXMin[j]) * (x[j] - " << prefix << "gXMax[j]);" << std::endl
-      << "      // what is the power to use!" << std::endl
-      << "      switch(power) {" << std::endl
-      << "      case 1: r = 1; break; " << std::endl
-      << "      case 2: r = v; break; " << std::endl
-      << "      default: " << std::endl
-      << "        p2 = v; " << std::endl
-      << "        for (k = 3; k <= power; k++) { " << std::endl
-      << "          p3 = p2 * v;" << std::endl;
+   << "MDF(double *x) {" << std::endl
+   << "  double returnValue = " << prefix << "gDMean;" << std::endl
+   << "  int    i = 0, j = 0, k = 0;" << std::endl
+   << "  for (i = 0; i < " << prefix << "gNCoefficients ; i++) {"
+   << std::endl
+   << "    // Evaluate the ith term in the expansion" << std::endl
+   << "    double term = " << prefix << "gCoefficient[i];"
+   << std::endl
+   << "    for (j = 0; j < " << prefix << "gNVariables; j++) {"
+   << std::endl
+   << "      // Evaluate the polynomial in the jth variable." << std::endl
+   << "      int power = "<< prefix << "gPower["
+   << prefix << "gNVariables * i + j]; " << std::endl
+   << "      double p1 = 1, p2 = 0, p3 = 0, r = 0;" << std::endl
+   << "      double v =  1 + 2. / ("
+   << prefix << "gXMax[j] - " << prefix
+   << "gXMin[j]) * (x[j] - " << prefix << "gXMax[j]);" << std::endl
+   << "      // what is the power to use!" << std::endl
+   << "      switch(power) {" << std::endl
+   << "      case 1: r = 1; break; " << std::endl
+   << "      case 2: r = v; break; " << std::endl
+   << "      default: " << std::endl
+   << "        p2 = v; " << std::endl
+   << "        for (k = 3; k <= power; k++) { " << std::endl
+   << "          p3 = p2 * v;" << std::endl;
    if (fPolyType == kLegendre)
       outFile << "          p3 = ((2 * i - 3) * p2 * v - (i - 2) * p1)"
       << " / (i - 1);" << std::endl;
    if (fPolyType == kChebyshev)
       outFile << "          p3 = 2 * v * p2 - p1; " << std::endl;
    outFile << "          p1 = p2; p2 = p3; " << std::endl << "        }" << std::endl
-      << "        r = p3;" << std::endl << "      }" << std::endl
-      << "      // multiply this term by the poly in the jth var" << std::endl
-      << "      term *= r; " << std::endl << "    }" << std::endl
-      << "    // Add this term to the final result" << std::endl
-      << "    returnValue += term;" << std::endl << "  }" << std::endl
-      << "  return returnValue;" << std::endl << "}" << std::endl << std::endl;
+   << "        r = p3;" << std::endl << "      }" << std::endl
+   << "      // multiply this term by the poly in the jth var" << std::endl
+   << "      term *= r; " << std::endl << "    }" << std::endl
+   << "    // Add this term to the final result" << std::endl
+   << "    returnValue += term;" << std::endl << "  }" << std::endl
+   << "  return returnValue;" << std::endl << "}" << std::endl << std::endl;
 
    // EOF
    outFile << "// EOF for " << filename << std::endl;
@@ -3487,21 +3487,21 @@ void TMultiDimFit::Print(Option_t *option) const
    if (opt.Contains("p")) {
       // Print basic parameters for this object
       std::cout << "User parameters:" << std::endl
-         << "----------------" << std::endl
-         << " Variables:                    " << fNVariables << std::endl
-         << " Data points:                  " << fSampleSize << std::endl
-         << " Max Terms:                    " << fMaxTerms << std::endl
-         << " Power Limit Parameter:        " << fPowerLimit << std::endl
-         << " Max functions:                " << fMaxFunctions << std::endl
-         << " Max functions to study:       " << fMaxStudy << std::endl
-         << " Max angle (optional):         " << fMaxAngle << std::endl
-         << " Min angle:                    " << fMinAngle << std::endl
-         << " Relative Error accepted:      " << fMinRelativeError << std::endl
-         << " Maximum Powers:               " << std::flush;
+      << "----------------" << std::endl
+      << " Variables:                    " << fNVariables << std::endl
+      << " Data points:                  " << fSampleSize << std::endl
+      << " Max Terms:                    " << fMaxTerms << std::endl
+      << " Power Limit Parameter:        " << fPowerLimit << std::endl
+      << " Max functions:                " << fMaxFunctions << std::endl
+      << " Max functions to study:       " << fMaxStudy << std::endl
+      << " Max angle (optional):         " << fMaxAngle << std::endl
+      << " Min angle:                    " << fMinAngle << std::endl
+      << " Relative Error accepted:      " << fMinRelativeError << std::endl
+      << " Maximum Powers:               " << std::flush;
       for (i = 0; i < fNVariables; i++)
          std::cout << " " << fMaxPowers[i] - 1 << std::flush;
       std::cout << std::endl << std::endl
-         << " Parameterisation will be done using " << std::flush;
+      << " Parameterisation will be done using " << std::flush;
       if (fPolyType == kChebyshev)
          std::cout << "Chebyshev polynomials" << std::endl;
       else if (fPolyType == kLegendre)
@@ -3514,56 +3514,56 @@ void TMultiDimFit::Print(Option_t *option) const
    if (opt.Contains("s")) {
       // Print statistics for read data
       std::cout << "Sample statistics:" << std::endl
-         << "------------------" << std::endl
-         << "                 D"  << std::flush;
+      << "------------------" << std::endl
+      << "                 D"  << std::flush;
       for (i = 0; i < fNVariables; i++)
          std::cout << " " << std::setw(10) << i+1 << std::flush;
       std::cout << std::endl << " Max:   " << std::setw(10) << std::setprecision(7)
-         << fMaxQuantity << std::flush;
+      << fMaxQuantity << std::flush;
       for (i = 0; i < fNVariables; i++)
          std::cout << " " << std::setw(10) << std::setprecision(4)
          << fMaxVariables(i) << std::flush;
       std::cout << std::endl << " Min:   " << std::setw(10) << std::setprecision(7)
-         << fMinQuantity << std::flush;
+      << fMinQuantity << std::flush;
       for (i = 0; i < fNVariables; i++)
          std::cout << " " << std::setw(10) << std::setprecision(4)
          << fMinVariables(i) << std::flush;
       std::cout << std::endl << " Mean:  " << std::setw(10) << std::setprecision(7)
-         << fMeanQuantity << std::flush;
+      << fMeanQuantity << std::flush;
       for (i = 0; i < fNVariables; i++)
          std::cout << " " << std::setw(10) << std::setprecision(4)
          << fMeanVariables(i) << std::flush;
       std::cout << std::endl << " Function Sum Squares:         " << fSumSqQuantity
-         << std::endl << std::endl;
+      << std::endl << std::endl;
    }
 
    if (opt.Contains("r")) {
       std::cout << "Results of Parameterisation:" << std::endl
-         << "----------------------------" << std::endl
-         << " Total reduction of square residuals    "
-         << fSumSqResidual << std::endl
-         << " Relative precision obtained:           "
-         << fPrecision   << std::endl
-         << " Error obtained:                        "
-         << fError << std::endl
-         << " Multiple correlation coefficient:      "
-         << fCorrelationCoeff   << std::endl
-         << " Reduced Chi square over sample:        "
-         << fChi2 / (fSampleSize - fNCoefficients) << std::endl
-         << " Maximum residual value:                "
-         << fMaxResidual << std::endl
-         << " Minimum residual value:                "
-         << fMinResidual << std::endl
-         << " Estimated root mean square:            "
-         << fRMS << std::endl
-         << " Maximum powers used:                   " << std::flush;
+      << "----------------------------" << std::endl
+      << " Total reduction of square residuals    "
+      << fSumSqResidual << std::endl
+      << " Relative precision obtained:           "
+      << fPrecision   << std::endl
+      << " Error obtained:                        "
+      << fError << std::endl
+      << " Multiple correlation coefficient:      "
+      << fCorrelationCoeff   << std::endl
+      << " Reduced Chi square over sample:        "
+      << fChi2 / (fSampleSize - fNCoefficients) << std::endl
+      << " Maximum residual value:                "
+      << fMaxResidual << std::endl
+      << " Minimum residual value:                "
+      << fMinResidual << std::endl
+      << " Estimated root mean square:            "
+      << fRMS << std::endl
+      << " Maximum powers used:                   " << std::flush;
       for (j = 0; j < fNVariables; j++)
          std::cout << fMaxPowersFinal[j] << " " << std::flush;
       std::cout << std::endl
-         << " Function codes of candidate functions." << std::endl
-         << "  1: considered,"
-         << "  2: too little contribution,"
-         << "  3: accepted." << std::flush;
+      << " Function codes of candidate functions." << std::endl
+      << "  1: considered,"
+      << "  2: too little contribution,"
+      << "  3: accepted." << std::flush;
       for (i = 0; i < fMaxFunctions; i++) {
          if (i % 60 == 0)
             std::cout << std::endl << " " << std::flush;
@@ -3590,18 +3590,18 @@ void TMultiDimFit::Print(Option_t *option) const
 
    if (opt.Contains("f")) {
       std::cout << "Results of Fit:" << std::endl
-         << "---------------" << std::endl
-         << " Test sample size:                      "
-         << fTestSampleSize << std::endl
-         << " Multiple correlation coefficient:      "
-         << fTestCorrelationCoeff << std::endl
-         << " Relative precision obtained:           "
-         << fTestPrecision   << std::endl
-         << " Error obtained:                        "
-         << fTestError << std::endl
-         << " Reduced Chi square over sample:        "
-         << fChi2 / (fSampleSize - fNCoefficients) << std::endl
-         << std::endl;
+      << "---------------" << std::endl
+      << " Test sample size:                      "
+      << fTestSampleSize << std::endl
+      << " Multiple correlation coefficient:      "
+      << fTestCorrelationCoeff << std::endl
+      << " Relative precision obtained:           "
+      << fTestPrecision   << std::endl
+      << " Error obtained:                        "
+      << fTestError << std::endl
+      << " Reduced Chi square over sample:        "
+      << fChi2 / (fSampleSize - fNCoefficients) << std::endl
+      << std::endl;
       if (fFitter) {
          fFitter->PrintResults(1,1);
          std::cout << std::endl;
@@ -3610,13 +3610,13 @@ void TMultiDimFit::Print(Option_t *option) const
 
    if (opt.Contains("c")){
       std::cout << "Coefficients:" << std::endl
-         << "-------------" << std::endl
-         << "   #         Value        Error   Powers" << std::endl
-         << " ---------------------------------------" << std::endl;
+      << "-------------" << std::endl
+      << "   #         Value        Error   Powers" << std::endl
+      << " ---------------------------------------" << std::endl;
       for (i = 0; i < fNCoefficients; i++) {
          std::cout << " " << std::setw(3) << i << "  "
-            << std::setw(12) << fCoefficients(i) << "  "
-            << std::setw(12) << fCoefficientsRMS(i) << "  " << std::flush;
+         << std::setw(12) << fCoefficients(i) << "  "
+         << std::setw(12) << fCoefficientsRMS(i) << "  " << std::flush;
          for (j = 0; j < fNVariables; j++)
             std::cout << " " << std::setw(3)
             << fPowers[fPowerIndex[i] * fNVariables + j] - 1 << std::flush;
@@ -3626,21 +3626,21 @@ void TMultiDimFit::Print(Option_t *option) const
    }
    if (opt.Contains("k") && fCorrelationMatrix.IsValid()) {
       std::cout << "Correlation Matrix:" << std::endl
-         << "-------------------";
+      << "-------------------";
       fCorrelationMatrix.Print();
    }
 
    if (opt.Contains("m")) {
       std::cout << "Parameterization:" << std::endl
-         << "-----------------" << std::endl
-         << "  Normalised variables: " << std::endl;
-      for (i = 0; i < fNVariables; i++) 
-         std::cout << "\ty_" << i << "\t= 1 + 2 * (x_" << i << " - " 
-         << fMaxVariables(i) << ") / (" 
-         << fMaxVariables(i) << " - " << fMinVariables(i) << ")" 
+      << "-----------------" << std::endl
+      << "  Normalised variables: " << std::endl;
+      for (i = 0; i < fNVariables; i++)
+         std::cout << "\ty_" << i << "\t= 1 + 2 * (x_" << i << " - "
+         << fMaxVariables(i) << ") / ("
+         << fMaxVariables(i) << " - " << fMinVariables(i) << ")"
          << std::endl;
       std::cout << std::endl
-         << "  f(";
+      << "  f(";
       for (i = 0; i < fNVariables; i++) {
          std::cout << "y_" << i;
          if (i != fNVariables-1) std::cout << ", ";
@@ -3648,13 +3648,13 @@ void TMultiDimFit::Print(Option_t *option) const
       std::cout << ") = ";
       for (i = 0; i < fNCoefficients; i++) {
          if (i != 0)
-            std::cout << std::endl << "\t" << (fCoefficients(i) < 0 ? "- " : "+ ") 
+            std::cout << std::endl << "\t" << (fCoefficients(i) < 0 ? "- " : "+ ")
             << TMath::Abs(fCoefficients(i));
-         else 
+         else
             std::cout << fCoefficients(i);
          for (j = 0; j < fNVariables; j++) {
             Int_t p = fPowers[fPowerIndex[i] * fNVariables + j];
-            switch (p) { 
+            switch (p) {
                case 1: break;
                case 2: std::cout << " * y_" << j; break;
                default:
@@ -3759,7 +3759,7 @@ void TMultiDimFit::SetMaxPowers(const Int_t* powers)
    // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    if (!powers)
       return;
-
+   
    for (Int_t i = 0; i < fNVariables; i++)
       fMaxPowers[i] = powers[i]+1;
 }
@@ -3783,22 +3783,22 @@ Bool_t TMultiDimFit::TestFunction(Double_t squareResidual,
    // Test whether the currently considered function contributes to the
    // fit. See also
    // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
-
+   
    if (fNCoefficients != 0) {
       // Now for the second test:
       if (fMaxAngle == 0) {
          // If the user hasn't supplied a max angle do the test as,
          if (dResidur <
-            squareResidual / (fMaxTerms - fNCoefficients + 1 + 1E-10)) {
-               return kFALSE;
+             squareResidual / (fMaxTerms - fNCoefficients + 1 + 1E-10)) {
+            return kFALSE;
          }
       }
       else {
          // If the user has provided a max angle, test if the calculated
          // angle is less then the max angle.
          if (TMath::Sqrt(dResidur/fSumSqAvgQuantity) <
-            TMath::Cos(fMaxAngle*DEGRAD)) {
-               return kFALSE;
+             TMath::Cos(fMaxAngle*DEGRAD)) {
+            return kFALSE;
          }
       }
    }
@@ -3812,7 +3812,7 @@ void mdfHelper(int& /*npar*/, double* /*divs*/, double& chi2,
                double* coeffs, int /*flag*/)
 {
    // Helper function for doing the minimisation of Chi2 using Minuit
-
+   
    // Get pointer  to current TMultiDimFit object.
    TMultiDimFit* mdf = TMultiDimFit::Instance();
    chi2     = mdf->MakeChi2(coeffs);

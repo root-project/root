@@ -152,7 +152,7 @@ int test_smatrix_op() {
 
 
 
-	        
+
     MnVectorN   v1[NLIST];  testMV(A,v,t_mv,v1);
     //if (k == 0) v1.Print(std::cout);
     MnVectorN   v2[NLIST];  testGMV(A,v,v1,t_gmv,v2);
@@ -265,7 +265,7 @@ int test_smatrix_sym_op() {
 #endif
 
     w.Start(); 
-	        
+
     MnVectorN   v1[NLIST];     testMV(A,v,t_mv,v1);
     MnVectorN   v2[NLIST];     testGMV(A,v,v1,t_gmv,v2);
     MnMatrixNN  C0[NLIST];     testMM(A,B,C,t_mm,C0);
@@ -375,7 +375,7 @@ int test_tmatrix_op() {
     }
 #endif
     w.Start(); 
-	
+
     
     MnVector v1(ND1);        testMV_T(A,v,t_mv,v1);
     //if (k == 0) v1.Print();
@@ -490,7 +490,7 @@ int test_tmatrix_sym_op() {
 #endif
 
     w.Start(); 
-	        
+
     MnVector   v1(N);  testMV_T(A,v,t_mv,v1);
     MnVector   v2(N);  testGMV_T(A,v,v1,t_gmv,v2);
     MnMatrix   C0(N,N);  testMM_T(A,B,C,t_mm,C0);
@@ -590,7 +590,7 @@ int test_hepmatrix_op() {
       std::cout << " p = " << p << std::endl;
     }
 #endif
-	
+
     w.Start(); 
     
     MnVector v1(ND1);        testMV(A,v,t_mv,v1);
@@ -694,7 +694,7 @@ int test_hepmatrix_sym_op() {
 #endif
     
     w.Start(); 
-	        
+        
     MnVector   v1(N);  testMV(A,v,t_mv,v1);
     MnVector   v2(N);  testGMV(A,v,v1,t_gmv,v2);
     MnMatrix   C0(N,N);  testMM_C(A,B,C,t_mm,C0);

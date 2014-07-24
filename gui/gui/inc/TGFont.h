@@ -123,10 +123,10 @@ class TGTextLayout : public TObject {
 friend class TGFont;
 
 protected:
-   const TGFont  *fFont;		   // The font used when laying out the text.
-   const char    *fString;	      // The string that was layed out.
-   Int_t          fWidth;		   // The maximum width of all lines in the text layout.
-   Int_t          fNumChunks;	   // Number of chunks actually used in following array.
+   const TGFont  *fFont;         // The font used when laying out the text.
+   const char    *fString;       // The string that was layed out.
+   Int_t          fWidth;        // The maximum width of all lines in the text layout.
+   Int_t          fNumChunks;    // Number of chunks actually used in following array.
    LayoutChunk_t *fChunks;       // Array of chunks. The actual size will be maxChunks.
 
    TGTextLayout(const TGTextLayout &tlayout);     // not implemented
@@ -182,7 +182,7 @@ protected:
       SetRefCount(1);
       for (Int_t i=0; i<256; i++) {
          fWidths[i] = 0;
-	 fTypes[i]  = ' ';
+         fTypes[i]  = ' ';
       }
    }
 

@@ -234,23 +234,23 @@ public:
       
       
       /**
-	 set random number generator
+       set random number generator
       */
       void SetGenerator(GSLRngWrapper* r);
 
       /**
-	 set integration method
+       set integration method
       */
       void SetType(MCIntegration::Type type);
 
       /**
-	 set integration method using a name instead of an enumeration
+       set integration method using a name instead of an enumeration
       */
       void SetTypeName(const char * typeName);
 
 
       /**
-	 set integration mode for VEGAS method
+       set integration mode for VEGAS method
          The possible MODE are : 
          MCIntegration::kIMPORTANCE (default) : VEGAS will use importance sampling 
          MCIntegration::kSTRATIFIED           : VEGAS will use stratified sampling  if certain condition are satisfied 
@@ -260,28 +260,28 @@ public:
       void SetMode(MCIntegration::Mode mode);
          
       /**
-	 set default parameters for VEGAS method
+       set default parameters for VEGAS method
       */
       void SetParameters(const VegasParameters &p);
 
    
       /**
-	 set default parameters for MISER method
+       set default parameters for MISER method
       */
       void SetParameters(const MiserParameters &p);
 
       /**
-	 set parameters for PLAIN method
+       set parameters for PLAIN method
       */
       //void SetPParameters(const PlainParameters &p);   
 
       /**
-	 returns the error sigma from the last iteration of the Vegas algorithm
+       returns the error sigma from the last iteration of the Vegas algorithm
       */  
       double Sigma();
 
       /**
-	 returns chi-squared per degree of freedom for the estimate of the integral in the Vegas algorithm
+       returns chi-squared per degree of freedom for the estimate of the integral in the Vegas algorithm
       */  
       double ChiSqr();
 

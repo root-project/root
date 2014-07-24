@@ -20,8 +20,8 @@ namespace ROOT {
     high (>=2);
     acts on: Migrad (behavioural), 
              Minos (lowers strategy by 1 for Minos-own minimization), 
-	     Hesse (iterations), 
-	     Numerical2PDerivative (iterations)
+             Hesse (iterations),
+             Numerical2PDerivative (iterations)
  */
 
 class MnStrategy {

@@ -86,17 +86,17 @@ void logscales() {
    f4->SetNpx(200);
    Int_t a = 20;
    for (int i=a; i>=1; i--) {
-     f4 = new TF1(Form("f4b_%d",i),"x*sin(x+10)*[0]/[1]+25",1,21);
-     f4->SetParameter(0,i);
-     f4->SetParameter(1,a);
-	f4->SetNpx(200);
-     f4->SetLineWidth(1); f4->SetLineColor(i+10); 
-     f4->Draw("same");
-     f4 = new TF1(Form("f4c_%d",i),"x*cos(x+10)*sin(x+10)*[0]/[1]+25",1,25);
-     f4->SetParameter(0,i);
-     f4->SetParameter(1,a);
-	f4->SetNpx(200);
-     f4->SetLineWidth(1); f4->SetLineColor(i+30); f4->Draw("same");
+      f4 = new TF1(Form("f4b_%d",i),"x*sin(x+10)*[0]/[1]+25",1,21);
+      f4->SetParameter(0,i);
+      f4->SetParameter(1,a);
+      f4->SetNpx(200);
+      f4->SetLineWidth(1); f4->SetLineColor(i+10);
+      f4->Draw("same");
+      f4 = new TF1(Form("f4c_%d",i),"x*cos(x+10)*sin(x+10)*[0]/[1]+25",1,25);
+      f4->SetParameter(0,i);
+      f4->SetParameter(1,a);
+      f4->SetNpx(200);
+      f4->SetLineWidth(1); f4->SetLineColor(i+30); f4->Draw("same");
    }
    pave3 = new TPaveText(1.2,8,9,15);
    pave3->SetFillColor(42);

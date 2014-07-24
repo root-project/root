@@ -89,7 +89,7 @@ protected:
     // Set in Setup()
     Double_t    fDollyDefault;    // default distnce from viewing centre
     Double_t    fDollyDistance;   // unit distance for camera movement in fwd/bck direction
-    Float_t     fVAxisMinAngle;	  // minimal allowed angle between up and fCamTrans Z vector
+    Float_t     fVAxisMinAngle;   // minimal allowed angle between up and fCamTrans Z vector
 
    // Internal cached matrices and frustum planes
    mutable Bool_t    fCacheDirty;                      //! cached items dirty?

@@ -59,16 +59,16 @@ namespace ROOT {
 
 //__________________________________________________________________________________________
     /**
-              Class describing a generic displacement vector in 3 dimensions.
-              This class is templated on the type of Coordinate system.
-              One example is the XYZVector which is a vector based on
-              double precision x,y,z data members by using the
-              ROOT::Math::Cartesian3D<double> Coordinate system.
-	      The class is having also an extra template parameter, the coordinate system tag, 
-	      to be able to identify (tag) vector described in different reference coordinate system, 
-	      like global or local coordinate systems.   
+     Class describing a generic displacement vector in 3 dimensions.
+     This class is templated on the type of Coordinate system.
+     One example is the XYZVector which is a vector based on
+     double precision x,y,z data members by using the
+     ROOT::Math::Cartesian3D<double> Coordinate system.
+     The class is having also an extra template parameter, the coordinate system tag,
+     to be able to identify (tag) vector described in different reference coordinate system,
+     like global or local coordinate systems.
 
-	      @ingroup GenVector
+     @ingroup GenVector
     */
 
     template <class CoordSystem, class Tag = DefaultCoordinateSystemTag >
@@ -159,8 +159,8 @@ namespace ROOT {
       template <class OtherCoords>
       DisplacementVector3D & operator=
                         ( const PositionVector3D<OtherCoords,Tag> & rhs) {
-        SetXYZ(rhs.x(), rhs.y(), rhs.z());
-	return *this;
+         SetXYZ(rhs.x(), rhs.y(), rhs.z());
+         return *this;
       }
 
 
@@ -395,9 +395,9 @@ namespace ROOT {
       // -- need to have the specialized version in order to avoid 
 
       /**
-          Return the scalar (dot) product of two displacement vectors.
-          It is possible to perform the product for any type of vector coordinates, 
-	  but they must have the same coordinate system tag
+       Return the scalar (dot) product of two displacement vectors.
+       It is possible to perform the product for any type of vector coordinates,
+       but they must have the same coordinate system tag
       */
       template< class OtherCoords >
       Scalar Dot( const  DisplacementVector3D<OtherCoords,Tag>  & v) const {
@@ -414,10 +414,10 @@ namespace ROOT {
       }
 
       /**
-         Return vector (cross) product of two displacement vectors,
-         as a vector in the coordinate system of this class.
-          It is possible to perform the product for any type of vector coordinates, 
-	  but they must have the same coordinate system tag
+       Return vector (cross) product of two displacement vectors,
+       as a vector in the coordinate system of this class.
+       It is possible to perform the product for any type of vector coordinates,
+       but they must have the same coordinate system tag
       */
       template <class OtherCoords>
       DisplacementVector3D Cross( const DisplacementVector3D<OtherCoords,Tag>  & v) const {

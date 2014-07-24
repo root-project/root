@@ -9,12 +9,12 @@ class NdbDCReactionXS : public NdbMF
 protected:
 
 public:
-	NdbDCReactionXS()
-		: NdbMF(33, "Data covariances for reaction cross section") {}
+   NdbDCReactionXS()
+      : NdbMF(33, "Data covariances for reaction cross section") {}
 
-	~NdbDCReactionXS() {}
+   ~NdbDCReactionXS() {}
 
-	ClassDef(NdbDCReactionXS,1)
+   ClassDef(NdbDCReactionXS,1)
 
 }; // NdbDCReactionXS
 

@@ -37,45 +37,45 @@ const double MOREBITSO2 = MOREBITS * 0.5;
 
 inline double get_atan_px(const double x2){
 
-	const double PX1atan = -8.750608600031904122785E-1;
-	const double PX2atan = -1.615753718733365076637E1;
-	const double PX3atan = -7.500855792314704667340E1;
-	const double PX4atan = -1.228866684490136173410E2;
-	const double PX5atan = -6.485021904942025371773E1;
+   const double PX1atan = -8.750608600031904122785E-1;
+   const double PX2atan = -1.615753718733365076637E1;
+   const double PX3atan = -7.500855792314704667340E1;
+   const double PX4atan = -1.228866684490136173410E2;
+   const double PX5atan = -6.485021904942025371773E1;
 
-	double px = PX1atan;
-	px *= x2;
-	px += PX2atan;
-	px *= x2;
-	px += PX3atan;
-	px *= x2;
-	px += PX4atan;
-	px *= x2;
-	px += PX5atan;
+   double px = PX1atan;
+   px *= x2;
+   px += PX2atan;
+   px *= x2;
+   px += PX3atan;
+   px *= x2;
+   px += PX4atan;
+   px *= x2;
+   px += PX5atan;
 
-	return px;
+   return px;
 }
 
 
 inline double get_atan_qx(const double x2){
-	const double QX1atan = 2.485846490142306297962E1;
-	const double QX2atan = 1.650270098316988542046E2;
-	const double QX3atan = 4.328810604912902668951E2;
-	const double QX4atan = 4.853903996359136964868E2;
-	const double QX5atan = 1.945506571482613964425E2;
+   const double QX1atan = 2.485846490142306297962E1;
+   const double QX2atan = 1.650270098316988542046E2;
+   const double QX3atan = 4.328810604912902668951E2;
+   const double QX4atan = 4.853903996359136964868E2;
+   const double QX5atan = 1.945506571482613964425E2;
 
-	double qx=x2;
-	qx += QX1atan;
-	qx *=x2;
-	qx += QX2atan;
-	qx *=x2;
-	qx += QX3atan;
-	qx *=x2;
-	qx += QX4atan;
-	qx *=x2;
-	qx += QX5atan;
+   double qx=x2;
+   qx += QX1atan;
+   qx *=x2;
+   qx += QX2atan;
+   qx *=x2;
+   qx += QX3atan;
+   qx *=x2;
+   qx += QX4atan;
+   qx *=x2;
+   qx += QX5atan;
 
-	return qx;
+   return qx;
 }
 
 }
@@ -85,75 +85,75 @@ inline double get_atan_qx(const double x2){
 /// Fast Atan implementation double precision
 inline double fast_atan(double x){
 
-	/* make argument positive and save the sign */
-	const uint64_t sign_mask = details::getSignMask(x);
-	x=std::fabs(x);
+   /* make argument positive and save the sign */
+   const uint64_t sign_mask = details::getSignMask(x);
+   x=std::fabs(x);
 
-	/* range reduction */
-	const double originalx=x;
+   /* range reduction */
+   const double originalx=x;
 
-	double y = details::PIO4;
-	double factor = details::MOREBITSO2;
-	x = (x-1.0) / (x+1.0);
+   double y = details::PIO4;
+   double factor = details::MOREBITSO2;
+   x = (x-1.0) / (x+1.0);
 
-	if( originalx > details::T3PO8 ) {
-		y = details::PIO2;
-		factor = details::MOREBITS;
-		x = -1.0 / originalx ;
-	}
-	if ( originalx <= 0.66 ) {
-		y = 0.;
-		factor = 0.;
-		x = originalx;
-	}
+   if( originalx > details::T3PO8 ) {
+      y = details::PIO2;
+      factor = details::MOREBITS;
+      x = -1.0 / originalx ;
+   }
+   if ( originalx <= 0.66 ) {
+      y = 0.;
+      factor = 0.;
+      x = originalx;
+   }
 
-	const double x2 = x * x;
+   const double x2 = x * x;
 
-	const double px = details::get_atan_px(x2);
-	const double qx = details::get_atan_qx(x2);
+   const double px = details::get_atan_px(x2);
+   const double qx = details::get_atan_qx(x2);
 
-	//double res = y +x * x2 * px / qx + x +factor;
+   //double res = y +x * x2 * px / qx + x +factor;
 
-	const double poq=px / qx;
+   const double poq=px / qx;
 
-	double res = x * x2 * poq + x;
-	res+=y;
+   double res = x * x2 * poq + x;
+   res+=y;
 
-	res+=factor;
+   res+=factor;
 
-	return details::dpORuint64(res,sign_mask);
+   return details::dpORuint64(res,sign_mask);
 }
 
 //------------------------------------------------------------------------------
 /// Fast Atan implementation single precision
 inline float fast_atanf( float xx ) {
 
-	const uint32_t sign_mask = details::getSignMask(xx);
+   const uint32_t sign_mask = details::getSignMask(xx);
 
-	float x= std::fabs(xx);
-	const float x0=x;
-	float y=0.0f;
+   float x= std::fabs(xx);
+   const float x0=x;
+   float y=0.0f;
 
-	/* range reduction */
-	if( x0 > 0.4142135623730950f ){ // * tan pi/8
-		x = (x0-1.0f)/(x0+1.0f);
-		y = details::PIO4F;
-	}
-	if( x0 > 2.414213562373095f ){  // tan 3pi/8
-		x = -( 1.0f/x0 );
-		y = details::PIO2F;
-	}
+   /* range reduction */
+   if( x0 > 0.4142135623730950f ){ // * tan pi/8
+      x = (x0-1.0f)/(x0+1.0f);
+      y = details::PIO4F;
+   }
+   if( x0 > 2.414213562373095f ){  // tan 3pi/8
+      x = -( 1.0f/x0 );
+      y = details::PIO2F;
+   }
 
 
-	const float x2 = x * x;
-	y +=
-			((( 8.05374449538e-2f * x2
-					- 1.38776856032E-1f) * x2
-					+ 1.99777106478E-1f) * x2
-					- 3.33329491539E-1f) * x2 * x
-					+ x;
+   const float x2 = x * x;
+   y +=
+         ((( 8.05374449538e-2f * x2
+               - 1.38776856032E-1f) * x2
+               + 1.99777106478E-1f) * x2
+               - 3.33329491539E-1f) * x2 * x
+               + x;
 
-	return details::spORuint32(y,sign_mask);
+   return details::spORuint32(y,sign_mask);
 }
 
 //------------------------------------------------------------------------------

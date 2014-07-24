@@ -273,7 +273,7 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
       gsl_complex prod_w = gsl_complex_mul (w1, w2);
       //gsl_complex mod_prod_w = gsl_complex_abs (prod_w);
       /*
-	Changed from gsl_complex to double in order to make it compile.
+       Changed from gsl_complex to double in order to make it compile.
       */
       double mod_prod_w = gsl_complex_abs (prod_w);
       if (0.0 != mod_prod_w)
