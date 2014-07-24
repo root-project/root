@@ -35,14 +35,14 @@ extern void abort PARAMS ((void));
 
 /* Arbitrary magical numbers.  */
 
-#define MAGICWORD	(unsigned int) 0xfedabeeb	/* Active chunk */
-#define MAGICWORDFREE	(unsigned int) 0xdeadbeef	/* Inactive chunk */
-#define MAGICBYTE	((char) 0xd7)
+#define MAGICWORD (unsigned int) 0xfedabeeb /* Active chunk */
+#define MAGICWORDFREE (unsigned int) 0xdeadbeef /* Inactive chunk */
+#define MAGICBYTE ((char) 0xd7)
 
 /* Each memory allocation is bounded by a header structure and a trailer
    byte.  I.E.
 
-	<size><magicword><user's allocation><magicbyte>
+   <size><magicword><user's allocation><magicbyte>
 
    The pointer returned to the user points to the first byte in the
    user's allocation area.  The magic word can be tested to detect
@@ -50,8 +50,8 @@ extern void abort PARAMS ((void));
 
 struct hdr
   {
-    size_t size;		/* Exact size requested by user.  */
-    unsigned long int magic;	/* Magic number to check header integrity.  */
+    size_t size;    /* Exact size requested by user.  */
+    unsigned long int magic;  /* Magic number to check header integrity.  */
   };
 
 typedef void (*mmfree_fun_t) PARAMS ((PTR, PTR));

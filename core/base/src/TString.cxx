@@ -618,7 +618,7 @@ namespace {
    typedef unsigned char uint8_t;
    typedef unsigned long uint32_t;
    typedef unsigned __int64 uint64_t;
-#else	// defined(_MSC_VER)
+#else // defined(_MSC_VER)
    // Other compilers
 #include <stdint.h>
 #endif // !defined(_MSC_VER)

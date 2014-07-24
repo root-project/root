@@ -364,9 +364,9 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D) const
        if(kind != "Field"){
        std::string proto;
        if (GetFunctionPrototype(D,proto))
-	    std::cout<<"\n\tFunction prototype: "<<str_name + proto;
+         std::cout<<"\n\tFunction prototype: "<<str_name + proto;
        else 
-	    std::cout<<"Error in prototype formation"; 
+         std::cout<<"Error in prototype formation"; 
        }
        */
       

@@ -20,11 +20,11 @@ and TTree::MakeCode functions.</li>
 not present and also supports the case where branch are not the same order.</li>
 <li>New bit flag <tt>kMapObject</tt> [<tt>mybranch->ResetBit(kMapObject)</tt>] to explicitly disable the
     object registration during streaming within a branch (Use only if you are sure that there
-	  is not a pointer pointing back to the nesting object within this branch).
+    is not a pointer pointing back to the nesting object within this branch).
 </li>
 <li>Fix <tt>tree->Draw("s1.value");</tt>
-	  when the top level branch does not have a trailing dot
-	  (and hence the real branch name is only 'value').</li>
+   when the top level branch does not have a trailing dot
+   (and hence the real branch name is only 'value').</li>
 </ul>
 <li>Fixed support for vector&lt;bool&gt; and vector&lt;string&gt; </li>
 <li>Added support for top level object that do not inherit from TObject _AND_ have a custom streamer (like std::string and TString);</li>

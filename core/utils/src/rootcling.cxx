@@ -4074,10 +4074,10 @@ const clang::FieldDecl *R__GetDataMemberFromAll(const clang::CXXRecordDecl &cl, 
    
 }
 
-bool CXXRecordDecl__FindOrdinaryMember 	( const clang::CXXBaseSpecifier *  	Specifier,
-                                           clang::CXXBasePath &  	Path,
-                                           void *  	Name 
-                                           ) 	
+bool CXXRecordDecl__FindOrdinaryMember ( const clang::CXXBaseSpecifier *Specifier,
+                                           clang::CXXBasePath &Path,
+                                           void *Name
+                                           )
 {
    clang::RecordDecl *BaseRecord = Specifier->getType()->getAs<clang::RecordType>()->getDecl();
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(BaseRecord);
@@ -6514,8 +6514,8 @@ int main(int argc, char **argv)
                  << "#include \"TCintWithCling.h\"" << std::endl
                  << "#include \"TBuffer.h\"" << std::endl
                  << "#include \"TMemberInspector.h\"" << std::endl
-		 << "#include \"TInterpreter.h\"" << std::endl
-		 << "#include \"TVirtualMutex.h\"" << std::endl
+                 << "#include \"TInterpreter.h\"" << std::endl
+                 << "#include \"TVirtualMutex.h\"" << std::endl
                  << "#include \"TError.h\"" << std::endl << std::endl
                  << "#ifndef G__ROOT" << std::endl
                  << "#define G__ROOT" << std::endl

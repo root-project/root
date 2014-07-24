@@ -1,20 +1,20 @@
 ROOTIO FILES
 
-	A ROOTIO file consists of one "file header", one or more "data
+   A ROOTIO file consists of one "file header", one or more "data
 records," and zero or more "free segments".  The file header is always
 at the beginning of the file, while the data records and free segments
 may in principle appear in any order.
 
-	The file header is fixed length (64 bytes in the current
+   The file header is fixed length (64 bytes in the current
 release.)  It's detailed format is given in "header.txt".
 
-	A free segment is of variable length.  One free segment is a set
+   A free segment is of variable length.  One free segment is a set
 of contiguous bytes that are unused, and are available for ROOTIO to use
 for new or resized data records.  The first four bytes of a a free
 segment contain the negative of the number of bytes in the segment.  The
 contents of the remainder of the free segment are irrelevant.
 
-	A data record represents either user data or data used
+   A data record represents either user data or data used
 internally by ROOTIO.  All data records have two portions, a "key"
 portion and a "data" portion.  The key portion precedes the data
 portion.  The format of the key portion is the same for all data.
@@ -28,22 +28,22 @@ DATA RECORD TYPES
 
 "core" record types
 
-	There are several types of data records used internally by
+   There are several types of data records used internally by
 ROOTIO to support the storage of byte sequences.  These record types
 are "TFile", "TDirectory", "KeysList", and "FreeSegments".  These types
 can be considered to be in the "core" layer of ROOTIO.
 
-	A file always contains exactly one "TFile" data record, which
+   A file always contains exactly one "TFile" data record, which
 (nearly?) always immediately follows the file header.  The TFile record
 consists of either data pertaining to the file as a whole, or data
 pertaining to the root "directory" of records in the file.  Its detailed
 format is given in "tfile.txt".
 
-	A file contains zero or more "TDirectory" data records, each
+   A file contains zero or more "TDirectory" data records, each
 representing a subdirectory in the directory tree that has the "TFile"
 record at its root.  The detailed format is given in "tdirectory.txt".
 
-	A file contains one or more "KeysList" data records.  There is
+   A file contains one or more "KeysList" data records.  There is
 one corresponding to the root directory (represented by the TFile 
 record), and one corresponding to each (non-empty) subdirectory in the
 tree (each represented by a TDirectory record).  The data portion of
@@ -53,7 +53,7 @@ records in that directory.  The detailed format is given in
 and "StreamerInfo" data records never appear in the data portion of
 a KeysList data record.
 
-	A file always contains exactly one "FreeSegments" data record,
+   A file always contains exactly one "FreeSegments" data record,
 which keeps track of the free segments in the file.  Its detailed format
 is given in "freesegments.txt".  Note that the list of free segments
 contains one additional free segment that is not in the file itself,
@@ -105,12 +105,12 @@ If level 2 is selected, level 1 is used with no notification to the user.
 The chosen compression level is not applied to the entire file.  The following
 portions of the file are not compressed, regardless of the compression level
 selected:
-	1) the file header
-	2) the KeysList data record
-	3) the FreeSegments data record
-	4) any data record (outside of a TTree) where the uncompressed size of
-	 the data portion is 256 bytes or less.
-        5) the key portion of any data record
+   1) the file header
+   2) the KeysList data record
+   3) the FreeSegments data record
+   4) any data record (outside of a TTree) where the uncompressed size of
+      the data portion is 256 bytes or less.
+   5) the key portion of any data record
 Furthermore, the data portion of the StreamerInfo data record is always
 compressed at level 1 (if over 256 bytes uncompressed), regardless of the
 compression level selected (even if no compression is selected).
@@ -225,16 +225,16 @@ is given in "tclonesarray.txt".
 
 There are two great advantages in the use of TClonesArray over TObjArray when the objects
 all will be of the same class:
-	1) Memory for the objects will be allocated only once for the entire array, rather
-	than the per-object allocation for TObjArray.  This can be done because all the
-	objects are the same size.
-	2) In the case of TObjArray, the stored objects are written sequentially. However,
-	in a TClonesArray, by default, each object is split one level deep into its base
-	class(es) and data members, and each of these members is written sequentially for
-	all objects in the array before the next member is written.  This has two advantages:
-		a) Greater compression can be achieved when similar data is consecutive.
-		b) The object's data members can easily be split into different TTree branches
-		(TTrees are discussed below).
+  1) Memory for the objects will be allocated only once for the entire array, rather
+     than the per-object allocation for TObjArray.  This can be done because all the
+     objects are the same size.
+  2) In the case of TObjArray, the stored objects are written sequentially. However,
+     in a TClonesArray, by default, each object is split one level deep into its base
+     class(es) and data members, and each of these members is written sequentially for
+     all objects in the array before the next member is written.  This has two advantages:
+      a) Greater compression can be achieved when similar data is consecutive.
+      b) The object's data members can easily be split into different TTree branches
+         (TTrees are discussed below).
 
 2) TTree
 

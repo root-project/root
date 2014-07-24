@@ -32,7 +32,7 @@
    };
 
 #else
-#   ifndef __CINT__ 	 
+#   ifndef __CINT__   
 #   include <stdarg.h>
 #   endif
 #   if defined(sparc) && !defined(__GNUG__) && !defined(__CC_SUN21__) && !defined(__SVR4)

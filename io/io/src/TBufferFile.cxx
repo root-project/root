@@ -2862,7 +2862,7 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
          // We could have a file created using a Foreign class before
          // the introduction of the CheckSum.  We need to check
          if ((!cl->IsLoaded() || cl->IsForeign()) &&
-	     Class_Has_StreamerInfo(cl) ) {
+             Class_Has_StreamerInfo(cl) ) {
 
             const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
             const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : 0;

@@ -32,23 +32,23 @@
 
 /* Options passed to cplus_demangle (in 2nd parameter). */
 
-#define DMGL_NO_OPTS	0		/* For readability... */
-#define DMGL_PARAMS	(1 << 0)	/* Include function args */
-#define DMGL_ANSI	(1 << 1)	/* Include const, volatile, etc */
+#define DMGL_NO_OPTS 0   /* For readability... */
+#define DMGL_PARAMS  (1 << 0)  /* Include function args */
+#define DMGL_ANSI  (1 << 1)  /* Include const, volatile, etc */
 
-#define DMGL_AUTO	(1 << 8)
-#define DMGL_GNU	(1 << 9)
-#define DMGL_LUCID	(1 << 10)
-#define DMGL_ARM	(1 << 11)
+#define DMGL_AUTO  (1 << 8)
+#define DMGL_GNU  (1 << 9)
+#define DMGL_LUCID  (1 << 10)
+#define DMGL_ARM  (1 << 11)
 /* If none of these are set, use 'current_demangling_style' as the default. */
 #define DMGL_STYLE_MASK (DMGL_AUTO|DMGL_GNU|DMGL_LUCID|DMGL_ARM)
 
 /* Define string names for the various demangling styles. */
 
-#define AUTO_DEMANGLING_STYLE_STRING	"auto"
-#define GNU_DEMANGLING_STYLE_STRING	"gnu"
-#define LUCID_DEMANGLING_STYLE_STRING	"lucid"
-#define ARM_DEMANGLING_STYLE_STRING	"arm"
+#define AUTO_DEMANGLING_STYLE_STRING  "auto"
+#define GNU_DEMANGLING_STYLE_STRING  "gnu"
+#define LUCID_DEMANGLING_STYLE_STRING  "lucid"
+#define ARM_DEMANGLING_STYLE_STRING  "arm"
 
 /* Some macros to test what demangling style is active. */
 
@@ -95,4 +95,4 @@ set_cplus_marker_for_demangling (int ch);
 }
 #endif
 
-#endif	/* DEMANGLE_H */
+#endif  /* DEMANGLE_H */

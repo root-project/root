@@ -241,7 +241,7 @@ void TBuffer3D::Init()
    fColor         = 0;
    // Set fLocalMaster in section kCore to identity
    fTransparency  = 0;
-   fLocalFrame	   = kFALSE;
+   fLocalFrame    = kFALSE;
    fReflection    = kFALSE;
    SetLocalMasterIdentity();
 

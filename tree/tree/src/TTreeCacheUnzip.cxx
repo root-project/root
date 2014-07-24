@@ -768,7 +768,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
                   }
                   else {
                      memcpy(*buf, fUnzipChunks[seekidx], fUnzipLen[seekidx]);
-	             delete fUnzipChunks[seekidx];
+                     delete fUnzipChunks[seekidx];
                      fTotalUnzipBytes -= fUnzipLen[seekidx];
                      fUnzipChunks[seekidx] = 0;
                      SendUnzipStartSignal(kFALSE);
@@ -1092,10 +1092,8 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
                   break;
                }
             }
-	    if (idxtounzip < 0) fBlocksToGo = 0;
+            if (idxtounzip < 0) fBlocksToGo = 0;
          }
-
-
       }
 
    } // lock scope

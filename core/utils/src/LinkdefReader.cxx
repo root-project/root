@@ -238,7 +238,7 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
          break;
          
       case kEnum:
-      case kGlobal:	    
+      case kGlobal:
       case kFunction:
       case kOperators:
       case kClass:
@@ -400,7 +400,7 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
          return false;
          break;
    }
-	
+
    return true;
 }
 

@@ -3335,8 +3335,8 @@ void TCintWithCling::RegisterModule(const char* modulename, const char** headers
 NEEDS PATCH IN CLANG >>>
 Index: /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h
 ===================================================================
---- /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h	(revision 153080)
-+++ /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h	(working copy)
+--- /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h  (revision 153080)
++++ /build/llvm/src/tools/clang/include/clang/Lex/HeaderSearch.h  (working copy)
 @@ -260,6 +260,11 @@
    
    /// \brief Retrieve the path to the module cache.

@@ -585,8 +585,8 @@ TStreamerInfo* TBranchSTL::GetInfo() const
          }
       }
       if((*fInfo).IsOptimized()) {
-	(*fInfo).SetBit(TVirtualStreamerInfo::kCannotOptimize);
-	(*fInfo).BuildOld();
+         (*fInfo).SetBit(TVirtualStreamerInfo::kCannotOptimize);
+         (*fInfo).BuildOld();
       }
    }
    return fInfo;

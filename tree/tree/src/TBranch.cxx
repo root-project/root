@@ -1393,8 +1393,8 @@ TFile* TBranch::GetFile(Int_t mode)
       R__LOCKGUARD2(gROOTMutex);
       file = (TFile*)gROOT->GetListOfFiles()->FindObject(fFileName.Data());
       if (file) {
-	 fDirectory = file;
-	 return file;
+         fDirectory = file;
+         return file;
       }
    }
 

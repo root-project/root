@@ -391,7 +391,7 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
       buffer.MapObject(obj);  //register obj in map to handle self reference
       {
          Bool_t isRef = obj->TestBit(kIsReferenced); 
-         ((TObject*)obj)->ResetBit(kIsReferenced);	
+         ((TObject*)obj)->ResetBit(kIsReferenced);
 
          ((TObject*)obj)->Streamer(buffer);
 

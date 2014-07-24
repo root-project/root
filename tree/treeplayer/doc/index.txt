@@ -10,7 +10,7 @@ BEGIN_HTML
 </li>
 <li><a href="ftp://root.cern.ch/root/doc/21ExampleAnalysis.pdf">The Chapter about Selectors in the Users Guide
     </a>
-</li><a hread="ftp://root.cern.ch/root/doc/20TutorialsandTests.pdf"> 	 ROOT examples in tutorials and test directories: Event application, benchmarks
+</li><a hread="ftp://root.cern.ch/root/doc/20TutorialsandTests.pdf">ROOT examples in tutorials and test directories: Event application, benchmarks
      </a>
 </ul>
 END_HTML

@@ -12,8 +12,8 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 //  The ROOT oject has a list of properties which are stored and        //
-//  retrieved using TDictAttributeMap.                                 //
-//  TDictAttributeMap maps the property keys of the object to their		//
+//  retrieved using TDictAttributeMap.                                  //
+//  TDictAttributeMap maps the property keys of the object to their     //
 //  values.                                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
