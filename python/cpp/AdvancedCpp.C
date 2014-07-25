@@ -2,9 +2,10 @@
   File: roottest/python/cpp/AdvancedCpp.C
   Author: WLavrijsen@lbl.gov
   Created: 06/04/05
-  Last: 05/20/14
+  Last: 07/24/14
 */
 
+#include "TString.h"
 #include <sstream>
 #include <string>
 #include <vector>
@@ -239,3 +240,16 @@ struct PR_CustomNewDeleteClass {
    }
    int m_data;
 };
+
+// more globals
+TString PR_Lumi1 = "::1 C++ global lumi";
+TString PR_GetLumi1() { return PR_Lumi1; }
+TString PR_Lumi2 = "::2 C++ global lumi";
+TString PR_GetLumi2() { return PR_Lumi2; }
+
+namespace NS_PR_Lumi {
+   TString PR_Lumi1 = "NS::1 C++ global lumi";
+   TString PR_GetLumi1() { return PR_Lumi1; }
+   TString PR_Lumi2 = "NS::2 C++ global lumi";
+   TString PR_GetLumi2() { return PR_Lumi2; }
+}
