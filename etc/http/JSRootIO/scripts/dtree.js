@@ -1,7 +1,7 @@
 /*--------------------------------------------------|
 | dTree 2.05 | www.destroydrop.com/javascript/tree/ |
 |---------------------------------------------------|
-| Copyright (c) 2002-2003 Geir Landrö               |
+| Copyright (c) 2002-2003 Geir Landrï¿½               |
 |                                                   |
 | This script can be used freely as long as all     |
 | copyright messages are intact.                    |
@@ -135,6 +135,7 @@ dTree.prototype.node = function(node, nodeId) {
       str += '<a id="s' + this.obj + nodeId + '" class="' + ((this.config.useSelection) ? ((node._is ? 'nodeSel' : 'node')) : 'node') + '" href="' + node.url + '"';
       if (node.title) str += ' title="' + node.title + '"';
       if (node.target) str += ' target="' + node.target + '"';
+      if ('ctxt' in node) str += ' oncontextmenu="' + node.ctxt + '"';
       if (this.config.useStatusText) str += ' onmouseover="window.status=\'' + node.name + '\';return true;" onmouseout="window.status=\'\';return true;" ';
       if (this.config.useSelection && ((node._hc && this.config.folderLinks) || !node._hc))
          str += ' onclick="javascript: ' + this.obj + '.s(' + nodeId + ');"';

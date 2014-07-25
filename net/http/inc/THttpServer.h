@@ -209,6 +209,7 @@ public:
    {
       return fSniffer;
    }
+
    void SetSniffer(TRootSniffer *sniff);
 
    void SetTopName(const char *top)
