@@ -240,7 +240,7 @@ PyObject* TPyDispatcher::Dispatch( TGListTreeItem* item, TDNDData* data )
 PyObject* TPyDispatcher::Dispatch( const char* name, const TList* attr )
 {
    PyObject* args = PyTuple_New( 2 );
-   PyTuple_SET_ITEM( args, 0, PyString_FromString( name ) );
+   PyTuple_SET_ITEM( args, 0, PyROOT_PyUnicode_FromString( name ) );
    PyTuple_SET_ITEM( args, 1, PyROOT::BindRootObject( (void*)attr, TClass::GetClass( "TList" ) ) );
 
    PyObject* result = PyObject_CallObject( fCallable, args );
