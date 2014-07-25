@@ -7,6 +7,7 @@
 #include "RootWrapper.h"
 #include "ClassMethodHolder.h"
 #include "MethodProxy.h"
+#include "PropertyProxy.h"
 #include "Adapters.h"
 
 // Standard
@@ -120,7 +121,11 @@ namespace {
                PyErr_Clear();
             // get class name to look up CINT tag info ...
                attr = GetRootGlobalFromString( name /*, tag */ );
-               if ( attr )
+               if ( PropertyProxy_Check( attr ) ) {
+                  PyObject_SetAttr( (PyObject*)Py_TYPE(pyclass), pyname, attr );
+                  Py_DECREF( attr );
+                  attr = PyType_Type.tp_getattro( pyclass, pyname );
+               } else if ( attr )
                   PyObject_SetAttr( pyclass, pyname, attr );
             }
 

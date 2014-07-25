@@ -198,8 +198,9 @@ namespace {
          return kTRUE;
       }
 
-   // this point is only reached if this is not an STL class, but that's ok
-      return kTRUE;
+   // this point is only reached if this is not an STL class, notify that no
+   // changes were made
+      return kFALSE;
    }
 
 } // unnamed namespace
@@ -502,10 +503,10 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
    T klass = T::ByName( lookup );
    if ( ! (Bool_t)klass || klass.FunctionMemberSize() == 0 ) {
    // special action for STL classes to enforce loading dict lib
-      LoadDictionaryForSTLType( name, klass.Id() );
-
-   // lookup again, if this was an STL class, we (may) now have a full dictionary
-      klass = T::ByName( lookup );
+      if ( LoadDictionaryForSTLType( name, klass.Id() ) ) {
+      // lookup again, we (may) now have a full dictionary
+         klass = T::ByName( lookup );
+      }
    }
 
    if ( ! (Bool_t)klass && G__defined_templateclass( const_cast< char* >( lookup.c_str() ) ) ) {
@@ -539,7 +540,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       if ( ! scope && fullname.find( "ROOT::" ) == std::string::npos ) { // not already in ROOT::
       // final attempt, for convenience, the "ROOT" namespace isn't required, try again ...
          PyObject* rtns = PyObject_GetAttr( gRootModule, PyStrings::gROOTns );
-         PyObject* pyclass = PyObject_GetAttrString( rtns, (char*)fullname.c_str() );
+         PyObject* pyclass = MakeRootClassFromString<T, B, M>( fullname, rtns ); //PyObject_GetAttrString( rtns, (char*)fullname.c_str() );
          Py_DECREF( rtns );
          return pyclass;
       }
@@ -846,14 +847,16 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 // determine type and cast as appropriate
    TClass* klass = TClass::GetClass( gbl->GetTypeName() );
    if ( klass != 0 ) {
-   // special cases where there should be no casting:
+   // special case where there should be no casting:
       if ( klass->InheritsFrom( "ios_base" ) )
          return BindRootObjectNoCast( (void*)gbl->GetAddress(), klass );
 
+   // pointer type globals
       if ( Utility::Compound( gbl->GetFullTypeName() ) != "" )
          return BindRootObject( (void*)gbl->GetAddress(), klass, kTRUE );
 
-      return BindRootObject( (void*)gbl->GetAddress(), klass );
+   // for by-value globals, to ensure setability
+      return (PyObject*)PropertyProxy_New< TGlobal* >( gbl );
    }
 
    if ( gbl->GetAddress() &&       // check for enums (which are const, not properties)

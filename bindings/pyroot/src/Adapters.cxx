@@ -129,6 +129,8 @@ Bool_t PyROOT::TMemberAdapter::IsPublic() const
 Bool_t PyROOT::TMemberAdapter::IsStatic() const
 {
 // test if the adapted member represents a class (data) member
+   if ( DeclaringScope().IsNamespace() )
+      return kTRUE;
    return fMember->Property() & G__BIT_ISSTATIC;
 }
 
@@ -200,6 +202,10 @@ PyROOT::TScopeAdapter PyROOT::TMemberAdapter::DeclaringScope() const
    TMethod* method = (TMethod*)*this;
    if ( method )
       return method->GetClass();
+
+   TDataMember* data = (TDataMember*)*this;
+   if ( data )
+      return data->GetClass();
 
 // happens for free-standing functions (i.e. global scope)
    return std::string( "" );
