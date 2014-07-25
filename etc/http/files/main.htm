@@ -3,26 +3,25 @@
 <head>
 
    <!--meta http-equiv="content-type" content="text/html; charset=iso-8859-1"/-->
-   
-   <meta http-equiv="X-UA-Compatible" content="IE=Edge; charset=iso-8859-1; text/html">
+   <meta charset="UTF-8" http-equiv="X-UA-Compatible" content="IE=Edge; charset=iso-8859-1; text/html">
    <title>Objects hierarchy</title>
    
-   <script src="jsrootiosys/scripts/jquery.min.js" type="text/javascript"></script>
-   <script src="jsrootiosys/scripts/jquery-ui.min.js" type="text/javascript"></script>
-   <script src="jsrootiosys/scripts/d3.v2.min.js" type="text/javascript"></script>
-   <script src="httpsys/scripts/raphael.2.1.0.min.js" type="text/javascript"></script>
-   <script src="httpsys/scripts/justgage.1.0.1.min.js" type="text/javascript"></script>
-   <script src="jsrootiosys/scripts/dtree.js" type="text/javascript" ></script>
-   <script src="jsrootiosys/scripts/JSRootInterface.js" type="text/javascript" ></script>
-	<link rel="stylesheet" type="text/css" href="jsrootiosys/style/jquery-ui.css"/>
-	<link rel="stylesheet" type="text/css" href="httpsys/files/dabc.css"/>
-   <script src="httpsys/scripts/dabc.js" type="text/javascript"></script>
+   <script src="/jsrootiosys/scripts/jquery.min.js" type="text/javascript"></script>
+   <script src="/jsrootiosys/scripts/jquery-ui.min.js" type="text/javascript"></script>
+   <script src="/jsrootiosys/scripts/d3.v3.min.js" type="text/javascript"></script>
+   <script src="/httpsys/scripts/raphael.2.1.0.min.js" type="text/javascript"></script>
+   <script src="/httpsys/scripts/justgage.1.0.1.min.js" type="text/javascript"></script>
+   <script src="/jsrootiosys/scripts/dtree.js" type="text/javascript" ></script>
+   <script src="/jsrootiosys/scripts/JSRootInterface.js" type="text/javascript" ></script>
+   <link rel="stylesheet" type="text/css" href="/jsrootiosys/style/jquery-ui.css"/>
+   <link rel="stylesheet" type="text/css" href="/httpsys/files/dabc.css"/>
+   <script src="/httpsys/scripts/dabc.js" type="text/javascript"></script>
    
    <script type='text/javascript'>
    
       function initGUI() {
       
-         source_dir = "jsrootiosys/";
+         source_dir = "/jsrootiosys/";
          
          if (!DABC.mgr) DABC.mgr = new DABC.Manager(true);
          
@@ -31,11 +30,7 @@
          $("#grid_spinner").spinner({ min:1, max:5});
          
          setInterval(function() { DABC.mgr.UpdateAll(); }, 3000);
-      
-         // var txt = '[{"_typename" : "JSROOTIO.TNamed","_option" : "opt1","fUniqueID" : 0,"fBits" : 50331648,"fName" : "a","fTitle" : "title a"},{"_typename" : "JSROOTIO.TNamed","_option" : "opt2","fUniqueID" : 0,"fBits" : 50331648,"fName" : "b","fTitle" : ""},"$ref:1","$ref:0",{"_typename" : "JSROOTIO.TNamed","_option" : "opt4","fUniqueID" : 0,"fBits" : 50331648,"fName" : "c","fTitle" : "title c"},"$ref:3"]'; 
-         // var obj = DABC.JSONR_unref(JSON.parse(txt));
-         // if (obj) console.log("length = " + obj.length);
-         
+     
       }
       
       $(document).ready(initGUI);
@@ -46,11 +41,14 @@
 </head>
 
 <body>
+   
+   <!--div id="overlay"><font face="Verdana" size="1px">DABC version 2.3.1</font></div-->
+   
    <div id="main" class="column">
    
       <h1>Objects hierarchy</h1>
 
-      Hierarchy in <a href="h.xml">xml</a> or <a href="h.json">json</a> format<br><br>
+      Hierarchy in <a href="h.xml">xml</a> format<br><br>
 
       <input type="checkbox" name="monitoring" id="monitoring"/> Monitoring        
       <input type="checkbox" name="show_history" id="show_history"/> History
@@ -60,7 +58,6 @@
   </div>
 
   <div id="DabcPainterHolder" class="column">
-      <div id="dialog"></div>
       <div id="dabc_draw"></div>
   </div>
   

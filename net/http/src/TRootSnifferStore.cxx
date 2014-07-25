@@ -79,7 +79,7 @@ void TRootSnifferStoreXml::SetField(Int_t, const char *field, const char *value,
                buf->Append("&amp;");
                break;
             case '\'' :
-               buf->Append("&ap;");
+               buf->Append("&apos;");
                break;
             case '\"' :
                buf->Append("&quot;");

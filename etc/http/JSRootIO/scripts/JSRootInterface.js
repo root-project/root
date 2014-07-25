@@ -15,8 +15,6 @@ var last_index = 0;
 var function_list = new Array();
 var func_list = new Array();
 var collections_list = {};
-var frame_id = 0;
-var random_id = 0;
 
 function closeCollapsible(e, el) {
    var sel = $(el)[0].textContent;
@@ -66,7 +64,7 @@ function showElement(element) {
 function loadScript(url, callback) {
    // dynamic script loader using callback
    // (as loading scripts may be asynchronous)
-   var script = document.createElement("script")
+   var script = document.createElement("script");
    script.type = "text/javascript";
    if (script.readyState) { // Internet Explorer specific
       script.onreadystatechange = function() {
@@ -75,7 +73,7 @@ function loadScript(url, callback) {
             script.onreadystatechange = null;
             if (callback!=null) callback();
          }
-      };
+      }
    } else { // Other browsers
       script.onload = function(){
          if (callback!=null) callback();
@@ -146,6 +144,7 @@ function displayCollection(name, cycle, c_id, coll) {
    JSROOTPainter.addCollectionContents(fullname, c_id, coll, '#status');
 };
 
+
 function displayObject(obj, cycle, idx) {
    if (!obj) return;
    if (!JSROOTPainter.canDrawObject(obj['_typename'])) return;
@@ -153,9 +152,21 @@ function displayObject(obj, cycle, idx) {
    var entryInfo = "<h5 id=\""+uid+"\"><a> " + obj['fName'] + ";" + cycle + "</a>&nbsp; </h5>\n";
    entryInfo += "<div id='histogram" + idx + "'>\n";
    $("#report").append(entryInfo);
-   JSROOTPainter.drawObject(obj, idx);
+   
+   var render_to = '#histogram' + idx;
+   if (typeof($(render_to)[0]) == 'undefined') return;
+   
+   $(render_to).empty();
+
+   var vis = JSROOTPainter.createCanvas($(render_to), obj);
+   
+   if (vis == null) return;
+
+   JSROOTPainter.drawObjectInFrame(vis, obj);
+   
    addCollapsible('#'+uid);
 };
+
 
 function showListObject(list_name, obj_name) {
 
@@ -188,7 +199,7 @@ function AssertPrerequisites(andThen) {
       // if JSROOTIO is not defined, then dynamically load the required scripts and open the file
       loadScript(source_dir+'scripts/jquery.min.js', function() {
       loadScript(source_dir+'scripts/jquery-ui.min.js', function() {
-      loadScript(source_dir+'scripts/d3.v2.min.js', function() {
+      loadScript(source_dir+'scripts/d3.v3.min.js', function() {
       loadScript(source_dir+'scripts/jquery.mousewheel.js', function() {
       loadScript(source_dir+'scripts/dtree.js', function() {
       loadScript(source_dir+'scripts/rawinflate.js', function() {
@@ -242,7 +253,7 @@ function ReadFile() {
    }
 
    gFile = new JSROOTIO.RootFile(url);
-};
+}
 
 function ResetUI() {
    obj_list.splice(0, obj_list.length);
@@ -250,8 +261,6 @@ function ResetUI() {
    collections_list = {};
    obj_index = 0;
    last_index = 0;
-   frame_id = 0;
-   random_id = 0;
    if (gFile) {
       gFile.Delete();
       delete gFile;
@@ -307,7 +316,6 @@ function BuildSimpleGUI() {
       +'<div id="status"></div>'
       +'</div>'
       +'<div id="reportHolder" class="column">'
-      +'<div id="dialog"> </div>'
       +'<div id="report"> </div>'
       +'</div>';
       $('#simpleGUI').append(guiCode);

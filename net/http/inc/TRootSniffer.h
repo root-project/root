@@ -66,6 +66,9 @@ public:
    /** Returns true when item can be expanded */
    Bool_t CanExpandItem();
 
+   /** Checks if result will be accepted. Used to verify if sniffer should read object from the file */
+   Bool_t IsReadyForResult() const;
+
    /** Set result pointer and return true if result is found */
    Bool_t SetResult(void *obj, TClass *cl, TDataMember *member = 0,  Int_t chlds = -1);
 
@@ -76,9 +79,10 @@ public:
    Int_t ExtraFolderLevel();
 
    /** Method indicates that scanning can be interrupted while result is set */
-   Bool_t Done();
+   Bool_t Done() const;
 
-   void MakeItemName(const char *objname, TString &itemname);
+   /** Construct item name, using object name as basis */
+   void MakeItemName(const char *objname, TString &itemname, Bool_t cut_slashes = kFALSE);
 
    Bool_t GoInside(TRootSnifferScanRec &super, TObject *obj, const char *obj_name = 0);
 
@@ -90,15 +94,17 @@ class TRootSniffer : public TNamed {
 
 protected:
 
-   TString fObjectsPath; //! path for registered objects
-   TMemFile *fMemFile;   //! file used to manage streamer infos
-   Int_t fSinfoSize;     //! number of elements in streamer info, used as version
+   TString     fObjectsPath; //! path for registered objects
+   TMemFile   *fMemFile;     //! file used to manage streamer infos
+   Int_t       fSinfoSize;   //! number of elements in streamer info, used as version
+   Bool_t      fReadOnly;    //! indicate if sniffer allowed to change ROOT structures - for instance, read objects from files
 
    void ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char *ptr, unsigned long int cloffset);
 
    void ScanObject(TRootSnifferScanRec &rec, TObject *obj);
 
-   void ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, const char *foldername = 0, Bool_t extra = kFALSE);
+   void ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
+                       const char *foldername = 0, Bool_t extra = kFALSE, TCollection* keys_lst = 0);
 
    /* Method is used to scan ROOT objects.
     * Can be reimplemented to extend scanning */
@@ -113,6 +119,13 @@ public:
 
    static Bool_t IsDrawableClass(TClass *cl);
    static Bool_t IsBrowsableClass(TClass *cl);
+
+   /** When readonly on (default), sniffer is not allowed to change ROOT structures.
+    * For instance, it is not allowed to read new objects from files */
+   void  SetReadOnly(Bool_t on = kTRUE) { fReadOnly = on; }
+
+   /** Return readonly mode */
+   Bool_t IsReadOnly() const { return fReadOnly; }
 
    Bool_t RegisterObject(const char *subfolder, TObject *obj);
 
