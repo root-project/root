@@ -2384,6 +2384,8 @@ void TStreamerInfo::Compile()
                )
               )
           && (element->TestBit(TStreamerElement::kCache) == previous->TestBit(TStreamerElement::kCache))
+          && (element->TestBit(TStreamerElement::kWrite) == previous->TestBit(TStreamerElement::kWrite))
+          // kWholeObject and kDoNotDelete do not apply to numerical elements.
           )
       {
          if (!previousOptimized) {
