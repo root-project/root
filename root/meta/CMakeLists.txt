@@ -8,8 +8,6 @@ ROOTTEST_ADD_TEST(roottest-root-meta-loadernotapp
 ROOTTEST_COMPILE_MACRO(fornamespace.C)
 
 ROOTTEST_ADD_AUTOMACROS(DEPENDS TmpltInt0.C TmpltInt1.C TmpltFloat.C
-                                TmpltNoSpec.C ${COMPILE_MACRO_TEST}
-                       WILLFAIL roottest-root-meta-execTypedefList-auto
-                                roottest-root-meta-execOptionList-auto)
+                                TmpltNoSpec.C Event.cxx ${COMPILE_MACRO_TEST})
 
 ROOTTEST_ADD_TESTDIRS()
