@@ -2572,13 +2572,27 @@ int CreateRootMapFile(const std::string& rootmapFileName,
 }
 
 //______________________________________________________________________________
+bool IsHeaderName(const std::string& filename)
+{
+   return llvm::sys::path::extension(filename) ==".h" ||
+          llvm::sys::path::extension(filename) ==".hh" ||
+          llvm::sys::path::extension(filename) ==".hpp" ||
+          llvm::sys::path::extension(filename) ==".H" ||
+          llvm::sys::path::extension(filename) ==".h++" ||
+          llvm::sys::path::extension(filename) =="hxx" ||
+          llvm::sys::path::extension(filename) =="Hxx" ||
+          llvm::sys::path::extension(filename) =="HXX";
+}
+
+//______________________________________________________________________________
 int CreateNewRootMapFile(const std::string& rootmapFileName,
                          const std::string& rootmapLibName,
                          const std::list<std::string>& classesDefsList,
                          const std::list<std::string>& classesNames,
                          const std::list<std::string>& nsNames,
                          const std::vector<clang::TypedefNameDecl*>& typedefDecls,
-                         const HeadersDeclsMap_t& headersClassesMap)
+                         const HeadersDeclsMap_t& headersClassesMap,
+                         const std::unordered_set<std::string> headersToIgnore)
 {
    // Generate a rootmap file in the new format, like
    // { decls }
@@ -2616,15 +2630,16 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
             rootmapFile << "class " << className << std::endl;
          }
          // And headers
-         std::unordered_set<std::string> writtenHeaders;
+         std::unordered_set<std::string> treatedHeaders;
          for (auto& className : classesNames){
             // Don't treat templates
             if (className.find("<")!=std::string::npos) continue;
             if (headersClassesMap.count(className)){
                auto& headers = headersClassesMap.at(className);
                auto& header = headers.front();
-               if (writtenHeaders.insert(header).second &&
-                   llvm::sys::path::extension(header)==".h")
+               if (treatedHeaders.insert(header).second &&
+                   headersToIgnore.find(header) == headersToIgnore.end() &&
+                   IsHeaderName(header))
                   rootmapFile << "header " << header << std::endl;
             }
          }
@@ -3389,20 +3404,6 @@ const std::string GenerateStringFromHeadersForClasses (const HeadersDeclsMap_t& 
    }
    headersClassesMapString+="nullptr};\n";
    return headersClassesMapString;
-}
-
-
-//______________________________________________________________________________
-bool IsHeaderName(const std::string& filename)
-{
-   return llvm::sys::path::extension(filename) ==".h" ||
-          llvm::sys::path::extension(filename) ==".hh" || 
-          llvm::sys::path::extension(filename) ==".hpp" || 
-          llvm::sys::path::extension(filename) ==".H" ||
-          llvm::sys::path::extension(filename) ==".h++" ||
-          llvm::sys::path::extension(filename) =="hxx" ||
-          llvm::sys::path::extension(filename) =="Hxx" ||
-          llvm::sys::path::extension(filename) =="HXX";
 }
 
 //______________________________________________________________________________
@@ -4358,6 +4359,14 @@ int RootCling(int argc,
       tmpCatalog.addFileName(rootmapFileName);
       int rmStatusCode = 0;
       if (useNewRmfFormat){
+         std::unordered_set<std::string> headersToIgnore;
+         if (inlineInputHeader){
+            for (int index=0; index < argc; ++index) {
+               if (*argv[index] != '-' && IsHeaderName(argv[index])) {
+                  headersToIgnore.insert(argv[index]);
+               }
+            }
+         }
 
          rmStatusCode = CreateNewRootMapFile(rootmapFileName,
                                              rootmapLibName,
@@ -4365,7 +4374,8 @@ int RootCling(int argc,
                                              classesNamesForRootmap,
                                              nsNames,
                                              scan.fSelectedTypedefs,
-                                             headersClassesMap);
+                                             headersClassesMap,
+                                             headersToIgnore);
       }
       else{
          rmStatusCode = CreateRootMapFile(rootmapFileName,
