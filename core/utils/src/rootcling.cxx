@@ -4352,8 +4352,8 @@ int RootCling(int argc,
                          rootmapLibName);
 
       ROOT::TMetaUtils::Info(0,"Rootmap file name %s and lib name(s) \"%s\"\n",
-                             rootmapLibName.c_str(),
-                             rootmapFileName.c_str());
+                             rootmapFileName.c_str(),
+                             rootmapLibName.c_str());
 
       tmpCatalog.addFileName(rootmapFileName);
       int rmStatusCode = 0;
