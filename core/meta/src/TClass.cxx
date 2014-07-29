@@ -5206,7 +5206,11 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
          il = name.Length();
          for (int i=0; i<il; i++) id = id*3+name[i];
          if (code > kNoBaseCheckSum && !isSTL) {
-            id = id*3 + tbc->GetClassPointer()->GetCheckSum();
+            if (tbc->GetClassPointer() == 0)
+               Error("GetCheckSum","Calculating the checksum for (%s) requires the base class (%s) meta information to be available!",
+                     GetName(),tbc->GetName()); 
+            else 
+               id = id*3 + tbc->GetClassPointer()->GetCheckSum();
          }
       }/*EndBaseLoop*/
    }
