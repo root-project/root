@@ -404,6 +404,7 @@ Bool_t TNetXNGFile::ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
    TSemaphore                 *semaphore;
    Int_t                       totalBytes = 0;
    Long64_t                    offset     = 0;
+   char                       *cursor     = buffer;
 
    Double_t start = 0;
    if (gPerfStats) start = TTimeStamp();
@@ -425,16 +426,17 @@ Bool_t TNetXNGFile::ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
          // Add as many max-size chunks as are divisible
          for (j = 0; j < nsplit; ++j) {
             offset = position[i] + (j * fReadvIorMax);
-            chunks.push_back(ChunkInfo(offset, fReadvIorMax, buffer));
+            chunks.push_back(ChunkInfo(offset, fReadvIorMax, cursor));
+            cursor += fReadvIorMax;
          }
 
          // Add the remainder
          offset = position[i] + (j * fReadvIorMax);
-         chunks.push_back(ChunkInfo(offset, rem, buffer));
-
+         chunks.push_back(ChunkInfo(offset, rem, cursor));
+         cursor += rem;
       } else {
-         offset = position[i];
-         chunks.push_back(ChunkInfo(offset, length[i], buffer));
+         chunks.push_back(ChunkInfo(position[i], length[i], cursor));
+         cursor += length[i];
       }
 
       // If there are more than or equal to max chunks, make another chunk list
@@ -449,7 +451,8 @@ Bool_t TNetXNGFile::ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
    }
 
    // Push back the last chunk list
-   chunkLists.push_back(chunks);
+   if( !chunks.empty() )
+      chunkLists.push_back(chunks);
 
    TAsyncReadvHandler *handler;
    XRootDStatus        status;
@@ -462,7 +465,7 @@ Bool_t TNetXNGFile::ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
    {
       handler = new TAsyncReadvHandler(statuses, it - chunkLists.begin(),
                                        semaphore);
-      status  = fFile->VectorRead(*it, buffer, handler);
+      status = fFile->VectorRead(*it, 0, handler);
 
       if (!status.IsOK()) {
          Error("ReadBuffers", "%s", status.ToStr().c_str());
