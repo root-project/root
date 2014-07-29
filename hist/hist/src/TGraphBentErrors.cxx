@@ -31,7 +31,7 @@ ClassImp(TGraphBentErrors)
 <center><h2>TGraphBentErrors class</h2></center>
 A TGraphBentErrors is a TGraph with bent, assymetric error bars.
 <p>
-The TGraphBentErrors painting is permofed thanks to the
+The TGraphBentErrors painting is performed thanks to the
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
 class. All details about the various painting options are given in
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
@@ -363,7 +363,7 @@ Bool_t TGraphBentErrors::CtorAllocate(void)
 Bool_t TGraphBentErrors::DoMerge(const TGraph *g)
 {
    //  protected function to perform the merge operation of a graph with asymmetric errors
-   if (g->GetN() == 0) return kFALSE; 
+   if (g->GetN() == 0) return kFALSE;
 
    Double_t * exl = g->GetEXlow();
    Double_t * exh = g->GetEXhigh();
@@ -375,19 +375,19 @@ Bool_t TGraphBentErrors::DoMerge(const TGraph *g)
    Double_t * eyld = g->GetEYlowd();
    Double_t * eyhd = g->GetEYhighd();
 
-   if (exl == 0 || exh == 0 || eyl == 0 || eyh == 0 || 
-       exld == 0 || exhd == 0 || eyld == 0 || eyhd == 0) { 
-      if (g->IsA() != TGraph::Class() ) 
+   if (exl == 0 || exh == 0 || eyl == 0 || eyh == 0 ||
+       exld == 0 || exhd == 0 || eyld == 0 || eyhd == 0) {
+      if (g->IsA() != TGraph::Class() )
          Warning("DoMerge","Merging a %s is not compatible with a TGraphBentErrors - errors will be ignored",g->IsA()->GetName());
-      return TGraph::DoMerge(g); 
+      return TGraph::DoMerge(g);
    }
    for (Int_t i = 0 ; i < g->GetN(); i++) {
-      Int_t ipoint = GetN(); 
-      Double_t x = g->GetX()[i]; 
-      Double_t y = g->GetY()[i]; 
+      Int_t ipoint = GetN();
+      Double_t x = g->GetX()[i];
+      Double_t y = g->GetY()[i];
       SetPoint(ipoint, x, y);
-      SetPointError(ipoint, exl[i],  exh[i],  eyl[i],  eyh[i], 
-                            exld[i], exhd[i], eyld[i], eyhd[i] ); 
+      SetPointError(ipoint, exl[i],  exh[i],  eyl[i],  eyh[i],
+                            exld[i], exhd[i], eyld[i], eyhd[i] );
    }
 
    return kTRUE;

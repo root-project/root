@@ -34,7 +34,7 @@ ClassImp(TGraphAsymmErrors)
 <center><h2>TGraphAsymmErrors class</h2></center>
 A TGraphAsymmErrors is a TGraph with assymetric error bars.
 <p>
-The TGraphAsymmErrors painting is permofed thanks to the
+The TGraphAsymmErrors painting is performed thanks to the
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
 class. All details about the various painting options are given in
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
@@ -99,11 +99,11 @@ TGraphAsymmErrors& TGraphAsymmErrors::operator=(const TGraphAsymmErrors &gr)
 
    if(this!=&gr) {
       TGraph::operator=(gr);
-      // delete arrays 
-      if (fEXlow) delete [] fEXlow; 
-      if (fEYlow) delete [] fEYlow; 
-      if (fEXhigh) delete [] fEXhigh; 
-      if (fEYhigh) delete [] fEYhigh; 
+      // delete arrays
+      if (fEXlow) delete [] fEXlow;
+      if (fEYlow) delete [] fEYlow;
+      if (fEXhigh) delete [] fEXhigh;
+      if (fEYhigh) delete [] fEYhigh;
 
       if (!CtorAllocate()) return *this;
       Int_t n = fNpoints*sizeof(Double_t);
@@ -564,7 +564,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
        Error("Divide","passed histograms are not of the same dimension");
        return;
      }
-     
+
      if(!TEfficiency::CheckBinning(*pass,*total)) {
        Error("Divide","passed histograms are not consistent");
        return;
@@ -578,7 +578,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
        return;
      }
    }
-   
+
    //Set the graph to have a number of points equal to the number of histogram
    //bins
    Int_t nbins = pass->GetNbinsX();
@@ -835,23 +835,23 @@ Bool_t TGraphAsymmErrors::CtorAllocate(void)
 Bool_t TGraphAsymmErrors::DoMerge(const TGraph *g)
 {
    //  protected function to perform the merge operation of a graph with asymmetric errors
-   if (g->GetN() == 0) return kFALSE; 
+   if (g->GetN() == 0) return kFALSE;
 
    Double_t * exl = g->GetEXlow();
    Double_t * exh = g->GetEXhigh();
    Double_t * eyl = g->GetEYlow();
    Double_t * eyh = g->GetEYhigh();
-   if (exl == 0 || exh == 0 || eyl == 0 || eyh == 0) { 
-      if (g->IsA() != TGraph::Class() ) 
+   if (exl == 0 || exh == 0 || eyl == 0 || eyh == 0) {
+      if (g->IsA() != TGraph::Class() )
          Warning("DoMerge","Merging a %s is not compatible with a TGraphAsymmErrors - errors will be ignored",g->IsA()->GetName());
-      return TGraph::DoMerge(g); 
+      return TGraph::DoMerge(g);
    }
    for (Int_t i = 0 ; i < g->GetN(); i++) {
-      Int_t ipoint = GetN(); 
-      Double_t x = g->GetX()[i]; 
-      Double_t y = g->GetY()[i]; 
+      Int_t ipoint = GetN();
+      Double_t x = g->GetX()[i];
+      Double_t y = g->GetY()[i];
       SetPoint(ipoint, x, y);
-      SetPointError(ipoint, exl[i], exh[i], eyl[i], eyh[i] ); 
+      SetPointError(ipoint, exl[i], exh[i], eyl[i], eyh[i] );
    }
 
    return kTRUE;
