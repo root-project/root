@@ -36,7 +36,7 @@ ClassImp(TGraphErrors)
 <center><h2>TGraphErrors class</h2></center>
 A TGraphErrors is a TGraph with error bars.
 <p>
-The TGraphErrors painting is permofed thanks to the
+The TGraphErrors painting is performed thanks to the
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
 class. All details about the various painting options are given in
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
@@ -186,8 +186,8 @@ TGraphErrors& TGraphErrors::operator=(const TGraphErrors &gr)
    if (this != &gr) {
       TGraph::operator=(gr);
       // N.B CtorAllocate does not delete arrays
-      if (fEX) delete [] fEX; 
-      if (fEY) delete [] fEY; 
+      if (fEX) delete [] fEX;
+      if (fEY) delete [] fEY;
       if (!CtorAllocate()) return *this;
 
       Int_t n = sizeof(Double_t) * fNpoints;
@@ -226,8 +226,8 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
    //
    // For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
    // you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
-   // e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';') 
-   // used once (e.g. "1;1") or in a combined way (" 1;,;;  1"). 
+   // e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';')
+   // used once (e.g. "1;1") or in a combined way (" 1;,;;  1").
    // Note in that case, the instanciation is about 2 times slower.
    // In case a delimiter is specified, the format "%lg %lg %lg" will read X,Y,EX.
 
@@ -314,7 +314,7 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
       // Looping
       while (std::getline(infile, line, '\n')) {
          if (line != "") {
-            if (line[line.size() - 1] == char(13)) {  // removing DOS CR character 
+            if (line[line.size() - 1] == char(13)) {  // removing DOS CR character
                line.erase(line.end() - 1, line.end()) ;
             }
             token = strtok(const_cast<char*>(line.c_str()), option) ;
@@ -530,21 +530,21 @@ Bool_t TGraphErrors::DoMerge(const TGraph *g)
 {
    //  protected function to perform the merge operation of a graph with errors
 
-   if (g->GetN() == 0) return kFALSE; 
+   if (g->GetN() == 0) return kFALSE;
 
    Double_t * ex = g->GetEX();
    Double_t * ey = g->GetEY();
-   if (ex == 0 || ey == 0 ) { 
-      if (g->IsA() != TGraph::Class() ) 
+   if (ex == 0 || ey == 0 ) {
+      if (g->IsA() != TGraph::Class() )
          Warning("DoMerge","Merging a %s is not compatible with a TGraphErrors - errors will be ignored",g->IsA()->GetName());
-      return TGraph::DoMerge(g); 
+      return TGraph::DoMerge(g);
    }
    for (Int_t i = 0 ; i < g->GetN(); i++) {
-      Int_t ipoint = GetN(); 
-      Double_t x = g->GetX()[i]; 
-      Double_t y = g->GetY()[i]; 
+      Int_t ipoint = GetN();
+      Double_t x = g->GetX()[i];
+      Double_t y = g->GetY()[i];
       SetPoint(ipoint, x, y);
-      SetPointError( ipoint, ex[i], ey[i] ); 
+      SetPointError( ipoint, ex[i], ey[i] );
    }
    return kTRUE;
 }
@@ -685,7 +685,7 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   " << std::endl;
    static Int_t frameNumber = 1000;
    frameNumber++;
-   
+
    Int_t i;
    TString fXName  = TString(GetName()) + Form("_fx%d",frameNumber);
    TString fYName  = TString(GetName()) + Form("_fy%d",frameNumber);
@@ -703,7 +703,7 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   Double_t " << fEYName << "[" << fNpoints << "] = {" << std::endl;
    for (i = 0; i < fNpoints-1; i++) out << "   " << fEY[i] << "," << std::endl;
    out << "   " << fEY[fNpoints-1] << "};" << std::endl;
-   
+
    if (gROOT->ClassSaved(TGraph::Class())) out << "   ";
    else out << "   TGraphErrors *";
    out << "gre = new TGraphErrors(" << fNpoints << ","
@@ -736,7 +736,7 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          out << "   gre->GetListOfFunctions()->Add(ptstats);" << std::endl;
          out << "   ptstats->SetParent(gre->GetListOfFunctions());" << std::endl;
       } else {
-         out << "   gre->GetListOfFunctions()->Add(" 
+         out << "   gre->GetListOfFunctions()->Add("
              << Form("%s%d",obj->GetName(),frameNumber) << ");" << std::endl;
       }
    }

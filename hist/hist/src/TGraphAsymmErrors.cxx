@@ -34,7 +34,7 @@ ClassImp(TGraphAsymmErrors)
 <center><h2>TGraphAsymmErrors class</h2></center>
 A TGraphAsymmErrors is a TGraph with assymetric error bars.
 <p>
-The TGraphAsymmErrors painting is permofed thanks to the
+The TGraphAsymmErrors painting is performed thanks to the
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">TGraphPainter</a>
 class. All details about the various painting options are given in
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
@@ -99,11 +99,11 @@ TGraphAsymmErrors& TGraphAsymmErrors::operator=(const TGraphAsymmErrors &gr)
 
    if(this!=&gr) {
       TGraph::operator=(gr);
-      // delete arrays 
-      if (fEXlow) delete [] fEXlow; 
-      if (fEYlow) delete [] fEYlow; 
-      if (fEXhigh) delete [] fEXhigh; 
-      if (fEYhigh) delete [] fEYhigh; 
+      // delete arrays
+      if (fEXlow) delete [] fEXlow;
+      if (fEYlow) delete [] fEYlow;
+      if (fEXhigh) delete [] fEXhigh;
+      if (fEYhigh) delete [] fEYhigh;
 
       if (!CtorAllocate()) return *this;
       Int_t n = fNpoints*sizeof(Double_t);
@@ -564,7 +564,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
        Error("Divide","passed histograms are not of the same dimension");
        return;
      }
-     
+
      if(!TEfficiency::CheckBinning(*pass,*total)) {
        Error("Divide","passed histograms are not consistent");
        return;
@@ -578,7 +578,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
        return;
      }
    }
-   
+
    //Set the graph to have a number of points equal to the number of histogram
    //bins
    Int_t nbins = pass->GetNbinsX();
@@ -610,11 +610,11 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
           pw =  pass->GetBinContent(b);
           pw2 = pass->GetSumw2()->At(b);
 
-	  if(bPoissonRatio)
-	  {
-	    tw += pw;
-	    tw2 += pw2;
-	  }
+          if(bPoissonRatio)
+          {
+            tw += pw;
+            tw2 += pw2;
+          }
 
           if (tw <= 0 && !plot0Bins) continue; // skip bins with total <= 0
 
@@ -628,23 +628,22 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
           t = int( total->GetBinContent(b) + 0.5);
           p = int(pass->GetBinContent(b) + 0.5);
 
-	  if(bPoissonRatio)
-	    t += p;
-	  
+          if(bPoissonRatio) t += p;
+
           if (!t && !plot0Bins) continue; // skip bins with total = 0
        }
 
 
       //using bayesian statistics
-      if(bIsBayesian) {         
+      if(bIsBayesian) {
          double aa,bb;
 
-         if (bEffective && tw2 <= 0) { 
-            // case of bins with zero errors 
-            eff = pw/tw; 
+         if (bEffective && tw2 <= 0) {
+            // case of bins with zero errors
+            eff = pw/tw;
             low = eff; upper = eff;
          }
-         else { 
+         else {
 
             if (bEffective) {
                // tw/tw2 renormalize the weights
@@ -660,7 +659,7 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
                eff = TEfficiency::BetaMode(aa,bb);
             else
                eff = TEfficiency::BetaMean(aa,bb);
-            
+
             if (useShortestInterval) {
                TEfficiency::BetaShortestInterval(conf,aa,bb,low,upper);
             }
@@ -705,11 +704,11 @@ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
       // treat as Poisson ratio
       if(bPoissonRatio && eff != 1)
       {
-	Double_t cor = 1./pow(1 - eff,2);
-	Double_t ratio = eff/(1 - eff);
-	low = ratio - cor * (eff - low);
-	upper = ratio + cor * (upper - eff);
-	eff = ratio;
+        Double_t cor = 1./pow(1 - eff,2);
+        Double_t ratio = eff/(1 - eff);
+        low = ratio - cor * (eff - low);
+        upper = ratio + cor * (upper - eff);
+        eff = ratio;
       }
       //Set the point center and its errors
       SetPoint(npoint,pass->GetBinCenter(b),eff);
@@ -835,23 +834,23 @@ Bool_t TGraphAsymmErrors::CtorAllocate(void)
 Bool_t TGraphAsymmErrors::DoMerge(const TGraph *g)
 {
    //  protected function to perform the merge operation of a graph with asymmetric errors
-   if (g->GetN() == 0) return kFALSE; 
+   if (g->GetN() == 0) return kFALSE;
 
    Double_t * exl = g->GetEXlow();
    Double_t * exh = g->GetEXhigh();
    Double_t * eyl = g->GetEYlow();
    Double_t * eyh = g->GetEYhigh();
-   if (exl == 0 || exh == 0 || eyl == 0 || eyh == 0) { 
-      if (g->IsA() != TGraph::Class() ) 
+   if (exl == 0 || exh == 0 || eyl == 0 || eyh == 0) {
+      if (g->IsA() != TGraph::Class() )
          Warning("DoMerge","Merging a %s is not compatible with a TGraphAsymmErrors - errors will be ignored",g->IsA()->GetName());
-      return TGraph::DoMerge(g); 
+      return TGraph::DoMerge(g);
    }
    for (Int_t i = 0 ; i < g->GetN(); i++) {
-      Int_t ipoint = GetN(); 
-      Double_t x = g->GetX()[i]; 
-      Double_t y = g->GetY()[i]; 
+      Int_t ipoint = GetN();
+      Double_t x = g->GetX()[i];
+      Double_t y = g->GetY()[i];
       SetPoint(ipoint, x, y);
-      SetPointError(ipoint, exl[i], exh[i], eyl[i], eyh[i] ); 
+      SetPointError(ipoint, exl[i], exh[i], eyl[i], eyh[i] );
    }
 
    return kTRUE;
@@ -1029,7 +1028,7 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
    out << "   Double_t " << fEhYName << "[" << fNpoints << "] = {" << std::endl;
    for (i = 0; i < fNpoints-1; i++) out << "   " << fEYhigh[i] << "," << std::endl;
    out << "   " << fEYhigh[fNpoints-1] << "};" << std::endl;
-   
+
    if (gROOT->ClassSaved(TGraphAsymmErrors::Class())) out<<"   ";
    else out << "   TGraphAsymmErrors *";
    out << "grae = new TGraphAsymmErrors("<< fNpoints << ","
@@ -1037,7 +1036,7 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
                                     << fElXName  << ","  << fEhXName << ","
                                     << fElYName  << ","  << fEhYName << ");"
                                     << std::endl;
-   
+
    out << "   grae->SetName(" << quote << GetName() << quote << ");" << std::endl;
    out << "   grae->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
 
@@ -1063,7 +1062,7 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
          out << "   grae->GetListOfFunctions()->Add(ptstats);" << std::endl;
          out << "   ptstats->SetParent(grae->GetListOfFunctions());" << std::endl;
       } else {
-         out << "   grae->GetListOfFunctions()->Add(" 
+         out << "   grae->GetListOfFunctions()->Add("
              << Form("%s%d",obj->GetName(),frameNumber) << ");" << std::endl;
       }
    }
