@@ -137,6 +137,8 @@ int main(int argc, char **argv)
 
 #endif
 
+class TPostScript;
+class TPad;
 class TH1;
 class TTree;
 
