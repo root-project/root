@@ -397,7 +397,7 @@ Begin_Macro(source)
    double zero[5] = {0, 0, 0, 0, 0};
 
    // data set (1) with stat and sys errors
-   double y1[5]       = {1.2, 1.15, 1.19, 0.9, 1.4};
+   double py1[5]      = {1.2, 1.15, 1.19, 0.9, 1.4};
    double ey_stat1[5] = {0.2, 0.18, 0.17, 0.2, 0.4};
    double ey_sys1[5]  = {0.5, 0.71, 0.76, 0.5, 0.45};
 
@@ -409,13 +409,13 @@ Begin_Macro(source)
    // Now draw data set (1)
 
    // We first have to draw it only with the stat errors
-   TGraphErrors *graph1 = new TGraphErrors(5, x, y1, zero, ey_stat1);
+   TGraphErrors *graph1 = new TGraphErrors(5, x, py1, zero, ey_stat1);
    graph1->SetMarkerStyle(20);
    graph1->Draw("P");
 
    // Now we have to somehow depict the sys errors
 
-   TGraphErrors *graph1_sys = new TGraphErrors(5, x, y1, zero, ey_sys1);
+   TGraphErrors *graph1_sys = new TGraphErrors(5, x, py1, zero, ey_sys1);
    graph1_sys->Draw("[]");
 
    // Now draw data set (2)
@@ -1080,7 +1080,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
 
    // If no "drawing" option is selected and if chopt<>' ' nothing is done.
    if (optionLine+optionFill+optionCurve+optionStar+optionMark+optionBar+optionE == 0) {
-      if (strlen(chopt) == 0)  optionLine=1;
+      if (!chopt[0])  optionLine=1;
       else   return;
    }
 
@@ -1723,8 +1723,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             gywork[npt-1] = y[j-1];
             gywork[npt]   = y[j-1];
             if (gywork[npt] < vymin) {gywork[npt] = vymin; gywork[npt-1] = vymin;}
-            if (gxwork[npt-1] >= uxmin-rounding && gxwork[npt] <= uxmax+rounding) npt += 2;
-            else gxwork[npt-2] = TMath::Min(gxwork[npt], uxmax);
+            if ((gxwork[npt-1] >= uxmin-rounding && gxwork[npt-1] <= uxmax+rounding) ||
+                (gxwork[npt]   >= uxmin-rounding && gxwork[npt]   <= uxmax+rounding)) npt += 2;
             if (j == last) {
                gxwork[npt-1] = gxwork[npt-2];
                gywork[npt-1] = gywork[0];
@@ -1762,7 +1762,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                gywork[npt-1] = y[j-1];       gywork[npt] = y[j];
             }
             gxwork[npt-1] = x[j-1];      gxwork[npt] = x[j-1];
-            if (gxwork[npt-1] >= uxmin-rounding && gxwork[npt] <= uxmax+rounding) npt += 2;
+            if ((gxwork[npt-1] >= uxmin-rounding && gxwork[npt-1] <= uxmax+rounding) ||
+                (gxwork[npt]   >= uxmin-rounding && gxwork[npt]   <= uxmax+rounding)) npt += 2;
             if (j == last) {
                gywork[npt-1] = gywork[npt-2];
                gxwork[npt-1] = gxwork[0];
@@ -1782,7 +1783,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
 
    //      Draw a standard Histogram (default)
 
-   if ((optionHist) || strlen(chopt) == 0) {
+   if ((optionHist) || !chopt[0]) {
       if (!optionRot) {
          gxwork[0] = wmin;
          gywork[0] = gPad->GetUymin();
@@ -1804,8 +1805,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             gywork[npt-1] = y[i-1];
             gywork[npt]   = y[i-1];
             if (gywork[npt] < vymin) {gywork[npt] = vymin; gywork[npt-1] = vymin;}
-            if (gxwork[npt-1] >= uxmin-rounding && gxwork[npt] <= uxmax+rounding) npt += 2;
-            else gxwork[npt-2] = TMath::Min(gxwork[npt], uxmax);
+            if ((gxwork[npt-1] >= uxmin-rounding && gxwork[npt-1] <= uxmax+rounding) ||
+                (gxwork[npt]   >= uxmin-rounding && gxwork[npt]   <= uxmax+rounding)) npt += 2;
             if (i == last) {
                gxwork[npt-1] = gxwork[npt-2];
                gywork[npt-1] = gywork[0];
@@ -1868,7 +1869,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                gywork[npt-1] = y[i-1];      gywork[npt] = y[i];
             }
             gxwork[npt-1] = x[i-1];      gxwork[npt] = x[i-1];
-            if (gxwork[npt-1] >= uxmin-rounding && gxwork[npt] <= uxmax+rounding) npt += 2;
+            if ((gxwork[npt-1] >= uxmin-rounding && gxwork[npt-1] <= uxmax+rounding) ||
+                (gxwork[npt]   >= uxmin-rounding && gxwork[npt]   <= uxmax+rounding)) npt += 2;
             if (i == last) {
                gywork[npt-1] = gywork[npt-2];
                gxwork[npt-1] = xwmin;
