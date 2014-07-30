@@ -112,7 +112,7 @@ public:
       PTHREAD_ONCE_INIT;
  
       void *_ptr;
-      (void) pthread_once(&(fOnce), _##name##_key_create);
+      (void) pthread_once(&(fOnce), _key_create);
    }
 
    ~TThreadTLSWrapper() {
