@@ -2,7 +2,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 
-   <meta charset="UTF-8" http-equiv="X-UA-Compatible" content="IE=Edge; charset=iso-8859-1; text/html">
+   <meta http-equiv="X-UA-Compatible" content="IE=Edge; text/html">
+
    <title>JSRootIO drawing inside HTML page</title>
    
    <script src="scripts/jquery.min.js" type="text/javascript"></script>
@@ -32,14 +33,20 @@
          var histo = JSROOTCore.CreateTH2(20, 20);
          for (var iy=0;iy<20;iy++)
             for (var ix=0;ix<20;ix++) {
-               var bin = histo.getBin(ix+1, iy+1);
-               histo.setBinContent(bin, cnt %2 ? 40 - ix - iy : ix+iy);
+               var bin = histo.getBin(ix+1, iy+1), val = 0;
+               switch (cnt % 4) {
+                  case 1: val = ix + 19 - iy; break;
+                  case 2: val = 38 - ix - iy; break;
+                  case 3: val = 19 - ix + iy; break;
+                  default: val = ix + iy; break;
+               }
+               histo.setBinContent(bin, val);
             }
             
          cnt++;
          
          if (painter==null) {
-            painter = JSROOTPainter.draw('object_draw', histo, "col");
+            painter = JSROOTPainter.draw('object_draw', histo, "colz");
          } else {   
             painter.UpdateObject(histo);   
             painter.RedrawFrame();
