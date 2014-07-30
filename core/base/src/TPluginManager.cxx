@@ -105,7 +105,11 @@
 TPluginManager *gPluginMgr;   // main plugin manager created in TROOT
 
 static TVirtualMutex *gPluginManagerMutex;
-static TTHREAD_TLS(bool) fgReadingDirs (false);
+
+static bool &TPH__IsReadingDirs() {
+   TTHREAD_TLS(bool) readingDirs (false);
+   return readingDirs;
+}
 
 ClassImp(TPluginHandler)
 
@@ -491,7 +495,7 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
 	 fBasesLoaded->Add(new TObjString(sbase));
       }
 
-      fgReadingDirs = kTRUE;
+      TPH__IsReadingDirs() = kTRUE;
 
       TString plugindirs = gEnv->GetValue("Root.PluginPath", (char*)0);
 #ifdef WIN32
@@ -534,7 +538,7 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
 	    }
 	 }
       }
-      fgReadingDirs = kFALSE;
+      TPH__IsReadingDirs() = kFALSE;
    }
    delete dirs;
 }
@@ -557,7 +561,7 @@ void TPluginManager::AddHandler(const char *base, const char *regexp,
    // make sure there is no previous handler for the same case
    RemoveHandler(base, regexp);
 
-   if (fgReadingDirs)
+   if (TPH__IsReadingDirs())
       origin = gInterpreter->GetCurrentMacroName();
 
    TPluginHandler *h = new TPluginHandler(base, regexp, className,

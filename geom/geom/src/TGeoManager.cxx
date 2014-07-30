@@ -845,7 +845,7 @@ TGeoNavigator *TGeoManager::AddNavigator()
 TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 {
 // Returns current navigator for the calling thread.
-   static TTHREAD_TLS(TGeoNavigator*) tnav = 0;
+   TTHREAD_TLS(TGeoNavigator*) tnav = 0;
    if (!fMultiThread) return fCurrentNavigator;
    TGeoNavigator *nav = tnav; // TTHREAD_TLS_GET(TGeoNavigator*,tnav);
    if (nav) return nav;
@@ -991,7 +991,7 @@ Int_t TGeoManager::ThreadId()
 // manage data which is pspecific for a given thread.
 //   static __thread Int_t tid = -1;
 //   if (tid > -1) return tid;
-   static TTHREAD_TLS(Int_t) tid = -1;
+   TTHREAD_TLS(Int_t) tid = -1;
    Int_t ttid = tid; // TTHREAD_TLS_GET(Int_t,tid);
    if (ttid > -1) return ttid;
    if (gGeoManager && !gGeoManager->IsMultiThread()) return 0;

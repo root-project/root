@@ -72,7 +72,6 @@
 
 #include "TStreamerInfoActions.h"
 
-TTHREAD_TLS(TStreamerElement*) TStreamerInfo::fgElement = 0;
 #if __cplusplus >= 201103L
 std::atomic<Int_t>   TStreamerInfo::fgCount{0};
 #else
@@ -3722,14 +3721,6 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
    fclose(fp);
    if (sfp) fclose(sfp);
    return 1;
-}
-
-//______________________________________________________________________________
-TStreamerElement *TStreamerInfo::GetCurrentElement()
-{
-   //static function returning a pointer to the current TStreamerElement
-   //fgElement points to the current TStreamerElement being read in ReadBuffer
-   return fgElement;
 }
 
 //______________________________________________________________________________

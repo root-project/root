@@ -25,6 +25,27 @@
 #include "TVirtualArray.h"
 #include "TVirtualObject.h"
 
+// GetCurrentElement.
+// Currently only used by TRef::Streamer.
+
+static TStreamerElement* &CurrentElement()
+{
+   //Pointer to current TStreamerElement
+   //Thread local storage.
+
+   TTHREAD_TLS(TStreamerElement*) fgElement(0);
+
+   return fgElement;
+}
+
+//______________________________________________________________________________
+TStreamerElement *TStreamerInfo::GetCurrentElement()
+{
+   //static function returning a pointer to the current TStreamerElement
+   //fgElement points to the current TStreamerElement being read in ReadBuffer
+   return CurrentElement();
+}
+
 //==========CPP macros
 
 #define DOLOOP for(Int_t k=0; k<narr; ++k)
@@ -754,7 +775,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
    Int_t isPreAlloc = 0;
    for (Int_t i=first;i<last;i++) {
       TStreamerElement * aElement  = (TStreamerElement*)compinfo[i]->fElem;
-      fgElement = aElement;
+      CurrentElement() = aElement;
 
       if (needIncrement) b.SetStreamerElementNumber(aElement,compinfo[i]->fType);
 

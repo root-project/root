@@ -460,7 +460,7 @@ TThread *TThread::Self()
 {
    // Static method returning pointer to current thread.
 
-   static TTHREAD_TLS(TThread*) self = 0;
+   TTHREAD_TLS(TThread*) self = 0;
 
    if (!self) self = GetThread(SelfId());
    return self;

@@ -318,11 +318,8 @@ protected:
    TSeqCollection  *fCompiled;         //List of shared libs from compiled macros to be deleted
    TSeqCollection  *fHelpers;          //List of helper classes for alternative file/directory access
 
-#if __cplusplus >= 201103L
-   static TTHREAD_TLS(TString)   fgLastErrorString;  //Last system error message
-#else
-   static TString                fgLastErrorString;  //Last system error message
-#endif
+   TString &GetLastErrorString();             //Last system error message (thread local).
+   const TString &GetLastErrorString() const; //Last system error message (thread local).
 
    TSystem               *FindHelper(const char *path, void *dirptr = 0);
    virtual Bool_t         ConsistentWith(const char *path, void *dirptr = 0);
@@ -348,7 +345,7 @@ public:
    virtual void            SetProgname(const char *name);
    virtual void            SetDisplay();
    void                    SetErrorStr(const char *errstr);
-   const char             *GetErrorStr() const { return fgLastErrorString; }
+   const char             *GetErrorStr() const { return GetLastErrorString(); }
    virtual const char     *GetError();
    void                    RemoveOnExit(TObject *obj);
    virtual const char     *HostName();

@@ -134,9 +134,9 @@ TUUID::TUUID()
 {
    // Create a UUID.
 
-   static TTHREAD_TLS(uuid_time_t) time_last;
-   static TTHREAD_TLS(UShort_t) clockseq;
-   static TTHREAD_TLS(Bool_t) firstTime = kTRUE;
+   TTHREAD_TLS(uuid_time_t) time_last;
+   TTHREAD_TLS(UShort_t) clockseq;
+   TTHREAD_TLS(Bool_t) firstTime = kTRUE;
    if (firstTime) {
       R__LOCKGUARD2(gROOTMutex); // rand and random are not thread safe.
 
@@ -325,9 +325,9 @@ void TUUID::GetCurrentTime(uuid_time_t *timestamp)
 
    const UShort_t uuids_per_tick = 1024;
 
-   static TTHREAD_TLS(uuid_time_t) time_last;
-   static TTHREAD_TLS(UShort_t)    uuids_this_tick;
-   static TTHREAD_TLS(Bool_t)      init = kFALSE;
+   TTHREAD_TLS(uuid_time_t) time_last;
+   TTHREAD_TLS(UShort_t)    uuids_this_tick;
+   TTHREAD_TLS(Bool_t)      init = kFALSE;
 
    if (!init) {
       GetSystemTime(&time_last);

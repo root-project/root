@@ -144,7 +144,7 @@ const char *TRegexp::MakeWildcard(const char *re)
    // pathnames, e.g. "*.root" will match "aap.root", but not "pipo/aap.root".
 
 #if __cplusplus >= 201103L
-   static thread_local char buf[fgMaxpat];
+   thread_local char buf[fgMaxpat];
 #else
    static char buf[fgMaxpat];
 #endif
