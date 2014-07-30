@@ -426,8 +426,8 @@ var gStyle = {
       'StatFontSize'  : 9,
       'StatTextColor' : 1,
       'TimeOffset'    : 788918400000, // UTC time at 01/01/95
-      'StatFormat'    : function(v) { return (Math.abs(v) < 1e5) ? v.toFixed(5) : v.toExponential(7); }, 
-      'StatEntriesFormat'  : function(v) { return (Math.abs(v) < 1e7) ? v.toFixed(0) : v.toExponential(7); } 
+      'StatFormat'    : function(v) { return (Math.abs(v) < 1e5) ? v.toFixed(5) : v.toExponential(7); },
+      'StatEntriesFormat'  : function(v) { return (Math.abs(v) < 1e7) ? v.toFixed(0) : v.toExponential(7); }
    };
 
 
@@ -476,12 +476,12 @@ var gStyle = {
    JSROOTPainter = {};
 
    JSROOTPainter.version = '4.1 2014/05/12';
-   
+
    JSROOTPainter.d3v3 = (d3.version.charAt(0) == '3');
-   
+
    // if (JSROOTPainter.d3v3) console.log("d3_v3_js"); else console.log("d3_v2_js");
 
-   JSROOTPainter.fUserPainters = null; // list of user painters, called with arguments painter(vis, obj, opt) 
+   JSROOTPainter.fUserPainters = null; // list of user painters, called with arguments painter(vis, obj, opt)
 
    /*
     * Helper functions
@@ -1033,12 +1033,12 @@ var gStyle = {
       }
       return 'rgb('+Math.round(r * 255)+', '+Math.round(g * 255)+', '+Math.round(b * 255)+')';
    }
-   
+
    JSROOTPainter.chooseTimeFormat = function(range, nticks) {
       if (nticks<1) nticks = 1;
       var awidth = range / nticks;
       var reasformat = 0;
-      
+
       // code from TAxis::ChooseTimeFormat
       // width in seconds ?
       if (awidth>=.5) {
@@ -1067,9 +1067,9 @@ var gStyle = {
             }
          }
       }
-      
+
       switch (reasformat) {
-         case 0: return "%S"; 
+         case 0: return "%S";
          case 1: return "%Mm%S";
          case 2: return "%Hh%M";
          case 3: return "%d-%Hh";
@@ -1078,7 +1078,7 @@ var gStyle = {
          case 6: return "%d/%m/%y";
          case 7: return "%m/%y";
       }
-      
+
       return "%Y";
    }
 
@@ -1165,7 +1165,7 @@ var gStyle = {
       }
       return str;
    };
-   
+
    JSROOTPainter.symbols_map = {
          // greek letters
          '#alpha' : '\u03B1',
@@ -1393,12 +1393,12 @@ var gStyle = {
    JSROOTPainter.histoDialog = function(item) {
 
       var x = document.getElementById('root_ctx_menu');
-      if(!x) return; 
-         
+      if(!x) return;
+
       var painter = $("#root_ctx_menu").data("Painter");
       $("#root_ctx_menu").dialog("close");
       $("#root_ctx_menu").empty();
-      
+
       x.parentNode.removeChild(x);
 
       painter.ExeContextMenu(item);
@@ -1444,7 +1444,7 @@ var gStyle = {
          this['zoom_xmin'] = 0;
          this['zoom_xmax'] = 0;
          this['zoom_xpad'] = true; // indicate that zooming specified from pad
-         
+
          this['zoom_ymin'] = 0;
          this['zoom_ymax'] = 0;
          this['zoom_ypad'] = true; // indicate that zooming specified from pad
@@ -1500,6 +1500,178 @@ var gStyle = {
          painter.Redraw();
       }
    }
+
+   JSROOTPainter.ObjectPainter.prototype.RemoveDrag = function(id)
+   {
+      var drag_rect_name = id + "_drag_rect";
+      var resize_rect_name = id + "_resize_rect";
+      if (this[drag_rect_name]) { this[drag_rect_name].remove(); this[drag_rect_name] = null; }
+      if (this[resize_rect_name]) { this[resize_rect_name].remove(); this[resize_rect_name] = null; }
+   }
+
+   JSROOTPainter.ObjectPainter.prototype.AddDrag = function(id, main_rect, callback) {
+
+      var pthis = this;
+
+      var drag_rect_name = id + "_drag_rect";
+      var resize_rect_name = id + "_resize_rect";
+
+      var istitle = (main_rect.node().tagName == "text");
+
+      var rect_width = function() {
+         if (istitle)
+            return main_rect.node().getBBox().width;
+         else
+            return Number(main_rect.attr("width"));
+      }
+
+      var rect_height = function() {
+         if (istitle)
+            return main_rect.node().getBBox().height;
+         else
+            return Number(main_rect.attr("height"));
+      }
+
+      var rect_x = function() {
+         var x = Number(main_rect.attr("x"));
+         if (istitle) x -= rect_width()/2;
+         return x;
+      }
+
+      var rect_y = function() {
+         var y = Number(main_rect.attr("y"));
+         if (istitle) y -= rect_height();
+         return y;
+      }
+
+      var drag_move = d3.behavior.drag()
+          .origin(Object)
+          .on("dragstart", function() {
+             d3.event.sourceEvent.preventDefault();
+
+             pthis[drag_rect_name] =
+                pthis.vis.append("rect")
+                .attr("class", "zoom")
+                .attr("id", drag_rect_name)
+                .attr("x", rect_x())
+                .attr("y", rect_y())
+                .attr("width", rect_width())
+                .attr("height", rect_height())
+                .style("cursor", "move");
+          })
+          .on("drag", function() {
+             d3.event.sourceEvent.preventDefault();
+             pthis[drag_rect_name].attr("x", Number(pthis[drag_rect_name].attr("x")) + d3.event.dx);
+             pthis[drag_rect_name].attr("y", Number(pthis[drag_rect_name].attr("y")) + d3.event.dy);
+             d3.event.sourceEvent.stopPropagation();
+          })
+          .on("dragend", function() {
+             d3.event.sourceEvent.preventDefault();
+
+             pthis[drag_rect_name].style("cursor", "auto");
+
+             var x = Number(pthis[drag_rect_name].attr("x"));
+             var y = Number(pthis[drag_rect_name].attr("y"));
+
+             var dx = x - rect_x();
+             var dy = y - rect_y();
+
+             pthis[drag_rect_name].remove();
+             pthis[drag_rect_name] = null;
+
+             if (istitle) {
+                main_rect.attr("x", x + rect_width()/2).attr("y", y + rect_height());
+             } else {
+                main_rect.attr("x", x).attr("y", y);
+                pthis[resize_rect_name]
+                   .attr("x", x + rect_width() - 20)
+                   .attr("y", y + rect_height() - 20);
+             }
+
+             callback.move(x, y, dx, dy);
+
+             // do it after call-back - rectangle has correct coordinates
+             if (istitle)
+                pthis[resize_rect_name]
+                  .attr("x", rect_x() + rect_width() - 20)
+                  .attr("y", rect_y() + rect_height() - 20);
+          });
+
+      var drag_resize =
+         d3.behavior.drag()
+          .origin(Object)
+          .on("dragstart", function() {
+             d3.event.sourceEvent.preventDefault();
+             pthis[drag_rect_name] =
+                pthis.vis.append("rect")
+                .attr("class", "zoom")
+                .attr("id", drag_rect_name)
+                .attr("x", rect_x())
+                .attr("y", rect_y())
+                .attr("width", rect_width())
+                .attr("height", rect_height())
+                .style("cursor", "se-resize");
+
+             // main_rect.style("cursor", "move");
+          })
+          .on("drag", function() {
+             d3.event.sourceEvent.preventDefault();
+             pthis[drag_rect_name].attr("width", Number(pthis[drag_rect_name].attr("width")) + d3.event.dx);
+             pthis[drag_rect_name].attr("height", Number(pthis[drag_rect_name].attr("height")) + d3.event.dy);
+             d3.event.sourceEvent.stopPropagation();
+          })
+          .on("dragend", function() {
+             d3.event.sourceEvent.preventDefault();
+             pthis[drag_rect_name].style("cursor", "auto");
+
+             var newwidth = Number(pthis[drag_rect_name].attr("width"));
+             var newheight = Number(pthis[drag_rect_name].attr("height"));
+
+             pthis[drag_rect_name].remove();
+             pthis[drag_rect_name] = null;
+
+             callback.resize(newwidth, newheight);
+
+             // do it after call-back - rectangle has correct coordinates
+             if (istitle)
+                pthis[resize_rect_name]
+                  .attr("x", rect_x() + rect_width() - 20)
+                  .attr("y", rect_y() + rect_height() - 20);
+
+             // console.log(resize_rect_name + " x = " + rect_x() + "  width = " + rect_width());
+             // console.log(resize_rect_name + " y = " + rect_y() + "  height = " + rect_height());
+          });
+
+
+      if (this[resize_rect_name] == null) {
+
+         main_rect.call(drag_move);
+
+         this[resize_rect_name] =
+            this.vis.append("rect")
+              .attr("id", resize_rect_name)
+              .style("opacity", "0")
+              .style("cursor", "se-resize")
+              .call(drag_resize);
+      } else {
+         // ensure that small resize rect appears after large move rect
+         var prnt = this[resize_rect_name].node().parentNode;
+
+         // first move small resize rec before main_rect
+         prnt.removeChild(this[resize_rect_name].node());
+         prnt.insertBefore(this[resize_rect_name].node(), main_rect.node());
+         // than swap them while big rect should be in the front
+         prnt.removeChild(main_rect.node());
+         prnt.insertBefore(main_rect.node(), this[resize_rect_name].node());
+      }
+
+      this[resize_rect_name]
+          .attr("x", rect_x() + rect_width() - 20)
+          .attr("y", rect_y() + rect_height() - 20)
+          .attr("width", 20)
+          .attr("height", 20);
+   }
+
 
    JSROOTPainter.ObjectPainter.prototype.FindPainterFor = function(selobj)
    {
@@ -2804,7 +2976,7 @@ var gStyle = {
       painter['ownhisto'] = ownhisto;
 
       painter.SetFrame(vis, true);
-      
+
       painter.DecodeOptions(opt);
 
       painter.CreateBins();
@@ -2820,6 +2992,9 @@ var gStyle = {
       JSROOTPainter.ObjectPainter.call(this);
       this.pavetext = pave;
       this.Enabled = true;
+      this.main_rect = null;
+      this.drag_rect = null;
+      this.resize_rect = null;
    }
 
    JSROOTPainter.PavePainter.prototype = Object.create( JSROOTPainter.ObjectPainter.prototype );
@@ -2852,7 +3027,6 @@ var gStyle = {
       // 1=bottom adjusted, 2=centered, 3=top adjusted
       // "middle", "start", "end"
 
-
       var align = 'start', halign = Math.round(pavetext['fTextAlign']/10);
       var baseline = 'bottom', valign = pavetext['fTextAlign']%10;
       if (halign == 1) align = 'start';  else
@@ -2868,7 +3042,7 @@ var gStyle = {
             lmargin = pavetext['fMargin'] * width;
             break;
          case 2:
-            lmargin = width/2;
+            lmargin = width / 2;
             break;
          case 3:
             lmargin = width - (pavetext['fMargin'] * width);
@@ -2880,146 +3054,72 @@ var gStyle = {
 
       var fontDetails = getFontDetails(root_fonts[Math.floor(pavetext['fTextFont']/10)]);
       var lwidth = pavetext['fBorderSize'] ? pavetext['fBorderSize'] : 0;
-      
-      // container to just to recalculate coordinates
-      this.draw_g = 
-         vis.append("svg:g").attr("transform", "translate(" + pos_x + "," + pos_y + ")");
 
-      var pthis = this;
-      var current_draw_g = pthis.draw_g;
-      
-      var drag_rect = null;
-      
-      var drag_move = d3.behavior.drag()
-              .origin(Object)
-              .on("dragstart", function() {
-                  d3.event.sourceEvent.preventDefault();
-                  drag_rect = 
-                   pthis.draw_g.append("rect")
-                    .attr("class", "zoom")
-                    .attr("id", "stat_move_rect")
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .attr("width", width)
-                    .attr("height", height)
-                    .style("cursor", "move");
-               
-                 // main_rect.style("cursor", "move"); 
-              })
-              .on("drag", function() { 
-                 d3.event.sourceEvent.preventDefault();
-                 drag_rect.attr("x", Number(drag_rect.attr("x")) + d3.event.dx);  
-                 drag_rect.attr("y", Number(drag_rect.attr("y")) + d3.event.dy);  
-               })
-              .on("dragend", function() { 
-                 d3.event.sourceEvent.preventDefault();
-                 drag_rect.style("cursor", "auto");
-                 
-                 var dx = Number(drag_rect.attr("x"));  
-                 var dy = Number(drag_rect.attr("y"));
-                 
-                 drag_rect.remove();
-                 drag_rect = null;
-                 
-                 if (current_draw_g !== pthis.draw_g) return;
-                 
-                 // recalculate
-                 pavetext['fX1NDC'] += dx / w;
-                 pavetext['fX2NDC'] += dx / w;
-                 pavetext['fY1NDC'] -= dy / h;
-                 pavetext['fY2NDC'] -= dy / h;
-                 
-                 pos_x += dx;
-                 pos_y += dy;
-                                  
-                 pthis.draw_g.attr("transform", "translate(" + pos_x + "," + pos_y + ")");
-              });
+      if (this.main_rect == null) {
+         this.main_rect = this.vis.append("rect");
+      } else {
+         // force main rect of the stat box be last item in the primitives to kept it on the top
+         var prnt = this.main_rect.node().parentNode;
+         prnt.removeChild(this.main_rect.node());
+         prnt.appendChild(this.main_rect.node());
+      }
 
-      var drag_resize = d3.behavior.drag()
-              .origin(Object)
-              .on("dragstart", function() {
-                  d3.event.sourceEvent.preventDefault();
-                  drag_rect = 
-                   pthis.draw_g.append("rect")
-                    .attr("class", "zoom")
-                    .attr("id", "stat_move_rect")
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .attr("width", width)
-                    .attr("height", height)
-                    .style("cursor", "se-resize");
-               
-                 // main_rect.style("cursor", "move"); 
-              })
-              .on("drag", function() { 
-                 d3.event.sourceEvent.preventDefault();
-                 drag_rect.attr("width", Number(drag_rect.attr("width")) + d3.event.dx);  
-                 drag_rect.attr("height", Number(drag_rect.attr("height")) + d3.event.dy);  
-               })
-              .on("dragend", function() { 
-                 d3.event.sourceEvent.preventDefault();
-                 drag_rect.style("cursor", "auto");
-                 
-                 var newwidth = Number(drag_rect.attr("width"));
-                 var newheight = Number(drag_rect.attr("height"));
-
-                 drag_rect.remove();
-                 drag_rect = null;
-
-                 if (current_draw_g !== pthis.draw_g) return;
-                 
-                 pavetext['fX2NDC'] = pavetext['fX1NDC'] + newwidth/w;  
-                 pavetext['fY1NDC'] = pavetext['fY2NDC'] - newheight/h;
-                 
-                 pthis.RemoveDraw();
-                 pthis.DrawPaveText();
-              });
-
-      var main_rect =
-        this.draw_g.append("rect")
-         .attr("x", 0)
-         .attr("y", 0)
+      this.main_rect
+         .attr("x", pos_x)
+         .attr("y", pos_y)
          .attr("height", height)
          .attr("width", width)
          .attr("fill", fcolor)
          .style("stroke-width", lwidth ? 1 : 0)
-         .style("stroke", lcolor)
-         .call(drag_move);
+         .style("stroke", lcolor);
 
-      var resize_rect =    
-        this.draw_g.append("rect")
-         .attr("x", width-20)
-         .attr("y", height-20)
-         .attr("width", 20)
-         .attr("height", 20)
-         .style("opacity", "0")
-         .style("cursor", "se-resize")
-         .call(drag_resize);
+      var pthis = this;
 
-         
+      this.AddDrag("stat", this.main_rect, {
+         move: function(x, y, dx, dy) {
+            pthis.draw_g.attr("transform", "translate(" + x + "," + y + ")");
+
+            pthis.pavetext['fX1NDC'] += dx / Number(pthis.vis.attr("width"));
+            pthis.pavetext['fX2NDC'] += dx / Number(pthis.vis.attr("width"));
+            pthis.pavetext['fY1NDC'] -= dy / Number(pthis.vis.attr("height"));
+            pthis.pavetext['fY2NDC'] -= dy / Number(pthis.vis.attr("height"));
+         },
+         resize: function(width, height) {
+            pthis.pavetext['fX2NDC'] = pthis.pavetext['fX1NDC'] + width/Number(pthis.vis.attr("width"));
+            pthis.pavetext['fY1NDC'] = pthis.pavetext['fY2NDC'] - height/Number(pthis.vis.attr("height"));
+
+            pthis.RemoveDraw();
+            pthis.DrawPaveText();
+         }
+      });
+
+      // container to just to recalculate coordinates
+      this.draw_g =
+         vis.append("svg:g").attr("transform", "translate(" + pos_x + "," + pos_y + ")");
+
       var first_stat = 0, num_cols = 0;
       var maxlw = 0;
       var lines = new Array;
- 
-      // adjust font size      
+
+      // adjust font size
       for (j=0; j<nlines; ++j) {
          var line = JSROOTPainter.translateLaTeX(pavetext['fLines'].arr[j]['fTitle']);
-         
+
          lines.push(line);
-         
+
          var lw = lmargin + JSROOTPainter.stringWidth(vis, line, font_size, fontDetails);
          if (lw > maxlw) maxlw = lw;
-         
+
          if ((j==0) || (line.indexOf('|')<0)) continue;
          if (first_stat === 0) first_stat = j;
          var parts = line.split("|");
-         if (parts.length>num_cols) num_cols = parts.length; 
+         if (parts.length>num_cols) num_cols = parts.length;
       }
-      
+
       if (maxlw > width)
         font_size = font_size * (width / maxlw);
 
-      var stepy = height / nlines; 
+      var stepy = height / nlines;
 
       if (nlines == 1) {
          this.draw_g.append("text")
@@ -3039,7 +3139,7 @@ var gStyle = {
             var jcolor = root_colors[pavetext['fLines'].arr[j]['fTextColor']];
             if (pavetext['fLines'].arr[j]['fTextColor'] == 0)  jcolor = tcolor;
             var posy = j * stepy + font_size;
-               
+
             if (pavetext['_typename'] == 'JSROOTIO.TPaveStats') {
                if ((first_stat>0) && (j>=first_stat)) {
                   var parts = lines[j].split("|");
@@ -3108,7 +3208,7 @@ var gStyle = {
 
       if ((first_stat > 0) && (num_cols > 1)) {
 
-         for (var nrow = first_stat; nrow < nlines; nrow++) 
+         for (var nrow = first_stat; nrow < nlines; nrow++)
             this.draw_g.append("svg:line")
               .attr("x1", 0)
               .attr("y1", nrow*stepy)
@@ -3179,7 +3279,11 @@ var gStyle = {
       this.RemoveDraw();
 
       // if pavetext artificially disabled, do not redraw it
-      if (!this.Enabled) return;
+      if (!this.Enabled) {
+         this.RemoveDrag("stat");
+         if (this.main_rect) { this.main_rect.remove(); this.main_rect = null; }
+         return;
+      }
 
       // recalculate statistic when manipulation with view were done
       // if (this.first.original_view_changed)
@@ -3202,8 +3306,8 @@ var gStyle = {
 
       painter.SetFrame(vis, true);
 
-      
-      // refill statistic in any case 
+
+      // refill statistic in any case
       // if ('_AutoCreated' in pavetext)
       painter.FillStatistic();
 
@@ -3322,6 +3426,46 @@ var gStyle = {
                .attr("font-size", axisTitleFontSize )
                .text(title);
       }
+
+      if (this.main_rect == null) {
+         this.main_rect = this.vis.append("rect")
+                              .attr("id","colz_move_rect")
+                              .style("opacity", "0");
+      } else {
+         // ensure that all color drawing inserted before move rect
+         var prnt = this.main_rect.node().parentNode;
+         prnt.removeChild(this.draw_g.node());
+         prnt.insertBefore(this.draw_g.node(), this.main_rect.node());
+      }
+
+      this.main_rect
+         .attr("x", pos_x)
+         .attr("y", pos_y)
+         .attr("width", s_width)
+         .attr("height", s_height);
+
+      var pthis = this;
+
+      this.AddDrag("colz", this.main_rect, {
+         move: function(x, y, dx, dy) {
+
+            pthis.draw_g.attr("transform", "translate(" + x + "," + y + ")");
+
+            pthis.palette['fX1NDC'] += dx / Number(pthis.vis.attr("width"));
+            pthis.palette['fX2NDC'] += dx / Number(pthis.vis.attr("width"));
+            pthis.palette['fY1NDC'] -= dy / Number(pthis.vis.attr("height"));
+            pthis.palette['fY2NDC'] -= dy / Number(pthis.vis.attr("height"));
+         },
+         resize: function(width, height) {
+            pthis.palette['fX2NDC'] = pthis.palette['fX1NDC'] + width/Number(pthis.vis.attr("width"));
+            pthis.palette['fY1NDC'] = pthis.palette['fY2NDC'] - height/Number(pthis.vis.attr("height"));
+
+            pthis.RemoveDraw();
+            pthis.DrawPalette();
+         }
+      });
+
+
    }
 
    JSROOTPainter.ColzPalettePainter.prototype.Redraw = function() {
@@ -3329,7 +3473,11 @@ var gStyle = {
       this.RemoveDraw();
 
       // if palette artificially disabled, do not redraw it
-      if (!this.Enabled) return;
+      if (!this.Enabled) {
+         this.RemoveDrag("colz");
+         if (this.main_rect) { this.main_rect.remove(); this.main_rect = null; }
+         return;
+      }
 
       this.DrawPalette();
    }
@@ -3445,11 +3593,11 @@ var gStyle = {
 
       this['scale_xmin'] = this.xmin;
       this['scale_xmax'] = this.xmax;
-      if (this.zoom_xmin != this.zoom_xmax) { 
+      if (this.zoom_xmin != this.zoom_xmax) {
          this['scale_xmin'] = this.zoom_xmin;
-         this['scale_xmax'] = this.zoom_xmax; 
+         this['scale_xmax'] = this.zoom_xmax;
       }
-      
+
       if (this.options.Logx) {
          if (this.scale_xmax <= 0) this.scale_xmax = 0;
          if ((this.scale_xmin <= 0) || (this.scale_xmin >= this.scale_xmax)) this.scale_xmin = this.scale_xmax * 0.0001;
@@ -3457,21 +3605,21 @@ var gStyle = {
       } else {
          this['x'] = d3.scale.linear().domain([this.scale_xmin, this.scale_xmax]).range([0, w]);
       }
-      
+
       this['scale_ymin'] = this.ymin;
       this['scale_ymax'] = this.ymax;
-      
+
       if (this.zoom_ypad) {
          if (this.histo.fMinimum != -1111) this.zoom_ymin = this.histo.fMinimum;
          if (this.histo.fMaximum != -1111) this.zoom_ymax = this.histo.fMaximum;
          this['zoom_ypad'] = false;
       }
-      
+
       if (this.zoom_ymin != this.zoom_ymax) {
-         this['scale_ymin'] = this.zoom_ymin; 
+         this['scale_ymin'] = this.zoom_ymin;
          this['scale_ymax'] = this.zoom_ymax;
       }
-      
+
       if (this.options.Logy) {
          if (this.scale_ymax<=0) this.scale_ymax = 1;
          if ((this.scale_ymin<=0) || (this.scale_ymin>=this.scale_ymax)) this.scale_ymin = 0.0001 * this.scale_ymax;
@@ -3561,7 +3709,7 @@ var gStyle = {
       // axes can be drawn only for main (first) histogram
 
       if (this.first) return;
-      
+
       this['x_axis_sub'] = null;
       this['y_axis_sub'] = null;
 
@@ -3652,7 +3800,7 @@ var gStyle = {
 
          var scale_xrange = this.scale_xmax - this.scale_xmin;
 
-         if ((timeformatx.length == 0) || (scale_xrange < 0.1*xrange)) 
+         if ((timeformatx.length == 0) || (scale_xrange < 0.1*xrange))
             timeformatx = JSROOTPainter.chooseTimeFormat(scale_xrange, this.x_nticks);
 
          this['dfx'] = d3.time.format(timeformatx);
@@ -3714,8 +3862,8 @@ var gStyle = {
 
          var scale_yrange = this.scale_ymax - this.scale_ymin;
 
-         if ((timeformaty.length == 0) || (scale_yrange < 0.1*yrange)) 
-            timeformaty = JSROOTPainter.chooseTimeFormat(scale_yrange, this.y_nticks); 
+         if ((timeformaty.length == 0) || (scale_yrange < 0.1*yrange))
+            timeformaty = JSROOTPainter.chooseTimeFormat(scale_yrange, this.y_nticks);
 
          this['dfy'] = d3.time.format(timeformaty);
 
@@ -3790,28 +3938,28 @@ var gStyle = {
 
       if ('xax' in this) this['xax'].remove();
       if ('xaxsub' in this) this['xaxsub'].remove();
-      
-      this['xax'] = 
+
+      this['xax'] =
          this.frame.append("svg:g")
                    .attr("class", "xaxis")
                    .attr("transform", "translate(0," + h + ")")
                    .call(this.x_axis);
 
-      if (JSROOTPainter.d3v3 && this['x_axis_sub']) 
-         this['xaxsub'] = 
+      if (JSROOTPainter.d3v3 && this['x_axis_sub'])
+         this['xaxsub'] =
             this.frame.append("svg:g")
                       .attr("class", "xaxis")
                       .attr("transform", "translate(0," + h + ")")
                       .call(this.x_axis_sub);
-      
+
       if ('yax' in this) this['yax'].remove();
       if ('yaxsub' in this) this['yaxsub'].remove();
-      
+
       this['yax'] = this.frame.append("svg:g").attr("class", "yaxis").call(this.y_axis);
 
-      if (JSROOTPainter.d3v3 && this['y_axis_sub']) 
+      if (JSROOTPainter.d3v3 && this['y_axis_sub'])
          this['yaxsub'] = this.frame.append("svg:g").attr("class", "yaxis").call(this.y_axis_sub);
-      
+
       var xAxisLabelFontDetails = getFontDetails(root_fonts[Math.floor(this.histo['fXaxis']['fLabelFont']/10)]);
       var yAxisLabelFontDetails = getFontDetails(root_fonts[Math.floor(this.histo['fXaxis']['fLabelFont']/10)]);
 
@@ -3860,16 +4008,33 @@ var gStyle = {
       var l_title = JSROOTPainter.translateLaTeX(this.histo['fTitle']);
 
       if (!this.pad || typeof(this.pad) == 'undefined') {
-         if (!('draw_title' in this))
-            this['draw_title'] = this.vis.append("text").attr("class", "title");
 
-         this.draw_title
-            .attr("text-anchor", "middle")
-            .attr("x", w/2)
-            .attr("y", 1 + font_size /* 0.07*h */)
-            .attr("font-family", "Arial")
-            .attr("font-size", font_size)
-            .text(l_title);
+         if (!('draw_title' in this))
+            this['draw_title'] =
+               this.vis.append("text")
+                .attr("class", "title")
+                .attr("text-anchor", "middle")
+                .attr("x", w/2)
+                .attr("y", 1 + font_size /* 0.07*h */)
+                .attr("font-family", "Arial")
+                .attr("font-size", font_size);
+
+         this.draw_title.text(l_title);
+
+         // console.log("title height = " + this.draw_title.node().getBBox().height + "  font size = " + font_size);
+
+         var pthis = this;
+
+         this.AddDrag("title", this.draw_title, {
+            move: function(x, y) {
+               // pthis.draw_title.attr("x",x).attr("y", y);
+            },
+            resize: function(width, height) {
+               font_size = height*0.8;
+               pthis.draw_title.attr("font-size", font_size);
+            }
+         });
+
       }
    }
 
@@ -4216,7 +4381,7 @@ var gStyle = {
          rect = pthis.frame
                  .append("rect")
                  .attr("class", "zoom")
-                 .attr("id", "zoom_rect")
+                 .attr("id", "zoomRect")
                  .attr("x", curr[0])
                  .attr("y", curr[1])
                  .attr("width", origin[0] - curr[0])
@@ -4273,7 +4438,7 @@ var gStyle = {
          if (zoom_kind<100) return;
 
          d3.event.preventDefault();
-         d3.select(window).on("touchmove.zoomRect", null).on("touchend.zoomRect", null).on("touchcancel.zoomRect", null);;
+         d3.select(window).on("touchmove.zoomRect", null).on("touchend.zoomRect", null).on("touchcancel.zoomRect", null);
          d3.select("body").classed("noselect", false);
 
          var xmin=0, xmax = 0, ymin = 0, ymax = 0;
@@ -4429,7 +4594,7 @@ var gStyle = {
 
          // ignore context menu when touches zooming is ongoing
          if (zoom_kind>100) return;
-         
+
          var ctx_menu = document.getElementById('root_ctx_menu');
          if(ctx_menu) ctx_menu.parentNode.removeChild(ctx_menu);
 
@@ -4440,7 +4605,7 @@ var gStyle = {
          $("#root_ctx_menu").empty();
 
          pthis.FillContextMenu($("#root_ctx_menu"));
-         
+
          $("#root_ctx_menu").data("Painter", pthis);
          $("#root_ctx_menu").data("shown", true);
 
@@ -4515,7 +4680,7 @@ var gStyle = {
          rect = pthis.frame
                  .append("rect")
                  .attr("class", "zoom")
-                 .attr("id", "zoom_rect");
+                 .attr("id", "zoomRect");
 
          pthis.frame.on("dblclick", unZoom);
 
@@ -4682,7 +4847,7 @@ var gStyle = {
 
       var hmin = 1.0e32, hmax = -1.0e32, hsum = 0;
       // this.stat_entries = d3.sum(this.histo['fArray']);
-      
+
       this.nbinsx = this.histo['fXaxis']['fNbins'];
 
       for (var i=0;i<this.nbinsx;++i) {
@@ -4691,7 +4856,7 @@ var gStyle = {
          if (value < hmin) hmin = value; else
          if (value > hmax) hmax = value;
       }
-      
+
       this.stat_entries = hsum;
 
       // if (('fBuffer' in this.histo) && (this.histo['fBuffer'].length>0)) this.stat_entries = this.histo['fBuffer'][0];
@@ -5496,14 +5661,14 @@ var gStyle = {
 
       if (print_entries > 0)
          stat.AddLine("Entries = " + gStyle.StatEntriesFormat(this.stat_entries));
-      
-      
+
+
       var meanx = 0, meany = 0;
       if (this.stat_sum0 > 0) {
          meanx = this.stat_sumx1/this.stat_sum0;
          meany = this.stat_sumy1/this.stat_sum0;
       }
-         
+
       if (print_mean > 0) {
          stat.AddLine("Mean x = " + gStyle.StatFormat(meanx));
          stat.AddLine("Mean y = " + gStyle.StatFormat(meany));
@@ -5600,7 +5765,7 @@ var gStyle = {
          xfactor = 0.5 * w / (i2-i1) / (this.maxbin - this.minbin);
          yfactor = 0.5 * h / (j2-j1) / (this.maxbin - this.minbin);
       }
-      
+
       var x1, y1, x2, y2, grx1, gry1, grx2, gry2, fillcol, shrx, shry, binz, point;
 
       var local_bins = new Array;
@@ -5872,7 +6037,6 @@ var gStyle = {
       if (this.zoom_xmin != this.zoom_xmax) { xmin = this.zoom_xmin; xmax = this.zoom_xmax; }
       var ymin = this.ymin, ymax = this.ymax;
       if (this.zoom_ymin != this.zoom_ymax) { ymin = this.zoom_ymin; ymax = this.zoom_ymax; }
-
 
       if (this.options.Logx) {
          var tx = d3.scale.log().domain([xmin, xmax]).range([-size, size]);
@@ -6914,7 +7078,7 @@ var gStyle = {
    {
       if (!classname) return false;
 
-      if ((this.fUserPainters != null) && 
+      if ((this.fUserPainters != null) &&
           (typeof(this.fUserPainters[classname]) === 'function')) return true;
 
       if (classname.match(/\bJSROOTIO.TH1/) ||
@@ -7249,7 +7413,7 @@ var gStyle = {
          }
          else if (keys[i]['className'].match('TCanvas')) {
             node_img = source_dir+'img/canvas.png';
-         } 
+         }
          else if (this.canDrawObject(keys[i]['className'])) {
             node_img = source_dir+'img/graph.png';
          }
@@ -7347,8 +7511,8 @@ var gStyle = {
       content += d_tree;
       $(container).html(content);
    };
-   
-   
+
+
    JSROOTPainter.drawObjectInFrame = function(vis, obj, opt)
    {
       // ignore objects without type information - for instance, TList
@@ -7410,17 +7574,17 @@ var gStyle = {
       if ((this.fUserPainters != null) && typeof(this.fUserPainters[classname]) === 'function')
          return this.fUserPainters[classname](vis, obj, opt);
    }
-   
+
    JSROOTPainter.draw = function(divid, obj, opt)
    {
       if ((typeof obj != 'object') || (!('_typename' in obj))) return;
-      
+
       var render_to = "#" + divid;
-      
+
       var fillcolor = 'white';
 
       d3.select(render_to).style("background-color", fillcolor);
-      
+
       var svg = d3.select(render_to)
                    .append("svg")
 //                   .attr({"width": "100%", "height": "100%"})
@@ -7433,14 +7597,14 @@ var gStyle = {
                    .call(d3.behavior.zoom().on("zoom", JSROOTPainter.redraw));
 
       var painter = JSROOTPainter.drawObjectInFrame(svg, obj, opt);
-      
+
       return painter;
    }
 
-   
+
 
    // comment out - now it is handled via CSS files
-   
+
    /*
    var style = "<style>\n"
       +".xaxis path, .xaxis line, .yaxis path, .yaxis line, .zaxis path, .zaxis line {\n"
@@ -7475,24 +7639,24 @@ var gStyle = {
 (function(){
 
    Amore_String_Streamer = function(buf, obj, prop, streamer) {
-      
+
       console.log("read property " + prop + " of typename " + streamer[prop]['typename']);
-      
+
       obj[prop] = buf.ReadTString();
    }
-   
+
    Amore_Painter = function(vis, obj, opt) {
-      // custom draw function. 
-      
+      // custom draw function.
+
       console.log("Draw user type " + obj['_typename']);
-      
+
       JSROOTPainter.drawObjectInFrame(vis, obj['fVal'], opt);
    }
-   
+
    JSROOTIO.addUserStreamer("amore::core::String_t", Amore_String_Streamer);
 
    JSROOTPainter.addUserPainter("JSROOTIO.amore::core::MonitorObjectHisto<TH1F>", Amore_Painter);
-   
+
 })();
 
 */
