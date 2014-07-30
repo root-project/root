@@ -57,7 +57,9 @@ private:
       kVariable,
       kEnum,
       kMethod,
+      kEndMethod,
       kField,
+      kEndField,
       kProperties,
       kVersion,
       

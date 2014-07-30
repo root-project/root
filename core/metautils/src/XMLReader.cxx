@@ -33,14 +33,15 @@ void XMLReader::PopulateMap(){
    XMLReader::fgMapTagNames["/class"] = kEndClass;
    XMLReader::fgMapTagNames["struct"] = kClass;
    XMLReader::fgMapTagNames["/struct"] = kEndClass;
-   XMLReader::fgMapTagNames["namespace"] = kClass;
-   XMLReader::fgMapTagNames["/namespace"] = kEndClass;
    XMLReader::fgMapTagNames["function"] = kFunction;
    XMLReader::fgMapTagNames["variable"] = kVariable;
    XMLReader::fgMapTagNames["enum"] = kEnum;
    XMLReader::fgMapTagNames["method"] = kMethod;
+   XMLReader::fgMapTagNames["/method"] = kEndMethod;
    XMLReader::fgMapTagNames["field"] = kField;
+   XMLReader::fgMapTagNames["/field"] = kEndField;
    XMLReader::fgMapTagNames["member"] = kField; // field and member treated identically
+   XMLReader::fgMapTagNames["/member"] = kEndField; // field and member treated identically
    XMLReader::fgMapTagNames["lcgdict"] = kLcgdict;
    XMLReader::fgMapTagNames["/lcgdict"] = kEndLcgdict;
    XMLReader::fgMapTagNames["selection"] = kSelection;
@@ -447,8 +448,10 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
    bool selEnd = false;
    bool exclEnd = false;
    bool excl = false;
-   bool inIoread=false;
-   bool inClass=false;
+   bool inIoread = false;
+   bool inClass = false;
+   bool inMethod = false;
+   bool inField = false;
    
    BaseSelectionRule *bsr      = 0; // Pointer to the base class, in it is written information about the current sel. rule
    BaseSelectionRule *bsrChild = 0; // The same but keeps information for method or field children of a class
@@ -667,13 +670,22 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   out.ClearSelectionRules();
                   return false;
                }
-               if (!IsStandaloneTag(tagStr)) {
-                  ROOT::TMetaUtils::Error(0,"At line %s. Tag should be standalone\n", lineNumCharp);
-                  out.ClearSelectionRules();
-                  return false;
+               if (!IsStandaloneTag(tagStr)){
+                  inField=true;
                }
                vsr = new VariableSelectionRule(fCount++, fInterp); // the field is variable selection rule object
                bsrChild = vsr;
+               break;
+            }
+            case kEndField:
+            {
+               if (!inField){
+                  ROOT::TMetaUtils::Error(0,"At line %s. Closing field tag which was not opened\n", lineNumCharp);
+                  out.ClearSelectionRules();
+                  return false;
+               }
+               inField=false;
+               ROOT::TMetaUtils::Info(0,"At line %s. A field is not supposed to have an end-tag (this message will become a warning).\n", lineNumCharp);
                break;
             }
             case kMethod:
@@ -684,13 +696,22 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                   out.ClearSelectionRules();
                   return false;
                }
-               if (!IsStandaloneTag(tagStr)) {
-                  ROOT::TMetaUtils::Error(0,"At line %s. Tag should be standalone\n", lineNumCharp);
-                  out.ClearSelectionRules();
-                  return false;
+               if (!IsStandaloneTag(tagStr)){
+                  inMethod=true;
                }
                fsr = new FunctionSelectionRule(fCount++, fInterp); // the method is function selection rule object
                bsrChild = fsr;
+               break;
+            }
+            case kEndMethod:
+            {
+               if (!inMethod){
+                  ROOT::TMetaUtils::Error(0,"At line %s. Closing method tag which was not opened\n", lineNumCharp);
+                  out.ClearSelectionRules();
+                  return false;
+               }
+               inMethod=false;
+               ROOT::TMetaUtils::Info(0,"At line %s. A method is not supposed to have an end-tag (this message will become a warning).\n", lineNumCharp);
                break;
             }
             case kProperties:
