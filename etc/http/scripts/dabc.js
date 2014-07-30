@@ -44,7 +44,7 @@ DABC.AssertRootPrerequisites = function() {
       loadScript('jsrootiosys/scripts/three.min.js', function() {
       loadScript('jsrootiosys/fonts/helvetiker_regular.typeface.js', function() {
       loadScript('jsrootiosys/scripts/JSRootIOEvolution.js', function() {
-      loadScript('jsrootiosys/scripts/JSRootD3ExpPainter.js', function() {
+      loadScript('jsrootiosys/scripts/JSRootPainter.js', function() {
          DABC.load_root_js = 2;
          gStyle.OptimizeDraw = true;
       }) }) }) }) }) }) });
