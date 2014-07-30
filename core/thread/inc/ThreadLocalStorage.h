@@ -92,27 +92,17 @@ template <typename type> class TThreadTLSWrapper
 {
 private:
    pthread_key_t  fKey;
-   pthread_once_t fOnce;
    type           fInitValue;
    
    static void key_delete(void *arg) {
       assert (NULL != arg);
       delete (type*)(arg);
    }
-   static void key_create() {
-      int _ret;
-      _ret = pthread_key_create(&(fKey),_key_delete);
-      _ret = _ret; /* To get rid of warnings in case of NDEBUG */
-      assert (0 == _ret);
-   }
 
 public:
    TThreadTLSWrapper(const type &value) : fInitValue(value) {
 
-      PTHREAD_ONCE_INIT;
- 
-      void *_ptr;
-      (void) pthread_once(&(fOnce), _key_create);
+      pthread_key_create(&(fKey), key_delete);
    }
 
    ~TThreadTLSWrapper() {
@@ -120,11 +110,11 @@ public:
    }
 
    type& operator get() {
-      void *_ptr = pthread_getspecific(fKey);
+      void *ptr = pthread_getspecific(fKey);
       if (!ptr) {
-         _ptr = new type(value);
-         assert (NULL != _ptr);
-         (void) pthread_setspecific(fKey, _ptr);
+         ptr = new type(fInitValue);
+         assert (NULL != ptr);
+         (void) pthread_setspecific(fKey, ptr);
       }
       return *(type*)ptr;
    }
