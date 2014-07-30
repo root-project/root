@@ -40,11 +40,13 @@ namespace std {} using namespace std;
 
 const Int_t kMaxLen = 1024;
 
+static TString &IncludeNameBuffer() {
 #if __cplusplus >= 201103L
-static thread_local TString gIncludeName(kMaxLen);
+   thread_local TString includeName(kMaxLen);
 #else
-static TString gIncludeName(kMaxLen);
+   static TString includeName(kMaxLen);
 #endif
+}
 
 extern void *gMmallocDesc;
 
@@ -301,7 +303,7 @@ const char *TStreamerElement::GetFullName() const
    // You should copy the result.
 
 #if __cplusplus >= 201103L
-   static thread_local TString name(kMaxLen);
+   thread_local TString name(kMaxLen);
 #else
    static TString name(kMaxLen);
 #endif
@@ -671,12 +673,12 @@ const char *TStreamerBase::GetInclude() const
    // Return the proper include for this element.
 
    if (GetClassPointer() && fBaseClass->GetClassInfo()) {
-      gIncludeName.Form("\"%s\"",fBaseClass->GetDeclFileName());
+      IncludeNameBuffer().Form("\"%s\"",fBaseClass->GetDeclFileName());
    } else {
       std::string shortname( TClassEdit::ShortType( GetName(), 1 ) );
-      gIncludeName.Form("\"%s.h\"",shortname.c_str());
+      IncludeNameBuffer().Form("\"%s.h\"",shortname.c_str());
    }
-   return gIncludeName;
+   return IncludeNameBuffer();
 }
 
 //______________________________________________________________________________
@@ -1005,8 +1007,8 @@ const char *TStreamerLoop::GetInclude() const
 {
    // Return the proper include for this element.
 
-   gIncludeName.Form("<%s>","TString.h"); //to be generalized
-   return gIncludeName;
+   IncludeNameBuffer().Form("<%s>","TString.h"); //to be generalized
+   return IncludeNameBuffer();
 }
 
 //______________________________________________________________________________
@@ -1188,12 +1190,12 @@ const char *TStreamerObject::GetInclude() const
 
    TClass *cl = GetClassPointer();
    if (cl && cl->GetClassInfo()) {
-      gIncludeName.Form("\"%s\"",cl->GetDeclFileName());
+      IncludeNameBuffer().Form("\"%s\"",cl->GetDeclFileName());
    } else {
       std::string shortname( TClassEdit::ShortType( GetTypeName(), 1 ) );
-      gIncludeName.Form("\"%s.h\"",shortname.c_str());
+      IncludeNameBuffer().Form("\"%s.h\"",shortname.c_str());
    }
-   return gIncludeName;
+   return IncludeNameBuffer();
 }
 
 //______________________________________________________________________________
@@ -1279,12 +1281,12 @@ const char *TStreamerObjectAny::GetInclude() const
 
    TClass *cl = GetClassPointer();
    if (cl && cl->GetClassInfo()) {
-      gIncludeName.Form("\"%s\"",cl->GetDeclFileName());
+      IncludeNameBuffer().Form("\"%s\"",cl->GetDeclFileName());
    } else {
       std::string shortname( TClassEdit::ShortType( GetTypeName(), 1 ) );
-      gIncludeName.Form("\"%s.h\"",shortname.c_str());
+      IncludeNameBuffer().Form("\"%s.h\"",shortname.c_str());
    }
-   return gIncludeName;
+   return IncludeNameBuffer();
 }
 
 //______________________________________________________________________________
@@ -1375,13 +1377,13 @@ const char *TStreamerObjectPointer::GetInclude() const
 
    TClass *cl = GetClassPointer();
    if (cl && cl->GetClassInfo()) {
-      gIncludeName.Form("\"%s\"",cl->GetDeclFileName());
+      IncludeNameBuffer().Form("\"%s\"",cl->GetDeclFileName());
    } else {
       std::string shortname( TClassEdit::ShortType( GetTypeName(), 1 ) );
-      gIncludeName.Form("\"%s.h\"",shortname.c_str());
+      IncludeNameBuffer().Form("\"%s.h\"",shortname.c_str());
    }
 
-   return gIncludeName;
+   return IncludeNameBuffer();
 }
 
 //______________________________________________________________________________
@@ -1478,13 +1480,13 @@ const char *TStreamerObjectAnyPointer::GetInclude() const
 
    TClass *cl = GetClassPointer();
    if (cl && cl->GetClassInfo()) {
-      gIncludeName.Form("\"%s\"",cl->GetDeclFileName());
+      IncludeNameBuffer().Form("\"%s\"",cl->GetDeclFileName());
    } else {
       std::string shortname( TClassEdit::ShortType( GetTypeName(), 1 ) );
-      gIncludeName.Form("\"%s.h\"",shortname.c_str());
+      IncludeNameBuffer().Form("\"%s.h\"",shortname.c_str());
    }
 
-   return gIncludeName;
+   return IncludeNameBuffer();
 }
 
 //______________________________________________________________________________
@@ -1555,8 +1557,8 @@ const char *TStreamerString::GetInclude() const
 {
    // Return the proper include for this element.
    
-   gIncludeName.Form("<%s>","TString.h");
-   return gIncludeName;
+   IncludeNameBuffer().Form("<%s>","TString.h");
+   return IncludeNameBuffer();
 }
 
 //______________________________________________________________________________
@@ -1845,15 +1847,15 @@ const char *TStreamerSTL::GetInclude() const
 {
    // Return the proper include for this element.
 
-   if      (fSTLtype == kSTLvector)   gIncludeName.Form("<%s>","vector");
-   else if (fSTLtype == kSTLlist)     gIncludeName.Form("<%s>","list");
-   else if (fSTLtype == kSTLdeque)    gIncludeName.Form("<%s>","deque");
-   else if (fSTLtype == kSTLmap)      gIncludeName.Form("<%s>","map");
-   else if (fSTLtype == kSTLset)      gIncludeName.Form("<%s>","set");
-   else if (fSTLtype == kSTLmultimap) gIncludeName.Form("<%s>","map");
-   else if (fSTLtype == kSTLmultiset) gIncludeName.Form("<%s>","set");
-   else if (fSTLtype == kSTLbitset)   gIncludeName.Form("<%s>","bitset");
-   return gIncludeName;
+   if      (fSTLtype == kSTLvector)   IncludeNameBuffer().Form("<%s>","vector");
+   else if (fSTLtype == kSTLlist)     IncludeNameBuffer().Form("<%s>","list");
+   else if (fSTLtype == kSTLdeque)    IncludeNameBuffer().Form("<%s>","deque");
+   else if (fSTLtype == kSTLmap)      IncludeNameBuffer().Form("<%s>","map");
+   else if (fSTLtype == kSTLset)      IncludeNameBuffer().Form("<%s>","set");
+   else if (fSTLtype == kSTLmultimap) IncludeNameBuffer().Form("<%s>","map");
+   else if (fSTLtype == kSTLmultiset) IncludeNameBuffer().Form("<%s>","set");
+   else if (fSTLtype == kSTLbitset)   IncludeNameBuffer().Form("<%s>","bitset");
+   return IncludeNameBuffer();
 }
 
 //______________________________________________________________________________
@@ -1970,8 +1972,8 @@ const char *TStreamerSTLstring::GetInclude() const
 {
    // Return the proper include for this element.
 
-   gIncludeName = "<string>";
-   return gIncludeName;
+   IncludeNameBuffer() = "<string>";
+   return IncludeNameBuffer();
 }
 
 //______________________________________________________________________________

@@ -1290,8 +1290,8 @@ const char *TWinNTSystem::GetError()
    // Return system error string.
 
    Int_t err = GetErrno();
-   if (err == 0 && fgLastErrorString != "")
-      return fgLastErrorString;
+   if (err == 0 && GetLastErrorString() != "")
+      return GetLastErrorString();
    if (err < 0 || err >= sys_nerr) {
       static TString error_msg;
       error_msg.Form("errno out of range %d", err);
@@ -2499,7 +2499,7 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
       ::SetErrorMode(nOldErrorMode);
       return kFALSE;
    }
-   fgLastErrorString = GetError();
+   GetLastErrorString() = GetError();
    // restore previous error mode
    ::SetErrorMode(nOldErrorMode);
    return kTRUE;
@@ -2558,7 +2558,7 @@ int TWinNTSystem::Rename(const char *f, const char *t)
    // Rename a file. Returns 0 when successful, -1 in case of failure.
 
    int ret = ::rename(f, t);
-   fgLastErrorString = GetError();
+   GetLastErrorString() = GetError();
    return ret;
 }
 

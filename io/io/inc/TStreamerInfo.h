@@ -135,11 +135,6 @@ private:
 #else
    static  Int_t     fgCount;            //Number of TStreamerInfo instances
 #endif
-#ifdef __CINT__
-   static TStreamerElement* fgElement;   //Pointer to current TStreamerElement
-#else
-   static TTHREAD_TLS(TStreamerElement*) fgElement;   //Pointer to current TStreamerElement
-#endif
 
    template <typename T> static T GetTypedValueAux(Int_t type, void *ladd, int k, Int_t len);
    static void       PrintValueAux(char *ladd, Int_t atype, TStreamerElement * aElement, Int_t aleng, Int_t *count);

@@ -2351,8 +2351,8 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
    // format descriptor).
 
    static const int fld_size = 2048;
-   static TTHREAD_TLS(char*) slowBuffer(0);
-   static TTHREAD_TLS(int) slowBufferSize(0);
+   TTHREAD_TLS(char*) slowBuffer(0);
+   TTHREAD_TLS(int) slowBufferSize(0);
 
    if (hint == -1) hint = fld_size;
    if (hint > slowBufferSize) {
@@ -2402,9 +2402,9 @@ static char *Format(const char *format, va_list ap)
    static const int fld_size = 2048;
 
    // a circular formating buffer
-   static TTHREAD_TLS(char) gFormbuf[cb_size]; // some slob for form overflow
-   static TTHREAD_TLS(char*) gBfree(0);
-   static TTHREAD_TLS(char*) gEndbuf(0);
+   TTHREAD_TLS(char) gFormbuf[cb_size]; // some slob for form overflow
+   TTHREAD_TLS(char*) gBfree(0);
+   TTHREAD_TLS(char*) gEndbuf(0);
 
    if (gBfree == 0) {
       gBfree = gFormbuf;

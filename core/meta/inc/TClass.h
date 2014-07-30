@@ -210,7 +210,6 @@ private:
    void StreamerDefault(void *object, TBuffer &b, const TClass *onfile_class) const;
 
    static IdMap_t    *GetIdMap();       //Map from typeid to TClass pointer
-   static TTHREAD_TLS(enum ENewType)  fgCallingNew;  //Intent of why/how TClass::New() is called
 #if __cplusplus >= 201103L
    static std::atomic<Int_t>     fgClassCount;  //provides unique id for a each class
                                                 //stored in TObject::fUniqueID

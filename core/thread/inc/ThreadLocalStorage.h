@@ -65,7 +65,7 @@
 
 #ifdef __CINT__
 
-#  define TTHREAD_TLS(type) type
+#  define TTHREAD_TLS(type) static type
 
 #elif __cplusplus >= 201103L
 
@@ -131,7 +131,7 @@ public:
 
 };
 
-#  define TTHREAD_TLS_INIT(type) TThreadTLSWrapper<type>
+#  define TTHREAD_TLS_INIT(type) static TThreadTLSWrapper<type>
 
 #else
 

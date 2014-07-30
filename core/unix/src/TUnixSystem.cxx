@@ -443,7 +443,7 @@ static void SigHandler(ESignals sig)
 static const char *GetExePath()
 {
 #if __cplusplus >= 201103L
-   static thread_local TString exepath;
+   thread_local TString exepath;
 #else
    static TString exepath;
 #endif
@@ -734,8 +734,8 @@ const char *TUnixSystem::GetError()
    // Return system error string.
 
    Int_t err = GetErrno();
-   if (err == 0 && fgLastErrorString != "")
-      return fgLastErrorString;
+   if (err == 0 && GetLastErrorString() != "")
+      return GetLastErrorString();
 
 #if defined(R__SOLARIS) || defined (R__LINUX) || defined(R__AIX) || \
     defined(R__FBSD) || defined(R__OBSD) || defined(R__HURD)
@@ -1590,7 +1590,7 @@ Bool_t TUnixSystem::AccessPathName(const char *path, EAccessMode mode)
 
    if (::access(StripOffProto(path, "file:"), mode) == 0)
       return kFALSE;
-   fgLastErrorString = GetError();
+   GetLastErrorString() = GetError();
 
    return kTRUE;
 }
@@ -1638,7 +1638,7 @@ int TUnixSystem::Rename(const char *f, const char *t)
    // Rename a file. Returns 0 when successful, -1 in case of failure.
 
    int ret = ::rename(f, t);
-   fgLastErrorString = GetError();
+   GetLastErrorString() = GetError();
    return ret;
 }
 
@@ -1840,7 +1840,7 @@ needshell:
       } else {
          hd = UnixHomedirectory(0);
          if (hd == 0) {
-            fgLastErrorString = GetError();
+            GetLastErrorString() = GetError();
             return kTRUE;
          }
          cmd += hd;
@@ -1850,7 +1850,7 @@ needshell:
       cmd += stuffedPat;
 
    if ((pf = ::popen(cmd.Data(), "r")) == 0) {
-      fgLastErrorString = GetError();
+      GetLastErrorString() = GetError();
       return kTRUE;
    }
 
@@ -1873,7 +1873,7 @@ again:
    while (ch != EOF) {
       ch = fgetc(pf);
       if (ch == ' ' || ch == '\t') {
-         fgLastErrorString = "expression ambigous";
+         GetLastErrorString() = "expression ambigous";
          ::pclose(pf);
          return kTRUE;
       }
@@ -3784,8 +3784,8 @@ void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignr)
    // If ignr is true ignore the specified signal, else restore previous
    // behaviour.
 
-   static TTHREAD_TLS(Bool_t) ignoreSig[kMAXSIGNALS] = { kFALSE };
-   static TTHREAD_TLS(struct sigaction) oldsigact[kMAXSIGNALS];
+   TTHREAD_TLS(Bool_t) ignoreSig[kMAXSIGNALS] = { kFALSE };
+   TTHREAD_TLS(struct sigaction) oldsigact[kMAXSIGNALS];
 
    if (ignr != ignoreSig[sig]) {
       ignoreSig[sig] = ignr;

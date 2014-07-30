@@ -64,14 +64,6 @@ static Int_t *gLibraryVersion    = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionIdx = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionMax = 256;
 
-#if __cplusplus >= 201103L
-thread_local TString TSystem::fgLastErrorString;
-#else
-// Because of
-//   error: ‘TSystem::fgLastErrorString’ cannot be thread-local because it has non-POD type ‘TString’
-// we can not rely on the platform independent thread local
-TString TSystem::fgLastErrorString;
-#endif
 
 ClassImp(TProcessEventTimer)
 
@@ -255,7 +247,7 @@ void TSystem::SetErrorStr(const char *errstr)
    // library that does not use standard errno).
 
    ResetErrno();   // so GetError() uses the fLastErrorString
-   fgLastErrorString = errstr;
+   GetLastErrorString() = errstr;
 }
 
 //______________________________________________________________________________
@@ -263,8 +255,8 @@ const char *TSystem::GetError()
 {
    // Return system error string.
 
-   if (GetErrno() == 0 && fgLastErrorString != "")
-      return fgLastErrorString;
+   if (GetErrno() == 0 && GetLastErrorString() != "")
+      return GetLastErrorString();
    return Form("errno: %d", GetErrno());
 }
 
@@ -2004,6 +1996,31 @@ void TSystem::ListLibraries(const char *regexp)
    Printf("-----------------------");
    Printf("%d libraries loaded", i);
    Printf("=======================");
+}
+
+//______________________________________________________________________________
+TString &TSystem::GetLastErrorString()
+{
+   // Return the thread local storage for the custom last error message
+
+#if __cplusplus >= 201103L
+   thread_local TString gLastErrorString;
+#else
+   // Because of
+   //   error: ‘TSystem::fgLastErrorString’ cannot be thread-local because it has non-POD type ‘TString’
+   // we can not rely on the platform independent thread local
+   static TString gLastErrorString;
+#endif
+
+   return gLastErrorString;
+}
+
+//______________________________________________________________________________
+const TString &TSystem::GetLastErrorString() const
+{
+   // Return the thread local storage for the custom last error message
+
+   return const_cast<TSystem*>(this)->GetLastErrorString();
 }
 
 //______________________________________________________________________________

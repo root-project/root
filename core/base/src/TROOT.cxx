@@ -1822,18 +1822,21 @@ void TROOT::ReadGitInfo()
    delete [] filename;
 }
 
-static TTHREAD_TLS(Bool_t) fgReadingObject = false;
+Bool_t &GetReadingObject() {
+   TTHREAD_TLS(Bool_t) fgReadingObject = false;
+   return fgReadingObject;
+}
 
 //______________________________________________________________________________
 Bool_t TROOT::ReadingObject() const 
 { 
    /* Deprecated (will be removed in next release) */ 
-   return fgReadingObject;
+   return GetReadingObject();
 }
 
 void TROOT::SetReadingObject(Bool_t flag) 
 { 
-   fgReadingObject = flag;
+   GetReadingObject() = flag;
 }
 
 
