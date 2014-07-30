@@ -437,13 +437,13 @@ var gStyle = {
 
    if (typeof JSROOTPainter == 'object'){
       var e1 = new Error('JSROOTPainter is already defined');
-      e1.source = 'JSROOTD3ExpPainter.js';
+      e1.source = 'JSROOTPainter.js';
       throw e1;
    }
 
    if (typeof d3 != 'object') {
       var e1 = new Error('This extension requires d3.v2.js');
-      e1.source = 'JSROOTD3ExpPainter.js';
+      e1.source = 'JSROOTPainter.js';
       throw e1;
    }
 

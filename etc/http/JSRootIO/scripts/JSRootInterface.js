@@ -207,7 +207,7 @@ function AssertPrerequisites(andThen) {
       loadScript(source_dir+'scripts/three.min.js', function() {
       loadScript(source_dir+'fonts/helvetiker_regular.typeface.js', function() {
       loadScript(source_dir+'scripts/JSRootIOEvolution.js', function() {
-      loadScript(source_dir+'scripts/JSRootD3ExpPainter.js', function() {
+      loadScript(source_dir+'scripts/JSRootPainter.js', function() {
 
          if (andThen!=null) andThen();
 
