@@ -109,7 +109,7 @@ public:
       pthread_key_delete(fKey);
    }
 
-   type& operator get() {
+   type& get() {
       void *ptr = pthread_getspecific(fKey);
       if (!ptr) {
          ptr = new type(fInitValue);
