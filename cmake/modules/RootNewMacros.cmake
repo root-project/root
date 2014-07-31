@@ -303,7 +303,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
   endif()
 
-  set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
+  if(CMAKE_ROOTTEST_NOROOTMAP)
+    set(rootmapname )
+    set(rootmapargs )
+  else()
+    set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
+  endif()
 
   #---Get the library and module dependencies-----------------
   if(ARG_DEPENDENCIES)
