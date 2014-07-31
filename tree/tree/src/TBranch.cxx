@@ -2343,7 +2343,7 @@ void TBranch::Streamer(TBuffer& b)
             TBasket *bk = (TBasket*)fBaskets.UncheckedAt(j);
             if (bk) {
                bk->SetBranch(this);
-               GetTree()->IncrementTotalBuffers(bk->GetBufferSize());
+               // GetTree()->IncrementTotalBuffers(bk->GetBufferSize());
                ++n;
             }
          }
@@ -2417,7 +2417,7 @@ void TBranch::Streamer(TBuffer& b)
             TBasket *bk = (TBasket*)fBaskets.UncheckedAt(j);
             if (bk) {
                bk->SetBranch(this);
-               GetTree()->IncrementTotalBuffers(bk->GetBufferSize());
+               //GetTree()->IncrementTotalBuffers(bk->GetBufferSize());
                ++n;
             }
          }

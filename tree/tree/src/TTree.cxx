@@ -8149,6 +8149,17 @@ static void TBranch__SetTree(TTree *tree, TObjArray &branches)
    for (Int_t i = 0; i < nb; ++i) {
       TBranch* br = (TBranch*) branches.UncheckedAt(i);
       br->SetTree(tree);
+
+      Int_t nBaskets = br->GetListOfBaskets()->GetEntries();
+      Int_t writeBasket = br->GetWriteBasket();
+      for (Int_t j=writeBasket,n=0;j>=0 && n<nBaskets;--j) {
+         TBasket *bk = (TBasket*)br->GetListOfBaskets()->UncheckedAt(j);
+         if (bk) {
+            tree->IncrementTotalBuffers(bk->GetBufferSize());
+            ++n;
+         }
+      }
+
       TBranch__SetTree(tree,*br->GetListOfBranches());
    }
 }
