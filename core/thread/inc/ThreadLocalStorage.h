@@ -66,22 +66,32 @@
 #ifdef __CINT__
 
 #  define TTHREAD_TLS(type) static type
+#  define TTHREAD_TLS_ARRAY(type,size,name) static type name[size];
+#  define TTHREAD_TLS_PTR(name) &name
 
 #elif __cplusplus >= 201103L
 
 #  define TTHREAD_TLS(type) thread_local type
+#  define TTHREAD_TLS_ARRAY(type,size,name) thread_local type name[size];
+#  define TTHREAD_TLS_PTR(name) &name
 
 #elif defined(R__HAS_THREAD_LOCAL)
 
 #  define TTHREAD_TLS(type) thread_local type
+#  define TTHREAD_TLS_ARRAY(type,size,name) thread_local type name[size];
+#  define TTHREAD_TLS_PTR(name) &name
 
 #elif defined(R__HAS___THREAD)
 
 #  define TTHREAD_TLS(type)  static __thread type
+#  define TTHREAD_TLS_ARRAY(type,size,name) static __thread type name[size];
+#  define TTHREAD_TLS_PTR(name) &name
 
 #elif defined(R__HAS_DECLSPEC_THREAD)
 
 #  define TTHREAD_TLS(type) static __declspec(thread) type
+#  define TTHREAD_TLS_ARRAY(type,size,name) static __declspec(thread) name[size];
+#  define TTHREAD_TLS_PTR(name) &name
 
 #elif defined(R__HAS_PTHREAD)
 
@@ -100,6 +110,12 @@ private:
    }
 
 public:
+
+   TThreadTLSWrapper() : fInitValue() {
+
+      pthread_key_create(&(fKey), key_delete);
+   }
+
    TThreadTLSWrapper(const type &value) : fInitValue(value) {
 
       pthread_key_create(&(fKey), key_delete);
@@ -125,14 +141,58 @@ public:
       return ptr;
    }
 
-   operator type &() {
+   operator type&() {
       return get();
    }
 
 };
 
-#  define TTHREAD_TLS_INIT(type) static TThreadTLSWrapper<type>
+template <typename type,int size> class TThreadTLSArrayWrapper
+{
+private:
+   pthread_key_t  fKey;
 
+   static void key_delete(void *arg) {
+      assert (NULL != arg);
+      delete [] (type*)(arg);
+   }
+
+public:
+
+   TThreadTLSArrayWrapper() {
+
+      pthread_key_create(&(fKey), key_delete);
+   }
+
+   ~TThreadTLSArrayWrapper() {
+      pthread_key_delete(fKey);
+   }
+
+   type* get() {
+      void *ptr = pthread_getspecific(fKey);
+      if (!ptr) {
+         ptr = new type[size];
+         assert (NULL != ptr);
+         (void) pthread_setspecific(fKey, ptr);
+      }
+      return  (type*)ptr;
+   }
+
+//   type& operator=(const type &in) {
+//      type &ptr = get();
+//      ptr = in;
+//      return ptr;
+//   }
+//
+   operator type*() {
+      return get();
+   }
+   
+};
+
+#  define TTHREAD_TLS(type) static TThreadTLSWrapper<type>
+#  define TTHREAD_TLS_ARRAY(type,size,name) static TThreadTLSArrayWrapper<type,size> name;
+#  define TTHREAD_TLS_PTR(name) &(name.get())
 #else
 
 #error "No Thread Local Storage (TLS) technology for this platform specified."
