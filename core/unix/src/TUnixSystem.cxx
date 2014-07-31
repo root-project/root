@@ -3785,7 +3785,7 @@ void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignr)
    // behaviour.
 
    TTHREAD_TLS(Bool_t) ignoreSig[kMAXSIGNALS] = { kFALSE };
-   TTHREAD_TLS(struct sigaction) oldsigact[kMAXSIGNALS];
+   TTHREAD_TLS_ARRAY(struct sigaction,kMAXSIGNALS,oldsigact);
 
    if (ignr != ignoreSig[sig]) {
       ignoreSig[sig] = ignr;

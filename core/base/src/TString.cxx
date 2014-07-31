@@ -2402,7 +2402,7 @@ static char *Format(const char *format, va_list ap)
    static const int fld_size = 2048;
 
    // a circular formating buffer
-   TTHREAD_TLS(char) gFormbuf[cb_size]; // some slob for form overflow
+   TTHREAD_TLS_ARRAY(char,cb_size,gFormbuf); // gFormbuf[cb_size]; // some slob for form overflow
    TTHREAD_TLS(char*) gBfree(0);
    TTHREAD_TLS(char*) gEndbuf(0);
 

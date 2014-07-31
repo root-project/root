@@ -92,7 +92,8 @@ again:
    // Serialize the actual printing.
    R__LOCKGUARD2(gErrorMutex);
 
-   fprintf(stderr, "%s", buf);
+   const char *toprint = buf; // Work around for older plaform where we use TThreadTLSWrapper
+   fprintf(stderr, "%s", toprint);
 
 #ifdef WIN32
    ::OutputDebugString(buf);
@@ -235,7 +236,8 @@ again:
 
    char *bp;
    if (level >= kSysError && level < kFatal) {
-      bp = Form("%s (%s)", buf, gSystem->GetError());
+      const char *toprint = buf; // Work around for older plaform where we use TThreadTLSWrapper
+      bp = Form("%s (%s)", toprint, gSystem->GetError());
    } else
       bp = buf;
 
