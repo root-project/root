@@ -239,9 +239,13 @@ endmacro(ROOTTEST_COMPILE_MACRO)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_DICTIONARY dictname)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "LINKDEF;DEPENDS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP" "" "LINKDEF;DEPENDS" ${ARGN})
 
   set(CMAKE_ROOTTEST_DICT ON)
+
+  if(ARG_NO_ROOTMAP)
+    set(CMAKE_ROOTTEST_NOROOTMAP ON)
+  endif()
 
   ROOT_GENERATE_DICTIONARY(${dictname} ${ARG_UNPARSED_ARGUMENTS}
                            MODULE ${dictname}
