@@ -46,6 +46,7 @@ static TString &IncludeNameBuffer() {
 #else
    static TString includeName(kMaxLen);
 #endif
+   return includeName;
 }
 
 extern void *gMmallocDesc;
