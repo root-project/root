@@ -31,13 +31,6 @@
 
 #include <cstring>
 
-#include "ThreadLocalStorage.h"
-#ifdef WIN32
-R__EXTERN TTree *gTree;
-#else
-R__EXTERN TTHREAD_TLS(TTree*) gTree;
-#endif
-
 ClassImp(TBranchClones)
 
 //______________________________________________________________________________
@@ -410,7 +403,7 @@ void TBranchClones::Streamer(TBuffer& b)
       b >> fBranchCount;
       fClassName.Streamer(b);
       fBranches.Streamer(b);
-      fTree = gTree;
+      fTree = 0;
       TBranch* branch = 0;
       TLeaf* leaf = 0;
       Int_t nbranches = fBranches.GetEntriesFast();

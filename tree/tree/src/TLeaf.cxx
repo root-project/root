@@ -24,13 +24,6 @@
 
 #include <ctype.h>
 
-#include "ThreadLocalStorage.h"
-#ifdef WIN32
-R__EXTERN TTree *gTree;
-#else
-R__EXTERN TTHREAD_TLS(TTree*) gTree;
-#endif
-
 ClassImp(TLeaf)
 
 //______________________________________________________________________________
@@ -191,15 +184,16 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    nch = strlen(countname);
 
    // Now search a branch name with a leaf name = countname
-   // We search for the leaf in the ListOfLeaves from the TTree. We can in principle
-   // access the TTree by calling fBranch()->GetTree(), but fBranch is not set if this
-   // method is called from the TLeaf constructor. In that case, use global pointer
-   // gTree.
-   // Also, if fBranch is set, but fBranch->GetTree() returns NULL, use gTree.
-   TTree* pTree = gTree;
-   if (fBranch && fBranch->GetTree()) {
-      pTree = fBranch->GetTree();
+   if (fBranch == 0) {
+      Error("GetLeafCounter","TLeaf %s is not setup properly, fBranch is null.",GetName());
+      return 0;
    }
+   if (fBranch->GetTree() == 0) {
+      Error("GetLeafCounter","For Leaf %s, the TBranch %s is not setup properly, fTree is null.",GetName(),fBranch->GetName());
+      return 0;
+   }
+   TTree* pTree = fBranch->GetTree();
+
    TLeaf* leaf = (TLeaf*) GetBranch()->GetListOfLeaves()->FindObject(countname);
    if (leaf == 0) {
       // Try outside the branch:

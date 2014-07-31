@@ -30,13 +30,6 @@
 #include "TFile.h"
 #include "TROOT.h"
 
-#include "ThreadLocalStorage.h"
-#ifdef WIN32
-R__EXTERN TTree *gTree;
-#else
-R__EXTERN TTHREAD_TLS(TTree*) gTree;
-#endif
-
 ClassImp(TFriendElement)
 
 //______________________________________________________________________________
@@ -48,7 +41,7 @@ TFriendElement::TFriendElement() : TNamed()
    fFile       = 0;
    fTree       = 0;
    fOwnFile    = kFALSE;
-   fParentTree = gTree;
+   fParentTree = 0;
 }
 
 //______________________________________________________________________________
