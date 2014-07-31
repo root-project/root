@@ -90,7 +90,7 @@
 #elif defined(R__HAS_DECLSPEC_THREAD)
 
 #  define TTHREAD_TLS(type) static __declspec(thread) type
-#  define TTHREAD_TLS_ARRAY(type,size,name) static __declspec(thread) name[size];
+#  define TTHREAD_TLS_ARRAY(type,size,name) static __declspec(thread) type name[size];
 #  define TTHREAD_TLS_PTR(name) &name
 
 #elif defined(R__HAS_PTHREAD)
