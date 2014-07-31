@@ -431,6 +431,32 @@ extern "C" void TCling__LibraryUnloadedRTTI(const void* dyLibHandle,
 
 extern "C"
 TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx) {
+   // The call to FindSpecialObject might induces any kind of use
+   // of the interpreter ... (library loading, function calling, etc.)
+   // ... and we _know_ we are in the middle of parsing, so let's make
+   // sure to save the state and then restore it.
+
+   cling::Interpreter *interpreter = ((TCling*)gCling)->GetInterpreter();
+
+   // Save state of the PP
+   Sema &SemaR = interpreter->getSema();
+   ASTContext& C = SemaR.getASTContext();
+   Preprocessor &PP = SemaR.getPreprocessor();
+   Parser& P = const_cast<Parser&>(interpreter->getParser());
+   Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+   Parser::ParserCurTokRestoreRAII savedCurToken(P);
+   // After we have saved the token reset the current one to something which
+   // is safe (semi colon usually means empty decl)
+   Token& Tok = const_cast<Token&>(P.getCurToken());
+   Tok.setKind(tok::semi);
+
+   // We can't PushDeclContext, because we go up and the routine that pops
+   // the DeclContext assumes that we drill down always.
+   // We have to be on the global context. At that point we are in a
+   // wrapper function so the parent context must be the global.
+   Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
+                                          SemaR.TUScope);
+
    return gROOT->FindSpecialObject(Name, LookupCtx);
 }
 
