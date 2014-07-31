@@ -86,7 +86,7 @@ find_package(PythonInterp)
 find_program(python_cmd ${PYTHON_EXECUTABLE})
 
 # Setup standard includes / links.
-include_directories(${ROOT_INCLUDE_DIRS} ${ROOT_INCLUDE_DIR})
+include_directories(${ROOT_INCLUDE_DIRS} ${ROOT_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/boost)
 link_directories(${ROOT_LIBRARY_DIR})
 
 # Enable and setup CTest.
