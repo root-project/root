@@ -1,3 +1,6 @@
+# Temporarly add workaround
+add_definitions(-DClingWorkAroundAutoParseRecurse)
+
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(AtlasTest AtlasTest.h SELECTION AtlasTest_selection.xml NO_ROOTMAP)
 set(depends ${GENERATE_REFLEX_TEST})
 
