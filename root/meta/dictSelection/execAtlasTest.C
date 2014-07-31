@@ -14,8 +14,6 @@ int execAtlasTest(){
 
 #ifdef ClingWorkAroundAutoParseRecurse
    gInterpreter->AutoParse("Atlas::ClassA");
-   gInterpreter->AutoParse("Atlas::ClassB");
-   gInterpreter->AutoParse("Atlas::ClassC");
 #endif
 
    printNames("Atlas::ClassA<Atlas::ClassB, float>");
