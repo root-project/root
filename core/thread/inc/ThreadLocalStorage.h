@@ -125,7 +125,7 @@ public:
       return ptr;
    }
 
-   operator T&() {
+   operator type &() {
       return get();
    }
 
