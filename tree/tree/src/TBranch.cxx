@@ -43,15 +43,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "ThreadLocalStorage.h"
-#ifdef WIN32
-R__EXTERN TTree *gTree;
-#else
-R__EXTERN TTHREAD_TLS(TTree*) gTree;
-#endif
-
 Int_t TBranch::fgCount = 0;
-
 
 #if (__GNUC__ >= 3) || defined(__INTEL_COMPILER)
 #if !defined(R__unlikely)
@@ -2322,7 +2314,7 @@ void TBranch::Streamer(TBuffer& b)
 
    if (b.IsReading()) {
       UInt_t R__s, R__c;
-      fTree = gTree;
+      fTree = 0; // Will be set by TTree::Streamer
       fAddress = 0;
       gROOT->SetReadingObject(kTRUE);
 

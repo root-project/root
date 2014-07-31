@@ -377,13 +377,6 @@
 Int_t    TTree::fgBranchStyle = 1;  // Use new TBranch style with TBranchElement.
 Long64_t TTree::fgMaxTreeSize = 100000000000LL;
 
-#include "ThreadLocalStorage.h"
-#ifdef WIN32
-TTree* gTree;
-#else
-TTHREAD_TLS(TTree*) gTree;
-#endif
-
 ClassImp(TTree)
 
 //
@@ -770,9 +763,6 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
    //        can with a histogram.
    fDirectory = gDirectory;
    fDirectory->Append(this);
-
-   // We become the current tree.
-   gTree = this;
 
    fBranches.SetOwner(kTRUE);
 
@@ -1647,7 +1637,6 @@ TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, In
    //         A small value for bufsize is optimum if you intend to access
    //         the entries in the Tree randomly and your Tree is in split mode.
 
-   gTree = this;
    TBranch* branch = new TBranch(this, name, address, leaflist, bufsize);
    if (branch->IsZombie()) {
       delete branch;
@@ -1732,7 +1721,6 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
    //    A small value for bufsize is optimum if you intend to access
    //    the entries in the Tree randomly and your Tree is in split mode.
 
-   gTree = this;
    TClass* cl = TClass::GetClass(classname);
    if (!cl) {
       Error("BranchOld", "Cannot find class: '%s'", classname);
@@ -2069,7 +2057,6 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
 {
    // Helper function implementing TTree::Bronch and TTree::Branch(const char *name, T &obj);
 
-   gTree = this;
    TClass* cl = TClass::GetClass(classname);
    if (!cl) {
       Error("Bronch", "Cannot find class:%s", classname);
@@ -6605,7 +6592,6 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
    //
    // See reference information for TTree::ReadFile
 
-   gTree = this;
    char newline = GetNewlineValue(inputStream);
    std::istream& in = inputStream;
    Long64_t nlines = 0;
@@ -8164,12 +8150,38 @@ void TTree::StopCacheLearningPhase()
 }
 
 //______________________________________________________________________________
+static void TBranch__SetTree(TTree *tree, TObjArray &branches)
+{
+   // Set the fTree member for all branches and sub branches.
+
+   Int_t nb = branches.GetEntriesFast();
+   for (Int_t i = 0; i < nb; ++i) {
+      TBranch* br = (TBranch*) branches.UncheckedAt(i);
+      br->SetTree(tree);
+      TBranch__SetTree(tree,*br->GetListOfBranches());
+   }
+}
+
+//______________________________________________________________________________
+void TFriendElement__SetTree(TTree *tree, TList *frlist)
+{
+   // Set the fTree member for all friend elements.
+
+   if (frlist) {
+      TObjLink *lnk = frlist->FirstLink();
+      while (lnk) {
+         TFriendElement *elem = (TFriendElement*)lnk->GetObject();
+         elem->fTree = tree;
+      }
+   }
+}
+
+//______________________________________________________________________________
 void TTree::Streamer(TBuffer& b)
 {
    // Stream a class object.
    if (b.IsReading()) {
       UInt_t R__s, R__c;
-      gTree = this;
       if (fDirectory) {
          fDirectory->Remove(this);
          //delete the file cache if it points to this Tree
@@ -8184,6 +8196,9 @@ void TTree::Streamer(TBuffer& b)
          b.ReadClassBuffer(TTree::Class(), this, R__v, R__s, R__c);
 
          fBranches.SetOwner(kTRUE); // True needed only for R__v < 19 and most R__v == 19
+
+         TBranch__SetTree(this,fBranches);
+         TFriendElement__SetTree(this,fFriends);
 
          if (fTreeIndex) {
             fTreeIndex->SetTree(this);
@@ -8242,6 +8257,7 @@ void TTree::Streamer(TBuffer& b)
       b >> ijunk; fEstimate = (Long64_t)ijunk;
       if (fEstimate <= 10000) fEstimate = 1000000;
       fBranches.Streamer(b);
+      TBranch__SetTree(this,fBranches);
       fLeaves.Streamer(b);
       fSavedBytes = fTotBytes;
       if (R__v > 1) fIndexValues.Streamer(b);

@@ -237,13 +237,6 @@ extern "C" void  type_of_call hldir(DEFCHAR,DEFCHAR);
 Bool_t THbookFile::fgPawInit = kFALSE;
 Int_t  *THbookFile::fgLuns   = 0;
 
-#include "ThreadLocalStorage.h"
-#ifdef WIN32
-R__EXTERN TTree *gTree;
-#else
-R__EXTERN TTHREAD_TLS(TTree*) gTree;
-#endif
-
 ClassImp(THbookFile)
 
 //______________________________________________________________________________
@@ -685,7 +678,6 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 
    char *bigbuf = tree->MakeX(500000);
 
-   gTree = tree;
 #ifndef WIN32
    hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0,1,6);
 #else
@@ -824,7 +816,6 @@ TObject *THbookFile::ConvertRWN(Int_t id)
    THbookTree *tree = new THbookTree(idname,id);
    tree->SetHbookFile(this);
    tree->SetType(0);
-   gTree = tree;
    Float_t *x = (Float_t*)tree->MakeX(nvar*4);
 
    Int_t first,last;

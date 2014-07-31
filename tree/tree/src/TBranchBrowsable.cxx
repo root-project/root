@@ -27,13 +27,6 @@
 #include "TRef.h"
 #include <algorithm>
 
-#include "ThreadLocalStorage.h"
-#ifdef WIN32
-R__EXTERN TTree *gTree;
-#else
-R__EXTERN TTHREAD_TLS(TTree*) gTree;
-#endif
-
 ClassImp(TVirtualBranchBrowsable);
 
 //______________________________________________________________________________
@@ -115,8 +108,8 @@ void TVirtualBranchBrowsable::Browse(TBrowser *b)
 
       TTree* tree=0;
       if (!fBranch) {
-         Warning("Browse", "branch not set - might access wrong tree!");
-         tree=gTree;
+         Error("Browse", "branch not set - might access wrong tree!");
+         return;
       } else tree=fBranch->GetTree();
       tree->Draw(name, "", b ? b->GetDrawOption() : "");
       if (gPad) gPad->Update();
@@ -199,7 +192,7 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
          type=TClass::GetClass(clonesname);
       }
    } else {
-      if (gTree) gTree->Warning("GetCollectionContainedType", "Neither branch nor parent given!");
+      ::Warning("TVirtualBranchBrowsable::GetCollectionContainedType", "Neither branch nor parent given!");
       return 0;
    }
 
@@ -782,8 +775,7 @@ Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& li, const TBranch* bran
          }
       }
    } else {
-      if (gTree)
-         gTree->Warning("GetBrowsables", "Neither branch nor parent is set!");
+      ::Warning("TCollectionPropertyBrowsable::GetBrowsables", "Neither branch nor parent is set!");
       return 0;
    }
 

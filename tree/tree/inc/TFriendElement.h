@@ -44,6 +44,8 @@ protected:
    TFriendElement(const TFriendElement&);
    TFriendElement& operator=(const TFriendElement&);
 
+   friend void TFriendElement__SetTree(TTree *tree, TList *frlist);
+
 public:
    enum { kFromChain = BIT(11) };
    TFriendElement();
