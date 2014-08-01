@@ -41,15 +41,16 @@
 #include <queue>
 #include <algorithm>
 
-#if ROOT_VERSION_CODE >= 364802
-#ifndef ROOT_TMathBase
-#include "TMathBase.h"
-#endif
-#else
-#ifndef ROOT_TMath
+// #if ROOT_VERSION_CODE >= 364802
+// #ifndef ROOT_TMathBase
+// #include "TMathBase.h"
+// #endif
+// #else
+// #ifndef ROOT_TMath
 #include "TMath.h"
-#endif
-#endif
+// #endif
+// #endif
+
 #include "TMatrixDBase.h"
 #include "TObjString.h"
 #include "TTree.h"

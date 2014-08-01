@@ -29,15 +29,15 @@
 #ifndef ROOT_TMVA_RuleEnsemble
 #define ROOT_TMVA_RuleEnsemble
 
-#if ROOT_VERSION_CODE >= 364802
-#ifndef ROOT_TMathBase
-#include "TMathBase.h"
-#endif
-#else
+// #if ROOT_VERSION_CODE >= 364802
+// #ifndef ROOT_TMathBase
+// #include "TMathBase.h"
+// #endif
+// #else
 #ifndef ROOT_TMath
 #include "TMath.h"
 #endif
-#endif
+// #endif
 
 #ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
