@@ -8174,6 +8174,7 @@ void TFriendElement__SetTree(TTree *tree, TList *frlist)
       while (lnk) {
          TFriendElement *elem = (TFriendElement*)lnk->GetObject();
          elem->fTree = tree;
+         lnk = lnk->Next();
       }
    }
 }
@@ -8199,6 +8200,7 @@ void TTree::Streamer(TBuffer& b)
 
          fBranches.SetOwner(kTRUE); // True needed only for R__v < 19 and most R__v == 19
 
+         if (fBranchRef) fBranchRef->SetTree(this);
          TBranch__SetTree(this,fBranches);
          TFriendElement__SetTree(this,fFriends);
 
@@ -8259,6 +8261,7 @@ void TTree::Streamer(TBuffer& b)
       b >> ijunk; fEstimate = (Long64_t)ijunk;
       if (fEstimate <= 10000) fEstimate = 1000000;
       fBranches.Streamer(b);
+      if (fBranchRef) fBranchRef->SetTree(this);
       TBranch__SetTree(this,fBranches);
       fLeaves.Streamer(b);
       fSavedBytes = fTotBytes;
