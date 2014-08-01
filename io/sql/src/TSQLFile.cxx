@@ -1079,7 +1079,7 @@ Bool_t TSQLFile::ReadConfigurations()
    // should be found, otherwise will be error
    fSQLIOversion = 0;
 
-   // Int_t lock = 0;
+   Int_t lock = 0;
 
    #define ReadIntCfg(name, target)                        \
      if ((field.CompareTo(name, TString::kIgnoreCase)==0)) \
@@ -1109,13 +1109,14 @@ Bool_t TSQLFile::ReadConfigurations()
       ReadIntCfg(sqlio::cfg_UseTransactions, fUseTransactions)
       ReadIntCfg(sqlio::cfg_UseIndexes, fUseIndexes)
       ReadIntCfg(sqlio::cfg_ModifyCounter, fModifyCounter)
-      // ReadIntCfg(sqlio::cfg_LockingMode, lock)
+      ReadIntCfg(sqlio::cfg_LockingMode, lock)
       {
          Error("ReadConfigurations","Invalid configuration field %s", field.Data());
          fSQLIOversion = 0;
          break;
       }
    }
+   (void)lock;
 
    delete res;
 
@@ -1144,7 +1145,7 @@ void TSQLFile::CreateBasicTables()
                quote, sqlio::CT_Field, quote, SQLSmallTextType(),
                quote, sqlio::CT_Value, quote, SQLSmallTextType());
    if ((fTablesType.Length()>0) && IsMySQL()) {
-      sqlcmd +=" TYPE=";
+      sqlcmd +=" ENGINE=";
       sqlcmd += fTablesType;
    }
 
@@ -1188,7 +1189,7 @@ void TSQLFile::CreateBasicTables()
                quote, sqlio::KT_Class, quote, SQLSmallTextType());
 
    if ((fTablesType.Length()>0) && IsMySQL()) {
-      sqlcmd +=" TYPE=";
+      sqlcmd +=" ENGINE=";
       sqlcmd += fTablesType;
    }
 
@@ -2044,7 +2045,7 @@ void TSQLFile::AddIdEntry(Long64_t tableid, Int_t subid, Int_t type,
                   quote, sqlio::IT_SQLName, quote, SQLSmallTextType(),
                   quote, sqlio::IT_Info, quote, SQLSmallTextType());
       if ((fTablesType.Length()>0) && IsMySQL()) {
-         sqlcmd +=" TYPE=";
+         sqlcmd +=" ENGINE=";
          sqlcmd += fTablesType;
       }
       SQLQuery(sqlcmd.Data());
@@ -2128,7 +2129,7 @@ Bool_t TSQLFile::CreateClassTable(TSQLClassInfo* sqlinfo, TObjArray* colinfos)
    sqlcmd += ")";
 
    if ((fTablesType.Length()>0)  && IsMySQL()) {
-      sqlcmd +=" TYPE=";
+      sqlcmd +=" ENGINE=";
       sqlcmd += fTablesType;
    }
 
@@ -2174,7 +2175,7 @@ Bool_t TSQLFile::CreateRawTable(TSQLClassInfo* sqlinfo)
                sqlio::BT_Value, SQLSmallTextType());
 
    if ((fTablesType.Length()>0) && IsMySQL()) {
-      sqlcmd +=" TYPE=";
+      sqlcmd +=" ENGINE=";
       sqlcmd += fTablesType;
    }
 
@@ -2223,7 +2224,7 @@ Bool_t TSQLFile::VerifyLongStringTable()
                sqlio::ST_Value, SQLBigTextType());
 
    if (fTablesType.Length()>0) {
-      sqlcmd +=" TYPE=";
+      sqlcmd +=" ENGINE=";
       sqlcmd += fTablesType;
    }
 
@@ -2332,7 +2333,7 @@ Long64_t TSQLFile::VerifyObjectTable()
                   quote, sqlio::OT_Version, quote, SQLIntType());
 
       if ((fTablesType.Length()>0) && IsMySQL()) {
-         sqlcmd +=" TYPE=";
+         sqlcmd +=" ENGINE=";
          sqlcmd += fTablesType;
       }
 
