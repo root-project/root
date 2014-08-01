@@ -1,0 +1,19 @@
+<lcgdict>
+  <class name="BCM_RawData" />
+
+  <class name="DataVector<BCM_RawData>" />
+  <class name="std::vector<BCM_RawData*>" />
+
+  <!--<class name="DataLinkVector<BCM_RDO_Collection>" >
+    <field name="m_last" transient="true" />
+    <field name="m_vect" transient="true" />
+    <field name="m_offset" transient="true" />
+  </class>-->
+
+  <class name="BCM_RDO_Collection" />
+
+  <class name="BCM_RDO_Container" />
+  <class name="std::vector<BCM_RDO_Collection*>" />
+  <class name="DataVector<BCM_RDO_Collection>" id="D2E35785-D188-4AB4-B828-A1E241C0AF8B"/>
+</lcgdict>
+

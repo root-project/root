@@ -1,0 +1,10 @@
+<lcgdict>
+
+<class name="D3PDTest::Obj1"/>
+<class name="D3PDTest::Obj1Container"/>
+<class name="D3PDTest::Obj3"/>
+<class name="D3PDTest::Obj4"/>
+<class name="D3PDTest::Obj4Container"/>
+<class name="D3PDTest::MapDumper"/>
+
+</lcgdict>

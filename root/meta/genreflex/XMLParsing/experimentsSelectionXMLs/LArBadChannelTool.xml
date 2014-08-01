@@ -1,0 +1,30 @@
+<lcgdict>
+
+<namespace name="LArBadChannelDBTools"/>
+<function name="LArBadChannelDBTools::readBadChan"/>
+<function name="LArBadChannelDBTools::readBadFeb"/>
+<function name="LArBadChannelDBTools::createCoolSpec"/>
+<function name="LArBadChannelDBTools::createPayload"/>
+<function name="LArBadChannelDBTools::createFebPayload"/>
+<function name="LArBadChannelDBTools::getDefaultMsgStream"/>
+
+<class name="LArBadChannel"/>
+<class name="std::pair<HWIdentifier,LArBadChannel>"/>
+<class name="std::vector<std::pair<HWIdentifier,LArBadChannel>>"/>
+
+<class name="LArBadFeb"/>
+<class name="std::pair<HWIdentifier,LArBadFeb>"/>
+<class name="std::vector<std::pair<HWIdentifier,LArBadFeb>>"/>
+
+<class name="LArBadChannelEnum"/>
+<class name="LArBadChanBitPacking"/>
+<class name="LArBadChannelState"/>
+<class name="LArBadChannelState::CoolChannelData"/>
+<class name="std::pair<bool,LArBadChannelEnum::ProblemType>"/> 
+
+<class name="ILArBadChannelMasker"/>
+<class name="ILArBadChanTool"/>
+<!-- <class name="LArBadChannelMasker"/> -->
+<!-- <class name="LArBadChanTool"/> -->
+
+</lcgdict>

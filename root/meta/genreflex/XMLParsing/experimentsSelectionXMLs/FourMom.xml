@@ -1,0 +1,38 @@
+
+
+<lcgdict>
+  <class name="P4PxPyPzE" />
+  <class name="P4PxPyPzEBase" />
+  <class name="P4Impl<P4ImplPxPyPzE>" />
+  <class name="P4ImplPxPyPzE" >
+    <field name="m_error" transient="true"/>
+  </class>
+  <class name="P4BasePxPyPzE" />
+
+  <class name="P4EEtaPhiM" />
+  <class name="P4EEtaPhiMBase" />
+  <class name="P4Impl<P4ImplEEtaPhiM>" />
+  <class name="P4ImplEEtaPhiM" >
+    <field name="m_error" transient="true"/>
+  </class>
+  <class name="P4BaseEEtaPhiM" />
+
+  <class name="P4IPtCotThPhiM" />
+  <class name="P4IPtCotThPhiMBase" />
+  <class name="P4Impl<P4ImplIPtCotThPhiM>" />
+  <class name="P4ImplIPtCotThPhiM" >
+    <field name="m_error" transient="true"/>
+  </class>
+  <class name="P4BaseIPtCotThPhiM" />
+
+  <class name="P4PtEtaPhiM" />
+  <class name="P4PtEtaPhiMBase" />
+  <class name="P4Impl<P4ImplPtEtaPhiM>" />
+  <class name="P4ImplPtEtaPhiM" >
+    <field name="m_error" transient="true"/>
+  </class>
+  <class name="P4BasePtEtaPhiM" />
+
+
+</lcgdict>
+

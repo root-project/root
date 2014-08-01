@@ -1,0 +1,8 @@
+<lcgdict>
+  <class name="LUCID_SimHitCollection" id="7BCDF079-FD96-4B18-B1E7-FA5EDDB026F26" />
+  <class name="AtlasHitsVector<LUCID_SimHit>" />
+  <class name="std::vector<LUCID_SimHit>" />
+  <class name="LUCID_SimHit" />
+</lcgdict>
+
+

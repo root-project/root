@@ -1,0 +1,66 @@
+<lcgdict>
+  <!-- egamma -->
+  <class name="egammaContainer_p5"  id="1AA8DE2E-D1CC-4076-B74A-82BBCC551798" />
+  <class name="std::vector<egamma_p5>" />
+  <class name="egamma_p5" />
+
+  <class name="egammaContainer_p4"  id="451AACD2-5B23-4557-8A3F-6CD1AB36BF9F" />
+  <class name="std::vector<egamma_p4>" />
+  <class name="egamma_p4" />
+
+  <class name="egammaContainer_p3"  id="95BD7D50-F070-4245-91DE-ECAB4A8D722D" />
+  <class name="std::vector<egamma_p3>" />
+  <class name="egamma_p3" />
+
+  <class name="egammaContainer_p2"  id="5576188C-ECA9-4BD1-B1F1-563C728FE51F" />
+  <class name="std::vector<egamma_p2>" />
+  <class name="egamma_p2" />
+
+  <class name="egDetailContainer_p2" id="6AB9ADFD-836F-416D-B343-3DDF7D4F6E18" />
+  <class name="std::vector<egDetail_p2>" />
+  <class name="egDetail_p2" />
+
+
+  <!-- Electron -->
+  <class name="ElectronContainer_p5" id="A7C69641-E985-4D31-92D4-D33206C197F1" />
+  <class name="std::vector<Electron_p5>" />
+  <class name="Electron_p5" />
+
+  <class name="ElectronContainer_p4" id="1A7C1F66-D9D2-49E9-80A8-592A0CEE3FDF" />
+  <class name="std::vector<Electron_p4>" />
+  <class name="Electron_p4" />
+
+
+  <class name="ElectronContainer_p3" id="51C149D6-2FBA-4ADD-B6AA-8AE39E07D202" />
+  <class name="std::vector<Electron_p3>" />
+  <class name="Electron_p3" />
+
+
+  <class name="ElectronContainer_p2" id="A4377CE2-C0DC-4F80-8CFD-3BBE9A8EFD52" />
+  <class name="std::vector<Electron_p2>" />
+  <class name="Electron_p2" />
+
+
+  <!-- Photon -->
+  <class name="PhotonContainer_p5"   id="64942DEF-C0FE-4CA7-A735-70187092DC27" />
+  <class name="std::vector<Photon_p5>" />
+  <class name="Photon_p5" />
+
+  <class name="PhotonContainer_p4"   id="554B12C0-AB10-451D-963C-F9714FB29695" />
+  <class name="std::vector<Photon_p4>" />
+  <class name="Photon_p4" />
+  
+  <class name="PhotonContainer_p3"   id="BC1DF3E5-98F5-444D-826A-DFBB85E1C870" />
+  <class name="std::vector<Photon_p3>" />
+  <class name="Photon_p3" />
+
+  <class name="PhotonContainer_p2"   id="E807B07C-8B27-4FF1-A638-05FBCA034C0B" />
+  <class name="std::vector<Photon_p2>" />
+  <class name="Photon_p2" />
+
+  <!-- Rings -->
+  <class name="CaloRingsContainer_p1" id="E6E0435E-BFEC-11DE-B657-001CC0754D20" />
+  <class name="std::vector<CaloRings_p1>" />
+  <class name="CaloRings_p1" />
+
+</lcgdict>

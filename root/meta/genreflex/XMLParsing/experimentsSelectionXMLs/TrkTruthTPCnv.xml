@@ -1,0 +1,45 @@
+<lcgdict>
+
+    <!-- PRD Truth -->
+    <class name="Trk::PRD_MultiTruthCollection_p1" id="6649A9D1-719F-4954-A385-D01BCA8E41EF" />
+    <class name="std::vector<Trk::PRD_MultiTruthCollection_p1::Entry>" />
+    <class name="Trk::PRD_MultiTruthCollection_p1::Entry" />
+    <class name="Trk::PRD_MultiTruthCollection_p2" id="714F2E4A-419D-4BDB-8080-BEEB6CDBA0DA" />
+    <class name="std::vector<Trk::PRD_MultiTruthCollection_p2::Entry>" />
+    <class name="Trk::PRD_MultiTruthCollection_p2::Entry" />
+
+    <!-- Track Truth p0 -->
+    <class name="TrackTruthVector"  id="8BC86D69-DBC4-4B34-8273-513D9BE771D5" />
+    <class name="std::vector<std::pair<ElementLink<TrackCollection>,TrackTruth> >" /> 
+    <class name="std::pair<ElementLink<TrackCollection >,TrackTruth>" /> 
+
+    <!-- Track Truth p1 -->
+    <class name="Trk::TrackTruthCollection_p1" id="ED2B4B64-7CF6-48B3-8C40-29F8501A6090" />
+    <class name="std::vector<Trk::TrackTruthCollection_p1::Entry>" />
+    <class name="Trk::TrackTruthCollection_p1::Entry" />
+
+    <!-- DetailedTrackTruth stuff -->
+
+    <class name="Trk::DetailedTrackTruthCollection_p0" id="8F573396-F26F-47FD-B05C-549E9D5C77E1" />
+    <class name="Trk::TrackTruthKey_p0" />
+    <class name="Trk::DetailedTrackTruth_p0" />
+    <class name="Trk::SubDetHitStatistics_p0" />
+    <class name="Trk::TruthTrajectory_p0" />
+
+    <class name="std::multimap<Trk::TrackTruthKey_p0, Trk::DetailedTrackTruth_p0 >" />
+    <class name="std::pair<Trk::TrackTruthKey_p0, Trk::DetailedTrackTruth_p0 >" />
+
+    <class name="Trk::DetailedTrackTruthCollection_p1" id="1BA26DEE-BACE-43D6-8F19-E9490CDE8BB8" />
+    <class name="Trk::DetailedTrackTruth_p1" />
+    <class name="Trk::TruthTrajectory_p1" />
+
+    <class name="std::vector<Trk::DetailedTrackTruthCollection_p1::Entry>" />
+    <class name="Trk::DetailedTrackTruthCollection_p1::Entry" />
+
+    <class name="Trk::DetailedTrackTruthCollection_p2" id="B30AE3A0-F34E-45B6-A8A1-B9CB5E669EB2" />
+    <class name="Trk::DetailedTrackTruth_p2" />
+
+    <class name="std::vector<Trk::DetailedTrackTruthCollection_p2::Entry>" />
+    <class name="Trk::DetailedTrackTruthCollection_p2::Entry" />
+
+</lcgdict>

@@ -1,0 +1,7 @@
+<lcgdict>
+  <class name="BCM_RawData_p0" />
+  <class name="std::vector<BCM_RawData_p0>" />
+  <class name="BCM_RDO_Collection_p0" />
+  <class name="std::vector<BCM_RDO_Collection_p0>" />
+  <class name="BCM_RDO_Container_p0" id="63D3391C-BB21-4B94-981C-D482A78497ED" />
+</lcgdict>

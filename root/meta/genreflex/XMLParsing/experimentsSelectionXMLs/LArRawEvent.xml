@@ -1,0 +1,32 @@
+<lcgdict>
+
+<!--  <class name="DataObject" >
+    <field name="m_pLinkMgr" transient="true" />
+    <field name="m_pRegistry" transient="true" />
+    <field name="m_refCount" transient="true" />
+    <field name="m_version" transient="true" />
+  </class>
+-->
+
+
+
+  <class name="LArDigit" />
+  <class name="LArFebErrorSummary" />
+  <class name="LArDigitContainer" id="B15FFDA0-206D-4062-8B5F-582A1ECD5502" />
+  <class name="DataVector<LArDigit>" />
+  <class name="std::vector<LArDigit*>" />
+ 
+<!--  <class name="std::vector<float>" /> -->
+  <class name="LArTTL1Container" id="38FAECC7-D0C5-4DD8-8FAE-8D35F0542ECD" />
+  <class name="DataVector<LArTTL1>" />
+  <class name="std::vector<LArTTL1*>" />
+  <class name="LArTTL1" >
+    <field name="m_onlineId" transient="true" />
+  </class>
+ 
+  
+<!--
+	Comments: 
+-->
+
+</lcgdict>

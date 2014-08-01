@@ -1,0 +1,10 @@
+<lcgdict>
+  <class name="AthenaHitsVector<ScintillatorHit>" id="7CF14254-51FF-46C5-A402-F1EE70B85994" />
+  <class name="std::vector<ScintillatorHit*>" />
+  <class name="ScintillatorHit" />
+
+  <class name="AthenaHitsVector<SimpleScintillatorHit>" id="F6829DA8-A4D9-48F6-BE4D-0107D5AE7CDB" />
+  <class name="std::vector<SimpleScintillatorHit*>" />
+  <class name="SimpleScintillatorHit" />
+
+</lcgdict>

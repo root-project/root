@@ -1,0 +1,5 @@
+<lcgdict>
+  <namespace name="dqm_algorithms::tools"/>
+  <class name="dqm_algorithms::tools::DumpConfig"/>
+  <class name="dqm_algorithms::tools::SimpleAlgorithmConfig"/>
+</lcgdict>

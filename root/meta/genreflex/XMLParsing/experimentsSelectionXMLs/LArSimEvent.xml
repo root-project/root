@@ -1,0 +1,9 @@
+<lcgdict>
+  <class name="PyGate<LArHitContainer>" />
+  <class pattern="*iterator<LArHit*>" />
+
+  <class name="LArHit" />
+  <class name="std::vector<LArHit*>" />
+  <class name="AthenaHitsVector<LArHit>" />
+  <class name="LArHitContainer" id="32703AED-CAA5-45ED-B804-8556900CA6B5"  />
+</lcgdict>

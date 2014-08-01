@@ -1,0 +1,9 @@
+<lcgdict>
+
+<class name ="IComputePointingQuantities" />
+<class name="IDiphotonVertexID" />
+<class name="std::vector<const Trk::VxCandidate*>" />
+<!--class name="std::vector<TLorentzVector>" /-->
+
+</lcgdict>
+

@@ -1,0 +1,7 @@
+<lcgdict>
+
+  <function pattern="FourMomUtils::*" />
+  <function pattern="P4Helpers::*" />
+  <class pattern="P4Sorters::*" />
+
+</lcgdict>

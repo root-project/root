@@ -1,0 +1,4 @@
+<lcgdict>      
+  <class name="EventShapeStore"/>
+  <class name="std::map<int,double>" />
+</lcgdict>

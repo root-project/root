@@ -1,0 +1,53 @@
+<lcgdict>
+
+   <!-- Tau enums stripped into separate dictionary -->
+   <!-- <enum pattern="TauJetParameters::*"/> -->
+   <!-- <variable pattern="TauJetParameters::*"/> -->
+
+    <!-- Tau and constituents -->
+    <class name="Analysis::TauJet" >
+      <field name="m_tauDetails" transient="true"/>
+      <field name="m_author" transient="true"/>
+    </class>
+    <class name="Analysis::TauDetails" />
+    <class name="Analysis::TauCommonDetails" />
+    <class name="Analysis::TauCommonExtraDetails" />
+    <class name="Analysis::TauPi0Details" />
+    <!-- <class name="Analysis::Tau1P3PDetails" />
+    <class name="Analysis::Tau1P3PExtraDetails" />
+    <class name="Analysis::TauRecDetails" />
+    <class name="Analysis::TauRecExtraDetails" /> -->
+    <class name="Analysis::TauPID" />
+    <class name="tauAnalysisHelperObject" />
+
+    <!-- Constituents of TauPID and TauGenericDetails -->
+    <class name="std::vector<std::pair<TauJetParameters::TauID,double> >" />
+    <class name="std::pair<TauJetParameters::TauID,double>" />  
+
+    <class name="std::vector<std::pair<TauJetParameters::TauCalibType,CLHEP::HepLorentzVector> >" />
+    <class name="std::pair<TauJetParameters::TauCalibType,CLHEP::HepLorentzVector>" />
+
+
+    <!-- <class name="std::vector<std::pair<TauJetParameters::Detail,double> >" />-->
+    <!-- <class name="std::vector<std::pair<TauJetParameters::Detail,int> >" />-->
+
+    <!-- Definitions for TauContainer -->
+    <class name="Analysis::TauJetContainer" id="F20A18CA-6A77-4050-A94D-5518FC6B5551" />
+    <class name="DataVector<Analysis::TauJet>" />
+    <!--<class name="std::vector<Analysis::TauJet*>" /> -->
+
+    <!-- Definitions for TauDetailsContainer -->
+    <class name="Analysis::TauDetailsContainer" id="09593E4D-6BC2-44B7-9DB9-0F33EB310E20" />
+    <class name="DataVector<Analysis::TauDetails>" />
+    <class name="std::vector<Analysis::TauDetails*>" />
+    <class name="std::vector<std::vector<ElementLink<CaloCellContainer> > >"/>
+    <class name="std::vector<ElementLink<CaloCellContainer> >"/>
+
+    <class name="Analysis::TauPi0Candidate"/>
+    <class name="Analysis::TauPi0Cluster"/>
+    <class name="Analysis::TauShot"/>
+    <class name="std::vector<Analysis::TauPi0Candidate*>"/>
+    <class name="std::vector<Analysis::TauPi0Cluster*>"/>
+    <class name="std::vector<Analysis::TauShot*>"/>
+
+</lcgdict>

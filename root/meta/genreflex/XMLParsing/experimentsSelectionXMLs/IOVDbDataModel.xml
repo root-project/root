@@ -1,0 +1,5 @@
+<lcgdict>
+  <class name="IOVMetaDataContainer" />
+  <class name="IOVPayloadContainer" />
+  <class pattern="RootUtils::PyROOTIteratorFuncs*"/>
+</lcgdict>

@@ -1,0 +1,35 @@
+<lcgdict>
+
+  <class name="CaloCell_ID" />
+  <class name="CaloCell_Base_ID" />
+  <class name="CaloCell_SuperCell_ID" />
+  <class name="AtlasDetectorID" />
+  <class name="CaloDM_ID" />
+  <class name="CaloLVL1_ID" />
+  <class name="LArEM_ID" />
+  <class name="LArEM_Base_ID" />
+  <class name="LArEM_SuperCell_ID" />
+  <class name="LArFCAL_ID" />
+  <class name="LArFCAL_SuperCell_ID" />
+  <class name="LArFCAL_Base_ID" />
+  <class name="LArMiniFCAL_ID" />
+  <class name="LArHEC_ID" />
+  <class name="LArHEC_SuperCell_ID" />
+  <class name="LArHEC_Base_ID" />
+  <class name="TileID" />
+  <class name="Tile_SuperCell_ID" />
+  <class name="Tile_Base_ID" />
+  <class name="TTOnlineID" />
+  <class name="TileTBID" />
+  <class name="CaloIdManager" />
+  <class name="CaloIDHelper" />
+
+  <!-- should really be in DetDescrDictionary. -->
+  <class name="boost::iterator_range<std::vector<Identifier>::const_iterator>"/>
+  <class name="std::vector<Identifier>::const_iterator"/>
+//  <function proto_pattern="*operator==*Identifier*"/>
+//  <function proto_pattern="*operator!=*Identifier*"/>
+
+</lcgdict>
+
+

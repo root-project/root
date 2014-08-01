@@ -1,0 +1,19 @@
+<lcgdict>
+  <class name="iPatTrackContainer" id="E3038298-F9A6-44F0-BC31-A934CB2E2952" />
+  <class name="Track" />
+  <class name="DataVector<Track>" />
+  <class name="std::vector<Track*>" />  
+  <class name="HitOnTrack" >
+   <field name="m_rio" transient="true" />
+  </class>
+  <class name="std::list<HitOnTrack*>" />
+  <class name="ScattererParameters" />
+  <class name="std::vector<ScattererParameters*>" />
+  <class name="PerigeeParameters" />
+  <class name="TrackParameters" />
+  <class name="FitQuality" />
+  <class name="HitQuality" />
+  <class name="TruthAssociation" />
+</lcgdict>
+ 
+ 

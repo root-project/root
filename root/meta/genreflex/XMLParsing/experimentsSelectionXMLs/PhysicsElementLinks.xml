@@ -1,0 +1,12 @@
+<lcgdict>
+
+<!-- needed for each Selector  inheriting SelectorBase and using XxxContainer-->
+ <class name="ElectronLinks" id="7D761076-6F83-46B9-84A7-73477B77B839"  />
+ <class name="PhotonLinks" id="55BD6EAD-07C9-44AD-8934-BE1F6B490D6C"  />
+ <class name="MuonLinks" id="AA0D4C06-3257-439B-8723-7D36Fe5BF369"  />
+ <class name="TauJetLinks" id="AA0d4C06-3257-439B-8723-7D36FE5BF369"  />
+ <class name="JetLinks" id="DDA27A57-D5F8-4899-A648-A80BBD0ACB27"  />
+ <class name="TruthParticleLinks" id="92D4B4BC-C550-468C-86C8-2FAF42303CE0"  />
+ <class name="TrackLinks" id="F077BA61-F03B-4894-8AE7-71449EEE53FA"  />
+
+</lcgdict>

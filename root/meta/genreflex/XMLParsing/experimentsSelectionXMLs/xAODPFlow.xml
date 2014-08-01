@@ -1,0 +1,55 @@
+<!-- $Id: selection.xml 596608 2014-05-12 14:18:21Z mhodgkin $ -->
+<lcgdict>
+
+  <!-- PFO_v1 dictionaries: -->
+  <class name="xAOD::PFO_v1" >
+    <field name="m_p4" transient="true" />
+    <field name="m_p4Cached" transient="true" />
+    <field name="m_p4EM" transient="true" />
+    <field name="m_p4EMCached" transient="true" />
+  </class>
+  <read sourceClass="xAOD::PFO_v1" version="[1-]"
+        targetClass="xAOD::PFO_v1" source="" target="m_p4Cached" >
+    <![CDATA[
+       m_p4Cached = false;
+    ]]>
+  </read>
+  <read sourceClass="xAOD::PFO_v1" version="[1-]"
+        targetClass="xAOD::PFO_v1" source="" target="m_p4EMCached" >
+    <![CDATA[
+       m_p4EMCached = false;
+    ]]>
+  </read>
+
+
+  <class name="xAOD::PFOContainer_v1"
+         id="476378BF-054D-499E-9CC9-000F501B30F2" />
+
+  <class name="xAOD::PFOAuxContainer_v1"
+         id="F691F845-4A3D-466A-9187-FED7837D9372" />
+
+  <!-- Link types pointing at clusters: -->
+  <class name="DataLink<xAOD::PFOContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::PFOContainer_v1> >" />
+
+  <class name="ElementLink<xAOD::PFOContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::PFOContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::PFOContainer_v1> > >" />
+
+  <class name="ElementLink<xAOD::IParticleContainer>" />
+  <class name="std::vector< ElementLink<xAOD::IParticleContainer> >" />
+  <class name="std::vector<std::vector< ElementLink<xAOD::IParticleContainer> > >" />
+
+  <enum pattern="xAOD::PFODetails::*" />
+  <class name="std::vector<xAOD::PFODetails::PFOLeptonType>" />
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+    <class name="DataVector<xAOD::IParticle>" />
+    <class name="ElementLink<DataVector<xAOD::IParticle> >" />
+  </exclusion>
+
+</lcgdict>

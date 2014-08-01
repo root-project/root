@@ -26,4 +26,25 @@ ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-XMLParsing-9
                   MACRO ${THESCRIPT} OPTS 30 9 ${XMLPATH} )
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-XMLParsing-10
                   MACRO ${THESCRIPT} OPTS 30 10 ${XMLPATH} )
-
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-XMLParsing-11
+                  MACRO ${THESCRIPT} OPTS 30 11 ${XMLPATH} )
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-XMLParsing-12
+                  MACRO ${THESCRIPT} OPTS 30 12 ${XMLPATH} )
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-XMLParsing-13
+                  MACRO ${THESCRIPT} OPTS 30 13 ${XMLPATH} )
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-XMLParsing-14
+                  MACRO ${THESCRIPT} OPTS 30 14 ${XMLPATH} )
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-XMLParsing-15
+                  MACRO ${THESCRIPT} OPTS 30 15 ${XMLPATH} )
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-XMLParsing-16
+                  MACRO ${THESCRIPT} OPTS 30 16 ${XMLPATH} )
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-XMLParsing-17
+                  MACRO ${THESCRIPT} OPTS 30 17 ${XMLPATH} )
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-XMLParsing-18
+                  MACRO ${THESCRIPT} OPTS 30 18 ${XMLPATH} )
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-XMLParsing-19
+                  MACRO ${THESCRIPT} OPTS 30 19 ${XMLPATH} )
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-XMLParsing-20
+                  MACRO ${THESCRIPT} OPTS 30 20 ${XMLPATH} )
+ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-XMLParsing-21
+                  MACRO ${THESCRIPT} OPTS 30 21 ${XMLPATH} )

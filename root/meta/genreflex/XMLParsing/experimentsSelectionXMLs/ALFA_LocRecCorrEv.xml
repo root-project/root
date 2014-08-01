@@ -1,0 +1,13 @@
+ 
+<lcgdict>
+  <class name="ALFA_LocRecCorrEvCollection" id="E90ACD3E-79BB-40EC-BB72-793DE66FC4D8"/>
+  <class name="std::vector<ALFA_LocRecCorrEvent*>" />
+  <class name="DataVector<ALFA_LocRecCorrEvent>" />
+  <class name="ALFA_LocRecCorrEvent" />
+  
+  <class name="ALFA_LocRecCorrODEvCollection" id="1C10E5AF-ABF6-4F9B-AE58-0C5A32DCD2E7"/>
+  <class name="std::vector<ALFA_LocRecCorrODEvent*>" />
+  <class name="DataVector<ALFA_LocRecCorrODEvent>" />
+  <class name="ALFA_LocRecCorrODEvent" />  
+</lcgdict>
+

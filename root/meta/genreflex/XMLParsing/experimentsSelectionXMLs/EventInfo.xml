@@ -1,0 +1,30 @@
+<lcgdict>
+  <class name="MergedEventInfo" id="FA93B80D-82C7-4096-8A04-62885A679A6F" />
+  <class name="EventInfo" id="380D8BB9-B34F-470F-92CC-06C3D60F7BE4" />
+  <class name="EventID" />
+  <class name="EventType" />
+  <class name="TriggerInfo" />
+  <class name="TriggerInfo::StreamTag" />
+  <class name="std::vector<TriggerInfo::StreamTag>" />
+  <class name="TagInfo" />
+  <class name="EventStreamInfo" id="2415BBB1-D76A-43CA-B4F6-34A9531EB10B"/>
+  <class name="std::set<std::pair<CLID, std::string> >"/>
+  <class name="std::pair<CLID, std::string>"/>
+  <class name="std::set<EventType>"/>
+  <class name="PileUpEventInfo" id="6A58157B-6B6E-430F-A72A-EAAA4BDC4AE2" />
+  <class name="std::list<PileUpEventInfo::SubEvent>" />
+  <class name="PileUpTimeEventIndex" />
+  <class name="PileUpEventInfo::SubEvent" >
+    <field name="pSubEvtSG" transient="true" />
+ </class>
+  <exclusion>
+    <class pattern="std::list<*>" />
+  </exclusion>
+
+  <class name="PyEventStreamInfo" />
+  <class name="std::vector<EventType>" />
+  <class name="std::vector<std::pair<CLID, std::string> >"/>
+
+  <class name="PyEventType" />
+
+</lcgdict>

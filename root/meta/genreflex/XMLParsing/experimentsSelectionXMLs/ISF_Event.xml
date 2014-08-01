@@ -1,0 +1,11 @@
+<lcgdict>
+
+  <!-- Helper classes -->
+
+  <class name="ISF_FCS_Parametrization::FCS_StepInfoCollection" id="FC824467-E751-4B26-B800-8D1E1888B60D" />
+
+  <class name="ISF_FCS_Parametrization::FCS_StepInfo" />
+  <class name="DataVector<ISF_FCS_Parametrization::FCS_StepInfo>" />
+  <class name="std::vector<ISF_FCS_Parametrization::FCS_StepInfo*>" />
+
+</lcgdict>

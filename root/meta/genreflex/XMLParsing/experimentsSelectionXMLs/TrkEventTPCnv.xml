@@ -1,0 +1,149 @@
+<lcgdict>
+	
+	<!-- please clean up everything that is not really needed. 
+	current size = 3.371 Mb -->
+	
+
+    <class name="Trk::TrackCollection_tlp5" id="436E4996-9D6E-11E3-AD2A-6C3BE51AB9F1" />
+   <!-- Vertex top level collection -->
+    <class name="Trk::VxContainer_tlp1"  id="AFA5FE76-EEC6-4BD1-B704-B5747F729291" />
+   <!-- Vertex top level collection -->
+    <class name="Trk::VxContainer_tlp2"  id="B5254571-6B6D-47F7-A52C-CBE857CF1812" />
+   <!-- Multi Vertex top level collection -->
+    <class name="Trk::MVFVxContainer_tlp1" id="D7BAA7AD-1A46-4DA3-9CA7-350A1A3F0656" /> 
+   <!-- TrkV0Vertex top level collection -->
+    <class name="Trk::V0Container_tlp1" id="402A9BD1-4476-4E97-A5E4-EB4D742FBB38" />
+   <!-- TrkV0Vertex top level collection -->
+    <class name="Trk::V0Container_tlp2" id="9BC2B917-940A-4121-8E8B-8C99E178D8C1" />
+    <!-- Segment top level collection -->
+    <class name="Trk::SegmentCollection_tlp3" id="1AA73E8A-AF6D-11E3-A8C8-6C3BE51AB9F1" />
+    
+    <!-- TrkTrack -->
+    <class name="Trk::TrackCollection_p1" id="F651016E-02F2-46F9-882B-60AF6F9381D3" />
+    <class name="std::vector<Trk::TrackCollection_p1>" />
+    <class name="Trk::Track_p4" />
+    <class name="std::vector<Trk::Track_p4>" />
+
+    <class name="Trk::TrackStateOnSurface_p3" />
+    <class name="std::vector<Trk::TrackStateOnSurface_p3>" />
+
+    <!-- TrkPseudoMeasurementOnTrack -->
+    <class name="Trk::PseudoMeasurementOnTrack_p2" />
+    <class name="std::vector<Trk::PseudoMeasurementOnTrack_p2>" />
+
+    <!-- TrkVertexOnTrack -->
+    <class name="Trk::VertexOnTrack_p1" />
+    <class name="std::vector<Trk::VertexOnTrack_p1>" />
+
+    <!-- TrkTrackSummary -->
+
+    <class name="Trk::InDetTrackSummary_p1" />
+    <class name="std::vector<Trk::InDetTrackSummary_p1>" />
+    <class name="Trk::MuonTrackSummary_p2" />
+    <class name="std::vector<Trk::MuonTrackSummary_p2>" />
+	
+    <class name="Trk::TrackSummary_p2" />
+    <class name="std::vector<Trk::TrackSummary_p2>" />
+    
+    <!-- TrkSegment -->
+    <class name="Trk::SegmentCollection_p1" id="85D7238B-A09C-4D0F-BE80-61F7A29B587D" />
+    <class name="std::vector<Trk::SegmentCollection_p1>" /> <!-- whats that for?? -->
+    <class name="Trk::Segment_p1" />
+    <class name="std::vector<Trk::Segment_p1>" />
+    <class name="Trk::TrackSegment_p1" />
+    <class name="std::vector<Trk::TrackSegment_p1>" />
+
+    <!-- TrkPrimitives -->
+    <class name="Trk::FitQuality_p1" />
+    <class name="std::vector<Trk::FitQuality_p1>" />
+    <class name="Trk::LocalPosition_p1" />
+    <class name="std::vector<Trk::LocalPosition_p1>" />
+    <class name="Trk::LocalDirection_p1" />
+    <class name="std::vector<Trk::LocalDirection_p1>" />
+    <class name="Trk::LocalParameters_p1" />
+    <class name="std::vector<Trk::LocalParameters_p1>" />
+    <class name="Trk::HepSymMatrix_p1" />
+    <class name="std::vector<Trk::HepSymMatrix_p1>" />
+    
+    <!-- TrkMaterialOnTrack -->
+    <class name="Trk::ScatteringAngleOnTrack_p1" />
+    <class name="std::vector<Trk::ScatteringAngleOnTrack_p1>" />
+    <class name="Trk::EnergyLoss_p1" />
+    <class name="std::vector<Trk::EnergyLoss_p1>" />
+    <class name="Trk::MaterialEffectsBase_p1" />
+    <class name="std::vector<Trk::MaterialEffectsBase_p1>" />
+    <class name="Trk::MaterialEffectsOnTrack_p2" />
+    <class name="std::vector<Trk::MaterialEffectsOnTrack_p2>" />
+    <class name="Trk::EstimatedBremOnTrack_p1" />
+    <class name="std::vector<Trk::EstimatedBremOnTrack_p1>" />
+    
+	
+    <class name="Trk::MaterialEffectsOnTrack_p1" />
+    <class name="std::vector<Trk::MaterialEffectsOnTrack_p1>" />
+
+    <!-- TrkSurfaces -->
+    <class name="Trk::Surface_p2" />
+    <class name="std::vector<Trk::Surface_p2>" />
+       
+    <!-- TrkParameters (also used for TrkNeutralParameters) -->
+
+    <class name="Trk::TrackParameters_p2" />
+    <class name="std::vector<Trk::TrackParameters_p2>" />
+
+    <!-- TrkRIO_OnTrack -->
+    <class name="Trk::RIO_OnTrack_p2" />
+    <class name="std::vector<Trk::RIO_OnTrack_p2>" />
+
+    <!-- Competing RIO_OnTracks -->
+    <class name="Trk::CompetingRIOsOnTrack_p1" />
+    <class name="std::vector<Trk::CompetingRIOsOnTrack_p1>" />
+
+    <!-- TrkPrepRawData -->
+    <class name="Trk::PrepRawData_p1" />
+    <class name="std::vector<Trk::PrepRawData_p1>" />
+    
+    <!-- VxVertex --> 
+    <class name="Trk::VxContainer_p1" id="7EB0011B-3814-48E1-8895-907FF172D9F7"/>  
+    <class name="std::vector<Trk::VxContainer_p1>" />
+  
+    <class name="Trk::VxCandidate_p1" />
+    <class name="std::vector<Trk::VxCandidate_p1>" />
+    <class name="Trk::Vertex_p1" />
+    <class name="std::vector<Trk::Vertex_p1>" />
+    <!-- <class name="Trk::Vertex_p2" />
+    <class name="std::vector<Trk::Vertex_p2>" /> -->
+
+    <class name="Trk::RecVertex_p2" />
+    <class name="std::vector<Trk::RecVertex_p2>" />
+    <class name="Trk::VxTrackAtVertex_p2" />
+    <class name="std::vector<Trk::VxTrackAtVertex_p2>" />
+    <class name="Trk::ExtendedVxCandidate_p1" />
+    <class name="std::vector<Trk::ExtendedVxCandidate_p1>" />
+    
+    <!-- VxMultiVertex -->
+    <class name="Trk::MVFVxContainer_p1" id="6BC2621B-D431-40B7-A1EE-F581D2924919" /> 
+    <class name="std::vector<Trk::MVFVxContainer_p1>" />  
+
+    <class name="Trk::MVFVxCandidate_p1" />
+    <class name="std::vector<Trk::MVFVxCandidate_p1>" />
+
+    <class name="Trk::MVFVxTrackAtVertex_p1" />
+    <class name="std::vector<Trk::MVFVxTrackAtVertex_p1>" /> 
+
+    <!-- V0Vertex -->
+    <class name="Trk::V0Container_p1" id="6BBEB567-78D9-46D9-9120-734F29986ADE" /> 
+    <class name="std::vector<Trk::V0Container_p1>" />  
+    <class name="std::vector<Trk::V0Candidate_p1>" />  
+    <class name="std::vector<Trk::V0Hypothesis_p1>" />  
+    <class name="Trk::V0Candidate_p1" />  
+    <class name="Trk::V0Hypothesis_p1" />  
+
+    <!-- TrkParticleBase -->
+    <class name="Trk::TrackParticleBase_p1" />
+    <class name="std::vector<Trk::TrackParticleBase_p1>" />
+
+    <!-- Identifier -->
+    <class name="Trk::DetElementSurface_p1" />
+    <class name="std::vector<Trk::DetElementSurface_p1>" />
+    
+</lcgdict>

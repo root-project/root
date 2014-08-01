@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<lcgdict>
+
+  <!-- Muon_v1 dictionaries: -->
+  <class name="xAOD::Muon_v1">
+    <field name="m_p4" transient="true"/>
+    <field name="m_p4Cached1" transient="true"/>
+  </class>
+  <class name="xAOD::MuonContainer_v1"
+         id="F84AE51A-F309-4844-B286-8E94C655B724"/>
+
+  <read sourceClass="xAOD::Muon_v1" version="[1-]"
+        targetClass="xAOD::Muon_v1" source="" target="m_p4Cached1" >
+    <![CDATA[
+      m_p4Cached1 = false;
+    ]]>
+  </read>
+
+  <class name="xAOD::MuonAuxContainer_v1"
+         id="EC9B677A-B3BA-4C75-87D3-373FC478291E"/>
+
+  <!-- All smart pointer dictionaries for xAOD::Muon -->
+  <class name="DataLink<xAOD::MuonContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::MuonContainer_v1> >" />
+
+  <class name="ElementLink<xAOD::MuonContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::MuonContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::MuonContainer_v1> > >" />
+
+  <!-- MuonSegment_v1 dictionaries -->
+  <class name="xAOD::MuonSegment_v1"/>
+  <class name="xAOD::MuonSegmentAuxContainer_v1"
+         id="51739E92-98A5-11E3-B7F4-6C3BE51AB9F1"/>
+  <class name="xAOD::MuonSegmentContainer_v1"
+         id="9516C67E-98A5-11E3-BDFD-6C3BE51AB9F1"/>
+
+  <!-- All smart pointer dictionaries for xAOD::MuonSegment -->
+  <class name="DataLink<xAOD::MuonSegmentContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::MuonSegmentContainer_v1> >" />
+
+  <class name="ElementLink<xAOD::MuonSegmentContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::MuonSegmentContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::MuonSegmentContainer_v1> > >" />
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+    <class name="DataVector<xAOD::IParticle>" />
+    <class pattern="xAOD::TrackParticle*" />
+    <class pattern="DataVector<xAOD::TrackParticle*" />
+    <class pattern="ElementLink<DataVector<xAOD::TrackParticle*" />
+    <class pattern="xAOD::CaloCluster*" />
+    <class pattern="DataVector<xAOD::CaloCluster*" />
+    <class pattern="ElementLink<DataVector<xAOD::CaloCluster*" />
+  </exclusion>
+
+</lcgdict>

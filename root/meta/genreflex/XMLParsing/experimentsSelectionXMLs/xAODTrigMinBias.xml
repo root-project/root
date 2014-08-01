@@ -1,0 +1,5 @@
+<lcgdict>
+  <class name="xAOD::TrigSpacePointCounts_v1" />
+  <class name="xAOD::TrigSpacePointCountsContainer_v1" id="519EBE61-C135-46C7-AD7D-C661DC6FC4B5" />
+  <class name="xAOD::TrigSpacePointCountsAuxContainer_v1" id="C682FD32-73CC-4773-ACBF-30B2657C5991" />
+</lcgdict>

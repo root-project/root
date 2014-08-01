@@ -1,0 +1,16 @@
+<lcgdict>
+
+  <class name="Py::Store" />
+  <class name="PerfMon::PyChrono" />
+  <class name="PerfMon::MallInfo" />
+  <class name="PerfMon::Cpu" />
+  <class name="PerfMon::Mem" />
+  <class name="PerfMon::IoContainer" />
+  <class name="PerfMon::Component" />
+  <class name="PerfMon::MemStats" />
+  <class name="PerfMon::MallocStats" />
+
+  <class name="PerfMon::Clock" />
+  <function name="PerfMon::clock_gettime" />
+
+</lcgdict>

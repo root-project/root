@@ -1,0 +1,102 @@
+<lcgdict>
+
+  <!--  dictionaries: -->
+  <!--   JEMHits -->
+  <class name="xAOD::JEMHits_v1" />
+  <class name="xAOD::JEMHitsContainer_v1"
+         id="070F54C6-320D-4F22-BD42-C87C6AF99C38" />
+  <class name="xAOD::JEMHitsAuxContainer_v1"
+         id="CE2C5182-53DD-46E0-9DFA-61C214A8FCE5" />  
+    
+  <!-- JEMEtSums -->
+  <class name="xAOD::JEMEtSums_v1" />
+  <class name="xAOD::JEMEtSumsContainer_v1"
+         id="DDB6D476-D1E2-490E-A81B-8D4FC65F1D81" />
+  <class name="xAOD::JEMEtSumsAuxContainer_v1"
+         id="4D3C658D-597A-414E-AAA3-BE61A1D664C3" /> 
+  
+  <!-- JEMRoI -->
+  <class name="xAOD::JEMRoI_v1" />
+  <class name="xAOD::JEMRoIContainer_v1"
+         id="52384828-A57D-477D-A8C8-597C78D02686" />
+  <class name="xAOD::JEMRoIAuxContainer_v1"
+         id="959C24E5-9746-4C70-83FA-A0140C710039" /> 
+  
+
+  <!--   CPMHits -->
+  <class name="xAOD::CPMHits_v1" />
+  <class name="xAOD::CPMHitsContainer_v1"
+         id="3D15DF3F-E014-42E3-9614-37E4CD535F9C" />
+  <class name="xAOD::CPMHitsAuxContainer_v1"
+         id="28FCEB20-A9DC-4FED-9FDD-00F46948E92E" />  
+  
+  <!--   CPMTower -->
+  <class name="xAOD::CPMTower_v1" />
+  <class name="xAOD::CPMTowerContainer_v1"
+         id="D220C61E-ECD1-427C-86D0-2C88E00ABBD2" />
+  <class name="xAOD::CPMTowerAuxContainer_v1"
+         id="529B6BD7-7B7D-438C-94D7-BAA49A022C47" />  
+  
+  <!--   CPMRoI -->
+  <class name="xAOD::CPMRoI_v1" />
+  <class name="xAOD::CPMRoIContainer_v1"
+         id="4B48CC07-6B22-46EC-9BD5-51379664B9BC" />
+  <class name="xAOD::CPMRoIAuxContainer_v1"
+         id="8FA92C8D-214F-4B8F-84CA-CB7267CAD0F2" />  
+
+  <!--   CMMCPHits -->
+  <class name="xAOD::CMMCPHits_v1" />
+  <class name="xAOD::CMMCPHitsContainer_v1"
+         id="8826CC48-CD08-4FD7-9AC4-358A4888271F" />
+  <class name="xAOD::CMMCPHitsAuxContainer_v1"
+         id="1951D4B4-D471-4256-8F0D-D666043E2889" />
+<!--  <class name="DataLink<xAOD::CMMCPHitsContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::CMMCPHitsContainer_v1> >" />
+  <class name="ElementLink<xAOD::CMMCPHitsContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::CMMCPHitsContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::CMMCPHitsContainer_v1> > >" />-->
+
+  <!--   CMMEtSums -->
+  <class name="xAOD::CMMEtSums_v1" />
+  <class name="xAOD::CMMEtSumsContainer_v1"
+         id="186A613D-0C91-4880-9B09-B41C28B17B53" />
+  <class name="xAOD::CMMEtSumsAuxContainer_v1"
+         id="A072EDD3-880D-46D0-A120-48C116FDB14E" /> 
+  
+  <!--   CMMJetHits -->
+  <class name="xAOD::CMMJetHits_v1" />
+  <class name="xAOD::CMMJetHitsContainer_v1"
+         id="43B6130D-4C3F-4E22-9FE2-680E6DFA149F" />
+  <class name="xAOD::CMMJetHitsAuxContainer_v1"
+         id="B3C8D000-0E7F-4A0D-8F05-6DA36FFC9DD7" />  
+  
+  <!--   CMMRoI -->
+  <class name="xAOD::CMMRoI_v1" 
+         id="2BA7B6B2-69C6-40E8-8D2A-0398371EDC81" />
+  <class name="xAOD::CMMRoIAuxInfo_v1"
+         id="B0CAB5B5-6B6B-437D-B353-1397C1F01B7E" />  
+  
+
+  <!--   JetElement -->
+  <class name="xAOD::JetElement_v1" />
+  <class name="xAOD::JetElementContainer_v1"
+         id="B1103844-7187-4305-B20A-748591A54145" />
+  <class name="xAOD::JetElementAuxContainer_v1"
+         id="7A0A2307-5729-4306-B520-4F75BBCC8E76" />  
+  
+  <!--   RODHeader -->
+  <class name="xAOD::RODHeader_v1" />
+  <class name="xAOD::RODHeaderContainer_v1"
+         id="AA0924D2-23E2-47B3-8C7D-9D3B104B8990" />
+  <class name="xAOD::RODHeaderAuxContainer_v1"
+         id="6524E46D-CC9C-43D2-BAE0-55310A6B316C" />  
+  
+  <!--   TriggerTower -->
+  <class name="xAOD::TriggerTower_v1" />
+  <class name="xAOD::TriggerTowerContainer_v1"
+         id="DE2A7891-B5FE-4811-8178-EF106743312C" />
+  <class name="xAOD::TriggerTowerAuxContainer_v1"
+         id="3C5D20CF-6F77-4E67-B182-674EDFD2FE38" />  
+
+</lcgdict>
+

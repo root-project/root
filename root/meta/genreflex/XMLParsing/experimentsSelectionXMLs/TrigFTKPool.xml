@@ -1,0 +1,13 @@
+<lcgdict>
+<class name="FTKTestData" id="1F22CE79-5D49-4DDB-B282-CB894C10CFFD" />
+<class name="FTKTestData_p0" id="1F22CE79-5D39-4DDB-B882-CA894B26CFFD" />
+
+<class name="FTKAthTrack" />
+<class name="FTKAthTrackContainer" id="A04672DA-185E-4363-B41E-06B55E4AF9AA" />
+<class name="FTKAthTrack_p1" />
+<class name="FTKAthTrackContainer_p1" id="94372D90-D05F-44B0-8E12-2E795342EAFC" />
+
+<class name="FTKTrackFitterStats" id="09065382-0AA9-4926-A2A8-7FFC5ED7BAA7" />
+<class name="FTKTrackFitterStats_p1" id="09056832-AA09-9426-A2A8-7FC5ED7BFAA7" />
+
+</lcgdict>

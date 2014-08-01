@@ -1,0 +1,33 @@
+<!-- $Id: selection.xml 592214 2014-04-09 19:27:48Z krasznaa $ -->
+<lcgdict>
+
+  <!-- TrigCaloCluster_v1 dictionaries: -->
+  <class name="xAOD::TrigCaloCluster_v1" />
+  <class name="xAOD::TrigCaloClusterContainer_v1"
+         id="0C7F7869-C67A-4E4A-8793-358F8B32DFEA" />
+  <class name="xAOD::TrigCaloClusterAuxContainer_v1"
+         id="4A2F55AF-D465-42A8-A4CF-2DB84D9628E5" />
+
+  <class name="ElementLink<xAOD::TrigCaloClusterContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::TrigCaloClusterContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::TrigCaloClusterContainer_v1> > >" />
+
+  <!-- TrigEMCluster_v1 dictionaries: -->
+  <class name="xAOD::TrigEMCluster_v1" />
+  <class name="xAOD::TrigEMClusterContainer_v1"
+         id="B37C59EC-1A1E-467C-BFCE-52EA08694C60" />
+  <class name="xAOD::TrigEMClusterAuxContainer_v1"
+         id="CE08F151-A2BA-44ED-B854-7D8B9C8679DE" />
+
+  <class name="ElementLink<xAOD::TrigEMClusterContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::TrigEMClusterContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::TrigEMClusterContainer_v1> > >" />
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+  </exclusion>
+
+</lcgdict>

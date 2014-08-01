@@ -1,0 +1,49 @@
+<lcgdict>
+  <class name="SG::DataProxyHolder">
+    <field name="m_proxy" transient="true"/>
+  </class>
+
+  <!-- The element link vector base class(es): -->
+  <class name="ElementLinkVectorBase" >
+    <field name="m_isDirectIO" transient="true" />
+  </class>
+  <read sourceClass="ElementLinkVectorBase" version="[1-]"
+        targetClass="ElementLinkVectorBase" source=""
+        target="m_isDirectIO" >
+    <![CDATA[
+       // Tell the object that direct ROOT I/O is happening:
+       m_isDirectIO = true;
+       // Let the object prepare for being used:
+       newObj->toTransient();
+    ]]>
+  </read>
+
+  <!-- The data link base class(es): -->
+  <class name="DataLinkBase" >
+    <field name="m_proxy" transient="true" />
+  </class>
+  <read sourceClass="DataLinkBase" version="[1-]"
+        targetClass="DataLinkBase" source=""
+        target=""
+        >
+    <![CDATA[
+       // Let the object prepare for being used:
+       newObj->toTransient();
+    ]]>
+  </read>
+
+  <class name="ElementLinkBase">
+    <field name="m_proxy" transient="true"/>
+    <field name="m_element" transient="true"/>
+  </class>
+  <read sourceClass="ElementLinkBase" version="[1-]"
+        targetClass="ElementLinkBase" source=""
+        target=""
+        >
+    <![CDATA[
+       // Let the object prepare for being used:
+       newObj->toTransient();
+    ]]>
+  </read>
+
+</lcgdict>

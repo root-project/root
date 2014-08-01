@@ -1,0 +1,112 @@
+ <lcgdict>
+  <!-- Si width used for SiCluster -->
+  <class name="InDet::SiWidth" />  
+   
+  <!-- Si cluster (parent of Pixel and SCT) -->
+  <class name="InDet::SiCluster" >
+    <field name="m_width"          transient="false" />
+    <field name="m_globalPosition" transient="true" />
+    <field name="m_gangedPixel"    transient="true" />
+    <field name="m_detEl"          transient="true" />
+  </class>
+  
+  <class name="Trk::PrepRawDataCollection< InDet::SiCluster >"  />
+  <class name="DataVector<InDet::SiCluster>"   />
+  <class name="std::vector<InDet::SiCluster*>"  />
+
+  <class name="InDet::SiClusterContainer" />   
+  
+  <class name="IdentifiableContainer<Trk::PrepRawDataCollection<InDet::SiCluster> >" />
+  
+  <class name="DataLinkVector<Trk::PrepRawDataCollection<InDet::SiCluster> >" >
+    <field name="m_last"   transient="true" />
+    <field name="m_vect"   transient="true" />
+  </class>
+
+  <class name="DataVector<Trk::PrepRawDataCollection<InDet::SiCluster> >" id="2DB8F9D6-B403-4C4C-9BBF-8D4E74316C9A" />
+  <class name="std::vector<DataLinkVector<Trk::PrepRawDataCollection<InDet::SiCluster> >::Entry>" />
+  <class name="std::vector<Trk::PrepRawDataCollection<InDet::SiCluster>* >" /> 
+
+
+  <!-- Pixels -->
+  <class name="InDet::PixelCluster" />
+
+  <class name="Trk::PrepRawDataCollection< InDet::PixelCluster >" /> 
+  <class name="DataVector<InDet::PixelCluster>"  />
+  <class name="std::vector<InDet::PixelCluster*>"  />
+  
+  <class name="InDet::PixelClusterContainer"  />   
+
+  <class name="IdentifiableContainer<Trk::PrepRawDataCollection<InDet::PixelCluster> >" />
+
+  <class name="DataLinkVector<Trk::PrepRawDataCollection<InDet::PixelCluster> >" >
+    <field name="m_last"   transient="true" />
+    <field name="m_vect"   transient="true" />
+  </class>
+
+  <class name="std::vector<DataLinkVector<Trk::PrepRawDataCollection<InDet::PixelCluster> >::Entry>" />
+  <class name="DataVector<Trk::PrepRawDataCollection<InDet::PixelCluster> >"  id="37B00A31-EA80-45DF-9A3F-2721EC0F0DA6"/>
+  <class name="std::vector<Trk::PrepRawDataCollection<InDet::PixelCluster>* >" />
+  
+  <!-- SCT -->
+  <class name="InDet::SCT_Cluster" />
+  
+  <class name="Trk::PrepRawDataCollection< InDet::SCT_Cluster >" />   
+  <class name="DataVector<InDet::SCT_Cluster>"  />
+  <class name="std::vector<InDet::SCT_Cluster*>"  />
+  
+  <class name="InDet::SCT_ClusterContainer" />  
+
+  <class name="IdentifiableContainer<Trk::PrepRawDataCollection<InDet::SCT_Cluster> >" />  
+
+  <class name="DataLinkVector<Trk::PrepRawDataCollection<InDet::SCT_Cluster> >" >
+    <field name="m_last"   transient="true" />
+    <field name="m_vect"   transient="true" />
+  </class>
+
+  <class name="std::vector<DataLinkVector<Trk::PrepRawDataCollection<InDet::SCT_Cluster> >::Entry>" />
+  <class name="DataVector<Trk::PrepRawDataCollection<InDet::SCT_Cluster> >"                       id="A180F372-0D52-49C3-8AA0-0939CB0B8179"/>
+  <class name="std::vector<Trk::PrepRawDataCollection<InDet::SCT_Cluster>* >" />
+    
+  
+  <!-- TRT_DriftCircle -->
+  <class name="InDet::TRT_DriftCircle" >
+    <field name="m_detEl"             transient="true" />
+  </class> 
+  <class name="Trk::PrepRawDataCollection< InDet::TRT_DriftCircle >" />   
+  <class name="DataVector<InDet::TRT_DriftCircle>"  />
+  <class name="std::vector<InDet::TRT_DriftCircle*>"  />
+  
+  <class name="InDet::TRT_DriftCircleContainer" />  
+
+  <class name="IdentifiableContainer<Trk::PrepRawDataCollection<InDet::TRT_DriftCircle> >" />  
+  
+  <class name="DataLinkVector<Trk::PrepRawDataCollection<InDet::TRT_DriftCircle> >" >
+    <field name="m_last"   transient="true" />
+    <field name="m_vect"   transient="true" />
+  </class> 
+
+  <class name="std::vector<DataLinkVector<Trk::PrepRawDataCollection<InDet::TRT_DriftCircle> >::Entry>" />
+  <class name="DataVector<Trk::PrepRawDataCollection<InDet::TRT_DriftCircle> >"                   id="A99630C5-3D7C-4DB4-9E6C-FC3CEF981895" />
+  <class name="std::vector<Trk::PrepRawDataCollection<InDet::TRT_DriftCircle>* >" />
+
+
+  <class name="PrdWrapper<InDet::PixelClusterContainer>::prd_iterator" />
+  <class name="PrdWrapper<InDet::PixelClusterContainer>::prd_entry" />
+  <class name="PrdWrapper<InDet::PixelClusterContainer>::prd_data_holder" />
+
+  <class name="PrdWrapper<InDet::SCT_ClusterContainer>::prd_iterator" />
+  <class name="PrdWrapper<InDet::SCT_ClusterContainer>::prd_entry" />
+  <class name="PrdWrapper<InDet::SCT_ClusterContainer>::prd_data_holder" />
+
+  <class name="PrdWrapper<InDet::SiClusterContainer>::prd_iterator" />
+  <class name="PrdWrapper<InDet::SiClusterContainer>::prd_entry" />
+  <class name="PrdWrapper<InDet::SiClusterContainer>::prd_data_holder" />
+
+  <class name="PrdWrapper<InDet::TRT_DriftCircleContainer>::prd_iterator" />
+  <class name="PrdWrapper<InDet::TRT_DriftCircleContainer>::prd_entry" />
+  <class name="PrdWrapper<InDet::TRT_DriftCircleContainer>::prd_data_holder" />
+
+</lcgdict>
+
+

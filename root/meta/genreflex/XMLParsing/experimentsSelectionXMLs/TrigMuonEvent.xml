@@ -1,0 +1,92 @@
+<lcgdict>
+
+  <!-- muFast output -->
+  <class name="MuonFeatureContainer" id="45225F26-A517-4E8B-BA93-DDFD1217B9A8" />
+  <class name="MuonFeature" id="295FBAFB-ED82-43EA-8B63-6E3D3F4D2A9F" />
+  <class name="std::vector<MuonFeature*>" />
+  <class name="std::vector<const MuonFeature*>" />
+  <class name="DataVector<MuonFeature>" id="4F1C3C3D-A63A-4665-9F2C-00335D117721" />
+
+  <!-- muFast debugging output -->
+  <class name="MuonFeatureDetailsContainer" id="185B6FDB-B41A-4190-84F0-655FBE5590CB" />
+  <class name="MuonFeatureDetails" id="A230E508-FFDA-413D-AF84-572457C0067B" />
+  <class name="std::vector<MuonFeatureDetails*>" />
+  <class name="DataVector<MuonFeatureDetails>" id="ECB05793-1D8A-4D7C-977D-74CC6B58F039" />
+
+  <!-- muComb output -->
+  <class name="CombinedMuonFeatureContainer" id="574BFA1C-ADB8-40DB-B538-0CA20E20CAAD" />
+  <class name="CombinedMuonFeature" id="9DFC54CA-4799-4BCB-A95B-919E7E761112" />
+  <class name="std::vector<CombinedMuonFeature*>"/>
+  <class name="std::vector<const CombinedMuonFeature*>"/>
+  <class name="DataVector<CombinedMuonFeature>" id="6355B148-140D-4F93-B1A5-158D4746139C" />
+
+  <!-- muIso output -->
+  <class name="IsoMuonFeatureContainer" id="3962B221-2A36-4160-AEE5-3BB6BC29BB46" />
+  <class name="IsoMuonFeature" id="60ECF1E1-408A-43CA-9858-62AAFE8041FF" />
+  <class name="std::vector<IsoMuonFeature*>" />
+  <class name="std::vector<const IsoMuonFeature*>" />
+  <class name="DataVector<IsoMuonFeature>" id="5115A067-6679-4428-B310-73E1F9DC7215" />
+
+  <!-- TrigMuonCluster output -->
+  <class name="TrigMuonClusterFeatureContainer" id="5B09201A-D1CD-43BA-A1B5-786189444579" />
+  <class name="TrigMuonClusterFeature" id="A7B1865B-55D0-49D2-9778-5E0797FB06FE" />
+  <class name="std::vector<TrigMuonClusterFeature*>" />
+  <class name="std::vector<const TrigMuonClusterFeature*>" />
+  <class name="DataVector<TrigMuonClusterFeature>" id="0583F1FC-78CE-4B1F-8811-CE8679C838CE" />
+
+  <!-- TrigMoore output -->
+  <class name="TrigMuonEFContainer" id="BB866230-C9D8-437A-A11B-A0CC08ACD97B"/>
+  <class name="TrigMuonEF" id="DEAB093D-C29F-4D28-BE48-20ACC9759647" />
+  <class name="DataVector<TrigMuonEF>" />
+  <class name="std::vector<TrigMuonEF*>" />
+  <class name="std::vector<const TrigMuonEF*>" />
+  <class name="DataVector<TrigMuonEFContainer>" id="4FFD2992-8EC1-4B6A-AB95-5B1308F10409"/>
+  <class name="std::vector<TrigMuonEFContainer*>" />
+
+  <!-- TrigMuonEF output -->
+  <class name="TrigMuonEFInfoContainer" id="023EFB42-0D62-413C-8644-1842A884E2C8"/>
+  <class name="DataVector<TrigMuonEFInfoContainer>" id="6BFA2DCF-1EF3-4572-B8AA-DD9F5E83DA52"/>
+  <class name="std::vector<TrigMuonEFInfoContainer*>" />
+  <class name="TrigMuonEFInfo" id="A040AFAE-973D-489C-852A-E0520E40CB73"/>
+  <class name="DataVector<TrigMuonEFInfo>" />
+  <class name="std::vector<TrigMuonEFInfo*>" />
+  <class name="TrigMuonEFTrack" id="A17F6DA3-2C0A-4F06-82D6-8302F63B786"/>
+  <class name="DataVector<TrigMuonEFTrack>" />
+  <class name="std::vector<TrigMuonEFTrack*>" />
+  <class name="std::vector<const TrigMuonEFTrack*>" />
+  <class name="TrigMuonEFCbTrack" id="E1794E03-8D3C-4CA3-919F-BFAF8A466667"/>
+  <class name="DataVector<TrigMuonEFCbTrack>" />
+  <class name="std::vector<TrigMuonEFCbTrack*>" />
+  <class name="std::vector<const TrigMuonEFCbTrack*>" />
+  <class name="TrigMuonEFInfoTrackContainer" id="58443A5F-7F78-4292-8BB1-648635E6632A"/>
+  <class name="DataVector<TrigMuonEFInfoTrackContainer>" />
+  <class name="std::vector<TrigMuonEFInfoTrackContainer*>" />
+  <class name="TrigMuonEFInfoTrack" id="290DDC86-5F0B-4A38-8AEC-EBE095C01C87"/>
+  <class name="DataVector<TrigMuonEFInfoTrack>" />
+  <class name="std::vector<TrigMuonEFInfoTrack*>" />
+  <class name="std::vector<const TrigMuonEFInfoTrack*>" />
+  <class name="TrigMuonEFIsolationContainer" id="3BC825FE-DF6D-40A6-85DC-51EFD4730529"/>
+  <class name="TrigMuonEFIsolation" id="9EDA9542-BAD7-4E84-9655-64F2E3EA4045"/>
+  <class name="DataVector<TrigMuonEFIsolation>" id="7CAEE107-FDF8-4728-8076-224D86EFFDAD"/>
+  <class name="std::vector<TrigMuonEFIsolation*>" />
+  <class name="std::vector<const TrigMuonEFIsolation*>" />
+
+
+  <!-- TrigTileMuon output -->
+  <class name="TileMuFeatureContainer" id="8B428EC4-339C-4517-A047-C0F5F98B820B"/>
+  <class name="TileMuFeature" id="526B0709-442D-4D2C-8C1F-8C3922149656"/>
+  <class name="DataVector<TileMuFeature>"  id="C106AE9B-2837-4308-B4CE-43D1301FE0E8"/>
+  <class name="std::vector<TileMuFeature*>" />
+  <class name="std::vector<const TileMuFeature*>" />
+
+  <!-- TileTrackMuFeature output -->
+  <class name="TileTrackMuFeatureContainer" id="1AFABC18-EB97-412D-B27C-C744ABA6E1DC" />
+  <class name="TileTrackMuFeature" id="0581C8B5-4527-4CD8-88E1-1CD3C3381FF4" />
+  <!-- duplicates an entry above    class
+  name="DataVector<TileMuFeature>"
+  id="865DB38F-2F24-4A64-A447-671EE2C1E484" /-->
+  <class name="DataVector<TileTrackMuFeature>" id="3B5E6DB4-C1CC-4692-B3F9-3A0310BB73A4" />
+  <class name="std::vector<TileTrackMuFeature*>" />
+  <class name="std::vector<const TileTrackMuFeature*>" />
+
+</lcgdict>

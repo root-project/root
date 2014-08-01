@@ -1,0 +1,14 @@
+<lcgdict>
+   <class name="Muon::MuonSegment">
+      <field name="m_cachedRots"      transient="true" />
+      <field name="m_globalPosition"  transient="true" />
+      <field name="m_globalDirection" transient="true" />
+   </class>
+   <class name="Muon::T0MuonSegment" />
+   <class name="Muon::MuonSegmentCombination" />
+   <class name="DataVector<Muon::MuonSegmentCombination>" />
+   <class name="std::vector<Muon::MuonSegmentCombination*>" />
+   <class name="std::vector<std::vector<const Muon::MuonSegment*>*>" />
+   <class name="std::vector<const Muon::MuonSegment*>" />
+   <class name="std::vector<const Muon::T0MuonSegment*>" />
+</lcgdict>

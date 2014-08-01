@@ -1,0 +1,47 @@
+<lcgdict>
+  <class name="HijingEventParams" id="439B0EC1-751F-4290-A41A-20089A6D9AC5" />
+  <class name="McEventCollection" id="6DE62B45-7C72-4539-92F2-3A8E739A4AC3" />
+  <class name="DataVector<HepMC::GenEvent>" />
+  <class name="std::vector<HepMC::GenEvent*>" />
+  <class name="HepMC::GenEvent" >
+    <field name="m_heavy_ion" transient="true"/>
+  </class>
+
+  <class name="HepMC::GenVertex" />
+  <class name="HepMC::GenVertex::particles_out_const_iterator" />
+  <class pattern="RootUtils::PyROOTIteratorFuncs*"/>
+
+  <class name="HepMC::GenParticle" />
+  <class name="std::map<int,HepMC::GenParticle*>" />
+  <class name="std::map<int,HepMC::GenVertex*,std::greater<int> >" />
+  <class name="HepMC::WeightContainer" />
+  <class name="std::set<HepMC::GenParticle*>" />
+  <class name="HepMC::Flow" >
+    <field name="m_particle_owner" transient="true" />
+  </class>
+  <class name="HepMC::Polarization" />
+  <class name="HepMcParticleLink" >
+   <field name="m_ptrs" transient="true" />
+   <field name="m_have_particle" transient="true" />
+  </class>
+  <class name="HepMcParticleLink::ExtendedBarCode" />
+  <class name="std::vector<HepMcParticleLink>" />
+  <class name="HepMC::GenEvent::vertex_const_iterator"/>
+  <class name="HepMC::GenEvent::particle_const_iterator"/>
+  <class name="HepMC::GenEvent::vertex_iterator"/>
+  <class name="HepMC::GenEvent::particle_iterator"/>
+  <class name="std::iterator<std::forward_iterator_tag,HepMC::GenVertex*,int,HepMC::GenVertex**,HepMC::GenVertex*&amp;>"/>
+  <class name="std::iterator<std::forward_iterator_tag,HepMC::GenParticle*,int,HepMC::GenParticle**,HepMC::GenParticle*&amp;>"/>
+  <class name="std::_Rb_tree_const_iterator<HepMC::GenParticle*>"/>
+
+  <class name="HepMC::FourVector"/>
+  <class name="HepMC::ThreeVector"/>
+  <exclusion>
+    <class name="HepMC::ThreeVector">
+//      <method proto_pattern="*ThreeVector*HepMC::Polarization*"/>
+    </class>
+  </exclusion>
+
+  <class name="HepMC::PdfInfo" />
+  <class name="HepMC::GenCrossSection" />
+</lcgdict>

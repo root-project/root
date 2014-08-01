@@ -1,0 +1,21 @@
+<!-- $Id: selection.xml 568357 2013-11-01 16:21:30Z krasznaa $ -->
+<lcgdict>
+
+   <class name="xAOD::EventFormatElement" />
+
+   <class name="xAOD::EventFormat_v1"
+          id="0EFE2D2C-9E78-441D-9A87-9EE2B908AC81" >
+      <field name="m_keyedData" transient="true" />
+      <field name="m_hashedData" transient="true" />
+   </class>
+
+   <!-- Custom streamer for the event format class: -->
+   <read sourceClass="xAOD::EventFormat_v1" version="[1-]"
+         targetClass="xAOD::EventFormat_v1"
+         source="" target="" >
+      <![CDATA[
+         newObj->toTransient();
+      ]]>
+   </read>
+
+</lcgdict>

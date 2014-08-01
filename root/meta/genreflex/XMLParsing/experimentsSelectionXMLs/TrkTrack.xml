@@ -1,0 +1,40 @@
+<lcgdict>
+  <!-- Track -->
+  <class name="Trk::Track" >
+    <field name="m_cachedParameterVector" transient="true" />
+    <field name="m_cachedOutlierVector" transient="true" />
+    <field name="m_cachedMeasurementVector" transient="true" />
+    <field name="m_perigeeParameters" transient="true" />
+    <field name="m_perigeeSearch" transient="true" />
+    <field name="m_trackStateVector" transient="false" />
+    <field name="s_numberOfInstantiations" transient="true" />
+  </class>
+  <class name="TrackCollection"/>
+  <class name="DataVector<Trk::Track>" id="70ECEBFC-BE00-46C2-8B35-4CC12D18DE39"/>
+  <class name="std::vector<Trk::Track*>"  />
+
+  <class name="std::vector<ElementLink<TrackCollection > >" > </class>
+
+  <!-- TSoS --> 
+  <class name="Trk::TrackStateOnSurface" />
+  <class name="DataVector<const Trk::TrackStateOnSurface>" />
+  <class name="std::vector<const Trk::TrackStateOnSurface*>" />  
+
+  <!-- RefittedTrackPair --> 
+  <class name="DataVector< Trk::RefittedTrackPair >" id="0168FDD0-A582-40C5-9A47-A39452C09778" />
+  <class name="std::vector< Trk::RefittedTrackPair* >" />
+  <class name="Trk::RefittedTrackPair" />
+
+  <class name="Trk::LinkToTrack"/>
+
+  <class name="Trk::TrackInfo"/>
+   <exclusion>
+    <class name="Trk::TrackInfo">
+      <field name="m_properties"/>
+      <field name="m_patternRecognition"/>
+    </class>
+  </exclusion>
+
+  <class name="std::bitset<11>" />
+
+</lcgdict>

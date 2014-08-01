@@ -1,0 +1,25 @@
+
+<lcgdict>
+
+  <class name="EtaPhiBins_p1" 
+         id="C653008A-0C79-4102-A318-F42703FD7EE4"/> 
+
+  <class name="T_TPCnv<EtaPhiBins,EtaPhiBins_p1>"/>
+  <class name="EtaPhiBinsCnv_p1" />
+  <class name="T_AthenaPoolTPCnvBase<EtaPhiBins, EtaPhiBins_p1>"/>
+  <class name="T_AthenaPoolTPPolyCnvBase<EtaPhiBins, EtaPhiBins, EtaPhiBins_p1>"/>
+  <class name="T_AthenaPoolTPAbstractPolyCnvBase<EtaPhiBins, EtaPhiBins, EtaPhiBins_p1>"/>
+  <class name="ITPConverterFor<EtaPhiBins>"/>
+
+  <class name="HIPixelTrackletsCollection_tlp1" id="8FE8FB83-AA9B-4E4A-8365-FBDDBC5B5400"  />
+  <class name="std::vector<HIPixelTrackletsCollection_p1>" />
+  <class name="HIPixelTrackletsCollectionCnv_tlp1" />
+  <class name="HIPixelTracklets_p1" />
+  <class name="std::vector<HIPixelTracklets_p1>" />
+
+  <!-- <class name="InDet:PixelCluster_p1" /> -->
+
+  <class name="T_TPCnv<HIPixelTrackletsCollection, HIPixelTrackletsCollection_tlp1>" />
+  <class name="HITRTInfo_p1" id="8F3FEA42-D7E6-4FD7-84C1-91D5B551B537" />
+  
+</lcgdict>

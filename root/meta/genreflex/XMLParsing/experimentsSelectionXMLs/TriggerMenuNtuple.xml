@@ -1,0 +1,53 @@
+<lcgdict>
+  <function name="isPassed"/>
+  <function name="isAssociated"/>
+  <class name="RoIData"/>
+  <class name="RoIData_Muon"/>
+  <class name="std::vector<RoIData_Muon>"/>
+  <class name="RoIData_Electron"/>
+  <class name="std::vector<RoIData_Electron>"/>
+  <class name="RoIData_Jet"/>
+  <class name="std::vector<RoIData_Jet>"/>
+  <class name="RoIData_Tau"/>
+  <class name="std::vector<RoIData_Tau>"/>
+  <class name="RoIData_MissingET"/>
+  <class name="std::vector<RoIData_MissingET>"/>
+  <class name="RoIData_TileMu"/>
+  <class name="std::vector<RoIData_TileMu>"/>
+  <class name="TrigStatus"/>
+  <class name="std::vector<TrigStatus>"/>
+  <class name="ChainEntry"/>
+  <class name="std::vector<ChainEntry>"/>
+  <class name="FeatureIndex"/>
+  <class name="std::vector<FeatureIndex>"/>
+  <class name="std::map<int,FeatureIndex>"/>
+  <class name="std::map<int,std::vector<FeatureIndex> >"/>
+  <class name="RoILinks"/>
+  <class name="CombLinks"/>
+  <class name="std::vector<CombLinks>"/>
+  <class name="MuonRoILinks"/>
+  <class name="std::vector<MuonRoILinks>"/>
+  <class name="ElectronRoILinks"/>
+  <class name="std::vector<ElectronRoILinks>"/>
+
+  <class name="TrigDecSummary"/>
+
+<!-- added by A.Ishikawa for Muon Trigger Calibration-->
+  <class name="TrigEventInfo"/>
+  <class name="TgcHpt"/>
+  <class name="std::vector<TgcHpt>"/>
+  <class name="MSMuon"/>
+  <class name="std::vector<MSMuon>"/>
+  <class name="CBMuon"/>
+  <class name="std::vector<CBMuon>"/>
+  <class name="TileL2Muon"/>
+  <class name="std::vector<TileL2Muon>"/>
+  <class name="TileMuon"/>
+  <class name="std::vector<TileMuon>"/>
+  <class name="L2IDTrack"/>
+  <class name="std::vector<L2IDTrack>"/>
+
+<!-- Classes for analysis of the ntuple -->
+  <class name="TMNUtil"/>
+
+</lcgdict>

@@ -1,0 +1,656 @@
+<lcgdict>
+  <class name="Amg::Transform3D"/>
+  <class name="Eigen::Affine3d"/>
+  <class name="Eigen::Transform<double,3,2,0>"/>
+  <class name="Eigen::DenseStorage<double,3,3,1,0>"/>
+  <class name="Eigen::internal::plain_array<double,3,0,0>"/>
+  <class name="Eigen::DenseStorage<double,9,3,3,0>"/>
+  <class name="Eigen::internal::plain_array<double,9,0,0>"/>
+  
+  <class name="Eigen::Matrix<double,2,1,0,2,1>"/>
+  <class name="Eigen::MatrixBase<Eigen::Matrix<double,2,1,0,2,1> >"/>
+  <class name="Eigen::DenseBase<Eigen::Matrix<double,2,1,0,2,1> >"/>
+  <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,2,1,0,2,1>,double,double,false>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,2,1,0,2,1>,3>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,2,1,0,2,1>,1>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,2,1,0,2,1>,0>"/>
+  <class name="Eigen::EigenBase<Eigen::Matrix<double,2,1,0,2,1> >"/>
+  <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,2,1,0,2,1> >"/>
+
+  <class name="Eigen::Matrix<double,3,1,0,3,1>"/>
+  <class name="Eigen::MatrixBase<Eigen::Matrix<double,3,1,0,3,1> >"/>
+  <class name="Eigen::DenseBase<Eigen::Matrix<double,3,1,0,3,1> >"/>
+  <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,3,1,0,3,1>,double,double,false>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,3,1,0,3,1>,3>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,3,1,0,3,1>,1>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,3,1,0,3,1>,0>"/>
+  <class name="Eigen::EigenBase<Eigen::Matrix<double,3,1,0,3,1> >"/>
+  <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,3,1,0,3,1> >"/>
+
+  <class name="Eigen::Matrix<double,5,1,0,5,1>"/>
+  <class name="Eigen::MatrixBase<Eigen::Matrix<double,5,1,0,5,1> >"/>
+  <class name="Eigen::DenseBase<Eigen::Matrix<double,5,1,0,5,1> >"/>
+  <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,5,1,0,5,1>,double,double,false>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,5,1,0,5,1>,3>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,5,1,0,5,1>,1>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,5,1,0,5,1>,0>"/>
+  <class name="Eigen::EigenBase<Eigen::Matrix<double,5,1,0,5,1> >"/>
+  <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,5,1,0,5,1> >"/>
+
+  <class name="Eigen::Matrix<double,3,3,0,3,3>"/>
+  <class name="Eigen::MatrixBase<Eigen::Matrix<double,3,3,0,3,3> >"/>
+  <class name="Eigen::DenseBase<Eigen::Matrix<double,3,3,0,3,3> >"/>
+  <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,3,3,0,3,3>,double,double,false>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,3,3,0,3,3>,3>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,3,3,0,3,3>,1>"/>
+  <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,3,3,0,3,3> >"/>
+
+  <class name="Eigen::Matrix<double,4,4,0,4,4>"/>
+  <class name="Eigen::MatrixBase<Eigen::Matrix<double,4,4,0,4,4> >"/>
+  <class name="Eigen::DenseBase<Eigen::Matrix<double,4,4,0,4,4> >"/>
+  <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,4,4,0,4,4>,double,double,false>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,4,4,0,4,4>,3>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,4,4,0,4,4>,1>"/>
+  <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,4,4,0,4,4> >"/>
+  <class name="Eigen::Block<const Eigen::Matrix<double,4,4,0,4,4>,3,1,false,true>"/>
+  <class name="Eigen::MapBase<Eigen::Block<const Eigen::Matrix<double,4,4,0,4,4>,3,1,false,true>,0>"/>
+  <class name="Eigen::MatrixBase<Eigen::Block<const Eigen::Matrix<double,4,4,0,4,4>,3,1,false,true> >"/>
+  <class name="Eigen::DenseBase<Eigen::Block<const Eigen::Matrix<double,4,4,0,4,4>,3,1,false,true> >"/>
+  <class name="Eigen::internal::special_scalar_op_base<Eigen::Block<const Eigen::Matrix<double,4,4,0,4,4>,3,1,false,true>,double,double,false>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Block<const Eigen::Matrix<double,4,4,0,4,4>,3,1,false,true>,2>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Block<const Eigen::Matrix<double,4,4,0,4,4>,3,1,false,true>,0>"/>
+
+  <class name="Eigen::Matrix<double,5,5,0,5,5>"/>
+  <class name="Eigen::MatrixBase<Eigen::Matrix<double,5,5,0,5,5> >"/>
+  <class name="Eigen::DenseBase<Eigen::Matrix<double,5,5,0,5,5> >"/>
+  <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,5,5,0,5,5>,double,double,false>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,5,5,0,5,5>,3>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,5,5,0,5,5>,1>"/>
+  <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,5,5,0,5,5> >"/>
+
+  <class name="Eigen::Matrix<double,-1,-1,0,-1,-1>"/>
+  <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,-1,-1,0,-1,-1> >"/>
+  <class name="Eigen::MatrixBase<Eigen::Matrix<double,-1,-1,0,-1,-1> >"/>
+  <class name="Eigen::DenseBase<Eigen::Matrix<double,-1,-1,0,-1,-1> >"/>
+  <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,-1,-1,0,-1,-1>,double,double,false>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,-1,-1,0,-1,-1>,3>"/>
+  <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,-1,-1,0,-1,-1>,1>"/>
+
+  <exclusion>
+    <class name="Eigen::Transform<double,3,2,0>">
+      <method name="shear"/>
+      <method name="preshear"/>
+      <method name="linearExt"/>
+      <method name="translationExt"/>
+      <method name="scale"/>
+//      <method proto_pattern="*UniformScaling*"/>
+    </class>
+    <class name="Eigen::Matrix<double,3,3,0,3,3>">
+//      <method proto_pattern="*Matrix*double*double*double*"/>
+//      <method proto_pattern="*Matrix*long*"/>
+//      <method proto_pattern="*Matrix*int*"/>
+      <method name="inverseSym5"/>
+      <method name="similaritySym5"/>
+    </class>
+    <class name="Eigen::Matrix<double,4,4,0,4,4>">
+//      <method proto_pattern="*Matrix*double*double*double*"/>
+//      <method proto_pattern="*Matrix*long*"/>
+//      <method proto_pattern="*Matrix*int*"/>
+      <method name="inverseSym5"/>
+      <method name="similaritySym5"/>
+    </class>
+    <class name="Eigen::Matrix<double,5,5,0,5,5>">
+//      <method proto_pattern="*Matrix*double*double*double*"/>
+//      <method proto_pattern="*Matrix*long*"/>
+//      <method proto_pattern="*Matrix*int*"/>
+      <method name="inverseSym5"/>
+      <method name="similaritySym5"/>
+    </class>
+    <class name="Eigen::Matrix<double,-1,-1,0,-1,-1>">
+//      <method proto_pattern="*Matrix*double*"/>
+//      <method proto_pattern="*Matrix*long*"/>
+//      <method proto_pattern="*Matrix*int*"/>
+      <method name="inverseSym5"/>
+      <method name="similaritySym5"/>
+    </class>
+
+    <class name="Eigen::Block<const Eigen::Matrix<double,4,4,0,4,4>,3,1,false,true>">
+      <method name="="/>
+      <field name="m_xpr"/>
+    </class>
+    <class name="Eigen::MapBase<Eigen::Block<const Eigen::Matrix<double,4,4,0,4,4>,3,1,false,true>,0>">
+      <method name="="/>
+    </class>
+
+    <class name="Eigen::MatrixBase<Eigen::Block<const Eigen::Matrix<double,4,4,0,4,4>,3,1,false,true> >">
+      <method name="sparseView"/>
+      <method name="homogeneous"/>
+      <method name="hnormalized"/>
+      <method name="exp"/>
+      <method name="matrixFunction"/>
+      <method name="cosh"/>
+      <method name="sinh"/>
+      <method name="cos"/>
+      <method name="sin"/>
+      <method name="sqrt"/>
+      <method name="log"/>
+      <method name="cwiseMin"/>
+      <method name="cwiseMax"/>
+      <method name="fillSymmetric"/>
+      <method name="="/>
+      <method name="adjointInPlace"/>
+      <method name="setIdentity"/>
+      <method name="makeHouseholderInPlace"/>
+      <method name="normalize"/>
+      <method name="eulerAngles"/>
+      <method name="eigenvalues"/>
+      <method name="operatorNorm"/>
+    </class>
+
+    <class name="Eigen::DenseBase<Eigen::Block<const Eigen::Matrix<double,4,4,0,4,4>,3,1,false,true> >">
+      <method name="value"/>
+      <method name="<<"/>
+      <method name="="/>
+      <method name="setConstant"/>
+      <method name="setLinSpaced"/>
+      <method name="setRandom"/>
+      <method name="reverseInPlace"/>
+      <method name="transposeInPlace"/>
+      <method name="*="/>
+      <method name="Ones"/>
+      <method name="isApproxToConstant"/>
+      <method name="fill"/>
+      <method name="/="/>
+      <method name="setZero"/>
+      <method name="setOnes"/>
+      <method name="forceAlignedAccess"/>
+      <method name="trace"/>
+    </class>
+
+    <class name="Eigen::internal::special_scalar_op_base<Eigen::Block<const Eigen::Matrix<double,4,4,0,4,4>,3,1,false,true>,double,double,false>">
+      <method name="*"/>
+    </class>
+
+    <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,3,3,0,3,3> >">
+      <method name="resize"/>
+      <method name="conservativeResize"/>
+      <method name="Map"/>
+      <method name="MapAligned"/>
+      <method name="setConstant"/>
+      <method name="setZero"/>
+      <method name="setOnes"/>
+      <method name="setRandom"/>
+    </class>
+
+    <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,4,4,0,4,4> >">
+      <method name="resize"/>
+      <method name="conservativeResize"/>
+      <method name="Map"/>
+      <method name="MapAligned"/>
+      <method name="setConstant"/>
+      <method name="setZero"/>
+      <method name="setOnes"/>
+      <method name="setRandom"/>
+    </class>
+
+    <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,5,5,0,5,5> >">
+      <method name="resize"/>
+      <method name="conservativeResize"/>
+      <method name="Map"/>
+      <method name="MapAligned"/>
+      <method name="setConstant"/>
+      <method name="setZero"/>
+      <method name="setOnes"/>
+      <method name="setRandom"/>
+    </class>
+
+
+    <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,-1,-1,0,-1,-1> >">
+      <method name="resize"/>
+      <method name="conservativeResize"/>
+      <method name="Map"/>
+      <method name="MapAligned"/>
+      <method name="setConstant"/>
+      <method name="setZero"/>
+      <method name="setOnes"/>
+      <method name="setRandom"/>
+    </class>
+
+
+    <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,2,1,0,2,1> >">
+      <method name="resize"/>
+      <method name="conservativeResize"/>
+      <method name="Map"/>
+      <method name="MapAligned"/>
+      <method name="setConstant"/>
+      <method name="setZero"/>
+      <method name="setOnes"/>
+      <method name="setRandom"/>
+    </class>
+
+    <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,3,1,0,3,1> >">
+      <method name="resize"/>
+      <method name="conservativeResize"/>
+      <method name="Map"/>
+      <method name="MapAligned"/>
+      <method name="setConstant"/>
+      <method name="setZero"/>
+      <method name="setOnes"/>
+      <method name="setRandom"/>
+    </class>
+
+    <class name="Eigen::PlainObjectBase<Eigen::Matrix<double,5,1,0,5,1> >">
+      <method name="resize"/>
+      <method name="conservativeResize"/>
+      <method name="Map"/>
+      <method name="MapAligned"/>
+      <method name="setConstant"/>
+      <method name="setZero"/>
+      <method name="setOnes"/>
+      <method name="setRandom"/>
+    </class>
+
+    <class name="Eigen::MatrixBase<Eigen::Matrix<double,3,3,0,3,3> >">
+      <method name="sparseView"/>
+      <method name="exp"/>
+      <method name="matrixFunction"/>
+      <method name="cosh"/>
+      <method name="sinh"/>
+      <method name="cos"/>
+      <method name="sin"/>
+      <method name="sqrt"/>
+      <method name="log"/>
+      <method name="homogeneous"/>
+      <method name="hnormalized"/>
+      <method name="phi"/>
+      <method name="theta"/>
+      <method name="eta"/>
+      <method name="deltaPhi"/>
+      <method name="deltaR"/>
+      <method name="eigenvalues"/>
+      <method name="operatorNorm"/>
+      <method name="Unit"/>
+      <method name="UnitX"/>
+      <method name="UnitY"/>
+      <method name="UnitZ"/>
+      <method name="UnitW"/>
+      <method name="unitOrthogonal"/>
+      <method name="perp"/>
+      <method name="perp2"/>
+      <method name="stableNorm"/>
+    </class>
+
+    <class name="Eigen::MatrixBase<Eigen::Matrix<double,4,4,0,4,4> >">
+      <method name="sparseView"/>
+      <method name="exp"/>
+      <method name="matrixFunction"/>
+      <method name="cosh"/>
+      <method name="sinh"/>
+      <method name="cos"/>
+      <method name="sin"/>
+      <method name="sqrt"/>
+      <method name="log"/>
+      <method name="homogeneous"/>
+      <method name="hnormalized"/>
+      <method name="phi"/>
+      <method name="theta"/>
+      <method name="eta"/>
+      <method name="deltaPhi"/>
+      <method name="deltaR"/>
+      <method name="eigenvalues"/>
+      <method name="operatorNorm"/>
+      <method name="Unit"/>
+      <method name="UnitX"/>
+      <method name="UnitY"/>
+      <method name="UnitZ"/>
+      <method name="UnitW"/>
+      <method name="unitOrthogonal"/>
+      <method name="perp"/>
+      <method name="perp2"/>
+      <method name="stableNorm"/>
+      <method name="eulerAngles"/>
+    </class>
+
+    <class name="Eigen::MatrixBase<Eigen::Matrix<double,5,5,0,5,5> >">
+      <method name="sparseView"/>
+      <method name="exp"/>
+      <method name="matrixFunction"/>
+      <method name="cosh"/>
+      <method name="sinh"/>
+      <method name="cos"/>
+      <method name="sin"/>
+      <method name="sqrt"/>
+      <method name="log"/>
+      <method name="homogeneous"/>
+      <method name="hnormalized"/>
+      <method name="phi"/>
+      <method name="theta"/>
+      <method name="eta"/>
+      <method name="deltaPhi"/>
+      <method name="deltaR"/>
+      <method name="eigenvalues"/>
+      <method name="operatorNorm"/>
+      <method name="Unit"/>
+      <method name="UnitX"/>
+      <method name="UnitY"/>
+      <method name="UnitZ"/>
+      <method name="UnitW"/>
+      <method name="unitOrthogonal"/>
+      <method name="perp"/>
+      <method name="perp2"/>
+      <method name="stableNorm"/>
+      <method name="eulerAngles"/>
+    </class>
+
+    <class name="Eigen::MatrixBase<Eigen::Matrix<double,-1,-1,0,-1,-1> >">
+      <method name="sparseView"/>
+      <method name="exp"/>
+      <method name="matrixFunction"/>
+      <method name="cosh"/>
+      <method name="sinh"/>
+      <method name="cos"/>
+      <method name="sin"/>
+      <method name="sqrt"/>
+      <method name="log"/>
+      <method name="homogeneous"/>
+      <method name="hnormalized"/>
+      <method name="phi"/>
+      <method name="theta"/>
+      <method name="eta"/>
+      <method name="deltaPhi"/>
+      <method name="deltaR"/>
+      <method name="eigenvalues"/>
+      <method name="operatorNorm"/>
+      <method name="Unit"/>
+      <method name="UnitX"/>
+      <method name="UnitY"/>
+      <method name="UnitZ"/>
+      <method name="UnitW"/>
+      <method name="unitOrthogonal"/>
+      <method name="perp"/>
+      <method name="perp2"/>
+      <method name="stableNorm"/>
+      <method name="eulerAngles"/>
+      <method name="Identity"/>
+    </class>
+
+    <class name="Eigen::MatrixBase<Eigen::Matrix<double,2,1,0,2,1> >">
+      <method name="sparseView"/>
+      <method name="exp"/>
+      <method name="matrixFunction"/>
+      <method name="cosh"/>
+      <method name="sinh"/>
+      <method name="cos"/>
+      <method name="sin"/>
+      <method name="sqrt"/>
+      <method name="log"/>
+      <method name="homogeneous"/>
+      <method name="hnormalized"/>
+      <method name="phi"/>
+      <method name="theta"/>
+      <method name="eta"/>
+      <method name="deltaPhi"/>
+      <method name="deltaR"/>
+      <method name="eigenvalues"/>
+      <method name="operatorNorm"/>
+      <method name="Unit"/>
+      <method name="UnitX"/>
+      <method name="UnitY"/>
+      <method name="UnitZ"/>
+      <method name="UnitW"/>
+      <method name="unitOrthogonal"/>
+      <method name="perp"/>
+      <method name="perp2"/>
+      <method name="stableNorm"/>
+      <method name="eulerAngles"/>
+    </class>
+
+    <class name="Eigen::MatrixBase<Eigen::Matrix<double,3,1,0,3,1> >">
+      <method name="sparseView"/>
+      <method name="exp"/>
+      <method name="matrixFunction"/>
+      <method name="cosh"/>
+      <method name="sinh"/>
+      <method name="cos"/>
+      <method name="sin"/>
+      <method name="sqrt"/>
+      <method name="log"/>
+      <method name="homogeneous"/>
+      <method name="hnormalized"/>
+      <method name="eigenvalues"/>
+      <method name="operatorNorm"/>
+      <method name="Unit"/>
+      <method name="UnitX"/>
+      <method name="UnitY"/>
+      <method name="UnitZ"/>
+      <method name="UnitW"/>
+      <method name="unitOrthogonal"/>
+      <method name="stableNorm"/>
+      <method name="eulerAngles"/>
+    </class>
+
+    <class name="Eigen::MatrixBase<Eigen::Matrix<double,5,1,0,5,1> >">
+      <method name="sparseView"/>
+      <method name="exp"/>
+      <method name="matrixFunction"/>
+      <method name="cosh"/>
+      <method name="sinh"/>
+      <method name="cos"/>
+      <method name="sin"/>
+      <method name="sqrt"/>
+      <method name="log"/>
+      <method name="homogeneous"/>
+      <method name="hnormalized"/>
+      <method name="phi"/>
+      <method name="theta"/>
+      <method name="eta"/>
+      <method name="deltaPhi"/>
+      <method name="deltaR"/>
+      <method name="eigenvalues"/>
+      <method name="operatorNorm"/>
+      <method name="Unit"/>
+      <method name="UnitX"/>
+      <method name="UnitY"/>
+      <method name="UnitZ"/>
+      <method name="UnitW"/>
+      <method name="unitOrthogonal"/>
+      <method name="perp"/>
+      <method name="perp2"/>
+      <method name="stableNorm"/>
+      <method name="eulerAngles"/>
+    </class>
+
+    <class name="Eigen::Matrix<double,2,1,0,2,1>">
+//      <method proto_pattern="*Matrix*double*double*double*"/>
+      <method name="inverseSym5"/>
+      <method name="similaritySym5"/>
+    </class>
+
+    <class name="Eigen::Matrix<double,3,1,0,3,1>">
+//      <method proto_pattern="*Matrix*double*double*double*"/>
+      <method name="inverseSym5"/>
+      <method name="similaritySym5"/>
+    </class>
+
+    <class name="Eigen::Matrix<double,5,1,0,5,1>">
+//      <method proto_pattern="*Matrix*double*double*double*"/>
+      <method name="inverseSym5"/>
+      <method name="similaritySym5"/>
+    </class>
+
+    <class name="Eigen::DenseBase<Eigen::Matrix<double,2,1,0,2,1> >">
+      <method name="value"/>
+      <method name="forceAlignedAccess"/>
+      <method name="trace"/>
+    </class>
+
+
+    <class name="Eigen::DenseBase<Eigen::Matrix<double,3,1,0,3,1> >">
+      <method name="value"/>
+      <method name="forceAlignedAccess"/>
+      <method name="trace"/>
+    </class>
+
+
+    <class name="Eigen::DenseBase<Eigen::Matrix<double,5,1,0,5,1> >">
+      <method name="value"/>
+      <method name="forceAlignedAccess"/>
+      <method name="trace"/>
+    </class>
+
+
+    <class name="Eigen::DenseBase<Eigen::Matrix<double,3,3,0,3,3> >">
+      <method name="value"/>
+      <method name="forceAlignedAccess"/>
+      <method name="trace"/>
+      <method name="segment"/>
+      <method name="head"/>
+      <method name="tail"/>
+      <method name="LinSpaced"/>
+      <method name="setLinSpaced"/>
+      <method name="Constant"/>
+      <method name="Random"/>
+      <method name="Zero"/>
+      <method name="Ones"/>
+    </class>
+
+
+    <class name="Eigen::DenseBase<Eigen::Matrix<double,4,4,0,4,4> >">
+      <method name="value"/>
+      <method name="forceAlignedAccess"/>
+      <method name="trace"/>
+      <method name="segment"/>
+      <method name="head"/>
+      <method name="tail"/>
+      <method name="LinSpaced"/>
+      <method name="setLinSpaced"/>
+      <method name="Constant"/>
+      <method name="Random"/>
+      <method name="Zero"/>
+      <method name="Ones"/>
+    </class>
+
+
+    <class name="Eigen::DenseBase<Eigen::Matrix<double,5,5,0,5,5> >">
+      <method name="value"/>
+      <method name="forceAlignedAccess"/>
+      <method name="trace"/>
+      <method name="segment"/>
+      <method name="head"/>
+      <method name="tail"/>
+      <method name="LinSpaced"/>
+      <method name="setLinSpaced"/>
+      <method name="Constant"/>
+      <method name="Random"/>
+      <method name="Zero"/>
+      <method name="Ones"/>
+    </class>
+
+
+    <class name="Eigen::DenseBase<Eigen::Matrix<double,-1,-1,0,-1,-1> >">
+      <method name="value"/>
+      <method name="forceAlignedAccess"/>
+      <method name="trace"/>
+      <method name="segment"/>
+      <method name="head"/>
+      <method name="tail"/>
+      <method name="LinSpaced"/>
+      <method name="setLinSpaced"/>
+      <method name="Constant"/>
+      <method name="Random"/>
+      <method name="Zero"/>
+      <method name="Ones"/>
+    </class>
+
+
+    <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,2,1,0,2,1>,double,double,false>">
+      <method name="*"/>
+    </class>
+
+    <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,3,1,0,3,1>,double,double,false>">
+      <method name="*"/>
+    </class>
+
+    <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,5,1,0,5,1>,double,double,false>">
+      <method name="*"/>
+    </class>
+
+    <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,3,3,0,3,3>,double,double,false>">
+      <method name="*"/>
+    </class>
+
+    <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,4,4,0,4,4>,double,double,false>">
+      <method name="*"/>
+    </class>
+
+    <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,5,5,0,5,5>,double,double,false>">
+      <method name="*"/>
+    </class>
+
+    <class name="Eigen::internal::special_scalar_op_base<Eigen::Matrix<double,-1,-1,0,-1,-1>,double,double,false>">
+      <method name="*"/>
+    </class>
+
+    <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,3,3,0,3,3>,1>">
+      <method name="[]"/>
+      <method name="x"/>
+      <method name="y"/>
+      <method name="z"/>
+      <method name="w"/>
+    </class>
+
+    <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,4,4,0,4,4>,1>">
+      <method name="[]"/>
+      <method name="x"/>
+      <method name="y"/>
+      <method name="z"/>
+      <method name="w"/>
+    </class>
+
+    <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,5,5,0,5,5>,1>">
+      <method name="[]"/>
+      <method name="x"/>
+      <method name="y"/>
+      <method name="z"/>
+      <method name="w"/>
+    </class>
+
+    <class name="Eigen::DenseCoeffsBase<Eigen::Matrix<double,-1,-1,0,-1,-1>,1>">
+      <method name="[]"/>
+      <method name="x"/>
+      <method name="y"/>
+      <method name="z"/>
+      <method name="w"/>
+    </class>
+  </exclusion>
+
+<!--
+  <read sourceClass="CLHEP::Hep3Vector"
+        source="double dx; double dy; double dz;"
+        version="[1-]"
+        targetClass="Eigen::Matrix<double,3,1,0,3,1>"
+        target=""
+        include="GeoPrimitives/CLHEPtoEigenConverter.h">
+  <![CDATA[
+    *newObj = Amg::Hep3VectorToEigen (*(CLHEP::Hep3Vector*) (oldObj->GetObject()));
+  ]]>
+  </read>
+-->
+
+  <readraw sourceClass="CLHEP::Hep3Vector"
+        source=""
+        version="[1-]"
+        targetClass="Eigen::Matrix<double,3,1,0,3,1>"
+        target=""
+        include="GeoPrimitives/CLHEPtoEigenConverter.h">
+  <![CDATA[
+    oldObj->SetBufferOffset (oldObj->Length() - 3*sizeof(double));
+    double dx, dy, dz;
+    *oldObj >> dx;
+    *oldObj >> dy;
+    *oldObj >> dz;
+    *newObj = Amg::Hep3VectorToEigen (CLHEP::Hep3Vector (dx, dy, dz));
+
+  ]]>
+  </readraw>
+<lcgdict>

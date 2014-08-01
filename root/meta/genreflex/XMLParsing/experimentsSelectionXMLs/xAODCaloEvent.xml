@@ -1,0 +1,74 @@
+<!-- $Id: selection.xml 591865 2014-04-08 08:49:51Z krasznaa $ -->
+<lcgdict>
+
+  <class name="xAOD::CaloCluster_v1" >
+    <field name="m_p4" transient="true" />
+    <field name="m_pt" transient="true" />
+    <field name="m_p4Cached" transient="true" />
+    <field name="m_ptCached" transient="true" />
+    <field name="m_signalState"  transient="true" />
+    <field name="m_cellLinks"    transient="true" />
+    <field name="m_ownCellLinks"    transient="true" />
+    <field name="m_recoStatus"    transient="true" />
+  </class>
+  <read sourceClass="xAOD::CaloCluster_v1" version="[1-]"
+        targetClass="xAOD::CaloCluster_v1" source="" target="m_p4Cached" >
+    <![CDATA[
+       m_p4Cached.reset();
+    ]]>
+  </read>
+ <read sourceClass="xAOD::CaloCluster_v1" version="[1-]"
+        targetClass="xAOD::CaloCluster_v1" source="" target="m_ptCached" >
+    <![CDATA[
+       m_ptCached.reset();
+    ]]>
+  </read>
+  <read sourceClass="xAOD::CaloCluster_v1" version="[1-]"
+        targetClass="xAOD::CaloCluster_v1" source="" target="m_signalState" >
+    <![CDATA[
+       m_signalState=xAOD::CaloCluster_v1::CALIBRATED;
+    ]]>
+  </read>
+  <read sourceClass="xAOD::CaloCluster_v1" version="[1-]"
+        targetClass="xAOD::CaloCluster_v1" source="" target="m_cellLinks" >
+    <![CDATA[
+       m_cellLinks=0;
+    ]]>
+  </read>
+  <read sourceClass="xAOD::CaloCluster_v1" version="[1-]"
+        targetClass="xAOD::CaloCluster_v1" source="" target="m_ownCellLinks" >
+    <![CDATA[
+       m_ownCellLinks=false;
+    ]]>
+  </read>
+  <class name="xAOD::CaloClusterContainer_v1"
+         id="24997BCA-3F6A-4530-8826-822EE9FC3C08" />
+  <class name="xAOD::CaloClusterAuxContainer_v1"
+         id="CE498B3B-A32D-43A3-B9B3-C13D136BACFC" />
+
+  <!-- Link types pointing at clusters: -->
+  <class name="DataLink<xAOD::CaloClusterContainer_v1>" />
+  <class name="std::vector<DataLink<xAOD::CaloClusterContainer_v1> >" />
+
+  <class name="ElementLink<xAOD::CaloClusterContainer_v1>" />
+  <class name="std::vector<ElementLink<xAOD::CaloClusterContainer_v1> >" />
+  <class name="std::vector<std::vector<ElementLink<xAOD::CaloClusterContainer_v1> > >" />
+
+
+  <class name="xAOD::CaloClusterBadChannelData_v1" />
+  <class name="std::vector<xAOD::CaloClusterBadChannelData_v1>" />
+  <class name="std::vector< std::vector<xAOD::CaloClusterBadChannelData_v1> >" />
+  
+
+  <!-- Additional type(s) needed: -->
+  <class name="std::bitset<3>" />
+
+  <!-- Suppress the unwanted classes found by ROOT 6. -->
+  <!-- Hopefully we can remove these extra lines at one point... -->
+  <exclusion>
+    <class name="SG::IConstAuxStore" />
+    <class name="DataLink<SG::IConstAuxStore>" />
+    <class name="DataVector<xAOD::IParticle>" />
+  </exclusion>
+
+</lcgdict>

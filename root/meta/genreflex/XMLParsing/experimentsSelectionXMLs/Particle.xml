@@ -1,0 +1,11 @@
+<lcgdict>
+  <class name="Rec::TrackParticle">
+    <field name="m_cachedPerigee" transient="true"/>
+  </class>
+  <class name="Rec::TrackParticleContainer" id="35BE1E01-658C-438A-AC86-F951006ECC6B" />
+  <class name="DataVector<Rec::TrackParticle>" />
+  <class name="std::vector<Rec::TrackParticle*>" /> 
+  <class name="std::vector<const Rec::TrackParticle*>" /> 
+  <class name="NavigableIterator<Rec::TrackParticleContainer,double,std::vector<std::pair<ElementLink<Rec::TrackParticleContainer>,double> > >"/>
+
+</lcgdict>

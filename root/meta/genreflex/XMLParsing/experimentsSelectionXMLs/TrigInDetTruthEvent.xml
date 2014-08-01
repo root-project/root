@@ -1,0 +1,11 @@
+<lcgdict> 
+  <class name="TrigInDetTrackTruthMap" id="41581666-F06D-44AE-93B9-D7E912A27AA1" />
+  <class name="std::vector< TrigInDetTrackTruth >" />
+  <class name="TrigInDetTrackTruth" >
+    <field name="m_true_part_vec" transient="false" />
+    <field name="m_nr_common_hits" transient="false" />
+    <field name="m_family_tree" transient="false" />
+  </class>
+  <class name="std::vector<TrigIDHitStats>" />
+  <class name="TrigIDHitStats" />
+</lcgdict>

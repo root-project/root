@@ -1,0 +1,10 @@
+<lcgdict>
+   <class name="ExampleHit_p0"/>
+   <class name="ExampleHitStreamer_p0"/>
+   <class name="ExampleHitContainer_p1" id="6BB89FA1-EB62-4641-97CA-3F8DB6588053"/>
+   <class name="std::vector<ExampleHit_p1>"/>
+   <class name="ExampleHit_p1"/>
+   <class name="ExampleTrackContainer_p1" id="FF777FDA-721C-4756-BBF3-4CE28C2A3AF5"/>
+   <class name="std::vector<ExampleTrack_p1>"/>
+   <class name="ExampleTrack_p1"/>
+</lcgdict>

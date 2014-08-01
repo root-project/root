@@ -1,0 +1,85 @@
+<lcgdict>
+
+  <class name="Analysis::BaseTagInfo_p1" />
+  <class name="std::vector<Analysis::BaseTagInfo_p1>" /> 
+
+  <class name="Analysis::IPInfoBase_p1" />
+  <class name="std::vector<Analysis::IPInfoBase_p1>" /> 
+
+  <class name="Analysis::IPTrackInfo_p1" />
+  <class name="std::vector<Analysis::IPTrackInfo_p1>" /> 
+
+  <class name="Analysis::IPInfoPlus_p1" />
+  <class name="std::vector<Analysis::IPInfoPlus_p1>" /> 
+
+  <class name="Analysis::TruthInfo_p1" />
+  <class name="std::vector<Analysis::TruthInfo_p1>" />
+
+  <class name="Analysis::AtlfInfo_p1" />
+  <class name="std::vector<Analysis::AtlfInfo_p1>" />
+
+  <class name="Analysis::JetTagInfo_tlp1" id="977E2E76-4DA6-4A4B-87A8-2E41353DB9F4" />
+  <class name="Analysis::JetTagInfo_tlp2" id="50E644C1-E247-41B0-B873-416362824A21" />
+  <class name="Analysis::JetTagInfo_tlp3" id="8A57BABD-C361-4796-93CD-E8171EF06BC7" />
+
+  <class name="Analysis::SoftLeptonTruthInfo_p1" />
+  <class name="std::vector<Analysis::SoftLeptonTruthInfo_p1>" />
+  <class name="Analysis::SLTrueInfo_p1" />
+  <class name="std::vector<Analysis::SLTrueInfo_p1>" />
+
+  <class name="Analysis::SecVtxInfo_p1" />
+  <class name="std::vector<Analysis::SecVtxInfo_p1>" />
+
+  <class name="Analysis::JetProbInfoBase_p1" />
+  <class name="std::vector<Analysis::JetProbInfoBase_p1>" />
+
+  <class name="Analysis::JetFitterTagInfo_p1" />
+  <class name="std::vector<Analysis::JetFitterTagInfo_p1>" />
+
+  <class name="Analysis::LifetimeInfo_p1" />
+  <class name="std::vector<Analysis::LifetimeInfo_p1>" />
+
+  <class name="Analysis::TrackCountingInfo_p1" />
+  <class name="std::vector<Analysis::TrackCountingInfo_p1>" />
+
+  <class name="Analysis::SoftElectronInfo_p1" />
+  <class name="std::vector<Analysis::SoftElectronInfo_p1>" />
+
+  <class name="Analysis::SETrackInfo_p1" />
+  <class name="std::vector<Analysis::SETrackInfo_p1>" />
+
+  <class name="Analysis::SoftMuonInfo_p1" />
+  <class name="std::vector<Analysis::SoftMuonInfo_p1>" />
+
+  <class name="Analysis::SMTrackInfo_p1" />
+  <class name="std::vector<Analysis::SMTrackInfo_p1>" />
+
+  <class name="Analysis::SVInfoPlus_p1" />
+  <class name="std::vector<Analysis::SVInfoPlus_p1>" />
+
+  <class name="Analysis::MultiSVInfoPlus_p1" />
+  <class name="std::vector<Analysis::MultiSVInfoPlus_p1>" />
+
+  <class name="Analysis::MSVVtxInfo_p1" />
+  <class name="std::vector<Analysis::MSVVtxInfo_p1>" />
+
+  <class name="Analysis::MSVVtxInfo_p2" />
+  <class name="std::vector<Analysis::MSVVtxInfo_p2>" />
+
+  <class name="Analysis::SVInfoBase_p1" />
+  <class name="std::vector<Analysis::SVInfoBase_p1>" />
+
+  <class name="Analysis::GbbNNTagInfo_p1" />
+  <class name="std::vector<Analysis::GbbNNTagInfo_p1>" />
+
+  <class name="Analysis::SvxSummary_p1" />
+  <class name="std::vector<Analysis::SvxSummary_p1>" />
+
+
+  <class name="Analysis::NavAssociationCommon_p1" />
+  <class name="std::vector<Analysis::NavAssociationCommon_p1>" />
+
+  <class name="Analysis::ISvxAssociation_p1" />
+  <class name="std::vector<Analysis::ISvxAssociation_p1>" />
+
+</lcgdict>

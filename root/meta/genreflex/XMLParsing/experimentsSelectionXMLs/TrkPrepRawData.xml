@@ -1,0 +1,11 @@
+ <lcgdict>
+  <class name="Trk::PrepRawData" >
+    <field name="m_clusId"      transient="false" />
+    <field name="m_localPos"    transient="false" />
+    <field name="m_rdoList"     transient="false" />
+    <field name="m_localErrMat" transient="false" />
+    <field name="s_numberOfInstantiations" transient="true" />
+  </class>
+</lcgdict>
+
+

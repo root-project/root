@@ -1,0 +1,13 @@
+<lcgdict>
+  <class name="Trk::MVFVxCandidate" />
+  <class name="MVFVxContainer" id="6C6999B7-F961-4B72-B6D9-DF71CB2364CC" />
+  <class name="Trk::MVFVxTrackAtVertex" >
+    <field name="m_linkToVertices" transient="true" />
+  </class>
+  <class name="Trk::TrackToVtxLink" >
+    <field name="m_vertexes" transient="true" />
+  </class>
+  <class name="Trk::MvfFitInfo" />
+  <class name="DataVector<Trk::MVFVxCandidate>"/>
+</lcgdict>
+
