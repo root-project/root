@@ -22,7 +22,7 @@ namespace TMVA {
   class ROCCalc {
     
   public:
-    ROCCalc(TH1* mvaS, TH1* mvaB);
+     ROCCalc(TH1* mvaS, TH1* mvaB, TString nameSuffix="");
     
     ~ROCCalc();
     
@@ -67,6 +67,7 @@ namespace TMVA {
 
     Double_t        fSignalCut;  // MVA cut value for last demanded background rejection or signal efficiency
 
+    TString         fSuffix;
     mutable MsgLogger* fLogger;   //! message logger
     MsgLogger& Log() const { return *fLogger; }                       
 

@@ -50,7 +50,7 @@
 using namespace std;
 
 //_______________________________________________________________________________________
-TMVA::ROCCalc::ROCCalc(TH1* mvaS, TH1* mvaB) :
+TMVA::ROCCalc::ROCCalc(TH1* mvaS, TH1* mvaB, TString nameSuffix) :
    fMaxIter(100),
    fAbsTol(0.0),
    fmvaS(0),
@@ -66,6 +66,7 @@ TMVA::ROCCalc::ROCCalc(TH1* mvaS, TH1* mvaB) :
    fnBtot(0),
    fSignificance(0),
    fPurity(0),
+   fSuffix(nameSuffix),
    fLogger ( new TMVA::MsgLogger("ROCCalc") )
 {
    fUseSplines = kTRUE;
@@ -196,7 +197,7 @@ TH1D* TMVA::ROCCalc::GetROC(){
    effBvsS->SetYTitle( "Backgr eff" );
 
    // background rejection (=1-eff.) versus signal efficiency
-   TH1D* rejBvsS = new TH1D( "rejBvsS", "ROC-Curve", fNbins, 0, 1 );
+   TH1D* rejBvsS = new TH1D( "rejBvsS"+fSuffix, "ROC-Curve", fNbins, 0, 1 );
    rejBvsS->SetXTitle( "Signal eff" );
    rejBvsS->SetYTitle( "Backgr rejection (1-eff)" );
    
