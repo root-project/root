@@ -1212,6 +1212,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
             Double_t br = b-bl;
             Double_t srW = sW-slW;
             Double_t brW = bW-blW;
+            //            std::cout << "sl="<<sl << " bl="<<bl<<" fMinSize="<<fMinSize << "sr="<<sr << " br="<<br  <<std::endl;
             if ( ((sl+bl)>=fMinSize && (sr+br)>=fMinSize)
                  && ((slW+blW)>=fMinSize && (srW+brW)>=fMinSize) 
                  ) {
@@ -1244,23 +1245,23 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       }
    }
 
-   if (DoRegression()) {
-      node->SetSeparationIndex(fRegType->GetSeparationIndex(nTotS+nTotB,target[0][nBins[mxVar]-1],target2[0][nBins[mxVar]-1]));
-      node->SetResponse(target[0][nBins[mxVar]-1]/(nTotS+nTotB));
-      if ( (target2[0][nBins[mxVar]-1]/(nTotS+nTotB) - target[0][nBins[mxVar]-1]/(nTotS+nTotB)*target[0][nBins[mxVar]-1]/(nTotS+nTotB)) < std::numeric_limits<double>::epsilon() ) {
-         node->SetRMS(0);
-      }else{ 
-         node->SetRMS(TMath::Sqrt(target2[0][nBins[mxVar]-1]/(nTotS+nTotB) - target[0][nBins[mxVar]-1]/(nTotS+nTotB)*target[0][nBins[mxVar]-1]/(nTotS+nTotB)));
-      }
-   }
-   else {
-      node->SetSeparationIndex(fSepType->GetSeparationIndex(nTotS,nTotB));
-      if (mxVar >=0){ 
-         if (nSelS[mxVar][cutIndex[mxVar]]/nTotS > nSelB[mxVar][cutIndex[mxVar]]/nTotB) cutType=kTRUE;
-         else cutType=kFALSE;
-      }      
-   }
    if (mxVar >= 0) {    
+      if (DoRegression()) {
+         node->SetSeparationIndex(fRegType->GetSeparationIndex(nTotS+nTotB,target[0][nBins[mxVar]-1],target2[0][nBins[mxVar]-1]));
+         node->SetResponse(target[0][nBins[mxVar]-1]/(nTotS+nTotB));
+         if ( (target2[0][nBins[mxVar]-1]/(nTotS+nTotB) - target[0][nBins[mxVar]-1]/(nTotS+nTotB)*target[0][nBins[mxVar]-1]/(nTotS+nTotB)) < std::numeric_limits<double>::epsilon() ) {
+            node->SetRMS(0);
+         }else{ 
+            node->SetRMS(TMath::Sqrt(target2[0][nBins[mxVar]-1]/(nTotS+nTotB) - target[0][nBins[mxVar]-1]/(nTotS+nTotB)*target[0][nBins[mxVar]-1]/(nTotS+nTotB)));
+         }
+      }
+      else {
+         node->SetSeparationIndex(fSepType->GetSeparationIndex(nTotS,nTotB));
+         if (mxVar >=0){ 
+            if (nSelS[mxVar][cutIndex[mxVar]]/nTotS > nSelB[mxVar][cutIndex[mxVar]]/nTotB) cutType=kTRUE;
+            else cutType=kFALSE;
+         }      
+      }
       node->SetSelector((UInt_t)mxVar);
       node->SetCutValue(cutValues[mxVar][cutIndex[mxVar]]);
       node->SetCutType(cutType);
