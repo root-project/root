@@ -17,6 +17,7 @@
 #include "ZipLZMA.h"
 
 #include <stdio.h>
+#include <assert.h>
 
 /*
  *  bits.c by Jean-loup Gailly and Kai Uwe Rommel.
@@ -123,7 +124,11 @@ local __thread unsigned in_offset, out_offset;
 local __thread unsigned in_size, out_size;
 /* Size of current input and output buffers */
 
-__thread int (*R__read_buf) OF((char *buf, unsigned size)) = R__mem_read;
+/* On some platform (MacOS) marking this thread local does not work,
+   however in our use this is a constant, so we do not really need to make it
+   thread local */
+/* __thread */
+int (*R__read_buf) OF((char *buf, unsigned size)) = R__mem_read;
 /* Current input function. Set to R__mem_read for in-memory compression */
 
 #ifdef DEBUG
@@ -347,7 +352,8 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
     crc = updcrc((char *)NULL, 0);
     crc = updcrc(src, (extent) srcsize);
 #endif
-    R__read_buf  = R__mem_read;
+    /* R__read_buf  = R__mem_read; */
+    assert(R__read_buf == R__mem_read);
     in_buf    = src;
     in_size   = (unsigned)srcsize;
     in_offset = 0;
@@ -460,7 +466,8 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     if (*srcsize > 0xffffff) R__error("source buffer too big");
     if (error_flag != 0) return;
 
-    R__read_buf  = R__mem_read;
+    /* R__read_buf  = R__mem_read; */
+    assert(R__read_buf == R__mem_read);
     in_buf    = src;
     in_size   = (unsigned) (*srcsize);
     in_offset = 0;
