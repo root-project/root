@@ -8173,7 +8173,7 @@ void TFriendElement__SetTree(TTree *tree, TList *frlist)
       TObjLink *lnk = frlist->FirstLink();
       while (lnk) {
          TFriendElement *elem = (TFriendElement*)lnk->GetObject();
-         elem->fTree = tree;
+         elem->fParentTree = tree;
          lnk = lnk->Next();
       }
    }
