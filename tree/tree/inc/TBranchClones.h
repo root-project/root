@@ -1,4 +1,4 @@
-// @(#)root/tree:$Id$
+// @(#)root/tree
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -60,6 +60,7 @@ public:
    virtual void    ResetAfterMerge(TFileMergeInfo *);
    virtual void    SetAddress(void *add);
    virtual void    SetBasketSize(Int_t buffsize);
+   virtual void    SetTree(TTree *tree) { fTree = tree; fBranchCount->SetTree(tree); }
    virtual void    UpdateFile();
 
    ClassDef(TBranchClones,2);  //Branch in case of an array of clone objects
