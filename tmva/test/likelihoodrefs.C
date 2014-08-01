@@ -9,30 +9,7 @@
 
 // input: - Input file (result from TMVA),
 //        - use of TMVA plotting TStyle
-void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
-{
-   // set style and remove existing canvas'
-   TMVAGlob::Initialize( useTMVAStyle );
-  
-   // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
 
-   // get all titles of the method likelihood
-   TList titles;
-   UInt_t ninst = TMVAGlob::GetListOfTitles("Method_Likelihood",titles);
-   if (ninst==0) {
-      cout << "Could not locate directory 'Method_Likelihood' in file " << fin << endl;
-      return;
-   }
-   // loop over all titles
-   TIter keyIter(&titles);
-   TDirectory *lhdir;
-   TKey *key;
-   while ((key = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
-      lhdir = (TDirectory *)key->ReadObj();
-      likelihoodrefs( lhdir );
-   }
-}
 
 void likelihoodrefs( TDirectory *lhdir ) {
    Bool_t newCanvas = kTRUE;
@@ -140,7 +117,7 @@ void likelihoodrefs( TDirectory *lhdir ) {
 
             // check for KDE
             if (h == 0 && b == 0) {
-               TString hspline = pname + Form( "_smoothed_hist_from_KDE", i );
+               TString hspline = pname +"_smoothed_hist_from_KDE";
                h = (TH1F*)lhdir->Get( hspline );
                if (h) {
                   b = (TH1F*)lhdir->Get( hspline.ReplaceAll("_sig","_bgd") );
@@ -189,6 +166,32 @@ void likelihoodrefs( TDirectory *lhdir ) {
             hasBeenUsed.push_back( hname.Data() );
          }
       }
+   }
+}
+
+void likelihoodrefs( TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE )
+{
+   // set style and remove existing canvas'
+   TMVAGlob::Initialize( useTMVAStyle );
+  
+   // checks if file with name "fin" is already open, and if not opens one
+   TFile* file = TMVAGlob::OpenFile( fin );  
+
+   // get all titles of the method likelihood
+   TList titles;
+   TString metlike="Method_Likelihood";
+   UInt_t ninst = TMVAGlob::GetListOfTitles(metlike,titles);
+   if (ninst==0) {
+      cout << "Could not locate directory 'Method_Likelihood' in file " << fin << endl;
+      return;
+   }
+   // loop over all titles
+   TIter keyIter(&titles);
+   TDirectory *lhdir;
+   TKey *key;
+   while ((key = TMVAGlob::NextKey(keyIter,"TDirectory"))) {
+      lhdir = (TDirectory *)key->ReadObj();
+      likelihoodrefs( lhdir );
    }
 }
 

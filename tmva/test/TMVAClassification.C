@@ -69,13 +69,9 @@ void TMVAClassification( TString myMethodList = "" )
    TMVA::Tools::Instance();
 
    // to get access to the GUI and all tmva macros
-    TString tmva_dir(TString(gRootDir) + "/tmva");
-    if(gSystem->Getenv("TMVASYS"))
-       tmva_dir = TString(gSystem->Getenv("TMVASYS"));
-    gROOT->SetMacroPath(tmva_dir + "/test/:" + gROOT->GetMacroPath() );
-    gROOT->ProcessLine(".L TMVAGui.C");
-
-
+   TString thisdir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   gROOT->SetMacroPath(thisdir + ":" + gROOT->GetMacroPath());
+   gROOT->ProcessLine(".L TMVAGui.C");
 
    // Default MVA methods to be trained + tested
    std::map<std::string,int> Use;
@@ -204,7 +200,7 @@ void TMVAClassification( TString myMethodList = "" )
    TString fname = "./tmva_class_example.root";
    
    if (gSystem->AccessPathName( fname ))  // file does not exist in local directory
-      gSystem->Exec("wget http://root.cern.ch/files/tmva_class_example.root");
+      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
    
    TFile *input = TFile::Open( fname );
    

@@ -58,7 +58,7 @@ void mvas( TString fin = "TMVA.root", HistType htype = MVAType, Bool_t useTMVASt
          TString methodTitle;
          TMVAGlob::GetMethodTitle(methodTitle,titDir);
 
-         cout << "--- Found directory for method: " << methodName << "::" << methodTitle << flush;
+	 std::cout << "--- Found directory for method: " << methodName << "::" << methodTitle << std::flush;
          TString hname = "MVA_" + methodTitle;
          if      (htype == ProbaType  ) hname += "_Proba";
          else if (htype == RarityType ) hname += "_Rarity";
@@ -196,7 +196,7 @@ void mvas( TString fin = "TMVA.root", HistType htype = MVAType, Bool_t useTMVASt
             bgdOv->SetLineColor( col );
             bgdOv->Draw("e1same");
 
-            ymax = TMath::Max( ymax, TMath::Max( sigOv->GetMaximum(), bgdOv->GetMaximum() )*maxMult );
+            ymax = TMath::Max( ymax, float(TMath::Max( sigOv->GetMaximum(), bgdOv->GetMaximum() )*maxMult ));
             frame->GetYaxis()->SetLimits( 0, ymax );
       
             // for better visibility, plot thinner lines

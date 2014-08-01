@@ -1,6 +1,10 @@
 #include "tmvaglob.C"
+#include "TH2F.h"
+#include "TFile.h"
+#include "TIterator.h"
+#include "TKey.h"
 
-void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
+void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir=0)
 {
    // input:   - Input file (result from TMVA),
    //          - type = 1 --> plot efficiency(B) versus eff(S)
@@ -70,7 +74,7 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
    TIter xnext(&xmethods);
    // loop over all methods
    TKey *xkey;
-   while (xkey = (TKey*)xnext()) {
+   while ((xkey = (TKey*)xnext())) {
       TDirectory * mDir = (TDirectory*)xkey->ReadObj();
       TList titles;
       UInt_t ninst = TMVAGlob::GetListOfTitles(mDir,titles);
@@ -82,8 +86,9 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
          TString methodTitle;
          TMVAGlob::GetMethodTitle(methodTitle,titDir);
          TIter nextKey( titDir->GetListOfKeys() );
-         while ((hkey = TMVAGlob::NextKey(nextKey,"TH1"))) {
-            TH1 *h = (TH1*)hkey->ReadObj();
+         TKey *hkey2;
+         while ((hkey2 = TMVAGlob::NextKey(nextKey,"TH1"))) {
+            TH1 *h = (TH1*)hkey2->ReadObj();
             TString hname = h->GetName();
             if (hname.Contains( hNameRef ) && hname.BeginsWith( "MVA_" )) {
                if (type==3 && h->GetMaximum() > y2) y2 = h->GetMaximum();
@@ -113,7 +118,7 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
    TIter next(&methods);
 
    // loop over all methods
-   while (key = (TKey*)next()) {
+   while ((key = (TKey*)next())) {
       TDirectory * mDir = (TDirectory*)key->ReadObj();
       TList titles;
       UInt_t ninst = TMVAGlob::GetListOfTitles(mDir,titles);
@@ -125,8 +130,9 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir)
          TString methodTitle;
          TMVAGlob::GetMethodTitle(methodTitle,titDir);
          TIter nextKey( titDir->GetListOfKeys() );
-         while ((hkey = TMVAGlob::NextKey(nextKey,"TH1"))) {
-            TH1 *h = (TH1*)hkey->ReadObj();
+         TKey *hkey2;
+         while ((hkey2 = TMVAGlob::NextKey(nextKey,"TH1"))) {
+            TH1 *h = (TH1*)hkey2->ReadObj();
             TString hname = h->GetName();
             if (hname.Contains( hNameRef ) && hname.BeginsWith( "MVA_" )) {
                h->SetLineWidth(3);

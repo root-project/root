@@ -25,7 +25,7 @@ void Boost(){
    TMVA::Tools::Instance();
 
    // to get access to the GUI and all tmva macros
-   TString tmva_dir(TString(gRootDir) + "/tmva");
+   TString tmva_dir = gSystem->DirName(gSystem->DirName(gInterpreter->GetCurrentMacroName()));
    if(gSystem->Getenv("TMVASYS"))
       tmva_dir = TString(gSystem->Getenv("TMVASYS"));
    gROOT->SetMacroPath(tmva_dir + "/test/:" + gROOT->GetMacroPath() );
@@ -45,7 +45,8 @@ void Boost(){
       input = TFile::Open( fname );
    }
    else {
-      gROOT->LoadMacro( "./createData.C");
+      TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+      gROOT->LoadMacro( dir + "/createData.C");
       create_circ(20000);
       cout << " created data.root with data and circle arranged in half circles"<<endl;
       input = TFile::Open( fname );
