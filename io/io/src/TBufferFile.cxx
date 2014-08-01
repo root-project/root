@@ -79,7 +79,7 @@ static inline bool Class_Has_StreamerInfo(const TClass* cl)
    // NOTE: we do not need a R__LOCKGUARD2 since we know the
    //   mutex is available since the TClass constructor will make
    //   it
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    return cl->GetStreamerInfos()->GetLast()>1;
 }
 
@@ -3622,7 +3622,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    const TObjArray* infos;
    Int_t ninfos;
    {
-      R__LOCKGUARD(gCINTMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       infos = cl->GetStreamerInfos();
       ninfos = infos->GetSize();
    }
@@ -3653,7 +3653,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    else {
       // The StreamerInfo should exist at this point.
 
-      R__LOCKGUARD(gCINTMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       sinfo = (TStreamerInfo*)infos->At(version);
       if (sinfo == 0) {
          // Unless the data is coming via a socket connection from with schema evolution
@@ -3757,7 +3757,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
                return 0;
             }
             sinfo = (TStreamerInfo*) infos->UncheckedAt(version);
-            // const_cast okay because of the lock on gCINTMutex.
+            // const_cast okay because of the lock on gInterpreterMutex.
             const_cast<TClass*>(cl)->SetLastReadInfo(sinfo);
          }
       }
@@ -3769,7 +3769,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
          // We could also get here if there old class version was '1' and the new class version is higher than 1
          // AND the checksum is the same.
          if (v2file || version == cl->GetClassVersion() || version == 1 ) {
-            R__LOCKGUARD(gCINTMutex);
+            R__LOCKGUARD(gInterpreterMutex);
             TObjArray *infos = cl->GetStreamerInfos();
 
             const_cast<TClass*>(cl)->BuildRealData(pointer);
@@ -3797,7 +3797,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
       { 
          // Streamer info has not been compiled, but exists.
          // Therefore it was read in from a file and we have to do schema evolution?
-         R__LOCKGUARD(gCINTMutex);
+         R__LOCKGUARD(gInterpreterMutex);
          const_cast<TClass*>(cl)->BuildRealData(pointer);
          sinfo->BuildOld();
       }
@@ -3828,7 +3828,7 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
    TStreamerInfo *sinfo = (TStreamerInfo*)const_cast<TClass*>(cl)->GetCurrentStreamerInfo();
    if (sinfo == 0) {
       //Have to be sure between the check and the taking of the lock if the current streamer has changed
-      R__LOCKGUARD(gCINTMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       sinfo = (TStreamerInfo*)const_cast<TClass*>(cl)->GetCurrentStreamerInfo();
       if(sinfo == 0) {
          const_cast<TClass*>(cl)->BuildRealData(pointer);
@@ -3839,7 +3839,7 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
          sinfo->Build();
       }
    } else if (!sinfo->IsCompiled()) {
-      R__LOCKGUARD(gCINTMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       // Redo the test in case we have been victim of a data race on fBits.
       if (!sinfo->IsCompiled()) {
          const_cast<TClass*>(cl)->BuildRealData(pointer);

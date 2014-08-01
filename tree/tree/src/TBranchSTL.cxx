@@ -17,7 +17,7 @@
 #include "TBasket.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
-#include "TInterpreter.h"  // For gCINTMutex
+#include "TInterpreter.h"  // For gInterpreterMutex
 #include "TVirtualMutex.h"
 #include <string>
 #include <utility>
@@ -564,8 +564,8 @@ TStreamerInfo* TBranchSTL::GetInfo() const
       //------------------------------------------------------------------------
       if( fClCheckSum && !cl->IsVersioned() ) {
          // NOTE: We do not need a R__LOCKGUARD2 since the TClass constructor
-         //  is guaranteed to set the gCINTMutex if it is not already available.
-         R__LOCKGUARD(gCINTMutex);
+         //  is guaranteed to set the gInterpreterMutex if it is not already available.
+         R__LOCKGUARD(gInterpreterMutex);
          //---------------------------------------------------------------------
          // Loop over the infos
          //---------------------------------------------------------------------

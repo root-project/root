@@ -12,7 +12,7 @@
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
 #include "TVirtualMutex.h"
-#include "TInterpreter.h" // For gCINTMutex
+#include "TInterpreter.h" // For gInterpreterMutex
 #include "TStreamerElement.h"
 #include "TClassEdit.h"
 
@@ -107,7 +107,7 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    // nothing to check against
    bool streamerInfosTest;
    {
-     R__LOCKGUARD2(gCINTMutex);
+     R__LOCKGUARD2(gInterpreterMutex);
      streamerInfosTest = (fClass->GetStreamerInfos()==0 || fClass->GetStreamerInfos()->GetEntries()==0);
    }
    if( rule->GetTarget()  && !(fClass->TestBit(TClass::kIsEmulation) && streamerInfosTest) ) {

@@ -478,7 +478,7 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
    // of the plugin.
 
    //The destructor of TObjArray takes the gROOTMutex lock so we want to
-   // delete the object after release the gCINTMutex lock
+   // delete the object after release the gInterpreterMutex lock
    TObjArray *dirs = nullptr;
    {
       R__LOCKGUARD2(gInterpreterMutex);

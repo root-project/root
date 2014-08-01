@@ -1955,7 +1955,7 @@ void TBranchElement::InitInfo()
          // FIXME: Check that the found streamer info checksum matches our branch class checksum here.
          // Check to see if the class code was unloaded/reloaded
          // since we were created.
-         R__LOCKGUARD(gCINTMutex);
+         R__LOCKGUARD(gInterpreterMutex);
          if (fCheckSum && (cl->IsForeign() || (!cl->IsLoaded() && (fClassVersion == 1) && cl->GetStreamerInfos()->At(1) && (fCheckSum != ((TVirtualStreamerInfo*) cl->GetStreamerInfos()->At(1))->GetCheckSum())))) {
             // Try to compensate for a class that got unloaded on us.
             // Search through the streamer infos by checksum

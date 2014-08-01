@@ -1746,7 +1746,7 @@ Bool_t TClass::AddRule( const char *rule )
       return kFALSE;
    }
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    TClass *cl = TClass::GetClass( ruleobj->GetTargetClass() );
    if (!cl) {
@@ -4157,7 +4157,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
          // Streamer info has not been compiled, but exists.
          // Therefore it was read in from a file and we have to do schema evolution?
          // Or it didn't have a dictionary before, but does now?
-         R__LOCKGUARD(gCINTMutex);
+         R__LOCKGUARD(gInterpreterMutex);
          // Re-test to make sure we did not get the 'wrong' result early because
          // of the potential data races on fBits.
          if (!guess->IsCompiled()) guess->BuildOld();

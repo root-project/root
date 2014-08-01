@@ -120,7 +120,7 @@ TStreamerBasicType *TVirtualStreamerInfo::GetElementCounter(const char *countNam
 =======
    TVirtualStreamerInfo *info;
    {
-      R__LOCKGUARD(gCINTMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       TObjArray *sinfos = cl->GetStreamerInfos();
       info = (TVirtualStreamerInfo *)sinfos->At(cl->GetClassVersion());
    }
