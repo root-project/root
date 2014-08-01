@@ -110,10 +110,13 @@ unsigned R__bi_reverse OF((unsigned value, int length));
 void     R__bi_windup  OF((void));
 void     R__copy_block OF((char far *buf, unsigned len, int header));
 int      R__seekable   OF((void));
-#ifdef _MSC_VER  
-extern __declspec( thread )  int (*R__read_buf) OF((char *buf, unsigned size));
+/* On some platform (MacOS) marking this thread local does not work,
+ however in our use this is a constant, so we do not really need to make it
+ thread local */
+#ifdef _MSC_VER
+extern /* __declspec( thread ) */ int (*R__read_buf) OF((char *buf, unsigned size));
 #else
-extern   __thread int (*R__read_buf) OF((char *buf, unsigned size));
+extern /* __thread */ int (*R__read_buf) OF((char *buf, unsigned size));
 #endif
 ulg      R__memcompress OF((char *tgt, ulg tgtsize, char *src, ulg srcsize));
 void     R__error      OF((char *h));
