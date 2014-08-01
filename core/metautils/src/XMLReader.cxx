@@ -56,6 +56,8 @@ void XMLReader::PopulateMap(){
    XMLReader::fgMapTagNames["/ioread"] = kEndIoread;
    XMLReader::fgMapTagNames["read"] = kBeginIoread;
    XMLReader::fgMapTagNames["/read"] = kEndIoread;
+   XMLReader::fgMapTagNames["readraw"] = kBeginIoreadRaw;
+   XMLReader::fgMapTagNames["/readraw"] = kEndIoreadRaw;
 }
 
 /*
@@ -537,6 +539,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                break;
             }
             case kBeginIoread:
+            case kBeginIoreadRaw:
             {
                inIoread = true;
                // Try to see if we have CDATA to be put into the attributes
@@ -584,6 +587,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                break;
             }
             case kEndIoread:
+            case kEndIoreadRaw:
             {
                if (!inIoread){
                   ROOT::TMetaUtils::Error(0,"Single </ioread> at line %s",lineNumCharp);
@@ -785,7 +789,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
 
 
          // Take care of ioread rules
-         if (tagKind == kBeginIoread){
+         if (tagKind == kBeginIoread || tagKind == kBeginIoreadRaw){
             // A first sanity check
             if (attr.empty()){
                ROOT::TMetaUtils::Error(0,"At line %s. ioread element has no attributes.\n",lineNumCharp);
@@ -804,37 +808,40 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             for (int i = 0, n = attr.size(); i < n; ++i) {
                pragmaArgs[attr[i].fName]=attr[i].fValue;
             }
-            
+
             std::stringstream pragmaLineStream;
-            const std::string attrs[10] ={"sourceClass",
+            const std::string attrs[11] ={"sourceClass",
                                           "version",
                                           "targetClass",
                                           "target",
+                                          "targetType",
                                           "source",
                                           "code",
                                           "checksum",
                                           "embed",
                                           "include",
                                           "attributes"};
-            std::string attr,value;
-            for (unsigned int i=0;i<10;++i) {
-               attr = attrs[i];               
-               if ( pragmaArgs.count(attr) == 1){ 
-                  value= pragmaArgs[attr];
+            std::string value;
+            for (unsigned int i=0;i<11;++i) {
+               const std::string& attr = attrs[i];
+               if ( pragmaArgs.count(attr) == 1){
+                  value = pragmaArgs[attr];
                   if (attr == "code")  value= "{"+value+"}";
                   pragmaLineStream << " " << attr << "=\""<< value << "\"";
                   }
                }
-                             
+
             // Now send them to the pragma processor. The info will be put
             // in a global then read by the TMetaUtils
             ROOT::TMetaUtils::Info(0,"Pragma generated for ioread rule: %s\n", pragmaLineStream.str().c_str());
-            ROOT::ProcessReadPragma( pragmaLineStream.str().c_str() );
-
+            if (tagKind == kBeginIoread)
+              ROOT::ProcessReadPragma( pragmaLineStream.str().c_str() );
+            else // this is a raw rule
+              ROOT::ProcessReadRawPragma( pragmaLineStream.str().c_str() );
             continue; // no need to go further
-         } // end of ioread rules         
-         
-         
+         } // end of ioread rules
+
+
          // We do not want to propagate in the meta the values in the
          // version tag
          if (!tagStr.empty() && tagKind != kVersion) {

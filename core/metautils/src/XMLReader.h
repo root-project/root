@@ -62,7 +62,6 @@ private:
       kEndField,
       kProperties,
       kVersion,
-      
       kStartIgnore,
       kLcgdict,
       kSelection,
@@ -74,7 +73,8 @@ private:
       kEndLcgdict,
       kBeginIoread,
       kEndIoread,
-      
+      kBeginIoreadRaw,
+      kEndIoreadRaw,
       kInvalid,
       kNumTagNames
    };
