@@ -3770,7 +3770,6 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
          // AND the checksum is the same.
          if (v2file || version == cl->GetClassVersion() || version == 1 ) {
             R__LOCKGUARD(gInterpreterMutex);
-            TObjArray *infos = cl->GetStreamerInfos();
 
             const_cast<TClass*>(cl)->BuildRealData(pointer);
             sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
