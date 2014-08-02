@@ -114,17 +114,12 @@ TStreamerBasicType *TVirtualStreamerInfo::GetElementCounter(const char *countNam
    // Get pointer to a TStreamerBasicType in TClass *cl
    //static function
 
-<<<<<<< HEAD
-   const TObjArray *sinfos = cl->GetStreamerInfos();
-   TVirtualStreamerInfo *info = (TVirtualStreamerInfo *)sinfos->At(cl->GetClassVersion());
-=======
    TVirtualStreamerInfo *info;
    {
       R__LOCKGUARD(gInterpreterMutex);
-      TObjArray *sinfos = cl->GetStreamerInfos();
+      const TObjArray *sinfos = cl->GetStreamerInfos();
       info = (TVirtualStreamerInfo *)sinfos->At(cl->GetClassVersion());
    }
->>>>>>> 55252ea... Protected threaded access to TClass::GetStreamerInfos()
 
    if (!info || !info->IsBuilt()) {
       // Even if the streamerInfo exist, it could still need to be 'build'
