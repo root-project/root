@@ -652,7 +652,7 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
             // Either the data type name doesn't have an EDataType entry
             // or the streamer info doesn't have a TClass* attached.
             TStreamerElement* element =
-               (TStreamerElement*) brElement->GetInfo()->GetElems()[brID];
+               (TStreamerElement*) brElement->GetInfo()->GetElement(brID);
             contentTypeName = element->GetTypeName();
             return 0;
          }

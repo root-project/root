@@ -228,7 +228,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                TClass *elementClass = 0;
 
                TObjArray *myObjArray = myBranchElement->GetInfo()->GetElements();
-               Int_t     *myOffsets  = myBranchElement->GetInfo()->GetOffsets();
+               TVirtualStreamerInfo *myInfo = myBranchElement->GetInfo();
 
                while (nameStack.size() && found){
                   found = false;
@@ -238,16 +238,16 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                      TStreamerElement *tempStreamerElement = (TStreamerElement*)myObjArray->At(i);
 
                      if (!strcmp(tempStreamerElement->GetName(), traversingBranch.Data())){
-                        offset += myOffsets[i];
+                        offset += myInfo->GetElementOffset(i);
 
                         traversingBranch = nameStack.back();
                         nameStack.pop_back();
 
                         elementClass = tempStreamerElement->GetClass();
-                        if (elementClass){
-                           TVirtualStreamerInfo *tempStreamerInfo = elementClass->GetStreamerInfo(0);
-                           myObjArray = tempStreamerInfo->GetElements();
-                           myOffsets = tempStreamerInfo->GetOffsets();
+                        if (elementClass) {
+                           myInfo = elementClass->GetStreamerInfo(0);
+                           myObjArray = myInfo->GetElements();
+                           // FIXME: this is odd, why is 'i' not also reset????
                         }
                         else {
                            finalDataType = TDataType::GetDataType((EDataType)tempStreamerElement->GetType());
