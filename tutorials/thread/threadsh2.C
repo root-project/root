@@ -137,6 +137,8 @@ void tryclosing(Int_t id)
    else if (id == 2) ((TRootCanvas *)c2->GetCanvasImp())->CloseWindow();
 }
 
+#include "TClass.h"
+
 void threadsh2()
 {
 #ifdef __CINT__
@@ -144,6 +146,9 @@ void threadsh2()
    return;
 #endif
 
+   if (gROOT->IsBatch()) {
+      return;
+   }
    c1 = new TCanvas("c1","Dynamic Filling Example", 100, 30, 400, 300);
    c1->SetFillColor(42);
    c1->GetFrame()->SetFillColor(21);
@@ -151,17 +156,22 @@ void threadsh2()
    c1->GetFrame()->SetBorderMode(-1);
    // connect to the CloseWindow() signal and prevent to close the canvas 
    // while the thread is running
-   ((TRootCanvas *)c1->GetCanvasImp())->Connect("CloseWindow()", 0, 0, 
-                                                "tryclosing(Int_t=1)");
-   ((TRootCanvas *)c1->GetCanvasImp())->DontCallClose();
+   TRootCanvas *rc = dynamic_cast<TRootCanvas*>(c1->GetCanvasImp());
+   if (!rc) return;
+
+   rc->Connect("CloseWindow()", 0, 0,
+               "tryclosing(Int_t=1)");
+   rc->DontCallClose();
 
    c2 = new TCanvas("c2","Dynamic Filling Example", 515, 30, 400, 300);
    c2->SetGrid();
    // connect to the CloseWindow() signal and prevent to close the canvas 
    // while the thread is running
-   ((TRootCanvas *)c2->GetCanvasImp())->Connect("CloseWindow()", 0, 0, 
-                                                "tryclosing(Int_t=2)");
-   ((TRootCanvas *)c2->GetCanvasImp())->DontCallClose();
+   rc = dynamic_cast<TRootCanvas*>(c2->GetCanvasImp());
+   if (!rc) return;
+   rc->Connect("CloseWindow()", 0, 0,
+               "tryclosing(Int_t=2)");
+   rc->DontCallClose();
 
    finished = kFALSE;
    //gDebug = 1;
