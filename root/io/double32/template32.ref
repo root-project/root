@@ -10,7 +10,7 @@ StreamerInfo for class: WithDouble, checksum=0xf3af1b21
 StreamerInfo for class: MyVector<double>, checksum=0x4ffe5ea
   double         d32             offset= [deleted from log] type= 8                     
   double         regdouble       offset= [deleted from log] type= 8                     
-   i= 0, d32             type= 28, offset= [deleted from log], len=2, method= [deleted from log]
+   i= 0, d32             type= 28, offset= [deleted from log], len=2, method= [deleted from log] [optimized]
 
 StreamerInfo for class: MyVector<Double32_t>, checksum=0xdd163122
   Double32_t     d32             offset= [deleted from log] type= 9                     
@@ -57,9 +57,9 @@ StreamerInfo for class: m02<Double32_t>, checksum=0x8610c861
    i= 0, map2<Double32_t,Double32_t,alloc<pair<Double32_t,Double32_t> > > type=  0, offset= [deleted from log], len=1, method= [deleted from log]
    i= 1, fN              type=  6, offset= [deleted from log], len=1, method= [deleted from log]
    i= 2, ff1             type=300, offset= [deleted from log], len=1, method= [deleted from log]
-   i= 3, ff2             type= 29, offset= [deleted from log], len=4, method= [deleted from log]
+   i= 3, ff2             type= 29, offset= [deleted from log], len=4, method= [deleted from log] [optimized]
    i= 4, ff4             type= 49, offset= [deleted from log], len=1, method= [deleted from log]
-   i= 5, fv1             type= 29, offset= [deleted from log], len=6, method= [deleted from log]
+   i= 5, fv1             type= 29, offset= [deleted from log], len=6, method= [deleted from log] [optimized]
    i= 6, fv4             type= 49, offset= [deleted from log], len=1, method= [deleted from log]
    i= 7, fv5             type=  9, offset= [deleted from log], len=1, method= [deleted from log]
    i= 8, fv6             type= 49, offset= [deleted from log], len=1, method= [deleted from log]
