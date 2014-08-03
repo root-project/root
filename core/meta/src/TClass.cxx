@@ -3568,6 +3568,9 @@ void TClass::GetMissingDictionariesForMembers(TCollection& result, TCollection& 
       if(!dm->IsPersistent()) {
         continue;
       }
+      if (dm->Property() & kIsStatic) {
+         continue;
+      }
       // If it is a built-in data type.
       TClass* dmTClass = 0;
       if (dm->GetDataType()) {
