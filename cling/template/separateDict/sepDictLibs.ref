@@ -6,7 +6,7 @@ SIZE: 16 FILE: MyClass.hh LINE: 10
 Base classes: --------------------------------------------------------
 0x0        public TObject
 List of member variables --------------------------------------------------
-MyClass.hh       20 0x0      private: static class TClass *fgIsA
+MyClass.hh       20 0x0      private: static atomic_TClass_ptr fgIsA
 List of member functions :---------------------------------------------------
 filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: MyClass();
@@ -30,7 +30,7 @@ SIZE: 16 FILE: MyClass.hh LINE: 10
 Base classes: --------------------------------------------------------
 0x0        public TObject
 List of member variables --------------------------------------------------
-MyClass.hh       20 0x0      private: static class TClass *fgIsA
+MyClass.hh       20 0x0      private: static atomic_TClass_ptr fgIsA
 List of member functions :---------------------------------------------------
 filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: MyClass();
@@ -54,7 +54,7 @@ SIZE: 16 FILE: MyClass.hh LINE: 10
 Base classes: --------------------------------------------------------
 0x0        public TObject
 List of member variables --------------------------------------------------
-MyClass.hh       20 0x0      private: static class TClass *fgIsA
+MyClass.hh       20 0x0      private: static atomic_TClass_ptr fgIsA
 List of member functions :---------------------------------------------------
 filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: MyClass();
