@@ -44,7 +44,7 @@ private:
    TRealData& operator=(const TRealData& rhs);  // Copying TRealData in not allowed.
 
 public:
-   enum { 
+   enum {
       kTransient = BIT(14)  // The member is transient.
    };
 

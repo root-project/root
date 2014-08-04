@@ -53,7 +53,7 @@ TSystemDirectory::TSystemDirectory(const TSystemDirectory& sd) :
   TSystemFile(sd),
   fDirsInBrowser(sd.fDirsInBrowser),
   fFilesInBrowser(sd.fFilesInBrowser)
-{ 
+{
    //copy constructor
 }
 
@@ -65,7 +65,7 @@ TSystemDirectory& TSystemDirectory::operator=(const TSystemDirectory& sd)
       TSystemFile::operator=(sd);
       fDirsInBrowser=sd.fDirsInBrowser;
       fFilesInBrowser=sd.fFilesInBrowser;
-   } 
+   }
    return *this;
 }
 

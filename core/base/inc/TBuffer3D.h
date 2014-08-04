@@ -1,4 +1,4 @@
-// @(#)root/base:$Id: TBuffer3D.h,v 1.00 
+// @(#)root/base:$Id: TBuffer3D.h,v 1.00
 // Author: Olivier Couet   05/05/04
 
 /*************************************************************************
@@ -28,18 +28,18 @@ class TBuffer3D : public TObject
 {
 private:
    const Int_t fType;        // Primitive type - predefined ones in TBuffer3DTypes.h
-                                
+
    UInt_t    fNbPnts;        // Number of points describing the shape
    UInt_t    fNbSegs;        // Number of segments describing the shape
    UInt_t    fNbPols;        // Number of polygons describing the shape
-   
+
    UInt_t    fPntsCapacity;  // Current capacity of fPnts space
    UInt_t    fSegsCapacity;  // Current capacity of fSegs space
    UInt_t    fPolsCapacity;  // Current capacity of fSegs space
-      
+
    UInt_t    fSections;      // Section validity flags
 
-   void Init();   
+   void Init();
 
    // Non-copyable class
    TBuffer3D(const TBuffer3D &);
@@ -61,15 +61,15 @@ public:
                    kCore            = BIT(1),
                    kBoundingBox     = BIT(2),
                    kShapeSpecific   = BIT(3),
-                   kRawSizes        = BIT(4), 
+                   kRawSizes        = BIT(4),
                    kRaw             = BIT(5),
-                   kAll             = kCore|kBoundingBox|kShapeSpecific|kRawSizes|kRaw 
+                   kAll             = kCore|kBoundingBox|kShapeSpecific|kRawSizes|kRaw
    };
-   
-   TBuffer3D(Int_t type, 
+
+   TBuffer3D(Int_t type,
              UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
-             UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
-             UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0); 
+             UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0,
+             UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
    virtual  ~TBuffer3D();
 
    // Section validity flags
@@ -77,20 +77,20 @@ public:
    void   ClearSectionsValid();
    Bool_t SectionsValid(UInt_t mask) const   { return (Bool_t) (GetSections(mask) == mask); }
    UInt_t GetSections(UInt_t mask)   const   { return (UInt_t) (fSections & mask); }
-      
+
    // Convenience functions
    void   SetLocalMasterIdentity();                  // Set fLocalMaster in kCore to identity
    void   SetAABoundingBox(const Double_t origin[3], // Set fBBVertex in kBoundingBox to axis aligned BB
-                           const Double_t halfLengths[3]); 
+                           const Double_t halfLengths[3]);
 
    // SECTION: kRawSize get/set
    Bool_t SetRawSizes(UInt_t reqPnts, UInt_t reqPntsCapacity,
-                      UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                      UInt_t reqSegs, UInt_t reqSegsCapacity,
                       UInt_t reqPols, UInt_t reqPolsCapacity);
-   
-   UInt_t NbPnts() const { return fNbPnts; }   
-   UInt_t NbSegs() const { return fNbSegs; }      
-   UInt_t NbPols() const { return fNbPols; }  
+
+   UInt_t NbPnts() const { return fNbPnts; }
+   UInt_t NbSegs() const { return fNbSegs; }
+   UInt_t NbPols() const { return fNbPols; }
 
    // SECTION: kCore
    Int_t  Type() const { return fType; }
@@ -113,15 +113,15 @@ public:
    // 3-------2 |
    // | 4-----|-5
    // |/      |/
-   // 0-------1 
+   // 0-------1
    //
-   Double_t    fBBVertex[8][3];  // 8 verticies defining bounding box. 
+   Double_t    fBBVertex[8][3];  // 8 verticies defining bounding box.
 
    // SECTION: kShapeSpecific - none for base class
 
    // SECTION: kRaw
    Double_t *fPnts;              // x0, y0, z0, x1, y1, z1, ..... ..... ....
-   Int_t    *fSegs;              // c0, p0, q0, c1, p1, q1, ..... ..... ....  
+   Int_t    *fSegs;              // c0, p0, q0, c1, p1, q1, ..... ..... ....
    Int_t    *fPols;              // c0, n0, s0, s1, ... sn, c1, n1, s0, ... sn
 
 
@@ -146,17 +146,17 @@ private:
    // Non-copyable class
    TBuffer3DSphere(const TBuffer3DSphere &);
    const TBuffer3DSphere & operator=(const TBuffer3DSphere &);
-   
+
 public:
    TBuffer3DSphere(UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
-                   UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
+                   UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0,
                    UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
 
    Bool_t IsSolidUncut() const;
 
    // SECTION: kShapeSpecific
-   Double_t fRadiusInner;  
-   Double_t fRadiusOuter;  
+   Double_t fRadiusInner;
+   Double_t fRadiusOuter;
    Double_t fThetaMin;     // Lower theta limit (orientation?)
    Double_t fThetaMax;     // Higher theta limit (orientation?)
    Double_t fPhiMin;       // Lower phi limit (orientation?)
@@ -167,7 +167,7 @@ public:
 //                                                                      //
 // TBuffer3DTube                                                        //
 //                                                                      //
-// Complete tube description class - see TBuffer3DTypes for producer    // 
+// Complete tube description class - see TBuffer3DTypes for producer    //
 // classes                                                              //
 //////////////////////////////////////////////////////////////////////////
 
@@ -181,18 +181,18 @@ private:
 protected:
    TBuffer3DTube(Int_t type,
                  UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
-                 UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
+                 UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0,
                  UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
 
 public:
    TBuffer3DTube(UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
-                 UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
+                 UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0,
                  UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
 
    // SECTION: kShapeSpecific
    Double_t fRadiusInner;  // Inner radius
    Double_t fRadiusOuter;  // Outer radius
-   Double_t fHalfLength;   // Half length (dz)           
+   Double_t fHalfLength;   // Half length (dz)
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -213,12 +213,12 @@ private:
 protected:
    TBuffer3DTubeSeg(Int_t type,
                     UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
-                    UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
+                    UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0,
                     UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
 
 public:
    TBuffer3DTubeSeg(UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
-                    UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
+                    UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0,
                     UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
 
    // SECTION: kShapeSpecific
@@ -243,12 +243,12 @@ private:
 
 public:
    TBuffer3DCutTube(UInt_t reqPnts = 0, UInt_t reqPntsCapacity = 0,
-                    UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0, 
+                    UInt_t reqSegs = 0, UInt_t reqSegsCapacity = 0,
                     UInt_t reqPols = 0, UInt_t reqPolsCapacity = 0);
 
    // SECTION: kShapeSpecific
-   Double_t fLowPlaneNorm[3];  // Normal to lower cut plane 
-   Double_t fHighPlaneNorm[3]; // Normal to highet cut plane 
+   Double_t fLowPlaneNorm[3];  // Normal to lower cut plane
+   Double_t fHighPlaneNorm[3]; // Normal to highet cut plane
 };
 
 #endif

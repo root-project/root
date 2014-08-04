@@ -62,14 +62,14 @@ public:
                                    llvm::StringRef /*RelativePath*/,
                                    const clang::Module */*Imported*/);
 
-   // Preprocessor callbacks used to handle special cases like for example: 
+   // Preprocessor callbacks used to handle special cases like for example:
    // #include "myMacro.C+"
    //
-   virtual bool FileNotFound(llvm::StringRef FileName, 
+   virtual bool FileNotFound(llvm::StringRef FileName,
                              llvm::SmallVectorImpl<char>& RecoveryPath);
 
    virtual bool LookupObject(clang::LookupResult &R, clang::Scope *S);
-   virtual bool LookupObject(const clang::DeclContext* DC, 
+   virtual bool LookupObject(const clang::DeclContext* DC,
                              clang::DeclarationName Name);
    virtual bool LookupObject(clang::TagDecl* Tag);
 
@@ -91,7 +91,7 @@ public:
                                 llvm::StringRef canonicalName);
 
 private:
-   bool tryAutoloadInternal(llvm::StringRef Name, clang::LookupResult &R, 
+   bool tryAutoloadInternal(llvm::StringRef Name, clang::LookupResult &R,
                             clang::Scope *S, bool noLookup=false);
    bool tryFindROOTSpecialInternal(clang::LookupResult &R, clang::Scope *S);
    bool tryResolveAtRuntimeInternal(clang::LookupResult &R, clang::Scope *S);

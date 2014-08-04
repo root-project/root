@@ -39,7 +39,7 @@ using namespace cling;
 class TObject;
 class TCling;
 
-// Functions used to forward calls from code compiled with no-rtti to code 
+// Functions used to forward calls from code compiled with no-rtti to code
 // compiled with rtti.
 extern "C" {
    void TCling__UpdateListsOnCommitted(const cling::Transaction&, Interpreter*);
@@ -60,7 +60,7 @@ extern "C" {
                                     llvm::StringRef canonicalName);
 }
 
-TClingCallbacks::TClingCallbacks(cling::Interpreter* interp) 
+TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
    : InterpreterCallbacks(interp, /*enableExternalSemaSourceCallbacks*/true,
                           /*enableDeserializationListenerCallbacks*/true,
                           /*enablePPCallbacks*/true),
@@ -156,9 +156,9 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
          // Thus if we reverted the token back to the parser, we are in
          // a trouble.
          Tok.setKind(tok::semi);
-         // We can't PushDeclContext, because we go up and the routine that pops 
+         // We can't PushDeclContext, because we go up and the routine that pops
          // the DeclContext assumes that we drill down always.
-         // We have to be on the global context. At that point we are in a 
+         // We have to be on the global context. At that point we are in a
          // wrapper function so the parent context must be the global.
          // This is needed to solve potential issues when using #include "myFile.C+"
          // after a scope declaration like:
@@ -169,7 +169,7 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
          // #include "A.C+"
          Sema& SemaR = m_Interpreter->getSema();
          ASTContext& C = SemaR.getASTContext();
-         Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
+         Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
                                                 SemaR.TUScope);
          int retcode = TCling__CompileMacro(fname.c_str(), options.c_str());
          if (retcode) {
@@ -194,8 +194,8 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
 
 // On a failed lookup we have to try to more things before issuing an error.
 // The symbol might need to be loaded by ROOT's autoloading mechanism or
-// it might be a ROOT special object. 
-// 
+// it might be a ROOT special object.
+//
 // Try those first and if still failing issue the diagnostics.
 //
 // returns true when a declaration is found and no error should be emitted.
@@ -204,7 +204,7 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
    // Don't do any extra work if an error that is not still recovered occurred.
    if (m_Interpreter->getSema().getDiagnostics().hasErrorOccurred())
       return false;
-   
+
    if (tryAutoloadInternal(R.getLookupName().getAsString(), R, S))
       return true; // happiness.
 
@@ -226,8 +226,8 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
    if (fIsAutoloadingRecursively)
       return false;
-   
-   // Finally try to resolve this name as a dynamic name, i.e delay its 
+
+   // Finally try to resolve this name as a dynamic name, i.e delay its
    // resolution for runtime.
    return tryResolveAtRuntimeInternal(R, S);
 }
@@ -240,10 +240,10 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(const_cast<DeclContext*>(DC));
    if (!NSD)
       return false;
-   
+
    if ( !TCling__IsAutoLoadNamespaceCandidate(NSD) )
       return false;
-   
+
    const DeclContext* primaryDC = NSD->getPrimaryContext();
    if (primaryDC != DC)
       return false;
@@ -254,7 +254,7 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    // We need the qualified name for TCling to find the right library.
    std::string qualName
       = NSD->getQualifiedNameAsString() + "::" + Name.getAsString();
-      
+
 
    // We want to avoid qualified lookups, because they are expensive and
    // difficult to construct. This is why we *artificially* push a scope and
@@ -262,12 +262,12 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    clang::Scope S(SemaR.TUScope, clang::Scope::DeclScope, SemaR.getDiagnostics());
    S.setEntity(const_cast<DeclContext*>(DC));
    Sema::ContextAndScopeRAII pushedDCAndS(SemaR, const_cast<DeclContext*>(DC), &S);
-   
+
    if (tryAutoloadInternal(qualName, R, SemaR.getCurScope())) {
       llvm::SmallVector<NamedDecl*, 4> lookupResults;
       for(LookupResult::iterator I = R.begin(), E = R.end(); I < E; ++I)
          lookupResults.push_back(*I);
-      UpdateWithNewDecls(DC, Name, llvm::makeArrayRef(lookupResults.data(), 
+      UpdateWithNewDecls(DC, Name, llvm::makeArrayRef(lookupResults.data(),
                                                       lookupResults.size()));
       return true;
    }
@@ -285,16 +285,16 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
       Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
       Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
       Parser::ParserCurTokRestoreRAII savedCurToken(P);
-      // After we have saved the token reset the current one to something which 
+      // After we have saved the token reset the current one to something which
       // is safe (semi colon usually means empty decl)
       Token& Tok = const_cast<Token&>(P.getCurToken());
       Tok.setKind(tok::semi);
 
-      // We can't PushDeclContext, because we go up and the routine that pops 
+      // We can't PushDeclContext, because we go up and the routine that pops
       // the DeclContext assumes that we drill down always.
-      // We have to be on the global context. At that point we are in a 
+      // We have to be on the global context. At that point we are in a
       // wrapper function so the parent context must be the global.
-      Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
+      Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
                                              SemaR.TUScope);
 
       // Use the Normalized name for the autoload
@@ -330,14 +330,14 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
      // Avoid tail chasing.
      if (fIsAutoloadingRecursively)
        return false;
-     
-     // We should try autoload only for special lookup failures. 
+
+     // We should try autoload only for special lookup failures.
      Sema::LookupNameKind kind = R.getLookupKind();
      if (!(kind == Sema::LookupTagName || kind == Sema::LookupOrdinaryName
            || kind == Sema::LookupNestedNameSpecifierName
            || kind == Sema::LookupNamespaceName))
         return false;
-         
+
      fIsAutoloadingRecursively = true;
 
      bool lookupSuccess = false;
@@ -353,16 +353,16 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
         Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
         Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
         Parser::ParserCurTokRestoreRAII savedCurToken(P);
-        // After we have saved the token reset the current one to something which 
+        // After we have saved the token reset the current one to something which
         // is safe (semi colon usually means empty decl)
         Token& Tok = const_cast<Token&>(P.getCurToken());
         Tok.setKind(tok::semi);
 
-        // We can't PushDeclContext, because we go up and the routine that pops 
+        // We can't PushDeclContext, because we go up and the routine that pops
         // the DeclContext assumes that we drill down always.
-        // We have to be on the global context. At that point we are in a 
+        // We have to be on the global context. At that point we are in a
         // wrapper function so the parent context must be the global.
-        Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
+        Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
                                                SemaR.TUScope);
         if (TCling__AutoLoadCallback(Name.data())) {
            pushedDCAndS.pop();
@@ -372,7 +372,7 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
      }
 
      fIsAutoloadingRecursively = false;
-   
+
      if (lookupSuccess)
        return true;
    }
@@ -390,7 +390,7 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
 // }
 //
 // Later if h is called again it again won't be found by the standart lookup
-// because it is in our hidden namespace (nobody should do using namespace 
+// because it is in our hidden namespace (nobody should do using namespace
 // __ROOT_SpecialObjects). It caches the variable declarations and their
 // last address. If the newly found decl with the same name (h) has different
 // address than the cached one it goes directly at the address and updates it.
@@ -422,7 +422,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
    // Save state of the PP, because TCling__GetObjectAddress may induce nested
    // lookup.
    Preprocessor::CleanupAndRestoreCacheRAII cleanupPPRAII(PP);
-   TObject *obj = TCling__GetObjectAddress(Name.getAsString().c_str(), 
+   TObject *obj = TCling__GetObjectAddress(Name.getAsString().c_str(),
                                            fLastLookupCtx);
    cleanupPPRAII.pop(); // force restroing the cache
 
@@ -431,7 +431,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
       // Register the address in TCling::fgSetOfSpecials
-      // to speed-up the execution of TCling::RecursiveRemove when 
+      // to speed-up the execution of TCling::RecursiveRemove when
       // the object is not a special.
       // See http://root.cern.ch/viewvc/trunk/core/meta/src/TCint.cxx?view=log#rev18109
       if (!fgSetOfSpecials) {
@@ -441,13 +441,13 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
 #endif
 #endif
 
-     VarDecl *VD = cast_or_null<VarDecl>(utils::Lookup::Named(&SemaR, Name, 
+     VarDecl *VD = cast_or_null<VarDecl>(utils::Lookup::Named(&SemaR, Name,
                                                         fROOTSpecialNamespace));
       if (VD) {
          //TODO: Check for same types.
          GlobalDecl GD(VD);
          TObject **address = (TObject**)m_Interpreter->getAddressOfGlobal(GD);
-         // Since code was generated already we cannot rely on the initializer 
+         // Since code was generated already we cannot rely on the initializer
          // of the decl in the AST, however we will update that init so that it
          // will be easier while debugging.
          CStyleCastExpr *CStyleCast = cast<CStyleCastExpr>(VD->getInit());
@@ -464,12 +464,12 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
          const Decl *TD = TCling__GetObjectDecl(obj);
          // We will declare the variable as pointer.
          QualType QT = C.getPointerType(C.getTypeDeclType(cast<TypeDecl>(TD)));
-         
-         VD = VarDecl::Create(C, fROOTSpecialNamespace, SourceLocation(), 
+
+         VD = VarDecl::Create(C, fROOTSpecialNamespace, SourceLocation(),
                               SourceLocation(), Name.getAsIdentifierInfo(), QT,
                               /*TypeSourceInfo*/0, SC_None);
          // Build an initializer
-         Expr* Init 
+         Expr* Init
            = utils::Synthesize::CStyleCastPtrExpr(&SemaR, QT, (uint64_t)obj);
          // Register the decl in our hidden special namespace
          VD->setInit(Init);
@@ -514,9 +514,9 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
                                      /*TypeSourceInfo*/0, SC_None);
 
    // Annotate the decl to give a hint in cling. FIXME: Current implementation
-   // is a gross hack, because TClingCallbacks shouldn't know about 
+   // is a gross hack, because TClingCallbacks shouldn't know about
    // EvaluateTSynthesizer at all!
-    
+
    SourceRange invalidRange;
    Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__ResolveAtRuntime", 0));
    if (Result) {
@@ -536,10 +536,10 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
    if (m_IsRuntime)
      return false;
 
-   if (R.getLookupKind() != Sema::LookupOrdinaryName) 
+   if (R.getLookupKind() != Sema::LookupOrdinaryName)
       return false;
 
-   if (R.isForRedeclaration()) 
+   if (R.isForRedeclaration())
       return false;
 
    if (!R.empty())
@@ -567,7 +567,7 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
    //if (R.getSema().PP.LookAhead(0).getKind() == tok::less)
       // TODO: check for . or -> in the cached token stream
    //   return false;
-   
+
    for (Scope* DepScope = S; DepScope; DepScope = DepScope->getParent()) {
       if (DeclContext* Ctx = static_cast<DeclContext*>(DepScope->getEntity())) {
          if (!Ctx->isDependentContext())
@@ -588,10 +588,10 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    if (m_IsRuntime)
       return false;
 
-   if (R.isForRedeclaration()) 
+   if (R.isForRedeclaration())
       return false;
 
-   if (R.getLookupKind() != Sema::LookupOrdinaryName) 
+   if (R.getLookupKind() != Sema::LookupOrdinaryName)
       return false;
 
    if (!isa<FunctionDecl>(R.getSema().CurContext))
@@ -615,7 +615,7 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    DeclarationName Name = R.getLookupName();
    IdentifierInfo* II = Name.getAsIdentifierInfo();
    SourceLocation Loc = R.getNameLoc();
-   VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II, 
+   VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II,
                                      C.getAutoType(QualType(),
                                                    /*IsDecltypeAuto*/false,
                                                    /*IsDependent*/false),
@@ -623,7 +623,7 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
 
    if (Result) {
       // Annotate the decl to give a hint in cling.
-      // FIXME: We should move this in cling, when we implement turning it on 
+      // FIXME: We should move this in cling, when we implement turning it on
       // and off.
       SourceRange invalidRange;
       Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__Auto", 0));

@@ -29,7 +29,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TRootIOCtor 
+class TRootIOCtor
 {
    // For now intentionally empty.
 };

@@ -219,7 +219,7 @@ TPySelector::~TPySelector()
 //- public functions ---------------------------------------------------------
 Int_t TPySelector::Version() const {
 // Return version number of this selector. First forward; if not overridden, then
-// yield an obvious "undefined" number, 
+// yield an obvious "undefined" number,
    PyObject* result = const_cast< TPySelector* >( this )->CallSelf( "Version" );
    if ( result && result != Py_None ) {
       Int_t ires = (Int_t)PyLong_AsLong( result );

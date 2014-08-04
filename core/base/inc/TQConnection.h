@@ -51,7 +51,7 @@ protected:
 
 private:
    TQConnection &operator=(const TQConnection &); // Not yet implemented.
-   
+
 public:
    TQConnection();
    TQConnection(TClass* cl, void *receiver, const char *method_name);

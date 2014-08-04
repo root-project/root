@@ -75,7 +75,7 @@ TPyReturn& TPyReturn::operator=( const TPyReturn& other )
       Py_DECREF( fPyObject );
       fPyObject = other.fPyObject;
    }
-   
+
    return *this;
 }
 
@@ -169,7 +169,7 @@ TPyReturn::operator void*() const
    if ( PyROOT::ObjectProxy_Check( fPyObject ) ) {
       ((PyROOT::ObjectProxy*)fPyObject)->Release();
       return ((PyROOT::ObjectProxy*)fPyObject)->GetObject();
-   } else 
+   } else
       return fPyObject;                 // borrows reference
 }
 

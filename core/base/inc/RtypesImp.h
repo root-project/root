@@ -45,7 +45,7 @@ inline void operator delete(void*, ROOT::TOperatorNewHelper*) { }
 // The STL GenerateInitInstance are not unique and hence are declared static
 // (not accessible outside the dictionary and not linker error for duplicate)
 #if defined(__CINT__)
-#define RootStlStreamer(name,STREAMER) 
+#define RootStlStreamer(name,STREAMER)
 #else
 #define RootStlStreamer(name,STREAMER)                               \
 namespace ROOT {                                                     \

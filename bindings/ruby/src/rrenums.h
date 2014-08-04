@@ -1,15 +1,15 @@
 // @(#)root/ruby:$Id$
 // Author:  Elias Athanasopoulos, May 2004
 
-/* 
+/*
  * ruby-root global enumeration methods
  *
  * ROOT enumerations are Ruby methods in ruby-root and
  * not constants, in order to keep the low-case 'k'.
- * 
+ *
  * --elathan  <elathan@phys.uoa.gr>
- * 
- * (c) 2003, 2004 
+ *
+ * (c) 2003, 2004
  */
 
 static VALUE

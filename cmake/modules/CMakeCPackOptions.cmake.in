@@ -1,6 +1,6 @@
 # This file is configured at cmake time, and loaded at cpack time.
 # To pass variables to cpack from cmake, they must be configured
-# in this file.  
+# in this file.
 
 if(CPACK_GENERATOR MATCHES "NSIS")
   # There is a bug in NSI that does not handle full unix paths properly. Make
@@ -20,7 +20,7 @@ if(CPACK_GENERATOR MATCHES "NSIS")
       WriteRegStr HKCR 'RootFile\\shell' '' 'open'
       WriteRegStr HKCR 'RootFile\\shell\\DefaultIcon' '' '$INSTDIR\\icons\\RootIcon.ico'
       WriteRegStr HKCR 'RootFile\\shell\\open\\command' '' \\
-                       '$INSTDIR\\bin\\root.exe -l \"%1\"  \"$INSTDIR\\macros\\fileopen.C\"' 
+                       '$INSTDIR\\bin\\root.exe -l \"%1\"  \"$INSTDIR\\macros\\fileopen.C\"'
      ")
   set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
       DeleteRegKey HKCR '.root'

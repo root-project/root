@@ -484,7 +484,7 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
       R__LOCKGUARD2(gInterpreterMutex);
       if (!fBasesLoaded) {
          fBasesLoaded = new THashTable();
-         fBasesLoaded->SetOwner();      
+         fBasesLoaded->SetOwner();
       }
       TString sbase = base;
       if (sbase != "") {
@@ -708,7 +708,7 @@ Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) con
          fprintf(f, "   gPluginMgr->AddHandler(\"%s\", \"%s\", \"%s\",\n",
                  h->fBase.Data(), h->fRegexp.Data(), h->fClass.Data());
          fprintf(f, "      \"%s\", \"%s\");\n", h->fPlugin.Data(), h->fCtor.Data());
-         
+
          // check for different regexps cases for the same base + class and
          // put them all in the same macro
          TObjLink *lnk2 = lnk->Next();
@@ -716,11 +716,11 @@ Int_t TPluginManager::WritePluginMacros(const char *dir, const char *plugin) con
             TPluginHandler *h2 = (TPluginHandler *) lnk2->GetObject();
             if (h->fBase != h2->fBase || h->fClass != h2->fClass)
                break;
-            
+
             fprintf(f, "   gPluginMgr->AddHandler(\"%s\", \"%s\", \"%s\",\n",
                     h2->fBase.Data(), h2->fRegexp.Data(), h2->fClass.Data());
             fprintf(f, "      \"%s\", \"%s\");\n", h2->fPlugin.Data(), h2->fCtor.Data());
-            
+
             lnk  = lnk2;
             lnk2 = lnk2->Next();
          }

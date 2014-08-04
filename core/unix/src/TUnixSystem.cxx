@@ -269,16 +269,16 @@ enum {
 struct TUtmpContent {
    STRUCT_UTMP *fUtmpContents;
    UInt_t       fEntries; // Number of entries in utmp file.
-   
+
    TUtmpContent() : fUtmpContents(0), fEntries(0) {}
    ~TUtmpContent() { free(fUtmpContents); }
-   
+
    STRUCT_UTMP *SearchUtmpEntry(const char *tty)
    {
       // Look for utmp entry which is connected to terminal tty.
-      
+
       STRUCT_UTMP *ue = fUtmpContents;
-      
+
       UInt_t n = fEntries;
       while (n--) {
          if (ue->ut_name[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
@@ -287,23 +287,23 @@ struct TUtmpContent {
       }
       return 0;
    }
-   
+
    int ReadUtmpFile()
    {
       // Read utmp file. Returns number of entries in utmp file.
-      
+
       FILE  *utmp;
       struct stat file_stats;
       size_t n_read, size;
-      
+
       fEntries = 0;
-      
+
       R__LOCKGUARD2(gSystemMutex);
-      
+
       utmp = fopen(UTMP_FILE, "r");
       if (!utmp)
          return 0;
-      
+
       if (fstat(fileno(utmp), &file_stats) == -1) {
          fclose(utmp);
          return 0;
@@ -313,13 +313,13 @@ struct TUtmpContent {
          fclose(utmp);
          return 0;
       }
-      
+
       fUtmpContents = (STRUCT_UTMP *) malloc(size);
       if (!fUtmpContents) {
          fclose(utmp);
          return 0;
       }
-      
+
       n_read = fread(fUtmpContents, 1, size, utmp);
       if (!ferror(utmp)) {
          if (fclose(utmp) != EOF && n_read == size) {
@@ -328,7 +328,7 @@ struct TUtmpContent {
          }
       } else
          fclose(utmp);
-      
+
       free(fUtmpContents);
       fUtmpContents = 0;
       return 0;

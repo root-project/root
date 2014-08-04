@@ -2502,7 +2502,7 @@ void ManipForRootmap(std::string& name)
       ReplaceAll(name,">>",">->");
    }
    ReplaceAll(name,"operator>->","operator>>");
-   
+
 }
 
 //______________________________________________________________________________
@@ -2766,7 +2766,7 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
          return 1;
       }
       classesList.push_back(normalizedName);
-      // Allow to autoload with the name of the class as it was specified in the 
+      // Allow to autoload with the name of the class as it was specified in the
       // selection xml or linkdef
       const char* reqName(selClass.GetRequestedName());
 
@@ -4347,7 +4347,7 @@ int RootCling(int argc,
                              headersClassesMap,
                              headersDeclsMap,
                              interp);
-      
+
       std::string detectedUmbrella;
       for (auto& arg : pcmArgs){
          if (inlineInputHeader && !IsLinkdefFile(arg.c_str()) && IsHeaderName(arg)){

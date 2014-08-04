@@ -6,7 +6,7 @@
 #  ROOT_DEFINITIONS  - compile definitions needed to use ROOT
 #  ROOT_LIBRARIES    - libraries to link against
 #  ROOT_USE_FILE     - path to a CMake module which may be included to help
-#                      setup CMake variables and useful Macros 
+#                      setup CMake variables and useful Macros
 #
 # You may supply a version number through find_package which will be checked
 # against the version of this build. Standard CMake logic is used so that

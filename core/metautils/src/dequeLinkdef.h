@@ -12,6 +12,6 @@ using namespace std;
 #pragma create TClass deque<double>;
 #pragma create TClass deque<void*>;
 #pragma create TClass deque<char*>;
-//Current not generate in cintdll 
+//Current not generate in cintdll
 //#pragma create TClass deque<string>;
 

@@ -64,9 +64,9 @@ TObject::TObject() : fBits(kNotDeleted) //Need to leave FUniqueID unset
    // (see TEnv) the object is added to the global TObjectTable for
    // bookkeeping.
 
-   if (TStorage::FilledByObjectAlloc(&fUniqueID)) 
+   if (TStorage::FilledByObjectAlloc(&fUniqueID))
       fBits |= kIsOnHeap;
-   
+
    fUniqueID = 0;
 
    if (fgObjectStat) TObjectTable::AddObj(this);

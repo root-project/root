@@ -279,7 +279,7 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
       gInterpreter->CallFunc_SetArg( func, (Long_t)para.fVoidp );
       return kTRUE;
    }
- 
+
    PyErr_SetString( PyExc_TypeError, "use ROOT.Long for pass-by-ref of ints" );
    return kFALSE;
 }
@@ -1193,7 +1193,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
 
    if ( ! result and cpd == "&&" )                 // moves
       result = new TNotImplementedConverter();
-   
+
 
    if ( ! result && h != gConvFactories.end() )
    // converter factory available, use it to create converter

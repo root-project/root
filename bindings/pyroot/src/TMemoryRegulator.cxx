@@ -139,7 +139,7 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
 
    if ( ppo != fgObjectTable->end() ) {
       fgWeakRefTable->erase( fgWeakRefTable->find( ppo->second ) );
- 
+
    // get the tracked object
       ObjectProxy* pyobj = (ObjectProxy*)PyWeakref_GetObject( ppo->second );
       if ( ! pyobj ) {

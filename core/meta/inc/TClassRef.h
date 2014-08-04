@@ -63,13 +63,13 @@ public:
          this->Assign(rhs);
       }
       return *this;
-   }      
+   }
 
    ~TClassRef() { };
 
-   void SetName(const char* new_name) { 
-      if ( fClassPtr && fClassName != new_name ) Reset(); 
-      fClassName = new_name; 
+   void SetName(const char* new_name) {
+      if ( fClassPtr && fClassName != new_name ) Reset();
+      fClassName = new_name;
    }
    const char *GetClassName() { return fClassName.c_str(); }
    TClass *GetClass()  const { return (fClassPtr && *fClassPtr) ? *fClassPtr : InternalGetClass(); }

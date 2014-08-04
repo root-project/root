@@ -52,7 +52,7 @@ class TClingTypeInfo;
 class TClingMethodInfo {
 private:
    class SpecIterator;
-   
+
    cling::Interpreter                          *fInterp; // Cling interpreter, we do *not* own.
    llvm::SmallVector<clang::DeclContext *, 2>   fContexts; // Set of DeclContext that we will iterate over.
    bool                                         fFirstTime; // Flag for first time incrementing iterator, cint semantics are weird.
@@ -63,13 +63,13 @@ private:
    const clang::FunctionDecl                   *fSingleDecl; // The single member
 
 public:
-   explicit TClingMethodInfo(cling::Interpreter *interp) 
+   explicit TClingMethodInfo(cling::Interpreter *interp)
       : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
         fTemplateSpecIter(0), fSingleDecl(0) {}
 
    TClingMethodInfo(const TClingMethodInfo&);
-   
-   // Takes concrete decl and disables the iterator. 
+
+   // Takes concrete decl and disables the iterator.
    TClingMethodInfo(cling::Interpreter *, const clang::FunctionDecl *);
    TClingMethodInfo(cling::Interpreter *, TClingClassInfo *);
 

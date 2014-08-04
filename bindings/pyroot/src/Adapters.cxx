@@ -405,7 +405,7 @@ PyROOT::TScopeAdapter::operator Bool_t() const
    gErrorIgnoreLevel = oldEIL;
    return b;
 }
-      
+
 //____________________________________________________________________________
 Bool_t PyROOT::TScopeAdapter::IsComplete() const
 {

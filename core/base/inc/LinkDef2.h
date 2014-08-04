@@ -15,7 +15,7 @@
 #pragma link C++ class string::iterator;
 #pragma link C++ class string::const_iterator;
 #else
-#include "dll_stl/str.h" 
+#include "dll_stl/str.h"
 #endif
 
 #pragma extra_include "vector";
@@ -26,10 +26,10 @@
 #pragma link C++ class std::vector<string>;
 #pragma link C++ operator std::vector<string>;
 #ifdef G__VECTOR_HAS_CLASS_ITERATOR
-#pragma link C++ class std::vector<string>::iterator; 
+#pragma link C++ class std::vector<string>::iterator;
 #pragma link C++ class std::vector<string>::const_iterator;
 #pragma link C++ class std::vector<string>::reverse_iterator;
-#pragma link C++ operator std::vector<string>::iterator; 
+#pragma link C++ operator std::vector<string>::iterator;
 #pragma link C++ operator std::vector<string>::const_iterator;
 #pragma link C++ operator std::vector<string>::reverse_iterator;
 #endif
@@ -37,10 +37,10 @@
 #pragma link C++ class std::vector<TString>;
 #pragma link C++ operators std::vector<TString>;
 #ifdef G__VECTOR_HAS_CLASS_ITERATOR
-#pragma link C++ class std::vector<TString>::iterator; 
-#pragma link C++ class std::vector<TString>::const_iterator; 
-#pragma link C++ class std::vector<TString>::reverse_iterator; 
-#pragma link C++ operator std::vector<TString>::iterator; 
+#pragma link C++ class std::vector<TString>::iterator;
+#pragma link C++ class std::vector<TString>::const_iterator;
+#pragma link C++ class std::vector<TString>::reverse_iterator;
+#pragma link C++ operator std::vector<TString>::iterator;
 #pragma link C++ operator std::vector<TString>::const_iterator;
 #pragma link C++ operator std::vector<TString>::reverse_iterator;
 #endif

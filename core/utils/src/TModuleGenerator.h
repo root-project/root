@@ -31,7 +31,7 @@ namespace clang {
 }
 
 namespace ROOT {
-   
+
 //______________________________________________________________________________
 class TModuleGenerator {
 public:
@@ -63,7 +63,7 @@ public:
    std::ostream& WritePPUndefines(std::ostream& out) const;
    std::ostream& WritePPIncludes(std::ostream& out) const;
 
-   void WriteRegistrationSource(std::ostream& out, 
+   void WriteRegistrationSource(std::ostream& out,
                                 bool inlineHeader,
                                 const std::string& fwdDeclnArgsToKeepString,
                                 const std::string& headersClassesMapString,

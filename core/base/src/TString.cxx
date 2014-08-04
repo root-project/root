@@ -642,7 +642,7 @@ namespace {
 #define FORCE_INLINE inline
 #else
 // (at least) in gcc v4.7, __attribute__((always_inline))" does not replace "inline" and they
-// need to be used together. 
+// need to be used together.
 #define FORCE_INLINE __attribute__((always_inline)) inline
 #endif
 #define ROTL64(x,y)     rotl64(x,y)

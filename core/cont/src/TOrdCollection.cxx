@@ -533,7 +533,7 @@ void TOrdCollectionIter::Reset()
       fCursor = 0;
    else
       fCursor = fCol->GetSize() - 1;
-   
+
    fCurCursor = fCursor;
 }
 

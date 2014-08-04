@@ -81,7 +81,7 @@ namespace {
    // if this method creates new objects, always take ownership
       if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator ) {
 
-      // either be a constructor with a fresh object proxy self ... 
+      // either be a constructor with a fresh object proxy self ...
          if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsConstructor ) {
             if ( pymeth->fSelf )
                pymeth->fSelf->HoldOn();
@@ -272,7 +272,7 @@ namespace {
       Py_DECREF( co_code );
 
       return code;
-#else 
+#else
 // not important for functioning of most code, so not implemented for p3 for now (TODO)
       pymeth = 0;
       if ( pymeth || !pymeth) Py_INCREF( Py_None );
@@ -602,7 +602,7 @@ namespace {
       if ( --(*pymeth->fMethodInfo->fRefCount) <= 0 ) {
          delete pymeth->fMethodInfo;
       }
- 
+
       PyObject_GC_Del( pymeth );
    }
 
@@ -787,7 +787,7 @@ void PyROOT::MethodProxy::AddMethod( PyCallable* pc )
    fMethodInfo->fMethods.push_back( pc );
    fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
 }
-      
+
 //____________________________________________________________________________
 void PyROOT::MethodProxy::AddMethod( MethodProxy* meth )
 {
@@ -798,7 +798,7 @@ void PyROOT::MethodProxy::AddMethod( MethodProxy* meth )
 
 //____________________________________________________________________________
 PyROOT::MethodProxy::MethodInfo_t::MethodInfo_t( const MethodInfo_t& s ) :
-   fName( s.fName ), fDispatchMap( s.fDispatchMap ), fMethods( s.fMethods ), fFlags( s.fFlags ) 
+   fName( s.fName ), fDispatchMap( s.fDispatchMap ), fMethods( s.fMethods ), fFlags( s.fFlags )
 {
    *s.fRefCount += 1;
    fRefCount = s.fRefCount;

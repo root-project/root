@@ -312,14 +312,14 @@ mmalloc (md, size)
          = mdp -> heapindex = mdp -> heapinfo[block].free.next;
          mdp -> heapstats.chunks_free--;
       }
-      
+
       mdp -> heapinfo[block].busy.type = 0;
       mdp -> heapinfo[block].busy.info.size = blocks;
       mdp -> heapstats.chunks_used++;
       mdp -> heapstats.bytes_used += blocks * BLOCKSIZE;
       mdp -> heapstats.bytes_free -= blocks * BLOCKSIZE;
    }
-   
+
    return (result);
 }
 

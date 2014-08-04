@@ -56,27 +56,27 @@ extern void *gMmallocDesc;
 static TStreamerBasicType *InitCounter(const char *countClass, const char *countName, TObject *directive)
 {
    // Helper function to initialize the 'index/counter' value of
-   // the Pointer streamerElements.  If directive is a StreamerInfo and it correspond to the 
+   // the Pointer streamerElements.  If directive is a StreamerInfo and it correspond to the
    // same class a 'countClass' the streamerInfo is used instead of the current StreamerInfo of the TClass
    // for 'countClass'.
-   
+
    TStreamerBasicType *counter = 0;
-   
+
    if (directive && directive->InheritsFrom(TVirtualStreamerInfo::Class()) && strcmp(directive->GetName(),countClass)==0) {
-      
+
       TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)directive;
       TStreamerElement *element = (TStreamerElement *)info->GetElements()->FindObject(countName);
       if (!element) return 0;
       if (element->IsA() != TStreamerBasicType::Class()) return 0;
       counter = (TStreamerBasicType*)element;
-      
+
    } else {
-   
+
       TClass *cl = TClass::GetClass(countClass);
       if (cl==0) return 0;
       counter = TVirtualStreamerInfo::GetElementCounter(countName,cl);
    }
-       
+
    //at this point the counter may be declared to be skipped
    if (counter) {
       if (counter->GetType() < TVirtualStreamerInfo::kCounter) counter->SetType(TVirtualStreamerInfo::kCounter);
@@ -475,7 +475,7 @@ void TStreamerElement::Streamer(TBuffer &R__b)
       //NOTE that when reading, one cannot use Class()->ReadBuffer
       // TBuffer::Class methods used for reading streamerinfos from SQL database
       // Any changes of class structure should be reflected by them starting from version 4
-      
+
       R__b.ClassBegin(TStreamerElement::Class(), R__v);
       R__b.ClassMember("TNamed");
       TNamed::Streamer(R__b);
@@ -500,7 +500,7 @@ void TStreamerElement::Streamer(TBuffer &R__b)
       }
       if (R__v <= 2 && this->IsA()==TStreamerBasicType::Class()) {
          // In TStreamerElement v2, fSize was holding the size of
-         // the underlying data type.  In later version it contains 
+         // the underlying data type.  In later version it contains
          // the full length of the data member.
          TDataType *type = gROOT->GetType(GetTypeName());
          if (type && fArrayLength) fSize = fArrayLength * type->Size();
@@ -517,7 +517,7 @@ void TStreamerElement::Streamer(TBuffer &R__b)
       //R__b.CheckByteCount(R__s, R__c, TStreamerElement::IsA());
       R__b.ClassEnd(TStreamerElement::Class());
       R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
-      
+
       ResetBit(TStreamerElement::kCache);
       ResetBit(TStreamerElement::kWrite);
    } else {
@@ -711,16 +711,16 @@ Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
       // If the old base class has an adopted streamer we take that
       // one instead of the new base class:
       if( fNewBaseClass ) {
-         TClassStreamer* extstrm = fNewBaseClass->GetStreamer();                  
+         TClassStreamer* extstrm = fNewBaseClass->GetStreamer();
          if (extstrm) {
             // The new base class has an adopted streamer:
             extstrm->SetOnFileClass(fBaseClass);
             (*extstrm)(b, pointer);
          } else {
-            b.ReadClassBuffer( fNewBaseClass, pointer+fOffset, fBaseClass ); 
+            b.ReadClassBuffer( fNewBaseClass, pointer+fOffset, fBaseClass );
          }
       } else {
-         TClassStreamer* extstrm = fBaseClass->GetStreamer();         
+         TClassStreamer* extstrm = fBaseClass->GetStreamer();
          if (extstrm) {
             // The class has an adopted streamer:
             (*extstrm)(b, pointer);
@@ -740,13 +740,13 @@ void TStreamerBase::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      
+
       R__b.ClassBegin(TStreamerBase::Class(), R__v);
-      
+
       R__b.ClassMember("TStreamerElement");
       TStreamerElement::Streamer(R__b);
       // If the class owning the TStreamerElement and the base class are not
-      // loaded, on the file their streamer info might be in the following 
+      // loaded, on the file their streamer info might be in the following
       // order (derived class,base class) and hence the base class is not
       // yet emulated.
       fBaseClass = (TClass*)-1;
@@ -758,7 +758,7 @@ void TStreamerBase::Streamer(TBuffer &R__b)
          R__b >> fBaseVersion;
       } else {
          // could have been: fBaseVersion = GetClassPointer()->GetClassVersion();
-         fBaseClass = TClass::GetClass(GetName());         
+         fBaseClass = TClass::GetClass(GetName());
          fBaseVersion = fBaseClass->GetClassVersion();
       }
       R__b.ClassEnd(TStreamerBase::Class());
@@ -798,7 +798,7 @@ Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
 
    if (fStreamerFunc) {
       // We have a custom Streamer member function, we must use it.
-      fStreamerFunc(b,pointer+fOffset);      
+      fStreamerFunc(b,pointer+fOffset);
    } else {
       // We don't have a custom Streamer member function. That still doesn't mean
       // that there is no streamer - it could be an external one:
@@ -891,10 +891,10 @@ Int_t TStreamerBasicPointer::GetSize() const
 void TStreamerBasicPointer::Init(TObject *directive)
 {
    // Setup the element.
-   // If directive is a StreamerInfo and it correspond to the 
+   // If directive is a StreamerInfo and it correspond to the
    // same class a 'countClass' the streamerInfo is used instead of the current StreamerInfo of the TClass
    // for 'countClass'.
-   
+
    fCounter = InitCounter( fCountClass, fCountName, directive );
 }
 
@@ -997,7 +997,7 @@ Int_t TStreamerLoop::GetSize() const
 void TStreamerLoop::Init(TObject *directive)
 {
    // Setup the element.
-   // If directive is a StreamerInfo and it correspond to the 
+   // If directive is a StreamerInfo and it correspond to the
    // same class a 'countClass' the streamerInfo is used instead of the current StreamerInfo of the TClass
    // for 'countClass'.
 
@@ -1112,7 +1112,7 @@ void TStreamerBasicType::Streamer(TBuffer &R__b)
          case TVirtualStreamerInfo::kBool:     fSize = sizeof(Bool_t);    break;
          case TVirtualStreamerInfo::kShort:    fSize = sizeof(Short_t);   break;
          case TVirtualStreamerInfo::kInt:      fSize = sizeof(Int_t);     break;
-         case TVirtualStreamerInfo::kLong:     fSize = sizeof(Long_t);    break; 
+         case TVirtualStreamerInfo::kLong:     fSize = sizeof(Long_t);    break;
          case TVirtualStreamerInfo::kLong64:   fSize = sizeof(Long64_t);  break;
          case TVirtualStreamerInfo::kFloat:    fSize = sizeof(Float_t);   break;
          case TVirtualStreamerInfo::kFloat16:  fSize = sizeof(Float_t);   break;
@@ -1558,7 +1558,7 @@ TStreamerString::~TStreamerString()
 const char *TStreamerString::GetInclude() const
 {
    // Return the proper include for this element.
-   
+
    IncludeNameBuffer().Form("<%s>","TString.h");
    return IncludeNameBuffer();
 }
@@ -1637,7 +1637,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
       fCtype = proxy.GetType();
       if (proxy.HasPointers()) fCtype += TVirtualStreamerInfo::kOffsetP;
    }
-   if (TStreamerSTL::IsaPointer()) fType = TVirtualStreamerInfo::kSTLp;  
+   if (TStreamerSTL::IsaPointer()) fType = TVirtualStreamerInfo::kSTLp;
 }
 
 //______________________________________________________________________________
@@ -1661,7 +1661,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    Int_t nch = strlen(t);
    char *s = new char[nch+1];
    strlcpy(s,t,nch+1);
-   char *sopen  = strchr(s,'<'); 
+   char *sopen  = strchr(s,'<');
    if (sopen == 0) {
       Fatal("TStreamerSTL","For %s, the type name (%s) is seemingly not a template (template argument not found)", name, s);
       return;
@@ -1736,7 +1736,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
             if(strcmp(sopen,"string")) {
                // This case can happens when 'this' is a TStreamerElement for
                // a STL container containing something for which we do not have
-               // a TVirtualStreamerInfo (This happens in particular is the collection 
+               // a TVirtualStreamerInfo (This happens in particular is the collection
                // objects themselves are always empty) and we do not have the
                // dictionary/shared library for the container.
                if (GetClassPointer() && GetClassPointer()->IsLoaded()) {
@@ -1816,7 +1816,7 @@ Int_t TStreamerSTL::GetSize() const
    } else {
       size = cl->Size();
    }
-   
+
    if (fArrayLength) return fArrayLength*size;
    return size;
 }
@@ -1890,7 +1890,7 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
          // For a long time those where inverted in TStreamerElement
          // compared to the other definitions.  When we moved to version '4',
          // this got standardized, but we now need to fix it.
-         
+
          if (fTypeName.BeginsWith("std::set") || fTypeName.BeginsWith("set")) {
             fSTLtype = ROOT::kSTLset;
          } else if (fTypeName.BeginsWith("std::multimap") || fTypeName.BeginsWith("multimap")) {
@@ -1907,7 +1907,7 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
          if (fCtype==TVirtualStreamerInfo::kObjectp || fCtype==TVirtualStreamerInfo::kAnyp || fCtype==TVirtualStreamerInfo::kObjectP || fCtype==TVirtualStreamerInfo::kAnyP) {
             SetBit(kDoNotDelete); // For backward compatibility
          } else if ( fSTLtype == ROOT::kSTLmap || fSTLtype == ROOT::kSTLmultimap) {
-            // Here we would like to set the bit only if one of the element of the pair is a pointer, 
+            // Here we would like to set the bit only if one of the element of the pair is a pointer,
             // however we have no easy to determine this short of parsing the class name.
             SetBit(kDoNotDelete); // For backward compatibility
          }

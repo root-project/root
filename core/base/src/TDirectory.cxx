@@ -260,7 +260,7 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
    // Clone an object.
    // This function is called when the directory is not a TDirectoryFile.
    // This version has to load the I/O package, hence via CINT
-   // 
+   //
    // If autoadd is true and if the object class has a
    // DirectoryAutoAdd function, it will be called at the end of the
    // function with the parameter gDirector.  This usually means that
@@ -269,7 +269,7 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
    // if no default ctor return immediately (error issued by New())
    char *pobj = (char*)obj->IsA()->New();
    if (!pobj) return 0;
-   
+
    Int_t baseOffset = obj->IsA()->GetBaseClassOffset(TObject::Class());
    if (baseOffset==-1) {
       // cl does not inherit from TObject.
@@ -311,7 +311,7 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
 TDirectory *&TDirectory::CurrentDirectory()
 {
    // Return the current directory for the current thread.
-   
+
    static TDirectory *currentDirectory = 0;
    if (!gThreadTsd)
       return currentDirectory;
@@ -647,7 +647,7 @@ TObject *TDirectory::FindObjectAny(const char *aname) const
    //object may be already in the list of objects in memory
    TObject *obj =  fList->FindObject(aname);
    if (obj) return obj;
-   
+
    //try with subdirectories
    TIter next(fList);
    while( (obj = next()) ) {
@@ -923,7 +923,7 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
    //    gDirectory->mkdir("b");
    //    gDirectory->cd("b");
    //    gDirectory->mkdir("d");
-   
+
    if (!name || !title || !name[0]) return 0;
    if (!title[0]) title = name;
    TDirectory *newdir = 0;
@@ -1028,7 +1028,7 @@ void TDirectory::RecursiveRemove(TObject *obj)
 
    fList->RecursiveRemove(obj);
 }
- 
+
 //______________________________________________________________________________
 TObject *TDirectory::Remove(TObject* obj)
 {

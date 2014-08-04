@@ -47,7 +47,7 @@ protected:
    virtual void Init(const char *cl, void *object,
                      const char *redo, const char *undo);
    virtual void PrintCollectionHeader(Option_t* option) const;
-   
+
 private:
    TQCommand &operator=(const TQCommand &); // Not yet implemented.
 
@@ -65,7 +65,7 @@ public:
    virtual void   SetRedoArgs(Int_t nargs, ...);
    virtual Bool_t CanMerge(TQCommand *c) const;
    virtual void   Merge(TQCommand *c);
-   virtual Long64_t Merge(TCollection*,TFileMergeInfo*); 
+   virtual Long64_t Merge(TCollection*,TFileMergeInfo*);
    virtual Bool_t CanCompress(TQCommand *c) const;
    virtual void   Compress(TQCommand *c);
    virtual Bool_t IsEqual(const TObject* obj) const;

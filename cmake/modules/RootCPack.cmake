@@ -27,7 +27,7 @@ set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/LICENSE.txt")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.txt")
 
 #---Source package settings--------------------------------------------------------------------------
-set(CPACK_SOURCE_IGNORE_FILES 
+set(CPACK_SOURCE_IGNORE_FILES
     ${PROJECT_BINARY_DIR}
     ${PROJECT_SOURCE_DIR}/tests
     "~$"
@@ -80,23 +80,23 @@ cpack_add_install_type(full      DISPLAY_NAME "Full Installation")
 cpack_add_install_type(minimal   DISPLAY_NAME "Minimal Installation")
 cpack_add_install_type(developer DISPLAY_NAME "Developer Installation")
 
-cpack_add_component(applications 
-    DISPLAY_NAME "ROOT Applications" 
+cpack_add_component(applications
+    DISPLAY_NAME "ROOT Applications"
     DESCRIPTION "ROOT executables such as root.exe"
      INSTALL_TYPES full minimal developer)
 
-cpack_add_component(libraries 
-    DISPLAY_NAME "ROOT Libraries" 
+cpack_add_component(libraries
+    DISPLAY_NAME "ROOT Libraries"
     DESCRIPTION "All ROOT libraries and dictionaries"
      INSTALL_TYPES full minimal developer)
 
-cpack_add_component(headers 
-    DISPLAY_NAME "C++ Headers" 
+cpack_add_component(headers
+    DISPLAY_NAME "C++ Headers"
     DESCRIPTION "These are needed to do any development"
      INSTALL_TYPES full developer)
-     
-cpack_add_component(tests 
-    DISPLAY_NAME "ROOT Tests and Tutorials" 
+
+cpack_add_component(tests
+    DISPLAY_NAME "ROOT Tests and Tutorials"
     DESCRIPTION "These are needed to do any test and tutorial"
      INSTALL_TYPES full developer)
 

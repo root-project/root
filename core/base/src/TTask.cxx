@@ -125,7 +125,7 @@ TTask& TTask::operator=(const TTask& tt)
       TTask *task;
       while ((task = (TTask*)next())) {
          fTasks->Add(new TTask(*task));
-      }      
+      }
       fOption=tt.fOption;
       fBreakin=tt.fBreakin;
       fBreakout=tt.fBreakout;
@@ -138,7 +138,7 @@ TTask& TTask::operator=(const TTask& tt)
 //______________________________________________________________________________
 TTask::TTask(const TTask &other) : TNamed(other)
 {
-   // Copy constructor. 
+   // Copy constructor.
    fTasks = new TList();
    TIter next(other.fTasks);
    TTask *task;
@@ -149,8 +149,8 @@ TTask::TTask(const TTask &other) : TNamed(other)
    fBreakin = other.fBreakin;
    fBreakout = other.fBreakout;
    fHasExecuted = kFALSE;
-   fActive = other.fActive;   
-} 
+   fActive = other.fActive;
+}
 
 //______________________________________________________________________________
 TTask::~TTask()

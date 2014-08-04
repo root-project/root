@@ -116,14 +116,14 @@ ROOT::Selection::NS::C.
  * }
  * @endcode
  *
- * 
- * The @c ROOT::Meta::Selection syntax allows to alter the number of template 
+ *
+ * The @c ROOT::Meta::Selection syntax allows to alter the number of template
  * parameters of a certain template class within the ROOT type system, TClass.
- * Technically it allows to alter the way in which the "normalized name" (in 
- * other words, the "ROOT name") of the class is created. The key is the usage 
+ * Technically it allows to alter the way in which the "normalized name" (in
+ * other words, the "ROOT name") of the class is created. The key is the usage
  * of the @c KeepFirstTemplateArguments traits class.
  * It is possible to select the maximum number of template arguments considered
- * if not different from the default. A concrete example can be more clear than 
+ * if not different from the default. A concrete example can be more clear than
  * a long explaination in this case:
  * @code
  * [...]
@@ -133,45 +133,45 @@ ROOT::Selection::NS::C.
  * A<char,float> a2;
  * myVector<float> v1;
  * myVector<A<char>> v2;
- * 
+ *
  * namespace ROOT{
  *    namespace Meta {
  *       namespace Selection{
  *          template <class T, class U=int, int V=3> class A
- *            :KeepFirstTemplateArguments<1>{};           
- *  
- *          A<double> ;  
+ *            :KeepFirstTemplateArguments<1>{};
+ *
+ *          A<double> ;
  *          template <class T, class Alloc= myAllocator<T> > class myVector
  *            :KeepFirstTemplateArguments<1>{};
  *
- *          myVector<double> vd;   
+ *          myVector<double> vd;
  *       }
  *    }
  * }
  * @endcode
- * 
- * Consistently with what described above, all the instances of @c A and 
- * @c myvector will be selected. In addition, only the first template parameter 
+ *
+ * Consistently with what described above, all the instances of @c A and
+ * @c myvector will be selected. In addition, only the first template parameter
  * will be kept.
- * In absence of any @c KeepFirstTemplateArguments trait, the normalization 
+ * In absence of any @c KeepFirstTemplateArguments trait, the normalization
  * would be:
  * @c A<char>           &rarr @c A<char,float,3>
  * @c A<char,float>     &rarr @c A<char,int,3>
  * @c myVector<float>   &rarr @c myVector<A<char,int,3>,myAllocator<A<char,int,3>>>
  * @c myVector<A<char>> &rarr @c myVector<float,myAllocator<float>>
- * 
+ *
  * Now, deciding to keep just one argument (@c KeepFirstTemplateArguments<1>):
  * @c A<char>           &rarr @c A<char,float>
  * @c A<char,float>     &rarr @c A<char>
  * @c myVector<float>   &rarr @c myVector<A<char>,myAllocator<A<char>>>
  * @c myVector<A<char>> &rarr @c myVector<float,myAllocator<float>>
- * 
+ *
  * And deciding to keep two arguments (@c KeepFirstTemplateArguments<2>):
  * @c A<char>           &rarr @c A<char,float>
  * @c A<char,float>     &rarr @c A<char,int>
  * @c myVector<float>   &rarr @c myVector<A<char,int>,myAllocator<A<char,int>>>
  * @c myVector<A<char>> &rarr @c myVector<float,myAllocator<float>>
- * 
+ *
  * A brief description of the properties that can be assigned to data members
  * with the @c ROOT::Meta::Selection MemberAttributes class:
  *    1. @c kTransient : the data member is transient, not persistified by the
@@ -245,10 +245,10 @@ class DictSelectionReader
    inline const clang::TemplateArgumentList* GetTmplArgList(
        const clang::CXXRecordDecl&); ///< Get the template arguments list if any
 
-   std::string PatternifyName(const std::string& className); ///< Transform instance 
+   std::string PatternifyName(const std::string& className); ///< Transform instance
                                                   ///< name in pattern for selection
    void GetPointeeType(std::string& typeName); ///< Get name of the pointee type
-      
+
    SelectionRules& fSelectionRules; ///< The selection rules to be filled
    std::set<const clang::RecordDecl*>
    fSelectedRecordDecls; ///< The pointers of the selected RecordDecls

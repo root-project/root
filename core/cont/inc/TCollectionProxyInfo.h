@@ -21,7 +21,7 @@
 
 #ifndef ROOT_TError
 #include "TError.h"
-#endif 
+#endif
 #include <vector>
 
 #if defined(_WIN32)
@@ -47,7 +47,7 @@ namespace ROOT {
       // Same value as TVirtualCollectionProxy.
       static const UInt_t fgIteratorArenaSize = 16; // greater than sizeof(void*) + sizeof(UInt_t)
 
-   /** @class template TCollectionProxyInfo::IteratorValue 
+   /** @class template TCollectionProxyInfo::IteratorValue
     *
     * Small helper to encapsulate whether to return the value
     * pointed to by the iterator or its address.
@@ -66,14 +66,14 @@ namespace ROOT {
          }
       };
 
-   /** @class template TCollectionProxyInfo::Iterators 
+   /** @class template TCollectionProxyInfo::Iterators
     *
     * Small helper to implement the function to create,access and destroy
     * iterators.
     *
     **/
 
-      template <typename Cont_t, bool large = false> 
+      template <typename Cont_t, bool large = false>
       struct Iterators {
          typedef Cont_t *PCont_t;
          typedef typename Cont_t::iterator iterator;
@@ -86,7 +86,7 @@ namespace ROOT {
          static void* copy(void *dest_arena, const void *source_ptr) {
             iterator *source = (iterator *)(source_ptr);
             new (dest_arena) iterator(*source);
-            return dest_arena; 
+            return dest_arena;
          }
          static void* next(void *iter_loc, const void *end_loc) {
             iterator *end = (iterator *)(end_loc);
@@ -136,7 +136,7 @@ namespace ROOT {
          }
          static void* copy(void *dest, const void *source) {
             *(void**)dest = *(void**)(const_cast<void*>(source));
-            return dest; 
+            return dest;
          }
          static void* next(void * /* iter_loc */, const void * /* end_loc */) {
             // Should not be used.
@@ -158,7 +158,7 @@ namespace ROOT {
          static void create(void *coll, void **begin_arena, void **end_arena, TVirtualCollectionProxy*) {
             PCont_t  c = PCont_t(coll);
             *begin_arena = new iterator(c->begin());
-            *end_arena = new iterator(c->end());        
+            *end_arena = new iterator(c->end());
          }
          static void* copy(void * /*dest_arena*/, const void *source_ptr) {
             iterator *source = (iterator *)(source_ptr);
@@ -213,7 +213,7 @@ namespace ROOT {
       void*               fTemp;
       Bool_t              fUseTemp;
       int                 fRefCount;
-      size_t              fSpace;      
+      size_t              fSpace;
    };
    template <typename T> struct Environ : public EnvironBase {
       typedef T           Iter_t;
@@ -422,7 +422,7 @@ namespace ROOT {
       }
    };
 
-      
+
    public:
 #ifndef __CINT__
       const type_info &fInfo;
@@ -440,29 +440,29 @@ namespace ROOT {
       void*  (*fFeedFunc)(void*,void*,size_t);
       void*  (*fCollectFunc)(void*,void*);
       void*  (*fCreateEnv)();
-      
+
       // Set of function of direct iteration of the collections.
       void (*fCreateIterators)(void *collection, void **begin_arena, void **end_arena, TVirtualCollectionProxy *proxy);
-      // begin_arena and end_arena should contain the location of memory arena  of size fgIteratorSize. 
+      // begin_arena and end_arena should contain the location of memory arena  of size fgIteratorSize.
       // If the collection iterator are of that size or less, the iterators will be constructed in place in those location (new with placement)
       // Otherwise the iterators will be allocated via a regular new and their address returned by modifying the value of begin_arena and end_arena.
-      
+
       void* (*fCopyIterator)(void *dest, const void *source);
       // Copy the iterator source, into dest.   dest should contain should contain the location of memory arena  of size fgIteratorSize.
       // If the collection iterator are of that size or less, the iterator will be constructed in place in this location (new with placement)
       // Otherwise the iterator will be allocated via a regular new and its address returned by modifying the value of dest.
-      
+
       void* (*fNext)(void *iter, const void *end);
       // iter and end should be pointer to respectively an iterator to be incremented and the result of colleciton.end()
       // 'Next' will increment the iterator 'iter' and return 0 if the iterator reached the end.
       // If the end is not reached, 'Next' will return the address of the content unless the collection contains pointers in
       // which case 'Next' will return the value of the pointer.
-      
+
       void (*fDeleteSingleIterator)(void *iter);
       void (*fDeleteTwoIterators)(void *begin, void *end);
       // If the sizeof iterator is greater than fgIteratorArenaSize, call delete on the addresses,
       // Otherwise just call the iterator's destructor.
-      
+
    public:
       TCollectionProxyInfo(const type_info& info,
                            size_t iter_size,
@@ -494,14 +494,14 @@ namespace ROOT {
          fDeleteSingleIterator(deleteSingleIterator),fDeleteTwoIterators(deleteTwoIterators)
       {
       }
- 
+
       /// Generate proxy from template
       template <class T> static ROOT::TCollectionProxyInfo* Generate(const T&)  {
          // Generate a TCollectionProxyInfo given a TCollectionProxyInfo::Type
          // template (used to described the behavior of the stl collection.
          // Typical use looks like:
          //      ::ROOT::TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< std::vector<string> >()));
-         
+
          PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p =
             (PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
          return new ROOT::TCollectionProxyInfo(typeid(TYPENAME T::Cont_t),
@@ -531,7 +531,7 @@ namespace ROOT {
          // template (used to described the behavior of the stl collection.
          // Typical use looks like:
          //      ::ROOT::TCollectionProxyInfo::Get(TCollectionProxyInfo::Pushback< std::vector<string> >()));
-         
+
          PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>* p =
             (PairHolder<TYPENAME T::Value_t, TYPENAME T::Value_t>*)0x1000;
          return ROOT::TCollectionProxyInfo(typeid(TYPENAME T::Cont_t),
@@ -562,9 +562,9 @@ namespace ROOT {
       typedef Env_t                          *PEnv_t;
       typedef Cont_t                         *PCont_t;
       typedef Value_t                        *PValue_t;
-      
+
       virtual ~Type() {}
-      
+
       static inline PCont_t object(void* ptr)   {
          return PCont_t(PEnv_t(ptr)->fObject);
       }
@@ -652,7 +652,7 @@ namespace ROOT {
       typedef Iterators Iterators_t;
 
    };
-   
+
    template <> struct TCollectionProxyInfo::Pushback<std::vector<bool> > : public TCollectionProxyInfo::Type<std::vector<Bool_t> > {
       typedef std::vector<Bool_t>    Cont_t;
       typedef Cont_t::iterator       Iter_t;
@@ -661,7 +661,7 @@ namespace ROOT {
       typedef Env_t                 *PEnv_t;
       typedef Cont_t                *PCont_t;
       typedef Value_t               *PValue_t;
-      
+
       static void resize(void* obj,size_t n) {
          PCont_t c = PCont_t(obj);
          c->resize(n);
@@ -685,10 +685,10 @@ namespace ROOT {
       return 0;
    }
 #endif
-   
+
    template <typename T> class TStdBitsetHelper {
       // This class is intentionally empty, this is scaffolding to allow the equivalent
-      // of 'template <int N> struct TCollectionProxyInfo::Type<std::bitset<N> >' which 
+      // of 'template <int N> struct TCollectionProxyInfo::Type<std::bitset<N> >' which
       // is not effective in C++ (as of gcc 4.3.3).
    };
 
@@ -702,9 +702,9 @@ namespace ROOT {
       typedef Env_t                   *PEnv_t;
       typedef Cont_t                  *PCont_t;
       typedef Value_t                 *PValue_t;
-      
+
       virtual ~Type() {}
-      
+
       static inline PCont_t object(void* ptr)   {
          return PCont_t(PEnv_t(ptr)->fObject);
       }
@@ -795,8 +795,8 @@ namespace ROOT {
       };
       typedef Iterators Iterators_t;
    };
-   
-   template <typename Bitset_t> 
+
+   template <typename Bitset_t>
    struct TCollectionProxyInfo::Pushback<ROOT::TStdBitsetHelper<Bitset_t>  > : public TCollectionProxyInfo::Type<TStdBitsetHelper<Bitset_t> > {
       typedef Bitset_t         Cont_t;
       typedef bool             Iter_t;
@@ -805,12 +805,12 @@ namespace ROOT {
       typedef Env_t           *PEnv_t;
       typedef Cont_t          *PCont_t;
       typedef Value_t         *PValue_t;
-      
+
       static void resize(void*,size_t)  {
       }
       static void* feed(void *from, void *to, size_t size)  {
          PCont_t  c = PCont_t(to);
-         PValue_t m = PValue_t(from); 
+         PValue_t m = PValue_t(from);
          for (size_t i=0; i<size; ++i, ++m)
             c->set(i,*m);
          return 0;
@@ -820,7 +820,7 @@ namespace ROOT {
       }
    };
 #endif
-   
+
 }
 
 #endif

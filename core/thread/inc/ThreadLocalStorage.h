@@ -1,6 +1,6 @@
 // @(#)root/thread:$Id$
 /*
- * Copyright (c) 2006-2011 High Performance Computing Center Stuttgart, 
+ * Copyright (c) 2006-2011 High Performance Computing Center Stuttgart,
  *                         University of Stuttgart.  All rights reserved.
  * Author: Rainer Keller, HLRS
  * Modified: Fons Rademakers, CERN
@@ -36,7 +36,7 @@
  *       func (a, TTHREAD_TLS_SET(int, my_var, 5));
  *    as we do not use the gcc-extension of returning macro-values.
  */
- 
+
 #ifndef ROOT_ThreadLocalStorage
 #define ROOT_ThreadLocalStorage
 
@@ -103,7 +103,7 @@ template <typename type> class TThreadTLSWrapper
 private:
    pthread_key_t  fKey;
    type           fInitValue;
-   
+
    static void key_delete(void *arg) {
       assert (NULL != arg);
       delete (type*)(arg);
@@ -187,7 +187,7 @@ public:
    operator type*() {
       return get();
    }
-   
+
 };
 
 #  define TTHREAD_TLS(type) static TThreadTLSWrapper<type>

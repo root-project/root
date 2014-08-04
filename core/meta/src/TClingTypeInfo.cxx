@@ -289,7 +289,7 @@ const char *TClingTypeInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &no
 {
    // Return the normalized name of the type (i.e. fully qualified and without
    // the non-opaque typedefs.
-   
+
    if (!IsValid()) {
       return 0;
    }
@@ -307,13 +307,13 @@ std::string TClingTypeInfo::NormalizedName(const ROOT::TMetaUtils::TNormalizedCt
 {
    // Return the normalized name of the type (i.e. fully qualified and without
    // the non-opaque typedefs.
-   
+
    if (!IsValid()) {
       return "";
    }
    std::string buf;
    ROOT::TMetaUtils::GetNormalizedName(buf,fQualType, *fInterp, normCtxt);
-   
+
    // in C++11 this will be efficient thanks to the move constructor.
    return buf;
 }

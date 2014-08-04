@@ -82,7 +82,7 @@ void R__unzipLZMA(int *srcsize, unsigned char *src, int *tgtsize, unsigned char 
 
    *irep = 0;
 
-   returnStatus = lzma_stream_decoder(&stream, 
+   returnStatus = lzma_stream_decoder(&stream,
                                       UINT64_MAX,
                                       0U);
    if (returnStatus != LZMA_OK) {

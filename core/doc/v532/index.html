@@ -1,5 +1,5 @@
-<br/> 
-<hr/> 
+<br/>
+<hr/>
 <h3>Build System</h3>
 
 <h4>MacOS X</h4>
@@ -35,7 +35,7 @@ any symbols (equivalent to the MacOS X build changes described above).
 </li>
 </ul>
 
-<a name="core"></a> 
+<a name="core"></a>
 <h3>Core Libraries</h3>
 
 
@@ -44,7 +44,7 @@ any symbols (equivalent to the MacOS X build changes described above).
 <ul>
 <li>Introduce <tt>TClonesArray::ConstructedAt</tt> which
 always returns an already constructed object.   If the slot is being used for the
-first time, it calls the default constructor otherwise it returns the object as 
+first time, it calls the default constructor otherwise it returns the object as
 is (unless a string is passed as the 2nd argument to the function in which case,
 it also calls Clear(second_argument) on the object).
 This allows to replace code like:
@@ -59,13 +59,13 @@ This allows to replace code like:
 </pre>
 with the simpler and more efficient:
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
-   for (int i = 0; i &lt; ev-&gt;Ntracks; i++) {   
+   for (int i = 0; i &lt; ev-&gt;Ntracks; i++) {
        TTrack *track = (TTrack*)a.ConstructedAt(i);
        track->Set(x,y,z,....);
-       ...                                                          
-       ...                                                          
-   }                                                               
-   ...                                                             
+       ...
+       ...
+   }
+   ...
    a.Clear();
 </pre>
 even in case where the TTrack class allocates memory.
@@ -97,12 +97,12 @@ So far it supports only one type of queue - FIFO.
 <h4>Global Variables</h4>
 <ul>
 <li>The global values gPad, gVirtualX, gInterpreter, gDirectory and gFile
-are now all accessed via a static function of their respective class.  The 
+are now all accessed via a static function of their respective class.  The
 access is made transparent via a CPP macro.</li>
 <li>The access is now also made transparent from the CINT and python prompt.</li>
-<li>gPad, gVirtualX and gInterpreter are now accessible even when their value 
+<li>gPad, gVirtualX and gInterpreter are now accessible even when their value
 is zero and they now properly support tab completion.</li>
-<li>See the important note in the I/O section on gDirectory and gFile which 
+<li>See the important note in the I/O section on gDirectory and gFile which
 are now thread local.</li>
 </ul>
 

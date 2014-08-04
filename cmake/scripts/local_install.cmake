@@ -1,7 +1,7 @@
 # Arguments:
 #  PREFIX    - Installation prefix
 #  COMPONENTS - Installation component
-  
+
 set(COMPONENTS ${COMPONENTS})
 foreach(component ${COMPONENTS})
   execute_process(

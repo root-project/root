@@ -274,7 +274,7 @@ void Obsolete(const char *function, const char *asOfVers, const char *removedFro
 {
    // Use this function to declare a function obsolete. Specify as of which version
    // the method is obsolete and as from which version it will be removed.
-   
+
    TString mess;
    mess.Form("obsolete as of %s and will be removed from %s", asOfVers, removedFromVers);
    Warning(function, "%s", mess.Data());

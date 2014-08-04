@@ -556,18 +556,18 @@ static string TCling__Demangle(const char *mangled_name, int *err)
 static clang::ClassTemplateDecl* FindTemplateInNamespace(clang::Decl* decl)
 {
    // Find a template decl within N nested namespaces, 0<=N<inf
-   // Assumes 1 and only 1 template present and 1 and only 1 entity contained 
+   // Assumes 1 and only 1 template present and 1 and only 1 entity contained
    // by the namespace. Example: ns1::ns2::..::nsN::myTemplate
    // Returns nullptr in case of error
    using namespace clang;
    if (NamespaceDecl* nsd = llvm::dyn_cast<NamespaceDecl>(decl)){
       return FindTemplateInNamespace(*nsd->decls_begin());
    }
-   
+
    if (ClassTemplateDecl* ctd = llvm::dyn_cast<ClassTemplateDecl>(decl)){
       return ctd;
    }
-   
+
    return nullptr; // something went wrong.
 }
 
@@ -797,15 +797,15 @@ namespace{
          fOldDiagValue = fDiagEngine.getIgnoreAllWarnings();
          fDiagEngine.setIgnoreAllWarnings(true);
       }
-         
+
       ~clangDiagSuppr() {
-         fDiagEngine.setIgnoreAllWarnings(fOldDiagValue); 
+         fDiagEngine.setIgnoreAllWarnings(fOldDiagValue);
       }
    private:
       clang::DiagnosticsEngine& fDiagEngine;
-      bool fOldDiagValue;         
+      bool fOldDiagValue;
    };
-   
+
 }
 
 //______________________________________________________________________________
@@ -1208,18 +1208,18 @@ void TCling::RegisterModule(const char* modulename,
             "A fwd declaration could not be compiled");
       if (compRes!=cling::Interpreter::kSuccess){
          Warning("TCling::RegisterModule",
-               "Problems in declaring string '%s' were encountered.", 
+               "Problems in declaring string '%s' were encountered.",
                fwdDecl.c_str()) ;
-         continue;         
+         continue;
       }
-       
+
       // Drill through namespaces recursively until the template is found
       if(ClassTemplateDecl* TD = FindTemplateInNamespace(T->getFirstDecl().getSingleDecl())){
          fNormalizedCtxt->AddTemplAndNargsToKeep(TD, nArgsToSkip);
       }
-      
+
    }
-   
+
    // FIXME: Remove #define __ROOTCLING__ once PCMs are there.
    // This is used to give Sema the same view on ACLiC'ed files (which
    // are then #included through the dictionary) as rootcling had.
@@ -1278,7 +1278,7 @@ void TCling::RegisterModule(const char* modulename,
             }
          }
       }
-      
+
       // Now we register all the headers necessary for the class
       // Typical format of the array:
       //    {"A", "classes.h", "@",
@@ -1349,12 +1349,12 @@ void TCling::RegisterModule(const char* modulename,
    // dictionary generation time. That won't be an issue with the PCMs.
 
       clangDiagSuppr diagSuppr(fInterpreter->getSema().getDiagnostics());
-   
+
       #if defined(R__MUST_REVISIT)
       #if R__MUST_REVISIT(6,2)
       Warning("TCling::RegisterModule","Diagnostics suppression should be gone by now.");
       #endif
-      #endif      
+      #endif
 
       if(!fHeaderParsingOnDemand){
          cling::Interpreter::CompilationResult compRes = fInterpreter->parseForModule(code.Data());
@@ -1776,9 +1776,9 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       if (memType->isPointerType()) {
          fieldName = "*";
       }
-      
+
       // Check if this field has a custom ioname, if not, just use the one of the decl
-      std::string ioname(iField->getName());      
+      std::string ioname(iField->getName());
       ROOT::TMetaUtils::ExtractAttrPropertyFromName(**iField,"ioname",ioname);
       fieldName += ioname;
       fieldName += arraySize;
@@ -1801,10 +1801,10 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
             // nested objects get an extra call to InspectMember
             // R__insp.InspectMember("FileStat_t", (void*)&fFileStat, "fFileStat.", false);
             std::string sFieldRecName;
-            if (!ROOT::TMetaUtils::ExtractAttrPropertyFromName(*fieldRecDecl,"iotype",sFieldRecName)){            
-               ROOT::TMetaUtils::GetNormalizedName(sFieldRecName, 
-                                                   clang::QualType(memNonPtrType,0), 
-                                                   *fInterpreter, 
+            if (!ROOT::TMetaUtils::ExtractAttrPropertyFromName(*fieldRecDecl,"iotype",sFieldRecName)){
+               ROOT::TMetaUtils::GetNormalizedName(sFieldRecName,
+                                                   clang::QualType(memNonPtrType,0),
+                                                   *fInterpreter,
                                                    *fNormalizedCtxt);
             }
 
@@ -1973,7 +1973,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
 
    std::set<std::string> fileMap;
    // Fill fileMap; return early on exact match.
-   for (llvm::SmallVector<llvm::StringRef, 100>::const_iterator 
+   for (llvm::SmallVector<llvm::StringRef, 100>::const_iterator
            iF = files.begin(), iE = files.end(); iF != iE; ++iF) {
       if ((*iF) == file_name.c_str()) return kTRUE; // exact match
       fileMap.insert(*iF);
@@ -2005,7 +2005,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
    // Check shared library.
    sFilename = file_name.c_str();
    const char *found = gSystem->FindDynamicLibrary(sFilename, kTRUE);
-   cling::DynamicLibraryManager* dyLibManager 
+   cling::DynamicLibraryManager* dyLibManager
       = fInterpreter->getDynamicLibraryManager();
    if (found) {
       if (dyLibManager->isLibraryLoaded(found)) {
@@ -2844,7 +2844,7 @@ void TCling::LoadEnums(TClass* cl) const
       // Collect all contexts of the namespace.
       llvm::SmallVector< DeclContext *, 4> allDeclContexts;
       const_cast< clang::DeclContext *>(DC)->collectAllContexts(allDeclContexts);
-      for (llvm::SmallVector<DeclContext*, 4>::iterator declIter = allDeclContexts.begin(), declEnd = allDeclContexts.end(); 
+      for (llvm::SmallVector<DeclContext*, 4>::iterator declIter = allDeclContexts.begin(), declEnd = allDeclContexts.end();
            declIter != declEnd; ++declIter) {
          // Iterate on all decls for each context.
          for (clang::DeclContext::decl_iterator DI = (*declIter)->decls_begin(),
@@ -3176,14 +3176,14 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
    R__LOCKGUARD2(gInterpreterMutex);
    DeclId_t d;
    TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
-   
+
    if (cl) {
       d = cl->GetDataMember(name);
       // We check if the decl of the data member has an annotation which indicates
       // an ioname.
-      // In case this is true, if the name requested is not the ioname, we 
-      // return 0, as if the member did not exist. In some sense we override 
-      // the information in the TClassInfo instance, isolating the typesystem in 
+      // In case this is true, if the name requested is not the ioname, we
+      // return 0, as if the member did not exist. In some sense we override
+      // the information in the TClassInfo instance, isolating the typesystem in
       // TClass from the one in the AST.
       if (const ValueDecl* decl = (const ValueDecl*) d){
          std::string ioName;
@@ -3902,10 +3902,10 @@ namespace {
       }
    private:
       std::unordered_set<const NamespaceDecl*>& fNSSet;
-   
+
    };
 
-   
+
 }
 
 //______________________________________________________________________________
@@ -3914,26 +3914,26 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
    // Read and parse a rootmapfile in its new format, and return 0 in case of
    // success, -1 if the file has already been read, and -3 in case its format
    // is the old one (e.g. containing "Library.ClassName")
-   
+
    // For "class ", "namespace ", "typedef ", "header " respectively
    const std::unordered_map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7}};
-   
+
    if (rootmapfile && *rootmapfile) {
 
       ExtVisibleStorageAdder evsAdder(fNSFromRootmaps);
-      
+
       // Add content of a specific rootmap file
       if (fRootmapFiles->FindObject(rootmapfile)) return -1;
       std::ifstream file(rootmapfile);
       TString lib_name = "";
       std::string line;
       while (getline(file, line, '\n')) {
-         if ((line.substr(0, 8) == "Library.") || 
+         if ((line.substr(0, 8) == "Library.") ||
              (line.substr(0, 8) == "Declare.")) {
             file.close();
             return -3; // old format
          }
-         if (line.substr(0, 9) == "{ decls }") {                        
+         if (line.substr(0, 9) == "{ decls }") {
             // forward declarations
 
             while (getline(file, line, '\n')) {
@@ -3998,7 +3998,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
                   if (gDebug > 3)
                         Info("ReadRootmapFile","Key %s was already defined for %s", keyname.c_str(), lib_name.Data());
                }
-               
+
             } else {
                fMapfile->SetValue(keyname.c_str(), lib_name.Data());
             }
@@ -4445,7 +4445,7 @@ Int_t TCling::AutoLoad(const type_info& typeinfo)
       demangled_name = TClassEdit::GetLong64_Name(demangled_name);
       result = AutoLoad(demangled_name.c_str());
    }
-      
+
    return result;
 }
 
@@ -5134,7 +5134,7 @@ const char* TCling::GetClassSharedLibs(const char* cls)
       if (libs_record) {
          const char* libs = libs_record->GetValue();
          return (*libs) ? libs : 0;
-      } 
+      }
       else {
          // Try the old format...
          TString c = TString("Library.") + cls;
@@ -5533,17 +5533,17 @@ void TCling::AddFriendToClass(clang::FunctionDecl* function,
 //
 
 //______________________________________________________________________________
-TInterpreter::DeclId_t TCling::GetDeclId(CallFunc_t* func) const 
+TInterpreter::DeclId_t TCling::GetDeclId(CallFunc_t* func) const
 {
    // Return a unique identifier of the declaration represented by the
    // CallFunc
-   
-   if (func) return ((TClingCallFunc*)func)->GetDecl()->getCanonicalDecl();      
+
+   if (func) return ((TClingCallFunc*)func)->GetDecl()->getCanonicalDecl();
    return 0;
 }
 
 //______________________________________________________________________________
-TInterpreter::DeclId_t TCling::GetDeclId(ClassInfo_t* cinfo) const 
+TInterpreter::DeclId_t TCling::GetDeclId(ClassInfo_t* cinfo) const
 {
    // Return a (almost) unique identifier of the declaration represented by the
    // ClassInfo.  In ROOT, this identifier can point to more than one TClass
@@ -5565,17 +5565,17 @@ TInterpreter::DeclId_t TCling::GetDeclId(DataMemberInfo_t* data) const
 }
 
 //______________________________________________________________________________
-TInterpreter::DeclId_t TCling::GetDeclId(MethodInfo_t* method) const 
+TInterpreter::DeclId_t TCling::GetDeclId(MethodInfo_t* method) const
 {
    // Return a unique identifier of the declaration represented by the
    // MethodInfo
-   
+
    if (method) return ((TClingMethodInfo*)method)->GetDeclId();
    return 0;
 }
 
 //______________________________________________________________________________
-TInterpreter::DeclId_t TCling::GetDeclId(TypedefInfo_t* tinfo) const 
+TInterpreter::DeclId_t TCling::GetDeclId(TypedefInfo_t* tinfo) const
 {
    // Return a unique identifier of the declaration represented by the
    // TypedefInfo
@@ -5822,7 +5822,7 @@ void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const ch
 Bool_t TCling::ClassInfo_Contains(ClassInfo_t *info, DeclId_t declid) const
 {
    // Return true if the entity pointed to by 'declid' is declared in
-   // the context described by 'info'.  If info is null, look into the 
+   // the context described by 'info'.  If info is null, look into the
    // global scope (translation unit scope).
 
    if (!declid) return kFALSE;
@@ -5830,7 +5830,7 @@ Bool_t TCling::ClassInfo_Contains(ClassInfo_t *info, DeclId_t declid) const
    const clang::Decl *scope;
    if (info) scope = ((TClingClassInfo*)info)->GetDecl();
    else scope = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
-   
+
    const clang::Decl *decl = reinterpret_cast<const clang::Decl*>(declid);
    const clang::DeclContext *ctxt = clang::Decl::castToDeclContext(scope);
    if (!decl || !ctxt) return kFALSE;

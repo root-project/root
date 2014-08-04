@@ -209,9 +209,9 @@ Bool_t TRefArray::GetObjectUID(Int_t &uid, TObject *obj, const char *methodname)
             // The container is empty, we can switch the ProcessID.
             fPID = TProcessID::GetProcessWithUID(obj);
             valid = kTRUE;
-            if (gDebug > 3) 
+            if (gDebug > 3)
                Info(TString::Format("TRefArray::%s",methodname),"The ProcessID for the %p has been switched to %s/%s:%d.",
-                    this,fPID->GetName(),fPID->GetTitle(),fPID->GetUniqueID()); 
+                    this,fPID->GetName(),fPID->GetTitle(),fPID->GetUniqueID());
         }
       }
    } else {
@@ -219,7 +219,7 @@ Bool_t TRefArray::GetObjectUID(Int_t &uid, TObject *obj, const char *methodname)
       // TRefArray's ProcessID.  For now, just check the
       // ProcessID it would be added to, i.e the current one,
       // is not full.
-      
+
       if (!(TProcessID::GetObjectCount() >= 16777215)) {
          valid = (fPID == TProcessID::GetSessionProcessID());
          if (valid) {
@@ -233,7 +233,7 @@ Bool_t TRefArray::GetObjectUID(Int_t &uid, TObject *obj, const char *methodname)
             fPID = TProcessID::GetProcessWithUID(obj);
             Warning(TString::Format("TRefArray::%s",methodname),"The ProcessID for the %p has been switched to %s/%s:%d. There are too many referenced objects.",
                     this,fPID->GetName(),fPID->GetTitle(),fPID->GetUniqueID());
-            return kTRUE; 
+            return kTRUE;
         } else {
             Error(TString::Format("TRefArray::%s",methodname),"The object at %p can not be registered in the process the TRefArray points to (pid = %s/%s) because the ProcessID has too many objects and the TRefArray already contains other objecs.",obj,fPID->GetName(),fPID->GetTitle());
             return kFALSE;

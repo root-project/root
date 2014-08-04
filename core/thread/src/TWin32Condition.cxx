@@ -114,7 +114,7 @@ Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
    // documentation for why absolute times are better than relative.
    // Returns 0 if successfully signalled, 1 if time expired.
 
-   DWORD ret; 
+   DWORD ret;
    TTimeStamp t;
    // Get actual time
    ULong_t secNow     = t.GetSec();
@@ -160,7 +160,7 @@ Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
       // give to our callers.
       // WaitForSingleObject(fMutex->fHMutex, INFINITE);
       ::EnterCriticalSection(&fMutex->fCritSect);
-   
+
    if (ret == WAIT_TIMEOUT)
       return 1;
    return 0;

@@ -783,7 +783,7 @@ TString TTabCom::DetermineClass(const char varName[])
    cmd += outf;
    //redirect
    gROOT->ProcessLineSync(cmd.Data());
-   
+
    cmd = "gROOT->ProcessLine(\"";
    cmd += varName;
    cmd += "\");";
@@ -989,9 +989,9 @@ Bool_t TTabCom::IsDirectory(const char fileName[])
    ///////////////////////////////////////////////////////
 
    FileStat_t stat;
-   if (!gSystem->GetPathInfo(fileName, stat)) 
+   if (!gSystem->GetPathInfo(fileName, stat))
       return R_ISDIR(stat.fMode);
-   else 
+   else
       return false;
 }
 
@@ -1477,7 +1477,7 @@ TString TTabCom::DeterminePath(const TString & fileName,
          IfDebug(std::cerr << " defaultPath: " << defaultPath << std::endl);
       } else {
          IfDebug(std::cerr << " defaultPath: " << std::endl);
-      }         
+      }
       IfDebug(std::cerr << "extendedPath: " << extendedPath << std::endl);
       IfDebug(std::cerr << std::endl);
 

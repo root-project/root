@@ -115,7 +115,7 @@ protected:
    TListOfFunctionTemplates *fFuncTemplate; //List of global function templates
    TListOfDataMembers*fGlobals;             //List of global variables
    TListOfFunctions*fGlobalFunctions;     //List of global functions
-   TSeqCollection  *fClosedObjects;       //List of closed objects from the list of files and sockets, so we can delete them if neededCl. 
+   TSeqCollection  *fClosedObjects;       //List of closed objects from the list of files and sockets, so we can delete them if neededCl.
    TSeqCollection  *fFiles;               //List of files
    TSeqCollection  *fMappedFiles;         //List of memory mapped files
    TSeqCollection  *fSockets;             //List of network sockets
@@ -156,9 +156,9 @@ protected:
    TListOfFunctions*GetGlobalFunctions();
 
 public:
-   
-   typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;   
-   
+
+   typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;
+
                      TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = 0);
    virtual           ~TROOT();
    void              AddClass(TClass *cl);
@@ -313,7 +313,7 @@ public:
    static Int_t       ConvertVersionInt2Code(Int_t v);
    static Int_t       RootVersionCode();
    static const char**&GetExtraInterpreterArgs();
-   
+
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes
 };
 

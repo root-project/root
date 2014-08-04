@@ -478,7 +478,7 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
          result = new TRootObjectByValueExecutor( klass );
       else if ( cpd == "&" )
          result = new TRootObjectRefExecutor( klass );
-      else if ( cpd == "**" ) 
+      else if ( cpd == "**" )
          result = new TRootObjectPtrPtrExecutor( klass );
       else if ( cpd == "*&" || cpd == "&*" )
          result = new TRootObjectPtrRefExecutor( klass );

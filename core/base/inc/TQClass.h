@@ -39,7 +39,7 @@ class TQClass : public TQObject, public TClass {
 private:
    TQClass(const TClass&) : TQObject(), TClass() {};
    TQClass& operator=(const TQClass&) { return *this; }
-      
+
 friend class TQObject;
 
 public:

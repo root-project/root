@@ -49,16 +49,16 @@ public:
       kPadMode,//NDC, in a pad's rectangle (pad is 0,0 - 1,1).
       kObjectBoundingMode //NDC in an object's bounding rect (this rect is 0,0 - 1, 1).
    };
-   
+
    struct Point {
       Double_t fX;
       Double_t fY;
-      
+
       Point()
          : fX(0.), fY(0.)
       {
       }
-      
+
       Point(Double_t x, Double_t y)
          : fX(x), fY(y)
       {
@@ -93,10 +93,10 @@ public:
    SizeType_t GetNumberOfSteps()const;
    const Double_t *GetColorPositions()const;
    const Double_t *GetColors()const;
-   
+
 private:
    void RegisterColor(Color_t colorIndex);
-   
+
    ClassDef(TColorGradient, 1) //Gradient fill.
 };
 
@@ -108,7 +108,7 @@ public:
                    const Color_t *colorIndices, ECoordinateMode mode = kObjectBoundingMode);
    TLinearGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                    const Double_t *colors, ECoordinateMode mode = kObjectBoundingMode);
-   
+
    //points are always in NDC (and also affected by fCoordinateMode).
    void SetStartEnd(const Point &p1, const Point &p2);
    const Point &GetStart()const;
@@ -117,7 +117,7 @@ public:
 private:
    Point fStart;
    Point fEnd;
-   
+
    ClassDef(TLinearGradient, 1)//Linear gradient fill.
 };
 
@@ -167,9 +167,9 @@ private:
    Double_t fR1 = 0.;
    Point fEnd;
    Double_t fR2 = 0.;
-   
+
    EGradientType fType = kSimple;
-   
+
    ClassDef(TRadialGradient, 1)//Radial gradient fill.
 };
 

@@ -10,10 +10,10 @@ To connect to Alien you have to connect to a running API service of your
 virtual organization.
 
 Creating <gGrid> instance:
-a) // connecting to an API service 
+a) // connecting to an API service
 
     TGrid::Connect("alien://pcapiserv01.cern.ch:9000","aliprod);
-    
+
     // connecting to an API service which is defined already by the
     environment variables:
        export alien_API_HOST=...
@@ -36,31 +36,31 @@ should be set != 0.
 Some examples:
 
 - change the working directory
-  
+
     gGrid->Cd("/alice/");  // => returns 1 for success, 0 for error
-  
+
 - get the working directory
-  
+
     printf("GRID Working is %d",gGrid->Pwd());
 
 - list a directory
 
-    TGridResult* result = gGrid->Ls("/alice");                         
-    Int_t i=0;                                                         
-    while (result->GetFileName(i))                                    
+    TGridResult* result = gGrid->Ls("/alice");
+    Int_t i=0;
+    while (result->GetFileName(i))
       printf("File %s\n",result->GetFileName(i++));
-    TGridResult* result = gGrid->Ls("/alice");                         
-    Int_t i=0;                                                           
-    while (result->GetFileName(i))                                    
+    TGridResult* result = gGrid->Ls("/alice");
+    Int_t i=0;
+    while (result->GetFileName(i))
       printf("File %s\n",result->GetFileName(i++));
 
 - get all file permissions - using the GetKey function
 
-    TGridResult* result = gGrid->Ls("/alice","-la");                   
-    while (result->GetFileName(i))\                                    
-    printf("The permissions are %s\n",result->GetKey(i++,"permissions")  
-                                                                       
-    // => the defined keys for GetKey can be seen using result->Print();   
+    TGridResult* result = gGrid->Ls("/alice","-la");
+    while (result->GetFileName(i))\
+    printf("The permissions are %s\n",result->GetKey(i++,"permissions")
+
+    // => the defined keys for GetKey can be seen using result->Print();
 
 
 - query files under a certain namespace tree
@@ -69,8 +69,8 @@ Some examples:
 
 
 You can execute any existing command via the Command interface:
-    
-    TGridResult* result = gGrid->Command("ls -la /",0,2); 
+
+    TGridResult* result = gGrid->Command("ls -la /",0,2);
 
     // '0' switches of the output of stdout and stderr to the terminal
     // '2' selects the result stream to be returned as TGridResult* :
@@ -79,7 +79,7 @@ You can execute any existing command via the Command interface:
      '2' returns the result structure
 
 -> This command is equivalent to:
-   
+
     gGrid->Ls("/","-la");
 
 You can print the stdout of the last command via:
@@ -87,7 +87,7 @@ You can print the stdout of the last command via:
 
 You can print the stderr of the last command via:
     gGrid->Stderr();
-        
+
 To see the result structure of a command, you can just use the 'Print' function for the
 TGridResult:
 

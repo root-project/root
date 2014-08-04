@@ -55,7 +55,7 @@ public:
 protected:
    void       Clear(Option_t *option="");
    void       Delete(Option_t *option="");
-   
+
    void       AddFirst(TObject *obj);
    void       AddFirst(TObject *obj, Option_t *opt);
    void       AddLast(TObject *obj);

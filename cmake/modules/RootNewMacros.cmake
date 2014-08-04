@@ -278,7 +278,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   else()
     set(deduced_arg_module ${dict_base_name})
   endif()
-  
+
   #---Set the library output directory-----------------------
   if(DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     set(library_output_dir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
@@ -472,7 +472,7 @@ function(ROOT_OBJECT_LIBRARY library)
   if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
      add_dependencies(${library} ${CMAKE_MATCH_2})
   endif()
-  #--- Fill the property OBJECTS with all the object files 
+  #--- Fill the property OBJECTS with all the object files
   #    This is needed becuase the generator expression $<TARGET_OBJECTS:target>
   #    does not get expanded when used in custom command dependencies
   get_target_property(sources ${library} SOURCES)
@@ -556,7 +556,7 @@ function(ROOT_GENERATE_ROOTMAP library)
   CMAKE_PARSE_ARGUMENTS(ARG "" "LIBRARY" "LINKDEF;DEPENDENCIES" ${ARGN})
   get_filename_component(libname ${library} NAME_WE)
   get_filename_component(path ${library} PATH)
-  
+
   #---Set the library output directory-----------------------
   if(DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     set(library_output_dir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
@@ -693,12 +693,12 @@ macro(ROOT_CHECK_OUT_OF_SOURCE_BUILD)
 endmacro()
 
 #----------------------------------------------------------------------------
-# function ROOT_ADD_TEST( <name> COMMAND cmd [arg1... ] 
+# function ROOT_ADD_TEST( <name> COMMAND cmd [arg1... ]
 #                        [PRECMD cmd [arg1...]] [POSTCMD cmd [arg1...]]
 #                        [OUTPUT outfile] [ERROR errfile]
 #                        [ENVIRONMENT var1=val1 var2=val2 ...
 #                        [DEPENDS test1 ...]
-#                        [TIMEOUT seconds] 
+#                        [TIMEOUT seconds]
 #                        [DEBUG]
 #                        [SOURCE_DIR dir] [BINARY_DIR dir]
 #                        [WORKING_DIR dir]
@@ -801,7 +801,7 @@ function(ROOT_ADD_TEST test)
   if(ARG_CHECKERR)
     set(_command ${_command} -DCHECKERR=true)
   endif()
- 
+
   set(_command ${_command} -DSYS=${ROOTSYS})
 
   #- Handle ENVIRONMENT argument

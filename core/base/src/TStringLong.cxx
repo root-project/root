@@ -100,7 +100,7 @@ void TStringLong::FillBuffer(char *&buffer) const
 void TStringLong::ReadBuffer(char *&buffer)
 {
    // Read this string from the buffer.
-   
+
    UnLink();
    Zero();
 

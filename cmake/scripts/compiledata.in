@@ -12,4 +12,4 @@
 #define LINKEDLIBS "-L@libdir@ -lCore -lRint "
 #define INCLUDEPATH "-I@incdir@"
 #define OBJEXT "o"
-#define SOEXT "@LibSuffix@" 
+#define SOEXT "@LibSuffix@"

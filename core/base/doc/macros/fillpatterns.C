@@ -24,19 +24,19 @@ TCanvas * fillpatterns()
 {
    // Fill patterns example. This macro shows the available fill patterns.
    // The first table displays the 25 fixed patterns. They cannot be
-   // customized unlike the hatches displayed in the second table which be 
+   // customized unlike the hatches displayed in the second table which be
    // cutomized using:
    //   - gStyle->SetHatchesSpacing() to define the spacing between hatches.
    //   - gStyle->SetHatchesLineWidth() to define the hatches line width.
    //
    // Author: Olivier Couet.
-      
+
    TCanvas *Pat = new TCanvas("Fill Patterns", "",0,0,500,700);
    Pat->Range(0,0,1,1);
    Pat->SetBorderSize(2);
    Pat->SetFrameFillColor(0);
    Double_t bh = 0.059;
-   Double_t db = 0.01; 
+   Double_t db = 0.01;
    Double_t y  = 0.995;
    Int_t i,j=3001;
 

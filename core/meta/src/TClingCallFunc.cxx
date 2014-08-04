@@ -736,7 +736,7 @@ TClingCallFunc::make_wrapper()
                   Pattern->getTemplateSpecializationKind();
                if (
                      // The pattern is an ordinary member function.
-                     (PTK == FunctionDecl::TK_NonTemplate) || 
+                     (PTK == FunctionDecl::TK_NonTemplate) ||
                      // The pattern is an explicit specialization, and
                      // so is not a template.
                      ((PTK != FunctionDecl::TK_FunctionTemplate) &&
@@ -790,7 +790,7 @@ TClingCallFunc::make_wrapper()
                   Pattern->getTemplateSpecializationKind();
                if (
                      // The pattern is an ordinary member function.
-                     (PTK == FunctionDecl::TK_NonTemplate) || 
+                     (PTK == FunctionDecl::TK_NonTemplate) ||
                      // The pattern is an explicit specialization, and
                      // so is not a template.
                      ((PTK != FunctionDecl::TK_FunctionTemplate) &&
@@ -847,7 +847,7 @@ TClingCallFunc::make_wrapper()
                   Pattern->getTemplateSpecializationKind();
                if (
                      // The pattern is an ordinary member function.
-                     (PTK == FunctionDecl::TK_NonTemplate) || 
+                     (PTK == FunctionDecl::TK_NonTemplate) ||
                      // The pattern is an explicit specialization, and
                      // so is not a template.
                      ((PTK != FunctionDecl::TK_FunctionTemplate) &&

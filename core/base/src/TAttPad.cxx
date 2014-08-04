@@ -171,7 +171,7 @@ void TAttPad::Streamer(TBuffer &R__b)
          R__b >> fFrameBorderMode;
       }
       //====end of old versions
-      
+
    } else {
       R__b.WriteClassBuffer(TAttPad::Class(),this);
    }

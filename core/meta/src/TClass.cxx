@@ -1399,7 +1399,7 @@ void TClass::Init(const char *name, Version_t cversion,
 
    if ( isStl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
       if (fState != kHasTClassInit) {
-         // If we have a TClass compiled initialization, we can safely assume that 
+         // If we have a TClass compiled initialization, we can safely assume that
          // there will also be a collection proxy.
          fCollectionProxy = TVirtualStreamerInfo::Factory()->GenEmulatedProxy( GetName(), silent );
          if (fCollectionProxy) {
@@ -2145,7 +2145,7 @@ Bool_t TClass::CanSplit() const
       if ((stl==ROOT::kSTLmap || stl==ROOT::kSTLmultimap)
           && !valueClass->HasDataMemberInfo()==0)
       {
-         This->fCanSplit = 0; 
+         This->fCanSplit = 0;
          return kFALSE;
       }
 
@@ -2169,7 +2169,7 @@ Bool_t TClass::CanSplit() const
 
    if (Size()==1) {
       // 'Empty' class there is nothing to split!.
-      This->fCanSplit = 0; 
+      This->fCanSplit = 0;
       return kFALSE;
    }
 
@@ -3068,10 +3068,10 @@ TClass *TClass::GetClass(ClassInfo_t *info, Bool_t load, Bool_t silent)
 
    if (cl) {
       if (cl->IsLoaded()) return cl;
-      
+
       //we may pass here in case of a dummy class created by TVirtualStreamerInfo
       load = kTRUE;
-      
+
    }
 
    if (!load) return 0;
@@ -3909,7 +3909,7 @@ TListOfFunctions *TClass::GetMethodList()
    // The major difference with GetListOfMethod is that this returns
    // the internal type of fMethod and thus can not be made public.
    // It also never 'loads' the content of the list.
-   
+
    if (!fMethod) fMethod = new TListOfFunctions(this);
    return fMethod;
 }
@@ -4020,7 +4020,7 @@ TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto,
    TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithPrototype(fClassInfo,
                                                                   method, proto,
                                                             objectIsConst, mode);
-   
+
    if (!decl) return 0;
    TMethod* f = FindClassOrBaseMethodWithId(decl);
    if (f) return f;
@@ -4065,11 +4065,11 @@ TMethod *TClass::GetClassMethod(const char *name, const char* params,
    TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithValues(fClassInfo,
                                                                      name, params,
                                                                      objectIsConst);
-   
+
    if (!decl) return 0;
-   
+
    TFunction *f = GetMethodList()->Get(decl);
-   
+
    return (TMethod*)f; // Could be zero if the decl is actually in a base class.
 }
 
@@ -4087,16 +4087,16 @@ TMethod *TClass::GetClassMethodWithPrototype(const char *name, const char* proto
 
    if (!gInterpreter)
       Fatal("GetClassMethodWithPrototype", "gInterpreter not initialized");
-   
+
    TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithPrototype(fClassInfo,
                                                                         name, proto,
                                                                         objectIsConst,
                                                                         mode);
-   
+
    if (!decl) return 0;
-   
+
    TFunction *f = GetMethodList()->Get(decl);
-   
+
    return (TMethod*)f; // Could be zero if the decl is actually in a base class.
 }
 
@@ -5780,8 +5780,8 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
          if (code > kNoBaseCheckSum && !isSTL) {
             if (tbc->GetClassPointer() == 0)
                Error("GetCheckSum","Calculating the checksum for (%s) requires the base class (%s) meta information to be available!",
-                     GetName(),tbc->GetName()); 
-            else 
+                     GetName(),tbc->GetName());
+            else
                id = id*3 + tbc->GetClassPointer()->GetCheckSum();
          }
       }/*EndBaseLoop*/
@@ -6339,9 +6339,9 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
       std::map<std::string, TObjArray*>::iterator it;
 
       R__LOCKGUARD(gInterpreterMutex);
-    
+
       it = (*fConversionStreamerInfo).find( cl->GetName() );
-      
+
       if( it != (*fConversionStreamerInfo).end() ) {
          arr = it->second;
       }

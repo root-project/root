@@ -2,12 +2,12 @@
 // Author:  Elias Athanasopoulos, May 2004
 
 /*  ruby-root
- *  
+ *
  *  Elias Athanasopoulos            <elathan@phys.uoa.gr>
  *  George Tzanakos (Supervisor)    <tzanakos@cc.uoa.gr>
- *    
- *  University of Athens 
- *  Department of Physics  
+ *
+ *  University of Athens
+ *  Department of Physics
  *  HEPA Lab
  *  (http://daedalus.phys.uoa.gr)
  *  (c) 2003, 2004
@@ -56,20 +56,20 @@
 #define RRGRAB(fromobj, type, toobj)                            \
     type *toobj;                                                \
     Data_Get_Struct (rb_iv_get (fromobj, "__rr__"), type, toobj)
- 
+
 #define RRCALL(obj, type)                                       \
     type *v;                                                    \
-    Data_Get_Struct(rb_iv_get (obj, "__rr__"), type, v); ((type *)(v)) 
+    Data_Get_Struct(rb_iv_get (obj, "__rr__"), type, v); ((type *)(v))
 
 #define RRCALL2(obj, type, ptr)                                 \
     type *v;                                                    \
-    Data_Get_Struct(rb_iv_get (obj, "__rr__"), type, v); ptr = v 
+    Data_Get_Struct(rb_iv_get (obj, "__rr__"), type, v); ptr = v
 
 #define RRMODCALL(obj, modtype, convfunc)                       \
     modtype *v;                                                 \
     Data_Get_Struct (rb_iv_get (obj, "__rr__"), modtype, v);    \
     convfunc ((void**)&v, obj); v
-    
+
 #define RRMODCALL2(obj, modtype, convfunc, ptr)                 \
     modtype *v;                                                 \
     Data_Get_Struct (rb_iv_get (obj, "__rr__"), modtype, v);    \
@@ -78,7 +78,7 @@
 
 #define RRSTRING(v) (TYPE(v) == T_STRING)
 #define RRINT(v) (TYPE(v) == T_FIXNUM)
-#define RRFLOAT(v) ((TYPE(v) == T_FLOAT) || (TYPE(v) == T_FIXNUM)) 
+#define RRFLOAT(v) ((TYPE(v) == T_FLOAT) || (TYPE(v) == T_FIXNUM))
 #define RRARRAY(v, kind) (TYPE(v) == T_ARRAY && kind(rb_ary_entry(v, 0)))
 #define RRDATA(v) (TYPE(v) == T_OBJECT)
 #define RRFUNC(v) (TYPE(v) == T_SYMBOL)
@@ -146,5 +146,5 @@ void drr_func_entry_free (struct drr_func_entry *entry);
 
 static VALUE drr_generic_method(int argc, VALUE argv[], VALUE self);
 static VALUE drr_method_missing(int argc, VALUE argv[], VALUE self);
-        
+
 #endif

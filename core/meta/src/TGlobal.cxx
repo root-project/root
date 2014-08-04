@@ -41,7 +41,7 @@ TGlobal::TGlobal(DataMemberInfo_t *info) : TDictionary(), fInfo(info)
 TGlobal::TGlobal(const TGlobal &rhs) : TDictionary( ), fInfo(0)
 {
    // Copy constructor
-   
+
    if (rhs.fInfo) {
       fInfo = gCling->DataMemberInfo_FactoryCopy(rhs.fInfo);
       SetName(gCling->DataMemberInfo_Name(fInfo));
@@ -53,7 +53,7 @@ TGlobal::TGlobal(const TGlobal &rhs) : TDictionary( ), fInfo(0)
 TGlobal &TGlobal::operator=(const TGlobal &rhs)
 {
    // Assignment operator.
-   
+
    if (this != &rhs) {
       gCling->DataMemberInfo_Delete(fInfo);
       if (rhs.fInfo) {
@@ -62,7 +62,7 @@ TGlobal &TGlobal::operator=(const TGlobal &rhs)
          SetTitle(gCling->DataMemberInfo_Title(fInfo));
       }
    }
-   return *this;   
+   return *this;
 }
 
 //______________________________________________________________________________

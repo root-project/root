@@ -24,8 +24,8 @@ if(NOT WIN32)
                          TPosixThread.cxx TPosixThreadFactory.cxx)
 else()
   set(sources ${sources} TWin32Condition.cxx TWin32Mutex.cxx
-                         TWin32Thread.cxx TWin32ThreadFactory.cxx)  
-endif() 
+                         TWin32Thread.cxx TWin32ThreadFactory.cxx)
+endif()
 
 ROOT_GENERATE_DICTIONARY(G__Thread ${headers} STAGE1 MODULE Thread LINKDEF LinkDef.h)
 

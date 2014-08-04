@@ -30,10 +30,10 @@ namespace ROOT {
    class TSchemaRuleSet: public TObject
    {
       public:
-      
+
          enum EConsistencyCheck {
             kNoCheck       = 0,
-            kCheckAll      = 1, 
+            kCheckAll      = 1,
             kCheckConflict = 2
          };
 
@@ -72,6 +72,6 @@ namespace ROOT {
          UInt_t                                 fCheckSum;        //  Target class checksum
    };
 
-} // End of Namespace ROOT 
+} // End of Namespace ROOT
 
 #endif // ROOT_TSchemaRuleSet

@@ -299,7 +299,7 @@ TObject *TProcessID::GetObjectWithID(UInt_t uidd)
 TProcessID *TProcessID::GetPID()
 {
    //static: returns pointer to current TProcessID
-   
+
    return fgPID;
 }
 
@@ -307,7 +307,7 @@ TProcessID *TProcessID::GetPID()
 TObjArray *TProcessID::GetPIDs()
 {
    //static: returns array of TProcessIDs
-   
+
    return fgPIDs;
 }
 

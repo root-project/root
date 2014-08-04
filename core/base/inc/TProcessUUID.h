@@ -40,7 +40,7 @@ private:
 protected:
    TList       *fUUIDs;        //Global list of TUUIDs
    TBits       *fActive;       //Table of active UUIDs
-      
+
 public:
 
    TProcessUUID();
@@ -51,7 +51,7 @@ public:
    TBits             *GetActive() const {return fActive;}
    TList             *GetUUIDs()  const {return fUUIDs;}
    void               RemoveUUID(UInt_t number);
-   
+
    ClassDef(TProcessUUID,1)  //TProcessID managing UUIDs
 };
 

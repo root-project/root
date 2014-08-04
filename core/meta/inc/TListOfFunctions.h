@@ -42,21 +42,21 @@ class TListOfFunctions : public THashList
 private:
    typedef TDictionary::DeclId_t DeclId_t;
    TClass    *fClass; // Context of this list.  Not owned.
-   
+
    TExMap    *fIds;      // Map from DeclId_t to TFunction*
    THashList *fUnloaded; // Holder of TFunction for unloaded functions.
    THashTable fOverloads; // TLists of overloads.
    ULong64_t  fLastLoadMarker; // Represent interpreter state when we last did a full load.
-   
+
    TListOfFunctions(const TListOfFunctions&);              // not implemented
    TListOfFunctions& operator=(const TListOfFunctions&);   // not implemented
    TList     *GetListForObjectNonConst(const char* name);
 
    void       MapObject(TObject *obj);
    void       UnmapObject(TObject *obj);
-   
+
 public:
-   
+
    TListOfFunctions(TClass *cl);
    ~TListOfFunctions();
 
@@ -87,7 +87,7 @@ public:
    void Load();
    void Unload();
    void Unload(TFunction *func);
-   
+
    ClassDef(TListOfFunctions,0);  // List of TFunctions for a class
 };
 

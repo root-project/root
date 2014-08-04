@@ -74,6 +74,6 @@ mmalloc_detach (md)
          md = NULL;
       }
    }
-   
+
    return (md);
 }

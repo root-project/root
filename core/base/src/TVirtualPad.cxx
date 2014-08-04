@@ -111,7 +111,7 @@ void TVirtualPad::PushTopLevelSelectable(TObject * /*object*/)
 {
    // Does nothing, unless you implement your own picking.
    // When complex object containing sub-objects (which can be picked)
-   // is painted in a pad, this "top-level" object is pushed into 
+   // is painted in a pad, this "top-level" object is pushed into
    // the selectables stack.
 }
 

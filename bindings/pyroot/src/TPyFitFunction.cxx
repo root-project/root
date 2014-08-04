@@ -54,7 +54,7 @@ static PyObject* DispatchCall( PyObject* pyself, const char* method, PyObject* p
       result = PyObject_CallFunctionObjArgs( pymethod, arg1, arg2, arg3, NULL );
    } else {
    // means the method has not been overridden ... simply accept its not there
-      result = 0; 
+      result = 0;
       PyErr_Format( PyExc_AttributeError,
          "method %s needs implementing in derived class", const_cast< char* >( method ) );
    }

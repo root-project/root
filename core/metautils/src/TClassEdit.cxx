@@ -293,7 +293,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       fElements[i] = TClassEdit::ShortType(fElements[i].c_str(),mode);
       if (hasconst && !(mode & TClassEdit::kKeepOuterConst)) {
          // if mode is set to keep the outer const, it will be kept
-         // and we do not need to put it back ... 
+         // and we do not need to put it back ...
          // FIXME: why are passing a flag meant for the outer
          // to the handling of the inner?
          fElements[i] = "const " + fElements[i];
@@ -376,7 +376,7 @@ ROOT::ESTLType TClassEdit::STLKind(const char *type, size_t len)
          if (len == stllen[k]) {
             if (strncmp(type+offset,stls[k],len)==0) return values[k];
          }
-      }         
+      }
    } else {
       for(int k=1;stls[k];k++) {if (strcmp(type+offset,stls[k])==0) return values[k];}
    }

@@ -421,8 +421,8 @@ Int_t TTimeStamp::GetZoneOffset()
    return -localtime_r(&tp, &buf)->tm_gmtoff;
 #else
    return -localtime(&tp)->tm_gmtoff;
-#endif 
-#endif  
+#endif
+#endif
 #endif
 #else
    _tzset();

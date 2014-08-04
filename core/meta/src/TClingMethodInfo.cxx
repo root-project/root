@@ -60,7 +60,7 @@ class TClingMethodInfo::SpecIterator
 {
 public:
    typedef clang::FunctionTemplateDecl::spec_iterator Iterator;
-   
+
    SpecIterator(Iterator begin, Iterator end) : fIter(begin), fEnd(end) {}
    explicit SpecIterator(clang::FunctionTemplateDecl *decl) : fIter(decl->spec_begin()), fEnd(decl->spec_end()) {}
 
@@ -81,22 +81,22 @@ private:
    Iterator fEnd;
 };
 
-TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo &rhs) : 
+TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo &rhs) :
    fInterp(rhs.fInterp),
    fContexts(rhs.fContexts),
-   fFirstTime(rhs.fFirstTime), 
-   fContextIdx(rhs.fContextIdx), 
+   fFirstTime(rhs.fFirstTime),
+   fContextIdx(rhs.fContextIdx),
    fIter(rhs.fIter),
-   fTitle(rhs.fTitle), 
-   fTemplateSpecIter(rhs.fTemplateSpecIter ? new SpecIterator(*rhs.fTemplateSpecIter) : 0), 
+   fTitle(rhs.fTitle),
+   fTemplateSpecIter(rhs.fTemplateSpecIter ? new SpecIterator(*rhs.fTemplateSpecIter) : 0),
    fSingleDecl(rhs.fSingleDecl)
 {
 }
-   
+
 
 TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
                                    TClingClassInfo *ci)
-   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""), 
+   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
      fTemplateSpecIter(0), fSingleDecl(0)
 {
    if (!ci || !ci->IsValid()) {
@@ -122,8 +122,8 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
 }
 
 TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
-                                   const clang::FunctionDecl *FD) 
-   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""), 
+                                   const clang::FunctionDecl *FD)
+   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
      fTemplateSpecIter(0), fSingleDecl(FD)
 {
 
@@ -139,7 +139,7 @@ TDictionary::DeclId_t TClingMethodInfo::GetDeclId() const
    if (!IsValid()) {
       return TDictionary::DeclId_t();
    }
-   return (const clang::Decl*)(GetMethodDecl()->getCanonicalDecl()); 
+   return (const clang::Decl*)(GetMethodDecl()->getCanonicalDecl());
 }
 
 const clang::FunctionDecl *TClingMethodInfo::GetMethodDecl() const
@@ -150,7 +150,7 @@ const clang::FunctionDecl *TClingMethodInfo::GetMethodDecl() const
 
    if (fSingleDecl)
       return fSingleDecl;
-   
+
    if (fTemplateSpecIter)
       return *(*fTemplateSpecIter);
 
@@ -283,7 +283,7 @@ int TClingMethodInfo::InternalNext()
          }
       }
 
-      clang::FunctionTemplateDecl *templateDecl = 
+      clang::FunctionTemplateDecl *templateDecl =
          llvm::dyn_cast<clang::FunctionTemplateDecl>(*fIter);
       if ( templateDecl ) {
          // SpecIterator calls clang::FunctionTemplateDecl::spec_begin
@@ -296,7 +296,7 @@ int TClingMethodInfo::InternalNext()
             return 1;
          }
       }
-      
+
       // Return if this decl is a function or method.
       if (llvm::isa<clang::FunctionDecl>(*fIter)) {
          // Iterator is now valid.
@@ -335,7 +335,7 @@ long TClingMethodInfo::Property() const
          property |= kIsPrivate;
          break;
       case clang::AS_none:
-         if (fd->getDeclContext()->isNamespace()) 
+         if (fd->getDeclContext()->isNamespace())
             property |= kIsPublic;
          break;
       default:
@@ -552,7 +552,7 @@ const char *TClingMethodInfo::Title()
 
    // Try to get the comment either from the annotation or the header file if present
 
-   // Iterate over the redeclarations, we can have muliple definitions in the 
+   // Iterate over the redeclarations, we can have muliple definitions in the
    // redecl chain (came from merging of pcms).
    const FunctionDecl *FD = GetMethodDecl();
    if (const FunctionDecl *AnnotFD

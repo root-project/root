@@ -106,7 +106,7 @@ private: // Data Members
    std::set<size_t> fLookedUpClasses; // Set of classes for which headers were looked up already
    std::set<size_t> fPayloads; // Set of payloads
    std::set<const char*> fParsedPayloadsAddresses; // Set of payloads which were parsed
-   std::hash<std::string> fStringHashFunction; // A simple hashing function   
+   std::hash<std::string> fStringHashFunction; // A simple hashing function
    std::unordered_set<const clang::NamespaceDecl*> fNSFromRootmaps;   // Collection of namespaces fwd declared in the rootmaps
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
    Bool_t          fLockProcessLine;  // True if ProcessLine should lock gInterpreterMutex.
@@ -402,8 +402,8 @@ public: // Public Interface
    virtual const char* DataMemberInfo_Title(DataMemberInfo_t* dminfo) const;
    virtual const char* DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) const;
    virtual void SetDeclAttr(DeclId_t, const char* /* attribute */);
-   
-   
+
+
    // Function Template interface
    virtual DeclId_t GetDeclId(FuncTempInfo_t *info) const;
    virtual void   FuncTempInfo_Delete(FuncTempInfo_t * /* ft_info */) const;

@@ -132,7 +132,7 @@ TFolder::~TFolder()
    // all its sub folders.
 
    TCollection::StartGarbageCollection();
-   
+
    if (fFolders) {
       if (fFolders->IsOwner()) {
          fFolders->Delete();
@@ -154,7 +154,7 @@ TFolder::~TFolder()
    }
 
    TCollection::EmptyGarbageCollection();
-   
+
    if (gDebug)
       std::cerr << "TFolder dtor called for "<< GetName() << std::endl;
 }
@@ -225,7 +225,7 @@ void TFolder::Clear(Option_t *option)
 //______________________________________________________________________________
 const char *TFolder::FindFullPathName(const char *name) const
 {
-   // Return the full pathname corresponding to subpath name if the node is 
+   // Return the full pathname corresponding to subpath name if the node is
    // gROOT->GetRootFolder() and return a relative path otherwise.
    // The returned path will be re-used by the next call to FindFullPathName().
 

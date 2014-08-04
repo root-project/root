@@ -62,7 +62,7 @@ struct LinkdefReader::Options {
  */
 void LinkdefReader::PopulatePragmaMap(){
    if (!(fgMapPragmaNames.empty())) return; // if the map has already been populated, return, else populate it
-   
+
    LinkdefReader::fgMapPragmaNames["TClass"] = kClass;
    LinkdefReader::fgMapPragmaNames["class"] = kClass;
    LinkdefReader::fgMapPragmaNames["typedef"] = kTypeDef;
@@ -87,7 +87,7 @@ void LinkdefReader::PopulatePragmaMap(){
 
 void LinkdefReader::PopulateCppMap(){
    if (!(fgMapCppNames.empty())) return; // if the map has already been populated, return, else populate it
-   
+
    LinkdefReader::fgMapCppNames["#pragma"] = kPragma;
    LinkdefReader::fgMapCppNames["#ifdef"] = kIfdef;
    LinkdefReader::fgMapCppNames["#endif"] = kEndif;
@@ -121,25 +121,25 @@ bool LinkdefReader::AddInclude(std::string include)
  * The method that processes the pragma statement.
  * Sometimes I had to do strange things to reflect the strange behavior of rootcint
  */
-bool LinkdefReader::AddRule(std::string ruletype, 
-                            std::string identifier, 
-                            bool linkOn, 
-                            bool request_only_tclass, 
+bool LinkdefReader::AddRule(std::string ruletype,
+                            std::string identifier,
+                            bool linkOn,
+                            bool request_only_tclass,
                             LinkdefReader::Options *options /* = 0 */)
 {
-   
+
    EPragmaNames name = kUnknown;
    ROOT::TMetaUtils::Info("LinkdefReader::AddRule","Ruletype is %s with the identifier %s\n",ruletype.c_str(), identifier.c_str());
    std::map<std::string, EPragmaNames>::iterator it = LinkdefReader::fgMapPragmaNames.find(ruletype);
    if (it != LinkdefReader::fgMapPragmaNames.end()) {
       name = it->second;
    }
-   
+
    switch (name) {
       case kAll:
          if (identifier == "globals"){
 //            std::cout<<"all enums and variables selection rule to be impl."<<std::endl;
-            
+
             VariableSelectionRule vsr(fCount++, fInterp);
             if (linkOn) {
                vsr.SetAttributeValue("pattern","*");
@@ -148,7 +148,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
             }
             else {
                if (fSelectionRules->GetHasFileNameRule()) { // only if we had previous defined_in -> create that
-                  // we don't create anything which is OK - if I don't have a selection rule for something 
+                  // we don't create anything which is OK - if I don't have a selection rule for something
                   // this something will not be generated
                   // This is valid also for the other all ... cases
                   vsr.SetAttributeValue("pattern","*");
@@ -158,13 +158,13 @@ bool LinkdefReader::AddRule(std::string ruletype,
             }
             //else vsr.SetSelected(BaseSelectionRule::kNo);
             //fSelectionRules->AddVariableSelectionRule(vsr);
-            
+
             EnumSelectionRule esr(fCount++, fInterp);
             if (linkOn) {
                esr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
                esr.SetAttributeValue("pattern","*");
                fSelectionRules->AddEnumSelectionRule(esr);
-               
+
                //EnumSelectionRule esr2; //Problem wih the enums - if I deselect them here
                EnumSelectionRule esr2(fCount++, fInterp);
                esr2.SetSelected(BaseSelectionRule::kNo);
@@ -181,7 +181,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
          }
          else if (identifier == "functions") {
 //            std::cout<<"all functions selection rule to be impl."<<std::endl;
-            
+
             FunctionSelectionRule fsr(fCount++, fInterp);
             fsr.SetAttributeValue("pattern","*");
             if (linkOn) {
@@ -197,21 +197,21 @@ bool LinkdefReader::AddRule(std::string ruletype,
          }
          else if (identifier == "classes" || identifier == "namespaces") {
 //            std::cout<<"all classes selection rule to be impl."<<std::endl;
-            
-            
-            if (linkOn) {         
-               
+
+
+            if (linkOn) {
+
                ClassSelectionRule csr3(fCount++, fInterp);
                csr3.SetSelected(BaseSelectionRule::kNo);
                csr3.SetAttributeValue("pattern","__va_*"); // don't generate for the built-in classes/structs
                fSelectionRules->AddClassSelectionRule(csr3);
-               
+
                ClassSelectionRule csr(fCount++,fInterp), csr2(fCount++,fInterp);
                csr.SetAttributeValue("pattern","*");
                csr2.SetAttributeValue("pattern","*::*");
                csr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
                csr2.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
-               
+
                fSelectionRules->AddClassSelectionRule(csr);
                fSelectionRules->AddClassSelectionRule(csr2);
             }
@@ -220,7 +220,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
                   ClassSelectionRule csr(fCount++, fInterp), csr2(fCount++, fInterp);
                   csr.SetAttributeValue("pattern","*");
                   csr2.SetAttributeValue("pattern","*::*");
-                  
+
                   csr.SetSelected(BaseSelectionRule::kNo);
                   csr2.SetSelected(BaseSelectionRule::kNo);
                   fSelectionRules->AddClassSelectionRule(csr);
@@ -232,7 +232,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
             std::cerr<<"Warning - possibly unimplemented pragma statement: "<<std::endl;
             return false;
          }
-         
+
          break;
       case kNestedclasses:
       { // we don't really process that one
@@ -241,36 +241,36 @@ bool LinkdefReader::AddRule(std::string ruletype,
       case kDefinedIn:
       {
 //         std::cout<<"sel rules for everything (pattern = \"*\") in "<<identifier<<" should be implemented"<<std::endl;
-         
+
          fSelectionRules->SetHasFileNameRule(true);
-         
+
          // add selection rules for everything
 
          if (identifier.length() && identifier[0]=='"' && identifier[identifier.length()-1]=='"') {
             identifier = identifier.substr(1,identifier.length()-2);
          }
-         
+
          VariableSelectionRule vsr(fCount++, fInterp);
          vsr.SetAttributeValue("pattern","*");
          vsr.SetAttributeValue("file_name",identifier);
          if (linkOn) vsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
          else vsr.SetSelected(BaseSelectionRule::kNo);
          fSelectionRules->AddVariableSelectionRule(vsr);
-         
+
          EnumSelectionRule esr(fCount++, fInterp);
          esr.SetAttributeValue("pattern","*");
          esr.SetAttributeValue("file_name",identifier);
          if (linkOn) esr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
          else esr.SetSelected(BaseSelectionRule::kNo);
          fSelectionRules->AddEnumSelectionRule(esr);
-         
+
          FunctionSelectionRule fsr(fCount++, fInterp);
          fsr.SetAttributeValue("pattern","*");
          fsr.SetAttributeValue("file_name",identifier);
          if (linkOn) fsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
          else fsr.SetSelected(BaseSelectionRule::kNo);
          fSelectionRules->AddFunctionSelectionRule(fsr);
-         
+
          ClassSelectionRule csr(fCount++, fInterp), csr2(fCount++, fInterp);
          csr.SetAttributeValue("pattern","*");
          csr2.SetAttributeValue("pattern","*::*");
@@ -289,10 +289,10 @@ bool LinkdefReader::AddRule(std::string ruletype,
          csr2.SetRequestStreamerInfo(true);
          fSelectionRules->AddClassSelectionRule(csr);
          fSelectionRules->AddClassSelectionRule(csr2);
-         
+
       }
          break;
-         
+
       case kFunction:
          {
             bool name_or_proto = false; // if true = name, if flase = proto_name
@@ -327,7 +327,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
                }
             }
             fSelectionRules->AddFunctionSelectionRule(fsr);
-            
+
          }
          break;
 
@@ -336,7 +336,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
             if(!ProcessOperators(identifier)) // this creates the proto_pattern
                return false;
 //            std::cout<<"function selection rule for "<<identifier<<" (proto_pattern) to be impl."<<std::endl;
-            
+
             FunctionSelectionRule fsr(fCount++, fInterp);
             if (linkOn) fsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
             else fsr.SetSelected(BaseSelectionRule::kNo);
@@ -358,7 +358,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
       case kEnum:
          {
 //            std::cout<<"enum selection rule for "<<identifier<<" to be impl."<<std::endl;
-            
+
             EnumSelectionRule esr(fCount++, fInterp);
             if (linkOn) esr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
             else esr.SetSelected(BaseSelectionRule::kNo);
@@ -375,7 +375,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
          {
 //            std::cout<<"class selection rule for "<<identifier<<" to be impl."<<std::endl;
             ClassSelectionRule csr(fCount++, fInterp);
-            
+
             if (request_only_tclass) {
                csr.SetRequestOnlyTClass(true);
             }
@@ -395,7 +395,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
                }
             }
             if (len > 1) { // process the +, -, -! endings of the classes
-               
+
                bool ending = false;
                int where = 1;
                while (!ending && where < len) {
@@ -428,16 +428,16 @@ bool LinkdefReader::AddRule(std::string ruletype,
                   identifier.erase(len - (where-1));
                }
             }
-            
+
             if (linkOn) {
                csr.SetSelected(BaseSelectionRule::kYes);
-               
+
                if (identifier == "*") { // rootcint generates error here, but I decided to implement it
                   ClassSelectionRule csr2(fCount++, fInterp);
                   csr2.SetSelected(BaseSelectionRule::kYes);
                   csr2.SetAttributeValue("pattern", "*::*");
                   fSelectionRules->AddClassSelectionRule(csr2);
-                  
+
                   ClassSelectionRule csr3(fCount++, fInterp);
                   csr3.SetSelected(BaseSelectionRule::kNo);
                   csr3.SetAttributeValue("pattern","__va_*");
@@ -451,12 +451,12 @@ bool LinkdefReader::AddRule(std::string ruletype,
                   csr2.SetSelected(BaseSelectionRule::kNo);
                   csr2.SetAttributeValue("pattern", "*::*");
                   fSelectionRules->AddClassSelectionRule(csr2);
-                  
+
                   EnumSelectionRule esr(fCount++, fInterp); // we need this because of implicit/explicit rules - check my notes on rootcint
                   esr.SetSelected(BaseSelectionRule::kNo);
                   esr.SetAttributeValue("pattern", "*::*");
                   fSelectionRules->AddEnumSelectionRule(esr);
-                  
+
                }
                // Since the rootcling default is 'off' (we need to explicilty annotate to turn it on), the nested type and function
                // should be off by default.  Note that anyway, this is not yet relevant since the pcm actually ignore the on/off
@@ -466,7 +466,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
                //    esr.SetSelected(BaseSelectionRule::kNo);
                //    esr.SetAttributeValue("pattern", identifier+"::*");
                //    fSelectionRules->AddEnumSelectionRule(esr);
-                  
+
                //    if (fSelectionRules->GetHasFileNameRule()) {
                //       FunctionSelectionRule fsr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcint
                //       fsr.SetSelected(BaseSelectionRule::kNo);
@@ -526,23 +526,23 @@ bool LinkdefReader::LoadIncludes(std::string &extraIncludes)
 bool LinkdefReader::ProcessFunctionPrototype(std::string& proto, bool& name)
 {
    int pos1, pos1_1, pos2, pos2_1;
-   
+
    pos1 = proto.find_first_of("(");
    pos1_1 = proto.find_last_of("(");
-   
+
    if (pos1 != pos1_1) {
       std::cout<<"Error at line "<<fLine<<" - too many ( in function prototype!"<<std::endl;
       return false;
    }
-   
+
    pos2 = proto.find_first_of(")");
    pos2_1 = proto.find_last_of(")");
-   
+
    if (pos2 != pos2_1) {
       std::cout<<"Error at line "<<fLine<<" - too many ) in function prototype!"<<std::endl;
       return false;
    }
-   
+
    if (pos1 > -1){
       if (pos2 < 0) {
          std::cout<<"Error at line "<<fLine<<" - missing ) in function prototype"<<std::endl;
@@ -552,7 +552,7 @@ bool LinkdefReader::ProcessFunctionPrototype(std::string& proto, bool& name)
          std::cout<<"Error at line "<<fLine<<" - wrong order of ( and ) in function prototype"<<std::endl;
          return false;
       }
-      
+
       // I don't have to escape the *-s because in rootcint there is no pattern recognition
       int pos3=pos1;
       while (true) {
@@ -577,7 +577,7 @@ bool LinkdefReader::ProcessFunctionPrototype(std::string& proto, bool& name)
    return true;
 }
 
-// This function is really very basic - it just checks whether everything is OK with the 
+// This function is really very basic - it just checks whether everything is OK with the
 // spaces and if the number of opening < matches the number of >.
 // But it doesn't catch situations like vector>int<, etc.
 bool LinkdefReader::ProcessOperators(std::string& pattern)
@@ -591,21 +591,21 @@ bool LinkdefReader::ProcessOperators(std::string& pattern)
       pos = pattern.find(" ",pos+1);
       pos1 = pattern.find("<", pos1+1);
       pos2 = pattern.find(">", pos2+1);
-      
+
       if ((pos < 0) && (pos1 < 0) && (pos2 < 0)) break;
-      
+
       if (pos1 > -1) ++open_br;
       if (pos2 > -1) ++close_br;
-      
+
       if (pos < 0) continue;
       char before = '$';
       char after = '$';
       bool ok1 = false;
       bool ok2 = false;
-      
+
       if (pos > 0) before = pattern.at(pos-1);
       if (pos < (int)(pattern.length()-1)) after = pattern.at(pos+1);
-      
+
       //std::cout<<"before: "<<before<<", after: "<<after<<", pos: "<<pos<<std::endl;
       switch(before){
          case '<':
@@ -633,7 +633,7 @@ bool LinkdefReader::ProcessOperators(std::string& pattern)
       }
       pattern.erase(pos, 1);
    }
-   
+
    if (open_br != close_br) {
       std::cout<<"Error at line "<<fLine<<" - number of < doesn't match number of >"<<std::endl;
       return false;
@@ -652,9 +652,9 @@ public:
       clang::PragmaHandler(which), fOwner(owner), fSourceManager(sm)
    {
    }
-   
+
    void Error(const char *message, const clang::Token &tok, bool source = true) {
-      
+
       std::cerr << message << " at ";
       tok.getLocation().dump(fSourceManager);
       if (source) {
@@ -689,12 +689,12 @@ public:
       }
 
       PP.Lex(tok);
-      while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) 
+      while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi))
       {
          if (!tok.getIdentifierInfo()) {
             Error("Error: Malformed version option.",tok);
-          } else if (tok.getIdentifierInfo()->getName() == "nomap") { 
-            // For rlibmap rather than rootcling 
+          } else if (tok.getIdentifierInfo()->getName() == "nomap") {
+            // For rlibmap rather than rootcling
             // so ignore
          }
          else if (tok.getIdentifierInfo()->getName() == "nostreamer") options.fNoStreamer = 1;
@@ -747,7 +747,7 @@ public:
 
 };
 
-class PragmaExtraInclude : public LinkdefReaderPragmaHandler 
+class PragmaExtraInclude : public LinkdefReaderPragmaHandler
 {
 public:
    PragmaExtraInclude(LinkdefReader &owner, clang::SourceManager &sm) :
@@ -755,7 +755,7 @@ public:
       LinkdefReaderPragmaHandler("extra_include",owner,sm)
    {
    }
-   
+
    void HandlePragma (clang::Preprocessor &PP,
                       clang::PragmaIntroducerKind Introducer,
                       clang::Token &tok) {
@@ -766,7 +766,7 @@ public:
       if (Introducer != clang::PIK_HashPragma) return; // only #pragma, not C-style.
       if (!tok.getIdentifierInfo()) return; // must be "link"
       if (tok.getIdentifierInfo()->getName() != "extra_include") return;
-      
+
       PP.Lex(tok);
       //      if (DClient.hasErrorOccured()) {
       //         return;
@@ -778,7 +778,7 @@ public:
       const char *start = fSourceManager.getCharacterData(tok.getLocation());
       clang::Token end;
       end.startToken(); // Initialize token.
-      while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) 
+      while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi))
       {
          end = tok;
          PP.Lex(tok);
@@ -791,16 +791,16 @@ public:
          Error("Error: Unknown token!",tok);
       } else {
          llvm::StringRef include(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
-         
+
          if (!fOwner.AddInclude(include))
          {
             Error("",tok);
          }
-      }      
+      }
    }
 };
 
-class PragmaIoReadInclude : public LinkdefReaderPragmaHandler 
+class PragmaIoReadInclude : public LinkdefReaderPragmaHandler
 {
 public:
    PragmaIoReadInclude(LinkdefReader &owner, clang::SourceManager &sm) :
@@ -808,12 +808,12 @@ public:
       LinkdefReaderPragmaHandler("read",owner,sm)
    {
    }
-   
+
    void HandlePragma (clang::Preprocessor &PP,
                       clang::PragmaIntroducerKind Introducer,
                       clang::Token &tok) {
       // Handle a #pragma found by the Preprocessor.
-      
+
       // check whether we care about the pragma - we are a named handler,
       // thus this could actually be transformed into an assert:
       if (Introducer != clang::PIK_HashPragma) return; // only #pragma, not C-style.
@@ -831,7 +831,7 @@ public:
       const char *start = fSourceManager.getCharacterData(tok.getLocation());
       clang::Token end;
       end.startToken(); // Initialize token.
-      while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) 
+      while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi))
       {
          end = tok;
          PP.Lex(tok);
@@ -845,18 +845,18 @@ public:
          Error("Error: unknown token",tok);
       } else {
          llvm::StringRef rule_text(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
-         
+
          ROOT::ProcessReadPragma( rule_text.str().c_str() );
          //std::cerr << "Warning: #pragma read not yet handled: " << include.str() << "\n";
          //         if (!fOwner.AddInclude(include))
          //         {
          //            Error("",tok);
          //         }
-      }      
+      }
    }
 };
 
-class PragmaLinkCollector : public LinkdefReaderPragmaHandler 
+class PragmaLinkCollector : public LinkdefReaderPragmaHandler
 {
    // Handles:
    //  #pragma link [spec] options=... class classname[+-!]
@@ -867,18 +867,18 @@ public:
       LinkdefReaderPragmaHandler("link",owner,sm)
    {
    }
-   
+
    void HandlePragma (clang::Preprocessor &PP,
                       clang::PragmaIntroducerKind Introducer,
                       clang::Token &tok) {
       // Handle a #pragma found by the Preprocessor.
-      
+
       // check whether we care about the pragma - we are a named handler,
       // thus this could actually be transformed into an assert:
       if (Introducer != clang::PIK_HashPragma) return; // only #pragma, not C-style.
       if (!tok.getIdentifierInfo()) return; // must be "link"
       if (tok.getIdentifierInfo()->getName() != "link") return;
-      
+
       PP.Lex(tok);
 //      if (DClient.hasErrorOccured()) {
 //         return;
@@ -906,14 +906,14 @@ public:
          Error("Error bad #pragma format. ",tok);
          return;
       }
-      
+
       PP.Lex(tok);
       if (tok.is(clang::tok::eod)) {
          Error("Error no arguments after #pragma link C++/off: ", tok);
          return;
       }
       llvm::StringRef type = tok.getIdentifierInfo()->getName();
-      
+
       LinkdefReader::Options *options = 0;
       if (type == "options" || type == "option") {
          options = new LinkdefReader::Options();
@@ -922,19 +922,19 @@ public:
          }
          if (tok.getIdentifierInfo()) type = tok.getIdentifierInfo()->getName();
       }
-         
+
       PP.Lex(tok);
       const char *start = fSourceManager.getCharacterData(tok.getLocation());
       clang::Token end;
       end.startToken(); // Initialize token.
-      while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) 
+      while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi))
       {
          // PP.DumpToken(tok, true);
          // llvm::errs() << "\n";
          end = tok;
          PP.Lex(tok);
       }
-      
+
       if (tok.isNot(clang::tok::semi)) {
          Error("Error: missing ; at end of rule",tok,false);
          return;
@@ -947,7 +947,7 @@ public:
          }
       } else {
          llvm::StringRef identifier(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
-         
+
          if (!fOwner.AddRule(type,identifier,linkOn,false,options))
          {
             Error(type.data(),tok, false);
@@ -959,7 +959,7 @@ public:
 //         llvm::errs() << "\n";
 //      } while (tok.isNot(clang::tok::eod));
    }
-   
+
 };
 
 class PragmaCreateCollector : public LinkdefReaderPragmaHandler
@@ -970,12 +970,12 @@ public:
       LinkdefReaderPragmaHandler("create",owner,sm)
    {
    }
-   
+
    void HandlePragma (clang::Preprocessor &PP,
                       clang::PragmaIntroducerKind Introducer,
                       clang::Token &tok) {
       // Handle a #pragma found by the Preprocessor.
-      
+
       // check whether we care about the pragma - we are a named handler,
       // thus this could actually be transformed into an assert:
       if (Introducer != clang::PIK_HashPragma) return; // only #pragma, not C-style.
@@ -994,40 +994,40 @@ public:
          Error("Error: currently only supporting TClass after '#pragma create':",tok);
          return;
       }
-            
+
       PP.Lex(tok);
       const char *start = fSourceManager.getCharacterData(tok.getLocation());
       clang::Token end = tok;
-      while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi)) 
+      while (tok.isNot(clang::tok::eod) && tok.isNot(clang::tok::semi))
       {
          end = tok;
          PP.Lex(tok);
       }
-      
+
       if (tok.isNot(clang::tok::semi)) {
          Error("Error: missing ; at end of rule",tok,false);
          return;
       }
-      
+
       llvm::StringRef identifier(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
-      
+
       if (!fOwner.AddRule("class",identifier,true,true))
       {
          Error("",tok);
       }
- 
+
 //      do {
 //         PP.Lex(tok);
 //         PP.DumpToken(tok, true);
 //         llvm::errs() << "\n";
 //      } while (tok.isNot(clang::tok::eod));
    };
-   
+
 };
 
 
 // Parse using clang and its pragma handlers callbacks.
-bool LinkdefReader::Parse(SelectionRules& sr, llvm::StringRef code, const std::vector<std::string> &parserArgs, const char *llvmdir)         
+bool LinkdefReader::Parse(SelectionRules& sr, llvm::StringRef code, const std::vector<std::string> &parserArgs, const char *llvmdir)
 {
    fSelectionRules = &sr;
 
@@ -1035,32 +1035,32 @@ bool LinkdefReader::Parse(SelectionRules& sr, llvm::StringRef code, const std::v
    for (size_t i = 0, n = parserArgs.size(); i < n; ++i) {
       parserArgsC.push_back(parserArgs[i].c_str());
    }
-   
+
    // Extract all #pragmas
    llvm::MemoryBuffer* memBuf = llvm::MemoryBuffer::getMemBuffer(code, "CINT #pragma extraction");
    clang::CompilerInstance* pragmaCI = cling::CIFactory::createCI(memBuf, parserArgsC.size(), &parserArgsC[0], llvmdir, /*stateCollector=*/0);
-   
+
    clang::Preprocessor& PP = pragmaCI->getPreprocessor();
    clang::DiagnosticConsumer& DClient = pragmaCI->getDiagnosticClient();
    DClient.BeginSourceFile(pragmaCI->getLangOpts(), &PP);
-   
-   PragmaLinkCollector pragmaLinkCollector(*this,pragmaCI->getASTContext().getSourceManager());   
+
+   PragmaLinkCollector pragmaLinkCollector(*this,pragmaCI->getASTContext().getSourceManager());
    PragmaCreateCollector pragmaCreateCollector(*this,pragmaCI->getASTContext().getSourceManager());
-   PragmaExtraInclude pragmaExtraInclude(*this,pragmaCI->getASTContext().getSourceManager());   
+   PragmaExtraInclude pragmaExtraInclude(*this,pragmaCI->getASTContext().getSourceManager());
    PragmaIoReadInclude pragmaIoReadInclude(*this,pragmaCI->getASTContext().getSourceManager());
-   
+
    PP.AddPragmaHandler(&pragmaLinkCollector);
    PP.AddPragmaHandler(&pragmaCreateCollector);
    PP.AddPragmaHandler(&pragmaExtraInclude);
    PP.AddPragmaHandler(&pragmaIoReadInclude);
-   
+
    // Start parsing the specified input file.
    PP.EnterMainSourceFile();
    clang::Token tok;
    do {
       PP.Lex(tok);
    } while (tok.isNot(clang::tok::eof));
-   
+
    fSelectionRules = 0;
    return true;
 }

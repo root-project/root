@@ -44,7 +44,7 @@ N: Elias Athanasopoulos
 E: elathan@ics.forth.gr
 D: Ruby interpreter interface
 
-N: Alejandro Alvarez Ayllon 
+N: Alejandro Alvarez Ayllon
 E: alejandro.alvarez.ayllon@cern.ch
 D: TSSLSocket class and integration in TWebFile
 
@@ -101,7 +101,7 @@ D: PROOF contributions
 N: Brian Bockelman
 E: bbockelm@cse.unl.edu
 D: THDFSFile for accessing the Hadoop file system
-D: Improvement to ROOT I/O disk and memory efficiency. 
+D: Improvement to ROOT I/O disk and memory efficiency.
 
 N: Sebastian Boeser
 E: sboeser@ifh.de
@@ -192,7 +192,7 @@ N: Bianca-Cristina Cristescu
 E: bianca-cristina.cristescu@cern.ch
 D: contributions to ROOT6 / meta
 
-N: David Dagenhart 
+N: David Dagenhart
 E: wdd@fnal.gov
 D: Support for LZMA compression in ROOT files
 
@@ -738,7 +738,7 @@ D: contributed to TMultiDimFit::EvalError function
 
 N: Bartolomeu Rabacal
 E: brabacal@cern.ch
-D: Math libraries: GoFTest and TKDE classes 
+D: Math libraries: GoFTest and TKDE classes
 
 N: Fons Rademakers
 E: Fons.Rademakers@cern.ch

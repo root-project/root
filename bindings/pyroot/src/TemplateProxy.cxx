@@ -19,7 +19,7 @@ namespace PyROOT {
 
 //____________________________________________________________________________
 void TemplateProxy::Set( const std::string& name, PyObject* pyclass )
-{   
+{
 // Initialize the proxy for the given 'pyclass.'
    fPyName       = PyROOT_PyUnicode_FromString( const_cast< char* >( name.c_str() ) );
    Py_XINCREF( pyclass );
@@ -34,7 +34,7 @@ void TemplateProxy::Set( const std::string& name, PyObject* pyclass )
 void TemplateProxy::AddOverload( MethodProxy* mp ) {
 // Store overloads of this templated method.
    fNonTemplated->AddMethod( mp );
-}  
+}
 
 void TemplateProxy::AddOverload( PyCallable* pc ) {
 // Store overload of this templated method.

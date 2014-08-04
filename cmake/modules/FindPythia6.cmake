@@ -10,7 +10,7 @@
 
 set(CMAKE_LIBRARY_PATH
   /cern/pro/lib
-  /opt/pythia 
+  /opt/pythia
   /opt/pythia6
   /usr/lib/pythia
   /usr/local/lib/pythia

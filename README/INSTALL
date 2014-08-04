@@ -192,7 +192,7 @@ packages do:
 1) Make a tar-ball of the source tree:
 
         cd ../
-        tar -czvf root-v<version>.source.tar.gz 
+        tar -czvf root-v<version>.source.tar.gz
 
   where <version>=<major>.<minor>.<revision> is the version number of
   ROOT (see the file build/version_number).
@@ -696,7 +696,7 @@ More information is available from:
 7.9. Venus Event Generators:
 ----------------------------
 To build the event generator interface for Venus, you need to have the
-Venus libraries.  The sources can be downloaded from 
+Venus libraries.  The sources can be downloaded from
 
     ftp://root.cern.ch/root/venus/
 
@@ -775,5 +775,5 @@ There is no need to build special modules for SSH authentication.
 
 
 Local Variables:
-      mode: text 
+      mode: text
 End:

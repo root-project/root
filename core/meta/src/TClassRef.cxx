@@ -46,7 +46,7 @@ TClassRef::TClassRef(const char *classname) :
 TClassRef::TClassRef(TClass *cl) : fClassPtr(0)
 {
    // Add reference to specified class object.
-   
+
    if (cl) {
       fClassName = cl->GetName();
       fClassPtr = cl->GetPersistentRef();

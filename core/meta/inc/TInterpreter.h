@@ -218,7 +218,7 @@ public:
    virtual ULong64_t GetInterpreterStateMarker() const = 0;
 
    typedef TDictionary::DeclId_t DeclId_t;
-   virtual DeclId_t GetDeclId(CallFunc_t *info) const = 0;   
+   virtual DeclId_t GetDeclId(CallFunc_t *info) const = 0;
    virtual DeclId_t GetDeclId(ClassInfo_t *info) const = 0;
    virtual DeclId_t GetDeclId(DataMemberInfo_t *info) const = 0;
    virtual DeclId_t GetDeclId(FuncTempInfo_t *info) const = 0;
@@ -280,9 +280,9 @@ public:
    virtual void   ClassInfo_Delete(ClassInfo_t * /* info */, void * /* arena */) const {;}
    virtual void   ClassInfo_DeleteArray(ClassInfo_t * /* info */, void * /* arena */, bool /* dtorOnly */) const {;}
    virtual void   ClassInfo_Destruct(ClassInfo_t * /* info */, void * /* arena */) const {;}
-   virtual ClassInfo_t  *ClassInfo_Factory() const = 0; 
+   virtual ClassInfo_t  *ClassInfo_Factory() const = 0;
    virtual ClassInfo_t  *ClassInfo_Factory(ClassInfo_t * /* cl */) const = 0;
-   virtual ClassInfo_t  *ClassInfo_Factory(const char * /* name */) const = 0; 
+   virtual ClassInfo_t  *ClassInfo_Factory(const char * /* name */) const = 0;
    virtual Long_t   ClassInfo_GetBaseOffset(ClassInfo_t* /* fromDerived */,
                                             ClassInfo_t* /* toBase */, void* /* address */ = 0, bool /*isderived*/ = true) const {return 0;}
    virtual int    ClassInfo_GetMethodNArg(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Bool_t /* objectIsConst */ = false, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {return 0;}

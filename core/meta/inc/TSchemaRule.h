@@ -31,7 +31,7 @@ namespace ROOT {
 
             ClassDef(TSources,2);
          };
-      
+
          typedef enum
          {
             kReadRule    = 0,
@@ -48,8 +48,8 @@ namespace ROOT {
          TSchemaRule( const TSchemaRule& rhs );
          TSchemaRule& operator = ( const TSchemaRule& rhs );
          Bool_t operator == ( const TSchemaRule& rhs );
-      
-         
+
+
          void             Clear(Option_t * /*option*/ ="");
          Bool_t           SetFromRule( const char *rule );
 

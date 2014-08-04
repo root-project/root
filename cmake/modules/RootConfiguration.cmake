@@ -1,6 +1,6 @@
 #---Define a function to do not polute the top level namespace with unneeded variables-----------------------
 function(RootConfigure)
-  
+
 #---Define all sort of variables to bridge between the old Module.mk and the new CMake equivalents-----------
 foreach(v 1 ON YES TRUE Y)
   set(value${v} yes)
@@ -512,27 +512,27 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
               ${CMAKE_SOURCE_DIR}/cmake/scripts/setenvwrap.csh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv
-              PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ 
-                          GROUP_EXECUTE GROUP_READ 
-                          WORLD_EXECUTE WORLD_READ 
+              PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                          GROUP_EXECUTE GROUP_READ
+                          WORLD_EXECUTE WORLD_READ
               DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 if (XROOTD_FOUND AND XROOTD_NOMAIN)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd
-                 PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ 
-                             GROUP_EXECUTE GROUP_READ 
-                             WORLD_EXECUTE WORLD_READ 
+                 PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                             GROUP_EXECUTE GROUP_READ
+                             WORLD_EXECUTE WORLD_READ
                  DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 install(FILES ${CMAKE_BINARY_DIR}/include/RConfigOptions.h
-              ${CMAKE_BINARY_DIR}/include/compiledata.h 
+              ${CMAKE_BINARY_DIR}/include/compiledata.h
               DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes 
+install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-              
+
 install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
 
 

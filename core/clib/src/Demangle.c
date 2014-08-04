@@ -2613,7 +2613,7 @@ string *s;
 int n;
 {
    int tem;
-   
+
    if (s->b == NULL)
    {
       if (n < 32)
@@ -2689,7 +2689,7 @@ string_appends (p, s)
 string *p, *s;
 {
    int n;
-   
+
    if (s->b != s->p)
    {
       n = s->p - s->b;
@@ -2741,7 +2741,7 @@ const char *s;
 int n;
 {
    char *q;
-   
+
    if (n != 0)
    {
       string_need (p, n);
@@ -2766,7 +2766,7 @@ demangle_it (mangled_name)
 char *mangled_name;
 {
    char *result;
-   
+
    result = cplus_demangle (mangled_name, DMGL_PARAMS | DMGL_ANSI);
    if (result == NULL)
    {
@@ -2821,12 +2821,12 @@ char **argv;
 {
    char *result;
    int c;
-   
+
    program_name = argv[0];
    malloc_set_program_name (program_name);
-   
+
    strip_underscore = prepends_underscore;
-   
+
    while ((c = getopt_long (argc, argv, "_ns:", long_options, (int *) 0)) != EOF)
    {
       switch (c)
@@ -2867,7 +2867,7 @@ char **argv;
             break;
       }
    }
-   
+
    if (optind < argc)
    {
       for ( ; optind < argc; optind++)
@@ -2893,7 +2893,7 @@ char **argv;
          {
             int skip_first = strip_underscore && i > 1 && mbuffer[0] == '_';
             mbuffer[i] = 0;
-            
+
             result = cplus_demangle (mbuffer+skip_first,
                                      DMGL_PARAMS | DMGL_ANSI);
             if (result)
@@ -2903,7 +2903,7 @@ char **argv;
             }
             else
                fputs (mbuffer + skip_first, stdout);
-            
+
             fflush (stdout);
          }
          if (c == EOF)
@@ -2911,7 +2911,7 @@ char **argv;
          putchar (c);
       }
    }
-   
+
    exit (0);
 }
 

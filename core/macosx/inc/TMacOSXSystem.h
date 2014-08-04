@@ -43,7 +43,7 @@ class TMacOSXSystem : public TUnixSystem {
 public:
    TMacOSXSystem();
    ~TMacOSXSystem();
-   
+
    void DispatchOneEvent(Bool_t pendingOnly);
    bool CocoaInitialized() const;
 
@@ -64,7 +64,7 @@ private:
 
    TMacOSXSystem(const TMacOSXSystem &rhs);
    TMacOSXSystem &operator = (const TMacOSXSystem &rhs);
-   
+
    ClassDef(TMacOSXSystem, 0);//TSystem for Mac OSX.
 };
 

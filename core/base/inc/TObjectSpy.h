@@ -56,7 +56,7 @@ class TObjectRefSpy : public TObject {
 private:
    TObjectRefSpy(const TObjectRefSpy& s); // Not implemented.  : TObject(), fObj(s.fObj), fFixMustCleanupBit(s.fFixMustCleanupBit) { }
    TObjectRefSpy& operator=(const TObjectRefSpy& s);  // Not implemented. { fObj = s.fObj; fFixMustCleanupBit = s.fFixMustCleanupBit; return *this; }
-   
+
 protected:
    TObject  *&fObj;                // object being spied
    Bool_t    fResetMustCleanupBit; // flag saying that kMustCleanup needs to be reset in dtor

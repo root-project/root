@@ -102,7 +102,7 @@ Bool_t TPython::Initialize()
    // try again to see if the interpreter is initialized
       if ( ! Py_IsInitialized() ) {
       // give up ...
-         std::cerr << "Error: python has not been intialized; returning." << std::endl;           
+         std::cerr << "Error: python has not been intialized; returning." << std::endl;
          return kFALSE;
       }
 

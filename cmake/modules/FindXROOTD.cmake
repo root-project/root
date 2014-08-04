@@ -71,7 +71,7 @@ if(XROOTD_FOUND)
   if(XROOTD_OLDPACK)
     foreach(l XrdNet XrdOuc XrdSys XrdClient Xrd)
       find_library(XROOTD_${l}_LIBRARY
-         NAMES ${l} 
+         NAMES ${l}
          HINTS ${searchpath}
          PATH_SUFFIXES lib)
       list(APPEND XROOTD_LIBRARIES ${XROOTD_${l}_LIBRARY})
@@ -97,7 +97,7 @@ if(XROOTD_FOUND)
        set(XROOTD_NOMAIN TRUE)
        if(NOT XROOTD_FIND_QUIETLY)
           message(STATUS "             libXrdMain not found: xproofd will be a wrapper around xrootd")
-       endif () 
+       endif ()
     endif ()
 
     # libXrdUtils
@@ -120,7 +120,7 @@ if(XROOTD_FOUND)
        set(XROOTD_NOOLDCLNT TRUE)
        if(NOT XROOTD_FIND_QUIETLY)
           message(STATUS "             libXrdClient not found: use built-in")
-       endif () 
+       endif ()
     endif ()
 
     # libXrdCl
@@ -141,7 +141,7 @@ if(XROOTD_FOUND)
     if(NOT XROOTD_FIND_QUIETLY )
       message(STATUS "             include_dirs: ${XROOTD_INCLUDE_DIRS}")
       message(STATUS "             libraries: ${XROOTD_LIBRARIES}")
-    endif() 
+    endif()
   else ()
     set(XROOTD_FOUND FALSE)
   endif ()

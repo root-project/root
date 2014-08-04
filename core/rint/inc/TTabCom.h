@@ -207,7 +207,7 @@ private: // member functions
    void       InitPatterns();
    TClass*    MakeClassFromClassName( const char className[] ) const;
    TClass*    TryMakeClassFromClassName( const char className[] ) const;
-   TClass*    MakeClassFromVarName( const char varName[], EContext_t& context, 
+   TClass*    MakeClassFromVarName( const char varName[], EContext_t& context,
                   int iter=0);
    void       SetPattern( EContext_t handle, const char regexp[] );
    int        ParseReverse(const char *var_str, int start);

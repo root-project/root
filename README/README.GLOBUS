@@ -13,7 +13,7 @@ Globus Authentication has been tested for the moment only on Linux.
    The interface has been developed using GTK version 2.2.3 and tested on
    machines with version 2.0, 2.0.21b, 2.4.3 and 3.2.1; it should work with
    versions 2.x and 3.x, at least until the C API's are kept ; however,
-   vanilla versions 2.2.3 - 2.4.3 contain a bug which does not allow to 
+   vanilla versions 2.2.3 - 2.4.3 contain a bug which does not allow to
    overload at the same time the defaults for the user certificate
    and key files. A patch has been provided by the Globus team (see Globus
    bugzilla #892) which is shipped with ROOT.
@@ -24,18 +24,18 @@ Globus Authentication has been tested for the moment only on Linux.
         globus-gsi-<GTK_version>-src_bundle.tar.gz
 
    Versions older than 2.1.2 and 3.x versions do not have a separate bundle
-   for GSI: in such a case you need to install the 
+   for GSI: in such a case you need to install the
 
         globus-resource-management-client-<GTK_version>-src_bundle.tar.gz
 
    If you plan to install binaries, the relevant code should be contained in
-   the 
+   the
 
         globus-resource-management-client-<GTK_version>-<arch>-bin.tar.gz
 
    bundle.
-   Please, refer to www.globus.org for any additional information about 
-   installation and certificate acquisition. 
+   Please, refer to www.globus.org for any additional information about
+   installation and certificate acquisition.
 
 2) Compiling ROOT with Globus support
 
@@ -49,7 +49,7 @@ Globus Authentication has been tested for the moment only on Linux.
 
        --with-globus-dir=<GTK_path>
 
-   The 'configure' script checks if the used GTK needs the patch mentioned 
+   The 'configure' script checks if the used GTK needs the patch mentioned
    above. While running configure you should get the following printed
 
  ...
@@ -77,13 +77,13 @@ Applying experimental patch to globus_gsi_credential.c
  ...
 
    where <flavour> is either gcc32 or gcc32dbg, and <GLBSLOC>
-   is the env $GLOBUS_LOCATION. 
+   is the env $GLOBUS_LOCATION.
    The last 3 lines appear only if the patch is needed and activated.
 
    If globus_gsi_credential.c does not compile correctly, it may be that
-   the patch version found by configure is not correct. Check in the 
+   the patch version found by configure is not correct. Check in the
    globusauth/src/patches/globus_gsi_credentials/README if the printed
-   <globus_gsi_credential version> matches the one expected for your 
+   <globus_gsi_credential version> matches the one expected for your
    GTK version (ask the latter to your site administrator if you do not
    it). If the version is wrong you should copy the right patched version
    of the globus_gsi_credentials.c file
@@ -92,8 +92,8 @@ cd  globusauth/src
 cp -rp patches/globus_gsi_credentials/<right version>/globus_gsi_credentials.c .
 cd ../..
 
-   and substitute the right version for the wrong one in the variable 
-   GLBPATCHFLAGS defined in config/Makefile.config; re-compile *without* 
+   and substitute the right version for the wrong one in the variable
+   GLBPATCHFLAGS defined in config/Makefile.config; re-compile *without*
    running configure. If the problem persists, mailto: gerardo.ganis@cern.ch.
 
 3) Before running, after compilation/installation
@@ -185,7 +185,7 @@ cd ../..
 
    3.2) On the SERVER side
 
-        The servers daemons (rootd/proofd/TServerSocket) need a valid service-type 
+        The servers daemons (rootd/proofd/TServerSocket) need a valid service-type
         certificate and key pair to handshake mutual authentication with the
         client.
 
@@ -202,14 +202,14 @@ cd ../..
 
         The reason to have the last one is to allow unprivileged users to
         run GSI authentication for their own local server. Make sure that
-        the time validity of the proxy is long enough for the purposes of 
+        the time validity of the proxy is long enough for the purposes of
         the server. Proxies can initialized for any time duration (within
         the time validity of the certificate) with
-             
+
             grid-proxy-init -valid <large_number_of_hours>:0
 
         The proxies *must be* initialized before the daemon tries to use
-        them, i.e. there is no prompt for proxy initialization as on the 
+        them, i.e. there is no prompt for proxy initialization as on the
         client side.
 
         Any other service certificate may be used in place of the ROOT one:
@@ -231,7 +231,7 @@ cd ../..
                         -C <server_globus_conf_file>
 
         to specify an alternative location; for daemons based on TServerSocket
-        the ROOT environment variable 
+        the ROOT environment variable
 
                         SrvAuth.HostCert <server_globus_conf_file>
 
@@ -242,7 +242,7 @@ cd ../..
 
         See the header of $ROOTSYS/etc/hostcert.conf for any details about
         the syntax and sue of the file; as an example:
-    
+
 < bof >
 # This is an example of hostcert.conf to use the ldap service certificate
   * /etc/grid-security/ldap/ldapcert.pem /etc/grid-security/ldap/ldapkey.pem *
@@ -263,9 +263,9 @@ cd ../..
 
         .2.1) Using user proxies when running as 'root' (or with su privileges)
 
-        If a valid host certificate is not available, the server administrator 
+        If a valid host certificate is not available, the server administrator
         can still decide to run as 'root' and use the valid proxies of a user
-        registered on the machine to authenticate a client. 
+        registered on the machine to authenticate a client.
         To activate this, the user certificate and key location should be
         specified in the relevant hostcert.conf file, e.g.
 
@@ -324,48 +324,48 @@ May 27 12:49:46 pcepsft43 rootd[24031]: RootdLoop: kind:2004 -- buf:'/test.root 
        directories; make sure they can be read by the root process
    .5) If you get the error message:
 
-        init.c:497: globus_gss_assist_init_sec_context_async: 
+        init.c:497: globus_gss_assist_init_sec_context_async:
                     Error during context initialization
-        init_sec_context.c:187: gss_init_sec_context: 
+        init_sec_context.c:187: gss_init_sec_context:
                                 Unable to verify remote side's credentials
-        globus_i_gsi_gss_utils.c:898: globus_i_gsi_gss_handshake: 
+        globus_i_gsi_gss_utils.c:898: globus_i_gsi_gss_handshake:
                     SSLv3 handshake problems: Couldn't do ssl handshake
-        OpenSSL Error: s3_clnt.c:836: in library: SSL routines, 
+        OpenSSL Error: s3_clnt.c:836: in library: SSL routines,
                     function SSL3_GET_SERVER_CERTIFICATE: certificate verify failed
-        globus_gsi_callback.c:349: globus_i_gsi_callback_handshake_callback: 
+        globus_gsi_callback.c:349: globus_i_gsi_callback_handshake_callback:
                     Could not verify credential
-        globus_gsi_callback.c:435: globus_i_gsi_callback_cred_verify: 
-                    Could not verify credential: 
+        globus_gsi_callback.c:435: globus_i_gsi_callback_cred_verify:
+                    Could not verify credential:
                     self signed certificate in certificate chain (error code 7)
 
        your certificate issuer is not recognized as trusted.
-       Most likely this means that its CA certificate has not been found. 
+       Most likely this means that its CA certificate has not been found.
        Either you don't have it or one of the followings holds:
- 
+
         o your $HOME/.globus/certificates does not exist or is empty
         o your X509_CERT_DIR is either undefined or points to the wrong
           directory
 
-       Solution: you should localize the certificate of the CA issuing your 
+       Solution: you should localize the certificate of the CA issuing your
        certificate: this is in the form <HASH>.0 and a possible alternative
        location in /etc/grid-securiy/certificates; you can check the content
        using the openssl command:
 
           openssl x509 -in <HASH>.0 -text
 
-       Do the same with your $HOME/.globus/usercert.pem and make sure the 
-       Issuer is the same. 
+       Do the same with your $HOME/.globus/usercert.pem and make sure the
+       Issuer is the same.
        Once you have localized the directory with your CA certificate, setenv
        X509_CERT_DIR to point to that directory, for example
 
           setenv X509_CERT_DIR /etc/grid-securiy/certificates
 
-       (or export X509_CERT_DIR=/etc/grid-securiy/certificates for a bash shell). 
+       (or export X509_CERT_DIR=/etc/grid-securiy/certificates for a bash shell).
 
    .6) If ROOT has been built on a different machine, make sure that the correct
-       (if any) GTK patch has been applied; a version mismatch may cause very 
+       (if any) GTK patch has been applied; a version mismatch may cause very
        strange failures, quite difficult to debug / identify.
-        
+
    .7) mailto: gerardo.ganis@cern.ch.
 
 --------------------------------------------------------------------------------------

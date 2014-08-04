@@ -212,7 +212,7 @@ ClassImp(TBuffer3D)
 //______________________________________________________________________________
 TBuffer3D::TBuffer3D(Int_t type,
                      UInt_t reqPnts, UInt_t reqPntsCapacity,
-                     UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                     UInt_t reqSegs, UInt_t reqSegsCapacity,
                      UInt_t reqPols, UInt_t reqPolsCapacity) :
       fType(type)
 {
@@ -258,12 +258,12 @@ void TBuffer3D::Init()
    fSegs          = 0;
    fPols          = 0;
 
-   fNbPnts        = 0;           
-   fNbSegs        = 0;           
-   fNbPols        = 0;        
-   fPntsCapacity  = 0;  
-   fSegsCapacity  = 0;  
-   fPolsCapacity  = 0;  
+   fNbPnts        = 0;
+   fNbSegs        = 0;
+   fNbPols        = 0;
+   fPntsCapacity  = 0;
+   fSegsCapacity  = 0;
+   fPolsCapacity  = 0;
    // Set fLocalMaster in section kCore to identity
 
    // Wipe output section.
@@ -277,7 +277,7 @@ void TBuffer3D::Init()
 void TBuffer3D::ClearSectionsValid()
 {
    // Clear any sections marked valid
-   fSections = 0U; 
+   fSections = 0U;
    SetRawSizes(0, 0, 0, 0, 0, 0);
 }
 
@@ -307,7 +307,7 @@ void TBuffer3D::SetAABoundingBox(const Double_t origin[3], const Double_t halfLe
    // 3-------2 |
    // | 4-----|-5
    // |/      |/
-   // 0-------1 
+   // 0-------1
    //
 
    // Vertex 0
@@ -346,7 +346,7 @@ void TBuffer3D::SetAABoundingBox(const Double_t origin[3], const Double_t halfLe
 
 //______________________________________________________________________________
 Bool_t TBuffer3D::SetRawSizes(UInt_t reqPnts, UInt_t reqPntsCapacity,
-                              UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                              UInt_t reqSegs, UInt_t reqSegsCapacity,
                               UInt_t reqPols, UInt_t reqPolsCapacity)
 {
    // Set kRaw tesselation section of buffer with supplied sizes
@@ -355,7 +355,7 @@ Bool_t TBuffer3D::SetRawSizes(UInt_t reqPnts, UInt_t reqPntsCapacity,
    fNbPnts = reqPnts;
    fNbSegs = reqSegs;
    fNbPols = reqPols;
-   
+
    if (reqPntsCapacity > fPntsCapacity) {
       delete [] fPnts;
       fPnts = new Double_t[reqPntsCapacity];
@@ -387,12 +387,12 @@ Bool_t TBuffer3D::SetRawSizes(UInt_t reqPnts, UInt_t reqPntsCapacity,
       }
    }
 
-   return allocateOK; 
+   return allocateOK;
 }
 
 //______________________________________________________________________________
 TBuffer3DSphere::TBuffer3DSphere(UInt_t reqPnts, UInt_t reqPntsCapacity,
-                                 UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                                 UInt_t reqSegs, UInt_t reqSegsCapacity,
                                  UInt_t reqPols, UInt_t reqPolsCapacity) :
    TBuffer3D(TBuffer3DTypes::kSphere, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
    fRadiusInner(0.0), fRadiusOuter(0.0),
@@ -409,7 +409,7 @@ Bool_t TBuffer3DSphere::IsSolidUncut() const
    if (fRadiusInner   != 0.0   ||
        fThetaMin      != 0.0   ||
        fThetaMax      != 180.0 ||
-       fPhiMin        != 0.0   || 
+       fPhiMin        != 0.0   ||
        fPhiMax        != 360.0 ) {
       return kFALSE;
    } else {
@@ -419,10 +419,10 @@ Bool_t TBuffer3DSphere::IsSolidUncut() const
 
 //______________________________________________________________________________
 TBuffer3DTube::TBuffer3DTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
-                             UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                             UInt_t reqSegs, UInt_t reqSegsCapacity,
                              UInt_t reqPols, UInt_t reqPolsCapacity) :
    TBuffer3D(TBuffer3DTypes::kTube, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
-   fRadiusInner(0.0), fRadiusOuter(1.0), fHalfLength(1.0)   
+   fRadiusInner(0.0), fRadiusOuter(1.0), fHalfLength(1.0)
 {
    //constructor
 }
@@ -430,7 +430,7 @@ TBuffer3DTube::TBuffer3DTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
 //______________________________________________________________________________
 TBuffer3DTube::TBuffer3DTube(Int_t type,
                              UInt_t reqPnts, UInt_t reqPntsCapacity,
-                             UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                             UInt_t reqSegs, UInt_t reqSegsCapacity,
                              UInt_t reqPols, UInt_t reqPolsCapacity) :
    TBuffer3D(type, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
    fRadiusInner(0.0), fRadiusOuter(1.0), fHalfLength(1.0)
@@ -440,7 +440,7 @@ TBuffer3DTube::TBuffer3DTube(Int_t type,
 
 //______________________________________________________________________________
 TBuffer3DTubeSeg::TBuffer3DTubeSeg(UInt_t reqPnts, UInt_t reqPntsCapacity,
-                                   UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                                   UInt_t reqSegs, UInt_t reqSegsCapacity,
                                    UInt_t reqPols, UInt_t reqPolsCapacity) :
    TBuffer3DTube(TBuffer3DTypes::kTubeSeg, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
    fPhiMin(0.0), fPhiMax(360.0)
@@ -451,7 +451,7 @@ TBuffer3DTubeSeg::TBuffer3DTubeSeg(UInt_t reqPnts, UInt_t reqPntsCapacity,
 //______________________________________________________________________________
 TBuffer3DTubeSeg::TBuffer3DTubeSeg(Int_t type,
                                    UInt_t reqPnts, UInt_t reqPntsCapacity,
-                                   UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                                   UInt_t reqSegs, UInt_t reqSegsCapacity,
                                    UInt_t reqPols, UInt_t reqPolsCapacity) :
    TBuffer3DTube(type, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity),
    fPhiMin(0.0), fPhiMax(360.0)
@@ -461,7 +461,7 @@ TBuffer3DTubeSeg::TBuffer3DTubeSeg(Int_t type,
 
 //______________________________________________________________________________
 TBuffer3DCutTube::TBuffer3DCutTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
-                                   UInt_t reqSegs, UInt_t reqSegsCapacity, 
+                                   UInt_t reqSegs, UInt_t reqSegsCapacity,
                                    UInt_t reqPols, UInt_t reqPolsCapacity) :
    TBuffer3DTubeSeg(TBuffer3DTypes::kCutTube, reqPnts, reqPntsCapacity, reqSegs, reqSegsCapacity, reqPols, reqPolsCapacity)
 {

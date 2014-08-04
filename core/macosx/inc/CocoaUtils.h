@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
- 
+
 #ifndef ROOT_CocoaUtils
 #define ROOT_CocoaUtils
 
@@ -27,12 +27,12 @@ namespace Util {
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-//In principle, NS is a prefix for AppKit classes, 
+//In principle, NS is a prefix for AppKit classes,
 //but I do not want to make it a suffix and
-//still have to distinguish between RAII classes 
+//still have to distinguish between RAII classes
 //for AppKit and for Core Foundation/Core Graphics (suffix CF).
 //But in C++ I have namespaces, and I can have NSWhatIWant,
-//since it will be ROOT::MacOSX::Util::NSWhatIWant. 
+//since it will be ROOT::MacOSX::Util::NSWhatIWant.
 //The same is true for CFWhatIWant (CF is a prefix for
 //CoreFoundation in Apple's API).
 
@@ -71,22 +71,22 @@ public:
 
       return *this;
    }
-   
+
    NSStrongReference &operator = (NSObject *nsObject)
    {
       if (nsObject != fNSObject) {
          [fNSObject release];
          fNSObject = [nsObject retain];
       }
-   
+
       return *this;
    }
-   
+
    DerivedType *Get()const
    {
       return (DerivedType *)fNSObject;
    }
-   
+
    void Reset(NSObject *object)
    {
       if (fNSObject != object) {
@@ -116,20 +116,20 @@ public:
 
    explicit NSScopeGuard(NSObject *nsObject)
                : fNSObject(nsObject)
-   {   
+   {
    }
    ~NSScopeGuard()
    {
       [fNSObject release];//nothing for nil.
    }
-   
+
 public:
-   
+
    DerivedType *Get()const
    {
       return (DerivedType *)fNSObject;
    }
-   
+
    void Reset(NSObject *object)
    {
       if (object != fNSObject) {
@@ -137,12 +137,12 @@ public:
          fNSObject = object;
       }
    }
-   
+
    void Release()
    {
       fNSObject = nil;
    }
-private:   
+private:
    NSObject *fNSObject;
 
    NSScopeGuard(const NSScopeGuard &rhs);
@@ -161,11 +161,11 @@ class AutoreleasePool {
 public:
    AutoreleasePool(bool delayCreation = false);
    ~AutoreleasePool();
-   
+
    //Drains the previous pool (if any)
    //and activates a new one.
    void Reset();
-   
+
 private:
    NSAutoreleasePool *fPool;
 
@@ -188,14 +188,14 @@ public:
               : fRef(0)
    {
    }
-   
+
    CFStrongReference(RefType ref, bool initRetain)
               : fRef(ref)
    {
       if (initRetain && ref)
          CFRetain(ref);
    }
-   
+
    CFStrongReference(const CFStrongReference &rhs)
    {
       fRef = rhs.fRef;
@@ -212,21 +212,21 @@ public:
          if (fRef)
             CFRetain(fRef);
       }
-      
+
       return *this;
    }
-   
+
    ~CFStrongReference()
    {
       if (fRef)
          CFRelease(fRef);
    }
-   
+
    RefType Get()const
    {
       return fRef;
    }
-   
+
 private:
    RefType fRef;
 };
@@ -249,23 +249,23 @@ public:
             : fRef(0)
    {
    }
-   
+
    explicit CFScopeGuard(RefType ref)
                : fRef(ref)
    {
    }
-   
+
    ~CFScopeGuard()
    {
       if (fRef)
          CFRelease(fRef);
    }
-   
+
    RefType Get()const
    {
       return fRef;
    }
-   
+
    void Reset(RefType ref)
    {
       if (ref != fRef) {
@@ -274,7 +274,7 @@ public:
          fRef = ref;
       }
    }
-   
+
    void Release()
    {
       fRef = 0;
@@ -310,29 +310,29 @@ public:
       : fData(p)
    {
    }
-   
+
    ~ScopedArray()
    {
       delete [] fData;
    }
-   
+
    void Reset(T * p)
    {
       if (p != fData)
          delete [] fData;
       fData = p;
    }
-   
+
    void Release()
    {
       fData = 0;
    }
-   
+
    T &operator [] (std::ptrdiff_t index)const
    {
       return fData[index];
    }
-   
+
    T *Get()const
    {
       return fData;

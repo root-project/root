@@ -40,7 +40,7 @@ TObject *TListOfTypes::FindObject(const char *name) const
 {
    // Specialize FindObject to do search for the
    // typedef if its not already in the list
-   
+
    return FindType(name);
 }
 
@@ -48,11 +48,11 @@ TDataType *TListOfTypes::FindType(const char *name) const
 {
    // Look for a type, first in the hast table
    // then in the interpreter.
-   
+
    TDataType *result = static_cast<TDataType*>(THashTable::FindObject(name));
    if (!result) {
       R__LOCKGUARD2(gCollectionMutex);
-      
+
       int old = gInterpreter->SetClassAutoloading(false);
       TypedefInfo_t  *info = gInterpreter->TypedefInfo_Factory(name);
       gInterpreter->SetClassAutoloading(old);

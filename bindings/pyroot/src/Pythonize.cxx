@@ -835,7 +835,7 @@ namespace {
          PyObject* pyclass = PyObject_GetAttr( (PyObject*)self, PyStrings::gClass );
          PyObject* nseq = PyObject_CallObject( pyclass, NULL );
          Py_DECREF( pyclass );
- 
+
          Py_ssize_t start, stop, step;
          PySlice_GetIndices( (PyROOT_PySliceCast)index, PyObject_Length( (PyObject*)self ), &start, &stop, &step );
          for ( Py_ssize_t i = start; i < stop; i += step ) {
@@ -1144,7 +1144,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
    {
    // Called if operator== not available (e.g. if a global overload as under gcc).
    // An exception is raised as the user should fix the dictionary.
-      return PyErr_Format( PyExc_LookupError, 
+      return PyErr_Format( PyExc_LookupError,
          "No operator==(const %s&, const %s&) available in the dictionary!",
          Utility::ClassName( self ).c_str(), Utility::ClassName( other ).c_str()  );
    }
@@ -1155,7 +1155,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
    // Called if operator== not available (e.g. if a global overload as under gcc).
    // An exception is raised as the user should fix the dictionary.
       return PyErr_Format( PyExc_LookupError,
-         "No operator!=(const %s&, const %s&) available in the dictionary!", 
+         "No operator!=(const %s&, const %s&) available in the dictionary!",
          Utility::ClassName( self ).c_str(), Utility::ClassName( other ).c_str()  );
    }
 
@@ -1369,7 +1369,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       // acceptable signatures:
       //   ( const char*, void*, const char*, Int_t = 32000 )
       //   ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
-      //   ( const char*, T**, Int_t = 32000, Int_t = 99 ) 
+      //   ( const char*, T**, Int_t = 32000, Int_t = 99 )
          int argc = PyTuple_GET_SIZE( args );
 
          if ( 2 <= argc ) {
@@ -1396,7 +1396,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                   buf = (void*)((ObjectProxy*)address)->GetObject();
                else
                   Utility::GetBuffer( address, '*', 1, buf, kFALSE );
- 
+
                if ( buf != 0 ) {
                   TBranch* branch = 0;
                   if ( argc == 4 ) {
@@ -1414,7 +1414,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             PyErr_Clear();
 
          // try: ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
-         //  or: ( const char*,              T**, Int_t = 32000, Int_t = 99 ) 
+         //  or: ( const char*,              T**, Int_t = 32000, Int_t = 99 )
             Bool_t bIsMatch = kFALSE;
             if ( PyArg_ParseTuple( args, const_cast< char* >( "O!O!O|O!O!:Branch" ),
                    &PyROOT_PyUnicode_Type, &name, &PyROOT_PyUnicode_Type, &clName, &address,
@@ -1873,7 +1873,7 @@ namespace {
          PyTuple_SET_ITEM( newArgs, 0, PyROOT_PyCapsule_New( fptr, NULL, NULL ) );
 
       // re-run
-      // CLING WORKAROUND: this is to be the call once TMinuit is fixed: 
+      // CLING WORKAROUND: this is to be the call once TMinuit is fixed:
          // PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
          PyObject* result = setFCN->operator()( self, newArgs, NULL );
       // END CLING WORKAROUND
@@ -2107,7 +2107,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 // search for global comparator overloads (may fail; not sure whether it isn't better to
 // do this lazily just as is done for math operators, but this interplays nicely with the
 // generic versions)
-   Utility::AddBinaryOperator( pyclass, "==", "__eq__" ); 
+   Utility::AddBinaryOperator( pyclass, "==", "__eq__" );
    Utility::AddBinaryOperator( pyclass, "!=", "__ne__" );
 
 // map operator==() through GenObjectIsEqual to allow comparison to None (kTRUE is to

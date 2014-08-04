@@ -1,9 +1,9 @@
 // @(#)root/ruby:$Id$
 // Author:  Elias Athanasopoulos, May 2004
 
-/*  Ruby bindings 
+/*  Ruby bindings
  *
- *  Elias Athanasopoulos  <elathan@ics.forth.gr> 
+ *  Elias Athanasopoulos  <elathan@ics.forth.gr>
  *
  *  (c) 2003, 2004, 2006, 2007, 2008
  */
@@ -467,7 +467,7 @@ UInt_t drr_map_args2(VALUE inargs, char *cproto, int cproto_size, G__CallFunc *f
             default:
                break;
             }
-         if ((i + 1 < nargs) && (nargs != 1) && cproto) 
+         if ((i + 1 < nargs) && (nargs != 1) && cproto)
             strlcat(cproto, ",", cproto_size);
       }
    return ntobjects;
@@ -503,7 +503,7 @@ void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inarg
          if (minfo->IsValid())
             break;
       }
-   } 
+   }
 
    delete minfo;
 

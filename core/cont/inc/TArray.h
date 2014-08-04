@@ -42,7 +42,7 @@ public:
    TArray(): fN(0) { }
    TArray(Int_t n): fN(n) { }
    TArray(const TArray &a): fN(a.fN) { }
-   TArray         &operator=(const TArray &rhs) 
+   TArray         &operator=(const TArray &rhs)
      {if(this!=&rhs) fN = rhs.fN; return *this; }
    virtual        ~TArray() { fN = 0; }
 
