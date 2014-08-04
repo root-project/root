@@ -23,7 +23,7 @@
 //      (1994) 280-284.                                                    //
 //  [2] Morhac M., Matousek V., New adaptive Cosine-Walsh  transform and   //
 //      its application to nuclear data compression, IEEE Transactions on  //
-//      Signal Processing 48 (2000) 2693.                                  //  
+//      Signal Processing 48 (2000) 2693.                                  //
 //  [3] Morhac M., Matousek V., Data compression using new fast adaptive   //
 //      Cosine-Haar transforms, Digital Signal Processing 8 (1998) 63.     //
 //  [4] Morhac M., Matousek V.: Multidimensional nuclear data compression  //
@@ -34,10 +34,10 @@
 #include "TSpectrumTransform.h"
 #include "TMath.h"
 
-ClassImp(TSpectrumTransform) 
- 
-//____________________________________________________________________________    
-TSpectrumTransform::TSpectrumTransform() 
+ClassImp(TSpectrumTransform)
+
+//____________________________________________________________________________
+TSpectrumTransform::TSpectrumTransform()
 {
    //default constructor
    fSize=0;
@@ -50,8 +50,8 @@ TSpectrumTransform::TSpectrumTransform()
    fEnhanceCoeff=0.5;
 }
 
-//____________________________________________________________________________    
-TSpectrumTransform::TSpectrumTransform(Int_t size):TNamed("SpectrumTransform", "Miroslav Morhac transformer") 
+//____________________________________________________________________________
+TSpectrumTransform::TSpectrumTransform(Int_t size):TNamed("SpectrumTransform", "Miroslav Morhac transformer")
 {
 //the constructor creates TSpectrumTransform object. Its size must be > than zero and must be power of 2.
 //It sets default transform type to be Cosine transform. Transform parameters can be changed using setter functions.
@@ -59,7 +59,7 @@ TSpectrumTransform::TSpectrumTransform(Int_t size):TNamed("SpectrumTransform", "
    if (size <= 0){
       Error ("TSpectrumTransform","Invalid length, must be > than 0");
       return;
-   }    
+   }
    j = 0;
    n = 1;
    for (; n < size;) {
@@ -68,7 +68,7 @@ TSpectrumTransform::TSpectrumTransform(Int_t size):TNamed("SpectrumTransform", "
    }
    if (n != size){
       Error ("TSpectrumTransform","Invalid length, must be power of 2");
-      return;   
+      return;
    }
    fSize=size;
    fTransformType=kTransformCos;
@@ -82,14 +82,14 @@ TSpectrumTransform::TSpectrumTransform(Int_t size):TNamed("SpectrumTransform", "
 
 
 //______________________________________________________________________________
-TSpectrumTransform::~TSpectrumTransform() 
+TSpectrumTransform::~TSpectrumTransform()
 {
    //destructor
 }
 
 //_____________________________________________________________________________
-void TSpectrumTransform::Haar(Double_t *working_space, int num, int direction) 
-{   
+void TSpectrumTransform::Haar(Double_t *working_space, int num, int direction)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
@@ -170,8 +170,8 @@ void TSpectrumTransform::Haar(Double_t *working_space, int num, int direction)
    return;
 }
 
-//____________________________________________________________________________    
-void TSpectrumTransform::Walsh(Double_t *working_space, int num) 
+//____________________________________________________________________________
+void TSpectrumTransform::Walsh(Double_t *working_space, int num)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -196,7 +196,7 @@ void TSpectrumTransform::Walsh(Double_t *working_space, int num)
    for (m = 1; m <= iter; m++) {
       if (m == 1)
          nump = 1;
-      
+
       else
          nump = nump * 2;
       mnum = num / nump;
@@ -227,9 +227,9 @@ void TSpectrumTransform::Walsh(Double_t *working_space, int num)
    return;
 }
 
-//____________________________________________________________________________    
-void TSpectrumTransform::BitReverse(Double_t *working_space, int num) 
-{   
+//____________________________________________________________________________
+void TSpectrumTransform::BitReverse(Double_t *working_space, int num)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
@@ -267,10 +267,10 @@ void TSpectrumTransform::BitReverse(Double_t *working_space, int num)
    return;
 }
 
-//____________________________________________________________________________    
+//____________________________________________________________________________
 void TSpectrumTransform::Fourier(Double_t *working_space, int num, int hartley,
-                          int direction, int zt_clear) 
-{   
+                          int direction, int zt_clear)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
@@ -371,7 +371,7 @@ void TSpectrumTransform::Fourier(Double_t *working_space, int num, int hartley,
          b = b / a;
          working_space[i + num] = b;
       }
-      
+
       else {
          b = working_space[i];
          c = working_space[i + num];
@@ -392,9 +392,9 @@ void TSpectrumTransform::Fourier(Double_t *working_space, int num, int hartley,
    return;
 }
 
-//____________________________________________________________________________    
+//____________________________________________________________________________
 void TSpectrumTransform::BitReverseHaar(Double_t *working_space, int shift, int num,
-                                 int start) 
+                                 int start)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -440,9 +440,9 @@ void TSpectrumTransform::BitReverseHaar(Double_t *working_space, int shift, int 
    return;
 }
 
-//____________________________________________________________________________    
+//____________________________________________________________________________
 int TSpectrumTransform::GeneralExe(Double_t *working_space, int zt_clear, int num,
-                            int degree, int type) 
+                            int degree, int type)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -507,7 +507,7 @@ int TSpectrumTransform::GeneralExe(Double_t *working_space, int zt_clear, int nu
             wr = TMath::Cos(arg);
             wi = TMath::Sin(arg);
          }
-         
+
          else {
             wr = 1;
             wi = 0;
@@ -522,7 +522,7 @@ int TSpectrumTransform::GeneralExe(Double_t *working_space, int zt_clear, int nu
                a0r = 1 / TMath::Sqrt(2.0);
                b0r = 1 / TMath::Sqrt(2.0);
             }
-            
+
             else {
                a0r = 1;
                b0r = 0;
@@ -561,9 +561,9 @@ int TSpectrumTransform::GeneralExe(Double_t *working_space, int zt_clear, int nu
    return (0);
 }
 
-//____________________________________________________________________________    
+//____________________________________________________________________________
 int TSpectrumTransform::GeneralInv(Double_t *working_space, int num, int degree,
-                            int type) 
+                            int type)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -600,7 +600,7 @@ int TSpectrumTransform::GeneralInv(Double_t *working_space, int num, int degree,
    for (m = 1; m <= iter; m++) {
       if (m == 1)
          nump = 1;
-      
+
       else
          nump = nump * 2;
       mnum = num / nump;
@@ -624,7 +624,7 @@ int TSpectrumTransform::GeneralInv(Double_t *working_space, int num, int degree,
             wr = TMath::Cos(arg);
             wi = TMath::Sin(arg);
          }
-         
+
          else {
             wr = 1;
             wi = 0;
@@ -639,7 +639,7 @@ int TSpectrumTransform::GeneralInv(Double_t *working_space, int num, int degree,
                a0r = 1 / TMath::Sqrt(2.0);
                b0r = 1 / TMath::Sqrt(2.0);
             }
-            
+
             else {
                a0r = 1;
                b0r = 0;
@@ -686,24 +686,24 @@ int TSpectrumTransform::GeneralInv(Double_t *working_space, int num, int degree,
 //////////END OF AUXILIARY FUNCTIONS FOR TRANSFORM! FUNCTION////////////////////////
 //////////TRANSFORM FUNCTION - CALCULATES DIFFERENT 1-D DIRECT AND INVERSE ORTHOGONAL TRANSFORMS//////
 
-//____________________________________________________________________________    
+//____________________________________________________________________________
 void TSpectrumTransform::Transform(const Double_t *source, Double_t *destVector)
-{   
+{
 ///////////////////////////////////////////////////////////////////////////////
-//        ONE-DIMENSIONAL TRANSFORM FUNCTION                                 
-//        This function transforms the source spectrum. The calling program 
-//        should fill in input parameters.                                    
-//        Transformed data are written into dest spectrum.                  
-//                                                                           
-//        Function parameters:                                               
-//        source-pointer to the vector of source spectrum, its length should 
-//             be size except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR     
-//             transform. These need 2*size length to supply real and        
-//             imaginary coefficients.                                       
+//        ONE-DIMENSIONAL TRANSFORM FUNCTION
+//        This function transforms the source spectrum. The calling program
+//        should fill in input parameters.
+//        Transformed data are written into dest spectrum.
+//
+//        Function parameters:
+//        source-pointer to the vector of source spectrum, its length should
+//             be size except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR
+//             transform. These need 2*size length to supply real and
+//             imaginary coefficients.
 //        destVector-pointer to the vector of dest data, its length should be
-//             size except for direct FOURIER, FOUR-WALSH, FOUR-HAAR. These    
-//             need 2*size length to store real and imaginary coefficients    
-//                                                                         
+//             size except for direct FOURIER, FOUR-WALSH, FOUR-HAAR. These
+//             need 2*size length to store real and imaginary coefficients
+//
 ///////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
@@ -1084,7 +1084,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
                working_space[k + i % j] = val;
                working_space[k + 2 * j - 1 - i % j] = val;
             }
-            
+
             else if (fTransformType == kTransformSinWalsh
                      || fTransformType == kTransformSinHaar) {
                j = (Int_t) TMath::Power(2, fDegree) / 2;
@@ -1093,7 +1093,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
                working_space[k + i % j] = val;
                working_space[k + 2 * j - 1 - i % j] = -val;
             }
-            
+
             else
                working_space[i] = val;
          }
@@ -1104,7 +1104,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
                BitReverseHaar(working_space, fSize, k, i * k);
             GeneralExe(working_space, 0, fSize, fDegree, fTransformType);
          }
-         
+
          else if (fTransformType == kTransformCosWalsh
                   || fTransformType == kTransformCosHaar) {
             m = (Int_t) TMath::Power(2, fDegree);
@@ -1120,14 +1120,14 @@ h-&gt;SetLineColor(kRed);      </span></p>
                b = working_space[k + i % j];
                if (i % j == 0)
                   a = b / TMath::Sqrt(2.0);
-               
+
                else
                   a = b / a;
                working_space[i] = a;
                working_space[i + 2 * fSize] = 0;
             }
          }
-         
+
          else if (fTransformType == kTransformSinWalsh
                   || fTransformType == kTransformSinHaar) {
             m = (Int_t) TMath::Power(2, fDegree);
@@ -1143,7 +1143,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
                b = working_space[j + k + i % j];
                if (i % j == 0)
                   a = b / TMath::Sqrt(2.0);
-               
+
                else
                   a = b / a;
                working_space[j + k / 2 - i % j - 1] = a;
@@ -1152,7 +1152,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
          }
          if (fTransformType > kTransformWalshHaar)
             k = (Int_t) TMath::Power(2, fDegree - 1);
-         
+
          else
             k = (Int_t) TMath::Power(2, fDegree);
          j = fSize / k;
@@ -1178,7 +1178,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
          break;
       }
    }
-   
+
    else if (fDirection == kTransformInverse) {
       switch (fTransformType) {
       case kTransformHaar:
@@ -1286,7 +1286,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
          }
          if (fTransformType > kTransformWalshHaar)
             k = (Int_t) TMath::Power(2, fDegree - 1);
-         
+
          else
             k = (Int_t) TMath::Power(2, fDegree);
          j = fSize / k;
@@ -1307,7 +1307,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
             for (i = 0; i < j; i++)
                BitReverseHaar(working_space, fSize, k, i * k);
          }
-         
+
          else if (fTransformType == kTransformCosWalsh
                   || fTransformType == kTransformCosHaar) {
             j = (Int_t) TMath::Power(2, fDegree) / 2;
@@ -1322,7 +1322,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
                       working_space[i] * TMath::Sqrt(2.0);
                   working_space[4 * fSize + 2 * fSize + k + i % j] = 0;
                }
-               
+
                else {
                   b = TMath::Sin(a);
                   a = TMath::Cos(a);
@@ -1337,7 +1337,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
                   working_space[2 * fSize + k + j] = 0;
                   working_space[4 * fSize + 2 * fSize + k + j] = 0;
                }
-               
+
                else {
                   working_space[2 * fSize + k + 2 * j - i % j] =
                       working_space[2 * fSize + k + i % j];
@@ -1356,7 +1356,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
             for (i = 0; i < l; i++)
                BitReverseHaar(working_space, 2 * fSize, m, i * m);
          }
-         
+
          else if (fTransformType == kTransformSinWalsh
                   || fTransformType == kTransformSinHaar) {
             j = (Int_t) TMath::Power(2, fDegree) / 2;
@@ -1372,7 +1372,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
                                     1] * TMath::Sqrt(2.0);
                   working_space[4 * fSize + 2 * fSize + k + j + i % j] = 0;
                }
-               
+
                else {
                   b = TMath::Sin(a);
                   a = TMath::Cos(a);
@@ -1387,7 +1387,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
                   working_space[2 * fSize + k] = 0;
                   working_space[4 * fSize + 2 * fSize + k] = 0;
                }
-               
+
                else {
                   working_space[2 * fSize + k + i % j] =
                       working_space[2 * fSize + k + 2 * j - i % j];
@@ -1411,7 +1411,7 @@ h-&gt;SetLineColor(kRed);      </span></p>
                k = 2 * k * j;
                val = working_space[k + i % j];
             }
-            
+
             else
                val = working_space[i];
             destVector[i] = val;
@@ -1427,26 +1427,26 @@ h-&gt;SetLineColor(kRed);      </span></p>
 
 //______________________________________________________________________________
 void TSpectrumTransform::FilterZonal(const Double_t *source, Double_t *destVector)
-{   
+{
 ////////////////////////////////////////////////////////////////////////////////
-//        ONE-DIMENSIONAL FILTER ZONAL FUNCTION                               
-//        This function transforms the source spectrum. The calling program  
-//        should fill in input parameters. Then it sets transformed          
-//        coefficients in the given region (fXmin, fXmax) to the given         
+//        ONE-DIMENSIONAL FILTER ZONAL FUNCTION
+//        This function transforms the source spectrum. The calling program
+//        should fill in input parameters. Then it sets transformed
+//        coefficients in the given region (fXmin, fXmax) to the given
 //        fFilterCoeff and transforms it back.
-//        Filtered data are written into dest spectrum.                     
-//                                                                           
-//        Function parameters:                                               
-//        source-pointer to the vector of source spectrum, its length should 
-//             be size except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR    
-//             transform. These need 2*size length to supply real and       
-//             imaginary coefficients.                                      
+//        Filtered data are written into dest spectrum.
+//
+//        Function parameters:
+//        source-pointer to the vector of source spectrum, its length should
+//             be size except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR
+//             transform. These need 2*size length to supply real and
+//             imaginary coefficients.
 //        destVector-pointer to the vector of dest data, its length should be
-//           size except for direct FOURIER, FOUR-WALSH, FOUR-HAAR. These  
-//           need 2*size length to store real and imaginary coefficients   
-//                                                                          
+//           size except for direct FOURIER, FOUR-WALSH, FOUR-HAAR. These
+//           need 2*size length to store real and imaginary coefficients
+//
 ////////////////////////////////////////////////////////////////////////////////
-//       
+//
 //Begin_Html <!--
 /* -->
 <div class=Section2>
@@ -1694,7 +1694,7 @@ L&quot;);</span></p>
             working_space[k + i % j] = val;
             working_space[k + 2 * j - 1 - i % j] = val;
          }
-         
+
          else if (fTransformType == kTransformSinWalsh
                   || fTransformType == kTransformSinHaar) {
             j = (Int_t) TMath::Power(2, fDegree) / 2;
@@ -1703,7 +1703,7 @@ L&quot;);</span></p>
             working_space[k + i % j] = val;
             working_space[k + 2 * j - 1 - i % j] = -val;
          }
-         
+
          else
             working_space[i] = val;
       }
@@ -1714,7 +1714,7 @@ L&quot;);</span></p>
             BitReverseHaar(working_space, fSize, k, i * k);
          GeneralExe(working_space, 0, fSize, fDegree, fTransformType);
       }
-      
+
       else if (fTransformType == kTransformCosWalsh || fTransformType == kTransformCosHaar) {
          m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
@@ -1729,14 +1729,14 @@ L&quot;);</span></p>
             b = working_space[k + i % j];
             if (i % j == 0)
                a = b / TMath::Sqrt(2.0);
-            
+
             else
                a = b / a;
             working_space[i] = a;
             working_space[i + 2 * fSize] = 0;
          }
       }
-      
+
       else if (fTransformType == kTransformSinWalsh || fTransformType == kTransformSinHaar) {
          m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
@@ -1751,7 +1751,7 @@ L&quot;);</span></p>
             b = working_space[j + k + i % j];
             if (i % j == 0)
                a = b / TMath::Sqrt(2.0);
-            
+
             else
                a = b / a;
             working_space[j + k / 2 - i % j - 1] = a;
@@ -1760,7 +1760,7 @@ L&quot;);</span></p>
       }
       if (fTransformType > kTransformWalshHaar)
          k = (Int_t) TMath::Power(2, fDegree - 1);
-      
+
       else
          k = (Int_t) TMath::Power(2, fDegree);
       j = fSize / k;
@@ -1806,7 +1806,7 @@ L&quot;);</span></p>
          }
       }
    }
-   
+
    else if (fTransformType == kTransformFourierWalsh
             || fTransformType == kTransformFourierHaar) {
       for (i = 0, old_area = 0; i < fSize; i++) {
@@ -1902,7 +1902,7 @@ L&quot;);</span></p>
    case kTransformSinHaar:
       if (fTransformType > kTransformWalshHaar)
          k = (Int_t) TMath::Power(2, fDegree - 1);
-      
+
       else
          k = (Int_t) TMath::Power(2, fDegree);
       j = fSize / k;
@@ -1922,7 +1922,7 @@ L&quot;);</span></p>
          for (i = 0; i < j; i++)
             BitReverseHaar(working_space, fSize, k, i * k);
       }
-      
+
       else if (fTransformType == kTransformCosWalsh || fTransformType == kTransformCosHaar) {
          j = (Int_t) TMath::Power(2, fDegree) / 2;
          m = (Int_t) TMath::Power(2, fDegree);
@@ -1936,7 +1936,7 @@ L&quot;);</span></p>
                    working_space[i] * TMath::Sqrt(2.0);
                working_space[4 * fSize + 2 * fSize + k + i % j] = 0;
             }
-            
+
             else {
                b = TMath::Sin(a);
                a = TMath::Cos(a);
@@ -1951,7 +1951,7 @@ L&quot;);</span></p>
                working_space[2 * fSize + k + j] = 0;
                working_space[4 * fSize + 2 * fSize + k + j] = 0;
             }
-            
+
             else {
                working_space[2 * fSize + k + 2 * j - i % j] =
                    working_space[2 * fSize + k + i % j];
@@ -1970,7 +1970,7 @@ L&quot;);</span></p>
          for (i = 0; i < l; i++)
             BitReverseHaar(working_space, 2 * fSize, m, i * m);
       }
-      
+
       else if (fTransformType == kTransformSinWalsh || fTransformType == kTransformSinHaar) {
          j = (Int_t) TMath::Power(2, fDegree) / 2;
          m = (Int_t) TMath::Power(2, fDegree);
@@ -1984,7 +1984,7 @@ L&quot;);</span></p>
                    working_space[j + k / 2 - i % j - 1] * TMath::Sqrt(2.0);
                working_space[4 * fSize + 2 * fSize + k + j + i % j] = 0;
             }
-            
+
             else {
                b = TMath::Sin(a);
                a = TMath::Cos(a);
@@ -1999,7 +1999,7 @@ L&quot;);</span></p>
                working_space[2 * fSize + k] = 0;
                working_space[4 * fSize + 2 * fSize + k] = 0;
             }
-            
+
             else {
                working_space[2 * fSize + k + i % j] =
                    working_space[2 * fSize + k + 2 * j - i % j];
@@ -2022,7 +2022,7 @@ L&quot;);</span></p>
             k = 2 * k * j;
             val = working_space[k + i % j];
          }
-         
+
          else
             val = working_space[i];
          destVector[i] = val;
@@ -2035,25 +2035,25 @@ L&quot;);</span></p>
 
 //////////ENHANCE FUNCTION - CALCULATES DIFFERENT 1-D ORTHOGONAL TRANSFORMS, MULTIPLIES GIVEN REGION BY ENHANCE COEFFICIENT AND TRANSFORMS IT BACK//////
 //___________________________________________________________________________
-void TSpectrumTransform::Enhance(const Double_t *source, Double_t *destVector) 
-{   
+void TSpectrumTransform::Enhance(const Double_t *source, Double_t *destVector)
+{
 ////////////////////////////////////////////////////////////////////////////////
-//        ONE-DIMENSIONAL ENHANCE ZONAL FUNCTION                             
-//        This function transforms the source spectrum. The calling program  
-//      should fill in input parameters. Then it multiplies transformed      
-//      coefficients in the given region (fXmin, fXmax) by the given          
-//      fEnhanceCoeff and transforms it back                                   
-//        Processed data are written into dest spectrum.                      
-//                                                                            
-//        Function parameters:                                                
-//        source-pointer to the vector of source spectrum, its length should  
-//             be size except for inverse FOURIER, FOUR-WALSh, FOUR-HAAR      
-//             transform. These need 2*size length to supply real and         
-//             imaginary coefficients.                                        
-//        destVector-pointer to the vector of dest data, its length should be 
-//           size except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These     
-//           need 2*size length to store real and imaginary coefficients      
-//                                                                           
+//        ONE-DIMENSIONAL ENHANCE ZONAL FUNCTION
+//        This function transforms the source spectrum. The calling program
+//      should fill in input parameters. Then it multiplies transformed
+//      coefficients in the given region (fXmin, fXmax) by the given
+//      fEnhanceCoeff and transforms it back
+//        Processed data are written into dest spectrum.
+//
+//        Function parameters:
+//        source-pointer to the vector of source spectrum, its length should
+//             be size except for inverse FOURIER, FOUR-WALSh, FOUR-HAAR
+//             transform. These need 2*size length to supply real and
+//             imaginary coefficients.
+//        destVector-pointer to the vector of dest data, its length should be
+//           size except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These
+//           need 2*size length to store real and imaginary coefficients
+//
 ////////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
@@ -2301,7 +2301,7 @@ L&quot;);</span></p>
             working_space[k + i % j] = val;
             working_space[k + 2 * j - 1 - i % j] = val;
          }
-         
+
          else if (fTransformType == kTransformSinWalsh
                   || fTransformType == kTransformSinHaar) {
             j = (Int_t) TMath::Power(2, fDegree) / 2;
@@ -2310,7 +2310,7 @@ L&quot;);</span></p>
             working_space[k + i % j] = val;
             working_space[k + 2 * j - 1 - i % j] = -val;
          }
-         
+
          else
             working_space[i] = val;
       }
@@ -2321,7 +2321,7 @@ L&quot;);</span></p>
             BitReverseHaar(working_space, fSize, k, i * k);
          GeneralExe(working_space, 0, fSize, fDegree, fTransformType);
       }
-      
+
       else if (fTransformType == kTransformCosWalsh || fTransformType == kTransformCosHaar) {
          m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
@@ -2336,14 +2336,14 @@ L&quot;);</span></p>
             b = working_space[k + i % j];
             if (i % j == 0)
                a = b / TMath::Sqrt(2.0);
-            
+
             else
                a = b / a;
             working_space[i] = a;
             working_space[i + 2 * fSize] = 0;
          }
       }
-      
+
       else if (fTransformType == kTransformSinWalsh || fTransformType == kTransformSinHaar) {
          m = (Int_t) TMath::Power(2, fDegree);
          l = 2 * fSize / m;
@@ -2358,7 +2358,7 @@ L&quot;);</span></p>
             b = working_space[j + k + i % j];
             if (i % j == 0)
                a = b / TMath::Sqrt(2.0);
-            
+
             else
                a = b / a;
             working_space[j + k / 2 - i % j - 1] = a;
@@ -2367,7 +2367,7 @@ L&quot;);</span></p>
       }
       if (fTransformType > kTransformWalshHaar)
          k = (Int_t) TMath::Power(2, fDegree - 1);
-      
+
       else
          k = (Int_t) TMath::Power(2, fDegree);
       j = fSize / k;
@@ -2413,7 +2413,7 @@ L&quot;);</span></p>
          }
       }
    }
-   
+
    else if (fTransformType == kTransformFourierWalsh
             || fTransformType == kTransformFourierHaar) {
       for (i = 0, old_area = 0; i < fSize; i++) {
@@ -2509,7 +2509,7 @@ L&quot;);</span></p>
    case kTransformSinHaar:
       if (fTransformType > kTransformWalshHaar)
          k = (Int_t) TMath::Power(2, fDegree - 1);
-      
+
       else
          k = (Int_t) TMath::Power(2, fDegree);
       j = fSize / k;
@@ -2529,7 +2529,7 @@ L&quot;);</span></p>
          for (i = 0; i < j; i++)
             BitReverseHaar(working_space, fSize, k, i * k);
       }
-      
+
       else if (fTransformType == kTransformCosWalsh || fTransformType == kTransformCosHaar) {
          j = (Int_t) TMath::Power(2, fDegree) / 2;
          m = (Int_t) TMath::Power(2, fDegree);
@@ -2543,7 +2543,7 @@ L&quot;);</span></p>
                    working_space[i] * TMath::Sqrt(2.0);
                working_space[4 * fSize + 2 * fSize + k + i % j] = 0;
             }
-            
+
             else {
                b = TMath::Sin(a);
                a = TMath::Cos(a);
@@ -2558,7 +2558,7 @@ L&quot;);</span></p>
                working_space[2 * fSize + k + j] = 0;
                working_space[4 * fSize + 2 * fSize + k + j] = 0;
             }
-            
+
             else {
                working_space[2 * fSize + k + 2 * j - i % j] =
                    working_space[2 * fSize + k + i % j];
@@ -2577,7 +2577,7 @@ L&quot;);</span></p>
          for (i = 0; i < l; i++)
             BitReverseHaar(working_space, 2 * fSize, m, i * m);
       }
-      
+
       else if (fTransformType == kTransformSinWalsh || fTransformType == kTransformSinHaar) {
          j = (Int_t) TMath::Power(2, fDegree) / 2;
          m = (Int_t) TMath::Power(2, fDegree);
@@ -2591,7 +2591,7 @@ L&quot;);</span></p>
                    working_space[j + k / 2 - i % j - 1] * TMath::Sqrt(2.0);
                working_space[4 * fSize + 2 * fSize + k + j + i % j] = 0;
             }
-            
+
             else {
                b = TMath::Sin(a);
                a = TMath::Cos(a);
@@ -2606,7 +2606,7 @@ L&quot;);</span></p>
                working_space[2 * fSize + k] = 0;
                working_space[4 * fSize + 2 * fSize + k] = 0;
             }
-            
+
             else {
                working_space[2 * fSize + k + i % j] =
                    working_space[2 * fSize + k + 2 * j - i % j];
@@ -2629,7 +2629,7 @@ L&quot;);</span></p>
             k = 2 * k * j;
             val = working_space[k + i % j];
          }
-         
+
          else
             val = working_space[i];
          destVector[i] = val;
@@ -2644,27 +2644,27 @@ L&quot;);</span></p>
 void TSpectrumTransform::SetTransformType(Int_t transType, Int_t degree)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION                                                      
-//                                                     
+//   SETTER FUNCION
+//
 //   This function sets the following parameters for transform:
 //         -transType - type of transform (Haar, Walsh, Cosine, Sine, Fourier, Hartley, Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar)
 //         -degree - degree of mixed transform, applies only for Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar transforms
-//////////////////////////////////////////////////////////////////////////////      
+//////////////////////////////////////////////////////////////////////////////
    Int_t j, n;
    j = 0;
    n = 1;
    for (; n < fSize;) {
       j += 1;
       n = n * 2;
-   } 
+   }
    if (transType < kTransformHaar || transType > kTransformSinHaar){
       Error ("TSpectrumTransform","Invalid type of transform");
-      return;       
+      return;
    }
    if (transType >= kTransformFourierWalsh && transType <= kTransformSinHaar) {
       if (degree > j || degree < 1){
          Error ("TSpectrumTransform","Invalid degree of mixed transform");
-         return;          
+         return;
       }
    }
    fTransformType=transType;
@@ -2676,15 +2676,15 @@ void TSpectrumTransform::SetTransformType(Int_t transType, Int_t degree)
 void TSpectrumTransform::SetRegion(Int_t xmin, Int_t xmax)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION                                                      
-//                                                     
+//   SETTER FUNCION
+//
 //   This function sets the filtering or enhancement region:
 //         -xmin, xmax
-//////////////////////////////////////////////////////////////////////////////         
-   if(xmin<0 || xmax < xmin || xmax >= fSize){ 
-      Error("TSpectrumTransform", "Wrong range");      
+//////////////////////////////////////////////////////////////////////////////
+   if(xmin<0 || xmax < xmin || xmax >= fSize){
+      Error("TSpectrumTransform", "Wrong range");
       return;
-   }         
+   }
    fXmin = xmin;
    fXmax = xmax;
 }
@@ -2693,15 +2693,15 @@ void TSpectrumTransform::SetRegion(Int_t xmin, Int_t xmax)
 void TSpectrumTransform::SetDirection(Int_t direction)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION                                                      
-//                                                     
+//   SETTER FUNCION
+//
 //   This function sets the direction of the transform:
 //         -direction (forward or inverse)
-//////////////////////////////////////////////////////////////////////////////   
-   if(direction != kTransformForward && direction != kTransformInverse){ 
-      Error("TSpectrumTransform", "Wrong direction");      
+//////////////////////////////////////////////////////////////////////////////
+   if(direction != kTransformForward && direction != kTransformInverse){
+      Error("TSpectrumTransform", "Wrong direction");
       return;
-   }         
+   }
    fDirection = direction;
 }
 
@@ -2709,11 +2709,11 @@ void TSpectrumTransform::SetDirection(Int_t direction)
 void TSpectrumTransform::SetFilterCoeff(Double_t filterCoeff)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION                                                      
-//                                                     
+//   SETTER FUNCION
+//
 //   This function sets the filter coefficient:
 //         -filterCoeff - after the transform the filtered region (xmin, xmax) is replaced by this coefficient. Applies only for filtereng operation.
-//////////////////////////////////////////////////////////////////////////////   
+//////////////////////////////////////////////////////////////////////////////
    fFilterCoeff = filterCoeff;
 }
 
@@ -2721,10 +2721,10 @@ void TSpectrumTransform::SetFilterCoeff(Double_t filterCoeff)
 void TSpectrumTransform::SetEnhanceCoeff(Double_t enhanceCoeff)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION                                                      
-//                                                     
+//   SETTER FUNCION
+//
 //   This function sets the enhancement coefficient:
 //         -enhanceCoeff - after the transform the enhanced region (xmin, xmax) is multiplied by this coefficient. Applies only for enhancement operation.
-//////////////////////////////////////////////////////////////////////////////   
+//////////////////////////////////////////////////////////////////////////////
    fEnhanceCoeff = enhanceCoeff;
 }

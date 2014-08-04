@@ -46,20 +46,20 @@
 //   ftp://root.cern.ch/root/SpectrumDec.ps.gz
 //   ftp://root.cern.ch/root/SpectrumSrc.ps.gz
 //   ftp://root.cern.ch/root/SpectrumBck.ps.gz
-// 
+//
 //
 /////////////////////////////////////////////////////////////////////////////
 
-    
+
 #include "TSpectrum3.h"
 #include "TH1.h"
 #include "TMath.h"
 #define PEAK_WINDOW 1024
 
-ClassImp(TSpectrum3)  
+ClassImp(TSpectrum3)
 
 //______________________________________________________________________________
-TSpectrum3::TSpectrum3() :TNamed("Spectrum", "Miroslav Morhac peak finder") 
+TSpectrum3::TSpectrum3() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
    // Constructor.
 
@@ -68,7 +68,7 @@ TSpectrum3::TSpectrum3() :TNamed("Spectrum", "Miroslav Morhac peak finder")
    fPosition   = new Double_t[n];
    fPositionX  = new Double_t[n];
    fPositionY  = new Double_t[n];
-   fPositionZ  = new Double_t[n];   
+   fPositionZ  = new Double_t[n];
    fResolution = 1;
    fHistogram  = 0;
    fNPeaks     = 0;
@@ -76,8 +76,8 @@ TSpectrum3::TSpectrum3() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
 
 //______________________________________________________________________________
-TSpectrum3::TSpectrum3(Int_t maxpositions, Double_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder") 
-{   
+TSpectrum3::TSpectrum3(Int_t maxpositions, Double_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder")
+{
 //  maxpositions:  maximum number of peaks
 //  resolution:    determines resolution of the neighboring peaks
 //                 default value is 1 correspond to 3 sigma distance
@@ -89,7 +89,7 @@ TSpectrum3::TSpectrum3(Int_t maxpositions, Double_t resolution) :TNamed("Spectru
    fPosition  = new Double_t[n];
    fPositionX = new Double_t[n];
    fPositionY = new Double_t[n];
-   fPositionZ = new Double_t[n];   
+   fPositionZ = new Double_t[n];
    fHistogram = 0;
    fNPeaks    = 0;
    SetResolution(resolution);
@@ -97,20 +97,20 @@ TSpectrum3::TSpectrum3(Int_t maxpositions, Double_t resolution) :TNamed("Spectru
 
 
 //______________________________________________________________________________
-TSpectrum3::~TSpectrum3() 
+TSpectrum3::~TSpectrum3()
 {
    // Destructor.
 
    delete [] fPosition;
    delete [] fPositionX;
    delete [] fPositionY;
-   delete [] fPositionZ;   
+   delete [] fPositionZ;
    delete    fHistogram;
 }
 
 //______________________________________________________________________________
 const char *TSpectrum3::Background(const TH1 * h, Int_t number_of_iterations,
-                                   Option_t * option) 
+                                   Option_t * option)
 {
 /////////////////////////////////////////////////////////////////////////////
 //   ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
@@ -143,8 +143,8 @@ void TSpectrum3::Print(Option_t *) const
 
 //______________________________________________________________________________
 Int_t TSpectrum3::Search(const TH1 * hin, Double_t sigma,
-                             Option_t * option, Double_t threshold) 
-{   
+                             Option_t * option, Double_t threshold)
+{
 /////////////////////////////////////////////////////////////////////////////
 //   ONE-DIMENSIONAL PEAK SEARCH FUNCTION                                  //
 //   This function searches for peaks in source spectrum in hin            //
@@ -179,7 +179,7 @@ Int_t TSpectrum3::Search(const TH1 * hin, Double_t sigma,
 
    Int_t sizex = hin->GetXaxis()->GetNbins();
    Int_t sizey = hin->GetYaxis()->GetNbins();
-   Int_t sizez = hin->GetZaxis()->GetNbins();   
+   Int_t sizez = hin->GetZaxis()->GetNbins();
    Int_t i, j, k, binx,biny,binz, npeaks;
    Double_t*** source = new Double_t**[sizex];
    Double_t*** dest   = new Double_t**[sizex];
@@ -189,7 +189,7 @@ Int_t TSpectrum3::Search(const TH1 * hin, Double_t sigma,
       for (j = 0; j < sizey; j++) {
          source[i][j] = new Double_t[sizez];
          dest[i][j]   = new Double_t[sizez];
-         for (k = 0; k < sizez; k++)       
+         for (k = 0; k < sizez; k++)
             source[i][j][k] = (Double_t) hin->GetBinContent(i + 1, j + 1, k + 1);
       }
    }
@@ -202,22 +202,22 @@ Int_t TSpectrum3::Search(const TH1 * hin, Double_t sigma,
    for (i = 0; i < npeaks; i++) {
       binx = 1 + Int_t(fPositionX[i] + 0.5);
       biny = 1 + Int_t(fPositionY[i] + 0.5);
-      binz = 1 + Int_t(fPositionZ[i] + 0.5);      
+      binz = 1 + Int_t(fPositionZ[i] + 0.5);
       fPositionX[i] = hin->GetXaxis()->GetBinCenter(binx);
       fPositionY[i] = hin->GetYaxis()->GetBinCenter(biny);
-      fPositionZ[i] = hin->GetZaxis()->GetBinCenter(binz);      
+      fPositionZ[i] = hin->GetZaxis()->GetBinCenter(binz);
    }
    for (i = 0; i < sizex; i++) {
       for (j = 0; j < sizey; j++){
          delete [] source[i][j];
-         delete [] dest[i][j];       
+         delete [] dest[i][j];
       }
       delete [] source[i];
       delete [] dest[i];
    }
    delete [] source;
    delete [] dest;
-      
+
    if (strstr(option, "goff"))
       return npeaks;
    if (!npeaks) return 0;
@@ -226,15 +226,15 @@ Int_t TSpectrum3::Search(const TH1 * hin, Double_t sigma,
 
 
 //______________________________________________________________________________
-void TSpectrum3::SetResolution(Double_t resolution) 
-{   
+void TSpectrum3::SetResolution(Double_t resolution)
+{
 //  resolution: determines resolution of the neighboring peaks
 //              default value is 1 correspond to 3 sigma distance
 //              between peaks. Higher values allow higher resolution
 //              (smaller distance between peaks.
 //              May be set later through SetResolution.
    if (resolution > 1)
-      fResolution = resolution;   
+      fResolution = resolution;
    else
       fResolution = 1;
 }
@@ -244,9 +244,9 @@ const char *TSpectrum3::Background(Double_t***spectrum,
                        Int_t ssizex, Int_t ssizey, Int_t ssizez,
                        Int_t numberIterationsX,
                        Int_t numberIterationsY,
-                       Int_t numberIterationsZ,                       
+                       Int_t numberIterationsZ,
                        Int_t direction,
-                       Int_t filterType) 
+                       Int_t filterType)
 {
 ///////////////////////////////////////////////////////////////////////////////
 // THREE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTIONS                         //
@@ -678,7 +678,7 @@ back-&gt;Draw(&quot;&quot;);  </span></p>
       working_space[i] =new Double_t*[ssizey];
       for(j=0;j<ssizey;j++)
          working_space[i][j]=new Double_t[ssizez];
-   }                         
+   }
    sampling =(Int_t) TMath::Max(numberIterationsX, numberIterationsY);
    sampling =(Int_t) TMath::Max(sampling, numberIterationsZ);
    if (direction == kBackIncreasingWindow) {
@@ -1037,7 +1037,7 @@ back-&gt;Draw(&quot;&quot;);  </span></p>
          delete[] working_space[i][j];
       delete[] working_space[i];
    }
-   delete[] working_space;      
+   delete[] working_space;
    return 0;
 }
 
@@ -1297,7 +1297,7 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
    Double_t a,b,maxch;
    Double_t nom,nip,nim,sp,sm,spx,smx,spy,smy,spz,smz,plocha=0;
    if(averWindow<=0)
-      return "Averaging Window must be positive";         
+      return "Averaging Window must be positive";
    Double_t***working_space = new Double_t**[ssizex];
    for(i = 0;i < ssizex; i++){
       working_space[i] = new Double_t*[ssizey];
@@ -1324,7 +1324,7 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
       delete [] working_space;
       return 0;
    }
-      
+
    nom = 0;
    working_space[xmin][ymin][zmin] = 1;
    for(i = xmin;i < xmax; i++){
@@ -1334,33 +1334,33 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
       for(l = 1;l <= averWindow; l++){
          if((i + l) > xmax)
             a = source[xmax][ymin][zmin] / maxch;
-            
+
          else
             a = source[i + l][ymin][zmin] / maxch;
-            
+
          b = a - nip;
          if(a + nip <= 0)
             a = 1;
-            
+
          else
             a = TMath::Sqrt(a + nip);
-            
+
          b = b / a;
          b = TMath::Exp(b);
          sp = sp + b;
          if(i - l + 1 < xmin)
             a = source[xmin][ymin][zmin] / maxch;
-            
+
          else
             a = source[i - l + 1][ymin][zmin] / maxch;
-            
+
          b = a - nim;
          if(a + nim <= 0)
             a = 1;
-            
+
          else
             a = TMath::Sqrt(a + nim);
-            
+
          b = b / a;
          b = TMath::Exp(b);
          sm = sm + b;
@@ -1376,33 +1376,33 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
       for(l = 1;l <= averWindow; l++){
          if((i + l) > ymax)
             a = source[xmin][ymax][zmin] / maxch;
-            
+
          else
             a = source[xmin][i + l][zmin] / maxch;
-            
+
          b = a - nip;
          if(a + nip <= 0)
             a = 1;
-            
+
          else
             a = TMath::Sqrt(a + nip);
-            
+
          b = b / a;
          b = TMath::Exp(b);
          sp = sp + b;
          if(i - l + 1 < ymin)
             a = source[xmin][ymin][zmin] / maxch;
-            
+
          else
             a = source[xmin][i - l + 1][zmin] / maxch;
-            
+
          b = a - nim;
          if(a + nim <= 0)
             a = 1;
-            
+
          else
             a = TMath::Sqrt(a + nim);
-            
+
          b = b / a;
          b = TMath::Exp(b);
          sm = sm + b;
@@ -1418,30 +1418,30 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
       for(l = 1;l <= averWindow; l++){
          if((i + l) > zmax)
             a = source[xmin][ymin][zmax] / maxch;
-            
+
          else
             a = source[xmin][ymin][i + l] / maxch;
-            
+
          b = a - nip;
          if(a + nip <= 0)
             a = 1;
-            
+
          else
             a = TMath::Sqrt(a + nip);
-            
+
          b = b / a;
          b = TMath::Exp(b);
          sp = sp + b;
          if(i - l + 1 < zmin)
             a = source[xmin][ymin][zmin] / maxch;
-            
+
          else
             a = source[xmin][ymin][i - l + 1] / maxch;
-            
+
          b = a - nim;
          if(a + nim <= 0)
             a = 1;
-            
+
          else
             a = TMath::Sqrt(a + nim);
          b = b / a;
@@ -1460,33 +1460,33 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
          for(l = 1;l <= averWindow; l++){
             if(i + l > xmax)
                a = source[xmax][j][zmin] / maxch;
-               
+
             else
                a = source[i + l][j][zmin] / maxch;
-               
+
             b = a - nip;
             if(a + nip <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nip);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             spx = spx + b;
             if(i - l + 1 < xmin)
                a = source[xmin][j][zmin] / maxch;
-               
+
             else
                a = source[i - l + 1][j][zmin] / maxch;
-               
+
             b = a - nim;
             if(a + nim <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nim);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             smx = smx + b;
@@ -1497,33 +1497,33 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
          for(l = 1;l <= averWindow; l++){
             if(j + l > ymax)
                a = source[i][ymax][zmin] / maxch;
-               
+
             else
                a = source[i][j + l][zmin] / maxch;
-               
+
             b = a - nip;
             if(a + nip <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nip);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             spy = spy + b;
             if(j - l + 1 < ymin)
                a = source[i][ymin][zmin] / maxch;
-               
+
             else
                a = source[i][j - l + 1][zmin] / maxch;
-               
+
             b = a - nim;
             if(a + nim <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nim);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             smy = smy + b;
@@ -1541,33 +1541,33 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
          for(l = 1;l <= averWindow; l++){
             if(i + l > xmax)
                a = source[xmax][ymin][j] / maxch;
-               
+
             else
                a = source[i + l][ymin][j] / maxch;
-               
+
             b = a - nip;
             if(a + nip <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nip);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             spx = spx + b;
             if(i - l + 1 < xmin)
                a = source[xmin][ymin][j] / maxch;
-               
+
             else
                a = source[i - l + 1][ymin][j] / maxch;
-               
+
             b = a - nim;
             if(a + nim <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nim);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             smx = smx + b;
@@ -1578,33 +1578,33 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
          for(l = 1;l <= averWindow; l++){
             if(j + l > zmax)
                a = source[i][ymin][zmax] / maxch;
-               
+
             else
                a = source[i][ymin][j + l] / maxch;
-               
+
             b = a - nip;
             if(a + nip <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nip);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             spz = spz + b;
             if(j - l + 1 < zmin)
                a = source[i][ymin][zmin] / maxch;
-               
+
             else
                a = source[i][ymin][j - l + 1] / maxch;
-               
+
             b = a - nim;
             if(a + nim <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nim);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             smz = smz + b;
@@ -1622,33 +1622,33 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
          for(l = 1;l <= averWindow; l++){
             if(i + l > ymax)
                a = source[xmin][ymax][j] / maxch;
-               
+
             else
                a = source[xmin][i + l][j] / maxch;
-               
+
             b = a - nip;
             if(a + nip <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nip);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             spy = spy + b;
             if(i - l + 1 < ymin)
                a = source[xmin][ymin][j] / maxch;
-               
+
             else
                a = source[xmin][i - l + 1][j] / maxch;
-               
+
             b = a - nim;
             if(a + nim <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nim);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             smy = smy + b;
@@ -1659,33 +1659,33 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
          for(l = 1;l <= averWindow; l++){
             if(j + l > zmax)
                a = source[xmin][i][zmax] / maxch;
-               
+
             else
                a = source[xmin][i][j + l] / maxch;
-               
+
             b = a - nip;
             if(a + nip <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nip);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             spz = spz + b;
             if(j - l + 1 < zmin)
                a = source[xmin][i][zmin] / maxch;
-               
+
             else
                a = source[xmin][i][j - l + 1] / maxch;
-               
+
             b = a - nim;
             if(a + nim <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nim);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             smz = smz + b;
@@ -1704,33 +1704,33 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
             for(l = 1;l <= averWindow; l++){
                if(i + l > xmax)
                   a = source[xmax][j][k] / maxch;
-                  
+
                else
                   a = source[i + l][j][k] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nip);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                spx = spx + b;
                if(i - l + 1 < xmin)
                   a = source[xmin][j][k] / maxch;
-                  
+
                else
                   a = source[i - l + 1][j][k] / maxch;
-                  
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nim);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                smx = smx + b;
@@ -1741,33 +1741,33 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
             for(l = 1;l <= averWindow; l++){
                if(j + l > ymax)
                   a = source[i][ymax][k] / maxch;
-                  
+
                else
                   a = source[i][j + l][k] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nip);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                spy = spy + b;
                if(j - l + 1 < ymin)
                   a = source[i][ymin][k] / maxch;
-                  
+
                else
                   a = source[i][j - l + 1][k] / maxch;
-                  
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nim);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                smy = smy + b;
@@ -1778,7 +1778,7 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
             for(l = 1;l <= averWindow; l++){
                if(j + l > zmax)
                   a = source[i][j][zmax] / maxch;
-                   
+
                else
                   a = source[i][j][k + l] / maxch;
 
@@ -1801,10 +1801,10 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-                   
+
                else
                   a = TMath::Sqrt(a + nim);
-                   
+
                b = b / a;
                b = TMath::Exp(b);
                smz = smz+b;
@@ -1834,17 +1834,17 @@ sm-&gt;Draw(&quot;&quot;);  </span></p>
          delete[] working_space[i][j];
       delete[] working_space[i];
    }
-   delete[] working_space;   
+   delete[] working_space;
    return 0;
 }
 
 //______________________________________________________________________________________________________________________________
 const char *TSpectrum3::Deconvolution(Double_t***source, const Double_t***resp,
                                        Int_t ssizex, Int_t ssizey, Int_t ssizez,
-                                       Int_t numberIterations, 
+                                       Int_t numberIterations,
                                        Int_t numberRepetitions,
-                                       Double_t boost)                                        
-{   
+                                       Double_t boost)
+{
 /////////////////////////////////////////////////////////////////////////////
 // THREE-DIMENSIONAL DECONVOLUTION FUNCTION                                //
 // This function calculates deconvolution from source spectrum             //
@@ -2350,11 +2350,11 @@ decon_in-&gt;Draw(&quot;&quot;);  </span></p>
    Int_t i, j, k, lhx, lhy, lhz, i1, i2, i3, j1, j2, j3, k1, k2, k3, lindex, i1min, i1max, i2min, i2max, i3min, i3max, j1min, j1max, j2min, j2max, j3min, j3max, positx = 0, posity = 0, positz = 0, repet;
    Double_t lda, ldb, ldc, area, maximum = 0;
    if (ssizex <= 0 || ssizey <= 0 || ssizez <= 0)
-      return "Wrong parameters";   
+      return "Wrong parameters";
    if (numberIterations <= 0)
-      return "Number of iterations must be positive";   
+      return "Number of iterations must be positive";
    if (numberRepetitions <= 0)
-      return "Number of repetitions must be positive";      
+      return "Number of repetitions must be positive";
    Double_t ***working_space=new Double_t** [ssizex];
    for(i=0;i<ssizex;i++){
       working_space[i]=new Double_t* [ssizey];
@@ -2385,7 +2385,7 @@ decon_in-&gt;Draw(&quot;&quot;);  </span></p>
       }
    }
    if (lhx == -1 || lhy == -1 || lhz == -1)
-      return ("Zero response data");   
+      return ("Zero response data");
 
 //calculate ht*y and write into p
    for (i3 = 0; i3 < ssizez; i3++) {
@@ -2543,7 +2543,7 @@ Int_t TSpectrum3::SearchHighRes(const Double_t***source,Double_t***dest, Int_t s
                                  Double_t sigma, Double_t threshold,
                                  Bool_t backgroundRemove,Int_t deconIterations,
                                  Bool_t markov, Int_t averWindow)
-                                     
+
 {
 /////////////////////////////////////////////////////////////////////////////
 // THREE-DIMENSIONAL HIGH-RESOLUTION PEAK SEARCH FUNCTION                  //
@@ -2900,7 +2900,7 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
    Double_t pocet_sigma = 5;
    Int_t lhx,lhy,lhz,i1,i2,i3,j1,j2,j3,k1,k2,k3,i1min,i1max,i2min,i2max,i3min,i3max,j1min,j1max,j2min,j2max,j3min,j3max,positx,posity,positz;
    if(sigma < 1){
-      Error("SearchHighRes", "Invalid sigma, must be greater than or equal to 1");   
+      Error("SearchHighRes", "Invalid sigma, must be greater than or equal to 1");
       return 0;
    }
 
@@ -2908,27 +2908,27 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
       Error("SearchHighRes", "Invalid threshold, must be positive and less than 100");
       return 0;
    }
-   
+
    j = (Int_t)(pocet_sigma*sigma+0.5);
    if (j >= PEAK_WINDOW / 2) {
       Error("SearchHighRes", "Too large sigma");
       return 0;
-   }   
-   
+   }
+
    if (markov == true) {
       if (averWindow <= 0) {
          Error("SearchHighRes", "Averanging window must be positive");
          return 0;
       }
    }
-   
+
    if(backgroundRemove == true){
       if(sizex_ext < 2 * number_of_iterations + 1 || sizey_ext < 2 * number_of_iterations + 1 || sizez_ext < 2 * number_of_iterations + 1){
          Error("SearchHighRes", "Too large clipping window");
          return 0;
       }
    }
-      
+
    i = (Int_t)(4 * sigma + 0.5);
    i = 4 * i;
    Double_t ***working_space = new Double_t** [ssizex + i];
@@ -2944,102 +2944,102 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
                if(j < shift){
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[0][0][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[0][0][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[0][0][k - shift];
                }
-               
+
                else if(j >= ssizey + shift){
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[0][ssizey - 1][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[0][ssizey - 1][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[0][ssizey - 1][k - shift];
                }
-               
+
                else{
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[0][j - shift][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[0][j - shift][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[0][j - shift][k - shift];
                }
             }
-            
+
             else if(i >= ssizex + shift){
                if(j < shift){
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][0][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][0][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][0][k - shift];
                }
-               
+
                else if(j >= ssizey + shift){
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][ssizey - 1][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][ssizey - 1][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][ssizey - 1][k - shift];
                }
-               
+
                else{
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][j - shift][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][j - shift][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][j - shift][k - shift];
                }
             }
-            
+
             else{
                if(j < shift){
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[i - shift][0][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[i - shift][0][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[i - shift][0][k - shift];
                }
-               
+
                else if(j >= ssizey + shift){
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[i - shift][ssizey - 1][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[i - shift][ssizey - 1][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[i - shift][ssizey - 1][k - shift];
                }
-               
+
                else{
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[i - shift][j - shift][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[i - shift][j - shift][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[i - shift][j - shift][k - shift];
                }
@@ -3082,51 +3082,51 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
                   b = (p1 + p3) / 2.0;
                   if(b > s1)
                      s1 = b;
-                     
+
                   b = (p1 + p2) / 2.0;
                   if(b > s2)
                      s2 = b;
-                     
+
                   b = (p2 + p4) / 2.0;
                   if(b > s3)
                      s3 = b;
-                     
+
                   b = (p3 + p4) / 2.0;
                   if(b > s4)
                      s4 = b;
-                     
+
                   b = (p5 + p7) / 2.0;
                   if(b > s5)
                      s5 = b;
-                     
+
                   b = (p5 + p6) / 2.0;
                   if(b > s6)
                      s6 = b;
-                     
+
                   b = (p6 + p8) / 2.0;
                   if(b > s7)
                      s7 = b;
-                     
+
                   b = (p7 + p8) / 2.0;
                   if(b > s8)
                      s8 = b;
-                     
+
                   b = (p2 + p6) / 2.0;
                   if(b > s9)
                      s9 = b;
-                     
+
                   b = (p4 + p8) / 2.0;
                   if(b > s10)
                      s10 = b;
-                     
+
                   b = (p1 + p5) / 2.0;
                   if(b > s11)
                      s11 = b;
-                     
+
                   b = (p3 + p7) / 2.0;
                   if(b > s12)
                      s12 = b;
-                     
+
                   s1 = s1 - (p1 + p3) / 2.0;
                   s2 = s2 - (p1 + p2) / 2.0;
                   s3 = s3 - (p2 + p4) / 2.0;
@@ -3142,27 +3142,27 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
                   b = (s1 + s3) / 2.0 + (s2 + s4) / 2.0 + (p1 + p2 + p3 + p4) / 4.0;
                   if(b > r1)
                      r1 = b;
-                     
+
                   b = (s5 + s7) / 2.0 + (s6 + s8) / 2.0 + (p5 + p6 + p7 + p8) / 4.0;
                   if(b > r2)
                      r2 = b;
-                     
+
                   b = (s3 + s7) / 2.0 + (s9 + s10) / 2.0 + (p2 + p4 + p6 + p8) / 4.0;
                   if(b > r3)
                      r3 = b;
-                     
+
                   b = (s1 + s5) / 2.0 + (s11 + s12) / 2.0 + (p1 + p3 + p5 + p7) / 4.0;
                   if(b > r4)
                      r4 = b;
-                     
+
                   b = (s9 + s11) / 2.0 + (s2 + s6) / 2.0 + (p1 + p2 + p5 + p6) / 4.0;
                   if(b > r5)
                      r5 = b;
-                     
+
                   b = (s4 + s8) / 2.0 + (s10 + s12) / 2.0 + (p3 + p4 + p7 + p8) / 4.0;
                   if(b > r6)
                      r6 = b;
-                     
+
                   r1 = r1 - ((s1 + s3) / 2.0 + (s2 + s4) / 2.0 + (p1 + p2 + p3 + p4) / 4.0);
                   r2 = r2 - ((s5 + s7) / 2.0 + (s6 + s8) / 2.0 + (p5 + p6 + p7 + p8) / 4.0);
                   r3 = r3 - ((s3 + s7) / 2.0 + (s9 + s10) / 2.0 + (p2 + p4 + p6 + p8) / 4.0);
@@ -3172,7 +3172,7 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
                   b = (r1 + r2) / 2.0 + (r3 + r4) / 2.0 + (r5 + r6) / 2.0 + (s1 + s3 + s5 + s7) / 4.0 + (s2 + s4 + s6 + s8) / 4.0 + (s9 + s10 + s11 + s12) / 4.0 + (p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8) / 8.0;
                   if(b < a)
                      a = b;
-                     
+
                   working_space[x][y][z] = a;
                }
             }
@@ -3192,102 +3192,102 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
                   if(j < shift){
                      if(k < shift)
                         working_space[i][j][k + sizez_ext] = source[0][0][0] - working_space[i][j][k + sizez_ext];
-                         
+
                      else if(k >= ssizez + shift)
                         working_space[i][j][k + sizez_ext] = source[0][0][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                          
+
                      else
-                        working_space[i][j][k + sizez_ext] = source[0][0][k - shift] - working_space[i][j][k + sizez_ext];   
+                        working_space[i][j][k + sizez_ext] = source[0][0][k - shift] - working_space[i][j][k + sizez_ext];
                   }
-                   
+
                   else if(j >= ssizey + shift){
                      if(k < shift)
                         working_space[i][j][k + sizez_ext] = source[0][ssizey - 1][0] - working_space[i][j][k + sizez_ext];
-                          
+
                      else if(k >= ssizez + shift)
                         working_space[i][j][k + sizez_ext] = source[0][ssizey - 1][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                          
+
                      else
                         working_space[i][j][k + sizez_ext] = source[0][ssizey - 1][k - shift] - working_space[i][j][k + sizez_ext];
                   }
- 
+
                   else{
                      if(k < shift)
                         working_space[i][j][k + sizez_ext] = source[0][j - shift][0] - working_space[i][j][k + sizez_ext];
-                         
+
                      else if(k >= ssizez + shift)
                         working_space[i][j][k + sizez_ext] = source[0][j - shift][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                         
+
                      else
                         working_space[i][j][k + sizez_ext] = source[0][j - shift][k - shift] - working_space[i][j][k + sizez_ext];
                   }
                }
-                 
+
                else if(i >= ssizex + shift){
                   if(j < shift){
                      if(k < shift)
                         working_space[i][j][k + sizez_ext] = source[ssizex - 1][0][0] - working_space[i][j][k + sizez_ext];
-                          
+
                      else if(k >= ssizez + shift)
                         working_space[i][j][k + sizez_ext] = source[ssizex - 1][0][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                         
+
                      else
                         working_space[i][j][k + sizez_ext] = source[ssizex - 1][0][k - shift] - working_space[i][j][k + sizez_ext];
                   }
-                    
+
                   else if(j >= ssizey + shift){
                      if(k < shift)
                         working_space[i][j][k + sizez_ext] = source[ssizex - 1][ssizey - 1][0] - working_space[i][j][k + sizez_ext];
-                          
+
                      else if(k >= ssizez + shift)
                         working_space[i][j][k + sizez_ext] = source[ssizex - 1][ssizey - 1][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                          
+
                      else
                         working_space[i][j][k + sizez_ext] = source[ssizex - 1][ssizey - 1][k - shift] - working_space[i][j][k + sizez_ext];
                   }
-                    
+
                   else{
                      if(k < shift)
                         working_space[i][j][k + sizez_ext] = source[ssizex - 1][j - shift][0] - working_space[i][j][k + sizez_ext];
-                          
+
                      else if(k >= ssizez + shift)
                         working_space[i][j][k + sizez_ext] = source[ssizex - 1][j - shift][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                          
+
                      else
                         working_space[i][j][k + sizez_ext] = source[ssizex - 1][j - shift][k - shift] - working_space[i][j][k + sizez_ext];
                   }
                }
-                 
+
                else{
                   if(j < shift){
                      if(k < shift)
                         working_space[i][j][k + sizez_ext] = source[i - shift][0][0] - working_space[i][j][k + sizez_ext];
-                          
+
                      else if(k >= ssizez + shift)
                         working_space[i][j][k + sizez_ext] = source[i - shift][0][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                          
+
                      else
                         working_space[i][j][k + sizez_ext] = source[i - shift][0][k - shift] - working_space[i][j][k + sizez_ext];
                   }
-                    
+
                   else if(j >= ssizey + shift){
                      if(k < shift)
                         working_space[i][j][k + sizez_ext] = source[i - shift][ssizey - 1][0] - working_space[i][j][k + sizez_ext];
-                          
+
                      else if(k >= ssizez + shift)
                         working_space[i][j][k + sizez_ext] = source[i - shift][ssizey - 1][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                          
+
                      else
                         working_space[i][j][k + sizez_ext] = source[i - shift][ssizey - 1][k - shift] - working_space[i][j][k + sizez_ext];
                   }
-                    
+
                   else{
                      if(k < shift)
                         working_space[i][j][k + sizez_ext] = source[i - shift][j - shift][0] - working_space[i][j][k + sizez_ext];
-                        
+
                      else if(k >= ssizez + shift)
                         working_space[i][j][k + sizez_ext] = source[i - shift][j - shift][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                          
+
                      else
                         working_space[i][j][k + sizez_ext] = source[i - shift][j - shift][k - shift] - working_space[i][j][k + sizez_ext];
                   }
@@ -3296,7 +3296,7 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
          }
       }
    }
-   
+
    if(markov == true){
       for(i = 0;i < sizex_ext; i++){
          for(j = 0;j < sizey_ext; j++){
@@ -3318,7 +3318,7 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
                working_space[i][j][k] = 0;
                if(maxch < working_space[i][j][k + 2 * sizez_ext])
                   maxch = working_space[i][j][k + 2 * sizez_ext];
-                  
+
                plocha += working_space[i][j][k + 2 * sizez_ext];
             }
          }
@@ -3326,7 +3326,7 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
       if(maxch == 0) {
          delete [] working_space;
          return 0;
-      }   
+      }
       nom = 0;
       working_space[xmin][ymin][zmin] = 1;
       for(i = xmin;i < xmax; i++){
@@ -3336,33 +3336,33 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
          for(l = 1;l <= averWindow; l++){
             if((i + l) > xmax)
                a = working_space[xmax][ymin][zmin + 2 * sizez_ext] / maxch;
-              
+
             else
                a = working_space[i + l][ymin][zmin + 2 * sizez_ext] / maxch;
-              
+
             b = a - nip;
             if(a + nip <= 0)
                a = 1;
 
             else
                a = TMath::Sqrt(a + nip);
-              
+
             b = b / a;
             b = TMath::Exp(b);
             sp = sp + b;
             if(i - l + 1 < xmin)
                a = working_space[xmin][ymin][zmin + 2 * sizez_ext] / maxch;
-             
+
             else
                a = working_space[i - l + 1][ymin][zmin + 2 * sizez_ext] / maxch;
-               
+
             b = a - nim;
             if(a + nim <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nim);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             sm = sm + b;
@@ -3378,17 +3378,17 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
          for(l = 1;l <= averWindow; l++){
             if((i + l) > ymax)
                a = working_space[xmin][ymax][zmin + 2 * sizez_ext] / maxch;
-             
+
             else
                a = working_space[xmin][i + l][zmin + 2 * sizez_ext] / maxch;
-               
+
             b = a - nip;
             if(a + nip <= 0)
                a = 1;
 
             else
                a = TMath::Sqrt(a + nip);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             sp = sp + b;
@@ -3397,14 +3397,14 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
 
             else
                a = working_space[xmin][i - l + 1][zmin + 2 * sizez_ext] / maxch;
-             
+
             b = a - nim;
             if(a + nim <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nim);
-             
+
             b = b / a;
             b = TMath::Exp(b);
             sm = sm + b;
@@ -3420,33 +3420,33 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
          for(l = 1;l <= averWindow;l++){
             if((i + l) > zmax)
                a = working_space[xmin][ymin][zmax + 2 * sizez_ext] / maxch;
-               
+
             else
                a = working_space[xmin][ymin][i + l + 2 * sizez_ext] / maxch;
-              
+
             b = a - nip;
             if(a + nip <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nip);
-              
+
             b = b / a;
             b = TMath::Exp(b);
             sp = sp + b;
             if(i - l + 1 < zmin)
                a = working_space[xmin][ymin][zmin + 2 * sizez_ext] / maxch;
- 
+
             else
                a = working_space[xmin][ymin][i - l + 1 + 2 * sizez_ext] / maxch;
-               
+
             b = a - nim;
             if(a + nim <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nim);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             sm = sm + b;
@@ -3463,33 +3463,33 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
             for(l = 1;l <= averWindow; l++){
                if(i + l > xmax)
                   a = working_space[xmax][j][zmin + 2 * sizez_ext] / maxch;
-                 
+
                else
                   a = working_space[i + l][j][zmin + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nip);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                spx = spx + b;
                if(i - l + 1 < xmin)
                   a = working_space[xmin][j][zmin + 2 * sizez_ext] / maxch;
-                  
+
                else
                   a = working_space[i - l + 1][j][zmin + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nim);
-                
+
                b = b / a;
                b = TMath::Exp(b);
                smx = smx + b;
@@ -3500,33 +3500,33 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
             for(l = 1;l <= averWindow; l++){
                if(j + l > ymax)
                   a = working_space[i][ymax][zmin + 2 * sizez_ext] / maxch;
-                
+
                else
                   a = working_space[i][j + l][zmin + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nip);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                spy = spy + b;
                if(j - l + 1 < ymin)
                   a = working_space[i][ymin][zmin + 2 * sizez_ext] / maxch;
-                  
+
                else
                   a = working_space[i][j - l + 1][zmin + 2 * sizez_ext] / maxch;
-                
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nim);
-                 
+
                b = b / a;
                b = TMath::Exp(b);
                smy = smy + b;
@@ -3544,33 +3544,33 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
             for(l = 1;l <= averWindow; l++){
                if(i + l > xmax)
                  a = working_space[xmax][ymin][j + 2 * sizez_ext] / maxch;
-                 
+
                else
                   a = working_space[i + l][ymin][j + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nip);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                spx = spx + b;
                if(i - l + 1 < xmin)
                   a = working_space[xmin][ymin][j + 2 * sizez_ext] / maxch;
-                  
+
                else
                   a = working_space[i - l + 1][ymin][j + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nim);
-                
+
                b = b / a;
                b = TMath::Exp(b);
                smx = smx + b;
@@ -3581,33 +3581,33 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
             for(l = 1;l <= averWindow; l++){
                if(j + l > zmax)
                   a = working_space[i][ymin][zmax + 2 * sizez_ext] / maxch;
-                
+
                else
                   a = working_space[i][ymin][j + l + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nip);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                spz = spz + b;
                if(j - l + 1 < zmin)
                   a = working_space[i][ymin][zmin + 2 * sizez_ext] / maxch;
-                  
+
                else
                   a = working_space[i][ymin][j - l + 1 + 2 * sizez_ext] / maxch;
-                
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nim);
-                 
+
                b = b / a;
                b = TMath::Exp(b);
                smz = smz + b;
@@ -3625,33 +3625,33 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
             for(l = 1;l <= averWindow; l++){
                if(i + l > ymax)
                   a = working_space[xmin][ymax][j + 2 * sizez_ext] / maxch;
-                 
+
                else
                   a = working_space[xmin][i + l][j + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nip);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                spy = spy + b;
                if(i - l + 1 < ymin)
                   a = working_space[xmin][ymin][j + 2 * sizez_ext] / maxch;
-                  
+
                else
                   a = working_space[xmin][i - l + 1][j + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nim);
-                
+
                b = b / a;
                b = TMath::Exp(b);
                smy = smy + b;
@@ -3662,33 +3662,33 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
             for(l = 1;l <= averWindow; l++){
                if(j + l > zmax)
                   a = working_space[xmin][i][zmax + 2 * sizez_ext] / maxch;
-                
+
                else
                   a = working_space[xmin][i][j + l + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-               
+
                else
                   a = TMath::Sqrt(a + nip);
-               
+
                b = b / a;
                b = TMath::Exp(b);
                spz = spz + b;
                if(j - l + 1 < zmin)
                   a = working_space[xmin][i][zmin + 2 * sizez_ext] / maxch;
-               
+
                else
                   a = working_space[xmin][i][j - l + 1 + 2 * sizez_ext] / maxch;
-             
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-               
+
                else
                   a = TMath::Sqrt(a + nim);
-             
+
                b = b / a;
                b = TMath::Exp(b);
                smz = smz + b;
@@ -3707,33 +3707,33 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
                for(l = 1;l <= averWindow; l++){
                   if(i + l > xmax)
                      a = working_space[xmax][j][k + 2 * sizez_ext] / maxch;
-                    
+
                   else
                      a = working_space[i + l][j][k + 2 * sizez_ext] / maxch;
-                    
+
                   b = a - nip;
                   if(a + nip <= 0)
                      a = 1;
-                    
+
                   else
                      a = TMath::Sqrt(a + nip);
-                    
+
                   b = b / a;
                   b = TMath::Exp(b);
                   spx = spx + b;
                   if(i - l + 1 < xmin)
                      a = working_space[xmin][j][k + 2 * sizez_ext] / maxch;
-                    
+
                   else
                      a = working_space[i - l + 1][j][k + 2 * sizez_ext] / maxch;
-                  
+
                   b = a - nim;
                   if(a + nim <= 0)
                      a = 1;
-                  
+
                   else
                      a = TMath::Sqrt(a + nim);
-                  
+
                   b = b / a;
                   b = TMath::Exp(b);
                   smx = smx + b;
@@ -3744,33 +3744,33 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
                for(l = 1;l <= averWindow; l++){
                   if(j + l > ymax)
                      a = working_space[i][ymax][k + 2 * sizez_ext] / maxch;
-                   
+
                   else
                      a = working_space[i][j + l][k + 2 * sizez_ext] / maxch;
-                   
+
                   b = a - nip;
                   if(a + nip <= 0)
                      a = 1;
-                     
+
                   else
                      a = TMath::Sqrt(a + nip);
-                   
+
                   b = b / a;
                   b = TMath::Exp(b);
                   spy = spy + b;
                   if(j - l + 1 < ymin)
                      a = working_space[i][ymin][k + 2 * sizez_ext] / maxch;
-                   
+
                   else
                      a = working_space[i][j - l + 1][k + 2 * sizez_ext] / maxch;
-                    
+
                   b = a - nim;
                   if(a + nim <= 0)
                      a = 1;
-                     
+
                   else
                      a = TMath::Sqrt(a + nim);
-                    
+
                   b = b / a;
                   b = TMath::Exp(b);
                   smy = smy + b;
@@ -3781,33 +3781,33 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
                for(l = 1;l <= averWindow; l++ ){
                   if(j + l > zmax)
                      a = working_space[i][j][zmax + 2 * sizez_ext] / maxch;
-                   
+
                   else
                      a = working_space[i][j][k + l + 2 * sizez_ext] / maxch;
-                   
+
                   b = a - nip;
                   if(a + nip <= 0)
                      a = 1;
-                     
+
                   else
                      a = TMath::Sqrt(a + nip);
-                   
+
                   b = b / a;
                   b = TMath::Exp(b);
                   spz = spz + b;
                   if(j - l + 1 < ymin)
                      a = working_space[i][j][zmin + 2 * sizez_ext] / maxch;
-                   
+
                   else
                      a = working_space[i][j][k - l + 1 + 2 * sizez_ext] / maxch;
-                    
+
                   b = a - nim;
                   if(a + nim <= 0)
                      a = 1;
-                     
+
                   else
                      a = TMath::Sqrt(a + nim);
-                    
+
                   b = b / a;
                   b = TMath::Exp(b);
                   smz = smz + b;
@@ -3853,10 +3853,10 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
             if(lda!=0){
                if((i + 1) > lhx)
                   lhx = i + 1;
-              
+
                if((j + 1) > lhy)
                   lhy = j + 1;
-                
+
                if((k + 1) > lhz)
                   lhz = k + 1;
             }
@@ -3909,37 +3909,37 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
             j3min = -i3;
             if (j3min < 0)
                j3min = 0;
-               
+
             j3max = lhz - 1 - i3;
             if (j3max > lhz - 1)
                j3max = lhz - 1;
-               
+
             for (j3 = j3min; j3 <= j3max; j3++) {
                j2min = -i2;
                if (j2min < 0)
                   j2min = 0;
-            
+
                j2max = lhy - 1 - i2;
                if (j2max > lhy - 1)
                   j2max = lhy - 1;
-            
+
                for (j2 = j2min; j2 <= j2max; j2++) {
                   j1min = -i1;
                   if (j1min < 0)
                      j1min = 0;
-            
+
                   j1max = lhx - 1 - i1;
                   if (j1max > lhx - 1)
                      j1max = lhx - 1;
-            
+
                   for (j1 = j1min; j1 <= j1max; j1++) {
                      lda = working_space[j1][j2][j3];
                      if (i1 + j1 < sizex_ext && i2 + j2 < sizey_ext)
                         ldb = working_space[i1 + j1][i2 + j2][i3 + j3];
-            
+
                      else
                         ldb = 0;
-                        
+
                      ldc = ldc + lda * ldb;
                   }
                }
@@ -3968,30 +3968,30 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
                   j3min = i3;
                   if (j3min > lhz - 1)
                      j3min = lhz - 1;
-                     
+
                   j3min = -j3min;
                   j3max = sizez_ext - i3 - 1;
                   if (j3max > lhz - 1)
                      j3max = lhz - 1;
-                     
+
                   j2min = i2;
                   if (j2min > lhy - 1)
                      j2min = lhy - 1;
-                     
+
                   j2min = -j2min;
                   j2max = sizey_ext - i2 - 1;
                   if (j2max > lhy - 1)
                      j2max = lhy - 1;
-                     
+
                   j1min = i1;
                   if (j1min > lhx - 1)
                      j1min = lhx - 1;
-                     
+
                   j1min = -j1min;
                   j1max = sizex_ext - i1 - 1;
                   if (j1max > lhx - 1)
                      j1max = lhx - 1;
-                     
+
                   for (j3 = j3min; j3 <= j3max; j3++) {
                      for (j2 = j2min; j2 <= j2max; j2++) {
                         for (j1 = j1min; j1 <= j1max; j1++) {
@@ -4040,7 +4040,7 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
             if(a > working_space[i][j][l - 1] && a > working_space[i - 1][j][l - 1] && a > working_space[i - 1][j - 1][l - 1] && a > working_space[i][j - 1][l - 1] && a > working_space[i + 1][j - 1][l - 1] && a > working_space[i + 1][j][l - 1] && a > working_space[i + 1][j + 1][l - 1] && a > working_space[i][j + 1][l - 1] && a > working_space[i - 1][j + 1][l - 1] && a > working_space[i - 1][j][l] && a > working_space[i - 1][j - 1][l] && a > working_space[i][j - 1][l] && a > working_space[i + 1][j - 1][l] && a > working_space[i + 1][j][l] && a > working_space[i + 1][j + 1][l] && a > working_space[i][j + 1][l] && a > working_space[i - 1][j + 1][l] && a > working_space[i][j][l + 1] && a > working_space[i - 1][j][l + 1] && a > working_space[i - 1][j - 1][l + 1] && a > working_space[i][j - 1][l + 1] && a > working_space[i + 1][j - 1][l + 1] && a > working_space[i + 1][j][l + 1] && a > working_space[i + 1][j + 1][l + 1] && a > working_space[i][j + 1][l + 1] && a > working_space[i - 1][j + 1][l + 1]){
                if(i >= shift && i < ssizex + shift && j >= shift && j < ssizey + shift && l >= shift && l < ssizez + shift){
                   if(working_space[i][j][l] > threshold * maximum / 100.0){
-                     if(peak_index < fMaxPeaks){                   
+                     if(peak_index < fMaxPeaks){
                         for(k = i - 1,a = 0,b = 0;k <= i + 1; k++){
                            a += (Double_t)(k - shift) * working_space[k][j][l];
                            b += working_space[k][j][l];
@@ -4056,7 +4056,7 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
                            b += working_space[i][j][k];
                         }
                         fPositionZ[peak_index] = a / b;
-                        peak_index += 1;                        
+                        peak_index += 1;
                      }
                   }
                }
@@ -4072,22 +4072,22 @@ style='font-size:10.0pt'>search-&gt;Draw(&quot;&quot;);  </span></p>
       }
    }
    k = (Int_t)(4 * sigma + 0.5);
-   k = 4 * k;      
+   k = 4 * k;
    for(i = 0;i < ssizex + k; i++){
       for(j = 0;j < ssizey + k; j++)
          delete[] working_space[i][j];
       delete[] working_space[i];
    }
-   delete[] working_space;   
+   delete[] working_space;
    fNPeaks = peak_index;
-   return fNPeaks;   
+   return fNPeaks;
 }
 
 //______________________________________________________________________________
 Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssizex, Int_t ssizey, Int_t ssizez,
                                  Double_t sigma, Double_t threshold,
                                  Bool_t markov, Int_t averWindow)
-                                     
+
 {
 
 /////////////////////////////////////////////////////////////////////////////
@@ -4123,7 +4123,7 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
    Int_t sizex_ext=ssizex + 4 * number_of_iterations,sizey_ext = ssizey + 4 * number_of_iterations,sizez_ext = ssizez + 4 * number_of_iterations,shift = 2 * number_of_iterations;
    Double_t c[PEAK_WINDOW],s_f_ratio_peaks = 5;
    if(sigma < 1){
-      Error("SearchFast", "Invalid sigma, must be greater than or equal to 1");   
+      Error("SearchFast", "Invalid sigma, must be greater than or equal to 1");
       return 0;
    }
 
@@ -4131,25 +4131,25 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
       Error("SearchFast", "Invalid threshold, must be positive and less than 100");
       return 0;
    }
-   
+
    j = (Int_t)(pocet_sigma*sigma+0.5);
    if (j >= PEAK_WINDOW / 2) {
       Error("SearchFast", "Too large sigma");
       return 0;
-   }   
-   
+   }
+
    if (markov == true) {
       if (averWindow <= 0) {
          Error("SearchFast", "Averanging window must be positive");
          return 0;
       }
    }
-   
+
    if(sizex_ext < 2 * number_of_iterations + 1 || sizey_ext < 2 * number_of_iterations + 1 || sizez_ext < 2 * number_of_iterations + 1){
       Error("SearchFast", "Too large clipping window");
       return 0;
    }
-      
+
    i = (Int_t)(4 * sigma + 0.5);
    i = 4 * i;
    Double_t ***working_space = new Double_t** [ssizex + i];
@@ -4158,7 +4158,7 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
       for(k = 0;k < ssizey + i; k++)
          working_space[j][k] = new Double_t [4 * (ssizez + i)];
    }
-   
+
    for(k = 0;k < sizez_ext; k++){
       for(j = 0;j < sizey_ext; j++){
         for(i = 0;i < sizex_ext; i++){
@@ -4166,102 +4166,102 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
                if(j < shift){
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[0][0][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[0][0][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[0][0][k - shift];
                }
-               
+
                else if(j >= ssizey + shift){
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[0][ssizey - 1][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[0][ssizey - 1][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[0][ssizey - 1][k - shift];
                }
-               
+
                else{
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[0][j - shift][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[0][j - shift][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[0][j - shift][k - shift];
                }
             }
-            
+
             else if(i >= ssizex + shift){
                if(j < shift){
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][0][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][0][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][0][k - shift];
                }
-               
+
                else if(j >= ssizey + shift){
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][ssizey - 1][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][ssizey - 1][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][ssizey - 1][k - shift];
                }
-               
+
                else{
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][j - shift][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][j - shift][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[ssizex - 1][j - shift][k - shift];
                }
             }
-            
+
             else{
                if(j < shift){
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[i - shift][0][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[i - shift][0][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[i - shift][0][k - shift];
                }
-               
+
                else if(j >= ssizey + shift){
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[i - shift][ssizey - 1][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[i - shift][ssizey - 1][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[i - shift][ssizey - 1][k - shift];
                }
-               
+
                else{
                   if(k < shift)
                      working_space[i][j][k + sizez_ext] = source[i - shift][j - shift][0];
-                     
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + sizez_ext] = source[i - shift][j - shift][ssizez - 1];
-                     
+
                   else
                      working_space[i][j][k + sizez_ext] = source[i - shift][j - shift][k - shift];
                }
@@ -4303,51 +4303,51 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
                b = (p1 + p3) / 2.0;
                if(b > s1)
                   s1 = b;
-                   
+
                b = (p1 + p2) / 2.0;
                if(b > s2)
                   s2 = b;
-                     
+
                b = (p2 + p4) / 2.0;
                if(b > s3)
                   s3 = b;
-                     
+
                b = (p3 + p4) / 2.0;
                if(b > s4)
                   s4 = b;
-                     
+
                b = (p5 + p7) / 2.0;
                if(b > s5)
                   s5 = b;
-                     
+
                b = (p5 + p6) / 2.0;
                if(b > s6)
                   s6 = b;
-                     
+
                b = (p6 + p8) / 2.0;
                if(b > s7)
                   s7 = b;
-                     
+
                b = (p7 + p8) / 2.0;
                if(b > s8)
                   s8 = b;
-                     
+
                b = (p2 + p6) / 2.0;
                if(b > s9)
                   s9 = b;
-                     
+
                b = (p4 + p8) / 2.0;
                if(b > s10)
                   s10 = b;
-                    
+
                b = (p1 + p5) / 2.0;
                if(b > s11)
                   s11 = b;
-                     
+
                b = (p3 + p7) / 2.0;
                if(b > s12)
                   s12 = b;
-                     
+
                s1 = s1 - (p1 + p3) / 2.0;
                s2 = s2 - (p1 + p2) / 2.0;
                s3 = s3 - (p2 + p4) / 2.0;
@@ -4363,27 +4363,27 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
                b = (s1 + s3) / 2.0 + (s2 + s4) / 2.0 + (p1 + p2 + p3 + p4) / 4.0;
                if(b > r1)
                   r1 = b;
-                     
+
                b = (s5 + s7) / 2.0 + (s6 + s8) / 2.0 + (p5 + p6 + p7 + p8) / 4.0;
                if(b > r2)
                   r2 = b;
-                   
+
                b = (s3 + s7) / 2.0 + (s9 + s10) / 2.0 + (p2 + p4 + p6 + p8) / 4.0;
                if(b > r3)
                   r3 = b;
-                     
+
                b = (s1 + s5) / 2.0 + (s11 + s12) / 2.0 + (p1 + p3 + p5 + p7) / 4.0;
                if(b > r4)
                   r4 = b;
-                     
+
                b = (s9 + s11) / 2.0 + (s2 + s6) / 2.0 + (p1 + p2 + p5 + p6) / 4.0;
                if(b > r5)
                   r5 = b;
-                     
+
                b = (s4 + s8) / 2.0 + (s10 + s12) / 2.0 + (p3 + p4 + p7 + p8) / 4.0;
                if(b > r6)
                   r6 = b;
-                     
+
                r1 = r1 - ((s1 + s3) / 2.0 + (s2 + s4) / 2.0 + (p1 + p2 + p3 + p4) / 4.0);
                r2 = r2 - ((s5 + s7) / 2.0 + (s6 + s8) / 2.0 + (p5 + p6 + p7 + p8) / 4.0);
                r3 = r3 - ((s3 + s7) / 2.0 + (s9 + s10) / 2.0 + (p2 + p4 + p6 + p8) / 4.0);
@@ -4393,7 +4393,7 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
                b = (r1 + r2) / 2.0 + (r3 + r4) / 2.0 + (r5 + r6) / 2.0 + (s1 + s3 + s5 + s7) / 4.0 + (s2 + s4 + s6 + s8) / 4.0 + (s9 + s10 + s11 + s12) / 4.0 + (p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8) / 8.0;
                if(b < a)
                   a = b;
-                     
+
                working_space[x][y][z] = a;
             }
          }
@@ -4413,102 +4413,102 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
                if(j < shift){
                   if(k < shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[0][0][0] - working_space[i][j][k + sizez_ext];
-                       
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[0][0][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                         
+
                   else
-                     working_space[i][j][k + 3 * sizez_ext] = source[0][0][k - shift] - working_space[i][j][k + sizez_ext];   
+                     working_space[i][j][k + 3 * sizez_ext] = source[0][0][k - shift] - working_space[i][j][k + sizez_ext];
                }
-                   
+
                else if(j >= ssizey + shift){
                   if(k < shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[0][ssizey - 1][0] - working_space[i][j][k + sizez_ext];
-                          
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[0][ssizey - 1][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                          
+
                   else
                      working_space[i][j][k + 3 * sizez_ext] = source[0][ssizey - 1][k - shift] - working_space[i][j][k + sizez_ext];
                }
-                    
+
                else{
                   if(k < shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[0][j - shift][0] - working_space[i][j][k + sizez_ext];
-                       
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[0][j - shift][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                         
+
                   else
                      working_space[i][j][k + 3 * sizez_ext] = source[0][j - shift][k - shift] - working_space[i][j][k + sizez_ext];
                }
             }
-                 
+
             else if(i >= ssizex + shift){
                if(j < shift){
                   if(k < shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[ssizex - 1][0][0] - working_space[i][j][k + sizez_ext];
-                          
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[ssizex - 1][0][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                         
+
                   else
                      working_space[i][j][k + 3 * sizez_ext] = source[ssizex - 1][0][k - shift] - working_space[i][j][k + sizez_ext];
                }
-                    
+
                else if(j >= ssizey + shift){
                   if(k < shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[ssizex - 1][ssizey - 1][0] - working_space[i][j][k + sizez_ext];
-                          
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[ssizex - 1][ssizey - 1][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                          
+
                   else
                      working_space[i][j][k + 3 * sizez_ext] = source[ssizex - 1][ssizey - 1][k - shift] - working_space[i][j][k + sizez_ext];
                }
-                    
+
                else{
                   if(k < shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[ssizex - 1][j - shift][0] - working_space[i][j][k + sizez_ext];
-                          
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[ssizex - 1][j - shift][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                          
+
                   else
                      working_space[i][j][k + 3 * sizez_ext] = source[ssizex - 1][j - shift][k - shift] - working_space[i][j][k + sizez_ext];
                }
             }
-                 
+
             else{
                if(j < shift){
                   if(k < shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[i - shift][0][0] - working_space[i][j][k + sizez_ext];
-                          
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[i - shift][0][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                          
+
                   else
                      working_space[i][j][k + 3 * sizez_ext] = source[i - shift][0][k - shift] - working_space[i][j][k + sizez_ext];
                }
-                    
+
                else if(j >= ssizey + shift){
                   if(k < shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[i - shift][ssizey - 1][0] - working_space[i][j][k + sizez_ext];
-                          
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[i - shift][ssizey - 1][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                          
+
                   else
                      working_space[i][j][k + 3 * sizez_ext] = source[i - shift][ssizey - 1][k - shift] - working_space[i][j][k + sizez_ext];
                }
-                    
+
                else{
                   if(k < shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[i - shift][j - shift][0] - working_space[i][j][k + sizez_ext];
-                        
+
                   else if(k >= ssizez + shift)
                      working_space[i][j][k + 3 * sizez_ext] = source[i - shift][j - shift][ssizez - 1] - working_space[i][j][k + sizez_ext];
-                          
+
                   else
                      working_space[i][j][k + 3 * sizez_ext] = source[i - shift][j - shift][k - shift] - working_space[i][j][k + sizez_ext];
                }
@@ -4516,7 +4516,7 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
          }
       }
    }
-   
+
    for(i = 0;i < sizex_ext; i++){
       for(j = 0;j < sizey_ext; j++){
          for(k = 0;k < sizez_ext; k++){
@@ -4528,8 +4528,8 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
                working_space[i][j][k + 2 * sizez_ext] = 0;
          }
       }
-   }   
-   
+   }
+
    if(markov == true){
       xmin = 0;
       xmax = sizex_ext - 1;
@@ -4543,7 +4543,7 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
                working_space[i][j][k] = 0;
                if(maxch < working_space[i][j][k + 2 * sizez_ext])
                   maxch = working_space[i][j][k + 2 * sizez_ext];
-                  
+
                plocha += working_space[i][j][k + 2 * sizez_ext];
             }
          }
@@ -4552,7 +4552,7 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
          delete [] working_space;
          return 0;
       }
-         
+
       nom = 0;
       working_space[xmin][ymin][zmin] = 1;
       for(i = xmin;i < xmax; i++){
@@ -4562,33 +4562,33 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
          for(l = 1;l <= averWindow; l++){
             if((i + l) > xmax)
                a = working_space[xmax][ymin][zmin + 2 * sizez_ext] / maxch;
-              
+
             else
                a = working_space[i + l][ymin][zmin + 2 * sizez_ext] / maxch;
-              
+
             b = a - nip;
             if(a + nip <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nip);
-              
+
             b = b / a;
             b = TMath::Exp(b);
             sp = sp + b;
             if(i - l + 1 < xmin)
                a = working_space[xmin][ymin][zmin + 2 * sizez_ext] / maxch;
-             
+
             else
                a = working_space[i - l + 1][ymin][zmin + 2 * sizez_ext] / maxch;
-               
+
             b = a - nim;
             if(a + nim <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nim);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             sm = sm + b;
@@ -4604,33 +4604,33 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
          for(l = 1;l <= averWindow; l++){
             if((i + l) > ymax)
                a = working_space[xmin][ymax][zmin + 2 * sizez_ext] / maxch;
-             
+
             else
                a = working_space[xmin][i + l][zmin + 2 * sizez_ext] / maxch;
-               
+
             b = a - nip;
             if(a + nip <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nip);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             sp = sp + b;
             if(i - l + 1 < ymin)
                a = working_space[xmin][ymin][zmin + 2 * sizez_ext] / maxch;
-              
+
             else
                a = working_space[xmin][i - l + 1][zmin + 2 * sizez_ext] / maxch;
-             
+
             b = a - nim;
             if(a + nim <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nim);
-             
+
             b = b / a;
             b = TMath::Exp(b);
             sm = sm + b;
@@ -4646,33 +4646,33 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
          for(l = 1;l <= averWindow;l++){
             if((i + l) > zmax)
                a = working_space[xmin][ymin][zmax + 2 * sizez_ext] / maxch;
-               
+
             else
                a = working_space[xmin][ymin][i + l + 2 * sizez_ext] / maxch;
-              
+
             b = a - nip;
             if(a + nip <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nip);
-              
+
             b = b / a;
             b = TMath::Exp(b);
             sp = sp + b;
             if(i - l + 1 < zmin)
                a = working_space[xmin][ymin][zmin + 2 * sizez_ext] / maxch;
-             
+
             else
                a = working_space[xmin][ymin][i - l + 1 + 2 * sizez_ext] / maxch;
-               
+
             b = a - nim;
             if(a + nim <= 0)
                a = 1;
-               
+
             else
                a = TMath::Sqrt(a + nim);
-               
+
             b = b / a;
             b = TMath::Exp(b);
             sm = sm + b;
@@ -4689,33 +4689,33 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
             for(l = 1;l <= averWindow; l++){
                if(i + l > xmax)
                  a = working_space[xmax][j][zmin + 2 * sizez_ext] / maxch;
-                 
+
                else
                   a = working_space[i + l][j][zmin + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nip);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                spx = spx + b;
                if(i - l + 1 < xmin)
                   a = working_space[xmin][j][zmin + 2 * sizez_ext] / maxch;
-                  
+
                else
                   a = working_space[i - l + 1][j][zmin + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nim);
-                
+
                b = b / a;
                b = TMath::Exp(b);
                smx = smx + b;
@@ -4726,33 +4726,33 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
             for(l = 1;l <= averWindow; l++){
                if(j + l > ymax)
                   a = working_space[i][ymax][zmin + 2 * sizez_ext] / maxch;
-                
+
                else
                   a = working_space[i][j + l][zmin + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nip);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                spy = spy + b;
                if(j - l + 1 < ymin)
                   a = working_space[i][ymin][zmin + 2 * sizez_ext] / maxch;
-                  
+
                else
                   a = working_space[i][j - l + 1][zmin + 2 * sizez_ext] / maxch;
-                
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nim);
-                 
+
                b = b / a;
                b = TMath::Exp(b);
                smy = smy + b;
@@ -4770,33 +4770,33 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
             for(l = 1;l <= averWindow; l++){
                if(i + l > xmax)
                   a = working_space[xmax][ymin][j + 2 * sizez_ext] / maxch;
-                 
+
                else
                   a = working_space[i + l][ymin][j + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nip);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                spx = spx + b;
                if(i - l + 1 < xmin)
                   a = working_space[xmin][ymin][j + 2 * sizez_ext] / maxch;
-                  
+
                else
                   a = working_space[i - l + 1][ymin][j + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nim);
-                
+
                b = b / a;
                b = TMath::Exp(b);
                smx = smx + b;
@@ -4807,33 +4807,33 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
             for(l = 1;l <= averWindow; l++){
                if(j + l > zmax)
                   a = working_space[i][ymin][zmax + 2 * sizez_ext] / maxch;
-                
+
                else
                   a = working_space[i][ymin][j + l + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nip);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                spz = spz + b;
                if(j - l + 1 < zmin)
                   a = working_space[i][ymin][zmin + 2 * sizez_ext] / maxch;
-                  
+
                else
                   a = working_space[i][ymin][j - l + 1 + 2 * sizez_ext] / maxch;
-                
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nim);
-                 
+
                b = b / a;
                b = TMath::Exp(b);
                smz = smz + b;
@@ -4851,33 +4851,33 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
             for(l = 1;l <= averWindow; l++){
                if(i + l > ymax)
                   a = working_space[xmin][ymax][j + 2 * sizez_ext] / maxch;
-                 
+
                else
                   a = working_space[xmin][i + l][j + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nip);
-                  
+
                b = b / a;
                b = TMath::Exp(b);
                spy = spy + b;
                if(i - l + 1 < ymin)
                   a = working_space[xmin][ymin][j + 2 * sizez_ext] / maxch;
-                  
+
                else
                   a = working_space[xmin][i - l + 1][j + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-                  
+
                else
                   a = TMath::Sqrt(a + nim);
-                
+
                b = b / a;
                b = TMath::Exp(b);
                smy = smy + b;
@@ -4888,33 +4888,33 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
             for(l = 1;l <= averWindow; l++){
                if(j + l > zmax)
                   a = working_space[xmin][i][zmax + 2 * sizez_ext] / maxch;
-                
+
                else
                   a = working_space[xmin][i][j + l + 2 * sizez_ext] / maxch;
-                  
+
                b = a - nip;
                if(a + nip <= 0)
                   a = 1;
-               
+
                else
                   a = TMath::Sqrt(a + nip);
-               
+
                b = b / a;
                b = TMath::Exp(b);
                spz = spz + b;
                if(j - l + 1 < zmin)
                   a = working_space[xmin][i][zmin + 2 * sizez_ext] / maxch;
-               
+
                else
                   a = working_space[xmin][i][j - l + 1 + 2 * sizez_ext] / maxch;
-             
+
                b = a - nim;
                if(a + nim <= 0)
                   a = 1;
-               
+
                else
                   a = TMath::Sqrt(a + nim);
-             
+
                b = b / a;
                b = TMath::Exp(b);
                smz = smz + b;
@@ -4933,33 +4933,33 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
                for(l = 1;l <= averWindow; l++){
                   if(i + l > xmax)
                      a = working_space[xmax][j][k + 2 * sizez_ext] / maxch;
-                    
+
                   else
                      a = working_space[i + l][j][k + 2 * sizez_ext] / maxch;
-                    
+
                   b = a - nip;
                   if(a + nip <= 0)
                      a = 1;
-                    
+
                   else
                      a = TMath::Sqrt(a + nip);
-                    
+
                   b = b / a;
                   b = TMath::Exp(b);
                   spx = spx + b;
                   if(i - l + 1 < xmin)
                      a = working_space[xmin][j][k + 2 * sizez_ext] / maxch;
-                    
+
                   else
                      a = working_space[i - l + 1][j][k + 2 * sizez_ext] / maxch;
-                  
+
                   b = a - nim;
                   if(a + nim <= 0)
                      a = 1;
-                  
+
                   else
                      a = TMath::Sqrt(a + nim);
-                  
+
                   b = b / a;
                   b = TMath::Exp(b);
                   smx = smx + b;
@@ -4970,33 +4970,33 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
                for(l = 1;l <= averWindow; l++){
                   if(j + l > ymax)
                      a = working_space[i][ymax][k + 2 * sizez_ext] / maxch;
-                   
+
                   else
                      a = working_space[i][j + l][k + 2 * sizez_ext] / maxch;
-                   
+
                   b = a - nip;
                   if(a + nip <= 0)
                      a = 1;
-                     
+
                   else
                      a = TMath::Sqrt(a + nip);
-                   
+
                   b = b / a;
                   b = TMath::Exp(b);
                   spy = spy + b;
                   if(j - l + 1 < ymin)
                      a = working_space[i][ymin][k + 2 * sizez_ext] / maxch;
-                   
+
                   else
                      a = working_space[i][j - l + 1][k + 2 * sizez_ext] / maxch;
-                    
+
                   b = a - nim;
                   if(a + nim <= 0)
                      a = 1;
-                     
+
                   else
                      a = TMath::Sqrt(a + nim);
-                    
+
                   b = b / a;
                   b = TMath::Exp(b);
                   smy = smy + b;
@@ -5007,33 +5007,33 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
                for(l = 1;l <= averWindow; l++ ){
                   if(j + l > zmax)
                      a = working_space[i][j][zmax + 2 * sizez_ext] / maxch;
-                   
+
                   else
                      a = working_space[i][j][k + l + 2 * sizez_ext] / maxch;
-                   
+
                   b = a - nip;
                   if(a + nip <= 0)
                      a = 1;
-                     
+
                   else
                      a = TMath::Sqrt(a + nip);
-                   
+
                   b = b / a;
                   b = TMath::Exp(b);
                   spz = spz + b;
                   if(j - l + 1 < ymin)
                      a = working_space[i][j][zmin + 2 * sizez_ext] / maxch;
-                   
+
                   else
                      a = working_space[i][j][k - l + 1 + 2 * sizez_ext] / maxch;
-                    
+
                   b = a - nim;
                   if(a + nim <= 0)
                      a = 1;
-                     
+
                   else
                      a = TMath::Sqrt(a + nim);
-                    
+
                   b = b / a;
                   b = TMath::Exp(b);
                   smz = smz + b;
@@ -5061,7 +5061,7 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
          }
       }
    }
-   
+
    maximum = 0;
    for(k = 0;k < ssizez; k++){
       for(j = 0;j < ssizey; j++){
@@ -5253,15 +5253,15 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
             dest[i][j][k] = val;
          }
       }
-   }   
+   }
    k = (Int_t)(4 * sigma + 0.5);
-   k = 4 * k;      
+   k = 4 * k;
    for(i = 0;i < ssizex + k; i++){
       for(j = 0;j < ssizey + k; j++)
          delete[] working_space[i][j];
       delete[] working_space[i];
    }
-   delete[] working_space;   
+   delete[] working_space;
    fNPeaks = peak_index;
-   return fNPeaks;                   
+   return fNPeaks;
 }

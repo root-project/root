@@ -46,7 +46,7 @@
    ftp://root.cern.ch/root/SpectrumDec.ps.gz
    ftp://root.cern.ch/root/SpectrumSrc.ps.gz
    ftp://root.cern.ch/root/SpectrumBck.ps.gz
-*/ 
+*/
 //
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -77,7 +77,7 @@ style='font-size:16.0pt'><a href="http://www.fu.sav.sk/nph/projects/ProcFunc/">h
 //______________________________________________________________________________
 
 
-    
+
 #include "TSpectrum2.h"
 #include "TPolyMarker.h"
 #include "TList.h"
@@ -88,10 +88,10 @@ style='font-size:16.0pt'><a href="http://www.fu.sav.sk/nph/projects/ProcFunc/">h
 Int_t TSpectrum2::fgIterations    = 3;
 Int_t TSpectrum2::fgAverageWindow = 3;
 
-ClassImp(TSpectrum2)  
+ClassImp(TSpectrum2)
 
 //______________________________________________________________________________
-TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder") 
+TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 {
    // Constructor.
 
@@ -107,15 +107,15 @@ TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
 
 //______________________________________________________________________________
-TSpectrum2::TSpectrum2(Int_t maxpositions, Double_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder") 
-{   
+TSpectrum2::TSpectrum2(Int_t maxpositions, Double_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder")
+{
 //  maxpositions:  maximum number of peaks
 //  resolution:    determines resolution of the neighboring peaks
 //                 default value is 1 correspond to 3 sigma distance
 //                 between peaks. Higher values allow higher resolution
 //                 (smaller distance between peaks.
 //                 May be set later through SetResolution.
-   
+
    Int_t n = maxpositions;
    fMaxPeaks  = n;
    fPosition  = new Double_t[n];
@@ -128,7 +128,7 @@ TSpectrum2::TSpectrum2(Int_t maxpositions, Double_t resolution) :TNamed("Spectru
 
 
 //______________________________________________________________________________
-TSpectrum2::~TSpectrum2() 
+TSpectrum2::~TSpectrum2()
 {
    // Destructor.
 
@@ -144,7 +144,7 @@ void TSpectrum2::SetAverageWindow(Int_t w)
 {
   // static function: Set average window of searched peaks
   // see TSpectrum2::SearchHighRes
-   
+
    fgAverageWindow = w;
 }
 
@@ -153,20 +153,20 @@ void TSpectrum2::SetDeconIterations(Int_t n)
 {
   // static function: Set max number of decon iterations in deconvolution operation
   // see TSpectrum2::SearchHighRes
-   
+
    fgIterations = n;
 }
 
 
 //______________________________________________________________________________
 TH1 *TSpectrum2::Background(const TH1 * h, Int_t number_of_iterations,
-                                   Option_t * option) 
+                                   Option_t * option)
 {
 /////////////////////////////////////////////////////////////////////////////
 //   TWO-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
 //   This function calculates the background spectrum in the input histogram h.
-//   The background is returned as a histogram. 
-//                
+//   The background is returned as a histogram.
+//
 //   Function parameters:
 //   -h: input 2-d histogram
 //   -numberIterations, (default value = 20)
@@ -174,19 +174,19 @@ TH1 *TSpectrum2::Background(const TH1 * h, Int_t number_of_iterations,
 //   -option: may contain one of the following options
 //      - to set the direction parameter
 //        "BackIncreasingWindow". By default the direction is BackDecreasingWindow
-//      - filterOrder-order of clipping filter,  (default "BackOrder2"                         
-//                  -possible values= "BackOrder4"                          
-//                                    "BackOrder6"                          
-//                                    "BackOrder8"                           
+//      - filterOrder-order of clipping filter,  (default "BackOrder2"
+//                  -possible values= "BackOrder4"
+//                                    "BackOrder6"
+//                                    "BackOrder8"
 //      - "nosmoothing"- if selected, the background is not smoothed
 //           By default the background is smoothed.
-//      - smoothWindow-width of smoothing window, (default is "BackSmoothing3")         
-//                  -possible values= "BackSmoothing5"                        
-//                                    "BackSmoothing7"                       
-//                                    "BackSmoothing9"                        
-//                                    "BackSmoothing11"                       
-//                                    "BackSmoothing13"                       
-//                                    "BackSmoothing15"                        
+//      - smoothWindow-width of smoothing window, (default is "BackSmoothing3")
+//                  -possible values= "BackSmoothing5"
+//                                    "BackSmoothing7"
+//                                    "BackSmoothing9"
+//                                    "BackSmoothing11"
+//                                    "BackSmoothing13"
+//                                    "BackSmoothing15"
 //      - "Compton" if selected the estimation of Compton edge
 //                  will be included.
 //      - "same" : if this option is specified, the resulting background
@@ -219,8 +219,8 @@ void TSpectrum2::Print(Option_t *) const
 
 //______________________________________________________________________________
 Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
-                             Option_t * option, Double_t threshold) 
-{   
+                             Option_t * option, Double_t threshold)
+{
 /////////////////////////////////////////////////////////////////////////////
 //   TWO-DIMENSIONAL PEAK SEARCH FUNCTION                                  //
 //   This function searches for peaks in source spectrum in hin            //
@@ -274,7 +274,7 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
       markov = kFALSE;
       opt.ReplaceAll("nomarkov","");
    }
-   
+
    Int_t sizex = hin->GetXaxis()->GetNbins();
    Int_t sizey = hin->GetYaxis()->GetNbins();
    Int_t i, j, binx,biny, npeaks;
@@ -306,7 +306,7 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
    }
    delete [] source;
    delete [] dest;
-      
+
    if (opt.Contains("goff"))
       return npeaks;
    if (!npeaks) return 0;
@@ -326,15 +326,15 @@ Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
 
 
 //______________________________________________________________________________
-void TSpectrum2::SetResolution(Double_t resolution) 
-{   
+void TSpectrum2::SetResolution(Double_t resolution)
+{
 //  resolution: determines resolution of the neighboring peaks
 //              default value is 1 correspond to 3 sigma distance
 //              between peaks. Higher values allow higher resolution
 //              (smaller distance between peaks.
 //              May be set later through SetResolution.
    if (resolution > 1)
-      fResolution = resolution;   
+      fResolution = resolution;
    else
       fResolution = 1;
 }
@@ -342,7 +342,7 @@ void TSpectrum2::SetResolution(Double_t resolution)
 
 //_____________________________________________________________________________
 //_____________________________________________________________________________
-    
+
 /////////////////////NEW FUNCTIONS  JANUARY 2006
 //______________________________________________________________________________
 const char *TSpectrum2::Background(Double_t **spectrum,
@@ -350,28 +350,28 @@ const char *TSpectrum2::Background(Double_t **spectrum,
                        Int_t numberIterationsX,
                        Int_t numberIterationsY,
                        Int_t direction,
-                       Int_t filterType) 
-{   
+                       Int_t filterType)
+{
 /////////////////////////////////////////////////////////////////////////////
-//   TWO-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION - RECTANGULAR RIDGES   // 
-//   This function calculates background spectrum from source spectrum.    // 
-//   The result is placed to the array pointed by spectrum pointer.        // 
-//                                                                         // 
-//   Function parameters:                                                  // 
-//   spectrum-pointer to the array of source spectrum                      // 
-//   ssizex-x length of spectrum                                           // 
-//   ssizey-y length of spectrum                                           // 
-//   numberIterationsX-maximal x width of clipping window                  // 
-//   numberIterationsY-maximal y width of clipping window                  // 
-//                           for details we refer to manual                // 
-//   direction- direction of change of clipping window                     // 
-//               - possible values=kBackIncreasingWindow                   // 
-//                                 kBackDecreasingWindow                   // 
-//   filterType-determines the algorithm of the filtering                  // 
-//                  -possible values=kBackSuccessiveFiltering              // 
-//                                   kBackOneStepFiltering                 // 
-//                                                                         // 
-//                                                                         // 
+//   TWO-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION - RECTANGULAR RIDGES   //
+//   This function calculates background spectrum from source spectrum.    //
+//   The result is placed to the array pointed by spectrum pointer.        //
+//                                                                         //
+//   Function parameters:                                                  //
+//   spectrum-pointer to the array of source spectrum                      //
+//   ssizex-x length of spectrum                                           //
+//   ssizey-y length of spectrum                                           //
+//   numberIterationsX-maximal x width of clipping window                  //
+//   numberIterationsY-maximal y width of clipping window                  //
+//                           for details we refer to manual                //
+//   direction- direction of change of clipping window                     //
+//               - possible values=kBackIncreasingWindow                   //
+//                                 kBackDecreasingWindow                   //
+//   filterType-determines the algorithm of the filtering                  //
+//                  -possible values=kBackSuccessiveFiltering              //
+//                                   kBackOneStepFiltering                 //
+//                                                                         //
+//                                                                         //
 /////////////////////////////////////////////////////////////////////////////
 //
 //Begin_Html <!--
@@ -891,9 +891,9 @@ window&quot;,10,10,1000,700);</p>
                   spectrum[x][y] = working_space[x][y];
                }
             }
-         }                 
+         }
       }
-      
+
       else if (filterType == kBackOneStepFiltering) {
          for (i = 1; i <= sampling; i++) {
             r1 = (Int_t) TMath::Min(i, numberIterationsX), r2 =
@@ -920,7 +920,7 @@ window&quot;,10,10,1000,700);</p>
          }
       }
    }
-   
+
    else if (direction == kBackDecreasingWindow) {
       if (filterType == kBackSuccessiveFiltering) {
          for (i = sampling; i >= 1; i--) {
@@ -967,8 +967,8 @@ window&quot;,10,10,1000,700);</p>
                }
             }
          }
-      }        
-      
+      }
+
       else if (filterType == kBackOneStepFiltering) {
          for (i = sampling; i >= 1; i--) {
             r1 = (Int_t) TMath::Min(i, numberIterationsX), r2 =
@@ -1005,11 +1005,11 @@ window&quot;,10,10,1000,700);</p>
 const char* TSpectrum2::SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssizey, Int_t averWindow)
 {
 /////////////////////////////////////////////////////////////////////////////
-//   TWO-DIMENSIONAL MARKOV SPECTRUM SMOOTHING FUNCTION               
+//   TWO-DIMENSIONAL MARKOV SPECTRUM SMOOTHING FUNCTION
 //
-//   This function calculates smoothed spectrum from source spectrum    
-//      based on Markov chain method.                                     
-//   The result is placed in the array pointed by source pointer.      
+//   This function calculates smoothed spectrum from source spectrum
+//      based on Markov chain method.
+//   The result is placed in the array pointed by source pointer.
 //
 //   Function parameters:
 //   source-pointer to the array of source spectrum
@@ -1238,10 +1238,10 @@ source[i][j]);   </p>
    Double_t a, b, maxch;
    Double_t nom, nip, nim, sp, sm, spx, spy, smx, smy, plocha = 0;
    if(averWindow <= 0)
-      return "Averaging Window must be positive";      
+      return "Averaging Window must be positive";
    Double_t **working_space = new Double_t*[ssizex];
    for(i = 0; i < ssizex; i++)
-      working_space[i] = new Double_t[ssizey];      
+      working_space[i] = new Double_t[ssizey];
    xmin = 0;
    xmax = ssizex - 1;
    ymin = 0;
@@ -1277,7 +1277,7 @@ source[i][j]);   </p>
             a = 1;
 
          else
-            a = TMath::Sqrt(a + nip);            
+            a = TMath::Sqrt(a + nip);
          b = b / a;
          b = TMath::Exp(b);
          sp = sp + b;
@@ -1291,7 +1291,7 @@ source[i][j]);   </p>
             a = 1;
 
          else
-            a = TMath::Sqrt(a + nim);            
+            a = TMath::Sqrt(a + nim);
          b = b / a;
          b = TMath::Exp(b);
          sm = sm + b;
@@ -1315,7 +1315,7 @@ source[i][j]);   </p>
             a = 1;
 
          else
-            a = TMath::Sqrt(a + nip);            
+            a = TMath::Sqrt(a + nip);
          b = b / a;
          b = TMath::Exp(b);
          sp = sp + b;
@@ -1329,7 +1329,7 @@ source[i][j]);   </p>
             a = 1;
 
          else
-            a = TMath::Sqrt(a + nim);            
+            a = TMath::Sqrt(a + nim);
          b = b / a;
          b = TMath::Exp(b);
          sm = sm + b;
@@ -1354,7 +1354,7 @@ source[i][j]);   </p>
                a = 1;
 
             else
-               a = TMath::Sqrt(a + nip);            
+               a = TMath::Sqrt(a + nip);
             b = b / a;
             b = TMath::Exp(b);
             spx = spx + b;
@@ -1368,7 +1368,7 @@ source[i][j]);   </p>
                a = 1;
 
             else
-               a = TMath::Sqrt(a + nim);            
+               a = TMath::Sqrt(a + nim);
             b = b / a;
             b = TMath::Exp(b);
             smx = smx + b;
@@ -1381,7 +1381,7 @@ source[i][j]);   </p>
             else              a = source[i][j + l] / maxch;
             b = a - nip;
             if (a + nip <= 0) a = 1;
-            else              a = TMath::Sqrt(a + nip);            
+            else              a = TMath::Sqrt(a + nip);
             b = b / a;
             b = TMath::Exp(b);
             spy = spy + b;
@@ -1389,7 +1389,7 @@ source[i][j]);   </p>
             else                  a = source[i][j - l + 1] / maxch;
             b = a - nim;
             if (a + nim <= 0) a = 1;
-            else              a = TMath::Sqrt(a + nim);            
+            else              a = TMath::Sqrt(a + nim);
             b = b / a;
             b = TMath::Exp(b);
             smy = smy + b;
@@ -1411,17 +1411,17 @@ source[i][j]);   </p>
    }
    for (i = 0; i < ssizex; i++)
       delete[]working_space[i];
-   delete[]working_space;   
+   delete[]working_space;
    return 0;
 }
 
 //______________________________________________________________________________________________________________________________
 const char *TSpectrum2::Deconvolution(Double_t **source, Double_t **resp,
                                        Int_t ssizex, Int_t ssizey,
-                                       Int_t numberIterations, 
+                                       Int_t numberIterations,
                                        Int_t numberRepetitions,
-                                       Double_t boost)                                        
-{   
+                                       Double_t boost)
+{
 /////////////////////////////////////////////////////////////////////////////
 //   TWO-DIMENSIONAL DECONVOLUTION FUNCTION
 //   This function calculates deconvolution from source spectrum
@@ -1984,7 +1984,7 @@ deconvolution&quot;,10,10,1000,700);</p>
    if (numberIterations <= 0)
       return "Number of iterations must be positive";
    if (numberRepetitions <= 0)
-      return "Number of repetitions must be positive";   
+      return "Number of repetitions must be positive";
    Double_t **working_space = new Double_t *[ssizex];
    for (i = 0; i < ssizex; i++)
       working_space[i] = new Double_t[5 * ssizey];
@@ -2011,8 +2011,8 @@ deconvolution&quot;,10,10,1000,700);</p>
       delete [] working_space;
       return ("Zero response data");
    }
-   
-//calculate ht*y and write into p 
+
+//calculate ht*y and write into p
    for (i2 = 0; i2 < ssizey; i2++) {
       for (i1 = 0; i1 < ssizex; i1++) {
          ldc = 0;
@@ -2029,8 +2029,8 @@ deconvolution&quot;,10,10,1000,700);</p>
          working_space[i1][i2 + ssizey] = ldc;
       }
    }
-   
-//calculate matrix b=ht*h 
+
+//calculate matrix b=ht*h
    i1min = -(lhx - 1), i1max = lhx - 1;
    i2min = -(lhy - 1), i2max = lhy - 1;
    for (i2 = i2min; i2 <= i2max; i2++) {
@@ -2061,16 +2061,16 @@ deconvolution&quot;,10,10,1000,700);</p>
          working_space[i1 - i1min][i2 - i2min + 2 * ssizey ] = ldc;
       }
    }
-   
-//initialization in x1 matrix 
+
+//initialization in x1 matrix
    for (i2 = 0; i2 < ssizey; i2++) {
       for (i1 = 0; i1 < ssizex; i1++) {
          working_space[i1][i2 + 3 * ssizey] = 1;
          working_space[i1][i2 + 4 * ssizey] = 0;
       }
    }
-   
-   //START OF ITERATIONS 
+
+   //START OF ITERATIONS
    for (repet = 0; repet < numberRepetitions; repet++) {
       if (repet != 0) {
          for (i = 0; i < ssizex; i++) {
@@ -2083,7 +2083,7 @@ deconvolution&quot;,10,10,1000,700);</p>
       for (lindex = 0; lindex < numberIterations; lindex++) {
          for (i2 = 0; i2 < ssizey; i2++) {
             for (i1 = 0; i1 < ssizex; i1++) {
-               ldb = 0;                 
+               ldb = 0;
                j2min = i2;
                if (j2min > lhy - 1)
                   j2min = lhy - 1;
@@ -2139,7 +2139,7 @@ Int_t TSpectrum2::SearchHighRes(Double_t **source, Double_t **dest, Int_t ssizex
                                  Double_t sigma, Double_t threshold,
                                  Bool_t backgroundRemove,Int_t deconIterations,
                                  Bool_t markov, Int_t averWindow)
-                                     
+
 {
 /////////////////////////////////////////////////////////////////////////////
 //   TWO-DIMENSIONAL HIGH-RESOLUTION PEAK SEARCH FUNCTION                  //
@@ -2863,18 +2863,18 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
       Error("SearchHighRes", "Invalid sigma, must be greater than or equal to 1");
       return 0;
    }
- 
+
    if(threshold<=0||threshold>=100){
       Error("SearchHighRes", "Invalid threshold, must be positive and less than 100");
       return 0;
    }
-   
+
    j = (Int_t) (5.0 * sigma + 0.5);
    if (j >= PEAK_WINDOW / 2) {
       Error("SearchHighRes", "Too large sigma");
       return 0;
    }
-   
+
    if (markov == true) {
       if (averWindow <= 0) {
          Error("SearchHighRes", "Averanging window must be positive");
@@ -2886,45 +2886,45 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
          Error("SearchHighRes", "Too large clipping window");
          return 0;
       }
-   }   
+   }
    i = (Int_t)(4 * sigma + 0.5);
    i = 4 * i;
    Double_t **working_space = new Double_t *[ssizex + i];
    for (j = 0; j < ssizex + i; j++) {
       Double_t *wsk = working_space[j] = new Double_t[16 * (ssizey + i)];
       for (k=0;k<16 * (ssizey + i);k++) wsk[k] = 0;
-   }   
+   }
    for(j = 0; j < ssizey_ext; j++){
       for(i = 0; i < ssizex_ext; i++){
          if(i < shift){
             if(j < shift)
                   working_space[i][j + ssizey_ext] = source[0][0];
-                  
+
             else if(j >= ssizey + shift)
                   working_space[i][j + ssizey_ext] = source[0][ssizey - 1];
-                  
+
             else
                   working_space[i][j + ssizey_ext] = source[0][j - shift];
          }
-         
+
          else if(i >= ssizex + shift){
             if(j < shift)
                working_space[i][j + ssizey_ext] = source[ssizex - 1][0];
-               
+
             else if(j >= ssizey + shift)
                working_space[i][j + ssizey_ext] = source[ssizex - 1][ssizey - 1];
-               
+
             else
                working_space[i][j + ssizey_ext] = source[ssizex - 1][j - shift];
          }
-         
+
          else{
             if(j < shift)
                working_space[i][j + ssizey_ext] = source[i - shift][0];
-               
+
             else if(j >= ssizey + shift)
                working_space[i][j + ssizey_ext] = source[i - shift][ssizey - 1];
-               
+
             else
                working_space[i][j + ssizey_ext] = source[i - shift][j - shift];
          }
@@ -3053,7 +3053,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
                a = 1;
 
             else
-               a=TMath::Sqrt(a + nip);            
+               a=TMath::Sqrt(a + nip);
             b = b / a;
             b = TMath::Exp(b);
             sp = sp + b;
@@ -3067,7 +3067,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
                a = 1;
 
             else
-               a=TMath::Sqrt(a + nim);                        
+               a=TMath::Sqrt(a + nim);
             b = b / a;
             b = TMath::Exp(b);
             sm = sm + b;
@@ -3091,7 +3091,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
                a=1;
 
             else
-               a=TMath::Sqrt(a + nip);            
+               a=TMath::Sqrt(a + nip);
             b = b / a;
             b = TMath::Exp(b);
             sp = sp + b;
@@ -3105,7 +3105,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
                a = 1;
 
             else
-               a=TMath::Sqrt(a + nim);            
+               a=TMath::Sqrt(a + nim);
             b = b / a;
             b = TMath::Exp(b);
             sm = sm + b;
@@ -3130,7 +3130,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
                   a = 1;
 
                else
-                  a=TMath::Sqrt(a + nip);            
+                  a=TMath::Sqrt(a + nip);
                b = b / a;
                b = TMath::Exp(b);
                spx = spx + b;
@@ -3144,7 +3144,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
                   a=1;
 
                else
-                  a=TMath::Sqrt(a + nim);            
+                  a=TMath::Sqrt(a + nim);
                b = b / a;
                b = TMath::Exp(b);
                smx = smx + b;
@@ -3163,7 +3163,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
                   a = 1;
 
                else
-                  a=TMath::Sqrt(a + nip);            
+                  a=TMath::Sqrt(a + nip);
                b = b / a;
                b = TMath::Exp(b);
                spy = spy + b;
@@ -3176,7 +3176,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
                if(a + nim <= 0)
                   a = 1;
                else
-                  a=TMath::Sqrt(a + nim);            
+                  a=TMath::Sqrt(a + nim);
                b = b / a;
                b = TMath::Exp(b);
                smy = smy + b;
@@ -3408,8 +3408,8 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
 
                      if(peak_index == 0){
                         fPositionX[0] = ax;
-                        fPositionY[0] = ay;                        
-                        peak_index = 1; 
+                        fPositionY[0] = ay;
+                        peak_index = 1;
                      }
 
                      else{
@@ -3443,14 +3443,14 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
          }
       }
    }
-   //writing back deconvolved spectrum 
+   //writing back deconvolved spectrum
    for(i = 0; i < ssizex; i++){
       for(j = 0; j < ssizey; j++){
          dest[i][j] = working_space[i + shift][j + shift];
       }
    }
    i = (Int_t)(4 * sigma + 0.5);
-   i = 4 * i;   
+   i = 4 * i;
    for (j = 0; j < ssizex + i; j++)
       delete[]working_space[j];
    delete[]working_space;
@@ -3465,7 +3465,7 @@ nbinsy, 2, 5, kFALSE, 10, kFALSE, 1);   </p>
 Int_t TSpectrum2::StaticSearch(const TH1 *hist, Double_t sigma, Option_t *option, Double_t threshold)
 {
    //static function, interface to TSpectrum2::Search
-   
+
    TSpectrum2 s;
    return s.Search(hist,sigma,option,threshold);
 }
@@ -3474,7 +3474,7 @@ Int_t TSpectrum2::StaticSearch(const TH1 *hist, Double_t sigma, Option_t *option
 TH1 *TSpectrum2::StaticBackground(const TH1 *hist,Int_t niter, Option_t *option)
 {
    //static function, interface to TSpectrum2::Background
-   
+
    TSpectrum2 s;
    return s.Background(hist,niter,option);
 }
