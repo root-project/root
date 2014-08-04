@@ -1,6 +1,6 @@
 <br/>
 <hr/>
-<a name="io"></a> 
+<a name="io"></a>
 <h3>I/O</h3>
 <h4>File Format</h4>
 <ul><li><b>The default for streaming the content of STL containers was changed from object-wise
@@ -8,24 +8,24 @@ to member-wise.</b><p/>
 
 We evaluated the impact of moving to MemberWise streaming using 5 different CMS data files:
 <br/>
-<ul><li>cms1.root an older split using level 99 Reco file 
-</li><li>cms2.root a more recent non split raw data file 
-</li><li>cms3.root a more recent non split Reco file 
+<ul><li>cms1.root an older split using level 99 Reco file
+</li><li>cms2.root a more recent non split raw data file
+</li><li>cms3.root a more recent non split Reco file
 </li><li>cms4.root is an example of the lepton plus jet analysis format known as a user PAT-tuple (split)
-</li><li>cms5.root is an example AOD (analysis object dataset) format file.  It is not split because the objects here are a strict subset of the RECO objects. 
+</li><li>cms5.root is an example AOD (analysis object dataset) format file.  It is not split because the objects here are a strict subset of the RECO objects.
 </li></ul>
-We rewrote all the files using the v5.26/00 new basket clustering algorithm using both memberwise streaming and objectwise streaming. 
+We rewrote all the files using the v5.26/00 new basket clustering algorithm using both memberwise streaming and objectwise streaming.
 <p/>
-In the table below the read time is the CPU time to completion including loading the libraries. 
-When reading the file where always in the os cache (since we are focusing evaluating cpu time). 
+In the table below the read time is the CPU time to completion including loading the libraries.
+When reading the file where always in the os cache (since we are focusing evaluating cpu time).
 <p/>
-The number of event actually read varies from file set to file set but was calibrated to result 
-in about 10s of cpu time.  The files are read using a library generated with <tt>TFile::MakeProject</tt>. 
+The number of event actually read varies from file set to file set but was calibrated to result
+in about 10s of cpu time.  The files are read using a library generated with <tt>TFile::MakeProject</tt>.
 <p/>
 The object-wise files are between 2% and 10% larger compared to their member-wise counterpart.
 <p/>
-The CPU time for reading object-wise files is 12% higher for split files 
-and 30% higher for non-split files. 
+The CPU time for reading object-wise files is 12% higher for split files
+and 30% higher for non-split files.
 <p/>
 So the improvement is significant enough to warrant switch the default from objectwise to memberwise.
 <p/>
@@ -95,12 +95,12 @@ The 1st version is optimized to read a single object.  The 2nd version is optimi
 <br/><br/>
 <tt>TBufferXML</tt> and <tt>TBufferSQL</tt> overload the loops to introduce extra code to help the buffer keep track of which streamer element is being streamed (this functionality is not used by <tt>TBufferFile</tt>.)
 <br/><br/>
-A <tt>TStreamerInfoActions::TActionSequence is</tt> an ordered sequence of configured actions.   
+A <tt>TStreamerInfoActions::TActionSequence is</tt> an ordered sequence of configured actions.
 <br/><br/>
-A configured action has both an action which is a free standing function and a configuration object deriving 
+A configured action has both an action which is a free standing function and a configuration object deriving
 from <tt>TStreamerInfoActions::TConfiguration</tt>. The configuration contains information that is specific to the action
-but varies from use to use, including the offset from the beginning of the object that needs to be updated.   
-Other examples of configuration include the number of bits requested for storing a Double32_t or its factor and minimum.   
+but varies from use to use, including the offset from the beginning of the object that needs to be updated.
+Other examples of configuration include the number of bits requested for storing a Double32_t or its factor and minimum.
 <br/><br/>
 When the sequence is intended for a collection, the sequence has a configuration object deriving
 from <tt>TStreamerInfoActions::TLoopConfiguration</tt> which contains for example the size of the element of
@@ -124,27 +124,27 @@ Each collection (proxy) needs to provide 5 new free standing functions:
    static const Int_t fgIteratorArenaSize = 16; // greater than sizeof(void*) + sizeof(UInt_t)
 
    typedef void (*CreateIterators_t)(void *collection, void **begin_arena, void **end_arena);
-   virtual CreateIterators_t GetFunctionCreateIterators(Bool_t read = kTRUE) = 0; 
-   // begin_arena and end_arena should contain the location of a memory arena of size fgIteratorSize. 
-   // If the collection iterator are of that size or less, the iterators will be constructed in place in those location 
-   // (new with placement.) Otherwise the iterators will be allocated via a regular new and their address returned by 
+   virtual CreateIterators_t GetFunctionCreateIterators(Bool_t read = kTRUE) = 0;
+   // begin_arena and end_arena should contain the location of a memory arena of size fgIteratorSize.
+   // If the collection iterator are of that size or less, the iterators will be constructed in place in those location
+   // (new with placement.) Otherwise the iterators will be allocated via a regular new and their address returned by
    // modifying the value of begin_arena and end_arena.
-   
+
    typedef void* (*CopyIterator_t)(void *dest, const void *source);
    virtual CopyIterator_t GetFunctionCopyIterator(Bool_t read = kTRUE) = 0;
    // Copy the iterator source, into dest.   dest should contain the location of a memory arena of size fgIteratorSize.
    // If the collection iterator is of that size or less, the iterator will be constructed in place in this location
-   // (new with placement.) Otherwise the iterator will be allocated via a regular new and its address returned by 
+   // (new with placement.) Otherwise the iterator will be allocated via a regular new and its address returned by
    // modifying the value of dest.
-   
+
    typedef void* (*Next_t)(void *iter, const void *end);
    virtual Next_t GetFunctionNext(Bool_t read = kTRUE) = 0;
    // iter and end should be pointers to respectively an iterator to be incremented and the result of collection.end()
-   // If the iterator has not reached the end of the collection, 'Next' increment the iterator 'iter' and return 0 if 
+   // If the iterator has not reached the end of the collection, 'Next' increment the iterator 'iter' and return 0 if
    // the iterator reached the end.
-   // If the end was not reached, 'Next' returns the address of the content pointed to by the iterator before the 
+   // If the end was not reached, 'Next' returns the address of the content pointed to by the iterator before the
    // incrementation ; if the collection contains pointers, 'Next' will return the value of the pointer.
-   
+
    typedef void (*DeleteIterator_t)(void *iter);
    typedef void (*DeleteTwoIterators_t)(void *begin, void *end);
 
@@ -158,7 +158,7 @@ Each collection (proxy) needs to provide 5 new free standing functions:
 <ul>
 <li>
 Extend <tt>TFile::MakeProject</tt> to support genreflex, cases of user's data model where
-the 2 distincts pointers point to a single object and more cases where we are 
+the 2 distincts pointers point to a single object and more cases where we are
 missing the StreamerInfo and need to guess whether the symbol represent an enum,
 a class or a namespace.
 
@@ -223,7 +223,7 @@ to never delete the object.  For example:
    TClass::AddRule("HepMC::GenVertex m_event attributes=NotOwner");
 </pre>
 </li>
-<li>The handling of memory by the collection proxy has been improved in the case of a 
+<li>The handling of memory by the collection proxy has been improved in the case of a
 collection of pointers which can now become owner of its content.<p/>
 
 The default, for backward compatibility reasons and to avoid double delete (at the expense

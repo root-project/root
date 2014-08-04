@@ -2,7 +2,7 @@
    //
    // This macro displays the ROOT architecture
    //Author: Rene Brun
-   
+
    gROOT->Reset();
    c1 = new TCanvas("c1","Dictionary Architecture",20,10,750,930);
    c1->SetBorderSize(0);

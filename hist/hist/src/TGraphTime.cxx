@@ -69,7 +69,7 @@ TGraphTime::TGraphTime(Int_t nsteps, Double_t xmin, Double_t ymin, Double_t xmax
 TGraphTime::~TGraphTime()
 {
    // GraphTime default destructor.
-   
+
    if (!fSteps) return;
    fSteps->Delete();
    delete fSteps; fSteps=0;
@@ -97,10 +97,10 @@ TGraphTime::TGraphTime(const TGraphTime &gtime) : TNamed(gtime)
 //______________________________________________________________________________
 Int_t TGraphTime::Add(const TObject *obj, Int_t slot, Option_t *option)
 {
-   // Add one object to a time slot. 
+   // Add one object to a time slot.
    // TGraphTime becomes the owner of this object.
    // object will be drawn with option
-   
+
    if (!fSteps) {
       fNsteps = 100;
       fSteps = new TObjArray(fNsteps+1);
@@ -121,7 +121,7 @@ void TGraphTime::Draw(Option_t *option)
 {
    // Draw this TGraphTime.
    // for each time step the list of objects added to this step are drawn.
-   
+
    if (!gPad) {
       gROOT->MakeDefCanvas();
       gPad->SetFillColor(41);
@@ -140,7 +140,7 @@ void TGraphTime::Draw(Option_t *option)
 void TGraphTime::Paint(Option_t *option)
 {
    // Paint all objects added to each time step
-   
+
    TString opt = option;
    opt.ToLower();
    TObject *frame = gPad->GetPrimitive("frame");
@@ -171,7 +171,7 @@ void TGraphTime::SaveAnimatedGif(const char *filename) const
    // Save this object to filename as an animated gif file
    // if filename is specified it must be of the form xxx.gif
    // otherwise a file yyy.gif is produced where yyy is the object name
-   
+
    TObject *frame = gPad->GetPrimitive("frame");
    TList *list = 0;
    TObjLink *lnk;

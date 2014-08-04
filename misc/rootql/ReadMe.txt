@@ -2,7 +2,7 @@ ROOTQL
 ======
 
 This is a Quick Look plugin that allows quick inspection of the content
-of ROOT files. 
+of ROOT files.
 
 Quick Look is available on MacOS X since version 10.5 (Leopard). To use QL
 select a file icon in the Finder and hit the space bar. For all file types

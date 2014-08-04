@@ -775,7 +775,7 @@ int XrdProofdProofServ::SetAdminPath(const char *a, bool assert, bool setown)
       TRACE(XERR, "unable to open / create status path "<< fn << "; errno = "<<errno);
       return -1;
    }
-   
+
    if (setown) {
       // Set the ownership of the status file to the user
       XrdProofUI ui;
@@ -807,7 +807,7 @@ int XrdProofdProofServ::Resume()
    XrdOucString msg;
 
    {  XrdSysMutexHelper mhp(fMutex);
-      // 
+      //
       if (!fResponse || fResponse->Send(kXR_attn, kXPD_resume, 0, 0) != 0) {
          msg = "could not propagate resume to proofsrv";
          rc = -1;

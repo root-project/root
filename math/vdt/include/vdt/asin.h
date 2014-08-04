@@ -2,24 +2,24 @@
  * aasin.h
  * The basic idea is to exploit Pade' polynomials.
  * A lot of ideas were inspired by the cephes math library (by Stephen L. Moshier
- * moshier@na-net.ornl.gov) as well as actual code. 
+ * moshier@na-net.ornl.gov) as well as actual code.
  * The Cephes library can be found here:  http://www.netlib.org/cephes/
- * 
+ *
  *  Created on: Jun 23, 2012
  *      Author: Danilo Piparo, Thomas Hauth, Vincenzo Innocente
  */
 
-/* 
+/*
  * VDT is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -61,22 +61,22 @@ inline double getRX(const double x){
    double rx = RX1asin;
    rx*= x;
    rx+= RX2asin;
-   rx*= x;    
+   rx*= x;
    rx+= RX3asin;
-   rx*= x;    
+   rx*= x;
    rx+= RX4asin;
-   rx*= x;    
+   rx*= x;
    rx+= RX5asin;
    return rx;
 }
 inline double getSX(const double x){
    double sx = x;
    sx+= SX1asin;
-   sx*= x;    
+   sx*= x;
    sx+= SX2asin;
-   sx*= x;    
+   sx*= x;
    sx+= SX3asin;
-   sx*= x;    
+   sx*= x;
    sx+= SX4asin;
    return sx;
 }
@@ -85,13 +85,13 @@ inline double getPX(const double x){
    double px = PX1asin;
    px*= x;
    px+= PX2asin;
-   px*= x;    
+   px*= x;
    px+= PX3asin;
-   px*= x;    
+   px*= x;
    px+= PX4asin;
-   px*= x;    
+   px*= x;
    px+= PX5asin;
-   px*= x;    
+   px*= x;
    px+= PX6asin;
    return px;
 }
@@ -99,13 +99,13 @@ inline double getPX(const double x){
 inline double getQX(const double x){
    double qx = x;
    qx+= QX1asin;
-   qx*= x;    
+   qx*= x;
    qx+= QX2asin;
-   qx*= x;    
+   qx*= x;
    qx+= QX3asin;
-   qx*= x;    
+   qx*= x;
    qx+= QX4asin;
-   qx*= x;    
+   qx*= x;
    qx+= QX5asin;
    return qx;
    }
@@ -117,13 +117,13 @@ namespace vdt{
 
 // asin double precision --------------------------------------------------------
 /// Double Precision asin
-inline double fast_asin(double x){   
+inline double fast_asin(double x){
 
    const uint64_t sign_mask = details::getSignMask(x);
    x = std::fabs(x);
    const double a = x;
-   
-   
+
+
    double zz = 1.0 - a;
    double px = details::getRX(zz);
    double qx = details::getSX(zz);
@@ -135,26 +135,26 @@ inline double fast_asin(double x){
    zz = zz * p - details::MOREBITS;
    z -= zz;
    z += details::PIO4;
-   
+
    if( a < 0.625 ){
       zz = a * a;
       px = details::getPX(zz);
       qx = details::getQX(zz);
-      z = zz*px/qx;    
+      z = zz*px/qx;
       z = a * z + a;
    }
-   
+
 
    // Linear approx, not sooo needed but seable. Price is cheap though
    double res = a < 1e-8? a : z ;
-        // Restore Sign   
+        // Restore Sign
    return details::dpORuint64(res,sign_mask);
 
 }
 
 //------------------------------------------------------------------------------
 /// Single Precision asin
-inline float fast_asinf(float x){      
+inline float fast_asinf(float x){
 
 
     uint32_t flag=0;
@@ -174,7 +174,7 @@ inline float fast_asinf(float x){
         x = a;
         z = x * x;
         }
-        
+
     z = (((( 4.2163199048E-2f * z
             + 2.4181311049E-2f) * z
             + 4.5470025998E-2f) * z
@@ -189,14 +189,14 @@ inline float fast_asinf(float x){
 //       }
 
     // No branch with the two coefficients
-            
+
     float tmp = z + z;
     tmp = details::PIO2F - tmp;
 
     // Linear approx, not sooo needed but seable. Price is cheap though
     float res = a < 1e-4f? a : tmp * flag + (1-flag) * z ;
-    
-    // Restore Sign 
+
+    // Restore Sign
     return details::spORuint32(res,sign_mask);
 
     return( z );
@@ -214,12 +214,12 @@ inline float fast_acosf( float x ){return details::PIO2F  - fast_asinf(x);}
 //------------------------------------------------------------------------------
 
 // // Vector signatures
-// 
+//
 // void asinv(const uint32_t size, double const * __restrict__ iarray, double* __restrict__ oarray);
 // void fast_asinv(const uint32_t size, double const * __restrict__ iarray, double* __restrict__ oarray);
 // void asinfv(const uint32_t size, float const * __restrict__ iarray, float* __restrict__ oarray);
 // void fast_asinfv(const uint32_t size, float const * __restrict__ iarray, float* __restrict__ oarray);
-// 
+//
 // void acosv(const uint32_t size, double const * __restrict__ iarray, double* __restrict__ oarray);
 // void fast_acosv(const uint32_t size, double const * __restrict__ iarray, double* __restrict__ oarray);
 // void acosfv(const uint32_t size, float const * __restrict__ iarray, float* __restrict__ oarray);

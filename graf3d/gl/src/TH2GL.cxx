@@ -71,7 +71,7 @@ Bool_t TH2GL::SetModel(TObject* obj, const Option_t* opt)
       fCoord.SetCoordType(kGLCylindrical);
 
    fPlotPainter->AddOption(option);
-   
+
    Ssiz_t pos = option.Index("fb");
    if (pos != kNPOS) {
       option.Remove(pos, 2);
@@ -81,11 +81,11 @@ Bool_t TH2GL::SetModel(TObject* obj, const Option_t* opt)
    pos = option.Index("bb");
    if (pos != kNPOS)
       fPlotPainter->SetDrawBackBox(kFALSE);
-      
+
    pos = option.Index("a");
    if (pos != kNPOS)
       fPlotPainter->SetDrawAxes(kFALSE);
-   
+
    fPlotPainter->InitGeometry();
 
    return kTRUE;

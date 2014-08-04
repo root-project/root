@@ -122,7 +122,7 @@ void MyEvent::SetHeader(Int_t i, Int_t run, TDatime date, Int_t primary,
                         Double_t energy)
 {
    // set event header with event identification and startup parameters
-   
+
    fEvtHdr.Set(i, run, date, primary, energy);
 }
 
@@ -135,7 +135,7 @@ MyParticle *MyEvent::AddParticle(Int_t id, Int_t pdg_code, const TVector3 &pos,
    // the standard but not well know C++ operator "new with placement"
    // is called. If particle[i] is 0, a new MyParticle object will be created
    // otherwise the previous particle[i] will be overwritten.
-   
+
    TClonesArray &parts = *fParticles;
    MyParticle *part = new(parts[fNparticles++])
                           MyParticle(id, pdg_code, CREATED, UNDEFINE, pos, mom);
@@ -149,7 +149,7 @@ MyParticle *MyEvent::AddParticle(Int_t id, Int_t pdg_code, const TVector3 &pos,
 Int_t MyEvent::Action(Int_t id)
 {
    // main event's action
-   
+
    Int_t  nchild;
    CheckMatter(id);
    if (GetParticle(id)->GetDecayType() == UNDEFINE)
@@ -257,7 +257,7 @@ Double_t MyEvent::BremsProb(Int_t id)
    // Check if bremsstrahlung is allowed and generate
    // a random decay length related to detector's material
    // radiation length (X0)
-   
+
    Double_t p, retval;
 
    if (GetParticle(id)->Energy() > GetParticle(id)->GetMass()) {
@@ -272,7 +272,7 @@ Double_t MyEvent::BremsProb(Int_t id)
 Int_t MyEvent::Bremsstrahlung(Int_t id)
 {
     // compute bremsstrahlung for particle "id"
-    
+
    Double_t  ratio;
    Int_t     d_num1,d_num2;
    Char_t    strtmp[80];
@@ -351,7 +351,7 @@ Int_t MyEvent::CheckDecayTime(Int_t id)
 //______________________________________________________________________________
 void MyEvent::CheckMatter(Int_t id)
 {
-   // Check material into which the particle "id" is. 
+   // Check material into which the particle "id" is.
 
    TGeoNode *Node = gGeoManager->FindNode(
              GetParticle(id)->GetvLocation().x(),
@@ -565,7 +565,7 @@ Int_t MyEvent::DEDX(Int_t id)
 Int_t MyEvent::FindFreeId(Int_t *FreeId)
 {
    // Give next available particle's id.
-   
+
    fTotalParticles++;
    *FreeId = fTotalParticles;
    if (fTotalParticles > fLast) fLast = fTotalParticles;
@@ -577,7 +577,7 @@ void MyEvent::MagneticField(Int_t id)
 {
    // Extrapolate track in a constant field oriented along X axis
    // translated to C++ from GEANT3 routine GHELX3.
-   
+
    Double_t sint, sintt, tsint, cos1t, sin2;
    Double_t f1, f2, f3, v1, v2, v3;
    Double_t pol = GetParticle(id)->GetPDG()->Charge() / 3.0;
@@ -750,7 +750,7 @@ void MyEvent::ScatterAngle(Int_t id)
    // for more infos, please refer to the particle data booklet
    // from which the formulas has been extracted :
    // Multiple scattering through small angles.
-   
+
    Double_t alpha,beta;
    Double_t abs_p,p1,p2,r_2;
    Double_t fact1,fact2;

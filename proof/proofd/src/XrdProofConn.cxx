@@ -102,7 +102,7 @@ XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
    : fMode(m), fConnected(0), fLogConnID(-1), fStreamid(0), fRemoteProtocol(-1),
      fServerProto(-1), fServerType(kSTNone), fSessionID(psid), fPort(-1),
      fLastErr(kXR_noErrorYet), fCapVer(capver), fLoginBuffer(logbuf), fMutex(0),
-     fConnectInterruptMtx(0), fConnectInterrupt(0), fPhyConn(0), 
+     fConnectInterruptMtx(0), fConnectInterrupt(0), fPhyConn(0),
      fOpenSockFD(-1), fUnsolMsgHandler(uh), fSender(0), fSenderArg(0)
 {
    // Constructor. Open the connection to a remote XrdProofd instance.
@@ -373,9 +373,9 @@ int XrdProofConn::TryConnect(int)
       TRACE(DBG, "failure resolving address name " <<URLTAG);
       fLogConnID = logid;
       fConnected = 0;
-      return -1;      
+      return -1;
    }
-   fUrl.HostAddr = (const char *) ha; // 
+   fUrl.HostAddr = (const char *) ha; //
    // Notify
    TRACE(HDBG, "found host "<<fUrl.Host<<" with addr " << fUrl.HostAddr);
 #endif
@@ -925,7 +925,7 @@ int XrdProofConn::WriteRaw(const void *buf, int len, XrdClientPhyConnection *phy
    } else if (fgConnMgr) {
       return fgConnMgr->WriteRaw(fLogConnID, buf, len, 0);
    }
-   
+
    // No connection open
    return -1;
 }
@@ -953,7 +953,7 @@ XrdProofConn::ESrvType XrdProofConn::DoHandShake(XrdClientPhyConnection *p)
    XPDLOC(ALL, "Conn::DoHandShake")
 
    XrdClientPhyConnection *phyconn = (p) ? p : fPhyConn;
-   
+
    // Nothing to do if already connected
    if (phyconn->fServerType == kSTBaseXrootd) {
 
@@ -1291,7 +1291,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
       static XrdSysError err(&log, "XrdProofConn_");
       // Initialize the security library plugin, if needed
       XrdOucString libsec;
-      if (!fgSecPlugin) { 
+      if (!fgSecPlugin) {
 #if !defined(ROOT_XrdNoUtils)
          libsec = "libXrdSec";
          libsec += LT_MODULE_EXT;

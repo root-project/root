@@ -9,10 +9,10 @@
 @synthesize keys;
 
 - (void) setKeys : (NSMutableArray *)k
-{  
+{
    keys = k;
    visibleKeys = k;
-   
+
    [self.tableView reloadData];
 }
 
@@ -27,7 +27,7 @@
 
 - (void) viewWillAppear : (BOOL)animated
 {
- 
+
    // Ensure the complete list of recents is shown on first display.
    [super viewWillAppear : animated];
 }
@@ -49,7 +49,7 @@
 {
    // If the search string is zero-length, then restore the full list
    // otherwise create a predicate to filter the recent searches using the search string.
-   
+
    if ([filterString length] == 0) {
       visibleKeys = keys;
    } else {
@@ -62,8 +62,8 @@
 
 #pragma mark Table view methods
 
-- (NSInteger) tableView : (UITableView *)tableView numberOfRowsInSection : (NSInteger)section 
-{    
+- (NSInteger) tableView : (UITableView *)tableView numberOfRowsInSection : (NSInteger)section
+{
    return [visibleKeys count];
 }
 
@@ -72,7 +72,7 @@
    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier : @"Cell"];
    if (cell == nil)
       cell = [[UITableViewCell alloc] initWithStyle : UITableViewCellStyleDefault reuseIdentifier : @"Cell"];
-   
+
    FileContainerElement *key = (FileContainerElement *)[visibleKeys objectAtIndex : indexPath.row];
    cell.textLabel.text = key.elementName;
    return cell;

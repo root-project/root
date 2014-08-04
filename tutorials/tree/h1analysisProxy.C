@@ -38,7 +38,7 @@
 // include h1analysProxy.C:
 //       h42->MakeProxy("h1sel","h1analysisProxy.C");
 // This produces one file: h1sel.h which does a #include "h1analysProxy.C"
-// The h1sel class is derived from the Root class TSelector and can then 
+// The h1sel class is derived from the Root class TSelector and can then
 // be used as:
 //      h42->Process("h1sel.h+");
 //
@@ -116,7 +116,7 @@ void h1analysisProxy_Begin(TTree *tree)
    useList  = kFALSE;
    if (fChain) fChain->SetEntryList(0);
    delete gDirectory->GetList()->FindObject("elist");
-  
+
    // case when one creates/fills the event list
    if (option.Contains("fillList")) {
       fillList = kTRUE;
@@ -127,7 +127,7 @@ void h1analysisProxy_Begin(TTree *tree)
          fInput->Add(elist);
       }
    } else elist = 0;
-   
+
    // case when one uses the event list generated in a previous call
    if (option.Contains("useList")) {
       useList  = kTRUE;
@@ -135,13 +135,13 @@ void h1analysisProxy_Begin(TTree *tree)
          tree->SetEntryList(elist);
          TFile f("elist.root");
          elist = (TEntryList*)f.Get("elist");
-         if (elist) elist->SetDirectory(0); //otherwise the file destructor will delete elist         
+         if (elist) elist->SetDirectory(0); //otherwise the file destructor will delete elist
       } else {
          // Option "useList" not supported in PROOF directly
          Warning("Begin", "option 'useList' not supported in PROOF - ignoring");
-         Warning("Begin", "the entry list must be set on the chain *before* calling Process");         
+         Warning("Begin", "the entry list must be set on the chain *before* calling Process");
       }
-   }   
+   }
 }
 
 //_____________________________________________________________________
@@ -195,7 +195,7 @@ void h1analysisProxy_SlaveBegin(TTree *tree)
       else {
          // Option "useList" not supported in PROOF directly
          Warning("Begin", "option 'useList' not supported in PROOF - ignoring");
-         Warning("Begin", "the entry list must be set on the chain *before* calling Process");         
+         Warning("Begin", "the entry list must be set on the chain *before* calling Process");
       }
    }
 
@@ -219,29 +219,29 @@ Bool_t h1analysisProxy_Process(Long64_t entry)
       bool test = TMath::Abs(md0_d-1.8646) >= 0.04;
       if (gDebug>0) fprintf(stderr,"entry #%lld f1=%f f2=%f test=%d\n",
                             fChain->GetReadEntry(),f1,f2,test);
-      
+
       if (TMath::Abs(md0_d-1.8646) >= 0.04) return kFALSE;
       if (ptds_d <= 2.5) return kFALSE;
       if (TMath::Abs(etads_d) >= 1.5) return kFALSE;
-      
+
       int cik = ik-1;    //original ik used f77 convention starting at 1
       int cipi = ipi-1;  //original ipi used f77 convention starting at 1
-      
+
       f1 = nhitrp[cik];
       f2 = nhitrp[cipi];
       test = nhitrp[cik]*nhitrp[cipi] <= 1;
       if (gDebug>0) fprintf(stderr,"entry #%lld f1=%f f2=%f test=%d\n",
                             fChain->GetReadEntry(),f1,f2,test);
-      
+
       if (nhitrp[cik]*nhitrp[cipi] <= 1) return kFALSE;
       if (rend[cik] -rstart[cik]  <= 22) return kFALSE;
       if (rend[cipi]-rstart[cipi] <= 22) return kFALSE;
       if (nlhk[cik] <= 0.1)    return kFALSE;
       if (nlhpi[cipi] <= 0.1)  return kFALSE;
-      // fix because read-only 
+      // fix because read-only
       if (nlhpi[ipis-1] <= 0.1) return kFALSE;
       if (njets < 1)          return kFALSE;
-      
+
    }
    // if option fillList, fill the event list
    if (fillList) elist->Enter(entry);
@@ -315,7 +315,7 @@ void h1analysisProxy_Terminate()
    TPaveStats *psdmd = (TPaveStats *)hdmd->GetListOfFunctions()->FindObject("stats");
    psdmd->SetOptStat(1110);
    c1->Modified();
-   
+
    //save the entry list to a Root file if one was produced
    if (fillList) {
       elist = dynamic_cast<TEntryList*>(fOutput->FindObject("elist"));

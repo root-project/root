@@ -77,8 +77,8 @@ void run_pythia_display()
    //========================================================================
    //========================================================================
 
-   // Create an instance of the Pythia event generator ... 
-   g_pythia = new TPythia6; 
+   // Create an instance of the Pythia event generator ...
+   g_pythia = new TPythia6;
    TPythia6& P = * g_pythia;
 
    P.SetMSEL(0);           // full user controll;
@@ -144,7 +144,7 @@ void run_pythia_display()
 
    gEve->GetBrowser()->GetTabRight()->SetTab(1);
 
-   gTrackList = new TEveTrackList("Pythia Tracks"); 
+   gTrackList = new TEveTrackList("Pythia Tracks");
    gTrackList->SetMainColor(kYellow);
    gTrackList->SetMarkerColor(kRed);
    gTrackList->SetMarkerStyle(4);
@@ -204,7 +204,7 @@ void pythia_next_event()
          track->SetLineColor(kColors[1]);
 
       gTrackList->AddElement(track);
-      
+
       /*
         printf("%d - %d %d %d %d %d %d\n", i,
         p.GetKF(), p.GetKS(), 0, 0,
@@ -259,7 +259,7 @@ void pythia_make_gui()
 
    TGHorizontalFrame* hf = new TGHorizontalFrame(frmMain);
    {
-      
+
       TString icondir( Form("%s/icons/", gSystem->Getenv("ROOTSYS")) );
       TGPictureButton* b = 0;
       EvNavHandler    *fh = new EvNavHandler;

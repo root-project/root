@@ -604,52 +604,52 @@ int test_clhep_kalman() {
          }
          // std::cout << k << " chi2 " << x2 << std::endl;
          x2sum += x2;
-         
+
          c2 = 0;
          for (int i=1; i<=NDIM2; ++i)
             for (int j=1; j<=NDIM2; ++j)
                c2 += C(i,j);
          c2sum += c2;
       }
-      
+
       //   }
-   }  
+   }
    //tr.dump();
    std::cerr << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
-   
+
    return 0;
 }
 #endif
 
 
 
-int testKalman() { 
-   
+int testKalman() {
+
    //int nlist = NLISTSIZE;
 #ifdef USE_VC
    std::cout << "Using VC library - size = " << ROOT::Vc::double_v::Size << " VC_IMPL = " << VC_IMPL << std::endl;
-   //nlist /= Vc::double_v::Size; 
-#endif     
-   
+   //nlist /= Vc::double_v::Size;
+#endif
+
    std::cout << " making vector/matrix lists of size = " << NLIST << std::endl;
-   
-   
+
+
 #ifdef TEST_SYM
    test_smatrix_sym_kalman();
 #endif
-   
+
    test_smatrix_kalman();
    test_tmatrix_kalman();
 #ifdef HAVE_CLHEP
    test_clhep_kalman();
 #endif
-   
-   return 0; 
-   
-   
+
+   return 0;
+
+
 }
 
-int main() { 
-   
-   return testKalman(); 
+int main() {
+
+   return testKalman();
 }

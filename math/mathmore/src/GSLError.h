@@ -28,7 +28,7 @@
 #define ROOT_Math_GSLError
 
 
-#if defined(G__DICTIONARY) 
+#if defined(G__DICTIONARY)
 
 #include "gsl/gsl_errno.h"
 
@@ -36,37 +36,37 @@
 #include "TSystem.h"
 
 
-namespace ROOT { 
-   namespace Math { 
+namespace ROOT {
+   namespace Math {
 
       /**
-         class to change GSL Error handler to use ROOT one. 
-         It is used only when building the dictionary (G__DICTIONARY is defined) 
-         and not in the stand-alone version of the library. 
-         In that case the default GSL error handler is used  
+         class to change GSL Error handler to use ROOT one.
+         It is used only when building the dictionary (G__DICTIONARY is defined)
+         and not in the stand-alone version of the library.
+         In that case the default GSL error handler is used
       */
 
-      class GSLError { 
+      class GSLError {
 
-      public: 
-         
-         GSLError() { 
+      public:
+
+         GSLError() {
             gsl_set_error_handler(&GSLError::Handler);
-            // set a new handler for GSL 
+            // set a new handler for GSL
          }
 
-         static void Handler(const char * reason, const char * file, int line, int gsl_errno)  { 
+         static void Handler(const char * reason, const char * file, int line, int gsl_errno)  {
 
             Error("GSLError","Error %d in %s at %d : %s",gsl_errno,file,line,reason);
-            
+
          }
-      }; 
+      };
 
    }
 }
 
 // re-define the default error handler when loading the library
-ROOT::Math::GSLError gGSLError; 
+ROOT::Math::GSLError gGSLError;
 
 
 #endif

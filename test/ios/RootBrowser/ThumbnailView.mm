@@ -8,12 +8,12 @@ const int preloadRows = 2;
 
    NSMutableSet *visibleThumbnails;
    NSMutableSet *cachedThumbnails;
-   
+
    //Grid parameters.
    unsigned nItems;
    unsigned nCols;
    unsigned nRows;
-   
+
    CGFloat addX;//addSide + remaining width.
 }
 
@@ -57,12 +57,12 @@ const int preloadRows = 2;
 
       visibleThumbnails = [[NSMutableSet alloc] init];
       cachedThumbnails = [[NSMutableSet alloc] init];
-      
+
       //Setup nested scrollview.
       frame.origin = CGPointZero;
 
       scroll = [[UIScrollView alloc] initWithFrame : frame];
-      scroll.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleLeftMargin | 
+      scroll.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleLeftMargin |
                                 UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
       scroll.contentMode = UIViewContentModeScaleToFill;
       scroll.showsVerticalScrollIndicator = YES;
@@ -78,12 +78,12 @@ const int preloadRows = 2;
 - (void) loadData
 {
    nItems = [delegate numberOfThumbnailsInView : self];
-   
+
    for (UIView *v in visibleThumbnails)
       [self cacheThumbnail : v];
 
    [visibleThumbnails removeAllObjects];
-   
+
    if (nItems) {
       [self calculateGridParameters];
       [self placeThumbnails : YES];
@@ -116,7 +116,7 @@ const int preloadRows = 2;
       NSLog(@"ThumbnailView -setItemSize, item size is too big");
       exit(1);//Must be an exception. Check this later.
    }
-   
+
    itemSize = newItemSize;
 }
 
@@ -150,9 +150,9 @@ const int preloadRows = 2;
    //Pre-condition: scroll width must be big enough to
    //position at least 1 thumbnail + additional spaces.
    const CGSize scrollSize = scroll.bounds.size;
-   
+
    if (scrollSize.width - addSide * 2 < itemSize.width + addW) {
-      //I do not know, if Apple's code can somehow set the bounds to 
+      //I do not know, if Apple's code can somehow set the bounds to
       //be so small.
       NSLog(@"scroll is to small to place any thumbnail of required size");
       exit(1);
@@ -177,7 +177,7 @@ const int preloadRows = 2;
 
    const unsigned first = self.firstVisibleThumbnail;
    const unsigned last = self.lastVisibleThumbnail;
-   
+
    for (UIView *thumbnail in visibleThumbnails) {
       if (thumbnail.tag < first || thumbnail.tag > last) {
          //Thumbnail became invisible, remove it from scroll,
@@ -185,10 +185,10 @@ const int preloadRows = 2;
          [self cacheThumbnail : thumbnail];
       }
    }
-   
+
    //Remove now invisible thumbnails.
    [visibleThumbnails minusSet : cachedThumbnails];
-   
+
    //Position visible thumbnails.
    for (unsigned tag = first; tag <= last; ++tag) {
       UIView *thumbnail = [self thumbnailWithTag : tag];
@@ -199,7 +199,7 @@ const int preloadRows = 2;
          [visibleThumbnails addObject : thumbnail];
       } else if (!fixPos)//For example, during scroll, no need to update anything.
          continue;
-      
+
       [self placeThumbnail : thumbnail];
    }
 }
@@ -209,12 +209,12 @@ const int preloadRows = 2;
 {
    const unsigned row = index / nCols;
    const unsigned col = index % nCols;
-   
+
    CGRect frame = CGRectZero;
    frame.origin.x = addX + (itemSize.width + addW) * col + 0.5 * addW;
    frame.origin.y = addTop + (itemSize.height + addH) * row;
    frame.size = itemSize;
-   
+
    return frame;
 }
 
@@ -226,7 +226,7 @@ const int preloadRows = 2;
    UIView *thumbnail = (UIView *)[cachedThumbnails anyObject];
    if (thumbnail)
       [cachedThumbnails removeObject : thumbnail];
-      
+
    return thumbnail;
 }
 
@@ -237,7 +237,7 @@ const int preloadRows = 2;
       if (view.tag == tag)
          return view;
    }
-   
+
    return nil;
 }
 
@@ -245,7 +245,7 @@ const int preloadRows = 2;
 - (void) cacheThumbnail : (UIView *)thumbnail
 {
    [cachedThumbnails addObject : thumbnail];
-   
+
    if ([delegate respondsToSelector : @selector(cacheDataForThumbnail:)])
       [delegate cacheDataForThumbnail : thumbnail];//Save icon in a cache.
 

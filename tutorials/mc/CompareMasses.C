@@ -72,5 +72,5 @@ void CompareMasses()
    }// while
    fclose(file);
    if (ndiff == 0) Printf("Crongratulations !! All particles in ROOT and PDG have identical masses");
-   
+
 }

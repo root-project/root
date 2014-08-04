@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: David Gonzalez Maline    01/2008 
+// Authors: David Gonzalez Maline    01/2008
 
 /**********************************************************************
  *                                                                    *
@@ -36,7 +36,7 @@ namespace ROOT {
 namespace Math {
 
 
-RootFinder::RootFinder(RootFinder::EType type) : 
+RootFinder::RootFinder(RootFinder::EType type) :
    fSolver(0)
 {
    // constructor passing type (default is kBRENT)
@@ -66,10 +66,10 @@ bool RootFinder::SetMethod(RootFinder::EType type)
    case kGSL_BRENT:
       fSolver = new ROOT::Math::Roots::Brent();
       break;
-   case kGSL_NEWTON: 
+   case kGSL_NEWTON:
       fSolver = new ROOT::Math::Roots::Newton();
       break;
-   case kGSL_SECANT: 
+   case kGSL_SECANT:
       fSolver = new ROOT::Math::Roots::Secant();
       break;
    case kGSL_STEFFENSON:
@@ -78,7 +78,7 @@ bool RootFinder::SetMethod(RootFinder::EType type)
    default:
       MATH_ERROR_MSG("RootFinder::SetMethod","RootFinderMethod type is not available in MathCore");
       fSolver = 0;
-      return false; 
+      return false;
       break;
    };
 
@@ -92,7 +92,7 @@ bool RootFinder::SetMethod(RootFinder::EType type)
    std::string stype;
 
    switch(type) {
-      
+
    case kGSL_BISECTION:
       stype = "Bisection";
       break;
@@ -102,10 +102,10 @@ bool RootFinder::SetMethod(RootFinder::EType type)
    case kGSL_BRENT:
       stype = "Brent";
       break;
-   case kGSL_NEWTON: 
+   case kGSL_NEWTON:
       stype = "Newton";
       break;
-   case kGSL_SECANT: 
+   case kGSL_SECANT:
       stype = "Secant";
       break;
    case kGSL_STEFFENSON:

@@ -169,8 +169,8 @@
 #pragma link C++ typedef THnC;
 
 
-// for autoloading of typedef's (make some dummy ifdef) 
-// which are not recognized by the autoloading 
+// for autoloading of typedef's (make some dummy ifdef)
+// which are not recognized by the autoloading
 #ifdef DO_AUTOLOAD_TYPEDEF
 #pragma link C++ class THnSparseD;
 #pragma link C++ class THnSparseF;
@@ -300,11 +300,11 @@
 #pragma link C++ class ROOT::Math::WrappedTF1;
 #pragma link C++ class ROOT::Math::WrappedMultiTF1;
 
-#pragma link C++ namespace ROOT::Fit; 
+#pragma link C++ namespace ROOT::Fit;
 #pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TH1 *, TF1 * );
 #pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TGraph2D *, TF1 * );
 
-#pragma link C++ namespace ROOT::Fit; 
+#pragma link C++ namespace ROOT::Fit;
 #pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TGraph *,  TF1 * );
 #pragma link C++ function ROOT::Fit::FillData(ROOT::Fit::BinData &, const TMultiGraph *,  TF1 * );
 

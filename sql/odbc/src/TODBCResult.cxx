@@ -19,7 +19,7 @@ ClassImp(TODBCResult)
 TODBCResult::TODBCResult(SQLHSTMT stmt)
 {
    // Constructor
-   
+
    fHstmt = stmt;
    fFieldCount = 0;
 
@@ -43,7 +43,7 @@ TODBCResult::~TODBCResult()
 void TODBCResult::Close(Option_t *)
 {
    // Close (cleanup) ODBC result object. Deletes statement
-   
+
    SQLFreeHandle(SQL_HANDLE_STMT, fHstmt);
    fHstmt = 0;
 }

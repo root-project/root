@@ -20,7 +20,7 @@ void ConnectToServer(const TInetAddress *hostb, Int_t port)
 
    // Connect only once...
    TBonjourResolver *resolver = (TBonjourResolver*) gTQSender;
-   TInetAddress host = *hostb; 
+   TInetAddress host = *hostb;
    delete resolver;
 
    printf("ConnectToServer: host = %s, port = %d\n", host.GetHostName(), port);

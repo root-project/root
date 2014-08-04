@@ -519,7 +519,7 @@ void ProofdExec()
       if ((lab = RpdProofGetAuthSetup(&authbuff)) > 0) {
          // Save it in an environment variable
          char *rootproofauthsetup = new char[20 + strlen(authbuff)];
-         memset(rootproofauthsetup, 0, 20 + strlen(authbuff)); 
+         memset(rootproofauthsetup, 0, 20 + strlen(authbuff));
          snprintf(rootproofauthsetup, 20 + strlen(authbuff), "ROOTPROOFAUTHSETUP=%s", authbuff);
          putenv(rootproofauthsetup);
       } else if (lab < 0) {

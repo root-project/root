@@ -66,7 +66,7 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
                                            Long64_t entries) : fDialog(0),
    fBar(0), fClose(0), fStop(0), fAbort(0), fAsyn(0), fLog(0), fRatePlot(0),
    fMemPlot(0), fKeepToggle(0), fLogQueryToggle(0), fTextQuery(0), fEntry(0),
-   fTitleLab(0), fFilesEvents(0), fTimeLab(0), fProcessed(0), fEstim(0), 
+   fTitleLab(0), fFilesEvents(0), fTimeLab(0), fProcessed(0), fEstim(0),
    fTotal(0), fRate(0), fInit(0), fSelector(0), fSpeedo(0), fSmoothSpeedo(0)
 {
    // Create PROOF processing progress dialog.
@@ -688,7 +688,7 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
 
    if (gDebug > 1)
       Info("Progress","t: %lld, p: %lld, itm: %f, ptm: %f", total, processed, initTime, procTime);
-   
+
    if (initTime >= 0.) {
       // Set init time
       fInitTime = initTime;

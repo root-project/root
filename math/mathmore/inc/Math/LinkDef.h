@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
 
 
@@ -18,17 +18,17 @@
 #pragma link C++ namespace ROOT::MathMore;
 
 
-#include "LinkDef_Func.h" 
+#include "LinkDef_Func.h"
 #include "LinkDef_RootFinding.h"
 
 #pragma link C++ struct ROOT::Math::MathMoreLibrary;
 
 #pragma link C++ class ROOT::Math::ParamFunction<ROOT::Math::IParametricGradFunctionOneDim>+;
 
-#ifndef _WIN32  
-// virtual inheritance gives problem when making dictionary on Windows 
+#ifndef _WIN32
+// virtual inheritance gives problem when making dictionary on Windows
 #pragma link C++ class ROOT::Math::Polynomial+;
-#else 
+#else
 #pragma link C++ class ROOT::Math::Polynomial-;
 #endif
 
@@ -39,13 +39,13 @@
 #pragma link C++ class ROOT::Math::VavilovAccurate+;
 #pragma link C++ class ROOT::Math::VavilovFast+;
 
-#ifndef _WIN32  
-// virtual inheritance gives problem when making dictionary on Windows 
+#ifndef _WIN32
+// virtual inheritance gives problem when making dictionary on Windows
 #pragma link C++ class ROOT::Math::Polynomial+;
 #pragma link C++ class ROOT::Math::VavilovAccuratePdf+;
 #pragma link C++ class ROOT::Math::VavilovAccurateCdf+;
 #pragma link C++ class ROOT::Math::VavilovAccurateQuantile+;
-#else 
+#else
 #pragma link C++ class ROOT::Math::Polynomial-;
 #pragma link C++ class ROOT::Math::VavilovAccuratePdf-;
 #pragma link C++ class ROOT::Math::VavilovAccurateCdf-;

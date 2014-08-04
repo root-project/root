@@ -28,7 +28,7 @@ void hlabels2()
    h->LabelsDeflate("Y");
    h->LabelsOption("v");
    h->Draw("text");
-   
+
    TPaveText *pt = new TPaveText(0.6,0.85,0.98,0.98,"brNDC");
    pt->SetFillColor(18);
    pt->SetTextAlign(12);

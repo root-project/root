@@ -12,8 +12,8 @@
 #include "TGeoGlobalMagField.h"
 
 //______________________________________________________________________________
-//                                                                        
-//    TGeoGlobalMagField - Global magnetic field manager. Provides access to 
+//
+//    TGeoGlobalMagField - Global magnetic field manager. Provides access to
 // and owns the actual magnetic field set via SetField(). The field is deleted
 // upon destruction of the field manager at the end of ROOT session or
 // by calling: TGeoGlobalMagField::Instance()->SetField(0). The previous
@@ -24,7 +24,7 @@
 // One can directly call the Field() method of a field via the global field manager:
 //
 //   TGeoGlobalMagField::Instance()->Field(x,B)
-//                                                                     
+//
 //______________________________________________________________________________
 
 ClassImp(TGeoGlobalMagField)
@@ -47,7 +47,7 @@ TGeoGlobalMagField::TGeoGlobalMagField()
          Warning("TGeoGlobalMagField", "A global field manager already existing. Please access via: \
          \n   TGeoGlobalMagField::Instance().");
       delete fgInstance;
-   }   
+   }
    gROOT->GetListOfGeometries()->Add(this); // list of cleanups not deleted
    fgInstance = this;
 }
@@ -61,10 +61,10 @@ TGeoGlobalMagField::~TGeoGlobalMagField()
       TVirtualMagField *field = fField;
       fField = NULL;
       delete field;
-   }   
+   }
    fgInstance = NULL;
 }
-   
+
 //______________________________________________________________________________
 void TGeoGlobalMagField::SetField(TVirtualMagField *field)
 {
@@ -76,12 +76,12 @@ void TGeoGlobalMagField::SetField(TVirtualMagField *field)
          Error("SetField", "Global field is already set to <%s> and locked", fField->GetName());
          return;
       }
-      // We delete the old global field and notify user.   
+      // We delete the old global field and notify user.
       Info("SetField", "Previous magnetic field <%s> will be deleted", fField->GetName());
       TVirtualMagField *oldfield = fField;
       fField = NULL;
       delete oldfield;
-   }   
+   }
    fField = field;
    if (fField) Info("SetField", "Global magnetic field set to <%s>", fField->GetName());
 }
@@ -91,7 +91,7 @@ TGeoGlobalMagField *TGeoGlobalMagField::GetInstance()
 {
 // Static getter that does not create the object.
    return fgInstance;
-}   
+}
 
 //______________________________________________________________________________
 TGeoGlobalMagField *TGeoGlobalMagField::Instance()
@@ -111,4 +111,4 @@ void TGeoGlobalMagField::Lock()
    }
    fLock = kTRUE;
    Info("Lock", "Global magnetic field <%s> is now locked", fField->GetName());
-}   
+}

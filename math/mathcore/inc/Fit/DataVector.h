@@ -13,8 +13,8 @@
 #ifndef ROOT_Fit_DataVector
 #define ROOT_Fit_DataVector
 
-/** 
-@defgroup FitData Fit Data Classes 
+/**
+@defgroup FitData Fit Data Classes
 
 Classes for describing the input data for fitting
 
@@ -38,12 +38,12 @@ Classes for describing the input data for fitting
 
 #include <vector>
 #include <cassert>
-#include <iostream> 
+#include <iostream>
 
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Fit { 
+   namespace Fit {
 
 
 /**
@@ -52,30 +52,30 @@ namespace ROOT {
    @ingroup FitData
  */
 
-class FitData { 
-  
-public: 
+class FitData {
 
-   /// construct with default option and data range 
+public:
+
+   /// construct with default option and data range
    FitData() {}
 
    /// dummy virtual destructor
    virtual ~FitData() {}
 
-   /// construct passing options and default data range 
-   FitData(const DataOptions & opt) : 
+   /// construct passing options and default data range
+   FitData(const DataOptions & opt) :
       fOptions(opt)
    {}
 
 
-   /// construct passing range and default options 
-   FitData(const DataRange & range) : 
+   /// construct passing range and default options
+   FitData(const DataRange & range) :
       fRange(range)
    {}
 
-   /// construct passing options and data range 
-   FitData (const DataOptions & opt, const DataRange & range) : 
-      fOptions(opt), 
+   /// construct passing options and data range
+   FitData (const DataOptions & opt, const DataRange & range) :
+      fOptions(opt),
       fRange(range)
    {}
 
@@ -91,62 +91,62 @@ public:
    const DataRange & Range() const { return fRange; }
 
    // range cannot be modified afterwards
-   // since fit method functions use all data 
+   // since fit method functions use all data
 
-   /** 
-       define a max size to avoid allocating too large arrays 
+   /**
+       define a max size to avoid allocating too large arrays
    */
-   static unsigned int MaxSize()  { 
+   static unsigned int MaxSize()  {
       return (unsigned int) (-1) / sizeof (double);
    }
 
 
-private: 
+private:
 
-      DataOptions fOptions; 
-      DataRange   fRange; 
+      DataOptions fOptions;
+      DataRange   fRange;
 
 };
-      
 
 
-/** 
+
+/**
    class holding the fit data points. It is template on the type of point,
-   which can be for example a binned or unbinned point. 
-   It is basicaly a wrapper on an std::vector  
+   which can be for example a binned or unbinned point.
+   It is basicaly a wrapper on an std::vector
 
    @ingroup FitData
 
-*/ 
+*/
 
 class DataVector {
 
-public: 
+public:
 
 
    typedef std::vector<double>      FData;
 
-   /** 
+   /**
       default constructor for a vector of N -data
-   */ 
-   explicit DataVector (size_t n ) : 
+   */
+   explicit DataVector (size_t n ) :
       fData(std::vector<double>(n))
 
    {
       //if (n!=0) fData.reserve(n);
-   } 
+   }
 
-
-   /** 
-      Destructor (no operations)
-   */ 
-   ~DataVector ()  {}  
-
-   // use default copy constructor and assignment operator
-   
 
    /**
-      const access to underlying vector 
+      Destructor (no operations)
+   */
+   ~DataVector ()  {}
+
+   // use default copy constructor and assignment operator
+
+
+   /**
+      const access to underlying vector
     */
    const FData & Data() const { return fData; }
 
@@ -157,8 +157,8 @@ public:
 
 #ifndef __CINT__
    /**
-      const iterator access 
-   */ 
+      const iterator access
+   */
    typedef FData::const_iterator const_iterator;
    typedef FData::iterator iterator;
 
@@ -166,126 +166,126 @@ public:
    const_iterator end() const { return fData.begin()+fData.size(); }
 
    /**
-      non-const iterator access 
-   */ 
+      non-const iterator access
+   */
    iterator begin() { return fData.begin(); }
    iterator end()   { return fData.end(); }
 
 #endif
    /**
       access to the point
-    */ 
-   const double & operator[] (unsigned int i)  const { return fData[i]; } 
-   double & operator[] (unsigned int i)   { return fData[i]; } 
+    */
+   const double & operator[] (unsigned int i)  const { return fData[i]; }
+   double & operator[] (unsigned int i)   { return fData[i]; }
 
 
    /**
-      full size of data vector (npoints * point size) 
+      full size of data vector (npoints * point size)
     */
-   size_t Size() const { return fData.size(); } 
+   size_t Size() const { return fData.size(); }
 
 
-private: 
+private:
 
-      FData fData; 
-}; 
+      FData fData;
+};
 
 
 //       // usefule typedef's of DataVector
 //       class BinPoint;
-      
+
 //       // declaration for various type of data vectors
-//       typedef DataVector<ROOT::Fit::BinPoint>                    BinData; 
-//       typedef DataVector<ROOT::Fit::BinPoint>::const_iterator    BinDataIterator; 
+//       typedef DataVector<ROOT::Fit::BinPoint>                    BinData;
+//       typedef DataVector<ROOT::Fit::BinPoint>::const_iterator    BinDataIterator;
 
 /**
    class maintaining a pointer to external data
    Using this class avoids copying the data when performing a fit
    NOTE: this class is not thread-safe and should not be used in parallel fits
-   
+
 
    @ingroup FitData
  */
 
-class DataWrapper { 
+class DataWrapper {
 
-public: 
+public:
 
    /**
       specialized constructor for 1D data without errors and values
     */
    explicit DataWrapper(const double * dataX ) :
       fDim(1),
-      fValues(0), 
+      fValues(0),
       fErrors(0),
       fCoords(std::vector<const double * >(1) ),
       fX(std::vector<double>(1) )
    {
-      fCoords[0] = dataX; 
+      fCoords[0] = dataX;
    }
 
 
    /**
-      constructor for 1D data (if errors are not present a null pointer should be passed) 
+      constructor for 1D data (if errors are not present a null pointer should be passed)
     */
    DataWrapper(const double * dataX, const double * val, const double * eval , const double * ex ) :
       fDim(1),
-      fValues(val), 
+      fValues(val),
       fErrors(eval),
       fCoords(std::vector<const double * >(1) ),
       fErrCoords(std::vector<const double * >(1) ),
       fX(std::vector<double>(1) ),
       fErr(std::vector<double>(1) )
    {
-      fCoords[0] = dataX; 
-      fErrCoords[0] = ex; 
+      fCoords[0] = dataX;
+      fErrCoords[0] = ex;
    }
 
    /**
-      constructor for 2D data (if errors are not present a null pointer should be passed) 
+      constructor for 2D data (if errors are not present a null pointer should be passed)
     */
-   DataWrapper(const double * dataX, const double * dataY, const double * val, const double * eval, const double * ex , const double * ey  ) : 
+   DataWrapper(const double * dataX, const double * dataY, const double * val, const double * eval, const double * ex , const double * ey  ) :
       fDim(2),
-      fValues(val), 
+      fValues(val),
       fErrors(eval),
       fCoords(std::vector<const double * >(2) ),
       fErrCoords(std::vector<const double * >(2) ),
       fX(std::vector<double>(2) ),
       fErr(std::vector<double>(2) )
    {
-      fCoords[0] = dataX; 
-      fCoords[1] = dataY; 
-      fErrCoords[0] = ex; 
-      fErrCoords[1] = ey; 
+      fCoords[0] = dataX;
+      fCoords[1] = dataY;
+      fErrCoords[0] = ex;
+      fErrCoords[1] = ey;
    }
 
    /**
-      constructor for 3D data (if errors are not present a null pointer should be passed) 
+      constructor for 3D data (if errors are not present a null pointer should be passed)
     */
-   DataWrapper(const double * dataX, const double * dataY, const double * dataZ, const double * val, const double * eval, const double * ex , const double * ey, const double * ez  ) : 
+   DataWrapper(const double * dataX, const double * dataY, const double * dataZ, const double * val, const double * eval, const double * ex , const double * ey, const double * ez  ) :
       fDim(3),
-      fValues(val), 
+      fValues(val),
       fErrors(eval),
       fCoords(std::vector<const double * >(3) ),
       fErrCoords(std::vector<const double * >(3) ),
       fX(std::vector<double>(3) ),
       fErr(std::vector<double>(3) )
    {
-      fCoords[0] = dataX; 
-      fCoords[1] = dataY; 
-      fCoords[2] = dataZ; 
-      fErrCoords[0] = ex; 
-      fErrCoords[1] = ey; 
-      fErrCoords[2] = ez; 
+      fCoords[0] = dataX;
+      fCoords[1] = dataY;
+      fCoords[2] = dataZ;
+      fErrCoords[0] = ex;
+      fErrCoords[1] = ey;
+      fErrCoords[2] = ez;
    }
 
    /**
-      constructor for multi-dim data without  errors 
+      constructor for multi-dim data without  errors
     */
-   template<class Iterator> 
-   DataWrapper(unsigned int dim,  Iterator  coordItr ) :  
+   template<class Iterator>
+   DataWrapper(unsigned int dim,  Iterator  coordItr ) :
       fDim(dim),
-      fValues(0), 
+      fValues(0),
       fErrors(0),
       fCoords(std::vector<const double * >(coordItr, coordItr+dim) ),
       fX(std::vector<double>(dim) )
@@ -293,13 +293,13 @@ public:
 
 
    /**
-      constructor for multi-dim data with errors and values (if errors are not present a null pointer should be passed) 
+      constructor for multi-dim data with errors and values (if errors are not present a null pointer should be passed)
     */
-   template<class Iterator> 
-   DataWrapper(size_t dim, Iterator coordItr, const double * val, const double * eval, Iterator errItr ) :  
+   template<class Iterator>
+   DataWrapper(size_t dim, Iterator coordItr, const double * val, const double * eval, Iterator errItr ) :
       // use size_t for dim to avoid allocating huge vector on 64 bits when dim=-1
       fDim(dim),
-      fValues(val), 
+      fValues(val),
       fErrors(eval),
       fCoords(std::vector<const double * >(coordItr, coordItr+dim) ),
       fErrCoords(std::vector<const double * >(errItr, errItr+dim) ),
@@ -307,8 +307,8 @@ public:
       fErr(std::vector<double>(dim) )
    { }
 
-   // destructor 
-   ~DataWrapper() { 
+   // destructor
+   ~DataWrapper() {
       //printf("Delete Data wrapper\n");
       // no operations
    }
@@ -317,53 +317,53 @@ public:
    // copy the pointer of the data not the data
 
 
-   const double * Coords(unsigned int ipoint) const { 
-      for (unsigned int i = 0; i < fDim; ++i) { 
+   const double * Coords(unsigned int ipoint) const {
+      for (unsigned int i = 0; i < fDim; ++i) {
          const double * x = fCoords[i];
          assert (x != 0);
          fX[i] = x[ipoint];
-      } 
+      }
       return &fX.front();
    }
 
-   double Coord(unsigned int ipoint, unsigned int icoord) const { 
+   double Coord(unsigned int ipoint, unsigned int icoord) const {
          const double * x = fCoords[icoord];
          assert (x != 0);
-         return  x[ipoint]; 
+         return  x[ipoint];
    }
 
 
-   const double * CoordErrors(unsigned int ipoint) const { 
-      for (unsigned int i = 0; i < fDim; ++i) { 
+   const double * CoordErrors(unsigned int ipoint) const {
+      for (unsigned int i = 0; i < fDim; ++i) {
          const double * err = fErrCoords[i];
-         if (err == 0) return 0; 
+         if (err == 0) return 0;
          fErr[i] = err[ipoint];
-      } 
+      }
       return &fErr.front();
    }
 
-   double CoordError(unsigned int ipoint, unsigned int icoord) const { 
+   double CoordError(unsigned int ipoint, unsigned int icoord) const {
          const double * err = fErrCoords[icoord];
-         return  (err != 0) ? err[ipoint] : 0; 
+         return  (err != 0) ? err[ipoint] : 0;
    }
 
 
-   double Value(unsigned int ipoint) const { 
+   double Value(unsigned int ipoint) const {
       return fValues[ipoint];
    }
 
-   double Error(unsigned int ipoint) const {       
+   double Error(unsigned int ipoint) const {
       return (fErrors) ?  fErrors[ipoint]  : 0. ;
-   } 
+   }
 
 
 
-private: 
+private:
 
 
    unsigned int fDim;
-   const double * fValues; 
-   const double * fErrors;   
+   const double * fValues;
+   const double * fErrors;
    std::vector<const double *> fCoords;
    std::vector<const double *> fErrCoords;
    // cached vector to return x[] and errors on x
@@ -373,7 +373,7 @@ private:
 };
 
 
-  
+
    } // end namespace Fit
 
 } // end namespace ROOT

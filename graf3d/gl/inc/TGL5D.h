@@ -48,10 +48,10 @@ public:
    void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    char    *GetObjectInfo(Int_t px, Int_t py) const;
    void     Paint(Option_t *option);
-   
+
    //This is for editor.
    TGL5DPainter *GetRealPainter()const;
-   
+
    //Select points for iso-surface.
    void     SelectPoints(Double_t v4Level, Double_t range);
    UInt_t   SelectedSize()const;
@@ -60,7 +60,7 @@ public:
    Double_t V1(UInt_t ind)const;
    Double_t V2(UInt_t ind)const;
    Double_t V3(UInt_t ind)const;
-   
+
    //Very similar to TH3's axes.
    TAxis   *GetXAxis()const;
    TAxis   *GetYAxis()const;
@@ -86,7 +86,7 @@ private:
    const Double_t *fV3;//V3.
    const Double_t *fV4;//V4.
    const Double_t *fV5;//V5.
-   
+
    //These are fixed ranges of the data set,
    //calculated during construction.
    Rgl::Range_t    fV1MinMax;//V1 range.
@@ -109,10 +109,10 @@ private:
    std::auto_ptr<TGLHistPainter> fPainter;
    //Indices of points, selected for some iso-level.
    std::vector<UInt_t> fIndices;
-   
+
    TGL5DDataSet(const TGL5DDataSet &rhs);
    TGL5DDataSet &operator = (const TGL5DDataSet &rhs);
-   
+
    ClassDef(TGL5DDataSet, 0)//Class to read data from TTree and create TGL5DPainter.
 };
 

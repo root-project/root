@@ -29,8 +29,8 @@ namespace ROOT {
 namespace Math {
 
 
-typedef Translation3D::Vector XYZVector; 
-typedef PositionVector3D<Cartesian3D<double> > XYZPoint; 
+typedef Translation3D::Vector XYZVector;
+typedef PositionVector3D<Cartesian3D<double> > XYZPoint;
 
 
 // ========== Constructors and Assignment =====================
@@ -51,7 +51,7 @@ std::ostream & operator<< (std::ostream & os, const Translation3D & t)
 {
    // TODO - this will need changing for machine-readable issues
    //        and even the human readable form needs formatiing improvements
-   
+
    double m[3];
    t.GetComponents(m, m+3);
    os << "\n" << m[0] << "  " << m[1] << "  " << m[2] << "\n";

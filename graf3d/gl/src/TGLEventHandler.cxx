@@ -135,7 +135,7 @@ void TGLEventHandler::SelectForClicked(Event_t *event)
 
    TGLLogicalShape  *lshp = fGLViewer->fSelRec.GetLogShape();
    TObject          *obj  = fGLViewer->fSelRec.GetObject();
-      
+
    // secondary selection
    if (lshp && (event->fState & kKeyMod1Mask || (fSecSelType == TGLViewer::kOnRequest && lshp->AlwaysSecondarySelect())))
    {
@@ -1082,7 +1082,7 @@ void TGLEventHandler::PopupContextMenu(TGLPhysicalShape* pshp, Event_t * /*event
 
    // This is dangerous ... should have special menu, probably even
    // tool / context specific.
-   // else 
+   // else
    // {
    //    fGLViewer->fContextMenu->Popup(x, y, fGLViewer);
    // }

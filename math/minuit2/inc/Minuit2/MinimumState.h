@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -22,29 +22,29 @@ class MinimumParameters;
 class MinimumError;
 class FunctionGradient;
 
-/** MinimumState keeps the information (position, Gradient, 2nd deriv, etc) 
+/** MinimumState keeps the information (position, Gradient, 2nd deriv, etc)
     after one minimization step (usually in MinimumBuilder).
  */
 
 class MinimumState {
-  
+
 public:
-  
+
   /** invalid state */
-  MinimumState(unsigned int n) : 
+  MinimumState(unsigned int n) :
     fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(n))) {}
   /** state with parameters only (from stepping methods like Simplex, Scan) */
-  MinimumState(const MinimumParameters& states, double edm, int nfcn) : 
+  MinimumState(const MinimumParameters& states, double edm, int nfcn) :
     fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(states, edm, nfcn))) {}
-  
-  /** state with parameters, Gradient and covariance (from Gradient methods 
+
+  /** state with parameters, Gradient and covariance (from Gradient methods
       such as Migrad) */
-  MinimumState(const MinimumParameters& states, const MinimumError& err, 
+  MinimumState(const MinimumParameters& states, const MinimumError& err,
                const FunctionGradient& grad, double edm, int nfcn) :
     fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(states, err, grad, edm, nfcn))) {}
-  
+
   ~MinimumState() {}
-  
+
   MinimumState(const MinimumState& state) : fData(state.fData) {}
 
   MinimumState& operator=(const MinimumState& state) {
@@ -63,12 +63,12 @@ public:
   int NFcn() const {return fData->NFcn();}
 
   bool IsValid() const {return fData->IsValid();}
-  
+
   bool HasParameters() const {return fData->HasParameters();}
   bool HasCovariance() const {return fData->HasCovariance();}
 
 private:
-  
+
   MnRefCountedPointer<BasicMinimumState> fData;
 };
 

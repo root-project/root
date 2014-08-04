@@ -337,7 +337,7 @@ void TBranchClones::ResetAfterMerge(TFileMergeInfo *info)
    //    Existing buffers are deleted
    //    Entries, max and min are reset
    //
-   
+
    fEntries  = 0;
    fTotBytes = 0;
    fZipBytes = 0;

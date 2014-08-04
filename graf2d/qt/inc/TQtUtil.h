@@ -25,7 +25,7 @@
 //----------------------------------------
 namespace  TQtUtil {
 ///
-/// Returns QPixmap backend for the given TVirtualPad 
+/// Returns QPixmap backend for the given TVirtualPad
 ///
 //_______________________________________
 inline QPixmap *padPixmap(TVirtualPad *pad)
@@ -33,7 +33,7 @@ inline QPixmap *padPixmap(TVirtualPad *pad)
 
 ///
 /// Returns QWidget backend for the given TCanvas
-///  if "c" is not a TCanvas returns zero 
+///  if "c" is not a TCanvas returns zero
 ///
 //_______________________________________
 inline QWidget *canvasWidget(TVirtualPad *c)
@@ -43,17 +43,17 @@ inline QWidget *canvasWidget(TVirtualPad *c)
 //    (see function above and Qt manual also)
 //----------------------------------------
 ///
-/// Returns system depended backend handle 
-/// for the given TVirtualPad 
+/// Returns system depended backend handle
+/// for the given TVirtualPad
 ///
 //_______________________________________
 inline unsigned long  wigdetHdc(TVirtualPad *pad)
 {  return padPixmap(pad)->handle(); }
 
 ///
-/// Returns system depended backend handle 
+/// Returns system depended backend handle
 /// for the given TCanvas
-///  if "c" is not a TCanvas returns zero 
+///  if "c" is not a TCanvas returns zero
 
 //_______________________________________
 inline unsigned long  hwndWin32(TVirtualPad *c)

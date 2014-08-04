@@ -1,11 +1,11 @@
-//  This macro shows the use of an ANN for regression analysis: 
-//given a set {i} of input vectors i and a set {o} of output vectors o, 
-//one looks for the unknown function f(i)=o. 
-//The ANN can approximate this function; TMLPAnalyzer::DrawTruthDeviation 
-//methods can be used to evaluate the quality of the approximation. 
+//  This macro shows the use of an ANN for regression analysis:
+//given a set {i} of input vectors i and a set {o} of output vectors o,
+//one looks for the unknown function f(i)=o.
+//The ANN can approximate this function; TMLPAnalyzer::DrawTruthDeviation
+//methods can be used to evaluate the quality of the approximation.
 //
 //For simplicity, we use a known function to create test and training data.
-//In reality this function is usually not known, and the data comes e.g. 
+//In reality this function is usually not known, and the data comes e.g.
 //from measurements.
 //
 //Axel Naumann, 2005-02-02
@@ -16,7 +16,7 @@ Double_t theUnknownFunction(Double_t x, Double_t y) {
 
 void mlpRegression() {
    // create a tree with train and test data.
-   // we have two input parameters x and y, 
+   // we have two input parameters x and y,
    // and one output value f(x,y)
    TNtuple* t=new TNtuple("tree","tree","x:y:f");
    TRandom r;
@@ -24,7 +24,7 @@ void mlpRegression() {
       Float_t x=r.Rndm();
       Float_t y=r.Rndm();
       // fill it with x, y, and f(x,y) - usually this function
-      // is not known, and the value of f given an x and a y comes 
+      // is not known, and the value of f given an x and a y comes
       // e.g. from measurements
       t->Fill(x,y,theUnknownFunction(x,y));
    }
@@ -44,12 +44,12 @@ void mlpRegression() {
    TCanvas* cIO=new TCanvas("TruthDeviation", "TruthDeviation");
    cIO->Divide(2,2);
    cIO->cd(1);
-   // draw the difference between the ANN's output for (x,y) and 
+   // draw the difference between the ANN's output for (x,y) and
    // the true value f(x,y), vs. f(x,y), as TProfiles
    mlpa->DrawTruthDeviations();
 
    cIO->cd(2);
-   // draw the difference between the ANN's output for (x,y) and 
+   // draw the difference between the ANN's output for (x,y) and
    // the true value f(x,y), vs. x, and vs. y, as TProfiles
    mlpa->DrawTruthDeviationInsOut();
 

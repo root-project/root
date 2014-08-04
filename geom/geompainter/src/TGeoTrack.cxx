@@ -21,9 +21,9 @@
 
 //______________________________________________________________________________
 // TGeoTrack - Class for user-defined tracks attached to a geometry.
-//             Tracks are 3D objects made of points and they store a 
+//             Tracks are 3D objects made of points and they store a
 //             pointer to a TParticle. The geometry manager holds a list
-//             of all tracks that will be deleted on destruction of 
+//             of all tracks that will be deleted on destruction of
 //             gGeoManager.
 //
 //______________________________________________________________________________
@@ -60,7 +60,7 @@ TGeoTrack::TGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent, TObject 
       SetMarkerSize(0.6);
       SetLineColor(4);
       SetLineWidth(2);
-   }  
+   }
 }
 
 //_____________________________________________________________________________
@@ -74,7 +74,7 @@ TGeoTrack::TGeoTrack(const TGeoTrack& other)
 }
 
 //_____________________________________________________________________________
-TGeoTrack& TGeoTrack::operator=(const TGeoTrack& gv) 
+TGeoTrack& TGeoTrack::operator=(const TGeoTrack& gv)
 {
    // Assignment operator. NOT TO BE CALLED.
    if(this!=&gv) {
@@ -82,7 +82,7 @@ TGeoTrack& TGeoTrack::operator=(const TGeoTrack& gv)
       fPointsSize=gv.fPointsSize;
       fNpoints=gv.fNpoints;
       fPoints=gv.fPoints;
-   } 
+   }
    return *this;
 }
 
@@ -125,20 +125,20 @@ void TGeoTrack::AnimateTrack(Double_t tmin, Double_t tmax, Double_t nframes, Opt
    gGeoManager->SetVisLevel(1);
    if (!gPad) {
       gGeoManager->GetMasterVolume()->Draw();
-   }   
+   }
    TList *list = gPad->GetListOfPrimitives();
    TIter next(list);
    TObject *obj;
    while ((obj = next())) {
       if (!strcmp(obj->ClassName(), "TGeoTrack")) list->Remove(obj);
-   }      
+   }
    Double_t dt = (tmax-tmin)/Double_t(nframes);
    Double_t delt = 2E-9;
    Double_t t = tmin;
    Bool_t geomanim = kFALSE;
    Bool_t issave = kFALSE;
    TString fname;
-   
+
    TString opt(option);
    if (opt.Contains("/G")) geomanim = kTRUE;
    if (opt.Contains("/S")) issave = kTRUE;
@@ -161,7 +161,7 @@ void TGeoTrack::AnimateTrack(Double_t tmin, Double_t tmax, Double_t nframes, Opt
       }
       for (i=0; i<6; i++) {
          dd[i] = (end[i]-start[i])/10.;
-      }      
+      }
       memcpy(box, start, 6*sizeof(Double_t));
       p->GetViewAngles(dlong,dlat,dpsi);
       dlong = (-206-dlong)/Double_t(nframes);
@@ -169,7 +169,7 @@ void TGeoTrack::AnimateTrack(Double_t tmin, Double_t tmax, Double_t nframes, Opt
       dpsi  = (75-dpsi)/Double_t(nframes);
       p->GrabFocus();
    }
-   
+
    for (i=0; i<nframes; i++) {
       if (t-delt<0) gGeoManager->SetTminTmax(0,t);
       else gGeoManager->SetTminTmax(t-delt,t);
@@ -179,13 +179,13 @@ void TGeoTrack::AnimateTrack(Double_t tmin, Double_t tmax, Double_t nframes, Opt
       } else {
          gPad->Modified();
          gPad->Update();
-      }     
+      }
       if (issave) {
          fname = TString::Format("anim%04d.gif", i);
          gPad->Print(fname);
-      }   
+      }
       t += dt;
-   }   
+   }
    gGeoManager->SetAnimateTracks(kFALSE);
 }
 
@@ -205,10 +205,10 @@ void TGeoTrack::AddPoint(Double_t x, Double_t y, Double_t z, Double_t t)
          fPoints = temp;
       }
    }
-   fPoints[fNpoints++] = x;      
-   fPoints[fNpoints++] = y;      
-   fPoints[fNpoints++] = z;      
-   fPoints[fNpoints++] = t;      
+   fPoints[fNpoints++] = x;
+   fPoints[fNpoints++] = y;
+   fPoints[fNpoints++] = z;
+   fPoints[fNpoints++] = t;
 }
 
 //______________________________________________________________________________
@@ -220,8 +220,8 @@ void TGeoTrack::Browse(TBrowser *b)
    if (!nd) {
       b->Add(this);
       return;
-   }   
-   for (Int_t i=0; i<nd; i++) 
+   }
+   for (Int_t i=0; i<nd; i++)
       b->Add(GetDaughter(i));
 
 }
@@ -264,21 +264,21 @@ Int_t TGeoTrack::DistancetoPrimitive(Int_t px, Int_t py)
          x2 = xndc[0];
          y2 = xndc[1];
          dsegment = DistancetoLine(px,py,x1,y1,x2,y2);
-//         printf("%i: dseg=%i\n", i, dsegment); 
+//         printf("%i: dseg=%i\n", i, dsegment);
          if (dsegment < dist) {
             dist = dsegment;
             if (dist<maxdist) {
                gPad->SetSelected(this);
                return 0;
             }
-         }      
+         }
       }
       if (dist<maxdist) {
          gPad->SetSelected(this);
          return 0;
-      }   
+      }
    }
-   // check now daughters   
+   // check now daughters
    Int_t nd = GetNdaughters();
    if (!nd) return dist;
    TGeoTrack *track;
@@ -313,11 +313,11 @@ void TGeoTrack::Draw(Option_t *option)
    if (opt.Contains("/D")) {
       is_onelevel = kTRUE;
       is_default = kFALSE;
-   }   
+   }
    if (opt.Contains("/*")) {
       is_all = kTRUE;
       is_default = kFALSE;
-   }   
+   }
    if (opt.Contains("/N")) {
       is_type = kTRUE;
       Int_t ist = opt.Index("/N")+2;
@@ -325,19 +325,19 @@ void TGeoTrack::Draw(Option_t *option)
       if (ilast<0) ilast=opt.Length();
       TString type = opt(ist, ilast-ist);
       gGeoManager->SetParticleName(type.Data());
-   } 
+   }
    SetBits(is_default, is_onelevel, is_all, is_type);
-   AppendPad("SAME"); 
+   AppendPad("SAME");
    if (!gGeoManager->IsAnimatingTracks()) {
       gPad->Modified();
       gPad->Update();
-   }      
+   }
    delete [] opt1;
    return;
-}      
+}
 
  //______________________________________________________________________________
-void TGeoTrack::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)     
+void TGeoTrack::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
 {
 // Event treatment.
    if (!gPad) return;
@@ -364,13 +364,13 @@ Int_t TGeoTrack::GetPoint(Int_t i, Double_t &x, Double_t &y, Double_t &z, Double
       Error("GetPoint", "no point %i, indmax=%d", i, np-1);
       return -1;
    }
-   Int_t icrt = 4*i;   
+   Int_t icrt = 4*i;
    x = fPoints[icrt];
    y = fPoints[icrt+1];
    z = fPoints[icrt+2];
    t = fPoints[icrt+3];
    return i;
-}   
+}
 
 //______________________________________________________________________________
 const Double_t *TGeoTrack::GetPoint(Int_t i) const
@@ -378,7 +378,7 @@ const Double_t *TGeoTrack::GetPoint(Int_t i) const
 // Return the pointer to the array of points starting with index I.
    if (!fNpoints) return 0;
    return (&fPoints[i<<2]);
-}   
+}
 
 //______________________________________________________________________________
 Int_t TGeoTrack::GetPoint(Double_t tof, Double_t *point, Int_t istart) const
@@ -397,7 +397,7 @@ Int_t TGeoTrack::GetPoint(Double_t tof, Double_t *point, Int_t istart) const
    Double_t ddt = fPoints[k+3]-fPoints[j+3];
    for (i=0; i<3; i++) point[i] = fPoints[j+i] +(fPoints[k+i]-fPoints[j+i])*dt/ddt;
    return ip;
-}   
+}
 
 //______________________________________________________________________________
 void TGeoTrack::Paint(Option_t *option)
@@ -412,7 +412,7 @@ void TGeoTrack::Paint(Option_t *option)
    if (is_type) {
       const char *type = gGeoManager->GetParticleName();
       if (strlen(type) && strcmp(type, GetName())) match_type=kFALSE;
-   }   
+   }
    if (match_type) {
       if (is_default || is_onelevel || is_all) PaintTrack(option);
    }
@@ -425,8 +425,8 @@ void TGeoTrack::Paint(Option_t *option)
       if (track->IsInTimeRange()) {
          track->SetBits(is_default,kFALSE,is_all,is_type);
          track->Paint(option);
-      }   
-   }   
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -441,7 +441,7 @@ void TGeoTrack::PaintCollect(Double_t time, Double_t *box)
    if (is_type) {
       const char *type = gGeoManager->GetParticleName();
       if (strlen(type) && strcmp(type, GetName())) match_type=kFALSE;
-   }   
+   }
    if (match_type) {
       if (is_default || is_onelevel || is_all) PaintCollectTrack(time, box);
    }
@@ -452,7 +452,7 @@ void TGeoTrack::PaintCollect(Double_t time, Double_t *box)
    for (Int_t i=0; i<nd; i++) {
       track = (TGeoTrack*)GetDaughter(i);
       if (track) track->PaintCollect(time, box);
-   }   
+   }
 }
 
 //______________________________________________________________________________
@@ -480,7 +480,7 @@ void TGeoTrack::PaintMarker(Double_t *point, Option_t *)
    Double_t xndc[3];
    TView *view = gPad->GetView();
    if (!view) return;
-   view->WCtoNDC(point, xndc);   
+   view->WCtoNDC(point, xndc);
    if (xndc[0] < gPad->GetX1() || xndc[0] > gPad->GetX2()) return;
    if (xndc[1] < gPad->GetY1() || xndc[1] > gPad->GetY2()) return;
    p.fX = gPad->XtoPixel(xndc[0]);
@@ -531,7 +531,7 @@ void TGeoTrack::PaintTrack(Option_t *option)
                   gPad->PaintLine3D(&seg[0], &seg[3]);
                } else {
                   gPad->PaintLine3D(start, end);
-               }   
+               }
             } else {
                // paint the starting, ending and connecting segments
                TAttLine::Modify();
@@ -553,14 +553,14 @@ void TGeoTrack::PaintTrack(Option_t *option)
                   for (ip=imin+1; ip<imax; ip++) {
                      gPad->PaintLine3D(&fPoints[ip<<2], &fPoints[(ip+1)<<2]);
                   }
-               }   
+               }
             }
             if (convert) {
                gGeoManager->MasterToTop(end, &seg[0]);
                PaintMarker(&seg[0]);
-            } else {   
+            } else {
                PaintMarker(end);
-            }   
+            }
          } else {
             TAttLine::Modify();
             if (convert) {
@@ -577,12 +577,12 @@ void TGeoTrack::PaintTrack(Option_t *option)
                for (ip=imin+1; ip<np-2; ip++) {
                   gPad->PaintLine3D(&fPoints[ip<<2], &fPoints[(ip+1)<<2]);
                }
-            }   
+            }
          }
       } else {
          imax = GetPoint(tmax, end);
          if (imax<0 || imax>=(np-1)) return;
-         // we have to draw just the end of the track    
+         // we have to draw just the end of the track
          TAttLine::Modify();
          if (convert) {
             for (ip=0; ip<imax-1; ip++) {
@@ -590,33 +590,33 @@ void TGeoTrack::PaintTrack(Option_t *option)
                gGeoManager->MasterToTop(&fPoints[(ip+1)<<2], &seg[3]);
                gPad->PaintLine3D(&seg[0], &seg[3]);
             }
-         } else {      
+         } else {
             for (ip=0; ip<imax-1; ip++) {
                gPad->PaintLine3D(&fPoints[ip<<2], &fPoints[(ip+1)<<2]);
             }
-         }        
+         }
          if (convert) {
             gGeoManager->MasterToTop(&fPoints[imax<<2], &seg[0]);
             gGeoManager->MasterToTop(end, &seg[3]);
             gPad->PaintLine3D(&seg[0], &seg[3]);
             PaintMarker(&seg[3]);
-         } else {   
+         } else {
             gPad->PaintLine3D(&fPoints[imax<<2], end);
             PaintMarker(end);
-         }   
+         }
       }
       TObject::SetBit(kGeoPDrawn);
       return;
-   }         
-   
-   // paint all segments from track                   
+   }
+
+   // paint all segments from track
    TObject::SetBit(kGeoPDrawn);
    TAttLine::Modify();  // change attributes if necessary
    for (ip=imin; ip<imax; ip++) {
       gPad->PaintLine3D(&fPoints[ip<<2], &fPoints[(ip+1)<<2]);
    }
 }
-   
+
 //______________________________________________________________________________
 void TGeoTrack::Print(Option_t * /*option*/) const
 {
@@ -634,7 +634,7 @@ void TGeoTrack::Print(Option_t * /*option*/) const
 //______________________________________________________________________________
 Int_t TGeoTrack::Size(Int_t &imin, Int_t &imax)
 {
-// Return the number of points within the time interval specified by 
+// Return the number of points within the time interval specified by
 // TGeoManager class and the corresponding indices.
    Double_t tmin, tmax;
    Int_t np = fNpoints>>2;
@@ -646,7 +646,7 @@ Int_t TGeoTrack::Size(Int_t &imin, Int_t &imax)
    imax = SearchPoint(tmax, imin);
    return (imax-imin+1);
 }
-   
+
 //______________________________________________________________________________
 Int_t TGeoTrack::SearchPoint(Double_t time, Int_t istart) const
 {
@@ -663,11 +663,11 @@ Int_t TGeoTrack::SearchPoint(Double_t time, Int_t istart) const
       if (time < fPoints[midloc])  nabove = middle;
       else                         nbelow = middle;
    }
-   return (nbelow-1);   
-}   
+   return (nbelow-1);
+}
 
 //______________________________________________________________________________
-void TGeoTrack::SetBits(Bool_t is_default, Bool_t is_onelevel, 
+void TGeoTrack::SetBits(Bool_t is_default, Bool_t is_onelevel,
                         Bool_t is_all, Bool_t is_type)
 {
 // Set drawing bits for this track
@@ -681,17 +681,17 @@ void TGeoTrack::SetBits(Bool_t is_default, Bool_t is_onelevel,
 void TGeoTrack::Sizeof3D() const
 {
 // Returns 3D size for the track.
-}   
+}
 
 //______________________________________________________________________________
 void TGeoTrack::ResetTrack()
 {
 // Reset data for this track.
-   fNpoints    = 0;   
+   fNpoints    = 0;
    fPointsSize = 0;
    if (fTracks) {fTracks->Delete(); delete fTracks;}
    fTracks = 0;
    if (fPoints) delete [] fPoints;
    fPoints = 0;
-}   
+}
 

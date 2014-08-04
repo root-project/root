@@ -102,22 +102,22 @@ protected:
 
    Bool_t      fSkipZip;         //! After being read, the buffer will not be unziped.
 
-   typedef void (TBranch::*ReadLeaves_t)(TBuffer &b); 
-   ReadLeaves_t fReadLeaves;     //! Pointer to the ReadLeaves implementation to use. 
-   typedef void (TBranch::*FillLeaves_t)(TBuffer &b); 
-   FillLeaves_t fFillLeaves;     //! Pointer to the FillLeaves implementation to use. 
+   typedef void (TBranch::*ReadLeaves_t)(TBuffer &b);
+   ReadLeaves_t fReadLeaves;     //! Pointer to the ReadLeaves implementation to use.
+   typedef void (TBranch::*FillLeaves_t)(TBuffer &b);
+   FillLeaves_t fFillLeaves;     //! Pointer to the FillLeaves implementation to use.
    void     ReadLeavesImpl(TBuffer &b);
    void     ReadLeaves0Impl(TBuffer &b);
    void     ReadLeaves1Impl(TBuffer &b);
    void     ReadLeaves2Impl(TBuffer &b);
    void     FillLeavesImpl(TBuffer &b);
-   
+
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
    TBasket *GetFreshBasket();
    Int_t    WriteBasket(TBasket* basket, Int_t where);
-   
+
    TString  GetRealFileName() const;
 
 private:

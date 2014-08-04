@@ -1725,7 +1725,7 @@ void TUnfoldBinning::DecodeAxisSteering
             TString axisId=pattern(0,bracketBegin);
             Int_t mask=0;
             if((axisId[0]=='*')&&(axisId.Length()==1)) {
-               // turn all bins on 
+               // turn all bins on
                mask=(1<<nAxis)-1;
             } else {
                // if axis is there, turn its bit on

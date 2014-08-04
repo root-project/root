@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class GSLIntegratorWorkspace
-// 
+//
 // Created by: moneta  at Sat Nov 13 14:55:27 2004
-// 
+//
 // Last update: Sat Nov 13 14:55:27 2004
-// 
+//
 #ifndef ROOT_Math_GSLIntegrationWorkspace
 #define ROOT_Math_GSLIntegrationWorkspace
 
@@ -41,10 +41,10 @@ namespace Math {
 #include "gsl/gsl_integration.h"
 
 
-  class GSLIntegrationWorkspace { 
+  class GSLIntegrationWorkspace {
 
     public :
-      
+
       GSLIntegrationWorkspace(size_t n) {
             fWs = gsl_integration_workspace_alloc( n);
     }
@@ -54,8 +54,8 @@ namespace Math {
 
     gsl_integration_workspace * GetWS() { return fWs; }
 
-  private: 
-    gsl_integration_workspace * fWs; 
+  private:
+    gsl_integration_workspace * fWs;
 
   };
 

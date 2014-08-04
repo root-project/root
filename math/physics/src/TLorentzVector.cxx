@@ -220,7 +220,7 @@ and negative light-cone components:<TT></TT>
 find it easier to define these components as (T{+,-}Z)/sqrt(2). Thus
 check what definition is used in the physics you're working in and adapt
 your code accordingly.
-   
+
 <H5>
 Transformation by TLorentzRotation</H5>
 A general Lorentz transformation see class <TT>TLorentzRotation</TT> can

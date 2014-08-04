@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: David Gonzalez Maline    01/2008 
+// Authors: David Gonzalez Maline    01/2008
 
 /**********************************************************************
  *                                                                    *
@@ -23,7 +23,7 @@
 namespace ROOT {
 namespace Math {
 
-namespace BrentMethods { 
+namespace BrentMethods {
 
    double MinimStep(const IGenFunction* function, int type, double &xmin, double &xmax, double fy, int npx,bool logStep)
 {
@@ -36,7 +36,7 @@ namespace BrentMethods {
    //         3-returns Maximum
    //         4-returns X corresponding to fy
 
-   if (logStep) { 
+   if (logStep) {
       xmin = std::log(xmin);
       xmax = std::log(xmax);
    }
@@ -44,7 +44,7 @@ namespace BrentMethods {
 
    if (npx < 2) return 0.5*(xmax-xmin); // no bracketing - return just mid-point
    double dx = (xmax-xmin)/(npx-1);
-   double xxmin = (logStep) ? std::exp(xmin) : xmin; 
+   double xxmin = (logStep) ? std::exp(xmin) : xmin;
    double yymin;
    if (type < 2)
       yymin = (*function)(xxmin);
@@ -55,7 +55,7 @@ namespace BrentMethods {
 
    for (int i=1; i<=npx-1; i++) {
       double x = xmin + i*dx;
-      if (logStep) x = std::exp(x); 
+      if (logStep) x = std::exp(x);
       double y = 0;
       if (type < 2)
          y = (*function)(x);
@@ -64,14 +64,14 @@ namespace BrentMethods {
       else
          y = std::fabs((*function)(x)-fy);
       if (y < yymin) {
-         xxmin = x; 
+         xxmin = x;
          yymin = y;
       }
    }
 
    if (logStep) {
-      xmin = std::exp(xmin); 
-      xmax = std::exp(xmax); 
+      xmin = std::exp(xmin);
+      xmax = std::exp(xmax);
    }
 
 
@@ -119,7 +119,7 @@ namespace BrentMethods {
       if (std::fabs(x-m) <= (t2-0.5*(b-a))) {
          //converged, return x
          ok=true;
-         niter = i-1; 
+         niter = i-1;
          if (type==1)
             return fx;
          else if (type==3)
@@ -139,21 +139,21 @@ namespace BrentMethods {
          r=e;   // Deltax before last
          e=d;   // last delta x
          // current Deltax = p/q
-         // take a parabolic  step only if: 
+         // take a parabolic  step only if:
          // Deltax < 0.5* (DeltaX before last) && Deltax > a && Deltax < b
          // (a BUG in testing this condition is fixed 11/3/2010 (with revision  32544)
          if (std::fabs(p) >= std::fabs(0.5*q*r) || p <= q*(a-x) || p >= q*(b-x)) {
-            //  condition fails - do not take parabolic step 
+            //  condition fails - do not take parabolic step
             e=(x>=m ? a-x : b-x);
             d = c*e;
-         } else { 
+         } else {
             // take a parabolic interpolation step
             d = p/q;
             u = x+d;
             if (u-a < t2 || b-u < t2)
                //d=TMath::Sign(tol, m-x);
                d=(m-x >= 0) ? std::fabs(tol) : -std::fabs(tol);
-         } 
+         }
       } else {
          e=(x>=m ? a-x : b-x);
          d = c*e;

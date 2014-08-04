@@ -28,7 +28,7 @@ Double_t langaufun(Double_t *x, Double_t *par) {
    //par[2]=Total area (integral -inf to inf, normalization constant)
    //par[3]=Width (sigma) of convoluted Gaussian function
    //
-   //In the Landau distribution (represented by the CERNLIB approximation), 
+   //In the Landau distribution (represented by the CERNLIB approximation),
    //the maximum is located at x=-0.22278298 with the location parameter=0.
    //This shift is corrected within this function, so that the actual
    //maximum is identical to the MP parameter.
@@ -52,7 +52,7 @@ Double_t langaufun(Double_t *x, Double_t *par) {
 
 
       // MP shift correction
-      mpc = par[1] - mpshift * par[0]; 
+      mpc = par[1] - mpshift * par[0];
 
       // Range of convolution integral
       xlow = x[0] - sc * par[3];
@@ -106,7 +106,7 @@ TF1 *langaufit(TH1F *his, Double_t *fitrange, Double_t *startvalues, Double_t *p
    TF1 *ffit = new TF1(FunName,langaufun,fitrange[0],fitrange[1],4);
    ffit->SetParameters(startvalues);
    ffit->SetParNames("Width","MP","Area","GSigma");
-   
+
    for (i=0; i<4; i++) {
       ffit->SetParLimits(i, parlimitslo[i], parlimitshi[i]);
    }
@@ -127,7 +127,7 @@ TF1 *langaufit(TH1F *his, Double_t *fitrange, Double_t *startvalues, Double_t *p
 
 Int_t langaupro(Double_t *params, Double_t &maxx, Double_t &FWHM) {
 
-   // Seaches for the location (x value) at the maximum of the 
+   // Seaches for the location (x value) at the maximum of the
    // Landau-Gaussian convolute and its full width at half-maximum.
    //
    // The search is probably not very efficient, but it's a first try.
@@ -153,10 +153,10 @@ Int_t langaupro(Double_t *params, Double_t &maxx, Double_t &FWHM) {
       lold = l;
       x = p + step;
       l = langaufun(&x,params);
- 
+
       if (l < lold)
          step = -step/10;
- 
+
       p += step;
    }
 
@@ -183,10 +183,10 @@ Int_t langaupro(Double_t *params, Double_t &maxx, Double_t &FWHM) {
       lold = l;
       x = p + step;
       l = TMath::Abs(langaufun(&x,params) - fy);
- 
+
       if (l > lold)
          step = -step/10;
- 
+
       p += step;
    }
 
@@ -210,10 +210,10 @@ Int_t langaupro(Double_t *params, Double_t &maxx, Double_t &FWHM) {
       lold = l;
       x = p + step;
       l = TMath::Abs(langaufun(&x,params) - fy);
- 
+
       if (l > lold)
          step = -step/10;
- 
+
       p += step;
    }
 
@@ -254,7 +254,7 @@ void langaus() {
    Double_t chisqr;
    Int_t    ndf;
    TF1 *fitsnr = langaufit(hSNR,fr,sv,pllo,plhi,fp,fpe,&chisqr,&ndf);
-   
+
    Double_t SNRPeak, SNRFWHM;
    langaupro(fp,SNRPeak,SNRFWHM);
 

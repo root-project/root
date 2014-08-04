@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -8,7 +8,7 @@
  **********************************************************************/
 
 // $Id$
-#ifdef _WIN32 
+#ifdef _WIN32
   #define _USE_MATH_DEFINES
 #endif
 #include "Minuit2/FunctionMinimum.h"
@@ -50,7 +50,7 @@ public:
       double ei = ni;
 //       double nexp1 = a*xi*xi + b*xi + c;
 //       double nexp2 = 0.5*p0*p1/M_PI;
-//       double nexp3 = std::max(1.e-10, (xi-p2)*(xi-p2) + 0.25*p1*p1); 
+//       double nexp3 = std::max(1.e-10, (xi-p2)*(xi-p2) + 0.25*p1*p1);
 //       double nexp = nexp1 + nexp2/nexp3;
       double nexp = a*xi*xi + b*xi + c + (0.5*p0*p1/M_PI)/std::max(1.e-10, (xi-p2)*(xi-p2) + 0.25*p1*p1);
       fval += (ni-nexp)*(ni-nexp)/ei;
@@ -64,7 +64,7 @@ private:
   std::vector<double> fMeasurements;
 };
 
- 
+
 /*
 extern "C" void fcnr_(int&, double[], double&, double[], int&);
 extern "C" void stand_() {}
@@ -86,7 +86,7 @@ public:
     int iflag = 4;
     int npar = par.size();
     fcnr_(npar, 0,  fval, mypar, iflag);
-    
+
     return fval;
   }
 
@@ -119,7 +119,7 @@ int main() {
            4.,5.,0.,6.,3.,4.,3.,3.,6.,8.,8.,3.,4.,
            4.,8.,9.,7.,3.,4.,6.,2.,5.,10.,7.,6.,4.,
            4.,7.,7.,5.,4.,12.,4.,6.,3.,7.,4.,3.,4.,
-           3,10.,8.,7.};  
+           3,10.,8.,7.};
   */
   double tmp[120] = {38.,36.,46.,52.,54.,52.,61.,52.,64.,77.,
            60.,56.,78.,71.,81.,83.,89.,96.,118.,96.,
@@ -149,7 +149,7 @@ int main() {
   upar.Add("p4", 1., 0.3);
   upar.Add("p5", 1., 0.3);
   /*
-# ext. ||   Name    ||   type  ||   Value   ||  Error +/- 
+# ext. ||   Name    ||   type  ||   Value   ||  Error +/-
 
    0   ||        p0 ||  free   ||     32.04 ||   9.611
    1   ||        p1 ||  free   ||     98.11 ||   29.43
@@ -176,7 +176,7 @@ int main() {
     std::cout<<"FM is invalid, try with strategy = 2."<<std::endl;
     MnMigrad migrad2(fFCN, min.UserState(), MnStrategy(2));
     min = migrad2();
-  } 
+  }
   std::cout<<"minimum: "<<min<<std::endl;
   /*
   std::cout<<"start Minos"<<std::endl;
@@ -184,7 +184,7 @@ int main() {
   AsymmetricError e0 = Minos(0);
   AsymmetricError e1 = Minos(1);
   AsymmetricError e2 = Minos(2);
-  
+
   std::cout<<"par0: "<<e0.Value()<<" + "<<e0.Upper()<<e0.Lower()<<std::endl;
   std::cout<<"par1: "<<e1.Value()<<" + "<<e1.Upper()<<e1.Lower()<<std::endl;
   std::cout<<"par2: "<<e2.Value()<<" + "<<e2.Upper()<<e2.Lower()<<std::endl;

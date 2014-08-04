@@ -47,9 +47,9 @@ void invertMatrix(Int_t msize=6)
 //   It is identical to Invert() for sizes > 6 x 6 but for smaller sizes, the
 //   inversion is performed according to Cramer's rule by explicitly calculating
 //   all Jacobi's sub-determinants . For instance for a 6 x 6 matrix this means:
-//    # of 5 x 5 determinant : 36 
-//    # of 4 x 4 determinant : 75 
-//    # of 3 x 3 determinant : 80 
+//    # of 5 x 5 determinant : 36
+//    # of 4 x 4 determinant : 75
+//    # of 3 x 3 determinant : 80
 //    # of 2 x 2 determinant : 45    (see TMatrixD/FCramerInv.cxx)
 //
 //    The only "quality" control in this process is to check whether the 6 x 6

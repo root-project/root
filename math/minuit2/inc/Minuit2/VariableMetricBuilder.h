@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -22,14 +22,14 @@ namespace ROOT {
    namespace Minuit2 {
 
 /**
-   Build (find) function minimum using the Variable Metric method (MIGRAD) 
+   Build (find) function minimum using the Variable Metric method (MIGRAD)
  */
 class VariableMetricBuilder : public MinimumBuilder {
 
 public:
 
 
-   VariableMetricBuilder() : fEstimator(VariableMetricEDMEstimator()), 
+   VariableMetricBuilder() : fEstimator(VariableMetricEDMEstimator()),
                              fErrorUpdator(DavidonErrorUpdator()) {}
 
    ~VariableMetricBuilder() {}
@@ -40,7 +40,7 @@ public:
 
    const VariableMetricEDMEstimator& Estimator() const {return fEstimator;}
    const DavidonErrorUpdator& ErrorUpdator() const {return fErrorUpdator;}
-   
+
    void AddResult(std::vector<MinimumState>& result, const MinimumState & state, bool store = false) const;
 
 private:

@@ -1,12 +1,12 @@
 // @(#)root/test:$name:  $:$id: stressFit.cxx,v 1.15 2002/10/25 10:47:51 rdm exp $
 // Authors: Rene Brun, Eddy Offermann  April 2006
-   
+
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
 //                                                                           //
 // Function Minimization Examples, Fred James                                //
 //                                                                           //
 // from the                                                                  //
-//   Proceedings of the 1972 CERN Computing and Data Processing School       // 
+//   Proceedings of the 1972 CERN Computing and Data Processing School       //
 //   Pertisau, Austria, 10-24 September, 1972 (CERN 72-21)                   //
 //                                                                           //
 // Here a collection of test problems is assembled which were found to be    //
@@ -147,10 +147,10 @@ Bool_t RunRosenBrock()
 //______________________________________________________________________________
 Double_t Wood4(const Double_t *par)
 {
-  const Double_t w = par[0]; 
-  const Double_t x = par[1]; 
-  const Double_t y = par[2]; 
-  const Double_t z = par[3]; 
+  const Double_t w = par[0];
+  const Double_t x = par[1];
+  const Double_t y = par[2];
+  const Double_t z = par[3];
 
   const Double_t w1 = w-1;
   const Double_t x1 = x-1;
@@ -222,10 +222,10 @@ Bool_t RunWood4()
 //______________________________________________________________________________
 Double_t Powell(const Double_t *par)
 {
-  const Double_t w = par[0]; 
-  const Double_t x = par[1]; 
-  const Double_t y = par[2]; 
-  const Double_t z = par[3]; 
+  const Double_t w = par[0];
+  const Double_t x = par[1];
+  const Double_t y = par[2];
+  const Double_t z = par[3];
 
   const Double_t tmp1 = w+10*x;
   const Double_t tmp2 = y-z;
@@ -375,13 +375,13 @@ Bool_t RunGoldStein1()
 //
 // F(x,y) = (1 + (x+y+1)^2 * (19-14x+3x^2-14y+6xy+3y^2))
 //           * (30 + (2x-3y)^2 * (18-32x+12x^2+48y-36xy+27y^2))
-// 
+//
 //   start point     : F(-0.4,-0,6) = 35
 //   local  minima   : F(1.2,0.8)   = 840
 //                     F(1.8,0.2)   = 84
 //                     F(-0.6,-0.4) = 30
 //   global minimum  : F(0.0,-1.0)  = 3
-//   
+//
 // This is an eighth-order polynomial in two variables which is well behaved near each
 // minimum, but has four local minima and is of course non-positive-definite in many
 // regions. The saddle point between the two lowest minima occurs at F(-0.4,-0.6)=35
@@ -438,10 +438,10 @@ Bool_t RunGoldStein2()
 //
 // F(x,y) = (1 + (x+y+1)^2 * (19-14x+3x^2-14y+6xy+3y^2))
 //           * (30 + (2x-3y)^2 * (18-32x+12x^2+48y-36xy+27y^2))
-// 
+//
 //   start point     : F(1.6,3.4) =
 //   global minimum  : F(3,4)     = 1
-//   
+//
 // This function has many local minima .
 // [Reference: Math. Comp. 25, 571 (1971).]
 
@@ -503,7 +503,7 @@ Double_t TrigoFletcher(const Double_t *par)
   v0 = A*sx0+B*cx0;
   v  = A*sx +B*cx;
   r  = v0-v;
- 
+
   return r * r;
 }
 
@@ -512,7 +512,7 @@ Bool_t RunTrigoFletcher()
 {
 //
 // F(\vec{x}) = \sum_{i=1}^n ( E_i - \sum_{j=1}^n (A_{ij} \sin x_j + B_{ij} \cos x_j) )^2
-// 
+//
 //   where E_i = \sum_{j=1}^n ( A_{ij} \sin x_{0j} + B_{ij} \cos x_{0j} )
 //
 //   B_{ij} and A_{ij} are random matrices composed of integers between -100 and 100;
@@ -520,7 +520,7 @@ Bool_t RunTrigoFletcher()
 //
 //   start point : x_j = x_{0j} + 0.1 \delta_j,  -\pi < \delta_j < \pi
 //   minimum     : F(\vec{x} = \vec{x}_0) = 0
-//   
+//
 // This is a set of functions of any number of variables n, where the minimum is always
 // known in advance, but where the problem can be changed by choosing different
 // (random) values of the constants A_{ij}, B_{ij}, and x_{0j} . The difficulty can be
@@ -529,7 +529,7 @@ Bool_t RunTrigoFletcher()
 // many subsidiary minima.
 // [Reference: Comput. J. 6 163 (1963).]
 
- 
+
   const Double_t pi = TMath::Pi();
   Bool_t ok = kTRUE;
   Double_t delta = 0.1;
@@ -578,7 +578,7 @@ Bool_t RunTrigoFletcher()
        ok = kFALSE;
 
      delete min;
-  }  
+  }
 
   return ok;
 }
@@ -650,7 +650,7 @@ Int_t stressFit(const char *type, const char *algo, Int_t N)
     if (!os) printf("*  SYS: Windows 95\n");
     else     printf("*  SYS: %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
   }
-  
+
   printf("******************************************************************\n");
   gBenchmark->Print("stressFit");
 #ifdef __CINT__
@@ -659,7 +659,7 @@ Int_t stressFit(const char *type, const char *algo, Int_t N)
   Double_t reftime = 12.07; //macbrun compiled
 #endif
   const Double_t rootmarks = 800.*reftime/gBenchmark->GetCpuTime("stressFit");
-  
+
   printf("******************************************************************\n");
   printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
          gROOT->GetVersionDate(),gROOT->GetVersionTime());
@@ -671,7 +671,7 @@ Int_t stressFit(const char *type, const char *algo, Int_t N)
 //_____________________________batch only_____________________
 #ifndef __CINT__
 
-int main(int argc,const char *argv[]) 
+int main(int argc,const char *argv[])
 {
   gBenchmark = new TBenchmark();
   const char *fittertype = "Minuit";

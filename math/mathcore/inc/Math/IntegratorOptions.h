@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id$ 
+// @(#)root/mathcore:$Id$
 // Author: L. Moneta Fri Aug 15 2008
 
 /**********************************************************************
@@ -18,35 +18,35 @@
 #include <string>
 #include <iostream>
 
-namespace ROOT { 
-   
+namespace ROOT {
 
-namespace Math { 
 
-   class IOptions; 
+namespace Math {
+
+   class IOptions;
 
 
 //_______________________________________________________________________________
-/** 
-    Base class for Numerical integration  options 
-    common in 1D and multi-dimension 
-    This is an internal class and is not supposed to be instantiated by the user 
+/**
+    Base class for Numerical integration  options
+    common in 1D and multi-dimension
+    This is an internal class and is not supposed to be instantiated by the user
 
     @ingroup Integration
 */
 class BaseIntegratorOptions {
 
-protected: 
+protected:
 
    /// protected constructor to avoid user creating this class
-   BaseIntegratorOptions(); 
+   BaseIntegratorOptions();
 
-public: 
+public:
 
-   // copy constructor 
+   // copy constructor
    BaseIntegratorOptions(const BaseIntegratorOptions & opt);
 
-   /// assignment operators 
+   /// assignment operators
    BaseIntegratorOptions & operator=(const BaseIntegratorOptions & opt);
 
 
@@ -55,21 +55,21 @@ public:
 
 
    /// name of 1D integrator
-   virtual std::string  Integrator() const = 0; 
+   virtual std::string  Integrator() const = 0;
 
    /** non-static methods for  retrivieng options */
 
-   /// absolute tolerance 
+   /// absolute tolerance
    double AbsTolerance() const { return  fAbsTolerance; }
 
-   /// absolute tolerance 
+   /// absolute tolerance
    double RelTolerance() const { return  fRelTolerance; }
 
    /// size of the workspace
    unsigned int WKSize() const { return fWKSize; }
 
 
-   /// return extra options 
+   /// return extra options
    IOptions * ExtraOptions() const { return fExtraOptions; }
 
    /** non-static methods for setting options */
@@ -85,29 +85,29 @@ public:
    void SetWKSize(unsigned int size) { fWKSize = size; }
 
    /// set extra options (in this case pointer is cloned)
-   void  SetExtraOptions(const IOptions & opt); 
-   
+   void  SetExtraOptions(const IOptions & opt);
+
 
 protected:
 
-   void ClearExtra(); 
+   void ClearExtra();
 
    int       fIntegType;   // Integrator type (value converted from enum)
 
    unsigned int fWKSize;        // workspace size
    unsigned int fNCalls;        // (max) funxtion calls
-   double fAbsTolerance;        // absolute tolerance 
-   double fRelTolerance;        // relative tolerance 
+   double fAbsTolerance;        // absolute tolerance
+   double fRelTolerance;        // relative tolerance
 
 
    // extra options
-   ROOT::Math::IOptions *   fExtraOptions;  // extra options 
-     
+   ROOT::Math::IOptions *   fExtraOptions;  // extra options
+
 };
 
 //_______________________________________________________________________________
-/** 
-    Numerical one dimensional integration  options 
+/**
+    Numerical one dimensional integration  options
 
     @ingroup Integration
 */
@@ -124,21 +124,21 @@ public:
    virtual ~IntegratorOneDimOptions() {}
 
    // copy constructor
-   IntegratorOneDimOptions(const IntegratorOneDimOptions & rhs) : 
+   IntegratorOneDimOptions(const IntegratorOneDimOptions & rhs) :
       BaseIntegratorOptions(rhs)
    {}
 
    // assignment operator
-   IntegratorOneDimOptions & operator=(const IntegratorOneDimOptions & rhs) { 
-      if (this == &rhs) return *this; 
+   IntegratorOneDimOptions & operator=(const IntegratorOneDimOptions & rhs) {
+      if (this == &rhs) return *this;
       static_cast<BaseIntegratorOptions &>(*this) = rhs;
-      return *this; 
+      return *this;
    }
 
    // specific method for one-dim
-   /// set number of points rule 
+   /// set number of points rule
    /// values of 1,2,3,4,5,6 corresponds to 15,21,31,41,51,61 and they are used in GSL adaptive
-   /// values > 6 corresponds to the actual points and they are used by teh GaussLegendre integrator 
+   /// values > 6 corresponds to the actual points and they are used by teh GaussLegendre integrator
    void SetNPoints(unsigned int n) { fNCalls = n; }
 
    /// maximum number of function calls
@@ -147,48 +147,48 @@ public:
    /// name of 1D integrator
    std::string  Integrator() const;
 
-   /// type of the integrator (return the enumeration type) 
+   /// type of the integrator (return the enumeration type)
    IntegrationOneDim::Type IntegratorType() const { return (IntegrationOneDim::Type) fIntegType; }
 
-   /// set 1D integrator name 
-   void SetIntegrator(const char * name); 
+   /// set 1D integrator name
+   void SetIntegrator(const char * name);
 
-   /// print all the options 
-   void Print(std::ostream & os = std::cout) const; 
+   /// print all the options
+   void Print(std::ostream & os = std::cout) const;
 
-   // static methods for setting and retrieving the default options 
+   // static methods for setting and retrieving the default options
 
    static void SetDefaultIntegrator(const char * name);
-   static void SetDefaultAbsTolerance(double tol); 
-   static void SetDefaultRelTolerance(double tol); 
+   static void SetDefaultAbsTolerance(double tol);
+   static void SetDefaultRelTolerance(double tol);
    static void SetDefaultWKSize(unsigned int size);
    static void SetDefaultNPoints(unsigned int n);
 
    static std::string  DefaultIntegrator();
    static IntegrationOneDim::Type DefaultIntegratorType();
-   static double DefaultAbsTolerance(); 
-   static double DefaultRelTolerance(); 
+   static double DefaultAbsTolerance();
+   static double DefaultRelTolerance();
    static unsigned int DefaultWKSize();
    static unsigned int DefaultNPoints();
 
-   /// retrieve specific options - if not existing create a IOptions 
+   /// retrieve specific options - if not existing create a IOptions
    static ROOT::Math::IOptions & Default(const char * name);
 
-   // find specific options - return 0 if not existing 
+   // find specific options - return 0 if not existing
    static ROOT::Math::IOptions * FindDefault(const char * name);
 
-   /// print only the specified default options 
-   static void PrintDefault(const char * name = 0, std::ostream & os = std::cout); 
+   /// print only the specified default options
+   static void PrintDefault(const char * name = 0, std::ostream & os = std::cout);
 
 
-private: 
+private:
 
 
 };
 
 //_______________________________________________________________________________
-/** 
-    Numerical multi dimensional integration  options 
+/**
+    Numerical multi dimensional integration  options
 
     @ingroup Integration
 */
@@ -198,22 +198,22 @@ class IntegratorMultiDimOptions : public BaseIntegratorOptions {
 public:
 
 
-   // constructor using the default options 
+   // constructor using the default options
    // can pass a pointer to extra options (N.B. pointer will be managed by the class)
    IntegratorMultiDimOptions(IOptions * extraOpts = 0);
 
    virtual ~IntegratorMultiDimOptions() {}
 
    // copy constructor
-   IntegratorMultiDimOptions(const IntegratorMultiDimOptions & rhs) : 
+   IntegratorMultiDimOptions(const IntegratorMultiDimOptions & rhs) :
       BaseIntegratorOptions(rhs)
    {}
 
    // assignment operator
-   IntegratorMultiDimOptions & operator=(const IntegratorMultiDimOptions & rhs) { 
-      if (this == &rhs) return *this; 
+   IntegratorMultiDimOptions & operator=(const IntegratorMultiDimOptions & rhs) {
+      if (this == &rhs) return *this;
       static_cast<BaseIntegratorOptions &>(*this) = rhs;
-      return *this; 
+      return *this;
    }
 
    // specific method for multi-dim
@@ -226,41 +226,41 @@ public:
    /// name of multi-dim integrator
    std::string  Integrator() const;
 
-   /// type of the integrator (return the enumeration type) 
+   /// type of the integrator (return the enumeration type)
    IntegrationMultiDim::Type IntegratorType() const { return (IntegrationMultiDim::Type) fIntegType; }
 
-   /// set multi-dim integrator name 
-   void SetIntegrator(const char * name); 
+   /// set multi-dim integrator name
+   void SetIntegrator(const char * name);
 
-   /// print all the options 
-   void Print(std::ostream & os = std::cout) const; 
+   /// print all the options
+   void Print(std::ostream & os = std::cout) const;
 
-   // static methods for setting and retrieving the default options 
+   // static methods for setting and retrieving the default options
 
    static void SetDefaultIntegrator(const char * name);
-   static void SetDefaultAbsTolerance(double tol); 
-   static void SetDefaultRelTolerance(double tol); 
+   static void SetDefaultAbsTolerance(double tol);
+   static void SetDefaultRelTolerance(double tol);
    static void SetDefaultWKSize(unsigned int size);
    static void SetDefaultNCalls(unsigned int ncall);
 
    static std::string DefaultIntegrator();
    static IntegrationMultiDim::Type DefaultIntegratorType();
-   static double DefaultAbsTolerance(); 
-   static double DefaultRelTolerance(); 
+   static double DefaultAbsTolerance();
+   static double DefaultRelTolerance();
    static unsigned int DefaultWKSize();
    static unsigned int DefaultNCalls();
 
-   // retrieve specific options 
+   // retrieve specific options
    static ROOT::Math::IOptions & Default(const char * name);
 
-   // find specific options - return 0 if not existing 
+   // find specific options - return 0 if not existing
    static ROOT::Math::IOptions * FindDefault(const char * name);
 
-   /// print only the specified default options 
-   static void PrintDefault(const char * name = 0, std::ostream & os = std::cout); 
+   /// print only the specified default options
+   static void PrintDefault(const char * name = 0, std::ostream & os = std::cout);
 
 
-private: 
+private:
 
 
 };

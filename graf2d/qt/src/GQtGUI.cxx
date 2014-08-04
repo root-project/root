@@ -163,7 +163,7 @@ QColor TGQt::QtColor(ULong_t pixel)
    } else {
       // this is a new color (red x green x blue)
       // this is a new color (blue x green x red)
-      
+
       ColorStruct_t newColor;
 #ifdef R__WIN32
       newColor.fRed  =  (pixel & 255);
@@ -171,7 +171,7 @@ QColor TGQt::QtColor(ULong_t pixel)
       newColor.fGreen = (pixel & 255);
       pixel = pixel >> 8;
       newColor.fBlue   = (pixel & 255);
-#else      
+#else
       newColor.fBlue  =  (pixel & 255);
       pixel = pixel >> 8;
       newColor.fGreen = (pixel & 255);
@@ -505,14 +505,14 @@ void   QtGContext::SetBackground(ULong_t background)
     // reset the context background color
     SETBIT(fMask,kBrush);
     QColor bg = QtColor(background);
-#if QT_VERSION < 0x40000    
+#if QT_VERSION < 0x40000
     setPaletteBackgroundColor(bg);
     setEraseColor(bg);
-#else    
+#else
     QPalette pp=palette();
     pp.setColor(QPalette::Window,bg);
     setPalette(pp);
-#endif 
+#endif
 }
 //______________________________________________________________________________
 void   QtGContext::SetForeground(ULong_t foreground)
@@ -526,7 +526,7 @@ void   QtGContext::SetForeground(ULong_t foreground)
    pp.setColor(QPalette::WindowText, bg);
    setPalette(pp);
    fBrush.setColor(bg);
-   fPen.setColor(bg); 
+   fPen.setColor(bg);
 }
 //______________________________________________________________________________
 //
@@ -547,8 +547,8 @@ public:
 #if QT_VERSION < 0x40000
             setRasterOp (rootContext.fROp);
 #else /* QT_VERSION */
-//           if (device()->devType() !=  QInternal::Widget ) 
-           if (pd->devType() ==  QInternal::Image ) 
+//           if (device()->devType() !=  QInternal::Widget )
+           if (pd->devType() ==  QInternal::Image )
                setCompositionMode(rootContext.fROp);
 #endif /* QT_VERSION */
          }
@@ -638,21 +638,21 @@ class TXlfd {
       fFontFamily  = fontName.section('-',2,2);
 
       QString fontWeight  = fontName.section('-',3,3);
-      if (fontWeight != "*") 
+      if (fontWeight != "*")
          fIsFontBold = fontWeight.startsWith("bold") ? 1 : 0;
 
       QString fontSlant = fontName.section('-',4,4);
-      if (fontSlant != "*" ) 
+      if (fontSlant != "*" )
          fIsFontItalic = ((fontSlant[0] == 'i') || (fontSlant[0] == 'o')) ? 1 : 0;
-      
+
       bool ok=true;
       QString fontPointSize = fontName.section('-',8,8);
-      if (fontPointSize != "*") 
+      if (fontPointSize != "*")
         fPointSize = fontPointSize.toInt(&ok);
       if (!ok) fPointSize = -1;
 
       QString fontPixelSize = fontName.section('-',7,7);
-      if (fontPixelSize != "*") 
+      if (fontPixelSize != "*")
         fPixelSize = fontPixelSize .toInt(&ok);
       if (!ok) fPixelSize = -1;
    }
@@ -693,49 +693,49 @@ class TXlfd {
    //______________________________________________________________________________
    inline bool operator!=(const TXlfd  &xlfd) const { return !operator==(xlfd); }
    //______________________________________________________________________________
-   inline QString ToString() const 
+   inline QString ToString() const
    {
       QString xLDF = "-";
       xLDF += fFontFoundry + "-";  // text name of font creator
-      xLDF += fFontFamily  + "-";  // name of the font. 
-                                   // Related fonts generally have the same base names; 
+      xLDF += fFontFamily  + "-";  // name of the font.
+                                   // Related fonts generally have the same base names;
                                    // i.e. helvetica, helvetica narrow , etc.
       QString weight_name = "*";   // usually one of [light|medium|demibold|bold] but other types may exist
-      if (fIsFontBold > -1) 
+      if (fIsFontBold > -1)
          weight_name = fIsFontBold ? "bold" : "medium";
       xLDF += weight_name  + "-";
-      
+
       QString slant_name = "*";   // one of [r|i|o]. i and o are used similarly, AFAIK
-      if (fIsFontItalic  > -1) 
+      if (fIsFontItalic  > -1)
          slant_name = fIsFontItalic ? "i" : "r";
       xLDF += slant_name  + "-";
-      
-      // SETWIDTH_NAME    - [normal|condensed|narrow|double wide] 
-      // ADD_STYLE_NAME   - not a classification field, used only for additional differentiation 
+
+      // SETWIDTH_NAME    - [normal|condensed|narrow|double wide]
+      // ADD_STYLE_NAME   - not a classification field, used only for additional differentiation
       xLDF += "*-*-";  // we do not crae (yet) about SETWIDTH and ADD_STYLE
-      
-      QString pixelsize = "*";   // 0 = scalable font; integer typicially height of bounding box  
-      if (fPixelSize   > -1) 
+
+      QString pixelsize = "*";   // 0 = scalable font; integer typicially height of bounding box
+      if (fPixelSize   > -1)
          pixelsize  = QString::number(fPixelSize);
       xLDF += pixelsize  + "-";
 
-      QString pointsize = "*";   // 0 = scalable font; integer typicially height of bounding box  
-      if (fPointSize   > -1) 
+      QString pointsize = "*";   // 0 = scalable font; integer typicially height of bounding box
+      if (fPointSize   > -1)
          pointsize  = QString::number(fPointSize);
       xLDF += pointsize  + "-";
 
-      // RESOLUTION_X - horizontal dots per inch 
-      // RESOLUTION_Y - vertical dots per inch 
-      // SPACING      - [p|m|c] p = proportional, m = monospaced, c = charcell. Charcell is 
-      //                 a special case of monospaced where no glyphs have pixels outside 
-      //                 the character cell; i.e. there is no kerning (no negative metrics). 
-      // AVERAGE_WIDTH  - unweighted arithmetic mean of absolute value of width of each glyph 
+      // RESOLUTION_X - horizontal dots per inch
+      // RESOLUTION_Y - vertical dots per inch
+      // SPACING      - [p|m|c] p = proportional, m = monospaced, c = charcell. Charcell is
+      //                 a special case of monospaced where no glyphs have pixels outside
+      //                 the character cell; i.e. there is no kerning (no negative metrics).
+      // AVERAGE_WIDTH  - unweighted arithmetic mean of absolute value of width of each glyph
       //                  in tenths of pixels
-      
+
       xLDF += "*-*-*-*-";  // we do not create (yet) about  RESOLUTION_X RESOLUTION_Y  SPACING  AVERAGE_WIDTH
 
-      // CHARSET_REGISTRY and CHARSET_ENCODING 
-      //                         the chararterset used to encode the font; ISO8859-1 for Latin 1 fonts 
+      // CHARSET_REGISTRY and CHARSET_ENCODING
+      //                         the chararterset used to encode the font; ISO8859-1 for Latin 1 fonts
       xLDF += "ISO8859-1";
       return xLDF;
    }
@@ -960,7 +960,7 @@ void         TGQt::MapWindow(Window_t id)
    // QWidget *nextWg = 0;
    QWidget *wg = wid(id);
    if ( wg ) {
-      if  ( wg->isTopLevel () ){ 
+      if  ( wg->isTopLevel () ){
          wg->showNormal();
       } else wg->show();
       // wg->update();
@@ -1152,7 +1152,7 @@ Bool_t TGQt::NeedRedraw(ULong_t w, Bool_t force)
    //
    // At the moment only Qt4 layer needs that
    //
-   // One needs to process the notification to confine 
+   // One needs to process the notification to confine
    // all paint operations within "expose" / "paint" like low level event
    // or equivalent
 #if ROOT_VERSION_CODE >= ROOT_VERSION(9,15,9)
@@ -1166,8 +1166,8 @@ Bool_t TGQt::NeedRedraw(ULong_t w, Bool_t force)
    return !force;
 #else
   if (w||force) {}
-   return kFALSE;   
-#endif     
+   return kFALSE;
+#endif
 }
 //______________________________________________________________________________
 void  TGQt::RaiseWindow(Window_t id)
@@ -1217,7 +1217,7 @@ void         TGQt::ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y)
    // position in the hierarchy, and inserts it as the child of the specified
    // parent. The window is placed in the stacking order on top with respect
    // to sibling windows.
-  
+
       wid(id)->setParent(wid(pid));
       if (x || y) wid(id)->move(x,y);
 }
@@ -1277,7 +1277,7 @@ Window_t TGQt::CreateWindow(Window_t parent, Int_t x, Int_t y,
       win->setFrameShape(QFrame::WinPanel); // xattr.window_type   = GDK_WINDOW_TOPLEVEL;
    }  else if (wtype & kTempFrame) {
       win =  fQClientGuard.Create(pWidget,"tooltip"
-            , Qt::ToolTip 
+            , Qt::ToolTip
             | Qt::Tool
             | Qt::X11BypassWindowManagerHint
             | Qt::FramelessWindowHint
@@ -1502,10 +1502,10 @@ GContext_t   TGQt::CreateGC(Drawable_t /*id*/, GCValues_t *gval)
   // Create a graphics context using the values set in gval (but only for
   // those entries that are in the mask).
    QtGContext *context = 0;
-   if (gval) 
+   if (gval)
       context =  new QtGContext(*gval);
-   else 
-      context =  new QtGContext();      
+   else
+      context =  new QtGContext();
 //   MapGCValues(*gval, context)
   return GContext_t(context);
 }
@@ -1750,8 +1750,8 @@ void         TGQt::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
       // QtGContext qgc = qtcontext(gc);
       QPixmap *pix = dynamic_cast<QPixmap*>(iwid(src));
       QBitmap *mask = qtcontext(gc).fClipMask;
-      if (pix && mask && (qtcontext(gc).fMask & QtGContext::kClipMask)) {         
-         if ((pix->width() != mask->width()) || (pix->height() != mask->height())) 
+      if (pix && mask && (qtcontext(gc).fMask & QtGContext::kClipMask)) {
+         if ((pix->width() != mask->width()) || (pix->height() != mask->height()))
          {
             // TASImage::GetMask() creates mask with the width rounded to 8
             // pix->resize(mask->width(), mask->height());
@@ -1777,17 +1777,17 @@ void         TGQt::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
                 copyArea.drawPixmap(dest_x,dest_y,*pix, src_x,src_y,width,height);
             }
          } else {
-            QImage *im = dynamic_cast<QImage*>(iwid(src)); 
+            QImage *im = dynamic_cast<QImage*>(iwid(src));
             if (im) {
                TQtPainter copyArea(iwid(dest),qtcontext(gc));
                copyArea.drawImage(dest_x,dest_y,*im, src_x,src_y,width,height);
             } else {
-               QWidget *qw = dynamic_cast<QWidget*>(iwid(src)); 
+               QWidget *qw = dynamic_cast<QWidget*>(iwid(src));
                if (qw) {
                   QPixmap pixw = QPixmap::grabWidget(qw, QRect(src_x,src_y,width,height));
                   TQtPainter copyArea(iwid(dest),qtcontext(gc));
                   copyArea.drawPixmap(dest_x,dest_y,pixw, src_x,src_y,width,height);
-               } else { 
+               } else {
                   qDebug() << " TGQt::CopyArea: illegal image source. Should be either QPixmap or QImage";
                }
             }
@@ -1889,7 +1889,7 @@ void         TGQt::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Clear a window area to the background color.
    if (id == kNone || id == kDefault ) return;
-   QPainter paint(iwid(id));  
+   QPainter paint(iwid(id));
    paint.setBackgroundMode( Qt::OpaqueMode); // Qt::TransparentMode
    TQtClientWidget *wd = dynamic_cast<TQtClientWidget*>(wid(id));
    if (!wd) {
@@ -1916,7 +1916,7 @@ void         TGQt::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
       qDebug() << "TGQt::ClearArea: ***   wrong client are size: " << w <<" : " << Int_t(w);
       return;
    }
-   if (p && c) 
+   if (p && c)
          paint.fillRect ( x, y, w, h, QBrush(cr,pr));
    else if (p)
          paint.fillRect ( x, y, w, h, QBrush(pr));
@@ -1929,13 +1929,13 @@ void         TGQt::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
   //  qDebug() << " TGQt::ClearArea " << (void *)id << p << c;
 }
 //______________________________________________________________________________
-Bool_t       TGQt::CheckEvent(Window_t, EGEventType, Event_t &) 
+Bool_t       TGQt::CheckEvent(Window_t, EGEventType, Event_t &)
 {
    // Check if there is for window "id" an event of type "type". If there
    // is fill in the event structure and return true. If no such event
    // return false.
-  
-    return kFALSE; 
+
+    return kFALSE;
 }
 //______________________________________________________________________________
 void         TGQt::SendEvent(Window_t id, Event_t *ev)
@@ -2019,7 +2019,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
     assert(confine==kNone);
     if (grab ) {
 //       if (cursor == kNone) {
-          ((TQtClientWidget*)wid(id))->SetButtonMask(modifier,button); 
+          ((TQtClientWidget*)wid(id))->SetButtonMask(modifier,button);
           ((TQtClientWidget*)wid(id))->SetButtonEventMask(evmask,cursor);
     } else {
           ((TQtClientWidget*)wid(id))->UnSetButtonMask();
@@ -2065,7 +2065,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
        fPointerGrabber = 0;
     }
     TQtClientFilter *f = QClientFilter();
-    if (f) 
+    if (f)
         f->GrabPointer(gw, evmask,0,(QCursor *)cursor, grab, owner_events);
  }
 //______________________________________________________________________________
@@ -2228,7 +2228,7 @@ void  TGQt::DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
 
    if (s && s[0] && len) {
       TQtPainter paint(iwid(id),qtcontext(gc));
-      //   Pick the font from the context 
+      //   Pick the font from the context
       QPalette pl =  qtcontext(gc).palette();
       const QColor &fontColor = pl.color(QPalette::WindowText);
       paint.setPen(fontColor);
@@ -2284,7 +2284,7 @@ void         TGQt::ClearWindow(Window_t id)
 {
    // Clear window.
    if (id == kNone || id == kDefault ) return;
-   QPainter paint(iwid(id));   
+   QPainter paint(iwid(id));
    paint.setBackgroundMode( Qt::OpaqueMode); // Qt::TransparentMode
    TQtClientWidget *wd =  dynamic_cast<TQtClientWidget*>(wid(id));
    const QColor  *c = 0;
@@ -2298,8 +2298,8 @@ void         TGQt::ClearWindow(Window_t id)
    const QColor  &cr = wd ? wd->palette().color(QPalette::Window) : *c;
    c = wd ? &cr : 0;
    const QPixmap &pr = *p;
-#endif      
-   if (p && c ) 
+#endif
+   if (p && c )
       paint.fillRect(wd->rect(),QBrush(cr,pr));
    else if (p)
       paint.fillRect(wd->rect(),QBrush(pr));
@@ -2356,7 +2356,7 @@ static KeyQSymbolMap_t gKeyQMap[] = {
    {Qt::Key_F4,        kKey_F4 },
    {Qt::Key_PageUp,    kKey_PageUp },
    {Qt::Key_PageDown,  kKey_PageDown },
-   {Qt::Key(0), (EKeySym) 0}   
+   {Qt::Key(0), (EKeySym) 0}
 };
 //______________________________________________________________________________________
 static inline Int_t MapKeySym(int key, bool toQt=true)
@@ -2562,7 +2562,7 @@ void         TGQt::GetWindowSize(Drawable_t id, Int_t &x, Int_t &y, UInt_t &w, U
 {
    // Return geometry of window (should be called GetGeometry but signature
    // already used).
-   
+
    x =  y = 0;
    if (id == kNone || id == kDefault )
    {
@@ -2584,7 +2584,7 @@ void         TGQt::GetWindowSize(Drawable_t id, Int_t &x, Int_t &y, UInt_t &w, U
                y = gWidget.y();
                w = gWidget.width();
                h = gWidget.height();
-            } else {         
+            } else {
                QDesktopWidget *d = QApplication::desktop();
                w = d->width();     // returns desktop width
                h = d->height();    // returns desktop height
@@ -2666,7 +2666,7 @@ void         TGQt::SetBackground(GContext_t gc, ULong_t background)
    // Set foreground color in graphics context (shortcut for ChangeGC with
    // only foreground mask set).
    // The interface is confusing . This function MUST be not here (VF 07/07/2003)
-   
+
    qtcontext(gc).SetBackground(background);
 }
 
@@ -2676,7 +2676,7 @@ void         TGQt::SetForeground(GContext_t gc, ULong_t foreground)
    // Set foreground color in graphics context (shortcut for ChangeGC with
    // only foreground mask set).
    // The interface is confusing . This function MUST be not here (VF 07/07/2003)
-   
+
    qtcontext(gc).SetForeground(foreground);
 }
 //______________________________________________________________________________
@@ -2888,54 +2888,54 @@ char **TGQt::ListFonts(const char *fontname, Int_t max, Int_t &count)
 
    // ------------------------------------------------------
    //  ROOT uses non-portable XLDF font description:
-   //  XLFD 
+   //  XLFD
    // ------------------------------------------------------
 
-   // The X Logical Font Descriptor (XLFD) is a text string made up of 13 parts 
-   // separated by a minus sign, i.e.: 
-   // 
-   // -Misc -Fixed    -Medium-R-Normal-13-120-75-75-C-70-ISO8859-1 
-   // -Adobe-Helvetica-Medium-R-Normal-12-120-75-75-P-67-ISO8859-1 
+   // The X Logical Font Descriptor (XLFD) is a text string made up of 13 parts
+   // separated by a minus sign, i.e.:
+   //
+   // -Misc -Fixed    -Medium-R-Normal-13-120-75-75-C-70-ISO8859-1
+   // -Adobe-Helvetica-Medium-R-Normal-12-120-75-75-P-67-ISO8859-1
    // ------------------------------------------------------------
-   // 
-   // FOUNDRY 
-   // text name of font creator 
-   // 
-   // FAMILY_NAME 
-   // name of the font. Related fonts generally have the same base names; i.e. helvetica, helvetica narrow , etc. 
-   
-   // WEIGHT_NAME 
-   // usually one of [light|medium|demibold|bold] but other types may exist 
-   // 
-   // SLANT 
-   // one of [r|i|o]. i and o are used similarly, AFAIK 
-   // 
-   // SETWIDTH_NAME 
-   // [normal|condensed|narrow|double wide] 
-   // 
-   // ADD_STYLE_NAME 
-   // not a classification field, used only for additional differentiation 
    //
-   // PIXEL_SIZE 
-   // 0 = scalable font; integer typicially height of bounding box 
+   // FOUNDRY
+   // text name of font creator
    //
-   // POINT_SIZE 
-   // typically height of bounding box in tenths of pixels 
-   // 
-   // RESOLUTION_X 
-   // horizontal dots per inch 
-   // 
-   // RESOLUTION_Y 
-   // vertical dots per inch 
-   // 
-   // SPACING 
-   // [p|m|c] p = proportional, m = monospaced, c = charcell. Charcell is a special case of monospaced where no glyphs have pixels outside the character cell; i.e. there is no kerning (no negative metrics). 
-   // 
-   // AVERAGE_WIDTH 
-   // unweighted arithmetic mean of absolute value of width of each glyph in tenths of pixels 
-   // CHARSET_REGISTRY and CHARSET_ENCODING 
+   // FAMILY_NAME
+   // name of the font. Related fonts generally have the same base names; i.e. helvetica, helvetica narrow , etc.
+
+   // WEIGHT_NAME
+   // usually one of [light|medium|demibold|bold] but other types may exist
+   //
+   // SLANT
+   // one of [r|i|o]. i and o are used similarly, AFAIK
+   //
+   // SETWIDTH_NAME
+   // [normal|condensed|narrow|double wide]
+   //
+   // ADD_STYLE_NAME
+   // not a classification field, used only for additional differentiation
+   //
+   // PIXEL_SIZE
+   // 0 = scalable font; integer typicially height of bounding box
+   //
+   // POINT_SIZE
+   // typically height of bounding box in tenths of pixels
+   //
+   // RESOLUTION_X
+   // horizontal dots per inch
+   //
+   // RESOLUTION_Y
+   // vertical dots per inch
+   //
+   // SPACING
+   // [p|m|c] p = proportional, m = monospaced, c = charcell. Charcell is a special case of monospaced where no glyphs have pixels outside the character cell; i.e. there is no kerning (no negative metrics).
+   //
+   // AVERAGE_WIDTH
+   // unweighted arithmetic mean of absolute value of width of each glyph in tenths of pixels
+   // CHARSET_REGISTRY and CHARSET_ENCODING
    // the chararterset used to encode the font; ISO8859-1 for Latin 1 fonts
-   
+
    //  Check whether "Symbol" font is available
     count = 0;
     TXlfd  patternFont(fontname);
@@ -2952,10 +2952,10 @@ char **TGQt::ListFonts(const char *fontname, Int_t max, Int_t &count)
             Int_t italic = fdb.italic(family, style);
             TXlfd currentFont(family,bold,italic);
             if (currentFont != patternFont) continue;
-            
+
             QList<int> sizes = fdb.pointSizes( family, style );
             for ( int points=0 ;  points < sizes.size()
-                                 && (Int_t)xlFonts.size() < max; ++points ) 
+                                 && (Int_t)xlFonts.size() < max; ++points )
             {
               currentFont.SetPointSize(sizes[points]);
               if (currentFont ==  patternFont )  xlFonts.push_back(currentFont.ToString());
@@ -3174,13 +3174,13 @@ unsigned char *TGQt::GetColorBits(Drawable_t rootWid, Int_t x, Int_t y, UInt_t w
    if (pix) {
       // Create intermediate pixmap to stretch the original one if any
       QSize imageSize;
-      if ( (h == w) && (w == UInt_t(-1) ) ) { 
-         w = pix->size().width(); 
-         h = pix->size().height(); 
+      if ( (h == w) && (w == UInt_t(-1) ) ) {
+         w = pix->size().width();
+         h = pix->size().height();
       }
-      imageSize.setWidth(w); 
-      imageSize.setHeight(h); 
-      
+      imageSize.setWidth(w);
+      imageSize.setHeight(h);
+
       QImage img(w,h,QImage::Format_ARGB32);
       QPainter p(&img);
       p.drawPixmap(QPoint(0,0),*pix,QRect(x,y,w,h));
@@ -3232,11 +3232,11 @@ Window_t TGQt::GetCurrentWindow() const
 }
 
 //______________________________________________________________________________
-Int_t TGQt::SupportsExtension(const char *extensionName) const 
- { 
-    // Returns 1 if window system server supports extension given by the 
-    // argument, returns 0 in case extension is not supported and returns -1 
-    // in case of error (like server not initialized). 
+Int_t TGQt::SupportsExtension(const char *extensionName) const
+ {
+    // Returns 1 if window system server supports extension given by the
+    // argument, returns 0 in case extension is not supported and returns -1
+    // in case of error (like server not initialized).
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,27,1)
     return   TVirtualX::SupportsExtension(extensionName);
 #else
@@ -3248,8 +3248,8 @@ Int_t TGQt::SupportsExtension(const char *extensionName) const
 //______________________________________________________________________________
 void TGQt::DeleteProperty(Window_t, Atom_t&)
 {
-   // Deletes the specified property only if the property was defined on the 
-   // specified window and causes the X server to generate a PropertyNotify 
+   // Deletes the specified property only if the property was defined on the
+   // specified window and causes the X server to generate a PropertyNotify
    // event on the window unless the property does not exist.
 
 }
@@ -3258,9 +3258,9 @@ void TGQt::DeleteProperty(Window_t, Atom_t&)
 Int_t TGQt::GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
                              Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**)
 {
-   // Returns the actual type of the property; the actual format of the property; 
-   // the number of 8-bit, 16-bit, or 32-bit items transferred; the number of 
-   // bytes remaining to be read in the property; and a pointer to the data 
+   // Returns the actual type of the property; the actual format of the property;
+   // the number of 8-bit, 16-bit, or 32-bit items transferred; the number of
+   // bytes remaining to be read in the property; and a pointer to the data
    // actually returned.
 
    return 0;
@@ -3269,8 +3269,8 @@ Int_t TGQt::GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
 //______________________________________________________________________________
 void TGQt::ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t)
 {
-   // Changes the specified dynamic parameters if the pointer is actively 
-   // grabbed by the client and if the specified time is no earlier than the 
+   // Changes the specified dynamic parameters if the pointer is actively
+   // grabbed by the client and if the specified time is no earlier than the
    // last-pointer-grab time and no later than the current X server time.
 
 }
@@ -3278,7 +3278,7 @@ void TGQt::ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t)
 //______________________________________________________________________________
 void TGQt::ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&)
 {
-   // Requests that the specified selection be converted to the specified 
+   // Requests that the specified selection be converted to the specified
    // target type.
 
 }
@@ -3294,7 +3294,7 @@ Bool_t TGQt::SetSelectionOwner(Window_t, Atom_t&)
 //______________________________________________________________________________
 void TGQt::ChangeProperties(Window_t, Atom_t, Atom_t, Int_t, UChar_t *, Int_t)
 {
-   // Alters the property for the specified window and causes the X server 
+   // Alters the property for the specified window and causes the X server
    // to generate a PropertyNotify event on that window.
 
 }
@@ -3302,7 +3302,7 @@ void TGQt::ChangeProperties(Window_t, Atom_t, Atom_t, Int_t, UChar_t *, Int_t)
 //______________________________________________________________________________
 void TGQt::SetDNDAware(Window_t, Atom_t *)
 {
-   // Add XdndAware property and the list of drag and drop types to the 
+   // Add XdndAware property and the list of drag and drop types to the
    // Window win.
 
 }
@@ -3317,7 +3317,7 @@ void TGQt::SetTypeList(Window_t, Atom_t, Atom_t *)
 //______________________________________________________________________________
 Window_t TGQt::FindRWindow(Window_t, Window_t, Window_t, int, int, int)
 {
-   // Recursively search in the children of Window for a Window which is at 
+   // Recursively search in the children of Window for a Window which is at
    // location x, y and is DND aware, with a maximum depth of maxd.
 
    return kNone;
@@ -3332,5 +3332,5 @@ Bool_t TGQt::IsDNDAware(Window_t, Atom_t *)
    return kFALSE;
 }
 
-      
+
 

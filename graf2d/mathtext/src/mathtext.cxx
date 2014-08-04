@@ -327,26 +327,26 @@ namespace mathtext {
    {
    }
 #endif
-   
+
    // Apply JIS X 4051:2004
-   
+
    bool math_text_t::well_formed(void) const
    {
       if(_math_list._type != field_t::TYPE_MATH_LIST)
          return false;
       return true;
    }
-   
+
 #if 0
    std::string tex_form(const double x)
    {
       std::string retval;
-      
+
       switch(std::fpclassify(x)) {
          default:
             return retval;
       }
    }
 #endif
-   
+
 }

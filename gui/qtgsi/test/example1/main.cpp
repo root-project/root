@@ -1,10 +1,10 @@
 /**
-*  Main program 
+*  Main program
 *
-*  Initialising both Root/Qt environment    
+*  Initialising both Root/Qt environment
 *
-*  Updated 10/10/01 
-*  @authors Denis Bertini <d.bertini@gsi.de> 
+*  Updated 10/10/01
+*  @authors Denis Bertini <d.bertini@gsi.de>
 *  @version 2.3
 */
 

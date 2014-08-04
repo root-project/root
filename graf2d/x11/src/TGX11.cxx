@@ -2002,7 +2002,7 @@ void  TGX11::SetColor(void *gci, int ci)
    // Set the foreground color in GC.
 
    GC gc = *(GC *)gci;
-   
+
    TColor *color = gROOT->GetColor(ci);
    if (color)
       SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());

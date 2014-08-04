@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -21,14 +21,14 @@ GaussDataGen::GaussDataGen(unsigned int n) {
 
   // create random generator for mean values of Gaussian [-50, 50)
   FlatRandomGen rand_mean(0., 50.);
-  
+
   // create random generator for sigma values of Gaussian [1., 11.)
   FlatRandomGen rand_var(6., 5.);
-  
+
   // errors of measurements (Gaussian, mean=0., sig = 0.01)
   double mvariance = 0.01*0.01;
   GaussRandomGen rand_mvar(0., 0.01);
-  
+
   // simulate data
   fSimMean = rand_mean();
   fSimVar = rand_var();

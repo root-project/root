@@ -55,7 +55,7 @@ private:
 protected:
    TMap              fFrameMap;         //global map of available frames
    TMap              fExclMap;          //map of excluded editors for selected model
-   TList             fGedFrames;        //list visible of frames 
+   TList             fGedFrames;        //list visible of frames
 
    TGCanvas         *fCan;              //provides scroll bars
    TGTab            *fTab;              //tab widget holding the editor
@@ -72,9 +72,9 @@ protected:
 
    void              ConfigureGedFrames(Bool_t objChaged);
 
-   virtual TGedFrame* CreateNameFrame(const TGWindow* parent, const char* tab_name); 
+   virtual TGedFrame* CreateNameFrame(const TGWindow* parent, const char* tab_name);
 
-   static TGedEditor *fgFrameCreator; 
+   static TGedEditor *fgFrameCreator;
 
 public:
    TGedEditor(TCanvas* canvas = 0, UInt_t width = 175, UInt_t height = 20);
@@ -101,7 +101,7 @@ public:
    virtual void   CloseWindow();
    virtual void   ConnectToCanvas(TCanvas *c);
    virtual void   DisconnectFromCanvas();
-   virtual Bool_t IsGlobal() const  { return fGlobal; } 
+   virtual Bool_t IsGlobal() const  { return fGlobal; }
    virtual void   Hide();
    virtual void   GlobalClosed();
    virtual void   SetCanvas(TCanvas *c);

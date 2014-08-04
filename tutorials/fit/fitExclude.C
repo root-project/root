@@ -22,7 +22,7 @@ void fitExclude() {
    TH1F *h = new TH1F("h","background + signal",100,0,5);
    h->FillRandom("f1",2000);
    TF1 *fl = new TF1("fl",fline,0,5,2);
-   fl->SetParameters(2,-1);      
+   fl->SetParameters(2,-1);
    //fit only the linear background excluding the signal area
    reject = kTRUE;
    h->Fit(fl,"0");
@@ -38,4 +38,4 @@ void fitExclude() {
    gROOT->GetListOfFunctions()->Remove(fright);
    h->Draw();
 }
-   
+

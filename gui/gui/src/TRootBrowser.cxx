@@ -760,7 +760,7 @@ void TRootBrowser::HandleMenu(Int_t id)
       case kExecPluginCmd:
          {
             char command[1024];
-            strlcpy(command, "new TGLSAViewer(gClient->GetRoot(), 0);", 
+            strlcpy(command, "new TGLSAViewer(gClient->GetRoot(), 0);",
                     sizeof(command));
             new TGInputDialog(gClient->GetRoot(), this,
                               "Enter plugin command line:",
@@ -1089,7 +1089,7 @@ void TRootBrowser::StopEmbedding(const char *name, TGLayoutHints *layout)
       if (el && el->fFrame) {
          // let be notified when the inside frame gets resized, and tell its
          // container to recompute its layout
-         el->fFrame->Connect("ProcessedConfigure(Event_t*)", "TGCompositeFrame", 
+         el->fFrame->Connect("ProcessedConfigure(Event_t*)", "TGCompositeFrame",
                              fEditFrame, "Layout()");
       }
       if (layout) {

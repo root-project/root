@@ -146,7 +146,7 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
       if (!(fOptions & kNoWarnings)) {
          Warning("TTreeCloner::TTreeCloner", "%s", fWarningMsg.Data());
       }
-      fIsValid = kFALSE;      
+      fIsValid = kFALSE;
    } else if (fToTree->GetCurrentFile() == 0) {
       fWarningMsg.Form("The output TTree (%s) must be associated with a directory (%s) that is in a file.",
                        fToTree->GetName(),fToTree->GetDirectory()->GetName());
@@ -157,7 +157,7 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
    } else if (! fToTree->GetDirectory()->IsWritable()) {
       if (fToTree->GetDirectory()==fToTree->GetCurrentFile()) {
          fWarningMsg.Form("The output TTree (%s) must be associated with a writable file (%s).",
-                          fToTree->GetName(),fToTree->GetCurrentFile()->GetName());         
+                          fToTree->GetName(),fToTree->GetCurrentFile()->GetName());
       } else {
          fWarningMsg.Form("The output TTree (%s) must be associated with a writable directory (%s in %s).",
                           fToTree->GetName(),fToTree->GetDirectory()->GetName(),fToTree->GetCurrentFile()->GetName());
@@ -578,7 +578,7 @@ void TTreeCloner::CopyProcessIds()
 //______________________________________________________________________________
 void TTreeCloner::ImportClusterRanges()
 {
-   // Set the entries and import the cluster range of the 
+   // Set the entries and import the cluster range of the
 
    // First undo, the external call to SetEntries
    // We could improve the interface to optional tell the TTreeCloner that the

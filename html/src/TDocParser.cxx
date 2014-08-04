@@ -58,7 +58,7 @@ namespace {
             else if (GetNargs() > m->GetNargs()) return 1;
             if (GetMethod()->GetClass()->InheritsFrom(m->GetMethod()->GetClass()))
                return -1;
-            else 
+            else
                return 1;
          }
 
@@ -70,7 +70,7 @@ namespace {
          }
          TClass *lcl = 0;
          TClass *rcl = 0;
-         if (fMeth->Property() & (kIsConstructor|kIsDestructor)) { 
+         if (fMeth->Property() & (kIsConstructor|kIsDestructor)) {
             lcl = TClass::GetClass(l);
          }
          if (m->fMeth->Property() & (kIsConstructor|kIsDestructor)) {
@@ -102,7 +102,7 @@ namespace {
 
 //______________________________________________________________________________
 ////////////////////////////////////////////////////////////////////////////////
-// 
+//
 // Parse C++ source or header, and extract documentation.
 //
 // Also handles special macros like
@@ -120,7 +120,7 @@ namespace {
 }
 End_Macro */
 // or multiline Latex aligned at =:
-/* Begin_Latex(separator='=',align=rcl) C = d #sqrt{#frac{2}{#lambdaD}} #int^{x}_{0}cos(#frac{#pi}{2}t^{2})dt 
+/* Begin_Latex(separator='=',align=rcl) C = d #sqrt{#frac{2}{#lambdaD}} #int^{x}_{0}cos(#frac{#pi}{2}t^{2})dt
  D(x) = d End_Latex */
 // even without alignment: Begin_Latex
 // x=sin^2(y)
@@ -148,8 +148,8 @@ std::set<std::string>  TDocParser::fgKeywords;
 TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
    fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
    fCurrentClass(cl), fRecentClass(0), fCurrentModule(0),
-   fDirectiveCount(0), fLineNumber(0), fDocContext(kIgnore), 
-   fCheckForMethod(kFALSE), fClassDocState(kClassDoc_Uninitialized), 
+   fDirectiveCount(0), fLineNumber(0), fDocContext(kIgnore),
+   fCheckForMethod(kFALSE), fClassDocState(kClassDoc_Uninitialized),
    fCommentAtBOL(kFALSE), fAllowDirectives(kTRUE)
 {
    // Constructor called for parsing class sources
@@ -188,7 +188,7 @@ TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
 TDocParser::TDocParser(TDocOutput& docOutput):
    fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
    fCurrentClass(0), fRecentClass(0), fDirectiveCount(0),
-   fLineNumber(0), fDocContext(kIgnore), 
+   fLineNumber(0), fDocContext(kIgnore),
    fCheckForMethod(kFALSE), fClassDocState(kClassDoc_Uninitialized),
    fCommentAtBOL(kFALSE), fAllowDirectives(kFALSE)
 {
@@ -228,13 +228,13 @@ TDocParser::~TDocParser()
 //______________________________________________________________________________
 void TDocParser::AddClassMethodsRecursively(TBaseClass* bc)
 {
-   // Add accessible (i.e. non-private) methods of base class bc 
+   // Add accessible (i.e. non-private) methods of base class bc
    // and its base classes' methods to methodNames.
    // If bc==0, we add fCurrentClass's methods (and also private functions).
 
    // make a loop on member functions
    TClass *cl = fCurrentClass;
-   if (bc) 
+   if (bc)
       cl = bc->GetClassPointer(kFALSE);
    if (!cl) return;
 
@@ -304,7 +304,7 @@ void TDocParser::AddClassDataMembersRecursively(TBaseClass* bc) {
 
    // make a loop on member functions
    TClass *cl = fCurrentClass;
-   if (bc) 
+   if (bc)
       cl = bc->GetClassPointer(kFALSE);
    if (!cl) return;
 
@@ -453,7 +453,7 @@ void TDocParser::DecorateKeywords(std::ostream& out, const char *text)
 //______________________________________________________________________________
 void TDocParser::DecorateKeywords(TString& line)
 {
-   // Find keywords in line and create URLs around them. Escape characters with a 
+   // Find keywords in line and create URLs around them. Escape characters with a
    // special meaning for HTML. Protect "Begin_Html"/"End_Html" pairs, and set the
    // parsing context. Evaluate sequences like a::b->c.
    // Skip regions where directives are active.
@@ -475,7 +475,7 @@ void TDocParser::DecorateKeywords(TString& line)
 
    Ssiz_t startOfLine = i;
 
-   // changed when the end of a directive is encountered, i.e. 
+   // changed when the end of a directive is encountered, i.e.
    // from where fLineSource needs to be appended to fLineComment
    Ssiz_t copiedToCommentUpTo = 0;
 
@@ -511,7 +511,7 @@ void TDocParser::DecorateKeywords(TString& line)
          scoping = kNada;
 
       // evaluate scope relation
-      if (Context() == kCode 
+      if (Context() == kCode
          || Context() == kComment) {
          if (currentType.back())
             switch (line[i]) {
@@ -550,7 +550,7 @@ void TDocParser::DecorateKeywords(TString& line)
                continue;
                break;
          }
-         if (i >= line.Length()) 
+         if (i >= line.Length())
             break;
       } else // code or comment
          currentType.back() = 0;
@@ -558,20 +558,20 @@ void TDocParser::DecorateKeywords(TString& line)
 
       if (!IsWord(line[i])){
 
-         Bool_t haveHtmlEscapedChar = Context() == kString 
+         Bool_t haveHtmlEscapedChar = Context() == kString
             && i > 2 && line[i] == '\'' && line[i-1] == ';';
          if (haveHtmlEscapedChar) {
             Ssiz_t posBegin = i - 2;
-            while (posBegin > 0 && IsWord(line[posBegin])) 
+            while (posBegin > 0 && IsWord(line[posBegin]))
                --posBegin;
-            haveHtmlEscapedChar = posBegin > 0 && 
+            haveHtmlEscapedChar = posBegin > 0 &&
                line[posBegin] == '&' && line[posBegin - 1] == '\'';
          }
          EParseContext context = Context();
          Bool_t closeString = context == kString
-            && (  line[i] == '"' 
-               || (line[i] == '\'' 
-                   && (  (i > 1 && line[i - 2] == '\'') 
+            && (  line[i] == '"'
+               || (line[i] == '\''
+                   && (  (i > 1 && line[i - 2] == '\'')
                       || (i > 3 && line[i - 2] == '\\' && line[i - 3] == '\'')))
                || haveHtmlEscapedChar)
             && (i == 0 || line[i - 1] != '\\'); // but not "foo \"str...
@@ -594,9 +594,9 @@ void TDocParser::DecorateKeywords(TString& line)
                currentType.back() = 0;
                fDocOutput->DecorateEntityBegin(line, i, kComment);
                ++i;
-            } else if (context == kComment 
+            } else if (context == kComment
                && !(fParseContext.back() & kCXXComment)
-               && line.Length() > i + 1 
+               && line.Length() > i + 1
                && line[i] == '*' && line[i+1] == '/') {
                if (fParseContext.size()>1)
                   fParseContext.pop_back();
@@ -722,7 +722,7 @@ void TDocParser::DecorateKeywords(TString& line)
                while (endWordT < line.Length()
                       && (templateLevel
                           || IsName(line[endWordT])
-                          || line[endWordT] == '<' 
+                          || line[endWordT] == '<'
                           || line[endWordT] == '>')) {
                   if (line[endWordT] == '<')
                      ++templateLevel;
@@ -762,7 +762,7 @@ void TDocParser::DecorateKeywords(TString& line)
                while (endWordT < line.Length()
                       && (templateLevel
                           || IsName(line[endWordT])
-                          || line[endWordT] == '<' 
+                          || line[endWordT] == '<'
                           || line[endWordT] == '>')) {
                   if (line[endWordT] == '<')
                      ++templateLevel;
@@ -844,7 +844,7 @@ void TDocParser::DecorateKeywords(TString& line)
          fLineComment += line(copiedToCommentUpTo, line.Length());
    }
 
-   // Do this after we append to fLineComment, otherwise the closing 
+   // Do this after we append to fLineComment, otherwise the closing
    // </span> gets sent to the directive.
    // clean up, no CPP comment across lines
    if (InContext(kComment) & kCXXComment) {
@@ -966,12 +966,12 @@ void TDocParser::GetCurrentModule(TString& out_module) const {
 }
 
 //______________________________________________________________________________
-Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word, 
+Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word,
                                    Ssiz_t& copiedToCommentUpTo)
 {
    // Process directives to the documentation engine, like "Begin_Html" / "End_Html",
    // "Begin_Macro" / "End_Macro", and "Begin_Latex" / "End_Latex".
-   
+
    Bool_t begin = kTRUE;
    TClass* clDirective = IsDirective(line, pos, word, begin);
    if (!clDirective)
@@ -1006,7 +1006,7 @@ Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word,
       if (begin && line[pos] == '(') {
          std::list<char> waitForClosing;
          Ssiz_t endParam = pos + 1;
-         for (; endParam < line.Length() 
+         for (; endParam < line.Length()
             && (line[endParam] != ')' || !waitForClosing.empty()); ++endParam) {
             const char c = line[endParam];
             if (!waitForClosing.empty() && waitForClosing.back() == c) {
@@ -1085,7 +1085,7 @@ Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word,
       if (!directive) directive = (TDocDirective*) fDirectiveHandlers.Last();
 
       if (!directive) {
-         Warning("HandleDirective", "Cannot find directive handler object %s !", 
+         Warning("HandleDirective", "Cannot find directive handler object %s !",
             fLineRaw.Data());
          return kFALSE;
       }
@@ -1129,12 +1129,12 @@ Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word,
 
       if (InContext(kDirective) && fDirectiveHandlers.Last())
          ((TDocDirective*)fDirectiveHandlers.Last())->AddLine(result(0, result.Length()));
-      else 
+      else
          fLineComment += result;
 
       /* NO - this can happen e.g. for "BEGIN_HTML / *..." (see doc in this class)
       if (Context() != kComment) {
-         Warning("HandleDirective", "Popping back a directive context, but enclosing context is not a comment! At:\n%s", 
+         Warning("HandleDirective", "Popping back a directive context, but enclosing context is not a comment! At:\n%s",
             fLineRaw.Data());
          fParseContext.push_back(kComment);
       }
@@ -1149,7 +1149,7 @@ UInt_t TDocParser::InContext(Int_t context) const
 {
    // checks whether we are in a parse context, return the entry closest
    // to the current context.
-   // If context is a EParseContextFlag just look for the first match in 
+   // If context is a EParseContextFlag just look for the first match in
    // the flags
 
    UInt_t lowerContext = context & kParseContextMask;
@@ -1241,7 +1241,7 @@ void TDocParser::InitKeywords() const
 TClass* TDocParser::IsDirective(const TString& line, Ssiz_t pos,
                                         const TString& word, Bool_t& begin) const
 {
-   // return whether word at line's pos is a valid directive, and returns its 
+   // return whether word at line's pos is a valid directive, and returns its
    // TDocDirective's TClass object, or 0 if it's not a directive. Set begin
    // to kTRUE for "Begin_..."
    // You can implement your own handlers by implementing a class deriving
@@ -1255,7 +1255,7 @@ TClass* TDocParser::IsDirective(const TString& line, Ssiz_t pos,
    begin      = word.BeginsWith("begin_", TString::kIgnoreCase);
    Bool_t end = word.BeginsWith("end_", TString::kIgnoreCase);
 
-   if (!begin && !end) 
+   if (!begin && !end)
       return 0;
 
    /* NO - we can have "BEGIN_HTML / * ..."
@@ -1334,8 +1334,8 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
                                                TString &anchor, std::ifstream& sourceFile,
                                                Bool_t allowPureVirtual)
 {
-   // Search for a method starting at posMethodName, and return its return type, 
-   // its name, and its arguments. If the end of arguments is not found in the 
+   // Search for a method starting at posMethodName, and return its return type,
+   // its name, and its arguments. If the end of arguments is not found in the
    // current line, get a new line from sourceFile, beautify it to srcOut, creating
    // an anchor as necessary. When this function returns, posMethodName points to the
    // end of the function declaration, i.e. right after the arguments' closing bracket.
@@ -1351,13 +1351,13 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
       Ssiz_t posQuote = fLineRaw.Index('"');
       if (posQuote != kNPOS && (posBlock == kNPOS || posQuote < posBlock))
          posBlock = posQuote;
-      if (posBlock == kNPOS) 
+      if (posBlock == kNPOS)
          posBlock = fLineRaw.Length();
       for (MethodCount_t::iterator iMethodName = fMethodCounts.begin();
          !name.Length() && iMethodName != fMethodCounts.end(); ++iMethodName) {
          TString lookFor(iMethodName->first);
          posMethodName = fLineRaw.Index(lookFor);
-         if (posMethodName != kNPOS && posMethodName < posBlock 
+         if (posMethodName != kNPOS && posMethodName < posBlock
             && (posMethodName == 0 || !IsWord(fLineRaw[posMethodName - 1]))) {
             // check whether the method name is followed by optional spaces and
             // an opening parathesis
@@ -1403,7 +1403,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
 
    // extract parameters
    Ssiz_t posParam = name.First('(');
-   if (posParam == kNPOS || 
+   if (posParam == kNPOS ||
       // no strange return types, please
       ret.Contains("{") || ret.Contains("}") || ret.Contains("(") || ret.Contains(")")
       || ret.Contains("=")) {
@@ -1416,7 +1416,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
    if (name.BeginsWith("operator")) {
       // op () (...)
       Ssiz_t checkOpBracketParam = posParam + 1;
-      while (isspace((UChar_t)name[checkOpBracketParam])) 
+      while (isspace((UChar_t)name[checkOpBracketParam]))
          ++checkOpBracketParam;
       if (name[checkOpBracketParam] == ')') {
          ++checkOpBracketParam;
@@ -1473,7 +1473,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
 
          fLineRaw.ReadLine(sourceFile, kFALSE);
          if (sourceFile.eof()) {
-            Error("LocateMethodInCurrentLine", 
+            Error("LocateMethodInCurrentLine",
                "Cannot find end of signature for function %s!",
                name.Data());
             break;
@@ -1563,7 +1563,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
 //______________________________________________________________________________
 void TDocParser::Parse(std::ostream& out)
 {
-   // Locate methods, starting in the source file, then inline, then 
+   // Locate methods, starting in the source file, then inline, then
    // immediately inside the class declaration. While doing that also
    // find the class description and special tags like the macro tag etc.
 
@@ -1583,34 +1583,34 @@ void TDocParser::Parse(std::ostream& out)
 
 //______________________________________________________________________________
 void TDocParser::LocateMethods(std::ostream& out, const char* filename,
-                          Bool_t lookForSourceInfo /*= kTRUE*/, 
-                          Bool_t useDocxxStyle /*= kFALSE*/, 
+                          Bool_t lookForSourceInfo /*= kTRUE*/,
+                          Bool_t useDocxxStyle /*= kFALSE*/,
                           Bool_t allowPureVirtual /*= kFALSE*/,
-                          const char* methodPattern /*= 0*/, 
+                          const char* methodPattern /*= 0*/,
                           const char* sourceExt /*= 0 */)
 {
    // Collect methods from the source or header file called filename.
    // It generates a beautified version of the source file on the fly;
    // the output file is given by the fCurrentClass's name, and sourceExt.
    // Documentation is extracted to out.
-   //   lookForSourceInfo: if set, author, lastUpdate, and copyright are 
+   //   lookForSourceInfo: if set, author, lastUpdate, and copyright are
    //     extracted (i.e. the values contained in fSourceInfo)
    //   useDocxxStyle: if set, documentation can be in front of the method
    //     name, not only inside the method. Useful doc Doc++/Doxygen style,
    //     and inline methods.
-   //   lookForClassDescr: if set, the first line matching the class description 
-   //     rules is assumed to be the class description for fCurrentClass; the 
+   //   lookForClassDescr: if set, the first line matching the class description
+   //     rules is assumed to be the class description for fCurrentClass; the
    //     description is written to out.
    //   methodPattern: if set, methods have to be prepended by this tag. Usually
    //     the class name + "::". In header files, looking for in-place function
-   //     definitions, this should be 0. In that case, only functions in 
+   //     definitions, this should be 0. In that case, only functions in
    //     fMethodCounts are searched for.
 
    TString sourceFileName(filename);
    fCurrentFile = filename;
    if (!sourceFileName.Length()) {
       fHtml->GetImplFileName(fCurrentClass, kFALSE, sourceFileName);
-      Error("LocateMethods", "Can't find source file '%s' for class %s!", 
+      Error("LocateMethods", "Can't find source file '%s' for class %s!",
          sourceFileName.Data(), fCurrentClass->GetName());
       return;
    }
@@ -1743,7 +1743,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
                   patternRE.Match(fLineRaw);
                   posPattern += patternRE[0].Length();
                }
-               LocateMethodInCurrentLine(posPattern, methodRet, methodName, 
+               LocateMethodInCurrentLine(posPattern, methodRet, methodName,
                                          methodParam, methodIsConst, srcHtmlOut,
                                          anchor, sourceFile, allowPureVirtual);
                if (methodName.Length()) {
@@ -1760,7 +1760,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
                   // these chars reset the preceding comment
                   fComment.Remove(0);
             } // pattern matches - could be a method
-            else 
+            else
                fComment.Remove(0);
          } else {
             wroteMethodNowWaitingForOpenBlock &= fLineRaw.Index("{") == kNPOS;
@@ -1770,7 +1770,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
          if (methodName.Length() && !wroteMethodNowWaitingForOpenBlock) {
             // make sure we don't have more '{' in commentLine than in fLineRaw
             if (!codeOneLiner.Length() &&
-                fLineSource.CountChar('{') == 1 && 
+                fLineSource.CountChar('{') == 1 &&
                 fLineSource.CountChar('}') == 1) {
                // a one-liner
                codeOneLiner = fLineSource;
@@ -1836,8 +1836,8 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
 //______________________________________________________________________________
 void TDocParser::LocateMethodsInSource(std::ostream& out)
 {
-   // Given fCurrentClass, look for methods in its source file, 
-   // and extract documentation to out, while beautifying the source 
+   // Given fCurrentClass, look for methods in its source file,
+   // and extract documentation to out, while beautifying the source
    // file in parallel.
 
    // for Doc++ style
@@ -1849,10 +1849,10 @@ void TDocParser::LocateMethodsInSource(std::ostream& out)
    while ((posLastScope = pattern.Index("::")) != kNPOS)
       pattern.Remove(0, posLastScope + 2);
    pattern += "::";
-   
+
    TString implFileName;
    if (fHtml->GetImplFileName(fCurrentClass, kTRUE, implFileName)) {
-      LocateMethods(out, implFileName, kFALSE /*source info*/, useDocxxStyle, 
+      LocateMethods(out, implFileName, kFALSE /*source info*/, useDocxxStyle,
                     kFALSE /*allowPureVirtual*/, pattern, ".cxx.html");
       Ssiz_t posGt = pattern.Index('>');
       if (posGt != kNPOS) {
@@ -1860,7 +1860,7 @@ void TDocParser::LocateMethodsInSource(std::ostream& out)
          Ssiz_t posLt = pattern.Index('<');
          if (posLt != kNPOS && posLt < posGt) {
             pattern.Replace(posLt + 1, posGt - posLt - 1, ".*");
-            LocateMethods(out, implFileName, kFALSE /*source info*/, useDocxxStyle, 
+            LocateMethods(out, implFileName, kFALSE /*source info*/, useDocxxStyle,
                     kFALSE /*allowPureVirtual*/, pattern, ".cxx.html");
          }
       }
@@ -1870,11 +1870,11 @@ void TDocParser::LocateMethodsInSource(std::ostream& out)
 //______________________________________________________________________________
 void TDocParser::LocateMethodsInHeaderInline(std::ostream& out)
 {
-   // Given fCurrentClass, look for methods in its header file, 
+   // Given fCurrentClass, look for methods in its header file,
    // and extract documentation to out.
 
    // for inline methods, always allow doc before func
-   Bool_t useDocxxStyle = kTRUE; 
+   Bool_t useDocxxStyle = kTRUE;
 
    TString pattern(fCurrentClass->GetName());
    // take unscoped version
@@ -1882,10 +1882,10 @@ void TDocParser::LocateMethodsInHeaderInline(std::ostream& out)
    while ((posLastScope = pattern.Index("::")) != kNPOS)
       pattern.Remove(0, posLastScope + 1);
    pattern += "::";
-   
+
    TString declFileName;
    if (fHtml->GetDeclFileName(fCurrentClass, kTRUE, declFileName)) {
-      LocateMethods(out, declFileName, kTRUE /*source info*/, useDocxxStyle, 
+      LocateMethods(out, declFileName, kTRUE /*source info*/, useDocxxStyle,
                     kFALSE /*allowPureVirtual*/, pattern, 0);
       Ssiz_t posGt = pattern.Index('>');
       if (posGt != kNPOS) {
@@ -1893,7 +1893,7 @@ void TDocParser::LocateMethodsInHeaderInline(std::ostream& out)
          Ssiz_t posLt = pattern.Index('<');
          if (posLt != kNPOS && posLt < posGt) {
             pattern.Replace(posLt + 1, posGt - posLt - 1, ".*");
-            LocateMethods(out, declFileName, kTRUE /*source info*/, useDocxxStyle, 
+            LocateMethods(out, declFileName, kTRUE /*source info*/, useDocxxStyle,
                     kFALSE /*allowPureVirtual*/, pattern, 0);
          }
       }
@@ -1923,7 +1923,7 @@ Bool_t TDocParser::ProcessComment()
    // Return kFALSE if the line is not a comment.
 
    if (!fCommentAtBOL
-      && !(fLineStripped[0] == '/' 
+      && !(fLineStripped[0] == '/'
          && (fLineStripped[1] == '/' || fLineStripped[1] == '*'))
       && !InContext(kComment) && !InContext(kDirective)) {
       fLineComment = "";
@@ -1942,7 +1942,7 @@ Bool_t TDocParser::ProcessComment()
    // remove all <span class="comment"> tags
    Bool_t mustDealWithCommentAtBOL = fCommentAtBOL; // whether we had a closing "*/"
    Ssiz_t posComment = kNPOS;
-   if (!fCommentAtBOL) 
+   if (!fCommentAtBOL)
       posComment = commentLine.Index("<span class=\"comment\">", 0, TString::kIgnoreCase);
    Ssiz_t posSpanEnd = commentLine.Index("</span>", posComment == kNPOS?0:posComment, TString::kIgnoreCase);
    while ((mustDealWithCommentAtBOL && posSpanEnd != kNPOS) || posComment != kNPOS) {
@@ -1963,7 +1963,7 @@ Bool_t TDocParser::ProcessComment()
       if (posSpanEnd != kNPOS) {
           // only remove span if </span> if it exists (or we end up with unbalanced spans)
          commentLine.Remove(posSpanEnd, 7);
-         if (posComment != kNPOS) 
+         if (posComment != kNPOS)
             commentLine.Remove(posComment, 22);
          else {
             mustDealWithCommentAtBOL = kFALSE;
@@ -1984,21 +1984,21 @@ Bool_t TDocParser::ProcessComment()
    // look for start tag of class description
    if ((fClassDocState == kClassDoc_LookingNothingFound
       || fClassDocState == kClassDoc_LookingHaveSomething)
-      && !fComment.Length() 
+      && !fComment.Length()
       && fDocContext == kIgnore && commentLine.Contains(fClassDescrTag)) {
       fDocContext = kDocClass;
    }
 
    char start_or_end = 0;
    // remove leading /*, //
-   if (commentLine.Length()>1 && commentLine[0] == '/' 
+   if (commentLine.Length()>1 && commentLine[0] == '/'
        && (commentLine[1] == '/' || commentLine[1] == '*')) {
       start_or_end = commentLine[1];
       commentLine.Remove(0, 2);
    }
    // remove trailing */
-   if (start_or_end != '/' && commentLine.Length()>1 
-       && commentLine[commentLine.Length() - 2] == '*' 
+   if (start_or_end != '/' && commentLine.Length()>1
+       && commentLine[commentLine.Length() - 2] == '*'
        && commentLine[commentLine.Length() - 1] == '/') {
       start_or_end = commentLine[commentLine.Length() - 2];
       commentLine.Remove(commentLine.Length()-2);
@@ -2020,7 +2020,7 @@ Bool_t TDocParser::ProcessComment()
                // also a class doc signature: line consists of ////
                if ((fClassDocState == kClassDoc_LookingNothingFound
                   || fClassDocState == kClassDoc_LookingHaveSomething)
-                  && !fComment.Length() 
+                  && !fComment.Length()
                    && fDocContext == kIgnore && start_or_end=='/') {
                   fDocContext = kDocClass;
                }
@@ -2039,7 +2039,7 @@ Bool_t TDocParser::ProcessComment()
              && !IsWord(commentLine[0])
              && commentLine[0] == commentLine[commentLine.Length() - 1])
          commentLine = commentLine.Strip(TString::kBoth, commentLine[0]);
-   
+
    // remove leading '/' if we had // or '*' if we had / *
    while (start_or_end && commentLine[0] == start_or_end)
       commentLine.Remove(0, 1);
@@ -2070,7 +2070,7 @@ Bool_t TDocParser::Strip(TString& str)
    // strips ' ', tabs, and newlines from both sides of str
    Bool_t changed = str[0] == ' ' || str[0] == '\t' || str[0] == '\n';
    changed |= str.Length()
-      && (str[str.Length() - 1] == ' ' || str[str.Length() - 1] == '\t' 
+      && (str[str.Length() - 1] == ' ' || str[str.Length() - 1] == '\t'
          || str[str.Length() - 1] == '\n');
    if (!changed) return kFALSE;
    Ssiz_t i = 0;
@@ -2231,9 +2231,9 @@ namespace {
 }
 
 //______________________________________________________________________________
-void TDocParser::WriteMethod(std::ostream& out, TString& ret, 
+void TDocParser::WriteMethod(std::ostream& out, TString& ret,
                              TString& name, TString& params, Bool_t isconst,
-                             const char* filename, TString& anchor, 
+                             const char* filename, TString& anchor,
                              TString& codeOneLiner)
 {
    // Write a method, forwarding to TClassDocOutput

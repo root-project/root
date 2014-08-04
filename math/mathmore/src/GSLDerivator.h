@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,20 +23,20 @@
   **********************************************************************/
 
 // Header file for class Derivator
-// 
+//
 // class for calculating Derivative of functions
-// 
+//
 // Created by: moneta  at Sat Nov 13 14:46:00 2004
-// 
+//
 // Last update: Sat Nov 13 14:46:00 2004
-// 
+//
 #ifndef ROOT_Math_GSLDerivator
 #define ROOT_Math_GSLDerivator
 
-/** 
+/**
 @defgroup Deriv Numerical Differentiation
 */
- 
+
 #include "Math/GSLFunctionAdapter.h"
 #include "GSLFunctionWrapper.h"
 
@@ -48,14 +48,14 @@ namespace ROOT {
 namespace Math {
 
 
-class GSLFunctionWrapper; 
+class GSLFunctionWrapper;
 
 
-/** 
-    Class for computing numerical derivative of a function based on the GSL numerical algorithm 
+/**
+    Class for computing numerical derivative of a function based on the GSL numerical algorithm
     This class is implemented using the numerical derivatives algorithms provided by GSL
     (see <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Numerical-Differentiation.html">GSL Online Manual</A> ).
-    
+
     @ingroup Deriv
 */
 
@@ -71,100 +71,100 @@ public:
    virtual ~GSLDerivator() {}
 
 //    // disable copying
-// private: 
+// private:
 
 //    GSLDerivator(const GSLDerivator &);
-//    GSLDerivator & operator = (const GSLDerivator &); 
+//    GSLDerivator & operator = (const GSLDerivator &);
 
-// public: 
+// public:
 
 
 
    /**
-      Set the function for calculating the derivatives. 
+      Set the function for calculating the derivatives.
       The function must implement the ROOT::Math::IGenFunction signature
     */
    void SetFunction(const IGenFunction &f);
 
-   /** 
-       Set the function f for evaluating the derivative using a GSL function pointer type 
+   /**
+       Set the function f for evaluating the derivative using a GSL function pointer type
        @param f :  free function pointer of the GSL required type
-       @param p :  pointer to the object carrying the function state 
+       @param p :  pointer to the object carrying the function state
                     (for example the function object itself)
    */
    void SetFunction( GSLFuncPointer f, void * p = 0);
 
-   /** 
-       Computes the numerical derivative at a point x using an adaptive central 
-       difference algorithm with a step size h. 
+   /**
+       Computes the numerical derivative at a point x using an adaptive central
+       difference algorithm with a step size h.
    */
-   double EvalCentral( double x, double h); 
+   double EvalCentral( double x, double h);
 
-   /** 
-       Computes the numerical derivative at a point x using an adaptive forward 
+   /**
+       Computes the numerical derivative at a point x using an adaptive forward
        difference algorithm with a step size h.
        The function is evaluated only at points greater than x and at x itself.
    */
-   double EvalForward( double x, double h); 
+   double EvalForward( double x, double h);
 
-   /** 
-       Computes the numerical derivative at a point x using an adaptive backward 
+   /**
+       Computes the numerical derivative at a point x using an adaptive backward
        difference algorithm with a step size h.
        The function is evaluated only at points less than x and at x itself.
    */
-   double EvalBackward( double x, double h); 
+   double EvalBackward( double x, double h);
 
    /** @name --- Static methods --- **/
 
-   /** 
-       Computes the numerical derivative of a function f at a point x using an adaptive central 
+   /**
+       Computes the numerical derivative of a function f at a point x using an adaptive central
        difference algorithm with a step size h
    */
-   static double EvalCentral(const IGenFunction & f, double x, double h); 
+   static double EvalCentral(const IGenFunction & f, double x, double h);
 
 
-   /** 
-       Computes the numerical derivative of a function f at a point x using an adaptive forward 
+   /**
+       Computes the numerical derivative of a function f at a point x using an adaptive forward
        difference algorithm with a step size h.
        The function is evaluated only at points greater than x and at x itself
-   */    
+   */
    static double EvalForward(const IGenFunction & f, double x, double h);
 
-   /** 
-       Computes the numerical derivative of a function f at a point x using an adaptive backward 
+   /**
+       Computes the numerical derivative of a function f at a point x using an adaptive backward
        difference algorithm with a step size h.
        The function is evaluated only at points less than x and at x itself
    */
-    
-   static double EvalBackward(const IGenFunction & f, double x, double h); 
 
-    
+   static double EvalBackward(const IGenFunction & f, double x, double h);
+
+
 
    /**
       return the error status of the last integral calculation
-   */     
-   int Status() const; 
+   */
+   int Status() const;
 
    /**
       return  the result of the last derivative calculation
    */
-   double Result() const; 
+   double Result() const;
 
    /**
       return the estimate of the absolute error of the last derivative calculation
    */
-   double Error() const; 
+   double Error() const;
 
 
-private: 
+private:
 
    int fStatus;
-   double fResult; 
-   double fError; 
+   double fResult;
+   double fError;
 
-   GSLFunctionWrapper fFunction;  
+   GSLFunctionWrapper fFunction;
 
-}; 
+};
 
 
 

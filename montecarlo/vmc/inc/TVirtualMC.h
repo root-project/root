@@ -363,7 +363,7 @@ public:
    virtual Bool_t GetShape(const TString& volumePath,
                          TString& shapeType, TArrayD& par) = 0;
 
-   // Return the material parameters for the material specified by 
+   // Return the material parameters for the material specified by
    // the material Id
    virtual Bool_t GetMaterial(Int_t imat, TString& name,
                                Double_t& a, Double_t& z, Double_t& density,
@@ -454,7 +454,7 @@ public:
    // Set a user defined particle
    // Function is ignored if particle with specified pdg
    // already exists and error report is printed.
-   //   pdg           PDG encoding  
+   //   pdg           PDG encoding
    //   name          particle name
    //   mcType        VMC Particle type
    //   mass          mass [GeV]
@@ -465,10 +465,10 @@ public:
    //   iSpin         spin
    //   iParity       parity
    //   iConjugation  conjugation
-   //   iIsospin      isospin 
-   //   iIsospinZ     isospin - #rd component 
+   //   iIsospin      isospin
+   //   iIsospinZ     isospin - #rd component
    //   gParity       gParity
-   //   lepton        lepton number 
+   //   lepton        lepton number
    //   baryon        baryon number
    //   stable        stability
    //   shortlived    is shorlived?
@@ -477,13 +477,13 @@ public:
    //   magMoment     magnetic moment
    //   excitation    excitation energy [GeV]
    virtual Bool_t   DefineParticle(Int_t pdg, const char* name,
-                        TMCParticleType mcType, 
+                        TMCParticleType mcType,
                         Double_t mass, Double_t charge, Double_t lifetime) = 0;
 
    // Set a user defined particle
    // Function is ignored if particle with specified pdg
    // already exists and error report is printed.
-   //   pdg           PDG encoding  
+   //   pdg           PDG encoding
    //   name          particle name
    //   mcType        VMC Particle type
    //   mass          mass [GeV]
@@ -494,10 +494,10 @@ public:
    //   iSpin         spin
    //   iParity       parity
    //   iConjugation  conjugation
-   //   iIsospin      isospin 
-   //   iIsospinZ     isospin - #rd component 
+   //   iIsospin      isospin
+   //   iIsospinZ     isospin - #rd component
    //   gParity       gParity
-   //   lepton        lepton number 
+   //   lepton        lepton number
    //   baryon        baryon number
    //   stable        stability
    //   shortlived    is shorlived?
@@ -506,10 +506,10 @@ public:
    //   magMoment     magnetic moment
    //   excitation    excitation energy [GeV]
    virtual Bool_t   DefineParticle(Int_t pdg, const char* name,
-                        TMCParticleType mcType, 
-                        Double_t mass, Double_t charge, Double_t lifetime, 
-                        const TString& pType, Double_t width, 
-                        Int_t iSpin, Int_t iParity, Int_t iConjugation, 
+                        TMCParticleType mcType,
+                        Double_t mass, Double_t charge, Double_t lifetime,
+                        const TString& pType, Double_t width,
+                        Int_t iSpin, Int_t iParity, Int_t iConjugation,
                         Int_t iIsospin, Int_t iIsospinZ, Int_t gParity,
                         Int_t lepton, Int_t baryon,
                         Bool_t stable, Bool_t shortlived = kFALSE,
@@ -523,15 +523,15 @@ public:
    //   A             atomic mass
    //   Q             charge [eplus}
    //   excitation    excitation energy [GeV]
-   //   mass          mass  [GeV] (if not specified by user, approximative 
-   //                 mass is calculated)                  
+   //   mass          mass  [GeV] (if not specified by user, approximative
+   //                 mass is calculated)
    virtual Bool_t   DefineIon(const char* name, Int_t Z, Int_t A,
                         Int_t Q, Double_t excEnergy, Double_t mass = 0.) = 0;
 
    // Set a user phase space decay for a particle
    //   pdg           particle PDG encoding
    //   bratios       the array with branching ratios (in %)
-   //   mode[6][3]    the array with daughters particles PDG codes  for each 
+   //   mode[6][3]    the array with daughters particles PDG codes  for each
    //                 decay channel
    virtual Bool_t   SetDecayMode(Int_t pdg, Float_t bratio[6], Int_t mode[6][3]) = 0;
 
@@ -630,7 +630,7 @@ public:
 
    // Return the path in geometry tree for the current volume
    virtual const char* CurrentVolPath() = 0;
-   
+
    // If track is on a geometry boundary, fill the normal vector of the crossing
    // volume surface and return true, return false otherwise
    virtual Bool_t   CurrentBoundaryNormal(
@@ -810,8 +810,8 @@ public:
 
    // Set switches for lego transport
    virtual void InitLego() = 0;
-   
-   // (In)Activate collecting TGeo tracks 
+
+   // (In)Activate collecting TGeo tracks
    virtual void SetCollectTracks(Bool_t collectTracks) = 0;
 
    // Return the info if collecting tracks is activated

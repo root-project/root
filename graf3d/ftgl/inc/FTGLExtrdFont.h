@@ -37,7 +37,7 @@ class FTGL_EXPORT FTGLExtrdFont : public FTFont
         ~FTGLExtrdFont();
 
         /**
-         * Set the extrusion distance for the font. 
+         * Set the extrusion distance for the font.
          *
          * @param d  The extrusion distance.
          */
@@ -53,7 +53,7 @@ class FTGL_EXPORT FTGLExtrdFont : public FTFont
         inline virtual FTGlyph* MakeGlyph( unsigned int glyphIndex);
 
         /**
-         * The extrusion distance for the font. 
+         * The extrusion distance for the font.
          */
         float depth;
 };

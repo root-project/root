@@ -60,8 +60,8 @@ public:
    virtual Bool_t Update();
    /// TVirtualRefProxy overload: Flag to indicate if this is a container reference
    virtual Bool_t HasCounter()  const             { return kFALSE;              }
-   /// TVirtualRefProxy overload: Access to container size (if container reference (ie TRefArray) etc) 
-   virtual Int_t  GetCounterValue(TFormLeafInfoReference* /* info */, void* /* data */) 
+   /// TVirtualRefProxy overload: Access to container size (if container reference (ie TRefArray) etc)
+   virtual Int_t  GetCounterValue(TFormLeafInfoReference* /* info */, void* /* data */)
    {  return 0;                                                                 }
    /// TVirtualRefProxy overload: Access referenced object(-data)
    virtual void* GetObject(TFormLeafInfoReference* info, void* data, int instance);

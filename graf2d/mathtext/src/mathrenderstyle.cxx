@@ -449,7 +449,7 @@ namespace mathtext {
                current_y += glyph_bounding_box.ascent();
             }
          }
-         
+
          const bounding_box_t bounding_box_repeatable =
          math_bounding_box(glyph[GLYPH_REPEATABLE], family,
                            size);
@@ -468,8 +468,8 @@ namespace mathtext {
       else
          nrepeat = 0;
    }
-   
+
    // Font parameters
 #include "table/mathfontparam.h"
-   
+
 }

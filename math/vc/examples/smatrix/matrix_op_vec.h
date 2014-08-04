@@ -1,4 +1,4 @@
-#ifndef MATRIX_OP_H 
+#ifndef MATRIX_OP_H
 #define MATRIX_OP_H
 
 #include "TestTimer.h"
@@ -13,24 +13,24 @@
 
 using namespace ROOT::Math;
 
-std::vector<float> gV; 
+std::vector<float> gV;
 
-void initValues() { 
+void initValues() {
    gV.reserve(10*NLOOP);
    TRandom3 r;
    std::cout << "init smearing vector ";
    for (int l = 0; l < 10*NLOOP; l++)
    {
       gV.push_back( r.Rndm() );
-   } 
+   }
    std::cout << " with size  " << gV.size() << std::endl;
 
 }
 
 // function for summing elements of matrix or vector
-template<class V> 
-typename V::value_type SumOfElements(const V & v) { 
-   typename V::value_type sum = 0.0; 
+template<class V>
+typename V::value_type SumOfElements(const V & v) {
+   typename V::value_type sum = 0.0;
    for (typename V::const_iterator itr = v.begin(); itr != v.end(); ++itr) {
       sum += *itr;
    }
@@ -40,13 +40,13 @@ typename V::value_type SumOfElements(const V & v) {
 
 
 // vector assignment
-template<class V> 
-void testVeq(const V * v, double & time, V * result) {  
-  Stype tmp = 0.0;  
+template<class V>
+void testVeq(const V * v, double & time, V * result) {
+  Stype tmp = 0.0;
   test::Timer t(time,"V=V ");
   for (int l = 0; l < 10*NLOOP; l++)  {
      for (int k = 0; k < NLIST; k++) {
-        result[k] = v[k];  
+        result[k] = v[k];
      }
      tmp += SumOfElements(result[NLIST-1]);
   }
@@ -54,13 +54,13 @@ void testVeq(const V * v, double & time, V * result) {
 }
 
 // matrix assignmnent
-template<class M> 
-void testMeq(const M * m, double & time, M * result) {  
-  Stype tmp = 0.0;  
+template<class M>
+void testMeq(const M * m, double & time, M * result) {
+  Stype tmp = 0.0;
   test::Timer t(time,"M=M ");
   for (int l = 0; l < NLOOP; l++)  {
      for (int k = 0; k < NLIST; k++) {
-        result[k] = m[k];  
+        result[k] = m[k];
      }
      tmp += SumOfElements(result[NLIST-1]);
   }
@@ -69,29 +69,29 @@ void testMeq(const M * m, double & time, M * result) {
 
 
 
-// vector sum 
-template<class V> 
-void testVad(const V * v1, const V * v2, double & time, V * result) { 
-   Stype tmp = 0.0;  
+// vector sum
+template<class V>
+void testVad(const V * v1, const V * v2, double & time, V * result) {
+   Stype tmp = 0.0;
    test::Timer t(time,"V+V ");
    for (int l = 0; l < 10*NLOOP; l++) {
       for (int k = 0; k < NLIST; k++) {
-         result[k] = v1[k] + v2[k];  
+         result[k] = v1[k] + v2[k];
       }
      tmp += SumOfElements(result[NLIST-1]);
   }
   gResultSum += tmp;
 }
 
-// matrix sum 
-template<class M> 
-void testMad(const M * m1, const M * m2, double & time, M * result) {  
-  Stype tmp = 0.0;  
+// matrix sum
+template<class M>
+void testMad(const M * m1, const M * m2, double & time, M * result) {
+  Stype tmp = 0.0;
   test::Timer t(time,"M+M ");;
    for (int l = 0; l < NLOOP; l++) {
       for (int k = 0; k < NLIST; k++) {
-        result[k] = m1[k]; 
-        result[k] += m2[k];  
+        result[k] = m1[k];
+        result[k] += m2[k];
      }
      tmp += SumOfElements(result[NLIST-1]);
   }
@@ -99,13 +99,13 @@ void testMad(const M * m1, const M * m2, double & time, M * result) {
 }
 
 // vector * constant
-template<class V, class T> 
-void testVscale(const V * v, T a, double & time, V * result) {  
-  Stype tmp = 0.0;  
+template<class V, class T>
+void testVscale(const V * v, T a, double & time, V * result) {
+  Stype tmp = 0.0;
   test::Timer t(time,"a*V ");;
    for (int l = 0; l < NLOOP; l++) {
       for (int k = 0; k < NLIST; k++) {
-        result[k] = a * v[k];   // v1 * a does not exist in ROOT   
+        result[k] = a * v[k];   // v1 * a does not exist in ROOT
      }
      tmp += SumOfElements(result[NLIST-1]);
   }
@@ -114,9 +114,9 @@ void testVscale(const V * v, T a, double & time, V * result) {
 
 
 // matrix * constant
-template<class M, class T> 
-void testMscale(const M * m1, T a, double & time, M * result) {  
-  Stype tmp = 0.0;  
+template<class M, class T>
+void testMscale(const M * m1, T a, double & time, M * result) {
+  Stype tmp = 0.0;
   test::Timer t(time,"a*M ");;
    for (int l = 0; l < NLOOP; l++) {
       for (int k = 0; k < NLIST; k++) {
@@ -129,13 +129,13 @@ void testMscale(const M * m1, T a, double & time, M * result) {
 
 
 // simple Matrix vector op
-template<class M, class V> 
-void testMV(const M * mat, const V * v, double & time, V * result) {  
-  Stype tmp = 0.0;  
+template<class M, class V>
+void testMV(const M * mat, const V * v, double & time, V * result) {
+  Stype tmp = 0.0;
   test::Timer t(time,"M*V ");
    for (int l = 0; l < NLOOP; l++) {
       for (int k = 0; k < NLIST; k++) {
-        result[k] = mat[k] * v[k];  
+        result[k] = mat[k] * v[k];
      }
      tmp += SumOfElements(result[NLIST-1]);
   }
@@ -143,13 +143,13 @@ void testMV(const M * mat, const V * v, double & time, V * result) {
 }
 
 // general matrix vector op
-template<class M, class V> 
-void testGMV(const M * mat, const V * v1, const V *v2, double & time, V * result) {  
-  Stype tmp = 0.0;  
+template<class M, class V>
+void testGMV(const M * mat, const V * v1, const V *v2, double & time, V * result) {
+  Stype tmp = 0.0;
   test::Timer t(time,"M*V+");
   for (int l = 0; l < NLOOP; l++) {
      for (int k = 0; k < NLIST; k++) {
-        result[k] = mat[k] * v1[k] + v2[k];  
+        result[k] = mat[k] * v1[k] + v2[k];
      }
      tmp += SumOfElements(result[NLIST-1]);
   }
@@ -157,14 +157,14 @@ void testGMV(const M * mat, const V * v1, const V *v2, double & time, V * result
 }
 
 
-// general matrix matrix op 
-template<class A, class B, class C> 
-void testMM(const A * a, const B * b, const C * c, double & time, C * result) {  
-  Stype tmp = 0.0;  
+// general matrix matrix op
+template<class A, class B, class C>
+void testMM(const A * a, const B * b, const C * c, double & time, C * result) {
+  Stype tmp = 0.0;
   test::Timer t(time,"M*M ");
-  for (int l = 0; l < NLOOP; l++) { 
+  for (int l = 0; l < NLOOP; l++) {
      for (int k = 0; k < NLIST; k++) {
-        result[k] = a[k] * b[k] + c[k];  
+        result[k] = a[k] * b[k] + c[k];
      }
      tmp += SumOfElements(result[NLIST-1]);
   }
@@ -173,16 +173,16 @@ void testMM(const A * a, const B * b, const C * c, double & time, C * result) {
 
 
 
-// specialized functions (depending on the package) 
+// specialized functions (depending on the package)
 
 //smatrix
-template<class V, class T> 
-void testDot_S(const V * v1, const V * v2, T * result, double & time) {  
-  Stype tmp = 0.0;  
+template<class V, class T>
+void testDot_S(const V * v1, const V * v2, T * result, double & time) {
+  Stype tmp = 0.0;
   test::Timer t(time,"dot ");
    for (int l = 0; l < 10*NLOOP; l++)  {
       for (int k = 0; k < NLIST; k++) {
-        result[k] = Dot(v1[k],v2[k]);  
+        result[k] = Dot(v1[k],v2[k]);
      }
      tmp += result[NLIST-1];
   }
@@ -190,35 +190,35 @@ void testDot_S(const V * v1, const V * v2, T * result, double & time) {
 }
 
 
-// double testDot_S(const std::vector<V*> & w1, const std::vector<V*> & w2, double & time) {  
+// double testDot_S(const std::vector<V*> & w1, const std::vector<V*> & w2, double & time) {
 //   test::Timer t(time,"dot ");
-//   double result=0; 
+//   double result=0;
 //   for (int l = 0; l < NLOOP; l++)
 //     {
-//       V & v1 = *w1[l]; 
-//       V & v2 = *w2[l]; 
-//       result = Dot(v1,v2);  
+//       V & v1 = *w1[l];
+//       V & v2 = *w2[l];
+//       result = Dot(v1,v2);
 //     }
-//   return result; 
+//   return result;
 // }
 
-template<class M, class V, class T> 
-void testInnerProd_S(const M * a, const V * v, T * result, double & time) {  
-  Stype tmp = 0.0;  
+template<class M, class V, class T>
+void testInnerProd_S(const M * a, const V * v, T * result, double & time) {
+  Stype tmp = 0.0;
   test::Timer t(time,"prod");
    for (int l = 0; l < 10*NLOOP; l++)  {
       for (int k = 0; k < NLIST; k++) {
-        result[k] = Similarity(v[k],a[k]);  
+        result[k] = Similarity(v[k],a[k]);
      }
      tmp += result[NLIST-1];
   }
   gResultSum += tmp;
 }
 
-//inversion 
-template<class M> 
+//inversion
+template<class M>
 void  testInv_S( const M * m,  double & time, M * result){
-  Stype tmp = 0.0;  
+  Stype tmp = 0.0;
   test::Timer t(time,"inv ");
   int ierr = 0;
   int ifail = 0;
@@ -232,12 +232,12 @@ void  testInv_S( const M * m,  double & time, M * result){
      tmp += SumOfElements(result[NLIST-1]);
   }
   gResultSum += tmp;
-  assert(ierr == 0);    
+  assert(ierr == 0);
 }
 
-template<class M> 
+template<class M>
 void  testInvFast_S( const M * m,  double & time, M * result){
-  Stype tmp = 0.0;  
+  Stype tmp = 0.0;
   test::Timer t(time,"invF");
   int ierr = 0;
   int ifail = 0;
@@ -251,12 +251,12 @@ void  testInvFast_S( const M * m,  double & time, M * result){
      tmp += SumOfElements(result[NLIST-1]);
   }
   gResultSum += tmp;
-  assert(ierr == 0);    
+  assert(ierr == 0);
 }
 
-template<class M> 
+template<class M>
 void  testInvChol_S( const M * m,  double & time, M * result){
-  Stype tmp = 0.0;  
+  Stype tmp = 0.0;
   test::Timer t(time,"invC");
   int ierr = 0;
   int ifail = 0;
@@ -270,19 +270,19 @@ void  testInvChol_S( const M * m,  double & time, M * result){
      tmp += SumOfElements(result[NLIST-1]);
   }
   gResultSum += tmp;
-  assert(ierr == 0);    
+  assert(ierr == 0);
 }
 
 
 // general matrix matrix op
-template<class A, class B, class C> 
-void testATBA_S(const A * a, const B * b, double & time, C * result) {  
-  Stype tmp = 0.0;  
+template<class A, class B, class C>
+void testATBA_S(const A * a, const B * b, double & time, C * result) {
+  Stype tmp = 0.0;
   test::Timer t(time,"At*M*A");
   for (int l = 0; l < NLOOP; l++) {
      for (int k = 0; k < NLIST; k++) {
         C tmp = b[k] * Transpose(a[k]);
-        result[k] = a[k] * tmp; 
+        result[k] = a[k] * tmp;
      }
      tmp += SumOfElements(result[NLIST-1]);
   }
@@ -290,32 +290,32 @@ void testATBA_S(const A * a, const B * b, double & time, C * result) {
 }
 
 // general matrix matrix op
-template<class A, class B, class C> 
-void testATBA_S2(const A * a, const B * b, double & time, C * result) {  
-  Stype tmp = 0.0;  
+template<class A, class B, class C>
+void testATBA_S2(const A * a, const B * b, double & time, C * result) {
+  Stype tmp = 0.0;
   test::Timer t(time,"At*M*A");
-  for (int l = 0; l < NLOOP; l++) { 
+  for (int l = 0; l < NLOOP; l++) {
      for (int k = 0; k < NLIST; k++) {
-        //result = Transpose(a) * b * a;  
-        //result = a * b * Transpose(a);  
-        //result = a * b * a;  
+        //result = Transpose(a) * b * a;
+        //result = a * b * Transpose(a);
+        //result = a * b * a;
         result[k]  = SimilarityT(a[k],b[k]);
-        //result = a * result; 
+        //result = a * result;
      }
      tmp += SumOfElements(result[NLIST-1]);
   }
   gResultSum += tmp;
 }
 
-template<class A, class C> 
-void testMT_S(const A * a, double & time, C * result) {  
-  Stype tmp = 0.0;  
+template<class A, class C>
+void testMT_S(const A * a, double & time, C * result) {
+  Stype tmp = 0.0;
   test::Timer t(time,"Transp");
   for (int l = 0; l < NLOOP; l++)  {
      for (int k = 0; k < NLIST; k++) {
-      //result = Transpose(a) * b * a;  
-      //result = a * b * Transpose(a);  
-      //result = a * b * a;  
+      //result = Transpose(a) * b * a;
+      //result = a * b * Transpose(a);
+      //result = a * b * a;
         result[k]  = Transpose(a[k]);
      }
      tmp += SumOfElements(result[NLIST-1]);
@@ -328,19 +328,19 @@ void testMT_S(const A * a, double & time, C * result) {
 //////////////////////////////////
 
 // simple Matrix vector op
-template<class M, class V> 
+template<class M, class V>
 void testMV_T(const M & mat, const V & v, double & time, V & result) {
-  V vtmp = v; 
+  V vtmp = v;
   test::Timer t(time,"M*V ");
   for (int l = 0; l < NLOOP; l++)
     {
       vtmp[0] = gV[l];
       Add(result,0.0,mat,vtmp);
     }
-} 
-  
+}
+
 // general matrix vector op
-template<class M, class V> 
+template<class M, class V>
 void testGMV_T(const M & mat, const V & v1, const V & v2, double & time, V & result) {
   V vtmp = v1;
   test::Timer t(time,"M*V+");
@@ -353,9 +353,9 @@ void testGMV_T(const M & mat, const V & v1, const V & v2, double & time, V & res
 }
 
 // general matrix matrix op
-template<class A, class B, class C> 
+template<class A, class B, class C>
 void testMM_T(const A & a, const B & b, const C & c, double & time, C & result) {
-  B btmp = b; 
+  B btmp = b;
   test::Timer t(time,"M*M ");
   for (int l = 0; l < NLOOP; l++)
     {
@@ -363,10 +363,10 @@ void testMM_T(const A & a, const B & b, const C & c, double & time, C & result) 
       result.Mult(a,btmp);
       result += c;
     }
-} 
+}
 
 // matrix sum
-template<class M> 
+template<class M>
 void testMad_T(const M & m1, const M & m2, double & time, M & result) {
   M mtmp = m2;
   test::Timer t(time,"M+M ");
@@ -377,73 +377,73 @@ void testMad_T(const M & m1, const M & m2, double & time, M & result) {
     }
 }
 
-template<class A, class B, class C> 
+template<class A, class B, class C>
 void testATBA_T(const A & a, const B & b, double & time, C & result) {
   B btmp = b;
   test::Timer t(time,"At*M*A");
   C tmp = a;
   for (int l = 0; l < NLOOP; l++)
     {
-      btmp(0,0) = gV[l]; 
+      btmp(0,0) = gV[l];
       tmp.Mult(a,btmp);
       result.MultT(tmp,a);
     }
 }
 
-template<class V> 
-double testDot_T(const V & v1, const V & v2, double & time) {  
+template<class V>
+double testDot_T(const V & v1, const V & v2, double & time) {
   V vtmp = v2;
   test::Timer t(time,"dot ");
-  double result=0; 
+  double result=0;
   for (int l = 0; l < 10*NLOOP; l++)
     {
       vtmp[0] = gV[l];
       result = Dot(v1,vtmp);
     }
-  return result; 
+  return result;
 }
 
-template<class M, class V> 
-double testInnerProd_T(const M & a, const V & v, double & time) {  
-  V vtmp = v; 
+template<class M, class V>
+double testInnerProd_T(const M & a, const V & v, double & time) {
+  V vtmp = v;
   test::Timer t(time,"prod");
-  double result=0; 
-  for (int l = 0; l < NLOOP; l++) { 
+  double result=0;
+  for (int l = 0; l < NLOOP; l++) {
     vtmp[0] =  gV[l];
     result = a.Similarity(vtmp);
   }
-  return result; 
+  return result;
 }
 
-//inversion 
-template<class M> 
-void  testInv_T(const M & m,  double & time, M& result){ 
+//inversion
+template<class M>
+void  testInv_T(const M & m,  double & time, M& result){
   M mtmp = m;
   test::Timer t(time,"inv ");
   for (int l = 0; l < NLOOP; l++)
     {
-      mtmp(0,0) = gV[l]; 
+      mtmp(0,0) = gV[l];
       memcpy(result.GetMatrixArray(),mtmp.GetMatrixArray(),mtmp.GetNoElements()*sizeof(Double_t));
-      result.InvertFast(); 
+      result.InvertFast();
     }
 }
 
-template<class M> 
-void  testInv_T2(const M & m,  double & time, M& result){ 
+template<class M>
+void  testInv_T2(const M & m,  double & time, M& result){
   M mtmp = m;
   test::Timer t(time,"inv2");
   for (int l = 0; l < NLOOP; l++)
     {
       memcpy(result.GetMatrixArray(),mtmp.GetMatrixArray(),mtmp.GetNoElements()*sizeof(Double_t));
-      result.InvertFast();  
+      result.InvertFast();
     }
 }
 
 
 // vector sum
-template<class V> 
+template<class V>
 void testVad_T(const V & v1, const V & v2, double & time, V & result) {
-  V vtmp = v2; 
+  V vtmp = v2;
   test::Timer t(time,"V+V ");;
   for (int l = 0; l < 10*NLOOP; l++)
     {
@@ -453,9 +453,9 @@ void testVad_T(const V & v1, const V & v2, double & time, V & result) {
 }
 
 // vector * constant
-template<class V> 
+template<class V>
 void testVscale_T(const V & v1, double a, double & time, V & result) {
-  V vtmp = v1; 
+  V vtmp = v1;
   test::Timer t(time,"a*V ");;
   for (int l = 0; l < NLOOP; l++)
     {
@@ -467,15 +467,15 @@ void testVscale_T(const V & v1, double a, double & time, V & result) {
 }
 
 // general matrix matrix op
-template<class A, class B, class C> 
-void testATBA_T2(const A & a, const B & b, double & time, C & result) {  
+template<class A, class B, class C>
+void testATBA_T2(const A & a, const B & b, double & time, C & result) {
   B btmp = b;
   test::Timer t(time,"At*M*A");
   for (int l = 0; l < NLOOP; l++)
     {
-      btmp(0,0) = gV[l]; 
+      btmp(0,0) = gV[l];
       memcpy(result.GetMatrixArray(),btmp.GetMatrixArray(),btmp.GetNoElements()*sizeof(Double_t));
-      result.Similarity(a); 
+      result.Similarity(a);
     }
 }
 
@@ -493,8 +493,8 @@ void testMscale_T(const M & m1, double a, double & time, M & result) {
     }
 }
 
-template<class A, class C> 
-void testMT_T(const A & a, double & time, C & result) {  
+template<class A, class C>
+void testMT_T(const A & a, double & time, C & result) {
   A atmp = a;
   test::Timer t(time,"Transp");
   for (int l = 0; l < NLOOP; l++)
@@ -504,81 +504,81 @@ void testMT_T(const A & a, double & time, C & result) {
     }
 }
 
-//////////////////////////////////////////// 
+////////////////////////////////////////////
 // for clhep
 ////////////////////////////////////////////
 
 //smatrix
-template<class V> 
-double testDot_C(const V & v1, const V & v2, double & time) {  
+template<class V>
+double testDot_C(const V & v1, const V & v2, double & time) {
   V vtmp =  v2;
   test::Timer t(time,"dot ");
-  double result=0; 
+  double result=0;
   for (int l = 0; l < 10*NLOOP; l++)
     {
       vtmp[0] = gV[l];
-      result = dot(v1,vtmp);  
+      result = dot(v1,vtmp);
     }
-  return result; 
+  return result;
 }
 
-template<class M, class V> 
-double testInnerProd_C(const M & a, const V & v, double & time) {  
-  V vtmp = v; 
+template<class M, class V>
+double testInnerProd_C(const M & a, const V & v, double & time) {
+  V vtmp = v;
   test::Timer t(time,"prod");
-  double result=0; 
+  double result=0;
   for (int l = 0; l < NLOOP; l++)
     {
       vtmp[0] = gV[l];
-      V tmp = a*vtmp; 
+      V tmp = a*vtmp;
       result = dot(vtmp,tmp);
     }
-  return result; 
+  return result;
 }
 
 
 // matrix assignmnent(index starts from 1)
-template<class M> 
-void testMeq_C(const M & m, double & time, M & result) {  
+template<class M>
+void testMeq_C(const M & m, double & time, M & result) {
   M mtmp = m;
   test::Timer t(time,"M=M ");
    for (int l = 0; l < NLOOP; l++)
     {
       mtmp(1,1) = gV[l];
-      result = mtmp;  
+      result = mtmp;
     }
 }
 
-// matrix sum 
-template<class M> 
-void testMad_C(const M & m1, const M & m2, double & time, M & result) {  
+// matrix sum
+template<class M>
+void testMad_C(const M & m1, const M & m2, double & time, M & result) {
   M mtmp = m2;
   test::Timer t(time,"M+M ");;
    for (int l = 0; l < NLOOP; l++)
     {
-      mtmp(1,1) = gV[l]; 
-      result = m1; result += mtmp;  
+      mtmp(1,1) = gV[l];
+      result = m1; result += mtmp;
     }
 }
 
 
 // matrix * constant
-template<class M> 
-void testMscale_C(const M & m1, double a, double & time, M & result) {  
+template<class M>
+void testMscale_C(const M & m1, double a, double & time, M & result) {
   M mtmp = m1;
   test::Timer t(time,"a*M ");;
    for (int l = 0; l < NLOOP; l++)
     {
       mtmp(1,1) = gV[l];
-      result = mtmp * a;  
+      result = mtmp * a;
     }
 }
 
 
 // clhep matrix matrix op (index starts from 1)
-template<class A, class B, class C> 
-void testMM_C(const A & a, const B & b, const C & c, double & time, C & result) {  
-  B btmp = b; 
+template<class A, class B, class C>
+void testMM_C(const A & a, const B & b, const C & c, double & time, C & result) {
+  B btmp = b;
   test::Timer t(time,"M*M ");
    for (int l = 0; l < NLOOP; l++)
     {
@@ -589,47 +589,47 @@ void testMM_C(const A & a, const B & b, const C & c, double & time, C & result) 
 
 
 //inversion
-template<class M> 
-void  testInv_C( const M & a,  double & time, M& result){ 
+template<class M>
+void  testInv_C( const M & a,  double & time, M& result){
   M mtmp = a;
   test::Timer t(time,"inv ");
-  int ifail = 0; 
+  int ifail = 0;
    for (int l = 0; l < NLOOP; l++)
     {
-      mtmp(1,1) = gV[l]; 
-      result = mtmp.inverse(ifail); 
-      if (ifail) {std::cout <<"error inverting" << mtmp << std::endl; return; } 
+      mtmp(1,1) = gV[l];
+      result = mtmp.inverse(ifail);
+      if (ifail) {std::cout <<"error inverting" << mtmp << std::endl; return; }
     }
 }
 
 // general matrix matrix op
-template<class A, class B, class C> 
-void testATBA_C(const A & a, const B & b, double & time, C & result) {  
+template<class A, class B, class C>
+void testATBA_C(const A & a, const B & b, double & time, C & result) {
   B btmp = b;
   test::Timer t(time,"At*M*A");
    for (int l = 0; l < NLOOP; l++)
     {
       btmp(1,1) = gV[l];
-      //result = a.T() * b * a;  
-      result = a * btmp * a.T();  
+      //result = a.T() * b * a;
+      result = a * btmp * a.T();
     }
 }
 
 
-template<class A, class B, class C> 
-void testATBA_C2(const A & a, const B & b, double & time, C & result) { 
-  B btmp = b; 
+template<class A, class B, class C>
+void testATBA_C2(const A & a, const B & b, double & time, C & result) {
+  B btmp = b;
   test::Timer t(time,"At*M*A");
    for (int l = 0; l < NLOOP; l++)
     {
-      btmp(1,1) = gV[l]; 
-      result = btmp.similarity(a); 
+      btmp(1,1) = gV[l];
+      result = btmp.similarity(a);
     }
 }
 
 
-template<class A, class C> 
-void testMT_C(const A & a, double & time, C & result) {  
+template<class A, class C>
+void testMT_C(const A & a, double & time, C & result) {
   A atmp = a;
   test::Timer t(time,"Transp");
    for (int l = 0; l < NLOOP; l++)
@@ -640,4 +640,4 @@ void testMT_C(const A & a, double & time, C & result) {
 }
 
 
-#endif   
+#endif

@@ -686,10 +686,10 @@ BoundingRect<ValueType> FindBoundingRect(Int_t nPoints, const ValueType *xs, con
    assert(nPoints > 0 && "FindBoundingRect, invalind number of points");
    assert(xs != nullptr && "FindBoundingRect, parameter 'xs' is null");
    assert(ys != nullptr && "FindBoundingRect, parameter 'ys' is null");
-   
+
    ValueType xMin = xs[0], xMax = xMin;
    ValueType yMin = ys[0], yMax = yMin;
-   
+
    for (Int_t i = 1; i < nPoints; ++i) {
       xMin = TMath::Min(xMin, xs[i]);
       xMax = TMath::Max(xMax, xs[i]);
@@ -697,16 +697,16 @@ BoundingRect<ValueType> FindBoundingRect(Int_t nPoints, const ValueType *xs, con
       yMin = TMath::Min(yMin, ys[i]);
       yMax = TMath::Max(yMax, ys[i]);
    }
-   
+
    BoundingRect<ValueType> box = {};
    box.fXMin = xMin;
    box.fXMax = xMax;
    box.fWidth = xMax - xMin;
-   
+
    box.fYMin = yMin;
    box.fYMax = yMax;
    box.fHeight = yMax - yMin;
-   
+
    return box;
 }
 

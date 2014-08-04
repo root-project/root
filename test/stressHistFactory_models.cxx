@@ -59,7 +59,7 @@ void buildAPI_XML_TestModel(TString prefix)
   Background2.AddOverallSys("bkg_unc",0.9,1.2);
   Background2.AddShapeSys("bkg2_shape_unc",HistFactory::Constraint::Gaussian,"bkg2_shape_unc","HistFactory_input.root","API_vs_XML/SignalRegion/");
   SignalRegion.AddSample(Background2);
-  
+
   // create channel for sideband region with observed data
   HistFactory::Channel SidebandRegion("SidebandRegion");
   SidebandRegion.SetData("Data","HistFactory_input.root","API_vs_XML/SidebandRegion/");
@@ -74,7 +74,7 @@ void buildAPI_XML_TestModel(TString prefix)
   // add channels to measurement
   meas.AddChannel(SignalRegion);
   meas.AddChannel(SidebandRegion);
- 
+
   // get histograms
   meas.CollectHistograms();
 

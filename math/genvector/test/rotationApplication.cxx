@@ -717,13 +717,13 @@ int rotationApplication (bool forceRun = false) {
         vp !=  testVectors.end(); ++vp ) {
       ret |= exerciseAxialTest (*vp);
    }
-   
+
    return ret;
 }
 
-int main() { 
+int main() {
    int ret =  rotationApplication(true);
-   if (ret)  std::cerr << "test FAILED !!! " << std::endl; 
+   if (ret)  std::cerr << "test FAILED !!! " << std::endl;
    else   std::cout << "test OK " << std::endl;
-   return ret; 
+   return ret;
 }

@@ -154,7 +154,7 @@ void threadsh2()
    c1->GetFrame()->SetFillColor(21);
    c1->GetFrame()->SetBorderSize(6);
    c1->GetFrame()->SetBorderMode(-1);
-   // connect to the CloseWindow() signal and prevent to close the canvas 
+   // connect to the CloseWindow() signal and prevent to close the canvas
    // while the thread is running
    TRootCanvas *rc = dynamic_cast<TRootCanvas*>(c1->GetCanvasImp());
    if (!rc) return;
@@ -165,7 +165,7 @@ void threadsh2()
 
    c2 = new TCanvas("c2","Dynamic Filling Example", 515, 30, 400, 300);
    c2->SetGrid();
-   // connect to the CloseWindow() signal and prevent to close the canvas 
+   // connect to the CloseWindow() signal and prevent to close the canvas
    // while the thread is running
    rc = dynamic_cast<TRootCanvas*>(c2->GetCanvasImp());
    if (!rc) return;

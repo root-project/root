@@ -44,8 +44,8 @@ class TSQLClassInfo;
 
 class TBufferSQL2 : public TBufferFile {
 
-friend class TSQLStructure;    
-    
+friend class TSQLStructure;
+
 protected:
 
    TSQLFile*        fSQL;                  //!   instance of TSQLFile
@@ -53,14 +53,14 @@ protected:
    TSQLStructure*   fStk;                  //!   pointer on current active structure (stack head)
    TExMap*          fObjMap;               //!   Map between stored objects and object id
    TString          fReadBuffer;           //!   Buffer for read value
-   Int_t            fErrorFlag;            //!   Error id value 
+   Int_t            fErrorFlag;            //!   Error id value
    Bool_t           fExpectedChain;        //!   flag to resolve situation when several elements of same basic type stored as FastArray
    Int_t            fCompressLevel;        //!   compress level used to minimize size of data in database
    Int_t            fReadVersionBuffer;    //!   buffer, used to by ReadVersion method
    Long64_t         fObjIdCounter;         //!   counter of objects id
-   Bool_t           fIgnoreVerification;   //!   ignore verification of names 
-   TSQLObjectData*  fCurrentData;          //!  
-   TObjArray*       fObjectsInfos;         //!   array of objects info for selected key 
+   Bool_t           fIgnoreVerification;   //!   ignore verification of names
+   TSQLObjectData*  fCurrentData;          //!
+   TObjArray*       fObjectsInfos;         //!   array of objects info for selected key
    Long64_t         fFirstObjId;           //!   id of first object to be read from the database
    Long64_t         fLastObjId;            //!   id of last object correspond to this key
    TMap*            fPoolsMap;             //!   map of pools with data from different tables
@@ -81,7 +81,7 @@ protected:
    TSQLStructure*   PopStack();
    TSQLStructure*   Stack(Int_t depth = 0);
 
-   void             WorkWithClass(const char* classname, Version_t classversion); 
+   void             WorkWithClass(const char* classname, Version_t classversion);
    void             WorkWithElement(TStreamerElement* elem, Int_t comp_type);
 
    Int_t            SqlReadArraySize();
@@ -122,19 +122,19 @@ protected:
    Int_t            SqlWriteObject(const void* obj, const TClass* objClass, TMemberStreamer *streamer = 0, Int_t streamer_index = 0);
    void*            SqlReadObject(void* obj, TClass** cl = 0, TMemberStreamer *streamer = 0, Int_t streamer_index = 0, const TClass *onFileClass=0);
    void*            SqlReadObjectDirect(void* obj, TClass** cl, Long64_t objid, TMemberStreamer *streamer = 0, Int_t streamer_index = 0, const TClass *onFileClass = 0);
- 
+
 public:
 
    TBufferSQL2(TBuffer::EMode mode);
    TBufferSQL2(TBuffer::EMode mode, TSQLFile* file);
    virtual ~TBufferSQL2();
-   
+
    void             SetCompressionLevel(int level) { fCompressLevel = level; }
 
    TSQLStructure*   GetStructure() const { return fStructure; }
-   
+
    Int_t            GetErrorFlag() const { return fErrorFlag; }
-   
+
    void             SetIgnoreVerification() { fIgnoreVerification = kTRUE; }
 
    TSQLStructure*   SqlWriteAny(const void* obj, const TClass* cl, Long64_t objid);
@@ -162,7 +162,7 @@ public:
    virtual void     IncrementLevel(TVirtualStreamerInfo*);
    virtual void     SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_type);
    virtual void     DecrementLevel(TVirtualStreamerInfo*);
-   
+
    virtual void     ClassBegin(const TClass*, Version_t = -1);
    virtual void     ClassEnd(const TClass*);
    virtual void     ClassMember(const char* name, const char* typeName = 0, Int_t arrsize1 = -1, Int_t arrsize2 = -1);
@@ -177,7 +177,7 @@ public:
    virtual void     ReadWithNbits(Float_t *ptr, Int_t nbits);
    virtual void     ReadWithFactor(Double_t *ptr, Double_t factor, Double_t minvalue);
    virtual void     ReadWithNbits(Double_t *ptr, Int_t nbits);
-   
+
    virtual Int_t    ReadArray(Bool_t    *&b);
    virtual Int_t    ReadArray(Char_t    *&c);
    virtual Int_t    ReadArray(UChar_t   *&c);

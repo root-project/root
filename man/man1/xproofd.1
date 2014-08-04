@@ -19,17 +19,17 @@ xproofd \- PROOF (The Parallel ROOT Facility) xrootd version
 Using \fBPROOF\fI (The \fIP\fRarallel \fIROO\fRT \fIF\fRacility) one
 can analyze trees in parallel on a cluster of computers. The
 \fBPROOF\fR system consists of the \fIxproofd\fR(1) from-end program
-which is started via \fIinetd\fR(8).  
+which is started via \fIinetd\fR(8).
 .PP
 \fIxproofd\fR takes care of user authentication and overlays itself
 then with the desired version of the \fIproofserv\fR(1)
-executable. 
+executable.
 .PP The \fIproofserv\fR(1) is a basically the same as the \fBROOT\fR
 interactive module \fIroot\fR(1), except that it reads its commands
-from a socket instead of from the terminal. 
+from a socket instead of from the terminal.
 .PP
 Since it is a remote server it will not do graphics and therefore is
-not linked with any graphics libraries (Motif, X11, etc.). 
+not linked with any graphics libraries (Motif, X11, etc.).
 
 .SH "SETTING UP PROOF"
 Since you need to handle sensitive system files, you need to have root
@@ -48,10 +48,10 @@ There, I said it. And ofcourse, no warrenties what so ever.
 1
 Make sure every node has \fBROOT\fR installed. We'll assume you
 installed the \fBROOT\fR applications in <\fIbindir\fR>
-(e.g. \fI/usr/bin\fR) and the \fBPROOF\fR configuration files in 
-files in \fI<xproofdir>/etc\fB (e.g. \fI/usr/share/root/etc\fB). 
+(e.g. \fI/usr/bin\fR) and the \fBPROOF\fR configuration files in
+files in \fI<xproofdir>/etc\fB (e.g. \fI/usr/share/root/etc\fB).
 
-.TP 
+.TP
 2
 The TCP port 1094 was allocated by \fBIANA\fR, (
 .UR Iwww.iana.org
@@ -83,7 +83,7 @@ the cluster.
 .TP
 4
 Restart \fBinetd\fR or force it to re-read the config file:
-.nf  
+.nf
 
   kill \-1 <\fIinetd pid\fR>
 
@@ -114,7 +114,7 @@ where <\fImaster hostname\fR> is domain name of the master node.
 All PROOF syslog messages will be collected on the master node.
 Just make one node in the cluster the master, all others are slaves.
 
-.TP 
+.TP
 6
 On all nodes, change the below lines in \fI/etc/syslog.conf\fR,
 .nf
@@ -132,7 +132,7 @@ to:
 .TP
 7
 Create an empty <\fIxproofdir\fR>/log/proof.log:
-.nf 
+.nf
 
     echo "" > <\fIxproofdir\fR>/log/proof.log
 
@@ -142,7 +142,7 @@ Create an empty <\fIxproofdir\fR>/log/proof.log:
 8
 Restart syslogd or force it to re-read the config file:
 .nf
- 
+
   kill \-1 <\fIsyslogd pid\fR>.
 
 .fi
@@ -158,19 +158,19 @@ or whatever is appropriate for your system.
 9
 Edit <\fIxproofdir\fR>\fI/etc/proof.conf\fR to reflect your cluster
 configuration. See the example \fIproof.conf\fR file for more
-information.  
+information.
 .PP
 If you installed \fBROOT\fR using some precompiled package (for
 example a \fBRedhat Linux\fR or a \fBDebian GNU/Linux\fR package),
-steps 2 to 4 may already be done for you. 
-.PP 
+steps 2 to 4 may already be done for you.
+.PP
 If you're running \fBLinux\fR, Steps 5 to 7 can be somewhat automated
 using the script \fIproof-facility\fR in <\fIxproofdir\fR> of your
 distribution. This script uses \fIsyslog-facility\fR(1), from the
 \fBLinux\fR \fIsyslog\fR(1) distribution, and may run on other
 platforms as well \- but no warrenties mind you!
 .PP
-Step 9 is completely up to the user.  
+Step 9 is completely up to the user.
 .SH "EXAMPLE"
 That's it. To test PROOF try the following:
 .nf
@@ -189,45 +189,45 @@ The location of your \fBPROOF\fI data. In binary packages, like for
 \fI/usr/share/root/proof\fB. If you got a binary \fItar\fR(1)-ball
 from the \fBROOT\fR website, or a build it yourself without the static
 paths option, then this directory could be ROOTSYS/proof. However, you
-may set it to something else when starting your server. 
+may set it to something else when starting your server.
 .TP
 <\fIxproofdir\fB>/etc\fR
 This directory holds all the configuration files for your cluster(s).
 .TP
 <\fIxproofdir\fB>/etc/<cluster>.conf\fR
-This is the cluster named <\fIcluster\fR> configuration file. See 
+This is the cluster named <\fIcluster\fR> configuration file. See
 <\fIxproofdir\fB>/etc/<cluster>.conf.sample\fR for an example.
-.TP 
+.TP
 <\fIxproofdir\fB>/etc/motd\fR
 This is Message-Of-The-Day file. See
-<\fIxproofdir\fB>/etc/motd.sample\fR for an example. 
+<\fIxproofdir\fB>/etc/motd.sample\fR for an example.
 .TP
 <\fIxproofdir\fB>/etc/noproof\fR
 If this file is present, all \fBPROOF\fR services will be diabled. See
-<\fIxproofdir\fB>/etc/noproof.sample\fR for an example. 
+<\fIxproofdir\fB>/etc/noproof.sample\fR for an example.
 .TP
 <\fIxproofdir\fB>/etc/proof.conf\fR
-This is the  \fBPROOF\fR configuration file. See 
-<\fIxproofdir\fB>/etc/proof.conf.sample\fR for an example. 
+This is the  \fBPROOF\fR configuration file. See
+<\fIxproofdir\fB>/etc/proof.conf.sample\fR for an example.
 .TP
 \fB~/.rootnetrc.conf\fR
 Configuration file for network access. Here you specify login names
-and pass word, so it \fBMUST\fI be read/write-able only by the user. 
-See <\fIxproofdir\fB>/etc/rootnetrc.conf.sample\fR for an example. 
+and pass word, so it \fBMUST\fI be read/write-able only by the user.
+See <\fIxproofdir\fB>/etc/rootnetrc.conf.sample\fR for an example.
 .TP
 <\fIxproofdir\fB>/log\fR
-This directory holds the log files from the master and slaves. 
+This directory holds the log files from the master and slaves.
 <\fIxproofdir\fB>/log/proof.log\fR
 \fISyslog\fR(1) log file for \fBPROOF\fR.
 .SH "SEE ALSO"
-.IR proofserv (1) 
+.IR proofserv (1)
 ,
-.IR root (1) 
+.IR root (1)
 ,
 .IR rootd (1)
 ,
 .IR xrootd (1)
-.PP 
+.PP
 More information can be found at the \fBROOT\fR website:
 .UR http://root.cern.ch
 \fIhttp://root.cern.ch\fB
@@ -235,7 +235,7 @@ More information can be found at the \fBROOT\fR website:
 .SH "ORIGINAL AUTHORS"
 The ROOT team (see web page above):
 .RS
-\fBRene Brun\fR and \fBFons Rademakers\fR 
+\fBRene Brun\fR and \fBFons Rademakers\fR
 .RE
 .SH "COPYRIGHT"
 This library is free software; you can redistribute it and/or modify
@@ -251,10 +251,10 @@ Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-.SH AUTHOR 
+.SH AUTHOR
 This manual page was written by Christian Holm Christensen
 <cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
-others). 
+others).
 .\"
 .\" $Log: xproofd.1,v $
 .\" Revision 1.3  2005/09/07 10:23:23  rdm

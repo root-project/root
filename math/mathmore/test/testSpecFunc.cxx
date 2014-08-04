@@ -1,8 +1,8 @@
 
 /* MathCore/tests/test_SpecFunc.cpp
- * 
+ *
  * Copyright (C) 2004 Andras Zsenei
- * 
+ *
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
@@ -32,8 +32,8 @@ if the value is right against values copied from the GSL tests.
 
 
 
-#include <iostream> 
-#include <iomanip> 
+#include <iostream>
+#include <iomanip>
 #include <string>
 #include <limits>
 
@@ -52,42 +52,42 @@ if the value is right against values copied from the GSL tests.
 
 
 int compare( const std::string & name, double v1, double v2, double scale = 2.0) {
-  //  ntest = ntest + 1; 
+  //  ntest = ntest + 1;
 
-   std::cout << std::setw(50) << std::left << name << ":\t";   
-   
-  // numerical double limit for epsilon 
+   std::cout << std::setw(50) << std::left << name << ":\t";
+
+  // numerical double limit for epsilon
    double eps = scale* std::numeric_limits<double>::epsilon();
-   int iret = 0; 
+   int iret = 0;
    double delta = v2 - v1;
    double d = 0;
-   if (delta < 0 ) delta = - delta; 
-   if (v1 == 0 || v2 == 0) { 
-      if  (delta > eps ) { 
-         iret = 1; 
+   if (delta < 0 ) delta = - delta;
+   if (v1 == 0 || v2 == 0) {
+      if  (delta > eps ) {
+         iret = 1;
       }
    }
    // skip case v1 or v2 is infinity
-   else { 
-      d = v1; 
+   else {
+      d = v1;
 
-      if ( v1 < 0) d = -d; 
+      if ( v1 < 0) d = -d;
       // add also case when delta is small by default
-      if ( delta/d  > eps && delta > eps ) 
-         iret =  1; 
+      if ( delta/d  > eps && delta > eps )
+         iret =  1;
    }
 
-   if (iret == 0) 
+   if (iret == 0)
       std::cout <<" OK" << std::endl;
-   else { 
+   else {
       std::cout <<" FAILED " << std::endl;
       int pr = std::cout.precision (18);
-      std::cout << "\nDiscrepancy in " << name << "() :\n  " << v1 << " != " << v2 << " discr = " << int(delta/d/eps) 
+      std::cout << "\nDiscrepancy in " << name << "() :\n  " << v1 << " != " << v2 << " discr = " << int(delta/d/eps)
                 << "   (Allowed discrepancy is " << eps  << ")\n\n";
       std::cout.precision (pr);
       //nfail = nfail + 1;
    }
-   return iret; 
+   return iret;
 }
 
 
@@ -99,7 +99,7 @@ int compare( const std::string & name, double v1, double v2, double scale = 2.0)
 //   std::cout << name << calculatedValue << " expected value: " << expectedValue;
 //   int prec = std::cout.precision();
 //   std::cout.precision(5);
-//   std::cout << " diff: " << (calculatedValue-expectedValue) << " reldiff: " << 
+//   std::cout << " diff: " << (calculatedValue-expectedValue) << " reldiff: " <<
 //     (calculatedValue-expectedValue)/expectedValue << std::endl;
 //   std::cout.precision(prec);
 
@@ -107,18 +107,18 @@ int compare( const std::string & name, double v1, double v2, double scale = 2.0)
 
 
 
-int testSpecFunc() { 
+int testSpecFunc() {
 
    using namespace ROOT::Math;
 
-   int iret = 0; 
+   int iret = 0;
 
    std::cout.precision(20);
 
-#ifndef NO_MATHCORE 
+#ifndef NO_MATHCORE
 
    // explicit put namespace to be sure to use right ones
-   
+
    iret |= compare("tgamma(9.0) ", ROOT::Math::tgamma(9.0), 40320.0, 4);
 
    iret |= compare("lgamma(0.1) ", ROOT::Math::lgamma(0.1),  2.252712651734205, 4);
@@ -131,13 +131,13 @@ int testSpecFunc() {
 
    iret |= compare("inc_gamma_c(100,99) ", ROOT::Math::inc_gamma_c(100.,99.), 0.5266956696005394, 100);
 
-   // need to increase here by a further factor of 5 for Windows 
+   // need to increase here by a further factor of 5 for Windows
    iret |= compare("inc_gamma_c(1000,1000.1) ", ROOT::Math::inc_gamma_c(1000.,1000.1),  0.4945333598559338247, 5000);
 
    iret |= compare("erf(0.5) ", ROOT::Math::erf(0.5), 0.5204998778130465377);
-   
+
    iret |= compare("erfc(-1.0) ", ROOT::Math::erfc(-1.0), 1.8427007929497148693);
-   
+
    iret |= compare("beta(1.0, 5.0) ", ROOT::Math::beta(1.0, 5.0), 0.2);
 
    iret |= compare("inc_beta(1,1,1) ", ROOT::Math::inc_beta(1.0, 1.0, 1.0), 1.0);
@@ -207,40 +207,40 @@ int testSpecFunc() {
 
    iret |= compare("airy_zero_Bi_deriv(2) ", airy_zero_Bi_deriv(2), -4.07315508907182799, 8);
 
-   if (iret != 0) { 
+   if (iret != 0) {
       std::cout << "\n\nError:  Special Functions Test FAILED !!!!!" << std::endl;
    }
-   return iret; 
+   return iret;
 
 }
 
-void getGSLErrors() { 
+void getGSLErrors() {
 
 #ifdef CHECK_WITH_GSL
-   gsl_sf_result r; 
-   int iret; 
+   gsl_sf_result r;
+   int iret;
 
    iret = gsl_sf_ellint_P_e(PI/2.0, 0.5, -0.5, GSL_PREC_DOUBLE, &r);
-   std::cout << "comp_ellint_3(0.50, 0.5) : " << r.val << " err:  " << r.err << "  iret:  " << iret << std::endl; 
+   std::cout << "comp_ellint_3(0.50, 0.5) : " << r.val << " err:  " << r.err << "  iret:  " << iret << std::endl;
 
    iret = gsl_sf_ellint_P_e(PI/3.0, 0.5, 0.5, GSL_PREC_DOUBLE, &r);
-   std::cout << "ellint_3(0.50, 0.5, PI/3.0) : " << r.val << " err:  " << r.err << "  iret:  " << iret << std::endl; 
-   
+   std::cout << "ellint_3(0.50, 0.5, PI/3.0) : " << r.val << " err:  " << r.err << "  iret:  " << iret << std::endl;
+
    iret = gsl_sf_zeta_e(-0.5, &r);
-   std::cout << "riemann_zeta(-0.5) : " << r.val << " err:  " << r.err << "  iret:  " << iret << std::endl; 
+   std::cout << "riemann_zeta(-0.5) : " << r.val << " err:  " << r.err << "  iret:  " << iret << std::endl;
 #endif
 
 
 }
 
 
-int main() { 
+int main() {
 
-   int iret = 0; 
+   int iret = 0;
    iret |=  testSpecFunc();
 
-   getGSLErrors(); 
-   return iret; 
+   getGSLErrors();
+   return iret;
 }
 
 

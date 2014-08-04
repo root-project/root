@@ -7,10 +7,10 @@
 #include <TRandom.h>
 #include <TComplex.h>
 
-Double_t Error(TComplex a, TComplex b) 
+Double_t Error(TComplex a, TComplex b)
 {return 2*TComplex::Abs(a-b)/(a.Rho()+b.Rho());}
 
-void Verify(const TComplex a, const TComplex b, 
+void Verify(const TComplex a, const TComplex b,
             Double_t epsmin, Double_t epsmax,
             const char* where, Int_t & ifail, Double_t &serr)
 {
@@ -145,18 +145,18 @@ int main () {
   Summary(title,ifail,serr,np);
 
   // Torture Power complex - complex
-  // 
+  //
   // Important note on the following tests. The operation of raising a complex
   // number to a power does not yet a single value, but rather an infinite
-  // number of values, particularly if the number is non rational. 
+  // number of values, particularly if the number is non rational.
   // For a real number a, you can define a^(b+ic) by writing a = e^(ln a):
   //
   //       b+ic    (ln a)(b+ic)    (b ln a) + i(c ln a)
   //      a     = e             = e
-  //        
+  //
   //               (b ln a)
   //            = e         ( cos (c ln a) + i sin (c ln a) )
-  //      
+  //
   //               b
   //            = a  ( cos (c ln a) + i sin (c ln a) ).
   //
@@ -176,8 +176,8 @@ int main () {
   // logarithm ln a rather than than something like ln a + 2 pi i.
   // Technically, this value is called the principal value. This is what
   // the formula up above gives you. Unfortunately this alone does not
-  // guarantees that the inverse operation brings you back where you 
-  // started from. 
+  // guarantees that the inverse operation brings you back where you
+  // started from.
   //
   // When a is not real there is no one natural choice of logarithm to prefer
   // over any other, so in those cases we have to say that an expression like

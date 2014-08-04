@@ -53,7 +53,7 @@ public :
    void            FillNtuple(Long64_t entry);
    void            PlotNtuple(TNtuple *, const char *);
    Int_t           GetHistosFromFC(TCanvas *);
-   
+
    // Setters and getters (for TDataMember)
    Int_t GetNhist() { return fNhist; }
    void SetNhist(Int_t nh) { fNhist = nh; }

@@ -278,7 +278,7 @@ void TMatrixDSymEigen::MakeEigenVectors(TMatrixD &v,TVectorD &d,TVectorD &e)
                pD[i+1] = h+s*(c*g+s*pD[i]);
 
                // Accumulate transformation.
- 
+
                for (k = 0; k < n; k++) {
                   const Int_t off_k = k*n;
                   h = pV[off_k+i+1];

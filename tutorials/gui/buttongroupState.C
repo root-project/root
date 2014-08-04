@@ -1,5 +1,5 @@
 // A simple example that shows the enabled and disabled state
-// of a button group with radio and check buttons. 
+// of a button group with radio and check buttons.
 //
 // Author: Roel Aaij   4/07/2007
 
@@ -32,7 +32,7 @@ private:
    TGCheckButton       *fCheckb[4];    // Check buttons
    TGRadioButton       *fRadiob[2];    // Radio buttons
    IDList               IDs;           // Widget IDs generator
-   
+
 public:
    MyButtonTest(const TGWindow *p, UInt_t w, UInt_t h);
    virtual ~MyButtonTest();
@@ -42,17 +42,17 @@ public:
 
    ClassDef(MyButtonTest, 0)
 };
-                          
-MyButtonTest::MyButtonTest(const TGWindow *p, UInt_t w, UInt_t h) 
-   : TGMainFrame(p, w, h)   
+
+MyButtonTest::MyButtonTest(const TGWindow *p, UInt_t w, UInt_t h)
+   : TGMainFrame(p, w, h)
 {
    SetCleanup(kDeepCleanup);
-   
+
    Connect("CloseWindow()", "MyButtonTest", this, "DoExit()");
    DontCallClose();
 
    TGHorizontalFrame *fHL2 = new TGHorizontalFrame(this, 70, 100);
-   fCheckb[0] = new TGCheckButton(fHL2, new TGHotString("Enable BG"), 
+   fCheckb[0] = new TGCheckButton(fHL2, new TGHotString("Enable BG"),
                                   IDs.GetUnID());
    fCheckb[0]->SetToolTipText("Enable/Disable the button group");
    fHL2->AddFrame(fCheckb[0], new TGLayoutHints(kLHintsCenterX|kLHintsCenterY,
@@ -86,7 +86,7 @@ MyButtonTest::MyButtonTest(const TGWindow *p, UInt_t w, UInt_t h)
    //Default state
    fCheckb[0]->SetOn();
    fButtonGroup->SetState(kTRUE);
-   
+
    SetWindowName("My Button Group");
    MapSubwindows();
    Resize(GetDefaultSize());
@@ -108,7 +108,7 @@ void MyButtonTest::DoExit()
    // Use one of the both lines according to your needs.
    // Please note to re-run this macro in the same ROOT session,
    // you have to compile it to get signals/slots 'on place'.
-   
+
    //DeleteWindow();            // to stay in the ROOT session
    gApplication->Terminate();   // to exit and close the ROOT session
 }
@@ -118,7 +118,7 @@ void MyButtonTest::SetGroupEnabled(Bool_t on)
    fButtonGroup->SetState(on);
 }
 
-void buttongroupState() 
+void buttongroupState()
 {
    new MyButtonTest(gClient->GetRoot(),100,100);
 }

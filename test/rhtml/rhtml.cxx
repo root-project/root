@@ -42,10 +42,10 @@ enum EMyMessageTypes {
    M_HELP_ABOUT
 };
 
-const char *filetypes[] = { 
+const char *filetypes[] = {
    "HTML files",    "*.html",
    "All files",     "*",
-    0,               0 
+    0,               0
 };
 
 const char *HtmlError[] = {
@@ -101,7 +101,7 @@ const char *HtmlError[] = {
 };
 
 //______________________________________________________________________________
-TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, UInt_t h) 
+TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, UInt_t h)
              : TGMainFrame(p, w, h)
 {
    // TGHtmlBrowser constructor.
@@ -111,19 +111,19 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fMenuBar = new TGMenuBar(this, 35, 50, kHorizontalFrame);
 
    fMenuFile = new TGPopupMenu(gClient->GetRoot());
-   fMenuFile->AddEntry(" &Open...            Ctrl+O", M_FILE_OPEN, 0,  
+   fMenuFile->AddEntry(" &Open...            Ctrl+O", M_FILE_OPEN, 0,
                        gClient->GetPicture("bld_open.png"));
    fMenuFile->AddEntry(" &Browse...         Ctrl+B", M_FILE_BROWSE);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry(" E&xit                   Ctrl+Q", M_FILE_EXIT, 0, 
+   fMenuFile->AddEntry(" E&xit                   Ctrl+Q", M_FILE_EXIT, 0,
                        gClient->GetPicture("bld_exit.png"));
    fMenuFile->Associate(this);
 
    fMenuFavorites = new TGPopupMenu(gClient->GetRoot());
-   fMenuFavorites->AddEntry("&Add to Favorites", M_FAVORITES_ADD, 0, 
+   fMenuFavorites->AddEntry("&Add to Favorites", M_FAVORITES_ADD, 0,
                             gClient->GetPicture("bld_plus.png"));
    fMenuFavorites->AddSeparator();
-   fMenuFavorites->AddEntry("http://root.cern.ch/drupal/", fNbFavorites++, 0, 
+   fMenuFavorites->AddEntry("http://root.cern.ch/drupal/", fNbFavorites++, 0,
                             gClient->GetPicture("htmlfile.gif"));
    fMenuFavorites->Associate(this);
 
@@ -355,9 +355,9 @@ void TGHtmlBrowser::Back()
 
    Int_t index = 0;
    const char *string = fURL->GetText();
-   TGLBEntry * lbe1 = fComboBox->FindEntry(string); 
+   TGLBEntry * lbe1 = fComboBox->FindEntry(string);
    if (lbe1)
-      index = lbe1->EntryId(); 
+      index = lbe1->EntryId();
    if (index > 0) {
       fComboBox->Select(index - 1, kTRUE);
       TGTextLBEntry *entry = (TGTextLBEntry *)fComboBox->GetSelectedEntry();
@@ -460,7 +460,7 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case M_FAVORITES_ADD:
                      fMenuFavorites->AddEntry(Form("%s",
-                           fURL->GetText()), fNbFavorites++, 0, 
+                           fURL->GetText()), fNbFavorites++, 0,
                            gClient->GetPicture("htmlfile.gif"));
                      break;
 
@@ -471,7 +471,7 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case M_FILE_BROWSE:
                      new TBrowser();
                      break;
-                  
+
                   case M_HELP_ABOUT:
                      {
 #ifdef R__UNIX
@@ -522,7 +522,7 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 int main(int argc, char **argv)
 {
    // Main application.
-   
+
    TApplication theApp("App", &argc, argv);
    new TGHtmlBrowser("http://root.cern.ch/drupal/");
    theApp.Run();

@@ -98,7 +98,7 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Double_t 
 TGeoElement::TGeoElement(const char *name, const char *title, Int_t nisotopes)
             :TNamed(name, title)
 {
-// Element having isotopes.   
+// Element having isotopes.
    SetDefined(kFALSE);
    SetUsed(kFALSE);
    fZ = 0;
@@ -136,7 +136,7 @@ void TGeoElement::Print(Option_t *option) const
          iso->Print(option);
       }
    }
-}   
+}
 
 //______________________________________________________________________________
 TGeoElementTable *TGeoElement::GetElementTable()
@@ -145,7 +145,7 @@ TGeoElementTable *TGeoElement::GetElementTable()
    if (!gGeoManager) {
       ::Error("TGeoElementTable::GetElementTable", "Create a geometry manager first");
       return NULL;
-   }   
+   }
    return gGeoManager->GetElementTable();
 }
 
@@ -164,7 +164,7 @@ void TGeoElement::AddIsotope(TGeoIsotope *isotope, Double_t relativeAbundance)
    if (ncurrent==fNisotopes) {
       Error("AddIsotope", "All %d isotopes of element %s already defined", fNisotopes, GetName());
       return;
-   }   
+   }
    // Check Z of the new isotope
    if ((fZ!=0) && (isotope->GetZ()!=fZ)) {
       Fatal("AddIsotope", "Trying to add isotope %s with different Z to the same element %s",
@@ -172,7 +172,7 @@ void TGeoElement::AddIsotope(TGeoIsotope *isotope, Double_t relativeAbundance)
       return;
    } else {
       fZ = isotope->GetZ();
-   }   
+   }
    fIsotopes->Add(isotope);
    fAbundances[ncurrent] = relativeAbundance;
    if (ncurrent==fNisotopes-1) {
@@ -186,10 +186,10 @@ void TGeoElement::AddIsotope(TGeoIsotope *isotope, Double_t relativeAbundance)
          weight += fAbundances[i];
       }
       aeff /= weight;
-      neff /= weight;         
+      neff /= weight;
       fN = (Int_t)neff;
       fA = aeff;
-   }   
+   }
 }
 
 //______________________________________________________________________________
@@ -222,7 +222,7 @@ TGeoIsotope *TGeoElement::GetIsotope(Int_t i) const
 //______________________________________________________________________________
 Double_t TGeoElement::GetRelativeAbundance(Int_t i) const
 {
-// Return relative abundance of i-th isotope in this element.   
+// Return relative abundance of i-th isotope in this element.
    if (i>=0 && i<fNisotopes) return fAbundances[i];
    return 0.0;
 }
@@ -259,14 +259,14 @@ TGeoIsotope *TGeoIsotope::FindIsotope(const char *name)
    TGeoElementTable *elTable = TGeoElement::GetElementTable();
    if (!elTable) return 0;
    return elTable->FindIsotope(name);
-}   
+}
 
 //______________________________________________________________________________
 void TGeoIsotope::Print(Option_t *) const
 {
 // Print this isotope
    printf("Isotope: %s     Z=%d   N=%d   A=%f [g/mole]\n", GetName(), fZ,fN,fA);
-}   
+}
 
 ClassImp(TGeoElementRN)
 
@@ -1062,7 +1062,7 @@ void TGeoElementTable::ImportElementsRN()
             Error("ImportElementsRN", "Error parsing RadioNuclides.txt file");
             fclose(fp);
             return;
-         }   
+         }
          TGeoDecayChannel *dc = TGeoDecayChannel::ReadDecay(line);
          elem->AddDecay(dc);
       }

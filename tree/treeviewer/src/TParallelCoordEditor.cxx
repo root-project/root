@@ -123,7 +123,7 @@ TParallelCoordEditor::TParallelCoordEditor(const TGWindow* /*p*/,
 
       AddFrame(new TGLabel(this,"Dots spacing"),
                new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
-      
+
       TGHorizontalFrame *f2 = new TGHorizontalFrame(this);
       fDotsSpacing = new TGHSlider(f2,100,kSlider2|kScaleNo,kDotsSpacing);
       fDotsSpacing->SetRange(0,60);

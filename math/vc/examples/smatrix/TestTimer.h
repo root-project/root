@@ -48,17 +48,17 @@ namespace ROOT {
 #endif
                if (fTime) *fTime += fWatch.RealTime();
             }
-            
-            
-         private: 
-            
+
+
+         private:
+
             std::string fName;
-            double * fTime; 
-            TStopwatch fWatch; 
-            
-         }; 
+            double * fTime;
+            TStopwatch fWatch;
+
+         };
       }
-      
+
    }
 }
 

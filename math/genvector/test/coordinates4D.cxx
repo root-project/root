@@ -1,9 +1,9 @@
 // $Id $
-// 
-// Tests that each form of 4-vector has all the properties that stem from
-// owning and forwarding to a 4D coordinates instance 
 //
-// 6/28/05 m fischler   
+// Tests that each form of 4-vector has all the properties that stem from
+// owning and forwarding to a 4D coordinates instance
+//
+// 6/28/05 m fischler
 //         from contents of test_coordinates.h by L. Moneta.
 //
 // =================================================================
@@ -38,10 +38,10 @@ using namespace ROOT::Math;
 
 
 
-template <typename T1, typename T2 > 
-struct Precision { 
-  enum { result = std::numeric_limits<T1>::digits <= std::numeric_limits<T2>::digits   }; 
-}; 
+template <typename T1, typename T2 >
+struct Precision {
+  enum { result = std::numeric_limits<T1>::digits <= std::numeric_limits<T2>::digits   };
+};
 
 template <typename T1, typename T2, bool>
 struct LessPreciseType {
@@ -53,7 +53,7 @@ struct LessPreciseType<T1, T2, false> {
 };
 
 
-template <typename Scalar1, typename Scalar2> 
+template <typename Scalar1, typename Scalar2>
 int
 closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, double ticks ) {
   int ret = 0;
@@ -78,8 +78,8 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, double ticks ) 
     return ret;
   }
   // infinity dicrepancy musy be checked with max precision
-  long double sd1(ss1); 
-  long double sd2(ss2); 
+  long double sd1(ss1);
+  long double sd2(ss2);
   if ( (sd1 + sd2 == sd1) != (sd1 + sd2 == sd2) ) {
     ret=5;
     std::cout << "\nInfinity discrepancy in " << coord << "(): "
@@ -102,27 +102,27 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, double ticks ) 
 
 template <class V1, class V2>
 int compare4D (const V1 & v1, const V2 & v2, double ticks) {
-  int ret =0;  
+  int ret =0;
   typedef typename V1::CoordinateType CoordType1;
   typedef typename V2::CoordinateType CoordType2;
-  
-  ret |= closeEnough ( v1.x(),     v2.x(),     "x"     ,ticks); 
-  ret |= closeEnough ( v1.y(),     v2.y(),     "y"     ,ticks); 
-  ret |= closeEnough ( v1.z(),     v2.z(),     "z"     ,ticks); 
-  ret |= closeEnough ( v1.t(),     v2.t(),     "t"     ,ticks); 
-  ret |= closeEnough ( v1.rho(),   v2.rho(),   "rho"   ,ticks); 
-  ret |= closeEnough ( v1.phi(),   v2.phi(),   "phi"   ,ticks); 
-  ret |= closeEnough ( v1.P(),     v2.P(),     "p"     ,ticks); 
-  ret |= closeEnough ( v1.theta(), v2.theta(), "theta" ,ticks); 
-  ret |= closeEnough ( v1.perp2(), v2.perp2(), "perp2" ,ticks); 
-  ret |= closeEnough ( v1.M2(),    v2.M2(),    "m2"    ,ticks); 
-  ret |= closeEnough ( v1.M(),     v2.M(),     "m"     ,ticks); 
-  ret |= closeEnough ( v1.Mt(),    v2.Mt(),    "mt"     ,ticks); 
-  ret |= closeEnough ( v1.Et(),    v2.Et(),    "et"     ,ticks); 
+
+  ret |= closeEnough ( v1.x(),     v2.x(),     "x"     ,ticks);
+  ret |= closeEnough ( v1.y(),     v2.y(),     "y"     ,ticks);
+  ret |= closeEnough ( v1.z(),     v2.z(),     "z"     ,ticks);
+  ret |= closeEnough ( v1.t(),     v2.t(),     "t"     ,ticks);
+  ret |= closeEnough ( v1.rho(),   v2.rho(),   "rho"   ,ticks);
+  ret |= closeEnough ( v1.phi(),   v2.phi(),   "phi"   ,ticks);
+  ret |= closeEnough ( v1.P(),     v2.P(),     "p"     ,ticks);
+  ret |= closeEnough ( v1.theta(), v2.theta(), "theta" ,ticks);
+  ret |= closeEnough ( v1.perp2(), v2.perp2(), "perp2" ,ticks);
+  ret |= closeEnough ( v1.M2(),    v2.M2(),    "m2"    ,ticks);
+  ret |= closeEnough ( v1.M(),     v2.M(),     "m"     ,ticks);
+  ret |= closeEnough ( v1.Mt(),    v2.Mt(),    "mt"     ,ticks);
+  ret |= closeEnough ( v1.Et(),    v2.Et(),    "et"     ,ticks);
   if ( v1.rho() > 0 && v2.rho() > 0 ) { // eta can legitimately vary if rho == 0
-    ret |= closeEnough ( v1.eta(), v2.eta(),   "eta"   ,ticks); 
+    ret |= closeEnough ( v1.eta(), v2.eta(),   "eta"   ,ticks);
   }
-  
+
   if (ret != 0) {
     std::cout << "Discrepancy detected (see above) is between:\n  "
               << CoordinateTraits<CoordType1>::name() << " and\n  "
@@ -130,7 +130,7 @@ int compare4D (const V1 & v1, const V2 & v2, double ticks) {
               << "with v = (" << v1.x() << ", " << v1.y() << ", "
               << v1.z() << ", " << v1.t() << ")\n";
   }
-  else { 
+  else {
     std::cout << ".";
   }
 
@@ -156,34 +156,34 @@ int test4D ( const LorentzVector<C> & v, double ticks ) {
   double theta = std::atan2( rho, v.z() );  // better tahn using acos
   //double theta = r>0 ? std::acos ( v.z()/r ) : 0;
   double phi = rho>0 ? std::atan2 (v.y(), v.x()) : 0;
-    
+
   double eta;
   if (rho != 0) {
-    eta = -std::log(std::tan(theta/2)); 
+    eta = -std::log(std::tan(theta/2));
    #ifdef TRACE1
-   std::cout <<  ":::: rho != 0\n" 
-             <<  ":::: theta = " <<  theta 
+   std::cout <<  ":::: rho != 0\n"
+             <<  ":::: theta = " <<  theta
         <<"/n:::: tan(theta/2) = " << std::tan(theta/2)
              <<"\n:::: eta = " << eta << "\n";
    #endif
   } else if (v.z() == 0) {
     eta = 0;
    #ifdef TRACE1
-   std::cout <<  ":::: v.z() == 0\n" 
+   std::cout <<  ":::: v.z() == 0\n"
              <<"\n:::: eta = " << eta << "\n";
    #endif
   } else if (v.z() > 0) {
     eta = v.z() + etaMax<long double>();
    #ifdef TRACE1
-   std::cout <<  ":::: v.z() > 0\n" 
-             <<  ":::: etaMax =  " << etaMax<long double>() 
+   std::cout <<  ":::: v.z() > 0\n"
+             <<  ":::: etaMax =  " << etaMax<long double>()
              <<"\n:::: eta = " << eta << "\n";
    #endif
   } else {
     eta = v.z() - etaMax<long double>();
    #ifdef TRACE1
-   std::cout <<  ":::: v.z() < 0\n" 
-             <<  ":::: etaMax =  " << etaMax<long double>() 
+   std::cout <<  ":::: v.z() < 0\n"
+             <<  ":::: etaMax =  " << etaMax<long double>()
              <<"\n:::: eta = " << eta << "\n";
    #endif
   }
@@ -197,7 +197,7 @@ int test4D ( const LorentzVector<C> & v, double ticks ) {
 
   LorentzVector< PxPyPzM4D  <double> > vxyzm_d ( v.x(), v.y(), v.z(), v.M() );
   ret |= compare4D( vrep_d, vxyzm_d, ticks);
-  
+
   LorentzVector< PxPyPzE4D<float> >      vxyzt_f (v.x(), v.y(), v.z(), v.t());
   ret |= compare4D( vxyzt_d, vxyzt_f, ticks);
 
@@ -211,12 +211,12 @@ int test4D ( const LorentzVector<C> & v, double ticks ) {
   ret |= compare4D( vrep_f, vxyzm_f, ticks);
 
   if (ret == 0) std::cout << "\t OK\n";
-  else { 
+  else {
      std::cout << "\t FAIL\n";
-     std::cerr << "\n>>>>> Testing LorentzVector from " << XYZTVector(v) << " ticks = " << ticks 
+     std::cerr << "\n>>>>> Testing LorentzVector from " << XYZTVector(v) << " ticks = " << ticks
                << "\t:\t FAILED\n";
   }
-  return ret; 
+  return ret;
 }
 
 
@@ -228,7 +228,7 @@ int coordinates4D (bool testAll = false) {
   ret |= test4D (XYZTVector ( -1.0, -2.0, 3.0, 4.0 )   ,10 );
   // test for large eta values (which was giving inf before  Jun 07)
   ret |= test4D (XYZTVector ( 1.E-8, 1.E-8, 10.0, 100.0 )   ,10 );
-  // for z < 0 precision in eta is worse since theta is close to Pi 
+  // for z < 0 precision in eta is worse since theta is close to Pi
   ret |= test4D (XYZTVector ( 1.E-8, 1.E-8, -10.0, 100.0 )   ,1000000000 );
 
   // test cases with zero mass
@@ -236,8 +236,8 @@ int coordinates4D (bool testAll = false) {
   // tick should be p /sqrt(eps) ~ 4 /sqrt(eps)
   ret |= test4D (PxPyPzMVector ( 1., 2., 3., 0.)  ,  4./std::sqrt(std::numeric_limits<double>::epsilon()) );
 
-  // this test fails in some machines (skip by default) 
-  if (!testAll) return ret;  
+  // this test fails in some machines (skip by default)
+  if (!testAll) return ret;
 
   // take a factor 1.5 in ticks to be conservative
   ret |= test4D (PxPyPzMVector ( 1., 1., 100., 0.)  ,  150./std::sqrt(std::numeric_limits<double>::epsilon()) );
@@ -249,9 +249,9 @@ int coordinates4D (bool testAll = false) {
   return ret;
 }
 
-int main() { 
+int main() {
    int ret = coordinates4D();
-   if (ret)  std::cerr << "test FAILED !!! " << std::endl; 
+   if (ret)  std::cerr << "test FAILED !!! " << std::endl;
    else   std::cout << "test OK " << std::endl;
    return ret;
 }

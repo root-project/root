@@ -52,7 +52,7 @@ private:
 
    TDataSetIter(const TDataSetIter&);            // Not implemented.
    TDataSetIter &operator=(const TDataSetIter&); // Not implemented.
-   
+
 public:
    TDataSetIter(TDataSet *l=0, Int_t depth=1, Bool_t dir=kIterForward);
    TDataSetIter(TDataSet *l, Bool_t dir);
@@ -112,7 +112,7 @@ public:
    const  Option_t    *GetOption() const                                { return fNext ? fNext->GetOption():0; }
    virtual void         Reset(TDataSet *l=0,Int_t depth=0);
    virtual TDataSet    *operator *() const ;
-   
+
    ClassDef(TDataSetIter,0) // class-iterator to navigate TDataSet structure
 };
 

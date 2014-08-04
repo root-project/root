@@ -36,7 +36,7 @@ protected:
    TList        *fList;    //list of objects in memory
    TList        *fKeys;    //list of Hbook keys (Ids) on disk
    TString       fCurDir;  //name of current directory
-   
+
    static Bool_t fgPawInit;
    static Int_t *fgLuns;
 

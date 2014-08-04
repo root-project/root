@@ -9,7 +9,7 @@
 // To use this class you must install a version of pythia6.                   //
 //   see the installation instructions at                                     //
 //       http://root.cern.ch/root/Install.html                                //
-//                                                                            // 
+//                                                                            //
 // CERNLIB event generators, written by T.Sjostrand.                          //
 // For the details about these generators look at Pythia/Jetset manual:       //
 //                                                                            //
@@ -98,7 +98,7 @@ TPythia6*  TPythia6::fgInstance = 0;
 #  define tpythia6_close_fortran_file tpythia6_close_fortran_file_
 #  define pythia6_common_address pythia6_common_address
 # else
-#  define pythia6_common_address pythia6_common_address 
+#  define pythia6_common_address pythia6_common_address
 #  define tpythia6_open_fortran_file tpythia6_open_fortran_file_
 #  define tpythia6_close_fortran_file tpythia6_close_fortran_file_
 # endif
@@ -193,12 +193,12 @@ TPythia6::TPythia6() : TGenerator("TPythia6","TPythia6") {
    // TPythia6 constructor: creates a TClonesArray in which it will store all
    // particles. Note that there may be only one functional TPythia6 object
    // at a time, so it's not use to create more than one instance of it.
-  
+
    // Protect against multiple objects.   All access should be via the
-   // Instance member function. 
-   if (fgInstance) 
+   // Instance member function.
+   if (fgInstance)
       Fatal("TPythia6", "There's already an instance of TPythia6");
-  
+
    delete fParticles; // was allocated as TObjArray in TGenerator
 
    fParticles = new TClonesArray("TMCParticle",50);
@@ -206,7 +206,7 @@ TPythia6::TPythia6() : TGenerator("TPythia6","TPythia6") {
    // initialize common-blocks
    // the functions/subroutines referenced by TPythia6 can be found
    // at ftp://root.cern.ch/root/pythia6.tar.gz
-  
+
    fPyjets = (Pyjets_t*) pythia6_common_address("PYJETS");
    fPydat1 = (Pydat1_t*) pythia6_common_address("PYDAT1");
    fPydat2 = (Pydat2_t*) pythia6_common_address("PYDAT2");
@@ -501,7 +501,7 @@ void TPythia6::Initialize(const char *frame, const char *beam, const char *targe
 }
 
 
-void TPythia6::Pyinit(char* frame, char* beam, char* target, double win) 
+void TPythia6::Pyinit(char* frame, char* beam, char* target, double win)
 {
    // Calls Pyinit with the same parameters after performing some checking,
    // sets correct title. This method should preferably be called instead of PyInit.
@@ -576,7 +576,7 @@ void TPythia6::Pylist(int flag) {
 void TPythia6::Pyname(int kf, char* name) {
    //Note that the array name must be dimensioned in the calling program
    //to at least name[16]
-   
+
    pyname(&kf,name,15);
    // cut trailing blanks to get C string
    name[15] = 0;
@@ -635,22 +635,22 @@ int TPythia6::Pychge(int kf) {
 void TPythia6::Py1ent(Int_t ip, Int_t kf, Double_t pe, Double_t theta, Double_t phi)
 {
    // Add one entry to the event record, i.e. either a parton or a
-   // particle. 
+   // particle.
    //
    //  IP:   normally line number for the parton/particle. There are two
    //        exceptions:
-   // 
-   //        If IP = 0: line number 1 is used and PYEXEC is called. 
+   //
+   //        If IP = 0: line number 1 is used and PYEXEC is called.
    //        If IP < 0: line -IP is used, with status code K(-IP,2)=2
    //                   rather than 1; thus a parton system may be built
    //                   up by filling all but the last parton of the
-   //                   system with IP < 0.   
+   //                   system with IP < 0.
    //  KF:   parton/particle flavour code (PDG code)
    //  PE:   parton/particle energy. If PE is smaller than the mass,
-   //        the parton/particle is taken to be at rest.  
+   //        the parton/particle is taken to be at rest.
    //  THETA:
    //  PHI:  polar and azimuthal angle for the momentum vector of the
-   //        parton/particle. 
+   //        parton/particle.
    py1ent(ip, kf, pe, theta, phi);
 }
 

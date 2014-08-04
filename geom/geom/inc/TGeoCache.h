@@ -46,7 +46,7 @@ protected:
    TGeoHMatrix        **fMatrixBranch;  // global matrices for last branch
    TGeoHMatrix        **fMatPtr;        // array of matrix pointers
 
-   TGeoCacheState(const TGeoCacheState&); 
+   TGeoCacheState(const TGeoCacheState&);
    TGeoCacheState& operator=(const TGeoCacheState&);
 
 public:

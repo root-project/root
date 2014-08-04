@@ -1,26 +1,26 @@
 //
 // macro driving the analysis
 //
-//  can specify file name and type 
+//  can specify file name and type
 //
-// type == 0 : normal 
-// type =  1 : use AClic to compile selector 
+// type == 0 : normal
+// type =  1 : use AClic to compile selector
 // type =  2 : use a fill list and then process the fill list
 
 //----------------------------------------
 
-void run_h1analysis(int type = 0, const char * h1dir = 0) { 
+void run_h1analysis(int type = 0, const char * h1dir = 0) {
 
    std::cout << "Run h1 analysis " << std::endl;
 
-   // create first the chain with all the files 
+   // create first the chain with all the files
 
    TChain chain("h42");
 
    if (h1dir) {
       gSystem->Setenv("H1",h1dir);
    }
-   else 
+   else
       gSystem->Setenv("H1","http://root.cern.ch/files/h1/");
 
 
@@ -32,16 +32,16 @@ void run_h1analysis(int type = 0, const char * h1dir = 0) {
    chain.Add("$H1/dstarp1b.root");
    chain.Add("$H1/dstarp2.root");
 
-   TString selectionMacro = TString(gSystem->DirName(__FILE__) ) + "/h1analysis.C"; 
+   TString selectionMacro = TString(gSystem->DirName(__FILE__) ) + "/h1analysis.C";
 
-   if (type == 0) 
+   if (type == 0)
       chain.Process(selectionMacro);
-   else if (type == 1)   { 
+   else if (type == 1)   {
       // use AClic ( add a + at the end
       selectionMacro += "+";
       chain.Process(selectionMacro);
    }
-   else if (type == 2) { 
+   else if (type == 2) {
       chain.Process(selectionMacro,"fillList");
       chain.Process(selectionMacro,"useList");
    }

@@ -7,8 +7,8 @@
  *                                                                    *
  **********************************************************************/
 //
-// Header file for TDataPointN class 
-// 
+// Header file for TDataPointN class
+//
 
 
 #ifndef ROOT_Math_TDataPointN
@@ -31,33 +31,33 @@ class TDataPointN
 {
 private:
    static UInt_t kDimension;
-  
+
 public:
    typedef _val_type value_type;
-  
+
    static UInt_t Dimension() {return kDimension;}
    static void SetDimension(UInt_t dim) {assert(dim>0);kDimension=dim;}
-  
+
    TDataPointN();
-#ifndef __MAKECINT__  
+#ifndef __MAKECINT__
    template<typename _coord_typ>
    TDataPointN(const _coord_typ* pData,value_type fWeight = 1);
    template<typename _val>
    TDataPointN(const TDataPointN<_val>&);
-#endif  
+#endif
    virtual ~TDataPointN();
 
 #ifndef __MAKECINT__
    template<typename _val>
    _val_type   Distance(const TDataPointN<_val>& rPoint) const;
-#endif  
+#endif
    _val_type   GetCoordinate(unsigned int iAxis) const;
    _val_type   GetWeight() const {return m_fWeight;}
    bool        Less(TDataPointN& rPoint,unsigned int iAxis) const;
    void        SetCoordinate(unsigned int iAxis,value_type fValue);
    void        SetWeight(float fWeight) {m_fWeight = fWeight;}
-       
-private:       
+
+private:
    value_type*   m_vCoordinates;
    value_type    m_fWeight;
 };

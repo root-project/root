@@ -37,12 +37,12 @@ protected:
    char               *fAbsAddress;   //! Absolute leaf Address
    Int_t               fID;           //element serial number in fInfo
    Int_t               fType;         //leaf type
-        
+
 public:
    TLeafElement();
    TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t type);
    virtual ~TLeafElement();
-   
+
    virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
    TMethodCall     *GetMethodCall(const char *name);
    virtual Int_t    GetMaximum() const {return ((TBranchElement*)fBranch)->GetMaximum();}
@@ -58,7 +58,7 @@ public:
    virtual Bool_t   IsOnTerminalBranch() const;
    virtual void     PrintValue(Int_t i=0) const {((TBranchElement*)fBranch)->PrintValue(i);}
    virtual void     SetLeafCount(TLeaf *leaf) {fLeafCount = leaf;}
-   
+
    ClassDef(TLeafElement,1);  //A TLeaf for a general object derived from TObject.
 };
 

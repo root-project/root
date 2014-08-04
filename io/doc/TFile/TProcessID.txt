@@ -26,7 +26,7 @@
 // -Begin TNamed object (Base class of TProcessID)
 //        6->9 ByteCount = Number of remaining bytes in TNamed object (uncompressed)
 //                       |   OR'd with kByteCountMask (0x40000000)
-//       10->11 Version  = Version of TNamed Class 
+//       10->11 Version  = Version of TNamed Class
 //       12->21          = TObject object (Base class of TNamed) (see tobject.txt).
 //                       |   The TProcessID object is not itself referenced.
 //       22->22 lname    = Number of bytes in the object name                 TNamed::fName

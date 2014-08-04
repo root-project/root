@@ -57,7 +57,7 @@ public:
 ClassImp(TGL5DDataSetEditor);
 
 //______________________________________________________________________________
-TGL5DDataSetEditor::TGL5DDataSetEditor(const TGWindow *p,  Int_t width, Int_t height, 
+TGL5DDataSetEditor::TGL5DDataSetEditor(const TGWindow *p,  Int_t width, Int_t height,
                                        UInt_t options, Pixel_t back) :
    TGedFrame(p,  width, height, options | kVerticalFrame, back),
    //"Grid" tab.
@@ -156,7 +156,7 @@ void TGL5DDataSetEditor::ConnectSignals2Slots()
    //Controls from "Surfaces" tab.
    fIsoList->Connect("Selected(Int_t)", "TGL5DDataSetEditor", this, "SurfaceSelected(Int_t)");
    fIsoList->GetContainer()->RemoveInput(kKeyPressMask);
-   
+
    fHighlightCheck->Connect("Clicked()", "TGL5DDataSetEditor", this, "HighlightClicked()");
    fVisibleCheck->Connect("Clicked()", "TGL5DDataSetEditor", this, "VisibleClicked()");
    fSurfColorSelect->Connect("ColorSelected(Pixel_t)", "TGL5DDataSetEditor", this, "ColorChanged(Pixel_t)");
@@ -174,7 +174,7 @@ namespace
 
 //Auxilary functions.
 //______________________________________________________________________________
-void make_slider_range_entries(TGCompositeFrame *parent, TGNumberEntryField *&minEntry, 
+void make_slider_range_entries(TGCompositeFrame *parent, TGNumberEntryField *&minEntry,
                                const TString &minToolTip, TGNumberEntryField *&maxEntry,
                                const TString &maxToolTip)
 {
@@ -211,7 +211,7 @@ TGDoubleHSlider *make_double_hslider(TGCompositeFrame *parent, const char *label
    TGCompositeFrame *sliderFrame = new TGCompositeFrame(parent, 80, 20, kHorizontalFrame);
    TGLabel *sliderLabel = new TGLabel(sliderFrame, labelName);
    sliderFrame->AddFrame(sliderLabel,
-                         new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2)); 
+                         new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 2, 2, 2, 2));
    TGDoubleHSlider *slider = new TGDoubleHSlider(sliderFrame, 1, 2);
    slider->Resize(110, 20);
 
@@ -249,7 +249,7 @@ void TGL5DDataSetEditor::CreateStyleTab()
    MakeTitle("Alpha");
    f = new TGHorizontalFrame(this, 200, 50);
    f->AddFrame(new TGLabel(f, "Value:"), new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5, 2, 2, 2));
-   fAlpha = new TGNumberEntry(f, 0, 1, -1, TGNumberFormat::kNESRealThree, TGNumberFormat::kNEANonNegative, 
+   fAlpha = new TGNumberEntry(f, 0, 1, -1, TGNumberFormat::kNESRealThree, TGNumberFormat::kNEANonNegative,
                               TGNumberFormat::kNELLimitMinMax, 0.1, 0.5);
    fAlpha->GetNumberEntry()->SetToolTipText("Value of alpha parameter");
    f->AddFrame(fAlpha, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 2, 2));
@@ -282,24 +282,24 @@ void TGL5DDataSetEditor::CreateGridTab()
    fNCellsXEntry = new TGNumberEntry(frame, 0., nDigits, -1, TGNumberFormat::kNESInteger,
                                      TGNumberFormat::kNEAPositive, TGNumberFormat::kNELLimitMinMax,
                                      min, max);
-   frame->AddFrame(fNCellsXEntry, 
+   frame->AddFrame(fNCellsXEntry,
                    new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsBottom, 2, 0, 0));
    //
    frame = make_labeled_hframe(gridGroup, "Cells along Y:");
-   fNCellsYEntry = new TGNumberEntry(frame, 0., nDigits, -1, TGNumberFormat::kNESInteger, 
+   fNCellsYEntry = new TGNumberEntry(frame, 0., nDigits, -1, TGNumberFormat::kNESInteger,
                                      TGNumberFormat::kNEAPositive, TGNumberFormat::kNELLimitMinMax,
                                      min, max);
-   frame->AddFrame(fNCellsYEntry, 
+   frame->AddFrame(fNCellsYEntry,
                    new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsBottom, 2, 0, 0));
    //
    frame = make_labeled_hframe(gridGroup, "Cells along Z:");
    fNCellsZEntry = new TGNumberEntry(frame, 0., nDigits, -1, TGNumberFormat::kNESInteger,
                                      TGNumberFormat::kNEAPositive, TGNumberFormat::kNELLimitMinMax,
                                      min, max);
-   frame->AddFrame(fNCellsZEntry, 
+   frame->AddFrame(fNCellsZEntry,
                    new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsBottom, 2, 0, 0));
    tabFrame->AddFrame(gridGroup, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX, 2, 3, 3, 0));
-   
+
    //3. The second part - "Ranges" group.
    TGGroupFrame *rangeGroup = new TGGroupFrame(tabFrame, "Ranges", kVerticalFrame);
    //4. Sliders and number entry fields.
@@ -355,7 +355,7 @@ void TGL5DDataSetEditor::CreateIsoTab()
    fIsoList->Resize(120, 120);
    hf->AddFrame(fIsoList, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
    isoGroup->AddFrame(hf, new TGLayoutHints(kLHintsLeft, 2, 1, 1, 1));
-   
+
    fVisibleCheck = new TGCheckButton(isoGroup, "Visible");
    fVisibleCheck->SetToolTipText("Show/hide surface");
    isoGroup->AddFrame(fVisibleCheck, new TGLayoutHints(kLHintsLeft, 4, 1, 1, 1));
@@ -421,7 +421,7 @@ void TGL5DDataSetEditor::SetModel(TObject* obj)
 
 namespace {
 
-void set_grid_range_widgets(const TAxis *a, const Rgl::Range_t r, TGDoubleHSlider *slider, 
+void set_grid_range_widgets(const TAxis *a, const Rgl::Range_t r, TGDoubleHSlider *slider,
                             TGNumberEntryField *eMin, TGNumberEntryField *eMax)
 {
    slider->SetRange(r.first, r.second);
@@ -531,7 +531,7 @@ void TGL5DDataSetEditor::EnableSurfaceControls()
    fVisibleCheck->SetState(kButtonUp);
 //   fShowCloud->SetState(kButtonUp);
 //   fSurfColorBtn->SetState(kButtonUp);
-   fSurfRemoveBtn->SetState(kButtonUp);   
+   fSurfRemoveBtn->SetState(kButtonUp);
 }
 
 //______________________________________________________________________________
@@ -579,7 +579,7 @@ void TGL5DDataSetEditor::XSliderSetMin()
 {
    //Value in a number entry was modified.
    if (fXRangeSliderMin->GetNumber() < fXRangeSliderMax->GetNumber()) {
-      fXRangeSlider->SetPosition(fXRangeSliderMin->GetNumber(), 
+      fXRangeSlider->SetPosition(fXRangeSliderMin->GetNumber(),
                                  fXRangeSliderMax->GetNumber());
       EnableGridTabButtons();
    } else
@@ -591,7 +591,7 @@ void TGL5DDataSetEditor::XSliderSetMax()
 {
    //Value in a number entry was modified.
    if (fXRangeSliderMin->GetNumber() < fXRangeSliderMax->GetNumber()) {
-      fXRangeSlider->SetPosition(fXRangeSliderMin->GetNumber(), 
+      fXRangeSlider->SetPosition(fXRangeSliderMin->GetNumber(),
                                  fXRangeSliderMax->GetNumber());
       EnableGridTabButtons();
    } else
@@ -604,7 +604,7 @@ void TGL5DDataSetEditor::YSliderSetMin()
 {
    //Value in a number entry was modified.
    if (fYRangeSliderMin->GetNumber() < fYRangeSliderMax->GetNumber()) {
-      fYRangeSlider->SetPosition(fYRangeSliderMin->GetNumber(), 
+      fYRangeSlider->SetPosition(fYRangeSliderMin->GetNumber(),
                                  fYRangeSliderMax->GetNumber());
       EnableGridTabButtons();
    } else
@@ -616,7 +616,7 @@ void TGL5DDataSetEditor::YSliderSetMax()
 {
    //Value in a number entry was modified.
    if (fYRangeSliderMin->GetNumber() < fYRangeSliderMax->GetNumber()) {
-      fYRangeSlider->SetPosition(fYRangeSliderMin->GetNumber(), 
+      fYRangeSlider->SetPosition(fYRangeSliderMin->GetNumber(),
                                  fYRangeSliderMax->GetNumber());
       EnableGridTabButtons();
    } else
@@ -628,7 +628,7 @@ void TGL5DDataSetEditor::ZSliderSetMin()
 {
    //Value in a number entry was modified.
    if (fZRangeSliderMin->GetNumber() < fZRangeSliderMax->GetNumber()) {
-      fZRangeSlider->SetPosition(fZRangeSliderMin->GetNumber(), 
+      fZRangeSlider->SetPosition(fZRangeSliderMin->GetNumber(),
                                  fZRangeSliderMax->GetNumber());
       EnableGridTabButtons();
    } else
@@ -641,7 +641,7 @@ void TGL5DDataSetEditor::ZSliderSetMax()
 {
    //Value in a number entry was modified.
    if (fZRangeSliderMin->GetNumber() < fZRangeSliderMax->GetNumber()) {
-      fZRangeSlider->SetPosition(fZRangeSliderMin->GetNumber(), 
+      fZRangeSlider->SetPosition(fZRangeSliderMin->GetNumber(),
                                  fZRangeSliderMax->GetNumber());
       EnableGridTabButtons();
    } else
@@ -664,16 +664,16 @@ void TGL5DDataSetEditor::ApplyGridParameters()
    //Modify all meshes.
    DisableGridTabButtons();
    //
-   fDataSet->GetXAxis()->Set(fNCellsXEntry->GetIntNumber(), 
-                             fXRangeSlider->GetMinPosition(), 
+   fDataSet->GetXAxis()->Set(fNCellsXEntry->GetIntNumber(),
+                             fXRangeSlider->GetMinPosition(),
                              fXRangeSlider->GetMaxPosition());
 
-   fDataSet->GetYAxis()->Set(fNCellsYEntry->GetIntNumber(), 
-                             fYRangeSlider->GetMinPosition(), 
+   fDataSet->GetYAxis()->Set(fNCellsYEntry->GetIntNumber(),
+                             fYRangeSlider->GetMinPosition(),
                              fYRangeSlider->GetMaxPosition());
 
-   fDataSet->GetZAxis()->Set(fNCellsZEntry->GetIntNumber(), 
-                             fZRangeSlider->GetMinPosition(), 
+   fDataSet->GetZAxis()->Set(fNCellsZEntry->GetIntNumber(),
+                             fZRangeSlider->GetMinPosition(),
                              fZRangeSlider->GetMaxPosition());
 
    fPainter->ResetGeometryRanges();
@@ -687,7 +687,7 @@ void TGL5DDataSetEditor::HighlightClicked()
    //Check, if selected surface must be highlighted.
    if (fSelectedSurface == -1)
       return;
-   
+
    fHidden->fIterators[fSelectedSurface]->fHighlight = fHighlightCheck->IsOn();
 
    if (gPad)
@@ -780,7 +780,7 @@ void TGL5DDataSetEditor::RemoveSurface()
 {
    //Remove selected surface.
    if (fSelectedSurface != -1) {
-      
+
       SurfIter_t it = fHidden->fIterators[fSelectedSurface];
       fHidden->fIterators.erase(fSelectedSurface);
       fIsoList->RemoveEntry(fSelectedSurface);
@@ -847,7 +847,7 @@ void TGL5DDataSetEditor::BoxCutToggled()
 {
    // Slot connected to the Show BoxCut check button.
 
-   if (fPainter) 
+   if (fPainter)
       fPainter->ShowBoxCut(fShowBoxCut->IsOn());
    if (gPad)
       gPad->Update();

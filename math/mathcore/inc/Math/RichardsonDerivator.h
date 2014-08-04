@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: David Gonzalez Maline    01/2008 
+// Authors: David Gonzalez Maline    01/2008
 
 /**********************************************************************
  *                                                                    *
@@ -9,9 +9,9 @@
  **********************************************************************/
 
 // Header file for RichardsonDerivator
-// 
+//
 // Created by: David Gonzalez Maline  : Mon Feb 4 2008
-// 
+//
 
 #ifndef ROOT_Math_RichardsonDerivator
 #define ROOT_Math_RichardsonDerivator
@@ -24,25 +24,25 @@ namespace Math {
 //___________________________________________________________________________________________
 /**
    User class for calculating the derivatives of a function. It can calculate first (method Derivative1),
-   second (method Derivative2) and third (method Derivative3) of a function.  
-   
-   It uses the Richardson extrapolation method for function derivation in a given interval. 
-   The method use 2 derivative estimates (one computed with step h and one computed with step h/2) 
-   to compute a third, more accurate estimation. It is equivalent to the 
+   second (method Derivative2) and third (method Derivative3) of a function.
+
+   It uses the Richardson extrapolation method for function derivation in a given interval.
+   The method use 2 derivative estimates (one computed with step h and one computed with step h/2)
+   to compute a third, more accurate estimation. It is equivalent to the
    <a href = http://en.wikipedia.org/wiki/Five-point_stencil>5-point method</a>,
-   which can be obtained with a Taylor expansion. 
-   A step size should be given, depending on x and f(x). 
-   An optimal step size value minimizes the truncation error of the expansion and the rounding  
-   error in evaluating x+h and f(x+h). A too small h will yield a too large rounding error while a too large 
-   h will give a large truncation error in the derivative approximation. 
-   A good discussion can be found in discussed in 
+   which can be obtained with a Taylor expansion.
+   A step size should be given, depending on x and f(x).
+   An optimal step size value minimizes the truncation error of the expansion and the rounding
+   error in evaluating x+h and f(x+h). A too small h will yield a too large rounding error while a too large
+   h will give a large truncation error in the derivative approximation.
+   A good discussion can be found in discussed in
    <a href=http://www.nrbook.com/a/bookcpdf/c5-7.pdf>Chapter 5.7</a>  of Numerical Recipes in C.
    By default a value of 0.001 is uses, acceptable in many cases.
 
    This class is implemented using code previosuly in  TF1::Derivate{,2,3}(). Now TF1 uses this class.
 
    @ingroup Deriv
-  
+
  */
 
 class RichardsonDerivator {
@@ -52,12 +52,12 @@ public:
    ~RichardsonDerivator();
 
    /** Default Constructor.
-       Give optionally the step size for derivation. By default is 0.001, which is fine for x ~ 1  
-       Increase if x is in averga larger or decrease if x is smaller 
+       Give optionally the step size for derivation. By default is 0.001, which is fine for x ~ 1
+       Increase if x is in averga larger or decrease if x is smaller
     */
    RichardsonDerivator(double h = 0.001);
-   
-   /** Construct from function and step size 
+
+   /** Construct from function and step size
     */
    RichardsonDerivator(const ROOT::Math::IGenFunction & f, double h = 0.001, bool copyFunc = false);
 
@@ -86,13 +86,13 @@ public:
      End_Latex
       the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
        "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
-     
+
       the argument eps may be specified to control the step size (precision).
       the step size is taken as eps*(xmax-xmin).
       the default value (0.001) should be good enough for the vast majority
       of functions. Give a smaller value if your function has many changes
       of the second derivative in the function range.
-     
+
       Getting the error via TF1::DerivativeError:
         (total error = roundoff error + interpolation error)
       the estimate of the roundoff error is taken as follows:
@@ -107,11 +107,11 @@ public:
    double operator() (double x) { return Derivative1(x); }
 
    /**
-      First Derivative calculation passing function and step-size 
+      First Derivative calculation passing function and step-size
     */
-   double Derivative1(const IGenFunction & f, double x, double h) { 
-      fFunction = &f; 
-      fStepSize = h; 
+   double Derivative1(const IGenFunction & f, double x, double h) {
+      fFunction = &f;
+      fStepSize = h;
       return Derivative1(x);
    }
 
@@ -125,13 +125,13 @@ public:
      End_Latex
       the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
        "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
-     
+
       the argument eps may be specified to control the step size (precision).
       the step size is taken as eps*(xmax-xmin).
       the default value (0.001) should be good enough for the vast majority
       of functions. Give a smaller value if your function has many changes
       of the second derivative in the function range.
-     
+
       Getting the error via TF1::DerivativeError:
         (total error = roundoff error + interpolation error)
       the estimate of the roundoff error is taken as follows:
@@ -145,11 +145,11 @@ public:
    double Derivative2 (double x);
 
    /**
-      Second Derivative calculation passing function and step-size 
+      Second Derivative calculation passing function and step-size
     */
-   double Derivative2(const IGenFunction & f, double x, double h) { 
-      fFunction = &f; 
-      fStepSize = h; 
+   double Derivative2(const IGenFunction & f, double x, double h) {
+      fFunction = &f;
+      fStepSize = h;
       return Derivative2(x);
    }
 
@@ -163,13 +163,13 @@ public:
      End_Latex
       the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
        "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
-     
+
       the argument eps may be specified to control the step size (precision).
       the step size is taken as eps*(xmax-xmin).
       the default value (0.001) should be good enough for the vast majority
       of functions. Give a smaller value if your function has many changes
       of the second derivative in the function range.
-     
+
       Getting the error via TF1::DerivativeError:
         (total error = roundoff error + interpolation error)
       the estimate of the roundoff error is taken as follows:
@@ -183,11 +183,11 @@ public:
    double Derivative3 (double x);
 
    /**
-      Third Derivative calculation passing function and step-size 
+      Third Derivative calculation passing function and step-size
     */
-   double Derivative3(const IGenFunction & f, double x, double h) { 
-      fFunction = &f; 
-      fStepSize = h; 
+   double Derivative3(const IGenFunction & f, double x, double h) {
+      fFunction = &f;
+      fStepSize = h;
       return Derivative3(x);
    }
 
@@ -213,7 +213,7 @@ protected:
 };
 
 } // end namespace Math
-   
+
 } // end namespace ROOT
 
 #endif /* ROOT_Math_RichardsonDerivator */

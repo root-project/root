@@ -2,7 +2,7 @@
 // Author: Andrei Gheata   30/10/01
 
 //_____________________________________________________________________________
-// TGeoPatternFinder - base finder class for patterns. 
+// TGeoPatternFinder - base finder class for patterns.
 //==================
 //   A pattern is specifying a division type which applies only to a given
 // shape type. The implemented patterns are for the moment equidistant slices
@@ -49,7 +49,7 @@ ClassImp(TGeoPatternSphR)
 ClassImp(TGeoPatternSphTheta)
 ClassImp(TGeoPatternSphPhi)
 ClassImp(TGeoPatternHoneycomb)
-   
+
 
 //______________________________________________________________________________
 TGeoPatternFinder::ThreadData_t::ThreadData_t() :
@@ -74,7 +74,7 @@ TGeoPatternFinder::ThreadData_t& TGeoPatternFinder::GetThreadData() const
    if (tid >= fThreadSize) {
       Error("GetThreadData", "Thread id=%d bigger than maximum declared thread number %d. \nUse TGeoManager::SetMaxThreads properly !!!",
              tid, fThreadSize);
-   }          
+   }
 
    TThread::Lock();
    if (tid >= fThreadSize)
@@ -119,7 +119,7 @@ void TGeoPatternFinder::CreateThreadData(Int_t nthreads)
          fThreadData[tid] = new ThreadData_t;
          fThreadData[tid]->fMatrix = CreateMatrix();
       }
-   }   
+   }
    TThread::UnLock();
 }
 
@@ -158,7 +158,7 @@ TGeoPatternFinder::TGeoPatternFinder(const TGeoPatternFinder& pf) :
   fNdivisions(pf.fNdivisions),
   fDivIndex(pf.fDivIndex),
   fVolume(pf.fVolume)
-{ 
+{
    //copy constructor
 }
 
@@ -174,7 +174,7 @@ TGeoPatternFinder& TGeoPatternFinder::operator=(const TGeoPatternFinder& pf)
       fNdivisions=pf.fNdivisions;
       fDivIndex=pf.fDivIndex;
       fVolume=pf.fVolume;
-   } 
+   }
    return *this;
 }
 
@@ -221,7 +221,7 @@ TGeoNode *TGeoPatternFinder::CdNext()
    if (td.fNextIndex < 0) return NULL;
    cd(td.fNextIndex);
    return GetNodeOffset(td.fCurrent);
-}   
+}
 
 //______________________________________________________________________________
 void TGeoPatternFinder::SetRange(Double_t start, Double_t step, Int_t ndivisions)
@@ -232,7 +232,7 @@ void TGeoPatternFinder::SetRange(Double_t start, Double_t step, Int_t ndivisions
    fStep = step;
    fNdivisions = ndivisions;
 }
-   
+
 //______________________________________________________________________________
 // TGeoPatternX - a X axis divison pattern
 //______________________________________________________________________________
@@ -247,7 +247,7 @@ TGeoPatternX::TGeoPatternX()
 //_____________________________________________________________________________
 TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    Double_t dx = ((TGeoBBox*)vol->GetShape())->GetDX();
    fStart = -dx;
@@ -259,7 +259,7 @@ TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions)
 //_____________________________________________________________________________
 TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    Double_t dx = ((TGeoBBox*)vol->GetShape())->GetDX();
    fStart = -dx;
@@ -271,7 +271,7 @@ TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t step)
 //_____________________________________________________________________________
 TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fStart      = start;
    fEnd        = end;
@@ -282,7 +282,7 @@ TGeoPatternX::TGeoPatternX(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
 //_____________________________________________________________________________
 TGeoPatternX::TGeoPatternX(const TGeoPatternX& pf) :
   TGeoPatternFinder(pf)
-{ 
+{
    //copy constructor
    CreateThreadData(1);
 }
@@ -294,7 +294,7 @@ TGeoPatternX& TGeoPatternX::operator=(const TGeoPatternX& pf)
    if(this!=&pf) {
       TGeoPatternFinder::operator=(pf);
       CreateThreadData(1);
-   } 
+   }
    return *this;
 }
 
@@ -309,7 +309,7 @@ void TGeoPatternX::cd(Int_t idiv)
 {
 // Update current division index and global matrix to point to a given slice.
    ThreadData_t& td = GetThreadData();
-   td.fCurrent=idiv; 
+   td.fCurrent=idiv;
    td.fMatrix->SetDx(fStart+idiv*fStep+0.5*fStep);
 }
 
@@ -321,12 +321,12 @@ TGeoMatrix* TGeoPatternX::CreateMatrix() const
       TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
       matrix->RegisterYourself();
       return matrix;
-   }   
+   }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
    combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
-   return combi;   
+   return combi;
 }
 
 //_____________________________________________________________________________
@@ -336,7 +336,7 @@ void TGeoPatternX::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
 // index.
    matrix.Clear();
    matrix.SetDx(fStart+idiv*fStep+0.5*fStep);
-}   
+}
 
 //_____________________________________________________________________________
 Bool_t TGeoPatternX::IsOnBoundary(const Double_t *point) const
@@ -347,7 +347,7 @@ Bool_t TGeoPatternX::IsOnBoundary(const Double_t *point) const
    if (diff>0.5) diff = 1.-diff;
    if (diff<1e-8) return kTRUE;
    return kFALSE;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoNode *TGeoPatternX::FindNode(Double_t *point, const Double_t *dir)
@@ -361,8 +361,8 @@ TGeoNode *TGeoPatternX::FindNode(Double_t *point, const Double_t *dir)
       if (dir[0]>0) td.fNextIndex++;
       else td.fNextIndex--;
       if ((td.fNextIndex<0) || (td.fNextIndex>=fNdivisions)) td.fNextIndex = -1;
-   }   
-   if ((ind<0) || (ind>=fNdivisions)) return node; 
+   }
+   if ((ind<0) || (ind>=fNdivisions)) return node;
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
@@ -380,14 +380,14 @@ Double_t TGeoPatternX::FindNextBoundary(Double_t *point, Double_t *dir, Int_t &i
    if (td.fCurrent<0) {
       Error("FindNextBoundary", "Must call FindNode first");
       return dist;
-   }   
+   }
    Int_t inc = (dir[0]>0)?1:0;
    dist = (fStep*(td.fCurrent+inc)-point[0])/dir[0];
    if (dist<0.) Error("FindNextBoundary", "Negative distance d=%g",dist);
    if (!inc) inc = -1;
    indnext = td.fCurrent+inc;
-   return dist;   
-}   
+   return dist;
+}
 
 //______________________________________________________________________________
 TGeoPatternFinder *TGeoPatternX::MakeCopy(Bool_t reflect)
@@ -398,13 +398,13 @@ TGeoPatternFinder *TGeoPatternX::MakeCopy(Bool_t reflect)
    finder->Reflect();
    return finder;
 }
-   
+
 //______________________________________________________________________________
 void TGeoPatternX::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 1;
-   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep;
 }
 
 //______________________________________________________________________________
@@ -422,7 +422,7 @@ TGeoPatternY::TGeoPatternY()
 //_____________________________________________________________________________
 TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    Double_t dy = ((TGeoBBox*)vol->GetShape())->GetDY();
    fStart = -dy;
@@ -434,7 +434,7 @@ TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions)
 //_____________________________________________________________________________
 TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    Double_t dy = ((TGeoBBox*)vol->GetShape())->GetDY();
    fStart = -dy;
@@ -446,7 +446,7 @@ TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t step)
 //_____________________________________________________________________________
 TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fStart      = start;
    fEnd        = end;
@@ -457,7 +457,7 @@ TGeoPatternY::TGeoPatternY(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
 //_____________________________________________________________________________
 TGeoPatternY::TGeoPatternY(const TGeoPatternY& pf) :
   TGeoPatternFinder(pf)
-{ 
+{
    //copy constructor
    CreateThreadData(1);
 }
@@ -469,7 +469,7 @@ TGeoPatternY& TGeoPatternY::operator=(const TGeoPatternY& pf)
    if(this!=&pf) {
       TGeoPatternFinder::operator=(pf);
       CreateThreadData(1);
-   } 
+   }
    return *this;
 }
 
@@ -484,7 +484,7 @@ void TGeoPatternY::cd(Int_t idiv)
 {
 // Update current division index and global matrix to point to a given slice.
    ThreadData_t& td = GetThreadData();
-   td.fCurrent=idiv; 
+   td.fCurrent=idiv;
    td.fMatrix->SetDy(fStart+idiv*fStep+0.5*fStep);
 }
 
@@ -496,7 +496,7 @@ TGeoMatrix* TGeoPatternY::CreateMatrix() const
       TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
       matrix->RegisterYourself();
       return matrix;
-   }   
+   }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
    combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
@@ -511,7 +511,7 @@ void TGeoPatternY::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
 // index.
    matrix.Clear();
    matrix.SetDy(fStart+idiv*fStep+0.5*fStep);
-}   
+}
 
 //_____________________________________________________________________________
 Bool_t TGeoPatternY::IsOnBoundary(const Double_t *point) const
@@ -522,7 +522,7 @@ Bool_t TGeoPatternY::IsOnBoundary(const Double_t *point) const
    if (diff>0.5) diff = 1.-diff;
    if (diff<1e-8) return kTRUE;
    return kFALSE;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoNode *TGeoPatternY::FindNode(Double_t *point, const Double_t *dir)
@@ -536,8 +536,8 @@ TGeoNode *TGeoPatternY::FindNode(Double_t *point, const Double_t *dir)
       if (dir[1]>0) td.fNextIndex++;
       else td.fNextIndex--;
       if ((td.fNextIndex<0) || (td.fNextIndex>=fNdivisions)) td.fNextIndex = -1;
-   }   
-   if ((ind<0) || (ind>=fNdivisions)) return node; 
+   }
+   if ((ind<0) || (ind>=fNdivisions)) return node;
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
@@ -555,15 +555,15 @@ Double_t TGeoPatternY::FindNextBoundary(Double_t *point, Double_t *dir, Int_t &i
    if (td.fCurrent<0) {
       Error("FindNextBoundary", "Must call FindNode first");
       return dist;
-   }   
+   }
    Int_t inc = (dir[1]>0)?1:0;
    dist = (fStep*(td.fCurrent+inc)-point[1])/dir[1];
    if (dist<0.) Error("FindNextBoundary", "Negative distance d=%g",dist);
    if (!inc) inc = -1;
    indnext = td.fCurrent+inc;
-   return dist;   
-}   
-   
+   return dist;
+}
+
 //______________________________________________________________________________
 TGeoPatternFinder *TGeoPatternY::MakeCopy(Bool_t reflect)
 {
@@ -573,7 +573,7 @@ TGeoPatternFinder *TGeoPatternY::MakeCopy(Bool_t reflect)
    finder->Reflect();
    return finder;
 }
-   
+
 //______________________________________________________________________________
 void TGeoPatternY::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
@@ -596,7 +596,7 @@ TGeoPatternZ::TGeoPatternZ()
 //_____________________________________________________________________________
 TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    Double_t dz = ((TGeoBBox*)vol->GetShape())->GetDZ();
    fStart = -dz;
@@ -607,7 +607,7 @@ TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions)
 //_____________________________________________________________________________
 TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    Double_t dz = ((TGeoBBox*)vol->GetShape())->GetDZ();
    fStart = -dz;
@@ -618,7 +618,7 @@ TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
 //_____________________________________________________________________________
 TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fStart      = start;
    fEnd        = end;
@@ -629,7 +629,7 @@ TGeoPatternZ::TGeoPatternZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Do
 //_____________________________________________________________________________
 TGeoPatternZ::TGeoPatternZ(const TGeoPatternZ& pf) :
   TGeoPatternFinder(pf)
-{ 
+{
    //copy constructor
    CreateThreadData(1);
 }
@@ -641,7 +641,7 @@ TGeoPatternZ& TGeoPatternZ::operator=(const TGeoPatternZ& pf)
    if(this!=&pf) {
       TGeoPatternFinder::operator=(pf);
       CreateThreadData(1);
-   } 
+   }
    return *this;
 }
 
@@ -655,7 +655,7 @@ void TGeoPatternZ::cd(Int_t idiv)
 {
 // Update current division index and global matrix to point to a given slice.
    ThreadData_t& td = GetThreadData();
-   td.fCurrent=idiv; 
+   td.fCurrent=idiv;
    td.fMatrix->SetDz(((IsReflected())?-1.:1.)*(fStart+idiv*fStep+0.5*fStep));
 }
 
@@ -667,12 +667,12 @@ TGeoMatrix* TGeoPatternZ::CreateMatrix() const
       TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
       matrix->RegisterYourself();
       return matrix;
-   }   
+   }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
    combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
-   return combi;   
+   return combi;
 }
 
 //_____________________________________________________________________________
@@ -682,7 +682,7 @@ void TGeoPatternZ::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
 // index.
    matrix.Clear();
    matrix.SetDz(((IsReflected())?-1.:1.)*(fStart+idiv*fStep+0.5*fStep));
-}   
+}
 
 //_____________________________________________________________________________
 Bool_t TGeoPatternZ::IsOnBoundary(const Double_t *point) const
@@ -693,7 +693,7 @@ Bool_t TGeoPatternZ::IsOnBoundary(const Double_t *point) const
    if (diff>0.5) diff = 1.-diff;
    if (diff<1e-8) return kTRUE;
    return kFALSE;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoNode *TGeoPatternZ::FindNode(Double_t *point, const Double_t *dir)
@@ -707,8 +707,8 @@ TGeoNode *TGeoPatternZ::FindNode(Double_t *point, const Double_t *dir)
       if (dir[2]>0) td.fNextIndex++;
       else td.fNextIndex--;
       if ((td.fNextIndex<0) || (td.fNextIndex>=fNdivisions)) td.fNextIndex = -1;
-   }   
-   if ((ind<0) || (ind>=fNdivisions)) return node; 
+   }
+   if ((ind<0) || (ind>=fNdivisions)) return node;
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
@@ -726,14 +726,14 @@ Double_t TGeoPatternZ::FindNextBoundary(Double_t *point, Double_t *dir, Int_t &i
    if (td.fCurrent<0) {
       Error("FindNextBoundary", "Must call FindNode first");
       return dist;
-   }   
+   }
    Int_t inc = (dir[2]>0)?1:0;
    dist = (fStep*(td.fCurrent+inc)-point[2])/dir[2];
    if (dist<0.) Error("FindNextBoundary", "Negative distance d=%g",dist);
    if (!inc) inc = -1;
    indnext = td.fCurrent+inc;
-   return dist;   
-}   
+   return dist;
+}
 
 //______________________________________________________________________________
 TGeoPatternFinder *TGeoPatternZ::MakeCopy(Bool_t reflect)
@@ -744,13 +744,13 @@ TGeoPatternFinder *TGeoPatternZ::MakeCopy(Bool_t reflect)
    finder->Reflect();
    return finder;
 }
-   
+
 //______________________________________________________________________________
 void TGeoPatternZ::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 3;
-   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep;
 }
 
 //______________________________________________________________________________
@@ -766,7 +766,7 @@ TGeoPatternParaX::TGeoPatternParaX()
 //_____________________________________________________________________________
 TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    Double_t dx = ((TGeoPara*)vol->GetShape())->GetX();
    fStart = -dx;
@@ -777,7 +777,7 @@ TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions)
 //_____________________________________________________________________________
 TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    Double_t dx = ((TGeoPara*)vol->GetShape())->GetX();
    fStart = -dx;
@@ -788,7 +788,7 @@ TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t s
 //_____________________________________________________________________________
 TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fStart      = start;
    fEnd        = end;
@@ -799,7 +799,7 @@ TGeoPatternParaX::TGeoPatternParaX(TGeoVolume *vol, Int_t ndivisions, Double_t s
 //_____________________________________________________________________________
 TGeoPatternParaX::TGeoPatternParaX(const TGeoPatternParaX& pf) :
   TGeoPatternFinder(pf)
-{ 
+{
    //copy constructor
    CreateThreadData(1);
 }
@@ -811,7 +811,7 @@ TGeoPatternParaX& TGeoPatternParaX::operator=(const TGeoPatternParaX& pf)
    if(this!=&pf) {
       TGeoPatternFinder::operator=(pf);
       CreateThreadData(1);
-   } 
+   }
    return *this;
 }
 
@@ -825,7 +825,7 @@ void TGeoPatternParaX::cd(Int_t idiv)
 {
 // Update current division index and global matrix to point to a given slice.
    ThreadData_t& td = GetThreadData();
-   td.fCurrent=idiv; 
+   td.fCurrent=idiv;
    td.fMatrix->SetDx(fStart+idiv*fStep+0.5*fStep);
 }
 
@@ -842,7 +842,7 @@ Bool_t TGeoPatternParaX::IsOnBoundary(const Double_t *point) const
    if (diff>0.5) diff = 1.-diff;
    if (diff<1e-8) return kTRUE;
    return kFALSE;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoNode *TGeoPatternParaX::FindNode(Double_t *point, const Double_t *dir)
@@ -866,7 +866,7 @@ TGeoNode *TGeoPatternParaX::FindNode(Double_t *point, const Double_t *dir)
       else td.fNextIndex--;
       if ((td.fNextIndex<0) || (td.fNextIndex>=fNdivisions)) td.fNextIndex = -1;
    }
-   if ((ind<0) || (ind>=fNdivisions)) return node; 
+   if ((ind<0) || (ind>=fNdivisions)) return node;
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
@@ -881,13 +881,13 @@ TGeoPatternFinder *TGeoPatternParaX::MakeCopy(Bool_t reflect)
    finder->Reflect();
    return finder;
 }
-      
+
 //______________________________________________________________________________
 void TGeoPatternParaX::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 1;
-   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep;
 }
 
 //______________________________________________________________________________
@@ -898,12 +898,12 @@ TGeoMatrix* TGeoPatternParaX::CreateMatrix() const
       TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
       matrix->RegisterYourself();
       return matrix;
-   }   
+   }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
    combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
-   return combi;   
+   return combi;
 }
 
 //_____________________________________________________________________________
@@ -913,7 +913,7 @@ void TGeoPatternParaX::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
 // index.
    matrix.Clear();
    matrix.SetDx(fStart+idiv*fStep+0.5*fStep);
-}   
+}
 
 //______________________________________________________________________________
 // TGeoPatternParaY - a Y axis divison pattern for PARA shape
@@ -929,7 +929,7 @@ TGeoPatternParaY::TGeoPatternParaY()
 //_____________________________________________________________________________
 TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fTxy = ((TGeoPara*)vol->GetShape())->GetTxy();
    Double_t dy = ((TGeoPara*)vol->GetShape())->GetY();
@@ -941,7 +941,7 @@ TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions)
 //_____________________________________________________________________________
 TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fTxy = ((TGeoPara*)vol->GetShape())->GetTxy();
    Double_t dy = ((TGeoPara*)vol->GetShape())->GetY();
@@ -953,7 +953,7 @@ TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t s
 //_____________________________________________________________________________
 TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fTxy = ((TGeoPara*)vol->GetShape())->GetTxy();
    fStart      = start;
@@ -964,7 +964,7 @@ TGeoPatternParaY::TGeoPatternParaY(TGeoVolume *vol, Int_t ndivisions, Double_t s
 //_____________________________________________________________________________
 TGeoPatternParaY::TGeoPatternParaY(const TGeoPatternParaY& pf) :
   TGeoPatternFinder(pf)
-{ 
+{
    //copy constructor
    CreateThreadData(1);
 }
@@ -976,7 +976,7 @@ TGeoPatternParaY& TGeoPatternParaY::operator=(const TGeoPatternParaY& pf)
    if(this!=&pf) {
       TGeoPatternFinder::operator=(pf);
       CreateThreadData(1);
-   } 
+   }
    return *this;
 }
 
@@ -1007,7 +1007,7 @@ Bool_t TGeoPatternParaY::IsOnBoundary(const Double_t *point) const
    if (diff>0.5) diff = 1.-diff;
    if (diff<1e-8) return kTRUE;
    return kFALSE;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoNode *TGeoPatternParaY::FindNode(Double_t *point, const Double_t *dir)
@@ -1027,7 +1027,7 @@ TGeoNode *TGeoPatternParaY::FindNode(Double_t *point, const Double_t *dir)
       else td.fNextIndex--;
       if ((td.fNextIndex<0) || (td.fNextIndex>=fNdivisions)) td.fNextIndex = -1;
    }
-   if ((ind<0) || (ind>=fNdivisions)) return node; 
+   if ((ind<0) || (ind>=fNdivisions)) return node;
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
@@ -1042,13 +1042,13 @@ TGeoPatternFinder *TGeoPatternParaY::MakeCopy(Bool_t reflect)
    finder->Reflect();
    return finder;
 }
-         
+
 //______________________________________________________________________________
 void TGeoPatternParaY::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 2;
-   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep;
 }
 
 //______________________________________________________________________________
@@ -1059,12 +1059,12 @@ TGeoMatrix* TGeoPatternParaY::CreateMatrix() const
       TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
       matrix->RegisterYourself();
       return matrix;
-   }   
+   }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
    combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
-   return combi;   
+   return combi;
 }
 
 //_____________________________________________________________________________
@@ -1076,7 +1076,7 @@ void TGeoPatternParaY::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
    Double_t dy = fStart+idiv*fStep+0.5*fStep;
    matrix.SetDx(fTxy*dy);
    matrix.SetDy(dy);
-}   
+}
 
 //______________________________________________________________________________
 // TGeoPatternParaZ - a Z axis divison pattern for PARA shape
@@ -1093,7 +1093,7 @@ TGeoPatternParaZ::TGeoPatternParaZ()
 //_____________________________________________________________________________
 TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fTxz = ((TGeoPara*)vol->GetShape())->GetTxz();
    fTyz = ((TGeoPara*)vol->GetShape())->GetTyz();
@@ -1106,7 +1106,7 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions)
 //_____________________________________________________________________________
 TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fTxz = ((TGeoPara*)vol->GetShape())->GetTxz();
    fTyz = ((TGeoPara*)vol->GetShape())->GetTyz();
@@ -1120,7 +1120,7 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
 //_____________________________________________________________________________
 TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fTxz = ((TGeoPara*)vol->GetShape())->GetTxz();
    fTyz = ((TGeoPara*)vol->GetShape())->GetTyz();
@@ -1133,7 +1133,7 @@ TGeoPatternParaZ::TGeoPatternParaZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
 //_____________________________________________________________________________
 TGeoPatternParaZ::TGeoPatternParaZ(const TGeoPatternParaZ& pf) :
   TGeoPatternFinder(pf)
-{ 
+{
    //copy constructor
    CreateThreadData(1);
 }
@@ -1145,7 +1145,7 @@ TGeoPatternParaZ& TGeoPatternParaZ::operator=(const TGeoPatternParaZ& pf)
    if(this!=&pf) {
       TGeoPatternFinder::operator=(pf);
       CreateThreadData(1);
-   } 
+   }
    return *this;
 }
 
@@ -1176,7 +1176,7 @@ Bool_t TGeoPatternParaZ::IsOnBoundary(const Double_t *point) const
    if (diff>0.5) diff = 1.-diff;
    if (diff<1e-8) return kTRUE;
    return kFALSE;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoNode *TGeoPatternParaZ::FindNode(Double_t *point, const Double_t *dir)
@@ -1191,8 +1191,8 @@ TGeoNode *TGeoPatternParaZ::FindNode(Double_t *point, const Double_t *dir)
       if (dir[2]>0) td.fNextIndex++;
       else td.fNextIndex--;
       if ((td.fNextIndex<0) || (td.fNextIndex>=fNdivisions)) td.fNextIndex = -1;
-   }   
-   if ((ind<0) || (ind>=fNdivisions)) return node; 
+   }
+   if ((ind<0) || (ind>=fNdivisions)) return node;
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
@@ -1207,13 +1207,13 @@ TGeoPatternFinder *TGeoPatternParaZ::MakeCopy(Bool_t reflect)
    finder->Reflect();
    return finder;
 }
-         
+
 //______________________________________________________________________________
 void TGeoPatternParaZ::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 3;
-   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep;
 }
 
 //______________________________________________________________________________
@@ -1224,12 +1224,12 @@ TGeoMatrix* TGeoPatternParaZ::CreateMatrix() const
       TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
       matrix->RegisterYourself();
       return matrix;
-   }   
+   }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
    combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
-   return combi;   
+   return combi;
 }
 
 //_____________________________________________________________________________
@@ -1242,7 +1242,7 @@ void TGeoPatternParaZ::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
    matrix.SetDx(fTxz*dz);
    matrix.SetDy(fTyz*dz);
    matrix.SetDz((IsReflected())?-dz:dz);
-}   
+}
 
 //______________________________________________________________________________
 // TGeoPatternTrapZ - a Z axis divison pattern for TRAP or GTRA shapes
@@ -1259,7 +1259,7 @@ TGeoPatternTrapZ::TGeoPatternTrapZ()
 //_____________________________________________________________________________
 TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    Double_t theta = ((TGeoTrap*)vol->GetShape())->GetTheta();
    Double_t phi   = ((TGeoTrap*)vol->GetShape())->GetPhi();
@@ -1274,7 +1274,7 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions)
 //_____________________________________________________________________________
 TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t step)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    Double_t theta = ((TGeoTrap*)vol->GetShape())->GetTheta();
    Double_t phi   = ((TGeoTrap*)vol->GetShape())->GetPhi();
@@ -1289,7 +1289,7 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t s
 //_____________________________________________________________________________
 TGeoPatternTrapZ::TGeoPatternTrapZ(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
              :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    Double_t theta = ((TGeoTrap*)vol->GetShape())->GetTheta();
    Double_t phi   = ((TGeoTrap*)vol->GetShape())->GetPhi();
@@ -1306,7 +1306,7 @@ TGeoPatternTrapZ::TGeoPatternTrapZ(const TGeoPatternTrapZ& pf) :
   TGeoPatternFinder(pf),
   fTxz(pf.fTxz),
   fTyz(pf.fTyz)
-{ 
+{
    //copy constructor
    CreateThreadData(1);
 }
@@ -1320,7 +1320,7 @@ TGeoPatternTrapZ& TGeoPatternTrapZ::operator=(const TGeoPatternTrapZ& pf)
       fTxz = pf.fTxz;
       fTyz = pf.fTyz;
       CreateThreadData(1);
-   } 
+   }
    return *this;
 }
 
@@ -1350,7 +1350,7 @@ Bool_t TGeoPatternTrapZ::IsOnBoundary(const Double_t *point) const
    if (diff>0.5) diff = 1.-diff;
    if (diff<1e-8) return kTRUE;
    return kFALSE;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoNode *TGeoPatternTrapZ::FindNode(Double_t *point, const Double_t *dir)
@@ -1365,8 +1365,8 @@ TGeoNode *TGeoPatternTrapZ::FindNode(Double_t *point, const Double_t *dir)
       if (dir[2]>0) td.fNextIndex++;
       else td.fNextIndex--;
       if ((td.fNextIndex<0) || (td.fNextIndex>=fNdivisions)) td.fNextIndex = -1;
-   }   
-   if ((ind<0) || (ind>=fNdivisions)) return node; 
+   }
+   if ((ind<0) || (ind>=fNdivisions)) return node;
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
@@ -1381,13 +1381,13 @@ TGeoPatternFinder *TGeoPatternTrapZ::MakeCopy(Bool_t reflect)
    finder->Reflect();
    return finder;
 }
-   
+
 //______________________________________________________________________________
 void TGeoPatternTrapZ::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 3;
-   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep;
 }
 
 //______________________________________________________________________________
@@ -1398,12 +1398,12 @@ TGeoMatrix* TGeoPatternTrapZ::CreateMatrix() const
       TGeoMatrix *matrix = new TGeoTranslation(0.,0.,0.);
       matrix->RegisterYourself();
       return matrix;
-   }   
+   }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
    combi->RegisterYourself();
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
-   return combi;   
+   return combi;
 }
 
 //_____________________________________________________________________________
@@ -1416,11 +1416,11 @@ void TGeoPatternTrapZ::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
    matrix.SetDx(fTxz*dz);
    matrix.SetDy(fTyz*dz);
    matrix.SetDz((IsReflected())?-dz:dz);
-}   
+}
 
 //______________________________________________________________________________
 // TGeoPatternCylR - a cylindrical R divison pattern
-//______________________________________________________________________________ 
+//______________________________________________________________________________
 
 //_____________________________________________________________________________
 TGeoPatternCylR::TGeoPatternCylR()
@@ -1431,14 +1431,14 @@ TGeoPatternCylR::TGeoPatternCylR()
 //_____________________________________________________________________________
 TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions)
                 :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    CreateThreadData(1);
 }
 //_____________________________________________________________________________
 TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions, Double_t step)
                 :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fStep       = step;
    CreateThreadData(1);
@@ -1447,7 +1447,7 @@ TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions, Double_t ste
 //_____________________________________________________________________________
 TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
                 :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fStart      = start;
    fEnd        = end;
@@ -1457,7 +1457,7 @@ TGeoPatternCylR::TGeoPatternCylR(TGeoVolume *vol, Int_t ndivisions, Double_t sta
 //_____________________________________________________________________________
 TGeoPatternCylR::TGeoPatternCylR(const TGeoPatternCylR& pf) :
   TGeoPatternFinder(pf)
-{ 
+{
    //copy constructor
    CreateThreadData(1);
 }
@@ -1469,7 +1469,7 @@ TGeoPatternCylR& TGeoPatternCylR::operator=(const TGeoPatternCylR& pf)
    if(this!=&pf) {
       TGeoPatternFinder::operator=(pf);
       CreateThreadData(1);
-   } 
+   }
    return *this;
 }
 
@@ -1489,14 +1489,14 @@ Bool_t TGeoPatternCylR::IsOnBoundary(const Double_t *point) const
    if (diff>0.5) diff = 1.-diff;
    if (diff<1e-8) return kTRUE;
    return kFALSE;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoPatternCylR::cd(Int_t idiv)
 {
 // Update current division index and global matrix to point to a given slice.
    ThreadData_t& td = GetThreadData();
-   td.fCurrent=idiv; 
+   td.fCurrent=idiv;
 }
 
 //_____________________________________________________________________________
@@ -1514,8 +1514,8 @@ TGeoNode *TGeoPatternCylR::FindNode(Double_t *point, const Double_t *dir)
       if (dot>0) td.fNextIndex++;
       else td.fNextIndex--;
       if ((td.fNextIndex<0) || (td.fNextIndex>=fNdivisions)) td.fNextIndex = -1;
-   }   
-   if ((ind<0) || (ind>=fNdivisions)) return node; 
+   }
+   if ((ind<0) || (ind>=fNdivisions)) return node;
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
@@ -1530,13 +1530,13 @@ TGeoPatternFinder *TGeoPatternCylR::MakeCopy(Bool_t reflect)
    finder->Reflect();
    return finder;
 }
-      
+
 //______________________________________________________________________________
 void TGeoPatternCylR::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 1;
-   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep;
 }
 
 //______________________________________________________________________________
@@ -1552,11 +1552,11 @@ void TGeoPatternCylR::UpdateMatrix(Int_t, TGeoHMatrix &matrix) const
 // Fills external matrix with the local one corresponding to the given division
 // index.
    matrix.Clear();
-}   
+}
 
 //______________________________________________________________________________
 // TGeoPatternCylPhi - a cylindrical phi divison pattern
-//______________________________________________________________________________ 
+//______________________________________________________________________________
 
 //_____________________________________________________________________________
 TGeoPatternCylPhi::TGeoPatternCylPhi()
@@ -1568,7 +1568,7 @@ TGeoPatternCylPhi::TGeoPatternCylPhi()
 //_____________________________________________________________________________
 TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions)
                   :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
 // compute step, start, end
    fStart = 0;
@@ -1584,7 +1584,7 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions)
 //_____________________________________________________________________________
 TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t step)
                   :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fStep       = step;
    fSinCos     = new Double_t[2*ndivisions];
@@ -1598,7 +1598,7 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
 //_____________________________________________________________________________
 TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
                   :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fStart      = start;
    if (fStart<0) fStart+=360;
@@ -1620,7 +1620,7 @@ TGeoPatternCylPhi::~TGeoPatternCylPhi()
 {
 // Destructor
    if (fSinCos) delete [] fSinCos;
-} 
+}
 //_____________________________________________________________________________
 void TGeoPatternCylPhi::cd(Int_t idiv)
 {
@@ -1643,7 +1643,7 @@ Bool_t TGeoPatternCylPhi::IsOnBoundary(const Double_t *point) const
    if (diff>0.5) diff = 1.-diff;
    if (diff<1e-8) return kTRUE;
    return kFALSE;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoNode *TGeoPatternCylPhi::FindNode(Double_t *point, const Double_t *dir)
@@ -1664,8 +1664,8 @@ TGeoNode *TGeoPatternCylPhi::FindNode(Double_t *point, const Double_t *dir)
       if (dot>0) td.fNextIndex++;
       else td.fNextIndex--;
       if ((td.fNextIndex<0) || (td.fNextIndex>=fNdivisions)) td.fNextIndex = -1;
-   }   
-   if ((ind<0) || (ind>=fNdivisions)) return node; 
+   }
+   if ((ind<0) || (ind>=fNdivisions)) return node;
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
@@ -1680,13 +1680,13 @@ TGeoPatternFinder *TGeoPatternCylPhi::MakeCopy(Bool_t reflect)
    finder->Reflect();
    return finder;
 }
-   
+
 //______________________________________________________________________________
 void TGeoPatternCylPhi::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 2;
-   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep;
 }
 
 //_____________________________________________________________________________
@@ -1715,12 +1715,12 @@ TGeoMatrix* TGeoPatternCylPhi::CreateMatrix() const
       TGeoRotation *matrix = new TGeoRotation();
       matrix->RegisterYourself();
       return matrix;
-   }   
+   }
    TGeoRotation *rot = new TGeoRotation();
    rot->RegisterYourself();
    rot->ReflectZ(kTRUE);
    rot->ReflectZ(kFALSE);
-   return rot;   
+   return rot;
 }
 
 //_____________________________________________________________________________
@@ -1730,7 +1730,7 @@ void TGeoPatternCylPhi::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
 // index.
    matrix.Clear();
    matrix.FastRotZ(&fSinCos[2*idiv]);
-}   
+}
 
 //______________________________________________________________________________
 // TGeoPatternSphR - a spherical R divison pattern
@@ -1745,7 +1745,7 @@ TGeoPatternSphR::TGeoPatternSphR()
 //_____________________________________________________________________________
 TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions)
                 :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
 // compute step, start, end
    CreateThreadData(1);
@@ -1753,7 +1753,7 @@ TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions)
 //_____________________________________________________________________________
 TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions, Double_t step)
                 :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fStep       = step;
    CreateThreadData(1);
@@ -1762,7 +1762,7 @@ TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions, Double_t ste
 //_____________________________________________________________________________
 TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
                 :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fStart      = start;
    fEnd        = end;
@@ -1772,7 +1772,7 @@ TGeoPatternSphR::TGeoPatternSphR(TGeoVolume *vol, Int_t ndivisions, Double_t sta
 //_____________________________________________________________________________
 TGeoPatternSphR::TGeoPatternSphR(const TGeoPatternSphR& pf) :
   TGeoPatternFinder(pf)
-{ 
+{
    //copy constructor
    CreateThreadData(1);
 }
@@ -1784,7 +1784,7 @@ TGeoPatternSphR& TGeoPatternSphR::operator=(const TGeoPatternSphR& pf)
    if(this!=&pf) {
       TGeoPatternFinder::operator=(pf);
       CreateThreadData(1);
-   } 
+   }
    return *this;
 }
 
@@ -1814,13 +1814,13 @@ TGeoPatternFinder *TGeoPatternSphR::MakeCopy(Bool_t)
    TGeoPatternSphR *finder = new TGeoPatternSphR(*this);
    return finder;
 }
-   
+
 //______________________________________________________________________________
 void TGeoPatternSphR::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 1;
-   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep;
 }
 
 //______________________________________________________________________________
@@ -1836,7 +1836,7 @@ void TGeoPatternSphR::UpdateMatrix(Int_t, TGeoHMatrix &matrix) const
 // Fills external matrix with the local one corresponding to the given division
 // index.
    matrix.Clear();
-}   
+}
 
 //______________________________________________________________________________
 // TGeoPatternSphTheta - a spherical theta divison pattern
@@ -1851,7 +1851,7 @@ TGeoPatternSphTheta::TGeoPatternSphTheta()
 //_____________________________________________________________________________
 TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions)
                     :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
 // compute step, start, end
    CreateThreadData(1);
@@ -1859,7 +1859,7 @@ TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions)
 //_____________________________________________________________________________
 TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions, Double_t step)
                     :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fStep       = step;
    CreateThreadData(1);
@@ -1868,7 +1868,7 @@ TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions, Doub
 //_____________________________________________________________________________
 TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end)
                     :TGeoPatternFinder(vol, ndivisions)
-{   
+{
 // constructor
    fStart      = start;
    fEnd        = end;
@@ -1878,7 +1878,7 @@ TGeoPatternSphTheta::TGeoPatternSphTheta(TGeoVolume *vol, Int_t ndivisions, Doub
 //_____________________________________________________________________________
 TGeoPatternSphTheta::TGeoPatternSphTheta(const TGeoPatternSphTheta& pf) :
   TGeoPatternFinder(pf)
-{ 
+{
    //copy constructor
    CreateThreadData(1);
 }
@@ -1889,7 +1889,7 @@ TGeoPatternSphTheta& TGeoPatternSphTheta::operator=(const TGeoPatternSphTheta& p
    if(this!=&pf) {
       TGeoPatternFinder::operator=(pf);
       CreateThreadData(1);
-   } 
+   }
    return *this;
 }
 //_____________________________________________________________________________
@@ -1902,7 +1902,7 @@ void TGeoPatternSphTheta::cd(Int_t idiv)
 {
 // Update current division index and global matrix to point to a given slice.
    ThreadData_t& td = GetThreadData();
-   td.fCurrent=idiv; 
+   td.fCurrent=idiv;
 }
 //_____________________________________________________________________________
 TGeoNode *TGeoPatternSphTheta::FindNode(Double_t * /*point*/, const Double_t * /*dir*/)
@@ -1918,13 +1918,13 @@ TGeoPatternFinder *TGeoPatternSphTheta::MakeCopy(Bool_t)
    TGeoPatternSphTheta *finder = new TGeoPatternSphTheta(*this);
    return finder;
 }
-   
+
 //______________________________________________________________________________
 void TGeoPatternSphTheta::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 2;
-   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep;
 }
 
 //______________________________________________________________________________
@@ -1940,7 +1940,7 @@ void TGeoPatternSphTheta::UpdateMatrix(Int_t, TGeoHMatrix &matrix) const
 // Fills external matrix with the local one corresponding to the given division
 // index.
    matrix.Clear();
-}   
+}
 
 //______________________________________________________________________________
 // TGeoPatternSphPhi - a spherical phi divison pattern
@@ -1956,7 +1956,7 @@ TGeoPatternSphPhi::TGeoPatternSphPhi()
 //_____________________________________________________________________________
 TGeoPatternSphPhi::TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions)
                   :TGeoPatternFinder(vol, ndivisions)
-{  
+{
 // constructor
 // compute step, start, end
    fStart = 0;
@@ -1989,7 +1989,7 @@ TGeoPatternSphPhi::TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
       fStep       = (end-start+360)/ndivisions;
    else
       fStep       = (end-start)/ndivisions;
-   CreateSinCos();   
+   CreateSinCos();
    CreateThreadData(1);
 }
 
@@ -2011,7 +2011,7 @@ Double_t *TGeoPatternSphPhi::CreateSinCos()
    }
    return fSinCos;
 }
-   
+
 //_____________________________________________________________________________
 void TGeoPatternSphPhi::cd(Int_t idiv)
 {
@@ -2035,7 +2035,7 @@ Bool_t TGeoPatternSphPhi::IsOnBoundary(const Double_t *point) const
    if (diff>0.5) diff = 1.-diff;
    if (diff<1e-8) return kTRUE;
    return kFALSE;
-}   
+}
 //_____________________________________________________________________________
 TGeoNode *TGeoPatternSphPhi::FindNode(Double_t * point, const Double_t * dir)
 {
@@ -2055,8 +2055,8 @@ TGeoNode *TGeoPatternSphPhi::FindNode(Double_t * point, const Double_t * dir)
       if (dot>0) td.fNextIndex++;
       else td.fNextIndex--;
       if ((td.fNextIndex<0) || (td.fNextIndex>=fNdivisions)) td.fNextIndex = -1;
-   }   
-   if ((ind<0) || (ind>=fNdivisions)) return node; 
+   }
+   if ((ind<0) || (ind>=fNdivisions)) return node;
    node = GetNodeOffset(ind);
    cd(ind);
    return node;
@@ -2070,13 +2070,13 @@ TGeoPatternFinder *TGeoPatternSphPhi::MakeCopy(Bool_t reflect)
    finder->Reflect();
    return finder;
 }
-   
+
 //______________________________________________________________________________
 void TGeoPatternSphPhi::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
    Int_t iaxis = 2;
-   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep; 
+   out << iaxis << ", " << fNdivisions << ", " << fStart << ", " << fStep;
 }
 //______________________________________________________________________________
 TGeoMatrix* TGeoPatternSphPhi::CreateMatrix() const
@@ -2086,12 +2086,12 @@ TGeoMatrix* TGeoPatternSphPhi::CreateMatrix() const
       TGeoRotation *matrix = new TGeoRotation();
       matrix->RegisterYourself();
       return matrix;
-   }   
+   }
    TGeoRotation *rot = new TGeoRotation();
    rot->RegisterYourself();
    rot->ReflectZ(kTRUE);
    rot->ReflectZ(kFALSE);
-   return rot;   
+   return rot;
 }
 //_____________________________________________________________________________
 void TGeoPatternSphPhi::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
@@ -2101,20 +2101,20 @@ void TGeoPatternSphPhi::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
    if (!fSinCos) ((TGeoPatternSphPhi*)this)->CreateSinCos();
    matrix.Clear();
    matrix.FastRotZ(&fSinCos[2*idiv]);
-}   
+}
 
 //______________________________________________________________________________
 // TGeoPatternHoneycomb - a divison pattern specialized for honeycombs
-//______________________________________________________________________________   
+//______________________________________________________________________________
 
 //_____________________________________________________________________________
 TGeoPatternHoneycomb::TGeoPatternHoneycomb()
 {
 // Default constructor
-   fNrows       = 0;                 
-   fAxisOnRows  = 0;            
-   fNdivisions  = 0;             
-   fStart       = 0;                 
+   fNrows       = 0;
+   fAxisOnRows  = 0;
+   fNdivisions  = 0;
+   fStart       = 0;
    CreateThreadData(1);
 }
 //_____________________________________________________________________________
@@ -2123,9 +2123,9 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb(TGeoVolume *vol, Int_t nrows)
 {
 // Default constructor
    fNrows = nrows;
-   fAxisOnRows  = 0;            
-   fNdivisions  = 0;             
-   fStart       = 0;                 
+   fAxisOnRows  = 0;
+   fNdivisions  = 0;
+   fStart       = 0;
    CreateThreadData(1);
 // compute everything else
 }
@@ -2136,13 +2136,13 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb(const TGeoPatternHoneycomb& pfh) :
   fAxisOnRows(pfh.fAxisOnRows),
   fNdivisions(pfh.fNdivisions),
   fStart(pfh.fStart)
-{ 
+{
    //copy constructor
    CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
-TGeoPatternHoneycomb& TGeoPatternHoneycomb::operator=(const TGeoPatternHoneycomb& pfh) 
+TGeoPatternHoneycomb& TGeoPatternHoneycomb::operator=(const TGeoPatternHoneycomb& pfh)
 {
    //assignment operator
    if(this!=&pfh) {
@@ -2152,7 +2152,7 @@ TGeoPatternHoneycomb& TGeoPatternHoneycomb::operator=(const TGeoPatternHoneycomb
       fNdivisions=pfh.fNdivisions;
       fStart=pfh.fStart;
       CreateThreadData(1);
-   } 
+   }
    return *this;
 }
 //_____________________________________________________________________________
@@ -2165,7 +2165,7 @@ void TGeoPatternHoneycomb::cd(Int_t idiv)
 {
 // Update current division index and global matrix to point to a given slice.
    ThreadData_t& td = GetThreadData();
-   td.fCurrent=idiv; 
+   td.fCurrent=idiv;
 }
 //_____________________________________________________________________________
 TGeoNode *TGeoPatternHoneycomb::FindNode(Double_t * /*point*/, const Double_t * /*dir*/)
@@ -2187,4 +2187,4 @@ void TGeoPatternHoneycomb::UpdateMatrix(Int_t, TGeoHMatrix &matrix) const
 // Fills external matrix with the local one corresponding to the given division
 // index.
    matrix.Clear();
-}   
+}

@@ -15,7 +15,7 @@ void hksimple()
   c1->Divide(1,3);
   Int_t j;
   for (j=0;j<3;j++) {
-     c1->cd(j+1); 
+     c1->cd(j+1);
      gPad->SetFrameFillColor(33);
      hpx[j]->SetFillColor(48);
      hpx[j]->Draw();

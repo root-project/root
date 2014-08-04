@@ -2,7 +2,7 @@ void splines_test (Int_t np=23, Double_t a=-0.5, Double_t b=31)
 {
   // examples of use of the spline classes
   //Author: Federico Carminati
-   
+
   // array of points
   Double_t *xx=0, *yy=0;
   TSpline3 *spline3=0;

@@ -38,7 +38,7 @@ const unsigned colorIndices[16] = {
 @implementation PadOptionsController {
    NSMutableArray *colors_;
    NSMutableArray *patterns_;
-   
+
    ROOT::iOS::Pad *pad;
    PadView *padView;
 }
@@ -56,14 +56,14 @@ const unsigned colorIndices[16] = {
          [newCell setRGB : predefinedFillColors[i]];
          [colors_ addObject : newCell];
       }
-      
+
       //Patterns.
       patterns_ = [[NSMutableArray alloc] init];
       //The first pattern - solid fill.
       PatternCell *solidFill = [[PatternCell alloc] initWithFrame : CGRectMake(0.f, 0.f, 80.f, 44.f) andPattern : 0];
       [solidFill setAsSolid];
       [patterns_ addObject : solidFill];
-      
+
       for (unsigned i = 0; i < ROOT::iOS::GraphicUtils::kPredefinedFillPatterns; ++i) {
          PatternCell *newCell = [[PatternCell alloc] initWithFrame : CGRectMake(0.f, 0.f, 80.f, 44.f) andPattern : i];
          [patterns_ addObject : newCell];
@@ -71,7 +71,7 @@ const unsigned colorIndices[16] = {
 
       //Pattern views.
    }
-   
+
    return self;
 }
 
@@ -114,12 +114,12 @@ const unsigned colorIndices[16] = {
 {
    padView = view;
    pad = newPad;
-   
+
    gridX_.on = pad->GetGridx();
    gridY_.on = pad->GetGridy();
    tickX_.on = pad->GetTickx();
    tickY_.on = pad->GetTicky();
-   
+
    logX_.on = pad->GetLogx();
    logY_.on = pad->GetLogy();
    logZ_.on = pad->GetLogz();
@@ -134,7 +134,7 @@ const unsigned colorIndices[16] = {
    } else if (control == tickY_) {
       pad->SetTicky(on);
    }
-   
+
    [padView setNeedsDisplay];
 }
 
@@ -147,7 +147,7 @@ const unsigned colorIndices[16] = {
    } else if (control == gridY_) {
       pad->SetGridy(on);
    }
-   
+
    [padView setNeedsDisplay];
 }
 
@@ -155,13 +155,13 @@ const unsigned colorIndices[16] = {
 - (IBAction) logActivated : (id) control
 {
    const unsigned on = [control isOn];
-   
+
    if (control == logX_)
       pad->SetLogx(on);
-   
+
    if (control == logY_)
       pad->SetLogy(on);
-      
+
    if (control == logZ_)
       pad->SetLogz(on);
 
@@ -214,7 +214,7 @@ const unsigned colorIndices[16] = {
 
 //_________________________________________________________________
 - (void)pickerView:(UIPickerView *)thePickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
-   
+
    if (thePickerView == colorPicker_) {
       if (row >= 0 && row < 16) {
          pad->SetFillColor(colorIndices[row]);

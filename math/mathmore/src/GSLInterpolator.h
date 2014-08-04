@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class GSLInterpolator
-// 
+//
 // Created by: moneta  at Fri Nov 26 15:31:41 2004
-// 
+//
 // Last update: Fri Nov 26 15:31:41 2004
-// 
+//
 #ifndef ROOT_Math_GSLInterpolator
 #define ROOT_Math_GSLInterpolator
 
@@ -51,49 +51,49 @@ namespace Math {
    Interpolation class based on GSL interpolation functions
     @ingroup Interpolation
     */
-   
+
    class GSLInterpolator {
-      
-   public: 
+
+   public:
 
       GSLInterpolator(unsigned int ndata, Interpolation::Type type);
 
-      GSLInterpolator(const Interpolation::Type type, const std::vector<double> & x, const std::vector<double> & y ); 
-      virtual ~GSLInterpolator(); 
-      
+      GSLInterpolator(const Interpolation::Type type, const std::vector<double> & x, const std::vector<double> & y );
+      virtual ~GSLInterpolator();
+
    private:
       // usually copying is non trivial, so we make this unaccessible
-      GSLInterpolator(const GSLInterpolator &); 
-      GSLInterpolator & operator = (const GSLInterpolator &); 
-      
-   public: 
+      GSLInterpolator(const GSLInterpolator &);
+      GSLInterpolator & operator = (const GSLInterpolator &);
 
-      bool Init(unsigned int ndata, const double *x, const double * y); 
-         
+   public:
+
+      bool Init(unsigned int ndata, const double *x, const double * y);
+
       double Eval( double x ) const
       {
          assert(fAccel);
-         double y = 0; 
+         double y = 0;
          static unsigned int nErrors = 0;
          if (fResetNErrors) { nErrors = 0; fResetNErrors = false;}
-         int ierr = gsl_spline_eval_e(fSpline, x, fAccel, &y );  
+         int ierr = gsl_spline_eval_e(fSpline, x, fAccel, &y );
          if (ierr){
             ++nErrors;
             if(nErrors < 5)
                 MATH_WARN_MSG("GSLInterpolator::Eval",gsl_strerror(ierr) ) //Trying to suppress errors B Zimmerman 11-11-11
              else if(nErrors == 4)
-                MATH_WARN_MSG("GSLInterpolator::Eval","Suppressing additional warnings");             
+                MATH_WARN_MSG("GSLInterpolator::Eval","Suppressing additional warnings");
          }
          return y;
       }
-      
-      double Deriv( double x ) const 
+
+      double Deriv( double x ) const
       {
          assert(fAccel);
-         double deriv = 0; 
+         double deriv = 0;
          static unsigned int nErrors = 0;
          if (fResetNErrors) { nErrors = 0; fResetNErrors = false;}
-         int ierr = gsl_spline_eval_deriv_e(fSpline, x, fAccel, &deriv );  
+         int ierr = gsl_spline_eval_deriv_e(fSpline, x, fAccel, &deriv );
          if (ierr){
             ++nErrors;
             if(nErrors < 5)
@@ -103,13 +103,13 @@ namespace Math {
          }
          return deriv;
       }
-      
-      double Deriv2( double x ) const {  
+
+      double Deriv2( double x ) const {
          assert(fAccel);
-         double deriv2 = 0; 
+         double deriv2 = 0;
          static unsigned int nErrors = 0;
          if (fResetNErrors) { nErrors = 0; fResetNErrors = false;}
-         int ierr = gsl_spline_eval_deriv2_e(fSpline, x, fAccel, &deriv2 );  
+         int ierr = gsl_spline_eval_deriv2_e(fSpline, x, fAccel, &deriv2 );
          if (ierr){
             ++nErrors;
             if(nErrors < 5)
@@ -119,14 +119,14 @@ namespace Math {
          }
          return deriv2;
       }
-      
-      double Integ( double a, double b) const { 
+
+      double Integ( double a, double b) const {
          if ( a > b) return -Integ(b,a);  // gsl will report an error in this case
          assert(fAccel);
-         double result = 0; 
+         double result = 0;
          static unsigned int nErrors = 0;
          if (fResetNErrors) { nErrors = 0; fResetNErrors = false;}
-         int ierr = gsl_spline_eval_integ_e(fSpline, a, b, fAccel, &result );  
+         int ierr = gsl_spline_eval_integ_e(fSpline, a, b, fAccel, &result );
          if (ierr){
             ++nErrors;
             if(nErrors < 5)
@@ -136,24 +136,24 @@ namespace Math {
          }
          return result;
       }
-      
-      std::string Name() { 
-         return fInterpType->name; 
+
+      std::string Name() {
+         return fInterpType->name;
       }
-      
-      
-   protected: 
-         
-         
-   private: 
-      
+
+
+   protected:
+
+
+   private:
+
       mutable bool fResetNErrors;  // flag to reset counter for error messages
-      gsl_interp_accel * fAccel; 
-      gsl_spline * fSpline; 
+      gsl_interp_accel * fAccel;
+      gsl_spline * fSpline;
       const gsl_interp_type * fInterpType;
-      
-   }; 
-   
+
+   };
+
 } // namespace Math
 } // namespace ROOT
 

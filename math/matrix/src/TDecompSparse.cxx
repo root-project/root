@@ -1192,7 +1192,7 @@ void TDecompSparse::InitPivot_sub2(const Int_t n,Int_t *ipe,Int_t *iw,const Int_
                   np = np+1;
                }
             }
- 
+
             Int_t doit = 2;
             if (id < limit) {
                iw[np] = iw[np0];
@@ -1226,7 +1226,7 @@ void TDecompSparse::InitPivot_sub2(const Int_t n,Int_t *ipe,Int_t *iw,const Int_
                   js = nxt[js];
                }
             }
- 
+
             if (doit == 1) {
                ipe[js] = -is;
                nv[is] = nv[is]+nv[js];

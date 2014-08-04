@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -19,8 +19,8 @@ class MnMachinePrecision;
 
 /**
    class for the transformation for double-limited parameter
-   Using a sin function one goes from a double-limited parameter range to 
-   an unlimited one 
+   Using a sin function one goes from a double-limited parameter range to
+   an unlimited one
  */
 class SinParameterTransformation {
 
@@ -31,7 +31,7 @@ public:
   ~SinParameterTransformation() {}
 
   double Int2ext(double Value, double Upper, double Lower) const;
-  double Ext2int(double Value, double Upper, double Lower, 
+  double Ext2int(double Value, double Upper, double Lower,
                  const MnMachinePrecision&) const;
   double DInt2Ext(double Value, double Upper, double Lower) const;
 

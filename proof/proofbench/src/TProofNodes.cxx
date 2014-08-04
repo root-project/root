@@ -29,7 +29,7 @@ ClassImp(TProofNodes)
 TProofNodes::TProofNodes(TProof* proof)
             : fProof(proof), fNodes(0), fActiveNodes(0),
               fMaxWrksNode(-1), fMinWrksNode(-1),
-              fNNodes(0), fNWrks(0), fNActiveWrks(0), fNCores(0) 
+              fNNodes(0), fNWrks(0), fNActiveWrks(0), fNCores(0)
 {
    // Constructor
 
@@ -56,7 +56,7 @@ void TProofNodes::Build()
    // Return: Nothing
 
    if (!fProof || !fProof->IsValid()) {
-      Warning("Build", "the PROOF instance is undefined or invalid! Cannot continue"); 
+      Warning("Build", "the PROOF instance is undefined or invalid! Cannot continue");
       return;
    }
 
@@ -77,7 +77,7 @@ void TProofNodes::Build()
       if (!(pair = (TPair *) fNodes->FindObject(si->GetName()))) {
          node = new TList;
          //si's are owned by the member fSlaveInfo of fProof
-         node->SetOwner(kTRUE); 
+         node->SetOwner(kTRUE);
          node->SetName(si_copy->GetName());
          node->Add(si_copy);
          fNodes->Add(new TObjString(si->GetName()), node);
@@ -126,7 +126,7 @@ void TProofNodes::Build()
                   actnode->Add(si_copy);
                } else {
                   actnode = new TList;
-                  actnode->SetOwner(kTRUE); 
+                  actnode->SetOwner(kTRUE);
                   actnode->SetName(si_copy->GetName());
                   actnode->Add(si_copy);
                   fActiveNodes->Add(new TObjString(si->GetName()), actnode);
@@ -134,7 +134,7 @@ void TProofNodes::Build()
             }
          }
       } else {
-         Warning("Build", "could not get list for node '%s'", key->GetName()); 
+         Warning("Build", "could not get list for node '%s'", key->GetName());
       }
    }
 
@@ -171,7 +171,7 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
 
    TString toactivate;
    TString todeactivate;
-   
+
    // The TProof::ActivateWorker/TProof::DeactivateWorker functions were fixed /
    // improved starting with protocol version 33
    Bool_t protocol33 = kTRUE;
@@ -221,7 +221,7 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
             }
          }
       } else {
-         Warning("ActivateWorkers", "could not get list for node '%s'", key->GetName()); 
+         Warning("ActivateWorkers", "could not get list for node '%s'", key->GetName());
       }
    }
 
@@ -235,7 +235,7 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
    }
    if (ret < 0) {
       Warning("ActivateWorkers", "could not get the requested number of workers per node (%d)",
-                                  nworkersnode); 
+                                  nworkersnode);
       return ret;
    }
 
@@ -258,7 +258,7 @@ Int_t TProofNodes::ActivateWorkers(const char *workers)
             ret = -1;
          }
       } else {
-         Warning("ActivateWorkers", "could not get list for node '%s'", key->GetName()); 
+         Warning("ActivateWorkers", "could not get list for node '%s'", key->GetName());
       }
    }
 
@@ -278,7 +278,7 @@ void TProofNodes::Print(Option_t* option) const
       if (node) {
          node->Print(option);
       } else {
-         Warning("Print", "could not get list for node '%s'", key->GetName()); 
+         Warning("Print", "could not get list for node '%s'", key->GetName());
       }
    }
 }

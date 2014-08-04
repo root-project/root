@@ -61,10 +61,10 @@
 int main(int argc, char *argv[])
 {
    // prototype of filter... does nothing right now.
-   
+
    FILE *fin;
    int ch;
-   
+
    switch (argc) {
       case 2:
          if ((fin = fopen(argv[1], "r")) == NULL) {
@@ -79,12 +79,12 @@ int main(int argc, char *argv[])
       case 1:
          fin = stdin;
          break;
-   
+
       default:
          (void)fprintf(stderr, "Usage: %s [file]\n", argv[0]);
          return(2);
    }
-   
+
    while ((ch = getc(fin)) != EOF) (void)putchar(ch);
 
    fclose(fin);

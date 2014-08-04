@@ -13,7 +13,7 @@
 /**
  * FTTextureGlyph is a specialisation of FTGlyph for creating texture
  * glyphs.
- * 
+ *
  * @see FTGlyphContainer
  *
  */
@@ -47,13 +47,13 @@ class FTGL_EXPORT FTTextureGlyph : public FTGlyph
          * @return      The advance distance for this glyph.
          */
         virtual const FTPoint& Render( const FTPoint& pen);
-        
+
         /**
          * Reset the currently active texture to zero to get into a known state before
          * drawing a string. This is to get round possible threading issues.
          */
         static void ResetActiveTexture(){ activeTextureID = 0;}
-        
+
     private:
         /**
          * The width of the glyph 'image'
@@ -69,12 +69,12 @@ class FTGL_EXPORT FTTextureGlyph : public FTGlyph
          * Vector from the pen position to the topleft corner of the pixmap
          */
         FTPoint pos;
-        
+
         /**
          * The texture co-ords of this glyph within the texture.
          */
         FTPoint uv[2];
-        
+
         /**
          * The texture index that this glyph is contained in.
          */
@@ -87,7 +87,7 @@ class FTGL_EXPORT FTTextureGlyph : public FTGlyph
          * of texture bind operations.
          */
         static GLint activeTextureID;
-        
+
 };
 
 

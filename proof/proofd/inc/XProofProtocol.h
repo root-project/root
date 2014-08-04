@@ -43,7 +43,7 @@ enum XProofRequestTypes {
    kXP_cleanup      = 3116,    // clean-up a session-ctx or a client section
    kXP_readbuf      = 3117,    // read a buffer from a file
    kXP_touch        = 3118,    // touch the client admin path
-   kXP_ctrlc        = 3119,    // propagate a Ctrl-C issued by the client 
+   kXP_ctrlc        = 3119,    // propagate a Ctrl-C issued by the client
    kXP_direct       = 3120,    // direct data connection
 //
    kXP_Undef        = 3121     // This should always be last: just increment

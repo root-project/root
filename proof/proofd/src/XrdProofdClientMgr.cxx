@@ -357,7 +357,7 @@ int XrdProofdClientMgr::Login(XrdProofdProtocol *p)
    bool anyserver = (fMgr->SrvType() == kXPD_AnyServer ||
                      !strcmp(p->Link()->Host(), "localhost") ||
                      !strcmp(p->Link()->Host(), "127.0.0.0")) ? 1 : 0;
-   
+
    // Find out the connection type: 'i', internal, means this is a proofsrv calling back.
    bool needauth = 0;
    bool ismaster = (fMgr->SrvType() == kXPD_TopMaster || fMgr->SrvType() == kXPD_Master) ? 1 : 0;
@@ -523,7 +523,7 @@ int XrdProofdClientMgr::CheckClient(XrdProofdProtocol *p,
       emsg = "protocol object undefined!";
       return -1;
    }
-   
+
    XrdOucString uname(user), gname(p->GroupIn());
    if (!user) {
       if (p && p->AuthProt() && strlen(p->AuthProt()->Entity.name) > 0) {

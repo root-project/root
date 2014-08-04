@@ -42,7 +42,7 @@ void pstable()
    Float_t yrange = 25;
    Int_t w = 650;
    Int_t h = w*yrange/xrange;
-   
+
    TCanvas *c1 = new TCanvas("c1","c1",200,10,w,h);
    c1->Range(0,0,xrange,yrange);
 
@@ -84,7 +84,7 @@ void pstable()
    c3->Update();
    c3->Print("pstable3.ps");
 }
-void table(Float_t x1, Float_t x2, Float_t yrange, TText *t, 
+void table(Float_t x1, Float_t x2, Float_t yrange, TText *t,
    const char **symbol, Bool_t octal)
 {
    Int_t i;

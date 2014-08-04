@@ -8,18 +8,18 @@ date   Dec. 2010
 
 This tutorial demonstraites and validates the RooJeffreysPrior class
 
-Jeffreys's prior is an 'objective prior' based on formal rules.  
-It is calculated from the Fisher information matrix.  
+Jeffreys's prior is an 'objective prior' based on formal rules.
+It is calculated from the Fisher information matrix.
 
 Read more:
 http://en.wikipedia.org/wiki/Jeffreys_prior
 
-The analytic form is not known for most PDFs, but it is for 
+The analytic form is not known for most PDFs, but it is for
 simple cases like the Poisson mean, Gaussian mean, Gaussian sigma.
 
 This class uses numerical tricks to calculate the Fisher Information Matrix
 efficiently.  In particular, it takes advantage of a property of the
-'Asimov data' as described in 
+'Asimov data' as described in
 Asymptotic formulae for likelihood-based tests of new physics
 Glen Cowan, Kyle Cranmer, Eilam Gross, Ofer Vitells
 http://arxiv.org/abs/arXiv:1007.1727
@@ -81,7 +81,7 @@ void JeffreysPriorDemo(){
 
   //  return;
   RooGenericPdf* test = new RooGenericPdf("test","test","1./sqrt(mu)",*w.set("poi"));
-  
+
   TCanvas* c1 = new TCanvas;
   RooPlot* plot = w.var("mu")->frame();
   //  pi.plotOn(plot, Normalization(1,RooAbsReal::Raw),Precision(.1));
@@ -89,7 +89,7 @@ void JeffreysPriorDemo(){
   //  pi2.plotOn(plot,LineColor(kGreen),LineStyle(kDotted));
   test->plotOn(plot,LineColor(kRed));
   plot->Draw();
- 
+
 }
 
 
@@ -127,14 +127,14 @@ void TestJeffreysGaussMean(){
 
   //  return;
   RooGenericPdf* test = new RooGenericPdf("test","test","1",*w.set("poi"));
-  
+
   TCanvas* c1 = new TCanvas;
   RooPlot* plot = w.var("mu")->frame();
   pi.plotOn(plot);
   test->plotOn(plot,LineColor(kRed),LineStyle(kDotted));
   plot->Draw();
 
-  
+
 }
 
 //_________________________________________________
@@ -181,14 +181,14 @@ void TestJeffreysGaussSigma(){
 
   //  return;
   RooGenericPdf* test = new RooGenericPdf("test","test","sqrt(2.)/sigma",*w.set("poi"));
-  
+
   TCanvas* c1 = new TCanvas;
   RooPlot* plot = w.var("sigma")->frame();
   pi.plotOn(plot);
   test->plotOn(plot,LineColor(kRed),LineStyle(kDotted));
   plot->Draw();
 
-  
+
 }
 
 
@@ -237,7 +237,7 @@ void TestJeffreysGaussMeanAndSigma(){
   TCanvas* c1 = new TCanvas;
   TH1* Jeff2d = pi.createHistogram("2dJeffreys",*w.var("mu"),Binning(10),YVar(*w.var("sigma"),Binning(10)));
   Jeff2d->Draw("surf");
-  
+
 }
 
 

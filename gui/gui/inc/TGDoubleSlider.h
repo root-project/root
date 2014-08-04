@@ -117,8 +117,8 @@ public:
    virtual Bool_t HandleMotion(Event_t *event) = 0;
 
    virtual void  SetScale(Int_t scale) { fScale = scale; }
-   virtual void  SetRange(Float_t min, Float_t max) { 
-      fVmin = min; fVmax = max; 
+   virtual void  SetRange(Float_t min, Float_t max) {
+      fVmin = min; fVmax = max;
       FixBounds(fVmin, fVmax);
    }
 

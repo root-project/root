@@ -1,5 +1,5 @@
 #include "TObject.h"
-   
+
 class Quad {
 
 public:

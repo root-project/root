@@ -1,19 +1,19 @@
 // Standard demo of the Bayesian MCMC calculator
- 
+
 /*
 
 Author: Kyle Cranmer
 date: Dec. 2010
 updated: July 2011 for 1-sided upper limit and SequentialProposalFunction
 
-This is a standard demo that can be used with any ROOT file 
+This is a standard demo that can be used with any ROOT file
 prepared in the standard way.  You specify:
  - name for input ROOT file
  - name of workspace inside ROOT file that holds model and data
  - name of ModelConfig that specifies details for calculator tools
- - name of dataset 
+ - name of dataset
 
-With default parameters the macro will attempt to run the 
+With default parameters the macro will attempt to run the
 standard hist2workspace example and read the ROOT file
 that it produces.
 
@@ -52,10 +52,10 @@ void StandardBayesianMCMCDemo(const char* infile = "",
                               const char* dataName = "obsData"){
 
   /////////////////////////////////////////////////////////////
-  // First part is just to access a user-defined file 
+  // First part is just to access a user-defined file
   // or create the standard example file if it doesn't exist
   ////////////////////////////////////////////////////////////
-   
+
    const char* filename = "";
    if (!strcmp(infile,"")) {
       filename = "results/example_combined_GaussExample_model.root";
@@ -74,22 +74,22 @@ void StandardBayesianMCMCDemo(const char* infile = "",
          cout <<"Done creating example input"<<endl;
          cout <<"---------------------\n\n"<<endl;
       }
-      
+
    }
    else
       filename = infile;
-   
+
    // Try to open the file
    TFile *file = TFile::Open(filename);
-   
+
    // if input file was specified byt not found, quit
    if(!file ){
       cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
-   } 
- 
- 
-  
+   }
+
+
+
   /////////////////////////////////////////////////////////////
   // Tutorial starts here
   ////////////////////////////////////////////////////////////
@@ -127,7 +127,7 @@ void StandardBayesianMCMCDemo(const char* infile = "",
   ph.SetCacheSize(100);
   ProposalFunction* pf = ph.GetProposalFunction();
   */
-  
+
   // this proposal function seems fairly robust
   SequentialProposal sp(0.1);
   /////////////////////////////////////////////
@@ -151,7 +151,7 @@ void StandardBayesianMCMCDemo(const char* infile = "",
   MCMCInterval* interval = mcmc.GetInterval();
 
   // make a plot
-  //TCanvas* c1 = 
+  //TCanvas* c1 =
   new TCanvas("IntervalPlot");
   MCMCIntervalPlot plot(*interval);
   plot.Draw();
@@ -173,7 +173,7 @@ void StandardBayesianMCMCDemo(const char* infile = "",
     c2->cd(iPad++);
     plot.DrawChainScatter(*firstPOI,*nuis);
   }
-  
+
   // print out the iterval on the first Parameter of Interest
   cout << "\n95% interval on " <<firstPOI->GetName()<<" is : ["<<
     interval->LowerLimit(*firstPOI) << ", "<<

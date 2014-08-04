@@ -5,7 +5,7 @@ void triangles(Int_t ntriangles=50) {
   //then click on any triangle. A message showing the triangle number
   //and its color will be printed.
   //Author: Rene Brun
-   
+
   TCanvas *c1 = new TCanvas("c1","triangles",10,10,700,700);
   TRandom r;
   Double_t dx = 0.2; Double_t dy = 0.2;
@@ -34,7 +34,7 @@ void TriangleClicked() {
    //it just prints the id of the picked triangle
    //you can add graphics actions instead
    int event = gPad->GetEvent();
-   if (event != 11) return; //may be comment this line 
+   if (event != 11) return; //may be comment this line
    TObject *select = gPad->GetSelected();
    if (!select) return;
    if (select->InheritsFrom(TPolyLine::Class())) {

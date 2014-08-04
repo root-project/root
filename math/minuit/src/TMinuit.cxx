@@ -242,7 +242,7 @@ It is possible that the apparent lack of positive-definiteness is in fact
 only due to excessive roundoff errors in numerical calculations in the
 user function or not enough precision. This is unlikely in general, but
 becomes more likely if the number of free parameters is very large, or if
-
+
 the parameters are badly scaled (not all of the same order of magnitude),
 and correlations are also large. In any case, whether the
 non-positive-definiteness is real or only numerical is largely irrelevant,

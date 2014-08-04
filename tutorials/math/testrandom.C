@@ -1,9 +1,9 @@
 //+______________________________________________________________________________
-// Performance test of all the ROOT random generator (TRandom, TRandom1, TRandom2 and TRandom3)  
+// Performance test of all the ROOT random generator (TRandom, TRandom1, TRandom2 and TRandom3)
 // Tests the generator TRandom3 against some ref values
 // and creates a timing table against TRandom, TRandom1 and TRandom2.
 //
-// E.g. on an an Intel Xeon Quad-core Harpertown (E5410) 2.33 GHz running 
+// E.g. on an an Intel Xeon Quad-core Harpertown (E5410) 2.33 GHz running
 // Linux SLC4 64 bit and compiled with gcc 3.4
 //
 // Distribution            nanoseconds/call
@@ -48,7 +48,7 @@ void testAll() {
   int i, N = 2000000;
   float cpn = 1000000000./N;
   int N1 = N/10; float cpn1 = cpn*10;  // for TRandom1
-  double x,y;  
+  double x,y;
   TRandom *rsave = gRandom;
   TRandom *r0 = new TRandom();
   TRandom *r1 = new TRandom1();
@@ -123,7 +123,7 @@ void testAll() {
      x = r3->Gaus(0,1);
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
-  
+
   sw.Start();
   for (i=0;i<N;i+=2) {
      r0->Rannor(x,y);
@@ -376,7 +376,7 @@ void testAll() {
 
   // continuous distribution (ex. Gaus)
   TUnuranContDist dist(f1);
-  // use arou method (is probably the fastest) 
+  // use arou method (is probably the fastest)
   unr0.Init(dist,"arou");
   unr1.Init(dist,"arou");
   unr2.Init(dist,"arou");
@@ -464,7 +464,7 @@ void testAll() {
   delete r3;
   gRandom = rsave;
 
-#ifdef LATER  
+#ifdef LATER
   // Binomial
   unr0.InitBinomial(15,0.5);
   unr1.InitBinomial(15,0.5);
@@ -497,7 +497,7 @@ void testAll() {
 
 int testRandom3() {
 
-  Float_t RefValue[] = // running using a seed of 4357 ROOT 5.13.07 and checked with GSL 1.8 
+  Float_t RefValue[] = // running using a seed of 4357 ROOT 5.13.07 and checked with GSL 1.8
      {  0.999741749, 0.162909875, 0.282617805, 0.947201082, 0.231656543, 0.484973614, 0.957476957, 0.744305343,
         0.540043658, 0.739952981, 0.759943798, 0.658636614, 0.315637622, 0.804403015, 0.519672115, 0.168572422,
         0.47552973, 0.392313994, 0.221667687, 0.213190459,0.0303352042,  0.33353925, 0.194148851, 0.943716781,
@@ -622,7 +622,7 @@ int testRandom3() {
         0.720296508,  0.21075374,  0.96309675, 0.749189411, 0.739621932, 0.510072327,0.0872929865, 0.650020469,
         0.0823648495, 0.726920745, 0.532618265, 0.749305866,  0.86126694,0.0346994482,0.0931224583, 0.655257095,
         0.959517847, 0.487057231, 0.859895745, 0.084794421, 0.718541715, 0.850918328, 0.818884782,  0.71627446,
-        0.40822393,  0.63658567, 0.523838703, 0.372038872, 0.353426097, 0.598049047,0.0974868746, 0.276353038 
+        0.40822393,  0.63658567, 0.523838703, 0.372038872, 0.353426097, 0.598049047,0.0974868746, 0.276353038
      };
 
      Int_t rc1 = 0;

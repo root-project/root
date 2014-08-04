@@ -46,7 +46,7 @@ protected:
    virtual void   ListDataMembers(std::ostream& classFile);
 
    virtual void   WriteClassDocHeader(std::ostream& classFile);
-   virtual void   WriteMethod(std::ostream & out, TString& ret, 
+   virtual void   WriteMethod(std::ostream & out, TString& ret,
                               TString& name, TString& params,
                               const char* file, TString& anchor,
                               TString& comment, TString& codeOneLiner,

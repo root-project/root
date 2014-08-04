@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -28,7 +28,7 @@ private:
 
   template<class MI1, class MI2>
   ABProd& operator=(const ABProd<MI1,MI2>&) {return *this;}
-  
+
 public:
 
   ABProd(const M1& a, const M2& b): fA(a), fB(b) {}
@@ -42,7 +42,7 @@ public:
 
   const M1& A() const {return fA;}
   const M2& B() const {return fB;}
- 
+
 private:
 
   M1 fA;

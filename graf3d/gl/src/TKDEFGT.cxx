@@ -16,11 +16,11 @@
 #include "TGL5D.h"
 
 //   Kernel density estimator based on Fast Gauss Transform.
-//   
+//
 //   Nice implementation of FGT by Sebastien Paris
 //   can be found here:
 //      http://www.mathworks.com/matlabcentral/fileexchange/17438
-//      
+//
 //   This version is based on his work.
 
 //______________________________________________________________________________
@@ -48,7 +48,7 @@ TKDEFGT::~TKDEFGT()
 }
 
 //______________________________________________________________________________
-void TKDEFGT::BuildModel(const std::vector<Double_t> &sources, Double_t sigma, 
+void TKDEFGT::BuildModel(const std::vector<Double_t> &sources, Double_t sigma,
                          UInt_t dim, UInt_t p, UInt_t k)
 {
    //Calculate coefficients for FGT.
@@ -66,7 +66,7 @@ void TKDEFGT::BuildModel(const std::vector<Double_t> &sources, Double_t sigma,
       Warning("TKDEFGT::BuildModel", "Order of truncation is zero, 8 will be used");
       p = 8;
    }
-   
+
    fDim = dim;
    fP = p;
    const UInt_t nP = UInt_t(sources.size()) / fDim;
@@ -117,7 +117,7 @@ void TKDEFGT::BuildModel(const TGL5DDataSet *sources, Double_t sigma, UInt_t p, 
    fK = !k ? UInt_t(TMath::Sqrt(Double_t(nP))) : k;
    fSigma = sigma;
    fPD = NChooseK(fP + fDim - 1, fDim);
-         
+
    fWeights.assign(nP, 1.);
    fXC.assign(fDim * fK, 0.);
    fA_K.assign(fPD * fK, 0.);
@@ -154,17 +154,17 @@ UInt_t Idmax(const std::vector<Double_t> &x , UInt_t n);
 void TKDEFGT::Kcenter(const std::vector<double> &x)
 {
    //Solve kcenter task.
-   
+
    //Randomly pick one node as the first center.
    const UInt_t nP = UInt_t(x.size()) / fDim;
-   
+
    UInt_t *indxc = &fIndxc[0];
    UInt_t ind = 1;
    *indxc++ = ind;
-   
+
    const Double_t *x_j   = &x[0];
    const Double_t *x_ind = &x[0] + ind * fDim;
-   
+
    for (UInt_t j = 0; j < nP; x_j += fDim, ++j) {
       fDistC[j] = (j == ind) ? 0. : DDist(x_j , x_ind , fDim);
       fIndx[j] = 0;
@@ -183,14 +183,14 @@ void TKDEFGT::Kcenter(const std::vector<double> &x)
          }
       }
    }
-   
+
    for (UInt_t i = 0, nd = 0 ; i < nP; i++, nd += fDim) {
       fXboxsz[fIndx[i]]++;
       Int_t ibase = fIndx[i] * fDim;
       for (UInt_t j = 0 ; j < fDim; ++j)
          fXC[j + ibase] += x[j + nd];
    }
-   
+
    for (UInt_t i = 0, ibase = 0; i < fK ; ++i, ibase += fDim) {
       const Double_t temp = 1. / fXboxsz[i];
       for (UInt_t j = 0; j < fDim; ++j)
@@ -204,16 +204,16 @@ void TKDEFGT::Kcenter(const TGL5DDataSet *sources)
    //Solve kcenter task. Version for dim == 3 and data from TTree.
    //Randomly pick one node as the first center.
    const UInt_t nP = sources->SelectedSize();
-   
+
    UInt_t *indxc = &fIndxc[0];
    *indxc++ = 1;
-   
+
    {
    //Block to limit the scope of x_ind etc.
    const Double_t x_ind = sources->V1(1);
    const Double_t y_ind = sources->V2(1);
    const Double_t z_ind = sources->V3(1);
-   
+
    for (UInt_t j = 0; j < nP; ++j) {
       const Double_t x_j = sources->V1(j);
       const Double_t y_j = sources->V2(j);
@@ -243,7 +243,7 @@ void TKDEFGT::Kcenter(const TGL5DDataSet *sources)
          }
       }
    }
-   
+
    for (UInt_t i = 0, nd = 0 ; i < nP; i++, nd += fDim) {
       fXboxsz[fIndx[i]]++;
       UInt_t ibase = fIndx[i] * fDim;
@@ -251,7 +251,7 @@ void TKDEFGT::Kcenter(const TGL5DDataSet *sources)
       fXC[ibase + 1] += sources->V2(i);
       fXC[ibase + 2] += sources->V3(i);
    }
-   
+
    for (UInt_t i = 0, ibase = 0; i < fK ; ++i, ibase += fDim) {
       const Double_t temp = 1. / fXboxsz[i];
       for (UInt_t j = 0; j < fDim; ++j)
@@ -266,7 +266,7 @@ void TKDEFGT::Compute_C_k()
    fHeads[fDim] = UINT_MAX;
    fCinds[0] = 0;
    fC_K[0] = 1.0;
-   
+
    for (UInt_t k = 1, t = 1, tail = 1; k < fP; ++k, tail = t) {
       for (UInt_t i = 0; i < fDim; ++i) {
          const UInt_t head = fHeads[i];
@@ -286,7 +286,7 @@ void TKDEFGT::Compute_A_k(const std::vector<Double_t> &x)
    //Coefficients A_K.
    const Double_t ctesigma = 1. / fSigma;
    const UInt_t nP = UInt_t(x.size()) / fDim;
-   
+
    for (UInt_t n = 0; n < nP; n++) {
       UInt_t nbase    = n * fDim;
       UInt_t ix2c     = fIndx[n];
@@ -294,7 +294,7 @@ void TKDEFGT::Compute_A_k(const std::vector<Double_t> &x)
       UInt_t ind      = ix2c * fPD;
       Double_t temp   = fWeights[n];
       Double_t sum    = 0.0;
-      
+
       for (UInt_t i = 0; i < fDim; ++i) {
          fDx[i]    = (x[i + nbase] - fXC[i + ix2cbase]) * ctesigma;
          sum      += fDx[i] * fDx[i];
@@ -330,7 +330,7 @@ void TKDEFGT::Compute_A_k(const TGL5DDataSet *sources)
    //Coefficients A_K. Special case for TTree and dim == 3.
    const Double_t ctesigma = 1. / fSigma;
    const UInt_t nP = sources->SelectedSize();
-   
+
    for (UInt_t n = 0; n < nP; n++) {
       UInt_t ix2c     = fIndx[n];
       UInt_t ix2cbase = ix2c * 3;
@@ -341,7 +341,7 @@ void TKDEFGT::Compute_A_k(const TGL5DDataSet *sources)
       fDx[0] = (sources->V1(n) - fXC[ix2cbase]) * ctesigma;
       fDx[1] = (sources->V2(n) - fXC[ix2cbase + 1]) * ctesigma;
       fDx[2] = (sources->V3(n) - fXC[ix2cbase + 2]) * ctesigma;
-      
+
       sum += (fDx[0] * fDx[0] + fDx[1] * fDx[1] + fDx[2] * fDx[2]);
       fHeads[0] = fHeads[1] = fHeads[2] = 0;
 
@@ -378,31 +378,31 @@ UInt_t InvNChooseK(UInt_t d, UInt_t cnk);
 void TKDEFGT::Predict(const std::vector<Double_t> &ts, std::vector<Double_t> &v, Double_t eval)const
 {
    //Calculate densities.
-   
+
    if (!fModelValid) {
       Error("TKDEFGT::Predict", "Call BuildModel first!");
       return;
    }
-   
+
    if (!ts.size()) {
       Warning("TKDEFGT::Predict", "Empty targets vector.");
       return;
    }
 
    v.assign(ts.size() / fDim, 0.);
-   
+
    fHeads.assign(fDim + 1, 0);
    fDx.assign(fDim, 0.);
    fProds.assign(fPD, 0.);
-   
+
    const Double_t ctesigma = 1. / fSigma;
    const UInt_t p  = InvNChooseK(fDim , fPD);
    const UInt_t nP = UInt_t(ts.size()) / fDim;
-   
+
    for (UInt_t m = 0; m < nP; ++m) {
       Double_t temp = 0.;
       const UInt_t mbase = m * fDim;
-      
+
       for (UInt_t kn = 0 ; kn < fK ; ++kn) {
          const UInt_t xbase = kn * fDim;
          const UInt_t ind = kn * fPD;
@@ -433,13 +433,13 @@ void TKDEFGT::Predict(const std::vector<Double_t> &ts, std::vector<Double_t> &v,
 
       v[m] = temp;
    }
-   
+
    Double_t dMin = v[0], dMax = dMin;
    for (UInt_t i = 1; i < nP; ++i) {
       dMin = TMath::Min(dMin, v[i]);
       dMax = TMath::Max(dMax, v[i]);
    }
-   
+
    const Double_t dRange = dMax - dMin;
    for (UInt_t i = 0; i < nP; ++i)
       v[i] = (v[i] - dMin) / dRange;

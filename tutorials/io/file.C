@@ -2,7 +2,7 @@
    //
    // This macro displays the physical ROOT file structure
    //Author: Rene Brun
-   
+
    gROOT->Reset();
    c1 = new TCanvas("c1","ROOT File description",200,10,700,550);
 

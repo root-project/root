@@ -241,8 +241,8 @@ templateClassImp(TKDTree)
 //
 //
 // Note: the storage of the TKDTree in a file which include also the contained data is not
-//       supported. One must store the data separatly in a file (e.g. using a TTree) and then 
-//       re-creating the TKDTree from the data, after having read them from the file 
+//       supported. One must store the data separatly in a file (e.g. using a TTree) and then
+//       re-creating the TKDTree from the data, after having read them from the file
 //////////////////////////////////////////////////////////////////////////
 
 
@@ -1132,8 +1132,8 @@ void TKDTree<Index, Value>::MakeBoundariesExact()
       }
    }
 
-   delete [] min; 
-   delete [] max; 
+   delete [] min;
+   delete [] max;
 
    Index left, right;
    for (Index inode=fNNodes-1; inode>=0; inode--){

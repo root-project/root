@@ -42,7 +42,7 @@ private:
 
 public:
    TGInputDialog(const TGWindow *p = 0, const TGWindow *main = 0,
-                 const char *prompt =0, const char *defval = 0, 
+                 const char *prompt =0, const char *defval = 0,
                  char *retstr = 0, UInt_t options = kVerticalFrame);
    ~TGInputDialog();
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t);

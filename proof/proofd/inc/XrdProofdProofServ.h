@@ -229,7 +229,7 @@ public:
    short int                 fID;
    char                      fProtVer;
    XrdOucString              fFileout;
-   
+
    int                       fPLiteNWrks;  // # of wrks when PLite master
 
    XrdNet                   *fUNIXSock;     // UNIX server socket for internal connections

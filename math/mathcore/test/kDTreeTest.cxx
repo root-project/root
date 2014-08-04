@@ -43,13 +43,13 @@ void kDTreeTest()
   //
   //
   printf("\n\tTesting kDTree memory usage ...\n");
-  TestBuild();  
+  TestBuild();
   printf("\n\tTesting kDTree speed ...\n");
   TestSpeed();
 }
 
 //______________________________________________________________________
-void TestBuild(const Int_t npoints, const Int_t bsize){  
+void TestBuild(const Int_t npoints, const Int_t bsize){
   //
   // Test kdTree for memory leaks
   //
@@ -79,12 +79,12 @@ void TestMembers()
    //This is not really a test, it's a function that illustrates the internal
    //behaviour of the kd-tree.
    //
-   //Print out the internal kd-tree data-members, like fCrossNode, for 
+   //Print out the internal kd-tree data-members, like fCrossNode, for
    //better understading
- 
+
 
    TKDTreeIF *kdtree = 0x0;
-   Int_t npoints = 33; 
+   Int_t npoints = 33;
    Int_t bsize = 10;
    Float_t *data0 = new Float_t[200]; //not to reallocate each time
    Float_t *data1 = new Float_t[200];
@@ -92,7 +92,7 @@ void TestMembers()
       data0[i]= gRandom->Rndm();
       data1[i]= gRandom->Rndm();
    }
-   
+
    kdtree = new TKDTreeIF(npoints, 2, bsize);
    kdtree->SetData(0, data0);
    kdtree->SetData(1, data1);
@@ -222,7 +222,7 @@ void TestSpeed(Int_t npower2, Int_t bsize)
     printf("Please specify a power of 2 greater than 10\n");
     return;
   }
-  
+
   Int_t npoints = Int_t(pow(2., npower2))*bsize;
   Float_t *data0 =  new Float_t[npoints*2];
   Float_t *data[2];
@@ -232,7 +232,7 @@ void TestSpeed(Int_t npower2, Int_t bsize)
     data[1][i]= gRandom->Rndm();
     data[0][i]= gRandom->Rndm();
   }
-  
+
   TGraph *g = new TGraph(npower2-10);
   g->SetMarkerStyle(7);
   TStopwatch timer;
@@ -285,7 +285,7 @@ void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
 //         - 0  : time building the tree
 //
 
- 
+
   Float_t rangey  = 100;
   Float_t rangez  = 100;
   Float_t drangey = 0.1;
@@ -296,13 +296,13 @@ void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
   Float_t *data[2];
   data[0] = &data0[0];
   data[1] = &data0[npoints];
-  //Int_t i;   
+  //Int_t i;
   for (Int_t i=0; i<npoints; i++){
     data[0][i]          = gRandom->Uniform(-rangey, rangey);
     data[1][i]          = gRandom->Uniform(-rangez, rangez);
   }
   TStopwatch timer;
-  
+
   // check time build
   printf("building kdTree ...\n");
   timer.Start(kTRUE);
@@ -311,11 +311,11 @@ void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
   timer.Stop();
   timer.Print();
   if(mode == 0) return;
-  
+
   Float_t countern=0;
   Float_t counteriter  = 0;
   Float_t counterfound = 0;
-  
+
   if (mode ==2){
     if (nloop) timer.Start(kTRUE);
     Int_t *res = new Int_t[npoints];
@@ -350,16 +350,16 @@ void  TestkdtreeIF(Int_t npoints, Int_t bsize, Int_t nloop, Int_t mode)
    }
       }
     }
-    
+
     if (nloop){
       timer.Stop();
       timer.Print();
     }
 
-    delete [] res; 
+    delete [] res;
   }
   delete [] data0;
-  
+
   counteriter/=npoints;
   counterfound/=npoints;
   if (nloop) printf("Find nearest point:\t%f\t%f\t%f\n",countern, counteriter, counterfound);
@@ -391,7 +391,7 @@ void TestNeighbors()
 //for the distances brute-force:
    Double_t *dist = new Double_t[npoints];
    Int_t *index = new Int_t[npoints];
-      
+
 //Build the tree
    TKDTreeID *kdtree = new TKDTreeID(npoints, 3, bsize);
    kdtree->SetData(0, x);
@@ -421,7 +421,7 @@ void TestNeighbors()
       point[2]=z[ipoint];
 
       kdtree->FindNearestNeighbors(point, nn, index2, dist2);
-      
+
 
       for (Int_t inn=0; inn<nn; inn++){
          if (TMath::Abs(dist2[inn]-dist[index[inn]])>1E-8) {
@@ -441,9 +441,9 @@ void TestNeighbors()
 //    for (Int_t i=0; i<nn; i++){
 //       printf("ind[%d]=%d, dist[%d]=%f\n", i, index2[i], i, dist2[i]);
 //    }
-      
-      
-      
+
+
+
 
    delete [] x;
    delete [] y;
@@ -516,7 +516,7 @@ void TestRange()
          ndiff++;
          printf("different numbers of points found, %d %d\n", np1, Int_t(results2.size()));
          continue;
-      } 
+      }
 
       //have to sort the results, as they are in different order
       TMath::Sort(np1, results1, index, kFALSE);
@@ -541,7 +541,7 @@ void TestRange()
 
 
 //______________________________________________________________________
-int main() { 
+int main() {
    kDTreeTest();
-   return 0; 
+   return 0;
 }

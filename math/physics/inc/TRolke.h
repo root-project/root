@@ -38,7 +38,7 @@ private:
    Double_t fUpperLimit; // the calculated upper limit
    Double_t fLowerLimit; // the calculated lower limit
    bool fBounding;       // false for unbounded likelihood
-                         // true for bounded likelihood   
+                         // true for bounded likelihood
    Int_t fNumWarningsDeprecated1;
    Int_t fNumWarningsDeprecated2;
 
@@ -129,7 +129,7 @@ public:
    void SetCLSigmas(Double_t CLsigmas) {
       fCL = TMath::Erf(CLsigmas / TMath::Sqrt(2.0)) ;
    }
-   
+
    // The Set methods for the different models are described in Rolke.cxx
    // model 1
    void SetPoissonBkgBinomEff(Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m);

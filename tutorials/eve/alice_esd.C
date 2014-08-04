@@ -39,7 +39,7 @@
   into the ROOT session.
 
   See the run_alice_esd.C macro.
-  
+
 
   2. Creation of simple GUI for event navigation.
   ------------------------------------------------------------------------
@@ -326,7 +326,7 @@ void load_event()
 /******************************************************************************/
 
 //______________________________________________________________________________
-// 
+//
 // EvNavHandler class is needed to connect GUI signals.
 
 class EvNavHandler
@@ -366,7 +366,7 @@ void make_gui()
 
    TGHorizontalFrame* hf = new TGHorizontalFrame(frmMain);
    {
-      
+
       TString icondir( Form("%s/icons/", gSystem->Getenv("ROOTSYS")) );
       TGPictureButton* b = 0;
       EvNavHandler    *fh = new EvNavHandler;
@@ -423,7 +423,7 @@ void alice_esd_read()
 
    if (gTrackList == 0)
    {
-      gTrackList = new TEveTrackList("ESD Tracks"); 
+      gTrackList = new TEveTrackList("ESD Tracks");
       gTrackList->SetMainColor(6);
       gTrackList->SetMarkerColor(kYellow);
       gTrackList->SetMarkerStyle(4);
@@ -488,7 +488,7 @@ TEveTrack* esd_make_track(TEveTrackPropagator*   trkProp,
    Double_t mc = 0.138; // at->GetMass(); - Complicated function, requiring PID.
 
    rt.fBeta = ep/TMath::Sqrt(ep*ep + mc*mc);
- 
+
    TEveTrack* track = new TEveTrack(&rt, trkProp);
    track->SetName(Form("TEveTrack %d", rt.fIndex));
    track->SetStdTitle();

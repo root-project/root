@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -26,23 +26,23 @@ class BasicFunctionGradient {
 private:
 
 public:
-  
+
   explicit BasicFunctionGradient(unsigned int n) :
     fGradient(MnAlgebraicVector(n)), fG2ndDerivative(MnAlgebraicVector(n)),
-    fGStepSize(MnAlgebraicVector(n)), fValid(false), 
+    fGStepSize(MnAlgebraicVector(n)), fValid(false),
     fAnalytical(false) {}
-  
-  explicit BasicFunctionGradient(const MnAlgebraicVector& grd) : 
+
+  explicit BasicFunctionGradient(const MnAlgebraicVector& grd) :
     fGradient(grd), fG2ndDerivative(MnAlgebraicVector(grd.size())),
-    fGStepSize(MnAlgebraicVector(grd.size())), fValid(true), 
+    fGStepSize(MnAlgebraicVector(grd.size())), fValid(true),
     fAnalytical(true) {}
 
-  BasicFunctionGradient(const MnAlgebraicVector& grd, const MnAlgebraicVector& g2, const MnAlgebraicVector& gstep) : 
+  BasicFunctionGradient(const MnAlgebraicVector& grd, const MnAlgebraicVector& g2, const MnAlgebraicVector& gstep) :
     fGradient(grd), fG2ndDerivative(g2),
     fGStepSize(gstep), fValid(true), fAnalytical(false) {}
-  
+
   ~BasicFunctionGradient() {}
-  
+
   BasicFunctionGradient(const BasicFunctionGradient& grad) : fGradient(grad.fGradient), fG2ndDerivative(grad.fG2ndDerivative), fGStepSize(grad.fGStepSize), fValid(grad.fValid) {}
 
   BasicFunctionGradient& operator=(const BasicFunctionGradient& grad) {
@@ -56,7 +56,7 @@ public:
   void* operator new(size_t nbytes) {
     return StackAllocatorHolder::Get().Allocate(nbytes);
   }
-  
+
   void operator delete(void* p, size_t /*nbytes */) {
     StackAllocatorHolder::Get().Deallocate(p);
   }

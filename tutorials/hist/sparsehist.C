@@ -1,33 +1,33 @@
 //*********************************************************************
 //+ Evaluate the performance of THnSparse vs TH1/2/3/nF
 //  for different numbers of dimensions and bins per dimension.
-// 
+//
 //  The script calculates the bandwidth for filling and retrieving
 //  bin contents (in million entries per second) for these two
 //  histogramming techniques, where "seconds" is CPU and real time.
 //
-//  The first line of the plots contains the bandwidth based on the 
+//  The first line of the plots contains the bandwidth based on the
 //  CPU time (THnSpase, TH1/2/3/nF*, ratio), the second line shows
 //  the plots for real time, and the third line shows the fraction of
 //  filled bins and memory used by THnSparse vs. TH1/2/3/nF.
-// 
+//
 //  The timing depends on the distribution and the amount of entries
 //  in the histograms; here, a Gaussian distribution (center is
 //  contained in the histograms) is used to fill each histogram with
 //  1000 entries. The filling and reading is repeated until enough
 //  statistics have been collected.
-// 
+//
 //  tutorials/tree/drawsparse.C shows an example for visualizing a
 //  THnSparse. It creates a TTree which is then drawn using
 //  TParallelCoord.
-// 
+//
 //  This macro should be run in compiled mode due to the many nested
 //  loops that force CINT to disable its optimization. If run
 //  interpreted one would not benchmark THnSparse but CINT.
-// 
+//
 //  Run as
 //    .L $ROOTSYS/tutorials/hist/sparsehist.C+
-// 
+//
 //  Axel.Naumann@cern.ch (2007-09-14)
 // *********************************************************************
 
@@ -200,12 +200,12 @@ void TTimeHists::SetupHist(EHist hist)
             Int_t size = 1;
             for (Int_t d = 0; d < fDim; ++d) {
                if ((Int_t)(size * sizeof(Float_t)) > INT_MAX / (fBins + 2)
-                  || (meminfo.fMemFree > 0 
+                  || (meminfo.fMemFree > 0
                   && meminfo.fMemFree / 2 < (Int_t) (size * sizeof(Float_t)/1000/1000)))
                   throw std::bad_alloc();
                size *= (fBins + 2);
             }
-            if (meminfo.fMemFree > 0 
+            if (meminfo.fMemFree > 0
                && meminfo.fMemFree / 2 < (Int_t) (size * sizeof(Float_t)/1000/1000))
                throw std::bad_alloc();
             Int_t* bins = new Int_t[fDim];

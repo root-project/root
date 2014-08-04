@@ -269,7 +269,7 @@ TRandom1::TRandom1(UInt_t seed, Int_t lux)
    fLuxury = lux;
    SetSeed2(seed, fLuxury);
    // in case seed = 0 SetSeed2 calls already SetSeeds
-   if (seed != 0) { 
+   if (seed != 0) {
       // setSeeds() wants a zero terminated array!
       seedlist[0]=fSeed;
       seedlist[1]=0;
@@ -554,12 +554,12 @@ void TRandom1::SetSeed2(UInt_t seed, int lux)
    // case of seed == 0
    // use a random seed based on TRandom2(0) which is based on the UUID
    if (seed == 0) {
-      UInt_t randSeeds[25]; 
+      UInt_t randSeeds[25];
       TRandom3 r2(0);
-      for (int j = 0; j < 24; ++j) 
+      for (int j = 0; j < 24; ++j)
        randSeeds[j]  =  static_cast<UInt_t> (4294967296.*r2.Rndm());
-      randSeeds[24] = 0; 
-      SetSeeds(randSeeds, lux); 
+      randSeeds[24] = 0;
+      SetSeeds(randSeeds, lux);
       return;
    }
 

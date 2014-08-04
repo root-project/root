@@ -135,7 +135,7 @@ public:
    virtual void          UnZoom() = 0;
 
    static TView         *CreateView(Int_t system=1, const Double_t *rmin=0, const Double_t *rmax=0);
-   
+
    ClassDef(TView,3);  //3-D View abstract interface for 3-D views
 };
 

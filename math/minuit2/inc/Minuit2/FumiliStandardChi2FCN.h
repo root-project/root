@@ -67,7 +67,7 @@ public:
                          const std::vector<double>& mvar)
    { //this->fModelFCN = &modelFunction;
       this->SetModelFunction(modelFCN);
-      
+
       assert(meas.size() == pos.size());
       assert(meas.size() == mvar.size());
       fMeasurements = meas;
@@ -86,7 +86,7 @@ public:
          else
             fInvErrors[i] = 1.0/std::sqrt(mvar[i]);
       }
-      
+
   }
 
 
@@ -112,7 +112,7 @@ public:
                         const std::vector<double>& mvar)
    { //this->fModelFCN = &modelFunction;
       this->SetModelFunction(modelFCN);
-      
+
       assert(meas.size() == pos.size());
       assert(meas.size() == mvar.size());
       fMeasurements = meas;

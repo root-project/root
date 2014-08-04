@@ -279,13 +279,13 @@ void TConvertMapToProxy::operator()(TBuffer &b, void *pmember, Int_t size)
       }
    }
 
-   
+
    char *addr = (char*)pmember;
    if (size==0) size=1;
    for(Int_t k=0; k<size; ++k, addr += fSizeOf) {
 
       if (needAlloc) {
-         
+
          // Read the class name.
 
       }

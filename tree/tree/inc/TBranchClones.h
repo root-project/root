@@ -47,7 +47,7 @@ public:
    TBranchClones(TTree *tree, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
    TBranchClones(TBranch *parent, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
    virtual ~TBranchClones();
-   
+
    virtual void    Browse(TBrowser *b);
    virtual Int_t   Fill();
    virtual const char* GetClassName() const { return fClassName; }

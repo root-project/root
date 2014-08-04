@@ -62,7 +62,7 @@ public:
    GVizAgedge_t  *GetGVEdge() {return fGVEdge;}
    TGraphNode    *GetNode1() {return fNode1;}
    TGraphNode    *GetNode2() {return fNode2;}
-   void           Layout();            
+   void           Layout();
    virtual void   Paint(Option_t *option="");
    virtual void   SavePrimitive(std::ostream &, Option_t *);
    void           SaveAttributes(std::ostream &, const char*);

@@ -236,7 +236,7 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
    AddFrame(fToolBar, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
    fToolBar->GetButton(M_SHOW_3D)->SetState(kButtonDisabled);
    fToolBar->GetButton(M_FILE_SAVEAS)->SetState(kButtonDisabled);
-    
+
    // Layout hints
    fL1 = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 0, 0, 0);
    fL2 = new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 0, 0, 0, 0);
@@ -295,7 +295,7 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
    fV1->AddFrame(fSelectionFrame, lo);
 
    fContextMenu = new TContextMenu("RSContextMenu");
-    
+
    //__________________________________________________________________________________
 
    // Create Display frame
@@ -838,7 +838,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         TString cmd;
                         fCA->cd();
                         TVirtualViewer3D *viewer3D = fCA->GetViewer3D("ogl");
-                        cmd.Form("((TGLViewer *)0x%lx)->SetCurrentCamera(TGLViewer::kCameraPerspXOY)", 
+                        cmd.Form("((TGLViewer *)0x%lx)->SetCurrentCamera(TGLViewer::kCameraPerspXOY)",
                                  (ULong_t)viewer3D);
                         gROOT->ProcessLine(cmd);
                         cmd.Form("((TGLViewer *)0x%lx)->CurrentCamera().RotateRad(0.0, TMath::Pi())",
@@ -877,7 +877,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      }
                   }
                   break;
-                    
+
                case kCT_ITEMCLICK:
                   if (parm1 == kButton3) {
                      if (fEventListTree->GetSelected()) {

@@ -337,7 +337,7 @@ void TQueryResult::Print(Option_t *opt) const
    if (full) Printf("+++");
 
    TString range;
-   if (!full && (last > -1)) 
+   if (!full && (last > -1))
       range.Form("evts:%lld-%lld", fFirst, last);
 
    // Print header

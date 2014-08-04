@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -30,13 +30,13 @@ class MnStrategy;
  */
 
 class HessianGradientCalculator : public GradientCalculator {
-  
+
 public:
-  
+
   HessianGradientCalculator(const MnFcn& fcn, const MnUserTransformation& par,
                             const MnStrategy& stra) :
     fFcn(fcn), fTransformation(par), fStrategy(stra) {}
-  
+
   virtual ~HessianGradientCalculator() {}
 
   virtual FunctionGradient operator()(const MinimumParameters&) const;
@@ -47,10 +47,10 @@ public:
   std::pair<FunctionGradient, MnAlgebraicVector> DeltaGradient(const MinimumParameters&, const FunctionGradient&) const;
 
   const MnFcn& Fcn() const {return fFcn;}
-  const MnUserTransformation& Trafo() const {return fTransformation;} 
+  const MnUserTransformation& Trafo() const {return fTransformation;}
   const MnMachinePrecision& Precision() const;
   const MnStrategy& Strategy() const {return fStrategy;}
- 
+
   unsigned int Ncycle() const;
   double StepTolerance() const;
   double GradTolerance() const;
@@ -58,7 +58,7 @@ public:
 private:
 
   const MnFcn& fFcn;
-  const MnUserTransformation& fTransformation; 
+  const MnUserTransformation& fTransformation;
   const MnStrategy& fStrategy;
 };
 

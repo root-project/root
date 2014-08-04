@@ -46,13 +46,13 @@ protected:
    TGRadioButton       *fShape3;      // set graph draw mode to fill area
    TGLayoutHints       *fShape1lh;    // layout-hints for fShape1
    TGCheckButton       *fMarkerOnOff; // set Marker visible/unvisible
-   TGLineWidthComboBox *fWidthCombo;  // Exclusion zone width 
+   TGLineWidthComboBox *fWidthCombo;  // Exclusion zone width
    TGCheckButton       *fExSide;      // set the exclusion zone side
 
    virtual void ConnectSignals2Slots();
 
 public:
-   TGraphEditor(const TGWindow *p = 0, 
+   TGraphEditor(const TGWindow *p = 0,
                Int_t width = 140, Int_t height = 30,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());

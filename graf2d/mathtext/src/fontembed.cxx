@@ -726,7 +726,7 @@ namespace mathtext {
                                         head_table.x_max = bswap_16(head_table.x_max);
                                         head_table.y_max = bswap_16(head_table.y_max);
 #endif // LITTLE_ENDIAN
-                                        
+
                                         font_bbox[0] =
                                         (double)head_table.x_min / head_table.units_per_em;
                                         font_bbox[1] =
@@ -735,9 +735,9 @@ namespace mathtext {
                                         (double)head_table.x_max / head_table.units_per_em;
                                         font_bbox[3] =
                                         (double)head_table.y_max / head_table.units_per_em;
-                                        
+
                                         // post
-                                        
+
                                         struct ttf_post_script_table_s {
                                            fixed_t format_type;
                                            fixed_t italic_angle;
@@ -749,11 +749,11 @@ namespace mathtext {
                                            uint32_t min_mem_type1;
                                            uint32_t max_mem_type1;
                                         } post_script_table;
-                                        
+
                                         memcpy(&post_script_table,
                                                &font_data[post_offset],
                                                sizeof(struct ttf_post_script_table_s));
-                                        
+
 #ifdef LITTLE_ENDIAN
                                         post_script_table.format_type =
                                         bswap_32(post_script_table.format_type);
@@ -762,9 +762,9 @@ namespace mathtext {
                                         post_script_table.max_mem_type42 =
                                         bswap_32(post_script_table.max_mem_type42);
 #endif // LITTLE_ENDIAN
-                                        
+
                                         size_t offset_current = post_offset;
-                                        
+
 #if 0
                                         if (post_script_table.format_type == 0x00010000) {
                                            // Exactly the 258 glyphs in the standard Macintosh glyph
@@ -777,9 +777,9 @@ namespace mathtext {
                                            //
                                            // numberOfGlyphs, glyphNameIndex[numGlyphs],
                                            // names[numberNewGlyphs] table
-                                           
+
                                            uint16_t num_glyphs;
-                                           
+
                                            memcpy(&num_glyphs,
                                                   &font_data[post_offset +
                                                              sizeof(struct ttf_post_script_table_s)],
@@ -787,9 +787,9 @@ namespace mathtext {
 #ifdef LITTLE_ENDIAN
                                            num_glyphs = bswap_16(num_glyphs);
 #endif // LITTLE_ENDIAN
-                                           
+
                                            uint16_t *glyph_name_index = new uint16_t[num_glyphs];
-                                           
+
                                            memcpy(glyph_name_index,
                                                   &font_data[post_offset +
                                                              sizeof(struct ttf_post_script_table_s) +
@@ -816,22 +816,22 @@ namespace mathtext {
                                            (num_glyphs + 1) * sizeof(uint16_t);
                                            for (uint16_t i = 0; i <= max_glyph_name_index - 258; i++) {
                                               uint8_t length;
-                                              
+
                                               memcpy(&length, &font_data[offset_current],
                                                      sizeof(uint8_t));
                                               offset_current += sizeof(uint8_t);
-                                              
+
                                               char *buffer = new char[length + 1UL];
-                                              
+
                                               memcpy(buffer, &font_data[offset_current],
                                                      length * sizeof(uint8_t));
                                               offset_current += length * sizeof(uint8_t);
                                               buffer[length] = '\0';
                                               glyph_name[i] = buffer;
-                                              
+
                                               delete [] buffer;
                                            }
-                                           
+
                                            char_strings.resize(num_glyphs);
 #include "table/macintoshordering.h"
                                            for (uint16_t glyph = 0; glyph < num_glyphs; glyph++) {
@@ -839,14 +839,14 @@ namespace mathtext {
                                               glyph_name[glyph_name_index[glyph] - 258].c_str() :
                                               macintosh_ordering[glyph_name_index[glyph]];
                                            }
-                                           
+
                                            delete [] glyph_name_index;
                                            delete [] glyph_name;
                                         }
                                         else if (post_script_table.format_type == 0x00030000) {
                                            // No PostScript name information is provided for the
                                            // glyphs
-                                           
+
                                            // Do nothing, cid_map will be initialized with standard
                                            // Adobe glyph names once cmap is read
                                         }
@@ -854,7 +854,7 @@ namespace mathtext {
                                            fprintf(stderr, "%s:%d: unsupported post table format "
                                                    "0x%08x\n", __FILE__, __LINE__,
                                                    post_script_table.format_type);
-                                           
+
                                            return false;
                                         }
 #if 0
@@ -866,24 +866,24 @@ namespace mathtext {
                                            return false;
                                         }
 #endif
-                                        
+
                                         // cmap
-                                        
+
                                         struct ttf_mapping_table_s {
                                            uint16_t version;
                                            uint16_t num_encoding_tables;
                                         } mapping_table;
-                                        
+
                                         memcpy(&mapping_table, &font_data[cmap_offset],
                                                sizeof(struct ttf_mapping_table_s));
 #ifdef LITTLE_ENDIAN
                                         mapping_table.num_encoding_tables =
                                         bswap_16(mapping_table.num_encoding_tables);
 #endif // LITTLE_ENDIAN
-                                        
+
                                         uint32_t *subtable_offset =
                                         new uint32_t[mapping_table.num_encoding_tables];
-                                        
+
                                         for (uint16_t i = 0;
                                              i < mapping_table.num_encoding_tables; i++) {
                                            struct ttf_encoding_table_s {
@@ -891,7 +891,7 @@ namespace mathtext {
                                               uint16_t encoding_id;
                                               uint32_t offset;
                                            } encoding_table;
-                                           
+
                                            memcpy(
                                                   &encoding_table,
                                                   &font_data[cmap_offset +
@@ -907,9 +907,9 @@ namespace mathtext {
 #endif // LITTLE_ENDIAN
                                            subtable_offset[i] = cmap_offset + encoding_table.offset;
                                         }
-                                        
+
                                         int priority_max = 0;
-                                        
+
                                         for (uint16_t i = 0;
                                              i < mapping_table.num_encoding_tables; i++) {
                                            struct ttf_encoding_subtable_common_s {
@@ -917,7 +917,7 @@ namespace mathtext {
                                               uint16_t length;
                                               uint16_t language;
                                            } encoding_subtable_common;
-                                           
+
                                            memcpy(&encoding_subtable_common,
                                                   &font_data[subtable_offset[i]],
                                                   sizeof(struct ttf_encoding_subtable_common_s));
@@ -929,7 +929,7 @@ namespace mathtext {
                                            encoding_subtable_common.language =
                                            bswap_16(encoding_subtable_common.language);
 #endif // LITTLE_ENDIAN
-                                           
+
                                            offset_current = subtable_offset[i] +
                                            sizeof(struct ttf_encoding_subtable_common_s);
 #if 0
@@ -943,9 +943,9 @@ namespace mathtext {
                                                    "= %hu\n", __FILE__, __LINE__,
                                                    encoding_subtable_common.language);
 #endif
-                                           
+
                                            int priority;
-                                           
+
                                            switch(encoding_subtable_common.format) {
                                                  /////////////////////////////////////////////////////
                                                  // 8 and 16 bit mappings
@@ -1005,11 +1005,11 @@ namespace mathtext {
                                                  return false;
                                            }
                                         }
-                                        
+
                                         delete [] subtable_offset;
-                                        
+
                                         // Regenerate cid_map from the Adobe glyph list
-                                        
+
                                         if (char_strings.empty() && !cid_map.empty()) {
                                            char_strings.resize(cid_map.size());
                                            for (std::map<wchar_t, uint16_t>::const_iterator iterator =
@@ -1017,7 +1017,7 @@ namespace mathtext {
                                                 iterator != cid_map.end(); iterator++) {
                                               if (iterator->second < char_strings.size()) {
 #include "table/adobeglyphlist.h"
-                                                 
+
                                                  const wchar_t *lower =
                                                  std::lower_bound(
                                                                   adobe_glyph_ucs,
@@ -1026,7 +1026,7 @@ namespace mathtext {
                                                  // The longest Adobe glyph name is 20 characters
                                                  // long (0x03b0 = upsilondieresistonos)
                                                  char buf[21];
-                                                 
+
                                                  if (iterator->first == L'\uffff') {
                                                     strncpy(buf, ".notdef", 8);
                                                  }
@@ -1034,7 +1034,7 @@ namespace mathtext {
                                                           *lower == iterator->first) {
                                                     const size_t index =
                                                     lower - adobe_glyph_ucs;
-                                                    
+
                                                     snprintf(buf, 21, "%s", adobe_glyph_name[index]);
                                                  }
                                                  else {
@@ -1044,10 +1044,10 @@ namespace mathtext {
                                               }
                                            }
                                         }
-                                        
+
                                         return true;
                                      }
-                                     
+
 #if 0
                                      std::vector<uint8_t> font_embed_t::subset_otf(
                                                                                    const std::vector<uint8_t> &font_data,
@@ -1061,7 +1061,7 @@ namespace mathtext {
                                            uint16_t entry_selector;
                                            uint16_t range_shift;
                                         } offset_table;
-                                        
+
                                         memcpy(&offset_table, &font_data[0],
                                                sizeof(struct otf_offset_table_s));
                                         if (strncmp(offset_table.sfnt_version, "OTTO", 4) != 0 ||
@@ -1080,7 +1080,7 @@ namespace mathtext {
 #ifdef LITTLE_ENDIAN
                                         offset_table.num_tables = bswap_16(offset_table.num_tables);
 #endif // LITTLE_ENDIAN
-                                        
+
                                         struct otf_table_directory_s {
                                            char tag[4];
                                            uint32_t check_sum;
@@ -1089,10 +1089,10 @@ namespace mathtext {
                                         };
                                         struct table_data_s *table_data =
                                         new struct table_data_s[offset_table.num_tables];
-                                        
+
                                         for (uint16_t i = 0; i < offset_table.num_tables; i++) {
                                            struct otf_table_directory_s table_directory;
-                                           
+
                                            memcpy(&table_directory,
                                                   &font_data[sizeof(struct otf_offset_table_s) + i *
                                                              sizeof(struct otf_table_directory_s)],
@@ -1117,20 +1117,20 @@ namespace mathtext {
                                                   &font_data[table_directory.offset],
                                                   table_directory.length);
                                         }
-                                        
+
                                         size_t size_count;
-                                        
+
                                         size_count = sizeof(struct otf_offset_table_s) +
                                         offset_table.num_tables *
                                         sizeof(struct otf_table_directory_s);
                                         for (size_t i = 0; i < offset_table.num_tables; i++) {
                                            size_count += table_data[i].data.size();
                                         }
-                                        
+
                                         size_t offset_current = sizeof(struct otf_offset_table_s);
                                         size_t offset_check_sum_adjustment = 0;
                                         bool head_table_exists = false;
-                                        
+
                                         retval.resize(size_count);
                                         memcpy(&retval[0], &font_data[0],
                                                sizeof(struct otf_offset_table_s));
@@ -1138,7 +1138,7 @@ namespace mathtext {
                                            struct otf_table_directory_s table_directory;
                                            const bool head_table =
                                            strncmp(table_directory.tag, "head", 4) == 0;
-                                           
+
                                            memcpy(table_directory.tag, table_data[i].tag,
                                                   4 * sizeof(char));
                                            if (head_table) {
@@ -1156,34 +1156,34 @@ namespace mathtext {
                                            otf_check_sum(table_data[i].data);
                                            table_directory.offset = size_count;
                                            table_directory.length = table_data[i].data.size();
-                                           
+
                                            memcpy(&retval[offset_current], &table_directory,
                                                   sizeof(struct otf_table_directory_s));
                                            size_count += table_data[i].data.size();
                                            offset_current += sizeof(struct otf_table_directory_s);
                                         }
-                                        
+
                                         for (size_t i = 0; i < offset_table.num_tables; i++) {
                                            memcpy(&retval[offset_current], &(table_data[i].data[0]),
                                                   table_data[i].data.size());
                                            offset_current += table_data[i].data.size();
-                                           
+
                                            const size_t padding_size =
                                            (4U - table_data[i].data.size()) & 3U;
-                                           
+
                                            memset(&retval[offset_current], '\0', padding_size);
                                            offset_current += padding_size;
                                         }
-                                        
+
                                         if (head_table_exists) {
                                            // Set checkSumAdjustment in the head table
                                            *reinterpret_cast<uint32_t *>(&(retval[
                                                                                   offset_check_sum_adjustment])) =
                                            0xb1b0afbaU - otf_check_sum(retval);
                                         }
-                                        
+
                                         return retval;
                                      }
 #endif
-         
+
          }

@@ -8,8 +8,8 @@
  *                                                                    *
  **********************************************************************/
 
-// Implementation file for TDataPointN class 
-// 
+// Implementation file for TDataPointN class
+//
 
 #include "Math/TDataPointN.h"
 namespace ROOT

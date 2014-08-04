@@ -18,7 +18,7 @@ void hist2image()
    f2->SetParameters(params);
    TH2D *h2 = new TH2D("h2","xygaus + xygaus(5) + xylandau(10)",100,-4,4,100,-4,4);
    h2->FillRandom("f2",40000);
-   img->SetImage((const Double_t *)h2->GetArray(), h2->GetNbinsX() + 2, 
+   img->SetImage((const Double_t *)h2->GetArray(), h2->GetNbinsX() + 2,
                   h2->GetNbinsY() + 2, gHistImagePalette);
    img->Draw();
    img->StartPaletteEditor();

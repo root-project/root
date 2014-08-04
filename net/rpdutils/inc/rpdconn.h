@@ -31,7 +31,7 @@
 //
 // Basic mutex helper class
 //
- 
+
 class rpdmtxhelper {
 private:
    pthread_mutex_t *mtx;
@@ -41,7 +41,7 @@ private:
                                          if (!pthread_mutex_lock((pthread_mutex_t *)m)) {
                                             mtx = (pthread_mutex_t *)m; ok = 1; } } }
    void rawunlock(const pthread_mutex_t *m) { if (m) { pthread_mutex_unlock((pthread_mutex_t *)m); } mtx = 0; ok = 0; }
-   
+
 public:
    rpdmtxhelper(const pthread_mutex_t *m = 0) { mtx = 0; ok = 0; rawlock(m); }
    rpdmtxhelper(const pthread_mutex_t &m) { mtx = 0; ok = 0; rawlock(&m); }
@@ -133,7 +133,7 @@ public:
    int recv(int &type, std::string &msg);
    int recv(rpdmsg &msg);
    virtual int recv(void *buffer, int len);
-   
+
    int senddesc(int desc);
    int recvdesc(int &desc);
 };

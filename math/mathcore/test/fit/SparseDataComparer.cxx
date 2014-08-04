@@ -21,7 +21,7 @@ double minRange[3] = { -5., -5., -5.};
 double maxRange[3] = {  5.,  5.,  5.};
 int       nbins[3] = {10 , 10 , 100 };
 
-bool showGraphics = false; 
+bool showGraphics = false;
 
 ostream& operator << (ostream& out, ROOT::Fit::BinData& bd)
 {
@@ -95,20 +95,20 @@ bool operator ==(ROOT::Fit::BinData& bd1, ROOT::Fit::BinData& bd2)
 
       cout << " bd1: ";
       std::copy(x1, &x1[ndim], ostream_iterator<double>(cout, " "));
-      cout << " value:" << value1; 
-      cout << " error:" << error1; 
+      cout << " value:" << value1;
+      cout << " error:" << error1;
 
       cout << " bd2: ";
       std::copy(x2, &x2[ndim], ostream_iterator<double>(cout, " "));
-      cout << " value:" << value2; 
-      cout << " error:" << error2; 
+      cout << " value:" << value2;
+      cout << " error:" << error2;
 
       cout << " equals: " << equals;
 
-      cout << endl; 
+      cout << endl;
    }
 
-   return equals;   
+   return equals;
 }
 
 
@@ -133,12 +133,12 @@ void OneDimension()
    cout << bd2 << endl;
 
    cout << " equals : ";
-   bool ok = (bd == bd2); 
+   bool ok = (bd == bd2);
 
    cout << "One Dimension test ............\t";
    if (ok)
       cout << "OK\n";
-   else 
+   else
       cout << "FAILED\n";
 
 
@@ -156,11 +156,11 @@ double gaus2D(double *x, double *p)
 
 void TwoDimensions()
 {
-   TH2D* h = new TH2D("h2", "h2-title", 
+   TH2D* h = new TH2D("h2", "h2-title",
                       nbins[0], minRange[0], maxRange[0],
                       nbins[1], minRange[1], maxRange[1]);
 
-   TF2* f2 = new TF2("gaus2D", gaus2D, 
+   TF2* f2 = new TF2("gaus2D", gaus2D,
                      minRange[0],maxRange[0], minRange[1], maxRange[1], 5);
    double initialPars[] = {300,0.,2.,0.,3.};
    f2->SetParameters(initialPars);
@@ -183,10 +183,10 @@ void TwoDimensions()
    cout << bd2 << endl;
 
    cout << " equals : ";
-   bool ok = (bd == bd2); 
+   bool ok = (bd == bd2);
 
    if (showGraphics) {
-      new TCanvas(); 
+      new TCanvas();
       h->Draw("lego2");
       gPad->Update();
    }
@@ -194,30 +194,30 @@ void TwoDimensions()
    cout << "Two Dimension test............\t";
    if (ok)
       cout << "OK\n";
-   else 
+   else
       cout << "FAILED\n";
 }
 
 int main(int argc, char** argv)
 {
 
-  // Parse command line arguments 
+  // Parse command line arguments
   for (Int_t i=1 ;  i<argc ; i++) {
      std::string arg = argv[i] ;
-     if (arg == "-g") { 
+     if (arg == "-g") {
       showGraphics = true;
      }
-     if (arg == "-v") { 
+     if (arg == "-v") {
       showGraphics = true;
       //verbose = true;
      }
-     if (arg == "-h") { 
+     if (arg == "-h") {
         cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
         cerr << "  where:\n";
         cerr << "     -g : graphics mode\n";
         cerr << "     -v : verbose  mode";
         cerr << endl;
-        return -1; 
+        return -1;
      }
    }
 
@@ -227,16 +227,16 @@ int main(int argc, char** argv)
       theApp = new TApplication("App",&argc,argv);
 
    cout << "\nONE DIMENSION" << endl;
-   OneDimension();   
+   OneDimension();
    cout << "\nTWO DIMENSIONS" << endl;
    TwoDimensions();
-  
+
    if (showGraphics) {
       theApp->Run();
       delete theApp;
       theApp = 0;
    }
-   
+
    return 0;
 }
 

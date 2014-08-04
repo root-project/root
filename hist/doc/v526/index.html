@@ -1,11 +1,11 @@
-<br/> 
-<hr/> 
-<a name="hist"></a> 
+<br/>
+<hr/>
+<a name="hist"></a>
 <h3>Histogram package</h3>
 
 <h4>new class TGraphTime</h4>
 <ul>
-<li> <tt>TGraphTime</tt> is a new class to organize and draw a list of 
+<li> <tt>TGraphTime</tt> is a new class to organize and draw a list of
      objects evolving with time. An example of use is shown in the tutorials
      <tt>$ROOTSYS/tutorials/graphs/gtime.C</tt> and
      <tt>$ROOTSYS/tutorials/graphs/gtime2.C</tt>.</li>
@@ -36,8 +36,8 @@ text sizes:
 }
 </pre></li>
 <li> Change <tt>THStack::GetMaximum()</tt> and <tt>THStack::GetMinimum()</tt>
-     to make sure the error bars fit entirely on the plot when a 
-     <tt>THStack</tt> is plotted with the option E. The following 
+     to make sure the error bars fit entirely on the plot when a
+     <tt>THStack</tt> is plotted with the option E. The following
      macro showed the problem:
 <pre>
 {
@@ -45,10 +45,10 @@ text sizes:
    TH1D *h2 = new TH1D("h2","h2",10,0,10);
    THStack h;
 
-   h1-&gt;SetLineColor(kRed);   
-   h1-&gt;SetMarkerStyle(20),   
-   h2-&gt;SetLineColor(kBlue);   
-   h2-&gt;SetMarkerStyle(21);   
+   h1-&gt;SetLineColor(kRed);
+   h1-&gt;SetMarkerStyle(20),
+   h2-&gt;SetLineColor(kBlue);
+   h2-&gt;SetMarkerStyle(21);
 
    for(int i=0; i&lt;11; i++){
       h1-&gt;SetBinContent(i,1.5-i/10);
@@ -69,7 +69,7 @@ text sizes:
 <li> TGraphAsymmErrors and TGraphBentErrors were not correctly clipped when
      paint with the option E3 (filled band) and zoomed.</li>
 <li> When drawn with the option B, a TGraph had the first or/and last bar missing
-     if its lowest or/and highest value were equal to the minimum or/and maximum 
+     if its lowest or/and highest value were equal to the minimum or/and maximum
      of the pad. The following lines illustrate the problem:
      <pre>
      Int_t x[5] = {0,1,2,3,4};
@@ -121,7 +121,7 @@ text sizes:
 that the surface is plotted with colors and the contours on top with lines.
 <p><img src="surf7.gif" alt="SURF7"></img></p></li>
 </ul>
-  
+
 <h4>TGraph</h4>
 <ul>
   <li>Fixed problem in &lt;http://root.cern.ch/phpBB2/viewtopic.php?t=9208&gt;</li>
@@ -164,21 +164,21 @@ by using the <tt>-&gt;</tt> operator the user can call the <tt>TFitResult</tt> m
   <pre>
      TFitResult r = h-&gt;Fit("myFunc","S");
      TMatrixDSym cov = r-&gt;GetCovarianceMatrix();  //  to access the covariance matrix
-     Double_t chi2   = r-&gt;Chi2(); // to retrieve the fit chi2 
-     Double_t par0   = r-&gt;Value(0); // retrieve the value for the parameter 0 
-     Double_t err0   = r-&gt;Error(0); // retrieve the error for the parameter 0 
+     Double_t chi2   = r-&gt;Chi2(); // to retrieve the fit chi2
+     Double_t par0   = r-&gt;Value(0); // retrieve the value for the parameter 0
+     Double_t err0   = r-&gt;Error(0); // retrieve the error for the parameter 0
      r-&gt;Print("V");     // print full information of fit including covariance matrix
      r-&gt;Write();        // store the result in a file
 </pre>
 </li>
 </ul>
-  
+
 
 
 <h3>FitPanel</h3>
 <ul>
   <li>Added predefined 2D Functions.</li>
-  <li>Addition of new minimization algorithms from the GSL library and foreseen the addition of 
+  <li>Addition of new minimization algorithms from the GSL library and foreseen the addition of
   genetic minimizers when will be released.</li>
   <li>Fixed up to three bugs from the previous release</li>
   <li>Added the Update Button. This way the user can update the content of the fitpanel with all the new objects and functions created in the current ROOT session.</li>

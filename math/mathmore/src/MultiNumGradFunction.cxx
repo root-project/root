@@ -34,22 +34,22 @@
 #endif
 
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Math { 
+   namespace Math {
 
 
-double MultiNumGradFunction::fgEps = 0.001; 
+double MultiNumGradFunction::fgEps = 0.001;
 
-double MultiNumGradFunction::DoDerivative (const double * x, unsigned int icoord  ) const { 
-      // calculate derivative using mathcore derivator class 
+double MultiNumGradFunction::DoDerivative (const double * x, unsigned int icoord  ) const {
+      // calculate derivative using mathcore derivator class
    // step size can be changes using SetDerivPrecision()
 
    static double kPrecision = std::sqrt ( std::numeric_limits<double>::epsilon() );
    double x0 = x[icoord];
    double step = std::max( fgEps* std::abs(x0), 8.0*kPrecision*(std::abs(x0) + kPrecision) );
-   return ROOT::Math::Derivator::Eval(*fFunc, x, icoord, step); 
-}  
+   return ROOT::Math::Derivator::Eval(*fFunc, x, icoord, step);
+}
 
 void MultiNumGradFunction::SetDerivPrecision(double eps) { fgEps = eps; }
 

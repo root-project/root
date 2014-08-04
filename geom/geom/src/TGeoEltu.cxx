@@ -10,9 +10,9 @@
  *************************************************************************/
 
 //_____________________________________________________________________________
-// TGeoEltu - elliptical tube class. It takes 3 parameters : 
+// TGeoEltu - elliptical tube class. It takes 3 parameters :
 // semi-axis of the ellipse along x, semi-asix of the ellipse along y
-// and half-length dz. 
+// and half-length dz.
 //
 //_____________________________________________________________________________
 //Begin_Html
@@ -31,13 +31,13 @@
 #include "TMath.h"
 
 ClassImp(TGeoEltu)
-   
+
 //_____________________________________________________________________________
 TGeoEltu::TGeoEltu()
 {
 // Dummy constructor
    SetShapeBit(TGeoShape::kGeoEltu);
-}   
+}
 
 //_____________________________________________________________________________
 TGeoEltu::TGeoEltu(Double_t a, Double_t b, Double_t dz)
@@ -84,18 +84,18 @@ Double_t TGeoEltu::Capacity() const
 // Computes capacity of the shape in [length^3]
    Double_t capacity = 2.*TMath::Pi()*fDz*fRmin*fRmax;
    return capacity;
-}   
+}
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoEltu::ComputeBBox()
 {
 // compute bounding box of the tube
    fDX = fRmin;
    fDY = fRmax;
    fDZ = fDz;
-}   
+}
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoEltu::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
@@ -132,7 +132,7 @@ Int_t TGeoEltu::DistancetoPrimitive(Int_t px, Int_t py)
    Int_t n = gGeoManager->GetNsegments();
    const Int_t numPoints=4*n;
    return ShapeDistancetoPrimitive(numPoints, px, py);
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoEltu::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
@@ -142,7 +142,7 @@ Double_t TGeoEltu::DistFromInside(const Double_t *point, const Double_t *dir, In
    Double_t b2=fRmax*fRmax;
    Double_t safz1=fDz-point[2];
    Double_t safz2=fDz+point[2];
-   
+
    if (iact<3 && safe) {
       Double_t x0=TMath::Abs(point[0]);
       Double_t y0=TMath::Abs(point[1]);
@@ -153,7 +153,7 @@ Double_t TGeoEltu::DistFromInside(const Double_t *point, const Double_t *dir, In
       Double_t d1=(x1-x0)*(x1-x0)+(y1-y0)*(y1-y0);
       Double_t d2=(x2-x0)*(x2-x0)+(y2-y0)*(y2-y0);
       Double_t x3,y3;
-   
+
       Double_t safr=TGeoShape::Big();
       Double_t safz = TMath::Min(safz1,safz2);
       for (Int_t i=0; i<8; i++) {
@@ -161,7 +161,7 @@ Double_t TGeoEltu::DistFromInside(const Double_t *point, const Double_t *dir, In
             x3=0.5*(x1+x2);
             y3=TMath::Sqrt((fRmin-x3)*(fRmin+x3))*fRmax/fRmin;;
          } else {
-            y3=0.5*(y1+y2);   
+            y3=0.5*(y1+y2);
             x3=TMath::Sqrt((fRmax-y3)*(fRmax+y3))*fRmin/fRmax;
          }
          if (d1<d2) {
@@ -174,19 +174,19 @@ Double_t TGeoEltu::DistFromInside(const Double_t *point, const Double_t *dir, In
             d1=(x1-x0)*(x1-x0)+(y1-y0)*(y1-y0);
          }
       }
-      safr=TMath::Sqrt(d1)-1.0E-3;   
+      safr=TMath::Sqrt(d1)-1.0E-3;
       *safe = TMath::Min(safz, safr);
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
-   // compute distance to surface 
+   // compute distance to surface
    // Do Z
    Double_t snxt = TGeoShape::Big();
    if (dir[2]>0) {
       snxt=safz1/dir[2];
    } else {
       if (dir[2]<0) snxt=-safz2/dir[2];
-   } 
+   }
    Double_t sz = snxt;
    Double_t xz=point[0]+dir[0]*sz;
    Double_t yz=point[1]+dir[1]*sz;
@@ -200,7 +200,7 @@ Double_t TGeoEltu::DistFromInside(const Double_t *point, const Double_t *dir, In
    if (d<0 || TGeoShape::IsSameWithinTolerance(u,0)) return tolerance;
    Double_t sd=TMath::Sqrt(d);
    snxt = (-v+sd)/u;
-   
+
    if (snxt<0) return tolerance;
    return snxt;
 }
@@ -233,7 +233,7 @@ Double_t TGeoEltu::DistFromOutside(const Double_t *point, const Double_t *dir, I
       }
       if (safz>0) {
          *safe=TMath::Sqrt((*safe)*(*safe)+safz*safz);
-      } 
+      }
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (step<*safe)) return TGeoShape::Big();
    }
@@ -254,8 +254,8 @@ Double_t TGeoEltu::DistFromOutside(const Double_t *point, const Double_t *dir, I
       Double_t xz=point[0]+dir[0]*tau;
       Double_t yz=point[1]+dir[1]*tau;
       if ((xz*xz/a2+yz*yz/b2)<1) return tau;
-   }   
-       
+   }
+
 // Check if the bounding box is crossed within the requested distance
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist>=step) return TGeoShape::Big();
@@ -268,10 +268,10 @@ Double_t TGeoEltu::DistFromOutside(const Double_t *point, const Double_t *dir, I
    Double_t dsq=TMath::Sqrt(d);
    // Biggest solution - if negative, or very close to boundary
    // no crossing (just exiting, no re-entering possible)
-   tau = (-v+dsq)/u; 
+   tau = (-v+dsq)/u;
    if (tau < epsil) return TGeoShape::Big();
    // only entering crossing must be considered (smallest)
-   tau = (-v-dsq)/u; 
+   tau = (-v-dsq)/u;
    zi=point[2]+tau*dir[2];
    // If the crossing point is not in the Z range, there is no crossing
    if ((TMath::Abs(zi)-fDz)>0) return TGeoShape::Big();
@@ -282,13 +282,13 @@ Double_t TGeoEltu::DistFromOutside(const Double_t *point, const Double_t *dir, I
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoEltu::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
-                             Double_t /*start*/, Double_t /*step*/) 
+TGeoVolume *TGeoEltu::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
+                             Double_t /*start*/, Double_t /*step*/)
 {
 // Divide the shape along one axis.
    Error("Divide", "Elliptical tubes divisions not implemenetd");
    return 0;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoEltu::GetBoundingCylinder(Double_t *param) const
@@ -299,8 +299,8 @@ void TGeoEltu::GetBoundingCylinder(Double_t *param) const
    param[1] = TMath::Max(fRmin, fRmax); // Rmax
    param[1] *= param[1];
    param[2] = 0.;                  // Phi1
-   param[3] = 360.;                // Phi2 
-}   
+   param[3] = 360.;                // Phi2
+}
 
 //_____________________________________________________________________________
 TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
@@ -319,7 +319,7 @@ TGeoShape *TGeoEltu::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
    if (fDz<0) dz=((TGeoEltu*)mother)->GetDz();
    if (fRmin<0)
       a = ((TGeoEltu*)mother)->GetA();
-   if (fRmax<0) 
+   if (fRmax<0)
       a = ((TGeoEltu*)mother)->GetB();
 
    return (new TGeoEltu(a, b, dz));
@@ -354,7 +354,7 @@ Double_t TGeoEltu::Safety(const Double_t *point, Bool_t /*in*/) const
    if (sqdist>onepls) in = kFALSE;
    else if (sqdist<onemin) in = kTRUE;
    else return 0.;
-   
+
    if (in) {
       x1 = fRmin*TMath::Sqrt(1.-(y0*y0)/(fRmax*fRmax));
       y1 = fRmax*TMath::Sqrt(1.-(x0*x0)/(fRmin*fRmin));
@@ -364,7 +364,7 @@ Double_t TGeoEltu::Safety(const Double_t *point, Bool_t /*in*/) const
       safr = dx*dy/TMath::Sqrt(dx*dx+dy*dy);
       safz = fDz - TMath::Abs(point[2]);
       return TMath::Min(safr,safz);
-   }   
+   }
 
    if (TMath::Abs(x0)<TGeoShape::Tolerance()) {
       safr = y0 - fRmax;
@@ -383,7 +383,7 @@ Double_t TGeoEltu::Safety(const Double_t *point, Bool_t /*in*/) const
          safr = (dx*bct+dy*ast)/d;
       }
    }
-   safz = TMath::Abs(point[2])-fDz;            
+   safz = TMath::Abs(point[2])-fDz;
    return TMath::Max(safr, safz);
 }
 
@@ -410,7 +410,7 @@ void TGeoEltu::SetEltuDimensions(Double_t a, Double_t b, Double_t dz)
    fRmin=a;
    fRmax=b;
    fDz=dz;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoEltu::SetDimensions(Double_t *param)
@@ -420,7 +420,7 @@ void TGeoEltu::SetDimensions(Double_t *param)
    Double_t b    = param[1];
    Double_t dz   = param[2];
    SetEltuDimensions(a, b, dz);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoEltu::SetPoints(Double_t *points) const
@@ -479,8 +479,8 @@ Int_t TGeoEltu::GetNmeshVertices() const
 {
 // Returns the number of vertices on the mesh.
    return TGeoTube::GetNmeshVertices();
-}   
-   
+}
+
 //_____________________________________________________________________________
 void TGeoEltu::SetPoints(Float_t *points) const
 {
@@ -537,7 +537,7 @@ const TBuffer3D & TGeoEltu::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
       Int_t n = gGeoManager->GetNsegments();
       Int_t nbPnts = 4*n;
       Int_t nbSegs = 8*n;
-      Int_t nbPols = 4*n;      
+      Int_t nbPols = 4*n;
       if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
@@ -547,10 +547,10 @@ const TBuffer3D & TGeoEltu::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
       if (!buffer.fLocalFrame) {
          TransformPoints(buffer.fPnts, buffer.NbPnts());
       }
-      SetSegsAndPols(buffer);  
+      SetSegsAndPols(buffer);
       buffer.SetSectionsValid(TBuffer3D::kRaw);
    }
-      
+
    return buffer;
 }
 

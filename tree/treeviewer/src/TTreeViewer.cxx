@@ -297,10 +297,10 @@ enum EButtonIdentifiers {
 ClassImp(TTreeViewer)
 
 //______________________________________________________________________________
-TTreeViewer::TTreeViewer(const char* treeName) : 
+TTreeViewer::TTreeViewer(const char* treeName) :
    TGMainFrame(0,10,10,kVerticalFrame),
-   fDimension(0), fVarDraw(0), fScanMode(0), 
-   fTreeIndex(0), fDefaultCursor(0), fWatchCursor(0), 
+   fDimension(0), fVarDraw(0), fScanMode(0),
+   fTreeIndex(0), fDefaultCursor(0), fWatchCursor(0),
    fCounting(0), fStopMapping(0), fEnableCut(0),fNexpressions(0)
 {
    // TTreeViewer default constructor
@@ -321,10 +321,10 @@ TTreeViewer::TTreeViewer(const char* treeName) :
 }
 
 //______________________________________________________________________________
-TTreeViewer::TTreeViewer(const TTree *tree) : 
+TTreeViewer::TTreeViewer(const TTree *tree) :
    TGMainFrame(0, 10, 10, kVerticalFrame),
-   fDimension(0), fVarDraw(0), fScanMode(0), 
-   fTreeIndex(0), fDefaultCursor(0), fWatchCursor(0), 
+   fDimension(0), fVarDraw(0), fScanMode(0),
+   fTreeIndex(0), fDefaultCursor(0), fWatchCursor(0),
    fCounting(0), fStopMapping(0), fEnableCut(0),fNexpressions(0)
 
 {
@@ -1797,17 +1797,17 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          // handle mouse messages in the list-tree (left panel)
             case kCT_ITEMCLICK :
                // tell coverity that parm1 is a Long_t, and not an enum (even
-               // if we compare it with an enum value) and the meaning of 
+               // if we compare it with an enum value) and the meaning of
                // parm1 depends on GET_MSG(msg) and GET_SUBMSG(msg)
                // coverity[mixed_enums]
-               if (((EMouseButton)parm1==kButton1) || 
+               if (((EMouseButton)parm1==kButton1) ||
                    ((EMouseButton)parm1==kButton3)) {
                   TGListTreeItem *ltItem = 0;
                   // get item that sent this
                   if ((ltItem = fLt->GetSelected()) != 0) {
                   // get item type
                      ULong_t *itemType = (ULong_t *)ltItem->GetUserData();
-                     if (!itemType) 
+                     if (!itemType)
                         break;
                      if (*itemType & kLTTreeType) {
                      // already mapped tree item clicked
@@ -2391,7 +2391,7 @@ void TTreeViewer::MapOptions(Long_t parm1)
 void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
 {
    // Map current tree and expand its content (including friends) in the lists.
-   
+
    if (!tree) return;
    TObjArray *branches = tree->GetListOfBranches();
    if (!branches) return; // A Chain with no underlying trees.
@@ -2410,7 +2410,7 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
    //Map branches of friend Trees (if any)
    //Look at tree->GetTree() to insure we see both the friendss of a chain
    //and the friends of the chain members
-   TIter nextf( tree->GetTree()->GetListOfFriends() ); 
+   TIter nextf( tree->GetTree()->GetListOfFriends() );
    TFriendElement *fr;
    while ((fr = (TFriendElement*)nextf())) {
       TTree * t = fr->GetTree();
@@ -2425,7 +2425,7 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
          fStopMapping = kFALSE;
       }
    }
-   
+
    // tell who was last mapped
    if (listIt) {
       fMappedTree    = tree;

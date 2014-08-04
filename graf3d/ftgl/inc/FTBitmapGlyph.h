@@ -15,8 +15,8 @@
  *
  * It provides the interface between Freetype glyphs and their openGL
  * Renderable counterparts. This is an abstract class and derived classes
- * must implement the <code>Render</code> function. 
- * 
+ * must implement the <code>Render</code> function.
+ *
  * @see FTGlyphContainer
  *
  */
@@ -42,7 +42,7 @@ class FTGL_EXPORT FTBitmapGlyph : public FTGlyph
          * @return      The advance distance for this glyph.
          */
         virtual const FTPoint& Render( const FTPoint& pen);
-        
+
     private:
         /**
          * The width of the glyph 'image'
@@ -63,12 +63,12 @@ class FTGL_EXPORT FTBitmapGlyph : public FTGlyph
          * Vector from the pen position to the topleft corner of the bitmap
          */
         FTPoint pos;
-        
+
         /**
          * Pointer to the 'image' data
          */
         unsigned char* data;
-        
+
 };
 
 

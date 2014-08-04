@@ -1,6 +1,6 @@
-<br/> 
-<hr/> 
-<a name="tree"></a> 
+<br/>
+<hr/>
+<a name="tree"></a>
 <h3>Tree Libraries</h3>
 
 
@@ -9,11 +9,11 @@
 TEntryListArray is an extension of TEntryList, used to hold selected entries and subentries (sublists) for when the user has a TTree with containers (vectors, arrays, ...).
 End_Html
 
-<h5> Usage with TTree::Draw to select entries and subentries </h5> 
+<h5> Usage with TTree::Draw to select entries and subentries </h5>
 <ol>
 <li> <b>To fill a list <i>elist</i> </b>:
     <pre>
-     tree->Draw(">> elist", "x > 0", "entrylistarray"); 
+     tree->Draw(">> elist", "x > 0", "entrylistarray");
     </pre>
 </li>
 <li> <b>To use a list to select entries and subentries:</b>
@@ -32,7 +32,7 @@ Its main purpose is to improve the performance of a code that needs to apply com
 The class derives from TEntryList and can be used basically in the same way. This same class is used to keep entries and subentries, so there are two types of TEntryListArray's:
 
 <ol>
-<li> The ones that only hold subentries 
+<li> The ones that only hold subentries
   <ul><li>fEntry is set to the entry# for which the subentries correspond</li>
   <li> fSubLists must be 0</li></ul></li>
 <li> The ones that hold entries and eventually lists with subentries in fSubLists.
@@ -54,13 +54,13 @@ The class derives from TEntryList and can be used basically in the same way. Thi
   <li>RemoveSubList: to remove the given sublist</li>
   <li>RemoveSubListForEntry: to remove the sublist corresponding to the given entry</li>
   <li>SetEntry: to get / set a sublist for the given entry</li></ul></li>
-</ol>  
+</ol>
 
 
 <h4>Others changes</h4>
 
 <ul>
-<li>Reduced the memory used by a TTree in half by refactoring the code reading and writing the TBasket data; 
+<li>Reduced the memory used by a TTree in half by refactoring the code reading and writing the TBasket data;
 A single transient buffer holding the compressed data is  now managed by TTree (and could be made thread local)
 rather than having one per TBranch.
 </li>
@@ -70,11 +70,11 @@ by TStreamerElement::CannotSplit (and thus TClass::CanSplit).
 
 This disabling is currently _not_ done automatically for backward compatibility reasons and because
   <ul>
-    <li>Without TClass::SetCanSplit there was no way to 
+    <li>Without TClass::SetCanSplit there was no way to
         force the splitting (short of setting the split level lower)</li>
     <li>Some classes still requires a custom streamer solely to
         read older data files (for example for file written before
-        the advent of StreamerInfo) and are such not necessary to 
+        the advent of StreamerInfo) and are such not necessary to
         be used when writting (and schema evolution rules can not
         yet be used in this case).</li>
   </ul>
@@ -93,7 +93,7 @@ cost of the file opening which can be comparatively large for small
 files.  For the example used in the comparison the cost <tt>TFile::Open</tt> is 8% of the cost
 of 100000 calls to <tt>TTree::GetEntry</tt>)
 </li>
-<li>Prevented the use of non-existent memory when reading in an object that is part of an STL collection and which used 
+<li>Prevented the use of non-existent memory when reading in an object that is part of an STL collection and which used
 to contains an embedded object (and this data member has been removed).
 </li>
 <li>Now properly recognize a TClonesArray data member even if the requested type was a typedef (to TClonesArray) that is in a namespace (for example edm::Event::ContaierType).

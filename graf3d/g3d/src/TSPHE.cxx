@@ -308,7 +308,7 @@ void TSPHE::Streamer(TBuffer &b)
       SetNumberOfDivisions (tNdiv); // XXX added by RvdE
       b.CheckByteCount(R__s, R__c, TSPHE::IsA());
       //====end of old versions
-      
+
    } else {
       b.WriteClassBuffer(TSPHE::Class(),this);
    }
@@ -436,7 +436,7 @@ const TBuffer3D & TSPHE::GetBuffer3D(Int_t reqSections) const
          buffer.fPols[indx++] = m+j;
          buffer.fPols[indx++] = 2*nz*m;
          buffer.fPols[indx++] = j;
-         
+
          buffer.fPols[indx++] = c+3;
          buffer.fPols[indx++] = 4;
          buffer.fPols[indx++] = 2*nz*m+n+j;

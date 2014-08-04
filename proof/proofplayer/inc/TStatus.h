@@ -69,7 +69,7 @@ public:
    Int_t          GetExitStatus() const { return fExitStatus; }
    Long_t         GetResMemMax(Bool_t master = kFALSE) const { return ((master) ? fResMaxMst : fResMemMax); }
    Long_t         GetVirtMemMax(Bool_t master = kFALSE) const { return ((master) ? fVirtMaxMst : fVirtMemMax); }
-   
+
    void           SetExitStatus(Int_t est) { fExitStatus = est; }
    void           SetMemValues(Long_t vmem = -1, Long_t rmem = -1, Bool_t master = kFALSE);
 

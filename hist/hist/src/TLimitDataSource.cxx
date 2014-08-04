@@ -17,14 +17,14 @@
 
 ClassImp(TLimitDataSource)
 
-TLimitDataSource::TLimitDataSource() 
+TLimitDataSource::TLimitDataSource()
 {
    // Default constructor
    fDummyTA.SetOwner();
    fDummyIds.SetOwner();
 }
 
-TLimitDataSource::TLimitDataSource(TH1 * s, TH1 * b, TH1 * d) 
+TLimitDataSource::TLimitDataSource(TH1 * s, TH1 * b, TH1 * d)
 {
    // Another constructor, directly adds one channel
    // with signal, background and data given as input.
@@ -46,7 +46,7 @@ TLimitDataSource::TLimitDataSource(TH1 * s, TH1 * b, TH1 * d,
 void TLimitDataSource::AddChannel(TH1 * s, TH1 * b, TH1 * d)
 {
    // Adds a channel with signal, background and data given as input.
-   
+
    TVectorD *empty;
    TRandom3 generator;
    fSignal.AddLast(s);
@@ -71,11 +71,11 @@ void TLimitDataSource::AddChannel(TH1 * s, TH1 * b, TH1 * d, TVectorD * es,
 {
    // Adds a channel with signal, background and data given as input.
    // In addition, error sources are defined.
-   // TH1 are here used for convenience: each bin has to be seen as 
+   // TH1 are here used for convenience: each bin has to be seen as
    // an error source (relative).
    // names is an array of strings containing the names of the sources.
    // Sources with the same name are correlated.
-   
+
    fSignal.AddLast(s);
    fBackground.AddLast(b);
    fCandidates.AddLast(d);
@@ -89,7 +89,7 @@ void TLimitDataSource::SetOwner(bool swtch)
    // Gives to the TLimitDataSource the ownership of the various objects
    // given as input.
    // Objects are then deleted by the TLimitDataSource destructor.
-   
+
    fSignal.SetOwner(swtch);
    fBackground.SetOwner(swtch);
    fCandidates.SetOwner(swtch);

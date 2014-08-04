@@ -13,9 +13,9 @@
 #define ROOT_TFFTRealComplex
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      
-// TFFTRealComplex                                                       
-//                                                                      
+//
+// TFFTRealComplex
+//
 // One of the interface classes to the FFTW package, can be used directly
 // or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
 //
@@ -33,14 +33,14 @@
 // 4) Run the Transform() function
 // 5) Get the output (via GetPoints() or GetPoint() functions)
 // 6) Repeat steps 3)-5) as needed
-// For a transform of the same size, but with different flags, 
+// For a transform of the same size, but with different flags,
 // rerun the Init() function and continue with steps 3)-5)
 //
 // NOTE: 1) running Init() function will overwrite the input array! Don't set any data
 //          before running the Init() function
-//       2) FFTW computes unnormalized transform, so doing a transform followed by 
+//       2) FFTW computes unnormalized transform, so doing a transform followed by
 //          its inverse will lead to the original array scaled by the transform size
-// 
+//
 //
 //////////////////////////////////////////////////////////////////////////
 

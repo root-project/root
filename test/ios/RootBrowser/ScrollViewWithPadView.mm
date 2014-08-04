@@ -5,9 +5,9 @@
 
 //____________________________________________________________________________________________________
 - (UIView *) hitTest : (CGPoint)point withEvent : (UIEvent *)event
-{  
+{
    UIView * v = [super hitTest : point withEvent : event];
-   
+
    if ([v isKindOfClass : [PadView class]]) {
       PadView *padView = (PadView *)v;
 
@@ -21,7 +21,7 @@
          self.delaysContentTouches = YES;
       }
    }
-   
+
    return v;
 }
 

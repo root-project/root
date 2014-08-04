@@ -36,7 +36,7 @@ void FTGLBitmapFont::PreRender()
     FTFont::PreRender();
     glPushClientAttrib( GL_CLIENT_PIXEL_STORE_BIT);
     glPushAttrib( GL_ENABLE_BIT);
-    
+
     glPixelStorei( GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei( GL_UNPACK_ALIGNMENT, 1);
 

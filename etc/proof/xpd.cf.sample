@@ -54,7 +54,7 @@ xrootd.export /pool/data
 ###
 
 ### Load the XrdProofd protocol:
-### a) if the ROOT lib paths are known by the linker/loader 
+### a) if the ROOT lib paths are known by the linker/loader
 xrd.protocol xproofd:1093 libXrdProofd.so
 ### b) using absolute paths (<ROOT_sys> with the path to the ROOT distribution)
 # xrd.protocol xproofd:1093 <ROOT_sys>/lib/libXrdProofd.so
@@ -74,7 +74,7 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 ### specifying a tag is optional: if missing, the ROOT version tag is taken
 ### (however, the tag must be unique, the first occurence is retained).
 ### If no 'xpd.rootsys' valid directives are specified, $ROOTSYS is used as
-### default ROOT version. 
+### default ROOT version.
 # xpd.rootsys /opt/root [tag_for_default_version]
 # xpd.rootsys /opt/root-dev [tag_for_an_alternative_version]
 ###
@@ -175,7 +175,7 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 ### Server role (master, submaster, worker) [default: any]
 ### Allows to control the cluster structure.
 ### The following (commented) example will set lxb6041 as master, and all
-### the others lxb* as workers 
+### the others lxb* as workers
 # xpd.role worker if lxb*.cern.ch
 # xpd.role master if lxb6041.cern.ch
 ###

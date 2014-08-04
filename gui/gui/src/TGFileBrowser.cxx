@@ -200,7 +200,7 @@ void TGFileBrowser::CreateBrowser()
                 kLHintsExpandX, 2, 2, 2, 2));
    fFileType->Connect("Selected(Int_t)", "TGFileBrowser", this,
                       "ApplyFilter(Int_t)");
-   fFileType->GetTextEntry()->Connect("ReturnPressed()", "TGFileBrowser", 
+   fFileType->GetTextEntry()->Connect("ReturnPressed()", "TGFileBrowser",
                                       this, "ApplyFilter(Int_t = -1)");
    AddFrame(fBotFrame, new TGLayoutHints(kLHintsLeft | kLHintsTop |
             kLHintsExpandX, 2, 2, 2, 2));
@@ -585,7 +585,7 @@ void TGFileBrowser::RecursiveRemove(TObject *obj)
       if (itm)
          item = fListTree->FindChildByData(itm, obj);
       if (item) {
-         // if the item to be deleted has a filter, 
+         // if the item to be deleted has a filter,
          // delete its entry in the map
          if (CheckFiltered(item))
             fFilteredItems.erase(item);
@@ -954,7 +954,7 @@ Bool_t TGFileBrowser::CheckFiltered(TGListTreeItem *item, Bool_t but)
       found = kTRUE;
    }
    if (but) {
-      // if the but argument is true, change the button state 
+      // if the but argument is true, change the button state
       // to reflect the filtering state
       fFilterButton->SetState(found ? kButtonEngaged : kButtonUp);
       if (found) {
@@ -1023,9 +1023,9 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
             void *add = gDirectory->FindObjectAny((char *) name.Data());
             if (add && cl->IsTObject()) {
                obj = (TObject*)add;
-               // don't change the user data, to avoid deletion of the 
+               // don't change the user data, to avoid deletion of the
                // list tree item by RecursiveRemove()
-               // it is better to read the object each time anyway, 
+               // it is better to read the object each time anyway,
                // as it may have changed in the file
                if (obj->InheritsFrom("TDirectory") || obj->InheritsFrom("TList"))
                   item->SetUserData(obj);
@@ -1174,7 +1174,7 @@ static Bool_t IsTextFile(const char *candidate)
 //______________________________________________________________________________
 static const TGPicture *MakeLinkPic(const TGPicture *pic)
 {
-   // Create a symlink (shortcut on Windows) icon by merging the picture 
+   // Create a symlink (shortcut on Windows) icon by merging the picture
    // passed as argument and the slink_t.xpm icon (small arrow)
 
    const TGPicture *merged;
@@ -1230,7 +1230,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       if (obj->InheritsFrom("TDirectory")) {
          if (((TDirectory *)obj)->GetListOfKeys())
             fNKeys = ((TDirectory *)obj)->GetListOfKeys()->GetEntries();
-         else 
+         else
             fNKeys = 0;
       }
       else if (obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class())) {
@@ -1244,9 +1244,9 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             void *add = gDirectory->FindObjectAny((char *) name.Data());
             if (add && cl->IsTObject()) {
                obj = (TObject*)add;
-               // don't change the user data, to avoid deletion of the 
+               // don't change the user data, to avoid deletion of the
                // list tree item by RecursiveRemove()
-               // it is better to read the object each time anyway, 
+               // it is better to read the object each time anyway,
                // as it may have changed in the file
                if (obj->InheritsFrom("TDirectory") || obj->InheritsFrom("TList"))
                   item->SetUserData(obj);
@@ -1357,7 +1357,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                      itm = fListTree->AddItem(item, fname);
                      if (!gSystem->GetPathInfo(fname, sbuf) &&
                          sbuf.fIsLink) {
-                        // change the pictures if it is a symlink 
+                        // change the pictures if it is a symlink
                         // (shortcut on Windows)
                         const TGPicture *opened = 0, *l_opened = 0;
                         const TGPicture *closed = 0, *l_closed = 0;
@@ -1525,7 +1525,7 @@ Long_t TGFileBrowser::XXExecuteDefaultAction(TObject *obj)
          // special case for remote object: remote process
          if (obj->InheritsFrom("TRemoteObject"))
             gApplication->SetBit(TApplication::kProcessRemotely);
-         
+
          const Long_t res = gApplication->ProcessLine(act.Data());
 #ifdef R__HAS_COCOA
          if (act.Contains(".x") || act.Contains(".X")) {
@@ -1566,7 +1566,7 @@ char *TGFileBrowser::FormatFileInfo(const char *fname, Long64_t size, Long_t mod
       infos += "\n";
       infos += TString::Format("%d-%02d-%02d %02d:%02d",
                                newtime->tm_year + 1900,
-                               newtime->tm_mon+1, newtime->tm_mday, 
+                               newtime->tm_mon+1, newtime->tm_mday,
                                newtime->tm_hour, newtime->tm_min);
    }
    return StrDup(infos.Data());
@@ -1758,23 +1758,23 @@ void TGFileBrowser::RequestFilter()
       return;
    // initialize with previous (active) filter string
    snprintf(filter, sizeof(filter), "%s", fFilterStr.Data());
-   new TGInputDialog(gClient->GetRoot(), this, 
+   new TGInputDialog(gClient->GetRoot(), this,
                      "Enter filter expression:\n(empty string \"\" or \"*\" to remove filter)",
                       filter, filter);
-   // if user pressed cancel, update the status of the current list tree 
+   // if user pressed cancel, update the status of the current list tree
    // item and return
    if ((filter[0] == 0) && (filter[1] == 0)) {
       CheckFiltered(fListLevel, kTRUE);
       return;
    }
    else if (((filter[0] == 0) && (filter[1] == 1)) || !strcmp(filter, "*")) {
-      // if user entered "*" or "", just disable filtering for the current 
+      // if user entered "*" or "", just disable filtering for the current
       // list tree item
       fFilterButton->SetState(kButtonUp);
       fFilteredItems.erase(fListLevel);
    }
    else {
-      // if user entered a string different from "*", use it to create an 
+      // if user entered a string different from "*", use it to create an
       // entry in the filter map
       fFilterStr = filter;
       fFilterButton->SetState(kButtonEngaged);

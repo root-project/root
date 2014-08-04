@@ -64,7 +64,7 @@ XrdProofdClient::XrdProofdClient(XrdProofUI ui, bool master, bool changeown,
 
    // We must have a valid sandbox
    if (fSandbox.IsValid()) fIsValid = 1;
-   
+
    // The session launcher (we may have a plugin here, one day ...)
    fLauncher = new XrdProofdLauncher(this);
 }
@@ -80,7 +80,7 @@ XrdProofdClient::~XrdProofdClient()
 //__________________________________________________________________________
 bool XrdProofdClient::Match(const char *usr, const char *grp)
 {
-   // return TRUE if this instance matches 'id' (and 'grp', if defined) 
+   // return TRUE if this instance matches 'id' (and 'grp', if defined)
 
    if (!fIsValid) return 0;
 
@@ -120,7 +120,7 @@ int XrdProofdClient::GetClientID(XrdProofdProtocol *p)
          // We need to resize (double it)
          if (ic >= (int)fClients.capacity())
             fClients.reserve(2*fClients.capacity());
- 
+
          // Fill in new element
          cid = new XrdClientID();
          fClients.push_back(cid);
@@ -483,7 +483,7 @@ int XrdProofdClient::Touch(bool reset)
 
    // If already asked to touch say it by return 1
    if (fAskedToTouch) return 1;
-   
+
    // Notify the attached clients
    int ic = 0;
    XrdClientID *cid = 0;
@@ -499,7 +499,7 @@ int XrdProofdClient::Touch(bool reset)
    }
    // Do it only once a time
    fAskedToTouch = 1;
-   // Done 
+   // Done
    return 0;
 }
 

@@ -43,9 +43,9 @@ private:
    Bool_t            fHelp;    // if true show Online Help button
 
 public:
-   TRootDialog(TRootContextMenu *cmenu = 0, const TGWindow *main = 0, 
-               const char *title = "ROOT Dialog", Bool_t okB = kTRUE, 
-               Bool_t cancelB = kTRUE, Bool_t applyB = kFALSE, 
+   TRootDialog(TRootContextMenu *cmenu = 0, const TGWindow *main = 0,
+               const char *title = "ROOT Dialog", Bool_t okB = kTRUE,
+               Bool_t cancelB = kTRUE, Bool_t applyB = kFALSE,
                Bool_t helpB = kTRUE);
    virtual ~TRootDialog();
 

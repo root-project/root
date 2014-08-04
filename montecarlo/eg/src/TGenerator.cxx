@@ -495,7 +495,7 @@ void TGenerator::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 Int_t TGenerator::GetNumberOfParticles() const
 {
    // Return the number of particles in the stack
-   
+
    return fParticles->GetLast()+1;
 }
 

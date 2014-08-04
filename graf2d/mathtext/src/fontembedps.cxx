@@ -404,9 +404,9 @@ namespace mathtext {
          offset += output_length;
       }
       ret.append("] def\n");
-      
+
       unsigned int char_strings_count = 0;
-      
+
       for (std::vector<std::string>::const_iterator iterator =
            char_strings.begin();
            iterator < char_strings.end(); iterator++) {
@@ -414,7 +414,7 @@ namespace mathtext {
             char_strings_count++;
          }
       }
-      
+
       snprintf(linebuf, BUFSIZ, "/CharStrings %u dict dup begin\n",
                char_strings_count);
       ret.append(linebuf);
@@ -430,7 +430,7 @@ namespace mathtext {
       ret.append("end readonly def\n");
       ret.append("FontName currentdict end definefont pop\n");
       ret.append("%%EndResource\n");
-      
+
       return ret;
    }
 }

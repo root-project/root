@@ -70,17 +70,17 @@ bool FTFont::FaceSize( const unsigned int size, const unsigned int res )
 {
     charSize = face.Size( size, res);
     err = face.Error();
-    
+
     if( err != 0)
     {
         return false;
     }
-    
+
     if( glyphList != NULL)
     {
         delete glyphList;
     }
-    
+
     glyphList = new FTGlyphContainer( &face);
     return true;
 }
@@ -148,7 +148,7 @@ void FTFont::BBox( const char* string,
             totalBBox = glyphList->BBox( *c);
             advance = glyphList->Advance( *c, *(c + 1));
         }
-                
+
         while( *++c)
         {
             if(CheckGlyph( *c))
@@ -185,7 +185,7 @@ void FTFont::BBox( const wchar_t* string,
             totalBBox = glyphList->BBox( *c);
             advance = glyphList->Advance( *c, *(c + 1));
         }
-        
+
         while( *++c)
         {
             if(CheckGlyph( *c))
@@ -220,7 +220,7 @@ float FTFont::Advance( const wchar_t* string)
         }
         ++c;
     }
-    
+
     return width;
 }
 
@@ -238,7 +238,7 @@ float FTFont::Advance( const char* string)
         }
         ++c;
     }
-    
+
     return width;
 }
 
@@ -331,12 +331,12 @@ bool FTFont::CheckGlyph( const unsigned int characterCode)
             {
                 err = 0x13;
             }
-            
+
             return false;
         }
         glyphList->Add( tempGlyph, characterCode);
     }
-    
+
     return true;
 }
 

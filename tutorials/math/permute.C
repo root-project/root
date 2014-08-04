@@ -3,10 +3,10 @@
 // root > .x permute.C
 // root > .x permute.C+ with ACLIC
 //Author: Federico Carminati
-   
+
 #include <TMath.h>
 
-int permuteSimple1 () 
+int permuteSimple1 ()
 {
   printf("\nTMath::Permute simple test\n");
   printf("==========================\n");
@@ -15,17 +15,17 @@ int permuteSimple1 ()
   Int_t i;
   Int_t icount=0;
   for(i=0; i<4; i++) a[i]=i;
-  do { 
+  do {
     icount++;
     for(Int_t i=0;i<4;printf("%c",static_cast<char>(aa+a[i++])));
     printf("\n");
-    
+
   } while(TMath::Permute(4,a));
   printf("Found %d permutations = 4!\n",icount);
   return 0;
 }
 
-int permuteSimple2 () 
+int permuteSimple2 ()
 {
   printf("\nTMath::Permute simple test with repetition\n");
   printf("==========================================\n");
@@ -34,17 +34,17 @@ int permuteSimple2 ()
   Int_t i;
   Int_t icount=0;
   for(i=0; i<6; i++) a[i]=(i+2)/2;
-  do { 
+  do {
      icount++;
      for(Int_t i=0;i<5;printf("%c",static_cast<char>(aa+a[i++])));
      printf("\n");
-     
+
   } while(TMath::Permute(5,a));
   printf("Found %d permutations = 5!/(2! 2!)\n",icount);
   return 0;
 }
 
-Int_t permuteFancy() 
+Int_t permuteFancy()
 {
   Int_t a[10];
   Int_t &n=a[0], &i=a[1];

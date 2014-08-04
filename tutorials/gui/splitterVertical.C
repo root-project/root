@@ -21,7 +21,7 @@ public:
    virtual ~MyMainFrame();
    void     DoSave();
    void     CloseWindow();
-   
+
    ClassDef(MyMainFrame, 0)
 };
 
@@ -37,7 +37,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
   TGMainFrame(p, w, h)
 {
    // Create vertical splitter
-   
+
    TGHorizontalFrame *fHf = new TGHorizontalFrame(this, 50, 50);
 
    TGVerticalFrame *fV1 = new TGVerticalFrame(fHf, 10, 10, kFixedWidth);
@@ -48,7 +48,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    TGLabel *fLleft = new TGLabel(fFleft, "Left Frame");
    TGLabel *fLright = new TGLabel(fFright, "Right Frame");
 
-   fFleft->AddFrame(fLleft, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 
+   fFleft->AddFrame(fLleft, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
                                               3, 0, 0, 0));
    fFright->AddFrame(fLright, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
                                                 3, 0, 0, 0));
@@ -70,7 +70,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
                                         kLHintsExpandY));
    AddFrame(fHf, new TGLayoutHints(kLHintsRight | kLHintsExpandX |
                                    kLHintsExpandY));
-   
+
    // button frame
    TGVerticalFrame *vframe = new TGVerticalFrame(this, 10, 10);
    TGCompositeFrame *cframe2 = new TGCompositeFrame(vframe, 170, 20,
@@ -80,17 +80,17 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
                                              3, 2, 2, 2));
    save->Connect("Clicked()", "MyMainFrame", this, "DoSave()");
    save->SetToolTipText("Click on the button to save the application as C++ macro");
-   
+
    TGTextButton *exit = new TGTextButton(cframe2, "&Exit ","gApplication->Terminate(0)");
    cframe2->AddFrame(exit, new TGLayoutHints(kLHintsTop | kLHintsExpandX,
                                              2, 0, 2, 2));
    vframe->AddFrame(cframe2, new TGLayoutHints(kLHintsExpandX, 2, 2, 5, 1));
    AddFrame(vframe, new TGLayoutHints(kLHintsExpandX, 2, 2, 5, 1));
-   
+
    // What to clean up in destructor
    SetCleanup(kDeepCleanup);
 
-   // Set a name to the main frame   
+   // Set a name to the main frame
    SetWindowName("Vertical Splitter");
    SetWMSizeHints(350, 200, 600, 400, 0, 0);
    MapSubwindows();

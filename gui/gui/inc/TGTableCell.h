@@ -49,7 +49,7 @@ protected:
    virtual void DoRedraw();
    virtual void DrawBorder();
    virtual void DrawBorder(Handle_t id, Int_t x, Int_t y);
-   virtual void MoveDraw(Int_t x, Int_t y); 
+   virtual void MoveDraw(Int_t x, Int_t y);
    virtual void Resize(UInt_t width, UInt_t height);
    virtual void Resize(TGDimension newsize);
 
@@ -60,36 +60,36 @@ public:
    static FontStruct_t GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();
 
-   TGTableCell(const TGWindow *p = 0, TGTable *table = 0, TGString *label = 0, 
-               UInt_t row = 0, UInt_t column = 0, UInt_t width = 80, 
-               UInt_t height = 25, GContext_t norm = GetDefaultGC()(), 
+   TGTableCell(const TGWindow *p = 0, TGTable *table = 0, TGString *label = 0,
+               UInt_t row = 0, UInt_t column = 0, UInt_t width = 80,
+               UInt_t height = 25, GContext_t norm = GetDefaultGC()(),
                FontStruct_t font = GetDefaultFontStruct(), UInt_t option = 0,
                Bool_t resize = kTRUE);
-   TGTableCell(const TGWindow *p, TGTable *table, const char *label, 
-               UInt_t row = 0, UInt_t column = 0, UInt_t width = 80, 
+   TGTableCell(const TGWindow *p, TGTable *table, const char *label,
+               UInt_t row = 0, UInt_t column = 0, UInt_t width = 80,
                UInt_t height = 25, GContext_t norm = GetDefaultGC()(),
                FontStruct_t font = GetDefaultFontStruct(),
                UInt_t option = 0, Bool_t resize =  kTRUE);
-//    TGTableCell(const TGWindow *p, TGTable *table, TGPicture *image, 
+//    TGTableCell(const TGWindow *p, TGTable *table, TGPicture *image,
 //                TGString *label,  UInt_t row, UInt_t column,
 //                UInt_t width, UInt_t height, GContext_t norm = GetDefaultGC()(),
 //                FontStruct_t font = GetDefaultFontStruct(),
 //                UInt_t option = 0, Bool_t resize = kTRUE);
-//    TGTableCell(const TGWindow *p, TGTable *table, TGPicture *image, 
-//                const char *label, UInt_t row, UInt_t column, UInt_t width, 
+//    TGTableCell(const TGWindow *p, TGTable *table, TGPicture *image,
+//                const char *label, UInt_t row, UInt_t column, UInt_t width,
 //                UInt_t height, GContext_t norm = GetDefaultGC()(),
 //                FontStruct_t font = GetDefaultFontStruct(),
 //                UInt_t option = 0, Bool_t resize = kTRUE);
    virtual ~TGTableCell();
 
    virtual void DrawCopy(Handle_t id, Int_t x, Int_t y);
-    
+
    virtual void SetLabel(const char *label);
-   
+
    virtual void SetImage(TGPicture *image);
    //   virtual void SetBckgndGC(TGGC *gc);
 
-   virtual void SetTextJustify(Int_t tmode); 
+   virtual void SetTextJustify(Int_t tmode);
    virtual void SetFont(FontStruct_t font);
    virtual void SetFont(const char *fontName);
 

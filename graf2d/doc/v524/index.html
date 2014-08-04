@@ -1,6 +1,6 @@
-<br> 
-<hr> 
-<a name="graf2d"></a> 
+<br>
+<hr>
+<a name="graf2d"></a>
 
 
 <h3>Graphical Output</h3>
@@ -8,13 +8,13 @@
 <h4>TASImage / libAfterImage</h4>
 <ul>
 
-<li> In <tt>TImageDump</tt> the way the markers 6 and 7 are drawn 
+<li> In <tt>TImageDump</tt> the way the markers 6 and 7 are drawn
      (medium dot and big dot) has been changed to make sure they have
      the same size as the one on screen.
 <li> Changes in libAfterImage (draw.c & draw.h), TASImage.cxx
-     and TImageDump.cxx in order to produce nice looking 
-     circular (hollow and solid) markers. Previously the line 
-     used to draw hollow circular markers looked very thick and 
+     and TImageDump.cxx in order to produce nice looking
+     circular (hollow and solid) markers. Previously the line
+     used to draw hollow circular markers looked very thick and
      the solid ones did not look circular.
 <li> Remove the global variable named "dpy" in libAfterImage. It produced
      an error if a user program used that simple variable name. "dpy"
@@ -48,14 +48,14 @@
 
 <h4>TGaxis</h4>
 <ul>
-<li> In <tt>PaintAxis</tt> The option "U", for unlabeled axis, was not 
+<li> In <tt>PaintAxis</tt> The option "U", for unlabeled axis, was not
      implemented in case of alphanumeric axis' labels.
 <li> On log-scale TGAxis, with labels having lower values than 1 and ticks marks
-  set to the positive side, alignement issues seem to come up. 
-  The following example shows four TGAxis drawn respectively with the 
-  following options: RG-, RG+, LG-, LG+. For the RG+ and LG+ options, 
-  the 10E-1 and 10E-2 labels were ill-aligned, showing a shift to the right 
-  compared to the 1E2, 1E1 and 1 labels. 
+  set to the positive side, alignement issues seem to come up.
+  The following example shows four TGAxis drawn respectively with the
+  following options: RG-, RG+, LG-, LG+. For the RG+ and LG+ options,
+  the 10E-1 and 10E-2 labels were ill-aligned, showing a shift to the right
+  compared to the 1E2, 1E1 and 1 labels.
   <pre>
   {
      c1 = new TCanvas("c1","Examples of Log TGaxis",10,10,700,500);
@@ -115,9 +115,9 @@
 <h4>QtRoot/ libGQt</h4>
 <ul>
 <li> The redundant Qt3-related code was removed.
-<li> The Q3_SUPPORT  flag was eliminated. 
+<li> The Q3_SUPPORT  flag was eliminated.
      The plug-in can be used with and without Q3_SUPPORT now.
 <li> The code was adjusted to work under the Qt 4.5.x.
-<li> Many platform depended (win32) sections 
+<li> Many platform depended (win32) sections
      were replaced with the cross-platform code
 </ul>

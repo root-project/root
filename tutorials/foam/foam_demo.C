@@ -44,7 +44,7 @@ public:
     R1=R1+(Xarg[i] -pos1)*(Xarg[i] -pos1);
     R2=R2+(Xarg[i] -pos2)*(Xarg[i] -pos2);
     xn1=xn1*Gam1*sPi;
-    xn2=xn2*Gam2*sPi;      
+    xn2=xn2*Gam2*sPi;
   }
   R1   = sqrt(R1);
   R2   = sqrt(R2);
@@ -74,7 +74,7 @@ Int_t foam_demo()
 //=========================================================
   TRandom *PseRan   = new TRandom3();  // Create random number generator
   TFoam   *FoamX    = new TFoam("FoamX");   // Create Simulator
-  TFoamIntegrand    *rho= new TFDISTR(); 
+  TFoamIntegrand    *rho= new TFDISTR();
   PseRan->SetSeed(4357);
 //=========================================================
   cout<<"*****   Demonstration Program for Foam version "<<FoamX->GetVersion()<<"    *****"<<endl;
@@ -107,7 +107,7 @@ Int_t foam_demo()
 //===============================
     FoamX->GetMCvect( MCvect);
     MCwt=FoamX->GetMCwt();
-    hst_Wt->Fill(MCwt,1.0);    
+    hst_Wt->Fill(MCwt,1.0);
     if(loop<15){
       cout<<"MCwt= "<<MCwt<<",  ";
       cout<<"MCvect= ";

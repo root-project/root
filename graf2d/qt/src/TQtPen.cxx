@@ -11,7 +11,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////
 //
-// TQtPen class is Qt QPen with ROOT TAttLine interface 
+// TQtPen class is Qt QPen with ROOT TAttLine interface
 //
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -33,7 +33,7 @@ TQtPen::TQtPen(): QPen(),TAttLine()
    // TQtPen default ctor
 }
 //______________________________________________________________________________
-TQtPen::TQtPen(const TAttLine &line) : QPen() 
+TQtPen::TQtPen(const TAttLine &line) : QPen()
 {
    // Copy ctor to copy ROOT TAttLine object
    SetLineAttributes(line);

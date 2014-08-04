@@ -1,21 +1,21 @@
 /*
 OneSidedFrequentistUpperLimitWithBands
 
-Author: Kyle Cranmer, 
+Author: Kyle Cranmer,
 Contributions from Haichen Wang and Daniel Whiteson
 date: Dec. 2010 - Feb. 2011
 v1. Jan 28
 
-This is a standard demo that can be used with any ROOT file 
+This is a standard demo that can be used with any ROOT file
 prepared in the standard way.  You specify:
  - name for input ROOT file
  - name of workspace inside ROOT file that holds model and data
  - name of ModelConfig that specifies details for calculator tools
- - name of dataset 
+ - name of dataset
 
-With default parameters the macro will attempt to run the 
+With default parameters the macro will attempt to run the
 standard hist2workspace example and read the ROOT file
-that it produces.  
+that it produces.
 
 The first ~100 lines define a new test statistic, then the main macro starts.
 You may want to control:
@@ -27,14 +27,14 @@ This uses a modified version of the profile likelihood ratio as
 a test statistic for upper limits (eg. test stat = 0 if muhat>mu).
 
 Based on the observed data, one defines a set of parameter points
-to be tested based on the value of the parameter of interest 
+to be tested based on the value of the parameter of interest
 and the conditional MLE (eg. profiled) values of the nuisance parameters.
 
 At each parameter point, pseudo-experiments are generated using this
 fixed reference model and then the test statistic is evaluated.
 Note, the nuisance parameters are floating in the fits.  For each point,
 the threshold that defines the 95% acceptance region is found.  This
-forms a "Confidence Belt".  
+forms a "Confidence Belt".
 
 After constructing the confidence belt, one can find the confidence
 interval for any particular dataset by finding the intersection
@@ -46,23 +46,23 @@ formed by generating background-only data and finding the upper limit.
 This is done by hand for now, will later be part of the RooStats tools.
 
 On a technical note, this technique is NOT the Feldman-Cousins technique,
-because that is a 2-sided interval BY DEFINITION.  However, like the 
+because that is a 2-sided interval BY DEFINITION.  However, like the
 Feldman-Cousins technique this is a Neyman-Construction.  For technical
-reasons the easiest way to implement this right now is to use the 
+reasons the easiest way to implement this right now is to use the
 FeldmanCousins tool and then change the test statistic that it is using.
 
 Building the confidence belt can be computationally expensive.  Once it is built,
-one could save it to a file and use it in a separate step.  
+one could save it to a file and use it in a separate step.
 
-We can use PROOF to speed things along in parallel, however, 
+We can use PROOF to speed things along in parallel, however,
 the test statistic has to be installed on the workers
 so either turn off PROOF or include the modified test statistic
 in your $ROOTSYS/roofit/roostats/inc directory,
 add the additional line to the LinkDef.h file,
 and recompile root.
 
-Note, if you have a boundary on the parameter of interest (eg. cross-section) 
-the threshold on the one-sided test statistic starts off very small because we 
+Note, if you have a boundary on the parameter of interest (eg. cross-section)
+the threshold on the one-sided test statistic starts off very small because we
 are only including downward fluctuations.  You can see the threshold in these printouts:
 
 [#0] PROGRESS:Generation -- generated toys: 500 / 999
@@ -71,14 +71,14 @@ NeymanConstruction: Prog: 12/50 total MC = 39 this test stat = 0
 
 this tells you the values of the parameters being used to generate the pseudo-experiments
 and the threshold in this case is 0.011215.  One would expect for 95% that the threshold
-would be ~1.35 once the cross-section is far enough away from 0 that it is essentially 
-unaffected by the boundary.  As one reaches the last points in the scan, the 
-theshold starts to get artificially high.  This is because the range of the parameter in 
-the fit is the same as the range in the scan.  In the future, these should be independently 
-controled, but they are not now.  As a result the ~50% of pseudo-experiments that have an 
-upward fluctuation end up with muhat = muMax.  Because of this, the upper range of the 
-parameter should be well above the expected upper limit... but not too high or one will 
-need a very large value of nPointsToScan to resolve the relevant region.  This can be 
+would be ~1.35 once the cross-section is far enough away from 0 that it is essentially
+unaffected by the boundary.  As one reaches the last points in the scan, the
+theshold starts to get artificially high.  This is because the range of the parameter in
+the fit is the same as the range in the scan.  In the future, these should be independently
+controled, but they are not now.  As a result the ~50% of pseudo-experiments that have an
+upward fluctuation end up with muhat = muMax.  Because of this, the upper range of the
+parameter should be well above the expected upper limit... but not too high or one will
+need a very large value of nPointsToScan to resolve the relevant region.  This can be
 improved, but this is the first version of this script.
 
 Important note: when the model includes external constraint terms, like a Gaussian
@@ -86,17 +86,17 @@ constraint to a nuisance parameter centered around some nominal value there is
 a subtlety.  The asymptotic results are all based on the assumption that all the
 measurements fluctuate... including the nominal values from auxiliary measurements.
 If these do not fluctuate, this corresponds to an "conditional ensemble".  The
-result is that the distribution of the test statistic can become very non-chi^2.  
-This results in thresholds that become very large. This can be seen in the following 
-thought experiment.  Say the model is 
+result is that the distribution of the test statistic can become very non-chi^2.
+This results in thresholds that become very large. This can be seen in the following
+thought experiment.  Say the model is
    Pois(N | s + b) * G(b0|b,sigma)
 where G(b0|b,sigma) is the external constraint and b0 is 100.  If N is also 100
 then the profiled value of b given s is going to be some trade off betwen 100-s and b0.
 If sigma is \sqrt(N), then the profiled value of b is probably 100 - s/2   So for
 s=60 we are going to have a profiled value of b~70.  Now when we generate pseudo-experiments
 for s=60, b=70 we will have N~130 and the average shat will be 30, not 60.  In practice,
-this is only an issue for values of s that are very excluded.  For values of s near the 95% 
-limit this should not be a big effect.  This can be avoided if the nominal values of the constraints also fluctuate, but that requires that those parameters are RooRealVars in the model.  
+this is only an issue for values of s that are very excluded.  For values of s near the 95%
+limit this should not be a big effect.  This can be avoided if the nominal values of the constraints also fluctuate, but that requires that those parameters are RooRealVars in the model.
 This version does not deal with this issue, but it will be addressed in a future version.
 */
 
@@ -145,7 +145,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
   int nToyMC = 500;
 
   /////////////////////////////////////////////////////////////
-  // First part is just to access a user-defined file 
+  // First part is just to access a user-defined file
   // or create the standard example file if it doesn't exist
   ////////////////////////////////////////////////////////////
    const char* filename = "";
@@ -166,21 +166,21 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
          cout <<"Done creating example input"<<endl;
          cout <<"---------------------\n\n"<<endl;
       }
-      
+
    }
    else
       filename = infile;
-   
+
    // Try to open the file
    TFile *file = TFile::Open(filename);
-   
+
    // if input file was specified byt not found, quit
    if(!file ){
       cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
    }
 
-  
+
   /////////////////////////////////////////////////////////////
   // Now get the data and workspace
   ////////////////////////////////////////////////////////////
@@ -221,7 +221,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
   // REMEMBER, we will change the test statistic
   // so this is NOT a Feldman-Cousins interval
   FeldmanCousins fc(*data,*mc);
-  fc.SetConfidenceLevel(confidenceLevel); 
+  fc.SetConfidenceLevel(confidenceLevel);
   //  fc.AdditionalNToysFactor(0.25); // degrade/improve sampling that defines confidence belt
   //  fc.UseAdaptiveSampling(true); // speed it up a bit, don't use for expectd limits
   fc.SetNBins(nPointsToScan); // set how many points per parameter of interest to scan
@@ -231,24 +231,24 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
   // Feldman-Cousins is a unified limit by definition
   // but the tool takes care of a few things for us like which values
   // of the nuisance parameters should be used to generate toys.
-  // so let's just change the test statistic and realize this is 
+  // so let's just change the test statistic and realize this is
   // no longer "Feldman-Cousins" but is a fully frequentist Neyman-Construction.
   //  ProfileLikelihoodTestStatModified onesided(*mc->GetPdf());
   //  fc.GetTestStatSampler()->SetTestStatistic(&onesided);
   // ((ToyMCSampler*) fc.GetTestStatSampler())->SetGenerateBinned(true);
-  ToyMCSampler*  toymcsampler = (ToyMCSampler*) fc.GetTestStatSampler(); 
+  ToyMCSampler*  toymcsampler = (ToyMCSampler*) fc.GetTestStatSampler();
   ProfileLikelihoodTestStat* testStat = dynamic_cast<ProfileLikelihoodTestStat*>(toymcsampler->GetTestStatistic());
   testStat->SetOneSided(true);
 
   // Since this tool needs to throw toy MC the PDF needs to be
   // extended or the tool needs to know how many entries in a dataset
-  // per pseudo experiment.  
+  // per pseudo experiment.
   // In the 'number counting form' where the entries in the dataset
   // are counts, and not values of discriminating variables, the
   // datasets typically only have one entry and the PDF is not
-  // extended.  
+  // extended.
   if(!mc->GetPdf()->canBeExtended()){
-    if(data->numEntries()==1)     
+    if(data->numEntries()==1)
       fc.FluctuateNumDataEntries(false);
     else
       cout <<"Not sure what to do about this model" <<endl;
@@ -260,7 +260,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
   // in your $ROOTSYS/roofit/roostats/inc directory,
   // add the additional line to the LinkDef.h file,
   // and recompile root.
-  ProofConfig pc(*w, 4, "workers=4"); 
+  ProofConfig pc(*w, 4, "workers=4");
   if(mc->GetGlobalObservables()){
     cout << "will use global observables for unconditional ensemble"<<endl;
     mc->GetGlobalObservables()->Print();
@@ -272,7 +272,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
   // Now get the interval
   PointSetInterval* interval = fc.GetInterval();
   ConfidenceBelt* belt = fc.GetConfidenceBelt();
- 
+
   // print out the iterval on the first Parameter of Interest
   cout << "\n95% interval on " <<firstPOI->GetName()<<" is : ["<<
     interval->LowerLimit(*firstPOI) << ", "<<
@@ -354,7 +354,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
     RooDataSet* toyData = 0;
     // now generate a toy dataset
     if(!mc->GetPdf()->canBeExtended()){
-      if(data->numEntries()==1)     
+      if(data->numEntries()==1)
          toyData = mc->GetPdf()->generate(*mc->GetObservables(),1);
       else
          cout <<"Not sure what to do about this model" <<endl;
@@ -377,7 +377,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
       delete values;
       delete one;
     } else {
-      
+
       //try fix for sim pdf
       TIterator* iter = simPdf->indexCat().typeIterator() ;
       RooCatType* tt = NULL;
@@ -385,20 +385,20 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
 
          // Get pdf associated with state from simpdf
          RooAbsPdf* pdftmp = simPdf->getPdf(tt->GetName()) ;
-         
+
          // Generate only global variables defined by the pdf associated with this state
          RooArgSet* globtmp = pdftmp->getObservables(*mc->GetGlobalObservables()) ;
          RooDataSet* tmp = pdftmp->generate(*globtmp,1) ;
-         
+
          // Transfer values to output placeholder
          *globtmp = *tmp->get(0) ;
-         
+
          // Cleanup
          delete globtmp ;
          delete tmp ;
       }
     }
-    
+
     //    globalData->Print("v");
     //    unconditionalObs = *globalData->get();
     //    mc->GetGlobalObservables()->Print("v");
@@ -423,10 +423,10 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
       tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
       double arMax = belt->GetAcceptanceRegionMax(*tmpPoint);
       firstPOI->setVal( tmpPoint->getRealValue(firstPOI->GetName()) );
-      //   double thisTS = profile->getVal(); 
+      //   double thisTS = profile->getVal();
       double thisTS = fc.GetTestStatSampler()->EvaluateTestStatistic(*toyData,tmpPOI);
 
-      //   cout << "poi = " << firstPOI->getVal() 
+      //   cout << "poi = " << firstPOI->getVal()
       // << " max is " << arMax << " this profile = " << thisTS << endl;
       //      cout << "thisTS = " << thisTS<<endl;
       if(thisTS<=arMax){
@@ -435,7 +435,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
          break;
       }
     }
-    
+
 
 
     /*
@@ -452,10 +452,10 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
       // cout << "from scan arMax2 = "<< arMax2 << endl; // not the same due to TH1F not TH1D
       // cout << "scan - hist" << arMax2-arMax << endl;
       firstPOI->setVal( histOfThresholds->GetBinCenter(i+1));
-      //   double thisTS = profile->getVal(); 
+      //   double thisTS = profile->getVal();
       double thisTS = fc.GetTestStatSampler()->EvaluateTestStatistic(*toyData,tmpPOI);
 
-      //   cout << "poi = " << firstPOI->getVal() 
+      //   cout << "poi = " << firstPOI->getVal()
       // << " max is " << arMax << " this profile = " << thisTS << endl;
       //      cout << "thisTS = " << thisTS<<endl;
 
@@ -472,7 +472,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char* infile = "",
 
     // for few events, data is often the same, and UL is often the same
     //    cout << "thisUL = " << thisUL<<endl;
-    
+
     delete toyData;
   }
   histOfUL->Draw();

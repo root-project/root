@@ -78,7 +78,7 @@ void TOracleStatement::Close(Option_t *)
 
    if (fConn && fStmt)
       fConn->terminateStatement(fStmt);
-      
+
    CloseBuffer();
 
    fConn = 0;
@@ -167,7 +167,7 @@ void TOracleStatement::CloseBuffer()
 Bool_t TOracleStatement::Process()
 {
    // Process SQL statement
-   
+
    CheckStatement("Process", kFALSE);
 
    try {
@@ -192,7 +192,7 @@ Int_t TOracleStatement::GetNumAffectedRows()
 {
    // Return number of affected rows after statement Process() was called
    // Make sense for queries like SELECT, INSERT, UPDATE
-    
+
    CheckStatement("GetNumAffectedRows", -1);
 
    try {
@@ -208,8 +208,8 @@ Int_t TOracleStatement::GetNumAffectedRows()
 Int_t TOracleStatement::GetNumParameters()
 {
    // Return number of parameters in statement
-   // Not yet implemented for Oracle 
-    
+   // Not yet implemented for Oracle
+
    CheckStatement("GetNumParameters", -1);
 
    Info("GetParametersNumber","Not implemented");
@@ -221,7 +221,7 @@ Int_t TOracleStatement::GetNumParameters()
 Bool_t TOracleStatement::SetNull(Int_t npar)
 {
    // Set NULL as value of parameter npar
-   
+
    CheckSetPar("SetNull");
 
    try {
@@ -240,7 +240,7 @@ Bool_t TOracleStatement::SetNull(Int_t npar)
 Bool_t TOracleStatement::SetInt(Int_t npar, Int_t value)
 {
    // Set integer value for parameter npar
-    
+
    CheckSetPar("SetInt");
 
    try {
@@ -293,7 +293,7 @@ Bool_t TOracleStatement::SetLong64(Int_t npar, Long64_t value)
    // Set 64-bit integer value for parameter npar
 
    CheckSetPar("SetLong64");
-   
+
    try {
       fStmt->setNumber(npar+1, Number((long double)value));
       return kTRUE;
@@ -325,7 +325,7 @@ Bool_t TOracleStatement::SetDouble(Int_t npar, Double_t value)
    // Set double value for parameter npar
 
    CheckSetPar("SetDouble");
-   
+
    try {
       fStmt->setDouble(npar+1, value);
       return kTRUE;
@@ -362,26 +362,26 @@ Bool_t TOracleStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 Bool_t TOracleStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize)
 {
    // set parameter value as binary data
-   
+
    CheckSetPar("SetBinary");
 
    try {
 
       // this is when NextIteration is called first time
-      if (fIterCounter==1) 
+      if (fIterCounter==1)
          fStmt->setMaxParamSize(npar+1, maxsize);
-         
+
       Bytes buf((unsigned char*) mem, size);
 
       fStmt->setBytes(npar+1, buf);
-      
+
       return kTRUE;
 
    } catch (SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetBinary");
    }
    return kFALSE;
-}   
+}
 
 //______________________________________________________________________________
 Bool_t TOracleStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
@@ -393,7 +393,7 @@ Bool_t TOracleStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
    try {
       Date tm = fStmt->getDate(npar+1);
       int o_year;
-      unsigned int o_month, o_day, o_hour, o_minute, o_second; 
+      unsigned int o_month, o_day, o_hour, o_minute, o_second;
       tm.getDate(o_year, o_month, o_day, o_hour, o_minute, o_second);
       tm.setDate(year, month, day, o_hour, o_minute, o_second);
       fStmt->setDate(npar+1, tm);
@@ -411,11 +411,11 @@ Bool_t TOracleStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
    // Set time value for parameter npar
 
    CheckSetPar("SetTime");
-   
+
    try {
       Date tm = fStmt->getDate(npar+1);
       int o_year;
-      unsigned int o_month, o_day, o_hour, o_minute, o_second; 
+      unsigned int o_month, o_day, o_hour, o_minute, o_second;
       tm.getDate(o_year, o_month, o_day, o_hour, o_minute, o_second);
       tm.setDate(o_year, o_month, o_day, hour, min, sec);
       fStmt->setDate(npar+1, tm);
@@ -467,7 +467,7 @@ Bool_t TOracleStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t
 Bool_t TOracleStatement::SetVInt(Int_t npar, const std::vector<Int_t> value, const char* schemaName, const char* typeName)
 {
    // Set vector of integer values for parameter npar
-    
+
    CheckSetPar("SetVInt");
 
    try {
@@ -525,7 +525,7 @@ Bool_t TOracleStatement::SetVLong64(Int_t npar, const std::vector<Long64_t> valu
    // Set vector of 64-bit integer values for parameter npar
 
    CheckSetPar("SetVLong64");
-   
+
    try {
       std::vector<Number> nvec;
       for (std::vector<Long64_t>::const_iterator it = value.begin();
@@ -569,7 +569,7 @@ Bool_t TOracleStatement::SetVDouble(Int_t npar, const std::vector<Double_t> valu
    // Set vector of double values for parameter npar
 
    CheckSetPar("SetVDouble");
-   
+
    try {
       setVector(fStmt, npar+1, value, schemaName, typeName);
       return kTRUE;
@@ -610,7 +610,7 @@ Bool_t TOracleStatement::NextIteration()
 Bool_t TOracleStatement::StoreResult()
 {
    // Store result of statement processing.
-   // Required to access results of SELECT queries 
+   // Required to access results of SELECT queries
 
    CheckStatement("StoreResult", kFALSE);
 
@@ -636,7 +636,7 @@ Bool_t TOracleStatement::SetMaxFieldSize(Int_t nfield, Long_t maxsize)
    // Defines maximum size for field which must be used for read or write operation
    // Some Oracle types as LONG (long binary continer) requires this call
    // before any data can be read from database. Call it once before first call to NextResultRow()
-   
+
    CheckStatement("SetMaxFieldSize", kFALSE);
 
    try {
@@ -655,16 +655,16 @@ Bool_t TOracleStatement::SetMaxFieldSize(Int_t nfield, Long_t maxsize)
 //______________________________________________________________________________
 Int_t TOracleStatement::GetNumFields()
 {
-   // Returns number of fields in result set 
-    
+   // Returns number of fields in result set
+
    return IsResultSet() ?  fBufferSize : -1;
 }
 
 //______________________________________________________________________________
 const char* TOracleStatement::GetFieldName(Int_t npar)
 {
-   // Return field name in result set 
-    
+   // Return field name in result set
+
    CheckGetField("GetFieldName", 0);
 
    if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
@@ -686,10 +686,10 @@ const char* TOracleStatement::GetFieldName(Int_t npar)
 Bool_t TOracleStatement::NextResultRow()
 {
    // Move cursor to next row in result set.
-   // For Oracle it may lead to additional request to database 
-    
+   // For Oracle it may lead to additional request to database
+
    ClearError();
-   
+
    if (fResult==0) {
       SetError(-1,"There is no result set for statement", "NextResultRow");
       return kFALSE;
@@ -699,7 +699,7 @@ Bool_t TOracleStatement::NextResultRow()
 
    try {
       for (int n=0;n<fBufferSize;n++) {
-        if (fBuffer[n].strbuf) 
+        if (fBuffer[n].strbuf)
            delete[] fBuffer[n].strbuf;
         fBuffer[n].strbuf = 0;
         fBuffer[n].strbufsize = -1;
@@ -712,10 +712,10 @@ Bool_t TOracleStatement::NextResultRow()
       return kTRUE;
    } catch (SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "NextResultRow");
-      
-      if (oraex.getErrorCode()==32108) 
+
+      if (oraex.getErrorCode()==32108)
          Info("NextResultRow", "Use TSQLStatement::SetMaxFieldSize() to solve a problem");
-      
+
    }
 
    return kFALSE;
@@ -724,8 +724,8 @@ Bool_t TOracleStatement::NextResultRow()
 //______________________________________________________________________________
 Bool_t TOracleStatement::IsNull(Int_t npar)
 {
-   // Checks if fieled value in result set is NULL  
-    
+   // Checks if fieled value in result set is NULL
+
    CheckGetField("IsNull", kFALSE);
 
    try {
@@ -741,7 +741,7 @@ Bool_t TOracleStatement::IsNull(Int_t npar)
 Int_t TOracleStatement::GetInt(Int_t npar)
 {
    // return field value as integer
-    
+
    CheckGetField("GetInt", 0);
 
    Int_t res = 0;
@@ -922,7 +922,7 @@ const char* TOracleStatement::GetString(Int_t npar)
 //______________________________________________________________________________
 Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 {
-   // Return field value as binary array 
+   // Return field value as binary array
    // Supports LONG, BLOB, CLOB, BFILE, CFILE types of columns
    // Reads complete content of the column, therefore not suitable for
    // big structures
@@ -933,7 +933,7 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
    CheckGetField("GetBinary", kFALSE);
 
    if (fBuffer[npar].strbufsize>=0) {
-      mem = fBuffer[npar].strbuf; 
+      mem = fBuffer[npar].strbuf;
       size = fBuffer[npar].strbufsize;
       return kTRUE;
    }
@@ -942,94 +942,94 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
       if (fResult->isNull(npar+1)) return kTRUE;
 
       int datatype = (*fFieldInfo)[npar].getInt(MetaData::ATTR_DATA_TYPE);
-      
+
       switch (datatype) {
          case SQLT_LNG: {
             Bytes parbytes = fResult->getBytes(npar+1);
-            
+
             size = parbytes.length();
-      
+
             fBuffer[npar].strbufsize = size;
-            
+
             if (size>0) {
-               mem = malloc(size); 
-               
+               mem = malloc(size);
+
                fBuffer[npar].strbuf = (char*) mem;
-               
+
                parbytes.getBytes((unsigned char*) mem, size);
             }
-            
+
             break;
          }
 
          case SQLT_BLOB: {
             Blob parblob = fResult->getBlob(npar+1);
-            
+
             size = parblob.length();
-            
+
             fBuffer[npar].strbufsize = size;
-            
+
             if (size>0) {
-               mem = malloc(size); 
-               
+               mem = malloc(size);
+
                fBuffer[npar].strbuf = (char*) mem;
-               
+
                parblob.read(size, (unsigned char*) mem, size);
             }
-            
+
             break;
          }
-         
+
          case SQLT_CLOB: {
             Clob parclob = fResult->getClob(npar+1);
-            
+
             size = parclob.length();
-            
+
             fBuffer[npar].strbufsize = size;
-            
+
             if (size>0) {
-               mem = malloc(size); 
-               
+               mem = malloc(size);
+
                fBuffer[npar].strbuf = (char*) mem;
-               
+
                parclob.read(size, (unsigned char*) mem, size);
             }
 
             break;
          }
 
-         case SQLT_BFILEE: 
+         case SQLT_BFILEE:
          case SQLT_CFILEE: {
 
             Bfile parbfile = fResult->getBfile(npar+1);
-            
+
             size = parbfile.length();
-            
+
             fBuffer[npar].strbufsize = size;
-            
+
             if (size>0) {
-               mem = malloc(size); 
-               
+               mem = malloc(size);
+
                fBuffer[npar].strbuf = (char*) mem;
-               
+
                parbfile.read(size, (unsigned char*) mem, size);
             }
-            
+
             break;
          }
-         
-         default: 
+
+         default:
            Error("GetBinary", "Oracle data type %d not supported", datatype);
            SetError(-1, "Unsupported type for binary convertion", "GetBinary");
            return false;
       }
-      
+
       return kTRUE;
-         
+
    } catch (SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetBinary");
    }
-   
+
    return kFALSE;
 }
 
@@ -1038,9 +1038,9 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 Bool_t TOracleStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day)
 {
    // return field value as date
-   
+
    Int_t hour, min, sec;
-   
+
    return GetDatime(npar, year, month, day, hour, min, sec);
 }
 
@@ -1048,7 +1048,7 @@ Bool_t TOracleStatement::GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& d
 Bool_t TOracleStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
 {
    // return field value as time
-    
+
    Int_t year, month, day;
 
    return GetDatime(npar, year, month, day, hour, min, sec);
@@ -1058,18 +1058,18 @@ Bool_t TOracleStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec
 Bool_t TOracleStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
 {
    // return field value as date & time
-    
+
    CheckGetField("GetDatime", kFALSE);
 
    try {
       if (!fResult->isNull(npar+1)) {
          int datatype = (*fFieldInfo)[npar].getInt(MetaData::ATTR_DATA_TYPE);
-         
+
          if (datatype!=SQLT_DAT) return kFALSE;
-          
+
          Date tm = fResult->getDate(npar+1);
          int o_year;
-         unsigned int o_month, o_day, o_hour, o_minute, o_second; 
+         unsigned int o_month, o_day, o_hour, o_minute, o_second;
          tm.getDate(o_year, o_month, o_day, o_hour, o_minute, o_second);
          year = (Int_t) o_year;
          month = (Int_t) o_month;
@@ -1090,20 +1090,20 @@ Bool_t TOracleStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t&
 Bool_t TOracleStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t& frac)
 {
    // return field value as date & time
-    
+
    CheckGetField("GetTimestamp", kFALSE);
 
    try {
       if (!fResult->isNull(npar+1)) {
          int datatype = (*fFieldInfo)[npar].getInt(MetaData::ATTR_DATA_TYPE);
 
-         if ((datatype!=SQLT_TIMESTAMP) && 
-             (datatype!=SQLT_TIMESTAMP_TZ) && 
+         if ((datatype!=SQLT_TIMESTAMP) &&
+             (datatype!=SQLT_TIMESTAMP_TZ) &&
              (datatype!=SQLT_TIMESTAMP_LTZ)) return kFALSE;
 
          Timestamp tm = fResult->getTimestamp(npar+1);
          int o_year;
-         unsigned int o_month, o_day, o_hour, o_minute, o_second, o_frac; 
+         unsigned int o_month, o_day, o_hour, o_minute, o_second, o_frac;
          tm.getDate(o_year, o_month, o_day);
          tm.getTime(o_hour, o_minute, o_second, o_frac);
          year = (Int_t) o_year;
@@ -1113,7 +1113,7 @@ Bool_t TOracleStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int
          min = (Int_t) o_minute;
          sec = (Int_t) o_second;
          frac = (Int_t) o_frac;
-         return kTRUE;  
+         return kTRUE;
       }
    } catch (SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetTimestamp");

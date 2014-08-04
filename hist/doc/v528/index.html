@@ -1,6 +1,6 @@
 <br/>
 <hr/>
-<a name="hist"></a> 
+<a name="hist"></a>
 <h3>Histogram package</h3>
 
 <h4>TGraphDelaunay</h4>
@@ -8,7 +8,7 @@
 <li> New version of the method <tt>TGraphDelaunay::Enclose()</tt>. This method
      decides if a point is inside a triangle or not. The way it was implemented
      produced infinite numbers and generated wrong peaks. It was visible on some
-     machines only (for instance MacOsX). Now this method uses 
+     machines only (for instance MacOsX). Now this method uses
      <tt>TMath::IsInside()</tt>. It is much safer, it runs faster, and the
      code is simpler. The problem could be seen with a simple macro like the
      following one:
@@ -34,7 +34,7 @@
 <li> The X and Y vectors are normalized in order to compute the triangles.
      The scale factor used was the same for the X and Y axis.
      This generated problems (very long triangles instead of the obvious ones)
-     in some cases when the X and Y axis had very different ranges. Having two 
+     in some cases when the X and Y axis had very different ranges. Having two
      scale factors, one for the X axis and one for the Y axis, cures the problem.</li>
 </ul>
 
@@ -55,7 +55,7 @@
         z[0] = 2723.;
         z[1] = 2723.;
         TGraph2D * g = new TGraph2D(2, x, y, z);
-        g->Draw("LINE");   
+        g->Draw("LINE");
      }
      </pre>
 </li>
@@ -63,7 +63,7 @@
 
 <h4>TGraph2DPainter</h4>
 <ul>
-<li> When a <tt>TGraph2D</tt> was painted with the option <tt>TRI1</tt> the 
+<li> When a <tt>TGraph2D</tt> was painted with the option <tt>TRI1</tt> the
      color distribution in case of log scale along the Z axis was wrong.</li>
 </ul>
 
@@ -93,7 +93,7 @@
         double xarr[] = { 0.01, 0.02, 0.03, 0.04 };
         TH2D *h = new TH2D("h","h",3,xarr,3,yarr);
         h->Fill(0.011,2.5);
-        h->Draw("box");           
+        h->Draw("box");
      }
      </pre>
 </li>
@@ -108,7 +108,7 @@
         h->SetFillColor(kGreen);
         for (int i=0;i&lt;44; i++ ) h->Fill(i, -i-60);
         h->DrawCopy("bar1");
-     } 
+     }
      </pre>
 </li>
 <li> The setting <tt>gStyle->SetHistMinimumZero()</tt> now works for horizontal
@@ -116,7 +116,7 @@
      <center><img src="hbarmin0.gif" alt="HBAR option"/></center>
 </li>
 <li> In the case of profile histograms it is possible to print the number
-     of entries instead of the bin content. It is enough to combine the  
+     of entries instead of the bin content. It is enough to combine the
      option "E" (for entries) with the option "TEXT".
      <pre>
      {
@@ -136,7 +136,7 @@
         profile->Fill(9.5,1);
         c02->cd(1); profile->Draw("HIST TEXT0");
         c02->cd(2); profile->Draw("HIST TEXT0E");
-     } 
+     }
      </pre>
      <center><img src="textoption.gif" alt="TEXT option"/></center>
 </li>
@@ -176,7 +176,7 @@
 <ul>
 <li> When painted with option "2" (errors represented with boxes) the graph
      with error bars were not clipped if the boxes were outside the frame
-     limits. This problem was visible with TGraphErrors, TGraphAsymmErrors and 
+     limits. This problem was visible with TGraphErrors, TGraphAsymmErrors and
      TGraphBentErrors. The following macro showed the problem:
      <pre>
      {
@@ -187,8 +187,8 @@
         Double_t y[n]    = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
         Double_t ex[n]   = {.05,.1,.07,.07,10.04,.05,.06,.07,.08,.05};
         Double_t ey[n]   = {3.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
-        Double_t exd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0}; 
-        Double_t eyd[n] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0}; 
+        Double_t exd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+        Double_t eyd[n] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
 
         TGraphErrors *gr1 = new TGraphErrors(n,x,y,ex,ey);
         gr1->SetFillStyle(3004);
@@ -196,14 +196,14 @@
         TGraphAsymmErrors *gr2 = new TGraphAsymmErrors(n, x, y, ex, ex, ey, ey);
         gr2->SetFillStyle(3005);
 
-        TGraphBentErrors *gr3 = new TGraphBentErrors(n,x,y,ex,ex,ey,ey,exd,exd,eyd,eyd);        
+        TGraphBentErrors *gr3 = new TGraphBentErrors(n,x,y,ex,ex,ey,ey,exd,exd,eyd,eyd);
         gr3->SetFillStyle(3006);
 
         c1->DrawFrame(-1,0,1,10);
 
         gr1->Draw("2");
         gr2->Draw("2");
-        gr3->Draw("2");  
+        gr3->Draw("2");
      }
      </pre>
 </li>
@@ -219,7 +219,7 @@
         h->SetFillColor(kGreen);
         for (int i=0;i&lt;44; i++ ) h->Fill(i, -i-60);
         h->DrawCopy("b");
-     } 
+     }
      </pre>
 </li>
 <li> It was not possible to interactively move a graph with many points
@@ -248,18 +248,18 @@
     </pre>
 </li>
 <li>New method <tt>IsInside(x,y)</tt>.</li>
-</ul>  
+</ul>
 
 <h4>TMultiGraph</h4>
 <ul>
 <li>New method <tt>IsInside(x,y)</tt>.</li>
-</ul>  
+</ul>
 
 <h4>THStack</h4>
 <ul>
 <li>The color index used to erase the background while drawing a stack of 1D
     histogram was wrong.</li>
-</ul>  
+</ul>
 
 <h4>TF1</h4>
 <ul>
@@ -297,7 +297,7 @@
   linear bin index. Use it in Projection() for a considerable
   speed-up.</li>
 </ul>
-  
+
 <h4>TSpectrum2Painter</h4>
 <ul>
 <li> New parameter bf() in the SPEC option to define the buffer size
@@ -333,9 +333,9 @@ TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;y;#epsilon",10,0,10,2
    The variables x,y and z determine the bin which is filled. For lower
    dimensions the z- or even the y-value may be omitted.
     </li>
-    
+
     <li>You can also set the number of passed or total events for a bin directly by using the SetPassedEvents or SetTotalEvents method.</li>
-    
+
     <li>If you already have two histograms filled with the number of passed and total
 events, you will use the constructor <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:TEfficiency%1">TEfficiency(const TH1& passed,const TH1& total)</a>
 to construct the TEfficiency object. The histograms "passed" and "total" have
@@ -345,13 +345,13 @@ to fullfill the conditions  mentioned in <a
     <li>Example 2: Create TEfficiency from 2 existing histograms:
     <pre>
 TEfficiency * pEff = 0;
-if (TEfficiency::CheckConsistency(h_pass,h_total)) 
+if (TEfficiency::CheckConsistency(h_pass,h_total))
    pEff = new TEfficiency(h_pass,h_total);
    </pre>
     </li>
 </ul>
   </li>
- 
+
 <li>
    The TEfficiency class provides various statistics option based on
   frequentist or Bayesian statistics  to compute
@@ -369,7 +369,7 @@ if (TEfficiency::CheckConsistency(h_pass,h_total))
     <li>Clopper_pearson (default) using the function
     <tt>TEfficiency::ClopperPearson(n, k, cl)</tt>
     </li>
-    
+
     <li>Bayesian methods using the function
     <tt>TEfficiency::Bayesian(n, k, cl, alpha, beta)</tt>.
     In this case the alpha and beta parameters of the
@@ -392,39 +392,39 @@ if (TEfficiency::CheckConsistency(h_pass,h_total))
   Rabacal. The algorithm used is described in "Cranmer KS, <i>Kernel Estimation in High-Energy
    Physics</i>. Computer Physics Communications 136:198-207,2001" -
   e-Print Archive: hep ex/0011057 and more information can be found
-  also in "Scott DW, <i>Multivariate Density Estimation. Theory, Practice and Visualization</i>. New York: Wiley", 
+  also in "Scott DW, <i>Multivariate Density Estimation. Theory, Practice and Visualization</i>. New York: Wiley",
     and "Jann Ben -, <i>Univariate kernel
-  density estimation document for KDENS</i> ". 
+  density estimation document for KDENS</i> ".
   </li>
 
   </ul>
 
 <h4>New TSVDUnfold class</h4>
 
-<tt>TSVDUnfold</tt> implements the singular value decomposition based 
-unfolding method proposed in <a 
-href="http://arXiv.org/abs/hep-ph/9509307">NIM A372, 469 (1996) 
-[hep-ph/9509307]</a>. The regularisation is implemented as 
-a discrete minimum curvature condition. This minimal implementation of 
-<tt>TSVDUnfold</tt> provides unfolding of one-dimensional histograms with 
-equal number of, not necessarily equidistant, bins in the measured and 
-unfolded distributions. In addition to the unfolding itself, 
+<tt>TSVDUnfold</tt> implements the singular value decomposition based
+unfolding method proposed in <a
+href="http://arXiv.org/abs/hep-ph/9509307">NIM A372, 469 (1996)
+[hep-ph/9509307]</a>. The regularisation is implemented as
+a discrete minimum curvature condition. This minimal implementation of
+<tt>TSVDUnfold</tt> provides unfolding of one-dimensional histograms with
+equal number of, not necessarily equidistant, bins in the measured and
+unfolded distributions. In addition to the unfolding itself,
 <tt>TSVDUnfold</tt> provides
 <ul>
-<li>Propagation of covariance matrices from the measured to the unfolded 
+<li>Propagation of covariance matrices from the measured to the unfolded
 spectrum via <tt>GetUnfoldCovMatrix</tt></li>
-<li>Evaluation of covariance matrix due to finite statistics in detector 
+<li>Evaluation of covariance matrix due to finite statistics in detector
 response via <tt>GetAdetCovMatrix</tt></li>
-<li>Access to distribution of |d_i| useful for determining the proper 
+<li>Access to distribution of |d_i| useful for determining the proper
 regularisation via <tt>GetD</tt></li>
 <li>Access to singular values via <tt>GetSV</tt></li>
 </ul>
-A toy example for the use of <tt>TSVDUnfold</tt> is included in the math 
+A toy example for the use of <tt>TSVDUnfold</tt> is included in the math
 tutorials (<tt>TSVDUnfoldExample.C</tt>).
 
 
 <h4>New TH2Poly class</h4>
-<tt>TH2Poly</tt> is a 2D Histogram class, inheriting from <tt>TH2</tt>, 
+<tt>TH2Poly</tt> is a 2D Histogram class, inheriting from <tt>TH2</tt>,
 allowing to define polygonal bins of arbitary shape.
 <p>
 Each bin, in a <tt>TH2Poly</tt> histogram, is a <tt>TH2PolyBin</tt> object.
@@ -467,4 +467,4 @@ More examples can be found in <tt>$ROOTSYS/tutorials/hist/</tt>:
 <center><img src="th2polyUSA.gif"       alt="th2polyUSA.C"/></center>
 
 
-  
+

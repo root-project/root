@@ -5,15 +5,15 @@
 HybridStandardForm
 
 Authors: Kyle Cranmer, Wouter Verkerke, and Sven Kreiss
-date  May 2010 Part 1-3 
+date  May 2010 Part 1-3
 date  Dec 2010 Part 4-6
 
-A hypothesis testing example based on number counting 
+A hypothesis testing example based on number counting
 with background uncertainty.
 
 NOTE: This example is like HybridInstructional, but the model is more clearly
 generalizable to an analysis with shapes.  There is a lot of flexability
-for how one models a problem in RooFit/RooStats.  Models come in a few 
+for how one models a problem in RooFit/RooStats.  Models come in a few
 common forms:
   - standard form: extended PDF of some discriminating variable m:
   eg: P(m) ~ S*fs(m) + B*fb(m), with S+B events expected
@@ -31,7 +31,7 @@ common forms:
   in this case the dataset has 1 row corresponding to N events
   and the extended term is the PDF itself.
 
-Here we convert the number counting form into the standard form by 
+Here we convert the number counting form into the standard form by
 introducing a dummy discriminating variable m with a uniform distribution.
 
 This example:
@@ -43,25 +43,25 @@ This example:
  - demonstrates usage of different priors for the nuisance parameters
  - demonstrates usage of PROOF
 
-The basic setup here is that a main measurement has observed x events with an 
+The basic setup here is that a main measurement has observed x events with an
 expectation of s+b.  One can choose an ad hoc prior for the uncertainty on b,
 or try to base it on an auxiliary measurement.  In this case, the auxiliary
 measurement (aka control measurement, sideband) is another counting experiment
-with measurement y and expectation tau*b.  With an 'original prior' on b, 
+with measurement y and expectation tau*b.  With an 'original prior' on b,
 called \eta(b) then one can obtain a posterior from the auxiliary measurement
 \pi(b) = \eta(b) * Pois(y|tau*b).  This is a principled choice for a prior
-on b in the main measurement of x, which can then be treated in a hybrid 
-Bayesian/Frequentist way.  Additionally, one can try to treat the two 
+on b in the main measurement of x, which can then be treated in a hybrid
+Bayesian/Frequentist way.  Additionally, one can try to treat the two
 measurements simultaneously, which is detailed in Part 6 of the tutorial.
 
 This tutorial is related to the FourBin.C tutorial in the modeling, but
 focuses on hypothesis testing instead of interval estimation.
 
-More background on this 'prototype problem' can be found in the 
+More background on this 'prototype problem' can be found in the
 following papers:
 
-Evaluation of three methods for calculating statistical significance 
-when incorporating a systematic uncertainty into a test of the 
+Evaluation of three methods for calculating statistical significance
+when incorporating a systematic uncertainty into a test of the
 background-only hypothesis for a Poisson process
 Authors: Robert D. Cousins, James T. Linnemann, Jordan Tucker
 http://arxiv.org/abs/physics/0702156
@@ -106,14 +106,14 @@ using namespace RooStats;
 //////////////////////////////////////////////////
 // A New Test Statistic Class for this example.
 // It simply returns the sum of the values in a particular
-// column of a dataset. 
+// column of a dataset.
 // You can ignore this class and focus on the macro below
 //////////////////////////////////////////////////
 class BinCountTestStat : public TestStatistic {
 public:
   BinCountTestStat(void) : fColumnName("tmp") {}
   BinCountTestStat(string columnName) : fColumnName(columnName) {}
-   
+
   virtual Double_t Evaluate(RooAbsData& data, RooArgSet& /*nullPOI*/) {
     // This is the main method in the interface
     Double_t value = 0.0;
@@ -123,7 +123,7 @@ public:
     return value;
       }
   virtual const TString GetVarName() const { return fColumnName; }
-  
+
 private:
   string fColumnName;
 
@@ -138,16 +138,16 @@ ClassImp(BinCountTestStat)
 //////////////////////////////////////////////////
 
 void HybridStandardForm() {
-  
+
   // This tutorial has 6 parts
   // Table of Contents
   // Setup
   //   1. Make the model for the 'prototype problem'
   // Special cases
   //   2. NOT RELEVANT HERE
-  //   3. Use RooStats analytic solution for this problem 
+  //   3. Use RooStats analytic solution for this problem
   // RooStats HybridCalculator -- can be generalized
-  //   4. RooStats ToyMC version of 2. & 3. 
+  //   4. RooStats ToyMC version of 2. & 3.
   //   5. RooStats ToyMC with an equivalent test statistic
   //   6. RooStats ToyMC with simultaneous control & main measurement
 
@@ -162,20 +162,20 @@ void HybridStandardForm() {
   c->Divide(2,2);
 
   ///////////////////////////////////////////////////////
-  // P A R T   1  :  D I R E C T   I N T E G R A T I O N 
+  // P A R T   1  :  D I R E C T   I N T E G R A T I O N
   //////////////////////////////////////////////////////
   // Make model for prototype on/off problem
   // Pois(x | s+b) * Pois(y | tau b )
   // for Z_Gamma, use uniform prior on b.
   RooWorkspace* w = new RooWorkspace("w");
-  
 
-  // replace the pdf in 'number couting form' 
+
+  // replace the pdf in 'number couting form'
   //w->factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0,300]))");
   // with one in standard form.  Now x is encoded in event count
   w->factory("Uniform::f(m[0,1])");//m is a dummy discriminanting variable
   w->factory("ExtendPdf::px(f,sum::splusb(s[0,0,100],b[100,0,300]))");
-  w->factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))"); 
+  w->factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))");
   w->factory("PROD::model(px,py)");
   w->factory("Uniform::prior_b(b)");
 
@@ -193,7 +193,7 @@ void HybridStandardForm() {
   /////////////////////////////////////////////////
   // P A R T   3  :  A N A L Y T I C   R E S U L T
   /////////////////////////////////////////////////
-  // In this special case, the integrals are known analytically 
+  // In this special case, the integrals are known analytically
   // and they are implemented in RooStats::NumberCountingUtils
 
   // analytic Z_Bi
@@ -212,17 +212,17 @@ void HybridStandardForm() {
   //
   // Like all RooStats calculators it needs the data and a ModelConfig
   // for the relevant hypotheses.  Since we are doing hypothesis testing
-  // we need a ModelConfig for the null (background only) and the alternate 
-  // (signal+background) hypotheses.  We also need to specify the PDF, 
+  // we need a ModelConfig for the null (background only) and the alternate
+  // (signal+background) hypotheses.  We also need to specify the PDF,
   // the parameters of interest, and the observables.  Furthermore, since
   // the parameter of interest is floating, we need to specify which values
   // of the parameter corresponds to the null and alternate (eg. s=0 and s=50)
   //
   // define some sets of variables obs={x} and poi={s}
   // note here, x is the only observable in the main measurement
-  // and y is treated as a separate measurement, which is used 
+  // and y is treated as a separate measurement, which is used
   // to produce the prior that will be used in this calculation
-  // to randomize the nuisance parameters.  
+  // to randomize the nuisance parameters.
   w->defineSet("obs","m");
   w->defineSet("poi","s");
 
@@ -252,9 +252,9 @@ void HybridStandardForm() {
 
   //////////////////////////////////////////////////////////
   // Part 3b : Choose Test Statistic
-  // To make an equivalent calculation we need to use x as the test 
+  // To make an equivalent calculation we need to use x as the test
   // statistic.  This is not a built-in test statistic in RooStats
-  // so we define it above.  The new class inherits from the 
+  // so we define it above.  The new class inherits from the
   // RooStats::TestStatistic interface, and simply returns the value
   // of x in the dataset.
 
@@ -273,11 +273,11 @@ void HybridStandardForm() {
   // If \eta(b) is flat, then we arrive at a Gamma distribution.
   // Since RooFit will normalize the PDF we can actually supply
   // py=Pois(y,tau*b) that will be equivalent to multiplying by a uniform.
-  // 
+  //
   // Alternatively, we could explicitly use a gamma distribution:
   // w->factory("Gamma::gamma(b,sum::temp(y,1),1,0)");
-  // 
-  // or we can use some other ad hoc prior that do not naturally 
+  //
+  // or we can use some other ad hoc prior that do not naturally
   // follow from the known form of the auxiliary measurement.
   // The common choice is the equivlaent Gaussian:
   w->factory("Gaussian::gauss_prior(b,y, expr::sqrty('sqrt(y)',y))");
@@ -291,7 +291,7 @@ void HybridStandardForm() {
   // prior \eta(b) to form \pi(b) = Pois(y|tau*b) * \eta(b).
   // This is not yet implemented because in the general case
   // it is not easy to identify the terms in the PDF that correspond
-  // to the auxiliary measurement.  So for now, it must be set 
+  // to the auxiliary measurement.  So for now, it must be set
   // explicitly with:
   //  - ForcePriorNuisanceNull()
   //  - ForcePriorNuisanceAlt()
@@ -307,7 +307,7 @@ void HybridStandardForm() {
   //  toymcs1->SetNEventsPerToy(1); // because the model is in number counting form
   toymcs1->SetTestStatistic(&eventCount); // set the test statistic
   //  toymcs1->SetGenerateBinned();
-  hc1.SetToys(30000,1000); 
+  hc1.SetToys(30000,1000);
   hc1.ForcePriorNuisanceAlt(*w->pdf("py"));
   hc1.ForcePriorNuisanceNull(*w->pdf("py"));
   // if you wanted to use the ad hoc Gaussian prior instead
@@ -319,7 +319,7 @@ void HybridStandardForm() {
 
   // enable proof
   // proof not enabled for this test statistic
-  //  if(pc) toymcs1->SetProofConfig(pc);     
+  //  if(pc) toymcs1->SetProofConfig(pc);
 
   // these lines save current msg level and then kill any messages below ERROR
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
@@ -337,10 +337,10 @@ void HybridStandardForm() {
 
   return; // keep the running time sort by default
   ////////////////////////////////////////////////////////////////////////////
-  // P A R T   5  :  U S I N G   H Y B R I D   C A L C U L A T O R   W I T H 
+  // P A R T   5  :  U S I N G   H Y B R I D   C A L C U L A T O R   W I T H
   //                 A N   A L T E R N A T I V E   T E S T   S T A T I S T I C
   /////////////////////////////////////////////////////////////////////////////
-  // 
+  //
   // A likelihood ratio test statistics should be 1-to-1 with the count x
   // when the value of b is fixed in the likelihood.  This is implemented
   // by the SimpleLikelihoodRatioTestStat
@@ -355,7 +355,7 @@ void HybridStandardForm() {
   //  toymcs2->SetNEventsPerToy(1);
   toymcs2->SetTestStatistic(&slrts);
   //  toymcs2->SetGenerateBinned();
-  hc2.SetToys(20000,1000); 
+  hc2.SetToys(20000,1000);
   hc2.ForcePriorNuisanceAlt(*w->pdf("py"));
   hc2.ForcePriorNuisanceNull(*w->pdf("py"));
   // if you wanted to use the ad hoc Gaussian prior instead
@@ -366,7 +366,7 @@ void HybridStandardForm() {
   //  hc2.ForcePriorNuisanceNull(*w->pdf("lognorm_prior"));
 
   // enable proof
-  if(pc) toymcs2->SetProofConfig(pc);     
+  if(pc) toymcs2->SetProofConfig(pc);
 
   // these lines save current msg level and then kill any messages below ERROR
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
@@ -395,7 +395,7 @@ Z_Bi p-value (analytic): 0.00094165
 Z_Bi significance (analytic): 3.10804
 Real time 0:00:00, CP time 0.610
 
-Results HybridCalculator_result: 
+Results HybridCalculator_result:
  - Null p-value = 0.00103333 +/- 0.000179406
  - Significance = 3.08048 sigma
  - Number of S+B toys: 1000
@@ -411,7 +411,7 @@ Real time 0:04:43, CP time 283.780
 -----------------------------------------
 Part 5
 
-Results HybridCalculator_result: 
+Results HybridCalculator_result:
  - Null p-value = 0.00105 +/- 0.000206022
  - Significance = 3.07571 sigma
  - Number of S+B toys: 1000
@@ -435,7 +435,7 @@ Real time 0:02:22, CP time 0.990
   // Comparison
   ///////////////////////////////////////////
   // Asymptotics
-  // From the value of the profile likelihood ratio (5.0338) 
+  // From the value of the profile likelihood ratio (5.0338)
   // The significance can be estimated using Wilks's theorem
   // significance = sqrt(2*profileLR) = 3.1729 sigma
 

@@ -41,7 +41,7 @@ protected:
    Bool_t        fScaling;         //!True when TProfile3D::Scale is called
    Double_t      fTsumwt;          //Total Sum of weight*T
    Double_t      fTsumwt2;         //Total Sum of weight*T*T
-   TArrayD       fBinSumw2;        //Array of sum of squares of weights per bin 
+   TArrayD       fBinSumw2;        //Array of sum of squares of weights per bin
    static Bool_t fgApproximate;    //bin error approximation option
 
    virtual Int_t    BufferFill(Double_t, Double_t) {return -2;} //may not use
@@ -50,8 +50,8 @@ protected:
    virtual Int_t    BufferFill(Double_t x, Double_t y, Double_t z, Double_t t, Double_t w);
 
    // helper methods for the Merge unification in TProfileHelper
-   void SetBins(const Int_t* nbins,const Double_t* range) { SetBins(nbins[0], range[0], range[1], 
-                                                                    nbins[1], range[2], range[3], 
+   void SetBins(const Int_t* nbins,const Double_t* range) { SetBins(nbins[0], range[0], range[1],
+                                                                    nbins[1], range[2], range[3],
                                                                     nbins[2], range[4], range[5]); };
    Int_t Fill(const Double_t* v) { return Fill(v[0], v[1], v[2], v[3], v[4]); };
 
@@ -69,7 +69,7 @@ protected:
    //virtual void     UpdateBinContent(Int_t bin, Double_t content);
    virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const { Double_t err = GetBinError(bin); return err*err; }
 
-   virtual TProfile2D *DoProjectProfile2D(const char* name, const char * title, TAxis* projX, TAxis* projY, 
+   virtual TProfile2D *DoProjectProfile2D(const char* name, const char * title, TAxis* projX, TAxis* projY,
                                           bool originalRange, bool useUF, bool useOF) const;
 
 private:
@@ -136,15 +136,15 @@ public:
    virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      Scale(Double_t c1=1, Option_t *option="");
    virtual void      SetBinEntries(Int_t bin, Double_t w);
-   virtual void      SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, 
-                             Int_t nbinsy, Double_t ymin, Double_t ymax, 
+   virtual void      SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax,
+                             Int_t nbinsy, Double_t ymin, Double_t ymax,
                              Int_t nbinsz, Double_t zmin, Double_t zmax);
    virtual void      SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t * yBins, Int_t nz,
                              const Double_t *zBins);
    virtual void      SetBinsLength(Int_t n=-1);
    virtual void      SetBuffer(Int_t buffersize, Option_t *opt="");
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
-   virtual void      Sumw2(Bool_t flag = kTRUE); 
+   virtual void      Sumw2(Bool_t flag = kTRUE);
 
    ClassDef(TProfile3D,7)  //Profile3D histogram class
 };

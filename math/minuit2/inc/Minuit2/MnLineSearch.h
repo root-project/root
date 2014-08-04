@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -25,11 +25,11 @@ class MnParabolaPoint;
 
 
 
-/** 
+/**
 
-Implements a 1-dimensional minimization along a given direction 
-(i.e. quadratic interpolation) It is independent of the algorithm 
-that generates the direction vector. It brackets the 1-dimensional 
+Implements a 1-dimensional minimization along a given direction
+(i.e. quadratic interpolation) It is independent of the algorithm
+that generates the direction vector. It brackets the 1-dimensional
 Minimum and iterates to approach the real Minimum of the n-dimensional
 function.
 

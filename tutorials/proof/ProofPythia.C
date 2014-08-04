@@ -94,7 +94,7 @@ void ProofPythia::SlaveBegin(TTree * /*tree*/)
 //_____________________________________________________________________________
 Bool_t ProofPythia::Process(Long64_t entry)
 {
-   // Main event loop  
+   // Main event loop
 
    fPythia->GenerateEvent();
    if (entry < 2)

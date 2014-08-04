@@ -51,7 +51,7 @@ void mygenerate(double factor, double cen_x, double cen_y)
       last_histo= new TH2F("h2",
          "Mandelbrot [move mouse and  press z to zoom, u to unzoom, r to reset]",
                            200,-2,2,200,-2,2);
-      last_histo->SetStats(0);            
+      last_histo->SetStats(0);
     }
   const int max_iter=50;
   for(int bx=1;bx<=last_histo->GetNbinsX();bx++)
@@ -68,7 +68,7 @@ void mygenerate(double factor, double cen_x, double cen_y)
             iter++;
             if(iter>max_iter) break;
          }
-      }  
+      }
   last_histo->Draw("colz");
   gPad->Modified();
   gPad->Update();

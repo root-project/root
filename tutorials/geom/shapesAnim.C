@@ -1,6 +1,6 @@
 //macro illustrating how to animate a geometry picture using a Timer
 //Author: Rene Brun
-   
+
 Double_t pi;
 Float_t theta = 0;
 Float_t phi   = 30;
@@ -76,11 +76,11 @@ void shapesAnim() {
    node1->cd();
    node1->Draw();
    c1->Update();
-   
+
    //start a Timer
    TTimer *timer = new TTimer(20);
    timer->SetCommand("Animate()");
-   timer->TurnOn();   
+   timer->TurnOn();
 }
 void Animate()
 {

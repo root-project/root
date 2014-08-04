@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -12,7 +12,7 @@
 #include "Minuit2/MnStrategy.h"
 
 #if defined(DEBUG) || defined(WARNINGMSG)
-#include "Minuit2/MnPrint.h" 
+#include "Minuit2/MnPrint.h"
 #endif
 
 
@@ -22,14 +22,14 @@ namespace ROOT {
 
 
 FunctionMinimum CombinedMinimumBuilder::Minimum(const MnFcn& fcn, const GradientCalculator& gc, const MinimumSeed& seed, const MnStrategy& strategy, unsigned int maxfcn, double edmval) const {
-   // find minimum using combined method 
-   // (Migrad then if fails try Simplex and then Migrad again) 
-   
+   // find minimum using combined method
+   // (Migrad then if fails try Simplex and then Migrad again)
+
    FunctionMinimum min = fVMMinimizer.Builder().Minimum(fcn, gc, seed, strategy, maxfcn, edmval);
-   
+
    if(!min.IsValid()) {
 #ifdef WARNINGMSG
-      MN_INFO_MSG("CombinedMinimumBuilder: migrad method fails, will try with simplex method first."); 
+      MN_INFO_MSG("CombinedMinimumBuilder: migrad method fails, will try with simplex method first.");
 #endif
       MnStrategy str(2);
       FunctionMinimum min1 = fSimplexMinimizer.Builder().Minimum(fcn, gc, seed, str, maxfcn, edmval);
@@ -40,7 +40,7 @@ FunctionMinimum CombinedMinimumBuilder::Minimum(const MnFcn& fcn, const Gradient
          return min1;
       }
       MinimumSeed seed1 = fVMMinimizer.SeedGenerator()(fcn, gc, min1.UserState(), str);
-      
+
       FunctionMinimum min2 = fVMMinimizer.Builder().Minimum(fcn, gc, seed1, str, maxfcn, edmval);
       if(!min2.IsValid()) {
 #ifdef WARNINGMSG
@@ -49,10 +49,10 @@ FunctionMinimum CombinedMinimumBuilder::Minimum(const MnFcn& fcn, const Gradient
 #endif
          return min1;
       }
-      
+
       return min2;
    }
-   
+
    return min;
 }
 

@@ -144,7 +144,7 @@ public:
    virtual void      LocalToMasterVect(const Double_t *local, Double_t *master) const;
 
    virtual void      ls(Option_t *option = "") const;
-   virtual void      Paint(Option_t *option = ""); 
+   virtual void      Paint(Option_t *option = "");
    void              PrintCandidates() const; // *MENU*
    void              PrintOverlaps() const; // *MENU*
    void              VisibleDaughters(Bool_t vis=kTRUE); // *MENU*
@@ -198,7 +198,7 @@ private:
    TGeoPatternFinder *fFinder; // finder for this node
 
 protected:
-   TGeoNodeOffset(const TGeoNodeOffset&); 
+   TGeoNodeOffset(const TGeoNodeOffset&);
    TGeoNodeOffset& operator=(const TGeoNodeOffset&);
 
 public:
@@ -239,13 +239,13 @@ private:
 public:
    TGeoIteratorPlugin() : TObject(),fIterator(0) {}
    virtual ~TGeoIteratorPlugin() {}
-   
-   virtual void      ProcessNode() = 0; 
-   void              SetIterator(const TGeoIterator *iter) {fIterator = iter;} 
-   
+
+   virtual void      ProcessNode() = 0;
+   void              SetIterator(const TGeoIterator *iter) {fIterator = iter;}
+
    ClassDef(TGeoIteratorPlugin, 0)  // ABC for user plugins connecter to a geometry iterator.
-};   
-   
+};
+
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TGeoIterator - iterator for the node tree                              //
@@ -265,18 +265,18 @@ private:
    TString           fTopName;              // User name for top
    TGeoIteratorPlugin
                     *fPlugin;               // User iterator plugin
-   Bool_t            fPluginAutoexec;       // Plugin automatically executed during next()                 
-   
+   Bool_t            fPluginAutoexec;       // Plugin automatically executed during next()
+
    void            IncreaseArray();
 protected:
-   TGeoIterator() : fTop(0), fMustResume(0), fMustStop(0), fLevel(0), fType(0), 
+   TGeoIterator() : fTop(0), fMustResume(0), fMustStop(0), fLevel(0), fType(0),
                     fArray(0), fMatrix(0), fTopName(), fPlugin(0), fPluginAutoexec(kFALSE) { }
 
 public:
    TGeoIterator(TGeoVolume *top);
    TGeoIterator(const TGeoIterator &iter);
    virtual          ~TGeoIterator();
-   
+
    TGeoIterator   &operator=(const TGeoIterator &iter);
    TGeoNode       *operator()();
    TGeoNode       *Next();
@@ -286,9 +286,9 @@ public:
    Int_t           GetLevel() const {return fLevel;}
    TGeoNode       *GetNode(Int_t level) const;
    void            GetPath(TString &path) const;
-   TGeoIteratorPlugin 
+   TGeoIteratorPlugin
                   *GetUserPlugin() const {return fPlugin;}
-   
+
    TGeoVolume     *GetTopVolume() const {return fTop;}
    Int_t           GetType() const {return fType;}
    void            Reset(TGeoVolume *top=0);
@@ -297,7 +297,7 @@ public:
    void            SetType(Int_t type) {fType = type;}
    void            SetTopName(const char* name);
    void            Skip();
-   
+
    ClassDef(TGeoIterator,0)  //Iterator for geometry.
 };
 

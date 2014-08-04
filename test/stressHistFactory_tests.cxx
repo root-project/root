@@ -49,24 +49,24 @@ public:
   ~PdfComparison()
   {
      // delete temmporary directory if in not verbose mode
-     if (_verb == 0) { 
-        TString cmd = "rm -rf "; 
+     if (_verb == 0) {
+        TString cmd = "rm -rf ";
         cmd += fTestDirectory;
-        int ret = gSystem->Exec(cmd); 
+        int ret = gSystem->Exec(cmd);
         if (ret != 0) Error("PdfComparison","Error removing test directory %s",fTestDirectory.Data());
      }
   }
 
   Bool_t isTestAvailable()
   {
-     bool ret = true; 
-     ret &= CreateTestDirectory(); 
+     bool ret = true;
+     ret &= CreateTestDirectory();
      if (!ret) { Error("PdfComparison","Error creating test directory"); return ret; }
-     ret &= CopyTestFiles(); 
+     ret &= CopyTestFiles();
      if (!ret) { Error("PdfComparison","Error copying test files from $ROOTSYS/test/HistFactoryTest.tar"); return ret; }
-     ret &= UnpackTestFiles(); 
-     if (!ret) Error("PdfComparison","Error unpacking test file HistFactoryTest.tar"); 
-     return ret; 
+     ret &= UnpackTestFiles();
+     if (!ret) Error("PdfComparison","Error unpacking test file HistFactoryTest.tar");
+     return ret;
   }
 
   Bool_t testCode()
@@ -74,10 +74,10 @@ public:
     // print information where the temporary test/log files are placed
     if(_verb > 0)
       std::cout << "using test directory: " << fTestDirectory << std::endl;
-    
+
     // dump histfactory output into a file
     gSystem->RedirectOutput(fTestDirectory + "/API_vs_XML_test.log","a");
-    
+
     // build model using the API
     // create and move to a temporary directory to run hist2workspace
     gSystem->ChangeDirectory(fTestDirectory + "/API/");
@@ -89,7 +89,7 @@ public:
        Error("testCode","Error opening the file API_XML_TestModel_combined_Test_model.root");
        return kFALSE;
     }
-    
+
     RooWorkspace* pWS_API = (RooWorkspace*)pAPIFile->Get("combined");
     if(!pWS_API) {
        Error("testCode","Error retrieving the workspace combined");
@@ -107,7 +107,7 @@ public:
     gSystem->AddDynamicPath("$ROOTSYS/lib");
     TString cmd = "$ROOTSYS/bin/hist2workspace config/Measurement.xml";
     int ret = gSystem->Exec(cmd);
-    if (ret != 0) { 
+    if (ret != 0) {
        Error("testCode","Error running hist2workspace");
        return kFALSE;
     }
@@ -118,7 +118,7 @@ public:
        Error("testCode","Error opening the file results/API_XML_TestModel_combined_Test_model.root");
        return kFALSE;
     }
-    
+
     RooWorkspace* pWS_XML = (RooWorkspace*)pXMLFile->Get("combined");
     if(!pWS_XML) {
        Error("testCode","Error retrieving the workspace combined");
@@ -130,13 +130,13 @@ public:
        Error("testCode","Error retrieving the ModelConfig");
        return kFALSE;
     }
-    
+
     // cancel redirection
     gSystem->RedirectOutput(0);
 
     // change working directory to original one
     gSystem->ChangeDirectory(fOldDirectory);
-    
+
     // compare data
     if(pWS_API->data("obsData"))
     {
@@ -155,7 +155,7 @@ public:
     }
     else
       return kFALSE;
-    
+
     // compare sets of parameters
     if(pMC_API->GetParametersOfInterest())
     {
@@ -229,11 +229,11 @@ public:
       // delete pGlobalObservables;
       return kFALSE;
     }
-    
+
     // clean up
     delete pObservables;
     // delete pGlobalObservables;
-    
+
     return kTRUE;
   }
 
@@ -260,10 +260,10 @@ private:
     TString tarFile = fTestDirectory + "/HistFactoryTest.tar";
     cmd.Append(tarFile);
     gSystem->ChangeDirectory(gSystem->DirName(tarFile));
-    
+
     return (gSystem->Exec(cmd) == 0);
   }
-  
+
   Bool_t CompareData(const RooAbsData& rData1,const RooAbsData& rData2)
   {
     if(rData1.numEntries() != rData2.numEntries())
@@ -288,7 +288,7 @@ private:
     RooAbsArg* arg = 0;
     while((arg = (RooAbsArg*)it.Next()))
     {
-      RooRealVar * par = dynamic_cast<RooRealVar*>(arg); 
+      RooRealVar * par = dynamic_cast<RooRealVar*>(arg);
       if (!par) continue;  // do not test RooCategory
       if(!TMath::AreEqualAbs(rData1.mean(*par),rData2.mean(*par),fTolerance))
       {
@@ -305,7 +305,7 @@ private:
 
     return kTRUE;
   }
-  
+
   Bool_t CompareParameters(const RooArgSet& rPars1, const RooArgSet& rPars2,Bool_t bAllowForError = kFALSE)
   {
     if(rPars1.getSize() != rPars2.getSize())
@@ -324,9 +324,9 @@ private:
       arg1 = dynamic_cast<RooRealVar*>(obj);
       if(!arg1)
          continue;
-      
+
       arg2 = (RooRealVar*)rPars2.find(arg1->GetName());
-      
+
       if(!arg2)
       {
          Warning("CompareParameters","did not find observable with name \"%s\"",arg1->GetName());
@@ -380,7 +380,7 @@ private:
           }
        }
     }
-     
+
      return kTRUE;
   }
 
@@ -388,7 +388,7 @@ private:
   {
     // options
     const Int_t iSamplingPoints = 100;
-    
+
     // get variables
     RooArgSet* pVars1 = rPDF1.getVariables();
     RooArgSet* pVars2 = rPDF2.getVariables();
@@ -415,7 +415,7 @@ private:
     }
 
     Bool_t bResult = kTRUE;
-    
+
     // no deviations > 1%
     if((h_diff->GetBinContent(0) > 0) || (h_diff->GetBinContent(h_diff->GetNbinsX()) > 0))
     {
@@ -436,7 +436,7 @@ private:
 
     if(!bResult)
       return kFALSE;
-    
+
     // check fit result to test data
     *pVars1 = *pVars2;
 
@@ -449,11 +449,11 @@ private:
 
     RooFitResult* r1 = rPDF1.fitTo(rTestData,Save(), RooFit::Minimizer(minimizerType.c_str()));
     //L.M:  for minuit we need ot rest otherwise fit could fail
-    if (minimizerType == "Minuit") { 
+    if (minimizerType == "Minuit") {
        if (gMinuit) { delete gMinuit; gMinuit=0; }
     }
     RooFitResult* r2 = rPDF2.fitTo(rTestData,Save(), RooFit::Minimizer(minimizerType.c_str()));
-    
+
     if(_verb > 0)
     {
       r1->Print("v");
@@ -465,13 +465,13 @@ private:
       Warning("ComparePDF","likelihood end up in different minima: %.3f vs %.3f",r1->minNll(),r2->minNll());
       return kFALSE;
     }
-    
+
     if(!CompareParameters(*pVars1,*pVars2,kTRUE))
     {
       Warning("ComparePDF","variable sets of PDFs differ after fit to test data");
       return kFALSE;
     }
-    
+
     return kTRUE;
   }
 };

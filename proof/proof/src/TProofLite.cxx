@@ -74,7 +74,7 @@ TProofLite::TProofLite(const char *url, const char *conffile, const char *confdi
 
    fUrl.SetUrl(url);
 
-   // Default initializations                                                                                                                                          
+   // Default initializations
    fServSock = 0;
    fCacheLock = 0;
    fQueryLock = 0;
@@ -100,7 +100,7 @@ TProofLite::TProofLite(const char *url, const char *conffile, const char *confdi
 
    // Flag that we are a client
    if (!gSystem->Getenv("ROOTPROOFCLIENT")) gSystem->Setenv("ROOTPROOFCLIENT","");
-   
+
    // Protocol and Host
    fUrl.SetProtocol("proof");
    fUrl.SetHost("__lite__");
@@ -159,7 +159,7 @@ Int_t TProofLite::Init(const char *, const char *conffile,
    fValid = kFALSE;
 
    // Connected to terminal?
-   fTty = (isatty(0) == 0 || isatty(1) == 0) ? kFALSE : kTRUE;   
+   fTty = (isatty(0) == 0 || isatty(1) == 0) ? kFALSE : kTRUE;
 
    if (TestBit(TProof::kIsMaster)) {
       // Fill default conf file and conf dir
@@ -370,7 +370,7 @@ Int_t TProofLite::Init(const char *, const char *conffile,
    // We register the session as a socket so that cleanup is done properly
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfSockets()->Add(this);
-   
+
    AskParallel();
 
    return fActiveSlaves->GetSize();
@@ -1099,7 +1099,7 @@ Long64_t TProofLite::DrawSelect(TDSet *dset, const char *varexp,
    // Fill the internal variables
    fVarExp = varexp;
    fSelection = selection;
-   
+
    return Process(dset, "draw:", opt, nentries, first);
 }
 
@@ -1115,7 +1115,7 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
 
    // For the time being cannot accept other queries if not idle, even if in async
    // mode; needs to set up an event handler to manage that
-   
+
    TString opt(option), optfb, outfile;
    // Enable feedback, if required
    if (opt.Contains("fb=") || opt.Contains("feedback=")) SetFeedback(opt, optfb, 0);
@@ -2012,7 +2012,7 @@ Bool_t TProofLite::RegisterDataSet(const char *uri,
 
    // If old server or not verifying in parallel we are done
    if (!parallelverify) return result;
-   
+
    // If we are here it means that we will verify in parallel
    sopt += "V";
    if (VerifyDataSet(uri, sopt) < 0){
@@ -2301,7 +2301,7 @@ Int_t TProofLite::VerifyDataSet(const char *uri, const char *optStr)
       }
       return rc;
    }
-   
+
    // Done
    return VerifyDataSetParallel(uri, optStr);
 }
@@ -2525,7 +2525,7 @@ void TProofLite::ShowDataDir(const char *dirname)
    // List contents of the data directory 'dirname'
 
    if (!dirname) return;
-   
+
    FileStat_t dirst;
    if (gSystem->GetPathInfo(dirname, dirst) != 0) return;
    if (!R_ISDIR(dirst.fMode)) return;

@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -19,14 +19,14 @@ namespace ROOT {
    namespace Minuit2 {
 
 
-/** MnPlot produces a text-screen graphical output of (x,y) points, e.g. 
+/** MnPlot produces a text-screen graphical output of (x,y) points, e.g.
     from Scan or Contours.
 */
 
 class MnPlot {
 
 public:
-  
+
   MnPlot() : fPageWidth(80), fPageLength(30) {}
 
   MnPlot(unsigned int width, unsigned int length) : fPageWidth(width), fPageLength(length) {

@@ -16,24 +16,24 @@
 #include <string>
 
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Math { 
+   namespace Math {
 
-   class Minimizer; 
-   class DistSampler;   
-   
+   class Minimizer;
+   class DistSampler;
+
 //___________________________________________________________________________
-/** 
+/**
    Factory  class holding static functions to create the interfaces like ROOT::Math::Minimizer
    via the Plugin Manager
-*/ 
-class Factory { 
-      public: 
+*/
+class Factory {
+      public:
 
    /**
       static method to create the corrisponding Minimizer given the string
-      Supported Minimizers types are: 
+      Supported Minimizers types are:
       Minuit (TMinuit), Minuit2, GSLMultiMin, GSLMultiFit, GSLSimAn, Linear, Fumili, Genetic
       If no name is given use default values defined in  MinimizerOptions
     */
@@ -41,14 +41,14 @@ class Factory {
 
    /**
       static method to create the distribution sampler class given a string specifying the type
-      Supported sampler types are: 
+      Supported sampler types are:
       Unuran, Foam
       If no name is given use default values defined in  DistSamplerOptions
     */
    static ROOT::Math::DistSampler * CreateDistSampler(const std::string & samplerType ="");
-   
 
-}; 
+
+};
 
    } // end namespace Fit
 

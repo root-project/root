@@ -117,7 +117,7 @@ void TGTabElement::DrawBorder()
    if (fShowClose && fClosePic && fClosePicD) {
       if (fEnabled && fActive)
          fClosePic->Draw(fId, fNormGC, fTWidth+12, fHeight/2-7);
-      else 
+      else
          fClosePicD->Draw(fId, fNormGC, fTWidth+12, fHeight/2-7);
    }
 }
@@ -339,7 +339,7 @@ TGCompositeFrame *TGTab::AddTab(TGString *text)
 
    TGTabElement *te = new TGTabElement(this, text, 50, 20, fNormGC, fFontStruct);
    AddFrame(te, 0);
-   
+
    TGCompositeFrame* cf = new TGCompositeFrame(this, fWidth, fHeight-21);
    AddFrame(cf, 0);
    cf->SetEditDisabled(kEditDisableResize);

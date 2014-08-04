@@ -1270,7 +1270,7 @@ void TGLColor::SetColor(Color_t color_index, Char_t transparency)
    // If color_index is not valid, color is set to magenta.
 
    UChar_t alpha = (255*(100 - transparency))/100;
-   
+
    TColor* c = gROOT->GetColor(color_index);
    if (c)
    {
@@ -1779,7 +1779,7 @@ Float_t TGLUtil::GetPointLineScalingFactor()
    // By default this is set to the same value as ScreenScalingFactor to keep
    // the same appearance. To override use rootrc entry, e.g.:
    // OpenGL.PointLineScalingFactor: 1.0
-   
+
    return fgPointLineScalingFactor;
 }
 
@@ -2226,7 +2226,7 @@ void TGLUtil::EndAttLine(Int_t pick_radius, Bool_t selection)
    if (selection && TGLUtil::LineWidth() > pick_radius)
      EndExtendPickRegion();
 
-   glPopAttrib(); 
+   glPopAttrib();
 }
 
 /******************************************************************************/
@@ -4105,7 +4105,7 @@ void TGLLevelPalette::EnableTexture(Int_t mode)const
    glEnable(GL_TEXTURE_1D);
 
    glGenTextures(1, &fTexture);
-   
+
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
    glBindTexture(GL_TEXTURE_1D, fTexture);
    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);

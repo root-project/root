@@ -50,7 +50,7 @@
 //
 // In 1990 Harry Markowitz was awarded the Nobel prize for economics : " his work provided new tools
 // for weighing the risks and rewards of different investments and for valuing corporate stocks and bonds" .
-// In plain English, he developed the tools to balance greed and fear, we want the maximum return 
+// In plain English, he developed the tools to balance greed and fear, we want the maximum return
 // with the minimum amount of risk. Our stock portfolio should be at the "Efficient Frontier",
 // see http://www.riskglossary.com/articles/efficient_frontier.htm .
 // To quantify better the risk we are willing to take, we define a utility function U(x) . It describes
@@ -75,11 +75,11 @@
 //
 // The expected value of the utility function is : E(u(x)) = Int (1-exp(-k*x) N(x) dx
 //                                                         = 1-exp(-k (r^T x - 0.5 k x^T Covar x) )
-// 
+//
 // Its value is maximized by maximizing  r^T x -0.5 k x^T Covar x
 // under the condition sum (x_i) = 1, meaning we want all our money invested and
 // x_i >= 0 , we can not "short" a stock
-//  
+//
 // For 10 stocks we got the historical daily data for Sep-2000 to Jun-2004:
 //
 // GE   : General Electric Co
@@ -96,7 +96,7 @@
 // We calculate the optimal portfolio for 2.0 and 10.0 .
 //
 // Food for thought :
-// - We assumed that the stock returns have a Normal distribution . Check this assumption by 
+// - We assumed that the stock returns have a Normal distribution . Check this assumption by
 //   histogramming the stock returns !
 // - We used for the expected return in the objective function, the flat average over a time
 //   period . Investment firms will put significant resources in improving the return predicton .
@@ -105,7 +105,7 @@
 //    +  If you are going to buy, you will drive the price up (so-called "slippage") .
 //       This can be taken into account by adding terms to the objective
 //       (Google for "slippage optimization")
-//    +  FTC regulations might have to be added to the inequality constraints 
+//    +  FTC regulations might have to be added to the inequality constraints
 // - Investment firms do not want to be exposed to the "market" as defined by a broad
 //   index like the S&P and "hedge" this exposure away . A perfect hedge this can be added
 //    as an equality constrain, otherwise add an inequality constrain .
@@ -127,7 +127,7 @@ public:
   Int_t fCloseAdj; // 100*close_price adjusted for splits and dividend
 
   TStockDaily() {
-     fDate = fVol = fOpen = fHigh = fLow = fClose = fCloseAdj = 0; 
+     fDate = fVol = fOpen = fHigh = fLow = fClose = fCloseAdj = 0;
   }
   virtual ~TStockDaily() {}
 
@@ -148,13 +148,13 @@ TArrayF &StockReturn(TFile *f,const TString &name,Int_t sDay,Int_t eDay)
   tDaily->SetBranchAddress("daily",&data);
   TBranch *b_closeAdj = tDaily->GetBranch("fCloseAdj");
   TBranch *b_date     = tDaily->GetBranch("fDate");
-   
+
   //read only the "adjusted close" branch for all entries
   const Int_t nrEntries = (Int_t)tDaily->GetEntries();
   TArrayF closeAdj(nrEntries);
   for (Int_t i = 0; i < nrEntries; i++) {
-    b_date->GetEntry(i); 
-    b_closeAdj->GetEntry(i); 
+    b_date->GetEntry(i);
+    b_closeAdj->GetEntry(i);
     if (data->fDate >= sDay && data->fDate <= eDay)
 #ifdef __CINT__
       closeAdj.AddAt(data->fCloseAdj/100. , i );
@@ -181,8 +181,8 @@ TVectorD OptimalInvest(Double_t riskFactor,TVectorD r,TMatrixDSym Covar)
 {
 // what the quadratic programming package will do:
 //
-//  minimize    c^T x + ( 1/2 ) x^T Q x       
-//  subject to                A x  = b  
+//  minimize    c^T x + ( 1/2 ) x^T Q x
+//  subject to                A x  = b
 //                    clo <=  C x <= cup
 //                    xlo <=    x <= xup
 // what we want :
@@ -211,7 +211,7 @@ TVectorD OptimalInvest(Double_t riskFactor,TVectorD r,TMatrixDSym Covar)
   //
   // - although not applicable in the current situatio since nrInEqual = 0, one
   //   has to specify not only clo and cup but also an index vector iclo and icup,
-  //   whose values are either 0 or 1 . If iclo[j] = 1, the lower boundary condition 
+  //   whose values are either 0 or 1 . If iclo[j] = 1, the lower boundary condition
   //   is active on x[j], etc. ...
 
   TMatrixD C   (nrInEqual,nrVar);

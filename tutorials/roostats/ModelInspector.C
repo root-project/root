@@ -18,7 +18,7 @@
 // the min and max range of the sliders are used to define the upper & lower variation
 // the pointer position of the slider is the central blue curve.
 //
-// Click the FIT button to 
+// Click the FIT button to
 //
 // To Do:
 //  - check boxes to specify which nuisance parameters used in making variation
@@ -28,8 +28,8 @@
 //  - a button to make the log likelihood plots
 //  - a dialog to open the desired file
 //  - ability to see teh signal and background contributions?
-//   
-   
+//
+
 #include "TGButton.h"
 #include "TRootEmbeddedCanvas.h"
 #include "TGLayout.h"
@@ -75,7 +75,7 @@ private:
    TGLayoutHints       *fLcan;
    TF1                 *fFitFcn;
   RooPlot* fPlot;
-  RooWorkspace* fWS;  
+  RooWorkspace* fWS;
   TFile* fFile;
   ModelConfig* fMC;
   RooAbsData* fData;
@@ -88,12 +88,12 @@ private:
   map<TGTripleHSlider*,TGLabel*> fLabelMap;
 
   TGButton* fFitButton;
-  TGTextButton *fExitButton; 
+  TGTextButton *fExitButton;
 
    // BB: a TGCanvas and a vertical frame are needed for using scrollbars
    TGCanvas *fCan;
    TGVerticalFrame *fVFrame;
-  
+
    TGHorizontalFrame   *fHframe0, *fHframe1, *fHframe2;
    TGLayoutHints       *fBly, *fBfly1, *fBfly2, *fBfly3;
    TGTripleHSlider     *fHslider1;
@@ -117,10 +117,10 @@ public:
 };
 
 //______________________________________________________________________________
-ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsData* data) 
+ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsData* data)
   : TGMainFrame(gClient->GetRoot(), 100, 100)
 {
-  
+
   RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
   fWS = w;
   fMC = mc;
@@ -128,7 +128,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsDat
   RooSimultaneous* simPdf = NULL;
   Int_t numCats = 1;
   if(strcmp(fMC->GetPdf()->ClassName(),"RooSimultaneous")==0){
-    cout <<"Is a simultaneous PDF"<< endl;     
+    cout <<"Is a simultaneous PDF"<< endl;
     simPdf = (RooSimultaneous*)(fMC->GetPdf());
     RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
     cout <<" with " << channelCat->numTypes() << " categories"<<endl;
@@ -137,7 +137,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsDat
     cout <<"Is not a simultaneous PDF"<<endl;
   }
   fFitRes=0;
-  
+
 
   //char buf[32];
    SetCleanup(kDeepCleanup);
@@ -210,8 +210,8 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsDat
    parameters.add(*fMC->GetNuisanceParameters());
    TIterator* it = parameters.createIterator();
    RooRealVar* param=NULL;
-   
-   // BB: This is the part needed in order to have scrollbars 
+
+   // BB: This is the part needed in order to have scrollbars
    fCan = new TGCanvas(this, 100, 100, kFixedSize);
    AddFrame(fCan, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
    fVFrame = new TGVerticalFrame(fCan->GetViewPort(), 10, 10);
@@ -228,12 +228,12 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsDat
                                                      kHorizontalFrame,
                                                      GetDefaultFrameBackground(),
                                                      kFALSE, kFALSE, kFALSE, kFALSE);
-     hsliderk->Connect("PointerPositionChanged()", "ModelInspectorGUI", 
+     hsliderk->Connect("PointerPositionChanged()", "ModelInspectorGUI",
                        this, "DoSlider()");
-     hsliderk->Connect("PositionChanged()", "ModelInspectorGUI", 
+     hsliderk->Connect("PositionChanged()", "ModelInspectorGUI",
                        this, "DoSlider()");
      hsliderk->SetRange(param->getMin(),param->getMax());
-     
+
      hframek->Resize(200, 25);
      fSliderList.Add(hsliderk);
      fFrameList.Add(hframek);
@@ -345,7 +345,7 @@ void ModelInspectorGUI::DoSlider()
     // if not SimPdf
     /////////////////////////////////////////////
 
-    // pre loop      
+    // pre loop
     map<TGTripleHSlider*,const char*>::iterator it;;
     delete fPlot;
     fPlot = ((RooRealVar*)fMC->GetObservables()->first())->frame();
@@ -362,7 +362,7 @@ void ModelInspectorGUI::DoSlider()
     }
     normCount = fMC->GetPdf()->expectedEvents(*fMC->GetObservables());
     fMC->GetPdf()->plotOn(fPlot,LineColor(kRed),Normalization(normCount,RooAbsReal::NumEvent));
-    
+
     // low loop
     it = fSliderMap.begin();
     for(; it!=fSliderMap.end(); ++it){
@@ -371,7 +371,7 @@ void ModelInspectorGUI::DoSlider()
       }
     normCount = fMC->GetPdf()->expectedEvents(*fMC->GetObservables());
     fMC->GetPdf()->plotOn(fPlot,LineColor(kGreen),Normalization(normCount,RooAbsReal::NumEvent));
-    
+
     // central oop
     it = fSliderMap.begin();
     for(; it!=fSliderMap.end(); ++it){
@@ -381,7 +381,7 @@ void ModelInspectorGUI::DoSlider()
     normCount = fMC->GetPdf()->expectedEvents(*fMC->GetObservables());
     fMC->GetPdf()->plotOn(fPlot,LineColor(kBlue),Normalization(normCount,RooAbsReal::NumEvent));
     fPlot->Draw();
-    
+
     fCanvas->GetCanvas()->Modified();
     fCanvas->GetCanvas()->Update();
     ////////////////////////////////////////////////////////////////////////////
@@ -460,7 +460,7 @@ void ModelInspectorGUI::DoSlider()
          RooMsgService::instance().setGlobalKillBelow(msglevel);
       }
       fPlot->Draw();
-    }    
+    }
     fCanvas->GetCanvas()->Modified();
     fCanvas->GetCanvas()->Update();
     ///////////////////////////////////////////
@@ -507,10 +507,10 @@ void ModelInspector(const char* infile = "",
 #endif
 
   /////////////////////////////////////////////////////////////
-  // First part is just to access a user-defined file 
+  // First part is just to access a user-defined file
   // or create the standard example file if it doesn't exist
   ////////////////////////////////////////////////////////////
- 
+
    const char* filename = "";
    if (!strcmp(infile,"")) {
       filename = "results/example_combined_GaussExample_model.root";
@@ -529,22 +529,22 @@ void ModelInspector(const char* infile = "",
          cout <<"Done creating example input"<<endl;
          cout <<"---------------------\n\n"<<endl;
       }
-      
+
    }
    else
       filename = infile;
-   
+
    // Try to open the file
    TFile *file = TFile::Open(filename);
-   
+
    // if input file was specified byt not found, quit
    if(!file ){
       cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
    }
-   
 
-  
+
+
   /////////////////////////////////////////////////////////////
   // Tutorial starts here
   ////////////////////////////////////////////////////////////

@@ -3403,7 +3403,7 @@ Double_t TUnfold::GetRhoIFromMatrix(TH1 *rhoi,const TMatrixDSparse *eOrig,
          //std::cout<<i<<" "<<localBinToHist[i]<<" "<<rho<<"\n";
          rhoi->SetBinContent(localBinToHist[i],rho);
       }
-      
+
       DeleteMatrix(&einvSparse);
       delete [] localBinToHist;
    }

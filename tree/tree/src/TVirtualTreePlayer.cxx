@@ -12,10 +12,10 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TVirtualTreePlayer
-// 
+//
 // Abstract base class defining the interface for the plugins that
 // implement Draw, Scan, Process, MakeProxy, etc. for a TTree object.
-// See the individual documentations in TTree. 
+// See the individual documentations in TTree.
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

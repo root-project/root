@@ -62,7 +62,7 @@ protected:
    Bool_t         fCleanElist;     //  true if original Tree elist must be saved
    Bool_t         fObjEval;        //  true if fVar1 returns an object (or pointer to).
    Long64_t       fCurrentSubEntry; // Current subentry when fSelectMultiple is true. Used to fill TEntryListArray
-   
+
 protected:
    virtual void      ClearFormula();
    virtual Bool_t    CompileVariables(const char *varexp="", const char *selection="");

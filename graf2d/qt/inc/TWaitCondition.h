@@ -18,7 +18,7 @@
 #ifdef R__QTGUITHREAD
 #include "TWin32Semaphore.h"
 
-class TWaitCondition : public TWin32Semaphore 
+class TWaitCondition : public TWin32Semaphore
 {
    public:
      TWaitCondition() : TWin32Semaphore() {}

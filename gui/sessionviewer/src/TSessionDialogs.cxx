@@ -1255,7 +1255,7 @@ void TUploadDataSetDlg::UploadDataSet()
    fCloseDlgButton->SetState(kButtonDisabled);
 
    if (strlen(destination) < 2) destination = 0;
-   
+
    // GG 17/8/2012 -- BEGIN
    // NB: UploadDataSet is obsolete; these changes are the minimal ones to make
    // the build after the removal of an obsolete structure in TProof.h;

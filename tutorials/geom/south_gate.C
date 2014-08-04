@@ -1,13 +1,13 @@
 #include "TGeoManager.h"
-   
-void south_gate() 
-{ 
+
+void south_gate()
+{
   // Drawing a famous Korean gate, the South gate, called Namdeamoon in Korean, using ROOT geometry class.
   // Name: south_gate.C
   // Author: Lan Hee Yang(yangd5d5@hotmail.com), Dept. of Physics, Univ. of Seoul
   // Reviewed by Sunman Kim (sunman98@hanmail.net)
   // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
-  // 
+  //
   // How to run: .x south_gate.C in ROOT terminal, then use OpenGL
   //
   // This macro was created for the evaluation of Computational Physics course in 2006.
@@ -31,7 +31,7 @@ void south_gate()
   geom->SetTopVolume(top);
   geom->SetTopVisible(0);
   // If you want to see the boundary, please input the number, 1 instead of 0.
-  // Like this, geom->SetTopVisible(1); 
+  // Like this, geom->SetTopVisible(1);
 
 
 //base
@@ -88,7 +88,7 @@ while (i<14){
       mBlock->SetLineColor(20);
       top->AddNodeOverlap(mBlock,1,new TGeoTranslation(105,5,5+(20*f)));
 
-   } 
+   }
 }
       sprintf(nBlocks,"f%d_bg%d",8,N++);
       mBlock = geom->MakeBox(nBlocks, Iron, 40,149,9);
@@ -120,9 +120,9 @@ while (i<14){
 
 
 i=1;f++;
-   
+
 }
-   
+
 
 
 
@@ -199,11 +199,11 @@ f++;
 int k;
 k=0; i=0;
 
-while (i<5){      
+while (i<5){
 while(k<10){
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeTubs(nBlocks,Iron, 70,89,14, (i*36)+0.5, (i+1)*36-0.5);
-   mBlock->SetLineColor(20);   
+   mBlock->SetLineColor(20);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(0,-130+(k*30),70, new TGeoRotation("r1",0,90,0)));
    k++;
 }
@@ -212,20 +212,20 @@ while(k<10){
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 9,149,17);
-   mBlock->SetLineColor(20);   
+   mBlock->SetLineColor(20);
    top->AddNodeOverlap(mBlock,1,new TGeoTranslation(80,5,14));
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 9,149,18);
-   mBlock->SetLineColor(20);   
+   mBlock->SetLineColor(20);
    top->AddNodeOverlap(mBlock,1,new TGeoTranslation(80,5,51));
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 9,149,17);
-   mBlock->SetLineColor(20);   
+   mBlock->SetLineColor(20);
    top->AddNodeOverlap(mBlock,1,new TGeoTranslation(-80,5,14));
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 9,149,18);
-   mBlock->SetLineColor(20);   
+   mBlock->SetLineColor(20);
    top->AddNodeOverlap(mBlock,1,new TGeoTranslation(-80,5,51));
 
 
@@ -236,11 +236,11 @@ while(k<10){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
 while(k<52){
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeTubs(nBlocks,Iron, 1,3,7, 0, 180);
-   mBlock->SetLineColor(12);   
+   mBlock->SetLineColor(12);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-382+(k*15),137,255, new TGeoRotation("r1",90,90,0)));
    k++;
 }
@@ -253,11 +253,11 @@ while(k<52){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
 while(k<52){
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeTubs(nBlocks,Iron, 2.5,3,7, 0, 180);
-   mBlock->SetLineColor(12);   
+   mBlock->SetLineColor(12);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-382+(k*15),-137,255, new TGeoRotation("r1",90,90,0)));
    k++;
 }
@@ -268,11 +268,11 @@ while(k<52){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
 while(k<20){
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeTubs(nBlocks,Iron, 2.5,3,6, 0, 180);
-   mBlock->SetLineColor(12);   
+   mBlock->SetLineColor(12);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-382,-123+(k*13),271, new TGeoRotation("r1",0,90,0)));
    k++;
 }
@@ -284,11 +284,11 @@ while(k<20){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
 while(k<20){
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeTubs(nBlocks,Iron, 2.5,3,7, 0, 180);
-   mBlock->SetLineColor(12);   
+   mBlock->SetLineColor(12);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(382,-123+(k*13),271, new TGeoRotation("r1",0,90,0)));
    k++;
 }
@@ -304,18 +304,18 @@ while(k<20){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
 while(k<7){
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeTubs(nBlocks,Iron, 0,5,56, 0, 360);
-   mBlock->SetLineColor(50);   
-   
+   mBlock->SetLineColor(50);
+
    if (k<=2){
 
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*100),80,260, new TGeoRotation("r1",0,0,0)));
    }else if (k>=4){
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*100),80,260, new TGeoRotation("r1",0,0,0)));
-   }   
+   }
 
 
 k++;
@@ -327,18 +327,18 @@ k++;
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
 while(k<7){
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeTubs(nBlocks,Iron, 0,5,56, 0, 360);
-   mBlock->SetLineColor(50);   
-   
+   mBlock->SetLineColor(50);
+
    if (k<=2){
 
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*100),-80,260, new TGeoRotation("r1",0,0,0)));
    }else if (k>=4){
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*100),-80,260, new TGeoRotation("r1",0,0,0)));
-   }   
+   }
 
 
 k++;
@@ -351,14 +351,14 @@ k++;
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 298,78,8);
-   mBlock->SetLineColor(42);   
+   mBlock->SetLineColor(42);
    top->AddNodeOverlap(mBlock,1,new TGeoTranslation(0,0,300));
 
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 298,78,5);
-   mBlock->SetLineColor(42);   
+   mBlock->SetLineColor(42);
    top->AddNodeOverlap(mBlock,1,new TGeoTranslation(0,0,320));
 
 
@@ -366,11 +366,11 @@ k++;
 //1
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
 while(k<6){
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron,18,10,8);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    {
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-250+(k*100),70,300, new TGeoRotation("r1",0,0,0)));
 
@@ -386,11 +386,11 @@ while(k<6){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
 while(k<6){
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron,18,10,8);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    {
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-250+(k*100),-70,300, new TGeoRotation("r1",0,0,0)));
 
@@ -405,14 +405,14 @@ while(k<6){
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 18,10,8);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-290,0,300, new TGeoRotation("r1",90,0,0)));
 
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 18,10,8);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(290,0,300, new TGeoRotation("r1",90,0,0)));
 
 
@@ -423,11 +423,11 @@ while(k<6){
 //2
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
 while(k<6){
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron,18,10,5);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    {
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-250+(k*100),70,320, new TGeoRotation("r1",0,0,0)));
 
@@ -443,11 +443,11 @@ while(k<6){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<6){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron,18,10,5);
-      mBlock->SetLineColor(8);   
+      mBlock->SetLineColor(8);
       {
          top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-250+(k*100),-70,320, new TGeoRotation("r1",0,0,0)));
 
@@ -461,14 +461,14 @@ while (i<5){
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 18,10,5);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-290,0,320, new TGeoRotation("r1",90,0,0)));
 
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 18,10,5);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(290,0,320, new TGeoRotation("r1",90,0,0)));
 
 
@@ -486,11 +486,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<19){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*33.3),78,345, new TGeoRotation("r1",0,0,0)));
       k++;
    }
@@ -502,11 +502,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<19){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*33.3),-78,345, new TGeoRotation("r1",0,0,0)));
       k++;
    }
@@ -517,11 +517,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<5){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300,-78+(k*33),345, new TGeoRotation("r1",0,0,0)));
       k++;
    }
@@ -534,11 +534,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<5){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(300,-78+(k*33),345, new TGeoRotation("r1",0,0,0)));
       k++;
    }
@@ -551,11 +551,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<19){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*33.3),90,342, new TGeoRotation("r1",0,-45,0)));
       k++;
    }
@@ -567,11 +567,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<19){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*33.3),-90,342, new TGeoRotation("r1",0,45,0)));
       k++;
    }
@@ -582,11 +582,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<5){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-318,-78+(k*33),345, new TGeoRotation("r1",-90,45,0)));
       k++;
    }
@@ -599,11 +599,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<5){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(318,-78+(k*33),345, new TGeoRotation("r1",90,45,0)));
       k++;
    }
@@ -611,13 +611,13 @@ while (i<5){
 }
 
 
-//   /// || / / / / / / / || / / / / / / / / || / / / / / / / / / / / 
+//   /// || / / / / / / / || / / / / / / / / || / / / / / / / / / / /
 
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 330,10,2);
-   mBlock->SetLineColor(42);   
+   mBlock->SetLineColor(42);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(0,-107,362, new TGeoRotation("r1",0,-45,0)));
 
 
@@ -625,21 +625,21 @@ while (i<5){
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 330,10,2);
-   mBlock->SetLineColor(42);   
+   mBlock->SetLineColor(42);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(0,107,362, new TGeoRotation("r1",0,45,0)));
 
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 110,10,2);
-   mBlock->SetLineColor(42);   
+   mBlock->SetLineColor(42);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(330,0,362, new TGeoRotation("r1",90,-45,0)));
 
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 110,10,2);
-   mBlock->SetLineColor(42);   
+   mBlock->SetLineColor(42);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-330,0,362, new TGeoRotation("r1",90,45,0)));
 
 
@@ -652,11 +652,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<6){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron,18,10,2);
-      mBlock->SetLineColor(8);   
+      mBlock->SetLineColor(8);
       {
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-270+(k*100),-108,362, new TGeoRotation("r1",0,-45,0)));
 
@@ -671,11 +671,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<6){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron,18,10,2);
-      mBlock->SetLineColor(8);   
+      mBlock->SetLineColor(8);
       {
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-270+(k*100),108,362, new TGeoRotation("r1",0,45,0)));
 
@@ -688,14 +688,14 @@ while (i<5){
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 18,10,2);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(331,0,362, new TGeoRotation("r1",90,-45,0)));
 
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 18,10,2);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-331,0,362, new TGeoRotation("r1",90,45,0)));
 
 
@@ -704,23 +704,23 @@ while (i<5){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// 2nd floor 
+// 2nd floor
 
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<7){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 0,5,30, 0, 360);
-      mBlock->SetLineColor(50);   
-      
+      mBlock->SetLineColor(50);
+
       if (k<=2){
 
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*100),80,465, new TGeoRotation("r1",0,0,0)));
       }else if (k>=4){
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*100),80,465, new TGeoRotation("r1",0,0,0)));
-      }   
+      }
 
 
    k++;
@@ -732,18 +732,18 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<7){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 0,5,30, 0, 360);
-      mBlock->SetLineColor(50);   
-      
+      mBlock->SetLineColor(50);
+
       if (k<=2){
 
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*100),-80,465, new TGeoRotation("r1",0,0,0)));
       }else if (k>=4){
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*100),-80,465, new TGeoRotation("r1",0,0,0)));
-      }   
+      }
 
 
    k++;
@@ -759,20 +759,20 @@ while (i<5){
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 302,80,8);
-   mBlock->SetLineColor(42);   
+   mBlock->SetLineColor(42);
    top->AddNodeOverlap(mBlock,1,new TGeoTranslation(0,0,480));
 
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 302,80,5);
-   mBlock->SetLineColor(42);   
+   mBlock->SetLineColor(42);
    top->AddNodeOverlap(mBlock,1,new TGeoTranslation(0,0,500));
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 305,80,2.5);
-   mBlock->SetLineColor(50);   
+   mBlock->SetLineColor(50);
    top->AddNodeOverlap(mBlock,1,new TGeoTranslation(0,0,465));
 
 
@@ -786,11 +786,11 @@ while (i<5){
 //1
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<6){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron,18,10,8);
-      mBlock->SetLineColor(8);   
+      mBlock->SetLineColor(8);
       {
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-250+(k*100),71,480, new TGeoRotation("r1",0,0,0)));
 
@@ -806,11 +806,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<6){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron,18,10,8);
-      mBlock->SetLineColor(8);   
+      mBlock->SetLineColor(8);
       {
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-250+(k*100),-71,480, new TGeoRotation("r1",0,0,0)));
 
@@ -825,14 +825,14 @@ while (i<5){
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 18,10,8);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-293,0,480, new TGeoRotation("r1",90,0,0)));
 
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 18,10,8);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(293,0,480, new TGeoRotation("r1",90,0,0)));
 
 
@@ -843,11 +843,11 @@ while (i<5){
 //2
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<6){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron,18,10,5);
-      mBlock->SetLineColor(8);   
+      mBlock->SetLineColor(8);
       {
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-250+(k*100),71,500, new TGeoRotation("r1",0,0,0)));
 
@@ -863,11 +863,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<6){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron,18,10,5);
-      mBlock->SetLineColor(8);   
+      mBlock->SetLineColor(8);
       {
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-250+(k*100),-71,500, new TGeoRotation("r1",0,0,0)));
 
@@ -881,14 +881,14 @@ while (i<5){
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 18,10,5);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-293,0,500, new TGeoRotation("r1",90,0,0)));
 
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 18,10,5);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(293,0,500, new TGeoRotation("r1",90,0,0)));
 
 
@@ -906,11 +906,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<25){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 1.5,5,15);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*25),78,450, new TGeoRotation("r1",0,0,0)));
       k++;
    }
@@ -922,11 +922,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<25){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 1.5,5,15);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*25),-78,450, new TGeoRotation("r1",0,0,0)));
       k++;
    }
@@ -937,11 +937,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<7){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,1.5,15);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300,-78+(k*25),450, new TGeoRotation("r1",0,0,0)));
       k++;
    }
@@ -954,11 +954,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while (k<7){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,1.5,15);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(300,-78+(k*25),450, new TGeoRotation("r1",0,0,0)));
       k++;
    }
@@ -973,11 +973,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
 while(k<19){
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-   mBlock->SetLineColor(50);   
+   mBlock->SetLineColor(50);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*33.3),78,525, new TGeoRotation("r1",0,0,0)));
    k++;
 }
@@ -989,11 +989,11 @@ while(k<19){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<19){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*33.3),-78,525, new TGeoRotation("r1",0,0,0)));
       k++;
    }
@@ -1004,11 +1004,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<5){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300,-78+(k*33),525, new TGeoRotation("r1",0,0,0)));
       k++;
    }
@@ -1021,11 +1021,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<5){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(300,-78+(k*33),525, new TGeoRotation("r1",0,0,0)));
       k++;
    }
@@ -1041,11 +1041,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<19){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*33.3),90,522, new TGeoRotation("r1",0,-45,0)));
       k++;
    }
@@ -1057,11 +1057,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<19){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300+(k*33.3),-90,522, new TGeoRotation("r1",0,45,0)));
       k++;
    }
@@ -1071,11 +1071,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<5){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-318,-78+(k*33.3),525, new TGeoRotation("r1",-90,45,0)));
       k++;
    }
@@ -1088,11 +1088,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<5){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(318,-78+(k*33.3),525, new TGeoRotation("r1",90,45,0)));
       k++;
    }
@@ -1105,11 +1105,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<50){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-320+(k*13),115,562, new TGeoRotation("r1",0,-115,0)));
       k++;
    }
@@ -1121,11 +1121,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<50){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-320+(k*13),-115,562, new TGeoRotation("r1",0,115,0)));
       k++;
    }
@@ -1136,11 +1136,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<17){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-340,-98+(k*13),565, new TGeoRotation("r1",-90,115,0)));
       k++;
    }
@@ -1153,11 +1153,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<17){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(340,-98+(k*13),565, new TGeoRotation("r1",90,115,0)));
       k++;
    }
@@ -1171,11 +1171,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<50){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-320+(k*13),115,375, new TGeoRotation("r1",0,-115,0)));
       k++;
    }
@@ -1187,11 +1187,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<50){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-320+(k*13),-115,375, new TGeoRotation("r1",0,115,0)));
       k++;
    }
@@ -1202,11 +1202,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<17){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-340,-98+(k*13),375, new TGeoRotation("r1",-90,115,0)));
       k++;
    }
@@ -1219,11 +1219,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<17){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(50);   
+      mBlock->SetLineColor(50);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(340,-98+(k*13),375, new TGeoRotation("r1",90,115,0)));
       k++;
    }
@@ -1235,11 +1235,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<50){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(44);   
+      mBlock->SetLineColor(44);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-320+(k*13),115,568, new TGeoRotation("r1",0,-115,0)));
       k++;
    }
@@ -1251,11 +1251,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<50){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(44);   
+      mBlock->SetLineColor(44);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-320+(k*13),-115,568, new TGeoRotation("r1",0,115,0)));
       k++;
    }
@@ -1265,11 +1265,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<17){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(44);   
+      mBlock->SetLineColor(44);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-340,-98+(k*13),568, new TGeoRotation("r1",-90,115,0)));
       k++;
    }
@@ -1282,11 +1282,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<17){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(44);   
+      mBlock->SetLineColor(44);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(340,-98+(k*13),568, new TGeoRotation("r1",90,115,0)));
       k++;
    }
@@ -1302,11 +1302,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<50){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(44);   
+      mBlock->SetLineColor(44);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-320+(k*13),115,385, new TGeoRotation("r1",0,-115,0)));
       k++;
    }
@@ -1318,11 +1318,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<50){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(44);   
+      mBlock->SetLineColor(44);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-320+(k*13),-115,385, new TGeoRotation("r1",0,115,0)));
       k++;
    }
@@ -1332,11 +1332,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<17){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(44);   
+      mBlock->SetLineColor(44);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-340,-98+(k*13),385, new TGeoRotation("r1",-90,115,0)));
       k++;
    }
@@ -1349,11 +1349,11 @@ while (i<5){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
    while(k<17){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2.5,2.5,20);
-      mBlock->SetLineColor(44);   
+      mBlock->SetLineColor(44);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(340,-98+(k*13),385, new TGeoRotation("r1",90,115,0)));
       k++;
    }
@@ -1365,27 +1365,27 @@ while (i<5){
    //=========
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron, 270,15,20);
-   mBlock->SetLineColor(10);   
+   mBlock->SetLineColor(10);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(0,0,620, new TGeoRotation("r1",0,0,0)));
    //===============//2
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron, 75,15,20);
-   mBlock->SetLineColor(10);   
+   mBlock->SetLineColor(10);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(300,-50,600, new TGeoRotation("r1",0,20,-40)));
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron, 75,15,20);
-   mBlock->SetLineColor(10);   
+   mBlock->SetLineColor(10);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(300,50,600, new TGeoRotation("r1",0,-20,40)));
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron, 75,15,20);
-   mBlock->SetLineColor(10);   
+   mBlock->SetLineColor(10);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300,50,600, new TGeoRotation("r1",0,-20,-40)));
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron, 75,15,20);
-   mBlock->SetLineColor(10);   
+   mBlock->SetLineColor(10);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300,-50,600, new TGeoRotation("r1",0,20,40)));
 
 
@@ -1394,22 +1394,22 @@ while (i<5){
    //===============//1
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron, 50,15,20);
-   mBlock->SetLineColor(10);   
+   mBlock->SetLineColor(10);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(300,-80,413, new TGeoRotation("r1",0,20,-40)));
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron, 50,15,20);
-   mBlock->SetLineColor(10);   
+   mBlock->SetLineColor(10);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(300,80,413, new TGeoRotation("r1",0,-20,40)));
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron, 50,15,20);
-   mBlock->SetLineColor(10);   
+   mBlock->SetLineColor(10);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300,80,413, new TGeoRotation("r1",0,-20,-40)));
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron, 50,15,20);
-   mBlock->SetLineColor(10);   
+   mBlock->SetLineColor(10);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-300,-80,413, new TGeoRotation("r1",0,20,40)));
 
 
@@ -1420,26 +1420,26 @@ while (i<5){
 //front
 
 k=0; i=0;
-while (i<7){   
+while (i<7){
    while(k<44){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-280+(k*13),70+(i*12.5),425-(i*5), new TGeoRotation("r1",0,60,0)));
       k++;
    }
       i++; k=0;
 }
-   
+
 
 
 k=0; i=0;
 
-while (i<7){   
+while (i<7){
    while(k<44){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-280+(k*13),-70-(i*12.5),425-(i*5), new TGeoRotation("r1",0,120,0)));
       k++;
    }
@@ -1452,27 +1452,27 @@ while (i<7){
 
 
 k=0; i=0;
-while (i<11){   
+while (i<11){
    while(k<43){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
 
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-270+(k*13),15+(i*12.5),620-(i*5), new TGeoRotation("r1",0,60,0)));
       k++;
    }
    i++; k=0;
 }
-   
+
 
 
 k=0; i=0;
 
-while (i<11){   
+while (i<11){
    while(k<43){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-270+(k*13),-15-(i*12.5),620-(i*5), new TGeoRotation("r1",0,120,0)));
       k++;
    }
@@ -1485,11 +1485,11 @@ while (i<11){
 //////left
 k=0; i=0;
 
-while (i<6){   
+while (i<6){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-335,81.25+(i*12.5),592.5-(i*2), new TGeoRotation("r1",0,60,0)));
       k++;
    }
@@ -1498,11 +1498,11 @@ while (i<6){
 
 k=0; i=0;
 
-while (i<7){   
+while (i<7){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-322,69.75+(i*12.5),595-(i*2), new TGeoRotation("r1",0,60,0)));
       k++;
    }
@@ -1512,11 +1512,11 @@ while (i<7){
 
 k=0; i=0;
 
-while (i<8){   
+while (i<8){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-309,56.25+(i*12.5),605-(i*4), new TGeoRotation("r1",0,60,0)));
       k++;
    }
@@ -1525,11 +1525,11 @@ while (i<8){
 
 k=0; i=0;
 
-while (i<9){   
+while (i<9){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-296,50+(i*12.5),610-(i*4), new TGeoRotation("r1",0,60,0)));
       k++;
    }
@@ -1539,11 +1539,11 @@ while (i<9){
 
 k=0; i=0;
 
-while (i<10){   
+while (i<10){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-283,37.5+(i*12.5),615-(i*4), new TGeoRotation("r1",0,60,0)));
       k++;
    }
@@ -1554,11 +1554,11 @@ while (i<10){
 
 k=0; i=0;
 
-while (i<6){   
+while (i<6){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-335,-81.25-(i*12.5),592.5-(i*2), new TGeoRotation("r1",0,120,0)));
       k++;
    }
@@ -1567,11 +1567,11 @@ while (i<6){
 
 k=0; i=0;
 
-while (i<7){   
+while (i<7){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-322,-69.75-(i*12.5),595-(i*2), new TGeoRotation("r1",0,120,0)));
       k++;
    }
@@ -1581,11 +1581,11 @@ while (i<7){
 
 k=0; i=0;
 
-while (i<8){   
+while (i<8){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-309,-56.25-(i*12.5),605-(i*4), new TGeoRotation("r1",0,120,0)));
       k++;
    }
@@ -1594,11 +1594,11 @@ while (i<8){
 
 k=0; i=0;
 
-while (i<9){   
+while (i<9){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-296,-50-(i*12.5),610-(i*4), new TGeoRotation("r1",0,120,0)));
       k++;
    }
@@ -1608,11 +1608,11 @@ while (i<9){
 
 k=0; i=0;
 
-while (i<10){   
+while (i<10){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-283,-37.5-(i*12.5),615-(i*4), new TGeoRotation("r1",0,120,0)));
       k++;
    }
@@ -1627,11 +1627,11 @@ while (i<10){
 
 k=0; i=0;
 
-while (i<6){   
+while (i<6){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(335,81.25+(i*12.5),592.5-(i*2), new TGeoRotation("r1",0,60,0)));
       k++;
    }
@@ -1640,11 +1640,11 @@ while (i<6){
 
 k=0; i=0;
 
-while (i<7){   
+while (i<7){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(322,69.75+(i*12.5),595-(i*2), new TGeoRotation("r1",0,60,0)));
       k++;
    }
@@ -1654,11 +1654,11 @@ while (i<7){
 
 k=0; i=0;
 
-while (i<8){   
+while (i<8){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(309,56.25+(i*12.5),605-(i*4), new TGeoRotation("r1",0,60,0)));
       k++;
    }
@@ -1667,11 +1667,11 @@ while (i<8){
 
 k=0; i=0;
 
-while (i<9){   
+while (i<9){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(296,50+(i*12.5),610-(i*4), new TGeoRotation("r1",0,60,0)));
       k++;
    }
@@ -1681,11 +1681,11 @@ while (i<9){
 
 k=0; i=0;
 
-while (i<10){   
+while (i<10){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(283,37.5+(i*12.5),615-(i*4), new TGeoRotation("r1",0,60,0)));
       k++;
    }
@@ -1701,11 +1701,11 @@ while (i<10){
 
 k=0; i=0;
 
-while (i<6){   
+while (i<6){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(335,-81.25-(i*12.5),592.5-(i*2), new TGeoRotation("r1",0,120,0)));
       k++;
    }
@@ -1714,11 +1714,11 @@ while (i<6){
 
 k=0; i=0;
 
-while (i<7){   
+while (i<7){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(322,-69.75-(i*12.5),595-(i*2), new TGeoRotation("r1",0,120,0)));
       k++;
    }
@@ -1728,11 +1728,11 @@ while (i<7){
 
 k=0; i=0;
 
-while (i<8){   
+while (i<8){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(309,-56.25-(i*12.5),605-(i*4), new TGeoRotation("r1",0,120,0)));
       k++;
    }
@@ -1741,11 +1741,11 @@ while (i<8){
 
 k=0; i=0;
 
-while (i<9){   
+while (i<9){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(296,-50-(i*12.5),610-(i*4), new TGeoRotation("r1",0,120,0)));
       k++;
    }
@@ -1755,11 +1755,11 @@ while (i<9){
 
 k=0; i=0;
 
-while (i<10){   
+while (i<10){
    while(k<11){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 3,6,6,10,170);
-      mBlock->SetLineColor(13);   
+      mBlock->SetLineColor(13);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(283,-37.5-(i*12.5),615-(i*4), new TGeoRotation("r1",0,120,0)));
       k++;
    }
@@ -1767,12 +1767,12 @@ while (i<10){
 }
 
 
-//   /// || / / / / / / / || / / / / / / / / || / / / / / / / / / / / 
+//   /// || / / / / / / / || / / / / / / / / || / / / / / / / / / / /
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 330,10,2);
-   mBlock->SetLineColor(42);   
+   mBlock->SetLineColor(42);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(0,-110,550, new TGeoRotation("r1",0,-45,0)));
 
 
@@ -1780,21 +1780,21 @@ while (i<10){
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 330,10,2);
-   mBlock->SetLineColor(42);   
+   mBlock->SetLineColor(42);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(0,110,550, new TGeoRotation("r1",0,45,0)));
 
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 110,10,2);
-   mBlock->SetLineColor(42);   
+   mBlock->SetLineColor(42);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(335,0,550, new TGeoRotation("r1",90,-45,0)));
 
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 110,10,2);
-   mBlock->SetLineColor(42);   
+   mBlock->SetLineColor(42);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-335,0,550, new TGeoRotation("r1",90,45,0)));
 
 
@@ -1807,11 +1807,11 @@ while (i<10){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
 while(k<6){
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron,18,10,2);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    {
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-270+(k*100),-111,550, new TGeoRotation("r1",0,-45,0)));
 
@@ -1826,11 +1826,11 @@ while(k<6){
 
 k=0; i=0;
 
-while (i<5){   
+while (i<5){
 while(k<6){
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks,Iron,18,10,2);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    {
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-270+(k*100),111,550, new TGeoRotation("r1",0,45,0)));
 
@@ -1843,14 +1843,14 @@ while(k<6){
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 18,10,2);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(336,0,550, new TGeoRotation("r1",90,-45,0)));
 
 
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 18,10,2);
-   mBlock->SetLineColor(8);   
+   mBlock->SetLineColor(8);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(-336,0,550, new TGeoRotation("r1",90,45,0)));
 
 
@@ -1862,7 +1862,7 @@ while(k<6){
 
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 300,75,40);
-   mBlock->SetLineColor(45);   
+   mBlock->SetLineColor(45);
    top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(0,0,450, new TGeoRotation("r1",0,0,0)));
 
 
@@ -1870,7 +1870,7 @@ while(k<6){
 //kiwa
    sprintf(nBlocks,"ab%d",N++);
    mBlock = geom->MakeBox(nBlocks, Iron, 305,80,2.5);
-   mBlock->SetLineColor(10);   
+   mBlock->SetLineColor(10);
    top->AddNodeOverlap(mBlock,1,new TGeoTranslation(0,0,430));
 
 

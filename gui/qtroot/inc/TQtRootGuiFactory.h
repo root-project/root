@@ -29,7 +29,7 @@ class TQtRootGuiFactory : public  TGuiFactory {
 
 private:
    TGuiFactory *fGuiProxy;
-   
+
 protected:
   static void CreateQClient();
   static TGClient *gfQtClient;

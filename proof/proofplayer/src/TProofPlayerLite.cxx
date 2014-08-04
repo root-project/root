@@ -191,7 +191,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
 
    // Send large input data objects, if any
    gProof->SendInputDataFile();
-      
+
    // Attach to the transient histogram with the assigned packets, if required
    if (fInput->FindObject("PROOF_StatsHist") != 0) {
       if (!(fProcPackets = (TH1 *) fOutput->FindObject("PROOF_ProcPcktHist"))) {
@@ -307,7 +307,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
       Long64_t rc = -1;
       if (GetExitStatus() != TProofPlayer::kAborted)
          rc = Finalize(kFALSE, sync);
-            
+
       // Remove temporary input objects, if any
       if (inputtmp) {
          TIter nxi(inputtmp);

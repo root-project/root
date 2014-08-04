@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -31,17 +31,17 @@ class ScanMinimizer : public ModularFunctionMinimizer {
 
 public:
 
-   ScanMinimizer() : fSeedGenerator(SimplexSeedGenerator()), 
+   ScanMinimizer() : fSeedGenerator(SimplexSeedGenerator()),
                      fBuilder(ScanBuilder()) {}
-  
+
    ~ScanMinimizer() {}
-  
+
    const MinimumSeedGenerator& SeedGenerator() const {return fSeedGenerator;}
    const MinimumBuilder& Builder() const {return fBuilder;}
    MinimumBuilder& Builder()  {return fBuilder;}
-  
+
 private:
-  
+
    SimplexSeedGenerator fSeedGenerator;
    ScanBuilder fBuilder;
 };

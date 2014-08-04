@@ -45,8 +45,8 @@ private :
    Double_t           fDir[3];         // direction after a step
    Double_t           fB[3];           // normalized direction for magnetic field
    Int_t              fQ;              // right/left-handed (+/- 1) - "charge"
-   TGeoHMatrix       *fMatrix;         // transformation of local helix frame to MARS   
- 
+   TGeoHMatrix       *fMatrix;         // transformation of local helix frame to MARS
+
    TGeoHelix(const TGeoHelix&);             // Not implemented
    TGeoHelix &operator=(const TGeoHelix&);  // Not implemented
 public:
@@ -65,7 +65,7 @@ public:
    void            InitPoint(Double_t *point);
    void            InitDirection(Double_t dirx, Double_t diry, Double_t dirz, Bool_t is_normalized=kTRUE);
    void            InitDirection(Double_t *dir, Bool_t is_normalized=kTRUE);
-   
+
    Double_t        ComputeSafeStep(Double_t epsil=1E-6) const;
    const Double_t *GetCurrentPoint() const {return fPoint;}
    const Double_t *GetCurrentDirection() const {return fDir;}
@@ -77,14 +77,14 @@ public:
    void            ResetStep();
    Double_t        StepToPlane(Double_t *point, Double_t *norm);
 //   Double_t       *StepToPlane(Double_t a, Double_t b, Double_t c);
-   
+
    void            SetCharge(Int_t charge);
    void            SetXYcurvature(Double_t curvature);
    void            SetField(Double_t bx, Double_t by, Double_t bz, Bool_t is_normalized=kTRUE);
    void            SetHelixStep(Double_t hstep);
-   
+
    void            Step(Double_t step);
-   
+
    void            UpdateHelix();
 
    ClassDef(TGeoHelix, 1)              // helix class

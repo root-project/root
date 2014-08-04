@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -30,10 +30,10 @@ public:
     std::vector<double> result; result.reserve(avec.size());
 
     for(unsigned int i = 0; i < avec.size(); i++) result.push_back(avec(i));
-    
+
     return result;
   }
-  
+
 };
 
   }  // namespace Minuit2

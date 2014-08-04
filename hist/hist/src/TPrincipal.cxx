@@ -766,7 +766,7 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
 }
 
 //____________________________________________________________________
-TPrincipal::TPrincipal(const TPrincipal& pr) : 
+TPrincipal::TPrincipal(const TPrincipal& pr) :
   TNamed(pr),
   fNumberOfDataPoints(pr.fNumberOfDataPoints),
   fNumberOfVariables(pr.fNumberOfVariables),
@@ -781,7 +781,7 @@ TPrincipal::TPrincipal(const TPrincipal& pr) :
   fHistograms(pr.fHistograms),
   fIsNormalised(pr.fIsNormalised),
   fStoreData(pr.fStoreData)
-{ 
+{
    //copy constructor
 }
 
@@ -804,7 +804,7 @@ TPrincipal& TPrincipal::operator=(const TPrincipal& pr)
       fHistograms=pr.fHistograms;
       fIsNormalised=pr.fIsNormalised;
       fStoreData=pr.fStoreData;
-   } 
+   }
    return *this;
 }
 

@@ -892,8 +892,8 @@ namespace mathtext {
                                         point_t(current_x,
                                                 nucleus_shift_up - shift_down),
                                         subscript_bounding_box, subscript_style));
-      
+
       return token_list;
    }
-   
+
 }

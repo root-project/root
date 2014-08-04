@@ -17,12 +17,12 @@ const CGFloat defaultCellH = 50.f;
 @implementation FilledAreaInspector  {
    HorizontalPickerView *colorPicker;
    HorizontalPickerView *patternPicker;
-   
+
    NSMutableArray *colorCells;
    NSMutableArray *patternCells;
-   
+
    TAttFill *filledObject;
-   
+
    __weak ROOTObjectController *parentController;
 }
 
@@ -32,19 +32,19 @@ const CGFloat defaultCellH = 50.f;
    using namespace ROOT::iOS::Browser;
 
    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-   
+
    [self view];
 
    if (self) {
       const CGRect cellRect = CGRectMake(0.f, 0.f, defaultCellW, defaultCellH);
-   
+
       colorCells = [[NSMutableArray alloc] init];
       for (unsigned i = 0; i < nROOTDefaultColors; ++i) {
          ColorCell * newCell = [[ColorCell alloc] initWithFrame : cellRect];
          [newCell setRGB : predefinedFillColors[i]];
          [colorCells addObject : newCell];
       }
-      
+
       colorPicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 15.f, 220.f, 70.f)];
       [colorPicker addItems : colorCells];
       [self.view addSubview : colorPicker];
@@ -54,12 +54,12 @@ const CGFloat defaultCellH = 50.f;
       PatternCell *solidFill = [[PatternCell alloc] initWithFrame : cellRect andPattern : 0];
       [solidFill setAsSolid];
       [patternCells addObject : solidFill];
-      
+
       for (unsigned i = 0; i < ROOT::iOS::GraphicUtils::kPredefinedFillPatterns; ++i) {
          PatternCell *newCell = [[PatternCell alloc] initWithFrame : cellRect andPattern : i];
          [patternCells addObject : newCell];
       }
-      
+
       patternPicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 90.f, 220.f, 70.f)];
       [patternPicker addItems : patternCells];
       [self.view addSubview : patternPicker];
@@ -87,12 +87,12 @@ const CGFloat defaultCellH = 50.f;
    //ROOT's standard color pick has 16 colors,
    //I have 16 rows in a color picker.
    //Fill color is some integer index, not from [0 16),
-   //but some hardcoded constant (as usually :( ) - 
+   //but some hardcoded constant (as usually :( ) -
    //see TGColorSelect or something like this.
    //I hold this indices in colorIndices array of constants,
    //since ROOT does not define them.
    //If the object color is one of 16 standard colors,
-   //I find the correct row in a picker and rotate picker 
+   //I find the correct row in a picker and rotate picker
    //to this row. If not - it's on zero.
    using namespace ROOT::iOS::Browser;
 
@@ -110,10 +110,10 @@ const CGFloat defaultCellH = 50.f;
    }
 
    [colorPicker setSelectedItem : pickerItem];
-   
+
    //Look for a fill pattern.
    namespace Fill = ROOT::iOS::GraphicUtils;
-   
+
    const Style_t fillStyle = filledObject->GetFillStyle();
    if (fillStyle == Fill::solidFillStyle)//I'm sorry, again, hardcoded constant, ROOT does not define it :(.
       pickerItem = 0;
@@ -139,7 +139,7 @@ const CGFloat defaultCellH = 50.f;
       if (cellIndex >= 0 && cellIndex < nROOTDefaultColors) {
          const bool isHollow = colorIndices[cellIndex] == 0;
          filledObject->SetFillColor(colorIndices[cellIndex]);
-         
+
          if (wasHollow != isHollow)
             [parentController objectWasModifiedUpdateSelection : YES];
          else

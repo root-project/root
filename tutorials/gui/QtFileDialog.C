@@ -1,8 +1,8 @@
 // @(#)root/qt:$Name:  $:$Id$
 // Author: Valeri Fine   23/03/2006
 #ifndef __CINT__
-#  include <QFileDialog> 
-#  include <QString> 
+#  include <QFileDialog>
+#  include <QString>
 #  include "TString.h"
 #  include <string>
 #endif
@@ -24,7 +24,7 @@ TString QtFileDialog() {
   // begin_html <a href="http://root.bnl.gov/QtRoot/htmldoc/src/qtclasses.h.html">by $ROOTSYS/cint/lib/qtclasses.h</a> end_html
   //
   // All Qt classes can be used from ACLiC though.
-  
+
 #ifdef __CINT__
   // Load the qt cint dictionary.
   // One is recommended to do that at once somewhere.

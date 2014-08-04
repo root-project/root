@@ -150,7 +150,7 @@ TGMimeTypes::~TGMimeTypes()
    fList->Delete();
    delete fList;
 }
- 
+
 //______________________________________________________________________________
 TGMimeTypes::TGMimeTypes(const TGMimeTypes& gmt) :
    TObject(gmt),
@@ -173,7 +173,7 @@ TGMimeTypes& TGMimeTypes::operator=(const TGMimeTypes& gmt)
       fFilename=gmt.fFilename;
       fChanged=gmt.fChanged;
       fList=gmt.fList;
-   } 
+   }
    return *this;
 }
 

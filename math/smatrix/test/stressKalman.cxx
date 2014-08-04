@@ -867,75 +867,75 @@ int TestRunner<NDIM1,NDIM2>::test_clhep_kalman() {
          MnMatrix tmp(second,first);
 
          TestTimer t(gReporter);
-         int ifail; 
+         int ifail;
          for (Int_t l = 0; l < NLOOP; l++)
          {
-            
-            
+
+
             vtmp1 = H*xp -m;
             //x = xp + K0 * (m- H * xp);
             x = xp - K0 * vtmp1;
             tmp = Cp * H.T();
             Rinv = V;  Rinv +=  H * tmp;
-            RinvSym.assign(Rinv); 
+            RinvSym.assign(Rinv);
             RinvSym.invert(ifail);
-            if (ifail !=0) { std::cout << "Error inverting Rinv" << std::endl; break; } 
-            K = tmp*RinvSym; 
+            if (ifail !=0) { std::cout << "Error inverting Rinv" << std::endl; break; }
+            K = tmp*RinvSym;
             //C.assign( (I-K*H)*Cp);
             //C = (I-K*H)*Cp;
             C.assign( (I-K*H)*Cp );
             x2= RinvSym.similarity(vtmp1);
-            if(ifail!=0) { std::cout << "Error inverting Rinv" << std::endl; break; } 
+            if(ifail!=0) { std::cout << "Error inverting Rinv" << std::endl; break; }
          }
          x2sum += x2;
-         
+
          c2 = 0;
          for (unsigned int i=1; i<=NDIM2; ++i)
             for (unsigned int j=1; j<=NDIM2; ++j)
                c2 += C(i,j);
          c2sum += c2;
       }
-      
+
       //   }
-   }  
+   }
    //tr.dump();
    //std::cout << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
-   
-   int iret = 0;                                 
+
+   int iret = 0;
    double d = std::abs(x2sum-fX2sum);
-   if ( d > 1.E-6 * fX2sum  ) {     
-      std::cout << "ERROR: difference found in x2sum = " << x2sum << "\tref = " << fX2sum << 
+   if ( d > 1.E-6 * fX2sum  ) {
+      std::cout << "ERROR: difference found in x2sum = " << x2sum << "\tref = " << fX2sum <<
       "\tdiff = " << d <<  std::endl;
-      iret = 1; 
+      iret = 1;
    }
-   d = std::abs(c2sum-fC2sum); 
-   if ( d > 1.E-6 * fC2sum  ) {     
-      std::cout << "ERROR: difference found in c2sum = " << c2sum << "\tref = " << fC2sum << 
+   d = std::abs(c2sum-fC2sum);
+   if ( d > 1.E-6 * fC2sum  ) {
+      std::cout << "ERROR: difference found in c2sum = " << c2sum << "\tref = " << fC2sum <<
       "\tdiff = " << d <<  std::endl;
-      iret = 1; 
+      iret = 1;
    }
-   
+
    return iret;
 }
 #endif
 
 
-int main(int argc, char *argv[]) { 
-   
-   
+int main(int argc, char *argv[]) {
+
+
    if (runTest() ) {
       std::cout << "\nERROR - stressKalman FAILED - exit!" << std::endl ;
       return -1;
-   }; 
-   
-   gReporter.print(std::cout); 
-   std::string fname = "kalman"; 
-   if (argc > 1) { 
-      std::string platf(argv[1]); 
-      fname = fname + "_" + platf; 
+   };
+
+   gReporter.print(std::cout);
+   std::string fname = "kalman";
+   if (argc > 1) {
+      std::string platf(argv[1]);
+      fname = fname + "_" + platf;
    }
-   
+
    gReporter.save(fname+".root");
-   
+
    return 0;
 }

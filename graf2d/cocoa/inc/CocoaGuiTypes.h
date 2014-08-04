@@ -12,7 +12,7 @@ namespace X11 {
 struct Point {
    int fX;
    int fY;
-   
+
    Point();
    Point(int x, int y);
 };
@@ -20,10 +20,10 @@ struct Point {
 struct Rectangle {
    int fX;
    int fY;
-   
+
    unsigned fWidth;
    unsigned fHeight;
-   
+
    Rectangle();
    Rectangle(int x, int y, unsigned w, unsigned h);
 };

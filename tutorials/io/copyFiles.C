@@ -8,15 +8,15 @@
 
   //Example of script showing how to copy all objects (including directories)
   //from a source file.
-  //For each input file, a new directory is created in the current directory 
+  //For each input file, a new directory is created in the current directory
   //with the name of the source file.
   //After execution of:
   // root > .x copyFiles.C
   //the file result.root will contain 4 subdirectories:
   // "tot100.root", "hsimple.root", "hs1.root","hs2.root"
-      
+
 void CopyDir(TDirectory *source) {
-   //copy all objects and subdirs of directory source as a subdir of the current directory   
+   //copy all objects and subdirs of directory source as a subdir of the current directory
    source->ls();
    TDirectory *savdir = gDirectory;
    TDirectory *adir = savdir->mkdir(source->GetName());
@@ -63,7 +63,7 @@ void CopyFile(const char *fname) {
    CopyDir(f);
    delete f;
    target->cd();
-}  
+}
 void copyFiles() {
    //prepare files to be copied
    if(gSystem->AccessPathName("tot100.root")) {

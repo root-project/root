@@ -39,7 +39,7 @@ class TAxisEditor : public TGedFrame {
 protected:
    TAxis               *fAxis;         // axis object
    TGColorSelect       *fAxisColor;    // color selection widget
-   TGCheckButton       *fLogAxis;      // logarithmic check box    
+   TGCheckButton       *fLogAxis;      // logarithmic check box
    TGNumberEntry       *fTickLength;   // tick length number entry
    TGNumberEntry       *fDiv1;         // primary axis division number entry
    TGNumberEntry       *fDiv2;         // secondary axis division number entry
@@ -62,12 +62,12 @@ protected:
    TGNumberEntry       *fLabelSize;    // label size number entry
    TGNumberEntry       *fLabelOffset;  // label offset number entry
    TGCheckButton       *fNoExponent;   // check box for No exponent choice
-   TGCheckButton       *fDecimal;      // decimal part check box    
+   TGCheckButton       *fDecimal;      // decimal part check box
 
    virtual void ConnectSignals2Slots();
 
 public:
-   TAxisEditor(const TGWindow *p = 0, 
+   TAxisEditor(const TGWindow *p = 0,
                Int_t width = 140, Int_t height = 30,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());

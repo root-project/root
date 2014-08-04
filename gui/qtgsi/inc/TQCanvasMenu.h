@@ -53,8 +53,8 @@ class TQCanvasMenu : public QObject {
 #endif
 private:
    TQCanvasMenu(const TQCanvasMenu &c);
-   TQCanvasMenu& operator=(const TQCanvasMenu&) {return *this;} 
-      
+   TQCanvasMenu& operator=(const TQCanvasMenu&) {return *this;}
+
 public:
    TQCanvasMenu(QWidget* parent = 0, TCanvas *canvas = 0);
    TQCanvasMenu(QWidget* parent, QWidget *tabWin, TCanvas *canvas) ;
@@ -80,5 +80,5 @@ protected:
 
    ClassDef(TQCanvasMenu,1)  //interface to Qt based context sensitive popup menus
 };
-   
+
 #endif

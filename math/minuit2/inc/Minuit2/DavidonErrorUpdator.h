@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -27,7 +27,7 @@ class DavidonErrorUpdator : public MinimumErrorUpdator {
 public:
 
   DavidonErrorUpdator() {}
-  
+
   virtual ~DavidonErrorUpdator() {}
 
   virtual MinimumError Update(const MinimumState&, const MinimumParameters&,

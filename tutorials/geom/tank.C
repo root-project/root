@@ -1,12 +1,12 @@
 #include "TGeoManager.h"
-   
-void tank() 
+
+void tank()
 {
   // Drawing a fine tank, using ROOT geometry class.
   // Author: Dong Gyu Lee (ravirus@hanmail.net), Dept. of Physics, Univ. of Seoul
   // Reviewed by Sunman Kim (sunman98@hanmail.net)
   // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
-  // 
+  //
   // How to run: .x tank.C in ROOT terminal, then use OpenGL
   //
   // This macro was created for the evaluation of Computational Physics course in 2006.
@@ -30,7 +30,7 @@ void tank()
    geom->SetTopVolume(top);
    geom->SetTopVisible(0);
    // If you want to see the boundary, please input the number, 1 instead of 0.
-   // Like this, geom->SetTopVisible(1); 
+   // Like this, geom->SetTopVisible(1);
 
 
 //-----------------Create Object volume--------------------------
@@ -67,7 +67,7 @@ void tank()
 //Small Top infront Top
    TGeoVolume *stp=geom->MakeSphere("stp",Iron,0,30,67,90,0,360);//Top for driver
    stp->SetLineColor(12);
-   TGeoVolume *stp1=geom->MakeSphere("stp1",Iron,115,120,0,12,0,360);//Top with roof 
+   TGeoVolume *stp1=geom->MakeSphere("stp1",Iron,115,120,0,12,0,360);//Top with roof
    stp1->SetLineColor(12);
    TGeoVolume *stpo1=geom->MakeBox("stpo1",Iron,3,1,5);
    stpo1->SetLineColor(42);//Small T P Option 1
@@ -124,7 +124,7 @@ void tank()
    TGeoVolume *who;
 
    //consist upper chain
-   for(int i=0;i<26;i++){   
+   for(int i=0;i<26;i++){
       sprintf(name,"wh%d",i);
       WH = geom->MakeBox(name,Iron,5.5,22,2);
       whp = geom->MakeBox(name,Iron,5,2.1,4);
@@ -436,9 +436,9 @@ void tank()
    top->AddNodeOverlap(chcl,1,new TGeoCombiTrans(-195-(25*sin(136*(3.14/180)))+18,111,-150+(25*cos(136*(3.14/180)))-15, new TGeoRotation("chcl",90,-142,-90)));
    top->AddNodeOverlap(chcl,1,new TGeoCombiTrans(-195-(25*sin(136*(3.14/180)))+29,111,-150+(25*cos(136*(3.14/180)))-25, new TGeoRotation("chcl",90,-139,-90)));
    top->AddNodeOverlap(chcl,1,new TGeoCombiTrans(-195-(25*sin(136*(3.14/180)))+41,111,-150+(25*cos(136*(3.14/180)))-35, new TGeoRotation("chcl",90,-138,-90)));
-   
+
    //consist under chain
-   for(int i=0;i<20;i++){   
+   for(int i=0;i<20;i++){
       sprintf(name,"wh%d",i);
       top->AddNodeOverlap(WH,1,new TGeoTranslation(-150+(15*i),-120,-212));
       top->AddNodeOverlap(WH,1,new TGeoTranslation(-150+(15*i),120,-212));

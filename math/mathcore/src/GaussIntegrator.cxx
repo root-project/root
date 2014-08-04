@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: David Gonzalez Maline    01/2008 
+// Authors: David Gonzalez Maline    01/2008
 
 /**********************************************************************
  *                                                                    *
@@ -14,7 +14,7 @@
 
 namespace ROOT {
 namespace Math {
-      
+
 
 bool GaussIntegrator::fgAbsValue = false;
 
@@ -22,14 +22,14 @@ bool GaussIntegrator::fgAbsValue = false;
 {
 // Default Constructor. If no relative espsilon is specified assume is equal to the absolute one
 
-   if (epsabs <= 0 ) { 
+   if (epsabs <= 0 ) {
       fEpsAbs = ROOT::Math::IntegratorOneDimOptions::DefaultAbsTolerance();
       fEpsRel = ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance();
    }
-   else { 
+   else {
       fEpsAbs = epsabs;
       if (epsrel <= 0 ) fEpsRel = epsabs;   // use relative tiolerance = to abs if it is given only one
-      else fEpsRel = epsrel; 
+      else fEpsRel = epsrel;
    }
    fLastResult = fLastError = 0;
    fUsedOnce = false;
@@ -67,7 +67,7 @@ double GaussIntegrator::DoIntegral(double a, double b, const IGenFunction* funct
 {
    //  Return Integral of function between a and b.
 
-   if (fEpsRel <=0 || fEpsAbs <= 0) { 
+   if (fEpsRel <=0 || fEpsAbs <= 0) {
       if (fEpsRel > 0) fEpsAbs = fEpsRel;
       else if (fEpsAbs > 0) fEpsRel = fEpsAbs;
       else {
@@ -155,7 +155,7 @@ CASE2:
 
    return h;
 }
-   
+
 
 double GaussIntegrator::Result () const
 {
@@ -178,21 +178,21 @@ void GaussIntegrator::SetFunction (const IGenFunction & function)
    // Set integration function
    fFunction = &function;
    // reset fUsedOne flag
-   fUsedOnce = false; 
+   fUsedOnce = false;
 }
 
 double GaussIntegrator::Integral (const std::vector< double > &/*pts*/)
-{ 
-   // not impl. 
+{
+   // not impl.
    MATH_WARN_MSG("ROOT::Math::GaussIntegrator", "This method is not implemented in this class !");
-   return -1.0;  
+   return -1.0;
 }
 
 double GaussIntegrator::IntegralCauchy (double /*a*/, double /*b*/, double /*c*/)
-{ 
+{
    // not impl.
    MATH_WARN_MSG("ROOT::Math::GaussIntegrator", "This method is not implemented in this class !");
-   return -1.0;  
+   return -1.0;
 }
 
 void GaussIntegrator::SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt) {
@@ -201,26 +201,26 @@ void GaussIntegrator::SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt
    SetAbsTolerance(opt.AbsTolerance() );
 }
 
-ROOT::Math::IntegratorOneDimOptions  GaussIntegrator::Options() const { 
-   // retrieve options 
-   ROOT::Math::IntegratorOneDimOptions opt; 
+ROOT::Math::IntegratorOneDimOptions  GaussIntegrator::Options() const {
+   // retrieve options
+   ROOT::Math::IntegratorOneDimOptions opt;
    opt.SetIntegrator("Gauss");
-   opt.SetAbsTolerance(fEpsAbs); 
-   opt.SetRelTolerance(fEpsRel); 
-   opt.SetWKSize(0); 
-   opt.SetNPoints(0); 
-   return opt; 
+   opt.SetAbsTolerance(fEpsAbs);
+   opt.SetRelTolerance(fEpsRel);
+   opt.SetWKSize(0);
+   opt.SetNPoints(0);
+   return opt;
 }
 
 
 
-//implementation of IntegrandTransform class 
+//implementation of IntegrandTransform class
 
 IntegrandTransform::IntegrandTransform(const IGenFunction* integrand)
    : fSign(kPlus), fIntegrand(integrand), fBoundary(0.), fInfiniteInterval(true) {
 }
 
-IntegrandTransform::IntegrandTransform(const double boundary, ESemiInfinitySign sign, const IGenFunction* integrand) 
+IntegrandTransform::IntegrandTransform(const double boundary, ESemiInfinitySign sign, const IGenFunction* integrand)
    : fSign(sign), fIntegrand(integrand), fBoundary(boundary), fInfiniteInterval(false)  {
 }
 
@@ -243,5 +243,5 @@ IGenFunction* IntegrandTransform::Clone() const {
 }
 
 
-} // end namespace Math   
+} // end namespace Math
 } // end namespace ROOT

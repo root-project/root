@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: David Gonzalez Maline    01/2008 
+// Authors: David Gonzalez Maline    01/2008
 
 /**********************************************************************
  *                                                                    *
@@ -19,7 +19,7 @@
 namespace ROOT {
 namespace Math {
 
-RichardsonDerivator::RichardsonDerivator(double h) : 
+RichardsonDerivator::RichardsonDerivator(double h) :
    fFunctionCopied(false),
    fStepSize(h),
    fLastError(0),
@@ -27,14 +27,14 @@ RichardsonDerivator::RichardsonDerivator(double h) :
 {
    // Default Constructor.
 }
-RichardsonDerivator::RichardsonDerivator(const ROOT::Math::IGenFunction & f, double h, bool copyFunc) : 
+RichardsonDerivator::RichardsonDerivator(const ROOT::Math::IGenFunction & f, double h, bool copyFunc) :
    fFunctionCopied(copyFunc),
    fStepSize(h),
    fLastError(0),
    fFunction(0)
 {
    // Constructor from a function and step size
-   if (copyFunc) fFunction = f.Clone(); 
+   if (copyFunc) fFunction = f.Clone();
    else fFunction = &f;
 }
 
@@ -46,17 +46,17 @@ RichardsonDerivator::~RichardsonDerivator()
       delete fFunction;
 }
 
-RichardsonDerivator::RichardsonDerivator(const RichardsonDerivator & rhs) 
+RichardsonDerivator::RichardsonDerivator(const RichardsonDerivator & rhs)
 {
     // copy constructor
     // copy constructor (deep copy or not depending on fFunctionCopied)
    fStepSize = rhs.fStepSize;
    fLastError = rhs.fLastError;
-   fFunctionCopied = rhs.fFunctionCopied; 
-   SetFunction(*rhs.fFunction);   
+   fFunctionCopied = rhs.fFunctionCopied;
+   SetFunction(*rhs.fFunction);
  }
 
-RichardsonDerivator &  RichardsonDerivator::operator= ( const RichardsonDerivator & rhs) 
+RichardsonDerivator &  RichardsonDerivator::operator= ( const RichardsonDerivator & rhs)
 {
    // Assignment operator
    if (&rhs == this) return *this;
@@ -72,7 +72,7 @@ void RichardsonDerivator::SetFunction(const ROOT::Math::IGenFunction & f)
    // set function
    if (fFunctionCopied) {
       if (fFunction) delete fFunction;
-      fFunction = f.Clone(); 
+      fFunction = f.Clone();
    }
    else fFunction = &f;
 }
@@ -81,13 +81,13 @@ double RichardsonDerivator::Derivative1 (double x)
 {
    const double kC1 = 1.E-15;
 
-   double h = fStepSize; 
+   double h = fStepSize;
 
    double xx[1];
    xx[0] = x+h;     double f1 = (*fFunction)(xx);
    //xx[0] = x;       double fx = (*fFunction)(xx); // not needed
    xx[0] = x-h;     double f2 = (*fFunction)(xx);
-   
+
    xx[0] = x+h/2;   double g1 = (*fFunction)(xx);
    xx[0] = x-h/2;   double g2 = (*fFunction)(xx);
 
@@ -150,5 +150,5 @@ double RichardsonDerivator::Derivative3 (double x)
 }
 
 } // end namespace Math
-   
+
 } // end namespace ROOT

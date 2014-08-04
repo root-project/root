@@ -41,7 +41,7 @@ private:
    TXMLDocument& operator=(const TXMLDocument&); // Not implemented
 
    _xmlDoc  *fXMLDoc;           // libxml xml doc
-   TXMLNode *fRootNode;         // the root node 
+   TXMLNode *fRootNode;         // the root node
 
 public:
    TXMLDocument(_xmlDoc *doc);

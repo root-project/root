@@ -3759,7 +3759,7 @@ void TMultiDimFit::SetMaxPowers(const Int_t* powers)
    // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
    if (!powers)
       return;
-   
+
    for (Int_t i = 0; i < fNVariables; i++)
       fMaxPowers[i] = powers[i]+1;
 }
@@ -3783,7 +3783,7 @@ Bool_t TMultiDimFit::TestFunction(Double_t squareResidual,
    // Test whether the currently considered function contributes to the
    // fit. See also
    // Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
-   
+
    if (fNCoefficients != 0) {
       // Now for the second test:
       if (fMaxAngle == 0) {
@@ -3812,7 +3812,7 @@ void mdfHelper(int& /*npar*/, double* /*divs*/, double& chi2,
                double* coeffs, int /*flag*/)
 {
    // Helper function for doing the minimisation of Chi2 using Minuit
-   
+
    // Get pointer  to current TMultiDimFit object.
    TMultiDimFit* mdf = TMultiDimFit::Instance();
    chi2     = mdf->MakeChi2(coeffs);

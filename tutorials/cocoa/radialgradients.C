@@ -89,7 +89,7 @@ bool add_ellipse(const Double_t xC, const Double_t yC, const Double_t r)
    TEllipse * const newEllipse = new TEllipse(xC, yC, r, r);
    newEllipse->SetFillColor(newColor);
    newEllipse->Draw();
-   
+
    return true;
 }
 
@@ -111,7 +111,7 @@ void radialgradients()
    for (unsigned i = 0; i < 100; ++i)
       if (!add_ellipse(gRandom->Rndm(), gRandom->Rndm(), 0.5 * gRandom->Rndm()))
          break;
-   
+
    cnv->Modified();
    cnv->Update();
 }

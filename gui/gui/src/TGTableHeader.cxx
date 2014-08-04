@@ -38,11 +38,11 @@ ClassImp(TGTableHeader)
 
 //______________________________________________________________________________
 TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table, TGString *label,
-                             UInt_t position, EHeaderType type, UInt_t width, 
-                             UInt_t height, GContext_t norm, FontStruct_t font, 
+                             UInt_t position, EHeaderType type, UInt_t width,
+                             UInt_t height, GContext_t norm, FontStruct_t font,
                              UInt_t option)
-   : TGTableCell(p, table, label, 0, 0, width, height, norm, font, option, 
-                 kFALSE), fType(type), fReadOnly(kFALSE), fEnabled(kTRUE), 
+   : TGTableCell(p, table, label, 0, 0, width, height, norm, font, option,
+                 kFALSE), fType(type), fReadOnly(kFALSE), fEnabled(kTRUE),
      fHasOwnLabel(kFALSE)
 {
    // TGTableHeader constuctor.
@@ -72,12 +72,12 @@ TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table, TGString *label,
 }
 
 //______________________________________________________________________________
-TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table,  
-                             const char *label, UInt_t position, 
-                             EHeaderType type, UInt_t width, UInt_t height, 
+TGTableHeader::TGTableHeader(const TGWindow *p, TGTable *table,
+                             const char *label, UInt_t position,
+                             EHeaderType type, UInt_t width, UInt_t height,
                              GContext_t norm, FontStruct_t font, UInt_t option)
-   : TGTableCell(p, table, label, 0, 0, width, height, norm, font, 
-                 option, kFALSE), fType(type), fReadOnly(kFALSE), fEnabled(kTRUE), 
+   : TGTableCell(p, table, label, 0, 0, width, height, norm, font,
+                 option, kFALSE), fType(type), fReadOnly(kFALSE), fEnabled(kTRUE),
      fHasOwnLabel(kFALSE)
 {
    // TGTableHeader constuctor.
@@ -116,7 +116,7 @@ TGTableHeader::~TGTableHeader()
 //______________________________________________________________________________
 void TGTableHeader::Init()
 {
-   // Initialize the TGTableHeader   
+   // Initialize the TGTableHeader
 
    if (fType == kTableHeader) {
       SetBackgroundColor(fTable->GetBackground());
@@ -124,7 +124,7 @@ void TGTableHeader::Init()
       SetBackgroundColor(fTable->GetHeaderBackground());
    }
 
-   Resize(fWidth, fHeight);      
+   Resize(fWidth, fHeight);
 
    Int_t max_ascent = 0, max_descent = 0;
 
@@ -189,7 +189,7 @@ void TGTableHeader::SetDefaultLabel()
 void TGTableHeader::SetPosition(UInt_t pos)
 {
    // Set the position of the TGTableHeader to pos.
-   
+
    // Verify functionality
 
    if (fType == kRowHeader) {

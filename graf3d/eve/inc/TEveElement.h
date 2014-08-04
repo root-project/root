@@ -339,7 +339,7 @@ public:
    Bool_t IsPickable()    const { return fPickable; }
    void   SetPickable(Bool_t p) { fPickable = p; }
    void   SetPickableRecursively(Bool_t p);
-   
+
    virtual TEveElement* ForwardSelection();
    virtual TEveElement* ForwardEdit();
 

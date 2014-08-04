@@ -533,7 +533,7 @@ TSpline3::TSpline3(const TH1 *h, const char *opt,
   fValBeg(valbeg), fValEnd(valend),
   fBegCond(0), fEndCond(0)
 {
-   // Third spline creator given a TH1 
+   // Third spline creator given a TH1
 
    fName=h->GetName();
 
@@ -566,7 +566,7 @@ TSpline3::TSpline3(const TSpline3& sp3) :
 {
    //copy constructor
    if (fNp > 0) fPoly = new TSplinePoly3[fNp];
-   for (Int_t i=0; i<fNp; ++i) 
+   for (Int_t i=0; i<fNp; ++i)
       fPoly[i] = sp3.fPoly[i];
 }
 
@@ -579,9 +579,9 @@ TSpline3& TSpline3::operator=(const TSpline3& sp3)
       TSpline::operator=(sp3);
       fPoly= 0;
       if (fNp > 0) fPoly = new TSplinePoly3[fNp];
-      for (Int_t i=0; i<fNp; ++i) 
+      for (Int_t i=0; i<fNp; ++i)
          fPoly[i] = sp3.fPoly[i];
-      
+
       fValBeg=sp3.fValBeg;
       fValEnd=sp3.fValEnd;
       fBegCond=sp3.fBegCond;
@@ -1022,7 +1022,7 @@ void TSpline3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 void TSpline3::SetPoint(Int_t i, Double_t x, Double_t y)
 {
    //set point number i.
-   
+
    if (i < 0 || i >= fNp) return;
    fPoly[i].X()= x;
    fPoly[i].Y()= y;
@@ -1032,7 +1032,7 @@ void TSpline3::SetPoint(Int_t i, Double_t x, Double_t y)
 void TSpline3::SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d)
 {
    // set point coefficient number i
- 
+
    if (i < 0 || i >= fNp) return;
    fPoly[i].B()= b;
    fPoly[i].C()= c;
@@ -1847,8 +1847,8 @@ void TSpline5::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 void TSpline5::SetPoint(Int_t i, Double_t x, Double_t y)
 {
    //set point number i.
-   
-   
+
+
    if (i < 0 || i >= fNp) return;
    fPoly[i].X()= x;
    fPoly[i].Y()= y;
@@ -1859,7 +1859,7 @@ void TSpline5::SetPointCoeff(Int_t i, Double_t b, Double_t c, Double_t d,
                              Double_t e, Double_t f)
 {
    // set point coefficient number i
-   
+
    if (i < 0 || i >= fNp) return;
    fPoly[i].B()= b;
    fPoly[i].C()= c;

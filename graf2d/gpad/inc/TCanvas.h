@@ -126,7 +126,7 @@ public:
            Int_t ww, Int_t wh);
    TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid);
    virtual ~TCanvas();
-   
+
    //-- used by friend TThread class
    void Constructor();
    void Constructor(const char *name, const char *title, Int_t form);
@@ -240,7 +240,7 @@ public:
    void                SetSupportGL(Bool_t support) {fUseGL = support;}
    TVirtualPadPainter *GetCanvasPainter();
    void                DeleteCanvasPainter();
-   
+
    static TCanvas   *MakeDefCanvas();
    static Bool_t     SupportAlpha();
 

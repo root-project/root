@@ -86,9 +86,9 @@ protected:
    virtual Int_t GetHead();
    virtual void SetMsgReadBuffer10(const char* redirectLocation = 0, Bool_t tempRedirect = kFALSE);
    virtual void ProcessHttpHeader(const TString& headerLine);
-   
+
    // Modifiers of data members (to be used mainly by subclasses)
-   void SetAccessKey(const TString& accessKey) { fS3Request.SetAccessKey(accessKey); } 
+   void SetAccessKey(const TString& accessKey) { fS3Request.SetAccessKey(accessKey); }
    void SetSecretKey(const TString& secretKey) { fS3Request.SetSecretKey(secretKey); }
 
    // Data members

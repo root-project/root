@@ -58,7 +58,7 @@ private:
 public:
    TStructNode(TString name, TString typeName, void* pointer, TStructNode* parent, ULong_t size, ENodeType type);
    ~TStructNode();
-   
+
    virtual Int_t  Compare(const TObject* obj) const;
    ULong_t        GetAllMembersCount() const;
    Float_t        GetCenter() const;

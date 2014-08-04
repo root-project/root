@@ -280,7 +280,7 @@ Int_t ProofAux::GenerateTree(const char *fnt, Long64_t ent, TString &fn)
          return rc;
       }
    }
-   
+
    rc = 0;
 
    // Create the tree

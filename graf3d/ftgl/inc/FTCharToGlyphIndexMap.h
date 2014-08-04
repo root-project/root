@@ -8,30 +8,30 @@
 /**
  * Provides a non-STL alternative to the STL std::map<unsigned long, unsigned long>
  * which maps character codes to glyph indices inside FTCharmap.
- * 
+ *
  * Implementation:
  *   - NumberOfBuckets buckets are considered.
  *   - Each bucket has BucketSize entries.
- *   - When the glyph index for the character code C has to be stored, the 
- *     bucket this character belongs to is found using 'C div BucketSize'. 
+ *   - When the glyph index for the character code C has to be stored, the
+ *     bucket this character belongs to is found using 'C div BucketSize'.
  *     If this bucket has not been allocated yet, do it now.
- *     The entry in the bucked is found using 'C mod BucketSize'. 
+ *     The entry in the bucked is found using 'C mod BucketSize'.
  *     If it is set to IndexNotFound, then the glyph entry has not been set.
  *   - Try to mimic the calls made to the STL map API.
  *
  * Caveats:
  *   - The glyph index is now a signed long instead of unsigned long, so
- *     the special value IndexNotFound (= -1) can be used to specify that the 
+ *     the special value IndexNotFound (= -1) can be used to specify that the
  *     glyph index has not been stored yet.
  */
 class FTGL_EXPORT FTCharToGlyphIndexMap
 {
     public:
-  
+
         typedef unsigned long CharacterCode;
         typedef signed long GlyphIndex;
-        
-        enum 
+
+        enum
         {
             NumberOfBuckets = 256,
             BucketSize = 256,
@@ -49,13 +49,13 @@ class FTGL_EXPORT FTCharToGlyphIndexMap
             {
                 // Free all buckets
                 this->clear();
-        
+
                 // Free main structure
                 delete [] this->Indices;
                 this->Indices = 0;
             }
         }
-  
+
         void clear()
         {
             if(this->Indices)
@@ -77,21 +77,21 @@ class FTGL_EXPORT FTCharToGlyphIndexMap
             {
                 return 0;
             }
-        
+
             // Find position of char code in buckets
             div_t pos = div( c, FTCharToGlyphIndexMap::BucketSize);
-        
+
             if( !this->Indices[pos.quot])
             {
                 return 0;
             }
-        
+
             const FTCharToGlyphIndexMap::GlyphIndex *ptr = &this->Indices[pos.quot][pos.rem];
             if( *ptr == FTCharToGlyphIndexMap::IndexNotFound)
             {
                 return 0;
             }
-        
+
             return *ptr;
         }
 
@@ -105,10 +105,10 @@ class FTGL_EXPORT FTCharToGlyphIndexMap
                     this->Indices[i] = 0;
                 }
             }
-        
+
             // Find position of char code in buckets
             div_t pos = div(c, FTCharToGlyphIndexMap::BucketSize);
-        
+
             // Allocate bucket if does not exist yet
             if( !this->Indices[pos.quot])
             {
@@ -118,10 +118,10 @@ class FTGL_EXPORT FTCharToGlyphIndexMap
                     this->Indices[pos.quot][i] = FTCharToGlyphIndexMap::IndexNotFound;
                 }
             }
-          
+
             this->Indices[pos.quot][pos.rem] = g;
         }
-  
+
     private:
         GlyphIndex** Indices;
 };

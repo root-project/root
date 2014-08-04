@@ -10,7 +10,7 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 @interface PadInspector () {
    PadTicksGridInspector *gridInspector;
    PadLogScaleInspector *logScaleInspector;
-   
+
    __weak ROOTObjectController *controller;
    TObject *object;
 }
@@ -32,22 +32,22 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 - (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
 {
    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    
+
    [self view];
-    
+
    if (self) {
       //Load inspectors from nib files.
       gridInspector = [[PadTicksGridInspector alloc] initWithNibName : @"PadTicksGridInspector" bundle : nil];
       gridInspector.view.frame = nestedComponentFrame;
       logScaleInspector = [[PadLogScaleInspector alloc] initWithNibName : @"PadLogScaleInspector" bundle : nil];
       logScaleInspector.view.frame = nestedComponentFrame;
-      
+
       [self.view addSubview : gridInspector.view];
       [self.view addSubview : logScaleInspector.view];
-      
+
       gridInspector.view.hidden = NO;
       logScaleInspector.view.hidden = YES;
-      
+
       tabBar.selectedItem = [[tabBar items] objectAtIndex : 0];
    }
 

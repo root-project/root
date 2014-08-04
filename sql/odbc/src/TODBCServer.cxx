@@ -173,7 +173,7 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
 
    fType = "ODBC";
-                  
+
    retcode = SQLGetInfo(fHdbc, SQL_USER_NAME, sbuf, sizeof(sbuf), &reslen);
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
    fUserId = sbuf;
@@ -182,7 +182,7 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
    fServerInfo = sbuf;
    fType = sbuf;
-   
+
    retcode = SQLGetInfo(fHdbc, SQL_DBMS_VER, sbuf, sizeof(sbuf), &reslen);
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
    fServerInfo += " ";
@@ -197,18 +197,18 @@ TODBCServer::TODBCServer(const char *db, const char *uid, const char *pw) :
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
    if (fHost.Length()==0) fHost = sbuf;
 
-/*   
-   
+/*
+
    SQLUINTEGER iinfo;
-   retcode = SQLGetInfo(fHdbc, SQL_PARAM_ARRAY_ROW_COUNTS, &iinfo, sizeof(iinfo), 0);  
+   retcode = SQLGetInfo(fHdbc, SQL_PARAM_ARRAY_ROW_COUNTS, &iinfo, sizeof(iinfo), 0);
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
    Info("Constr", "SQL_PARAM_ARRAY_ROW_COUNTS = %u", iinfo);
-   
-   retcode = SQLGetInfo(fHdbc, SQL_PARAM_ARRAY_SELECTS, &iinfo, sizeof(iinfo), 0);  
+
+   retcode = SQLGetInfo(fHdbc, SQL_PARAM_ARRAY_SELECTS, &iinfo, sizeof(iinfo), 0);
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
    Info("Constr", "SQL_PARAM_ARRAY_SELECTS = %u", iinfo);
 
-   retcode = SQLGetInfo(fHdbc, SQL_BATCH_ROW_COUNT, &iinfo, sizeof(iinfo), 0);  
+   retcode = SQLGetInfo(fHdbc, SQL_BATCH_ROW_COUNT, &iinfo, sizeof(iinfo), 0);
    if (ExtractErrors(retcode, "TODBCServer")) goto zombie;
    Info("Constr", "SQL_BATCH_ROW_COUNT = %u", iinfo);
 */
@@ -233,7 +233,7 @@ TODBCServer::~TODBCServer()
 //______________________________________________________________________________
 TList* TODBCServer::ListData(Bool_t isdrivers)
 {
-   // Produce TList object with list of available 
+   // Produce TList object with list of available
    // ODBC drivers (isdrivers = kTRUE) or data sources (isdrivers = kFALSE)
 
    SQLHENV   henv;
@@ -244,41 +244,41 @@ TList* TODBCServer::ListData(Bool_t isdrivers)
 
    retcode = SQLSetEnvAttr(henv, SQL_ATTR_ODBC_VERSION, (void*)SQL_OV_ODBC3, 0);
    if ((retcode!=SQL_SUCCESS) && (retcode!=SQL_SUCCESS_WITH_INFO)) return 0;
-   
+
    TList* lst = 0;
-   
+
    char namebuf[2048], optbuf[2048];
    SQLSMALLINT reslen1, reslen2;
-   
+
    do {
-      strlcpy(namebuf, "",2048); 
+      strlcpy(namebuf, "",2048);
       strlcpy(optbuf, "",2048);
       if (isdrivers)
-         retcode = SQLDrivers(henv, (lst==0 ? SQL_FETCH_FIRST : SQL_FETCH_NEXT), 
+         retcode = SQLDrivers(henv, (lst==0 ? SQL_FETCH_FIRST : SQL_FETCH_NEXT),
                      (SQLCHAR*) namebuf, sizeof(namebuf), &reslen1,
                      (SQLCHAR*) optbuf, sizeof(optbuf), &reslen2);
       else
-         retcode = SQLDataSources(henv, (lst==0 ? SQL_FETCH_FIRST : SQL_FETCH_NEXT), 
+         retcode = SQLDataSources(henv, (lst==0 ? SQL_FETCH_FIRST : SQL_FETCH_NEXT),
                      (SQLCHAR*) namebuf, sizeof(namebuf), &reslen1,
                      (SQLCHAR*) optbuf, sizeof(optbuf), &reslen2);
-                     
+
       if (retcode==SQL_NO_DATA) break;
       if ((retcode==SQL_SUCCESS) || (retcode==SQL_SUCCESS_WITH_INFO)) {
-         if (lst==0) { 
-            lst = new TList; 
+         if (lst==0) {
+            lst = new TList;
             lst->SetOwner(kTRUE);
-         } 
+         }
          for (int n=0;n<reslen2-1;n++)
             if (optbuf[n]=='\0') optbuf[n] = ';';
-         
+
          lst->Add(new TNamed(namebuf, optbuf));
-      } 
+      }
    } while ((retcode==SQL_SUCCESS) || (retcode==SQL_SUCCESS_WITH_INFO));
 
    SQLFreeHandle(SQL_HANDLE_ENV, henv);
-   
+
    return lst;
-   
+
 }
 
 
@@ -298,13 +298,13 @@ void TODBCServer::PrintDrivers()
 {
    // Print list of ODBC drivers in form:
    //   <name> : <options list>
-    
+
    TList* lst = GetDrivers();
    std::cout << "List of ODBC drivers:" << std::endl;
    TIter iter(lst);
    TNamed* n = 0;
-   while ((n = (TNamed*) iter()) != 0) 
-      std::cout << "  " << n->GetName() << " : " << n->GetTitle() << std::endl; 
+   while ((n = (TNamed*) iter()) != 0)
+      std::cout << "  " << n->GetName() << " : " << n->GetTitle() << std::endl;
    delete lst;
 }
 
@@ -324,13 +324,13 @@ void TODBCServer::PrintDataSources()
 {
    // Print list of ODBC data sources in form:
    //   <name> : <options list>
-    
+
    TList* lst = GetDataSources();
    std::cout << "List of ODBC data sources:" << std::endl;
    TIter iter(lst);
    TNamed* n = 0;
-   while ((n = (TNamed*) iter()) != 0) 
-      std::cout << "  " << n->GetName() << " : " << n->GetTitle() << std::endl; 
+   while ((n = (TNamed*) iter()) != 0)
+      std::cout << "  " << n->GetName() << " : " << n->GetTitle() << std::endl;
    delete lst;
 }
 
@@ -436,10 +436,10 @@ Int_t TODBCServer::SelectDataBase(const char *db)
    // Normally user should specify database name at time of connection
 
    CheckConnect("SelectDataBase", -1);
-   
+
    SQLRETURN retcode = SQLSetConnectAttr(fHdbc, SQL_ATTR_CURRENT_CATALOG, (SQLCHAR*) db, SQL_NTS);
    if (ExtractErrors(retcode, "SelectDataBase")) return -1;
-   
+
    fDB = db;
 
    return 0;
@@ -487,7 +487,7 @@ TSQLResult *TODBCServer::GetTables(const char*, const char* wild)
       schemaNameLength = schemabuf.Length();
    }
 */
-   
+
    SQLCHAR* tableName = 0;
    SQLSMALLINT tableNameLength = 0;
 

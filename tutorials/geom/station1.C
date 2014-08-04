@@ -1,13 +1,13 @@
 #include "TGeoManager.h"
-   
-void station1() 
+
+void station1()
 {
   // Drawing a space station, using ROOT geometry class.
   // Name: station1.C
   // Author: Chang Yeol Lee, Dept. of Physics, Univ. of Seoul
   // Reviewed by Sunman Kim (sunman98@hanmail.net)
   // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
-  // 
+  //
   // How to run: .x station1.C in ROOT terminal, then use OpenGL
   //
   // This macro was created for the evaluation of Computational Physics course in 2006.
@@ -28,7 +28,7 @@ void station1()
  geom->SetTopVolume(top);
  geom->SetTopVisible(0);
  // If you want to see the boundary, please input the number, 1 instead of 0.
- // Like this, geom->SetTopVisible(1); 
+ // Like this, geom->SetTopVisible(1);
 
 
 
@@ -36,7 +36,7 @@ void station1()
  Cone1->SetFillColor(35);
  Cone1->SetLineColor(35);
  top->AddNodeOverlap(Cone1,1,new TGeoTranslation(0,0,0));
- 
+
  TGeoVolume *Cone2=geom->MakeCone("Cone2",Copper,25,0,30,0,30);
  Cone2->SetFillColor(7);
  Cone2->SetLineColor(7);
@@ -63,12 +63,12 @@ for(int i=0;i<28;i++){
  Cone3->SetFillColor(13);
  Cone3->SetLineColor(13);
  top->AddNodeOverlap(Cone3,1,new TGeoTranslation(-60,0,-110));
- 
+
  TGeoVolume *Cone31=geom->MakeCone("Cone31",Copper,230,0,70,0,70);
  Cone31->SetFillColor(13);
  Cone31->SetLineColor(13);
  top->AddNodeOverlap(Cone31,1,new TGeoTranslation(-60,0,-400));
- 
+
 for(int i=0;i<5;i++){
  Cone31=geom->MakeCone("Cone31",Copper,7,0,73,0,73);
  Cone31->SetFillColor(21);
@@ -88,7 +88,7 @@ for(int i=0;i<5;i++){
  Cone321->SetFillColor(2);
  Cone321->SetLineColor(2);
  top->AddNodeOverlap(Cone321,1,new TGeoTranslation(-60,0,-680));
- 
+
  TGeoVolume *Cone4=geom->MakeCone("Cone4",Copper,60,0,70,0,0);
  Cone4->SetFillColor(13);
  Cone4->SetLineColor(13);
@@ -110,7 +110,7 @@ for(int i=1;i<=8;i++){
  Cone41->SetFillColor(13);
  Cone41->SetLineColor(13);
  top->AddNodeOverlap(Cone41,1,new TGeoTranslation(60,0,-400));
- 
+
  TGeoVolume *Cone42=geom->MakeCone("Cone42",Copper,30,60,50,0,70);
  Cone42->SetFillColor(35);
  Cone42->SetLineColor(35);
@@ -120,7 +120,7 @@ for(int i=1;i<=8;i++){
  Cone421->SetFillColor(2);
  Cone421->SetLineColor(2);
  top->AddNodeOverlap(Cone421,1,new TGeoTranslation(60,0,-680));
- 
+
  TGeoVolume *Cone5=geom->MakeCone("Cone5",Copper,60,0,70,0,0);
  Cone5->SetFillColor(13);
  Cone5->SetLineColor(13);
@@ -140,12 +140,12 @@ for(int i=1;i<=8;i++){
  Cone521->SetFillColor(2);
  Cone521->SetLineColor(2);
  top->AddNodeOverlap(Cone521,1,new TGeoTranslation(0,-60,-680));
- 
+
  TGeoVolume *Cone6=geom->MakeCone("Cone6",Copper,60,0,70,0,0);
  Cone6->SetFillColor(13);
  Cone6->SetLineColor(13);
  top->AddNodeOverlap(Cone3,1,new TGeoTranslation(0,60,-110));
- 
+
  TGeoVolume *Cone61=geom->MakeCone("Cone61",Copper,230,0,70,0,70);
  Cone61->SetFillColor(13);
  Cone61->SetLineColor(13);
@@ -160,7 +160,7 @@ for(int i=1;i<=8;i++){
  Cone621->SetFillColor(2);
  Cone621->SetLineColor(2);
  top->AddNodeOverlap(Cone621,1,new TGeoTranslation(0,60,-680));
- 
+
  TGeoVolume *Cone7=geom->MakeCone("Cone7",Copper,50,0,40,0,5);
  Cone7->SetFillColor(13);
  Cone7->SetLineColor(13);
@@ -174,18 +174,18 @@ for(int i=1;i<=8;i++){
  TGeoVolume *Cone711=geom->MakeCone("Cone711",Copper,10,0,10,0,60);
  Cone711->SetFillColor(13);
  Cone711->SetLineColor(13);
- top->AddNodeOverlap(Cone711,1,new TGeoCombiTrans(70,-60,10,new TGeoRotation("Cone7",90,-90,-90))); 
+ top->AddNodeOverlap(Cone711,1,new TGeoCombiTrans(70,-60,10,new TGeoRotation("Cone7",90,-90,-90)));
 
  TGeoVolume *Torus1=geom->MakeTorus("Torus1",Iron,120,30,20);
  Torus1->SetFillColor(33);
  Torus1->SetLineColor(33);
- top->AddNodeOverlap(Torus1,1,new TGeoTranslation(0,0,610)); 
+ top->AddNodeOverlap(Torus1,1,new TGeoTranslation(0,0,610));
 
  TGeoVolume *Cone8=geom->MakeCone("Cone8",Copper,50,0,40,0,5);
  Cone8->SetFillColor(13);
  Cone8->SetLineColor(13);
  top->AddNodeOverlap(Cone8,1,new TGeoCombiTrans(100,60,10,new TGeoRotation("Cone8",90,90,0)));
- 
+
  TGeoVolume *Cone81=geom->MakeCone("Cone81",Copper,50,0,60,0,40);
  Cone81->SetFillColor(16);
  Cone81->SetLineColor(16);
@@ -239,7 +239,7 @@ for(int i=1;i<=8;i++){
  Torus1=geom->MakeTorus("Torus1",Iron,120,30,20);
  Torus1->SetFillColor(33);
  Torus1->SetLineColor(33);
- top->AddNodeOverlap(Torus1,1,new TGeoTranslation(0,0,610)); 
+ top->AddNodeOverlap(Torus1,1,new TGeoTranslation(0,0,610));
 
 for(int i=1;i<=8;i++){
  TGeoVolume *Torus2=geom->MakeTorus("Torus2",Iron,120,20,40,45*i-4,8);
@@ -260,7 +260,7 @@ for(int i=1;i<=8;i++){
 
  TGeoVolume *Sphere01=geom->MakeSphere("Sphere01",Iron,0,15,0,45,0);
  Sphere01->SetFillColor(2);
- Sphere01->SetLineColor(2); 
+ Sphere01->SetLineColor(2);
  top->AddNodeOverlap(Sphere01,1,new TGeoTranslation(0,-210,600));
 
  TGeoVolume *Sphere02=geom->MakeSphere("Sphere02",Iron,0,15,0,45,0);
@@ -362,12 +362,12 @@ for(int i=1;i<=8;i++){
  Tubs3->SetFillColor(18);
  Tubs3->SetLineColor(18);
  top->AddNodeOverlap(Tubs3,1,new TGeoTranslation(30,-170,-400));
- 
+
  TGeoVolume *Tubs31=geom->MakeTubs("Tubs31",Iron,50,60,230,310,440);
  Tubs31->SetFillColor(18);
  Tubs31->SetLineColor(18);
  top->AddNodeOverlap(Tubs31,1,new TGeoTranslation(0,-275,-400));
- 
+
  TGeoVolume *Sphere311=geom->MakeSphere("Sphere311",Iron,0,10,0,180,0,360);
  Sphere311->SetFillColor(2);
  Sphere311->SetLineColor(2);
@@ -387,12 +387,12 @@ for(int i=1;i<=8;i++){
  Tubs4->SetFillColor(18);
  Tubs4->SetLineColor(18);
  top->AddNodeOverlap(Tubs4,1,new TGeoTranslation(-30,170,-400));
- 
+
  TGeoVolume *Tubs41=geom->MakeTubs("Tubs41",Iron,50,60,230,490,620);
  Tubs41->SetFillColor(18);
  Tubs41->SetLineColor(18);
  top->AddNodeOverlap(Tubs41,1,new TGeoTranslation(0,275,-400));
- 
+
  TGeoVolume *Sphere411=geom->MakeSphere("Sphere411",Iron,0,10,0,180,0,360);
  Sphere411->SetFillColor(2);
  Sphere411->SetLineColor(2);
@@ -402,7 +402,7 @@ for(int i=1;i<=8;i++){
  Sphere412->SetFillColor(2);
  Sphere412->SetLineColor(2);
  top->AddNodeOverlap(Sphere412,1,new TGeoTranslation(30,-320,-400));
- 
+
  TGeoVolume *Sphere413=geom->MakeSphere("Sphere413",Iron,0,10,0,180,0,360);
  Sphere413->SetFillColor(2);
  Sphere413->SetLineColor(2);
@@ -523,7 +523,7 @@ for(int i=1;i<=8;i++){
  Cone31->SetFillColor(38);
  top->SetVisibility(0);
  geom->CloseGeometry();
- 
+
  top->Draw("ogl");
 
 }

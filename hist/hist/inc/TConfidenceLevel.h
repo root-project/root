@@ -13,7 +13,7 @@
 // TConfidenceLevel
 //
 // This class serves as output for the TLimit::ComputeLimit method.
-// It is created just after the time-consuming part and can be stored 
+// It is created just after the time-consuming part and can be stored
 // in a TFile for further processing. It contains
 // light methods to return CLs, CLb and other interesting quantities.
 //____________________________________________________________________
@@ -24,7 +24,7 @@ class TConfidenceLevel : public TObject {
    TConfidenceLevel();
    TConfidenceLevel(Int_t mc, bool onesided = kTRUE);
    virtual ~TConfidenceLevel();
-   inline void SetTSD(Double_t in) { fTSD = in; } 
+   inline void SetTSD(Double_t in) { fTSD = in; }
    void SetTSB(Double_t * in);
    void SetTSS(Double_t * in);
    inline void SetLRS(Double_t * in) { fLRS = in; }
@@ -32,7 +32,7 @@ class TConfidenceLevel : public TObject {
    inline void SetBtot(Double_t in) { fBtot = in; }
    inline void SetStot(Double_t in) { fStot = in; }
    inline void SetDtot(Int_t in) { fDtot = in; }
-   inline Double_t GetStatistic() const { return -2 * (fTSD - fStot); } 
+   inline Double_t GetStatistic() const { return -2 * (fTSD - fStot); }
    void Draw(const Option_t *option="");
    Double_t GetExpectedStatistic_b(Int_t sigma = 0) const;
    Double_t GetExpectedStatistic_sb(Int_t sigma = 0) const;
@@ -42,14 +42,14 @@ class TConfidenceLevel : public TObject {
    Double_t GetExpectedCLb_sb(Int_t sigma = 0) const;
    Double_t GetExpectedCLb_b(Int_t sigma = 0) const;
    Double_t GetExpectedCLsb_b(Int_t sigma = 0) const;
-   inline Double_t GetExpectedCLs_b(Int_t sigma = 0) const { return (GetExpectedCLsb_b(sigma) / GetExpectedCLb_b(sigma)); } 
+   inline Double_t GetExpectedCLs_b(Int_t sigma = 0) const { return (GetExpectedCLsb_b(sigma) / GetExpectedCLb_b(sigma)); }
    Double_t GetAverageCLs() const;
    Double_t GetAverageCLsb() const;
    Double_t Get3sProbability() const;
    Double_t Get5sProbability() const;
-   inline Int_t GetDtot() const { return fDtot; } 
-   inline Double_t GetStot() const { return fStot; } 
-   inline Double_t GetBtot() const { return fBtot; } 
+   inline Int_t GetDtot() const { return fDtot; }
+   inline Double_t GetStot() const { return fStot; }
+   inline Double_t GetBtot() const { return fBtot; }
  private:
    // data members used for the limits calculation
    Int_t      fNNMC;

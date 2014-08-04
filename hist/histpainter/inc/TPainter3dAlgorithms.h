@@ -114,7 +114,7 @@ private:
    DrawFaceFunc_t  fDrawFace;        //pointer to face drawing function
    LegoFunc_t      fLegoFunction;    //pointer to lego function
    SurfaceFunc_t   fSurfaceFunction; //pointer to surface function
-   
+
 public:
    TPainter3dAlgorithms();
    TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t system=1);

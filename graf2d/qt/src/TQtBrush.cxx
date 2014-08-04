@@ -13,7 +13,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////
 //
-// TQtBrush creates the QBrush Qt object based on the ROOT "TAttFill" attributes 
+// TQtBrush creates the QBrush Qt object based on the ROOT "TAttFill" attributes
 //
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -149,7 +149,7 @@ TQtBrush::TQtBrush(const TAttFill &rootFillAttributes)
 
 }
 //______________________________________________________________________________
-TQtBrush::~TQtBrush() 
+TQtBrush::~TQtBrush()
 {
    // TQtBrush dtor
 }

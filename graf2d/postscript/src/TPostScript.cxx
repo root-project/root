@@ -3069,7 +3069,7 @@ void TPostScript::Zone()
       fIXzone++;
       if( fIXzone > fNXzone) { fIXzone=1; fIYzone++; }
    }
-   
+
    // Picture Initialisation
    SaveRestore(1);
    if (fgLineJoin) {

@@ -37,7 +37,7 @@ protected :
    Bool_t             fIsClosed;       // Closed flag
    Bool_t             fUseOverlaps;    // Activated if user defined overlapping candidates
 
-   TGeoParallelWorld(const TGeoParallelWorld&); 
+   TGeoParallelWorld(const TGeoParallelWorld&);
    TGeoParallelWorld& operator=(const TGeoParallelWorld&);
 
 public:
@@ -52,8 +52,8 @@ public:
    void              AddNode(TGeoPhysicalNode *pnode);
    // Adding overlap candidates can improve performance
    void              AddOverlap(TGeoVolume *vol);
-   
-   
+
+
    // Closing a parallel geometry is mandatory
    Bool_t            CloseGeometry();
    // Refresh structures in case of re-alignment
@@ -68,7 +68,7 @@ public:
    TGeoManager      *GetGeometry() const {return fGeoManager;}
    Bool_t            IsClosed() const    {return fIsClosed;}
    TGeoVolume       *GetVolume() const   {return fVolume;}
-   
+
    // Utilities
    void              CheckOverlaps(Double_t ovlp=0.001); // default 10 microns
    void              Draw(Option_t *option);

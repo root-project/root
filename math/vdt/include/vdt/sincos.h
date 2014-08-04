@@ -2,24 +2,24 @@
  * sincos_common.h
  * The basic idea is to exploit Pade polynomials.
  * A lot of ideas were inspired by the cephes math library (by Stephen L. Moshier
- * moshier@na-net.ornl.gov) as well as actual code. 
+ * moshier@na-net.ornl.gov) as well as actual code.
  * The Cephes library can be found here:  http://www.netlib.org/cephes/
- * 
+ *
  *  Created on: Jun 23, 2012
  *      Author: Danilo Piparo, Thomas Hauth, Vincenzo Innocente
  */
 
-/* 
+/*
  * VDT is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -59,7 +59,7 @@ const double DP1 = 7.853981554508209228515625E-1;
 const double DP2 = 7.94662735614792836714E-9;
 const double DP3 = 3.06161699786838294307E-17;
 
-// single precision constants 
+// single precision constants
 
 const float DP1F = 0.78515625;
 const float DP2F = 2.4187564849853515625e-4;
@@ -108,7 +108,7 @@ inline double reduce2quadrant(double x, int32_t& quad) {
 
     x = fabs(x);
     quad = int (ONEOPIO4 * x); // always positive, so (int) == std::floor
-    quad = (quad+1) & (~1);    
+    quad = (quad+1) & (~1);
     const double y = double (quad);
     // Extended precision modular arithmetic
     return ((x - y * DP1) - y * DP2) - y * DP3;
@@ -118,8 +118,8 @@ inline double reduce2quadrant(double x, int32_t& quad) {
 /// Sincos only for -45deg < x < 45deg
 inline void fast_sincos_m45_45( const double z, double & s, double &c ) {
 
-    double zz = z * z;    
-    s = z  +  z * zz * get_sin_px(zz);                
+    double zz = z * z;
+    s = z  +  z * zz * get_sin_px(zz);
     c = 1.0 - zz * .5 + zz * zz * get_cos_px(zz);
   }
 
@@ -134,7 +134,7 @@ inline void fast_sincos( const double xx, double & s, double &c ) {
 
     int j;
     double x = details::reduce2quadrant(xx,j);
-    const double signS = (j&4); 
+    const double signS = (j&4);
 
     j-=2;
 
@@ -142,19 +142,19 @@ inline void fast_sincos( const double xx, double & s, double &c ) {
     const double poly = j&2;
 
     details::fast_sincos_m45_45(x,s,c);
-    
+
     //swap
     if( poly==0 ) {
       const double tmp = c;
-      c=s; 
+      c=s;
       s=tmp;
     }
 
-    if(signC == 0.) 
+    if(signC == 0.)
       c = -c;
-    if(signS != 0.) 
+    if(signS != 0.)
       s = -s;
-    if (xx < 0.)  
+    if (xx < 0.)
       s = -s;
 
   }
@@ -177,8 +177,8 @@ inline float reduce2quadrant(float x, int & quad) {
     // Extended precision modular arithmetic
     return ((x - y * DP1F) - y * DP2F) - y * DP3F;
   }
-  
-  
+
+
 //------------------------------------------------------------------------------
 
 
@@ -209,7 +209,7 @@ inline void fast_sincosf( const float xx, float & s, float &c ) {
 
     int j;
     const float x = details::reduce2quadrant(xx,j);
-    int signS = (j&4); 
+    int signS = (j&4);
 
     j-=2;
 
@@ -235,4 +235,4 @@ inline void fast_sincosf( const float xx, float & s, float &c ) {
 
 } // end namespace vdt
 
-#endif 
+#endif

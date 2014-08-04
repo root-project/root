@@ -17,11 +17,11 @@
 
 /////////////////////////////////////////////////////////////////////////////////
 //
-//  TQtEventQueue is a queue container of the pointers of Event_t structures 
+//  TQtEventQueue is a queue container of the pointers of Event_t structures
 //  created by TQtClientFilter class
-//  If auto-deleting is turned on, all the items in a collection are deleted when 
+//  If auto-deleting is turned on, all the items in a collection are deleted when
 //  the collection itself is deleted.
-//  (for the full list of the members see: 
+//  (for the full list of the members see:
 //  http://doc.trolltech.com/3.3/qptrlist.html)
 //
 /////////////////////////////////////////////////////////////////////////////////
@@ -36,16 +36,16 @@ TQtEventQueue::TQtEventQueue(): QQueue<const Event_t *> ()
 TQtEventQueue::~TQtEventQueue()
 {
     // Remove all remaining events if any
-    qDeleteAll(*this); 
+    qDeleteAll(*this);
 }
 
 //______________________________________________________________________________
 int TQtEventQueue::RemoveItems(const Event_t *ev)
-{ 
-   // Removes all items matching ev->fWindow 
+{
+   // Removes all items matching ev->fWindow
    // The removed item is deleted if auto-deletion (by default) is enabled
    // with class ctor
-   
+
    // This method is used to debug the application only (by far)
    int counter = 0;
    assert(0);

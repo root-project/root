@@ -37,7 +37,7 @@ public:
    TClassDocInfo(TClass* cl,
       const char* htmlfilename = "",
       const char* fsdecl = "", const char* fsimpl = "",
-      const char* decl = 0, const char* impl = 0): 
+      const char* decl = 0, const char* impl = 0):
       fClass(cl), fModule(0), fHtmlFileName(htmlfilename),
       fDeclFileName(decl ? decl : cl->GetDeclFileName()),
       fImplFileName(impl ? impl : cl->GetImplFileName()),
@@ -47,7 +47,7 @@ public:
    TClassDocInfo(TDictionary* cl,
       const char* htmlfilename = "",
       const char* fsdecl = "", const char* fsimpl = "",
-      const char* decl = 0, const char* impl = 0): 
+      const char* decl = 0, const char* impl = 0):
       fClass(cl), fModule(0), fHtmlFileName(htmlfilename),
       fDeclFileName(decl),
       fImplFileName(impl),
@@ -71,7 +71,7 @@ public:
            Bool_t          IsSelected() const { return fSelected; }
            Bool_t          HaveSource() const { return fDeclFileSysName.Length()
                                                    || (fClass && !dynamic_cast<TClass*>(fClass)); }
-   
+
            void            SetHtmlFileName(const char* name) { fHtmlFileName = name; }
            void            SetDeclFileName(const char* name) { fDeclFileName = name; }
            void            SetImplFileName(const char* name) { fImplFileName = name; }
@@ -107,7 +107,7 @@ private:
 //
 class TModuleDocInfo: public TNamed {
 public:
-   TModuleDocInfo(const char* name, TModuleDocInfo* super, const char* doc = ""): 
+   TModuleDocInfo(const char* name, TModuleDocInfo* super, const char* doc = ""):
       TNamed(name, doc), fSuper(super), fSub(0), fSelected(kTRUE) {
          if (super) super->GetSub().Add(this);
       }

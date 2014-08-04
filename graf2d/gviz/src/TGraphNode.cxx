@@ -55,7 +55,7 @@ TGraphNode::TGraphNode(const char *name,const char *title)
 TGraphNode::~TGraphNode()
 {
    // Graph Node default destructor.
-   
+
 }
 
 
@@ -96,7 +96,7 @@ Int_t TGraphNode::DistancetoPrimitive(Int_t px, Int_t py)
 void TGraphNode::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    // Execute action corresponding to one event.
-   
+
    TEllipse ellipse(fX, fY, fW, fH, 0., 360., 0.);
    ellipse.ExecuteEvent(event,px, py);
    fX = ellipse.GetX1();
@@ -142,7 +142,7 @@ void TGraphNode::Paint(Option_t *)
    ellipse.SetLineStyle(GetLineStyle());
    ellipse.SetLineWidth(GetLineWidth());
    ellipse.PaintEllipse(fX, fY, fW, fH, 0., 360., 0., "");
-   
+
    // Draw the node title
    text.SetTextColor(GetTextColor());
    text.SetTextFont(GetTextFont());

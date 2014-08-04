@@ -24,7 +24,7 @@ Int_t ProcFileElements::ProcFileElement::Compare(const TObject *o) const
    if (!e) return -1;
 
    if (fFirst == e->fFirst) {
-      // They start at the same point 
+      // They start at the same point
       return 0;
    } else if (fFirst < e->fFirst) {
       // This starts first
@@ -109,10 +109,10 @@ Int_t ProcFileElements::ProcFileElement::MergeElement(ProcFileElement *e)
 
    // Check if it can be done
    if (Overlapping(e) < 0) return -1;
-   
+
    // Ok, we can merge: set the lower bound
    if (e->fFirst < fFirst) fFirst = e->fFirst;
-   
+
    // Set the upper bound
    if (fLast == -1 || e->fLast == -1) {
       fLast = -1;
@@ -134,7 +134,7 @@ void ProcFileElements::ProcFileElement::Print(Option_t *) const
 //_______________________________________________________________________
 Int_t ProcFileElements::Add(Long64_t fst, Long64_t lst)
 {
-   // Add a new element to the list 
+   // Add a new element to the list
    // Return 1 if a new element has been added, 0 if it has been merged
    // with an existing one, -1 in case of error
 
@@ -143,7 +143,7 @@ Int_t ProcFileElements::Add(Long64_t fst, Long64_t lst)
       Error("Add", "could not create internal list!");
       return -1;
    }
-   
+
    // Create (temporary element)
    ProcFileElements::ProcFileElement *ne =
       new ProcFileElements::ProcFileElement(fst, lst);
@@ -154,7 +154,7 @@ Int_t ProcFileElements::Add(Long64_t fst, Long64_t lst)
    while ((e = (ProcFileElements::ProcFileElement *)nxe())) {
       if (e->MergeElement(ne) == 0) break;
    }
-   
+
    Int_t rc = 0;
    // Remove and re-add the merged element to sort correctly its possibly new position
    if (e) {
@@ -170,7 +170,7 @@ Int_t ProcFileElements::Add(Long64_t fst, Long64_t lst)
    // Make sure that all what can be merged is merged (because of the order, some elements
    // which could be merged are not merged, making the determination of fFirst and fLast below
    // to give incorrect values)
-   
+
    ProcFileElements::ProcFileElement *ep = 0, *en = 0;
    TObjLink *olp = fElements->FirstLink(), *oln = 0;
    while (olp && (ep = (ProcFileElements::ProcFileElement *) olp->GetObject())) {
@@ -190,7 +190,7 @@ Int_t ProcFileElements::Add(Long64_t fst, Long64_t lst)
    // New overall ranges
    if ((e = (ProcFileElements::ProcFileElement *) fElements->First())) fFirst = e->fFirst;
    if ((e = (ProcFileElements::ProcFileElement *) fElements->Last())) fLast = e->fLast;
-   
+
    // Done
    return rc;
 }
@@ -217,7 +217,7 @@ Int_t ProcFileElements::Merge(TCollection *li)
    // Return number of elements added
 
    if (!li) return -1;
-   
+
    if (li->GetSize() <= 0) return 0;
 
    Int_t nadd = 0;

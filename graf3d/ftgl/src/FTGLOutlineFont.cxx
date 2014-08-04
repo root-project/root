@@ -35,9 +35,9 @@ void FTGLOutlineFont::PreRender()
 {
     FTFont::PreRender();
     glPushAttrib( GL_ENABLE_BIT | GL_HINT_BIT | GL_LINE_BIT | GL_COLOR_BUFFER_BIT);
-    
+
     glDisable( GL_TEXTURE_2D);
-    
+
     glEnable( GL_LINE_SMOOTH);
     glHint( GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
     glEnable(GL_BLEND);

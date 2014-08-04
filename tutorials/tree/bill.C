@@ -1,7 +1,7 @@
 // benchmark comparing write/read to/from keys or trees
 // for example for N=10000, the following output is produced
 // on a P IV 62.4GHz
-//   
+//
 // root -b -q bill.C    or root -b -q bill.C++
 //
 //billw0  : RT=  1.070 s, Cpu=  1.050 s, File size=  45508003 bytes, CX= 1
@@ -27,7 +27,7 @@
 #include "TKey.h"
 #include "TTree.h"
 #include "TROOT.h"
-   
+
 const Int_t N = 10000;       //number of events to be processed
 TStopwatch timer;
 
@@ -37,7 +37,7 @@ void billw(Int_t compress) {
    TFile f("/tmp/bill.root","recreate","bill benchmark with keys",compress);
    TH1F h("h","h",1000,-3,3);
    h.FillRandom("gaus",50000);
-   
+
    for (Int_t i=0;i<N;i++) {
       char name[20];
       sprintf(name,"h%d",i);
@@ -59,7 +59,7 @@ void billr(Int_t compress) {
    TKey *key;
    Int_t i=0;
    TH1F *hmean = new TH1F("hmean","hist mean from keys",100,0,1);
-   
+
    while ((key=(TKey*)next())) {
       h = (TH1F*)key->ReadObj();
       hmean->Fill(h->GetMean());
@@ -107,7 +107,7 @@ void billtr(Int_t compress) {
    printf("billtr%d : RT=%7.3f s, Cpu=%7.3f s\n",compress,timer.RealTime(),timer.CpuTime());
 }
 void bill() {
-   
+
    TStopwatch totaltimer;
    totaltimer.Start();
    for (Int_t compress=0;compress<2;compress++) {
@@ -128,4 +128,4 @@ void bill() {
    printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
    printf("******************************************************************\n");
 }
-          
+

@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -19,43 +19,43 @@ namespace ROOT {
    namespace Minuit2 {
 
 
-int mneigen(double* a, unsigned int ndima, unsigned int n, unsigned int mits, 
+int mneigen(double* a, unsigned int ndima, unsigned int n, unsigned int mits,
             double* work, double precis) {
    // compute matrix eignevalues (transaltion from mneig.F of Minuit)
-   
+
    /* System generated locals */
    unsigned int a_dim1, a_offset, i__1, i__2, i__3;
    double r__1, r__2;
-   
+
    /* Local variables */
    double b, c__, f, h__;
    unsigned int i__, j, k, l, m = 0;
    double r__, s;
    unsigned int i0, i1, j1, m1, n1;
    double hh, gl, pr, pt;
-   
-   
+
+
    /*          PRECIS is the machine precision EPSMAC */
    /* Parameter adjustments */
    a_dim1 = ndima;
    a_offset = 1 + a_dim1 * 1;
    a -= a_offset;
    --work;
-   
+
    /* Function Body */
    int ifault = 1;
-   
+
    i__ = n;
    i__1 = n;
    for (i1 = 2; i1 <= i__1; ++i1) {
       l = i__ - 2;
       f = a[i__ + (i__ - 1) * a_dim1];
       gl = (double)0.;
-      
+
       if (l < 1) {
          goto L25;
       }
-      
+
       i__2 = l;
       for (k = 1; k <= i__2; ++k) {
          /* Computing 2nd power */
@@ -66,23 +66,23 @@ L25:
          /* Computing 2nd power */
          r__1 = f;
       h__ = gl + r__1 * r__1;
-      
+
       if (gl > (double)1e-35) {
          goto L30;
       }
-      
+
       work[i__] = (double)0.;
       work[n + i__] = f;
       goto L65;
 L30:
          ++l;
-      
+
       gl = sqrt(h__);
-      
+
       if (f >= (double)0.) {
          gl = -gl;
       }
-      
+
       work[n + i__] = gl;
       h__ -= f * gl;
       a[i__ + (i__ - 1) * a_dim1] = f - gl;
@@ -95,11 +95,11 @@ L30:
          for (k = 1; k <= i__3; ++k) {
             gl += a[j + k * a_dim1] * a[i__ + k * a_dim1];
          }
-         
+
          if (j >= l) {
             goto L47;
          }
-         
+
          j1 = j + 1;
          i__3 = l;
          for (k = j1; k <= i__3; ++k) {
@@ -117,7 +117,7 @@ L47:
          work[n + j] = gl;
          i__3 = j;
          for (k = 1; k <= i__3; ++k) {
-            a[j + k * a_dim1] = a[j + k * a_dim1] - f * work[n + k] - gl 
+            a[j + k * a_dim1] = a[j + k * a_dim1] - f * work[n + k] - gl
             * a[i__ + k * a_dim1];
          }
       }
@@ -130,11 +130,11 @@ L65:
    i__1 = n;
    for (i__ = 1; i__ <= i__1; ++i__) {
       l = i__ - 1;
-      
+
       if (work[i__] == (double)0. || l == 0) {
          goto L100;
       }
-      
+
       i__3 = l;
       for (j = 1; j <= i__3; ++j) {
          gl = (double)0.;
@@ -150,11 +150,11 @@ L65:
 L100:
          work[i__] = a[i__ + i__ * a_dim1];
       a[i__ + i__ * a_dim1] = (double)1.;
-      
+
       if (l == 0) {
          goto L110;
       }
-      
+
       i__2 = l;
       for (j = 1; j <= i__2; ++j) {
          a[i__ + j * a_dim1] = (double)0.;
@@ -163,8 +163,8 @@ L100:
 L110:
          ;
    }
-   
-   
+
+
    n1 = n - 1;
    i__1 = n;
    for (i__ = 2; i__ <= i__1; ++i__) {
@@ -177,42 +177,42 @@ L110:
    i__1 = n;
    for (l = 1; l <= i__1; ++l) {
       j = 0;
-      h__ = precis * ((r__1 = work[l], fabs(r__1)) + (r__2 = work[n + l], 
+      h__ = precis * ((r__1 = work[l], fabs(r__1)) + (r__2 = work[n + l],
                                                       fabs(r__2)));
-      
+
       if (b < h__) {
          b = h__;
       }
-      
+
       i__2 = n;
       for (m1 = l; m1 <= i__2; ++m1) {
          m = m1;
-         
+
          if ((r__1 = work[n + m], fabs(r__1)) <= b) {
             goto L150;
          }
-         
+
       }
-      
+
 L150:
          if (m == l) {
             goto L205;
          }
-      
+
 L160:
          if (j == mits) {
             return ifault;
          }
-      
+
       ++j;
       pt = (work[l + 1] - work[l]) / (work[n + l] * (double)2.);
       r__ = sqrt(pt * pt + (double)1.);
       pr = pt + r__;
-      
+
       if (pt < (double)0.) {
          pr = pt - r__;
       }
-      
+
       h__ = work[l] - work[n + l] / pr;
       i__2 = n;
       for (i__ = l; i__ <= i__2; ++i__) {
@@ -230,11 +230,11 @@ L160:
          --i__;
          gl = c__ * work[n + i__];
          h__ = c__ * pt;
-         
+
          if (fabs(pt) >= (r__1 = work[n + i__], fabs(r__1))) {
             goto L180;
          }
-         
+
          c__ = pt / work[n + i__];
          r__ = sqrt(c__ * c__ + (double)1.);
          work[n + j] = s * work[n + i__] * r__;
@@ -259,11 +259,11 @@ L190:
       }
       work[n + l] = s * pt;
       work[l] = c__ * pt;
-      
+
       if ((r__1 = work[n + l], fabs(r__1)) > b) {
          goto L160;
       }
-      
+
 L205:
          work[l] += f;
    }
@@ -274,21 +274,21 @@ L205:
       i1 = i__ + 1;
       i__3 = n;
       for (j = i1; j <= i__3; ++j) {
-         
+
          if (work[j] >= pt) {
             goto L220;
          }
-         
+
          k = j;
          pt = work[j];
 L220:
             ;
       }
-      
+
       if (k == i__) {
          goto L240;
       }
-      
+
       work[k] = work[i__];
       work[i__] = pt;
       i__3 = n;
@@ -301,7 +301,7 @@ L240:
          ;
    }
    ifault = 0;
-   
+
    return ifault;
 } /* mneig_ */
 

@@ -99,9 +99,9 @@ void finalizeProof(const char *what = "simple",
 
    // Parse 'what'; it is in the form 'analysis(arg1,arg2,...)'
    TString args(what);
-   args.ReplaceAll("("," "); 
-   args.ReplaceAll(")"," "); 
-   args.ReplaceAll(","," "); 
+   args.ReplaceAll("("," ");
+   args.ReplaceAll(")"," ");
+   args.ReplaceAll(","," ");
    Ssiz_t from = 0;
    TString act, tok;
    if (!args.Tokenize(act, from, " ")) {

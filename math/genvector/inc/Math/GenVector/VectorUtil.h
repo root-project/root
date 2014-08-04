@@ -424,69 +424,69 @@ namespace ROOT {
           */
          template<class Matrix, class CoordSystem, class U>
          inline
-         DisplacementVector3D<CoordSystem,U> Mult (const Matrix & m, const DisplacementVector3D<CoordSystem,U> & v) { 
-            DisplacementVector3D<CoordSystem,U> vret; 
-            vret.SetXYZ( m(0,0) * v.x() + m(0,1) * v.y() + m(0,2) * v.z() , 
-                        m(1,0) * v.x() + m(1,1) * v.y() + m(1,2) * v.z() , 
-                        m(2,0) * v.x() + m(2,1) * v.y() + m(2,2) * v.z() ); 
-            return vret; 
+         DisplacementVector3D<CoordSystem,U> Mult (const Matrix & m, const DisplacementVector3D<CoordSystem,U> & v) {
+            DisplacementVector3D<CoordSystem,U> vret;
+            vret.SetXYZ( m(0,0) * v.x() + m(0,1) * v.y() + m(0,2) * v.z() ,
+                        m(1,0) * v.x() + m(1,1) * v.y() + m(1,2) * v.z() ,
+                        m(2,0) * v.x() + m(2,1) * v.y() + m(2,2) * v.z() );
+            return vret;
          }
-         
-         
-         /** 
-          Multiplications of a generic matrices with a generic PositionVector 
+
+
+         /**
+          Multiplications of a generic matrices with a generic PositionVector
           Assume that the matrix implements the operator( i,j) and that it has at least         3 columns and 3 rows. There is no check on the matrix size !!
-          */ 
-         template<class Matrix, class CoordSystem, class U> 
+          */
+         template<class Matrix, class CoordSystem, class U>
          inline
-         PositionVector3D<CoordSystem,U> Mult (const Matrix & m, const PositionVector3D<CoordSystem,U> & p) { 
-            DisplacementVector3D<CoordSystem,U> pret; 
-            pret.SetXYZ( m(0,0) * p.x() + m(0,1) * p.y() + m(0,2) * p.z() , 
-                        m(1,0) * p.x() + m(1,1) * p.y() + m(1,2) * p.z() , 
-                        m(2,0) * p.x() + m(2,1) * p.y() + m(2,2) * p.z() ); 
-            return pret; 
+         PositionVector3D<CoordSystem,U> Mult (const Matrix & m, const PositionVector3D<CoordSystem,U> & p) {
+            DisplacementVector3D<CoordSystem,U> pret;
+            pret.SetXYZ( m(0,0) * p.x() + m(0,1) * p.y() + m(0,2) * p.z() ,
+                        m(1,0) * p.x() + m(1,1) * p.y() + m(1,2) * p.z() ,
+                        m(2,0) * p.x() + m(2,1) * p.y() + m(2,2) * p.z() );
+            return pret;
          }
-         
-         
-         /** 
-          Multiplications of a generic matrices with a  LorentzVector described 
-          in any coordinate system.  
+
+
+         /**
+          Multiplications of a generic matrices with a  LorentzVector described
+          in any coordinate system.
           Assume that the matrix implements the operator( i,j) and that it has at least         4 columns and 4 rows. There is no check on the matrix size !!
-          */ 
+          */
          // this will not be ambigous with operator*(Scalar, LorentzVector) since that one     // Scalar is passed by value
-         template<class CoordSystem, class Matrix> 
+         template<class CoordSystem, class Matrix>
          inline
-         LorentzVector<CoordSystem> Mult (const Matrix & m, const LorentzVector<CoordSystem> & v) { 
-            LorentzVector<CoordSystem> vret; 
-            vret.SetXYZT( m(0,0)*v.x() + m(0,1)*v.y() + m(0,2)*v.z() + m(0,3)* v.t() , 
-                         m(1,0)*v.x() + m(1,1)*v.y() + m(1,2)*v.z() + m(1,3)* v.t() , 
+         LorentzVector<CoordSystem> Mult (const Matrix & m, const LorentzVector<CoordSystem> & v) {
+            LorentzVector<CoordSystem> vret;
+            vret.SetXYZT( m(0,0)*v.x() + m(0,1)*v.y() + m(0,2)*v.z() + m(0,3)* v.t() ,
+                         m(1,0)*v.x() + m(1,1)*v.y() + m(1,2)*v.z() + m(1,3)* v.t() ,
                          m(2,0)*v.x() + m(2,1)*v.y() + m(2,2)*v.z() + m(2,3)* v.t() ,
                          m(3,0)*v.x() + m(3,1)*v.y() + m(3,2)*v.z() + m(3,3)* v.t() );
-            return vret; 
+            return vret;
          }
-         
-         
-         
+
+
+
          // non-template utility functions for all objects
-         
-         
-         /** 
+
+
+         /**
           Return a phi angle in the interval (0,2*PI]
-          */ 
+          */
          double Phi_0_2pi(double phi);
-         /** 
+         /**
           Returns phi angle in the interval (-PI,PI]
           */
          double  Phi_mpi_pi(double phi);
-         
-         
-         
+
+
+
       }  // end namespace Vector Util
-      
-      
-      
+
+
+
    } // end namespace Math
-   
+
 } // end namespace ROOT
 
 

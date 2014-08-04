@@ -61,7 +61,7 @@ TNtuple::TNtuple(const char *name, const char *title, const char *varlist, Int_t
 //
 //      NOTE:
 //       -Use TTree to create branches with variables of different data types.
-//       -Use TTree when the number of branches is large (> 100). 
+//       -Use TTree when the number of branches is large (> 100).
 //*-*
 
    Int_t i;

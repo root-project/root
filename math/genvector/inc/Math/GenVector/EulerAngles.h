@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -14,7 +14,7 @@
 //
 // Last update: Tue May 10 17:55:10 2005
 //
-#ifndef ROOT_Math_GenVector_EulerAngles 
+#ifndef ROOT_Math_GenVector_EulerAngles
 #define ROOT_Math_GenVector_EulerAngles  1
 
 #include "Math/GenVector/Rotation3D.h"
@@ -33,11 +33,11 @@ namespace Math {
    /**
       EulerAngles class describing rotation as three angles (Euler Angles).
       The Euler angles definition matches that of Classical Mechanics (Goldstein).
-      It is also the same convention defined in 
-      <A HREF="http://mathworld.wolfram.com/EulerAngles.html">mathworld</A> 
-      and used in Mathematica and CLHEP. Note that the ROOT class TRotation defines 
-      a slightly different convention. 
-      
+      It is also the same convention defined in
+      <A HREF="http://mathworld.wolfram.com/EulerAngles.html">mathworld</A>
+      and used in Mathematica and CLHEP. Note that the ROOT class TRotation defines
+      a slightly different convention.
+
       @ingroup GenVector
    */
 class EulerAngles {
@@ -79,15 +79,15 @@ public:
    /**
       Create from any other supported rotation (see gv_detail::convert )
     */
-   template <class OtherRotation> 
+   template <class OtherRotation>
    explicit EulerAngles(const OtherRotation & r) {gv_detail::convert(r,*this);}
 
    /**
       Assign from any other rotation (see gv_detail::convert )
    */
-   template <class OtherRotation> 
-   EulerAngles &  operator=( OtherRotation const  & r ) { 
-      gv_detail::convert(r,*this); 
+   template <class OtherRotation>
+   EulerAngles &  operator=( OtherRotation const  & r ) {
+      gv_detail::convert(r,*this);
       return *this;
    }
 
@@ -156,7 +156,7 @@ public:
       fPhi   = *begin++;
       fTheta = *begin++;
       fPsi   = *begin++;
-      assert(begin == end); 
+      assert(begin == end);
       Rectify(); // Added 27 Jan. 06   JMM
    }
 
@@ -173,7 +173,7 @@ public:
       *begin++ = fPhi;
       *begin++ = fTheta;
       *begin++ = fPsi;
-      assert(begin == end); 
+      assert(begin == end);
    }
 
    /**
@@ -190,7 +190,7 @@ public:
       Set the components phi, theta, psi based on three Scalars.
    */
    void SetComponents(Scalar phi, Scalar theta, Scalar psi) {
-      fPhi=phi; fTheta=theta; fPsi=psi; 
+      fPhi=phi; fTheta=theta; fPsi=psi;
       Rectify(); // Added 27 Jan. 06   JMM
    }
 
@@ -292,11 +292,11 @@ public:
    /**
       Invert a rotation in place
    */
-   // theta stays the same and negative rotation in Theta is done via a rotation 
-   // of + PI in phi and Psi 
+   // theta stays the same and negative rotation in Theta is done via a rotation
+   // of + PI in phi and Psi
    void Invert() {
-      Scalar tmp = -fPhi; 
-      fPhi = -fPsi + Pi(); 
+      Scalar tmp = -fPhi;
+      fPhi = -fPsi + Pi();
       fPsi=tmp + Pi();
    }
 
@@ -371,7 +371,7 @@ EulerAngles operator* (RotationZ const & r1, EulerAngles const & r2);
 /**
    Stream Output and Input
  */
-  // TODO - I/O should be put in the manipulator form 
+  // TODO - I/O should be put in the manipulator form
 
 std::ostream & operator<< (std::ostream & os, const EulerAngles & e);
 

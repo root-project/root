@@ -6,9 +6,9 @@
 // also stored in a TRefArray.
 // see $ROOTSYS/tutorials/jets.C for an example creating a Tree
 // with JetEvents.
-      
-#include "TMath.h"   
-#include "TRandom.h"   
+
+#include "TMath.h"
+#include "TRandom.h"
 #include "JetEvent.h"
 
 ClassImp(Jet)
@@ -47,7 +47,7 @@ JetEvent::~JetEvent()
 //______________________________________________________________________________
 void JetEvent::Build(Int_t jetm, Int_t trackm, Int_t hitam, Int_t hitbm) {
    //Build one event
-   
+
    //Save current Object count
    Int_t ObjectNumber = TProcessID::GetObjectCount();
    Clear();
@@ -56,11 +56,11 @@ void JetEvent::Build(Int_t jetm, Int_t trackm, Int_t hitam, Int_t hitbm) {
    Track *track;
    Jet *jet;
    fNjet   = fNtrack = fNhitA  = fNhitB  = 0;
-   
+
    fVertex.SetXYZ(gRandom->Gaus(0,0.1),
                   gRandom->Gaus(0,0.2),
                   gRandom->Gaus(0,10));
-      
+
    Int_t njets = (Int_t)gRandom->Gaus(jetm,1); if (njets < 1) njets = 1;
    for (Int_t j=0;j<njets;j++) {
       jet = AddJet();
@@ -91,10 +91,10 @@ void JetEvent::Build(Int_t jetm, Int_t trackm, Int_t hitam, Int_t hitbm) {
          }
          track->fNhit = nhitsA + nhitsB;
       }
-   }         
-  //Restore Object count 
+   }
+  //Restore Object count
   //To save space in the table keeping track of all referenced objects
-  //we assume that our events do not address each other. We reset the 
+  //we assume that our events do not address each other. We reset the
   //object count to what it was at the beginning of the event.
   TProcessID::SetObjectCount(ObjectNumber);
 }

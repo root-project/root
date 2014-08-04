@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -16,26 +16,26 @@ namespace ROOT {
 
    namespace Minuit2 {
 
- 
-int Mndaxpy(unsigned int n, double da, const double* dx, int incx, double* dy, 
+
+int Mndaxpy(unsigned int n, double da, const double* dx, int incx, double* dy,
             int incy) {
    /* System generated locals */
    int i__1;
-   
+
    /* Local variables */
    int i__, m, ix, iy, mp1;
-   
-   
+
+
    /*     constant times a vector plus a vector. */
    /*     uses unrolled loops for increments equal to one. */
    /*     jack dongarra, linpack, 3/11/78. */
    /*     modified 12/3/93, array(1) declarations changed to array(*) */
-   
-   
+
+
    /* Parameter adjustments */
    --dy;
    --dx;
-   
+
    /* Function Body */
    if (n <= 0) {
       return 0;
@@ -46,10 +46,10 @@ int Mndaxpy(unsigned int n, double da, const double* dx, int incx, double* dy,
    if (incx == 1 && incy == 1) {
       goto L20;
    }
-   
+
    /*        code for unequal increments or equal increments */
    /*          not equal to 1 */
-   
+
    ix = 1;
    iy = 1;
    if (incx < 0) {
@@ -66,12 +66,12 @@ int Mndaxpy(unsigned int n, double da, const double* dx, int incx, double* dy,
       /* L10: */
    }
    return 0;
-   
+
    /*        code for both increments equal to 1 */
-   
-   
+
+
    /*        clean-up loop */
-   
+
 L20:
       m = n % 4;
    if (m == 0) {

@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2006  
+// Authors: W. Brown, M. Fischler, L. Moneta    2006
 
  /**********************************************************************
   *                                                                    *
@@ -28,25 +28,25 @@ double VectorUtil::Phi_0_2pi(double angle) {
       angle -= 2.*M_PI*n;
    } else {
       int n = static_cast<int>( -(angle)/(2.*M_PI) );
-      angle += 2.*M_PI*(n+1);  
+      angle += 2.*M_PI*(n+1);
    }
    return angle;
 }
 
 double VectorUtil::Phi_mpi_pi(double angle) {
    // returns phi angle in the interval (-PI,PI]
-   
+
    if ( angle <= M_PI && angle > -M_PI ) return angle;
-   
+
    if ( angle > 0 ) {
       int n = static_cast<int>( (angle+M_PI)/(2.*M_PI) );
       angle -= 2*M_PI*n;
    } else {
       int n = static_cast<int>( -(angle-M_PI)/(2.*M_PI) );
-      angle += 2*M_PI*n;  
+      angle += 2*M_PI*n;
    }
    return angle;
-} 
+}
 
 
 

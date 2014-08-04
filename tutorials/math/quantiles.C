@@ -1,7 +1,7 @@
 void quantiles() {
    // demo for quantiles
    // Authors: Rene Brun, Eddy Offermann
-   
+
    const Int_t nq = 100;
    const Int_t nshots = 10;
    Double_t xq[nq];  // position where to compute the quantiles in [0,1]
@@ -12,7 +12,7 @@ void quantiles() {
    TGraph *gr90 = new TGraph(nshots);
    TGraph *gr98 = new TGraph(nshots);
    TH1F *h = new TH1F("h","demo quantiles",50,-3,3);
-   
+
    for (Int_t shot=0;shot<nshots;shot++) {
       h->FillRandom("gaus",50);
       h->GetQuantiles(nq,yq,xq);
@@ -20,7 +20,7 @@ void quantiles() {
       gr90->SetPoint(shot,shot+1,yq[90]);
       gr98->SetPoint(shot,shot+1,yq[98]);
    }
-   
+
    //show the original histogram in the top pad
    TCanvas *c1 = new TCanvas("c1","demo quantiles",10,10,600,900);
    c1->SetFillColor(41);
@@ -28,7 +28,7 @@ void quantiles() {
    c1->cd(1);
    h->SetFillColor(38);
    h->Draw();
-   
+
    // show the final quantiles in the middle pad
    c1->cd(2);
    gPad->SetFrameFillColor(33);
@@ -39,7 +39,7 @@ void quantiles() {
    gr->SetMarkerColor(kRed);
    gr->SetMarkerSize(0.3);
    gr->Draw("ap");
-   
+
    // show the evolution of some  quantiles in the bottom pad
    c1->cd(3);
    gPad->SetFrameFillColor(17);

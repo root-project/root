@@ -35,7 +35,7 @@ protected:
    TEveElement   *fElement;    // Cached eve-element pointer.
    TObject       *fObject;     // Cached tobj pointer.
 
-   virtual TGedFrame* CreateNameFrame(const TGWindow* parent, const char* tab_name); 
+   virtual TGedFrame* CreateNameFrame(const TGWindow* parent, const char* tab_name);
 
    static Int_t   fgMaxExtraEditors;
    static TList  *fgExtraEditors;

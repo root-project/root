@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class GSLMonteFunctionWrapper
-// 
+//
 // Created by: moneta  at Sat Nov 13 14:54:41 2004
-// 
+//
 // Last update: Sat Nov 13 14:54:41 2004
-// 
+//
 #ifndef ROOT_Math_GSLMonteFunctionWrapper
 #define ROOT_Math_GSLMonteFunctionWrapper
 
@@ -48,50 +48,50 @@ namespace Math {
 
 
 /**
-   wrapper to a multi-dim function withtout  derivatives for Monte Carlo multi-dimensional 
+   wrapper to a multi-dim function withtout  derivatives for Monte Carlo multi-dimensional
    integration algorithm
 
    @ingroup MCIntegration
 */
 
-class GSLMonteFunctionWrapper { 
+class GSLMonteFunctionWrapper {
 
-public: 
+public:
 
-  GSLMonteFunctionWrapper() 
+  GSLMonteFunctionWrapper()
    {
-      fFunc.f = 0; 
-      fFunc.dim = 0; 
+      fFunc.f = 0;
+      fFunc.dim = 0;
       fFunc.params = 0;
    }
 
-    void SetFuncPointer( GSLMonteFuncPointer f) { fFunc.f = f; } 
+    void SetFuncPointer( GSLMonteFuncPointer f) { fFunc.f = f; }
     void SetDim  ( unsigned int n ) { fFunc.dim = n; }
     void SetParams ( void * p) { fFunc.params = p; }
 
-    /// Fill gsl function structure from a C++ Function class 
-    template<class FuncType> 
-    void SetFunction(const FuncType &f) { 
+    /// Fill gsl function structure from a C++ Function class
+    template<class FuncType>
+    void SetFunction(const FuncType &f) {
        const void * p = &f;
-       assert (p != 0); 
+       assert (p != 0);
        SetFuncPointer(&GSLMonteFunctionAdapter<FuncType >::F);
-       SetDim( f.NDim() ); 
+       SetDim( f.NDim() );
        SetParams(const_cast<void *>(p));
     }
-   
-   gsl_monte_function * GetFunc() { return &fFunc; } 
+
+   gsl_monte_function * GetFunc() { return &fFunc; }
 
     // evaluate the function and derivatives
     double operator() (const double * x) {  return GSL_MONTE_FN_EVAL(&fFunc, const_cast<double *>(x) ); }
 
 
-  private: 
-    gsl_monte_function fFunc; 
+  private:
+    gsl_monte_function fFunc;
 
   };
 
- 
- 
+
+
 
 
 } // namespace Math

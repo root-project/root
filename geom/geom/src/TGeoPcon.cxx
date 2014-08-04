@@ -14,7 +14,7 @@
 // TGeoPcon - a polycone. It has at least 9 parameters :
 //            - the lower phi limit;
 //            - the range in phi;
-//            - the number of z planes (at least two) where the inner/outer 
+//            - the number of z planes (at least two) where the inner/outer
 //              radii are changing;
 //            - z coordinate, inner and outer radius for each z plane
 //
@@ -78,7 +78,7 @@ TGeoPcon::TGeoPcon()
 {
 // dummy ctor
    SetShapeBit(TGeoShape::kGeoPcon);
-}   
+}
 
 //_____________________________________________________________________________
 TGeoPcon::TGeoPcon(Double_t phi, Double_t dphi, Int_t nz)
@@ -128,7 +128,7 @@ TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
           fDphi(dphi),
           fRmin(NULL),
           fRmax(NULL),
-          fZ(NULL),        
+          fZ(NULL),
           fFullPhi(kFALSE),
           fC1(0.),
           fS1(0.),
@@ -193,7 +193,7 @@ TGeoPcon::TGeoPcon(Double_t *param)
 }
 
 //_____________________________________________________________________________
-TGeoPcon::TGeoPcon(const TGeoPcon& pc) : 
+TGeoPcon::TGeoPcon(const TGeoPcon& pc) :
   TGeoBBox(pc),
   fNz(0),
   fPhi1(0.),
@@ -209,12 +209,12 @@ TGeoPcon::TGeoPcon(const TGeoPcon& pc) :
   fCm(0.),
   fSm(0.),
   fCdphi(0.)
-{ 
+{
    //copy constructor
 }
 
 //_____________________________________________________________________________
-TGeoPcon& TGeoPcon::operator=(const TGeoPcon& pc) 
+TGeoPcon& TGeoPcon::operator=(const TGeoPcon& pc)
 {
    //assignment operator
    if(this!=&pc) {
@@ -233,7 +233,7 @@ TGeoPcon& TGeoPcon::operator=(const TGeoPcon& pc)
       fCm=0;
       fSm=0;
       fCdphi=0;
-   } 
+   }
    return *this;
 }
 
@@ -264,10 +264,10 @@ Double_t TGeoPcon::Capacity() const
       rmax2 = fRmax[ipl+1];
       capacity += TGeoConeSeg::Capacity(dz,rmin1,rmax1,rmin2,rmax2,phi1,phi2);
    }
-   return capacity;   
+   return capacity;
 }
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoPcon::ComputeBBox()
 {
 // compute bounding box of the pcon
@@ -277,7 +277,7 @@ void TGeoPcon::ComputeBBox()
       if (fZ[isec]>fZ[isec+1]) {
          InspectShape();
          Fatal("ComputeBBox", "Wrong section order");
-      }   
+      }
    }
    // Check if the last sections are valid
    if (TMath::Abs(fZ[1]-fZ[0]) < TGeoShape::Tolerance() ||
@@ -285,14 +285,14 @@ void TGeoPcon::ComputeBBox()
       InspectShape();
       Fatal("ComputeBBox","Shape %s at index %d: Not allowed first two or last two sections at same Z",
              GetName(), gGeoManager->GetListOfShapes()->IndexOf(this));
-   }          
+   }
    Double_t zmin = TMath::Min(fZ[0], fZ[fNz-1]);
    Double_t zmax = TMath::Max(fZ[0], fZ[fNz-1]);
    // find largest rmax an smallest rmin
    Double_t rmin, rmax;
    rmin = fRmin[TMath::LocMin(fNz, fRmin)];
    rmax = fRmax[TMath::LocMax(fNz, fRmax)];
-   
+
    Double_t xc[4];
    Double_t yc[4];
    xc[0] = rmax*fC1;
@@ -305,8 +305,8 @@ void TGeoPcon::ComputeBBox()
    yc[3] = rmin*fS2;
 
    Double_t xmin = xc[TMath::LocMin(4, &xc[0])];
-   Double_t xmax = xc[TMath::LocMax(4, &xc[0])]; 
-   Double_t ymin = yc[TMath::LocMin(4, &yc[0])]; 
+   Double_t xmax = xc[TMath::LocMax(4, &xc[0])];
+   Double_t ymin = yc[TMath::LocMin(4, &yc[0])];
    Double_t ymax = yc[TMath::LocMax(4, &yc[0])];
 
    Double_t ddp = -fPhi1;
@@ -328,12 +328,12 @@ void TGeoPcon::ComputeBBox()
    fDY = (ymax-ymin)/2;
    fDZ = (zmax-zmin)/2;
    SetShapeBit(kGeoClosedShape);
-}   
+}
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoPcon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT. 
+// Compute normal to closest surface from POINT.
    memset(norm,0,3*sizeof(Double_t));
    Double_t r;
    Double_t ptnew[3];
@@ -374,7 +374,7 @@ void TGeoPcon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
    if (TGeoShape::IsSameWithinTolerance(dz,0.)) {
       norm[2] = TMath::Sign(1., dir[2]);
       return;
-   }         
+   }
    ptnew[2] -= 0.5*(fZ[ipl]+fZ[ipl+1]);
    rmin1 = fRmin[ipl];
    rmax1 = fRmax[ipl];
@@ -398,19 +398,19 @@ Bool_t TGeoPcon::Contains(const Double_t *point) const
    if ((point[2]<fZ[0]) || (point[2]>fZ[fNz-1])) return kFALSE;
    // check R squared
    Double_t r2 = point[0]*point[0]+point[1]*point[1];
-   
+
    Int_t izl = 0;
    Int_t izh = fNz-1;
    Int_t izt = (fNz-1)/2;
    while ((izh-izl)>1) {
-      if (point[2] > fZ[izt]) izl = izt;     
+      if (point[2] > fZ[izt]) izl = izt;
       else izh = izt;
       izt = (izl+izh)>>1;
    }
    // the point is in the section bounded by izl and izh Z planes
-   
+
    // compute Rmin and Rmax and test the value of R squared
-   Double_t rmin, rmax;  
+   Double_t rmin, rmax;
    if (TGeoShape::IsSameWithinTolerance(fZ[izl],fZ[izh]) && TGeoShape::IsSameWithinTolerance(point[2],fZ[izl])) {
       rmin = TMath::Min(fRmin[izl], fRmin[izh]);
       rmax = TMath::Max(fRmax[izl], fRmax[izh]);
@@ -421,7 +421,7 @@ Bool_t TGeoPcon::Contains(const Double_t *point) const
       rmax = (fRmax[izl]*(dz-dz1)+fRmax[izh]*dz1)/dz;
    }
    if ((r2<rmin*rmin) || (r2>rmax*rmax)) return kFALSE;
-   // now check phi 
+   // now check phi
    if (TGeoShape::IsSameWithinTolerance(fDphi,360)) return kTRUE;
    if (r2<1E-10) return kTRUE;
    Double_t phi = TMath::ATan2(point[1], point[0]) * TMath::RadToDeg();
@@ -470,8 +470,8 @@ Double_t TGeoPcon::DistFromInside(const Double_t *point, const Double_t *dir, In
          point_new[2] = point[2]+sstep*dir[2];
          if (!Contains(point_new)) return 0.;
          return (DistFromInside(point_new,dir,iact,step,safe)+sstep);
-      }   
-   }   
+      }
+   }
    // determine if the current segment is a tube or a cone
    Bool_t intub = kTRUE;
    if (!TGeoShape::IsSameWithinTolerance(fRmin[ipl],fRmin[ipl+1])) intub=kFALSE;
@@ -480,26 +480,26 @@ Double_t TGeoPcon::DistFromInside(const Double_t *point, const Double_t *dir, In
    memcpy(point_new, point, 2*sizeof(Double_t));
    // new point in reference system of the current segment
    point_new[2] = point[2]-0.5*(fZ[ipl]+fZ[ipl+1]);
-   
+
    if (special_case) {
-      if (!fFullPhi) snxt = TGeoTubeSeg::DistFromInsideS(point_new, dir, 
+      if (!fFullPhi) snxt = TGeoTubeSeg::DistFromInsideS(point_new, dir,
                TMath::Min(fRmin[ipl],fRmin[ipl+1]), TMath::Max(fRmax[ipl],fRmax[ipl+1]),
                dz, fC1,fS1,fC2,fS2,fCm,fSm,fCdphi);
-      else       snxt = TGeoTube::DistFromInsideS(point_new, dir, 
+      else       snxt = TGeoTube::DistFromInsideS(point_new, dir,
                TMath::Min(fRmin[ipl],fRmin[ipl+1]), TMath::Max(fRmax[ipl],fRmax[ipl+1]),dz);
       return snxt;
-   }   
+   }
    if (intub) {
-      if (!fFullPhi) snxt=TGeoTubeSeg::DistFromInsideS(point_new, dir, fRmin[ipl], fRmax[ipl],dz, fC1,fS1,fC2,fS2,fCm,fSm,fCdphi); 
+      if (!fFullPhi) snxt=TGeoTubeSeg::DistFromInsideS(point_new, dir, fRmin[ipl], fRmax[ipl],dz, fC1,fS1,fC2,fS2,fCm,fSm,fCdphi);
       else snxt=TGeoTube::DistFromInsideS(point_new, dir, fRmin[ipl], fRmax[ipl],dz);
    } else {
       if (!fFullPhi) snxt=TGeoConeSeg::DistFromInsideS(point_new,dir,dz,fRmin[ipl],fRmax[ipl],fRmin[ipl+1],fRmax[ipl+1],fC1,fS1,fC2,fS2,fCm,fSm,fCdphi);
       else snxt=TGeoCone::DistFromInsideS(point_new,dir,dz,fRmin[ipl],fRmax[ipl],fRmin[ipl+1], fRmax[ipl+1]);
-   }                              
+   }
 
    for (Int_t i=0; i<3; i++) point_new[i]=point[i]+(snxt+1E-6)*dir[i];
    if (!Contains(&point_new[0])) return snxt;
-   
+
    snxt += DistFromInside(&point_new[0], dir, 3) + 1E-6;
    return snxt;
 }
@@ -530,7 +530,7 @@ Double_t TGeoPcon::DistToSegZ(const Double_t *point, const Double_t *dir, Int_t 
    if (TGeoShape::IsSameWithinTolerance(rmin1,rmin2) && TGeoShape::IsSameWithinTolerance(rmax1,rmax2)) {
       if (fFullPhi) snxt=TGeoTube::DistFromOutsideS(local, dir, rmin1, rmax1, dz);
       else snxt=TGeoTubeSeg::DistFromOutsideS(local,dir,rmin1,rmax1,dz,fC1,fS1,fC2,fS2,fCm,fSm,fCdphi);
-   } else {  
+   } else {
       if (fFullPhi) snxt=TGeoCone::DistFromOutsideS(local,dir,dz,rmin1, rmax1,rmin2,rmax2);
       else snxt=TGeoConeSeg::DistFromOutsideS(local,dir,dz,rmin1,rmax1,rmin2,rmax2,fC1,fS1,fC2,fS2,fCm,fSm,fCdphi);
    }
@@ -541,7 +541,7 @@ Double_t TGeoPcon::DistToSegZ(const Double_t *point, const Double_t *dir, Int_t 
    iz+=istep;
    if (iz<0 || iz>(fNz-2)) return TGeoShape::Big();
    return DistToSegZ(point,dir,iz);
-}      
+}
 
 //_____________________________________________________________________________
 Double_t TGeoPcon::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
@@ -579,7 +579,7 @@ Double_t TGeoPcon::DistFromOutside(const Double_t *point, const Double_t *dir, I
    if (!fFullPhi) {
       phi=TMath::ATan2(point[1], point[0]);
       if (phi<0) phi+=2.*TMath::Pi();
-   } 
+   }
 
    // compute distance to boundary
    return DistToSegZ(point,dir,ifirst);
@@ -589,13 +589,13 @@ Double_t TGeoPcon::DistFromOutside(const Double_t *point, const Double_t *dir, I
 void TGeoPcon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rmax)
 {
 // Defines z position of a section plane, rmin and rmax at this z. Sections
-// should be defined in increasing or decreasing Z order and the last section 
+// should be defined in increasing or decreasing Z order and the last section
 // HAS to be snum = fNz-1
    if ((snum<0) || (snum>=fNz)) return;
    fZ[snum]    = z;
    fRmin[snum] = rmin;
    fRmax[snum] = rmax;
-   if (rmin>rmax) 
+   if (rmin>rmax)
       Warning("DefineSection", "Shape %s: invalid rmin=%g rmax=%g", GetName(), rmin, rmax);
    if (snum==(fNz-1)) {
       // Reorder sections in increasing Z order
@@ -615,10 +615,10 @@ void TGeoPcon::DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rma
             fRmax[izi] = temp;
             iz++;
             izi--;
-         }   
-      }      
+         }
+      }
       ComputeBBox();
-   }   
+   }
 }
 
 //_____________________________________________________________________________
@@ -629,22 +629,22 @@ Int_t TGeoPcon::GetNsegments() const
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
-                             Double_t start, Double_t step) 
+TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
+                             Double_t start, Double_t step)
 {
 //--- Divide this polycone shape belonging to volume "voldiv" into ndiv volumes
 // called divname, from start position with the given step. Returns pointer
 // to created division cell volume in case of Z divisions. Z divisions can be
 // performed if the divided range is in between two consecutive Z planes.
-//  In case a wrong division axis is supplied, returns pointer to 
+//  In case a wrong division axis is supplied, returns pointer to
 // volume that was divided.
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
-   TGeoPatternFinder *finder;  //--- finder to be attached 
+   TGeoPatternFinder *finder;  //--- finder to be attached
    TString opt = "";           //--- option to be attached
    Double_t zmin = start;
-   Double_t zmax = start+ndiv*step;            
+   Double_t zmax = start+ndiv*step;
    Int_t isect = -1;
    Int_t is, id, ipl;
    switch (iaxis) {
@@ -655,10 +655,10 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start+ndiv*step);
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          voldiv->SetFinder(finder);
-         finder->SetDivIndex(voldiv->GetNdaughters());            
+         finder->SetDivIndex(voldiv->GetNdaughters());
          shape = new TGeoPcon(-step/2, step, fNz);
          for (is=0; is<fNz; is++)
-            ((TGeoPcon*)shape)->DefineSection(is, fZ[is], fRmin[is], fRmax[is]); 
+            ((TGeoPcon*)shape)->DefineSection(is, fZ[is], fRmin[is], fRmax[is]);
             vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
             vmulti->AddVolume(vol);
             opt = "Phi";
@@ -703,7 +703,7 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             } else {
                if (is_tube) shape=new TGeoTube(fRmin[isect],fRmax[isect],step/2);
                else shape = new TGeoCone(step/2,rmin1,rmax1,rmin2,rmax2);
-            }    
+            }
             vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
             vmulti->AddVolume(vol);
             voldiv->AddNodeOffset(vol, id, start+id*step+step/2, opt.Data());
@@ -712,7 +712,7 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          return vmulti;
       default:
          Error("Divide", "Shape %s: Wrong axis %d for division",GetName(), iaxis);
-         return 0;            
+         return 0;
    }
 }
 
@@ -730,7 +730,7 @@ const char *TGeoPcon::GetAxisName(Int_t iaxis) const
       default:
          return "UNDEFINED";
    }
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoPcon::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
@@ -752,8 +752,8 @@ Double_t TGeoPcon::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
          return dx;
    }
    return dx;
-}         
-            
+}
+
 //_____________________________________________________________________________
 void TGeoPcon::GetBoundingCylinder(Double_t *param) const
 {
@@ -771,10 +771,10 @@ void TGeoPcon::GetBoundingCylinder(Double_t *param) const
       param[2] = 0.;
       param[3] = 360.;
       return;
-   }   
+   }
    param[2] = (fPhi1<0)?(fPhi1+360.):fPhi1;     // Phi1
    param[3] = param[2]+fDphi;                   // Phi2
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoPcon::GetRmin(Int_t ipl) const
@@ -785,7 +785,7 @@ Double_t TGeoPcon::GetRmin(Int_t ipl) const
       return 0.;
    }
    return fRmin[ipl];
-}      
+}
 
 //_____________________________________________________________________________
 Double_t TGeoPcon::GetRmax(Int_t ipl) const
@@ -796,7 +796,7 @@ Double_t TGeoPcon::GetRmax(Int_t ipl) const
       return 0.;
    }
    return fRmax[ipl];
-}      
+}
 
 //_____________________________________________________________________________
 Double_t TGeoPcon::GetZ(Int_t ipl) const
@@ -807,7 +807,7 @@ Double_t TGeoPcon::GetZ(Int_t ipl) const
       return 0.;
    }
    return fZ[ipl];
-}      
+}
 
 //_____________________________________________________________________________
 void TGeoPcon::InspectShape() const
@@ -825,7 +825,7 @@ void TGeoPcon::InspectShape() const
 
 //_____________________________________________________________________________
 TBuffer3D *TGeoPcon::MakeBuffer3D() const
-{ 
+{
    // Creates a TBuffer3D describing *this* shape.
    // Coordinates are in local reference frame.
 
@@ -849,7 +849,7 @@ TBuffer3D *TGeoPcon::MakeBuffer3D() const
       SetSegsAndPols(*buff);
    }
 
-   return buff;  
+   return buff;
 }
 
 //_____________________________________________________________________________
@@ -955,7 +955,7 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D &buff) const
       buff.fPols[indx++] = m+j;
       buff.fPols[indx++] = 2*nz*m;
       buff.fPols[indx++] = j;
- 
+
       buff.fPols[indx++] = c+3;
       buff.fPols[indx++] = 4;
       buff.fPols[indx++] = 2*nz*m+n+j;
@@ -989,7 +989,7 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D &buff) const
          buff.fPols[indx++] = nz*2*m+(2*k+2)*n;
          buff.fPols[indx++] = (2*k+2)*m+j;
          buff.fPols[indx++] = nz*2*m+(2*k+2)*n+j;
- 
+
          buff.fPols[indx++] = c+1;
          buff.fPols[indx++] = 4;
          buff.fPols[indx++] = (2*k+1)*m+j;
@@ -1010,7 +1010,7 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D &buff) const
          buff.fPols[indx++] = indx2+2*(k+1)*n;
          buff.fPols[indx++] = indx2+2*nz*n+2*k;
          buff.fPols[indx++] = indx2+(2*k+3)*n;
- 
+
          buff.fPols[indx++] = c+2;
          buff.fPols[indx++] = 4;
          buff.fPols[indx++] = k==0 ? indx2+n-1 : indx2+2*nz*n+2*(k-1)+1;
@@ -1021,7 +1021,7 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D &buff) const
       buff.fPols[indx-8] = indx2+n;
       buff.fPols[indx-2] = indx2+2*n-1;
    }
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoPcon::SafetyToSegment(const Double_t *point, Int_t ipl, Bool_t in, Double_t safmin) const
@@ -1051,7 +1051,7 @@ Double_t TGeoPcon::SafetyToSegment(const Double_t *point, Int_t ipl, Bool_t in, 
       else         safe = TGeoCone::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,0);
    }
    if (safe<0) safe=0;
-   return safe;   
+   return safe;
 }
 
 //_____________________________________________________________________________
@@ -1060,7 +1060,7 @@ Double_t TGeoPcon::Safety(const Double_t *point, Bool_t in) const
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
    //---> localize the Z segment
-   
+
    Double_t safmin, saftmp;
    Double_t dz;
    Int_t ipl, iplane;
@@ -1085,7 +1085,7 @@ Double_t TGeoPcon::Safety(const Double_t *point, Bool_t in) const
          safmin = TMath::Min(safmin, fRmax[ipl+1]-radius);
          if (safmin<0) safmin = 0;
          return safmin;
-      }   
+      }
       // Check safety for current segment
       safmin = SafetyToSegment(point, ipl);
       if (safmin>1E10) {
@@ -1100,7 +1100,7 @@ Double_t TGeoPcon::Safety(const Double_t *point, Bool_t in) const
          saftmp = TMath::Abs(SafetyToSegment(point,iplane,kFALSE,safmin));
          if (saftmp<safmin) safmin=saftmp;
          iplane++;
-      }   
+      }
       // now decreasing nplanes
       iplane = ipl-1;
       saftmp = 0.;
@@ -1108,9 +1108,9 @@ Double_t TGeoPcon::Safety(const Double_t *point, Bool_t in) const
          saftmp = TMath::Abs(SafetyToSegment(point,iplane,kFALSE,safmin));
          if (saftmp<safmin) safmin=saftmp;
          iplane--;
-      }   
+      }
       return safmin;
-   }   
+   }
    //---> point is outside pcon
    ipl = TMath::BinarySearch(fNz, fZ, point[2]);
    if (ipl<0) ipl=0;
@@ -1119,7 +1119,7 @@ Double_t TGeoPcon::Safety(const Double_t *point, Bool_t in) const
    if (dz<1E-8 && (ipl+2<fNz)) {
       ipl++;
       dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
-   }   
+   }
    // Check safety for current segment
    safmin = SafetyToSegment(point, ipl, kFALSE);
    if (safmin<1E-6) return TMath::Abs(safmin); // point on radius-changing plane
@@ -1131,7 +1131,7 @@ Double_t TGeoPcon::Safety(const Double_t *point, Bool_t in) const
       saftmp = TMath::Abs(SafetyToSegment(point,iplane,kFALSE,safmin));
       if (saftmp<safmin) safmin=saftmp;
       iplane++;
-   }   
+   }
    // now decreasing nplanes
    iplane = ipl-1;
    saftmp = 0.;
@@ -1139,7 +1139,7 @@ Double_t TGeoPcon::Safety(const Double_t *point, Bool_t in) const
       saftmp = TMath::Abs(SafetyToSegment(point,iplane,kFALSE,safmin));
       if (saftmp<safmin) safmin=saftmp;
       iplane--;
-   }   
+   }
    return safmin;
 }
 
@@ -1162,7 +1162,7 @@ void TGeoPcon::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    out << "   TGeoShape *" << GetPointerName() << " = pcon;" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
-         
+
 //_____________________________________________________________________________
 void TGeoPcon::SetDimensions(Double_t *param)
 {
@@ -1174,10 +1174,10 @@ void TGeoPcon::SetDimensions(Double_t *param)
    if (fNz<2) {
       Error("SetDimensions","Pcon %s: Number of Z sections must be > 2", GetName());
       return;
-   } 
-   if (fRmin) delete [] fRmin;  
-   if (fRmax) delete [] fRmax;  
-   if (fZ) delete [] fZ;  
+   }
+   if (fRmin) delete [] fRmin;
+   if (fRmax) delete [] fRmax;
+   if (fZ) delete [] fZ;
    fRmin = new Double_t [fNz];
    fRmax = new Double_t [fNz];
    fZ    = new Double_t [fNz];
@@ -1196,9 +1196,9 @@ void TGeoPcon::SetDimensions(Double_t *param)
    fSm = TMath::Sin(phim*TMath::DegToRad());
    fCdphi = TMath::Cos(0.5*fDphi*TMath::DegToRad());
 
-   for (Int_t i=0; i<fNz; i++) 
+   for (Int_t i=0; i<fNz; i++)
       DefineSection(i, param[3+3*i], param[4+3*i], param[5+3*i]);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoPcon::SetPoints(Double_t *points) const
@@ -1262,7 +1262,7 @@ Int_t TGeoPcon::GetNmeshVertices() const
    Int_t n = gGeoManager->GetNsegments()+1;
    Int_t numPoints = fNz*2*n;
    return numPoints;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoPcon::Sizeof3D() const
@@ -1321,10 +1321,10 @@ const TBuffer3D & TGeoPcon::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
          TransformPoints(buffer.fPnts, buffer.NbPnts());
       }
 
-      SetSegsAndPols(buffer);      
+      SetSegsAndPols(buffer);
       buffer.SetSectionsValid(TBuffer3D::kRaw);
    }
-      
+
    return buffer;
 }
 

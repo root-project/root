@@ -104,7 +104,7 @@ public:
    TObject *WaitPrimitive(const char *, const char *);
    void ReleaseViewer3D(Option_t *);
    Bool_t HasViewer3D() const;
-   
+
    TVirtualPadPainter *GetPainter();
 };
 

@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -12,10 +12,10 @@
 
 #include "Minuit2/MnConfig.h"
 
-// comment out this line and recompile if you want to gain additional 
+// comment out this line and recompile if you want to gain additional
 // performance (the gain is mainly for "simple" functions which are easy
 // to calculate and vanishes quickly if going to cost-intensive functions)
-// the library is no longer thread save however 
+// the library is no longer thread save however
 
 #ifdef MN_USE_STACK_ALLOC
 #define _MN_NO_THREAD_SAVE_
@@ -35,7 +35,7 @@ namespace ROOT {
 
 
 /// define stack allocator symbol
- 
+
 
 
 class StackOverflow {};
@@ -84,7 +84,7 @@ public:
       WriteInt( fStackOffset, fStackOffset+nAlloc);
       // write the start position of the new block at the end of the block
       WriteInt( fStackOffset + nAlloc - sizeof(int), fStackOffset);
- 
+
       void* result = fStack + fStackOffset + sizeof(int);
       fStackOffset += nAlloc;
       fBlockCount++;
@@ -92,7 +92,7 @@ public:
 #ifdef DEBUG_ALLOCATOR
       CheckConsistency();
 #endif
-      
+
 #else
       void* result = malloc(nBytes);
       if (!result) throw std::bad_alloc();
@@ -100,14 +100,14 @@ public:
 
       return result;
   }
-  
+
   void Deallocate( void* p) {
 #ifdef _MN_NO_THREAD_SAVE_
       // int previousOffset = ReadInt( fStackOffset - sizeof(int));
       int delBlock = ToInt(p);
       int nextBlock = ReadInt( delBlock);
       int previousBlock = ReadInt( nextBlock - sizeof(int));
-      if ( nextBlock == fStackOffset) { 
+      if ( nextBlock == fStackOffset) {
           // deallocating last allocated
          fStackOffset = previousBlock;
       }
@@ -126,7 +126,7 @@ public:
 #else
       free(p);
 #endif
-      // std::cout << "Block at " << delBlock 
+      // std::cout << "Block at " << delBlock
       //   << " deallocated, fStackOffset = " << fStackOffset << std::endl;
   }
 
@@ -181,7 +181,7 @@ public:
 
          // std::cout << "beg = " << beg << " end = " << end
          //     << " fStackOffset = " << fStackOffset << std::endl;
-         
+
          int beg2 = ReadInt( end - sizeof(int));
          if ( beg != beg2) {
             //std::cout << "  beg != beg2 " << std::endl;
@@ -213,19 +213,19 @@ private:
 
 
 
-class StackAllocatorHolder { 
-  
-  // t.b.d need to use same trick as  Boost singleton.hpp to be sure that 
-  // StackAllocator is created before main() 
+class StackAllocatorHolder {
 
- public: 
+  // t.b.d need to use same trick as  Boost singleton.hpp to be sure that
+  // StackAllocator is created before main()
 
-    
-  static StackAllocator & Get() { 
-    static StackAllocator gStackAllocator; 
-    return gStackAllocator; 
+ public:
+
+
+  static StackAllocator & Get() {
+    static StackAllocator gStackAllocator;
+    return gStackAllocator;
   }
-}; 
+};
 
 
 

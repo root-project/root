@@ -41,7 +41,7 @@ protected:
    Bool_t      fScaling;         //!True when TProfile2D::Scale is called
    Double_t    fTsumwz;          //Total Sum of weight*Z
    Double_t    fTsumwz2;         //Total Sum of weight*Z*Z
-   TArrayD     fBinSumw2;         //Array of sum of squares of weights per bin 
+   TArrayD     fBinSumw2;         //Array of sum of squares of weights per bin
    static Bool_t   fgApproximate; //bin error approximation option
 
    virtual Int_t    BufferFill(Double_t, Double_t) {return -2;} //may not use
@@ -49,7 +49,7 @@ protected:
    virtual Int_t    BufferFill(Double_t x, Double_t y, Double_t z, Double_t w);
 
    // helper methods for the Merge unification in TProfileHelper
-   void SetBins(const Int_t* nbins, const Double_t* range) { SetBins(nbins[0], range[0], range[1], 
+   void SetBins(const Int_t* nbins, const Double_t* range) { SetBins(nbins[0], range[0], range[1],
                                                                      nbins[1], range[2], range[3]); };
    Int_t Fill(const Double_t* v) { return Fill(v[0], v[1], v[2], v[3]); };
 
@@ -135,7 +135,7 @@ public:
    virtual void      Reset(Option_t *option="");
    virtual TProfile2D *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname="");
    virtual TProfile2D *RebinX(Int_t ngroup=2, const char *newname="");
-   virtual TProfile2D *RebinY(Int_t ngroup=2, const char *newname="");     
+   virtual TProfile2D *RebinY(Int_t ngroup=2, const char *newname="");
    virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void      Scale(Double_t c1=1, Option_t *option="");
    virtual void      SetBinEntries(Int_t bin, Double_t w);

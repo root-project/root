@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -34,7 +34,7 @@ public:
 
   virtual double Up() const {return fErrorDef;}
   virtual double operator()(const std::vector<double>&) const;
-  
+
   std::vector<double> Measurements() const {return fMeasurements;}
   std::vector<double> Positions() const {return fPositions;}
   std::vector<double> Variances() const {return fMVariances;}
@@ -43,7 +43,7 @@ public:
 
 private:
 
-  
+
   std::vector<double> fMeasurements;
   std::vector<double> fPositions;
   std::vector<double> fMVariances;

@@ -59,7 +59,7 @@ TLeaf::TLeaf(TBranch *parent, const char* name, const char *)
    fLeafCount = GetLeafCounter(fLen);
 
    if (fLen == -1) {
-      MakeZombie(); 
+      MakeZombie();
       return;
    }
 
@@ -68,7 +68,7 @@ TLeaf::TLeaf(TBranch *parent, const char* name, const char *)
 }
 
 //______________________________________________________________________________
-TLeaf::TLeaf(const TLeaf& lf) : 
+TLeaf::TLeaf(const TLeaf& lf) :
   TNamed(lf),
   fNdata(lf.fNdata),
   fLen(lf.fLen),
@@ -78,12 +78,12 @@ TLeaf::TLeaf(const TLeaf& lf) :
   fIsUnsigned(lf.fIsUnsigned),
   fLeafCount(lf.fLeafCount),
   fBranch(lf.fBranch)
-{ 
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TLeaf& TLeaf::operator=(const TLeaf& lf) 
+TLeaf& TLeaf::operator=(const TLeaf& lf)
 {
    //assignment operator
    if(this!=&lf) {
@@ -96,7 +96,7 @@ TLeaf& TLeaf::operator=(const TLeaf& lf)
       fIsUnsigned=lf.fIsUnsigned;
       fLeafCount=lf.fLeafCount;
       fBranch=lf.fBranch;
-   } 
+   }
    return *this;
 }
 
@@ -124,7 +124,7 @@ void TLeaf::Browse(TBrowser* b)
    if (strchr(GetName(), '.')) {
       fBranch->GetTree()->Draw(GetName(), "", b ? b->GetDrawOption() : "");
    } else {
-      if ((fBranch->GetListOfLeaves()->GetEntries() > 1) || 
+      if ((fBranch->GetListOfLeaves()->GetEntries() > 1) ||
           (strcmp(fBranch->GetName(), GetName()) != 0)) {
          TString name;
          name.Form("%s.%s", fBranch->GetName(), GetName());
@@ -150,11 +150,11 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    // -- Return a pointer to the counter of this leaf.
    //
    //  If leaf name has the form var[nelem], where nelem is alphanumeric, then
-   //     if nelem is a leaf name, return countval = 1 and the pointer to 
+   //     if nelem is a leaf name, return countval = 1 and the pointer to
    //          the leaf named nelem, otherwise return 0.
    //  If leaf name has the form var[nelem], where nelem is a non-negative integer, then
    //     return countval = nelem and a null pointer.
-   //  If leaf name has the form of a multi-dimensional array (e.g. var[nelem][nelem2] 
+   //  If leaf name has the form of a multi-dimensional array (e.g. var[nelem][nelem2]
    //     where nelem and nelem2 are non-negative integers) then
    //     return countval = product of all dimension sizes and a null pointer.
    //  If leaf name has the form var[... (and does not match the previous 2
@@ -332,17 +332,17 @@ Int_t TLeaf::ResetAddress(void* addr, Bool_t calledFromDestructor)
 
 //_______________________________________________________________________
 void TLeaf::SetLeafCount(TLeaf *leaf)
-{ 
+{
    // -- Set the leaf count of this leaf.
 
    if (IsZombie() && (fLen == -1) && leaf) {
-      // The constructor noted that it could not find the 
+      // The constructor noted that it could not find the
       // leafcount.  Now that we did find it, let's remove
       // the side-effects.
       ResetBit(kZombie);
       fLen = 1;
    }
-   fLeafCount = leaf; 
+   fLeafCount = leaf;
 }
 
 //_______________________________________________________________________

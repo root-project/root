@@ -133,11 +133,11 @@ using namespace std;
 
 unsigned int __DRAW__ = 0;
 
-int gSelectedTest = 0; 
+int gSelectedTest = 0;
 
 // set a small tolerance for the tests
 // The default of 10*-2 make sometimes Simplex do not converge
-const double gDefaultTolerance = 1.E-4;  
+const double gDefaultTolerance = 1.E-4;
 
 TRandom3 rndm;
 
@@ -169,18 +169,18 @@ public:
       refValue(0), opts(_opts), tolPar(_tolPar), tolChi2(_tolChi2) {};
 
    CompareResult(CompareResult const& copy):
-      refValue(copy.refValue), opts(copy.opts), 
+      refValue(copy.refValue), opts(copy.opts),
       tolPar(copy.tolPar), tolChi2(copy.tolChi2) {};
 
    void setRefValue(struct RefValue* _refValue)
-   { 
-      refValue = _refValue; 
+   {
+      refValue = _refValue;
    };
 
    int parameters(int npar, double val, double ref) const
-   { 
+   {
       int ret = 0;
-      if ( refValue && (opts & cmpPars) ) 
+      if ( refValue && (opts & cmpPars) )
       {
          ret = compareResult(val, refValue->pars[npar], tolPar*ref);
 //          printf("[TOL:%f]", ref);
@@ -193,10 +193,10 @@ public:
 
 public:
    // Compares two doubles with a given tolerence
-   int compareResult(double v1, double v2, double tol = 0.01) const { 
-      if (std::abs(v1-v2) > tol ) return 1; 
-      return 0; 
-   } 
+   int compareResult(double v1, double v2, double tol = 0.01) const {
+      if (std::abs(v1-v2) > tol ) return 1;
+      return 0;
+   }
 };
 
 // Create a variable range in a vector (to be passed to the histogram
@@ -204,14 +204,14 @@ public:
 void FillVariableRange(Double_t v[], Int_t numberOfBins, Double_t minRange, Double_t maxRange)
 {
    Double_t minLimit = (maxRange-minRange)  / (numberOfBins*4);
-   Double_t maxLimit = (maxRange-minRange)*4/ (numberOfBins);   
+   Double_t maxLimit = (maxRange-minRange)*4/ (numberOfBins);
    v[0] = 0;
    for ( Int_t i = 1; i < numberOfBins + 1; ++i )
    {
       Double_t limit = rndm.Uniform(minLimit, maxLimit);
       v[i] = v[i-1] + limit;
    }
-   
+
    Double_t k = (maxRange-minRange)/v[numberOfBins];
    for ( Int_t i = 0; i < numberOfBins + 1; ++i )
    {
@@ -230,10 +230,10 @@ public:
    const char* algo;
    const char* opts;
    CompareResult cmpResult;
-   
+
    algoType(): type(0), algo(0), opts(0), cmpResult(0) {}
 
-   algoType(const char* s1, const char* s2, const char* s3, 
+   algoType(const char* s1, const char* s2, const char* s3,
             CompareResult _cmpResult):
       type(s1), algo(s2), opts(s3), cmpResult(_cmpResult) {}
 };
@@ -299,7 +299,7 @@ public:
                 unsigned int n,
                 double* v1, double* v2,
                 vector<ParLimit>& limits):
-      name(s1), func(f), npars(n), 
+      name(s1), func(f), npars(n),
       origPars(npars), fitPars(npars), parLimits(limits.size())
    {
       copy(v1, v1 + npars, origPars.begin());
@@ -351,48 +351,48 @@ double gausNormal(Double_t* x, Double_t* p)
 }
 
 // Gaus 2D Normalized Implementation
-double gaus2dnormal(double *x, double *p) { 
-  
+double gaus2dnormal(double *x, double *p) {
+
    double mu_x = p[0];
    double sigma_x = p[1];
    double mu_y = p[2];
    double sigma_y = p[3];
-   double rho = p[4]; 
+   double rho = p[4];
    double u = (x[0] - mu_x)/ sigma_x ;
    double v = (x[1] - mu_y)/ sigma_y ;
    double c = 1 - rho*rho ;
-   double result = (1 / (2 * TMath::Pi() * sigma_x * sigma_y * sqrt(c))) 
+   double result = (1 / (2 * TMath::Pi() * sigma_x * sigma_y * sqrt(c)))
       * exp (-(u * u - 2 * rho * u * v + v * v ) / (2 * c));
    return result;
 }
 
 // N-dimensional Gaus
-double gausNd(double *x, double *p) { 
+double gausNd(double *x, double *p) {
 
-   double f = gaus2dnormal(x,p); 
-   f *= ROOT::Math::normal_pdf(x[2],p[6],p[5]); 
-   f *= ROOT::Math::normal_pdf(x[3],p[8],p[7]); 
-   f *= ROOT::Math::normal_pdf(x[4],p[10],p[9]); 
-   f *= ROOT::Math::normal_pdf(x[5],p[12],p[11]); 
+   double f = gaus2dnormal(x,p);
+   f *= ROOT::Math::normal_pdf(x[2],p[6],p[5]);
+   f *= ROOT::Math::normal_pdf(x[3],p[8],p[7]);
+   f *= ROOT::Math::normal_pdf(x[4],p[10],p[9]);
+   f *= ROOT::Math::normal_pdf(x[5],p[12],p[11]);
 
-   if (f <= 0) { 
-      std::cout << "invalid f value " << f << " for x "; 
-      for (int i = 0; i < 6; ++i) std::cout << "  " << x[i]; 
-      std::cout << "\t P = "; 
-      for (int i = 0; i < 11; ++i) std::cout << "  " << p[i]; 
+   if (f <= 0) {
+      std::cout << "invalid f value " << f << " for x ";
+      for (int i = 0; i < 6; ++i) std::cout << "  " << x[i];
+      std::cout << "\t P = ";
+      for (int i = 0; i < 11; ++i) std::cout << "  " << p[i];
       std::cout << "\n\n ";
       return 1.E-300;
-   } 
-   else if (f > 0) return f; 
-   
-   std::cout << " f is a nan " << f << std::endl; 
-   for (int i = 0; i < 6; ++i) std::cout << "  " << x[i]; 
-   std::cout << "\t P = "; 
-   for (int i = 0; i < 11; ++i) std::cout << "  " << p[i]; 
+   }
+   else if (f > 0) return f;
+
+   std::cout << " f is a nan " << f << std::endl;
+   for (int i = 0; i < 6; ++i) std::cout << "  " << x[i];
+   std::cout << "\t P = ";
+   for (int i = 0; i < 11; ++i) std::cout << "  " << p[i];
    std::cout << "\n\n ";
    Error("gausNd","f is a nan");
    assert(1);
-   return 0; 
+   return 0;
 }
 
 const double minX = -5.;
@@ -423,31 +423,31 @@ public:
    T object;
    ObjectWrapper(T _obj): object(_obj) {};
    template <typename F>
-   Int_t Fit(F func, const char* opts) 
+   Int_t Fit(F func, const char* opts)
    {
       if ( opts[0] == 'G' )
       {
-         ROOT::Fit::BinData d; 
+         ROOT::Fit::BinData d;
          ROOT::Fit::FillData(d,object,func);
 //         ROOT::Math::WrappedTF1 f(*func);
          ROOT::Math::WrappedMultiTF1 f(*func);
 //          f->SetDerivPrecision(10e-6);
-         ROOT::Fit::Fitter fitter; 
+         ROOT::Fit::Fitter fitter;
 //          printf("Gradient? FIT?!?\n");
          fitter.Fit(d, f);
-         const ROOT::Fit::FitResult & fitResult = fitter.Result(); 
+         const ROOT::Fit::FitResult & fitResult = fitter.Result();
          // one could set directly the fit result in TF1
-         Int_t iret = fitResult.Status(); 
-         if (!fitResult.IsEmpty() ) { 
-            // set in f1 the result of the fit      
+         Int_t iret = fitResult.Status();
+         if (!fitResult.IsEmpty() ) {
+            // set in f1 the result of the fit
             func->SetChisquare( fitResult.Chi2() );
             func->SetNDF( fitResult.Ndf() );
             func->SetNumberFitPoints( d.Size() );
-            
-            func->SetParameters( &(fitResult.Parameters().front()) ); 
-            if ( int( fitResult.Errors().size()) >= func->GetNpar() ) 
-               func->SetParErrors( &(fitResult.Errors().front()) ); 
-            
+
+            func->SetParameters( &(fitResult.Parameters().front()) );
+            if ( int( fitResult.Errors().size()) >= func->GetNpar() )
+               func->SetParErrors( &(fitResult.Errors().front()) );
+
          }
          // Next line only for debug
 //          fitResult.Print(std::cout);
@@ -461,7 +461,7 @@ public:
 };
 
 // Print the Name of the test
-int gTestIndex = 0; 
+int gTestIndex = 0;
 template <typename T>
 void printTestName(T* object, TF1* func)
 {
@@ -505,9 +505,9 @@ void setColor(int red = 0)
 {
 #ifndef R__WIN32
    char command[13];
-   if ( red ) 
+   if ( red )
       snprintf(command,13, "%c[%d;%d;%dm", 0x1B, 1, 1 + 30, 8 + 40);
-   else 
+   else
       snprintf(command,13, "%c[%dm", 0x1B, 0); // reset to default
    printf("%s", command);
 #else
@@ -523,7 +523,7 @@ void setColor(int red = 0)
 //     @str2 Name of the algorithm used
 //     @str3 Options used when fitting
 //     @func Fitted function
-//     @cmpResult Object to compare the result. It contains all the reference 
+//     @cmpResult Object to compare the result. It contains all the reference
 //               objects as well as the method to compare. It will know whether something has to be tested or not.
 //     @opts Options of the test, to know what has to be printed or tested.
 int testFit(const char* str1, const char* str2, const char* str3,
@@ -540,7 +540,7 @@ int testFit(const char* str1, const char* str2, const char* str3,
       chi2 = func->GetChisquare();
 
    fflush(stdout);
-   if ( opts & testOptPars ) 
+   if ( opts & testOptPars )
    {
       int n = func->GetNpar();
       double* values = func->GetParameters();
@@ -549,7 +549,7 @@ int testFit(const char* str1, const char* str2, const char* str3,
       for ( int i = 0; i < n; ++i ) {
          if ( opts & testOptCheck )
             diff = cmpResult.parameters(i,
-                                        values[i], 
+                                        values[i],
                                         std::max(std::sqrt(chi2/func->GetNDF()),1.0)*func->GetParError(i));
          status += diff;
          if ( opts & testOptColor )
@@ -569,7 +569,7 @@ int testFit(const char* str1, const char* str2, const char* str3,
 
    if ( opts & testOptErr )
    {
-      assert(TVirtualFitter::GetFitter() != 0 ); 
+      assert(TVirtualFitter::GetFitter() != 0 );
       TBackCompFitter* fitter = dynamic_cast<TBackCompFitter*>( TVirtualFitter::GetFitter() );
       assert(fitter != 0);
       const ROOT::Fit::FitResult& fitResult = fitter->GetFitResult();
@@ -584,7 +584,7 @@ int testFit(const char* str1, const char* str2, const char* str3,
          printf("| ");
    }
 
-   if ( opts != 0 ) 
+   if ( opts != 0 )
    {
       setColor(0);
       if ( debug )
@@ -611,14 +611,14 @@ int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, fitFu
    const double* fitpars = &(fitFunction.fitPars[0]);
 
    func->SetParameters(fitpars);
-   
+
    printTestName(object, func);
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer(commonAlgos[0].type, commonAlgos[0].algo);
    ROOT::Math::MinimizerOptions::SetDefaultTolerance(gDefaultTolerance);
 
-   TString opt = ""; 
-   if (! (defaultOptions & testOptFitDbg) ) opt += "Q"; 
-   if (! __DRAW__) opt += "0"; 
+   TString opt = "";
+   if (! (defaultOptions & testOptFitDbg) ) opt += "Q";
+   if (! __DRAW__) opt += "0";
 
    object->Fit(func, opt);
    if ( defaultOptions & testOptDebug ) printTitle(func);
@@ -641,8 +641,8 @@ int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, fitFu
    }
 
    for ( unsigned int j = 0; j < listAlgos.size(); ++j )
-   { 
-      for ( unsigned int i = 0; i < listAlgos[j].size(); ++i ) 
+   {
+      for ( unsigned int i = 0; i < listAlgos[j].size(); ++i )
       {
          int testFitOptions = testOptPars | testOptChi | testOptErr | defaultOptions;
          ROOT::Math::MinimizerOptions::SetDefaultMinimizer(listAlgos[j][i].type, listAlgos[j][i].algo);
@@ -656,10 +656,10 @@ int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, fitFu
          fflush(stdout);
       }
    }
-   
+
    double percentageFailure = double( status * 100 ) / double( numberOfTests*func->GetNpar() );
 
-   if ( defaultOptions & testOptDebug ) 
+   if ( defaultOptions & testOptDebug )
    {
       printSeparator();
       printf("Number of fails: %d Total Number of tests %d", status, numberOfTests);
@@ -695,7 +695,7 @@ int test1DObjects(vector< vector<algoType> >& listH,
       func->SetParameters(&(listOfFunctions[j].origPars[0]));
       SetParsLimits(listOfFunctions[j].parLimits, func);
 
-      // fill an histogram 
+      // fill an histogram
       if ( h1 ) delete h1;
       h1 = new TH1D("histogram1D","h1-title",nbinsX,minX,maxX);
       for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
@@ -709,7 +709,7 @@ int test1DObjects(vector< vector<algoType> >& listH,
          h2->SetBinContent( i, rndm.Poisson( func->Eval( h2->GetBinCenter(i) ) ) );
 
       gTestIndex++;
-      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          delete c0; c0 = new TCanvas("c0-1D", "Histogram1D Variable");
          if ( __DRAW__ ) h2->DrawCopy();
          ObjectWrapper<TH1D*> owh2(h2);
@@ -718,16 +718,16 @@ int test1DObjects(vector< vector<algoType> >& listH,
       }
 
       gTestIndex++;
-      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          delete c1; c1 = new TCanvas("c1_1D", "Histogram1D");
          if ( __DRAW__ ) h1->DrawCopy();
          ObjectWrapper<TH1D*> owh1(h1);
          globalStatus += status = testFitters(&owh1, func, listH, listOfFunctions[j]);
          printf("%s\n", (status?"FAILED":"OK"));
       }
-      
+
       gTestIndex++;
-      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          delete g1; g1 = new TGraph(h1);
          g1->SetName("TGraph1D");
          g1->SetTitle("TGraph 1D - title");
@@ -740,7 +740,7 @@ int test1DObjects(vector< vector<algoType> >& listH,
       }
 
       gTestIndex++;
-      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          delete ge1; ge1 = new TGraphErrors(h1);
          ge1->SetName("TGraphErrors1D");
          ge1->SetTitle("TGraphErrors 1D - title");
@@ -753,7 +753,7 @@ int test1DObjects(vector< vector<algoType> >& listH,
       }
 
       gTestIndex++;
-      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          delete s1; s1 = THnSparse::CreateSparse("THnSparse 1D", "THnSparse 1D - title", h1);
          ObjectWrapper<THnSparse*> ows1(s1);
          globalStatus += status = testFitters(&ows1, func, listH, listOfFunctions[j]);
@@ -801,8 +801,8 @@ int test2DObjects(vector< vector<algoType> >& listH,
       func = new TF2( listOfFunctions[h].name, listOfFunctions[h].func, minX, maxX, minY, maxY, listOfFunctions[h].npars);
       func->SetParameters(&(listOfFunctions[h].origPars[0]));
       SetParsLimits(listOfFunctions[h].parLimits, func);
-      
-      // fill an histogram 
+
+      // fill an histogram
       if ( h1 ) delete h1;
       h1 = new TH2D("histogram2D","h1-title",nbinsX,minX,maxX,nbinsY,minY,maxY);
       if ( ge1 ) delete ge1;
@@ -811,14 +811,14 @@ int test2DObjects(vector< vector<algoType> >& listH,
       ge1->SetTitle("Graph2D with Errors");
       unsigned int counter = 0;
       for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
-         for ( int j = 0; j <= h1->GetNbinsY() + 1; ++j ) 
+         for ( int j = 0; j <= h1->GetNbinsY() + 1; ++j )
          {
             double xc = h1->GetXaxis()->GetBinCenter(i);
             double yc = h1->GetYaxis()->GetBinCenter(j);
             double content = rndm.Poisson( func->Eval( xc, yc ) );
             h1->SetBinContent( i, j, content );
             ge1->SetPoint(counter, xc, yc, content);
-            ge1->SetPointError(counter, 
+            ge1->SetPointError(counter,
                                h1->GetXaxis()->GetBinWidth(i) / 2,
                                h1->GetYaxis()->GetBinWidth(j) / 2,
                                h1->GetBinError(i,j));
@@ -832,7 +832,7 @@ int test2DObjects(vector< vector<algoType> >& listH,
       FillVariableRange(y, nbinsY, minY, maxY);
       h2 = new TH2D("Histogram 2D Variable","h2-title",nbinsX, x, nbinsY, y);
       for ( int i = 0; i <= h2->GetNbinsX() + 1; ++i )
-         for ( int j = 0; j <= h2->GetNbinsY() + 1; ++j ) 
+         for ( int j = 0; j <= h2->GetNbinsY() + 1; ++j )
          {
             double xc = h2->GetXaxis()->GetBinCenter(i);
             double yc = h2->GetYaxis()->GetBinCenter(j);
@@ -841,7 +841,7 @@ int test2DObjects(vector< vector<algoType> >& listH,
          }
 
       gTestIndex++;
-      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          if ( c0 ) delete c0;
          c0 = new TCanvas("c0_2D", "Histogram2D Variable");
          if ( __DRAW__ ) h2->DrawCopy();
@@ -851,7 +851,7 @@ int test2DObjects(vector< vector<algoType> >& listH,
       }
 
       gTestIndex++;
-      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          if ( c1 ) delete c1;
          c1 = new TCanvas("c1_2D", "Histogram2D");
          if ( __DRAW__ ) h1->DrawCopy();
@@ -866,7 +866,7 @@ int test2DObjects(vector< vector<algoType> >& listH,
       g1->SetTitle("TGraph 2D - title");
 
       gTestIndex++;
-      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          if ( c2 ) delete c2;
          c2 = new TCanvas("c2_2D","TGraph");
          if ( __DRAW__ ) g1->DrawClone("AB*");
@@ -874,12 +874,12 @@ int test2DObjects(vector< vector<algoType> >& listH,
          globalStatus += status = testFitters(&owg1, func, listG, listOfFunctions[h]);
          printf("%s\n", (status?"FAILED":"OK"));
       }
-      
+
       ge1->SetName("TGraphErrors2DGE");
       ge1->SetTitle("TGraphErrors 2DGE - title");
 
       gTestIndex++;
-      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          if ( c3 ) delete c3;
          c3 = new TCanvas("c3_2DGE","TGraphError");
          if ( __DRAW__ ) ge1->DrawClone("AB*");
@@ -889,7 +889,7 @@ int test2DObjects(vector< vector<algoType> >& listH,
       }
 
       gTestIndex++;
-      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          delete s1; s1 = THnSparse::CreateSparse("THnSparse2D", "THnSparse 2D - title", h1);
          ObjectWrapper<THnSparse*> ows1(s1);
          globalStatus += status = testFitters(&ows1, func, listH, listOfFunctions[h]);
@@ -955,14 +955,14 @@ int testUnBinnedFit(int n = 10000)
    func->SetParameters(origPars);
 
    TUnuranMultiContDist dist(func);
-   TUnuran unr(&rndm); 
+   TUnuran unr(&rndm);
 
    // sampling with vnrou methods
    if (! unr.Init(dist,"vnrou")) {
          std::cerr << "error in init unuran " << std::endl; return -1;
    }
 
-   TTree * tree =  new  TTree("tree","2 var gaus tree"); 
+   TTree * tree =  new  TTree("tree","2 var gaus tree");
    double x,y,z,u,v,w;
    tree->Branch("x",&x,"x/D");
    tree->Branch("y",&y,"y/D");
@@ -979,9 +979,9 @@ int testUnBinnedFit(int n = 10000)
       u = rndm.Gaus(origPars[7],origPars[8]);
       v = rndm.Gaus(origPars[9],origPars[10]);
       w = rndm.Gaus(origPars[11],origPars[12]);
- 
+
       tree->Fill();
-      
+
    }
 
    delete func;
@@ -991,14 +991,14 @@ int testUnBinnedFit(int n = 10000)
    listAlgos[1] = simplexAlgos;
 
    TreeWrapper tw;
-   TF1 * f1 = 0; 
-   TF2 * f2 = 0; 
-   TF1 * f4 = 0; 
+   TF1 * f1 = 0;
+   TF2 * f2 = 0;
+   TF1 * f4 = 0;
 
    gTestIndex++;
-   if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
-      f1 = new TF1(treeFunctions[0].name,treeFunctions[0].func,minX,maxY,treeFunctions[0].npars);   
-      f1->SetParameters( &(treeFunctions[0].fitPars[0]) ); 
+   if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
+      f1 = new TF1(treeFunctions[0].name,treeFunctions[0].func,minX,maxY,treeFunctions[0].npars);
+      f1->SetParameters( &(treeFunctions[0].fitPars[0]) );
       f1->FixParameter(2,1);
       tw.set(tree, "x", "");
       globalStatus += status = testFitters(&tw, f1, listAlgos, treeFunctions[0]);
@@ -1014,17 +1014,17 @@ int testUnBinnedFit(int n = 10000)
    listAlgosND[1] = noCompareInTree;
 
    gTestIndex++;
-   if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
-      f2 = new TF2(treeFunctions[1].name,treeFunctions[1].func,minX,maxX,minY,maxY,treeFunctions[1].npars);   
-      f2->SetParameters( &(treeFunctions[1].fitPars[0]) ); 
+   if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
+      f2 = new TF2(treeFunctions[1].name,treeFunctions[1].func,minX,maxX,minY,maxY,treeFunctions[1].npars);
+      f2->SetParameters( &(treeFunctions[1].fitPars[0]) );
       tw.set(tree, "x:y", "");
       globalStatus += status = testFitters(&tw, f2, listAlgosND, treeFunctions[1]);
       printf("%s\n", (status?"FAILED":"OK"));
    }
 
    gTestIndex++;
-   if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
-      f4 = new TF1("gausND",gausNd,0,1,13);   
+   if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
+      f4 = new TF1("gausND",gausNd,0,1,13);
       f4->SetParameters(&(treeFunctions[2].fitPars[0]));
       tw.set(tree, "x:y:z:u:v:w", "");
       globalStatus += status = testFitters(&tw, f4, listAlgosND, treeFunctions[2]);
@@ -1086,7 +1086,7 @@ void init_structures()
    noGraphErrorAlgos.push_back( algoType( "GSLMultiFit", "",            "Q0", CompareResult()) ); // Not in TGraphError
 #endif
 
-   // Same as TH1D (but different comparision scheme!): commonAlgos, 
+   // Same as TH1D (but different comparision scheme!): commonAlgos,
    histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "Q0",   CompareResult(cmpPars,6)) );
    histGaus2D.push_back( algoType( "Minuit",      "Minimize",    "Q0",   CompareResult(cmpPars,6)) );
    histGaus2D.push_back( algoType( "Minuit",      "Scan",        "Q0",   CompareResult(0))         );
@@ -1102,7 +1102,7 @@ void init_structures()
    histGaus2D.push_back( algoType( "GSLSimAn",    "",            "Q0", CompareResult(cmpPars,6)) );
 #endif   // treeFail
    histGaus2D.push_back( algoType( "Minuit",      "Simplex",     "Q0",   CompareResult(cmpPars,6)) );
-   // minuit2 simplex fails in 2d 
+   // minuit2 simplex fails in 2d
    //histGaus2D.push_back( algoType( "Minuit2",     "Simplex",     "Q0",   CompareResult(cmpPars,6)) );
    // special algos
    histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "QE0",  CompareResult(cmpPars,6)) );
@@ -1134,8 +1134,8 @@ void init_structures()
 
    // For testing the liear fitter we can force the use by setting Linear the default minimizer and use
    // teh G option. In this case the fit is linearized using the gradient as the linear components
-   // Option "G" has not to be set as first option character to avoid using Fitter class in 
-   // the test program 
+   // Option "G" has not to be set as first option character to avoid using Fitter class in
+   // the test program
    // Use option "X" to force Chi2 calculations
    linearAlgos.push_back( algoType( "Linear",      "",            "Q0XG", CompareResult()) );
    listLinearAlgos.push_back( linearAlgos );
@@ -1157,7 +1157,7 @@ void init_structures()
    listAlgosTGraphError.push_back( graphErrorAlgos );
 
    listTH2DAlgos.push_back( histGaus2D );
-   
+
    listAlgosTGraph2D.push_back( commonAlgos );
    listAlgosTGraph2D.push_back( specialAlgos );
    listAlgosTGraph2D.push_back( noGraphErrorAlgos );
@@ -1196,13 +1196,13 @@ void init_structures()
    l2DLinearFunctions.push_back( fitFunctions("Poly2D", poly2DImpl, 7, poly2DOrig, poly2DFit, emptyLimits) );
 }
 
-int stressHistoFit() 
-{ 
+int stressHistoFit()
+{
    rndm.SetSeed(10);
 
    init_structures();
 
-   int iret = 0; 
+   int iret = 0;
 
    TBenchmark bm;
    bm.Start("stressHistoFit");
@@ -1221,19 +1221,19 @@ int stressHistoFit()
    // tree test
    std::cout << "\nTest unbinned fits\n\n";
    iret += testUnBinnedFit(2000);  // reduce statistics
-   
+
    bm.Stop("stressHistoFit");
    std::cout <<"\n****************************************************************************\n";
    bm.Print("stressHistoFit");
    const double reftime = 124; // ref time on  pcbrun4
    double rootmarks = 800 * reftime / bm.GetCpuTime("stressHistoFit");
-   std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t" 
+   std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t"
              << gROOT->GetGitBranch() << "@" << gROOT->GetGitCommit() << std::endl;
    std::cout <<"****************************************************************************\n";
 
-   return iret; 
+   return iret;
 }
-   
+
 int main(int argc, char** argv)
 {
 
@@ -1243,7 +1243,7 @@ int main(int argc, char** argv)
 
    Int_t  verbose     =      0;
    Int_t testNumber   =      0;
-   Bool_t doDraw      = kFALSE; 
+   Bool_t doDraw      = kFALSE;
 
    // Parse command line arguments
    for (Int_t i = 1 ;  i < argc ; i++) {
@@ -1279,15 +1279,15 @@ int main(int argc, char** argv)
          return 0 ;
       }
    }
-      
-   __DRAW__ = ( doDraw || verbose == 2);    
 
-   if (verbose > 0) { 
-      defaultOptions |= testOptDebug;   // debug mode (print test results) 
+   __DRAW__ = ( doDraw || verbose == 2);
+
+   if (verbose > 0) {
+      defaultOptions |= testOptDebug;   // debug mode (print test results)
       if (verbose > 1) defaultOptions |= testOptFitDbg;   // very debug (print also fit outputs)
    }
 
-   gSelectedTest = testNumber;  // number of selected test 
+   gSelectedTest = testNumber;  // number of selected test
 
    if ( __DRAW__ )
       theApp = new TApplication("App",&argc,argv);

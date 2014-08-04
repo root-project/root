@@ -1,6 +1,6 @@
 // Author: Valeriy Onuchin   17/07/2007
 //
-// This macro gives an example of how to set/change text button attributes. 
+// This macro gives an example of how to set/change text button attributes.
 //
 // To run it do either:
 // .x buttonTest.C
@@ -22,7 +22,7 @@ protected:
    TGNumberEntry *fEntry;
 
 public:
-   TextMargin(const TGWindow *p, const char *name) : TGHorizontalFrame(p) 
+   TextMargin(const TGWindow *p, const char *name) : TGHorizontalFrame(p)
    {
       fEntry = new TGNumberEntry(this, 0, 6, -1, TGNumberFormat::kNESInteger);
       AddFrame(fEntry, new TGLayoutHints(kLHintsLeft));
@@ -39,7 +39,7 @@ class ButtonWindow : public TGMainFrame {
 
 protected:
    TGTextButton *fButton;   // button being tested
-   
+
 public:
    ButtonWindow();
    void DoHPosition(Int_t);
@@ -48,7 +48,7 @@ public:
    void DoRightMargin(char*);
    void DoTopMargin(char*);
    void DoBottomMargin(char*);
-   
+
    ClassDef(ButtonWindow, 0)
 };
 
@@ -62,7 +62,7 @@ ButtonWindow::ButtonWindow() : TGMainFrame(gClient->GetRoot(), 10, 10, kHorizont
 
    // Controls on right
    TGVerticalFrame *controls = new TGVerticalFrame(this);
-   AddFrame(controls, new TGLayoutHints(kLHintsRight | kLHintsExpandY, 
+   AddFrame(controls, new TGLayoutHints(kLHintsRight | kLHintsExpandY,
                                         5, 5, 5, 5));
 
    // Separator
@@ -99,7 +99,7 @@ ButtonWindow::ButtonWindow() : TGMainFrame(gClient->GetRoot(), 10, 10, kHorizont
    new TGRadioButton(horizontal, "Left", kTextLeft);
    new TGRadioButton(horizontal, "Right", kTextRight);
    horizontal->SetButton(kTextCenterX);
-   horizontal->Connect("Pressed(Int_t)", "ButtonWindow", this, 
+   horizontal->Connect("Pressed(Int_t)", "ButtonWindow", this,
                        "DoHPosition(Int_t)");
    controls->AddFrame(horizontal, new TGLayoutHints(kLHintsExpandX));
 
@@ -111,7 +111,7 @@ ButtonWindow::ButtonWindow() : TGMainFrame(gClient->GetRoot(), 10, 10, kHorizont
    new TGRadioButton(vertical, "Top", kTextTop);
    new TGRadioButton(vertical, "Bottom", kTextBottom);
    vertical->SetButton(kTextCenterY);
-   vertical->Connect("Pressed(Int_t)", "ButtonWindow", this, 
+   vertical->Connect("Pressed(Int_t)", "ButtonWindow", this,
                      "DoVPosition(Int_t)");
    controls->AddFrame(vertical, new TGLayoutHints(kLHintsExpandX));
 
@@ -192,7 +192,7 @@ void ButtonWindow::DoLeftMargin(char *val)
 
    fButton->SetLeftMargin(atoi(val));
    gClient->NeedRedraw(fButton);
-}  
+}
 
 //______________________________________________________________________________
 void ButtonWindow::DoRightMargin(char *val)

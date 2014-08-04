@@ -248,11 +248,11 @@ int main(int ac, char *av[])
    TApplication theApp("App", &ac, av);
 
    XSGui mainWindow(gClient->GetRoot(), 400, 220);
-   
+
    XSinitialise();
-   
+
    theApp.Run();
-   
+
    XSfinalise();
    return 0;
 } // main

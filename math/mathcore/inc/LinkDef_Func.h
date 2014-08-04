@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
+// Authors: Andras Zsenei & Lorenzo Moneta   06/2005
 
 /**********************************************************************
  *                                                                    *

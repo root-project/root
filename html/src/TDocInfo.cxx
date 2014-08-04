@@ -46,13 +46,13 @@ Int_t TClassDocInfo::Compare(const TObject* obj) const
 // BEGIN_HTML
 // <p>Represents modules of the documented product. Modules are sub-groups of
 // sources of a product, which get separate index pages and user-provided
-// documentation. For ROOT, a module is a sub-directory; it often corresponds 
+// documentation. For ROOT, a module is a sub-directory; it often corresponds
 // to a library. TModuleDocInfo, for example, is part of the HTML module,
 // which is documented <a href="./HTML_index.html">here</a>. The list of
 // all modules is shown e.g. in the <a href="ClassIndex.html">class index</a>.</p>
 // <p>A module's documentation is searched by combining its source directory
 // (see <a href="#TModuleDocInfo:SetInputDir">SetInputDir()</a>) and the
-// module documentation search path defined by 
+// module documentation search path defined by
 // <a href="./THtml.html#THtml:SetModuleDocPath">THtml::SetModuleDocPath()</a>;
 // it defaults to "../doc", i.e. for a module's sources in "module/src" its
 // documentation is searched in "module/doc".

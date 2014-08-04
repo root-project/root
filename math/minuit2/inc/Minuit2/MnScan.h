@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -21,11 +21,11 @@ namespace ROOT {
 class FCNBase;
 
 //_______________________________________________________________________
-/** 
+/**
     API class for minimization using a scan method to find the minimum;
     allows for user interaction: set/change parameters, do minimization,
-    change parameters, re-do minimization etc.; 
-    
+    change parameters, re-do minimization etc.;
+
  */
 
 class MnScan : public MnApplication {
@@ -50,7 +50,7 @@ public:
    /// construct from FCNBase + MnUserParameterState + MnStrategy
    MnScan(const FCNBase& fcn, const MnUserParameterState& par, const MnStrategy& str) : MnApplication(fcn, MnUserParameterState(par), str), fMinimizer(ScanMinimizer()) {}
 
-   MnScan(const MnScan& migr) : MnApplication(migr.Fcnbase(), migr.State(), migr.Strategy(), migr.NumOfCalls()), fMinimizer(migr.fMinimizer) {}  
+   MnScan(const MnScan& migr) : MnApplication(migr.Fcnbase(), migr.State(), migr.Strategy(), migr.NumOfCalls()), fMinimizer(migr.fMinimizer) {}
 
    ~MnScan() {}
 

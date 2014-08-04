@@ -1492,7 +1492,7 @@ void TGX11::MapEvent(Event_t &ev, void *xevi, Bool_t tox)
 {
    // Map Event_t structure to XEvent structure. If tox is false
    // map the other way.
-   
+
    XEvent &xev = *(XEvent *)xevi;
 
    if (tox) {

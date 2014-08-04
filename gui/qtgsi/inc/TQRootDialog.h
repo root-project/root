@@ -64,7 +64,7 @@ class TQRootDialog: public QVBox
 private:
    TQRootDialog(const TQRootDialog &);
    TQRootDialog& operator=(const TQRootDialog &);
-      
+
 public:
    TQRootDialog(QWidget *parent, const char *name, Qt::WFlags f=0,
                 TObject *obj=0,TMethod *meth=0);
@@ -89,7 +89,7 @@ protected:
    QList<QLineEdit*> fList; // list of widget corresponding to the number of arguments
 #else
    QList<QLineEdit> fList; // list of widget corresponding to the number of arguments
-#endif      
+#endif
    ClassDef(TQRootDialog,1)  //prompt for the arguments of an object's member function
 };
 

@@ -3,7 +3,7 @@
 // root > .x binomial.C
 // root > .x binomial.C+ with ACLIC
 //Author: Federico Carminati
-   
+
 #include <TMath.h>
 #include <TRandom.h>
 

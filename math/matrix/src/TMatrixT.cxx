@@ -1349,7 +1349,7 @@ TMatrixTBase<Element> &TMatrixT<Element>::ResizeTo(Int_t row_lwb,Int_t row_upb,I
 template<class Element>
 Double_t TMatrixT<Element>::Determinant() const
 {
-// Return the matrix determinant 
+// Return the matrix determinant
 
    const TMatrixT<Element> &tmp = *this;
    TDecompLU lu(tmp,this->fTol);
@@ -2071,7 +2071,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator*=(const TMatrixTSym<Element> &sou
       }
       trp0 += this->fNcols;                            // Set trp0 to the (i+1)-th row
       R__ASSERT(trp0 == cp);
-   } 
+   }
 
    R__ASSERT(cp == trp0_last && trp0 == trp0_last);
    if (isAllocated)
@@ -2261,7 +2261,7 @@ TMatrixT<Element> &TMatrixT<Element>::operator/=(const TMatrixTRow_const<Element
    const TMatrixTBase<Element> *mt = row.GetMatrix();
    R__ASSERT(this->IsValid());
    R__ASSERT(mt->IsValid());
- 
+
    if (this->fNcols != mt->GetNcols()) {
       Error("operator/=(const TMatrixTRow_const &)","wrong row length");
       return *this;
@@ -3197,19 +3197,19 @@ void TMatrixT<Element>::Streamer(TBuffer &R__b)
 }
 
 // trick to return a reference to nan in operator(i,j_ when i,j are outside of range
-template<class Element> 
-struct nan_value_t { 
+template<class Element>
+struct nan_value_t {
    static Element gNanValue;
 };
 template<>
-Double_t nan_value_t<Double_t>::gNanValue = std::numeric_limits<Double_t>::quiet_NaN(); 
+Double_t nan_value_t<Double_t>::gNanValue = std::numeric_limits<Double_t>::quiet_NaN();
 template<>
-Float_t nan_value_t<Float_t>::gNanValue = std::numeric_limits<Float_t>::quiet_NaN(); 
+Float_t nan_value_t<Float_t>::gNanValue = std::numeric_limits<Float_t>::quiet_NaN();
 
 template<class Element>
 Element & TMatrixT<Element>::NaNValue()
 {
-   return nan_value_t<Element>::gNanValue; 
+   return nan_value_t<Element>::gNanValue;
 }
 
 

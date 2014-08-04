@@ -608,7 +608,7 @@ namespace mathtext {
       return math_bounding_box(textbb._math_list._math_list,
                                initial_style);
    }
-   
+
    void math_text_renderer_t::
    text(const float x, const float y, const math_text_t &texti,
         const bool display_style)
@@ -616,11 +616,11 @@ namespace mathtext {
       if(!texti.well_formed()) {
          text_raw(x, y, L"*** invalid: " + texti.code());
       }
-      
+
       const unsigned int initial_style = display_style ?
       math_text_t::item_t::STYLE_DISPLAY :
       math_text_t::item_t::STYLE_TEXT;
-      
+
       if(texti._render_structure) {
          point(x, y);
          rectangle(point_t(x, y) + math_bounding_box(
@@ -629,7 +629,7 @@ namespace mathtext {
       math_text(point_t(x, y), texti._math_list._math_list,
                 initial_style, texti._render_structure);
    }
-   
+
 }
 #ifdef WIN32
 #pragma warning( pop )

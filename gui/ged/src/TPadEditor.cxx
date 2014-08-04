@@ -15,7 +15,7 @@
 //  TPadEditor                                                          //
 //                                                                      //
 //  Editor of pad/canvas objects.                                       //
-//       color and fill style,                                          //             
+//       color and fill style,                                          //
 //      'Edit' check box sets pad/canvad editable,                      //
 //      'Crosshair' sets a cross hair on the pad,                       //
 //      'Fixed aspect ratio' can be set when resizing the pad           //
@@ -65,7 +65,7 @@ TPadEditor::TPadEditor(const TGWindow *p, Int_t width,
    // Constructor of TPad editor GUI.
 
    fPadPointer = 0;
-   
+
    MakeTitle("Pad/Canvas");
 
    fFixedAR = new TGCheckButton(this, "Fixed aspect ratio", kPAD_FAR);
@@ -127,9 +127,9 @@ TPadEditor::TPadEditor(const TGWindow *p, Int_t width,
    fBgroup->ChangeOptions(kFitWidth|kChildFrame|kVerticalFrame);
    f6->AddFrame(fBgroup, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 1, 0, 0));
    AddFrame(f6, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-   
+
    TGCompositeFrame *f7 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGLabel *fSizeLbl = new TGLabel(f7, "Size:");                              
+   TGLabel *fSizeLbl = new TGLabel(f7, "Size:");
    f7->AddFrame(fSizeLbl, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 6, 1, 0, 0));
    fBsize = new TGLineWidthComboBox(f7, kPAD_BSIZE);
    fBsize->Resize(92, 20);
@@ -142,7 +142,7 @@ TPadEditor::TPadEditor(const TGWindow *p, Int_t width,
 
 //______________________________________________________________________________
 TPadEditor::~TPadEditor()
-{ 
+{
    // Destructor of fill editor.
 
    // children of TGButonGroup are not deleted
@@ -154,7 +154,7 @@ TPadEditor::~TPadEditor()
 
 //______________________________________________________________________________
 void TPadEditor::ConnectSignals2Slots()
-{ 
+{
    // Connect signals to slots.
 
    fFixedAR->Connect("Toggled(Bool_t)","TPadEditor",this,"DoFixedAspectRatio(Bool_t)");
@@ -186,11 +186,11 @@ void TPadEditor::SetModel(TObject* obj)
    on = fPadPointer->HasFixedAspectRatio();
    if (on) fFixedAR->SetState(kButtonDown);
    else fFixedAR->SetState(kButtonUp);
-   
+
    on = fPadPointer->HasCrosshair();
    if (on) fCrosshair->SetState(kButtonDown);
    else fCrosshair->SetState(kButtonUp);
-   
+
    on = fPadPointer->IsEditable();
    if (on) fEditable->SetState(kButtonDown);
    else fEditable->SetState(kButtonUp);
@@ -198,7 +198,7 @@ void TPadEditor::SetModel(TObject* obj)
    on = fPadPointer->GetGridx();
    if (on) fGridX->SetState(kButtonDown);
    else fGridX->SetState(kButtonUp);
-   
+
    on = fPadPointer->GetGridy();
    if (on) fGridY->SetState(kButtonDown);
    else fGridY->SetState(kButtonUp);
@@ -207,7 +207,7 @@ void TPadEditor::SetModel(TObject* obj)
    par = fPadPointer->GetLogx();
    if (par) fLogX->SetState(kButtonDown);
    else fLogX->SetState(kButtonUp);
-   
+
    par = fPadPointer->GetLogy();
    if (par) fLogY->SetState(kButtonDown);
    else fLogY->SetState(kButtonUp);
@@ -239,7 +239,7 @@ void TPadEditor::SetModel(TObject* obj)
    if (par < 1) par = 1;
    if (par > 16) par = 16;
    fBsize->Select(par);
-   
+
    if (fInit) ConnectSignals2Slots();
 
    fAvoidSignal = kFALSE;

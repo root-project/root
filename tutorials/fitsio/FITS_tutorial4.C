@@ -12,7 +12,7 @@ void FITS_tutorial4()
    printf("named DATAMAX greater than 2e-15 (there's only 1\n");
    printf("matching row)\n");
    printf("Data copyright: NASA\n\n");
-   
+
    if (!gROOT->IsBatch()) {
       //printf("Press ENTER to start..."); getchar();
    }
@@ -25,23 +25,23 @@ void FITS_tutorial4()
    }
    //printf("Press ENTER to see information about the table's columns..."); getchar();
    hdu->Print("T");
-   
+
    printf("\n\n........................................\n");
    printf("Press ENTER to see full table contents (maybe you should resize\n");
-   //printf("this window as large as possible before)..."); getchar();   
+   //printf("this window as large as possible before)..."); getchar();
    hdu->Print("T+");
-   
+
    printf("\n\n........................................\n");
    //printf("Press ENTER to get only the DATAMAX value of the matched row..."); getchar();
    TVectorD *v = hdu->GetTabRealVectorColumn("DATAMAX");
    printf("%lg\n", (*v)[0]);
-   
-   
+
+
    printf("Does the matched row have DATAMAX > 2e-15? :-)\n");
-   
-   //Clean up 
-   delete v;  
+
+   //Clean up
+   delete v;
    delete hdu;
 }
 
- 
+

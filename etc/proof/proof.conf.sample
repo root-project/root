@@ -29,7 +29,7 @@
 # a worker from the set of active workers. The worker (Condor VM) will
 # be suspended and resumed. This supports situations where there a more
 # VMs then CPUs.
-# 
+#
 # Users can be redirected to have their master server run on a pre-determined
 # node. For that use the "user" line.
 #

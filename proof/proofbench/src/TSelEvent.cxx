@@ -70,7 +70,7 @@ TSelEvent::TSelEvent()
             b_event_fTriggerBits(0), b_event_fIsValid(0)
 {
    // Constructor
-   
+
 }
 
 //______________________________________________________________________________
@@ -105,8 +105,8 @@ void TSelEvent::Begin(TTree *)
             //Info("Begin", "PROOF_BenchmarkDebug=%d", fDebug);
          }
          else{
-            Error("Begin", "PROOF_BenchmarkDebug not type TParameter<Int_t>*"); 
-         } 
+            Error("Begin", "PROOF_BenchmarkDebug not type TParameter<Int_t>*");
+         }
          continue;
       }
    }
@@ -156,8 +156,8 @@ void TSelEvent::SlaveBegin(TTree *tree)
          }
          else{
             Error("SlaveBegin", "PROOF_BenchmarkDebug not type TParameter"
-                                "<Int_t>*"); 
-         } 
+                                "<Int_t>*");
+         }
          continue;
       }
    }
@@ -176,7 +176,7 @@ void TSelEvent::SlaveBegin(TTree *tree)
    fPtHist->SetDirectory(0);
    fPtHist->GetXaxis()->SetTitle("p_{T}");
    fPtHist->GetYaxis()->SetTitle("dN/p_{T}dp_{T}");
-   
+
    fNTracksHist = new TH1F("ntracks_dist","N_{Tracks} per Event"
                            " Distribution", 100, 50, 150);
    //enable rebinning
@@ -206,14 +206,14 @@ Bool_t TSelEvent::Process(Long64_t entry)
    //  The entry is always the local entry number in the current tree.
    //  Assuming that fChain is the pointer to the TChain being processed,
    //  use fChain->GetTree()->GetEntry(entry).
- 
+
    if (fReadType->GetType() != TPBReadType::kReadNotSpecified){
       switch (fReadType->GetType()){
          case TPBReadType::kReadFull:
             // Full read
             fChain->GetTree()->GetEntry(entry);
             fNTracksHist->Fill(fNtrack);
-      
+
             for(Int_t j=0;j<fTracks->GetEntries();j++){
                Track* curtrack = dynamic_cast<Track*>(fTracks->At(j));
                fPtHist->Fill(curtrack->GetPt(),1./curtrack->GetPt());
@@ -223,9 +223,9 @@ Bool_t TSelEvent::Process(Long64_t entry)
          case TPBReadType::kReadOpt:
             // Partial read
             b_event_fNtrack->GetEntry(entry);
-      
+
             fNTracksHist->Fill(fNtrack);
-         
+
             if (fNtrack>0) {
                b_fTracks->GetEntry(entry);
                for(Int_t j=0;j<fTracks->GetEntries();j++){

@@ -105,7 +105,7 @@ public:
    virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
    virtual void UnRefProjectable(TEveProjectable* assumed_parent, bool notifyParent = true);
 
-   virtual void UpdateProjection() = 0;   
+   virtual void UpdateProjection() = 0;
    virtual TEveElement* GetProjectedAsElement();
 
    virtual void SetDepth(Float_t d);

@@ -30,7 +30,7 @@ class TAttFill;
 class TPoint;
 
    //
-   // TQtBrush creates the QBrush Qt object based on the ROOT "fill" attributes 
+   // TQtBrush creates the QBrush Qt object based on the ROOT "fill" attributes
    //
 class TQtBrush : public QBrush
 {
@@ -55,14 +55,14 @@ public:
    void  SetFillAttributes(const TAttFill &rootFillAttributes);
    Bool_t IsTransparent() const;
    void SetStyle(int newStyle=1000){ if (newStyle < 0) fStyle = fFasi = -1;
-                                     else  SetStyle(newStyle/1000,newStyle%1000); 
+                                     else  SetStyle(newStyle/1000,newStyle%1000);
                                    };
    void SetStyle(int style, int fasi);
    void SetColor(const QColor &qtcolor);
    void SetColor(Color_t cindex);
    const QColor &GetColor() const { return fBackground;}
    int   GetStyle()         const { return 1000*fStyle + fFasi; }
-   ClassDef(TQtBrush,0); // create QBrush object based on the ROOT "fill" attributes 
+   ClassDef(TQtBrush,0); // create QBrush object based on the ROOT "fill" attributes
 };
 
 inline Bool_t TQtBrush::IsTransparent() const

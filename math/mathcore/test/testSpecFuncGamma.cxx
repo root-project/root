@@ -21,7 +21,7 @@ const double INCREMENT = 0.01;
 const int ARRAYSIZE = (int) (( MAX - MIN ) / INCREMENT) + 1;
 
 bool showGraphics = false;
-//bool verbose = false; 
+//bool verbose = false;
 using namespace std;
 
 TGraph* drawPoints(Double_t x[], Double_t y[], int color, int style = 1)
@@ -35,7 +35,7 @@ TGraph* drawPoints(Double_t x[], Double_t y[], int color, int style = 1)
    return g;
 }
 
-int testSpecFuncGamma() 
+int testSpecFuncGamma()
 {
    vector<Double_t> x( ARRAYSIZE );
    vector<Double_t> yg( ARRAYSIZE );
@@ -54,8 +54,8 @@ int testSpecFuncGamma()
    unsigned int index = 0;
    for ( double i = MIN; i < MAX; i += INCREMENT )
    {
-//       cout << "i:"; cout.width(5); cout << i 
-//            << " index: "; cout.width(5); cout << index 
+//       cout << "i:"; cout.width(5); cout << i
+//            << " index: "; cout.width(5); cout << index
 //            << " TMath::Gamma(x): "; cout.width(10); cout << TMath::Gamma(i)
 //            << " ROOT::Math::tgamma(x): "; cout.width(10); cout << ROOT::Math::tgamma(i)
 //            << " TMath::Gamma(a, x): "; cout.width(10); cout << TMath::Gamma(a, i)
@@ -70,7 +70,7 @@ int testSpecFuncGamma()
       // take the infinity values out of the error checking!
       if ( std::fabs(yg[index]) < 1E+12 && std::fabs( yg[index] - ymtg[index] ) > ERRORLIMIT )
       {
-         cout << "i " << i   
+         cout << "i " << i
               << " yg[index] " << yg[index]
               << " ymtg[index] " << ymtg[index]
               << " " << std::fabs( yg[index] - ymtg[index] )
@@ -82,7 +82,7 @@ int testSpecFuncGamma()
       ymga[index] = ROOT::Math::inc_gamma(a, i);
       if ( std::fabs( yga[index] - ymga[index] ) > ERRORLIMIT )
       {
-         cout << "i " << i   
+         cout << "i " << i
               << " yga[index] " << yga[index]
               << " ymga[index] " << ymga[index]
               << " " << std::fabs( yga[index] - ymga[index] )
@@ -94,7 +94,7 @@ int testSpecFuncGamma()
       ymlng[index] = ROOT::Math::lgamma(i);
       if ( std::fabs( ylng[index] - ymlng[index] ) > ERRORLIMIT )
       {
-         cout << "i " << i   
+         cout << "i " << i
               << " ylng[index] " << ylng[index]
               << " ymlng[index] " << ymlng[index]
               << " " << std::fabs( ylng[index] - ymlng[index] )
@@ -107,19 +107,19 @@ int testSpecFuncGamma()
 
    if ( showGraphics )
    {
-      
-      TCanvas* c1 = new TCanvas("c1", "Two Graphs", 600, 400); 
+
+      TCanvas* c1 = new TCanvas("c1", "Two Graphs", 600, 400);
       TH2F* hpx = new TH2F("hpx", "Two Graphs(hpx)", ARRAYSIZE, MIN, MAX, ARRAYSIZE, -1,5);
       hpx->SetStats(kFALSE);
       hpx->Draw();
-      
+
       TGraph* gg    = drawPoints(&x[0], &yg[0], 1);
       TGraph* gmtg  = drawPoints(&x[0], &ymtg[0], 2, 7);
       TGraph* gga   = drawPoints(&x[0], &yga[0], 3);
       TGraph* gmga  = drawPoints(&x[0], &ymga[0], 4, 7);
       TGraph* glng  = drawPoints(&x[0], &ylng[0], 5);
       TGraph* gmlng = drawPoints(&x[0], &ymlng[0], 6, 7);
-      
+
       TLegend* legend = new TLegend(0.61,0.52,0.86,0.86);
       legend->AddEntry(gg,    "TMath::Gamma()");
       legend->AddEntry(gmtg,  "ROOT::Math::tgamma()");
@@ -128,7 +128,7 @@ int testSpecFuncGamma()
       legend->AddEntry(glng,  "TMath::LnGamma()");
       legend->AddEntry(gmlng, "ROOT::Math::lgamma()");
       legend->Draw();
-      
+
       c1->Show();
    }
 
@@ -138,25 +138,25 @@ int testSpecFuncGamma()
 }
 
 
-int main(int argc, char **argv) 
+int main(int argc, char **argv)
 {
-  // Parse command line arguments 
+  // Parse command line arguments
   for (Int_t i=1 ;  i<argc ; i++) {
      std::string arg = argv[i] ;
-     if (arg == "-g") { 
+     if (arg == "-g") {
       showGraphics = true;
      }
-     if (arg == "-v") { 
+     if (arg == "-v") {
       showGraphics = true;
       //verbose = true;
      }
-     if (arg == "-h") { 
+     if (arg == "-h") {
         cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
         cerr << "  where:\n";
         cerr << "     -g : graphics mode\n";
         cerr << "     -v : verbose  mode";
         cerr << endl;
-        return -1; 
+        return -1;
      }
    }
 

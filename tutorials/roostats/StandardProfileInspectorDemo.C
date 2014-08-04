@@ -5,14 +5,14 @@ StandardProfileInspectorDemo
 Author: Kyle Cranmer
 date: Dec. 2010
 
-This is a standard demo that can be used with any ROOT file 
+This is a standard demo that can be used with any ROOT file
 prepared in the standard way.  You specify:
  - name for input ROOT file
  - name of workspace inside ROOT file that holds model and data
  - name of ModelConfig that specifies details for calculator tools
- - name of dataset 
+ - name of dataset
 
-With default parameters the macro will attempt to run the 
+With default parameters the macro will attempt to run the
 standard hist2workspace example and read the ROOT file
 that it produces.
 
@@ -46,10 +46,10 @@ void StandardProfileInspectorDemo(const char* infile = "",
                                   const char* dataName = "obsData")
 
   /////////////////////////////////////////////////////////////
-  // First part is just to access a user-defined file 
+  // First part is just to access a user-defined file
   // or create the standard example file if it doesn't exist
   ////////////////////////////////////////////////////////////
-   
+
    const char* filename = "";
    if (!strcmp(infile,"")) {
       filename = "results/example_combined_GaussExample_model.root";
@@ -68,21 +68,21 @@ void StandardProfileInspectorDemo(const char* infile = "",
          cout <<"Done creating example input"<<endl;
          cout <<"---------------------\n\n"<<endl;
       }
-      
+
    }
    else
       filename = infile;
-   
+
    // Try to open the file
    TFile *file = TFile::Open(filename);
-   
+
    // if input file was specified byt not found, quit
    if(!file ){
       cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
    }
 
-  
+
   /////////////////////////////////////////////////////////////
   // Tutorial starts here
   ////////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ void StandardProfileInspectorDemo(const char* infile = "",
   // now use the profile inspector
   ProfileInspector p;
   TList* list = p.GetListOfProfilePlots(*data,mc);
-  
+
   // now make plots
   TCanvas* c1 = new TCanvas("c1","ProfileInspectorDemo",800,200);
   if(list->GetSize()>4){
@@ -126,6 +126,6 @@ void StandardProfileInspectorDemo(const char* infile = "",
     c1->cd(i+1);
     list->At(i)->Draw("al");
   }
-  
+
   cout << endl;
 }

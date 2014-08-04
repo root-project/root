@@ -46,26 +46,26 @@ public:
 #endif
 
    // constructor using a functor
-   TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Double_t zmin=0, Double_t zmax=1, Int_t npar = 0);  
+   TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Double_t zmin=0, Double_t zmax=1, Int_t npar = 0);
 
-   // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type 
-   // MemFn. 
+   // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
+   // MemFn.
    template <class PtrObj, typename MemFn>
-   TF3(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, const char * c1, const char * c2) : 
+   TF3(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, const char * c1, const char * c2) :
       TF2(name,p,memFn,xmin,xmax,ymin,ymax,npar,c1,c2),
-      fZmin(zmin), fZmax(zmax), fNpz(30) 
+      fZmin(zmin), fZmax(zmax), fNpz(30)
    {
       fNdim = 3;
-   } 
-   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) 
-   // and returning a double.    
-   template <typename Func> 
-   TF3(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, const char * c1  ) : 
+   }
+   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *)
+   // and returning a double.
+   template <typename Func>
+   TF3(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, const char * c1  ) :
       TF2(name,f,xmin,xmax,ymin,ymax,npar,c1),
-      fZmin(zmin), fZmax(zmax), fNpz(30) 
+      fZmin(zmin), fZmax(zmax), fNpz(30)
    {
       fNdim = 3;
-   } 
+   }
 
    TF3(const TF3 &f3);
    TF3& operator=(const TF3 &rhs);
@@ -80,7 +80,7 @@ public:
    virtual Double_t GetMaximumXYZ(Double_t &x, Double_t &y, Double_t &z);
           Int_t     GetNpz() const {return fNpz;}
    virtual void     GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom);
-   using TF1::GetRange; 
+   using TF1::GetRange;
    virtual void     GetRange(Double_t &xmin, Double_t &xmax) const;
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const ;
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const;
@@ -117,10 +117,10 @@ public:
    virtual Double_t Covariance3XZ(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001) {return CentralMoment3(1,ax,bx,0,ay,by,1,az,bz,epsilon);}
    virtual Double_t Covariance3YZ(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001) {return CentralMoment3(0,ax,bx,1,ay,by,1,az,bz,epsilon);}
 
-protected: 
-   
-   virtual Double_t FindMinMax(Double_t* x, bool findmax) const; 
-   
+protected:
+
+   virtual Double_t FindMinMax(Double_t* x, bool findmax) const;
+
    ClassDef(TF3,3)  //The Parametric 3-D function
 };
 

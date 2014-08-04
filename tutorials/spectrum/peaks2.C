@@ -12,7 +12,7 @@
 // To Quit, select the "quit" item in the canvas "File" menu
 //
 //Author: Rene Brun
-   
+
 #include "TSpectrum2.h"
 #include "TCanvas.h"
 #include "TRandom.h"
@@ -66,10 +66,10 @@ void findPeak2() {
    TCanvas *c1 = (TCanvas*)gROOT->GetListOfCanvases()->FindObject("c1");
    if (!c1) c1 = new TCanvas("c1","c1",10,10,1000,700);
    h2->FillRandom("f2",500000);
-   
+
    //now the real stuff: Finding the peaks
    Int_t nfound = s->Search(h2,2,"col");
-   
+
    //searching good and ghost peaks (approximation)
    Int_t pf,ngood = 0;
    Double_t *xpeaks = s->GetPositionX();
@@ -94,7 +94,7 @@ void findPeak2() {
       if (nf == 0) nghost++;
    }
    c1->Update();
-   
+
    s->Print();
    printf("Gener=%d, Found=%d, Good=%d, Ghost=%d\n",npeaks,nfound,ngood,nghost);
    printf("\nDouble click in the bottom right corner of the pad to continue\n");
@@ -107,5 +107,5 @@ void peaks2(Int_t maxpeaks=50) {
       findPeak2();
    }
 }
-   
-   
+
+

@@ -25,10 +25,10 @@ enum EArrowWid {
 
 //______________________________________________________________________________
 /* Begin_Html
-<center><h2>Implements user interface for editing of arrow attributes: 
+<center><h2>Implements user interface for editing of arrow attributes:
 shape, size, angle.</h2></center>
 The picture below shows this interface.
-End_Html 
+End_Html
 Begin_Macro(GUI)
 {
    gROOT->ProcessLine(".x $ROOTSYS/tutorials/graphics/arrow.C");

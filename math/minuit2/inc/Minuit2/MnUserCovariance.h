@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -22,7 +22,7 @@ namespace ROOT {
 
 
 /**
-   Class containing the covariance matrix data represented as a vector of 
+   Class containing the covariance matrix data represented as a vector of
    size n*(n+1)/2
    Used to hide internal matrix representation to user
  */
@@ -40,11 +40,11 @@ public:
 
    // unsafe constructor using just a pointer
   MnUserCovariance(const double * data, unsigned int nrow) :
-     fData(std::vector<double>(data,data+nrow*(nrow+1)/2)), 
+     fData(std::vector<double>(data,data+nrow*(nrow+1)/2)),
      fNRow(nrow) {
   }
 
-  MnUserCovariance(unsigned int n) : 
+  MnUserCovariance(unsigned int n) :
     fData(std::vector<double>(n*(n+1)/2, 0.)), fNRow(n) {}
 
   ~MnUserCovariance() {}
@@ -61,7 +61,7 @@ public:
 
   double operator()(unsigned int row, unsigned int col) const {
     assert(row < fNRow && col < fNRow);
-    if(row > col) 
+    if(row > col)
       return fData[col+row*(row+1)/2];
     else
       return fData[row+col*(col+1)/2];
@@ -69,7 +69,7 @@ public:
 
   double& operator()(unsigned int row, unsigned int col) {
     assert(row < fNRow && col < fNRow);
-    if(row > col) 
+    if(row > col)
       return fData[col+row*(row+1)/2];
     else
       return fData[row+col*(col+1)/2];
@@ -84,7 +84,7 @@ public:
   unsigned int Nrow() const {return fNRow;}
 
 // VC 7.1 warning: conversion from size_t to unsigned int
-  unsigned int size() const 
+  unsigned int size() const
   { return static_cast < unsigned int > ( fData.size() );
   }
 

@@ -429,17 +429,17 @@ namespace mathtext {
             box = false;
          }
 #endif
-         
+
          ret.push_back(code_substr);
          begin = end;
          while( begin<code.size() && code[begin] == ' ' ) {
             begin++;
          }
       }
-      
+
       return ret;
    }
-   
+
    std::vector<std::string> math_text_t::
    tex_replace(const std::vector<std::string> &/*code*/)
    {
@@ -451,8 +451,8 @@ namespace mathtext {
          { "\\frac", "\2", "{", "\1", "\\over", "\2", "}", NULL }
       };
 #endif
-      
+
       return std::vector<std::string>();
    }
-   
+
 }

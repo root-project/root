@@ -687,11 +687,11 @@ void TEveViewerList::SwitchColorSet()
 
    fUseLightColorSet = ! fUseLightColorSet;
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {  
+   {
       TGLViewer* glv = ((TEveViewer*)*i)->GetGLViewer();
       if ( fUseLightColorSet)
          glv->UseLightColorSet();
-      else 
+      else
          glv->UseDarkColorSet();
 
       glv->RequestDraw(TGLRnrCtx::kLODHigh);

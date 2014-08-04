@@ -135,7 +135,7 @@ Double_t TGeoCone::Capacity() const
 {
 // Computes capacity of the shape in [length^3]
    return TGeoCone::Capacity(fDz, fRmin1, fRmax1, fRmin2, fRmax2);
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoCone::Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
@@ -143,8 +143,8 @@ Double_t TGeoCone::Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Double_
 // Computes capacity of the shape in [length^3]
    Double_t capacity = (2.*dz*TMath::Pi()/3.)*(rmax1*rmax1+rmax2*rmax2+rmax1*rmax2-
                                                rmin1*rmin1-rmin2*rmin2-rmin1*rmin2);
-   return capacity;                                            
-}   
+   return capacity;
+}
 
 //_____________________________________________________________________________
 TGeoCone::~TGeoCone()
@@ -264,7 +264,7 @@ Double_t TGeoCone::DistFromInsideS(const Double_t *point, const Double_t *dir, D
    if (dir[2]) {
       sz = (TMath::Sign(dz, dir[2])-point[2])/dir[2];
       if (sz<=0) return 0.0;
-   }   
+   }
    Double_t rsq=point[0]*point[0]+point[1]*point[1];
    Double_t zinv = 1./dz;
    Double_t rin = 0.5*(rmin1+rmin2+(rmin2-rmin1)*point[2]*zinv);
@@ -276,7 +276,7 @@ Double_t TGeoCone::DistFromInsideS(const Double_t *point, const Double_t *dir, D
       if (rsq < rin*(rin+TGeoShape::Tolerance())) {
          Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]+0.5*(rmin1-rmin2)*dir[2]*zinv*TMath::Sqrt(rsq);
          if (ddotn<=0) return 0.0;
-      } else {         
+      } else {
          TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
          if (delta>0) {
             sr = -b-delta;
@@ -284,7 +284,7 @@ Double_t TGeoCone::DistFromInsideS(const Double_t *point, const Double_t *dir, D
                zi = point[2]+sr*dir[2];
                if (TMath::Abs(zi)<=dz) return TMath::Min(sz,sr);
             }
-            sr = -b+delta;   
+            sr = -b+delta;
             if (sr>0) {
                zi = point[2]+sr*dir[2];
                if (TMath::Abs(zi)<=dz) return TMath::Min(sz,sr);
@@ -305,7 +305,7 @@ Double_t TGeoCone::DistFromInsideS(const Double_t *point, const Double_t *dir, D
       zi = point[2]+sr*dir[2];
       if (TMath::Abs(zi)<=dz) return TMath::Min(sz,sr);
       return sz;
-   }   
+   }
    TGeoCone::DistToCone(point, dir, dz, rmax1, rmax2, b, delta);
    if (delta>0) {
       sr = -b-delta;
@@ -313,13 +313,13 @@ Double_t TGeoCone::DistFromInsideS(const Double_t *point, const Double_t *dir, D
          zi = point[2]+sr*dir[2];
          if (TMath::Abs(zi)<=dz) return TMath::Min(sz,sr);
       }
-      sr = -b+delta;   
+      sr = -b+delta;
       if (sr>TGeoShape::Tolerance()) {
          zi = point[2]+sr*dir[2];
          if (TMath::Abs(zi)<=dz) return TMath::Min(sz,sr);
       }
    }
-   return sz;   
+   return sz;
 }
 
 //_____________________________________________________________________________
@@ -366,7 +366,7 @@ Double_t TGeoCone::DistFromOutsideS(const Double_t *point, const Double_t *dir, 
          Double_t r2 = xp*xp+yp*yp;
          if ((r2>=rmin2*rmin2) && (r2<=rmax2*rmax2)) return snxt;
          inz = kFALSE;
-      }   
+      }
    }
 
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
@@ -380,7 +380,7 @@ Double_t TGeoCone::DistFromOutsideS(const Double_t *point, const Double_t *dir, 
       tg1=0.5*(rmin2-rmin1)*dzinv;
       rin=ro1+tg1*point[2];
       if (rin>0 && rsq<rin*(rin-TGeoShape::Tolerance())) inrmin=kFALSE;
-   }   
+   }
    Double_t ro2=0.5*(rmax1+rmax2);
    Double_t tg2=0.5*(rmax2-rmax1)*dzinv;
    Double_t rout=tg2*point[2]+ro2;
@@ -404,11 +404,11 @@ Double_t TGeoCone::DistFromOutsideS(const Double_t *point, const Double_t *dir, 
          Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]-tg2*dir[2]*r;
          if (ddotn<=0) return 0.0;
          return TGeoShape::Big();
-      }   
+      }
       // on rmin boundary
       Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]-tg1*dir[2]*r;
       if (ddotn>=0) return 0.0;
-      // we can cross (+) solution of rmin       
+      // we can cross (+) solution of rmin
       TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
 
       if (delta<0) return 0.0;
@@ -419,7 +419,7 @@ Double_t TGeoCone::DistFromOutsideS(const Double_t *point, const Double_t *dir, 
       if (TMath::Abs(zp)<=dz) return snxt;
       return TGeoShape::Big();
    }
-            
+
    // compute distance to inner cone
    snxt = TGeoShape::Big();
    if (!inrmin) {
@@ -430,13 +430,13 @@ Double_t TGeoCone::DistFromOutsideS(const Double_t *point, const Double_t *dir, 
       if (snxt>0) {
          zp = point[2]+snxt*dir[2];
          if (TMath::Abs(zp)<=dz) return snxt;
-      }   
+      }
       snxt = -b-delta;
       if (snxt>0) {
          zp = point[2]+snxt*dir[2];
          if (TMath::Abs(zp)<=dz) return snxt;
-      }   
-      snxt = TGeoShape::Big();      
+      }
+      snxt = TGeoShape::Big();
    } else {
       if (hasrmin) {
          TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
@@ -448,8 +448,8 @@ Double_t TGeoCone::DistFromOutsideS(const Double_t *point, const Double_t *dir, 
             }
          }
       }
-   }   
-   
+   }
+
    if (inrmax) return snxt;
    // We can cross outer cone, both solutions possible
    // compute distance to outer cone
@@ -460,7 +460,7 @@ Double_t TGeoCone::DistFromOutsideS(const Double_t *point, const Double_t *dir, 
       zp = point[2]+dout*dir[2];
       if (TMath::Abs(zp)<=dz) return dout;
    }
-   dout = -b+delta;  
+   dout = -b+delta;
    if (dout<=0 || dout>snxt) return snxt;
    zp = point[2]+dout*dir[2];
    if (TMath::Abs(zp)<=dz) return dout;
@@ -507,7 +507,7 @@ void TGeoCone::DistToCone(const Double_t *point, const Double_t *dir, Double_t d
       b = 0.5*c/b;
       delta = 0.;
       return;
-   }   
+   }
    a = 1./a;
    b *= a;
    c *= a;
@@ -677,7 +677,7 @@ Bool_t TGeoCone::GetPointsOnSegments(Int_t npoints, Double_t *array) const
    if (npoints > (npoints/2)*2) {
       Error("GetPointsOnSegments","Npoints must be even number");
       return kFALSE;
-   }   
+   }
    Bool_t hasrmin = (fRmin1>0 || fRmin2>0)?kTRUE:kFALSE;
    Int_t nc = 0;
    if (hasrmin)   nc = (Int_t)TMath::Sqrt(0.5*npoints);
@@ -698,7 +698,7 @@ Bool_t TGeoCone::GetPointsOnSegments(Int_t npoints, Double_t *array) const
       if (i == (nc-1)) nphi = ntop;
       z = -fDz + i*dz;
       if (hasrmin) rmin = 0.5*(fRmin1+fRmin2) + 0.5*(fRmin2-fRmin1)*z/fDz;
-      rmax = 0.5*(fRmax1+fRmax2) + 0.5*(fRmax2-fRmax1)*z/fDz; 
+      rmax = 0.5*(fRmax1+fRmax2) + 0.5*(fRmax2-fRmax1)*z/fDz;
       // loop points on circle sections
       for (Int_t j=0; j<nphi; j++) {
          phi = j*dphi;
@@ -713,7 +713,7 @@ Bool_t TGeoCone::GetPointsOnSegments(Int_t npoints, Double_t *array) const
       }
    }
    return kTRUE;
-}                    
+}
 
 
 //_____________________________________________________________________________
@@ -732,14 +732,14 @@ void TGeoCone::InspectShape() const
 
 //_____________________________________________________________________________
 TBuffer3D *TGeoCone::MakeBuffer3D() const
-{ 
+{
    // Creates a TBuffer3D describing *this* shape.
    // Coordinates are in local reference frame.
 
    Int_t n = gGeoManager->GetNsegments();
    Int_t nbPnts = 4*n;
    Int_t nbSegs = 8*n;
-   Int_t nbPols = 4*n; 
+   Int_t nbPols = 4*n;
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
                                    nbPnts, 3*nbPnts,
                                    nbSegs, 3*nbSegs,
@@ -747,10 +747,10 @@ TBuffer3D *TGeoCone::MakeBuffer3D() const
 
    if (buff)
    {
-      SetPoints(buff->fPnts);   
+      SetPoints(buff->fPnts);
       SetSegsAndPols(*buff);
    }
-   return buff; 
+   return buff;
 }
 
 //_____________________________________________________________________________
@@ -889,9 +889,9 @@ void TGeoCone::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    out << "   rmin2 = " << fRmin2 << ";" << std::endl;
    out << "   rmax2 = " << fRmax2 << ";" << std::endl;
    out << "   TGeoShape *" << GetPointerName() << " = new TGeoCone(\"" << GetName() << "\", dz,rmin1,rmax1,rmin2,rmax2);" << std::endl;
-   TObject::SetBit(TGeoShape::kGeoSavePrimitive);   
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
-         
+
 //_____________________________________________________________________________
 void TGeoCone::SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                              Double_t rmin2, Double_t rmax2)
@@ -976,7 +976,7 @@ void TGeoCone::SetPoints(Double_t *points) const
          points[indx++] = fRmin1 * TMath::Sin(phi);
          points[indx++] = -dz;
       }
-      
+
       for (j = 0; j < n; j++) {
          phi = j*dphi*TMath::DegToRad();
          points[indx++] = fRmax1 * TMath::Cos(phi);
@@ -1019,7 +1019,7 @@ void TGeoCone::SetPoints(Float_t *points) const
          points[indx++] = fRmin1 * TMath::Sin(phi);
          points[indx++] = -dz;
       }
-      
+
       for (j = 0; j < n; j++) {
          phi = j*dphi*TMath::DegToRad();
          points[indx++] = fRmax1 * TMath::Cos(phi);
@@ -1103,7 +1103,7 @@ const TBuffer3D & TGeoCone::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
       SetSegsAndPols(buffer);
       buffer.SetSectionsValid(TBuffer3D::kRaw);
    }
-      
+
    return buffer;
 }
 
@@ -1165,7 +1165,7 @@ TGeoConeSeg::TGeoConeSeg(Double_t dz, Double_t rmin1, Double_t rmax1,
                           Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
             :TGeoCone(dz, rmin1, rmax1, rmin2, rmax2),
              fPhi1(0.), fPhi2(0.), fS1(0.), fC1(0.), fS2(0.), fC2(0.), fSm(0.), fCm(0.), fCdfi(0.)
-            
+
 {
 // Default constructor specifying minimum and maximum radius
    SetShapeBit(TGeoShape::kGeoConeSeg);
@@ -1214,7 +1214,7 @@ void TGeoConeSeg::AfterStreamer()
 {
 // Function called after streaming an object of this class.
    InitTrigonometry();
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoConeSeg::InitTrigonometry()
@@ -1238,7 +1238,7 @@ Double_t TGeoConeSeg::Capacity() const
 {
 // Computes capacity of the shape in [length^3]
    return TGeoConeSeg::Capacity(fDz, fRmin1, fRmax1, fRmin2, fRmax2, fPhi1, fPhi2);
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoConeSeg::Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
@@ -1247,8 +1247,8 @@ Double_t TGeoConeSeg::Capacity(Double_t dz, Double_t rmin1, Double_t rmax1, Doub
    Double_t capacity = (TMath::Abs(phi2-phi1)*TMath::DegToRad()*dz/3.)*
                        (rmax1*rmax1+rmax2*rmax2+rmax1*rmax2-
                         rmin1*rmin1-rmin2*rmin2-rmin1*rmin2);
-   return capacity;                                            
-}   
+   return capacity;
+}
 
 //_____________________________________________________________________________
 void TGeoConeSeg::ComputeBBox()
@@ -1482,8 +1482,8 @@ Double_t TGeoConeSeg::DistToCons(const Double_t *point, const Double_t *dir, Dou
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::DistFromInsideS(const Double_t *point, const Double_t *dir, Double_t dz, 
-                       Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, 
+Double_t TGeoConeSeg::DistFromInsideS(const Double_t *point, const Double_t *dir, Double_t dz,
+                       Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2,
                        Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi)
 {
 // compute distance from inside point to surface of the tube segment
@@ -1499,7 +1499,7 @@ Double_t TGeoConeSeg::DistFromInsideS(const Double_t *point, const Double_t *dir
       sfmin = TGeoShape::DistToPhiMin(point, dir, s1, c1, s2, c2, sm, cm);
       return TMath::Min(scone,sfmin);
    }
-   // Point on the phi boundary or outside   
+   // Point on the phi boundary or outside
    // which one: phi1 or phi2
    Double_t ddotn, xi, yi;
    if (TMath::Abs(point[1]-s1*r) < TMath::Abs(point[1]-s2*r)) {
@@ -1546,8 +1546,8 @@ Double_t TGeoConeSeg::DistFromInside(const Double_t *point, const Double_t *dir,
 }
 
 //_____________________________________________________________________________
-Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *dir, Double_t dz, 
-                       Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, 
+Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *dir, Double_t dz,
+                       Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2,
                        Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi)
 {
 // compute distance from outside point to surface of arbitrary tube
@@ -1574,14 +1574,14 @@ Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
       } else {
          rin = rmin2;
          rout = rmax2;
-      }      
+      }
       if ((rin*rin<=r2) && (r2<=rout*rout)) {
          cpsi=xi*cm+yi*sm;
          if (cpsi>=(cdfi*TMath::Sqrt(r2))) return s;
       }
    }
    Double_t zinv = 1./dz;
-   Double_t rsq = point[0]*point[0]+point[1]*point[1];   
+   Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
    Double_t ro1=0.5*(rmin1+rmin2);
    Bool_t hasrmin = (ro1>0)?kTRUE:kFALSE;
@@ -1594,7 +1594,7 @@ Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
       if (rsq > rin*(rin-TGeoShape::Tolerance())) inrmin=kTRUE;
    } else {
       inrmin = kTRUE;
-   }     
+   }
    Double_t ro2=0.5*(rmax1+rmax2);
    Double_t tg2=0.5*(rmax2-rmax1)*zinv;
    rout = ro2+tg2*point[2];
@@ -1605,7 +1605,7 @@ Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
    if (cpsi>r*cdfi-TGeoShape::Tolerance())  inphi = kTRUE;
    in = inz & inrmin & inrmax & inphi;
    // If inside, we are most likely on a boundary within machine precision.
-   if (in) { 
+   if (in) {
       Double_t safphi = (cpsi-r*cdfi)*TMath::Sqrt(1.-cdfi*cdfi);
       Double_t safrmin = (hasrmin)?TMath::Abs(r-rin):(TGeoShape::Big());
       Double_t safrmax = TMath::Abs(r-rout);
@@ -1613,10 +1613,10 @@ Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
       if (zi<safrmax && zi<safrmin && zi<safphi) {
          if (point[2]*dir[2]<0) return 0.0;
          return TGeoShape::Big();
-      }   
+      }
       // check if on Rmax boundary
       if (safrmax<safrmin && safrmax<safphi) {
-         Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]-tg2*dir[2]*r;      
+         Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]-tg2*dir[2]*r;
          if (ddotn<=0) return 0.0;
          return TGeoShape::Big();
       }
@@ -1646,7 +1646,7 @@ Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
                      }
                   }
                }
-            }   
+            }
          } else {
             un = -dir[0]*s2+dir[1]*c2;
             if (un < 0) return 0.0;
@@ -1669,17 +1669,17 @@ Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
                   }
                }
             }
-         }      
+         }
          // We may also cross rmin, second solution coming from outside
          Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]-tg1*dir[2]*r;
          if (ddotn>=0) return TGeoShape::Big();
-         if (cdfi>=0) return TGeoShape::Big();              
-         TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta); 
+         if (cdfi>=0) return TGeoShape::Big();
+         TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
          if (delta<0) return TGeoShape::Big();
          snxt = -b-delta;
          if (snxt<0) return TGeoShape::Big();
          snxt = -b+delta;
-         zi = point[2]+snxt*dir[2];           
+         zi = point[2]+snxt*dir[2];
          if (TMath::Abs(zi)>dz) return TGeoShape::Big();
          xi = point[0]+snxt*dir[0];
          yi = point[1]+snxt*dir[1];
@@ -1688,7 +1688,7 @@ Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
          if (cpsi>=(cdfi*TMath::Sqrt(r2))) return snxt;
          return TGeoShape::Big();
       }
-      // We are on rmin boundary: we may cross again rmin or a phi facette   
+      // We are on rmin boundary: we may cross again rmin or a phi facette
       Double_t ddotn = point[0]*dir[0]+point[1]*dir[1]-tg1*dir[2]*r;
       if (ddotn>=0) return 0.0;
       TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
@@ -1720,10 +1720,10 @@ Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
                   rin = ro1+tg1*zi;
                   rout = ro2+tg2*zi;
                   if ((rin*rin<=r2) && (rout*rout>=r2)) return s;
-               }   
+               }
             }
          }
-      }         
+      }
       un=dir[0]*s2-dir[1]*c2;
       if (un > 0) {
          s=(point[1]*c2-point[0]*s2)/un;
@@ -1740,9 +1740,9 @@ Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
                }
             }
          }
-      }            
+      }
       return TGeoShape::Big();
-   }   
+   }
 
    // The point is really outside
    Double_t sr1 = TGeoShape::Big();
@@ -1776,8 +1776,8 @@ Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
    }
    // check crossing with inner cone
    Double_t sr2 = TGeoShape::Big();
-   TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);      
-   if (delta>=0) {      
+   TGeoCone::DistToCone(point, dir, dz, rmin1, rmin2, b, delta);
+   if (delta>=0) {
       s = -b-delta;
       if (s>0) {
          zi=point[2]+s*dir[2];
@@ -1803,9 +1803,9 @@ Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
          }
       }
    }
-   snxt = TMath::Min(sr1,sr2);   
-   // Check phi crossing   
-   s = TGeoShape::DistToPhiMin(point,dir,s1,c1,s2,c2,sm,cm,kFALSE);      
+   snxt = TMath::Min(sr1,sr2);
+   // Check phi crossing
+   s = TGeoShape::DistToPhiMin(point,dir,s1,c1,s2,c2,sm,cm,kFALSE);
    if (s>snxt) return snxt;
    zi=point[2]+s*dir[2];
    if (TMath::Abs(zi)>dz) return snxt;
@@ -1992,16 +1992,16 @@ void TGeoConeSeg::InspectShape() const
 
  //_____________________________________________________________________________
 TBuffer3D *TGeoConeSeg::MakeBuffer3D() const
-{  
+{
    // Creates a TBuffer3D describing *this* shape.
    // Coordinates are in local reference frame.
 
    Int_t n = gGeoManager->GetNsegments()+1;
    Int_t nbPnts = 4*n;
    Int_t nbSegs = 2*nbPnts;
-   Int_t nbPols = nbPnts-2; 
+   Int_t nbPols = nbPnts-2;
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
-                                   nbPnts, 3*nbPnts, 
+                                   nbPnts, 3*nbPnts,
                                    nbSegs, 3*nbSegs,
                                    nbPols, 6*nbPols);
 
@@ -2138,7 +2138,7 @@ void TGeoConeSeg::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*
    out << "   phi1  = " << fPhi1 << ";" << std::endl;
    out << "   phi2  = " << fPhi2 << ";" << std::endl;
    out << "   TGeoShape *" << GetPointerName() << " = new TGeoConeSeg(\"" << GetName() << "\", dz,rmin1,rmax1,rmin2,rmax2,phi1,phi2);" << std::endl;
-   TObject::SetBit(TGeoShape::kGeoSavePrimitive);  
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________
@@ -2321,7 +2321,7 @@ const TBuffer3D & TGeoConeSeg::GetBuffer3D(Int_t reqSections, Bool_t localFrame)
       SetSegsAndPols(buffer);
       buffer.SetSectionsValid(TBuffer3D::kRaw);
    }
-      
+
    return buffer;
 }
 
@@ -2334,7 +2334,7 @@ Bool_t TGeoConeSeg::GetPointsOnSegments(Int_t npoints, Double_t *array) const
    if (npoints > (npoints/2)*2) {
       Error("GetPointsOnSegments","Npoints must be even number");
       return kFALSE;
-   }   
+   }
    Int_t nc = (Int_t)TMath::Sqrt(0.5*npoints);
    Double_t dphi = (fPhi2-fPhi1)*TMath::DegToRad()/(nc-1);
    Double_t phi = 0;
@@ -2351,10 +2351,10 @@ Bool_t TGeoConeSeg::GetPointsOnSegments(Int_t npoints, Double_t *array) const
       if (i == (nc-1)) {
          nphi = ntop;
          dphi = (fPhi2-fPhi1)*TMath::DegToRad()/(nphi-1);
-      }   
+      }
       z = -fDz + i*dz;
       rmin = 0.5*(fRmin1+fRmin2) + 0.5*(fRmin2-fRmin1)*z/fDz;
-      rmax = 0.5*(fRmax1+fRmax2) + 0.5*(fRmax2-fRmax1)*z/fDz; 
+      rmax = 0.5*(fRmax1+fRmax2) + 0.5*(fRmax2-fRmax1)*z/fDz;
       // loop points on circle sections
       for (Int_t j=0; j<nphi; j++) {
          phi = phi1 + j*dphi;
@@ -2367,7 +2367,7 @@ Bool_t TGeoConeSeg::GetPointsOnSegments(Int_t npoints, Double_t *array) const
       }
    }
    return kTRUE;
-}                    
+}
 
 //_____________________________________________________________________________
 void TGeoConeSeg::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const

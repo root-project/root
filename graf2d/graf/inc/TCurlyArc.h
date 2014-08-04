@@ -30,7 +30,7 @@ private:
    Double_t fPhimax;              //  end phi (degrees)
    Double_t fTheta;               //  used internally
 
-   static Double_t fgDefaultWaveLength;   //default wavelength 
+   static Double_t fgDefaultWaveLength;   //default wavelength
    static Double_t fgDefaultAmplitude;    //default amplitude
    static Bool_t   fgDefaultIsCurly;      //default curly type
 
@@ -52,11 +52,11 @@ public:
    virtual void SetPhimax(Double_t phimax);          // *MENU* *ARGS={phimax=>fPhimax}
    virtual void SavePrimitive(std::ostream &out, Option_t * = "");
 
-   static void          SetDefaultWaveLength(Double_t WaveLength); 
-   static void          SetDefaultAmplitude (Double_t Amplitude );    
-   static void          SetDefaultIsCurly   (Bool_t   IsCurly   );      
-   static Double_t      GetDefaultWaveLength();  
-   static Double_t      GetDefaultAmplitude (); 
+   static void          SetDefaultWaveLength(Double_t WaveLength);
+   static void          SetDefaultAmplitude (Double_t Amplitude );
+   static void          SetDefaultIsCurly   (Bool_t   IsCurly   );
+   static Double_t      GetDefaultWaveLength();
+   static Double_t      GetDefaultAmplitude ();
    static Bool_t        GetDefaultIsCurly   ();
    virtual Rectangle_t  GetBBox();
    virtual TPoint       GetBBoxCenter();

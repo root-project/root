@@ -1,19 +1,19 @@
 #include "TGeoManager.h"
-   
-void cheongwadae() 
+
+void cheongwadae()
 {
   // Drawing the Cheongwadae building which is the Presidential Residence of the Republic of Korea, using ROOT geometry class.
   //
   // Author: Hee Jun Shin (s-heejun@hanmail.net), Dept. of Physics, Univ. of Seoul
   // Reviewed by Sunman Kim (sunman98@hanmail.net)
   // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
-  // 
+  //
   // How to run: .x cheongwadae.C in ROOT terminal, then use OpenGL
   //
   // This macro was created for the evaluation of Computational Physics course in 2006.
   // We thank to Prof. Inkyu Park for his special lecture on ROOT and to all of ROOT team
   //
-   
+
    TGeoManager *geom = new TGeoManager("geom","My first 3D geometry");
 
    //material
@@ -29,14 +29,14 @@ void cheongwadae()
    geom->SetTopVolume(top);
    geom->SetTopVisible(0);
    // If you want to see the boundary, please input the number, 1 instead of 0.
-   // Like this, geom->SetTopVisible(1); 
+   // Like this, geom->SetTopVisible(1);
 
 char nBlocks[100];
 int N = 0;
 int f=0;
 int di[2]; di[0] = 0; di[1] = 30;
 TGeoVolume *mBlock;
-   
+
 
    for(int k=0;k<7;k++){
    for(int i=0;i<20;i++){
@@ -178,43 +178,43 @@ TGeoVolume *mBlock;
       mBlock = geom->MakeSphere(nBlocks, Iron, 0, 30, 0, 180, 0, 180);
       mBlock->SetLineColor(32);
       top->AddNodeOverlap(mBlock,1,new TGeoTranslation(0,24,0));
-   
+
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 0.1,30,0.1);
-      mBlock->SetLineColor(10);   
+      mBlock->SetLineColor(10);
       top->AddNodeOverlap(mBlock,1,new TGeoTranslation(0,40,0));
 
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeTubs(nBlocks,Iron, 0,30,4,360,360);
-      mBlock->SetLineColor(10);   
+      mBlock->SetLineColor(10);
       top->AddNodeOverlap(mBlock,1,new TGeoCombiTrans(0,27,0, new TGeoRotation("r1",0,90,0)));
 
 
    for(int i=0;i<8;i++){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2,22,2);
-      mBlock->SetLineColor(18);   
+      mBlock->SetLineColor(18);
       top->AddNodeOverlap(mBlock,1,new TGeoTranslation(-70+(20*i),0,80));
    }
 
    for(int i=0;i<8;i++){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2,22,2);
-      mBlock->SetLineColor(18);   
+      mBlock->SetLineColor(18);
       top->AddNodeOverlap(mBlock,1,new TGeoTranslation(-70+(20*i),0,-80));
    }
 
    for(int i=0;i<7;i++){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2,22,2);
-      mBlock->SetLineColor(18);   
+      mBlock->SetLineColor(18);
       top->AddNodeOverlap(mBlock,1,new TGeoTranslation(-70,0,-80+(23*i)));
    }
 
    for(int i=0;i<7;i++){
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 2,22,2);
-      mBlock->SetLineColor(18);   
+      mBlock->SetLineColor(18);
       top->AddNodeOverlap(mBlock,1,new TGeoTranslation(70,0,-80+(23*i)));
    }
       sprintf(nBlocks,"f%d_bg%d",f,N++);
@@ -322,7 +322,7 @@ TGeoVolume *mBlock;
 
 
 
-   
+
 
 
 
@@ -330,22 +330,22 @@ TGeoVolume *mBlock;
 
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 0.1,10,0.1);
-      mBlock->SetLineColor(12);   
+      mBlock->SetLineColor(12);
       top->AddNodeOverlap(mBlock,1,new TGeoTranslation(20,-15,110));
 
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,3,0.1);
-      mBlock->SetLineColor(10);   
+      mBlock->SetLineColor(10);
       top->AddNodeOverlap(mBlock,1,new TGeoTranslation(25,-8,110));
 
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 0.1,10,0.1);
-      mBlock->SetLineColor(12);   
+      mBlock->SetLineColor(12);
       top->AddNodeOverlap(mBlock,1,new TGeoTranslation(-20,-15,110));
 
       sprintf(nBlocks,"ab%d",N++);
       mBlock = geom->MakeBox(nBlocks,Iron, 5,3,0.1);
-      mBlock->SetLineColor(10);   
+      mBlock->SetLineColor(10);
       top->AddNodeOverlap(mBlock,1,new TGeoTranslation(-15,-8,110));
 
 

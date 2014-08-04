@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -43,7 +43,7 @@ int main() {
   std::cout<<"minimum: "<<min<<std::endl;
   }
   {
-     // use analytical derivatives 
+     // use analytical derivatives
      Quad4FGrad gfcn;
 
      MnUserParameters upar;
@@ -56,9 +56,9 @@ int main() {
      FunctionMinimum min = migrad();
      std::cout<<"minimum with grad calculation : "<<min<<std::endl;
 
-     // try to run hesse 
-     MnHesse hesse; 
-     hesse( gfcn, min); 
+     // try to run hesse
+     MnHesse hesse;
+     hesse( gfcn, min);
      std::cout<<"minimum after hesse: "<<min<<std::endl;
   }
 
@@ -68,7 +68,7 @@ int main() {
 
   {
   //test constructor
-  std::vector<double> par(4); 
+  std::vector<double> par(4);
   std::vector<double> err(4);
   for(int i = 0; i < 4; i++) {
     par[i] = 1.;
@@ -81,7 +81,7 @@ int main() {
 
   {
   //test edm Value
-  std::vector<double> par(4); 
+  std::vector<double> par(4);
   std::vector<double> err(4);
   for(int i = 0; i < 4; i++) {
     par[i] = 1.;
@@ -95,7 +95,7 @@ int main() {
 
   {
   //test # of iterations
-  std::vector<double> par(4); 
+  std::vector<double> par(4);
   std::vector<double> err(4);
   for(int i = 0; i < 4; i++) {
     par[i] = 1.;

@@ -40,7 +40,7 @@
   into the ROOT session.
 
   See the run_alice_esd.C macro.
-  
+
 
   2. Creation of simple GUI for event navigation.
   ------------------------------------------------------------------------
@@ -209,7 +209,7 @@ void run_alice_esd_split(Bool_t auto_size=kFALSE)
    // Adapt the main frame to the screen size...
    if (auto_size)
    {
-      Int_t qq; 
+      Int_t qq;
       UInt_t ww, hh;
       gVirtualX->GetWindowSize(gVirtualX->GetDefaultRootWindow(), qq, qq, ww, hh);
       Float_t screen_ratio = (Float_t)ww/(Float_t)hh;
@@ -250,7 +250,7 @@ void run_alice_esd_split(Bool_t auto_size=kFALSE)
    load_event();
 
    update_projections();
-   
+
    gEve->Redraw3D(kTRUE); // Reset camera after the first event has been shown.
 }
 
@@ -281,9 +281,9 @@ void load_event()
 //______________________________________________________________________________
 void update_projections()
 {
-   // cleanup then import geometry and event 
+   // cleanup then import geometry and event
    // in the projection managers
-   
+
    TEveElement* top = gEve->GetCurrentEvent();
    if (gRPhiMgr && top) {
       gRPhiMgr->DestroyElements();
@@ -302,7 +302,7 @@ void update_projections()
 /******************************************************************************/
 
 //______________________________________________________________________________
-// 
+//
 // EvNavHandler class is needed to connect GUI signals.
 
 class EvNavHandler
@@ -355,7 +355,7 @@ void make_gui()
 
    TGHorizontalFrame* hf = new TGHorizontalFrame(frmMain);
    {
-      
+
       TString icondir( Form("%s/icons/", gSystem->Getenv("ROOTSYS")) );
       TGPictureButton* b = 0;
       EvNavHandler    *fh = new EvNavHandler;
@@ -370,7 +370,7 @@ void make_gui()
 
       gTextEntry = new TGTextEntry(hf);
       gTextEntry->SetEnabled(kFALSE);
-      hf->AddFrame(gTextEntry, new TGLayoutHints(kLHintsLeft | kLHintsCenterY  | 
+      hf->AddFrame(gTextEntry, new TGLayoutHints(kLHintsLeft | kLHintsCenterY  |
                    kLHintsExpandX, 2, 10, 10, 10));
    }
    frmMain->AddFrame(hf, new TGLayoutHints(kLHintsTop | kLHintsExpandX,0,0,20,0));
@@ -419,7 +419,7 @@ void alice_esd_read()
    // printf("Friend %p, n_tracks:%d\n", frnd, frnd->fTracks.GetEntries());
 
    if (track_list == 0) {
-      track_list = new TEveTrackList("ESD Tracks"); 
+      track_list = new TEveTrackList("ESD Tracks");
       track_list->SetMainColor(6);
       //track_list->SetLineWidth(2);
       track_list->SetMarkerColor(kYellow);
@@ -488,7 +488,7 @@ TEveTrack* esd_make_track(TEveTrackPropagator*   trkProp,
    Double_t mc = 0.138; // at->GetMass(); - Complicated function, requiring PID.
 
    rt.fBeta = ep/TMath::Sqrt(ep*ep + mc*mc);
- 
+
    TEveTrack* track = new TEveTrack(&rt, trkProp);
    track->SetName(Form("TEveTrack %d", rt.fIndex));
    track->SetStdTitle();

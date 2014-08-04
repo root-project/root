@@ -279,25 +279,25 @@ void StandardHistFactoryPlotsWithCategories(const char* infile = "",
             } else{
                var->setVal(0);
             }
-            
+
             list->Add(frame);
-            
+
             // quit making plots
             ++nPlots;
-            
+
             frame->Draw();
             c2->SaveAs(Form("%s_%s_%s.pdf",tt->GetName(),obs->GetName(),var->GetName()));
             delete c2;
          }
       }
    }
-   
-   
-   
+
+
+
    ////////////////////////////////////////
    ////////////////////////////////////////
    ////////////////////////////////////////
-   
+
    // now make plots
    TCanvas* c1 = new TCanvas("c1","ProfileInspectorDemo",800,200);
    if(list->GetSize()>4){
@@ -312,9 +312,9 @@ void StandardHistFactoryPlotsWithCategories(const char* infile = "",
       c1->cd(i+1);
       list->At(i)->Draw();
    }
-   
-   
-   
-   
-   
+
+
+
+
+
 }

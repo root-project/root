@@ -1,4 +1,4 @@
-void hclient(Bool_t evol=kFALSE) 
+void hclient(Bool_t evol=kFALSE)
 {
    // Client program which creates and fills a histogram. Every 1000 fills
    // the histogram is send to the server which displays the histogram.
@@ -17,7 +17,7 @@ void hclient(Bool_t evol=kFALSE)
    // support automatic schema evolution between the client and the server.
    //
    //Author: Fons Rademakers
-   
+
    gBenchmark->Start("hclient");
 
    // Open connection to server

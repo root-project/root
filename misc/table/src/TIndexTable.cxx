@@ -51,7 +51,7 @@
 // TableClassImpl(TIndexTable,int);
    TTableDescriptor *TIndexTable::fgColDescriptors = TIndexTable::CreateDescriptor();
    ClassImp(TIndexTable)
-     
+
 #if 0
 void TIndexTable::Dictionary()
 {
@@ -108,15 +108,15 @@ TTableDescriptor *TIndexTable::CreateDescriptor()
 }
 
 //___________________________________________________________________
-TTableDescriptor *TIndexTable::GetDescriptorPointer() const 
-{ 
+TTableDescriptor *TIndexTable::GetDescriptorPointer() const
+{
    //return column descriptor
    return fgColDescriptors;
 }
 
 //___________________________________________________________________
-void TIndexTable::SetDescriptorPointer(TTableDescriptor *list)  
-{ 
+void TIndexTable::SetDescriptorPointer(TTableDescriptor *list)
+{
    //set table descriptor
    fgColDescriptors = list;
 }

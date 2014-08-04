@@ -2051,10 +2051,10 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
             case kCT_ITEMCLICK:
                // tell coverity that parm1 is a Long_t, and not an enum (even
-               // if we compare it with an enum value) and the meaning of 
+               // if we compare it with an enum value) and the meaning of
                // parm1 depends on GET_MSG(msg) and GET_SUBMSG(msg)
                // coverity[mixed_enums]
-               if (((EMouseButton)parm1 == kButton1) || 
+               if (((EMouseButton)parm1 == kButton1) ||
                    ((EMouseButton)parm1 == kButton3)) {
                   HideTextEdit();
                   TGListTreeItem *item2;

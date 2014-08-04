@@ -29,7 +29,7 @@ namespace ROOT {
 }
 
 class TKDTreeBinning : public TObject {
-private: 
+private:
    Double_t** fData; // The data from which a KDTree partition is computed for binning
    std::vector<Double_t> fBinMinEdges; // The minimum values for the bins' edges for each dimension
    std::vector<Double_t> fBinMaxEdges; // The maximum values for the bins' edges for each dimension
@@ -90,7 +90,7 @@ public:
    UInt_t GetBinMaxDensity() const;
    UInt_t GetBinMinDensity() const;
    const Double_t* GetOneDimBinEdges() const;
-   const Double_t* SortOneDimBinEdges(Bool_t sortAsc = kTRUE); 
+   const Double_t* SortOneDimBinEdges(Bool_t sortAsc = kTRUE);
    void FillBinData(ROOT::Fit::BinData & data) const;
 
    ClassDef(TKDTreeBinning, 1)

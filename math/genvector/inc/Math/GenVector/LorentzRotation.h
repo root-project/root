@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -9,12 +9,12 @@
   **********************************************************************/
 
 // Header file for LorentzRotation
-// 
+//
 // Created by: Mark Fischler  Mon Aug 8  2005
-// 
+//
 // Last update: $Id$
-// 
-#ifndef ROOT_Math_GenVector_LorentzRotation 
+//
+#ifndef ROOT_Math_GenVector_LorentzRotation
 #define ROOT_Math_GenVector_LorentzRotation  1
 
 #include "Math/GenVector/LorentzRotationfwd.h"
@@ -46,9 +46,9 @@ namespace ROOT {
      specialized Lorentz transformations.
      Also, the 3-D rotation classes can be considered to be special Lorentz
      transformations which do not mix space and time components.
-     
+
      @ingroup GenVector
-     
+
   */
 
 class LorentzRotation {
@@ -78,20 +78,20 @@ public:
   template<class IT>
   LorentzRotation(IT begin, IT end) { SetComponents(begin,end); }
 
-  // The compiler-generated and dtor are OK but we have implementwd the copy-ctor and 
+  // The compiler-generated and dtor are OK but we have implementwd the copy-ctor and
   // assignment operators since we have a template assignment
 
   /**
-     Copy constructor 
+     Copy constructor
    */
-   LorentzRotation( LorentzRotation const & r ) { 
-      *this = r; 
-   } 
+   LorentzRotation( LorentzRotation const & r ) {
+      *this = r;
+   }
 
   /**
-     Construct from a pure boost 
+     Construct from a pure boost
   */
-  explicit LorentzRotation( Boost  const & b  ) {  b.GetLorentzRotation( fM+0 ); } 
+  explicit LorentzRotation( Boost  const & b  ) {  b.GetLorentzRotation( fM+0 ); }
   explicit LorentzRotation( BoostX const & bx ) { bx.GetLorentzRotation( fM+0 ); }
   explicit LorentzRotation( BoostY const & by ) { by.GetLorentzRotation( fM+0 ); }
   explicit LorentzRotation( BoostZ const & bz ) { bz.GetLorentzRotation( fM+0 ); }
@@ -99,13 +99,13 @@ public:
   /**
      Construct from a 3-D rotation (no space-time mixing)
   */
-  explicit LorentzRotation( Rotation3D  const & r ); 
-  explicit LorentzRotation( AxisAngle   const & a ); 
-  explicit LorentzRotation( EulerAngles const & e ); 
-  explicit LorentzRotation( Quaternion  const & q ); 
-  explicit LorentzRotation( RotationX   const & r ); 
-  explicit LorentzRotation( RotationY   const & r ); 
-  explicit LorentzRotation( RotationZ   const & r ); 
+  explicit LorentzRotation( Rotation3D  const & r );
+  explicit LorentzRotation( AxisAngle   const & a );
+  explicit LorentzRotation( EulerAngles const & e );
+  explicit LorentzRotation( Quaternion  const & q );
+  explicit LorentzRotation( RotationX   const & r );
+  explicit LorentzRotation( RotationY   const & r );
+  explicit LorentzRotation( RotationZ   const & r );
 
   /**
      Construct from a linear algebra matrix of size at least 4x4,
@@ -120,8 +120,8 @@ public:
   /**
      Construct from four orthosymplectic vectors (which must have methods
      x(), y(), z() and t()) which will be used as the columns of the Lorentz
-     rotation matrix.  The orthosymplectic conditions will be checked, and 
-     values adjusted so that the result will always be a good Lorentz rotation 
+     rotation matrix.  The orthosymplectic conditions will be checked, and
+     values adjusted so that the result will always be a good Lorentz rotation
      matrix.
   */
   template<class Foreign4Vector>
@@ -129,7 +129,7 @@ public:
                   const Foreign4Vector& v2,
                   const Foreign4Vector& v3,
                   const Foreign4Vector& v4 ) { SetComponents(v1, v2, v3, v4); }
-  
+
 
   /**
      Raw constructor from sixteen Scalar components (without any checking)
@@ -139,26 +139,26 @@ public:
                   Scalar  zx, Scalar  zy, Scalar  zz, Scalar zt,
                   Scalar  tx, Scalar  ty, Scalar  tz, Scalar tt)
  {
-    SetComponents (xx, xy, xz, xt, 
+    SetComponents (xx, xy, xz, xt,
                    yx, yy, yz, yt,
                    zx, zy, zz, zt,
                    tx, ty, tz, tt);
  }
 
-  /** 
+  /**
       Assign from another LorentzRotation
   */
-   LorentzRotation & 
-  operator=( LorentzRotation  const & rhs ) { 
-      SetComponents( rhs.fM[0],  rhs.fM[1],  rhs.fM[2],  rhs.fM[3],  
+   LorentzRotation &
+  operator=( LorentzRotation  const & rhs ) {
+      SetComponents( rhs.fM[0],  rhs.fM[1],  rhs.fM[2],  rhs.fM[3],
                      rhs.fM[4],  rhs.fM[5],  rhs.fM[6],  rhs.fM[7],
-                     rhs.fM[8],  rhs.fM[9],  rhs.fM[10], rhs.fM[11], 
+                     rhs.fM[8],  rhs.fM[9],  rhs.fM[10], rhs.fM[11],
                      rhs.fM[12], rhs.fM[13], rhs.fM[14], rhs.fM[15] );
-      return *this; 
+      return *this;
    }
 
   /**
-     Assign from a pure boost 
+     Assign from a pure boost
   */
   LorentzRotation &
   operator=( Boost  const & b ) { return operator=(LorentzRotation(b)); }
@@ -170,7 +170,7 @@ public:
   operator=( BoostZ const & b ) { return operator=(LorentzRotation(b)); }
 
   /**
-     Assign from a 3-D rotation 
+     Assign from a 3-D rotation
   */
   LorentzRotation &
   operator=( Rotation3D  const & r ) { return operator=(LorentzRotation(r)); }
@@ -195,12 +195,12 @@ public:
   */
   template<class ForeignMatrix>
   LorentzRotation &
-  operator=(const ForeignMatrix & m) { 
+  operator=(const ForeignMatrix & m) {
      SetComponents( m(0,0), m(0,1), m(0,2), m(0,3),
                     m(1,0), m(1,1), m(1,2), m(1,3),
-                    m(2,0), m(2,1), m(2,2), m(2,3), 
+                    m(2,0), m(2,1), m(2,2), m(2,3),
                     m(3,0), m(3,1), m(3,2), m(3,3) );
-     return *this; 
+     return *this;
   }
 
   /**
@@ -213,7 +213,7 @@ public:
 
   /**
      Set components from four orthosymplectic vectors (which must have methods
-     x(), y(), z(), and t()) which will be used as the columns of the 
+     x(), y(), z(), and t()) which will be used as the columns of the
      Lorentz rotation matrix.  The values will be adjusted
      so that the result will always be a good Lorentz rotation matrix.
   */
@@ -231,9 +231,9 @@ public:
   }
 
   /**
-     Get components into four 4-vectors which will be the (orthosymplectic) 
-     columns of the rotation matrix.  (The 4-vector class must have a 
-     constructor from 4 Scalars used as x, y, z, t) 
+     Get components into four 4-vectors which will be the (orthosymplectic)
+     columns of the rotation matrix.  (The 4-vector class must have a
+     constructor from 4 Scalars used as x, y, z, t)
   */
   template<class Foreign4Vector>
   void
@@ -257,9 +257,9 @@ public:
 #else
   void SetComponents(IT begin, IT ) {
 #endif
-     for (int i = 0; i <16; ++i) { 
+     for (int i = 0; i <16; ++i) {
         fM[i] = *begin;
-        ++begin; 
+        ++begin;
      }
      assert (end==begin);
   }
@@ -274,9 +274,9 @@ public:
 #else
   void GetComponents(IT begin, IT ) const {
 #endif
-     for (int i = 0; i <16; ++i) { 
+     for (int i = 0; i <16; ++i) {
         *begin = fM[i];
-        ++begin;  
+        ++begin;
      }
      assert (end==begin);
   }
@@ -349,24 +349,24 @@ public:
   // =========== operations ==============
 
   /**
-     Lorentz transformation operation on a Minkowski ('Cartesian') 
+     Lorentz transformation operation on a Minkowski ('Cartesian')
      LorentzVector
   */
   LorentzVector< ROOT::Math::PxPyPzE4D<double> >
-  operator() (const LorentzVector< ROOT::Math::PxPyPzE4D<double> > & v) const { 
+  operator() (const LorentzVector< ROOT::Math::PxPyPzE4D<double> > & v) const {
         Scalar x = v.Px();
         Scalar y = v.Py();
         Scalar z = v.Pz();
         Scalar t = v.E();
-        return LorentzVector< PxPyPzE4D<double> > 
-           ( fM[kXX]*x + fM[kXY]*y + fM[kXZ]*z + fM[kXT]*t 
+        return LorentzVector< PxPyPzE4D<double> >
+           ( fM[kXX]*x + fM[kXY]*y + fM[kXZ]*z + fM[kXT]*t
              , fM[kYX]*x + fM[kYY]*y + fM[kYZ]*z + fM[kYT]*t
              , fM[kZX]*x + fM[kZY]*y + fM[kZZ]*z + fM[kZT]*t
-             , fM[kTX]*x + fM[kTY]*y + fM[kTZ]*z + fM[kTT]*t );        
+             , fM[kTX]*x + fM[kTY]*y + fM[kTZ]*z + fM[kTT]*t );
   }
-  
+
   /**
-     Lorentz transformation operation on a LorentzVector in any 
+     Lorentz transformation operation on a LorentzVector in any
      coordinate system
    */
   template <class CoordSystem>
@@ -421,10 +421,10 @@ public:
   /**
      Multiply (combine) this Lorentz rotation by a pure Lorentz boost
    */
-  //TODO: implement directly in a more efficient way. Now are implemented 
+  //TODO: implement directly in a more efficient way. Now are implemented
   // going through another LorentzRotation
   LorentzRotation operator * (const Boost  & b) const  { LorentzRotation tmp(b); return (*this)*tmp; }
-  LorentzRotation operator * (const BoostX & b) const  { LorentzRotation tmp(b); return (*this)*tmp; } 
+  LorentzRotation operator * (const BoostX & b) const  { LorentzRotation tmp(b); return (*this)*tmp; }
   LorentzRotation operator * (const BoostY & b) const  { LorentzRotation tmp(b); return (*this)*tmp; }
   LorentzRotation operator * (const BoostZ & b) const  { LorentzRotation tmp(b); return (*this)*tmp; }
 
@@ -441,7 +441,7 @@ public:
   //#endif
 
   /**
-     Post-Multiply (on right) by another LorentzRotation, Boost, or 
+     Post-Multiply (on right) by another LorentzRotation, Boost, or
      rotation :  T = T*R
    */
   template <class R>
@@ -472,7 +472,7 @@ private:
 /**
    Stream Output and Input
  */
-  // TODO - I/O should be put in the manipulator form 
+  // TODO - I/O should be put in the manipulator form
 
 std::ostream & operator<< (std::ostream & os, const LorentzRotation & r);
 

@@ -1,5 +1,5 @@
 void PhaseSpace() {
-// example of use of TGenPhaseSpace  
+// example of use of TGenPhaseSpace
 //Author: Valerio Filippini
 
    if (!gROOT->GetClass("TGenPhaseSpace")) gSystem->Load("libPhysics");

@@ -261,7 +261,7 @@ TFile* TProofOutputFile::OpenFile(const char* opt)
    // Create the path
    TString fileLoc;
    fileLoc.Form("%s/%s%s", fRawDir.Data(), fFileName.Data(), fOptionsAnchor.Data());
-   
+
    // Open the file
    TFile *retFile = TFile::Open(fileLoc, opt);
 
@@ -305,7 +305,7 @@ Int_t TProofOutputFile::AdoptFile(TFile *f)
          fDir.Insert(0, localDS);
       }
    }
-   
+
    return 0;
 }
 
@@ -318,7 +318,7 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
 
    // Needs somethign to merge
    if(!list || list->IsEmpty()) return 0;
-   
+
    if (IsMerge()) {
       // Build-up the merger
       TString fileLoc;
@@ -514,7 +514,7 @@ Int_t TProofOutputFile::AssertDir(const char *dirpath)
    // Assert directory path 'dirpath', with the ownership of the last already
    // existing subpath.
    // Return 0 on success, -1 on error
-   
+
    TString existsPath(dirpath);
    TList subPaths;
    while (existsPath != "/" && existsPath != "." && gSystem->AccessPathName(existsPath)) {

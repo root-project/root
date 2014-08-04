@@ -9,7 +9,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// GButtonFrame                                                         // 
+// GButtonFrame                                                         //
 //                                                                      //
 // This File contains the declaration of the GButtonFrame-class for     //
 // the RootShower application                                           //
@@ -35,7 +35,7 @@ private:
    TGButton       *fStopSimButton;     // "Interrupt Simulation" button
 
 public:
-   // enum 
+   // enum
    enum EState {
       kAllActive,
       kNoneActive

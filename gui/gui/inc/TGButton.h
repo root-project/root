@@ -268,7 +268,7 @@ public:
 class TGCheckButton : public TGTextButton {
 
 private:
- 
+
    TGCheckButton(const TGCheckButton&); // Not implemented
    TGCheckButton& operator=(const TGCheckButton&); // Not implemented
 
@@ -416,15 +416,15 @@ protected:
 
 public:
    TGSplitButton(const TGWindow *p, TGHotString *menulabel,
-                TGPopupMenu *popmenu, Bool_t split = kTRUE, 
+                TGPopupMenu *popmenu, Bool_t split = kTRUE,
                 Int_t id = -1, GContext_t norm = GetDefaultGC()(),
                 FontStruct_t fontstruct = GetDefaultFontStruct(),
                 UInt_t option = kRaisedFrame | kDoubleBorder);
-   
+
    virtual ~TGSplitButton();
-   
+
    virtual TGDimension GetDefaultSize() const ;
-   
+
    virtual void   SetText(TGHotString *new_label);
    virtual void   SetText(const TString &new_label);
    virtual void   SetFont(FontStruct_t font, Bool_t global = kFALSE);
@@ -445,7 +445,7 @@ public:
 
    // Slots
    void HandleMenu(Int_t id) ;
-   
+
    ClassDef(TGSplitButton, 0) //a split button widget
 };
 

@@ -65,7 +65,7 @@ public :
 
    virtual Bool_t   Decompose  ();
    virtual Bool_t   Solve      (      TVectorD &b);
-   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = Solve(x); 
+   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = Solve(x);
                                                                 const Int_t rowLwb = GetRowLwb();
                                                                 x.ResizeTo(rowLwb,rowLwb+GetNcols()-1);
                                                                 return x; }

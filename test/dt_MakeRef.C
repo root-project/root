@@ -12,7 +12,7 @@
 #endif
 
 TH1 *RefClone(TH1* orig) {
-   TH1 *cloned = (TH1*)orig->Clone(); 
+   TH1 *cloned = (TH1*)orig->Clone();
    TString name = orig->GetName();
    name.Prepend("ref");
    cloned->SetName(name);
@@ -30,7 +30,7 @@ TH1* RefClone(TDirectory* from, const char* name) {
 }
 
 void MakeHisto(TTree *tree, TDirectory* To) {
-   
+
    cout << "Generating histograms from TTree::Draw" << endl;
    TDirectory* where = GenerateDrawHist(tree);
    To->cd();
@@ -43,19 +43,19 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    //We want to have identical histogram limits
    TH1F *refNtrack = RefClone(where,"hNtrack");
    TH1F *refGetNtrack = RefClone(where,"hGetNtrack");
-   TH1F *refNseg   = RefClone(where,"hNseg");  
-   TH1F *refTemp   = RefClone(where,"hTemp");  
-   TH1F *refHmean  = RefClone(where,"hHmean"); 
-   TH1F *refHAxisMax = RefClone(where,"hHAxisMax"); 
-   TH1F *refHAxisGetMax = RefClone(where,"hHAxisGetMax"); 
+   TH1F *refNseg   = RefClone(where,"hNseg");
+   TH1F *refTemp   = RefClone(where,"hTemp");
+   TH1F *refHmean  = RefClone(where,"hHmean");
+   TH1F *refHAxisMax = RefClone(where,"hHAxisMax");
+   TH1F *refHAxisGetMax = RefClone(where,"hHAxisGetMax");
    TH1F *refHGetAxisGetMax  = RefClone(where,"hHGetAxisGetMax");
    TH1F *refHGetAxisMax  = RefClone(where,"hHGetAxisMax");
    TH1F *refGetHGetAxisMax  = RefClone(where,"hGetHGetAxisMax");
    TH1F *refGetRefHGetAxisMax  = RefClone(where,"hGetRefHGetAxisMax");
 
-   TH1F *refPx     = RefClone(where,"hPx"); 
+   TH1F *refPx     = RefClone(where,"hPx");
    TH1F *refPy     = RefClone(where,"hPy");
-   TH1F *refPz     = RefClone(where,"hPz"); 
+   TH1F *refPz     = RefClone(where,"hPz");
    TH1F *refRandom = RefClone(where,"hRandom");
    TH1F *refMass2  = RefClone(where,"hMass2");
    TH1F *refBx     = RefClone(where,"hBx");
@@ -152,8 +152,8 @@ void MakeHisto(TTree *tree, TDirectory* To) {
       refGetHGetAxisMax->Fill(event->GetHistogram()->GetXaxis()->GetXmax());
       refGetRefHGetAxisMax->Fill(event->GetHistogram()->GetXaxis()->GetXmax());
       refSqrtNtrack->Fill(sqrt(event->GetNtrack()));
-      
-      if (!strcmp("type1",event->GetType())) 
+
+      if (!strcmp("type1",event->GetType()))
         refString->Fill(event->GetHeader()->GetEvtNum());
       if (strstr(event->GetType(),"1")) {
         refString->Fill(event->GetHeader()->GetEvtNum());
@@ -182,7 +182,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          }
          refColMatrix->Fill(event->GetMatrix(i0,0));
          refRowMatrix->Fill(event->GetMatrix(1,i0)); // done here because the matrix is square!
-         
+
       }
       refCellMatrix->Fill(event->GetMatrix(2,2));
 
@@ -257,7 +257,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          if (event->GetNvertex()>10 && event->GetNseg()<=6000) {
             refAndValid->Fill( t->GetValid() & 0x1 );
          }
-         
+
          Track * t2 = (Track*)tracks->At(t->GetNpoint()/6);
          if (t2 && t2->GetPy()>0) {
             refPxInd->Fill(t2->GetPy(),t->GetPx());
@@ -323,7 +323,7 @@ void dt_MakeRef(const char* from, Int_t verboseLevel = 2) {
 
    TFile *hfile = new TFile(from);
    TTree *tree = (TTree*)hfile->Get("T");
-   
+
    TFile* f= new TFile("dt_reference.root","recreate");
    MakeHisto(tree,f);
    f->Write();

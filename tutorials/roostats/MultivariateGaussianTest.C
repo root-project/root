@@ -37,14 +37,14 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
 
     This tutorial produces an N-dimensional multivariate Gaussian
     with a non-trivial covariance matrix.  By default N=4 (called "dim").
-    
+
     A subset of these are considered parameters of interest.
     This problem is tractable analytically.
 
     We use this mainly as a test of Markov Chain Monte Carlo
     and we compare the result to the profile likelihood ratio.
 
-    We use the proposal helper to create a customized 
+    We use the proposal helper to create a customized
     proposal function for this problem.
 
     For N=4 and 2 parameters of interest it takes about 10-20 seconds
@@ -86,7 +86,7 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
          else        cov(i,j) = 1.0;
       }
    }
-   
+
    // now make the multivariate Gaussian
    RooMultiVarGaussian mvg("mvg", "mvg", xVec, muVec, cov);
 
@@ -103,7 +103,7 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
 
    ///////////////////////////////////////////
    // Setup calculators
-   
+
    // MCMC
    // we want to setup an efficient proposal function
    // using the covariance matrix from a fit to the data
@@ -143,7 +143,7 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
 
    LikelihoodIntervalPlot plPlot(plInt);
    plPlot.Draw("same");
-   
+
    if (poiList->getSize() == 1) {
       RooRealVar* p = (RooRealVar*)poiList->at(0);
       Double_t ll = mcInt->LowerLimit(*p);

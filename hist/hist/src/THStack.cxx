@@ -619,7 +619,7 @@ void THStack::Paint(Option_t *option)
    // a number of pads equal to the number of histograms and each histogram
    // is paint into a separate pad.
    //
-   // By default the background of the histograms is erased before drawing the 
+   // By default the background of the histograms is erased before drawing the
    // histograms. The option "noclear" avoid this behaviour. This is useful
    // when drawing a THStack on top of an other plot. If the patterns used to
    // draw the histograms in the stack are transparents, then the plot behind

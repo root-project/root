@@ -10,7 +10,7 @@
  *************************************************************************/
 
 //_____________________________________________________________________________
-// TGeoXtru 
+// TGeoXtru
 //==========
 //   An extrusion with fixed outline shape in x-y and a sequence
 // of z extents (segments).  The overall scale of the outline scales
@@ -23,9 +23,9 @@
 //    is an arbytrary polygon (convex or not) defined by the X/Y positions of
 //    its vertices.
 // b. A sequence of Z sections ordered on the Z axis. Each section defines the
-//   'actual' parameters of the polygon at a given Z. The sections may be 
+//   'actual' parameters of the polygon at a given Z. The sections may be
 //    translated with respect to the blueprint and/or scaled. The TGeoXtru
-//   segment in between 2 Z sections is a solid represented by the linear 
+//   segment in between 2 Z sections is a solid represented by the linear
 //   extrusion between the 2 polygons. Two consecutive sections may be defined
 //   at same Z position.
 //
@@ -89,7 +89,7 @@ TGeoXtru::ThreadData_t& TGeoXtru::GetThreadData() const
    if (tid >= fThreadSize) {
       Error("GetThreadData", "Thread id=%d bigger than maximum declared thread number %d. \nUse TGeoManager::SetMaxThreads properly !!!",
              tid, fThreadSize);
-   }          
+   }
    if (tid >= fThreadSize)
    {
       fThreadData.resize(tid + 1);
@@ -109,7 +109,7 @@ TGeoXtru::ThreadData_t& TGeoXtru::GetThreadData() const
       td.fPoly->FinishPolygon();
       if (tid == 0 && td.fPoly->IsIllegalCheck()) {
          Error("DefinePolygon", "Shape %s of type XTRU has an illegal polygon.", GetName());
-      }      
+      }
    }
    TThread::UnLock();
 */
@@ -149,9 +149,9 @@ void TGeoXtru::CreateThreadData(Int_t nthreads)
          td.fPoly->FinishPolygon();
          if (tid == 0 && td.fPoly->IsIllegalCheck()) {
             Error("DefinePolygon", "Shape %s of type XTRU has an illegal polygon.", GetName());
-         }      
+         }
       }
-   }   
+   }
    TThread::UnLock();
 }
 
@@ -187,7 +187,7 @@ TGeoXtru::TGeoXtru()
 {
 // dummy ctor
    SetShapeBit(TGeoShape::kGeoXtru);
-}   
+}
 
 //_____________________________________________________________________________
 TGeoXtru::TGeoXtru(Int_t nz)
@@ -202,7 +202,7 @@ TGeoXtru::TGeoXtru(Int_t nz)
           fX0(new Double_t[nz]),
           fY0(new Double_t[nz]),
           fThreadData(0),
-          fThreadSize(0)         
+          fThreadSize(0)
 {
 // Default constructor
    SetShapeBit(TGeoShape::kGeoXtru);
@@ -226,7 +226,7 @@ TGeoXtru::TGeoXtru(Double_t *param)
           fX0(0),
           fY0(0),
           fThreadData(0),
-          fThreadSize(0)         
+          fThreadSize(0)
 {
 // Default constructor in GEANT3 style
 // param[0] = nz  // number of z planes
@@ -258,7 +258,7 @@ TGeoXtru::TGeoXtru(const TGeoXtru& xt) :
   fY0(0),
   fThreadData(0),
   fThreadSize(0)
-{ 
+{
    //copy constructor
 }
 
@@ -278,7 +278,7 @@ TGeoXtru& TGeoXtru::operator=(const TGeoXtru& xt)
       fX0=0;
       fY0=0;
       fThreadSize=0;
-   } 
+   }
    return *this;
 }
 
@@ -295,7 +295,7 @@ TGeoXtru::~TGeoXtru()
    ClearThreadData();
 }
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 Double_t TGeoXtru::Capacity() const
 {
 // Compute capacity [length^3] of this shape.
@@ -304,7 +304,7 @@ Double_t TGeoXtru::Capacity() const
    Double_t capacity = 0;
    Double_t area, dz, sc1, sc2;
    TGeoXtru *xtru = (TGeoXtru*)this;
-   xtru->SetCurrentVertices(0.,0.,1.);  
+   xtru->SetCurrentVertices(0.,0.,1.);
    area = td.fPoly->Area();
    for (iz=0; iz<fNz-1; iz++) {
       dz = fZ[iz+1]-fZ[iz];
@@ -314,9 +314,9 @@ Double_t TGeoXtru::Capacity() const
       capacity += (area*dz/3.)*(sc1*sc1+sc1*sc2+sc2*sc2);
    }
    return capacity;
-}      
+}
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoXtru::ComputeBBox()
 {
 // compute bounding box of the pcon
@@ -325,7 +325,7 @@ void TGeoXtru::ComputeBBox()
       Error("ComputeBBox", "In shape %s polygon not defined", GetName());
       SetShapeBit(TGeoShape::kGeoBad);
       return;
-   }   
+   }
    Double_t zmin = fZ[0];
    Double_t zmax = fZ[fNz-1];
    Double_t xmin = TGeoShape::Big();
@@ -341,25 +341,25 @@ void TGeoXtru::ComputeBBox()
          if (td.fYc[j]>ymax) ymax=td.fYc[j];
       }
    }
-   fOrigin[0] = 0.5*(xmin+xmax);      
-   fOrigin[1] = 0.5*(ymin+ymax);      
-   fOrigin[2] = 0.5*(zmin+zmax);      
+   fOrigin[0] = 0.5*(xmin+xmax);
+   fOrigin[1] = 0.5*(ymin+ymax);
+   fOrigin[2] = 0.5*(zmin+zmax);
    fDX = 0.5*(xmax-xmin);
    fDY = 0.5*(ymax-ymin);
    fDZ = 0.5*(zmax-zmin);
-}   
+}
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoXtru::ComputeNormal(const Double_t * /*point*/, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT. 
+// Compute normal to closest surface from POINT.
    ThreadData_t& td = GetThreadData();
-   if (td.fIz<0) {  
+   if (td.fIz<0) {
       memset(norm,0,3*sizeof(Double_t));
       norm[2] = (dir[2]>0)?1:-1;
       return;
    }
-   Double_t vert[12];      
+   Double_t vert[12];
    GetPlaneVertices(td.fIz, td.fSeg, vert);
    GetPlaneNormal(vert, norm);
    Double_t ndotd = norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2];
@@ -367,7 +367,7 @@ void TGeoXtru::ComputeNormal(const Double_t * /*point*/, const Double_t *dir, Do
       norm[0] = -norm[0];
       norm[1] = -norm[1];
       norm[2] = -norm[2];
-   }   
+   }
 }
 
 //_____________________________________________________________________________
@@ -377,8 +377,8 @@ Bool_t TGeoXtru::Contains(const Double_t *point) const
    ThreadData_t& td = GetThreadData();
    // Check Z range
    TGeoXtru *xtru = (TGeoXtru*)this;
-   if (point[2]<fZ[0]) return kFALSE;   
-   if (point[2]>fZ[fNz-1]) return kFALSE; 
+   if (point[2]<fZ[0]) return kFALSE;
+   if (point[2]>fZ[fNz-1]) return kFALSE;
    Int_t iz = TMath::BinarySearch(fNz, fZ, point[2]);
    if (iz<0 || iz==fNz-1) return kFALSE;
    if (TGeoShape::IsSameWithinTolerance(point[2],fZ[iz])) {
@@ -391,8 +391,8 @@ Bool_t TGeoXtru::Contains(const Double_t *point) const
       } else if (iz<fNz-2 && TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz+1])) {
          xtru->SetCurrentVertices(fX0[iz+1],fY0[iz+1], fScale[iz+1]);
          return td.fPoly->Contains(point);
-      }      
-   }      
+      }
+   }
    xtru->SetCurrentZ(point[2], iz);
    if (TMath::Abs(point[2]-fZ[iz])<TGeoShape::Tolerance() ||
        TMath::Abs(fZ[iz+1]-point[2])<TGeoShape::Tolerance())  xtru->SetIz(-1);
@@ -415,7 +415,7 @@ void TGeoXtru::DrawPolygon(Option_t *option)
    ThreadData_t& td = GetThreadData();
    if (td.fPoly) td.fPoly->Draw(option);
 }
-   
+
 //_____________________________________________________________________________
 Double_t TGeoXtru::DistToPlane(const Double_t *point, const Double_t *dir, Int_t iz, Int_t ivert, Double_t stepmax, Bool_t in) const
 {
@@ -438,7 +438,7 @@ Double_t TGeoXtru::DistToPlane(const Double_t *point, const Double_t *dir, Int_t
       else             xtru->SetCurrentVertices(fX0[iz+1], fY0[iz+1], fScale[iz+1]);
       if (!td.fPoly->Contains(pt)) return TGeoShape::Big();
       return snext;
-   }      
+   }
    GetPlaneVertices(iz, ivert, vert);
    GetPlaneNormal(vert, norm);
    Double_t ndotd = norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2];
@@ -450,12 +450,12 @@ Double_t TGeoXtru::DistToPlane(const Double_t *point, const Double_t *dir, Int_t
       if (safe<-1.E-8) return TGeoShape::Big(); // direction outwards plane
    } else {
       ndotd = -ndotd;
-      if (ndotd<=0) return TGeoShape::Big(); 
+      if (ndotd<=0) return TGeoShape::Big();
       safe = (point[0]-vert[0])*norm[0]+
              (point[1]-vert[1])*norm[1]+
              (point[2]-vert[2])*norm[2];
       if (safe<-1.E-8) return TGeoShape::Big(); // direction outwards plane
-   }      
+   }
    snext = safe/ndotd;
    if (snext>stepmax) return TGeoShape::Big();
    if (fZ[iz]<fZ[iz+1]) {
@@ -480,7 +480,7 @@ Double_t TGeoXtru::DistFromInside(const Double_t *point, const Double_t *dir, In
       *safe = Safety(point, kTRUE);
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
-   }   
+   }
    TGeoXtru *xtru = (TGeoXtru*)this;
    Int_t iz = TMath::BinarySearch(fNz, fZ, point[2]);
    if (iz < 0) {
@@ -489,21 +489,21 @@ Double_t TGeoXtru::DistFromInside(const Double_t *point, const Double_t *dir, In
          return 0.;
       }
       iz = 0;
-   }            
+   }
    if (iz==fNz-1) {
       if (dir[2]>=0) {
          xtru->SetIz(-1);
          return 0.;
-      }   
+      }
       iz--;
-   } else {   
+   } else {
       if (iz>0) {
          if (TGeoShape::IsSameWithinTolerance(point[2],fZ[iz])) {
             if (TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz+1]) && dir[2]<0) iz++;
             else if (TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz-1]) && dir[2]>0) iz--;
-         }   
+         }
       }
-   }   
+   }
    Bool_t convex = td.fPoly->IsConvex();
 //   Double_t stepmax = step;
 //   if (stepmax>TGeoShape::Big()) stepmax = TGeoShape::Big();
@@ -520,16 +520,16 @@ Double_t TGeoXtru::DistFromInside(const Double_t *point, const Double_t *dir, In
             snext = dist;
             xtru->SetSeg(iv);
             if (convex) return snext;
-         }   
+         }
       }
       if (snext < 1.E10) return snext;
       return TGeoShape::Tolerance();
-   }      
-   
-   // normal case   
-   Int_t incseg = (dir[2]>0)?1:-1; 
+   }
+
+   // normal case
+   Int_t incseg = (dir[2]>0)?1:-1;
    Int_t iznext = iz;
-   Bool_t zexit = kFALSE;  
+   Bool_t zexit = kFALSE;
    while (iz>=0 && iz<fNz-1) {
       // find the distance  to current segment end Z surface
       ipl = iz+((incseg+1)>>1); // next plane
@@ -548,7 +548,7 @@ Double_t TGeoXtru::DistFromInside(const Double_t *point, const Double_t *dir, In
                if (convex) return sz;
                zexit = kTRUE;
                snext = sz;
-            }   
+            }
             // maybe a Z discontinuity - check this
             if (!zexit && TGeoShape::IsSameWithinTolerance(fZ[ipl],fZ[inext])) {
                xtru->SetCurrentVertices(fX0[inext],fY0[inext],fScale[inext]);
@@ -558,24 +558,24 @@ Double_t TGeoXtru::DistFromInside(const Double_t *point, const Double_t *dir, In
                   if (convex) return sz;
                   zexit = kTRUE;
                   snext = sz;
-               } else {  
+               } else {
                   iznext = inext;
-               }   
-            } 
+               }
+            }
          }
       } else {
          iznext = fNz-1;   // stop
-      }   
-      // ray may cross the lateral surfaces of section iz      
+      }
+      // ray may cross the lateral surfaces of section iz
       for (iv=0; iv<fNvert; iv++) {
-         dist = DistToPlane(point,dir,iz,iv,TGeoShape::Big(),kTRUE); 
+         dist = DistToPlane(point,dir,iz,iv,TGeoShape::Big(),kTRUE);
          if (dist<snext) {
             xtru->SetIz(iz);
             xtru->SetSeg(iv);
             snext = dist;
             if (convex) return snext;
             zexit = kTRUE;
-         }   
+         }
       }
       if (zexit) return snext;
       iz = iznext;
@@ -593,7 +593,7 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
       *safe = Safety(point, kTRUE);
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
-   }   
+   }
 // Check if the bounding box is crossed within the requested distance
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist>=step) return TGeoShape::Big();
@@ -617,7 +617,7 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
       if (td.fPoly->Contains(pt)) {
          xtru->SetIz(-1);
          return snext;
-      }   
+      }
       iz=0; // valid starting value = first segment
       stepmax -= snext;
    } else {
@@ -631,11 +631,11 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
          if (td.fPoly->Contains(pt)) {
             xtru->SetIz(-1);
             return snext;
-         }   
+         }
          iz = fNz-2; // valid value = last segment
          stepmax -= snext;
       }
-   }      
+   }
    // Check if the bounding box is missed by the track
    if (!TGeoBBox::Contains(pt)) {
       dist = TGeoBBox::DistFromOutside(pt,dir,3);
@@ -643,12 +643,12 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
       if (dist>1E-6) dist-=1E-6; // decrease snext to make sure we do not cross the xtru
       else dist = 0;
       for (i=0; i<3; i++) pt[i] += dist*dir[i]; // we are now closer
-      iz = TMath::BinarySearch(fNz, fZ, pt[2]);      
+      iz = TMath::BinarySearch(fNz, fZ, pt[2]);
       if (iz<0) iz=0;
       else if (iz==fNz-1) iz = fNz-2;
       snext += dist;
       stepmax -= dist;
-   }   
+   }
    // not the case - we have to do some work...
    // Start trackink from current iz
    // - first solve particular case dir[2]=0
@@ -664,11 +664,11 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
             if (convex) return (snext+dist);
             stepmax = dist;
             hit = kTRUE;
-         }   
+         }
       }
       if (hit) return (snext+stepmax);
       return TGeoShape::Big();
-   }   
+   }
    // general case
    Int_t incseg = (dir[2]>0)?1:-1;
    while (iz>=0 && iz<fNz-1) {
@@ -683,12 +683,12 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
             if (convex) return (snext+dist);
             stepmax = dist;
             hit = kTRUE;
-         }   
+         }
       }
       if (hit) return (snext+stepmax);
       iz += incseg;
-   }   
-   return TGeoShape::Big();  
+   }
+   return TGeoShape::Big();
 }
 
 //_____________________________________________________________________________
@@ -696,8 +696,8 @@ Bool_t TGeoXtru::DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *
 {
 // Creates the polygon representing the blueprint of any Xtru section.
 //   nvert     = number of vertices >2
-//   xv[nvert] = array of X vertex positions 
-//   yv[nvert] = array of Y vertex positions 
+//   xv[nvert] = array of X vertex positions
+//   yv[nvert] = array of Y vertex positions
 // *NOTE* should be called before DefineSection or ctor with 'param'
    if (nvert<3) {
       Error("DefinePolygon","In shape %s cannot create polygon with less than 3 vertices", GetName());
@@ -711,7 +711,7 @@ Bool_t TGeoXtru::DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *
              Error("DefinePolygon","In shape %s 2 vertices cannot be identical",GetName());
              SetShapeBit(TGeoShape::kGeoBad);
 //             return kFALSE;
-          }   
+          }
       }
    }
    fNvert = nvert;
@@ -721,7 +721,7 @@ Bool_t TGeoXtru::DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *
    fY = new Double_t[nvert];
    memcpy(fX,xv,nvert*sizeof(Double_t));
    memcpy(fY,yv,nvert*sizeof(Double_t));
-   
+
    ClearThreadData();
 
    return kTRUE;
@@ -742,14 +742,14 @@ void TGeoXtru::DefineSection(Int_t snum, Double_t z, Double_t x0, Double_t y0, D
                  "%i, z=%e, not in increasing order, %i, z=%e",
                  GetName(),snum,fZ[snum],snum-1,fZ[snum-1]);
          return;
-      }   
+      }
    }
    if (snum==(fNz-1)) {
       ComputeBBox();
       if (TestShapeBit(TGeoShape::kGeoBad)) InspectShape();
-   }   
+   }
 }
-            
+
 //_____________________________________________________________________________
 Double_t TGeoXtru::GetZ(Int_t ipl) const
 {
@@ -759,7 +759,7 @@ Double_t TGeoXtru::GetZ(Int_t ipl) const
       return 0.;
    }
    return fZ[ipl];
-}      
+}
 //_____________________________________________________________________________
 void TGeoXtru::GetPlaneNormal(const Double_t *vert, Double_t *norm) const
 {
@@ -782,7 +782,7 @@ void TGeoXtru::GetPlaneNormal(const Double_t *vert, Double_t *norm) const
    if (cross < TGeoShape::Tolerance()) return;
    cross = 1./TMath::Sqrt(cross);
    for (Int_t i=0; i<3; i++) norm[i] *= cross;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoXtru::GetPlaneVertices(Int_t iz, Int_t ivert, Double_t *vert) const
@@ -860,7 +860,7 @@ Bool_t TGeoXtru::IsPointInsidePlane(const Double_t *point, Double_t *vert, Doubl
               (v1[0]*v2[1]-v1[1]*v2[0])*norm[2];
       if (cross<0) return kFALSE;
    }
-   return kTRUE;   
+   return kTRUE;
 }
 
 //_____________________________________________________________________________
@@ -880,7 +880,7 @@ void TGeoXtru::InspectShape() const
 
 //_____________________________________________________________________________
 TBuffer3D *TGeoXtru::MakeBuffer3D() const
-{ 
+{
    // Creates a TBuffer3D describing *this* shape.
    // Coordinates are in local reference frame.
    Int_t nz = GetNz();
@@ -893,11 +893,11 @@ TBuffer3D *TGeoXtru::MakeBuffer3D() const
                                    nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*(nbPols-2)+2*(2+nvert));
    if (buff)
    {
-      SetPoints(buff->fPnts);   
+      SetPoints(buff->fPnts);
       SetSegsAndPols(*buff);
    }
 
-   return buff; 
+   return buff;
 }
 
 //_____________________________________________________________________________
@@ -959,7 +959,7 @@ void TGeoXtru::SetSegsAndPols(TBuffer3D &buff) const
    buff.fPols[indx++] = c;
    buff.fPols[indx++] = nvert;
    indx2 = (nz-1)*nvert;
- 
+
    for (j=0; j<nvert; j++) {
       buff.fPols[indx++] = indx2+j;
    }
@@ -982,36 +982,36 @@ Double_t TGeoXtru::SafetyToSector(const Double_t *point, Int_t iz, Double_t safm
       SetCurrentVertices(fX0[iz], fY0[iz], fScale[iz]);
       saf1 = td.fPoly->Safety(point, iseg);
       in1 = td.fPoly->Contains(point);
-//      if (!in1 && saf1>safmin) return TGeoShape::Big(); 
+//      if (!in1 && saf1>safmin) return TGeoShape::Big();
       SetCurrentVertices(fX0[iz+1], fY0[iz+1], fScale[iz+1]);
       saf2 = td.fPoly->Safety(point, iseg);
       in2 = td.fPoly->Contains(point);
       if ((in1&!in2)|(in2&!in1)) {
-         safe = safz; 
+         safe = safz;
       } else {
          safe = TMath::Min(saf1,saf2);
          safe = TMath::Max(safe, safz);
       }
       if (safe>safmin) return TGeoShape::Big();
       return safe;
-   }      
+   }
    // normal case
    safz = fZ[iz]-point[2];
    if (safz>safmin) return TGeoShape::Big();
    if (safz<0) {
       saf1 = point[2]-fZ[iz+1];
-      if (saf1>safmin) return TGeoShape::Big(); 
+      if (saf1>safmin) return TGeoShape::Big();
       if (saf1<0) {
          safz = TMath::Max(safz, saf1); // we are in between the 2 Z segments - we ignore safz
       } else {
          safz = saf1;
       }
    }
-   
+
    // loop segments
    Bool_t found = kFALSE;
-   Double_t vert[12]; 
-   Double_t norm[3]; 
+   Double_t vert[12];
+   Double_t norm[3];
 //   printf("plane %d: safz=%f in=%d\n", iz, safz, in);
    for (iseg=0; iseg<fNvert; iseg++) {
       GetPlaneVertices(iz,iseg,vert);
@@ -1025,7 +1025,7 @@ Double_t TGeoXtru::SafetyToSector(const Double_t *point, Int_t iz, Double_t safm
       if (safe>safmin) continue;
       safmin = safe;
       found = kTRUE;
-   }   
+   }
    if (found) return safmin;
    return TGeoShape::Big();
 }
@@ -1068,7 +1068,7 @@ Double_t TGeoXtru::Safety(const Double_t *point, Bool_t in) const
       if (safe<safmin) safmin=safe;
    }
    // loop segments from iz-1 down
-   for (i=iz-1; i>=0; i--) {            
+   for (i=iz-1; i>=0; i--) {
       safe = xtru->SafetyToSector(point,i,safmin, in);
       if (safe<safmin) safmin=safe;
    }
@@ -1080,7 +1080,7 @@ Double_t TGeoXtru::Safety(const Double_t *point, Bool_t in) const
 void TGeoXtru::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TObject::TestBit(kGeoSavePrimitive)) return;   
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
    out << "   nz       = " << fNz << ";" << std::endl;
    out << "   nvert    = " << fNvert << ";" << std::endl;
@@ -1092,15 +1092,15 @@ void TGeoXtru::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    }
    out << "   xtru->DefinePolygon(nvert,xvert,yvert);" << std::endl;
    for (i=0; i<fNz; i++) {
-      out << "   zsect  = " << fZ[i] << ";" << std::endl; 
-      out << "   x0     = " << fX0[i] << ";" << std::endl; 
-      out << "   y0     = " << fY0[i] << ";" << std::endl; 
-      out << "   scale0 = " << fScale[i] << ";" << std::endl; 
+      out << "   zsect  = " << fZ[i] << ";" << std::endl;
+      out << "   x0     = " << fX0[i] << ";" << std::endl;
+      out << "   y0     = " << fY0[i] << ";" << std::endl;
+      out << "   scale0 = " << fScale[i] << ";" << std::endl;
       out << "   xtru->DefineSection(" << i << ",zsect,x0,y0,scale0);" << std::endl;
    }
    out << "   TGeoShape *" << GetPointerName() << " = xtru;" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
-}         
+}
 
 //_____________________________________________________________________________
 void TGeoXtru::SetCurrentZ(Double_t z, Int_t iz)
@@ -1109,7 +1109,7 @@ void TGeoXtru::SetCurrentZ(Double_t z, Int_t iz)
    Double_t x0, y0, scale, a, b;
    Int_t ind1, ind2;
    ind1 = iz;
-   ind2 = iz+1;   
+   ind2 = iz+1;
    Double_t invdz = 1./(fZ[ind2]-fZ[ind1]);
    a = (fX0[ind1]*fZ[ind2]-fX0[ind2]*fZ[ind1])*invdz;
    b = (fX0[ind2]-fX0[ind1])*invdz;
@@ -1122,16 +1122,16 @@ void TGeoXtru::SetCurrentZ(Double_t z, Int_t iz)
    scale = a+b*z;
    SetCurrentVertices(x0,y0,scale);
 }
-      
+
 //_____________________________________________________________________________
-void TGeoXtru::SetCurrentVertices(Double_t x0, Double_t y0, Double_t scale)      
+void TGeoXtru::SetCurrentVertices(Double_t x0, Double_t y0, Double_t scale)
 {
 // Set current vertex coordinates according X0, Y0 and SCALE.
    ThreadData_t& td = GetThreadData();
    for (Int_t i=0; i<fNvert; i++) {
       td.fXc[i] = scale*fX[i] + x0;
       td.fYc[i] = scale*fY[i] + y0;
-   }   
+   }
 }
 
 //_____________________________________________________________________________
@@ -1148,7 +1148,7 @@ void TGeoXtru::SetDimensions(Double_t *param)
 // param[4*(nz-1)+2] = xn
 // param[4*(nz-1)+3] = yn
 // param[4*(nz-1)+4] = scalen
-   fNz = (Int_t)param[0];   
+   fNz = (Int_t)param[0];
    if (fNz<2) {
       Error("SetDimensions","Cannot create TGeoXtru %s with less than 2 Z planes",GetName());
       SetShapeBit(TGeoShape::kGeoBad);
@@ -1162,10 +1162,10 @@ void TGeoXtru::SetDimensions(Double_t *param)
    fScale = new Double_t[fNz];
    fX0 = new Double_t[fNz];
    fY0 = new Double_t[fNz];
-   
-   for (Int_t i=0; i<fNz; i++) 
+
+   for (Int_t i=0; i<fNz; i++)
       DefineSection(i, param[1+4*i], param[2+4*i], param[3+4*i], param[4+4*i]);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoXtru::SetPoints(Double_t *points) const
@@ -1190,7 +1190,7 @@ void TGeoXtru::SetPoints(Double_t *points) const
                points[indx++] = td.fYc[fNvert-1-j];
                points[indx++] = fZ[i];
             }
-         }   
+         }
       }
    }
 }
@@ -1218,7 +1218,7 @@ void TGeoXtru::SetPoints(Float_t *points) const
                points[indx++] = td.fYc[fNvert-1-j];
                points[indx++] = fZ[i];
             }
-         }   
+         }
       }
    }
 }
@@ -1268,7 +1268,7 @@ const TBuffer3D & TGeoXtru::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
       Int_t nvert = GetNvert();
       Int_t nbPnts = nz*nvert;
       Int_t nbSegs = nvert*(2*nz-1);
-      Int_t nbPols = nvert*(nz-1)+2;            
+      Int_t nbPols = nvert*(nz-1)+2;
       if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*(nbPols-2)+2*(2+nvert))) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
@@ -1280,10 +1280,10 @@ const TBuffer3D & TGeoXtru::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
          TransformPoints(buffer.fPnts, buffer.NbPnts());
       }
 
-      SetSegsAndPols(buffer);      
+      SetSegsAndPols(buffer);
       buffer.SetSectionsValid(TBuffer3D::kRaw);
    }
-      
+
    return buffer;
 }
 

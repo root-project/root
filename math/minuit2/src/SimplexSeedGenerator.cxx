@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -21,11 +21,11 @@ namespace ROOT {
 
 
 MinimumSeed SimplexSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculator&, const MnUserParameterState& st, const MnStrategy& stra) const {
-   // create starting state for Simplex, which corresponds to the initial parameter values  
+   // create starting state for Simplex, which corresponds to the initial parameter values
    // using the simple Initial gradient calculator (does not use any FCN function calls)
    unsigned int n = st.VariableParameters();
    const MnMachinePrecision& prec = st.Precision();
-   
+
    // initial starting values
    MnAlgebraicVector x(n);
    for(unsigned int i = 0; i < n; i++) x(i) = st.IntParameters()[i];
@@ -40,8 +40,8 @@ MinimumSeed SimplexSeedGenerator::operator()(const MnFcn& fcn, const GradientCal
    MinimumError err(mat, dcovar);
    double edm = VariableMetricEDMEstimator().Estimate(dgrad, err);
    MinimumState state(pa, err, dgrad, edm, fcn.NumOfCalls());
-   
-   return MinimumSeed(state, st.Trafo());     
+
+   return MinimumSeed(state, st.Trafo());
 }
 
 MinimumSeed SimplexSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradientCalculator& gc, const MnUserParameterState& st, const MnStrategy& stra) const {

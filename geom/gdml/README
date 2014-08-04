@@ -1,22 +1,22 @@
 The $ROOTSYS/gdml directory contains a set of Python modules designed
-for writing out Geometry Description Markup Language (GDML) files. 
+for writing out Geometry Description Markup Language (GDML) files.
 There is also a C++ implementation for the import of GDML into ROOT.
-They act as a converter between the GDML geometry files and the TGeo 
+They act as a converter between the GDML geometry files and the TGeo
 geometry structures (and vice versa).
 
 GDML->ROOT
 ----------
 
-As this binding is integrated into the ROOT installation, you need to 
-enable the use of the binding at the configure point of the ROOT 
+As this binding is integrated into the ROOT installation, you need to
+enable the use of the binding at the configure point of the ROOT
 installation.  This can be done like so:
 
 ./configure  --enable-gdml
 
-On doing this the libraries will be built by issuing the standard ROOT 
-make command. The GDML to TGeo converter uses the TXMLEngine to parse 
-the GDML files. This XML parser is a DOM parser and returns the DOM 
-tree to the class TGDMLParse.  This class then interprets the GDML file 
+On doing this the libraries will be built by issuing the standard ROOT
+make command. The GDML to TGeo converter uses the TXMLEngine to parse
+the GDML files. This XML parser is a DOM parser and returns the DOM
+tree to the class TGDMLParse.  This class then interprets the GDML file
 and adds the bindings in their TGeo equivilent.
 
 The GDML schema is fully supported with a few exceptions:
@@ -41,7 +41,7 @@ calling:
 gGeoManager->GetTopVolume()->Draw("ogl");
 
 
-For any questions or comments about the GDML->ROOT binding please contact ben.lloyd@cern.ch 
+For any questions or comments about the GDML->ROOT binding please contact ben.lloyd@cern.ch
 
 
 ROOT->GDML
@@ -56,12 +56,12 @@ can be exported in GDML format. Please refere to the comment part of
 the ROOTwriter.py file for the list of presently supported TGeo
 classes. The ROOTwriter class contains also three methods,
 dumpMaterials, dumpSolids and examineVol which need to be called in
-order to export materials, solids and geometry tree respectively. 
+order to export materials, solids and geometry tree respectively.
 
 The TGeo to GDML converter is now interfaced to the
 TGeoManager::Export method which automatically calls the appropriate
 Python scripts whenever the geometry output file has the .gdml
-extension. 
+extension.
 
 Alternatively, one can also use the ROOT->GDML converter directly from
 the Python prompt (assuming the TGeo geometry has already been loaded
@@ -70,33 +70,33 @@ into memory in one or another way), for example:
 
 ###################
 from math import *
- 
+
 import ROOT
 import writer
 import ROOTwriter
- 
+
 # get TGeoManager and
 # get the top volume of the existing (in-memory) geometry tree
 geomgr = ROOT.gGeoManager
 topV = geomgr.GetTopVolume()
- 
+
 # instanciate writer
 gdmlwriter = writer.writer('mygeo.gdml')
 binding = ROOTwriter.ROOTwriter(gdmlwriter)
- 
+
 # dump materials
 matlist = geomgr.GetListOfMaterials()
 binding.dumpMaterials(matlist)
- 
+
 # dump solids
 shapelist = geomgr.GetListOfShapes()
 binding.dumpSolids(shapelist)
- 
+
 # dump geo tree
 print 'Traversing geometry tree'
 gdmlwriter.addSetup('default', '1.0', topV.GetName())
 binding.examineVol(topV)
- 
+
 # write file
 gdmlwriter.writeFile()
 ###################

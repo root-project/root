@@ -4,12 +4,12 @@ void FeldmanCousins()
  // Example macro of using the TFeldmanCousins class in root.
  //
  // get a FeldmanCousins calculation object with the default limits
- // of calculating a 90% CL with the minimum signal value scanned 
+ // of calculating a 90% CL with the minimum signal value scanned
  // = 0.0 and the maximum signal value scanned of 50.0
  //Author : Adrian John Bevan <bevan@SLAC.Stanford.EDU>
-  
+
  if (!gROOT->GetClass("TFeldmanCousins")) gSystem->Load("libPhysics");
- 
+
  TFeldmanCousins f;
 
   // calculate either the upper or lower limit for 10 observerd

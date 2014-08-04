@@ -33,7 +33,7 @@ ClassImp(TAlienSystem)
 TAlienSystem::TAlienSystem(const char *name, const char *title) : TSystem(name, title)
 {
    // Create a new OS interface.
-   
+
    fWorkingDirectory[0] = '\0';
 }
 
@@ -407,7 +407,7 @@ Bool_t TAlienSystem::AccessPathName(const char *path, EAccessMode mode)
    }
 
    TString strippath = path ;
-   // remove trailing '/' 
+   // remove trailing '/'
    while (strippath.EndsWith("/")) {strippath.Remove(strippath.Length()-1);}
    TUrl url(strippath);
    url.CleanRelativePath();

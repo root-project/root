@@ -156,7 +156,7 @@ namespace TMath {
    inline Double_t Floor(Double_t x);
    inline Int_t    FloorNint(Double_t x);
    template<typename T>
-   inline Int_t    Nint(T x); 
+   inline Int_t    Nint(T x);
 
    inline Double_t Sqrt(Double_t x);
    inline Double_t Exp(Double_t x);
@@ -173,15 +173,15 @@ namespace TMath {
    inline Int_t    Finite(Double_t x);
    inline Int_t    IsNaN(Double_t x);
 
-   inline Double_t QuietNaN(); 
-   inline Double_t SignalingNaN(); 
-   inline Double_t Infinity(); 
+   inline Double_t QuietNaN();
+   inline Double_t SignalingNaN();
+   inline Double_t Infinity();
 
-   template <typename T> 
-   struct Limits { 
-      inline static T Min(); 
-      inline static T Max(); 
-      inline static T Epsilon(); 
+   template <typename T>
+   struct Limits {
+      inline static T Min();
+      inline static T Max();
+      inline static T Epsilon();
    };
 
    // Some integer math
@@ -470,7 +470,7 @@ inline Double_t TMath::Floor(Double_t x)
 inline Int_t TMath::FloorNint(Double_t x)
    { return TMath::Nint(floor(x)); }
 
-template<typename T> 
+template<typename T>
 inline Int_t TMath::Nint(T x)
 {
    // Round to nearest integer. Rounds half integers to the nearest
@@ -510,9 +510,9 @@ inline Double_t TMath::Power(Double_t x, Double_t y)
 
 inline Double_t TMath::Power(Double_t x, Int_t y) {
 #ifdef R__ANSISTREAM
-   return std::pow(x, y); 
+   return std::pow(x, y);
 #else
-   return pow(x, (Double_t) y); 
+   return pow(x, (Double_t) y);
 #endif
 }
 
@@ -539,7 +539,7 @@ inline Int_t TMath::Finite(Double_t x)
 #endif
 
 inline Int_t TMath::IsNaN(Double_t x)
-#if (defined(R__ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__))) && !defined(_AIX) && !defined(__CUDACC__) 
+#if (defined(R__ANSISTREAM) || (defined(R__MACOSX) && defined(__arm__))) && !defined(_AIX) && !defined(__CUDACC__)
 #if defined(isnan) || defined(R__SOLARIS_CC50) || defined(__INTEL_COMPILER)
    // from math.h
   { return ::isnan(x); }
@@ -553,40 +553,40 @@ inline Int_t TMath::IsNaN(Double_t x)
 
 //--------wrapper to numeric_limits
 //____________________________________________________________________________
-inline Double_t TMath::QuietNaN() { 
-   // returns a quiet NaN as defined by IEEE 754 
+inline Double_t TMath::QuietNaN() {
+   // returns a quiet NaN as defined by IEEE 754
    // see http://en.wikipedia.org/wiki/NaN#Quiet_NaN
-   return std::numeric_limits<Double_t>::quiet_NaN(); 
+   return std::numeric_limits<Double_t>::quiet_NaN();
 }
 
 //____________________________________________________________________________
-inline Double_t TMath::SignalingNaN() { 
-   // returns a signaling NaN as defined by IEEE 754 
+inline Double_t TMath::SignalingNaN() {
+   // returns a signaling NaN as defined by IEEE 754
    // see http://en.wikipedia.org/wiki/NaN#Signaling_NaN
-   return std::numeric_limits<Double_t>::signaling_NaN(); 
+   return std::numeric_limits<Double_t>::signaling_NaN();
 }
 
-inline Double_t TMath::Infinity() { 
+inline Double_t TMath::Infinity() {
    // returns an infinity as defined by the IEEE standard
-   return std::numeric_limits<Double_t>::infinity(); 
+   return std::numeric_limits<Double_t>::infinity();
 }
 
-template<typename T> 
-inline T TMath::Limits<T>::Min() { 
+template<typename T>
+inline T TMath::Limits<T>::Min() {
    // returns maximum representation for type T
-   return (std::numeric_limits<T>::min)();    //N.B. use this signature to avoid class with macro min() on Windows 
+   return (std::numeric_limits<T>::min)();    //N.B. use this signature to avoid class with macro min() on Windows
 }
 
-template<typename T> 
-inline T TMath::Limits<T>::Max() { 
+template<typename T>
+inline T TMath::Limits<T>::Max() {
    // returns minimum double representation
-   return (std::numeric_limits<T>::max)();  //N.B. use this signature to avoid class with macro max() on Windows 
+   return (std::numeric_limits<T>::max)();  //N.B. use this signature to avoid class with macro max() on Windows
 }
 
-template<typename T> 
-inline T TMath::Limits<T>::Epsilon() { 
+template<typename T>
+inline T TMath::Limits<T>::Epsilon() {
    // returns minimum double representation
-   return std::numeric_limits<T>::epsilon(); 
+   return std::numeric_limits<T>::epsilon();
 }
 
 
@@ -788,8 +788,8 @@ Double_t TMath::RMS(Iterator first, Iterator last)
    // Note that this function returns the sigma(standard deviation) and
    // not the root mean square of the array.
 
-   // Use the two pass algorithm, which is slower (! a factor of 2) but much more 
-   // precise.  Since we have a vector the 2 pass algorithm is still faster than the 
+   // Use the two pass algorithm, which is slower (! a factor of 2) but much more
+   // precise.  Since we have a vector the 2 pass algorithm is still faster than the
    // Welford algorithm. (See also ROOT-5545)
 
    Double_t n = 0;
@@ -798,7 +798,7 @@ Double_t TMath::RMS(Iterator first, Iterator last)
    Double_t mean = TMath::Mean(first,last);
    while ( first != last ) {
       Double_t x = Double_t(*first);
-      tot += (x - mean)*(x - mean); 
+      tot += (x - mean)*(x - mean);
       ++first;
       ++n;
    }
@@ -1070,8 +1070,8 @@ Element TMath::KOrdStat(Size n, const Element *a, Size k, Size *work)
    // If work is supplied, it is used to store the sorting index and
    // assumed to be >= n. If work=0, local storage is used, either on
    // the stack if n < kWorkMax or on the heap for n >= kWorkMax.
-   // Note that the work index array will not contain the sorted indices but 
-   // all indeces of the smaller element in arbitrary order in work[0,...,k-1] and 
+   // Note that the work index array will not contain the sorted indices but
+   // all indeces of the smaller element in arbitrary order in work[0,...,k-1] and
    // all indeces of the larger element in arbitrary order in work[k+1,..,n-1]
    // work[k] will contain instead the index of the returned element.
    //

@@ -35,10 +35,10 @@ using namespace ROOT::Math;
 
 
 
-template <typename T1, typename T2 > 
-struct Precision { 
-  enum { result = std::numeric_limits<T1>::digits <= std::numeric_limits<T2>::digits   }; 
-}; 
+template <typename T1, typename T2 >
+struct Precision {
+  enum { result = std::numeric_limits<T1>::digits <= std::numeric_limits<T2>::digits   };
+};
 
 template <typename T1, typename T2, bool>
 struct LessPreciseType {
@@ -75,8 +75,8 @@ closeEnough ( Scalar1 s1, Scalar2 s2, std::string const & coord, double ticks ) 
     return ret;
   }
   // infinity dicrepancy musy be checked with max precision
-  long double sd1(ss1); 
-  long double sd2(ss2); 
+  long double sd1(ss1);
+  long double sd2(ss2);
   if ( (sd1 + sd2 == sd1) != (sd1 + sd2 == sd2) ) {
     ret=5;
     std::cout << "\nInfinity discrepancy in " << coord << "(): "
@@ -106,12 +106,12 @@ int compare3D (const V1 & v1, const V2 & v2, double ticks) {
   ret |= closeEnough ( v1.z(),     v2.z(),     "z"     ,ticks);
   ret |= closeEnough ( v1.rho(),   v2.rho(),   "rho"   ,ticks);
   // case in phi that difference is close to 2pi
-  typedef typename  V2::Scalar Scalar; 
+  typedef typename  V2::Scalar Scalar;
   Scalar phi2 = v2.phi();
-  if (std::abs(v1.phi()- phi2 ) > ROOT::Math::Pi() ) { 
-     if (phi2<0) 
+  if (std::abs(v1.phi()- phi2 ) > ROOT::Math::Pi() ) {
+     if (phi2<0)
         phi2 += 2.*ROOT::Math::Pi();
-     else 
+     else
         phi2 -= 2*ROOT::Math::Pi();
   }
   ret |= closeEnough ( v1.phi(),   phi2,   "phi"   ,ticks);
@@ -130,7 +130,7 @@ int compare3D (const V1 & v1, const V2 & v2, double ticks) {
               << "with v = (" << v1.x() << ", " << v1.y() << ", " << v1.z()
               << ")\n\n\n";
   }
-  else { 
+  else {
 #ifdef DEBUG
     std::cout << ".";
 #endif
@@ -154,9 +154,9 @@ int test3D ( const DisplacementVector3D<C> & v, double ticks ) {
   double rho = std::sqrt (v.x()*v.x() + v.y()*v.y());
   double z   = v.z();
 //   double theta = r>0 ? std::acos ( z/r ) : 0;
-//   if (std::abs( std::abs(z) - r) < 10*r* std::numeric_limits<double>::epsilon() ) 
+//   if (std::abs( std::abs(z) - r) < 10*r* std::numeric_limits<double>::epsilon() )
    double  theta = std::atan2( rho, z );  // better when theta is small or close to pi
-  
+
   double phi = rho>0 ? std::atan2 (v.y(), v.x()) : 0;
   DisplacementVector3D< Polar3D<double> > vrtp_d ( r, theta, phi );
 
@@ -222,9 +222,9 @@ int test3D ( const DisplacementVector3D<C> & v, double ticks ) {
 
 #ifdef DEBUG
   if (ret == 0) std::cout << "\t OK\n";
-  else { 
+  else {
      std::cout << "\t FAIL\n";
-     std::cerr << "\n>>>>> Testing DisplacementVector3D from " << v << " ticks = " << ticks 
+     std::cerr << "\n>>>>> Testing DisplacementVector3D from " << v << " ticks = " << ticks
                << "\t:\t FAILED\n";
   }
   std::cout << "           Testing PositionVector3D     :   ";
@@ -255,9 +255,9 @@ int test3D ( const DisplacementVector3D<C> & v, double ticks ) {
 
 #ifdef DEBUG
   if (ret == 0) std::cout << "\t\t OK\n";
-  else { 
+  else {
      std::cout << "\t FAIL\n";
-     std::cerr << "\n>>>>> Testing PositionVector3D from     " << v << " ticks = " << ticks 
+     std::cerr << "\n>>>>> Testing PositionVector3D from     " << v << " ticks = " << ticks
                << "\t:\t FAILED\n";
   }
 #endif
@@ -288,9 +288,9 @@ int coordinates3D () {
 // Larger ratios among coordinates presents a precision challenge
   ret |= test3D (XYZVector ( 16.0, 0.02, .01 )   ,10 );
   ret |= test3D (XYZVector ( -16.0, 0.02, .01 )  ,10 );
-  ret |= test3D (XYZVector ( -.01, 16.0, .01 )   ,2000 ); 
-  ret |= test3D (XYZVector ( -.01, -16.0, .01 )  ,2000 ); 
-  ret |= test3D (XYZVector ( 1.0, 2.0, 30.0 )    ,10 );  
+  ret |= test3D (XYZVector ( -.01, 16.0, .01 )   ,2000 );
+  ret |= test3D (XYZVector ( -.01, -16.0, .01 )  ,2000 );
+  ret |= test3D (XYZVector ( 1.0, 2.0, 30.0 )    ,10 );
    // NOTE -- these larger erros are likely the results of treating
    //         the vector in a ctor or assignment as foreign...
    // NO -- I'm fouling up the value of x() !!!!!
@@ -302,23 +302,23 @@ int coordinates3D () {
 // When z is big compared to rho, it is very hard to get precision in polar/eta:
   ret |= test3D (XYZVector ( 0.01, 0.02, 16.0 )  ,10 );
   ret |= test3D (XYZVector ( 0.01, 0.02, -16.0 ) ,40000 );
-// test case when eta is large 
+// test case when eta is large
   ret |= test3D (XYZVector ( 1.E-8, 1.E-8, 10.0 )  , 20 );
-// when z is neg error is larger in eta when calculated from polar 
-// since we have a larger error in theta which is closer to pi 
-  ret |= test3D (XYZVector ( 1.E-8, 1.E-8, -10.0 ) ,2.E9 );   
+// when z is neg error is larger in eta when calculated from polar
+// since we have a larger error in theta which is closer to pi
+  ret |= test3D (XYZVector ( 1.E-8, 1.E-8, -10.0 ) ,2.E9 );
 
   // small value of z
-  ret |= test3D (XYZVector ( 10., 10., 1.E-8 ) ,1.0E6 );   
-  ret |= test3D (XYZVector ( 10., 10., -1.E-8 ) ,1.0E6 );   
+  ret |= test3D (XYZVector ( 10., 10., 1.E-8 ) ,1.0E6 );
+  ret |= test3D (XYZVector ( 10., 10., -1.E-8 ) ,1.0E6 );
 
 
   return ret;
 }
 
-int main() { 
+int main() {
    int ret = coordinates3D();
-   if (ret)  std::cerr << "test FAILED !!! " << std::endl; 
+   if (ret)  std::cerr << "test FAILED !!! " << std::endl;
    else   std::cout << "test OK " << std::endl;
    return ret;
 }

@@ -189,7 +189,7 @@ void TLineEditor::DoEndPoint()
    Update();
 }
 
-//______________________________________________________________________________                                                                                
+//______________________________________________________________________________
 void TLineEditor::DoLineVertical()
 {
    // Slot so set the line vertical
@@ -204,7 +204,7 @@ void TLineEditor::DoLineVertical()
    Update();
 }
 
-//______________________________________________________________________________                                                                                
+//______________________________________________________________________________
 void TLineEditor::DoLineHorizontal()
 {
    // Slot so set the line horizontal

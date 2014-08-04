@@ -18,12 +18,12 @@ void fillRandomMat(TRandom & r, M  & m, unsigned int first, unsigned int second,
 
 template<class M>
 void fillRandomSym(TRandom & r, M  & m, unsigned int first, unsigned int start = 0, double offset = 1) {
-  for(unsigned int i = start; i < first+start; ++i) { 
-    for(unsigned int j = i; j < first+start; ++j) { 
-      if ( i != j ) { 
+  for(unsigned int i = start; i < first+start; ++i) {
+    for(unsigned int j = i; j < first+start; ++j) {
+      if ( i != j ) {
          m(i,j) = r.Rndm() + offset;
          m(j,i) = m(i,j);
-      }      
+      }
        else // add extra offset to make no singular when inverting
        m(i,i) = r.Rndm() + 3*offset;
     }

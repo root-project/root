@@ -19,11 +19,11 @@ ClassImp(TStructNodeProperty);
 //////////////////////////////////////////////////////////////////////////
 //
 // TStructNodeProperty class keeps a color for type
-// 
-// 
-// 
-// 
-// 
+//
+//
+//
+//
+//
 //////////////////////////////////////////////////////////////////////////
 
 //________________________________________________________________________
@@ -93,7 +93,7 @@ Int_t TStructNodeProperty::Compare(const TObject* obj) const
       return -1;
    }
    if(cl2->InheritsFrom(cl1)) {
-      return 1;   
+      return 1;
    }
 
    if(this > prop) {

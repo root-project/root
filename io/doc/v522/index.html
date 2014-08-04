@@ -1,9 +1,9 @@
-<br> 
-<hr> 
-<a name="io"></a> 
+<br>
+<hr>
+<a name="io"></a>
 <h3>I/O</h3>
 <ul>
-<li>Fix the order of creation of the TStreamerInfo during the opening of a ROOT file to insure that the CollectionProxy are properly setup.</li> 
+<li>Fix the order of creation of the TStreamerInfo during the opening of a ROOT file to insure that the CollectionProxy are properly setup.</li>
 <li>Fix problem: "recover warning when opening an empty file
 created with TXNetFile" which was due to a bad check <tt>in TFile::Recover</tt>
 (line <tt>TFile.cxx:1561</tt>) where the inheritance from <tt>TFile</tt> should be checked
@@ -54,18 +54,18 @@ Setting a new member from 2 removed members:
   code="{ z = onfile.x*1000 + onfile.y*10; }"
 </pre>
    Renaming a class:
-   
+
 <pre>   #pragma read sourceClass="ACache" version="[8]"
    targetClass="Axis" \
    source="int x; int y;" target="z" \
    code="{ z = onfile.x*1000 + onfile.y*
    #pragma read sourceClass="ACache" version="[9]"
    targetClass="Axis";</pre>
-     
+
 See the <a href="DataModelEvolution.txt">long form documentation</a>
-   
+
 <h5>Selection XML syntax</h5
-   
+
 <pre>   &lt;read sourceClass="ACache" targetClass="ACache" source=""
    version="[1-]" target="zcalc"&gt;
    &lt;![CDATA[

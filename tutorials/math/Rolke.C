@@ -1,9 +1,9 @@
-// Example of the usage of the TRolke class 
+// Example of the usage of the TRolke class
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TRolke.h"
 #include "Riostream.h"
-      
+
 void Rolke()
 {
 //////////////////////////////////////////////////////////
@@ -14,7 +14,7 @@ void Rolke()
 //
 // Author : Jan Conrad (CERN) <jan.conrad@cern.ch> 2004
 //          Johan Lundberg (CERN) <johan.lundberg@cern.ch> 2009
-//  
+//
 // Please read TRolke.cxx and TRolke.h for more docs.
 //             ----------     --------
 //
@@ -40,7 +40,7 @@ void Rolke()
    // make TRolke objects
    TRolke tr;   //
 
-   Double_t ul ; // upper limit 
+   Double_t ul ; // upper limit
    Double_t ll ; // lower limit
 
 
@@ -56,20 +56,20 @@ void Rolke()
    y = 10;    // events observed in the background region
    tau = 2.5; // ratio between size of signal/background region
    m = 100;   // MC events have been produced  (signal)
-   z = 50;    // MC events have been observed (signal)          
+   z = 50;    // MC events have been observed (signal)
 
    alpha=0.9; //Confidence Level
 
-   tr.SetCL(alpha);  
+   tr.SetCL(alpha);
 
-   tr.SetPoissonBkgBinomEff(x,y,z,tau,m); 
+   tr.SetPoissonBkgBinomEff(x,y,z,tau,m);
    tr.GetLimits(ll,ul);
- 
-   cout << "For model 1: Poisson / Binomial" << endl; 
+
+   cout << "For model 1: Poisson / Binomial" << endl;
    cout << "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
- 
+
 /////////////////////////////////////////////////////////////
 // Model 2 assumes:
 //
@@ -89,12 +89,12 @@ void Rolke()
 
    tr.SetPoissonBkgGaussEff(x,y,em,tau,sde);
    tr.GetLimits(ll,ul);
- 
-   cout << "For model 2 : Poisson / Gaussian" << endl; 
+
+   cout << "For model 2 : Poisson / Gaussian" << endl;
    cout << "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
-  
+
 
 /////////////////////////////////////////////////////////////
 // Model 3 assumes:
@@ -113,34 +113,34 @@ void Rolke()
 
    tr.SetCL(alpha);
 
-   tr.SetGaussBkgGaussEff(x,bm,em,sde,sdb); 
+   tr.SetGaussBkgGaussEff(x,bm,em,sde,sdb);
    tr.GetLimits(ll,ul);
-   cout << "For model 3 : Gaussian / Gaussian" << endl; 
+   cout << "For model 3 : Gaussian / Gaussian" << endl;
    cout << "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
 
- 
+
    cout << "***************************************" << endl;
    cout << "* some more example's for gauss/gauss *" << endl;
    cout << "*                                     *" << endl;
    Double_t slow,shigh;
    tr.GetSensitivity(slow,shigh);
    cout << "sensitivity:" << endl;
-   cout << "[" << slow << "," << shigh << "]" << endl; 
+   cout << "[" << slow << "," << shigh << "]" << endl;
 
    int outx;
    tr.GetLimitsQuantile(slow,shigh,outx,0.5);
    cout << "median limit:" << endl;
-   cout << "[" << slow << "," << shigh << "] @ x =" << outx <<endl; 
+   cout << "[" << slow << "," << shigh << "] @ x =" << outx <<endl;
 
    tr.GetLimitsML(slow,shigh,outx);
    cout << "ML limit:" << endl;
-   cout << "[" << slow << "," << shigh << "] @ x =" << outx <<endl; 
+   cout << "[" << slow << "," << shigh << "] @ x =" << outx <<endl;
 
    tr.GetSensitivity(slow,shigh);
    cout << "sensitivity:" << endl;
-   cout << "[" << slow << "," << shigh << "]" << endl; 
+   cout << "[" << slow << "," << shigh << "]" << endl;
 
    tr.GetLimits(ll,ul);
    cout << "the Profile Likelihood interval is :" << endl;
@@ -169,7 +169,7 @@ void Rolke()
    y = 7;       // events observed in the background region
    x = 1;       // events in the signal region
    tau = 5;     // ratio between size of signal/background region
-   e = 0.25;    // efficiency 
+   e = 0.25;    // efficiency
 
    alpha =0.68; // Confidence L evel
 
@@ -177,12 +177,12 @@ void Rolke()
 
    tr.SetPoissonBkgKnownEff(x,y,tau,e);
    tr.GetLimits(ll,ul);
- 
-   cout << "For model 4 : Poissonian / Known" << endl; 
+
+   cout << "For model 4 : Poissonian / Known" << endl;
    cout <<  "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
-   
+
 ////////////////////////////////////////////////////////
 // Model 5 assumes:
 //
@@ -201,17 +201,17 @@ void Rolke()
 
    tr.SetGaussBkgKnownEff(x,bm,sdb,e);
    tr.GetLimits(ll,ul);
- 
-   cout << "For model 5 : Gaussian / Known" << endl; 
+
+   cout << "For model 5 : Gaussian / Known" << endl;
    cout <<  "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
- 
+
 
 ////////////////////////////////////////////////////////
 // Model 6 assumes:
 //
-// Known background 
+// Known background
 // Binomial uncertainty in the efficiency estimate
 //
    cout << endl<<" ======================================================== " <<endl;
@@ -226,12 +226,12 @@ void Rolke()
 
    tr.SetKnownBkgBinomEff(x, z,m,b);
    tr.GetLimits(ll,ul);
- 
-   cout << "For model 6 : Known / Binomial" << endl; 
+
+   cout << "For model 6 : Known / Binomial" << endl;
    cout <<  "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
-  
+
 ////////////////////////////////////////////////////////
 // Model 7 assumes:
 //
@@ -252,8 +252,8 @@ void Rolke()
 
    tr.SetKnownBkgGaussEff(x,em,sde,b);
    tr.GetLimits(ll,ul);
-  
-   cout << "For model 7 : Known / Gaussian " << endl; 
+
+   cout << "For model 7 : Known / Gaussian " << endl;
    cout <<  "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
@@ -271,22 +271,22 @@ void Rolke()
    y = 15;
    x = 0;
    alpha = 0.90;
-   
+
    tr.SetCL(alpha);
-   tr.SetPoissonBkgBinomEff(x,y,z,tau,m); 
+   tr.SetPoissonBkgBinomEff(x,y,z,tau,m);
    tr.SetBounding(true); //bounded
-   tr.GetLimits(ll,ul);   
-   
-   cout << "Example of the effect of bounded vs unbounded, For model 1" << endl; 
+   tr.GetLimits(ll,ul);
+
+   cout << "Example of the effect of bounded vs unbounded, For model 1" << endl;
    cout <<  "the BOUNDED Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
 
    tr.SetBounding(false); //unbounded
-   tr.GetLimits(ll,ul);   
-   
+   tr.GetLimits(ll,ul);
+
    cout <<  "the UNBOUNDED Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
-  
+
 }
 

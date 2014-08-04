@@ -1011,7 +1011,7 @@ Int_t TXSocket::Flush()
          }
       }
    }
-   
+
    // We are done
    return nf;
 }
@@ -1167,7 +1167,7 @@ Bool_t TXSocket::Create(Bool_t attach)
 
       if (srvresp) free(srvresp);
    } // Creation retries
-   
+
    // The session is invalid: reset the sessionID to invalid state (it was our protocol
    // number during creation
    fSessionID = -1;

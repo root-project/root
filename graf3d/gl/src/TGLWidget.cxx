@@ -398,7 +398,7 @@ Window_t TGLWidget::CreateWindow(const TGWindow* parent, const TGLFormat &format
    // Static function called prior to construction.
 
    typedef std::pair<UInt_t, Int_t> component_type;
-   
+
    std::vector<component_type>formatComponents;
 
    if (format.HasDepth())

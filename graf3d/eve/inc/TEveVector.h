@@ -102,7 +102,7 @@ inline TT TEveVectorT<TT>::Phi() const
 }
 
 //______________________________________________________________________________
-template<typename TT> 
+template<typename TT>
 inline TT TEveVectorT<TT>::Theta() const
 {
    return fX == 0 && fY == 0 && fZ == 0 ? 0 : TMath::ATan2(Perp(), fZ);

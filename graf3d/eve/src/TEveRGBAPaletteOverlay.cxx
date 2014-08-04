@@ -42,8 +42,8 @@ TEveRGBAPaletteOverlay::TEveRGBAPaletteOverlay(TEveRGBAPalette* p, Float_t posx,
    fAxisPainter.SetLabelAlign(TGLFont::kCenterH, TGLFont::kBottom);
 }
 
-void TEveRGBAPaletteOverlay::Render(TGLRnrCtx& rnrCtx) 
-{ 
+void TEveRGBAPaletteOverlay::Render(TGLRnrCtx& rnrCtx)
+{
    // Render the overlay.
 
    const Double_t ca_min = fPalette->GetCAMinAsDouble();
@@ -56,7 +56,7 @@ void TEveRGBAPaletteOverlay::Render(TGLRnrCtx& rnrCtx)
 
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
 
-   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  
+   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
    glDisable(GL_CULL_FACE);
    glEnable(GL_BLEND);
    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);

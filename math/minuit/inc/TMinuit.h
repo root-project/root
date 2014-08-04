@@ -40,7 +40,7 @@ private:
 // should become private....
 public:
         enum{kMAXWARN=100};
-          
+
         Int_t        fNpfix;            //Number of fixed parameters
         Int_t        fEmpty;            //Initialization flag (1 = Minuit initialized)
         Int_t        fMaxpar;           //Maximum number of parameters
@@ -52,7 +52,7 @@ public:
         Int_t        fMaxcpt;
         Int_t        fMaxpar2;          // fMaxpar*fMaxpar
         Int_t        fMaxpar1;          // fMaxpar*(fMaxpar+1)
-        
+
         Double_t     fAmin;             //Minimum value found for FCN
         Double_t     fUp;               //FCN+-UP defines errors (for chisquare fits UP=1)
         Double_t     fEDM;              //Estimated vertical distance to the minimum
@@ -71,7 +71,7 @@ public:
         Double_t     fYmidcr;           //
         Double_t     fXdircr;           //
         Double_t     fYdircr;           //
-        
+
         Double_t     *fU;               //[fMaxpar2] External (visible to user in FCN) value of parameters
         Double_t     *fAlim;            //[fMaxpar2] Lower limits for parameters. If zero no limits
         Double_t     *fBlim;            //[fMaxpar2] Upper limits for parameters
@@ -86,24 +86,24 @@ public:
         Double_t     *fXts;             //[fMaxpar] Internal parameters values X saved as Xt for fixed params
         Double_t     *fDirins;          //[fMaxpar] (Internal) step sizes for current step for fixed params
         Double_t     *fGrd;             //[fMaxpar] First derivatives
-        Double_t     *fG2;              //[fMaxpar] 
+        Double_t     *fG2;              //[fMaxpar]
         Double_t     *fGstep;           //[fMaxpar] Step sizes
-        Double_t     *fGin;             //[fMaxpar2] 
+        Double_t     *fGin;             //[fMaxpar2]
         Double_t     *fDgrd;            //[fMaxpar] Uncertainties
-        Double_t     *fGrds;            //[fMaxpar] 
-        Double_t     *fG2s;             //[fMaxpar] 
-        Double_t     *fGsteps;          //[fMaxpar] 
+        Double_t     *fGrds;            //[fMaxpar]
+        Double_t     *fG2s;             //[fMaxpar]
+        Double_t     *fGsteps;          //[fMaxpar]
         Double_t     *fVhmat;           //[fMaxpar5] (Internal) error matrix stored as Half MATrix, since it is symmetric
         Double_t     *fVthmat;          //[fMaxpar5] VHMAT is sometimes saved in VTHMAT, especially in MNMNOT
-        Double_t     *fP;               //[fMaxpar1] 
-        Double_t     *fPstar;           //[fMaxpar2] 
-        Double_t     *fPstst;           //[fMaxpar] 
-        Double_t     *fPbar;            //[fMaxpar] 
+        Double_t     *fP;               //[fMaxpar1]
+        Double_t     *fPstar;           //[fMaxpar2]
+        Double_t     *fPstst;           //[fMaxpar]
+        Double_t     *fPbar;            //[fMaxpar]
         Double_t     *fPrho;            //[fMaxpar] Minimum point of parabola
-        Double_t     *fWord7;           //[fMaxpar] 
+        Double_t     *fWord7;           //[fMaxpar]
         Double_t     *fXpt;             //[fMaxcpt] X array of points for contours
         Double_t     *fYpt;             //[fMaxcpt] Y array of points for contours
-        
+
         Double_t     *fCONTgcc;         //[fMaxpar] array used in mncont
         Double_t     *fCONTw;           //[fMaxpar] array used in mncont
         Double_t     *fFIXPyy;          //[fMaxpar] array used in mnfixp
@@ -129,7 +129,7 @@ public:
         Double_t     *fVERTpp;          //[fMaxpar] array used in mnvert
         Double_t     *fCOMDplist;       //[fMaxpar] array used in mncomd
         Double_t     *fPARSplist;       //[fMaxpar] array used in mnpars
-        
+
         Int_t        *fNvarl;           //[fMaxpar2] parameters flag (-1=undefined, 0=constant..)
         Int_t        *fNiofex;          //[fMaxpar2] Internal parameters number, or zero if not currently variable
         Int_t        *fNexofi;          //[fMaxpar] External parameters number for currently variable parameters

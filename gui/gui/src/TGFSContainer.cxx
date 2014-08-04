@@ -369,7 +369,7 @@ void TGFileItem::Init(const TGPicture *blpic, const TGPicture *slpic,
                newtime->tm_min);
       fSubnames[4] = new TGString(tmp);
    }
-   else 
+   else
       fSubnames[4] = new TGString("1901-01-01 00:00");
 
    fSubnames[5] = 0;

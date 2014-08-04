@@ -43,13 +43,13 @@ public:
    virtual Bool_t        Contains(const Double_t *point) const;
    virtual void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
-   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
                                 Double_t start, Double_t step);
    virtual Double_t      GetA() const    {return fRmin;}
    virtual Double_t      GetB() const    {return fRmax;}

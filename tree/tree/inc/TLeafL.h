@@ -56,7 +56,7 @@ public:
    virtual void    SetAddress(void *add=0);
    virtual void    SetMaximum(Long64_t max) {fMaximum = max;}
    virtual void    SetMinimum(Long64_t min) {fMinimum = min;}
-   
+
    ClassDef(TLeafL,1);  //A TLeaf for a 64 bit Integer data type.
 };
 

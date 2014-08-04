@@ -16,7 +16,7 @@ H2PolyDemo::H2PolyDemo(const char *fileName)
    std::auto_ptr<TFile> inputFile(TFile::Open(fileName, "read"));
    if (!inputFile.get())
       return;
-      
+
    fPoly.reset(dynamic_cast<TH2Poly *>(inputFile->Get("h2poly")));
    if (fPoly.get())
       fPoly->SetDirectory(0);

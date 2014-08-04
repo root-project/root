@@ -44,7 +44,7 @@ protected:
    virtual void   ConnectSignals2Slots();
 
 public:
-   TCurlyLineEditor(const TGWindow *p = 0 , 
+   TCurlyLineEditor(const TGWindow *p = 0 ,
                 Int_t width = 140, Int_t height = 30,
                 UInt_t options = kChildFrame,
                 Pixel_t back = GetDefaultFrameBackground());

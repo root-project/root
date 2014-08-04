@@ -1,10 +1,10 @@
-// special functions taken from Cephes library 
+// special functions taken from Cephes library
 //  see:  http://www.netlib.org/cephes
-// 
+//
 // Copyright 1985, 1987, 2000 by Stephen L. Moshier
-// 
+//
 //  granted permission from the author to be used in MathCore
-//  
+//
 
 
 
@@ -12,10 +12,10 @@
 #ifndef ROOT_Math_SpecFunCephes
 #define ROOT_Math_SpecFunCephes
 
-namespace ROOT { 
-   namespace Math { 
+namespace ROOT {
+   namespace Math {
 
-      namespace Cephes { 
+      namespace Cephes {
 
 
 //---
@@ -35,7 +35,7 @@ namespace ROOT {
 #define kMAXLGM 2.556348e305
 
 
-/** 
+/**
     incomplete complementary gamma function
  *  igamc(a, x) = 1 - igam(a, x)
 */
@@ -59,7 +59,7 @@ double incbet( double aa, double bb, double xx );
 /* Continued fraction expansion #1
  * for incomplete beta integral
  * used when xx < (aa-1)/(aa+bb-2)
- * (and bb*xx > 1 or xx > 0.95) 
+ * (and bb*xx > 1 or xx > 0.95)
 */
 double incbcf( double a, double b, double x );
 
@@ -67,7 +67,7 @@ double incbcf( double a, double b, double x );
 /* Continued fraction expansion #2
  * for incomplete beta integral
  * used when xx > (aa-1)/(aa+bb-2)
- * (and bb*xx > 1 or xx > 0.95) 
+ * (and bb*xx > 1 or xx > 0.95)
  */
 double incbd( double a, double b, double x );
 
@@ -87,17 +87,17 @@ double erfc( double a );
 
 // inverse function
 
-/* normal quantile */ 
-double ndtri (double y); 
+/* normal quantile */
+double ndtri (double y);
 
-/* normal quantile */ 
-double ndtri (double y); 
+/* normal quantile */
+double ndtri (double y);
 
-/* inverse of incomplete gamma */ 
-double igami (double a, double y); 
+/* inverse of incomplete gamma */
+double igami (double a, double y);
 
-/* inverse of incomplete beta */ 
-double incbi (double a, double b, double y); 
+/* inverse of incomplete beta */
+double incbi (double a, double b, double y);
 
 
 } // end namespace Cephes

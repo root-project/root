@@ -93,7 +93,7 @@ FT_Encoding* FTFace::CharMapList()
             fontEncodingList[encodingIndex] = (*ftFace)->charmaps[encodingIndex]->encoding;
         }
     }
-    
+
     return fontEncodingList;
 }
 
@@ -108,12 +108,12 @@ FTPoint FTFace::KernAdvance( unsigned int index1, unsigned int index2)
         kernAdvance.x = kernAdvance.y = 0;
 
         err = FT_Get_Kerning( *ftFace, index1, index2, ft_kerning_unfitted, &kernAdvance);
-        if (!err) {   
+        if (!err) {
             x = static_cast<float>( kernAdvance.x) / 64.0f;
             y = static_cast<float>( kernAdvance.y) / 64.0f;
         }
     }
-    
+
     return FTPoint( x, y, 0.0);
 }
 

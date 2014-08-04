@@ -13,7 +13,7 @@
 #include "TArrow.h"
 #include "TPolyLine.h"
 #include "TGraphEdge.h"
-#include "TGraphNode.h"  
+#include "TGraphNode.h"
 
 #include <gvc.h>
 
@@ -76,7 +76,7 @@ TGraphEdge::~TGraphEdge()
 //______________________________________________________________________________
 void TGraphEdge::CreateGVEdge(GVizAgraph_t *gv)
 {
-   // Create the GraphViz edge into the GraphViz data structure gv.           
+   // Create the GraphViz edge into the GraphViz data structure gv.
 
    if (gv) {
       Agnode_t *n1 = (Agnode_t*)fNode1->GetGVNode();
@@ -98,7 +98,7 @@ Int_t TGraphEdge::DistancetoPrimitive(Int_t px, Int_t py)
    // Compute distance from point px,py to an edge.
 
    Int_t i,n,a,dist=999;
-   
+
    TPolyLine *polyline;
    a = 0;
 
@@ -212,7 +212,7 @@ void TGraphEdge::Paint(Option_t *)
 //______________________________________________________________________________
 void TGraphEdge::SavePrimitive(std::ostream &, Option_t *)
 {
-   // Save primitive as a C++ statement(s) on output stream out   
+   // Save primitive as a C++ statement(s) on output stream out
 }
 
 //______________________________________________________________________________

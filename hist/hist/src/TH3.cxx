@@ -1566,7 +1566,7 @@ Long64_t TH3::Merge(TCollection *list)
 
    TIter next(&inlist);
    TH3* h = this;
-   do { 
+   do {
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
       allHaveLimits = allHaveLimits && hasLimits;
 
@@ -1575,9 +1575,9 @@ Long64_t TH3::Merge(TCollection *list)
 
          // this is done in case the first histograms are empty and
          // the histogram have different limits
-         if (firstHistWithLimits ) { 
+         if (firstHistWithLimits ) {
             // set axis limits in the case the first histogram did not have limits
-            if (h != this ) { 
+            if (h != this ) {
               if (!SameLimitsAndNBins(fXaxis, *(h->GetXaxis())) ) {
                 if (h->GetXaxis()->GetXbins()->GetSize() != 0) fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
                 else                                           fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
@@ -3519,11 +3519,11 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
    fZaxis.SetTitleSize(zTitleSize);
    fZaxis.SetTitleColor(zTitleColor);
    fZaxis.SetTitleFont(zTitleFont);
-   
+
    //restore statistics and entries  modified by SetBinContent
    hnew->SetEntries(entries);
    if (!resetStat) hnew->PutStats(stat);
-   
+
    delete [] oldBins;
    if (oldSumw2) delete [] oldSumw2;
    return hnew;

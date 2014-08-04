@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
 //
-// 'Number Counting Utils' RooStats tutorial 
+// 'Number Counting Utils' RooStats tutorial
 // author: Kyle Cranmer
-// date June. 2009 
+// date June. 2009
 //
-// This tutorial shows an example of the RooStats standalone 
+// This tutorial shows an example of the RooStats standalone
 // utilities that calculate the p-value or Z value (eg. significance in
 // 1-sided Gaussian standard deviations) for a number counting experiment.
 // This is a hypothesis test between background only and signal-plus-background.
@@ -18,9 +18,9 @@
 // This problem is often called a proto-type problem for high energy physics.
 // In some references it is referred to as the on/off problem.
 //
-// The problem is treated in a fully frequentist fashion by 
+// The problem is treated in a fully frequentist fashion by
 // interpreting the relative background uncertainty as
-// being due to an auxiliary or sideband observation 
+// being due to an auxiliary or sideband observation
 // that is also Poisson distributed with only background.
 // Finally, one considers the test as a ratio of Poisson means
 // where an interval is well known based on the conditioning on the total
@@ -50,9 +50,9 @@ using namespace std ;
 
 void rs_numbercountingutils()
 {
-  
+
   // From the root prompt, you can see the full list of functions by using tab-completion
-  
+
   // root [0] RooStats::NumberCountingUtils::  <tab>
   // BinomialExpZ
   // BinomialWithTauExpZ
@@ -101,9 +101,9 @@ void rs_numbercountingutils()
   // in the auxiliary measurement to the main measurement.
   // Large values of tau mean small background uncertainty
   // because the sideband is very constraining.
-  
+
   // Usage:
-  // root [0] RooStats::NumberCountingUtils::BinomialWithTauExpP( 
+  // root [0] RooStats::NumberCountingUtils::BinomialWithTauExpP(
   // Double_t BinomialWithTauExpP(Double_t sExp, Double_t bExp, Double_t tau)
 
 

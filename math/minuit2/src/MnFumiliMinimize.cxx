@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -22,7 +22,7 @@ namespace ROOT {
 FunctionMinimum MnFumiliMinimize::operator()(unsigned int maxfcn, double toler) {
    // minimize using Fumili
    // need to reimplement otherwise base class method is done
-   
+
    assert(fState.IsValid());
    unsigned int npar = VariableParameters();
    //   assert(npar > 0);

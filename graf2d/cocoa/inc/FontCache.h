@@ -45,19 +45,19 @@ public:
    };
 
    FontCache();
-   
+
    FontStruct_t LoadFont(const X11::XLFDName &xlfd);
    void UnloadFont(FontStruct_t font);
-   
+
    char **ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count);
    void FreeFontNames(char **fontList);
 
    unsigned GetTextWidth(FontStruct_t font, const char *text, int nChars);
    void GetFontProperties(FontStruct_t font, int &maxAscent, int &maxDescent);
-   
+
    //Select the existing font or create a new one and select it.
    CTFontRef SelectFont(Font_t fontIndex, Float_t fontSize);
-   
+
    //Typographical bounds (whatever it means),
    //for the current selected font and text.
    void GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const;
@@ -78,7 +78,7 @@ private:
    CTFontRef SelectSymbolFont(Float_t fontSize, unsigned fontIndex);
 
    typedef Util::CFStrongReference<CTFontRef> CTFontGuard_t;
-   
+
    //These are fonts for GUI. Weird map, as I can see now.
    std::map<CTFontRef, CTFontGuard_t> fLoadedFonts;
    typedef std::map<CTFontRef, CTFontGuard_t>::iterator font_iterator;
@@ -95,10 +95,10 @@ private:
    //FontList can be requested by TGCocoa::ListFonts,
    //the return value is char **, and later it's freed by
    //TGCocoa::FreeFontNames, again using char **.
-   //In my case, I have to somehow map char ** to two 
+   //In my case, I have to somehow map char ** to two
    //data sets - char ** itself + real strings, whose
    //addresses are in char **.
-   //fList, after it's filled and returned by TGCocoa, 
+   //fList, after it's filled and returned by TGCocoa,
    //is immutable, so later I can find this FontList
    //comparing char ** and &fList[0].
    struct FontList {
@@ -108,7 +108,7 @@ private:
 
    std::list<FontList> fFontLists;//list of "lists" of fonts :)
    FontList fDummyList;
-   
+
    typedef std::map<std::string, std::string> PSNameMap_t;
    PSNameMap_t fXLFDtoPostscriptNames;
 

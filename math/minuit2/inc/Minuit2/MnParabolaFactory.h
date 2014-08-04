@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -26,14 +26,14 @@ public:
 
   ~MnParabolaFactory() {}
 
-  MnParabola operator()(const MnParabolaPoint&, const MnParabolaPoint&, 
+  MnParabola operator()(const MnParabolaPoint&, const MnParabolaPoint&,
                         const MnParabolaPoint&) const;
 
-  MnParabola operator()(const MnParabolaPoint&, double, 
+  MnParabola operator()(const MnParabolaPoint&, double,
                         const MnParabolaPoint&) const;
 
-private: 
-  
+private:
+
 };
 
   }  // namespace Minuit2

@@ -27,7 +27,7 @@
 
 //___________________________________________________________________
 class  TQtTimer : public QTimer  {
-#ifndef __CINT__    
+#ifndef __CINT__
      Q_OBJECT
 #endif
 private:
@@ -41,7 +41,7 @@ protected:
 
 protected slots:
    virtual void AwakeRootEvent();
-   
+
 public:
    virtual ~TQtTimer(){}
    static TQtTimer *Create(QObject *parent=0);

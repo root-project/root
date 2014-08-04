@@ -9,7 +9,7 @@
 #endif
 
 #include "TVectorDfwd.h"
-   
+
 class TH1;
 
 //_______________________________________________________________________
@@ -17,9 +17,9 @@ class TH1;
 // TLimitDataSource
 //
 // This class serves as input for the TLimit::ComputeLimit method.
-// It takes the signal, background and data histograms to form a channel. 
+// It takes the signal, background and data histograms to form a channel.
 // More channels can be added using AddChannel(), as well as different
-// systematics sources. 
+// systematics sources.
 //_______________________________________________________________________
 
 

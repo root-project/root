@@ -31,7 +31,7 @@
 
 using namespace std ;
 using namespace RooFit ;
-   
+
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
 //                                                                           //
 // RooFit Examples, Wouter Verkerke                                          //
@@ -101,7 +101,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   cout << "*  RooFit - S T R E S S suite                                    *" <<endl;
   cout << "******************************************************************" <<endl;
   cout << "******************************************************************" <<endl;
-  
+
   TStopwatch timer;
   timer.Start();
 
@@ -162,14 +162,14 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   testList.push_back(new TestBasic802(fref,writeRef,doVerbose)) ;
   testList.push_back(new TestBasic803(fref,writeRef,doVerbose)) ;
   testList.push_back(new TestBasic804(fref,writeRef,doVerbose)) ;
-  
+
   cout << "*  Starting  S T R E S S  basic suite                            *" <<endl;
   cout << "******************************************************************" <<endl;
 
   if (doDump) {
     TFile fdbg("stressRooFit_DEBUG.root","RECREATE") ;
-  }  
-  
+  }
+
   gBenchmark->Start("StressRooFit");
 
   Int_t i(1) ;
@@ -192,8 +192,8 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   }
 
   gBenchmark->Stop("StressRooFit");
-  
-  
+
+
   //Print table with results
   Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
   printf("******************************************************************\n");
@@ -215,7 +215,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
     if (!os) printf("*  SYS: Windows 95\n");
     else     printf("*  SYS: %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
   }
-  
+
   printf("******************************************************************\n");
   gBenchmark->Print("StressFit");
 #ifdef __CINT__
@@ -224,12 +224,12 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   Double_t reftime = 93.59; //pcbrun4 compiled
 #endif
   const Double_t rootmarks = 860*reftime/gBenchmark->GetCpuTime("StressRooFit");
-  
+
   printf("******************************************************************\n");
   printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
          gROOT->GetVersionDate(),gROOT->GetVersionTime());
   printf("******************************************************************\n");
-  
+
   printf("Time at the end of job = %f seconds\n",timer.CpuTime());
 
   if (fref) {
@@ -246,7 +246,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
 //_____________________________batch only_____________________
 #ifndef __CINT__
 
-int main(int argc,const char *argv[]) 
+int main(int argc,const char *argv[])
 {
   Bool_t doWrite     = kFALSE ;
   Int_t doVerbose    = 0 ;
@@ -257,7 +257,7 @@ int main(int argc,const char *argv[])
 
   string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
 
-  // Parse command line arguments 
+  // Parse command line arguments
   for (Int_t i=1 ;  i<argc ; i++) {
     string arg = argv[i] ;
 
@@ -293,14 +293,14 @@ int main(int argc,const char *argv[])
 
     if (arg=="-n") {
       cout << "stressRooFit: running single test " << argv[i+1] << endl ;
-      oneTest = atoi(argv[++i]) ;      
+      oneTest = atoi(argv[++i]) ;
     }
-    
+
     if (arg=="-d") {
       cout << "stressRooFit: setting gDebug to " << argv[i+1] << endl ;
       gDebug = atoi(argv[++i]) ;
     }
-    
+
     if (arg=="-c") {
       cout << "stressRooFit: dumping comparison file for failed tests " << endl ;
       doDump=kTRUE ;
@@ -340,7 +340,7 @@ int main(int argc,const char *argv[])
   }
 
   gBenchmark = new TBenchmark();
-  Int_t retVal = stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);  
+  Int_t retVal = stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);
   return retVal;
 }
 

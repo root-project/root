@@ -59,7 +59,7 @@ protected:
 
    void                ClearError();
    void                SetError(Int_t code, const char* msg, const char* method = 0);
-   
+
    static const char* fgFloatFmt;          //!  printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
 
 public:

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Id: LinkDef.h,v 1.0 2003/11/25 
+// @(#)root/ged:$Id: LinkDef.h,v 1.0 2003/11/25
 
 /*************************************************************************
  * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *

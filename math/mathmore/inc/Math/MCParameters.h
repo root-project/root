@@ -35,40 +35,40 @@ namespace Math {
 class IOptions;
 
 /**
-   structures collecting parameters 
+   structures collecting parameters
    for VEGAS multidimensional integration
-   FOr implementation of default parameters see file 
+   FOr implementation of default parameters see file
    mathmore/src/GSLMCIntegrationWorkspace.h
 
    @ingroup MCIntegration
 */
 struct VegasParameters{
    double alpha;
-   size_t iterations; 
-   int stage; 
-   int mode; 
-   int verbose; 
+   size_t iterations;
+   int stage;
+   int mode;
+   int verbose;
 
    // constructor of default parameters
    VegasParameters() { SetDefaultValues(); }
 
    // construct from GenAlgoOptions
-   // parameter not specified are ignored 
+   // parameter not specified are ignored
    VegasParameters(const ROOT::Math::IOptions & opt);
 
    void SetDefaultValues();
 
    VegasParameters & operator=(const ROOT::Math::IOptions & opt);
 
-   /// convert to options (return object is managed by the user) 
+   /// convert to options (return object is managed by the user)
    ROOT::Math::IOptions * operator() () const;
 };
-  
- 
+
+
 
 
 /**
-   structures collecting parameters 
+   structures collecting parameters
    for MISER multidimensional integration
 
    @ingroup MCIntegration
@@ -78,7 +78,7 @@ struct MiserParameters{
    size_t min_calls;
    size_t min_calls_per_bisection;
    double alpha;
-   double dither; 
+   double dither;
 
    // constructor of default parameters
    // needs dimension since min_calls = 16 * dim
@@ -87,12 +87,12 @@ struct MiserParameters{
    void SetDefaultValues(size_t dim=10);
 
    // construct from GenAlgoOptions
-   // parameter not specified are ignored 
+   // parameter not specified are ignored
    MiserParameters(const ROOT::Math::IOptions & opt, size_t dim = 10);
 
    MiserParameters & operator=(const ROOT::Math::IOptions & opt);
 
-   /// convert to options (return object is managed by the user) 
+   /// convert to options (return object is managed by the user)
    ROOT::Math::IOptions * operator() () const;
 
 };
@@ -103,4 +103,4 @@ struct PlainParameters{
 } // namespace Math
 } // namespace ROOT
 
-#endif 
+#endif

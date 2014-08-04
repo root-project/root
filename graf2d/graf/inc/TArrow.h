@@ -66,7 +66,7 @@ public:
    virtual void   SetOption(Option_t *option=">"){ fOption = option;}
 
    static void SetDefaultAngle     (Float_t  Angle    );
-   static void SetDefaultArrowSize (Float_t  ArrowSize);  
+   static void SetDefaultArrowSize (Float_t  ArrowSize);
    static void SetDefaultOption    (Option_t *Option  );
    static Float_t GetDefaultAngle    ();
    static Float_t GetDefaultArrowSize();

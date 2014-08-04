@@ -35,7 +35,7 @@ protected:
    Long64_t         fEntry; // the entry number, when the list is used for subentries
    TEntryListArray *fLastSubListQueried; //! last sublist checked by GetSubListForEntry
    TIter *fSubListIter; //! to iterate over fSubLists and keep last one checked
-   
+
    void Init();
    virtual void AddEntriesAndSubLists(const TEntryList *elist);
    virtual void ConvertToTEntryListArray(TEntryList *e);
@@ -59,7 +59,7 @@ public:
 
    virtual void        Add(const TEntryList *elist);
    virtual Int_t       Contains(Long64_t entry, TTree *tree, Long64_t subentry);
-   virtual Int_t       Contains(Long64_t entry, TTree *tree = 0) { 
+   virtual Int_t       Contains(Long64_t entry, TTree *tree = 0) {
       return TEntryList::Contains(entry, tree);
    };
    virtual Bool_t      Enter(Long64_t entry, TTree *tree, Long64_t subentry);
@@ -67,7 +67,7 @@ public:
       return Enter(entry, tree, -1);
    };
 //    virtual Bool_t      Enter(Long64_t entry, TTree *tree, const TEntryList *e);
-   virtual TEntryListArray* GetSubListForEntry(Long64_t entry, TTree *tree = 0);   
+   virtual TEntryListArray* GetSubListForEntry(Long64_t entry, TTree *tree = 0);
    virtual void        Print(const Option_t* option = "") const;
    virtual Bool_t      Remove(Long64_t entry, TTree *tree, Long64_t subentry);
    virtual Bool_t      Remove(Long64_t entry, TTree *tree = 0) {
@@ -124,7 +124,7 @@ protected:
    Long64_t         fEntry; // the entry number, when the list is used for subentries
    TEntryListArray *fLastSubListQueried; //! last sublist checked by GetSubListForEntry
    TIter *fSubListIter; //! to iterate over fSubLists and keep last one checked
-   
+
    void Init();
    virtual void AddEntriesAndSubLists(const TEntryList *elist);
    virtual void ConvertToTEntryListArray(TEntryList *e);
@@ -148,7 +148,7 @@ public:
 
    virtual void        Add(const TEntryList *elist);
    virtual Int_t       Contains(Long64_t entry, TTree *tree, Long64_t subentry);
-   virtual Int_t       Contains(Long64_t entry, TTree *tree = 0) { 
+   virtual Int_t       Contains(Long64_t entry, TTree *tree = 0) {
       return TEntryList::Contains(entry, tree);
    };
    virtual Bool_t      Enter(Long64_t entry, TTree *tree, Long64_t subentry);
@@ -156,7 +156,7 @@ public:
       return Enter(entry, tree, -1);
    };
 //    virtual Bool_t      Enter(Long64_t entry, TTree *tree, const TEntryList *e);
-   virtual TEntryListArray* GetSubListForEntry(Long64_t entry, TTree *tree = 0);   
+   virtual TEntryListArray* GetSubListForEntry(Long64_t entry, TTree *tree = 0);
    virtual void        Print(const Option_t* option = "") const;
    virtual Bool_t      Remove(Long64_t entry, TTree *tree, Long64_t subentry);
    virtual Bool_t      Remove(Long64_t entry, TTree *tree = 0) {

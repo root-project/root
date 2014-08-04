@@ -27,7 +27,7 @@ bool HexCharToInt(char symbol, unsigned &val)
       val = symbol - '0';
       return true;
    }
-   
+
    switch (symbol) {
    case 'a': case 'A':
       val = 10;
@@ -899,11 +899,11 @@ ColorParser::ColorParser()
    fX11RGB["yellow3"] = RGB_t(205, 205, 0);
    fX11RGB["yellow4"] = RGB_t(139, 139, 0);
    fX11RGB["YellowGreen"] = RGB_t(154, 205, 50);
-   
+
    //These were colors names from X11's rgb.txt.
    //But X11 also understand lower case names.
    //And ROOT uses this. Convert all keys into lower case.
-   
+
    rgb_map tmpMap;
    TString key;
    for (const_rgb_iterator iter = fX11RGB.begin(), endIter = fX11RGB.end(); iter != endIter; ++iter) {
@@ -912,7 +912,7 @@ ColorParser::ColorParser()
       //Insert fails, if we have such case already - we do not care about such a fail.
       tmpMap.insert(std::make_pair(key, iter->second));
    }
-   
+
    fX11RGB.swap(tmpMap);
 }
 

@@ -39,7 +39,7 @@ public:
 protected :
 // data members
    Int_t               fNvert;            // number of vertices (must be defined clockwise in XY plane)
-   Int_t               fNconvex;          // number of points of the outscribed convex polygon 
+   Int_t               fNconvex;          // number of points of the outscribed convex polygon
    Int_t              *fInd;              //[fNvert] list of vertex indices
    Int_t              *fIndc;             //[fNconvex] indices of vertices of the outscribed convex polygon
    Double_t           *fX;                //! pointer to list of current X coordinates of vertices
@@ -73,7 +73,7 @@ public:
    Bool_t              IsIllegalCheck() const;
    Double_t            Safety(const Double_t *point, Int_t &isegment) const;
    void                SetConvex(Bool_t flag=kTRUE) {TObject::SetBit(kGeoConvex,flag);}
-   void                SetXY(Double_t *x, Double_t *y);   
+   void                SetXY(Double_t *x, Double_t *y);
    void                SetNextIndex(Int_t index=-1);
 
    ClassDef(TGeoPolygon, 2)         // class for handling arbitrary polygons

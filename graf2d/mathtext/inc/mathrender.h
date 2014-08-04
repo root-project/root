@@ -882,7 +882,7 @@ namespace mathtext {
 #ifdef __INTEL_COMPILER
 #pragma warning(pop)
 #endif // __INTEL_COMPILER
-   
+
 }
 
 #endif // MATHRENDER_H_

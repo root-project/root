@@ -29,8 +29,8 @@ namespace ROOT {
 namespace Math {
 
 
-typedef Transform3D::Point  XYZPoint; 
-typedef Transform3D::Vector XYZVector; 
+typedef Transform3D::Point  XYZPoint;
+typedef Transform3D::Vector XYZVector;
 
 
 // ========== Constructors and Assignment =====================
@@ -42,19 +42,19 @@ Transform3D::Transform3D(const XYZPoint & fr0, const XYZPoint & fr1, const XYZPo
                          const XYZPoint & to0, const XYZPoint & to1, const XYZPoint & to2 )
 {
    // takes impl. from CLHEP ( E.Chernyaev). To be checked
-   
+
    XYZVector x1,y1,z1, x2,y2,z2;
    x1 = (fr1 - fr0).Unit();
    y1 = (fr2 - fr0).Unit();
    x2 = (to1 - to0).Unit();
    y2 = (to2 - to0).Unit();
-   
+
    //   C H E C K   A N G L E S
-   
+
    double cos1, cos2;
    cos1 = x1.Dot(y1);
    cos2 = x2.Dot(y2);
-   
+
    if (std::fabs(1.0-cos1) <= 0.000001 || std::fabs(1.0-cos2) <= 0.000001) {
       std::cerr << "Transform3D: Error : zero angle between axes" << std::endl;
       SetIdentity();
@@ -63,12 +63,12 @@ Transform3D::Transform3D(const XYZPoint & fr0, const XYZPoint & fr1, const XYZPo
          std::cerr << "Transform3D: Warning: angles between axes are not equal"
          << std::endl;
       }
-      
+
       //   F I N D   R O T A T I O N   M A T R I X
-      
+
       z1 = (x1.Cross(y1)).Unit();
       y1  = z1.Cross(x1);
-      
+
       z2 = (x2.Cross(y2)).Unit();
       y2  = z2.Cross(x2);
 
@@ -79,7 +79,7 @@ Transform3D::Transform3D(const XYZPoint & fr0, const XYZPoint & fr1, const XYZPo
       double x2x = x2.x();      double x2y = x2.y();      double x2z = x2.z();
       double y2x = y2.x();      double y2y = y2.y();      double y2z = y2.z();
       double z2x = z2.x();      double z2y = z2.y();      double z2z = z2.z();
-      
+
       double detxx =  (y1y *z1z  - z1y *y1z );
       double detxy = -(y1x *z1z  - z1x *y1z );
       double detxz =  (y1x *z1y  - z1x *y1y );
@@ -89,7 +89,7 @@ Transform3D::Transform3D(const XYZPoint & fr0, const XYZPoint & fr1, const XYZPo
       double detzx =  (x1y *y1z  - y1y *x1z );
       double detzy = -(x1x *y1z  - y1x *x1z );
       double detzz =  (x1x *y1y  - y1x *x1y );
-      
+
       double txx = x2x *detxx + y2x *detyx + z2x *detzx;
       double txy = x2x *detxy + y2x *detyy + z2x *detzy;
       double txz = x2x *detxz + y2x *detyz + z2x *detzz;
@@ -99,12 +99,12 @@ Transform3D::Transform3D(const XYZPoint & fr0, const XYZPoint & fr1, const XYZPo
       double tzx = x2z *detxx + y2z *detyx + z2z *detzx;
       double tzy = x2z *detxy + y2z *detyy + z2z *detzy;
       double tzz = x2z *detxz + y2z *detyz + z2z *detzz;
-      
+
       //   S E T    T R A N S F O R M A T I O N
-      
+
       double dx1 = fr0.x(), dy1 = fr0.y(), dz1 = fr0.z();
       double dx2 = to0.x(), dy2 = to0.y(), dz2 = to0.z();
-      
+
       SetComponents(txx, txy, txz, dx2-txx*dx1-txy*dy1-txz*dz1,
                     tyx, tyy, tyz, dy2-tyx*dx1-tyy*dy1-tyz*dz1,
                     tzx, tzy, tzz, dz2-tzx*dx1-tzy*dy1-tzz*dz1);
@@ -120,7 +120,7 @@ void Transform3D::Invert()
    // Author: E.Chernyaev (IHEP/Protvino)            Revised:
    //
    // Function: Find inverse affine transformation.
-   
+
    double detxx = fM[kYY]*fM[kZZ] - fM[kYZ]*fM[kZY];
    double detxy = fM[kYX]*fM[kZZ] - fM[kYZ]*fM[kZX];
    double detxz = fM[kYX]*fM[kZY] - fM[kYY]*fM[kZX];
@@ -157,7 +157,7 @@ void Transform3D::SetIdentity()
 void Transform3D::AssignFrom (const Rotation3D  & r,  const XYZVector & v)
 {
    // assignment  from rotation + translation
-   
+
    double rotData[9];
    r.GetComponents(rotData, rotData +9);
    // first raw
@@ -169,7 +169,7 @@ void Transform3D::AssignFrom (const Rotation3D  & r,  const XYZVector & v)
    // third raw
    for (int i = 0; i < 3; ++i)
       fM[kZX+i] = rotData[6+i];
-   
+
    // translation data
    double vecData[3];
    v.GetCoordinates(vecData, vecData+3);
@@ -215,7 +215,7 @@ std::ostream & operator<< (std::ostream & os, const Transform3D & t)
 {
    // TODO - this will need changing for machine-readable issues
    //        and even the human readable form needs formatting improvements
-   
+
    double m[12];
    t.GetComponents(m, m+12);
    os << "\n" << m[0] << "  " << m[1] << "  " << m[2] << "  " << m[3] ;

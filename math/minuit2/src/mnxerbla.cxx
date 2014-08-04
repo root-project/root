@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -27,7 +27,7 @@ namespace ROOT {
 int mnxerbla(const char* srname, int info) {
     /* Format strings */
 //     static char fmt_9999[] = "(\002 ** On entry to \002,a6,\002 Parameter nu\// mber \002,i2,\002 had \002,\002an illegal Value\002)";
-  
+
 /*  -- LAPACK auxiliary routine (version 3.0) -- */
 /*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd., */
 /*     Courant Institute, Argonne National Lab, and Rice University */
@@ -59,11 +59,11 @@ int mnxerbla(const char* srname, int info) {
 /* ===================================================================== */
 
 /*     .. Executable Statements .. */
-   
+
    std::cout<<" ** On entry to "<<srname<<" Parameter number "<<info<<" had an illegal Value"<<std::endl;
-   
+
    /*     End of XERBLA */
-   
+
    return 0;
 } /* xerbla_ */
 

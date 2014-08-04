@@ -27,7 +27,7 @@ void Zbi_Zgamma() {
   // for Z_Gamma, use uniform prior on b.
   RooWorkspace* w = new RooWorkspace("w",true);
   w->factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0,300]))");
-  w->factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))");     
+  w->factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))");
   w->factory("Uniform::prior_b(b)");
 
   // construct the Bayesian-averaged model (eg. a projection pdf)
@@ -43,7 +43,7 @@ void Zbi_Zgamma() {
   // compare analytic calculation of Z_Bi
   // with the numerical RooFit implementation of Z_Gamma
   // for an example with x = 150, y = 100
-   
+
   // numeric RooFit Z_Gamma
   w->var("y")->setVal(100);
   w->var("x")->setVal(150);
@@ -51,7 +51,7 @@ void Zbi_Zgamma() {
   cdf->getVal(); // get ugly print messages out of the way
 
   cout << "Hybrid p-value = " << cdf->getVal() << endl;
-  cout << "Z_Gamma Significance  = " << 
+  cout << "Z_Gamma Significance  = " <<
     PValueToSignificance(1-cdf->getVal()) << endl;
 
   // analytic Z_Bi

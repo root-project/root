@@ -58,7 +58,7 @@ enum EOverlapType {
 private:
    TGeoOverlap(const TGeoOverlap&); // Not implemented
    TGeoOverlap& operator=(const TGeoOverlap&); // Not implemented
-   
+
 protected:
    Double_t         fOverlap;     // overlap distance
    TGeoVolume      *fVolume1;     // first volume
@@ -73,7 +73,7 @@ public:
                const TGeoMatrix *matrix1, const TGeoMatrix *matrix2,
                Bool_t isovlp=kTRUE,  Double_t ovlp=0.01);
    virtual           ~TGeoOverlap();
-   
+
    void              Browse(TBrowser *b);
    virtual Int_t     Compare(const TObject *obj) const;
    virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
@@ -103,9 +103,9 @@ public:
    void              SetSecondMatrix(TGeoMatrix *matrix) {*fMatrix2 = matrix;}
    void              SetOverlap(Double_t ovlp)  {fOverlap=ovlp;}
    void              Validate() const; // *MENU*
-   
+
    ClassDef(TGeoOverlap, 2)         // base class for geometical overlaps
 };
-      
+
 #endif
- 
+

@@ -40,7 +40,7 @@ protected:
    Int_t     fPower;                     //possible values kFitPower2,4,6,8,10,12, for details see references. It applies only for Awmi fitting function.
    Int_t     fFitTaylor;                 //order of Taylor expansion, possible values kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi fitting function.
    Double_t  fAlpha;                     //convergence coefficient, input parameter, it should be positive number and <=1, for details see references
-   Double_t  fChi;                       //here the fitting functions return resulting chi square   
+   Double_t  fChi;                       //here the fitting functions return resulting chi square
    Double_t *fPositionInit;              //[fNPeaks] array of initial values of peaks positions, input parameters
    Double_t *fPositionCalc;              //[fNPeaks] array of calculated values of fitted positions, output parameters
    Double_t *fPositionErr;               //[fNPeaks] array of position errors
@@ -70,14 +70,14 @@ protected:
    Double_t  fA2Init;                    //initial value of background a2 parameter(backgroud is estimated as a0+a1*x+a2*x*x)
    Double_t  fA2Calc;                    //calculated value of background a2 parameter
    Double_t  fA2Err;                     //error value of background a2 parameter
-   Bool_t   *fFixPosition;               //[fNPeaks] array of logical values which allow to fix appropriate positions (not fit). However they are present in the estimated functional   
-   Bool_t   *fFixAmp;                    //[fNPeaks] array of logical values which allow to fix appropriate amplitudes (not fit). However they are present in the estimated functional      
-   Bool_t    fFixSigma;                  //logical value of sigma parameter, which allows to fix the parameter (not to fit).   
-   Bool_t    fFixT;                      //logical value of t parameter, which allows to fix the parameter (not to fit).      
-   Bool_t    fFixB;                      //logical value of b parameter, which allows to fix the parameter (not to fit).   
-   Bool_t    fFixS;                      //logical value of s parameter, which allows to fix the parameter (not to fit).      
+   Bool_t   *fFixPosition;               //[fNPeaks] array of logical values which allow to fix appropriate positions (not fit). However they are present in the estimated functional
+   Bool_t   *fFixAmp;                    //[fNPeaks] array of logical values which allow to fix appropriate amplitudes (not fit). However they are present in the estimated functional
+   Bool_t    fFixSigma;                  //logical value of sigma parameter, which allows to fix the parameter (not to fit).
+   Bool_t    fFixT;                      //logical value of t parameter, which allows to fix the parameter (not to fit).
+   Bool_t    fFixB;                      //logical value of b parameter, which allows to fix the parameter (not to fit).
+   Bool_t    fFixS;                      //logical value of s parameter, which allows to fix the parameter (not to fit).
    Bool_t    fFixA0;                     //logical value of a0 parameter, which allows to fix the parameter (not to fit).
-   Bool_t    fFixA1;                     //logical value of a1 parameter, which allows to fix the parameter (not to fit).   
+   Bool_t    fFixA1;                     //logical value of a1 parameter, which allows to fix the parameter (not to fit).
    Bool_t    fFixA2;                     //logical value of a2 parameter, which allows to fix the parameter (not to fit).
 
 public:
@@ -97,21 +97,21 @@ public:
        kFitTaylorOrderSecond =1,
        kFitNumRegulCycles =100
    };
-   TSpectrumFit(void); //default constructor     
-   TSpectrumFit(Int_t numberPeaks); 
+   TSpectrumFit(void); //default constructor
+   TSpectrumFit(Int_t numberPeaks);
    virtual ~TSpectrumFit();
 
    //auxiliary functions for 1. parameter fit functions
-protected:   
+protected:
    Double_t            Area(Double_t a,Double_t sigma,Double_t t,Double_t b);
    Double_t            Dera1(Double_t i);
    Double_t            Dera2(Double_t i);
-   Double_t            Deramp(Double_t i,Double_t i0,Double_t sigma,Double_t t,Double_t s,Double_t b);   
+   Double_t            Deramp(Double_t i,Double_t i0,Double_t sigma,Double_t t,Double_t s,Double_t b);
    Double_t            Derb(Int_t num_of_fitted_peaks,Double_t i,const Double_t* parameter,Double_t sigma,Double_t t,Double_t b);
    Double_t            Derderi0(Double_t i,Double_t amp,Double_t i0,Double_t sigma);
    Double_t            Derdersigma(Int_t num_of_fitted_peaks,Double_t i,const Double_t* parameter,Double_t sigma);
    Double_t            Derfc(Double_t x);
-   Double_t            Deri0(Double_t i,Double_t amp,Double_t i0,Double_t sigma,Double_t t,Double_t s,Double_t b);   
+   Double_t            Deri0(Double_t i,Double_t amp,Double_t i0,Double_t sigma,Double_t t,Double_t s,Double_t b);
    Double_t            Derpa(Double_t sigma,Double_t t,Double_t b);
    Double_t            Derpb(Double_t a,Double_t sigma,Double_t t,Double_t b);
    Double_t            Derpsigma(Double_t a,Double_t t,Double_t b);
@@ -120,27 +120,27 @@ protected:
    Double_t            Dersigma(Int_t num_of_fitted_peaks,Double_t i,const Double_t* parameter,Double_t sigma,Double_t t,Double_t s,Double_t b);
    Double_t            Dert(Int_t num_of_fitted_peaks,Double_t i,const Double_t* parameter,Double_t sigma,Double_t b);
    Double_t            Erfc(Double_t x);
-   Double_t            Ourpowl(Double_t a,Int_t pw);   
+   Double_t            Ourpowl(Double_t a,Int_t pw);
    Double_t            Shape(Int_t num_of_fitted_peaks,Double_t i,const Double_t *parameter,Double_t sigma,Double_t t,Double_t s,Double_t b,Double_t a0,Double_t a1,Double_t a2);
    void                StiefelInversion(Double_t **a,Int_t rozmer);
 
 public:
-   void                FitAwmi(Double_t *source); 
-   void                FitStiefel(Double_t *source); 
-   Double_t           *GetAmplitudes() const {return fAmpCalc;}   
+   void                FitAwmi(Double_t *source);
+   void                FitStiefel(Double_t *source);
+   Double_t           *GetAmplitudes() const {return fAmpCalc;}
    Double_t           *GetAmplitudesErrors() const {return fAmpErr;}
-   Double_t           *GetAreas() const {return fArea;}            
-   Double_t           *GetAreasErrors() const {return fAreaErr;}               
+   Double_t           *GetAreas() const {return fArea;}
+   Double_t           *GetAreasErrors() const {return fAreaErr;}
    void                GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Double_t &a1, Double_t &a1Err, Double_t &a2, Double_t &a2Err);
    Double_t            GetChi() const {return fChi;}
    Double_t           *GetPositions() const {return fPositionCalc;}
-   Double_t           *GetPositionsErrors() const {return fPositionErr;}   
+   Double_t           *GetPositionsErrors() const {return fPositionErr;}
    void                GetSigma(Double_t &sigma, Double_t &sigmaErr);
    void                GetTailParameters(Double_t &t, Double_t &tErr, Double_t &b, Double_t &bErr, Double_t &s, Double_t &sErr);
    void                SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Double_t a1Init, Bool_t fixA1, Double_t a2Init, Bool_t fixA2);
    void                SetFitParameters(Int_t xmin,Int_t xmax, Int_t numberIterations, Double_t alpha, Int_t statisticType, Int_t alphaOptim, Int_t power, Int_t fitTaylor);
-   void                SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Double_t *positionInit, const Bool_t *fixPosition, const Double_t *ampInit, const Bool_t *fixAmp);    
-   void                SetTailParameters(Double_t tInit, Bool_t fixT, Double_t bInit, Bool_t fixB, Double_t sInit, Bool_t fixS); 
+   void                SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Double_t *positionInit, const Bool_t *fixPosition, const Double_t *ampInit, const Bool_t *fixAmp);
+   void                SetTailParameters(Double_t tInit, Bool_t fixT, Double_t bInit, Bool_t fixB, Double_t sInit, Bool_t fixS);
 
    ClassDef(TSpectrumFit,1)  //Spectrum Fitter using algorithm without matrix inversion and conjugate gradient method for symmetrical matrices (Stiefel-Hestens method)
 };

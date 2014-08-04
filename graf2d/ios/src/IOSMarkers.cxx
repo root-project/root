@@ -21,7 +21,7 @@ namespace GraphicUtils {
 //______________________________________________________________________________
 void DrawMarkerDot(CGContextRef ctx, unsigned n, const TPoint *xy)
 {
-   for (unsigned i = 0; i < n; ++i) 
+   for (unsigned i = 0; i < n; ++i)
       CGContextFillRect(ctx, CGRectMake(xy[i].fX, xy[i].fY, 1.f, 1.f));
 }
 
@@ -29,16 +29,16 @@ void DrawMarkerDot(CGContextRef ctx, unsigned n, const TPoint *xy)
 void DrawMarkerPlus(CGContextRef ctx, unsigned n, const TPoint *xy, Size_t markerSize)
 {
    const Double_t im = 4 * markerSize + 0.5;
-   
+
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-      
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, -im + x, y);
       CGContextAddLineToPoint(ctx, im + x, y);
       CGContextStrokePath(ctx);
-      
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, x, -im + y);
       CGContextAddLineToPoint(ctx, x, im + y);
@@ -50,7 +50,7 @@ void DrawMarkerPlus(CGContextRef ctx, unsigned n, const TPoint *xy, Size_t marke
 void DrawMarkerStar(CGContextRef ctx, unsigned n, const TPoint *xy, Size_t markerSize)
 {
    Double_t im = 4 * markerSize + 0.5;
-   
+
    TPoint star[8];
    star[0].fX = -im;  star[0].fY = 0;
    star[1].fX =  im;  star[1].fY = 0;
@@ -62,22 +62,22 @@ void DrawMarkerStar(CGContextRef ctx, unsigned n, const TPoint *xy, Size_t marke
    star[5].fX =  im;  star[5].fY = im;
    star[6].fX = -im;  star[6].fY = im;
    star[7].fX =  im;  star[7].fY = -im;
-   
+
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-      
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, star[0].fX + x, star[0].fY + y);
       CGContextAddLineToPoint(ctx, star[1].fX + x, star[1].fY + y);
       CGContextStrokePath(ctx);
 
-      CGContextBeginPath(ctx);      
+      CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, star[2].fX + x, star[2].fY + y);
       CGContextAddLineToPoint(ctx, star[3].fX + x, star[3].fY + y);
       CGContextStrokePath(ctx);
 
-      CGContextBeginPath(ctx);      
+      CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, star[4].fX + x, star[4].fY + y);
       CGContextAddLineToPoint(ctx, star[5].fX + x, star[5].fY + y);
       CGContextStrokePath(ctx);
@@ -95,9 +95,9 @@ void DrawMarkerOpenCircle(CGContextRef ctx, unsigned n, const TPoint *xy, Size_t
    Double_t r = 4 * markerSize + 0.5;
    if (r > 100.)
       r = 100.;//as in TGX11.
-   
+
    const Double_t d = 2 * r;
-   
+
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
@@ -115,11 +115,11 @@ void DrawMarkerX(CGContextRef ctx, unsigned n, const TPoint *xy, Size_t markerSi
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
 
-      CGContextBeginPath(ctx);      
+      CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, -im + x, -im + y);
       CGContextAddLineToPoint(ctx, im + x, im + y);
       CGContextStrokePath(ctx);
-      
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, -im + x, im + y);
       CGContextAddLineToPoint(ctx, im + x, -im + y);
@@ -138,7 +138,7 @@ void DrawMarkerFullDotSmall(CGContextRef ctx, unsigned n, const TPoint *xy)
       CGContextMoveToPoint(ctx, -1. + x, y);
       CGContextAddLineToPoint(ctx, x + 1., y);
       CGContextStrokePath(ctx);
-      
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, x, -1. + y);
       CGContextAddLineToPoint(ctx, x, 1. + y);
@@ -165,7 +165,7 @@ void DrawMarkerFullDotLarge(CGContextRef ctx, unsigned n, const TPoint *xy, Size
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-      
+
       const CGRect rect = CGRectMake(x - radius, y - radius, d, d);
       CGContextFillEllipseInRect(ctx, rect);
    }
@@ -226,7 +226,7 @@ void DrawMarkerOpenTriangleUp(CGContextRef ctx, unsigned n, const TPoint *xy, Si
 //______________________________________________________________________________
 void DrawMarkerOpenTriangleDown(CGContextRef ctx, unsigned n, const TPoint *xy, Size_t markerSize)
 {
-   const Int_t im = Int_t(4 * markerSize + 0.5);   
+   const Int_t im = Int_t(4 * markerSize + 0.5);
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
@@ -243,7 +243,7 @@ void DrawMarkerOpenTriangleDown(CGContextRef ctx, unsigned n, const TPoint *xy, 
 //______________________________________________________________________________
 void DrawMarkerFullTriangleDown(CGContextRef ctx, unsigned n, const TPoint *xy, Size_t markerSize)
 {
-   const Int_t im = Int_t(4 * markerSize + 0.5);   
+   const Int_t im = Int_t(4 * markerSize + 0.5);
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
@@ -261,11 +261,11 @@ void DrawMarkerFullDiamond(CGContextRef ctx, unsigned n, const TPoint *xy, Size_
 {
    const Int_t im  = Int_t(4 * markerSize + 0.5);
    const Int_t imx = Int_t(2.66 * markerSize + 0.5);
-   
+
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-      
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, x - imx,  y);
       CGContextAddLineToPoint(ctx, x, y - im);
@@ -280,11 +280,11 @@ void DrawMarkerOpenDiamond(CGContextRef ctx, unsigned n, const TPoint *xy, Size_
 {
    const Int_t im  = Int_t(4 * markerSize + 0.5);
    const Int_t imx = Int_t(2.66 * markerSize + 0.5);
-   
+
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-      
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, x - imx,  y);
       CGContextAddLineToPoint(ctx, x, y - im);
@@ -304,7 +304,7 @@ void DrawMarkerFullCross(CGContextRef ctx, unsigned n, const TPoint *xy, Size_t 
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-   
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, x - im, y - imx);
       CGContextAddLineToPoint(ctx, x - imx, y - imx);
@@ -333,7 +333,7 @@ void DrawMarkerOpenCross(CGContextRef ctx, unsigned n, const TPoint *xy, Size_t 
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;
-   
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, x - im, y - imx);
       CGContextAddLineToPoint(ctx, x - imx, y - imx);
@@ -371,43 +371,43 @@ void DrawMarkerFullStar(CGContextRef ctx, unsigned n, const TPoint *xy, Size_t m
       CGContextAddLineToPoint(ctx, x - im2, y + im1);
       CGContextAddLineToPoint(ctx, x - im4, y - im4);
       CGContextFillPath(ctx);
- 
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, x - im2, y + im1);//1
       CGContextAddLineToPoint(ctx, x - im3, y + im);//2
       CGContextAddLineToPoint(ctx, x, y + im2);//3
       CGContextFillPath(ctx);
-      
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, x, y + im2);//3
       CGContextAddLineToPoint(ctx, x + im3, y + im);//4
       CGContextAddLineToPoint(ctx, x + im2, y + im1);//5
       CGContextFillPath(ctx);
-           
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, x + im2, y + im1);//5
       CGContextAddLineToPoint(ctx, x + im, y - im4);//6
       CGContextAddLineToPoint(ctx,x + im4, y - im4);//7
       CGContextFillPath(ctx);
-      
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, x + im4, y - im4);//7
       CGContextAddLineToPoint(ctx, x, y - im);//8
       CGContextAddLineToPoint(ctx, x - im4, y - im4);//9
       CGContextFillPath(ctx);
-            
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, x - im4, y - im4);//9
       CGContextAddLineToPoint(ctx, x - im2, y + im1);//1
       CGContextAddLineToPoint(ctx, x, y + im2);//3
       CGContextFillPath(ctx);
-            
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, x - im4, y - im4);//9
       CGContextAddLineToPoint(ctx, x, y + im2);//3
       CGContextAddLineToPoint(ctx, x + im2, y + im1);//5
       CGContextFillPath(ctx);
-            
+
       CGContextBeginPath(ctx);
       CGContextMoveToPoint(ctx, x - im4, y - im4);//9
       CGContextAddLineToPoint(ctx, x + im2, y + im1);//5
@@ -424,7 +424,7 @@ void DrawMarkerOpenStar(CGContextRef ctx, unsigned n, const TPoint *xy, Size_t m
    const Int_t im2 = Int_t(2.00 * markerSize + 0.5);
    const Int_t im3 = Int_t(2.66 * markerSize + 0.5);
    const Int_t im4 = Int_t(1.33 * markerSize + 0.5);
-   
+
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
       const Double_t y = xy[i].fY;

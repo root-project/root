@@ -89,7 +89,7 @@ public:
 
    private:
    void CopyPoly(TSplinePoly const &other);
-   
+
    ClassDef(TSplinePoly,2) // Spline polynomial terms
 };
 
@@ -131,7 +131,7 @@ public:
 
 private:
    void CopyPoly(TSplinePoly3 const &other);
-   
+
    ClassDef(TSplinePoly3,1)  // Third spline polynomial terms
 };
 

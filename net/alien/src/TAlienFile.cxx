@@ -285,10 +285,10 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
          repcommand += " 0 ";
          repcommand += imagenr;
       }
-      
+
       if (gSystem->Getenv("ALIEN_SITE")) {
          repcommand += " 0 ";
-         repcommand += gSystem->Getenv("ALIEN_SITE"); 
+         repcommand += gSystem->Getenv("ALIEN_SITE");
       }
       result = gGrid->Command(repcommand.Data(), kFALSE, TAlien::kOUTPUT);
       alienResult = dynamic_cast < TAlienResult * >(result);
@@ -333,19 +333,19 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
          TObject *seObject = map->GetValue("se");
          seStr = dynamic_cast < TObjString * >(seObject);
          if (seStr) seStrs = seStr->GetName();
-         
+
          TObject *nreplicasObject = map->GetValue("nSEs");
          if (nreplicasObject) {
             snreplicas = nreplicasObject->GetName();
             nreplicas = snreplicas.Atoi();
-         }   
-         
+         }
+
          TObject *guidObject = map->GetValue("guid");
          if (guidObject) sguid = guidObject->GetName();
 
          TObject *pfnObject = map->GetValue("pfn");
          if (pfnObject) pfnStr = pfnObject->GetName();
-         
+
          if (map->GetValue("eof")) {
             imageeof = kTRUE;
             // there is only one result line .... in case it is at all ....
@@ -496,7 +496,7 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
       TAlienFile *alienfile =
           new TAlienFile(fAUrl.GetUrl(), fAOption, ftitle, compress,
                          parallelopen, lUrl.GetUrl(), authz);
-      timer.Stop();                   
+      timer.Stop();
       if (alienfile->IsZombie()) {
          delete alienfile;
          if (fAWritable) {

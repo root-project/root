@@ -335,7 +335,7 @@ void TGVerticalLayout::Layout()
             size.fHeight = 1;
          ptr->fFrame->MoveResize(x, y, size.fWidth, size.fHeight);
 
-         fModified = fModified || (ptr->fFrame->GetX() != x) || 
+         fModified = fModified || (ptr->fFrame->GetX() != x) ||
                     (ptr->fFrame->GetY() != y) ||
                     (ptr->fFrame->GetWidth() != size.fWidth) ||
                     (ptr->fFrame->GetHeight() != size.fHeight);
@@ -493,7 +493,7 @@ void TGHorizontalLayout::Layout()
 
          ptr->fFrame->MoveResize(x, y, size.fWidth, size.fHeight);
 
-         fModified = fModified || (ptr->fFrame->GetX() != x) || 
+         fModified = fModified || (ptr->fFrame->GetX() != x) ||
                     (ptr->fFrame->GetY() != y) ||
                     (ptr->fFrame->GetWidth() != size.fWidth) ||
                     (ptr->fFrame->GetHeight() != size.fHeight);
@@ -550,7 +550,7 @@ void TGRowLayout::Layout()
          size = ptr->fFrame->GetDefaultSize();
          ptr->fFrame->Move(x, y);
 
-         fModified = fModified || (ptr->fFrame->GetX() != x) || 
+         fModified = fModified || (ptr->fFrame->GetX() != x) ||
                     (ptr->fFrame->GetY() != y);
 
          ptr->fFrame->Layout();
@@ -606,7 +606,7 @@ void TGColumnLayout::Layout()
       if (ptr->fState & kIsVisible) {
          size = ptr->fFrame->GetDefaultSize();
          ptr->fFrame->Move(x, y);
-         fModified = fModified || (ptr->fFrame->GetX() != x) || 
+         fModified = fModified || (ptr->fFrame->GetX() != x) ||
                     (ptr->fFrame->GetY() != y);
          ptr->fFrame->Layout();
          y += size.fHeight + fSep;
@@ -681,7 +681,7 @@ void TGMatrixLayout::Layout()
    next.Reset();
    while ((ptr = (TGFrameElement *) next())) {
       ptr->fFrame->Move(x, y);
-      fModified = fModified || (ptr->fFrame->GetX() != x) || 
+      fModified = fModified || (ptr->fFrame->GetX() != x) ||
                    (ptr->fFrame->GetY() != y);
 
       ptr->fFrame->Layout();
@@ -756,7 +756,7 @@ TGTileLayout::TGTileLayout(TGCompositeFrame *main, Int_t sep)
    fMain = main;
    fSep  = sep;
    fList = fMain->GetList();
-   fModified = kTRUE; 
+   fModified = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -800,7 +800,7 @@ void TGTileLayout::Layout()
       else // defaults to kLHintsTop
          yw = y;
 
-      fModified = fModified || (ptr->fFrame->GetX() != xw) || 
+      fModified = fModified || (ptr->fFrame->GetX() != xw) ||
                  (ptr->fFrame->GetY() != yw);
       ptr->fFrame->Move(xw, yw);
       if (hints & kLHintsExpandX)
@@ -893,7 +893,7 @@ void TGListLayout::Layout()
       else // defaults to kLHintsTop
          yw = y;
 
-      fModified = fModified || (ptr->fFrame->GetX() != xw) || 
+      fModified = fModified || (ptr->fFrame->GetX() != xw) ||
                  (ptr->fFrame->GetY() != yw);
       ptr->fFrame->Move(xw, yw);
       if (hints & kLHintsExpandX)
@@ -963,7 +963,7 @@ void TGListDetailsLayout::Layout()
       if (ptr->fState & kIsVisible) {
          csize = ptr->fFrame->GetDefaultSize();
 
-         fModified = fModified || (ptr->fFrame->GetX() != x) || 
+         fModified = fModified || (ptr->fFrame->GetX() != x) ||
                      (ptr->fFrame->GetY() != y);
 
          ptr->fFrame->MoveResize(x, y, msize.fWidth, csize.fHeight);
@@ -1009,7 +1009,7 @@ void TGLayoutHints::SavePrimitive(std::ostream &out, Option_t * option/*= ""*/)
    UInt_t pad = GetPadLeft()+GetPadRight()+GetPadTop()+GetPadBottom();
 
    if (!GetLayoutHints()) return;
-   
+
    if ((option == 0) || strcmp(option, "nocoma"))
       out << ", ";
 

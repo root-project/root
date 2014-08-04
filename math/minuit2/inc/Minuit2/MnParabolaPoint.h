@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -16,7 +16,7 @@ namespace ROOT {
 
 
 
-/** 
+/**
 
 A point of a parabola.
 
@@ -42,11 +42,11 @@ public:
 
 
   /**
-    
+
   Initializes the point with its coordinates.
 
   @param x the x (first) coordinate of the point.
-  @param y the y (second) coordinate of the point. 
+  @param y the y (second) coordinate of the point.
 
   */
 

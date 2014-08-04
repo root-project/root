@@ -74,7 +74,7 @@ private:
                      *fPlugin;           // User iterator plugin for changing pain volume properties
    TObjArray         *fVisVolumes;       // list of visible volumes
    Bool_t             fIsEditable;       // flag that geometry is editable
-   
+
    void               DefineColors() const;
    void               LocalToMasterVect(const Double_t *local, Double_t *master) const;
 
@@ -88,7 +88,7 @@ public:
    virtual TVirtualGeoTrack *AddTrack(Int_t id, Int_t pdgcode, TObject *part);
    virtual void       AddTrackPoint(Double_t *point, Double_t *box, Bool_t reset=kFALSE);
    virtual void       BombTranslation(const Double_t *tr, Double_t *bombtr);
-   virtual void       CheckBoundaryErrors(Int_t ntracks=1000000, Double_t radius=-1.); 
+   virtual void       CheckBoundaryErrors(Int_t ntracks=1000000, Double_t radius=-1.);
    virtual void       CheckBoundaryReference(Int_t icheck=-1);
    virtual void       CheckGeometryFull(Bool_t checkoverlaps=kTRUE, Bool_t checkcrossings=kTRUE, Int_t nrays=10000, const Double_t *vertex=NULL);
    virtual void       CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
@@ -117,7 +117,7 @@ public:
    virtual void       ExecuteShapeEvent(TGeoShape *shape, Int_t event, Int_t px, Int_t py);
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py);
    virtual const char*GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const;
-   virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const 
+   virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const
                                     {bombx=fBombX; bomby=fBombY; bombz=fBombZ; bombr=fBombR;}
    virtual Int_t      GetBombMode() const      {return fExplodedView;}
    virtual TGeoNode  *GetCheckedNode() {return fCheckedNode;}
@@ -125,7 +125,7 @@ public:
    virtual Int_t      GetColor(Int_t base, Float_t light) const;
    virtual const char *GetDrawPath() const     {return fVisBranch.Data();}
    virtual TGeoVolume *GetDrawnVolume() const;
-   virtual TGeoVolume *GetTopVolume() const {return fTopVolume;} 
+   virtual TGeoVolume *GetTopVolume() const {return fTopVolume;}
    virtual Int_t      GetVisLevel() const      {return fVisLevel;}
    virtual Int_t      GetVisOption() const     {return fVisOption;}
    Int_t              GetNsegments() const     {return fNsegments;}
@@ -166,7 +166,7 @@ public:
    virtual void       SetTopVolume(TGeoVolume *vol) {fTopVolume = vol;}
    virtual void       SetVisLevel(Int_t level=3);
    virtual void       SetVisOption(Int_t option=0);
-   virtual Int_t      ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const;   
+   virtual Int_t      ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const;
    virtual void       Test(Int_t npoints, Option_t *option);
    virtual void       TestOverlaps(const char *path);
    virtual Bool_t     TestVoxels(TGeoVolume *vol);

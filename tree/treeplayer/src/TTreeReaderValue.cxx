@@ -84,7 +84,7 @@ ROOT::TTreeReaderValueBase::ProxyRead() {
 }
 
 //______________________________________________________________________________
-TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() { 
+TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() {
    // If we are reading a leaf, return the corresponding TLeaf.
 
    if (fLeafName.Length() > 0){
@@ -200,11 +200,11 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
             nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
             leafName = branchName(leafNameExpression);
             branchName = branchName(0, branchName.Length() - leafName.Length());
-            
+
             branch = fTreeReader->GetTree()->GetBranch(branchName);
             if (!branch) branch = fTreeReader->GetTree()->GetBranch(branchName + ".");
             if (leafName.Length()) nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
-            
+
             while (!branch && branchName.Contains(".")){
                leafName = branchName(leafNameExpression);
                branchName = branchName(0, fBranchName.Length() - leafName.Length());
@@ -283,7 +283,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                }
             }
 
-            
+
             if (!fStaticClassOffsets.size()) {
                Error("CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
                fProxy = 0;
@@ -335,7 +335,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
          return;
       }
    }
-   
+
 
    // Update named proxy's dictionary
    if (namedProxy && !namedProxy->GetDict()) {
@@ -374,8 +374,8 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
    dict = 0;
    if (branch->IsA() == TBranchElement::Class()) {
       TBranchElement* brElement = (TBranchElement*)branch;
-      if (brElement->GetType() == TBranchElement::kSTLNode || 
-            brElement->GetType() == TBranchElement::kLeafNode || 
+      if (brElement->GetType() == TBranchElement::kSTLNode ||
+            brElement->GetType() == TBranchElement::kLeafNode ||
             brElement->GetType() == TBranchElement::kObjectNode) {
 
          TStreamerInfo *streamerInfo = brElement->GetInfo();

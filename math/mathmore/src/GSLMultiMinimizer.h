@@ -35,28 +35,28 @@
 
 #include "Math/IFunction.h"
 
-#include <cassert> 
+#include <cassert>
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Math { 
+   namespace Math {
 
 
-/** 
-   GSLMultiMinimizer class , for minimizing multi-dimensional function 
-   using derivatives 
+/**
+   GSLMultiMinimizer class , for minimizing multi-dimensional function
+   using derivatives
 
    @ingroup MultiMin
 
-*/ 
+*/
 class GSLMultiMinimizer {
 
-public: 
+public:
 
-   /** 
+   /**
       Default constructor
-   */ 
-   GSLMultiMinimizer (ROOT::Math::EGSLMinimizerType type)  : 
+   */
+   GSLMultiMinimizer (ROOT::Math::EGSLMinimizerType type)  :
       fMinimizer(0),
       fType(0),
       fVec(0)
@@ -64,146 +64,146 @@ public:
       switch(type)
       {
       case ROOT::Math::kConjugateFR :
-         fType = gsl_multimin_fdfminimizer_conjugate_fr; 
-         break; 
-      case ROOT::Math::kConjugatePR : 
-         fType = gsl_multimin_fdfminimizer_conjugate_pr; 
+         fType = gsl_multimin_fdfminimizer_conjugate_fr;
          break;
-      case ROOT::Math::kVectorBFGS : 
-         fType = gsl_multimin_fdfminimizer_vector_bfgs; 
-         break; 
-      case ROOT::Math::kVectorBFGS2 : 
-#if defined (GSL_VERSION_NUM) && GSL_VERSION_NUM >= 1009 
-         // bfgs2 is available only for v>= 1.9 
-         fType = gsl_multimin_fdfminimizer_vector_bfgs2; 
-#else 
+      case ROOT::Math::kConjugatePR :
+         fType = gsl_multimin_fdfminimizer_conjugate_pr;
+         break;
+      case ROOT::Math::kVectorBFGS :
+         fType = gsl_multimin_fdfminimizer_vector_bfgs;
+         break;
+      case ROOT::Math::kVectorBFGS2 :
+#if defined (GSL_VERSION_NUM) && GSL_VERSION_NUM >= 1009
+         // bfgs2 is available only for v>= 1.9
+         fType = gsl_multimin_fdfminimizer_vector_bfgs2;
+#else
          MATH_INFO_MSG("GSLMultiMinimizer","minimizer BFSG2 does not exist with this GSL version , use BFGS");
          fType = gsl_multimin_fdfminimizer_vector_bfgs;
-#endif 
-         break; 
+#endif
+         break;
       case ROOT::Math::kSteepestDescent:
-         fType = gsl_multimin_fdfminimizer_steepest_descent; 
-         break; 
-      default: 
-         fType = gsl_multimin_fdfminimizer_conjugate_fr; 
-         break; 
+         fType = gsl_multimin_fdfminimizer_steepest_descent;
+         break;
+      default:
+         fType = gsl_multimin_fdfminimizer_conjugate_fr;
+         break;
       }
-                                     
+
    }
 
-   /** 
-      Destructor 
-   */ 
+   /**
+      Destructor
+   */
    ~GSLMultiMinimizer ()  {
-      if (fMinimizer != 0 ) gsl_multimin_fdfminimizer_free(fMinimizer); 
+      if (fMinimizer != 0 ) gsl_multimin_fdfminimizer_free(fMinimizer);
       // can free vector (is copied inside)
-      if (fVec != 0) gsl_vector_free(fVec); 
-   }  
+      if (fVec != 0) gsl_vector_free(fVec);
+   }
 
 private:
    // usually copying is non trivial, so we make this unaccessible
 
-   /** 
+   /**
       Copy constructor
-   */ 
-   GSLMultiMinimizer(const GSLMultiMinimizer &) {} 
+   */
+   GSLMultiMinimizer(const GSLMultiMinimizer &) {}
 
-   /** 
+   /**
       Assignment operator
-   */ 
+   */
    GSLMultiMinimizer & operator = (const GSLMultiMinimizer & rhs)  {
       if (this == &rhs) return *this;  // time saving self-test
       return *this;
    }
 
-public: 
+public:
 
    /**
-      set the function to be minimize the initial minimizer parameters, 
-      step size and tolerance in the line search 
-    */ 
-   int Set(const ROOT::Math::IMultiGradFunction & func, const double * x, double stepSize, double tol) { 
+      set the function to be minimize the initial minimizer parameters,
+      step size and tolerance in the line search
+    */
+   int Set(const ROOT::Math::IMultiGradFunction & func, const double * x, double stepSize, double tol) {
       // create function wrapper
-      fFunc.SetFunction(func); 
-      // create minimizer object (free previous one if already existing) 
-      unsigned int ndim = func.NDim(); 
-      CreateMinimizer( ndim ); 
-      // set initial values 
-      if (fVec != 0) gsl_vector_free(fVec);   
-      fVec = gsl_vector_alloc( ndim ); 
-      std::copy(x,x+ndim, fVec->data); 
-      assert(fMinimizer != 0); 
-      return gsl_multimin_fdfminimizer_set(fMinimizer, fFunc.GetFunc(), fVec, stepSize, tol); 
+      fFunc.SetFunction(func);
+      // create minimizer object (free previous one if already existing)
+      unsigned int ndim = func.NDim();
+      CreateMinimizer( ndim );
+      // set initial values
+      if (fVec != 0) gsl_vector_free(fVec);
+      fVec = gsl_vector_alloc( ndim );
+      std::copy(x,x+ndim, fVec->data);
+      assert(fMinimizer != 0);
+      return gsl_multimin_fdfminimizer_set(fMinimizer, fFunc.GetFunc(), fVec, stepSize, tol);
    }
 
-   /// create the minimizer from the type and size 
-   void CreateMinimizer(unsigned int n) { 
-      if (fMinimizer) gsl_multimin_fdfminimizer_free(fMinimizer); 
+   /// create the minimizer from the type and size
+   void CreateMinimizer(unsigned int n) {
+      if (fMinimizer) gsl_multimin_fdfminimizer_free(fMinimizer);
       fMinimizer = gsl_multimin_fdfminimizer_alloc(fType, n);
-   }  
+   }
 
-   std::string Name() const { 
+   std::string Name() const {
       if (fMinimizer == 0) return "undefined";
-      return std::string(gsl_multimin_fdfminimizer_name(fMinimizer) ); 
-   }
-   
-   int Iterate() { 
-      if (fMinimizer == 0) return -1; 
-      return gsl_multimin_fdfminimizer_iterate(fMinimizer); 
+      return std::string(gsl_multimin_fdfminimizer_name(fMinimizer) );
    }
 
-   /// x values at the minimum 
-   double * X() const { 
-      if (fMinimizer == 0) return 0; 
-      gsl_vector * x =  gsl_multimin_fdfminimizer_x(fMinimizer);       
-      return x->data; 
-   } 
-
-   /// function value at the minimum 
-   double Minimum() const { 
-      if (fMinimizer == 0) return 0; 
-      return gsl_multimin_fdfminimizer_minimum(fMinimizer);       
+   int Iterate() {
+      if (fMinimizer == 0) return -1;
+      return gsl_multimin_fdfminimizer_iterate(fMinimizer);
    }
 
-   /// gradient value at the minimum 
-   double * Gradient() const { 
-      if (fMinimizer == 0) return 0; 
-      gsl_vector * g =  gsl_multimin_fdfminimizer_gradient(fMinimizer);       
-      return g->data; 
+   /// x values at the minimum
+   double * X() const {
+      if (fMinimizer == 0) return 0;
+      gsl_vector * x =  gsl_multimin_fdfminimizer_x(fMinimizer);
+      return x->data;
+   }
+
+   /// function value at the minimum
+   double Minimum() const {
+      if (fMinimizer == 0) return 0;
+      return gsl_multimin_fdfminimizer_minimum(fMinimizer);
+   }
+
+   /// gradient value at the minimum
+   double * Gradient() const {
+      if (fMinimizer == 0) return 0;
+      gsl_vector * g =  gsl_multimin_fdfminimizer_gradient(fMinimizer);
+      return g->data;
    }
 
    /// restart minimization from current point
-   int Restart() { 
-      if (fMinimizer == 0) return -1; 
-      return gsl_multimin_fdfminimizer_restart(fMinimizer); 
+   int Restart() {
+      if (fMinimizer == 0) return -1;
+      return gsl_multimin_fdfminimizer_restart(fMinimizer);
    }
 
-   /// test gradient (ask from minimizer gradient vector) 
-   int TestGradient(double absTol) const { 
-      if (fMinimizer == 0) return -1; 
-      gsl_vector * g =  gsl_multimin_fdfminimizer_gradient(fMinimizer);       
-      return gsl_multimin_test_gradient( g, absTol);      
+   /// test gradient (ask from minimizer gradient vector)
+   int TestGradient(double absTol) const {
+      if (fMinimizer == 0) return -1;
+      gsl_vector * g =  gsl_multimin_fdfminimizer_gradient(fMinimizer);
+      return gsl_multimin_test_gradient( g, absTol);
    }
 
-   /// test gradient (require a vector gradient) 
-   int TestGradient(const double * g, double absTol) const { 
-      if (fVec == 0 ) return -1; 
-      unsigned int n = fVec->size; 
-      if (n == 0 ) return -1; 
+   /// test gradient (require a vector gradient)
+   int TestGradient(const double * g, double absTol) const {
+      if (fVec == 0 ) return -1;
+      unsigned int n = fVec->size;
+      if (n == 0 ) return -1;
       std::copy(g,g+n, fVec->data);
-      return gsl_multimin_test_gradient( fVec, absTol);      
+      return gsl_multimin_test_gradient( fVec, absTol);
    }
 
 
-private: 
+private:
 
-   gsl_multimin_fdfminimizer * fMinimizer; 
-   GSLMultiMinDerivFunctionWrapper fFunc; 
-   const gsl_multimin_fdfminimizer_type * fType; 
+   gsl_multimin_fdfminimizer * fMinimizer;
+   GSLMultiMinDerivFunctionWrapper fFunc;
+   const gsl_multimin_fdfminimizer_type * fType;
    // cached vector to avoid re-allocating every time a new one
-   mutable gsl_vector * fVec; 
+   mutable gsl_vector * fVec;
 
-}; 
+};
 
    } // end namespace Math
 

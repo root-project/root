@@ -300,7 +300,7 @@ void XrdProofSched::DumpQueues(const char *prefix)
 
    TRACE(ALL," ++++++++++++++++++++ DumpQueues ++++++++++++++++++++++++++++++++ ");
    if (prefix) TRACE(ALL, " +++ Called from: "<<prefix);
-   TRACE(ALL," +++ # of waiting sessions: "<<fQueue.size()); 
+   TRACE(ALL," +++ # of waiting sessions: "<<fQueue.size());
    std::list<XrdProofdProofServ *>::iterator ii;
    int i = 0;
    for (ii = fQueue.begin(); ii != fQueue.end(); ii++) {

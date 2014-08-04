@@ -85,16 +85,16 @@ Bool_t TGComboBoxPopup::HandleButton(Event_t *event)
    // Handle mouse button event in combo box popup.
 
    if (event->fType == kButtonPress && event->fCode == kButton1) {
-      if ((fListBox != 0) && (fSelected != 0) && 
+      if ((fListBox != 0) && (fSelected != 0) &&
           fListBox->GetSelectedEntry() != fSelected) {
-         // in the case the combo box popup is closed by clicking outside the 
+         // in the case the combo box popup is closed by clicking outside the
          // list box, then select the previously selected entry
          fListBox->Select(fSelected->EntryId());
       }
       EndPopup();
    }
    else {
-      // reset the dragging flag of the scrollbar when the button is 
+      // reset the dragging flag of the scrollbar when the button is
       // released outside the scrollbar itself
       fListBox->GetScrollBar()->SetDragging(kFALSE);
    }
@@ -184,7 +184,7 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
 //______________________________________________________________________________
 void TGComboBoxPopup::KeyPressed(TGFrame *f, UInt_t keysym, UInt_t)
 {
-   // Slot handling the key press events. 
+   // Slot handling the key press events.
 
    switch ((EKeySym)keysym) {
       case kKey_Enter:
@@ -201,7 +201,7 @@ void TGComboBoxPopup::KeyPressed(TGFrame *f, UInt_t keysym, UInt_t)
          EndPopup();
          break;
       case kKey_Escape:
-         if (fListBox) 
+         if (fListBox)
             ((TGContainer *)fListBox->GetContainer())->UnSelectAll();
          EndPopup();
          break;
@@ -305,8 +305,8 @@ void TGComboBox::Init()
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier, kButtonPressMask |
                          kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
 
-   fListBox->GetContainer()->Connect("KeyPressed(TGFrame*, UInt_t, UInt_t)", 
-                                     "TGComboBoxPopup", fComboFrame, 
+   fListBox->GetContainer()->Connect("KeyPressed(TGFrame*, UInt_t, UInt_t)",
+                                     "TGComboBoxPopup", fComboFrame,
                                      "KeyPressed(TGFrame*, UInt_t, UInt_t)");
    // Drop down listbox of combo box should react to pointer motion
    // so it will be able to Activate() (i.e. highlight) the different

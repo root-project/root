@@ -1,6 +1,6 @@
 //Importing an image and manipulating it
 //Author: Valeriy Onuchin
-   
+
 void galaxy_image()
 {
    TCanvas *canv = new TCanvas("image", "n4254", 40, 40, 812, 700);

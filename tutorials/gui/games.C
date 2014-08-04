@@ -52,7 +52,7 @@ class Tetris;
 
 void rungames()
 {
-   // This macro runs three "games" that each nicely illustrate the graphics capabilities of ROOT. 
+   // This macro runs three "games" that each nicely illustrate the graphics capabilities of ROOT.
    // Thanks to the clever usage of TTimer objects it looks like they are all
    // executing in parallel (emulation of multi-threading).
    // It uses the small classes generated in $ROOTSYS/test/Hello,

@@ -208,7 +208,7 @@ TSQLColumnData::~TSQLColumnData()
 ClassImp(TSQLTableData);
 
 //________________________________________________________________________
-TSQLTableData::TSQLTableData(TSQLFile* f, TSQLClassInfo* info) : 
+TSQLTableData::TSQLTableData(TSQLFile* f, TSQLClassInfo* info) :
    TObject(),
    fFile(f),
    fInfo(info),
@@ -216,8 +216,8 @@ TSQLTableData::TSQLTableData(TSQLFile* f, TSQLClassInfo* info) :
    fColInfos(0)
 {
    // normal constructor
-   
-   if (info && !info->IsClassTableExist()) 
+
+   if (info && !info->IsClassTableExist())
       fColInfos = new TObjArray;
 }
 
@@ -225,11 +225,11 @@ TSQLTableData::TSQLTableData(TSQLFile* f, TSQLClassInfo* info) :
 TSQLTableData::~TSQLTableData()
 {
    // destructor
-   
+
    fColumns.Delete();
    if (fColInfos!=0) {
       fColInfos->Delete();
-      delete fColInfos;  
+      delete fColInfos;
    }
 }
 
@@ -244,15 +244,15 @@ void TSQLTableData::AddColumn(const char* name, Long64_t value)
 
 //   TSQLColumnData* col = new TSQLColumnData(name, value);
 //   fColumns.Add(col);
-   
+
    if (fColInfos!=0)
      fColInfos->Add(new TSQLClassColumnInfo(name, DefineSQLName(name), "INT"));
 }
 
 //________________________________________________________________________
-void TSQLTableData::AddColumn(const char* name, 
-                              const char* sqltype, 
-                              const char* value, 
+void TSQLTableData::AddColumn(const char* name,
+                              const char* sqltype,
+                              const char* value,
                               Bool_t numeric)
 {
    // Add nomral column to list of columns
@@ -260,7 +260,7 @@ void TSQLTableData::AddColumn(const char* name,
    TObjString* v = new TObjString(value);
    v->SetBit(BIT(20), numeric);
    fColumns.Add(v);
-   
+
 //   TSQLColumnData* col = new TSQLColumnData(name, sqltype, value, numeric);
 //   fColumns.Add(col);
 
@@ -272,36 +272,36 @@ void TSQLTableData::AddColumn(const char* name,
 TString TSQLTableData::DefineSQLName(const char* fullname)
 {
    // produce suitable name for column, taking into account length limitation
-   
+
    Int_t maxlen = fFile->SQLMaxIdentifierLength();
-   
+
    Int_t len = strlen(fullname);
-   
+
    if ((len<=maxlen) && !HasSQLName(fullname)) return TString(fullname);
-   
+
    Int_t cnt = -1;
    TString res, scnt;
-   
+
    do {
-      
+
       scnt.Form("%d",cnt);
       Int_t numlen = cnt<0 ? 0 : scnt.Length();
-      
+
       res = fullname;
-      
-      if (len + numlen > maxlen) 
+
+      if (len + numlen > maxlen)
          res.Resize(maxlen - numlen);
-      
+
       if (cnt>=0) res+=scnt;
-      
+
       if (!HasSQLName(res.Data())) return res;
-      
+
       cnt++;
-      
+
    } while (cnt<10000);
-   
+
    Error("DefineSQLName","Cannot find reasonable column name for field %s",fullname);
-   
+
    return TString(fullname);
 }
 
@@ -309,16 +309,16 @@ TString TSQLTableData::DefineSQLName(const char* fullname)
 Bool_t TSQLTableData::HasSQLName(const char* sqlname)
 {
    // checks if columns list already has that sql name
-   
+
    TIter next(fColInfos);
 
    TSQLClassColumnInfo* col = 0;
-   
+
    while ((col = (TSQLClassColumnInfo*) next()) != 0) {
       const char* colname = col->GetSQLName();
       if (strcmp(colname, sqlname)==0) return kTRUE;
    }
-   
+
    return kFALSE;
 
 }
@@ -327,7 +327,7 @@ Bool_t TSQLTableData::HasSQLName(const char* sqlname)
 Int_t TSQLTableData::GetNumColumns()
 {
    // returns number of columns in provided set
-   
+
    return fColumns.GetLast() +1;
 }
 
@@ -342,18 +342,18 @@ const char* TSQLTableData::GetColumn(Int_t n)
 Bool_t TSQLTableData::IsNumeric(Int_t n)
 {
    // identifies if column has numeric value
-   
+
    return fColumns[n]->TestBit(BIT(20));
 }
 
 //________________________________________________________________________
-TObjArray* TSQLTableData::TakeColInfos() 
-{ 
+TObjArray* TSQLTableData::TakeColInfos()
+{
    // take ownership over colinfos
-   
-   TObjArray* res = fColInfos; 
-   fColInfos = 0; 
-   return res; 
+
+   TObjArray* res = fColInfos;
+   fColInfos = 0;
+   return res;
 }
 
 //________________________________________________________________________
@@ -467,7 +467,7 @@ void TSQLStructure::SetStreamerElement(const TStreamerElement* elem, Int_t numbe
 void TSQLStructure::SetCustomClass(const TClass* cl, Version_t version)
 {
    // set structure type as kSqlCustomClass
-   
+
    fType = kSqlCustomClass;
    fPointer = (void*) cl;
    fArrayIndex = version;
@@ -477,7 +477,7 @@ void TSQLStructure::SetCustomClass(const TClass* cl, Version_t version)
 void TSQLStructure::SetCustomElement(TStreamerElement* elem)
 {
    // set structure type as kSqlCustomElement
-   
+
    fType = kSqlCustomElement;
    fPointer = elem;
 }
@@ -581,7 +581,7 @@ const char* TSQLStructure::GetValueType() const
 TClass* TSQLStructure::GetCustomClass() const
 {
    // return element custom class if strutures is kSqlCustomClass
-   
+
    return (fType==kSqlCustomClass) ? (TClass*) fPointer : 0;
 }
 
@@ -589,7 +589,7 @@ TClass* TSQLStructure::GetCustomClass() const
 Version_t TSQLStructure::GetCustomClassVersion() const
 {
    // return custom class version if strutures is kSqlCustomClass
-   
+
    return (fType==kSqlCustomClass) ? fArrayIndex : 0;
 }
 
@@ -597,7 +597,7 @@ Version_t TSQLStructure::GetCustomClassVersion() const
 Bool_t TSQLStructure::GetClassInfo(TClass* &cl, Version_t &version)
 {
    // provides class info if structure kSqlStreamerInfo or kSqlCustomClass
-   
+
    if (GetType()==kSqlStreamerInfo) {
       TStreamerInfo* info = GetStreamerInfo();
       if (info==0) return kFALSE;
@@ -663,7 +663,7 @@ Long64_t TSQLStructure::DefineObjectId(Bool_t recursive)
    TSQLStructure* curr = this;
    while (curr!=0) {
       if ((curr->GetType()==kSqlObject) ||
-          (curr->GetType()==kSqlPointer) || 
+          (curr->GetType()==kSqlPointer) ||
          // workaround to store object id in element structure
           (curr->GetType()==kSqlElement) ||
           (curr->GetType()==kSqlCustomElement) ||
@@ -868,7 +868,7 @@ public:
 
 //________________________________________________________________________
 // TSqlRegistry keeps data, used when object data transformed to sql query or
-// statements 
+// statements
 
 class TSqlRegistry : public TObject {
 
@@ -904,7 +904,7 @@ public:
    TMap       fPool;
    TObjArray  fLongStrValues;
    TObjArray  fRegValues;
-   
+
    TSQLStatement* fRegStmt;
 
 
@@ -1003,18 +1003,18 @@ public:
          Error("AddRegCmd","Something wrong with objid = %lld", objid);
          return;
       }
-      
+
       if (fFile->IsOracle() || fFile->IsODBC()) {
          if ((fRegStmt==0) && fFile->SQLCanStatement()) {
             const char* quote = fFile->SQLIdentifierQuote();
-            
+
             TString sqlcmd;
             const char* pars = fFile->IsOracle() ? ":1, :2, :3, :4" : "?, ?, ?, ?";
-            sqlcmd.Form("INSERT INTO %s%s%s VALUES (%s)", 
+            sqlcmd.Form("INSERT INTO %s%s%s VALUES (%s)",
                      quote, sqlio::ObjectsTable, quote, pars);
             fRegStmt = fFile->SQLStatement(sqlcmd.Data(), 1000);
          }
-         
+
          if (fRegStmt!=0) {
             fRegStmt->NextIteration();
             fRegStmt->SetLong64(0, fKeyId);
@@ -1023,8 +1023,8 @@ public:
             fRegStmt->SetInt(3, cl->GetClassVersion());
             return;
          }
-      }      
-      
+      }
+
       const char* valuequote = fFile->SQLValueQuote();
       TString cmd;
       cmd.Form("%lld, %lld, %s%s%s, %d",
@@ -1057,41 +1057,41 @@ public:
    {
       TSqlCmdsBuffer* buf = GetCmdsBuffer(sqlinfo);
       if (buf==0) return kFALSE;
-      
+
       TSQLStatement* stmt = buf->fNormStmt;
       if (stmt==0) {
          // if one cannot create statement, do it normal way
          if (!fFile->SQLCanStatement()) return kFALSE;
-         
+
          const char* quote = fFile->SQLIdentifierQuote();
          TString sqlcmd;
-         sqlcmd.Form("INSERT INTO %s%s%s VALUES (", 
+         sqlcmd.Form("INSERT INTO %s%s%s VALUES (",
                      quote, sqlinfo->GetClassTableName(), quote);
          for (int n=0;n<columns->GetNumColumns();n++) {
             if (n>0) sqlcmd +=", ";
             if (fFile->IsOracle()) {
-               sqlcmd += ":"; 
+               sqlcmd += ":";
                sqlcmd += (n+1);
             } else
                sqlcmd += "?";
          }
          sqlcmd += ")";
-                     
+
          stmt = fFile->SQLStatement(sqlcmd.Data(), 1000);
          if (stmt==0) return kFALSE;
          buf->fNormStmt = stmt;
       }
-      
-      stmt->NextIteration(); 
-      
+
+      stmt->NextIteration();
+
       Int_t sizelimit = fFile->SQLSmallTextTypeLimit();
-       
+
       for (Int_t ncol=0;ncol<columns->GetNumColumns();ncol++) {
          const char* value = columns->GetColumn(ncol);
          if (value==0) value = "";
          stmt->SetString(ncol, value, sizelimit);
       }
-      
+
       return kTRUE;
    }
 
@@ -1106,10 +1106,10 @@ public:
       const char* valuequote = fFile->SQLValueQuote();
 
       TString values;
-      
+
       for (Int_t n=0;n<columns->GetNumColumns();n++) {
-         if (n>0) values+=", "; 
-         
+         if (n>0) values+=", ";
+
          if (columns->IsNumeric(n))
             values+=columns->GetColumn(n);
          else {
@@ -1118,7 +1118,7 @@ public:
             values += value;
          }
       }
-     
+
       TSqlCmdsBuffer* buf = GetCmdsBuffer(sqlinfo);
       if (buf!=0) buf->AddValues(kTRUE, values.Data());
    }
@@ -1128,7 +1128,7 @@ public:
 //_____________________________________________________________________________
 
 // TSqlRawBuffer is used to convert raw data, which corresponds to one
-// object and belong to single SQL tables. Supoorts both statements 
+// object and belong to single SQL tables. Supoorts both statements
 // and query mode
 
 class TSqlRawBuffer : public TObject {
@@ -1151,11 +1151,11 @@ public:
       fCmdBuf = reg->GetCmdsBuffer(sqlinfo);
       fObjId = reg->fCurrentObjId;
       fValueQuote = fFile->SQLValueQuote();
-      fValueMask.Form("%lld, %s, %s%s%s, %s", fObjId, "%d", fValueQuote, "%s", fValueQuote, "%s");      
+      fValueMask.Form("%lld, %s, %s%s%s, %s", fObjId, "%d", fValueQuote, "%s", fValueQuote, "%s");
       fMaxStrSize = reg->fFile->SQLSmallTextTypeLimit();
    }
-   
-   virtual ~TSqlRawBuffer() 
+
+   virtual ~TSqlRawBuffer()
    {
       // close blob statement for Oracle
       TSQLStatement* stmt = fCmdBuf->fBlobStmt;
@@ -1165,33 +1165,33 @@ public:
          fCmdBuf->fBlobStmt = 0;
       }
    }
-   
+
    Bool_t IsAnyData() const { return fRawId>0; }
 
    void AddLine(const char* name, const char* value, const char* topname = 0, const char* ns = 0)
    {
       if (fCmdBuf==0) return;
-      
+
       // when first line is created, check all problems
       if (fRawId==0) {
          Bool_t maketmt = kFALSE;
          if (fFile->IsOracle() || fFile->IsODBC())
             maketmt = (fCmdBuf->fBlobStmt==0) && fFile->SQLCanStatement();
-            
+
          if (maketmt) {
             // ensure that raw table is exists
             fFile->CreateRawTable(fInfo);
-            
+
             const char* quote = fFile->SQLIdentifierQuote();
             TString sqlcmd;
             const char* params = fFile->IsOracle() ? ":1, :2, :3, :4" : "?, ?, ?, ?";
-            sqlcmd.Form("INSERT INTO %s%s%s VALUES (%s)", 
+            sqlcmd.Form("INSERT INTO %s%s%s VALUES (%s)",
                         quote, fInfo->GetRawTableName(), quote, params);
             TSQLStatement* stmt = fFile->SQLStatement(sqlcmd.Data(), 2000);
             fCmdBuf->fBlobStmt = stmt;
          }
       }
-      
+
       TString buf;
       const char* fullname = name;
       if ((topname!=0) && (ns!=0)) {
@@ -1200,9 +1200,9 @@ public:
          buf+=name;
          fullname = buf.Data();
       }
-      
+
       TSQLStatement* stmt = fCmdBuf->fBlobStmt;
-      
+
       if (stmt!=0) {
          stmt->NextIteration();
          stmt->SetLong64(0, fObjId);
@@ -1215,14 +1215,14 @@ public:
          TSQLStructure::AddStrBrackets(valuebuf, fValueQuote);
          TString cmd;
          cmd.Form(fValueMask.Data(), fRawId++, fullname, valuebuf.Data());
-         fCmdBuf->AddValues(kFALSE, cmd.Data());         
+         fCmdBuf->AddValues(kFALSE, cmd.Data());
       }
    }
-      
+
    TSQLFile*  fFile;
    TSQLClassInfo* fInfo;
    TSqlCmdsBuffer* fCmdBuf;
-   Long64_t fObjId; 
+   Long64_t fObjId;
    Int_t fRawId;
    TString fValueMask;
    const char* fValueQuote;
@@ -1505,7 +1505,7 @@ Bool_t TSQLStructure::StoreClassInNormalForm(TSqlRegistry* reg)
 
       Bool_t doblobs = kTRUE;
 
-      Int_t blobid = rawdata.fRawId; // keep id of first raw, used in class table 
+      Int_t blobid = rawdata.fRawId; // keep id of first raw, used in class table
 
       if (columntyp==kColObjectArray)
          if (child->TryConvertObjectArray(reg, &rawdata))
@@ -1514,9 +1514,9 @@ Bool_t TSQLStructure::StoreClassInNormalForm(TSqlRegistry* reg)
       if (doblobs)
          child->PerformConversion(reg, &rawdata, elem->GetName(), kFALSE);
 
-      if (blobid==rawdata.fRawId) 
+      if (blobid==rawdata.fRawId)
          blobid = -1; // no data for blob was created
-      else { 
+      else {
          //reg->fFile->CreateRawTable(sqlinfo);
          //blobid = currrawid; // column will contain first raw id
          //reg->ConvertBlobs(&blobs, sqlinfo, currrawid);
@@ -1650,7 +1650,7 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TSQLTableData*
       Long64_t objid = -1;
 
       if (child->GetType()==kSqlObject) {
-         objid = child->DefineObjectId(kFALSE); 
+         objid = child->DefineObjectId(kFALSE);
          normal = child->StoreObject(reg, objid, child->GetObjectClass());
       } else {
          objid = child->DefineObjectId(kFALSE);
@@ -1666,7 +1666,7 @@ Bool_t TSQLStructure::StoreElementInNormalForm(TSqlRegistry* reg, TSQLTableData*
    }
 
    if (columntyp==kColNormObjectArray) {
-       
+
       if (elem->GetArrayLength()!=NumChilds()) return kFALSE;
 
       for (Int_t index=0;index<NumChilds();index++) {
@@ -1887,7 +1887,7 @@ Bool_t TSQLStructure::StoreTString(TSqlRegistry* reg)
    columns.AddColumn(sqlio::TStringValue, reg->fFile->SQLBigTextType(), value, kFALSE);
 
    reg->fFile->CreateClassTable(sqlinfo, columns.TakeColInfos());
-   
+
    reg->InsertToNormalTable(&columns, sqlinfo);
    return kTRUE;
 }

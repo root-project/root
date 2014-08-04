@@ -1,6 +1,6 @@
 # TODO: Check if we have to install the buildin version of
-# libAfterImage or if we can use the system version of 
-# libAfterImage. We have to create a FindAfterImage.cmake 
+# libAfterImage or if we can use the system version of
+# libAfterImage. We have to create a FindAfterImage.cmake
 # script and search for the system version of
 # libAfterImage if not set buildin version of libAfterImage.
 # Up to now we don't check and install the buildin version anyway.
@@ -16,16 +16,16 @@ if(WIN32)
   if(winrtdebug)
     set(astepbld "libAfterImage - Win32 Debug")
   else()
-    set(astepbld "libAfterImage - Win32 Release")  
+    set(astepbld "libAfterImage - Win32 Release")
   endif()
 
   add_custom_command( OUTPUT ${afterimageliba}
                     COMMAND cmake -E copy_directory  ${CMAKE_CURRENT_SOURCE_DIR}/src/libAfterImage libAfterImage
                     COMMAND echo "*** Building ${afterimageliba}"
-                    COMMAND cmake -E chdir libAfterImage 
-                            nmake -nologo -f libAfterImage.mak FREETYPEDIRI=-I${FREETYPE_INCLUDE_DIR} 
+                    COMMAND cmake -E chdir libAfterImage
+                            nmake -nologo -f libAfterImage.mak FREETYPEDIRI=-I${FREETYPE_INCLUDE_DIR}
                             CFG=${astepbld} NMAKECXXFLAGS="${CMAKE_CXX_FLAGS} /wd4244")
-else() 
+else()
   set(afterimagelib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libAfterImage.a)
   set(afterimageliba ${CMAKE_CURRENT_BINARY_DIR}/libAfterImage/libAfterImage.a)
 
@@ -89,10 +89,10 @@ else()
                      COMMAND cmake -E copy_directory  ${CMAKE_CURRENT_SOURCE_DIR}/src/libAfterImage libAfterImage)
 
   #---configure and make --------------------------------------------------------------
-  add_custom_command(OUTPUT ${afterimageliba}  
+  add_custom_command(OUTPUT ${afterimageliba}
                    COMMAND GNUMAKE=make CC=${AFTER_CC} CFLAGS=${AFTER_CFLAGS} ./configure --with-ttf ${TTFINCLUDE} --with-afterbase=no --without-svg --disable-glx ${AFTER_MMX} ${AFTER_DBG} --with-builtin-ungif  --with-jpeg ${JPEGINCLUDE} --with-png ${PNGINCLUDE} ${TIFFINCLUDE} # > /dev/null 2>& 1
                    COMMAND make > /dev/null 2>& 1
-                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libAfterImage 
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libAfterImage
                    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/libAfterImage
                   )
 endif()
@@ -108,10 +108,10 @@ else()
                      COMMAND cmake -E copy_if_different ${afterimageliba} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
                      DEPENDS ${afterimageliba})
 endif()
-                
+
 # create a target which will always be build and does actually nothing. The target is only
 # needed that the dependencies are build, f they are not up to date. If everything is up to
-# date nothing is done. This target depends on the libAfterImage.a in the library directory of the 
+# date nothing is done. This target depends on the libAfterImage.a in the library directory of the
 # build directory.
 add_custom_target(AFTERIMAGE DEPENDS ${afterimagelib} )
 set_target_properties(AFTERIMAGE PROPERTIES FOLDER Builtins)

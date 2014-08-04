@@ -47,28 +47,28 @@ public:
 #endif
 
    // constructor using a functor
-   TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Int_t npar = 0);  
+   TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Int_t npar = 0);
 
-   // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type 
-   // MemFn. 
+   // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
+   // MemFn.
    template <class PtrObj, typename MemFn>
-   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * c1, const char * c2) : 
+   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * c1, const char * c2) :
       TF1(name,p,memFn,xmin,xmax,npar,c1,c2),
       fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
-      fNpx = 30; 
+      fNpx = 30;
       fNdim = 2;
-   } 
-   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) 
-   // and returning a double.    
-   template <typename Func> 
-   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * tmp  ) : 
+   }
+   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *)
+   // and returning a double.
+   template <typename Func>
+   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * tmp  ) :
       TF1(name,f,xmin,xmax,npar,tmp),
       fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
-      fNpx = 30; 
+      fNpx = 30;
       fNdim = 2;
-   } 
+   }
 
    TF2(const TF2 &f2);
    TF2 &operator=(const TF2& rhs);
@@ -88,7 +88,7 @@ public:
        Double_t     GetRandom();
        Double_t     GetRandom(Double_t xmin, Double_t xmax);
    virtual void     GetRandom2(Double_t &xrandom, Double_t &yrandom);
-   using TF1::GetRange; 
+   using TF1::GetRange;
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const;
    virtual Double_t GetSave(const Double_t *x);
@@ -101,7 +101,7 @@ public:
    virtual Double_t GetYmin() const {return fYmin;}
    virtual Double_t GetYmax() const {return fYmax;}
    using TF1::Integral;
-   virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsrel=1.e-6); 
+   virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsrel=1.e-6);
    virtual Bool_t   IsInside(const Double_t *x) const;
    virtual TH1     *CreateHistogram();
    virtual void     Paint(Option_t *option="");
@@ -126,9 +126,9 @@ public:
 
    virtual Double_t Covariance2XY(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001) {return CentralMoment2(1,ax,bx,1,ay,by,epsilon);}
 
-protected: 
+protected:
 
-   virtual Double_t FindMinMax(Double_t* x, bool findmax) const; 
+   virtual Double_t FindMinMax(Double_t* x, bool findmax) const;
 
    ClassDef(TF2,4)  //The Parametric 2-D function
 };

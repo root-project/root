@@ -28,7 +28,7 @@
 //_______________________________________________________________________
 XrdProofdProtocol *XpdObjectQ::Pop()
 {
-   // Pop up a protocol object 
+   // Pop up a protocol object
 
    XpdObject *node;
    fQMutex.Lock();

@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -14,7 +14,7 @@
 
 
 #ifdef DEBUG
-#include "Minuit2/MnPrint.h" 
+#include "Minuit2/MnPrint.h"
 #endif
 
 namespace ROOT {
@@ -23,25 +23,25 @@ namespace ROOT {
 
 
 // constructor from non-gradient functions
-MnApplication::MnApplication(const FCNBase& fcn, const MnUserParameterState& state, const MnStrategy& stra, unsigned int nfcn) : 
-   fFCN(fcn), fState(state), fStrategy(stra), fNumCall(nfcn), fUseGrad(false) 
+MnApplication::MnApplication(const FCNBase& fcn, const MnUserParameterState& state, const MnStrategy& stra, unsigned int nfcn) :
+   fFCN(fcn), fState(state), fStrategy(stra), fNumCall(nfcn), fUseGrad(false)
 {}
 
 // constructor from functions
-MnApplication::MnApplication(const FCNGradientBase& fcn, const MnUserParameterState& state, const MnStrategy& stra, unsigned int nfcn) : 
-   fFCN(fcn), fState(state), fStrategy(stra), fNumCall(nfcn), fUseGrad(true) 
+MnApplication::MnApplication(const FCNGradientBase& fcn, const MnUserParameterState& state, const MnStrategy& stra, unsigned int nfcn) :
+   fFCN(fcn), fState(state), fStrategy(stra), fNumCall(nfcn), fUseGrad(true)
 {}
 
 
 FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler) {
-   // constructor from macfcn calls and tolerance 
-   
+   // constructor from macfcn calls and tolerance
+
    assert(fState.IsValid());
    unsigned int npar = VariableParameters();
    //   assert(npar > 0);
    if(maxfcn == 0) maxfcn = 200 + 100*npar + 5*npar*npar;
 
-   const FCNBase * fcn = &(Fcnbase()); 
+   const FCNBase * fcn = &(Fcnbase());
    if (fUseGrad) {
       // case of Gradient FCN implemented via the FCNGradientBase interface
       const FCNGradientBase * gfcn = dynamic_cast<const FCNGradientBase *>(fcn);
@@ -52,7 +52,7 @@ FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler) {
       fState = min.UserState();
       return min;
    }
-   else { 
+   else {
       // no gradient
       FunctionMinimum min = Minimizer().Minimize( *fcn, fState, fStrategy, maxfcn, toler);
       fNumCall += min.NFcn();
@@ -60,7 +60,7 @@ FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler) {
 
 #ifdef DEBUG
 //       std::cout << "Initial MIGRAD state is " << MnUserParameterState( min.States()[0], min.Up(), min.Seed().Trafo() ) << std::endl;
-      std::cout << "State resulting from Migrad. Total Function calls  " << fNumCall  << fState << std::endl;  
+      std::cout << "State resulting from Migrad. Total Function calls  " << fNumCall  << fState << std::endl;
       const std::vector<ROOT::Minuit2::MinimumState>& iterationStates =  min.States();
       std::cout << "Number of iterations " << iterationStates.size() << std::endl;
       for (unsigned int i = 0; i <  iterationStates.size(); ++i) {
@@ -68,13 +68,13 @@ FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler) {
          const ROOT::Minuit2::MinimumState & st =  iterationStates[i];
          std::cout << "----------> Iteration " << i << std::endl;
          int pr = std::cout.precision(18);
-         std::cout << "            FVAL = " << st.Fval() 
+         std::cout << "            FVAL = " << st.Fval()
                    << " Edm = " << st.Edm() << " Nfcn = " << st.NFcn() << std::endl;
          std::cout.precision(pr);
-         std::cout << "            Error matrix change = " << st.Error().Dcovar() 
+         std::cout << "            Error matrix change = " << st.Error().Dcovar()
                    << std::endl;
          std::cout << "            Internal parameters : ";
-         for (int j = 0; j < st.size() ; ++j) 
+         for (int j = 0; j < st.size() ; ++j)
             std::cout << " p" << j << " = " << st.Vec()(j);
          std::cout << std::endl;
       }
@@ -93,7 +93,7 @@ const std::vector<MinuitParameter>& MnApplication::MinuitParameters() const {
    //access to parameters (row-wise)
    return fState.MinuitParameters();
 }
-//access to parameters and errors in column-wise representation 
+//access to parameters and errors in column-wise representation
 std::vector<double> MnApplication::Params() const {return fState.Params();}
 std::vector<double> MnApplication::Errors() const {return fState.Errors();}
 
@@ -110,7 +110,7 @@ void MnApplication::Add(const char* name, double val, double err) {
 }
 
 void MnApplication::Add(const char* name, double val, double err, double low, double up) {
-   //add limited Parameter 
+   //add limited Parameter
    fState.Add(name, val, err, low, up);
 }
 
@@ -123,7 +123,7 @@ void MnApplication::Add(const char* name, double val) {
 void MnApplication::Fix(unsigned int i) {fState.Fix(i);}
 void MnApplication::Release(unsigned int i) {fState.Release(i);}
 void MnApplication::SetValue(unsigned int i, double val) {
-   // set value for parameter i 
+   // set value for parameter i
    fState.SetValue(i, val);
 }
 void MnApplication::SetError(unsigned int i, double val) {
@@ -175,7 +175,7 @@ unsigned int MnApplication::IntOfExt(unsigned int ext) const {
    // get internal index for external parameter with index ext
    return fState.IntOfExt(ext);
 }
-unsigned int MnApplication::ExtOfInt(unsigned int internal) const { 
+unsigned int MnApplication::ExtOfInt(unsigned int internal) const {
    // get external index for internal parameter with index internal
    return fState.ExtOfInt(internal);
 }

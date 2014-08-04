@@ -878,7 +878,7 @@ Bool_t TMonaLisaWriter::SendFileCheckpoint(TFile *file)
    fFileStopwatch.Continue();
 
    // This info has to be gathered in any case.
-   
+
    // Check if an MonitoredTFileInfo instance is already available
    // If not, create one
    MonitoredTFileInfo *mi = 0;
@@ -887,7 +887,7 @@ Bool_t TMonaLisaWriter::SendFileCheckpoint(TFile *file)
    if (!mi) {
 
       mi = new MonitoredTFileInfo(file, timenow);
-      if (mi) fMonInfoRepo->insert( make_pair( file->GetUniqueID(), mi ) ); 
+      if (mi) fMonInfoRepo->insert( make_pair( file->GetUniqueID(), mi ) );
    }
 
    // And now we get those partial values
@@ -905,7 +905,7 @@ Bool_t TMonaLisaWriter::SendFileCheckpoint(TFile *file)
    valuelist->SetOwner(kTRUE);
 
    TString valname;
-   
+
    // We send only a little throughput summary info
    // Instead we send the info for the actual file passed
 
@@ -942,7 +942,7 @@ Bool_t TMonaLisaWriter::SendFileCheckpoint(TFile *file)
       iter++;
       if (iter != fMonInfoRepo->end())
          mi = iter->second;
-      else 
+      else
          mi = 0;
    }
 

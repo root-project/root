@@ -1,6 +1,6 @@
 // example of TGraphTime
 //Author: Rene Brun 14/07/2009
-   
+
 #include "TCanvas.h"
 #include "TRandom3.h"
 #include "TMath.h"
@@ -8,7 +8,7 @@
 #include "TArrow.h"
 #include "TGraphTime.h"
 #include "TROOT.h"
-   
+
 void gtime(Int_t nsteps = 500, Int_t np=100) {
    if (np > 1000) np = 1000;
    Int_t color[1000];
@@ -44,7 +44,7 @@ void gtime(Int_t nsteps = 500, Int_t np=100) {
       g->Add(new TPaveLabel(.90,.92,.98,.97,Form("%d",s+1),"brNDC"),s);
    }
    g->Draw();
-   
+
    //save object to a file
    TFile f("gtime.root","recreate");
    g->Write("g");
@@ -52,6 +52,6 @@ void gtime(Int_t nsteps = 500, Int_t np=100) {
    //  TFile f("gtime.root");
    //  g.Draw();
 }
-   
-   
-   
+
+
+

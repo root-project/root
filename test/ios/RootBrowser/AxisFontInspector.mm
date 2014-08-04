@@ -45,7 +45,7 @@ NSString *fixedFontNames[] = //these are the strings to show in a picker view.
                                       @"Symbol",//No custom fonts yet.
                                       @"Times New Roman"
                                      };
-                                     
+
 const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 
 }
@@ -62,9 +62,9 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
    using namespace ROOT_IOSObjectInspector;
 
    self = [super initWithNibName : nibName bundle : nil];
-   
+
    [self view];
-   
+
    if (self) {
       // Custom initialization
       mode = m;
@@ -127,10 +127,10 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
       fontIndex = object->GetTitleFont() / 10 - 1;
    else if (mode == afimLabelFont)
       fontIndex = object->GetLabelFont() / 10 - 1;
-   
+
    if (fontIndex < 0 || fontIndex > nFixedFonts)
       fontIndex = 0;
-   
+
    [fontPicker selectRow : fontIndex inComponent : 0 animated : NO];
 }
 
@@ -167,7 +167,7 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
    UILabel *label = [[UILabel alloc] initWithFrame : CGRectMake(0.f, 0.f, defaultCellW, defaultCellH)];
    label.text = fixedFontNames[row];
    label.font = [UIFont fontWithName : fixedFonts[row] size : 14.f];
-   
+
 #ifdef __IPHONE_6_0
    label.textAlignment = NSTextAlignmentCenter;
 #else
@@ -175,7 +175,7 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 #endif
 
    label.backgroundColor = [UIColor colorWithPatternImage : [UIImage imageNamed : @"text_cell_bkn.png"]];
-   
+
    return label;
 }
 

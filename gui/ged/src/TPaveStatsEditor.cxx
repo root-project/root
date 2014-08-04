@@ -1,5 +1,5 @@
 // @(#)root/ged:$Id$
-// Author: Ilka Antcheva  
+// Author: Ilka Antcheva
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -17,7 +17,7 @@
 //      all text attributes                                             //
 //      The following statistics option settings can be set:            //
 //      name, mean, RMS, overflow, underflow, integral of bins,         //
-//      Fit parameters that can be set are: Values/Names, Probability,  // 
+//      Fit parameters that can be set are: Values/Names, Probability,  //
 //      Errors, Chisquare                                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -52,20 +52,20 @@ enum EPaveStatsWid {
 
 
 //______________________________________________________________________________
-TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t width, Int_t height, 
-   UInt_t options, Pixel_t back) : 
+TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t width, Int_t height,
+   UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
    // Constructor of TPaveStats GUI.
 
    fPaveStats = 0;
-   
+
    MakeTitle("Stat Options");
 
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGCompositeFrame *f2 = new TGCompositeFrame(f1, 40, 20, kVerticalFrame);
    f1->AddFrame(f2, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
-   
+
    fHistoName = new TGCheckButton(f2, "Name", kSTAT_NAME);
    fHistoName->SetToolTipText("Print the histogram name");
    f2->AddFrame(fHistoName, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
@@ -103,7 +103,7 @@ TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t width, Int_t height,
    AddFrame(f1, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
    MakeTitle("Fit Options");
- 
+
    TGCompositeFrame *f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGCompositeFrame *f5 = new TGCompositeFrame(f4, 40, 20, kVerticalFrame);
    f4->AddFrame(f5, new TGLayoutHints(kLHintsTop, 0, 1, 0, 0));
@@ -129,15 +129,15 @@ TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t width, Int_t height,
 
 //______________________________________________________________________________
 TPaveStatsEditor::~TPaveStatsEditor()
-{ 
+{
   // Destructor of fill editor.
 }
 
 //______________________________________________________________________________
 void TPaveStatsEditor::ConnectSignals2Slots()
-{ 
+{
    // Connect signals to slots.
-   
+
    // about stat options
    fHistoName->Connect("Toggled(Bool_t)","TPaveStatsEditor",this,"DoStatOptions()");
    fEntries->Connect("Toggled(Bool_t)","TPaveStatsEditor",this,"DoStatOptions()");
@@ -167,30 +167,30 @@ void TPaveStatsEditor::SetModel(TObject* obj)
 
    fPaveStats = (TPaveStats *)obj;
    fAvoidSignal = kTRUE;
-   
+
    Int_t stat = fPaveStats->GetOptStat();
 
    if (stat % 10)  fHistoName->SetState(kButtonDown);
    else fHistoName->SetState(kButtonUp);
-   
+
    if (stat/10 % 10) fEntries->SetState(kButtonDown);
    else fEntries->SetState(kButtonUp);
-   
+
    if (stat/100 % 10) fMean->SetState(kButtonDown);
    else fMean->SetState(kButtonUp);
-   
+
    if (stat/1000 % 10) fRMS->SetState(kButtonDown);
    else fRMS->SetState(kButtonUp);
-   
+
    if (stat/10000 % 10) fUnderflow->SetState(kButtonDown);
    else fUnderflow->SetState(kButtonUp);
-   
+
    if (stat/100000 % 10) fOverflow->SetState(kButtonDown);
    else fOverflow->SetState(kButtonUp);
-   
+
    if (stat/1000000 % 10) fIntegral->SetState(kButtonDown);
    else fIntegral->SetState(kButtonUp);
-   
+
    if (stat/10000000 % 10) fSkewness->SetState(kButtonDown);
    else fSkewness->SetState(kButtonUp);
 
@@ -200,17 +200,17 @@ void TPaveStatsEditor::SetModel(TObject* obj)
    Int_t fit = fPaveStats->GetOptFit();
    if (fit % 10)  fNameValues->SetState(kButtonDown);
    else fNameValues->SetState(kButtonUp);
-   
+
    if (fit/10 % 10) {
       fErrors->SetState(kButtonDown);
       fNameValues->SetState(kButtonDown);
    } else {
       fErrors->SetState(kButtonUp);
    }
-   
+
    if (fit/100 % 10) fChisquare->SetState(kButtonDown);
    else fChisquare->SetState(kButtonUp);
-   
+
    if (fit/1000 % 10) fProbability->SetState(kButtonDown);
    else fProbability->SetState(kButtonUp);
 
@@ -241,7 +241,7 @@ void TPaveStatsEditor::DoStatOptions()
       if (fSkewness->GetState() == kButtonDown) stat +=10000000;
       if (fKurtosis->GetState() == kButtonDown) stat +=100000000;
    }
-   
+
    if (!stat) {
       stat = 1;
       fHistoName->SetState(kButtonDown);
@@ -273,7 +273,7 @@ void TPaveStatsEditor::SetValuesON(Bool_t on)
 {
    // Slot connected to the selection of the button 'Errors':
    // check button Values should be selected if Errors is selected.
-   
+
    if (fAvoidSignal) return;
    if (on == kTRUE) fNameValues->SetState(kButtonDown);
 }

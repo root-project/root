@@ -874,7 +874,7 @@ Double_t TSVDUnfold::ComputeChiSquared( const TH1D& truspec, const TH1D& unfspec
                   (truspec.GetBinContent( j+1 )-unfspec.GetBinContent( j+1 )) * fXinv->GetBinContent(i+1,j+1) );
       }
    }
-   
+
    return chi2;
 }
 

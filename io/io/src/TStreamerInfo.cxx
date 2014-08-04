@@ -405,7 +405,7 @@ void TStreamerInfo::Build()
          }
          if (dtype == kOther_t || dtype == kNoType_t) {
             Error("Build", "%s, unknown type: %s %s", GetName(), dmFull, dmName);
-            continue;            
+            continue;
          } else if (dmIsPtr && (dtype != kCharStar)) {
             if (dmCounter) {
                // data member is pointer to an array of basic types
@@ -603,7 +603,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
 
    fClass = TClass::GetClass(GetName());
    if (!fClass) {
-      // fClassVersion should have been a Version_t and/or Version_t 
+      // fClassVersion should have been a Version_t and/or Version_t
       // should have been an Int_t.  Changing the on-file format
       // of the StreamerInfo is 'hard' (for forward compatibility), so
       // leave it as is for now.
@@ -1861,7 +1861,7 @@ void TStreamerInfo::BuildOld()
       } else {
          // The class is known to Cling (and thus is not emulated)
          // and we need to use the real offsets.
-         // However we may not have a 'proper' TClass for it 
+         // However we may not have a 'proper' TClass for it
          // (in which case IsLoaded will be false and GetImplFileLine will be -1)
 
          // First look for the data member in the current class
@@ -2214,10 +2214,10 @@ void TStreamerInfo::BuildOld()
          // Note the initialization in this case are
          // delayed until __after__ the schema evolution
          // section, just in case the info has changed.
-         
+
          // The class is NOT known to Cling, i.e. is emulated,
          // and we need to use the calculated offset.
-     
+
          Int_t asize;
          if (element->GetType() == TStreamerInfo::kSTL &&
              strcmp(element->GetName(),"This") == 0 &&

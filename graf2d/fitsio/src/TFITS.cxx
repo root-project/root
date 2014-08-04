@@ -16,8 +16,8 @@
 // it can contain spectrums, data tables, histograms, and multidimensional
 // data. Furthermore, FITS data can be described itself by containing
 // human-readable information that let us to interpret the data within
-// the FITS file. For example, a FITS could contain a 3D data cube, 
-// but an additional description would tell us that we must read it, for 
+// the FITS file. For example, a FITS could contain a 3D data cube,
+// but an additional description would tell us that we must read it, for
 // example, as a 3-layer image.
 //
 // TFITS requires CFITSIO library to be installed on your system. It
@@ -38,11 +38,11 @@
 //
 // Please have a look to the tutorials ($ROOTSYS/tutorials/fitsio/) to see
 // some examples. IMPORTANT: to run tutorials it is required that
-// you change the current working directory of ROOT (CINT) shell to the 
+// you change the current working directory of ROOT (CINT) shell to the
 // tutorials directory. Example:
 //
 // root [1] gSystem->ChangeDirectory("tutorials/fitsio")
-// root [1] .x FITS_tutorial1.C 
+// root [1] .x FITS_tutorial1.C
 
 // LIST OF TODO
 // - Support for complex values within data tables
@@ -105,7 +105,7 @@ TFITSHDU::TFITSHDU(const char *filepath_with_filter)
 {
    // TFITSHDU constructor from file path with HDU selection filter.
    // Please refer to CFITSIO manual for more information about
-   // HDU selection filters. 
+   // HDU selection filters.
    // Examples:
    // - TFITSHDU("/path/to/myfile.fits"): just open the PRIMARY HDU
    // - TFITSHDU("/path/to/myfile.fits[1]"): open HDU #1
@@ -113,9 +113,9 @@ TFITSHDU::TFITSHDU(const char *filepath_with_filter)
    // - TFITSHDU("/path/to/myfile.fits[ACQ][EXPOSURE > 5]"): open the (table) HDU called 'ACQ' and
    //                                                        selects the rows that have column 'EXPOSURE'
    //                                                        greater than 5.
-   
+
    _initialize_me();
-   
+
    fFilePath = filepath_with_filter;
    CleanFilePath(filepath_with_filter, fBaseFilePath);
 
@@ -135,7 +135,7 @@ TFITSHDU::TFITSHDU(const char *filepath, Int_t extension_number)
 
    //Add "by extension number" filter
    fFilePath.Form("%s[%d]", fBaseFilePath.Data(), extension_number);
-   
+
    if (kFALSE == LoadHDU(fFilePath)) {
       _release_resources();
       throw -1;
@@ -181,7 +181,7 @@ void TFITSHDU::_release_resources()
    } else {
       if (fColumnsInfo) {
          if (fCells) {
-            for (Int_t i = 0; i < fNColumns; i++) {               
+            for (Int_t i = 0; i < fNColumns; i++) {
                if (fColumnsInfo[i].fType == kString) {
                   //Deallocate character arrays allocated for kString columns
                   Int_t offset = i * fNRows;
@@ -196,14 +196,14 @@ void TFITSHDU::_release_resources()
                   }
                }
             }
-            
+
             delete [] fCells;
          }
-      
+
          delete [] fColumnsInfo;
       }
-      
-      
+
+
    }
 }
 
@@ -336,28 +336,28 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
       }
    } else {
       // Table
-      
+
       // Get table's number of rows and columns
       long table_rows;
       int  table_cols;
-      
+
       fits_get_num_rows(fp, &table_rows, &status);
       if (status) goto ERR;
-      
+
       fNRows = Int_t(table_rows);
-      
+
       fits_get_num_cols(fp, &table_cols, &status);
       if (status) goto ERR;
-           
+
       fNColumns = Int_t(table_cols);
-      
-      // Allocate column info array     
+
+      // Allocate column info array
       fColumnsInfo = new struct Column[table_cols];
-            
+
       // Read column names
-      char colname[80];     
+      char colname[80];
       int colnum;
-      
+
       fits_get_colname(fp, CASEINSEN, (char*) "*", colname, &colnum, &status);
       while (status == COL_NOT_UNIQUE)
       {
@@ -365,86 +365,86 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
          fits_get_colname(fp, CASEINSEN, (char*) "*", colname, &colnum, &status);
       }
       if (status != COL_NOT_FOUND) goto ERR;
-      status = 0;  
-      
+      status = 0;
+
       //Allocate cells
       fCells = new union Cell [table_rows * table_cols];
-      
+
       // Read columns
       int typecode;
       long repeat, width;
       Int_t cellindex;
-      
-      
+
+
       for (colnum = 0, cellindex = 0; colnum < fNColumns; colnum++) {
          fits_get_coltype(fp, colnum+1, &typecode, &repeat, &width, &status);
          if (status) goto ERR;
-         
-         if ((typecode == TDOUBLE) || (typecode == TSHORT) || (typecode == TLONG) 
+
+         if ((typecode == TDOUBLE) || (typecode == TSHORT) || (typecode == TLONG)
                                    || (typecode == TFLOAT) || (typecode == TLOGICAL) || (typecode == TBIT)
                                    || (typecode == TBYTE)  || (typecode == TSTRING)) {
-             
+
             fColumnsInfo[colnum].fType = (typecode == TSTRING) ? kString : kRealNumber;
-            
+
             if (typecode == TSTRING) {
                // String column
                int dispwidth=0;
                fits_get_col_display_width(fp, colnum+1, &dispwidth, &status);
                if (status) goto ERR;
-               
-               
+
+
                char *nulval = (char*) "";
                int anynul=0;
                char **array;
-               
-               if (dispwidth <= 0) {               
+
+               if (dispwidth <= 0) {
                   dispwidth = 1;
                }
-               
+
                array = new char* [table_rows];
                for (long row = 0; row < table_rows; row++) {
                   array[row] = new char[dispwidth+1]; //also room for end null!
                }
-               
+
                if (repeat > 0) {
                   fits_read_col(fp, TSTRING, colnum+1, 1, 1, table_rows, nulval, array, &anynul, &status);
                   if (status) {
                      for (long row = 0; row < table_rows; row++) {
-                        delete [] array[row]; 
+                        delete [] array[row];
                      }
                      delete [] array;
                      goto ERR;
                   }
-                  
+
                } else {
                   //No elements: set dummy
                   for (long row = 0; row < table_rows; row++) {
-                     strlcpy(array[row], "-",dispwidth+1); 
+                     strlcpy(array[row], "-",dispwidth+1);
                   }
                }
-               
-               
+
+
                //Save values
                for (long row = 0; row < table_rows; row++) {
                   fCells[cellindex++].fString = array[row];
                }
-               
+
                delete [] array; //Delete temporal array holding pointer to strings, but not delete strings themselves!
-               
-               
+
+
             } else {
                //Numeric or vector column
                double nulval = 0;
                int anynul=0;
-               
+
                fColumnsInfo[colnum].fDim = (Int_t) repeat;
-               
+
                double *array;
-               
+
                if (repeat > 0) {
                   array = new double [table_rows * repeat]; //Hope you got a big machine! Ask China otherwise :-)
                   fits_read_col(fp, TDOUBLE, colnum+1, 1, 1, table_rows * repeat, &nulval, array, &anynul, &status);
-                  
+
                   if (status) {
                      delete [] array;
                      goto ERR;
@@ -456,7 +456,7 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                      array[row] = 0.0;
                   }
                }
-               
+
                //Save values
                if (repeat == 1) {
                   //Scalar
@@ -474,21 +474,21 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                      fCells[cellindex++].fRealVector = vec;
                   }
                }
-               
+
                delete [] array;
-               
+
             }
-            
+
          } else {
             Warning("LoadHDU", "error opening FITS file. Column type %d is currently not supported", typecode);
          }
       }
-      
-      
-      
+
+
+
       if (hdutype == ASCII_TBL) {
          //ASCII table
-         
+
       } else {
          //Binary table
       }
@@ -652,12 +652,12 @@ ERR:
 void TFITSHDU::PrintColumnInfo(const Option_t *) const
 {
    // Print column information
-   
+
    if (fType != kTableHDU) {
       Warning("PrintColumnInfo", "this is not a table HDU.");
       return;
    }
-   
+
    for (Int_t i = 0; i < fNColumns; i++) {
       printf("%-20s : %s\n", fColumnsInfo[i].fName.Data(), (fColumnsInfo[i].fType == kRealNumber) ? "REAL NUMBER" : "STRING");
    }
@@ -667,14 +667,14 @@ void TFITSHDU::PrintColumnInfo(const Option_t *) const
 void TFITSHDU::PrintFullTable(const Option_t *) const
 {
    // Print full table contents
-   
+
    int printed_chars;
-   
+
    if (fType != kTableHDU) {
       Warning("PrintColumnInfo", "this is not a table HDU.");
       return;
    }
-   
+
    // Dump header
    putchar('\n');
    printed_chars = 0;
@@ -686,7 +686,7 @@ void TFITSHDU::PrintFullTable(const Option_t *) const
       putchar('-');
    }
    putchar('\n');
-   
+
    // Dump rows
    for (Int_t row = 0; row < fNRows; row++) {
       for (Int_t col = 0; col < fNColumns; col++) {
@@ -700,7 +700,7 @@ void TFITSHDU::PrintFullTable(const Option_t *) const
                printed_chars++;
             }
          }
-         
+
          if (col <= fNColumns - 1) printf("| ");
       }
       printf("\n");
@@ -717,7 +717,7 @@ void TFITSHDU::Print(const Option_t *opt) const
    // "F+":  print FITS file's extension names and types and their record data
    // "T" :  print column information when HDU is a table
    // "T+" : print full table (columns header and rows)
-   
+
    if ((opt[0] == 'F') || (opt[0] == 'f')) {
       PrintFileMetadata((opt[1] == '+') ? "+" : "");
    } else if ((opt[0] == 'T') || (opt[0] == 't')) {
@@ -726,7 +726,7 @@ void TFITSHDU::Print(const Option_t *opt) const
       } else {
          PrintColumnInfo("");
       }
-      
+
    } else {
       PrintHDUMetadata("");
    }
@@ -744,7 +744,7 @@ TImage *TFITSHDU::ReadAsImage(Int_t layer, TImagePalette *pal)
       Warning("ReadAsImage", "this is not an image HDU.");
       return 0;
    }
-   
+
 
    if (((fSizes->GetSize() != 2) && (fSizes->GetSize() != 3) && (fSizes->GetSize() != 4)) || ((fSizes->GetSize() == 4) && (fSizes->GetAt(3) > 1))) {
       Warning("ReadAsImage", "could not convert image HDU to image because it has %d dimensions.", fSizes->GetSize());
@@ -759,9 +759,9 @@ TImage *TFITSHDU::ReadAsImage(Int_t layer, TImagePalette *pal)
 
    pixels_per_layer = UInt_t(width) * UInt_t(height);
 
-   if (  ((fSizes->GetSize() == 2) && (layer > 0)) 
+   if (  ((fSizes->GetSize() == 2) && (layer > 0))
       || (((fSizes->GetSize() == 3) || (fSizes->GetSize() == 4)) && (layer >= fSizes->GetAt(2)))) {
-      
+
       Warning("ReadAsImage", "layer out of bounds.");
       return 0;
    }
@@ -795,8 +795,8 @@ TImage *TFITSHDU::ReadAsImage(Int_t layer, TImagePalette *pal)
       //plain image
       for (i = 0; i < pixels_per_layer; i++) {
          layer_pixels->SetAt(255.0, i);
-      }   
-   } else {   
+      }
+   } else {
       Double_t factor = 255.0 / (maxval-minval);
       for (i = 0; i < pixels_per_layer; i++) {
          pixvalue = fPixels->GetAt(offset + i);
@@ -833,12 +833,12 @@ void TFITSHDU::Draw(Option_t *)
 {
    // If the HDU is an image, draw the first layer of the primary array
    // To set a title to the canvas, pass it in "opt"
-   
+
    if (fType != kImageHDU) {
       Warning("Draw", "cannot draw. This is not an image HDU.");
       return;
    }
-   
+
    TImage *im = ReadAsImage(0, 0);
    if (im) {
       Int_t width = Int_t(fSizes->GetAt(0));
@@ -870,9 +870,9 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
       Warning("ReadAsMatrix", "could not convert image HDU to image because it has %d dimensions.", fSizes->GetSize());
       return 0;
    }
- 
 
-   if (   ((fSizes->GetSize() == 2) && (layer > 0)) 
+
+   if (   ((fSizes->GetSize() == 2) && (layer > 0))
        || (((fSizes->GetSize() == 3) || (fSizes->GetSize() == 4)) && (layer >= fSizes->GetAt(2)))) {
       Warning("ReadAsMatrix", "layer out of bounds.");
       return 0;
@@ -883,50 +883,50 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
    Int_t offset;
    UInt_t i;
    TMatrixD *mat=0;
-   
+
    width  = Int_t(fSizes->GetAt(0));
    height = Int_t(fSizes->GetAt(1));
-   
+
    pixels_per_layer = UInt_t(width) * UInt_t(height);
    offset = layer * pixels_per_layer;
-   
+
    double *layer_pixels = new double[pixels_per_layer];
 
    if ((opt[0] == 'S') || (opt[0] == 's')) {
       //Stretch
       // Get the maximum and minimum pixel values in the layer to auto-stretch pixels
-      Double_t factor, maxval=0, minval=0;   
+      Double_t factor, maxval=0, minval=0;
       Double_t pixvalue;
       for (i = 0; i < pixels_per_layer; i++) {
          pixvalue = fPixels->GetAt(offset + i);
-   
+
          if (pixvalue > maxval) {
             maxval = pixvalue;
          }
-   
+
          if ((i == 0) || (pixvalue < minval)) {
             minval = pixvalue;
          }
       }
-      
+
       if (maxval == minval) {
          //plain image
          for (i = 0; i < pixels_per_layer; i++) {
             layer_pixels[i] = 1.0;
-         }   
+         }
       } else {
          factor = 1.0 / (maxval-minval);
          mat = new TMatrixD(height, width);
-      
+
          for (i = 0; i < pixels_per_layer; i++) {
             layer_pixels[i] = factor * (fPixels->GetAt(offset + i) - minval);
          }
       }
-      
+
    } else {
       //No stretching
       mat = new TMatrixD(height, width);
-      
+
       for (i = 0; i < pixels_per_layer; i++) {
          layer_pixels[i] = fPixels->GetAt(offset + i);
       }
@@ -1111,7 +1111,7 @@ TVectorD* TFITSHDU::GetArrayColumn(UInt_t col)
 Int_t TFITSHDU::GetColumnNumber(const char *colname)
 {
    //Get column number given its name
-   
+
    Int_t colnum;
    for (colnum = 0; colnum < fNColumns; colnum++) {
       if (fColumnsInfo[colnum].fName == colname) {
@@ -1125,80 +1125,80 @@ Int_t TFITSHDU::GetColumnNumber(const char *colname)
 TObjArray* TFITSHDU::GetTabStringColumn(Int_t colnum)
 {
    // Get a string-typed column from a table HDU given its column index (>=0).
-   
+
    if (fType != kTableHDU) {
       Warning("GetTabStringColumn", "this is not a table HDU.");
       return 0;
    }
-   
+
    if ((colnum < 0) || (colnum >= fNColumns)) {
       Warning("GetTabStringColumn", "column index out of bounds.");
       return 0;
    }
-   
+
    if (fColumnsInfo[colnum].fType != kString) {
       Warning("GetTabStringColumn", "attempting to read a column that is not of type 'kString'.");
       return 0;
    }
-   
+
    Int_t offset = colnum * fNRows;
-   
+
    TObjArray *res = new TObjArray();
    for (Int_t row = 0; row < fNRows; row++) {
       res->Add(new TObjString(fCells[offset + row].fString));
    }
-   
+
    return res;
 }
-   
+
 //______________________________________________________________________________
 TObjArray* TFITSHDU::GetTabStringColumn(const char *colname)
 {
    // Get a string-typed column from a table HDU given its name
-   
+
    if (fType != kTableHDU) {
       Warning("GetTabStringColumn", "this is not a table HDU.");
       return 0;
    }
-   
-   
+
+
    Int_t colnum = GetColumnNumber(colname);
-   
+
    if (colnum == -1) {
       Warning("GetTabStringColumn", "column not found.");
       return 0;
    }
-      
+
    if (fColumnsInfo[colnum].fType != kString) {
       Warning("GetTabStringColumn", "attempting to read a column that is not of type 'kString'.");
       return 0;
    }
-   
+
    Int_t offset = colnum * fNRows;
-   
+
    TObjArray *res = new TObjArray();
    for (Int_t row = 0; row < fNRows; row++) {
       res->Add(new TObjString(fCells[offset + row].fString));
    }
-   
+
    return res;
-}   
+}
 
 //______________________________________________________________________________
 TVectorD* TFITSHDU::GetTabRealVectorColumn(Int_t colnum)
 {
    // Get a real number-typed column from a table HDU given its column index (>=0).
-   
+
    if (fType != kTableHDU) {
       Warning("GetTabRealVectorColumn", "this is not a table HDU.");
       return 0;
    }
-   
+
    if ((colnum < 0) || (colnum >= fNColumns)) {
       Warning("GetTabRealVectorColumn", "column index out of bounds.");
       return 0;
    }
-   
+
    if (fColumnsInfo[colnum].fType != kRealNumber) {
       Warning("GetTabRealVectorColumn", "attempting to read a column that is not of type 'kRealNumber'.");
       return 0;
@@ -1206,18 +1206,18 @@ TVectorD* TFITSHDU::GetTabRealVectorColumn(Int_t colnum)
       Warning("GetTabRealVectorColumn", "attempting to read a column whose cells have embedded vectors, not real scalars. Use GetTabRealVectorCells() instead.");
       return 0;
    }
-   
+
    Int_t offset = colnum * fNRows;
-   
+
    Double_t *arr = new Double_t[fNRows];
-     
+
    for (Int_t row = 0; row < fNRows; row++) {
       arr[row] = fCells[offset + row].fRealNumber;
    }
-   
+
    TVectorD *res = new TVectorD();
    res->Use(fNRows, arr);
-   
+
    return res;
 }
 
@@ -1225,19 +1225,19 @@ TVectorD* TFITSHDU::GetTabRealVectorColumn(Int_t colnum)
 TVectorD* TFITSHDU::GetTabRealVectorColumn(const char *colname)
 {
    // Get a real number-typed column from a table HDU given its name
-   
+
    if (fType != kTableHDU) {
       Warning("GetTabRealVectorColumn", "this is not a table HDU.");
       return 0;
    }
-   
+
    Int_t colnum = GetColumnNumber(colname);
-   
+
    if (colnum == -1) {
       Warning("GetTabRealVectorColumn", "column not found.");
       return 0;
    }
-   
+
    if (fColumnsInfo[colnum].fType != kRealNumber) {
       Warning("GetTabRealVectorColumn", "attempting to read a column that is not of type 'kRealNumber'.");
       return 0;
@@ -1245,18 +1245,18 @@ TVectorD* TFITSHDU::GetTabRealVectorColumn(const char *colname)
       Warning("GetTabRealVectorColumn", "attempting to read a column whose cells have embedded vectors, not real scalars. Use GetTabRealVectorCells() instead.");
       return 0;
    }
-   
+
    Int_t offset = colnum * fNRows;
-   
+
    Double_t *arr = new Double_t[fNRows];
-     
+
    for (Int_t row = 0; row < fNRows; row++) {
       arr[row] = fCells[offset + row].fRealNumber;
    }
-   
+
    TVectorD *res = new TVectorD();
    res->Use(fNRows, arr);
-   
+
    return res;
 }
 
@@ -1269,26 +1269,26 @@ Bool_t TFITSHDU::Change(const char *filter)
    // hduObject.Change("[EVENTS][TIME > 5]");
    // Please, see documentation of TFITSHDU(const char *filepath_with_filter) constructor
    // for further information.
-   
+
    TString tmppath;
    tmppath.Form("%s%s", fBaseFilePath.Data(), filter);
-   
+
    _release_resources();
    _initialize_me();
-   
+
    if (kFALSE == LoadHDU(tmppath)) {
       //Failed! Restore previous hdu
       Warning("Change", "error changing HDU. Restoring the previous one...");
-      
+
       _release_resources();
       _initialize_me();
-      
+
       if (kFALSE == LoadHDU(fFilePath)) {
          Warning("Change", "could not restore previous HDU. This object is no longer reliable!!");
       }
       return kFALSE;
    }
-   
+
    //Set new full path
    fFilePath = tmppath;
    return kTRUE;
@@ -1298,83 +1298,83 @@ Bool_t TFITSHDU::Change(const char *filter)
 Bool_t TFITSHDU::Change(Int_t extension_number)
 {
    // Change to another HDU given by extension_number
-   
+
    TString tmppath;
    tmppath.Form("[%d]", extension_number);
-   
+
    return Change(tmppath.Data());
 }
 
 //______________________________________________________________________________
 TObjArray *TFITSHDU::GetTabRealVectorCells(Int_t colnum)
 {
-   // Get a collection of real vectors embedded in cells along a given column from a table HDU. colnum >= 0. 
+   // Get a collection of real vectors embedded in cells along a given column from a table HDU. colnum >= 0.
    if (fType != kTableHDU) {
       Warning("GetTabRealVectorCells", "this is not a table HDU.");
       return 0;
    }
-   
+
    if ((colnum < 0) || (colnum >= fNColumns)) {
       Warning("GetTabRealVectorCells", "column index out of bounds.");
       return 0;
    }
-   
+
    if (fColumnsInfo[colnum].fType != kRealNumber) {
       Warning("GetTabRealVectorCells", "attempting to read a column that is not of type 'kRealNumber'.");
       return 0;
    }
-   
+
    Int_t offset = colnum * fNRows;
-   
+
    TObjArray *res = new TObjArray();
    Int_t dim = fColumnsInfo[colnum].fDim;
-     
+
    for (Int_t row = 0; row < fNRows; row++) {
       TVectorD *v = new TVectorD();
       v->Use(dim, fCells[offset + row].fRealVector);
       res->Add(v);
    }
-   
+
    //Make the collection to own the allocated TVectorD objects, so when
-   //destroying the collection, the vectors will be destroyed too. 
+   //destroying the collection, the vectors will be destroyed too.
    res->SetOwner(kTRUE);
-   
+
    return res;
 }
 
 //______________________________________________________________________________
 TObjArray *TFITSHDU::GetTabRealVectorCells(const char *colname)
 {
-   // Get a collection of real vectors embedded in cells along a given column from a table HDU by name 
+   // Get a collection of real vectors embedded in cells along a given column from a table HDU by name
    if (fType != kTableHDU) {
       Warning("GetTabRealVectorCells", "this is not a table HDU.");
       return 0;
    }
-   
+
    Int_t colnum = GetColumnNumber(colname);
-   
+
    if (colnum == -1) {
       Warning("GetTabRealVectorCells", "column not found.");
       return 0;
    }
-   
+
    return GetTabRealVectorCells(colnum);
 }
 
 //______________________________________________________________________________
 TVectorD *TFITSHDU::GetTabRealVectorCell(Int_t rownum, Int_t colnum)
 {
-   // Get a real vector embedded in a cell given by (row>=0, column>=0) 
+   // Get a real vector embedded in a cell given by (row>=0, column>=0)
    if (fType != kTableHDU) {
       Warning("GetTabRealVectorCell", "this is not a table HDU.");
       return 0;
    }
-   
+
    if ((colnum < 0) || (colnum >= fNColumns)) {
       Warning("GetTabRealVectorCell", "column index out of bounds.");
       return 0;
    }
-   
+
    if ((rownum < 0) || (rownum >= fNRows)) {
       Warning("GetTabRealVectorCell", "row index out of bounds.");
       return 0;
@@ -1384,29 +1384,29 @@ TVectorD *TFITSHDU::GetTabRealVectorCell(Int_t rownum, Int_t colnum)
       Warning("GetTabRealVectorCell", "attempting to read a column that is not of type 'kRealNumber'.");
       return 0;
    }
-   
+
    TVectorD *v = new TVectorD();
    v->Use(fColumnsInfo[colnum].fDim, fCells[(colnum * fNRows) + rownum].fRealVector);
-   
+
    return v;
 }
 
 //______________________________________________________________________________
 TVectorD *TFITSHDU::GetTabRealVectorCell(Int_t rownum, const char *colname)
 {
-   // Get a real vector embedded in a cell given by (row>=0, column name)  
+   // Get a real vector embedded in a cell given by (row>=0, column name)
    if (fType != kTableHDU) {
       Warning("GetTabRealVectorCell", "this is not a table HDU.");
       return 0;
    }
-   
+
    Int_t colnum = GetColumnNumber(colname);
-   
+
    if (colnum == -1) {
       Warning("GetTabRealVectorCell", "column not found.");
       return 0;
    }
-   
+
    return GetTabRealVectorCell(rownum, colnum);
 }
 
@@ -1422,7 +1422,7 @@ const TString& TFITSHDU::GetColumnName(Int_t colnum)
       Error("GetColumnName", "this is not a table HDU.");
       return noName;
    }
-   
+
    if ((colnum < 0) || (colnum >= fNColumns)) {
       Error("GetColumnName", "column index out of bounds.");
       return noName;

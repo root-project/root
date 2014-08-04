@@ -51,7 +51,7 @@ protected:
    Double_t      fCpuTime;       //Cpu time
    Double_t      fDiskTime;      //Time spent in pure raw disk IO
    Double_t      fUnzipTime;     //Time spent uncompressing the data.
-   Double_t      fCompress;      //Tree compression factor      
+   Double_t      fCompress;      //Tree compression factor
    TString       fName;          //name of this TTreePerfStats
    TString       fHostInfo;      //name of the host system, ROOT version and date
    TFile        *fFile;          //!pointer to the file containing the Tree
@@ -62,7 +62,7 @@ protected:
    TStopwatch   *fWatch;         //TStopwatch pointer
    TGaxis       *fRealTimeAxis;  //pointer to TGaxis object showing real-time
    TText        *fHostInfoText;  //Graphics Text object with the fHostInfo data
-      
+
 public:
    TTreePerfStats();
    TTreePerfStats(const char *name, TTree *T);

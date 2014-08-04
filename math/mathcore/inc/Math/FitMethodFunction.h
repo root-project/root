@@ -21,41 +21,41 @@
 // #include "Math/IParamFunctionfwd.h"
 // #endif
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Math { 
+   namespace Math {
 
 //______________________________________________________________________________________
-/** 
-   FitMethodFunction class 
+/**
+   FitMethodFunction class
    Interface for objective functions (like chi2 and likelihood used in the fit)
-   In addition to normal function interface provide interface for calculating each 
+   In addition to normal function interface provide interface for calculating each
    data contrinution to the function which is required by some algorithm (like Fumili)
 
    @ingroup  FitMethodFunc
-*/ 
+*/
 template<class FunctionType>
 class BasicFitMethodFunction : public FunctionType {
 
 public:
 
 
-   typedef  typename FunctionType::BaseFunc BaseFunction; 
+   typedef  typename FunctionType::BaseFunc BaseFunction;
 
    /// enumeration specyfing the possible fit method types
-   enum Type_t { kUndefined , kLeastSquare, kLogLikelihood }; 
+   enum Type_t { kUndefined , kLeastSquare, kLogLikelihood };
 
 
-   BasicFitMethodFunction(int dim, int npoint) : 
-      fNDim(dim), 
+   BasicFitMethodFunction(int dim, int npoint) :
+      fNDim(dim),
       fNPoints(npoint),
       fNCalls(0)
    {}
 
-   /** 
+   /**
       Virtual Destructor (no operations)
-   */ 
-   virtual ~BasicFitMethodFunction ()  {}  
+   */
+   virtual ~BasicFitMethodFunction ()  {}
 
    /**
       Number of dimension (parameters) . From IGenMultiFunction interface
@@ -64,11 +64,11 @@ public:
 
    /**
       method returning the data i-th contribution to the fit objective function
-      For example the residual for the least square functions or the pdf element for the 
-      likelihood functions. 
+      For example the residual for the least square functions or the pdf element for the
+      likelihood functions.
       Estimating eventually also the gradient of the data element if the passed pointer  is not null
     */
-   virtual double DataElement(const double *x, unsigned int i, double *g = 0) const = 0; 
+   virtual double DataElement(const double *x, unsigned int i, double *g = 0) const = 0;
 
 
    /**
@@ -87,7 +87,7 @@ public:
    virtual unsigned int NCalls() const { return fNCalls; }
 
    /**
-      update number of calls 
+      update number of calls
     */
    virtual void UpdateNCalls() const { fNCalls++; }
 
@@ -98,38 +98,38 @@ public:
 
 
 
-public: 
+public:
 
 
-protected: 
+protected:
 
 
-private: 
+private:
 
-   unsigned int fNDim;      // function dimension 
+   unsigned int fNDim;      // function dimension
    unsigned int fNPoints;   // size of the data
    mutable unsigned int fNCalls; // number of function calls
 
 
-}; 
+};
 
       // define the normal and gradient function
-      typedef BasicFitMethodFunction<ROOT::Math::IMultiGenFunction>  FitMethodFunction;      
+      typedef BasicFitMethodFunction<ROOT::Math::IMultiGenFunction>  FitMethodFunction;
       typedef BasicFitMethodFunction<ROOT::Math::IMultiGradFunction> FitMethodGradFunction;
 
 
-      // useful template definition to use these interface in 
+      // useful template definition to use these interface in
       // generic programming
-      // (comment them out since they are not used anymore) 
+      // (comment them out since they are not used anymore)
 /*
-      template<class FunType> 
-      struct ParamFunctionTrait { 
+      template<class FunType>
+      struct ParamFunctionTrait {
          typedef  IParamMultiFunction PFType;
       };
 
       // specialization for the gradient param functions
-      template<>      
-      struct ParamFunctionTrait<ROOT::Math::IMultiGradFunction>  { 
+      template<>
+      struct ParamFunctionTrait<ROOT::Math::IMultiGradFunction>  {
          typedef  IParamMultiGradFunction PFType;
       };
 */

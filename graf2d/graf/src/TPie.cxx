@@ -833,7 +833,7 @@ void TPie::Paint(Option_t *option)
 
    // if true the lines around the slices are drawn, if false not
    Bool_t optionLine(kTRUE);
-   
+
    // if true the labels' colors are the same as the slices' colors
    Bool_t optionSameColor(kFALSE);
 
@@ -855,7 +855,7 @@ void TPie::Paint(Option_t *option)
       optionLine = kFALSE;
       soption.Remove(idx,3);
    }
-   
+
    if ( (idx=soption.Index("sc"))>=0 ) {
       optionSameColor = kTRUE;
       soption.Remove(idx,2);
@@ -880,7 +880,7 @@ void TPie::Paint(Option_t *option)
       lblor = 1;
       soption.Remove(idx,1);
    }
-   
+
    // Seeks if has to paint sort the slices in increasing mode
    if ( (idx=soption.Index(">"))>=0 ) {
       SortSlices(kTRUE);
@@ -1060,7 +1060,7 @@ void TPie::Paint(Option_t *option)
       Float_t rphi = TMath::ATan2((ly-fY)*radXY,lx-fX);
       if (rphi < 0 && fIs3D && label_off>=0.)
          ly -= fHeight;
-      
+
       if (optionSameColor) textlabel->SetTextColor((fPieSlices[i]->GetFillColor()));
       textlabel->PaintLatex(lx,ly,
                             lblang*180/TMath::Pi()+GetTextAngle(),
@@ -1486,8 +1486,8 @@ void TPie::SortSlices(Bool_t amode, Float_t merge_threshold)
    //
    // If the merge_thresold>0 the slice that contains a quantity smaller than merge_thresold are merged
    // togheter
-   
-   
+
+
    // main loop to order, bubble sort, the array
    Bool_t isDone = kFALSE;
 
@@ -1519,16 +1519,16 @@ void TPie::SortSlices(Bool_t amode, Float_t merge_threshold)
       merged_slice->SetFillColor(gStyle->GetColorPalette( (amode ? 0 : fNvals-1) ));
       merged_slice->SetFillStyle(1001);
 
-      if (amode) {         
+      if (amode) {
          // search slices under the threshold
          Int_t iMerged = 0;
          for (;iMerged<fNvals&&fPieSlices[iMerged]->GetValue()<merge_threshold;++iMerged) {
             merged_slice->SetValue( merged_slice->GetValue()+fPieSlices[iMerged]->GetValue() );
          }
-         
+
          // evaluate number of valid slices
          if (iMerged<=1) { // no slices to merge
-            delete merged_slice; 
+            delete merged_slice;
          }
          else { // write a new array with the right dimension
             Int_t old_fNvals = fNvals;
@@ -1552,7 +1552,7 @@ void TPie::SortSlices(Bool_t amode, Float_t merge_threshold)
          // evaluate number of valid slices
          Int_t nMerged = fNvals-1-iMerged;
          if (nMerged<=1) { // no slices to merge
-            delete merged_slice; 
+            delete merged_slice;
          }
          else { // write a new array with the right dimension
             Int_t old_fNvals = fNvals;
@@ -1569,7 +1569,7 @@ void TPie::SortSlices(Bool_t amode, Float_t merge_threshold)
 
       }
    }
-   
+
    MakeSlices(kTRUE);
 }
 

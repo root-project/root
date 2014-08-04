@@ -1,4 +1,4 @@
-This directory contains utilities to plot data stored in a TTree. 
+This directory contains utilities to plot data stored in a TTree.
 BEGIN_HTML
  See the TTree documentation:
 <ul>

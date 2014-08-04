@@ -30,9 +30,9 @@
 //  Int_t            fY;                // X,Y: quantum numbers for the 4-th generation
 //  Int_t            fX;
 //  Int_t            fStable;           // 1 if stable, 0 otherwise
-//                                        
+//
 //  TObjArray*       fDecayList;        // array of decay channels
-//                                
+//
 //  TString          fParticleClass;    // lepton, meson etc
 //
 //  Int_t            fTrackingCode;     // G3 tracking code of the particle
@@ -127,7 +127,7 @@ TParticlePDG::TParticlePDG(const char* Name, const char* Title, Double_t aMass,
    fDecayList     = NULL;
    if (Anti) fAntiParticle = this;
    else      fAntiParticle = 0;
-   
+
    const Double_t kHbar = 6.58211889e-25; // GeV s
    if (fWidth != 0.) fLifetime = kHbar / fWidth;
 }

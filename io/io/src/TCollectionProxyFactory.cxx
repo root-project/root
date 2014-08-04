@@ -68,7 +68,7 @@ namespace {
             default:
                result = new TEmulatedCollectionProxy(class_name,silent);
          }
-         if ( result->IsValid() ) { 
+         if ( result->IsValid() ) {
             return result;
          }
       }

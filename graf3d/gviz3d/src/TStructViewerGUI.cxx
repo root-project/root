@@ -42,12 +42,12 @@ ClassImp(TStructViewerGUI);
 //////////////////////////////////////////////////////////////////////////
 //
 // TStructViewerGUI is main window of TStructViewer. It provides graphical
-// interface. In the window we can find panel with tabs and frame with 
-// GLViewer. Tab "Info" serves information about node and is used to naviagate 
-// backward and forward. Second tab "Options" is used to set few options 
+// interface. In the window we can find panel with tabs and frame with
+// GLViewer. Tab "Info" serves information about node and is used to naviagate
+// backward and forward. Second tab "Options" is used to set few options
 // such as links visibility, scaling method or setting a pointer.
 // Last tab "Editor" is tab when the TStructNodeEditor is placed.
-// 
+//
 //////////////////////////////////////////////////////////////////////////
 
 TGeoMedium* TStructViewerGUI::fgMedium = NULL;
@@ -62,14 +62,14 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
 
    fParent = parent;
    fNodePtr = nodePtr;
-   
+
    fMaxSlices = 10;
    fMouseX = 0;
    fMouseY = 0;
    fSelectedObject = NULL;
    fMaxRatio = 0;
    fColors = colors;
-   
+
    if (!gGeoManager) new TGeoManager("tmp","tmp");
    if (!fgMedium) {
       fgMedium = new TGeoMedium("MED",1,new TGeoMaterial("Mat", 26.98,13,2.7));
@@ -108,12 +108,12 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
    // OPTIONS
    //////////////////////////////////////////////////////////////////////////
    TGCompositeFrame* options = tabs->AddTab("Options");
-    
+
    fShowLinksCheckButton = new TGCheckButton(options, "Show links");
    fShowLinksCheckButton->Connect("Toggled(Bool_t)", "TStructViewerGUI", this, "ShowLinksToggled(Bool_t)");
    options->AddFrame(fShowLinksCheckButton);
    fShowLinksCheckButton->SetOn();
- 
+
    TGVButtonGroup* scaleByGroup = new TGVButtonGroup(options, "Scale by");
    fScaleBySizeButton = new TGRadioButton(scaleByGroup, "Size");
    fScaleBySizeButton->Connect("Clicked()", "TStructViewerGUI", this, "ScaleByChangedSlot()");
@@ -178,7 +178,7 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
    TGVSplitter* splitter = new TGVSplitter(this);
    splitter->SetFrame(leftFrame, true);
    this->AddFrame(splitter, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
- 
+
    //////////////////////////////////////////////////////////////////////////
    // NAVIGATE
    //////////////////////////////////////////////////////////////////////////
@@ -207,7 +207,7 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
    fTopVolume = gGeoManager->MakeBox("TOPVolume", fgMedium,100, 100, 100);
    gGeoManager->SetTopVolume(fTopVolume);
    gGeoManager->SetNsegments(40);
-    
+
    fCanvas = new TCanvas("", "", 0, 0);
    // drawing after creating canvas to avoid drawing in default canvas
    fGLViewer = new TGLEmbeddedViewer(this, fCanvas);
@@ -219,7 +219,7 @@ TStructViewerGUI::TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, 
    fGLViewer->SetCurrentCamera(TGLViewer::kCameraPerspXOY);
    Update();
    fGLViewer->SetResetCamerasOnUpdate(false);
- 
+
    SetWindowName("Struct Viewer");
    MapSubwindows();
    this->SetWMSizeHints(w, h, 2000, 2000, 0, 0);
@@ -412,7 +412,7 @@ void TStructViewerGUI::Divide(TList* list, Float_t x1, Float_t x2, Float_t y1, F
 //________________________________________________________________________
 void TStructViewerGUI::DoubleClickedSlot()
 {
-   // Activated when user double click on objects on 3D scene. Sets clicked node to top node 
+   // Activated when user double click on objects on 3D scene. Sets clicked node to top node
    // and updates scene with camers reset.
 
    if (fSelectedObject) {
@@ -586,7 +586,7 @@ TCanvas* TStructViewerGUI::GetCanvas()
    return fCanvas;
 }
 //________________________________________________________________________
-Int_t TStructViewerGUI::GetColor(TStructNode* node) 
+Int_t TStructViewerGUI::GetColor(TStructNode* node)
 {
    // Returns color form fColors for given "node"
 
@@ -642,7 +642,7 @@ void TStructViewerGUI::GLWidgetProcessedEventSlot(Event_t* event)
          if (fSelectedObject) {
             UpdateLabels(fSelectedObject);
             fEditor->SetModel(fSelectedObject);
-         }         
+         }
          break;
 
       default:
@@ -663,7 +663,7 @@ void TStructViewerGUI::LevelDistValueSetSlot(Long_t /* dist */)
 //________________________________________________________________________
 void TStructViewerGUI::MouseOverSlot(TGLPhysicalShape* shape)
 {
-   // MouseOver slot. Activated when user out mouse over object on scene. 
+   // MouseOver slot. Activated when user out mouse over object on scene.
    // Sets ToolTip and updates labels
 
    fToolTip->Hide();
@@ -678,7 +678,7 @@ void TStructViewerGUI::MouseOverSlot(TGLPhysicalShape* shape)
          Long_t shapeID  = (Long_t)(shape->GetLogical()->ID());
          Long_t volValue = (Long_t)fVolumes.GetValue(shapeID);
          fSelectedObject = (TStructNode*)volValue;
-         
+
          fToolTip->SetText(TString(fSelectedObject->GetName()) + "\n" + fSelectedObject->GetTypeName());
          fToolTip->SetPosition(fMouseX, fMouseY);
          fToolTip->Reset();
@@ -715,7 +715,7 @@ void TStructViewerGUI::ResetButtonSlot()
 //________________________________________________________________________
 void TStructViewerGUI::Scale(TStructNode* parent)
 {
-   // Recursive method to scaling all modes on scene. We have to scale nodes to get real ratio between nodes. 
+   // Recursive method to scaling all modes on scene. We have to scale nodes to get real ratio between nodes.
    // Uses fMaxRatio.
 
    // newRatio = sqrt(ratio/maxratio)
@@ -866,7 +866,7 @@ void TStructViewerGUI::UpdateLabels(TStructNode* node)
 //________________________________________________________________________
 void TStructViewerGUI::UndoButtonSlot()
 {
-   // UndoButton Slot. Activated when user press Undo button. Restore last top node pointer. 
+   // UndoButton Slot. Activated when user press Undo button. Restore last top node pointer.
 
    fRedoList.Add(fNodePtr);
    fRedoButton->SetEnabled(true);
@@ -882,7 +882,7 @@ void TStructViewerGUI::UndoButtonSlot()
 //________________________________________________________________________
 void TStructViewerGUI::ScaleByChangedSlot()
 {
-   // Activated when user press radio button 
+   // Activated when user press radio button
 
     if (fAutoRefesh->IsOn()) {
        Update();

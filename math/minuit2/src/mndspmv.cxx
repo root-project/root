@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -20,57 +20,57 @@ namespace ROOT {
 bool mnlsame(const char*, const char*);
 int mnxerbla(const char*, int);
 
-int Mndspmv(const char* uplo, unsigned int n, double alpha, 
-            const double* ap, const double* x, int incx, double beta, 
+int Mndspmv(const char* uplo, unsigned int n, double alpha,
+            const double* ap, const double* x, int incx, double beta,
             double* y, int incy) {
    /* System generated locals */
    int i__1, i__2;
-   
+
    /* Local variables */
    int info;
    double temp1, temp2;
    int i__, j, k;
    int kk, ix, iy, jx, jy, kx, ky;
-   
+
    /*     .. Scalar Arguments .. */
    /*     .. Array Arguments .. */
    /*     .. */
-   
+
    /*  Purpose */
    /*  ======= */
-   
+
    /*  DSPMV  performs the matrix-vector operation */
-   
+
    /*     y := alpha*A*x + beta*y, */
-   
+
    /*  where alpha and beta are scalars, x and y are n element vectors and */
    /*  A is an n by n symmetric matrix, supplied in packed form. */
-   
+
    /*  Parameters */
    /*  ========== */
-   
+
    /*  UPLO   - CHARACTER*1. */
    /*           On entry, UPLO specifies whether the Upper or Lower */
    /*           triangular part of the matrix A is supplied in the packed */
    /*           array AP as follows: */
-   
+
    /*              UPLO = 'U' or 'u'   The Upper triangular part of A is */
    /*                                  supplied in AP. */
-   
+
    /*              UPLO = 'L' or 'l'   The Lower triangular part of A is */
    /*                                  supplied in AP. */
-   
+
    /*           Unchanged on exit. */
-   
+
    /*  N      - INTEGER. */
    /*           On entry, N specifies the order of the matrix A. */
    /*           N must be at least zero. */
    /*           Unchanged on exit. */
-   
+
    /*  ALPHA  - DOUBLE PRECISION. */
    /*           On entry, ALPHA specifies the scalar alpha. */
    /*           Unchanged on exit. */
-   
+
    /*  AP     - DOUBLE PRECISION array of DIMENSION at least */
    /*           ( ( n*( n + 1 ) )/2 ). */
    /*           Before entry with UPLO = 'U' or 'u', the array AP must */
@@ -84,66 +84,66 @@ int Mndspmv(const char* uplo, unsigned int n, double alpha,
    /*           contains a( 1, 1 ), AP( 2 ) and AP( 3 ) contain a( 2, 1 ) */
    /*           and a( 3, 1 ) respectively, and so on. */
    /*           Unchanged on exit. */
-   
+
    /*  X      - DOUBLE PRECISION array of dimension at least */
    /*           ( 1 + ( n - 1 )*abs( INCX ) ). */
    /*           Before entry, the incremented array X must contain the n */
    /*           element vector x. */
    /*           Unchanged on exit. */
-   
+
    /*  INCX   - INTEGER. */
    /*           On entry, INCX specifies the increment for the Elements of */
    /*           X. INCX must not be zero. */
    /*           Unchanged on exit. */
-   
+
    /*  BETA   - DOUBLE PRECISION. */
    /*           On entry, BETA specifies the scalar beta. When BETA is */
    /*           supplied as zero then Y need not be set on input. */
    /*           Unchanged on exit. */
-   
+
    /*  Y      - DOUBLE PRECISION array of dimension at least */
    /*           ( 1 + ( n - 1 )*abs( INCY ) ). */
    /*           Before entry, the incremented array Y must contain the n */
    /*           element vector y. On exit, Y is overwritten by the updated */
    /*           vector y. */
-   
+
    /*  INCY   - INTEGER. */
    /*           On entry, INCY specifies the increment for the Elements of */
    /*           Y. INCY must not be zero. */
    /*           Unchanged on exit. */
-   
-   
+
+
    /*  Level 2 Blas routine. */
-   
+
    /*  -- Written on 22-October-1986. */
    /*     Jack Dongarra, Argonne National Lab. */
    /*     Jeremy Du Croz, Nag Central Office. */
    /*     Sven Hammarling, Nag Central Office. */
    /*     Richard Hanson, Sandia National Labs. */
-   
-   
+
+
    /*     .. Parameters .. */
    /*     .. Local Scalars .. */
    /*     .. External Functions .. */
    /*     .. External Subroutines .. */
    /*     .. */
    /*     .. Executable Statements .. */
-   
+
    /*     Test the input parameters. */
-   
+
    /* Parameter adjustments */
    --y;
    --x;
    --ap;
-   
+
    /* Function Body */
    info = 0;
    if (! mnlsame(uplo, "U") && ! mnlsame(uplo, "L")) {
       info = 1;
-   } 
+   }
    //     else if (n < 0) {
    //       info = 2;
-   //     } 
+   //     }
    else if (incx == 0) {
       info = 6;
    } else if (incy == 0) {
@@ -153,15 +153,15 @@ int Mndspmv(const char* uplo, unsigned int n, double alpha,
       mnxerbla("DSPMV ", info);
       return 0;
    }
-   
+
    /*     Quick return if possible. */
-   
+
    if ( ( n == 0)  || ( alpha == 0. && beta == 1.) ) {
       return 0;
    }
-   
+
    /*     Set up the start points in  X  and  Y. */
-   
+
    if (incx > 0) {
       kx = 1;
    } else {
@@ -172,12 +172,12 @@ int Mndspmv(const char* uplo, unsigned int n, double alpha,
    } else {
       ky = 1 - (n - 1) * incy;
    }
-   
+
    /*     Start the operations. In this version the Elements of the array AP */
    /*     are accessed sequentially with one pass through AP. */
-   
+
    /*     First form  y := beta*y. */
-   
+
    if (beta != 1.) {
       if (incy == 1) {
          if (beta == 0.) {
@@ -217,9 +217,9 @@ int Mndspmv(const char* uplo, unsigned int n, double alpha,
    }
    kk = 1;
    if (mnlsame(uplo, "U")) {
-      
+
       /*        Form  y  when AP contains the Upper triangle. */
-      
+
       if (incx == 1 && incy == 1) {
          i__1 = n;
          for (j = 1; j <= i__1; ++j) {
@@ -262,9 +262,9 @@ int Mndspmv(const char* uplo, unsigned int n, double alpha,
          }
       }
    } else {
-      
+
       /*        Form  y  when AP contains the Lower triangle. */
-      
+
       if (incx == 1 && incy == 1) {
          i__1 = n;
          for (j = 1; j <= i__1; ++j) {
@@ -309,11 +309,11 @@ int Mndspmv(const char* uplo, unsigned int n, double alpha,
          }
       }
    }
-   
+
    return 0;
-   
+
    /*     End of DSPMV . */
-   
+
 } /* dspmv_ */
 
 

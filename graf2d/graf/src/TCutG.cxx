@@ -71,7 +71,7 @@ corresponding to x,y if one wants to use the cut as input to TTree::Draw,eg
    cutg->SetPoint(4,0.756681,0.1853814);
    cutg->SetPoint(5,-0.3586207,1.509534);
 </pre>
-<p>   
+<p>
 Example of use of a TCutG in TTree::Draw:
 <pre>
    tree.Draw("x:y","mycutg && z>0 %% sqrt(x)>1")
@@ -256,7 +256,7 @@ TCutG::~TCutG()
 }
 
 //______________________________________________________________________________
-TCutG &TCutG::operator=(const TCutG &rhs) 
+TCutG &TCutG::operator=(const TCutG &rhs)
 {
    // Assignment operator.
 
@@ -283,7 +283,7 @@ Double_t TCutG::Area() const
       a += (fX[i]-fX[i+1])*(fY[i]+fY[i+1]);
    }
    a *= 0.5;
-   return a;   
+   return a;
 }
 
 //______________________________________________________________________________
@@ -385,7 +385,7 @@ void TCutG::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 //______________________________________________________________________________
-void TCutG::SetObjectX(TObject *obj) 
+void TCutG::SetObjectX(TObject *obj)
 {
    // Set the X object (and delete the previous one if any).
 
@@ -397,7 +397,7 @@ void TCutG::SetObjectX(TObject *obj)
 void TCutG::SetObjectY(TObject *obj)
 {
    // Set the Y object (and delete the previous one if any).
-   
+
    delete fObjectY;
    fObjectY = obj;
 }

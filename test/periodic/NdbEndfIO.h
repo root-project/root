@@ -15,7 +15,7 @@ enum {
 };
 
 #define   TENDF_NEXT_NUMBER   -1
-#define TENDF_MAXREC      100 
+#define TENDF_MAXREC      100
 
 // End records
 enum {
@@ -27,8 +27,8 @@ enum {
 
 class NdbEndfIO : public TObject
 {
-  // ================== NdbEndfIO =================== 
-  // This class is handling all the input/output 
+  // ================== NdbEndfIO ===================
+  // This class is handling all the input/output
   // to an ENDF-B/VI file
   //
 protected:
@@ -57,7 +57,7 @@ public:
    NdbEndfIO( char *filename, Int_t mode);
 
      NdbEndfIO( NdbEndfIO *endf ) {
-        f   = endf->f;      
+        f   = endf->f;
         mode   = endf->mode;
        iMAT   = endf->iMAT;
        iMF   = endf->iMF;
@@ -114,7 +114,7 @@ public:
 
    // Rewind to beggining of current section (MT)
    Bool_t      RewindMT()   { return fseek(f, mtStart, SEEK_SET); }
-      
+
    // Read entire line
    Bool_t      ReadLine();
 

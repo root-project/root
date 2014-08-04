@@ -1,6 +1,6 @@
 
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
 /**********************************************************************
 *                                                                    *
@@ -10,13 +10,13 @@
 **********************************************************************/
 
 // Header file for class PtEtaPhiE4D
-// 
+//
 // Created by: fischler at Wed Jul 20 2005
 //   based on CylindricalEta4D by moneta
-// 
+//
 // Last update: $Id$
-// 
-#ifndef ROOT_Math_GenVector_PtEtaPhiE4D 
+//
+#ifndef ROOT_Math_GenVector_PtEtaPhiE4D
 #define ROOT_Math_GenVector_PtEtaPhiE4D  1
 
 #ifndef ROOT_Math_Math
@@ -27,7 +27,7 @@
 #include "Math/GenVector/etaMax.h"
 #endif
 
-#ifndef ROOT_Math_GenVector_GenVector_exception 
+#ifndef ROOT_Math_GenVector_GenVector_exception
 #include "Math/GenVector/GenVector_exception.h"
 #endif
 
@@ -40,64 +40,64 @@
 
 
 
-namespace ROOT {   
+namespace ROOT {
 
-namespace Math { 
-       
+namespace Math {
+
 //__________________________________________________________________________________________
-/** 
+/**
     Class describing a 4D cylindrical coordinate system
-    using Pt , Phi, Eta and E (or rho, phi, eta , T) 
-    The metric used is (-,-,-,+). 
+    using Pt , Phi, Eta and E (or rho, phi, eta , T)
+    The metric used is (-,-,-,+).
     Phi is restricted to be in the range [-PI,PI)
-    
+
     @ingroup GenVector
-*/ 
+*/
 
-template <class ScalarType> 
-class PtEtaPhiE4D { 
+template <class ScalarType>
+class PtEtaPhiE4D {
 
-public : 
+public :
 
    typedef ScalarType Scalar;
 
    // --------- Constructors ---------------
 
    /**
-      Default constructor gives zero 4-vector  
+      Default constructor gives zero 4-vector
    */
    PtEtaPhiE4D() : fPt(0), fEta(0), fPhi(0), fE(0) { }
 
    /**
       Constructor  from pt, eta, phi, e values
    */
-   PtEtaPhiE4D(Scalar pt, Scalar eta, Scalar phi, Scalar e) : 
+   PtEtaPhiE4D(Scalar pt, Scalar eta, Scalar phi, Scalar e) :
       fPt(pt), fEta(eta), fPhi(phi), fE(e) { Restrict(); }
 
    /**
-      Generic constructor from any 4D coordinate system implementing 
-      Pt(), Eta(), Phi() and E()  
-   */ 
-   template <class CoordSystem > 
-   explicit PtEtaPhiE4D(const CoordSystem & c) : 
+      Generic constructor from any 4D coordinate system implementing
+      Pt(), Eta(), Phi() and E()
+   */
+   template <class CoordSystem >
+   explicit PtEtaPhiE4D(const CoordSystem & c) :
       fPt(c.Pt()), fEta(c.Eta()), fPhi(c.Phi()), fE(c.E())  { }
 
-   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower 
+   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
    // so we decided to re-implement them ( there is no no need to have them with g++4)
 
    /**
       copy constructor
     */
-   PtEtaPhiE4D(const PtEtaPhiE4D & v) : 
+   PtEtaPhiE4D(const PtEtaPhiE4D & v) :
       fPt(v.fPt), fEta(v.fEta), fPhi(v.fPhi), fE(v.fE) { }
-      
+
    /**
-      assignment operator 
+      assignment operator
     */
-   PtEtaPhiE4D & operator = (const PtEtaPhiE4D & v) { 
-      fPt  = v.fPt;  
-      fEta = v.fEta;  
-      fPhi = v.fPhi;  
+   PtEtaPhiE4D & operator = (const PtEtaPhiE4D & v) {
+      fPt  = v.fPt;
+      fEta = v.fEta;
+      fPhi = v.fPhi;
       fE   = v.fE;
       return *this;
    }
@@ -105,32 +105,32 @@ public :
 
    /**
       Set internal data based on an array of 4 Scalar numbers
-   */ 
-   void SetCoordinates( const Scalar src[] ) 
+   */
+   void SetCoordinates( const Scalar src[] )
    { fPt=src[0]; fEta=src[1]; fPhi=src[2]; fE=src[3]; Restrict(); }
 
    /**
       get internal data into an array of 4 Scalar numbers
-   */ 
-   void GetCoordinates( Scalar dest[] ) const 
+   */
+   void GetCoordinates( Scalar dest[] ) const
    { dest[0] = fPt; dest[1] = fEta; dest[2] = fPhi; dest[3] = fE; }
 
    /**
       Set internal data based on 4 Scalar numbers
-   */ 
-   void SetCoordinates(Scalar pt, Scalar eta, Scalar phi, Scalar e) 
+   */
+   void SetCoordinates(Scalar pt, Scalar eta, Scalar phi, Scalar e)
    { fPt=pt; fEta = eta; fPhi = phi; fE = e; Restrict(); }
 
    /**
       get internal data into 4 Scalar numbers
-   */ 
-   void 
-   GetCoordinates(Scalar& pt, Scalar & eta, Scalar & phi, Scalar& e) const 
+   */
+   void
+   GetCoordinates(Scalar& pt, Scalar & eta, Scalar & phi, Scalar& e) const
    { pt=fPt; eta=fEta; phi = fPhi; e = fE; }
 
    // --------- Coordinates and Coordinate-like Scalar properties -------------
 
-   // 4-D Cylindrical eta coordinate accessors  
+   // 4-D Cylindrical eta coordinate accessors
 
    Scalar Pt()  const { return fPt;  }
    Scalar Eta() const { return fEta; }
@@ -140,7 +140,7 @@ public :
    Scalar Perp()const { return Pt(); }
    Scalar Rho() const { return Pt(); }
    Scalar T()   const { return E();  }
-  
+
    // other coordinate representation
 
    Scalar Px() const { return fPt*cos(fPhi);}
@@ -148,25 +148,25 @@ public :
    Scalar Py() const { return fPt*sin(fPhi);}
    Scalar Y () const { return Py();         }
    Scalar Pz() const {
-      return fPt >   0 ? fPt*std::sinh(fEta)     : 
+      return fPt >   0 ? fPt*std::sinh(fEta)     :
          fEta == 0 ? 0                       :
          fEta >  0 ? fEta - etaMax<Scalar>() :
-         fEta + etaMax<Scalar>() ; 
+         fEta + etaMax<Scalar>() ;
    }
    Scalar Z () const { return Pz(); }
 
-   /** 
+   /**
        magnitude of momentum
    */
-   Scalar P() const { 
+   Scalar P() const {
       return  fPt  > 0                 ?  fPt*std::cosh(fEta)       :
          fEta >  etaMax<Scalar>() ?  fEta - etaMax<Scalar>()   :
          fEta < -etaMax<Scalar>() ? -fEta - etaMax<Scalar>()   :
-         0                         ; 
+         0                         ;
    }
    Scalar R() const { return P(); }
 
-   /** 
+   /**
        squared magnitude of spatial components (momentum squared)
    */
    Scalar P2() const { Scalar p = P(); return p*p; }
@@ -175,12 +175,12 @@ public :
       vector magnitude squared (or mass squared)
    */
    Scalar M2() const { Scalar p = P(); return fE*fE - p*p; }
-   Scalar Mag2() const { return M2(); } 
+   Scalar Mag2() const { return M2(); }
 
    /**
-      invariant mass 
+      invariant mass
    */
-   Scalar M() const    { 
+   Scalar M() const    {
       Scalar mm = M2();
       if (mm >= 0) {
          return std::sqrt(mm);
@@ -192,21 +192,21 @@ public :
    }
    Scalar Mag() const    { return M(); }
 
-   /** 
-       transverse spatial component squared  
+   /**
+       transverse spatial component squared
    */
    Scalar Pt2()   const { return fPt*fPt;}
    Scalar Perp2() const { return Pt2();  }
 
-   /** 
+   /**
        transverse mass squared
    */
-   Scalar Mt2() const {  Scalar pz = Pz(); return fE*fE  - pz*pz; } 
+   Scalar Mt2() const {  Scalar pz = Pz(); return fE*fE  - pz*pz; }
 
    /**
       transverse mass
    */
-   Scalar Mt() const { 
+   Scalar Mt() const {
       Scalar mm = Mt2();
       if (mm >= 0) {
          return std::sqrt(mm);
@@ -215,7 +215,7 @@ public :
                            "    Pt and Eta give Pz such that Pz^2 > E^2, so the mass would be imaginary");
          return -std::sqrt(-mm);
       }
-   } 
+   }
 
    /**
       transverse energy
@@ -223,23 +223,23 @@ public :
    /**
       transverse energy
    */
-   Scalar Et() const { 
+   Scalar Et() const {
       return fE / std::cosh(fEta); // faster using eta
    }
 
-   /** 
+   /**
        transverse energy squared
    */
    Scalar Et2() const { Scalar et = Et(); return et*et; }
 
 
 private:
-   inline static Scalar pi() { return M_PI; } 
+   inline static Scalar pi() { return M_PI; }
    inline void Restrict() {
-      if ( fPhi <= -pi() || fPhi > pi() ) 
+      if ( fPhi <= -pi() || fPhi > pi() )
          fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
       return;
-   } 
+   }
 public:
 
    /**
@@ -254,33 +254,33 @@ public:
    // --------- Set Coordinates of this system  ---------------
 
    /**
-      set Pt value 
+      set Pt value
    */
-   void SetPt( Scalar  pt) { 
-      fPt = pt; 
+   void SetPt( Scalar  pt) {
+      fPt = pt;
    }
    /**
-      set eta value 
+      set eta value
    */
-   void SetEta( Scalar  eta) { 
-      fEta = eta; 
+   void SetEta( Scalar  eta) {
+      fEta = eta;
    }
    /**
-      set phi value 
+      set phi value
    */
-   void SetPhi( Scalar  phi) { 
-      fPhi = phi; 
+   void SetPhi( Scalar  phi) {
+      fPhi = phi;
       Restrict();
    }
    /**
-      set E value 
+      set E value
    */
-   void SetE( Scalar  e) { 
-      fE = e; 
+   void SetE( Scalar  e) {
+      fE = e;
    }
 
-   /** 
-       set values using cartesian coordinate system  
+   /**
+       set values using cartesian coordinate system
    */
    void SetPxPyPzE(Scalar px, Scalar py, Scalar pz, Scalar e);
 
@@ -290,41 +290,41 @@ public:
    /**
       negate the 4-vector
    */
-   void Negate( ) { 
+   void Negate( ) {
       fPhi = ( fPhi > 0 ? fPhi - pi() : fPhi + pi()  );
-      fEta = - fEta; 
-      fE = - fE; 
+      fEta = - fEta;
+      fE = - fE;
    }
 
    /**
       Scale coordinate values by a scalar quantity a
    */
-   void Scale( Scalar a) { 
+   void Scale( Scalar a) {
       if (a < 0) {
          Negate(); a = -a;
       }
-      fPt *= a; 
-      fE  *= a; 
+      fPt *= a;
+      fE  *= a;
    }
 
    /**
-      Assignment from a generic coordinate system implementing 
-      Pt(), Eta(), Phi() and E()  
-   */ 
-   template <class CoordSystem > 
-   PtEtaPhiE4D & operator = (const CoordSystem & c) { 
-      fPt  = c.Pt(); 
+      Assignment from a generic coordinate system implementing
+      Pt(), Eta(), Phi() and E()
+   */
+   template <class CoordSystem >
+   PtEtaPhiE4D & operator = (const CoordSystem & c) {
+      fPt  = c.Pt();
       fEta = c.Eta();
-      fPhi = c.Phi(); 
-      fE   = c.E(); 
+      fPhi = c.Phi();
+      fE   = c.E();
       return *this;
    }
 
    /**
       Exact equality
-   */  
+   */
    bool operator == (const PtEtaPhiE4D & rhs) const {
-      return fPt == rhs.fPt && fEta == rhs.fEta 
+      return fPt == rhs.fPt && fEta == rhs.fEta
          && fPhi == rhs.fPhi && fE == rhs.fE;
    }
    bool operator != (const PtEtaPhiE4D & rhs) const {return !(operator==(rhs));}
@@ -335,16 +335,16 @@ public:
    // vector that an assignment member template can work with either
    Scalar x() const { return X(); }
    Scalar y() const { return Y(); }
-   Scalar z() const { return Z(); } 
-   Scalar t() const { return E(); } 
+   Scalar z() const { return Z(); }
+   Scalar t() const { return E(); }
 
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
+#if defined(__MAKECINT__) || defined(G__DICTIONARY)
 
    // ====== Set member functions for coordinates in other systems =======
 
-   void SetPx(Scalar px);  
+   void SetPx(Scalar px);
 
    void SetPy(Scalar py);
 
@@ -360,63 +360,63 @@ private:
    ScalarType fPt;
    ScalarType fEta;
    ScalarType fPhi;
-   ScalarType fE; 
+   ScalarType fE;
 
-};    
-    
-    
-} // end namespace Math  
+};
+
+
+} // end namespace Math
 } // end namespace ROOT
 
 
 
 // move implementations here to avoid circle dependencies
-#ifndef ROOT_Math_GenVector_PxPyPzE4D 
+#ifndef ROOT_Math_GenVector_PxPyPzE4D
 #include "Math/GenVector/PxPyPzE4D.h"
 #endif
-#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
-#ifndef ROOT_Math_GenVector_PtEtaPhiM4D 
+#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#ifndef ROOT_Math_GenVector_PtEtaPhiM4D
 #include "Math/GenVector/PtEtaPhiM4D.h"
 #endif
 #endif
 
-namespace ROOT { 
+namespace ROOT {
 
-namespace Math { 
+namespace Math {
 
-template <class ScalarType>  
-inline void PtEtaPhiE4D<ScalarType>::SetPxPyPzE(Scalar px, Scalar py, Scalar pz, Scalar e) {  
+template <class ScalarType>
+inline void PtEtaPhiE4D<ScalarType>::SetPxPyPzE(Scalar px, Scalar py, Scalar pz, Scalar e) {
    *this = PxPyPzE4D<Scalar> (px, py, pz, e);
 }
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
-     
+#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+
   // ====== Set member functions for coordinates in other systems =======
 
-template <class ScalarType>  
-inline void PtEtaPhiE4D<ScalarType>::SetPx(Scalar px) {  
+template <class ScalarType>
+inline void PtEtaPhiE4D<ScalarType>::SetPx(Scalar px) {
    GenVector_exception e("PtEtaPhiE4D::SetPx() is not supposed to be called");
    throw e;
    PxPyPzE4D<Scalar> v(*this); v.SetPx(px); *this = PtEtaPhiE4D<Scalar>(v);
 }
-template <class ScalarType>  
-inline void PtEtaPhiE4D<ScalarType>::SetPy(Scalar py) {  
+template <class ScalarType>
+inline void PtEtaPhiE4D<ScalarType>::SetPy(Scalar py) {
    GenVector_exception e("PtEtaPhiE4D::SetPx() is not supposed to be called");
    throw e;
    PxPyPzE4D<Scalar> v(*this); v.SetPy(py); *this = PtEtaPhiE4D<Scalar>(v);
 }
-template <class ScalarType>  
-inline void PtEtaPhiE4D<ScalarType>::SetPz(Scalar pz) {  
+template <class ScalarType>
+inline void PtEtaPhiE4D<ScalarType>::SetPz(Scalar pz) {
    GenVector_exception e("PtEtaPhiE4D::SetPx() is not supposed to be called");
    throw e;
    PxPyPzE4D<Scalar> v(*this); v.SetPz(pz); *this = PtEtaPhiE4D<Scalar>(v);
 }
-template <class ScalarType>  
-inline void PtEtaPhiE4D<ScalarType>::SetM(Scalar m) {  
+template <class ScalarType>
+inline void PtEtaPhiE4D<ScalarType>::SetM(Scalar m) {
    GenVector_exception e("PtEtaPhiE4D::SetM() is not supposed to be called");
    throw e;
-   PtEtaPhiM4D<Scalar> v(*this); v.SetM(m); 
+   PtEtaPhiM4D<Scalar> v(*this); v.SetM(m);
    *this = PtEtaPhiE4D<Scalar>(v);
 }
 
@@ -429,5 +429,5 @@ inline void PtEtaPhiE4D<ScalarType>::SetM(Scalar m) {
 
 
 
-#endif // ROOT_Math_GenVector_PtEtaPhiE4D 
+#endif // ROOT_Math_GenVector_PtEtaPhiE4D
 

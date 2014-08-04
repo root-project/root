@@ -3,18 +3,18 @@
 #include <cmath>
 
 
-class GaussFunction : public ROOT::Math::IParamMultiGradFunction { 
+class GaussFunction : public ROOT::Math::IParamMultiGradFunction {
 
-public: 
+public:
 
-   enum { 
-      kNPar = 3 
-   }; 
+   enum {
+      kNPar = 3
+   };
 
    GaussFunction(double amp = 1, double mean = 0, double sigma = 1) {
       fParams[0] = amp;
-      fParams[1] = mean; 
-      fParams[2] = sigma; 
+      fParams[1] = mean;
+      fParams[2] = sigma;
       fLogAmp = std::log(amp);
    }
 
@@ -27,8 +27,8 @@ public:
    inline double mean()  const { return fParams[1]; }
    inline double sigma() const { return fParams[2]; }
 
-   const double * Parameters() const { return fParams; } 
-   
+   const double * Parameters() const { return fParams; }
+
    void SetParameters(const double * p) { std::copy(p,p+kNPar,fParams); /* fLogAmp = std::log( p[0] ); */ }
 
 
@@ -36,48 +36,48 @@ public:
 
 
    // implementing this is much faster
-   double operator()(const double *x, const double * p) { 
+   double operator()(const double *x, const double * p) {
       double y = (x[0]-p[1])/p[2];
       return p[0]*std::exp(-0.5*y*y);
    }
 
    using  ROOT::Math::IParamMultiGradFunction::operator();
 
-   void ParameterGradient(const double *x, const double * p, double * g) const { 
-      double a = p[0]; 
-      double m = p[1]; 
-      double s = p[2]; 
+   void ParameterGradient(const double *x, const double * p, double * g) const {
+      double a = p[0];
+      double m = p[1];
+      double s = p[2];
       double y = (x[0]- m )/s;
       g[0] = std::exp(-0.5*y*y);
       g[1] =  a *g[0]*y/s;
-      g[2] = g[1]*y; 
+      g[2] = g[1]*y;
    }
 
 
-private: 
+private:
 
 
-   double DoEvalPar(const double * x, const double * p) const { 
-      double a = p[0]; 
-      double m = p[1]; 
-      double s = p[2]; 
+   double DoEvalPar(const double * x, const double * p) const {
+      double a = p[0];
+      double m = p[1];
+      double s = p[2];
       double y = (x[0]-m)/s;
       return a*std::exp(-0.5*y*y);
    }
 
-   double DoDerivative(const double *x, unsigned int icoord) const { 
-      assert (icoord == 0); 
+   double DoDerivative(const double *x, unsigned int icoord) const {
+      assert (icoord == 0);
       double dGdx = -(*this)(x) * (x[0]-mean())/(sigma()*sigma());
-      return dGdx; 
+      return dGdx;
    }
 
-   double DoParameterDerivative(const double *x, const double * p, unsigned int ipar) const { 
+   double DoParameterDerivative(const double *x, const double * p, unsigned int ipar) const {
       double grad[3];
-      ParameterGradient(x, p, &grad[0] ); 
-      return grad[ipar]; 
+      ParameterGradient(x, p, &grad[0] );
+      return grad[ipar];
    }
 
 
-   double fParams[kNPar]; 
-   double fLogAmp; 
-}; 
+   double fParams[kNPar];
+   double fLogAmp;
+};

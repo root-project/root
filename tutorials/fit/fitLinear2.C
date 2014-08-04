@@ -10,14 +10,14 @@ void fitLinear2()
    //A 5-d hyperplane is fit, a constant term is assumed in the hyperplane
    //equation (y = a0 + a1*x0 + a2*x1 + a3*x2 + a4*x3 + a5*x4)
    //Author: Anna Kreshuk
-   
+
    Int_t n=100;
    Int_t i;
    TRandom rand;
    TLinearFitter *lf=new TLinearFitter(5);
 
    //The predefined "hypN" functions are the fastest to fit
-   lf->SetFormula("hyp5"); 
+   lf->SetFormula("hyp5");
 
    Double_t *x=new Double_t[n*10*5];
    Double_t *y=new Double_t[n*10];
@@ -64,7 +64,7 @@ void fitLinear2()
    }
 
    //Assign the data the same way as before
-   lf->AssignData(n*2, 5, x, y, e);   
+   lf->AssignData(n*2, 5, x, y, e);
    lf->Eval();
    lf->GetParameters(params);
    lf->GetErrors(errors);
@@ -101,7 +101,7 @@ void fitLinear2()
       printf("par[%d]=%f+-%f\n", i, params(i), errors(i));
    chisquare=lf->GetChisquare();
    printf("chisquare=%.15f\n", chisquare);
-   
+
    //The fixed parameters can then be released by the ReleaseParameter method
    delete lf;
 

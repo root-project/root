@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -29,7 +29,7 @@ LASymMatrix::LASymMatrix(const ABObj<sym, VectorOuterProduct<ABObj<vec, LAVector
 }
 
 LASymMatrix& LASymMatrix::operator=(const ABObj<sym, VectorOuterProduct<ABObj<vec, LAVector, double>, double>, double>& out) {
-   // assignment operator from expression based on outer product of symmetric matrices   
+   // assignment operator from expression based on outer product of symmetric matrices
    //   std::cout<<"LASymMatrix& LASymMatrix::operator=(const ABObj<sym, VectorOuterProduct<ABObj<vec, LAVector, double>, double>, double>& out)"<<std::endl;
    if(fSize == 0 && fData == 0) {
       fNRow = out.Obj().Obj().Obj().size();

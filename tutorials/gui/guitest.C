@@ -1,4 +1,4 @@
-// Test program for ROOT native GUI classes 
+// Test program for ROOT native GUI classes
 // exactly like $ROOTSYS/test/guitest.cxx but using the new signal and slots
 // communication mechanism. It is now possible to run this entire
 // test program in the interpreter. Do either:
@@ -101,7 +101,7 @@ enum ETestCommandIdentifiers {
 
 Int_t mb_button_id[13] = { kMBYes, kMBNo, kMBOk, kMBApply,
                            kMBRetry, kMBIgnore, kMBCancel,
-                           kMBClose, kMBYesAll, kMBNoAll, 
+                           kMBClose, kMBYesAll, kMBNoAll,
                            kMBNewer, kMBAppend, kMBDismiss};
 
 EMsgBoxIcon mb_icon[4] = { kMBIconStop, kMBIconQuestion,

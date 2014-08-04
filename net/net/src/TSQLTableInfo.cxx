@@ -10,13 +10,13 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-//                                                                      
+//
 // TSQLTableInfo
 //
 // Contains information about table and table columns.
-// For MySQL additional information like engine type, 
+// For MySQL additional information like engine type,
 // creation and last update time is provided
-//                                                                      
+//
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -31,7 +31,7 @@
 ClassImp(TSQLTableInfo)
 
 //______________________________________________________________________________
-TSQLTableInfo::TSQLTableInfo() : 
+TSQLTableInfo::TSQLTableInfo() :
    TNamed(),
    fColumns(0),
    fEngine(),
@@ -42,12 +42,12 @@ TSQLTableInfo::TSQLTableInfo() :
 }
 
 //______________________________________________________________________________
-TSQLTableInfo::TSQLTableInfo(const char* tablename, 
+TSQLTableInfo::TSQLTableInfo(const char* tablename,
                              TList* columns,
                              const char* comment,
                              const char* engine,
                              const char* create_time,
-                             const char* update_time) : 
+                             const char* update_time) :
    TNamed(tablename, comment),
    fColumns(columns),
    fEngine(engine),
@@ -55,14 +55,14 @@ TSQLTableInfo::TSQLTableInfo(const char* tablename,
    fUpdateTime(update_time)
 {
    // normal constructor
-   
+
 }
 
 //______________________________________________________________________________
 TSQLTableInfo::~TSQLTableInfo()
 {
    // destructor
-   
+
    if (fColumns!=0) {
       fColumns->Delete();
       delete fColumns;
@@ -74,13 +74,13 @@ TSQLTableInfo::~TSQLTableInfo()
 void TSQLTableInfo::Print(Option_t*) const
 {
    // Prints table and table columns info
-   
+
    TROOT::IndentLevel();
    std::cout << "Table:" << GetName();
-   
+
    if ((GetTitle()!=0) && (strlen(GetTitle())!=0))
       std::cout << " comm:'" << GetTitle() << "'";
-   
+
    if (fEngine.Length()>0)
       std::cout << " engine:" << fEngine;
 
@@ -89,9 +89,9 @@ void TSQLTableInfo::Print(Option_t*) const
 
    if (fUpdateTime.Length()>0)
       std::cout << " update:" << fUpdateTime;
-   
+
    std::cout << std::endl;
-    
+
    TROOT::IncreaseDirLevel();
    if (fColumns!=0)
       fColumns->Print("*");
@@ -102,9 +102,9 @@ void TSQLTableInfo::Print(Option_t*) const
 TSQLColumnInfo* TSQLTableInfo::FindColumn(const char* columnname)
 {
    // Return column info object of given name
-   
+
    if ((columnname==0) || (fColumns==0)) return 0;
-   
+
    return dynamic_cast<TSQLColumnInfo*> (fColumns->FindObject(columnname));
-   
+
 }

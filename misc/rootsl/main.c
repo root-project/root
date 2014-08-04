@@ -36,12 +36,12 @@
 // -----------------------------------------------------------------------------
 
 // The import function to be implemented in GetMetadataForFile.c
-Boolean GetMetadataForFile(void *thisInterface, 
+Boolean GetMetadataForFile(void *thisInterface,
                            CFMutableDictionaryRef attributes,
                            CFStringRef contentTypeUTI,
                            CFStringRef pathToFile);
 
-// The layout for an instance of MetaDataImporterPlugIn 
+// The layout for an instance of MetaDataImporterPlugIn
 typedef struct __MetadataImporterPluginType
 {
     MDImporterInterfaceStruct *conduitInterface;

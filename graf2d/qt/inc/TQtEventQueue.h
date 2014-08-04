@@ -15,15 +15,15 @@
  *************************************************************************/
 
 #include "GuiTypes.h"
-#include <QQueue> 
+#include <QQueue>
 
 /////////////////////////////////////////////////////////////////////////////////
 //
-//  TQtEventQueue is a queue container of the pointers of Event_t structures 
+//  TQtEventQueue is a queue container of the pointers of Event_t structures
 //  created by TQtClientFilter class
-//  If auto-deleting is turned on, all the items in a collection are deleted when 
+//  If auto-deleting is turned on, all the items in a collection are deleted when
 //  the collection itself is deleted.
-//  (for the full list of the members see: 
+//  (for the full list of the members see:
 //  http://doc.trolltech.com/3.3/qptrlist.html)
 //
 /////////////////////////////////////////////////////////////////////////////////
@@ -42,13 +42,13 @@ class TQtEventQueue : public QQueue<const Event_t *> {
 };
 //______________________________________________________________________________
 inline void TQtEventQueue::enqueue(const Event_t *ev)
-{    
+{
    QQueue<const Event_t *>::enqueue(ev);
 }
 //______________________________________________________________________________
 inline const Event_t *TQtEventQueue::dequeue()
 {
-   return isEmpty() ? 0 : 
+   return isEmpty() ? 0 :
             QQueue<const Event_t *>::dequeue();
 }
 

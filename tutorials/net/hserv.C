@@ -9,7 +9,7 @@ void hserv() {
    //   - Execute in the first window: .x hserv.C
    //   - Execute in the second and third windows: .x hclient.C
    //Author: Fons Rademakers
-   
+
    // Open a server socket looking for connections on a named service or
    // on a specified port.
    //TServerSocket *ss = new TServerSocket("rootserv", kTRUE);

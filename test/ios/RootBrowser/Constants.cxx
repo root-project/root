@@ -59,7 +59,7 @@ const float padYWithEditorP = scrollHP / 2 - padHSmall / 2;
 const float padXWithEditorL = 100.f;
 const float padYWithEditorL = scrollHL / 2 - padH / 2;
 
-const double predefinedFillColors[nROOTDefaultColors][3] = 
+const double predefinedFillColors[nROOTDefaultColors][3] =
 {
 {1., 1., 1.},
 {0., 0., 0.},

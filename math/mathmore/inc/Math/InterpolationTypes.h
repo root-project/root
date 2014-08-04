@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class InterpolationTypes
-// 
+//
 // Created by: moneta  at Fri Nov 26 15:40:58 2004
-// 
+//
 // Last update: Fri Nov 26 15:40:58 2004
-// 
+//
 #ifndef ROOT_Math_InterpolationTypes
 #define ROOT_Math_InterpolationTypes
 
@@ -65,8 +65,8 @@ namespace Math {
          kAKIMA_PERIODIC
       };
    }
-   
-   
+
+
 } // namespace Math
 } // namespace ROOT
 

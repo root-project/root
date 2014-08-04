@@ -90,7 +90,7 @@
    fun:_Zna?
    ...
    fun:_ZN6TClass4InitEPKcs*
-}   
+}
 
 {
    Anything allocated by TClass::Init: new()
@@ -151,7 +151,7 @@
    fun:_ZN5TCint12SetClassInfoEP6TClassb
    fun:_ZN6TClass11SetUnloadedEv
 }
- 
+
 {
    TClass::Init calling TCint::SetClassInfo
    Memcheck:Leak
@@ -330,7 +330,7 @@
    fun:_ZN10THashTable6RehashEib
    fun:_ZN10THashTable3AddEP7TObject
    fun:_ZN5TCint17UpdateListOfTypesEv
-} 
+}
 
 ######### ROOT I/O
 
@@ -346,7 +346,7 @@
    zlib deflate issue, see zlib.net FAQ #36: http://www.zlib.net/zlib_faq.html#faq36 which says that it was due to changing from calloc to malloc.  And notes, that even though the code was correct, versions 1.2.4 and later was changed to not stimulate these checkers.
    Memcheck:Cond
    fun:longest_match
-   ... 
+   ...
    fun:deflate
 }
 
@@ -403,7 +403,7 @@
    fun:G__make_ifunctable
 }
 
-{  
+{
    CINT's function prototype
    Memcheck:Leak
    fun:malloc
@@ -421,7 +421,7 @@
    fun:_ZNSt8_Rb_treeIiiSt9_IdentityIiESt4lessIiESaIiEE16_M_insert_uniqueERKi
    fun:_ZNSt3setIiSt4lessIiESaIiEE6insertERKi
    fun:_ZN7NameMap6InsertEPKci
-} 
+}
 
 {
    CINT's NameMap part2
@@ -654,7 +654,7 @@
 }
 
 {
-   ROOT:X11 - XQueryExtension 
+   ROOT:X11 - XQueryExtension
    Memcheck:Param
    writev(vector[...])
    fun:writev

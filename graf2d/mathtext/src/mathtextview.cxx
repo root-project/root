@@ -231,5 +231,5 @@ namespace mathtext {
          std::cerr << "</subscript>" << std::endl;
       }
    }
-   
+
 }

@@ -109,7 +109,7 @@ virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = 
 //
 //    ClassDefineChair(_NAME2_(className,C),className,structName)
 //    We have to define this macro in full because RootCint doesn't provide the deep CPP evaluation
-//    V.Fine 17/12/2003 
+//    V.Fine 17/12/2003
 #define ClassDefChair(className,structName)             \
   public:                                               \
     typedef structName* iterator;                       \

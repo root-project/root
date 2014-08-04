@@ -36,7 +36,7 @@
 //  The components of x or y are part of multi-dimensional distributions.
 //  The bin widths along the relevant directions in these distributions
 //  are used to calculate bin densities (number of events divided by bin width)
-//  or to calculate derivatives taking into account the proper distance of 
+//  or to calculate derivatives taking into account the proper distance of
 //  adjacent bin centers
 //
 //  Complex binning schemes
@@ -54,7 +54,7 @@
 //
 //  In TUnfoldDensity, such complex binning schemes are handled with the help
 //  of the class TUnfoldBinning. For each vector there is a tree
-//  structure. The tree nodes hold multi-dimensiopnal distributions 
+//  structure. The tree nodes hold multi-dimensiopnal distributions
 //
 //  For example, the "measurement" tree could have two leaves, one for
 //  the primary distribution and one for auxillary measurements
@@ -162,11 +162,11 @@ TUnfoldDensity::TUnfoldDensity
  EDensityMode densityMode,const TUnfoldBinning *outputBins,
  const TUnfoldBinning *inputBins,const char *regularisationDistribution,
  const char *regularisationAxisSteering) :
-   TUnfoldSys(hist_A,histmap,kRegModeNone,constraint) 
+   TUnfoldSys(hist_A,histmap,kRegModeNone,constraint)
 {
    // set up unfolding matrix and regularisation scheme
    //    hist_A:  matrix that describes the migrations
-   //    histmap: mapping of the histogram axes to the unfolding output 
+   //    histmap: mapping of the histogram axes to the unfolding output
    //    regmode: global regularisation mode
    //    constraint: type of constraint to use
    //    regularisationSteering: detailed steering for the regularisation
@@ -297,7 +297,7 @@ void TUnfoldDensity::RegularizeDistribution
    //
    //          example:  "*[UOB]" uses bin widths for derivatives and
    //                             underflow/overflow bins are not regularized
-  
+
    RegularizeDistributionRecursive(GetOutputBinning(),regmode,densityMode,
                                    distribution,axisSteering);
 }
@@ -334,7 +334,7 @@ void TUnfoldDensity::RegularizeOneDistribution
    //     densityMode: how to apply bin density corrections
    //              (normalisation to bin withd or user factor)
    //     axisSteering: regularisation steering specific to the axes
-   //              (see method RegularizeDistribution()) 
+   //              (see method RegularizeDistribution())
    if(!fRegularisationConditions)
       fRegularisationConditions=new TUnfoldBinning("regularisation");
 
@@ -387,7 +387,7 @@ void TUnfoldDensity::RegularizeOneDistribution
    }
 #ifdef DEBUG
    cout<<"after underflow/overflow bin removal "<<nbin<<"\n";
-#endif   
+#endif
    if(regmode==kRegModeSize) {
       Int_t nRegBins=0;
       // regularize all bins of the distribution, possibly excluding
@@ -500,7 +500,7 @@ TH1 *TUnfoldDensity::GetOutput
    //       "pattern1;pattern2;...;patternN"
    //       patternI = axis[mode]
    //       axis = name or *
-   //       mode = C|U|O 
+   //       mode = C|U|O
    //        C: collapse axis into one bin
    //        U: discarde underflow bin
    //        O: discarde overflow bin
@@ -629,7 +629,7 @@ TH1 *TUnfoldDensity::GetRhoItotal
    //       "pattern1;pattern2;...;patternN"
    //       patternI = axis[mode]
    //       axis = name or *
-   //       mode = C|U|O 
+   //       mode = C|U|O
    //        C: collapse axis into one bin
    //        U: discarde underflow bin
    //        O: discarde overflow bin
@@ -681,7 +681,7 @@ TH1 *TUnfoldDensity::GetRhoIstatbgr
    //       "pattern1;pattern2;...;patternN"
    //       patternI = axis[mode]
    //       axis = name or *
-   //       mode = C|U|O 
+   //       mode = C|U|O
    //        C: collapse axis into one bin
    //        U: discarde underflow bin
    //        O: discarde overflow bin
@@ -733,7 +733,7 @@ TH1 *TUnfoldDensity::GetDeltaSysSource
    //       "pattern1;pattern2;...;patternN"
    //       patternI = axis[mode]
    //       axis = name or *
-   //       mode = C|U|O 
+   //       mode = C|U|O
    //        C: collapse axis into one bin
    //        U: discarde underflow bin
    //        O: discarde overflow bin
@@ -757,7 +757,7 @@ TH1 *TUnfoldDensity::GetDeltaSysBackgroundScale
 (const char *bgrSource,const char *histogramName,
  const char *histogramTitle,const char *distributionName,
  const char *axisSteering,Bool_t useAxisBinning) {
-   // retreive histogram of systematic 1-sigma shifts due to a background 
+   // retreive histogram of systematic 1-sigma shifts due to a background
    // normalisation uncertainty
    //   source: name of background source
    //   histogramName:  name of the histogram
@@ -769,7 +769,7 @@ TH1 *TUnfoldDensity::GetDeltaSysBackgroundScale
    //       "pattern1;pattern2;...;patternN"
    //       patternI = axis[mode]
    //       axis = name or *
-   //       mode = C|U|O 
+   //       mode = C|U|O
    //        C: collapse axis into one bin
    //        U: discarde underflow bin
    //        O: discarde overflow bin
@@ -803,7 +803,7 @@ TH1 *TUnfoldDensity::GetDeltaSysTau
    //       "pattern1;pattern2;...;patternN"
    //       patternI = axis[mode]
    //       axis = name or *
-   //       mode = C|U|O 
+   //       mode = C|U|O
    //        C: collapse axis into one bin
    //        U: discarde underflow bin
    //        O: discarde overflow bin
@@ -839,7 +839,7 @@ TH2 *TUnfoldDensity::GetRhoIJtotal
    //       "pattern1;pattern2;...;patternN"
    //       patternI = axis[mode]
    //       axis = name or *
-   //       mode = C|U|O 
+   //       mode = C|U|O
    //        C: collapse axis into one bin
    //        U: discarde underflow bin
    //        O: discarde overflow bin
@@ -876,7 +876,7 @@ TH2 *TUnfoldDensity::GetRhoIJtotal
    }
    return r;
 }
-                           
+
 TH2 *TUnfoldDensity::GetEmatrixSysUncorr
 (const char *histogramName,const char *histogramTitle,
  const char *distributionName,const char *axisSteering,
@@ -892,7 +892,7 @@ TH2 *TUnfoldDensity::GetEmatrixSysUncorr
    //       "pattern1;pattern2;...;patternN"
    //       patternI = axis[mode]
    //       axis = name or *
-   //       mode = C|U|O 
+   //       mode = C|U|O
    //        C: collapse axis into one bin
    //        U: discarde underflow bin
    //        O: discarde overflow bin
@@ -925,7 +925,7 @@ TH2 *TUnfoldDensity::GetEmatrixSysBackgroundUncorr
    //       "pattern1;pattern2;...;patternN"
    //       patternI = axis[mode]
    //       axis = name or *
-   //       mode = C|U|O 
+   //       mode = C|U|O
    //        C: collapse axis into one bin
    //        U: discarde underflow bin
    //        O: discarde overflow bin
@@ -957,7 +957,7 @@ TH2 *TUnfoldDensity::GetEmatrixInput
    //       "pattern1;pattern2;...;patternN"
    //       patternI = axis[mode]
    //       axis = name or *
-   //       mode = C|U|O 
+   //       mode = C|U|O
    //        C: collapse axis into one bin
    //        U: discarde underflow bin
    //        O: discarde overflow bin
@@ -1005,7 +1005,7 @@ TH2 *TUnfoldDensity::GetEmatrixTotal
    //       "pattern1;pattern2;...;patternN"
    //       patternI = axis[mode]
    //       axis = name or *
-   //       mode = C|U|O 
+   //       mode = C|U|O
    //        C: collapse axis into one bin
    //        U: discarde underflow bin
    //        O: discarde overflow bin
@@ -1020,7 +1020,7 @@ TH2 *TUnfoldDensity::GetEmatrixTotal
    }
    if(binMap) delete [] binMap;
    return r;
-}   
+}
 
 TH2 *TUnfoldDensity::GetL
 (const char *histogramName,const char *histogramTitle,Bool_t useAxisBinning)
@@ -1031,7 +1031,7 @@ TH2 *TUnfoldDensity::GetL
    //   histogramTitle: title of the histogram (could be zero)
    //   useAxisBinning: if true, try to use the axis bin widths
    //                   on the x-axis of the output histogram
-   if(fRegularisationConditions && 
+   if(fRegularisationConditions &&
       (fRegularisationConditions->GetEndBin()-
        fRegularisationConditions->GetStartBin()!= fL->GetNrows())) {
       Warning("GetL",
@@ -1066,7 +1066,7 @@ TH1 *TUnfoldDensity::GetLxMinusBias
    //   histogramTitle: title of the histogram (could be zero)
    TMatrixD dx(*GetX(), TMatrixD::kMinus, fBiasScale * (*fX0));
    TMatrixDSparse *Ldx=MultiplyMSparseM(fL,&dx);
-   if(fRegularisationConditions && 
+   if(fRegularisationConditions &&
       (fRegularisationConditions->GetEndBin()-
        fRegularisationConditions->GetStartBin()!= fL->GetNrows())) {
       Warning("GetLxMinusBias",
@@ -1149,24 +1149,24 @@ Int_t TUnfoldDensity::ScanTau
    //      and store the result in
    //        curve
    //  (3) return the result in scanResult
-   
+
    //==========================================================
    //  (1) do the unfolding for nPoint-1 points
    //      and store the results in
    //        curve
    //    (1a) store minimum and maximum tau to curve
-   
+
    if((tauMin<=0)||(tauMax<=0.0)||(tauMin>=tauMax)) {
       // here no range is given, has to be determined automatically
-      // the maximum tau is determined from the chi**2 values 
+      // the maximum tau is determined from the chi**2 values
       // observed from unfolding without regulatisation
-      
+
       // first unfolding, without regularisation
       DoUnfold(0.0);
 
       // if the number of degrees of freedom is too small, create an error
       if(GetNdf()<=0) {
-         Error("ScanTau","too few input bins, NDF<=0 %d",GetNdf());  
+         Error("ScanTau","too few input bins, NDF<=0 %d",GetNdf());
       }
       Double_t X0=GetLcurveX();
       Double_t Y0=GetLcurveY();
@@ -1410,7 +1410,7 @@ Int_t TUnfoldDensity::ScanTau
          n++;
       }
       if(lCurvePlot) {
-         *lCurvePlot=new TGraph(n,x,y); 
+         *lCurvePlot=new TGraph(n,x,y);
          (*lCurvePlot)->SetTitle("L curve");
       }
       if(logTauXPlot)

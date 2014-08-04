@@ -35,7 +35,7 @@ The following is a summary of the major modifications since 5.34 .
 
 ``` {.cpp}
     root[] p = TProof::Open("master", "igprof-pp")
-``` 
+```
 -   Miscellanea:
    -   Added functions [Getenv](http://root.cern.ch/root/htmldoc/TProof.html#TProof:Getenv) and [GetRC](http://root.cern.ch/root/htmldoc/TProof.html#TProof:GetRC)
         in TProof to retrieve environment information from the nodes, typically from the master.
@@ -46,4 +46,4 @@ The following is a summary of the major modifications since 5.34 .
 
 Several consolidation fixes in several parts of the system (see the [5.34 patch release notes for details](http://root.cern.ch/drupal/content/root-version-v5-34-00-patch-release-notes)). In particular, those for 'xproofd' were provided by B. Butler and  M. Swiatlowski and greatly contributed to consolidate the daemon.
 
-  
+

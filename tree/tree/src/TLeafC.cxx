@@ -139,9 +139,9 @@ void TLeafC::ReadBasket(TBuffer &b)
       Long64_t first = GetBranch()->GetBasketEntry()[readbasket];
       Long64_t entry = GetBranch()->GetReadEntry();
       if ( (readbasket == GetBranch()->GetWriteBasket() && (entry+1) == GetBranch()->GetEntries()) /* Very last entry */
-               || 
+               ||
                (readbasket <  GetBranch()->GetWriteBasket() && (entry+1) == GetBranch()->GetBasketEntry()[readbasket+1] ) /* Last entry of the basket */
-           ) 
+           )
          {
             if ( entryOffset[entry-first] == basket->GetLast() ) /* The 'read' point is at the end of the basket */
                {
@@ -149,7 +149,7 @@ void TLeafC::ReadBasket(TBuffer &b)
                   fValue[0] = '\0';
                   return;
                }
-         } 
+         }
       else if ( entryOffset[entry-first] == entryOffset[entry-first+1] ) /* This string did not use up any space in the buffer */
          {
             // Empty string

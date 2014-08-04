@@ -12,13 +12,13 @@
 #include <stdio.h>
 
 #include <TSystem.h>
-#include <TApplication.h> 
+#include <TApplication.h>
 #include <TRint.h>
 #include "TGRootIDE.h"
 
 //----------------------------------------------------------------------
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
 
    TString *fname = 0;

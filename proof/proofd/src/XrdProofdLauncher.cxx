@@ -49,7 +49,7 @@ XrdNetPeer *XrdProofdLauncher::Launch(ProofdLaunch_t *in, int &pid)
       return peer;
    }
    XrdProofdProofServ *xps = in->fPS;
-   
+
    // Log prefix
    XrdOucString npfx;
    XPDFORM(npfx, "%s-%s:", (xps->SrvType() == kXPD_MasterWorker) ? "wrk" : "mst", xps->Ordinal());
@@ -66,17 +66,17 @@ XrdNetPeer *XrdProofdLauncher::Launch(ProofdLaunch_t *in, int &pid)
    XPDFORM(pexe, "%s/proofexecv", fClient->ROOT()->BinDir());
    if (access(pexe.c_str(), X_OK) != 0) {
       XPDFORM(emsg, "path '%s' does not exist or is not executable (errno: %d)", pexe.c_str(), (int)errno);
-      TRACE(XERR, emsg);      
+      TRACE(XERR, emsg);
       XrdProofdAux::LogEmsgToFile(in->fErrLog.c_str(), emsg.c_str(), npfx.c_str());
       return peer;
    }
-   
+
    // Create server socket to get the call back
    rpdunixsrv *unixsrv = new rpdunixsrv(xps->UNIXSockPath());
    if (!unixsrv || (unixsrv && !unixsrv->isvalid(0))) {
       XPDFORM(emsg, "could not start unix server connection on path '%s' (errno: %d)",
                     xps->UNIXSockPath(), (int)errno);
-      TRACE(XERR, emsg);      
+      TRACE(XERR, emsg);
       XrdProofdAux::LogEmsgToFile(in->fErrLog.c_str(), emsg.c_str(), npfx.c_str());
       SafeDel(unixsrv);
       return peer;
@@ -111,7 +111,7 @@ XrdNetPeer *XrdProofdLauncher::Launch(ProofdLaunch_t *in, int &pid)
    SafeDel(unixsrv);
    TRACE(ALL, "proofserv connected!");
 
-   //   
+   //
    // Setup the peer
    return SetupPeer(in, pid, uconn);
 }
@@ -135,7 +135,7 @@ XrdNetPeer *XrdProofdLauncher::SetupPeer(ProofdLaunch_t *in, int &pid, rpdunix *
    }
    XrdProofdManager   *mgr = in->fMgr;
    XrdProofdProofServ *xps = in->fPS;
-   
+
    // Log prefix
    XrdOucString npfx;
    XPDFORM(npfx, "%s-%s:", (xps->SrvType() == kXPD_MasterWorker) ? "wrk" : "mst", xps->Ordinal());
@@ -163,7 +163,7 @@ XrdNetPeer *XrdProofdLauncher::SetupPeer(ProofdLaunch_t *in, int &pid, rpdunix *
       XrdProofdAux::LogEmsgToFile(in->fErrLog.c_str(), emsg.c_str(), npfx.c_str());
       return peer;
    }
-   
+
    // Send information about dataset, data dir(s), credentials ...
    std::string creds(fClient->Sandbox()->Dir());
    creds += "/.creds";
@@ -177,7 +177,7 @@ XrdNetPeer *XrdProofdLauncher::SetupPeer(ProofdLaunch_t *in, int &pid, rpdunix *
       XrdProofdAux::LogEmsgToFile(in->fErrLog.c_str(), emsg.c_str(), npfx.c_str());
       return peer;
    }
-       
+
    // Wait for something to read on the socket
    int pollrc = uconn->pollrd(in->fIntWait);
    if (pollrc <= 0) {
@@ -200,7 +200,7 @@ XrdNetPeer *XrdProofdLauncher::SetupPeer(ProofdLaunch_t *in, int &pid, rpdunix *
 #endif
    peer->InetName = 0;
    delete uconn;
-   
+
    // Done
    return peer;
 }

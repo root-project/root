@@ -109,7 +109,7 @@ public:
               ( R>534.5 && R<597.5 ) ||
               ( R>637.0 && R<700.0 ) )
             return TEveVectorD(0,0,-field/3.8*1.2);
- 
+
       } else {
          // endcaps
          if (m_simpleModel)
@@ -226,14 +226,14 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
          prop->SetMagFieldObj(new GappedField());
          list->SetElementName(Form("%s, gappedB", list->GetElementName()));
 
-      
+
          TEveRecTrackD *rc = new TEveRecTrackD();
          rc->fV.Set(0.028558, -0.000918, 3.691919);
          rc->fP.Set(0.767095, -0.400006, 2.313103);
          rc->fSign = 1;
          track = new TEveTrack(rc, prop);
 
-         TEvePointSet* marker = new TEvePointSet(2);  
+         TEvePointSet* marker = new TEvePointSet(2);
          marker->SetElementName("B field break points");
          marker->SetPoint(0, 0., 0., 300.f);
          marker->SetPoint(1, 0., 0., 600.f);
@@ -295,7 +295,7 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
          prop->SetRnrDecay(kTRUE);
          prop->RefPMAtt().SetMarkerStyle(4);
          list->SetElementName(Form("%s, CMS field", list->GetElementName()));
-      
+
          TEveRecTrackD *rc = new TEveRecTrackD();
          rc->fV.Set(-16.426592, 16.403185, -19.782692);
          rc->fP.Set(3.631100, 3.643450, 0.682254);
@@ -358,14 +358,14 @@ void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
          break;
       }
    };
-       
+
    if (isRungeKutta)
       list->SetLineColor(kMagenta);
-   else 
+   else
       list->SetLineColor(kCyan);
 
    track->SetLineColor(list->GetLineColor());
- 
+
    gEve->AddElement(list);
    list->AddElement(track);
 

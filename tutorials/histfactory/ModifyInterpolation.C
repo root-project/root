@@ -3,11 +3,11 @@ An example script to modify the interpolation used in HistFactory models.
 Usage:
 
 make the standard example workspace with histfactory
-$ prepareHistFactory 
-$ hist2workspace config/example.xml 
+$ prepareHistFactory
+$ hist2workspace config/example.xml
 
 inspect file (note we are using the model with Gaussian constraints)
-$ root.exe results/example_combined_GaussExample_model.root 
+$ root.exe results/example_combined_GaussExample_model.root
 root [1] combined->Print()
 
 notice there is a new class in the new version:
@@ -78,12 +78,12 @@ void ModifyInterpolationForAll(RooWorkspace* ws, int code){
   RooArgSet funcs = ws->allFunctions();
   TIterator* it = funcs.createIterator();
   TObject* tempObj=0;
-  while((tempObj=it->Next())){    
+  while((tempObj=it->Next())){
     FlexibleInterpVar* flex = dynamic_cast<FlexibleInterpVar*>(tempObj);
     if(flex){
       flex->setAllInterpCodes(code);
     }
-  }     
+  }
 }
 
 void ModifyInterpolationForSet(RooArgSet* modifySet, int code){
@@ -100,9 +100,9 @@ void ModifyInterpolationForSet(RooArgSet* modifySet, int code){
          flex->setInterpCode(*alpha,code);
          flex->printAllInterpCodes();
       }
-    }     
+    }
   }
-  
+
 }
 
 
@@ -110,10 +110,10 @@ void CheckInterpolation(RooWorkspace* ws){
   RooArgSet funcs = ws->allFunctions();
   TIterator* it = funcs.createIterator();
   TObject* tempObj=0;
-  while((tempObj=it->Next())){    
+  while((tempObj=it->Next())){
     FlexibleInterpVar* flex = dynamic_cast<FlexibleInterpVar*>(tempObj);
     if(flex){
       flex->printAllInterpCodes();
     }
-  }     
+  }
 }

@@ -98,12 +98,12 @@ void *XrdProofdManagerCron(void *p)
          tw = mid - now + 2; // Always run a check just after midnight
          mid += 86400;
       }
-      
+
       // Check if reconfiguration of some services is required (triggered by a change
       // of the configuration file)
       if (mgr->SessionMgr()) mgr->SessionMgr()->Config(1);
       if (mgr->GroupsMgr()) mgr->GroupsMgr()->Config(mgr->GroupsMgr()->GetCfgFile());
-      
+
       XrdSysTimer::Wait(tw * 1000);
    }
 
@@ -160,11 +160,11 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fRootdArgsPtrs[fRootdArgs.size() + 1] = 0;
    // Started with 'system' (not 'fork')
    fRootdFork = 0;
-      
+
    // Proof admin path
    fAdminPath = pi->AdmPath;
    fAdminPath += "/.xproofd.";
-   
+
    // Lib paths for proofserv
    fBareLibPath = "";
    fRemoveROOTLibPaths = 0;
@@ -354,7 +354,7 @@ int XrdProofdManager::CheckUser(const char *usr, const char *grp,
       //   1.    xpd.allowedgroups alfa
       //         Users 'katy', 'jack' and 'john' are allowed because part of UNIX group 'alfa' (no 'allowedusers' directive)
       //   2.    xpd.allowedgroups student
-      //         User 'katy' is allowed because part of PROOF group 'student'; 
+      //         User 'katy' is allowed because part of PROOF group 'student';
       //         users 'jack' and 'john' are denied because not part of PROOF group 'student' (no 'allowedusers' directive)
       //   3.    xpd.allowedgroups alfa,-student
       //         User 'katy' is denied because part of PROOF group 'student' which is explicitly denied;
@@ -566,7 +566,7 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
    if (rc == 0) {
 
       TRACE(DBG, "list size: " << wrks.size());
-      
+
       XrdOucString ord;
       int ii = -1;
       // If in remote PLite mode, we need to isolate the number of workers
@@ -596,7 +596,7 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
                uw->fType = 'S';
                uw->fOrd = ord;
                uwrks.push_back(uw);
-               // Setup connection with the proofserv using the original 
+               // Setup connection with the proofserv using the original
                xps->AddWorker(ord.c_str(), w);
                w->AddProofServ(xps);
             }
@@ -613,7 +613,7 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
                // Add export version of the info
                lw += w->Export(0);
             }
-         }         
+         }
 
       } else {
 
@@ -983,7 +983,7 @@ int XrdProofdManager::Config(bool rcf)
          TRACE(ALL, msg);
       }
    }
-   
+
    // Bare lib path
    if (getenv(XPD_LIBPATH)) {
       XrdOucString ctrim;
@@ -1131,7 +1131,7 @@ int XrdProofdManager::Config(bool rcf)
       } else {
          TRACE(ALL, "serving files with: '" << fRootdExe <<"' (protocol: 'rootd://') to ALL hosts");
       }
-      
+
    } else {
       TRACE(ALL, "file serving (protocol: 'rootd://') explicitly disabled");
    }
@@ -1737,7 +1737,7 @@ int XrdProofdManager::DoDirectiveMultiUser(char *val, XrdOucStream *cfg, bool)
    if (val) fMUWorkDir = val;
 
    TRACE(DBG, "fMultiUser: "<< fMultiUser << " work dir template: " << fMUWorkDir);
-   
+
    return 0;
 }
 
@@ -1829,7 +1829,7 @@ int XrdProofdManager::DoDirectiveDataDir(char *val, XrdOucStream *cfg, bool)
 int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
 {
    // Process 'rootd' directive
-   //  xpd.rootd deny|allow [rootsys:<tag>] [path:abs-path/] [mode:ro|rw] 
+   //  xpd.rootd deny|allow [rootsys:<tag>] [path:abs-path/] [mode:ro|rw]
    //            [auth:none|full] [other_rootd_args]
    XPDLOC(ALL, "Manager::DoDirectiveRootd")
 
@@ -1879,7 +1879,7 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
       // Nothing else to do, if denied
       return 0;
    }
-      
+
    // Build the argument list
    fRootdArgsPtrs = new const char *[fRootdArgs.size() + 2];
    fRootdArgsPtrs[0] = fRootdExe.c_str();
@@ -1975,7 +1975,7 @@ bool XrdProofdManager::IsRootdAllowed(const char *host)
    if (!host || strlen(host) <= 0) return 0;
 
    TRACE(DBG, "checking host: "<< host);
-   
+
    XrdOucString h(host);
    std::list<XrdOucString>::iterator ia = fRootdAllow.begin();
    while (ia != fRootdAllow.end()) {

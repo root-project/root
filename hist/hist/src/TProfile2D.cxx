@@ -754,7 +754,7 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
       if (z <fZmin || z> fZmax || TMath::IsNaN(z)) return -1;
    }
 
-   Double_t u= w; 
+   Double_t u= w;
    fEntries++;
    binx =fXaxis.FindBin(x);
    biny =fYaxis.FindBin(y);
@@ -762,7 +762,7 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
    AddBinContent(bin, u*z);
    fSumw2.fArray[bin] += u*z*z;
-   if (!fBinSumw2.fN && u != 1.)  Sumw2();  // must be called before accumulating the entries 
+   if (!fBinSumw2.fN && u != 1.)  Sumw2();  // must be called before accumulating the entries
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += u*u;
    fBinEntries.fArray[bin] += u;
    if (binx == 0 || binx > fXaxis.GetNbins()) {
@@ -1903,12 +1903,12 @@ void TProfile2D::SetErrorOption(Option_t *option)
    //                    In this case for N > 0 the error is  1./SQRT(12.*N)
    //
    //     'g'            Errors are 1./SQRT(W)  for W not equal to 0 and 0 for W = 0.
-   //                    W is the sum in the bin of the weights of the profile. 
-   //                    This option is for combining measurements z +/- dz,  
+   //                    W is the sum in the bin of the weights of the profile.
+   //                    This option is for combining measurements z +/- dz,
    //                    and  the profile is filled with values y and weights z = 1/dz**2
    //
    //   See TProfile::BuildOptions for a detailed explanation of all options
-   
+
    TProfileHelper::SetErrorOption(this, option);
 }
 
@@ -1916,7 +1916,7 @@ void TProfile2D::SetErrorOption(Option_t *option)
 void TProfile2D::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TProfile2D.
-   
+
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -1940,7 +1940,7 @@ void TProfile2D::Streamer(TBuffer &R__b)
       }
       R__b.CheckByteCount(R__s, R__c, TProfile2D::IsA());
       //====end of old versions
-      
+
    } else {
       R__b.WriteClassBuffer(TProfile2D::Class(),this);
    }
@@ -1950,13 +1950,13 @@ void TProfile2D::Streamer(TBuffer &R__b)
 void TProfile2D::Sumw2(Bool_t flag)
 {
    // Create/Delete structure to store sum of squares of weights per bin  *-*-*-*-*-*-*-*
-   //   This is needed to compute  the correct statistical quantities  
-   //    of a profile filled with weights 
-   //  
+   //   This is needed to compute  the correct statistical quantities
+   //    of a profile filled with weights
+   //
    //
    //  This function is automatically called when the histogram is created
    //  if the static function TH1::SetDefaultSumw2 has been called before.
-   //  If flag is false the structure is deleted 
-   
+   //  If flag is false the structure is deleted
+
    TProfileHelper::Sumw2(this, flag);
 }

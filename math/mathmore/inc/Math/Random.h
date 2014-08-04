@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Author: L. Moneta, A. Zsenei   08/2005 
+// Author: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,20 +23,20 @@
   **********************************************************************/
 
 // Header file for class GSLRandom
-// 
+//
 // Created by: moneta  at Sun Nov 21 16:26:03 2004
-// 
+//
 // Last update: Sun Nov 21 16:26:03 2004
-// 
+//
 #ifndef ROOT_Math_Random
 #define ROOT_Math_Random
 
-#include <string> 
-#include <vector> 
+#include <string>
+#include <vector>
 
 /**
    @defgroup Random Random number generators and distributions
-*/ 
+*/
 
 
 
@@ -46,227 +46,227 @@ namespace Math {
 
 //_____________________________________________________________________________________
   /**
-     User class for MathMore random numbers template on the Engine type. 
-     The API of this class followed that of the class ROOT::TRandom. 
-     It must be implemented using as Engine one of the derived classes of 
+     User class for MathMore random numbers template on the Engine type.
+     The API of this class followed that of the class ROOT::TRandom.
+     It must be implemented using as Engine one of the derived classes of
      ROOT::Math::GSLRandomEngine, like ROOT::Math::GSLRngMT
 
-     @ingroup Random 
+     @ingroup Random
 
-   */ 
-  template < class Engine> 
-  class Random { 
+   */
+  template < class Engine>
+  class Random {
 
-  public: 
+  public:
 
 
     /**
-       Create a Random generator. Use default engine constructor. 
-       Engine will  be initialized via Initialize() function in order to 
+       Create a Random generator. Use default engine constructor.
+       Engine will  be initialized via Initialize() function in order to
        allocate resources
      */
     Random() {
-      fEngine.Initialize(); 
-    } 
+      fEngine.Initialize();
+    }
 
     /**
-       Create a Random generator based using teh default enfing constructor and 
-       then setting the given seed. 
-       Engine will  be initialized via Initialize() function in order to 
+       Create a Random generator based using teh default enfing constructor and
+       then setting the given seed.
+       Engine will  be initialized via Initialize() function in order to
        allocate resources
      */
     explicit Random(unsigned int seed)  {
-      fEngine.Initialize(); 
+      fEngine.Initialize();
       fEngine.SetSeed(seed);
-    } 
+    }
 
     /**
        Create a Random generator based on a provided generic engine.
-       Engine will  be initialized via Initialize() function in order to 
+       Engine will  be initialized via Initialize() function in order to
        allocate resources
      */
     explicit Random(const Engine & e) : fEngine(e) {
-      fEngine.Initialize(); 
-    } 
+      fEngine.Initialize();
+    }
 
     /**
-       Destructor: call Terminate() function of engine to free any 
+       Destructor: call Terminate() function of engine to free any
        allocated resource
      */
-    ~Random() { 
-      fEngine.Terminate(); 
+    ~Random() {
+      fEngine.Terminate();
     }
 
     /**
        Generate random numbers between ]0,1]
        0 is excluded and 1 is included
      */
-    double Uniform(double x=1.0) { 
-      return x*fEngine(); 
+    double Uniform(double x=1.0) {
+      return x*fEngine();
     }
-    /** 
+    /**
        Generate random numbers between ]0,1]
        0 is excluded and 1 is included
-       Function to preserve ROOT Trandom compatibility 
-     */  
-   double Rndm() { 
-      return fEngine(); 
+       Function to preserve ROOT Trandom compatibility
+     */
+   double Rndm() {
+      return fEngine();
     }
 
-    /** 
+    /**
        Generate an array of random numbers between ]0,1]
        0 is excluded and 1 is included
-       Function to preserve ROOT Trandom compatibility 
-     */ 
-    void RndmArray(int n, double * array) { 
+       Function to preserve ROOT Trandom compatibility
+     */
+    void RndmArray(int n, double * array) {
       fEngine.RandomArray(array, array+n);
     }
 
     /**
-       Return the type (name) of the used generator 
+       Return the type (name) of the used generator
      */
-    std::string Type() const { 
+    std::string Type() const {
       return fEngine.Name();
     }
 
     /**
-       Return the size of the generator state 
+       Return the size of the generator state
      */
-    unsigned int EngineSize() const { 
+    unsigned int EngineSize() const {
       return fEngine.Size();
     }
 
-    /** 
+    /**
      set the random generator seed
-     */ 
-    void SetSeed(unsigned int seed) { 
+     */
+    void SetSeed(unsigned int seed) {
       return  fEngine.SetSeed(seed);
     }
-    
-    /** Random  Distributions 
+
+    /** Random  Distributions
      Use naming and signatures compatible with ROOT TRandom
      **/
 
     /**
        Gaussian distribution. Default method (use Ziggurat)
      */
-    double Gaus(double mean = 0, double sigma = 1) { 
+    double Gaus(double mean = 0, double sigma = 1) {
       return mean + fEngine.GaussianZig(sigma);
-    }  
+    }
 
     /**
        Gaussian distribution (Box-Muller method)
      */
-    double GausBM(double mean = 0, double sigma = 1) { 
+    double GausBM(double mean = 0, double sigma = 1) {
       return mean + fEngine.Gaussian(sigma);
-    }  
+    }
 
     /**
        Gaussian distribution (Ratio Method)
      */
-    double GausR(double mean = 0, double sigma = 1) { 
+    double GausR(double mean = 0, double sigma = 1) {
       return mean + fEngine.GaussianRatio(sigma);
-    }  
+    }
 
     /**
        Gaussian Tail distribution
      */
-    double GaussianTail(double a, double sigma = 1) { 
+    double GaussianTail(double a, double sigma = 1) {
       return fEngine.GaussianTail(a,sigma);
     }
-  
+
     /**
        Bivariate Gaussian distribution with correlation
      */
-    void Gaussian2D(double sigmaX, double sigmaY, double rho, double &x, double &y) { 
+    void Gaussian2D(double sigmaX, double sigmaY, double rho, double &x, double &y) {
       fEngine.Gaussian2D(sigmaX, sigmaY, rho, x, y);
     }
-    
+
     /**
        Exponential distribution
      */
-    double Exp(double tau) { 
+    double Exp(double tau) {
       return fEngine.Exponential(tau);
     }
     /**
-       Breit Wigner distribution 
+       Breit Wigner distribution
     */
-    double BreitWigner(double mean = 0., double gamma = 1) { 
+    double BreitWigner(double mean = 0., double gamma = 1) {
       return mean + fEngine.Cauchy( gamma/2.0 );
-    } 
+    }
 
     /**
        Landau distribution
      */
-    double Landau(double mean = 0, double sigma = 1) { 
+    double Landau(double mean = 0, double sigma = 1) {
       return mean + sigma*fEngine.Landau();
-    } 
+    }
 
     /**
        Gamma distribution
      */
-    double Gamma(double a, double b) { 
+    double Gamma(double a, double b) {
       return fEngine.Gamma(a,b);
-    } 
+    }
 
     /**
        Log Normal distribution
      */
-    double LogNormal(double zeta, double sigma) { 
+    double LogNormal(double zeta, double sigma) {
       return fEngine.LogNormal(zeta,sigma);
     }
 
     /**
        Chi square distribution
      */
-    double ChiSquare(double nu) { 
+    double ChiSquare(double nu) {
       return fEngine.ChiSquare(nu);
     }
 
     /**
        F distrbution
      */
-    double FDist(double nu1, double nu2) { 
+    double FDist(double nu1, double nu2) {
       return fEngine.FDist(nu1,nu2);
     }
-    
+
     /**
        t student distribution
      */
-    double tDist(double nu) { 
+    double tDist(double nu) {
       return fEngine.tDist(nu);
     }
 
     /**
-       generate random numbers in a 2D circle of radious 1 
+       generate random numbers in a 2D circle of radious 1
      */
-    void Circle(double &x, double &y, double r = 1) { 
+    void Circle(double &x, double &y, double r = 1) {
       fEngine.Dir2D(x,y);
       x *= r;
       y *= r;
-    } 
+    }
 
     /**
-       generate random numbers in a 3D sphere of radious 1 
+       generate random numbers in a 3D sphere of radious 1
      */
-    void Sphere(double &x, double &y, double &z,double r = 1) { 
+    void Sphere(double &x, double &y, double &z,double r = 1) {
       fEngine.Dir3D(x,y,z);
       x *= r;
       y *= r;
       z *= r;
-    } 
-  
+    }
+
     /**
        Poisson distribution
      */
-    unsigned int Poisson(double mu) { 
-      return fEngine.Poisson(mu); 
+    unsigned int Poisson(double mu) {
+      return fEngine.Poisson(mu);
     }
 
     /**
        Binomial distribution
      */
-    unsigned int Binomial(unsigned int ntot, double prob) { 
+    unsigned int Binomial(unsigned int ntot, double prob) {
       return fEngine.Binomial(prob,ntot);
     }
 
@@ -275,23 +275,23 @@ namespace Math {
        First parameter is n, second is probability
        To be consistent with Random::Binomial
      */
-     unsigned int NegativeBinomial(double n, double prob) { 
+     unsigned int NegativeBinomial(double n, double prob) {
       return fEngine.NegativeBinomial(prob,n);
     }
 
     /**
        Multinomial distribution
      */
-    std::vector<unsigned int> Multinomial( unsigned int ntot, const std::vector<double> & p ) { 
+    std::vector<unsigned int> Multinomial( unsigned int ntot, const std::vector<double> & p ) {
       return fEngine.Multinomial(ntot,p);
     }
 
 
-  private: 
+  private:
 
-    Engine fEngine; 
+    Engine fEngine;
 
-  }; 
+  };
 
 } // namespace Math
 } // namespace ROOT

@@ -196,14 +196,14 @@ void TGLPlotPainter::Paint()
       Bool_t old = gPad->TestBit(TGraph::kClipFrame);
       if (!old)
          gPad->SetBit(TGraph::kClipFrame);
-      
+
       //Viewport on retina is bigger than real pixel coordinates in
       //a pad, scale it back.
       TGLUtil::InitializeIfNeeded();
       Float_t scale = TGLUtil::GetScreenScalingFactor();
       if (scale < 1.f)//Just ignore this.
          scale = 1.f;
-      
+
       const Int_t viewport[] = {Int_t(fCamera->GetX() / scale),
                                 Int_t(fCamera->GetY() / scale),
                                 Int_t(fCamera->GetWidth() / scale),
@@ -283,7 +283,7 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
 
       glFinish();
       //fSelection.ReadColorBuffer(fCamera->GetWidth(), fCamera->GetHeight());
-      
+
       fSelection.ReadColorBuffer(fCamera->GetX(), fCamera->GetY(), fCamera->GetWidth(), fCamera->GetHeight());
       fSelectionPass   = kFALSE;
       fUpdateSelection = kFALSE;
@@ -297,14 +297,14 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
       glMatrixMode(GL_MODELVIEW);//2]
       glPopMatrix();
    }
-   
+
    px -= Int_t(gPad->GetXlowNDC() * gPad->GetWw());
    py -= Int_t(gPad->GetWh() - gPad->YtoAbsPixel(gPad->GetY1()));
 
    //Pixel coords can be affected by scaling factor on retina displays.
    TGLUtil::InitializeIfNeeded();
    const Float_t scale = TGLUtil::GetScreenScalingFactor();
-   
+
    if (scale > 1.f) {
       px *= scale;
       py *= scale;

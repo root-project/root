@@ -213,7 +213,7 @@ fFitDone(kFALSE), fChisquare(0), fPlot(0)  {
    CheckConsistency();
    fWeights.Expand(fNpar);
 
-   fFractionFitter = new ROOT::Fit::Fitter(); 
+   fFractionFitter = new ROOT::Fit::Fitter();
 
    // set print level
    TString opt(option);
@@ -224,12 +224,12 @@ fFitDone(kFALSE), fChisquare(0), fPlot(0)  {
    else if (opt.Contains("V") ) {
       fFractionFitter->Config().MinimizerOptions().SetPrintLevel(2);
    }
-   else 
+   else
       fFractionFitter->Config().MinimizerOptions().SetPrintLevel(1);
 
    Double_t defaultFraction = 1.0/((Double_t)fNpar);
    Double_t defaultStep = 0.01;
-   // set the parameters 
+   // set the parameters
    std::vector<ROOT::Fit::ParameterSettings> & parameters = fFractionFitter->Config().ParamsSettings();
    parameters.reserve(fNpar);
    for (par = 0; par < fNpar; ++par) {
@@ -237,7 +237,7 @@ fFitDone(kFALSE), fChisquare(0), fPlot(0)  {
       parameters.push_back(ROOT::Fit::ParameterSettings(name.Data(), defaultFraction, defaultStep) );
    }
 
-   if (fFractionFitter->Config().MinimizerOptions().ErrorDef() == 1.0 )  
+   if (fFractionFitter->Config().MinimizerOptions().ErrorDef() == 1.0 )
       fFractionFitter->Config().MinimizerOptions().SetErrorDef(0.5);
 
 }
@@ -945,7 +945,7 @@ TH1* TFractionFitter::GetMCPrediction(Int_t parm) const
    // Return the adjusted MC template (Aji) for template (parm).
    // Note that the (Aji) times fractions only sum to the total prediction
    // of the fit if all weights are 1.
-   
+
    CheckParNo(parm);
    if ( !fFitDone ) {
       Error("GetMCPrediction","Fit not yet performed");

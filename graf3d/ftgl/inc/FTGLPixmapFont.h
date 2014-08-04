@@ -24,7 +24,7 @@ class FTGL_EXPORT FTGLPixmapFont : public FTFont
          * @param fontFilePath  font file path.
          */
         FTGLPixmapFont( const char* fontFilePath);
-        
+
         /**
          * Open and read a font from a buffer in memory. Sets Error flag.
          *
@@ -32,12 +32,12 @@ class FTGL_EXPORT FTGLPixmapFont : public FTFont
          * @param bufferSizeInBytes  the length of the buffer in bytes
          */
         FTGLPixmapFont( const unsigned char *pBufferBytes, size_t bufferSizeInBytes);
-        
+
         /**
          * Destructor
          */
         ~FTGLPixmapFont();
-        
+
         /**
          * Prepare for rendering
          */
@@ -56,7 +56,7 @@ class FTGL_EXPORT FTGLPixmapFont : public FTFont
          * @return  An FTPixmapGlyph or <code>null</code> on failure.
          */
         inline virtual FTGlyph* MakeGlyph( unsigned int g);
-        
+
 };
 
 

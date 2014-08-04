@@ -5,11 +5,11 @@
 // date Jan. 2009
 // updated June 2010
 //
-// Using the RooStats FeldmanCousins tool with 200 bins 
-// it takes 1 min and the interval is [0.2625, 10.6125] 
+// Using the RooStats FeldmanCousins tool with 200 bins
+// it takes 1 min and the interval is [0.2625, 10.6125]
 // with a step size of 0.075.
 // The interval in Feldman & Cousins's original paper is [.29, 10.81]
-//  Phys.Rev.D57:3873-3889,1998. 
+//  Phys.Rev.D57:3873-3889,1998.
 /////////////////////////////////////////////////////////////////////////
 
 #include "RooGlobalFunc.h"
@@ -60,7 +60,7 @@ void rs401c_FeldmanCousins()
   // create a toy dataset
   RooDataSet* data = pois.generate(RooArgSet(x), 1);
   data->Print("v");
-  
+
   TCanvas* dataCanvas = new TCanvas("dataCanvas");
   RooPlot* frame = x.frame();
   data->plotOn(frame);
@@ -86,18 +86,18 @@ void rs401c_FeldmanCousins()
 
   // make a canvas for plots
   TCanvas* intervalCanvas =  new TCanvas("intervalCanvas");
-  
-  std::cout << "is this point in the interval? " << 
+
+  std::cout << "is this point in the interval? " <<
     interval->IsInInterval(parameters) << std::endl;
 
-  std::cout << "interval is ["<<  
+  std::cout << "interval is ["<<
     interval->LowerLimit(mu)  << ", "  <<
     interval->UpperLimit(mu) << "]" << endl;
 
   // using 200 bins it takes 1 min and the answer is
   // interval is [0.2625, 10.6125] with a step size of .075
   // The interval in Feldman & Cousins's original paper is [.29, 10.81]
-  //  Phys.Rev.D57:3873-3889,1998. 
+  //  Phys.Rev.D57:3873-3889,1998.
 
   // No dedicated plotting class yet, so do it by hand:
 
@@ -105,7 +105,7 @@ void rs401c_FeldmanCousins()
   TH1F* hist = (TH1F*) parameterScan->createHistogram("mu",30);
   hist->Draw();
 
- 
+
   RooArgSet* tmpPoint;
   // loop over points to test
   for(Int_t i=0; i<parameterScan->numEntries(); ++i){
@@ -114,7 +114,7 @@ void rs401c_FeldmanCousins()
     tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
 
     TMarker* mark = new TMarker(tmpPoint->getRealValue("mu"), 1, 25);
-    if (interval->IsInInterval( *tmpPoint ) ) 
+    if (interval->IsInInterval( *tmpPoint ) )
       mark->SetMarkerColor(kBlue);
     else
       mark->SetMarkerColor(kRed);
@@ -125,6 +125,6 @@ void rs401c_FeldmanCousins()
   }
   t.Stop();
   t.Print();
-    
+
 
 }

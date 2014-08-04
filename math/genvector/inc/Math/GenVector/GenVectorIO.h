@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -16,7 +16,7 @@
 //
 // Last update: Tue Jun 21 2005
 //
-#ifndef ROOT_Math_GenVector_GenVectorIO 
+#ifndef ROOT_Math_GenVector_GenVectorIO
 #define ROOT_Math_GenVector_GenVectorIO  1
 
 #include <cctype>
@@ -218,4 +218,4 @@ template< class char_t, class traits_t >
 }  // namespace Math
 
 
-#endif  // ROOT_Math_GenVector_GenVectorIO 
+#endif  // ROOT_Math_GenVector_GenVectorIO

@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
 #ifdef __CINT__
 
@@ -39,9 +39,9 @@
 #pragma link C++ function ROOT::Math::wigner_6j(int,int,int,int,int,int);
 #pragma link C++ function ROOT::Math::wigner_9j(int,int,int,int,int,int,int,int,int);
 
-// statistical functions: 
+// statistical functions:
 
-//pdf 
+//pdf
 #pragma link C++ function ROOT::Math::noncentral_chisquared_pdf(double,double,double);
 
 
@@ -55,7 +55,7 @@
 #pragma link C++ function ROOT::MathMore::gamma_quantile(double,double,double);
 
 
-// for auto-loading of mathmore 
+// for auto-loading of mathmore
 // one can do it by doing using namespace ROOT::Math::MathMore
 #ifdef USE_FOR_AUTLOADING
 #pragma link C++ class ROOT::MathMore;

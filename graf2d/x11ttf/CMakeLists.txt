@@ -11,7 +11,7 @@ include_directories(${FREETYPE_INCLUDE_DIRS} ${X11_INCLUDE_DIR})
 ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h)
 
 
-ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx 
+ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx
                     LIBRARIES ${X11_LIBRARIES} ${X11_Xpm_LIB} ${X11_Xft_LIB} ${FREETYPE_LIBRARIES} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT}
                     DEPENDENCIES GX11 Graf)
 ROOT_INSTALL_HEADERS()

@@ -16,13 +16,13 @@ FTPixmapGlyph::FTPixmapGlyph( FT_GlyphSlot glyph)
 
     //check the pixel mode
     //ft_pixel_mode_grays
-        
+
     int srcWidth = bitmap.width;
     int srcHeight = bitmap.rows;
-    
+
     destWidth = srcWidth;
     destHeight = srcHeight;
-    
+
     if( destWidth && destHeight)
     {
         data = new unsigned char[destWidth * destHeight * 2];
@@ -58,7 +58,7 @@ FTPixmapGlyph::~FTPixmapGlyph()
 const FTPoint& FTPixmapGlyph::Render( const FTPoint& pen)
 {
     glBitmap( 0, 0, 0.0f, 0.0f, pen.X() + pos.X(), pen.Y() - pos.Y(), (const GLubyte*)0);
-    
+
     if( data)
     {
         glPixelStorei( GL_UNPACK_ROW_LENGTH, 0);
@@ -66,7 +66,7 @@ const FTPoint& FTPixmapGlyph::Render( const FTPoint& pen)
 
         glDrawPixels( destWidth, destHeight, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, (const GLvoid*)data);
     }
-        
+
     glBitmap( 0, 0, 0.0f, 0.0f, -pos.X(), pos.Y(), (const GLubyte*)0);
 
     return advance;

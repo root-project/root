@@ -19,10 +19,10 @@ FTBitmapGlyph::FTBitmapGlyph( FT_GlyphSlot glyph)
     unsigned int srcWidth = bitmap.width;
     unsigned int srcHeight = bitmap.rows;
     unsigned int srcPitch = bitmap.pitch;
-    
+
     destWidth = srcWidth;
     destHeight = srcHeight;
-    destPitch = srcPitch;    
+    destPitch = srcPitch;
 
     if( destWidth && destHeight)
     {
@@ -52,14 +52,14 @@ FTBitmapGlyph::~FTBitmapGlyph()
 const FTPoint& FTBitmapGlyph::Render( const FTPoint& pen)
 {
     glBitmap( 0, 0, 0.0f, 0.0f, pen.X() + pos.X(), pen.Y() - pos.Y(), (const GLubyte*)0 );
-    
+
     if( data)
     {
         glPixelStorei( GL_UNPACK_ROW_LENGTH, destPitch * 8);
         glBitmap( destWidth, destHeight, 0.0f, 0.0, 0.0, 0.0, (const GLubyte*)data);
     }
-    
+
     glBitmap( 0, 0, 0.0f, 0.0f, -pos.X(), pos.Y(), (const GLubyte*)0 );
-    
+
     return advance;
 }

@@ -570,4 +570,4 @@ void testMT_C(const A & a, double & time, C & result) {
 }
 
 
-#endif   
+#endif

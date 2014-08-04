@@ -62,9 +62,9 @@ const CFStringRef fixedFontNames[FontCache::nPadFonts] =
 CTFontCollectionRef CreateFontCollection(const X11::XLFDName &/*xlfd*/)
 {
    CTFontCollectionRef ctCollection = CTFontCollectionCreateFromAvailableFonts(0);
-   if (!ctCollection) 
+   if (!ctCollection)
       ::Error("CreateFontCollection", "CTFontCollectionCreateFromAvailableFonts failed");
-   
+
    return ctCollection;
 /*   CTFontCollectionRef ctCollection = 0;
    if (xlfd.fFamilyName == "*")
@@ -127,11 +127,11 @@ bool GetPostscriptName(CTFontDescriptorRef fontDescriptor, std::vector<char> &na
 {
    //If success, this function returns a null-terminated string in a vector.
    assert(fontDescriptor != 0 && "GetPostscriptName, parameter 'fontDescriptor' is null");
-    
+
    name.clear();
-    
+
    Util::CFScopeGuard<CFStringRef> cfFamilyName((CFStringRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontNameAttribute));
-   
+
    if (const CFIndex cfLen = CFStringGetLength(cfFamilyName.Get())) {
       name.resize(cfLen + 1);//+ 1 for '\0'.
       if (CFStringGetCString(cfFamilyName.Get(), &name[0], name.size(), kCFStringEncodingMacRoman))
@@ -156,15 +156,15 @@ void GetWeightAndSlant(CTFontDescriptorRef fontDescriptor, X11::XLFDName &newXLF
             newXLFD.fSlant = X11::kFSItalic;
          else
             newXLFD.fSlant = X11::kFSRegular;
-            
+
          if (val & kCTFontBoldTrait)
             newXLFD.fWeight = X11::kFWBold;
          else
             newXLFD.fWeight = X11::kFWMedium;
       }
-   
+
       /*
-      //The code below is wrong - using it, I can not identify bold or italic and always have 
+      //The code below is wrong - using it, I can not identify bold or italic and always have
       //only medium/regular.
       if(CFNumberRef weight = (CFNumberRef)CFDictionaryGetValue(traits.Get(), kCTFontWeightTrait)) {
          double val = 0.;
@@ -237,7 +237,7 @@ FontCache::FontCache()
    //XLFD name is not exactly PS name thus generating a warning with a new Core Text.
    fXLFDtoPostscriptNames["helvetica"] = "Helvetica";
    fXLFDtoPostscriptNames["courier"] = "Courier";
-   fXLFDtoPostscriptNames["times"] = "Times-Roman";   
+   fXLFDtoPostscriptNames["times"] = "Times-Roman";
 }
 
 //______________________________________________________________________________
@@ -255,33 +255,33 @@ FontStruct_t FontCache::LoadFont(const X11::XLFDName &xlfd)
 #endif
 
    const CFStrongReference<CTFontRef> baseFont(CTFontCreateWithName(fontName.Get(), xlfd.fPixelSize, 0), false);//false == do not retain
-   
+
    if (!baseFont.Get()) {
       ::Error("FontCache::LoadFont", "CTFontCreateWithName failed for %s", xlfd.fFamilyName.c_str());
       return FontStruct_t();//Haha! Die ROOT, die!
    }
-   
+
    CTFontSymbolicTraits symbolicTraits = CTFontSymbolicTraits();
-   
+
    if (xlfd.fWeight == X11::kFWBold)
       symbolicTraits |= kCTFontBoldTrait;
    if (xlfd.fSlant == X11::kFSItalic)
       symbolicTraits |= kCTFontItalicTrait;
-      
+
    if (symbolicTraits) {
       const CFStrongReference<CTFontRef> font(CTFontCreateCopyWithSymbolicTraits(baseFont.Get(), xlfd.fPixelSize, 0, symbolicTraits, symbolicTraits), false);//false == do not retain.
       if (font.Get()) {
          if (fLoadedFonts.find(font.Get()) == fLoadedFonts.end())
             fLoadedFonts[font.Get()] = font;
-      
+
          return reinterpret_cast<FontStruct_t>(font.Get());
       }
    }
-      
+
    if (fLoadedFonts.find(baseFont.Get()) == fLoadedFonts.end())
       fLoadedFonts[baseFont.Get()] = baseFont;
 
-   return reinterpret_cast<FontStruct_t>(baseFont.Get());   
+   return reinterpret_cast<FontStruct_t>(baseFont.Get());
 }
 
 //______________________________________________________________________________
@@ -302,7 +302,7 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
 
    count =  0;
 
-   //Ugly, ugly code. I should "think different"!!!   
+   //Ugly, ugly code. I should "think different"!!!
    //To extract font names, I have to: create CFString, create font descriptor, create
    //CFArray, create CTFontCollection, that's a mess!!!
    //It's good I have my small and ugly RAII classes, otherwise the code will be
@@ -318,26 +318,26 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
       ::Error("FontCache::ListFonts", "CTFontCollectionCreateMatchingFontDescriptors failed %s", xlfd.fFamilyName.c_str());
       return 0;
    }
-   
+
    std::vector<char> xlfdData;
    //familyName is actually a null-terminated string.
    std::vector<char> familyName;
    X11::XLFDName newXLFD;
    std::string xlfdString;
-   
+
    const CFIndex nFonts = CFArrayGetCount(fonts.Get());
    for (CFIndex i = 0; i < nFonts && count < maxNames; ++i) {
       CTFontDescriptorRef font = (CTFontDescriptorRef)CFArrayGetValueAtIndex(fonts.Get(), i);
 
       if (!GetFamilyName(font, familyName))
          continue;
- 
+
       if (xlfd.fFamilyName != "*" && xlfd.fFamilyName != &familyName[0])
          continue;
 
       newXLFD.fFamilyName = &familyName[0];
-      
-      //If family name has '-', ROOT's GUI can not parse it correctly - 
+
+      //If family name has '-', ROOT's GUI can not parse it correctly -
       //'-' is a separator in XLFD. Just skip this font (anyway, it wan not requested by GUI, only
       //listed by FontCache.
       if (newXLFD.fFamilyName.find('-') != std::string::npos)
@@ -361,7 +361,7 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
 #ifdef MAC_OS_X_VERSION_10_9
       //To avoid a warning from Core Text, save a mapping from a name seen by ROOT (family)
       //to a right postscript name (required by Core Text).
-   
+
       //It's a null-terminated string:
       std::vector<char> postscriptName;
       if (GetPostscriptName(font, postscriptName)) {
@@ -383,10 +383,10 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
    if (xlfdData.size()) {
       fFontLists.push_back(fDummyList);
       fFontLists.back().fStringData.swap(xlfdData);
-      
+
       std::vector<char> &data = fFontLists.back().fStringData;
       std::vector<char *> &list = fFontLists.back().fList;
-      
+
       list.push_back(&data[0]);
       for (size_type i = 1, e = data.size(); i < e; ++i) {
          if (!data[i] && i + 1 < e)
@@ -403,14 +403,14 @@ void FontCache::FreeFontNames(char **fontList)
 {
    if (!fontList)
       return;
-   
+
    for (std::list<FontList>::iterator it = fFontLists.begin(), eIt = fFontLists.end(); it != eIt; ++it) {
       if (fontList == &it->fList[0]) {
          fFontLists.erase(it);
          return;
       }
    }
-   
+
    assert(0 && "FreeFontNames, unknown fontList");
 }
 
@@ -435,11 +435,11 @@ unsigned FontCache::GetTextWidth(FontStruct_t font, const char *text, int nChars
    //Glyps' advances for a text.
    std::vector<CGSize> glyphAdvances(glyphs.size());
    CTFontGetAdvancesForGlyphs(fontRef, kCTFontHorizontalOrientation, &glyphs[0], &glyphAdvances[0], glyphs.size());
-   
+
    CGFloat textWidth = 0.;
    for (size_type i = 0, e = glyphAdvances.size(); i < e; ++i)
       textWidth += std::ceil(glyphAdvances[i].width);
-      
+
    return textWidth;
 }
 
@@ -470,13 +470,13 @@ CTFontRef FontCache::SelectFont(Font_t fontIndex, Float_t fontSize)
       fontIndex = 3;//Select the Helvetica as default.
    } else
       fontIndex -= 1;
-   
+
    if (fontIndex == 11 || fontIndex == 14)//Special case, our own symbol.ttf file.
       return SelectSymbolFont(fontSize, fontIndex);
-   
+
    const UInt_t fixedSize = UInt_t(fontSize);
    font_map_iterator it = fFonts[fontIndex].find(fixedSize);
-   
+
    if (it == fFonts[fontIndex].end()) {
       //Insert the new font.
       try {
@@ -485,7 +485,7 @@ CTFontRef FontCache::SelectFont(Font_t fontIndex, Float_t fontSize)
             ::Error("FontCache::SelectFont", "CTFontCreateWithName failed for font %d", fontIndex);
             return 0;
          }
-    
+
          fFonts[fontIndex][fixedSize] = font;//Insetion can throw.
          return fSelectedFont = font.Get();
       } catch (const std::exception &) {//Bad alloc.
@@ -503,12 +503,12 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
 
    const UInt_t fixedSize = UInt_t(fontSize);
    font_map_iterator it = fFonts[fontIndex].find(fixedSize);//In ROOT, 11 is a font from symbol.ttf.
-   
+
    if (it == fFonts[fontIndex].end()) {
       //This GetValue + Which I took from Olivier's code.
       const char * const fontDirectoryPath = gEnv->GetValue("Root.TTFontPath","$(ROOTSYS)/fonts");//This one I do not own.
       char * const fontFileName = gSystem->Which(fontDirectoryPath, "symbol.ttf", kReadPermission);//This must be deleted.
-      
+
       const Util::ScopedArray<char> arrayGuard(fontFileName);
 
       if (!fontFileName || fontFileName[0] == 0) {
@@ -528,7 +528,7 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
             ::Error("FontCache::SelectSymbolFont", "CFURLCreateWithFileSystemPath failed");
             return 0;
          }
-         
+
          //Try to register this font.
          if (!fSymbolFontRegistered) {
             CFErrorRef err = 0;
@@ -540,7 +540,7 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
                return 0;
             }
          }
-         
+
          const Util::CFScopeGuard<CFArrayRef> arr(CTFontManagerCreateFontDescriptorsFromURL(fontURL.Get()));
          if (!arr.Get()) {
             ::Error("FontCache::SelectSymbolFont", "CTFontManagerCreateFontDescriptorsFromURL failed");
@@ -548,7 +548,7 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
          }
 
          CTFontDescriptorRef fontDesc = (CTFontDescriptorRef)CFArrayGetValueAtIndex(arr.Get(), 0);
-         
+
          const CGAffineTransform shearMatrix = {1., 0., 0.26794, 1., 0., 0.};//Yes, these are hardcoded values, taken from TPDF class.
          const CTFontGuard_t font(CTFontCreateWithFontDescriptorAndOptions(fontDesc, fixedSize,
                                                                            fontIndex == 11 ? &CGAffineTransformIdentity :
@@ -569,11 +569,11 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
    return fSelectedFont = it->second.Get();
 }
 
-//_________________________________________________________________   
+//_________________________________________________________________
 void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
 {
    assert(fSelectedFont != 0 && "GetTextBounds: no font was selected");
-   
+
    try {
       const Quartz::TextLine ctLine(text, fSelectedFont);
       ctLine.GetBounds(w, h);
@@ -583,11 +583,11 @@ void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
    }
 }
 
-//_________________________________________________________________   
+//_________________________________________________________________
 void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const std::vector<UniChar> &unichars)const
 {
    assert(fSelectedFont != 0 && "GetTextBounds: no font was selected");
-   
+
    try {
       const Quartz::TextLine ctLine(unichars, fSelectedFont);
       ctLine.GetBounds(w, h);

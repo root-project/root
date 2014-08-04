@@ -35,7 +35,7 @@
 #include "TMath.h"
 
 //  Define the names of the Fortran common blocks for the different OSs
-// Note that with gcc3.4 or above the size of PAWC_SIZE must be the same 
+// Note that with gcc3.4 or above the size of PAWC_SIZE must be the same
 // as in the Fortran definition in hbook.f and zebra
 // Also, the arrays must be declared extern like on Windows
 #ifndef WIN32
@@ -424,7 +424,7 @@ void convert_directory(const char *dir)
       if (strchr(chdir,'/')) {
          printf("Sorry cannot convert directory name %s because it contains a slash\n",chdir);
          continue;
-      }   
+      }
       strlcpy(hbookdir,chdir,17);
       for (i=16;i>0;i--) {
          if (chdir[i] == 0) continue;
@@ -885,7 +885,7 @@ void convert_cwn(Int_t id)
                }
             }
             bufpos += isize*ielem;
-            
+
          }
       }
 

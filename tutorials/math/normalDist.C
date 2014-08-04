@@ -1,4 +1,4 @@
-// tutorial illustrating the new statistical  distributions functions (pdf, cdf and quantile) 
+// tutorial illustrating the new statistical  distributions functions (pdf, cdf and quantile)
 
 #ifndef __CINT__
 #include "Math/DistFunc.h"
@@ -11,7 +11,7 @@
 
 
 
-void normalDist() { 
+void normalDist() {
 
 // #ifdef __CINT__
 //    gSystem->Load("libMathCore");
@@ -33,7 +33,7 @@ void normalDist() {
    pdfunc->GetXaxis()->SetTitleSize(0.07);
    pdfunc->GetXaxis()->SetTitleOffset(0.55);
    pdfunc->GetYaxis()->SetLabelSize(0.06);
- 
+
 
 
 
@@ -46,17 +46,17 @@ void normalDist() {
    cdfunc->GetXaxis()->SetTitle("x");
    cdfunc->GetXaxis()->SetTitleSize(0.07);
    cdfunc->GetXaxis()->SetTitleOffset(0.55);
-   
+
    cdfunc->GetYaxis()->SetLabelSize(0.06);
    cdfunc->GetYaxis()->SetTitle("p");
    cdfunc->GetYaxis()->SetTitleSize(0.07);
    cdfunc->GetYaxis()->SetTitleOffset(0.55);
- 
+
    ccdfunc->SetParameters(1.0,0.0);  // set sigma to 1 and mean to zero
    ccdfunc->SetTitle("");
    ccdfunc->SetLineColor(kGreen);
 
-   qfunc->SetParameter(0, 1.0);  // set sigma to 1 
+   qfunc->SetParameter(0, 1.0);  // set sigma to 1
    qfunc->SetTitle("");
    qfunc->SetLineColor(kRed);
    qfunc->SetNpx(1000); // to get more precision for p close to 0 or 1
@@ -70,11 +70,11 @@ void normalDist() {
    qfunc->GetYaxis()->SetTitleSize(0.07);
    qfunc->GetYaxis()->SetTitleOffset(0.55);
 
-   cqfunc->SetParameter(0, 1.0);  // set sigma to 1 
+   cqfunc->SetParameter(0, 1.0);  // set sigma to 1
    cqfunc->SetTitle("");
    cqfunc->SetLineColor(kGreen);
-   cqfunc->SetNpx(1000); 
-   
+   cqfunc->SetNpx(1000);
+
 
    TCanvas * c1 = new TCanvas("c1","Normal Distributions",100,10,600,800);
 
@@ -103,5 +103,5 @@ void normalDist() {
    legend3->Draw();
 
 
-   
+
 }

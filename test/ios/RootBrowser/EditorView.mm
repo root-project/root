@@ -26,17 +26,17 @@ enum {
 
    CGFloat plateYs[evMaxStates * evMaxComponents];
    CGFloat viewYs[evMaxStates * evMaxComponents];
-   
+
    UIView *plates[evMaxComponents];
    UIView *views[evMaxComponents];
-   UIView *containers[evMaxComponents];   
+   UIView *containers[evMaxComponents];
 
    unsigned nStates;
    unsigned nEditors;
    unsigned currentState;
-   
+
    int newOpened;
-   
+
    BOOL animation;
 }
 
@@ -92,7 +92,7 @@ enum {
       //It's completely transparent.
       const CGRect titleRect = CGRectMake(10.f, 10.f, 250.f, 35.f);
       editorTitle = [[UILabel alloc] initWithFrame : titleRect];
-      
+
 #ifdef __IPHONE_6_0
       editorTitle.textAlignment = NSTextAlignmentCenter;
 #else
@@ -102,7 +102,7 @@ enum {
       editorTitle.textColor = [UIColor blackColor];
       editorTitle.backgroundColor = [UIColor clearColor];
       [self addSubview : editorTitle];
-      
+
       const CGRect scrollFrame = CGRectMake(10.f, 45.f, [EditorView scrollWidth], frame.size.height - 55.f);
       scrollView = [[ScrollViewWithPickers alloc] initWithFrame : scrollFrame];
       scrollView.backgroundColor = [UIColor clearColor];
@@ -131,11 +131,11 @@ enum {
 //   UIColor *background = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"inspector_bkn.png"]] colorWithAlphaComponent : [EditorView editorAlpha]];
    CGContextSetFillColorWithColor(ctx, background.CGColor);
    CGContextSetPatternPhase(ctx, CGSizeMake(-8.f, 0.f));
-   
+
    //Draw the rect with rounded corners now.
    CGContextFillRect(ctx, CGRectMake(0.f, [EditorView ncHeight] / 2, [EditorView ncWidth] / 2, rect.size.height - [EditorView ncHeight]));
    CGContextFillRect(ctx, CGRectMake([EditorView ncWidth] / 2, 0.f, rect.size.width - [EditorView ncWidth] / 2, rect.size.height));
-   
+
    //Draw arcs.
    CGContextBeginPath(ctx);
    CGContextMoveToPoint(ctx, [EditorView ncWidth] / 2, [EditorView ncHeight] / 2);
@@ -156,7 +156,7 @@ enum {
       [plates[i] removeFromSuperview];
       [containers[i] removeFromSuperview];
    }
-   
+
    nEditors = 0;
    currentState = 0;
    nStates = 0;
@@ -204,7 +204,7 @@ enum {
    frame.size.height -= 55.f;
    frame.size.width = 250.f;
    scrollView.frame = frame;
-   
+
    const CGFloat totalHeight = [self recalculateEditorGeometry];
    scrollView.contentSize = CGSizeMake([EditorView scrollWidth], totalHeight);
    scrollView.contentOffset = CGPointZero;
@@ -261,7 +261,7 @@ enum {
    //Set scrollView.contentSize to include all sub-editors in opened state.
    scrollView.contentSize = CGSizeMake([EditorView scrollWidth], totalHeight);
    scrollView.contentOffset = CGPointZero;
-   
+
    //No sub-editor is visible.
    currentState = 0;
    //Also, make new sub-editor transparent.
@@ -352,7 +352,7 @@ enum {
       frameToShow.origin.y = viewYs[currentState * nEditors + newOpened] - 70.f;
       frameToShow.size.height += 70.f;
    }
-   
+
    [scrollView scrollRectToVisible : frameToShow animated : YES];
    animation = NO;
 }
@@ -363,17 +363,17 @@ enum {
    animation = YES;
 
    [self presetViewsYs];
-   
+
    [UIView beginAnimations : nil context : nil];
    [UIView setAnimationDuration : 0.25];
    [UIView setAnimationCurve : UIViewAnimationCurveEaseOut];
- 
+
    [self setPlatesYs];
    [self setViewsYs];
    [self setViewsAlphaAndVisibility];
 
    [UIView commitAnimations];
- 
+
    //Do not hide the views immediately, so user can see animation.
    [NSTimer scheduledTimerWithTimeInterval : 0.15 target : self selector : @selector(hideViews) userInfo : nil repeats : NO];
    [NSTimer scheduledTimerWithTimeInterval : 0.3 target : self selector : @selector(showEditorFrame) userInfo : nil repeats : NO];
@@ -388,7 +388,7 @@ enum {
    //Depending on the current editor's state,
    //we open or close it with animation.
    newOpened = -1;
-   
+
    for (unsigned i = 0; i < nEditors; ++i) {
       if (plate != plates[i]) {
          if (currentState & (1 << i))

@@ -46,11 +46,11 @@ Bool_t h1analysisTreeReader::Process(Long64_t entry){
       if (TMath::Abs(*fEtads_d) >= 1.5) return kFALSE;
       (*fIk)--; //original fIk used f77 convention starting at 1
       (*fIpi)--;
-      
-      
+
+
       if (fNhitrp.At(*fIk)* fNhitrp.At(*fIpi) <= 1) return kFALSE;
-      
-      
+
+
       if (fRend.At(*fIk) -fRstart.At(*fIk)  <= 22) return kFALSE;
       if (fRend.At(*fIpi)-fRstart.At(*fIpi) <= 22) return kFALSE;
       if (fNlhk.At(*fIk) <= 0.1)    return kFALSE;
@@ -222,7 +222,7 @@ void h1analysisTreeReader::Terminate() {
 }
 
 void h1analysisTreeReader::SlaveTerminate(){
-   
+
 }
 
 Bool_t h1analysisTreeReader::Notify() {

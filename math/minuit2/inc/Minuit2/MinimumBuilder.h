@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -29,7 +29,7 @@ class MnStrategy;
 class MinimumBuilder {
 
 public:
-  
+
    MinimumBuilder();
 
    virtual ~MinimumBuilder() {}
@@ -51,12 +51,12 @@ public:
    }
 
    void TraceIteration(int iter, const MinimumState & state) const {
-      if (fTracer) (*fTracer)(iter, state); 
+      if (fTracer) (*fTracer)(iter, state);
    }
 
-private: 
+private:
 
-   int fPrintLevel; 
+   int fPrintLevel;
    int fStorageLevel;
 
    MnTraceObject * fTracer; //! tracer object (it is managed by user)

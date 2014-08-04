@@ -40,9 +40,9 @@ class TXMLStackObj;
 
 
 class TBufferXML : public TBufferFile, public TXMLSetup {
-   
-friend class TKeyXML;   
-   
+
+friend class TKeyXML;
+
 public:
 
    TBufferXML(TBuffer::EMode mode);
@@ -51,10 +51,10 @@ public:
 
    static TString   ConvertToXML(const TObject* obj, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
    static TString   ConvertToXML(const void* obj, const TClass* cl, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
-   
-   static TObject*  ConvertFromXML(const char* str, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);   
+
+   static TObject*  ConvertFromXML(const char* str, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
    static void*     ConvertFromXMLAny(const char* str, TClass** cl = 0, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
-   
+
    // suppress class writing/reading
 
    virtual TClass*  ReadClass(const TClass* cl = 0, UInt_t* objTag = 0);
@@ -76,7 +76,7 @@ public:
    virtual void     IncrementLevel(TVirtualStreamerInfo*);
    virtual void     SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_type);
    virtual void     DecrementLevel(TVirtualStreamerInfo*);
-   
+
    virtual void     ClassBegin(const TClass*, Version_t = -1);
    virtual void     ClassEnd(const TClass*);
    virtual void     ClassMember(const char* name, const char* typeName = 0, Int_t arrsize1 = -1, Int_t arrsize2 = -1);
@@ -91,7 +91,7 @@ public:
    virtual void     ReadWithNbits(Float_t *ptr, Int_t nbits);
    virtual void     ReadWithFactor(Double_t *ptr, Double_t factor, Double_t minvalue);
    virtual void     ReadWithNbits(Double_t *ptr, Int_t nbits);
-   
+
    virtual Int_t    ReadArray(Bool_t    *&b);
    virtual Int_t    ReadArray(Char_t    *&c);
    virtual Int_t    ReadArray(UChar_t   *&c);
@@ -217,15 +217,15 @@ public:
    virtual   void     WriteCharP(const Char_t *c);
    virtual   void     WriteTString(const TString  &s);
 
-   virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);      
-   virtual Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);      
+   virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
+   virtual Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
    virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
 
    // end of redefined virtual functions
-   
+
    static    void     SetFloatFormat(const char* fmt = "%e");
    static const char* GetFloatFormat();
-   
+
 
 protected:
    TBufferXML();
@@ -263,7 +263,7 @@ protected:
    void             WorkWithElement(TStreamerElement* elem, Int_t comp_type);
    Bool_t           VerifyNode(XMLNodePointer_t node, const char* name, const char* errinfo = 0);
    Bool_t           VerifyStackNode(const char* name, const char* errinfo = 0);
-   
+
    Bool_t           VerifyAttr(XMLNodePointer_t node, const char* name, const char* value, const char* errinfo = 0);
    Bool_t           VerifyStackAttr(const char* name, const char* value, const char* errinfo = 0);
 
@@ -316,7 +316,7 @@ protected:
 
    void             BeforeIOoperation();
    void             CheckVersionBuf();
-   
+
    TXMLEngine*      fXML;                 //!
 
    TObjArray        fStack;                //!
@@ -329,7 +329,7 @@ protected:
    TString          fValueBuf;             //!
 
    Int_t            fErrorFlag;            //!
-   
+
    Bool_t           fCanUseCompact;        //!   flag indicate that basic type (like Int_t) can be placed in the same tag
    Bool_t           fExpectedChain;        //!   flag to resolve situation when several elements of same basic type stored as FastArray
    TClass*          fExpectedBaseClass;    //!   pointer to class, which should be stored as parent of current

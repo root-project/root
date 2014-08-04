@@ -24,7 +24,7 @@
 //
 // implementation file for class MCParameters
 // Author: Lorenzo Moneta , Nov 2010
-// 
+//
 //
 
 #include "Math/MCParameters.h"
@@ -36,43 +36,43 @@ namespace ROOT {
 namespace Math {
 
 
-   /// default VEGAS parameters (copied from gsl/monte/vegas.c) 
+   /// default VEGAS parameters (copied from gsl/monte/vegas.c)
    void VegasParameters::SetDefaultValues() {
       // init default values
       alpha        =  1.5;
       iterations   = 5;
-      stage        = 0; 
+      stage        = 0;
       mode         = GSL_VEGAS_MODE_IMPORTANCE;
       verbose      = -1;
    }
 
-   VegasParameters::VegasParameters(const IOptions & opt) { 
+   VegasParameters::VegasParameters(const IOptions & opt) {
       SetDefaultValues();
       (*this) = opt;
    }
 
-   VegasParameters & VegasParameters::operator= (const IOptions & opt) { 
+   VegasParameters & VegasParameters::operator= (const IOptions & opt) {
       // set parameters from IOptions
-      double val = 0; 
-      int ival = 0; 
-      bool ret = false; 
+      double val = 0;
+      int ival = 0;
+      bool ret = false;
 
-      ret = opt.GetRealValue("alpha",val); 
-      if (ret) alpha = val; 
+      ret = opt.GetRealValue("alpha",val);
+      if (ret) alpha = val;
       ret = opt.GetIntValue("iterations",ival);
-      if (ret) iterations = ival; 
+      if (ret) iterations = ival;
       ret = opt.GetIntValue("stage",ival);
-      if (ret) stage = ival; 
+      if (ret) stage = ival;
       ret = opt.GetIntValue("mode",ival);
-      if (ret) mode = ival; 
+      if (ret) mode = ival;
       ret = opt.GetIntValue("verbose",ival);
-      if (ret) verbose = ival; 
+      if (ret) verbose = ival;
       return *this;
    }
 
-   IOptions * VegasParameters::operator() () const { 
-      // convert to options (return object is managed by the user) 
-      GenAlgoOptions * opt = new GenAlgoOptions(); 
+   IOptions * VegasParameters::operator() () const {
+      // convert to options (return object is managed by the user)
+      GenAlgoOptions * opt = new GenAlgoOptions();
       opt->SetRealValue("alpha",alpha);
       opt->SetIntValue("iterations",iterations);
       opt->SetIntValue("stage",stage);
@@ -83,7 +83,7 @@ namespace Math {
 
 
 
-   /// default MISER parameters (copied from gsl/monte/vegas.c) 
+   /// default MISER parameters (copied from gsl/monte/vegas.c)
 
 
    void MiserParameters::SetDefaultValues(size_t dim) {
@@ -96,33 +96,33 @@ namespace Math {
    }
 
 
-   MiserParameters::MiserParameters(const IOptions & opt, size_t dim) { 
+   MiserParameters::MiserParameters(const IOptions & opt, size_t dim) {
       SetDefaultValues(dim);
       (*this) = opt;
    }
 
-   MiserParameters & MiserParameters::operator= (const IOptions & opt) { 
+   MiserParameters & MiserParameters::operator= (const IOptions & opt) {
       // set parameters from IOptions
-      double val = 0; 
-      int ival = 0; 
-      bool ret = false; 
+      double val = 0;
+      int ival = 0;
+      bool ret = false;
 
-      ret = opt.GetRealValue("alpha",val); 
-      if (ret) alpha = val; 
-      ret = opt.GetRealValue("dither",val); 
-      if (ret) dither = val; 
-      ret = opt.GetRealValue("estimate_frac",val); 
-      if (ret) estimate_frac = val; 
-      ret = opt.GetIntValue("min_calls",ival); 
-      if (ret) min_calls = ival; 
-      ret = opt.GetIntValue("min_calls_per_bisection",ival); 
-      if (ret) min_calls_per_bisection = ival; 
+      ret = opt.GetRealValue("alpha",val);
+      if (ret) alpha = val;
+      ret = opt.GetRealValue("dither",val);
+      if (ret) dither = val;
+      ret = opt.GetRealValue("estimate_frac",val);
+      if (ret) estimate_frac = val;
+      ret = opt.GetIntValue("min_calls",ival);
+      if (ret) min_calls = ival;
+      ret = opt.GetIntValue("min_calls_per_bisection",ival);
+      if (ret) min_calls_per_bisection = ival;
       return *this;
    }
 
-   IOptions * MiserParameters::operator() () const { 
-      // convert to options (return object is managed by the user) 
-      GenAlgoOptions * opt = new GenAlgoOptions(); 
+   IOptions * MiserParameters::operator() () const {
+      // convert to options (return object is managed by the user)
+      GenAlgoOptions * opt = new GenAlgoOptions();
       opt->SetRealValue("alpha",alpha);
       opt->SetRealValue("dither",dither);
       opt->SetRealValue("estimate_frac",estimate_frac);

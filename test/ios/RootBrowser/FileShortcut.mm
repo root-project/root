@@ -12,7 +12,7 @@
    __weak UIViewController *controller;
 
    UIImage *filePictogram;
-   
+
    ROOT::iOS::Browser::FileContainer *fileContainer;
 }
 
@@ -40,21 +40,21 @@
 - (id) initWithFrame : (CGRect)frame controller : (UIViewController *)viewController fileContainer : (ROOT::iOS::Browser::FileContainer *)container;
 {
    self = [super initWithFrame : frame];
-   
+
    if (self) {
       controller = viewController;
       fileContainer = container;
-      
+
       self.fileName = [NSString stringWithFormat : @"%s", fileContainer->GetFileName()];
       filePictogram = [UIImage imageNamed : @"file_icon.png"];
       UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(handleTap)];
       [self addGestureRecognizer : tap];
       UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget: self action:@selector(handleLongPress:)];
       [self addGestureRecognizer : longPress];
-   
+
       self.opaque = NO;
    }
-   
+
    return self;
 }
 
@@ -65,10 +65,10 @@
    CGContextRef ctx = UIGraphicsGetCurrentContext();
 
    //Draw the pictogram for ROOT's file.
-   const CGPoint topLeftPicCorner = CGPointMake(rect.size.width / 2 - filePictogram.size.width / 2, 
+   const CGPoint topLeftPicCorner = CGPointMake(rect.size.width / 2 - filePictogram.size.width / 2,
                                                 (rect.size.height - [FileShortcut textHeight]) / 2 - filePictogram.size.height / 2);
    [filePictogram drawAtPoint:topLeftPicCorner];
-   
+
    //Draw the file name.
    CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
    const CGRect textRect = CGRectMake(0.f, [FileShortcut iconHeight] - [FileShortcut textHeight], [FileShortcut iconWidth], [FileShortcut textHeight]);
@@ -88,7 +88,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) handleTap 
+- (void) handleTap
 {
    RootFileController *parentController = (RootFileController *)controller;
    [parentController fileWasSelected : self];

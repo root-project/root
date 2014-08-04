@@ -32,7 +32,7 @@ using namespace std;
 */
 
 ///////////////////////////////////////////////////////////////////////
-// 
+//
 // Test program for the classes TUnfoldDensity and TUnfoldBinning
 //
 // A toy test of the TUnfold package
@@ -63,7 +63,7 @@ using namespace std;
 //            -> read  testUnfold5_histograms.root
 //            -> write testUnfold5_result.root
 //                     testUnfold5_result.ps
-// 
+//
 ///////////////////////////////////////////////////////////////////////
 
 TRandom *g_rnd=0;
@@ -80,7 +80,7 @@ public:
    inline Bool_t IsTriggered(void) const { return fIsTriggered; }
 
    // generator level quantities
-   inline Double_t GetPtGen(void) const { 
+   inline Double_t GetPtGen(void) const {
       if(IsSignal()) return fPtGen;
       else return -1.0;
    }
@@ -122,7 +122,7 @@ void testUnfold5a()
   Float_t etaRec,ptRec,discr,etaGen,ptGen;
   Int_t istriggered,issignal;
 
-  //==================================================================  
+  //==================================================================
   // Step 1: generate data TTree
 
   TFile *dataFile=new TFile("testUnfold5_data.root","recreate");
@@ -167,7 +167,7 @@ void testUnfold5a()
   delete dataTree;
   delete dataFile;
 
-  //==================================================================  
+  //==================================================================
   // Step 2: generate signal TTree
 
   TFile *signalFile=new TFile("testUnfold5_signal.root","recreate");
@@ -181,7 +181,7 @@ void testUnfold5a()
   signalTree->Branch("ptgen",&ptGen,"ptgen/F");
 
   cout<<"fill signal tree\n";
-  
+
   for(int ievent=0;ievent<neventSignalMC;ievent++) {
      ToyEvent event;
      event.GenerateSignalEvent(g_rnd);

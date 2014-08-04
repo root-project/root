@@ -47,7 +47,7 @@ void PackTest()
    gEve->GetViewers()->AddElement(v);
    v->AddScene(gEve->GetEventScene());
 
-   slot = pack1->NewSlot();   
+   slot = pack1->NewSlot();
    TEveWindowPack* pack2 = slot->MakePack();
    pack2->SetShowTitleBar(kFALSE);
 
@@ -63,7 +63,7 @@ void PackTest()
    v->SpawnGLViewer(gEve->GetEditor());
    slot->ReplaceWindow(v);
    gEve->GetViewers()->AddElement(v);
-   v->AddScene(gEve->GetEventScene());   
+   v->AddScene(gEve->GetEventScene());
 }
 
 
@@ -93,7 +93,7 @@ void DetailTest()
       guiFrame->AddFrame(new TGLabel(guiFrame, "Press Button:"),
                          new TGLayoutHints(kLHintsLeft, 2, 2, 0, 0));
       TGTextButton *b = new TGTextButton(guiFrame, "TestButton");
-      guiFrame->AddFrame(b, new TGLayoutHints(kLHintsExpandX));     
+      guiFrame->AddFrame(b, new TGLayoutHints(kLHintsExpandX));
       TRootEmbeddedCanvas* ec =
          new TRootEmbeddedCanvas("Embeddedcanvas", hf, 220);
       hf->AddFrame(ec, new TGLayoutHints(kLHintsExpandY|kLHintsExpandX));
@@ -121,12 +121,12 @@ void DetailTest()
       y -= fontsize;
       latex->DrawLatex(x, y, "#color[5]{#Box} color");
    }
- 
+
    cf->MapSubwindows();
    cf->Layout();
    cf->MapWindow();
 
-   // viewer slot 
+   // viewer slot
    TEveWindowSlot* slot2 = pack1->NewSlotWithWeight(3);
    TEveViewer*  viewer = new TEveViewer("DetailView", "DetailView");
    TGLEmbeddedViewer*  embeddedViewer =  viewer->SpawnGLEmbeddedViewer();
@@ -169,7 +169,7 @@ void TabsTest()
       text_view->Update();
       text_view->SetWidth(text_view->ReturnLongestLineWidth()+20);
       text_view->Layout();
-     
+
       cf->MapSubwindows();
       cf->Layout();
       cf->MapWindow();

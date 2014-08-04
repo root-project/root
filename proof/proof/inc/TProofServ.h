@@ -129,8 +129,8 @@ private:
    TStopwatch    fSaveOutput;       //measures time spent saving the partial result
    Int_t         fQuerySeqNum;      //sequential number of the current or last query
 
-   Int_t         fTotSessions;      //Total number of PROOF sessions on the cluster 
-   Int_t         fActSessions;      //Total number of active PROOF sessions on the cluster 
+   Int_t         fTotSessions;      //Total number of PROOF sessions on the cluster
+   Int_t         fActSessions;      //Total number of active PROOF sessions on the cluster
    Float_t       fEffSessions;      //Effective Number of PROOF sessions on the assigned machines
 
    TFileHandler *fInputHandler;     //Input socket handler

@@ -15,11 +15,11 @@ class HsimpleDemo : public DemoBase {
 public:
    HsimpleDemo();
    ~HsimpleDemo();
-   
+
    //Overriders.
    void ResetDemo();
    bool IsAnimated()const;
-   
+
    unsigned NumOfFrames() const;
    double AnimationTime() const;
 
@@ -30,12 +30,12 @@ public:
    void AdjustPad(Pad *pad);
 
    void PresentDemo();
-   
+
    bool Supports3DRotation() const {return false;}
 
 private:
    std::auto_ptr<TH1F> fHist;
-   
+
    HsimpleDemo(const HsimpleDemo &rhs);
    HsimpleDemo &operator = (const HsimpleDemo &rhs);
 };

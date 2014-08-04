@@ -25,11 +25,11 @@ FTOutlineGlyph::FTOutlineGlyph( FT_GlyphSlot glyph, bool useDisplayList1)
         glList = glGenLists(1);
         glNewList( glList, GL_COMPILE);
     }
-    
+
     for( unsigned int c = 0; c < numContours; ++c)
     {
         const FTContour* contour = vectoriser.Contour(c);
-        
+
         glBegin( GL_LINE_LOOP);
             for( unsigned int pointIndex = 0; pointIndex < contour->PointCount(); ++pointIndex)
             {
@@ -60,7 +60,7 @@ const FTPoint& FTOutlineGlyph::Render( const FTPoint& pen)
     {
         glCallList( glList);
     }
-    
+
     return advance;
 }
 

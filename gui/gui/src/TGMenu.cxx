@@ -185,17 +185,17 @@ TGMenuBar::~TGMenuBar()
 //______________________________________________________________________________
 void TGMenuBar::Layout()
 {
-   // Calculates whether the >> menu must be shown or not and 
-   // which menu titles are hidden. 
+   // Calculates whether the >> menu must be shown or not and
+   // which menu titles are hidden.
 
    if (GetDefaultWidth() > GetWidth()) {
-      while (!(GetDefaultWidth() < GetWidth() || 
+      while (!(GetDefaultWidth() < GetWidth() ||
                GetList()->GetSize() <= 1)) {
          TGFrameElement* entry = GetLastOnLeft();
          if (!entry) break;
          TGMenuTitle* menuTitle = (TGMenuTitle*) entry->fFrame;
-         fNeededSpace->AddLast(new TParameter<Int_t>("", menuTitle->GetWidth() + 
-                                                         entry->fLayout->GetPadLeft() + 
+         fNeededSpace->AddLast(new TParameter<Int_t>("", menuTitle->GetWidth() +
+                                                         entry->fLayout->GetPadLeft() +
                                                          entry->fLayout->GetPadRight() ) );
          fOutLayouts->AddLast( entry->fLayout );
          fMenuMore->AddPopup( menuTitle->GetName(), menuTitle->GetMenu() );
@@ -209,7 +209,7 @@ void TGMenuBar::Layout()
       Bool_t fit = kFALSE;
       if (fNeededSpace->GetSize() > 1)
          fit = GetDefaultWidth() + neededWidth + 5 < GetWidth();
-      else 
+      else
          fit = GetDefaultWidth() + neededWidth - 7 < GetWidth();
       while (fit) {
          TGMenuEntry* menu = (TGMenuEntry*) fMenuMore->GetListOfEntries()->Last();
@@ -235,9 +235,9 @@ void TGMenuBar::Layout()
             neededWidth = ((TParameter<Int_t>*)fNeededSpace->Last())->GetVal();
             if (fNeededSpace->GetSize() > 1)
                fit = GetDefaultWidth() + neededWidth + 5 < GetWidth();
-            else 
+            else
                fit = GetDefaultWidth() + neededWidth - 7 < GetWidth();
-         } else 
+         } else
             fit = kFALSE;
       }
    }
@@ -260,12 +260,12 @@ void TGMenuBar::Layout()
 //______________________________________________________________________________
 TGFrameElement* TGMenuBar::GetLastOnLeft()
 {
-   // Returns the last visible menu title on the left of the '>>' 
+   // Returns the last visible menu title on the left of the '>>'
    // in the menu bar.
 
    TIter next(GetList());
    while (TGFrameElement *entry = (TGFrameElement*) next()) {
-   
+
       TGMenuTitle* menuTitle = (TGMenuTitle*) entry->fFrame;
       TGLayoutHints* tmpLayout = (TGLayoutHints*) entry->fLayout;
       ULong_t  hints = tmpLayout->GetLayoutHints();
@@ -288,7 +288,7 @@ void TGMenuBar::PopupConnection()
    TList* slots = fMenuMore->GetListOfSignals();
    TIter next (slots);
    while (TList* connlist = (TList*) next()) {
-   
+
       const char* signal_name = connlist->GetName();
       TIter next2(connlist);
       while (TQConnection* conn = (TQConnection*) next2()) {
@@ -309,7 +309,7 @@ void TGMenuBar::PopupConnection()
    slots = currentMenu->GetListOfSignals();
    TIter next3 (slots);
    while (TList* connlist = (TList*) next3()) {
-   
+
       const char* signal_name = connlist->GetName();
       if (strcmp(signal_name, "Activated(int)") == 0) {
          TIter next2(connlist);
@@ -346,13 +346,13 @@ void TGMenuBar::BindKeys(Bool_t on)
 }
 
 //______________________________________________________________________________
-void TGMenuBar::BindMenu(TGPopupMenu* subMenu, Bool_t on) 
+void TGMenuBar::BindMenu(TGPopupMenu* subMenu, Bool_t on)
 {
    // If on kTRUE bind subMenu hot keys, otherwise remove key bindings.
 
    TGMenuEntry *e;
    TIter next(subMenu->GetListOfEntries());
-   
+
    while ((e = (TGMenuEntry*)next())) {
       Int_t hot = 0;
       if ( e->GetType() == kMenuPopup )
@@ -1028,7 +1028,7 @@ void TGPopupMenu::AddEntry(TGHotString *s, Int_t id, void *ud,
    fMenuWidth = TMath::Max(fMenuWidth, nw->fEw);
    gVirtualX->GetFontProperties(fHifontStruct, max_ascent, max_descent);
    nw->fEh = max_ascent + max_descent + fEntrySep;
-   if (nw->fEh < ph+fEntrySep) nw->fEh = ph+fEntrySep; 
+   if (nw->fEh < ph+fEntrySep) nw->fEh = ph+fEntrySep;
    fMenuHeight += nw->fEh;
 
    if (before)
@@ -1119,7 +1119,7 @@ void TGPopupMenu::AddLabel(TGHotString *s, const TGPicture *p,
    fMenuWidth = TMath::Max(fMenuWidth, nw->fEw);
    gVirtualX->GetFontProperties(fHifontStruct, max_ascent, max_descent);
    nw->fEh = max_ascent + max_descent + fEntrySep;
-   if (nw->fEh < ph+fEntrySep) nw->fEh = ph+fEntrySep; 
+   if (nw->fEh < ph+fEntrySep) nw->fEh = ph+fEntrySep;
    fMenuHeight += nw->fEh;
 
    if (before)
@@ -1177,7 +1177,7 @@ void TGPopupMenu::AddPopup(TGHotString *s, TGPopupMenu *popup,
    fMenuWidth = TMath::Max(fMenuWidth, nw->fEw);
    gVirtualX->GetFontProperties(fHifontStruct, max_ascent, max_descent);
    nw->fEh = max_ascent + max_descent + fEntrySep;
-   if (nw->fEh < ph+fEntrySep) nw->fEh = ph+fEntrySep; 
+   if (nw->fEh < ph+fEntrySep) nw->fEh = ph+fEntrySep;
    fMenuHeight += nw->fEh;
 
    if (before)
@@ -1386,7 +1386,7 @@ Bool_t TGPopupMenu::HandleMotion(Event_t *event)
    TIter next(fEntryList);
 
    if (twice < 2) {
-      // hack to eat mouse move events generated by Windows when 
+      // hack to eat mouse move events generated by Windows when
       // pressing/releasing a mouse button
       ++twice;
    }
@@ -1418,7 +1418,7 @@ void TGPopupMenu::Activate(TGMenuEntry *entry)
    if (fCurrent != 0) {
       void *ud;
       if (entry == 0 && fCurrent->fType == kMenuPopup) return;
-      if ((fCurrent->fType == kMenuPopup) && fCurrent->fPopup) 
+      if ((fCurrent->fType == kMenuPopup) && fCurrent->fPopup)
          fCurrent->fPopup->EndMenu(ud);
       fCurrent->fStatus &= ~kMenuActiveMask;
       DrawEntry(fCurrent);
@@ -1590,7 +1590,7 @@ void TGPopupMenu::DrawBorder()
       gVirtualX->DrawLine(fId, GetShadowGC()(), 0, fMenuHeight-1, fMenuWidth-1, fMenuHeight-1);
       gVirtualX->DrawLine(fId, GetShadowGC()(), fMenuWidth-1, fMenuHeight-1, fMenuWidth-1, 0);
       gVirtualX->DrawLine(fId, GetShadowGC()(), fMenuWidth-1, 0, 0, 0);
-   } 
+   }
    else {
       // old (raised frame) version
       gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, fMenuWidth-2, 0);

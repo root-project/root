@@ -171,7 +171,7 @@ void TRootControlBar::SetFont(const char *fontName)
    TIter next(fWidgets);
 
    TObject *obj;
-   
+
    while ((obj=next())) {
       if (!obj->InheritsFrom(TGTextButton::Class())) continue;
 
@@ -188,7 +188,7 @@ void TRootControlBar::SetButtonState(const char *label, Int_t state)
    TIter next(fWidgets);
 
    TObject *obj;
-   
+
    while ((obj=next())) {
       if (!obj->InheritsFrom(TGTextButton::Class())) continue;
 
@@ -229,13 +229,13 @@ void TRootControlBar::SetTextColor(const char *colorName)
 
    Pixel_t color;
    gClient->GetColorByName(colorName, color);
-   
+
    if (!fWidgets) Create();
-   
+
    TIter next(fWidgets);
 
    TObject *obj;
-   
+
    while ((obj=next())) {
       if (!obj->InheritsFrom(TGTextButton::Class())) continue;
 
@@ -248,6 +248,6 @@ void TRootControlBar::SetTextColor(const char *colorName)
 void TRootControlBar::SetButtonWidth(UInt_t width)
 {
    // Set button width in pixels.
-   
+
    fBwidth = width;
 }

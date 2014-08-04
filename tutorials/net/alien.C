@@ -1,6 +1,6 @@
 //Example of use of the TAlien class (an implementation of TGrid)
 //Author: Andreas Peters
-   
+
 void alien()
 {
    TString testdir = "root-test3";

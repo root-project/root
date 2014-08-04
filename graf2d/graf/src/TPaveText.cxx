@@ -221,7 +221,7 @@ void TPaveText::Draw(Option_t *option)
    Option_t *opt;
    if (option && strlen(option)) opt = option;
    else                          opt = GetOption();
-   
+
    AppendPad(opt);
 }
 

@@ -23,7 +23,7 @@
   **********************************************************************/
 
 // Header file for class MCIntegrationTypes
-// 
+//
 
 #ifndef ROOT_Math_MCIntegrationTypes
 #define ROOT_Math_MCIntegrationTypes
@@ -41,7 +41,7 @@ namespace Math {
   namespace MCIntegration {
 
 
-     using namespace IntegrationMultiDim;   
+     using namespace IntegrationMultiDim;
 
 
     // type of integration
@@ -49,7 +49,7 @@ namespace Math {
     //enum Type { PLAIN, MISER, VEGAS};
 
     enum Mode{kIMPORTANCE, kSTRATIFIED, kIMPORTANCE_ONLY };
- 
+
   }    // end namespace mcIntegration
 
 

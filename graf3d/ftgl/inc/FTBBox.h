@@ -27,7 +27,7 @@ class FTGL_EXPORT FTBBox
             upperY(0.0f),
             upperZ(0.0f)
         {}
-        
+
         /**
          * Constructor.
          */
@@ -39,7 +39,7 @@ class FTGL_EXPORT FTBBox
             upperY(uy),
             upperZ(uz)
         {}
-        
+
         /**
          * Constructor. Extracts a bounding box from a freetype glyph. Uses
          * the control box for the glyph. <code>FT_Glyph_Get_CBox()</code>
@@ -63,15 +63,15 @@ class FTGL_EXPORT FTBBox
             upperX = static_cast<float>( bbox.xMax) / 64.0f;
             upperY = static_cast<float>( bbox.yMax) / 64.0f;
             upperZ = 0.0f;
-            
-        }       
+
+        }
 
         /**
          * Destructor
          */
         ~FTBBox()
         {}
-        
+
 
         /**
          * Move the Bounding Box by a vector.
@@ -89,32 +89,32 @@ class FTGL_EXPORT FTBBox
             return *this;
         }
 
-        FTBBox& operator += ( const FTBBox& bbox) 
+        FTBBox& operator += ( const FTBBox& bbox)
         {
-            lowerX = bbox.lowerX < lowerX? bbox.lowerX: lowerX; 
+            lowerX = bbox.lowerX < lowerX? bbox.lowerX: lowerX;
             lowerY = bbox.lowerY < lowerY? bbox.lowerY: lowerY;
-            lowerZ = bbox.lowerZ < lowerZ? bbox.lowerZ: lowerZ; 
-            upperX = bbox.upperX > upperX? bbox.upperX: upperX; 
-            upperY = bbox.upperY > upperY? bbox.upperY: upperY; 
-            upperZ = bbox.upperZ > upperZ? bbox.upperZ: upperZ; 
-            
+            lowerZ = bbox.lowerZ < lowerZ? bbox.lowerZ: lowerZ;
+            upperX = bbox.upperX > upperX? bbox.upperX: upperX;
+            upperY = bbox.upperY > upperY? bbox.upperY: upperY;
+            upperZ = bbox.upperZ > upperZ? bbox.upperZ: upperZ;
+
             return *this;
         }
-        
+
         void SetDepth( float depth)
         {
             upperZ = lowerZ + depth;
         }
-        
-        
+
+
         /**
          * The bounds of the box
          */
         // Make these ftPoints & private
         float lowerX, lowerY, lowerZ, upperX, upperY, upperZ;
     protected:
-    
-    
+
+
     private:
 
 };

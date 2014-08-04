@@ -54,8 +54,8 @@ class TUnfoldBinning : public TNamed {
    TUnfoldBinning *nextNode; // next sister
    TUnfoldBinning *prevNode; // previous sister
    TObjArray *fAxisList; // for each axis the bin borders (TVectorD)
-   TObjArray *fAxisLabelList; // for each axis its name (TObjString) 
-   Int_t fHasUnderflow,fHasOverflow; // bit fields indicating whether there are underflow/overflow bins on the axes   
+   TObjArray *fAxisLabelList; // for each axis its name (TObjString)
+   Int_t fHasUnderflow,fHasOverflow; // bit fields indicating whether there are underflow/overflow bins on the axes
    Int_t fDistributionSize; // number of bins in this node's distribution
    Int_t fFirstBin; // global bin number of the first bin
    Int_t fLastBin; // global bin number of the last(+1) bin
@@ -101,7 +101,7 @@ class TUnfoldBinning : public TNamed {
    Int_t GetGlobalBinNumber(Double_t x,Double_t y) const; // get bin number 2-dim distribution
    Int_t GetGlobalBinNumber(Double_t x,Double_t y,Double_t z) const; // get bin number 3-dim distribution
    Int_t GetGlobalBinNumber(Double_t x0,Double_t x1,Double_t x2,Double_t x3) const; // get bin number for given variables, up to four-dimensional binning
-   Int_t GetGlobalBinNumber(const Double_t *x) const; // get bin number, up to 32 dimenstional binning 
+   Int_t GetGlobalBinNumber(const Double_t *x) const; // get bin number, up to 32 dimenstional binning
    inline Int_t GetStartBin(void) const { return fFirstBin; } // first bin of this node
    inline Int_t GetEndBin(void) const { return fLastBin; } // last+1 bin of this node (includes children)
 

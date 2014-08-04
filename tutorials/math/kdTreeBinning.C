@@ -74,8 +74,8 @@ void kdTreeBinning() {
    std::cout << "Bin with maximum density: " << kdBins->GetBinMaxDensity() << std::endl;
 
    TCanvas* c1 = new TCanvas("glc1", "TH2Poly from a kdTree",0,0,600,1000);
-   c1->Divide(1,3); 
-   c1->cd(1); 
+   c1->Divide(1,3);
+   c1->cd(1);
    h1->Draw("lego");
 
    c1->cd(2);
@@ -135,8 +135,8 @@ void kdTreeBinning() {
 
 
    // plot new TH2Poly (ordered one) and TGraph2D
-   // The new TH2Poly has to be same as old one and the TGraph2D should be similar to 
-   // the previous one. It is now made using as z value the bin number 
+   // The new TH2Poly has to be same as old one and the TGraph2D should be similar to
+   // the previous one. It is now made using as z value the bin number
 
    TCanvas* c4 = new TCanvas("glc4", "TH2Poly from a kdTree (Ordered)",50,50,1050,1050);
 

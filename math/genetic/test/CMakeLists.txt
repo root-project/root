@@ -17,6 +17,6 @@ set(TestGeneticSource
 foreach(file ${TestGeneticSource})
   get_filename_component(testname ${file} NAME_WE)
   ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(genetic-${testname} COMMAND ${testname}) 
+  ROOT_ADD_TEST(genetic-${testname} COMMAND ${testname})
 endforeach()
 

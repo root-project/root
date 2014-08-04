@@ -79,21 +79,21 @@ TShape::TShape(const char *name,const char *title, const char *materialname)
 }
 
 //______________________________________________________________________________
-TShape::TShape(const TShape& ts) : 
-  TNamed(ts), 
+TShape::TShape(const TShape& ts) :
+  TNamed(ts),
   TAttLine(ts),
   TAttFill(ts),
   TAtt3D(ts),
   fNumber(ts.fNumber),
   fVisibility(ts.fVisibility),
-  fMaterial(ts.fMaterial) 
-{ 
+  fMaterial(ts.fMaterial)
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TShape& TShape::operator=(const TShape& ts) 
-{ 
+TShape& TShape::operator=(const TShape& ts)
+{
    //assignement operator
    if (this!=&ts) {
       TNamed::operator=(ts);
@@ -103,7 +103,7 @@ TShape& TShape::operator=(const TShape& ts)
       fNumber=ts.fNumber;
       fVisibility=ts.fVisibility;
       fMaterial=ts.fMaterial;
-   } 
+   }
    return *this;
 }
 
@@ -155,7 +155,7 @@ void TShape::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TShape::SetPoints(Double_t *) const 
+void TShape::SetPoints(Double_t *) const
 {
    // Set points.
 
@@ -185,7 +185,7 @@ void TShape::Streamer(TBuffer &R__b)
       R__b >> fMaterial;
       R__b.CheckByteCount(R__s, R__c, TShape::IsA());
       //====end of old versions
-      
+
    } else {
       R__b.WriteClassBuffer(TShape::Class(),this);
    }
@@ -216,7 +216,7 @@ void TShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
 //______________________________________________________________________________
 void TShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections) const
 {
-   // We have to set kRawSize (unless already done) to allocate buffer space 
+   // We have to set kRawSize (unless already done) to allocate buffer space
    // before kRaw can be filled
 
    if (reqSections & TBuffer3D::kRaw)
@@ -230,12 +230,12 @@ void TShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections) const
    if (reqSections & TBuffer3D::kCore) {
       buffer.ClearSectionsValid();
 
-      // We are only filling TBuffer3D in the master frame. Therefore the shape 
+      // We are only filling TBuffer3D in the master frame. Therefore the shape
       // described in buffer is a specific placement - and this needs to be
       // identified uniquely. Use the current node set in TNode::Paint which calls us
       buffer.fID = gNode;
       buffer.fColor = GetLineColor();
-      buffer.fTransparency = 0;    
+      buffer.fTransparency = 0;
       buffer.fLocalFrame = kFALSE; // Only support master frame for these shapes
       buffer.fReflection = kFALSE;
 

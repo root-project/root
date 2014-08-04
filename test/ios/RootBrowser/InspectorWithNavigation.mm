@@ -9,7 +9,7 @@
    if (self) {
       self.navigationBar.hidden = YES;
    }
-   
+
    return self;
 }
 

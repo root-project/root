@@ -717,12 +717,12 @@ Int_t TProfile::Fill(Double_t x, Double_t y, Double_t w)
       if (y <fYmin || y> fYmax || TMath::IsNaN(y) ) return -1;
    }
 
-   Double_t u= w; 
+   Double_t u= w;
    fEntries++;
    bin =fXaxis.FindBin(x);
    AddBinContent(bin, u*y);
    fSumw2.fArray[bin] += u*y*y;
-   if (!fBinSumw2.fN && u != 1.)  Sumw2();  // must be called before accumulating the entries 
+   if (!fBinSumw2.fN && u != 1.)  Sumw2();  // must be called before accumulating the entries
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += u*u;
    fBinEntries.fArray[bin] += u;
    if (bin == 0 || bin > fXaxis.GetNbins()) {
@@ -753,7 +753,7 @@ Int_t TProfile::Fill(const char *namex, Double_t y, Double_t w)
    bin =fXaxis.FindBin(namex);
    AddBinContent(bin, u*y);
    fSumw2.fArray[bin] += u*y*y;
-   if (!fBinSumw2.fN && u != 1.)  Sumw2();  // must be called before accumulating the entries 
+   if (!fBinSumw2.fN && u != 1.)  Sumw2();  // must be called before accumulating the entries
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += u*u;
    fBinEntries.fArray[bin] += u;
    if (bin == 0 || bin > fXaxis.GetNbins()) {
@@ -787,7 +787,7 @@ void TProfile::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const D
       bin =fXaxis.FindBin(x[i]);
       AddBinContent(bin, u*y[i]);
       fSumw2.fArray[bin] += u*y[i]*y[i];
-      if (!fBinSumw2.fN && u != 1.)  Sumw2();  // must be called before accumulating the entries 
+      if (!fBinSumw2.fN && u != 1.)  Sumw2();  // must be called before accumulating the entries
       if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += u*u;
       fBinEntries.fArray[bin] += u;
       if (bin == 0 || bin > fXaxis.GetNbins()) {
@@ -1738,7 +1738,7 @@ void TProfile::Streamer(TBuffer &R__b)
       }
       R__b.CheckByteCount(R__s, R__c, TProfile::IsA());
       //====end of old versions
-      
+
    } else {
       R__b.WriteClassBuffer(TProfile::Class(),this);
    }
@@ -1747,13 +1747,13 @@ void TProfile::Streamer(TBuffer &R__b)
 void TProfile::Sumw2(Bool_t flag)
 {
    // Create/delete structure to store sum of squares of weights per bin  *-*-*-*-*-*-*-*
-   //   This is needed to compute  the correct statistical quantities  
-   //    of a profile filled with weights 
-   //  
+   //   This is needed to compute  the correct statistical quantities
+   //    of a profile filled with weights
+   //
    //
    //  This function is automatically called when the histogram is created
    //  if the static function TH1::SetDefaultSumw2 has been called before.
    // If flag is false the structure is deleted
-   
+
    TProfileHelper::Sumw2(this, flag);
 }

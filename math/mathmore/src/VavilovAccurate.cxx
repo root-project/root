@@ -1,6 +1,6 @@
 // @(#)root/mathmore:$Id$
 // Authors: B. List 29.4.2010
- 
+
 
  /**********************************************************************
   *                                                                    *
@@ -24,11 +24,11 @@
   **********************************************************************/
 
 // Implementation file for class VavilovAccurate
-// 
+//
 // Created by: blist  at Thu Apr 29 11:19:00 2010
-// 
+//
 // Last update: Thu Apr 29 11:19:00 2010
-// 
+//
 
 
 #include "Math/VavilovAccurate.h"
@@ -49,13 +49,13 @@ namespace Math {
 VavilovAccurate *VavilovAccurate::fgInstance = 0;
 
 
-VavilovAccurate::VavilovAccurate(double kappa, double beta2, double epsilonPM, double epsilon) 
+VavilovAccurate::VavilovAccurate(double kappa, double beta2, double epsilonPM, double epsilon)
 {
    Set (kappa, beta2, epsilonPM, epsilon);
 }
 
 
-VavilovAccurate::~VavilovAccurate() 
+VavilovAccurate::~VavilovAccurate()
 {
    // desctructor (clean up resources)
 }
@@ -65,16 +65,16 @@ void VavilovAccurate::SetKappaBeta2 (double kappa, double beta2) {
 }
 
 void VavilovAccurate::Set(double kappa, double beta2, double epsilonPM, double epsilon) {
-   // Method described in 
-   // B. Schorr, Programs for the Landau and the Vavilov distributions and the corresponding random numbers, 
-   // <A HREF="http://dx.doi.org/10.1016/0010-4655(74)90091-5">Computer Phys. Comm. 7 (1974) 215-224</A>. 
+   // Method described in
+   // B. Schorr, Programs for the Landau and the Vavilov distributions and the corresponding random numbers,
+   // <A HREF="http://dx.doi.org/10.1016/0010-4655(74)90091-5">Computer Phys. Comm. 7 (1974) 215-224</A>.
    fQuantileInit = false;
 
    fKappa = kappa;
    fBeta2 = beta2;
-   fEpsilonPM = epsilonPM;    // epsilon_+ = epsilon_-: determines support (T0, T1) 
+   fEpsilonPM = epsilonPM;    // epsilon_+ = epsilon_-: determines support (T0, T1)
    fEpsilon = epsilon;
-   
+
    static const double eu = 0.577215664901532860606;              // Euler's constant
    static const double pi2 = 6.28318530717958647693,              // 2pi
                        rpi = 0.318309886183790671538,             // 1/pi
@@ -82,7 +82,7 @@ void VavilovAccurate::Set(double kappa, double beta2, double epsilonPM, double e
    double h1 = -std::log(fEpsilon)-1.59631259113885503887;        // -ln(fEpsilon) + ln(2/pi**2)
    double deltaEpsilon = 0.001;
    static const double logdeltaEpsilon = -std::log(deltaEpsilon); // 3 ln 10 = -ln(.001);
-   double logEpsilonPM = std::log(fEpsilonPM); 
+   double logEpsilonPM = std::log(fEpsilonPM);
    static const double eps = 1e-5;                                // accuracy of root finding for x0
 
    double xp[9] = {0,
@@ -93,13 +93,13 @@ void VavilovAccurate::Set(double kappa, double beta2, double epsilonPM, double e
    if (kappa < 0.001) {
       std::cerr << "VavilovAccurate::Set: kappa = " << kappa << " - out of range" << std::endl;
       if (kappa < 0.001) kappa = 0.001;
-   } 
+   }
    if (beta2 < 0 || beta2 > 1) {
       std::cerr << "VavilovAccurate::Set: beta2 = " << beta2 << " - out of range" << std::endl;
       if (beta2 < 0) beta2 = -beta2;
       if (beta2 > 1) beta2 = 1;
    }
-   
+
    // approximation of x_-
    fH[5] = 1-beta2*(1-eu)-logEpsilonPM/kappa;       // eq. 3.9
    fH[6] = beta2;
@@ -121,8 +121,8 @@ void VavilovAccurate::Set(double kappa, double beta2, double epsilonPM, double e
    do {
       ifail = Rzero(-lp-0.5-delta,lq-7.5+delta,fH[0],eps,1000,&ROOT::Math::VavilovAccurate::G116f2);
       delta += 0.5;
-   } while (ifail == 2);   
-   
+   } while (ifail == 2);
+
    double q = 1/fH[0];
    // Calculate T1 from Eq. (3.6)
 //    double e1h0 = (fH[0] > 40 ) ? 0 : -ROOT::Math::expint (-fH[0]);
@@ -136,7 +136,7 @@ void VavilovAccurate::Set(double kappa, double beta2, double epsilonPM, double e
    fH[2] = beta2*kappa;
    fH[3] = kappaInv*fOmega;
    fH[4] = pih*fOmega;
-   
+
    // Solve log(eq. (4.10)) to get fX0 = N
    ifail = Rzero(5.,MAXTERMS,fX0,eps,1000,&ROOT::Math::VavilovAccurate::G116f1);
 //    if (ifail) {
@@ -192,7 +192,7 @@ void VavilovAccurate::InitQuantile() const {
    else if (fKappa < 0.05) fNQuant = 32;
 
    // crude approximation for the median:
-   
+
    double estmedian = -4.22784335098467134e-01-std::log(fKappa)-fBeta2;
    if (estmedian>1.3) estmedian = 1.3;
 
@@ -207,12 +207,12 @@ void VavilovAccurate::InitQuantile() const {
       fQuant[i] = Cdf(x);
       fLambda[i] = x;
    }
-   
+
    fQuant[0] = 0;
    fLambda[0] = fT0;
    fQuant[fNQuant-1] = 1;
    fLambda[fNQuant-1] = fT1;
-     
+
 }
 
 double VavilovAccurate::Pdf (double x) const {
@@ -336,7 +336,7 @@ double VavilovAccurate::Cdf_c (double x, double kappa, double beta2) {
 
 double VavilovAccurate::Quantile (double z) const {
    if (z < 0 || z > 1) return std::numeric_limits<double>::signaling_NaN();
-  
+
    if (!fQuantileInit) InitQuantile();
 
    double x;
@@ -348,9 +348,9 @@ double VavilovAccurate::Quantile (double z) const {
    else {
       // yes, I know what a binary search is, but linear search is faster for small n!
       int i = 1;
-      while (z > fQuant[i]) ++i; 
+      while (z > fQuant[i]) ++i;
       assert (i < fNQuant);
-      
+
       assert (i >= 1);
       assert (i < fNQuant);
 
@@ -359,11 +359,11 @@ double VavilovAccurate::Quantile (double z) const {
       assert (f >= 0);
       assert (f <= 1);
       assert (fQuant[i] > fQuant[i-1]);
-   
+
       x = f*fLambda[i] + (1-f)*fLambda[i-1];
    }
    if (fabs(x-fT0) < fEpsilon || fabs(x-fT1) < fEpsilon) return x;
-   
+
    assert (x > fT0 && x < fT1);
    double dx;
    int n = 0;
@@ -388,9 +388,9 @@ double VavilovAccurate::Quantile (double z, double kappa, double beta2) {
 
 double VavilovAccurate::Quantile_c (double z) const {
    if (z < 0 || z > 1) return std::numeric_limits<double>::signaling_NaN();
-  
+
    if (!fQuantileInit) InitQuantile();
-   
+
    double z1 = 1-z;
 
    double x;
@@ -402,9 +402,9 @@ double VavilovAccurate::Quantile_c (double z) const {
    else {
       // yes, I know what a binary search is, but linear search is faster for small n!
       int i = 1;
-      while (z1 > fQuant[i]) ++i; 
+      while (z1 > fQuant[i]) ++i;
       assert (i < fNQuant);
-   
+
 //       int i0=0, i1=fNQuant, i;
 //       for (int it = 0; it < LOG2fNQuant; ++it) {
 //         i = (i0+i1)/2;
@@ -412,7 +412,7 @@ double VavilovAccurate::Quantile_c (double z) const {
 //         else i1 = i;
 //       }
 //       assert (i1-i0 == 1);
-   
+
       assert (i >= 1);
       assert (i < fNQuant);
 
@@ -421,11 +421,11 @@ double VavilovAccurate::Quantile_c (double z) const {
       assert (f >= 0);
       assert (f <= 1);
       assert (fQuant[i] > fQuant[i-1]);
-   
+
       x = f*fLambda[i] + (1-f)*fLambda[i-1];
    }
    if (fabs(x-fT0) < fEpsilon || fabs(x-fT1) < fEpsilon) return x;
-   
+
    assert (x > fT0 && x < fT1);
    double dx;
    int n = 0;
@@ -452,7 +452,7 @@ VavilovAccurate *VavilovAccurate::GetInstance() {
    if (!fgInstance) fgInstance = new VavilovAccurate (1, 1);
    return fgInstance;
 }
-   
+
 VavilovAccurate *VavilovAccurate::GetInstance(double kappa, double beta2) {
    if (!fgInstance) fgInstance = new VavilovAccurate (kappa, beta2);
    else if (kappa != fgInstance->fKappa || beta2 != fgInstance->fBeta2) fgInstance->Set (kappa, beta2);
@@ -502,11 +502,11 @@ double VavilovAccurate::G116f2 (double x) const {
    return fH[5]-x+fH[6]*E1plLog(x)-fH[7]*std::exp(-x);
 }
 
-int VavilovAccurate::Rzero (double a, double b, double& x0, 
+int VavilovAccurate::Rzero (double a, double b, double& x0,
                      double eps, int mxf, double (VavilovAccurate::*f)(double)const) const {
- 
+
    double xa, xb, fa, fb, r;
- 
+
    if (a <= b) {
       xa = a;
       xb = b;
@@ -516,7 +516,7 @@ int VavilovAccurate::Rzero (double a, double b, double& x0,
    }
    fa = (this->*f)(xa);
    fb = (this->*f)(xb);
-   
+
    if(fa*fb > 0) {
       r = -2*(xb-xa);
       x0 = 0;
@@ -525,12 +525,12 @@ int VavilovAccurate::Rzero (double a, double b, double& x0,
       return 2;
    }
    int mc = 0;
-   
+
    bool recalcF12 = true;
    bool recalcFab = true;
    bool fail      = false;
-   
- 
+
+
    double x1=0, x2=0, f1=0, f2=0, fx=0, ee=0;
    do {
       if (recalcF12) {
@@ -560,7 +560,7 @@ int VavilovAccurate::Rzero (double a, double b, double& x0,
       }
       recalcF12 = true;
       recalcFab = true;
-   
+
       double u1 = f1-f2;
       double u2 = x1-x2;
       double u3 = f2-fx;
@@ -583,9 +583,9 @@ int VavilovAccurate::Rzero (double a, double b, double& x0,
          x0 = -u3 + (x0+u3 >= 0 ? +1 : -1)*std::sqrt(u4);
       }
       if(x0 < xa || x0 > xb) continue;
-   
+
       recalcF12 = false;
- 
+
       r = std::abs(x0-x3) < std::abs(x0-x2) ? std::abs(x0-x3) : std::abs(x0-x2);
       ee = eps*(std::abs(x0)+1);
       if (r > ee) {
@@ -595,9 +595,9 @@ int VavilovAccurate::Rzero (double a, double b, double& x0,
          x2 = x3;
          continue;
       }
-      
+
       recalcFab = false;
- 
+
       fx = (this->*f) (x0);
       if (fx == 0) break;
       double xx, ff;
@@ -628,7 +628,7 @@ int VavilovAccurate::Rzero (double a, double b, double& x0,
       fx = ff;
    }
    while (true);
-   
+
    if (fail) {
       r = -0.5*std::abs(xb-xa);
       x0 = 0;
@@ -636,11 +636,11 @@ int VavilovAccurate::Rzero (double a, double b, double& x0,
                 << ", f(" << b << ")=" << (this->*f) (b) << std::endl;
       return 1;
    }
- 
+
    r = ee;
    return 0;
-}  
-    
+}
+
 // Calculates log(|x|)+E_1(x)
 double VavilovAccurate::E1plLog (double x) {
    static const double eu = 0.577215664901532860606;      // Euler's constant
@@ -678,7 +678,7 @@ double VavilovAccurate::Mode() const {
    if (x>-0.223172) x = -0.223172;
    double eps = 0.01;
    double dx;
-  
+
    do {
       double p0 = Pdf (x - eps);
       double p1 = Pdf (x);
@@ -708,7 +708,7 @@ double VavilovAccurate::GetEpsilon()   const {
 double VavilovAccurate::GetNTerms()    const {
    return fX0;
 }
-   
+
 
 
 } // namespace Math

@@ -160,7 +160,7 @@ int main(int argc, char **argv)
       nevent = TMath::Min(nevent,nentries);
       if (read == 1) {  //read sequential
          //by setting the read cache to -1 we set it to the AutoFlush value when writing
-         Int_t cachesize = -1; 
+         Int_t cachesize = -1;
          if (punzip) tree->SetParallelUnzip();
          tree->SetCacheSize(cachesize);
          tree->SetCacheLearnEntries(1); //one entry is sufficient to learn

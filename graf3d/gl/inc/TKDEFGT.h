@@ -24,7 +24,7 @@ class TGL5DDataSet;
 
 class TKDEFGT {
 private:
-   //KDE-related stuff.   
+   //KDE-related stuff.
    std::vector<Double_t>    fXC;     //Centers.
    std::vector<Double_t>    fWeights;//Weights.
    std::vector<UInt_t>      fIndxc;  //Internal data.
@@ -35,23 +35,23 @@ private:
    std::vector<Double_t>    fDistC;  //Internal data.
    std::vector<Double_t>    fC_K;    //Internal data.
    std::vector<UInt_t>      fCinds;  //Internal data.
-   
+
    mutable std::vector<UInt_t>   fHeads; //Internal data.
    mutable std::vector<Double_t> fDx;    //Internal data.
    mutable std::vector<Double_t> fProds; //Internal data.
-   
+
    UInt_t                  fDim;        //Number of dimensions.
    UInt_t                  fP;          //Order of trancation.
    UInt_t                  fK;          //Number of centers.
    Double_t                fSigma;      //Noise Standard deviation of the kernel (default sigma = 1)
-   UInt_t                  fPD;         //nchoosek(fP + fDim - 1, fDim); 
+   UInt_t                  fPD;         //nchoosek(fP + fDim - 1, fDim);
    Bool_t                  fModelValid; //Check, if coefficients are ok.
-   
+
 public:
    TKDEFGT();
-   
+
    virtual ~TKDEFGT();
-   
+
    //Generic version.
    //"sources" must be a vector of packed coordinates, if you have
    //dim == 3, vector will be [xyz|xyz|...].

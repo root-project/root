@@ -38,7 +38,7 @@ protected:
    TClassRef    fClass;          //! pointer to class
    void       **fObjAddress;     //! Address of Pointer to object
    Bool_t       fVirtual;        //  Support for polymorphism, when set classname is written with object.
-    
+
 public:
    enum { kWarn = BIT(12) };
 
@@ -59,7 +59,7 @@ public:
    virtual void    ReadBasket(TBuffer &b);
    virtual void    SetAddress(void *add=0);
    virtual void    SetVirtual(Bool_t virt=kTRUE) {fVirtual=virt;}
-    
+
    ClassDef(TLeafObject,4);  //A TLeaf for a general object derived from TObject.
 };
 

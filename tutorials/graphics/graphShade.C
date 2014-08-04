@@ -6,7 +6,7 @@ void graphShade() {
 
    c1->SetGrid();
    c1->DrawFrame(0,0,2.2,12);
-   
+
    const Int_t n = 20;
    Double_t x[n], y[n],ymin[n], ymax[n];
    Int_t i;

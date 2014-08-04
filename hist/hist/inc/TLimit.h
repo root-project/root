@@ -44,7 +44,7 @@ public:
                                          Int_t nmc =50000,
                                          bool stat = false,
                                          TRandom * generator = 0);
-   static TConfidenceLevel *ComputeLimit(Double_t s, Double_t b, Int_t d, 
+   static TConfidenceLevel *ComputeLimit(Double_t s, Double_t b, Int_t d,
                                          TVectorD* se, TVectorD* be, TObjArray*,
                                          Int_t nmc =50000,
                                          bool stat = false,
@@ -53,7 +53,7 @@ public:
                                          Int_t nmc =50000,
                                          bool stat = false,
                                          TRandom * generator = 0);
-   static TConfidenceLevel *ComputeLimit(TH1* s, TH1* b, TH1* d, 
+   static TConfidenceLevel *ComputeLimit(TH1* s, TH1* b, TH1* d,
                                          TVectorD* se, TVectorD* be, TObjArray*,
                                          Int_t nmc =50000,
                                          bool stat = false,

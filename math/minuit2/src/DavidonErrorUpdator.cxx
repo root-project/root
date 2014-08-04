@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -12,10 +12,10 @@
 #include "Minuit2/LaSum.h"
 #include "Minuit2/LaProd.h"
 
-//#define DEBUG 
+//#define DEBUG
 
 #if defined(DEBUG) || defined(WARNINGMSG)
-#include "Minuit2/MnPrint.h" 
+#include "Minuit2/MnPrint.h"
 #endif
 
 
@@ -29,29 +29,29 @@ double inner_product(const LAVector&, const LAVector&);
 double similarity(const LAVector&, const LASymMatrix&);
 double sum_of_elements(const LASymMatrix&);
 
-MinimumError DavidonErrorUpdator::Update(const MinimumState& s0, 
+MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
                                          const MinimumParameters& p1,
                                          const FunctionGradient& g1) const {
 
    // update of the covarianze matrix (Davidon formula, see Tutorial, par. 4.8 pag 26)
-   // in case of delgam > gvg (PHI > 1) use rank one formula 
+   // in case of delgam > gvg (PHI > 1) use rank one formula
    // see  par 4.10 pag 30
 
    const MnAlgebraicSymMatrix& v0 = s0.Error().InvHessian();
    MnAlgebraicVector dx = p1.Vec() - s0.Vec();
    MnAlgebraicVector dg = g1.Vec() - s0.Gradient().Vec();
-  
+
    double delgam = inner_product(dx, dg);
    double gvg = similarity(dg, v0);
 
 
 #ifdef DEBUG
-   std::cout << "dx = " << dx << std::endl; 
-   std::cout << "dg = " << dg << std::endl; 
+   std::cout << "dx = " << dx << std::endl;
+   std::cout << "dg = " << dg << std::endl;
    std::cout<<"delgam= "<<delgam<<" gvg= "<<gvg<<std::endl;
 #endif
 
-   if (delgam == 0 ) { 
+   if (delgam == 0 ) {
 #ifdef WARNINGMSG
       MN_INFO_MSG("DavidonErrorUpdator: delgam = 0 : cannot update - return same matrix ");
 #endif
@@ -61,10 +61,10 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
    if (delgam < 0)  MN_INFO_MSG("DavidonErrorUpdator: delgam < 0 : first derivatives increasing along search line");
 #endif
 
-   if (gvg <= 0 ) { 
+   if (gvg <= 0 ) {
       // since v0 is pos def this gvg can be only = 0 if  dg = 0 - should never be here
 #ifdef WARNINGMSG
-      MN_INFO_MSG("DavidonErrorUpdator: gvg <= 0 : cannot update - return same matrix "); 
+      MN_INFO_MSG("DavidonErrorUpdator: gvg <= 0 : cannot update - return same matrix ");
 #endif
       return s0.Error();
    }
@@ -81,21 +81,21 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
 
    double sum_upd = sum_of_elements(vUpd);
    vUpd += v0;
-  
+
    double dcov = 0.5*(s0.Error().Dcovar() + sum_upd/sum_of_elements(vUpd));
-  
+
    return MinimumError(vUpd, dcov);
 }
 
 /*
-MinimumError DavidonErrorUpdator::Update(const MinimumState& s0, 
+MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
                 const MinimumParameters& p1,
                 const FunctionGradient& g1) const {
 
   const MnAlgebraicSymMatrix& v0 = s0.Error().InvHessian();
   MnAlgebraicVector dx = p1.Vec() - s0.Vec();
   MnAlgebraicVector dg = g1.Vec() - s0.Gradient().Vec();
-  
+
   double delgam = inner_product(dx, dg);
   double gvg = similarity(dg, v0);
 
@@ -110,7 +110,7 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
 //   vUpd = dd - VggV;
 //   MnAlgebraicSymMatrix vUpd = ( 1./delgam )*outer_product(dx) - ( 1./gvg )*outer_product(vg);
   MnAlgebraicSymMatrix vUpd = Outer_product(dx)/delgam - Outer_product(vg)/gvg;
-  
+
   if(delgam > gvg) {
 //     dx *= ( 1./delgam );
 //     vg *= ( 1./gvg );
@@ -121,14 +121,14 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
     vUpd += gvg*outer_product(dx/delgam - vg/gvg);
   }
 
-//   
+//
 //     MnAlgebraicSymMatrix dd = Outer_product(dx);
 //     dd *= ( 1./delgam );
 //     MnAlgebraicSymMatrix VggV = Outer_product(vg);
 //     VggV *= ( 1./gvg );
 //     vUpd = dd - VggV;
-//   
-//     
+//
+//
 //   double phi = delgam/(delgam - gvg);
 
 //   MnAlgebraicSymMatrix vUpd(v0.Nrow());
@@ -146,15 +146,15 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
 //     vUpd = Outer_product(tmp);
 //     vUpd *= ( 1./(delgam - gvg) );
 //   }
-//     
+//
 
-//     
+//
 //   if(delgam > gvg) {
 //     // rank-1 Update
 //     MnAlgebraicVector tmp = dx - vg;
 //     vUpd = Outer_product(tmp);
 //     vUpd *= ( 1./(delgam - gvg) );
-//   } else { 
+//   } else {
 //     // rank-2 Update
 //     MnAlgebraicSymMatrix dd = Outer_product(dx);
 //     dd *= ( 1./delgam );
@@ -162,16 +162,16 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
 //     VggV *= ( 1./gvg );
 //     vUpd = dd - VggV;
 //   }
-//   
+//
 
   double sum_upd = sum_of_elements(vUpd);
   vUpd += v0;
-    
+
 //   MnAlgebraicSymMatrix V1 = v0 + vUpd;
 
-  double dcov = 
+  double dcov =
     0.5*(s0.Error().Dcovar() + sum_upd/sum_of_elements(vUpd));
-  
+
   return MinimumError(vUpd, dcov);
 }
 */

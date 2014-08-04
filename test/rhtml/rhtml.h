@@ -69,7 +69,7 @@ public:
    void              Stop();
    void              MouseOver(char *);
    void              MouseDown(char *);
-   
+
    ClassDef(TGHtmlBrowser, 0) // very simple html browser
 };
 

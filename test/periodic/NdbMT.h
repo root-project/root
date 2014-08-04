@@ -52,7 +52,7 @@ public:
    virtual void ReadENDFSection() {}
 
    ClassDef(NdbMT,1)
-   
+
 }; // NdbMT
 
 #endif

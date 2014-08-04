@@ -27,8 +27,8 @@ namespace Rgl {
 namespace Mc {
 
 /*
-TIsoMesh - set of vertices, per-vertex normals, "triangles". 
-Each "triangle" is a triplet of indices, pointing into vertices 
+TIsoMesh - set of vertices, per-vertex normals, "triangles".
+Each "triangle" is a triplet of indices, pointing into vertices
 and normals arrays. For example, triangle t = {1, 4, 6}
 has vertices &fVerts[1 * 3], &fVerts[4 * 3], &fVerts[6 * 3];
 and normals &fNorms[1 * 3], &fNorms[4 * 3], &fNorms[6 * 3]
@@ -88,7 +88,7 @@ public:
 };
 
 /*
-TGridGeometry describes ranges and cell steps (scales are 
+TGridGeometry describes ranges and cell steps (scales are
 already in steps and ranges).
 */
 template<class V>
@@ -108,7 +108,7 @@ public:
    {
       //Default constructor.
    }
-   
+
    TGridGeometry(const TAxis *x, const TAxis *y, const TAxis *z,
                  Double_t xs = 1., Double_t ys = 1., Double_t zs = 1.,
                  EVertexPosition pos = kBinCenter)
@@ -148,7 +148,7 @@ public:
       fYScaleInverted = 1. / ys;
       fZScaleInverted = 1. / zs;
    }
-   
+
    V fMinX;
    V fStepX;
 
@@ -166,17 +166,17 @@ public:
 }//namespace Mc
 
 //Auxilary functions to draw an iso mesh in different modes.
-void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns, 
+void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns,
               const std::vector<UInt_t> &ts);
-void DrawMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns, 
+void DrawMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns,
               const std::vector<UInt_t> &ts);
 
 void DrawMesh(const std::vector<Float_t> &vs, const std::vector<UInt_t> &fTS);
 void DrawMesh(const std::vector<Double_t> &vs, const std::vector<UInt_t> &fTS);
 
-void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns, 
+void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns,
               const std::vector<UInt_t> &ts, const TGLBoxCut &box);
-void DrawMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns, 
+void DrawMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns,
               const std::vector<UInt_t> &ts, const TGLBoxCut &box);
 
 void DrawMesh(const std::vector<Float_t> &vs, const std::vector<UInt_t> &ts,
@@ -184,9 +184,9 @@ void DrawMesh(const std::vector<Float_t> &vs, const std::vector<UInt_t> &ts,
 void DrawMesh(const std::vector<Double_t> &vs, const std::vector<UInt_t> &ts,
               const TGLBoxCut &box);
 
-void DrawMesh(const std::vector<Double_t> &vs, const std::vector<UInt_t> &ts, 
+void DrawMesh(const std::vector<Double_t> &vs, const std::vector<UInt_t> &ts,
               const TGLBoxCut &box);
-void DrawMesh(const std::vector<Float_t> &vs, const std::vector<UInt_t> &ts, 
+void DrawMesh(const std::vector<Float_t> &vs, const std::vector<UInt_t> &ts,
               const TGLBoxCut &box);
 
 void DrawMapleMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns,

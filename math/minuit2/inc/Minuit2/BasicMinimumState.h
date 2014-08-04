@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -27,22 +27,22 @@ class BasicMinimumState {
 
 public:
 
-  BasicMinimumState(unsigned int n) : 
+  BasicMinimumState(unsigned int n) :
     fParameters(MinimumParameters(n)), fError(MinimumError(n)),
     fGradient(FunctionGradient(n)), fEDM(0.), fNFcn(0) {}
-  BasicMinimumState(const MinimumParameters& states, const MinimumError& err, 
+  BasicMinimumState(const MinimumParameters& states, const MinimumError& err,
                     const FunctionGradient& grad, double edm, int nfcn) :
     fParameters(states), fError(err), fGradient(grad), fEDM(edm), fNFcn(nfcn) {}
-  
+
   BasicMinimumState(const MinimumParameters& states, double edm, int nfcn) : fParameters(states), fError(MinimumError(states.Vec().size())), fGradient(FunctionGradient(states.Vec().size())), fEDM(edm), fNFcn(nfcn) {}
-  
+
   ~BasicMinimumState() {}
 
-  BasicMinimumState(const BasicMinimumState& state) : 
+  BasicMinimumState(const BasicMinimumState& state) :
     fParameters(state.fParameters), fError(state.fError), fGradient(state.fGradient), fEDM(state.fEDM), fNFcn(state.fNFcn) {}
-  
+
   BasicMinimumState& operator=(const BasicMinimumState& state) {
-    fParameters = state.fParameters; 
+    fParameters = state.fParameters;
     fError = state.fError;
     fGradient = state.fGradient;
     fEDM = state.fEDM;
@@ -53,7 +53,7 @@ public:
   void* operator new(size_t nbytes) {
     return StackAllocatorHolder::Get().Allocate(nbytes);
   }
-  
+
   void operator delete(void* p, size_t /*nbytes */) {
     StackAllocatorHolder::Get().Deallocate(p);
   }
@@ -68,17 +68,17 @@ public:
   double Edm() const {return fEDM;}
   int NFcn() const {return fNFcn;}
 
-  bool IsValid() const {    
-    if(HasParameters() && HasCovariance()) 
+  bool IsValid() const {
+    if(HasParameters() && HasCovariance())
       return Parameters().IsValid() && Error().IsValid();
     else if(HasParameters()) return Parameters().IsValid();
     else return false;
-  }  
+  }
   bool HasParameters() const {return fParameters.IsValid();}
   bool HasCovariance() const {return fError.IsAvailable();}
-  
+
 private:
-  
+
   MinimumParameters fParameters;
   MinimumError fError;
   FunctionGradient fGradient;

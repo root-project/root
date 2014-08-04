@@ -382,22 +382,22 @@ int main()
    std::cerr << "check nearest neighbor searches...DONE" << std::endl;
    else
    std::cerr << "check nearest neighbor searches...FAILED" << std::endl;
-   
+
    if(CheckTreeClear(pTree,vDataPoints))
    std::cerr << "check KDTree::Clear...DONE" << std::endl;
    else
    std::cerr << "check KDTree:Clear...FAILED" << std::endl;
-   
+
    //pTree->Print();
    pTree->Freeze();
    //pTree->Print();
    ROOT::Math::KDTree<DP>* pCopy = pTree->GetFrozenCopy();
    //pCopy->Print();
-   
+
    delete pCopy;
    delete pTree;
-   
+
    DeletePseudoData(vDataPoints);
-   
+
    return 0;
 }

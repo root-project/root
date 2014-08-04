@@ -33,7 +33,7 @@ using namespace std;
 */
 
 ///////////////////////////////////////////////////////////////////////
-// 
+//
 // Test program for the classes TUnfoldDensity and TUnfoldBinning
 //
 // A toy test of the TUnfold package
@@ -64,7 +64,7 @@ using namespace std;
 //            -> read  testUnfold5_histograms.root
 //            -> write testUnfold5_result.root
 //                     testUnfold5_result.ps
-// 
+//
 ///////////////////////////////////////////////////////////////////////
 
 void testUnfold5c()
@@ -135,7 +135,7 @@ void testUnfold5c()
   if(!dataTree) {
      cout<<"could not read 'data' tree\n";
   }
-  
+
   dataTree->ResetBranchAddresses();
   dataTree->SetBranchAddress("etarec",&etaRec);
   dataTree->SetBranchAddress("ptrec",&ptRec);
@@ -189,7 +189,7 @@ void testUnfold5c()
   if(!signalTree) {
      cout<<"could not read 'signal' tree\n";
   }
-  
+
   signalTree->ResetBranchAddresses();
   signalTree->SetBranchAddress("etarec",&etaRec);
   signalTree->SetBranchAddress("ptrec",&ptRec);
@@ -200,7 +200,7 @@ void testUnfold5c()
   signalTree->SetBranchStatus("*",1);
 
   cout<<"loop over MC signal events\n";
-  
+
   for(Int_t ievent=0;ievent<signalTree->GetEntriesFast();ievent++) {
      if(signalTree->GetEntry(ievent)<=0) break;
 

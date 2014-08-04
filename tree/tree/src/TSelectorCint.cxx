@@ -377,10 +377,10 @@ void TSelectorCint::Terminate()
 void TSelectorCint::Abort(const char *mesg, EAbort what)
 {
    // Invoke the GetAbort function via the interpreter.
-   
+
    if (gDebug > 2)
       Info("Abort","Call Abort");
-   
+
    if (gCling->CallFunc_IsValid(fFuncAbort)) {
       gCling->CallFunc_ResetArg(fFuncAbort);
       gCling->CallFunc_SetArg(fFuncAbort, (Long_t)mesg);
@@ -393,10 +393,10 @@ void TSelectorCint::Abort(const char *mesg, EAbort what)
 TSelector::EAbort TSelectorCint::GetAbort() const
 {
    // Invoke the GetAbort function via the interpreter.
-   
+
    if (gDebug > 2)
       Info("GetAbort","Call GetAbort");
-   
+
    if (gCling->CallFunc_IsValid(fFuncGetAbort)) {
       gCling->CallFunc_ResetArg(fFuncGetAbort);
       return (EAbort)gCling->CallFunc_ExecInt(fFuncGetAbort, fIntSelector);
@@ -409,10 +409,10 @@ TSelector::EAbort TSelectorCint::GetAbort() const
 void TSelectorCint::ResetAbort()
 {
    // Invoke the GetAbort function via the interpreter.
-   
+
    if (gDebug > 2)
       Info("ResetAbort","Call ResetAbort");
-   
+
    if (gCling->CallFunc_IsValid(fFuncResetAbort)) {
       gCling->CallFunc_ResetArg(fFuncResetAbort);
       gCling->CallFunc_ExecInt(fFuncResetAbort, fIntSelector);

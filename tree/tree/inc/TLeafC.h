@@ -54,7 +54,7 @@ public:
    virtual void    SetAddress(void *add=0);
    virtual void    SetMaximum(Int_t max) {fMaximum = max;}
    virtual void    SetMinimum(Int_t min) {fMinimum = min;}
-   
+
    ClassDef(TLeafC,1);  //A TLeaf for a variable length string.
 };
 

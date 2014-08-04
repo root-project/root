@@ -26,22 +26,22 @@
 #ifndef ROOT_Math_PdfFuncMathMore
 #define ROOT_Math_PdfFuncMathMore
 
-namespace ROOT { 
-   namespace Math { 
+namespace ROOT {
+   namespace Math {
 
 
   /**
 
-  Probability density function of the non central \f$\chi^2\f$ distribution with \f$r\f$ 
-  degrees of freedom and the noon-central parameter \f$\lambda\f$ 
+  Probability density function of the non central \f$\chi^2\f$ distribution with \f$r\f$
+  degrees of freedom and the noon-central parameter \f$\lambda\f$
 
   \f[ p_r(x) = \frac{1}{\Gamma(r/2) 2^{r/2}} x^{r/2-1} e^{-x/2} \f]
 
-  for \f$x \geq 0\f$. 
-  For detailed description see 
+  for \f$x \geq 0\f$.
+  For detailed description see
   <A HREF="http://mathworld.wolfram.com/NoncentralChi-SquaredDistribution.html">
-  Mathworld</A>. 
-  
+  Mathworld</A>.
+
   @ingroup PdfFunc
 
   */
@@ -54,13 +54,13 @@ namespace ROOT {
 
 // make a fake class to auto-load functions from MathMore
 
-namespace ROOT { 
-   namespace Math { 
-      
-      struct MathMoreLibrary { 
-         
+namespace ROOT {
+   namespace Math {
+
+      struct MathMoreLibrary {
+
          // adding this method with force the auto-loading of the library
-         static void Load(); 
+         static void Load();
       };
    }
 }

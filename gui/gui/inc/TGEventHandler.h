@@ -33,7 +33,7 @@ class TGWindow;
 class TGEventHandler : public TNamed, public TQObject {
 
 private:
-  
+
    TGEventHandler(const TGEventHandler&); // Not implemented
    TGEventHandler& operator=(const TGEventHandler&); // Not implemented
 
@@ -44,7 +44,7 @@ private:
    void  *GetSender() { return this; }  //used to set gTQSender
 
 public:
-   TGEventHandler(const char *name, TGWindow *w, TObject *obj, const char *title="") : 
+   TGEventHandler(const char *name, TGWindow *w, TObject *obj, const char *title="") :
       TNamed(name, title), fIsActive(kTRUE), fWindow(w), fObject(obj) { };
    virtual ~TGEventHandler() { }
 

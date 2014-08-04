@@ -187,7 +187,7 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
       // Notify
       Printf("getProof: working area not specified temp ");
       // Force "/tmp/<user>" whenever possible to avoid length problems on MacOsX
-      tutdir="/tmp"; 
+      tutdir="/tmp";
       if (gSystem->AccessPathName(tutdir, kWritePermission)) tutdir = gSystem->TempDirectory();
       TString us;
       UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());

@@ -40,38 +40,38 @@ const TGFont *TGTableCell::fgDefaultFont = 0;
 
 //______________________________________________________________________________
 TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, TGString *label,
-                         UInt_t row, UInt_t column, UInt_t width, UInt_t height, 
-                         GContext_t norm, FontStruct_t font, UInt_t option, 
-                         Bool_t resize) 
-   : TGFrame(p, width, height, option), fTip(0), fReadOnly(kFALSE), 
-     fEnabled(kTRUE), fTMode(kTextRight | kTextCenterY), fImage(0), 
-     fFontStruct(font), fHasOwnFont(kFALSE), fColumn(column), fRow(row), 
+                         UInt_t row, UInt_t column, UInt_t width, UInt_t height,
+                         GContext_t norm, FontStruct_t font, UInt_t option,
+                         Bool_t resize)
+   : TGFrame(p, width, height, option), fTip(0), fReadOnly(kFALSE),
+     fEnabled(kTRUE), fTMode(kTextRight | kTextCenterY), fImage(0),
+     fFontStruct(font), fHasOwnFont(kFALSE), fColumn(column), fRow(row),
      fTable(table)
 {
    // TGTableCell constructor.
-   
+
    if (label) {
       fLabel = label;
    } else {
       fLabel = new TGString("0");
    }
-   
+
    fNormGC = norm;
    Init(resize);
 }
 
 //______________________________________________________________________________
-TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, const char *label, 
+TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, const char *label,
                          UInt_t row, UInt_t column, UInt_t width, UInt_t height,
-                         GContext_t norm, FontStruct_t font, UInt_t option, 
-                         Bool_t resize) 
-   : TGFrame(p, width, height, option), fTip(0), fReadOnly(kFALSE), 
-     fEnabled(kTRUE), fTMode(kTextRight | kTextCenterY), fImage(0), 
-     fFontStruct(font), fHasOwnFont(kFALSE), fColumn(column), fRow(row), 
+                         GContext_t norm, FontStruct_t font, UInt_t option,
+                         Bool_t resize)
+   : TGFrame(p, width, height, option), fTip(0), fReadOnly(kFALSE),
+     fEnabled(kTRUE), fTMode(kTextRight | kTextCenterY), fImage(0),
+     fFontStruct(font), fHasOwnFont(kFALSE), fColumn(column), fRow(row),
      fTable(table)
 {
    // TGTableCell constructor
-   
+
    if (label) {
       fLabel = new TGString(label);
    } else {
@@ -83,12 +83,12 @@ TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, const char *label,
 }
 
 // //______________________________________________________________________________
-// TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, TGPicture *image, 
-//                          TGString *label, UInt_t row, UInt_t column, 
-//                          GContext_t norm, FontStruct_t font, UInt_t option, 
+// TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, TGPicture *image,
+//                          TGString *label, UInt_t row, UInt_t column,
+//                          GContext_t norm, FontStruct_t font, UInt_t option,
 //                          Bool_t resize)
-//    : TGFrame(p, 80, 25, option), fTip(0), fReadOnly(kFALSE), fEnabled(kTRUE), 
-//      fTMode(kTextRight | kTextCenterY), fImage(image), fFontStruct(font), 
+//    : TGFrame(p, 80, 25, option), fTip(0), fReadOnly(kFALSE), fEnabled(kTRUE),
+//      fTMode(kTextRight | kTextCenterY), fImage(image), fFontStruct(font),
 //      fHasOwnFont(kFALSE), fColumn(column), fRow(row), fTable(table)
 // {
 //    if (label) {
@@ -102,21 +102,21 @@ TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, const char *label,
 // }
 
 // //______________________________________________________________________________
-// TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, TGPicture *image, 
-//                          const char *label, UInt_t row, UInt_t column, 
+// TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, TGPicture *image,
+//                          const char *label, UInt_t row, UInt_t column,
 //                          GContext_t norm, FontStruct_t font, UInt_t option,
-//                          Bool_t resize) 
-//    : TGFrame(p, 80, 25, option), fTip(0), fReadOnly(kFALSE), fEnabled(kTRUE), 
-//      fTMode(kTextRight | kTextCenterY), fImage(image), fFontStruct(font), 
+//                          Bool_t resize)
+//    : TGFrame(p, 80, 25, option), fTip(0), fReadOnly(kFALSE), fEnabled(kTRUE),
+//      fTMode(kTextRight | kTextCenterY), fImage(image), fFontStruct(font),
 //      fHasOwnFont(kFALSE), fColumn(column), fRow(row), fTable(table)
 // {
-   
+
 //    if (label) {
 //       fLabel = new TGString(label);
 //    } else {
 //       fLabel = new TGString("0");
 //    }
-   
+
 //    fNormGC = norm;
 
 //    Init(resize);
@@ -139,13 +139,13 @@ void TGTableCell::Init(Bool_t resize)
    // Initialise the TGTableCell.
 
    Int_t max_ascent = 0, max_descent = 0;
-   
+
    fTWidth  = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
 
    // Modifications for individual cell drawing test, original block is marked
-   
+
    if (fTable) {
       // Original from here
       TGTableHeader *chdr = 0;
@@ -182,7 +182,7 @@ void TGTableCell::DoRedraw()
    // To be done: Add a tooltip with the complete label when it
    // doesn't fit in the cell.
    if (fTWidth > fWidth - 4) fTMode = kTextLeft;
-   
+
    if (fTMode & kTextLeft) {
       x = 4;
    } else if (fTMode & kTextRight) {
@@ -198,7 +198,7 @@ void TGTableCell::DoRedraw()
    } else {
       y = (fHeight - fTHeight - 4) / 2;
    }
-   
+
    y += fTHeight;
 
    fLabel->Draw(fId, fNormGC, x, y);
@@ -280,7 +280,7 @@ void TGTableCell::Highlight()
 }
 
 // //______________________________________________________________________________
-// void TGTableCell::SetRow(UInt_t row) 
+// void TGTableCell::SetRow(UInt_t row)
 // {
 //    fRow = row;
 // }
@@ -297,8 +297,8 @@ void TGTableCell::DrawCopy(Handle_t id, Int_t x, Int_t y)
    // Draw list view item in other window.
    // List view item is placed and layout in the container frame,
    // but is drawn in viewport.
-   
-   // FIXME this method is only needed if the table container frame is a 
+
+   // FIXME this method is only needed if the table container frame is a
    // TGContainer. It is broken and not used in the current implementation.
 
    Int_t lx = 0, ly = 0;
@@ -318,9 +318,9 @@ void TGTableCell::DrawCopy(Handle_t id, Int_t x, Int_t y)
    } else {
       ly = (fHeight - fTHeight - 4) / 2;
    }
-   
+
    ly += fTHeight;
-   
+
    //    if (fActive) {
    //       gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
    //       gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, fTWidth, fTHeight + 1);
@@ -333,7 +333,7 @@ void TGTableCell::DrawCopy(Handle_t id, Int_t x, Int_t y)
    DrawBorder(id, x, y);
 
    //    }
-   
+
    fLabel->Draw(id, fNormGC, x + lx, y + ly);
 }
 

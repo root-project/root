@@ -65,7 +65,7 @@
 //******************************************************************
 //*  ROOTMARKS = 600.1   *  Root4.02/00   20041217/1146
 //******************************************************************
-// 
+//
 //_____________________________batch only_____________________
 #ifndef __CINT__
 
@@ -146,13 +146,13 @@ int gPrintSubBench = 0;
 
 Double_t ntotin=0, ntotout=0;
 
-void stress(Int_t nevent, Int_t style = 1, 
+void stress(Int_t nevent, Int_t style = 1,
             Int_t printSubBenchmark = kFALSE, UInt_t portion = 65535)
 {
    //Main control function invoking all test programs
-   
+
    gPrintSubBench = printSubBenchmark;
-   
+
    if (nevent < 11) nevent = 11; // must have at least 10 events
    //Delete all possible objects in memory (to execute stress several times)
    gROOT->GetListOfFunctions()->Delete();
@@ -231,7 +231,7 @@ void stress(Int_t nevent, Int_t style = 1,
    printf("******************************************************************\n");
    printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
    printf("******************************************************************\n");
-   
+
    delete gBenchmark;
 }
 
@@ -421,12 +421,12 @@ void stress4()
 
    //Compare results of fit with expected parameters
    Bool_t OK = kTRUE;
-   for (int k = 0; k < 3; ++k) { 
-      for (int  l = 1; l < 5; ++l) { 
+   for (int k = 0; k < 3; ++k) {
+      for (int  l = 1; l < 5; ++l) {
          int idx = k*5+l;
          Double_t dp0  = TMath::Abs((f2form->GetParameter(idx) -f2params[idx]));
          if (f2params[idx] != 0.) dp0 /=  f2params[idx];
-         bool testok =  (dp0 < 5.e-2); 
+         bool testok =  (dp0 < 5.e-2);
          if (!testok) {
             printf("\nfailed:   ipar=%d delta=%g, par=%g, nom=%g",idx,dp0,f2form->GetParameter(idx),f2params[idx]);
          }
@@ -499,7 +499,7 @@ void stress5()
    }
    delete c1;
    if (gPrintSubBench) { printf("Test  5 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
-   
+
 }
 
 //_______________________________________________________________
@@ -1120,14 +1120,14 @@ void stress9tree(TTree *tree, Int_t realTestNum)
    Event::Reset();
    ntotin += nbin;
 
-   if (gPrintSubBench) { 
-      printf("Test %2dC: ",realTestNum); 
+   if (gPrintSubBench) {
+      printf("Test %2dC: ",realTestNum);
       gBenchmark->Show("stress");gBenchmark->Start("stress");
       // Since we disturbed the flow (due to the double benchmark printing),
       // let's repeat the header!
       printf("Test %2d : ",realTestNum);
    }
-   
+
    Bool_t OK = kTRUE;
    if (cNtrack || cNseg   || cTemp  || cHmean || cPx    || cPy     || cPz) OK = kFALSE;
    if (cRandom || cMass2  || cBx    || cBy    || cXfirst|| cYfirst || cZfirst) OK = kFALSE;
@@ -1377,7 +1377,7 @@ void stress15()
    if (oldfile->IsZombie()) {
       printf("failed\n");
       return;
-   }   
+   }
    TTree *oldtree; oldfile->GetObject("T",oldtree);
    Event *event   = 0;
    oldtree->SetBranchAddress("event",&event);

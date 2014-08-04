@@ -31,7 +31,7 @@ protected:
    Int_t        fVarTemp;       //number of variables already added to the data matrix
    Int_t        fVecTemp;       //number of observations already added to the data matrix
 
-   Int_t        fExact;         //if there was an exact fit, stores the number of points on a hyperplane 
+   Int_t        fExact;         //if there was an exact fit, stores the number of points on a hyperplane
 
    TVectorD     fMean;          //location estimate (mean values)
    TMatrixDSym  fCovariance;    //covariance matrix estimate
@@ -42,30 +42,30 @@ protected:
    TArrayI      fOut;           //array of indexes of ouliers, size <0.5*n
    TVectorD     fHyperplane;    //in case more than fH observations lie on a hyperplane
                                //the equation of this hyperplane is stored here
- 
+
    TMatrixD fData;              //the original data
 
    //functions needed for evaluation
 
    void     AddToSscp(TMatrixD &sscp, TVectorD &vec);
-   void     ClearSscp(TMatrixD &sscp); 
+   void     ClearSscp(TMatrixD &sscp);
 
    void     Classic();
-   void     Covar(TMatrixD &sscp, TVectorD &m, TMatrixDSym &cov, TVectorD &sd, Int_t nvec); 
+   void     Covar(TMatrixD &sscp, TVectorD &m, TMatrixDSym &cov, TVectorD &sd, Int_t nvec);
    void     Correl();
 
-   void     CreateSubset(Int_t ntotal, Int_t htotal, Int_t p, Int_t *index, TMatrixD &data, 
+   void     CreateSubset(Int_t ntotal, Int_t htotal, Int_t p, Int_t *index, TMatrixD &data,
                     TMatrixD &sscp, Double_t *ndist);
    void     CreateOrtSubset(TMatrixD &dat, Int_t *index, Int_t hmerged, Int_t nmerged, TMatrixD &sscp, Double_t *ndist);
 
    Double_t CStep(Int_t ntotal, Int_t htotal, Int_t *index, TMatrixD &data, TMatrixD &sscp, Double_t *ndist);
 
-   Int_t    Exact(Double_t *ndist); 
+   Int_t    Exact(Double_t *ndist);
    Int_t    Exact2(TMatrixD &mstockbig, TMatrixD &cstockbig, TMatrixD &hyperplane,
-               Double_t *deti, Int_t nbest,Int_t kgroup, 
+               Double_t *deti, Int_t nbest,Int_t kgroup,
                TMatrixD &sscp, Double_t *ndist);
 
-   Int_t    Partition(Int_t nmini, Int_t *indsubdat); 
+   Int_t    Partition(Int_t nmini, Int_t *indsubdat);
    Int_t    RDist(TMatrixD &sscp);
    void     RDraw(Int_t *subdat, Int_t ngroup, Int_t *indsubdat);
 
@@ -103,9 +103,9 @@ public:
                       //ONLY those with robust distances significantly larger than the
                       //cutoff value, should be considered outliers!
    Double_t GetChiQuant(Int_t i) const;
-   
+
    ClassDef(TRobustEstimator,1)  //Minimum Covariance Determinant Estimator
- 
+
 };
 
 

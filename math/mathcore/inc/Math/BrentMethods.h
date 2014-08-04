@@ -9,7 +9,7 @@
 namespace ROOT {
 namespace Math {
 
-namespace BrentMethods { 
+namespace BrentMethods {
 
 /**
      Grid search implementation, used to bracket the minimum and later
@@ -32,20 +32,20 @@ namespace BrentMethods {
       found in the book by R.P.Brent "Algorithms for Minimization Without Derivatives"
       or in the "Numerical Recipes", chapter 10.2
       convergence is reached using  tolerance = 2 *( epsrel * abs(x) + epsabs)
-   
+
       type: 0-returns MinimumX
             1-returns Minimum
             2-returns MaximumX
             3-returns Maximum
             4-returns X corresponding to fy
 
-      if ok=true the method has converged. 
+      if ok=true the method has converged.
       Maxiter returns the actual  number of iteration performed
 
    */
 
    double MinimBrent(const IGenFunction* f, int type, double &xmin, double &xmax, double xmiddle, double fy, bool &ok, int &niter, double epsabs = 1.E-8, double epsrel = 1.E-10, int maxiter = 100  );
-   
+
 
 } // end namespace BrentMethods
 } // end namespace Math

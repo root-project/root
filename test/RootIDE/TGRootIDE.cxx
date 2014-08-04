@@ -374,7 +374,7 @@ Bool_t TGDocument::Close()
 //______________________________________________________________________________
 Bool_t TGDocument::Open(const char *fname)
 {
-   // Open file and create new document. If fname is NULL, create new Untitled 
+   // Open file and create new document. If fname is NULL, create new Untitled
    // document. Add a new tab element for this documment.
 
    TGFileInfo fi;
@@ -404,7 +404,7 @@ Bool_t TGDocument::Open(const char *fname)
       if ((fEditor == 0) || (fTabEl == 0) || (fEditor &&
            fEditor->GetText()->RowCount() > 1 &&
            fEditor->GetText()->ColCount() > 1)) {
-         // if no current editor, or if current text editor already has 
+         // if no current editor, or if current text editor already has
          // text, add a new tab
          TGCompositeFrame *tf = fTab->AddTab(gSystem->BaseName(fname));
          tf->SetLayoutManager(new TGHorizontalLayout(tf));

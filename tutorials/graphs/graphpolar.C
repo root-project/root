@@ -1,6 +1,6 @@
 //Create and draw a polar graph
 //Author: Olivier Couet
-   
+
 void graphpolar()
 {
    // Illustrates how to use TGraphPolar
@@ -8,7 +8,7 @@ void graphpolar()
    TCanvas * CPol = new TCanvas("CPol","TGraphPolar Examples",1200,600);
    CPol->Divide(2,1);
    CPol->cd(1);
-  
+
    Double_t xmin=0;
    Double_t xmax=TMath::Pi()*2;
 
@@ -18,7 +18,7 @@ void graphpolar()
    Double_t y1[20];
 
    TF1 * fplot = new TF1("fplot","cos(2*x)*cos(20*x)",xmin,xmax);
-  
+
    for (Int_t ipt = 0; ipt < 1000; ipt++){
       x[ipt] = ipt*(xmax-xmin)/1000+xmin;
       y[ipt] = fplot->Eval(x[ipt]);

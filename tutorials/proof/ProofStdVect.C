@@ -106,7 +106,7 @@ void ProofStdVect::SlaveBegin(TTree * /*tree*/)
 
       // Init the random generator
       fRandom = new TRandom3(0);
-      
+
    } else {
       // Create two histograms
       fHgood = new TH1F("Hgood", "Good hits", 100., -2.5, 2.5);
@@ -139,7 +139,7 @@ Bool_t ProofStdVect::Process(Long64_t entry)
 
    if (fCreate) {
       if (!fTree) return kTRUE;
-   
+
       // Number of vectors
       Int_t nv =  (Int_t) (entry % 10);
       if (nv < 1) nv = 1;
@@ -168,7 +168,7 @@ Bool_t ProofStdVect::Process(Long64_t entry)
 
       // Fill the tree
       fTree->Fill();
-      
+
       // Clear the vectors
       std::vector<std::vector<bool> >::iterator ivb;
       for (ivb = fVb.begin(); ivb != fVb.end(); ivb++) {
@@ -197,7 +197,7 @@ Bool_t ProofStdVect::Process(Long64_t entry)
             if (vb.at(j) < 0.5)
                fHbad->Fill(ny);
             else
-               fHgood->Fill(ny);            
+               fHgood->Fill(ny);
          }
       }
    }
@@ -214,7 +214,7 @@ void ProofStdVect::SlaveTerminate()
 
    // Nothing to do in read mode
    if (!fCreate) return;
-   
+
    // Write the ntuple to the file
    if (fFile) {
       if (!fTree) {

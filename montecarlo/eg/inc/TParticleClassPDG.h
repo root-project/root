@@ -25,7 +25,7 @@ protected:
    TObjArray*  fListOfParticles;  // list of (non-owned) particles
 
    TParticleClassPDG(const TParticleClassPDG& pcp): TNamed(pcp), fListOfParticles(pcp.fListOfParticles) { }
-   TParticleClassPDG& operator=(const TParticleClassPDG& pcp) 
+   TParticleClassPDG& operator=(const TParticleClassPDG& pcp)
    {if(this!=&pcp) {TNamed::operator=(pcp); fListOfParticles=pcp.fListOfParticles;}
        return *this;
    }
@@ -38,13 +38,13 @@ public:
    TParticleClassPDG(const char* name = 0);
    virtual ~TParticleClassPDG();
    // ****** access methods
-  
-   Int_t   GetNParticles () { 
+
+   Int_t   GetNParticles () {
       return fListOfParticles->GetEntriesFast();
    }
 
-   TParticlePDG* GetParticle(Int_t i) { 
-      return (TParticlePDG*) fListOfParticles->At(i); 
+   TParticlePDG* GetParticle(Int_t i) {
+      return (TParticlePDG*) fListOfParticles->At(i);
    }
 
    TObjArray* GetListOfParticles() { return fListOfParticles; }

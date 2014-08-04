@@ -22,7 +22,7 @@
 #include "TNamed.h"
 #endif
 
-//--- globals 
+//--- globals
 const Double_t kNullVector[3]       =       {0.0,  0.0,  0.0};
 
 const Double_t kIdentityMatrix[3*3] =       {1.0,  0.0,  0.0,
@@ -73,16 +73,16 @@ public :
 #pragma GCC diagnostic pop
 #endif
    Bool_t      operator ==(const TGeoMatrix &other) const;
-   
+
    Bool_t               IsIdentity()    const {return !TestBit(kGeoGenTrans);}
    Bool_t               IsTranslation() const {return TestBit(kGeoTranslation);}
    Bool_t               IsRotation()    const {return TestBit(kGeoRotation);}
    Bool_t               IsReflection()  const {return TestBit(kGeoReflection);}
    Bool_t               IsScale()       const {return TestBit(kGeoScale);}
    Bool_t               IsShared()      const {return TestBit(kGeoShared);}
-   Bool_t               IsCombi()       const {return (TestBit(kGeoTranslation) 
+   Bool_t               IsCombi()       const {return (TestBit(kGeoTranslation)
                                                && TestBit(kGeoRotation));}
-   Bool_t               IsGeneral()     const {return (TestBit(kGeoTranslation) 
+   Bool_t               IsGeneral()     const {return (TestBit(kGeoTranslation)
                             && TestBit(kGeoRotation) && TestBit(kGeoScale));}
    Bool_t               IsRegistered()  const {return TestBit(kGeoRegistered);}
    Bool_t               IsRotAboutZ()   const;
@@ -115,7 +115,7 @@ public :
    virtual void         SetDy(Double_t) {}
    virtual void         SetDz(Double_t) {}
    void                 SetShared(Bool_t flag=kTRUE) {SetBit(kGeoShared, flag);}
-   
+
    ClassDef(TGeoMatrix, 1)                 // base geometrical transformation class
 };
 
@@ -141,7 +141,7 @@ public :
    TGeoTranslation(Double_t dx, Double_t dy, Double_t dz);
    TGeoTranslation(const char *name, Double_t dx, Double_t dy, Double_t dz);
    virtual ~TGeoTranslation() {}
-   
+
    TGeoTranslation& operator=(const TGeoMatrix &matrix);
    TGeoTranslation& operator=(const TGeoTranslation &other) {return operator=((const TGeoMatrix&)other);};
 
@@ -164,7 +164,7 @@ public :
    virtual void         SetDx(Double_t dx) {SetTranslation(dx, fTranslation[1], fTranslation[2]);}
    virtual void         SetDy(Double_t dy) {SetTranslation(fTranslation[0], dy, fTranslation[2]);}
    virtual void         SetDz(Double_t dz) {SetTranslation(fTranslation[0], fTranslation[1], dz);}
-   
+
    virtual const Double_t    *GetTranslation() const {return &fTranslation[0];}
    virtual const Double_t    *GetRotationMatrix() const {return &kIdentityMatrix[0];}
    virtual const Double_t    *GetScale()       const {return &kUnitScale[0];}
@@ -195,10 +195,10 @@ public :
    TGeoRotation(const char *name, Double_t theta1, Double_t phi1, Double_t theta2, Double_t phi2,
                 Double_t theta3, Double_t phi3);
    virtual ~TGeoRotation() {}
-   
+
    TGeoRotation& operator=(const TGeoMatrix &matrix);
    TGeoRotation& operator=(const TGeoRotation &other) {return operator=((const TGeoMatrix&)other);};
-   
+
    Bool_t               IsValid() const;
    virtual TGeoMatrix&  Inverse() const;
    void                 Clear(Option_t *option ="");
@@ -229,7 +229,7 @@ public :
    void                 SetMatrix(const Double_t *rot) {memcpy(&fRotationMatrix[0], rot, 9*sizeof(Double_t));CheckMatrix();}
    void                 SetRotation(const TGeoMatrix &other);
    void                 GetInverse(Double_t *invmat) const;
-   
+
    virtual const Double_t    *GetTranslation()    const {return &kNullVector[0];}
    virtual const Double_t    *GetRotationMatrix() const {return &fRotationMatrix[0];}
    virtual const Double_t    *GetScale()          const {return &kUnitScale[0];}
@@ -256,7 +256,7 @@ public :
    TGeoScale(const char *name, Double_t sx, Double_t sy, Double_t sz);
    virtual ~TGeoScale();
 
-   TGeoScale& operator=(const TGeoScale &other);   
+   TGeoScale& operator=(const TGeoScale &other);
    virtual TGeoMatrix&  Inverse() const;
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
@@ -269,7 +269,7 @@ public :
    virtual void         ReflectX(Bool_t, Bool_t) {fScale[0]=-fScale[0]; SetBit(kGeoReflection, !IsReflection());}
    virtual void         ReflectY(Bool_t, Bool_t) {fScale[1]=-fScale[1]; SetBit(kGeoReflection, !IsReflection());}
    virtual void         ReflectZ(Bool_t, Bool_t) {fScale[2]=-fScale[2]; SetBit(kGeoReflection, !IsReflection());}
-   
+
    virtual const Double_t    *GetTranslation()    const {return &kNullVector[0];}
    virtual const Double_t    *GetRotationMatrix() const {return &kIdentityMatrix[0];}
    virtual const Double_t    *GetScale()          const {return &fScale[0];}
@@ -302,7 +302,7 @@ public :
    TGeoCombiTrans& operator=(const TGeoCombiTrans &other) {return operator=((const TGeoMatrix&)other);};
 
    virtual ~TGeoCombiTrans();
-   
+
    void                 Clear(Option_t *option ="");
    virtual TGeoMatrix&  Inverse() const;
    virtual TGeoMatrix  *MakeClone() const;
@@ -351,7 +351,7 @@ public :
    TGeoGenTrans(const char *name, Double_t dx, Double_t dy, Double_t dz,
                 Double_t sx, Double_t sy, Double_t sz, TGeoRotation *rot);
    virtual ~TGeoGenTrans();
-   
+
    void                 Clear(Option_t *option ="");
    virtual TGeoMatrix&  Inverse() const;
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
@@ -380,7 +380,7 @@ public :
    TGeoIdentity();
    TGeoIdentity(const char *name);
    virtual ~TGeoIdentity() {}
-   
+
    virtual TGeoMatrix&  Inverse() const;
    virtual void         LocalToMaster(const Double_t *local, Double_t *master) const {memcpy(master, local, 3*sizeof(Double_t));}
    virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const {memcpy(master, local, 3*sizeof(Double_t));}
@@ -415,17 +415,17 @@ private:
    Double_t              fTranslation[3];    // translation component
    Double_t              fRotationMatrix[9]; // rotation matrix
    Double_t              fScale[3];          // scale component
-   
+
 public :
    TGeoHMatrix();
    TGeoHMatrix(const TGeoMatrix &matrix);
    TGeoHMatrix(const char *name);
    virtual ~TGeoHMatrix();
-   
+
    TGeoHMatrix& operator=(const TGeoMatrix *matrix);
    TGeoHMatrix& operator=(const TGeoMatrix &matrix);
    TGeoHMatrix& operator=(const TGeoHMatrix &other) {return operator=((const TGeoMatrix&)other);};
-   
+
    TGeoHMatrix& operator*=(const TGeoMatrix &matrix) {Multiply(&matrix);return(*this);}
 
    void                 Clear(Option_t *option ="");

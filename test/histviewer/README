@@ -28,41 +28,41 @@ rootlogon.C
 which is executed when ROOT starts.
 
 The program itself is a demo version of a control panel which allows to perform
-a few actions with one-dimensional histogrammes (in ROOT terms objects of 
+a few actions with one-dimensional histogrammes (in ROOT terms objects of
 class TH1F). So this can be regarded as a small presentation how nice and easy
-will be the work with the HADES analysis stuff in the future when the ROOT GUI 
-classes will be introduced to the game. 
+will be the work with the HADES analysis stuff in the future when the ROOT GUI
+classes will be introduced to the game.
 
-To create the shared library "libHistViewer.so" one has to type from the OS 
+To create the shared library "libHistViewer.so" one has to type from the OS
 prompt string the following command:
 
 (g)make
 
 The shared library "libHistViewer" will be created.
-Then start ROOT and the shared library will be 
-loaded, and an object of the class HistAction will be created resulting in 
+Then start ROOT and the shared library will be
+loaded, and an object of the class HistAction will be created resulting in
 appearance on the screen the window "Histogram Viewer".
 
 A few comments to conclude this introduction.
 
-1. Right now the program provides the full functionality only for 
+1. Right now the program provides the full functionality only for
    one-dimensional histogrammes (class TH1F). Two-dimensional histogrammes
    (class TH2F) can be read from a file or imported from memory, drawn
-   in the main canvas and saved as a picture but it is not possible at 
+   in the main canvas and saved as a picture but it is not possible at
    the moment to apply to them the functionality of the "Scan" panel.
 
 2. There is an internal container which stores the histogrammes visible
    for the program. The capacity of this container is now fixed to 1000
    histogrammes.
 
-3. To put the histogrammes to the container from a ROOT file (*.root) one has 
-   to simply doubly click on the icon with that file in the "File Manager" 
+3. To put the histogrammes to the container from a ROOT file (*.root) one has
+   to simply doubly click on the icon with that file in the "File Manager"
    window.
 
 4. It is not possible right now to import a histo from the memory by means
-   of clicking some button somewhere on the panel, but nevertheless this 
-   feature is realized in the class HistAction. So, to import 
-   a histogram one has to type a command from the prompt string of 
+   of clicking some button somewhere on the panel, but nevertheless this
+   feature is realized in the class HistAction. So, to import
+   a histogram one has to type a command from the prompt string of
    the interpreter.
 
    Example:
@@ -76,7 +76,7 @@ to the class HistAction is 'gui',
    root[3] gui->importHist(hist->GetName());
 
 5. If a user doubly clicks on an icon with a file which can be viewed with
-   a viewer like gv or xv, then that file is loaded to the viewer. This 
+   a viewer like gv or xv, then that file is loaded to the viewer. This
    feature allows to have a look at the saved picture without leaving ROOT
    or typing some commands.
 

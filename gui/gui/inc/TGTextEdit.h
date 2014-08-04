@@ -56,7 +56,7 @@ protected:
    EInsertMode      fInsertMode;    // *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="&Insert",kReplace="&Replace")}*
    Bool_t           fEnableMenu;    // enable context menu with editor actions
    TGTextEditHist  *fHistory;       // undo manager
-   Bool_t           fEnableCursorWithoutFocus; // enable cursor visibility when focus went out from 
+   Bool_t           fEnableCursorWithoutFocus; // enable cursor visibility when focus went out from
                                                // text editor window (default is kTRUE)
 
    static TGGC     *fgCursor0GC;

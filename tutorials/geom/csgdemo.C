@@ -1,6 +1,6 @@
 //Conbinatorial Solid Geometry example
 //Author: Andrei Gheata
-   
+
 Bool_t raytracing = kTRUE;
 
 //______________________________________________________________________________
@@ -8,7 +8,7 @@ void csgdemo ()
 {
    gSystem->Load("libGeom");
    bar = new TControlBar("vertical", "TGeo composite shapes",20,20);
-   bar->AddButton("How to run  ","help()","Instructions "); 
+   bar->AddButton("How to run  ","help()","Instructions ");
    bar->AddButton("Union ", "s_union()", "A + B ");
    bar->AddButton("Intersection ", "s_intersection()","A * B ");
    bar->AddButton("Difference ", "s_difference()","A - B ");
@@ -38,9 +38,9 @@ void s_union()
    gPad->SetPad(0,0,1,0.4);
    c->cd(1);
    gPad->SetPad(0,0.4,1,1);
-   
+
    if (gGeoManager) delete gGeoManager;
-   
+
    new TGeoManager("xtru", "poza12");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
@@ -48,7 +48,7 @@ void s_union()
    gGeoManager->SetTopVolume(top);
 
    // define shape components with names
-   TGeoPgon *pgon = new TGeoPgon("pg",0.,360.,6,2); 
+   TGeoPgon *pgon = new TGeoPgon("pg",0.,360.,6,2);
    pgon->DefineSection(0,0,0,20);
    pgon->DefineSection(1, 30,0,20);
 
@@ -95,9 +95,9 @@ void s_intersection()
    gPad->SetPad(0,0,1,0.4);
    c->cd(1);
    gPad->SetPad(0,0.4,1,1);
-   
+
    if (gGeoManager) delete gGeoManager;
-   
+
    new TGeoManager("xtru", "poza12");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
@@ -105,7 +105,7 @@ void s_intersection()
    gGeoManager->SetTopVolume(top);
 
    // define shape components with names
-   TGeoBBox *box = new TGeoBBox("bx", 40., 40., 40.); 
+   TGeoBBox *box = new TGeoBBox("bx", 40., 40., 40.);
    TGeoSphere *sph = new TGeoSphere("sph", 40., 45.);
    // define named geometrical transformations with names
    TGeoTranslation *tr = new TGeoTranslation(0., 0., 45.);
@@ -153,9 +153,9 @@ void s_difference()
    gPad->SetPad(0,0,1,0.4);
    c->cd(1);
    gPad->SetPad(0,0.4,1,1);
-   
+
    if (gGeoManager) delete gGeoManager;
-   
+
    new TGeoManager("xtru", "poza12");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
@@ -163,7 +163,7 @@ void s_difference()
    gGeoManager->SetTopVolume(top);
 
    // define shape components with names
-   TGeoTorus *tor = new TGeoTorus("tor", 45., 15., 20., 45., 145.); 
+   TGeoTorus *tor = new TGeoTorus("tor", 45., 15., 20., 45., 145.);
    TGeoSphere *sph = new TGeoSphere("sph", 20., 45., 0., 180., 0., 270.);
    // create the composite shape based on a Boolean expression
    TGeoCompositeShape *cs = new TGeoCompositeShape("mir", "sph - tor");
@@ -207,9 +207,9 @@ void complex_1()
    gPad->SetPad(0,0,1,0.4);
    c->cd(1);
    gPad->SetPad(0,0.4,1,1);
-   
+
    if (gGeoManager) delete gGeoManager;
-   
+
    new TGeoManager("xtru", "poza12");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
@@ -217,8 +217,8 @@ void complex_1()
    gGeoManager->SetTopVolume(top);
 
    // define shape components with names
-   TGeoBBox *box = new TGeoBBox("box", 20., 20., 20.); 
-   TGeoBBox *box1 = new TGeoBBox("box1", 5., 5., 5.); 
+   TGeoBBox *box = new TGeoBBox("box", 20., 20., 20.);
+   TGeoBBox *box1 = new TGeoBBox("box1", 5., 5., 5.);
    TGeoSphere *sph = new TGeoSphere("sph", 5., 25.);
    TGeoSphere *sph1 = new TGeoSphere("sph1", 1., 15.);
    // create the composite shape based on a Boolean expression
@@ -335,7 +335,7 @@ void raytrace() {
 //______________________________________________________________________________
 void help() {
    //
-  
+
    new TCanvas("chelp","Help to run demos",200,10,700,600);
 
    welcome = new TPaveText(.1,.8,.9,.97);

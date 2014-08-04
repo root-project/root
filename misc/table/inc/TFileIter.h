@@ -66,7 +66,7 @@ private:
 
    virtual TIterator &operator=(const TIterator &) { return *this; }
    virtual Bool_t operator!=(const TIterator &it) const { return TListIter::operator!=(it);}
-   
+
 protected:
    TDirectory   *fRootFile;       // TDirectory/TFile to be iterated over
    TString  fEventName;           // current key name
@@ -171,7 +171,7 @@ inline TObject *TFileIter::Next()
 }
 
 //__________________________________________________________________________
-inline void TFileIter::Rewind() 
+inline void TFileIter::Rewind()
 {
    // Alias for "Reset" method
    Reset();
@@ -181,9 +181,9 @@ inline void  TFileIter::SetCursorPosition(Int_t cursorPosition)
 {
    // Make <cursorPosition> steps (>0 - forward) over the file
    // objects to skip it
-   if (fNestedIterator) 
+   if (fNestedIterator)
       fNestedIterator->SetCursorPosition(cursorPosition);
-   else 
+   else
       SkipObjects(cursorPosition - fCursorPosition);
 }
 

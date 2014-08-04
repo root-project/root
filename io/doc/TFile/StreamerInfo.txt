@@ -1,7 +1,7 @@
 //  Format of StreamerInfo record in release 3.02.06.
 //  It is probably not accessed by its key, but from its offset given in the file header.
 //  The StreamerInfo record DATA consists of a TList (list) object containing elements
-//  of class TStreamerInfo.  
+//  of class TStreamerInfo.
 // ----------TKey-(never compressed)----------------------
 //  byte 0->3  Nbytes    = Number of bytes in compressed record (TKey+data)         TKey::fNbytes
 //       4->5  Version   = TKey class version identifier                            TKey::fVersion
@@ -157,7 +157,7 @@
 //      0->3  fType     = Type of data described by this TStreamerElement.
 //                      |   (TStreamerElement::fType)
 //                      |   Built in types:
-//                      |   1:char, 2:short, 3:int, 4:long, 5:float, 8:double 
+//                      |   1:char, 2:short, 3:int, 4:long, 5:float, 8:double
 //                      |   11, 12, 13, 14:unsigned char, short, int, long respectively
 //                      |   6: an array dimension (counter)
 //                      |   15: bit mask (used for fBits field)
@@ -200,7 +200,7 @@
 //      For TStreamerString:
 //            No specific data
 //      For TStreamerBasicPointer:
-//      0->3  fCountVersion = Version of class with the count (array dimension) 
+//      0->3  fCountVersion = Version of class with the count (array dimension)
 //      4->.. fCountName= Number of bytes in the name of the data member holding
 //                      | the count, followed by the name itself.
 //      0->.. fCountName= Number of bytes in the name of the class holding the
@@ -210,7 +210,7 @@
 //      For TStreamerObjectPointer:
 //            No specific data
 //      For TStreamerLoop:
-//      0->3  fCountVersion = Version of class with the count (array dimension) 
+//      0->3  fCountVersion = Version of class with the count (array dimension)
 //      4->.. fCountName= Number of bytes in the name of the data member holding
 //                      | the count, followed by the name itself.
 //      0->.. fCountClass= Number of bytes in the name of the class holding the
@@ -221,6 +221,6 @@
 //      0->3  fSTLtype  = Type of STL container:
 //                      | 1:vector, 2:list, 3:deque, 4:map, 5:set, 6:multimap, 7:multiset
 //      4->7  fCType    = Type contained in STL container:
-//                      | Same values as for fType above, with one addition: 365:STL string 
+//                      | Same values as for fType above, with one addition: 365:STL string
 //      For TStreamerSTLString:
 //            No specific data

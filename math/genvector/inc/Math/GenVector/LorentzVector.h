@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
 /**********************************************************************
  *                                                                    *
@@ -15,14 +15,14 @@
 //
 // Last update: $Id$
 //
-#ifndef ROOT_Math_GenVector_LorentzVector 
+#ifndef ROOT_Math_GenVector_LorentzVector
 #define ROOT_Math_GenVector_LorentzVector  1
 
 #ifndef ROOT_Math_GenVector_PxPyPzE4D
 #include "Math/GenVector/PxPyPzE4D.h"
 #endif
 
-#ifndef ROOT_Math_GenVector_DisplacementVector3D 
+#ifndef ROOT_Math_GenVector_DisplacementVector3D
 #include "Math/GenVector/DisplacementVector3D.h"
 #endif
 
@@ -161,8 +161,8 @@ namespace ROOT {
        /**
           Set internal data based on an array of 4 Scalar numbers
        */
-       LorentzVector<CoordSystem>& SetCoordinates( const Scalar src[] ) { 
-          fCoordinates.SetCoordinates(src);  
+       LorentzVector<CoordSystem>& SetCoordinates( const Scalar src[] ) {
+          fCoordinates.SetCoordinates(src);
           return *this;
        }
 
@@ -170,22 +170,22 @@ namespace ROOT {
           Set internal data based on 4 Scalar numbers
        */
        LorentzVector<CoordSystem>& SetCoordinates( Scalar a, Scalar b, Scalar c, Scalar d ) {
-          fCoordinates.SetCoordinates(a, b, c, d);  
+          fCoordinates.SetCoordinates(a, b, c, d);
           return *this;
        }
 
        /**
           Set internal data based on 4 Scalars at *begin to *end
        */
-//#ifdef NDEBUG 
+//#ifdef NDEBUG
           //this does not compile in CINT
 //        template< class IT >
 //        LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT /* end */  ) {
 // #endif
        template< class IT >
-#ifndef NDEBUG 
+#ifndef NDEBUG
        LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT end  ) {
-#else  
+#else
        LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT /* end */  ) {
 #endif
           IT a = begin; IT b = ++begin; IT c = ++begin; IT d = ++begin;
@@ -210,7 +210,7 @@ namespace ROOT {
           get internal data into 4 Scalars at *begin to *end
        */
        template <class IT>
-#ifndef NDEBUG 
+#ifndef NDEBUG
        void GetCoordinates( IT begin, IT end ) const
 #else
        void GetCoordinates( IT begin, IT /* end */ ) const
@@ -221,16 +221,16 @@ namespace ROOT {
        }
 
        /**
-          get internal data into 4 Scalars at *begin 
+          get internal data into 4 Scalars at *begin
        */
        template <class IT>
-       void GetCoordinates( IT begin ) const { 
-          Scalar a,b,c,d = 0; 
+       void GetCoordinates( IT begin ) const {
+          Scalar a,b,c,d = 0;
           GetCoordinates (a,b,c,d);
-          *begin++ = a; 
-          *begin++ = b; 
-          *begin++ = c; 
-          *begin   = d; 
+          *begin++ = a;
+          *begin++ = b;
+          *begin++ = c;
+          *begin   = d;
        }
 
        /**
@@ -411,7 +411,7 @@ namespace ROOT {
           \return a new LorentzVector of the same type as v1
        */
        template<class OtherLorentzVector>
-       LorentzVector  operator +  ( const OtherLorentzVector & v2) const 
+       LorentzVector  operator +  ( const OtherLorentzVector & v2) const
        {
           LorentzVector<CoordinateType> v3(*this);
           v3 += v2;
@@ -578,31 +578,31 @@ namespace ROOT {
           }
           return BetaVector (vecSum * (-1./eSum));
        }
-      
+
        //beta and gamma
 
-       /** 
+       /**
            Return beta scalar value
        */
-       Scalar Beta() const { 
-          if ( E() == 0 ) { 
+       Scalar Beta() const {
+          if ( E() == 0 ) {
              if ( P2() == 0)
-                // to avoid Nan 
-                return 0; 
-             else { 
+                // to avoid Nan
+                return 0;
+             else {
                 GenVector::Throw ("LorentzVector::Beta() - beta computed for LorentzVector with t = 0. Return an Infinite result");
                 return 1./E();
              }
           }
-          if ( M2() <= 0 ) {     
+          if ( M2() <= 0 ) {
              GenVector::Throw ("LorentzVector::Beta() - beta computed for non-timelike LorentzVector . Result is physically meaningless" );
-          }  
+          }
           return P() / E();
-       }  
-       /** 
+       }
+       /**
            Return Gamma scalar value
        */
-       Scalar Gamma() const { 
+       Scalar Gamma() const {
           Scalar v2 = P2();
           Scalar t2 = E()*E();
           if (E() == 0) {
@@ -613,7 +613,7 @@ namespace ROOT {
 
              }
           }
-          if ( t2 < v2 ) { 
+          if ( t2 < v2 ) {
              GenVector::Throw ("LorentzVector::Gamma() - gamma computed for a spacelike LorentzVector. Imaginary result");
              return 0;
           }
@@ -645,18 +645,18 @@ namespace ROOT {
        Scalar mag()   const { return fCoordinates.M();      }
        Scalar mt()    const { return fCoordinates.Mt();     }
        Scalar mt2()   const { return fCoordinates.Mt2();    }
- 
+
 
        // Methods  requested by CMS ---
        Scalar energy() const { return fCoordinates.E();      }
        Scalar mass()   const { return fCoordinates.M();      }
-       Scalar mass2()  const { return fCoordinates.M2();     }   
+       Scalar mass2()  const { return fCoordinates.M2();     }
 
 
        /**
           Methods setting a Single-component
-          Work only if the component is one of which the vector is represented. 
-          For example SetE will work for a PxPyPzE Vector but not for a PxPyPzM Vector.  
+          Work only if the component is one of which the vector is represented.
+          For example SetE will work for a PxPyPzE Vector but not for a PxPyPzM Vector.
        */
        LorentzVector<CoordSystem>& SetE  ( Scalar a )  { fCoordinates.SetE  (a); return *this; }
        LorentzVector<CoordSystem>& SetEta( Scalar a )  { fCoordinates.SetEta(a); return *this; }
@@ -692,7 +692,7 @@ namespace ROOT {
        tmp *= a;
        return tmp;
     }
-     
+
     // ------------- I/O to/from streams -------------
 
     template< class char_t, class traits_t, class Coords >
@@ -703,10 +703,10 @@ namespace ROOT {
        )
     {
        if( !os )  return os;
-       
+
        typename Coords::Scalar a, b, c, d;
        v.GetCoordinates(a, b, c, d);
-       
+
        if( detail::get_manip( os, detail::bitforbit ) )  {
         detail::set_manip( os, detail::bitforbit, '\00' );
         // TODO: call MF's bitwise-accurate functions on each of a, b, c, d
@@ -718,11 +718,11 @@ namespace ROOT {
              << detail::get_manip( os, detail::sep   ) << d
              << detail::get_manip( os, detail::close );
        }
-       
+
        return os;
-       
+
     }  // op<< <>()
-     
+
 
      template< class char_t, class traits_t, class Coords >
      inline
@@ -732,9 +732,9 @@ namespace ROOT {
         )
      {
         if( !is )  return is;
-        
+
         typename Coords::Scalar a, b, c, d;
-        
+
         if( detail::get_manip( is, detail::bitforbit ) )  {
            detail::set_manip( is, detail::bitforbit, '\00' );
            // TODO: call MF's bitwise-accurate functions on each of a, b, c
@@ -746,13 +746,13 @@ namespace ROOT {
            detail::require_delim( is, detail::sep   );  is >> d;
            detail::require_delim( is, detail::close );
         }
-        
+
         if( is )
            v.SetCoordinates(a, b, c, d);
         return is;
-        
+
      }  // op>> <>()
-     
+
 
 
   } // end namespace Math

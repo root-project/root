@@ -204,7 +204,7 @@ Bool_t TDecompChol::Solve(TVectorD &b)
 
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
-      Error("Solve()","Matrix is singular"); 
+      Error("Solve()","Matrix is singular");
       return kFALSE;
    }
    if ( !TestBit(kDecomposed) ) {

@@ -1,6 +1,6 @@
-<br/> 
+<br/>
 <hr/>
-<a name="math"></a> 
+<a name="math"></a>
 <h3>Math Libraries</h3>
 
 <h4>Mathcore</h4>
@@ -120,17 +120,17 @@
       <li>The tutorial <tt>math/kdTreeBinning.C</tt> is an example on
   how to use this class</li>
   </ul>
- </li>  
+ </li>
 
     <br>
 
- <li>New statistical functions <tt>ROOT::Math::landau_quantile</tt> (inverse of landau cumulative distribution) 
+ <li>New statistical functions <tt>ROOT::Math::landau_quantile</tt> (inverse of landau cumulative distribution)
    translated from RANLAN and
    <tt>ROOT::Math::landau_quantile_c</tt>.
   </li>
  <li>New statistical functions
    <tt>ROOT::Math::negative_binomial_pdf</tt> and the cumulative distributions
-  <tt>ROOT::Math::negative_binomial_cdf</tt> and <tt>ROOT::Math::negative_binomial_cdf_c</tt>. 
+  <tt>ROOT::Math::negative_binomial_cdf</tt> and <tt>ROOT::Math::negative_binomial_cdf_c</tt>.
   </li>
  <li>New special functions: sine and cosine integral, translated by
    B. List from CERNLIB:
@@ -145,7 +145,7 @@
   <li>They are used for defining possible extra
   options for the minimizer, integration and sampler options.
   </li>
- 
+
   <li>Integration classes:
   <ul>
    <li>Fix a bug in the templated method setting  the integrand
@@ -164,7 +164,7 @@
   the class <tt>ROOT::Math::IOptions</tt> generic (string,value)
   options can be used in the base class to define specific options for
   the implementations. For example for the MCIntegrator class,
-  specific options can now be passed to VEGAS or MISER.  
+  specific options can now be passed to VEGAS or MISER.
   </ul>
 </li>
     <li>Improve the root finder and 1D minimization classes (<tt>BrentRootFinder</tt>
@@ -175,11 +175,11 @@
   <tt>ROOT::Math::RootFinder</tt> and
   <tt>ROOT::Math::IMinimizer1D</tt> to have methods consistent with
   the other numerical algorithm classes (e.g. return bool and not
-  int from <tt>RootFinder::Solve</tt>  and add a 
+  int from <tt>RootFinder::Solve</tt>  and add a
   <tt>RootFinder::Status()</tt> function. In addition, use the same default
   tolerance for all the root finder algorithms.
   </li>
-      
+
  <li>The class <tt>ROOT::Math::Data::Range</tt> returns in the method
   GetRange the values <tt>-inf</tt>  and  <tt>+inf</tt> when no range
   is set
@@ -194,7 +194,7 @@
   The method <tt>FitResult::ParError</tt> should be used instead of
   <tt>FitResult::Error</tt> in the derived <tt>TFitResult</tt>
   class to avoid a conflict with <tt>TObject::Error</tt>
-  (see bug <a href="https://savannah.cern.ch/bugs/index.php?67671">67671</a>). 
+  (see bug <a href="https://savannah.cern.ch/bugs/index.php?67671">67671</a>).
    </li>
   <li>Fix a bug in <tt>Tmath::AreEqualRel</tt> to take into account
   the case when the two arguments may be null.</li>
@@ -213,7 +213,7 @@
   <li>New mathematical special functions in the <tt>ROOT::Math</tt> namespace
   implemented using GSL:
   <ul>
-    <li>Airy functions: 
+    <li>Airy functions:
   <pre>
    double airy_Ai(double x);
    double airy_Bi(double x);
@@ -232,10 +232,10 @@
    </pre></li>
    </ul>
    <li>New statistical function: non-central chisquare probability
-   density function 
+   density function
    <pre>
    double noncentral_chisquared_pdf(double x, double r, double lambda);
-   </pre> 
+   </pre>
    It is implemented using Bessel functions or hypergeometric function
    </li>
     <li>New classes <tt>VavilovAccurate</tt> and <tt>VavilovFast</tt>,
@@ -247,7 +247,7 @@
  implement the <tt>IParametricFunctionOneDim</tt> interface
  for easier use in fit problems. </li>
 
- 
+
 </ul>
 
 <h4>Unuran</h4>
@@ -268,11 +268,11 @@
   <li>All the TFoam options can be controlled via the
   <tt>ROOT::Math::DistSamplerOptions</tt> class, which can be passed
   as input to the virtual <tt>ROOT::Math::DistSampler::Init(..)</tt>
-  function. 
+  function.
  </li>
 </ul>
 
-  
+
 <h4>GenVector</h4>
 <ul>
   <li>Add some missing copy constructor and assignment operators to
@@ -297,7 +297,7 @@
   </li>
   <li>Fix a problem in the number of function calls when running MnHesse
   after minimizing. Now the number is incremented instead of being
-  reset. 
+  reset.
  </li>
 </ul>
 

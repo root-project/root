@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -23,7 +23,7 @@ class CombinedMinimumBuilder : public MinimumBuilder {
 
 public:
 
-   CombinedMinimumBuilder() : fVMMinimizer(VariableMetricMinimizer()), 
+   CombinedMinimumBuilder() : fVMMinimizer(VariableMetricMinimizer()),
       fSimplexMinimizer(SimplexMinimizer()) {}
 
    ~CombinedMinimumBuilder() {}
@@ -31,12 +31,12 @@ public:
    virtual FunctionMinimum Minimum(const MnFcn&, const GradientCalculator&, const MinimumSeed&, const MnStrategy&, unsigned int, double) const;
 
    //re-implement setter of base class. Need also to store in the base class for consistency
-   virtual void SetPrintLevel(int level) { 
+   virtual void SetPrintLevel(int level) {
       MinimumBuilder::SetPrintLevel(level);
       fVMMinimizer.Builder().SetPrintLevel(level);
       fSimplexMinimizer.Builder().SetPrintLevel(level);
    }
-   virtual void SetStorageLevel(int level) { 
+   virtual void SetStorageLevel(int level) {
       MinimumBuilder::SetStorageLevel(level);
       fVMMinimizer.Builder().SetStorageLevel(level);
       fSimplexMinimizer.Builder().SetStorageLevel(level);

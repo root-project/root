@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class IntegrationTypes
-// 
+//
 // Created by: moneta  at Fri Nov 26 15:40:58 2004
-// 
+//
 // Last update: Fri Nov 26 15:40:58 2004
-// 
+//
 #ifndef ROOT_Math_IntegrationTypes
 #define ROOT_Math_IntegrationTypes
 
@@ -43,7 +43,7 @@ namespace Math {
 
   namespace Integration {
 
-     using namespace IntegrationOneDim; 
+     using namespace IntegrationOneDim;
 
 
 //     // type of integration

@@ -84,7 +84,7 @@
 //
 //Author: Rene Brun 7 July 2010
 //___________________________________________________________________________
-      
+
 #include "TMemStatShow.h"
 #include "TMath.h"
 #include "TFile.h"
@@ -108,7 +108,7 @@
    TH1I      *TMemStatShow::fgHleaks = 0;    //histogram with leaks
    TH1I      *TMemStatShow::fgHentry = 0;    //histogram with entry numbers in the TObjArray
    TH1I      *TMemStatShow::fgHdiff = 0;     //histogram with diff of entry number between alloc/free
-   
+
    TGToolTip *TMemStatShow::fgTip1 = 0;      //pointer to tool tip for canvas 1
    TGToolTip *TMemStatShow::fgTip2 = 0;      //pointer to tool tip for canvas 2
    TObjArray *TMemStatShow::fgBtidlist = 0;  //list of back trace ids
@@ -124,12 +124,12 @@
    Long64_t TMemStatShow::fgEntryN       = 0; //number of addresses in bytes to process
    Long64_t TMemStatShow::fgAddressFirst = 0; //first entry to process
    Long64_t TMemStatShow::fgAddressN     = 0; //number of entries to process
-   
+
 //___________________________________________________________________________
 void TMemStatShow::SetAddressRange(Long64_t nbytes, Long64_t first)
 {
    //specify a memory address range to process (static function).
-   // This function can be used to restrict the range of memory addresses 
+   // This function can be used to restrict the range of memory addresses
    // to be analyzed. For example whem TmemStat is run on a 64 bits machine and
    // the results visualized on a 32 bits machine, it might be necessary to
    // restrict the analysis range to the addresses below 2 Gigabytes, eg
@@ -137,11 +137,11 @@ void TMemStatShow::SetAddressRange(Long64_t nbytes, Long64_t first)
    // -first : first address to process (default is 0)
    // -nbytes : number of addresses in bytes to process starting at first
    //             if 0 (default), then all addresses are processed
-   
+
    fgAddressFirst = first;
    fgAddressN     = nbytes;
 }
-   
+
 //___________________________________________________________________________
 void TMemStatShow::SetEntryRange(Long64_t nentries, Long64_t first)
 {
@@ -151,13 +151,13 @@ void TMemStatShow::SetEntryRange(Long64_t nentries, Long64_t first)
    //             if 0 (default), then all entries are processed
    // call this function when the amount of data collected in the Tree is large
    // and therefore making the analysis slow.
-   
+
    fgEntryFirst = first;
    fgEntryN     = nentries;
 }
 
 //___________________________________________________________________________
-void TMemStatShow::Show(double update, int nbigleaks, const char* fname) 
+void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
 {
    // function called by TMemStat::Show
    // Open the memstat data file, then call TTree::Draw to precompute
@@ -168,8 +168,8 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    // the memory use.
    // the histogram hbigleaks will contain the nbigleaks largest leaks
    // if fname=="*" (default), the most recent file memstat*.root will be taken.
-   
-   
+
+
    TString s;
    if (!fname || strlen(fname) <5 || strstr(fname,"*")) {
       //take the most recent file memstat*.root
@@ -194,7 +194,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    }
    if (update < 0.001) printf("Warning update parameter is very small, processing may be slow\n");
 
-   //autorestrict the amount of data to analyze 
+   //autorestrict the amount of data to analyze
    gSystem->GetMemInfo(&minfo);
    Int_t nfree = minfo.fMemTotal - minfo.fMemUsed;  //in Mbytes
    printf("TMemStat::Show info: you are running on a machine with %d free MBytes of memory\n",nfree);
@@ -213,13 +213,13 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    Long64_t ivmax = (Long64_t)TMath::MaxElement(nsel,fgV1);
    if (ivmax-ivmin > fgAddressN) ivmax = ivmin+fgAddressN;
    printf("TMemStatShow::Show will analyze only %lld bytes in its first pass\n",ivmax);
-   
-   
+
+
    //initialize statics
    fgTip1 = 0;
    fgTip2 = 0;
    fgBtidlist = 0;
-      
+
    Long64_t ne = nfreebytes/32LL;
    if (ne < nentries) nentries = ne;
    fgT->SetEstimate(nentries+10);
@@ -246,7 +246,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    printf("==>The data Tree contains %lld entries with addresses in range[%lld,%lld]\n",nsel,ivmin,ivmax);
    //ne = (1000000*nfree-nvm*12)/32;
    ne = 1000000LL*nfree/32LL;
-   if (ne < 0) return;    
+   if (ne < 0) return;
    if (ne < nentries) {
       //we take only the first side of the allocations
       //we are mostly interested by the small allocations, so we select
@@ -268,7 +268,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
       printf("==>restricting the analysis range to [%lld,%lld] and %lld entries\n",ivmin,ivmax,ne);
       printf("==>you can restrict the address range with TMemStatShow::SetAddressRange\n");
       printf("==>you can restrict the entries range with TMemStatShow::SetEntryRange\n");
-   } 
+   }
    update *= 0.0001*fgV3[nsel-1]; //convert time per cent in seconds
    nvm = Long64_t(ivmax-ivmin);
    Long64_t *nbold = new Long64_t[nvm];
@@ -424,8 +424,8 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    delete [] ientry;
    fgHentry->SetEntries(nleaks);
    fgHleaks->SetEntries(nleaks);
-   
-   
+
+
    //construct the first tooltip
    fgC1->Modified();
    fgC1->Update();
@@ -449,7 +449,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    fgHleaks->Draw();
    //draw producer identifier
    if (named) tmachine.DrawText(0.01,0.01,named->GetTitle());
-   
+
    //construct the second tooltip
    TRootCanvas *rc2 = (TRootCanvas *)fgC2->GetCanvasImp();
    TGMainFrame *frm2 = dynamic_cast<TGMainFrame *>(rc2);
@@ -457,7 +457,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    if (!fgTip2) fgTip2 = new TGToolTip(gClient->GetDefaultRoot(), frm2, "", 250);
    fgC2->Connect("ProcessedEvent(Int_t, Int_t, Int_t, TObject*)",
                "TMemStatShow", 0, "EventInfo2(Int_t, Int_t, Int_t, TObject*)");
-   
+
    //---------------------------------------------------------------------------
    //open a third canvas and draw the histogram with the nbigleaks largest leaks
    fgC3 = new TCanvas("fgC3","c3",1200,600);
@@ -467,9 +467,9 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    fgC3->SetLogx();
    fgC3->SetLeftMargin(0.05);
    fgC3->SetRightMargin(0.7);
-   
+
    //fill histogram htotleaks accumulating in the same bin all leaks
-   //from btids having identical nchar first characters   
+   //from btids having identical nchar first characters
    TH1I *htotleaks = new TH1I("htotleaks","main leaks sorted by btids",100,0,0);
    Int_t l;
    for (l=1;l<=nleaks;l++) {
@@ -480,12 +480,12 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    Double_t tsize = 0.03;
    if (nbigleaks > 30) tsize = 0.02;
    htotleaks->LabelsOption(">");
-   htotleaks->GetXaxis()->SetRange(1,nbigleaks); 
+   htotleaks->GetXaxis()->SetRange(1,nbigleaks);
    htotleaks->GetXaxis()->SetLabelSize(tsize);
    htotleaks->GetYaxis()->SetLabelSize(tsize);
    htotleaks->SetFillColor(kBlue-3);
    htotleaks->Draw("hbar2 y+");
-   
+
    //now loop on all the sorted bins and count the number of leaks
    Double_t xr = 0.96*fgC3->GetLeftMargin();
    Double_t xr2 = 1.04*fgC3->GetLeftMargin();
@@ -527,7 +527,7 @@ void TMemStatShow::Show(double update, int nbigleaks, const char* fname)
    tnl.DrawText(1-fgC3->GetRightMargin(),0.5*ylow,"nbytes");
    //draw producer identifier
    if (named) tmachine.DrawText(0.01,0.01,named->GetTitle());
-   
+
 }
 
 //______________________________________________________________________
@@ -565,11 +565,11 @@ void TMemStatShow::EventInfo1(Int_t event, Int_t px, Int_t , TObject *selected)
       }
    }
    if (!nhits) return;
-      
+
    Double_t time = 0.0001*fgV3[entry];
    TString ttip;
    TMemStatShow::FillBTString(entry,0,ttip);
-   
+
    if (selected) {
       TString form1 = TString::Format("  Alloc(%d) at %lld of %d bytes, time=%gseconds\n\n",nhits,Long64_t(fgV1[entry]),nbytes,time);
       fgTip1->SetText(TString::Format("%s%s",form1.Data(),ttip.Data() ));
@@ -594,7 +594,7 @@ void TMemStatShow::EventInfo2(Int_t event, Int_t px, Int_t , TObject *selected)
    Double_t time = 0.0001*fgV3[entry];
    TString ttip;
    TMemStatShow::FillBTString(entry,0,ttip);
-      
+
    if (selected) {
       TString form1 = TString::Format("  Leak number=%d, leaking %d bytes at entry=%d    time=%gseconds\n\n",bin,nbytes,entry,time);
       fgTip2->SetText(TString::Format("%s%s",form1.Data(),ttip.Data() ));
@@ -608,7 +608,7 @@ void TMemStatShow::FillBTString(Int_t entry,Int_t mode,TString &btstring)
 {
    // static: fill btstring with the traceback corresponding to entry in T
    //          btstring must be initialized in calling function
-   
+
    Int_t btid   = (Int_t)fgV4[entry];
    TH1I *hbtids = (TH1I*)fgT->GetUserInfo()->FindObject("btids");
    if (!hbtids) return;
@@ -628,7 +628,7 @@ void TMemStatShow::FillBTString(Int_t entry,Int_t mode,TString &btstring)
       if (strstr(title,"TMemStatHook")) continue;
       char *bar = strchr(title+5,'|');
       if (!bar) bar = title;
-      
+
       if (strstr(bar,"operator new")) continue;
       if (strstr(bar,"libMemStat")) continue;
       if (strstr(bar,"G__Exception")) continue;

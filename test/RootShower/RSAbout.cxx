@@ -36,7 +36,7 @@ RootShowerAbout::RootShowerAbout(const TGWindow *p, const TGWindow *main,
    iyear  = (idatqq/10000);
    Char_t *root_date = Form("%s %d %4d",months[imonth-1],iday,iyear);
    fVFrame  = new TGVerticalFrame(this, w, wh1, 0);
-  
+
    TString theLogoFilename = StrDup(gProgPath);
    theLogoFilename.Append("/icons/mclogo01.xpm");
 
@@ -62,7 +62,7 @@ RootShowerAbout::RootShowerAbout(const TGWindow *p, const TGWindow *main,
    fVFrame->AddFrame(fLabel2,fBly);
    fVFrame->AddFrame(fLabel4,fBly);
 
-   //------------------------------------------------------------------------------   
+   //------------------------------------------------------------------------------
    // OK Cancel Buttons in Horizontal frame
    //------------------------------------------------------------------------------
 
@@ -75,7 +75,7 @@ RootShowerAbout::RootShowerAbout(const TGWindow *p, const TGWindow *main,
    fL1 = new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 2, 2, 2, 2);
    fL2 = new TGLayoutHints(kLHintsBottom | kLHintsCenterX | kLHintsExpandX, 150, 150, 2, 10);
 
-   fHFrame->AddFrame(fOkButton,     fL1);  
+   fHFrame->AddFrame(fOkButton,     fL1);
 
    fHFrame->Resize(100, fOkButton->GetDefaultHeight());
 
@@ -89,7 +89,7 @@ RootShowerAbout::RootShowerAbout(const TGWindow *p, const TGWindow *main,
    SetWMSize(size.fWidth, size.fHeight);
    SetWMSizeHints(size.fWidth, size.fHeight, size.fWidth, size.fHeight, 0, 0);
    SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
-               kMWMDecorMinimize | kMWMDecorMenu, kMWMFuncAll |  
+               kMWMDecorMinimize | kMWMDecorMenu, kMWMFuncAll |
                kMWMFuncResize    | kMWMFuncMaximize | kMWMFuncMinimize,
                kMWMInputModeless);
 
@@ -112,7 +112,7 @@ RootShowerAbout::RootShowerAbout(const TGWindow *p, const TGWindow *main,
 }
 
 //______________________________________________________________________________
-RootShowerAbout::~RootShowerAbout() 
+RootShowerAbout::~RootShowerAbout()
 {
    delete fOkButton;
    delete fVFrame;
@@ -132,7 +132,7 @@ void RootShowerAbout::CloseWindow()
 }
 
 //______________________________________________________________________________
-Bool_t RootShowerAbout::ProcessMessage(Long_t msg, Long_t /*parm1*/, 
+Bool_t RootShowerAbout::ProcessMessage(Long_t msg, Long_t /*parm1*/,
                                        Long_t /*parm2*/)
 {
    // Process messages sent to this dialog.

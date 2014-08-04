@@ -48,7 +48,7 @@ using namespace std;
 
 
 //______________________________________________________________________________
-TOCCToStep::TOCCToStep() 
+TOCCToStep::TOCCToStep()
 {
    OCCDocCreation();
 }
@@ -166,7 +166,7 @@ TDF_Label TOCCToStep::GetLabelOfVolume(TGeoVolume * v)
 TGeoVolume * TOCCToStep::GetVolumeOfLabel(TDF_Label fLabel)
 {
    map <TGeoVolume *,TDF_Label>::iterator it;
-   for(it = fTree.begin(); it != fTree.end(); it++) 
+   for(it = fTree.begin(); it != fTree.end(); it++)
       if (it->second.IsEqual(fLabel))
          return it->first;
 }
@@ -180,7 +180,7 @@ void TOCCToStep::AddChildLabel(TDF_Label mother, TDF_Label child, TopLoc_Locatio
 
 //______________________________________________________________________________
 TopLoc_Location TOCCToStep::CalcLocation (TGeoHMatrix matrix)
-{ 
+{
    gp_Trsf TR,TR1;
    TopLoc_Location locA;
    Double_t const *t=matrix.GetTranslation();

@@ -53,7 +53,7 @@ public:
       kMatUsed   =   BIT(17),
       kMatSavePrimitive = BIT(18)
    };
-   enum EGeoMaterialState {   
+   enum EGeoMaterialState {
       kMatStateUndefined,
       kMatStateSolid,
       kMatStateLiquid,
@@ -85,7 +85,7 @@ public:
    // constructors
    TGeoMaterial();
    TGeoMaterial(const char *name);
-   TGeoMaterial(const char *name, Double_t a, Double_t z, 
+   TGeoMaterial(const char *name, Double_t a, Double_t z,
                 Double_t rho, Double_t radlen=0, Double_t intlen=0);
    TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rho,
                 EGeoMaterialState state, Double_t temperature=STP_temperature, Double_t pressure=STP_pressure);
@@ -142,7 +142,7 @@ public:
    void                     SetFWExtension(TGeoExtension *ext);
    static  Double_t         ScreenFactor(Double_t z);
 
-   
+
 
    ClassDef(TGeoMaterial, 5)              // base material class
 
@@ -209,9 +209,9 @@ public:
    ClassDef(TGeoMixture, 2)              // material mixtures
 };
 
-inline void TGeoMixture::DefineElement(Int_t, Double_t a, Double_t z, Double_t weight) 
+inline void TGeoMixture::DefineElement(Int_t, Double_t a, Double_t z, Double_t weight)
    {return AddElement(a,z,weight);}
-inline void TGeoMixture::DefineElement(Int_t, TGeoElement *elem, Double_t weight) 
+inline void TGeoMixture::DefineElement(Int_t, TGeoElement *elem, Double_t weight)
    {return AddElement(elem,weight);}
 
 

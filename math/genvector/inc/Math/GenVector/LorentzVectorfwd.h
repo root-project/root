@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -14,7 +14,7 @@
 //
 // Last update: Tue May 31 21:06:43 2005
 //
-#ifndef ROOT_Math_GenVector_LorentzVectorfwd 
+#ifndef ROOT_Math_GenVector_LorentzVectorfwd
 #define ROOT_Math_GenVector_LorentzVectorfwd  1
 
 

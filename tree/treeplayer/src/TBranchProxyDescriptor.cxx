@@ -34,9 +34,9 @@ ClassImp(ROOT::TBranchProxyDescriptor);
 
 namespace ROOT {
 
-   TBranchProxyDescriptor::TBranchProxyDescriptor(const char *dataname, 
-                                                  const char *type, 
-                                                  const char *branchname, 
+   TBranchProxyDescriptor::TBranchProxyDescriptor(const char *dataname,
+                                                  const char *type,
+                                                  const char *branchname,
                                                   Bool_t split,
                                                   Bool_t skipped,
                                                   Bool_t isleaflist) :
@@ -58,26 +58,26 @@ namespace ROOT {
 
    }
 
-   const char *TBranchProxyDescriptor::GetDataName() 
-   { 
+   const char *TBranchProxyDescriptor::GetDataName()
+   {
       // Get the name of the data member.
-      return fDataName; 
+      return fDataName;
    }
 
-   const char *TBranchProxyDescriptor::GetTypeName() 
-   { 
+   const char *TBranchProxyDescriptor::GetTypeName()
+   {
       // Get the name of the type of the data member
-      return GetTitle(); 
+      return GetTitle();
    }
 
-   const char *TBranchProxyDescriptor::GetBranchName() 
-   { 
+   const char *TBranchProxyDescriptor::GetBranchName()
+   {
       // Get the branch name.
-      return fBranchName.Data(); 
+      return fBranchName.Data();
    }
 
    Bool_t TBranchProxyDescriptor::IsEquivalent(const TBranchProxyDescriptor *other,
-                                               Bool_t inClass) 
+                                               Bool_t inClass)
    {
       // Return true if this description is the 'same' as the other decription.
 
@@ -85,7 +85,7 @@ namespace ROOT {
       if ( other == this ) return true;
 
       if ( inClass ) {
-         // If this description belong to a class, the branchname will be 
+         // If this description belong to a class, the branchname will be
          // stripped.
       } else {
          if ( fBranchName != other->fBranchName ) return false;
@@ -97,10 +97,10 @@ namespace ROOT {
       return true;
    }
 
-   Bool_t TBranchProxyDescriptor::IsSplit() const 
-   { 
+   Bool_t TBranchProxyDescriptor::IsSplit() const
+   {
       // Return true if the branch is split
-      return fIsSplit; 
+      return fIsSplit;
    }
 
    void TBranchProxyDescriptor::OutputDecl(FILE *hf, int offset, UInt_t maxVarname)
@@ -109,9 +109,9 @@ namespace ROOT {
       fprintf(hf,"%-*s%-*s %s;\n",  offset," ",  maxVarname, GetTypeName(), GetDataName()); // might want to add a comment
    }
 
-   void TBranchProxyDescriptor::OutputInit(FILE *hf, int offset, 
+   void TBranchProxyDescriptor::OutputInit(FILE *hf, int offset,
                                            UInt_t maxVarname,
-                                           const char *prefix) 
+                                           const char *prefix)
    {
       // Output the initialization corresponding to this proxy
       if (fIsSplit) {

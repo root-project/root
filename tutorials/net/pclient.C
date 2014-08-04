@@ -10,7 +10,7 @@ void pclient(int niter = 100, int bsize = 500000, int nsocks = 5)
    // If you want to run the pserv.C on a different host, just change
    // "localhost" in the TPSocket ctor below to the desried hostname.
    //Author: Fons Rademakers
-   
+
    // Open connection to server
    TPSocket *sock = new TPSocket("localhost", 9090, nsocks);
    //TPSocket *sock = new TPSocket("pcroot2", 9090, nsocks);

@@ -8,7 +8,7 @@
 {
    if (self = [super init])
       [NSApp setDelegate : (id<NSFileManagerDelegate>)self];
-   
+
    return self;
 }
 

@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class VavilovFast
-// 
+//
 // Created by: blist  at Thu Apr 29 11:19:00 2010
-// 
+//
 // Last update: Thu Apr 29 11:19:00 2010
-// 
+//
 #ifndef ROOT_Math_VavilovFast
 #define ROOT_Math_VavilovFast
 
@@ -45,10 +45,10 @@ namespace Math {
 //____________________________________________________________________________
 /**
    Class describing a Vavilov distribution.
-   
+
    The probability density function of the Vavilov distribution
    as function of Landau's parameter is given by:
-  \f[ p(\lambda_L; \kappa, \beta^2) =  
+  \f[ p(\lambda_L; \kappa, \beta^2) =
   \frac{1}{2 \pi i}\int_{c-i\infty}^{c+i\infty} \phi(s) e^{\lambda_L s} ds\f]
    where \f$\phi(s) = e^{C} e^{\psi(s)}\f$
    with  \f$ C = \kappa (1+\beta^2 \gamma )\f$
@@ -57,8 +57,8 @@ namespace Math {
                \frac{1 - e^{\frac{-st}{\kappa}}}{t} \,d t- \gamma \right )
                - \kappa \, e^{\frac{-s}{\kappa}}\f$.
    \f$ \gamma = 0.5772156649\dots\f$ is Euler's constant.
-   
-   For the class VavilovFast, 
+
+   For the class VavilovFast,
    Pdf returns the Vavilov distribution as function of Landau's parameter
    \f$\lambda_L = \lambda_V/\kappa  - \ln \kappa\f$,
    which is the convention used in the CERNLIB routines, and in the tables
@@ -73,161 +73,161 @@ namespace Math {
    <A HREF="http://books.google.de/books?id=kmMrAAAAYAAJ&lpg=PP9&pg=PA187#v=onepage&q&f=false">Google books</A>
 
    Therefore, for small values of \f$\kappa < 0.01\f$,
-   pdf approaches the Landau distribution.  
+   pdf approaches the Landau distribution.
 
    For values \f$\kappa > 10\f$, the Gauss approximation should be used
    with \f$\mu\f$ and \f$\sigma\f$ given by Vavilov::mean(kappa, beta2)
    and sqrt(Vavilov::variance(kappa, beta2).
-   
+
    For values \f$\kappa > 10\f$, the Gauss approximation should be used
    with \f$\mu\f$ and \f$\sigma\f$ given by Vavilov::mean(kappa, beta2)
    and sqrt(Vavilov::variance(kappa, beta2).
-   
+
    The original Vavilov pdf is obtained by
    v.Pdf(lambdaV/kappa-log(kappa))/kappa.
-       
+
    For detailed description see
-   A. Rotondi and P. Montagna, Fast calculation of Vavilov distribution, 
+   A. Rotondi and P. Montagna, Fast calculation of Vavilov distribution,
    <A HREF="http://dx.doi.org/10.1016/0168-583X(90)90749-K">Nucl. Instr. and Meth. B47 (1990) 215-224</A>,
-   which has been implemented in 
+   which has been implemented in
    <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g115/top.html">
    CERNLIB (G115)</A>.
-   
+
    The class stores coefficients needed to calculate \f$p(\lambda; \kappa, \beta^2)\f$
    for fixed values of \f$\kappa\f$ and \f$\beta^2\f$.
    Changing these values is computationally expensive.
-   
+
    The parameter \f$\kappa\f$ must be in the range \f$0.01 \le \kappa \le 12\f$.
-   
+
    The parameter \f$\beta^2\f$ must be in the range \f$0 \le \beta^2 \le 1\f$.
-   
+
    Average times on a Pentium Core2 Duo P8400 2.26GHz:
    - 9.9us per call to SetKappaBeta2 or constructor
    - 0.095us per call to Pdf, Cdf
    - 3.7us per first call to Quantile after SetKappaBeta2 or constructor
    - 0.137us per subsequent call to Quantile
-   
+
    Benno List, June 2010
-   
+
    @ingroup StatFunc
  */
 
 
 class VavilovFast: public Vavilov {
 
-public: 
+public:
 
 
    /**
       Initialize an object to calculate the Vavilov distribution
 
-       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$ 
-       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$ 
+       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$
+       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
 
-  VavilovFast(double kappa=1, double beta2=1); 
+  VavilovFast(double kappa=1, double beta2=1);
 
 
    /**
      Destructor
    */
-   virtual ~VavilovFast(); 
-   
+   virtual ~VavilovFast();
 
-public: 
-  
-   /** 
+
+public:
+
+   /**
        Evaluate the Vavilov probability density function
-       
-       @param x The Landau parameter \f$x = \lambda_L\f$ 
+
+       @param x The Landau parameter \f$x = \lambda_L\f$
    */
    double Pdf (double x) const;
-  
-   /** 
+
+   /**
        Evaluate the Vavilov probability density function,
        and set kappa and beta2, if necessary
-       
-       @param x The Landau parameter \f$x = \lambda_L\f$ 
-       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$ 
-       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$ 
+
+       @param x The Landau parameter \f$x = \lambda_L\f$
+       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$
+       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
    double Pdf (double x, double kappa, double beta2);
-  
-   /** 
+
+   /**
        Evaluate the Vavilov cummulative probability density function
-       
-       @param x The Landau parameter \f$x = \lambda_L\f$ 
+
+       @param x The Landau parameter \f$x = \lambda_L\f$
    */
    double Cdf (double x) const;
-  
-   /** 
+
+   /**
        Evaluate the Vavilov cummulative probability density function,
        and set kappa and beta2, if necessary
-       
-       @param x The Landau parameter \f$x = \lambda_L\f$ 
-       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$ 
-       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$ 
+
+       @param x The Landau parameter \f$x = \lambda_L\f$
+       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$
+       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
    double Cdf (double x, double kappa, double beta2);
-   
-   /** 
+
+   /**
        Evaluate the Vavilov complementary cummulative probability density function
-       
-       @param x The Landau parameter \f$x = \lambda_L\f$ 
+
+       @param x The Landau parameter \f$x = \lambda_L\f$
    */
    double Cdf_c (double x) const;
-   
-   /** 
+
+   /**
        Evaluate the Vavilov complementary cummulative probability density function,
        and set kappa and beta2, if necessary
-       
-       @param x The Landau parameter \f$x = \lambda_L\f$ 
-       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$ 
-       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$ 
+
+       @param x The Landau parameter \f$x = \lambda_L\f$
+       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$
+       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
    double Cdf_c (double x, double kappa, double beta2);
-  
-   /** 
+
+   /**
        Evaluate the inverse of the Vavilov cummulative probability density function
-       
+
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
    */
    double Quantile (double z) const;
-  
-   /** 
+
+   /**
        Evaluate the inverse of the Vavilov cummulative probability density function,
        and set kappa and beta2, if necessary
-       
+
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
-       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$ 
-       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$ 
+       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$
+       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
    double Quantile (double z, double kappa, double beta2);
-  
-   /** 
+
+   /**
        Evaluate the inverse of the complementary Vavilov cummulative probability density function
-       
+
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
    */
    double Quantile_c (double z) const;
-  
-   /** 
+
+   /**
        Evaluate the inverse of the complementary Vavilov cummulative probability density function,
        and set kappa and beta2, if necessary
-       
+
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
-       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$ 
-       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$ 
+       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$
+       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
    double Quantile_c (double z, double kappa, double beta2);
 
    /**
       Change \f$\kappa\f$ and \f$\beta^2\f$ and recalculate coefficients if necessary
 
-       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$ 
-       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$ 
+       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$
+       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
-   virtual void SetKappaBeta2 (double kappa, double beta2); 
+   virtual void SetKappaBeta2 (double kappa, double beta2);
 
    /**
       Return the minimum value of \f$\lambda\f$ for which \f$p(\lambda; \kappa, \beta^2)\f$
@@ -250,23 +250,23 @@ public:
       Return the current value of \f$\beta^2\f$
    */
    virtual double GetBeta2()     const;
-      
+
    /**
       Returns a static instance of class VavilovFast
    */
    static VavilovFast *GetInstance();
-   
+
    /**
       Returns a static instance of class VavilovFast,
       and sets the values of kappa and beta2
-       
-       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$ 
-       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$ 
+
+       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$
+       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
    static VavilovFast *GetInstance(double kappa, double beta2);
-   
 
-private: 
+
+private:
    double fKappa;
    double fBeta2;
 
@@ -275,62 +275,62 @@ private:
    double fWCM[201];
    int    fItype;
    int    fNpt;
-      
-   static VavilovFast *fgInstance;
-     
-}; 
 
-   /** 
+   static VavilovFast *fgInstance;
+
+};
+
+   /**
        The Vavilov probability density function
-       
-       @param x The Landau parameter \f$x = \lambda_L\f$ 
-       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$ 
-       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$ 
-       
+
+       @param x The Landau parameter \f$x = \lambda_L\f$
+       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$
+       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
+
        @ingroup PdfFunc
    */
 double vavilov_fast_pdf (double x, double kappa, double beta2);
 
-   /** 
+   /**
        The Vavilov cummulative probability density function
-       
-       @param x The Landau parameter \f$x = \lambda_L\f$ 
-       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$ 
-       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$ 
+
+       @param x The Landau parameter \f$x = \lambda_L\f$
+       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$
+       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
 
        @ingroup ProbFunc
    */
 double vavilov_fast_cdf (double x, double kappa, double beta2);
 
-   /** 
+   /**
        The Vavilov complementary cummulative probability density function
-       
-       @param x The Landau parameter \f$x = \lambda_L\f$ 
-       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$ 
-       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$ 
+
+       @param x The Landau parameter \f$x = \lambda_L\f$
+       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$
+       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
 
        @ingroup ProbFunc
    */
 double vavilov_fast_cdf_c (double x, double kappa, double beta2);
 
-   /** 
+   /**
        The inverse of the Vavilov cummulative probability density function
-       
+
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
-       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$ 
-       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$ 
-       
+       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$
+       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
+
       @ingroup QuantFunc
    */
 double vavilov_fast_quantile (double z, double kappa, double beta2);
 
-   /** 
+   /**
        The inverse of the complementary Vavilov cummulative probability density function
-       
+
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
-       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$ 
-       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$ 
- 
+       @param kappa The parameter \f$\kappa\f$, which must be in the range \f$0.01 \le \kappa \le 12 \f$
+       @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
+
       @ingroup QuantFunc
    */
 double vavilov_fast_quantile_c (double z, double kappa, double beta2);

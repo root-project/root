@@ -3,7 +3,7 @@
 
 //
 // This macro should be run together with authserv.C to test
-// authentication between two remote ROOT sessions. 
+// authentication between two remote ROOT sessions.
 // Run first the authserv.C within a ROOT session on the server
 // machine, eg. "srv.machi.ne":
 //
@@ -58,8 +58,8 @@ int authclient(const char *host = "up://localhost:3000", int sz = 0)
    TSocket *s = TSocket::CreateAuthSocket(newurl.Data(),sz);
 
    // Print out;
-   if (s) 
-      if (s->IsAuthenticated()) 
+   if (s)
+      if (s->IsAuthenticated())
          cout << "authclient: auth socket: OK" << endl;
       else
          cout << "authclient: auth socket: failed" << endl;

@@ -45,7 +45,7 @@ private:
    Double_t               fRangeXU;
    Double_t               fRangeYU;
    Double_t               fRangeZU;
-   
+
    Bool_t                 fDrawBack;
    Bool_t                 fDrawFront;
 
@@ -79,7 +79,7 @@ public:
    static const Int_t    fgBackPairs[][2];
    static const Int_t    fgFrontPairs[][2];
    static const Double_t fgNormals[][3];
-   
+
    void SetDrawFront(Bool_t d) {fDrawFront = d;}
    Bool_t GetDrawFront() const {return fDrawFront;}
 

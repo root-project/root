@@ -196,7 +196,7 @@ namespace ROOT {
       }
 
       void* GetWhere() const { return fWhere; } // intentionally non-virtual
-      
+
       TVirtualCollectionProxy *GetCollection() { return fCollection; }
 
       // protected:
@@ -304,7 +304,7 @@ namespace ROOT {
          }
 
       }
-      
+
       Int_t GetOffset() { return fOffset; }
    };
 
@@ -348,17 +348,17 @@ namespace ROOT {
          if (!Read()) return "";
          return (const char*)GetStart();
       }
-      
+
       const char* Data() {
          if (!Read()) return "";
          return (const char*)GetStart();
       }
-      
+
       const char* c_str() {
          if (!Read()) return "";
          return (const char*)GetStart();
       }
-      
+
       operator std::string() {
          if (!Read()) return "";
          return std::string((const char*)GetStart());
@@ -465,7 +465,7 @@ namespace ROOT {
          TBranchProxy(director,top,name) {};
       TImpProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
          TBranchProxy(director,top,name,data) {};
-      TImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) : 
+      TImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          TBranchProxy(director,parent, name, top, mid) {};
       ~TImpProxy() {};
 
@@ -495,7 +495,7 @@ namespace ROOT {
    template <class T, int d = 0> struct TArrayType {
       typedef T type_t;
       typedef T array_t[d];
-   }; 
+   };
    //____________________________________________
    // Helper class for proxy around multi dimension array
    template <class T> struct TArrayType<T,0> {
@@ -565,7 +565,7 @@ namespace ROOT {
          TBranchProxy(director,top,name) {};
       TClaImpProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
          TBranchProxy(director,top,name,data) {};
-      TClaImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) : 
+      TClaImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          TBranchProxy(director,parent, name, top, mid) {};
       ~TClaImpProxy() {};
 
@@ -617,7 +617,7 @@ namespace ROOT {
          TBranchProxy(director,top,name) {};
       TStlImpProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
          TBranchProxy(director,top,name,data) {};
-      TStlImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) : 
+      TStlImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          TBranchProxy(director,parent, name, top, mid) {};
       ~TStlImpProxy() {};
 
@@ -686,7 +686,7 @@ namespace ROOT {
       /* const */ array_t *operator [](UInt_t i) { return At(i); }
    };
 
-   
+
    //__________________________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around an stl container of array of T
    template <class T>

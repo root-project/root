@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -41,7 +41,7 @@ class FumiliBuilder : public MinimumBuilder {
 
 public:
 
-  FumiliBuilder() : fEstimator(VariableMetricEDMEstimator()), 
+  FumiliBuilder() : fEstimator(VariableMetricEDMEstimator()),
    fErrorUpdator(FumiliErrorUpdator()) {}
 
   ~FumiliBuilder() {}
@@ -58,10 +58,10 @@ public:
 
   @param fMinimumSeed the seed generator.
 
-  @param fMnStrategy the strategy describing the number of function calls 
+  @param fMnStrategy the strategy describing the number of function calls
   allowed for Gradient calculations.
 
-  @param maxfcn maximum number of function calls after which the calculation 
+  @param maxfcn maximum number of function calls after which the calculation
   will be stopped even if it has not yet converged.
 
   @param edmval expected vertical distance to the Minimum.
@@ -69,7 +69,7 @@ public:
   @return Returns the function Minimum found.
 
 
-  \todo Complete the documentation by understanding what is the reason to 
+  \todo Complete the documentation by understanding what is the reason to
   have two Minimum methods.
 
   */
@@ -87,9 +87,9 @@ public:
 
   @param fMinimumSeed the seed generator.
 
-  @param states vector containing the state result of each iteration  
+  @param states vector containing the state result of each iteration
 
-  @param maxfcn maximum number of function calls after which the calculation 
+  @param maxfcn maximum number of function calls after which the calculation
   will be stopped even if it has not yet converged.
 
   @param edmval expected vertical distance to the Minimum
@@ -104,7 +104,7 @@ public:
   */
 
   FunctionMinimum Minimum(const MnFcn& fMnFcn, const GradientCalculator& fGradienCalculator, const MinimumSeed& fMinimumSeed, std::vector<MinimumState> & states, unsigned int maxfcn, double edmval) const;
- 
+
 
   /**
 
@@ -115,7 +115,7 @@ public:
   \todo Maybe a little explanation concerning EDM in all relevant classes.
 
   */
- 
+
   const VariableMetricEDMEstimator& Estimator() const {return fEstimator;}
 
 

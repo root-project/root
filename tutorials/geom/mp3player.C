@@ -5,7 +5,7 @@
 #include "TLatex.h"
 #include "TButton.h"
 #include "TGeoManager.h"
-   
+
 void mp3player()
 {
   // Drawing a mp3 type music player, using ROOT geometry class.
@@ -13,7 +13,7 @@ void mp3player()
   // Author: Eun Young Kim, Dept. of Physics, Univ. of Seoul
   // Reviewed by Sunman Kim (sunman98@hanmail.net)
   // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
-  // 
+  //
   // How to run: .x mp3player.C in ROOT terminal, then use OpenGL
   //
   // This macro was created for the evaluation of Computational Physics course in 2006.
@@ -40,7 +40,7 @@ void mp3player()
   geom->SetTopVolume(top);
   geom->SetTopVisible(0);
   // If you want to see the boundary, please input the number, 1 instead of 0.
-  // Like this, geom->SetTopVisible(1); 
+  // Like this, geom->SetTopVisible(1);
 
 
 
@@ -62,16 +62,16 @@ void mp3player()
   TGeoVolume *b5=geom->MakeTubs("b5",Iron,0,50,200,270,360);
   b5->SetLineColor(10);
 
-  
+
   TGeoVolume *b6=geom->MakeTubs("b6",Iron,0,50,600,0,90);
   b6->SetLineColor(10);
 
   TGeoVolume *b7=geom->MakeTubs("b7",Iron,0,50,600,90,180);
   b7->SetLineColor(10);
-  
+
   TGeoVolume *b8=geom->MakeTubs("b8",Iron,0,50,600,180,270);
   b8->SetLineColor(10);
- 
+
   TGeoVolume *b9=geom->MakeTubs("b9",Iron,0,50,600,270,360);
   b9->SetLineColor(10);
 
@@ -85,7 +85,7 @@ void mp3player()
 
   TGeoVolume *b12=geom->MakeTubs("b12",Iron,0,50,100,180,270);
   b12->SetLineColor(10);
-  
+
   TGeoVolume *b13=geom->MakeTubs("b13",Iron,0,50,100,270,360);
   b13->SetLineColor(10);
 
@@ -186,7 +186,7 @@ void mp3player()
 
   TGeoVolume *b48=geom->MakeBox("b48",Iron,150,176,236);
   b48->SetLineColor(37);
-  
+
 
   TGeoVolume *b49=geom->MakeBox("b49",Iron,150,2,236);
   b49->SetLineColor(20);
@@ -256,7 +256,7 @@ void mp3player()
   TGeoVolume *b63=geom->MakeBox("b63",Iron,5,15,150);
   b63->SetLineColor(38);
   top->AddNodeOverlap(b63,63,new TGeoCombiTrans(-4,-40,-497,new TGeoRotation("r1",90,90,0)));
-  
+
   TGeoVolume *b64=geom->MakeBox("b64",Iron,5,15,150);
   b64->SetLineColor(38);
   top->AddNodeOverlap(b64,64,new TGeoCombiTrans(-4,-10,-497,new TGeoRotation("r1",90,90,0)));
@@ -475,14 +475,14 @@ void mp3player()
   top->AddNodeOverlap(b7,7,new TGeoCombiTrans(-100,200,0,new TGeoRotation("r1",0,0,0)));
   top->AddNodeOverlap(b8,8,new TGeoCombiTrans(-100,-200,0,new TGeoRotation("r1",0,0,0)));
   top->AddNodeOverlap(b9,9,new TGeoCombiTrans(100,-200,0,new TGeoRotation("r1",0,0,0)));
-  
+
   top->AddNodeOverlap(b10,10,new TGeoCombiTrans(0,200,600,new TGeoRotation("r2",90,90,0)));
   top->AddNodeOverlap(b11,11,new TGeoCombiTrans(0,-200,600,new TGeoRotation("r2",90,90,0)));
   top->AddNodeOverlap(b12,12,new TGeoCombiTrans(0,-200,-600, new TGeoRotation("r2",90,90,0)));
   top->AddNodeOverlap(b13,13,new TGeoCombiTrans(0,200,-600,new TGeoRotation("r2",90,90,0)));
   top->AddNodeOverlap(b14,14,new TGeoTranslation(0,200,-150));
   top->AddNodeOverlap(b15,15,new TGeoTranslation(100,0,0));
-  
+
   top->AddNodeOverlap(b16,16,new TGeoCombiTrans(100,200,600,new TGeoRotation("r2",0,0,0)));
   top->AddNodeOverlap(b17,17,new TGeoCombiTrans(100,-200,600,new TGeoRotation("r2",0,0,0)));
   top->AddNodeOverlap(b18,18,new TGeoCombiTrans(-100,-200,600,new TGeoRotation("r2",0,0,0)));
@@ -492,10 +492,10 @@ void mp3player()
   top->AddNodeOverlap(b22,22,new TGeoCombiTrans(100,-200,-600,new TGeoRotation("r2",0,0,0)));
   top->AddNodeOverlap(b23,23,new TGeoCombiTrans(-100,-200,-600,new TGeoRotation("r2",0,0,0)));
   top->AddNodeOverlap(b24,24,new TGeoCombiTrans(-100,200,-600,new TGeoRotation("r2",0,0,0)));
- 
 
 
-  top->AddNodeOverlap(b25,25,new TGeoCombiTrans(-9,0,350,new TGeoRotation("r2",90,90,0)));  
+
+  top->AddNodeOverlap(b25,25,new TGeoCombiTrans(-9,0,350,new TGeoRotation("r2",90,90,0)));
   top->AddNodeOverlap(b26,26,new TGeoCombiTrans(-9,0,350,new TGeoRotation("r2",90,90,0)));
   top->AddNodeOverlap(b27,27,new TGeoCombiTrans(-9,0,350,new TGeoRotation("r2",90,90,0)));
   top->AddNodeOverlap(b28,28,new TGeoCombiTrans(-9,0,350,new TGeoRotation("r2",90,90,0)));
@@ -515,11 +515,11 @@ void mp3player()
   top->AddNodeOverlap(b42,42,new TGeoCombiTrans(-9,0,350,new TGeoRotation("r2",90,90,0)));
   top->AddNodeOverlap(b43,43,new TGeoCombiTrans(-9,0,350,new TGeoRotation("r2",90,90,0)));
   top->AddNodeOverlap(b44,44,new TGeoCombiTrans(-9,0,350,new TGeoRotation("r2",90,90,0)));
-  
- 
+
+
   top->AddNodeOverlap(b45,45,new TGeoCombiTrans(-20,0,350,new TGeoRotation("r2",90,90,0)));
   top->AddNodeOverlap(b46,46,new TGeoCombiTrans(-25,0,350,new TGeoRotation("r2",90,90,0)));
-  
+
   top->AddNodeOverlap(b47,47,new TGeoTranslation(5,0,85));
   top->AddNodeOverlap(b48,48,new TGeoTranslation(-2,0,-150));
   geom->CloseGeometry();
@@ -547,37 +547,37 @@ void mp3player()
    pt->SetFillColor(30);
    pt->AddText(0.5,0.5,"Musics");
    pt->Draw();
-   
+
    TLatex Tex;
 
    Tex.SetTextSize(0.04);
    Tex.SetTextColor(31);
-   Tex.DrawLatex(0.3,0.81,"Mariah Carey - Shake it off");  
- 
-   Tex.SetTextSize(0.04);
-   Tex.SetTextColor(31);
-   Tex.DrawLatex(0.3,0.71,"Alicia keys - If I ain't got you");  
+   Tex.DrawLatex(0.3,0.81,"Mariah Carey - Shake it off");
 
    Tex.SetTextSize(0.04);
    Tex.SetTextColor(31);
-   Tex.DrawLatex(0.3,0.61,"Michael Jackson - Billie Jean");  
+   Tex.DrawLatex(0.3,0.71,"Alicia keys - If I ain't got you");
 
    Tex.SetTextSize(0.04);
    Tex.SetTextColor(31);
-   Tex.DrawLatex(0.3,0.51,"Christina Milian - Am to Pm");  
+   Tex.DrawLatex(0.3,0.61,"Michael Jackson - Billie Jean");
 
    Tex.SetTextSize(0.04);
    Tex.SetTextColor(31);
-   Tex.DrawLatex(0.3,0.41,"Zapp&Roger - Slow and Easy");  
+   Tex.DrawLatex(0.3,0.51,"Christina Milian - Am to Pm");
 
    Tex.SetTextSize(0.04);
    Tex.SetTextColor(31);
-   Tex.DrawLatex(0.3,0.31,"Black Eyes Peas - Let's get retarded");  
- 
+   Tex.DrawLatex(0.3,0.41,"Zapp&Roger - Slow and Easy");
+
+   Tex.SetTextSize(0.04);
+   Tex.SetTextColor(31);
+   Tex.DrawLatex(0.3,0.31,"Black Eyes Peas - Let's get retarded");
+
    Tex.SetTextSize(0.04);
    Tex.SetTextColor(31);
    Tex.DrawLatex(0.3,0.21,"Bosson - One in a Millin");
-  
+
    Tex.SetTextSize(0.04);
    Tex.SetTextColor(15);
    Tex.DrawLatex(0.2,0.11,"Click Button!! You Can Listen to Musics");
@@ -615,7 +615,7 @@ void mp3player()
 
    TImage *image=TImage::Open("mp3.jpg");
    image->Draw();
-   
+
 
 
    TPad *pad4=new TPad("pad4","Pad4",0.6,0.1,0.9,0.9);
@@ -628,8 +628,8 @@ void mp3player()
 
    Tex.SetTextSize(0.08);
    Tex.SetTextColor(10);
-   Tex.DrawLatex(0.06,0.85,"IAudio U3 Mp3 Player");  
-  
+   Tex.DrawLatex(0.06,0.85,"IAudio U3 Mp3 Player");
+
 
    L.SetLineColor(10);
    L.SetLineWidth(3);
@@ -637,37 +637,37 @@ void mp3player()
 
    Tex.SetTextSize(0.06);
    Tex.SetTextColor(10);
-   Tex.DrawLatex(0.06,0.75,"+ Color LCD");  
+   Tex.DrawLatex(0.06,0.75,"+ Color LCD");
 
    Tex.SetTextSize(0.06);
    Tex.SetTextColor(10);
-   Tex.DrawLatex(0.06,0.65,"+ 60mW High Generating Power");  
+   Tex.DrawLatex(0.06,0.65,"+ 60mW High Generating Power");
 
    Tex.SetTextSize(0.06);
    Tex.SetTextColor(10);
-   Tex.DrawLatex(0.06,0.55,"+ GUI Theme Skin");  
+   Tex.DrawLatex(0.06,0.55,"+ GUI Theme Skin");
 
    Tex.SetTextSize(0.06);
    Tex.SetTextColor(10);
-   Tex.DrawLatex(0.06,0.45,"+ Noble White&Black");  
+   Tex.DrawLatex(0.06,0.45,"+ Noble White&Black");
 
    Tex.SetTextSize(0.06);
    Tex.SetTextColor(10);
-   Tex.DrawLatex(0.06,0.35,"+ Text Viewer+Image Viewer");  
-   
-   Tex.SetTextSize(0.06);
-   Tex.SetTextColor(10);
-   Tex.DrawLatex(0.06,0.25,"+ 20 Hours Playing");  
+   Tex.DrawLatex(0.06,0.35,"+ Text Viewer+Image Viewer");
 
    Tex.SetTextSize(0.06);
    Tex.SetTextColor(10);
-   Tex.DrawLatex(0.06,0.15,"+ The Best Quality of Sound");  
+   Tex.DrawLatex(0.06,0.25,"+ 20 Hours Playing");
+
+   Tex.SetTextSize(0.06);
+   Tex.SetTextColor(10);
+   Tex.DrawLatex(0.06,0.15,"+ The Best Quality of Sound");
 
 
    pad->cd();
 
 
- 
+
 }
 
 void Sound(int i)

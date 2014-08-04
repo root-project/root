@@ -74,7 +74,7 @@ void vxinvb_(int *ixv, int *n)
    int limit, jloop;
    int in;
    limit = *n;
-   for (jloop = 0; jloop < limit; jloop++) { 
+   for (jloop = 0; jloop < limit; jloop++) {
       in = ixv[jloop];
       ixv[jloop] =
             ((in >> 24) & 0x000000ff) |
@@ -104,24 +104,24 @@ void vxinvc_ (int *iv, int *ixv, int *n)
 
 //------------------------------------------------------------------------------
 
-void cfget_(int *lundes, int *medium, int *nwrec, int *nwtak, char *mbuf, 
+void cfget_(int *lundes, int *medium, int *nwrec, int *nwtak, char *mbuf,
             int *astat)
 {
-   int fildes;   
-   int nbdn, nbdo;   
+   int fildes;
+   int nbdn, nbdo;
 
    if (medium) { }
 
-   *astat = 0;   
-   if (*nwtak <= 0) return;   
-     
-   fildes = *lundes;   
-   nbdo = *nwrec * 4;   
-   nbdn = read (fildes, mbuf, nbdo);   
-   if (nbdn == 0) goto heof;   
-   if (nbdn < 0) goto herror;   
+   *astat = 0;
+   if (*nwtak <= 0) return;
+
+   fildes = *lundes;
+   nbdo = *nwrec * 4;
+   nbdn = read (fildes, mbuf, nbdo);
+   if (nbdn == 0) goto heof;
+   if (nbdn < 0) goto herror;
    *nwtak = (nbdn - 1) / 4 + 1;
-   return;   
+   return;
    heof:
       *astat = -1;
       return;
@@ -143,14 +143,14 @@ void cfseek_(int *lundes, int *medium, int *nwrec, int *jcrec, int *astat)
 
    fildes = *lundes;
    nbdo = *jcrec * *nwrec * 4;
-   isw = lseek (fildes, nbdo, 0); 
+   isw = lseek (fildes, nbdo, 0);
    if (isw < 0) goto trouble;
    *astat = 0;
    return;
 
-   trouble: 
+   trouble:
       *astat = -1;
-      printf("error in CFSEEK\n");  
+      printf("error in CFSEEK\n");
 }
 
 //------------------------------------------------------------------------------
@@ -265,7 +265,7 @@ fltp:
    else
    flags = 02;}
    else if (mode[0] == 2) return;
-act: 
+act:
    pttext = fchtak(ftext,*lgtx);
    if (pttext == 0) return;
    if (perm == 0) perm = 0644;
@@ -274,10 +274,10 @@ act:
    *lundes = fildes;
    *astat = 0;
    goto done;
-errm: 
+errm:
    *astat = 0;
    printf("error in CFOPEN\n");
-done: 
+done:
    free(pttext);
    return;
 }

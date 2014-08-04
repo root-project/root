@@ -48,7 +48,7 @@ void TKDEAdapter::SetGeometry(const TGL5DDataSet *dataSet)
    const TAxis *zA = dataSet->GetZAxis();
    const Rgl::Range_t &zMinMax = dataSet->GetZRange();
    const Double_t zRange = zMinMax.second - zMinMax.first;
-   
+
    fW = xA->GetNbins();
    fH = yA->GetNbins();
    fD = zA->GetNbins();
@@ -131,7 +131,7 @@ void TKDEAdapter::FetchDensities()const
          }
       }
    }
-   
+
    fDensities.resize(fSliceSize * fD);
    //Ok, now, we can estimate densities.
    fDE->Predict(fGrid, fDensities, fE);

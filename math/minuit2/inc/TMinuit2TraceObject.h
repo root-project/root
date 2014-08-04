@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Author:  L. Moneta 2012  
+// Author:  L. Moneta 2012
 
 /**********************************************************************
  *                                                                    *
@@ -13,7 +13,7 @@
 #include "TNamed.h"
 #include "Minuit2/MnTraceObject.h"
 
-class TH1; 
+class TH1;
 class TVirtualPad;
 class TList;
 
@@ -22,14 +22,14 @@ namespace ROOT {
    namespace Minuit2 {
 
       class MinimumState;
-      class MnUserParameterState; 
+      class MnUserParameterState;
 
    }  // namespace Minuit2
 }  // namespace ROOT
 
-class TMinuit2TraceObject : public ROOT::Minuit2::MnTraceObject, public TNamed { 
+class TMinuit2TraceObject : public ROOT::Minuit2::MnTraceObject, public TNamed {
 
-public: 
+public:
 
    TMinuit2TraceObject(int parNumber = -1);
 
@@ -37,11 +37,11 @@ public:
 
    virtual void Init(const ROOT::Minuit2::MnUserParameterState & state);
 
-   virtual void operator() (int i, const ROOT::Minuit2::MinimumState & state); 
+   virtual void operator() (int i, const ROOT::Minuit2::MinimumState & state);
 
    ClassDef(TMinuit2TraceObject,0) // Example Trace Object for Minuit2
 
-private: 
+private:
 
    int fIterOffset;                // offset in iteration in case of combined minimizers
    TH1 * fHistoFval;               // Function value histogram
@@ -49,7 +49,7 @@ private:
    TList * fHistoParList;          // list of parameter values histograms
    TVirtualPad * fOldPad;          // old existing current pad
    TVirtualPad * fMinuitPad;       // new pad with trace histograms
-   
+
 
 };
 

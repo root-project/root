@@ -20,7 +20,7 @@ hist2workspace \- utility to create RooFit/RooStats workspace from histograms
 .SH SYNOPSIS
 .B hist2workspace [option] input.xml
 .SH DESCRIPTION
-.B hist2workspace 
+.B hist2workspace
 is a utility to create RooFit/RooStats workspace from histograms
 .SH OPTIONS
 .B -standard_form
@@ -31,22 +31,22 @@ this was the original model in 5.28 (without patches). It uses a Poisson for eac
 .br
 .br
 .SH Prepare working area
-The ROOT release ships with a script 
+The ROOT release ships with a script
 .B prepareHistFactory
-in the $ROOTSYS/bin directory that prepares a working area.  
+in the $ROOTSYS/bin directory that prepares a working area.
 It creates a results/, data/, and config/ directory.
 It also copies the HistFactorySchema.dtd and example XML files into
 the config/ directory.  Additionally, it copies a root file into the data/
 directory for use with the examples.
 .br
 .SH HistFactorySchema.dtd
-This file is located in $ROOTSYS/etc/ specifies the XML schema.  
+This file is located in $ROOTSYS/etc/ specifies the XML schema.
 It is typically placed in the config/ directory of a working area
 together with the top-level XML file and the individual channel XML files.
 The user should not modify this file.
 .br
 The HistFactorySchema.dtd is commented to specify exactly the meaning of
-the various options. 
+the various options.
 
 
 .SH Top-Level XML File
@@ -58,19 +58,19 @@ This file is edited by the user.  It specifies
       - a name for this measurement to be used in tables and files
       - what is the luminosity associated to the measurement in picobarns
       - which bins of the histogram should be used
-      - what is the relative uncertainty on the luminosity 
+      - what is the relative uncertainty on the luminosity
       - what is (are) the parameter(s) of interest that will be measured
       - which parameters should be fixed/floating (eg. nuisance parameters)
-      - which type of constriants are desired 
+      - which type of constriants are desired
    - Gaussian by default
    - Gamma, LogNormal, and Uniform are also supported
-      - if the tool should export the model only and skip the default fit 
+      - if the tool should export the model only and skip the default fit
 
 .br
 .SH Channel XML Files
 (see for example $ROOTSYS/tutorials/histfactory/example_channel.xml)
 This file is edited by the user.  It specifies for each channel
- - observed data 
+ - observed data
    - if absent the tool will use the expectation, which is useful for expected sensitivity
  - several 'Samples' (eg. signal, bkg1, bkg2, ...), each of which has:
    - a name
@@ -88,7 +88,7 @@ This file is edited by the user.  It specifies for each channel
 .B Kyle Cranmer
 ,
 .B Akira Shibata
-, and 
+, and
 .B Dominique Tardif
 .RE
 .SH "COPYRIGHT"

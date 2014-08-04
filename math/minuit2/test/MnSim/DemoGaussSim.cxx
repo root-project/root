@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -31,8 +31,8 @@ int main() {
   std::vector<double> pos = gdg.Positions();
   std::vector<double> meas = gdg.Measurements();
   std::vector<double> var = gdg.Variances();
-   
-  // create FCN function  
+
+  // create FCN function
   GaussFcn fFCN(meas, pos, var);
 
   // create initial starting values for parameters
@@ -56,20 +56,20 @@ int main() {
     // create Minuit parameters without names
 
     // starting values for parameters
-    std::vector<double> init_par; 
-    init_par.push_back(mean); 
-    init_par.push_back(rms); 
+    std::vector<double> init_par;
+    init_par.push_back(mean);
+    init_par.push_back(rms);
     init_par.push_back(area);
 
     // starting values for initial uncertainties
-    std::vector<double> init_err; 
-    init_err.push_back(0.1); 
-    init_err.push_back(0.1); 
+    std::vector<double> init_err;
     init_err.push_back(0.1);
-    
+    init_err.push_back(0.1);
+    init_err.push_back(0.1);
+
     // create minimizer (default constructor)
     VariableMetricMinimizer fMinimizer;
-    
+
     // Minimize
     FunctionMinimum min = fMinimizer.Minimize(fFCN, init_par, init_err);
 
@@ -96,7 +96,7 @@ int main() {
   }
 
   {
-    // demonstrate full interaction with parameters over subsequent 
+    // demonstrate full interaction with parameters over subsequent
     // minimizations
 
     // create Minuit parameters with names
@@ -110,7 +110,7 @@ int main() {
 
     // ... or access Parameter by Index
     upar.SetLimits(1, rms-0.1, rms+0.1);
-    
+
     // create Migrad minimizer
     MnMigrad migrad(fFCN, upar);
 
@@ -131,7 +131,7 @@ int main() {
 
     // and Minimize again
     FunctionMinimum min1 = migrad();
- 
+
     // output
     std::cout<<"minimum1: "<<min1<<std::endl;
 
@@ -140,7 +140,7 @@ int main() {
 
     // ... and Minimize with all three parameters (still with limits!)
     FunctionMinimum min2 = migrad();
-    
+
     // output
     std::cout<<"minimum2: "<<min2<<std::endl;
 
@@ -199,7 +199,7 @@ int main() {
       std::pair<double,double> e0 = Minos(0);
       std::pair<double,double> e1 = Minos(1);
       std::pair<double,double> e2 = Minos(2);
-      
+
       // output
       std::cout<<"1-sigma Minos errors: "<<std::endl;
       std::cout<<"par0: "<<min.UserState().Value("mean")<<" "<<e0.first<<" "<<e0.second<<std::endl;
@@ -213,7 +213,7 @@ int main() {
       MinosError e0 = Minos.Minos(0);
       MinosError e1 = Minos.Minos(1);
       MinosError e2 = Minos.Minos(2);
-      
+
       // output
       std::cout<<"2-sigma Minos errors: "<<std::endl;
       std::cout<<e0<<std::endl;
@@ -255,7 +255,7 @@ int main() {
       std::pair<double,double> e1 = Minos(1);
       std::pair<double,double> e2 = Minos(2);
 
-      
+
       // output
       std::cout<<"3-sigma Minos errors with limits: "<<std::endl;
       std::cout.precision(16);
@@ -285,7 +285,7 @@ int main() {
 
     // create contours factory with FCN and Minimum
     MnContours contours(fFCN, min);
-  
+
     //70% confidence level for 2 parameters Contour around the Minimum
     // (minimal interface)
     fFCN.SetErrorDef(2.41);
@@ -295,7 +295,7 @@ int main() {
     // (rich interface)
     fFCN.SetErrorDef(5.99);
     ContoursError cont4 = contours.Contour(0, 1, 20);
-    
+
     // plot the contours
     MnPlot plot;
     cont.insert(cont.end(), cont4().begin(), cont4().end());

@@ -51,11 +51,11 @@ public:
    };
 
 private:
-   TString     fName;          // File name 
+   TString     fName;          // File name
    TSortedList   *fElements;      // List of processed elements
 
-   Long64_t    fFirst;   // Overall lower bound 
-   Long64_t    fLast;    // Overall Upper bound 
+   Long64_t    fFirst;   // Overall lower bound
+   Long64_t    fLast;    // Overall Upper bound
 
 public:
    ProcFileElements(const char *fn = "") : fName(fn), fElements(0),
@@ -70,7 +70,7 @@ public:
 
    TSortedList   *GetListOfElements() const { return fElements; }
    Int_t          GetNumElements() const { return (fElements ? fElements->GetSize() : 0); }
-   
+
    Long64_t       GetFirst() const { return fFirst; }
    Long64_t       GetLast() const { return fLast; }
 

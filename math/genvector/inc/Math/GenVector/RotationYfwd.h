@@ -1,21 +1,21 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
-#ifndef ROOT_Math_GenVector_RotationYfwd 
+#ifndef ROOT_Math_GenVector_RotationYfwd
 #define ROOT_Math_GenVector_RotationYfwd  1
 
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
-  /** 
+  /**
       Class describing a rotation about the Y axis
-   */ 
+   */
 
-class RotationY; 
+class RotationY;
 
 }  // namespace Math
 }  // namespace ROOT
 
-#endif  // ROOT_Math_GenVector_RotationYfwd 
+#endif  // ROOT_Math_GenVector_RotationYfwd

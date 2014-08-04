@@ -105,7 +105,7 @@ TGuiBldAction::TGuiBldAction(const char *name, const char *title,
    // constructor
 
    fPicture = 0;
-   fPic = 0;  
+   fPic = 0;
    fAct = "";
 }
 

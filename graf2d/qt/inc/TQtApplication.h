@@ -27,7 +27,7 @@
 class TQtApplicationThread;
 
 class TQtApplication { // : public TApplicationImp
-  
+
 private:
   friend class TQtApplicationThread;
   TQtApplicationThread  *fGUIThread;

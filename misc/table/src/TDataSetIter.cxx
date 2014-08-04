@@ -70,7 +70,7 @@ TDataSetIter::TDataSetIter(TDataSet *link, Int_t depth, Bool_t dir)
    // Create a DataSet iterator to pass all nodes of the
    //     "depth"  levels
    //  of  TDataSet *link
-   
+
    for(UInt_t i = 0; i < sizeof(fNextSet) / sizeof(TIter*); ++i) {
       fNextSet[i] = (TIter*)0;
    }
@@ -100,17 +100,17 @@ TDataSetIter::~TDataSetIter()
 
 
 //______________________________________________________________________________
-TDataSet *TDataSetIter::operator *() const 
-{ 
+TDataSet *TDataSetIter::operator *() const
+{
    //operator *
-   return fDataSet == fgNullDataSet ? fWorkingDataSet : fDataSet; 
+   return fDataSet == fgNullDataSet ? fWorkingDataSet : fDataSet;
 }
 
 //______________________________________________________________________________
-TDataSet *TDataSetIter::GetNullSet() 
-{ 
+TDataSet *TDataSetIter::GetNullSet()
+{
    // return a fake pointer == -1 casted to (TDataSet *)
-   return (TDataSet *)fgNullDataSet;  
+   return (TDataSet *)fgNullDataSet;
 }
 
 //______________________________________________________________________________

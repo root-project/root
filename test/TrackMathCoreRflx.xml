@@ -16,14 +16,14 @@
   <field name="fY" iotype="Double32_t" />
   <field name="fZ" iotype="Double32_t" />
 </class>
-<class name="ROOT::Math::MatRepStd<Double32_t,4,4>"> 
+<class name="ROOT::Math::MatRepStd<Double32_t,4,4>">
   <field name="fArray" iotype="Double32_t [16]" />
 </class>
 <class name="ROOT::Math::MatRepSym<Double32_t,6>">
   <field name="fArray" iotype="Double32_t [21]" />
 </class>
 
-<class name="ROOT::Math::SMatrix<Double32_t,4,4,ROOT::Math::MatRepStd<Double32_t,4,4> >"> 
+<class name="ROOT::Math::SMatrix<Double32_t,4,4,ROOT::Math::MatRepStd<Double32_t,4,4> >">
   <field name="fRep" iotype="ROOT::Math::MatRepStd<Double32_t,4,4>" />
 </class>
 
@@ -60,5 +60,5 @@
 <class name="VecTrack<TrackD>" />
 <class name="VecTrack<TrackErrD>" />
 
- 
+
 </lcgdict>

@@ -26,28 +26,28 @@ const double Y0_P2 = 5.0;   // Y0 for test 1 (parabola)
 const double Y0_GAMMA = 0.32;  // Y0 for test 2 (gamma cdf)
 const double ALPHA_GAMMA = 16.; // alpha of gamma cdf
 const double THETA_GAMMA = 0.4;  // theta of gamma cdf
- 
-int gTestCase = 0; 
+
+int gTestCase = 0;
 
 double myfunc ( double x ) {
    myfuncCalls ++;
    if (gTestCase == 0) // polynomial
-      return x*x - Y0_P2;   
+      return x*x - Y0_P2;
    if (gTestCase == 1) // function showing bug in BrentMethod::
-      return ROOT::Math::gamma_cdf(x,ALPHA_GAMMA,THETA_GAMMA)-Y0_GAMMA; 
-   return 0; 
+      return ROOT::Math::gamma_cdf(x,ALPHA_GAMMA,THETA_GAMMA)-Y0_GAMMA;
+   return 0;
 }
 
-double ExactResult() { 
+double ExactResult() {
    if (gTestCase == 0) {
-      return std::sqrt(Y0_P2); 
+      return std::sqrt(Y0_P2);
    }
    if (gTestCase == 1)
       //return ROOT::Math::gamma_quantile(Y0_GAMMA,ALPHA_GAMMA,THETA_GAMMA);
       // put the value to avoid direct MathMore dependency
-      return 5.55680381022934800;   
+      return 5.55680381022934800;
 
-   return 0; 
+   return 0;
 }
 
 
@@ -56,14 +56,14 @@ double myfunc_p (double *x, double *) { return myfunc(x[0]); }
 
 int printStats(TStopwatch& timer, double root) {
 
-   //std::cout << "Return code:  " << status << std::endl; 
+   //std::cout << "Return code:  " << status << std::endl;
    double difference = root - ExactResult();
    int pr = std::cout.precision(16);
-   std::cout << "Result:       " << root << std::endl; 
+   std::cout << "Result:       " << root << std::endl;
    std::cout << "Exact result: " << ExactResult();
    std::cout.precision(pr);
-   std::cout << " difference: " << difference << std::endl; 
-   std::cout << "Time: " << timer.RealTime()/(double) iterTest << std::endl; 
+   std::cout << " difference: " << difference << std::endl;
+   std::cout << "Time: " << timer.RealTime()/(double) iterTest << std::endl;
    std::cout << "Number of calls to function: " << myfuncCalls/iterTest << std::endl;
 
    return difference > ERRORLIMIT;
@@ -71,15 +71,15 @@ int printStats(TStopwatch& timer, double root) {
 
 int runTest(int testcase = 0) {
 
-   double xmin = 0; 
+   double xmin = 0;
    double xmax = 10;
 
    std::cout << "*************************************************************\n";
-   gTestCase = testcase; 
-   if (gTestCase == 0) 
-      std::cout << "Test for simple function f(x) = x^2 - 5  \n" << std::endl; 
+   gTestCase = testcase;
+   if (gTestCase == 0)
+      std::cout << "Test for simple function f(x) = x^2 - 5  \n" << std::endl;
    if (gTestCase == 1) {
-      std::cout << "\nTest for  f(x) = gamma_cdf  \n" << std::endl; 
+      std::cout << "\nTest for  f(x) = gamma_cdf  \n" << std::endl;
       xmin = 3.955687382047723;
       xmax = 9.3423159494328623;
    }
@@ -92,7 +92,7 @@ int runTest(int testcase = 0) {
    int maxiter = 100;
 
    ROOT::Math::Functor1D    *func = new ROOT::Math::Functor1D (&myfunc);
-   
+
    TF1* f1 = new TF1("f1", myfunc_p, xmin, xmax);
    timer.Reset(); timer.Start(); myfuncCalls = 0;
    for (int i = 0; i < iterTest; ++i)
@@ -140,7 +140,7 @@ int runTest(int testcase = 0) {
 
 int testRootFinder() {
 
-   int status = 0; 
+   int status = 0;
    status |= runTest(0);  // test pol function
    if (status) std::cerr << "Test pol function  FAILED" << std::endl;
 
@@ -149,14 +149,14 @@ int testRootFinder() {
 
    std::cerr << "*************************************************************\n";
    std::cerr << "\nTest RootFinder :\t";
-   if (status == 0) 
+   if (status == 0)
       std::cerr << "OK " << std::endl;
-  else 
+  else
      std::cerr << "Failed !" << std::endl;
 
    return status;
 }
 
-int main() { 
+int main() {
    return testRootFinder();
 }

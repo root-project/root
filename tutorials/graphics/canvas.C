@@ -4,7 +4,7 @@
 // One of the first actions in a ROOT session is the creation of a Canvas.
 // Here we create a Canvas named "c1"
 //Author: Rene Brun
-   
+
   gROOT->Reset();
   c1 = new TCanvas("c1","Canvas Example",200,10,600,480);
 

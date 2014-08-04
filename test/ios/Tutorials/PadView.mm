@@ -16,7 +16,7 @@
 
    float scaleFactor;
    SelectionView *selectionView;
-   
+
    BOOL processPan;
    BOOL processTap;
 }
@@ -76,7 +76,7 @@
    const CGPoint p = [panGesture locationInView:self];
    [selectionView setPad : pad];
    [selectionView setShowRotation : YES];
-   
+
    if (panGesture.state == UIGestureRecognizerStateBegan) {
       selectionView.hidden = NO;
       [selectionView setEvent : kButton1Down atX : p.x andY : p.y];
@@ -103,7 +103,7 @@
    //Now draw into this context.
    CGContextTranslateCTM(ctx, 0.f, rect.size.height);
    CGContextScaleCTM(ctx, 1.f, -1.f);
-      
+
    //Disable anti-aliasing, to avoid "non-clear" colors.
    CGContextSetAllowsAntialiasing(ctx, 0);
    //Fill bitmap with black (nothing under cursor).
@@ -113,16 +113,16 @@
    //with special colors (color == object's identity)
    pad->SetContext(ctx);
    pad->PaintForSelection();
-   
+
    UIImage *uiImageForPicking = UIGraphicsGetImageFromCurrentImageContext();//autoreleased UIImage.
    CGImageRef cgImageForPicking = uiImageForPicking.CGImage;
    CGImageRetain(cgImageForPicking);//It must live as long, as I need :)
-   
+
    UIGraphicsEndImageContext();
-   
+
    return cgImageForPicking;
 
-} 
+}
 
 //_________________________________________________________________
 - (BOOL) fillPickingBufferFromCGImage : (CGImageRef) cgImage
@@ -134,14 +134,14 @@
    //alpha.
    const int bitmapBytesPerRow = pixelsW * 4;
    const int bitmapByteCount = bitmapBytesPerRow * pixelsH;
-   
+
    //Use the generic RGB color space.
    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
    if (!colorSpace) {
       //Log error: color space allocation failed.
       return NO;
    }
-   
+
    unsigned char *buffer = (unsigned char*)malloc(bitmapByteCount);
    if (!buffer) {
       //Log error: memory allocation failed.
@@ -149,8 +149,8 @@
       return NO;
    }
 
-   // Create the bitmap context. We want pre-multiplied ARGB, 8-bits 
-   // per component. Regardless of what the source image format is 
+   // Create the bitmap context. We want pre-multiplied ARGB, 8-bits
+   // per component. Regardless of what the source image format is
    // (CMYK, Grayscale, and so on) it will be converted over to the format
    // specified here by CGBitmapContextCreate.
    CGContextRef ctx = CGBitmapContextCreate(buffer, pixelsW, pixelsH, 8, bitmapBytesPerRow, colorSpace, kCGImageAlphaPremultipliedFirst);
@@ -162,18 +162,18 @@
       free(buffer);
       return NO;
    }
-   
-   const CGRect rect = CGRectMake(0.f, 0.f, pixelsW, pixelsH); 
-   //Draw the image to the bitmap context. Once we draw, the memory 
-   //allocated for the context for rendering will then contain the 
+
+   const CGRect rect = CGRectMake(0.f, 0.f, pixelsW, pixelsH);
+   //Draw the image to the bitmap context. Once we draw, the memory
+   //allocated for the context for rendering will then contain the
    //raw image data in the specified color space.
-   
+
    CGContextSetAllowsAntialiasing(ctx, 0);//Check, if I need this for a bitmap.
    CGContextDrawImage(ctx, rect, cgImage);
 
    pad->SetSelectionBuffer(pixelsW, pixelsH, buffer);
    // When finished, release the context
-   CGContextRelease(ctx); 
+   CGContextRelease(ctx);
    free(buffer);
 
    return YES;
@@ -188,7 +188,7 @@
 
    const BOOL res = [self fillPickingBufferFromCGImage : cgImage];
    CGImageRelease(cgImage);
-   
+
    return res;
 }
 
@@ -197,12 +197,12 @@
 {
    if (processTap) {
       const CGPoint tapPt = [tapGesture locationInView : self];
-      
+
       if (!pad->SelectionIsValid() && ![self initPadPicking])
          return;
-      
+
       pad->Pick(tapPt.x, tapPt.y);
-      
+
       if (pad->GetSelected()) {
          [selectionView setShowRotation : NO];
          [selectionView setPad : pad];

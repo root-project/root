@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Implementation file for class GSLRootFinderAlgorithms
-// 
+//
 // Created by: moneta  at Sun Nov 14 14:07:50 2004
-// 
+//
 // Last update: Sun Nov 14 14:07:50 2004
-// 
+//
 
 #include "Math/RootFinderAlgorithms.h"
 #include "GSLRootFSolver.h"
@@ -39,21 +39,21 @@ namespace ROOT {
 namespace Math {
 
 
-namespace Roots { 
+namespace Roots {
 
 
 
-Bisection::Bisection() 
+Bisection::Bisection()
 {
    // Bisection constructor
-   GSLRootFSolver * s = new GSLRootFSolver( gsl_root_fsolver_bisection ); 
-   SetSolver(s); 
+   GSLRootFSolver * s = new GSLRootFSolver( gsl_root_fsolver_bisection );
+   SetSolver(s);
 }
 
-Bisection::~Bisection() 
+Bisection::~Bisection()
 {
    // destructor
-   FreeSolver();  
+   FreeSolver();
 }
 
 Bisection::Bisection(const Bisection &) : GSLRootFinder()
@@ -61,7 +61,7 @@ Bisection::Bisection(const Bisection &) : GSLRootFinder()
   // dummy copy ctr
 }
 
-Bisection & Bisection::operator = (const Bisection &rhs) 
+Bisection & Bisection::operator = (const Bisection &rhs)
 {
    // dummy (private) operator=
    if (this == &rhs) return *this;  // time saving self-test
@@ -71,17 +71,17 @@ Bisection & Bisection::operator = (const Bisection &rhs)
 
 // falsepos method
 
-FalsePos::FalsePos() 
+FalsePos::FalsePos()
 {
    // FalsePos constructor
-   GSLRootFSolver * s = new GSLRootFSolver( gsl_root_fsolver_falsepos ); 
-   SetSolver(s); 
+   GSLRootFSolver * s = new GSLRootFSolver( gsl_root_fsolver_falsepos );
+   SetSolver(s);
 }
 
-FalsePos::~FalsePos() 
+FalsePos::~FalsePos()
 {
    // destructor
-   FreeSolver();  
+   FreeSolver();
 }
 
 FalsePos::FalsePos(const FalsePos &) : GSLRootFinder()
@@ -89,7 +89,7 @@ FalsePos::FalsePos(const FalsePos &) : GSLRootFinder()
   // dummy copy ctr
 }
 
-FalsePos & FalsePos::operator = (const FalsePos &rhs) 
+FalsePos & FalsePos::operator = (const FalsePos &rhs)
 {
    // dummy (private) operator=
    if (this == &rhs) return *this;  // time saving self-test
@@ -98,17 +98,17 @@ FalsePos & FalsePos::operator = (const FalsePos &rhs)
 
 // Brent method
 
-Brent::Brent() 
+Brent::Brent()
 {
    // Brent constructor
-   GSLRootFSolver * s = new GSLRootFSolver( gsl_root_fsolver_brent ); 
-   SetSolver(s); 
+   GSLRootFSolver * s = new GSLRootFSolver( gsl_root_fsolver_brent );
+   SetSolver(s);
 }
 
-Brent::~Brent() 
+Brent::~Brent()
 {
    // destructor
-   FreeSolver();  
+   FreeSolver();
 }
 
 Brent::Brent(const Brent &) : GSLRootFinder()
@@ -116,7 +116,7 @@ Brent::Brent(const Brent &) : GSLRootFinder()
   // dummy copy ctr
 }
 
-Brent & Brent::operator = (const Brent &rhs) 
+Brent & Brent::operator = (const Brent &rhs)
 {
    // dummy (private) operator=
    if (this == &rhs) return *this;  // time saving self-test
@@ -125,22 +125,22 @@ Brent & Brent::operator = (const Brent &rhs)
 
 
 //---------------------------------------------------------------------
-// algorithms with Derivatives 
+// algorithms with Derivatives
 //--------------------------------------------------------------------
 
 // Newton
 
-Newton::Newton() 
+Newton::Newton()
 {
    // Newton constructor
-   GSLRootFdFSolver * s = new GSLRootFdFSolver( gsl_root_fdfsolver_newton ); 
-   SetSolver(s); 
+   GSLRootFdFSolver * s = new GSLRootFdFSolver( gsl_root_fdfsolver_newton );
+   SetSolver(s);
 }
 
-Newton::~Newton() 
+Newton::~Newton()
 {
    // destructor
-   FreeSolver();  
+   FreeSolver();
 }
 
 Newton::Newton(const Newton &) : GSLRootFinderDeriv()
@@ -148,7 +148,7 @@ Newton::Newton(const Newton &) : GSLRootFinderDeriv()
   // dummy copy ctr
 }
 
-Newton & Newton::operator = (const Newton &rhs) 
+Newton & Newton::operator = (const Newton &rhs)
 {
    // dummy (private) operator=
    if (this == &rhs) return *this;  // time saving self-test
@@ -157,17 +157,17 @@ Newton & Newton::operator = (const Newton &rhs)
 
 // Secant
 
-Secant::Secant() 
+Secant::Secant()
 {
    // Secant constructor
-   GSLRootFdFSolver * s = new GSLRootFdFSolver( gsl_root_fdfsolver_secant ); 
-   SetSolver(s); 
+   GSLRootFdFSolver * s = new GSLRootFdFSolver( gsl_root_fdfsolver_secant );
+   SetSolver(s);
 }
 
-Secant::~Secant() 
+Secant::~Secant()
 {
    // destructor
-   FreeSolver();  
+   FreeSolver();
 }
 
 Secant::Secant(const Secant &) : GSLRootFinderDeriv()
@@ -175,7 +175,7 @@ Secant::Secant(const Secant &) : GSLRootFinderDeriv()
   // dummy copy ctr
 }
 
-Secant & Secant::operator = (const Secant &rhs) 
+Secant & Secant::operator = (const Secant &rhs)
 {
    // dummy (private) operator=
    if (this == &rhs) return *this;  // time saving self-test
@@ -184,17 +184,17 @@ Secant & Secant::operator = (const Secant &rhs)
 
 // Steffenson
 
-Steffenson::Steffenson() 
+Steffenson::Steffenson()
 {
    // Steffenson constructor
-   GSLRootFdFSolver * s = new GSLRootFdFSolver( gsl_root_fdfsolver_steffenson ); 
-   SetSolver(s); 
+   GSLRootFdFSolver * s = new GSLRootFdFSolver( gsl_root_fdfsolver_steffenson );
+   SetSolver(s);
 }
 
-Steffenson::~Steffenson() 
+Steffenson::~Steffenson()
 {
    // destructor
-   FreeSolver();  
+   FreeSolver();
 }
 
 Steffenson::Steffenson(const Steffenson &) : GSLRootFinderDeriv()
@@ -202,7 +202,7 @@ Steffenson::Steffenson(const Steffenson &) : GSLRootFinderDeriv()
   // dummy copy ctr
 }
 
-Steffenson & Steffenson::operator = (const Steffenson &rhs) 
+Steffenson & Steffenson::operator = (const Steffenson &rhs)
 {
    // dummy (private) operator=
    if (this == &rhs) return *this;  // time saving self-test

@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta Dec 2006 
+// Authors: L. Moneta Dec 2006
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class GSLMultiMinFunctionWrapper
-// 
+//
 // Created by: moneta  at Sat Nov 13 14:54:41 2004
-// 
+//
 // Last update: Sat Nov 13 14:54:41 2004
-// 
+//
 #ifndef ROOT_Math_GSLMultiFitFunctionWrapper
 #define ROOT_Math_GSLMultiFitFunctionWrapper
 
@@ -49,46 +49,46 @@ namespace Math {
 
 
 /**
-   wrapper to a multi-dim function withtout  derivatives for multi-dimensional 
+   wrapper to a multi-dim function withtout  derivatives for multi-dimensional
    minimization algorithm
 
    @ingroup MultiMin
 */
 
-class GSLMultiFitFunctionWrapper { 
+class GSLMultiFitFunctionWrapper {
 
-public: 
+public:
 
-   GSLMultiFitFunctionWrapper() 
+   GSLMultiFitFunctionWrapper()
    {
-      fFunc.f = 0; 
-      fFunc.df = 0; 
-      fFunc.fdf = 0; 
-      fFunc.n = 0; 
-      fFunc.p = 0; 
+      fFunc.f = 0;
+      fFunc.df = 0;
+      fFunc.fdf = 0;
+      fFunc.n = 0;
+      fFunc.p = 0;
       fFunc.params = 0;
    }
 
 
    /// Fill gsl function structure from a C++ function iterator and size and number of residuals
-   template<class FuncVector> 
-   void SetFunction(const FuncVector & f, unsigned int nres, unsigned int npar  ) { 
+   template<class FuncVector>
+   void SetFunction(const FuncVector & f, unsigned int nres, unsigned int npar  ) {
       const void * p = &f;
-      assert (p != 0); 
+      assert (p != 0);
       fFunc.f   = &GSLMultiFitFunctionAdapter<FuncVector >::F;
       fFunc.df  = &GSLMultiFitFunctionAdapter<FuncVector >::Df;
       fFunc.fdf = &GSLMultiFitFunctionAdapter<FuncVector >::FDf;
-      fFunc.n = nres; 
-      fFunc.p = npar; 
-      fFunc.params =  const_cast<void *>(p); 
+      fFunc.n = nres;
+      fFunc.p = npar;
+      fFunc.params =  const_cast<void *>(p);
    }
-   
-   gsl_multifit_function_fdf * GetFunc() { return &fFunc; } 
+
+   gsl_multifit_function_fdf * GetFunc() { return &fFunc; }
 
 
-  private: 
-   
-   gsl_multifit_function_fdf fFunc; 
+  private:
+
+   gsl_multifit_function_fdf fFunc;
 
 };
 

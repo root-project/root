@@ -59,7 +59,7 @@ protected:
    TGLongPosition    fMousePos;     // position of mouse
    TGLongPosition    fScrollVal;    // scroll value
    TGDimension       fVirtualSize;  // the current virtual window size
-   TGRectangle       fExposedRegion;// exposed area   
+   TGRectangle       fExposedRegion;// exposed area
 
    Int_t             fScrolling;    // scrolling direction
    Atom_t            fClipboard;    // clipboard property
@@ -74,7 +74,7 @@ protected:
 
    virtual void DoRedraw();
    virtual void UpdateRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   virtual Bool_t ItemLayout() { return kFALSE; } 
+   virtual Bool_t ItemLayout() { return kFALSE; }
 
 private:
    TGView(const TGView&);              // not implemented

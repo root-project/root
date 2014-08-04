@@ -74,13 +74,13 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
    //     s3http://host.example.com/bucket/path/to/my/file
    //    s3https://host.example.com/bucket/path/to/my/file
    //        as3://host.example.com/bucket/path/to/my/file
-   // 
+   //
    // For files hosted by Google Storage, use the following forms:
    //
    //        gs://storage.googleapis.com/bucket/path/to/my/file
    //    gshttp://storage.googleapis.com/bucket/path/to/my/file
    //  gsthttps://storage.googleapis.com/bucket/path/to/my/file
-   // 
+   //
    // The 'as3' scheme is accepted for backwards compatibility but its usage is
    // deprecated.
    //
@@ -109,7 +109,7 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
    // where the environemntal variables solution is not convenient (see below).
    //
    // If you need to specify both NOPROXY and AUTH separate them by ' '
-   // (blank), for instance: 
+   // (blank), for instance:
    // "NOPROXY AUTH=F38XYZABCDeFgH4D0E1F:V+frt4re7J1euSNFnmaf8wwmI4AAAE7kzxZ/TTM+"
    //
    // Examples:
@@ -127,7 +127,7 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
    // If neither the AUTH information is provided in the 'options' argument
    // nor the environmental variables are set, we try to open the file
    // without providing any authentication information to the server. This
-   // is useful when the file is set an access control that allows for 
+   // is useful when the file is set an access control that allows for
    // any unidentified user to read the file.
 
    // Make sure this is a valid S3 path. We accept 'as3' as a scheme, for
@@ -151,25 +151,25 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
       Error("TS3WebFile", "%s", (const char*)errorMsg);
       MakeZombie();
       gDirectory = gROOT;
-      return;      
+      return;
    }
 
    // Set this S3 object's URL, the bucket name this file is located in
    // and the object key
    fS3Request.SetBucket(rex[3]);
    fS3Request.SetObjectKey(TString::Format("/%s", (const char*)rex[4]));
- 
+
    // Initialize super-classes data members (fUrl is a data member of
    // super-super class TFile)
    TString protocol = "https";
-   if (rex[1].EndsWith("http", TString::kIgnoreCase) || 
+   if (rex[1].EndsWith("http", TString::kIgnoreCase) ||
        rex[1].EqualTo("as3", TString::kIgnoreCase))
       protocol = "http";
    fUrl.SetUrl(TString::Format("%s://%s/%s/%s", (const char*)protocol,
       (const char*)rex[2], (const char*)rex[3], (const char*)rex[4]));
-      
+
    // Set S3-specific data members. If the access and secret keys are not
-   // provided in the 'options' argument we look in the environmental 
+   // provided in the 'options' argument we look in the environmental
    // variables.
    const char* kAccessKeyEnv = "S3_ACCESS_KEY";
    const char* kSecretKeyEnv = "S3_SECRET_KEY";
@@ -193,12 +193,12 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
       else
          fS3Request.SetAuthType(TS3HTTPRequest::kAmazon);
    }
-   
+
    // Assume this server does not serve multi-range HTTP GET requests. We
    // will detect this when the HTTP headers of this files are retrieved
    // later in the initialization process
    fUseMultiRange = kFALSE;
-      
+
    // Call super-class initializer
    TWebFile::Init(kFALSE);
 
@@ -208,7 +208,7 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
       // so inform the user so that they can check.
       Error("TS3WebFile", "could not find authentication info in "\
          "'options' argument and at least one of the environment variables '%s' or '%s' is not set",
-         kAccessKeyEnv, kSecretKeyEnv);     
+         kAccessKeyEnv, kSecretKeyEnv);
    }
 }
 
@@ -224,16 +224,16 @@ Bool_t TS3WebFile::ParseOptions(Option_t* options, TString& accessKey, TString& 
    // accessing this file's contents.
    // For instance:
    // "NOPROXY AUTH=F38XYZABCDeFgHiJkLm:V+frt4re7J1euSNFnmaf8wwmI401234E7kzxZ/TTM+"
-   
+
    TString optStr = (const char*)options;
    if (optStr.IsNull())
       return kTRUE;
-      
+
    fNoProxy = kFALSE;
    if (optStr.Contains("NOPROXY", TString::kIgnoreCase))
       fNoProxy = kTRUE;
    CheckProxy();
-   
+
    // Look in the options string for the authentication information.
    TPMERegexp rex("(^AUTH=|^.* AUTH=)([a-z0-9]+):([a-z0-9+/]+)[\\s]*.*$", "i");
    if (rex.Match(optStr) < 4) {
@@ -282,7 +282,7 @@ Bool_t TS3WebFile::ReadBuffers(char* buf, Long64_t* pos, Int_t* len, Int_t nbuf)
    // According to the kind of server this file is hosted by, we use a
    // single HTTP request with a muti-range header or we generate multiple
    // requests with a single range each.
-   
+
    // Does this server support multi-range GET requests?
    if (fUseMultiRange)
       return TWebFile::ReadBuffers(buf, pos, len, nbuf);
@@ -312,7 +312,7 @@ void TS3WebFile::ProcessHttpHeader(const TString& headerLine)
    // receive a multi-range request they sent back the whole file contents.
    // For this class, if the server do not support multirange requests
    // we issue multiple single-range requests instead.
-   
+
    TPMERegexp rex("^Server: (.+)", "i");
    if (rex.Match(headerLine) != 2)
       return;
@@ -334,7 +334,7 @@ Bool_t TS3WebFile::GetCredentialsFromEnv(const char* accessKeyEnv, const char* s
    // Sets the access and secret keys from the environmental variables, if
    // they are both set.
 
-   // Look first in the recommended environmental variables. Both variables 
+   // Look first in the recommended environmental variables. Both variables
    // must be set.
    TString accKey = gSystem->Getenv(accessKeyEnv);
    TString secKey = gSystem->Getenv(secretKeyEnv);

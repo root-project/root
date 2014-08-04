@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -37,7 +37,7 @@ namespace Math {
 
 void EulerAngles::Rectify()
 {
-   // rectify 
+   // rectify
    if ( fTheta < 0 || fTheta > Pi() ) {
       Scalar t = fTheta - std::floor( fTheta/(2*Pi()) ) * 2*Pi();
       if ( t <= Pi() ) {
@@ -48,15 +48,15 @@ void EulerAngles::Rectify()
          fPsi =  fPsi + Pi();
       }
    }
-   
+
    if ( fPhi <= -Pi()|| fPhi > Pi() ) {
       fPhi = fPhi - std::floor( fPhi/(2*Pi()) +.5 ) * 2*Pi();
    }
-   
+
    if ( fPsi <= -Pi()|| fPsi > Pi() ) {
       fPsi = fPsi - std::floor( fPsi/(2*Pi()) +.5 ) * 2*Pi();
    }
-   
+
 } // Rectify()
 
 
@@ -128,8 +128,8 @@ operator * ( RotationZ const & r, EulerAngles const & e )  {
 std::ostream & operator<< (std::ostream & os, const EulerAngles & e) {
    // TODO - this will need changing for machine-readable issues
    //        and even the human readable form may need formatiing improvements
-   os << "\n{phi: " << e.Phi() << "   theta: " << e.Theta() 
-   << "   psi: " << e.Psi() << "}\n"; 
+   os << "\n{phi: " << e.Phi() << "   theta: " << e.Theta()
+   << "   psi: " << e.Psi() << "}\n";
    return os;
 }
 

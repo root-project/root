@@ -167,7 +167,7 @@ Bool_t TEventList::ContainsRange(Long64_t entrymin, Long64_t entrymax)
 
    Long64_t imax = TMath::BinarySearch(fN,fList,entrymax);
    //printf("ContainsRange: entrymin=%lld, entrymax=%lld,imax=%lld, fList[imax]=%lld\n",entrymin,entrymax,imax,fList[imax]);
-   
+
    if (fList[imax] < entrymin) return kFALSE;
    return kTRUE;
 }
@@ -176,7 +176,7 @@ Bool_t TEventList::ContainsRange(Long64_t entrymin, Long64_t entrymax)
 void TEventList::DirectoryAutoAdd(TDirectory* dir)
 {
    // Called by TKey and others to automatically add us to a directory when we are read from a file.
-   
+
    SetDirectory(dir);
 }
 
@@ -355,7 +355,7 @@ void TEventList::SetDirectory(TDirectory *dir)
 void TEventList::SetName(const char *name)
 {
    // Change the name of this TEventList
-   
+
    //  TEventLists are named objects in a THashList.
    //  We must update the hashlist if we change the name
    if (fDirectory) fDirectory->Remove(this);

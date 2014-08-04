@@ -23,7 +23,7 @@
 
 //_____________________________________________________________________________
 // TGeoScaledShape - A shape scaled by a TGeoScale transformation
-//    
+//
 //Begin_Html
 /*
 <img src="gif/TGeoScaledShape.gif">
@@ -33,14 +33,14 @@
 
 
 ClassImp(TGeoScaledShape)
-   
+
 //_____________________________________________________________________________
 TGeoScaledShape::TGeoScaledShape()
 {
 // Default constructor
    fShape = 0;
    fScale = 0;
-}   
+}
 
 
 //_____________________________________________________________________________
@@ -78,16 +78,16 @@ Double_t TGeoScaledShape::Capacity() const
    const Double_t *scale = fScale->GetScale();
    capacity *= scale[0]*scale[1]*scale[2];
    return capacity;
-}   
-   
-//_____________________________________________________________________________   
+}
+
+//_____________________________________________________________________________
 void TGeoScaledShape::ComputeBBox()
 {
 // Compute bounding box of the scaled shape
    if (!fShape) {
       Error("ComputeBBox", "Scaled shape %s without shape", GetName());
       return;
-   } 
+   }
    if (fShape->IsAssembly()) fShape->ComputeBBox();
    TGeoBBox *box = (TGeoBBox*)fShape;
    const Double_t *orig = box->GetOrigin();
@@ -95,15 +95,15 @@ void TGeoScaledShape::ComputeBBox()
    point[0] = box->GetDX();
    point[1] = box->GetDY();
    point[2] = box->GetDZ();
-   
+
    fScale->LocalToMaster(orig, fOrigin);
    fScale->LocalToMaster(point, master);
    fDX = TMath::Abs(master[0]);
    fDY = TMath::Abs(master[1]);
    fDZ = TMath::Abs(master[2]);
-}   
+}
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoScaledShape::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
@@ -171,15 +171,15 @@ Double_t TGeoScaledShape::DistFromOutside(const Double_t *point, const Double_t 
 //   printf("converted distance: %f\n",dist);
    return dist;
 }
-   
+
 //_____________________________________________________________________________
-TGeoVolume *TGeoScaledShape::Divide(TGeoVolume * /*voldiv*/, const char *divname, Int_t /*iaxis*/, Int_t /*ndiv*/, 
-                             Double_t /*start*/, Double_t /*step*/) 
+TGeoVolume *TGeoScaledShape::Divide(TGeoVolume * /*voldiv*/, const char *divname, Int_t /*iaxis*/, Int_t /*ndiv*/,
+                             Double_t /*start*/, Double_t /*step*/)
 {
 // Cannot divide assemblies.
    Error("Divide", "Scaled shapes cannot be divided. Division volume %s not created", divname);
    return 0;
-}   
+}
 
 //_____________________________________________________________________________
 const TBuffer3D & TGeoScaledShape::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
@@ -200,7 +200,7 @@ const TBuffer3D & TGeoScaledShape::GetBuffer3D(Int_t reqSections, Bool_t localFr
          TransformPoints(buffer.fPnts, buffer.NbPnts());
       }
    }
-      
+
    return buffer;
 }
 //_____________________________________________________________________________
@@ -233,9 +233,9 @@ void TGeoScaledShape::InspectShape() const
 Bool_t TGeoScaledShape::IsAssembly() const
 {
  // Returns true if the scaled shape is an assembly.
-   return fShape->IsAssembly(); 
+   return fShape->IsAssembly();
 }
-   
+
 //_____________________________________________________________________________
 Bool_t TGeoScaledShape::IsReflected() const
 {
@@ -245,13 +245,13 @@ Bool_t TGeoScaledShape::IsReflected() const
 
 //_____________________________________________________________________________
 TBuffer3D *TGeoScaledShape::MakeBuffer3D() const
-{ 
+{
    // Creates a TBuffer3D describing *this* shape.
    // Coordinates are in local reference frame.
 
    TBuffer3D *buff = fShape->MakeBuffer3D();
-   if (buff) SetPoints(buff->fPnts);   
-   return buff; 
+   if (buff) SetPoints(buff->fPnts);
+   return buff;
 }
 
 //_____________________________________________________________________________
@@ -268,10 +268,10 @@ TGeoShape *TGeoScaledShape::MakeScaledShape(const char *name, TGeoShape *shape, 
                       scale->GetScale()[2]*old_scale->GetScale()[2]);
       new_shape = new TGeoScaledShape(name, old_shape, scale);
       return new_shape;
-   }   
+   }
    new_shape = new TGeoScaledShape(name, shape, scale);
    return new_shape;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoScaledShape::SetSegsAndPols(TBuffer3D &buff) const
@@ -306,9 +306,9 @@ void TGeoScaledShape::SavePrimitive(std::ostream &out, Option_t *option)
    TString sname = fShape->GetPointerName();
    const Double_t *sc = fScale->GetScale();
    out << "   // Scale factor:" << std::endl;
-   out << "   TGeoScale *pScale = new TGeoScale(\"" << fScale->GetName() 
+   out << "   TGeoScale *pScale = new TGeoScale(\"" << fScale->GetName()
        << "\"," << sc[0] << "," << sc[1] << "," << sc[2] << ");" << std::endl;
-   out << "   TGeoScaledShape *" << GetPointerName() << " = new TGeoScaledShape(\"" 
+   out << "   TGeoScaledShape *" << GetPointerName() << " = new TGeoScaledShape(\""
        << GetName() << "\"," << sname << ", pScale);" << std::endl;
 }
 
@@ -322,7 +322,7 @@ void TGeoScaledShape::SetPoints(Double_t *points) const
    for (Int_t i=0; i<npts; i++) {
       fScale->LocalToMaster(&points[3*i], master);
       memcpy(&points[3*i], master, 3*sizeof(Double_t));
-   }   
+   }
 }
 
 //_____________________________________________________________________________
@@ -343,7 +343,7 @@ void TGeoScaledShape::SetPoints(Float_t *points) const
       points[index] = master[0];
       points[index+1] = master[1];
       points[index+2] = master[2];
-   }   
+   }
 }
 
 //_____________________________________________________________________________

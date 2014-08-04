@@ -1,6 +1,6 @@
 #ifndef ROOT_TQtClientGuard
 #define ROOT_TQtClientGuard
- 
+
 // @(#)root/qt:$Id$
 // Author: Valeri Fine   21/01/2002
 
@@ -16,9 +16,9 @@
 #include <qobject.h>
 #include <qpixmap.h>
 #if QT_VERSION < 0x40000
-#  include <qptrlist.h> 
+#  include <qptrlist.h>
 #else /* QT_VERSION */
-#  include <QList> 
+#  include <QList>
 #endif /* QT_VERSION */
 #include "TQtClientWidget.h"
 

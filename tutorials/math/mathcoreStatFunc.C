@@ -1,8 +1,8 @@
-// Example macro showing some major probability density functions in ROOT. 
+// Example macro showing some major probability density functions in ROOT.
 // The macro shows four of them with
 // respect to their two variables. In order to run the macro type:
 //
-//   root [0] .x mathcoreStatFunc.C 
+//   root [0] .x mathcoreStatFunc.C
 //
 //  Author: Andras Zsenei
 

@@ -24,12 +24,12 @@ void testNormCross()
       type = "Float_t";
    else if ( strcmp( typeid(T).name(), "d" ) == 0 )
       type = "Double_t";
-   else 
+   else
       type = typeid(T).name();
 
    TMath::NormCross(fv1,fv2,fout);
 
-   cout << "NormCross(const " << type << " v1[3],const " 
+   cout << "NormCross(const " << type << " v1[3],const "
    << type << " v2[3]," << type << " out[3]): out = ["
    << fout[0] << ", " << fout[1] << ", " << fout[2] << "]"
    << endl;
@@ -120,7 +120,7 @@ void testPoints(T x, T y)
 
    T dx[4] = {0, 0, 2, 2};
    T dy[4] = {0, 2, 2, 0};
-   cout << "Point(" << x << "," << y << ") IsInside?: " 
+   cout << "Point(" << x << "," << y << ") IsInside?: "
         << IsInside( x, y, n, dx, dy) << endl;
 
 }
@@ -133,14 +133,14 @@ void testPlane()
    T dp3[3] = {0,1,0};
    T dn[3];
    Normal2Plane(dp1, dp2, dp3, dn);
-   cout << "Normal: (" 
+   cout << "Normal: ("
         << dn[0] << ", "
         << dn[1] << ", "
-        << dn[2] << ")" 
+        << dn[2] << ")"
         << endl;
 }
 
-void testTMath() 
+void testTMath()
 {
    cout << "Starting tests on TMath..." << endl;
 

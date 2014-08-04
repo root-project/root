@@ -25,7 +25,7 @@ namespace Math {
     // type of integration
 
 
-  
+
     //for 1-dim integration
   namespace IntegrationOneDim {
 
@@ -64,7 +64,7 @@ namespace Math {
 
      enum Type {kDEFAULT = -1, kADAPTIVE, kVEGAS, kMISER, kPLAIN};
 
-  }  
+  }
 
 
 } // namespace Math

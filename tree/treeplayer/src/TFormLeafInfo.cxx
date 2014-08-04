@@ -89,7 +89,7 @@ TFormLeafInfo::TFormLeafInfo(TClass* classptr, Long_t offset,
 TFormLeafInfo::TFormLeafInfo(const TFormLeafInfo& orig) : TObject(orig),fClass(orig.fClass),fOffset(orig.fOffset),fElement(orig.fElement),fCounter(0),fNext(0),fClassName(orig.fClassName),fElementName(orig.fElementName),fMultiplicity(orig.fMultiplicity)
 {
    //Constructor.
-   
+
    // Deep copy the pointers.
    if (orig.fCounter) fCounter = orig.fCounter->DeepCopy();
    if (orig.fNext) fNext = orig.fNext->DeepCopy();
@@ -229,7 +229,7 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t& instance)
 
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kAny:
-         case TStreamerInfo::kOffsetL + TStreamerInfo::kSTL: 
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kSTL:
          {
             // An array of objects.
             Int_t index;
@@ -998,12 +998,12 @@ TFormLeafInfoNumerical::TFormLeafInfoNumerical(TVirtualCollectionProxy *collecti
    fKind(kNoType_t), fIsBool(kFALSE)
 {
    // Construct a TFormLeafInfo for the numerical type contained in the collection.
-   
+
    if (collection) {
       fKind = (EDataType)collection->GetType();
       if (fKind == TStreamerInfo::kOffsetL + TStreamerInfo::kChar) {
          // Could be a bool
-         if (strcmp( collection->GetCollectionClass()->GetName(), "vector<bool>") == 0 
+         if (strcmp( collection->GetCollectionClass()->GetName(), "vector<bool>") == 0
              || strncmp( collection->GetCollectionClass()->GetName(), "bitset<", strlen("bitset<") ) ==0 ) {
             fIsBool = kTRUE;
             fKind = (EDataType)18;
@@ -1023,7 +1023,7 @@ TFormLeafInfoNumerical::TFormLeafInfoNumerical(const TFormLeafInfoNumerical& ori
 }
 
 //______________________________________________________________________________
-void TFormLeafInfoNumerical::Swap(TFormLeafInfoNumerical& other) 
+void TFormLeafInfoNumerical::Swap(TFormLeafInfoNumerical& other)
 {
    // Exception safe swap.
 
@@ -1058,10 +1058,10 @@ TFormLeafInfoNumerical::~TFormLeafInfoNumerical()
 Bool_t TFormLeafInfoNumerical::IsString() const
 {
    // Return true if the underlying data is a string
-   
+
    if (fIsBool) return kFALSE;
    return TFormLeafInfo::IsString();
-}  
+}
 
 //______________________________________________________________________________
 Bool_t TFormLeafInfoNumerical::Update()
@@ -1575,7 +1575,7 @@ Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf)
    void *ptr = GetLocalValuePointer(leaf);
 
    if (fCounter) { return (Int_t)fCounter->ReadValue((char*)ptr); }
-   
+
    R__ASSERT(fCollProxy);
    if (ptr==0) return 0;
    TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
@@ -1619,7 +1619,7 @@ T TFormLeafInfoCollection::ReadValueImpl(char *where, Int_t instance)
 
    if (fNext==0) return 0;
    UInt_t len,index,sub_instance;
-   len = (fNext->fElement==0)? 0 : fNext->GetArrayLength(); 
+   len = (fNext->fElement==0)? 0 : fNext->GetArrayLength();
    Int_t primary = fNext->GetPrimaryIndex();
    if (len) {
       index = instance / len;
@@ -2094,7 +2094,7 @@ TFormLeafInfoMethod::TFormLeafInfoMethod(const TFormLeafInfoMethod& orig)
 void TFormLeafInfoMethod::Swap(TFormLeafInfoMethod &other)
 {
    // Exception safe swap.
-   TFormLeafInfo::Swap(other); 
+   TFormLeafInfo::Swap(other);
    std::swap(fMethod,other.fMethod);
    std::swap(fMethodName,other.fMethodName);
    std::swap(fParams,other.fParams);
@@ -2343,7 +2343,7 @@ TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim(const TFormLeafInfoMultiVarDi
 void TFormLeafInfoMultiVarDim::Swap(TFormLeafInfoMultiVarDim &other)
 {
    // Exception safe swap.
-   TFormLeafInfo::Swap(other); 
+   TFormLeafInfo::Swap(other);
    std::swap(fNsize,other.fNsize);
    std::swap(fSizes,other.fSizes);
    std::swap(fSumOfSizes,other.fSumOfSizes);
@@ -2796,7 +2796,7 @@ TFormLeafInfoCast::TFormLeafInfoCast(const TFormLeafInfoCast& orig) :
 void TFormLeafInfoCast::Swap(TFormLeafInfoCast &other)
 {
    // Exception safe swap.
-   TFormLeafInfo::Swap(other); 
+   TFormLeafInfo::Swap(other);
    std::swap(fCasted,other.fCasted);
    std::swap(fCastedName,other.fCastedName);
    std::swap(fGoodCast,other.fGoodCast);
@@ -2879,7 +2879,7 @@ Bool_t TFormLeafInfoCast::Update()
 
 //______________________________________________________________________________
 //
-// TFormLeafTTree is a small helper class to implement reading 
+// TFormLeafTTree is a small helper class to implement reading
 // from the containing TTree object itself.
 //______________________________________________________________________________
 
@@ -2900,7 +2900,7 @@ TFormLeafInfoTTree::TFormLeafInfoTTree(const TFormLeafInfoTTree& orig) :
    fCurrent = orig.fCurrent;
 }
 
-TFormLeafInfo* TFormLeafInfoTTree::DeepCopy() const 
+TFormLeafInfo* TFormLeafInfoTTree::DeepCopy() const
 {
    // Copy the object and all its content.
 
@@ -2940,10 +2940,10 @@ INSTANTIATE_GETVAL(TFormLeafInfoTTree);
 INSTANTIATE_READVAL(TFormLeafInfoTTree);
 
 //______________________________________________________________________________
-Bool_t TFormLeafInfoTTree::Update() 
+Bool_t TFormLeafInfoTTree::Update()
 {
    // Update after a change of file in a chain
-   
+
    if (fAlias.Length() && fAlias != fTree->GetName()) {
       fCurrent = fTree->GetFriend(fAlias.Data());
    }

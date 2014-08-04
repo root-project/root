@@ -60,7 +60,7 @@
 //  matrices with large dimensions.                                     //
 //                                                                      //
 //  Thus the algorithm should not used for large dimensions of x and y  //
-//    dim(x) should not exceed O(100)                                   //    
+//    dim(x) should not exceed O(100)                                   //
 //    dim(y) should not exceed O(500)                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////

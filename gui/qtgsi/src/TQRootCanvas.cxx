@@ -159,7 +159,7 @@ void TQRootCanvas::mousePressEvent( QMouseEvent *e )
             fCanvas->SetSelectedPad(pad);
          }
          gROOT->SetSelectedPrimitive(selected);
-         fContextMenu->Popup(selected, gPad->AbsPixeltoX(gPad->GetEventX()), 
+         fContextMenu->Popup(selected, gPad->AbsPixeltoX(gPad->GetEventX()),
                              gPad->AbsPixeltoY(gPad->GetEventY()), e);
 
          break;
@@ -323,7 +323,7 @@ void TQRootCanvas::dropEvent( QDropEvent *Event )
          std::cout << "object " <<
 #if  (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
          str.data()
-#else 
+#else
          str
 #endif
          <<  " not found by ROOT" << std::endl;

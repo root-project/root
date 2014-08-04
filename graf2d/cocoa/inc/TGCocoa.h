@@ -41,7 +41,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-namespace ROOT {   
+namespace ROOT {
 namespace MacOSX {
 
 namespace X11 {
@@ -61,12 +61,12 @@ class TGCocoa : public TVirtualX {
 public:
    TGCocoa();
    TGCocoa(const char *name, const char *title);
-   
+
    ~TGCocoa();
-   
+
    //TVirtualX final overriders.
    //I split them in a group not to get lost in this fat interface.
-   
+
    ///////////////////////////////////////
    //General.
    virtual Bool_t      Init(void *display);
@@ -80,13 +80,13 @@ public:
    virtual UInt_t      ScreenWidthMM()const;
    virtual Int_t       GetDepth()const;
    virtual void        Update(Int_t mode);
-   
+
    //Non-virtual functions.
            void                         ReconfigureDisplay();
            ROOT::MacOSX::X11::Rectangle GetDisplayGeometry()const;
    //End of general.
    ///////////////////////////////////////
-   
+
    ///////////////////////////////////////
    //Window management part:
    virtual Window_t  GetDefaultRootWindow()const;
@@ -113,7 +113,7 @@ public:
                                   void *visual, SetWindowAttributes_t *attr,
                                   UInt_t wtype);
 
-   
+
    virtual void      DestroyWindow(Window_t wid);
    virtual void      DestroySubwindows(Window_t wid);
 
@@ -130,7 +130,7 @@ public:
    virtual void      MapRaised(Window_t wid);
    virtual void      UnmapWindow(Window_t wid);
    virtual void      RaiseWindow(Window_t wid);
-   virtual void      LowerWindow(Window_t wid);  
+   virtual void      LowerWindow(Window_t wid);
 
    virtual void      MoveWindow(Window_t wid, Int_t x, Int_t y);
    virtual void      MoveResizeWindow(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
@@ -145,7 +145,7 @@ public:
    virtual void      SetWindowBackgroundPixmap(Window_t wid, Pixmap_t pxm);
 
    virtual Window_t  GetParent(Window_t wid)const;
-   
+
    virtual void      SetWindowName(Window_t wid, char *name);
    virtual void      SetIconName(Window_t wid, char *name);
    virtual void      SetIconPixmap(Window_t wid, Pixmap_t pix);
@@ -155,7 +155,7 @@ public:
 
    //End window-management part.
    ///////////////////////////////////////
-   
+
    /////////////////////////////
    //Set of "Window manager hints".
    virtual void      SetMWMHints(Window_t winID, UInt_t value, UInt_t decorators, UInt_t inputMode);
@@ -192,7 +192,7 @@ public:
    //End of GUI-rendering part.
    ///////////////////////////////////////
 
-   
+
    ///////////////////////////////////////
    //Pixmap management.
    //-Used by TCanvas/TPad classes:
@@ -203,7 +203,7 @@ public:
    virtual void      ClosePixmap();
    //Used by GUI.
    virtual Pixmap_t  CreatePixmap(Drawable_t wid, UInt_t w, UInt_t h);
-   virtual Pixmap_t  CreatePixmap(Drawable_t wid, const char *bitmap, UInt_t width, UInt_t height, 
+   virtual Pixmap_t  CreatePixmap(Drawable_t wid, const char *bitmap, UInt_t width, UInt_t height,
                                   ULong_t foregroundColor, ULong_t backgroundColor,
                                   Int_t depth);
    virtual Pixmap_t  CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
@@ -211,7 +211,7 @@ public:
                                   UInt_t width, UInt_t height);
            void      DeletePixmapAux(Pixmap_t pixmapID);//Non-overrider.
    virtual void      DeletePixmap(Pixmap_t pixmapID);
-   
+
    //-"Qt ROOT".
    virtual Int_t     AddPixmap(ULong_t pixid, UInt_t w, UInt_t h);
    virtual unsigned char *GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
@@ -241,7 +241,7 @@ public:
    virtual void      ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t);//Noop.
    //End of mouse related part.
    /////////////////////////////
-   
+
    /////////////////////////////
    //Keyboard management.
    virtual void      SetKeyAutoRepeat(Bool_t on = kTRUE);
@@ -267,7 +267,7 @@ public:
    virtual void         FreeFontNames(char **fontlist);
    //End of font management.
    /////////////////////////////
-   
+
    /////////////////////////////
    //Color management.
    virtual Bool_t       ParseColor(Colormap_t cmap, const char *cname, ColorStruct_t &color);
@@ -282,7 +282,7 @@ public:
 
    //End of color management.
    /////////////////////////////
-   
+
    /////////////////////////////
    //Context management.
    virtual GContext_t   CreateGC(Drawable_t wid, GCValues_t *gval);
@@ -293,7 +293,7 @@ public:
    virtual void         DeleteGC(GContext_t gc);
    //Context management.
    /////////////////////////////
-   
+
    /////////////////////////////
    //Cursors.
    virtual Cursor_t     CreateCursor(ECursor cursor);
@@ -331,7 +331,7 @@ public:
    //TPad's/TCanvas'.
    /////////////////////////////
 
-   /////////////////////////////   
+   /////////////////////////////
    //Event management.
    virtual void      SendEvent(Window_t wid, Event_t *ev);
    virtual void      NextEvent(Event_t &event);
@@ -341,9 +341,9 @@ public:
    //Event management.
    /////////////////////////////
 
-   /////////////////////////////   
+   /////////////////////////////
    //"Drag and drop" and "Copy and paste" (quotes are intentional :)).
-   
+
    //Names here are total mess, but this comes from TVirtualX interface.
    virtual Atom_t    InternAtom(const char *atom_name, Bool_t only_if_exist);
 
@@ -408,9 +408,9 @@ public:
    virtual void         DeletePictureData(void *data);
    virtual void         SetDashes(GContext_t gc, Int_t offset, const char *dash_list, Int_t n);
 
-   
+
    virtual void         Bell(Int_t percent);
-   
+
    virtual void         WMDeleteNotify(Window_t wid);
 
    virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
@@ -429,15 +429,15 @@ public:
    //
 
    virtual Bool_t       IsCmdThread()const { return kTRUE; }
-   
+
    //Non virtual, non-overriding functions.
    ROOT::MacOSX::X11::EventTranslator *GetEventTranslator()const;
    ROOT::MacOSX::X11::CommandBuffer *GetCommandBuffer()const;
-   
+
    void CocoaDrawON();
    void CocoaDrawOFF();
    Bool_t IsCocoaDraw()const;
-   
+
 protected:
    void *GetCurrentContext();
 
@@ -455,14 +455,14 @@ private:
    void SetApplicationIcon();
 
    bool fForegroundProcess;
-   std::vector<GCValues_t> fX11Contexts;   
+   std::vector<GCValues_t> fX11Contexts;
    //
    ROOT::MacOSX::X11::name_to_atom_map fNameToAtom;
    std::vector<std::string> fAtomToName;
 
    std::map<Atom_t, Window_t> fSelectionOwners;
    typedef std::map<Atom_t, Window_t>::iterator selection_iterator;
-   
+
    bool fSetApp;
    mutable bool fDisplayShapeChanged;
    mutable ROOT::MacOSX::X11::Rectangle fDisplayRect;

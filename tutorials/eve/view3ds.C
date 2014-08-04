@@ -90,15 +90,15 @@ public:
    Vertex   *vlist;
    Face     *flist;
    UInt_t   numverts, numfaces;
-   
-   Model() {  
+
+   Model() {
       sprintf(name,"");
       sprintf(matname,"");
       vlist = 0;
       flist = 0;
       numverts = numfaces = 0;
    }
-   ~Model() { 
+   ~Model() {
       if (vlist != 0) delete [] vlist;
       if (flist != 0) delete [] flist;
    }
@@ -254,7 +254,7 @@ Int_t ReadMaterialChunk(FILE *f, UInt_t len)
 Int_t ReadColor(FILE *f, UInt_t len)
 {
    // reads the Color property of the Material Chunk
-   
+
    Chunk chunk;
    float fr, fg, fb;
    while ((ReadChunk(f, &chunk) == 0) && (!feof(f))) {
@@ -299,7 +299,7 @@ Int_t ReadColor(FILE *f, UInt_t len)
 Int_t ReadTransparency(FILE *f, UInt_t len)
 {
    // reads the Transparency property of the Material Chunk
-   
+
    Chunk    chunk;
    float    ftransp;
    UShort_t stransp;
@@ -541,8 +541,8 @@ Int_t ConvertModel()
    for (i = 0; i < nummaterials; i++) {
       if (strcmp(model.matname, material[i]->name) == 0) {
          ts[nummodels]->SetMainTransparency(material[i]->transparency);
-         ts[nummodels]->SetMainColorRGB(material[i]->color[0], 
-                                        material[i]->color[1], 
+         ts[nummodels]->SetMainColorRGB(material[i]->color[0],
+                                        material[i]->color[1],
                                         material[i]->color[2]);
          break;
       }

@@ -1,7 +1,7 @@
 {
    // Examples showing how to use TSpectrum2Painter (the SPEC option)
    //Authors: Olivier Couet, Miroslav Morhac
-   
+
    TH2 *h2 = new TH2F("h2","h2",40,-8,8,40,-9,9);
    Float_t px, py;
    for (Int_t i = 0; i < 50000; i++) {

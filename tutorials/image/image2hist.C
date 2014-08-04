@@ -17,7 +17,7 @@ void image2hist()
          h->SetBinContent(row+1,yPixels-col,grey);
       }
    }
-   
+
    gStyle->SetPalette(53);
    h->Draw("colz");
 }

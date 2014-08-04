@@ -23,7 +23,7 @@ class  FTGL_EXPORT FTGLTextureFont : public FTFont
          * @param fontFilePath  font file path.
          */
         FTGLTextureFont( const char* fontFilePath);
-        
+
         /**
          * Open and read a font from a buffer in memory. Sets Error flag.
          *
@@ -31,7 +31,7 @@ class  FTGL_EXPORT FTGLTextureFont : public FTFont
          * @param bufferSizeInBytes  the length of the buffer in bytes
          */
         FTGLTextureFont( const unsigned char *pBufferBytes, size_t bufferSizeInBytes);
-        
+
         /**
          * Destructor
          */
@@ -55,7 +55,7 @@ class  FTGL_EXPORT FTGLTextureFont : public FTFont
          * Cleanup after rendering
          */
         virtual void PostRender();
-        
+
     private:
         /**
          * Construct a FTTextureGlyph.
@@ -64,7 +64,7 @@ class  FTGL_EXPORT FTGLTextureFont : public FTFont
          * @return  An FTTextureGlyph or <code>null</code> on failure.
          */
         inline virtual FTGlyph* MakeGlyph( unsigned int glyphIndex);
-                
+
         /**
          * Get the size of a block of memory required to layout the glyphs
          *
@@ -84,27 +84,27 @@ class  FTGL_EXPORT FTGLTextureFont : public FTFont
          * Note that mipmapping is NOT used
          */
         inline GLuint CreateTexture();
-        
+
         /**
          * The maximum texture dimension on this OpenGL implemetation
          */
         GLsizei maximumGLTextureSize;
-        
+
         /**
          * The minimum texture width required to hold the glyphs
          */
         GLsizei textureWidth;
-        
+
         /**
          * The minimum texture height required to hold the glyphs
          */
         GLsizei textureHeight;
-        
+
         /**
          *An array of texture ids
          */
          FTVector<GLuint> textureIDList;
-        
+
         /**
          * The max height for glyphs in the current font
          */
@@ -120,12 +120,12 @@ class  FTGL_EXPORT FTGLTextureFont : public FTFont
          * glyphs don't overlap in the texture
          */
         unsigned int padding;
-        
+
         /**
          *
          */
          unsigned int numGlyphs;
-        
+
         /**
          */
         unsigned int remGlyphs;

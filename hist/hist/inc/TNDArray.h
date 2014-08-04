@@ -42,13 +42,13 @@
 
 // Array layout:
 // nbins[0] = 2, nbins[1] = 4, nbins[2] = 3 => 24 bins
-// 
+//
 // fSizes: 24, 12, 3 [, 1
 
 class TNDArray: public TObject {
 public:
    TNDArray(): fNdimPlusOne(), fSizes() {}
-   
+
    TNDArray(Int_t ndim, const Int_t* nbins, bool addOverflow = false):
    fNdimPlusOne(), fSizes() {
       TNDArray::Init(ndim, nbins, addOverflow);
@@ -67,7 +67,7 @@ public:
       fSizes[ndim] = 1;
       for (Int_t i = 0; i < ndim; ++i) {
          fSizes[ndim - i - 1] = fSizes[ndim - i] * (nbins[ndim - i - 1] + overBins);
-      }      
+      }
    }
 
    virtual void Reset(Option_t* option = "") = 0;
@@ -75,7 +75,7 @@ public:
    Int_t GetNdimensions() const { return fNdimPlusOne - 1; }
    Long64_t GetNbins() const { return fSizes[0]; }
    Long64_t GetCellSize(Int_t dim) const { return fSizes[dim + 1]; }
-  
+
    Long64_t GetBin(const Int_t* idx) const {
       // Get the linear bin number for each dimension's bin index
       Long64_t bin = idx[fNdimPlusOne - 2];
@@ -104,7 +104,7 @@ class TNDArrayRef {
 public:
    TNDArrayRef(const T* data, const Long64_t* sizes):
    fData(data), fSizes(sizes) {}
-   
+
    TNDArrayRef<T> operator[] (Int_t idx) const {
       if (!fData) return TNDArrayRef<T>(0, 0);
       R__ASSERT(idx < fSizes[-1] / fSizes[0] && "index out of range!");
@@ -126,7 +126,7 @@ template <typename T>
 class TNDArrayT: public TNDArray {
 public:
    TNDArrayT(): fNumData(), fData() {}
-   
+
    TNDArrayT(Int_t ndim, const Int_t* nbins, bool addOverflow = false):
    TNDArray(ndim, nbins, addOverflow),
    fNumData(), fData() {
@@ -158,8 +158,8 @@ public:
       R__ASSERT(idx < fSizes[0] / fSizes[1] && "index out of range!");
       return TNDArrayRef<T>(fData + idx * fSizes[1], fSizes + 2);
    }
-#endif // __CINT__   
-   
+#endif // __CINT__
+
    T At(const Int_t* idx) const {
       return At(GetBin(idx));
    }
@@ -187,7 +187,7 @@ public:
       if (!fData) fData = new T[fNumData]();
       fData[linidx] += (T) value;
    }
-   
+
 protected:
    int fNumData; // number of bins, product of fSizes
    T*  fData; //[fNumData] data

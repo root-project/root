@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, 08/2007 
+// Authors: L. Moneta, 08/2007
 
  /**********************************************************************
   *                                                                    *
@@ -24,13 +24,13 @@
 
 // Header file for class GSLMultiMinFunctionAdapter
 //
-// Generic adapter for gsl_multimin_function signature 
-// usable for any c++ class which defines operator( ) 
-// 
+// Generic adapter for gsl_multimin_function signature
+// usable for any c++ class which defines operator( )
+//
 // Created by: Lorenzo Moneta  at Fri Nov 12 16:58:51 2004
-// 
+//
 // Last update: Fri Nov 12 16:58:51 2004
-// 
+//
 #ifndef ROOT_Math_GSLMonteFunctionAdapter
 #define ROOT_Math_GSLMonteFunctionAdapter
 
@@ -40,28 +40,28 @@ namespace Math {
 
 
   /**
-     Class for adapting any multi-dimension C++ functor class to C function pointers used by 
-     GSL MonteCarlo integration algorithms. 
-     The templated C++ function class must implement: 
+     Class for adapting any multi-dimension C++ functor class to C function pointers used by
+     GSL MonteCarlo integration algorithms.
+     The templated C++ function class must implement:
 
     <em> double operator( const double *  x)</em>
 
-    This class defines static methods with will be used to fill the 
-    \a gsl_monte_function  used by GSL. 
-    See for examples the 
+    This class defines static methods with will be used to fill the
+    \a gsl_monte_function  used by GSL.
+    See for examples the
     <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Monte-Carlo-Interface.html">GSL online manual</A>
 
     @ingroup MCIntegration
-  */ 
- typedef double ( * GSLMonteFuncPointer ) ( double *, size_t, void *);    
+  */
+ typedef double ( * GSLMonteFuncPointer ) ( double *, size_t, void *);
 
-  template<class UserFunc> 
+  template<class UserFunc>
   struct  GSLMonteFunctionAdapter {
-    
-    static double F( double * x, size_t, void * p) { 
-      
+
+    static double F( double * x, size_t, void * p) {
+
       UserFunc * function = reinterpret_cast< UserFunc *> (p);
-      return (*function)( x ); 
+      return (*function)( x );
     }
 
   };

@@ -111,10 +111,10 @@ public:
 
    // get the drawn object to chanage settings
    // These objects are managed by TKDE and should not be deleted by the user
-   TF1 * GetDrawnFunction() { return fPDF;}  
-   TF1 * GetDrawnUpperFunction() { return fUpperPDF;}  
-   TF1 * GetDrawnLowerFunction() { return fLowerPDF;}  
-   TGraphErrors * GetDrawnGraph() { return fGraph;}  
+   TF1 * GetDrawnFunction() { return fPDF;}
+   TF1 * GetDrawnUpperFunction() { return fUpperPDF;}
+   TF1 * GetDrawnLowerFunction() { return fLowerPDF;}
+   TGraphErrors * GetDrawnGraph() { return fGraph;}
 
    const Double_t * GetAdaptiveWeights() const;
 

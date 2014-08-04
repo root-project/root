@@ -1,6 +1,6 @@
-<br/> 
-<hr/> 
-<a name="hist"></a> 
+<br/>
+<hr/>
+<a name="hist"></a>
 <h3>Histogram package</h3>
 
 <h4>All Histogram classes (including the TProfile's)</h4>
@@ -26,7 +26,7 @@
   <li>Fix for the bug <a href="http://savannah.cern.ch/bugs/?82562" >82562</a>.</li>
   <li>Fix a bug in <tt>TH1::Merge</tt> for histogram with labels (bug <a href="http://savannah.cern.ch/bugs/?75902" >75902</a>).</li>
   <li>Fix few bugs related with the Buffer. </li>
-  
+
 </ul>
 
 <h4>TProfile</h4>
@@ -58,7 +58,7 @@ lego or a surface or as a contour plot for any other plotting options.
 <li>When drawing scatter plot for TH2 or TH2Poly do not use gRandom, but an independent random generator instance,
 to avoid interfering with gRandom (bug <a href="https://savannah.cern.ch/bugs/?83021" >83021</a>).
 Now the same random sequence is always used for drawing the same histograms, giving therefore exactly the same scatter plot for the same
-histogram, while before a slightly different plot was obtained every time. 
+histogram, while before a slightly different plot was obtained every time.
 </li>
 </ul>
 
@@ -106,9 +106,9 @@ histogram, while before a slightly different plot was obtained every time.
 </pre>
 </li>
 <li> The option "0" for graphs with error bars is no implemented:
-  <p> "By default, when a data point is outside the visible range 
-   along the Y axis the error bars are not drawn. Combined with 
-   other options, this option forces error bars' drawing for the 
+  <p> "By default, when a data point is outside the visible range
+   along the Y axis the error bars are not drawn. Combined with
+   other options, this option forces error bars' drawing for the
    data points outside the visible range along the Y axis."</p>
   <p>A similar option already existed for histograms.</p>
 </li>
@@ -124,7 +124,7 @@ while they were used for non-linear fits. </li>
 <h4>TGraphAsymErrors</h4>
 
 <ul>
-  <li>Fix calculation of binomial errors in <tt>>TGraphAsymErrors::Divide</tt> for the case the histogram have weights. 
+  <li>Fix calculation of binomial errors in <tt>>TGraphAsymErrors::Divide</tt> for the case the histogram have weights.
 Have  methods working for Bayesian and Normal statistic options. For the others options the division using weights is
   not supported.
   </li>
@@ -143,7 +143,7 @@ Have  methods working for Bayesian and Normal statistic options. For the others 
 
 <h4>TSVDUnfold</h4>
 <ul>
-<li>Rescaling using full covariance matrix rather than neglecting 
+<li>Rescaling using full covariance matrix rather than neglecting
 correlations.</li>
 <li>Computed covariance matrix via <tt>GetXtau()</tt> and inverse via
 <tt>GetXinv()</tt>.</li>

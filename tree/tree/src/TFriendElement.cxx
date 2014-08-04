@@ -88,7 +88,7 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
    fOwnFile    = kFALSE;
    fParentTree = tree;
    fTreeName   = treename;
-   if (fParentTree && fParentTree->GetDirectory() 
+   if (fParentTree && fParentTree->GetDirectory()
        && fParentTree->GetDirectory()->GetFile() == fFile) {
       // The friend and the TTree are in the same file, let's not record
       // the filename.
@@ -128,7 +128,7 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
    if (fTree) {
       fTreeName   = fTree->GetName();
       if (fTree->GetDirectory()) fFile = fTree->GetDirectory()->GetFile();
-      if (fParentTree && fParentTree->GetDirectory() 
+      if (fParentTree && fParentTree->GetDirectory()
           && fParentTree->GetDirectory()->GetFile() == fFile) {
          // The friend and the TTree are in the same file, let's not record
          // the filename.
@@ -145,19 +145,19 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
 }
 
 //______________________________________________________________________________
-TFriendElement::TFriendElement(const TFriendElement& tfe) : 
+TFriendElement::TFriendElement(const TFriendElement& tfe) :
    TNamed(tfe),
    fParentTree(tfe.fParentTree),
    fTree(tfe.fTree),
    fFile(tfe.fFile),
    fTreeName(tfe.fTreeName),
    fOwnFile(tfe.fOwnFile)
-{ 
+{
    // Copy constructor
 }
 
 //______________________________________________________________________________
-TFriendElement& TFriendElement::operator=(const TFriendElement& tfe) 
+TFriendElement& TFriendElement::operator=(const TFriendElement& tfe)
 {
    // Equal operator
    if(this!=&tfe) {

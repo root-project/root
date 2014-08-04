@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
 
 
@@ -25,9 +25,9 @@
 #pragma link C++ class ROOT::Math::Cylindrical3D<double>+;
 #pragma link C++ class ROOT::Math::CylindricalEta3D<double>+;
 
-#pragma link C++ class ROOT::Math::DefaultCoordinateSystemTag+; 
-#pragma link C++ class ROOT::Math::LocalCoordinateSystemTag+; 
-#pragma link C++ class ROOT::Math::GlobalCoordinateSystemTag+; 
+#pragma link C++ class ROOT::Math::DefaultCoordinateSystemTag+;
+#pragma link C++ class ROOT::Math::LocalCoordinateSystemTag+;
+#pragma link C++ class ROOT::Math::GlobalCoordinateSystemTag+;
 
 #pragma link C++ class ROOT::Math::DisplacementVector2D<ROOT::Math::Cartesian2D<double> >+;
 #pragma link C++ class ROOT::Math::DisplacementVector2D<ROOT::Math::Polar2D<double> >+;

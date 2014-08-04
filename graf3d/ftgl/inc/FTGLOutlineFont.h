@@ -23,7 +23,7 @@ class FTGL_EXPORT FTGLOutlineFont : public FTFont
          * @param fontFilePath  font file path.
          */
         FTGLOutlineFont( const char* fontFilePath);
-        
+
         /**
          * Open and read a font from a buffer in memory. Sets Error flag.
          *
@@ -31,12 +31,12 @@ class FTGL_EXPORT FTGLOutlineFont : public FTFont
          * @param bufferSizeInBytes  the length of the buffer in bytes
          */
         FTGLOutlineFont( const unsigned char *pBufferBytes, size_t bufferSizeInBytes);
-        
+
         /**
          * Destructor
          */
         ~FTGLOutlineFont();
-        
+
         /**
          * Prepare for rendering
          */
@@ -55,6 +55,6 @@ class FTGL_EXPORT FTGLOutlineFont : public FTFont
          * @return  An FTOutlineGlyph or <code>null</code> on failure.
          */
         inline virtual FTGlyph* MakeGlyph( unsigned int g);
-        
+
 };
 #endif // __FTGLOutlineFont__

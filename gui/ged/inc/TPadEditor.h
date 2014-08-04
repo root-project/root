@@ -22,7 +22,7 @@
 
 #ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif 
+#endif
 
 class TGCheckButton;
 class TGRadioButton;
@@ -36,7 +36,7 @@ class TPadEditor : public TGedFrame {
 protected:
    TPad                *fPadPointer;       // TPad object
    TGCheckButton       *fEditable;         // set pad editable
-   TGCheckButton       *fCrosshair;        // set crosshair   
+   TGCheckButton       *fCrosshair;        // set crosshair
    TGCheckButton       *fFixedAR;          // set fixed aspect ratio
    TGCheckButton       *fGridX;            // set grid on X
    TGCheckButton       *fGridY;            // set grid on Y
@@ -51,15 +51,15 @@ protected:
    TGLayoutHints       *fBmodelh;          // layout hints for border mode buttons
    TGLineWidthComboBox *fBsize;            // set pad border size
    TGButtonGroup       *fBgroup;           // button group of border mode
-      
+
    virtual void ConnectSignals2Slots();
- 
+
 public:
-   TPadEditor(const TGWindow *p = 0, 
+   TPadEditor(const TGWindow *p = 0,
               Int_t width = 140, Int_t height = 30,
               UInt_t options = kChildFrame,
               Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TPadEditor(); 
+   virtual ~TPadEditor();
 
    virtual void   SetModel(TObject* obj);
    virtual void   ActivateBaseClassEditors(TClass* cl);
@@ -76,7 +76,7 @@ public:
    virtual void   DoTickY(Bool_t on);
    virtual void   DoBorderMode();
    virtual void   DoBorderSize(Int_t size);
-           
+
    ClassDef(TPadEditor,0)  //editor of TPad objects
 };
 

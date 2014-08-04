@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -26,13 +26,13 @@ class MnStrategy;
    Class to calculate an initial estimate of the gradient
  */
 class InitialGradientCalculator : public GradientCalculator {
-  
+
 public:
-  
+
   InitialGradientCalculator(const MnFcn& fcn, const MnUserTransformation& par,
                             const MnStrategy& stra) :
     fFcn(fcn), fTransformation(par), fStrategy(stra) {};
-  
+
   virtual ~InitialGradientCalculator() {}
 
   virtual FunctionGradient operator()(const MinimumParameters&) const;
@@ -41,7 +41,7 @@ public:
                                       const FunctionGradient&) const;
 
   const MnFcn& Fcn() const {return fFcn;}
-  const MnUserTransformation& Trafo() const {return fTransformation;} 
+  const MnUserTransformation& Trafo() const {return fTransformation;}
   const MnMachinePrecision& Precision() const;
   const MnStrategy& Strategy() const {return fStrategy;}
 
@@ -52,7 +52,7 @@ public:
 private:
 
   const MnFcn& fFcn;
-  const MnUserTransformation& fTransformation; 
+  const MnUserTransformation& fTransformation;
   const MnStrategy& fStrategy;
 };
 

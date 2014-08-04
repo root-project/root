@@ -6,14 +6,14 @@
 Author: Kyle Cranmer
 date: Dec. 2010
 
-This is a standard demo that can be used with any ROOT file 
+This is a standard demo that can be used with any ROOT file
 prepared in the standard way.  You specify:
  - name for input ROOT file
  - name of workspace inside ROOT file that holds model and data
  - name of ModelConfig that specifies details for calculator tools
- - name of dataset 
+ - name of dataset
 
-With default parameters the macro will attempt to run the 
+With default parameters the macro will attempt to run the
 standard hist2workspace example and read the ROOT file
 that it produces.
 
@@ -43,11 +43,11 @@ using namespace RooStats;
 
 TString integrationType = "";  // integration Type (default is adaptive (numerical integration)
                                // possible values are "TOYMC" (toy MC integration, work when nuisances have a constraints pdf)
-                               //  "VEGAS" , "MISER", or "PLAIN"  (these are all possible MC integration) 
-int nToys = 10000;             // number of toys used for the MC integrations - for Vegas should be probably set to an higher value 
-bool scanPosterior = false;    // flag to compute interval by scanning posterior (it is more robust but maybe less precise) 
+                               //  "VEGAS" , "MISER", or "PLAIN"  (these are all possible MC integration)
+int nToys = 10000;             // number of toys used for the MC integrations - for Vegas should be probably set to an higher value
+bool scanPosterior = false;    // flag to compute interval by scanning posterior (it is more robust but maybe less precise)
 int nScanPoints = 50;          // number of points for scanning the posterior (if scanPosterior = false it is used only for plotting)
-int intervalType = 1;          // type of interval (0 is shortest, 1 central, 2 upper limit) 
+int intervalType = 1;          // type of interval (0 is shortest, 1 central, 2 upper limit)
 double   maxPOI = -999;        // force a different value of POI for doing the scan (default is given value)
 
 void StandardBayesianNumericalDemo(const char* infile = "",
@@ -56,7 +56,7 @@ void StandardBayesianNumericalDemo(const char* infile = "",
                                    const char* dataName = "obsData") {
 
   /////////////////////////////////////////////////////////////
-  // First part is just to access a user-defined file 
+  // First part is just to access a user-defined file
   // or create the standard example file if it doesn't exist
   ////////////////////////////////////////////////////////////
 
@@ -78,21 +78,21 @@ void StandardBayesianNumericalDemo(const char* infile = "",
          cout <<"Done creating example input"<<endl;
          cout <<"---------------------\n\n"<<endl;
       }
-      
+
    }
    else
       filename = infile;
-   
+
    // Try to open the file
    TFile *file = TFile::Open(filename);
-   
+
    // if input file was specified byt not found, quit
    if(!file ){
       cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
-   } 
+   }
 
-  
+
   /////////////////////////////////////////////////////////////
   // Tutorial starts here
   ////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ void StandardBayesianNumericalDemo(const char* infile = "",
   // to find and plot the 95% credible interval
   // on the parameter of interest as specified
   // in the model config
-  
+
   // before we do that, we must specify our prior
   // it belongs in the model config, but it may not have
   // been specified
@@ -133,7 +133,7 @@ void StandardBayesianNumericalDemo(const char* infile = "",
   // do without systematics
   //mc->SetNuisanceParameters(RooArgSet() );
 
-  
+
   BayesianCalculator bayesianCalc(*data,*mc);
   bayesianCalc.SetConfidenceLevel(0.95); // 95% interval
 
@@ -143,13 +143,13 @@ void StandardBayesianNumericalDemo(const char* infile = "",
   if (intervalType == 1)  bayesianCalc.SetLeftSideTailFraction(0.5); // for central interval
   if (intervalType == 2)  bayesianCalc.SetLeftSideTailFraction(0.); // for upper limit
 
-  if (!integrationType.IsNull() ) { 
+  if (!integrationType.IsNull() ) {
      bayesianCalc.SetIntegrationType(integrationType); // set integrationType
      bayesianCalc.SetNumIters(nToys); // set number of ietrations (i.e. number of toys for MC integrations)
   }
 
   // in case of toyMC make a nnuisance pdf
-  if (integrationType.Contains("TOYMC") ) { 
+  if (integrationType.Contains("TOYMC") ) {
     RooAbsPdf * nuisPdf = RooStats::MakeNuisancePdf(*mc, "nuisance_pdf");
     cout << "using TOYMC integration: make nuisance pdf from the model " << std::endl;
     nuisPdf->Print();
@@ -158,7 +158,7 @@ void StandardBayesianNumericalDemo(const char* infile = "",
   }
 
   // compute interval by scanning the posterior function
-  if (scanPosterior)   
+  if (scanPosterior)
      bayesianCalc.SetScanOfPosterior(nScanPoints);
 
   RooRealVar* poi = (RooRealVar*) mc->GetParametersOfInterest()->first();
@@ -174,9 +174,9 @@ void StandardBayesianNumericalDemo(const char* infile = "",
     interval->UpperLimit() <<"] "<<endl;
 
 
-  // make a plot 
-  // since plotting may take a long time (it requires evaluating 
-  // the posterior in many points) this command will speed up 
+  // make a plot
+  // since plotting may take a long time (it requires evaluating
+  // the posterior in many points) this command will speed up
   // by reducing the number of points to plot - do 50
 
   cout << "\nDrawing plot of posterior function....." << endl;
@@ -184,6 +184,6 @@ void StandardBayesianNumericalDemo(const char* infile = "",
   bayesianCalc.SetScanOfPosterior(nScanPoints);
 
   RooPlot * plot = bayesianCalc.GetPosteriorPlot();
-  plot->Draw();  
+  plot->Draw();
 
 }

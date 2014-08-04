@@ -6,8 +6,8 @@
 //
 // This program is free software; you can redistribute it and/or modify it
 // under
-// the terms of the GNU General Public License as published by CodeCogs. 
-// You must retain a copy of this licence in all copies. 
+// the terms of the GNU General Public License as published by CodeCogs.
+// You must retain a copy of this licence in all copies.
 //
 // This program is distributed in the hope that it will be useful, but
 // WITHOUT ANY
@@ -34,7 +34,7 @@
 
 namespace ROOT {
 namespace Math {
-   
+
 class KelvinFunctions
 {
   public:
@@ -64,14 +64,14 @@ class KelvinFunctions
 
   protected:
     // Internal parameters used to control calculation method and convegence
-    static double fgMin;     
+    static double fgMin;
     static double fgEpsilon;
 
 };
 
 } // namespace Math
 } // namespace ROOT
- 
- 
-#endif 
- 
+
+
+#endif
+

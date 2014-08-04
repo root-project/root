@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -15,7 +15,7 @@
 #include "Minuit2/MinimumState.h"
 
 #if defined(DEBUG) || defined(WARNINGMSG)
-#include "Minuit2/MnPrint.h" 
+#include "Minuit2/MnPrint.h"
 #endif
 
 
@@ -28,17 +28,17 @@ namespace ROOT {
 
 FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalculator&, const MinimumSeed& seed, const MnStrategy&, unsigned int maxfcn, double minedm) const {
    // find the minimum using the Simplex method of Nelder and Mead (does not use function gradient)
-   // method to find initial simplex is slightly different than in the orginal Fortran 
+   // method to find initial simplex is slightly different than in the orginal Fortran
    // Minuit since has not been proofed that one to be better
-   
+
 #ifdef DEBUG
    std::cout << "Running Simplex with maxfcn = " << maxfcn << " minedm = " << minedm << std::endl;
-#endif  
-   
+#endif
+
    const MnMachinePrecision& prec = seed.Precision();
    MnAlgebraicVector x = seed.Parameters().Vec();
    MnAlgebraicVector step = 10.*seed.Gradient().Gstep();
-   
+
    unsigned int n = x.size();
    double wg = 1./double(n);
    double alpha = 1., beta = 0.5, gamma = 2., rhomin = 4., rhomax = 8.;
@@ -46,14 +46,14 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
    //double rho2 = rho1 + alpha*gamma;
    //change proposed by david sachs (fnal)
    double rho2 = 1. + alpha*gamma;
-   
-   
+
+
    std::vector<std::pair<double, MnAlgebraicVector> > simpl; simpl.reserve(n+1);
    simpl.push_back(std::pair<double, MnAlgebraicVector>(seed.Fval(), x));
-   
+
    unsigned int jl = 0, jh = 0;
    double amin = seed.Fval(), aming = seed.Fval();
-   
+
    for(unsigned int i = 0; i < n; i++) {
       double dmin = 8.*prec.Eps2()*(fabs(x(i)) + prec.Eps2());
       if(step(i) < dmin) step(i) = dmin;
@@ -71,13 +71,13 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
       x(i) -= step(i);
    }
    SimplexParameters simplex(simpl, jh, jl);
-   
+
 #ifdef DEBUG
    std::cout << "simplex initial parameters - min  " << jl << "  " << amin << " max " << jh << "  " << aming << std::endl;
-   for (unsigned int i = 0; i < simplex.Simplex().size(); ++i)  
-      std::cout << " i = " << i << " x = " << simplex(i).second << " fval(x) = " << simplex(i).first << std::endl; 
+   for (unsigned int i = 0; i < simplex.Simplex().size(); ++i)
+      std::cout << " i = " << i << " x = " << simplex(i).second << " fval(x) = " << simplex(i).first << std::endl;
 #endif
-   
+
    double edmPrev = simplex.Edm();
    int niterations = 0;
    do {
@@ -85,15 +85,15 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
       jh = simplex.Jh();
       amin = simplex(jl).first;
       edmPrev = simplex.Edm();
-      
+
 #ifdef DEBUG
-      std::cout << "\n\nsimplex iteration: edm =  " << simplex.Edm()  
-                << "\n--> Min Param is  " << jl << " pmin " << simplex(jl).second << " f(pmin) " << amin 
+      std::cout << "\n\nsimplex iteration: edm =  " << simplex.Edm()
+                << "\n--> Min Param is  " << jl << " pmin " << simplex(jl).second << " f(pmin) " << amin
                 << "\n--> Max param is " << jh << "  " << simplex(jh).first << std::endl;
-      
-      //     std::cout << "ALL SIMPLEX PARAMETERS: "<< std::endl; 
-      //     for (unsigned int i = 0; i < simplex.Simplex().size(); ++i)  
-      //       std::cout << " i = " << i << " x = " << simplex(i).second << " fval(x) = " << simplex(i).first << std::endl; 
+
+      //     std::cout << "ALL SIMPLEX PARAMETERS: "<< std::endl;
+      //     for (unsigned int i = 0; i < simplex.Simplex().size(); ++i)
+      //       std::cout << " i = " << i << " x = " << simplex(i).second << " fval(x) = " << simplex(i).first << std::endl;
 #endif
 
       // trace the iterations (need to create a MinimunState although errors and gradient are not existing)
@@ -107,36 +107,36 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
          if(i == jh) continue;
          pbar += (wg*simplex(i).second);
       }
-      
+
       MnAlgebraicVector pstar = (1. + alpha)*pbar - alpha*simplex(jh).second;
       double ystar = mfcn(pstar);
-      
+
 #ifdef DEBUG
       std::cout << " pbar = " << pbar << std::endl;
       std::cout << " pstar = " << pstar << " f(pstar) =  " << ystar << std::endl;
 #endif
-      
+
       if(ystar > amin) {
          if(ystar < simplex(jh).first) {
             simplex.Update(ystar, pstar);
             if(jh != simplex.Jh()) continue;
-         } 
+         }
          MnAlgebraicVector pstst = beta*simplex(jh).second + (1. - beta)*pbar;
          double ystst = mfcn(pstst);
 #ifdef DEBUG
          std::cout << "Reduced simplex pstst = " << pstst << " f(pstst) =  " << ystst << std::endl;
-#endif      
-         if(ystst > simplex(jh).first) break; 
+#endif
+         if(ystst > simplex(jh).first) break;
          simplex.Update(ystst, pstst);
          continue;
       }
-      
+
       MnAlgebraicVector pstst = gamma*pstar + (1. - gamma)*pbar;
       double ystst = mfcn(pstst);
 #ifdef DEBUG
       std::cout << " pstst = " << pstst << " f(pstst) =  " << ystst << std::endl;
 #endif
-      
+
       double y1 = (ystar - simplex(jh).first)*rho2;
       double y2 = (ystst - simplex(jh).first)*rho1;
       double rho = 0.5*(rho2*y1 - rho1*y2)/(y1 - y2);
@@ -167,18 +167,18 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
       if(ystar > simplex(jh).first) {
          pstst = beta*simplex(jh).second + (1. - beta)*pbar;
          ystst = mfcn(pstst);
-         if(ystst > simplex(jh).first) break; 
+         if(ystst > simplex(jh).first) break;
          simplex.Update(ystst, pstst);
       }
 #ifdef DEBUG
       std::cout << "End loop : edm = " << simplex.Edm() << "  pstst = " << pstst << " f(pstst) =  " << ystst << std::endl;
 #endif
    } while( (simplex.Edm() > minedm || edmPrev > minedm )  && mfcn.NumOfCalls() < maxfcn);
-   
+
    jl = simplex.Jl();
    jh = simplex.Jh();
    amin = simplex(jl).first;
-   
+
    MnAlgebraicVector pbar(n);
    for(unsigned int i = 0; i < n+1; i++) {
       if(i == jh) continue;
@@ -190,22 +190,22 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
       pbar = simplex(jl).second;
       ybar = simplex(jl).first;
    }
-   
+
    MnAlgebraicVector dirin = simplex.Dirin();
-   //   Scale to sigmas on parameters werr^2 = dirin^2 * (up/edm) 
+   //   Scale to sigmas on parameters werr^2 = dirin^2 * (up/edm)
    dirin *= sqrt(mfcn.Up()/simplex.Edm());
-   
+
 #ifdef DEBUG
    std::cout << "End simplex " << simplex.Edm() << "  pbar = " << pbar << " f(p) =  " << ybar << std::endl;
 #endif
-   
-   
+
+
    MinimumState st(MinimumParameters(pbar, dirin, ybar), simplex.Edm(), mfcn.NumOfCalls());
 
-   if (PrintLevel() > 1) 
+   if (PrintLevel() > 1)
       MnPrint::PrintState(std::cout,st,"Simplex: Final iteration");
    if (TraceIter() ) TraceIteration(niterations, st);
-   
+
    if(mfcn.NumOfCalls() > maxfcn) {
 #ifdef WARNINGMSG
       MN_INFO_MSG("Simplex did not converge, #fcn calls exhausted.");
@@ -218,7 +218,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
 #endif
       return FunctionMinimum(seed, std::vector<MinimumState>(1, st), mfcn.Up(), FunctionMinimum::MnAboveMaxEdm());
    }
-   
+
    return FunctionMinimum(seed, std::vector<MinimumState>(1, st), mfcn.Up());
 }
 

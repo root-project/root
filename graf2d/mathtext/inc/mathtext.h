@@ -158,7 +158,7 @@ namespace mathtext {
          }
          inline math_symbol_t(std::string code, wchar_t glyph,
                          const unsigned int family)
-            : _code(code), _family(family), _glyph(glyph), 
+            : _code(code), _family(family), _glyph(glyph),
               _type(atom_t::TYPE_UNKNOWN)
          {
          }

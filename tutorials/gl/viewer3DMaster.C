@@ -39,10 +39,10 @@ protected:
    ClassDef(Shape,0);
 };
 
-ClassImp(Shape); 
+ClassImp(Shape);
 
-Shape::Shape(Int_t color, Double_t x, Double_t y, Double_t z) : 
-   fX(x), fY(y), fZ(z), fColor(color) 
+Shape::Shape(Int_t color, Double_t x, Double_t y, Double_t z) :
+   fX(x), fY(y), fZ(z), fColor(color)
 {}
 
 class Box : public Shape
@@ -60,11 +60,11 @@ private:
    ClassDef(Box,0);
 };
 
-ClassImp(Box); 
+ClassImp(Box);
 
 Box::Box(Int_t color, Double_t x, Double_t y, Double_t z,
-         Double_t dX, Double_t dY, Double_t dZ) : 
-   Shape(color,x,y,z), 
+         Double_t dX, Double_t dY, Double_t dZ) :
+   Shape(color,x,y,z),
    fDX(dX), fDY(dY), fDZ(dZ)
 {}
 
@@ -73,9 +73,9 @@ TBuffer3D & Box::GetBuffer3D(UInt_t reqSections)
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    // Complete kCore section - this could be moved to Shape base class
-   if (reqSections & TBuffer3D::kCore) {      
+   if (reqSections & TBuffer3D::kCore) {
       buffer.ClearSectionsValid();
-      buffer.fID = this; 
+      buffer.fID = this;
       buffer.fColor = fColor;       // Color index - see gROOT->GetColor()
       buffer.fTransparency = 0;     // Transparency 0 (opaque) - 100 (fully transparent)
       buffer.fLocalFrame = kFALSE;
@@ -125,7 +125,7 @@ TBuffer3D & Box::GetBuffer3D(UInt_t reqSections)
       buffer.fSegs[27] = fColor   ; buffer.fSegs[28] = 1   ; buffer.fSegs[29] = 5   ; // 9
       buffer.fSegs[30] = fColor   ; buffer.fSegs[31] = 2   ; buffer.fSegs[32] = 6   ; // 10
       buffer.fSegs[33] = fColor   ; buffer.fSegs[34] = 3   ; buffer.fSegs[35] = 7   ; // 11
-      
+
       // Polygons (6)
       // 5+ (2+n) components: polygon color (ignored), segment count(n=3+),
       // seg1, seg2 .... segn index
@@ -143,7 +143,7 @@ TBuffer3D & Box::GetBuffer3D(UInt_t reqSections)
       buffer.fPols[27] = 2        ; buffer.fPols[28] = 3   ;  buffer.fPols[29] = 0  ;
       buffer.fPols[30] = fColor   ; buffer.fPols[31] = 4   ;  buffer.fPols[32] = 7  ; // 5
       buffer.fPols[33] = 6        ; buffer.fPols[34] = 5   ;  buffer.fPols[35] = 4  ;
-      
+
       buffer.SetSectionsValid(TBuffer3D::kRaw);
   }
 
@@ -166,11 +166,11 @@ private:
    ClassDef(SBPyramid,0);
 };
 
-ClassImp(SBPyramid); 
+ClassImp(SBPyramid);
 
 SBPyramid::SBPyramid(Int_t color, Double_t x, Double_t y, Double_t z,
-         Double_t dX, Double_t dY, Double_t dZ) : 
-   Shape(color,x,y,z), 
+         Double_t dX, Double_t dY, Double_t dZ) :
+   Shape(color,x,y,z),
    fDX(dX), fDY(dY), fDZ(dZ)
 {}
 
@@ -179,9 +179,9 @@ TBuffer3D & SBPyramid::GetBuffer3D(UInt_t reqSections)
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    // Complete kCore section - this could be moved to Shape base class
-   if (reqSections & TBuffer3D::kCore) {      
+   if (reqSections & TBuffer3D::kCore) {
       buffer.ClearSectionsValid();
-      buffer.fID = this; 
+      buffer.fID = this;
       buffer.fColor = fColor;       // Color index - see gROOT->GetColor()
       buffer.fTransparency = 0;     // Transparency 0 (opaque) - 100 (fully transparent)
       buffer.fLocalFrame = kFALSE;
@@ -225,7 +225,7 @@ TBuffer3D & SBPyramid::GetBuffer3D(UInt_t reqSections)
       buffer.fSegs[15] = fColor   ; buffer.fSegs[16] = 1   ; buffer.fSegs[17] = 4   ; // 5 side
       buffer.fSegs[18] = fColor   ; buffer.fSegs[19] = 2   ; buffer.fSegs[20] = 4   ; // 6 side
       buffer.fSegs[21] = fColor   ; buffer.fSegs[22] = 3   ; buffer.fSegs[23] = 4   ; // 7 side
-      
+
       // Polygons (6)
       // 5+ (2+n) components: polygon color (ignored), segment count(n=3+),
       // seg1, seg2 .... segn index
@@ -239,10 +239,10 @@ TBuffer3D & SBPyramid::GetBuffer3D(UInt_t reqSections)
       buffer.fPols[11] = fColor  ; buffer.fPols[12] = 3   ;  buffer.fPols[13] = 1  ; // side 1
       buffer.fPols[14] = 5       ; buffer.fPols[15] = 6   ;
       buffer.fPols[16] = fColor  ; buffer.fPols[17] = 3   ;  buffer.fPols[18] = 2  ; // side 2
-      buffer.fPols[19] = 6       ; buffer.fPols[20] = 7   ;   
+      buffer.fPols[19] = 6       ; buffer.fPols[20] = 7   ;
       buffer.fPols[21] = fColor  ; buffer.fPols[22] = 3   ;  buffer.fPols[23] = 3  ; // side 3
       buffer.fPols[24] = 7       ; buffer.fPols[25] = 4   ;
-      
+
       buffer.SetSectionsValid(TBuffer3D::kRaw);
   }
 
@@ -264,7 +264,7 @@ private:
    ClassDef(MyGeom,0);
 };
 
-ClassImp(MyGeom); 
+ClassImp(MyGeom);
 
 MyGeom::MyGeom()
 {

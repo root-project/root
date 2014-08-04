@@ -1,14 +1,14 @@
 // example of simulated annealing
 // traveling salesman problem
-// example from GSL siman_tsp, see also 
+// example from GSL siman_tsp, see also
 // http://www.gnu.org/software/gsl/manual/html_node/Traveling-Salesman-Problem.html
 //
 //
-// minimize total distance when visiting a set of cities 
+// minimize total distance when visiting a set of cities
 //
-// you can run in ROOT by doing 
+// you can run in ROOT by doing
 //
-//.x simanTSP.cxx+ 
+//.x simanTSP.cxx+
 // running FulLSearch() you can check that the result is correct
 //
 #include <cmath>
@@ -26,7 +26,7 @@
 
 bool showGraphics = false;
 
-using namespace ROOT::Math; 
+using namespace ROOT::Math;
 
 /* in this table, latitude and longitude are obtained from the US
    Census Bureau, at http://www.census.gov/cgi-bin/gazetteer */
@@ -99,26 +99,26 @@ void print_distance_matrix()
 
 
 
-class MySimAnFunc : public GSLSimAnFunc { 
+class MySimAnFunc : public GSLSimAnFunc {
 
 public:
- 
-   MySimAnFunc( std::vector<double> & allDist)  
+
+   MySimAnFunc( std::vector<double> & allDist)
    {
       calculate_distance_matrix();
       // initial route is just the sequantial order
-      for (unsigned int i = 0; i < N_CITIES; ++i) 
-         fRoute[i] = i; 
+      for (unsigned int i = 0; i < N_CITIES; ++i)
+         fRoute[i] = i;
 
       // keep track of all the found distances
-      fDist = &allDist; 
+      fDist = &allDist;
    }
 
 
    virtual ~MySimAnFunc() {}
 
    unsigned int Route(unsigned int i) const { return fRoute[i]; }
-   
+
    const unsigned int * Route()  const { return fRoute; }
    unsigned int * Route()   { return fRoute; }
 
@@ -126,33 +126,33 @@ public:
 
    std::vector<double> & AllDist() { return *fDist; }
 
-   virtual double Energy() const { 
+   virtual double Energy() const {
       // calculate the energy
-     
 
-      double enrg = 0; 
+
+      double enrg = 0;
       for (unsigned int i = 0; i < N_CITIES; ++i) {
          /* use the distance_matrix to optimize this calculation; it had
             better be allocated!! */
          enrg += fDistanceMatrix( fRoute[i] ,  fRoute[ (i + 1) % N_CITIES ] );
-      }      
+      }
 
       //std::cout << "energy is " << enrg << std::endl;
       return enrg;
    }
 
-   virtual double Distance(const GSLSimAnFunc & f) const { 
+   virtual double Distance(const GSLSimAnFunc & f) const {
       const MySimAnFunc * f2 = dynamic_cast<const MySimAnFunc *> (&f);
       assert (f2 != 0);
-      double d = 0; 
+      double d = 0;
       // use change in permutations
       for (unsigned int i = 0; i < N_CITIES; ++i) {
          d += (( fRoute[i]  == f2->Route(i) ) ? 0 : 1 );
       }
       return d;
    }
-   virtual void Step(const GSLRandomEngine & r, double ) { 
-      // swap to city in the matrix 
+   virtual void Step(const GSLRandomEngine & r, double ) {
+      // swap to city in the matrix
       int x1, x2, dummy;
 
       /* pick the two cities to swap in the matrix; we leave the first
@@ -161,7 +161,7 @@ public:
       do {
          x2 = r.RndmInt(N_CITIES);
       } while (x2 == x1);
-      
+
       // swap x1 and x2
       dummy = fRoute[x1];
       fRoute[x1] = fRoute[x2];
@@ -181,25 +181,25 @@ public:
    }
 
    // fast copy (need to keep base class type for using virtuality
-   virtual MySimAnFunc & FastCopy(const GSLSimAnFunc & f) { 
-      const MySimAnFunc * rhs = dynamic_cast<const MySimAnFunc *>(&f); 
+   virtual MySimAnFunc & FastCopy(const GSLSimAnFunc & f) {
+      const MySimAnFunc * rhs = dynamic_cast<const MySimAnFunc *>(&f);
       assert (rhs != 0);
-      std::copy(rhs->fRoute, rhs->fRoute + N_CITIES, fRoute);  
+      std::copy(rhs->fRoute, rhs->fRoute + N_CITIES, fRoute);
       return *this;
    }
 
-   double Distance(int i, int j) const { return fDistanceMatrix(i,j); } 
+   double Distance(int i, int j) const { return fDistanceMatrix(i,j); }
 
    void PrintRoute();  // used for debugging at the end
 
    void SetRoute(unsigned int * r) { std::copy(r,r+N_CITIES,fRoute); } // set a new route (used by exh. search)
 
-private: 
+private:
 
    void calculate_distance_matrix();
 
-   // variable of the system - order how cities are visited 
-   unsigned int fRoute[N_CITIES]; 
+   // variable of the system - order how cities are visited
+   unsigned int fRoute[N_CITIES];
    typedef SMatrix<double,N_CITIES,N_CITIES, MatRepSym<double,N_CITIES> > Matrix;
    Matrix fDistanceMatrix;
 
@@ -208,7 +208,7 @@ private:
 };
 
 
-// calculate distance between the cities 
+// calculate distance between the cities
 void MySimAnFunc::calculate_distance_matrix()
 {
   unsigned int i, j;
@@ -226,30 +226,30 @@ void MySimAnFunc::calculate_distance_matrix()
   }
 }
 
-void MySimAnFunc::PrintRoute() { 
-   // print the route and distance 
-   double dtot = 0; 
-   for (unsigned int i = 0; i < N_CITIES; ++i) { 
+void MySimAnFunc::PrintRoute() {
+   // print the route and distance
+   double dtot = 0;
+   for (unsigned int i = 0; i < N_CITIES; ++i) {
       std::cout << std::setw(20) << cities[Route(i)].name << " \t " << Route(i);
       int j = Route(i);
       int k = Route( (i+ 1) % N_CITIES );
-      dtot += Distance(j,k); 
+      dtot += Distance(j,k);
       std::cout << "\tdistance [" << j <<  " ,  " << k  << " ]\t= " << Distance(j,k) << "\tTotal Distance\t =  "  << dtot << std::endl;
    }
    std::cout << "Total Route energy is " << dtot << std::endl;
 }
 
 
-// minimize using simulated annealing 
-void simanTSP(bool debug = true) { 
+// minimize using simulated annealing
+void simanTSP(bool debug = true) {
 
-   std::vector<double>  allDist; 
+   std::vector<double>  allDist;
    allDist.reserve(5000); // keep track of all distance for histogramming later on
 
-   // create class 
-   MySimAnFunc f(allDist); 
+   // create class
+   MySimAnFunc f(allDist);
 
-   GSLSimAnnealing siman; 
+   GSLSimAnnealing siman;
 
    GSLSimAnParams & p = siman.Params();
    p.n_tries = 200;
@@ -263,17 +263,17 @@ void simanTSP(bool debug = true) {
    // set the parameters
 
    // solve
-   siman.Solve(f, debug); 
+   siman.Solve(f, debug);
 
    unsigned int niter = allDist.size();
    std::cout << "minimum found is for distance " << f.Energy()  << std::endl;
    if (debug) std::cout << "number of iterations is " << niter << std::endl;
 
-   std::cout << "Best Route is \n"; 
-   f.PrintRoute(); 
+   std::cout << "Best Route is \n";
+   f.PrintRoute();
 
    // plot configurations
-   double x0[N_CITIES+1]; 
+   double x0[N_CITIES+1];
    double y0[N_CITIES+1];
    double xmin[N_CITIES+1];
    double ymin[N_CITIES+1];
@@ -285,12 +285,12 @@ void simanTSP(bool debug = true) {
       h1->SetBinContent(i,allDist[i]);
    }
 
-   for (unsigned int i = 0; i < N_CITIES; ++i) { 
+   for (unsigned int i = 0; i < N_CITIES; ++i) {
       // invert long to have west on left side
-      x0[i] = -cities[i].longitude; 
-      y0[i] = cities[i].lat; 
-      xmin[i] = -cities[f.Route(i)].longitude;   
-      ymin[i] = cities[f.Route(i)].lat;   
+      x0[i] = -cities[i].longitude;
+      y0[i] = cities[i].lat;
+      xmin[i] = -cities[f.Route(i)].longitude;
+      ymin[i] = cities[f.Route(i)].lat;
    }
    // to close the curve
    x0[N_CITIES] = x0[0];
@@ -303,7 +303,7 @@ void simanTSP(bool debug = true) {
 
       TGraph *g0 = new TGraph(N_CITIES+1,x0,y0);
       TGraph *gmin = new TGraph(N_CITIES+1,xmin,ymin);
-      
+
       TCanvas * c1 = new TCanvas("c","TSP",10,10,1000,800);
       c1->Divide(2,2);
       c1->cd(1);
@@ -321,18 +321,18 @@ void simanTSP(bool debug = true) {
 unsigned int r1[N_CITIES];
 unsigned int r2[N_CITIES];
 unsigned int r3[N_CITIES];
-unsigned int nfiter = 0; 
+unsigned int nfiter = 0;
 double best_E, second_E, third_E;
 
-// use STL algorithms for permutations 
+// use STL algorithms for permutations
 // algorithm does also the inverse
 void do_all_perms(MySimAnFunc & f, int offset )
 {
-   unsigned int * r = f.Route(); 
+   unsigned int * r = f.Route();
 
    // do all permutation of N_CITIES -1 (keep first one at same place)
-   while (std::next_permutation(r+offset,r+N_CITIES) ) { 
-     
+   while (std::next_permutation(r+offset,r+N_CITIES) ) {
+
       double E = f.Energy();
       nfiter++;
       /* now save the best 3 energies and routes */
@@ -343,7 +343,7 @@ void do_all_perms(MySimAnFunc & f, int offset )
          std::copy(r1,r1+N_CITIES,r2);
          best_E = E;
          std::copy(r,r+N_CITIES,r1);
-      } else if (E < second_E) {         
+      } else if (E < second_E) {
          third_E = second_E;
          std::copy(r2,r2+N_CITIES,r3);
          second_E = E;
@@ -353,7 +353,7 @@ void do_all_perms(MySimAnFunc & f, int offset )
          std::copy(r,r+N_CITIES,r3);
       }
    }
-}          
+}
 
 #ifdef O
 /* James Theiler's recursive algorithm for generating all routes */
@@ -362,7 +362,7 @@ void do_all_perms(MySimAnFunc & f, int n) {
 
    if (n == (N_CITIES-1)) {
       /* do it! calculate the energy/cost for that route */
-      const unsigned int * r = f.Route(); 
+      const unsigned int * r = f.Route();
       /* now save the best 3 energies and routes */
       if (E < best_E) {
          third_E = second_E;
@@ -371,7 +371,7 @@ void do_all_perms(MySimAnFunc & f, int n) {
          std::copy(r1,r1+N_CITIES,r2);
          best_E = E;
          std::copy(r,r+N_CITIES,r1);
-      } else if (E < second_E) {         
+      } else if (E < second_E) {
          third_E = second_E;
          std::copy(r2,r2+N_CITIES,r3);
          second_E = E;
@@ -384,7 +384,7 @@ void do_all_perms(MySimAnFunc & f, int n) {
      unsigned int newr[N_CITIES];
      unsigned int j;
      int swap_tmp;
-     const unsigned int * r = f.Route(); 
+     const unsigned int * r = f.Route();
      std::copy(r,r+N_CITIES,newr);
      for (j = n; j < N_CITIES; ++j) {
         // swap j and n
@@ -400,25 +400,25 @@ void do_all_perms(MySimAnFunc & f, int n) {
 
 
 // search by brute force the best route
-// the full permutations will be Factorial (N_CITIES-1) 
+// the full permutations will be Factorial (N_CITIES-1)
 // which is approx 4 E+7 for 12 cities
 
 void  FullSearch()
 {
    // use still MySimAnFunc for initial routes and distance
-   std::vector<double>  dummy; 
+   std::vector<double>  dummy;
 
-   MySimAnFunc f(dummy);  
+   MySimAnFunc f(dummy);
 
    // intitial config
-   
+
    const unsigned int * r = f.Route();
    std::copy(r,r+N_CITIES,r1);
    std::copy(r,r+N_CITIES,r2);
    std::copy(r,r+N_CITIES,r3);
    best_E = f.Energy();
    second_E = 1.E100;
-   third_E = 1.E100; 
+   third_E = 1.E100;
 
 
    do_all_perms(f, 1 );
@@ -434,7 +434,7 @@ void  FullSearch()
    printf("\n# exhaustive second_best route: ");
    std::cout << second_E << std::endl;
    f.SetRoute(r2);   f.PrintRoute();
-   
+
    printf("\n# exhaustive third_best route: ");
    std::cout << third_E << std::endl;
    f.SetRoute(r3);   f.PrintRoute();
@@ -451,25 +451,25 @@ int main(int argc, char **argv)
    using std::endl;
    using std::cerr;
 
-   bool verbose = false; 
+   bool verbose = false;
 
-  // Parse command line arguments 
+  // Parse command line arguments
   for (Int_t i=1 ;  i<argc ; i++) {
      std::string arg = argv[i] ;
-     if (arg == "-g") { 
+     if (arg == "-g") {
       showGraphics = true;
      }
-     if (arg == "-v") { 
+     if (arg == "-v") {
       showGraphics = true;
       verbose = true;
      }
-     if (arg == "-h") { 
+     if (arg == "-h") {
         cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
         cerr << "  where:\n";
         cerr << "     -g : graphics mode\n";
         cerr << "     -v : verbose  mode";
         cerr << endl;
-        return -1; 
+        return -1;
      }
    }
 

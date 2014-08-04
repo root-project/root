@@ -32,15 +32,15 @@ TString TTableDescriptor::fgCommentsName = ".comments";
 TableClassImp(TTableDescriptor,tableDescriptor_st)
 
 //___________________________________________________________________
-TTableDescriptor *TTableDescriptor::GetDescriptorPointer() const 
-{ 
+TTableDescriptor *TTableDescriptor::GetDescriptorPointer() const
+{
    //return column descriptor
    return fgColDescriptors;
 }
 
 //___________________________________________________________________
-void TTableDescriptor::SetDescriptorPointer(TTableDescriptor *list)  
-{ 
+void TTableDescriptor::SetDescriptorPointer(TTableDescriptor *list)
+{
    //set table descriptor
    fgColDescriptors = list;
 }
@@ -85,7 +85,7 @@ TTableDescriptor::TTableDescriptor(TClass *classPtr)
 //______________________________________________________________________________
 TTableDescriptor::~TTableDescriptor()
 {
-   // class destructor 
+   // class destructor
 #ifdef NORESTRICTIONS
    if (!IsZombie()) {
       for (Int_t i=0;i<GetNRows();i++) {
@@ -131,8 +131,8 @@ void  TTableDescriptor::AddAt(const void *c, Int_t i)
 //____________________________________________________________________________
 void  TTableDescriptor::AddAt(TDataSet *dataset,Int_t idx)
 {
-   // Add one dataset to the descriptor. 
-   // There is no new implementation here. 
+   // Add one dataset to the descriptor.
+   // There is no new implementation here.
    // One needs it to avoid the "hidden method" compilation warning
    TTable::AddAt(dataset,idx);
 }

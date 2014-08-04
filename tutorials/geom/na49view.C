@@ -4,7 +4,7 @@ void na49view() {
    // a begin_html <a href="gif/na49canvas.gif">Canvas</a> end_html
    // with 2 views of the NA49 detector using the old obsolete geometry package.
    //Author: Rene Brun
-   
+
    TCanvas *c1 = new TCanvas("c1","The NA49 canvas",200,10,700,780);
 
    gBenchmark->Start("na49view");

@@ -32,7 +32,7 @@ class TSliderBox : public TWbox {
 
 protected:
    TSlider   *fSlider;     //Pointer to slider
-   
+
    TSliderBox(const TSliderBox& sb)
      : TWbox(sb), fSlider(sb.fSlider) { }
    TSliderBox& operator=(const TSliderBox& sb)

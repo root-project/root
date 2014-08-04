@@ -3,25 +3,25 @@
  * Common functions for the vdt routines.
  * The basic idea is to exploit Pade polynomials.
  * A lot of ideas were inspired by the cephes math library (by Stephen L. Moshier
- * moshier@na-net.ornl.gov) as well as actual code for the exp, log, sin, cos, 
+ * moshier@na-net.ornl.gov) as well as actual code for the exp, log, sin, cos,
  * tan, asin, acos and atan functions. The Cephes library can be found here:
  * http://www.netlib.org/cephes/
- * 
+ *
  *  Created on: Jun 23, 2012
  *      Author: Danilo Piparo, Thomas Hauth, Vincenzo Innocente
  */
 
-/* 
+/*
  * VDT is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -91,17 +91,17 @@ inline uint64_t dp2uint64(double x) {
 //------------------------------------------------------------------------------
 /// Makes an AND of a double and a unsigned long long
 inline double dpANDuint64(const double x, const uint64_t i ){
-  return uint642dp(dp2uint64(x) & i); 
+  return uint642dp(dp2uint64(x) & i);
 }
 //------------------------------------------------------------------------------
 /// Makes an OR of a double and a unsigned long long
 inline double dpORuint64(const double x, const uint64_t i ){
-  return uint642dp(dp2uint64(x) | i); 
+  return uint642dp(dp2uint64(x) | i);
 }
 
 /// Makes a XOR of a double and a unsigned long long
 inline double dpXORuint64(const double x, const uint64_t i ){
-  return uint642dp(dp2uint64(x) ^ i); 
+  return uint642dp(dp2uint64(x) ^ i);
 }
 
 //------------------------------------------------------------------------------
@@ -129,18 +129,18 @@ inline uint32_t sp2uint32(float x) {
 //------------------------------------------------------------------------------
 /// Makes an AND of a float and a unsigned long
 inline float spANDuint32(const float x, const uint32_t i ){
-  return uint322sp(sp2uint32(x) & i); 
+  return uint322sp(sp2uint32(x) & i);
 }
 //------------------------------------------------------------------------------
 /// Makes an OR of a float and a unsigned long
 inline float spORuint32(const float x, const uint32_t i ){
-  return uint322sp(sp2uint32(x) | i); 
+  return uint322sp(sp2uint32(x) | i);
 }
 
 //------------------------------------------------------------------------------
 /// Makes an OR of a float and a unsigned long
 inline float spXORuint32(const float x, const uint32_t i ){
-  return uint322sp(sp2uint32(x) ^ i); 
+  return uint322sp(sp2uint32(x) ^ i);
 }
 //------------------------------------------------------------------------------
 /// Get the sign mask
@@ -211,25 +211,25 @@ inline double int2fp(uint64_t i) {
 //------------------------------------------------------------------------------
 /**
  * A vectorisable floor implementation, not only triggered by fast-math.
- * These functions do not distinguish between -0.0 and 0.0, so are not IEC6509 
+ * These functions do not distinguish between -0.0 and 0.0, so are not IEC6509
  * compliant for argument -0.0
-**/ 
+**/
 inline double fpfloor(const double x){
   // no problem since exp is defined between -708 and 708. Int is enough for it!
   int32_t ret = int32_t (x);
-  ret-=(sp2uint32(x)>>31);  
+  ret-=(sp2uint32(x)>>31);
   return ret;
 
 }
 //------------------------------------------------------------------------------
 /**
  * A vectorisable floor implementation, not only triggered by fast-math.
- * These functions do not distinguish between -0.0 and 0.0, so are not IEC6509 
+ * These functions do not distinguish between -0.0 and 0.0, so are not IEC6509
  * compliant for argument -0.0
-**/ 
+**/
 inline float fpfloor(const float x){
   int32_t ret = int32_t (x);
-  ret-=(sp2uint32(x)>>31);  
+  ret-=(sp2uint32(x)>>31);
   return ret;
 
 }

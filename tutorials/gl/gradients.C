@@ -36,9 +36,9 @@ void gradients()
    const Color_t &radialFill = colorIndices[0];
    const Color_t &linearFill = colorIndices[1];
    const Color_t &transparentFill = colorIndices[2];
-   
+
    gStyle->SetCanvasPreferGL(kTRUE);
-   
+
    TCanvas * const c = new TCanvas("cpie","Gradient colours demo", 700, 700);
    //Before we allocated any new colour or created any object:
    if (!c->UseGL()) {
@@ -59,7 +59,7 @@ void gradients()
    //Colour positions in the gradient's palette (here I place colors at the
    //ends of 0-1):
    const Double_t locations[] = {0., 1.};
-   
+
    //Linear gradient fill (with an axis angle == 45):
    const Double_t rgbaData1[] = {0.2, 0.2, 0.2, 1.,/*gray*/
                                  0.8, 1., 0.9, 1.  /*pale green*/};
@@ -73,12 +73,12 @@ void gradients()
    //semi-transparent):
    TText * const t = new TText(0.05, 0.7, "Can you see the text?");
    t->Draw();
-   
+
    //We create a nested pad on top to render a TPie in,
    //this way we still have a text (below) + TPie with
    //a fancy colour on top.
    TPad * const pad = new TPad("p", "p", 0., 0., 1., 1.);
-   
+
    //TPad itself is fully transparent:
    new TColor(transparentFill, 1., 1., 1., "transparent_fill_color", 0.);
    pad->SetFillColor(transparentFill);

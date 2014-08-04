@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -27,7 +27,7 @@ class MnGlobalCorrelationCoeff {
 
 public:
 
-  MnGlobalCorrelationCoeff() : 
+  MnGlobalCorrelationCoeff() :
     fGlobalCC(std::vector<double>()), fValid(false) {}
 
   MnGlobalCorrelationCoeff(const MnAlgebraicSymMatrix&);

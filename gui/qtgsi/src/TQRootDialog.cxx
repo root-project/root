@@ -128,7 +128,7 @@ TQRootDialog::~TQRootDialog()
    if (fArgBox) delete fArgBox;
    if (fLineEdit) delete fLineEdit;
 #if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
-   // Perhaps we need to deallocate all? 
+   // Perhaps we need to deallocate all?
    fList.erase(fList.begin(),fList.end());
 #else
    fList.remove();

@@ -625,10 +625,10 @@ void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
       //how do I know what to calculate without a font???
       if (gVirtualX->InheritsFrom("TGCocoa"))
          gVirtualX->SetTextFont(fTextFont);
-      
+
       gVirtualX->SetTextSize((int)tsize);
       gVirtualX->GetTextExtent(a, h, (char*)text);
-      
+
       if (gVirtualX->InheritsFrom("TGCocoa"))
          gVirtualX->SetTextFont(oldFont);
    }

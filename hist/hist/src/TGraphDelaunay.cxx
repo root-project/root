@@ -784,9 +784,9 @@ L1:
 
                   // u et v are used only to know their sign. The previous
                   // code computed them with a division which was long and
-                  // might be a division by 0. It is now replaced by a 
+                  // might be a division by 0. It is now replaced by a
                   // multiplication.
-                  u = (dy3*dx2-dx3*dy2)*(dy1*dx2-dx1*dy2);                  
+                  u = (dy3*dx2-dx3*dy2)*(dy1*dx2-dx1*dy2);
                   v = (dy3*dx1-dx3*dy1)*(dy2*dx1-dx2*dy1);
 
                   if ((u>=0) && (v>=0)) {

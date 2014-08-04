@@ -48,7 +48,7 @@ protected:
 public:
 enum EGeoVisLevel {
    kGeoVisLevel   = 0
-};         
+};
 enum EGeoVisOption {
    kGeoVisDefault = 0,    // default visualization - everything visible 3 levels down
    kGeoVisLeaves  = 1,    // only last leaves are visible
@@ -56,7 +56,7 @@ enum EGeoVisOption {
    kGeoVisBranch  = 3,    // only a given branch is drawn
    kGeoVisChanged = 4     // visibility changed
 };
-enum EGeoBombOption {   
+enum EGeoBombOption {
    kGeoNoBomb     = 0,    // default - no bomb
    kGeoBombXYZ    = 1,    // explode view in cartesian coordinates
    kGeoBombCyl    = 2,    // explode view in cylindrical coordinates (R, Z)
@@ -73,7 +73,7 @@ public:
    virtual void       BombTranslation(const Double_t *tr, Double_t *bombtr) = 0;
    virtual void       CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="") = 0;
    virtual void       CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option) = 0;
-   virtual void       CheckBoundaryErrors(Int_t ntracks=1000000, Double_t radius=-1.) = 0; 
+   virtual void       CheckBoundaryErrors(Int_t ntracks=1000000, Double_t radius=-1.) = 0;
    virtual void       CheckBoundaryReference(Int_t icheck=-1) = 0;
    virtual void       CheckGeometryFull(Bool_t checkoverlaps=kTRUE, Bool_t checkcrossings=kTRUE, Int_t nrays=10000, const Double_t *vertex=NULL) = 0;
    virtual void       CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const = 0;
@@ -98,15 +98,15 @@ public:
    virtual void       ExecuteManagerEvent(TGeoManager *geom, Int_t event, Int_t px, Int_t py) = 0;
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py) = 0;
    virtual Int_t      GetColor(Int_t base, Float_t light) const = 0;
-   virtual Int_t      GetNsegments() const = 0; 
+   virtual Int_t      GetNsegments() const = 0;
    virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const = 0;
-   virtual Int_t      GetBombMode() const = 0; 
-   virtual const char *GetDrawPath() const = 0; 
+   virtual Int_t      GetBombMode() const = 0;
+   virtual const char *GetDrawPath() const = 0;
    virtual TGeoVolume *GetDrawnVolume() const = 0;
-   virtual TGeoVolume *GetTopVolume() const = 0; 
+   virtual TGeoVolume *GetTopVolume() const = 0;
    virtual void       GetViewAngles(Double_t &/*longitude*/, Double_t &/*latitude*/, Double_t &/*psi*/) {;}
-   virtual Int_t      GetVisLevel() const = 0; 
-   virtual Int_t      GetVisOption() const = 0; 
+   virtual Int_t      GetVisLevel() const = 0;
+   virtual Int_t      GetVisOption() const = 0;
    virtual const char*GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const = 0;
    virtual void       GrabFocus(Int_t nfr=0, Double_t dlong=0, Double_t dlat=0, Double_t dpsi=0) =0;
    virtual Double_t  *GetViewBox() = 0;
@@ -135,7 +135,7 @@ public:
    virtual void       SetGeoManager(TGeoManager *geom) = 0;
    virtual void       SetIteratorPlugin(TGeoIteratorPlugin *plugin) = 0;
    virtual void       SetCheckedNode(TGeoNode *node) = 0;
-   virtual void       SetNsegments(Int_t nseg=20) = 0;    
+   virtual void       SetNsegments(Int_t nseg=20) = 0;
    virtual void       SetNmeshPoints(Int_t npoints) = 0;
    virtual void       SetRaytracing(Bool_t flag=kTRUE) = 0;
    static  TVirtualGeoPainter *GeoPainter();
@@ -150,7 +150,7 @@ public:
    virtual Bool_t     TestVoxels(TGeoVolume *vol) = 0;
    virtual void       UnbombTranslation(const Double_t *tr, Double_t *bombtr) = 0;
    virtual Double_t   Weight(Double_t precision, Option_t *option="v") = 0;
-      
+
    ClassDef(TVirtualGeoPainter,0)  //Abstract interface for geometry painters
 };
 

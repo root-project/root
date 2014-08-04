@@ -61,7 +61,7 @@ namespace Quartz = ROOT::Quartz;
    unsigned       fHeight;
    unsigned char *fData;
    CGContextRef   fContext;
-   
+
    unsigned       fScaleFactor;
 }
 
@@ -75,7 +75,7 @@ namespace Quartz = ROOT::Quartz;
       fHeight = 0;
       fData = 0;
       fContext = 0;
-      
+
       if (![self resizeW : width H : height scaleFactor : scaleFactor]) {
          [self release];
          return nil;
@@ -103,20 +103,20 @@ namespace Quartz = ROOT::Quartz;
    assert(height > 0 && "resizeW:H:, Pixmap height must be positive");
 
    fScaleFactor = unsigned(scaleFactor + 0.5);
-   
+
    //Part, which does not change anything in a state:
    unsigned char *memory = 0;
-   
+
    const unsigned scaledW = width * fScaleFactor;
    const unsigned scaledH = height * fScaleFactor;
-   
+
    try {
       memory = new unsigned char[scaledW * scaledH * 4]();//[0]
    } catch (const std::bad_alloc &) {
       NSLog(@"QuartzPixmap: -resizeW:H:, memory allocation failed");
       return NO;
    }
-   
+
    Util::ScopedArray<unsigned char> arrayGuard(memory);
 
    //TODO: device RGB? should it be generic?
@@ -133,9 +133,9 @@ namespace Quartz = ROOT::Quartz;
       NSLog(@"QuartzPixmap: -resizeW:H:, CGBitmapContextCreateWithData failed");
       return NO;
    }
-   
+
    //Now, apply scaling.
-   
+
    if (fScaleFactor > 1)
       CGContextScaleCTM(ctx.Get(), fScaleFactor, fScaleFactor);
 
@@ -152,7 +152,7 @@ namespace Quartz = ROOT::Quartz;
    fWidth = width;
    fHeight = height;
    fData = memory;
-   
+
    arrayGuard.Release();
 
    fContext = ctx.Get();//[2]
@@ -171,25 +171,25 @@ namespace Quartz = ROOT::Quartz;
 - (CGImageRef) createImageFromPixmap : (X11::Rectangle) cropArea
 {
    //Crop area must be valid and adjusted by caller.
-   
+
    //This function is incorrect in a general case, it does not care about
    //cropArea.fX and cropArea.fY, very sloppy implementation.
    //TODO: either fix it or remove completely.
-   
+
    assert(cropArea.fX >= 0 && "createImageFromPixmap:, cropArea.fX is negative");
    assert(cropArea.fY >= 0 && "createImageFromPixmap:, cropArea.fY is negative");
    assert(cropArea.fWidth <= fWidth && "createImageFromPixmap:, bad cropArea.fWidth");
    assert(cropArea.fHeight <= fHeight && "createImageFromPixmap:, bad cropArea.fHeight");
 
    //
-   const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer, 
-                                                            ROOT_QuartzImage_ReleaseBytePointer, 
+   const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer,
+                                                            ROOT_QuartzImage_ReleaseBytePointer,
                                                             ROOT_QuartzImage_GetBytesAtPosition, 0};
 
    const unsigned scaledW = fWidth * fScaleFactor;
    const unsigned scaledH = fHeight * fScaleFactor;
-   
-   
+
+
    const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(fData,
                                                         scaledW * scaledH * 4, &providerCallbacks));
    if (!provider.Get()) {
@@ -203,7 +203,7 @@ namespace Quartz = ROOT::Quartz;
       NSLog(@"QuartzPixmap: -pixmapToImage, CGColorSpaceCreateDeviceRGB failed");
       return 0;
    }
-      
+
    //8 bits per component, 32 bits per pixel, 4 bytes per pixel, kCGImageAlphaLast:
    //all values hardcoded for TGCocoa.
    CGImageRef image = CGImageCreate(cropArea.fWidth * fScaleFactor, cropArea.fHeight * fScaleFactor,
@@ -265,7 +265,7 @@ namespace Quartz = ROOT::Quartz;
              ":toPoint, srcRect and copyRect do not intersect");
       return;
    }
-   
+
    CGImageRef subImage = 0;//RAII not really needed.
    bool needSubImage = false;
    if (area.fX || area.fY || area.fWidth != srcImage.fWidth || area.fHeight != srcImage.fHeight) {
@@ -313,13 +313,13 @@ namespace Quartz = ROOT::Quartz;
              "toPoint, srcRect and copyRect do not intersect");
       return;
    }
-   
-   const Util::CFScopeGuard<CGImageRef> image([srcPixmap createImageFromPixmap : area]);   
+
+   const Util::CFScopeGuard<CGImageRef> image([srcPixmap createImageFromPixmap : area]);
    if (!image.Get())
       return;
 
    const Quartz::CGStateGuard stateGuard(fContext);
-   
+
    if (mask) {
       assert(mask.fImage != nil &&
              "copyPixmap:area:withMask:clipOrigin:toPoint, mask is not nil, but mask.fImage is nil");
@@ -330,7 +330,7 @@ namespace Quartz = ROOT::Quartz;
       const CGRect clipRect = CGRectMake(clipXY.fX, clipXY.fY, mask.fWidth, mask.fHeight);
       CGContextClipToMask(fContext, clipRect, mask.fImage);
    }
-   
+
    //TODO: fix the possible overflow? (though, who can have such images???)
    dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);
    const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
@@ -381,7 +381,7 @@ namespace Quartz = ROOT::Quartz;
          NSLog(@"QuartzImage: -readColorBits:, can not create scaled pixmap");
          return buffer;//empty buffer.
       }
-      
+
       [scaledPixmap.Get() copy : self area : X11::Rectangle(0, 0, fWidth, fHeight)
                       withMask : nil clipOrigin : X11::Point() toPoint : X11::Point()];
    }
@@ -423,10 +423,10 @@ namespace Quartz = ROOT::Quartz;
    assert(rgb != 0 && "putPixel:X:Y:, rgb parameter is null");
    assert(x < fWidth && "putPixel:X:Y:, x parameter is >= self.fWidth");
    assert(y < fHeight && "putPixel:X:Y:, y parameter is >= self.fHeight");
-   
+
    if (fScaleFactor > 1) {
       //Ooops, and what should I do now???
-      const unsigned scaledW = fWidth * fScaleFactor;      
+      const unsigned scaledW = fWidth * fScaleFactor;
       unsigned char *dst = fData + y * fScaleFactor * scaledW * 4 + x * fScaleFactor * 4;
 
       for (unsigned i = 0; i < 2; ++i, dst += 4) {
@@ -447,7 +447,7 @@ namespace Quartz = ROOT::Quartz;
       }
    } else {
       unsigned char *dst = fData + y * fWidth * 4 + x * 4;
-      
+
       dst[0] = rgb[0];
       dst[1] = rgb[1];
       dst[2] = rgb[2];
@@ -460,7 +460,7 @@ namespace Quartz = ROOT::Quartz;
 {
    //Primitive version of XAddPixel.
    assert(rgb != 0 && "addPixel:, rgb parameter is null");
-   
+
    for (unsigned i = 0; i < fHeight; ++i) {
       for (unsigned j = 0; j < fWidth; ++j) {
          fData[i * fWidth * 4 + j * 4] = rgb[0];
@@ -498,7 +498,7 @@ namespace Quartz = ROOT::Quartz;
 
       //This w * h * 4 is ONLY for TGCocoa::CreatePixmapFromData.
       //If needed something else, I'll make this code more generic.
-      
+
       unsigned char *dataCopy = 0;
       try {
          dataCopy = new unsigned char[width * height * 4]();
@@ -506,13 +506,13 @@ namespace Quartz = ROOT::Quartz;
          NSLog(@"QuartzImage: -initWithW:H:data:, memory allocation failed");
          return nil;
       }
-      
+
       std::copy(data, data + width * height * 4, dataCopy);
       Util::ScopedArray<unsigned char> arrayGuard(dataCopy);
-   
+
       fIsStippleMask = NO;
-      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer, 
-                                                               ROOT_QuartzImage_ReleaseBytePointer, 
+      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer,
+                                                               ROOT_QuartzImage_ReleaseBytePointer,
                                                                ROOT_QuartzImage_GetBytesAtPosition, 0};
 
       const Util::CFScopeGuard<CGDataProviderRef>
@@ -521,7 +521,7 @@ namespace Quartz = ROOT::Quartz;
          NSLog(@"QuartzImage: -initWithW:H:data: CGDataProviderCreateDirect failed");
          return nil;
       }
-      
+
       //RGB - this is only for TGCocoa::CreatePixmapFromData.
       const Util::CFScopeGuard<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB());
       if (!colorSpace.Get()) {
@@ -534,7 +534,7 @@ namespace Quartz = ROOT::Quartz;
       fImage = CGImageCreate(width, height, 8, 32, width * 4, colorSpace.Get(),
                              kCGImageAlphaLast, provider.Get(), 0, false,
                              kCGRenderingIntentDefault);
-      
+
       if (!fImage) {
          NSLog(@"QuartzImage: -initWithW:H:data: CGImageCreate failed");
          return nil;
@@ -547,7 +547,7 @@ namespace Quartz = ROOT::Quartz;
       fHeight = height;
       fImageData = dataCopy;
    }
-   
+
    return self;
 }
 
@@ -557,10 +557,10 @@ namespace Quartz = ROOT::Quartz;
    assert(width != 0 && "initMaskWithW:H:bitmapMask:, width parameter is zero");
    assert(height != 0 && "initMaskWithW:H:bitmapMask:, height parameter is zero");
    assert(mask != 0 && "initMaskWithW:H:bitmapMask:, mask parameter is null");
-   
+
    if (self = [super init]) {
       Util::NSScopeGuard<QuartzImage> selfGuard(self);
-      
+
       unsigned char *dataCopy = 0;
       try {
          dataCopy = new unsigned char[width * height]();
@@ -569,15 +569,15 @@ namespace Quartz = ROOT::Quartz;
          return nil;
       }
 
-      std::copy(mask, mask + width * height, dataCopy);      
+      std::copy(mask, mask + width * height, dataCopy);
       Util::ScopedArray<unsigned char> arrayGuard(dataCopy);
-   
+
       fIsStippleMask = YES;
-      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer, 
-                                                               ROOT_QuartzImage_ReleaseBytePointer, 
+      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer,
+                                                               ROOT_QuartzImage_ReleaseBytePointer,
                                                                ROOT_QuartzImage_GetBytesAtPosition, 0};
-                                                               
-                                                               
+
+
       const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(dataCopy,
                                                            width * height, &providerCallbacks));
       if (!provider.Get()) {
@@ -591,7 +591,7 @@ namespace Quartz = ROOT::Quartz;
          NSLog(@"QuartzImage: -initMaskWithW:H:bitmapMask:, CGImageMaskCreate failed");
          return nil;
       }
-      
+
       selfGuard.Release();
       arrayGuard.Release();
 
@@ -599,7 +599,7 @@ namespace Quartz = ROOT::Quartz;
       fHeight = height;
       fImageData = dataCopy;
    }
-   
+
    return self;
 }
 
@@ -610,7 +610,7 @@ namespace Quartz = ROOT::Quartz;
 
    assert(width != 0 && "initMaskWithW:H:, width parameter is zero");
    assert(height != 0 && "initMaskWithW:H:, height parameter is zero");
-   
+
    if (self = [super init]) {
       Util::NSScopeGuard<QuartzImage> selfGuard(self);
 
@@ -622,10 +622,10 @@ namespace Quartz = ROOT::Quartz;
       }
 
       fIsStippleMask = YES;
-      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer, 
-                                                               ROOT_QuartzImage_ReleaseBytePointer, 
+      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer,
+                                                               ROOT_QuartzImage_ReleaseBytePointer,
                                                                ROOT_QuartzImage_GetBytesAtPosition, 0};
-                                                               
+
       const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(fImageData,
                                                            width * height, &providerCallbacks));
       if (!provider.Get()) {
@@ -639,13 +639,13 @@ namespace Quartz = ROOT::Quartz;
          NSLog(@"QuartzImage: -initMaskWithW:H:, CGImageMaskCreate failed");
          return nil;
       }
-      
+
       selfGuard.Release();
-      
+
       fWidth = width;
       fHeight = height;
    }
-   
+
    return self;
 }
 
@@ -667,7 +667,7 @@ namespace Quartz = ROOT::Quartz;
    assert(image.fWidth != 0 && "initFromImage:, image width is 0");
    assert(image.fHeight != 0 && "initFromImage:, image height is 0");
    assert(image.fIsStippleMask == NO && "initFromImage:, image is a stipple mask, not implemented");
-   
+
    return [self initWithW : image.fWidth H : image.fHeight data : image->fImageData];
 }
 
@@ -677,9 +677,9 @@ namespace Quartz = ROOT::Quartz;
    assert(image != nil && "initFromImageFlipped:, image parameter is nil");
    assert(image.fWidth != 0 && "initFromImageFlipped:, image width is 0");
    assert(image.fHeight != 0 && "initFromImageFlipped:, image height is 0");
-   
+
    const unsigned bpp = image.fIsStippleMask ? 1 : 4;
-   
+
    if (self = [super init]) {
       const unsigned width = image.fWidth;
       const unsigned height = image.fHeight;
@@ -700,13 +700,13 @@ namespace Quartz = ROOT::Quartz;
          unsigned char *dstLine = dataCopy + i * lineSize;
          std::copy(sourceLine, sourceLine + lineSize, dstLine);
       }
-      
+
       Util::ScopedArray<unsigned char> arrayGuard(dataCopy);
 
-      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer, 
+      const CGDataProviderDirectCallbacks providerCallbacks = {0, ROOT_QuartzImage_GetBytePointer,
                                                                ROOT_QuartzImage_ReleaseBytePointer,
                                                                ROOT_QuartzImage_GetBytesAtPosition, 0};
-   
+
       if (bpp == 1) {
          fIsStippleMask = YES;
 
@@ -725,14 +725,14 @@ namespace Quartz = ROOT::Quartz;
          }
       } else {
          fIsStippleMask = NO;
-      
+
          const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(dataCopy,
                                                               width * height * 4, &providerCallbacks));
          if (!provider.Get()) {
             NSLog(@"QuartzImage: -initFromImageFlipped:, CGDataProviderCreateDirect failed");
             return nil;
          }
-      
+
          const Util::CFScopeGuard<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB());
          if (!colorSpace.Get()) {
             NSLog(@"QuartzImage: -initFromImageFlipped:, CGColorSpaceCreateDeviceRGB failed");
@@ -756,7 +756,7 @@ namespace Quartz = ROOT::Quartz;
       fHeight = height;
       fImageData = dataCopy;
    }
-   
+
    return self;
 }
 
@@ -767,7 +767,7 @@ namespace Quartz = ROOT::Quartz;
       CGImageRelease(fImage);
       delete [] fImageData;
    }
-   
+
    [super dealloc];
 }
 
@@ -782,7 +782,7 @@ namespace Quartz = ROOT::Quartz;
       return NO;
    if (area.fHeight > fHeight || !area.fHeight)
       return NO;
-   
+
    return YES;
 }
 
@@ -792,7 +792,7 @@ namespace Quartz = ROOT::Quartz;
    assert([self isRectInside : area] == YES && "readColorBits: bad area parameter");
    //Image, bitmap - they all must be converted to ARGB (bitmap) or BGRA (image) (for libAfterImage).
    unsigned char *buffer = 0;
-   
+
    try {
       buffer = new unsigned char[area.fWidth * area.fHeight * 4]();
    } catch (const std::bad_alloc &) {
@@ -812,7 +812,7 @@ namespace Quartz = ROOT::Quartz;
             if (!srcPixel[0])
                dstPixel[0] = 255;//can be 1 or anything different from 0.
          }
-         
+
          line += fWidth;
          srcPixel = line + area.fX;
       }
@@ -821,7 +821,7 @@ namespace Quartz = ROOT::Quartz;
       //fImageData has 4 bytes per pixel.
       const unsigned char *line = fImageData + area.fY * fWidth * 4;
       const unsigned char *srcPixel = line + area.fX * 4;
-      
+
       for (unsigned i = 0; i < area.fHeight; ++i) {
          for (unsigned j = 0; j < area.fWidth; ++j, srcPixel += 4, dstPixel += 4) {
             dstPixel[0] = srcPixel[2];
@@ -833,10 +833,10 @@ namespace Quartz = ROOT::Quartz;
          line += fWidth * 4;
          srcPixel = line + area.fX * 4;
       }
-      
+
       return buffer;
    }
-   
+
    return buffer;
 }
 
@@ -916,24 +916,24 @@ bool FindOverlapDifferentSigns(const range_type &left, const range_type &right, 
    //x2 - x1 can overflow.
    //Left.x is negative, right.x is non-negative (0 included).
    const unsigned signedMinAbs(std::numeric_limits<unsigned>::max() / 2 + 1);
-   
+
    if (left.first == std::numeric_limits<int>::min()) {//hehehe
       if (left.second <= signedMinAbs)
          return false;
-      
+
       if (left.second - signedMinAbs <= unsigned(right.first))
          return false;
-      
+
       intersection.first = right.first;
       intersection.second = std::min(right.second, left.second - signedMinAbs - unsigned(right.first));
    } else {
       const unsigned leftXAbs(-left.first);//-left.first can't overflow.
       if (leftXAbs >= left.second)
          return false;
-      
+
       if (left.second - leftXAbs <= unsigned(right.first))
          return false;
-      
+
       intersection.first = right.first;
       intersection.second = std::min(right.second, left.second - leftXAbs - unsigned(right.first));
    }
@@ -946,7 +946,7 @@ bool FindOverlap(const range_type &range1, const range_type &range2, range_type 
 {
    range_type left;
    range_type right;
-   
+
    if (range1.first < range2.first) {
       left = range1;
       right = range2;
@@ -972,18 +972,18 @@ bool AdjustCropArea(const Rectangle &srcRect, Rectangle &cropArea)
    if (!FindOverlap(range_type(srcRect.fX, srcRect.fWidth),
                     range_type(cropArea.fX, cropArea.fWidth), xIntersection))
       return false;
-   
+
    range_type yIntersection;
    if (!FindOverlap(range_type(srcRect.fY, srcRect.fHeight),
                     range_type(cropArea.fY, cropArea.fHeight), yIntersection))
       return false;
-   
+
    cropArea.fX = xIntersection.first;
    cropArea.fWidth = xIntersection.second;
-   
+
    cropArea.fY = yIntersection.first;
    cropArea.fHeight = yIntersection.second;
-   
+
    return true;
 }
 
@@ -1001,11 +1001,11 @@ bool AdjustCropArea(QuartzImage *srcImage, NSRect &cropArea)
 {
    assert(srcImage != nil && "AdjustCropArea, srcImage parameter is nil");
    assert(srcImage.fImage != 0 && "AdjustCropArea, srcImage.fImage is null");
-   
+
    const Rectangle srcRect(0, 0, srcImage.fWidth, srcImage.fHeight);
    Rectangle dstRect(int(cropArea.origin.x), int(cropArea.origin.y),
                      unsigned(cropArea.size.width), unsigned(cropArea.size.height));
-   
+
    if (AdjustCropArea(srcRect, dstRect)) {
       cropArea.origin.x = dstRect.fX;
       cropArea.origin.y = dstRect.fY;
@@ -1014,7 +1014,7 @@ bool AdjustCropArea(QuartzImage *srcImage, NSRect &cropArea)
 
       return true;
    }
-   
+
    return false;
 }
 
@@ -1030,16 +1030,16 @@ bool AdjustCropArea(QuartzPixmap *srcPixmap, X11::Rectangle &cropArea)
 bool TestBitmapBit(const unsigned char *bitmap, unsigned w, unsigned i, unsigned j)
 {
    //Test if a bit (i,j) is set in a bitmap (w, h).
-   
+
    //Code in ROOT's GUI suggests, that byte is octet.
    assert(bitmap != 0 && "TestBitmapBit, bitmap parameter is null");
    assert(w != 0 && "TestBitmapBit, w parameter is 0");
    assert(i < w && "TestBitmapBit, i parameter is >= w");
-   
+
    const unsigned bytesPerLine = (w + 7) / 8;
    const unsigned char *line = bitmap + j * bytesPerLine;
    const unsigned char byteValue = line[i / 8];
-   
+
    return byteValue & (1 << (i % 8));
 }
 
@@ -1063,7 +1063,7 @@ void FillPixmapBuffer(const unsigned char *bitmap, unsigned width, unsigned heig
          const unsigned line = j * width * 4;
          for (unsigned i = 0; i < width; ++i) {
             const unsigned pixel = line + i * 4;
-            
+
             if (TestBitmapBit(bitmap, width, i, j)) {
                //Foreground color.
                imageData[pixel] = foregroundColor[0];
@@ -1072,9 +1072,9 @@ void FillPixmapBuffer(const unsigned char *bitmap, unsigned width, unsigned heig
             } else {
                imageData[pixel] = backgroundColor[0];
                imageData[pixel + 1] = backgroundColor[1];
-               imageData[pixel + 2] = backgroundColor[2];            
+               imageData[pixel + 2] = backgroundColor[2];
             }
-            
+
             imageData[pixel + 3] = 255;
          }
       }
@@ -1088,7 +1088,7 @@ void FillPixmapBuffer(const unsigned char *bitmap, unsigned width, unsigned heig
             else
                imageData[pixel] = 255;//mask out pixel.
          }
-      }   
+      }
    }
 }
 

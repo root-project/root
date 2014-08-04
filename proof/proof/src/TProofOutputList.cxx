@@ -30,7 +30,7 @@ ClassImp(TProofOutputList)
 TProofOutputList::TProofOutputList(const char *dontshow) : TList()
 {
    // Constructor
-   
+
    fDontShow = new TList();
    TString regs(dontshow), reg;
    Int_t from = 0;
@@ -43,7 +43,7 @@ TProofOutputList::TProofOutputList(const char *dontshow) : TList()
 TProofOutputList::~TProofOutputList()
 {
    // Destructor
-   
+
    fDontShow->SetOwner(kTRUE);
    SafeDelete(fDontShow);
 }
@@ -78,7 +78,7 @@ void TProofOutputList::ls(Option_t *option) const
       TObjString *os = 0;
       TList doShow;
       doShow.SetOwner(kFALSE);
-      
+
       Bool_t hasmissing = kFALSE;
       TIter nxo(this);
       TObject *obj = 0;
@@ -114,7 +114,7 @@ void TProofOutputList::ls(Option_t *option) const
 void TProofOutputList::Print(Option_t *option) const
 {
    // Print the content of the list
- 
+
    TString opt(option);
    opt.ToUpper();
    if (opt.BeginsWith("ALL")) {
@@ -125,7 +125,7 @@ void TProofOutputList::Print(Option_t *option) const
       TObjString *os = 0;
       TList doShow;
       doShow.SetOwner(kFALSE);
-      
+
       Bool_t hasmissing = kFALSE;
       TIter nxo(this);
       TObject *obj = 0;

@@ -474,7 +474,7 @@ void ROOT::TTreeReaderArrayBase::CreateProxy()
       }
    }
 
-   
+
 
    // Access a branch's collection content (not the collection itself)
    // through a proxy.

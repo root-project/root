@@ -506,7 +506,7 @@ void TGDNDManager::SendDNDEnter(Window_t target)
       event.fUser[3] = kNone;
       event.fUser[4] = kNone;
    }
-   
+
    gVirtualX->SendEvent(target, &event);
 }
 
@@ -854,7 +854,7 @@ Bool_t TGDNDManager::HandleSelection(Event_t *event)
 
       if ((actual != fDropType) || (format != 8) || (count == 0) || !data) {
          if (data) delete[] data;
-         
+
          return kFALSE;
       }
 

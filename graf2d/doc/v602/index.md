@@ -9,8 +9,8 @@
 
 ### TLatex
 
--  The interface to TMathText did not work when the size was set in pixel 
-   (precision 3). 
+-  The interface to TMathText did not work when the size was set in pixel
+   (precision 3).
 
 ### TTeXDump
 

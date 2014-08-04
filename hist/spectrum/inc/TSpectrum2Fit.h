@@ -40,7 +40,7 @@ protected:
    Int_t     fPower;                         //possible values kFitPower2,4,6,8,10,12, for details see references. It applies only for Awmi fitting function.
    Int_t     fFitTaylor;                     //order of Taylor expansion, possible values kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi fitting function.
    Double_t  fAlpha;                         //convergence coefficient, input parameter, it should be positive number and <=1, for details see references
-   Double_t  fChi;                           //here the fitting functions return resulting chi square   
+   Double_t  fChi;                           //here the fitting functions return resulting chi square
    Double_t *fPositionInitX;                 //[fNPeaks] array of initial values of x positions of 2D peaks, input parameters
    Double_t *fPositionCalcX;                 //[fNPeaks] array of calculated values of x positions of 2D peaks, output parameters
    Double_t *fPositionErrX;                  //[fNPeaks] array of error values of x positions of 2D peaks, output parameters
@@ -105,7 +105,7 @@ protected:
    Double_t  fAxErr;                         //error value of background ax parameter
    Double_t  fAyInit;                        //initial value of background ay parameter(backgroud is estimated as a0+ax*x+ay*y)
    Double_t  fAyCalc;                        //calculated value of background ay parameter
-   Double_t  fAyErr;                         //error value of background ay parameter   
+   Double_t  fAyErr;                         //error value of background ay parameter
    Bool_t   *fFixPositionX;                  //[fNPeaks] array of logical values which allow to fix appropriate x positions of 2D peaks (not fit). However they are present in the estimated functional
    Bool_t   *fFixPositionY;                  //[fNPeaks] array of logical values which allow to fix appropriate y positions of 2D peaks (not fit). However they are present in the estimated functional
    Bool_t   *fFixPositionX1;                 //[fNPeaks] array of logical values which allow to fix appropriate x positions of 1D ridges (not fit). However they are present in the estimated functional
@@ -144,13 +144,13 @@ public:
        kFitTaylorOrderSecond =1,
        kFitNumRegulCycles =100
    };
-   TSpectrum2Fit(void); //default constructor        
+   TSpectrum2Fit(void); //default constructor
    TSpectrum2Fit(Int_t numberPeaks);
    virtual ~TSpectrum2Fit();
    //auxiliary functions for 2. parameter fit functions
-protected:    
+protected:
    Double_t            Deramp2(Double_t x,Double_t y,Double_t x0,Double_t y0,Double_t sigmax,Double_t sigmay,Double_t ro,Double_t txy,Double_t sxy,Double_t bx,Double_t by);
-   Double_t            Derampx(Double_t x,Double_t x0,Double_t sigmax,Double_t tx,Double_t sx,Double_t bx);   
+   Double_t            Derampx(Double_t x,Double_t x0,Double_t sigmax,Double_t tx,Double_t sx,Double_t bx);
    Double_t            Derbx(Int_t numOfFittedPeaks,Double_t x,Double_t y,const Double_t *parameter,Double_t sigmax,Double_t sigmay,Double_t txy,Double_t tx,Double_t bx,Double_t by);
    Double_t            Derby(Int_t numOfFittedPeaks,Double_t x,Double_t y,const Double_t *parameter,Double_t sigmax,Double_t sigmay,Double_t txy,Double_t ty,Double_t bx,Double_t by);
    Double_t            Derderi01(Double_t x,Double_t ax,Double_t x0,Double_t sigmax);
@@ -177,17 +177,17 @@ protected:
    Double_t            Derty(Int_t numOfFittedPeaks,Double_t x,const Double_t *parameter,Double_t sigmax,Double_t bx);
    Double_t            Erfc(Double_t x);
    Double_t            Ourpowl(Double_t a,Int_t pw);
-   Double_t            Shape2(Int_t numOfFittedPeaks,Double_t x,Double_t y,const Double_t *parameter,Double_t sigmax,Double_t sigmay,Double_t ro,Double_t a0,Double_t ax,Double_t ay,Double_t txy,Double_t sxy,Double_t tx,Double_t ty,Double_t sx,Double_t sy,Double_t bx,Double_t by);   
+   Double_t            Shape2(Int_t numOfFittedPeaks,Double_t x,Double_t y,const Double_t *parameter,Double_t sigmax,Double_t sigmay,Double_t ro,Double_t a0,Double_t ax,Double_t ay,Double_t txy,Double_t sxy,Double_t tx,Double_t ty,Double_t sx,Double_t sy,Double_t bx,Double_t by);
    void                StiefelInversion(Double_t **a,Int_t size);
    Double_t            Volume(Double_t a,Double_t sx,Double_t sy,Double_t ro);
 
 public:
-   void                FitAwmi(Double_t **source);   
-   void                FitStiefel(Double_t **source);   
+   void                FitAwmi(Double_t **source);
+   void                FitStiefel(Double_t **source);
    void                GetAmplitudes(Double_t *amplitudes, Double_t *amplitudesX1, Double_t *amplitudesY1);
    void                GetAmplitudeErrors(Double_t *amplitudeErrors, Double_t *amplitudeErrorsX1, Double_t *amplitudeErrorsY1);
    void                GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Double_t &ax, Double_t &axErr, Double_t &ay, Double_t &ayErr);
-   Double_t            GetChi() const {return fChi;}   
+   Double_t            GetChi() const {return fChi;}
    void                GetPositions(Double_t *positionsX, Double_t *positionsY, Double_t *positionsX1, Double_t *positionsY1);
    void                GetPositionErrors(Double_t *positionErrorsX, Double_t *positionErrorsY, Double_t *positionErrorsX1, Double_t *positionErrorsY1);
    void                GetRo(Double_t &ro, Double_t &roErr);
@@ -196,11 +196,11 @@ public:
    void                GetTailParameters(Double_t &txy, Double_t &txyErr, Double_t &tx, Double_t &txErr, Double_t &ty, Double_t &tyErr, Double_t &bx, Double_t &bxErr, Double_t &by, Double_t &byErr, Double_t &sxy, Double_t &sxyErr, Double_t &sx, Double_t &sxErr, Double_t &sy, Double_t &syErr);
    void                GetVolumes(Double_t *volumes);
    void                GetVolumeErrors(Double_t *volumeErrors);
-   void                SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Double_t axInit, Bool_t fixAx, Double_t ayInit, Bool_t fixAy);   
+   void                SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Double_t axInit, Bool_t fixAx, Double_t ayInit, Bool_t fixAy);
    void                SetFitParameters(Int_t xmin,Int_t xmax,Int_t ymin,Int_t ymax, Int_t numberIterations, Double_t alpha, Int_t statisticType, Int_t alphaOptim, Int_t power, Int_t fitTaylor);
-   void                SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_t sigmaY, Bool_t fixSigmaY, Double_t ro, Bool_t fixRo, const Double_t *positionInitX, const Bool_t *fixPositionX, const Double_t *positionInitY, const Bool_t *fixPositionY, const Double_t *positionInitX1, const Bool_t *fixPositionX1, const Double_t *positionInitY1, const Bool_t *fixPositionY1, const Double_t *ampInit, const Bool_t *fixAmp, const Double_t *ampInitX1, const Bool_t *fixAmpX1, const Double_t *ampInitY1, const Bool_t *fixAmpY1);   
+   void                SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_t sigmaY, Bool_t fixSigmaY, Double_t ro, Bool_t fixRo, const Double_t *positionInitX, const Bool_t *fixPositionX, const Double_t *positionInitY, const Bool_t *fixPositionY, const Double_t *positionInitX1, const Bool_t *fixPositionX1, const Double_t *positionInitY1, const Bool_t *fixPositionY1, const Double_t *ampInit, const Bool_t *fixAmp, const Double_t *ampInitX1, const Bool_t *fixAmpX1, const Double_t *ampInitY1, const Bool_t *fixAmpY1);
    void                SetTailParameters(Double_t tInitXY, Bool_t fixTxy, Double_t tInitX, Bool_t fixTx, Double_t tInitY, Bool_t fixTy, Double_t bInitX, Bool_t fixBx, Double_t bInitY, Bool_t fixBy, Double_t sInitXY, Bool_t fixSxy, Double_t sInitX, Bool_t fixSx, Double_t sInitY, Bool_t fixSy);
-   
+
    ClassDef(TSpectrum2Fit,1)  //Spectrum2 Fitter using algorithm without matrix inversion and conjugate gradient method for symmetrical matrices (Stiefel-Hestens method)
 };
 

@@ -31,7 +31,7 @@ protected:
 
    Int_t     fErrorCode;  // error code of last operation
    TString   fErrorMsg;   // error message of last operation
-   Bool_t    fErrorOut;   // enable error output 
+   Bool_t    fErrorOut;   // enable error output
 
    void                ClearError();
    void                SetError(Int_t code, const char* msg, const char* method = 0);

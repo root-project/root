@@ -1,6 +1,6 @@
 #import <UIKit/UIKit.h>
 
-@interface ColorCell : UIView 
+@interface ColorCell : UIView
 
 - (void) setRGB : (const double *) rgb;
 

@@ -13,7 +13,7 @@ void Draw_PerfProfiles(const Char_t* filename) {
 
    if(!TString(gSystem->GetLibraries()).Contains("Proof"))
       gSystem->Load("libProof.so");
-   
+
    TFile f(filename);
    if (f.IsZombie()) {
       cout << "file " << filename << " cannot be opened" << endl;
@@ -57,7 +57,7 @@ void Draw_PerfProfiles(const Char_t* filename) {
 
    Int_t nslaves = procmax_slaves>procoptmax_slaves?procmax_slaves:procoptmax_slaves;
    if (nslaves<noprocmax_slaves) nslaves=noprocmax_slaves;
-   
+
    TProfile* procprof = new TProfile("procprof", "Total Processing Time",
                                      nslaves+1, 0, nslaves+1);
    procprof->SetMarkerStyle(26);
@@ -89,7 +89,7 @@ void Draw_PerfProfiles(const Char_t* filename) {
                               1.0-tm-(legyoffset+legheight)*(1.0-tm-bm),
                               lm+(legxoffset+legwidth)*(1.0-lm-rm),
                               1.0-tm-legyoffset*(1.0-tm-bm));
-   leg->SetBorderSize(1); 
+   leg->SetBorderSize(1);
    leg->SetFillColor(0);
    leg->AddEntry(procprof,"Full Event","p");
    leg->AddEntry(procoptprof,"Partial Event","p");

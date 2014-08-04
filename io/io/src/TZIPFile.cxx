@@ -194,7 +194,7 @@ Int_t TZIPFile::ReadEndHeader(Long64_t pos)
    fDirSize   = dirsz;
 
    delete [] comment;
-   
+
    // Try to read Zip64 end of central directory locator
    Long64_t recoff = ReadZip64EndLocator(pos - kZIP64_EDL_HEADER_SIZE);
    if (recoff < 0) {
@@ -202,7 +202,7 @@ Int_t TZIPFile::ReadEndHeader(Long64_t pos)
          return -1;
       return 0;
    }
-   
+
    if (ReadZip64EndRecord(recoff) < 0)
       return -1;
 
@@ -215,16 +215,16 @@ Long64_t TZIPFile::ReadZip64EndLocator(Long64_t pos)
    // Read Zip64 end of central directory locator. Returns -1 in case of error,
    // -2 in case end locator magic is not found (i.e. not a zip64 file) and
    // offset of Zip64 end of central directory record in case of success.
-   
+
    char buf[kZIP64_EDL_HEADER_SIZE];
-   
+
    // read and validate first the end header magic
    fFile->Seek(pos);
    if (fFile->ReadBuffer(buf, kZIP_MAGIC_LEN) ||
        Get(buf, kZIP_MAGIC_LEN) != kZIP64_EDL_HEADER_MAGIC) {
       return -2;
    }
-   
+
    // read rest of the header
    if (fFile->ReadBuffer(buf + kZIP_MAGIC_LEN,  kZIP64_EDL_HEADER_SIZE - kZIP_MAGIC_LEN)) {
       Error("ReadZip64EndLocator", "error reading %d Zip64 end locator header bytes from %s",
@@ -250,9 +250,9 @@ Int_t TZIPFile::ReadZip64EndRecord(Long64_t pos)
 {
    // Read Zip64 end of central directory record. Returns -1 in case of error
    // and 0 in case of success.
-   
+
    char buf[kZIP64_EDR_HEADER_SIZE];
-   
+
    // read and validate first the end header magic
    fFile->Seek(pos);
    if (fFile->ReadBuffer(buf, kZIP_MAGIC_LEN) ||
@@ -260,20 +260,20 @@ Int_t TZIPFile::ReadZip64EndRecord(Long64_t pos)
       Error("ReadZip64EndRecord", "no Zip64 end of directory record\n");
       return -1;
    }
-   
+
    // read rest of the header
    if (fFile->ReadBuffer(buf + kZIP_MAGIC_LEN,  kZIP64_EDR_HEADER_SIZE - kZIP_MAGIC_LEN)) {
       Error("ReadZip64EndRecord", "error reading %d Zip64 end record header bytes from %s",
             kZIP64_EDR_HEADER_SIZE - kZIP_MAGIC_LEN, fArchiveName.Data());
       return -1;
    }
-   
+
    Long64_t dirsz  = Get64(buf + kZIP64_EDR_DIR_SIZE_OFF,   kZIP64_EDR_DIR_SIZE_LEN);
    Long64_t diroff = Get64(buf + kZIP64_EDR_DIR_OFFSET_OFF, kZIP64_EDR_DIR_OFFSET_LEN);
-   
+
    fDirOffset = fDirPos = diroff;
    fDirSize   = dirsz;
-   
+
    return 0;
 }
 
@@ -371,7 +371,7 @@ Int_t TZIPFile::ReadDirectory()
       m->fAttrInt   = iattr;
       m->fAttrExt   = xattr;
       m->fPosition  = offset;
-      
+
       delete [] name;
       delete [] comment;
       // extra is adopted be the TZIPMember
@@ -445,11 +445,11 @@ Int_t TZIPFile::DecodeZip64ExtendedExtraField(TZIPMember *m, Bool_t global)
    // extra field coming from the local file header. Returns -1 in case of
    // error, -2 in case Zip64 extra block was not found and 0 in case of
    // success.
-   
+
    char  *buf;
    Int_t  len;
    Int_t  ret = -2;
-   
+
    if (global) {
       buf = (char *) m->fGlobal;
       len = m->fGlobalLen;
@@ -457,11 +457,11 @@ Int_t TZIPFile::DecodeZip64ExtendedExtraField(TZIPMember *m, Bool_t global)
       buf = (char *) m->fLocal;
       len = m->fLocalLen;
    }
-   
+
    if (!buf || !len) {
       return ret;
    }
-   
+
    Int_t off = 0;
    while (len > 0) {
       UInt_t   tag  = Get(buf + off + kZIP64_EXTENDED_MAGIC_OFF, kZIP64_EXTENDED_MAGIC_LEN);
@@ -481,7 +481,7 @@ Int_t TZIPFile::DecodeZip64ExtendedExtraField(TZIPMember *m, Bool_t global)
       len -= (Int_t)size + kZIP64_EXTENDED_MAGIC_LEN + kZIP64_EXTENDED_MAGIC_LEN;
       off += (Int_t)size + kZIP64_EXTENDED_MAGIC_LEN + kZIP64_EXTENDED_MAGIC_LEN;
    }
-   
+
    return ret;
 }
 
@@ -539,14 +539,14 @@ UInt_t TZIPFile::Get(const void *buffer, Int_t bytes)
 ULong64_t TZIPFile::Get64(const void *buffer, Int_t bytes)
 {
    // Read a 8 byte long little-endian integer value from "buffer".
-   
+
    ULong64_t value = 0;
-   
+
    if (bytes != 8) {
       Error("Get64", "bytes must be 8 (asked for %d)", bytes);
       return value;
    }
-   
+
 #ifdef R__BYTESWAP
    memcpy(&value, buffer, bytes);
 #else

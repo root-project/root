@@ -234,7 +234,7 @@ public:
    virtual void ComputeBBox();
 
    virtual void CellSelectionChanged();
-      
+
    virtual void    SetScaleAbs(Bool_t);
 
    virtual Float_t GetValToHeight() const;

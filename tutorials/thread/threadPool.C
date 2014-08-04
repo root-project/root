@@ -50,7 +50,7 @@ void threadPool(size_t _numThreads = 10, bool _needDbg = false)
 
    // create a thread pool object
    // _numThreads - a number of threads in the pool
-   // _needDbg - defines whether to show debug messages  
+   // _needDbg - defines whether to show debug messages
    TThreadPool<TTestTask, EProc> threadPool(_numThreads, _needDbg);
 
    // create a container of tasks

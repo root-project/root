@@ -37,7 +37,7 @@ protected:
 
    TDatabasePDG& operator=(const TDatabasePDG& db)
    {if(this!=&db) {TNamed::operator=(db); fParticleList=db.fParticleList;
-         fListOfClasses=db.fListOfClasses; fPdgMap=db.fPdgMap;} 
+         fListOfClasses=db.fListOfClasses; fPdgMap=db.fPdgMap;}
       return *this;}
 
    void BuildPdgMap() const;

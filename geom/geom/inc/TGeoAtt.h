@@ -54,12 +54,12 @@ public:
    enum EGeoOptimizationAtt {
       kUseBoundingBox   = BIT(16),           // use bounding box for tracking
       kUseVoxels        = BIT(17),           // compute and use voxels
-      kUseGsord         = BIT(18)            // use slicing in G3 style     
+      kUseGsord         = BIT(18)            // use slicing in G3 style
    };                          // tracking optimization attributes
    enum EGeoSavePrimitiveAtt {
       kSavePrimitiveAtt = BIT(19),
       kSaveNodesAtt     = BIT(20)
-   };                          // save primitive bits                          
+   };                          // save primitive bits
 protected :
 // data members
    UInt_t                fGeoAtt;            // option flags
@@ -76,7 +76,7 @@ public:
    Bool_t              TestAttBit(UInt_t f) const {return (Bool_t)((fGeoAtt & f) != 0);}
 
    void                SetVisRaytrace(Bool_t flag=kTRUE) {SetAttBit(kVisRaytrace, flag);}
-   void                SetVisBranch(); 
+   void                SetVisBranch();
    virtual void        SetVisContainers(Bool_t flag=kTRUE);
    virtual void        SetVisLeaves(Bool_t flag=kTRUE);
    virtual void        SetVisOnly(Bool_t flag=kTRUE);
@@ -86,10 +86,10 @@ public:
    void                SetVisTouched(Bool_t vis=kTRUE);
    void                SetActivity(Bool_t flag=kTRUE) {SetAttBit(kActThis, flag);}
    void                SetActiveDaughters(Bool_t flag=kTRUE) {SetAttBit(kActDaughters,flag);}
-   
+
    void                SetOptimization(Option_t *option);
 
-   
+
    Bool_t              IsActive() const {return TestAttBit(kActThis);}
    Bool_t              IsActiveDaughters() const {return TestAttBit(kActDaughters);}
    Bool_t              IsVisRaytrace() const {return TestAttBit(kVisRaytrace);}
@@ -99,7 +99,7 @@ public:
    Bool_t              IsVisContainers() const {return TestAttBit(kVisContainers);}
    Bool_t              IsVisLeaves() const {return !TestAttBit(kVisContainers | kVisOnly | kVisBranch);}
    Bool_t              IsVisOnly() const {return TestAttBit(kVisOnly);}
-   
+
    Bool_t              IsVisStreamed() const {return TestAttBit(kVisStreamed);}
    Bool_t              IsVisTouched() const {return TestAttBit(kVisTouched);}
 

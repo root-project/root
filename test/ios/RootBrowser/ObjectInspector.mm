@@ -37,9 +37,9 @@ namespace {
    UIViewController <ObjectInspectorComponent> *cachedEditors[kNOfInspectors];
 
    unsigned nActiveEditors;
-   
+
    TObject *object;
-   
+
    EditorView *editorView;
 }
 
@@ -55,11 +55,11 @@ namespace {
 - (void) cacheEditors
 {
    //TAttLine.
-   cachedEditors[kAttLine] = [[LineInspector alloc] initWithNibName : @"LineInspector" bundle : nil];//lineInspector;   
+   cachedEditors[kAttLine] = [[LineInspector alloc] initWithNibName : @"LineInspector" bundle : nil];//lineInspector;
    //TAttFill.
    cachedEditors[kAttFill] = [[FilledAreaInspector alloc] initWithNibName : @"FilledAreaInspector" bundle : nil];
    //TAttPad.
-   cachedEditors[kAttPad] = [[PadInspector alloc] initWithNibName : @"PadInspector" bundle : nil];//padInspector;   
+   cachedEditors[kAttPad] = [[PadInspector alloc] initWithNibName : @"PadInspector" bundle : nil];//padInspector;
    //TAttAxis.
    cachedEditors[kAttAxis] = [[AxisInspector alloc] initWithNibName : @"AxisInspector" bundle : nil];
    //TAttMarker.
@@ -146,16 +146,16 @@ namespace {
 
    if (dynamic_cast<TAttLine *>(object) && !dynamic_cast<TAttPad *>(object))
       activeEditors[nActiveEditors++] = cachedEditors[kAttLine];
-   
+
    if (dynamic_cast<TAttFill *>(object))
       activeEditors[nActiveEditors++] = cachedEditors[kAttFill];
-   
+
    if (dynamic_cast<TAttPad *>(object))
       activeEditors[nActiveEditors++] = cachedEditors[kAttPad];
-      
+
    if (dynamic_cast<TAttAxis *>(object))
       activeEditors[nActiveEditors++] = cachedEditors[kAttAxis];
-   
+
    if (dynamic_cast<TAttMarker *>(object))
       activeEditors[nActiveEditors++] = cachedEditors[kAttMarker];
 
@@ -169,13 +169,13 @@ namespace {
    if (o != object) {
       //Initialize.
       object = o;
-      
+
       [self setTitle];
       [self setActiveEditors];
-   
+
       for (unsigned i = 0; i < nActiveEditors; ++i)
          [activeEditors[i] setROOTObject : o];
-      
+
       [editorView removeAllEditors];
 
       for (unsigned i = 0; i < nActiveEditors; ++i)

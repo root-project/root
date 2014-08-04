@@ -486,14 +486,14 @@ int test_clhep_kalman() {
 
       // fill matrices with random data
       fillRandomMat(r,H,first,second,1);
-      fillRandomMat(r,K0,second,first,1); 
-      fillRandomSym(r,Cp,second,1); 
-      fillRandomSym(r,V,first,1); 
-      fillRandomVec(r,m,first); 
-      fillRandomVec(r,xp,second); 
-      
+      fillRandomMat(r,K0,second,first,1);
+      fillRandomSym(r,Cp,second,1);
+      fillRandomSym(r,V,first,1);
+      fillRandomVec(r,m,first);
+      fillRandomVec(r,xp,second);
+
       MnSymMatrix I(second,1);//Identity matrix
-      
+
       {
          double x2 = 0,c2 = 0;
          MnVector x(second);
@@ -503,66 +503,66 @@ int test_clhep_kalman() {
          MnSymMatrix C(second);
          MnVector vtmp1(first);
          MnMatrix tmp(second,first);
-         
+
          test::Timer t("CLHEP Kalman ");
-         int ifail; 
+         int ifail;
          for (Int_t l = 0; l < NLOOP; l++)
          {
-            
-            
+
+
             vtmp1 = H*xp -m;
             //x = xp + K0 * (m- H * xp);
             x = xp - K0 * vtmp1;
             tmp = Cp * H.T();
             Rinv = V;  Rinv +=  H * tmp;
-            RinvSym.assign(Rinv); 
+            RinvSym.assign(Rinv);
             RinvSym.invert(ifail);
-            if (ifail !=0) { std::cout << "Error inverting Rinv" << std::endl; break; } 
-            K = tmp*RinvSym; 
+            if (ifail !=0) { std::cout << "Error inverting Rinv" << std::endl; break; }
+            K = tmp*RinvSym;
             //C.assign( (I-K*H)*Cp);
             //C = (I-K*H)*Cp;
             C.assign( (I-K*H)*Cp );
             x2= RinvSym.similarity(vtmp1);
-            if(ifail!=0) { std::cout << "Error inverting Rinv" << std::endl; break; } 
+            if(ifail!=0) { std::cout << "Error inverting Rinv" << std::endl; break; }
          }
          // std::cout << k << " chi2 " << x2 << std::endl;
          x2sum += x2;
-         
+
          c2 = 0;
          for (int i=1; i<=NDIM2; ++i)
             for (int j=1; j<=NDIM2; ++j)
                c2 += C(i,j);
          c2sum += c2;
       }
-      
+
       //   }
-   }  
+   }
    //tr.dump();
    std::cerr << "x2sum = " << x2sum << "\tc2sum = " << c2sum << std::endl;
-   
+
    return 0;
 }
 #endif
 
 
 
-int testKalman() { 
-   
+int testKalman() {
+
 #ifdef TEST_SYM
    test_smatrix_sym_kalman();
 #endif
-   
+
    test_smatrix_kalman();
    test_tmatrix_kalman();
 #ifdef HAVE_CLHEP
    test_clhep_kalman();
 #endif
-   
-   return 0; 
-   
-   
+
+   return 0;
+
+
 }
 
-int main() { 
-   return testKalman(); 
+int main() {
+   return testKalman();
 }

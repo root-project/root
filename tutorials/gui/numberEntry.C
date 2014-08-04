@@ -2,7 +2,7 @@
 // Author: Ilka Antcheva   1/12/2006
 
 // This macro gives an example of how to create a number entry
-// and how to update a label according to the changed value of 
+// and how to update a label according to the changed value of
 // this number entry.
 // To run it do either:
 // .x numberEntry.C
@@ -31,22 +31,22 @@ public:
    MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h);
    virtual ~MyMainFrame();
    void DoSetlabel();
-   
+
    ClassDef(MyMainFrame, 0)
 };
-                          
+
 MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    : TGMainFrame(p, w, h)
 {
 
    fHor1 = new TGHorizontalFrame(this, 60, 20, kFixedWidth);
    fExit = new TGTextButton(fHor1, "&Exit", "gApplication->Terminate(0)");
-   fHor1->AddFrame(fExit, new TGLayoutHints(kLHintsTop | kLHintsLeft | 
+   fHor1->AddFrame(fExit, new TGLayoutHints(kLHintsTop | kLHintsLeft |
                                             kLHintsExpandX, 4, 4, 4, 4));
    AddFrame(fHor1,new TGLayoutHints(kLHintsBottom | kLHintsRight, 2, 2, 5, 1));
-   
+
    fNumber = new TGNumberEntry(this, 0, 9,999, TGNumberFormat::kNESInteger,
-                                               TGNumberFormat::kNEANonNegative, 
+                                               TGNumberFormat::kNEANonNegative,
                                                TGNumberFormat::kNELLimitMinMax,
                                                0, 99999);
    fNumber->Connect("ValueSet(Long_t)", "MyMainFrame", this, "DoSetlabel()");
@@ -58,7 +58,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fGframe->AddFrame(fLabel, new TGLayoutHints(kLHintsTop | kLHintsLeft,
                                                5, 5, 5, 5));
    AddFrame(fGframe, new TGLayoutHints(kLHintsExpandX, 2, 2, 1, 1));
-   
+
    SetCleanup(kDeepCleanup);
    SetWindowName("Number Entry");
    MapSubwindows();
@@ -69,7 +69,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
 MyMainFrame::~MyMainFrame()
 {
    // Destructor.
-   
+
    Cleanup();
 }
 
@@ -77,7 +77,7 @@ void MyMainFrame::DoSetlabel()
 {
    // Slot method connected to the ValueSet(Long_t) signal.
    // It displays the value set in TGNumberEntry widget.
-   
+
    fLabel->SetText(Form("%ld",fNumber->GetNumberEntry()->GetIntNumber()));
 
    // Parent frame Layout() method will redraw the label showing the new value.
@@ -86,5 +86,5 @@ void MyMainFrame::DoSetlabel()
 
 void numberEntry()
 {
-   new MyMainFrame(gClient->GetRoot(), 50, 50); 
+   new MyMainFrame(gClient->GetRoot(), 50, 50);
 }

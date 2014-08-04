@@ -50,7 +50,7 @@ private:
    Int_t        fNHists;                //number of histograms
 
    Long64_t     fNEvents;               //number of events to generate
-   Int_t        fNTries;                //number of tries 
+   Int_t        fNTries;                //number of tries
 
    Int_t        fStart;                 //start number of workers to scan
    Int_t        fStop;                  //stop number of workers to scan

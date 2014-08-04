@@ -2,7 +2,7 @@ TCanvas *hstack() {
 // Example of stacked histograms: class THStack
 //
 //  Author: Rene Brun
-   
+
    THStack *hs = new THStack("hs","Stacked 1D histograms");
    //create three 1-d histograms
    TH1F *h1st = new TH1F("h1st","test hstack",100,-4,4);
@@ -23,14 +23,14 @@ TCanvas *hstack() {
    h3st->SetMarkerStyle(21);
    h3st->SetMarkerColor(kGreen);
    hs->Add(h3st);
-   
+
    TCanvas *cst = new TCanvas("cst","stacked hists",10,10,700,700);
    cst->SetFillColor(41);
    cst->Divide(2,2);
    // in top left pad, draw the stack with defaults
    cst->cd(1);
    hs->Draw();
-   // in top right pad, draw the stack in non-stack mode 
+   // in top right pad, draw the stack in non-stack mode
    // and errors option
    cst->cd(2);
    gPad->SetGrid();

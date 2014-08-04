@@ -40,18 +40,18 @@
 class RootShowerAbout : public TGTransientFrame {
 
 private:
-    TGVerticalFrame*    fVFrame; 
-    TGHorizontalFrame*  fHFrame; 
+    TGVerticalFrame*    fVFrame;
+    TGHorizontalFrame*  fHFrame;
     TGTextButton*       fOkButton;
     TGLabel*            fLabel1;
     TGLabel*            fLabel2;
     TGLabel*            fLabel4;
-   
+
     TGLayoutHints      *fLogoLayout;
-  
+
     TGLayoutHints*      fL1;
     TGLayoutHints*      fL2;
-  
+
     TGLayoutHints*      fBly;
     TGLayoutHints*      fBfly;
 

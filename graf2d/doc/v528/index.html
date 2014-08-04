@@ -1,6 +1,6 @@
-<br/> 
-<hr/> 
-<a name="graf2d"></a> 
+<br/>
+<hr/>
+<a name="graf2d"></a>
 
 <h3>Graphical Output</h3>
 
@@ -10,14 +10,14 @@
      was not consistent.</li>
 <li> Implement the text kerning. The effect is clearly illustrated with
      the following script. Without kerning the red X is overlaped by the
-     the rest of the text. 
+     the rest of the text.
      <pre>
      {
         TCanvas *c = new TCanvas;
         TLatex *l = new TLatex(0.5, 0.5, "AVAVAVAVAVAVAVAVAVA#color[2]{X}");
         l->Draw();
         c->SaveAs("c1.eps");
-     } 
+     }
      </pre>
      The original idea came from Oleksandr Grebenyuk. It has been implemented
      in a such way that the kerning mechanism is activated only when needed. If
@@ -84,7 +84,7 @@
      }
     </pre>
 </li>
-<li> Improve the palette placement in <tt>TASImage::Paint</tt> 
+<li> Improve the palette placement in <tt>TASImage::Paint</tt>
      (cf $ROOTSYS/tutorials/image/galaxy_image.C) </li>
 <li> <tt>GetWidth()</tt> and <tt>GetHeight()</tt> returned the size of the
      scaled image (if it exist) instead of the real size of the image.</li>
@@ -113,7 +113,7 @@
      <pre>
      {
         TCanvas c("c","c",0,0,400,100);
-        TLatex t0(.05,.45,"Symbol: #font[122]{abc} - Symbol Italic #font[152]{abc}");                    
+        TLatex t0(.05,.45,"Symbol: #font[122]{abc} - Symbol Italic #font[152]{abc}");
         t0.SetTextSize(0.36);
         t0.Draw();
         c.Print("symbolitalic.ps");
@@ -194,7 +194,7 @@
 <ul>
 <li> In case of horizontal axis with the font size in pixel (font precision = 3)
      the labels were not visible.</li>
-<li> Alpha numeric labels are not scaled anymore in case of text precision 3 
+<li> Alpha numeric labels are not scaled anymore in case of text precision 3
      (size in pixels). They are in the other precisions.</li>
 <li> Fix a precision issue on Mac. With the following lines the last label
      (10^3) did not show:
@@ -208,11 +208,11 @@
 <h4>TPaveStats</h4>
 <ul>
 <li> The stats painting assumed that the stats position was always defined with
-     Y2>Y1 and X2>X1. This is true when the stats is created automatically but 
-     might not true if the stats position is given by user. This is now 
+     Y2>Y1 and X2>X1. This is true when the stats is created automatically but
+     might not true if the stats position is given by user. This is now
      protected. The stats are correctly drawn whatever the orders of X and Y
      coordinates are. </li>
-<li> Saving canvas as a .C macro discarded white title and stat box 
+<li> Saving canvas as a .C macro discarded white title and stat box
      background. Same thing with TPaveText.</li>
 </ul>
 
@@ -222,7 +222,7 @@
 </ul>
 
 <h4>TCanvas and TPad</h4>
-<ul> 
+<ul>
 <li> In case of <tt>Canvas.MoveOpaque = true</tt> in <tt>$ROOTSYS/etc/system.rootrc</tt>
 the rubberband was not visible during the zooming along axis.</li>
 <li><tt>TPad::SaveAs</tt> now takes care of the extensions <tt>.pdf]</tt>,

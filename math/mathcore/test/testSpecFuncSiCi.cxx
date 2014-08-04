@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cmath>
 
-using std::cout; 
+using std::cout;
 using std::endl;
 
 // input for wolframalpha.com:  Table[{N[x/10], N[CosIntegral[x/10], 18]}, {x, -100, 100}],
@@ -428,21 +428,21 @@ int testSiCi() {
       maxrel = std::abs(SiRoot/SiMathematica-1);
       xmaxrel = x;
     }
-    
+
 //     std::cout << "x=" << x << ": Si(x) = " << SiMathematica
 //          << ", sinint(x) = " << SiRoot
 //          << ", rel. diff = " << SiRoot/SiMathematica-1
 //          << std::endl;
   }
   std::cout << "Si: Maximum relative deviation: " << maxrel
-       << " for x=" << xmaxrel 
+       << " for x=" << xmaxrel
        << (maxrel > 1E-15 ? " -> FAIL" : " -> pass") << std::endl;
   std::cout << "Si: Maximum absolute deviation: " << maxabs
-       << " for x=" << xmaxabs 
+       << " for x=" << xmaxabs
        << (maxabs > 1E-15 ? " -> FAIL" : " -> pass") << std::endl;
   if (maxrel > 1E-15) fail += 1;
   if (maxabs > 1E-15) fail += 2;
-  
+
   xmaxrel = -1; maxrel = 0; xmaxabs=-1; maxabs=0;
   for (int i = 0; i < 200; ++i) {
     double x = civalues[i][0];
@@ -465,23 +465,23 @@ int testSiCi() {
        << " for x=" << xmaxrel
        << (maxrel > 1E-13 ? " -> FAIL" : " -> pass") <<std::endl;
   std::cout << "Ci: Maximum absolute deviation: " << maxabs
-       << " for x=" << xmaxabs 
+       << " for x=" << xmaxabs
        << (maxabs > 1E-15 ? " -> FAIL" : " -> pass")<< std::endl;
-   
+
   if (maxrel > 1E-13) fail += 4;
   if (maxabs > 1E-15) fail += 8;
   return fail;
 }
 
-int testSpecFuncSiCi() { 
-   int status = testSiCi(); 
+int testSpecFuncSiCi() {
+   int status = testSiCi();
    std::cerr << "Test Special Function Sin integral and Cos integral :\t";
    if (status)  std::cout << "FAILED !!!" << std::endl;
-   else 
+   else
       std::cerr << "OK " << std::endl;
-   return status; 
+   return status;
 }
 
-int main() { 
+int main() {
    return testSpecFuncSiCi();
-} 
+}

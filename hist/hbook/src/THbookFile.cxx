@@ -299,7 +299,7 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
       printf("Error cannot open input file: %s\n",fname);
    }
    if (ier || quest[0]) {
-      fgLuns[fLun-10]=0; 
+      fgLuns[fLun-10]=0;
       fLun  = 0;
       fList = 0;
       fKeys = 0;
@@ -387,7 +387,7 @@ void THbookFile::Close(Option_t *)
 
    if(!IsOpen()) return;
    if (!fList) return;
-   
+
    gROOT->GetListOfBrowsables()->Remove(this);
 
    cd();
@@ -615,7 +615,7 @@ TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
    if (opt.Contains("l")) strlcat (cmd," 0",nch+1);
 
    gSystem->Exec(cmd);
-   
+
    delete [] cmd;
    if (opt.Contains("no")) {delete [] rfile; return 0;}
    TFile *f = new TFile(rfile);
@@ -669,7 +669,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
    char name[32];
    char block[32];
    char oldblock[32];
-   strlcpy(oldblock,"OLDBLOCK",32); 
+   strlcpy(oldblock,"OLDBLOCK",32);
    Int_t oldischar = -1;
    for (i=80;i>0;i--) {if (chtitl[i] == ' ') chtitl[i] = 0; }
    THbookTree *tree = new THbookTree(idname,id);
@@ -733,7 +733,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 
       if (ischar != oldischar || strcmp(oldblock,block) != 0) {
          varNumber = 0;
-         strlcpy(oldblock,block,32); 
+         strlcpy(oldblock,block,32);
          oldischar = ischar;
          Long_t add= (Long_t)&bigbuf[bufpos];
          Int_t lblock   = strlen(block);
@@ -741,7 +741,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
          hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar,lblock,4);
 #else
          hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar);
-#endif 
+#endif
 
       }
 

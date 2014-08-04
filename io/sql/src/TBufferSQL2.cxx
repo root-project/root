@@ -866,7 +866,7 @@ void TBufferSQL2::WorkWithElement(TStreamerElement* elem, Int_t /* comp_type */)
    TSQLStructure* stack = Stack(1);
    TStreamerInfo* info = stack->GetStreamerInfo();
    Int_t number = info->GetElements()->IndexOf(elem);
-   
+
    if (number>=0)
       PushStack()->SetStreamerElement(elem, number);
    else
@@ -1095,7 +1095,7 @@ void TBufferSQL2::ReadWithFactor(Float_t *ptr, Double_t /* factor */, Double_t /
 }
 
 //______________________________________________________________________________
-void TBufferSQL2::ReadWithNbits(Float_t *ptr, Int_t /* nbits */) 
+void TBufferSQL2::ReadWithNbits(Float_t *ptr, Int_t /* nbits */)
 {
    // Read a Float16_t from the buffer when the number of bits is specified (explicitly or not)
    // see comments about Float16_t encoding at TBufferFile::WriteFloat16().
@@ -1105,20 +1105,20 @@ void TBufferSQL2::ReadWithNbits(Float_t *ptr, Int_t /* nbits */)
 }
 
 //______________________________________________________________________________
-void TBufferSQL2::ReadWithFactor(Double_t *ptr, Double_t /* factor */, Double_t /* minvalue */) 
+void TBufferSQL2::ReadWithFactor(Double_t *ptr, Double_t /* factor */, Double_t /* minvalue */)
 {
    // Read a Double32_t from the buffer when the factor and minimun value have been specified
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32().   
+   // see comments about Double32_t encoding at TBufferFile::WriteDouble32().
    // Currently TBufferXML does not optimize space in this case.
 
    SqlReadBasic(*ptr);
 }
 
 //______________________________________________________________________________
-void TBufferSQL2::ReadWithNbits(Double_t *ptr, Int_t /* nbits */) 
+void TBufferSQL2::ReadWithNbits(Double_t *ptr, Int_t /* nbits */)
 {
    // Read a Double32_t from the buffer when the number of bits is specified (explicitly or not)
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32().   
+   // see comments about Double32_t encoding at TBufferFile::WriteDouble32().
    // Currently TBufferXML does not optimize space in this case.
 
    SqlReadBasic(*ptr);
@@ -2769,7 +2769,7 @@ const char* TBufferSQL2::GetFloatFormat()
 }
 
 //______________________________________________________________________________
-Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *obj) 
+Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *obj)
 {
    // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
    // The collection needs to be a split TClonesArray or a split vector of pointers.
@@ -2782,7 +2782,7 @@ Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
           iter != end;
-          ++iter) {      
+          ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
          SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter).PrintDebug(*this,obj);
@@ -2794,7 +2794,7 @@ Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
           iter != end;
-          ++iter) {      
+          ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
          SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter)(*this,obj);
@@ -2806,7 +2806,7 @@ Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &se
 }
 
 //______________________________________________________________________________
-Int_t TBufferSQL2::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) 
+Int_t TBufferSQL2::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection)
 {
    // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
    // The collection needs to be a split TClonesArray or a split vector of pointers.
@@ -2819,7 +2819,7 @@ Int_t TBufferSQL2::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
           iter != end;
-          ++iter) {      
+          ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
          SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter).PrintDebug(*this,*(char**)start_collection);  // Warning: This limits us to TClonesArray and vector of pointers.
@@ -2831,7 +2831,7 @@ Int_t TBufferSQL2::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
           iter != end;
-          ++iter) {      
+          ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
          SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter)(*this,start_collection,end_collection);
@@ -2843,7 +2843,7 @@ Int_t TBufferSQL2::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
 }
 
 //______________________________________________________________________________
-Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) 
+Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection)
 {
    // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
 
@@ -2861,7 +2861,7 @@ Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
           iter != end;
-          ++iter) {      
+          ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
          SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter).PrintDebug(*this,arr0);
@@ -2873,7 +2873,7 @@ Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
           iter != end;
-          ++iter) {      
+          ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
          SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter)(*this,start_collection,end_collection,loopconfig);

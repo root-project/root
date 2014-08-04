@@ -2214,10 +2214,10 @@ void TCanvas::DeleteCanvasPainter()
       //wrong texture will be deleted, damaging some of our fonts.
       gGLManager->MakeCurrent(fGLDevice);
    }
-   
+
    delete fPainter;
    fPainter = 0;
-   
+
    if (fGLDevice != -1) {
       gGLManager->DeleteGLContext(fGLDevice);//?
       fGLDevice = -1;

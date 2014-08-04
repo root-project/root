@@ -65,7 +65,7 @@ public:
    // destructor
    virtual ~TGeoChecker();
    // methods
-   virtual void     CheckBoundaryErrors(Int_t ntracks=1000000, Double_t radius=-1.); 
+   virtual void     CheckBoundaryErrors(Int_t ntracks=1000000, Double_t radius=-1.);
    virtual void     CheckBoundaryReference(Int_t icheck=-1);
    void             CheckGeometryFull(Bool_t checkoverlaps=kTRUE, Bool_t checkcrossings=kTRUE, Int_t nrays=10000, const Double_t *vertex=NULL);
    void             CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
@@ -93,7 +93,7 @@ public:
    void             TestOverlaps(const char *path);
    Bool_t           TestVoxels(TGeoVolume *vol, Int_t npoints=1000000);
    Double_t         Weight(Double_t precision=0.01, Option_t *option="v");
-   
+
    ClassDef(TGeoChecker, 2)               // a simple geometry checker
 };
 

@@ -29,10 +29,10 @@ TView::TView(const TView& tv) :
 }
 
 //____________________________________________________________________________
-TView *TView::CreateView(Int_t system, const Double_t *rmin, const Double_t *rmax) 
+TView *TView::CreateView(Int_t system, const Double_t *rmin, const Double_t *rmax)
 {
    // Create a concrete default 3-d view via the plug-in manager
-   
+
    TView *view = 0;
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TView"))) {

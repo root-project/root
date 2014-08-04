@@ -29,7 +29,7 @@
 #include "TAtt3D.h"
 #endif
 
-class TH2D; 
+class TH2D;
 class TProfile2D;
 
 class TH3 : public TH1, public TAtt3D {
@@ -66,10 +66,10 @@ protected:
    Int_t    Fill(const char*,Double_t,Double_t) {return Fill(0);} //MayNotUse
    Int_t    Fill(const char*,const char*,Double_t) {return Fill(0);} //MayNotUse
 
-private: 
+private:
 
    TH3(const TH3&);
-   TH3& operator=(const TH3&); // Not implemented   
+   TH3& operator=(const TH3&); // Not implemented
 
 public:
    virtual ~TH3();
@@ -135,22 +135,22 @@ public:
 
 protected:
 
-   virtual TH1D        *DoProject1D(const char* name, const char * title, TAxis* projX, 
+   virtual TH1D        *DoProject1D(const char* name, const char * title, TAxis* projX,
                          bool computeErrors, bool originalRange,
                          bool useUF, bool useOF) const;
-   virtual TH2D        *DoProject2D(const char* name, const char * title, TAxis* projX, TAxis* projY, 
+   virtual TH2D        *DoProject2D(const char* name, const char * title, TAxis* projX, TAxis* projY,
                         bool computeErrors, bool originalRange,
                          bool useUF, bool useOF) const;
-   virtual TProfile2D  *DoProjectProfile2D(const char* name, const char * title, TAxis* projX, TAxis* projY, 
+   virtual TProfile2D  *DoProjectProfile2D(const char* name, const char * title, TAxis* projX, TAxis* projY,
                                           bool originalRange, bool useUF, bool useOF) const;
 
    // these functions are need to be used inside TProfile3D::DoProjectProfile2D
-   static TH1D         *DoProject1D(const TH3 & h, const char* name, const char * title, TAxis* projX,  
-                                    bool computeErrors, bool originalRange, bool useUF, bool useOF)  { 
+   static TH1D         *DoProject1D(const TH3 & h, const char* name, const char * title, TAxis* projX,
+                                    bool computeErrors, bool originalRange, bool useUF, bool useOF)  {
       return h.DoProject1D(name, title, projX, computeErrors, originalRange, useUF, useOF);
    }
-   static TH2D         *DoProject2D(const TH3 & h, const char* name, const char * title, TAxis* projX, TAxis* projY, 
-                                    bool computeErrors, bool originalRange, bool useUF, bool useOF)  { 
+   static TH2D         *DoProject2D(const TH3 & h, const char* name, const char * title, TAxis* projX, TAxis* projY,
+                                    bool computeErrors, bool originalRange, bool useUF, bool useOF)  {
       return h.DoProject2D(name, title, projX,projY, computeErrors, originalRange, useUF, useOF);
    }
 
@@ -189,7 +189,7 @@ public:
 protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
    virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Char_t (content); }
-   
+
    ClassDef(TH3C,3)  //3-Dim histograms (one char per channel)
 };
 

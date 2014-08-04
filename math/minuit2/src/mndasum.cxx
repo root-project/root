@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -23,22 +23,22 @@ double mndasum(unsigned int n, const double* dx, int incx) {
    /* System generated locals */
    int i__1, i__2;
    double ret_val, d__1, d__2, d__3, d__4, d__5, d__6;
-   
+
    /* Local variables */
    int i__, m;
    double dtemp;
    int nincx, mp1;
-   
-   
+
+
    /*     takes the sum of the absolute values. */
    /*     jack dongarra, linpack, 3/11/78. */
    /*     modified 3/93 to return if incx .le. 0. */
    /*     modified 12/3/93, array(1) declarations changed to array(*) */
-   
-   
+
+
    /* Parameter adjustments */
    --dx;
-   
+
    /* Function Body */
    ret_val = 0.;
    dtemp = 0.;
@@ -48,9 +48,9 @@ double mndasum(unsigned int n, const double* dx, int incx) {
    if (incx == 1) {
       goto L20;
    }
-   
+
    /*        code for increment not equal to 1 */
-   
+
    nincx = n * incx;
    i__1 = nincx;
    i__2 = incx;
@@ -60,12 +60,12 @@ double mndasum(unsigned int n, const double* dx, int incx) {
    }
    ret_val = dtemp;
    return ret_val;
-   
+
    /*        code for increment equal to 1 */
-   
-   
+
+
    /*        clean-up loop */
-   
+
 L20:
       m = n % 6;
    if (m == 0) {
@@ -83,9 +83,9 @@ L40:
       mp1 = m + 1;
    i__2 = n;
    for (i__ = mp1; i__ <= i__2; i__ += 6) {
-      dtemp = dtemp + (d__1 = dx[i__], fabs(d__1)) + (d__2 = dx[i__ + 1], 
-                                                      fabs(d__2)) + (d__3 = dx[i__ + 2], fabs(d__3)) + 
-      (d__4 = dx[i__ + 3], fabs(d__4)) + 
+      dtemp = dtemp + (d__1 = dx[i__], fabs(d__1)) + (d__2 = dx[i__ + 1],
+                                                      fabs(d__2)) + (d__3 = dx[i__ + 2], fabs(d__3)) +
+      (d__4 = dx[i__ + 3], fabs(d__4)) +
       (d__5 = dx[i__ + 4], fabs(d__5)) + (d__6 = dx[i__ + 5], fabs(d__6));
       /* L50: */
    }

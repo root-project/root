@@ -156,7 +156,7 @@ public:
    void    SetCenterVecWarp(Double_t x, Double_t y, Double_t z);
    Double_t* GetCenterVec() { return fCenter->Arr(); }
 
-   void    SetFixDefCenter(Bool_t x) { fFixDefCenter = x; } 
+   void    SetFixDefCenter(Bool_t x) { fFixDefCenter = x; }
    void    SetFixDefCenterVec(Double_t x, Double_t y, Double_t z) { fFDCenter.Set(x, y, z); }
    Double_t* GetFixDefCenterVec() { return fFDCenter.Arr(); }
 

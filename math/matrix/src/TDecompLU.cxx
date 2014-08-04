@@ -318,7 +318,7 @@ Bool_t TDecompLU::Solve(TMatrixDColumn &cb)
 
    const Int_t     n   = fLU.GetNrows();
    const Double_t *pLU = fLU.GetMatrixArray();
- 
+
    Int_t i;
 
    // Check for zero diagonals
@@ -459,7 +459,7 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 
    const Int_t n   = fLU.GetNrows();
    const Int_t lwb = fLU.GetRowLwb();
- 
+
    const Double_t *pLU = fLU.GetMatrixArray();
 
    Int_t i;
@@ -506,7 +506,7 @@ Bool_t TDecompLU::TransSolve(TMatrixDColumn &cb)
 //______________________________________________________________________________
 void TDecompLU::Det(Double_t &d1,Double_t &d2)
 {
-// Calculate determinant det = d1*TMath::Power(2.,d2) 
+// Calculate determinant det = d1*TMath::Power(2.,d2)
 
    if ( !TestBit(kDetermined) ) {
       if ( !TestBit(kDecomposed) )
@@ -730,7 +730,7 @@ Bool_t TDecompLU::DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,
             i_pivot = i;
          }
       }
-  
+
       if (i_pivot != j) {
          const Int_t off_ipov = i_pivot*n;
          for (Int_t k = 0; k < n; k++ ) {

@@ -44,7 +44,7 @@ representing a subdirectory in the directory tree that has the "TFile"
 record at its root.  The detailed format is given in "tdirectory.txt".
 
    A file contains one or more "KeysList" data records.  There is
-one corresponding to the root directory (represented by the TFile 
+one corresponding to the root directory (represented by the TFile
 record), and one corresponding to each (non-empty) subdirectory in the
 tree (each represented by a TDirectory record).  The data portion of
 each KeysList record consists of the sequential keys of those data
@@ -118,7 +118,7 @@ compression level selected (even if no compression is selected).
 The compression algorithm used is an in memory ZIP compression written for the
 DELPHI collaboration at CERN.  Its author is E. Chernyaev (IHEP/Protvino).
 The source code is internal to ROOTIO.
- 
+
 STREAMERINFO
 
 The "StreamerInfo" data record is used by ROOTIO to support the storage of
@@ -148,7 +148,7 @@ any streamerinfo for such a member.
 
 A data member that is a C++ pointer (not to be confused with "pointers to persistent
 objects" described below) is never written to disk as a pointer value.  If it is a
-pointer to an object, the object itself (or 0 (4 bytes) if the pointer value is NULL) 
+pointer to an object, the object itself (or 0 (4 bytes) if the pointer value is NULL)
 is written.  If the declaration line has a comment beginning with "//->", this indicates
 that the pointer value will never be null, which allows a performance optimization.
 Another optimization is that if two or more pointers pointing to the same object are
@@ -217,7 +217,7 @@ The TObjArray class can be used to support an array of objects.  The objects nee
 same type, but each object must be of a class type that inherits from TObject.  We have already
 seen a specific example of the use of TObjArray, in the StreamerInfo record, where it is used
 to hold an array of TStreamerElement objects, each of which is of a class inheriting from
-TStreamerElement, which in turn inherits from TObject.  
+TStreamerElement, which in turn inherits from TObject.
 
 The TClonesArray class is a specialization of the TObjArray class for holding an array
 of objects that are all of the same type.  The format of a TClonesArray object

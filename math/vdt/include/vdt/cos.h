@@ -2,9 +2,9 @@
  * cos.h
  * The basic idea is to exploit Pade polynomials.
  * A lot of ideas were inspired by the cephes math library (by Stephen L. Moshier
- * moshier@na-net.ornl.gov) as well as actual code. 
+ * moshier@na-net.ornl.gov) as well as actual code.
  * The Cephes library can be found here:  http://www.netlib.org/cephes/
- * 
+ *
  *  Created on: Jun 23, 2012
  *      Author: Danilo Piparo, Thomas Hauth, Vincenzo Innocente
  */

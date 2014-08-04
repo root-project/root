@@ -20,7 +20,7 @@
 //      0->..           = Number of bytes in name and version of the cloned class, followed
 //                      |   by the name and version themselves (e.g. "TXxx;1")
 //      0->3  nObjects  = Number of objects in clones array.
-//      4->7  fLowerBound= Lower bound of clones array.  
+//      4->7  fLowerBound= Lower bound of clones array.
 //      8->.. objects   = Sequentially, objects in the clones array.  However, the data
 //                      |   ordering depends on whether or not kBypassStreamer (0x1000) is
 //                      |   set in TObject::fBits.   By default, it is set.  If it is not set,

@@ -5,11 +5,11 @@
 
 typedef double Double32_t;
 
-typedef ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepStd<double,5,5> >          SMatrix5D; 
-typedef ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepStd<Double32_t,5,5> >  SMatrix5D32; 
+typedef ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepStd<double,5,5> >          SMatrix5D;
+typedef ROOT::Math::SMatrix<Double32_t,5,5,ROOT::Math::MatRepStd<Double32_t,5,5> >  SMatrix5D32;
 
 // track class based on SMatrix of double
-class  TrackD { 
+class  TrackD {
 
 public:
    TrackD() {}
@@ -19,14 +19,14 @@ public:
    SMatrix5D & CovMatrix() { return fCov; }
 
 private:
-   
-   SMatrix5D  fCov; 
-   
-}; 
+
+   SMatrix5D  fCov;
+
+};
 
 // track class based on Smatrix of Double32
 
-class  TrackD32 { 
+class  TrackD32 {
 
 public:
    TrackD32() {}
@@ -36,7 +36,7 @@ public:
    SMatrix5D & CovMatrix() { return fCov; }
 
 private:
-   
-   SMatrix5D32  fCov; 
-   
-}; 
+
+   SMatrix5D32  fCov;
+
+};

@@ -37,7 +37,7 @@ TMySQLRow::~TMySQLRow()
 void TMySQLRow::Close(Option_t *)
 {
    // Close row.
-   
+
    if (!fFields)
       return;
 
@@ -50,7 +50,7 @@ void TMySQLRow::Close(Option_t *)
 Bool_t TMySQLRow::IsValid(Int_t field)
 {
    // Check if row is open and field index within range.
-   
+
    if (!fFields) {
       Error("IsValid", "row closed");
       return kFALSE;
@@ -66,13 +66,13 @@ Bool_t TMySQLRow::IsValid(Int_t field)
 ULong_t TMySQLRow::GetFieldLength(Int_t field)
 {
    // Get length in bytes of specified field.
-   
+
    if (!IsValid(field))
       return 0;
 
    if (!fFieldLength)
       fFieldLength = mysql_fetch_lengths(fResult);
-   
+
    if (!fFieldLength) {
       Error("GetFieldLength", "cannot get field length");
       return 0;

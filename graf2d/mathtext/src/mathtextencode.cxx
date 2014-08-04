@@ -431,7 +431,7 @@ namespace mathtext {
             return false;
       }
    }
-   
+
 }
 #ifdef WIN32
 #pragma warning( pop )

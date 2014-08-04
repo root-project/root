@@ -38,24 +38,24 @@ protected:
    TGeoGlobalMagField(const TGeoGlobalMagField&);
    TGeoGlobalMagField& operator=(const TGeoGlobalMagField&);
    void                    Unlock() {fLock = kFALSE;}
-   
+
 public:
    TGeoGlobalMagField();
    virtual ~TGeoGlobalMagField();
-   
+
    // Using SetField() makes a given field global. The field manager owns it from now on.
    TVirtualMagField       *GetField() const {return fField;}
    void                    SetField(TVirtualMagField *field);
    Bool_t                  IsLocked() {return fLock;}
    void                    Lock();
-   
+
    // The field manager should be accessed via TGeoGlobalMagField::Instance()
    static TGeoGlobalMagField *Instance();
    static TGeoGlobalMagField *GetInstance();
 
    // Inline access to Field() method
    void                    Field(const Double_t *x, Double_t *B) {if (fField) fField->Field(x,B);}
-   
+
    ClassDef(TGeoGlobalMagField, 0)              // Global field manager
 };
 

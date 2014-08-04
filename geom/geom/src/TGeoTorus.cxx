@@ -13,7 +13,7 @@
 // TGeoTorus - Torus segment class. A torus has 5 parameters :
 //            R    - axial radius
 //            Rmin - inner radius
-//            Rmax - outer radius 
+//            Rmax - outer radius
 //            Phi1 - starting phi
 //            Dphi - phi extent
 //
@@ -49,7 +49,7 @@ TGeoTorus::TGeoTorus()
    fRmax = 0.0;
    fPhi1 = 0.0;
    fDphi = 0.0;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoTorus::TGeoTorus(Double_t r, Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi)
@@ -58,7 +58,7 @@ TGeoTorus::TGeoTorus(Double_t r, Double_t rmin, Double_t rmax, Double_t phi1, Do
 // Constructor without name.
    SetShapeBit(TGeoShape::kGeoTorus);
    SetTorusDimensions(r, rmin, rmax, phi1, dphi);
-   if ((fRmin<0) || (fRmax<0)) 
+   if ((fRmin<0) || (fRmax<0))
       SetShapeBit(kGeoRunTimeShape);
    ComputeBBox();
 }
@@ -70,7 +70,7 @@ TGeoTorus::TGeoTorus(const char *name, Double_t r, Double_t rmin, Double_t rmax,
 // Constructor with name.
    SetShapeBit(TGeoShape::kGeoTorus);
    SetTorusDimensions(r, rmin, rmax, phi1, dphi);
-   if ((fRmin<0) || (fRmax<0)) 
+   if ((fRmin<0) || (fRmax<0))
       SetShapeBit(kGeoRunTimeShape);
    ComputeBBox();
 }
@@ -98,7 +98,7 @@ Double_t TGeoTorus::Capacity() const
    Double_t capacity = (fDphi/180.)*TMath::Pi()*TMath::Pi()*fR*(fRmax*fRmax-fRmin*fRmin);
    return capacity;
 }
-   
+
 //_____________________________________________________________________________
 void TGeoTorus::ComputeBBox()
 {
@@ -118,10 +118,10 @@ void TGeoTorus::ComputeBBox()
    yc[2] = (fR-fRmax)*TMath::Sin(fPhi1*TMath::DegToRad());
    xc[3] = (fR-fRmax)*TMath::Cos((fPhi1+fDphi)*TMath::DegToRad());
    yc[3] = (fR-fRmax)*TMath::Sin((fPhi1+fDphi)*TMath::DegToRad());
-      
+
    Double_t xmin = xc[TMath::LocMin(4, &xc[0])];
-   Double_t xmax = xc[TMath::LocMax(4, &xc[0])]; 
-   Double_t ymin = yc[TMath::LocMin(4, &yc[0])]; 
+   Double_t xmax = xc[TMath::LocMax(4, &xc[0])];
+   Double_t ymin = yc[TMath::LocMin(4, &yc[0])];
    Double_t ymax = yc[TMath::LocMax(4, &yc[0])];
    Double_t ddp = -fPhi1;
    if (ddp<0) ddp+= 360;
@@ -145,10 +145,10 @@ void TGeoTorus::ComputeBBox()
    fDY = (ymax-ymin)/2;
 }
 
-//-----------------------------------------------------------------------------   
+//-----------------------------------------------------------------------------
 void TGeoTorus::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT. 
+// Compute normal to closest surface from POINT.
    Double_t phi = TMath::ATan2(point[1],point[0]);
    if (fDphi<360) {
       Double_t phi1 = fPhi1*TMath::DegToRad();
@@ -165,17 +165,17 @@ void TGeoTorus::ComputeNormal(const Double_t *point, const Double_t *dir, Double
             return;
          }
       }
-   }   
+   }
    Double_t r0[3];
    r0[0] = fR*TMath::Cos(phi);
-   r0[1] = fR*TMath::Sin(phi);           
+   r0[1] = fR*TMath::Sin(phi);
    r0[2] = 0;
    Double_t normsq = 0;
    for (Int_t i=0; i<3; i++) {
       norm[i] = point[i] - r0[i];
       normsq += norm[i]*norm[i];
    }
-   
+
    normsq = TMath::Sqrt(normsq);
    norm[0] /= normsq;
    norm[1] /= normsq;
@@ -184,7 +184,7 @@ void TGeoTorus::ComputeNormal(const Double_t *point, const Double_t *dir, Double
       norm[0] = -norm[0];
       norm[1] = -norm[1];
       norm[2] = -norm[2];
-   }      
+   }
 }
 
 //_____________________________________________________________________________
@@ -205,7 +205,7 @@ Bool_t TGeoTorus::Contains(const Double_t *point) const
    if (radsq<fRmin*fRmin) return kFALSE;
    if (radsq>fRmax*fRmax) return kFALSE;
    return kTRUE;
-}   
+}
 
 //_____________________________________________________________________________
 Int_t TGeoTorus::DistancetoPrimitive(Int_t px, Int_t py)
@@ -226,7 +226,7 @@ Double_t TGeoTorus::Daxis(const Double_t *pt, const Double_t *dir, Double_t t) c
    for (Int_t i=0; i<3; i++) p[i] = pt[i]+t*dir[i];
    Double_t rxy = TMath::Sqrt(p[0]*p[0]+p[1]*p[1]);
    return TMath::Sqrt((rxy-fR)*(rxy-fR)+p[2]*p[2]);
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoTorus::DDaxis(const Double_t *pt, const Double_t *dir, Double_t t) const
@@ -240,7 +240,7 @@ Double_t TGeoTorus::DDaxis(const Double_t *pt, const Double_t *dir, Double_t t) 
    if (TGeoShape::IsSameWithinTolerance(d,0)) return 0.;
    Double_t dd = (p[0]*dir[0]+p[1]*dir[1]+p[2]*dir[2] - (p[0]*dir[0]+p[1]*dir[1])*fR/rxy)/d;
    return dd;
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoTorus::DDDaxis(const Double_t *pt, const Double_t *dir, Double_t t) const
@@ -258,7 +258,7 @@ Double_t TGeoTorus::DDDaxis(const Double_t *pt, const Double_t *dir, Double_t t)
    dddaxis /= daxis;
    return dddaxis;
 }
-   
+
 //_____________________________________________________________________________
 Double_t TGeoTorus::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
@@ -293,7 +293,7 @@ Double_t TGeoTorus::DistFromInside(const Double_t *point, const Double_t *dir, I
       dphi = TGeoTubeSeg::DistFromInsideS(point,dir,fR-fRmax,fR+fRmax, fRmax, c1,s1,c2,s2,cm,sm,cdfi);
       Double_t daxis = Daxis(point,dir,dphi);
       if (daxis>=fRmin+1.E-8 && daxis<=fRmax-1.E-8) snext=TMath::Min(snext,dphi);
-   }      
+   }
    return snext;
 }
 
@@ -319,7 +319,7 @@ Double_t TGeoTorus::DistFromOutside(const Double_t *point, const Double_t *dir, 
    Double_t snext;
    Double_t pt[3];
    Int_t i;
-      
+
    if (hasphi) {
       // Torus segment case.
       phi=TMath::ATan2(point[1], point[0])*TMath::RadToDeg();;
@@ -345,8 +345,8 @@ Double_t TGeoTorus::DistFromOutside(const Double_t *point, const Double_t *dir, 
       if ((rxy2>=(fR-fRmax)*(fR-fRmax)) && (rxy2<=(fR+fRmax)*(fR+fRmax))) {
          if (!hasphi || inphi) inbring=kTRUE;
       }
-   }   
-   
+   }
+
    // If outside the ring, compute distance to it.
    Double_t dring = TGeoShape::Big();
    Double_t eps = 1.E-8;
@@ -363,7 +363,7 @@ Double_t TGeoTorus::DistFromOutside(const Double_t *point, const Double_t *dir, 
       daxis = Daxis(point,dir,snext);
       if (daxis>=fRmin && daxis<fRmax) return snext;
       // Not a phi crossing -> propagate until we cross the ring.
-      for (i=0; i<3; i++) pt[i] = point[i]+snext*dir[i];      
+      for (i=0; i<3; i++) pt[i] = point[i]+snext*dir[i];
    }
    // Point pt is inside the bounding ring, no phi crossing so far.
    // Check if we are in the hole.
@@ -375,7 +375,7 @@ Double_t TGeoTorus::DistFromOutside(const Double_t *point, const Double_t *dir, 
          snext += 0.1*eps;
          for (i=0; i<3; i++) pt[i] += 0.1*eps*dir[i];
       }
-      // We are in the hole from the begining.   
+      // We are in the hole from the begining.
       // find first crossing with inner torus
       dd = ToBoundary(pt,dir, fRmin,kFALSE);
       // find exit distance from inner bounding ring
@@ -387,7 +387,7 @@ Double_t TGeoTorus::DistFromOutside(const Double_t *point, const Double_t *dir, 
       for (i=0; i<3; i++) pt[i] = point[i] + snext*dir[i];
       snext += DistFromOutside(pt,dir,3);
       return snext;
-   }    
+   }
    // We are inside the outer ring, having daxis>fRmax
    // Compute distance to exit the bounding ring (again)
    if (snext>0) {
@@ -397,25 +397,25 @@ Double_t TGeoTorus::DistFromOutside(const Double_t *point, const Double_t *dir, 
    }
    // Check intersection with outer torus
    dd = ToBoundary(pt, dir, fRmax, kFALSE);
-   if (hasphi) dring = TGeoTubeSeg::DistFromInsideS(pt,dir,TMath::Max(0.,fR-fRmax-eps),fR+fRmax+eps, fRmax+eps, c1,s1,c2,s2,cm,sm,cdfi);            
+   if (hasphi) dring = TGeoTubeSeg::DistFromInsideS(pt,dir,TMath::Max(0.,fR-fRmax-eps),fR+fRmax+eps, fRmax+eps, c1,s1,c2,s2,cm,sm,cdfi);
    else        dring = TGeoTube::DistFromInsideS(pt,dir,TMath::Max(0.,fR-fRmax-eps),fR+fRmax+eps, fRmax+eps);
    if (dd<dring) {
       snext += dd;
       return snext;
    }
    // We are exiting the bounding ring before crossing the torus -> propagate
-   snext += dring+eps;   
+   snext += dring+eps;
    for (i=0; i<3; i++) pt[i] = point[i] + snext*dir[i];
    snext += DistFromOutside(pt,dir,3);
    return snext;
-}      
+}
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoTorus::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
-                              Double_t /*start*/, Double_t /*step*/) 
+TGeoVolume *TGeoTorus::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
+                              Double_t /*start*/, Double_t /*step*/)
 {
 //--- Divide this torus shape belonging to volume "voldiv" into ndiv volumes
-// called divname, from start position with the given step. 
+// called divname, from start position with the given step.
    return 0;
 }
 
@@ -433,8 +433,8 @@ const char *TGeoTorus::GetAxisName(Int_t iaxis) const
       default:
          return "UNDEFINED";
    }
-}   
-   
+}
+
 //_____________________________________________________________________________
 Double_t TGeoTorus::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
@@ -458,8 +458,8 @@ Double_t TGeoTorus::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) cons
          return dx;
    }
    return dx;
-}         
-   
+}
+
 //_____________________________________________________________________________
 void TGeoTorus::GetBoundingCylinder(Double_t *param) const
 {
@@ -469,8 +469,8 @@ void TGeoTorus::GetBoundingCylinder(Double_t *param) const
    param[1] = (fR+fRmax); // Rmax
    param[2] = fPhi1;    // Phi1
    param[3] = fPhi1+fDphi;  // Phi2
-}   
- 
+}
+
 //_____________________________________________________________________________
 TGeoShape *TGeoTorus::GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const
 {
@@ -479,7 +479,7 @@ TGeoShape *TGeoTorus::GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /
    Error("GetMakeRuntimeShape", "parametrized toruses not supported");
    return 0;
 }
-      
+
 //_____________________________________________________________________________
 void TGeoTorus::InspectShape() const
 {
@@ -496,7 +496,7 @@ void TGeoTorus::InspectShape() const
 
 //_____________________________________________________________________________
 TBuffer3D *TGeoTorus::MakeBuffer3D() const
-{ 
+{
    // Creates a TBuffer3D describing *this* shape.
    // Coordinates are in local reference frame.
 
@@ -522,11 +522,11 @@ TBuffer3D *TGeoTorus::MakeBuffer3D() const
                                    nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols);
    if (buff)
    {
-      SetPoints(buff->fPnts);   
+      SetPoints(buff->fPnts);
       SetSegsAndPols(*buff);
    }
 
-   return buff; 
+   return buff;
 }
 
 //_____________________________________________________________________________
@@ -700,14 +700,14 @@ Double_t TGeoTorus::Safety(const Double_t *point, Bool_t in) const
       if (in) return TMath::Min(saf[0],saf[1]);
       for (i=0; i<2; i++) saf[i]=-saf[i];
       return TMath::Max(saf[0], saf[1]);
-   }   
+   }
 
    Double_t safphi = TGeoShape::SafetyPhi(point,in,fPhi1, fPhi1+fDphi);
    Double_t safe = TGeoShape::Big();
    if (in) {
       safe = TMath::Min(saf[0], saf[1]);
       return TMath::Min(safe, safphi);
-   }   
+   }
    for (i=0; i<2; i++) saf[i]=-saf[i];
    safe = TMath::Max(saf[0], saf[1]);
    return TMath::Max(safe, safphi);
@@ -717,7 +717,7 @@ Double_t TGeoTorus::Safety(const Double_t *point, Bool_t in) const
 void TGeoTorus::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
 // Save a primitive as a C++ statement(s) on output stream "out".
-   if (TObject::TestBit(kGeoSavePrimitive)) return;  
+   if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
    out << "   r    = " << fR << ";" << std::endl;
    out << "   rmin = " << fRmin << ";" << std::endl;
@@ -774,8 +774,8 @@ void TGeoTorus::SetPoints(Double_t *points) const
          points[indx++] = (fR+fRmax*ci)*so;
          points[indx++] = fRmax*si;
       }
-   }     
-    
+   }
+
    if (havermin) {
     // loop inner mesh -> n*(n-1) points [3*n*(n-1), 6*n*(n-1)]
       for (i=0; i<n; i++) {
@@ -790,7 +790,7 @@ void TGeoTorus::SetPoints(Double_t *points) const
             points[indx++] = (fR+fRmin*ci)*so;
             points[indx++] = fRmin*si;
          }
-      }  
+      }
    } else {
       if (fDphi<360.) {
       // just add extra 2 points on the centers of the 2 phi cuts [3*n*n, 3*n*n+1]
@@ -801,8 +801,8 @@ void TGeoTorus::SetPoints(Double_t *points) const
          points[indx++] = fR*TMath::Sin((fPhi1+fDphi)*TMath::DegToRad());
          points[indx++] = 0;
       }
-   }      
-}        
+   }
+}
 
 //_____________________________________________________________________________
 void TGeoTorus::SetPoints(Float_t *points) const
@@ -831,8 +831,8 @@ void TGeoTorus::SetPoints(Float_t *points) const
          points[indx++] = (fR+fRmax*ci)*so;
          points[indx++] = fRmax*si;
       }
-   }     
-    
+   }
+
    if (havermin) {
     // loop inner mesh -> n*(n-1) points [3*n*(n-1), 6*n*(n-1)]
       // plane i = 0, n-1  point j = 0, n-1  ipoint = n*n + n*i + j
@@ -848,7 +848,7 @@ void TGeoTorus::SetPoints(Float_t *points) const
             points[indx++] = (fR+fRmin*ci)*so;
             points[indx++] = fRmin*si;
          }
-      }  
+      }
    } else {
       if (fDphi<360.) {
       // just add extra 2 points on the centers of the 2 phi cuts [n*n, n*n+1]
@@ -861,8 +861,8 @@ void TGeoTorus::SetPoints(Float_t *points) const
          points[indx++] = fR*TMath::Sin((fPhi1+fDphi)*TMath::DegToRad());
          points[indx++] = 0;
       }
-   }      
-}        
+   }
+}
 
 //_____________________________________________________________________________
 Int_t TGeoTorus::GetNmeshVertices() const
@@ -893,12 +893,12 @@ void TGeoTorus::Sizeof3D() const
 ///   if (hasrmin) {
 ///      numSegs   += (2*n-1)*(n-1);
 ///      numPolys  += (n-1)*(n-1);
-///   }   
+///   }
 ///   if (hasphi) {
 ///      numSegs   += 2*(n-1);
 ///      numPolys  += 2*(n-1);
-///   }   
-///    
+///   }
+///
 ///   painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 
@@ -929,8 +929,8 @@ Int_t TGeoTorus::SolveCubic(Double_t a, Double_t b, Double_t c, Double_t *x) con
       u = delta/(6*sq3);
       x[0] = 2.*TMath::Power(t*t+u*u,0.5*ott) * TMath::Cos(ott*TMath::ATan2(u,t));
       x[0] -= a*ott;
-   }   
-         
+   }
+
    t = x[0]*x[0]+a*x[0]+b;
    u = a+x[0];
    delta = u*u-4.*t;
@@ -980,26 +980,26 @@ Int_t TGeoTorus::SolveQuartic(Double_t a, Double_t b, Double_t c, Double_t d, Do
          for (i=0; i<ireal; i++) xx[i] = x[ind[i]];
          memcpy(x,xx,ireal*sizeof(Double_t));
       }
-      return ireal; 
-   }     
-   
+      return ireal;
+   }
+
    if (TGeoShape::IsSameWithinTolerance(g,0)) {
       x[ireal++] = -0.25*a;
       ind[0] = SolveCubic(0,e,f,xx);
-      for (i=0; i<ind[0]; i++) x[ireal++] = xx[i]-0.25*a;      
+      for (i=0; i<ind[0]; i++) x[ireal++] = xx[i]-0.25*a;
       if (ireal>0) {
          TMath::Sort(ireal, x, ind,kFALSE);
          for (i=0; i<ireal; i++) xx[i] = x[ind[i]];
          memcpy(x,xx,ireal*sizeof(Double_t));
       }
       return ireal;
-   }    
-      
-      
+   }
+
+
    ireal = SolveCubic(2.*e, e*e-4.*g, -f*f, xx);
    if (ireal==1) {
       if (xx[0]<=0) return 0;
-      h = TMath::Sqrt(xx[0]);   
+      h = TMath::Sqrt(xx[0]);
    } else {
       // 3 real solutions of the cubic
       for (i=0; i<3; i++) {
@@ -1009,7 +1009,7 @@ Int_t TGeoTorus::SolveQuartic(Double_t a, Double_t b, Double_t c, Double_t d, Do
       if (h<=0) return 0;
       h = TMath::Sqrt(h);
    }
-   Double_t j = 0.5*(e+h*h-f/h);      
+   Double_t j = 0.5*(e+h*h-f/h);
    ireal = 0;
    delta = h*h-4.*j;
    if (delta>=0) {
@@ -1035,9 +1035,9 @@ Int_t TGeoTorus::SolveQuartic(Double_t a, Double_t b, Double_t c, Double_t d, Do
 Double_t TGeoTorus::ToBoundary(const Double_t *pt, const Double_t *dir, Double_t r, Bool_t in) const
 {
 // Returns distance to the surface or the torus (fR,r) from a point, along
-// a direction. Point is close enough to the boundary so that the distance 
+// a direction. Point is close enough to the boundary so that the distance
 // to the torus is decreasing while moving along the given direction.
-   
+
    // Compute coeficients of the quartic
    Double_t s = TGeoShape::Big();
    Double_t tol = TGeoShape::Tolerance();
@@ -1048,7 +1048,7 @@ Double_t TGeoTorus::ToBoundary(const Double_t *pt, const Double_t *dir, Double_t
    Double_t b = 2.*(r0sq+2.*rdotn*rdotn-rsumsq+2.*fR*fR*dir[2]*dir[2]);
    Double_t c = 4.*(r0sq*rdotn-rsumsq*rdotn+2.*fR*fR*pt[2]*dir[2]);
    Double_t d = r0sq*r0sq-2.*r0sq*rsumsq+4.*fR*fR*pt[2]*pt[2]+(fR*fR-r*r)*(fR*fR-r*r);
-   
+
    Double_t x[4],y[4];
    Int_t nsol = 0;
 
@@ -1078,9 +1078,9 @@ Double_t TGeoTorus::ToBoundary(const Double_t *pt, const Double_t *dir, Double_t
          TMath::Sort(nsol, y, ind,kFALSE);
          for (Int_t j=0; j<nsol; j++) x[j] = y[ind[j]];
       }
-   } else {               
+   } else {
       nsol = SolveQuartic(a,b,c,d,x);
-   }   
+   }
    if (!nsol) return TGeoShape::Big();
    // look for first positive solution
    Double_t phi, ndotd;
@@ -1090,7 +1090,7 @@ Double_t TGeoTorus::ToBoundary(const Double_t *pt, const Double_t *dir, Double_t
       if (x[i]<-10) continue;
       phi = TMath::ATan2(pt[1]+x[i]*dir[1],pt[0]+x[i]*dir[0]);
       r0[0] = fR*TMath::Cos(phi);
-      r0[1] = fR*TMath::Sin(phi);           
+      r0[1] = fR*TMath::Sin(phi);
       r0[2] = 0;
       for (Int_t ipt=0; ipt<3; ipt++) norm[ipt] = pt[ipt]+x[i]*dir[ipt] - r0[ipt];
       ndotd = norm[0]*dir[0]+norm[1]*dir[1]+norm[2]*dir[2];
@@ -1098,7 +1098,7 @@ Double_t TGeoTorus::ToBoundary(const Double_t *pt, const Double_t *dir, Double_t
          if (ndotd<0) continue;
       } else {
          if (ndotd>0) continue;
-      }      
+      }
       s = x[i];
       Double_t eps = TGeoShape::Big();
       Double_t delta = s*s*s*s + a*s*s*s + b*s*s + c*s + d;
@@ -1115,8 +1115,8 @@ Double_t TGeoTorus::ToBoundary(const Double_t *pt, const Double_t *dir, Double_t
       if (s<-TGeoShape::Tolerance()) continue;
       return TMath::Max(0.,s);
    }
-   return TGeoShape::Big();   
-}      
+   return TGeoShape::Big();
+}
 
 //_____________________________________________________________________________
 void TGeoTorus::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
@@ -1179,10 +1179,10 @@ const TBuffer3D & TGeoTorus::GetBuffer3D(Int_t reqSections, Bool_t localFrame) c
          TransformPoints(buffer.fPnts, buffer.NbPnts());
       }
 
-      SetSegsAndPols(buffer);      
+      SetSegsAndPols(buffer);
       buffer.SetSectionsValid(TBuffer3D::kRaw);
    }
-      
+
    return buffer;
 }
 

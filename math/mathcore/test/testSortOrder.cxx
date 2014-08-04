@@ -12,28 +12,28 @@ const int maxint = 20;
 
 #ifndef ROOT_TMath
 
-template<typename T> 
-struct CompareDesc { 
+template<typename T>
+struct CompareDesc {
 
    CompareDesc(T d) : fData(d) {}
 
-   bool operator()(int i1, int i2) { 
+   bool operator()(int i1, int i2) {
       return *(fData + i1) > *(fData + i2);
    }
 
    T fData;
 };
 
-template<typename T> 
-struct CompareAsc { 
+template<typename T>
+struct CompareAsc {
 
    CompareAsc(T d) : fData(d) {}
 
-   bool operator()(int i1, int i2) { 
+   bool operator()(int i1, int i2) {
       return *(fData + i1) < *(fData + i2);
    }
 
-   T fData; 
+   T fData;
 };
 
 #endif
@@ -50,13 +50,13 @@ template <typename T> bool testSort(const int n)
 
    cout << "k: ";
    for ( Int_t i = 0; i < n; i++) {
-      k[i] = (T) r.Integer( maxint ); 
+      k[i] = (T) r.Integer( maxint );
       cout << k[i] << ' ';
    }
    cout << endl;
 
    for(Int_t i = 0; i < n; i++) { indexM[i] = i; }
-   TMath::Sort(n,&k[0],&indexM[0],kTRUE);  
+   TMath::Sort(n,&k[0],&indexM[0],kTRUE);
 
    cout << "TMath[kTRUE]\n\tindex = ";
    for ( Int_t i = 0; i < n; ++i )
@@ -77,7 +77,7 @@ template <typename T> bool testSort(const int n)
 
 
    for(Int_t i = 0; i < n; i++) { indexM[i] = i; }
-   TMath::Sort(n,&k[0],&indexM[0],kFALSE);  
+   TMath::Sort(n,&k[0],&indexM[0],kFALSE);
 
    cout << "TMath[kFALSE]\n\tindex = ";
    for ( Int_t i = 0; i < n; ++i )
@@ -99,7 +99,7 @@ template <typename T> bool testSort(const int n)
    return equals;
 }
 
-bool stdsort() 
+bool stdsort()
 {
    return testSort<Int_t>(20);
 }

@@ -546,7 +546,7 @@ void TEveCaloLegoOverlay::RenderPaletteScales(TGLRnrCtx& rnrCtx)
    glScalef(fScaleH/(bn*bw), fScaleH/(bn*bw), 1.);
 
    glPushName(0);
-   glLoadName(1);   
+   glLoadName(1);
    TGLAxisPainter::LabVec_t &labVec = fAxisPainter->RefLabVec();
    labVec.clear();
    Float_t val = 0;

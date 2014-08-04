@@ -23,7 +23,7 @@
 #include "TRandom.h"
 #include "TSpectrum.h"
 #include "TVirtualFitter.h"
-   
+
 Int_t npeaks = 30;
 Double_t fpeaks(Double_t *x, Double_t *par) {
    Double_t result = par[0] + par[1]*x[0];
@@ -92,5 +92,5 @@ void peaks(Int_t np=10) {
    TVirtualFitter::Fitter(h2,10+3*npeaks);
    fit->SetParameters(par);
    fit->SetNpx(1000);
-   h2->Fit("fit");             
+   h2->Fit("fit");
 }

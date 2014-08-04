@@ -39,7 +39,7 @@ int SelectEntry(TGComboBox* cb, const char* name)
 // methods are inside the class as this in particular is defined as a
 // friend of the TFitEditor. This way, we can access the private
 // methods of TFitEditor to perform several types of tests.
-class FitEditorUnitTesting 
+class FitEditorUnitTesting
 {
 private:
    // Pointer to the current (and only one) TFitEditor opened.
@@ -53,7 +53,7 @@ public:
 
    // Exception thrown when any of the pointers managed by the
    // FitEditorUnitTesting class are invalid
-   class InvalidPointer: public std::exception 
+   class InvalidPointer: public std::exception
    {
    private:
       const char* _exp;
@@ -71,13 +71,13 @@ public:
 
       // Execute the initial script
       gROOT->ProcessLine(".x $ROOTSYS/tutorials/fit/FittingDemo.C+");
-      
+
       // Get an instance of the TFitEditor
       TCanvas* c1 = static_cast<TCanvas*>( gROOT->FindObject("c1") );
       TH1*      h = static_cast<TH1*>    ( gROOT->FindObject("histo") );
-      
+
       f = TFitEditor::GetInstance(c1,h);
-   
+
       if ( f == 0 )
          throw InvalidPointer("In FitEditorUnitTesting constructor");
    }
@@ -143,11 +143,11 @@ public:
 
       result += MakeTest("TestUpdateTree.....", &FitEditorUnitTesting::TestUpdateTree);
 
-      result += MakeTest("TestTree1D.........", &FitEditorUnitTesting::TestTree1D); 
+      result += MakeTest("TestTree1D.........", &FitEditorUnitTesting::TestTree1D);
 
       result += MakeTest("TestTree2D.........", &FitEditorUnitTesting::TestTree2D);
 
-      result += MakeTest("TestTreeND.........", &FitEditorUnitTesting::TestTreeND); 
+      result += MakeTest("TestTreeND.........", &FitEditorUnitTesting::TestTreeND);
 
       fprintf(out, "\nRemember to also check outputUnitTesting.txt for "
               "more detailed information\n\n");
@@ -271,7 +271,7 @@ public:
 
       f->fTypeFit->Select(kFP_UFUNC, kTRUE);
       SelectEntry(f->fFuncList, "f2");
-      
+
       // Set the parameters to the original ones in
       // ConfidenceIntervals.C. Otherwise it will be using those of
       // the last fit with fpol and will make an invalid fit.
@@ -295,7 +295,7 @@ public:
 
       f->fTypeFit->Select(kFP_UFUNC, kTRUE);
       SelectEntry(f->fFuncList, "f2");
-      
+
       // Set the parameters to the original ones in
       // ConfidenceIntervals.C. Otherwise it will be using those of
       // the last fit with f2 and the fit will make no sense.
@@ -319,7 +319,7 @@ public:
 
    int TestTree1D() {
       TObject* objSelected = gROOT->FindObject("tree");
-      if ( !objSelected ) 
+      if ( !objSelected )
          throw InvalidPointer("In TestUpdateTree");
 
       Int_t selected = kFP_NOSEL + 6;
@@ -345,7 +345,7 @@ public:
 
    int TestTree2D() {
       TObject* objSelected = gROOT->FindObject("tree");
-      if ( !objSelected ) 
+      if ( !objSelected )
          throw InvalidPointer("In TestUpdateTree");
 
       Int_t selected = kFP_NOSEL + 6;
@@ -370,7 +370,7 @@ public:
 
    int TestTreeND() {
       TObject* objSelected = gROOT->FindObject("tree");
-      if ( !objSelected ) 
+      if ( !objSelected )
          throw InvalidPointer("In TestUpdateTree");
 
       Int_t selected = kFP_NOSEL + 6;

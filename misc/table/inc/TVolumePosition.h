@@ -38,7 +38,7 @@ protected:
 public:
    enum EPositionBits {
        kIsOwn      = BIT(23)   // if the TVolumePoistion doesn't own the TRotMatrix object
-   };   
+   };
    TVolumePosition(TVolume *node=0,Double_t x=0, Double_t y=0, Double_t z=0, TRotMatrix *matrix=0);
    TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t z, const char *matrixname);
    TVolumePosition(const TVolumePosition* oldPosition, const TVolumePosition* curPosition);
@@ -114,10 +114,10 @@ inline void TVolumePosition::DeleteOwnMatrix()
 inline TRotMatrix *TVolumePosition::GetMatrix()
 {   return fMatrix;                           }
 //______________________________________________________________________________
-inline const TRotMatrix *TVolumePosition::GetMatrix() const 
+inline const TRotMatrix *TVolumePosition::GetMatrix() const
 {   return fMatrix;                                }
 //______________________________________________________________________________
-inline Bool_t TVolumePosition::SetMatrixOwner(Bool_t ownerShips) 
+inline Bool_t TVolumePosition::SetMatrixOwner(Bool_t ownerShips)
 {
    Bool_t currentOwner = IsMatrixOwner();
    SetBit(kIsOwn,ownerShips);
@@ -125,9 +125,9 @@ inline Bool_t TVolumePosition::SetMatrixOwner(Bool_t ownerShips)
 }
 //______________________________________________________________________________
 inline Bool_t TVolumePosition::IsMatrixOwner() const
-{  
+{
   // Check whether this object owns the TRotMatrix (to be deleted for example)
-  // Note: This method is to be caleed from dtor. 
+  // Note: This method is to be caleed from dtor.
   //       It is dangerous to make it virtual
    return TestBit(kIsOwn);
 }

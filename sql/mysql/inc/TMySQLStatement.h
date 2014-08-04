@@ -70,7 +70,7 @@ protected:
    void        SetBuffersNumber(Int_t n);
 
    void       *BeforeSet(const char* method, Int_t npar, Int_t sqltype, Bool_t sig = kTRUE, ULong_t size = 0);
-   
+
    static ULong64_t fgAllocSizeLimit;
 
 private:
@@ -80,7 +80,7 @@ private:
 public:
    TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout = kTRUE);
    virtual ~TMySQLStatement();
-   
+
    static ULong_t GetAllocSizeLimit() { return fgAllocSizeLimit; }
    static void SetAllocSizeLimit(ULong_t sz) { fgAllocSizeLimit = sz; }
 

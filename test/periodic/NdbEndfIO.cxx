@@ -34,7 +34,7 @@ NdbEndfIO::FindMAT( Int_t mat, Bool_t rewind )
    while (ReadLine())
       if (iMAT == mat)
          return TRUE;
-   
+
    return FALSE;
 } // FindMAT
 
@@ -49,7 +49,7 @@ NdbEndfIO::FindMATMF( Int_t mat, Int_t mf, Bool_t rewind )
       if (iMF == mf)
          return TRUE;
    } while (ReadLine());
-   
+
    return FALSE;
 } // FindMATMF
 
@@ -64,7 +64,7 @@ NdbEndfIO::FindMATMFMT( Int_t mat, Int_t mf, Int_t mt, Bool_t rewind )
       if (iMT == mt)
          return TRUE;
    } while (ReadLine());
-   
+
    return FALSE;
 } // FindMATMFMT
 
@@ -151,7 +151,7 @@ NdbEndfIO::SubReadReal(Int_t start, Int_t length)
 {
    char   numstr[20];
    char   *dst, *src;
-   
+
    NdbEndfIO::Substr(start,length);
 
    // Real numbers are in the following formats

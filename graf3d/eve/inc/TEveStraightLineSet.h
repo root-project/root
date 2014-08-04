@@ -110,7 +110,7 @@ public:
    virtual void SetRnrMarkers(Bool_t x) { fRnrMarkers = x; }
    virtual void SetRnrLines(Bool_t x)   { fRnrLines   = x; }
    virtual void SetDepthTest(Bool_t x)  { fDepthTest   = x; }
-   
+
    virtual void CopyVizParams(const TEveElement* el);
    virtual void WriteVizParams(std::ostream& out, const TString& var);
 

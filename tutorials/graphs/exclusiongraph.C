@@ -1,7 +1,7 @@
 TCanvas *exclusiongraph() {
    // Draw three graphs with an exclusion zone.
    //Author: Olivier Couet
-   
+
    TCanvas *c1 = new TCanvas("c1","Exclusion graphs examples",200,10,600,400);
    c1->SetGrid();
 

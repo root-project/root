@@ -243,7 +243,7 @@ public:
    static void   LoadAllLibs();
 
    // Functions to generate documentation
-   void          Convert(const char *filename, const char *title, 
+   void          Convert(const char *filename, const char *title,
                          const char *dirname = "", const char *relpath="../",
                          Int_t includeOutput = kNoOutput,
                          const char* context = "");
@@ -403,7 +403,7 @@ protected:
 
    static void    *MakeClassThreaded(void* info);
 
-protected:   
+protected:
    TString        fCounter;         // counter string
    TString        fCounterFormat;   // counter printf-like format
    TString        fProductName;     // name of the product to document

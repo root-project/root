@@ -53,24 +53,24 @@
 // you can do :
 //   TF1 *f1 = new TF1("f1","abs(sin(x)/x)*sqrt(x)",0,10);
 //   double r = f1->GetRandom();
-// or you can use the UNURAN package. You need in this case to initialize UNURAN 
-// to the function you would like to generate. 
-//   TUnuran u; 
-//   u.Init(TUnuranDistrCont(f1)); 
+// or you can use the UNURAN package. You need in this case to initialize UNURAN
+// to the function you would like to generate.
+//   TUnuran u;
+//   u.Init(TUnuranDistrCont(f1));
 //   double r = u.Sample();
 //
-// The techniques of using directly a TF1,2 or 3 function is powerful and 
-// can be used to generate numbers in the defined range of the function. 
+// The techniques of using directly a TF1,2 or 3 function is powerful and
+// can be used to generate numbers in the defined range of the function.
 // Getting a number from a TF1,2,3 function is also quite fast.
-// UNURAN is a  powerful and flexible tool which containes various methods for 
-// generate random numbers for continuous distributions of one and multi-dimension. 
-// It requires some set-up (initialization) phase and can be very fast when the distribution 
-// parameters are not changed for every call.   
+// UNURAN is a  powerful and flexible tool which containes various methods for
+// generate random numbers for continuous distributions of one and multi-dimension.
+// It requires some set-up (initialization) phase and can be very fast when the distribution
+// parameters are not changed for every call.
 //
 // The following table shows some timings (in nanosecond/call)
-// for basic functions,  TF1 functions and using UNURAN obtained running 
+// for basic functions,  TF1 functions and using UNURAN obtained running
 // the tutorial math/testrandom.C
-// Numbers have been obtained on an Intel Xeon Quad-core Harpertown (E5410) 2.33 GHz running 
+// Numbers have been obtained on an Intel Xeon Quad-core Harpertown (E5410) 2.33 GHz running
 // Linux SLC4 64 bit and compiled with gcc 3.4
 //
 // Distribution            nanoseconds/call
@@ -93,7 +93,7 @@
 // PoissonUNURAN(10).   85.000  271.000   92.000  102.000
 // PoissonUNURAN(100)   62.000  256.000   69.000   78.000
 //
-//  Note that the time to generate a number from an arbitrary TF1 function 
+//  Note that the time to generate a number from an arbitrary TF1 function
 //  using TF1::GetRandom or using TUnuran is  independent of the complexity of the function.
 //
 //  TH1::FillRandom(TH1 *) or TH1::FillRandom(const char *tf1name)
@@ -211,20 +211,20 @@ Double_t TRandom::Exp(Double_t tau)
 //______________________________________________________________________________
 Double_t TRandom::Gaus(Double_t mean, Double_t sigma)
 {
-   // Samples a random number from the standard Normal (Gaussian) Distribution 
-   // with the given mean and sigma.                                                 
-   // Uses the Acceptance-complement ratio from W. Hoermann and G. Derflinger 
-   // This is one of the fastest existing method for generating normal random variables. 
-   // It is a factor 2/3 faster than the polar (Box-Muller) method used in the previous 
+   // Samples a random number from the standard Normal (Gaussian) Distribution
+   // with the given mean and sigma.
+   // Uses the Acceptance-complement ratio from W. Hoermann and G. Derflinger
+   // This is one of the fastest existing method for generating normal random variables.
+   // It is a factor 2/3 faster than the polar (Box-Muller) method used in the previous
    // version of TRandom::Gaus. The speed is comparable to the Ziggurat method (from Marsaglia)
-   // implemented for example in GSL and available in the MathMore library. 
-   //                                                                           
-   // REFERENCE:  - W. Hoermann and G. Derflinger (1990):                       
-   //              The ACR Method for generating normal random variables,       
-   //              OR Spektrum 12 (1990), 181-185.                             
-   //                                                                           
-   // Implementation taken from 
-   // UNURAN (c) 2000  W. Hoermann & J. Leydold, Institut f. Statistik, WU Wien 
+   // implemented for example in GSL and available in the MathMore library.
+   //
+   // REFERENCE:  - W. Hoermann and G. Derflinger (1990):
+   //              The ACR Method for generating normal random variables,
+   //              OR Spektrum 12 (1990), 181-185.
+   //
+   // Implementation taken from
+   // UNURAN (c) 2000  W. Hoermann & J. Leydold, Institut f. Statistik, WU Wien
 
    const Double_t kC1 = 1.448242853;
    const Double_t kC2 = 3.307147487;
@@ -260,20 +260,20 @@ Double_t TRandom::Gaus(Double_t mean, Double_t sigma)
 
       if (y>kHm1) {
          result = kHp*y-kHp1; break; }
-  
-      else if (y<kZm) {  
+
+      else if (y<kZm) {
          rn = kZp*y-1;
          result = (rn>0) ? (1+rn) : (-1+rn);
          break;
-      } 
+      }
 
-      else if (y<kHm) {  
+      else if (y<kHm) {
          rn = Rndm();
          rn = rn-1+rn;
          z = (rn>0) ? 2-rn : -2-rn;
          if ((kC1-y)*(kC3+TMath::Abs(z))<kC2) {
             result = z; break; }
-         else {  
+         else {
             x = rn*rn;
             if ((y+kD1)*(kD3+x)<kD2) {
                result = rn; break; }
@@ -288,7 +288,7 @@ Double_t TRandom::Gaus(Double_t mean, Double_t sigma)
          x = Rndm();
          y = kYm * Rndm();
          z = kX0 - kS*x - y;
-         if (z>0) 
+         if (z>0)
             rn = 2+y/x;
          else {
             x = 1-x;
@@ -302,7 +302,7 @@ Double_t TRandom::Gaus(Double_t mean, Double_t sigma)
                result = rn; break; }
       }
    } while(0);
-   
+
    return mean + sigma * result;
 }
 
@@ -322,17 +322,17 @@ Double_t TRandom::Landau(Double_t mu, Double_t sigma)
    // Generate a random number following a Landau distribution
    // with location parameter mu and scale parameter sigma:
    //      Landau( (x-mu)/sigma )
-   // Note that mu is not the mpv(most probable value) of the Landa distribution 
-   // and sigma is not the standard deviation of the distribution which is not defined. 
+   // Note that mu is not the mpv(most probable value) of the Landa distribution
+   // and sigma is not the standard deviation of the distribution which is not defined.
    // For mu  =0 and sigma=1, the mpv = -0.22278
    //
-   // The Landau random number generation is implemented using the 
-   // function landau_quantile(x,sigma), which provides 
+   // The Landau random number generation is implemented using the
+   // function landau_quantile(x,sigma), which provides
    // the inverse of the landau cumulative distribution.
    // landau_quantile has been converted from CERNLIB ranlan(G110).
 
    if (sigma <= 0) return 0;
-   Double_t x = Rndm(); 
+   Double_t x = Rndm();
    Double_t res = mu + ROOT::Math::landau_quantile(x, sigma);
    return res;
 }
@@ -551,16 +551,16 @@ void TRandom::RndmArray(Int_t n, Float_t *array)
 void TRandom::SetSeed(UInt_t seed)
 {
    // Set the random generator seed. Note that default value is zero, which is
-   // different than the default value used when constructing the class.  
-   // If the seed is zero the seed is set to a random value 
-   // which in case of TRandom depends on the lowest 4 bytes of TUUID 
+   // different than the default value used when constructing the class.
+   // If the seed is zero the seed is set to a random value
+   // which in case of TRandom depends on the lowest 4 bytes of TUUID
    // The UUID will be identical if SetSeed(0) is called with time smaller than 100 ns
    // Instead if a different generator implementation is used (TRandom1, 2 or 3)
    // the seed is generated using a 128 bit UUID. This results in different seeds
-   // and then random sequence for every SetSeed(0) call. 
+   // and then random sequence for every SetSeed(0) call.
 
    if( seed==0 ) {
-      TUUID u; 
+      TUUID u;
       UChar_t uuid[16];
       u.GetUUID(uuid);
       fSeed  =  int(uuid[3])*16777216 + int(uuid[2])*65536 + int(uuid[1])*256 + int(uuid[0]);

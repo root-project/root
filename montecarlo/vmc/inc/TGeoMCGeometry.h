@@ -134,7 +134,7 @@ public:
 private:
    TGeoMCGeometry(const TGeoMCGeometry& /*rhs*/);
    TGeoMCGeometry& operator=(const TGeoMCGeometry& /*rhs*/);
-   
+
    TGeoManager* GetTGeoManager() const;
 
    Double_t* CreateDoubleArray(Float_t* array, Int_t size) const;

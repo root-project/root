@@ -29,7 +29,7 @@ class QPainter;
 
 ////////////////////////////////////////////////////////////////////////
 //
-// TQtMarker - class-utility to convert the ROOT TMarker object shape 
+// TQtMarker - class-utility to convert the ROOT TMarker object shape
 //             in to the Qt QPolygon.
 //
 ////////////////////////////////////////////////////////////////////////
@@ -68,10 +68,10 @@ public:
 };
 
 //_________________________________________________________
-inline TQtMarker &TQtMarker::operator=(const TQtMarker&m) 
+inline TQtMarker &TQtMarker::operator=(const TQtMarker&m)
 {
    fNumNode  = m.fNumNode;
-   fChain    = m.fChain; 
+   fChain    = m.fChain;
    fCindex   = m.fCindex;
    fMarkerType=m.fMarkerType;
    fLineWidth =m.fLineWidth;
@@ -79,7 +79,7 @@ inline TQtMarker &TQtMarker::operator=(const TQtMarker&m)
 }
 //_________________________________________________________
 inline TQtMarker::TQtMarker(const TQtMarker&m) : fNumNode(m.fNumNode),
-fChain(m.fChain), fCindex(m.fCindex),fMarkerType(m.fMarkerType),fLineWidth(m.fLineWidth) 
+fChain(m.fChain), fCindex(m.fCindex),fMarkerType(m.fMarkerType),fLineWidth(m.fLineWidth)
 , fLineOption()
 {}
 

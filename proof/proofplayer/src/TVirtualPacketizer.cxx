@@ -155,7 +155,7 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
 
    // Whether to send estimated values for the progress info
    TString estopt;
-   if (TProof::GetParameter(input, "PROOF_RateEstimation", estopt) != 0 || 
+   if (TProof::GetParameter(input, "PROOF_RateEstimation", estopt) != 0 ||
        estopt.IsNull()) {
       // Parse option from the env
       estopt = gEnv->GetValue("Proof.RateEstimation", "");
@@ -365,7 +365,7 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
                fReportPeriod = (Float_t) fTotalEntries / (Double_t) estent * fProcTime / 100.;
                if (fReportPeriod > 0. && fReportPeriod < 5.) fReportPeriod = 5.;
             }
-           
+
             if (fProgressPerf->GetEntries() <= 0) {
                // Fill the first entry
                fProgressPerf->Fill(fProcTime, (Float_t)actw, -1., -1., -1.);

@@ -48,7 +48,7 @@ static const ushort symbol_to_unicode[96] = {
 //
 //  upper case letters:
 //  ----------------
-// UPSILON  NUMBER  LessEq   Div   INFINITY ???????  CLUB   DIAMOND     
+// UPSILON  NUMBER  LessEq   Div   INFINITY ???????  CLUB   DIAMOND
     0x03D2, 0x0374, 0x2264, 0x2215, 0x221E, 0x0395, 0x2663, 0x2666,
 //   HEART  SPADE   <--->   <---             -->             RING
     0x2665, 0x2660, 0x2194, 0x2190, 0x2191, 0x2192, 0x2193, 0x2218,
@@ -106,7 +106,7 @@ static const uchar unicode_to_symbol_05[32] = {
     visually ordered Microsoft Symbol.ttf.
 
 
-    This codec has the name "symbol". 
+    This codec has the name "symbol".
 */
 
 //_______________________________________________________________________
@@ -124,7 +124,7 @@ QByteArray QSymbolCodec::name() const
 }
 
 //_______________________________________________________________________
-/*! \reimp */ 
+/*! \reimp */
 const char* QSymbolCodec::mimeName() const
 {
    //   Returns the codec's mime name.
@@ -132,7 +132,7 @@ const char* QSymbolCodec::mimeName() const
 }
 
 //_______________________________________________________________________
-/*! \reimp */ 
+/*! \reimp */
 QString QSymbolCodec::toUnicode(const char* chars, int len ) const
 {
    QString r;
@@ -191,7 +191,7 @@ int QSymbolCodec::heuristicContentMatch(const char* chars, int len) const
    const unsigned char * c = (const unsigned char *)chars;
    int score = 0;
    for (int i=0; i<len; i++) {
-      if( c[i] > 64 && c[i] < 255 ) 
+      if( c[i] > 64 && c[i] < 255 )
          //     if ( symbol_to_unicode[c[i] - 0x80] != 0xFFFD)
          score++;
       else

@@ -88,21 +88,21 @@ gcc version 4.2.1 (Apple Inc. build 5646) (dot 1)
 </para></footnote>)</entry>
             <entry>Linux 64b (debug<footnote id="debug"><para><emphasis role="bold">debug</emphasis> means that TMemStat library is compiled with “make ROOTBUILD=debug” and a test script compiled by ACLIC with C++g option.
 </para></footnote>)</entry>
-              <entry>Linux 32b (opt.<footnoteref linkend="opt" />)</entry>  
+              <entry>Linux 32b (opt.<footnoteref linkend="opt" />)</entry>
             <entry>Linux 32b (debug <footnoteref linkend="debug" />)</entry>
-              <entry>MacOSX 10.5 (opt<footnoteref linkend="opt" />)</entry>  
-              <entry>MacOSX 10.5 (debug<footnoteref linkend="debug" />)</entry>  
+              <entry>MacOSX 10.5 (opt<footnoteref linkend="opt" />)</entry>
+              <entry>MacOSX 10.5 (debug<footnoteref linkend="debug" />)</entry>
             <entry>MacOSX 10.6 (opt.<footnoteref linkend="opt" />)</entry>
-              <entry>MacOSX 10.6 (debug<footnoteref linkend="debug" />)</entry>  
+              <entry>MacOSX 10.6 (debug<footnoteref linkend="debug" />)</entry>
        </row>
           </thead>
           <tbody>
             <row>
               <entry>backtrace</entry>
-                 <entry>Ok.</entry>    
+                 <entry>Ok.</entry>
               <entry>Ok.</entry>
               <entry>-</entry>
-                 <entry>-</entry>    
+                 <entry>-</entry>
               <entry>-</entry>
               <entry>-</entry>
                  <entry>Ok. <footnote id="mac_optim">
@@ -113,20 +113,20 @@ Both algorithms beehives the same in this case.
 What else we could expect, if the code was really optimized and compiler unrolled the loop...
 </para>
 </footnote>
-</entry>    
+</entry>
               <entry>Ok.</entry>
             </row>
             <row>
               <entry>builtin</entry>
-                 <entry>X</entry>    
+                 <entry>X</entry>
               <entry>Ok.</entry>
               <entry>-</entry>
-                 <entry>-</entry>    
+                 <entry>-</entry>
               <entry>-</entry>
               <entry>-</entry>
-                 <entry>Ok. <footnoteref linkend="mac_optim"/></entry>    
+                 <entry>Ok. <footnoteref linkend="mac_optim"/></entry>
               <entry>Ok.</entry>
-            </row>   
+            </row>
         </tbody>
       </tgroup>
   </table>

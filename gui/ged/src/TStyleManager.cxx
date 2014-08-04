@@ -755,7 +755,7 @@ TStyleManager::~TStyleManager()
 TStyleManager *&TStyleManager::GetSM()
 {
    //static: return style manager
-   return fgStyleManager; 
+   return fgStyleManager;
 }
 
 //______________________________________________________________________________
@@ -1375,21 +1375,21 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          fPadBorderMode->SetButton(fCurSelStyle->GetPadBorderMode() + 1 + kPadBorderModeSunken);
          fPadBorderSize->Select(fCurSelStyle->GetPadBorderSize());
          fPadColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetPadColor()));
-         if (fCurSelStyle->GetPadTickX()) 
+         if (fCurSelStyle->GetPadTickX())
             fPadTickX->SetState(kButtonDown, kFALSE);
-         else 
+         else
             fPadTickX->SetState(kButtonUp, kFALSE);
-         if (fCurSelStyle->GetPadTickY()) 
+         if (fCurSelStyle->GetPadTickY())
             fPadTickY->SetState(kButtonDown, kFALSE);
-         else 
+         else
             fPadTickY->SetState(kButtonUp, kFALSE);
-         if (fCurSelStyle->GetPadGridX()) 
+         if (fCurSelStyle->GetPadGridX())
             fPadGridX->SetState(kButtonDown, kFALSE);
-         else 
+         else
             fPadGridX->SetState(kButtonUp, kFALSE);
-         if (fCurSelStyle->GetPadGridY()) 
+         if (fCurSelStyle->GetPadGridY())
             fPadGridY->SetState(kButtonDown, kFALSE);
-         else 
+         else
             fPadGridY->SetState(kButtonUp, kFALSE);
          fGridColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetGridColor()));
          fGridWidth->Select(fCurSelStyle->GetGridWidth());
@@ -1403,9 +1403,9 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          fHistLineStyle->Select(fCurSelStyle->GetHistLineStyle());
          fBarWidth->SetNumber(fCurSelStyle->GetBarWidth());
          fBarOffset->SetNumber(fCurSelStyle->GetBarOffset());
-         if (fCurSelStyle->GetHistMinimumZero()) 
+         if (fCurSelStyle->GetHistMinimumZero())
             fHistMinimumZero->SetState(kButtonDown, kFALSE);
-         else 
+         else
             fHistMinimumZero->SetState(kButtonUp, kFALSE);
          fPaintTextFormat->SetText(fCurSelStyle->GetPaintTextFormat());
          fNumberContours->SetIntNumber(fCurSelStyle->GetNumberContours());
@@ -1421,9 +1421,9 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          fFuncColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetFuncColor()));
          fFuncWidth->Select(fCurSelStyle->GetFuncWidth());
          fFuncStyle->Select(fCurSelStyle->GetFuncStyle());
-         if (fCurSelStyle->GetDrawBorder()) 
+         if (fCurSelStyle->GetDrawBorder())
             fDrawBorder->SetState(kButtonDown, kFALSE);
-         else 
+         else
             fDrawBorder->SetState(kButtonUp, kFALSE);
          fEndErrorSize->SetNumber(fCurSelStyle->GetEndErrorSize());
          fErrorX->SetIntNumber((Int_t) (fCurSelStyle->GetErrorX() * 100 + 0.5));
@@ -1467,9 +1467,9 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          fTimeOffsetDate->SetNumber(year*10000 + month*100 + day);
          fTimeOffsetTime->SetNumber(delta);
 
-         if (fCurSelStyle->GetStripDecimals()) 
+         if (fCurSelStyle->GetStripDecimals())
             fStripDecimals->SetState(kButtonUp, kFALSE);
-         else 
+         else
             fStripDecimals->SetState(kButtonDown, kFALSE);
          fXTitleSize->SetNumber(fCurSelStyle->GetTitleSize("X"));
          if (fCurSelStyle->GetTitleFont("X")%10 > 2) {
@@ -1495,16 +1495,16 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          fXLabelFont->Select(fCurSelStyle->GetLabelFont("X")/10);
          fXAxisColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetAxisColor("X")));
          fXTickLength->SetNumber(fCurSelStyle->GetTickLength("X"));
-         if (fCurSelStyle->GetOptLogx()) 
+         if (fCurSelStyle->GetOptLogx())
             fOptLogx->SetState(kButtonDown, kFALSE);
-         else 
+         else
             fOptLogx->SetState(kButtonUp, kFALSE);
          fXNdivMain->SetIntNumber(TMath::Abs(fCurSelStyle->GetNdivisions("X")) % 100);
          fXNdivSub->SetIntNumber((TMath::Abs(fCurSelStyle->GetNdivisions("X")) % 10000)/100);
          fXNdivSubSub->SetIntNumber((TMath::Abs(fCurSelStyle->GetNdivisions("X")) % 1000000)/10000);
-         if (fCurSelStyle->GetNdivisions("X") > 0) 
+         if (fCurSelStyle->GetNdivisions("X") > 0)
             fXNdivisionsOptimize->SetState(kButtonDown, kFALSE);
-         else 
+         else
             fXNdivisionsOptimize->SetState(kButtonUp, kFALSE);
          fYTitleSize->SetNumber(fCurSelStyle->GetTitleSize("Y"));
          if (fCurSelStyle->GetTitleFont("Y")%10 > 2) {
@@ -1530,16 +1530,16 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          fYLabelFont->Select(fCurSelStyle->GetLabelFont("Y")/10);
          fYAxisColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetAxisColor("Y")));
          fYTickLength->SetNumber(fCurSelStyle->GetTickLength("Y"));
-         if (fCurSelStyle->GetOptLogy()) 
+         if (fCurSelStyle->GetOptLogy())
             fOptLogy->SetState(kButtonDown, kFALSE);
-         else  
+         else
             fOptLogy->SetState(kButtonUp, kFALSE);
          fYNdivMain->SetIntNumber(TMath::Abs(fCurSelStyle->GetNdivisions("Y")) % 100);
          fYNdivSub->SetIntNumber((TMath::Abs(fCurSelStyle->GetNdivisions("Y")) % 10000)/100);
          fYNdivSubSub->SetIntNumber((TMath::Abs(fCurSelStyle->GetNdivisions("Y")) % 1000000)/10000);
-         if (fCurSelStyle->GetNdivisions("Y") > 0) 
+         if (fCurSelStyle->GetNdivisions("Y") > 0)
             fYNdivisionsOptimize->SetState(kButtonDown, kFALSE);
-         else 
+         else
             fYNdivisionsOptimize->SetState(kButtonUp, kFALSE);
          fZTitleSize->SetNumber(fCurSelStyle->GetTitleSize("Z"));
          if (fCurSelStyle->GetTitleFont("Z")%10 > 2) {
@@ -1565,18 +1565,18 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          fZLabelFont->Select(fCurSelStyle->GetLabelFont("Z")/10);
          fZAxisColor->SetColor(TColor::Number2Pixel(fCurSelStyle->GetAxisColor("Z")));
          fZTickLength->SetNumber(fCurSelStyle->GetTickLength("Z"));
-         
-         if (fCurSelStyle->GetOptLogz()) 
+
+         if (fCurSelStyle->GetOptLogz())
             fOptLogz->SetState(kButtonDown, kFALSE);
-         else 
+         else
             fOptLogz->SetState(kButtonUp, kFALSE);
-         
+
          fZNdivMain->SetIntNumber(TMath::Abs(fCurSelStyle->GetNdivisions("Z")) % 100);
          fZNdivSub->SetIntNumber((TMath::Abs(fCurSelStyle->GetNdivisions("Z")) % 10000)/100);
          fZNdivSubSub->SetIntNumber((TMath::Abs(fCurSelStyle->GetNdivisions("Z")) % 1000000)/10000);
-         if (fCurSelStyle->GetNdivisions("Z") > 0) 
+         if (fCurSelStyle->GetNdivisions("Z") > 0)
             fZNdivisionsOptimize->SetState(kButtonDown, kFALSE);
-         else 
+         else
             fZNdivisionsOptimize->SetState(kButtonUp, kFALSE);
          break;
       case 5: // TITLES
@@ -1648,67 +1648,67 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
             ModStatFontSizeInPixels(kFALSE);
          }
          fStatFontSize->SetNumber(fCurSelStyle->GetStatFontSize());
-         
+
          fStatX->SetNumber(fCurSelStyle->GetStatX());
          fStatY->SetNumber(fCurSelStyle->GetStatY());
          fStatW->SetNumber(fCurSelStyle->GetStatW());
          fStatH->SetNumber(fCurSelStyle->GetStatH());
          fStatBorderSize->Select(fCurSelStyle->GetStatBorderSize());
          tmp = fCurSelStyle->GetOptStat();
-         
+
          if (tmp % 10) fOptStatName->SetState(kButtonDown, kFALSE);
          else fOptStatName->SetState(kButtonUp, kFALSE);
-         
+
          if ((tmp/10) % 10) fOptStatEntries->SetState(kButtonDown, kFALSE);
          else fOptStatEntries->SetState(kButtonUp, kFALSE);
-         
+
          if ((tmp/100) % 10) fOptStatMean->SetState(kButtonDown, kFALSE);
          else fOptStatMean->SetState(kButtonUp, kFALSE);
-         
+
          if ((tmp/1000) % 10) fOptStatRMS->SetState(kButtonDown, kFALSE);
          else fOptStatRMS->SetState(kButtonUp, kFALSE);
-         
+
          if ((tmp/10000) % 10) fOptStatUnderflow->SetState(kButtonDown, kFALSE);
          else fOptStatUnderflow->SetState(kButtonUp, kFALSE);
-         
+
          if ((tmp/100000) % 10) fOptStatOverflow->SetState(kButtonDown, kFALSE);
          else fOptStatOverflow->SetState(kButtonUp, kFALSE);
-         
+
          if ((tmp/1000000) % 10) fOptStatIntegral->SetState(kButtonDown, kFALSE);
          else fOptStatIntegral->SetState(kButtonUp, kFALSE);
-         
+
          if ((tmp/10000000) % 10) fOptStatSkewness->SetState(kButtonDown, kFALSE);
          else fOptStatSkewness->SetState(kButtonUp, kFALSE);
-         
+
          if ((tmp/100000000) % 10) fOptStatKurtosis->SetState(kButtonDown, kFALSE);
          else fOptStatKurtosis->SetState(kButtonUp, kFALSE);
-         
-         if ((((tmp/100) % 10) == 2) || (((tmp/1000) % 10) == 2) || 
+
+         if ((((tmp/100) % 10) == 2) || (((tmp/1000) % 10) == 2) ||
              (((tmp/10000000) % 10) == 2) || (((tmp/100000000) % 10) == 2))
-            fOptStatErrors->SetState(kButtonDown, kFALSE);   
+            fOptStatErrors->SetState(kButtonDown, kFALSE);
          else  fOptStatErrors->SetState(kButtonUp, kFALSE);
-         
+
          fStatFormat->SetText(fCurSelStyle->GetStatFormat());
          tmp2 = fCurSelStyle->GetOptFit();
-         
+
          if (tmp2 % 10) fOptFitValues->SetState(kButtonDown, kFALSE);
          else fOptFitValues->SetState(kButtonUp, kFALSE);
-         
+
          if ((tmp2/10) % 10) {
             fOptFitErrors->SetState(kButtonDown, kFALSE);
             fOptFitValues->SetState(kButtonDown, kFALSE);
          } else
             fOptFitErrors->SetState(kButtonUp, kFALSE);
-            
+
          if ((tmp2/100) % 10) fOptFitChi->SetState(kButtonDown, kFALSE);
          else fOptFitChi->SetState(kButtonUp, kFALSE);
-         
+
          if ((tmp2/1000) % 10) fOptFitProbability->SetState(kButtonDown, kFALSE);
          else fOptFitProbability->SetState(kButtonUp, kFALSE);
-         
+
          fFitFormat->SetText(fCurSelStyle->GetFitFormat());
          break;
-         
+
       case 7: // PS / PDF
          fHeaderPS->SetText(fCurSelStyle->GetHeaderPS());
          fTitlePS->SetText(fCurSelStyle->GetTitlePS());
@@ -4296,35 +4296,35 @@ void TStyleManager::DoImportMacro(Bool_t create)
    //             - recreated (if it is one of the 5 basic styles).
 
    if ((!create) && (!strcmp(fCurSelStyle->GetName(), "Default"))) {
-      if ((!strcmp(fCurSelStyle->GetName(),gStyle->GetName()))) 
+      if ((!strcmp(fCurSelStyle->GetName(),gStyle->GetName())))
          gStyle->Reset("Default");
       else {
          delete gROOT->GetStyle("Default");
          new TStyle("Default", "Default Style");
       }
    } else if ((!create) && (!strcmp(fCurSelStyle->GetName(), "Plain"))) {
-      if ((!strcmp(fCurSelStyle->GetName(),gStyle->GetName()))) 
+      if ((!strcmp(fCurSelStyle->GetName(),gStyle->GetName())))
          gStyle->Reset("Plain");
       else {
          delete gROOT->GetStyle("Plain");
          new TStyle("Plain",   "Plain Style (no colors/fill areas)");
       }
    } else if ((!create) && (!strcmp(fCurSelStyle->GetName(), "Bold"))) {
-      if ((!strcmp(fCurSelStyle->GetName(),gStyle->GetName()))) 
+      if ((!strcmp(fCurSelStyle->GetName(),gStyle->GetName())))
          gStyle->Reset("Bold");
       else {
          delete gROOT->GetStyle("Bold");
          new TStyle("Bold",    "Bold Style");
       }
    } else if ((!create) && (!strcmp(fCurSelStyle->GetName(), "Video"))) {
-      if ((!strcmp(fCurSelStyle->GetName(),gStyle->GetName()))) 
+      if ((!strcmp(fCurSelStyle->GetName(),gStyle->GetName())))
          gStyle->Reset("Video");
       else {
          delete gROOT->GetStyle("Video");
          new TStyle("Video",   "Style for video presentation histograms");
       }
    } else if ((!create) && (!strcmp(fCurSelStyle->GetName(), "Pub"))) {
-      if ((!strcmp(fCurSelStyle->GetName(),gStyle->GetName()))) 
+      if ((!strcmp(fCurSelStyle->GetName(),gStyle->GetName())))
          gStyle->Reset("Pub");
       else {
          delete gROOT->GetStyle("Pub");
@@ -4619,22 +4619,22 @@ void TStyleManager::DoSelectCanvas(TVirtualPad *pad, TObject *obj, Int_t mouseBu
 
    // Update the information' label about the selected objects.
    TString sPad;
-   if (fCurPad->GetName() && strlen(fCurPad->GetName())) 
+   if (fCurPad->GetName() && strlen(fCurPad->GetName()))
       sPad.Append(fCurPad->GetName());
-   else 
+   else
       sPad.Append("[no name]");
    sPad.Append(" - '");
-   if (fCurPad->GetTitle() && strlen(fCurPad->GetTitle())) 
+   if (fCurPad->GetTitle() && strlen(fCurPad->GetTitle()))
       sPad.Append(fCurPad->GetTitle());
-   else 
+   else
       sPad.Append("[no title]");
    sPad.Append("'::");
    sPad.Append(fCurPad->ClassName());
    fCurPadTextEntry->SetText(sPad);
    TString sObj;
-   if (strlen(fCurObj->GetName())) 
+   if (strlen(fCurObj->GetName()))
       sObj.Append(fCurObj->GetName());
-   else 
+   else
       sObj.Append("[no name]");
    sObj.Append("::");
    sObj.Append(fCurObj->ClassName());
@@ -4914,9 +4914,9 @@ void TStyleManager::ModOptDateBool()
 {
    // Slot called whenever the OptDate boolean is modified by the user.
 
-   if (fOptDateBool->IsDown()) 
+   if (fOptDateBool->IsDown())
       fCurSelStyle->SetOptDate(4);
-   else 
+   else
       fCurSelStyle->SetOptDate(0);
    DisconnectEditor(fCurTabNum);
    UpdateEditor(fCurTabNum);

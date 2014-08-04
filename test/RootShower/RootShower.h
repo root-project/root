@@ -53,7 +53,7 @@ extern TGListTreeItem   *gBaseLTI;          // First ListTree item
 extern TGListTreeItem   *gTmpLTI;           // Temporary ListTree item
 extern TGListTreeItem   *gLTI[];            // Array of ListTree items (particles)
 
-extern Int_t            gColIndex;          // Global gradient color table used 
+extern Int_t            gColIndex;          // Global gradient color table used
                                             // for tracks color
 
 class RootShower: public TGMainFrame {
@@ -146,10 +146,10 @@ private:
    TCanvas             *fCA;                // Events view
    TCanvas             *fCB;                // Selected event view
    TCanvas             *fCC;                // Statistics
-    
+
    MyEvent             *fEvent;             // Pointer on actual event
    TPad                *fPadC;              // TPad of statistics histo
-    
+
    TH1F                *fHisto_dEdX;        // histogram of particle's energy loss
 
 protected:

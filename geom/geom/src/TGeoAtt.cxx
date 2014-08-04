@@ -12,7 +12,7 @@
 //_____________________________________________________________________________
 //   TGeoAtt - visualization and tracking attributes for volumes and nodes
 // ==========
-// The TGeoAtt class is a utility for volume/node visibility and tracking 
+// The TGeoAtt class is a utility for volume/node visibility and tracking
 // activity. By default the attributes are set to visible/active
 //_____________________________________________________________________________
 
@@ -67,7 +67,7 @@ void TGeoAtt::SetVisBranch()
 void TGeoAtt::SetVisContainers(Bool_t flag)
 {
 // Set branch type visibility.
-   SetVisLeaves(!flag);   
+   SetVisLeaves(!flag);
 }
 
 //-----------------------------------------------------------------------------
@@ -121,6 +121,6 @@ void TGeoAtt::SetVisTouched(Bool_t vis)
 //-----------------------------------------------------------------------------
 void TGeoAtt::SetOptimization(Option_t * /*option*/)
 {
-// Set optimization flags. 
+// Set optimization flags.
 }
 

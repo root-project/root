@@ -138,13 +138,13 @@ void TChainIndex::Append(const TVirtualIndex *index, Bool_t delaySort )
          Error("Append", "The given index is not a TTreeIndex but a %s",
                index->IsA()->GetName());
       }
-      
+
       TChainIndexEntry entry;
       entry.fTreeIndex = 0;
       entry.SetMinMaxFrom(ti_index);
       fEntries.push_back(entry);
    }
-   
+
    if (!delaySort) {
       // Check if the indices of different trees are in order. If not then return an error.
       for (Int_t i = 0; i < Int_t(fEntries.size() - 1); i++) {
@@ -363,14 +363,14 @@ void TChainIndex::UpdateFormulaLeaves(const TTree *parent)
 {
    // Updates the parent formulae.
    // Called by TChain::LoadTree when the parent chain changes it's tree.
-   if (fMajorFormulaParent) { 
+   if (fMajorFormulaParent) {
       // Prevent TTreeFormula from finding any of the branches in our TTree even if it
       // is a friend of the parent TTree.
       TTree::TFriendLock friendlock(fTree, TTree::kFindLeaf | TTree::kFindBranch | TTree::kGetBranch | TTree::kGetLeaf);
       if (parent) fMajorFormulaParent->SetTree((TTree*)parent);
       fMajorFormulaParent->UpdateFormulaLeaves();
    }
-   if (fMinorFormulaParent) { 
+   if (fMinorFormulaParent) {
       if (parent) fMinorFormulaParent->SetTree((TTree*)parent);
       fMinorFormulaParent->UpdateFormulaLeaves();
    }

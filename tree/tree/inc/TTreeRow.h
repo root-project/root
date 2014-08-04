@@ -44,7 +44,7 @@ private:
 
    TTreeRow(const TTreeRow&);            // Not implemented.
    TTreeRow &operator=(const TTreeRow&); // Not implemented.
-   
+
 public:
    TTreeRow();
    TTreeRow(Int_t nfields);
@@ -55,7 +55,7 @@ public:
    ULong_t     GetFieldLength(Int_t field);
    const char *GetField(Int_t field);
    void        SetRow(const Int_t *fields, const char *row);
-   
+
    ClassDef(TTreeRow,1)  // One row of an TTree query result
 };
 

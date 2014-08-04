@@ -73,7 +73,7 @@ public:
    // cannot be private due to a bug in VC++7
    ~TTreeFormulaManager();
 #endif
-   
+
    virtual void       Add(TTreeFormula*);
    virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
    virtual Int_t      GetNdata(Bool_t forceLoadDim = kFALSE);

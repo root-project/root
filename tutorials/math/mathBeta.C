@@ -1,11 +1,11 @@
 // Test the TMath::BetaDist and TMath::BetaDistI functions
 // author: Anna Kreshuk
-   
+
 #include "TMath.h"
 #include "TCanvas.h"
 #include "TF1.h"
 #include "TLegend.h"
-   
+
 void mathBeta() {
   TCanvas *c1=new TCanvas("c1", "TMath::BetaDist",600,800);
   c1->Divide(1, 2);

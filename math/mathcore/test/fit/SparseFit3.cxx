@@ -34,7 +34,7 @@ double gaus2D(double *x, double *p)
 
 double gaus3D(double *x, double *p)
 {
-   return p[0] * TMath::Gaus(x[0],p[1],p[2]) 
+   return p[0] * TMath::Gaus(x[0],p[1],p[2])
                * TMath::Gaus(x[1],p[3],p[4])
                * TMath::Gaus(x[2],p[5],p[6]);
 }
@@ -118,20 +118,20 @@ bool operator ==(ROOT::Fit::BinData& bd1, ROOT::Fit::BinData& bd2)
 
       cout << " bd1: ";
       std::copy(x1, &x1[ndim], ostream_iterator<double>(cout, " "));
-      cout << " value:" << value1; 
-      cout << " error:" << error1; 
+      cout << " value:" << value1;
+      cout << " error:" << error1;
 
       cout << " bd2: ";
       std::copy(x2, &x2[ndim], ostream_iterator<double>(cout, " "));
-      cout << " value:" << value2; 
-      cout << " error:" << error2; 
+      cout << " value:" << value2;
+      cout << " error:" << error2;
 
       cout << " equals: " << equals;
 
-      cout << endl; 
+      cout << endl;
    }
 
-   return equals;   
+   return equals;
 }
 
 void fit3DHist()
@@ -139,37 +139,37 @@ void fit3DHist()
    vector<double> min(3); min[0] = 0.;  min[1] = 0.;   min[2] = 0.;
    vector<double> max(3); max[0] = 10.; max[1] = 10.;  max[2] = 10.;
    vector<int> nbins(3); nbins[0] = 10; nbins[1] = 10; nbins[2] = 10;
-   
-   TH3D* h1 = new TH3D("3D Original Hist Fit", "h1-title", 
-                       nbins[0], min[0], max[0], 
+
+   TH3D* h1 = new TH3D("3D Original Hist Fit", "h1-title",
+                       nbins[0], min[0], max[0],
                        nbins[1], min[1], max[1],
                        nbins[2], min[2], max[2]);
-   TH3D* h2 = new TH3D("3D Blanked Hist Fit", "h1-title",  
-                       nbins[0], min[0], max[0], 
+   TH3D* h2 = new TH3D("3D Blanked Hist Fit", "h1-title",
+                       nbins[0], min[0], max[0],
                        nbins[1], min[1], max[1],
                        nbins[2], min[2], max[2]);
-   
-   TF3* f1 = new TF3("func3D", gaus3D, 
-                     min[0],max[0], 
+
+   TF3* f1 = new TF3("func3D", gaus3D,
+                     min[0],max[0],
                      min[1],max[1],
                      min[2],max[2],
                      7);
    double initialPars[] = {20,5,2,5,1,5,2};
-//    TF1* f1 = new TF1("func3D", pol2D, 
+//    TF1* f1 = new TF1("func3D", pol2D,
 //                      min[0],max[0], min[1], max[1], 5);
 //    double initialPars[] = {1,0.,0.5,0.,0.};
    f1->SetParameters(initialPars);
 //    f1->FixParameter(1,0.);
 //    f1->FixParameter(3,0.);
-   
-   
-   for (int ix=1; ix <= h1->GetNbinsX(); ++ix) { 
-      for (int iy=1; iy <= h1->GetNbinsY(); ++iy) { 
-         for (int iz=1; iz <= h1->GetNbinsZ(); ++iz) { 
+
+
+   for (int ix=1; ix <= h1->GetNbinsX(); ++ix) {
+      for (int iy=1; iy <= h1->GetNbinsY(); ++iy) {
+         for (int iz=1; iz <= h1->GetNbinsZ(); ++iz) {
             double x = h1->GetXaxis()->GetBinCenter(ix);
             double y = h1->GetYaxis()->GetBinCenter(iy);
             double z = h1->GetZaxis()->GetBinCenter(iz);
-            
+
             h1->SetBinContent( ix, iy, iz, gRandom->Poisson( f1->Eval(x,y,z) ) );
          }
       }
@@ -182,7 +182,7 @@ void fit3DHist()
    ROOT::Fit::BinData bd;
    d.GetBinData(bd);
 
-   
+
    cout << "Filling second histogram" << endl;
    for ( unsigned int i = 0; i < bd.NPoints(); ++i )
    {
@@ -208,8 +208,8 @@ void fit3DHist()
    ROOT::Fit::BinData bdOriginal;
    ROOT::Fit::FillData(bdOriginal, h1, 0);
    ret = fitter.LikelihoodFit(bdOriginal, if1, true);
-   fitter.Result().Print(std::cout); 
-   if (!ret)  
+   fitter.Result().Print(std::cout);
+   if (!ret)
       std::cout << "Fit Failed " << std::endl;
 
    /////////////////////////////////////////////////////////////////////////
@@ -220,8 +220,8 @@ void fit3DHist()
    ROOT::Fit::BinData bdOriginalWithCeros(opt);
    ROOT::Fit::FillData(bdOriginalWithCeros, h1, 0);
    ret = fitter.LikelihoodFit(bdOriginalWithCeros, if1, true);
-   fitter.Result().Print(std::cout); 
-   if (!ret)  
+   fitter.Result().Print(std::cout);
+   if (!ret)
       std::cout << "Fit Failed " << std::endl;
 
    /////////////////////////////////////////////////////////////////////////
@@ -229,8 +229,8 @@ void fit3DHist()
    ROOT::Fit::BinData bdNoCeros;
    d.GetBinDataNoZeros(bdNoCeros);
    ret = fitter.LikelihoodFit(bdNoCeros, if1, true);
-   fitter.Result().Print(std::cout); 
-   if (!ret)  
+   fitter.Result().Print(std::cout);
+   if (!ret)
       std::cout << "Fit Failed " << std::endl;
 
 //    cout << "bdOriginal:\n" << bdOriginal << endl;
@@ -241,8 +241,8 @@ void fit3DHist()
    ROOT::Fit::BinData bdWithCeros(opt);
    d.GetBinDataIntegral(bdWithCeros);
    ret = fitter.LikelihoodFit(bdWithCeros, if1, true);
-   fitter.Result().Print(std::cout); 
-   if (!ret)  
+   fitter.Result().Print(std::cout);
+   if (!ret)
       std::cout << "Fit Failed " << std::endl;
 
 //    cout << "bdOriginal:\n" << bdOriginal << endl;
@@ -252,7 +252,7 @@ void fit3DHist()
    /////////////////////////////////////////////////////////////////////////
 
    if (showGraphics) {
-  
+
       TCanvas* c = new TCanvas("Histogram 3D");
       c->Divide(1,2);
       c->cd(1);
@@ -268,26 +268,26 @@ void fit2DHist()
    vector<double> min(2); min[0] = 0.;  min[1] = 0.;
    vector<double> max(2); max[0] = 10.; max[1] = 10.;
    vector<int> nbins(2); nbins[0] = 10; nbins[1] = 10;
-   
+
    TH2D* h1 = new TH2D("2D Original Hist Fit", "h1-title", nbins[0], min[0], max[0], nbins[1], min[1], max[1]);
    TH2D* h2 = new TH2D("2D Blanked Hist Fit", "h1-title",  nbins[0], min[0], max[0], nbins[1], min[1], max[1]);
-   
-   TF2* f2 = new TF2("func2D", gaus2D, 
+
+   TF2* f2 = new TF2("func2D", gaus2D,
                      min[0],max[0], min[1], max[1], 5);
    double initialPars[] = {20,5,2,5,1};
-//    TF2* f2 = new TF2("func2D", pol2D, 
+//    TF2* f2 = new TF2("func2D", pol2D,
 //                      min[0],max[0], min[1], max[1], 5);
 //    double initialPars[] = {1,0.,0.5,0.,0.};
    f2->SetParameters(initialPars);
 //    f2->FixParameter(1,0.);
 //    f2->FixParameter(3,0.);
-   
-   
-   for (int ix=1; ix <= h1->GetNbinsX(); ++ix) { 
-      for (int iy=1; iy <= h1->GetNbinsY(); ++iy) { 
+
+
+   for (int ix=1; ix <= h1->GetNbinsX(); ++ix) {
+      for (int iy=1; iy <= h1->GetNbinsY(); ++iy) {
          double x=  h1->GetXaxis()->GetBinCenter(ix);
          double y= h1->GetYaxis()->GetBinCenter(iy);
-         
+
          h1->SetBinContent( ix, iy, gRandom->Poisson( f2->Eval(x,y) ) );
       }
    }
@@ -299,7 +299,7 @@ void fit2DHist()
    ROOT::Fit::BinData bd;
    d.GetBinData(bd);
 
-   
+
    cout << "Filling second histogram" << endl;
    for ( unsigned int i = 0; i < bd.NPoints(); ++i )
    {
@@ -324,8 +324,8 @@ void fit2DHist()
    ROOT::Fit::BinData bdOriginal;
    ROOT::Fit::FillData(bdOriginal, h1, 0);
    ret = fitter.LikelihoodFit(bdOriginal, if2, true);
-   fitter.Result().Print(std::cout); 
-   if (!ret)  
+   fitter.Result().Print(std::cout);
+   if (!ret)
       std::cout << "Fit Failed " << std::endl;
 
    /////////////////////////////////////////////////////////////////////////
@@ -336,8 +336,8 @@ void fit2DHist()
    ROOT::Fit::BinData bdOriginalWithCeros(opt);
    ROOT::Fit::FillData(bdOriginalWithCeros, h1, 0);
    ret = fitter.LikelihoodFit(bdOriginalWithCeros, if2, true);
-   fitter.Result().Print(std::cout); 
-   if (!ret)  
+   fitter.Result().Print(std::cout);
+   if (!ret)
       std::cout << "Fit Failed " << std::endl;
 
    /////////////////////////////////////////////////////////////////////////
@@ -345,8 +345,8 @@ void fit2DHist()
    ROOT::Fit::BinData bdNoCeros;
    d.GetBinDataNoZeros(bdNoCeros);
    ret = fitter.LikelihoodFit(bdNoCeros, if2, true);
-   fitter.Result().Print(std::cout); 
-   if (!ret)  
+   fitter.Result().Print(std::cout);
+   if (!ret)
       std::cout << "Fit Failed " << std::endl;
 
 //    cout << "bdOriginal:\n" << bdOriginal << endl;
@@ -357,8 +357,8 @@ void fit2DHist()
    ROOT::Fit::BinData bdWithCeros(opt);
    d.GetBinDataIntegral(bdWithCeros);
    ret = fitter.LikelihoodFit(bdWithCeros, if2, true);
-   fitter.Result().Print(std::cout); 
-   if (!ret)  
+   fitter.Result().Print(std::cout);
+   if (!ret)
       std::cout << "Fit Failed " << std::endl;
 
 //    cout << "bdOriginal:\n" << bdOriginal << endl;
@@ -367,7 +367,7 @@ void fit2DHist()
 
    /////////////////////////////////////////////////////////////////////////
 
-   if (showGraphics)  { 
+   if (showGraphics)  {
       TCanvas* c = new TCanvas("Histogram 2D");
       c->Divide(2,2);
       c->cd(1);
@@ -433,8 +433,8 @@ void fit2DHist()
 //    ROOT::Fit::BinData bdOriginal;
 //    ROOT::Fit::FillData(bdOriginal, h1, 0);
 //    ret = fitter.Fit(bdOriginal, wf1);
-//    fitter.Result().Print(std::cout); 
-//    if (!ret)  
+//    fitter.Result().Print(std::cout);
+//    if (!ret)
 //       std::cout << "Fit Failed " << std::endl;
 
 //    cout << "\n ******* Chi2Fit with BinData and NoCeros *******" << endl;
@@ -444,10 +444,10 @@ void fit2DHist()
 //    cout << "bdNoCeros:\n" << *bdNoCeros << endl;
 
 //    cout << "Equals: " << (bdOriginal == *bdNoCeros) << endl;
-   
+
 //    ret = fitter.Fit(*bdNoCeros, wf1);
-//    fitter.Result().Print(std::cout); 
-//    if (!ret)  
+//    fitter.Result().Print(std::cout);
+//    if (!ret)
 //       std::cout << "Fit Failed " << std::endl;
 
 
@@ -458,27 +458,27 @@ void fit2DHist()
 {
 
   bool do3dfit = false;
-  // Parse command line arguments 
+  // Parse command line arguments
   for (Int_t i=1 ;  i<argc ; i++) {
      std::string arg = argv[i] ;
-     if (arg == "-g") { 
+     if (arg == "-g") {
       showGraphics = true;
      }
-     if (arg == "-v") { 
+     if (arg == "-v") {
       showGraphics = true;
       //verbose = true;
      }
-     if (arg == "-3d") { 
+     if (arg == "-3d") {
       do3dfit = true;
      }
-     if (arg == "-h") { 
+     if (arg == "-h") {
         cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
         cerr << "  where:\n";
         cerr << "     -g  :  graphics mode\n";
         cerr << "     -v  :  verbose  mode\n";
         cerr << "     -3d :  3d fit";
         cerr << endl;
-        return -1; 
+        return -1;
      }
    }
 
@@ -486,17 +486,17 @@ void fit2DHist()
 
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
-   
+
    fit2DHist();
    if (do3dfit) fit3DHist();
 // //    fit1DHist();
-  
+
    if ( showGraphics ) {
       theApp->Run();
       delete theApp;
       theApp = 0;
    }
-   
+
    return 0;
 }
 

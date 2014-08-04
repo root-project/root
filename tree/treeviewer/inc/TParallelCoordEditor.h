@@ -76,14 +76,14 @@ protected:
    void                    CleanUpVariables();
    virtual void            ConnectSignals2Slots();
    void                    MakeVariablesTab();
-   
+
 public:
    TParallelCoordEditor(const TGWindow *p = 0,
                         Int_t width = 140, Int_t height = 30,
                         UInt_t options = kChildFrame,
                         Pixel_t back = GetDefaultFrameBackground());
    ~TParallelCoordEditor();
-   
+
    virtual void            DoActivateSelection(Bool_t);
    virtual void            DoAddSelection();
    virtual void            DoAddVariable();
@@ -120,9 +120,9 @@ public:
    virtual void            DoVariableSelect(const char* var);
    virtual void            DoWeightCut();
    virtual void            SetModel(TObject* obj);
-   
+
    ClassDef(TParallelCoordEditor,0)    // GUI for editing the parallel coordinates plot attributes.
 };
-   
+
 
 #endif

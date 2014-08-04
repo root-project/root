@@ -11,8 +11,8 @@ set(TestMathMoreSource
      testPermute.cxx
      testDerivation.cxx
      testGSLIntegration.cxx
-     testMCIntegration.cxx    
-     testGSLRootFinder.cxx      
+     testMCIntegration.cxx
+     testGSLRootFinder.cxx
      testMinimization1D.cxx
      testInterpolation.cxx
      testRandom.cxx
@@ -45,6 +45,6 @@ add_definitions(-DUSE_ROOT_ERROR -DHAVE_ROOTLIBS)
 foreach(file ${TestMathMoreSource})
   get_filename_component(testname ${file} NAME_WE)
   ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${Libraries} ${GSL_LIBRARIES})
-  ROOT_ADD_TEST(mathmore-${testname} COMMAND ${testname}) 
+  ROOT_ADD_TEST(mathmore-${testname} COMMAND ${testname})
 endforeach()
 

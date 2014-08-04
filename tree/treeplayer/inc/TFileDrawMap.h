@@ -40,18 +40,18 @@ protected:
    TString        fOption;         //drawing options
    Int_t          fXsize;          //size in bytes of X axis
    Int_t          fYsize;          //size in K/Mbytes of Y axis
-   
+
    virtual void     DrawMarker(Int_t marker, Long64_t eseek);
    virtual Bool_t   GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const;
    virtual void     PaintBox(TBox &box, Long64_t bseek, Int_t nbytes);
    virtual void     PaintDir(TDirectory *dir, const char *keys);
-   virtual TObject *GetObject(); 
-   
+   virtual TObject *GetObject();
+
 public:
    TFileDrawMap();
    TFileDrawMap(const TFile *file, const char *keys, Option_t *option);
    virtual ~TFileDrawMap();
-   
+
    virtual void  AnimateTree(const char *branches=""); // *MENU*
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  DrawObject(); // *MENU*
@@ -60,7 +60,7 @@ public:
    virtual char *GetObjectInfo(Int_t px, Int_t py) const;
    virtual void  InspectObject(); // *MENU*
    virtual void  Paint(Option_t *option);
-   
+
    ClassDef(TFileDrawMap,1);  //Draw a 2-d map of the objects in a file
 };
 

@@ -272,7 +272,7 @@ void TGColorPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    MapRaised();
 
    gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                          kPointerMotionMask, kNone, 
+                          kPointerMotionMask, kNone,
                           fClient->GetResourcePool()->GetGrabCursor());
 
    fLaunchDialog = kFALSE;
@@ -283,7 +283,7 @@ void TGColorPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (fLaunchDialog) {
       Int_t retc;
       ULong_t color = fCurrentColor;
-      
+
       new TGColorDialog(gClient->GetDefaultRoot(), this, &retc, &color);
 
       if (retc == kMBOk) {
@@ -351,23 +351,23 @@ Bool_t TGColorPopup::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 void TGColorPopup::PreviewColor(Pixel_t color)
 {
    // Emit a signal to see preview.
-   
+
    if (fClient->IsEditable()) return;
-   
+
    fCurrentColor = color;
-   SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED), -1, color);     
+   SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED), -1, color);
 }
 
 //________________________________________________________________________________
 void TGColorPopup::PreviewAlphaColor(ULong_t color)
 {
    // Emit a signal to see preview.
-   
+
    if (fClient->IsEditable()) return;
 
    TColor *tcolor = (TColor *)color;
    fCurrentColor = tcolor->GetPixel();
-   SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED), 0, (ULong_t)tcolor);  
+   SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED), 0, (ULong_t)tcolor);
 }
 
 //________________________________________________________________________________
@@ -411,17 +411,17 @@ Bool_t TGColorSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    switch (GET_MSG(msg)) {
       case kC_COLORSEL:
          switch (GET_SUBMSG(msg)) {
-            case kCOL_SELCHANGED: 
+            case kCOL_SELCHANGED:
                {
                   if (parm1 == 0) {
                      SetAlphaColor((ULong_t)parm2);
-                     parm1 = (Long_t)fWidgetId;  // parm1 needs to pass the widget Id 
+                     parm1 = (Long_t)fWidgetId;  // parm1 needs to pass the widget Id
                      SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED),
                                  parm1, parm2);
                   }
                   else {
                      SetColor(parm2);
-                     parm1 = (Long_t)fWidgetId;  // parm1 needs to pass the widget Id 
+                     parm1 = (Long_t)fWidgetId;  // parm1 needs to pass the widget Id
                      SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED),
                                  parm1, parm2);
                   }

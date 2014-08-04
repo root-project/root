@@ -167,7 +167,7 @@ class TUnfoldDensity : public TUnfoldSys {
    TH2 *GetL(const char *histogramName,
              const char *histogramTitle=0,
              Bool_t useAxisBinning=kTRUE); // get regularisation matrix
-   TH1 *GetLxMinusBias(const char *histogramName,const char *histogramTitle=0); // get vector L(x-bias) of regularisation conditions 
+   TH1 *GetLxMinusBias(const char *histogramName,const char *histogramTitle=0); // get vector L(x-bias) of regularisation conditions
 
    TH2 *GetProbabilityMatrix(const char *histogramName,
                              const char *histogramTitle=0,Bool_t useAxisBinning=kTRUE) const; // get matrix of probabilities

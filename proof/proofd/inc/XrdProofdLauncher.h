@@ -51,13 +51,13 @@ class XrdProofdLauncher {
    //
    // To check if the instance is valid
    virtual bool Valid() { return (fClient->IsValid()) ? 1 : 0; }
-   
+
    //
    // Launch the session, establishing the UNIX connection and
    // retrieve the process id; returns the peer object describing the connection
    // and the pid. Or NULL in case of failure.
    virtual XrdNetPeer *Launch(ProofdLaunch_t *in,  // Object describing inputs
-                              int &pid);           // ID of the process started 
+                              int &pid);           // ID of the process started
 
    //
    // Called before Launch, for optional pre-actions

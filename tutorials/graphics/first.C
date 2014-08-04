@@ -1,7 +1,7 @@
 //Show some basic primitives
 //Author: Rene Brun
 void first() {
-   
+
    TCanvas *nut = new TCanvas("nut", "FirstSession",100,10,700,900);
    nut->Range(0,0,20,24);
    nut->SetFillColor(10);

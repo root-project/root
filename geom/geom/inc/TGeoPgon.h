@@ -16,7 +16,7 @@
 #include "TGeoPcon.h"
 #endif
 
-  
+
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TGeoPgon - a polygone. It has at least 10 parameters :                 //
@@ -46,7 +46,7 @@ public:
 
 protected:
    // data members
-   Int_t                 fNedges;    // number of edges (at least one)   
+   Int_t                 fNedges;    // number of edges (at least one)
    mutable std::vector<ThreadData_t*> fThreadData; //! Navigation data per thread
    mutable Int_t                      fThreadSize; //! Size for the navigation data array
 
@@ -55,7 +55,7 @@ protected:
    Bool_t                IsCrossingSlice(const Double_t *point, const Double_t *dir, Int_t iphi, Double_t sstart, Int_t &ipl, Double_t &snext, Double_t stepmax) const;
    void                  LocatePhi(const Double_t *point, Int_t &ipsec) const;
    Double_t              Rpg(Double_t z, Int_t ipl, Bool_t inner, Double_t &a, Double_t &b) const;
-   Double_t              Rproj(Double_t z,const Double_t *point, const Double_t *dir, Double_t cphi, Double_t sphi, Double_t &a, Double_t &b) const; 
+   Double_t              Rproj(Double_t z,const Double_t *point, const Double_t *dir, Double_t cphi, Double_t sphi, Double_t &a, Double_t &b) const;
    Bool_t                SliceCrossing(const Double_t *point, const Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
    Bool_t                SliceCrossingIn(const Double_t *point, const Double_t *dir, Int_t ipl, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
    Bool_t                SliceCrossingZ(const Double_t *point, const Double_t *dir, Int_t nphi, Int_t *iphi, Double_t *sphi, Double_t &snext, Double_t stepmax) const;
@@ -76,14 +76,14 @@ public:
    virtual void          ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize);
    virtual Bool_t        Contains(const Double_t *point) const;
    virtual void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const;
-   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
-   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
                                 Double_t start, Double_t step);
    virtual void          GetBoundingCylinder(Double_t *param) const;
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
@@ -92,7 +92,7 @@ public:
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    Int_t                 GetNedges() const   {return fNedges;}
    virtual Int_t         GetNmeshVertices() const;
-   virtual Int_t         GetNsegments() const {return fNedges;}     
+   virtual Int_t         GetNsegments() const {return fNedges;}
    virtual Bool_t        GetPointsOnSegments(Int_t npoints, Double_t *array) const {return TGeoBBox::GetPointsOnSegments(npoints,array);}
    virtual void          InspectShape() const;
    virtual TBuffer3D    *MakeBuffer3D() const;
@@ -107,7 +107,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
-   ClassDef(TGeoPgon, 1)         // polygone class 
+   ClassDef(TGeoPgon, 1)         // polygone class
 };
 
 #endif

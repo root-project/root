@@ -180,7 +180,7 @@ void TEveGeoPolyShape::FillBuffer3D(TBuffer3D& b, Int_t reqSections, Bool_t) con
          pd += nv;
       }
 
-      
+
 
       b.SetSectionsValid(TBuffer3D::kRawSizes | TBuffer3D::kRaw);
    }

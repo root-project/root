@@ -12,7 +12,7 @@ void hsumTimer(Int_t nfill=100000)
 // This program is a variant of the tutorial "hsum".
 // It illustrates the use of Timers.
 //Author: Rene Brun
-   
+
   c1 = new TCanvas("c1","The HSUM example",200,10,600,400);
   c1->SetGrid();
 
@@ -38,7 +38,7 @@ void hsumTimer(Int_t nfill=100000)
   slider->SetFillColor(46);
 
 // Create a TTimer (hsumUpdate called every 300 msec)
-  TTimer timer("hsumUpdate()",300); 
+  TTimer timer("hsumUpdate()",300);
   timer.TurnOn();
 
  // Fill histograms randomly

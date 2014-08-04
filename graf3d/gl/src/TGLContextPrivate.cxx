@@ -55,7 +55,7 @@ TGLContext *TGLContextPrivate::GetCurrentContext()
       assert(fgContexts.find(ctxID) != fgContexts.end() && "GetCurrentContext, context id is unknown");
       return fgContexts[ctxID];
    }
-   
+
    //Else part - error message was issued already by TGCocoa.
    return 0;
 }

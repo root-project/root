@@ -247,7 +247,7 @@ Int_t TBranchSTL::Fill()
          continue;
       }
 
-      // coverity[dereference] since this is a TBranchSTL by definition the collection contains pointers to objects. 
+      // coverity[dereference] since this is a TBranchSTL by definition the collection contains pointers to objects.
       actClass = cl->GetActualClass( element );
       brIter = fBranchMap.find( actClass );
 
@@ -515,10 +515,10 @@ Int_t TBranchSTL::GetExpectedType(TClass *&expectedClass,EDataType &expectedType
    // object/values contained in this branch (and thus the type of pointers
    // expected to be passed to Set[Branch]Address
    // return 0 in case of success and > 0 in case of failure.
-   
+
    expectedClass = 0;
    expectedType = kOther_t;
-   
+
    if (fID < 0) {
       expectedClass = TClass::GetClass( fContName );
    } else {

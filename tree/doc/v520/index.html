@@ -16,7 +16,7 @@ an object:
 
 <li>Clarify the ownership rules of user objects in a TTree.   This clarification (and the improved auto-add-to-directory behavior
 of the TH1*) allows for the TTree to now delete the memory that
-its has allocated and whose ownsership was _not_ transfer back 
+its has allocated and whose ownsership was _not_ transfer back
 to the user (this is happens any time the user give the TTree
 the address of a pointer):
 
@@ -80,7 +80,7 @@ and owned by us:
    f2 = 0;
    delete f1;
    f1 = 0;</pre>
-   
+
 An example of a branch with an object allocated by us,
 but owned by the caller:
 
@@ -154,12 +154,12 @@ Introducing a parallel unzipping algorithm for pre-fetched buffers. Since we alr
 <p>
 The size of this unzipping cache is 20% the size of the TTreeCache and can be modified with TTreeCache::SetUnzipBufferSize(Long64_t bufferSize). Theoretically, we only need one buffer in advance but in practice we might fall short if the unzipping cache is too small (synchronization costs).
 <p>
-This experimental feature is disabled by default, to activate it use the static function <pre>TTreeCache::SetParallelUnzip(TTreeCacheUnzip::EParUnzipMode option = TTreeCacheUnzip::kEnable).</pre> The possible values to pass are: <ul><li>TTreeCacheUnzip::kEnable to enable it</li><li>TTreeCacheUnzip::kDisable to disable it</li><li>TTreeCacheUnzip::kForce to force it.</li></ul>The TTreeCacheUnzip is actived 
+This experimental feature is disabled by default, to activate it use the static function <pre>TTreeCache::SetParallelUnzip(TTreeCacheUnzip::EParUnzipMode option = TTreeCacheUnzip::kEnable).</pre> The possible values to pass are: <ul><li>TTreeCacheUnzip::kEnable to enable it</li><li>TTreeCacheUnzip::kDisable to disable it</li><li>TTreeCacheUnzip::kForce to force it.</li></ul>The TTreeCacheUnzip is actived
 only if you have more than one core.  To activate it with only one core useTTreeCacheUnzip::kForce option (for example to measure the overhead).
 
 <h4>Disk and Memory Space Gain</h4>
 
-In ROOT older than v5.20/00, the branches' last basket, also known as the <i>write basket</i>, was always saved in the same "key" as the TTree object and was always present in memory when reading or writing.  
+In ROOT older than v5.20/00, the branches' last basket, also known as the <i>write basket</i>, was always saved in the same "key" as the TTree object and was always present in memory when reading or writing.
 When reading this write basket was always present in memory even if the branch was never accessed.
 <p>
 Starting in v5.20/00, TTree::Write closes out, compresses (when requested) and writes to disk in their own file record the <i>write baskets</i> of all the branches.
@@ -181,7 +181,7 @@ Flushing the write baskets has several advantages:
 <li>allow for the basket to be compressed and stored separated, increasing the compression factor.</li>
 </ul>
 
-Note: Calling FlushBaskets too often (either directly of via AutoSave("FlushBaskets")) can lead to unnecessary fragmentation of the ROOT file, 
+Note: Calling FlushBaskets too often (either directly of via AutoSave("FlushBaskets")) can lead to unnecessary fragmentation of the ROOT file,
 since it write the baskets to disk (and a new basket will be started at the next fill) whether or not the content was close to filling the basket or not.
 
 <h4>Others</h4>
@@ -209,7 +209,7 @@ new function which loops on all branch baskets. If the file where branch buffers
 <li>Protect TTree::GetCurrentFile in case the current directory is gROOT.
 This case may happen when a TChain calls TChain::Process and no files have been
 connected to the chain yet, but a TFile has been opened meanwhile.</li>
-<li>Remove the calls to MapObject introduce in revision 21384 when 
+<li>Remove the calls to MapObject introduce in revision 21384 when
 are unnecessary hence restoring lost performance in case where
 the TTree contains many simple type (double, int, etc.)</li>
 
@@ -219,10 +219,10 @@ but also (in the case of the top level branch of a split TClonesArray
 or a split STL container) call ForceWriteInfo for the class of
 the value.
 <p>
-This omission meant that slow CloneTree was (fataly) missing in 
-some cases the copy of the TStreamerInfo for class that are part 
-part of the TTree but had only a base and no member or in 
+This omission meant that slow CloneTree was (fataly) missing in
+some cases the copy of the TStreamerInfo for class that are part
+part of the TTree but had only a base and no member or in
 some cases where it had only object data members.</li>
-<li>Fix the return value of the lookup in TChainIndex 
+<li>Fix the return value of the lookup in TChainIndex
 when the value searched for does not exist.</li>
 </ul>

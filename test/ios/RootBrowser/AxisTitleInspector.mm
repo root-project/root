@@ -50,7 +50,7 @@ const float tabBarHeight = 49.f;
 {
     // Releases the view if it doesn't have a superview.
     [super didReceiveMemoryWarning];
-    
+
     // Release any cached data, images, etc that aren't in use.
 }
 
@@ -94,13 +94,13 @@ const float tabBarHeight = 49.f;
       titleField.text = @"";
    else
       titleField.text = [NSString stringWithFormat : @"%s", axisTitle];
-      
+
    centered.on = object->GetCenterTitle();
    rotated.on = object->GetRotateTitle();
-   
+
    offset = object->GetTitleOffset();
    offsetLabel.text = [NSString stringWithFormat:@"%.2f", offset];
-   
+
    titleSize = object->GetTitleSize();
    if (titleSize > maxTitleSize || titleSize < minTitleSize) {//this is baaad
       titleSize = minTitleSize;
@@ -118,7 +118,7 @@ const float tabBarHeight = 49.f;
 
    [fontInspector setROOTObjectController : controller];
    [fontInspector setROOTObject : object];
-   
+
    [self.navigationController pushViewController : fontInspector animated : YES];
 }
 
@@ -154,11 +154,11 @@ const float tabBarHeight = 49.f;
 {
    if (offset + titleOffsetStep > maxTitleOffset)
       return;
-   
+
    offset += titleOffsetStep;
    offsetLabel.text = [NSString stringWithFormat:@"%.2f", offset];
    object->SetTitleOffset(offset);
-   
+
    [controller objectWasModifiedUpdateSelection : NO];
 }
 
@@ -167,11 +167,11 @@ const float tabBarHeight = 49.f;
 {
    if (offset - titleOffsetStep < minTitleOffset)
       return;
-   
+
    offset -= titleOffsetStep;
    offsetLabel.text = [NSString stringWithFormat:@"%.2f", offset];
    object->SetTitleOffset(offset);
-   
+
    [controller objectWasModifiedUpdateSelection : NO];
 }
 
@@ -180,11 +180,11 @@ const float tabBarHeight = 49.f;
 {
    if (titleSize + titleSizeStep > maxTitleSize)
       return;
-   
+
    titleSize += titleSizeStep;
    sizeLabel.text = [NSString stringWithFormat:@"%.2f", titleSize];
    object->SetTitleSize(titleSize);
-   
+
    [controller objectWasModifiedUpdateSelection : NO];
 }
 
@@ -193,11 +193,11 @@ const float tabBarHeight = 49.f;
 {
    if (titleSize - titleSizeStep < minTitleSize)
       return;
-   
+
    titleSize -= titleSizeStep;
    sizeLabel.text = [NSString stringWithFormat:@"%.2f", titleSize];
    object->SetTitleSize(titleSize);
-   
+
    [controller objectWasModifiedUpdateSelection : NO];
 }
 

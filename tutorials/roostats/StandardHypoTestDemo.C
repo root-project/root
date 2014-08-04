@@ -1,22 +1,22 @@
-// Standard tutorial macro for hypothesis test (for computing the discovery significance) using all 
-// RooStats hypotheiss tests calculators and test statistics  
+// Standard tutorial macro for hypothesis test (for computing the discovery significance) using all
+// RooStats hypotheiss tests calculators and test statistics
 //
 //
 //Author:  L. Moneta
 //
-// Usage: 
+// Usage:
 //
 // root>.L StandardHypoTestDemo.C
 // root> StandardHypoTestDemo("fileName","workspace name","S+B modelconfig name","B model name","data set name",calculator type, test statistic type, //                             number of toys)
 //
 //
-// type = 0 Freq calculator 
+// type = 0 Freq calculator
 // type = 1 Hybrid calculator
-// type = 2 Asymptotic calculator  
+// type = 2 Asymptotic calculator
 // type = 3 Asymptotic calculator using nominal Asimov data sets (not using fitted parameter values but nominal ones)
 //
 // testStatType = 0 LEP
-//              = 1 Tevatron 
+//              = 1 Tevatron
 //              = 2 Profile Likelihood
 //              = 3 Profile Likelihood one sided (i.e. = 0 if mu_hat < 0)
 //
@@ -66,11 +66,11 @@ void StandardHypoTestDemo(const char* infile = "",
                           const char* workspaceName = "combined",
                           const char* modelSBName = "ModelConfig",
                           const char* modelBName = "",
-                          const char* dataName = "obsData", 
+                          const char* dataName = "obsData",
                           int calcType = 0, // 0 freq 1 hybrid, 2 asymptotic
                           int testStatType = 3,   // 0 LEP, 1 TeV, 2 LHC, 3 LHC - one sided
-                          int ntoys = 5000, 
-                          bool useNC = false, 
+                          int ntoys = 5000,
+                          bool useNC = false,
                           const char * nuisPriorName = 0)
 {
 
@@ -79,30 +79,30 @@ void StandardHypoTestDemo(const char* infile = "",
   Other Parameter to pass in tutorial
   apart from standard for filename, ws, modelconfig and data
 
-  type = 0 Freq calculator 
+  type = 0 Freq calculator
   type = 1 Hybrid calculator
-  type = 2 Asymptotic calculator  
+  type = 2 Asymptotic calculator
 
   testStatType = 0 LEP
-  = 1 Tevatron 
+  = 1 Tevatron
   = 2 Profile Likelihood
   = 3 Profile Likelihood one sided (i.e. = 0 if mu < mu_hat)
 
-  ntoys:         number of toys to use 
+  ntoys:         number of toys to use
 
-  useNumberCounting:  set to true when using number counting events 
+  useNumberCounting:  set to true when using number counting events
 
   nuisPriorName:   name of prior for the nnuisance. This is often expressed as constraint term in the global model
   It is needed only when using the HybridCalculator (type=1)
-  If not given by default the prior pdf from ModelConfig is used. 
+  If not given by default the prior pdf from ModelConfig is used.
 
-  extra options are available as global paramwters of the macro. They major ones are: 
- 
-  generateBinned       generate binned data sets for toys (default is false) - be careful not to activate with 
-  a too large (>=3) number of observables 
+  extra options are available as global paramwters of the macro. They major ones are:
+
+  generateBinned       generate binned data sets for toys (default is false) - be careful not to activate with
+  a too large (>=3) number of observables
   nToyRatio            ratio of S+B/B toys (default is 2)
   printLevel
-  
+
 */
 
    // disable - can cause some problems
@@ -114,13 +114,13 @@ void StandardHypoTestDemo(const char* infile = "",
 
    //RooRandom::randomGenerator()->SetSeed(0);
 
-   // to change minimizers 
+   // to change minimizers
    // ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
    // ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
    // ROOT::Math::MinimizerOptions::SetDefaultTolerance(1);
 
   /////////////////////////////////////////////////////////////
-  // First part is just to access a user-defined file 
+  // First part is just to access a user-defined file
   // or create the standard example file if it doesn't exist
   ////////////////////////////////////////////////////////////
    const char* filename = "";
@@ -141,21 +141,21 @@ void StandardHypoTestDemo(const char* infile = "",
          cout <<"Done creating example input"<<endl;
          cout <<"---------------------\n\n"<<endl;
       }
-      
+
    }
    else
       filename = infile;
-   
+
    // Try to open the file
    TFile *file = TFile::Open(filename);
-   
+
    // if input file was specified byt not found, quit
    if(!file ){
       cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
    }
 
-  
+
   /////////////////////////////////////////////////////////////
   // Tutorial starts here
   ////////////////////////////////////////////////////////////
@@ -187,15 +187,15 @@ void StandardHypoTestDemo(const char* infile = "",
 
    // case of no systematics
    // remove nuisance parameters from model
-   if (noSystematics) { 
+   if (noSystematics) {
       const RooArgSet * nuisPar = sbModel->GetNuisanceParameters();
-      if (nuisPar && nuisPar->getSize() > 0) { 
+      if (nuisPar && nuisPar->getSize() > 0) {
          std::cout << "StandardHypoTestInvDemo" << "  -  Switch off all systematics by setting them constant to their initial values" << std::endl;
          RooStats::SetAllConstant(*nuisPar);
       }
-      if (bModel) { 
+      if (bModel) {
          const RooArgSet * bnuisPar = bModel->GetNuisanceParameters();
-         if (bnuisPar) 
+         if (bnuisPar)
             RooStats::SetAllConstant(*bnuisPar);
       }
    }
@@ -205,7 +205,7 @@ void StandardHypoTestDemo(const char* infile = "",
       Info("StandardHypoTestInvDemo","The background model %s does not exist",modelBName);
       Info("StandardHypoTestInvDemo","Copy it from ModelConfig %s and set POI to zero",modelSBName);
       bModel = (ModelConfig*) sbModel->Clone();
-      bModel->SetName(TString(modelSBName)+TString("B_only"));      
+      bModel->SetName(TString(modelSBName)+TString("B_only"));
       RooRealVar * var = dynamic_cast<RooRealVar*>(bModel->GetParametersOfInterest()->first());
       if (!var) return;
       double oldval = var->getVal();
@@ -214,8 +214,8 @@ void StandardHypoTestDemo(const char* infile = "",
       bModel->SetSnapshot( RooArgSet(*var)  );
       var->setVal(oldval);
   }
-  
-   if (!sbModel->GetSnapshot() || poiValue > 0) { 
+
+   if (!sbModel->GetSnapshot() || poiValue > 0) {
       Info("StandardHypoTestDemo","Model %s has no snapshot  - make one using model poi",modelSBName);
       RooRealVar * var = dynamic_cast<RooRealVar*>(sbModel->GetParametersOfInterest()->first());
       if (!var) return;
@@ -227,16 +227,16 @@ void StandardHypoTestDemo(const char* infile = "",
       //sbModel->SetSnapshot( *sbModel->GetParametersOfInterest() );
    }
 
-   
 
 
 
-   // part 1, hypothesis testing 
+
+   // part 1, hypothesis testing
    SimpleLikelihoodRatioTestStat * slrts = new SimpleLikelihoodRatioTestStat(*bModel->GetPdf(), *sbModel->GetPdf());
-   // null parameters must includes snapshot of poi plus the nuisance values 
+   // null parameters must includes snapshot of poi plus the nuisance values
    RooArgSet nullParams(*bModel->GetSnapshot());
    if (bModel->GetNuisanceParameters()) nullParams.add(*bModel->GetNuisanceParameters());
-   
+
    slrts->SetNullParameters(nullParams);
    RooArgSet altParams(*sbModel->GetSnapshot());
    if (sbModel->GetNuisanceParameters()) altParams.add(*sbModel->GetNuisanceParameters());
@@ -246,7 +246,7 @@ void StandardHypoTestDemo(const char* infile = "",
    ProfileLikelihoodTestStat * profll = new ProfileLikelihoodTestStat(*bModel->GetPdf());
 
 
-   RatioOfProfiledLikelihoodsTestStat * 
+   RatioOfProfiledLikelihoodsTestStat *
       ropl = new RatioOfProfiledLikelihoodsTestStat(*bModel->GetPdf(), *sbModel->GetPdf(), sbModel->GetSnapshot());
    ropl->SetSubtractMLE(false);
 
@@ -265,37 +265,37 @@ void StandardHypoTestDemo(const char* infile = "",
    else if (calcType == 1) hypoCalc= new  HybridCalculator(*data, *sbModel, *bModel);
    else if (calcType == 2) hypoCalc= new  AsymptoticCalculator(*data, *sbModel, *bModel);
 
-   if (calcType == 0) 
+   if (calcType == 0)
        ((FrequentistCalculator*)hypoCalc)->SetToys(ntoys, ntoys/nToysRatio);
-   if (calcType == 1) 
+   if (calcType == 1)
        ((HybridCalculator*)hypoCalc)->SetToys(ntoys, ntoys/nToysRatio);
-   if (calcType == 2 ) { 
-      if (testStatType == 3) ((AsymptoticCalculator*) hypoCalc)->SetOneSidedDiscovery(true);  
-      if (testStatType != 2 && testStatType != 3)  
+   if (calcType == 2 ) {
+      if (testStatType == 3) ((AsymptoticCalculator*) hypoCalc)->SetOneSidedDiscovery(true);
+      if (testStatType != 2 && testStatType != 3)
          Warning("StandardHypoTestDemo","Only the PL test statistic can be used with AsymptoticCalculator - use by default a two-sided PL");
-      
+
 
    }
 
 
-   // check for nuisance prior pdf in case of nuisance parameters 
+   // check for nuisance prior pdf in case of nuisance parameters
    if (calcType == 1 && (bModel->GetNuisanceParameters() || sbModel->GetNuisanceParameters() )) {
-         RooAbsPdf * nuisPdf = 0; 
+         RooAbsPdf * nuisPdf = 0;
          if (nuisPriorName) nuisPdf = w->pdf(nuisPriorName);
          // use prior defined first in bModel (then in SbModel)
-         if (!nuisPdf)  { 
+         if (!nuisPdf)  {
             Info("StandardHypoTestDemo","No nuisance pdf given for the HybridCalculator - try to deduce  pdf from the   model");
-            if (bModel->GetPdf() && bModel->GetObservables() ) 
+            if (bModel->GetPdf() && bModel->GetObservables() )
                nuisPdf = RooStats::MakeNuisancePdf(*bModel,"nuisancePdf_bmodel");
-            else 
+            else
                nuisPdf = RooStats::MakeNuisancePdf(*sbModel,"nuisancePdf_sbmodel");
-         }   
+         }
          if (!nuisPdf ) {
-            if (bModel->GetPriorPdf())  { 
+            if (bModel->GetPriorPdf())  {
                nuisPdf = bModel->GetPriorPdf();
-               Info("StandardHypoTestDemo","No nuisance pdf given - try to use %s that is defined as a prior pdf in the B model",nuisPdf->GetName());            
+               Info("StandardHypoTestDemo","No nuisance pdf given - try to use %s that is defined as a prior pdf in the B model",nuisPdf->GetName());
             }
-            else { 
+            else {
                Error("StandardHypoTestDemo","Cannnot run Hybrid calculator because no prior on the nuisance parameter is specified or can be derived");
                return;
             }
@@ -303,14 +303,14 @@ void StandardHypoTestDemo(const char* infile = "",
          assert(nuisPdf);
          Info("StandardHypoTestDemo","Using as nuisance Pdf ... " );
          nuisPdf->Print();
-      
+
          const RooArgSet * nuisParams = (bModel->GetNuisanceParameters() ) ? bModel->GetNuisanceParameters() : sbModel->GetNuisanceParameters();
          RooArgSet * np = nuisPdf->getObservables(*nuisParams);
-         if (np->getSize() == 0) { 
+         if (np->getSize() == 0) {
             Warning("StandardHypoTestDemo","Prior nuisance does not depend on nuisance parameters. They will be smeared in their full range");
          }
          delete np;
-      
+
          ((HybridCalculator*)hypoCalc)->ForcePriorNuisanceAlt(*nuisPdf);
          ((HybridCalculator*)hypoCalc)->ForcePriorNuisanceNull(*nuisPdf);
    }
@@ -320,15 +320,15 @@ void StandardHypoTestDemo(const char* infile = "",
 
    ToyMCSampler * sampler = (ToyMCSampler *)hypoCalc->GetTestStatSampler();
 
-   if (sampler && (calcType == 0 || calcType == 1) ) { 
+   if (sampler && (calcType == 0 || calcType == 1) ) {
 
       // look if pdf is number counting or extended
-      if (sbModel->GetPdf()->canBeExtended() ) { 
+      if (sbModel->GetPdf()->canBeExtended() ) {
          if (useNC)   Warning("StandardHypoTestDemo","Pdf is extended: but number counting flag is set: ignore it ");
       }
       else {
          // for not extended pdf
-         if (!useNC)  { 
+         if (!useNC)  {
             int nEvents = data->numEntries();
             Info("StandardHypoTestDemo","Pdf is not extended: number of events to generate taken  from observed data set is %d",nEvents);
             sampler->SetNEventsPerToy(nEvents);
@@ -338,28 +338,28 @@ void StandardHypoTestDemo(const char* infile = "",
             sampler->SetNEventsPerToy(1);
          }
       }
-      
-      if (data->isWeighted() && !generateBinned) { 
+
+      if (data->isWeighted() && !generateBinned) {
          Info("StandardHypoTestDemo","Data set is weighted, nentries = %d and sum of weights = %8.1f but toy generation is unbinned - it would be faster to set generateBinned to true\n",data->numEntries(), data->sumEntries());
       }
       if (generateBinned)  sampler->SetGenerateBinned(generateBinned);
 
 
       // set the test statistic
-      if (testStatType == 0) sampler->SetTestStatistic(slrts); 
-      if (testStatType == 1) sampler->SetTestStatistic(ropl); 
-      if (testStatType == 2 || testStatType == 3) sampler->SetTestStatistic(profll); 
+      if (testStatType == 0) sampler->SetTestStatistic(slrts);
+      if (testStatType == 1) sampler->SetTestStatistic(ropl);
+      if (testStatType == 2 || testStatType == 3) sampler->SetTestStatistic(profll);
 
    }
-   
+
    HypoTestResult *  htr = hypoCalc->GetHypoTest();
    htr->SetPValueIsRightTail(true);
    htr->SetBackgroundAsAlt(false);
    htr->Print(); // how to get meaningfull CLs at this point?
 
    delete sampler;
-   delete slrts; 
-   delete ropl; 
+   delete slrts;
+   delete ropl;
    delete profll;
 
    if (calcType != 2) {
@@ -367,45 +367,45 @@ void StandardHypoTestDemo(const char* infile = "",
       plot->SetLogYaxis(true);
       plot->Draw();
    }
-   else { 
+   else {
       std::cout << "Asymptotic results " << std::endl;
-      
+
    }
 
-   // look at expected significances 
+   // look at expected significances
    // found median of S+B distribution
-   if (calcType != 2) { 
+   if (calcType != 2) {
 
-      SamplingDistribution * altDist = htr->GetAltDistribution();   
+      SamplingDistribution * altDist = htr->GetAltDistribution();
       HypoTestResult htExp("Expected Result");
       htExp.Append(htr);
-      // find quantiles in alt (S+B) distribution 
+      // find quantiles in alt (S+B) distribution
       double p[5];
       double q[5];
-      for (int i = 0; i < 5; ++i) { 
+      for (int i = 0; i < 5; ++i) {
          double sig = -2  + i;
          p[i] = ROOT::Math::normal_cdf(sig,1);
       }
       std::vector<double> values = altDist->GetSamplingDistribution();
-      TMath::Quantiles( values.size(), 5, &values[0], q, p, false);  
+      TMath::Quantiles( values.size(), 5, &values[0], q, p, false);
 
-      for (int i = 0; i < 5; ++i) { 
+      for (int i = 0; i < 5; ++i) {
          htExp.SetTestStatisticData( q[i] );
-         double sig = -2  + i;      
-         std::cout << " Expected p -value and significance at " << sig << " sigma = " 
-                   << htExp.NullPValue() << " significance " << htExp.Significance() << " sigma " << std::endl; 
-         
+         double sig = -2  + i;
+         std::cout << " Expected p -value and significance at " << sig << " sigma = "
+                   << htExp.NullPValue() << " significance " << htExp.Significance() << " sigma " << std::endl;
+
       }
    }
-   else { 
-      // case of asymptotic calculator 
-      for (int i = 0; i < 5; ++i) { 
-         double sig = -2  + i;      
-         // sigma is inverted here 
+   else {
+      // case of asymptotic calculator
+      for (int i = 0; i < 5; ++i) {
+         double sig = -2  + i;
+         // sigma is inverted here
          double pval = AsymptoticCalculator::GetExpectedPValues( htr->NullPValue(), htr->AlternatePValue(), -sig, false);
-         std::cout << " Expected p -value and significance at " << sig << " sigma = " 
-                   << pval << " significance " << ROOT::Math::normal_quantile_c(pval,1) << " sigma " << std::endl; 
-         
+         std::cout << " Expected p -value and significance at " << sig << " sigma = "
+                   << pval << " significance " << ROOT::Math::normal_quantile_c(pval,1) << " sigma " << std::endl;
+
       }
    }
 

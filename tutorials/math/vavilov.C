@@ -2,12 +2,12 @@
 #include "TCanvas.h"
 #include "TRandom.h"
 #include "TGraph.h"
-   
+
 void vavilov()
 {
    //test of the TMath::Vavilov distribution
    //Author: Anna Kreshuk
-   
+
    Int_t n = 1000;
    Double_t *x  = new Double_t[n];
    Double_t *y1 = new Double_t[n];

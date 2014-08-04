@@ -49,7 +49,7 @@ Pad::Pad(UInt_t w, UInt_t h)
    fX2 = 1.;
    fY1 = 0.;
    fY2 = 1.;
-   
+
    fUxmin = 0.;
    fUymin = 0.;
    fUxmax = 0.;
@@ -79,7 +79,7 @@ Pad::Pad(UInt_t w, UInt_t h)
 
    fFrame = 0;
    fView = 0;
-   
+
    fViewer3D = 0;
    fSelectionIsValid = kFALSE;
    fSelectionAreaWidth = w;
@@ -88,7 +88,7 @@ Pad::Pad(UInt_t w, UInt_t h)
    fInSelectionMode = kFALSE;
    fInHighlightMode = kFALSE;
    fObjectID = 1;
-   
+
    fContains3DObject = kFALSE;
 
    cd();
@@ -119,7 +119,7 @@ const char *Pad::GetName() const
 }
 
 //______________________________________________________________________________
-const char *Pad::GetTitle() const 
+const char *Pad::GetTitle() const
 {
    return "iOSPad";
 }
@@ -137,9 +137,9 @@ void Pad::Clear(Option_t *)
 
    fPrimitives.SetOwner(kFALSE);
    fPrimitives.Clear();
-   
+
    fContains3DObject = kFALSE;
-   
+
    Range(0., 0., 1., 1.);
 }
 
@@ -148,9 +148,9 @@ void Pad::SetViewWH(UInt_t viewW, UInt_t viewH)
 {
    fViewW = viewW;
    fViewH = viewH;
-   
+
    ResizePad();
-   
+
    fPainter.SetTransform(fViewW, GetX1(), GetX2(), fViewH, GetY1(), GetY2());
 }
 
@@ -263,7 +263,7 @@ Int_t Pad::VtoPixel(Double_t v) const
 
    if (val < -kMaxPixel)
       return -kMaxPixel;
-      
+
    if (val >  kMaxPixel)
       return  kMaxPixel;
 
@@ -300,7 +300,7 @@ Int_t Pad::XtoPixel(Double_t x) const
    Double_t val;
    if (fAbsCoord)
       val = fXtoAbsPixelk + x * fXtoPixel;
-   else 
+   else
       val = fXtoPixelk + x * fXtoPixel;
 
    if (val < -kMaxPixel)
@@ -319,7 +319,7 @@ Int_t Pad::YtoPixel(Double_t y) const
       val = fYtoAbsPixelk + y * fYtoPixel;
    else
       val = fYtoPixelk + y * fYtoPixel;
-      
+
    if (val < -kMaxPixel)
       return -kMaxPixel;
    if (val > kMaxPixel)
@@ -417,7 +417,7 @@ void Pad::SetPad(const char *, const char *, Double_t xlow, Double_t ylow, Doubl
    SetTopMargin(gStyle->GetPadTopMargin());
    SetLeftMargin(gStyle->GetPadLeftMargin());
    SetRightMargin(gStyle->GetPadRightMargin());
-   
+
    if (color >= 0)
       SetFillColor(color);
    else
@@ -568,7 +568,7 @@ void Pad::SetView(TView *view)
    // attempt to free memory - view was already deleted by THistPainter.
    // So, I simply assume, that pad does not own fView.
    /*
-   if (!view) 
+   if (!view)
       delete fView;
    */
    fView = view;
@@ -721,12 +721,12 @@ TFrame *Pad::GetFrame()
    //Original TPad has a COMPLETE MESS here. I'm trying to fix this.
    if (!fFrame) {
       fFrame = new TFrame(0., 0., 1., 1.);
-      
+
       Int_t framecolor = GetFrameFillColor();
-      
+
       if (!framecolor)
          framecolor = GetFillColor();
-      
+
       fFrame->SetFillColor(framecolor);
       fFrame->SetFillStyle(GetFrameFillStyle());
       fFrame->SetLineColor(GetFrameLineColor());
@@ -735,7 +735,7 @@ TFrame *Pad::GetFrame()
       fFrame->SetBorderSize(GetFrameBorderSize());
       fFrame->SetBorderMode(GetFrameBorderMode());
    }
-   
+
    return fFrame;
 }
 
@@ -743,10 +743,10 @@ TFrame *Pad::GetFrame()
 TObject *Pad::GetPrimitive(const char *name) const
 {
    // Final-overrider for TVirtualPad.
-   
+
    TIter next(&fPrimitives);
    TObject *obj = 0;
-   
+
    while ((obj=next())) {
       if (!strcmp(name, obj->GetName()))
          return obj;
@@ -755,7 +755,7 @@ TObject *Pad::GetPrimitive(const char *name) const
       if (found)
          return found;
    }
-   
+
    return 0;
 }
 
@@ -763,7 +763,7 @@ TObject *Pad::GetPrimitive(const char *name) const
 void Pad::Paint(Option_t *)
 {
    cd();
-   
+
    //First, fill pad's area with white
    //- it's required in case this pad
    //has some fill pattern.
@@ -780,7 +780,7 @@ void Pad::Paint(Option_t *)
       obj = lnk->GetObject();
       obj->Paint(lnk->GetOption());
       lnk = (TObjOptLink*)lnk->Next();
-      
+
       //This is the special case, which can not
       //be processed in a generic way at the moment.
       if (obj->InheritsFrom("TF2"))
@@ -802,7 +802,7 @@ void Pad::PaintForSelection()
 
    TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();
    TObject *obj;
-   
+
    while (lnk) {
       obj = lnk->GetObject();
       obj->Paint(lnk->GetOption());
@@ -833,14 +833,14 @@ void Pad::PaintShadowForSelected() const
 void Pad::PaintSelected() const
 {
    fInHighlightMode = kTRUE;
-   
+
    fPainter.SetPainterMode(Painter::kPaintSelected);
-   
+
    if (fParentOfSelected)
       fParentOfSelected->Paint(GetSelectedParentDrawOption());
    else if (fSelected)
       fSelected->Paint(GetSelectedDrawOption());
-   
+
    fPainter.SetPainterMode(Painter::kPaintToView);
    fInHighlightMode = kFALSE;
 }
@@ -855,12 +855,12 @@ void Pad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t 
 
    Int_t style0 = gVirtualX->GetFillStyle();
    Int_t style  = style0;
-      
+
    if (option[0] == 's') {
       gVirtualX->SetFillStyle(0);
       style = 0;
    }
-      
+
    if (style) {
       if (style > 3000 && style < 4000) {
          if (style < 3026) {
@@ -919,7 +919,7 @@ void Pad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
    }
 
    Int_t nc = 2*nn+1;
-   
+
    std::vector<Double_t> x(nc);
    std::vector<Double_t> y(nc);
 
@@ -955,12 +955,12 @@ void Pad::PaintPadFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ym
 
    if (gROOT->GetForceStyle())
       fFrame->UseCurrentStyle();
-   
+
    if (!GetListOfPrimitives()->FindObject(fFrame)) {
       GetListOfPrimitives()->AddFirst(fFrame);
       //fFrame->SetBit(kMustCleanup);
    }
-   
+
    fFrame->Paint();
 }
 
@@ -988,7 +988,7 @@ void Pad::PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2)
    const Double_t xRange = GetX2() - GetX1();
    const Double_t yRange = GetY2() - GetY1();
 
-   fPainter.DrawLine(GetX1() + u1 * xRange, GetY1() + v1 * yRange, 
+   fPainter.DrawLine(GetX1() + u1 * xRange, GetY1() + v1 * yRange,
                      GetX1() + u2 * xRange, GetY1() + v2 * yRange);
 }
 
@@ -1103,7 +1103,7 @@ void Pad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       np++;
       if (i1 < 0) i1 = i;
       if (iclip == 0 && i < n-2) continue;
-      
+
       fPainter.DrawPolyLine(np, &x[i1], &y[i1]);
       if (iclip) {
          x[i] = x1;
@@ -1157,9 +1157,9 @@ void Pad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
          if (i < n-1) continue;
       }
       if (np == 0) continue;
-      
+
       fPainter.DrawPolyMarker(np, &x[i1], &y[i1]);
-      
+
       i1 = -1;
       np = 0;
    }
@@ -1186,9 +1186,9 @@ void Pad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
          if (i < n-1) continue;
       }
       if (np == 0) continue;
-      
+
       fPainter.DrawPolyMarker(np, &x[i1], &y[i1]);
-      
+
       i1 = -1;
       np = 0;
    }
@@ -1262,7 +1262,7 @@ TH1F *Pad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
    hframe->GetYaxis()->SetLimits(ymin,ymax);
    hframe->SetDirectory(0);
    hframe->Draw(" ");
-   
+
    Update();
    if (padsav) padsav->cd();
    return hframe;
@@ -2220,7 +2220,7 @@ TObject *Pad::ObjectInPoint(Int_t px, Int_t py)
    const unsigned red = fSelectionBuffer[offset + 1];
    const unsigned green = fSelectionBuffer[offset + 2];
    const unsigned blue = fSelectionBuffer[offset + 3];
-   
+
    GraphicUtils::IDEncoder enc(10, 255);
    const UInt_t id = enc.ColorToId(red, green, blue);
    if (id > 0 && id <= fSelectables.size()) {
@@ -2240,7 +2240,7 @@ void Pad::PushTopLevelSelectable(TObject *top)
    ObjectPair_t newPair(top, top);
    fPainter.SetCurrentObjectID(fObjectID);
    fObjectID++;
-   
+
    fParentPainters.push_back(newTopLevel);
    fSelectables.push_back(newPair);
 }
@@ -2250,7 +2250,7 @@ void Pad::PushSelectableObject(TObject *obj)
 {
    if (!fInSelectionMode)
       return;
-   
+
    ObjectPair_t newPair(obj, 0);
    if (fParentPainters.size())
       newPair.second = fParentPainters.back().first;

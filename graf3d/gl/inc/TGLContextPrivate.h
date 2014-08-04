@@ -44,7 +44,7 @@ class TGLContextPrivate {
 public:
    Handle_t fWindowID;
    Handle_t fGLContext;
-   
+
 
    TGLContextPrivate()
       : fGLContext(0)

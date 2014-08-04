@@ -42,7 +42,7 @@ BOOL canScaleMarker(Style_t style)
 
    NSMutableArray *styleCells;
    NSMutableArray *colorCells;
-   
+
    __weak ROOTObjectController *controller;
    TAttMarker *object;
 }
@@ -53,28 +53,28 @@ BOOL canScaleMarker(Style_t style)
    using namespace ROOT::iOS::Browser;
 
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
-   
+
    if (self) {
       [self view];
-      
+
       styleCells = [[NSMutableArray alloc] init];//]WithCapacity : nMarkers];
       for (unsigned i = 0; i < nMarkers; ++i) {
          MarkerStyleCell *newCell = [[MarkerStyleCell alloc] initWithFrame : cellRect andMarkerStyle : markerStyles[i]];
          [styleCells addObject : newCell];
       }
-      
+
       markerStylePicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 15.f, 220.f, 70.f)];
       [markerStylePicker addItems : styleCells];
       [self.view addSubview : markerStylePicker];
       markerStylePicker.pickerDelegate = self;
-      
+
       colorCells = [[NSMutableArray alloc] init];
       for (unsigned i = 0; i < nROOTDefaultColors; ++i) {
          ColorCell *newCell = [[ColorCell alloc] initWithFrame : cellRect];
          [newCell setRGB : predefinedFillColors[i]];
          [colorCells addObject : newCell];
       }
-      
+
       markerColorPicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 110.f, 220.f, 70.f)];
       [markerColorPicker addItems : colorCells];
       [self.view addSubview : markerColorPicker];
@@ -168,21 +168,21 @@ BOOL canScaleMarker(Style_t style)
          break;
       }
    }
-   
+
    [markerStylePicker setSelectedItem : item];
 
    //Extract marker color.
    //The same predefined 16 colors as with fill color.
    item = 1;//?
    const Color_t colorIndex = object->GetMarkerColor();
-   
+
    for (unsigned i = 0; i < nROOTDefaultColors; ++i) {
       if (colorIndex == colorIndices[i]) {
          item = i;
          break;
       }
    }
-   
+
    [markerColorPicker setSelectedItem : item];
 
    if (!canScaleMarker(object->GetMarkerStyle())) {
@@ -210,7 +210,7 @@ BOOL canScaleMarker(Style_t style)
       return;
 
    object->SetMarkerSize(object->GetMarkerSize() + sizeStep);
-   sizeLabel.text = [NSString stringWithFormat : @"%.2g", object->GetMarkerSize()];   
+   sizeLabel.text = [NSString stringWithFormat : @"%.2g", object->GetMarkerSize()];
    [controller objectWasModifiedUpdateSelection : YES];
 }
 
@@ -219,9 +219,9 @@ BOOL canScaleMarker(Style_t style)
 {
    if (object->GetMarkerSize() - sizeStep < 1.)
       return;
-   
+
    object->SetMarkerSize(object->GetMarkerSize() - sizeStep);
-   sizeLabel.text = [NSString stringWithFormat : @"%.2g", object->GetMarkerSize()];   
+   sizeLabel.text = [NSString stringWithFormat : @"%.2g", object->GetMarkerSize()];
    [controller objectWasModifiedUpdateSelection : YES];
 }
 

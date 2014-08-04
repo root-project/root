@@ -1,9 +1,9 @@
 <br/>
 <hr/>
-<a name="tree"></a> 
+<a name="tree"></a>
 <h3>Tree</h3>
 <ul>
-<li>Introduce <tt>TBranch::Set/GetMakeClass</tt> to independently set each branch in <tt>MakeClass</tt> mode 
+<li>Introduce <tt>TBranch::Set/GetMakeClass</tt> to independently set each branch in <tt>MakeClass</tt> mode
 and to have a good place to switch the <tt>ReadLeaves</tt> function appropriately (to and from
 the <tt>MakeClass mode</tt> (also known as the decomposed object mode)).   This can also be
 used to reset the mode of some branch with a <tt>MakeClass/MakeSelector</tt> file.
@@ -13,13 +13,13 @@ for each branch.  Instead of creating one <tt>TBasket</tt> object and one <tt>TB
 for each onfile basket of each branch, we now create only one <tt>TBasket</tt> and one <tt>TBuffer</tt> object for the lifetime of
 each branch.  The memory buffer associated with the <tt>TBuffer</tt> object is also created once and rarely reallocated;
 it is reallocated only when the buffer size is reset (for example by the AutoFlush mechanism) and when the user
-object do not fit in the currently allocated memory (but we do not shrink it after that.  The same minization 
+object do not fit in the currently allocated memory (but we do not shrink it after that.  The same minization
 is applied to the scratch area used to read the compressed version of a basket from the file.</li>
 <li>In <tt>TTree</tt> and <tt>TChain</tt>'s <tt>LoadTree</tt> <tt>fReadEntry</tt> is now set to -1 in case of failure to find the proper row.</li>
 <li>In <tt>TTree::CloneTree</tt>, <tt>TChain::Merge</tt> and <tt>TTree::CopyEntries</tt> introduces more flexibility
-in the handling of the case where a <tt>TTreeIndex</tt> is 'missing' in one or more of the 
-<tt>TTree</tt> objects being collated.   If the tree or any of the underlying tree of the chain has an index, 
-that index and any index in the subsequent underlying <tt>TTree</tt> objects will be merged. There are currently three 'options' 
+in the handling of the case where a <tt>TTreeIndex</tt> is 'missing' in one or more of the
+<tt>TTree</tt> objects being collated.   If the tree or any of the underlying tree of the chain has an index,
+that index and any index in the subsequent underlying <tt>TTree</tt> objects will be merged. There are currently three 'options'
 to control this merging:
    <ul>
    <li>NoIndex             : all the <tt>TTreeIndex</tt> object are dropped.</li>
@@ -45,7 +45,7 @@ avoid deleting the memory allocated by the tree each time <tt>CopyAddress</tt> i
 </li>
 
 <li>Warning: The <tt>TTreeCache</tt> is no longer enabled by default in a <tt>TChain</tt> to align the behavior with a <tt>TTree</tt>.  You need to call
-<tt>TTree::SetCacheSize</tt> to enable the <tt>TTreeCache</tt>.</li> 
+<tt>TTree::SetCacheSize</tt> to enable the <tt>TTreeCache</tt>.</li>
 <li>Correct and clarify the relationship between AutoFlush and AutoSave:
    <ul>
    <li>Both the <tt>AutoFlush</tt> and <tt>AutoSave</tt> interval can be specified in
@@ -116,7 +116,7 @@ This function can be called directly from <tt>TTree</tt>: <tt>T-&gt;PrintCacheSt
 <li>Improved the output of <tt>TTree::Scan</tt> by inserting a blank space whenever a value is not available because there is no proper row in a friend.
 (Previously it was re-printing the previous value).  This required changes in </li>
 <li>When the draw option to TTree::Draw contains "norm" the output histogram is normalized to 1.</li>
-<li>Improve the selection of the leaf used for size of an array in a leaflist by giving preference 
+<li>Improve the selection of the leaf used for size of an array in a leaflist by giving preference
 for the leaf inside the same branch and by adding support for explicit full path name.  For example the following now works properly:
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">tree->Branch("JET1", &JET1, "njets/I:et[njets]/F:pt[njets]/F");
 tree->BranchBranch("JET2", &JET2, "njets/I:et[njets]/F:pt[njets]/F");

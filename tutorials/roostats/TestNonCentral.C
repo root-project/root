@@ -26,5 +26,5 @@ void TestNonCentral(){
   w.pdf("nccc")->plotOn(plot,LineColor(kYellow),LineStyle(kDashed));
   w.pdf("cs")->plotOn(plot,LineColor(kBlue),LineStyle(kDotted));
   plot->Draw();
-  
+
 }
