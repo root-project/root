@@ -757,7 +757,8 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 
       // Save the typedef
       if (selectedFromTypedef){
-         fSelectedTypedefs.push_back(typedefNameDecl);
+         if (std::find(fSelectedTypedefs.begin(),fSelectedTypedefs.end(),typedefNameDecl) == fSelectedTypedefs.end())
+            fSelectedTypedefs.push_back(typedefNameDecl);
          // Early exit here if we are not in presence of XML
          if (!fSelectionRules.IsSelectionXMLFile()) return true;
       }
