@@ -5549,7 +5549,7 @@ void TClass::SetUnloaded()
    //R__ASSERT(fState == kLoaded);
    if (fState != kLoaded) {
       Fatal("SetUnloaded","The TClass for %s is being unloaded when in state %d\n",
-	    GetName(),(int)fState);
+            GetName(),(int)fState);
    }
 
    // Make sure SetClassInfo, re-calculated the state.

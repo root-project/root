@@ -71,8 +71,8 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 //____________________________________________________________________________________________________
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    // Return YES for supported orientations
-	return YES;
+   // Return YES for supported orientations
+   return YES;
 }
 
 //____________________________________________________________________________________________________

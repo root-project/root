@@ -116,13 +116,13 @@
 
 
 TGeoToOCC::TGeoToOCC():fOccShape()
-{	
+{
 
 }
 
 TGeoToOCC::~TGeoToOCC()
 {
-	
+
 }
 
 TopoDS_Shape TGeoToOCC::OCC_SimpleShape(TGeoShape *TG_Shape)
@@ -592,7 +592,7 @@ TopoDS_Shape TGeoToOCC::OCC_Xtru(TGeoXtru * TG_Xtru)
       }
       z[i]=TG_Xtru->GetZ(i);
       w=TGeoToOCC::Polygon(x,y,z[i],vert);
-      sect.AddWire(w);	
+      sect.AddWire(w);
    }
    sect.Build();
    if (sect.IsDone()) fOccShape = sect.Shape();
@@ -601,7 +601,7 @@ TopoDS_Shape TGeoToOCC::OCC_Xtru(TGeoXtru * TG_Xtru)
 
 
 TopoDS_Shape TGeoToOCC::OCC_Hype(Double_t rmin, Double_t  rmax,Double_t  stin, Double_t stout, Double_t  dz )
-{	
+{
    gp_Pnt p(0, 0, 0);
    gp_Dir d(0, 0, 1);
    TopoDS_Vertex vIn,vOut;
@@ -918,7 +918,7 @@ TopoDS_Shape TGeoToOCC::OCC_Pcon(Double_t startPhi, Double_t deltaPhi,
          pCone=fuse.Shape();
       } else
          pCone=cone;
-   }	
+   }
    return Reverse(pCone);
 }
 

@@ -16,9 +16,9 @@ a) // connecting to an API service
     
     // connecting to an API service which is defined already by the
     environment variables:
-		 export alien_API_HOST=...
-		 export alien_API_PORT=...
-		 export alien_API_USER=...
+       export alien_API_HOST=...
+       export alien_API_PORT=...
+       export alien_API_USER=...
     TGrid::Connect("alien://");
 
     // connect to an API service with an authentication token established
@@ -74,9 +74,9 @@ You can execute any existing command via the Command interface:
 
     // '0' switches of the output of stdout and stderr to the terminal
     // '2' selects the result stream to be returned as TGridResult* :
-	  '0' returns stdout, 
-	  '1' returns stderr,
-	  '2' returns the result structure
+     '0' returns stdout,
+     '1' returns stderr,
+     '2' returns the result structure
 
 -> This command is equivalent to:
    
@@ -91,7 +91,7 @@ You can print the stderr of the last command via:
 To see the result structure of a command, you can just use the 'Print' function for the
 TGridResult:
 
-	result->Print();
+   result->Print();
 
 
 
@@ -101,26 +101,26 @@ TFile-Plugin: TAlienFile
 Files stored in Alien can be opened with the catalogue LFN or a GUID.
 To open a file by LFN use:
 
-	TFile* myfile = TFile::Open("alien:///alice/cern.ch/file.root");
+   TFile* myfile = TFile::Open("alien:///alice/cern.ch/file.root");
 
 or
-	
-	TFile* myfile = TFile::Open("/alien/alice/cern.ch/file.root");
-	
+
+   TFile* myfile = TFile::Open("/alien/alice/cern.ch/file.root");
+
 
 To open a file by GUID use:
 
-	TFile* myfile = TFile::Open("alien://<guid>");
+   TFile* myfile = TFile::Open("alien://<guid>");
 
 To address a certain storage element add to the URL
-	   "?se=ALICE::CERN::Castor";
+      "?se=ALICE::CERN::Castor";
 
 f.e.    TFile::Open("/alien/alice/cern.ch/file.root?se=ALICE::CERN::Castor");
 
 
 To open a ZIP file in an archive, use:
 
-	TFile::Open("/alien7alice/cern.ch/archivefile.zip#file.root");
+  TFile::Open("/alien7alice/cern.ch/archivefile.zip#file.root");
 
 - this assumes, that archivefile.zip is an UNCOMPRESSED zip archive containing
   'file.root'.

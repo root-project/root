@@ -46,7 +46,7 @@ protected:
    Double_t   *fY;         // X edge points (GV)
    Int_t      *fN;         // number of edge points (GV)
                            // fN[0] = number of splines
-	                	   // fN[1...n] = number of points in each spline
+                           // fN[1...n] = number of points in each spline
    Double_t    fArrX;      // Arrow X position
    Double_t    fArrY;      // Arrow Y position
 

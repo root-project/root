@@ -235,13 +235,13 @@ enum ETutorialsDefaults {
 //_________________________________________________________________
 - (void)viewWillDisappear:(BOOL)animated
 {
-	[super viewWillDisappear:animated];
+   [super viewWillDisappear:animated];
 }
 
 //_________________________________________________________________
 - (void)viewDidDisappear:(BOOL)animated
 {  
-	[super viewDidDisappear:animated];
+   [super viewDidDisappear:animated];
 }
 
 //_________________________________________________________________
@@ -310,9 +310,9 @@ enum ETutorialsDefaults {
 {
    [super viewDidUnload];
 
-	// Release any retained subviews of the main view.
-	// e.g. self.myOutlet = nil;
-	self.popoverController = nil;
+   // Release any retained subviews of the main view.
+   // e.g. self.myOutlet = nil;
+   self.popoverController = nil;
 }
 
 #pragma mark - Memory management
@@ -320,10 +320,10 @@ enum ETutorialsDefaults {
 //_________________________________________________________________
 - (void)didReceiveMemoryWarning
 {
-	// Releases the view if it doesn't have a superview.
+   // Releases the view if it doesn't have a superview.
    [super didReceiveMemoryWarning];
-	
-	// Release any cached data, images, etc that aren't in use.
+
+   // Release any cached data, images, etc that aren't in use.
 }
 
 //_________________________________________________________________

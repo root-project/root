@@ -227,7 +227,7 @@ cd ../..
         by means of the hostcert.conf file. By default this file is searched
         for in /etc/root/hostcert.conf or in $ROOTSYS/etc/hostcert.conf .
         However, daemon servers accept the argument
-	    
+
                         -C <server_globus_conf_file>
 
         to specify an alternative location; for daemons based on TServerSocket
@@ -237,12 +237,12 @@ cd ../..
 
         is provided.
         The hostcert.conf contains record lines specifying
-	    
+
         <certificates_dir> <host_cert_file> <host_cert_key> <grid_mapfile>
-	    
+
         See the header of $ROOTSYS/etc/hostcert.conf for any details about
         the syntax and sue of the file; as an example:
-	    
+    
 < bof >
 # This is an example of hostcert.conf to use the ldap service certificate
   * /etc/grid-security/ldap/ldapcert.pem /etc/grid-security/ldap/ldapkey.pem *

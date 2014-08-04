@@ -22,7 +22,7 @@ set(TestSource
     testSpecFuncBeta.cxx
     testSpecFuncBetaI.cxx
     testIntegrationMultiDim.cxx
-    fit/testFit.cxx 	
+    fit/testFit.cxx
     fit/testGraphFit.cxx 
     fit/SparseDataComparer.cxx
     fit/SparseFit4.cxx 

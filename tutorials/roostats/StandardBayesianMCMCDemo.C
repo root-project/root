@@ -47,9 +47,9 @@ using namespace RooFit;
 using namespace RooStats;
 
 void StandardBayesianMCMCDemo(const char* infile = "",
-		      const char* workspaceName = "combined",
-		      const char* modelConfigName = "ModelConfig",
-		      const char* dataName = "obsData"){
+                              const char* workspaceName = "combined",
+                              const char* modelConfigName = "ModelConfig",
+                              const char* dataName = "obsData"){
 
   /////////////////////////////////////////////////////////////
   // First part is just to access a user-defined file 

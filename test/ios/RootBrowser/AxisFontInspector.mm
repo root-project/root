@@ -106,7 +106,7 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 - (BOOL)shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation
 {
    // Return YES for supported orientations
-	return YES;
+   return YES;
 }
 
 //____________________________________________________________________________________________________
@@ -156,7 +156,7 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 //____________________________________________________________________________________________________
 - (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
 {
-	return 1;
+   return 1;
 }
 
 #pragma mark color/pattern picker's delegate.

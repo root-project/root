@@ -74,8 +74,8 @@ const float tabBarHeight = 49.f;
 //____________________________________________________________________________________________________
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    // Return YES for supported orientations
-	return YES;
+   // Return YES for supported orientations
+   return YES;
 }
 
 //____________________________________________________________________________________________________

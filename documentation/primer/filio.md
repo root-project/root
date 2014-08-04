@@ -238,30 +238,30 @@ fills the current values of the connected variables to the tree.
 void write_ntuple_to_file_advanced(
    const std::string& outputFileName="conductivity_experiment.root"
    ,unsigned int numDataPoints=1000000){
-	// Initialise the TNtuple
-	TTree cond_data("cond_data", "Example N-Tuple");
+   // Initialise the TNtuple
+   TTree cond_data("cond_data", "Example N-Tuple");
 
-	// define the variables and book them for the ntuple
-	float pot,cur,temp,pres;
-	cond_data.Branch("Potential", &pot, "Potential/F");
-	cond_data.Branch("Current", &cur, "Current/F");
-	cond_data.Branch("Temperature", &temp, "Temperature/F");
-	cond_data.Branch("Pressure", &pres, "Pressure/F");
+   // define the variables and book them for the ntuple
+   float pot,cur,temp,pres;
+   cond_data.Branch("Potential", &pot, "Potential/F");
+   cond_data.Branch("Current", &cur, "Current/F");
+   cond_data.Branch("Temperature", &temp, "Temperature/F");
+   cond_data.Branch("Pressure", &pres, "Pressure/F");
 
-	for (int i=0;i<numDataPoints;++i){
-		// Fill it randomly to fake the acquired data
-		pot=gRandom->Uniform(0.,10.)*gRandom->Gaus(1.,0.01);
-		temp=gRandom->Uniform(250.,350.)+gRandom->Gaus(0.,0.3);
-		pres=gRandom->Uniform(0.5,1.5)*gRandom->Gaus(1.,0.02);
-		cur=pot/(10.+0.05*(temp-300.)-0.2*(pres-1.))*
+   for (int i=0;i<numDataPoints;++i){
+      // Fill it randomly to fake the acquired data
+      pot=gRandom->Uniform(0.,10.)*gRandom->Gaus(1.,0.01);
+      temp=gRandom->Uniform(250.,350.)+gRandom->Gaus(0.,0.3);
+      pres=gRandom->Uniform(0.5,1.5)*gRandom->Gaus(1.,0.02);
+      cur=pot/(10.+0.05*(temp-300.)-0.2*(pres-1.))*
                     gRandom->Gaus(1.,0.01);
-		// write to ntuple
-		cond_data.Fill();}
+      // write to ntuple
+      cond_data.Fill();}
 
-	// Open a file, save the ntuple and close the file
-	TFile ofile(outputFileName.c_str(),"RECREATE");
-	cond_data.Write();
-	ofile.Close();
+   // Open a file, save the ntuple and close the file
+   TFile ofile(outputFileName.c_str(),"RECREATE");
+   cond_data.Write();
+   ofile.Close();
 }
 ```
 
@@ -309,25 +309,25 @@ wild-cards as shown in the example.
 //  done
 
 void read_ntuple_with_chain(){
-	// initiate a TChain with the name of the TTree to be processed
-	TChain in_chain("cond_data");
-	in_chain.Add("conductivity_experiment*.root"); // add files,
-	                                               // wildcards work
+   // initiate a TChain with the name of the TTree to be processed
+   TChain in_chain("cond_data");
+   in_chain.Add("conductivity_experiment*.root"); // add files,
+                                                  // wildcards work
 
-	// define variables and assign them to the corresponding branches
-	float pot, cur, temp, pres;
-	my_tuple->SetBranchAddress("Potential", &pot);
-	my_tuple->SetBranchAddress("Current", &cur);
-	my_tuple->SetBranchAddress("Temperature", &temp);
-	my_tuple->SetBranchAddress("Pressure", &pres);
+   // define variables and assign them to the corresponding branches
+   float pot, cur, temp, pres;
+   my_tuple->SetBranchAddress("Potential", &pot);
+   my_tuple->SetBranchAddress("Current", &cur);
+   my_tuple->SetBranchAddress("Temperature", &temp);
+   my_tuple->SetBranchAddress("Pressure", &pres);
 
-	cout << "Potential\tCurrent\tTemperature\tPressure\n";
-	for (size_t irow=0; irow<in_chain.GetEntries(); ++irow){
-		in_chain.GetEntry(irow); // loads all variables that have
-	                                 // been connected to branches
-		cout << pot << "\t" << cur << "\t" << temp <<
-	                       "\t" << pres << endl;
-	}
+   cout << "Potential\tCurrent\tTemperature\tPressure\n";
+   for (size_t irow=0; irow<in_chain.GetEntries(); ++irow){
+      in_chain.GetEntry(irow); // loads all variables that have
+                                    // been connected to branches
+      cout << pot << "\t" << cur << "\t" << temp <<
+                          "\t" << pres << endl;
+   }
 }
 ```
 

@@ -44,9 +44,9 @@ using namespace RooFit;
 using namespace RooStats;
 
 void StandardFeldmanCousinsDemo(const char* infile = "",
-		      const char* workspaceName = "combined",
-		      const char* modelConfigName = "ModelConfig",
-		      const char* dataName = "obsData"){
+                                const char* workspaceName = "combined",
+                                const char* modelConfigName = "ModelConfig",
+                                const char* dataName = "obsData"){
 
   /////////////////////////////////////////////////////////////
   // First part is just to access a user-defined file 
@@ -138,7 +138,7 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
   // We can use PROOF to speed things along in parallel
   //  ProofConfig pc(*w, 1, "workers=4", kFALSE);
   //  ToyMCSampler*  toymcsampler = (ToyMCSampler*) fc.GetTestStatSampler();
-  //  toymcsampler->SetProofConfig(&pc);	// enable proof
+  //  toymcsampler->SetProofConfig(&pc); // enable proof
 
 
   // Now get the interval
@@ -160,9 +160,9 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
 
   // make a histogram of parameter vs. threshold
   TH1F* histOfThresholds = new TH1F("histOfThresholds","",
-				    parameterScan->numEntries(),
-				    firstPOI->getMin(),
-				    firstPOI->getMax());
+                                    parameterScan->numEntries(),
+                                    firstPOI->getMin(),
+                                    firstPOI->getMax());
 
   // loop through the points that were tested and ask confidence belt
   // what the upper/lower thresholds were.

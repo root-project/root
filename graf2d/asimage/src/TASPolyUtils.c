@@ -143,15 +143,15 @@ SOFTWARE.
  *     register declarations.
  */
 typedef struct {
-    int minor_axis;	/* minor axis        */
-    int d;		/* decision variable */
-    int m, m1;		/* slope and slope+1 */
-    int incr1, incr2;	/* error increments */
+    int minor_axis;   /* minor axis        */
+    int d;            /* decision variable */
+    int m, m1;        /* slope and slope+1 */
+    int incr1, incr2; /* error increments */
 } BRESINFO;
 
 
 #define BRESINITPGONSTRUCT(dmaj, min1, min2, bres) \
-	BRESINITPGON(dmaj, min1, min2, bres.minor_axis, bres.d, \
+   BRESINITPGON(dmaj, min1, min2, bres.minor_axis, bres.d, \
                      bres.m, bres.m1, bres.incr1, bres.incr2)
 
 #define BRESINCRPGONSTRUCT(bres) \
@@ -443,8 +443,8 @@ static void CreateETandAET(int count, TPoint *pts, EdgeTable *ET, EdgeTableEntry
 
          InsertEdgeInET(ET, pETEs, top->fY, &pSLLBlock, &iSLLBlock);
 
-	      if (PrevPt->fY > ET->ymax) ET->ymax = PrevPt->fY;
-	      if (PrevPt->fY < ET->ymin) ET->ymin = PrevPt->fY;
+         if (PrevPt->fY > ET->ymax) ET->ymax = PrevPt->fY;
+         if (PrevPt->fY < ET->ymin) ET->ymin = PrevPt->fY;
          pETEs++;
       }
       PrevPt = CurrPt;

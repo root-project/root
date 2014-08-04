@@ -69,11 +69,11 @@ A few comments to conclude this introduction.
 
 Assuming that the panel was opened by rootlogon.C and the name of the pointer
 to the class HistAction is 'gui',
-	
+
    root[0] Float_t x,y;
    root[1] hist = new TH1F("GAUS","My Histo",100,-4.,4.);
    root[2] for(Int_t i=0; i<10000; i++) {gRandom->Rannor(x,y); hist->Fill(x);}
-   root[3] gui->importHist(hist->GetName());	
+   root[3] gui->importHist(hist->GetName());
 
 5. If a user doubly clicks on an icon with a file which can be viewed with
    a viewer like gv or xv, then that file is loaded to the viewer. This 

@@ -108,8 +108,8 @@ void rs_numberCountingCombination_expected()
   // Step 5, Create a calculator for doing the hypothesis test.
   // because this is a 
   ProfileLikelihoodCalculator plc( *wspace->data("ExpectedNumberCountingData"),
-				   *wspace->pdf("TopLevelPdf"), *poi, 0.05, nullParams);
-				  
+                                  *wspace->pdf("TopLevelPdf"), *poi, 0.05, nullParams);
+
 
   // Step 6, Use the Calculator to get a HypoTestResult
   HypoTestResult* htr = plc.GetHypoTest();
@@ -277,8 +277,8 @@ void rs_numberCountingCombination_observed()
   // Step 5, Create a calculator for doing the hypothesis test.
   // because this is a 
   ProfileLikelihoodCalculator plc( *wspace->data("ObservedNumberCountingData"),
-				   *wspace->pdf("TopLevelPdf"), *poi, 0.05, nullParams);
-	
+                                  *wspace->pdf("TopLevelPdf"), *poi, 0.05, nullParams);
+
   wspace->var("tau_0")->Print();
   wspace->var("tau_1")->Print();
 
@@ -373,8 +373,7 @@ void rs_numberCountingCombination_observedWithTau()
   // Step 5, Create a calculator for doing the hypothesis test.
   // because this is a 
   ProfileLikelihoodCalculator plc( *wspace->data("ObservedNumberCountingDataWithSideband"),
-				   *wspace->pdf("TopLevelPdf"), *poi, 0.05, nullParams);
-				  
+                                  *wspace->pdf("TopLevelPdf"), *poi, 0.05, nullParams);
 
 
   // Step 7, Use the Calculator to get a HypoTestResult

@@ -176,7 +176,7 @@ const int preloadRows = 2;
    scroll.contentSize = CGSizeMake(scroll.frame.size.width, addTop * 2 + (itemSize.height + addH) * nRows - addH);
 
    const unsigned first = self.firstVisibleThumbnail;
-   const unsigned last = self.lastVisibleThumbnail;	
+   const unsigned last = self.lastVisibleThumbnail;
    
    for (UIView *thumbnail in visibleThumbnails) {
       if (thumbnail.tag < first || thumbnail.tag > last) {

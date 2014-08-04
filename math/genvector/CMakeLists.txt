@@ -15,7 +15,7 @@ set(headers   Math/Vector2D.h Math/Point2D.h
               Math/Transform3D.h Math/Translation3D.h Math/Plane3D.h
               Math/VectorUtil.h)
 set(headers32 Math/Vector2D.h Math/Point2D.h
-	      Math/Vector3D.h Math/Point3D.h Math/Vector4D.h)
+             Math/Vector3D.h Math/Point3D.h Math/Vector4D.h)
 
 ROOT_GENERATE_DICTIONARY(G__${libname}   ${headers} MODULE ${libname} LINKDEF Math/LinkDef_GenVector.h)
 ROOT_GENERATE_DICTIONARY(G__${libname}32 ${headers32} MULTIDICT MODULE ${libname} LINKDEF Math/LinkDef_GenVector32.h)

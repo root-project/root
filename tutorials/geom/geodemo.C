@@ -117,11 +117,11 @@ void SavePicture(const char *name, TObject *objcanvas, TObject *objvol, Int_t ia
    switch (iaxis) {
       case 0:
          sprintf(fname,"t_%s.gif",name);
-	 break;
+      break;
       default:
          if (step==0) sprintf(fname,"t_%sdiv%s.gif", name,vol->GetShape()->GetAxisName(iaxis));
          else sprintf(fname,"t_%sdivstep%s.gif", name,vol->GetShape()->GetAxisName(iaxis));
-   }	 
+   } 
    c->Print(fname);
 }
 

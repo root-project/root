@@ -83,7 +83,7 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
    for (i = 0; i < dim; i++) {
       for (j = 0; j < dim; j++) {
          if (i == j) cov(i,j) = 3.;
-	 else        cov(i,j) = 1.0;
+         else        cov(i,j) = 1.0;
       }
    }
    

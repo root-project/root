@@ -947,7 +947,7 @@ void stress_determinant(Int_t msize)
     std::cout << "\nCheck to see that the determinant of the unit matrix is one";
   m.UnitMatrix();
   if (gVerbose)
-     std::cout << "\n	determinant is " << m.Determinant();
+     std::cout << "\n\tdeterminant is " << m.Determinant();
   ok &= ( m.Determinant() == 1 ) ? kTRUE : kFALSE;
 
   if (gVerbose)
@@ -958,7 +958,7 @@ void stress_determinant(Int_t msize)
         m(i,j) = ( i==j ? pattern : 0 );
   }
   if (gVerbose)
-     std::cout << "\n	determinant is " << m.Determinant() << " should be " << TMath::Power(pattern,(double)m.GetNrows()) <<std::endl;
+     std::cout << "\n\tdeterminant is " << m.Determinant() << " should be " << TMath::Power(pattern,(double)m.GetNrows()) <<std::endl;
   ok &= ( TMath::Abs(m.Determinant()-TMath::Power(pattern,(double)m.GetNrows())) < DBL_EPSILON  ) ? kTRUE : kFALSE;
 
   if (gVerbose)

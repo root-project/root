@@ -6,9 +6,9 @@ The following is a summary of the major modifications since 5.34 .
 ### New developments/functionality
 
 -   Several improvements in the merging phase; in particular:
-	-   Modification of output sending protocol to control memory usage, significantly reducing the memory footprint on the master, in particular when merging
+   -   Modification of output sending protocol to control memory usage, significantly reducing the memory footprint on the master, in particular when merging
         large numbers of histograms.
-	-   Use an hash table for the output list to significantly speed up names lookups during merging.
+   -   Use an hash table for the output list to significantly speed up names lookups during merging.
 -   Add support for dynamic addition of workers to a currently running process (currently supported by the unit packetizer).
 -   Automatization of the usage of file-based technology to handle outputs (see [Handling Outputs](http://root.cern.ch/drupal/content/handling-outputs)).
 -   [Improved dataset management model](http://proof.web.cern.ch/proof/TDataSetManagerAliEn.html#a-proof-interface-to-the-alien-file-catalog)
@@ -37,10 +37,10 @@ The following is a summary of the major modifications since 5.34 .
     root[] p = TProof::Open("master", "igprof-pp")
 ``` 
 -   Miscellanea:
-	-   Added functions [Getenv](http://root.cern.ch/root/htmldoc/TProof.html#TProof:Getenv) and [GetRC](http://root.cern.ch/root/htmldoc/TProof.html#TProof:GetRC)
+   -   Added functions [Getenv](http://root.cern.ch/root/htmldoc/TProof.html#TProof:Getenv) and [GetRC](http://root.cern.ch/root/htmldoc/TProof.html#TProof:GetRC)
         in TProof to retrieve environment information from the nodes, typically from the master.
-	-   Add support unix secondary groups in group access control. This allows more flexibility in, for example, assigning group-shared credential files to the daemon.
-	-   Several new tests and options in the test program _stressProof_.
+   -   Add support unix secondary groups in group access control. This allows more flexibility in, for example, assigning group-shared credential files to the daemon.
+   -   Several new tests and options in the test program _stressProof_.
 
 ### Bug fixes
 

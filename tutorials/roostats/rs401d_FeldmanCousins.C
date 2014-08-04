@@ -120,7 +120,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
   RooRealVar EPrime("EPrime","", 15,10,60,"GeV");
   RooRealVar LPrime("LPrime","", .800,.600, 1.0,"km"); // need these units in formula
   NuMuToNuE_Oscillation PnmuTonePrime("PnmuTonePrime","P(#nu_{#mu} #rightarrow #nu_{e}",
-				      LPrime,EPrime,deltaMSq);
+                                      LPrime,EPrime,deltaMSq);
   RooAbsReal* intProbToOscInExp = PnmuTonePrime.createIntegral(RooArgSet(EPrime,LPrime));
 
   // Getting the flux is a bit tricky.  It is more celear to include a cross section term that is not
@@ -132,7 +132,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
   // for 5 bins, this means maxEventsTot = 50,000   
   RooConstVar maxEventsTot("maxEventsTot","maximum number of sinal events",50000);
   RooConstVar inverseArea("inverseArea","1/(#Delta E #Delta L)",
-			   1./(EPrime.getMax()-EPrime.getMin())/(LPrime.getMax()-LPrime.getMin()));
+                          1./(EPrime.getMax()-EPrime.getMin())/(LPrime.getMax()-LPrime.getMin()));
 
   // sigNorm = maxEventsTot * (\int dE dL prob to oscillate in experiment / Area) * sin^2(2\theta)
   RooProduct sigNorm("sigNorm", "", RooArgSet(maxEventsTot, *intProbToOscInExp, inverseArea, sinSq2theta));
@@ -144,7 +144,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
 
   // total model
   RooAddPdf model("model","",RooArgList(*sigModel,bkgEShape),
-		  RooArgList(sigNorm,bkgNorm));
+                  RooArgList(sigNorm,bkgNorm));
 
   // for debugging, check model tree
   //  model.printCompactTree();
@@ -281,10 +281,10 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
         if (interval){
            if (interval->IsInInterval( *tmpPoint ) ) {
               forContour->SetBinContent( hist->FindBin(tmpPoint->getRealValue("sinSq2theta"), 
-                       tmpPoint->getRealValue("deltaMSq")),	 1);
+                       tmpPoint->getRealValue("deltaMSq")), 1);
            }else{
               forContour->SetBinContent( hist->FindBin(tmpPoint->getRealValue("sinSq2theta"), 
-                       tmpPoint->getRealValue("deltaMSq")),	 0);
+                       tmpPoint->getRealValue("deltaMSq")), 0);
            }
         }
 

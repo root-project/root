@@ -10,23 +10,23 @@
 //  done
 
 void read_ntuple_with_chain(){
-	// initiate a TChain with the name of the TTree to be processed
-	TChain in_chain("cond_data");
-	in_chain.Add("conductivity_experiment*.root"); // add files,
-	                                               // wildcards work
+   // initiate a TChain with the name of the TTree to be processed
+   TChain in_chain("cond_data");
+   in_chain.Add("conductivity_experiment*.root"); // add files,
+                                                  // wildcards work
 
-	// define variables and assign them to the corresponding branches
-	float pot, cur, temp, pres;
-	my_tuple->SetBranchAddress("Potential", &pot);
-	my_tuple->SetBranchAddress("Current", &cur);
-	my_tuple->SetBranchAddress("Temperature", &temp);
-	my_tuple->SetBranchAddress("Pressure", &pres);
+   // define variables and assign them to the corresponding branches
+   float pot, cur, temp, pres;
+   my_tuple->SetBranchAddress("Potential", &pot);
+   my_tuple->SetBranchAddress("Current", &cur);
+   my_tuple->SetBranchAddress("Temperature", &temp);
+   my_tuple->SetBranchAddress("Pressure", &pres);
 
-	cout << "Potential\tCurrent\tTemperature\tPressure\n";
-	for (size_t irow=0; irow<in_chain.GetEntries(); ++irow){
-		in_chain.GetEntry(irow); // loads all variables that have
-	                                 // been connected to branches
-		cout << pot << "\t" << cur << "\t" << temp <<
-	                       "\t" << pres << endl;
-	}
+   cout << "Potential\tCurrent\tTemperature\tPressure\n";
+   for (size_t irow=0; irow<in_chain.GetEntries(); ++irow){
+      in_chain.GetEntry(irow); // loads all variables that have
+                                    // been connected to branches
+      cout << pot << "\t" << cur << "\t" << temp <<
+                          "\t" << pres << endl;
+   }
 }

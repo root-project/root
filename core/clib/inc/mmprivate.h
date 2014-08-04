@@ -168,11 +168,11 @@ struct mmlist
 
 struct mmstats_t
 {
-   size_t bytes_total;		/* Total size of the heap. */
-   size_t chunks_used;		/* Chunks allocated by the user. */
-   size_t bytes_used;		/* Byte total of user-allocated chunks. */
-   size_t chunks_free;		/* Chunks in the free list. */
-   size_t bytes_free;		/* Byte total of chunks in the free list. */
+   size_t bytes_total;     /* Total size of the heap. */
+   size_t chunks_used;     /* Chunks allocated by the user. */
+   size_t bytes_used;      /* Byte total of user-allocated chunks. */
+   size_t chunks_free;     /* Chunks in the free list. */
+   size_t bytes_free;      /* Byte total of chunks in the free list. */
 };
 
 /* Internal structure that defines the format of the malloc-descriptor.

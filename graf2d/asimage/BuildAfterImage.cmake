@@ -17,7 +17,7 @@ if(WIN32)
     set(astepbld "libAfterImage - Win32 Debug")
   else()
     set(astepbld "libAfterImage - Win32 Release")  
-  endif()	
+  endif()
 
   add_custom_command( OUTPUT ${afterimageliba}
                     COMMAND cmake -E copy_directory  ${CMAKE_CURRENT_SOURCE_DIR}/src/libAfterImage libAfterImage

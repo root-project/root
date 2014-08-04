@@ -409,7 +409,7 @@ StandardHypoTestInvDemo(const char * infile = 0,
          file->ls();
          return; 
       }
-   }		
+   }
   
    calc.AnalyzeResult( r, calculatorType, testStatType, useCLs, npoints, infile );
   

@@ -114,13 +114,13 @@ void AddModel(RooWorkspace* ws){
   // the isolation to decay an e-fold every R GeV, we use 
   // c = -1/R.
   RooConstVar zIsolDecayConst("zIsolDecayConst",
-			      "z isolation decay  constant", -1);
+                              "z isolation decay  constant", -1);
   RooExponential zIsolationModel("zIsolationModel", "z isolation model",
-				 isolation, zIsolDecayConst);
+                                 isolation, zIsolDecayConst);
 
   // make the combined Z model
   RooProdPdf zModel("zModel", "4-d model for Z", 
-		    RooArgSet(mZModel, zIsolationModel));
+                    RooArgSet(mZModel, zIsolationModel));
 
   //////////////////////////////////////////////
   // make QCD model
@@ -132,10 +132,10 @@ void AddModel(RooWorkspace* ws){
   // c = -1/R.
   // We can leave this parameter free during the fit.
   RooRealVar qcdMassDecayConst("qcdMassDecayConst",
-			       "Decay const for QCD mass spectrum", 
-			       -0.01, -100, 100,"1/GeV");
+                               "Decay const for QCD mass spectrum",
+                               -0.01, -100, 100,"1/GeV");
   RooExponential qcdMassModel("qcdMassModel", "qcd Mass Model",
-			      invMass, qcdMassDecayConst);
+                              invMass, qcdMassDecayConst);
 
 
   // isolation model for QCD.  Only used to generate toy MC
@@ -143,9 +143,9 @@ void AddModel(RooWorkspace* ws){
   // the isolation to decay an e-fold every R GeV, we use 
   // c = -1/R.
   RooConstVar qcdIsolDecayConst("qcdIsolDecayConst",
-			      "Et resolution constant", -.1);
+                                "Et resolution constant", -.1);
   RooExponential qcdIsolationModel("qcdIsolationModel", "QCD isolation model",
-				   isolation, qcdIsolDecayConst);
+                                   isolation, qcdIsolDecayConst);
 
   // make the 2-d model
   RooProdPdf qcdModel("qcdModel", "2-d model for QCD", 
@@ -162,8 +162,8 @@ void AddModel(RooWorkspace* ws){
   // now make the combined model
   std::cout << "make full model" << std::endl;
   RooAddPdf model("model","z+qcd background models",
-		  RooArgList(zModel, qcdModel), 
-		  RooArgList(zYield,qcdYield));
+                  RooArgList(zModel, qcdModel),
+                  RooArgList(zYield,qcdYield));
 
 
   // interesting for debugging and visualizing the model
@@ -222,7 +222,7 @@ void DoSPlot(RooWorkspace* ws){
   // Now we use the SPlot class to add SWeights to our data set
   // based on our model and our yield variables
   RooStats::SPlot* sData = new RooStats::SPlot("sData","An SPlot",
-		            *data, model, RooArgList(*zYield,*qcdYield) );
+                                               *data, model, RooArgList(*zYield,*qcdYield) );
 
 
   // Check that our weights have the desired properties
@@ -231,21 +231,21 @@ void DoSPlot(RooWorkspace* ws){
 
 
   std::cout << std::endl <<  "Yield of Z is " 
-	    << zYield->getVal() << ".  From sWeights it is "
-	    << sData->GetYieldFromSWeight("zYield") << std::endl;
+            << zYield->getVal() << ".  From sWeights it is "
+            << sData->GetYieldFromSWeight("zYield") << std::endl;
 
 
   std::cout << "Yield of QCD is " 
-	    << qcdYield->getVal() << ".  From sWeights it is "
-	    << sData->GetYieldFromSWeight("qcdYield") << std::endl
-	    << std::endl;
+            << qcdYield->getVal() << ".  From sWeights it is "
+            << sData->GetYieldFromSWeight("qcdYield") << std::endl
+            << std::endl;
 
   for(Int_t i=0; i < 10; i++)
     {
       std::cout << "z Weight   " << sData->GetSWeight(i,"zYield") 
-		<< "   qcd Weight   " << sData->GetSWeight(i,"qcdYield") 
-		<< "  Total Weight   " << sData->GetSumOfEventSWeight(i) 
-		<< std::endl;
+                << "   qcd Weight   " << sData->GetSWeight(i,"qcdYield")
+                << "  Total Weight   " << sData->GetSumOfEventSWeight(i)
+                << std::endl;
     }
 
   std::cout << std::endl;

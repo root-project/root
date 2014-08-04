@@ -174,74 +174,74 @@ namespace mathtext {
          dword = bswap_32(dword);
 #endif // LITTLE_ENDIAN
 
-			char str[5];
+         char str[5];
 
-			str[4] = static_cast<char>(dword % 85 + '!');
-			dword /= 85;
-			str[3] = static_cast<char>(dword % 85 + '!');
-			dword /= 85;
-			str[2] = static_cast<char>(dword % 85 + '!');
-			dword /= 85;
-			str[1] = static_cast<char>(dword % 85 + '!');
-			dword /= 85;
-			str[0] = static_cast<char>(dword % 85 + '!');
-			for(int j = 0; j < k + 1; j++) {
-				ascii.append(1, str[j]);
-				column++;
-				if(column == width) {
-					ascii.append(1, '\n');
-					column = 0;
-				}
-			}
+         str[4] = static_cast<char>(dword % 85 + '!');
+         dword /= 85;
+         str[3] = static_cast<char>(dword % 85 + '!');
+         dword /= 85;
+         str[2] = static_cast<char>(dword % 85 + '!');
+         dword /= 85;
+         str[1] = static_cast<char>(dword % 85 + '!');
+         dword /= 85;
+         str[0] = static_cast<char>(dword % 85 + '!');
+         for(int j = 0; j < k + 1; j++) {
+            ascii.append(1, str[j]);
+            column++;
+            if(column == width) {
+               ascii.append(1, '\n');
+               column = 0;
+            }
+         }
 
-		}
-		if(column > width - 2)
-			ascii.append(1, '\n');
-		ascii.append("~>");
-	}
+      }
+      if(column > width - 2)
+         ascii.append(1, '\n');
+      ascii.append("~>");
+   }
 
-	std::string font_embed_postscript_t::font_embed_type_1(
+   std::string font_embed_postscript_t::font_embed_type_1(
                                                           std::string &font_name,
                                                           const std::vector<unsigned char> &font_data)
-	{
-		// Embed font type 1
+   {
+      // Embed font type 1
 
-		struct pfb_segment_header_s {
-			char always_128;
-			char type;
-			unsigned int length;
-		};
-		enum {
-			TYPE_ASCII = 1,
-			TYPE_BINARY,
-			TYPE_EOF
-		};
+      struct pfb_segment_header_s {
+         char always_128;
+         char type;
+         unsigned int length;
+      };
+      enum {
+         TYPE_ASCII = 1,
+         TYPE_BINARY,
+         TYPE_EOF
+      };
 
-		char magic_number[2];
-		std::string ret;
+      char magic_number[2];
+      std::string ret;
 
-		memcpy(magic_number, &font_data[0], 2);
-		if(magic_number[0] == '\200') {
-			// IBM PC format printer font binary
+      memcpy(magic_number, &font_data[0], 2);
+      if(magic_number[0] == '\200') {
+         // IBM PC format printer font binary
 
-			// FIXME: Maybe the real name can be parsed out of the
-			// file
-			font_name = "";
+         // FIXME: Maybe the real name can be parsed out of the
+         // file
+         font_name = "";
 
-			struct pfb_segment_header_s segment_header;
-			size_t offset = 0;
+         struct pfb_segment_header_s segment_header;
+         size_t offset = 0;
 
-			segment_header.type = 0;
-			while (segment_header.type != TYPE_EOF) {
-				// The two char elements of struct
-				// pfb_segment_header_s are most likely aligned to
-				// larger than 1 byte boundaries, so copy all the
-				// elements individually
-				segment_header.always_128 = font_data[offset];
-				segment_header.type = font_data[offset + 1];
-				memcpy(&segment_header.length, &font_data[offset + 2],
+         segment_header.type = 0;
+         while (segment_header.type != TYPE_EOF) {
+            // The two char elements of struct
+            // pfb_segment_header_s are most likely aligned to
+            // larger than 1 byte boundaries, so copy all the
+            // elements individually
+            segment_header.always_128 = font_data[offset];
+            segment_header.type = font_data[offset + 1];
+            memcpy(&segment_header.length, &font_data[offset + 2],
                    sizeof(unsigned int));
-				offset += sizeof(unsigned int) + 2;
+            offset += sizeof(unsigned int) + 2;
 #ifdef LITTLE_ENDIAN
             segment_header.length =
             bswap_32(segment_header.length);

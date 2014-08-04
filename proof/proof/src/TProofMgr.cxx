@@ -837,7 +837,7 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
    }
    // Generate template for zero-padded serial numbers 
    TString sForm = TString::Format("%%0%dd", 
-				   Int_t(TMath::Log10(src->GetEntries()+1)));
+                                   Int_t(TMath::Log10(src->GetEntries()+1)));
 
    // Now we will actually copy files and create the TList object
    ds = new TFileCollection();
@@ -884,46 +884,46 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
          // Replace filename and basename
          if (fdst.Contains("<bn>")) fdst.ReplaceAll("<bn>", gSystem->BaseName(furl->GetFile()));
          if (fdst.Contains("<fn>")) fdst.ReplaceAll("<fn>", furl->GetFile());
-	 if (fdst.Contains("<bs>")) { 
-	   // Basename sans 'extension' 
-	   TString bs(gSystem->BaseName(furl->GetFile()));
-	   Int_t idx = bs.Last('.');
-	   if (idx != kNPOS) bs.Remove(idx);
-	   fdst.ReplaceAll("<bs>", bs.Data());
-	 }
-	 if (fdst.Contains("<ex>")) { 
-	   // 'Extension' - that is the last part after the last '.'
-	   TString ex(furl->GetFile());
-	   Int_t idx = ex.Last('.');
-	   if (idx != kNPOS) ex.Remove(0, idx+1);
-	   else                       ex = "";
-	   fdst.ReplaceAll("<ex>", ex);
-	 }
-	 if (fdst.Contains("<pa>")) { 
-	   fdst.ReplaceAll("<pa>", 
-			   gSystem->BaseName(gSystem
-					     ->DirName(furl->GetFile())));
-	   
-	 }
-	 if (fdst.Contains("<gp>")) { 
-	   fdst.ReplaceAll("<gp>", 
-			   gSystem->BaseName(gSystem
-					     ->DirName(gSystem
-						       ->DirName(furl->GetFile()))));
-	   
-	 }
-	 
-
-         // Replace serial number         
-         if (fdst.Contains("<sn>")) {
-	   TString skn = TString::Format("%d", kn);
-	   fdst.ReplaceAll("<sn>", skn);
+         if (fdst.Contains("<bs>")) {
+            // Basename sans 'extension'
+            TString bs(gSystem->BaseName(furl->GetFile()));
+            Int_t idx = bs.Last('.');
+            if (idx != kNPOS) bs.Remove(idx);
+            fdst.ReplaceAll("<bs>", bs.Data());
          }
-	 if (fdst.Contains("<s0>")) { 
-	   TString skn = TString::Format(sForm.Data(), kn);
-	   fdst.ReplaceAll("<s0>", skn);
-	 }
-	 kn++;
+         if (fdst.Contains("<ex>")) {
+            // 'Extension' - that is the last part after the last '.'
+            TString ex(furl->GetFile());
+            Int_t idx = ex.Last('.');
+            if (idx != kNPOS) ex.Remove(0, idx+1);
+            else                       ex = "";
+            fdst.ReplaceAll("<ex>", ex);
+         }
+         if (fdst.Contains("<pa>")) {
+            fdst.ReplaceAll("<pa>",
+                            gSystem->BaseName(gSystem
+                                              ->DirName(furl->GetFile())));
+
+         }
+         if (fdst.Contains("<gp>")) { 
+            fdst.ReplaceAll("<gp>", 
+                            gSystem->BaseName(gSystem
+                                              ->DirName(gSystem
+                                                        ->DirName(furl->GetFile()))));
+            
+         }
+ 
+
+         // Replace serial number
+         if (fdst.Contains("<sn>")) {
+            TString skn = TString::Format("%d", kn);
+            fdst.ReplaceAll("<sn>", skn);
+         }
+         if (fdst.Contains("<s0>")) {
+            TString skn = TString::Format(sForm.Data(), kn);
+            fdst.ReplaceAll("<s0>", skn);
+         }
+         kn++;
 
          // Replace user and group name
          UserGroup_t *pw = gSystem->GetUserInfo();
@@ -932,8 +932,8 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
             if (fdst.Contains("<gr>")) fdst.ReplaceAll("<gr>", pw->fGroup);
             delete pw;
          }
-	 if (gProof && fdst.Contains("<pg>")) 
-	   fdst.ReplaceAll("<pg>", gProof->GetGroup());
+         if (gProof && fdst.Contains("<pg>"))
+            fdst.ReplaceAll("<pg>", gProof->GetGroup());
 
          // Now replace the subdirs, if required
          if (dirph.GetSize() > 0)
@@ -953,7 +953,7 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
          }
       }
    }
-   
+
    // Return the TFileCollection
    return ds;
 }

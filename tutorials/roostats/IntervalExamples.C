@@ -130,7 +130,7 @@ void IntervalExamples()
   MCMCCalculator mc(*data, *modelConfig);
   mc.SetConfidenceLevel( confidenceLevel);
   // special options
-  mc.SetNumBins(200);	  // bins used internally for representing posterior
+  mc.SetNumBins(200);        // bins used internally for representing posterior
   mc.SetNumBurnInSteps(500); // first N steps to be ignored as burn-in
   mc.SetNumIters(100000);    // how long to run chain
   mc.SetLeftSideTailFraction(0.5); // for central interval

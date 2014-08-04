@@ -499,7 +499,7 @@ calculation:
    </ul>
    Depending on the actual meaning of different weights in your case, you
    should either merge or combine them to get the overall efficiency.
-						      
+
    <h4><a name="merge">V.1 When should I use merging?</a></h4>
    If the weights are artificial and do not represent real alternative hypotheses,
    you should merge the different TEfficiency objects. That means especially for
@@ -528,9 +528,9 @@ calculation:
    End_Html
    Begin_Latex
    w_{1} = #frac{#sigma L}{#epsilon N_{1}}, w_{2} = #frac{#sigma L}{#epsilon N_{2}} #Rightarrow w_{new} = #frac{#sigma L}{#epsilon (N_{1} + N_{2})} = #frac{1}{#frac{1}{w_{1}} + #frac{1}{w_{2}}}
-   End_Latex							     
-   Begin_Html							     
-			  
+   End_Latex
+   Begin_Html
+  
    <h4><a name="comb">V.2 When should I use combining?</a></h4>
 You should combine TEfficiency objects whenever the weights represent
 alternatives processes for the efficiency. As the combination of two TEfficiency

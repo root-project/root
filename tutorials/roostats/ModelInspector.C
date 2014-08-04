@@ -225,13 +225,13 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsDat
 
      TGLabel* hlabel = new TGLabel(hframek,Form("%s = %.3f +%.3f",param->GetName(),param->getVal(),param->getError()));
      TGTripleHSlider* hsliderk = new TGTripleHSlider(hframek, 190, kDoubleScaleBoth, HSId1,
-				     kHorizontalFrame,
-				     GetDefaultFrameBackground(),
-				     kFALSE, kFALSE, kFALSE, kFALSE);
+                                                     kHorizontalFrame,
+                                                     GetDefaultFrameBackground(),
+                                                     kFALSE, kFALSE, kFALSE, kFALSE);
      hsliderk->Connect("PointerPositionChanged()", "ModelInspectorGUI", 
-			this, "DoSlider()");
+                       this, "DoSlider()");
      hsliderk->Connect("PositionChanged()", "ModelInspectorGUI", 
-			this, "DoSlider()");
+                       this, "DoSlider()");
      hsliderk->SetRange(param->getMin(),param->getMax());
      
      hframek->Resize(200, 25);
@@ -420,10 +420,10 @@ void ModelInspectorGUI::DoSlider()
       // high loop
       it = fSliderMap.begin();
       for(; it!=fSliderMap.end(); ++it){
-	const char* name = it->second;
-	fWS->var(name)->setVal(it->first->GetMaxPosition());
-	RooRealVar* param = fWS->var(name);
-	fLabelMap[it->first]->SetText(Form("%s = %.3f [%.3f,%.3f]",param->GetName(),it->first->GetPointerPosition(),it->first->GetMinPosition(),it->first->GetMaxPosition()));
+         const char* name = it->second;
+         fWS->var(name)->setVal(it->first->GetMaxPosition());
+         RooRealVar* param = fWS->var(name);
+         fLabelMap[it->first]->SetText(Form("%s = %.3f [%.3f,%.3f]",param->GetName(),it->first->GetPointerPosition(),it->first->GetMinPosition(),it->first->GetMaxPosition()));
       }
       normCount = pdftmp->expectedEvents(*obs);
       pdftmp->plotOn(fPlot,LineColor(kRed),LineWidth(2.),Normalization(normCount,RooAbsReal::NumEvent)) ;
@@ -432,10 +432,10 @@ void ModelInspectorGUI::DoSlider()
       // low loop
       it = fSliderMap.begin();
       for(; it!=fSliderMap.end(); ++it){
-	const char* name = it->second;
-	fWS->var(name)->setVal(it->first->GetMinPosition());
-	RooRealVar* param = fWS->var(name);
-	fLabelMap[it->first]->SetText(Form("%s = %.3f [%.3f,%.3f]",param->GetName(),it->first->GetPointerPosition(),it->first->GetMinPosition(),it->first->GetMaxPosition()));
+         const char* name = it->second;
+         fWS->var(name)->setVal(it->first->GetMinPosition());
+         RooRealVar* param = fWS->var(name);
+         fLabelMap[it->first]->SetText(Form("%s = %.3f [%.3f,%.3f]",param->GetName(),it->first->GetPointerPosition(),it->first->GetMinPosition(),it->first->GetMaxPosition()));
       }
       normCount = pdftmp->expectedEvents(*obs);
       pdftmp->plotOn(fPlot,LineColor(kGreen),LineWidth(2.),Normalization(normCount,RooAbsReal::NumEvent)) ;
@@ -443,21 +443,21 @@ void ModelInspectorGUI::DoSlider()
       // central loop
       it = fSliderMap.begin();
       for(; it!=fSliderMap.end(); ++it){
-	const char* name = it->second;
-	fWS->var(name)->setVal(it->first->GetPointerPosition());
-	RooRealVar* param = fWS->var(name);
-	fLabelMap[it->first]->SetText(Form("%s = %.3f [%.3f,%.3f]",param->GetName(),it->first->GetPointerPosition(),it->first->GetMinPosition(),it->first->GetMaxPosition()));
+         const char* name = it->second;
+         fWS->var(name)->setVal(it->first->GetPointerPosition());
+         RooRealVar* param = fWS->var(name);
+         fLabelMap[it->first]->SetText(Form("%s = %.3f [%.3f,%.3f]",param->GetName(),it->first->GetPointerPosition(),it->first->GetMinPosition(),it->first->GetMaxPosition()));
       }
       normCount = pdftmp->expectedEvents(*obs);
       if(!fFitRes)
-	pdftmp->plotOn(fPlot,LineColor(kBlue),LineWidth(2.),Normalization(normCount,RooAbsReal::NumEvent)) ;
+         pdftmp->plotOn(fPlot,LineColor(kBlue),LineWidth(2.),Normalization(normCount,RooAbsReal::NumEvent)) ;
       else{
-	pdftmp->plotOn(fPlot,Normalization(normCount,RooAbsReal::NumEvent),VisualizeError(*fFitRes,*fMC->GetNuisanceParameters()),FillColor(kYellow)) ;
-	pdftmp->plotOn(fPlot,LineColor(kBlue),LineWidth(2.),Normalization(normCount,RooAbsReal::NumEvent)) ;
-      msglevel = RooMsgService::instance().globalKillBelow();
-      RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
-      fData->plotOn(fPlot,MarkerSize(1),Cut(Form("%s==%s::%s",channelCat->GetName(),channelCat->GetName(),tt->GetName())),DataError(RooAbsData::None));
-      RooMsgService::instance().setGlobalKillBelow(msglevel);
+         pdftmp->plotOn(fPlot,Normalization(normCount,RooAbsReal::NumEvent),VisualizeError(*fFitRes,*fMC->GetNuisanceParameters()),FillColor(kYellow)) ;
+         pdftmp->plotOn(fPlot,LineColor(kBlue),LineWidth(2.),Normalization(normCount,RooAbsReal::NumEvent)) ;
+         msglevel = RooMsgService::instance().globalKillBelow();
+         RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
+         fData->plotOn(fPlot,MarkerSize(1),Cut(Form("%s==%s::%s",channelCat->GetName(),channelCat->GetName(),tt->GetName())),DataError(RooAbsData::None));
+         RooMsgService::instance().setGlobalKillBelow(msglevel);
       }
       fPlot->Draw();
     }    
@@ -497,9 +497,9 @@ void ModelInspectorGUI::DoExit()
 
 
 void ModelInspector(const char* infile = "",
-		      const char* workspaceName = "combined",
-		      const char* modelConfigName = "ModelConfig",
-		      const char* dataName = "obsData"){
+                    const char* workspaceName = "combined",
+                    const char* modelConfigName = "ModelConfig",
+                    const char* dataName = "obsData"){
 
 #ifdef __CINT__
   cout <<"You must use ACLIC for this.  Use ModelInspector.C+"<<endl;

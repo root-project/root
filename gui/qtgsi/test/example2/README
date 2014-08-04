@@ -8,5 +8,4 @@ Before you can compile this example you have to
    thread from the config line in qtrootexample.pro (you can also use the project setting in the
    Qt-designer)
 
-	
 

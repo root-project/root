@@ -35,16 +35,16 @@ class TSelHist : public TSelector {
 public :
 
    // Specific members
-   TPBHistType	   *fHistType;
+   TPBHistType     *fHistType;
    Int_t            fNHists;
-   Bool_t 	    fDraw;
+   Bool_t           fDraw;
    TH1F           **fHist1D;//[fNHists]
    TH2F           **fHist2D;//[fNHists]
    TH3F           **fHist3D;//[fNHists]
    TRandom3        *fRandom;
-   TCanvas	*fCHist1D;
-   TCanvas	*fCHist2D;
-   TCanvas	*fCHist3D;
+   TCanvas         *fCHist1D;
+   TCanvas         *fCHist2D;
+   TCanvas         *fCHist3D;
 
    TSelHist();
    virtual ~TSelHist();

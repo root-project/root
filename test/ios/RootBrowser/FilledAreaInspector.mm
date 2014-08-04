@@ -182,7 +182,7 @@ const CGFloat defaultCellH = 50.f;
 - (BOOL)shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation
 {
    // Return YES for supported orientations
-	return YES;
+   return YES;
 }
 
 #pragma mark - Color/pattern picker's delegate.

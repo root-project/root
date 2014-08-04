@@ -126,9 +126,9 @@ int nworkers = 0;   // number of workers (default use all available cores)
 /////////////////////////////////////////////////////////////////////////
 
 void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
-					    const char* workspaceName = "combined",
-					    const char* modelConfigName = "ModelConfig",
-					    const char* dataName = "obsData"){
+                                            const char* workspaceName = "combined",
+                                            const char* modelConfigName = "ModelConfig",
+                                            const char* dataName = "obsData") {
 
 
   double confidenceLevel=0.95;
@@ -261,7 +261,7 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
         mc->GetGlobalObservables()->Print();
         toymcsampler->SetGlobalObservables(*mc->GetGlobalObservables());
      }
-     toymcsampler->SetProofConfig(&pc);	// enable proof
+     toymcsampler->SetProofConfig(&pc); // enable proof
   }
 
 
@@ -287,9 +287,9 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
 
   // make a histogram of parameter vs. threshold
   TH1F* histOfThresholds = new TH1F("histOfThresholds","",
-				    parameterScan->numEntries(),
-				    firstPOI->getMin(),
-				    firstPOI->getMax());
+                                    parameterScan->numEntries(),
+                                    firstPOI->getMin(),
+                                    firstPOI->getMax());
   histOfThresholds->GetXaxis()->SetTitle(firstPOI->GetName());
   histOfThresholds->GetYaxis()->SetTitle("Threshold");
 
@@ -350,13 +350,13 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
     RooDataSet* toyData = 0;
     // now generate a toy dataset for the main measurement
     if(!mc->GetPdf()->canBeExtended()){
-      if(data->numEntries()==1)     
-	toyData = mc->GetPdf()->generate(*mc->GetObservables(),1);
-      else
-	cout <<"Not sure what to do about this model" <<endl;
+       if(data->numEntries()==1)
+          toyData = mc->GetPdf()->generate(*mc->GetObservables(),1);
+       else
+          cout <<"Not sure what to do about this model" <<endl;
     } else{
-      //      cout << "generating extended dataset"<<endl;
-      toyData = mc->GetPdf()->generate(*mc->GetObservables(),Extended());
+       //      cout << "generating extended dataset"<<endl;
+       toyData = mc->GetPdf()->generate(*mc->GetObservables(),Extended());
     }
 
     // generate global observables
@@ -409,9 +409,9 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
       // << " max is " << arMax << " this profile = " << thisTS << endl;
       //      cout << "thisTS = " << thisTS<<endl;
       if(thisTS<=arMax){
-	thisUL = firstPOI->getVal();
+         thisUL = firstPOI->getVal();
       } else{
-	break;
+         break;
       }
     }
     

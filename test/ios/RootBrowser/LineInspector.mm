@@ -101,7 +101,7 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
    // Return YES for supported orientations
-	return YES;
+   return YES;
 }
 
 //____________________________________________________________________________________________________

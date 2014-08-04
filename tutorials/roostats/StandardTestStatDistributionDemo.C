@@ -48,9 +48,9 @@ using namespace RooStats;
 // The actual macro
 
 void StandardTestStatDistributionDemo(const char* infile = "",
-				      const char* workspaceName = "combined",
-				      const char* modelConfigName = "ModelConfig",
-				      const char* dataName = "obsData"){
+                                      const char* workspaceName = "combined",
+                                      const char* modelConfigName = "ModelConfig",
+                                      const char* dataName = "obsData"){
 
 
   // the number of toy MC used to generate the distribution
@@ -163,7 +163,7 @@ void StandardTestStatDistributionDemo(const char* infile = "",
   sampler.SetParametersForTestStat(*mc->GetParametersOfInterest()); // set POI value for evaluation
 
   ProofConfig pc(*w, 4, "workers=4",false); 
-  sampler.SetProofConfig(&pc);	// enable proof
+  sampler.SetProofConfig(&pc); // enable proof
 
   firstPOI->setVal(plcUpperLimit);
   RooArgSet allParameters;

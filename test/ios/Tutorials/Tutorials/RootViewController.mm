@@ -77,13 +77,13 @@ enum {
 //_________________________________________________________________
 - (void) viewWillDisappear : (BOOL)animated
 {
-	[super viewWillDisappear : animated];
+   [super viewWillDisappear : animated];
 }
 
 //_________________________________________________________________
 - (void) viewDidDisappear : (BOOL)animated
 {
-	[super viewDidDisappear : animated];
+   [super viewDidDisappear : animated];
 }
 
 //_________________________________________________________________
@@ -96,13 +96,12 @@ enum {
 - (NSInteger) numberOfSectionsInTableView : (UITableView *)tableView
 {
    return 1;
-   		
 }
 
 //_________________________________________________________________
 - (NSInteger) tableView : (UITableView *)tableView numberOfRowsInSection : (NSInteger)section
 {
-   return [tutorialNames count];   		
+   return [tutorialNames count];
 }
 
 //_________________________________________________________________

@@ -215,9 +215,9 @@ namespace {
       int co_argcount = (methods.size() == 1 ? methods[0]->GetMaxArgs() : 1) + 1 /* for 'self' */;
 
    // TODO: static methods need no 'self' (but is harmless otherwise)
-	  	 
-   // for now, code object representing the statement 'pass' 	 
-      PyObject* co_code = PyString_FromStringAndSize( "d\x00\x00S", 4 ); 	 
+
+   // for now, code object representing the statement 'pass'
+      PyObject* co_code = PyString_FromStringAndSize( "d\x00\x00S", 4 );
 
    // tuples with all the const literals used in the function
       PyObject* co_consts = PyTuple_New( 0 );
@@ -235,7 +235,7 @@ namespace {
       } else
          PyTuple_SET_ITEM( co_varnames, 1, PyString_FromString( "*args" ) );
 
-   // filename is made-up 	 
+   // filename is made-up
       PyObject* co_filename = PyString_FromString( "ROOT.py" );
 
    // name is the function name, also through __name__ on the function itself
@@ -272,7 +272,7 @@ namespace {
       Py_DECREF( co_code );
 
       return code;
-#else 	 
+#else 
 // not important for functioning of most code, so not implemented for p3 for now (TODO)
       pymeth = 0;
       if ( pymeth || !pymeth) Py_INCREF( Py_None );

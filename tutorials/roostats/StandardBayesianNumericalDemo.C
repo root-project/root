@@ -51,9 +51,9 @@ int intervalType = 1;          // type of interval (0 is shortest, 1 central, 2 
 double   maxPOI = -999;        // force a different value of POI for doing the scan (default is given value)
 
 void StandardBayesianNumericalDemo(const char* infile = "",
-		      const char* workspaceName = "combined",
-		      const char* modelConfigName = "ModelConfig",
-		      const char* dataName = "obsData"){
+                                   const char* workspaceName = "combined",
+                                   const char* modelConfigName = "ModelConfig",
+                                   const char* dataName = "obsData") {
 
   /////////////////////////////////////////////////////////////
   // First part is just to access a user-defined file 

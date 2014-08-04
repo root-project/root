@@ -63,7 +63,7 @@ TGeoToStep::~TGeoToStep()
 }
 
 void * TGeoToStep::CreateGeometry()
-{	
+{
    //ROOT CAD CONVERSION
    fCreate = new TOCCToStep();
    fCreate->OCCShapeCreation(fGeometry);

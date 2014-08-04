@@ -100,7 +100,7 @@ void *XrdProofdClientCron(void *p)
          //XrdOucString buf;
          if (msg.Type() == XrdProofdClientMgr::kClientDisconnect) {
             // obsolete
-	    TRACE(XERR, "obsolete type: XrdProofdClientMgr::kClientDisconnect");
+            TRACE(XERR, "obsolete type: XrdProofdClientMgr::kClientDisconnect");
          } else {
             TRACE(XERR, "unknown type: "<<msg.Type());
             continue;

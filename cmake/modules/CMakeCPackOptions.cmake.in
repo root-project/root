@@ -21,11 +21,11 @@ if(CPACK_GENERATOR MATCHES "NSIS")
       WriteRegStr HKCR 'RootFile\\shell\\DefaultIcon' '' '$INSTDIR\\icons\\RootIcon.ico'
       WriteRegStr HKCR 'RootFile\\shell\\open\\command' '' \\
                        '$INSTDIR\\bin\\root.exe -l \"%1\"  \"$INSTDIR\\macros\\fileopen.C\"' 
-	  ")
+     ")
   set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
       DeleteRegKey HKCR '.root'
       DeleteRegKey HKCR 'RootFile'
-	  ")
+     ")
 endif()
 
 

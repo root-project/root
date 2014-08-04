@@ -3022,9 +3022,9 @@ Int_t TProofServ::SetupCommon()
    if (paths.Length() > 0) {
       Int_t icomp = 0;
       if (paths.Contains("^<compiler>"))
-	 icomp = 1;
+         icomp = 1;
       else if (paths.Contains("<compiler>"))
-	 icomp = -1;
+         icomp = -1;
       if (icomp != 0) {
 # ifdef COMPILER
          TString compiler = COMPILER;
@@ -3042,9 +3042,9 @@ Int_t TProofServ::SetupCommon()
       }
       Int_t isysb = 0;
       if (paths.Contains("^<sysbin>"))
-	 isysb = 1;
+         isysb = 1;
       else if (paths.Contains("<sysbin>"))
-	 isysb = -1;
+         isysb = -1;
       if (isysb != 0) {
          if (isysb == 1) {
             if (!bindir.IsNull()) bindir += ":";

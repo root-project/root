@@ -3506,7 +3506,7 @@ int RootCling(int argc,
    std::string dictname;
    std::string dictpathname;
    int ic, force = 0, onepcm = 0;
-	bool ignoreExistingDict = false;
+   bool ignoreExistingDict = false;
    bool requestAllSymbols = isDeep;
 
    std::string currentDirectory;

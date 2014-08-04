@@ -83,7 +83,7 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
    // Return YES for supported orientations
-	return YES;
+   return YES;
 }
 
 //____________________________________________________________________________________________________

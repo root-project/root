@@ -27,7 +27,7 @@ void Zbi_Zgamma() {
   // for Z_Gamma, use uniform prior on b.
   RooWorkspace* w = new RooWorkspace("w",true);
   w->factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0,300]))");
-  w->factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))");	     
+  w->factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))");     
   w->factory("Uniform::prior_b(b)");
 
   // construct the Bayesian-averaged model (eg. a projection pdf)

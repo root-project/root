@@ -67,7 +67,7 @@ public:
    FunctionDecl *operator* () const { return *fIter; }
    FunctionDecl *operator-> () const { return *fIter; }
    SpecIterator & operator++ () { ++fIter; return *this; }
-   SpecIterator 	operator++ (int) {
+   SpecIterator   operator++ (int) {
       SpecIterator tmp(fIter,fEnd);
       ++(*this);
       return tmp;

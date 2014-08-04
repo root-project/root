@@ -137,8 +137,8 @@ void testUnfold5d()
   TUnfoldDensity unfold(histMCGenRec,TUnfold::kHistMapOutputHoriz,
                         regMode,constraintMode,densityFlags,
                         generatorBinning,detectorBinning,
-			REGULARISATION_DISTRIBUTION,
-			REGULARISATION_AXISSTEERING);
+                        REGULARISATION_DISTRIBUTION,
+                        REGULARISATION_AXISSTEERING);
 
   // define the input vector (the measured data distribution)
   unfold.SetInput(histDataReco /* ,0.0,1.0 */);
