@@ -27,9 +27,9 @@
 #include <cmath>
 #include <algorithm>
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Math { 
+   namespace Math {
 
 /// helpers for CholeskyDecomp
 namespace CholeskyDecompHelpers {
@@ -91,7 +91,7 @@ public:
     * that behave like an SMatrix in terms of using
     * operator()(int i, int j) for access to elements)
     */
-   template<class M> CholeskyDecomp(const M& m) : 
+   template<class M> CholeskyDecomp(const M& m) :
       fL( ), fOk(false)
    {
       using CholeskyDecompHelpers::_decomposer;
@@ -101,7 +101,7 @@ public:
    /// perform a Cholesky decomposition
    /** perfrom a Cholesky decomposition of a symmetric positive
     * definite matrix m
-    * 
+    *
     * this is the constructor to use in special applications where
     * plain arrays are used
     *
@@ -109,7 +109,7 @@ public:
     * element m(i,j) (j <= i) is supposed to be in array element
     * (i * (i + 1)) / 2 + j
     */
-   template<typename G> CholeskyDecomp(G* m) : 
+   template<typename G> CholeskyDecomp(G* m) :
       fL(), fOk(false)
    {
       using CholeskyDecompHelpers::_decomposer;
@@ -128,7 +128,7 @@ public:
    /** @brief solves a linear system for the given right hand side
     *
     * Note that you can use both SVector classes and plain arrays for
-    * rhs. (Make sure that the sizes match!). It will work with any vector 
+    * rhs. (Make sure that the sizes match!). It will work with any vector
     * implementing the operator [i]
     *
     * @returns if the decomposition was successful
@@ -194,7 +194,7 @@ public:
       }
       return true;
    }
-   
+
    /** @brief obtain the decomposed matrix L
     *
     * @returns if the decomposition was successful
@@ -310,7 +310,7 @@ template<class F> class CholeskyDecompGenDim
 private:
    /** @brief dimensionality
     * dimensionality of the problem */
-   unsigned fN; 
+   unsigned fN;
    /// lower triangular matrix L
    /** lower triangular matrix L, packed storage, with diagonal
     * elements pre-inverted */
@@ -326,7 +326,7 @@ public:
     * that behave like an SMatrix in terms of using
     * operator()(int i, int j) for access to elements)
     */
-   template<class M> CholeskyDecompGenDim(unsigned N, const M& m) : 
+   template<class M> CholeskyDecompGenDim(unsigned N, const M& m) :
       fN(N), fL(new F[(fN * (fN + 1)) / 2]), fOk(false)
    {
       using CholeskyDecompHelpers::_decomposerGenDim;
@@ -336,7 +336,7 @@ public:
    /// perform a Cholesky decomposition
    /** perfrom a Cholesky decomposition of a symmetric positive
     * definite matrix m
-    * 
+    *
     * this is the constructor to use in special applications where
     * plain arrays are used
     *
@@ -344,7 +344,7 @@ public:
     * element m(i,j) (j <= i) is supposed to be in array element
     * (i * (i + 1)) / 2 + j
     */
-   template<typename G> CholeskyDecompGenDim(unsigned N, G* m) : 
+   template<typename G> CholeskyDecompGenDim(unsigned N, G* m) :
       fN(N), fL(new F[(fN * (fN + 1)) / 2]), fOk(false)
    {
       using CholeskyDecompHelpers::_decomposerGenDim;
@@ -366,7 +366,7 @@ public:
    /** @brief solves a linear system for the given right hand side
     *
     * Note that you can use both SVector classes and plain arrays for
-    * rhs. (Make sure that the sizes match!). It will work with any vector 
+    * rhs. (Make sure that the sizes match!). It will work with any vector
     * implementing the operator [i]
     *
     * @returns if the decomposition was successful
@@ -408,7 +408,7 @@ public:
          _inverterGenDim<F,PackedArrayAdapter<G> >()(adapted, fL, fN);
       }
       return fOk;
-   }   
+   }
 
    /** @brief obtain the decomposed matrix L
     *

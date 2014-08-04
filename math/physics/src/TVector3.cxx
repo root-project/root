@@ -229,7 +229,7 @@ TVector3 & TVector3::Transform(const TRotation & m) {
 }
 
 //______________________________________________________________________________
-Double_t TVector3::Angle(const TVector3 & q) const 
+Double_t TVector3::Angle(const TVector3 & q) const
 {
    // return the angle w.r.t. another 3-vector
    Double_t ptot2 = Mag2()*q.Mag2();
@@ -244,46 +244,46 @@ Double_t TVector3::Angle(const TVector3 & q) const
 }
 
 //______________________________________________________________________________
-Double_t TVector3::Mag() const 
-{ 
+Double_t TVector3::Mag() const
+{
    // return the magnitude (rho in spherical coordinate system)
-   
-   return TMath::Sqrt(Mag2()); 
+
+   return TMath::Sqrt(Mag2());
 }
 
 //______________________________________________________________________________
-Double_t TVector3::Perp() const 
-{ 
+Double_t TVector3::Perp() const
+{
    //return the transverse component  (R in cylindrical coordinate system)
 
-   return TMath::Sqrt(Perp2()); 
+   return TMath::Sqrt(Perp2());
 }
 
 
 //______________________________________________________________________________
 Double_t TVector3::Perp(const TVector3 & p) const
-{ 
+{
    //return the transverse component (R in cylindrical coordinate system)
 
-   return TMath::Sqrt(Perp2(p)); 
+   return TMath::Sqrt(Perp2(p));
 }
 
 //______________________________________________________________________________
-Double_t TVector3::Phi() const 
+Double_t TVector3::Phi() const
 {
    //return the  azimuth angle. returns phi from -pi to pi
    return fX == 0.0 && fY == 0.0 ? 0.0 : TMath::ATan2(fY,fX);
 }
 
 //______________________________________________________________________________
-Double_t TVector3::Theta() const 
+Double_t TVector3::Theta() const
 {
    //return the polar angle
    return fX == 0.0 && fY == 0.0 && fZ == 0.0 ? 0.0 : TMath::ATan2(Perp(),fZ);
 }
 
 //______________________________________________________________________________
-TVector3 TVector3::Unit() const 
+TVector3 TVector3::Unit() const
 {
    // return unit vector parallel to this.
    Double_t  tot2 = Mag2();
@@ -373,13 +373,13 @@ void TVector3::SetPtEtaPhi(Double_t pt, Double_t eta, Double_t phi) {
 void TVector3::SetPtThetaPhi(Double_t pt, Double_t theta, Double_t phi) {
    //set Pt, Theta and Phi
    fX = pt * TMath::Cos(phi);
-   fY = pt * TMath::Sin(phi); 
+   fY = pt * TMath::Sin(phi);
    Double_t tanTheta = TMath::Tan(theta);
    fZ = tanTheta ? pt / tanTheta : 0;
 }
 
 //______________________________________________________________________________
-void TVector3::SetTheta(Double_t th) 
+void TVector3::SetTheta(Double_t th)
 {
    // Set theta keeping mag and phi constant (BaBar).
    Double_t ma   = Mag();
@@ -390,7 +390,7 @@ void TVector3::SetTheta(Double_t th)
 }
 
 //______________________________________________________________________________
-void TVector3::SetPhi(Double_t ph) 
+void TVector3::SetPhi(Double_t ph)
 {
    // Set phi keeping mag and theta constant (BaBar).
    Double_t xy   = Perp();
@@ -399,7 +399,7 @@ void TVector3::SetPhi(Double_t ph)
 }
 
 //______________________________________________________________________________
-Double_t TVector3::DeltaR(const TVector3 & v) const 
+Double_t TVector3::DeltaR(const TVector3 & v) const
 {
    //return deltaR with respect to v
    Double_t deta = Eta()-v.Eta();
@@ -408,7 +408,7 @@ Double_t TVector3::DeltaR(const TVector3 & v) const
 }
 
 //______________________________________________________________________________
-void TVector3::SetMagThetaPhi(Double_t mag, Double_t theta, Double_t phi) 
+void TVector3::SetMagThetaPhi(Double_t mag, Double_t theta, Double_t phi)
 {
    //setter with mag, theta, phi
    Double_t amag = TMath::Abs(mag);
@@ -436,7 +436,7 @@ void TVector3::Streamer(TBuffer &R__b)
       R__b >> fZ;
       R__b.CheckByteCount(R__s, R__c, TVector3::IsA());
       //====end of old versions
-      
+
    } else {
       R__b.WriteClassBuffer(TVector3::Class(),this);
    }

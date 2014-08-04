@@ -1,5 +1,5 @@
 // @(#)root/smatrix:$Id$
-// Authors: T. Glebe, L. Moneta    2005  
+// Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_Dfinv
 #define ROOT_Math_Dfinv
@@ -29,9 +29,9 @@
 // ********************************************************************
 
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
 
 
@@ -57,13 +57,13 @@ bool Dfinv(Matrix& rhs, unsigned int* ir) {
   unsigned int nxch, i, j, k, m, ij;
   unsigned int im2, nm1, nmi;
   typename Matrix::value_type s31, s34, ti;
-  
+
   /* Parameter adjustments */
   a -= idim + 1;
   --ir;
-  
+
   /* Function Body */
-  
+
   /* finv.inc */
 
   a[idim + 2] = -a[(idim << 1) + 2] * (a[idim + 1] * a[idim + 2]);
@@ -132,7 +132,7 @@ bool Dfinv(Matrix& rhs, unsigned int* ir) {
          a[k + ji] = ti;
       } // for k
    } // for m
-   
+
    return true;
 } // Dfinv
 
@@ -140,7 +140,7 @@ bool Dfinv(Matrix& rhs, unsigned int* ir) {
   }  // namespace Math
 
 }  // namespace ROOT
-          
+
 
 
 #endif  /* ROOT_Math_Dfinv */

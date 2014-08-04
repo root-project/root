@@ -1,5 +1,5 @@
 // @(#)root/smatrix:$Id$
-// Authors: T. Glebe, L. Moneta    2005  
+// Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_Expression
 #define ROOT_Math_Expression
@@ -39,7 +39,7 @@
 // Expr: class representing SVector expressions
 //=============================================================================
 
-// modified BinaryOp with two extension BinaryOpCopyL and BinaryOpCopyR to store the 
+// modified BinaryOp with two extension BinaryOpCopyL and BinaryOpCopyR to store the
 // object in BinaryOp by value and not reference. When used with constant BinaryOp reference give problems
 // on some compilers (like Windows) where a temporary Constant object is ccreated and then destructed
 
@@ -47,15 +47,15 @@
 #include <iomanip>
 #include <iostream>
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
 
 
 //    template <class T, unsigned int D, unsigned int D2> class MatRepStd;
 
-/** 
+/**
     Expression wrapper class for Vector objects
 
     @ingroup Expression
@@ -73,7 +73,7 @@ public:
   ///
   ~VecExpr() {}
 
-   /// 
+   ///
   inline T apply(unsigned int i) const {
     return rhs_.apply(i);
   }
@@ -90,19 +90,19 @@ public:
   ///static const unsigned int cols = D2;
 #else
   // use enumerations
-  enum { 
+  enum {
 
-    kRows = D 
+    kRows = D
 
   };
 #endif
 
-  /** 
-      function to  determine if any use operand 
+  /**
+      function to  determine if any use operand
       is being used (has same memory adress)
-   */ 
-  inline bool IsInUse (const T * p) const { 
-    return rhs_.IsInUse(p); 
+   */
+  inline bool IsInUse (const T * p) const {
+    return rhs_.IsInUse(p);
   }
 
 
@@ -116,7 +116,7 @@ public:
     }
     os << apply(i);
     os << " ]";
-    
+
     return os;
   }
 
@@ -125,7 +125,7 @@ private:
 };
 
 
-/** 
+/**
     Expression wrapper class for Matrix objects
 
     @ingroup Expression
@@ -153,15 +153,15 @@ public:
   inline T operator() (unsigned int i, unsigned j) const {
     return rhs_(i,j);
   }
-   
-  /** 
-      function to  determine if any use operand 
+
+  /**
+      function to  determine if any use operand
       is being used (has same memory adress)
-   */ 
-  inline bool IsInUse (const T * p) const { 
-    return rhs_.IsInUse(p); 
+   */
+  inline bool IsInUse (const T * p) const {
+    return rhs_.IsInUse(p);
   }
-  
+
 
 
 #ifdef OLD_IMPL
@@ -171,16 +171,16 @@ public:
   static const unsigned int cols = D2;
 #else
   // use enumerations
-  enum { 
+  enum {
     ///
-    kRows = D, 
+    kRows = D,
   ///
     kCols = D2
   };
 #endif
 
   /// used by operator<<()
-  /// simplify to use apply(i,j) 
+  /// simplify to use apply(i,j)
   std::ostream& print(std::ostream& os) const {
     os.setf(std::ios::right,std::ios::adjustfield);
       os << "[ ";
@@ -195,7 +195,7 @@ public:
          os << std::endl  << "  ";
       }
      os << " ]";
-     
+
      return os;
   }
 
@@ -216,9 +216,9 @@ inline std::ostream& operator<<(std::ostream& os, const Expr<A,T,D1,D2,R1>& rhs)
   return rhs.print(os);
 }
 
-/** 
+/**
     BinaryOperation class
-    A class representing binary operators in the parse tree. 
+    A class representing binary operators in the parse tree.
     This is the default case where objects are kept by reference
 
     @ingroup  Expression
@@ -248,8 +248,8 @@ public:
     return Operator::apply(lhs_(i,j), rhs_(i,j) );
   }
 
-  inline bool IsInUse (const T * p) const { 
-    return lhs_.IsInUse(p) || rhs_.IsInUse(p); 
+  inline bool IsInUse (const T * p) const {
+    return lhs_.IsInUse(p) || rhs_.IsInUse(p);
   }
 
 protected:
@@ -260,15 +260,15 @@ protected:
 };
 
 //LM :: add specialization of BinaryOP when first or second argument needs to be copied
-// (maybe it can be doen with a template specialization, but it is not worth, easier to have a separate class    
+// (maybe it can be doen with a template specialization, but it is not worth, easier to have a separate class
 
 //==============================================================================
 /**
-   Binary Operation class with value storage for the left argument. 
-   Special case of BinaryOp where for the left argument the passed object 
-   is copied and stored by value instead of a reference.  
-   This is used in the case of operations involving a constant, where we cannot store a 
-   reference to the constant (we get a temporary object) and we need to copy it. 
+   Binary Operation class with value storage for the left argument.
+   Special case of BinaryOp where for the left argument the passed object
+   is copied and stored by value instead of a reference.
+   This is used in the case of operations involving a constant, where we cannot store a
+   reference to the constant (we get a temporary object) and we need to copy it.
 
    @ingroup  Expression
 */
@@ -291,9 +291,9 @@ public:
     return Operator::apply(lhs_(i,j), rhs_(i,j) );
   }
 
-  inline bool IsInUse (const T * p) const { 
+  inline bool IsInUse (const T * p) const {
     // no need to check left since we copy it
-    return rhs_.IsInUse(p); 
+    return rhs_.IsInUse(p);
   }
 
 protected:
@@ -306,9 +306,9 @@ protected:
 
 //==============================================================================
 /**
-   Binary Operation class with value storage for the right argument. 
-   Special case of BinaryOp where for the wight argument a copy is stored instead of a reference 
-   This is use in the case for example of constant where we cannot store by reference 
+   Binary Operation class with value storage for the right argument.
+   Special case of BinaryOp where for the wight argument a copy is stored instead of a reference
+   This is use in the case for example of constant where we cannot store by reference
    but need to copy since Constant is a temporary object
 
    @ingroup  Expression
@@ -332,9 +332,9 @@ public:
     return Operator::apply(lhs_(i,j), rhs_(i,j) );
   }
 
-  inline bool IsInUse (const T * p) const { 
-    // no need for right since we copied 
-    return lhs_.IsInUse(p); 
+  inline bool IsInUse (const T * p) const {
+    // no need for right since we copied
+    return lhs_.IsInUse(p);
   }
 
 protected:
@@ -346,7 +346,7 @@ protected:
 
 
 
-/** 
+/**
     UnaryOperation class
     A class representing unary operators in the parse tree.
     The objects are stored by reference
@@ -366,7 +366,7 @@ public:
 
   ///
   ~UnaryOp() {}
-  
+
   ///
   inline T apply(unsigned int i) const {
     return Operator::apply(rhs_.apply(i));
@@ -375,8 +375,8 @@ public:
     return Operator::apply(rhs_(i,j));
   }
 
-  inline bool IsInUse (const T * p) const { 
-    return rhs_.IsInUse(p); 
+  inline bool IsInUse (const T * p) const {
+    return rhs_.IsInUse(p);
   }
 
 protected:
@@ -386,7 +386,7 @@ protected:
 };
 
 
-/** 
+/**
     Constant expression class
     A class representing constant expressions (literals) in the parse tree.
 
@@ -415,7 +415,7 @@ public:
 
 protected:
 
-  const T rhs_;  // no need for reference. It is  a fundamental type normally 
+  const T rhs_;  // no need for reference. It is  a fundamental type normally
 
 
 };
@@ -425,7 +425,7 @@ protected:
   }  // namespace Math
 
 }  // namespace ROOT
-          
+
 
 
 #endif  /* ROOT_Math_Expression */

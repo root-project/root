@@ -102,7 +102,7 @@ TQpLinSolverBase::TQpLinSolverBase(TQpProbBase *factory,TQpDataBase *data)
 
 
 //______________________________________________________________________________
-TQpLinSolverBase::TQpLinSolverBase(const TQpLinSolverBase &another) : TObject(another), 
+TQpLinSolverBase::TQpLinSolverBase(const TQpLinSolverBase &another) : TObject(another),
                                                                       fFactory(another.fFactory)
 {
 // Copy constructor

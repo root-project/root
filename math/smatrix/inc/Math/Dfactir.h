@@ -1,5 +1,5 @@
 // @(#)root/smatrix:$Id$
-// Authors: T. Glebe, L. Moneta    2005  
+// Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_Dfactir
 #define ROOT_Math_Dfactir
@@ -30,9 +30,9 @@
 
 #include <cmath>
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
 
 /** Dfactir.
@@ -138,7 +138,7 @@ bool Dfactir(Matrix& rhs, typename Matrix::value_type& det, unsigned int* ir)
          a[kji] -= a[jjpi] * a[k + ji];
       } // for k
    } // for j
-   
+
    if (nxch % 2 != 0) {
       det = -(det);
    }
@@ -150,7 +150,7 @@ bool Dfactir(Matrix& rhs, typename Matrix::value_type& det, unsigned int* ir)
   }  // namespace Math
 
 }  // namespace ROOT
-          
+
 
 
 #endif /* ROOT_Math_Dfactir */

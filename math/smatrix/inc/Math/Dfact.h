@@ -1,5 +1,5 @@
 // @(#)root/smatrix:$Id$
-// Authors: T. Glebe, L. Moneta    2005  
+// Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_Dfact
 #define ROOT_Math_Dfact
@@ -34,13 +34,13 @@
 #include "Math/MatrixRepresentationsStatic.h"
 #endif
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
 
 
-/** 
+/**
     Detrminant for a general squared matrix
     Function to compute the determinant from a square matrix (\f$ \det(A)\f$) of
     dimension idim and order n.
@@ -48,10 +48,10 @@ namespace ROOT {
     @author T. Glebe
 */
 template <unsigned int n, unsigned int idim = n>
-class Determinant { 
+class Determinant {
 public:
- 
-template <class T> 
+
+template <class T>
 static bool Dfact(MatRepStd<T,n,idim>& rhs, T& det) {
 
 #ifdef XXX
@@ -69,14 +69,14 @@ static bool Dfact(MatRepStd<T,n,idim>& rhs, T& det) {
   unsigned int nxch, i, j, k, l;
   //static typename MatrixRep::value_type p, q, tf;
   T p, q, tf;
-  
+
   /* Parameter adjustments */
   //  a -= idim + 1;
   const int arrayOffset = - int(idim+1);
   /* Function Body */
-  
+
   // fact.inc
-  
+
    nxch = 0;
    det = 1.;
    for (j = 1; j <= n; ++j) {
@@ -145,7 +145,7 @@ static bool Dfact(MatRepStd<T,n,idim>& rhs, T& det) {
          rhs[kji + arrayOffset] -= rhs[jjpi + arrayOffset] * rhs[k + ji + arrayOffset];
       } // for k
    } // for j
-   
+
    if (nxch % 2 != 0) {
       det = -(det);
   }
@@ -154,20 +154,20 @@ static bool Dfact(MatRepStd<T,n,idim>& rhs, T& det) {
 
 
    // t.b.d re-implement methods for symmetric
-  // symmetric function (copy in a general  one) 
+  // symmetric function (copy in a general  one)
   template <class T>
   static bool Dfact(MatRepSym<T,n> & rhs, T & det) {
-    // not very efficient but need to re-do Dsinv for new storage of 
+    // not very efficient but need to re-do Dsinv for new storage of
     // symmetric matrices
-    MatRepStd<T,n> tmp; 
-    for (unsigned int i = 0; i< n*n; ++i) 
+    MatRepStd<T,n> tmp;
+    for (unsigned int i = 0; i< n*n; ++i)
       tmp[i] = rhs[i];
     if (! Determinant<n>::Dfact(tmp,det) ) return false;
 //     // recopy the data
-//     for (int i = 0; i< idim*n; ++i) 
+//     for (int i = 0; i< idim*n; ++i)
 //       rhs[i] = tmp[i];
 
-    return true; 
+    return true;
   }
 
 };
@@ -176,7 +176,7 @@ static bool Dfact(MatRepStd<T,n,idim>& rhs, T& det) {
   }  // namespace Math
 
 }  // namespace ROOT
-          
+
 
 
 #endif /* ROOT_Math_Dfact */

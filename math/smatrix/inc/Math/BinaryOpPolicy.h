@@ -1,12 +1,12 @@
 // @(#)root/smatrix:$Id$
-// Authors: J. Palacios    2006  
-#ifndef ROOT_Math_BinaryOpPolicy 
+// Authors: J. Palacios    2006
+#ifndef ROOT_Math_BinaryOpPolicy
 #define ROOT_Math_BinaryOpPolicy 1
 
 // Include files
 
 /** @class BinaryOpPolicy BinaryOpPolicy.h Math/BinaryOpPolicy.h
- *  
+ *
  *
  *  @author Juan PALACIOS
  *  @date   2006-01-10
@@ -22,7 +22,7 @@
 #include "Math/MatrixRepresentationsStatic.h"
 #endif
 
-namespace ROOT { 
+namespace ROOT {
 
   namespace Math {
 
@@ -32,7 +32,7 @@ namespace ROOT {
     template <class T, class R1, class R2>
     struct MultPolicy
     {
-      enum { 
+      enum {
          N1 = R1::kRows,
          N2 = R2::kCols
       };
@@ -45,11 +45,11 @@ namespace ROOT {
     template <class T, unsigned int D1, unsigned int D2, class R1, class R2>
     struct AddPolicy
     {
-      enum { 
+      enum {
          N1 = R1::kRows,
          N2 = R1::kCols
       };
-      typedef MatRepStd<typename R1::value_type, N1, N2 > RepType;  
+      typedef MatRepStd<typename R1::value_type, N1, N2 > RepType;
     };
 
     template <class T, unsigned int D1, unsigned int D2>
@@ -64,7 +64,7 @@ namespace ROOT {
     template <class T, unsigned int D1, unsigned int D2, class R>
     struct TranspPolicy
     {
-      enum { 
+      enum {
          N1 = R::kRows,
          N2 = R::kCols
       };
@@ -72,12 +72,12 @@ namespace ROOT {
     };
     // specialized case of transpose of sym matrices
     template <class T, unsigned int D1, unsigned int D2>
-    struct TranspPolicy<T, D1, D2, MatRepSym<T,D1> > 
+    struct TranspPolicy<T, D1, D2, MatRepSym<T,D1> >
     {
       typedef MatRepSym<T, D1> RepType;
     };
   }  // namespace Math
-  
+
 }  // namespace ROOT
 
 #endif // MATH_BINARYOPPOLICY_H

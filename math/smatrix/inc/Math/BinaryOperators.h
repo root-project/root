@@ -1,5 +1,5 @@
 // @(#)root/smatrix:$Id$
-// Authors: T. Glebe, L. Moneta    2005  
+// Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_BinaryOperators
 #define ROOT_Math_BinaryOperators
@@ -22,9 +22,9 @@
 #include "Math/BinaryOpPolicy.h"
 #endif
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
 
 
@@ -104,7 +104,7 @@ inline VecExpr<BinaryOp<AddOp<T>, VecExpr<A,T,D>, VecExpr<B,T,D>, T>, T, D>
 
 
 /**
-   Addition of a scalar to a each vector element:  v2(i) = v1(i) + a 
+   Addition of a scalar to a each vector element:  v2(i) = v1(i) + a
    returning a vector expression
 
    @ingroup VectFunction
@@ -233,7 +233,7 @@ inline Expr<BinaryOpCopyR<AddOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2
 }
 
 /**
-   Addition element by element of matrix and a scalar  C(i,j) = s + A(i,j) 
+   Addition element by element of matrix and a scalar  C(i,j) = s + A(i,j)
    returning a matrix expression
 
    @ingroup MatrixFunctions
@@ -460,7 +460,7 @@ inline Expr<BinaryOp<MinOp<T>, Expr<A,T,D,D2,R1>, Expr<B,T,D,D2,R2>, T>, T, D, D
 
 
 /**
-   Subtraction of a scalar and a matrix (element wise)  B(i,j)  = A(i,j) - s 
+   Subtraction of a scalar and a matrix (element wise)  B(i,j)  = A(i,j) - s
    returning a matrix expression
 
    @ingroup MatrixFunctions
@@ -478,7 +478,7 @@ inline Expr<BinaryOpCopyR<MinOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2
 }
 
 /**
-   Subtraction of a scalar and a matrix (element wise)  B(i,j)  = s - A(i,j) 
+   Subtraction of a scalar and a matrix (element wise)  B(i,j)  = s - A(i,j)
    returning a matrix expression
 
    @ingroup MatrixFunctions
@@ -535,9 +535,9 @@ public:
 };
 
 /**
-   Element by element vector product v3(i) = v1(i)*v2(i) 
+   Element by element vector product v3(i) = v1(i)*v2(i)
    returning a vector expression.
-   Note this is NOT the Dot, Cross or Tensor product. 
+   Note this is NOT the Dot, Cross or Tensor product.
 
    @ingroup VectFunction
 */
@@ -638,9 +638,9 @@ inline VecExpr<BinaryOpCopyL<MulOp<T>, Constant<A>, VecExpr<B,T,D>, T>, T, D>
 }
 
 /**
-   Element by element matrix multiplication  C(i,j) = A(i,j)*B(i,j) 
-   returning a matrix expression. This is not a matrix-matrix multiplication and works only 
-   for matrices of the same dimensions. 
+   Element by element matrix multiplication  C(i,j) = A(i,j)*B(i,j)
+   returning a matrix expression. This is not a matrix-matrix multiplication and works only
+   for matrices of the same dimensions.
 
    @ingroup MatrixFunctions
 */
@@ -712,7 +712,7 @@ inline Expr<BinaryOpCopyR<MulOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2
 }
 
 /**
-   Multiplication (element wise) of a matrix and a scalar, B(i,j) = s * A(i,j) 
+   Multiplication (element wise) of a matrix and a scalar, B(i,j) = s * A(i,j)
    returning a matrix expression
 
    @ingroup MatrixFunctions
@@ -795,7 +795,7 @@ inline VecExpr<BinaryOp<DivOp<T>, SVector<T,D>, SVector<T,D>, T>, T, D>
 template <class A,  class T, unsigned int D>
 inline VecExpr<BinaryOp<DivOp<T>, VecExpr<A,T,D>, SVector<T,D>, T>, T, D>
  operator/(const VecExpr<A,T,D>& lhs, const SVector<T,D>& rhs) {
-  typedef BinaryOp<DivOp<T>, VecExpr<A,T,D>, SVector<T,D>, T> DivOpBinOp;  
+  typedef BinaryOp<DivOp<T>, VecExpr<A,T,D>, SVector<T,D>, T> DivOpBinOp;
   return VecExpr<DivOpBinOp,T,D>(DivOpBinOp(DivOp<T>(),lhs,rhs));
 }
 
@@ -842,7 +842,7 @@ inline VecExpr<BinaryOpCopyR<DivOp<T>, SVector<T,D>, Constant<A>, T>, T, D>
 }
 
 /**
-   Division of a scalar value by the vector element:  v2(i) = a/v1(i) 
+   Division of a scalar value by the vector element:  v2(i) = a/v1(i)
    returning a vector expression
 
    @ingroup VectFunction
@@ -955,7 +955,7 @@ inline Expr<BinaryOpCopyR<DivOp<T>, SMatrix<T,D,D2,R>, Constant<A>, T>, T, D, D2
 }
 
 /**
-   Division (element wise) of a matrix and a scalar, B(i,j) = s / A(i,j) 
+   Division (element wise) of a matrix and a scalar, B(i,j) = s / A(i,j)
    returning a matrix expression
 
    @ingroup MatrixFunctions
@@ -1001,6 +1001,6 @@ inline Expr<BinaryOpCopyL<DivOp<T>, Constant<A>, Expr<B,T,D,D2,R>, T>, T, D, D2,
   }  // namespace Math
 
 }  // namespace ROOT
-          
+
 
 #endif  /*ROOT_Math_BinaryOperators */
