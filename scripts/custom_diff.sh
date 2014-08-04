@@ -6,8 +6,21 @@ FILEOUT="$2"
 prefix1='/tmp/roottest_log_fifo_'
 prefix2='/tmp/roottest_ref_fifo_'
 
-fifo1=$prefix1$RANDOM
-fifo2=$prefix2$RANDOM
+# if $RANDOM does not exist, use /dev/random
+if [ -z $RANDOM ]; then
+  RANDOM1=`od -An -N2 -i /dev/random`    
+  RANDOM2=`od -An -N2 -i /dev/random`    
+
+  # remove leading whitespaces
+  RANDOM1=`echo $RANDOM1`    
+  RANDOM2=`echo $RANDOM2`    
+else
+  RANDOM1=$RANDOM
+  RANDOM2=$RANDOM
+fi
+
+fifo1=$prefix1$RANDOM1
+fifo2=$prefix2$RANDOM2
 
 mkfifo "$fifo1"
 mkfifo "$fifo2"
