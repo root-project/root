@@ -166,7 +166,6 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
 
   set(gensrcdict ${dictionary}.cxx)
 
-  message("${dictionary}: ${CMAKE_ROOTTEST_NOROOTMAP}")
   #---roottest compability---------------------------------
   if(CMAKE_ROOTTEST_NOROOTMAP)
     set(rootmapname )
@@ -175,7 +174,6 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
     set(rootmapname ${dictionary}Dict.rootmap)
     set(rootmapopts --rootmap=${rootmapname} --rootmap-lib=${libprefix}${dictionary}Dict)
   endif()
-  message("${rootmapname}")
 
   set(include_dirs -I${CMAKE_CURRENT_SOURCE_DIR})
   get_directory_property(incdirs INCLUDE_DIRECTORIES)
