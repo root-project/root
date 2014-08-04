@@ -4,7 +4,7 @@
 #include "NdbMF.h"
 
 /* ========= NdbRadioMult ============ */
-class NdbRad  ioMult : public NdbMF
+class NdbRadioMult : public NdbMF
 {
 protected:
 
