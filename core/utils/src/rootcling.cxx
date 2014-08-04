@@ -2584,13 +2584,61 @@ bool IsHeaderName(const std::string& filename)
           llvm::sys::path::extension(filename) =="HXX";
 }
 
+
+//______________________________________________________________________________
+void GetMostExternalEnclosingClassName(const clang::DeclContext& theContext,
+                                       std::string& ctxtName,
+                                       const cling::Interpreter& interpreter,
+                                       bool treatParent=true)
+{
+   // Extract the proper autoload key for nested classes
+   // The routine does not erase the name, just updates it
+
+   const clang::DeclContext* outerCtxt = treatParent ? theContext.getParent():&theContext;
+   // If the context has no outer context, we are finished
+   if (!outerCtxt) return;
+   // If the context is a class, we update the name
+   if (const clang::RecordDecl* thisRcdDecl = llvm::dyn_cast<clang::RecordDecl>(outerCtxt)){
+      ROOT::TMetaUtils::GetNormalizedName(ctxtName, thisRcdDecl, interpreter);
+   }
+   // We recurse
+   GetMostExternalEnclosingClassName(*outerCtxt, ctxtName, interpreter);
+}
+
+//______________________________________________________________________________
+void GetMostExternalEnclosingClassNameFromDecl(const clang::Decl& theDecl,
+                                               std::string& ctxtName,
+                                               const cling::Interpreter& interpreter)
+{
+   const clang::DeclContext* theContext = theDecl.getDeclContext();
+   GetMostExternalEnclosingClassName(*theContext, ctxtName,interpreter,false);
+}
+
+//______________________________________________________________________________
+void ExtractTypedefAutoloadKeys(std::list<std::string>& tdNames,
+                                const std::vector<clang::TypedefNameDecl*>& typedefDecls,
+                                const cling::Interpreter& interp)
+{
+   if (!typedefDecls.empty()){
+      std::string autoLoadKey;
+      for (auto& tDef : typedefDecls){
+         autoLoadKey="";
+         GetMostExternalEnclosingClassNameFromDecl(*tDef, autoLoadKey, interp);
+         // If there is an outer class, it is already considered
+         if (autoLoadKey.empty()){
+            tdNames.push_back(tDef->getQualifiedNameAsString());
+         }
+      }
+   }
+}
+
 //______________________________________________________________________________
 int CreateNewRootMapFile(const std::string& rootmapFileName,
                          const std::string& rootmapLibName,
                          const std::list<std::string>& classesDefsList,
                          const std::list<std::string>& classesNames,
                          const std::list<std::string>& nsNames,
-                         const std::vector<clang::TypedefNameDecl*>& typedefDecls,
+                         const std::list<std::string>& tdNames,
                          const HeadersDeclsMap_t& headersClassesMap,
                          const std::unordered_set<std::string> headersToIgnore)
 {
@@ -2610,6 +2658,10 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
       return 1;
    }
 
+   // Keep track of the classes keys
+   // This is done to avoid duplications of keys with typedefs
+   std::unordered_set<std::string> classesKeys;
+
    // Add the template definitions
    if (!classesDefsList.empty()){
       rootmapFile << "{ decls }\n";
@@ -2620,7 +2672,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
    }
 
    // Add the "section"
-   if (!nsNames.empty() || !classesNames.empty() || !typedefDecls.empty()){
+   if (!nsNames.empty() || !classesNames.empty() || !tdNames.empty()){
       rootmapFile << "[" << rootmapLibName << " ]\n";
 
       // Loop on selected classes and insert them in the rootmap
@@ -2628,6 +2680,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
          rootmapFile << "# List of selected classes\n";
          for (auto& className : classesNames){
             rootmapFile << "class " << className << std::endl;
+            classesKeys.insert(className);
          }
          // And headers
          std::unordered_set<std::string> treatedHeaders;
@@ -2654,13 +2707,12 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
       }
 
       // And typedefs. These are used just to trigger the autoload mechanism
-      if (!typedefDecls.empty()){
-         rootmapFile << "# List of selected typedefs\n";
-         for (auto& tDef : typedefDecls){
-            rootmapFile << "typedef " << tDef->getQualifiedNameAsString() << std::endl;
-         }
+      if (!tdNames.empty()){
+         rootmapFile << "# List of selected typedefs and outer classes\n";
+         for (const auto& autoloadKey : tdNames)
+            if (classesKeys.insert(autoloadKey).second)
+               rootmapFile << "typedef " << autoloadKey << std::endl;
       }
-
    }
 
    return 0;
@@ -2683,7 +2735,7 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
                                            std::list<std::string>& classesList,
                                            std::list<std::string>& classesListForRootmap,
                                            std::list<std::string>& fwdDeclarationsList,
-                                           cling::Interpreter& interpreter)
+                                           const cling::Interpreter& interpreter)
 {
 
    // Loop on selected classes. If they don't have the attribute "rootmap"
@@ -2693,14 +2745,19 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
    // An unordered_set to keep track of the existing classes.
    // We want to avoid duplicates there as they may hint to a serious corruption
    std::unordered_set<std::string> classesSet;
+   std::unordered_set<std::string> outerMostClassesSet;
 
    std::string attrName,attrValue;
    bool isClassSelected;
    // Loop on selected classes and put them in a list
    for (auto const & selClass: scan.fSelectedClasses){
       isClassSelected = true;
-      std::string normalizedName(selClass.GetNormalizedName());
-      if (normalizedName.size()!=0 && !classesSet.insert(normalizedName).second){
+      const clang::RecordDecl* rDecl = selClass.GetRecordDecl();
+      std::string normalizedName;
+      normalizedName=selClass.GetNormalizedName();
+      if (!normalizedName.empty() &&
+         !classesSet.insert(normalizedName).second &&
+         outerMostClassesSet.count(normalizedName)==0){
          std::cerr << "FATAL: A class with normalized name " << normalizedName
                    << " was already selected. This means that two different instances of"
                    << " clang::RecordDecl had the same name, which is not possible."
@@ -2712,7 +2769,6 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
       // Allow to autoload with the name of the class as it was specified in the 
       // selection xml or linkdef
       const char* reqName(selClass.GetRequestedName());
-      const clang::RecordDecl* rDecl = selClass.GetRecordDecl();
 
       // Get always the containing namespace, put it in the list if not there
       std::string fwdDeclaration;
@@ -2739,10 +2795,19 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
          }
       }
       if (isClassSelected){
-          classesListForRootmap.push_back(normalizedName);
-          if (reqName!=nullptr && 0!=strcmp(reqName,"") && reqName != normalizedName){
-             classesListForRootmap.push_back(reqName);
-          }
+         // Now, check if this is an internal class. If yes, we check the name of the outermost one
+         std::string outerMostClassName;
+         GetMostExternalEnclosingClassName(*rDecl,outerMostClassName,interpreter);
+         if (!outerMostClassName.empty() &&
+             classesSet.insert(outerMostClassName).second &&
+             outerMostClassesSet.insert(outerMostClassName).second){
+            classesListForRootmap.push_back(outerMostClassName);
+         } else {
+            classesListForRootmap.push_back(normalizedName);
+            if (reqName!=nullptr && 0!=strcmp(reqName,"") && reqName != normalizedName){
+               classesListForRootmap.push_back(reqName);
+            }
+         }
       }
    }
    classesListForRootmap.sort();
@@ -3272,16 +3337,21 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
 {
    std::set<const clang::CXXRecordDecl*> visitedDecls;
    std::unordered_set<std::string> buffer;
+   std::string autoParseKey;
+
    // Add some manip of headers
    for (auto& annotatedRcd : annotatedRcds){
       if (const clang::CXXRecordDecl* cxxRcd =
            llvm::dyn_cast_or_null<clang::CXXRecordDecl>(annotatedRcd.GetRecordDecl())){
+         autoParseKey="";
          visitedDecls.clear();
          std::list<std::string> headers (RecordDecl2Headers(*cxxRcd,interp,visitedDecls));
          // remove duplicates, also if not subsequent
          buffer.clear();
          headers.remove_if([&buffer](const std::string& s) {return !buffer.insert(s).second;});
-         headersDeclsMap[annotatedRcd.GetNormalizedName()] = headers;
+         GetMostExternalEnclosingClassName(*cxxRcd, autoParseKey, interp);
+         if (autoParseKey.empty()) autoParseKey=annotatedRcd.GetNormalizedName();
+         headersDeclsMap[autoParseKey] = headers;
          headersDeclsMap[annotatedRcd.GetRequestedName()] = headers;
       }
    }
@@ -3291,13 +3361,16 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
    // The same for the typedefs:
    for (auto& tDef : tDefDecls){
       if (clang::CXXRecordDecl* cxxRcd=tDef->getUnderlyingType()->getAsCXXRecordDecl()){
+         autoParseKey="";
          visitedDecls.clear();
          std::list<std::string> headers (RecordDecl2Headers(*cxxRcd,interp,visitedDecls));
          headers.push_back(ROOT::TMetaUtils::GetFileName(*tDef, interp));
          // remove duplicates, also if not subsequent
          buffer.clear();
          headers.remove_if([&buffer](const std::string& s) {return !buffer.insert(s).second;});
-         headersDeclsMap[tDef->getQualifiedNameAsString()] = headers;
+         GetMostExternalEnclosingClassNameFromDecl(*tDef, autoParseKey, interp);
+         if (autoParseKey.empty()) autoParseKey=tDef->getQualifiedNameAsString();
+         headersDeclsMap[autoParseKey] = headers;
       }
    }
    // The same for the functions:
@@ -4368,12 +4441,17 @@ int RootCling(int argc,
             }
          }
 
+         std::list<std::string> typedefsRootmapLines;
+         ExtractTypedefAutoloadKeys (typedefsRootmapLines,
+                                     scan.fSelectedTypedefs,
+                                     interp);
+
          rmStatusCode = CreateNewRootMapFile(rootmapFileName,
                                              rootmapLibName,
                                              classesDefsList,
                                              classesNamesForRootmap,
                                              nsNames,
-                                             scan.fSelectedTypedefs,
+                                             typedefsRootmapLines,
                                              headersClassesMap,
                                              headersToIgnore);
       }
