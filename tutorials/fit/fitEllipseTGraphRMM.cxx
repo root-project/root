@@ -5,7 +5,7 @@
 // To try this macro, in a ROOT prompt, do:
 // .L fitEllipseTGraphRMM.cxx // or ".L fitEllipseTGraphRMM.cxx++"
 // fitEllipseTGraphRMM(TestGraphRMM());
-// for (Int_t i = 0; i < 10; i++) { fitEllipseTGraphRMM(); gSystem->Sleep(333); }
+// for (Int_t i=0; i<10; i++) { fitEllipseTGraphRMM(); gSystem->Sleep(333); }
 //
 // Last update: Thu Jul 31 18:00:00 UTC 2014
 //
@@ -306,4 +306,4 @@ void fitEllipseTGraphRMM(TGraph *g = ((TGraph *)0))
   return;
 }
 
-// end of file EllipseTGraphRMM.cxx by Silesius Anonymus
+// end of file fitEllipseTGraphRMM.cxx by Silesius Anonymus
