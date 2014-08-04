@@ -5,7 +5,7 @@
 // To try this macro, in a ROOT prompt, do:
 // .L fitEllipseTGraphDLSF.cxx // or ".L fitEllipseTGraphDLSF.cxx++"
 // fitEllipseTGraphDLSF(TestGraphDLSF());
-// for (Int_t i = 0; i < 10; i++) { fitEllipseTGraphDLSF(); gSystem->Sleep(333); }
+// for (Int_t i=0; i<10; i++) { fitEllipseTGraphDLSF(); gSystem->Sleep(333); }
 //
 // Last update: Thu Jul 31 18:00:00 UTC 2014
 //
@@ -335,4 +335,4 @@ void fitEllipseTGraphDLSF(TGraph *g = ((TGraph *)0))
   return;
 }
 
-// end of file EllipseTGraphDLSF.cxx by Silesius Anonymus
+// end of file fitEllipseTGraphDLSF.cxx by Silesius Anonymus
