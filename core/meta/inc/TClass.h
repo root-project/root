@@ -39,9 +39,7 @@
 #include <set>
 #include <vector>
 
-#if __cplusplus >= 201103L
 #include <atomic>
-#endif
 #ifndef ROOT_ThreadLocalStorage
 #include "ThreadLocalStorage.h"
 #endif
@@ -143,19 +141,11 @@ private:
    // value of fPersistentRef is set to zero, leading the TClassRef to call
    // TClass::GetClass which is also locked by the replacement.   At the end
    // of the replacement, fPersistentRef points to the new TClass object.
-#if __cplusplus >= 201103L
    std::atomic<TClass**> fPersistentRef;//!Persistent address of pointer to this TClass object and its successors.
-#else
-   TClass           **fPersistentRef;   //!Persistent address of pointer to this TClass object and its successors.
-#endif
 
 
    mutable TObjArray *fStreamerInfo;    //Array of TVirtualStreamerInfo
-#if __cplusplus >= 201103L
    mutable std::atomic<std::map<std::string, TObjArray*>*> fConversionStreamerInfo; //Array of the streamer infos derived from another class.
-#else
-   mutable std::map<std::string, TObjArray*> *fConversionStreamerInfo; //Array of the streamer infos derived from another class.
-#endif
    TList             *fRealData;        //linked list for persistent members including base classes
    TList             *fBase;            //linked list for base classes
    TListOfDataMembers*fData;            //linked list for data members
@@ -204,22 +194,13 @@ private:
            Bool_t     fHasRootPcmInfo : 1;      //!Whether info was loaded from a root pcm.
    mutable Bool_t     fCanLoadClassInfo : 1;    //!Indicates whether the ClassInfo is supposed to be available.
    mutable Bool_t     fIsOffsetStreamerSet : 1; //!saved remember if fOffsetStreamer has been set.
-#if __cplusplus >= 201103L
    mutable std::atomic<Bool_t> fVersionUsed;     //!Indicates whether GetClassVersion has been called
-#else
-   mutable Bool_t     fVersionUsed : 1;         //!Indicates whether GetClassVersion has been called
-#endif
 
    mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
    EState             fState;           //!Current 'state' of the class (Emulated,Interpreted,Loaded)
-#if __cplusplus >= 201103L
    mutable std::atomic<TVirtualStreamerInfo*>  fCurrentInfo;     //!cached current streamer info.
    mutable std::atomic<TVirtualStreamerInfo*>  fLastReadInfo;    //!cached streamer info used in the last read.
-#else
-   mutable TVirtualStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
-   mutable TVirtualStreamerInfo     *fLastReadInfo;    //!cached streamer info used in the last read.
-#endif
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
    ROOT::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
 
@@ -256,13 +237,8 @@ private:
 
    static IdMap_t    *GetIdMap();       //Map from typeid to TClass pointer
    static DeclIdMap_t *GetDeclIdMap();  //Map from DeclId_t to TClass pointer
-#if __cplusplus >= 201103L
    static std::atomic<Int_t>     fgClassCount;  //provides unique id for a each class
                                                 //stored in TObject::fUniqueID
-#else
-   static Int_t       fgClassCount;             //provides unique id for a each class
-                                                //stored in TObject::fUniqueID
-#endif
    // Internal status bits
    enum { kLoading = BIT(14), kUnloading = BIT(14) };
    // Internal streamer type.

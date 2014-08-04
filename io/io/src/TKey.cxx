@@ -46,9 +46,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#if __cplusplus >= 201103L
 #include <atomic>
-#endif
 
 #include "Riostream.h"
 #include "TROOT.h"
@@ -82,11 +80,7 @@ const ULong64_t kPidOffsetMask = 0xffffffffffffUL;
 const UChar_t kPidOffsetShift = 48;
 
 static TString gTDirectoryString = "TDirectory";
-#if __cplusplus >= 201103L
 std::atomic<UInt_t> keyAbsNumber{0};
-#else
-UInt_t keyAbsNumber(0);
-#endif
 
 ClassImp(TKey)
 

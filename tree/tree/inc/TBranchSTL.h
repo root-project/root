@@ -15,9 +15,6 @@
 #include "TBranchObject.h"
 #include "TBranchElement.h"
 #include "TIndArray.h"
-#if __cplusplus >= 201103L
-#include <atomic>
-#endif
 #include <map>
 #include <vector>
 #include <utility>

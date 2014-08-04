@@ -38,9 +38,7 @@
 #include "TObjArray.h"
 #include <map>
 #include <algorithm>
-#if __cplusplus >= 201103L
 #include <atomic>
-#endif
 
 //#define G__OLDEXPAND
 
@@ -400,11 +398,7 @@ static void SigHandler(ESignals sig)
 //______________________________________________________________________________
 static const char *GetExePath()
 {
-#if __cplusplus >= 201103L
    thread_local TString exepath;
-#else
-   static TString exepath;
-#endif
    if (exepath == "") {
 #if defined(R__MACOSX)
       exepath = _dyld_get_image_name(0);
@@ -3702,11 +3696,7 @@ Long64_t TUnixSystem::UnixNow()
 {
    // Get current time in milliseconds since 0:00 Jan 1 1995.
 
-#if __cplusplus >= 201103L
    static std::atomic<time_t> jan95{0};
-#else
-   static time_t jan95 = 0;
-#endif
    if (!jan95) {
       struct tm tp;
       tp.tm_year  = 95;

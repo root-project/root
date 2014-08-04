@@ -72,11 +72,7 @@
 
 #include "TStreamerInfoActions.h"
 
-#if __cplusplus >= 201103L
 std::atomic<Int_t>   TStreamerInfo::fgCount{0};
-#else
-Int_t   TStreamerInfo::fgCount = 0;
-#endif
 
 const Int_t kMaxLen = 1024;
 

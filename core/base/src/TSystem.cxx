@@ -1992,14 +1992,7 @@ TString &TSystem::GetLastErrorString()
 {
    // Return the thread local storage for the custom last error message
 
-#if __cplusplus >= 201103L
    thread_local TString gLastErrorString;
-#else
-   // Because of
-   //   error: ‘TSystem::fgLastErrorString’ cannot be thread-local because it has non-POD type ‘TString’
-   // we can not rely on the platform independent thread local
-   static TString gLastErrorString;
-#endif
 
    return gLastErrorString;
 }

@@ -42,11 +42,7 @@ namespace std {} using namespace std;
 const Int_t kMaxLen = 1024;
 
 static TString &IncludeNameBuffer() {
-#if __cplusplus >= 201103L
    thread_local TString includeName(kMaxLen);
-#else
-   static TString includeName(kMaxLen);
-#endif
    return includeName;
 }
 
@@ -304,11 +300,7 @@ const char *TStreamerElement::GetFullName() const
    // Note that this function stores the name into a static array.
    // You should copy the result.
 
-#if __cplusplus >= 201103L
    thread_local TString name(kMaxLen);
-#else
-   static TString name(kMaxLen);
-#endif
    char cdim[20];
    name = GetName();
    for (Int_t i=0;i<fArrayDim;i++) {

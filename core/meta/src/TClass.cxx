@@ -102,11 +102,7 @@ namespace {
    };
 }
 
-#if __cplusplus >= 201103L
 std::atomic<Int_t> TClass::fgClassCount;
-#else
-Int_t TClass::fgClassCount;
-#endif
 
 //Intent of why/how TClass::New() is called
 //[Not a static datamember because MacOS does not support static thread local data member ... who knows why]
@@ -1205,12 +1201,7 @@ void TClass::Init(const char *name, Version_t cversion,
    TClass **persistentRef = 0;
    if (oldcl) {
 
-#if __cplusplus >= 201103L
       persistentRef = oldcl->fPersistentRef.exchange(0);
-#else
-      persistentRef = oldcl->fPersistentRef;
-      oldcl->fPersistentRef = 0;
-#endif
 
       // The code from here is also in ForceReload.
       TClass::RemoveClass(oldcl);
@@ -1354,12 +1345,7 @@ void TClass::Init(const char *name, Version_t cversion,
       if (resolvedThis != fName) {
          oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedThis);
          if (oldcl && oldcl != this) {
-#if __cplusplus >= 201103L
             persistentRef = oldcl->fPersistentRef.exchange(0);
-#else
-            persistentRef = oldcl->fPersistentRef;
-            oldcl->fPersistentRef = 0;
-#endif
             ForceReload (oldcl);
          }
       }
@@ -1368,12 +1354,7 @@ void TClass::Init(const char *name, Version_t cversion,
          if (resolvedThis != htmp->String()) continue;
          oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(htmp->fOrigName); // gROOT->GetClass (htmp->fOrigName, kFALSE);
          if (oldcl && oldcl != this) {
-#if __cplusplus >= 201103L
             persistentRef = oldcl->fPersistentRef.exchange(0);
-#else
-            persistentRef = oldcl->fPersistentRef;
-            oldcl->fPersistentRef = 0;
-#endif
             ForceReload (oldcl);
          }
       }
@@ -1524,11 +1505,7 @@ TClass::~TClass()
    delete fAllPubData;     fAllPubData  =0;
    delete fAllPubMethod;   fAllPubMethod=0;
 
-#if __cplusplus >= 201103L
    delete fPersistentRef.load();
-#else
-   delete fPersistentRef;
-#endif
 
    if (fBase)
       fBase->Delete();
@@ -1585,11 +1562,7 @@ TClass::~TClass()
       for( it = (*fConversionStreamerInfo).begin(); it != end; ++it ) {
          delete it->second;
       }
-#if __cplusplus >= 201103L
       delete fConversionStreamerInfo.load();
-#else
-      delete fConversionStreamerInfo;
-#endif
    }
 }
 
@@ -2848,12 +2821,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
                // Remove the existing (soon to be invalid) TClass object to
                // avoid an infinite recursion.
                gROOT->GetListOfClasses()->Remove(cl);
-#if __cplusplus >= 201103L
                TClass **persistentRef = cl->fPersistentRef.exchange(0);
-#else
-               TClass **persistentRef = cl->fPersistentRef;
-               cl->fPersistentRef = 0;
-#endif
                TClass *newcl = GetClass(altname.c_str(),load);
 
                // Pass along the persistentRef.  It would safe to change it here
@@ -2861,13 +2829,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
                // until we release the lock ... However, it was already captured
                // by the TClassRef in the CollectionProxy so the ref must be
                // deleted only after the ForceReload
-#if __cplusplus >= 201103L
                persistentRef = newcl->fPersistentRef.exchange(persistentRef);
-#else
-               TClass **todelete = newcl->fPersistentRef;
-               newcl->fPersistentRef = persistentRef;
-               persistentRef = todelete;
-#endif
                *(newcl->fPersistentRef) = newcl;
                // Force a refresh
                *persistentRef = 0;
