@@ -1130,7 +1130,7 @@ namespace {
       // with the setHasExternalLexicalStorage method.
    public:
       bool VisitRecordDecl(clang::RecordDecl* rcd){
-         if (gDebug > 1)
+         if (gDebug > 2)
             Info("ExtLexicalStorageAdder",
                  "Adding external lexical storage to class %s",
                  rcd->getNameAsString().c_str());
@@ -1307,7 +1307,7 @@ void TCling::RegisterModule(const char* modulename,
                fPayloads.insert(theHash);
                if (addTemplate) fPayloads.insert(theTemplateHash);
             }
-            if (gDebug > 1)
+            if (gDebug > 2)
                Info("TCling::RegisterModule",
                      "Adding a header for %s", temp.c_str());
             fClassesHeadersMap[theHash].push_back(*classesHeader_inner);
