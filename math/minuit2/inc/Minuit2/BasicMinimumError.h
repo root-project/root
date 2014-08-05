@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -30,38 +30,38 @@ namespace ROOT {
 //extern StackAllocator gStackAllocator;
 
 /**
-   Internal Class containing the error information on the 
-   estimated minimum : 
+   Internal Class containing the error information on the
+   estimated minimum :
    Error matrix + dcovar + additional flags for quality and validity checks
  */
 
 class BasicMinimumError {
 
 public:
- 
+
   class MnNotPosDef {};
   class MnMadePosDef {};
   class MnHesseFailed {};
   class MnInvertFailed {};
 
 public:
-  
-  BasicMinimumError(unsigned int n) : 
+
+  BasicMinimumError(unsigned int n) :
     fMatrix(MnAlgebraicSymMatrix(n)), fDCovar(1.), fValid(false), fPosDef(false), fMadePosDef(false), fHesseFailed(false), fInvertFailed(false), fAvailable(false) {}
- 
-  BasicMinimumError(const MnAlgebraicSymMatrix& mat, double dcov) : 
+
+  BasicMinimumError(const MnAlgebraicSymMatrix& mat, double dcov) :
     fMatrix(mat), fDCovar(dcov), fValid(true), fPosDef(true), fMadePosDef(false), fHesseFailed(false), fInvertFailed(false), fAvailable(true) {}
-  
-  BasicMinimumError(const MnAlgebraicSymMatrix& mat, MnHesseFailed) : 
+
+  BasicMinimumError(const MnAlgebraicSymMatrix& mat, MnHesseFailed) :
     fMatrix(mat), fDCovar(1.), fValid(false), fPosDef(false), fMadePosDef(false), fHesseFailed(true), fInvertFailed(false), fAvailable(true) {}
 
-  BasicMinimumError(const MnAlgebraicSymMatrix& mat, MnMadePosDef) : 
+  BasicMinimumError(const MnAlgebraicSymMatrix& mat, MnMadePosDef) :
     fMatrix(mat), fDCovar(1.), fValid(true), fPosDef(false), fMadePosDef(true), fHesseFailed(false), fInvertFailed(false), fAvailable(true) {}
 
-  BasicMinimumError(const MnAlgebraicSymMatrix& mat, MnInvertFailed) : 
+  BasicMinimumError(const MnAlgebraicSymMatrix& mat, MnInvertFailed) :
     fMatrix(mat), fDCovar(1.), fValid(false), fPosDef(true), fMadePosDef(false), fHesseFailed(false), fInvertFailed(true), fAvailable(true) {}
 
-  BasicMinimumError(const MnAlgebraicSymMatrix& mat, MnNotPosDef) : 
+  BasicMinimumError(const MnAlgebraicSymMatrix& mat, MnNotPosDef) :
     fMatrix(mat), fDCovar(1.), fValid(false), fPosDef(false), fMadePosDef(false), fHesseFailed(false), fInvertFailed(false), fAvailable(true) {}
 
   ~BasicMinimumError() {}
@@ -83,7 +83,7 @@ public:
   void* operator new(size_t nbytes) {
     return StackAllocatorHolder::Get().Allocate(nbytes);
   }
-  
+
   void operator delete(void* p, size_t /*nbytes */) {
     StackAllocatorHolder::Get().Deallocate(p);
   }

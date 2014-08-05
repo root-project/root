@@ -1,5 +1,5 @@
 // @(#)root/smatrix:$Id$
-// Authors: T. Glebe, L. Moneta    2005  
+// Authors: T. Glebe, L. Moneta    2005
 
 #ifndef  ROOT_Math_UnaryOperators
 #define  ROOT_Math_UnaryOperators
@@ -24,9 +24,9 @@
 #include "Math/Expression.h"
 #endif
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
 
 
@@ -138,7 +138,7 @@ inline VecExpr<UnaryOp<Fabs<T>, VecExpr<A,T,D>, T>, T, D>
 
 
 /**
-   abs of a vector : v2(i) = | v1(i) | 
+   abs of a vector : v2(i) = | v1(i) |
    returning a vector expression
 
    @ingroup VectFunction
@@ -167,7 +167,7 @@ inline Expr<UnaryOp<Fabs<T>, Expr<A,T,D,D2,R>, T>, T, D, D2, R>
 
 
 /**
-   abs of a matrix  m2(i,j) = | m1(i,j) | 
+   abs of a matrix  m2(i,j) = | m1(i,j) |
    returning a matrix epression
 
    @ingroup MatrixFunctions
@@ -213,7 +213,7 @@ inline VecExpr<UnaryOp<Sqr<T>, VecExpr<A,T,D>, T>, T, D>
 
 
 /**
-   square of a vector   v2(i) = v1(i)*v1(i) .  
+   square of a vector   v2(i) = v1(i)*v1(i) .
    returning a vector expression
 
    @ingroup VectFunction
@@ -288,7 +288,7 @@ inline VecExpr<UnaryOp<Sqrt<T>, VecExpr<A,T,D>, T>, T, D>
 
 
 /**
-   square root of a vector (element by element) v2(i) = sqrt( v1(i) )  
+   square root of a vector (element by element) v2(i) = sqrt( v1(i) )
    returning a vector expression
 
    @ingroup VectFunction
@@ -336,7 +336,7 @@ inline Expr<UnaryOp<Sqrt<T>, SMatrix<T,D,D2,R>, T>, T, D, D2, R>
   }  // namespace Math
 
 }  // namespace ROOT
-          
 
 
-#endif  /* ROOT_Math_UnaryOperators */ 
+
+#endif  /* ROOT_Math_UnaryOperators */

@@ -604,7 +604,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
                                " (MemHWM) out of range [0,MemStop] - ignoring");
          fgMemHWM = 0.80;
       }
-   }   
+   }
 
    // Wait (loop) to allow debugger to connect
    Bool_t test = (argc && *argc >= 4 && !strcmp(argv[3], "test")) ? kTRUE : kFALSE;
@@ -697,7 +697,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 
    // Bit to flg high-memory footprint
    ResetBit(TProofServ::kHighMemory);
-   
+
    // Max message size
    fMsgSizeHWM = gEnv->GetValue("ProofServ.MsgSizeHWM", 1000000);
 
@@ -737,7 +737,7 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
          Warning("TProofServ", "bad formatted log file size limit ignored: '%s'", logmx.Data());
       }
    }
-   
+
    // Parse options
    GetOptions(argc, argv);
 
@@ -1339,7 +1339,7 @@ void TProofServ::HandleSocketInput()
    TruncateLogFile();
 
    try {
-   
+
       // Get message
       if (fSocket->Recv(mess) <= 0 || !mess) {
          // Pending: do something more intelligent here
@@ -1395,7 +1395,7 @@ void TProofServ::HandleSocketInput()
             doit = 1;
          }
       }
-   
+
    } catch (std::bad_alloc &) {
       // Memory allocation problem:
       exmsg.Form("caught exception 'bad_alloc' (memory leak?) %s %lld",
@@ -1427,7 +1427,7 @@ void TProofServ::HandleSocketInput()
       // Terminate
       Terminate(0);
    }
-   
+
    // Terminate also if a high memory footprint was detected before the related
    // exception was thrwon
    if (TestBit(TProofServ::kHighMemory)) {
@@ -3022,9 +3022,9 @@ Int_t TProofServ::SetupCommon()
    if (paths.Length() > 0) {
       Int_t icomp = 0;
       if (paths.Contains("^<compiler>"))
-	 icomp = 1;
+         icomp = 1;
       else if (paths.Contains("<compiler>"))
-	 icomp = -1;
+         icomp = -1;
       if (icomp != 0) {
 # ifdef COMPILER
          TString compiler = COMPILER;
@@ -3042,9 +3042,9 @@ Int_t TProofServ::SetupCommon()
       }
       Int_t isysb = 0;
       if (paths.Contains("^<sysbin>"))
-	 isysb = 1;
+         isysb = 1;
       else if (paths.Contains("<sysbin>"))
-	 isysb = -1;
+         isysb = -1;
       if (isysb != 0) {
          if (isysb == 1) {
             if (!bindir.IsNull()) bindir += ":";
@@ -3155,14 +3155,14 @@ Int_t TProofServ::SetupCommon()
                if (st.fUid == (Int_t) gSystem->GetUid() && st.fGid == (Int_t) gSystem->GetGid()) {
                   if (gSystem->Chmod(p.Data(), m) != 0) {
                      Warning("SetupCommon", "problems setting mode '%o' on path '%s' (errno: %d)",
-                                            m, p.Data(), TSystem::GetErrno());  
+                                            m, p.Data(), TSystem::GetErrno());
                      break;
                   }
                }
                p += "/";
             } else {
                Warning("SetupCommon", "problems stat-ing path '%s' (errno: %d; datadir: %s)",
-                                       p.Data(), TSystem::GetErrno(), fDataDir.Data());  
+                                       p.Data(), TSystem::GetErrno(), fDataDir.Data());
                break;
             }
          }
@@ -3789,7 +3789,7 @@ TMap *TProofServ::GetDataSetNodeMap(TFileCollection *fc, TString &emsg)
 
    TMap *fcmap = 0;
    emsg = "";
-   
+
    // Sanity checks
    if (!fc) {
       emsg.Form("file collection undefined!");
@@ -3806,7 +3806,7 @@ TMap *TProofServ::GetDataSetNodeMap(TFileCollection *fc, TString &emsg)
       TUrl *xurl = fiind->GetCurrentUrl();
       // Find the key for this server
       key.Form("%s://%s", xurl->GetProtocol(), xurl->GetHostFQDN());
-      if (xurl->GetPort() > 0) 
+      if (xurl->GetPort() > 0)
          key += TString::Format(":%d", xurl->GetPort());
          // Get the map entry for this key
       TPair *ent = 0;
@@ -3815,7 +3815,7 @@ TMap *TProofServ::GetDataSetNodeMap(TFileCollection *fc, TString &emsg)
          // Attach to the list
          l = (THashList *) ent->Value();
       } else {
-         // Create list 
+         // Create list
          l = new THashList;
          l->SetOwner(kTRUE);
          // Add it to the map
@@ -3824,7 +3824,7 @@ TMap *TProofServ::GetDataSetNodeMap(TFileCollection *fc, TString &emsg)
       // Add fileinfo with index to list
       l->Add(fiind);
    }
-  
+
    // Done
    return fcmap;
 }
@@ -4113,7 +4113,7 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
 
       // Process
       PDB(kGlobal, 1) Info("HandleProcess", "calling %s::Process()", fPlayer->IsA()->GetName());
-       
+
       if (selector_obj){
          Info("HandleProcess", "calling fPlayer->Process() with selector object: %s", selector_obj->ClassName());
          fPlayer->Process(dset, selector_obj, opt, nentries, first);
@@ -4272,7 +4272,7 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
 
       // Make also sure the input list objects are deleted
       fPlayer->GetInputList()->SetOwner(0);
-      
+
       // Remove possible inputs from a file and the file, if any
       TList *added = dynamic_cast<TList *>(input->FindObject("PROOF_InputObjsFromFile"));
       if (added) {
@@ -4704,7 +4704,7 @@ void TProofServ::ProcessNext(TString *slb)
          }
       }
    }
-   
+
    // Send back the results
    TQueryResult *pqr = pq->CloneInfo();
    // At least the TDSet name in the light object
@@ -4801,7 +4801,7 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out,
             // Extract the list
             if (ds->GetList()->GetSize() > 0) {
                // Register the dataset (quota checks are done inside here)
-               const char *vfmsg = regopt.Contains("V") ? " and verifying" : ""; 
+               const char *vfmsg = regopt.Contains("V") ? " and verifying" : "";
                msg.Form("Registering%s dataset '%s' ... ", vfmsg, ds->GetName());
                // Always allow verification for this action
                Bool_t allowVerify = dsm->TestBit(TDataSetManager::kAllowVerify) ? kTRUE : kFALSE;
@@ -5306,7 +5306,7 @@ void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
             if (fProof->UploadPackage(fPackageDir + "/" + filenam) != 0)
                Info("HandleCheckFile",
                     "problems uploading package %s", filenam.Data());
-               
+
       } else {
          reply << (Int_t)0;
          if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
@@ -6288,7 +6288,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
          buf.Form("%s: %s:<%.*s>: %s", fgSysLogEntity.Data(), type, ipos, location, msg);
    }
    fflush(fgErrorHandlerFile);
-   
+
    if (tosyslog)
       gSystem->Syslog(loglevel, buf);
 
@@ -6297,7 +6297,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
       delete [] __crashreporter_info__;
    __crashreporter_info__ = StrDup(buf);
 #endif
-   
+
    if (abort) {
 
       static Bool_t recursive = kFALSE;
@@ -7289,7 +7289,7 @@ void TProofServ::HandleSubmerger(TMessage *mess)
 
                      // Delayed merging if neccessary
                      mergerPlayer->MergeOutput();
-                  
+
                      PDB(kSubmerger, 2) mergerPlayer->GetOutputList()->Print();
 
                      PDB(kSubmerger, 2) Info("HandleSubmerger", "delayed merging on %s finished ", fOrdinal.Data());
@@ -7315,7 +7315,7 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                   }
                   // Reset
                   SafeDelete(mergerPlayer);
-                  
+
                } else {
                   Warning("HandleSubmerger","kBeMerger: problems craeting the merger player!");
                   // Results from all assigned workers not accepted
@@ -7641,13 +7641,13 @@ Float_t TProofServ::GetMemStop()
 void TProofServ::GetLocalServer(TString &dsrv)
 {
    // Extract LOCALDATASERVER info in 'dsrv'
- 
+
    // Check if a local data server has been specified
    if (gSystem->Getenv("LOCALDATASERVER")) {
       dsrv = gSystem->Getenv("LOCALDATASERVER");
       if (!dsrv.EndsWith("/")) dsrv += "/";
    }
-   
+
    // Done
    return;
 }
@@ -7668,7 +7668,7 @@ void TProofServ::FilterLocalroot(TString &path, const char *dsrv)
          if (srvp == "root" || srvp == "xrd") path.Remove(0, pfx.Length());
       }
    }
-   
+
    // Done
    return;
 }

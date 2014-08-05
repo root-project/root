@@ -10,24 +10,24 @@
 #include "TFrame.h"
 #include "TSystem.h"
 #include "TInterpreter.h"
-   
+
 void h1draw()
 {
-   // We attach (or generate) the ROOT file in $ROOTSYS/tutorials/hsimple.root 
+   // We attach (or generate) the ROOT file in $ROOTSYS/tutorials/hsimple.root
    // or $PWD/hsimple.root
    // We draw one histogram in different formats
    //Author: Rene Brun
-   
+
    TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("h1draw.C","../hsimple.C");
    dir.ReplaceAll("/./","/");
    if (gBenchmark->GetBench("hsimple") < 0) gInterpreter->LoadMacro(dir.Data());
    TFile *example = (TFile*)gROOT->ProcessLineFast("hsimple(1)");
    if (!example) return;
-   
+
    example->ls();
    TH1 *hpx = (TH1*)example->Get("hpx");
-   
+
    TCanvas *c1 = new TCanvas("c1","Histogram Drawing Options",200,10,700,900);
    TPad *pad1 = new TPad("pad1",
       "The pad with the function",0.03,0.62,0.50,0.92,21);

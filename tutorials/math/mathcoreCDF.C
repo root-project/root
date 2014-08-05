@@ -1,8 +1,8 @@
-// Example describing how to use the different cumulative distribution functions in ROOT. 
+// Example describing how to use the different cumulative distribution functions in ROOT.
 // The macro shows four of them with
 // respect to their two variables. In order to run the macro type:
 //
-//   root [0] .x mathcoreCDF.C 
+//   root [0] .x mathcoreCDF.C
 //Author: Lorenzo Moneta
 
 #include "TSystem.h"
@@ -27,7 +27,7 @@ TF2 *f4a = new TF2("f4a","ROOT::Math::exponential_cdf_c(x,y)",0,10,0,5);
 
 TCanvas *c1 = new TCanvas("c1","c1",1000,750);
 
-c1->Divide(2,2); 
+c1->Divide(2,2);
 
 c1->cd(1);
 f1a->Draw("surf1");

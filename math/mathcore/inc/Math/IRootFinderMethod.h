@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: David Gonzalez Maline    01/2008 
+// Authors: David Gonzalez Maline    01/2008
 
 /**********************************************************************
  *                                                                    *
@@ -9,9 +9,9 @@
  **********************************************************************/
 
 // Header for the IRootFinderMethod interface
-// 
+//
 // Created by: David Gonzalez Maline  : Fri Jan 25 2008
-// 
+//
 
 #ifndef ROOT_Math_IRootFinderMethod
 #define ROOT_Math_IRootFinderMethod
@@ -32,7 +32,7 @@ namespace Math {
    Interface for finding function roots of one-dimensional functions
 
    @ingroup RootFinders
-  
+
  */
 
 class IRootFinderMethod {
@@ -42,7 +42,7 @@ public:
 
    /** Default Constructor. */
    IRootFinderMethod() {}
-   
+
    // Common functionality
 
    /** Sets the function for algorithms using derivatives.  */
@@ -64,11 +64,11 @@ public:
    virtual double Root() const = 0;
 
    /** Returns the status of the previous estimate */
-   virtual int Status() const = 0; 
+   virtual int Status() const = 0;
 
    // Methods to be Implemented in the derived classes
 
-   /** Stimates the root for the function.  
+   /** Stimates the root for the function.
        \@param maxIter maximum number of iterations.
        \@param absTol desired absolute error in the minimum position.
        \@param absTol desired relative error in the minimum position.
@@ -77,18 +77,18 @@ public:
 
    /** Return name of root finder algorithm */
    virtual const char* Name() const = 0;
-   
-   /** This method is  implemented only by the GSLRootFinder 
+
+   /** This method is  implemented only by the GSLRootFinder
        and GSLRootFinderDeriv classes and will return an error if it's not one of them. */
    virtual int Iterate() {
       MATH_ERROR_MSG("Iterate", "This method must be used with a Root Finder algorithm wrapping the GSL Library");
       return -1;
    }
 
-   /** Return number of iterations used to find the root 
-       Must be implemented by derived classes 
+   /** Return number of iterations used to find the root
+       Must be implemented by derived classes
    */
-   virtual int Iterations() const { return -1; } 
+   virtual int Iterations() const { return -1; }
 
 };
 

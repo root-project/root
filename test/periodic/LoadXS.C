@@ -2,7 +2,7 @@ void LoadXS()
 {
   gSystem->Load("libNdb");
   NdbMTReactionXS   pb(1,"Total Cross Section");
-  
+
   pb.LoadENDF("8200.endf");
 
   const Int_t npoint=1000;
@@ -22,7 +22,7 @@ void LoadXS()
   }
 
   c1 = new TCanvas("c1","Lead Cross section",200,10,700,500);
-  
+
   c1->SetFillColor(42);
   c1->SetGridx();
   c1->SetGridy();
@@ -30,7 +30,7 @@ void LoadXS()
   c1->GetFrame()->SetBorderSize(12);
   c1->SetLogx();
   c1->SetLogy();
-  
+
   TGraph *gr = new TGraph(npoint,x,y);
   gr->SetFillColor(19);
   gr->SetLineColor(2);
@@ -40,13 +40,13 @@ void LoadXS()
   gr->SetMarkerSize(0.2);
   gr->SetTitle("Lead Total Cross section");
   gr->Draw("AWLP");
-  
+
   //Add axis titles.
   //A graph is drawn using the services of the TH1F histogram class.
   //The histogram is created by TGraph::Paint.
   //TGraph::Paint is called by TCanvas::Update. This function is called by default
   //when typing <CR> at the keyboard. In a macro, one must force TCanvas::Update.
-  
+
   c1->Update();
   gr->GetHistogram()->SetXTitle("Energy in eV");
   gr->GetHistogram()->SetYTitle("Cross Section in Barns");

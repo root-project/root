@@ -162,7 +162,7 @@ public:
    void           SetPattern(Style_t pattern, Bool_t emit=kTRUE);
    Style_t        GetPattern() const { return fPattern; }
    virtual        TGDimension GetDefaultSize() const { return TGDimension(55, 21); }
-   virtual void   PatternSelected(Style_t pattern = 0) 
+   virtual void   PatternSelected(Style_t pattern = 0)
                   { Emit("PatternSelected(Style_t)", pattern ? pattern : GetPattern()); }  // *SIGNAL*
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    virtual void   SavePrimitive(std::ostream &out, Option_t * = "");

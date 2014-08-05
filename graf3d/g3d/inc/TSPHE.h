@@ -47,7 +47,7 @@ protected:
    Float_t faX;      // Coeff along Ox
    Float_t faY;      // Coeff along Oy
    Float_t faZ;      // Coeff along Oz
-        
+
    virtual void    MakeTableOfCoSin() const;  // Create the table of the fSiTab; fCoTab
    virtual void    SetPoints(Double_t *points) const;
 

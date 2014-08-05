@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta Dec 2006 
+// Authors: L. Moneta Dec 2006
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class GSLMultiRootFunctionWrapper
-// 
+//
 // Created by: moneta  at Sat Nov 13 14:54:41 2004
-// 
+//
 // Last update: Sat Nov 13 14:54:41 2004
-// 
+//
 #ifndef ROOT_Math_GSLMultiRootFunctionWrapper
 #define ROOT_Math_GSLMultiRootFunctionWrapper
 
@@ -42,7 +42,7 @@ namespace ROOT {
 namespace Math {
 
 
-   
+
 // can re-use same type for multi-fit
 
    typedef double ( * GSLMultiRootFPointer ) ( const gsl_vector *, void *, gsl_vector *);
@@ -51,82 +51,82 @@ namespace Math {
 
 
 /**
-   wrapper to a multi-dim function without  derivatives for multi roots  
+   wrapper to a multi-dim function without  derivatives for multi roots
    algorithm
 
    @ingroup MultiRoots
 */
-class GSLMultiRootFunctionWrapper { 
+class GSLMultiRootFunctionWrapper {
 
-public: 
+public:
 
-   GSLMultiRootFunctionWrapper() 
+   GSLMultiRootFunctionWrapper()
    {
-      fFunc.f = 0; 
-      fFunc.n = 0; 
+      fFunc.f = 0;
+      fFunc.n = 0;
       fFunc.params = 0;
    }
 
 
    /// Fill gsl function structure from a C++ function iterator and size and number of residuals
-   template<class FuncVector> 
-   void SetFunctions(const FuncVector & f, unsigned int n ) { 
+   template<class FuncVector>
+   void SetFunctions(const FuncVector & f, unsigned int n ) {
       const void * p = &f;
-      assert (p != 0); 
+      assert (p != 0);
       fFunc.f   = &GSLMultiRootFunctionAdapter<FuncVector >::F;
-      fFunc.n = n; 
-      fFunc.params =  const_cast<void *>(p); 
+      fFunc.n = n;
+      fFunc.params =  const_cast<void *>(p);
    }
-   
-   gsl_multiroot_function * GetFunctions() { return &fFunc; } 
+
+   gsl_multiroot_function * GetFunctions() { return &fFunc; }
 
 
-  private: 
-   
-   gsl_multiroot_function fFunc; 
+  private:
+
+   gsl_multiroot_function fFunc;
 
 };
 
 
 /**
-   wrapper to a multi-dim function with  derivatives for multi roots  
+   wrapper to a multi-dim function with  derivatives for multi roots
    algorithm
 
    @ingroup MultiRoot
 */
 
-class GSLMultiRootDerivFunctionWrapper { 
+class GSLMultiRootDerivFunctionWrapper {
 
-public: 
+public:
 
-   GSLMultiRootDerivFunctionWrapper() 
+   GSLMultiRootDerivFunctionWrapper()
    {
-      fFunc.f = 0; 
-      fFunc.df = 0; 
-      fFunc.fdf = 0; 
-      fFunc.n = 0; 
+      fFunc.f = 0;
+      fFunc.df = 0;
+      fFunc.fdf = 0;
+      fFunc.n = 0;
       fFunc.params = 0;
    }
 
 
    /// Fill gsl function structure from a C++ function iterator and size and number of residuals
-   template<class FuncVector> 
-   void SetFunctions(const FuncVector & f, unsigned int n  ) { 
+   template<class FuncVector>
+   void SetFunctions(const FuncVector & f, unsigned int n  ) {
       const void * p = &f;
-      assert (p != 0); 
+      assert (p != 0);
       fFunc.f   = &GSLMultiRootFunctionAdapter<FuncVector >::F;
       fFunc.df  = &GSLMultiRootFunctionAdapter<FuncVector >::Df;
       fFunc.fdf = &GSLMultiRootFunctionAdapter<FuncVector >::FDf;
-      fFunc.n = n; 
-      fFunc.params =  const_cast<void *>(p); 
+      fFunc.n = n;
+      fFunc.params =  const_cast<void *>(p);
    }
-   
-   gsl_multiroot_function_fdf * GetFunctions() { return &fFunc; } 
+
+   gsl_multiroot_function_fdf * GetFunctions() { return &fFunc; }
 
 
-  private: 
-   
-   gsl_multiroot_function_fdf fFunc; 
+  private:
+
+   gsl_multiroot_function_fdf fFunc;
 
 };
 

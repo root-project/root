@@ -20,39 +20,39 @@
 #include "XSElements.h"
 
 #ifdef __XSVARIOUS_CXX
-#	define	EXT
+#  define   EXT
 #else
-#	define	EXT	extern
+#  define   EXT   extern
 #endif
 
 /* ---------------- Global DEFINES ---------------------- */
-#define PATHSEP			"/"
-#define	ICONDIR			"icons" PATHSEP
-#define	DBDIR			"db" PATHSEP
-#define	PTBL_ICON		ICONDIR "ptable_s.xpm"
-#define	ISOTOPES_DESC_FILE	DBDIR "isotopes.dat"
-#define	MT_DESC_FILE		DBDIR "mt.dat"
+#define PATHSEP     "/"
+#define  ICONDIR     "icons" PATHSEP
+#define  DBDIR       "db" PATHSEP
+#define  PTBL_ICON     ICONDIR "ptable_s.xpm"
+#define  ISOTOPES_DESC_FILE  DBDIR "isotopes.dat"
+#define  MT_DESC_FILE     DBDIR "mt.dat"
 
 /* ---------------- Global Variables -------------------- */
-EXT	XSElements	*XSelements;
-EXT	NdbMTReacDesc	*XSReactionDesc;
-EXT	TList		*graphList;
+EXT  XSElements  *XSelements;
+EXT  NdbMTReacDesc  *XSReactionDesc;
+EXT  TList     *graphList;
 
 // --- GUI vars ---
-EXT	GCValues_t       gval;
-EXT	FontStruct_t     fixedFontStruct;
-EXT	FontStruct_t     blueFontStruct;
-EXT	GContext_t       fixedGC;
-EXT	GContext_t       blueBoldGC;
+EXT   GCValues_t       gval;
+EXT   FontStruct_t     fixedFontStruct;
+EXT   FontStruct_t     blueFontStruct;
+EXT   GContext_t       fixedGC;
+EXT   GContext_t       blueBoldGC;
 
-EXT     TCanvas			*canvas;
-EXT	TRootEmbeddedCanvas	*canvasWindow;
+EXT     TCanvas         *canvas;
+EXT   TRootEmbeddedCanvas   *canvasWindow;
 
 /* ----------------- function prototypes ---------------- */
-void	XSinitialise();
-void	XSfinalise();
+void   XSinitialise();
+void   XSfinalise();
 
-void	Add2GraphList( XSGraph *gr);
+void   Add2GraphList( XSGraph *gr);
 
 #undef EXT
 #endif

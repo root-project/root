@@ -172,7 +172,7 @@ Int_t TSTLhit::MakeTree(int mode, int nevents, int compression, int split, float
    TTree *T=0;
    TSTLhit *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhit"),"recreate","STLhit",compression);  
+      f = new TFile(demofile_name("TSTLhit"),"recreate","STLhit",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhit",&top,64000,split);
    }
@@ -180,7 +180,7 @@ Int_t TSTLhit::MakeTree(int mode, int nevents, int compression, int split, float
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -194,7 +194,7 @@ Int_t TSTLhit::MakeTree(int mode, int nevents, int compression, int split, float
 Int_t TSTLhit::ReadTree()
 {
    TSTLhit *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhit"));  
+   TFile *f = new TFile(demofile_name("TSTLhit"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -245,7 +245,7 @@ Int_t TSTLhitList::MakeTree(int mode, int nevents, int compression, int split, f
    TTree *T=0;
    TSTLhitList *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhitList"),"recreate","STLhit",compression);  
+      f = new TFile(demofile_name("TSTLhitList"),"recreate","STLhit",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitList",&top,64000,split);
    }
@@ -253,7 +253,7 @@ Int_t TSTLhitList::MakeTree(int mode, int nevents, int compression, int split, f
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -267,7 +267,7 @@ Int_t TSTLhitList::MakeTree(int mode, int nevents, int compression, int split, f
 Int_t TSTLhitList::ReadTree()
 {
    TSTLhitList *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhitList"));  
+   TFile *f = new TFile(demofile_name("TSTLhitList"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -317,7 +317,7 @@ Int_t TSTLhitDeque::MakeTree(int mode, int nevents, int compression, int split, 
    TTree *T=0;
    TSTLhitDeque *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhitDeque"),"recreate","STLhit",compression);  
+      f = new TFile(demofile_name("TSTLhitDeque"),"recreate","STLhit",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitDeque",&top,64000,split);
    }
@@ -325,7 +325,7 @@ Int_t TSTLhitDeque::MakeTree(int mode, int nevents, int compression, int split, 
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -339,7 +339,7 @@ Int_t TSTLhitDeque::MakeTree(int mode, int nevents, int compression, int split, 
 Int_t TSTLhitDeque::ReadTree()
 {
    TSTLhitDeque *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhitDeque"));  
+   TFile *f = new TFile(demofile_name("TSTLhitDeque"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -390,7 +390,7 @@ Int_t TSTLhitSet::MakeTree(int mode, int nevents, int compression, int split, fl
    TTree *T=0;
    TSTLhitSet *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhitSet"),"recreate","STLhit",compression);  
+      f = new TFile(demofile_name("TSTLhitSet"),"recreate","STLhit",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitSet",&top,64000,split);
    }
@@ -398,7 +398,7 @@ Int_t TSTLhitSet::MakeTree(int mode, int nevents, int compression, int split, fl
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -412,7 +412,7 @@ Int_t TSTLhitSet::MakeTree(int mode, int nevents, int compression, int split, fl
 Int_t TSTLhitSet::ReadTree()
 {
    TSTLhitSet *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhitSet"));  
+   TFile *f = new TFile(demofile_name("TSTLhitSet"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -463,7 +463,7 @@ Int_t TSTLhitMultiset::MakeTree(int mode, int nevents, int compression, int spli
    TTree *T=0;
    TSTLhitMultiset *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhitMultiset"),"recreate","STLhit",compression);  
+      f = new TFile(demofile_name("TSTLhitMultiset"),"recreate","STLhit",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitMultiset",&top,64000,split);
    }
@@ -471,7 +471,7 @@ Int_t TSTLhitMultiset::MakeTree(int mode, int nevents, int compression, int spli
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -485,7 +485,7 @@ Int_t TSTLhitMultiset::MakeTree(int mode, int nevents, int compression, int spli
 Int_t TSTLhitMultiset::ReadTree()
 {
    TSTLhitMultiset *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhitMultiset"));  
+   TFile *f = new TFile(demofile_name("TSTLhitMultiset"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -536,7 +536,7 @@ Int_t TSTLhitMap::MakeTree(int mode, int nevents, int compression, int split, fl
    TTree *T=0;
    TSTLhitMap *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhitMap"),"recreate","STLhit",compression);  
+      f = new TFile(demofile_name("TSTLhitMap"),"recreate","STLhit",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitMap",&top,64000,split);
    }
@@ -544,7 +544,7 @@ Int_t TSTLhitMap::MakeTree(int mode, int nevents, int compression, int split, fl
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -558,7 +558,7 @@ Int_t TSTLhitMap::MakeTree(int mode, int nevents, int compression, int split, fl
 Int_t TSTLhitMap::ReadTree()
 {
    TSTLhitMap *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhitMap"));  
+   TFile *f = new TFile(demofile_name("TSTLhitMap"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -610,7 +610,7 @@ Int_t TSTLhitMultiMap::MakeTree(int mode, int nevents, int compression, int spli
    TTree *T=0;
    TSTLhitMultiMap *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhitMultiMap"),"recreate","STLhit",compression);  
+      f = new TFile(demofile_name("TSTLhitMultiMap"),"recreate","STLhit",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitMultiMap",&top,64000,split);
    }
@@ -618,7 +618,7 @@ Int_t TSTLhitMultiMap::MakeTree(int mode, int nevents, int compression, int spli
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -632,7 +632,7 @@ Int_t TSTLhitMultiMap::MakeTree(int mode, int nevents, int compression, int spli
 Int_t TSTLhitMultiMap::ReadTree()
 {
    TSTLhitMultiMap *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhitMultiMap"));  
+   TFile *f = new TFile(demofile_name("TSTLhitMultiMap"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -683,7 +683,7 @@ Int_t TSTLhitHashSet::MakeTree(int mode, int nevents, int compression, int split
    TTree *T=0;
    TSTLhitHashSet *top = this;
    if (mode > 0) {
-      f = new TFile(demofile,"recreate","STLhit",compression);  
+      f = new TFile(demofile,"recreate","STLhit",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitHashSet",&top,64000,split);
    }
@@ -691,7 +691,7 @@ Int_t TSTLhitHashSet::MakeTree(int mode, int nevents, int compression, int split
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -705,7 +705,7 @@ Int_t TSTLhitHashSet::MakeTree(int mode, int nevents, int compression, int split
 Int_t TSTLhitHashSet::ReadTree()
 {
    TSTLhitHashSet *top = this;
-   TFile *f = new TFile(demofile);  
+   TFile *f = new TFile(demofile);
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -756,7 +756,7 @@ Int_t TSTLhitHashMultiSet::MakeTree(int mode, int nevents, int compression, int 
    TTree *T=0;
    TSTLhitHashMultiSet *top = this;
    if (mode > 0) {
-      f = new TFile(demofile,"recreate","STLhit",compression);  
+      f = new TFile(demofile,"recreate","STLhit",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitHashMultiSet",&top,64000,split);
    }
@@ -764,7 +764,7 @@ Int_t TSTLhitHashMultiSet::MakeTree(int mode, int nevents, int compression, int 
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -778,7 +778,7 @@ Int_t TSTLhitHashMultiSet::MakeTree(int mode, int nevents, int compression, int 
 Int_t TSTLhitHashMultiSet::ReadTree()
 {
    TSTLhitHashMultiSet *top = this;
-   TFile *f = new TFile(demofile);  
+   TFile *f = new TFile(demofile);
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -833,7 +833,7 @@ Int_t TSTLhitStar::MakeTree(int mode, int nevents, int compression, int split, f
    TTree *T=0;
    TSTLhitStar *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhitStar"),"recreate","STLhitStar",compression);  
+      f = new TFile(demofile_name("TSTLhitStar"),"recreate","STLhitStar",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitStar",&top,64000,split);
    }
@@ -841,7 +841,7 @@ Int_t TSTLhitStar::MakeTree(int mode, int nevents, int compression, int split, f
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -855,7 +855,7 @@ Int_t TSTLhitStar::MakeTree(int mode, int nevents, int compression, int split, f
 Int_t TSTLhitStar::ReadTree()
 {
    TSTLhitStar *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhitStar"));  
+   TFile *f = new TFile(demofile_name("TSTLhitStar"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -907,7 +907,7 @@ Int_t TSTLhitStarList::MakeTree(int mode, int nevents, int compression, int spli
    TTree *T=0;
    TSTLhitStarList *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhitStarList"),"recreate","STLhitStar",compression);  
+      f = new TFile(demofile_name("TSTLhitStarList"),"recreate","STLhitStar",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitStarList",&top,64000,split);
    }
@@ -915,7 +915,7 @@ Int_t TSTLhitStarList::MakeTree(int mode, int nevents, int compression, int spli
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -929,7 +929,7 @@ Int_t TSTLhitStarList::MakeTree(int mode, int nevents, int compression, int spli
 Int_t TSTLhitStarList::ReadTree()
 {
    TSTLhitStarList *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhitStarList"));  
+   TFile *f = new TFile(demofile_name("TSTLhitStarList"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -981,7 +981,7 @@ Int_t TSTLhitStarDeque::MakeTree(int mode, int nevents, int compression, int spl
    TTree *T=0;
    TSTLhitStarDeque *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhitStarDeque"),"recreate","STLhitStar",compression);  
+      f = new TFile(demofile_name("TSTLhitStarDeque"),"recreate","STLhitStar",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitStarDeque",&top,64000,split);
    }
@@ -989,7 +989,7 @@ Int_t TSTLhitStarDeque::MakeTree(int mode, int nevents, int compression, int spl
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -1003,7 +1003,7 @@ Int_t TSTLhitStarDeque::MakeTree(int mode, int nevents, int compression, int spl
 Int_t TSTLhitStarDeque::ReadTree()
 {
    TSTLhitStarDeque *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhitStarDeque"));  
+   TFile *f = new TFile(demofile_name("TSTLhitStarDeque"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -1056,7 +1056,7 @@ Int_t TSTLhitStarSet::MakeTree(int mode, int nevents, int compression, int split
    TTree *T=0;
    TSTLhitStarSet *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhitStarSet"),"recreate","STLhitStar",compression);  
+      f = new TFile(demofile_name("TSTLhitStarSet"),"recreate","STLhitStar",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitStarSet",&top,64000,split);
    }
@@ -1064,7 +1064,7 @@ Int_t TSTLhitStarSet::MakeTree(int mode, int nevents, int compression, int split
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -1078,7 +1078,7 @@ Int_t TSTLhitStarSet::MakeTree(int mode, int nevents, int compression, int split
 Int_t TSTLhitStarSet::ReadTree()
 {
    TSTLhitStarSet *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhitStarSet"));  
+   TFile *f = new TFile(demofile_name("TSTLhitStarSet"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -1130,7 +1130,7 @@ Int_t TSTLhitStarMultiSet::MakeTree(int mode, int nevents, int compression, int 
    TTree *T=0;
    TSTLhitStarMultiSet *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhitStarMultiSet"),"recreate","STLhitStar",compression);  
+      f = new TFile(demofile_name("TSTLhitStarMultiSet"),"recreate","STLhitStar",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitStarMultiSet",&top,64000,split);
    }
@@ -1138,7 +1138,7 @@ Int_t TSTLhitStarMultiSet::MakeTree(int mode, int nevents, int compression, int 
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -1152,7 +1152,7 @@ Int_t TSTLhitStarMultiSet::MakeTree(int mode, int nevents, int compression, int 
 Int_t TSTLhitStarMultiSet::ReadTree()
 {
    TSTLhitStarMultiSet *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhitStarMultiSet"));  
+   TFile *f = new TFile(demofile_name("TSTLhitStarMultiSet"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -1205,7 +1205,7 @@ Int_t TSTLhitStarMap::MakeTree(int mode, int nevents, int compression, int split
    TTree *T=0;
    TSTLhitStarMap *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhitStarMap"),"recreate","STLhitStar",compression);  
+      f = new TFile(demofile_name("TSTLhitStarMap"),"recreate","STLhitStar",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitStarMap",&top,64000,split);
    }
@@ -1213,7 +1213,7 @@ Int_t TSTLhitStarMap::MakeTree(int mode, int nevents, int compression, int split
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -1227,7 +1227,7 @@ Int_t TSTLhitStarMap::MakeTree(int mode, int nevents, int compression, int split
 Int_t TSTLhitStarMap::ReadTree()
 {
    TSTLhitStarMap *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhitStarMap"));  
+   TFile *f = new TFile(demofile_name("TSTLhitStarMap"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -1280,7 +1280,7 @@ Int_t TSTLhitStarMultiMap::MakeTree(int mode, int nevents, int compression, int 
    TTree *T=0;
    TSTLhitStarMultiMap *top = this;
    if (mode > 0) {
-      f = new TFile(demofile_name("TSTLhitStarMultiMap"),"recreate","STLhitStar",compression);  
+      f = new TFile(demofile_name("TSTLhitStarMultiMap"),"recreate","STLhitStar",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TSTLhitStarMultiMap",&top,64000,split);
    }
@@ -1288,7 +1288,7 @@ Int_t TSTLhitStarMultiMap::MakeTree(int mode, int nevents, int compression, int 
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -1302,7 +1302,7 @@ Int_t TSTLhitStarMultiMap::MakeTree(int mode, int nevents, int compression, int 
 Int_t TSTLhitStarMultiMap::ReadTree()
 {
    TSTLhitStarMultiMap *top = this;
-   TFile *f = new TFile(demofile_name("TSTLhitStarMultiMap"));  
+   TFile *f = new TFile(demofile_name("TSTLhitStarMultiMap"));
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();
@@ -1337,8 +1337,8 @@ TCloneshit::~TCloneshit() {
 
 void TCloneshit::Clear(Option_t *)
 {
-   fList3->Delete();   
-   //fList3->Clear();   
+   fList3->Delete();
+   //fList3->Clear();
 }
 
 void TCloneshit::MakeEvent(int /*ievent*/)
@@ -1346,7 +1346,7 @@ void TCloneshit::MakeEvent(int /*ievent*/)
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
       new((*fList3)[j]) TObjHit(j);
-   }   
+   }
 }
 
 Int_t TCloneshit::MakeTree(int mode, int nevents, int compression, int split, float &cx)
@@ -1355,7 +1355,7 @@ Int_t TCloneshit::MakeTree(int mode, int nevents, int compression, int split, fl
    TTree *T=0;
    TCloneshit *top = this;
    if (mode > 0) {
-      f = new TFile(demofile,"recreate","Cloneshit",compression);  
+      f = new TFile(demofile,"recreate","Cloneshit",compression);
       T = new TTree("T","Demo tree");
       T->Branch("event","TCloneshit",&top,64000,split);
    }
@@ -1363,7 +1363,7 @@ Int_t TCloneshit::MakeTree(int mode, int nevents, int compression, int split, fl
       MakeEvent(ievent);
       if (mode > 0) T->Fill();
    }
-   
+
    if (mode == 0) return 0;
    T->Write();
    delete f;
@@ -1377,7 +1377,7 @@ Int_t TCloneshit::MakeTree(int mode, int nevents, int compression, int split, fl
 Int_t TCloneshit::ReadTree()
 {
    TCloneshit *top = this;
-   TFile *f = new TFile(demofile);  
+   TFile *f = new TFile(demofile);
    TTree *T = (TTree*)f->Get("T");
    T->SetBranchAddress("event",&top);
    Int_t nevents = (Int_t)T->GetEntries();

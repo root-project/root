@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -22,8 +22,8 @@ namespace ROOT {
    namespace Minuit2 {
 
 /**
-   class describing the simplex set of points (f(x), x )  which evolve during the minimization 
-   iteration process. 
+   class describing the simplex set of points (f(x), x )  which evolve during the minimization
+   iteration process.
  */
 
 class SimplexParameters {
@@ -34,8 +34,8 @@ public:
 
   ~SimplexParameters() {}
 
-  void Update(double, const MnAlgebraicVector&); 
-  
+  void Update(double, const MnAlgebraicVector&);
+
   const std::vector<std::pair<double, MnAlgebraicVector> >& Simplex() const {
     return fSimplexParameters;
   }
@@ -44,7 +44,7 @@ public:
     assert(i < fSimplexParameters.size());
     return fSimplexParameters[i];
   }
-  
+
   unsigned int Jh() const {return fJHigh;}
   unsigned int Jl() const {return fJLow;}
   double Edm() const {return fSimplexParameters[Jh()].first - fSimplexParameters[Jl()].first;}

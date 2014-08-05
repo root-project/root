@@ -181,7 +181,7 @@ void TGLCameraOverlay::RenderAxis(TGLRnrCtx& rnrCtx, Bool_t grid)
    Float_t minX, maxX;
    TGLVector3 xdir = rnrCtx.RefCamera().GetCamBase().GetBaseVec(2); xdir.Normalise(); // left
    if (fFrustum[2] > fFrustum[0] )
-   {   
+   {
       minX =  fFrustum[0];
       maxX =  fFrustum[2];
    }

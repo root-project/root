@@ -92,7 +92,7 @@ public:
     virtual bool setMmlContent(const QString &text, QString *errorMsg   = 0,
                     int *errorLine = 0, int *errorColumn = 0) = 0;
     virtual void paint(QPainter *p,unsigned int x, unsigned int y) const  = 0;
-    virtual unsigned int width() const = 0; 
+    virtual unsigned int width() const = 0;
     virtual unsigned int height()    const = 0;
 
     virtual void setFont(Font_t fontnumber) = 0;
@@ -123,8 +123,8 @@ class TGQt  : public TVirtualX  {
    friend class TQtToggleFeedBack;
    friend class TQtColorSelect;
    friend class TQt16ColorSelector;
-   friend class TQtPen; 
-   friend class TQtBrush; 
+   friend class TQtPen;
+   friend class TQtBrush;
    friend class TQtPainter;
    friend class TQtTextProxy;
 
@@ -179,11 +179,11 @@ protected:
     QString                fFontTextCode;     // The default code text code page (from the Gui.DefaultFont)
     const char            *fSymbolFontFamily; // the name of the font to substiute the non-standard "Symbol"
     Int_t                 fQtEventHasBeenProcessed; // Flag whether the events were processed
-    Bool_t                fFeedBackMode;      // TCanvas feedback mode 
+    Bool_t                fFeedBackMode;      // TCanvas feedback mode
     TQtFeedBackWidget    *fFeedBackWidget;    // The dedicated widget for TCanvas feedback mode
     Bool_t                fBlockRGB;          // Protect against color double setting
     Bool_t                fUseTTF;            // Flag whether ROOT font has a priority
-    
+
     static TQtTextProxy   *fgTextProxy;       // proxy for the custom text rendering engine
 //
 //   Text management

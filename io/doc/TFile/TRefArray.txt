@@ -1,4 +1,4 @@
-//	Here is the format of the DATA for a TRefArray object in Release 3.02.06.
+// Here is the format of the DATA for a TRefArray object in Release 3.02.06.
 //--------
 //       0->3  ByteCount = Number of remaining bytes in TRefArray object (uncompressed)
 //                       |   OR'd with kByteCountMask (0x40000000)
@@ -11,7 +11,7 @@
 //                       |   are not named, so this is a single byte containing 0.
 //       0->3  nObjects  | Number of object references (fUIDs) in this TRefArray.
 //       4->7  fLowerBound= Lower bound of array.  Typically 0.
-//	 8->9  pidf	 = An identifier of the TProcessID record for the process that wrote the
+//       8->9  pidf  = An identifier of the TProcessID record for the process that wrote the
 //                       | referenced objects. This identifier is an unsigned short.  The relevant
 //                       | record has a name that is the string "ProcessID" concatenated with the
 //                       | ASCII decimal representation of "pidf" (no leading zeros).

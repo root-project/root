@@ -115,31 +115,31 @@ TTask::TTask(const char* name, const char *title)
 }
 //______________________________________________________________________________
 
-TTask& TTask::operator=(const TTask& tt)	 
-{	 
-   //assignment operator (PLEASE DO NOT USE THIS IS WRONG)	 
-   if(this!=&tt) {	 
-      TNamed::operator=(tt);	 
+TTask& TTask::operator=(const TTask& tt)
+{
+   //assignment operator (PLEASE DO NOT USE THIS IS WRONG)
+   if(this!=&tt) {
+      TNamed::operator=(tt);
       fTasks->Delete();
       TIter next(tt.fTasks);
       TTask *task;
       while ((task = (TTask*)next())) {
          fTasks->Add(new TTask(*task));
-      }      
-      fOption=tt.fOption;	 
-      fBreakin=tt.fBreakin;	 
-      fBreakout=tt.fBreakout;	 
-      fHasExecuted=tt.fHasExecuted;	 
-      fActive=tt.fActive;	 
-   }	 
-   return *this;	 
-}	 
+      }
+      fOption=tt.fOption;
+      fBreakin=tt.fBreakin;
+      fBreakout=tt.fBreakout;
+      fHasExecuted=tt.fHasExecuted;
+      fActive=tt.fActive;
+   }
+   return *this;
+}
 
-//______________________________________________________________________________	 //______________________________________________________________________________
-TTask::TTask(const TTask &other) : TNamed(other)	 
-{	 
-   // Copy constructor. 
-   fTasks = new TList();	 
+//______________________________________________________________________________
+TTask::TTask(const TTask &other) : TNamed(other)
+{
+   // Copy constructor.
+   fTasks = new TList();
    TIter next(other.fTasks);
    TTask *task;
    while ((task = (TTask*)next())) {
@@ -149,8 +149,8 @@ TTask::TTask(const TTask &other) : TNamed(other)
    fBreakin = other.fBreakin;
    fBreakout = other.fBreakout;
    fHasExecuted = kFALSE;
-   fActive = other.fActive;   
-}	 
+   fActive = other.fActive;
+}
 
 //______________________________________________________________________________
 TTask::~TTask()

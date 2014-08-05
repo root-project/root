@@ -7,31 +7,31 @@
 #define __DEFS_H
 
 #ifndef TRUE
-#	define	FALSE	0
-#	define	TRUE	1
+#   define   FALSE   0
+#   define   TRUE   1
 #endif
 #ifndef OFF
-#	define OFF	0
-#	define ON	1
+#   define OFF   0
+#   define ON   1
 #endif
 #ifndef NO
-#	define NO	0
-#	define YES	1
+#   define NO   0
+#   define YES   1
 #endif
 
-#define NOTFOUND	-1
+#define NOTFOUND   -1
 
-#define THERMAL_ENERGY	0.05
-#define MAX_REAL	1e38
+#define THERMAL_ENERGY   0.05
+#define MAX_REAL   1e38
 #ifndef PI
-#	define PI	3.14159265358979323844
-#	define PI2	6.28318530717958647692
+#   define PI   3.14159265358979323844
+#   define PI2   6.28318530717958647692
 #endif
-#define PIover2		1.57079632679489661923
-#define PIover180	1.74532925199433E-002
-#define PIunder180	5.72957795130823E+001
-#define LN10		2.30258509299405
-#define ONEoverLN10	0.43429448190325
+#define PIover2      1.57079632679489661923
+#define PIover180   1.74532925199433E-002
+#define PIunder180   5.72957795130823E+001
+#define LN10      2.30258509299405
+#define ONEoverLN10   0.43429448190325
 
 /* --- BIT definitions --- */
 #define MASK1      0x0001
@@ -70,50 +70,50 @@
 #define BIT16      0x10000L
 
 /* ------------------ comonly used macros -------------------- */
-#define	ISPRINT(c)	((c)>=' ' && (c)<='~' && (c)!='\'')
-#define ISSPACE(c)	((c==0x09) || (c==0x0D) || (c==0x20))
-#define HEXVAL(x)	(((x)>='A')?((((x)>='a')?((x)&(0xdf)):(x))-'A'+10):((x)-'0'))
-#define CTL(a)		(('a') & 0x1f)
-#define	ESC		((char)27)
+#define   ISPRINT(c)   ((c)>=' ' && (c)<='~' && (c)!='\'')
+#define ISSPACE(c)   ((c==0x09) || (c==0x0D) || (c==0x20))
+#define HEXVAL(x)   (((x)>='A')?((((x)>='a')?((x)&(0xdf)):(x))-'A'+10):((x)-'0'))
+#define CTL(a)      (('a') & 0x1f)
+#define   ESC      ((char)27)
 
-#define SWAP(a,b)	a ^= b ^= a ^= b;
+#define SWAP(a,b)   a ^= b ^= a ^= b;
 
-#define DIMENSION(p)	(sizeof(p) / sizeof(p[0]))
-#define ABS(a)		(((a)<0)?-(a):(a))
+#define DIMENSION(p)   (sizeof(p) / sizeof(p[0]))
+#define ABS(a)      (((a)<0)?-(a):(a))
 
 #ifndef MAX
-#	define MAX(a,b)	(((a)>(b))?(a):(b))
-#	define MIN(a,b)	(((a)<(b))?(a):(b))
+#   define MAX(a,b)   (((a)>(b))?(a):(b))
+#   define MIN(a,b)   (((a)<(b))?(a):(b))
 #endif
 
-#define MAX3(a,b,c)	MAX(MAX(a,b),c)
-#define MAX4(a,b,c,d)	MAX(MAX3(a,b,c),d)
+#define MAX3(a,b,c)   MAX(MAX(a,b),c)
+#define MAX4(a,b,c,d)   MAX(MAX3(a,b,c),d)
 
-#define MIN3(a,b,c)	MIN(MIN(a,b),c)
-#define MIN4(a,b,c,d)	MIN(MIN3(a,b,c),d)
+#define MIN3(a,b,c)   MIN(MIN(a,b),c)
+#define MIN4(a,b,c,d)   MIN(MIN3(a,b,c),d)
 
-#define RANGE(a,x,b)	((x)<(a)?(a): ((x)>(b)?(b):(x)))
-#define IN_RANGE(a,x,b)	(((a) <= (x)) && ((x) <= (b)))
+#define RANGE(a,x,b)   ((x)<(a)?(a): ((x)>(b)?(b):(x)))
+#define IN_RANGE(a,x,b)   (((a) <= (x)) && ((x) <= (b)))
 
-#define ODD(n)		((n)&1)
-#define EVEN(n)		(!((n)&1))
+#define ODD(n)      ((n)&1)
+#define EVEN(n)      (!((n)&1))
 
-#define TRUNC(a)	((a)>=0? (int)(a) : (int)((a)-1))
-#define ROUND(a)	((a)>=0? (int)((a)+0.5): -(int)(0.5-(a)))
-#define CEILING(a)	((a)==(int)(a)? (int)(a): \
-			(a)>0? (int)(1+(int)(a)): -(int)(1+(int)(-(a))))
-#define FRAC(x)		((x)-(float)((int)(x)))
-#define SIGN(x)		((x)>0? 1:(((x)==0)?0:-1))
-#define SQR(x)		((x)*(x))
+#define TRUNC(a)   ((a)>=0? (int)(a) : (int)((a)-1))
+#define ROUND(a)   ((a)>=0? (int)((a)+0.5): -(int)(0.5-(a)))
+#define CEILING(a)   ((a)==(int)(a)? (int)(a): \
+         (a)>0? (int)(1+(int)(a)): -(int)(1+(int)(-(a))))
+#define FRAC(x)      ((x)-(float)((int)(x)))
+#define SIGN(x)      ((x)>0? 1:(((x)==0)?0:-1))
+#define SQR(x)      ((x)*(x))
 
-#define RAD(a)		((a)*PIover180)
-#define DEG(a)		((a)*PIunder180)
+#define RAD(a)      ((a)*PIover180)
+#define DEG(a)      ((a)*PIunder180)
 
-#define COSD(a)		cos(RAD(a))
-#define SIND(a)		sin(RAD(a))
-#define TAND(a)		tan(RAD(a))
+#define COSD(a)      cos(RAD(a))
+#define SIND(a)      sin(RAD(a))
+#define TAND(a)      tan(RAD(a))
 
-#define LOG(x)		(log(x)*ONEoverLN10)
-#define EXP10(x)	exp((x)*LN10)
+#define LOG(x)      (log(x)*ONEoverLN10)
+#define EXP10(x)   exp((x)*LN10)
 
 #endif

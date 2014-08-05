@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -17,10 +17,10 @@
 // Last update: $Id$
 //
 
-#ifndef ROOT_Math_GenVector_DisplacementVector3D 
+#ifndef ROOT_Math_GenVector_DisplacementVector3D
 #define ROOT_Math_GenVector_DisplacementVector3D  1
 
-#ifndef ROOT_Math_GenVector_Cartesian3D 
+#ifndef ROOT_Math_GenVector_Cartesian3D
 #include "Math/GenVector/Cartesian3D.h"
 #endif
 
@@ -32,11 +32,11 @@
 #include "Math/GenVector/GenVectorIO.h"
 #endif
 
-#ifndef ROOT_Math_GenVector_BitReproducible 
+#ifndef ROOT_Math_GenVector_BitReproducible
 #include "Math/GenVector/BitReproducible.h"
 #endif
 
-#ifndef ROOT_Math_GenVector_CoordinateSystemTags 
+#ifndef ROOT_Math_GenVector_CoordinateSystemTags
 #include "Math/GenVector/CoordinateSystemTags.h"
 #endif
 
@@ -45,8 +45,8 @@
 //doxygen tag
 /**
    @defgroup GenVector GenVector
-   Generic 2D, 3D and 4D vectors classes and their transformations (rotations). More information is available at the 
-   home page for \ref Vector 
+   Generic 2D, 3D and 4D vectors classes and their transformations (rotations). More information is available at the
+   home page for \ref Vector
  */
 
 
@@ -59,16 +59,16 @@ namespace ROOT {
 
 //__________________________________________________________________________________________
     /**
-              Class describing a generic displacement vector in 3 dimensions.
-              This class is templated on the type of Coordinate system.
-              One example is the XYZVector which is a vector based on
-              double precision x,y,z data members by using the
-              ROOT::Math::Cartesian3D<double> Coordinate system.
-	      The class is having also an extra template parameter, the coordinate system tag, 
-	      to be able to identify (tag) vector described in different reference coordinate system, 
-	      like global or local coordinate systems.   
+     Class describing a generic displacement vector in 3 dimensions.
+     This class is templated on the type of Coordinate system.
+     One example is the XYZVector which is a vector based on
+     double precision x,y,z data members by using the
+     ROOT::Math::Cartesian3D<double> Coordinate system.
+     The class is having also an extra template parameter, the coordinate system tag,
+     to be able to identify (tag) vector described in different reference coordinate system,
+     like global or local coordinate systems.
 
-	      @ingroup GenVector
+     @ingroup GenVector
     */
 
     template <class CoordSystem, class Tag = DefaultCoordinateSystemTag >
@@ -110,7 +110,7 @@ namespace ROOT {
          but with the same coordinate system tag
       */
       template <class OtherCoords>
-      explicit DisplacementVector3D( const PositionVector3D<OtherCoords,Tag> & p) : 
+      explicit DisplacementVector3D( const PositionVector3D<OtherCoords,Tag> & p) :
         fCoordinates ( p.Coordinates() ) { }
 
 
@@ -159,8 +159,8 @@ namespace ROOT {
       template <class OtherCoords>
       DisplacementVector3D & operator=
                         ( const PositionVector3D<OtherCoords,Tag> & rhs) {
-        SetXYZ(rhs.x(), rhs.y(), rhs.z());
-	return *this;
+         SetXYZ(rhs.x(), rhs.y(), rhs.z());
+         return *this;
       }
 
 
@@ -216,9 +216,9 @@ namespace ROOT {
          Set internal data based on 3 Scalars at *begin to *end
        */
       template <class IT>
-#ifndef NDEBUG 
+#ifndef NDEBUG
       DisplacementVector3D<CoordSystem, Tag>& SetCoordinates( IT begin, IT end  )
-#else  
+#else
       DisplacementVector3D<CoordSystem, Tag>& SetCoordinates( IT begin, IT /* end */  )
 #endif
       { IT a = begin; IT b = ++begin; IT c = ++begin;
@@ -243,9 +243,9 @@ namespace ROOT {
          get internal data into 3 Scalars at *begin to *end (3 past begin)
        */
       template <class IT>
-#ifndef NDEBUG 
+#ifndef NDEBUG
       void GetCoordinates( IT begin, IT end ) const
-#else 
+#else
       void GetCoordinates( IT begin, IT /* end */ ) const
 #endif
       { IT a = begin; IT b = ++begin; IT c = ++begin;
@@ -253,15 +253,15 @@ namespace ROOT {
         GetCoordinates (*a,*b,*c);
       }
       /**
-         get internal data into 3 Scalars starting at *begin 
+         get internal data into 3 Scalars starting at *begin
        */
       template <class IT>
       void GetCoordinates( IT begin) const {
-         Scalar a,b,c = 0; 
+         Scalar a,b,c = 0;
          GetCoordinates (a,b,c);
-         *begin++ = a; 
-         *begin++ = b; 
-         *begin = c; 
+         *begin++ = a;
+         *begin++ = b;
+         *begin = c;
       }
 
       /**
@@ -392,12 +392,12 @@ namespace ROOT {
 
 
       // ------ Operations combining two vectors ------
-      // -- need to have the specialized version in order to avoid 
+      // -- need to have the specialized version in order to avoid
 
       /**
-          Return the scalar (dot) product of two displacement vectors.
-          It is possible to perform the product for any type of vector coordinates, 
-	  but they must have the same coordinate system tag
+       Return the scalar (dot) product of two displacement vectors.
+       It is possible to perform the product for any type of vector coordinates,
+       but they must have the same coordinate system tag
       */
       template< class OtherCoords >
       Scalar Dot( const  DisplacementVector3D<OtherCoords,Tag>  & v) const {
@@ -414,10 +414,10 @@ namespace ROOT {
       }
 
       /**
-         Return vector (cross) product of two displacement vectors,
-         as a vector in the coordinate system of this class.
-          It is possible to perform the product for any type of vector coordinates, 
-	  but they must have the same coordinate system tag
+       Return vector (cross) product of two displacement vectors,
+       as a vector in the coordinate system of this class.
+       It is possible to perform the product for any type of vector coordinates,
+       but they must have the same coordinate system tag
       */
       template <class OtherCoords>
       DisplacementVector3D Cross( const DisplacementVector3D<OtherCoords,Tag>  & v) const {
@@ -553,7 +553,7 @@ namespace ROOT {
 
       template <class OtherCoords, class OtherTag>
       DisplacementVector3D & operator=( const DisplacementVector3D<OtherCoords, OtherTag> & );
-      
+
 
       template <class OtherCoords, class OtherTag>
       DisplacementVector3D & operator=( const PositionVector3D<OtherCoords, OtherTag> & );

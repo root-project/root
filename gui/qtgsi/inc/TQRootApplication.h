@@ -56,7 +56,7 @@ public:
 public slots:
    void Execute();
    void Quit();
-   
+
 public:
    ClassDef(TQRootApplication,1)  //creates Qt environment interface with the ROOT windowing system
 };

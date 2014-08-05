@@ -50,7 +50,7 @@ public:
    Bool_t operator <(const TGeoBranchArray& other) const;
    Bool_t operator >=(const TGeoBranchArray& other) const;
    Bool_t operator <=(const TGeoBranchArray& other) const;
-   
+
    void              AddLevel(Int_t dindex);
    virtual Int_t     Compare(const TObject *obj) const;
    void              CleanMatrix();
@@ -71,7 +71,7 @@ public:
    static void       Sort(Int_t n, TGeoBranchArray **array, Int_t *index, Bool_t down=kTRUE);
    static Long64_t   BinarySearch(Long64_t n, const TGeoBranchArray **array, TGeoBranchArray *value);
    void              UpdateNavigator(TGeoNavigator *nav) const;
-   
+
    ClassDef(TGeoBranchArray, 3)
 };
 

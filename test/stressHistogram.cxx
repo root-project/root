@@ -127,7 +127,7 @@ const char* refFileName = "http://root.cern.ch/files/stressHistogram.5.18.00.roo
 
 TRandom2 r;
 // set to zero if want to run different every time
-const int initialSeed = 0;   
+const int initialSeed = 0;
 
 
 
@@ -154,7 +154,7 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT = default
 std::ostream& operator<<(std::ostream& out, TH1D* h);
 // old stresHistOpts.cxx file
 
-bool testAdd1() 
+bool testAdd1()
 {
    // Tests the first Add method for 1D Histograms
 
@@ -180,7 +180,7 @@ bool testAdd1()
    return ret;
 }
 
-bool testAddProfile1() 
+bool testAddProfile1()
 {
    // Tests the first Add method for 1D Profiles
 
@@ -215,7 +215,7 @@ bool testAddProfile1()
    return ret;
 }
 
-bool testAdd2() 
+bool testAdd2()
 {
    // Tests the second Add method for 1D Histograms
 
@@ -231,14 +231,14 @@ bool testAdd2()
    FillHistograms(h7, h5, 1.0, c2);
 
    h6->Add(h7, c2);
-   
+
    bool ret = equals("Add1D2", h5, h6, cmpOptStats, 1E-13);
    delete h5;
    delete h7;
    return ret;
 }
 
-bool testAddProfile2() 
+bool testAddProfile2()
 {
    // Tests the second Add method for 1D Profiles
 
@@ -263,14 +263,14 @@ bool testAddProfile2()
    }
 
    p6->Add(p7, c2);
-   
+
    bool ret = equals("Add1DProfile2", p5, p6, cmpOptStats, 1E-13);
    delete p5;
    delete p7;
    return ret;
 }
 
-bool testAdd3() 
+bool testAdd3()
 {
    // Tests the first add method to do scalation of 1D Histograms
 
@@ -377,7 +377,7 @@ bool testAddVar2()
    FillHistograms(h7, h5, 1.0, c2);
 
    h6->Add(h7, c2);
-   
+
    bool ret = equals("AddVar1D2", h5, h6, cmpOptStats, 1E-13);
    delete h5;
    delete h7;
@@ -403,14 +403,14 @@ bool testAddVarProf2()
    FillProfiles(p7, p5, 1.0, c2);
 
    p6->Add(p7, c2);
-   
+
    bool ret = equals("AddVar1D2", p5, p6, cmpOptStats, 1E-13);
    delete p5;
    delete p7;
    return ret;
 }
 
-bool testAddVar3() 
+bool testAddVar3()
 {
    // Tests the first add method to do scale of 1D Histograms with variable bin width
 
@@ -449,10 +449,10 @@ bool testAdd2D3()
 
    Double_t c1 = r.Rndm();
 
-   TH2D* h1 = new TH2D("t1D1-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("t1D1-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins+2, minRange, maxRange);
-   TH2D* h2 = new TH2D("t1D1-h2", "h2=c1*h1+c2*h2", 
+   TH2D* h2 = new TH2D("t1D1-h2", "h2=c1*h1+c2*h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins+2, minRange, maxRange);
 
@@ -468,7 +468,7 @@ bool testAdd2D3()
       h2->Fill(x, y, c1 / area);
    }
 
-   TH2D* h3 = new TH2D("t1D1-h3", "h3=c1*h1", 
+   TH2D* h3 = new TH2D("t1D1-h3", "h3=c1*h1",
                        numberOfBins, minRange, maxRange,
                        numberOfBins+2, minRange, maxRange);
    h3->Add(h1, h1, c1, -1);
@@ -488,11 +488,11 @@ bool testAdd3D3()
 
    Double_t c1 = r.Rndm();
 
-   TH3D* h1 = new TH3D("t1D1-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("t1D1-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins+1, minRange, maxRange,
                        numberOfBins+2, minRange, maxRange);
-   TH3D* h2 = new TH3D("t1D1-h2", "h2=c1*h1+c2*h2", 
+   TH3D* h2 = new TH3D("t1D1-h2", "h2=c1*h1+c2*h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins+1, minRange, maxRange,
                        numberOfBins+2, minRange, maxRange);
@@ -507,13 +507,13 @@ bool testAdd3D3()
       Int_t binx = h1->GetXaxis()->FindBin(x);
       Int_t biny = h1->GetYaxis()->FindBin(y);
       Int_t binz = h1->GetZaxis()->FindBin(z);
-      Double_t area = h1->GetXaxis()->GetBinWidth( binx ) * 
-                      h1->GetYaxis()->GetBinWidth( biny ) * 
+      Double_t area = h1->GetXaxis()->GetBinWidth( binx ) *
+                      h1->GetYaxis()->GetBinWidth( biny ) *
                       h1->GetZaxis()->GetBinWidth( binz );
       h2->Fill(x, y, z, c1 / area);
    }
 
-   TH3D* h3 = new TH3D("t1D1-h3", "h3=c1*h1", 
+   TH3D* h3 = new TH3D("t1D1-h3", "h3=c1*h1",
                        numberOfBins, minRange, maxRange,
                        numberOfBins+1, minRange, maxRange,
                        numberOfBins+2, minRange, maxRange);
@@ -528,22 +528,22 @@ bool testAdd3D3()
    return ret;
 }
 
-bool testAdd2D1() 
+bool testAdd2D1()
 {
    // Tests the first Add method for 2D Histograms
 
    Double_t c1 = r.Rndm();
    Double_t c2 = r.Rndm();
 
-   TH2D* h1 = new TH2D("t2D1-h1", "h1", 
+   TH2D* h1 = new TH2D("t2D1-h1", "h1",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   TH2D* h2 = new TH2D("t2D1-h2", "h2", 
+   TH2D* h2 = new TH2D("t2D1-h2", "h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   TH2D* h3 = new TH2D("t2D1-h3", "h3=c1*h1+c2*h2", 
+   TH2D* h3 = new TH2D("t2D1-h3", "h3=c1*h1+c2*h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
@@ -563,7 +563,7 @@ bool testAdd2D1()
       h3->Fill(x, y, c2);
    }
 
-   TH2D* h4 = new TH2D("t2D1-h4", "h4=c1*h1+c2*h2", 
+   TH2D* h4 = new TH2D("t2D1-h4", "h4=c1*h1+c2*h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    h4->Add(h1, h2, c1, c2);
@@ -574,22 +574,22 @@ bool testAdd2D1()
    return ret;
 }
 
-bool testAdd2DProfile1() 
+bool testAdd2DProfile1()
 {
    // Tests the first Add method for 1D Profiles
 
    Double_t c1 = r.Rndm();
    Double_t c2 = r.Rndm();
 
-   TProfile2D* p1 = new TProfile2D("t2D1-p1", "p1", 
+   TProfile2D* p1 = new TProfile2D("t2D1-p1", "p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile2D* p2 = new TProfile2D("t2D1-p2", "p2", 
+   TProfile2D* p2 = new TProfile2D("t2D1-p2", "p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile2D* p3 = new TProfile2D("t2D1-p3", "p3=c1*p1+c2*p2", 
+   TProfile2D* p3 = new TProfile2D("t2D1-p3", "p3=c1*p1+c2*p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -609,7 +609,7 @@ bool testAdd2DProfile1()
       p3->Fill(x, y, z, c2);
    }
 
-   TProfile2D* p4 = new TProfile2D("t2D1-p4", "p4=c1*p1+c2*p2", 
+   TProfile2D* p4 = new TProfile2D("t2D1-p4", "p4=c1*p1+c2*p2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    p4->Add(p1, p2, c1, c2);
@@ -620,21 +620,21 @@ bool testAdd2DProfile1()
    return ret;
 }
 
-bool testAdd2D2() 
+bool testAdd2D2()
 {
    // Tests the second Add method for 2D Histograms
 
    Double_t c2 = r.Rndm();
 
-   TH2D* h1 = new TH2D("t2D2-h1", "h1", 
+   TH2D* h1 = new TH2D("t2D2-h1", "h1",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   TH2D* h2 = new TH2D("t2D2-h2", "h2", 
+   TH2D* h2 = new TH2D("t2D2-h2", "h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   TH2D* h3 = new TH2D("t2D2-h3", "h3=h1+c2*h2", 
+   TH2D* h3 = new TH2D("t2D2-h3", "h3=h1+c2*h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
@@ -661,21 +661,21 @@ bool testAdd2D2()
    return ret;
 }
 
-bool testAdd2DProfile2() 
+bool testAdd2DProfile2()
 {
    // Tests the second Add method for 2D Profiles
 
    Double_t c2 = r.Rndm();
 
-   TProfile2D* p1 = new TProfile2D("t2D2-p1", "p1", 
+   TProfile2D* p1 = new TProfile2D("t2D2-p1", "p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile2D* p2 = new TProfile2D("t2D2-p2", "p2", 
+   TProfile2D* p2 = new TProfile2D("t2D2-p2", "p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile2D* p3 = new TProfile2D("t2D2-p3", "p3=p1+c2*p2", 
+   TProfile2D* p3 = new TProfile2D("t2D2-p3", "p3=p1+c2*p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -702,24 +702,24 @@ bool testAdd2DProfile2()
    return ret;
 }
 
-bool testAdd3D1() 
+bool testAdd3D1()
 {
    // Tests the first Add method for 3D Histograms
 
    Double_t c1 = r.Rndm();
    Double_t c2 = r.Rndm();
 
-   TH3D* h1 = new TH3D("t3D1-h1", "h1", 
+   TH3D* h1 = new TH3D("t3D1-h1", "h1",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   TH3D* h2 = new TH3D("t3D1-h2", "h2", 
+   TH3D* h2 = new TH3D("t3D1-h2", "h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   TH3D* h3 = new TH3D("t3D1-h3", "h3=c1*h1+c2*h2", 
+   TH3D* h3 = new TH3D("t3D1-h3", "h3=c1*h1+c2*h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -742,7 +742,7 @@ bool testAdd3D1()
       h3->Fill(x, y, z, c2);
    }
 
-   TH3D* h4 = new TH3D("t3D1-h4", "h4=c1*h1+c2*h2", 
+   TH3D* h4 = new TH3D("t3D1-h4", "h4=c1*h1+c2*h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -754,24 +754,24 @@ bool testAdd3D1()
    return ret;
 }
 
-bool testAdd3DProfile1() 
+bool testAdd3DProfile1()
 {
    // Tests the second Add method for 3D Profiles
 
    Double_t c1 = r.Rndm();
    Double_t c2 = r.Rndm();
 
-   TProfile3D* p1 = new TProfile3D("t3D1-p1", "p1", 
+   TProfile3D* p1 = new TProfile3D("t3D1-p1", "p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile3D* p2 = new TProfile3D("t3D1-p2", "p2", 
+   TProfile3D* p2 = new TProfile3D("t3D1-p2", "p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile3D* p3 = new TProfile3D("t3D1-p3", "p3=c1*p1+c2*p2", 
+   TProfile3D* p3 = new TProfile3D("t3D1-p3", "p3=c1*p1+c2*p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -794,7 +794,7 @@ bool testAdd3DProfile1()
       p3->Fill(x, y, z, t,  c2);
    }
 
-   TProfile3D* p4 = new TProfile3D("t3D1-p4", "p4=c1*p1+c2*p2", 
+   TProfile3D* p4 = new TProfile3D("t3D1-p4", "p4=c1*p1+c2*p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -806,23 +806,23 @@ bool testAdd3DProfile1()
    return ret;
 }
 
-bool testAdd3D2() 
+bool testAdd3D2()
 {
    // Tests the second Add method for 3D Histograms
 
    Double_t c2 = r.Rndm();
 
-   TH3D* h1 = new TH3D("t3D2-h1", "h1", 
+   TH3D* h1 = new TH3D("t3D2-h1", "h1",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   TH3D* h2 = new TH3D("t3D2-h2", "h2", 
+   TH3D* h2 = new TH3D("t3D2-h2", "h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   TH3D* h3 = new TH3D("t3D2-h3", "h3=h1+c2*h2", 
+   TH3D* h3 = new TH3D("t3D2-h3", "h3=h1+c2*h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -852,27 +852,27 @@ bool testAdd3D2()
    return ret;
 }
 
-bool testAdd3DProfile2() 
+bool testAdd3DProfile2()
 {
    // Tests the second Add method for 3D Profiles
 
    Double_t c2 = r.Rndm();
 
-   TProfile3D* p1 = new TProfile3D("t3D2-p1", "p1", 
+   TProfile3D* p1 = new TProfile3D("t3D2-p1", "p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   
-   TProfile3D* p2 = new TProfile3D("t3D2-p2", "p2", 
+
+   TProfile3D* p2 = new TProfile3D("t3D2-p2", "p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   
-   TProfile3D* p3 = new TProfile3D("t3D2-p3", "p3=p1+c2*p2", 
+
+   TProfile3D* p3 = new TProfile3D("t3D2-p3", "p3=p1+c2*p2",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   
+
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -942,7 +942,7 @@ bool testAddHn()
    return ret;
 }
 
-bool testMul1() 
+bool testMul1()
 {
    // Tests the first Multiply method for 1D Histograms
 
@@ -991,7 +991,7 @@ bool testMul1()
    return ret;
 }
 
-bool testMulVar1() 
+bool testMulVar1()
 {
    // Tests the first Multiply method for 1D Histograms with variable bin size
 
@@ -1043,7 +1043,7 @@ bool testMulVar1()
    return ret;
 }
 
-bool testMul2() 
+bool testMul2()
 {
    // Tests the second Multiply method for 1D Histograms
 
@@ -1085,7 +1085,7 @@ bool testMul2()
    return ret;
 }
 
-bool testMulVar2() 
+bool testMulVar2()
 {
    // Tests the second Multiply method for 1D Histograms with variable bin size
 
@@ -1130,17 +1130,17 @@ bool testMulVar2()
    return ret;
 }
 
-bool testMul2D1() 
+bool testMul2D1()
 {
    // Tests the first Multiply method for 2D Histograms
 
    Double_t c1 = r.Rndm();
    Double_t c2 = r.Rndm();
 
-   TH2D* h1 = new TH2D("m2D1-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("m2D1-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH2D* h2 = new TH2D("m2D1-h2", "h2-Title", 
+   TH2D* h2 = new TH2D("m2D1-h2", "h2-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    TH2D* h3 = new TH2D("m2D1-h3", "h3=c1*h1*c2*h2",
@@ -1182,7 +1182,7 @@ bool testMul2D1()
       }
    }
 
-   TH2D* h4 = new TH2D("m2D1-h4", "h4=h1*h2", 
+   TH2D* h4 = new TH2D("m2D1-h4", "h4=h1*h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    h4->Multiply(h1, h2, c1, c2);
@@ -1194,14 +1194,14 @@ bool testMul2D1()
    return ret;
 }
 
-bool testMul2D2() 
+bool testMul2D2()
 {
    // Tests the second Multiply method for 2D Histograms
 
-   TH2D* h1 = new TH2D("m2D2-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("m2D2-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH2D* h2 = new TH2D("m2D2-h2", "h2-Title", 
+   TH2D* h2 = new TH2D("m2D2-h2", "h2-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    TH2D* h3 = new TH2D("m2D2-h3", "h3=h1*h2",
@@ -1251,18 +1251,18 @@ bool testMul2D2()
    return ret;
 }
 
-bool testMul3D1() 
+bool testMul3D1()
 {
    // Tests the first Multiply method for 3D Histograms
 
    Double_t c1 = r.Rndm();
    Double_t c2 = r.Rndm();
 
-   TH3D* h1 = new TH3D("m3D1-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("m3D1-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH3D* h2 = new TH3D("m3D1-h2", "h2-Title", 
+   TH3D* h2 = new TH3D("m3D1-h2", "h2-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -1313,7 +1313,7 @@ bool testMul3D1()
       }
    }
 
-   TH3D* h4 = new TH3D("m3D1-h4", "h4=h1*h2", 
+   TH3D* h4 = new TH3D("m3D1-h4", "h4=h1*h2",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -1326,15 +1326,15 @@ bool testMul3D1()
    return ret;
 }
 
-bool testMul3D2() 
+bool testMul3D2()
 {
    // Tests the second Multiply method for 3D Histograms
 
-   TH3D* h1 = new TH3D("m3D2-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("m3D2-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH3D* h2 = new TH3D("m3D2-h2", "h2-Title", 
+   TH3D* h2 = new TH3D("m3D2-h2", "h2-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -1499,7 +1499,7 @@ bool testMulF1D2()
    TH1D* h1 = new TH1D("mf1D2-h1", "h1-Title", numberOfBins, minRange, maxRange);
    TH1D* h2 = new TH1D("mf1D2-h2", "h2=h1*c1*f1", numberOfBins, minRange, maxRange);
 
-   TF2* f = new TF2("sin2", "sin(x)*cos(y)", 
+   TF2* f = new TF2("sin2", "sin(x)*cos(y)",
                     minRange - 2, maxRange + 2,
                     minRange - 2, maxRange + 2);
    h1->Sumw2();h2->Sumw2();
@@ -1528,15 +1528,15 @@ bool testMulF2D()
 {
    Double_t c1 = r.Rndm();
 
-   TH2D* h1 = new TH2D("mf2D-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("mf2D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins, minRange, maxRange);
-   TH2D* h2 = new TH2D("mf2D-h2", "h2=h1*c1*f1", 
+   TH2D* h2 = new TH2D("mf2D-h2", "h2=h1*c1*f1",
                        numberOfBins, minRange, maxRange,
                        numberOfBins, minRange, maxRange);
 
    TF1* f = new TF1("sin", "sin(x)", minRange - 2, maxRange + 2);
-   
+
    h1->Sumw2();h2->Sumw2();
 
    UInt_t seed = r.GetSeed();
@@ -1562,17 +1562,17 @@ bool testMulF2D2()
 {
    Double_t c1 = r.Rndm();
 
-   TH2D* h1 = new TH2D("mf2D2-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("mf2D2-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins, minRange, maxRange);
-   TH2D* h2 = new TH2D("mf2D2-h2", "h2=h1*c1*f1", 
+   TH2D* h2 = new TH2D("mf2D2-h2", "h2=h1*c1*f1",
                        numberOfBins, minRange, maxRange,
                        numberOfBins, minRange, maxRange);
 
-   TF2* f = new TF2("sin2", "sin(x)*cos(y)", 
+   TF2* f = new TF2("sin2", "sin(x)*cos(y)",
                     minRange - 2, maxRange + 2,
                     minRange - 2, maxRange + 2);
-   
+
    h1->Sumw2();h2->Sumw2();
 
    UInt_t seed = r.GetSeed();
@@ -1600,17 +1600,17 @@ bool testMulF3D()
 {
    Double_t c1 = r.Rndm();
 
-   TH3D* h1 = new TH3D("mf3D-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("mf3D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins, minRange, maxRange,
                        numberOfBins, minRange, maxRange);
-   TH3D* h2 = new TH3D("mf3D-h2", "h2=h1*c1*f1", 
+   TH3D* h2 = new TH3D("mf3D-h2", "h2=h1*c1*f1",
                        numberOfBins, minRange, maxRange,
                        numberOfBins, minRange, maxRange,
                        numberOfBins, minRange, maxRange);
 
    TF1* f = new TF1("sin", "sin(x)", minRange - 2, maxRange + 2);
-   
+
    h1->Sumw2();h2->Sumw2();
 
    UInt_t seed = r.GetSeed();
@@ -1637,19 +1637,19 @@ bool testMulF3D2()
 {
    Double_t c1 = r.Rndm();
 
-   TH3D* h1 = new TH3D("mf3D2-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("mf3D2-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins, minRange, maxRange,
                        numberOfBins, minRange, maxRange);
-   TH3D* h2 = new TH3D("mf3D2-h2", "h2=h1*c1*f1", 
+   TH3D* h2 = new TH3D("mf3D2-h2", "h2=h1*c1*f1",
                        numberOfBins, minRange, maxRange,
                        numberOfBins, minRange, maxRange,
                        numberOfBins, minRange, maxRange);
 
-   TF2* f = new TF2("sin2", "sin(x)*cos(y)", 
+   TF2* f = new TF2("sin2", "sin(x)*cos(y)",
                     minRange - 2, maxRange + 2,
                     minRange - 2, maxRange + 2);
-   
+
    h1->Sumw2();h2->Sumw2();
 
    UInt_t seed = r.GetSeed();
@@ -1690,7 +1690,7 @@ bool testMulFND()
    HIST* s2 = new HIST("mfND-s2", "s2=f*s2",  nDims, bsize, xmin, xmax);
 
    TF1* f = new TF1("sin", "sin(x)", minRange - 2, maxRange + 2);
-   
+
    s1->Sumw2();s2->Sumw2();
 
    UInt_t seed = r.GetSeed();
@@ -1727,10 +1727,10 @@ bool testMulFND2()
    HIST* s1 = new HIST("mfND-s1", "s1-Title", nDims, bsize, xmin, xmax);
    HIST* s2 = new HIST("mfND-s2", "s2=f*s2",  nDims, bsize, xmin, xmax);
 
-   TF2* f = new TF2("sin2", "sin(x)*cos(y)", 
+   TF2* f = new TF2("sin2", "sin(x)*cos(y)",
                     minRange - 2, maxRange + 2,
                     minRange - 2, maxRange + 2);
-   
+
    s1->Sumw2();s2->Sumw2();
 
    UInt_t seed = r.GetSeed();
@@ -1754,7 +1754,7 @@ bool testMulFND2()
    return status;
 }
 
-bool testDivide1() 
+bool testDivide1()
 {
    // Tests the first Divide method for 1D Histograms
 
@@ -1777,22 +1777,22 @@ bool testDivide1()
       h2->Fill(value,  1.0);
    }
    // avoid bins in h2 with zero content
-   for (int i = 0; i < h2->GetSize(); ++i) 
+   for (int i = 0; i < h2->GetSize(); ++i)
       if (h2->GetBinContent(i) == 0) h2->SetBinContent(i,1);
 
 
    TH1D* h3 = new TH1D("d1D1-h3", "h3=(c1*h1)/(c2*h2)", numberOfBins, minRange, maxRange);
    h3->Divide(h1, h2, c1, c2);
-      
+
    TH1D* h4 = new TH1D("d1D1-h4", "h4=h3*h2)", numberOfBins, minRange, maxRange);
    h4->Multiply(h2, h3, c2/c1, 1);
    for ( Int_t bin = 0; bin <= h4->GetNbinsX() + 1; ++bin ) {
       Double_t error = h4->GetBinError(bin) * h4->GetBinError(bin);
-      error -= (2*(c2*c2)/(c1*c1)) * h3->GetBinContent(bin)*h3->GetBinContent(bin)*h2->GetBinError(bin)*h2->GetBinError(bin); 
+      error -= (2*(c2*c2)/(c1*c1)) * h3->GetBinContent(bin)*h3->GetBinContent(bin)*h2->GetBinError(bin)*h2->GetBinError(bin);
       h4->SetBinError( bin, sqrt(error) );
    }
    h4->ResetStats();
-   h1->ResetStats(); 
+   h1->ResetStats();
 
    bool ret = equals("Divide1D1", h1, h4, cmpOptStats );
    delete h1;
@@ -1801,7 +1801,7 @@ bool testDivide1()
    return ret;
 }
 
-bool testDivideVar1() 
+bool testDivideVar1()
 {
    // Tests the first Divide method for 1D Histograms with variable bin size
 
@@ -1827,22 +1827,22 @@ bool testDivideVar1()
       h2->Fill(value,  1.0);
    }
    // avoid bins in h2 with zero content
-   for (int i = 0; i < h2->GetSize(); ++i) 
+   for (int i = 0; i < h2->GetSize(); ++i)
       if (h2->GetBinContent(i) == 0) h2->SetBinContent(i,1);
 
 
    TH1D* h3 = new TH1D("d1D1-h3", "h3=(c1*h1)/(c2*h2)", numberOfBins, v);
    h3->Divide(h1, h2, c1, c2);
-      
+
    TH1D* h4 = new TH1D("d1D1-h4", "h4=h3*h2)", numberOfBins, v);
    h4->Multiply(h2, h3, c2/c1, 1);
    for ( Int_t bin = 0; bin <= h4->GetNbinsX() + 1; ++bin ) {
       Double_t error = h4->GetBinError(bin) * h4->GetBinError(bin);
-      error -= (2*(c2*c2)/(c1*c1)) * h3->GetBinContent(bin)*h3->GetBinContent(bin)*h2->GetBinError(bin)*h2->GetBinError(bin); 
+      error -= (2*(c2*c2)/(c1*c1)) * h3->GetBinContent(bin)*h3->GetBinContent(bin)*h2->GetBinError(bin)*h2->GetBinError(bin);
       h4->SetBinError( bin, sqrt(error) );
    }
    h4->ResetStats();
-   h1->ResetStats(); 
+   h1->ResetStats();
 
    bool ret = equals("DivideVar1D1", h1, h4, cmpOptStats);
    delete h1;
@@ -1852,7 +1852,7 @@ bool testDivideVar1()
 }
 
 
-bool testDivideProf1() 
+bool testDivideProf1()
 {
    // Tests the first Divide method for 1D Profiles
 
@@ -1889,7 +1889,7 @@ bool testDivideProf1()
    return 0;
 }
 
-bool testDivide2() 
+bool testDivide2()
 {
    // Tests the second Divide method for 1D Histograms
 
@@ -1909,22 +1909,22 @@ bool testDivide2()
       h2->Fill(value,  1.0);
    }
    // avoid bins in h2 with zero content
-   for (int i = 0; i < h2->GetSize(); ++i) 
+   for (int i = 0; i < h2->GetSize(); ++i)
       if (h2->GetBinContent(i) == 0) h2->SetBinContent(i,1);
 
    TH1D* h3 = static_cast<TH1D*>( h1->Clone() );
    h3->Divide(h2);
-      
+
    TH1D* h4 = new TH1D("d1D2-h4", "h4=h3*h2)", numberOfBins, minRange, maxRange);
    h4->Multiply(h2, h3, 1.0, 1.0);
    for ( Int_t bin = 0; bin <= h4->GetNbinsX() + 1; ++bin ) {
       Double_t error = h4->GetBinError(bin) * h4->GetBinError(bin);
-      error -= 2 * h3->GetBinContent(bin)*h3->GetBinContent(bin)*h2->GetBinError(bin)*h2->GetBinError(bin); 
+      error -= 2 * h3->GetBinContent(bin)*h3->GetBinContent(bin)*h2->GetBinError(bin)*h2->GetBinError(bin);
       h4->SetBinError( bin, sqrt(error) );
    }
 
-   h4->ResetStats(); 
-   h1->ResetStats(); 
+   h4->ResetStats();
+   h1->ResetStats();
 
    bool ret = equals("Divide1D2", h1, h4, cmpOptStats);
    delete h1;
@@ -1933,7 +1933,7 @@ bool testDivide2()
    return ret;
 }
 
-bool testDivideVar2() 
+bool testDivideVar2()
 {
    // Tests the second Divide method for 1D Histograms with variable bin size
 
@@ -1956,22 +1956,22 @@ bool testDivideVar2()
       h2->Fill(value,  1.0);
    }
    // avoid bins in h2 with zero content
-   for (int i = 0; i < h2->GetSize(); ++i) 
+   for (int i = 0; i < h2->GetSize(); ++i)
       if (h2->GetBinContent(i) == 0) h2->SetBinContent(i,1);
 
    TH1D* h3 = static_cast<TH1D*>( h1->Clone() );
    h3->Divide(h2);
-      
+
    TH1D* h4 = new TH1D("d1D2-h4", "h4=h3*h2)", numberOfBins, v);
    h4->Multiply(h2, h3, 1.0, 1.0);
    for ( Int_t bin = 0; bin <= h4->GetNbinsX() + 1; ++bin ) {
       Double_t error = h4->GetBinError(bin) * h4->GetBinError(bin);
-      error -= 2 * h3->GetBinContent(bin)*h3->GetBinContent(bin)*h2->GetBinError(bin)*h2->GetBinError(bin); 
+      error -= 2 * h3->GetBinContent(bin)*h3->GetBinContent(bin)*h2->GetBinError(bin)*h2->GetBinError(bin);
       h4->SetBinError( bin, sqrt(error) );
    }
 
-   h4->ResetStats(); 
-   h1->ResetStats(); 
+   h4->ResetStats();
+   h1->ResetStats();
 
    bool ret = equals("DivideVar1D2", h1, h4, cmpOptStats);
    delete h1;
@@ -1980,17 +1980,17 @@ bool testDivideVar2()
    return ret;
 }
 
-bool testDivide2D1() 
+bool testDivide2D1()
 {
    // Tests the first Divide method for 2D Histograms
 
    Double_t c1 = r.Rndm() + 1;
    Double_t c2 = r.Rndm() + 1;
 
-   TH2D* h1 = new TH2D("d2D1-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("d2D1-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH2D* h2 = new TH2D("d2D1-h2", "h2-Title", 
+   TH2D* h2 = new TH2D("d2D1-h2", "h2-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
@@ -2009,28 +2009,28 @@ bool testDivide2D1()
       h2->Fill(x, y, 1.0);
    }
    // avoid bins in h2 with zero content
-   for (int i = 0; i < h2->GetSize(); ++i) 
+   for (int i = 0; i < h2->GetSize(); ++i)
       if (h2->GetBinContent(i) == 0) h2->SetBinContent(i,1);
 
-   TH2D* h3 = new TH2D("d2D1-h3", "h3=(c1*h1)/(c2*h2)", 
+   TH2D* h3 = new TH2D("d2D1-h3", "h3=(c1*h1)/(c2*h2)",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    h3->Divide(h1, h2, c1, c2);
-      
-   TH2D* h4 = new TH2D("d2D1-h4", "h4=h3*h2)", 
+
+   TH2D* h4 = new TH2D("d2D1-h4", "h4=h3*h2)",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    h4->Multiply(h2, h3, c2/c1, 1);
    for ( Int_t i = 0; i <= h4->GetNbinsX() + 1; ++i ) {
       for ( Int_t j = 0; j <= h4->GetNbinsY() + 1; ++j ) {
          Double_t error = h4->GetBinError(i,j) * h4->GetBinError(i,j);
-         error -= (2*(c2*c2)/(c1*c1)) * h3->GetBinContent(i,j)*h3->GetBinContent(i,j)*h2->GetBinError(i,j)*h2->GetBinError(i,j); 
+         error -= (2*(c2*c2)/(c1*c1)) * h3->GetBinContent(i,j)*h3->GetBinContent(i,j)*h2->GetBinError(i,j)*h2->GetBinError(i,j);
          h4->SetBinError( i, j, sqrt(error) );
       }
    }
 
-   h4->ResetStats(); 
-   h1->ResetStats(); 
+   h4->ResetStats();
+   h1->ResetStats();
 
    bool ret = equals("Divide2D1", h1, h4, cmpOptStats );
    delete h1;
@@ -2039,14 +2039,14 @@ bool testDivide2D1()
    return ret;
 }
 
-bool testDivide2D2() 
+bool testDivide2D2()
 {
    // Tests the second Divide method for 2D Histograms
 
-   TH2D* h1 = new TH2D("d2D2-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("d2D2-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH2D* h2 = new TH2D("d2D2-h2", "h2-Title", 
+   TH2D* h2 = new TH2D("d2D2-h2", "h2-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
@@ -2065,26 +2065,26 @@ bool testDivide2D2()
       h2->Fill(x, y, 1.0);
    }
    // avoid bins in h2 with zero content
-   for (int i = 0; i < h2->GetSize(); ++i) 
+   for (int i = 0; i < h2->GetSize(); ++i)
       if (h2->GetBinContent(i) == 0) h2->SetBinContent(i,1);
 
    TH2D* h3 = static_cast<TH2D*>( h1->Clone() );
    h3->Divide(h2);
-      
-   TH2D* h4 = new TH2D("d2D2-h4", "h4=h3*h2)", 
+
+   TH2D* h4 = new TH2D("d2D2-h4", "h4=h3*h2)",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    h4->Multiply(h2, h3, 1.0, 1.0);
    for ( Int_t i = 0; i <= h4->GetNbinsX() + 1; ++i ) {
       for ( Int_t j = 0; j <= h4->GetNbinsY() + 1; ++j ) {
           Double_t error = h4->GetBinError(i,j) * h4->GetBinError(i,j);
-         error -= 2 * h3->GetBinContent(i,j)*h3->GetBinContent(i,j)*h2->GetBinError(i,j)*h2->GetBinError(i,j); 
+         error -= 2 * h3->GetBinContent(i,j)*h3->GetBinContent(i,j)*h2->GetBinError(i,j)*h2->GetBinError(i,j);
          h4->SetBinError( i, j, sqrt(error) );
       }
    }
 
-   h4->ResetStats(); 
-   h1->ResetStats(); 
+   h4->ResetStats();
+   h1->ResetStats();
 
    bool ret = equals("Divide2D2", h1, h4, cmpOptStats);
    delete h1;
@@ -2093,18 +2093,18 @@ bool testDivide2D2()
    return ret;
 }
 
-bool testDivide3D1() 
+bool testDivide3D1()
 {
    // Tests the first Divide method for 3D Histograms
 
    Double_t c1 = r.Rndm() + 1;
    Double_t c2 = r.Rndm() + 1;
 
-   TH3D* h1 = new TH3D("d3D1-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("d3D1-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH3D* h2 = new TH3D("d3D1-h2", "h2-Title", 
+   TH3D* h2 = new TH3D("d3D1-h2", "h2-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -2126,16 +2126,16 @@ bool testDivide3D1()
       h2->Fill(x, y, z, 1.0);
    }
    // avoid bins in h2 with zero content
-   for (int i = 0; i < h2->GetSize(); ++i) 
+   for (int i = 0; i < h2->GetSize(); ++i)
       if (h2->GetBinContent(i) == 0) h2->SetBinContent(i,1);
 
-   TH3D* h3 = new TH3D("d3D1-h3", "h3=(c1*h1)/(c2*h2)", 
+   TH3D* h3 = new TH3D("d3D1-h3", "h3=(c1*h1)/(c2*h2)",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    h3->Divide(h1, h2, c1, c2);
-      
-   TH3D* h4 = new TH3D("d3D1-h4", "h4=h3*h2)", 
+
+   TH3D* h4 = new TH3D("d3D1-h4", "h4=h3*h2)",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -2144,16 +2144,16 @@ bool testDivide3D1()
       for ( Int_t j = 0; j <= h4->GetNbinsY() + 1; ++j ) {
          for ( Int_t h = 0; h <= h4->GetNbinsZ() + 1; ++h ) {
             Double_t error = h4->GetBinError(i,j,h) * h4->GetBinError(i,j,h);
-            //error -= 2 * h3->GetBinContent(i,j,h)*h3->GetBinContent(i,j,h)*h2->GetBinError(i,j,h)*h2->GetBinError(i,j,h); 
-            error -= (2*(c2*c2)/(c1*c1)) * 
-               h3->GetBinContent(i,j,h)*h3->GetBinContent(i,j,h)*h2->GetBinError(i,j,h)*h2->GetBinError(i,j,h); 
+            //error -= 2 * h3->GetBinContent(i,j,h)*h3->GetBinContent(i,j,h)*h2->GetBinError(i,j,h)*h2->GetBinError(i,j,h);
+            error -= (2*(c2*c2)/(c1*c1)) *
+               h3->GetBinContent(i,j,h)*h3->GetBinContent(i,j,h)*h2->GetBinError(i,j,h)*h2->GetBinError(i,j,h);
             h4->SetBinError( i, j, h, sqrt(error) );
          }
       }
    }
 
-   h4->ResetStats(); 
-   h1->ResetStats(); 
+   h4->ResetStats();
+   h1->ResetStats();
 
    bool ret = equals("Divide3D1", h1, h4, cmpOptStats);
    delete h1;
@@ -2162,15 +2162,15 @@ bool testDivide3D1()
    return ret;
 }
 
-bool testDivide3D2() 
+bool testDivide3D2()
 {
    // Tests the second Divide method for 3D Histograms
 
-   TH3D* h1 = new TH3D("d3D2-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("d3D2-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH3D* h2 = new TH3D("d3D2-h2", "h2-Title", 
+   TH3D* h2 = new TH3D("d3D2-h2", "h2-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -2192,13 +2192,13 @@ bool testDivide3D2()
       h2->Fill(x, y, z, 1.0);
    }
    // avoid bins in h2 with zero content
-   for (int i = 0; i < h2->GetSize(); ++i) 
+   for (int i = 0; i < h2->GetSize(); ++i)
       if (h2->GetBinContent(i) == 0) h2->SetBinContent(i,1);
 
    TH3D* h3 = static_cast<TH3D*>( h1->Clone() );
    h3->Divide(h2);
-      
-   TH3D* h4 = new TH3D("d3D2-h4", "h4=h3*h2)", 
+
+   TH3D* h4 = new TH3D("d3D2-h4", "h4=h3*h2)",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -2207,14 +2207,14 @@ bool testDivide3D2()
       for ( Int_t j = 0; j <= h4->GetNbinsY() + 1; ++j ) {
          for ( Int_t h = 0; h <= h4->GetNbinsZ() + 1; ++h ) {
             Double_t error = h4->GetBinError(i,j,h) * h4->GetBinError(i,j,h);
-            error -= 2 * h3->GetBinContent(i,j,h)*h3->GetBinContent(i,j,h)*h2->GetBinError(i,j,h)*h2->GetBinError(i,j,h); 
+            error -= 2 * h3->GetBinContent(i,j,h)*h3->GetBinContent(i,j,h)*h2->GetBinError(i,j,h)*h2->GetBinError(i,j,h);
             h4->SetBinError( i, j, h, sqrt(error) );
          }
       }
    }
 
-   h4->ResetStats(); 
-   h1->ResetStats(); 
+   h4->ResetStats();
+   h1->ResetStats();
 
    bool ret = equals("Divide3D2", h1, h4, cmpOptStats);
    delete h1;
@@ -2235,7 +2235,7 @@ bool testDivHn1()
    Double_t xmax[] = {maxRange, maxRange, maxRange};
 
    // There is no multiply with coefficients!
-   const Double_t c1 = 1; 
+   const Double_t c1 = 1;
    const Double_t c2 = 1;
 
    HIST* s1 = new HIST("dND1-s1", "s1-Title", 3, bsize, xmin, xmax);
@@ -2263,7 +2263,7 @@ bool testDivHn1()
 
    HIST* s3 = new HIST("dND1-s3", "s3=(c1*s1)/(c2*s2)", 3, bsize, xmin, xmax);
    s3->Divide(s1, s2, c1, c2);
-      
+
    s4->Multiply(s3);
 
    // No the bin contents has to be reduced, as it was filled twice!
@@ -2297,7 +2297,7 @@ bool testDivHn2()
    Double_t xmax[] = {maxRange, maxRange, maxRange};
 
    // There is no multiply with coefficients!
-   const Double_t c1 = 1; 
+   const Double_t c1 = 1;
    const Double_t c2 = 1;
 
    HIST* s1 = new HIST("dND2-s1", "s1-Title", 3, bsize, xmin, xmax);
@@ -2325,12 +2325,12 @@ bool testDivHn2()
 
    HIST* s3 = static_cast<HIST*>( s1->Clone() );
    s3->Divide(s2);
-   
+
    HIST* s5 = new HIST("dND2-s5", "s5=(c1*s1)/(c2*s2)", 3, bsize, xmin, xmax);
    s5->Divide(s1,s2);
-      
+
    s4->Multiply(s3);
-   
+
    // No the bin contents has to be reduced, as it was filled twice!
    for ( Long64_t i = 0; i < s3->GetNbins(); ++i ) {
       Int_t coord[3];
@@ -2344,7 +2344,7 @@ bool testDivHn2()
    }
 
    bool ret = equals(TString::Format("DivideND2<%s>", HIST::Class()->GetName()), s1, s4, cmpOptStats, 1E-6);
-   
+
    delete s1;
    delete s2;
    delete s3;
@@ -2465,7 +2465,7 @@ bool testCopyConstructorVar1D()
 
    Double_t v[numberOfBins+1];
    FillVariableRange(v);
-   
+
    TH1D* h1 = new TH1D("cc1D-h1", "h1-Title", numberOfBins, v);
 
    h1->Sumw2();
@@ -2611,7 +2611,7 @@ bool testAssign2D()
 {
    // Tests the operator=() method for 2D Histograms
 
-   TH2D* h1 = new TH2D("=2D-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("=2D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
@@ -2622,9 +2622,9 @@ bool testAssign2D()
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       h1->Fill(x, y, 1.0);
    }
-   
-   TH2D* h2 = new TH2D("=2D-h2", "h2-Title", 
-                       numberOfBins, minRange, maxRange, 
+
+   TH2D* h2 = new TH2D("=2D-h2", "h2-Title",
+                       numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    *h2 = *h1;
 
@@ -2637,7 +2637,7 @@ bool testAssignProfile2D()
 {
    // Tests the operator=() method for 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("=2D-p1", "p1-Title", 
+   TProfile2D* p1 = new TProfile2D("=2D-p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -2648,8 +2648,8 @@ bool testAssignProfile2D()
       p1->Fill(x, y, z, 1.0);
    }
 
-   TProfile2D* p2 = new TProfile2D("=2D-p2", "p2-Title", 
-                                   numberOfBins, minRange, maxRange, 
+   TProfile2D* p2 = new TProfile2D("=2D-p2", "p2-Title",
+                                   numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    *p2 = *p1;
 
@@ -2663,7 +2663,7 @@ bool testCopyConstructor2D()
 {
    // Tests the copy constructor for 2D Histograms
 
-   TH2D* h1 = new TH2D("cc2D-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("cc2D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
@@ -2686,7 +2686,7 @@ bool testCopyConstructorProfile2D()
 {
    // Tests the copy constructor for 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("cc2D-p1", "p1-Title", 
+   TProfile2D* p1 = new TProfile2D("cc2D-p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -2708,7 +2708,7 @@ bool testClone2D()
 {
    // Tests the clone method for 2D Histograms
 
-   TH2D* h1 = new TH2D("cl2D-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("cl2D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
@@ -2731,7 +2731,7 @@ bool testCloneProfile2D()
 {
    // Tests the clone method for 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("cl2D-p1", "p1-Title", 
+   TProfile2D* p1 = new TProfile2D("cl2D-p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -2753,7 +2753,7 @@ bool testAssign3D()
 {
    // Tests the operator=() method for 3D Histograms
 
-   TH3D* h1 = new TH3D("=3D-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("=3D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -2767,9 +2767,9 @@ bool testAssign3D()
       h1->Fill(x, y, z, 1.0);
    }
 
-   TH3D* h2 = new TH3D("=3D-h2", "h2-Title", 
-                       numberOfBins, minRange, maxRange, 
-                       numberOfBins + 1, minRange, maxRange, 
+   TH3D* h2 = new TH3D("=3D-h2", "h2-Title",
+                       numberOfBins, minRange, maxRange,
+                       numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    *h2 = *h1;
 
@@ -2782,7 +2782,7 @@ bool testAssignProfile3D()
 {
    // Tests the operator=() method for 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("=3D-p1", "p1-Title", 
+   TProfile3D* p1 = new TProfile3D("=3D-p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -2795,9 +2795,9 @@ bool testAssignProfile3D()
       p1->Fill(x, y, z, t, 1.0);
    }
 
-   TProfile3D* p2 = new TProfile3D("=3D-p2", "p2-Title", 
-                                   numberOfBins, minRange, maxRange, 
-                                   numberOfBins + 1, minRange, maxRange, 
+   TProfile3D* p2 = new TProfile3D("=3D-p2", "p2-Title",
+                                   numberOfBins, minRange, maxRange,
+                                   numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    *p2 = *p1;
 
@@ -2810,7 +2810,7 @@ bool testCopyConstructor3D()
 {
    // Tests the copy constructor for 3D Histograms
 
-   TH3D* h1 = new TH3D("cc3D-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("cc3D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -2835,7 +2835,7 @@ bool testCopyConstructorProfile3D()
 {
    // Tests the copy constructor for 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("cc3D-p1", "p1-Title", 
+   TProfile3D* p1 = new TProfile3D("cc3D-p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -2859,7 +2859,7 @@ bool testClone3D()
 {
    // Tests the clone method for 3D Histograms
 
-   TH3D* h1 = new TH3D("cl3D-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("cl3D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -2884,7 +2884,7 @@ bool testCloneProfile3D()
 {
    // Tests the clone method for 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("cl3D-p1", "p1-Title", 
+   TProfile3D* p1 = new TProfile3D("cl3D-p1", "p1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -3041,7 +3041,7 @@ bool testWriteRead2D()
 {
    // Tests the write and read methods for 2D Histograms
 
-   TH2D* h1 = new TH2D("wr2D-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("wr2D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
@@ -3069,7 +3069,7 @@ bool testWriteReadProfile2D()
 {
    // Tests the write and read methods for 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("wr2D-p1", "p1-Title", 
+   TProfile2D* p1 = new TProfile2D("wr2D-p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
@@ -3096,7 +3096,7 @@ bool testWriteRead3D()
 {
    // Tests the write and read methods for 3D Histograms
 
-   TH3D* h1 = new TH3D("wr3D-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("wr3D-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -3126,7 +3126,7 @@ bool testWriteReadProfile3D()
 {
    // Tests the write and read methods for 3D Profile
 
-   TProfile3D* p1 = new TProfile3D("wr3D-p1", "p1-Title", 
+   TProfile3D* p1 = new TProfile3D("wr3D-p1", "p1-Title",
                                  numberOfBins, minRange, maxRange,
                                  numberOfBins + 1, minRange, maxRange,
                                  numberOfBins + 2, minRange, maxRange);
@@ -3166,7 +3166,7 @@ bool testWriteReadHn()
    };
    Double_t xmin[] = {minRange, minRange, minRange};
    Double_t xmax[] = {maxRange, maxRange, maxRange};
-   
+
    HIST* s1 = new HIST("wrS-s1","s1-Title", 3, bsize, xmin, xmax);
    s1->Sumw2();
 
@@ -3191,7 +3191,7 @@ bool testWriteReadHn()
 }
 
 
-bool testMerge1D() 
+bool testMerge1D()
 {
    // Tests the merge method for 1D Histograms
    // simple merge with histogram with same limits
@@ -3220,7 +3220,7 @@ bool testMerge1D()
    return ret;
 }
 
-bool testMergeVar1D() 
+bool testMergeVar1D()
 {
    // Tests the merge method for 1D Histograms with variable bin size
 
@@ -3251,7 +3251,7 @@ bool testMergeVar1D()
    return ret;
 }
 
-bool testMergeProf1D() 
+bool testMergeProf1D()
 {
    // Tests the merge method for 1D Profiles
 
@@ -3277,7 +3277,7 @@ bool testMergeProf1D()
    return ret;
 }
 
-bool testMergeProfVar1D() 
+bool testMergeProfVar1D()
 {
    // Tests the merge method for 1D Profiles with variable bin size
 
@@ -3306,7 +3306,7 @@ bool testMergeProfVar1D()
    return ret;
 }
 
-bool testMerge2D() 
+bool testMerge2D()
 {
    // Tests the merge method for 2D Histograms
 
@@ -3359,7 +3359,7 @@ bool testMerge2D()
    return ret;
 }
 
-bool testMergeProf2D() 
+bool testMergeProf2D()
 {
    // Tests the merge method for 2D Profiles
 
@@ -3413,7 +3413,7 @@ bool testMergeProf2D()
    return ret;
 }
 
-bool testMerge3D() 
+bool testMerge3D()
 {
    // Tests the merge method for 3D Histograms
 
@@ -3473,7 +3473,7 @@ bool testMerge3D()
    return ret;
 }
 
-bool testMergeProf3D() 
+bool testMergeProf3D()
 {
    // Tests the merge method for 3D Profiles
 
@@ -3535,7 +3535,7 @@ bool testMergeProf3D()
 }
 
 template <typename HIST>
-bool testMergeHn() 
+bool testMergeHn()
 {
    // Tests the merge method for n-dim Histograms
 
@@ -3602,7 +3602,7 @@ bool testMerge1DLabelSame()
    TH1D* h2 = new TH1D("merge1DLabelSame-h2", "h2-Title", numberOfBins, minRange, maxRange);
    TH1D* h3 = new TH1D("merge1DLabelSame-h3", "h3-Title", numberOfBins, minRange, maxRange);
    TH1D* h4 = new TH1D("merge1DLabelSame-h4", "h4-Title", numberOfBins, minRange, maxRange);
-   
+
    const char labels[10][5] = {"aaa","bbb","ccc","ddd","eee","fff","ggg","hhh","iii","lll"};
 
    for (Int_t i = 0; i < numberOfBins; ++i) {
@@ -3615,14 +3615,14 @@ bool testMerge1DLabelSame()
 
    for ( Int_t e = 0; e < nEvents ; ++e ) {
       Int_t i = r.Integer(11);
-      if (i < 10)  { 
+      if (i < 10)  {
          h1->Fill(labels[i], 1.0);
          h4->Fill(labels[i], 1.0);
       }
       else {
          // add one empty label
          // should be added in underflow bin
-         // to test merge of underflows 
+         // to test merge of underflows
          h1->Fill("", 1.0);
          h4->Fill("", 1.0);
       }
@@ -3648,7 +3648,7 @@ bool testMerge1DLabelSame()
 
    h1->Merge(list);
 
-   
+
    bool ret = equals("MergeLabelSame1D", h1, h4, cmpOptStats, 1E-10);
    delete h1;
    delete h2;
@@ -3659,21 +3659,21 @@ bool testMerge1DLabelSame()
 bool testMerge2DLabelSame()
 {
    // Tests the merge with some equal labels method for 2D Histograms
-   // Note by LM (Dec 2010) 
-   // In reality in 2D histograms the Merge does not support 
-   // histogram with labels - just merges according to the x-values 
+   // Note by LM (Dec 2010)
+   // In reality in 2D histograms the Merge does not support
+   // histogram with labels - just merges according to the x-values
    // This test is basically useless
 
-   TH2D* h1 = new TH2D("merge2DLabelSame-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("merge2DLabelSame-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    TH2D* h2 = new TH2D("merge2DLabelSame-h2", "h2-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH2D* h3 = new TH2D("merge2DLabelSame-h3", "h3-Title", 
+   TH2D* h3 = new TH2D("merge2DLabelSame-h3", "h3-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH2D* h4 = new TH2D("merge2DLabelSame-h4", "h4-Title", 
+   TH2D* h4 = new TH2D("merge2DLabelSame-h4", "h4-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
@@ -3720,7 +3720,7 @@ bool testMerge3DLabelSame()
 {
    // Tests the merge with some equal labels method for 3D Histograms
 
-   TH3D* h1 = new TH3D("merge3DLabelSame-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("merge3DLabelSame-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -3728,11 +3728,11 @@ bool testMerge3DLabelSame()
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH3D* h3 = new TH3D("merge3DLabelSame-h3", "h3-Title", 
+   TH3D* h3 = new TH3D("merge3DLabelSame-h3", "h3-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH3D* h4 = new TH3D("merge3DLabelSame-h4", "h4-Title", 
+   TH3D* h4 = new TH3D("merge3DLabelSame-h4", "h4-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -3820,7 +3820,7 @@ bool testMergeProf1DLabelSame()
    TList *list = new TList;
    list->Add(p2);
    list->Add(p3);
-   
+
    p1->Merge(list);
 
    bool ret = equals("MergeLabelSame1DProf", p1, p4, cmpOptStats, 1E-10);
@@ -3835,16 +3835,16 @@ bool testMergeProf2DLabelSame()
    // Tests the merge with some equal labels method for 2D Profiles
 
    TProfile2D* p1 = new TProfile2D("merge2DLabelSame-p1", "p1-Title",
-                                   numberOfBins, minRange, maxRange, 
+                                   numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    TProfile2D* p2 = new TProfile2D("merge2DLabelSame-p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p3 = new TProfile2D("merge2DLabelSame-p3", "p3-Title", 
+   TProfile2D* p3 = new TProfile2D("merge2DLabelSame-p3", "p3-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    TProfile2D* p4 = new TProfile2D("merge2DLabelSame-p4", "p4-Title",
-                                   numberOfBins, minRange, maxRange, 
+                                   numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
    // It does not work properly! Look, the bins with the same labels
@@ -3882,7 +3882,7 @@ bool testMergeProf2DLabelSame()
    TList *list = new TList;
    list->Add(p2);
    list->Add(p3);
-   
+
    p1->Merge(list);
 
    bool ret = equals("MergeLabelSame2DProf", p1, p4, cmpOptStats, 1E-10);
@@ -3897,20 +3897,20 @@ bool testMergeProf3DLabelSame()
    // Tests the merge with some equal labels method for 3D Profiles
 
    TProfile3D* p1 = new TProfile3D("merge3DLabelSame-p1", "p1-Title",
-                                   numberOfBins, minRange, maxRange, 
-                                   numberOfBins + 1, minRange, maxRange, 
+                                   numberOfBins, minRange, maxRange,
+                                   numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    TProfile3D* p2 = new TProfile3D("merge3DLabelSame-p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
-                                   numberOfBins + 1, minRange, maxRange, 
+                                   numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p3 = new TProfile3D("merge3DLabelSame-p3", "p3-Title", 
+   TProfile3D* p3 = new TProfile3D("merge3DLabelSame-p3", "p3-Title",
                                    numberOfBins, minRange, maxRange,
-                                   numberOfBins + 1, minRange, maxRange, 
+                                   numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    TProfile3D* p4 = new TProfile3D("merge3DLabelSame-p4", "p4-Title",
-                                   numberOfBins, minRange, maxRange, 
-                                   numberOfBins + 1, minRange, maxRange, 
+                                   numberOfBins, minRange, maxRange,
+                                   numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
    // It does not work properly! Look, the bins with the same labels
@@ -3951,14 +3951,14 @@ bool testMergeProf3DLabelSame()
    TList *list = new TList;
    list->Add(p2);
    list->Add(p3);
-   
+
    p1->Merge(list);
 
    bool ret = equals("MergeLabelSame3DProf", p1, p4, cmpOptStats, 1E-10);
    delete p1;
    delete p2;
    delete p3;
-   return ret;  
+   return ret;
 }
 
 bool testMerge1DLabelDiff()
@@ -3976,11 +3976,11 @@ bool testMerge1DLabelDiff()
    //choose random same labels (nbins -2)
    std::vector<TString> labels2(8);
    for (int i = 0; i < 8; ++i)
-      labels2[i] = labels[r.Integer(10)]; 
+      labels2[i] = labels[r.Integer(10)];
 
    for ( Int_t e = 0; e < nEvents ; ++e ) {
       int i = r.Integer(8);
-      if (i < 8)  { 
+      if (i < 8)  {
          h1->Fill(labels2[i], 1.0);
          h4->Fill(labels2[i], 1.0);
       }
@@ -3992,7 +3992,7 @@ bool testMerge1DLabelDiff()
    }
 
    for (int i = 0; i < 8; ++i)
-      labels2[i] = labels[r.Integer(10)]; 
+      labels2[i] = labels[r.Integer(10)];
    for ( Int_t e = 0; e < nEvents ; ++e ) {
       Int_t i = r.Integer(8);
       h2->Fill(labels2[i], 1.0);
@@ -4000,7 +4000,7 @@ bool testMerge1DLabelDiff()
    }
 
    for (int i = 0; i < 8; ++i)
-      labels2[i] = labels[r.Integer(10)]; 
+      labels2[i] = labels[r.Integer(10)];
    for ( Int_t e = 0; e < nEvents ; ++e ) {
       Int_t i = r.Integer(8);
       h3->Fill(labels2[i], 1.0);
@@ -4015,7 +4015,7 @@ bool testMerge1DLabelDiff()
    TList *list = new TList;
    list->Add(h2);
    list->Add(h3);
-   
+
    h1->Merge(list);
 
    // need to order the histo to compare them
@@ -4037,7 +4037,7 @@ bool testMerge2DLabelDiff()
    // are different ones and still the tests passes! This is not
    // consistent with TH1::Merge()
 
-   TH2D* h1 = new TH2D("merge2DLabelDiff-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("merge2DLabelDiff-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    TH2D* h2 = new TH2D("merge2DLabelDiff-h2", "h2-Title",
@@ -4079,7 +4079,7 @@ bool testMerge2DLabelDiff()
    TList *list = new TList;
    list->Add(h2);
    list->Add(h3);
-   
+
    h1->Merge(list);
 
    bool ret = equals("MergeLabelDiff2D", h1, h4, cmpOptStats, 1E-10);
@@ -4097,7 +4097,7 @@ bool testMerge3DLabelDiff()
    // are different ones and still the tests passes! This is not
    // consistent with TH1::Merge()
 
-   TH3D* h1 = new TH3D("merge3DLabelDiff-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("merge3DLabelDiff-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -4146,7 +4146,7 @@ bool testMerge3DLabelDiff()
    TList *list = new TList;
    list->Add(h2);
    list->Add(h3);
-   
+
    h1->Merge(list);
 
    bool ret = equals("MergeLabelDiff3D", h1, h4, cmpOptStats, 1E-10);
@@ -4197,7 +4197,7 @@ bool testMergeProf1DLabelDiff()
    TList *list = new TList;
    list->Add(p2);
    list->Add(p3);
-   
+
    p1->Merge(list);
 
    bool ret = equals("MergeLabelDiff1DProf", p1, p4, cmpOptStats, 1E-10);
@@ -4211,10 +4211,10 @@ bool testMergeProf2DLabelDiff()
 {
    // Tests the merge with some different labels method for 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("merge2DLabelDiff-p1", "p1-Title", 
+   TProfile2D* p1 = new TProfile2D("merge2DLabelDiff-p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile2D* p2 = new TProfile2D("merge2DLabelDiff-p2", "p2-Title", 
+   TProfile2D* p2 = new TProfile2D("merge2DLabelDiff-p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    TProfile2D* p3 = new TProfile2D("merge2DLabelDiff-p3", "p3-Title",
@@ -4259,7 +4259,7 @@ bool testMergeProf2DLabelDiff()
    TList *list = new TList;
    list->Add(p2);
    list->Add(p3);
-   
+
    p1->Merge(list);
 
    bool ret = equals("MergeLabelDiff2DProf", p1, p4, cmpOptStats, 1E-10);
@@ -4273,11 +4273,11 @@ bool testMergeProf3DLabelDiff()
 {
    // Tests the merge with some different labels method for 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("merge3DLabelDiff-p1", "p1-Title", 
+   TProfile3D* p1 = new TProfile3D("merge3DLabelDiff-p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
-   TProfile3D* p2 = new TProfile3D("merge3DLabelDiff-p2", "p2-Title", 
+   TProfile3D* p2 = new TProfile3D("merge3DLabelDiff-p2", "p2-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -4328,7 +4328,7 @@ bool testMergeProf3DLabelDiff()
    TList *list = new TList;
    list->Add(p2);
    list->Add(p3);
-   
+
    p1->Merge(list);
 
    bool ret = equals("MergeLabelDiff3DProf", p1, p4, cmpOptStats, 1E-10);
@@ -4377,8 +4377,8 @@ bool testMerge1DLabelAll()
    TList *list = new TList;
    list->Add(h2);
    list->Add(h3);
-   
-   // test to re-order some histos 
+
+   // test to re-order some histos
    h1->LabelsOption("a");
    h2->LabelsOption("<");
    h3->LabelsOption(">");
@@ -4386,7 +4386,7 @@ bool testMerge1DLabelAll()
    h1->Merge(list);
 
    h4->LabelsOption("a");
-   
+
    bool ret = equals("MergeLabelAll1D", h1, h4, cmpOptNone, 1E-10);
    delete h1;
    delete h2;
@@ -4398,13 +4398,13 @@ bool testMerge2DLabelAll()
 {
    // Tests the merge method with fully equally labelled 2D Histograms
 
-   TH2D* h1 = new TH2D("merge2DLabelAll-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("merge2DLabelAll-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    TH2D* h2 = new TH2D("merge2DLabelAll-h2", "h2-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH2D* h3 = new TH2D("merge2DLabelAll-h3", "h3-Title", 
+   TH2D* h3 = new TH2D("merge2DLabelAll-h3", "h3-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    TH2D* h4 = new TH2D("merge2DLabelAll-h4", "h4-Title",
@@ -4443,7 +4443,7 @@ bool testMerge2DLabelAll()
    TList *list = new TList;
    list->Add(h2);
    list->Add(h3);
-   
+
    h1->Merge(list);
 
    bool ret = equals("MergeLabelAll2D", h1, h4, cmpOptStats, 1E-10);
@@ -4457,7 +4457,7 @@ bool testMerge3DLabelAll()
 {
    // Tests the merge method with fully equally labelled 3D Histograms
 
-   TH3D* h1 = new TH3D("merge3DLabelAll-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("merge3DLabelAll-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -4465,7 +4465,7 @@ bool testMerge3DLabelAll()
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH3D* h3 = new TH3D("merge3DLabelAll-h3", "h3-Title", 
+   TH3D* h3 = new TH3D("merge3DLabelAll-h3", "h3-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -4509,7 +4509,7 @@ bool testMerge3DLabelAll()
    TList *list = new TList;
    list->Add(h2);
    list->Add(h3);
-   
+
    h1->Merge(list);
 
    bool ret = equals("MergeLabelAll3D", h1, h4, cmpOptStats, 1E-10);
@@ -4561,7 +4561,7 @@ bool testMergeProf1DLabelAll()
    TList *list = new TList;
    list->Add(p2);
    list->Add(p3);
-   
+
    p1->Merge(list);
 
    bool ret = equals("MergeLabelAll1DProf", p1, p4, cmpOptStats, 1E-10);
@@ -4575,7 +4575,7 @@ bool testMergeProf2DLabelAll()
 {
    // Tests the merge method with fully equally labelled 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("merge2DLabelAll-p1", "p1-Title", 
+   TProfile2D* p1 = new TProfile2D("merge2DLabelAll-p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    TProfile2D* p2 = new TProfile2D("merge2DLabelAll-p2", "p2-Title",
@@ -4624,7 +4624,7 @@ bool testMergeProf2DLabelAll()
    TList *list = new TList;
    list->Add(p2);
    list->Add(p3);
-   
+
    p1->Merge(list);
 
    bool ret = equals("MergeLabelAll2DProf", p1, p4, cmpOptStats, 1E-10);
@@ -4638,7 +4638,7 @@ bool testMergeProf3DLabelAll()
 {
    // Tests the merge method with fully equally labelled 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("merge3DLabelAll-p1", "p1-Title", 
+   TProfile3D* p1 = new TProfile3D("merge3DLabelAll-p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -4694,7 +4694,7 @@ bool testMergeProf3DLabelAll()
    TList *list = new TList;
    list->Add(p2);
    list->Add(p3);
-   
+
    p1->Merge(list);
 
    bool ret = equals("MergeLabelAll3DProf", p1, p4, cmpOptStats, 1E-10);
@@ -4706,8 +4706,8 @@ bool testMergeProf3DLabelAll()
 
 bool testMerge1DLabelAllDiff()
 {
-   //LM: Dec 2010 : rmeake this test as 
-   // a test of histogram with some different labels not all filled 
+   //LM: Dec 2010 : rmeake this test as
+   // a test of histogram with some different labels not all filled
 
    TH1D* h1 = new TH1D("merge1DLabelAllDiff-h1", "h1-Title", numberOfBins, minRange, maxRange);
    TH1D* h2 = new TH1D("merge1DLabelAllDiff-h2", "h2-Title", numberOfBins, minRange, maxRange);
@@ -4743,16 +4743,16 @@ bool testMerge1DLabelAllDiff()
    list->Add(h2);
    list->Add(h3);
 
-   Int_t prevErrorLevel = gErrorIgnoreLevel; 
+   Int_t prevErrorLevel = gErrorIgnoreLevel;
    // // to suppress a Warning message
-   //   Warning in <TH1D::Merge>: Histogram FirstClone contains non-empty bins without labels - 
+   //   Warning in <TH1D::Merge>: Histogram FirstClone contains non-empty bins without labels -
    //  falling back to bin numbering mode
-   gErrorIgnoreLevel = kError; 
+   gErrorIgnoreLevel = kError;
 
    h1->Merge(list);
    gErrorIgnoreLevel = prevErrorLevel;
 
-   
+
    bool ret = equals("MergeLabelAllDiff1D", h1, h4, cmpOptStats, 1E-10);
    delete h1;
    delete h2;
@@ -4768,7 +4768,7 @@ bool testMerge2DLabelAllDiff()
    // are different ones and still the tests passes! This is not
    // consistent with TH1::Merge()
 
-   TH2D* h1 = new TH2D("merge2DLabelAllDiff-h1", "h1-Title", 
+   TH2D* h1 = new TH2D("merge2DLabelAllDiff-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    TH2D* h2 = new TH2D("merge2DLabelAllDiff-h2", "h2-Title",
@@ -4778,7 +4778,7 @@ bool testMerge2DLabelAllDiff()
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
    TH2D* h4 = new TH2D("merge2DLabelAllDiff-h4", "h4-Title",
-                       numberOfBins, minRange, maxRange, 
+                       numberOfBins, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
@@ -4820,7 +4820,7 @@ bool testMerge2DLabelAllDiff()
    TList *list = new TList;
    list->Add(h2);
    list->Add(h3);
-   
+
    h1->Merge(list);
 
    bool ret = equals("MergeLabelAllDiff2D", h1, h4, cmpOptStats, 1E-10);
@@ -4838,7 +4838,7 @@ bool testMerge3DLabelAllDiff()
    // are different ones and still the tests passes! This is not
    // consistent with TH1::Merge()
 
-   TH3D* h1 = new TH3D("merge3DLabelAllDiff-h1", "h1-Title", 
+   TH3D* h1 = new TH3D("merge3DLabelAllDiff-h1", "h1-Title",
                        numberOfBins, minRange, maxRange,
                        numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
@@ -4852,7 +4852,7 @@ bool testMerge3DLabelAllDiff()
                        numberOfBins + 2, minRange, maxRange);
    TH3D* h4 = new TH3D("merge3DLabelAllDiff-h4", "h4-Title",
                        numberOfBins, minRange, maxRange,
-                       numberOfBins + 1, minRange, maxRange, 
+                       numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
    for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
@@ -4902,14 +4902,14 @@ bool testMerge3DLabelAllDiff()
    TList *list = new TList;
    list->Add(h2);
    list->Add(h3);
-   
+
    h1->Merge(list);
 
    bool ret = equals("MergeLabelAllDiff3D", h1, h4, cmpOptStats, 1E-10);
    delete h1;
    delete h2;
    delete h3;
-   return ret;  
+   return ret;
 }
 
 bool testMergeProf1DLabelAllDiff()
@@ -4960,9 +4960,9 @@ bool testMergeProf1DLabelAllDiff()
    TList *list = new TList;
    list->Add(p2);
    list->Add(p3);
-   
+
    p1->Merge(list);
-   
+
    bool ret = equals("MergeLabelAllDiff1DProf", p1, p4, cmpOptStats, 1E-10);
    delete p1;
    delete p2;
@@ -4974,7 +4974,7 @@ bool testMergeProf2DLabelAllDiff()
 {
    // Tests the merge method with fully differently labelled 2D Profiles
 
-   TProfile2D* p1 = new TProfile2D("merge2DLabelAllDiff-p1", "p1-Title", 
+   TProfile2D* p1 = new TProfile2D("merge2DLabelAllDiff-p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    TProfile2D* p2 = new TProfile2D("merge2DLabelAllDiff-p2", "p2-Title",
@@ -5033,9 +5033,9 @@ bool testMergeProf2DLabelAllDiff()
    TList *list = new TList;
    list->Add(p2);
    list->Add(p3);
-   
+
    p1->Merge(list);
-   
+
    bool ret = equals("MergeLabelAllDiff2DProf", p1, p4, cmpOptStats, 1E-10);
    delete p1;
    delete p2;
@@ -5047,7 +5047,7 @@ bool testMergeProf3DLabelAllDiff()
 {
    // Tests the merge method with fully differently labelled 3D Profiles
 
-   TProfile3D* p1 = new TProfile3D("merge3DLabelAllDiff-p1", "p1-Title", 
+   TProfile3D* p1 = new TProfile3D("merge3DLabelAllDiff-p1", "p1-Title",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -5117,9 +5117,9 @@ bool testMergeProf3DLabelAllDiff()
    TList *list = new TList;
    list->Add(p2);
    list->Add(p3);
-   
+
    p1->Merge(list);
-   
+
    bool ret = equals("MergeLabelAllDiff3DProf", p1, p4, cmpOptStats, 1E-10);
    delete p1;
    delete p2;
@@ -5127,10 +5127,10 @@ bool testMergeProf3DLabelAllDiff()
    return ret;
 }
 
-bool testMerge1D_Diff(bool testEmpty=false) 
+bool testMerge1D_Diff(bool testEmpty=false)
 {
    // Tests the merge method with different binned 1D Histograms
-   // test also case when the first histogram is empty (bug Savannah 95190) 
+   // test also case when the first histogram is empty (bug Savannah 95190)
 
    TH1D *h1 = new TH1D("merge1DDiff-h1","h1-Title",100,-100,0);
    TH1D *h2 = new TH1D("merge1DDiff-h2","h2-Title",200,0,100);
@@ -5143,7 +5143,7 @@ bool testMerge1D_Diff(bool testEmpty=false)
    h1->Sumw2();h2->Sumw2();h3->Sumw2();h4->Sumw2();
 
 
-   if (!testEmpty) { 
+   if (!testEmpty) {
       for ( Int_t e = 0; e < nEvents; ++e ) {
          Double_t value = r.Gaus(-50,10);
          h1->Fill(value, 1.0);
@@ -5169,7 +5169,7 @@ bool testMerge1D_Diff(bool testEmpty=false)
 
    h1->Merge(list);
 
-   const char * testName = (!testEmpty) ? "Merge1D-Diff" : "Merge1D-DiffEmpty"; 
+   const char * testName = (!testEmpty) ? "Merge1D-Diff" : "Merge1D-DiffEmpty";
    bool ret = equals(testName, h1, h4, cmpOptStats, 1E-10);
    delete h1;
    delete h2;
@@ -5178,13 +5178,13 @@ bool testMerge1D_Diff(bool testEmpty=false)
 }
 
 bool testMerge1DDiff() {
-   return testMerge1D_Diff(false); 
+   return testMerge1D_Diff(false);
 }
 bool testMerge1DDiffEmpty() {
-   return testMerge1D_Diff(true); 
+   return testMerge1D_Diff(true);
 }
 
-bool testMerge2D_Diff(bool testEmpty = false) 
+bool testMerge2D_Diff(bool testEmpty = false)
 {
    // Tests the merge method with different binned 2D Histograms
 
@@ -5206,7 +5206,7 @@ bool testMerge2D_Diff(bool testEmpty = false)
 
    h1->Sumw2();h2->Sumw2();h3->Sumw2();h4->Sumw2();
 
-   if (!testEmpty) { 
+   if (!testEmpty) {
       for ( Int_t e = 0; e < nEvents; ++e ) {
          Double_t x = r.Gaus(-55,10);
          Double_t y = r.Gaus(-55,10);
@@ -5219,7 +5219,7 @@ bool testMerge2D_Diff(bool testEmpty = false)
       Double_t x = r.Gaus(55,10);
       Double_t y = r.Gaus(55,10);
       h2->Fill(x, y, 1.0);
-      h4->Fill(x, y, 1.0); 
+      h4->Fill(x, y, 1.0);
    }
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
@@ -5235,7 +5235,7 @@ bool testMerge2D_Diff(bool testEmpty = false)
 
    h1->Merge(list);
 
-   const char * testName = (!testEmpty) ? "Merge2D-Diff" : "Merge2D-DiffEmpty"; 
+   const char * testName = (!testEmpty) ? "Merge2D-Diff" : "Merge2D-DiffEmpty";
    bool ret = equals(testName, h1, h4, cmpOptStats, 1E-10);
    delete h1;
    delete h2;
@@ -5244,13 +5244,13 @@ bool testMerge2D_Diff(bool testEmpty = false)
 }
 
 bool testMerge2DDiff() {
-   return testMerge2D_Diff(false); 
+   return testMerge2D_Diff(false);
 }
 bool testMerge2DDiffEmpty() {
-   return testMerge2D_Diff(true); 
+   return testMerge2D_Diff(true);
 }
 
-bool testMerge3D_Diff(bool testEmpty = false) 
+bool testMerge3D_Diff(bool testEmpty = false)
 {
    // Tests the merge method with different binned 3D Histograms
 
@@ -5306,7 +5306,7 @@ bool testMerge3D_Diff(bool testEmpty = false)
 
    h1->Merge(list);
 
-   const char * testName = (!testEmpty) ? "Merge3D-Diff" : "Merge3D-DiffEmpty"; 
+   const char * testName = (!testEmpty) ? "Merge3D-Diff" : "Merge3D-DiffEmpty";
    bool ret = equals(testName, h1, h4, cmpOptStats, 1E-10);
    delete h1;
    delete h2;
@@ -5315,13 +5315,13 @@ bool testMerge3D_Diff(bool testEmpty = false)
 }
 
 bool testMerge3DDiff() {
-   return testMerge3D_Diff(false); 
+   return testMerge3D_Diff(false);
 }
 bool testMerge3DDiffEmpty() {
-   return testMerge3D_Diff(true); 
+   return testMerge3D_Diff(true);
 }
 
-bool testMergeProf1D_Diff(bool testEmpty = false) 
+bool testMergeProf1D_Diff(bool testEmpty = false)
 {
    // Tests the merge method with different binned 1D Profile
 
@@ -5332,7 +5332,7 @@ bool testMergeProf1D_Diff(bool testEmpty = false)
    TProfile *p3 = new TProfile("merge1DDiff-p3","p3-Title",330,-55,55);
    TProfile *p4 = new TProfile("merge1DDiff-p4","p4-Title",220,-110,110);
 
-   if (!testEmpty) { 
+   if (!testEmpty) {
       for ( Int_t e = 0; e < nEvents; ++e ) {
          Double_t x = r.Gaus(-55,10);
          Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -5361,7 +5361,7 @@ bool testMergeProf1D_Diff(bool testEmpty = false)
 
    p1->Merge(list);
 
-   const char * testName = (!testEmpty) ? "MergeProf1D-Diff" : "MergeProf1D-DiffEmpty"; 
+   const char * testName = (!testEmpty) ? "MergeProf1D-Diff" : "MergeProf1D-DiffEmpty";
    bool ret = equals(testName, p1, p4, cmpOptNone , 1E-10);
    delete p1;
    delete p2;
@@ -5370,14 +5370,14 @@ bool testMergeProf1D_Diff(bool testEmpty = false)
 }
 
 bool testMergeProf1DDiff() {
-   return testMergeProf1D_Diff(false); 
+   return testMergeProf1D_Diff(false);
 }
-bool testMergeProf1DDiffEmpty() 
+bool testMergeProf1DDiffEmpty()
 {
-   return testMergeProf1D_Diff(true); 
+   return testMergeProf1D_Diff(true);
 }
 
-bool testMergeProf2DDiff() 
+bool testMergeProf2DDiff()
 {
    // Tests the merge method with different binned 2D Profile
 
@@ -5432,7 +5432,7 @@ bool testMergeProf2DDiff()
    return ret;
 }
 
-bool testMergeProf3DDiff() 
+bool testMergeProf3DDiff()
 {
    // Tests the merge method with different binned 3D Profile
 
@@ -5487,7 +5487,7 @@ bool testMergeProf3DDiff()
 
    p1->Merge(list);
 
-   // exclude statistics in comparison since chi2 test will fail with low 
+   // exclude statistics in comparison since chi2 test will fail with low
    // bin statistics
    bool ret = equals("MergeDiff3DProf", p1, p4, cmpOptNone, 1E-10);
    delete p1;
@@ -5496,7 +5496,7 @@ bool testMergeProf3DDiff()
    return ret;
 }
 
-bool testMerge1DRebin() 
+bool testMerge1DRebin()
 {
    // Tests the merge method for diferent 1D Histograms
    // when axis can rebin (e.g. for time histograms)
@@ -5532,7 +5532,7 @@ bool testMerge1DRebin()
    return ret;
 }
 
-bool testMerge2DRebin() 
+bool testMerge2DRebin()
 {
    // Tests the merge method for diferent 1D Histograms
    // when axis can rebin (e.g. for time histograms)
@@ -5577,7 +5577,7 @@ bool testMerge2DRebin()
    return ret;
 }
 
-bool testMerge3DRebin() 
+bool testMerge3DRebin()
 {
    // Tests the merge method for diferent 1D Histograms
    // when axis can rebin (e.g. for time histograms)
@@ -5625,7 +5625,7 @@ bool testMerge3DRebin()
    return ret;
 }
 
-bool testMerge1DRebinProf() 
+bool testMerge1DRebinProf()
 {
    // Tests the merge method for diferent 1D Histograms
    // when axis can rebin (e.g. for time histograms)
@@ -5662,17 +5662,17 @@ bool testMerge1DRebinProf()
    return ret;
 }
 
-bool testMerge1DWithBuffer(bool allNoLimits) 
+bool testMerge1DWithBuffer(bool allNoLimits)
 {
    // Tests the merge method for different 1D Histograms
    // where different axis are used, BUT the largest bin width must be
    // a multiple of the smallest bin width
 
-   double x1 = 1; double x2 = 0; 
+   double x1 = 1; double x2 = 0;
    if (!allNoLimits) {
       // case when one of the histogram has limits (mix mode)
       x1 = minRange; x2 = maxRange;
-   } 
+   }
 
    TH1D* h0 = new TH1D("merge1D-h0", "h1-Title", numberOfBins, 1, 0);
    TH1D* h1 = new TH1D("merge1D-h1", "h1-Title", numberOfBins, x1, x2);
@@ -5689,19 +5689,19 @@ bool testMerge1DWithBuffer(bool allNoLimits)
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform( minRange,  maxRange);
-      Double_t weight = std::exp(r.Gaus(0,1)); 
+      Double_t weight = std::exp(r.Gaus(0,1));
       h1->Fill(value,weight);
       h4->Fill(value,weight);
    }
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform( (maxRange-minRange)/2, maxRange);
-      Double_t weight = std::exp(r.Gaus(0,1)); 
+      Double_t weight = std::exp(r.Gaus(0,1));
       h2->Fill(value,weight);
       h4->Fill(value,weight);
    }
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t value = r.Uniform(minRange,  (maxRange-minRange)/2);
-      Double_t weight = std::exp(r.Gaus(0,1)); 
+      Double_t weight = std::exp(r.Gaus(0,1));
       h3->Fill(value,weight);
       h4->Fill(value,weight);
    }
@@ -5714,23 +5714,23 @@ bool testMerge1DWithBuffer(bool allNoLimits)
    h0->Merge(list);
 
    // flush buffer before comparing
-   h0->BufferEmpty(); 
-   h4->BufferEmpty(); 
+   h0->BufferEmpty();
+   h4->BufferEmpty();
 
    const char * testName = (allNoLimits) ? "Merge1DNoLimits" : "Merge1DMixedLimits";
 
    bool ret = equals(testName, h0, h4, cmpOptStats, 1E-10);
-   delete h0; 
+   delete h0;
    delete h1;
    delete h2;
-   delete h3; 
+   delete h3;
    return ret;
 }
 
-bool testMerge1DNoLimits() { 
+bool testMerge1DNoLimits() {
    return testMerge1DWithBuffer(true);
 }
-bool testMerge1DMixedLimits() { 
+bool testMerge1DMixedLimits() {
    return testMerge1DWithBuffer(false);
 }
 
@@ -5746,7 +5746,7 @@ bool testLabel()
    TH1D* h2 = new TH1D("lD1-h2", "h2-Title", 2*numberOfBins+20, minRange, maxRange + extraBins*h1->GetXaxis()->GetBinWidth(1));
 
 
-   // set labels 
+   // set labels
    std::vector<std::string> vLabels;
    for ( Int_t bin = 1; bin <= h1->GetNbinsX() ; ++bin ) {
       ostringstream label;
@@ -5755,7 +5755,7 @@ bool testLabel()
       h2->GetXaxis()->SetBinLabel(bin, label.str().c_str());
    }
    // sort labels in alphabetic order
-   std::sort(vLabels.begin(), vLabels.end() );  
+   std::sort(vLabels.begin(), vLabels.end() );
 
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
@@ -5783,7 +5783,7 @@ bool testLabel2DX()
    // build histo with extra  labels to tets the deflate option
    TH2D* h2 = new TH2D("lD2-h2", "h2-Title", 2*numberOfBins+20, minRange, maxRange + 20*h1->GetXaxis()->GetBinWidth(1), numberOfBins, minRange, maxRange);
 
-   // set labels 
+   // set labels
    std::vector<std::string> vLabels;
    for ( Int_t bin = 1; bin <= h1->GetNbinsX() ; ++bin ) {
       ostringstream label;
@@ -5792,7 +5792,7 @@ bool testLabel2DX()
       h2->GetXaxis()->SetBinLabel(bin, label.str().c_str());
    }
    // sort labels in alphabetic order
-   std::sort(vLabels.begin(), vLabels.end() );  
+   std::sort(vLabels.begin(), vLabels.end() );
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t xvalue = r.Uniform(minRange, maxRange);
@@ -5821,7 +5821,7 @@ bool testLabel2DY()
    // build histo with extra  labels to tets the deflate option
    TH2D* h2 = new TH2D("lD2-h2", "h2-Title", numberOfBins, minRange, maxRange, 2*numberOfBins+20, minRange, maxRange + 20*h1->GetYaxis()->GetBinWidth(1));
 
-   // set labels 
+   // set labels
    std::vector<std::string> vLabels;
    for ( Int_t bin = 1; bin <= h1->GetNbinsY() ; ++bin ) {
       ostringstream label;
@@ -5830,7 +5830,7 @@ bool testLabel2DY()
       h2->GetYaxis()->SetBinLabel(bin, label.str().c_str());
    }
    // sort labels in alphabetic order
-   std::sort(vLabels.begin(), vLabels.end() );  
+   std::sort(vLabels.begin(), vLabels.end() );
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t xvalue = r.Uniform(minRange, maxRange);
@@ -5864,7 +5864,7 @@ bool testLabelsInflateProf1D()
       numberOfFills *= 2;
       maxRangeInflate = 2*maxRangeInflate - 1;
    }
-      
+
 
    TProfile* p1 = new TProfile("tLI1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
    TProfile* p2 = new TProfile("tLI1D-p2", "p2-Title", numberOfFills, minRange, maxRangeInflate);
@@ -5894,31 +5894,31 @@ Double_t function1D(Double_t x)
    return a * x;
 }
 
-bool testInterpolation1D() 
+bool testInterpolation1D()
 {
    // Tests interpolation method for 1D Histogram
 
    bool status = false;
 
-   TH1D* h1 = new TH1D("h1", "h1", 
+   TH1D* h1 = new TH1D("h1", "h1",
                        numberOfBins, minRange, maxRange);
-   
+
    h1->Reset();
 
    for ( Int_t nbinsx = 1; nbinsx <= h1->GetXaxis()->GetNbins(); ++nbinsx ) {
       Double_t x = h1->GetXaxis()->GetBinCenter(nbinsx);
       h1->Fill(x, function1D(x));
    }
-   
+
    int itest = 0;
-   for (itest = 0; itest < 1000; ++itest) { 
-      double xp = r.Uniform( h1->GetXaxis()->GetBinCenter(1), h1->GetXaxis()->GetBinCenter(numberOfBins) ); 
-      
-      double ip = h1->Interpolate(xp); 
-     
+   for (itest = 0; itest < 1000; ++itest) {
+      double xp = r.Uniform( h1->GetXaxis()->GetBinCenter(1), h1->GetXaxis()->GetBinCenter(numberOfBins) );
+
+      double ip = h1->Interpolate(xp);
+
       if (  fabs(ip  - function1D(xp) ) > 1.E-13*fabs(ip) ) {
          status = true;
-         std::cout << "x: " << xp 
+         std::cout << "x: " << xp
               << " h3->Inter: " << ip
               << " functionD: " << function1D(xp)
               << " diff: " << fabs(ip  - function1D(xp))
@@ -5928,10 +5928,10 @@ bool testInterpolation1D()
 
    delete h1;
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testInterpolation1D: \t" << (status?"FAILED":"OK") << std::endl;
-   return status; 
+   return status;
 }
 
-bool testInterpolationVar1D() 
+bool testInterpolationVar1D()
 {
    // Tests interpolation method for 1D Histogram with variable bin size
 
@@ -5941,23 +5941,23 @@ bool testInterpolationVar1D()
    bool status = false;
 
    TH1D* h1 = new TH1D("h1", "h1", numberOfBins, v);
-   
+
    h1->Reset();
 
    for ( Int_t nbinsx = 1; nbinsx <= h1->GetXaxis()->GetNbins(); ++nbinsx ) {
       Double_t x = h1->GetXaxis()->GetBinCenter(nbinsx);
       h1->Fill(x, function1D(x));
    }
-   
+
    int itest = 0;
-   for (itest = 0; itest < 1000; ++itest) { 
-      double xp = r.Uniform( h1->GetXaxis()->GetBinCenter(1), h1->GetXaxis()->GetBinCenter(numberOfBins) ); 
-      
-      double ip = h1->Interpolate(xp); 
-     
+   for (itest = 0; itest < 1000; ++itest) {
+      double xp = r.Uniform( h1->GetXaxis()->GetBinCenter(1), h1->GetXaxis()->GetBinCenter(numberOfBins) );
+
+      double ip = h1->Interpolate(xp);
+
       if (  fabs(ip  - function1D(xp) ) > 1.E-13*fabs(ip) ) {
          status = true;
-         std::cout << "x: " << xp 
+         std::cout << "x: " << xp
               << " h3->Inter: " << ip
               << " functionD: " << function1D(xp)
               << " diff: " << fabs(ip  - function1D(xp))
@@ -5967,7 +5967,7 @@ bool testInterpolationVar1D()
 
    delete h1;
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testInterpolaVar1D: \t" << (status?"FAILED":"OK") << std::endl;
-   return status; 
+   return status;
 }
 
 Double_t function2D(Double_t x, Double_t y)
@@ -5984,10 +5984,10 @@ bool testInterpolation2D()
 
    bool status = false;
 
-   TH2D* h1 = new TH2D("h1", "h1", 
+   TH2D* h1 = new TH2D("h1", "h1",
                        numberOfBins, minRange, maxRange,
                        2*numberOfBins, minRange, maxRange);
-   
+
    h1->Reset();
 
    for ( Int_t nbinsx = 1; nbinsx <= h1->GetXaxis()->GetNbins(); ++nbinsx )
@@ -5996,15 +5996,15 @@ bool testInterpolation2D()
             Double_t y = h1->GetYaxis()->GetBinCenter(nbinsy);
             h1->Fill(x, y, function2D(x, y));
          }
-   
-   int itest = 0;
-   for (itest = 0; itest < 1000; ++itest) { 
 
-      double xp = r.Uniform( h1->GetXaxis()->GetBinCenter(1), h1->GetXaxis()->GetBinCenter(numberOfBins) ); 
+   int itest = 0;
+   for (itest = 0; itest < 1000; ++itest) {
+
+      double xp = r.Uniform( h1->GetXaxis()->GetBinCenter(1), h1->GetXaxis()->GetBinCenter(numberOfBins) );
       double yp = r.Uniform( h1->GetYaxis()->GetBinCenter(1), h1->GetYaxis()->GetBinCenter(numberOfBins) );
-      
-      double ip = h1->Interpolate(xp, yp); 
-     
+
+      double ip = h1->Interpolate(xp, yp);
+
       if (  fabs(ip  - function2D(xp, yp) ) > 1.E-13*fabs(ip) ) {
          status = true;
          std::cout << "x: " << xp << " y: " << yp
@@ -6017,7 +6017,7 @@ bool testInterpolation2D()
 
    delete h1;
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testInterpolation2D: \t" << (status?"FAILED":"OK") << std::endl;
-   return status; 
+   return status;
 }
 
 Double_t function3D(Double_t x, Double_t y, Double_t z)
@@ -6035,11 +6035,11 @@ bool testInterpolation3D()
    // Tests interpolation method for 3D Histogram
 
    bool status = false;
-   TH3D* h1 = new TH3D("h1", "h1", 
+   TH3D* h1 = new TH3D("h1", "h1",
                        numberOfBins, minRange, maxRange,
                        2*numberOfBins, minRange, maxRange,
                        4*numberOfBins, minRange, maxRange);
-   
+
    h1->Reset();
 
    for ( Int_t nbinsx = 1; nbinsx <= h1->GetXaxis()->GetNbins(); ++nbinsx )
@@ -6051,16 +6051,16 @@ bool testInterpolation3D()
             h1->Fill(x, y, z, function3D(x, y, z));
          }
 
-   
+
    int itest = 0;
-   for (itest = 0; itest < 1000; ++itest) { 
-      double xp = r.Uniform( h1->GetXaxis()->GetBinCenter(1), h1->GetXaxis()->GetBinCenter(numberOfBins) ); 
+   for (itest = 0; itest < 1000; ++itest) {
+      double xp = r.Uniform( h1->GetXaxis()->GetBinCenter(1), h1->GetXaxis()->GetBinCenter(numberOfBins) );
       double yp = r.Uniform( h1->GetYaxis()->GetBinCenter(1), h1->GetYaxis()->GetBinCenter(numberOfBins) );
       double zp = r.Uniform( h1->GetZaxis()->GetBinCenter(1), h1->GetZaxis()->GetBinCenter(numberOfBins) );
-      
-      double ip = h1->Interpolate(xp, yp, zp); 
-      
-      if (  fabs(ip  - function3D(xp, yp, zp) ) > 1.E-15*fabs(ip) ) 
+
+      double ip = h1->Interpolate(xp, yp, zp);
+
+      if (  fabs(ip  - function3D(xp, yp, zp) ) > 1.E-15*fabs(ip) )
          status = true;
    }
 
@@ -6068,7 +6068,7 @@ bool testInterpolation3D()
 
    if ( defaultEqualOptions & cmpOptPrint ) std::cout << "testInterpolation3D: \t" << (status?"FAILED":"OK") << std::endl;
 
-   return status; 
+   return status;
 }
 
 bool testScale1DProf()
@@ -6094,11 +6094,11 @@ bool testScale1DProf()
 
 bool testScale2DProf()
 {
-   TProfile2D* p1 = new TProfile2D("scD2-p1", "p1", 
+   TProfile2D* p1 = new TProfile2D("scD2-p1", "p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile2D* p2 = new TProfile2D("scD2-p2", "p2=c1*p1", 
+   TProfile2D* p2 = new TProfile2D("scD2-p2", "p2=c1*p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
    Double_t c1 = r.Rndm();
@@ -6120,12 +6120,12 @@ bool testScale2DProf()
 
 bool testScale3DProf()
 {
-   TProfile3D* p1 = new TProfile3D("scD3-p1", "p1", 
+   TProfile3D* p1 = new TProfile3D("scD3-p1", "p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
 
-   TProfile3D* p2 = new TProfile3D("scD3-p2", "p2=c1*p1", 
+   TProfile3D* p2 = new TProfile3D("scD3-p2", "p2=c1*p1",
                                    numberOfBins, minRange, maxRange,
                                    numberOfBins + 1, minRange, maxRange,
                                    numberOfBins + 2, minRange, maxRange);
@@ -6149,31 +6149,31 @@ bool testScale3DProf()
 
 
 bool normGaussfunc = true;
-double gaus1d(const double *x, const double * p) { 
+double gaus1d(const double *x, const double * p) {
    return p[0] * TMath::Gaus( x[0], p[1], p[2], normGaussfunc);
 }
-double gaus2d(const double *x, const double * p) { 
+double gaus2d(const double *x, const double * p) {
    return p[0] * TMath::Gaus( x[0], p[1], p[2], normGaussfunc ) * TMath::Gaus( x[1], p[3], p[4], normGaussfunc );
 }
-double gaus3d(const double *x, const double * p) { 
+double gaus3d(const double *x, const double * p) {
    return p[0] * TMath::Gaus( x[0], p[1], p[2], normGaussfunc ) * TMath::Gaus( x[1], p[3], p[4], normGaussfunc ) * TMath::Gaus( x[2], p[5], p[6], normGaussfunc );
 }
 
 
-bool testH1Integral() 
-{ 
+bool testH1Integral()
+{
    int i1 = 1;
    int i2 = 100;
-   
-   int n = 10000; 
-   TH1D * h1 = new TH1D("h1","h1",100,-5,5); 
-   TF1 * gaus = new TF1("gaus1d",gaus1d,-5,5,3); 
+
+   int n = 10000;
+   TH1D * h1 = new TH1D("h1","h1",100,-5,5);
+   TF1 * gaus = new TF1("gaus1d",gaus1d,-5,5,3);
    gaus->SetParameters(1,0,1);
 
-   h1->FillRandom("gaus1d",n); 
+   h1->FillRandom("gaus1d",n);
 
    TString fitOpt = "LQ0";
-   if ( defaultEqualOptions & cmpOptDebug ) fitOpt = "L0"; 
+   if ( defaultEqualOptions & cmpOptDebug ) fitOpt = "L0";
    h1->Fit(gaus, fitOpt);
 
 
@@ -6190,21 +6190,21 @@ bool testH1Integral()
    double x1 = h1->GetXaxis()->GetBinLowEdge(i1);
    double x2 = h1->GetXaxis()->GetBinUpEdge(i2);
 
-   double igf = gaus->Integral(x1,x2); 
+   double igf = gaus->Integral(x1,x2);
    double err2 = gaus->IntegralError(x1,x2);
 
 
-   double delta = fabs( igh - igf)/ err2; 
+   double delta = fabs( igh - igf)/ err2;
 
    if ( defaultEqualOptions & cmpOptDebug ) {
-      std::cout << "Estimated entries = " << nent << " +/- " << err << std::endl; 
+      std::cout << "Estimated entries = " << nent << " +/- " << err << std::endl;
       std::cout << "Histogram integral =  " << igh << " +/- " << err1 << std::endl;
       std::cout << "Function  integral =  " << igf << " +/- " << err2 << std::endl;
       std::cout << " Difference (histogram - function) in nsigma  = " <<  delta << std::endl;
    }
 
 
-   iret |= (delta > 3); 
+   iret |= (delta > 3);
 
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Integral H1:\t" << (iret?"FAILED":"OK") << std::endl;
@@ -6214,16 +6214,16 @@ bool testH1Integral()
 
 
 bool testH2Integral()
-{ 
+{
    int ix1 = 1;
    int ix2 = 50;
    int iy1 = 1;
    int iy2 = 50;
 
-   int n = 10000; 
-   TH2D * h2 = new TH2D("h2","h2",50,-5,5, 50, -5, 5); 
-  
-   TF2 * gaus = new TF2("gaus2d",gaus2d,-5,5,-5,5,5); 
+   int n = 10000;
+   TH2D * h2 = new TH2D("h2","h2",50,-5,5, 50, -5, 5);
+
+   TF2 * gaus = new TF2("gaus2d",gaus2d,-5,5,-5,5,5);
    gaus->SetParameters(100,0,1.2,1.,1);
    h2->FillRandom("gaus2d",n);
    TString fitOpt = "LQ0";
@@ -6232,7 +6232,7 @@ bool testH2Integral()
 
 
    // test first nentries
-   double err = 0; 
+   double err = 0;
    double nent = h2->IntegralAndError(0,-1, 0, -1, err);
 
    int iret = 0;
@@ -6246,26 +6246,26 @@ bool testH2Integral()
    double y1 = h2->GetYaxis()->GetBinLowEdge(iy1);
    double y2 = h2->GetYaxis()->GetBinUpEdge(iy2);
 
-   double a[2]; 
-   double b[2]; 
-   a[0] = x1; a[1] = y1; 
-   b[0] = x2; b[1] = y2; 
-   
-   //double igf = gaus->Integral(x1,x2,y1,y2,1.E-4);    
+   double a[2];
+   double b[2];
+   a[0] = x1; a[1] = y1;
+   b[0] = x2; b[1] = y2;
+
+   //double igf = gaus->Integral(x1,x2,y1,y2,1.E-4);
    double relerr = 0;
    double igf = gaus->IntegralMultiple(2, a, b, 1.E-4, relerr);  // don't need high tolerance (use 10-4)
    double err2 = gaus->IntegralError(2,a,b);
 
-   double delta = fabs( igh - igf)/ err1; 
+   double delta = fabs( igh - igf)/ err1;
 
    if ( defaultEqualOptions & cmpOptDebug ) {
-      std::cout << "Estimated entries = " << nent << " +/- " << err << std::endl; 
+      std::cout << "Estimated entries = " << nent << " +/- " << err << std::endl;
       std::cout << "Histogram integral =  " << igh << " +/- " << err1 << std::endl;
       std::cout << "Function  integral =  " << igf << " +/- " << err2 << " +/- " << igf*relerr << std::endl;
       std::cout << " Difference (histogram - function) in nsigma  = " <<  delta << std::endl;
    }
 
-   iret |= (delta > 3); 
+   iret |= (delta > 3);
 
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Integral H2:\t" << (iret?"FAILED":"OK") << std::endl;
@@ -6274,7 +6274,7 @@ bool testH2Integral()
 }
 
 bool testH3Integral()
-{ 
+{
    int ix1 = 1;
    int ix2 = 50;
    int iy1= 1;
@@ -6282,25 +6282,25 @@ bool testH3Integral()
    int iz1 = 1;
    int iz2 = 50;
 
-   TStopwatch w; 
-   int n = 1000000; 
-   TH3D * h3 = new TH3D("h3","h3",50,-5,5, 50, -5, 5, 50, -5, 5); 
-  
-   //TF3 * gaus = new TF3("gaus3d",gaus3d,-5,5,-5,5,-5,5,7); 
-   TF3 * gaus = new TF3("gaus3d",gaus3d,-5,5,-5,5,-5,5,7); 
+   TStopwatch w;
+   int n = 1000000;
+   TH3D * h3 = new TH3D("h3","h3",50,-5,5, 50, -5, 5, 50, -5, 5);
+
+   //TF3 * gaus = new TF3("gaus3d",gaus3d,-5,5,-5,5,-5,5,7);
+   TF3 * gaus = new TF3("gaus3d",gaus3d,-5,5,-5,5,-5,5,7);
    gaus->SetParameters(100,0,1.3,1.,1.,-1,0.9);
-   w.Start(); 
+   w.Start();
    h3->FillRandom("gaus3d",n);
 
    //gaus->SetParameter(0, h3->GetMaximum() );
 
    TString fitOpt = "LQ0";
-   w.Stop(); 
-   if ( defaultEqualOptions & cmpOptDebug ) { 
+   w.Stop();
+   if ( defaultEqualOptions & cmpOptDebug ) {
       std::cout << "Time to fill random " << w.RealTime() << std::endl;
       fitOpt = "L0";
    }
-   w.Start(); 
+   w.Start();
    h3->Fit(gaus,fitOpt);
    if ( defaultEqualOptions & cmpOptDebug )
       std::cout << "Time to fit         " << w.RealTime() << std::endl;
@@ -6308,11 +6308,11 @@ bool testH3Integral()
 
    // test first nentries
    double err = 0;
-   w.Start(); 
+   w.Start();
    double nent = h3->IntegralAndError(0, -1, 0, -1, 0, -1, err);
    w.Stop();
    if ( defaultEqualOptions & cmpOptDebug ) {
-      std::cout << "Estimated entries = " << nent << " +/- " << err << std::endl; 
+      std::cout << "Estimated entries = " << nent << " +/- " << err << std::endl;
       std::cout << "Time to integral of all  " << w.RealTime() << std::endl;
    }
 
@@ -6322,10 +6322,10 @@ bool testH3Integral()
    double err1 = 0;
    w.Start();
    double igh = h3->IntegralAndError(ix1,ix2, iy1, iy2, iz1, iz2, err1,"width");
-   w.Stop();    
-   if ( defaultEqualOptions & cmpOptDebug ) 
+   w.Stop();
+   if ( defaultEqualOptions & cmpOptDebug )
       std::cout << "Time to integral of selected  " << w.RealTime() << std::endl;
-   
+
    double x1 = h3->GetXaxis()->GetBinLowEdge(ix1);
    double x2 = h3->GetXaxis()->GetBinUpEdge(ix2);
    double y1 = h3->GetYaxis()->GetBinLowEdge(iy1);
@@ -6333,20 +6333,20 @@ bool testH3Integral()
    double z1 = h3->GetZaxis()->GetBinLowEdge(iz1);
    double z2 = h3->GetZaxis()->GetBinUpEdge(iz2);
 
-   double a[3]; 
-   double b[3]; 
-   a[0] = x1; a[1] = y1; a[2] = z1;  
-   b[0] = x2; b[1] = y2; b[2] = z2; 
+   double a[3];
+   double b[3];
+   a[0] = x1; a[1] = y1; a[2] = z1;
+   b[0] = x2; b[1] = y2; b[2] = z2;
 
    w.Start();
    double relerr = 0;
-   double igf = gaus->IntegralMultiple(3, a, b, 1.E-4, relerr);  // don't need high tolerance (use 10-4) 
-   //double igf = gaus->Integral(x1,x2,y1,y2,z1,z2,1.E-4);  // don't need high tolerance 
-   
-   double err2 = gaus->IntegralError(3,a,b);
-   w.Stop();    
+   double igf = gaus->IntegralMultiple(3, a, b, 1.E-4, relerr);  // don't need high tolerance (use 10-4)
+   //double igf = gaus->Integral(x1,x2,y1,y2,z1,z2,1.E-4);  // don't need high tolerance
 
-   double delta = fabs( igh - igf)/ err1; 
+   double err2 = gaus->IntegralError(3,a,b);
+   w.Stop();
+
+   double delta = fabs( igh - igf)/ err1;
 
    if ( defaultEqualOptions & cmpOptDebug ) {
       std::cout << "Time to function integral   " << w.RealTime() << std::endl;
@@ -6354,11 +6354,11 @@ bool testH3Integral()
       std::cout << "Function  integral =  " << igf << " +/- " << err2 << " +/- " << igf*relerr << std::endl;
       std::cout << " Difference (histogram - function) in nsigma  = " <<  delta << std::endl;
    }
-   
-   iret |= (delta > 3); 
-   
+
+   iret |= (delta > 3);
+
    if ( defaultEqualOptions & cmpOptPrint )
-      std::cout << "Integral H3:\t" << (iret?"FAILED":"OK") << std::endl;                                                                               
+      std::cout << "Integral H3:\t" << (iret?"FAILED":"OK") << std::endl;
    return iret;
 }
 
@@ -6367,7 +6367,7 @@ bool testConversion1D()
    const int nbins[3] = {50,11,12};
    const double minRangeArray[3] = {2.,4.,4.};
    const double maxRangeArray[3] = {5.,8.,10.};
-   
+
    const int nevents = 500;
 
    TF1* f = new TF1("gaus1D", gaus1d, minRangeArray[0], maxRangeArray[0], 3);
@@ -6436,29 +6436,29 @@ bool testConversion2D()
    const int nbins[3] = {50,11,12};
    const double minRangeArray[3] = {2.,4.,4.};
    const double maxRangeArray[3] = {5.,8.,10.};
-   
+
    const int nevents = 500;
 
    TF2* f = new TF2("gaus2D", gaus2d,
-                    minRangeArray[0], maxRangeArray[0], 
+                    minRangeArray[0], maxRangeArray[0],
                     minRangeArray[1], maxRangeArray[1],
                     5);
    f->SetParameters(10., 3.5, .4, 6, 1);
 
-   TH2 *h2c = new TH2C("h2c", "h2-title", 
+   TH2 *h2c = new TH2C("h2c", "h2-title",
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1]);
-                       
-   TH2 *h2s = new TH2S("h2s", "h2-title", 
+
+   TH2 *h2s = new TH2S("h2s", "h2-title",
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1]);
-   TH2 *h2i = new TH2I("h2i", "h2-title", 
+   TH2 *h2i = new TH2I("h2i", "h2-title",
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1]);
-   TH2 *h2f = new TH2F("h2f", "h2-title", 
+   TH2 *h2f = new TH2F("h2f", "h2-title",
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1]);
-   TH2 *h2d = new TH2D("h2d", "h2-title", 
+   TH2 *h2d = new TH2D("h2d", "h2-title",
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1]);
 
@@ -6519,34 +6519,34 @@ bool testConversion3D()
    const int nbins[3] = {50,11,12};
    const double minRangeArray[3] = {2.,4.,4.};
    const double maxRangeArray[3] = {5.,8.,10.};
-   
+
    const int nevents = 500;
 
    TF3* f = new TF3("gaus3D", gaus3d,
-                    minRangeArray[0], maxRangeArray[0], 
+                    minRangeArray[0], maxRangeArray[0],
                     minRangeArray[1], maxRangeArray[1],
                     minRangeArray[2], maxRangeArray[2],
                     7);
    f->SetParameters(10., 3.5, .4, 6, 1, 7, 2);
 
-   TH3 *h3c = new TH3C("h3c", "h3-title", 
+   TH3 *h3c = new TH3C("h3c", "h3-title",
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1],
                        nbins[2], minRangeArray[2], maxRangeArray[2]);
-                       
-   TH3 *h3s = new TH3S("h3s", "h3-title", 
+
+   TH3 *h3s = new TH3S("h3s", "h3-title",
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1],
                        nbins[2], minRangeArray[2], maxRangeArray[2]);
-   TH3 *h3i = new TH3I("h3i", "h3-title", 
+   TH3 *h3i = new TH3I("h3i", "h3-title",
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1],
                        nbins[2], minRangeArray[2], maxRangeArray[2]);
-   TH3 *h3f = new TH3F("h3f", "h3-title", 
+   TH3 *h3f = new TH3F("h3f", "h3-title",
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1],
                        nbins[2], minRangeArray[2], maxRangeArray[2]);
-   TH3 *h3d = new TH3D("h3d", "h3-title", 
+   TH3 *h3d = new TH3D("h3d", "h3-title",
                        nbins[0], minRangeArray[0], maxRangeArray[0],
                        nbins[1], minRangeArray[1], maxRangeArray[1],
                        nbins[2], minRangeArray[2], maxRangeArray[2]);
@@ -6625,9 +6625,9 @@ int findBin(ROOT::Fit::BinData& bd, const double *x)
       {
          thisIsIt &= fabs(x1[j] - x[j]) < 1E-15;
       }
-      if ( thisIsIt ) { 
+      if ( thisIsIt ) {
 //          std::cout << "RETURNED!" << std::endl;
-         return i; 
+         return i;
       }
    }
 
@@ -6669,11 +6669,11 @@ bool operator ==(ROOT::Fit::BinData& bd1, ROOT::Fit::BinData& bd2)
       }
    }
 
-   return equals;   
+   return equals;
 }
 
 
-int findBin(ROOT::Fit::SparseData& sd, 
+int findBin(ROOT::Fit::SparseData& sd,
             const std::vector<double>& minRef, const std::vector<double>& maxRef,
             const double valRef, const double errorRef)
 {
@@ -6711,9 +6711,9 @@ int findBin(ROOT::Fit::SparseData& sd,
 //          std::cout << thisIsIt << " ";
       }
 //       std::cout << thisIsIt << " " << std::endl;
-      if ( thisIsIt ) { 
-//          std::cout << "RETURNING " << i << std::endl; 
-         return i; 
+      if ( thisIsIt ) {
+//          std::cout << "RETURNING " << i << std::endl;
+         return i;
       }
    }
 
@@ -6751,7 +6751,7 @@ bool operator ==(ROOT::Fit::SparseData& sd1, ROOT::Fit::SparseData& sd2)
       equals &= (findBin(sd1, min, max, val, error) >= 0 );
    }
 
-   return equals;     
+   return equals;
 }
 
 bool testSparseData1DFull()
@@ -7253,21 +7253,21 @@ bool testRefRead1D()
    if ( refFileOption == refFileWrite ) {
       h1 = new TH1D("rr1D-h1", "h1-Title", numberOfBins, minRange, maxRange);
       h1->Sumw2();
-   
+
       for ( Int_t e = 0; e < nEvents; ++e ) {
          Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          h1->Fill(value, 1.0);
-      }  
+      }
       h1->Write();
    } else {
       h1 = static_cast<TH1D*> ( refFile->Get("rr1D-h1") );
       TH1D* h2 = new TH1D("rr1D-h2", "h2-Title", numberOfBins, minRange, maxRange);
       h2->Sumw2();
-   
+
       for ( Int_t e = 0; e < nEvents; ++e ) {
          Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          h2->Fill(value, 1.0);
-      }  
+      }
 
       ret = equals("Ref Read Hist 1D", h1, h2, cmpOptStats);
    }
@@ -7285,24 +7285,24 @@ bool testRefReadProf1D()
    if ( refFileOption == refFileWrite ) {
       p1 = new TProfile("rr1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
 //      p1->Sumw2();
-   
+
       for ( Int_t e = 0; e < nEvents; ++e ) {
          Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          p1->Fill(x, y, 1.0);
-      }  
+      }
       p1->Write();
    } else {
       TH1::SetDefaultSumw2(false);
       p1 = static_cast<TProfile*> ( refFile->Get("rr1D-p1") );
       TProfile* p2 = new TProfile("rr1D-p2", "p2-Title", numberOfBins, minRange, maxRange);
 //      p2->Sumw2();
-   
+
       for ( Int_t e = 0; e < nEvents; ++e ) {
          Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          p2->Fill(x, y, 1.0);
-      }  
+      }
 
       ret = equals("Ref Read Prof 1D", p1, p2, cmpOptStats);
       TH1::SetDefaultSumw2(true);
@@ -7319,29 +7319,29 @@ bool testRefRead2D()
    TH2D* h1 = 0;
    bool ret = 0;
    if ( refFileOption == refFileWrite ) {
-      h1 = new TH2D("rr2D-h1", "h1-Title", 
+      h1 = new TH2D("rr2D-h1", "h1-Title",
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange);
       h1->Sumw2();
-   
+
       for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
          Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          h1->Fill(x, y, 1.0);
-      }  
+      }
       h1->Write();
    } else {
       h1 = static_cast<TH2D*> ( refFile->Get("rr2D-h1") );
-      TH2D* h2 = new TH2D("rr2D-h2", "h2-Title", 
+      TH2D* h2 = new TH2D("rr2D-h2", "h2-Title",
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange);
       h2->Sumw2();
-   
+
       for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
          Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          h2->Fill(x, y, 1.0);
-      }  
+      }
 
       ret = equals("Ref Read Hist 2D", h1, h2, cmpOptStats);
    }
@@ -7356,29 +7356,29 @@ bool testRefReadProf2D()
    TProfile2D* p1 = 0;
    bool ret = 0;
    if ( refFileOption == refFileWrite ) {
-      p1 = new TProfile2D("rr2D-p1", "p1-Title", 
+      p1 = new TProfile2D("rr2D-p1", "p1-Title",
                                       numberOfBins, minRange, maxRange,
                                       numberOfBins, minRange, maxRange);
-   
+
       for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
          Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          p1->Fill(x, y, z, 1.0);
-      }  
+      }
       p1->Write();
    } else {
       p1 = static_cast<TProfile2D*> ( refFile->Get("rr2D-p1") );
-      TProfile2D* p2 = new TProfile2D("rr2D-p2", "p2-Title", 
+      TProfile2D* p2 = new TProfile2D("rr2D-p2", "p2-Title",
                                       numberOfBins, minRange, maxRange,
                                       numberOfBins, minRange, maxRange);
-   
+
       for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
          Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          p2->Fill(x, y, z, 1.0);
-      }  
+      }
 
       ret = equals("Ref Read Prof 2D", p1, p2, cmpOptStats );
    }
@@ -7393,33 +7393,33 @@ bool testRefRead3D()
    TH3D* h1 = 0;
    bool ret = 0;
    if ( refFileOption == refFileWrite ) {
-      h1 = new TH3D("rr3D-h1", "h1-Title", 
+      h1 = new TH3D("rr3D-h1", "h1-Title",
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange);
       h1->Sumw2();
-   
+
       for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
          Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          h1->Fill(x, y, z, 1.0);
-      }  
+      }
       h1->Write();
    } else {
       h1 = static_cast<TH3D*> ( refFile->Get("rr3D-h1") );
-      TH3D* h2 = new TH3D("rr3D-h2", "h2-Title", 
+      TH3D* h2 = new TH3D("rr3D-h2", "h2-Title",
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange);
       h2->Sumw2();
-   
+
       for ( Int_t e = 0; e < nEvents * nEvents; ++e ) {
          Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          h2->Fill(x, y, z, 1.0);
-      }  
+      }
 
       ret = equals("Ref Read Hist 3D", h1, h2, cmpOptStats);
    }
@@ -7434,7 +7434,7 @@ bool testRefReadProf3D()
    TProfile3D* p1 = 0;
    bool ret = 0;
    if ( refFileOption == refFileWrite ) {
-      p1 = new TProfile3D("rr3D-p1", "p1-Title", 
+      p1 = new TProfile3D("rr3D-p1", "p1-Title",
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange);
@@ -7445,11 +7445,11 @@ bool testRefReadProf3D()
          Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          p1->Fill(x, y, z, t, 1.0);
-      }  
+      }
       p1->Write();
    } else {
       p1 = static_cast<TProfile3D*> ( refFile->Get("rr3D-p1") );
-      TProfile3D* p2 = new TProfile3D("rr3D-p2", "p2-Title", 
+      TProfile3D* p2 = new TProfile3D("rr3D-p2", "p2-Title",
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange,
                           numberOfBins, minRange, maxRange);
@@ -7460,7 +7460,7 @@ bool testRefReadProf3D()
          Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
          p2->Fill(x, y, z, t, 1.0);
-      }  
+      }
 
       ret = equals("Ref Read Prof 3D", p1, p2, cmpOptStats);
    }
@@ -7491,7 +7491,7 @@ bool testRefReadSparse()
          points[1] = r.Uniform( minRange * .9 , maxRange * 1.1 );
          points[2] = r.Uniform( minRange * .9 , maxRange * 1.1 );
          s1->Fill(points);
-      }  
+      }
       s1->Write();
    } else {
       s1 = static_cast<THnSparseD*> ( refFile->Get("rr-s1") );
@@ -7504,7 +7504,7 @@ bool testRefReadSparse()
          points[1] = r.Uniform( minRange * .9 , maxRange * 1.1 );
          points[2] = r.Uniform( minRange * .9 , maxRange * 1.1 );
          s2->Fill(points);
-      }  
+      }
 
       ret = equals("Ref Read Sparse", s1, s2, cmpOptStats);
    }
@@ -7526,7 +7526,7 @@ bool testIntegerRebin()
 
    TH1D* h2 = static_cast<TH1D*>( h1->Rebin(rebin, "testIntegerRebin") );
 
-   TH1D* h3 = new TH1D("testIntegerRebin2", "testIntegerRebin2", 
+   TH1D* h3 = new TH1D("testIntegerRebin2", "testIntegerRebin2",
                        h1->GetNbinsX() / rebin, minRange, maxRange);
    r.SetSeed(seed);
    h3->Sumw2();
@@ -7576,7 +7576,7 @@ bool testIntegerRebinNoName()
    TH1D* h2 = dynamic_cast<TH1D*>( h1->Clone() );
    h2->Rebin(rebin);
 
-   TH1D* h3 = new TH1D("testIntegerRebinNoName", "testIntegerRebinNoName", 
+   TH1D* h3 = new TH1D("testIntegerRebinNoName", "testIntegerRebinNoName",
                        int(h1->GetNbinsX() / rebin + 0.1), minRange, maxRange);
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
@@ -7623,7 +7623,7 @@ bool testArrayRebin()
       h1->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) );
 
    // Create vector - generate bin edges ( nbins is always > 2)
-   // ignore fact that array may contains bins with zero size 
+   // ignore fact that array may contains bins with zero size
    Double_t * rebinArray = new Double_t[rebin];
    r.RndmArray(rebin, rebinArray);
    std::sort(rebinArray, rebinArray + rebin);
@@ -7631,14 +7631,14 @@ bool testArrayRebin()
       rebinArray[i] = TMath::Nint( rebinArray[i] * ( h1->GetNbinsX() - 2 ) + 2 );
       rebinArray[i] = h1->GetBinLowEdge( (Int_t) rebinArray[i] );
    }
-   
+
 
 //    rebinArray[0] = minRange;
 //    rebinArray[rebin-1] = maxRange;
 
 #ifdef __DEBUG__
    std::cout << "min range = " << minRange << " max range " << maxRange << std::endl;
-   for ( Int_t i = 0; i < rebin; ++i ) 
+   for ( Int_t i = 0; i < rebin; ++i )
       std::cout << rebinArray[i] << std::endl;
    std::cout << "rebin: " << rebin << std::endl;
 #endif
@@ -7651,7 +7651,7 @@ bool testArrayRebin()
       h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) );
 
    delete [] rebinArray;
-      
+
    bool ret = equals("TestArrayRebin", h2, h3, cmpOptStats);
    delete h1;
    delete h2;
@@ -7668,12 +7668,12 @@ bool testArrayRebinProfile()
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i ) {
       Double_t x = r.Uniform( minRange * .9 , maxRange * 1.1 );
-      Double_t y = r.Uniform( minRange * .9 , maxRange * 1.1 ); 
+      Double_t y = r.Uniform( minRange * .9 , maxRange * 1.1 );
       p1->Fill( x, y );
    }
 
    // Create vector - generate bin edges ( nbins is always > 2)
-   // ignore fact that array may contains bins with zero size 
+   // ignore fact that array may contains bins with zero size
    Double_t * rebinArray = new Double_t[rebin];
    r.RndmArray(rebin, rebinArray);
    std::sort(rebinArray, rebinArray + rebin);
@@ -7686,7 +7686,7 @@ bool testArrayRebinProfile()
 //    rebinArray[rebin-1] = maxRange;
 
    #ifdef __DEBUG__
-   for ( Int_t i = 0; i < rebin; ++i ) 
+   for ( Int_t i = 0; i < rebin; ++i )
       std::cout << rebinArray[i] << std::endl;
    std::cout << "rebin: " << rebin << std::endl;
    #endif
@@ -7702,7 +7702,7 @@ bool testArrayRebinProfile()
    }
 
    delete [] rebinArray;
-      
+
    bool ret = equals("TestArrayRebinProf", p2, p3, cmpOptStats );
    delete p1;
    delete p2;
@@ -7716,8 +7716,8 @@ bool test2DRebin()
    Int_t xrebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
    Int_t yrebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
    // make the bins of the orginal histo not an exact divider to leave an extra bin
-   TH2D* h2d = new TH2D("h2d","Original Histogram", 
-                        xrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange, 
+   TH2D* h2d = new TH2D("h2d","Original Histogram",
+                        xrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange,
                         yrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange);
 
    h2d->Sumw2();
@@ -7731,7 +7731,7 @@ bool test2DRebin()
    TH2D* h2d2 = (TH2D*) h2d->Rebin2D(xrebin,yrebin, "p2d2");
 
    // range of rebinned histogram may be different than original one
-   TH2D* h3 = new TH2D("test2DRebin", "test2DRebin", 
+   TH2D* h3 = new TH2D("test2DRebin", "test2DRebin",
                        h2d->GetNbinsX() / xrebin, h2d2->GetXaxis()->GetXmin(), h2d2->GetXaxis()->GetXmax(),
                        h2d->GetNbinsY() / yrebin, h2d2->GetYaxis()->GetXmin(), h2d2->GetYaxis()->GetXmax());
 
@@ -7740,7 +7740,7 @@ bool test2DRebin()
    for ( Int_t i = 0; i < nEvents; ++i )
       h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), r.Uniform( minRange * .9 , maxRange * 1.1 ),
                 r.Uniform(0,10.) );
-   
+
 
    bool ret = equals("TestIntRebin2D", h2d2, h3, cmpOptStats); // | cmpOptDebug);
    delete h2d;
@@ -7757,8 +7757,8 @@ bool test3DRebin()
    Int_t zrebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
 
    // make the bins of the orginal histo not an exact divider to leave an extra bin
-   TH3D* h3d = new TH3D("h3d","Original Histogram", 
-                        xrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange, 
+   TH3D* h3d = new TH3D("h3d","Original Histogram",
+                        xrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange,
                         yrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange,
                         zrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange);
    h3d->Sumw2();
@@ -7766,15 +7766,15 @@ bool test3DRebin()
    UInt_t seed = r.GetSeed();
    r.SetSeed(seed);
    for ( Int_t i = 0; i < 10*nEvents; ++i )
-      h3d->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ), 
+      h3d->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ),
                  r.Uniform( minRange * .9 , maxRange * 1.1 ),
-                 r.Uniform( minRange * .9 , maxRange * 1.1 ), 
+                 r.Uniform( minRange * .9 , maxRange * 1.1 ),
                  r.Uniform(0,10.) );
 
    TH3D* h3d2 = (TH3D*) h3d->Rebin3D(xrebin,yrebin, zrebin, "h3-rebin");
 
    // range of rebinned histogram may be different than original one
-   TH3D* h3 = new TH3D("test3DRebin", "test3DRebin", 
+   TH3D* h3 = new TH3D("test3DRebin", "test3DRebin",
                        h3d->GetNbinsX() / xrebin, h3d2->GetXaxis()->GetXmin(), h3d2->GetXaxis()->GetXmax(),
                        h3d->GetNbinsY() / yrebin, h3d2->GetYaxis()->GetXmin(), h3d2->GetYaxis()->GetXmax(),
                        h3d->GetNbinsZ() / zrebin, h3d2->GetZaxis()->GetXmin(), h3d2->GetZaxis()->GetXmax() );
@@ -7782,7 +7782,7 @@ bool test3DRebin()
    r.SetSeed(seed);
    for ( Int_t i = 0; i < 10*nEvents; ++i )
       h3->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ),
-                r.Uniform( minRange * .9 , maxRange * 1.1 ), 
+                r.Uniform( minRange * .9 , maxRange * 1.1 ),
                 r.Uniform( minRange * .9 , maxRange * 1.1 ),
                 r.Uniform(0,10.) );
 
@@ -7798,8 +7798,8 @@ bool test2DRebinProfile()
 
    Int_t xrebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
    Int_t yrebin = TMath::Nint( r.Uniform(minRebin, maxRebin) );
-   TProfile2D* h2d = new TProfile2D("p2d","Original Profile Histogram", 
-                       xrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange, 
+   TProfile2D* h2d = new TProfile2D("p2d","Original Profile Histogram",
+                       xrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange,
                        yrebin * TMath::Nint( r.Uniform(1, 5) ), minRange, maxRange);
 
    UInt_t seed = r.GetSeed();
@@ -7809,8 +7809,8 @@ bool test2DRebinProfile()
 
    TProfile2D* h2d2 = (TProfile2D*) h2d->Rebin2D(xrebin,yrebin, "p2d2");
 
-   TProfile2D* h3 = new TProfile2D("test2DRebinProfile", "test2DRebin", 
-                                   h2d->GetNbinsX() / xrebin, h2d2->GetXaxis()->GetXmin(), h2d2->GetXaxis()->GetXmax(), 
+   TProfile2D* h3 = new TProfile2D("test2DRebinProfile", "test2DRebin",
+                                   h2d->GetNbinsX() / xrebin, h2d2->GetXaxis()->GetXmin(), h2d2->GetXaxis()->GetXmax(),
                                    h2d->GetNbinsY() / yrebin, h2d2->GetYaxis()->GetXmin(), h2d2->GetYaxis()->GetXmax() );
    r.SetSeed(seed);
    for ( Int_t i = 0; i < nEvents; ++i )
@@ -7823,7 +7823,7 @@ bool test2DRebinProfile()
 }
 
 template <typename HIST>
-bool testHnRebin1() 
+bool testHnRebin1()
 {
    // Tests rebin method for n-dim Histogram
 
@@ -7836,7 +7836,7 @@ bool testHnRebin1()
    Int_t bsize[] = { bsizeRebin[0] * rebin,
                      bsizeRebin[1] * rebin,
                      bsizeRebin[2] * rebin};
-                    
+
    Double_t xmin[] = {minRange, minRange, minRange};
    Double_t xmax[] = {maxRange, maxRange, maxRange};
    HIST* s1 = new HIST("rebin1-s1","s1-Title", 3, bsize, xmin, xmax);
@@ -7871,10 +7871,10 @@ bool testTH2toTH1()
    static const unsigned int maxbinY = 8;
    const int lower_limit = 0;
    const int upper_limit = 10;
-   
+
    r.SetSeed(10);
 
-   TH2D* h2XY = new TH2D("h2XY", "h2XY", binsizeX, lower_limit, upper_limit, 
+   TH2D* h2XY = new TH2D("h2XY", "h2XY", binsizeX, lower_limit, upper_limit,
                                          binsizeY, lower_limit, upper_limit);
 
    TH1::StatOverflows(kTRUE);
@@ -7886,48 +7886,48 @@ bool testTH2toTH1()
    TH1D* h1YOR = new TH1D("h1YOR", "h1YOR", binsizeY, lower_limit, upper_limit);
 
    TH1D* h1XR = new TH1D("h1XR", "h1XR",
-                         maxbinX - minbinX + 1, 
-                         h1X->GetXaxis()->GetBinLowEdge(minbinX), 
+                         maxbinX - minbinX + 1,
+                         h1X->GetXaxis()->GetBinLowEdge(minbinX),
                          h1X->GetXaxis()->GetBinUpEdge(maxbinX) );
    TH1D* h1YR = new TH1D("h1YR", "h1YR",
-                         maxbinY - minbinY + 1, 
+                         maxbinY - minbinY + 1,
                          h1Y->GetXaxis()->GetBinLowEdge(minbinY),
                          h1Y->GetXaxis()->GetBinUpEdge(maxbinY) );
 
    TProfile* pe1XY  = new TProfile("pe1XY",  "pe1XY",  binsizeX, lower_limit, upper_limit);
    TProfile* pe1XYOR  = new TProfile("pe1XYOR",  "pe1XYOR",  binsizeX, lower_limit, upper_limit);
-   TProfile* pe1XYR = new TProfile("pe1XYR", "pe1XYR", 
-                                   maxbinX - minbinX + 1, 
-                                   h1X->GetXaxis()->GetBinLowEdge(minbinX), 
+   TProfile* pe1XYR = new TProfile("pe1XYR", "pe1XYR",
+                                   maxbinX - minbinX + 1,
+                                   h1X->GetXaxis()->GetBinLowEdge(minbinX),
                                    h1X->GetXaxis()->GetBinUpEdge(maxbinX) );
 
    TProfile* pe1YX  = new TProfile("pe1YX",  "pe1YX", binsizeY, lower_limit, upper_limit);
    TProfile* pe1YXOR  = new TProfile("pe1YXOR",  "pe1YXOR", binsizeY, lower_limit, upper_limit);
-   TProfile* pe1YXR = new TProfile("pe1YXR", "pe1YXR", 
-                                  maxbinY - minbinY + 1, 
-                                  h1Y->GetXaxis()->GetBinLowEdge(minbinY), 
+   TProfile* pe1YXR = new TProfile("pe1YXR", "pe1YXR",
+                                  maxbinY - minbinY + 1,
+                                  h1Y->GetXaxis()->GetBinLowEdge(minbinY),
                                   h1Y->GetXaxis()->GetBinUpEdge(maxbinY));
-   
+
    for ( int ix = 0; ix <= h2XY->GetXaxis()->GetNbins() + 1; ++ix ) {
       double xc = h2XY->GetXaxis()->GetBinCenter(ix);
-      double x = xc + centre_deviation * h2XY->GetXaxis()->GetBinWidth(ix); 
+      double x = xc + centre_deviation * h2XY->GetXaxis()->GetBinWidth(ix);
       for ( int iy = 0; iy <= h2XY->GetYaxis()->GetNbins() + 1; ++iy ) {
          double yc = h2XY->GetYaxis()->GetBinCenter(iy);
          double y = yc + centre_deviation * h2XY->GetYaxis()->GetBinWidth(iy);
 
          Double_t w = (Double_t) r.Uniform(1,3);
-         
+
          h2XY->Fill(x,y,w);
-               
+
          h1X->Fill(x,w);
          h1Y->Fill(y,w);
 
          pe1XY->Fill(xc,yc,w);
          pe1YX->Fill(yc,xc,w);
          if ( x >= h1X->GetXaxis()->GetBinLowEdge(minbinX) &&
-              x <= h1X->GetXaxis()->GetBinUpEdge(maxbinX)  && 
+              x <= h1X->GetXaxis()->GetBinUpEdge(maxbinX)  &&
               y >= h1Y->GetXaxis()->GetBinLowEdge(minbinY) &&
-              y <= h1Y->GetXaxis()->GetBinUpEdge(maxbinY) ) 
+              y <= h1Y->GetXaxis()->GetBinUpEdge(maxbinY) )
          {
             h1XOR->Fill(x,w);
             h1YOR->Fill(y,w);
@@ -7941,7 +7941,7 @@ bool testTH2toTH1()
 
       }
    }
-   
+
    int status = 0;
    int options = cmpOptStats;
 
@@ -7978,7 +7978,7 @@ bool testTH2toTH1()
 
    status += equals("TH2XYR -> PX", pe1XYR, (TH1D*) h2XY->ProfileX("PX"), options);
    status += equals("TH2XYR -> PY", pe1YXR, (TH1D*) h2XY->ProfileY("PY"), options);
-   
+
    status += equals("TH2XYRO -> PX", pe1XYOR, (TH1D*) h2XY->ProfileX("OPX", 0,-1,"o"), options);
    status += equals("TH2XYRO -> PY", pe1YXOR, (TH1D*) h2XY->ProfileY("OPY", 0,-1,"o"), options);
 
@@ -8022,8 +8022,8 @@ bool testTH3toTH1()
 
    r.SetSeed(10);
 
-   TH3D* h3 = new TH3D("h3","h3", binsizeX, lower_limit, upper_limit, 
-                                  binsizeY, lower_limit, upper_limit, 
+   TH3D* h3 = new TH3D("h3","h3", binsizeX, lower_limit, upper_limit,
+                                  binsizeY, lower_limit, upper_limit,
                                   binsizeZ, lower_limit, upper_limit);
 
 
@@ -8034,15 +8034,15 @@ bool testTH3toTH1()
    TH1D* h1Z = new TH1D("h1Z", "h1Z", binsizeZ, lower_limit, upper_limit);
 
    TH1D* h1XR = new TH1D("h1XR", "h1XR",
-                         maxbinX - minbinX + 1, 
-                         h1X->GetXaxis()->GetBinLowEdge(minbinX), 
+                         maxbinX - minbinX + 1,
+                         h1X->GetXaxis()->GetBinLowEdge(minbinX),
                          h1X->GetXaxis()->GetBinUpEdge(maxbinX) );
    TH1D* h1YR = new TH1D("h1YR", "h1YR",
-                         maxbinY - minbinY + 1, 
+                         maxbinY - minbinY + 1,
                          h1Y->GetXaxis()->GetBinLowEdge(minbinY),
                          h1Y->GetXaxis()->GetBinUpEdge(maxbinY) );
    TH1D* h1ZR = new TH1D("h1ZR", "h1ZR",
-                         maxbinZ - minbinZ + 1, 
+                         maxbinZ - minbinZ + 1,
                          h1Z->GetXaxis()->GetBinLowEdge(minbinZ),
                          h1Z->GetXaxis()->GetBinUpEdge(maxbinZ) );
 
@@ -8059,19 +8059,19 @@ bool testTH3toTH1()
             for ( int iz = 0; iz <= h3->GetZaxis()->GetNbins() + 1; ++iz ) {
                double z = centre_deviation * h3->GetZaxis()->GetBinWidth(iz) + h3->GetZaxis()->GetBinCenter(iz);
                Double_t w = (Double_t) r.Uniform(1,3);
-         
+
                h3->Fill(x,y,z,w);
-               
+
                h1X->Fill(x,w);
                h1Y->Fill(y,w);
                h1Z->Fill(z,w);
-               
+
                if ( x >= h1X->GetXaxis()->GetBinLowEdge(minbinX) &&
-                    x <= h1X->GetXaxis()->GetBinUpEdge(maxbinX)  && 
+                    x <= h1X->GetXaxis()->GetBinUpEdge(maxbinX)  &&
                     y >= h1Y->GetXaxis()->GetBinLowEdge(minbinY) &&
                     y <= h1Y->GetXaxis()->GetBinUpEdge(maxbinY)  &&
                     z >= h1Z->GetXaxis()->GetBinLowEdge(minbinZ) &&
-                    z <= h1Z->GetXaxis()->GetBinUpEdge(maxbinZ) ) 
+                    z <= h1Z->GetXaxis()->GetBinUpEdge(maxbinZ) )
                {
                   h1XR->Fill(x,w);
                   h1YR->Fill(y,w);
@@ -8080,7 +8080,7 @@ bool testTH3toTH1()
                   h1YOR->Fill(y,w);
                   h1ZOR->Fill(z,w);
                }
-               
+
             }
          }
    }
@@ -8126,7 +8126,7 @@ bool testTH3toTH1()
    h1X->GetXaxis()->SetRange(minbinX, maxbinX);
    h1Y->GetXaxis()->SetRange(minbinY, maxbinY);
    h1Z->GetXaxis()->SetRange(minbinZ, maxbinZ);
-   
+
    //Statistics are no longer conserved if the center_deviation != 0.0
    options = 0;
    status += equals("TH3R -> X", h1XR, (TH1D*) h3->Project3D("x34"), options );
@@ -8193,31 +8193,31 @@ bool testTH3toTH2()
 
    r.SetSeed(10);
 
-   TH3D* h3 = new TH3D("h3","h3", binsizeX, lower_limit, upper_limit, 
-                                  binsizeY, lower_limit, upper_limit, 
+   TH3D* h3 = new TH3D("h3","h3", binsizeX, lower_limit, upper_limit,
+                                  binsizeY, lower_limit, upper_limit,
                                   binsizeZ, lower_limit, upper_limit);
 
 
    TH1::StatOverflows(kTRUE);
 
-   TH2D* h2XY = new TH2D("h2XY", "h2XY", binsizeX, lower_limit, upper_limit, 
+   TH2D* h2XY = new TH2D("h2XY", "h2XY", binsizeX, lower_limit, upper_limit,
                                          binsizeY, lower_limit, upper_limit);
-   TH2D* h2XZ = new TH2D("h2XZ", "h2XZ", binsizeX, lower_limit, upper_limit, 
+   TH2D* h2XZ = new TH2D("h2XZ", "h2XZ", binsizeX, lower_limit, upper_limit,
                                          binsizeZ, lower_limit, upper_limit);
-   TH2D* h2YX = new TH2D("h2YX", "h2YX", binsizeY, lower_limit, upper_limit, 
+   TH2D* h2YX = new TH2D("h2YX", "h2YX", binsizeY, lower_limit, upper_limit,
                                          binsizeX, lower_limit, upper_limit);
-   TH2D* h2YZ = new TH2D("h2YZ", "h2YZ", binsizeY, lower_limit, upper_limit, 
+   TH2D* h2YZ = new TH2D("h2YZ", "h2YZ", binsizeY, lower_limit, upper_limit,
                                          binsizeZ, lower_limit, upper_limit);
-   TH2D* h2ZX = new TH2D("h2ZX", "h2ZX", binsizeZ, lower_limit, upper_limit, 
+   TH2D* h2ZX = new TH2D("h2ZX", "h2ZX", binsizeZ, lower_limit, upper_limit,
                                          binsizeX, lower_limit, upper_limit);
-   TH2D* h2ZY = new TH2D("h2ZY", "h2ZY", binsizeZ, lower_limit, upper_limit, 
+   TH2D* h2ZY = new TH2D("h2ZY", "h2ZY", binsizeZ, lower_limit, upper_limit,
                                          binsizeY, lower_limit, upper_limit);
 
-   TH2D* h2XYR = new TH2D("h2XYR", "h2XYR", 
-                          maxbinX - minbinX + 1, h3->GetXaxis()->GetBinLowEdge(minbinX), h3->GetXaxis()->GetBinUpEdge(maxbinX), 
+   TH2D* h2XYR = new TH2D("h2XYR", "h2XYR",
+                          maxbinX - minbinX + 1, h3->GetXaxis()->GetBinLowEdge(minbinX), h3->GetXaxis()->GetBinUpEdge(maxbinX),
                           maxbinY - minbinY + 1, h3->GetYaxis()->GetBinLowEdge(minbinY), h3->GetYaxis()->GetBinUpEdge(maxbinY) );
    TH2D* h2XZR = new TH2D("h2XZR", "h2XZR",
-                          maxbinX - minbinX + 1, h3->GetXaxis()->GetBinLowEdge(minbinX), h3->GetXaxis()->GetBinUpEdge(maxbinX), 
+                          maxbinX - minbinX + 1, h3->GetXaxis()->GetBinLowEdge(minbinX), h3->GetXaxis()->GetBinUpEdge(maxbinX),
                           maxbinZ - minbinZ + 1, h3->GetZaxis()->GetBinLowEdge(minbinZ), h3->GetZaxis()->GetBinUpEdge(maxbinZ) );
    TH2D* h2YXR = new TH2D("h2YXR", "h2YXR",
                           maxbinY - minbinY + 1, h3->GetYaxis()->GetBinLowEdge(minbinY), h3->GetYaxis()->GetBinUpEdge(maxbinY),
@@ -8225,46 +8225,46 @@ bool testTH3toTH2()
    TH2D* h2YZR = new TH2D("h2YZR", "h2YZR",
                           maxbinY - minbinY + 1, h3->GetYaxis()->GetBinLowEdge(minbinY), h3->GetYaxis()->GetBinUpEdge(maxbinY),
                           maxbinZ - minbinZ + 1, h3->GetZaxis()->GetBinLowEdge(minbinZ), h3->GetZaxis()->GetBinUpEdge(maxbinZ) );
-   TH2D* h2ZXR = new TH2D("h2ZXR", "h2ZXR", 
+   TH2D* h2ZXR = new TH2D("h2ZXR", "h2ZXR",
                           maxbinZ - minbinZ + 1, h3->GetZaxis()->GetBinLowEdge(minbinZ), h3->GetZaxis()->GetBinUpEdge(maxbinZ),
                           maxbinX - minbinX + 1, h3->GetXaxis()->GetBinLowEdge(minbinX), h3->GetXaxis()->GetBinUpEdge(maxbinX) );
-   TH2D* h2ZYR = new TH2D("h2ZYR", "h2ZYR", 
+   TH2D* h2ZYR = new TH2D("h2ZYR", "h2ZYR",
                           maxbinZ - minbinZ + 1, h3->GetZaxis()->GetBinLowEdge(minbinZ), h3->GetZaxis()->GetBinUpEdge(maxbinZ),
                           maxbinY - minbinY + 1, h3->GetYaxis()->GetBinLowEdge(minbinY), h3->GetYaxis()->GetBinUpEdge(maxbinY) );
 
-   TH2D* h2XYOR = new TH2D("h2XYOR", "h2XYOR", binsizeX, lower_limit, upper_limit, 
+   TH2D* h2XYOR = new TH2D("h2XYOR", "h2XYOR", binsizeX, lower_limit, upper_limit,
                                                binsizeY, lower_limit, upper_limit);
-   TH2D* h2XZOR = new TH2D("h2XZOR", "h2XZOR", binsizeX, lower_limit, upper_limit, 
+   TH2D* h2XZOR = new TH2D("h2XZOR", "h2XZOR", binsizeX, lower_limit, upper_limit,
                                                binsizeZ, lower_limit, upper_limit);
-   TH2D* h2YXOR = new TH2D("h2YXOR", "h2YXOR", binsizeY, lower_limit, upper_limit, 
+   TH2D* h2YXOR = new TH2D("h2YXOR", "h2YXOR", binsizeY, lower_limit, upper_limit,
                                                binsizeX, lower_limit, upper_limit);
-   TH2D* h2YZOR = new TH2D("h2YZOR", "h2YZOR", binsizeY, lower_limit, upper_limit, 
+   TH2D* h2YZOR = new TH2D("h2YZOR", "h2YZOR", binsizeY, lower_limit, upper_limit,
                                                binsizeZ, lower_limit, upper_limit);
-   TH2D* h2ZXOR = new TH2D("h2ZXOR", "h2ZXOR", binsizeZ, lower_limit, upper_limit, 
+   TH2D* h2ZXOR = new TH2D("h2ZXOR", "h2ZXOR", binsizeZ, lower_limit, upper_limit,
                                                binsizeX, lower_limit, upper_limit);
-   TH2D* h2ZYOR = new TH2D("h2ZYOR", "h2ZYOR", binsizeZ, lower_limit, upper_limit, 
+   TH2D* h2ZYOR = new TH2D("h2ZYOR", "h2ZYOR", binsizeZ, lower_limit, upper_limit,
                                                binsizeY, lower_limit, upper_limit);
 
-   TProfile2D* pe2XY = new TProfile2D("pe2XY", "pe2XY", binsizeX, lower_limit, upper_limit, 
+   TProfile2D* pe2XY = new TProfile2D("pe2XY", "pe2XY", binsizeX, lower_limit, upper_limit,
                                                         binsizeY, lower_limit, upper_limit);
-   TProfile2D* pe2XZ = new TProfile2D("pe2XZ", "pe2XZ", binsizeX, lower_limit, upper_limit, 
+   TProfile2D* pe2XZ = new TProfile2D("pe2XZ", "pe2XZ", binsizeX, lower_limit, upper_limit,
                                                         binsizeZ, lower_limit, upper_limit);
-   TProfile2D* pe2YX = new TProfile2D("pe2YX", "pe2YX", binsizeY, lower_limit, upper_limit, 
+   TProfile2D* pe2YX = new TProfile2D("pe2YX", "pe2YX", binsizeY, lower_limit, upper_limit,
                                                         binsizeX, lower_limit, upper_limit);
-   TProfile2D* pe2YZ = new TProfile2D("pe2YZ", "pe2YZ", binsizeY, lower_limit, upper_limit, 
+   TProfile2D* pe2YZ = new TProfile2D("pe2YZ", "pe2YZ", binsizeY, lower_limit, upper_limit,
                                                         binsizeZ, lower_limit, upper_limit);
-   TProfile2D* pe2ZX = new TProfile2D("pe2ZX", "pe2ZX", binsizeZ, lower_limit, upper_limit, 
+   TProfile2D* pe2ZX = new TProfile2D("pe2ZX", "pe2ZX", binsizeZ, lower_limit, upper_limit,
                                                         binsizeX, lower_limit, upper_limit);
-   TProfile2D* pe2ZY = new TProfile2D("pe2ZY", "pe2ZY", binsizeZ, lower_limit, upper_limit, 
+   TProfile2D* pe2ZY = new TProfile2D("pe2ZY", "pe2ZY", binsizeZ, lower_limit, upper_limit,
                                                         binsizeY, lower_limit, upper_limit);
 
-   TProfile2D* pe2XYR = new TProfile2D("pe2XYR", "pe2XYR", 
-                            maxbinX - minbinX + 1, h3->GetXaxis()->GetBinLowEdge(minbinX), h3->GetXaxis()->GetBinUpEdge(maxbinX), 
+   TProfile2D* pe2XYR = new TProfile2D("pe2XYR", "pe2XYR",
+                            maxbinX - minbinX + 1, h3->GetXaxis()->GetBinLowEdge(minbinX), h3->GetXaxis()->GetBinUpEdge(maxbinX),
                             maxbinY - minbinY + 1, h3->GetYaxis()->GetBinLowEdge(minbinY), h3->GetYaxis()->GetBinUpEdge(maxbinY) );
-   TProfile2D* pe2XZR = new TProfile2D("pe2XZR", "pe2XZR", 
-                            maxbinX - minbinX + 1, h3->GetXaxis()->GetBinLowEdge(minbinX), h3->GetXaxis()->GetBinUpEdge(maxbinX), 
+   TProfile2D* pe2XZR = new TProfile2D("pe2XZR", "pe2XZR",
+                            maxbinX - minbinX + 1, h3->GetXaxis()->GetBinLowEdge(minbinX), h3->GetXaxis()->GetBinUpEdge(maxbinX),
                             maxbinZ - minbinZ + 1, h3->GetZaxis()->GetBinLowEdge(minbinZ), h3->GetZaxis()->GetBinUpEdge(maxbinZ) );
-   TProfile2D* pe2YXR = new TProfile2D("pe2YXR", "pe2YXR", 
+   TProfile2D* pe2YXR = new TProfile2D("pe2YXR", "pe2YXR",
                             maxbinY - minbinY + 1, h3->GetYaxis()->GetBinLowEdge(minbinY), h3->GetYaxis()->GetBinUpEdge(maxbinY),
                             maxbinX - minbinX + 1, h3->GetXaxis()->GetBinLowEdge(minbinX), h3->GetXaxis()->GetBinUpEdge(maxbinX) );
    TProfile2D* pe2YZR = new TProfile2D("pe2YZR", "pe2YZR",
@@ -8273,33 +8273,33 @@ bool testTH3toTH2()
    TProfile2D* pe2ZXR = new TProfile2D("pe2ZXR", "pe2ZXR",
                             maxbinZ - minbinZ + 1, h3->GetZaxis()->GetBinLowEdge(minbinZ), h3->GetZaxis()->GetBinUpEdge(maxbinZ),
                             maxbinX - minbinX + 1, h3->GetXaxis()->GetBinLowEdge(minbinX), h3->GetXaxis()->GetBinUpEdge(maxbinX) );
-   TProfile2D* pe2ZYR = new TProfile2D("pe2ZYR", "pe2ZYR", 
+   TProfile2D* pe2ZYR = new TProfile2D("pe2ZYR", "pe2ZYR",
                             maxbinZ - minbinZ + 1, h3->GetZaxis()->GetBinLowEdge(minbinZ), h3->GetZaxis()->GetBinUpEdge(maxbinZ),
                             maxbinY - minbinY + 1, h3->GetYaxis()->GetBinLowEdge(minbinY), h3->GetYaxis()->GetBinUpEdge(maxbinY) );
 
-   TProfile2D* pe2XYOR = new TProfile2D("pe2XYOR", "pe2XYOR", binsizeX, lower_limit, upper_limit, 
+   TProfile2D* pe2XYOR = new TProfile2D("pe2XYOR", "pe2XYOR", binsizeX, lower_limit, upper_limit,
                                                               binsizeY, lower_limit, upper_limit);
-   TProfile2D* pe2XZOR = new TProfile2D("pe2XZOR", "pe2XZOR", binsizeX, lower_limit, upper_limit, 
+   TProfile2D* pe2XZOR = new TProfile2D("pe2XZOR", "pe2XZOR", binsizeX, lower_limit, upper_limit,
                                                               binsizeZ, lower_limit, upper_limit);
-   TProfile2D* pe2YXOR = new TProfile2D("pe2YXOR", "pe2YXOR", binsizeY, lower_limit, upper_limit, 
+   TProfile2D* pe2YXOR = new TProfile2D("pe2YXOR", "pe2YXOR", binsizeY, lower_limit, upper_limit,
                                                               binsizeX, lower_limit, upper_limit);
-   TProfile2D* pe2YZOR = new TProfile2D("pe2YZOR", "pe2YZOR", binsizeY, lower_limit, upper_limit, 
+   TProfile2D* pe2YZOR = new TProfile2D("pe2YZOR", "pe2YZOR", binsizeY, lower_limit, upper_limit,
                                                               binsizeZ, lower_limit, upper_limit);
-   TProfile2D* pe2ZXOR = new TProfile2D("pe2ZXOR", "pe2ZXOR", binsizeZ, lower_limit, upper_limit, 
+   TProfile2D* pe2ZXOR = new TProfile2D("pe2ZXOR", "pe2ZXOR", binsizeZ, lower_limit, upper_limit,
                                                               binsizeX, lower_limit, upper_limit);
-   TProfile2D* pe2ZYOR = new TProfile2D("pe2ZYOR", "pe2ZYOR", binsizeZ, lower_limit, upper_limit, 
+   TProfile2D* pe2ZYOR = new TProfile2D("pe2ZYOR", "pe2ZYOR", binsizeZ, lower_limit, upper_limit,
                                                               binsizeY, lower_limit, upper_limit);
 
    for ( int ix = 0; ix <= h3->GetXaxis()->GetNbins() + 1; ++ix ) {
       double xc = h3->GetXaxis()->GetBinCenter(ix);
-      double x = xc + centre_deviation * h3->GetXaxis()->GetBinWidth(ix); 
+      double x = xc + centre_deviation * h3->GetXaxis()->GetBinWidth(ix);
       for ( int iy = 0; iy <= h3->GetYaxis()->GetNbins() + 1; ++iy ) {
          double yc = h3->GetYaxis()->GetBinCenter(iy);
          double y = yc + centre_deviation * h3->GetYaxis()->GetBinWidth(iy);
          for ( int iz = 0; iz <= h3->GetZaxis()->GetNbins() + 1; ++iz ) {
             double zc =  h3->GetZaxis()->GetBinCenter(iz);
             double z  = zc + centre_deviation * h3->GetZaxis()->GetBinWidth(iz);
-            
+
 //    for ( int ix = 0; ix <= h3->GetXaxis()->GetNbins() + 1; ++ix ) {
 //       double x = centre_deviation * h3->GetXaxis()->GetBinWidth(ix) + h3->GetXaxis()->GetBinCenter(ix);
 //       for ( int iy = 0; iy <= h3->GetYaxis()->GetNbins() + 1; ++iy ) {
@@ -8307,7 +8307,7 @@ bool testTH3toTH2()
 //          for ( int iz = 0; iz <= h3->GetZaxis()->GetNbins() + 1; ++iz ) {
 //             double z = centre_deviation * h3->GetZaxis()->GetBinWidth(iz) + h3->GetZaxis()->GetBinCenter(iz);
             Double_t w = (Double_t) r.Uniform(1,3);
-         
+
             h3->Fill(x,y,z,w);
 
             h2XY->Fill(x,y,w);
@@ -8316,7 +8316,7 @@ bool testTH3toTH2()
             h2YZ->Fill(y,z,w);
             h2ZX->Fill(z,x,w);
             h2ZY->Fill(z,y,w);
-               
+
             pe2XY->Fill(xc,yc,zc,w);
             pe2XZ->Fill(xc,zc,yc,w);
             pe2YX->Fill(yc,xc,zc,w);
@@ -8325,11 +8325,11 @@ bool testTH3toTH2()
             pe2ZY->Fill(zc,yc,xc,w);
 
                if ( x >= h3->GetXaxis()->GetBinLowEdge(minbinX) &&
-                    x <= h3->GetXaxis()->GetBinUpEdge(maxbinX)  && 
+                    x <= h3->GetXaxis()->GetBinUpEdge(maxbinX)  &&
                     y >= h3->GetYaxis()->GetBinLowEdge(minbinY) &&
                     y <= h3->GetYaxis()->GetBinUpEdge(maxbinY)  &&
                     z >= h3->GetZaxis()->GetBinLowEdge(minbinZ) &&
-                    z <= h3->GetZaxis()->GetBinUpEdge(maxbinZ) ) 
+                    z <= h3->GetZaxis()->GetBinUpEdge(maxbinZ) )
                {
                   h2XYR->Fill(x,y,w);
                   h2XZR->Fill(x,z,w);
@@ -8362,7 +8362,7 @@ bool testTH3toTH2()
          }
       }
    }
-   
+
    int status = 0;
    int options = cmpOptStats;
 
@@ -8382,7 +8382,7 @@ bool testTH3toTH2()
    status += equals("TH3O -> YZ", h2YZ, (TH2D*) h3->Project3D("oZY"), options);
    status += equals("TH3O -> ZX", h2ZX, (TH2D*) h3->Project3D("oXZ"), options);
    status += equals("TH3O -> ZY", h2ZY, (TH2D*) h3->Project3D("oYZ"), options);
-   options = 0; 
+   options = 0;
 
    options = cmpOptStats;
    status += equals("TH3 -> PXY", (TH2D*) pe2XY, (TH2D*) h3->Project3DProfile("yx  UF OF"), options);
@@ -8400,7 +8400,7 @@ bool testTH3toTH2()
    status += equals("TH3O -> PYZ", (TH2D*) pe2YZ, (TH2D*) h3->Project3DProfile("ozy  UF OF"), options);
    status += equals("TH3O -> PZX", (TH2D*) pe2ZX, (TH2D*) h3->Project3DProfile("oxz  UF OF"), options);
    status += equals("TH3O -> PZY", (TH2D*) pe2ZY, (TH2D*) h3->Project3DProfile("oyz  UF OF"), options);
-   options = 0;   
+   options = 0;
 
    h3->GetXaxis()->SetRange(minbinX, maxbinX);
    h3->GetYaxis()->SetRange(minbinY, maxbinY);
@@ -8531,21 +8531,21 @@ struct ProjectionTester {
    TH1D* h1XStats;
    TH1D* h1YStats;
    TH1D* h1ZStats;
-   
+
    TProfile2D* pe2XY;
    TProfile2D* pe2XZ;
    TProfile2D* pe2YX;
    TProfile2D* pe2YZ;
    TProfile2D* pe2ZX;
    TProfile2D* pe2ZY;
-   
+
    TH2D* h2wXY;
    TH2D* h2wXZ;
    TH2D* h2wYX;
    TH2D* h2wYZ;
    TH2D* h2wZX;
    TH2D* h2wZY;
-   
+
    TProfile* pe1XY;
    TProfile* pe1XZ;
    TProfile* pe1YX;
@@ -8560,7 +8560,7 @@ struct ProjectionTester {
    TH1D* hw1ZX;
    TH1D* hw1ZY;
 
-   TProfile3D* p3; 
+   TProfile3D* p3;
 
    TProfile2D* p2XY;
    TProfile2D* p2XZ;
@@ -8579,7 +8579,7 @@ struct ProjectionTester {
 
    bool buildWithWeights;
 
-   
+
 public:
 
    ProjectionTester(bool useWeights = false)
@@ -8591,21 +8591,21 @@ public:
 
    void CreateHistograms()
    {
-      h3 = new TH3D("h3","h3", binsizeX, lower_limit, upper_limit, 
-                               binsizeY, lower_limit, upper_limit, 
+      h3 = new TH3D("h3","h3", binsizeX, lower_limit, upper_limit,
+                               binsizeY, lower_limit, upper_limit,
                                binsizeZ, lower_limit, upper_limit);
 
-      h2XY = new TH2D("h2XY", "h2XY", binsizeX, lower_limit, upper_limit, 
+      h2XY = new TH2D("h2XY", "h2XY", binsizeX, lower_limit, upper_limit,
                                       binsizeY, lower_limit, upper_limit);
-      h2XZ = new TH2D("h2XZ", "h2XZ", binsizeX, lower_limit, upper_limit, 
+      h2XZ = new TH2D("h2XZ", "h2XZ", binsizeX, lower_limit, upper_limit,
                                       binsizeZ, lower_limit, upper_limit);
-      h2YX = new TH2D("h2YX", "h2YX", binsizeY, lower_limit, upper_limit, 
+      h2YX = new TH2D("h2YX", "h2YX", binsizeY, lower_limit, upper_limit,
                                       binsizeX, lower_limit, upper_limit);
-      h2YZ = new TH2D("h2YZ", "h2YZ", binsizeY, lower_limit, upper_limit, 
+      h2YZ = new TH2D("h2YZ", "h2YZ", binsizeY, lower_limit, upper_limit,
                                       binsizeZ, lower_limit, upper_limit);
-      h2ZX = new TH2D("h2ZX", "h2ZX", binsizeZ, lower_limit, upper_limit, 
+      h2ZX = new TH2D("h2ZX", "h2ZX", binsizeZ, lower_limit, upper_limit,
                                       binsizeX, lower_limit, upper_limit);
-      h2ZY = new TH2D("h2ZY", "h2ZY", binsizeZ, lower_limit, upper_limit, 
+      h2ZY = new TH2D("h2ZY", "h2ZY", binsizeZ, lower_limit, upper_limit,
                                       binsizeY, lower_limit, upper_limit);
 
       // The bit is set for all the histograms (It's a statistic variable)
@@ -8619,30 +8619,30 @@ public:
       h1YStats = new TH1D("h1YStats", "h1YStats", binsizeY, lower_limit, upper_limit);
       h1ZStats = new TH1D("h1ZStats", "h1ZStats", binsizeZ, lower_limit, upper_limit);
 
-      pe2XY = new TProfile2D("pe2XY", "pe2XY", binsizeX, lower_limit, upper_limit, 
+      pe2XY = new TProfile2D("pe2XY", "pe2XY", binsizeX, lower_limit, upper_limit,
                                                binsizeY, lower_limit, upper_limit);
-      pe2XZ = new TProfile2D("pe2XZ", "pe2XZ", binsizeX, lower_limit, upper_limit, 
+      pe2XZ = new TProfile2D("pe2XZ", "pe2XZ", binsizeX, lower_limit, upper_limit,
                                                binsizeZ, lower_limit, upper_limit);
-      pe2YX = new TProfile2D("pe2YX", "pe2YX", binsizeY, lower_limit, upper_limit, 
+      pe2YX = new TProfile2D("pe2YX", "pe2YX", binsizeY, lower_limit, upper_limit,
                                                binsizeX, lower_limit, upper_limit);
-      pe2YZ = new TProfile2D("pe2YZ", "pe2YZ", binsizeY, lower_limit, upper_limit, 
+      pe2YZ = new TProfile2D("pe2YZ", "pe2YZ", binsizeY, lower_limit, upper_limit,
                                                binsizeZ, lower_limit, upper_limit);
-      pe2ZX = new TProfile2D("pe2ZX", "pe2ZX", binsizeZ, lower_limit, upper_limit, 
+      pe2ZX = new TProfile2D("pe2ZX", "pe2ZX", binsizeZ, lower_limit, upper_limit,
                                                binsizeX, lower_limit, upper_limit);
-      pe2ZY = new TProfile2D("pe2ZY", "pe2ZY", binsizeZ, lower_limit, upper_limit, 
+      pe2ZY = new TProfile2D("pe2ZY", "pe2ZY", binsizeZ, lower_limit, upper_limit,
                                               binsizeY, lower_limit, upper_limit);
-      
-      h2wXY = new TH2D("h2wXY", "h2wXY", binsizeX, lower_limit, upper_limit, 
+
+      h2wXY = new TH2D("h2wXY", "h2wXY", binsizeX, lower_limit, upper_limit,
                                          binsizeY, lower_limit, upper_limit);
-      h2wXZ = new TH2D("h2wXZ", "h2wXZ", binsizeX, lower_limit, upper_limit, 
+      h2wXZ = new TH2D("h2wXZ", "h2wXZ", binsizeX, lower_limit, upper_limit,
                                          binsizeZ, lower_limit, upper_limit);
-      h2wYX = new TH2D("h2wYX", "h2wYX", binsizeY, lower_limit, upper_limit, 
+      h2wYX = new TH2D("h2wYX", "h2wYX", binsizeY, lower_limit, upper_limit,
                                          binsizeX, lower_limit, upper_limit);
-      h2wYZ = new TH2D("h2wYZ", "h2wYZ", binsizeY, lower_limit, upper_limit, 
+      h2wYZ = new TH2D("h2wYZ", "h2wYZ", binsizeY, lower_limit, upper_limit,
                                          binsizeZ, lower_limit, upper_limit);
-      h2wZX = new TH2D("h2wZX", "h2wZX", binsizeZ, lower_limit, upper_limit, 
+      h2wZX = new TH2D("h2wZX", "h2wZX", binsizeZ, lower_limit, upper_limit,
                                          binsizeX, lower_limit, upper_limit);
-      h2wZY = new TH2D("h2wZY", "h2wZY", binsizeZ, lower_limit, upper_limit, 
+      h2wZY = new TH2D("h2wZY", "h2wZY", binsizeZ, lower_limit, upper_limit,
                                          binsizeY, lower_limit, upper_limit);
 
       h2wXY->Sumw2();
@@ -8681,24 +8681,24 @@ public:
 
    }
 
-   void CreateProfiles() { 
+   void CreateProfiles() {
 
       // create Profile histograms
-      p3 = new TProfile3D("p3","p3", binsizeX, lower_limitX, upper_limitX, 
-                          binsizeY, lower_limitY, upper_limitY, 
+      p3 = new TProfile3D("p3","p3", binsizeX, lower_limitX, upper_limitX,
+                          binsizeY, lower_limitY, upper_limitY,
                           binsizeZ, lower_limitZ, upper_limitZ);
-    
-      p2XY = new TProfile2D("p2XY", "p2XY", binsizeX, lower_limitX, upper_limitX, 
-                             binsizeY, lower_limitY, upper_limitY);  
-      p2XZ = new TProfile2D("p2XZ", "p2XZ", binsizeX, lower_limitX, upper_limitX, 
+
+      p2XY = new TProfile2D("p2XY", "p2XY", binsizeX, lower_limitX, upper_limitX,
+                             binsizeY, lower_limitY, upper_limitY);
+      p2XZ = new TProfile2D("p2XZ", "p2XZ", binsizeX, lower_limitX, upper_limitX,
                              binsizeZ, lower_limitZ, upper_limitZ);
-      p2YX = new TProfile2D("p2YX", "p2YX", binsizeY, lower_limitY, upper_limitY, 
+      p2YX = new TProfile2D("p2YX", "p2YX", binsizeY, lower_limitY, upper_limitY,
                              binsizeX, lower_limitX, upper_limitX);
-      p2YZ = new TProfile2D("p2YZ", "p2YZ", binsizeY, lower_limitY, upper_limitY, 
+      p2YZ = new TProfile2D("p2YZ", "p2YZ", binsizeY, lower_limitY, upper_limitY,
                              binsizeZ, lower_limitZ, upper_limitZ);
-      p2ZX = new TProfile2D("p2ZX", "p2ZX", binsizeZ, lower_limitZ, upper_limitZ, 
+      p2ZX = new TProfile2D("p2ZX", "p2ZX", binsizeZ, lower_limitZ, upper_limitZ,
                              binsizeX, lower_limitX, upper_limitX);
-      p2ZY = new TProfile2D("p2ZY", "p2ZY", binsizeZ, lower_limitZ, upper_limitZ,     
+      p2ZY = new TProfile2D("p2ZY", "p2ZY", binsizeZ, lower_limitZ, upper_limitZ,
                              binsizeY, lower_limitY, upper_limitY);
 
       p1X = new TProfile("p1X", "pe1X", binsizeX, lower_limitX, upper_limitX);
@@ -8706,11 +8706,11 @@ public:
       p1Z = new TProfile("p1Z", "pe1Z", binsizeZ, lower_limitZ, upper_limitZ);
 
    }
-   
+
    void DeleteHistograms()
    {
       delete h3;
-      
+
       delete h2XY;
       delete h2XZ;
       delete h2YX;
@@ -8721,7 +8721,7 @@ public:
       delete h1X;
       delete h1Y;
       delete h1Z;
-      
+
       delete h1XStats;
       delete h1YStats;
       delete h1ZStats;
@@ -8732,7 +8732,7 @@ public:
       delete pe2YZ;
       delete pe2ZX;
       delete pe2ZY;
-      
+
       delete h2wXY;
       delete h2wXZ;
       delete h2wYX;
@@ -8767,25 +8767,25 @@ public:
       delete p2ZX;
       delete p2ZY;
 
-      delete p1X; 
-      delete p1Y; 
+      delete p1X;
+      delete p1Y;
       delete p1Z;
 
       // delete all histogram in gROOT
-      TList * l = gROOT->GetList(); 
+      TList * l = gROOT->GetList();
       TIter next(l);
-      TObject * obj = 0; 
+      TObject * obj = 0;
       while ((obj = next()))
-         if (obj->InheritsFrom(TH1::Class()) ) delete obj; 
+         if (obj->InheritsFrom(TH1::Class()) ) delete obj;
 
    }
-   
+
    virtual ~ProjectionTester()
    {
       DeleteHistograms();
    }
-   
-   
+
+
    void buildHistograms()
    {
 
@@ -8793,7 +8793,7 @@ public:
 
       for ( int ix = 0; ix <= h3->GetXaxis()->GetNbins() + 1; ++ix ) {
          double xc = h3->GetXaxis()->GetBinCenter(ix);
-         double x = xc + centre_deviation * h3->GetXaxis()->GetBinWidth(ix); 
+         double x = xc + centre_deviation * h3->GetXaxis()->GetBinWidth(ix);
          for ( int iy = 0; iy <= h3->GetYaxis()->GetNbins() + 1; ++iy ) {
             double yc = h3->GetYaxis()->GetBinCenter(iy);
             double y = yc + centre_deviation * h3->GetYaxis()->GetBinWidth(iy);
@@ -8807,14 +8807,14 @@ public:
                   Double_t points[] = {x,y,z};
                   s3->Fill(points);
                   n3->Fill(points);
-                  
+
                   h2XY->Fill(x,y);
                   h2XZ->Fill(x,z);
                   h2YX->Fill(y,x);
                   h2YZ->Fill(y,z);
                   h2ZX->Fill(z,x);
                   h2ZY->Fill(z,y);
-                  
+
                   h1X->Fill(x);
                   h1Y->Fill(y);
                   h1Z->Fill(z);
@@ -8828,16 +8828,16 @@ public:
                      h1ZStats->Fill(z);
                   }
 
-                  // for filling reference profile need to use bin center 
-                  // because projection from histogram can use only bin center 
+                  // for filling reference profile need to use bin center
+                  // because projection from histogram can use only bin center
                   pe2XY->Fill(xc,yc,zc);
                   pe2XZ->Fill(xc,zc,yc);
                   pe2YX->Fill(yc,xc,zc);
                   pe2YZ->Fill(yc,zc,xc);
                   pe2ZX->Fill(zc,xc,yc);
                   pe2ZY->Fill(zc,yc,xc);
-                  
-                  // reference histogram to test with option W. 
+
+                  // reference histogram to test with option W.
                   // need to use bin center for the weight
                   h2wXY->Fill(x,y,zc);
                   h2wXZ->Fill(x,z,yc);
@@ -8875,7 +8875,7 @@ public:
 
       for ( int ix = 0; ix <= h3->GetXaxis()->GetNbins() + 1; ++ix ) {
          double xc = h3->GetXaxis()->GetBinCenter(ix);
-         double x = xc + centre_deviation * h3->GetXaxis()->GetBinWidth(ix); 
+         double x = xc + centre_deviation * h3->GetXaxis()->GetBinWidth(ix);
          for ( int iy = 0; iy <= h3->GetYaxis()->GetNbins() + 1; ++iy ) {
             double yc = h3->GetYaxis()->GetBinCenter(iy);
             double y = yc + centre_deviation * h3->GetYaxis()->GetBinWidth(iy);
@@ -8890,18 +8890,18 @@ public:
                Double_t points[] = {x,y,z};
                s3->Fill(points,w);
                n3->Fill(points,w);
-               
+
                h2XY->Fill(x,y,w);
                h2XZ->Fill(x,z,w);
                h2YX->Fill(y,x,w);
                h2YZ->Fill(y,z,w);
                h2ZX->Fill(z,x,w);
                h2ZY->Fill(z,y,w);
-               
+
                h1X->Fill(x,w);
                h1Y->Fill(y,w);
                h1Z->Fill(z,w);
-                   
+
                if ( ix > 0 && ix < h3->GetXaxis()->GetNbins() + 1 &&
                     iy > 0 && iy < h3->GetYaxis()->GetNbins() + 1 &&
                     iz > 0 && iz < h3->GetZaxis()->GetNbins() + 1 )
@@ -8909,7 +8909,7 @@ public:
                   h1XStats->Fill(x,w);
                   h1YStats->Fill(y,w);
                   h1ZStats->Fill(z,w);
-               }              
+               }
 
                pe2XY->Fill(xc,yc,zc,w);
                pe2XZ->Fill(xc,zc,yc,w);
@@ -8917,21 +8917,21 @@ public:
                pe2YZ->Fill(yc,zc,xc,w);
                pe2ZX->Fill(zc,xc,yc,w);
                pe2ZY->Fill(zc,yc,xc,w);
-               
+
                h2wXY->Fill(x,y,zc*w);
                h2wXZ->Fill(x,z,yc*w);
                h2wYX->Fill(y,x,zc*w);
                h2wYZ->Fill(y,z,xc*w);
                h2wZX->Fill(z,x,yc*w);
                h2wZY->Fill(z,y,xc*w);
-               
+
                pe1XY->Fill(xc,yc,w);
                pe1XZ->Fill(xc,zc,w);
                pe1YX->Fill(yc,xc,w);
                pe1YZ->Fill(yc,zc,w);
                pe1ZX->Fill(zc,xc,w);
                pe1ZY->Fill(zc,yc,w);
-               
+
                hw1XY->Fill(x,yc*w);
                hw1XZ->Fill(x,zc*w);
                hw1YX->Fill(y,xc*w);
@@ -8944,14 +8944,14 @@ public:
 
       buildWithWeights = true;
    }
-   
+
    void buildHistograms(int xmin, int xmax,
                         int ymin, int ymax,
                         int zmin, int zmax)
    {
       for ( int ix = 0; ix <= h3->GetXaxis()->GetNbins() + 1; ++ix ) {
          double xc = h3->GetXaxis()->GetBinCenter(ix);
-         double x = xc + centre_deviation * h3->GetXaxis()->GetBinWidth(ix); 
+         double x = xc + centre_deviation * h3->GetXaxis()->GetBinWidth(ix);
          for ( int iy = 0; iy <= h3->GetYaxis()->GetNbins() + 1; ++iy ) {
             double yc = h3->GetYaxis()->GetBinCenter(iy);
             double y = yc + centre_deviation * h3->GetYaxis()->GetBinWidth(iy);
@@ -8966,32 +8966,32 @@ public:
                   Double_t points[] = {x,y,z};
                   s3->Fill(points);
                   n3->Fill(points);
-                  
+
                   if ( h3->GetXaxis()->FindBin(x) >= xmin && h3->GetXaxis()->FindBin(x) <= xmax &&
                        h3->GetYaxis()->FindBin(y) >= ymin && h3->GetYaxis()->FindBin(y) <= ymax &&
                        h3->GetZaxis()->FindBin(z) >= zmin && h3->GetZaxis()->FindBin(z) <= zmax )
                   {
                      if ( defaultEqualOptions & cmpOptPrint )
                         std::cout << "Filling (" << x << "," << y << "," << z << ")!" << std::endl;
-                     
+
                      h2XY->Fill(x,y);
                      h2XZ->Fill(x,z);
                      h2YX->Fill(y,x);
                      h2YZ->Fill(y,z);
                      h2ZX->Fill(z,x);
                      h2ZY->Fill(z,y);
-                     
+
                      h1X->Fill(x);
                      h1Y->Fill(y);
                      h1Z->Fill(z);
-                     
+
                      pe2XY->Fill(xc,yc,zc);
                      pe2XZ->Fill(xc,zc,yc);
                      pe2YX->Fill(yc,xc,zc);
                      pe2YZ->Fill(yc,zc,xc);
                      pe2ZX->Fill(zc,xc,yc);
                      pe2ZY->Fill(zc,yc,xc);
-                     
+
                      h2wXY->Fill(x,y,z);
                      h2wXZ->Fill(x,z,y);
                      h2wYX->Fill(y,x,z);
@@ -9005,7 +9005,7 @@ public:
                      pe1YZ->Fill(yc,zc);
                      pe1ZX->Fill(zc,xc);
                      pe1ZY->Fill(zc,yc);
-                     
+
                      hw1XY->Fill(x,y);
                      hw1XZ->Fill(x,z);
                      hw1YX->Fill(y,x);
@@ -9017,29 +9017,29 @@ public:
             }
          }
       }
-      
+
       h3->GetXaxis()->SetRange(xmin, xmax);
       h3->GetYaxis()->SetRange(ymin, ymax);
       h3->GetZaxis()->SetRange(zmin, zmax);
-      
+
       h2XY->GetXaxis()->SetRange(xmin, xmax);
       h2XY->GetYaxis()->SetRange(ymin, ymax);
-      
+
       h2XZ->GetXaxis()->SetRange(xmin, xmax);
       h2XZ->GetZaxis()->SetRange(zmin, zmax);
-      
+
       h2YX->GetYaxis()->SetRange(ymin, ymax);
       h2YX->GetXaxis()->SetRange(xmin, xmax);
-      
+
       h2YZ->GetYaxis()->SetRange(ymin, ymax);
       h2YZ->GetZaxis()->SetRange(zmin, zmax);
-      
+
       h2ZX->GetZaxis()->SetRange(zmin, zmax);
       h2ZX->GetXaxis()->SetRange(xmin, xmax);
-      
+
       h2ZY->GetZaxis()->SetRange(zmin, zmax);
       h2ZY->GetYaxis()->SetRange(ymin, ymax);
-      
+
       h1X->GetXaxis()->SetRange(xmin, xmax);
       h1Y->GetXaxis()->SetRange(ymin, ymax);
       h1Z->GetXaxis()->SetRange(zmin, zmax);
@@ -9056,13 +9056,13 @@ public:
 
       buildWithWeights = false;
    }
-   
+
 
    int compareHistograms()
    {
       int status = 0;
       int options = 0;
-      
+
       // TH2 derived from TH3
       options = cmpOptStats;
       status += equals("TH3 -> XY", h2XY, (TH2D*) h3->Project3D("yx"), options);
@@ -9074,7 +9074,7 @@ public:
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
          std::cout << "----------------------------------------------" << std::endl;
-      
+
       // TH1 derived from TH3
       options = cmpOptStats;
       TH1D* tmp1 = 0;
@@ -9094,7 +9094,7 @@ public:
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
          std::cout << "----------------------------------------------" << std::endl;
-      
+
       // TH1 derived from h2XY
       options = cmpOptStats;
       status += equals("TH2XY -> X", h1X, (TH1D*) h2XY->ProjectionX("x"), options);
@@ -9119,21 +9119,21 @@ public:
          std::cout << "----------------------------------------------" << std::endl;
 
 
-      // in the following comparison with profiles we need to re-calculate statistics using bin centers 
+      // in the following comparison with profiles we need to re-calculate statistics using bin centers
       // on the reference histograms
-      if (centre_deviation != 0) { 
-         h2XY->ResetStats();      
+      if (centre_deviation != 0) {
+         h2XY->ResetStats();
          h2YX->ResetStats();
-         h2XZ->ResetStats();      
+         h2XZ->ResetStats();
          h2ZX->ResetStats();
-         h2YZ->ResetStats();      
+         h2YZ->ResetStats();
          h2ZY->ResetStats();
 
-         h1X->ResetStats(); 
-         h1Y->ResetStats(); 
-         h1Z->ResetStats(); 
+         h1X->ResetStats();
+         h1Y->ResetStats();
+         h1Z->ResetStats();
       }
-      
+
       // Now the histograms coming from the Profiles!
       options = cmpOptStats;
       status += equals("TH3 -> PBXY", h2XY, (TH2D*) h3->Project3DProfile("yx UF OF")->ProjectionXY("1", "B"), options  );
@@ -9145,7 +9145,7 @@ public:
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
          std::cout << "----------------------------------------------" << std::endl;
-      
+
       // test directly project3dprofile
       options = cmpOptStats;
       status += equals("TH3 -> PXY", (TH2D*) pe2XY, (TH2D*) h3->Project3DProfile("yx  UF OF"), options);
@@ -9157,7 +9157,7 @@ public:
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
          std::cout << "----------------------------------------------" << std::endl;
-      
+
       // test option E of ProjectionXY
       options = 0;
       status += equals("TH3 -> PEXY", (TH2D*) pe2XY, (TH2D*) h3->Project3DProfile("yx  UF OF")->ProjectionXY("1", "E"), options);
@@ -9169,9 +9169,9 @@ public:
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
          std::cout << "----------------------------------------------" << std::endl;
-      
+
       // test option W of ProjectionXY
-      
+
       // The error fails when built with weights. It is not properly calculated
       if ( buildWithWeights ) options = cmpOptNoError;
       status += equals("TH3 -> PWXY", (TH2D*) h2wXY, (TH2D*) h3->Project3DProfile("yx  UF OF")->ProjectionXY("1", "W"), options);
@@ -9183,10 +9183,10 @@ public:
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
          std::cout << "----------------------------------------------" << std::endl;
-      
+
       // test 1D histograms
       options = cmpOptStats;
-      // ProfileX re-use the same histo if sme name is given. 
+      // ProfileX re-use the same histo if sme name is given.
       // need to give a diffrent name for each projectino (x,y,Z) otherwise we end-up in different bins
       // t.b.d: ProfileX make a new histo if non compatible
       status += equals("TH2XY -> PBX", h1X, (TH1D*) h2XY->ProfileX("PBX", 0,h2XY->GetYaxis()->GetNbins()+1)->ProjectionX("1", "B"),options  );
@@ -9205,7 +9205,7 @@ public:
       if ( defaultEqualOptions & cmpOptPrint )
          std::cout << "----------------------------------------------" << std::endl;
 
-      // 1D testing direct profiles 
+      // 1D testing direct profiles
       options = cmpOptStats;
       status += equals("TH2XY -> PX", pe1XY, (TH1D*) h2XY->ProfileX("PX", 0,h2XY->GetYaxis()->GetNbins()+1), options);
       status += equals("TH2XY -> PY", pe1YX, (TH1D*) h2XY->ProfileY("PY", 0,h2XY->GetXaxis()->GetNbins()+1), options);
@@ -9225,29 +9225,29 @@ public:
 
       // 1D testing e profiles
       options = 0;
-      status += equals("TH2XY -> PEX", pe1XY, 
+      status += equals("TH2XY -> PEX", pe1XY,
                        (TH1D*) h2XY->ProfileX("PEX", 0,h2XY->GetYaxis()->GetNbins()+1)->ProjectionX("1", "E"), options);
-      status += equals("TH2XY -> PEY", pe1YX, 
+      status += equals("TH2XY -> PEY", pe1YX,
                        (TH1D*) h2XY->ProfileY("PEY", 0,h2XY->GetXaxis()->GetNbins()+1)->ProjectionX("1", "E"), options);
-      status += equals("TH2XZ -> PEX", pe1XZ, 
+      status += equals("TH2XZ -> PEX", pe1XZ,
                        (TH1D*) h2XZ->ProfileX("PEX", 0,h2XZ->GetYaxis()->GetNbins()+1)->ProjectionX("1", "E"), options);
-      status += equals("TH2XZ -> PEZ", pe1ZX, 
+      status += equals("TH2XZ -> PEZ", pe1ZX,
                        (TH1D*) h2XZ->ProfileY("PEZ", 0,h2XZ->GetXaxis()->GetNbins()+1)->ProjectionX("1", "E"), options);
-      status += equals("TH2YX -> PEY", pe1YX, 
+      status += equals("TH2YX -> PEY", pe1YX,
                        (TH1D*) h2YX->ProfileX("PEY", 0,h2YX->GetYaxis()->GetNbins()+1)->ProjectionX("1", "E"), options);
-      status += equals("TH2YX -> PEX", pe1XY, 
+      status += equals("TH2YX -> PEX", pe1XY,
                        (TH1D*) h2YX->ProfileY("PEX", 0,h2YX->GetXaxis()->GetNbins()+1)->ProjectionX("1", "E"), options);
-      status += equals("TH2YZ -> PEY", pe1YZ, 
+      status += equals("TH2YZ -> PEY", pe1YZ,
                        (TH1D*) h2YZ->ProfileX("PEY", 0,h2YZ->GetYaxis()->GetNbins()+1)->ProjectionX("1", "E"), options);
-      status += equals("TH2YZ -> PEZ", pe1ZY, 
+      status += equals("TH2YZ -> PEZ", pe1ZY,
                        (TH1D*) h2YZ->ProfileY("PEZ", 0,h2YZ->GetXaxis()->GetNbins()+1)->ProjectionX("1", "E"), options);
-      status += equals("TH2ZX -> PEZ", pe1ZX, 
+      status += equals("TH2ZX -> PEZ", pe1ZX,
                        (TH1D*) h2ZX->ProfileX("PEZ", 0,h2ZX->GetYaxis()->GetNbins()+1)->ProjectionX("1", "E"), options);
-      status += equals("TH2ZX -> PEX", pe1XZ, 
+      status += equals("TH2ZX -> PEX", pe1XZ,
                        (TH1D*) h2ZX->ProfileY("PEX", 0,h2ZX->GetXaxis()->GetNbins()+1)->ProjectionX("1", "E"), options);
-      status += equals("TH2ZY -> PEZ", pe1ZY, 
+      status += equals("TH2ZY -> PEZ", pe1ZY,
                        (TH1D*) h2ZY->ProfileX("PEZ", 0,h2ZY->GetYaxis()->GetNbins()+1)->ProjectionX("1", "E"), options);
-      status += equals("TH2ZY -> PEY", pe1YZ, 
+      status += equals("TH2ZY -> PEY", pe1YZ,
                        (TH1D*) h2ZY->ProfileY("PEY", 0,h2ZY->GetXaxis()->GetNbins()+1)->ProjectionX("1", "E"), options);
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
@@ -9256,29 +9256,29 @@ public:
       // 1D testing w profiles
       // The error is not properly propagated when build with weights :S
       if ( buildWithWeights ) options = cmpOptNoError;
-      status += equals("TH2XY -> PWX", hw1XY, 
+      status += equals("TH2XY -> PWX", hw1XY,
                        (TH1D*) h2XY->ProfileX("PWX", 0,h2XY->GetYaxis()->GetNbins()+1)->ProjectionX("1", "W"), options);
-      status += equals("TH2XY -> PWY", hw1YX, 
+      status += equals("TH2XY -> PWY", hw1YX,
                        (TH1D*) h2XY->ProfileY("PWY", 0,h2XY->GetXaxis()->GetNbins()+1)->ProjectionX("1", "W"), options);
-      status += equals("TH2XZ -> PWX", hw1XZ, 
+      status += equals("TH2XZ -> PWX", hw1XZ,
                        (TH1D*) h2XZ->ProfileX("PWX", 0,h2XZ->GetYaxis()->GetNbins()+1)->ProjectionX("1", "W"), options);
-      status += equals("TH2XZ -> PWZ", hw1ZX, 
+      status += equals("TH2XZ -> PWZ", hw1ZX,
                        (TH1D*) h2XZ->ProfileY("PWZ", 0,h2XZ->GetXaxis()->GetNbins()+1)->ProjectionX("1", "W"), options);
-      status += equals("TH2YX -> PWY", hw1YX, 
+      status += equals("TH2YX -> PWY", hw1YX,
                        (TH1D*) h2YX->ProfileX("PWY", 0,h2YX->GetYaxis()->GetNbins()+1)->ProjectionX("1", "W"), options);
-      status += equals("TH2YX -> PWX", hw1XY, 
+      status += equals("TH2YX -> PWX", hw1XY,
                        (TH1D*) h2YX->ProfileY("PWX", 0,h2YX->GetXaxis()->GetNbins()+1)->ProjectionX("1", "W"), options);
-      status += equals("TH2YZ -> PWY", hw1YZ, 
+      status += equals("TH2YZ -> PWY", hw1YZ,
                        (TH1D*) h2YZ->ProfileX("PWY", 0,h2YZ->GetYaxis()->GetNbins()+1)->ProjectionX("1", "W"), options);
-      status += equals("TH2YZ -> PWZ", hw1ZY, 
+      status += equals("TH2YZ -> PWZ", hw1ZY,
                        (TH1D*) h2YZ->ProfileY("PWZ", 0,h2YZ->GetXaxis()->GetNbins()+1)->ProjectionX("1", "W"), options);
-      status += equals("TH2ZX -> PWZ", hw1ZX, 
+      status += equals("TH2ZX -> PWZ", hw1ZX,
                        (TH1D*) h2ZX->ProfileX("PWZ", 0,h2ZX->GetYaxis()->GetNbins()+1)->ProjectionX("1", "W"), options);
-      status += equals("TH2ZX -> PWX", hw1XZ, 
+      status += equals("TH2ZX -> PWX", hw1XZ,
                        (TH1D*) h2ZX->ProfileY("PWX", 0,h2ZX->GetXaxis()->GetNbins()+1)->ProjectionX("1", "W"), options);
-      status += equals("TH2ZY -> PWZ", hw1ZY, 
+      status += equals("TH2ZY -> PWZ", hw1ZY,
                        (TH1D*) h2ZY->ProfileX("PWZ", 0,h2ZY->GetYaxis()->GetNbins()+1)->ProjectionX("1", "W"), options);
-      status += equals("TH2ZY -> PWY", hw1YZ, 
+      status += equals("TH2ZY -> PWY", hw1YZ,
                        (TH1D*) h2ZY->ProfileY("PWY", 0,h2ZY->GetXaxis()->GetNbins()+1)->ProjectionX("1", "W"), options);
 
       options = 0;
@@ -9287,7 +9287,7 @@ public:
 
 
       // do THNsparse after Profile because reference histograms need to have a ResetStats
-      // the statistics coming from a projected THNsparse has been computed using the bin centers 
+      // the statistics coming from a projected THNsparse has been computed using the bin centers
 
       // TH2 derived from STH3
       options = cmpOptStats;
@@ -9295,15 +9295,15 @@ public:
       status += equals("STH3 -> XZ", h2XZ, (TH2D*) s3->Projection(2,0), options);
       status += equals("STH3 -> YX", h2YX, (TH2D*) s3->Projection(0,1), options);
       status += equals("STH3 -> YZ", h2YZ, (TH2D*) s3->Projection(2,1), options);
-      status += equals("STH3 -> ZX", h2ZX, (TH2D*) s3->Projection(0,2), options); 
-      status += equals("STH3 -> ZY", h2ZY, (TH2D*) s3->Projection(1,2), options); 
+      status += equals("STH3 -> ZX", h2ZX, (TH2D*) s3->Projection(0,2), options);
+      status += equals("STH3 -> ZY", h2ZY, (TH2D*) s3->Projection(1,2), options);
 
       status += equals("THn3 -> XY", h2XY, (TH2D*) n3->Projection(1,0), options);
       status += equals("THn3 -> XZ", h2XZ, (TH2D*) n3->Projection(2,0), options);
       status += equals("THn3 -> YX", h2YX, (TH2D*) n3->Projection(0,1), options);
       status += equals("THn3 -> YZ", h2YZ, (TH2D*) n3->Projection(2,1), options);
-      status += equals("THn3 -> ZX", h2ZX, (TH2D*) n3->Projection(0,2), options); 
-      status += equals("THn3 -> ZY", h2ZY, (TH2D*) n3->Projection(1,2), options); 
+      status += equals("THn3 -> ZX", h2ZX, (TH2D*) n3->Projection(0,2), options);
+      status += equals("THn3 -> ZY", h2ZY, (TH2D*) n3->Projection(1,2), options);
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
          std::cout << "----------------------------------------------" << std::endl;
@@ -9321,36 +9321,36 @@ public:
       if ( defaultEqualOptions & cmpOptPrint )
          std::cout << "----------------------------------------------" << std::endl;
 
-      
-      
+
+
 
       return status;
    }
 
 
-   void buildProfiles() { 
+   void buildProfiles() {
 
-      if (buildWithWeights) { 
-         p3->Sumw2(); 
-         p2XY->Sumw2();  p2YX->Sumw2(); p2YZ->Sumw2(); 
-         p2XZ->Sumw2();  p2ZX->Sumw2(); p2ZY->Sumw2(); 
-         p1X->Sumw2(); p1Y->Sumw2(); p1Z->Sumw2(); 
+      if (buildWithWeights) {
+         p3->Sumw2();
+         p2XY->Sumw2();  p2YX->Sumw2(); p2YZ->Sumw2();
+         p2XZ->Sumw2();  p2ZX->Sumw2(); p2ZY->Sumw2();
+         p1X->Sumw2(); p1Y->Sumw2(); p1Z->Sumw2();
       }
 
 
-      // use a different way to fill the histogram 
-      for (int i = 0; i < 100000; ++i) { 
+      // use a different way to fill the histogram
+      for (int i = 0; i < 100000; ++i) {
 
-         // use in range in X but only overflow in Y and underflow/overflow in Z 
+         // use in range in X but only overflow in Y and underflow/overflow in Z
          double x = gRandom->Uniform(lower_limitX, upper_limitX );
          double y = gRandom->Uniform(lower_limitY, upper_limitY+2.);
          double z = gRandom->Uniform(lower_limitZ-1, upper_limitZ+1);
          double u = TMath::Gaus(x,0,3)*TMath::Gaus(y,3,5)*TMath::Gaus(z,-3,10);
-      
-         double w = 1; 
+
+         double w = 1;
          if (buildWithWeights) w += x*x + (y-2)*(y-2) + (z+2)*(z+2);
-      
-         p3->Fill(x,y,z,u,w); 
+
+         p3->Fill(x,y,z,u,w);
 
          p2XY->Fill(x,y,u,w);
          p2YX->Fill(y,x,u,w);
@@ -9358,10 +9358,10 @@ public:
          p2ZX->Fill(z,x,u,w);
          p2YZ->Fill(y,z,u,w);
          p2ZY->Fill(z,y,u,w);
-         
+
          p1X->Fill(x,u,w);
          p1Y->Fill(y,u,w);
-         p1Z->Fill(z,u,w);         
+         p1Z->Fill(z,u,w);
 
       }
 
@@ -9384,7 +9384,7 @@ public:
    {
       int status = 0;
       int options = 0;
-      
+
       // TProfile2d derived from TProfile3d
       options = cmpOptStats;
       //options = cmpOptPrint;
@@ -9397,7 +9397,7 @@ public:
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
          cout << "----------------------------------------------" << endl;
-      
+
       // TProfile1 derived from TProfile2D from TProfile3D
       options = cmpOptStats;
       //options = cmpOptDebug;
@@ -9416,18 +9416,18 @@ public:
       delete tmp1; tmp1 = 0;
 
       return status;
-   } 
+   }
 };
 
 int stressHistogram()
 {
 #ifdef R__WIN32
-   // On windows there is an order of initialization problem that lead to 
-   // 'Int_t not being in the list of types when TProfile's TClass is 
+   // On windows there is an order of initialization problem that lead to
+   // 'Int_t not being in the list of types when TProfile's TClass is
    // initialized (via a call to IsA()->InheritsFrom(); on linux this is
    // not a problem because G__Base1 is initialized early; on windows with
    // root.exe this is not a problem because GetListOfType(kTRUE) is called
-   // via a call to TClass::GetClass induces by the initialization of the 
+   // via a call to TClass::GetClass induces by the initialization of the
    // plugin manager.
    gROOT->GetListOfTypes(kTRUE);
 #endif
@@ -9446,19 +9446,19 @@ int stressHistogram()
    // Test 1
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "**********************************\n"
-           << "       Test without weights       \n" 
+           << "       Test without weights       \n"
            << "**********************************\n"
            << std::endl;
 
 
-   TH1::SetDefaultSumw2(); 
-   // to avoid cases in chi2-test of profiles when error is zero  
+   TH1::SetDefaultSumw2();
+   // to avoid cases in chi2-test of profiles when error is zero
    TProfile::Approximate();
    TProfile2D::Approximate();
    TProfile3D::Approximate();
 
 
-   
+
    ProjectionTester* ht = new ProjectionTester();
    ht->buildHistograms();
    //Ht->buildHistograms(2,4,5,6,8,10);
@@ -9468,7 +9468,7 @@ int stressHistogram()
    printResult("Testing Histogram Projections without weights....................", status);
 
    ProjectionTester* htp = new ProjectionTester();
-   htp->buildProfiles(); 
+   htp->buildProfiles();
    status = htp->compareProfiles();
    GlobalStatus += status;
    delete htp;
@@ -9478,10 +9478,10 @@ int stressHistogram()
    // Test 3-4
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "**********************************\n"
-           << "        Test with weights         \n" 
+           << "        Test with weights         \n"
            << "**********************************\n"
            << std::endl;
-   
+
    ProjectionTester* ht2 = new ProjectionTester();
    ht2->buildHistogramsWithWeights();
    status = ht2->compareHistograms();
@@ -9496,7 +9496,7 @@ int stressHistogram()
    GlobalStatus += status;
    printResult("Testing Profile   Projections with weights.......................", status);
    delete htp2;
-   
+
    // Test 3
    // Range Tests
    const unsigned int numberOfRange = 3;
@@ -9504,7 +9504,7 @@ int stressHistogram()
                                                     testTH3toTH1,
                                                     testTH3toTH2
    };
-   struct TTestSuite rangeTestSuite = { numberOfRange, 
+   struct TTestSuite rangeTestSuite = { numberOfRange,
                                         "Projection with Range for Histograms and Profiles................",
                                         rangeTestPointer };
 
@@ -9515,17 +9515,17 @@ int stressHistogram()
                                                     testArrayRebin,         testArrayRebinProfile,
                                                     test2DRebin, test3DRebin, test2DRebinProfile,
                                                     testHnRebin1<THnD>,     testHnRebin1<THnSparseD>};
-   struct TTestSuite rebinTestSuite = { numberOfRebin, 
+   struct TTestSuite rebinTestSuite = { numberOfRebin,
                                         "Histogram Rebinning..............................................",
                                         rebinTestPointer };
 
    // Test 5
    // Add Tests
    const unsigned int numberOfAdds = 22;
-   pointer2Test addTestPointer[numberOfAdds] = { testAdd1,    testAddProfile1, 
+   pointer2Test addTestPointer[numberOfAdds] = { testAdd1,    testAddProfile1,
                                                  testAdd2,    testAddProfile2,
-                                                 testAdd3,   
-                                                 testAddVar1, testAddVarProf1, 
+                                                 testAdd3,
+                                                 testAddVar1, testAddVarProf1,
                                                  testAddVar2, testAddVarProf2,
                                                  testAddVar3,
                                                  testAdd2D3,
@@ -9537,7 +9537,7 @@ int stressHistogram()
                                                  testAddHn<THnSparseD>,
                                                  testAddHn<THnD>
    };
-   struct TTestSuite addTestSuite = { numberOfAdds, 
+   struct TTestSuite addTestSuite = { numberOfAdds,
                                       "Add tests for 1D, 2D and 3D Histograms and Profiles..............",
                                       addTestPointer };
 
@@ -9558,7 +9558,7 @@ int stressHistogram()
                                                           testMulFND2<THnD>,
                                                           testMulFND2<THnSparseD>
    };
-   struct TTestSuite multiplyTestSuite = { numberOfMultiply, 
+   struct TTestSuite multiplyTestSuite = { numberOfMultiply,
                                            "Multiply tests for 1D, 2D and 3D Histograms......................",
                                            multiplyTestPointer };
 
@@ -9574,7 +9574,7 @@ int stressHistogram()
                                                       testDivHn2<THnD>,
                                                       testDivHn2<THnSparseD>
    };
-   struct TTestSuite divideTestSuite = { numberOfDivide, 
+   struct TTestSuite divideTestSuite = { numberOfDivide,
                                          "Divide tests for 1D, 2D and 3D Histograms........................",
                                          divideTestPointer };
 
@@ -9586,10 +9586,10 @@ int stressHistogram()
    // Test 8
    // Copy Tests
    const unsigned int numberOfCopy = 26;
-   pointer2Test copyTestPointer[numberOfCopy] = { testAssign1D,             testAssignProfile1D, 
-                                                  testAssignVar1D,          testAssignProfileVar1D, 
-                                                  testCopyConstructor1D,    testCopyConstructorProfile1D, 
-                                                  testCopyConstructorVar1D, testCopyConstructorProfileVar1D, 
+   pointer2Test copyTestPointer[numberOfCopy] = { testAssign1D,             testAssignProfile1D,
+                                                  testAssignVar1D,          testAssignProfileVar1D,
+                                                  testCopyConstructor1D,    testCopyConstructorProfile1D,
+                                                  testCopyConstructorVar1D, testCopyConstructorProfileVar1D,
                                                   testClone1D,              testCloneProfile1D,
                                                   testCloneVar1D,           testCloneProfileVar1D,
                                                   testAssign2D,             testAssignProfile2D,
@@ -9600,7 +9600,7 @@ int stressHistogram()
                                                   testClone3D,              testCloneProfile3D,
                                                   testCloneHn<THnD>,        testCloneHn<THnSparseD>
    };
-   struct TTestSuite copyTestSuite = { numberOfCopy, 
+   struct TTestSuite copyTestSuite = { numberOfCopy,
                                        "Copy tests for 1D, 2D and 3D Histograms and Profiles.............",
                                        copyTestPointer };
 
@@ -9610,10 +9610,10 @@ int stressHistogram()
    pointer2Test readwriteTestPointer[numberOfReadwrite] = { testWriteRead1D,      testWriteReadProfile1D,
                                                             testWriteReadVar1D,   testWriteReadProfileVar1D,
                                                             testWriteRead2D,      testWriteReadProfile2D,
-                                                            testWriteRead3D,      testWriteReadProfile3D, 
+                                                            testWriteRead3D,      testWriteReadProfile3D,
                                                             testWriteReadHn<THnD>,testWriteReadHn<THnSparseD>
    };
-   struct TTestSuite readwriteTestSuite = { numberOfReadwrite, 
+   struct TTestSuite readwriteTestSuite = { numberOfReadwrite,
                                             "Read/Write tests for 1D, 2D and 3D Histograms and Profiles.......",
                                             readwriteTestPointer };
 
@@ -9640,14 +9640,14 @@ int stressHistogram()
                                                     testMerge3DLabelAllDiff,     testMergeProf3DLabelAllDiff,
                                                     testMerge1DDiff,             testMergeProf1DDiff,
                                                     testMerge2DDiff,             testMergeProf2DDiff,
-                                                    testMerge3DDiff,             testMergeProf3DDiff, 
-                                                    testMerge1DDiffEmpty,        testMerge2DDiffEmpty, 
-                                                    testMerge3DDiffEmpty,        testMergeProf1DDiffEmpty, 
+                                                    testMerge3DDiff,             testMergeProf3DDiff,
+                                                    testMerge1DDiffEmpty,        testMerge2DDiffEmpty,
+                                                    testMerge3DDiffEmpty,        testMergeProf1DDiffEmpty,
                                                     testMerge1DRebin,            testMerge2DRebin,
                                                     testMerge3DRebin,            testMerge1DRebinProf,
                                                     testMerge1DNoLimits
    };
-   struct TTestSuite mergeTestSuite = { numberOfMerge, 
+   struct TTestSuite mergeTestSuite = { numberOfMerge,
                                         "Merge tests for 1D, 2D and 3D Histograms and Profiles............",
                                         mergeTestPointer };
    // Test 11
@@ -9656,7 +9656,7 @@ int stressHistogram()
    pointer2Test labelTestPointer[numberOfLabel] = { testLabel, testLabel2DX, testLabel2DY,
                                                     testLabelsInflateProf1D
    };
-   struct TTestSuite labelTestSuite = { numberOfLabel, 
+   struct TTestSuite labelTestSuite = { numberOfLabel,
                                         "Label tests for 1D and 2D Histograms ............................",
                                         labelTestPointer };
 
@@ -9665,10 +9665,10 @@ int stressHistogram()
    const unsigned int numberOfInterpolation = 4;
    pointer2Test interpolationTestPointer[numberOfInterpolation] = { testInterpolation1D,
                                                                     testInterpolationVar1D,
-                                                                    testInterpolation2D, 
+                                                                    testInterpolation2D,
                                                                     testInterpolation3D
    };
-   struct TTestSuite interpolationTestSuite = { numberOfInterpolation, 
+   struct TTestSuite interpolationTestSuite = { numberOfInterpolation,
                                                 "Interpolation tests for Histograms...............................",
                                                 interpolationTestPointer };
 
@@ -9679,7 +9679,7 @@ int stressHistogram()
                                                     testScale2DProf,
                                                     testScale3DProf
    };
-   struct TTestSuite scaleTestSuite = { numberOfScale, 
+   struct TTestSuite scaleTestSuite = { numberOfScale,
                                         "Scale tests for Profiles.........................................",
                                         scaleTestPointer };
 
@@ -9690,7 +9690,7 @@ int stressHistogram()
                                                           testH2Integral,
                                                           testH3Integral
    };
-   struct TTestSuite integralTestSuite = { numberOfIntegral, 
+   struct TTestSuite integralTestSuite = { numberOfIntegral,
                                            "Integral tests for Histograms....................................",
                                            integralTestPointer };
 
@@ -9701,7 +9701,7 @@ int stressHistogram()
                                                                 testConversion2D,
                                                                 testConversion3D,
    };
-   struct TTestSuite conversionsTestSuite = { numberOfConversions, 
+   struct TTestSuite conversionsTestSuite = { numberOfConversions,
                                               "TH1-THn[Sparse] Conversion tests.................................",
                                               conversionsTestPointer };
 
@@ -9711,14 +9711,14 @@ int stressHistogram()
    pointer2Test fillDataTestPointer[numberOfFillData] = { testSparseData1DFull,  testSparseData1DSparse,
                                                           testSparseData2DFull,  testSparseData2DSparse,
                                                           testSparseData3DFull,  testSparseData3DSparse,
-                                                          testBinDataData1D, 
+                                                          testBinDataData1D,
                                                           testBinDataData2D,
                                                           testBinDataData3D,
                                                           testBinDataData1DInt,
                                                           testBinDataData2DInt,
                                                           testBinDataData3DInt,
    };
-   struct TTestSuite fillDataTestSuite = { numberOfFillData, 
+   struct TTestSuite fillDataTestSuite = { numberOfFillData,
                                            "FillData tests for Histograms and Sparses........................",
                                            fillDataTestPointer };
 
@@ -9762,10 +9762,10 @@ int stressHistogram()
                                                         testRefRead3D,  testRefReadProf3D,
                                                         testRefReadSparse
    };
-   struct TTestSuite refReadTestSuite = { numberOfRefRead, 
+   struct TTestSuite refReadTestSuite = { numberOfRefRead,
                                           "Reference File Read for Histograms and Profiles..................",
                                           refReadTestPointer };
-   
+
 
    if ( refFileOption == refFileWrite ) {
       refFile = TFile::Open(refFileName, "RECREATE");
@@ -9791,7 +9791,7 @@ int stressHistogram()
    bm.Print("stressHistogram");
    const double reftime = 123; // needs to be updated // ref time on  pcbrun4
    double rootmarks = 900 * reftime / bm.GetCpuTime("stressHistogram");
-   std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t" 
+   std::cout << " ROOTMARKS = " << rootmarks << " ROOT version: " << gROOT->GetVersion() << "\t"
              << gROOT->GetGitBranch() << "@" << gROOT->GetGitCommit() << std::endl;
    std::cout <<"****************************************************************************\n";
 
@@ -9823,14 +9823,14 @@ void FillVariableRange(Double_t v[numberOfBins+1])
 {
    //Double_t v[numberOfBins+1];
    Double_t minLimit = (maxRange-minRange)  / (numberOfBins*2);
-   Double_t maxLimit = (maxRange-minRange)*4/ (numberOfBins);   
+   Double_t maxLimit = (maxRange-minRange)*4/ (numberOfBins);
    v[0] = 0;
    for ( Int_t i = 1; i < numberOfBins + 1; ++i )
    {
       Double_t limit = r.Uniform(minLimit, maxLimit);
       v[i] = v[i-1] + limit;
    }
-   
+
    Double_t k = (maxRange-minRange)/v[numberOfBins];
    for ( Int_t i = 0; i < numberOfBins + 1; ++i )
    {
@@ -9865,9 +9865,9 @@ int equals(const char* msg, THnBase* h1, THnBase* h2, int options, double ERRORL
    bool print = options & cmpOptPrint;
    bool debug = options & cmpOptDebug;
    bool compareError = ! (options & cmpOptNoError);
-   
+
    int differents = 0;
-   
+
    for ( int i = 0; i <= h1->GetAxis(0)->GetNbins() + 1; ++i )
       for ( int j = 0; j <= h1->GetAxis(1)->GetNbins() + 1; ++j )
          for ( int h = 0; h <= h1->GetAxis(2)->GetNbins() + 1; ++h )
@@ -9875,14 +9875,14 @@ int equals(const char* msg, THnBase* h1, THnBase* h2, int options, double ERRORL
             Double_t x = h1->GetAxis(0)->GetBinCenter(i);
             Double_t y = h1->GetAxis(1)->GetBinCenter(j);
             Double_t z = h1->GetAxis(2)->GetBinCenter(h);
-            
+
             Int_t bin[3] = {i, j, h};
-            
+
             if (debug) {
                std::cout << equals(x, h2->GetAxis(0)->GetBinCenter(i), ERRORLIMIT) << " "
                     << equals(y, h2->GetAxis(1)->GetBinCenter(j), ERRORLIMIT) << " "
                     << equals(z, h2->GetAxis(2)->GetBinCenter(h), ERRORLIMIT) << " "
-                    << "[" << x << "," << y << "," << z << "]: " 
+                    << "[" << x << "," << y << "," << z << "]: "
                     << h1->GetBinContent(bin) << " +/- " << h1->GetBinError(bin) << " | "
                     << h2->GetBinContent(bin) << " +/- " << h2->GetBinError(bin)
                     << " | " << equals(h1->GetBinContent(bin), h2->GetBinContent(bin), ERRORLIMIT)
@@ -9898,16 +9898,16 @@ int equals(const char* msg, THnBase* h1, THnBase* h2, int options, double ERRORL
             if ( compareError )
                differents += equals(h1->GetBinError(bin)  , h2->GetBinError(bin), ERRORLIMIT);
          }
-   
+
    // Statistical tests:
    // No statistical tests possible for THnBase so far...
 //    if ( compareStats )
 //       differents += compareStatistics( h1, h2, debug, ERRORLIMIT);
-   
+
    if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
-   
+
    delete h2;
-   
+
    return differents;
 }
 
@@ -9917,7 +9917,7 @@ int equals(const char* msg, THnBase* s, TH1* h2, int options, double ERRORLIMIT)
    bool print = options & cmpOptPrint;
    bool debug = options & cmpOptDebug;
    bool compareError = ! (options & cmpOptNoError);
-   
+
    int differents = 0;
 
    const int dim ( s->GetNdimensions() );
@@ -9929,13 +9929,13 @@ int equals(const char* msg, THnBase* s, TH1* h2, int options, double ERRORLIMIT)
          return 1;
    } else if ( dim != 1 )
       return 1;
-              
+
    TArray* array = dynamic_cast<TArray*>(h2);
    if ( !array )
       Fatal( "equals(const char* msg, THnBase* s, TH1* h2, int options, double ERRORLIMIT)" ,"NO ARRAY!");
 
    Int_t* coord = new Int_t[3];
-   for (Long64_t i = 0; i < s->GetNbins(); ++i) 
+   for (Long64_t i = 0; i < s->GetNbins(); ++i)
    {
       Double_t v1 = s->GetBinContent(i, coord);
       Double_t err1 = s->GetBinError(coord);
@@ -9949,13 +9949,13 @@ int equals(const char* msg, THnBase* s, TH1* h2, int options, double ERRORLIMIT)
          differents += equals(err1  , err2, ERRORLIMIT);
    }
 
-   for (Long64_t i = 0; i < array->GetSize(); ++i) 
+   for (Long64_t i = 0; i < array->GetSize(); ++i)
    {
       h2->GetBinXYZ(i, coord[0], coord[1], coord[2]);
-      
+
       Double_t v1 = s->GetBinContent(coord);
       Double_t err1 = s->GetBinError(coord);
-      
+
       Double_t v2 = h2->GetBinContent(i);
       Double_t err2 = h2->GetBinError(i);
 
@@ -9965,10 +9965,10 @@ int equals(const char* msg, THnBase* s, TH1* h2, int options, double ERRORLIMIT)
    }
 
    if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
-   
+
    delete h2;
-   
-   return differents;  
+
+   return differents;
 }
 
 int equals(const char* msg, TH3D* h1, TH3D* h2, int options, double ERRORLIMIT)
@@ -9978,13 +9978,13 @@ int equals(const char* msg, TH3D* h1, TH3D* h2, int options, double ERRORLIMIT)
    bool debug = options & cmpOptDebug;
    bool compareError = ! (options & cmpOptNoError);
    bool compareStats = options & cmpOptStats;
-   
+
    int differents = ( h1 == h2 ); // Check they are not the same histogram!
    if (debug) {
       std::cout << static_cast<void*>(h1) << " " << static_cast<void*>(h2) << " "
            << (h1 == h2 ) << " " << differents << std::endl;
    }
-   
+
    for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
       for ( int j = 0; j <= h1->GetNbinsY() + 1; ++j )
          for ( int h = 0; h <= h1->GetNbinsZ() + 1; ++h )
@@ -9992,13 +9992,13 @@ int equals(const char* msg, TH3D* h1, TH3D* h2, int options, double ERRORLIMIT)
          Double_t x = h1->GetXaxis()->GetBinCenter(i);
          Double_t y = h1->GetYaxis()->GetBinCenter(j);
          Double_t z = h1->GetZaxis()->GetBinCenter(h);
-         
+
          if (debug)
          {
             std::cout << equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT) << " "
                  << equals(y, h2->GetYaxis()->GetBinCenter(j), ERRORLIMIT) << " "
                  << equals(z, h2->GetZaxis()->GetBinCenter(h), ERRORLIMIT) << " "
-                 << "[" << x << "," << y << "," << z << "]: " 
+                 << "[" << x << "," << y << "," << z << "]: "
                  << h1->GetBinContent(i,j,h) << " +/- " << h1->GetBinError(i,j,h) << " | "
                  << h2->GetBinContent(i,j,h) << " +/- " << h2->GetBinError(i,j,h)
                  << " | " << equals(h1->GetBinContent(i,j,h), h2->GetBinContent(i,j,h), ERRORLIMIT)
@@ -10014,15 +10014,15 @@ int equals(const char* msg, TH3D* h1, TH3D* h2, int options, double ERRORLIMIT)
          if ( compareError )
             differents += (bool) equals(h1->GetBinError(i,j,h)  , h2->GetBinError(i,j,h), ERRORLIMIT);
       }
-   
+
    // Statistical tests:
    if ( compareStats )
       differents += compareStatistics( h1, h2, debug, ERRORLIMIT);
-   
+
    if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
-   
+
    delete h2;
-   
+
    return differents;
 }
 
@@ -10033,7 +10033,7 @@ int equals(const char* msg, TH2D* h1, TH2D* h2, int options, double ERRORLIMIT)
    bool debug = options & cmpOptDebug;
    bool compareError = ! (options & cmpOptNoError);
    bool compareStats = options & cmpOptStats;
-   
+
    int differents = ( h1 == h2 ); // Check they are not the same histogram!
    if (debug) {
       std::cout << static_cast<void*>(h1) << " " << static_cast<void*>(h2) << " "
@@ -10045,12 +10045,12 @@ int equals(const char* msg, TH2D* h1, TH2D* h2, int options, double ERRORLIMIT)
       {
          Double_t x = h1->GetXaxis()->GetBinCenter(i);
          Double_t y = h1->GetYaxis()->GetBinCenter(j);
-         
+
          if (debug)
          {
             std::cout << equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT) << " "
                  << equals(y, h2->GetYaxis()->GetBinCenter(j), ERRORLIMIT) << " "
-                 << "[" << x << "," << y << "]: " 
+                 << "[" << x << "," << y << "]: "
                  << h1->GetBinContent(i,j) << " +/- " << h1->GetBinError(i,j) << " | "
                  << h2->GetBinContent(i,j) << " +/- " << h2->GetBinError(i,j)
                  << " | " << equals(h1->GetBinContent(i,j), h2->GetBinContent(i,j), ERRORLIMIT)
@@ -10065,15 +10065,15 @@ int equals(const char* msg, TH2D* h1, TH2D* h2, int options, double ERRORLIMIT)
          if ( compareError )
             differents += (bool) equals(h1->GetBinError(i,j)  , h2->GetBinError(i,j), ERRORLIMIT);
       }
-   
+
    // Statistical tests:
    if ( compareStats )
       differents += compareStatistics( h1, h2, debug, ERRORLIMIT);
-   
+
    if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
-   
+
    delete h2;
-   
+
    return differents;
 }
 
@@ -10094,7 +10094,7 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
    // check axis
 
    differents += (bool) equals(h1->GetXaxis()->GetNbins() , h2->GetXaxis()->GetNbins() );
-   if (debug) { 
+   if (debug) {
       cout << "Nbins  = " << h1->GetXaxis()->GetNbins() << " |  " <<  h2->GetXaxis()->GetNbins() << " | " << differents << std::endl;
    }
 
@@ -10107,21 +10107,21 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
    if (debug) {
       cout << "Xmax   = "  << h1->GetXaxis()->GetXmax() << " |  " <<  h2->GetXaxis()->GetXmax() << endl;
    }
-   
+
    for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
    {
       Double_t x = h1->GetXaxis()->GetBinCenter(i);
 
       differents += (bool) equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT);
       differents += (bool) equals(h1->GetBinContent(i), h2->GetBinContent(i), ERRORLIMIT);
-      
+
       if ( compareError )
          differents += (bool) equals(h1->GetBinError(i),   h2->GetBinError(i), ERRORLIMIT);
 
       if ( debug )
       {
          std::cout << equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT)
-              << " [" << x << "]: " 
+              << " [" << x << "]: "
               << h1->GetBinContent(i) << " +/- " << h1->GetBinError(i) << " | "
               << h2->GetBinContent(i) << " +/- " << h2->GetBinError(i)
               << " | " << equals(h1->GetBinContent(i), h2->GetBinContent(i), ERRORLIMIT)
@@ -10130,16 +10130,16 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
               << std::endl;
       }
    }
-   
+
    // Statistical tests:
    if ( compareStats )
       differents += compareStatistics( h1, h2, debug, ERRORLIMIT);
-   
+
    if ( print || debug ) std::cout << msg << ": \t" << (differents?"FAILED":"OK") << std::endl;
-   
+
    delete h2;
-   
-   return differents;      
+
+   return differents;
 }
 
 int equals(Double_t n1, Double_t n2, double ERRORLIMIT)
@@ -10155,49 +10155,49 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
    int pr = std::cout.precision(12);
 
 
-   int precLevel = gErrorIgnoreLevel; 
+   int precLevel = gErrorIgnoreLevel;
    // switch off Info mesaage from chi2 test
-   if (!debug) gErrorIgnoreLevel = 1001; 
-            
-   if (debug) h2->Print(); 
-   
+   if (!debug) gErrorIgnoreLevel = 1001;
+
+   if (debug) h2->Print();
+
    std::string option = "WW OF UF";
-   const char * opt = option.c_str(); 
+   const char * opt = option.c_str();
 
    double chi_12 = h1->Chi2Test(h2, opt);
    double chi_21 = h2->Chi2Test(h1, opt);
 
    differents += (bool) equals(chi_12, 1, ERRORLIMIT);
-   differents += (bool) equals(chi_21, 1, ERRORLIMIT);  
+   differents += (bool) equals(chi_21, 1, ERRORLIMIT);
    differents += (bool) equals(chi_12, chi_21, ERRORLIMIT);
    if ( debug )
-      std::cout << "Chi2Test " << chi_12 << " " <<  chi_21 
+      std::cout << "Chi2Test " << chi_12 << " " <<  chi_21
            << " | " << differents
            << std::endl;
 
-   if (!debug) gErrorIgnoreLevel = precLevel; 
+   if (!debug) gErrorIgnoreLevel = precLevel;
 
    // Mean
    differents += (bool) equals(h1->GetMean(1), h2->GetMean(1), ERRORLIMIT);
    if ( debug )
-      std::cout << "Mean: " << h1->GetMean(1) << " " << h2->GetMean(1) 
-           << " | " << fabs( h1->GetMean(1) - h2->GetMean(1) ) 
+      std::cout << "Mean: " << h1->GetMean(1) << " " << h2->GetMean(1)
+           << " | " << fabs( h1->GetMean(1) - h2->GetMean(1) )
            << " " << differents
            << std::endl;
-   
+
    // RMS
    differents += (bool) equals( h1->GetRMS(1), h2->GetRMS(1), ERRORLIMIT);
    if ( debug )
-      std::cout << "RMS: " << h1->GetRMS(1) << " " << h2->GetRMS(1) 
-           << " | " << fabs( h1->GetRMS(1) - h2->GetRMS(1) ) 
+      std::cout << "RMS: " << h1->GetRMS(1) << " " << h2->GetRMS(1)
+           << " | " << fabs( h1->GetRMS(1) - h2->GetRMS(1) )
            << " " << differents
-           << std::endl;  
+           << std::endl;
 
    // Number of Entries
    // check if is an unweighted histogram compare entries and  effective entries
    // otherwise only effective entries since entries do not make sense for an unweighted histogram
    // to check if is weighted - check if sum of weights == effective entries
-//   if (h1->GetEntries() == h1->GetEffectiveEntries() ) {  
+//   if (h1->GetEntries() == h1->GetEffectiveEntries() ) {
    double stats1[TH1::kNstat];
    h1->GetStats(stats1);
    double stats2[TH1::kNstat];
@@ -10206,29 +10206,29 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
    differents += (bool) equals( stats1[0], stats2[0], 100*ERRORLIMIT);
    if ( debug )
       std::cout << "Sum Of Weigths: " << stats1[0] << " " << stats2[0]
-           << " | " << fabs( stats1[0] - stats2[0] ) 
+           << " | " << fabs( stats1[0] - stats2[0] )
            << " " << differents
-           << std::endl;  
+           << std::endl;
 
-   if (TMath::AreEqualRel(stats1[0], h1->GetEffectiveEntries() , 1.E-12) ) { 
+   if (TMath::AreEqualRel(stats1[0], h1->GetEffectiveEntries() , 1.E-12) ) {
       // unweighted histograms - check also number of entries
       differents += (bool) equals( h1->GetEntries(), h2->GetEntries(), 100*ERRORLIMIT);
       if ( debug )
-         std::cout << "Entries: " << h1->GetEntries() << " " << h2->GetEntries() 
-              << " | " << fabs( h1->GetEntries() - h2->GetEntries() ) 
+         std::cout << "Entries: " << h1->GetEntries() << " " << h2->GetEntries()
+              << " | " << fabs( h1->GetEntries() - h2->GetEntries() )
               << " " << differents
-              << std::endl;  
+              << std::endl;
    }
-   
+
    // Number of Effective Entries
    differents += (bool) equals( h1->GetEffectiveEntries(), h2->GetEffectiveEntries(), 100*ERRORLIMIT);
    if ( debug )
-      std::cout << "Eff Entries: " << h1->GetEffectiveEntries() << " " << h2->GetEffectiveEntries() 
-           << " | " << fabs( h1->GetEffectiveEntries() - h2->GetEffectiveEntries() ) 
+      std::cout << "Eff Entries: " << h1->GetEffectiveEntries() << " " << h2->GetEffectiveEntries()
+           << " | " << fabs( h1->GetEffectiveEntries() - h2->GetEffectiveEntries() )
            << " " << differents
-           << std::endl;  
+           << std::endl;
 
-   std::cout.precision(pr);   
+   std::cout.precision(pr);
 
    return differents;
 }
@@ -10242,8 +10242,8 @@ int main(int argc, char** argv)
    if ( __DRAW__ )
       theApp = new TApplication("App",&argc,argv);
 
-   if (argc > 1) { 
-      // for changing printing option (0 default, 1 print all test, 2 debug) 
+   if (argc > 1) {
+      // for changing printing option (0 default, 1 print all test, 2 debug)
       defaultEqualOptions = atoi(argv[1] );
    }
 

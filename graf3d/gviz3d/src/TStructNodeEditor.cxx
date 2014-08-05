@@ -25,12 +25,12 @@ ClassImp(TStructNodeEditor)
 
 //________________________________________________________________________
 //////////////////////////////////////////////////////////////////////////
-// 
-// TStructNodeEditor is an editor for changing node attributes such as 
-// maximum numbers of level or maximum number of objects diplayed if this 
+//
+// TStructNodeEditor is an editor for changing node attributes such as
+// maximum numbers of level or maximum number of objects diplayed if this
 // node is our top node. We can also change color associated with a class
-// or chagne color to default. 
-// 
+// or chagne color to default.
+//
 //////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
@@ -47,7 +47,7 @@ TStructNodeEditor::TStructNodeEditor(TList* colors, const TGWindow *p, Int_t wid
    this->AddFrame(fNodeNameLabel, expandX);
 
    fTypeName = new TGLabel(this);
-   
+
    this->AddFrame(fTypeName, expandX);
 
    TGHorizontalFrame* maxObjectsFrame = new TGHorizontalFrame(this);
@@ -102,7 +102,7 @@ TStructNodeEditor::TStructNodeEditor(TList* colors, const TGWindow *p, Int_t wid
 
 //______________________________________________________________________________
 TStructNodeEditor::~TStructNodeEditor()
-{ 
+{
    // Destructor of node editor.
 }
 
@@ -209,7 +209,7 @@ TStructNodeProperty* TStructNodeEditor::FindNodeProperty(TStructNode* node)
 //________________________________________________________________________
 TStructNodeProperty* TStructNodeEditor::GetDefaultProperty()
 {
-   // Returns property with default color 
+   // Returns property with default color
 
    return (TStructNodeProperty*)fColors->Last();
 }

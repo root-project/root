@@ -98,7 +98,7 @@ Int_t TPerfEvent::Compare(const TObject *obj) const
 void TPerfEvent::Print(Option_t *) const
 {
    // Dump content of this instance
-        
+
    TString where;
    if (fEvtNode == -2) {
       where = "TPerfEvent: StandAlone ";
@@ -141,7 +141,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       if (si->fStatus == TSlaveInfo::kActive) fSlaves++;
 
    PDB(kMonitoring,1) Info("TPerfStats", "Statistics for %d slave(s)", fSlaves);
-   
+
    fDoHist = (input->FindObject("PROOF_StatsHist") != 0);
    fDoTrace = (input->FindObject("PROOF_StatsTrace") != 0);
    fDoTraceRate = (input->FindObject("PROOF_RateTrace") != 0);
@@ -159,7 +159,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    fMonitorPerPacket = (perpacket == 1) ? kTRUE : kFALSE;
    if (fMonitorPerPacket)
       Info("TPerfStats", "sending full information after each packet");
-   
+
    // Extract the name of the dataset
    TObject *o = 0;
    TIter nxi(input);
@@ -191,7 +191,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
    //
    PDB(kMonitoring,1)
       Info("TPerfStats", "dataset: '%s', # files: %d", fDataSet.Data(), fDataSetSize);
- 
+
    if ((isMaster && (fDoTrace || fDoTraceRate)) || (!isMaster && fDoSlaveTrace)) {
       // Construct tree
       gDirectory->RecursiveRemove(gDirectory->FindObject("PROOF_PerfStats"));
@@ -306,7 +306,7 @@ TPerfStats::TPerfStats(TList *input, TList *output)
       // top be escaped three times in the regular experession), e.g.
       // ProofServ.Monitoring:  Monalisa bla bla bla,
       // +ProofServ.Monitoring:  SQL blu blu blu
-      
+
       TString mons = gEnv->GetValue("ProofServ.Monitoring", ""), mon;
       Ssiz_t fmon = 0;
       TProofMonSender *monSender = 0;
@@ -443,7 +443,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
               ((gProofServ && gProofServ->GetProof()) ? qr : 0));
          return;
       }
-      
+
       TTimeStamp stop;
       TString identifier;
       identifier.Form("%s-q%d", gProofServ->GetSessionTag(), qr->GetSeqNum());
@@ -461,7 +461,7 @@ void TPerfStats::PacketEvent(const char *slave, const char* slavename, const cha
       values.Add(new TParameter<Long64_t>("totevents", fNumEvents));
       values.Add(new TParameter<int>("workers", fSlaves));
       values.Add(new TNamed("querytag", identifier.Data()));
-      
+
       // Memory usage on workers
       TStatus *pst = (fOutput) ? (TStatus *) fOutput->FindObject("PROOF_Status") : 0;
       // This most likely will be always NULL when sending from GetNextPacket ...
@@ -659,7 +659,7 @@ void TPerfStats::WriteQueryLog()
       values.Add(new TParameter<Long64_t>("totevents", fTotEvents));
       values.Add(new TParameter<int>("workers", fSlaves));
       values.Add(new TNamed("querytag", identifier.Data()));
-      
+
       TList *mfls = (fOutput) ? (TList *) fOutput->FindObject("MissingFiles") : 0;
       // Memory usage on workers
       TStatus *pst = (fOutput) ? (TStatus *) fOutput->FindObject("PROOF_Status") : 0;
@@ -729,7 +729,7 @@ void TPerfStats::Start(TList *input, TList *output)
    fgVirtMemMax = -1;
    fgResMemMax = -1;
    TPerfStats::SetMemValues();
-   
+
    gPerfStats = new TPerfStats(input, output);
    if (gPerfStats && !gPerfStats->TestBit(TObject::kInvalidObject)) {
       // This measures the time taken by the constructor: not negligeable ...

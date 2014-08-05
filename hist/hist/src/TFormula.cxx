@@ -206,24 +206,24 @@ TFormula::TFormula(const char *name,const char *expression) :
       // special case for normalized gaus
       if (chaine.Contains("gausn")) {
          gausNorm = kTRUE;
-         TString tmp = chaine;         
+         TString tmp = chaine;
          tmp.ReplaceAll("gausn","");
          tmp.ReplaceAll("landaun","");
          if ( tmp.Contains("gaus")  )
             Warning("TFormula","Cannot use both gaus and gausn - gaus will be treated as gausn");
-         if ( tmp.Contains("landau")  ) 
+         if ( tmp.Contains("landau")  )
             Warning("TFormula","Cannot use both gausn and landau - landau will be treated as landaun");
       }
       // special case for normalized landau
       if (chaine.Contains("landaun")) {
          landauNorm = kTRUE;
-         TString tmp = chaine;         
+         TString tmp = chaine;
          tmp.ReplaceAll("landaun","");
          tmp.ReplaceAll("gausn","");
          if ( tmp.Contains("gaus")  ) {
             Warning("TFormula","Cannot use both gaus and landaun - gaus will be treated as gausn");
          }
-         if ( tmp.Contains("landau") ) 
+         if ( tmp.Contains("landau") )
             Warning("TFormula","Cannot use both landau and landaun - landau will be treated as landaun");
       }
       // need to to the replacement here for the error message before
@@ -411,7 +411,7 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    } else {
       cinfo = gInterpreter->ClassInfo_Factory();
    }
-   
+
    // ROOT does yet have a complete TType class, but TCling does,
    // so let's use that for now.
    static TypeInfo_t *doubletype = 0;
@@ -425,10 +425,10 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    gInterpreter->CallFunc_SetFuncProto(callfunc,cinfo,functionName,proto,false,&func_offset,ROOT::kConversionMatch);
 
    TMethodCall *method = new TMethodCall(ns,callfunc,func_offset);
-   
+
    if (!ns) gInterpreter->ClassInfo_Delete(cinfo);
    gInterpreter->CallFunc_Delete(callfunc);
-   
+
    if (method->IsValid()) {
       if (method->ReturnType() == TMethodCall::kOther) {
          /*
@@ -2632,7 +2632,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
    //End_Html
 
    Int_t i,j;
-   // coverity[uninit] the tab value of tab is guaranteed to be set properly by the control flow. 
+   // coverity[uninit] the tab value of tab is guaranteed to be set properly by the control flow.
    Double_t tab[kMAXFOUND];
    const char *stringStack[gMAXSTRINGFOUND];
    Double_t param_calc[kMAXFOUND];
@@ -3090,7 +3090,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
             tab[spos]=funcname+"()";
             ismulti[spos]=kFALSE;
             spos += 1;
-            continue;            
+            continue;
          } else if (offset<=0 && (spos+offset>=0)) {
             tab[spos+offset]=funcname+("("+tab[spos+offset]);
             for (j=offset+1; j<0; j++){

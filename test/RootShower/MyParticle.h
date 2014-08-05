@@ -41,7 +41,7 @@ private:
    Double_t    fTimeOfDecay;   // Generated decay time
    Int_t       fChild[6];      // Array of children indexes
 
-   Int_t       fNtrack;    
+   Int_t       fNtrack;
    TObjArray  *fTracks;       // ->array with all tracks
 
 public :

@@ -9,12 +9,12 @@ class NdbDCRadioYield : public NdbMF
 protected:
 
 public:
-	NdbDCRadioYield()
-		: NdbMF(39, "Data covariances for radionuclide "
-			"production yields") {}
-	~NdbDCRadioYield() {}
+   NdbDCRadioYield()
+      : NdbMF(39, "Data covariances for radionuclide "
+         "production yields") {}
+   ~NdbDCRadioYield() {}
 
-	ClassDef(NdbDCRadioYield,1)
+   ClassDef(NdbDCRadioYield,1)
 
 }; // NdbDCRadioYield
 

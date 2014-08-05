@@ -130,7 +130,7 @@ public:
    virtual void      SetInitTime() = 0;
    virtual Long64_t  GetCacheSize() = 0;
    virtual Int_t     GetLearnEntries() = 0;
-   
+
    virtual void      UpdateProgressInfo() = 0;
 
    virtual TVirtualPacketizer *GetPacketizer() const { return 0; }

@@ -111,9 +111,9 @@ inline Long_t TMath::Abs(Long_t d)
 { return ::labs(d); }
 
 inline Long64_t TMath::Abs(Long64_t d)
-#if __cplusplus >= 201103 
+#if __cplusplus >= 201103
 { return ::llabs(d); }
-#else 
+#else
 { return (d >= 0) ? d : -d;  }
 #endif
 

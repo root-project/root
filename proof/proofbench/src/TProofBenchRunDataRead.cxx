@@ -105,7 +105,7 @@ TProofBenchRunDataRead::~TProofBenchRunDataRead()
    SafeDelete(fProfLegend_mb);
    SafeDelete(fNormLegend_evt);
    SafeDelete(fNormLegend_mb);
-} 
+}
 
 //______________________________________________________________________________
 void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
@@ -156,7 +156,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
       Int_t minnworkersanode = fNodes->GetMinWrksPerNode();
       if (stop > minnworkersanode) stop = minnworkersanode;
    }
-   
+
    // Load the selector, if needed
    if (!TClass::GetClass(fSelName) || !fDS->IsProof(fProof)) {
       // Is it the default selector?
@@ -207,7 +207,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
 
    // Build histograms, profiles and graphs needed for this run
    BuildHistos(start, stop, step, nx);
-  
+
    TString dsname(dset);
    TString dsbasename = gSystem->BaseName(dset);
 
@@ -229,7 +229,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
 
    Int_t nnodes = fNodes->GetNNodes(); // Number of machines
    Int_t ncores = fNodes->GetNCores(); // Number of cores
-   
+
    Bool_t drawpf = kFALSE;
    Double_t ymi = -1., ymx = -1., emx =- 1, ymiio = -1., ymxio = -1., mbmx = -1.;
    for (Int_t nactive = start; nactive <= stop; nactive += step) {
@@ -264,7 +264,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
       TString dsn = TString::Format("%s_%d_%d", dsbasename.Data(), nactive, (Int_t)nx);
       fProof->RegisterDataSet(dsn, fc, "OT");
       fProof->ShowDataSet(dsn, "F");
-      
+
       for (Int_t j=0; j<ntries; j++) {
 
          if (nx){
@@ -283,11 +283,11 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
          SetParameters();
 
          Info("Run", "Processing data set %s with"
-                     " %d active worker(s).", dsn.Data(), nactive); 
+                     " %d active worker(s).", dsn.Data(), nactive);
 
          TTime starttime = gSystem->Now();
          fProof->Process(dsn, fSelName, fSelOption);
-                 
+
          DeleteParameters();
 
          TTime endtime = gSystem->Now();
@@ -386,7 +386,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
                Error("Run", "PROOF output list is empty!");
          }
 
-         // 
+         //
          const char *drawopt = t ? "SAME" : "";
          // Performance measures from TQueryResult
          TQueryResult *queryresult = fProof->GetQueryResult();
@@ -476,7 +476,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
             fNormLegend_mb->Draw();
             gPad->Update();
          }
-         fCPerfProfiles->cd(0); 
+         fCPerfProfiles->cd(0);
       }
       // Remove temporary dataset
       fProof->RemoveDataSet(dsn);
@@ -503,7 +503,7 @@ void TProofBenchRunDataRead::Run(const char *dset, Int_t start, Int_t stop,
    if (drawpf) fNorm_perfstat_IOmax->DrawCopy("SAME");
    fProfLegend_mb->Draw();
    gPad->Update();
-   
+
    //save performance profiles to file
    if (fDirProofBench->IsWritable()){
       TDirectory *curdir = gDirectory;
@@ -536,7 +536,7 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
       Error("GetDataSet", "dataset '%s' does not exist", dset);
       return fcsub;
    }
-   
+
    // Get the full collection
    TFileCollection *fcref = fProof->GetDataSet(dset);
    if (!fcref) {
@@ -568,15 +568,15 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
       return fcsub;
    }
    mpnodes->Print();
-   
+
    // Number of files: fFilesPerWrk per active worker
    Int_t nf = fNodes->GetNActives() * fFilesPerWrk;
    Printf(" number of files needed (ideally): %d (%d per worker)", nf, fFilesPerWrk);
-   
+
    // The output dataset
    fcsub = new TFileCollection(TString::Format("%s_%d_%d", fcref->GetName(), nact, nx),
                                                            fcref->GetTitle());
-     
+
    // Order reference sub-collections
    TIter nxnd(mpnodes);
    TObject *key = 0;
@@ -616,7 +616,7 @@ TFileCollection *TProofBenchRunDataRead::GetDataSet(const char *dset,
    // Update counters
    fcsub->Update();
    fcsub->Print();
-   
+
    // Make sure that the tree name is the one of the original dataset
    if (fcref) {
       TString dflt(fcref->GetDefaultTreeName());
@@ -647,7 +647,7 @@ void TProofBenchRunDataRead::FillPerfStatProfiles(TTree *t, Int_t nactive)
    TPerfEvent* pep = &pe;
    t->SetBranchAddress("PerfEvents",&pep);
    Long64_t entries = t->GetEntries();
-      
+
    const Double_t Dmegabytes = 1024.*1024.;
    Double_t event_rate_packet = 0;
    Double_t IO_rate_packet = 0;
@@ -691,7 +691,7 @@ void TProofBenchRunDataRead::Print(Option_t* option) const
    if (fListPerfPlots) fListPerfPlots->Print(option);
 
    if (fCPerfProfiles)
-      Printf("Performance Profiles Canvas: Name = %s Title = %s", 
+      Printf("Performance Profiles Canvas: Name = %s Title = %s",
               fCPerfProfiles->GetName(), fCPerfProfiles->GetTitle());
 }
 
@@ -731,7 +731,7 @@ void TProofBenchRunDataRead::DrawPerfProfiles()
 TString TProofBenchRunDataRead::GetNameStem()const
 {
    // Get name for this run
-   
+
    TString namestem("+++undef+++");
    if (fReadType) {
       switch (fReadType->GetType()) {
@@ -755,7 +755,7 @@ TString TProofBenchRunDataRead::GetNameStem()const
 Int_t TProofBenchRunDataRead::SetParameters()
 {
    // Set parameters
-   
+
    if (!fProof){
       Error("SetParameters", "Proof not set; Doing nothing");
       return 1;

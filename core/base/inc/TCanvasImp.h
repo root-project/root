@@ -35,7 +35,7 @@ friend class TCanvas;
 protected:
    TCanvas  *fCanvas;   //TCanvas associated with this implementation
 
-   TCanvasImp(const TCanvasImp& ci) 
+   TCanvasImp(const TCanvasImp& ci)
      : fCanvas(ci.fCanvas) { }
    TCanvasImp& operator=(const TCanvasImp& ci)
      {if(this!=&ci) fCanvas=ci.fCanvas; return *this;}

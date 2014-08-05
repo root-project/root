@@ -1,4 +1,4 @@
-// @(#)root/mathcore:$Id$ 
+// @(#)root/mathcore:$Id$
 // Author: L. Moneta Fri Aug 15 2008
 
 /**********************************************************************
@@ -21,34 +21,34 @@
 
 #include <map>
 
-namespace ROOT { 
-   
-namespace Math { 
+namespace ROOT {
+
+namespace Math {
 
    // eventually could take values from /etc/system.rootrc
 
-namespace IntegOneDim { 
-   
-#ifdef R__HAS_MATHMORE   
+namespace IntegOneDim {
+
+#ifdef R__HAS_MATHMORE
    static int gDefaultIntegrator = IntegrationOneDim::kADAPTIVESINGULAR;
-#else 
+#else
    static int gDefaultIntegrator = IntegrationOneDim::kGAUSS;
 #endif
-   static double gDefaultAbsTolerance = 1.E-09; 
-   static double gDefaultRelTolerance = 1.E-09; 
+   static double gDefaultAbsTolerance = 1.E-09;
+   static double gDefaultRelTolerance = 1.E-09;
    static unsigned int gDefaultWKSize = 1000;
-   static unsigned int gDefaultNPointsLegendre = 10;  
+   static unsigned int gDefaultNPointsLegendre = 10;
    static unsigned int gDefaultNPointsGSLAdaptive = 3;  // corresponds to 31 points
-   static unsigned int gDefaultNPoints = gDefaultNPointsGSLAdaptive;  
-   
-   
+   static unsigned int gDefaultNPoints = gDefaultNPointsGSLAdaptive;
+
+
 }
 
-namespace IntegMultiDim { 
+namespace IntegMultiDim {
 
-   static int gDefaultIntegrator = IntegrationMultiDim::kADAPTIVE;  
-   static double gDefaultAbsTolerance = 1.E-09; 
-   static double gDefaultRelTolerance = 1.E-09; 
+   static int gDefaultIntegrator = IntegrationMultiDim::kADAPTIVE;
+   static double gDefaultAbsTolerance = 1.E-09;
+   static double gDefaultRelTolerance = 1.E-09;
    static unsigned int gDefaultWKSize = 100000;
    static unsigned int gDefaultNCalls = 100000;
 
@@ -58,33 +58,33 @@ namespace IntegMultiDim {
 
 // some utility functions
 
-namespace IntegOptionsUtil { 
+namespace IntegOptionsUtil {
 
 
    // traits for the specific methods 1D - ND
-   template<class OptionType> 
+   template<class OptionType>
    struct OptionTrait {
       static int N() { return 0; }
       static int N(const OptionType & ) { return 0; }
-      static const char * DescriptionOfN() {return 0; } 
+      static const char * DescriptionOfN() {return 0; }
    };
    template<>
    struct OptionTrait<IntegratorOneDimOptions> {
       typedef IntegratorOneDimOptions OptType;
       static int N() { return OptType::DefaultNPoints(); }
       static int N(const OptType & opt) { return opt.NPoints(); }
-      static const char * DescriptionOfN() {return  "Rule (Npoints)";} 
-   }; 
+      static const char * DescriptionOfN() {return  "Rule (Npoints)";}
+   };
    template<>
    struct OptionTrait<IntegratorMultiDimOptions> {
       typedef IntegratorMultiDimOptions OptType;
       static int N() { return OptType::DefaultNCalls(); }
       static int N(const OptType & opt) { return opt.NCalls(); }
-      static const char * DescriptionOfN() {return "(max) function calls";} 
-   }; 
+      static const char * DescriptionOfN() {return "(max) function calls";}
+   };
 
-   
-   //print  option values (not the default ones) 
+
+   //print  option values (not the default ones)
    template <class OptionType>
    void Print(std::ostream & os,const OptionType & opt) {
       //print all the options
@@ -92,25 +92,25 @@ namespace IntegOptionsUtil {
       os << std::setw(25) << "Absolute tolerance"     << " : " << std::setw(15) << opt.AbsTolerance() << std::endl;
       os << std::setw(25) << "Relative tolerance"     << " : " << std::setw(15) << opt.RelTolerance() << std::endl;
       os << std::setw(25) << "Workspace size"         << " : " << std::setw(15) << opt.WKSize() << std::endl;
-      typedef  OptionTrait<OptionType> OPT; 
+      typedef  OptionTrait<OptionType> OPT;
       os << std::setw(25) << OPT::DescriptionOfN()    << " : " << std::setw(15) << OPT::N(opt) << std::endl;
-      if (opt.ExtraOptions()) { 
+      if (opt.ExtraOptions()) {
          os << opt.Integrator() << " specific options :"  << std::endl;
          opt.ExtraOptions()->Print(os);
       }
    }
 
 
-   /// print default  options 
+   /// print default  options
    template <class OptionType>
    void PrintDefault(const char * name, std::ostream & os) {
       //print default options
-      std::string integName = (name != 0) ? name : OptionType::DefaultIntegrator();      
+      std::string integName = (name != 0) ? name : OptionType::DefaultIntegrator();
       os << "Default options for numerical integrator "  << integName << " : " << std::endl;
       os << std::setw(25) << "Absolute tolerance"     << " : " << std::setw(15) << OptionType::DefaultAbsTolerance() << std::endl;
       os << std::setw(25) << "Relative tolerance"     << " : " <<std::setw(15) << OptionType::DefaultRelTolerance() << std::endl;
       os << std::setw(25) << "Workspace size"         << " : " << std::setw(15) << OptionType::DefaultWKSize() << std::endl;
-      typedef  OptionTrait<OptionType> OPT; 
+      typedef  OptionTrait<OptionType> OPT;
       os << std::setw(25) <<  OPT::DescriptionOfN()   << " : " << std::setw(15) << OPT::N() << std::endl;
       IOptions * opts = GenAlgoOptions::FindDefault(integName.c_str());
       if (opts) opts->Print(os);
@@ -122,63 +122,63 @@ namespace IntegOptionsUtil {
 /// constructor (protected) to avoid user creating this class
 BaseIntegratorOptions::BaseIntegratorOptions() :
    fIntegType(-1),
-   fWKSize(0), fNCalls(0), 
-   fAbsTolerance(0), fRelTolerance(0), 
-   fExtraOptions(0) 
-{} 
+   fWKSize(0), fNCalls(0),
+   fAbsTolerance(0), fRelTolerance(0),
+   fExtraOptions(0)
+{}
 
-BaseIntegratorOptions::BaseIntegratorOptions(const BaseIntegratorOptions & opt) : fExtraOptions(0) {  
-   // copy constructor 
-   (*this) = opt; 
+BaseIntegratorOptions::BaseIntegratorOptions(const BaseIntegratorOptions & opt) : fExtraOptions(0) {
+   // copy constructor
+   (*this) = opt;
 }
 
-BaseIntegratorOptions & BaseIntegratorOptions::operator=(const BaseIntegratorOptions & opt) {  
-   // assignment operator 
+BaseIntegratorOptions & BaseIntegratorOptions::operator=(const BaseIntegratorOptions & opt) {
+   // assignment operator
    if (this == &opt) return *this; // self assignment
    fWKSize = opt.fWKSize;
    fNCalls = opt.fNCalls;
-   fAbsTolerance = opt.fAbsTolerance; 
-   fRelTolerance = opt.fRelTolerance; 
-   fIntegType = opt.fIntegType; 
+   fAbsTolerance = opt.fAbsTolerance;
+   fRelTolerance = opt.fRelTolerance;
+   fIntegType = opt.fIntegType;
 
 //    std::cout << " copy options for " << fIntegName << std::endl;
 //    std::cout << fExtraOptions << std::endl;
-//    if (fExtraOptions) fExtraOptions->Print(std::cout); 
+//    if (fExtraOptions) fExtraOptions->Print(std::cout);
 
 //    std::cout << opt.fExtraOptions << std::endl;
-//    if (opt.fExtraOptions) (opt.fExtraOptions)->Print(std::cout); 
+//    if (opt.fExtraOptions) (opt.fExtraOptions)->Print(std::cout);
 
 
 
-   ClearExtra(); 
+   ClearExtra();
    if (opt.fExtraOptions)  fExtraOptions =  (opt.fExtraOptions)->Clone();
    return *this;
 }
 
 
-void BaseIntegratorOptions::ClearExtra() {  
+void BaseIntegratorOptions::ClearExtra() {
    // delete extra options
-   if (fExtraOptions) delete fExtraOptions; 
-   fExtraOptions = 0; 
+   if (fExtraOptions) delete fExtraOptions;
+   fExtraOptions = 0;
 }
 
-void BaseIntegratorOptions::SetExtraOptions(const IOptions & opt) {  
+void BaseIntegratorOptions::SetExtraOptions(const IOptions & opt) {
    // delete extra options
-   ClearExtra(); 
-   fExtraOptions = opt.Clone(); 
+   ClearExtra();
+   fExtraOptions = opt.Clone();
 }
 
 
 
 // one dim specific  methods
 
-// implementation of non-static methods 
+// implementation of non-static methods
 
-IntegratorOneDimOptions::IntegratorOneDimOptions(IOptions * opts): 
-   BaseIntegratorOptions() 
+IntegratorOneDimOptions::IntegratorOneDimOptions(IOptions * opts):
+   BaseIntegratorOptions()
 {
-   fWKSize       = IntegOneDim::gDefaultWKSize; 
-   fNCalls       = IntegOneDim::gDefaultNPoints; 
+   fWKSize       = IntegOneDim::gDefaultWKSize;
+   fNCalls       = IntegOneDim::gDefaultNPoints;
    fAbsTolerance = IntegOneDim::gDefaultAbsTolerance;
    fRelTolerance = IntegOneDim::gDefaultRelTolerance;
    fIntegType    = IntegOneDim::gDefaultIntegrator;
@@ -186,16 +186,16 @@ IntegratorOneDimOptions::IntegratorOneDimOptions(IOptions * opts):
    fExtraOptions = opts; // N.B. ownership of pointer is given to the class !
 
    // check  the default options if opts = 0
-   if (!fExtraOptions) { 
+   if (!fExtraOptions) {
       std::string igname = DefaultIntegrator();
       IOptions * gopts = FindDefault( igname.c_str() );
       if (gopts) fExtraOptions = gopts->Clone();
    }
 }
 
-void IntegratorOneDimOptions::SetIntegrator(const char * algo ) {   
+void IntegratorOneDimOptions::SetIntegrator(const char * algo ) {
    // set the default 1D integrator
-   if (!algo) return; 
+   if (!algo) return;
    fIntegType = (int) IntegratorOneDim::GetType(algo);
 }
 
@@ -208,9 +208,9 @@ void IntegratorOneDimOptions::Print(std::ostream & os) const {
    IntegOptionsUtil::Print(os, *this);
 }
 
-// one dim integrator options:  implementation for static methods 
+// one dim integrator options:  implementation for static methods
 
-/// print default  options 
+/// print default  options
 void IntegratorOneDimOptions::PrintDefault(const char * name, std::ostream & os) {
    //print default options
    IntegOptionsUtil::PrintDefault<IntegratorOneDimOptions>(name,os);
@@ -218,14 +218,14 @@ void IntegratorOneDimOptions::PrintDefault(const char * name, std::ostream & os)
 
 
 
-void IntegratorOneDimOptions::SetDefaultIntegrator(const char * algo ) {   
+void IntegratorOneDimOptions::SetDefaultIntegrator(const char * algo ) {
    // set the default 1D integrator
-   if (!algo) return; 
+   if (!algo) return;
    IntegOneDim::gDefaultIntegrator = (int) IntegratorOneDim::GetType(algo);
-   if (IntegOneDim::gDefaultIntegrator == IntegrationOneDim::kLEGENDRE) 
-      IntegOneDim::gDefaultNPoints = IntegOneDim::gDefaultNPointsLegendre;  
+   if (IntegOneDim::gDefaultIntegrator == IntegrationOneDim::kLEGENDRE)
+      IntegOneDim::gDefaultNPoints = IntegOneDim::gDefaultNPointsLegendre;
    if (IntegOneDim::gDefaultIntegrator == IntegrationOneDim::kADAPTIVE)
-      IntegOneDim::gDefaultNPoints = IntegOneDim::gDefaultNPointsGSLAdaptive;  
+      IntegOneDim::gDefaultNPoints = IntegOneDim::gDefaultNPointsGSLAdaptive;
 }
 
 
@@ -235,22 +235,22 @@ std::string  IntegratorOneDimOptions::DefaultIntegrator() {
 }
 
 IntegratorOneDim::Type  IntegratorOneDimOptions::DefaultIntegratorType() {
-   // return default integrator type (enum) 
+   // return default integrator type (enum)
    return  (IntegratorOneDim::Type) IntegOneDim::gDefaultIntegrator;
 }
 
 
 void IntegratorOneDimOptions::SetDefaultAbsTolerance(double tol) {
    // set the default tolerance
-   IntegOneDim::gDefaultAbsTolerance = tol; 
+   IntegOneDim::gDefaultAbsTolerance = tol;
 }
 void IntegratorOneDimOptions::SetDefaultRelTolerance(double tol) {
    // set the default tolerance
-   IntegOneDim::gDefaultRelTolerance = tol; 
+   IntegOneDim::gDefaultRelTolerance = tol;
 }
 
 void IntegratorOneDimOptions::SetDefaultWKSize(unsigned int size) {
-   // set the default workspace size 
+   // set the default workspace size
    IntegOneDim::gDefaultWKSize = size;
 }
 void IntegratorOneDimOptions::SetDefaultNPoints(unsigned int n) {
@@ -265,13 +265,13 @@ unsigned int IntegratorOneDimOptions::DefaultWKSize()        { return IntegOneDi
 unsigned int IntegratorOneDimOptions::DefaultNPoints()        { return IntegOneDim::gDefaultNPoints; }
 
 
-IOptions & IntegratorOneDimOptions::Default(const char * algo) { 
-   // create default extra options for the given algorithm type 
+IOptions & IntegratorOneDimOptions::Default(const char * algo) {
+   // create default extra options for the given algorithm type
    return GenAlgoOptions::Default(algo);
 }
 
-IOptions * IntegratorOneDimOptions::FindDefault(const char * algo) { 
-   // find extra options for the given algorithm type 
+IOptions * IntegratorOneDimOptions::FindDefault(const char * algo) {
+   // find extra options for the given algorithm type
    return GenAlgoOptions::FindDefault(algo);
 }
 
@@ -279,11 +279,11 @@ IOptions * IntegratorOneDimOptions::FindDefault(const char * algo) {
 //Multi-dim integration options implementation
 /////////////////////////////////////////////////////////
 
-IntegratorMultiDimOptions::IntegratorMultiDimOptions(IOptions * opts): 
+IntegratorMultiDimOptions::IntegratorMultiDimOptions(IOptions * opts):
    BaseIntegratorOptions()
 {
-   fWKSize       = IntegMultiDim::gDefaultWKSize; 
-   fNCalls       = IntegMultiDim::gDefaultNCalls; 
+   fWKSize       = IntegMultiDim::gDefaultWKSize;
+   fNCalls       = IntegMultiDim::gDefaultNCalls;
    fAbsTolerance = IntegMultiDim::gDefaultAbsTolerance;
    fRelTolerance = IntegMultiDim::gDefaultRelTolerance;
    fIntegType    = IntegMultiDim::gDefaultIntegrator;
@@ -291,15 +291,15 @@ IntegratorMultiDimOptions::IntegratorMultiDimOptions(IOptions * opts):
    fExtraOptions = opts; // N.B. ownership of pointer is given to the class !
 
    // check  the default options if opts = 0
-   if (!fExtraOptions) { 
+   if (!fExtraOptions) {
       IOptions * gopts = FindDefault( DefaultIntegrator().c_str() );
       if (gopts) fExtraOptions = gopts->Clone();
    }
 }
 
-void IntegratorMultiDimOptions::SetIntegrator(const char * algo ) {   
+void IntegratorMultiDimOptions::SetIntegrator(const char * algo ) {
    // set the default integrator
-   if (!algo) return; 
+   if (!algo) return;
    fIntegType = (int) IntegratorMultiDim::GetType(algo);
 }
 
@@ -312,45 +312,45 @@ void IntegratorMultiDimOptions::Print(std::ostream & os) const {
    IntegOptionsUtil::Print(os, *this);
 }
 
-// multi dim integrator options:  implementation for static methods 
+// multi dim integrator options:  implementation for static methods
 
-/// print default  options 
+/// print default  options
 void IntegratorMultiDimOptions::PrintDefault(const char * name, std::ostream & os) {
    //print default options
    IntegOptionsUtil::PrintDefault<IntegratorMultiDimOptions>(name,os);
 }
 
 
-void IntegratorMultiDimOptions::SetDefaultIntegrator(const char * algo ) {   
+void IntegratorMultiDimOptions::SetDefaultIntegrator(const char * algo ) {
    // set the default integrator
-   if (!algo) return; 
+   if (!algo) return;
    IntegMultiDim::gDefaultIntegrator = (int) IntegratorMultiDim::GetType(algo);
 }
 
 
 std::string  IntegratorMultiDimOptions::DefaultIntegrator() {
-   // return default integrator name 
+   // return default integrator name
    return  IntegratorMultiDim::GetName((IntegratorMultiDim::Type) IntegMultiDim::gDefaultIntegrator);
 }
 
 IntegratorMultiDim::Type  IntegratorMultiDimOptions::DefaultIntegratorType() {
-   // return default integrator type (enum) 
+   // return default integrator type (enum)
    return  (IntegratorMultiDim::Type) IntegMultiDim::gDefaultIntegrator;
 }
 
 
 void IntegratorMultiDimOptions::SetDefaultAbsTolerance(double tol) {
    // set the default tolerance
-   IntegMultiDim::gDefaultAbsTolerance = tol; 
+   IntegMultiDim::gDefaultAbsTolerance = tol;
 }
 
 void IntegratorMultiDimOptions::SetDefaultRelTolerance(double tol) {
    // set the default tolerance
-   IntegMultiDim::gDefaultRelTolerance = tol; 
+   IntegMultiDim::gDefaultRelTolerance = tol;
 }
 
 void IntegratorMultiDimOptions::SetDefaultWKSize(unsigned int size) {
-   // set the default workspace size 
+   // set the default workspace size
    IntegMultiDim::gDefaultWKSize = size;
 }
 void IntegratorMultiDimOptions::SetDefaultNCalls(unsigned int ncall) {
@@ -365,13 +365,13 @@ unsigned int IntegratorMultiDimOptions::DefaultWKSize()        { return IntegMul
 unsigned int IntegratorMultiDimOptions::DefaultNCalls()        { return IntegMultiDim::gDefaultNCalls; }
 
 
-IOptions & IntegratorMultiDimOptions::Default(const char * algo) { 
-   // create default extra options for the given algorithm type 
+IOptions & IntegratorMultiDimOptions::Default(const char * algo) {
+   // create default extra options for the given algorithm type
    return GenAlgoOptions::Default(algo);
 }
 
-IOptions * IntegratorMultiDimOptions::FindDefault(const char * algo) { 
-   // create default extra options for the given algorithm type 
+IOptions * IntegratorMultiDimOptions::FindDefault(const char * algo) {
+   // create default extra options for the given algorithm type
    return GenAlgoOptions::FindDefault(algo);
 }
 

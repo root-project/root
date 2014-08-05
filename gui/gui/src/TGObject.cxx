@@ -38,7 +38,7 @@ ClassImp(TGObject)
 
 void TGObject::SaveAs(const char* filename /*= ""*/, Option_t* option /*= ""*/) const
 {
-   // Write this TGObject to a file using TImage, if filename's extension signals 
+   // Write this TGObject to a file using TImage, if filename's extension signals
    // a valid TImage::EImageFileType, as defined by TImage::GetImageFileTypeFromFilename().
    // Otherwise forward to TObject::SaveAs().
 

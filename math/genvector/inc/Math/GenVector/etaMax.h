@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -14,7 +14,7 @@
 // Created by: Mark Fischler  at Thu Jun 2 2005
 
 
-#ifndef ROOT_Math_GenVector_etaMax 
+#ifndef ROOT_Math_GenVector_etaMax
 #define ROOT_Math_GenVector_etaMax  1
 
 

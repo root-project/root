@@ -1,6 +1,6 @@
 //Multi-Dimensional Parametrisation and Fitting
 //Authors: Rene Brun, Christian Holm Christensen
-   
+
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TApplication.h"
@@ -16,26 +16,26 @@
 
 
 //____________________________________________________________________
-void makeData(Double_t* x, Double_t& d, Double_t& e) 
+void makeData(Double_t* x, Double_t& d, Double_t& e)
 {
-  // Make data points 
+  // Make data points
   Double_t upp[5] = { 10, 10, 10, 10,  1 };
   Double_t low[5] = {  0,  0,  0,  0, .1 };
-  for (int i = 0; i < 4; i++) 
-    x[i] = (upp[i] - low[i]) * gRandom->Rndm() + low[i]; 
-  
+  for (int i = 0; i < 4; i++)
+    x[i] = (upp[i] - low[i]) * gRandom->Rndm() + low[i];
+
   d = x[0] * TMath::Sqrt(x[1] * x[1] + x[2] * x[2] + x[3] * x[3]);
-  
+
   e = gRandom->Gaus(upp[4],low[4]);
 }
 
 //____________________________________________________________________
 int CompareResults(TMultiDimFit *fit, bool doFit)
-{ 
+{
    //Compare results with reference run
- 
 
-   // the right coefficients (before fit) 
+
+   // the right coefficients (before fit)
   double GoodCoeffsNoFit[] = {
   -4.37056,
   43.1468,
@@ -60,9 +60,9 @@ int CompareResults(TMultiDimFit *fit, bool doFit)
   -3.97612
 };
 
-   // the right coefficients (after fit) 
+   // the right coefficients (after fit)
   double GoodCoeffs[] = {
-     -4.399,  
+     -4.399,
      43.15,
      13.41,
      13.49,
@@ -82,7 +82,7 @@ int CompareResults(TMultiDimFit *fit, bool doFit)
      4.378,
      3.516,
      -4.111,
-     -3.823,    
+     -3.823,
 };
 
 // Good Powers
@@ -129,12 +129,12 @@ int CompareResults(TMultiDimFit *fit, bool doFit)
         k++;
      }
   }
-  
+
   // now test the result of the generated function
   gROOT->ProcessLine(".L MDF.C");
- 
+
   Double_t refMDF = (doFit) ? 43.95 : 43.98;
-  // this does not work in CLing since the function is not defined 
+  // this does not work in CLing since the function is not defined
   //Double_t x[]    = {5,5,5,5};
   //Double_t rMDF   = MDF(x);
   //LM:  need to return the address of the result since it is casted to a long (this should not be in a tutorial !)
@@ -142,32 +142,32 @@ int CompareResults(TMultiDimFit *fit, bool doFit)
   Double_t rMDF = * ( (Double_t*)iret);
   //printf("%f\n",rMDF);
   if (TMath::Abs(rMDF -refMDF) > 1e-2) return 4;
-  return 0;     
+  return 0;
 }
 
 //____________________________________________________________________
-Int_t multidimfit(bool doFit = true) 
+Int_t multidimfit(bool doFit = true)
 {
 
-  cout << "*************************************************" << endl; 
+  cout << "*************************************************" << endl;
   cout << "*             Multidimensional Fit              *" << endl;
   cout << "*                                               *" << endl;
   cout << "* By Christian Holm <cholm@nbi.dk> 14/10/00     *" << endl;
-  cout << "*************************************************" << endl; 
+  cout << "*************************************************" << endl;
   cout << endl;
 
-  // Initialize global TRannom object. 
+  // Initialize global TRannom object.
   gRandom = new TRandom();
 
-  // Open output file 
+  // Open output file
   TFile* output = new TFile("mdf.root", "RECREATE");
-  
-  // Global data parameters 
+
+  // Global data parameters
   Int_t nVars       = 4;
   Int_t nData       = 500;
   Double_t x[4];
 
-  // make fit object and set parameters on it. 
+  // make fit object and set parameters on it.
   TMultiDimFit* fit = new TMultiDimFit(nVars, TMultiDimFit::kMonomials,"v");
 
   Int_t mPowers[]   = { 6 , 6, 6, 6 };
@@ -180,20 +180,20 @@ Int_t multidimfit(bool doFit = true)
   fit->SetMaxAngle(10);
   fit->SetMinRelativeError(.01);
 
-  // variables to hold the temporary input data 
+  // variables to hold the temporary input data
   Double_t d;
   Double_t e;
-  
+
   // Print out the start parameters
   fit->Print("p");
 
   printf("======================================\n");
 
-  // Create training sample 
+  // Create training sample
   Int_t i;
   for (i = 0; i < nData ; i++) {
 
-    // Make some data 
+    // Make some data
     makeData(x,d,e);
 
     // Add the row to the fit object
@@ -203,17 +203,17 @@ Int_t multidimfit(bool doFit = true)
   // Print out the statistics
   fit->Print("s");
 
-  // Book histograms 
+  // Book histograms
   fit->MakeHistograms();
 
-  // Find the parameterization 
+  // Find the parameterization
   fit->FindParameterization();
 
-  // Print coefficents 
+  // Print coefficents
   fit->Print("rc");
 
   // Get the min and max of variables from the training sample, used
-  // for cuts in test sample. 
+  // for cuts in test sample.
   Double_t *xMax = new Double_t[nVars];
   Double_t *xMin = new Double_t[nVars];
   for (i = 0; i < nVars; i++) {
@@ -224,17 +224,17 @@ Int_t multidimfit(bool doFit = true)
   nData = fit->GetNCoefficients() * 100;
   Int_t j;
 
-  // Create test sample 
+  // Create test sample
   for (i = 0; i < nData ; i++) {
-    // Make some data 
+    // Make some data
     makeData(x,d,e);
 
-    for (j = 0; j < nVars; j++) 
+    for (j = 0; j < nVars; j++)
       if (x[j] < xMin[j] || x[j] > xMax[j])
-	break;
+    break;
 
-    // If we get through the loop above, all variables are in range 
-    if (j == nVars)  
+    // If we get through the loop above, all variables are in range
+    if (j == nVars)
       // Add the row to the fit object
       fit->AddTestRow(x,d,e);
     else
@@ -242,21 +242,21 @@ Int_t multidimfit(bool doFit = true)
   }
   //delete gRandom;
 
-  // Test the parameterizatio and coefficents using the test sample. 
-  if (doFit) 
+  // Test the parameterizatio and coefficents using the test sample.
+  if (doFit)
      fit->Fit("M");
 
-  // Print result 
+  // Print result
   fit->Print("fc v");
 
-  // Write code to file 
+  // Write code to file
   fit->MakeCode();
 
-  // Write histograms to disk, and close file 
+  // Write histograms to disk, and close file
   output->Write();
   output->Close();
   delete output;
-  
+
   // Compare results with reference run
   Int_t compare = CompareResults(fit, doFit);
   if (!compare) {
@@ -265,7 +265,7 @@ Int_t multidimfit(bool doFit = true)
      printf("\nmultidimfit ..............................................  fails case %d\n",compare);
   }
 
-  // We're done 
+  // We're done
   delete fit;
   return compare;
 }

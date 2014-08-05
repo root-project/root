@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -15,7 +15,7 @@
 //
 // Last update: $Id$
 //
-#ifndef ROOT_Math_GenVector_3DDistances 
+#ifndef ROOT_Math_GenVector_3DDistances
 #define ROOT_Math_GenVector_3DDistances  1
 
 #include "Math/GenVector/Rotation3Dfwd.h"
@@ -148,4 +148,4 @@ double dist( RotationZ const  & r1, RotationZ   const & r2);
 } //namespace Math
 } //namespace ROOT
 
-#endif // ROOT_Math_GenVector_3DDistances 
+#endif // ROOT_Math_GenVector_3DDistances

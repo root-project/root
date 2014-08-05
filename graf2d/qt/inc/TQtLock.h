@@ -14,7 +14,7 @@
 
 #include "Rtypes.h"
 #include <qapplication.h>
-class TQtLock 
+class TQtLock
 {
  public:
     TQtLock (void) { Lock();   }

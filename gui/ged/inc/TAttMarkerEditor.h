@@ -42,7 +42,7 @@ protected:
    Bool_t              fSizeForText;      // true if "text" draw option uses marker size
    TGHSlider           *fAlpha;           // fill opacity
    TGNumberEntryField  *fAlphaField;
-   
+
    virtual void        ConnectSignals2Slots();
 
 public:

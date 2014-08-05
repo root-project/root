@@ -1,4 +1,4 @@
-// A simple example that shows the usage of a TGSplitButton. 
+// A simple example that shows the usage of a TGSplitButton.
 // The checkbutton is used to change the split state of the button.
 //
 // author, Roel Aaij 13/07/2007
@@ -41,7 +41,7 @@ private:
    TGPopupMenu   *fPopMenu;  // TGpopupMenu that will be attached to
                              // the button.
    IDList         IDs ;      // Generator for unique widget IDs.
-   
+
 public:
    SplitButtonTest(const TGWindow *p, UInt_t w, UInt_t h) ;
    virtual ~SplitButtonTest() ;
@@ -53,12 +53,12 @@ public:
 
    ClassDef(SplitButtonTest, 0)
 };
-                          
-SplitButtonTest::SplitButtonTest(const TGWindow *p, UInt_t w, UInt_t h) 
-   : TGMainFrame(p, w, h)   
+
+SplitButtonTest::SplitButtonTest(const TGWindow *p, UInt_t w, UInt_t h)
+   : TGMainFrame(p, w, h)
 {
    SetCleanup(kDeepCleanup) ;
-   
+
    Connect("CloseWindow()", "SplitButtonTest", this, "DoExit()") ;
    DontCallClose() ;
 
@@ -72,36 +72,36 @@ SplitButtonTest::SplitButtonTest(const TGWindow *p, UInt_t w, UInt_t h)
    fPopMenu->DisableEntry(ID_2);
    fPopMenu->AddEntry("Button &3", ID_3);
    fPopMenu->AddSeparator();
-   
+
    // Create a split button, the menu is adopted.
-   fMButton = new TGSplitButton(fHL, new TGHotString("Button &Options"), 
+   fMButton = new TGSplitButton(fHL, new TGHotString("Button &Options"),
                                 fPopMenu, IDs.GetUnID());
 
    // It is possible to add entries later
    fPopMenu->AddEntry("En&try with really really long name", ID_4);
-   fPopMenu->AddEntry("&Exit", ID_5);   
-   
+   fPopMenu->AddEntry("&Exit", ID_5);
+
    // Connect the special signal for the activation of items in a menu
    // that belongs to a split button to the slot.
-   fMButton->Connect("ItemClicked(Int_t)", "SplitButtonTest", this, 
+   fMButton->Connect("ItemClicked(Int_t)", "SplitButtonTest", this,
                      "HandleMenu(Int_t)");
 
-   TGCheckButton *fCButton = new TGCheckButton(fHL, new TGHotString("Split"), 
+   TGCheckButton *fCButton = new TGCheckButton(fHL, new TGHotString("Split"),
                                                IDs.GetUnID());
    fCButton->SetState(kButtonDown);
    fCButton->Connect("Toggled(Bool_t)", "SplitButtonTest", this, "DoSplit(Bool_t)");
 
    // Add frames to their parent for layout.
-   fHL->AddFrame(fCButton, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 
-                                             0, 10, 0, 0)) ;        
-   TGCheckButton *fEButton = new TGCheckButton(fHL, new TGHotString("Enable"), 
+   fHL->AddFrame(fCButton, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY,
+                                             0, 10, 0, 0)) ;
+   TGCheckButton *fEButton = new TGCheckButton(fHL, new TGHotString("Enable"),
                                                IDs.GetUnID());
    fEButton->SetState(kButtonDown);
    fEButton->Connect("Toggled(Bool_t)", "SplitButtonTest", this, "DoEnable(Bool_t)");
 
    // Add frames to their parent for layout.
-   fHL->AddFrame(fEButton, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 
-                                             0, 10, 0, 0)) ;        
+   fHL->AddFrame(fEButton, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY,
+                                             0, 10, 0, 0)) ;
    fHL->AddFrame(fMButton, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
    fVL->AddFrame(fHL, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY)) ;
    AddFrame(fVL, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY)) ;
@@ -125,9 +125,9 @@ void SplitButtonTest::DoExit()
    // Use one of the both lines according to your needs.
    // Please note to re-run this macro in the same ROOT session,
    // you have to compile it to get signals/slots 'on place'.
-   
+
    //DeleteWindow();            // to stay in the ROOT session
-   gApplication->Terminate();   // to exit and close the ROOT session   
+   gApplication->Terminate();   // to exit and close the ROOT session
 }
 
 void SplitButtonTest::DoSplit(Bool_t split)
@@ -143,7 +143,7 @@ void SplitButtonTest::DoEnable(Bool_t on)
       fMButton->SetState(kButtonDisabled);
 }
 
-void SplitButtonTest::HandleMenu(Int_t id) 
+void SplitButtonTest::HandleMenu(Int_t id)
 {
    // Activation of menu items in the popup menu are handled in a user
    // defined slot to which the ItemClicked(Int_t) signal is
@@ -160,7 +160,7 @@ void SplitButtonTest::HandleMenu(Int_t id)
       std::cout << "Button 3 was activated" << std::endl;
       break;
    case ID_4:
-      std::cout << "Button with a really really long name was activated" 
+      std::cout << "Button with a really really long name was activated"
                 << std::endl;
       break;
    case ID_5:
@@ -168,7 +168,7 @@ void SplitButtonTest::HandleMenu(Int_t id)
       break;
    }
 }
-void splitbuttonTest() 
+void splitbuttonTest()
 {
    new SplitButtonTest(gClient->GetRoot(),100,100);
 }

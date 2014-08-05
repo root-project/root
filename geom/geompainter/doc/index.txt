@@ -4,6 +4,6 @@ BEGIN_HTML
 <ul>
 <li><a href="ftp://root.cern.ch/root/doc/18Geometry.pdf">The Chapter about the TGeo classes and builder in the Users Guide
     </a></li>
-    
+
 </ul>
 END_HTML

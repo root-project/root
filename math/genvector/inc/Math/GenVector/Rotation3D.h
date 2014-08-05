@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -14,7 +14,7 @@
 //
 // Last update: $Id$
 //
-#ifndef ROOT_Math_GenVector_Rotation3D 
+#ifndef ROOT_Math_GenVector_Rotation3D
 #define ROOT_Math_GenVector_Rotation3D  1
 
 
@@ -49,15 +49,15 @@ namespace Math {
      Rotation class with the (3D) rotation represented by
      a 3x3 orthogonal matrix.
      This is the optimal representation for application to vectors.
-     See also ROOT::Math::AxisAngle, ROOT::Math::EulerAngles, and ROOT::Math::Quaternion for 
+     See also ROOT::Math::AxisAngle, ROOT::Math::EulerAngles, and ROOT::Math::Quaternion for
      classes which have conversion operators to Rotation3D.
 
-     All Rotations types (not only Rotation3D) can be applied to all 3D Vector classes 
-     (like ROOT::Math::DisplacementVector3D and ROOT::Math::PositionVector3D) 
-     and also to the 4D Vectors (ROOT::Math::LorentzVector classes), acting on the 3D components. 
-     A rotaiton operation is applied by using the operator() or the operator *. 
-     With the operator * is possible also to combine rotations. 
-     Note that the operator is NOT commutative, the order how the rotations are applied is relevant.   
+     All Rotations types (not only Rotation3D) can be applied to all 3D Vector classes
+     (like ROOT::Math::DisplacementVector3D and ROOT::Math::PositionVector3D)
+     and also to the 4D Vectors (ROOT::Math::LorentzVector classes), acting on the 3D components.
+     A rotaiton operation is applied by using the operator() or the operator *.
+     With the operator * is possible also to combine rotations.
+     Note that the operator is NOT commutative, the order how the rotations are applied is relevant.
 
      @ingroup GenVector
   */
@@ -89,11 +89,11 @@ public:
    Rotation3D(IT begin, IT end) { SetComponents(begin,end); }
 
    /**
-      copy constructor  
+      copy constructor
    */
    Rotation3D ( Rotation3D const   & r ) {
-      *this = r; 
-   } 
+      *this = r;
+   }
 
    /**
       Construct from an AxisAngle
@@ -157,12 +157,12 @@ public:
    // need to implement assignment operator to avoid using the templated one
 
    /**
-      Assignment operator 
+      Assignment operator
    */
    Rotation3D &
-   operator=( Rotation3D const   & rhs ) { 
-      SetComponents( rhs.fM[0], rhs.fM[1], rhs.fM[2], 
-                     rhs.fM[3], rhs.fM[4], rhs.fM[5], 
+   operator=( Rotation3D const   & rhs ) {
+      SetComponents( rhs.fM[0], rhs.fM[1], rhs.fM[2],
+                     rhs.fM[3], rhs.fM[4], rhs.fM[5],
                      rhs.fM[6], rhs.fM[7], rhs.fM[8] );
       return *this;
    }
@@ -207,11 +207,11 @@ public:
    */
    template<class ForeignMatrix>
    Rotation3D &
-   operator=(const ForeignMatrix & m) { 
-      SetComponents( m(0,0), m(0,1), m(0,2), 
+   operator=(const ForeignMatrix & m) {
+      SetComponents( m(0,0), m(0,1), m(0,2),
                      m(1,0), m(1,1), m(1,2),
                      m(2,0), m(2,1), m(2,2) );
-      return *this; 
+      return *this;
    }
 
    /**
@@ -240,9 +240,9 @@ public:
    }
 
    /**
-      Get components into three vectors which will be the (orthonormal) 
-      columns of the rotation matrix.  (The vector class must have a 
-      constructor from 3 Scalars.) 
+      Get components into three vectors which will be the (orthonormal)
+      columns of the rotation matrix.  (The vector class must have a
+      constructor from 3 Scalars.)
    */
    template<class ForeignVector>
    void
@@ -264,9 +264,9 @@ public:
 #else
    void SetComponents(IT begin, IT ) {
 #endif
-      for (int i = 0; i <9; ++i) { 
+      for (int i = 0; i <9; ++i) {
          fM[i] = *begin;
-         ++begin;  
+         ++begin;
       }
       assert (end==begin);
    }
@@ -281,9 +281,9 @@ public:
 #else
    void GetComponents(IT begin, IT ) const {
 #endif
-      for (int i = 0; i <9; ++i) { 
+      for (int i = 0; i <9; ++i) {
          *begin = fM[i];
-         ++begin; 
+         ++begin;
       }
       assert (end==begin);
    }
@@ -358,9 +358,9 @@ public:
    operator() (const DisplacementVector3D<CoordSystem,U> & v) const {
       DisplacementVector3D< Cartesian3D<double>,U > xyz;
       xyz.SetXYZ( fM[kXX] * v.X() + fM[kXY] * v.Y() + fM[kXZ] * v.Z() ,
-                  fM[kYX] * v.X() + fM[kYY] * v.Y() + fM[kYZ] * v.Z() , 
+                  fM[kYX] * v.X() + fM[kYY] * v.Y() + fM[kYZ] * v.Z() ,
                   fM[kZX] * v.X() + fM[kZY] * v.Y() + fM[kZZ] * v.Z() );
-      return  DisplacementVector3D<CoordSystem,U>( xyz ); 
+      return  DisplacementVector3D<CoordSystem,U>( xyz );
    }
 
    /**
@@ -424,27 +424,27 @@ public:
    /**
       Multiply (combine) two rotations
    */
-   Rotation3D operator * (const Rotation3D  & r) const { 
-   return Rotation3D 
+   Rotation3D operator * (const Rotation3D  & r) const {
+   return Rotation3D
    (  fM[kXX]*r.fM[kXX] + fM[kXY]*r.fM[kYX] + fM[kXZ]*r.fM[kZX]
     , fM[kXX]*r.fM[kXY] + fM[kXY]*r.fM[kYY] + fM[kXZ]*r.fM[kZY]
     , fM[kXX]*r.fM[kXZ] + fM[kXY]*r.fM[kYZ] + fM[kXZ]*r.fM[kZZ]
-    
+
     , fM[kYX]*r.fM[kXX] + fM[kYY]*r.fM[kYX] + fM[kYZ]*r.fM[kZX]
     , fM[kYX]*r.fM[kXY] + fM[kYY]*r.fM[kYY] + fM[kYZ]*r.fM[kZY]
     , fM[kYX]*r.fM[kXZ] + fM[kYY]*r.fM[kYZ] + fM[kYZ]*r.fM[kZZ]
-    
+
     , fM[kZX]*r.fM[kXX] + fM[kZY]*r.fM[kYX] + fM[kZZ]*r.fM[kZX]
     , fM[kZX]*r.fM[kXY] + fM[kZY]*r.fM[kYY] + fM[kZZ]*r.fM[kZY]
     , fM[kZX]*r.fM[kXZ] + fM[kZY]*r.fM[kYZ] + fM[kZZ]*r.fM[kZZ]   );
 
    }
-   
+
 
    /**
-      Multiplication with arbitrary rotations 
+      Multiplication with arbitrary rotations
     */
-    // note: cannot have a  template method since it is ambigous with the operator * on vectors 
+    // note: cannot have a  template method since it is ambigous with the operator * on vectors
 
    Rotation3D operator * (const AxisAngle   & a) const;
    Rotation3D operator * (const EulerAngles & e) const;
@@ -496,14 +496,14 @@ typename Rotation3D::Scalar
 Distance ( const Rotation3D& r1, const R & r2) {return gv_detail::dist(r1,r2);}
 
 /**
-   Multiplication of an axial rotation by a Rotation3D 
+   Multiplication of an axial rotation by a Rotation3D
  */
 Rotation3D operator* (RotationX const & r1, Rotation3D const & r2);
 Rotation3D operator* (RotationY const & r1, Rotation3D const & r2);
 Rotation3D operator* (RotationZ const & r1, Rotation3D const & r2);
 
 /**
-   Multiplication of an axial rotation by another axial Rotation 
+   Multiplication of an axial rotation by another axial Rotation
  */
 Rotation3D operator* (RotationX const & r1, RotationY const & r2);
 Rotation3D operator* (RotationX const & r1, RotationZ const & r2);
@@ -517,11 +517,11 @@ Rotation3D operator* (RotationZ const & r1, RotationY const & r2);
 /**
    Stream Output and Input
  */
-  // TODO - I/O should be put in the manipulator form 
+  // TODO - I/O should be put in the manipulator form
 
 std::ostream & operator<< (std::ostream & os, const Rotation3D & r);
-  
+
 } // namespace Math
 } // namespace ROOT
 
-#endif // ROOT_Math_GenVector_Rotation3D 
+#endif // ROOT_Math_GenVector_Rotation3D

@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -36,19 +36,19 @@ namespace Math {
 
 
 
-struct NullTypeFunc1D {}; 
+struct NullTypeFunc1D {};
 
 typedef double(*FreeFunctionPtr)(double);
 
-typedef double(*FreeMultiFunctionPtr)(const double*); 
+typedef double(*FreeMultiFunctionPtr)(const double*);
 
 /**
-   Template class to wrap any C++ callable object which takes one argument 
+   Template class to wrap any C++ callable object which takes one argument
    i.e. implementing operator() (double x) in a One-dimensional function interface.
    It provides a ROOT::Math::IGenFunction-like signature
 
-   Note: If you want to wrap just the reference (to avoid copying) you need to use 
-   Func& or const Func & as template parameter.  The former should be used when the 
+   Note: If you want to wrap just the reference (to avoid copying) you need to use
+   Func& or const Func & as template parameter.  The former should be used when the
    operator() is not a const method of Func
 
    @ingroup  GenFunc
@@ -63,8 +63,8 @@ class WrappedFunction : public IGenFunction {
    /**
       construct from the pointer to the object and the member function
     */
-   WrappedFunction( Func f ) : 
-      fFunc( f ) 
+   WrappedFunction( Func f ) :
+      fFunc( f )
    { /* no op */ }
 
    // use default  copy contructor and assignment operator
@@ -73,7 +73,7 @@ class WrappedFunction : public IGenFunction {
    WrappedFunction * Clone() const {
       return new WrappedFunction(fFunc);
    }
-   
+
    //  virtual ~WrappedFunction() { /**/ }
 
 private:
@@ -83,21 +83,21 @@ private:
    }
 
 
-   Func fFunc; 
+   Func fFunc;
 
 
 }; // WrappedFunction
 
 
 /**
-   Template class to wrap any member function of a class 
+   Template class to wrap any member function of a class
    taking a double and returning a double in a 1D function interface
-   For example, if you have a class like: 
-   struct X { 
-       double Eval(double x); 
+   For example, if you have a class like:
+   struct X {
+       double Eval(double x);
    };
-   you can wrapped in the following way: 
-   WrappedMemFunction<X, double ( X::* ) (double) > f; 
+   you can wrapped in the following way:
+   WrappedMemFunction<X, double ( X::* ) (double) > f;
 
 
    @ingroup  GenFunc
@@ -113,9 +113,9 @@ class WrappedMemFunction : public IGenFunction {
    /**
       construct from the pointer to the object and the member function
     */
-   WrappedMemFunction( FuncObj & obj, MemFuncPtr memFn ) : 
-      fObj(&obj), 
-      fMemFunc( memFn ) 
+   WrappedMemFunction( FuncObj & obj, MemFuncPtr memFn ) :
+      fObj(&obj),
+      fMemFunc( memFn )
    { /* no op */ }
 
    // use default  copy contructor and assignment operator
@@ -124,7 +124,7 @@ class WrappedMemFunction : public IGenFunction {
    WrappedMemFunction * Clone() const {
       return new WrappedMemFunction(*fObj,fMemFunc);
    }
-   
+
 
 private:
 
@@ -133,7 +133,7 @@ private:
    }
 
 
-   FuncObj * fObj; 
+   FuncObj * fObj;
    MemFuncPtr fMemFunc;
 
 
@@ -141,12 +141,12 @@ private:
 
 
 /**
-   Template class to wrap any C++ callable object 
+   Template class to wrap any C++ callable object
    implementing operator() (const double * x) in a multi-dimensional function interface.
    It provides a ROOT::Math::IGenMultiFunction-like signature
 
-   Note: If you want to wrap just the reference (to avoid copying) you need to use 
-   Func& or const Func & as template parameter. The former should be used when the 
+   Note: If you want to wrap just the reference (to avoid copying) you need to use
+   Func& or const Func & as template parameter. The former should be used when the
    operator() is not a const method of Func
 
    @ingroup  GenFunc
@@ -161,8 +161,8 @@ class WrappedMultiFunction : public IMultiGenFunction {
    /**
       construct from the pointer to the object and the member function
     */
-   WrappedMultiFunction( Func f , unsigned int dim = 1) : 
-      fFunc( f ), 
+   WrappedMultiFunction( Func f , unsigned int dim = 1) :
+      fFunc( f ),
       fDim( dim)
    { /* no op */ }
 
@@ -174,7 +174,7 @@ class WrappedMultiFunction : public IMultiGenFunction {
    }
 
    unsigned int NDim() const { return fDim; }
-   
+
    //  virtual ~WrappedFunction() { /**/ }
 
 private:
@@ -184,8 +184,8 @@ private:
    }
 
 
-   Func fFunc; 
-   unsigned int fDim; 
+   Func fFunc;
+   unsigned int fDim;
 
 
 }; // WrappedMultiFunction
@@ -200,8 +200,8 @@ class WrappedMemMultiFunction : public IMultiGenFunction {
    /**
       construct from the pointer to the object and the member function
     */
-   WrappedMemMultiFunction( FuncObj & obj, MemFuncPtr memFn, unsigned int dim = 1 ) : 
-      fObj(&obj), 
+   WrappedMemMultiFunction( FuncObj & obj, MemFuncPtr memFn, unsigned int dim = 1 ) :
+      fObj(&obj),
       fMemFunc( memFn ),
       fDim(dim)
    { /* no op */ }
@@ -212,7 +212,7 @@ class WrappedMemMultiFunction : public IMultiGenFunction {
    WrappedMemMultiFunction * Clone() const {
       return new WrappedMemMultiFunction(*fObj,fMemFunc,fDim);
    }
-   
+
 
    unsigned int NDim() const { return fDim; }
 
@@ -223,7 +223,7 @@ private:
    }
 
 
-   FuncObj * fObj; 
+   FuncObj * fObj;
    MemFuncPtr fMemFunc;
    unsigned int fDim;
 

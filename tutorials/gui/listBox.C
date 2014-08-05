@@ -18,7 +18,7 @@ class MyMainFrame : public TGMainFrame {
 private:
    TGListBox           *fListBox;
    TGCheckButton       *fCheckMulti;
-   TList               *fSelected;   
+   TList               *fSelected;
 
 public:
    MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h);
@@ -46,7 +46,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    TGMainFrame(p, w, h)
 {
    // Create main frame
-   
+
    fListBox = new TGListBox(this, 89);
    fSelected = new TList;
    char tmp[20];
@@ -56,13 +56,13 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    }
    fListBox->Resize(100,150);
    AddFrame(fListBox, new TGLayoutHints(kLHintsTop | kLHintsLeft |
-                                        kLHintsExpandX | kLHintsExpandY, 
+                                        kLHintsExpandX | kLHintsExpandY,
                                         5, 5, 5, 5));
-                                                         
+
    fCheckMulti = new TGCheckButton(this, "&Mutliple selection", 10);
    AddFrame(fCheckMulti, new TGLayoutHints(kLHintsTop | kLHintsLeft,
                                            5, 5, 5, 5));
-   fCheckMulti->Connect("Clicked()", "MyMainFrame", this, "HandleButtons()"); 
+   fCheckMulti->Connect("Clicked()", "MyMainFrame", this, "HandleButtons()");
    // Create a horizontal frame containing button(s)
    TGHorizontalFrame *hframe = new TGHorizontalFrame(this, 150, 20, kFixedWidth);
    TGTextButton *show = new TGTextButton(hframe, "&Show");
@@ -74,7 +74,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    hframe->AddFrame(exit, new TGLayoutHints(kLHintsExpandX, 5, 5, 3, 4));
    AddFrame(hframe, new TGLayoutHints(kLHintsExpandX, 2, 2, 5, 1));
 
-   // Set a name to the main frame   
+   // Set a name to the main frame
    SetWindowName("List Box");
    MapSubwindows();
 
@@ -105,7 +105,7 @@ void MyMainFrame::HandleButtons()
 
    printf("HandleButton: id = %d\n", id);
 
-   if (id == 10)  
+   if (id == 10)
       fListBox->SetMultipleSelections(fCheckMulti->GetState());
 }
 

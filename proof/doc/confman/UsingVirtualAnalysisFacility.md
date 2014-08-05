@@ -352,9 +352,9 @@ to PROOF like this:
 Example of output:
 
     Starting master: opening connection ...
-    Starting master: OK                                                 
-    Opening connections to workers: OK (12 workers)                 
-    Setting up worker servers: OK (12 workers)                 
+    Starting master: OK
+    Opening connections to workers: OK (12 workers)
+    Setting up worker servers: OK (12 workers)
     PROOF set to parallel mode (12 workers)
 
 ### Stop or restart your PoD cluster

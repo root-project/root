@@ -19,15 +19,15 @@
 #include "TVirtualX.h"
 
 //______________________________________________________________________________
-//                                                                      
-// Abstract base class for viewer manipulators, which allow direct in   
-// viewer manipulation of a (TGlPhysicalShape) object - currently       
-// translation, scaling and rotation along/round objects local axes.    
-// See derived classes for these implementations.                       
-//                                                                      
-// This class provides binding to the zero or one manipulated physical, 
-// hit testing (selection) for manipulator sub component (widget), and  
-// some common mouse action handling/tracking.                          
+//
+// Abstract base class for viewer manipulators, which allow direct in
+// viewer manipulation of a (TGlPhysicalShape) object - currently
+// translation, scaling and rotation along/round objects local axes.
+// See derived classes for these implementations.
+//
+// This class provides binding to the zero or one manipulated physical,
+// hit testing (selection) for manipulator sub component (widget), and
+// some common mouse action handling/tracking.
 
 ClassImp(TGLManip);
 

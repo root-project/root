@@ -43,15 +43,15 @@ namespace Minuit2 {
 
       StartMPI();
 
-      if (fgGlobalSize==fgCartDimension && 
+      if (fgGlobalSize==fgCartDimension &&
           fgCartSizeX!=fgCartDimension && fgCartSizeY!=fgCartDimension) {
          //declare the cartesian topology
 
          if (fgCommunicator==0 && fgIndexComm<0 && fgNewCart) {
             // first call, declare the topology
-            std::cout << "Info --> MPIProcess::MPIProcess: Declare cartesian Topology (" 
+            std::cout << "Info --> MPIProcess::MPIProcess: Declare cartesian Topology ("
                       << fgCartSizeX << "x" << fgCartSizeY << ")" << std::endl;
-      
+
             int color = fgGlobalRank / fgCartSizeY;
             int key = fgGlobalRank % fgCartSizeY;
 
@@ -67,7 +67,7 @@ namespace Minuit2 {
          if (fgIndexComm>1 || fgCommunicator==(&(MPI::COMM_WORLD))) { // Remember, no more than 2 dimensions in the topology!
             std::cerr << "Error --> MPIProcess::MPIProcess: Requiring more than 2 dimensions in the topology!" << std::endl;
             MPI::COMM_WORLD.Abort(-1);
-         } 
+         }
 
          // requiring columns as first call. In this case use all nodes
          if (((unsigned int)fgIndexComm)<indexComm)
@@ -114,7 +114,7 @@ namespace Minuit2 {
             std::cout << "Warning --> MPIProcess::MPIProcess: Requiring 2 nested MPI calls!" << std::endl;
             std::cout << "Warning --> MPIProcess::MPIProcess: Ignoring second call." << std::endl;
             fgIndecesComm[fgIndexComm] = (indexComm==0) ? 1 : 0;
-         } 
+         }
 
          fgCommunicator = fgCommunicators[fgIndecesComm[fgIndexComm]];
 
@@ -130,7 +130,7 @@ namespace Minuit2 {
          fSize = 1;
          fRank = 0;
       }
-    
+
 
       if (fSize>fNelements) {
          std::cerr << "Error --> MPIProcess::MPIProcess: more processors than elements!" << std::endl;
@@ -147,19 +147,19 @@ namespace Minuit2 {
    MPIProcess::~MPIProcess()
    {
       // destructor
-#ifdef MPIPROC  
+#ifdef MPIPROC
       fgCommunicator = 0;
-      fgIndexComm--; 
+      fgIndexComm--;
       if (fgIndexComm==0)
          fgCommunicator = fgCommunicators[fgIndecesComm[fgIndexComm]];
-    
+
 #endif
 
    }
 
    bool MPIProcess::SyncVector(ROOT::Minuit2::MnAlgebraicVector &mnvector)
    {
-    
+
       // In case of just one job, don't need sync, just go
       if (fSize<2)
          return false;
@@ -169,7 +169,7 @@ namespace Minuit2 {
          std::cerr << "Error --> MPIProcess::SyncVector: no MPI syncronization is possible!" << std::endl;
          exit(-1);
       }
-    
+
 #ifdef MPIPROC
       unsigned int numElements4ThisJob = NumElements4Job(fRank);
       unsigned int startElementIndex = StartElementIndex();
@@ -184,7 +184,7 @@ namespace Minuit2 {
 
       for (unsigned int i = 0; i<fNelements; i++) {
          mnvector(i) = dvector[i];
-      }                             
+      }
 
       return true;
 
@@ -196,15 +196,15 @@ namespace Minuit2 {
 #endif
 
    }
-  
+
 
    bool MPIProcess::SyncSymMatrixOffDiagonal(ROOT::Minuit2::MnAlgebraicSymMatrix &mnmatrix)
    {
-  
+
       // In case of just one job, don't need sync, just go
       if (fSize<2)
          return false;
-    
+
       if (mnmatrix.size()-mnmatrix.Nrow()!=fNelements) {
          std::cerr << "Error --> MPIProcess::SyncSymMatrixOffDiagonal: # defined elements different from # requested elements!" << std::endl;
          std::cerr << "Error --> MPIProcess::SyncSymMatrixOffDiagonal: no MPI syncronization is possible!" << std::endl;
@@ -229,7 +229,7 @@ namespace Minuit2 {
          int y = (i+offsetVect)%(nrow-1)+1;
 
          dvectorJob[i-startElementIndex] = mnmatrix(x,y);
-      
+
       }
 
       double dvector[fNelements];
@@ -237,7 +237,7 @@ namespace Minuit2 {
 
       offsetVect = 0;
       for (unsigned int i = 0; i<fNelements; i++) {
-    
+
          int x = (i+offsetVect)/(nrow-1);
          if ((i+offsetVect)%(nrow-1)==0) offsetVect += x;
          int y = (i+offsetVect)%(nrow-1)+1;
@@ -270,11 +270,11 @@ namespace Minuit2 {
       }
 
       fgCommunicator->Allgatherv(ivector,svector,MPI::DOUBLE,
-                                ovector,nconts,offsets,MPI::DOUBLE); 
-    
+                                ovector,nconts,offsets,MPI::DOUBLE);
+
    }
 
-   bool MPIProcess::SetCartDimension(unsigned int dimX, unsigned int dimY)  
+   bool MPIProcess::SetCartDimension(unsigned int dimX, unsigned int dimY)
    {
       if (fgCommunicator!=0 || fgIndexComm>=0) {
          std::cout << "Warning --> MPIProcess::SetCartDimension: MPIProcess already declared! Ignoring command..." << std::endl;
@@ -294,7 +294,7 @@ namespace Minuit2 {
       }
 
       if (fgCartSizeX!=dimX || fgCartSizeY!=dimY) {
-         fgCartSizeX = dimX; fgCartSizeY = dimY; 
+         fgCartSizeX = dimX; fgCartSizeY = dimY;
          fgCartDimension = fgCartSizeX * fgCartSizeY;
          fgNewCart = true;
 
@@ -309,7 +309,7 @@ namespace Minuit2 {
    }
 
    bool MPIProcess::SetDoFirstMPICall(bool doFirstMPICall)
-   { 
+   {
 
       StartMPI();
 

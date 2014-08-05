@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors:  M. Fischler  2005  
+// Authors:  M. Fischler  2005
 
  /**********************************************************************
   *                                                                    *
@@ -33,10 +33,10 @@ void BoostY::SetComponents (Scalar by) {
    // set component
    Scalar bp2 = by*by;
    if (bp2 >= 1) {
-      GenVector::Throw( 
+      GenVector::Throw(
                               "Beta Vector supplied to set BoostY represents speed >= c");
       return;
-   }    
+   }
    fBeta = by;
    fGamma = 1.0 / std::sqrt(1.0-bp2);
 }
@@ -54,10 +54,10 @@ BoostY::BetaVector() const {
 
 void BoostY::GetLorentzRotation (Scalar r[]) const {
    // get corresponding LorentzRotation
-   r[kLXX] = 1.0;  r[kLXY] = 0.0;           r[kLXZ] = 0.0;  r[kLXT] = 0.0;  
-   r[kLYX] = 0.0;  r[kLYY] = fGamma;        r[kLYZ] = 0.0;  r[kLYT] = fGamma*fBeta; 
-   r[kLZX] = 0.0;  r[kLZY] = 0.0;           r[kLZZ] = 1.0;  r[kLZT] = 0.0;  
-   r[kLTX] = 0.0;  r[kLTY] = fGamma*fBeta;  r[kLTZ] = 0.0;  r[kLTT] = fGamma;  
+   r[kLXX] = 1.0;  r[kLXY] = 0.0;           r[kLXZ] = 0.0;  r[kLXT] = 0.0;
+   r[kLYX] = 0.0;  r[kLYY] = fGamma;        r[kLYZ] = 0.0;  r[kLYT] = fGamma*fBeta;
+   r[kLZX] = 0.0;  r[kLZY] = 0.0;           r[kLZZ] = 1.0;  r[kLZT] = 0.0;
+   r[kLTX] = 0.0;  r[kLTY] = fGamma*fBeta;  r[kLTZ] = 0.0;  r[kLTT] = fGamma;
 }
 
 void BoostY::Rectify() {
@@ -65,15 +65,15 @@ void BoostY::Rectify() {
    // but may have drifted due to round-off error from many operations,
    // this forms an "exact" orthosymplectic matrix for the Lorentz Rotation
    // again.
-   
-   if (fGamma <= 0) {	
-      GenVector::Throw ( 
+
+   if (fGamma <= 0) {
+      GenVector::Throw (
                               "Attempt to rectify a boost with non-positive gamma");
       return;
-   }    
+   }
    Scalar beta = fBeta;
-   if ( beta >= 1 ) {			    
-      beta /= ( beta * ( 1.0 + 1.0e-16 ) );  
+   if ( beta >= 1 ) {
+      beta /= ( beta * ( 1.0 + 1.0e-16 ) );
    }
    SetComponents ( beta );
 }
@@ -83,7 +83,7 @@ BoostY::operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
    // apply boost to a LV
    Scalar y = v.Py();
    Scalar t = v.E();
-   return LorentzVector< PxPyPzE4D<double> > 
+   return LorentzVector< PxPyPzE4D<double> >
       (  v.Px()
          , fGamma*y       + fGamma*fBeta*t
          ,  v.Pz()
@@ -99,7 +99,7 @@ BoostY BoostY::Inverse() const {
    // return inverse
    BoostY tmp(*this);
    tmp.Invert();
-   return tmp; 
+   return tmp;
 }
 
 // ========== I/O =====================

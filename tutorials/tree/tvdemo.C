@@ -11,7 +11,7 @@ void tvdemo() {
    printf("        UpdateRecord()     - if you want to change a record from the list\n");
    printf("                             with your new X, Y, Z, Cut configuration.\n");
    printf("  Best luck !\n");
-   
+
    open_session();
 }
 

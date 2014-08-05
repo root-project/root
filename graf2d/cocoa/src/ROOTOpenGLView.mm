@@ -23,7 +23,7 @@ namespace OpenGL {
 bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 {
    assert(glView != nil && "GLViewIsValid, glView parameter is nil");
-   
+
    if ([glView isHiddenOrHasHiddenAncestor]) {
       //This will result in "invalid drawable" message
       //from -setView:.
@@ -45,7 +45,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 
 @implementation ROOTOpenGLView {
    BOOL            fIsOverlapped;
-   
+
    NSOpenGLPixelFormat *fPixelFormat;
    BOOL fUpdateContext;
 }
@@ -56,11 +56,11 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 //______________________________________________________________________________
 - (id) initWithFrame : (NSRect) frameRect pixelFormat : (NSOpenGLPixelFormat *) format
 {
-   if (self = [super initWithFrame : frameRect windowAttributes : 0]) {   
+   if (self = [super initWithFrame : frameRect windowAttributes : 0]) {
       [self setHidden : YES];//Not sure.
       fIsOverlapped = NO;
       fPixelFormat = [format retain];
-      
+
       if ([[NSScreen mainScreen] backingScaleFactor] > 1.)
          [self  setWantsBestResolutionOpenGLSurface : YES];
    }
@@ -119,7 +119,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 
 //______________________________________________________________________________
 - (void) mapWindow
-{   
+{
    [self setHidden : NO];
 }
 
@@ -173,7 +173,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 }
 
 //______________________________________________________________________________
-- (BOOL) isFlipped 
+- (BOOL) isFlipped
 {
    return YES;
 }
@@ -194,14 +194,14 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 - (void) setFrameSize : (NSSize) newSize
 {
    //Check, if setFrameSize calls setFrame.
-   
+
    [super setFrameSize : newSize];
-   
+
    if (![self isHiddenOrHasHiddenAncestor] && !fIsOverlapped)
       [fOpenGLContext update];
-   else 
+   else
       fUpdateContext = YES;
-   
+
    if ((self.fEventMask & kStructureNotifyMask) && (self.fMapState == kIsViewable || fIsOverlapped == YES)) {
       assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
              "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");

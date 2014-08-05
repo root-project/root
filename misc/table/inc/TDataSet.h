@@ -69,7 +69,7 @@ protected:
 
 
 public:
- 
+
    //----- dataset flags
    enum ESetBits {
       kMark        = BIT(22)   // if object is marked

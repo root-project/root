@@ -1,5 +1,5 @@
 {
-//Simple example illustrating how to draw TGaxis objects in various formats.	
+//Simple example illustrating how to draw TGaxis objects in various formats.
 //To see the output of this macro, click begin_html <a href="gif/gaxis.gif" >here</a> end_html
 //Author: Rene Brun
 
@@ -27,7 +27,7 @@
   axis4->SetName("axis4");
   axis4->SetTitle("axis4");
   axis4->Draw();
-   
+
   TGaxis *axis5 = new TGaxis(-4.5,-0.6,5.5,-0.6,1.2,1.32,80506,"-+");
   axis5->SetName("axis5");
   axis5->SetLabelSize(0.03);

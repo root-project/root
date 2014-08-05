@@ -10,7 +10,7 @@ void fitMultiGraph()
    //fitting a parabola to a multigraph of 3 partly overlapping graphs
    //with different errors
    //Author: Anna Kreshuk
-      
+
    Int_t n = 30;
    Double_t *x1 = new Double_t[n];
    Double_t *x2 = new Double_t[n];
@@ -21,7 +21,7 @@ void fitMultiGraph()
    Double_t *e1 = new Double_t[n];
    Double_t *e2 = new Double_t[n];
    Double_t *e3 = new Double_t[n];
-   
+
    //generate the data for the graphs
    TRandom r;
    Int_t i;
@@ -36,7 +36,7 @@ void fitMultiGraph()
       e3[i] = 20;
       y3[i] = 3 + 2*x3[i] + x3[i]*x3[i] + r.Gaus()*20;
    }
-   
+
    //create the graphs and set their drawing options
    TGraphErrors *gr1 = new TGraphErrors(n, x1, y1, 0, e1);
    TGraphErrors *gr2 = new TGraphErrors(n, x2, y2, 0, e2);
@@ -50,19 +50,19 @@ void fitMultiGraph()
    gr3->SetMarkerSize(0.3);
 
    //add the graphs to the multigraph
-   TMultiGraph *mg=new TMultiGraph("mg", 
+   TMultiGraph *mg=new TMultiGraph("mg",
       "TMultiGraph of 3 TGraphErrors");
    mg->Add(gr1);
    mg->Add(gr2);
    mg->Add(gr3);
 
-   TCanvas *myc = new TCanvas("myc", 
+   TCanvas *myc = new TCanvas("myc",
       "Fitting a MultiGraph of 3 TGraphErrors");
    myc->SetFillColor(42);
    myc->SetGrid();
-   
+
    mg->Draw("ap");
-   
+
    //fit
    mg->Fit("pol2", "F");
 
@@ -87,7 +87,7 @@ void fitminuit()
    Double_t *xtotal = new Double_t[n*3];
    Double_t *ytotal = new Double_t[n*3];
    Double_t *etotal = new Double_t[n*3];
-   
+
    TRandom r;
    Int_t i;
    for (i=0; i<n; i++) {
@@ -101,11 +101,11 @@ void fitminuit()
       e3[i] = 0.00001;
       y3[i] = TMath::Gaus(x3[i], 0, 1);
    }
-   for (i=0; i<n; i++) 
+   for (i=0; i<n; i++)
       {xtotal[i]=x1[i]; ytotal[i]=y1[i]; etotal[i]=0.00001;}
-   for (i=n; i<2*n; i++) 
+   for (i=n; i<2*n; i++)
       {xtotal[i] = x2[i-n]; ytotal[i]=y2[i-n]; etotal[i]=0.00001;}
-   for (i=2*n; i<3*n; i++) 
+   for (i=2*n; i<3*n; i++)
       {xtotal[i] = x3[i-2*n]; ytotal[i]=y3[i-2*n]; etotal[i]=0.00001;}
 
    //create the graphs and set their drawing options

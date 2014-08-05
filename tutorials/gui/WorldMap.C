@@ -1,7 +1,7 @@
 //  This macro shows how to use a TGImageMap class.
 //
-// A TGImageMap provides the functionality like a clickable image in    
-// with sensitive regions (similar to MAP HTML tag).                 
+// A TGImageMap provides the functionality like a clickable image in
+// with sensitive regions (similar to MAP HTML tag).
 //Author: Valeriy Onuchin
 
 #include <TGPicture.h>
@@ -29,9 +29,9 @@ protected:
    virtual void InitUK();
 
 public:
-   // the name corresponds to TLD code 
+   // the name corresponds to TLD code
    // (http://www.iana.org/cctld/cctld-whois.htm)
-   // the value to "country phone code" 
+   // the value to "country phone code"
    // (http://www.att.com/traveler/tools/codes.html)
    enum ECountryCode {
       kRU = 7, kUS = 1, kFR = 33, kDE = 49, kCH = 41, kCN = 86, kAU = 61,

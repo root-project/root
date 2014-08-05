@@ -70,7 +70,7 @@ extern FILE *                           globus_i_gsi_cred_debug_fstream;
 #define GLOBUS_I_GSI_CRED_DEBUG_PRINT_OBJECT(_LEVEL_, _OBJ_NAME_, _OBJ_) {}
 
 #endif
-         
+
 #define GLOBUS_I_GSI_CRED_DEBUG_ENTER \
             GLOBUS_I_GSI_CRED_DEBUG_FPRINTF( \
                 2, (globus_i_gsi_cred_debug_fstream, \
@@ -187,12 +187,12 @@ typedef struct globus_l_gsi_cred_handle_attrs_s
  * @internal
  *
  * Contains all the state associated with a credential handle, including
- * 
+ *
  * @see globus_credential_handle_init(), globus_credential_handle_destroy()
  */
 typedef struct globus_l_gsi_cred_handle_s
 {
-    /** The credential's signed certificate */ 
+    /** The credential's signed certificate */
     X509 *                              cert;
     /** The private key of the credential */
     EVP_PKEY *                          key;

@@ -123,7 +123,7 @@ TQpDataSparse::TQpDataSparse(const TQpDataSparse &another) : TQpDataBase(another
 void TQpDataSparse::SetNonZeros(Int_t nnzQ,Int_t nnzA,Int_t nnzC)
 {
 // Allocate space for the appropriate number of non-zeros in the matrices
- 
+
    fQ.SetSparseIndex(nnzQ);
    fA.SetSparseIndex(nnzA);
    fC.SetSparseIndex(nnzC);

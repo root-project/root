@@ -102,7 +102,7 @@ TProofProgressMemoryPlot::TProofProgressMemoryPlot(TProofProgressDialog *d,
 
    AddFrame(htotal, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 2, 2, 2, 2));
    TString title;
-   title.Form("PROOF Memory Consumption: %s", (fDialog->fProof ? 
+   title.Form("PROOF Memory Consumption: %s", (fDialog->fProof ?
               fDialog->fProof->GetMaster() : "<dummy>"));
    SetWindowName(title);
    SetIconName(title);

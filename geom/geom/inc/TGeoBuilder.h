@@ -39,24 +39,24 @@ protected:
    static TGeoBuilder    *fgInstance;            //! static pointer to singleton
 
    TGeoBuilder();
-   TGeoBuilder(const TGeoBuilder&); 
-   TGeoBuilder& operator=(const TGeoBuilder&); 
+   TGeoBuilder(const TGeoBuilder&);
+   TGeoBuilder& operator=(const TGeoBuilder&);
 
 private :
    TGeoManager           *fGeometry;             //! current geometry
 
    void                   SetGeometry(TGeoManager *geom) {fGeometry = geom;}
-   
+
 public :
    virtual ~TGeoBuilder();
-   
+
    static TGeoBuilder    *Instance(TGeoManager *geom);
 
    Int_t                  AddMaterial(TGeoMaterial *material);
    Int_t                  AddTransformation(TGeoMatrix *matrix);
    Int_t                  AddShape(TGeoShape *shape);
    void                   RegisterMatrix(TGeoMatrix *matrix);
-   
+
    TGeoVolume            *MakeArb8(const char *name, TGeoMedium *medium,
                                      Double_t dz, Double_t *vertices=0);
    TGeoVolume            *MakeBox(const char *name, TGeoMedium *medium,
@@ -115,7 +115,7 @@ public :
 
    //--- GEANT3-like geometry creation
    TGeoVolume            *Division(const char *name, const char *mother, Int_t iaxis, Int_t ndiv,
-                                         Double_t start, Double_t step, Int_t numed=0, Option_t *option="");    
+                                         Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
    void                   Matrix(Int_t index, Double_t theta1, Double_t phi1,
                                        Double_t theta2, Double_t phi2,
                                        Double_t theta3, Double_t phi3);
@@ -138,9 +138,9 @@ public :
                                        Float_t *upar, Int_t npar=0);
    TGeoVolume            *Volume(const char *name, const char *shape, Int_t nmed,
                                        Double_t *upar, Int_t npar=0);
-      
+
    ClassDef(TGeoBuilder, 0)          // geometry builder singleton
 };
 
 #endif
-   
+

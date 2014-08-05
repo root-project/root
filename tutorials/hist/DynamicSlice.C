@@ -5,7 +5,7 @@ void DynamicSlice()
    c1 = new TCanvas("c1","Dynamic Slice Example",10,10,700,500);
    c1->SetFillColor(42);
    c1->SetFrameFillColor(33);
-  
+
    //create a 2-d histogram, fill and draw it
    TH2F *hpxpy  = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
    hpxpy->SetStats(0);
@@ -15,7 +15,7 @@ void DynamicSlice()
       hpxpy->Fill(px,py);
    }
    hpxpy->Draw("col");
-   
+
    //Add a TExec object to the canvas
    c1->AddExec("dynamic","DynamicExec()");
 }
@@ -32,7 +32,7 @@ void DynamicExec()
    // as a development engine.
    //
    // Author:  Rene Brun
-   
+
    TObject *select = gPad->GetSelected();
    if(!select) return;
    if (!select->InheritsFrom(TH2::Class())) {gPad->SetUniqueID(0); return;}

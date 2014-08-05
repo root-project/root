@@ -1,6 +1,6 @@
-<br/> 
-<hr/> 
-<a name="hist"></a> 
+<br/>
+<hr/>
+<a name="hist"></a>
 <h3>Histogram Libraries</h3>
 
 <h4>TH1</h4>
@@ -52,21 +52,21 @@ histograms as ratio of Poisson means</li>
 
 <h4>TMultiGraph</h4>
 <ul>
-<li>The following macro did not show the x-axis in TimeDisplay mode. The 
-<tt>mg->GetYaxis()->UnZoom();</tt> command erased the TimeDisplay attribute of 
+<li>The following macro did not show the x-axis in TimeDisplay mode. The
+<tt>mg->GetYaxis()->UnZoom();</tt> command erased the TimeDisplay attribute of
 the axis. (fix from beischer@physik.rwth-aachen.de).
 <pre>
-{ 
-   TMultiGraph* mg = new TMultiGraph; 
-   TGraph* g = new TGraph; 
-   for (int i = 0; i &lt; 100; i++) g->SetPoint(i, 1289420808+i, i+2); 
-   mg->Add(g, "P"); 
-   mg->Draw("AP"); 
-   mg->GetXaxis()->SetTimeDisplay(1); 
-   mg->GetYaxis()->UnZoom(); 
-   gPad->Modified(); 
-   gPad->Update(); 
-} 
+{
+   TMultiGraph* mg = new TMultiGraph;
+   TGraph* g = new TGraph;
+   for (int i = 0; i &lt; 100; i++) g->SetPoint(i, 1289420808+i, i+2);
+   mg->Add(g, "P");
+   mg->Draw("AP");
+   mg->GetXaxis()->SetTimeDisplay(1);
+   mg->GetYaxis()->UnZoom();
+   gPad->Modified();
+   gPad->Update();
+}
 </pre>
 </li>
 </ul>
@@ -78,14 +78,14 @@ the axis. (fix from beischer@physik.rwth-aachen.de).
 </li>
 <li> on Ubuntu the following macro crashed. A char variable was too small.
 <pre>
-   { 
-      TCanvas *tmp = new TCanvas(); 
-      TH2F *h1 = new TH2F("h1","h1",40,0.,10.,40,1.e-2,1.e2); 
-      h1->Fill(5,10); 
-      h1->Draw("COLZ"); 
-      tmp->SetLogz(); 
-      h1->GetZaxis()->SetNdivisions(110,kFALSE); 
-   } 
+   {
+      TCanvas *tmp = new TCanvas();
+      TH2F *h1 = new TH2F("h1","h1",40,0.,10.,40,1.e-2,1.e2);
+      h1->Fill(5,10);
+      h1->Draw("COLZ");
+      tmp->SetLogz();
+      h1->GetZaxis()->SetNdivisions(110,kFALSE);
+   }
 </pre>
 </li>
 </ul>
@@ -114,7 +114,7 @@ jags go away.
 
 <h4>TPainter3dAlgorithms</h4>
 <ul>
-<li>Protection against possible NaN added. The following macro produced wrong 
+<li>Protection against possible NaN added. The following macro produced wrong
    plots.
 <pre>
    {

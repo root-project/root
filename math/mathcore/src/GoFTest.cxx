@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: Bartolomeu Rabacal    05/2010 
+// Authors: Bartolomeu Rabacal    05/2010
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2006 , LCG ROOT MathLib Team                         *
@@ -28,67 +28,67 @@
 
 namespace ROOT {
 namespace Math {
-   
-   struct CDFWrapper : public IGenFunction { 
-      // wrapper around a cdf funciton to re-scale for the range
-      Double_t fXmin; // lower range for x 
-      Double_t fXmax; // lower range for x 
-      Double_t fNorm; // normalization
-      const IGenFunction* fCDF; // cdf pointer (owned by the class) 
 
-      
+   struct CDFWrapper : public IGenFunction {
+      // wrapper around a cdf funciton to re-scale for the range
+      Double_t fXmin; // lower range for x
+      Double_t fXmax; // lower range for x
+      Double_t fNorm; // normalization
+      const IGenFunction* fCDF; // cdf pointer (owned by the class)
+
+
       virtual ~CDFWrapper() { if (fCDF) delete fCDF; }
 
-      CDFWrapper(const IGenFunction& cdf, Double_t xmin=0, Double_t xmax=-1) : 
+      CDFWrapper(const IGenFunction& cdf, Double_t xmin=0, Double_t xmax=-1) :
          fCDF(cdf.Clone())
       {
-         if (xmin >= xmax) { 
-            fNorm = 1; 
+         if (xmin >= xmax) {
+            fNorm = 1;
             fXmin = -std::numeric_limits<double>::infinity();
             fXmax = std::numeric_limits<double>::infinity();
          }
          else {
-            fNorm = cdf(xmax) - cdf(xmin); 
-            fXmin = xmin; 
-            fXmax = xmax; 
+            fNorm = cdf(xmax) - cdf(xmin);
+            fXmin = xmin;
+            fXmax = xmax;
          }
       }
 
       Double_t DoEval(Double_t x) const {
-         if (x <= fXmin) return 0; 
-         if (x >= fXmax) return 1.0; 
+         if (x <= fXmin) return 0;
+         if (x >= fXmax) return 1.0;
          return (*fCDF)(x)/fNorm;
       }
-      
+
       IGenFunction* Clone() const {
          return new CDFWrapper(*fCDF,fXmin,fXmax);
       }
    };
 
 
-   class PDFIntegral : public IGenFunction { 
-      Double_t fXmin; // lower range for x 
-      Double_t fXmax; // lower range for x 
+   class PDFIntegral : public IGenFunction {
+      Double_t fXmin; // lower range for x
+      Double_t fXmax; // lower range for x
       Double_t fNorm; // normalization
       mutable IntegratorOneDim fIntegral;
-      const IGenFunction* fPDF; // pdf pointer (owned by the class) 
+      const IGenFunction* fPDF; // pdf pointer (owned by the class)
    public:
 
       virtual ~PDFIntegral() { if (fPDF) delete fPDF; }
 
-      PDFIntegral(const IGenFunction& pdf, Double_t xmin = 0, Double_t xmax = -1) : 
-         fXmin(xmin), 
+      PDFIntegral(const IGenFunction& pdf, Double_t xmin = 0, Double_t xmax = -1) :
+         fXmin(xmin),
          fXmax(xmax),
          fNorm(1),
          fPDF(pdf.Clone())
       {
          // compute normalization
          fIntegral.SetFunction(*fPDF);  // N.B. must be fPDF (the cloned copy) and not pdf which can disappear
-         if (fXmin >= fXmax) {  
+         if (fXmin >= fXmax) {
             fXmin = -std::numeric_limits<double>::infinity();
             fXmax = std::numeric_limits<double>::infinity();
          }
-         if (fXmin == -std::numeric_limits<double>::infinity() && fXmax == std::numeric_limits<double>::infinity() ) { 
+         if (fXmin == -std::numeric_limits<double>::infinity() && fXmax == std::numeric_limits<double>::infinity() ) {
             fNorm = fIntegral.Integral();
          }
          else if (fXmin == -std::numeric_limits<double>::infinity() )
@@ -98,16 +98,16 @@ namespace Math {
          else
             fNorm = fIntegral.Integral(fXmin, fXmax);
       }
-            
+
       Double_t DoEval(Double_t x) const {
-         if (x <= fXmin) return 0; 
-         if (x >= fXmax) return 1.0; 
+         if (x <= fXmin) return 0;
+         if (x >= fXmax) return 1.0;
          if (fXmin == -std::numeric_limits<double>::infinity() )
             return fIntegral.IntegralLow(x)/fNorm;
-         else 
+         else
             return fIntegral.Integral(fXmin,x)/fNorm;
       }
-      
+
       IGenFunction* Clone() const {
          return new PDFIntegral(*fPDF, fXmin, fXmax);
       }
@@ -121,22 +121,22 @@ namespace Math {
       fDist = dist;
       SetCDF();
    }
-  
+
    GoFTest::GoFTest( UInt_t sample1Size, const Double_t* sample1, UInt_t sample2Size, const Double_t* sample2 )
-   : fCDF(std::auto_ptr<IGenFunction>((IGenFunction*)0)), 
-     fDist(kUndefined), 
-     fSamples(std::vector<std::vector<Double_t> >(2)), 
+   : fCDF(std::auto_ptr<IGenFunction>((IGenFunction*)0)),
+     fDist(kUndefined),
+     fSamples(std::vector<std::vector<Double_t> >(2)),
      fTestSampleFromH0(kFALSE) {
       Bool_t badSampleArg = sample1 == 0 || sample1Size == 0;
-      if (badSampleArg) { 
+      if (badSampleArg) {
          std::string msg = "'sample1";
          msg += !sample1Size ? "Size' cannot be zero" : "' cannot be zero-length";
          MATH_ERROR_MSG("GoFTest", msg.c_str());
          assert(!badSampleArg);
       }
       badSampleArg = sample2 == 0 || sample2Size == 0;
-      if (badSampleArg) { 
-         std::string msg = "'sample2";         
+      if (badSampleArg) {
+         std::string msg = "'sample2";
          msg += !sample2Size ? "Size' cannot be zero" : "' cannot be zero-length";
          MATH_ERROR_MSG("GoFTest", msg.c_str());
          assert(!badSampleArg);
@@ -151,13 +151,13 @@ namespace Math {
       SetParameters();
    }
 
-   GoFTest::GoFTest(UInt_t sampleSize, const Double_t* sample, EDistribution dist)   
-   : fCDF(std::auto_ptr<IGenFunction>((IGenFunction*)0)), 
-     fDist(dist), 
-     fSamples(std::vector<std::vector<Double_t> >(1)), 
+   GoFTest::GoFTest(UInt_t sampleSize, const Double_t* sample, EDistribution dist)
+   : fCDF(std::auto_ptr<IGenFunction>((IGenFunction*)0)),
+     fDist(dist),
+     fSamples(std::vector<std::vector<Double_t> >(1)),
      fTestSampleFromH0(kTRUE) {
       Bool_t badSampleArg = sample == 0 || sampleSize == 0;
-      if (badSampleArg) { 
+      if (badSampleArg) {
          std::string msg = "'sample";
          msg += !sampleSize ? "Size' cannot be zero" : "' cannot be zero-length";
          MATH_ERROR_MSG("GoFTest", msg.c_str());
@@ -184,9 +184,9 @@ namespace Math {
          combinedSamplesSize += samplesSizes[i];
       }
       std::sort(fCombinedSamples.begin(), fCombinedSamples.end());
-   
+
       Bool_t degenerateSamples = *(fCombinedSamples.begin()) == *(fCombinedSamples.end() - 1);
-      if (degenerateSamples) { 
+      if (degenerateSamples) {
          std::string msg = "Degenerate sample";
          msg += samplesSizes.size() > 1 ? "s!" : "!";
          msg += " Sampling values all identical.";
@@ -199,7 +199,7 @@ namespace Math {
       fMean = std::accumulate(fSamples[0].begin(), fSamples[0].end(), 0.0) / fSamples[0].size();
       fSigma = TMath::Sqrt(1. / (fSamples[0].size() - 1) * (std::inner_product(fSamples[0].begin(), fSamples[0].end(),     fSamples[0].begin(), 0.0) - fSamples[0].size() * TMath::Power(fMean, 2)));
    }
-   
+
    void GoFTest::operator()(ETestType test, Double_t& pvalue, Double_t& testStat) const {
       switch (test) {
          default:
@@ -216,7 +216,7 @@ namespace Math {
             KolmogorovSmirnov2SamplesTest(pvalue, testStat);
       }
    }
-   
+
    Double_t GoFTest::operator()(ETestType test, const Char_t* option) const {
       Double_t result = 0.0;
       switch (test) {
@@ -236,7 +236,7 @@ namespace Math {
       return result;
    }
 
-   void GoFTest::SetCDF() { // Setting parameter-free distributions 
+   void GoFTest::SetCDF() { // Setting parameter-free distributions
       IGenFunction* cdf = 0;
       switch (fDist) {
       case kLogNormal:
@@ -250,27 +250,27 @@ namespace Math {
       case kUserDefined:
       case kUndefined:
       default:
-         break;   
+         break;
       }
       fCDF = std::auto_ptr<IGenFunction>(cdf);
    }
-   
+
    void GoFTest::SetDistributionFunction(const IGenFunction& f, Bool_t isPDF, Double_t xmin, Double_t xmax) {
       if (fDist > kUserDefined) {
          MATH_WARN_MSG("SetDistributionFunction","Distribution type is changed to user defined");
       }
-      fDist = kUserDefined; 
+      fDist = kUserDefined;
       // function will be cloned inside the wrapper PDFIntegral of CDFWrapper classes
-      if (isPDF) 
-         fCDF = std::auto_ptr<IGenFunction>(new PDFIntegral(f, xmin, xmax) ); 
-      else 
-         fCDF = std::auto_ptr<IGenFunction>(new CDFWrapper(f, xmin, xmax) ); 
+      if (isPDF)
+         fCDF = std::auto_ptr<IGenFunction>(new PDFIntegral(f, xmin, xmax) );
+      else
+         fCDF = std::auto_ptr<IGenFunction>(new CDFWrapper(f, xmin, xmax) );
    }
 
    void GoFTest::Instantiate(const Double_t* sample, UInt_t sampleSize) {
       // initialization function for the template constructors
       Bool_t badSampleArg = sample == 0 || sampleSize == 0;
-      if (badSampleArg) { 
+      if (badSampleArg) {
          std::string msg = "'sample";
          msg += !sampleSize ? "Size' cannot be zero" : "' cannot be zero-length";
          MATH_ERROR_MSG("GoFTest", msg.c_str());
@@ -279,12 +279,12 @@ namespace Math {
       fCDF = std::auto_ptr<IGenFunction>((IGenFunction*)0);
       fDist = kUserDefined;
       fMean = 0;
-      fSigma = 0; 
+      fSigma = 0;
       fSamples = std::vector<std::vector<Double_t> >(1);
       fTestSampleFromH0 = kTRUE;
       SetSamples(std::vector<const Double_t*>(1, sample), std::vector<UInt_t>(1, sampleSize));
    }
-   
+
    Double_t GoFTest::GaussianCDF(Double_t x) const {
       return ROOT::Math::normal_cdf(x, fSigma, fMean);
    }
@@ -393,7 +393,7 @@ namespace Math {
          return 1.0;
       if (A2 <= 0.0) A2 = W2;
       Int_t bin = Int_t(50 * A2);
-      dA2 = Double_t(bin) / 50 + 0.01 - A2; // Difference between the bin center and A2 
+      dA2 = Double_t(bin) / 50 + 0.01 - A2; // Difference between the bin center and A2
       pvalue = InterpolatePValues(dA2, bin);
       return pvalue;
    }
@@ -408,12 +408,12 @@ namespace Math {
          pvalue = std::pow(A2, -0.5) * std::exp(-1.2337141 / A2) * (2.00012 + (0.247105 - (0.0649821 - (0.0347962 - (0.011672 - 0.00168691 * A2) * A2) * A2) * A2) * A2);
       } else {
          pvalue = std::exp(-1. * std::exp(1.0776 - (2.30695 - (0.43424 - (.082433 - (0.008056 - 0.0003146 * A2) * A2) * A2) * A2) * A2));
-      }   
+      }
       return 1. - pvalue;
    }
 
 /*
-  Taken from (1) -- Named for 2 samples but implemented for K. Restricted to K = 2 by the class's constructors 
+  Taken from (1) -- Named for 2 samples but implemented for K. Restricted to K = 2 by the class's constructors
 */ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) const {
       pvalue = -1;
       testStat = -1;
@@ -421,7 +421,7 @@ namespace Math {
          MATH_ERROR_MSG("AndersonDarling2SamplesTest", "Only 1-sample tests can be issued with a 1-sample constructed GoFTest object!");
          return;
       }
-      std::vector<Double_t> z(fCombinedSamples); 
+      std::vector<Double_t> z(fCombinedSamples);
       std::vector<Double_t>::iterator endUnique = std::unique(z.begin(), z.end()); //z_j's in (1)
       std::vector<UInt_t> h; // h_j's in (1)
       std::vector<Double_t> H; // H_j's in (1)
@@ -443,7 +443,7 @@ namespace Math {
          Double_t sum_result = 0.0;
          UInt_t j = 0;
          for (std::vector<Double_t>::iterator data = z.begin(); data != endUnique; ++data) {
-            sum_result += h[j] *  TMath::Power(N * F[i][j]- fSamples[i].size() * H[j], 2) / (H[j] * (N - H[j]) - N * h[j] / 4.0); 
+            sum_result += h[j] *  TMath::Power(N * F[i][j]- fSamples[i].size() * H[j], 2) / (H[j] * (N - H[j]) - N * h[j] / 4.0);
             ++j;
          }
          A2 += 1.0 / fSamples[i].size() * sum_result;
@@ -452,13 +452,13 @@ namespace Math {
       pvalue = PValueAD2Samples(A2, N); // standartized A2
       testStat = A2;
    }
-   
+
    Double_t GoFTest::AndersonDarling2SamplesTest(const Char_t* option) const {
       Double_t pvalue, testStat;
       AndersonDarling2SamplesTest(pvalue, testStat);
-      return (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0) ? pvalue : testStat;   
+      return (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0) ? pvalue : testStat;
    }
-   
+
 /*
   Taken from (3)
 */ void GoFTest::AndersonDarlingTest(Double_t& pvalue, Double_t& testStat) const {
@@ -467,7 +467,7 @@ namespace Math {
       if (!fTestSampleFromH0) {
          MATH_ERROR_MSG("AndersonDarlingTest", "Only 2-sample tests can be issued with a 2-sample constructed GoFTest object!");
          return;
-      } 
+      }
       if (fDist == kUndefined) {
          MATH_ERROR_MSG("AndersonDarlingTest", "Distribution type is undefined! Please use SetDistribution(GoFTest::EDistribution).");
          return;
@@ -478,7 +478,7 @@ namespace Math {
          Double_t x1 = fSamples[0][i];
          Double_t w1 = (*fCDF)(x1);
          Double_t result = (2 * (i + 1) - 1) * TMath::Log(w1) + (2 * (n - (i + 1)) + 1) * TMath::Log(1 - w1);
-         A2 += result; 
+         A2 += result;
       }
       (A2 /= -n) -= n;
       if (A2 != A2) {
@@ -488,7 +488,7 @@ namespace Math {
       pvalue = PValueAD1Sample(A2);
       testStat = A2;
    }
-   
+
    Double_t GoFTest::AndersonDarlingTest(const Char_t* option) const {
       Double_t pvalue, testStat;
       AndersonDarlingTest(pvalue, testStat);
@@ -505,20 +505,20 @@ namespace Math {
       const UInt_t na = fSamples[0].size();
       const UInt_t nb = fSamples[1].size();
       Double_t* a = new Double_t[na];
-      Double_t* b = new Double_t[nb]; 
+      Double_t* b = new Double_t[nb];
       std::copy(fSamples[0].begin(), fSamples[0].end(), a);
       std::copy(fSamples[1].begin(), fSamples[1].end(), b);
       pvalue = TMath::KolmogorovTest(na, a, nb, b, 0);
       testStat = TMath::KolmogorovTest(na, a, nb, b, "M");
    }
-   
+
    Double_t GoFTest::KolmogorovSmirnov2SamplesTest(const Char_t* option) const {
       Double_t pvalue, testStat;
       KolmogorovSmirnov2SamplesTest(pvalue, testStat);
-      return (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0) ? pvalue : testStat;    
+      return (strncmp(option, "p", 1) == 0 || strncmp(option, "t", 1) != 0) ? pvalue : testStat;
    }
 
-/* 
+/*
    Algorithm taken from (3) in page 737
 */ void GoFTest::KolmogorovSmirnovTest(Double_t& pvalue, Double_t& testStat) const {
       pvalue = -1;
@@ -543,7 +543,7 @@ namespace Math {
       pvalue = TMath::KolmogorovProb(Dn * (TMath::Sqrt(n) + 0.12 + 0.11 / TMath::Sqrt(n)));
       testStat = Dn;
    }
-   
+
    Double_t GoFTest::KolmogorovSmirnovTest(const Char_t* option) const {
       Double_t pvalue, testStat;
       KolmogorovSmirnovTest(pvalue, testStat);

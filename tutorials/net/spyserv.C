@@ -8,7 +8,7 @@
 //     the histograms by clicking on the "hpx", "hpxpy" and "hprof"
 //     buttons
 //Author: Fons Rademakers
-   
+
 #include "TH1.h"
 #include "TH2.h"
 #include "TProfile.h"

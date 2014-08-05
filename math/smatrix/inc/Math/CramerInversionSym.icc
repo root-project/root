@@ -1,5 +1,5 @@
 // @(#)root/smatrix:$Id$
-// Authors: L. Moneta    2005  
+// Authors: L. Moneta    2005
 
 
 /**********************************************************************
@@ -9,11 +9,11 @@
  *                                                                    *
  **********************************************************************/
 //
-// Cramer optmized inversion for symmetric matrices up to size 5x5. 
-// Code from ROOT TMatrixDCramerInv which originates from CLHEP 
+// Cramer optmized inversion for symmetric matrices up to size 5x5.
+// Code from ROOT TMatrixDCramerInv which originates from CLHEP
 // (original author Mark Fischler)
 //
-// Modified by L. Moneta 22/03/07: specialize only until 5x5 (before was up to 6x6) 
+// Modified by L. Moneta 22/03/07: specialize only until 5x5 (before was up to 6x6)
 //  tests show that on 64 machines (like on slc4) it is faster the general method
 //
 
@@ -23,9 +23,9 @@
 #include <cmath>
 
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
 
 
@@ -34,10 +34,10 @@ namespace ROOT {
 /**
    Inversion for a 3x3 symmetric matrix
  */
-template <class T> 
-bool FastInverter<3>::Dinv(MatRepSym<T,3> & rhs) { 
+template <class T>
+bool FastInverter<3>::Dinv(MatRepSym<T,3> & rhs) {
 
-  typedef T  Scalar; 
+  typedef T  Scalar;
 
   // check matrix sizes ??
 
@@ -85,7 +85,7 @@ bool FastInverter<3>::Dinv(MatRepSym<T,3> & rhs) {
   rhs[4] = s*c11;
   rhs[5] = s*c12;
   rhs[8] = s*c22;
-  
+
   return true;
 }
 
@@ -120,10 +120,10 @@ bool FastInverter<3>::Dinv(MatRepSym<T,3> & rhs) {
 /**
    Inversion for a 4x4 symmetric matrix
  */
-template <class T> 
-bool FastInverter<4>::Dinv(MatRepSym<T,4> & rhs) { 
+template <class T>
+bool FastInverter<4>::Dinv(MatRepSym<T,4> & rhs) {
 
-  typedef T  Scalar; 
+  typedef T  Scalar;
 
 
   // Find all NECESSARY 2x2 dets:  (14 of them)
@@ -144,7 +144,7 @@ bool FastInverter<4>::Dinv(MatRepSym<T,4> & rhs) {
   const Scalar mDet2_23_23 = rhs[SF22]*rhs[SF33] - rhs[SF23]*rhs[SF32];
 
   // SFind all NECESSSFRY 3x3 dets:   (10 of them)
-  
+
   const Scalar mDet3_012_012 = rhs[SF00]*mDet2_12_12 - rhs[SF01]*mDet2_12_02
                                + rhs[SF02]*mDet2_12_01;
   const Scalar mDet3_013_012 = rhs[SF00]*mDet2_13_12 - rhs[SF01]*mDet2_13_02
@@ -203,13 +203,13 @@ bool FastInverter<4>::Dinv(MatRepSym<T,4> & rhs) {
 //==============================================================================
 
 // Mij are indices for a 5x5 matrix.
-    
+
 #define SM00 0
 #define SM01 1
 #define SM02 2
 #define SM03 3
 #define SM04 4
-  
+
 #define SM10 1
 #define SM11 6
 #define SM12 7
@@ -237,10 +237,10 @@ bool FastInverter<4>::Dinv(MatRepSym<T,4> & rhs) {
 /**
    Inversion for a 5x5 symmetric matrix
  */
-template <class T> 
-bool FastInverter<5>::Dinv(MatRepSym<T,5> & rhs) { 
+template <class T>
+bool FastInverter<5>::Dinv(MatRepSym<T,5> & rhs) {
 
-  typedef T  Scalar; 
+  typedef T  Scalar;
 
   // Find all NECESSARY 2x2 dets:  (25 of them)
 
@@ -378,13 +378,13 @@ bool FastInverter<5>::Dinv(MatRepSym<T,5> & rhs) {
   }  // namespace Math
 
 }  // namespace ROOT
-          
+
 
 // undef Smacros to avoid conflicts
 
 // undef SF 4x4
-#undef SF00 
-#undef SF01 
+#undef SF00
+#undef SF01
 #undef SF02
 #undef SF03
 

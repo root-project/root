@@ -18,7 +18,7 @@
 //
 //      TGeoBuilder::Instance()->SetGeometry(gGeoManager);
 //
-//   The geometry builder is a singleton that may be used to build one or more 
+//   The geometry builder is a singleton that may be used to build one or more
 //   geometries.
 //
 //_____________________________________________________________________________
@@ -59,7 +59,7 @@ TGeoBuilder::TGeoBuilder()
 {
 // Default constructor.
    fgInstance = this;
-} 
+}
 
 //_____________________________________________________________________________
 TGeoBuilder::TGeoBuilder(const TGeoBuilder& other)
@@ -67,14 +67,14 @@ TGeoBuilder::TGeoBuilder(const TGeoBuilder& other)
 {
 // Copy constructor.
    Error("copy constructor","copying not allowed for TGeoBuilder");
-} 
+}
 
 //_____________________________________________________________________________
 TGeoBuilder::~TGeoBuilder()
 {
 // Destructor.
    fgInstance = NULL;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoBuilder &TGeoBuilder::operator=(const TGeoBuilder&)
@@ -85,17 +85,17 @@ TGeoBuilder &TGeoBuilder::operator=(const TGeoBuilder&)
 }
 
 //_____________________________________________________________________________
-TGeoBuilder *TGeoBuilder::Instance(TGeoManager *geom) 
+TGeoBuilder *TGeoBuilder::Instance(TGeoManager *geom)
 {
 // Return pointer to singleton.
    if (!geom) {
       printf("ERROR: Cannot create geometry builder with NULL geometry\n");
       return NULL;
-   }   
+   }
    if (!fgInstance) fgInstance = new TGeoBuilder();
    fgInstance->SetGeometry(geom);
    return fgInstance;
-}   
+}
 
 //_____________________________________________________________________________
 Int_t TGeoBuilder::AddMaterial(TGeoMaterial *material)
@@ -140,7 +140,7 @@ void TGeoBuilder::RegisterMatrix(TGeoMatrix *matrix)
 // Register a matrix to the list of matrices. It will be cleaned-up at the
 // destruction TGeoManager.
    if (matrix->IsRegistered()) return;
-   TObjArray *matrices = fGeometry->GetListOfMatrices();   
+   TObjArray *matrices = fGeometry->GetListOfMatrices();
    Int_t nmat = matrices->GetEntriesFast();
    matrices->AddAtAndExpand(matrix, nmat);
 }
@@ -472,7 +472,7 @@ TGeoVolume *TGeoBuilder::Division(const char *name, const char *mother, Int_t ia
    TString smname = mother;
    smname = smname.Strip();
    const char *mname = smname.Data();
-   
+
    amother = (TGeoVolume*)fGeometry->GetListOfGVolumes()->FindObject(mname);
    if (!amother) amother = fGeometry->GetVolume(mname);
    if (amother) return amother->Divide(vname,iaxis,ndiv,start,step,numed, option);
@@ -588,7 +588,7 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
 //  ISONLY ONLY/MANY flag
    TGeoVolume *amother= 0;
    TGeoVolume *volume = 0;
-   
+
    // look into special volume list first
    amother = fGeometry->FindVolumeFast(mother,kTRUE);
    if (!amother) amother = fGeometry->FindVolumeFast(mother);
@@ -626,7 +626,7 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
             return;
          }
          TString vname = name;
-         vname = vname.Strip();         
+         vname = vname.Strip();
          Error("Node","VOLUME: \"%s\" not defined ",vname.Data());
          return;
       }
@@ -695,7 +695,7 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
       if (isOnly) amother->AddNode(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
       else        amother->AddNodeOverlap(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
    } else {
-      if (TMath::Abs(x)<TGeoShape::Tolerance() && 
+      if (TMath::Abs(x)<TGeoShape::Tolerance() &&
           TMath::Abs(y)<TGeoShape::Tolerance() &&
           TMath::Abs(z)<TGeoShape::Tolerance()) {
          if (isOnly) amother->AddNode(volume,nr);
@@ -727,7 +727,7 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
 //  ISONLY ONLY/MANY flag
    TGeoVolume *amother= 0;
    TGeoVolume *volume = 0;
-   
+
    // look into special volume list first
    amother = fGeometry->FindVolumeFast(mother,kTRUE);
    if (!amother) amother = fGeometry->FindVolumeFast(mother);
@@ -765,7 +765,7 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
             return;
          }
          TString vname = name;
-         vname = vname.Strip();         
+         vname = vname.Strip();
          Error("Node","VOLUME: \"%s\" not defined ",vname.Data());
          return;
       }
@@ -834,7 +834,7 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
       if (isOnly) amother->AddNode(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
       else        amother->AddNodeOverlap(volume,nr,new TGeoCombiTrans(x,y,z,matrix));
    } else {
-      if (TMath::Abs(x)<TGeoShape::Tolerance() && 
+      if (TMath::Abs(x)<TGeoShape::Tolerance() &&
           TMath::Abs(y)<TGeoShape::Tolerance() &&
           TMath::Abs(z)<TGeoShape::Tolerance()) {
          if (isOnly) amother->AddNode(volume,nr);

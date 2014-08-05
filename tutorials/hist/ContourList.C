@@ -126,8 +126,8 @@ TCanvas *ContourList(){
          nGraphs ++;
          printf("\tGraph: %d  -- %d Elements\n", nGraphs,curv->GetN());
 
-	 // Draw clones of the graphs to avoid deletions in case the 1st
-	 // pad is redrawn.
+         // Draw clones of the graphs to avoid deletions in case the 1st
+         // pad is redrawn.
          gc = (TGraph*)curv->Clone();
          gc->Draw("C");
 

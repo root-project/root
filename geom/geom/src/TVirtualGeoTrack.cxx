@@ -15,9 +15,9 @@
 
 //______________________________________________________________________________
 // TVirtualGeoTrack - Base class for user-defined tracks attached to a geometry.
-//             Tracks are 3D objects made of points and they store a 
+//             Tracks are 3D objects made of points and they store a
 //             pointer to a TParticle. The geometry manager holds a list
-//             of all tracks that will be deleted on destruction of 
+//             of all tracks that will be deleted on destruction of
 //             gGeoManager.
 //
 //______________________________________________________________________________
@@ -61,7 +61,7 @@ TVirtualGeoTrack::TVirtualGeoTrack(const TVirtualGeoTrack& other)
 }
 
 //_____________________________________________________________________________
-TVirtualGeoTrack& TVirtualGeoTrack::operator=(const TVirtualGeoTrack& gv) 
+TVirtualGeoTrack& TVirtualGeoTrack::operator=(const TVirtualGeoTrack& gv)
 {
    // Assignment operator. NOT TO BE CALLED.
    if(this!=&gv) {
@@ -74,7 +74,7 @@ TVirtualGeoTrack& TVirtualGeoTrack::operator=(const TVirtualGeoTrack& gv)
       fParent=gv.fParent;
       fParticle=gv.fParticle;
       fTracks=gv.fTracks;
-   } 
+   }
    return *this;
 }
 
@@ -85,7 +85,7 @@ TVirtualGeoTrack::~TVirtualGeoTrack()
    if (fTracks) {
       fTracks->Delete();
       delete fTracks;
-   }   
+   }
 }
 
 //______________________________________________________________________________
@@ -96,7 +96,7 @@ Int_t TVirtualGeoTrack::GetDaughterId(Int_t index) const
    if (!daughter) {
       Error("GetDaughterId", "No daughter track with index %d", index);
       return -1;
-   }   
+   }
    return daughter->GetId();
 }
 
@@ -143,7 +143,7 @@ Bool_t TVirtualGeoTrack::IsInTimeRange() const
    point = GetLastPoint();
    if (point[3]<tmin) return kFALSE;
    return kTRUE;
-}     
+}
 
 //______________________________________________________________________________
 void TVirtualGeoTrack::SetName(const char *name)
@@ -156,52 +156,52 @@ void TVirtualGeoTrack::SetName(const char *name)
       SetLineWidth(1);
       SetLineStyle(kDotted);
       return;
-   }     
+   }
    if (!strcmp(name, "pi+") || !strcmp(name, "proton") || !strcmp(name, "K+")) {
       SetLineColor(kRed);
       SetMarkerColor(kRed);
       SetLineWidth(2);
       return;
-   }     
+   }
    if (!strcmp(name, "pi-") || !strcmp(name, "K-")) {
       SetLineColor(30);
       SetMarkerColor(30);
       SetLineWidth(2);
       return;
-   }     
+   }
    if (!strcmp(name, "pi0") || !strcmp(name, "K0")) {
       SetLineColor(kCyan);
       SetMarkerColor(kCyan);
       SetLineWidth(2);
       return;
-   }     
+   }
    if (!strcmp(name, "neutron")) {
       SetLineColor(16);
       SetMarkerColor(16);
       SetLineWidth(1);
       SetLineStyle(kDotted);
       return;
-   }     
+   }
    if (!strcmp(name, "Alpha") || !strcmp(name, "Deuteron") || !strcmp(name, "Triton")) {
       SetLineColor(kMagenta);
       SetMarkerColor(kMagenta);
       SetLineWidth(3);
       return;
-   }     
+   }
    if (!strcmp(name, "e-") || !strcmp(name, "mu-")) {
       SetLineColor(kBlue);
       SetMarkerColor(kBlue);
       SetLineWidth(1);
       SetLineStyle(kDotted);
       return;
-   }     
+   }
    if (!strcmp(name, "e+") || !strcmp(name, "mu+")) {
       SetLineColor(kMagenta);
       SetMarkerColor(kMagenta);
       SetLineWidth(1);
       SetLineStyle(kDotted);
       return;
-   }     
+   }
 }
 
-   
+

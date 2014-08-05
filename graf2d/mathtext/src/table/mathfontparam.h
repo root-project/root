@@ -68,8 +68,7 @@ const float math_text_renderer_t::big_op_spacing_5 = 0.111111F;
 /////////////////////////////////////////////////////////////////////
 // Implicit TFM Font Parameters
 const float math_text_renderer_t::radical_rule_thickness = 0.054F;
-const float math_text_renderer_t::large_operator_display_scale =
-	1.4F;
+const float math_text_renderer_t::large_operator_display_scale = 1.4F;
 
 /////////////////////////////////////////////////////////////////////
 // Text Mode Parameters

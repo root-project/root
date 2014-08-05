@@ -3,13 +3,13 @@
 void FITS_tutorial6()
 {
    TVectorD *v;
-   
+
    printf("\n\n--------------------------------\n");
    printf("WELCOME TO FITS tutorial #6 !!!!\n");
    printf("--------------------------------\n");
    printf("We are going to open a table from a FITS file\n");
    printf("and dump its columns.\n\n");
-  
+
    TString dir = gSystem->DirName(__FILE__);
 
    //Open the table
@@ -17,7 +17,7 @@ void FITS_tutorial6()
    if (hdu == 0) {
       printf("ERROR: could not access the HDU\n"); return;
    }
-   
+
    //Show columns
    Int_t nColumns = hdu->GetTabNColumns();
    printf("The table has %d columns:\n", nColumns);
@@ -25,8 +25,8 @@ void FITS_tutorial6()
       printf("...Column %d: %s\n", i, hdu->GetColumnName(i).Data());
    }
    puts("");
-  
+
    delete hdu;
 }
 
- 
+

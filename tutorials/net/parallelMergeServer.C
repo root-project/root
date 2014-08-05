@@ -29,7 +29,7 @@ static Bool_t R__NeedInitialMerge(TDirectory *dir)
 {
 
    if (dir==0) return kFALSE;
-   
+
    TIter nextkey(dir->GetListOfKeys());
    TKey *key;
    while( (key = (TKey*)nextkey()) ) {
@@ -54,7 +54,7 @@ static Bool_t R__NeedInitialMerge(TDirectory *dir)
 static void R__DeleteObject(TDirectory *dir, Bool_t withReset)
 {
    if (dir==0) return;
-   
+
    TIter nextkey(dir->GetListOfKeys());
    TKey *key;
    while( (key = (TKey*)nextkey()) ) {
@@ -84,7 +84,7 @@ static void R__DeleteObject(TDirectory *dir, Bool_t withReset)
 static void R__MigrateKey(TDirectory *destination, TDirectory *source)
 {
    if (destination==0 || source==0) return;
-   
+
    TIter nextkey(source->GetListOfKeys());
    TKey *key;
    while( (key = (TKey*)nextkey()) ) {
@@ -110,8 +110,8 @@ static void R__MigrateKey(TDirectory *destination, TDirectory *source)
          newkey->WriteFile(0);
          if (destination->GetFile()->TestBit(TFile::kWriteError)) {
             return;
-         }         
-      }      
+         }
+      }
    }
    destination->SaveSelf();
 }
@@ -123,20 +123,20 @@ struct ClientInfo
    UInt_t     fContactsCount;
    TTimeStamp fLastContact;
    Double_t   fTimeSincePrevContact;
-   
+
    ClientInfo() : fFile(0), fLocalName(), fContactsCount(0), fTimeSincePrevContact(0) {}
    ClientInfo(const char *filename, UInt_t clientId) : fFile(0), fContactsCount(0), fTimeSincePrevContact(0) {
       fLocalName.Form("%s-%d-%d",filename,clientId,gSystem->GetPid());
    }
-   
+
    void Set(TFile *file)
    {
       // Register the new file as coming from this client.
       if (file != fFile) {
-         // We need to keep any of the keys from the previous file that 
+         // We need to keep any of the keys from the previous file that
          // are not in the new file.
          if (fFile) {
-            R__MigrateKey(fFile,file); 
+            R__MigrateKey(fFile,file);
             // delete the previous memory file (if any)
             delete file;
          } else {
@@ -160,7 +160,7 @@ struct ParallelFileMerger : public TObject
    ClientColl_t  fClients;
    TTimeStamp    fLastMerge;
    TFileMerger   fMerger;
-   
+
    ParallelFileMerger(const char *filename, Bool_t writeCache = kFALSE) : fFilename(filename), fNClientsContact(0), fMerger(kFALSE,kTRUE)
    {
       // Default constructor.
@@ -170,25 +170,25 @@ struct ParallelFileMerger : public TObject
       if (writeCache) new TFileCacheWrite(fMerger.GetOutputFile(),32*1024*1024);
    }
 
-   ~ParallelFileMerger() 
+   ~ParallelFileMerger()
    {
       // Destructor.
-   
+
       for(unsigned int f = 0 ; f < fClients.size(); ++f) {
          fprintf(stderr,"Client %d reported %u times\n",f,fClients[f].fContactsCount);
       }
       for( ClientColl_t::iterator iter = fClients.begin();
           iter != fClients.end();
-          ++iter) 
+          ++iter)
       {
          delete iter->fFile;
       }
    }
-   
-   ULong_t  Hash() const 
+
+   ULong_t  Hash() const
    {
       // Return hash value for this object.
-      return fFilename.Hash(); 
+      return fFilename.Hash();
    }
 
    const char *GetName() const
@@ -196,16 +196,16 @@ struct ParallelFileMerger : public TObject
       // Return the name of the object which is the name of the output file.
       return fFilename;
    }
-   
+
    Bool_t InitialMerge(TFile *input)
    {
       // Initial merge of the input to copy the resetable object (TTree) into the output
       // and remove them from the input file.
-      
+
       fMerger.AddFile(input);
-      
+
       Bool_t result = fMerger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kResetable);
-      
+
       R__DeleteObject(input,kTRUE);
       return result;
    }
@@ -213,14 +213,14 @@ struct ParallelFileMerger : public TObject
    Bool_t Merge()
    {
       // Merge the current inputs into the output file.
-      
+
       R__DeleteObject(fMerger.GetOutputFile(),kFALSE); // Remove object that can *not* be incrementally merge and will *not* be reset by the client code.
       for(unsigned int f = 0 ; f < fClients.size(); ++f) {
          fMerger.AddFile(fClients[f].fFile);
       }
       Bool_t result = fMerger.PartialMerge(TFileMerger::kAllIncremental);
-      
-      // Remove any 'resetable' object (like TTree) from the input file so that they will not 
+
+      // Remove any 'resetable' object (like TTree) from the input file so that they will not
       // be re-merged.  Keep only the object that always need to be re-merged (Histograms).
       for(unsigned int f = 0 ; f < fClients.size(); ++f) {
          if (fClients[f].fFile) {
@@ -236,21 +236,21 @@ struct ParallelFileMerger : public TObject
       fLastMerge = TTimeStamp();
       fNClientsContact = 0;
       fClientsContact.Clear();
-      
+
       return result;
    }
-   
-   Bool_t NeedFinalMerge() 
+
+   Bool_t NeedFinalMerge()
    {
       // Return true, if there is any data that has not been merged.
 
       return fClientsContact.CountBits() > 0;
    }
-   
-   Bool_t NeedMerge(Float_t clientThreshold) 
+
+   Bool_t NeedMerge(Float_t clientThreshold)
    {
       // Return true, if enough client have reported
-      
+
       if (fClients.size()==0) {
          return kFALSE;
       }
@@ -279,7 +279,7 @@ struct ParallelFileMerger : public TObject
       Float_t cut = clientThreshold * fClients.size();
       return fClientsContact.CountBits() > cut  || fNClientsContact > 2*cut;
    }
-   
+
    void RegisterClient(UInt_t clientId, TFile *file)
    {
       // Register that a client has sent a file.
@@ -291,10 +291,10 @@ struct ParallelFileMerger : public TObject
       }
       fClients[clientId].Set(file);
    }
-   
+
    ClassDef(ParallelFileMerger,0);
 };
-                              
+
 void parallelMergeServer(bool cache = false) {
    // This script shows how to make a simple iterative server that
    // can accept connections while handling currently open connections.
@@ -313,7 +313,7 @@ void parallelMergeServer(bool cache = false) {
    //   - Execute in the first window: .x hserv2.C
    //   - Execute in the second and third windows: .x hclient.C
    //Author: Fons Rademakers
-   
+
    // Open a server socket looking for connections on a named service or
    // on a specified port.
    //TServerSocket *ss = new TServerSocket("rootserv", kTRUE);
@@ -323,18 +323,18 @@ void parallelMergeServer(bool cache = false) {
    }
 
    TMonitor *mon = new TMonitor;
-   
+
    mon->Add(ss);
 
    UInt_t clientCount = 0;
    UInt_t clientIndex = 0;
-   
+
    THashTable mergers;
- 
+
    enum StatusKind {
       kStartConnection = 0,
       kProtocol = 1,
-            
+
       kProtocolVersion = 1
    };
 
@@ -363,7 +363,7 @@ void parallelMergeServer(bool cache = false) {
          }
          continue;
       }
-      
+
       s->Recv(mess);
 
       if (mess==0) {
@@ -391,10 +391,10 @@ void parallelMergeServer(bool cache = false) {
          mess->ReadLong64(length); // '*mess >> length;' is broken in CINT for Long64_t.
 
          // Info("fastMergeServerHist","Received input from client %d for %s",clientId,filename.Data());
-         
+
          TMemFile *transient = new TMemFile(filename,mess->Buffer() + mess->Length(),length,"UPDATE"); // UPDATE because we need to remove the TTree after merging them.
          mess->SetBufferOffset(mess->Length()+length);
- 
+
          const Float_t clientThreshold = 0.75; // control how often the histogram are merged.  Here as soon as half the clients have reported.
 
          ParallelFileMerger *info = (ParallelFileMerger*)mergers.FindObject(filename);
@@ -421,11 +421,11 @@ void parallelMergeServer(bool cache = false) {
 
       delete mess;
    }
-   
+
    TIter next(&mergers);
    ParallelFileMerger *info;
    while ( (info = (ParallelFileMerger*)next()) ) {
-      if (info->NeedFinalMerge()) 
+      if (info->NeedFinalMerge())
       {
          info->Merge();
       }

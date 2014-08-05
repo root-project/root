@@ -101,7 +101,7 @@ public:
            void MakeRandomData(TQpDataSparse *&data,TQpVar *&soln,Int_t nnzQ,Int_t nnzA,Int_t nnzC);
 
    TQpProbSparse &operator=(const TQpProbSparse &source);
-   
+
    ClassDef(TQpProbSparse,1)                   // Qp sparse problem formulation class
 };
 #endif

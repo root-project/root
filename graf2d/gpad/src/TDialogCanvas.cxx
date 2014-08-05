@@ -53,7 +53,7 @@ TDialogCanvas::TDialogCanvas(const char *name, const char *title, Int_t wtopx, I
              : TCanvas(name,title,-wtopx,wtopy,ww,wh)
 {
    // DialogCanvas constructor
-   
+
    SetFillColor(36);
    fRefObject = 0;
    fRefPad    = 0;

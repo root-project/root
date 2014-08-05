@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
 /**********************************************************************
  *                                                                    *
@@ -14,7 +14,7 @@
 //
 // Last update: $Id$
 //
-#ifndef ROOT_Math_GenVector_BitReproducible 
+#ifndef ROOT_Math_GenVector_BitReproducible
 #define ROOT_Math_GenVector_BitReproducible  1
 
 #include <iostream>

@@ -51,8 +51,8 @@ protected:
    Bool_t          fIsLearning;  //! true if cache is in learning mode
    Bool_t          fIsManual;    //! true if cache is StopLearningPhase was used
    Bool_t          fFirstBuffer; //! true if first buffer is used for prefetching
-   Bool_t          fOneTime;     //! used in the learning phase 
-   Bool_t          fReverseRead; //!  reading in reverse mode 
+   Bool_t          fOneTime;     //! used in the learning phase
+   Bool_t          fReverseRead; //!  reading in reverse mode
    Int_t           fFillTimes;   //!  how many times we can fill the current buffer
    Bool_t          fFirstTime;   //! save the fact that we processes the first entry
    Long64_t        fFirstEntry;  //! save the value of the first entry
@@ -95,7 +95,7 @@ public:
 
    virtual void         Print(Option_t *option="") const;
    virtual Int_t        ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   virtual Int_t        ReadBufferNormal(char *buf, Long64_t pos, Int_t len); 
+   virtual Int_t        ReadBufferNormal(char *buf, Long64_t pos, Int_t len);
    virtual Int_t        ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len);
    virtual void         ResetCache();
    void                 SetAutoSized(Bool_t val) {fAutoSized = val;}

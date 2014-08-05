@@ -35,14 +35,14 @@ TGLPlotCamera::TGLPlotCamera() :
 void TGLPlotCamera::SetViewport(const TGLRect &vp)
 {
    //Setup viewport, if it was changed, plus reset arcball.
-   
+
    if (vp.Width() != fViewport.Width() || vp.Height() != fViewport.Height() ||
        vp.X() != fViewport.X() || vp.Y() != fViewport.Y())
    {
       fVpChanged = kTRUE;
       fArcBall.SetBounds(vp.Width(), vp.Height());
       fViewport = vp;
-      
+
    } else
       fVpChanged = kFALSE;
 }

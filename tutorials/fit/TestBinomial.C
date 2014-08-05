@@ -1,25 +1,25 @@
-// Perform a fit to a set of data with binomial errors 
-// like those derived from the division of two histograms. 
-// Three different fits are performed and compared:  
+// Perform a fit to a set of data with binomial errors
+// like those derived from the division of two histograms.
+// Three different fits are performed and compared:
 //
-//   -  simple least square fit to the divided histogram obtained 
+//   -  simple least square fit to the divided histogram obtained
 //      from TH1::Divide with option b
-//   -  least square fit to the TGraphAsymmErrors obtained from 
+//   -  least square fit to the TGraphAsymmErrors obtained from
 //      TGraphAsymmErrors::BayesDivide
-//   -  likelihood fit performed on the dividing histograms using 
+//   -  likelihood fit performed on the dividing histograms using
 //      binomial statistics with the TBinomialEfficiency class
-// 
-// The first two methods are biased while the last one  is statistical correct. 
-// Running the script passing an integer value n larger than 1, n fits are 
-// performed and the bias are also shown.   
-// To run the script : 
-// 
+//
+// The first two methods are biased while the last one  is statistical correct.
+// Running the script passing an integer value n larger than 1, n fits are
+// performed and the bias are also shown.
+// To run the script :
+//
 //  to show the bias performing 100 fits for 1000 events per "experiment"
 //  root[0]: .x TestBinomial.C+
-// 
+//
 //  to show the bias performing 100 fits for 1000 events per "experiment"
 //           .x TestBinomial.C+(100, 1000)
-// 
+//
 //
 #include "TBinomialEfficiencyFitter.h"
 #include "TVirtualFitter.h"
@@ -48,7 +48,7 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    TObjArray hbiasWidth;
    hbiasWidth.Add(new TH1D("h0Width", "Bias Histogram fit",100,-5,5));
    hbiasWidth.Add(new TH1D("h1Width","Bias Binomial fit",100,-5,5));
-   TH1D* hChisquared = new TH1D("hChisquared", 
+   TH1D* hChisquared = new TH1D("hChisquared",
       "#chi^{2} probability (Baker-Cousins)", 200, 0.0, 1.0);
 
    //TVirtualFitter::SetDefaultFitter("Minuit2");
@@ -64,18 +64,18 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    // Here: assume a x^(-2) distribution. Boundaries: [10, 100].
 
    Double_t xmin =10, xmax = 100;
-   TH1D* hM2D = new TH1D("hM2D", "x^(-2) denominator distribution", 
+   TH1D* hM2D = new TH1D("hM2D", "x^(-2) denominator distribution",
       45, xmin, xmax);
-   TH1D* hM2N = new TH1D("hM2N", "x^(-2) numerator distribution",   
+   TH1D* hM2N = new TH1D("hM2N", "x^(-2) numerator distribution",
       45, xmin, xmax);
-   TH1D* hM2E = new TH1D("hM2E", "x^(-2) efficiency",               
+   TH1D* hM2E = new TH1D("hM2E", "x^(-2) efficiency",
       45, xmin, xmax);
 
-   TF1*  fM2D = new TF1("fM2D", "(1-[0]/(1+exp(([1]-x)/[2])))/(x*x)", 
+   TF1*  fM2D = new TF1("fM2D", "(1-[0]/(1+exp(([1]-x)/[2])))/(x*x)",
       xmin, xmax);
-   TF1*  fM2N = new TF1("fM2N", "[0]/(1+exp(([1]-x)/[2]))/(x*x)",     
+   TF1*  fM2N = new TF1("fM2N", "[0]/(1+exp(([1]-x)/[2]))/(x*x)",
       xmin, xmax);
-   TF1*  fM2Fit = new TF1("fM2Fit", "[0]/(1+exp(([1]-x)/[2]))",       
+   TF1*  fM2Fit = new TF1("fM2Fit", "[0]/(1+exp(([1]-x)/[2]))",
       xmin, xmax);
    TF1*  fM2Fit2 = 0;
 
@@ -132,8 +132,8 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
      TCanvas* cEvt;
      if (plot) {
        cEvt = new TCanvas(Form("cEnv%d",iloop),
-			  Form("plots for experiment %d", iloop),
-			  1000, 600);
+                          Form("plots for experiment %d", iloop),
+                          1000, 600);
        cEvt->Divide(1,2);
        cEvt->cd(1);
        hM2D->DrawCopy("HIST");
@@ -145,29 +145,29 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
        Int_t status = 0;
        switch (fit) {
        case 0:
-	 hM2E->Fit(fM2Fit, "RN");
-	 if (plot) {
-	   hM2E->DrawCopy("E");
-	   fM2Fit->DrawCopy("SAME");
-	 }
-	 break;
+          hM2E->Fit(fM2Fit, "RN");
+          if (plot) {
+             hM2E->DrawCopy("E");
+             fM2Fit->DrawCopy("SAME");
+          }
+          break;
        case 1:
-	 if (fM2Fit2) delete fM2Fit2;
-	 fM2Fit2 = dynamic_cast<TF1*>(fM2Fit->Clone("fM2Fit2"));
-	 if (fM2Fit2->GetParameter(0) >= 1.0)
-	   fM2Fit2->SetParameter(0, 0.95);
-	 fM2Fit2->SetParLimits(0, 0.0, 1.0);
-	 TBinomialEfficiencyFitter bef(hM2N, hM2D);
-	 status = bef.Fit(fM2Fit2,"RI");
-	 if (status!=0) {
-	   std::cerr << "Error performing binomial efficiency fit, result = "
-		     << status << std::endl;
-	   continue;
-	 }
-	 if (plot) {
-	   fM2Fit2->SetLineColor(kRed);
-	   fM2Fit2->DrawCopy("SAME");
-	 }
+          if (fM2Fit2) delete fM2Fit2;
+          fM2Fit2 = dynamic_cast<TF1*>(fM2Fit->Clone("fM2Fit2"));
+          if (fM2Fit2->GetParameter(0) >= 1.0)
+          fM2Fit2->SetParameter(0, 0.95);
+          fM2Fit2->SetParLimits(0, 0.0, 1.0);
+          TBinomialEfficiencyFitter bef(hM2N, hM2D);
+          status = bef.Fit(fM2Fit2,"RI");
+          if (status!=0) {
+             std::cerr << "Error performing binomial efficiency fit, result = "
+             << status << std::endl;
+             continue;
+          }
+          if (plot) {
+             fM2Fit2->SetLineColor(kRed);
+             fM2Fit2->DrawCopy("SAME");
+          }
        }
 
        if (status != 0) break;
@@ -179,13 +179,13 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
        Double_t fwidth = fM2Fit->GetParameter(2);
        Double_t ewidth = fM2Fit->GetParError(2);
        if (fit == 1) {
-	 fnorm = fM2Fit2->GetParameter(0);
-	 enorm = fM2Fit2->GetParError(0);
-	 fthreshold = fM2Fit2->GetParameter(1);
-	 ethreshold = fM2Fit2->GetParError(1);
-	 fwidth = fM2Fit2->GetParameter(2);
-	 ewidth = fM2Fit2->GetParError(2);
-	 hChisquared->Fill(fM2Fit2->GetProb());
+          fnorm = fM2Fit2->GetParameter(0);
+          enorm = fM2Fit2->GetParError(0);
+          fthreshold = fM2Fit2->GetParameter(1);
+          ethreshold = fM2Fit2->GetParError(1);
+          fwidth = fM2Fit2->GetParameter(2);
+          ewidth = fM2Fit2->GetParError(2);
+          hChisquared->Fill(fM2Fit2->GetProb());
        }
 
        TH1D* h = dynamic_cast<TH1D*>(hbiasNorm[fit]);
@@ -196,10 +196,10 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
        h->Fill((fwidth-width)/ewidth);
      }
    }
-   
+
 
    TCanvas* c1 = new TCanvas("c1",
-      "Efficiency fit biases",10,10,1000,800); 
+      "Efficiency fit biases",10,10,1000,800);
    c1->Divide(2,2);
 
    TH1D *h0, *h1;
@@ -209,7 +209,7 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    h1 = dynamic_cast<TH1D*>(hbiasNorm[1]);
    h1->SetLineColor(kRed);
    h1->Draw("HIST SAMES");
-   TLegend* l1 = new TLegend(0.1, 0.75, 0.5, 0.9, 
+   TLegend* l1 = new TLegend(0.1, 0.75, 0.5, 0.9,
       "plateau parameter", "ndc");
    l1->AddEntry(h0, Form("histogram: mean = %4.2f RMS = \
       %4.2f", h0->GetMean(), h0->GetRMS()), "l");
@@ -223,7 +223,7 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot=false)
    h1 = dynamic_cast<TH1D*>(hbiasThreshold[1]);
    h1->SetLineColor(kRed);
    h1->Draw("HIST SAMES");
-   TLegend* l2 = new TLegend(0.1, 0.75, 0.5, 0.9, 
+   TLegend* l2 = new TLegend(0.1, 0.75, 0.5, 0.9,
       "threshold parameter", "ndc");
    l2->AddEntry(h0, Form("histogram: mean = %4.2f RMS = \
       %4.2f", h0->GetMean(), h0->GetRMS()), "l");

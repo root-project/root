@@ -274,7 +274,7 @@ public:
 
       if (fTrackList == 0)
       {
-         fTrackList = new TEveTrackList("ESD Tracks"); 
+         fTrackList = new TEveTrackList("ESD Tracks");
          fTrackList->SetMainColor(6);
          fTrackList->SetMarkerColor(kYellow);
          fTrackList->SetMarkerStyle(4);

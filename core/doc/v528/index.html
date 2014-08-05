@@ -1,6 +1,6 @@
 <br/>
 <hr/>
-<a name="core"></a> 
+<a name="core"></a>
 <h3>Core</h3>
 <h4>Build system and Platform support</h4>
 <ul>
@@ -95,10 +95,10 @@ given one (or more) class name(s) and the name(s) of its header files.
    gInterpreter->GenerateDictionary("myclass","myclass.h;myhelper.h");
 </pre>This replaces the recommendation of creating a small 'loader.C' script to create the dictionaries.
 </li>
-<li>Implement a ShowMembers function for interpreted classes, by querying the interpreter for the data member 
+<li>Implement a ShowMembers function for interpreted classes, by querying the interpreter for the data member
 information.</li>
 <li>In order to fix possible buffer overflow of parent string buffer in TMemberInspector,
-the signature of ShowMember() was changed to no longer require (nor request) the 
+the signature of ShowMember() was changed to no longer require (nor request) the
 caller to provide a buffer (of length unknown to the callee.)</li>
 <li>Improve the uniqueness of globally visible symbols to allow for the mixing of
 dictionaries with very similar layout.</li>
@@ -130,9 +130,9 @@ be sorted just like a (a determines the sort; nBs is the number of TObject**
 arrays in b). Uses ObjCompare() to compare objects. This function is used by
 the new function TClonesArray::MultiSort().
 </li>
-<li>Add a new option "+" in TClonesArray::Clear.   When the option starts with "C+", 
+<li>Add a new option "+" in TClonesArray::Clear.   When the option starts with "C+",
 eg "C+xyz" the objects in the array are in turn cleared with the option "xyz".</li>
-<li>Since the Collection objects do have a name and the Clone method does allow 
+<li>Since the Collection objects do have a name and the Clone method does allow
 for the name to change, TCollection::Clone was added to implement the name change properly.</li>
 </ul>
 <h4>Thread</h4>

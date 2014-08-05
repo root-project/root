@@ -1159,7 +1159,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
 {
   // Copy nr elements from row/col index and data array to matrix . It is assumed
   // that arrays are of size >= nr
-  // Note that the input arrays are not passed as const since they will be modified ! 
+  // Note that the input arrays are not passed as const since they will be modified !
 
    R__ASSERT(this->IsValid());
    if (nr <= 0) {
@@ -1255,13 +1255,13 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndex(Int_t nelems_ne
       Int_t nr = TMath::Min(nelems_new,this->fNelems);
       Int_t *oIp = fColIndex;
       fColIndex = new Int_t[nelems_new];
-      if (oIp) { 
+      if (oIp) {
          memmove(fColIndex,oIp,nr*sizeof(Int_t));
          delete [] oIp;
       }
       Element *oDp = fElements;
       fElements = new Element[nelems_new];
-      if (oDp) { 
+      if (oDp) {
          memmove(fElements,oDp,nr*sizeof(Element));
          delete [] oDp;
       }

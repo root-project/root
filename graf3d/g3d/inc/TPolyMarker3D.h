@@ -47,7 +47,7 @@ protected:
    TString          fName;         //Name of polymarker
 
    TPolyMarker3D& operator=(const TPolyMarker3D&);
-   
+
 public:
    TPolyMarker3D();
    TPolyMarker3D(Int_t n, Marker_t marker=1, Option_t *option="");

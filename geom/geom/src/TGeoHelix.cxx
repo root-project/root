@@ -19,11 +19,11 @@
 //     z = s * alfa
 // where:
 //     c = 1/Rxy  - curvature in XY plane
-//     phi        - phi angle 
+//     phi        - phi angle
 //     S = 2*PI*s - vertical separation between helix loops
 //     q = +/- 1  - (+)=left-handed, (-)=right-handed
 //
-//   In particular, a helix describes the trajectory of a charged particle in magnetic 
+//   In particular, a helix describes the trajectory of a charged particle in magnetic
 // field. In such case, the helix is right-handed for negative particle charge.
 // To define a helix, one must define:
 //   - the curvature - positive defined
@@ -48,7 +48,7 @@ ClassImp(TGeoHelix)
 
 //_____________________________________________________________________________
 TGeoHelix::TGeoHelix()
-{ 
+{
 // Dummy constructor
    fC    = 0.;
    fS    = 0.;
@@ -61,14 +61,14 @@ TGeoHelix::TGeoHelix()
    fB[0] = fB[1] = fB[2] = 0.;
    fQ    = 0;
    fMatrix = 0;
-   TObject::SetBit(kHelixNeedUpdate, kTRUE);   
+   TObject::SetBit(kHelixNeedUpdate, kTRUE);
    TObject::SetBit(kHelixStraigth, kFALSE);
    TObject::SetBit(kHelixCircle, kFALSE);
 }
 
 //_____________________________________________________________________________
 TGeoHelix::TGeoHelix(Double_t curvature, Double_t hstep, Int_t charge)
-{ 
+{
 // Normal constructor
    SetXYcurvature(curvature);
    SetHelixStep(hstep);
@@ -82,7 +82,7 @@ TGeoHelix::TGeoHelix(Double_t curvature, Double_t hstep, Int_t charge)
    fDir[0] = fDir[1] = fDir[2] = 0.;
    fB[0] = fB[1] = fB[2] = 0.;
    fMatrix    = new TGeoHMatrix();
-   TObject::SetBit(kHelixNeedUpdate, kTRUE);   
+   TObject::SetBit(kHelixNeedUpdate, kTRUE);
    TObject::SetBit(kHelixStraigth, kFALSE);
    TObject::SetBit(kHelixCircle, kFALSE);
 }
@@ -103,7 +103,7 @@ Double_t TGeoHelix::ComputeSafeStep(Double_t epsil) const
    Double_t c = GetTotalCurvature();
    Double_t step = TMath::Sqrt(2.*epsil/c);
    return step;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoHelix::InitPoint(Double_t x0, Double_t y0, Double_t z0)
@@ -112,8 +112,8 @@ void TGeoHelix::InitPoint(Double_t x0, Double_t y0, Double_t z0)
    fPointInit[0] = x0;
    fPointInit[1] = y0;
    fPointInit[2] = z0;
-   TObject::SetBit(kHelixNeedUpdate, kTRUE);   
-}   
+   TObject::SetBit(kHelixNeedUpdate, kTRUE);
+}
 
 //_____________________________________________________________________________
 void TGeoHelix::InitPoint (Double_t *point)
@@ -125,22 +125,22 @@ void TGeoHelix::InitPoint (Double_t *point)
 //_____________________________________________________________________________
 void TGeoHelix::InitDirection(Double_t dirx, Double_t diry, Double_t dirz, Bool_t is_normalized)
 {
-// Initialize particle direction (tangent on the helix in initial point)   
+// Initialize particle direction (tangent on the helix in initial point)
    fDirInit[0] = dirx;
    fDirInit[1] = diry;
    fDirInit[2] = dirz;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
    if (is_normalized) return;
    Double_t norm = 1./TMath::Sqrt(dirx*dirx+diry*diry+dirz*dirz);
-   for (Int_t i=0; i<3; i++) fDirInit[i] *= norm;   
-}   
-   
+   for (Int_t i=0; i<3; i++) fDirInit[i] *= norm;
+}
+
 //_____________________________________________________________________________
 void TGeoHelix::InitDirection(Double_t *dir, Bool_t is_normalized)
 {
-// Initialize particle direction (tangent on the helix in initial point)   
+// Initialize particle direction (tangent on the helix in initial point)
    InitDirection(dir[0], dir[1], dir[2], is_normalized);
-}     
+}
 
 //_____________________________________________________________________________
 Double_t TGeoHelix::GetTotalCurvature() const
@@ -159,38 +159,38 @@ void TGeoHelix::SetXYcurvature(Double_t curvature)
    if (fC < 0) {
       Error("SetXYcurvature", "Curvature %f not valid. Must be positive.", fC);
       return;
-   } 
+   }
    if (TMath::Abs(fC) < TGeoShape::Tolerance()) {
-      Warning("SetXYcurvature", "Curvature is zero. Helix is a straigth line.");      
+      Warning("SetXYcurvature", "Curvature is zero. Helix is a straigth line.");
       TObject::SetBit(kHelixStraigth, kTRUE);
-   }   
-}  
+   }
+}
 
 //_____________________________________________________________________________
 void TGeoHelix::SetCharge(Int_t charge)
 {
-// Positive charge means left-handed helix.   
+// Positive charge means left-handed helix.
    if (charge==0) {
       Error("ctor", "charge cannot be 0 - define it positive for a left-handed helix, negative otherwise");
       return;
-   }   
+   }
    Int_t q = TMath::Sign(1, charge);
    if (q == fQ) return;
    fQ = q;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoHelix::SetField(Double_t bx, Double_t by, Double_t bz, Bool_t is_normalized)
 {
-// Initialize particle direction (tangent on the helix in initial point)   
+// Initialize particle direction (tangent on the helix in initial point)
    fB[0] = bx;
    fB[1] = by;
    fB[2] = bz;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
    if (is_normalized) return;
    Double_t norm = 1./TMath::Sqrt(bx*bx+by*by+bz*bz);
-   for (Int_t i=0; i<3; i++) fB[i] *= norm;   
+   for (Int_t i=0; i<3; i++) fB[i] *= norm;
 }
 
 //_____________________________________________________________________________
@@ -200,11 +200,11 @@ void TGeoHelix::SetHelixStep(Double_t step)
    if (step < 0) {
       Error("ctor", "Z step %f not valid. Must be positive.", step);
       return;
-   }   
+   }
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
    fS    = 0.5*step/TMath::Pi();
    if (fS < TGeoShape::Tolerance()) TObject::SetBit(kHelixCircle, kTRUE);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoHelix::ResetStep()
@@ -213,7 +213,7 @@ void TGeoHelix::ResetStep()
    fStep = 0.;
    memcpy(fPoint, fPointInit, 3*sizeof(Double_t));
    memcpy(fDir, fDirInit, 3*sizeof(Double_t));
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoHelix::Step(Double_t step)
@@ -233,15 +233,15 @@ void TGeoHelix::Step(Double_t step)
       for (i=0; i<3; i++) {
          fPoint[i] = fPointInit[i]+fStep*fDirInit[i];
          fDir[i] = fDirInit[i];
-      }   
+      }
       return;
    }
    if (TObject::TestBit(kHelixNeedUpdate)) UpdateHelix();
    Double_t r = 1./fC;
    fPhi = fStep/TMath::Sqrt(r*r+fS*fS);
    Double_t vect[3];
-   vect[0] = r * TMath::Cos(fPhi);  
-   vect[1] = -fQ * r * TMath::Sin(fPhi);  
+   vect[0] = r * TMath::Cos(fPhi);
+   vect[1] = -fQ * r * TMath::Sin(fPhi);
    vect[2] = fS * fPhi;
    fMatrix->LocalToMaster(vect, fPoint);
 
@@ -251,11 +251,11 @@ void TGeoHelix::Step(Double_t step)
    vect[1] = fQ*f*TMath::Cos(fPhi);
    vect[2] = ddb;
    TMath::Normalize(vect);
-   fMatrix->LocalToMasterVect(vect, fDir);   
+   fMatrix->LocalToMasterVect(vect, fDir);
 }
 
 //_____________________________________________________________________________
-Double_t TGeoHelix::StepToPlane(Double_t *point, Double_t *norm) 
+Double_t TGeoHelix::StepToPlane(Double_t *point, Double_t *norm)
 {
 // Propagate initial point up to a given Z position in MARS.
    Double_t step = 0.;
@@ -274,8 +274,8 @@ Double_t TGeoHelix::StepToPlane(Double_t *point, Double_t *norm)
       snext = pdn/ddn;
       Step(snext);
       return snext;
-   }   
-   
+   }
+
    Double_t r = 1./fC;
    Double_t dist;
    Double_t safety = TMath::Abs(pdn);
@@ -299,8 +299,8 @@ Double_t TGeoHelix::StepToPlane(Double_t *point, Double_t *norm)
       if (approaching) snext = pdn/ddn;
       else if (safety > 2.*r) {
          ResetStep();
-         return snext; 
-      }   
+         return snext;
+      }
    }
    step += snext;
    Step(snext);
@@ -323,7 +323,7 @@ void TGeoHelix::UpdateHelix()
       TObject::SetBit(kHelixStraigth, kTRUE);
       fMatrix->Clear();
       return;
-   }   
+   }
    rot[2] = fB[0];
    rot[5] = fB[1];
    rot[8] = fB[2];
@@ -337,12 +337,12 @@ void TGeoHelix::UpdateHelix()
    rot[0] = rot[4]*rot[8] - rot[7]*rot[5];
    rot[3] = rot[7]*rot[2] - rot[1]*rot[8];
    rot[6] = rot[1]*rot[5] - rot[4]*rot[2];
-   
+
    tr[0] = fPointInit[0] - rot[0]/fC;
    tr[1] = fPointInit[1] - rot[3]/fC;
    tr[2] = fPointInit[2] - rot[6]/fC;
-   
+
    fMatrix->SetTranslation(tr);
    fMatrix->SetRotation(rot);
-   
-}    
+
+}

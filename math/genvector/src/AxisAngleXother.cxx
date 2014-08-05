@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -35,7 +35,7 @@ namespace Math {
 AxisAngle AxisAngle::operator * (const Rotation3D & r) const {
    // combination with a Rotation3D
    return operator* ( Quaternion(r) );
-   
+
 }
 
 AxisAngle AxisAngle::operator * (const AxisAngle   & a) const {
@@ -88,7 +88,7 @@ AxisAngle AxisAngle::operator * (const Quaternion  & q) const {
 
 AxisAngle AxisAngle::operator * (const RotationX & rx) const {
    // combination with RotationX
-   
+
    const Scalar s1 = std::sin(fAngle/2);
    const Scalar au = std::cos(fAngle/2);
    const Scalar ai = s1 * fAxis.X();
@@ -119,7 +119,7 @@ AxisAngle AxisAngle::operator * (const RotationX & rx) const {
 
 AxisAngle AxisAngle::operator * (const RotationY & ry) const {
    // combination with RotationY
-   
+
    const Scalar s1 = std::sin(fAngle/2);
    const Scalar au = std::cos(fAngle/2);
    const Scalar ai = s1 * fAxis.X();
@@ -150,7 +150,7 @@ AxisAngle AxisAngle::operator * (const RotationY & ry) const {
 
 AxisAngle AxisAngle::operator * (const RotationZ & rz) const {
    // combination with RotationZ
-   
+
    const Scalar s1 = std::sin(fAngle/2);
    const Scalar au = std::cos(fAngle/2);
    const Scalar ai = s1 * fAxis.X();

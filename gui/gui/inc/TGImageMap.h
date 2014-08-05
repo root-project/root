@@ -115,7 +115,7 @@ public:
 class TGImageMap : public TGPictureButton {
 
 private:
-  
+
    TGImageMap(const TGImageMap&); // Not implemented
    TGImageMap& operator=(const TGImageMap&); // Not implemented
 

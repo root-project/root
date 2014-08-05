@@ -6,17 +6,17 @@
 #include "TClassTable.h"
 #include "TSystem.h"
 #include "TROOT.h"
-#if defined(__CINT__) && !defined(__MAKECINT__) 
+#if defined(__CINT__) && !defined(__MAKECINT__)
 #include "../test/libEvent.so"
-#else 
+#else
 #include "../test/Event.h"
 #endif
 
-// This example writes a tree with objects of the class Event. 
-// It is a simplified version of $ROOTSYS/test/MainEvent.cxx to 
+// This example writes a tree with objects of the class Event.
+// It is a simplified version of $ROOTSYS/test/MainEvent.cxx to
 // write the tree, and $ROOTSYS/test/eventb.C
 // It shows:
-//   -how to fill a Tree with an event class containing these 
+//   -how to fill a Tree with an event class containing these
 //    data members:
 //     char           fType[20];
 //     Int_t          fNtrack;
@@ -29,7 +29,7 @@
 //     TH1F          *fH;                 //->
 //     Int_t          fMeasures[10];
 //     Float_t        fMatrix[4][4];
-//     Float_t       *fClosestDistance;   //[fNvertex] 
+//     Float_t       *fClosestDistance;   //[fNvertex]
 //
 //   -the difference in splitting or not splitting a branch
 //   -how to read selected branches of the tree,
@@ -49,21 +49,21 @@
 
 void tree4w()
 {
- 
+
   //create a Tree file tree4.root
   TFile f("tree4.root","RECREATE");
- 
+
   // Create a ROOT Tree
   TTree t4("t4","A Tree with Events");
-    
+
   // Create a pointer to an Event object
   Event *event = new Event();
-    
+
   // Create two branches, split one.
   t4.Branch("event_split", &event,16000,99);
   t4.Branch("event_not_split", &event,16000,0);
- 
-  // a local variable for the event type 
+
+  // a local variable for the event type
   char etype[20];
 
   // Fill the tree
@@ -79,11 +79,11 @@ void tree4w()
     event->SetNvertex(Int_t(1+20*gRandom->Rndm()));
     event->SetFlag(UInt_t(random+0.5));
     event->SetTemperature(random+20.);
-    
+
     for(UChar_t m = 0; m < 10; m++) {
       event->SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
     }
-    
+
     // fill the matrix
     for(UChar_t i0 = 0; i0 < 4; i0++) {
       for(UChar_t i1 = 0; i1 < 4; i1++) {
@@ -93,17 +93,17 @@ void tree4w()
 
     //  Create and fill the Track objects
     for (Int_t t = 0; t < ntrack; t++) event->AddTrack(random);
-    
+
     // Fill the tree
-    t4.Fill(); 
-    
-    // Clear the event before reloading it 
+    t4.Fill();
+
+    // Clear the event before reloading it
     event->Clear();
   }
-  
+
   // Write the file header
   f.Write();
-  
+
   // Print the tree contents
   t4.Print();
 }
@@ -115,49 +115,49 @@ void tree4r()
   // if it is not load the definition in libEvent.so
   if (!TClassTable::GetDict("Event")) {
     gSystem->Load("$ROOTSYS/test/libEvent");
-  }    
-   
-  // read the tree generated with tree4w 
-  
+  }
+
+  // read the tree generated with tree4w
+
   //note that we use "new" to create the TFile and TTree objects !
   //because we want to keep these objects alive when we leave this function.
   TFile *f = new TFile("tree4.root");
   TTree *t4 = (TTree*)f->Get("t4");
-  
+
   // create a pointer to an event object. This will be used
   // to read the branch values.
   Event *event = new Event();
-  
+
   // get two branches and set the branch address
   TBranch *bntrack = t4->GetBranch("fNtrack");
   TBranch *branch  = t4->GetBranch("event_split");
   branch->SetAddress(&event);
-   
+
   Long64_t nevent = t4->GetEntries();
   Int_t nselected = 0;
   Int_t nb = 0;
-  for (Long64_t i=0;i<nevent;i++) {    
+  for (Long64_t i=0;i<nevent;i++) {
     //read branch "fNtrack"only
-    bntrack->GetEntry(i);  
-          
-    //reject events with more than 587 tracks          
+    bntrack->GetEntry(i);
+
+    //reject events with more than 587 tracks
     if (event->GetNtrack() > 587)continue;
-    
-    //read complete accepted event in memory 
-    nb += t4->GetEntry(i);                  
+
+    //read complete accepted event in memory
+    nb += t4->GetEntry(i);
     nselected++;
-    
+
     //print the first accepted event
     if (nselected == 1) t4->Show();
-    
-    //clear tracks array     
-    event->Clear();                        
+
+    //clear tracks array
+    event->Clear();
   }
-   
+
   if (gROOT->IsBatch()) return;
   new TBrowser();
   t4->StartViewer();
-}   
+}
 
 void tree4() {
    Event::Reset(); // Allow for re-run this script by cleaning static variables.

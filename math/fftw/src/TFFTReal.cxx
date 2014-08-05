@@ -10,14 +10,14 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      
-// TFFTReal                                                       
+//
+// TFFTReal
 // One of the interface classes to the FFTW package, can be used directly
 // or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
 //
-// Computes transforms called r2r in FFTW manual: 
-// - transforms of real input and output in "halfcomplex" format i.e. 
-//   real and imaginary parts for a transform of size n stored as 
+// Computes transforms called r2r in FFTW manual:
+// - transforms of real input and output in "halfcomplex" format i.e.
+//   real and imaginary parts for a transform of size n stored as
 //   (r0, r1, r2, ..., rn/2, i(n+1)/2-1, ..., i2, i1)
 // - discrete Hartley transform
 // - sine and cosine transforms (DCT-I,II,III,IV and DST-I,II,III,IV)
@@ -33,12 +33,12 @@
 // 4) Run the Transform() function
 // 5) Get the output (via GetPoints() or GetPoint() functions)
 // 6) Repeat steps 3)-5) as needed
-// For a transform of the same size, but of different kind (or with different flags), 
+// For a transform of the same size, but of different kind (or with different flags),
 // rerun the Init() function and continue with steps 3)-5)
 //
 // NOTE: 1) running Init() function will overwrite the input array! Don't set any data
 //          before running the Init() function!
-//       2) FFTW computes unnormalized transform, so doing a transform followed by 
+//       2) FFTW computes unnormalized transform, so doing a transform followed by
 //          its inverse will lead to the original array scaled BY:
 //          - transform size (N) for R2HC, HC2R, DHT transforms
 //          - 2*(N-1) for DCT-I (REDFT00)
@@ -53,7 +53,7 @@
 // DST-I<-->DST-I
 // DST-II<-->DST-III
 // DST-IV<-->DST-IV
-// 
+//
 //////////////////////////////////////////////////////////////////////////
 
 #include "TFFTReal.h"
@@ -72,7 +72,7 @@ TFFTReal::TFFTReal()
    fN     = 0;
    fKind  = 0;
    fFlags = 0;
-   fNdim = 0; 
+   fNdim = 0;
    fTotalSize = 0;
 }
 
@@ -107,7 +107,7 @@ TFFTReal::TFFTReal(Int_t ndim, Int_t *n, Bool_t inPlace)
    fN = new Int_t[ndim];
    fKind = 0;
    fPlan = 0;
-   fFlags = 0; 
+   fFlags = 0;
    for (Int_t i=0; i<ndim; i++){
       fTotalSize*=n[i];
       fN[i] = n[i];
@@ -217,7 +217,7 @@ void TFFTReal::GetPoints(Double_t *data, Bool_t fromInput) const
 //be big enough
 
    const Double_t * array = GetPointsReal(fromInput);
-   if (!array) return; 
+   if (!array) return;
    std::copy(array, array+fTotalSize, data);
 }
 
@@ -231,7 +231,7 @@ Double_t TFFTReal::GetPointReal(Int_t ipoint, Bool_t fromInput) const
       return 0;
    }
    const Double_t * array = GetPointsReal(fromInput);
-   return ( array ) ? array[ipoint] : 0; 
+   return ( array ) ? array[ipoint] : 0;
 }
 
 //_____________________________________________________________________________
@@ -244,7 +244,7 @@ Double_t TFFTReal::GetPointReal(const Int_t *ipoint, Bool_t fromInput) const
       ireal=fN[i+1]*ireal + ipoint[i+1];
 
    const Double_t * array = GetPointsReal(fromInput);
-   return ( array ) ? array[ireal] : 0; 
+   return ( array ) ? array[ireal] : 0;
 }
 
 //_____________________________________________________________________________
@@ -253,7 +253,7 @@ void TFFTReal::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, Bool_t 
 //Only for input of HC2R and output of R2HC
 
    const Double_t * array = GetPointsReal(fromInput);
-   if (!array) return; 
+   if (!array) return;
    if ( ( ((fftw_r2r_kind*)fKind)[0]==FFTW_R2HC && !fromInput ) ||
         ( ((fftw_r2r_kind*)fKind)[0]==FFTW_HC2R &&  fromInput ) )
    {
@@ -281,16 +281,16 @@ Double_t* TFFTReal::GetPointsReal(Bool_t fromInput) const
 //Returns the output (or input) array
 
    // we have 4 different cases
-   // fromInput = false; fOut = !NULL (transformed is not in place) : return fOut 
+   // fromInput = false; fOut = !NULL (transformed is not in place) : return fOut
    // fromInput = false; fOut = NULL (transformed is in place) : return fIn
    // fromInput = true; fOut = !NULL :   return fIn
    // fromInput = true; fOut = NULL return an error since input array is overwritten
 
-   if (!fromInput && fOut) 
+   if (!fromInput && fOut)
       return (Double_t*)fOut;
-   else if (fromInput && !fOut) { 
-      Error("GetPointsReal","Input array was destroyed"); 
-      return 0; 
+   else if (fromInput && !fOut) {
+      Error("GetPointsReal","Input array was destroyed");
+      return 0;
    }
    //R__ASSERT(fIn);
    return (Double_t*)fIn;

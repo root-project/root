@@ -2,7 +2,7 @@
    //
    //This macro produces the flowchart of TFormula::Analyze
    //Author: Rene Brun
-   
+
    gROOT->Reset();
    c1 = new TCanvas("c1","Analyze.mac",620,790);
    c1->Range(-1,0,19,30);

@@ -66,7 +66,7 @@
 // This implies that the number of TRefs in a single ProcessID should not
 // exceed 2**24 = 16777216.   For pidf greater than 254, the value 0xff is
 // stored in those bits and we use the table TProcessID::fgObjPIDs which
-// links the referenced object's address to its ProcessID. 
+// links the referenced object's address to its ProcessID.
 // See section "ObjectNumber" below for a recipee to minimize the object count.
 // If the objectnumber exceeds this limit, it could be the sign that:
 //   -The object count is never reset (see below)

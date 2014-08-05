@@ -21,32 +21,32 @@ class TClass;
 class TFormLeafInfoReference;
 
 //______________________________________________________________________________
-//  
+//
 //   Abstract proxy definition to follow reference objects.
-//   
-//   
+//
+//
 //   Generic Mechanism for Object References
 //   =======================================
-//   
+//
 //   References are a well known mechanism to support persistency
-//   of entities, which in C++ typically are represented as 
-//   pointers. The generic mechanism allows clients to supply 
-//   hooks to the ROOT framework in interactive mode in order to 
-//   dereference these objects and access the objects pointed to by 
+//   of entities, which in C++ typically are represented as
+//   pointers. The generic mechanism allows clients to supply
+//   hooks to the ROOT framework in interactive mode in order to
+//   dereference these objects and access the objects pointed to by
 //   the reference objects.
-//   
+//
 //   Implementations are supplied for ROOT own reference mechanism
 //   based on instances of the TRef and the TRefArray classes.
-//   
+//
 //   To support generality this mechanism was implemented using a
 //   proxy mechanism, which shields the concrete implementation of the
 //   reference classes from ROOT. Hence, this mechanism also works for
 //   references as they are supported by the POOL persistency framework
 //   and by frameworks like Gaudi.
-//   
-//   To enable reference support a concrete sub-class instance of 
+//
+//   To enable reference support a concrete sub-class instance of
 //   the TVirtualRefProxy base class must be attached to the TClass
-//   instance representing the reference itself. Please see the 
+//   instance representing the reference itself. Please see the
 //   header- and implementation file TRefProxy.h/cxx for details.
 //   For ROOT's own references this is done simply by a call like:
 //
@@ -59,10 +59,10 @@ class TFormLeafInfoReference;
 //
 //      - GetObject() must return the pointer to the referenced
 //        object. TTreeFormula then figures out how to access the
-//        value to be plotted. 
+//        value to be plotted.
 //        Hence, the actual work is done inside a call to:
-// 
-//        void* TRefProxy::GetObject(TFormLeafInfoReference* info, void* data, int)  
+//
+//        void* TRefProxy::GetObject(TFormLeafInfoReference* info, void* data, int)
 //        {
 //          if ( data )  {
 //            TRef*      ref    = (TRef*)((char*)data + info->GetOffset());
@@ -78,7 +78,7 @@ class TFormLeafInfoReference;
 //      In this case the following conditions must be met:
 //      - GetValueClass() must return the TClass to the referenced
 //        objects (or a base class)
-// 
+//
 //______________________________________________________________________________
 class TVirtualRefProxy  {
 public:
@@ -97,7 +97,7 @@ public:
    // classptr [IN]    Pointer to the reference class.
    virtual void SetClass(TClass *classptr) = 0;
 
-   // Getter of reference class. 
+   // Getter of reference class.
    // The function returns the class description of the reference class
    // ie. in the case of TRef TRef::Class
    virtual TClass * GetClass() const = 0;
@@ -116,7 +116,7 @@ public:
    // Flag to indicate if this is a container reference
    virtual Bool_t HasCounter()  const = 0;
 
-   // Access to container size (if container reference (ie TRefArray) etc) 
+   // Access to container size (if container reference (ie TRefArray) etc)
    //
    // info    [IN]   Pointer to the structure called by TTree::Draw
    //                to extract the required object information.
@@ -140,7 +140,7 @@ public:
    // info     [IN]   Pointer to the structure called by TTree::Draw
    //                 to extract the required object information.
    // data     [IN]   Pointer to the referenced object
-   // instance [IN]   Item number if ref collection  
+   // instance [IN]   Item number if ref collection
    //
    // return value: Pointer to the requested information
    virtual void* GetObject(TFormLeafInfoReference* info, void* data, int instance) = 0;

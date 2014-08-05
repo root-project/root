@@ -14,7 +14,7 @@ void fitLinearRobust()
 //the robust fitting coefficients, just use the TLinearFitter::EvalRobust
 //function instead of TLinearFitter::Eval
 //Author: Anna Kreshuk
-   
+
    //First generate a dataset, where 20% of points are spoiled by large
    //errors
    Int_t npoints = 250;

@@ -252,10 +252,10 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
 
        // Create SecContext object
        TPwdCtx *pwdctx = new TPwdCtx((const char *)psswd,kFALSE);
-       TSecContext *ctx = 
-          auth->GetHostAuth()->CreateSecContext((const char *)lUser, 
+       TSecContext *ctx =
+          auth->GetHostAuth()->CreateSecContext((const char *)lUser,
               remote, (Int_t)TAuthenticate::kSRP,OffSet,Details,
-              (const char *)Token, TAuthenticate::GetGlobalExpDate(), 
+              (const char *)Token, TAuthenticate::GetGlobalExpDate(),
               (void *)pwdctx, RSAKey);
        // Transmit it to TAuthenticate
        auth->SetSecContext(ctx);
@@ -292,8 +292,8 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
      if (kind == kROOTD_AUTH && stat == 1) {
         // Get a SecContext for the record and avoid problems
         // with fSecContext undefined in TAuthenticate
-        TSecContext *ctx = 
-           auth->GetHostAuth()->CreateSecContext((const char *)usr, 
+        TSecContext *ctx =
+           auth->GetHostAuth()->CreateSecContext((const char *)usr,
                        remote, (Int_t)TAuthenticate::kSRP,-1,Details,0);
         // Transmit it to TAuthenticate
         auth->SetSecContext(ctx);
@@ -314,10 +314,10 @@ Int_t SRPCheckSecCtx(const char *User, TSecContext *Ctx)
    // SRP version of CheckSecCtx to be passed to TAuthenticate::AuthExists
    // Check if User is matches the one in Ctx
    // Returns: 1 if ok, 0 if not
-   // Deactivates Ctx is not valid 
- 
+   // Deactivates Ctx is not valid
+
    Int_t rc = 0;
- 
+
    if (Ctx->IsActive()) {
       if (!strcmp(User,Ctx->GetUser()))
          rc = 1;

@@ -17,18 +17,18 @@ To import libAfterImage into the ROOT svn repository we use the following comman
    cd libAfterImage
    rm -f Makefile config.status afterimage-libs config.log
    rm -rf apps aftershow config.h
-   rm -rf ./libpng/CVS ./CVS ./win32/CVS ./libungif/CVS ./libjpeg/CVS ./zlib/CVS 
+   rm -rf ./libpng/CVS ./CVS ./win32/CVS ./libungif/CVS ./libjpeg/CVS ./zlib/CVS
    cd libAfterImage
-   cp -R * $ROOTSYS/graf2d/asimage/src/libAfterImage 
-   cd /tmp   
+   cp -R * $ROOTSYS/graf2d/asimage/src/libAfterImage
+   cd /tmp
    rm -r libAfterImage
 
 Some files have been modified compare to the official libAfterImage version:
 
-   config.h.in has been modified in order to use freetype from the ROOT 
+   config.h.in has been modified in order to use freetype from the ROOT
    repository.
 
-   libjpeg/jcmainct.c libjpeg/jdmainct.c have been modified to avoid a 
+   libjpeg/jcmainct.c libjpeg/jdmainct.c have been modified to avoid a
    compilation warning. These two pieces of code contain a variable called
    "main" (some compiler do not like this). This variable name has been
    changed to "mainptr".
@@ -67,7 +67,7 @@ Some files have been modified compare to the official libAfterImage version:
 
    export.c and import.c:
    OSX Lion comes with builtin libpng 1.5.1 which obsoletes some 1.2 constructs
-   
+
    asimage.c, char2uni.c, export.c, imencdec.c:
    - fix a warning with clang:
      "comparison of unsigned enum expression < 0 is always false"

@@ -12,7 +12,7 @@ void gtime() {
    g->SetMarkerStyle(21);
    g->SetMarkerColor(kBlue);
    Double_t x = 0;
-         
+
    while (1) {
       c1->Clear();
       if (cursor > kNMAX-ng) {
@@ -34,5 +34,5 @@ void gtime() {
       gSystem->ProcessEvents();
       gSystem->Sleep(10);
    }
-}         
-      
+}
+

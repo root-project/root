@@ -199,7 +199,7 @@ void TBranchRef::ResetAfterMerge(TFileMergeInfo *info)
 {
    // Reset a Branch after a Merge operation (drop data but keep customizations)
    // TRefTable is cleared.
-   
+
    TBranch::ResetAfterMerge(info);
    if (!fRefTable) fRefTable = new TRefTable(this,100);
    fRefTable->Reset();

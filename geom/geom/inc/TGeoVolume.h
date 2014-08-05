@@ -81,7 +81,7 @@ protected :
    TGeoExtension     *fUserExtension;  //! Transient user-defined extension to volumes
    TGeoExtension     *fFWExtension;    //! Transient framework-defined extension to volumes
 
-   TGeoVolume(const TGeoVolume&); 
+   TGeoVolume(const TGeoVolume&);
    TGeoVolume& operator=(const TGeoVolume&);
 
 public:
@@ -279,7 +279,7 @@ private:
    Bool_t           fAttSet;       // flag attributes set
 
 protected:
-   TGeoVolumeMulti(const TGeoVolumeMulti&); 
+   TGeoVolumeMulti(const TGeoVolumeMulti&);
    TGeoVolumeMulti& operator=(const TGeoVolumeMulti&);
 
 public:
@@ -342,12 +342,12 @@ public:
    TGeoVolumeAssembly(const char *name);
    virtual ~TGeoVolumeAssembly();
 
-   virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option=""); 
+   virtual void    AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat=0, Option_t *option="");
    virtual void    AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option);
    virtual TGeoVolume *CloneVolume() const;
    virtual TGeoVolume *Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed=0, Option_t *option="");
    TGeoVolume     *Divide(TGeoVolume *cell, TGeoPatternFinder *pattern, Option_t *option="spacedout");
-   virtual void    DrawOnly(Option_t *) {;} 
+   virtual void    DrawOnly(Option_t *) {;}
    virtual Int_t   GetCurrentNodeIndex() const;
    virtual Int_t   GetNextNodeIndex() const;
    virtual Bool_t  IsAssembly() const {return kTRUE;}

@@ -50,11 +50,11 @@ TMemFile::TMemBlock::TMemBlock() : fPrevious(0), fNext(0), fBuffer(0), fSize(0)
 }
 
 //______________________________________________________________________________
-TMemFile::TMemBlock::TMemBlock(Long64_t size, TMemBlock *previous) : 
+TMemFile::TMemBlock::TMemBlock(Long64_t size, TMemBlock *previous) :
    fPrevious(previous), fNext(0), fBuffer(0), fSize(0)
 {
    // Constructor allocating the memory buffer.
-   
+
    fBuffer = new UChar_t[size];
    fSize = size;
 }
@@ -63,7 +63,7 @@ TMemFile::TMemBlock::TMemBlock(Long64_t size, TMemBlock *previous) :
 TMemFile::TMemBlock::~TMemBlock()
 {
    // Usual destructors.  Delete the block memory.
-   
+
    delete fNext;
    delete [] fBuffer;
 }
@@ -131,7 +131,7 @@ zombie:
 //______________________________________________________________________________
 TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *option,
                    const char *ftitle, Int_t compress):
-   TFile(path, "WEB", ftitle, compress), fBlockList(size),  
+   TFile(path, "WEB", ftitle, compress), fBlockList(size),
    fSize(size), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
 {
    // Usual Constructor.  See the TFile constructor for details.
@@ -146,7 +146,7 @@ TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *opti
       read    = kTRUE;
       fOption = "READ";
    }
-   
+
    if (create || update || recreate) {
       Int_t mode = O_RDWR | O_CREAT;
       if (recreate) mode |= O_TRUNC;
@@ -180,14 +180,14 @@ zombie:
 
 //______________________________________________________________________________
 TMemFile::TMemFile(const TMemFile &orig) :
-   TFile(orig.GetEndpointUrl()->GetUrl(), "WEB", orig.GetTitle(), 
-         orig.GetCompressionSettings() ), fBlockList(orig.GetEND()),  
+   TFile(orig.GetEndpointUrl()->GetUrl(), "WEB", orig.GetTitle(),
+         orig.GetCompressionSettings() ), fBlockList(orig.GetEND()),
    fSize(orig.GetEND()), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
 {
    // Copying the content of the TMemFile into another TMemFile.
-   
+
    fOption = orig.fOption;
-   
+
    Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
    Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
    Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
@@ -196,17 +196,17 @@ TMemFile::TMemFile(const TMemFile &orig) :
       read    = kTRUE;
       fOption = "READ";
    }
-   
+
    fD = orig.fD; // not really used, so it is okay to have the same value.
    fWritable = orig.fWritable;
-   
+
    // We intentionally allocated just one big buffer for this object.
    orig.CopyTo(fBlockList.fBuffer,fSize);
-   
-   Init(create || recreate); // A copy is 
+
+   Init(create || recreate); // A copy is
 }
-   
-   
+
+
 //______________________________________________________________________________
 TMemFile::~TMemFile()
 {
@@ -219,12 +219,12 @@ TMemFile::~TMemFile()
 }
 
 //______________________________________________________________________________
-Long64_t TMemFile::CopyTo(void *to, Long64_t maxsize) const 
+Long64_t TMemFile::CopyTo(void *to, Long64_t maxsize) const
 {
    // Copy the binary representation of the TMemFile into
    // the memory area starting at 'to' and of length at most 'maxsize'
    // returns the number of bytes actually copied.
-   
+
    Long64_t len = GetSize();
    if (len > maxsize) {
       len = maxsize;
@@ -232,10 +232,10 @@ Long64_t TMemFile::CopyTo(void *to, Long64_t maxsize) const
    Long64_t storedSysOffset   = fSysOffset;
    Long64_t storedBlockOffset = fBlockOffset;
    TMemBlock *storedBlockSeek = fBlockSeek;
-   
+
    const_cast<TMemFile*>(this)->SysSeek(fD, 0, SEEK_SET);
    len = const_cast<TMemFile*>(this)->SysRead(fD, to, len);
-   
+
    const_cast<TMemFile*>(this)->fBlockSeek   = storedBlockSeek;
    const_cast<TMemFile*>(this)->fBlockOffset = storedBlockOffset;
    const_cast<TMemFile*>(this)->fSysOffset   = storedSysOffset;
@@ -243,7 +243,7 @@ Long64_t TMemFile::CopyTo(void *to, Long64_t maxsize) const
 }
 
 //______________________________________________________________________________
-void TMemFile::CopyTo(TBuffer &tobuf) const 
+void TMemFile::CopyTo(TBuffer &tobuf) const
 {
    // Copy the binary representation of the TMemFile into
    // the TBuffer tobuf
@@ -410,7 +410,7 @@ Int_t TMemFile::SysRead(Int_t, void *buf, Int_t len)
       if (fSysOffset + len > fSize) {
          len = fSize - fSysOffset;
       }
-               
+
       if (fBlockOffset+len <= fBlockSeek->fSize) {
          // 'len' does not go past the end of the current block,
          // so let's make a simple copy.
@@ -419,16 +419,16 @@ Int_t TMemFile::SysRead(Int_t, void *buf, Int_t len)
       } else {
          // We are going to have to copy data from more than one
          // block.
-         
+
          // First copy the end of the first block.
          Int_t sublen = fBlockSeek->fSize - fBlockOffset;
          memcpy(buf,fBlockSeek->fBuffer+fBlockOffset,sublen);
-         
+
          // Move to the next.
          buf = (char*)buf + sublen;
          Int_t len_left = len - sublen;
          fBlockSeek = fBlockSeek->fNext;
-         
+
          // Copy all the full blocks that are covered by the request.
          while (len_left > fBlockSeek->fSize) {
             R__ASSERT(fBlockSeek);
@@ -438,7 +438,7 @@ Int_t TMemFile::SysRead(Int_t, void *buf, Int_t len)
             len_left -= fBlockSeek->fSize;
             fBlockSeek = fBlockSeek->fNext;
          }
-         
+
          // Copy the data from the last block.
          R__ASSERT(fBlockSeek);
          memcpy(buf,fBlockSeek->fBuffer, len_left);
@@ -463,7 +463,7 @@ Long64_t TMemFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
       Long64_t counter = 0;
       while(fBlockSeek->fNext && (counter+fBlockSeek->fSize) < fSysOffset)
       {
-         counter += fBlockSeek->fSize; 
+         counter += fBlockSeek->fSize;
          fBlockSeek = fBlockSeek->fNext;
       }
       fBlockOffset = fSysOffset - counter;  // If we seek past the 'end' of the file, we now have fBlockOffset > fBlockSeek->fSize
@@ -481,7 +481,7 @@ Long64_t TMemFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
             fSysOffset += offset;
             while(fBlockSeek->fNext && counter < fSysOffset)
             {
-               counter += fBlockSeek->fSize; 
+               counter += fBlockSeek->fSize;
                fBlockSeek = fBlockSeek->fNext;
             }
             fBlockOffset = fSysOffset - counter; // If we seek past the 'end' of the file, we now have fBlockOffset > fBlockSeek->fSize
@@ -556,14 +556,14 @@ Int_t TMemFile::SysClose(Int_t /* fd */)
 Int_t TMemFile::SysWrite(Int_t /* fd */, const void *buf, Int_t len)
 {
    // Write a buffer into the file;
-   
+
    TRACE("WRITE")
-   
+
    if (fBlockList.fBuffer == 0) {
       errno = EBADF;
       gSystem->SetErrorStr("The memory file is not open.");
       return 0;
-   } else {      
+   } else {
       if (fBlockOffset+len <= fBlockSeek->fSize) {
          // 'len' does not go past the end of the current block,
          // so let's make a simple copy.
@@ -572,7 +572,7 @@ Int_t TMemFile::SysWrite(Int_t /* fd */, const void *buf, Int_t len)
       } else {
          // We are going to have to copy data into more than one
          // block.
-         
+
          // First copy to the end of the first block.
          Int_t sublen = fBlockSeek->fSize - fBlockOffset;
          memcpy(fBlockSeek->fBuffer+fBlockOffset,buf,sublen);
@@ -584,12 +584,12 @@ Int_t TMemFile::SysWrite(Int_t /* fd */, const void *buf, Int_t len)
             fBlockSeek->CreateNext(fgDefaultBlockSize);
             fSize += fgDefaultBlockSize;
          }
-         fBlockSeek = fBlockSeek->fNext; 
-         
+         fBlockSeek = fBlockSeek->fNext;
+
          // Copy all the full blocks that are covered by the request.
          while (len_left > fBlockSeek->fSize) {
             R__ASSERT(fBlockSeek);
-            
+
             memcpy(fBlockSeek->fBuffer, buf, fBlockSeek->fSize);
             buf = (char*)buf + fBlockSeek->fSize;
             len_left -= fBlockSeek->fSize;
@@ -597,14 +597,14 @@ Int_t TMemFile::SysWrite(Int_t /* fd */, const void *buf, Int_t len)
                fBlockSeek->CreateNext(fgDefaultBlockSize);
                fSize += fgDefaultBlockSize;
             }
-            fBlockSeek = fBlockSeek->fNext; 
+            fBlockSeek = fBlockSeek->fNext;
          }
-         
+
          // Copy the data from the last block.
          R__ASSERT(fBlockSeek);
          memcpy(fBlockSeek->fBuffer, buf, len_left);
          fBlockOffset = len_left;
-         
+
       }
       fSysOffset += len;
       return len;

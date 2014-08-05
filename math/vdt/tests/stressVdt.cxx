@@ -2,7 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath> //for log2
-#include <assert.h> 
+#include <assert.h>
 #include <limits>
 #include <iostream>
 #include <iomanip>
@@ -22,11 +22,11 @@ const uint32_t SIZE= 16777216;
 
 //------------------------------------------------------------------------------
 // Not good for floating point, but just to get the bit difference
-template <class T> 
+template <class T>
 uint64_t fp2uint (T /*x*/)
 {
    T::not_implemented; // "Static assert" in C++03
-   return 0;   
+   return 0;
 }
 
 template <>
@@ -42,10 +42,10 @@ uint64_t fp2uint<float> (float x)
 }
 
 //------------------------------------------------------------------------------
-/// Returns most significative different bit 
+/// Returns most significative different bit
 template <class T>
 inline uint32_t diffbit(const T a,const T b )
-{ 
+{
    uint64_t ia = fp2uint<T>(a);
    uint64_t ib = fp2uint<T>(b);
    uint64_t c = ia>ib? ia-ib : ib-ia;
@@ -54,55 +54,55 @@ inline uint32_t diffbit(const T a,const T b )
 
 //------------------------------------------------------------------------------
 // This allows to vectorise on very modern compilers (>=gcc 4.7)
-// Note how the templating mechanism allows the compiler to *inline* the 
+// Note how the templating mechanism allows the compiler to *inline* the
 // function. It is much more efficient than a void ptr or std::function!
 template <typename T, typename F>
 inline void calculateValues(F mathFunc,
-                            const std::vector<T>& inputVector, 
+                            const std::vector<T>& inputVector,
                             std::vector<T>& outputVector)
 {
-  
+
    const uint32_t size = inputVector.size();
 
    for (unsigned int i=0;i<size;++i){
       outputVector[i]=mathFunc(inputVector[i]);
    }
-   
+
 }
 
 //------------------------------------------------------------------------------
 template <typename T>
-void compareOutputs(const std::vector<T>& inputVector1, 
-                    const std::vector<T>& inputVector2, 
+void compareOutputs(const std::vector<T>& inputVector1,
+                    const std::vector<T>& inputVector2,
                     std::vector<uint32_t>& outputVector)
 {
-   assert(inputVector1.size()==inputVector2.size() && 
+   assert(inputVector1.size()==inputVector2.size() &&
           inputVector1.size()==outputVector.size());
-   
+
    const uint32_t size = inputVector1.size();
-      
+
    for (unsigned int i=0;i<size;++i)
-      outputVector[i]=diffbit(inputVector1[i],inputVector2[i]);   
+      outputVector[i]=diffbit(inputVector1[i],inputVector2[i]);
 }
 
 //------------------------------------------------------------------------------
 
-enum rangeType {kReal, 
+enum rangeType {kReal,
                 kExp,
                 kExpf,
-                kRealPlus, 
+                kRealPlus,
                 km1p1};
 
 template <typename T>
 void fillRandom(std::vector<T>& randomV,
                 const rangeType theRangeType)
 {
-   // Yeah, well, maybe it can be done better. But this is not a tutorial about 
+   // Yeah, well, maybe it can be done better. But this is not a tutorial about
    // random generation!
    const uint32_t size=randomV.size();
    static TRandom3 rndmGenerator(123);
    T* arr = &(randomV[0]);
-   rndmGenerator.RndmArray(size,arr);      
+   rndmGenerator.RndmArray(size,arr);
    if (kReal == theRangeType )     for (uint32_t i=0;i<size;++i) randomV[i]=(randomV[i]-0.5)*2*RANGE;
    if (kExp == theRangeType )     for (uint32_t i=0;i<size;++i) randomV[i]=(randomV[i]-0.5)*2*705.;
    if (kExpf == theRangeType )     for (uint32_t i=0;i<size;++i) randomV[i]=(randomV[i]-0.5)*2*85.;
@@ -131,7 +131,7 @@ void treatBinDiffHisto(TH1F& histo,
 //------------------------------------------------------------------------------
 template <typename T, typename F>
 inline double measureTiming(F mathFunc,
-                            const std::vector<T>& inputVector, 
+                            const std::vector<T>& inputVector,
                             std::vector<T>& outputVector)
 {
    TStopwatch timer;
@@ -166,31 +166,31 @@ inline double measureTiming(F mathFunc,
       Asin   0.40379  0.869315        2.15289       0.318644              2
       Acos  0.392566  0.864706         2.2027       0.391922             11
    */
-      
+
    // The reference values: speedup and accuracy. Some contingency is given
 struct staticInitHelper{
    std::map<std::string, std::pair<float,uint32_t> > referenceValues;
-    
+
    staticInitHelper()
    {
-      referenceValues["Expf"]  =  std::make_pair(1.f,8);  
-      referenceValues["Sinf"]  =  std::make_pair(1.f,11); 
-      referenceValues["Cosf"]  =  std::make_pair(1.f,10); 
-      referenceValues["Tanf"]  =  std::make_pair(1.f,11); 
-      referenceValues["Atanf"] =  std::make_pair(1.f,4);  
-      referenceValues["Logf"]  =  std::make_pair(1.f,4);  
-      referenceValues["Isqrtf"]=  std::make_pair(1.f,9);  
-      referenceValues["Asinf"] =  std::make_pair(1.f,5);  
-      referenceValues["Acosf"] =  std::make_pair(1.f,12); 
-      referenceValues["Exp"]   =  std::make_pair(1.f,4);  
-      referenceValues["Sin"]   =  std::make_pair(1.f,4);  
-      referenceValues["Cos"]   =  std::make_pair(1.f,4);  
-      referenceValues["Tan"]   =  std::make_pair(1.f,7);  
-      referenceValues["Atan"]  =  std::make_pair(1.f,4);  
-      referenceValues["Log"]   =  std::make_pair(1.f,4);  
-      referenceValues["Isqrt"] =  std::make_pair(.4f,4);  // Fix fluctuation on x86_64-slc5-gcc47 
-      referenceValues["Asin"]  =  std::make_pair(1.f,4);  
-      referenceValues["Acos"]  =  std::make_pair(1.f,13);    
+      referenceValues["Expf"]  =  std::make_pair(1.f,8);
+      referenceValues["Sinf"]  =  std::make_pair(1.f,11);
+      referenceValues["Cosf"]  =  std::make_pair(1.f,10);
+      referenceValues["Tanf"]  =  std::make_pair(1.f,11);
+      referenceValues["Atanf"] =  std::make_pair(1.f,4);
+      referenceValues["Logf"]  =  std::make_pair(1.f,4);
+      referenceValues["Isqrtf"]=  std::make_pair(1.f,9);
+      referenceValues["Asinf"] =  std::make_pair(1.f,5);
+      referenceValues["Acosf"] =  std::make_pair(1.f,12);
+      referenceValues["Exp"]   =  std::make_pair(1.f,4);
+      referenceValues["Sin"]   =  std::make_pair(1.f,4);
+      referenceValues["Cos"]   =  std::make_pair(1.f,4);
+      referenceValues["Tan"]   =  std::make_pair(1.f,7);
+      referenceValues["Atan"]  =  std::make_pair(1.f,4);
+      referenceValues["Log"]   =  std::make_pair(1.f,4);
+      referenceValues["Isqrt"] =  std::make_pair(.4f,4);  // Fix fluctuation on x86_64-slc5-gcc47
+      referenceValues["Asin"]  =  std::make_pair(1.f,4);
+      referenceValues["Acos"]  =  std::make_pair(1.f,13);
   }
 } gbl;
 
@@ -198,13 +198,13 @@ template <typename T, typename F1, typename F2>
 inline void compareFunctions(const std::string& label,
                              F1 vdtFunc,
                              F2 systemFunc,
-                             const std::vector<T>& inputVector, 
+                             const std::vector<T>& inputVector,
                              std::vector<T>& outputVectorVDT,
                              std::vector<T>& outputVectorSystem,
                              float& speedup,
                              uint32_t& maxdiffBit,
                              TH1F& histo)
-{     
+{
    double timeVdt = measureTiming<T>(vdtFunc,inputVector,outputVectorVDT);
    double timeSystem = measureTiming<T>(systemFunc,inputVector,outputVectorSystem);
    std::string name(label);
@@ -213,26 +213,26 @@ inline void compareFunctions(const std::string& label,
    histo.Reset();
    histo.SetName(label.c_str());
    histo.SetTitle(title.c_str());
-   treatBinDiffHisto(histo,outputVectorVDT,outputVectorSystem);   
-   double meandiffBit = histo.GetMean();   
+   treatBinDiffHisto(histo,outputVectorVDT,outputVectorSystem);
+   double meandiffBit = histo.GetMean();
    maxdiffBit = 0;
    const uint32_t xmax=histo.GetXaxis()->GetXmax();
-   
+
    for (uint32_t i=1;i<=xmax;i++){
       if ( histo.GetBinContent(i) > 0.f )
          maxdiffBit=i-1;
    }
-   
-   speedup = timeSystem/timeVdt ; 
-   
-   std::cout << std::setw(8) 
-             << label << std::setw(10) 
-             << timeVdt << std::setw(10) 
-             << timeSystem << std::setw(15) 
+
+   speedup = timeSystem/timeVdt ;
+
+   std::cout << std::setw(8)
+             << label << std::setw(10)
+             << timeVdt << std::setw(10)
+             << timeSystem << std::setw(15)
              << speedup << std::setw(15)
-             << meandiffBit << std::setw(15) 
-             << maxdiffBit << std::endl;            
-                 
+             << meandiffBit << std::setw(15)
+             << maxdiffBit << std::endl;
+
    // Draw it
    TCanvas c;
    c.cd();
@@ -243,8 +243,8 @@ inline void compareFunctions(const std::string& label,
    name+=".png";
    Int_t oldErrorIgnoreLevel = gErrorIgnoreLevel; // we know we are printing..
    gErrorIgnoreLevel=1001;
-   c.Print(name.c_str()); 
-   gErrorIgnoreLevel=oldErrorIgnoreLevel;   
+   c.Print(name.c_str());
+   gErrorIgnoreLevel=oldErrorIgnoreLevel;
 }
 
 //
@@ -266,22 +266,22 @@ inline double isqrt(double x) {return 1./sqrt(x);};
 //------------------------------------------------------------------------------
 // Artificially chunck the work to help the compiler manage everything.
 // If all the content is moved to a single function, the vectorization breaks.
-// Same holds for the check of speed and accuracy. Technically it could be part 
+// Same holds for the check of speed and accuracy. Technically it could be part
 // of compareFunctions.
 void spStep1()
 {
    std::vector<float> VDTVals(SIZE);
-   std::vector<float> SystemVals(SIZE);   
+   std::vector<float> SystemVals(SIZE);
    std::vector<float> realNumbers(SIZE);
    TH1F histo("bitDiffHisto","willbechanged",32,0,32);
 
    float speedup;
    uint32_t maxdiffBit;
-   
-   fillRandom(realNumbers,kExpf);               
+
+   fillRandom(realNumbers,kExpf);
    compareFunctions<float>("Expf",  vdt::fast_expf,    expf,   realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Expf",speedup, maxdiffBit);
-   
+
    fillRandom(realNumbers,kReal);
    compareFunctions<float>("Sinf",  vdt::fast_sinf,    sinf,   realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Sinf",speedup, maxdiffBit);
@@ -289,37 +289,37 @@ void spStep1()
    checkFunction("Cosf",speedup, maxdiffBit);
    compareFunctions<float>("Tanf",  vdt::fast_tanf,    tanf,   realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Tanf",speedup, maxdiffBit);
-   compareFunctions<float>("Atanf", vdt::fast_atanf,   atanf,  realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);         
+   compareFunctions<float>("Atanf", vdt::fast_atanf,   atanf,  realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Atanf",speedup, maxdiffBit);
 }
 
 void spStep2()
 {
    std::vector<float> VDTVals(SIZE);
-   std::vector<float> SystemVals(SIZE);   
+   std::vector<float> SystemVals(SIZE);
    std::vector<float> realNumbers(SIZE);
    TH1F histo("bitDiffHisto","willbechanged",32,0,32);
-   
+
    float speedup;
    uint32_t maxdiffBit;
-   
+
    fillRandom(realNumbers,kRealPlus);
    compareFunctions<float>("Logf",   vdt::fast_logf,   logf,   realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Logf",speedup, maxdiffBit);
    compareFunctions<float>("Isqrtf", vdt::fast_isqrtf, isqrtf, realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Isqrtf",speedup, maxdiffBit);
 }
-   
+
 void spStep3()
 {
    std::vector<float> VDTVals(SIZE);
-   std::vector<float> SystemVals(SIZE);   
+   std::vector<float> SystemVals(SIZE);
    std::vector<float> realNumbers(SIZE);
    TH1F histo("bitDiffHisto","willbechanged",32,0,32);
 
    float speedup;
    uint32_t maxdiffBit;
-   
+
    fillRandom(realNumbers,km1p1);
    compareFunctions<float>("Asinf",  vdt::fast_asinf,  asinf,  realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Asinf",speedup, maxdiffBit);
@@ -330,16 +330,16 @@ void spStep3()
 void dpStep1()
 {
    std::vector<double> VDTVals(SIZE);
-   std::vector<double> SystemVals(SIZE);   
+   std::vector<double> SystemVals(SIZE);
    std::vector<double> realNumbers(SIZE);
    TH1F histo("bitDiffHisto","willbechanged",64,0,64);
-   
+
    float speedup;
    uint32_t maxdiffBit;
-   
+
    fillRandom(realNumbers,kExp);
    compareFunctions<double>("Exp",  vdt::fast_exp,    exp,  realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
-   checkFunction("Exp",speedup, maxdiffBit);   
+   checkFunction("Exp",speedup, maxdiffBit);
    fillRandom(realNumbers,kReal);
    compareFunctions<double>("Sin",  vdt::fast_sin,    sin,   realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Sin",speedup, maxdiffBit);
@@ -347,20 +347,20 @@ void dpStep1()
    checkFunction("Cos",speedup, maxdiffBit);
    compareFunctions<double>("Tan",  vdt::fast_tan,    tan,   realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Tan",speedup, maxdiffBit);
-   compareFunctions<double>("Atan", vdt::fast_atan,   atan,  realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo); 
+   compareFunctions<double>("Atan", vdt::fast_atan,   atan,  realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Atan",speedup, maxdiffBit);
 }
 
 void dpStep2()
 {
    std::vector<double> VDTVals(SIZE);
-   std::vector<double> SystemVals(SIZE);   
+   std::vector<double> SystemVals(SIZE);
    std::vector<double> realNumbers(SIZE);
    TH1F histo("bitDiffHisto","willbechanged",64,0,64);
-   
+
    float speedup;
    uint32_t maxdiffBit;
-   
+
    fillRandom(realNumbers,kRealPlus);
    compareFunctions<double>("Log",   vdt::fast_log,   log,   realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Log",speedup, maxdiffBit);
@@ -371,44 +371,44 @@ void dpStep2()
 void dpStep3()
 {
    std::vector<double> VDTVals(SIZE);
-   std::vector<double> SystemVals(SIZE);   
+   std::vector<double> SystemVals(SIZE);
    std::vector<double> realNumbers(SIZE);
    TH1F histo("bitDiffHisto","willbechanged",64,0,64);
-   
+
    float speedup;
    uint32_t maxdiffBit;
-   
+
    fillRandom(realNumbers,km1p1);
    compareFunctions<double>("Asin",  vdt::fast_asin,  asin,  realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Asin",speedup, maxdiffBit);
-   compareFunctions<double>("Acos",  vdt::fast_acos,  acos,  realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo); 
+   compareFunctions<double>("Acos",  vdt::fast_acos,  acos,  realNumbers, VDTVals, SystemVals, speedup, maxdiffBit, histo);
    checkFunction("Acos",speedup, maxdiffBit);
 }
 //------------------------------------------------------------------------------
 
 int main(){
-   
+
    std::cout << "Test performed on " << SIZE << " random numbers\n"
-             << std::setw(8) 
-             << "Name" << std::setw(10) 
-             << "VDT (s)" << std::setw(10) 
-             << "Sys (s)" << std::setw(15) 
-             << "Speedup" << std::setw(15) 
-             << "<diff Bit>" << std::setw(15) 
-             << "max(diff Bit)" << std::endl; 
-             
-   // Single precision ----       
+             << std::setw(8)
+             << "Name" << std::setw(10)
+             << "VDT (s)" << std::setw(10)
+             << "Sys (s)" << std::setw(15)
+             << "Speedup" << std::setw(15)
+             << "<diff Bit>" << std::setw(15)
+             << "max(diff Bit)" << std::endl;
+
+   // Single precision ----
    spStep1();
    spStep2();
    spStep3();
-         
-   // Double precision ----   
+
+   // Double precision ----
    dpStep1();
    dpStep2();
    dpStep3();
 
    return 0;
-  
+
 }
 
 

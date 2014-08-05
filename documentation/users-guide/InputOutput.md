@@ -2062,7 +2062,7 @@ do that either in a LinkDef file or in the selection xml file being fed to genre
 The syntax of the rules is the following:
 
    - For dictionaries created from a LinkDef file:
-   
+
 ``` {.cpp}
 #pragma read                                              \
     sourceClass="ClassA"                                  \
@@ -2123,9 +2123,9 @@ fXbins.Set( xbins ); \
 
    The variables in the rules have the following meaning:
 
-  * sourceClass 
+  * sourceClass
      - The field defines the on-disk class that is the input for the rule.
-  * source      
+  * source
      - A semicolon-separated list of values defining the source class data members
        that need to be cached and accessible via object proxy when the rule is
        executed. The values are either the names of the data members or the type-name
@@ -2180,13 +2180,13 @@ facilitate the rule definitions. The user can expect the following variables bei
         declared in source property of the rule
    * names of the data members of the target object declared in the target property of the
      rule declared to be the appropriate type
-   * onfile.xxx 
+   * onfile.xxx
      - in normal conversion rules, names of the variables of basic types declared
        in the source property of the rule
 
 #### The C++ API
 
-The schema evolution C++ API consists of two classes: `ROOT::TSchemaRuleSet` and 
+The schema evolution C++ API consists of two classes: `ROOT::TSchemaRuleSet` and
 `ROOT::TSchemaRule`. Objects of the TSchemaRule class represent the rules and their fields have exactly the same
 meaning as the ones of rules specified in the dictionaries. `TSchemaRuleSet` objects
 manage the sets of rules and ensure their consistency. There can be no conflicting

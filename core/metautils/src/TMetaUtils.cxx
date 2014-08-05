@@ -2727,7 +2727,7 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Decla
 
    if (errnum) *errnum = VALID;
 
-   if (title.size() == 0 || (title[0] != '[')) return 0; 
+   if (title.size() == 0 || (title[0] != '[')) return 0;
    size_t rightbracket = title.find(']');
    if (rightbracket == llvm::StringRef::npos) return 0;
 
@@ -4792,7 +4792,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionD
    // Extract the fwd declaration of a function
    defString = fcnDecl.getNameAsString();
 
-   // Treat parameters   
+   // Treat parameters
    std::string paramString;
    auto paramArray = fcnDecl.parameters ();
    unsigned int pCounter=0;

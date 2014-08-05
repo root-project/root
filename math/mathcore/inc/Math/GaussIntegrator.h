@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: David Gonzalez Maline    01/2008 
+// Authors: David Gonzalez Maline    01/2008
 
 /**********************************************************************
  *                                                                    *
@@ -9,9 +9,9 @@
  **********************************************************************/
 
 // Header file for GaussIntegrator
-// 
+//
 // Created by: David Gonzalez Maline  : Wed Jan 16 2008
-// 
+//
 
 #ifndef ROOT_Math_GaussIntegrator
 #define ROOT_Math_GaussIntegrator
@@ -31,18 +31,18 @@ namespace Math {
 
 //___________________________________________________________________________________________
 /**
-   User class for performing function integration. 
+   User class for performing function integration.
 
-   It will use the Gauss Method for function integration in a given interval. 
+   It will use the Gauss Method for function integration in a given interval.
    This class is implemented from TF1::Integral().
 
    @ingroup Integration
-  
+
  */
 
 class GaussIntegrator: public VirtualIntegratorOneDim {
 
-   
+
 public:
 
    /** Destructor */
@@ -50,12 +50,12 @@ public:
 
    /** Default Constructor. */
    GaussIntegrator(double absTol = 0, double relTol = 0);
-   
+
 
    /** Static function: set the fgAbsValue flag.
        By default TF1::Integral uses the original function value to compute the integral
        However, TF1::Moment, CentralMoment require to compute the integral
-       using the absolute value of the function. 
+       using the absolute value of the function.
    */
    void AbsValue(bool flag);
 
@@ -79,14 +79,14 @@ public:
 
    // Implementing VirtualIntegratorOneDim Interface
 
-   /** 
-     Returns Integral of function between a and b. 
-     Based on original CERNLIB routine DGAUSS by Sigfried Kolbig 
+   /**
+     Returns Integral of function between a and b.
+     Based on original CERNLIB routine DGAUSS by Sigfried Kolbig
      converted to C++ by Rene Brun
-     
+
      This function computes, to an attempted specified accuracy, the value
      of the integral.
-    
+
     Method:
        For any interval [a,b] we define g8(a,b) and g16(a,b) to be the 8-point
        and 16-point Gaussian quadrature approximations to
@@ -106,7 +106,7 @@ public:
    Begin_Latex
       x_{i} = x_{i-1} + #lambda(B-x_{i-1})
    End_Latex
-   Begin_Latex 
+   Begin_Latex
       #lambda
    End_Latex
       is equal to the first member of the
@@ -120,9 +120,9 @@ public:
       set equal to zero.
 
    Accuracy:
-      The user provides absolute and relative error bounds (epsrel and epsabs) and the 
-      algorithm will stop when the estimated error is less than the epsabs OR is less 
-      than |I| * epsrel. 
+      The user provides absolute and relative error bounds (epsrel and epsabs) and the
+      algorithm will stop when the estimated error is less than the epsabs OR is less
+      than |I| * epsrel.
       Unless there is severe cancellation of positive and negative values of
       f(x) over the interval [A,B], the relative error may be considered as
       specifying a bound on the <I>relative</I> error of I in the case
@@ -151,8 +151,8 @@ public:
       undefined
    */
    double Integral (double a, double b);
-   
-   /** Returns Integral of function on an infinite interval. 
+
+   /** Returns Integral of function on an infinite interval.
       This function computes, to an attempted specified accuracy, the value of the integral:
    Begin_Latex
       I = #int^{#infinity}_{-#infinity} f(x)dx
@@ -160,12 +160,12 @@ public:
       Usage:
         In any arithmetic expression, this function has the approximate value
         of the integral I.
-    
+
       The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
    */
    double Integral ();
-   
-   /** Returns Integral of function on an upper semi-infinite interval. 
+
+   /** Returns Integral of function on an upper semi-infinite interval.
       This function computes, to an attempted specified accuracy, the value of the integral:
    Begin_Latex
       I = #int^{#infinity}_{A} f(x)dx
@@ -174,12 +174,12 @@ public:
         In any arithmetic expression, this function has the approximate value
         of the integral I.
         - A: lower end-point of integration interval.
-   
+
       The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
    */
    double IntegralUp (double a);
-   
-   /** Returns Integral of function on a lower semi-infinite interval. 
+
+   /** Returns Integral of function on a lower semi-infinite interval.
        This function computes, to an attempted specified accuracy, the value of the integral:
    Begin_Latex
       I = #int^{B}_{#infinity} f(x)dx
@@ -192,7 +192,7 @@ public:
       The integral is mapped onto [0,1] using a transformation then integral computation is surrogated to DoIntegral.
    */
    double IntegralLow (double b);
-   
+
 
    /** Set integration function (flag control if function must be copied inside).
        \@param f Function to be used in the calculations.
@@ -205,18 +205,18 @@ public:
    /** This method is not implemented. */
    double IntegralCauchy (double a, double b, double c);
 
-   ///  get the option used for the integration 
-   virtual ROOT::Math::IntegratorOneDimOptions Options() const; 
+   ///  get the option used for the integration
+   virtual ROOT::Math::IntegratorOneDimOptions Options() const;
 
-   // set the options 
+   // set the options
    virtual void SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt);
 
 private:
 
    /**
       Integration surrugate method. Return integral of passed function in  interval [a,b]
-      Derived class (like GaussLegendreIntegrator)  can re-implement this method to modify to use 
-      an improved algorithm 
+      Derived class (like GaussLegendreIntegrator)  can re-implement this method to modify to use
+      an improved algorithm
    */
    virtual double DoIntegral (double a, double b, const IGenFunction* func);
 
@@ -234,7 +234,7 @@ protected:
 
 /**
    Auxillary inner class for mapping infinite and semi-infinite integrals
-*/            
+*/
 class IntegrandTransform : public IGenFunction {
 public:
    enum ESemiInfinitySign {kMinus = -1, kPlus = +1};
@@ -250,11 +250,11 @@ private:
    bool fInfiniteInterval;
    double DoEval(double x, double boundary, int sign) const;
 };
-   
+
 
 
 } // end namespace Math
-   
+
 } // end namespace ROOT
 
 #endif /* ROOT_Math_GaussIntegrator */

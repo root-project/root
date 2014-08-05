@@ -2,9 +2,9 @@
 //
 // gamma and related functions from Cephes library
 // see:  http://www.netlib.org/cephes
-// 
+//
 // Copyright 1985, 1987, 2000 by Stephen L. Moshier
-// 
+//
 //
 
 #include "SpecFuncCephes.h"
@@ -13,14 +13,14 @@
 
 #include <cmath>
 
-#include <limits> 
+#include <limits>
 
 
 
-namespace ROOT { 
-namespace Math { 
+namespace ROOT {
+namespace Math {
 
-namespace Cephes { 
+namespace Cephes {
 
 
 static double kBig = 4.503599627370496e15;
@@ -30,7 +30,7 @@ static double kBiginv =  2.22044604925031308085e-16;
 static double LS2PI  =  0.91893853320467274178;
 
 
-// incomplete gamma function (complement integral) 
+// incomplete gamma function (complement integral)
 //  igamc(a,x)   =   1 - igam(a,x)
 //
 //                            inf.
@@ -48,7 +48,7 @@ static double LS2PI  =  0.91893853320467274178;
 // continued fraction expansion, depending on the relative
 // values of a and x.
 
-double igamc( double a, double x ) 
+double igamc( double a, double x )
 {
 
    double ans, ax, c, yc, r, t, y, z;
@@ -56,7 +56,7 @@ double igamc( double a, double x )
 
    // LM: for negative values returns 0.0
    // This is correct if a is a negative integer since Gamma(-n) = +/- inf
-   if (a <= 0)  return 0.0;  
+   if (a <= 0)  return 0.0;
 
    if (x <= 0) return 1.0;
 
@@ -80,7 +80,7 @@ double igamc( double a, double x )
    ans = pkm1/qkm1;
 
    do
-   { 
+   {
       c += 1.0;
       y += 1.0;
       z += 2.0;
@@ -130,7 +130,7 @@ double igam( double a, double x )
 
    // LM: for negative values returns 1.0 instead of zero
    // This is correct if a is a negative integer since Gamma(-n) = +/- inf
-   if (a <= 0)  return 1.0;  
+   if (a <= 0)  return 1.0;
 
    if (x <= 0)  return 0.0;
 
@@ -183,7 +183,7 @@ static double B[] = {
    -1.72173700820839662146E6,
    -8.53555664245765465627E5
 };
-   
+
 static double C[] = {
 /* 1.00000000000000000000E0, */
    -3.51815701436523470549E2,
@@ -207,7 +207,7 @@ double lgam( double x )
    if( x < -34.0 )
    {
       q = -x;
-      w = lgam(q); 
+      w = lgam(q);
       p = std::floor(q);
       if( p==q )//_unur_FP_same(p,q)
          return (std::numeric_limits<double>::infinity());
@@ -225,7 +225,7 @@ double lgam( double x )
       z = q * std::sin( ROOT::Math::Pi() * z );
       if( z == 0 )
          return (std::numeric_limits<double>::infinity());
-/*	z = log(ROOT::Math::Pi()) - log( z ) - w;*/
+/* z = log(ROOT::Math::Pi()) - log( z ) - w;*/
       z = std::log(ROOT::Math::Pi()) - std::log( z ) - w;
       return( z );
    }
@@ -604,7 +604,7 @@ double incbcf( double a, double b, double x )
    thresh = 3.0 * kMACHEP;
    do
    {
-	
+
       xk = -( x * k1 * k2 )/( k3 * k4 );
       pk = pkm1 +  pkm2 * xk;
       qk = qkm1 +  qkm2 * xk;
@@ -698,7 +698,7 @@ double incbd( double a, double b, double x )
    thresh = 3.0 * kMACHEP;
    do
    {
-	
+
       xk = -( z * k1 * k2 )/( k3 * k4 );
       pk = pkm1 +  pkm2 * xk;
       qk = qkm1 +  qkm2 * xk;
@@ -780,7 +780,7 @@ double pseries( double a, double b, double x )
       u = (n - b) * x / n;
       t *= u;
       v = t / (a + n);
-      s += v; 
+      s += v;
       n += 1.0;
    }
    s += t1;
@@ -869,7 +869,7 @@ static double erfU[] = {
 /* complementary error function */
 /* For small x, erfc(x) = 1 - erf(x); otherwise rational */
 /* approximations are computed. */
- 
+
 
 double erfc( double a )
 {

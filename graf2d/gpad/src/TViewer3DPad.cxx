@@ -50,7 +50,7 @@ void TViewer3DPad::BeginScene()
       }
       fPad.SetView(view);
 
-      // Set view to perform first auto-range (scaling) pass 
+      // Set view to perform first auto-range (scaling) pass
       view->SetAutoRange(kTRUE);
    }
 
@@ -70,8 +70,8 @@ void TViewer3DPad::EndScene()
          view->SetAutoRange(kFALSE);
          fPad.Paint();
       }
-   }   
-   
+   }
+
    fBuilding = kFALSE;
 }
 
@@ -80,7 +80,7 @@ Int_t TViewer3DPad::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 {
    // Add an 3D object described by the buffer to the viewer. Returns flags
    // to indicate:
-   // i) if extra sections of the buffer need completing. 
+   // i) if extra sections of the buffer need completing.
    // ii) if child objects of the buffer object should be added (always true)
 
    // Accept any children
@@ -156,7 +156,7 @@ Int_t TViewer3DPad::AddObject(UInt_t /*placedID*/, const TBuffer3D & buffer, Boo
 
 
 //______________________________________________________________________________
-Bool_t TViewer3DPad::OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * /*addChildren*/) 
+Bool_t TViewer3DPad::OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * /*addChildren*/)
 {
    // Composite shapes not supported on this viewer currently - ignore.
    // Will result in a set of individual component shapes
@@ -164,9 +164,9 @@ Bool_t TViewer3DPad::OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * /*addC
 };
 
 //______________________________________________________________________________
-void TViewer3DPad::CloseComposite() 
+void TViewer3DPad::CloseComposite()
 {};
 
 //______________________________________________________________________________
-void TViewer3DPad::AddCompositeOp(UInt_t /*operation*/) 
+void TViewer3DPad::AddCompositeOp(UInt_t /*operation*/)
 {};

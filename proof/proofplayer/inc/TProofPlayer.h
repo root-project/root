@@ -108,7 +108,7 @@ protected:
 
    TTimer       *fDispatchTimer;    //Dispatch pending events while processing
 
-   TTimer       *fProcTimeTimer;    //Notifies reaching of allowed max proc time 
+   TTimer       *fProcTimeTimer;    //Notifies reaching of allowed max proc time
    TStopwatch   *fProcTime;         //Packet proc time
 
    TString       fOutputFilePath;   //Path to file with (partial) results of the query
@@ -116,7 +116,7 @@ protected:
    Long_t        fSaveMemThreshold; //Threshold for saving output to file
    Bool_t        fSavePartialResults; //Whether to save the partial results
    Bool_t        fSaveResultsPerPacket; //Whether to save partial results after each packet
-   
+
    static THashList *fgDrawInputPars;  // List of input parameters to be kept on drawing actions
 
    void         *GetSender() { return this; }  //used to set gTQSender
@@ -124,7 +124,7 @@ protected:
    virtual Int_t DrawCanvas(TObject *obj); // Canvas drawing via libProofDraw
 
    virtual void SetupFeedback();  // specialized setup
-   
+
    virtual void  MergeOutput();
 
 public:   // fix for broken compilers so TCleanup can call StopFeedback()

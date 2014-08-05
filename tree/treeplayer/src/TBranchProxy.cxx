@@ -14,7 +14,7 @@
 // TBranchProxy                                                         //
 //
 // Base class for all the proxy object.  It includes the imeplemtation
-// of the autoloading of branches as well as all the generic setup 
+// of the autoloading of branches as well as all the generic setup
 // routine.
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -151,7 +151,7 @@ Bool_t ROOT::TBranchProxy::Setup()
       if (!fParent->Setup()) {
          return false;
       }
-      
+
       TClass *pcl = fParent->GetClass();
       R__ASSERT(pcl);
 
@@ -175,10 +175,10 @@ Bool_t ROOT::TBranchProxy::Setup()
          fCollection = pcl->GetCollectionProxy()->Generate();
          pcl = fCollection->GetValueClass();
          if (pcl == 0) {
-            // coverity[dereference] fparent is checked jus a bit earlier and can not be null here 
+            // coverity[dereference] fparent is checked jus a bit earlier and can not be null here
             Error("Setup","Not finding TClass for collecion for the data member %s seems no longer be in class %s",fDataMember.Data(),fParent->GetClass()->GetName());
             return false;
-         }         
+         }
       }
 
       fElement = (TStreamerElement*)pcl->GetStreamerInfo()->GetElements()->FindObject(fDataMember);
@@ -186,7 +186,7 @@ Bool_t ROOT::TBranchProxy::Setup()
          Error("Setup","Data member %s seems no longer be in class %s",fDataMember.Data(),pcl->GetName());
          return false;
       }
-      
+
       fIsaPointer = fElement->IsaPointer();
       fClass = fElement->GetClassPointer();
 
@@ -261,12 +261,12 @@ Bool_t ROOT::TBranchProxy::Setup()
          TStreamerInfo * info = be->GetInfo();
          Int_t id = be->GetID();
          if (id>=0) {
-            fOffset = info->GetOffsets()[id];
+            fOffset = info->GetElementOffset(id);
             fElement = (TStreamerElement*)info->GetElements()->At(id);
             fIsaPointer = fElement->IsaPointer();
             fClass = fElement->GetClassPointer();
 
-            if ((fIsMember || (be->GetType()!=3 && be->GetType() !=4)) 
+            if ((fIsMember || (be->GetType()!=3 && be->GetType() !=4))
                   && (be->GetType()!=31 && be->GetType()!=41)) {
 
                if (fClass==TClonesArray::Class()) {
@@ -368,7 +368,7 @@ Bool_t ROOT::TBranchProxy::Setup()
            (((TBranchElement*)fBranch)->GetType()==3 || fClass==TClonesArray::Class()) &&
            !fIsMember ) {
          fIsClone = true;
-      } 
+      }
 
       if (fIsMember) {
          if ( fBranch->IsA()==TBranchElement::Class() &&

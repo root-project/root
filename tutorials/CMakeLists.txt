@@ -46,7 +46,7 @@ if(NOT ROOT_minuit2_FOUND)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
-  set(roofit_veto  fit/RoofitDemo.C 
+  set(roofit_veto  fit/RoofitDemo.C
                    roofit/*.C roostats/*.C histfactory/*.C)
 endif()
 
@@ -64,8 +64,8 @@ if(NOT ROOT_fitsio_FOUND)
 endif()
 
 if(NOT ROOT_mathmore_FOUND)
-  set(mathmore_veto 
-      math/quasirandom.C 
+  set(mathmore_veto
+      math/quasirandom.C
       math/exampleMultiRoot.C
       math/Bessel.C
       math/LegendreAssoc.C
@@ -93,7 +93,7 @@ set(gui_veto fit/fitpanel_playback.C
              geom/*.C
              gl/*.C
              gui/*.C
-             hist/exec1.C 
+             hist/exec1.C
              hist/exec2.C
              image/*.C
              graphics/psview.C graphics/gtime.C
@@ -116,19 +116,19 @@ set(extra_veto
   pythia/*.C
   sql/*.C
   tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
-  tree/tree0.C 
-  tree/tree2a.C 
+  tree/tree0.C
+  tree/tree2a.C
   tree/tree4.C
   roostats/rs401d_FeldmanCousins.C  # Takes too much time
   roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
-  tree/copytree2.C 
-  tree/copytree3.C 
+  tree/copytree2.C
+  tree/copytree3.C
   tree/copytree.C
   tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
   tree/h1chain.C
   http/*.C)
-  
+
 set(all_veto hsimple.C
              ${extra_veto}
              ${gui_veto}
@@ -140,7 +140,7 @@ set(all_veto hsimple.C
              ${mathmore_veto}
              ${fftw3_veto}
              ${gviz_veto})
-             
+
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
 
@@ -160,8 +160,8 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphs/exclusiongraph.C graphs/multigraph.C
                  graphs/multipalette.C
                  graphs/graphstruct.C
-                 hist/ContourList.C hist/hstack.C 
-                 hist/h2proj.C 
+                 hist/ContourList.C hist/hstack.C
+                 hist/h2proj.C
                  hist/th2polyBoxes.C
                  math/chi2test.C )
 #---Dependencies------------------------------------------------------
@@ -175,9 +175,9 @@ set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
 set(foam-foam_demopers-depends tutorial-foam-foam_demo)
 set(tree-staff-depends  tutorial-tree-cernbuild)
-#--many roostats tutorials depending on having creating the file first with histfactory 
+#--many roostats tutorials depending on having creating the file first with histfactory
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
-               StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo 
+               StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo
                StandardHypoTestInvDemo StandardProfileInspectorDemo StandardTestStatDistributionDemo
                OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands)
   set(roostats-${tname}-depends tutorial-roostats-StandardProfileLikelihoodDemo)
@@ -201,7 +201,7 @@ foreach(t ${tutorials})
   endif()
   string(REPLACE ".C" "" tname ${t})
   string(REPLACE "/" "-" tname ${tname})
-  ROOT_ADD_TEST(tutorial-${tname} 
+  ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
                 LABELS tutorial
@@ -247,7 +247,7 @@ endif()
 
 
 
-                   
+
 
 
 

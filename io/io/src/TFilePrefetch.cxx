@@ -42,7 +42,7 @@ TFilePrefetch::TFilePrefetch(TFile* file) :
 
    fPendingBlocks->SetOwner();
    fReadBlocks->SetOwner();
-   
+
    fMutexReadList    = new TMutex();
    fMutexPendingList = new TMutex();
    fNewBlockAdded    = new TCondition(0);
@@ -60,7 +60,7 @@ TFilePrefetch::~TFilePrefetch()
    if (!fThreadJoined) {
      WaitFinishPrefetch();
    }
-  
+
    SafeDelete(fConsumer);
    SafeDelete(fPendingBlocks);
    SafeDelete(fReadBlocks);
@@ -307,14 +307,14 @@ TThread* TFilePrefetch::GetThread() const
 
 
 //____________________________________________________________________________________________
-void TFilePrefetch::SetFile(TFile *file) 
+void TFilePrefetch::SetFile(TFile *file)
 {
    // Change the file
    // When prefetching is enabled we also need to:
-   // - make sure the async thread is not doing any work 
+   // - make sure the async thread is not doing any work
    // - clear all blocks from prefetching and read list
    // - reset the file pointer
-  
+
    if (!fThreadJoined) {
      fSemChangeFile->Wait();
    }
@@ -329,7 +329,7 @@ void TFilePrefetch::SetFile(TFile *file)
      fReadBlocks->Clear();
      fMutexReadList->UnLock();
    }
-      
+
    fFile = file;
    if (!fThreadJoined) {
      fSemChangeFile->Post();
@@ -342,7 +342,7 @@ Int_t TFilePrefetch::ThreadStart()
 {
    // Used to start the consumer thread.
    int rc;
-   
+
    fConsumer = new TThread((TThread::VoidRtnFunc_t) ThreadProc, (void*) this);
    rc = fConsumer->Run();
    if ( !rc ) {
@@ -356,16 +356,16 @@ Int_t TFilePrefetch::ThreadStart()
 TThread::VoidRtnFunc_t TFilePrefetch::ThreadProc(void* arg)
 {
    // Execution loop of the consumer thread.
-  
+
    TFilePrefetch* pClass = (TFilePrefetch*) arg;
    TSemaphore* semChangeFile = pClass->fSemChangeFile;
    semChangeFile->Post();
    pClass->fNewBlockAdded->Wait();
    semChangeFile->Wait();
-   
+
    while( pClass->fSemMasterWorker->TryWait() != 0 ) {
       pClass->ReadListOfBlocks();
-   
+
       // Use the semaphore to deal with the case when the file pointer
       // is changed on the fly by TChain
       semChangeFile->Post();
@@ -490,7 +490,7 @@ void TFilePrefetch::SaveBlockInCache(TFPBlock* block)
    }
    md->Final();
 
-   TString fileName( md->AsString() );   
+   TString fileName( md->AsString() );
    Int_t value = SumHex(fileName);
    value = value % 16;
 
@@ -529,7 +529,7 @@ Bool_t TFilePrefetch::SetCache(const char* path)
 {
    // Set the path of the cache directory.
   fPathCache = path;
-  
+
   if (!gSystem->OpenDirectory(path)){
     return (!gSystem->mkdir(path) ? true : false);
   }

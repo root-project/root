@@ -47,9 +47,9 @@ class TH1;
 class TAxis;
 class TMethodCall;
 
-namespace ROOT { 
-   namespace Fit { 
-      class FitResult; 
+namespace ROOT {
+   namespace Fit {
+      class FitResult;
    }
 }
 
@@ -86,7 +86,7 @@ protected:
    void CreateFromFunctor(const char *name, Int_t npar);
 
    virtual Double_t GetMinMaxNDim(Double_t * x , Bool_t findmax, Double_t epsilon = 0, Int_t maxiter = 0) const;
-   virtual void GetRange(Double_t * xmin, Double_t * xmax) const; 
+   virtual void GetRange(Double_t * xmin, Double_t * xmax) const;
 
 public:
     // TF1 status bits
@@ -203,8 +203,8 @@ public:
    virtual Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0) const;
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params=0);
    // for using TF1 as a callable object (functor)
-   virtual Double_t operator()(Double_t x, Double_t y=0, Double_t z = 0, Double_t t = 0) const; 
-   virtual Double_t operator()(const Double_t *x, const Double_t *params=0);  
+   virtual Double_t operator()(Double_t x, Double_t y=0, Double_t z = 0, Double_t t = 0) const;
+   virtual Double_t operator()(const Double_t *x, const Double_t *params=0);
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void     FixParameter(Int_t ipar, Double_t value);
        Double_t     GetChisquare() const {return fChisquare;}
@@ -249,8 +249,8 @@ public:
    virtual Double_t IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params=0, Double_t epsilon=1e-12);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t maxpts, Double_t epsrel, Double_t epsabs ,Double_t &relerr,Int_t &nfnevl, Int_t &ifail);
    // for backward compatibility
-   virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t /*minpts*/, Int_t maxpts, Double_t epsrel, Double_t &relerr,Int_t &nfnevl, Int_t &ifail) { 
-      return  IntegralMultiple(n,a,b,maxpts, epsrel, epsrel, relerr, nfnevl, ifail);  
+   virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t /*minpts*/, Int_t maxpts, Double_t epsrel, Double_t &relerr,Int_t &nfnevl, Int_t &ifail) {
+      return  IntegralMultiple(n,a,b,maxpts, epsrel, epsrel, relerr, nfnevl, ifail);
    }
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t epsrel, Double_t &relerr);
    virtual Bool_t   IsInside(const Double_t *x) const;
@@ -261,9 +261,9 @@ public:
    virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void     SetChisquare(Double_t chi2) {fChisquare = chi2;}
    virtual void     SetFitResult(const ROOT::Fit::FitResult & result, const Int_t * indpar = 0);
-   template <class PtrObj, typename MemFn> 
+   template <class PtrObj, typename MemFn>
    void SetFunction( PtrObj& p, MemFn memFn );
-   template <typename Func> 
+   template <typename Func>
    void SetFunction( Func f );
    virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
    virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
@@ -301,12 +301,12 @@ public:
    ClassDef(TF1,7)  //The Parametric 1-D function
 };
 
-inline Double_t TF1::operator()(Double_t x, Double_t y, Double_t z, Double_t t) const  
+inline Double_t TF1::operator()(Double_t x, Double_t y, Double_t z, Double_t t) const
    { return Eval(x,y,z,t); }
 inline Double_t TF1::operator()(const Double_t *x, const Double_t *params)
-   { 
+   {
       if (fMethodCall) InitArgs(x,params);
-      return EvalPar(x,params); 
+      return EvalPar(x,params);
    }
 
 
@@ -315,17 +315,17 @@ inline void TF1::SetRange(Double_t xmin, Double_t,  Double_t xmax, Double_t)
 inline void TF1::SetRange(Double_t xmin, Double_t, Double_t,  Double_t xmax, Double_t, Double_t)
    { TF1::SetRange(xmin, xmax); }
 
-template <typename Func> 
+template <typename Func>
 void TF1::SetFunction( Func f )    {
-   // set function from a generic C++ callable object 
-   fType = 1; 
-   fFunctor = ROOT::Math::ParamFunctor(f); 
-} 
-template <class PtrObj, typename MemFn> 
-void TF1::SetFunction( PtrObj& p, MemFn memFn )   { 
+   // set function from a generic C++ callable object
+   fType = 1;
+   fFunctor = ROOT::Math::ParamFunctor(f);
+}
+template <class PtrObj, typename MemFn>
+void TF1::SetFunction( PtrObj& p, MemFn memFn )   {
    // set from a pointer to a member function
-   fType = 1; 
-   fFunctor = ROOT::Math::ParamFunctor(p,memFn); 
-} 
+   fType = 1;
+   fFunctor = ROOT::Math::ParamFunctor(p,memFn);
+}
 
 #endif

@@ -25,7 +25,7 @@ RootShowerMsgBox::RootShowerMsgBox(const TGWindow *p, const TGWindow *main,
    UInt_t wh2 = h - wh1;
 
    fVFrame  = new TGVerticalFrame(this, w, wh1, 0);
-  
+
    TString theLogoFilename = StrDup(gProgPath);
    theLogoFilename.Append("/icons/mclogo01.xpm");
    fIconPicture = (TGPicture *)gClient->GetPicture(theLogoFilename);
@@ -44,7 +44,7 @@ RootShowerMsgBox::RootShowerMsgBox(const TGWindow *p, const TGWindow *main,
    fVFrame->AddFrame(fLabel1,fBly);
    fVFrame->AddFrame(fLabel2,fBly);
 
-//------------------------------------------------------------------------------   
+//------------------------------------------------------------------------------
 // OK Cancel Buttons in Horizontal frame
 //------------------------------------------------------------------------------
 
@@ -61,10 +61,10 @@ RootShowerMsgBox::RootShowerMsgBox(const TGWindow *p, const TGWindow *main,
 
    fL1 = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX,
                            2, 2, 2, 2);
-   fL2 = new TGLayoutHints(kLHintsBottom | kLHintsLeft | kLHintsExpandX, 
+   fL2 = new TGLayoutHints(kLHintsBottom | kLHintsLeft | kLHintsExpandX,
                            10, 10, 5, 10);
 
-   fHFrame->AddFrame(fOkButton,     fL1);  
+   fHFrame->AddFrame(fOkButton,     fL1);
    fHFrame->AddFrame(fHelpButton,   fL1);
    fHFrame->AddFrame(fCancelButton, fL1);
 
@@ -80,7 +80,7 @@ RootShowerMsgBox::RootShowerMsgBox(const TGWindow *p, const TGWindow *main,
    SetWMSize(size.fWidth, size.fHeight);
    SetWMSizeHints(size.fWidth, size.fHeight, size.fWidth, size.fHeight, 0, 0);
    SetMWMHints(kMWMDecorAll | kMWMDecorResizeH  | kMWMDecorMaximize |
-               kMWMDecorMinimize | kMWMDecorMenu, kMWMFuncAll |  
+               kMWMDecorMinimize | kMWMDecorMenu, kMWMFuncAll |
                kMWMFuncResize    | kMWMFuncMaximize | kMWMFuncMinimize,
                kMWMInputModeless);
 
@@ -100,7 +100,7 @@ RootShowerMsgBox::RootShowerMsgBox(const TGWindow *p, const TGWindow *main,
 }
 
 //______________________________________________________________________________
-RootShowerMsgBox::~RootShowerMsgBox() 
+RootShowerMsgBox::~RootShowerMsgBox()
 {
    delete fLogoLayout;
    delete fCancelButton;
@@ -133,7 +133,7 @@ Bool_t RootShowerMsgBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2
          switch (GET_SUBMSG(msg)) {
             case kCM_BUTTON:
                switch(parm1) {
-                  case 1:                    
+                  case 1:
                      gRootShower->SetOk();
                      CloseWindow();
                      break;

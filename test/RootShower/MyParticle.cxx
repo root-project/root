@@ -51,10 +51,10 @@ MyParticle::MyParticle() : TParticle()
 
 //______________________________________________________________________________
 MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const TVector3 &pLocation,
-                       const TVector3 &pMomentum,Double_t pPassed, Double_t pDecayLen, 
+                       const TVector3 &pMomentum,Double_t pPassed, Double_t pDecayLen,
                        Double_t pEnergy)
-          : TParticle(pType, pStat, 1, 0, 0, 0, pMomentum.x(), pMomentum.y(), 
-                        pMomentum.z(), pEnergy, pLocation.x(), pLocation.y(), 
+          : TParticle(pType, pStat, 1, 0, 0, 0, pMomentum.x(), pMomentum.y(),
+                        pMomentum.z(), pEnergy, pLocation.x(), pLocation.y(),
                         pLocation.z(), 0.0)
 {
    // MyParticle constructor.
@@ -81,7 +81,7 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
 //______________________________________________________________________________
 MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const TVector3 &pLocation,
                        const TVector3 &pMomentum)
-          : TParticle(pType, pStat, 1, 0, 0, 0, pMomentum.x(), pMomentum.y(), 
+          : TParticle(pType, pStat, 1, 0, 0, 0, pMomentum.x(), pMomentum.y(),
                         pMomentum.z(), 0.0, pLocation.x(), pLocation.y(),
                         pLocation.z(), 0.0)
 {

@@ -40,21 +40,21 @@ class TList;
 class TOracleResult : public TSQLResult {
 
 private:
-   oracle::occi::Connection*fConn;        // connection to Oracle 
+   oracle::occi::Connection*fConn;        // connection to Oracle
    oracle::occi::Statement *fStmt;        // executed statement
    oracle::occi::ResultSet *fResult;      // query result (rows)
    std::vector<oracle::occi::MetaData> *fFieldInfo;   // info for each field in the row
    Int_t                  fFieldCount;  // num of fields in resultset
    UInt_t                 fUpdateCount; // for dml query, mutual exclusive with above
    Int_t                  fResultType;  // 0 - nothing; 1 - Select; 2 - table metainfo, 3 - update counter
-   TList                 *fPool;        // array of results, produced when number of rows are requested 
+   TList                 *fPool;        // array of results, produced when number of rows are requested
    std::string           fNameBuffer; // buffer for GetFieldName() argument
 
    Bool_t  IsValid(Int_t field);
 
    TOracleResult(const TOracleResult&);            // Not implemented;
    TOracleResult &operator=(const TOracleResult&); // Not implemented;
-   
+
 protected:
    void    initResultSet(oracle::occi::Statement *stmt);
    void    ProducePool();
@@ -69,7 +69,7 @@ public:
    const char *GetFieldName(Int_t field);
    virtual Int_t GetRowCount() const;
    TSQLRow    *Next();
-   
+
    Int_t       GetUpdateCount() { return fUpdateCount; }
 
    ClassDef(TOracleResult,0)  // Oracle query result

@@ -49,24 +49,24 @@ public:
   ~PdfComparison()
   {
      // delete temmporary directory if in not verbose mode
-     if (_verb == 0) { 
-        TString cmd = "rm -rf "; 
+     if (_verb == 0) {
+        TString cmd = "rm -rf ";
         cmd += fTestDirectory;
-        int ret = gSystem->Exec(cmd); 
+        int ret = gSystem->Exec(cmd);
         if (ret != 0) Error("PdfComparison","Error removing test directory %s",fTestDirectory.Data());
      }
   }
 
   Bool_t isTestAvailable()
   {
-     bool ret = true; 
-     ret &= CreateTestDirectory(); 
+     bool ret = true;
+     ret &= CreateTestDirectory();
      if (!ret) { Error("PdfComparison","Error creating test directory"); return ret; }
-     ret &= CopyTestFiles(); 
+     ret &= CopyTestFiles();
      if (!ret) { Error("PdfComparison","Error copying test files from $ROOTSYS/test/HistFactoryTest.tar"); return ret; }
-     ret &= UnpackTestFiles(); 
-     if (!ret) Error("PdfComparison","Error unpacking test file HistFactoryTest.tar"); 
-     return ret; 
+     ret &= UnpackTestFiles();
+     if (!ret) Error("PdfComparison","Error unpacking test file HistFactoryTest.tar");
+     return ret;
   }
 
   Bool_t testCode()
@@ -74,10 +74,10 @@ public:
     // print information where the temporary test/log files are placed
     if(_verb > 0)
       std::cout << "using test directory: " << fTestDirectory << std::endl;
-    
+
     // dump histfactory output into a file
     gSystem->RedirectOutput(fTestDirectory + "/API_vs_XML_test.log","a");
-    
+
     // build model using the API
     // create and move to a temporary directory to run hist2workspace
     gSystem->ChangeDirectory(fTestDirectory + "/API/");
@@ -89,7 +89,7 @@ public:
        Error("testCode","Error opening the file API_XML_TestModel_combined_Test_model.root");
        return kFALSE;
     }
-    
+
     RooWorkspace* pWS_API = (RooWorkspace*)pAPIFile->Get("combined");
     if(!pWS_API) {
        Error("testCode","Error retrieving the workspace combined");
@@ -107,7 +107,7 @@ public:
     gSystem->AddDynamicPath("$ROOTSYS/lib");
     TString cmd = "$ROOTSYS/bin/hist2workspace config/Measurement.xml";
     int ret = gSystem->Exec(cmd);
-    if (ret != 0) { 
+    if (ret != 0) {
        Error("testCode","Error running hist2workspace");
        return kFALSE;
     }
@@ -118,7 +118,7 @@ public:
        Error("testCode","Error opening the file results/API_XML_TestModel_combined_Test_model.root");
        return kFALSE;
     }
-    
+
     RooWorkspace* pWS_XML = (RooWorkspace*)pXMLFile->Get("combined");
     if(!pWS_XML) {
        Error("testCode","Error retrieving the workspace combined");
@@ -130,19 +130,19 @@ public:
        Error("testCode","Error retrieving the ModelConfig");
        return kFALSE;
     }
-    
+
     // cancel redirection
     gSystem->RedirectOutput(0);
 
     // change working directory to original one
     gSystem->ChangeDirectory(fOldDirectory);
-    
+
     // compare data
     if(pWS_API->data("obsData"))
     {
       assert(pWS_XML->data("obsData"));
       if(!CompareData(*pWS_API->data("obsData"),*pWS_XML->data("obsData")))
-	return kFALSE;
+         return kFALSE;
     }
     else
       return kFALSE;
@@ -151,30 +151,30 @@ public:
     {
       assert(pWS_XML->data("asimovData"));
       if(!CompareData(*pWS_API->data("asimovData"),*pWS_XML->data("asimovData")))
-	return kFALSE;
+        return kFALSE;
     }
     else
       return kFALSE;
-    
+
     // compare sets of parameters
     if(pMC_API->GetParametersOfInterest())
     {
       assert(pMC_XML->GetParametersOfInterest());
       if(_verb > 0)
-	Info("testCode","comparing PoIs");
+         Info("testCode","comparing PoIs");
       if(!CompareParameters(*pMC_API->GetParametersOfInterest(),*pMC_XML->GetParametersOfInterest()))
-	return kFALSE;
+         return kFALSE;
     }
-    else
+     else
       assert(!pMC_XML->GetParametersOfInterest());
 
     if(pMC_API->GetObservables())
     {
       assert(pMC_XML->GetObservables());
       if(_verb > 0)
-	Info("testCode","comparing observables");
+         Info("testCode","comparing observables");
       if(!CompareParameters(*pMC_API->GetObservables(),*pMC_XML->GetObservables()))
-	return kFALSE;
+         return kFALSE;
     }
     else
       assert(!pMC_XML->GetObservables());
@@ -183,9 +183,9 @@ public:
     {
       assert(pMC_XML->GetGlobalObservables());
       if(_verb > 0)
-	Info("testCode","comparing global observables");
+         Info("testCode","comparing global observables");
       if(!CompareParameters(*pMC_API->GetGlobalObservables(),*pMC_XML->GetGlobalObservables()))
-	return kFALSE;
+         return kFALSE;
     }
     else
       assert(!pMC_XML->GetGlobalObservables());
@@ -194,9 +194,9 @@ public:
     {
       assert(pMC_XML->GetConditionalObservables());
       if(_verb > 0)
-	Info("testCode","comparing conditional observables");
+         Info("testCode","comparing conditional observables");
       if(!CompareParameters(*pMC_API->GetConditionalObservables(),*pMC_XML->GetConditionalObservables()))
-	return kFALSE;
+         return kFALSE;
     }
     else
       assert(!pMC_XML->GetConditionalObservables());
@@ -205,9 +205,9 @@ public:
     {
       assert(pMC_XML->GetNuisanceParameters());
       if(_verb > 0)
-	Info("testCode","comparing nuisance parameters");
+         Info("testCode","comparing nuisance parameters");
       if(!CompareParameters(*pMC_API->GetNuisanceParameters(),*pMC_XML->GetNuisanceParameters()))
-	return kFALSE;
+         return kFALSE;
     }
     else
       assert(!pMC_XML->GetNuisanceParameters());
@@ -229,11 +229,11 @@ public:
       // delete pGlobalObservables;
       return kFALSE;
     }
-    
+
     // clean up
     delete pObservables;
     // delete pGlobalObservables;
-    
+
     return kTRUE;
   }
 
@@ -260,10 +260,10 @@ private:
     TString tarFile = fTestDirectory + "/HistFactoryTest.tar";
     cmd.Append(tarFile);
     gSystem->ChangeDirectory(gSystem->DirName(tarFile));
-    
+
     return (gSystem->Exec(cmd) == 0);
   }
-  
+
   Bool_t CompareData(const RooAbsData& rData1,const RooAbsData& rData2)
   {
     if(rData1.numEntries() != rData2.numEntries())
@@ -288,24 +288,24 @@ private:
     RooAbsArg* arg = 0;
     while((arg = (RooAbsArg*)it.Next()))
     {
-      RooRealVar * par = dynamic_cast<RooRealVar*>(arg); 
+      RooRealVar * par = dynamic_cast<RooRealVar*>(arg);
       if (!par) continue;  // do not test RooCategory
       if(!TMath::AreEqualAbs(rData1.mean(*par),rData2.mean(*par),fTolerance))
       {
-	Warning("CompareData","data sets have different means for \"%s\": %.3f vs %.3f",par->GetName(),rData1.mean(*par),rData2.mean(*par));
-	return kFALSE;
+         Warning("CompareData","data sets have different means for \"%s\": %.3f vs %.3f",par->GetName(),rData1.mean(*par),rData2.mean(*par));
+         return kFALSE;
       }
 
       if(!TMath::AreEqualAbs(rData1.sigma(*par),rData2.sigma(*par),fTolerance))
       {
-	Warning("CompareData","data sets have different sigmas for \"%s\": %.3f vs %.3f",par->GetName(),rData1.sigma(*par),rData2.sigma(*par));
-	return kFALSE;
+         Warning("CompareData","data sets have different sigmas for \"%s\": %.3f vs %.3f",par->GetName(),rData1.sigma(*par),rData2.sigma(*par));
+         return kFALSE;
       }
     }
 
     return kTRUE;
   }
-  
+
   Bool_t CompareParameters(const RooArgSet& rPars1, const RooArgSet& rPars2,Bool_t bAllowForError = kFALSE)
   {
     if(rPars1.getSize() != rPars2.getSize())
@@ -323,72 +323,72 @@ private:
       // checks only for RooRealVars implemented
       arg1 = dynamic_cast<RooRealVar*>(obj);
       if(!arg1)
-	continue;
-      
+         continue;
+
       arg2 = (RooRealVar*)rPars2.find(arg1->GetName());
-      
+
       if(!arg2)
       {
-	Warning("CompareParameters","did not find observable with name \"%s\"",arg1->GetName());
-	return kFALSE;
+         Warning("CompareParameters","did not find observable with name \"%s\"",arg1->GetName());
+         return kFALSE;
       }
 
       if(!TMath::AreEqualAbs(arg1->getMin(),arg2->getMin(),fTolerance))
       {
-	Warning("CompareParameters","parameters with name \"%s\" have different minima: %.3f vs %.3f",arg1->GetName(),arg1->getMin(),arg2->getMin());
-	return kFALSE;
+         Warning("CompareParameters","parameters with name \"%s\" have different minima: %.3f vs %.3f",arg1->GetName(),arg1->getMin(),arg2->getMin());
+         return kFALSE;
       }
 
       if(!TMath::AreEqualAbs(arg1->getMax(),arg2->getMax(),fTolerance))
       {
-	Warning("CompareParameters","parameters with name \"%s\" have different maxima: %.3f vs %.3f",arg1->GetName(),arg1->getMax(),arg2->getMax());
-	return kFALSE;
+         Warning("CompareParameters","parameters with name \"%s\" have different maxima: %.3f vs %.3f",arg1->GetName(),arg1->getMax(),arg2->getMax());
+         return kFALSE;
       }
 
       if(arg1->getBins() != arg2->getBins())
       {
-	Warning("CompareParameters","parameters with name \"%s\" have different number of bins: %d vs %d",arg1->GetName(),arg1->getBins(),arg2->getBins());
-	return kFALSE;
+         Warning("CompareParameters","parameters with name \"%s\" have different number of bins: %d vs %d",arg1->GetName(),arg1->getBins(),arg2->getBins());
+         return kFALSE;
       }
 
       if(arg1->isConstant() != arg2->isConstant())
       {
-	Warning("CompareParameters","parameters with name \"%s\" have different constness",arg1->GetName());
-	return kFALSE;
+         Warning("CompareParameters","parameters with name \"%s\" have different constness",arg1->GetName());
+         return kFALSE;
       }
 
       if(bAllowForError)
       {
          if(!TMath::AreEqualAbs(arg1->getVal(),arg2->getVal(), TMath::Max(fTolerance,0.1*TMath::Min(arg1->getError(),arg2->getError()))))
-	{
-	  Warning("CompareParameters","parameters with name \"%s\" have different values: %.3f +/- %.3f vs %.3f +/- %.3f",arg1->GetName(),arg1->getVal(),arg1->getError(),arg2->getVal(),arg2->getError());
-	  return kFALSE;
-	}
+         {
+            Warning("CompareParameters","parameters with name \"%s\" have different values: %.3f +/- %.3f vs %.3f +/- %.3f",arg1->GetName(),arg1->getVal(),arg1->getError(),arg2->getVal(),arg2->getError());
+            return kFALSE;
+         }
       }
       else
-      {
-	if(!TMath::AreEqualAbs(arg1->getVal(),arg2->getVal(),fTolerance))
-	{
-	  Warning("CompareParameters","parameters with name \"%s\" have different values: %.3f vs %.3f",arg1->GetName(),arg1->getVal(),arg2->getVal());
-	  return kFALSE;
-	}
+       {
+          if(!TMath::AreEqualAbs(arg1->getVal(),arg2->getVal(),fTolerance))
+          {
+             Warning("CompareParameters","parameters with name \"%s\" have different values: %.3f vs %.3f",arg1->GetName(),arg1->getVal(),arg2->getVal());
+             return kFALSE;
+          }
 
-	if(!TMath::AreEqualAbs(arg1->getError(),arg2->getError(),fTolerance))
-	{
-	  Warning("CompareParameters","parameters with name \"%s\" have different errors: %.3f vs %.3f",arg1->GetName(),arg1->getError(),arg2->getError());
-	  return kFALSE;
-	}
-      }
+          if(!TMath::AreEqualAbs(arg1->getError(),arg2->getError(),fTolerance))
+          {
+             Warning("CompareParameters","parameters with name \"%s\" have different errors: %.3f vs %.3f",arg1->GetName(),arg1->getError(),arg2->getError());
+             return kFALSE;
+          }
+       }
     }
 
-    return kTRUE;
+     return kTRUE;
   }
 
   Bool_t ComparePDF(RooAbsPdf& rPDF1,RooAbsPdf& rPDF2,const RooArgSet& rAllObservables,RooAbsData& rTestData)
   {
     // options
     const Int_t iSamplingPoints = 100;
-    
+
     // get variables
     RooArgSet* pVars1 = rPDF1.getVariables();
     RooArgSet* pVars2 = rPDF2.getVariables();
@@ -415,7 +415,7 @@ private:
     }
 
     Bool_t bResult = kTRUE;
-    
+
     // no deviations > 1%
     if((h_diff->GetBinContent(0) > 0) || (h_diff->GetBinContent(h_diff->GetNbinsX()) > 0))
     {
@@ -436,7 +436,7 @@ private:
 
     if(!bResult)
       return kFALSE;
-    
+
     // check fit result to test data
     *pVars1 = *pVars2;
 
@@ -449,11 +449,11 @@ private:
 
     RooFitResult* r1 = rPDF1.fitTo(rTestData,Save(), RooFit::Minimizer(minimizerType.c_str()));
     //L.M:  for minuit we need ot rest otherwise fit could fail
-    if (minimizerType == "Minuit") { 
+    if (minimizerType == "Minuit") {
        if (gMinuit) { delete gMinuit; gMinuit=0; }
     }
     RooFitResult* r2 = rPDF2.fitTo(rTestData,Save(), RooFit::Minimizer(minimizerType.c_str()));
-    
+
     if(_verb > 0)
     {
       r1->Print("v");
@@ -465,13 +465,13 @@ private:
       Warning("ComparePDF","likelihood end up in different minima: %.3f vs %.3f",r1->minNll(),r2->minNll());
       return kFALSE;
     }
-    
+
     if(!CompareParameters(*pVars1,*pVars2,kTRUE))
     {
       Warning("ComparePDF","variable sets of PDFs differ after fit to test data");
       return kFALSE;
     }
-    
+
     return kTRUE;
   }
 };

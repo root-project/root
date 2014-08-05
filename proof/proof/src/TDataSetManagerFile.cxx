@@ -234,7 +234,7 @@ void TDataSetManagerFile::InitLocalCache()
    // Init the local cache if required
 
    fUseCache = (fIsRemote) ? kTRUE : kFALSE;
-   
+
    // Check if the caller has given specific instructions
    TString useCache;
    if (TestBit(TDataSetManager::kUseCache)) useCache = "yes";
@@ -245,7 +245,7 @@ void TDataSetManagerFile::InitLocalCache()
    useCache.ToLower();
    if (!useCache.IsNull())
       fUseCache = (useCache == "no" || useCache == "0") ? kFALSE : kTRUE;
-      
+
    if (fUseCache) {
       fLocalCacheDir = gSystem->Getenv("DATASETLOCALCACHEDIR");
       if (fLocalCacheDir.IsNull())

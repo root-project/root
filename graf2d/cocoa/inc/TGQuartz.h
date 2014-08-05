@@ -36,28 +36,28 @@ private:
    enum EAlign {kNone, kTLeft, kTCenter, kTRight, kMLeft,
                 kMCenter, kMRight, kBLeft, kBCenter, kBRight};
 
-   FT_Vector   fAlign; // alignment vector 
+   FT_Vector   fAlign; // alignment vector
 public:
    TGQuartz();
    TGQuartz(const char *name, const char *title);
-   
+
    //Final-overriders for TVirtualX.
    virtual void      DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
                              EBoxMode mode);
    virtual void      DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2,
                                    Int_t nx, Int_t ny, Int_t *ic);
    virtual void      DrawFillArea(Int_t n, TPoint *xy);
-   
+
    using TGCocoa::DrawLine;//There is a GUI version of DrawLine.
-   
+
    virtual void      DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2);
    virtual void      DrawPolyLine(Int_t n, TPoint *xy);
    virtual void      DrawPolyMarker(Int_t n, TPoint *xy);
-   virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, 
-                              const char *text, ETextMode mode);                              
+   virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
+                              const char *text, ETextMode mode);
    virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                               const wchar_t *text, ETextMode mode);
-   
+
    //I have to override these setters, since they are alredy overriden
    //in TVirtualX (originally, they are declared in TAttXXX classes)
    //and do nothing in TVirtualX (though, they are implemented
@@ -76,7 +76,7 @@ public:
    virtual void      SetTextFont(Font_t fontnumber);
    virtual Int_t     SetTextFont(char *fontname, ETextSetMode mode);
    virtual void      SetTextSize(Float_t textsize);
-   
+
    virtual void      GetTextExtent(UInt_t &w, UInt_t &h, char *text);
    virtual Int_t     GetFontAscent() const;
    virtual Int_t     GetFontAscent(const char *text) const;
@@ -108,7 +108,7 @@ private:
 
    TGQuartz(const TGQuartz &rhs);
    TGQuartz &operator = (const TGQuartz &rhs);
-      
+
    ClassDef(TGQuartz, 0);//2D non-GUI graphics for Mac OSX.
 };
 

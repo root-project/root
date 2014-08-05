@@ -52,7 +52,7 @@ TKeySQL::TKeySQL(TDirectory* mother, const TObject* obj, const char* name, const
    if (name) SetName(name); else
       if (obj!=0) {SetName(obj->GetName());  fClassName=obj->ClassName();}
       else SetName("Noname");
-      
+
    if (title) SetTitle(title);
 
    StoreKeyObject((void*)obj, obj ? obj->IsA() : 0);
@@ -75,7 +75,7 @@ TKeySQL::TKeySQL(TDirectory* mother, const void* obj, const TClass* cl, const ch
 }
 
 //______________________________________________________________________________
-TKeySQL::TKeySQL(TDirectory* mother, Long64_t keyid, Long64_t objid, 
+TKeySQL::TKeySQL(TDirectory* mother, Long64_t keyid, Long64_t objid,
                  const char* name, const char* title,
                  const char* keydatetime, Int_t cycle, const char* classname) :
     TKey(mother),
@@ -104,12 +104,12 @@ Bool_t TKeySQL::IsKeyModified(const char* keyname, const char* keytitle, const c
 // Compares keydata with provided and return kTRUE if key was modified
 // Used in TFile::StreamKeysForDirectory() method to verify data for that keys
 // should be updated
-  
+
    Int_t len1 = (GetName()==0) ? 0 : strlen(GetName());
    Int_t len2 = (keyname==0) ? 0 : strlen(keyname);
    if (len1!=len2) return kTRUE;
    if ((len1>0) && (strcmp(GetName(), keyname)!=0)) return kTRUE;
-  
+
    len1 = (GetTitle()==0) ? 0 : strlen(GetTitle());
    len2 = (keytitle==0) ? 0 : strlen(keytitle);
    if (len1!=len2) return kTRUE;
@@ -120,14 +120,14 @@ Bool_t TKeySQL::IsKeyModified(const char* keyname, const char* keytitle, const c
    len2 = (keydatime==0) ? 0 : strlen(keydatime);
    if (len1!=len2) return kTRUE;
    if ((len1>0) && (strcmp(tm, keydatime)!=0)) return kTRUE;
-  
+
    if (cycle!=GetCycle()) return kTRUE;
 
    len1 = (GetClassName()==0) ? 0 : strlen(GetClassName());
    len2 = (classname==0) ? 0 : strlen(classname);
    if (len1!=len2) return kTRUE;
    if ((len1>0) && (strcmp(GetClassName(), classname)!=0)) return kTRUE;
-      
+
    return kFALSE;
 }
 
@@ -137,7 +137,7 @@ void TKeySQL::Delete(Option_t * /*option*/)
 // Removes key from current directory
 // Note: TKeySQL object is not deleted. You still have to call "delete key"
 
-   TSQLFile* f = (TSQLFile*) GetFile(); 
+   TSQLFile* f = (TSQLFile*) GetFile();
 
    if (f!=0)
       f->DeleteKeyFromDB(GetDBKeyId());
@@ -149,7 +149,7 @@ void TKeySQL::Delete(Option_t * /*option*/)
 Long64_t TKeySQL::GetDBDirId() const
 {
    // return sql id of parent directory
-   
+
    return GetMotherDir() ? GetMotherDir()->GetSeekDir() : 0;
 }
 
@@ -157,9 +157,9 @@ Long64_t TKeySQL::GetDBDirId() const
 void TKeySQL::StoreKeyObject(const void* obj, const TClass* cl)
 {
    // Stores object, associated with key, into data tables
-   
-   TSQLFile* f = (TSQLFile*) GetFile(); 
-    
+
+   TSQLFile* f = (TSQLFile*) GetFile();
+
    fCycle = GetMotherDir()->AppendKey(this);
 
    fKeyId = f->DefineNextKeyId();
@@ -167,18 +167,18 @@ void TKeySQL::StoreKeyObject(const void* obj, const TClass* cl)
    fObjId = f->StoreObjectInTables(fKeyId, obj, cl);
 
    if (cl) fClassName = cl->GetName();
-   
-   if (GetDBObjId()>=0) { 
+
+   if (GetDBObjId()>=0) {
       fDatime.Set();
       if (!f->WriteKeyData(this)) {
-         // cannot add entry to keys table                          
+         // cannot add entry to keys table
          Error("StoreKeyObject","Cannot write data to key tables");
          // delete everything relevant for that key
          f->DeleteKeyFromDB(GetDBKeyId());
          fObjId = -1;
       }
    }
-   
+
    if (GetDBObjId()<0)
       GetMotherDir()->GetListOfKeys()->Remove(this);
    // fix me !!! One should delete object by other means
@@ -193,10 +193,10 @@ Int_t TKeySQL::Read(TObject* tobj)
    // Before invoking this function, obj has been created via the
    // default constructor.
 
-   if (tobj==0) return 0; 
-    
+   if (tobj==0) return 0;
+
    void* res = ReadKeyObject(tobj, 0);
-   
+
    return res==0 ? 0 : 1;
 }
 
@@ -207,7 +207,7 @@ TObject* TKeySQL::ReadObj()
 // If it is not TObject or in case of error, return 0
 
    TObject* tobj = (TObject*) ReadKeyObject(0, TObject::Class());
-   
+
    if (tobj!=0) {
       if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
       if (tobj->IsA() == TDirectoryFile::Class()) {
@@ -220,7 +220,7 @@ TObject* TKeySQL::ReadObj()
          fMotherDir->Append(dir);
       }
    }
-       
+
    return tobj;
 }
 
@@ -231,7 +231,7 @@ TObject* TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/)
 // If it is not TObject or in case of error, return 0
 
    TObject* tobj = (TObject*) ReadKeyObject(0, TObject::Class());
-   
+
    if (tobj!=0) {
       if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
       if (tobj->IsA() == TDirectoryFile::Class()) {
@@ -244,7 +244,7 @@ TObject* TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/)
          fMotherDir->Append(dir);
       }
    }
-       
+
    return tobj;
 }
 
@@ -261,20 +261,20 @@ void* TKeySQL::ReadKeyObject(void* obj, const TClass* expectedClass)
 {
    // Read object, associated with key, from database
 
-   TSQLFile* f = (TSQLFile*) GetFile(); 
+   TSQLFile* f = (TSQLFile*) GetFile();
 
    if ((GetDBKeyId()<=0) || (f==0)) return obj;
 
    TBufferSQL2 buffer(TBuffer::kRead, f);
-   
+
    TClass* cl = 0;
 
    void* res = buffer.SqlReadAny(GetDBKeyId(), GetDBObjId(), &cl, obj);
-   
+
    if ((cl==0) || (res==0)) return 0;
-   
+
    Int_t delta = 0;
-   
+
    if (expectedClass!=0) {
       delta = cl->GetBaseClassOffset(expectedClass);
       if (delta<0) {
@@ -288,6 +288,6 @@ void* TKeySQL::ReadKeyObject(void* obj, const TClass* expectedClass)
                  cl->GetName(),expectedClass->GetName());
       }
    }
-   
+
    return ((char*)res) + delta;
 }

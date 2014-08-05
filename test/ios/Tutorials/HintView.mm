@@ -11,12 +11,12 @@
 - (id) initWithFrame : (CGRect)frame
 {
    self = [super initWithFrame : frame];
-    
+
    if (self) {
       // Initialization code
       self.opaque = NO;
    }
-    
+
    return self;
 }
 
@@ -32,7 +32,7 @@
 {
    CGContextRef ctx = UIGraphicsGetCurrentContext();
    CGContextSetRGBFillColor(ctx, 0.3f, 0.3f, 0.3f, 0.7f);
-   
+
    CGContextFillRect(ctx, rect);
 
    //Draw the hint's text.

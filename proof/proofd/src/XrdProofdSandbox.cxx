@@ -104,7 +104,7 @@ XrdProofdSandbox::XrdProofdSandbox(XrdProofUI ui, bool full, bool changeown)
       // Recursively ...
       XrdOucString path, sb;
       path.assign(fDir, 0, iph - 1);
-      int from = iph; 
+      int from = iph;
       while ((from = fDir.tokenize(sb, from, '/')) != -1) {
          path += sb;
          if (XrdProofdAux::AssertDir(path.c_str(), ui, changeown) == -1) {
@@ -498,7 +498,7 @@ int XrdProofdSandbox::GuessTag(XrdOucString &tag, int ridx)
 //______________________________________________________________________________
 int XrdProofdSandbox::RemoveSession(const char *tag)
 {
-   // Move record for tag from the active sessions file to the old 
+   // Move record for tag from the active sessions file to the old
    // sessions file (<SandBox>/.sessions). The active file is removed if
    // empty after the operation. The old sessions file is created if needed.
    // Return 0 on success, -1 on error.
@@ -582,7 +582,7 @@ int XrdProofdSandbox::RemoveSession(const char *tag)
 
    // Unlink the file if empty
    if (unlk)
-      if (unlink(fna.c_str()) == -1) 
+      if (unlink(fna.c_str()) == -1)
          TRACE(DBG, "cannot unlink file "<<fna<<" (errno: "<<errno<<")");
 
    // Flag the session as closed

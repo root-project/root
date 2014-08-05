@@ -24,19 +24,19 @@
 
 //_____________________________________________________________________________
 // TGeoShapeAssembly - The shape encapsulating an assembly (union) of volumes.
-//    
+//
 //_____________________________________________________________________________
 
 
 ClassImp(TGeoShapeAssembly)
-   
+
 //_____________________________________________________________________________
 TGeoShapeAssembly::TGeoShapeAssembly()
 {
 // Default constructor
    fVolume  = 0;
    fBBoxOK = kFALSE;
-}   
+}
 
 
 //_____________________________________________________________________________
@@ -54,14 +54,14 @@ TGeoShapeAssembly::~TGeoShapeAssembly()
 // destructor
 }
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoShapeAssembly::ComputeBBox()
 {
 // Compute bounding box of the assembly
    if (!fVolume) {
       Fatal("ComputeBBox", "Assembly shape %s without volume", GetName());
       return;
-   } 
+   }
    // Make sure bbox is computed only once or recomputed only if invalidated (by alignment)
    if (fBBoxOK) return;
    Int_t nd = fVolume->GetNdaughters();
@@ -94,11 +94,11 @@ void TGeoShapeAssembly::ComputeBBox()
    fDY = 0.5*(ymax-ymin);
    fOrigin[1] = 0.5*(ymin+ymax);
    fDZ = 0.5*(zmax-zmin);
-   fOrigin[2] = 0.5*(zmin+zmax);   
+   fOrigin[2] = 0.5*(zmin+zmax);
    if (fDX>0 && fDY>0 && fDZ>0) fBBoxOK = kTRUE;
-}   
+}
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoShapeAssembly::RecomputeBoxLast()
 {
 // Recompute bounding box of the assembly after adding a node.
@@ -106,7 +106,7 @@ void TGeoShapeAssembly::RecomputeBoxLast()
    if (!nd) {
       Warning("RecomputeBoxLast", "No daughters for volume %s yet", fVolume->GetName());
       return;
-   }   
+   }
    TGeoNode *node = fVolume->GetNode(nd-1);
    Double_t xmin, xmax, ymin, ymax, zmin, zmax;
    if (nd==1) {
@@ -119,7 +119,7 @@ void TGeoShapeAssembly::RecomputeBoxLast()
       ymax = fOrigin[1]+fDY;
       zmin = fOrigin[2]-fDZ;
       zmax = fOrigin[2]+fDZ;
-   }      
+   }
    Double_t vert[24];
    Double_t pt[3];
    TGeoBBox *box = (TGeoBBox*)node->GetVolume()->GetShape();
@@ -140,11 +140,11 @@ void TGeoShapeAssembly::RecomputeBoxLast()
    fDY = 0.5*(ymax-ymin);
    fOrigin[1] = 0.5*(ymin+ymax);
    fDZ = 0.5*(zmax-zmin);
-   fOrigin[2] = 0.5*(zmin+zmax);   
-   fBBoxOK = kTRUE;      
-}  
+   fOrigin[2] = 0.5*(zmin+zmax);
+   fBBoxOK = kTRUE;
+}
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoShapeAssembly::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT. Should not be called.
@@ -156,8 +156,8 @@ void TGeoShapeAssembly::ComputeNormal(const Double_t *point, const Double_t *dir
       if (inext<0) {
          Error("ComputeNormal","Invalid inext=%i (Ncomponents=%i)",inext,fVolume->GetNdaughters());
          return;
-      }   
-   }   
+      }
+   }
    TGeoNode *node = fVolume->GetNode(inext);
    Double_t local[3],ldir[3],lnorm[3];
    node->MasterToLocal(point,local);
@@ -186,7 +186,7 @@ Bool_t TGeoShapeAssembly::Contains(const Double_t *point) const
       if (!check_list) {
          nav->GetCache()->ReleaseInfo();
          return kFALSE;
-      }   
+      }
       for (id=0; id<ncheck; id++) {
          node = fVolume->GetNode(check_list[id]);
          shape = node->GetVolume()->GetShape();
@@ -196,11 +196,11 @@ Bool_t TGeoShapeAssembly::Contains(const Double_t *point) const
             fVolume->SetNextNodeIndex(check_list[id]);
             nav->GetCache()->ReleaseInfo();
             return kTRUE;
-         }   
+         }
       }
       nav->GetCache()->ReleaseInfo();
       return kFALSE;
-   }      
+   }
    Int_t nd = fVolume->GetNdaughters();
    for (id=0; id<nd; id++) {
       node = fVolume->GetNode(id);
@@ -208,11 +208,11 @@ Bool_t TGeoShapeAssembly::Contains(const Double_t *point) const
       node->MasterToLocal(point,local);
       if (shape->Contains(local)) {
          fVolume->SetCurrentNodeIndex(id);
-         fVolume->SetNextNodeIndex(id);      
+         fVolume->SetNextNodeIndex(id);
          return kTRUE;
-      }   
+      }
    }
-   return kFALSE;   
+   return kFALSE;
 }
 
 //_____________________________________________________________________________
@@ -226,7 +226,7 @@ Int_t TGeoShapeAssembly::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 Double_t TGeoShapeAssembly::DistFromInside(const Double_t * /*point*/, const Double_t * /*dir*/, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
 {
 // Compute distance from inside point to surface of the hyperboloid.
-   Info("DistFromInside", "Cannot compute distance from inside the assembly (but from a component)"); 
+   Info("DistFromInside", "Cannot compute distance from inside the assembly (but from a component)");
    return TGeoShape::Big();
 }
 
@@ -242,7 +242,7 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
    TString sindent = "";
    for (Int_t k=0; k<indent; k++) sindent += "  ";
    Int_t idebug = TGeoManager::GetVerboseLevel();
-#endif   
+#endif
    if (!fBBoxOK) ((TGeoShapeAssembly*)this)->ComputeBBox();
    if (iact<3 && safe) {
       *safe = Safety(point, kFALSE);
@@ -287,11 +287,11 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
 #endif
 //         fVolume->SetNextNodeIndex(fVolume->GetCurrentNodeIndex());
 //         return snext;
-//      }   
+//      }
 //      snext += TGeoShape::Tolerance();
       stepmax -= snext;
    }
-   // Point represented by pt is now inside the bounding box - find distance to components   
+   // Point represented by pt is now inside the bounding box - find distance to components
    Int_t nd = fVolume->GetNdaughters();
    TGeoNode *node;
    Double_t lpoint[3],ldir[3];
@@ -312,10 +312,10 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
                printf("%s[%d] %s -> from local=(%19.16f, %19.16f, %19.16f, %19.16f, %19.16f, %19.16f)\n",
                       sindent.Data(), indent, fVolume->GetName(), lpoint[0],lpoint[1],lpoint[2],ldir[0],ldir[1],ldir[2]);
                printf("%s[%d] -> (l)to: %s shape %s snext=%g\n", sindent.Data(), indent, node->GetName(),
-                      node->GetVolume()->GetShape()->ClassName(), dist);        
+                      node->GetVolume()->GetShape()->ClassName(), dist);
             }
 #endif
-            
+
             stepmax = dist;
             fVolume->SetNextNodeIndex(i);
             found = kTRUE;
@@ -333,14 +333,14 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
       if (idebug>4) printf("%s[%d] %s: no daughter crossed\n", sindent.Data(), indent, fVolume->GetName());
       indent--;
 #endif
-      return TGeoShape::Big();   
+      return TGeoShape::Big();
    }
    // current volume is voxelized, first get current voxel
    Int_t ncheck = 0;
    Int_t *vlist = 0;
    TGeoNavigator *nav = gGeoManager->GetCurrentNavigator();
    TGeoStateInfo &td = *nav->GetCache()->GetInfo();
-   
+
    voxels->SortCrossedVoxels(pt, dir, td);
    while ((vlist=voxels->GetNextVoxel(pt, dir, ncheck, td))) {
       for (i=0; i<ncheck; i++) {
@@ -357,8 +357,8 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
                printf("%s[%d] %s -> from local=(%19.16f, %19.16f, %19.16f, %19.16f, %19.16f, %19.16f)\n",
                       sindent.Data(), indent, fVolume->GetName(), lpoint[0],lpoint[1],lpoint[2], ldir[0],ldir[1],ldir[2]);
                printf("%s[%d] -> to: %s shape %s snext=%g\n", sindent.Data(), indent, node->GetName(),
-                      node->GetVolume()->GetShape()->ClassName(), dist);        
-            }           
+                      node->GetVolume()->GetShape()->ClassName(), dist);
+            }
 #endif
             stepmax = dist;
             fVolume->SetNextNodeIndex(vlist[i]);
@@ -379,17 +379,17 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
    if (idebug>4) printf("%s[%d] %s: no daughter crossed\n", sindent.Data(), indent, fVolume->GetName());
    indent--;
 #endif
-   return TGeoShape::Big();      
+   return TGeoShape::Big();
 }
-   
+
 //_____________________________________________________________________________
-TGeoVolume *TGeoShapeAssembly::Divide(TGeoVolume * /*voldiv*/, const char *divname, Int_t /*iaxis*/, Int_t /*ndiv*/, 
-                             Double_t /*start*/, Double_t /*step*/) 
+TGeoVolume *TGeoShapeAssembly::Divide(TGeoVolume * /*voldiv*/, const char *divname, Int_t /*iaxis*/, Int_t /*ndiv*/,
+                             Double_t /*start*/, Double_t /*step*/)
 {
 // Cannot divide assemblies.
    Error("Divide", "Assemblies cannot be divided. Division volume %s not created", divname);
    return 0;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoShape *TGeoShapeAssembly::GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const
@@ -405,7 +405,7 @@ void TGeoShapeAssembly::InspectShape() const
 {
 // print shape parameters
    printf("*** Shape %s: TGeoShapeAssembly ***\n", GetName());
-   printf("    Volume assembly %s with %i nodes\n", fVolume->GetName(), fVolume->GetNdaughters());   
+   printf("    Volume assembly %s with %i nodes\n", fVolume->GetName(), fVolume->GetNdaughters());
    printf(" Bounding box:\n");
    if (!fBBoxOK) ((TGeoShapeAssembly*)this)->ComputeBBox();
    TGeoBBox::InspectShape();
@@ -415,7 +415,7 @@ void TGeoShapeAssembly::InspectShape() const
 void TGeoShapeAssembly::SetSegsAndPols(TBuffer3D & /*buff*/) const
 {
 // Fill TBuffer3D structure for segments and polygons.
-   Error("SetSegsAndPols", "Drawing functions should not be called for assemblies, but rather for their content");   
+   Error("SetSegsAndPols", "Drawing functions should not be called for assemblies, but rather for their content");
 }
 
 //_____________________________________________________________________________
@@ -443,12 +443,12 @@ Double_t TGeoShapeAssembly::Safety(const Double_t *point, Bool_t in) const
          }
       }
       return TGeoShape::Big();
-   }         
+   }
    Double_t safe;
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
    Int_t nd = fVolume->GetNdaughters();
    Double_t *boxes = 0;
-   if (voxels) boxes = voxels->GetBoxes();   
+   if (voxels) boxes = voxels->GetBoxes();
    TGeoNode *node;
    for (Int_t id=0; id<nd; id++) {
       if (boxes && id>0) {
@@ -469,8 +469,8 @@ Double_t TGeoShapeAssembly::Safety(const Double_t *point, Bool_t in) const
       safe = node->Safety(point, kFALSE);
       if (safe<=0.0) return 0.0;
       if (safe<safety) safety = safe;
-   }   
-   return safety;        
+   }
+   return safety;
 }
 
 //_____________________________________________________________________________

@@ -11,14 +11,14 @@
 template <typename Index, typename Value> class TKDTree : public TObject
 {
 public:
-	
+
    TKDTree();
    TKDTree(Index npoints, Index ndim, UInt_t bsize);
    TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **data);
    ~TKDTree();
-   
+
    void            Build();  // build the tree
-   
+
    Double_t        Distance(const Value *point, Index ind, Int_t type=2) const;
    void            DistanceToNode(const Value *point, Index inode, Value &min, Value &max, Int_t type=2);
 
@@ -26,7 +26,7 @@ public:
    Int_t   GetLeft(Int_t inode)  const    {return inode*2+1;}
    Int_t   GetRight(Int_t inode) const    {return (inode+1)*2;}
    Int_t   GetParent(Int_t inode) const  {return (inode-1)/2;}
-   //  
+   //
    // Other getters
    Index*  GetPointsIndexes(Int_t node) const;
    void    GetNodePointsIndexes(Int_t node, Int_t &first1, Int_t &last1, Int_t &first2, Int_t &last2) const;
@@ -66,14 +66,14 @@ public:
    Int_t   SetData(Index idim, Value *data);
    void    SetOwner(Int_t owner) { fDataOwner = owner; }
    void    Spread(Index ntotal, Value *a, Index *index, Value &min, Value &max) const;
-   
+
  private:
    TKDTree(const TKDTree &); // not implemented
    TKDTree<Index, Value>& operator=(const TKDTree<Index, Value>&); // not implemented
    void CookBoundaries(const Int_t node, Bool_t left);
 
    void UpdateNearestNeighbors(Index inode, const Value *point, Int_t kNN, Index *ind, Value *dist);
-   void UpdateRange(Index inode, Value *point, Value range, std::vector<Index> &res); 
+   void UpdateRange(Index inode, Value *point, Value range, std::vector<Index> &res);
 
  protected:
    Int_t   fDataOwner;  //! 0 - not owner, 2 - owner of the pointer array, 1 - owner of the whole 2-d array
@@ -101,8 +101,8 @@ public:
 
    ClassDef(TKDTree, 1)  // KD tree
 };
-      
-      
+
+
 typedef TKDTree<Int_t, Double_t> TKDTreeID;
 typedef TKDTree<Int_t, Float_t> TKDTreeIF;
 

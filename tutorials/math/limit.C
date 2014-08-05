@@ -11,7 +11,7 @@
 #include "TLimitDataSource.h"
 #include "TConfidenceLevel.h"
 
-using std::cout; 
+using std::cout;
 using std::endl;
 
 void limit() {
@@ -23,7 +23,7 @@ void limit() {
 // Create a new canvas.
   TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",200,10,700,500);
   c1->SetFillColor(42);
-	  
+
 // Create some histograms
   TH1D* background = new TH1D("background","The expected background",30,-4,4);
   TH1D* signal     = new TH1D("signal","the expected signal",30,-4,4);
@@ -34,7 +34,7 @@ void limit() {
   data->SetMarkerColor(kBlue);
   background->Sumw2(); // needed for stat uncertainty
   signal->Sumw2(); // needed for stat uncertainty
-  
+
 // Fill histograms randomly
   TRandom2 r;
   Float_t bg,sig,dt;
@@ -111,7 +111,7 @@ void limit() {
 // - The histogram of -2lnQ for signal and background hypothesis (dashed)
   TCanvas *c2 = new TCanvas("c2");
   myconfidence->Draw();
-  
+
 // clean up (except histograms and canvas)
   delete myconfidence;
   delete mydatasource;
@@ -119,4 +119,4 @@ void limit() {
   delete mynewconfidence;
   delete mynewdatasource;
 }
-  
+

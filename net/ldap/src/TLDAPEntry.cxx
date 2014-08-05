@@ -42,7 +42,7 @@ TLDAPEntry::TLDAPEntry(const TLDAPEntry &e) : TObject(e), fNCount(e.fNCount)
 }
 
 //______________________________________________________________________________
-TLDAPEntry& TLDAPEntry::operator=(const TLDAPEntry& lde) 
+TLDAPEntry& TLDAPEntry::operator=(const TLDAPEntry& lde)
 {
    // Equal operator
    if(this!=&lde) {

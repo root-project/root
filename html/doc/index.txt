@@ -1,6 +1,6 @@
 DUMMY - a howto, for now.
 
-The content of a file called index.html or index.txt will be put 
+The content of a file called index.html or index.txt will be put
 into the module index page (e.g. into GUI/index.html).
 All other files will be linked.
 

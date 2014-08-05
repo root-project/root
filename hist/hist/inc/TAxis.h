@@ -56,11 +56,11 @@ private:
 
    Bool_t       HasBinWithoutLabel() const;
    Bool_t       IsAlphanumeric() { return fBits2 & kAlphanumeric; }
-   void         SetAlphanumeric(Bool_t alphanumeric = kTRUE); 
+   void         SetAlphanumeric(Bool_t alphanumeric = kTRUE);
 
 public:
    // TAxis status bits
-   enum { 
+   enum {
           kDecimals      = BIT(7),
           kTickPlus      = BIT(9),
           kTickMinus     = BIT(10),
@@ -76,7 +76,7 @@ public:
           kLabelsUp      = BIT(21),
           kIsInteger     = BIT(22),
           kMoreLogLabels = BIT(23)
-   }; 
+   };
 
    TAxis();
    TAxis(Int_t nbins, Double_t xmin, Double_t xmax);
@@ -107,7 +107,7 @@ public:
    virtual void       GetCenter(Double_t *center) const;
            Bool_t     GetCenterLabels() const { return TestBit(kCenterLabels); }
            Bool_t     GetCenterTitle() const { return TestBit(kCenterTitle); }
-           Bool_t     GetDecimals() const { return TestBit(kDecimals); } 
+           Bool_t     GetDecimals() const { return TestBit(kDecimals); }
    THashList         *GetLabels() const { return fLabels; }
    virtual void       GetLowEdge(Double_t *edge) const;
            Bool_t     GetMoreLogLabels() const { return TestBit(kMoreLogLabels); }
@@ -183,12 +183,12 @@ inline void TAxis::RotateTitle(Bool_t rotate)
 }
 
 //______________________________________________________________________________
-inline void TAxis::SetDecimals(Bool_t dot) { 
+inline void TAxis::SetDecimals(Bool_t dot) {
    // sets the decimals flag
    // by default, blank characters are stripped, and then the label is correctly aligned.
    // If the dot is the last character of the string, it is also stripped, unless this option is specified.
-   SetBit(kDecimals, dot); 
-}    
+   SetBit(kDecimals, dot);
+}
 
 //______________________________________________________________________________
 inline void TAxis::SetMoreLogLabels(Bool_t more)

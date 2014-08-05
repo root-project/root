@@ -97,18 +97,18 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
       ::Error("FillNtupleFromStream", "invalid number of elements");
       return 0;
    }
-   
+
    DataType *args = tuple.GetArgs();
    assert(args != 0 && "FillNtupleFromStream, args buffer is a null");
-   
+
    Long64_t nLines = 0;
-   
+
    if (strictMode) {
       while (true) {
          //Skip empty-lines (containing only newlines, comments, whitespaces + newlines
          //and combinations).
          SkipEmptyLines(inputStream);
-         
+
          if (!inputStream.good()) {
             if (!nLines)
                ::Error("FillNtupleFromStream", "no data read");
@@ -133,7 +133,7 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
                inputStream.get();//we skip a dilimiter whatever it is.
                SkipWSCharacters(inputStream);
             }
-            
+
             if (NextCharacterIsEOL(inputStream)) {
                //This is unexpected!
                ::Error("FillNtupleFromStream", "unexpected character or eof found");
@@ -141,13 +141,13 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
             }
 
             inputStream>>args[i];
-            
+
             if (!(inputStream.eof() && i + 1 == nVars) && !inputStream.good()){
                ::Error("FillNtupleFromStream", "error while reading a value");
                return nLines;
             }
          }
-         
+
          SkipWSCharacters(inputStream);
          if (!NextCharacterIsEOL(inputStream)) {
             ::Error("FillNtupleFromStream",
@@ -167,7 +167,7 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
          //the first 'non-ws' symbol:
          //it can be a delimiter/a number (depends on a context) or an invalid symbol.
          SkipEmptyLines(inputStream);
-         
+
          if (!inputStream.good()) {
             //No data to read, check what we read by this moment:
             if (!nLines)
@@ -176,7 +176,7 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
                ::Error("FillNtupleFromStream", "unexpected character or eof found");
             return nLines;
          }
-         
+
          if (i > 0 && !std::isspace(delimiter)) {
             //The next one must be a delimiter.
             const char test = inputStream.peek();
@@ -188,15 +188,15 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
             inputStream.get();//skip the delimiter.
             SkipEmptyLines(inputStream);//probably, read till eof.
          }
-         
+
          //Here must be a number.
          inputStream>>args[i];
-            
+
          if (!(inputStream.eof() && i + 1 == nVars) && !inputStream.good()){
             ::Error("FillNtupleFromStream", "error while reading a value");
             return nLines;
          }
-            
+
          if (i + 1 == nVars) {
             //We god the row, can fill now and continue.
             static_cast<TTree &>(tuple).Fill();
@@ -206,7 +206,7 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
             ++i;
       }
    }
-   
+
    return nLines;
 }
 
@@ -260,7 +260,7 @@ void SkipComment(std::istream &input)
 void SkipEmptyLines(std::istream &input)
 {
    //Skips empty lines (newline-characters), ws-lines (consisting only of whitespace characters + newline-characters).
-   
+
    while (input.good()) {
       const char c = input.peek();
       if (!input.good())
@@ -300,11 +300,11 @@ bool NextCharacterIsEOL(std::istream &input)
    //Either '\r' | '\n' or eof of some problem.
    if (!input.good())
       return true;
-   
+
    const char next = input.peek();
    if (!input.good())
       return true;
-  
+
    return next == '\r' || next == '\n';
 }
 

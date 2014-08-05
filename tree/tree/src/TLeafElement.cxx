@@ -36,7 +36,7 @@ TLeafElement::TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t ty
    :TLeaf(parent, name,name)
 {
    // Create a LeafObject.
-   
+
    fAbsAddress = 0;
    fID         = id;
    fType       = type;

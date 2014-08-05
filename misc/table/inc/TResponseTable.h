@@ -20,7 +20,7 @@ class TResponseTable : public TGenericTable
       void SetResponse(int track, int *nvl, float *response);
       static Int_t FindResponseLocation(TTableDescriptor  &dsc);
 
-    protected: 
+    protected:
       void AddVolumePath(const char *path);
       void AddResponse(const char *chit);
       void AddElement(const char *path,EColumnType type);

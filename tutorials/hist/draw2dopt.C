@@ -1,7 +1,7 @@
 {
    // display the various 2-d drawing options
    //Author: Rene Brun
-   
+
    gROOT->Reset();
    gStyle->SetOptStat(0);
    gStyle->SetPalette(1);
@@ -14,7 +14,7 @@
    h2.SetFillColor(46);
    h2.FillRandom("f2",40000);
    TPaveLabel pl;
-   
+
    //basic 2-d options
    Float_t xMin=0.67, yMin=0.875, xMax=0.85, yMax=0.95;
    Int_t cancolor = 17;
@@ -30,7 +30,7 @@
    c2h.cd(4);
    h2.Draw("colz"); pl.DrawPaveLabel(xMin,yMin,xMax,yMax,"COLZ","brNDC");
    c2h.Update();
-   
+
    //text option
    TCanvas ctext("ctext","text option",50,50,800,600);
    gPad->SetGrid();
@@ -38,7 +38,7 @@
    ctext.SetGrid();
    h2.Draw("text"); pl.DrawPaveLabel(xMin,yMin,xMax,yMax,"TEXT","brNDC");
    ctext.Update();
-   
+
    //contour options
    TCanvas cont("contours","contours",100,100,800,600);
    cont.Divide(2,2);
@@ -56,7 +56,7 @@
    gPad->SetGrid();
    h2.Draw("cont3"); pl.DrawPaveLabel(xMin,yMin,xMax,yMax,"CONT3","brNDC");
    cont.Update();
-   
+
    //lego options
    TCanvas lego("lego","lego options",150,150,800,600);
    lego.Divide(2,2);
@@ -72,7 +72,7 @@
    gPad->SetTheta(21); gPad->SetPhi(-90);
    h2.Draw("surf1cyl"); pl.DrawPaveLabel(xMin,yMin,xMax+0.05,yMax,"SURF1CYL","brNDC");
    lego.Update();
-   
+
    //surface options
    TCanvas surf("surfopt","surface options",200,200,800,600);
    surf.Divide(2,2);

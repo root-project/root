@@ -704,7 +704,7 @@ int XrdProofdAdmin::QuerySessions(XrdProofdProtocol *p)
 //______________________________________________________________________________
 int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
 {
-   // Handle request for log paths 
+   // Handle request for log paths
    XPDLOC(ALL, "Admin::QueryLogPaths")
 
    int rc = 0;
@@ -781,12 +781,12 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
       response->Send(kXR_InvalidRequest, msg.c_str());
       return 0;
    }
-   
+
    // Masters have the .workers file
    XrdOucString wfile(sdir);
    wfile += "/.workers";
    bool ismaster = (access(wfile.c_str(), F_OK) == 0) ? 1 : 0;
-   
+
    // Scan the directory to add the top master (only if top master)
    XrdOucString xo, logtag, xf;
    int ilog, idas, iund1, iund2;

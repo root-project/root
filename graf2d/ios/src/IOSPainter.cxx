@@ -48,7 +48,7 @@ void SetMarkerStrokeColor(CGContextRef ctx, Color_t colorIndex)
 }
 
 //______________________________________________________________________________
-bool MarkerIsFilledPolygon(Style_t markerStyle) 
+bool MarkerIsFilledPolygon(Style_t markerStyle)
 {
    switch (markerStyle) {
    case kDot:
@@ -94,7 +94,7 @@ void SpaceConverter::SetConverter(UInt_t w, Double_t xMin, Double_t xMax, UInt_t
    //Set conversion coefficients.
    fXMin = xMin;
    fXConv = w / (xMax - xMin);
-   
+
    fYMin = yMin;
    fYConv = h / (yMax - yMin);
 }
@@ -105,7 +105,7 @@ Double_t SpaceConverter::XToView(Double_t x)const
    //From pad's user space to view's user space.
    return (x - fXMin) * fXConv;
 }
-   
+
 //_________________________________________________________________
 Double_t SpaceConverter::YToView(Double_t y)const
 {
@@ -123,23 +123,23 @@ Painter::Painter()
    //Default ctor.
 }
 
-//_________________________________________________________________      
+//_________________________________________________________________
 void Painter::SetStrokeParameters()const
 {
-   //Painter can work in four modes: 
+   //Painter can work in four modes:
    //1. draw objects into a view;
    //2. draw them into a bitmap file with a special color("selection mode");
    //3. draw highlighted object
    //4. draw object's shadow
-   
-   //In selection mode line color is quite a special thing, it's used as 
+
+   //In selection mode line color is quite a special thing, it's used as
    //object's identity. Line width is also different: to be selectable by tap gesture,
    //line has to be very thick.
    //In "shadow mode" or "highlight mode" it's just gray or pink and transparent.
 
    CGContextSetLineCap(fCtx, kCGLineCapRound);
    CGContextSetLineJoin(fCtx, kCGLineJoinMiter);
-   
+
    if (fPainterMode == kPaintToSelectionBuffer) {
       SetLineColorForCurrentObjectID();
       //If line's width is less, it's already very difficult to pick.
@@ -158,10 +158,10 @@ void Painter::SetStrokeParameters()const
 
    const Float_t alpha = 1.f;//Must come from gVirtualX.
    Float_t red = 0.f, green = 0.f, blue = 0.f;//Black line by default.
-   
+
    GraphicUtils::GetColorForIndex(gVirtualX->GetLineColor(), red, green, blue);
    CGContextSetRGBStrokeColor(fCtx, red, green, blue, alpha);
-   
+
    const Style_t lineStyle = gVirtualX->GetLineStyle();
    if (lineStyle > 1 && lineStyle <= 10)
       CGContextSetLineDash(fCtx, 0., GraphicUtils::dashLinePatterns[lineStyle - 1], GraphicUtils::linePatternLengths[lineStyle - 1]);
@@ -169,25 +169,25 @@ void Painter::SetStrokeParameters()const
       CGContextSetLineDash(fCtx, 0., 0, 0);
 }
 
-//_________________________________________________________________      
+//_________________________________________________________________
 void Painter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
    //In principle, stroke parameters (line style, width, color) must
    //be specified externally, before DrawLine is called.
    //Unfortunately, in ROOT gVirtualX->SetLineXXXX is called in every
-   //possible place and not only inside gPad, so I simply can not 
+   //possible place and not only inside gPad, so I simply can not
    //controll all places, there line parameters are set. So
    //they are specified here.
    const Util::CGStateGuard contextState(fCtx);
-   
+
    SetStrokeParameters();
-   
+
    const Double_t x1p = fConverter.XToView(x1);
    const Double_t x2p = fConverter.XToView(x2);
 
    const Double_t y1p = fConverter.YToView(y1);
    const Double_t y2p = fConverter.YToView(y2);
-   
+
    CGContextBeginPath(fCtx);
    CGContextMoveToPoint(fCtx, x1p, y1p);
    CGContextAddLineToPoint(fCtx, x2p, y2p);
@@ -200,13 +200,13 @@ void Painter::DrawLineNDC(Double_t, Double_t, Double_t, Double_t)
    //Just an empty overrider. Pad does conversions required and
    //calls DrawLine instead of this.
 }
-   
+
 //_________________________________________________________________
 void Painter::SetPolygonParameters()const
 {
    //TODO: check, if stroke parameters also should
    //be specified for polygon.
-   
+
    if (fPainterMode == kPaintToSelectionBuffer) {
       SetStrokeParameters();
       SetPolygonColorForCurrentObjectID();
@@ -221,7 +221,7 @@ void Painter::SetPolygonParameters()const
 
    const Float_t alpha = 1.f;//must be in gVirtualX.
    Float_t red = 1.f, green = 1.f, blue = 1.f;//White by default.
- 
+
    GraphicUtils::GetColorForIndex(gVirtualX->GetFillColor(), red, green, blue);
    CGContextSetRGBFillColor(fCtx, red, green, blue, alpha);
    //Without the next two lines and without kCGPathFillStroke I
@@ -246,7 +246,7 @@ void Painter::FillBoxWithPattern(Double_t x1, Double_t y1, Double_t x2, Double_t
    //
    Util::RefGuardGeneric<CGColorSpaceRef, CGColorSpaceRelease> patternColorSpace(CGColorSpaceCreatePattern(0));
    CGContextSetFillColorSpace(fCtx, patternColorSpace.Get());
-   
+
    //patternIndex < kPredefinedFillPatterns, this is assumed by previous call
    //to PolygonHasStipples.
    CGFloat rgb[3] = {};
@@ -255,7 +255,7 @@ void Painter::FillBoxWithPattern(Double_t x1, Double_t y1, Double_t x2, Double_t
    rgb[0] = r; rgb[1] = g; rgb[2] = b;
    const Style_t patternIndex = gVirtualX->GetFillStyle() % 1000 - 1;
    const Util::SmartRef<CGPatternRef, CGPatternRelease> pattern(GraphicUtils::gPatternGenerators[patternIndex](rgb));
-   
+
    const CGFloat alpha = 1.f;
    CGContextSetFillPattern(fCtx, pattern.Get(), &alpha);
 
@@ -277,15 +277,15 @@ void Painter::DrawBoxOutline(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
    //Hollow box.
    const Util::CGStateGuard contextGuard(fCtx);
-   
+
    const CGRect rect = CGRectMake(x1, y1, x2 - x1, y2 - y1);
-   
+
    SetStrokeParameters();
    CGContextStrokeRect(fCtx, rect);
-   
+
    if (fPainterMode == kPaintSelected)
       GraphicUtils::DrawBoxSelectionMarkers(fCtx, rect);
-      
+
 }
 
 //_________________________________________________________________
@@ -295,20 +295,20 @@ void Painter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TVirtu
    const Double_t y1p = fConverter.YToView(y1);
    const Double_t x2p = fConverter.XToView(x2);
    const Double_t y2p = fConverter.YToView(y2);
-   
+
    if (fPainterMode == kPaintSelected || fPainterMode == kPaintShadow)
       return DrawBoxOutline(x1p, y1p, x2p, y2p);
-      
+
    if (fPainterMode == kPaintToSelectionBuffer && PolygonHasStipple())
       return DrawBoxOutline(x1p, y1p, x2p, y2p);
-      
+
    if (mode == TVirtualPadPainter::kFilled)
       PolygonHasStipple() ? FillBoxWithPattern(x1p, y1p, x2p, y2p) : FillBox(x1p, y1p, x2p, y2p);
    else
       DrawBoxOutline(x1p, y1p, x2p, y2p);
 }
 
-namespace 
+namespace
 {
 
 //_________________________________________________________________
@@ -316,12 +316,12 @@ template<class PointCoordinate>
 void draw_polygon(CGContextRef ctx, UInt_t n, const PointCoordinate *x, const PointCoordinate *y, const SpaceConverter & sc, Bool_t withStroke = kTRUE)
 {
    CGContextBeginPath(ctx);
-   
+
    CGContextMoveToPoint(ctx, sc.XToView(x[0]), sc.YToView(y[0]));
    for (UInt_t i = 1; i < n; ++i)
       CGContextAddLineToPoint(ctx, sc.XToView(x[i]), sc.YToView(y[i]));
    CGContextClosePath(ctx);
-   
+
    if (!withStroke)
       CGContextFillPath(ctx);
    else
@@ -338,11 +338,11 @@ void draw_polyline(CGContextRef ctx, UInt_t n, const PointCoordinate *x, const P
       CGContextAddLineToPoint(ctx, sc.XToView(x[i]), sc.YToView(y[i]));
 
    CGContextStrokePath(ctx);
-   
+
    if (showSelection) {
       GraphicUtils::DrawSelectionMarker(ctx, CGPointMake(sc.XToView(x[0]), sc.YToView(y[0])));
       GraphicUtils::DrawSelectionMarker(ctx, CGPointMake(sc.XToView(x[n - 1]), sc.YToView(y[n - 1])));
-      
+
       const unsigned midPoint = n / 2;
       if (midPoint)
          GraphicUtils::DrawSelectionMarker(ctx, CGPointMake(sc.XToView(x[midPoint]), sc.YToView(y[midPoint])));
@@ -369,7 +369,7 @@ void Painter::FillAreaWithPattern(Int_t n, const Double_t *x, const Double_t *y)
    const CGFloat alpha = 1.f;
    CGContextSetFillPattern(fCtx, pattern.Get(), &alpha);
 
-   draw_polygon(fCtx, n, x, y, fConverter, kFALSE);   
+   draw_polygon(fCtx, n, x, y, fConverter, kFALSE);
 }
 
 //_________________________________________________________________
@@ -381,11 +381,11 @@ void Painter::FillArea(Int_t n, const Double_t *x, const Double_t *y)const
    draw_polygon(fCtx, n, x, y, fConverter);
 }
 
-//_________________________________________________________________   
+//_________________________________________________________________
 void Painter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
 {
    //Check, may be, that's a hollow area, if so, call DrawPolyline instead.
-   
+
    if (!gVirtualX->GetFillStyle())
       return DrawPolyLine(n, x, y);
 
@@ -394,7 +394,7 @@ void Painter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
 
    if (fPainterMode == kPaintToSelectionBuffer && PolygonHasStipple())
       return DrawPolyLine(n, x, y);
-         
+
    if (PolygonHasStipple())
       return FillAreaWithPattern(n, x, y);
 
@@ -415,7 +415,7 @@ void Painter::DrawFillArea(Int_t, const Float_t *, const Float_t *)
 void Painter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
 {
    const Util::CGStateGuard contextGuard(fCtx);
-   
+
    SetStrokeParameters();
    draw_polyline(fCtx, n, x, y, fConverter, fPainterMode == kPaintSelected);
 }
@@ -467,7 +467,7 @@ void Painter::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y)
       p.SetX(fConverter.XToView(x[i]));
       p.SetY(fConverter.YToView(y[i]));
    }
-      
+
    const Util::CGStateGuard contextGuard(fCtx);
 
    if (fPainterMode == kPaintToSelectionBuffer) {
@@ -490,13 +490,13 @@ void Painter::DrawText(Double_t x, Double_t y, const CTLineGuard &ctLine)
 {
    UInt_t w = 0, h = 0;
    ctLine.GetBounds(w, h);
-   
+
    x = fConverter.XToView(x);
    y = fConverter.YToView(y);
-   
+
    Double_t xc = 0., yc = 0.;
-   
-   const UInt_t hAlign = UInt_t(gVirtualX->GetTextAlign() / 10);   
+
+   const UInt_t hAlign = UInt_t(gVirtualX->GetTextAlign() / 10);
    switch (hAlign) {
    case 1:
       xc = 0.5 * w;
@@ -519,13 +519,13 @@ void Painter::DrawText(Double_t x, Double_t y, const CTLineGuard &ctLine)
       yc = -0.5 * h;
       break;
    }
-   
+
    CGContextSaveGState(fCtx);
 
    CGContextSetTextMatrix(fCtx, CGAffineTransformIdentity);
 
    CGContextSetTextPosition(fCtx, 0.f, 0.f);
-   CGContextTranslateCTM(fCtx, x, y);  
+   CGContextTranslateCTM(fCtx, x, y);
    CGContextRotateCTM(fCtx, gVirtualX->GetTextAngle() * TMath::DegToRad());
    CGContextTranslateCTM(fCtx, xc, yc);
    CGContextTranslateCTM(fCtx, -0.5 * w, -0.5 * h);
@@ -539,8 +539,8 @@ void Painter::DrawText(Double_t x, Double_t y, const char *text, TVirtualPadPain
 {
    //TODO: mode parameter.
    const Util::CGStateGuard contextGuard(fCtx);
-   
-   if (fPainterMode == kPaintToView || fPainterMode == kPaintThumbnail) {   
+
+   if (fPainterMode == kPaintToView || fPainterMode == kPaintThumbnail) {
       CTFontRef currentFont = fFontManager.SelectFont(gVirtualX->GetTextFont(), gVirtualX->GetTextSize());
       if (gVirtualX->GetTextFont() / 10 - 1 == 11) {
          CTLineGuard ctLine(text, currentFont, fFontManager.GetSymbolMap());
@@ -575,7 +575,7 @@ void Painter::SetPainterMode(EMode mode)
    fPainterMode = mode;
 }
 
-//_________________________________________________________________   
+//_________________________________________________________________
 void Painter::SetCurrentObjectID(UInt_t objId)
 {
    fCurrentObjectID = objId;

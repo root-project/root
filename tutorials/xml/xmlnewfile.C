@@ -1,13 +1,13 @@
 // Example to create a new xml file with the TXMLEngine class
 //Author: Sergey Linev
-   
+
 #include "TXMLEngine.h"
 
 void xmlnewfile(const char* filename = "example.xml")
 {
    // First create engine
    TXMLEngine* xml = new TXMLEngine;
-   
+
    // Create main node of document tree
    XMLNodePointer_t mainnode = xml->NewChild(0, 0, "main");
 
@@ -16,7 +16,7 @@ void xmlnewfile(const char* filename = "example.xml")
 
    // Other child node with attributes
    XMLNodePointer_t child2 = xml->NewChild(mainnode, 0, "child2");
-   xml->NewAttr(child2, 0, "attr1","value1"); 
+   xml->NewAttr(child2, 0, "attr1","value1");
    xml->NewAttr(child2, 0, "attr2","value2");
 
    // Child node with subnodes
@@ -35,10 +35,10 @@ void xmlnewfile(const char* filename = "example.xml")
    // now create doccumnt and assign main node of document
    XMLDocPointer_t xmldoc = xml->NewDoc();
    xml->DocSetRootElement(xmldoc, mainnode);
-   
+
    // Save document to file
    xml->SaveDoc(xmldoc, filename);
-      
+
    // Release memory before exit
    xml->FreeDoc(xmldoc);
    delete xml;

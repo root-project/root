@@ -2,7 +2,7 @@ void img2pad()
 {
    // Display image in canvas and pad.
    //Author: valeriy Onuchin
-   
+
    TImage *img = TImage::Open("rose512.jpg");
    if (!img) {
       printf("Could not create an image... exit\n");

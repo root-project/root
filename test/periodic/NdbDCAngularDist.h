@@ -9,11 +9,11 @@ class NdbDCAngularDist : public NdbMF
 protected:
 
 public:
-	NdbDCAngularDist()
-		: NdbMF(34, "Data covariances for angular distributions") {}
-	~NdbDCAngularDist() {}
+   NdbDCAngularDist()
+      : NdbMF(34, "Data covariances for angular distributions") {}
+   ~NdbDCAngularDist() {}
 
-	ClassDef(NdbDCAngularDist,1)
+   ClassDef(NdbDCAngularDist,1)
 
 }; // NdbDCAngularDist
 

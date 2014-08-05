@@ -1,6 +1,6 @@
-<br/> 
-<hr/> 
-<a name="graf2d"></a> 
+<br/>
+<hr/>
+<a name="graf2d"></a>
 <h3>2D Graphics Libraries</h3>
 
 <h4>TPDF</h4>
@@ -10,7 +10,7 @@
       before "Title:".
    </li>
    <li>
-      After a title was once set, this title will be used for all following 
+      After a title was once set, this title will be used for all following
       additions to the PDF file, instead of "Page ###".
    </li>
    <li>
@@ -19,7 +19,7 @@
    <li>
       Implement the transparency in PDF files. To make a graphics object transparent
       it is enough to set its color to a transparent one. The color transparency
-      is defined via its alpha component. The alpha value varies from 0. to 1. 
+      is defined via its alpha component. The alpha value varies from 0. to 1.
       0. makes an object fully transparent, and 1. makes it fully opaque. To set the
       alpha value of an existing color it is enough to do:
       <pre>
@@ -46,13 +46,13 @@
 <h4>TLegend</h4>
 <ul>
    <li>
-      The option E, to draw the error bar on a legend entry, does not need 
-      anymore the option L to be active. It is now possible to draw the error 
-      bar only using the option E alone. The combination of the options E and L 
+      The option E, to draw the error bar on a legend entry, does not need
+      anymore the option L to be active. It is now possible to draw the error
+      bar only using the option E alone. The combination of the options E and L
       still works as before.
    </li>
    <li>
-      The text attributes were not properly initialized by the default 
+      The text attributes were not properly initialized by the default
       constructor.
    </li>
 </ul>
@@ -71,7 +71,7 @@
       along the X and Y axis are computed according to the square root of n.
       Example:
    <pre>
-      void divsquare(int w, int h, int n) 
+      void divsquare(int w, int h, int n)
       {
          TCanvas *c = new TCanvas ("c","c",0,0,w,h);
          c->DivideSquare(n);
@@ -82,10 +82,10 @@
       }
    </pre>
    </li>
-   <li> TPad::Print always use TImageDump to print gif, png and jpeg files, in 
-      interactive and batch mode (previously it was used in the batch case only). 
-      This allows to generate output transparent colors in these formats even in 
-      interactive mode. The generation of gif, png and jpeg files from the 
+   <li> TPad::Print always use TImageDump to print gif, png and jpeg files, in
+      interactive and batch mode (previously it was used in the batch case only).
+      This allows to generate output transparent colors in these formats even in
+      interactive mode. The generation of gif, png and jpeg files from the
       graphics window in interactive mode is kept for OpenGL canvases.
    </li>
 </ul>

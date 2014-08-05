@@ -36,7 +36,7 @@ TProofMonSenderSQL::TProofMonSenderSQL(const char *serv, const char *user,
                                        const char *dstab, const char *filestab)
                   : TProofMonSender(serv,"ProofMonSenderSQL"),
                     fDSetSendOpts("bulk,table=proofquerydsets"),
-                    fFilesSendOpts("bulk,table=proofqueryfiles") 
+                    fFilesSendOpts("bulk,table=proofqueryfiles")
 {
    // Main constructor
 
@@ -72,7 +72,7 @@ TProofMonSenderSQL::TProofMonSenderSQL(const char *serv, const char *user,
 TProofMonSenderSQL::~TProofMonSenderSQL()
 {
    // Destructor
-   
+
    SafeDelete(fWriter);
 }
 
@@ -207,7 +207,7 @@ Int_t TProofMonSenderSQL::SendSummary(TList *recs, const char *dumid)
          recs->Add(dsn);
    }
    if (xrecs != recs) SafeDelete(xrecs);
-   
+
    // Done
    return (rc ? 0 : -1);
 }
@@ -283,7 +283,7 @@ Int_t TProofMonSenderSQL::SendDataSetInfo(TDSet *dset, TList *missing,
       // Create a new TDSetPlet and add it to the list
       plets.Add(new TDSetPlet(ds.Data(), dset));
    }
-   
+
    // Now try to count the files
    TDSetPlet *plet = 0;
    TIter nxpl(&plets);
@@ -291,7 +291,7 @@ Int_t TProofMonSenderSQL::SendDataSetInfo(TDSet *dset, TList *missing,
    TDSetElement *e = 0, *ee = 0;
    TDSet *dsete = 0;
    TIter nxe(dset->GetListOfElements());
-   TString dse; 
+   TString dse;
    while ((o = nxe())) {
       if ((e = dynamic_cast<TDSetElement *>(o))) {
          dse = e->GetDataSet();
@@ -321,7 +321,7 @@ Int_t TProofMonSenderSQL::SendDataSetInfo(TDSet *dset, TList *missing,
                   }
                }
             }
-         }         
+         }
       } else {
          Warning("SendDataSetInfo", "ignoring unknown element type: '%s'", o->ClassName());
       }
@@ -331,7 +331,7 @@ Int_t TProofMonSenderSQL::SendDataSetInfo(TDSet *dset, TList *missing,
    if (missing) {
       TFileInfo *fi = 0;
       TIter nxm(missing);
-      TString dsfi, fn; 
+      TString dsfi, fn;
       while ((fi = (TFileInfo *) nxm())) {
          dsfi = fi->GetTitle();
          if (!dsfi.IsNull() && dsfi != "TFileInfo") {
@@ -348,7 +348,7 @@ Int_t TProofMonSenderSQL::SendDataSetInfo(TDSet *dset, TList *missing,
          }
       }
    }
-   
+
    // Now we can prepare the input for SendParameters
    TList values;
    TString ent("dsn,querytag,querybegin,numfiles,missfiles");
@@ -365,10 +365,10 @@ Int_t TProofMonSenderSQL::SendDataSetInfo(TDSet *dset, TList *missing,
 
    PDB(kMonitoring,1)
       Info("SendDataSetInfo", "sending (%d entries)", values.GetSize());
-   
+
    // Now we are ready to send
    Bool_t rc = fWriter->SendParameters(&values, fDSetSendOpts);
-   
+
    // Done
    return (rc ? 0 : -1);
 }
@@ -449,13 +449,13 @@ Int_t TProofMonSenderSQL::SendFileInfo(TDSet *dset, TList *missing,
    TString ent("lfn,path,querytag,querybegin,status");
    if (fFileInfoVrs == 0)  ent = "lfn,path,querytag,status";
    values.Add(new TObjString(ent.Data()));
-   
+
    // Create the file-plets
    TObject *o = 0;
    TDSetElement *e = 0, *ee = 0;
    TDSet *dsete = 0;
    TIter nxe(dset->GetListOfElements());
-   TString fne, status; 
+   TString fne, status;
    while ((o = nxe())) {
       if ((e = dynamic_cast<TDSetElement *>(o))) {
          fne = e->GetName();
@@ -493,10 +493,10 @@ Int_t TProofMonSenderSQL::SendFileInfo(TDSet *dset, TList *missing,
    }
 
    PDB(kMonitoring,1) Info("SendFileInfo", "sending (%d entries)", values.GetSize());
-   
+
    // Now we are ready to send
    Bool_t rc = fWriter->SendParameters(&values, fFilesSendOpts);
-   
+
    // Done
    return (rc ? 0 : -1);
 }

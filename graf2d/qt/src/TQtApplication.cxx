@@ -62,7 +62,7 @@ void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled
 {
   //  Initialize the Qt package
   //  Check the QT_BATCH environment variable to disactivate Qt GUI mode
-   
+
   // QApplication must be created in the proper "GUI" thread
   // It may be called from TQtApplicationThread::Run
    if (!qApp) {
@@ -71,9 +71,9 @@ void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled
        QString display = gSystem->Getenv("DISPLAY");
        // check the QT_BATCH option
        if (display.contains("QT_BATCH")) GUIenabled = false;
-#ifndef R__WIN32       
+#ifndef R__WIN32
        QCoreApplication::setAttribute(Qt::AA_ImmediateWidgetCreation);
-#endif       
+#endif
        // Check whether we want to debug the Qt X11
        QString fatalWarnings = gSystem->Getenv("QT_FATAL_WARNINGS");
        if (fatalWarnings.contains("1")) {
@@ -81,13 +81,13 @@ void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled
           static const char *argV[] = {"root.exe", "-sync" };
           qDebug() << "TQtApplication::CreateQApplication: "
                    << "ATTENTION !!! "
-                   << "The env variable \"QT_FATAL_WARNIGNS\" was defined. The special debug option has  been turned on." 
+                   << "The env variable \"QT_FATAL_WARNIGNS\" was defined. The special debug option has  been turned on."
                    << " argc = " << argc << " argv = " << argv[0] << argv[1];
           qDebug() << " You may want to restart ROOT with " << argC << " parameters :"
                    << " like this: \"" << argV[0] << " " << argV[1];
 //          new QApplication(argC,argV,GUIenabled);
           new QApplication(argc,argv,GUIenabled);
-       } else {       
+       } else {
           new QApplication(argc,argv,GUIenabled);
        }
        // The string must be one of the QStyleFactory::keys(),
@@ -111,18 +111,18 @@ void TQtApplication::CreateQApplication(int &argc, char ** argv, bool GUIenabled
             .arg(qAppName())
             .arg(QT_VERSION_STR)
             .arg(QString::fromLatin1(ROOT_VALID_QT_VERSION))
-            .arg(QString::fromLatin1(qVersion()) ); 
+            .arg(QString::fromLatin1(qVersion()) );
       QMessageBox::critical( 0, QApplication::tr("Incompatible Qt Library Error" ), s, QMessageBox::Abort,0 );
       qFatal("%s",s.toAscii().data());
    } else if (thisQtVersion < QtVersion()) {
        QString s = QApplication::tr("Executable '%1' was compiled with Qt %2, found Qt %3.")
             .arg(qAppName())
             .arg(QT_VERSION_STR)
-            .arg(QString::fromLatin1(qVersion()) ); 
+            .arg(QString::fromLatin1(qVersion()) );
       QMessageBox::warning( 0, QApplication::tr("Upgrade Qt Library Warning" ), s, QMessageBox::Abort,0 );
       qWarning("%s",s.toAscii().data());
    }
-  
+
    // Add Qt plugin path if  present (it is the case for Windows binary ROOT distribution)
    char *qtPluginPath = gSystem->ConcatFileName(gSystem->Getenv("ROOTSYS"),"/Qt/plugins");
    if (!gSystem->AccessPathName(qtPluginPath))

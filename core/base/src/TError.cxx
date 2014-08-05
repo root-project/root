@@ -35,6 +35,7 @@
 #include "TString.h"
 #include "TEnv.h"
 #include "TVirtualMutex.h"
+#include "ThreadLocalStorage.h"
 
 // Mutex for error and error format protection
 // (exported to be used for similar cases in other classes)
@@ -64,10 +65,8 @@ static void DebugPrint(const char *fmt, ...)
 {
    // Print debugging message to stderr and, on Windows, to the system debugger.
 
-   static Int_t buf_size = 2048;
-   static char *buf = 0;
-
-   R__LOCKGUARD2(gErrorMutex);
+   TTHREAD_TLS(Int_t) buf_size = 2048;
+   TTHREAD_TLS(char*) buf = 0;
 
    va_list ap;
    va_start(ap, fmt);
@@ -92,7 +91,11 @@ again:
    }
    va_end(ap);
 
-   fprintf(stderr, "%s", buf);
+   // Serialize the actual printing.
+   R__LOCKGUARD2(gErrorMutex);
+
+   const char *toprint = buf; // Work around for older plaform where we use TThreadTLSWrapper
+   fprintf(stderr, "%s", toprint);
 
 #ifdef WIN32
    ::OutputDebugString(buf);
@@ -200,10 +203,8 @@ void ErrorHandler(Int_t level, const char *location, const char *fmt, va_list ap
 {
    // General error handler function. It calls the user set error handler.
 
-   R__LOCKGUARD2(gErrorMutex);
-
-   static Int_t buf_size = 2048;
-   static char *buf = 0;
+   TTHREAD_TLS(Int_t) buf_size(2048);
+   TTHREAD_TLS(char*) buf(0);
 
    int vc = 0;
    va_list sap;
@@ -236,9 +237,10 @@ again:
       va_end(ap);
 
    char *bp;
-   if (level >= kSysError && level < kFatal)
-      bp = Form("%s (%s)", buf, gSystem->GetError());
-   else
+   if (level >= kSysError && level < kFatal) {
+      const char *toprint = buf; // Work around for older plaform where we use TThreadTLSWrapper
+      bp = Form("%s (%s)", toprint, gSystem->GetError());
+   } else
       bp = buf;
 
    if (level != kFatal)
@@ -272,7 +274,7 @@ void Obsolete(const char *function, const char *asOfVers, const char *removedFro
 {
    // Use this function to declare a function obsolete. Specify as of which version
    // the method is obsolete and as from which version it will be removed.
-   
+
    TString mess;
    mess.Form("obsolete as of %s and will be removed from %s", asOfVers, removedFromVers);
    Warning(function, "%s", mess.Data());

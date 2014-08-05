@@ -129,7 +129,7 @@ struct LogImpl
         const V x4 = x2 * x2; // 5  → 9
         const V x5 = x2 * x3; // 8  → 12
         const V x6 = x3 * x3; // 9  → 13
-        const V x7 = x4 * x3; // 
+        const V x7 = x4 * x3; //
         const V x8 = x4 * x4;
         const V x9 = x5 * x4;
         const V x10 = x5 * x5;

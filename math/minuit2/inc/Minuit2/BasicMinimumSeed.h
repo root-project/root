@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -28,13 +28,13 @@ namespace ROOT {
 class BasicMinimumSeed {
 
 public:
-  
+
   BasicMinimumSeed(const MinimumState& state, const MnUserTransformation& trafo) : fState(state), fTrafo(trafo), fValid(true) {}
-  
+
   ~BasicMinimumSeed() {}
 
   BasicMinimumSeed(const BasicMinimumSeed& seed) : fState(seed.fState), fTrafo(seed.fTrafo), fValid(seed.fValid) {}
-  
+
   BasicMinimumSeed& operator=(const BasicMinimumSeed& seed) {
     fState = seed.fState;
     fTrafo = seed.fTrafo;
@@ -45,7 +45,7 @@ public:
   void* operator new(size_t nbytes) {
     return StackAllocatorHolder::Get().Allocate(nbytes);
   }
-  
+
   void operator delete(void* p, size_t /*nbytes*/) {
     StackAllocatorHolder::Get().Deallocate(p);
   }

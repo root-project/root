@@ -1,6 +1,6 @@
 #---Define a function to do not polute the top level namespace with unneeded variables-----------------------
 function(RootConfigure)
-  
+
 #---Define all sort of variables to bridge between the old Module.mk and the new CMake equivalents-----------
 foreach(v 1 ON YES TRUE Y)
   set(value${v} yes)
@@ -481,8 +481,8 @@ if(WIN32)
 else()
   execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh include/compiledata.h "${CXX}" ""
        "${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}"
-	     "${CMAKE_CXX_FLAGS}" "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "${LibSuffix}" "${SYSLIBS}"
-	     "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "" "${explicitlink}" )
+        "${CMAKE_CXX_FLAGS}" "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "${LibSuffix}" "${SYSLIBS}"
+        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "" "${explicitlink}" )
 endif()
 
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY)
@@ -512,27 +512,27 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
               ${CMAKE_SOURCE_DIR}/cmake/scripts/setenvwrap.csh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv
-              PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ 
-                          GROUP_EXECUTE GROUP_READ 
-                          WORLD_EXECUTE WORLD_READ 
+              PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                          GROUP_EXECUTE GROUP_READ
+                          WORLD_EXECUTE WORLD_READ
               DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 if (XROOTD_FOUND AND XROOTD_NOMAIN)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd
-                 PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ 
-                             GROUP_EXECUTE GROUP_READ 
-                             WORLD_EXECUTE WORLD_READ 
+                 PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                             GROUP_EXECUTE GROUP_READ
+                             WORLD_EXECUTE WORLD_READ
                  DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 install(FILES ${CMAKE_BINARY_DIR}/include/RConfigOptions.h
-              ${CMAKE_BINARY_DIR}/include/compiledata.h 
+              ${CMAKE_BINARY_DIR}/include/compiledata.h
               DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes 
+install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-              
+
 install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
 
 

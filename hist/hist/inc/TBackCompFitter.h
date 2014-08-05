@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Author: L. Moneta    08/2008  
+// Author: L. Moneta    08/2008
 
 /**********************************************************************
  *                                                                    *
@@ -34,15 +34,15 @@
     TVirtualFitter backward compatibility implementation using new ROOT::Fit::Fitter
 */
 
-class TGraph; 
-class TFitResult; 
+class TGraph;
+class TFitResult;
 
-namespace ROOT { 
-   namespace Fit { 
-      class FitData; 
+namespace ROOT {
+   namespace Fit {
+      class FitData;
    }
-   namespace Math { 
-      class Minimizer; 
+   namespace Math {
+      class Minimizer;
    }
 }
 
@@ -55,14 +55,14 @@ public:
 
    TBackCompFitter();
 
-   //TBackCompFitter(ROOT::Fit::Fitter & fitter, ROOT::Fit::FitData * ); 
-   TBackCompFitter( std::auto_ptr<ROOT::Fit::Fitter>  fitter, std::auto_ptr<ROOT::Fit::FitData> data  ); 
+   //TBackCompFitter(ROOT::Fit::Fitter & fitter, ROOT::Fit::FitData * );
+   TBackCompFitter( std::auto_ptr<ROOT::Fit::Fitter>  fitter, std::auto_ptr<ROOT::Fit::FitData> data  );
 
    virtual ~TBackCompFitter();
 
 public:
 
-   enum { 
+   enum {
       kCanDeleteLast = BIT(9)  // object can be deleted before creating a new one
    };
 
@@ -103,63 +103,63 @@ public:
    // for using interpreted function passed by the user
    virtual void SetMethodCall(TMethodCall * m) { fMethodCall = m; }
 
-   ///!!!! new method (of this interface) 
+   ///!!!! new method (of this interface)
 
 
-   // get reference to Fit configuration (NOTE: it will be invalid when class is deleted) 
+   // get reference to Fit configuration (NOTE: it will be invalid when class is deleted)
    ROOT::Fit::FitConfig & GetFitConfig()  { return fFitter->Config(); }
 
-   // get reference to Fit Result object (NOTE: it will be invalid when class is deleted) 
+   // get reference to Fit Result object (NOTE: it will be invalid when class is deleted)
    const ROOT::Fit::FitResult & GetFitResult() const { return fFitter->Result(); }
 
-   // get a copy of the Fit result returning directly a new  TFitResult 
-   TFitResult * GetTFitResult() const; 
+   // get a copy of the Fit result returning directly a new  TFitResult
+   TFitResult * GetTFitResult() const;
 
-   // get reference to Fit Data object (NOTE: it will be invalid when class is deleted) 
+   // get reference to Fit Data object (NOTE: it will be invalid when class is deleted)
    const ROOT::Fit::FitData & GetFitData() const { return *fFitData; }
 
    // return pointer to last used minimizer
-   ROOT::Math::Minimizer * GetMinimizer() const; 
+   ROOT::Math::Minimizer * GetMinimizer() const;
 
    // return pointer to last used objective function
-   ROOT::Math::IMultiGenFunction * GetObjFunction() const; 
-   
-   // scan likelihood value of  parameter and fill the given graph. 
+   ROOT::Math::IMultiGenFunction * GetObjFunction() const;
+
+   // scan likelihood value of  parameter and fill the given graph.
    bool  Scan(unsigned int ipar, TGraph * gr, double xmin = 0, double xmax = 0);
 
-//    // scan likelihood value for two  parameters and fill the given graph. 
-//    bool  Scan2D(unsigned int ipar, unsigned int jpar, TGraph2D * gr, 
+//    // scan likelihood value for two  parameters and fill the given graph.
+//    bool  Scan2D(unsigned int ipar, unsigned int jpar, TGraph2D * gr,
 //                         double xmin = 0, double xmax = 0, double ymin = 0, double ymax = 0);
 
    // create contour of two parameters around the minimum
-   // pass as option confidence level:  default is a value of 0.683 
-   bool  Contour(unsigned int ipar, unsigned int jpar, TGraph * gr , double confLevel = 0.683); 
-   
+   // pass as option confidence level:  default is a value of 0.683
+   bool  Contour(unsigned int ipar, unsigned int jpar, TGraph * gr , double confLevel = 0.683);
+
    // set FCN using new interface
    virtual void SetObjFunction(  ROOT::Math::IMultiGenFunction * f);
 
-   // recreate minimizer and FCN for TMinuit fits and standard printout 
+   // recreate minimizer and FCN for TMinuit fits and standard printout
    void ReCreateMinimizer();
-   
 
-protected: 
+
+protected:
 
    // internal methods
 
    bool ValidParameterIndex(int ipar) const;
-  
-   void DoSetDimension(); 
-   
-   
+
+   void DoSetDimension();
+
+
 private:
 
 
-   //ROOT::Fit::FitData * fFitData;          
+   //ROOT::Fit::FitData * fFitData;
    std::auto_ptr<ROOT::Fit::FitData>  fFitData;  //! data of the fit (managed by TBackCompFitter)
    std::auto_ptr<ROOT::Fit::Fitter>   fFitter;   //! pointer to fitter object (managed by TBackCompFitter)
    ROOT::Math::Minimizer * fMinimizer;
-   ROOT::Math::IMultiGenFunction * fObjFunc; 
-   ROOT::Math::IParamMultiFunction * fModelFunc; 
+   ROOT::Math::IMultiGenFunction * fObjFunc;
+   ROOT::Math::IParamMultiFunction * fModelFunc;
    mutable std::vector<double> fCovar; // cached covariance matrix (NxN)
 
 

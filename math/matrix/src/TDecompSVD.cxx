@@ -855,12 +855,12 @@ void TDecompSVD::Det(Double_t &d1,Double_t &d2)
 }
 
 //______________________________________________________________________________
-Int_t  TDecompSVD::GetNrows  () const 
-{ 
-   return fU.GetNrows(); 
+Int_t  TDecompSVD::GetNrows  () const
+{
+   return fU.GetNrows();
 }
 
-Int_t TDecompSVD::GetNcols  () const 
+Int_t TDecompSVD::GetNcols  () const
 {
    return fV.GetNcols();
 }

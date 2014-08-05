@@ -84,7 +84,7 @@ Int_t TStatus::Merge(TCollection *li)
          if (!fInfoMsgs.FindObject(os->GetName()))
             AddInfo(os->GetName());
       }
-      
+
       SetMemValues(s->GetVirtMemMax(), s->GetResMemMax());
       // Check the master values (relevantt if merging submaster info)
       SetMemValues(s->GetVirtMemMax(kTRUE), s->GetResMemMax(kTRUE), kTRUE);
@@ -207,7 +207,7 @@ void TStatus::Streamer(TBuffer &R__b)
       }
    } else {
       R__b.WriteClassBuffer(TStatus::Class(),this);
-   }   
+   }
 }
 
 

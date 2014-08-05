@@ -23,7 +23,7 @@ public:
 public:
    Hit() { }
    virtual ~Hit() { }
-   
+
    ClassDef(Hit,1)  //A track hit
 };
 
@@ -41,7 +41,7 @@ public:
    virtual ~Track() { }
    Int_t         GetNhit() const { return fNhit; }
    TRefArray   &GetHits()  {return fHits; }
-   
+
    ClassDef(Track,1)  //A track segment
 };
 
@@ -73,7 +73,7 @@ private:
    TClonesArray  *fTracks;            //->array with all tracks
    TClonesArray  *fHitsA;             //->array of hits in detector A
    TClonesArray  *fHitsB;             //->array of hits in detector B
-      
+
    static TClonesArray *fgJets;
    static TClonesArray *fgTracks;
    static TClonesArray *fgHitsA;
@@ -94,7 +94,7 @@ public:
    Hit          *AddHitA();
    Hit          *AddHitB();
    TClonesArray *GetJets() const { return fJets; }
-   
+
    ClassDef(JetEvent,1)  //Event structure
 };
 

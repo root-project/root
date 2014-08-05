@@ -512,8 +512,8 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
 
 //______________________________________________________________________________
 TGraph2D::TGraph2D(const TGraph2D &g)
-: TNamed(g), TAttLine(g), TAttFill(g), TAttMarker(g), 
-   fX(0), fY(0), fZ(0), 
+: TNamed(g), TAttLine(g), TAttFill(g), TAttMarker(g),
+   fX(0), fY(0), fZ(0),
    fHistogram(0), fDirectory(0), fPainter(0)
 {
    // Graph2D copy constructor.
@@ -534,7 +534,7 @@ TGraph2D::TGraph2D(const TGraph2D &g)
       }
    }
 
-   
+
 }
 
 
@@ -564,22 +564,22 @@ TGraph2D& TGraph2D::operator=(const TGraph2D &g)
    }
    // copy everyting except the function list
    fNpoints = g.fNpoints;
-   fNpx = g.fNpx; 
+   fNpx = g.fNpx;
    fNpy = g.fNpy;
-   fMaxIter = g.fMaxIter; 
-   fSize = fNpoints; // force size to be the same of npoints  
+   fMaxIter = g.fMaxIter;
+   fSize = fNpoints; // force size to be the same of npoints
    fX         = (fSize > 0) ? new Double_t[fSize] : 0;
    fY         = (fSize > 0) ? new Double_t[fSize] : 0;
    fZ         = (fSize > 0) ? new Double_t[fSize] : 0;
-   fMinimum = g.fMinimum; 
-   fMaximum = g.fMaximum; 
-   fMargin = g.fMargin; 
-   fZout = g.fZout; 
-   fUserHisto = g.fUserHisto; 
-   if (g.fHistogram) 
+   fMinimum = g.fMinimum;
+   fMaximum = g.fMaximum;
+   fMargin = g.fMargin;
+   fZout = g.fZout;
+   fUserHisto = g.fUserHisto;
+   if (g.fHistogram)
       fHistogram = (fUserHisto ) ? g.fHistogram : new TH2D(*g.fHistogram);
 
-   
+
 
    // copy the points
    for (Int_t n = 0; n < fSize; n++) {

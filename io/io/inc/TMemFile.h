@@ -38,7 +38,7 @@ private:
       ~TMemBlock();
 
       void CreateNext(Long64_t size);
-      
+
       TMemBlock *fPrevious;
       TMemBlock *fNext;
       UChar_t   *fBuffer;
@@ -81,7 +81,7 @@ public:
    void ResetErrno() const;
 
    virtual void        Print(Option_t *option="") const;
-   
+
    ClassDef(TMemFile, 0) //A ROOT file that reads/writes via HDFS
 };
 

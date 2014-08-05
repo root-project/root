@@ -47,8 +47,8 @@ class TStatistic : public TObject {
 private:
    TString     fName;
    Long64_t    fN;       // Number of fills
-   Double_t    fW;       // Sum of weights    
-   Double_t    fW2;      // Sum of weights**2    
+   Double_t    fW;       // Sum of weights
+   Double_t    fW2;      // Sum of weights**2
    Double_t    fMean;    // Mean
    Double_t    fM2;      // Second order momentum
 
@@ -56,7 +56,7 @@ public:
    TStatistic(const char *name = "") : fName(name), fN(0), fW(0.), fW2(0.), fMean(0.), fM2(0.) { }
    TStatistic(const char *name, Int_t n, const Double_t *val, const Double_t *w = 0);
    ~TStatistic() { }
- 
+
    // Getters
    const char    *GetName() const { return fName; }
    ULong_t        Hash() const { return fName.Hash(); }
@@ -98,7 +98,7 @@ public:
       Printf(" OBJ: TStatistic\t %s = %.3g +- %.3g \t RMS = %.3g \t N = %lld",
              fName.Data(), fMean, GetMeanErr(), GetRMS(), fN);
    }
-   
+
    ClassDef(TStatistic,1)  //Named statistical variable
 };
 

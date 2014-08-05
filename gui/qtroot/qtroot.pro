@@ -35,7 +35,7 @@ unix {
 # Input
 HEADERS += $$QTROOTDIRI/TQtRootGuiFactory.h
 SOURCES += $$QTROOTDIRS/TQtRootGuiFactory.cxx
-           
+
 CREATE_ROOT_DICT_FOR_CLASSES  = $$HEADERS $$QTROOTDIRI/LinkDef.h
 
 !exists ($$GQTDIRI/rootcintrule.pri){
@@ -66,8 +66,8 @@ INSTALLS += headerfiles target
 DISTFILES += LICENSE.QPL Module.mk
 
 unix {
-#  -- working directory 
-  
+#  -- working directory
+
   ROOTCINT_DIR = .rootcint
   UI_DIR = .ui
   MOC_DIR = .moc
@@ -75,4 +75,4 @@ unix {
 
 }
 #The following line was inserted by qt3to4
-QT += qt3support 
+QT += qt3support

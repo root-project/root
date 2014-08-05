@@ -75,7 +75,7 @@
       object->SetLogy(log.on);
    if (log == logZ)
       object->SetLogz(log.on);
-   
+
    [controller objectWasModifiedUpdateSelection : YES];//Now picture changed, so picking buffer is invalid.
 }
 

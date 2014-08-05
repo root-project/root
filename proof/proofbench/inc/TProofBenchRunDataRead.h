@@ -60,7 +60,7 @@ private:
    Int_t fStep;                  //test to be performed every fStep workers
    Int_t fDebug;                 //debug switch
    Int_t fFilesPerWrk;           //# of files to be processed per worker
-   Bool_t fReleaseCache;         // Release cache for data reads between runs 
+   Bool_t fReleaseCache;         // Release cache for data reads between runs
 
    TDirectory  *fDirProofBench;   //directory for proof outputs
 

@@ -60,7 +60,7 @@ void Command::Execute(CGContextRef /*ctx*/)const
 //______________________________________________________________________________
 bool Command::HasOperand(Drawable_t wid)const
 {
-   return wid == fID;      
+   return wid == fID;
 }
 
 //______________________________________________________________________________
@@ -89,11 +89,11 @@ void DrawLine::Execute()const
 //______________________________________________________________________________
 DrawSegments::DrawSegments(Drawable_t wid, const GCValues_t &gc,
                            const Segment_t *segments, Int_t nSegments)
-                 : Command(wid, gc) 
+                 : Command(wid, gc)
 {
    assert(segments != 0 && "DrawSegments, segments parameter is null");
    assert(nSegments > 0 && "DrawSegments, nSegments <= 0");
-   
+
    fSegments.assign(segments, segments + nSegments);
 }
 
@@ -194,11 +194,11 @@ FillPolygon::FillPolygon(Drawable_t wid, const GCValues_t &gc,
 {
    assert(points != 0 && "FillPolygon, points parameter is null");
    assert(nPoints > 0 && "FillPolygon, nPoints <= 0");
-   
+
    fPolygon.assign(points, points + nPoints);
 }
 
-//______________________________________________________________________________   
+//______________________________________________________________________________
 void FillPolygon::Execute()const
 {
    assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
@@ -282,10 +282,10 @@ void DrawBoxXor::Execute(CGContextRef ctx)const
 {
    //
    assert(ctx != 0 && "Execute, ctx parameter is null");
-   
+
    CGContextSetRGBStrokeColor(ctx, 0., 0., 0., 1.);
    CGContextSetLineWidth(ctx, 1.);
-   
+
    CGContextStrokeRect(ctx, CGRectMake(fP1.fX, fP1.fY, fP2.fX - fP1.fX, fP2.fY - fP1.fY));
 }
 
@@ -308,10 +308,10 @@ void DrawLineXor::Execute(CGContextRef ctx)const
 {
    //
    assert(ctx != 0 && "Execute, ctx parameter is null");
-   
+
    CGContextSetRGBStrokeColor(ctx, 0., 0., 0., 1.);
    CGContextSetLineWidth(ctx, 1.);
-   
+
    CGContextBeginPath(ctx);
    CGContextMoveToPoint(ctx, fP1.fX, fP1.fY);
    CGContextAddLineToPoint(ctx, fP2.fX, fP2.fY);
@@ -378,7 +378,7 @@ void CommandBuffer::AddClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddCopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc, 
+void CommandBuffer::AddCopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc,
                                 Int_t srcX, Int_t srcY, UInt_t width, UInt_t height,
                                 Int_t dstX, Int_t dstY)
 {
@@ -455,7 +455,7 @@ void CommandBuffer::AddFillPolygon(Drawable_t wid, const GCValues_t &gc,
 {
    assert(polygon != 0 && "AddFillPolygon, polygon parameter is null");
    assert(nPoints > 0 && "AddFillPolygon, nPoints <= 0");
-   
+
    try {
       std::auto_ptr<FillPolygon> cmd(new FillPolygon(wid, gc, polygon, nPoints));
       fCommands.push_back(cmd.get());
@@ -469,7 +469,7 @@ void CommandBuffer::AddFillPolygon(Drawable_t wid, const GCValues_t &gc,
 void CommandBuffer::AddUpdateWindow(QuartzView *view)
 {
    assert(view != nil && "AddUpdateWindow, view parameter is nil");
-   
+
    try {
       std::auto_ptr<UpdateWindow> cmd(new UpdateWindow(view));
       fCommands.push_back(cmd.get());
@@ -532,55 +532,55 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
       const Command *cmd = fCommands[i];
       if (!cmd)//Command was deleted by RemoveOperation/RemoveGraphicsOperation.
          continue;
-      
+
       NSObject<X11Drawable> *drawable = impl->GetDrawable(cmd->fID);
       if (drawable.fIsPixmap) {
          cmd->Execute();//Can throw, ok.
          continue;
       }
-      
+
       QuartzView *view = (QuartzView *)impl->GetWindow(cmd->fID).fContentView;
-      
+
       if (prevView != view)
          ClipOverlaps(view);//Can throw, ok.
-      
+
       prevView = view;
-      
+
       try {
          if ([view lockFocusIfCanDraw]) {
             NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
             assert(nsContext != nil && "Flush, currentContext is nil");
             currContext = (CGContextRef)[nsContext graphicsPort];
             assert(currContext != 0 && "Flush, graphicsPort is null");//remove this assert?
-            
+
             view.fContext = currContext;
             if (prevContext && prevContext != currContext)
                CGContextFlush(prevContext);
             prevContext = currContext;
 
             const Quartz::CGStateGuard ctxGuard(currContext);
-            
+
             //Clip regions first.
             if (fClippedRegion.size())
                CGContextClipToRects(currContext, &fClippedRegion[0], fClippedRegion.size());
-   
+
             //Now add also shape combine mask.
             if (view.fQuartzWindow.fShapeCombineMask)
                ClipToShapeMask(view, currContext);
 
             cmd->Execute();//This can throw, we should restore as much as we can here.
-            
+
             if (view.fBackBuffer) {
                //Very "special" window.
                const Rectangle copyArea(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
                [view copy : view.fBackBuffer area : copyArea
                  withMask : nil clipOrigin : Point() toPoint : Point()];
             }
-            
+
             [view unlockFocus];
-            
+
             view.fContext = 0;
-         }      
+         }
       } catch (const std::exception &) {
          //Focus was locked, roll-back:
          [view unlockFocus];
@@ -601,55 +601,55 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
 void CommandBuffer::FlushXOROps(Details::CocoaPrivate *impl)
 {
    assert(impl != 0 && "FlushXOROps, impl parameter is null");
-   
+
    if (!fXorOps.size())
       return;
-   
+
    //I assume here, that all XOR ops in one iteration (one Update call) must
    //be for the same window (if not, there is no normal way to implement this at all).
    //TODO: verify and check this condition.
 
    NSObject<X11Drawable> *drawable = impl->GetDrawable(fXorOps[0]->fID);
-   
+
    assert([drawable isKindOfClass : [QuartzView class]] &&
           "FlushXOROps, drawable must be of type QuartzView");
-   
+
    QuartzView *view = (QuartzView *)drawable;
-   
+
    if ([view lockFocusIfCanDraw]) {
       NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
       assert(nsContext != nil && "FlushXOROps, currentContext is nil");
       CGContextRef currContext = (CGContextRef)[nsContext graphicsPort];
       assert(currContext != 0 && "FlushXOROps, graphicsPort is null");//remove this assert?
-      
+
       const Quartz::CGStateGuard ctxGuard(currContext);//ctx guard.
-      
+
       CGContextSetAllowsAntialiasing(currContext, false);
-      
+
       view.fContext = currContext;
-   
+
       if (view.fBackBuffer) {//back buffer has canvas' contents.
          //Very "special" window.
          const Rectangle copyArea(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
          [view copy : view.fBackBuffer area : copyArea
           withMask : nil clipOrigin : Point() toPoint : Point()];
       }
-   
+
       //Now, do "XOR" drawings.
       for (size_type i = 0, e = fXorOps.size(); i < e; ++i) {
          if (fXorOps[i]) {
             fXorOps[i]->Execute(currContext);
          }
       }
-      
+
       [view unlockFocus];
       view.fContext = 0;
-      
+
       CGContextFlush(currContext);
-      
+
       CGContextSetAllowsAntialiasing(currContext, true);
    }
-   
+
    ClearXOROperations();
 }
 
@@ -728,7 +728,7 @@ bool RectsOverlap(const NSRect &r1, const NSRect &r2)
       return false;
    if (r2.origin.y + r2.size.height <= r1.origin.y)
       return false;
-   
+
    return true;
 }
 
@@ -745,7 +745,7 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
    //To fix this and emulate window with backing store
    //without real backing store, I'm calculating the
    //area of a view this is visible and not overlapped.
-   
+
    //Who can overlap our view?
    //1. Its own siblings and, probably, siblings of its ancestors.
    //2. Children views.
@@ -772,7 +772,7 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
 
    //For every fViewBranch[i] in our branch, we're looking for overlapping siblings.
    //Calculations are in view.fParentView's coordinate system.
-   
+
    WidgetRect clipRect;
    NSRect frame1 = {};
 
@@ -790,9 +790,9 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
          } else if (!doCheck || sibling.fMapState != kIsViewable) {
             continue;
          }
-         
+
          frame1 = sibling.frame;
-         
+
          if (!frame1.size.width || !frame1.size.height)
             continue;
 
@@ -810,13 +810,13 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
          }
       }
    }
-   
+
    //Substruct children.
-   
+
    for (QuartzView *child in [view subviews]) {
       if (child.fMapState != kIsViewable)
          continue;
-      
+
       frame1 = child.frame;
 
       if (!frame1.size.width || !frame1.size.height)
@@ -824,7 +824,7 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
 
       if (view.fParentView)//view can also be a content view.
          frame1.origin = [view convertPoint : frame1.origin toView : view.fParentView];
-      
+
       if (RectsOverlap(frame2, frame1)) {
          clipRect.fX1 = frame1.origin.x;
          clipRect.fX2 = clipRect.fX1 + frame1.size.width;
@@ -833,16 +833,16 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
          fRectsToClip.push_back(clipRect);
       }
    }
-   
+
    if (fRectsToClip.size()) {
       //Now, if we have any rectanges to substruct them from our view's frame,
       //we are building a set of rectangles, which represents visible part of view.
-   
+
       WidgetRect rect(frame2.origin.x, frame2.origin.y, frame2.origin.x + frame2.size.width,
                       frame2.origin.y + frame2.size.height);
 
       BuildClipRegion(rect);
-      
+
       if (view.fParentView) {
          //To able to use this set of rectangles with CGContextClipToRects,
          //convert them (if needed) into view's own coordinate system.
@@ -897,7 +897,7 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
    // 1) all rects are valid (non-empty and x1 < x2, y1 < y2);
    // 2) all rects intersect with widget's rect.
    //I do not check these conditions here, this is done when filling rectsToClip.
-   
+
    //I did not find any reasonable algorithm (have to search better?),
    //code in gdk and pixman has to many dependencies and is lib-specific +
    //they require input to be quite special:
@@ -930,7 +930,7 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
          fClippedRegion.push_back(CGRectMake(0., 0., 0., 0.));
          return;
       }
-   
+
       if (recIt->fX1 > rect.fX1)//recIt->x1 is always < rect.x2 (input validation).
          fXBounds.push_back(recIt->fX1);
 
@@ -962,10 +962,10 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
    for (; recIt != endIt; ++recIt) {
       const int_iterator left = BinarySearchLeft(fXBounds.begin(), xBoundsEnd, recIt->fX1);
       const size_type firstXBand = left == xBoundsEnd ? 0 : left - fXBounds.begin() + 1;
-      
+
       const int_iterator right = BinarySearchRight(fXBounds.begin(), xBoundsEnd, recIt->fX2);
       const size_type lastXBand = right - fXBounds.begin() + 1;
-      
+
       const int_iterator bottom = BinarySearchLeft(fYBounds.begin(), yBoundsEnd, recIt->fY1);
       const size_type firstYBand = bottom == yBoundsEnd ? 0 : bottom - fYBounds.begin() + 1;
 
@@ -978,7 +978,7 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
             fGrid[baseIndex + j] = true;
       }
    }
-   
+
    //I do not merge rectangles.
    //Search for non-overlapped parts and create rectangles for them.
    CGRect newRect = {};
@@ -989,7 +989,7 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
          if (!fGrid[baseIndex + j]) {
             newRect.origin.x = j ? fXBounds[j - 1] : rect.fX1;
             newRect.origin.y = i ? fYBounds[i - 1] : rect.fY1;
-            
+
             newRect.size.width = (j == nXBands - 1 ? rect.fX2 : fXBounds[j]) - newRect.origin.x;
             newRect.size.height = (i == nYBands - 1 ? rect.fY2 : fYBounds[i]) - newRect.origin.y;
 
@@ -997,7 +997,7 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
          }
       }
    }
-   
+
    if (!fClippedRegion.size())//Completely hidden
       fClippedRegion.push_back(CGRectMake(0., 0., 0., 0.));
 }

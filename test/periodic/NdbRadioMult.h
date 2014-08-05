@@ -9,11 +9,11 @@ class NdbRadioMult : public NdbMF
 protected:
 
 public:
-	NdbRadioMult()
-		: NdbMF(9, "Multiplicities for radioactive nuclide production") {}
-	~NdbRadioMult() {}
+   NdbRadioMult()
+      : NdbMF(9, "Multiplicities for radioactive nuclide production") {}
+   ~NdbRadioMult() {}
 
-	ClassDef(NdbRadioMult,1)
+   ClassDef(NdbRadioMult,1)
 }; // NdbRadioMult
 
 #endif

@@ -202,7 +202,7 @@ public:
    virtual void     Print(Option_t *option="ps") const; // *MENU*
 
    void             SetBinVarX(Int_t nbbinvarx) {fBinVarX = nbbinvarx;}
-   void             SetBinVarY(Int_t nbbinvary) {fBinVarY = nbbinvary;} 
+   void             SetBinVarY(Int_t nbbinvary) {fBinVarY = nbbinvary;}
    void             SetMaxAngle(Double_t angle=0);
    void             SetMaxFunctions(Int_t n) { fMaxFunctions = n; }
    void             SetMaxPowers(const Int_t *powers);

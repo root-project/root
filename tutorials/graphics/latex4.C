@@ -1,6 +1,6 @@
-// Draw the Greek letters as a table and save the result as GIF, PS, PDF 
-// and SVG files. 
-// Lowercase Greek letters are obtained by adding a # to the name of the letter. 
+// Draw the Greek letters as a table and save the result as GIF, PS, PDF
+// and SVG files.
+// Lowercase Greek letters are obtained by adding a # to the name of the letter.
 // For an uppercase Greek letter, just capitalize the first letter of the
 // command name. Some letter have two representations. The name of the
 // second one (the "variation") starts with "var".

@@ -43,13 +43,13 @@ namespace {
 #endif
 
 //______________________________________________________________________________
-TVirtualFitter::TVirtualFitter() : 
-   fXfirst(0), 
-   fXlast(0), 
-   fYfirst(0), 
-   fYlast(0), 
-   fZfirst(0), 
-   fZlast(0), 
+TVirtualFitter::TVirtualFitter() :
+   fXfirst(0),
+   fXlast(0),
+   fYfirst(0),
+   fYlast(0),
+   fZfirst(0),
+   fZlast(0),
    fNpoints(0),
    fPointSize(0),
    fCacheSize(0),
@@ -116,7 +116,7 @@ TVirtualFitter::~TVirtualFitter()
 
    delete fMethodCall;
    delete [] fCache;
-   if ( fgFitter == this ) { 
+   if ( fgFitter == this ) {
       fgFitter    = 0;
       fgMaxpar    = 0;
    }
@@ -302,7 +302,7 @@ void TVirtualFitter::SetMaxIterations(Int_t niter)
 {
    // static: Set the maximum number of function calls for the minimization algorithm
    // For example for MIGRAD this is the maxcalls value passed as first argument
-   // (see http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html ) 
+   // (see http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html )
 
    ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(niter);
 }
@@ -327,8 +327,8 @@ void TVirtualFitter::SetPrecision(Double_t prec)
 {
    // static: Set the tolerance used in the minimization algorithm
    // For example for MIGRAD this is tolerance value passed as second argument
-   // (see http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html ) 
-  
+   // (see http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html )
+
    //fgPrecision = prec;
    ROOT::Math::MinimizerOptions::SetDefaultTolerance(prec);
 }

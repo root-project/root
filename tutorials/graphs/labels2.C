@@ -1,4 +1,4 @@
-//Setting alphanumeric labels 
+//Setting alphanumeric labels
 //Author: Rene Brun
 void labels2()
 {
@@ -19,14 +19,14 @@ void labels2()
    c1->SetBottomMargin(0.15);
    TH2F *h = new TH2F("h","test",nx,0,nx,ny,0,ny);
    for (i=0;i<5000;i++) {
-      h->Fill(gRandom->Gaus(0.5*nx,0.2*nx), 
+      h->Fill(gRandom->Gaus(0.5*nx,0.2*nx),
          gRandom->Gaus(0.5*ny,0.2*ny));
    }
    h->SetStats(0);
    for (i=1;i<=nx;i++) h->GetXaxis()->SetBinLabel(i,month[i-1]);
    for (i=1;i<=ny;i++) h->GetYaxis()->SetBinLabel(i,people[i-1]);
    h->Draw("text");
-   
+
    TPaveText *pt = new TPaveText(0.6,0.85,0.98,0.98,"brNDC");
    pt->SetFillColor(18);
    pt->SetTextAlign(12);

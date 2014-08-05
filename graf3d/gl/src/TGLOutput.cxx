@@ -145,7 +145,7 @@ void TGLOutput::StartEmbeddedPS()
    xx[1] = gPad->GetUxmax();
    yy[1] = gPad->GetUymax();
    gVirtualPS->PrintStr("@");
-   
+
 ///gVirtualPS->DrawPS(0, xx, yy);
 ///gVirtualPS->WriteInteger(4*gPad->GetBorderSize());
 ///gVirtualPS->PrintStr(" add exch");
@@ -209,7 +209,7 @@ void TGLOutput::Capture(TGLViewer & viewer)
       CloseEmbeddedPS();
       return;
    }
-   
+
    Int_t gl2psFormat = GL2PS_EPS;
    Int_t gl2psSort = GL2PS_BSP_SORT;
    Int_t buffsize = 0, state = GL2PS_OVERFLOW;

@@ -84,7 +84,7 @@ bool showAboutInfo = false;
 {
    assert(image != nil && "initWithImage:text:, parameter 'image' is nil");
    assert(textToScroll != nil && "initWithImage:text:, parameter 'textToScroll' is nil");
-   
+
    using ROOT::MacOSX::Util::NSScopeGuard;
 
 
@@ -101,7 +101,7 @@ bool showAboutInfo = false;
          break;
       }
    }
-   
+
    //minimal sizes required by text view's position (which is 'hardcoded' and
    //must be the same as in rootxx (X11 version).
 //   assert(imageSize.width >= 300 && imageSize.height >= 285 &&
@@ -109,7 +109,7 @@ bool showAboutInfo = false;
 
 
    self = [super initWithFrame : CGRectMake(0, 0, pixelWidth, pixelHeight)];
-   
+
    if (self) {
       //Let's create our child views.
       backgroundImage = [image retain];
@@ -117,13 +117,13 @@ bool showAboutInfo = false;
       CGRect scrollRect = CGRectMake(110., 25., 455., 80.);
       scrollView = [[NSScrollView alloc] initWithFrame : scrollRect];
       [self addSubview : scrollView];
-      
+
       scrollRect.origin = CGPoint();
       textView = [[NSTextView alloc] initWithFrame : scrollRect];
       [textView setEditable : NO];
-      
+
       [[textView textStorage] setAttributedString : textToScroll];
-      
+
       [scrollView setDocumentView : textView];
       [scrollView setBorderType : NSNoBorder];
 
@@ -132,7 +132,7 @@ bool showAboutInfo = false;
          [textView setTextContainerInset : CGSizeMake(0., scrollRect.size.height)];
          [textView scrollPoint : NSMakePoint(0., scrollRect.size.height)];
       }
-      
+
       const NSScopeGuard<NSShadow> dropShadow([[NSShadow alloc] init]);
       [dropShadow.Get() setShadowColor:[NSColor blackColor]];
       [dropShadow.Get() setShadowBlurRadius : 10.];
@@ -141,20 +141,20 @@ bool showAboutInfo = false;
       //Hehehehe.
       [scrollView setDrawsBackground : NO];
       [textView setDrawsBackground : NO];
-      
+
       //
       if (NSFont * const font = [NSFont fontWithName : @"Tahoma" size : 12.]) {
          //Will be some special font here.
          NSScopeGuard<NSMutableDictionary> dict([[NSMutableDictionary alloc] init]);
-         
+
          [dict.Get() setObject : font forKey : NSFontAttributeName];
          [dict.Get() setObject : [NSColor whiteColor] forKey : NSForegroundColorAttributeName];
-         
+
          versionTextAttributes = dict.Get();
          dict.Release();
       }
    }
-   
+
    return self;
 }
 
@@ -165,7 +165,7 @@ bool showAboutInfo = false;
    [textView release];
    [scrollView release];
    [versionTextAttributes release];
-   
+
    [super dealloc];
 }
 
@@ -185,7 +185,7 @@ bool showAboutInfo = false;
                     fromRect : CGRectMake(0., 0., imageSize.width, imageSize.height)
                     operation : NSCompositeSourceOver
                     fraction : 1.];
-   
+
    //Let's now draw a version.
    if (versionTextAttributes) {
       if (NSString * const version = [NSString stringWithFormat : @"Version %s", ROOT_RELEASE])
@@ -201,7 +201,7 @@ bool showAboutInfo = false;
    const CGFloat scrollAmountPixels = 1.;
    // How far have we scrolled so far?
    const CGFloat currentScrollAmount = [scrollView documentVisibleRect].origin.y;
-   
+
    if (currentScrollAmount + scrollAmountPixels >= textView.frame.size.height - scrollView.frame.size.height)
       [textView scrollPoint : NSMakePoint(0., 0.)];//Make a "loop".
    else {
@@ -303,7 +303,7 @@ enum CustomEventSource {//make it enum class when C++11 is here.
       result = 0;
       normalExit = false;
    }
-   
+
    return self;
 }
 
@@ -317,7 +317,7 @@ enum CustomEventSource {//make it enum class when C++11 is here.
 - (void) main
 {
    using ROOT::ROOTX::gChildpid;
-   
+
    do {
       while ((result = ::waitpid(gChildpid, &status, WUNTRACED) < 0)) {
          if (errno != EINTR)
@@ -425,7 +425,7 @@ void PopupLogo(bool about)
       //TODO: diagnostic.
       return;
    }
-   
+
    showAboutInfo = about;
    SetSplashscreenPosition();
    [splashScreen setLevel : NSFloatingWindowLevel];
@@ -445,16 +445,16 @@ void WaitLogo()
    if (!splashScreen)
       //TODO: diagnostic.
       return;
-   
+
    ROOTSplashScreenAppDelegate *delegate = nil;
-   
+
    if (showAboutInfo) {
       delegate = [[ROOTSplashScreenAppDelegate alloc] init];
       [NSApp setDelegate : (id<NSFileManagerDelegate>)delegate];
    }
 
    RunEventLoop();
-   
+
    //Cleanup.
    [splashScreen orderOut : nil];
    [splashScreen release];
@@ -506,7 +506,7 @@ bool InitCocoa()
       [[NSApplication sharedApplication] setActivationPolicy : NSApplicationActivationPolicyAccessory];//Do I need this?
       topLevelPool = [[NSAutoreleasePool alloc] init];
    }
-   
+
    return true;
 }
 
@@ -517,7 +517,7 @@ bool InitTimers()
    assert(signalTimer == 0 && "InitTimers, signalTimer was initialized already");
 
    using ROOT::MacOSX::Util::CFScopeGuard;
-   
+
    CFScopeGuard<CFRunLoopTimerRef> guard1(CFRunLoopTimerCreate(kCFAllocatorDefault,//allocator
                                                                CFAbsoluteTimeGetCurrent() + signalInterval,//fireDate
                                                                signalInterval,//interval in seconds(?)
@@ -558,7 +558,7 @@ void AttachTimers()
 {
    assert(signalTimer != 0 && "AttachTimer, invalid signalTimer (null)");
    CFRunLoopAddTimer(CFRunLoopGetMain(), signalTimer, kCFRunLoopCommonModes);
-   
+
    if (showAboutInfo) {
       assert(scrollTimer != 0 && "AttachTimer, invalid scrollTimer (null)");
       CFRunLoopAddTimer(CFRunLoopGetMain(), scrollTimer, kCFRunLoopCommonModes);
@@ -569,12 +569,12 @@ void AttachTimers()
 void RemoveTimers()
 {
    assert(signalTimer != 0 && "RemoveTimers, signalTimer is null");
-   
+
    CFRunLoopRemoveTimer(CFRunLoopGetMain(), signalTimer, kCFRunLoopCommonModes);
    CFRunLoopTimerInvalidate(signalTimer);
    //TODO: test if I also have to call release!!!
    signalTimer = 0;
-   
+
    if (showAboutInfo) {
       assert(scrollTimer != 0 && "RemoveTimers, scrollTimer is null");
       CFRunLoopRemoveTimer(CFRunLoopGetMain(), scrollTimer, kCFRunLoopCommonModes);
@@ -588,23 +588,23 @@ void RemoveTimers()
 void RunEventLoop()
 {
    //Kind of event loop.
-   
+
    if (!splashScreen)
       //TODO: diagnostic.
       return;
-   
+
    if (!InitTimers())
       return;
-   
+
    AttachTimers();
-   
+
    popupDone = false;
 
    while (!popupDone) {
       //Here we (possibly) suspend waiting for event.
       using ROOT::MacOSX::Util::NSScopeGuard;
       const NSScopeGuard<NSAutoreleasePool> pool([[NSAutoreleasePool alloc] init]);
-      
+
       if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask
           untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES])
       {
@@ -621,7 +621,7 @@ void RunEventLoop()
             [NSApp sendEvent : event];
       }
    }
-   
+
    RemoveTimers();
    //Empty the queue (hehehe, this makes me feel ... uneasy :) ).
    while ([NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]);
@@ -634,7 +634,7 @@ void WaitChildGeneric()
    //Wait till child (i.e. ROOT) is finished. From rootx.cxx.
 
    using ROOT::ROOTX::gChildpid;
-   
+
    int status = 0;
 
    do {
@@ -663,14 +663,14 @@ void WaitChildGeneric()
 void RunEventLoopInBackground()
 {
    using ROOT::MacOSX::Util::NSScopeGuard;
-   
+
    if (!InitCocoa()) {
       //It's a serious bug and must be either reported or handled in a different way.
       return WaitChildGeneric();
    }
 
    int status = 0;
-   
+
    {//Block to force a scope guard's lifetime.
    const NSScopeGuard<ROOTWaitpidThread> thread([[ROOTWaitpidThread alloc] init]);
    if (!thread.Get()) {
@@ -696,7 +696,7 @@ void RunEventLoopInBackground()
                [NSApp sendEvent : event];
          }
       }
-      
+
       [NSApp hide : nil];//deactivate?
    }
    }//to force thread release.
@@ -732,7 +732,7 @@ bool StayUp()
       ctv.tv_usec += 1000000;
       dtv.tv_sec++;
    }
-   
+
    ctv.tv_sec = tv.tv_sec - dtv.tv_sec;
 
    if (ctv.tv_sec < 0)
@@ -764,7 +764,7 @@ bool CreateSplashscreen(bool about)
       //TODO: diagnostic.
       return false;
    }
-   
+
    const std::string fileName(std::string(env) + "/icons/Root6Splash.png");
 #endif
 
@@ -773,13 +773,13 @@ bool CreateSplashscreen(bool about)
       //TODO: diagnostic.
       return false;
    }
-   
+
    const NSScopeGuard<NSImage> imageGuard([[NSImage alloc] initWithContentsOfFile : nsStringGuard.Get()]);
    if (!imageGuard.Get()) {
       //TODO: diagnostic.
       return false;
    }
-   
+
    NSInteger pixelWidth = 0, pixelHeight = 0;
    {//For autorelease pool.
       const NSScopeGuard<NSAutoreleasePool> pool([[NSAutoreleasePool alloc] init]);
@@ -813,14 +813,14 @@ bool CreateSplashscreen(bool about)
       //TODO: diagnostic.
       return false;
    }
-   
+
    [splashGuard.Get() setContentView : viewGuard.Get()];
    [splashGuard.Get() setOpaque : NO];
    [splashGuard.Get() setBackgroundColor : [NSColor clearColor]];
 
    splashScreen = splashGuard.Get();
    splashGuard.Release();
-   
+
    return true;
 }
 
@@ -828,7 +828,7 @@ bool CreateSplashscreen(bool about)
 void SetSplashscreenPosition()
 {
    assert(splashScreen != nil && "SetSplashscreenPosition, splashScreen is nil");
-   
+
    //Set the splash-screen's position (can it be wrong for a multi-head setup?)
    //TODO: check with a secondary display.
    if (NSScreen * const screen = [NSScreen mainScreen]) {
@@ -857,26 +857,26 @@ bool AddCaptionAttributes(NSMutableAttributedString *textToScroll, NSRange capti
 
    if (!captionRange.length)
       return true;
-   
-   
+
+
    assert(captionRange.location < textToScroll.length &&
           captionRange.location + captionRange.length <= textToScroll.length &&
           "AddCaptionAttributes, invalid range");
-   
+
    NSFont * const font = [NSFont fontWithName : @"Tahoma-Bold" size : 11.];
    if (!font)
       //TODO: diagnostic.
       return false;
-   
+
    const NSScopeGuard<NSMutableDictionary> dict([[NSMutableDictionary alloc] init]);
    [dict.Get() setObject : font forKey : NSFontAttributeName];
    NSColor * const captionColor = [NSColor colorWithDeviceRed : 176 / 255.
                                    green : 210 / 255. blue : 249 / 255. alpha : 1.];
    [dict.Get() setObject : captionColor forKey : NSForegroundColorAttributeName];
 
-   
+
    [textToScroll addAttributes : dict.Get() range : captionRange];
-   
+
    return true;
 }
 
@@ -890,14 +890,14 @@ bool AddMainTextBodyAttributes(NSMutableAttributedString *textToScroll, NSRange 
    using ROOT::MacOSX::Util::NSScopeGuard;
 
    assert(textToScroll != nil && "AddMainTextBodyAttributes, parameter 'textToScroll' is nil");
-   
+
    if (!attributedRange.length)
       return true;
-   
+
    assert(attributedRange.location < textToScroll.length &&
           attributedRange.location + attributedRange.length <= textToScroll.length &&
           "AddMainTextBodyAttributes, invalid range");
-   
+
    NSFont * const font = [NSFont fontWithName : @"Tahoma" size : 11.];
    if (!font)
       //TODO: diagnostic.
@@ -910,9 +910,9 @@ bool AddMainTextBodyAttributes(NSMutableAttributedString *textToScroll, NSRange 
                                 green : 190 / 255. blue : 229 / 255. alpha : 1.];
    //
    [dict.Get() setObject : textColor forKey : NSForegroundColorAttributeName];
-   
+
    [textToScroll addAttributes : dict.Get() range : attributedRange];
-   
+
    return true;
 }
 
@@ -924,7 +924,7 @@ bool AddSectionTitle(NSMutableAttributedString *textToScroll, NSString *title)
 
    if (!title.length)
       return false;
-   
+
    using ROOT::MacOSX::Util::NSScopeGuard;
 
    NSScopeGuard<NSAttributedString> newString([[NSAttributedString alloc] initWithString : title]);
@@ -947,15 +947,15 @@ bool AddSectionBody(NSMutableAttributedString *textToScroll, NSString *body)
       return false;
 
    using ROOT::MacOSX::Util::NSScopeGuard;
-   
+
    NSScopeGuard<NSAttributedString> newString([[NSAttributedString alloc] initWithString : body]);
    if (!newString.Get())
       //TODO: diagnostic.
       return false;
-   
+
    const NSRange currentRange(NSMakeRange(textToScroll.length, newString.Get().length));
    [textToScroll appendAttributedString : newString.Get()];
-   
+
    return AddMainTextBodyAttributes(textToScroll, currentRange);
 }
 
@@ -963,9 +963,9 @@ bool AddSectionBody(NSMutableAttributedString *textToScroll, NSString *body)
 bool AddDeveloperInfo(NSMutableAttributedString *textToScroll)
 {
    assert(textToScroll != nil && "AddDeveloperInfo, parameter 'textToScroll' is nil");
-   
+
    using ROOT::MacOSX::Util::NSScopeGuard;
-   
+
    //'Conception:' caption.
    if (!AddSectionTitle(textToScroll, @"Conception:  "))
       //TODO: diagnostic.
@@ -982,20 +982,20 @@ bool AddDeveloperInfo(NSMutableAttributedString *textToScroll)
    std::size_t nLines = sizeof ROOT::ROOTX::gROOTCoreTeam / sizeof ROOT::ROOTX::gROOTCoreTeam[0];
    if (nLines > 1) {
       nLines -= 1;//There is a "terminating null" in this array, get rid of it.
-      
+
       NSScopeGuard<NSMutableString> coreTeam([[NSMutableString alloc] init]);
-      
+
       for (std::size_t i = 0; i < nLines; ++i)
          [coreTeam.Get() appendFormat : (i ? @", %s" : @"%s"), ROOT::ROOTX::gROOTCoreTeam[i]];
       [coreTeam.Get() appendFormat : @".\n\n"];
-      
+
       if (!AddSectionBody(textToScroll, coreTeam.Get()))
          return false;
    } else {
       //TODO: diagnostic.
       return false;
    }
-   
+
    return true;
 }
 
@@ -1011,10 +1011,10 @@ void AddContributorsInfo(NSMutableAttributedString *textToScroll)
 
    if (contributors.size()) {//Add more lines here.
       using ROOT::MacOSX::Util::NSScopeGuard;
-      
+
       if (!AddSectionTitle(textToScroll, @"Contributors:  "))
          return;//Simply ignore this part, no diagnostic.
-      
+
       NSScopeGuard<NSAttributedString> newString;
       NSRange textRange(NSMakeRange(textToScroll.length, 0));
 
@@ -1032,13 +1032,13 @@ void AddContributorsInfo(NSMutableAttributedString *textToScroll)
       }
 
       AddMainTextBodyAttributes(textToScroll, textRange);
-      
+
       textRange.location = textToScroll.length;
       newString.Reset([[NSAttributedString alloc] initWithString :
                       @"\n\nOur sincere thanks and apologies to anyone who deserves"
                        " credit but fails to appear in this list."]);
       textRange.length = newString.Get().length;
-      
+
       [textToScroll appendAttributedString : newString.Get()];
       AddCaptionAttributes(textToScroll, textRange);
    }
@@ -1053,7 +1053,7 @@ void AddUserInfo(NSMutableAttributedString *textToScroll)
 
    if (const passwd * const pwd = getpwuid(getuid())) {
       std::string name;
-      
+
       if (pwd->pw_gecos) {
          const char * const comma = std::strchr(pwd->pw_gecos, ',');
          if (!comma)
@@ -1061,13 +1061,13 @@ void AddUserInfo(NSMutableAttributedString *textToScroll)
          else if (pwd->pw_gecos - comma)
             name.assign(pwd->pw_gecos, pwd->pw_gecos - comma);
       }
-      
+
       if (!name.length() && pwd->pw_name)
          name = pwd->pw_name;
-      
+
       if (!name.length())
          return;
-      
+
       using ROOT::MacOSX::Util::NSScopeGuard;
       NSRange textRange = NSMakeRange(textToScroll.length, 0);
       NSString * const nsFromC = [NSString stringWithFormat : @"\n\nExtra special thanks"
@@ -1089,7 +1089,7 @@ NSAttributedString *CreateTextToScroll(bool about)
 
    //the resulting string.
    const NSScopeGuard<NSAutoreleasePool> pool;
-   
+
    NSScopeGuard<NSMutableAttributedString> textToScroll([[NSMutableAttributedString alloc] init]);
    if (!textToScroll.Get())
       //TODO: diagnostic.
@@ -1122,7 +1122,7 @@ bool ReadContributors(std::list<std::string> & contributors)
    if (!env)
       //TODO: diagnostic?
       return false;
-   
+
    const std::string fileName(std::string(env) + "/README/CREDITS");
 #endif
 
@@ -1139,9 +1139,9 @@ bool ReadContributors(std::list<std::string> & contributors)
             tmp.push_back(line.substr(3, line.length() - 3));
       }
    }
-   
+
    tmp.swap(contributors);
-   
+
    return true;
 }
 

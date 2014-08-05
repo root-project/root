@@ -602,7 +602,7 @@ void TGSpeedo::DoRedraw()
           (fAngleMax - fAngleMin)));
    Translate(80.0, angle, &xmn0, &ymn0);
    Translate(70.0, angle, &xmn1, &ymn1);
-   
+
    if (fImage && fImage->IsValid()) {
       // First clone original image.
       if (fImage2 && fImage2->IsValid())

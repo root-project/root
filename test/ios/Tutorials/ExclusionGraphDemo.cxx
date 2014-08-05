@@ -17,7 +17,7 @@ ExclusionGraphDemo::ExclusionGraphDemo()
 
    Double_t x1[kNPoints], x2[kNPoints], x3[kNPoints];
    Double_t y1[kNPoints], y2[kNPoints], y3[kNPoints];
-   
+
    for (UInt_t i = 0; i < kNPoints; ++i) {
       x1[i]  = i * 0.1;
       x2[i]  = x1[i];
@@ -47,7 +47,7 @@ ExclusionGraphDemo::ExclusionGraphDemo()
    fMultiGraph->Add(graph1.get());
    fMultiGraph->Add(graph2.get());
    fMultiGraph->Add(graph3.get());
-   
+
    graph1.release();
    graph2.release();
    graph3.release();

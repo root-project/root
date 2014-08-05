@@ -11,6 +11,7 @@
 @sysconfdir@/root/system.rootrc
 @sysconfdir@/root/system.rootdaemonrc
 @sysconfdir@/root/valgrind-root.supp
+@sysconfdir@/root/helgrind-root.supp
 @prefix@/share/man/man1/system.rootdaemonrc.1*
 @prefix@/share/root/icons/
 @prefix@/share/root/fonts/symbol.ttf

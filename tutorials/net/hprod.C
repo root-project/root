@@ -6,7 +6,7 @@
    // Every 10 fills the objects are updated in shared memory.
    // Use the hcons.C script to map this file and display the histograms.
    //Author: Fons Rademakers
-   
+
    gROOT->Reset();
 
    // Create a new memory mapped file. The memory mapped file can be

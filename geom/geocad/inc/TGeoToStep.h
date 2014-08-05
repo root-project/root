@@ -27,7 +27,7 @@ protected:
    TOCCToStep *fCreate;       //OCC geometry build based on Root one
 
 public:
-   TGeoToStep(); 
+   TGeoToStep();
    TGeoToStep(TGeoManager *geom);
    ~TGeoToStep();
    void *CreateGeometry();

@@ -359,7 +359,7 @@ namespace {
 
             if ( PropertyProxy_Check( pyprop ) ) {
             // this is an address of a value (i.e. &myobj->prop)
-               void* addr = (void*)pyprop->GetAddress( pyobj ); 
+               void* addr = (void*)pyprop->GetAddress( pyobj );
                Py_DECREF( pyprop );
                return addr;
             }

@@ -38,8 +38,8 @@ private:
    oracle::occi::Environment  *fEnv;    // environment of Oracle access
    oracle::occi::Connection   *fConn;   // connection to Oracle server
    TString       fInfo;  // info string with Oracle version information
-   
-   static const char* fgDatimeFormat; //! format for converting date and time stamps into string 
+
+   static const char* fgDatimeFormat; //! format for converting date and time stamps into string
 
 public:
    TOracleServer(const char *db, const char *uid, const char *pw);

@@ -8,8 +8,8 @@ V0.3.5
 o Added support for Clang in CMake
 
 V0.3.4
-o Added regex support to perfbenchmark to profile only groups of functions 
-o Removed fpe rising in atan2, both single and double precision, when x 
+o Added regex support to perfbenchmark to profile only groups of functions
+o Removed fpe rising in atan2, both single and double precision, when x
 argument was 0.
 
 V0.3.3
@@ -17,8 +17,8 @@ o Minor Bugfixes
 
 V0.3.2
 o Added the possibility to prepare the lib for preload. The CMake command
-is -DPRELOAD=1. If set, symbols identical to the Libm ones but containing 
-a vdt call will be generated in the lib. If preloaded, vdt calls will be 
+is -DPRELOAD=1. If set, symbols identical to the Libm ones but containing
+a vdt call will be generated in the lib. If preloaded, vdt calls will be
 performed instead of libm ones.
 
 V0.3.1
@@ -36,7 +36,7 @@ o randomPool:
  * Removed long doubles
  * Size is now a uint64_t
  * Refactored: added abstract interface to random generator
- * Added 2D random generator and test 
+ * Added 2D random generator and test
 o Removed redundancy of includes in diagnostic files
 o Removed fake program deleteme.cpp
 o fcnResponse,fcnComparison:
@@ -48,8 +48,8 @@ o Atan2:
  * Added tests for response.
  * Integrated in the accuracy tests
  * Double and Single precision
- 
- 
+
+
 V0.2.3
 o Fixed the installation of atan2.h
 

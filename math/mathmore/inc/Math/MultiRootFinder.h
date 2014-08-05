@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Author: L. Moneta   03/2011 
+// Author: L. Moneta   03/2011
 
  /**********************************************************************
   *                                                                    *
@@ -23,7 +23,7 @@
   **********************************************************************/
 
 // Header file for class MultiRootFinder
-// 
+//
 #ifndef ROOT_Math_MultiRootFinder
 #define ROOT_Math_MultiRootFinder
 
@@ -36,7 +36,7 @@
 namespace ROOT {
 namespace Math {
 
-   typedef GSLMultiRootFinder MultiRootFinder; 
+   typedef GSLMultiRootFinder MultiRootFinder;
 
 } // namespace Math
 } // namespace ROOT

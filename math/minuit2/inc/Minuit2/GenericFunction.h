@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -20,7 +20,7 @@ namespace ROOT {
 
 
 //_____________________________________________________________________
-/** 
+/**
 
 Class from which all the other classes, representing functions,
 inherit. That is why it defines only one method, the operator(),
@@ -43,7 +43,7 @@ public:
 
       Evaluates the function using the vector containing the input values.
 
-      @param x vector of the coordinates (for example the x coordinate for a 
+      @param x vector of the coordinates (for example the x coordinate for a
       one-dimensional Gaussian)
 
       @return the result of the evaluation of the function.

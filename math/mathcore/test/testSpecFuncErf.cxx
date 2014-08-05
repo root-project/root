@@ -38,7 +38,7 @@ TGraph* drawPoints(Double_t x[], Double_t y[], int color, int style = 1)
    return g;
 }
 
-int testSpecFuncErf() 
+int testSpecFuncErf()
 {
    vector<Double_t> x( ARRAYSIZE );
    vector<Double_t> yerf( ARRAYSIZE );
@@ -56,8 +56,8 @@ int testSpecFuncErf()
    unsigned int index = 0;
    for ( double i = MIN; i < MAX; i += INCREMENT )
    {
-//       outputFile << "i:"; outputFile.width(5); outputFile << i 
-//            << " index: "; outputFile.width(5); outputFile << index 
+//       outputFile << "i:"; outputFile.width(5); outputFile << i
+//            << " index: "; outputFile.width(5); outputFile << index
 //            << " TMath::Erf(x): "; outputFile.width(10); outputFile << TMath::Erf(i)
 //            << " ROOT::Math::erf(x): "; outputFile.width(10); outputFile << ROOT::Math::erf(i)
 //            << " TMath::Erfc(x): "; outputFile.width(10); outputFile << TMath::Erfc(i)
@@ -73,7 +73,7 @@ int testSpecFuncErf()
       ymerf[index] = ROOT::Math::erf(i);
       if ( std::fabs( yerf[index] - ymerf[index] ) > ERRORLIMIT )
       {
-         cout << "i " << i   
+         cout << "i " << i
               << " yerf[index] " << yerf[index]
               << " ymerf[index] " << ymerf[index]
               << " " << std::fabs( yerf[index] - ymerf[index] )
@@ -85,7 +85,7 @@ int testSpecFuncErf()
       ymerfc[index] = ROOT::Math::erfc(i);
       if ( std::fabs( yerfc[index] - ymerfc[index] ) > ERRORLIMIT )
       {
-         cout << "i " << i 
+         cout << "i " << i
               << " yerfc[index] " << yerfc[index]
               << " ymerfc[index] " << ymerfc[index]
               << " " << std::fabs( yerfc[index] - ymerfc[index] )
@@ -96,7 +96,7 @@ int testSpecFuncErf()
       yierf[index] = TMath::ErfInverse(yerf[index]);
       if ( std::fabs( yierf[index] - i ) > ERRORLIMIT )
       {
-         cout << "i " << i 
+         cout << "i " << i
               << " yierf[index] " << yierf[index]
               << " " << std::fabs( yierf[index] - i )
               << endl;
@@ -106,7 +106,7 @@ int testSpecFuncErf()
       yierfc[index] = TMath::ErfcInverse(yerfc[index]);
       if ( std::fabs( yierfc[index] - i ) > ERRORLIMIT )
       {
-         cout << "i " << i 
+         cout << "i " << i
               << " yierfc[index] " << yierfc[index]
               << " " << std::fabs( yierfc[index] - i )
               << endl;
@@ -121,11 +121,11 @@ int testSpecFuncErf()
    if ( showGraphics )
    {
 
-      TCanvas* c1 = new TCanvas("c1", "Two Graphs", 600, 400); 
+      TCanvas* c1 = new TCanvas("c1", "Two Graphs", 600, 400);
       TH2F* hpx = new TH2F("hpx", "Two Graphs(hpx)", ARRAYSIZE, MIN, MAX, ARRAYSIZE, -1,2);
       hpx->SetStats(kFALSE);
       hpx->Draw();
-      
+
       TGraph* gerf   = drawPoints(&x[0], &yerf[0], 14);
       TGraph* gmerf  = drawPoints(&x[0], &ymerf[0], 5, 7);
       TGraph* gerfc  = drawPoints(&x[0], &yerfc[0], 2);
@@ -140,10 +140,10 @@ int testSpecFuncErf()
       legend->AddEntry(gerfc,  "TMath::Erfc()");
       legend->AddEntry(gmerfc, "ROOT::Math::erfInverse()");
       legend->Draw();
-      
+
       c1->Show();
    }
-      
+
    cout << "Test Done!" << endl;
 
    return status;
@@ -152,23 +152,23 @@ int testSpecFuncErf()
 int main(int argc, char **argv)
 {
 
-  // Parse command line arguments 
+  // Parse command line arguments
   for (Int_t i=1 ;  i<argc ; i++) {
      std::string arg = argv[i] ;
-     if (arg == "-g") { 
+     if (arg == "-g") {
       showGraphics = true;
      }
-     if (arg == "-v") { 
+     if (arg == "-v") {
       showGraphics = true;
       //verbose = true;
      }
-     if (arg == "-h") { 
+     if (arg == "-h") {
         cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
         cerr << "  where:\n";
         cerr << "     -g : graphics mode\n";
         cerr << "     -v : verbose  mode";
         cerr << endl;
-        return -1; 
+        return -1;
      }
    }
 

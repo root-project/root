@@ -58,7 +58,7 @@ TFitter::~TFitter()
 Double_t TFitter::Chisquare(Int_t npar, Double_t *params) const
 {
    // return a chisquare equivalent
-   
+
    Double_t amin = 0;
    H1FitChisquare(npar,params,amin,params,1);
    return amin;
@@ -71,7 +71,7 @@ void TFitter::Clear(Option_t *)
 
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
    fMinuit->mncler();
-   
+
    //reset the internal Minuit random generator to its initial state
    Double_t val = 3;
    Int_t inseed = 12345;
@@ -107,7 +107,7 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
 //Parameters:
 //n - number of points
 //ndim - dimensions of points
-//x - points, at which to compute the intervals, for ndim > 1 
+//x - points, at which to compute the intervals, for ndim > 1
 //    should be in order: (x0,y0, x1, y1, ... xn, yn)
 //ci - computed intervals are returned in this array
 //cl - confidence level, default=0.95
@@ -138,7 +138,7 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
    Double_t *matr = GetCovarianceMatrix();
    if (!matr)
       return;
-   Double_t t = TMath::StudentQuantile(0.5 + cl/2, f->GetNDF());   
+   Double_t t = TMath::StudentQuantile(0.5 + cl/2, f->GetNDF());
    Double_t chidf = TMath::Sqrt(f->GetChisquare()/f->GetNDF());
    Int_t igrad, ifree=0;
    for (Int_t ipoint=0; ipoint<n; ipoint++){
@@ -180,14 +180,14 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
          }
          c+=grad[igrad]*sum_vector[i];
       }
-      
+
       c=TMath::Sqrt(c);
       ci[ipoint]=c*t*chidf;
    }
 
    delete [] grad;
    delete [] sum_vector;
-   if (fixed) 
+   if (fixed)
       delete [] fixed;
 }
 
@@ -261,7 +261,7 @@ void TFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
       Double_t *sum_vector = new Double_t[npar];
       Double_t *x = gr2->GetX();
       Double_t *y = gr2->GetY();
-      Double_t t = TMath::StudentQuantile(0.5 + cl/2, f->GetNDF());   
+      Double_t t = TMath::StudentQuantile(0.5 + cl/2, f->GetNDF());
       Double_t chidf = TMath::Sqrt(f->GetChisquare()/f->GetNDF());
       Double_t *matr=GetCovarianceMatrix();
       Double_t c = 0;
@@ -316,19 +316,19 @@ void TFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
       Double_t x[3];
 
       Int_t hxfirst = hfit->GetXaxis()->GetFirst();
-      Int_t hxlast  = hfit->GetXaxis()->GetLast(); 
+      Int_t hxlast  = hfit->GetXaxis()->GetLast();
       Int_t hyfirst = hfit->GetYaxis()->GetFirst();
-      Int_t hylast  = hfit->GetYaxis()->GetLast(); 
+      Int_t hylast  = hfit->GetYaxis()->GetLast();
       Int_t hzfirst = hfit->GetZaxis()->GetFirst();
-      Int_t hzlast  = hfit->GetZaxis()->GetLast(); 
+      Int_t hzlast  = hfit->GetZaxis()->GetLast();
 
       TAxis *xaxis  = hfit->GetXaxis();
       TAxis *yaxis  = hfit->GetYaxis();
       TAxis *zaxis  = hfit->GetZaxis();
-      Double_t t = TMath::StudentQuantile(0.5 + cl/2, f->GetNDF());   
+      Double_t t = TMath::StudentQuantile(0.5 + cl/2, f->GetNDF());
       Double_t chidf = TMath::Sqrt(f->GetChisquare()/f->GetNDF());
       Double_t *matr=GetCovarianceMatrix();
-      Double_t c=0;      
+      Double_t c=0;
       for (Int_t binz=hzfirst; binz<=hzlast; binz++){
          x[2]=zaxis->GetBinCenter(binz);
          for (Int_t biny=hyfirst; biny<=hylast; biny++) {
@@ -352,18 +352,18 @@ void TFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
       }
       delete [] grad;
       delete [] sum_vector;
-   }    
+   }
    else {
       Error("GetConfidenceIntervals", "This object type is not supported");
       return;
-   }           
+   }
 
 }
 
 //______________________________________________________________________________
 Double_t *TFitter::GetCovarianceMatrix() const
 {
-   // return a pointer to the covariance matrix 
+   // return a pointer to the covariance matrix
 
    if (fCovar) return fCovar;
    Int_t npars = fMinuit->GetNumPars();
@@ -446,7 +446,7 @@ Double_t TFitter::GetParameter(Int_t ipar) const
    fMinuit->mnpout(ipar, pname,value,verr,vlow,vhigh,ierr);
    return value;
 }
-   
+
 //______________________________________________________________________________
 Int_t TFitter::GetParameter(Int_t ipar, char *parname,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const
 {
@@ -458,7 +458,7 @@ Int_t TFitter::GetParameter(Int_t ipar, char *parname,Double_t &value,Double_t &
    //   vlow     : lower value for the parameter
    //   vhigh    : upper value for the parameter
    //  WARNING! parname must be suitably dimensionned in the calling function.
-   
+
    Int_t ierr = 0;
    TString pname;
    fMinuit->mnpout(ipar, pname,value,verr,vlow,vhigh,ierr);
@@ -470,13 +470,13 @@ Int_t TFitter::GetParameter(Int_t ipar, char *parname,Double_t &value,Double_t &
 const char *TFitter::GetParName(Int_t ipar) const
 {
    // return name of parameter ipar
-   
+
    if (!fMinuit || ipar < 0 || ipar > fMinuit->fNu) return "";
    return fMinuit->fCpnam[ipar];
 }
 
 //______________________________________________________________________________
-Int_t TFitter::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const 
+Int_t TFitter::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const
 {
    // return global fit parameters
    //   amin     : chisquare
@@ -516,8 +516,8 @@ Double_t TFitter::GetSumLog(Int_t n)
 Bool_t TFitter::IsFixed(Int_t ipar) const
 {
    //return kTRUE if parameter ipar is fixed, kFALSE othersise)
-   
-   if (fMinuit->fNiofex[ipar] == 0 ) return kTRUE; 
+
+   if (fMinuit->fNiofex[ipar] == 0 ) return kTRUE;
    return kFALSE;
 }
 
@@ -547,7 +547,7 @@ void TFitter::SetFCN(void *fcn)
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
    TVirtualFitter::SetFCN(fcn);
    fMinuit->SetFCN(fcn);
-   
+
 }
 
 //______________________________________________________________________________
@@ -564,7 +564,7 @@ void TFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, I
 void TFitter::SetFitMethod(const char *name)
 {
    // ret fit method (chisquare or loglikelihood)
-   
+
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
    if (!strcmp(name,"H1FitChisquare"))    SetFCN(H1FitChisquare);
    if (!strcmp(name,"H1FitLikelihood"))   SetFCN(H1FitLikelihood);
@@ -574,7 +574,7 @@ void TFitter::SetFitMethod(const char *name)
    if (!strcmp(name,"F2Minimizer")) SetFCN(F2Fit);
    if (!strcmp(name,"F3Minimizer")) SetFCN(F3Fit);
 }
-      
+
 //______________________________________________________________________________
 Int_t TFitter::SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh)
 {
@@ -616,12 +616,12 @@ void TFitter::FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
    TF1 *f1   = (TF1*)GetUserFunc();
    Int_t nd  = hfit->GetDimension();
    Int_t j;
-   
+
    f1->InitArgs(x,u);
    npar = f1->GetNpar();
    if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
    f = 0;
-   
+
    Int_t npfit = 0;
    Double_t *cache = fCache;
    for (Int_t i=0;i<fNpoints;i++) {
@@ -654,7 +654,7 @@ void TFitter::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
    //    -1D : bc,e, xc,xw  (bin content, error, x of center of bin, x bin width of bin)
    //    -2D : bc,e, xc,xw,yc,yw
    //    -3D : bc,e, xc,xw,yc,yw,zc,zw
-   
+
    Double_t cu,eu,fu,fsum;
    Double_t dersum[100], grad[100];
    memset(grad,0,800);
@@ -664,12 +664,12 @@ void TFitter::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
    TF1 *f1   = (TF1*)GetUserFunc();
    Int_t nd = hfit->GetDimension();
    Int_t j;
-   
+
    f1->InitArgs(x,u);
    npar = f1->GetNpar();
    if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
    f = 0;
-   
+
    Int_t npfit = 0;
    Double_t *cache = fCache;
    for (Int_t i=0;i<fNpoints;i++) {
@@ -731,7 +731,7 @@ void TFitter::FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
    npar = f1->GetNpar();
    if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
    f = 0;
-   
+
    Int_t npfit = 0;
    Double_t *cache = fCache;
    for (Int_t i=0;i<fNpoints;i++) {
@@ -797,7 +797,7 @@ void TFitter::FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *
    npar = f1->GetNpar();
    if (flag == 2) for (j=0;j<npar;j++) dersum[j] = gin[j] = 0;
    f = 0;
-   
+
    Int_t npfit = 0;
    Double_t *cache = fCache;
    for (Int_t i=0;i<fNpoints;i++) {
@@ -956,9 +956,9 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
           //x[0] = xm; fm = f1->EvalPar(x,u);
           //x[0] = xp; fp = f1->EvalPar(x,u);
           //eux = 0.5*(fp-fm);
-         
-         //"Effective Variance" method introduced by Anna Kreshuk 
-         // in version 4.00/08.        
+
+         //"Effective Variance" method introduced by Anna Kreshuk
+         // in version 4.00/08.
          eux = 0.5*(exl + exh)*f1->Derivative(x[0], u);
       } else
          eux = 0.;
@@ -987,7 +987,7 @@ void Graph2DFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    TGraph2D *gr     = (TGraph2D*)grFitter->GetObjectFit();
    TF2 *f2   = (TF2*)grFitter->GetUserFunc();
    Foption_t fitOption = grFitter->GetFitOption();
-   
+
    Int_t n        = gr->GetN();
    Double_t *gx   = gr->GetX();
    Double_t *gy   = gr->GetY();
@@ -1057,7 +1057,7 @@ void MultiGraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    TF1 *f1   = (TF1*)grFitter->GetUserFunc();
    Foption_t fitOption = grFitter->GetFitOption();
    TGraph *gr;
-   TIter next(mg->GetListOfGraphs());   
+   TIter next(mg->GetListOfGraphs());
 
    Int_t n;
    Double_t *gx;
@@ -1101,9 +1101,9 @@ void MultiGraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
             //x[0] = xm; fm = f1->EvalPar(x,u);
             //x[0] = xp; fp = f1->EvalPar(x,u);
             //eux = 0.5*(fp-fm);
-            
-            //"Effective Variance" method introduced by Anna Kreshuk 
-            // in version 4.00/08.        
+
+            //"Effective Variance" method introduced by Anna Kreshuk
+            // in version 4.00/08.
             eux = 0.5*(exl + exh)*f1->Derivative(x[0], u);
          } else
             eux = 0.;

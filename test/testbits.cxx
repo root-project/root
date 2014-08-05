@@ -182,23 +182,23 @@ static void test_get_to_int(UInt_t nbits) {
 
 int main(int /*c*/,char **v) {
     TROOT app("bits_test", "Tests the TBits class's new functionality");
-    
+
     fprintf(stderr,"%s: ",v[0]);
-    
+
     DO_TEST(test_set_bit());
-    
+
     DO_TEST(test_set_from_char(64));
     DO_TEST(test_set_from_char(64-1));
     DO_TEST(test_set_from_char(64-7));
     DO_TEST(test_set_from_char(64-8));
-    
+
     DO_TEST(test_set_from_short(64));
     DO_TEST(test_set_from_short(64-1));
     DO_TEST(test_set_from_short(64-7));
     DO_TEST(test_set_from_short(64-8));
     DO_TEST(test_set_from_short(64-15));
     DO_TEST(test_set_from_short(64-16));
-    
+
     DO_TEST(test_set_from_int(64));
     DO_TEST(test_set_from_int(64-1));
     DO_TEST(test_set_from_int(64-7));
@@ -209,19 +209,19 @@ int main(int /*c*/,char **v) {
     DO_TEST(test_set_from_int(64-24));
     DO_TEST(test_set_from_int(64-31));
     DO_TEST(test_set_from_int(64-32));
-    
+
     DO_TEST(test_get_to_char(64));
     DO_TEST(test_get_to_char(64-1));
     DO_TEST(test_get_to_char(64-7));
     DO_TEST(test_get_to_char(64-8));
-    
+
     DO_TEST(test_get_to_short(64));
     DO_TEST(test_get_to_short(64-1));
     DO_TEST(test_get_to_short(64-7));
     DO_TEST(test_get_to_short(64-8));
     DO_TEST(test_get_to_short(64-15));
     DO_TEST(test_get_to_short(64-16));
-    
+
     DO_TEST(test_get_to_int(64));
     DO_TEST(test_get_to_int(64-1));
     DO_TEST(test_get_to_int(64-7));
@@ -232,9 +232,9 @@ int main(int /*c*/,char **v) {
     DO_TEST(test_get_to_int(64-24));
     DO_TEST(test_get_to_int(64-31));
     DO_TEST(test_get_to_int(64-32));
-    
+
     fprintf(stderr," OK! (%d tests)\n",test_count);
-    
+
     return 0;
 }
 

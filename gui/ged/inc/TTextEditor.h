@@ -31,7 +31,7 @@ class TTextEditor : public TGedFrame {
 
 private:
    TText *fEditedText;
-   
+
 protected:
    TGTextEntry   *fText;  // Text
    TGNumberEntry *fAngle; // Text's angle
@@ -40,22 +40,22 @@ protected:
    TGNumberEntry *fYpos;  // Text's Y position
 
    void ConnectSignals2Slots();
-   
+
 public:
-   TTextEditor(const TGWindow *p = 0, 
+   TTextEditor(const TGWindow *p = 0,
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
    ~TTextEditor();
-   
+
    void SetModel(TObject *);
-   
+
    void DoAngle();
    void DoSize();
    void DoText(const char*);
    void DoXpos();
    void DoYpos();
-      
+
    ClassDef(TTextEditor,0)        // text editor
 };
 

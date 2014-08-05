@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -21,10 +21,10 @@ bool GenVector_exception::fgOn = false;
 void Throw(GenVector_exception & e) { if (GenVector_exception::fgOn) throw e; }
 
 
-void GenVector::Throw(const char * s) { 
-   if (!GenVector_exception::fgOn) return;  
+void GenVector::Throw(const char * s) {
+   if (!GenVector_exception::fgOn) return;
    GenVector_exception e(s);
-   throw e; 
+   throw e;
 }
 
 

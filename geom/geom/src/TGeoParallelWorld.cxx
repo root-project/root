@@ -11,9 +11,9 @@
 //_____________________________________________________________________________
 // TGeoParallelWorld    - base class for a flat parallel geometry.
 //   The parallel geometry can be composed by both normal volumes added
-// using the AddNode interface (not implemented yet) or by physical nodes 
-// which will use as position their actual global matrix with respect to the top 
-// volume of the main geometry. 
+// using the AddNode interface (not implemented yet) or by physical nodes
+// which will use as position their actual global matrix with respect to the top
+// volume of the main geometry.
 //   All these nodes are added as daughters to the "top" volume of
 // the parallel world which acts as a navigation helper in this parallel
 // world. The parallel world has to be closed before calling any navigation
@@ -31,7 +31,7 @@
 ClassImp(TGeoParallelWorld)
 
 //_____________________________________________________________________________
-TGeoParallelWorld::TGeoParallelWorld(const char *name, TGeoManager *mgr) 
+TGeoParallelWorld::TGeoParallelWorld(const char *name, TGeoManager *mgr)
                   : TNamed(name,""),
                     fGeoManager(mgr),
                     fPhysical(0),
@@ -81,12 +81,12 @@ Bool_t TGeoParallelWorld::CloseGeometry()
    RefreshPhysicalNodes();
    fIsClosed = kTRUE;
    return kTRUE;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoParallelWorld::RefreshPhysicalNodes()
 {
-// Refresh the node pointers and re-voxelize. To be called mandatory in case 
+// Refresh the node pointers and re-voxelize. To be called mandatory in case
 // re-alignment happened.
    if (fIsClosed) {
       delete fVolume;
@@ -102,7 +102,7 @@ void TGeoParallelWorld::RefreshPhysicalNodes()
    // Voxelize the volume
    fVolume->GetShape()->ComputeBBox();
    fVolume->Voxelize("ALL");
-}   
+}
 
 //_____________________________________________________________________________
 TGeoPhysicalNode *TGeoParallelWorld::FindNode(Double_t point[3])
@@ -135,7 +135,7 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNode(Double_t point[3])
       }
    }
    return 0;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_t dir[3],
@@ -153,7 +153,7 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
    // of the physical nodes in the parallel geometry
    while ((pnode = (TGeoPhysicalNode*)next())) {
       if (pnode->IsMatchingState(nav)) return 0;
-   }   
+   }
    Double_t snext = TGeoShape::Big();
    step = stepmax;
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
@@ -183,7 +183,7 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
       }
       step = TGeoShape::Big();
       return 0;
-   }      
+   }
    // Get current voxel
    Int_t ncheck = 0;
    Int_t sumchecked = 0;
@@ -202,15 +202,15 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
             step = snext;
             idaughter = vlist[i];
          }
-      }   
+      }
       if (idaughter>=0) {
          pnode = (TGeoPhysicalNode*)fPhysical->At(idaughter);
          return pnode;
       }
-   }   
+   }
    step = TGeoShape::Big();
    return 0;
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoParallelWorld::Safety(Double_t point[3], Double_t safmax)
@@ -249,7 +249,7 @@ Double_t TGeoParallelWorld::Safety(Double_t point[3], Double_t safmax)
       if (safnext < safe) safe = safnext;
    }
    return safe;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoParallelWorld::CheckOverlaps(Double_t ovlp)
@@ -257,11 +257,11 @@ void TGeoParallelWorld::CheckOverlaps(Double_t ovlp)
 // Check overlaps within a tolerance value.
    fVolume->CheckOverlaps(ovlp);
 }
-   
+
 //_____________________________________________________________________________
 void TGeoParallelWorld::Draw(Option_t *option)
 {
 // Draw the parallel world
    fVolume->Draw(option);
 }
-   
+

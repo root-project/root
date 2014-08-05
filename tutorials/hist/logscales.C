@@ -1,7 +1,7 @@
 void logscales() {
 //Draw parametric functions with log scales
 //Author: Olivier Couet
-   
+
    TCanvas *c1 = new TCanvas("c1",
       "Various options on LOG scales plots",0,0,700,900);
    c1->SetFillColor(30);
@@ -74,29 +74,29 @@ void logscales() {
    pad3->SetGridy();
    pad3->SetLogy();
    pad3->SetLogx();
-   TF1 *f4 = new TF1("f4a","x*sin(x+10)+25",1,21); 
-   f4->SetLineWidth(1); 
+   TF1 *f4 = new TF1("f4a","x*sin(x+10)+25",1,21);
+   f4->SetLineWidth(1);
    f4->Draw();
    f4->SetNpx(200);
    //f4->SetTitle("");
    f4->GetYaxis()->SetMoreLogLabels();
    f4->GetXaxis()->SetMoreLogLabels();
-   f4 = new TF1("f4b","x*cos(x+10)*sin(x+10)+25",1,21); 
+   f4 = new TF1("f4b","x*cos(x+10)*sin(x+10)+25",1,21);
    f4->SetLineWidth(1); f4->Draw("same");
    f4->SetNpx(200);
    Int_t a = 20;
    for (int i=a; i>=1; i--) {
-     f4 = new TF1(Form("f4b_%d",i),"x*sin(x+10)*[0]/[1]+25",1,21);
-     f4->SetParameter(0,i);
-     f4->SetParameter(1,a);
-	f4->SetNpx(200);
-     f4->SetLineWidth(1); f4->SetLineColor(i+10); 
-     f4->Draw("same");
-     f4 = new TF1(Form("f4c_%d",i),"x*cos(x+10)*sin(x+10)*[0]/[1]+25",1,25);
-     f4->SetParameter(0,i);
-     f4->SetParameter(1,a);
-	f4->SetNpx(200);
-     f4->SetLineWidth(1); f4->SetLineColor(i+30); f4->Draw("same");
+      f4 = new TF1(Form("f4b_%d",i),"x*sin(x+10)*[0]/[1]+25",1,21);
+      f4->SetParameter(0,i);
+      f4->SetParameter(1,a);
+      f4->SetNpx(200);
+      f4->SetLineWidth(1); f4->SetLineColor(i+10);
+      f4->Draw("same");
+      f4 = new TF1(Form("f4c_%d",i),"x*cos(x+10)*sin(x+10)*[0]/[1]+25",1,25);
+      f4->SetParameter(0,i);
+      f4->SetParameter(1,a);
+      f4->SetNpx(200);
+      f4->SetLineWidth(1); f4->SetLineColor(i+30); f4->Draw("same");
    }
    pave3 = new TPaveText(1.2,8,9,15);
    pave3->SetFillColor(42);

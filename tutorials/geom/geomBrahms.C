@@ -4,9 +4,9 @@
 //if the file containing the geometry is not found in the local
 //directory, it is automatically read from the ROOT web site.
 // Author: Rene Brun
-   
+
 void geomBrahms() {
    TGeoManager::Import("http://root.cern.ch/files/brahms.root");
    gGeoManager->GetVolume("CAVE")->Draw("ogl");
-   new TBrowser;  
+   new TBrowser;
 }

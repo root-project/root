@@ -20,7 +20,7 @@ void transparentpad()
    //I prefer to find free indices in a ROOT's color table
    //to avoid possible conflicts with other tutorials.
    gStyle->SetCanvasPreferGL(kTRUE);
-   
+
    Int_t indices[3] = {};
    if (ROOT::GLTutorials::FindFreeCustomColorIndices(indices) != 3) {
       ::Error("transparentpad", "failed to create new custom colors");
@@ -43,13 +43,13 @@ void transparentpad()
    //3. Some arbitrary histograms.
    TH1F * const h1 = new TH1F("TH1F 1", "TH1F 1", 100, -1.5, 1.5);
    h1->FillRandom("gaus");
-   
+
    TH1F * const h2 = new TH1F("TH1F 2", "TH1F 2", 100, -1.5, 0.);
    h2->FillRandom("gaus");
 
    TH1F * const h3 = new TH1F("TH1F 3", "TH1F 3", 100, 0.5, 2.);
    h3->FillRandom("landau");
-   
+
    //4. Now overlapping transparent pads.
    TPad * const pad1 = new TPad("transparent pad 1", "transparent pad 1", 0.1, 0.1, 0.7, 0.7);
    pad1->SetFillColor(indices[0]);//here's the magic!
@@ -57,7 +57,7 @@ void transparentpad()
    h1->Draw("lego2");
    c1->cd();
    pad1->Draw();
-   
+
    TPad * const pad2 = new TPad("transparent pad 2", "transparent pad 2", 0.2, 0.2, 0.8, 0.8);
    pad2->SetFillColor(indices[1]);//here's the magic!
    pad2->cd();

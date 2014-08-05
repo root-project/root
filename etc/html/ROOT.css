@@ -218,7 +218,7 @@ div.location {
    margin-bottom: 0.5em;
    padding-bottom: 0.5em;
    padding-top: 3px;
-   font-size: 80%;   
+   font-size: 80%;
 }
 
 /* convert */
@@ -463,7 +463,7 @@ div.access {
 
 table.func, table.data /* but not table.data! */ {
    width: 100%;
-} 
+}
 tr.func, tr.data {
    white-space: nowrap;
 }
@@ -500,11 +500,11 @@ td.funcname {
 }
 span.funcprop
 {
-	margin-left: 1em;
-	background-color: #FFFFCC;
-	border: solid 1px #FFFF33;
-	font-size: 80%;
-	font-weight: bold;
+   margin-left: 1em;
+   background-color: #FFFFCC;
+   border: solid 1px #FFFF33;
+   font-size: 80%;
+   font-weight: bold;
 }
 td.dataname {
    font-weight: bolder;

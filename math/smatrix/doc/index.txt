@@ -33,8 +33,8 @@ T. Glebe, <em>SMatrix - A high performance library for Vector/Matrix calculation
 <p>
 <hr>
 <p>
-<strong>N.B.</strong>: For browsing the reference SMatrix documentation it is <strong>strongly  recommended</strong> 
-to look  at <a href="http://www.cern.ch/mathlibs/sw/html/SMatrix.html">these online doc</a></strong>. The class documentation shown from the class links below is not complete, it is missing for example template methods. 
+<strong>N.B.</strong>: For browsing the reference SMatrix documentation it is <strong>strongly  recommended</strong>
+to look  at <a href="http://www.cern.ch/mathlibs/sw/html/SMatrix.html">these online doc</a></strong>. The class documentation shown from the class links below is not complete, it is missing for example template methods.
 <hr>
 <p>
 

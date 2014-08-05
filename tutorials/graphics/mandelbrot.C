@@ -35,13 +35,13 @@ void mygenerate(double factor, double cen_x, double cen_y)
       double dx=last_histo->GetXaxis()->GetXmax()-last_histo->GetXaxis()->GetXmin();
       double dy=last_histo->GetYaxis()->GetXmax()-last_histo->GetYaxis()->GetXmin();
       last_histo->SetBins(
-			  last_histo->GetNbinsX(),
-			  cen_x-factor*dx/2,
-			  cen_x+factor*dx/2,
-			  last_histo->GetNbinsY(),
-			  cen_y-factor*dy/2,
-			  cen_y+factor*dy/2
-			  );
+                          last_histo->GetNbinsX(),
+                          cen_x-factor*dx/2,
+                          cen_x+factor*dx/2,
+                          last_histo->GetNbinsY(),
+                          cen_y-factor*dy/2,
+                          cen_y+factor*dy/2
+                          );
       last_histo->Reset();
     }
   else
@@ -50,25 +50,25 @@ void mygenerate(double factor, double cen_x, double cen_y)
       // allocate first view...
       last_histo= new TH2F("h2",
          "Mandelbrot [move mouse and  press z to zoom, u to unzoom, r to reset]",
-			   200,-2,2,200,-2,2);
-      last_histo->SetStats(0);            
+                           200,-2,2,200,-2,2);
+      last_histo->SetStats(0);
     }
   const int max_iter=50;
   for(int bx=1;bx<=last_histo->GetNbinsX();bx++)
     for(int by=1;by<=last_histo->GetNbinsY();by++)
       {
-	double x=last_histo->GetXaxis()->GetBinCenter(bx);
-	double y=last_histo->GetYaxis()->GetBinCenter(by);
-	TComplex point( x,y);
-	TComplex z=point;
-	int iter=0;	
-	while (z.Rho()<2){
-	  z=z*z+point;
-	  last_histo->Fill(x,y);
-	  iter++;
-	  if(iter>max_iter) break;
-	}
-      }  
+         double x=last_histo->GetXaxis()->GetBinCenter(bx);
+         double y=last_histo->GetYaxis()->GetBinCenter(by);
+         TComplex point( x,y);
+         TComplex z=point;
+         int iter=0;
+         while (z.Rho()<2){
+            z=z*z+point;
+            last_histo->Fill(x,y);
+            iter++;
+            if(iter>max_iter) break;
+         }
+      }
   last_histo->Draw("colz");
   gPad->Modified();
   gPad->Update();

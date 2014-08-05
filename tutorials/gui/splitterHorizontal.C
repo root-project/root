@@ -21,7 +21,7 @@ public:
    virtual ~MyMainFrame();
    void     DoSave();
    void     CloseWindow();
-   
+
    ClassDef(MyMainFrame, 0)
 };
 
@@ -51,9 +51,9 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    fFbottom->AddFrame(fLbottom, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,
                                                   3, 0, 0, 0));
 
-   fH1->AddFrame(fFtop, new TGLayoutHints(kLHintsTop | kLHintsExpandY | 
+   fH1->AddFrame(fFtop, new TGLayoutHints(kLHintsTop | kLHintsExpandY |
                                           kLHintsExpandX, 0, 0, 1, 2));
-   fH2->AddFrame(fFbottom, new TGLayoutHints(kLHintsTop | kLHintsExpandY | 
+   fH2->AddFrame(fFbottom, new TGLayoutHints(kLHintsTop | kLHintsExpandY |
                                              kLHintsExpandX, 0, 0, 1, 2));
 
    fH1->Resize(fFtop->GetDefaultWidth(), fH1->GetDefaultHeight()+20);
@@ -64,30 +64,30 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    hsplitter->SetFrame(fH1, kTRUE);
    fVf->AddFrame(hsplitter, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
 
-   fVf->AddFrame(fH2, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));   
-   
+   fVf->AddFrame(fH2, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+
    // button frame
    TGVerticalFrame *hframe = new TGVerticalFrame(this, 10, 10);
-   TGCompositeFrame *cframe2 = new TGCompositeFrame(hframe, 170, 50, 
+   TGCompositeFrame *cframe2 = new TGCompositeFrame(hframe, 170, 50,
                                              kHorizontalFrame | kFixedWidth);
    TGTextButton *save = new TGTextButton(cframe2, "&Save");
    cframe2->AddFrame(save, new TGLayoutHints(kLHintsTop | kLHintsExpandX,
                                              3, 2, 2, 2));
    save->Connect("Clicked()", "MyMainFrame", this, "DoSave()");
    save->SetToolTipText("Click on the button to save the application as C++ macro");
-   
+
    TGTextButton *exit = new TGTextButton(cframe2, "&Exit ","gApplication->Terminate(0)");
    cframe2->AddFrame(exit, new TGLayoutHints(kLHintsTop | kLHintsExpandX,
                                              2, 0, 2, 2));
    hframe->AddFrame(cframe2, new TGLayoutHints(kLHintsExpandX, 2, 2, 5, 1));
-   
+
    AddFrame(fVf, new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY));
    AddFrame(hframe, new TGLayoutHints(kLHintsExpandX, 2, 2, 5, 1));
-   
+
    // What to clean up in dtor
    SetCleanup(kDeepCleanup);
-     
-   // Set a name to the main frame   
+
+   // Set a name to the main frame
    SetWindowName("Horizontal Splitter");
    SetWMSizeHints(300, 250, 600, 600, 0, 0);
    MapSubwindows();

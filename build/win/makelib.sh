@@ -45,12 +45,12 @@ bindexp=bin/bindexplib
 rm -f $R__LIB
 
 if [ "$targetdir" = "lib" ]; then
-	libdir=lib
-	dlldir=bin
-	relocated=x
+   libdir=lib
+   dlldir=bin
+   relocated=x
 else 
-	libdir=$targetdir
-	dlldir=$targetdir
+   libdir=$targetdir
+   dlldir=$targetdir
 fi
 
 if [ "$R__PLATFORM" = "win32" ]; then

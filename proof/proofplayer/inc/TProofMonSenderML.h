@@ -39,7 +39,7 @@ public:
    TProofMonSenderML(const char *serv, const char *tag, const char *id = 0,
                      const char *subid = 0, const char *opt = "");
    virtual ~TProofMonSenderML();
-   
+
    // Summary record
    Int_t SendSummary(TList *, const char *);
 
@@ -48,7 +48,7 @@ public:
 
    // Detailed infoirmation about files
    Int_t SendFileInfo(TDSet *, TList *, const char *, const char *);
-   
+
    ClassDef(TProofMonSenderML, 0); // Interface for PROOF monitoring
 };
 

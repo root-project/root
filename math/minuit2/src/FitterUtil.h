@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Author: L. Moneta    10/2005  
+// Author: L. Moneta    10/2005
 
 /**********************************************************************
  *                                                                    *
@@ -11,9 +11,9 @@
 #define ROOT_FitterUtil_H_
 
 
-/// utility functions to be used in the fitter classes 
+/// utility functions to be used in the fitter classes
 
-namespace FitterUtil { 
+namespace FitterUtil {
 
   /**
      Evaluate integral of model function around the bin

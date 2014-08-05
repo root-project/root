@@ -79,9 +79,9 @@ TGTextLine::TGTextLine(const char *string)
 }
 
 //______________________________________________________________________________
-TGTextLine::TGTextLine(const TGTextLine& tl) : fLength(tl.fLength), 
+TGTextLine::TGTextLine(const TGTextLine& tl) : fLength(tl.fLength),
    fPrev(tl.fPrev), fNext(tl.fNext)
-{ 
+{
    //copy constructor
 
    fString = 0;
@@ -105,7 +105,7 @@ TGTextLine& TGTextLine::operator=(const TGTextLine& tl)
       fString[fLength] = 0;
       fPrev = tl.fPrev;
       fNext = tl.fNext;
-   } 
+   }
    return *this;
 }
 
@@ -319,7 +319,7 @@ TGText::TGText(const TGText& gt) :
   fRowCount(gt.fRowCount),
   fColCount(gt.fColCount),
   fLongestLine(gt.fLongestLine)
-{ 
+{
    //copy constructor
 }
 
@@ -336,7 +336,7 @@ TGText& TGText::operator=(const TGText& gt)
       fRowCount=gt.fRowCount;
       fColCount=gt.fColCount;
       fLongestLine=gt.fLongestLine;
-   } 
+   }
    return *this;
 }
 

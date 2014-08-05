@@ -84,7 +84,7 @@ ClassImp(TGListTree)
 //______________________________________________________________________________
 TGListTreeItem::TGListTreeItem(TGClient *client) :
    fClient(client),
-   fParent    (0), fFirstchild(0), fLastchild (0), fPrevsibling(0), 
+   fParent    (0), fFirstchild(0), fLastchild (0), fPrevsibling(0),
    fNextsibling(0),fOpen (kFALSE), fDNDState  (0),
    fY         (0), fXtext     (0), fYtext(0), fHeight(0)
 {
@@ -234,7 +234,7 @@ void TGListTreeItemStd::CheckAllChildren(Bool_t state)
 {
    // Set all child items of this one checked if state=kTRUE,
    // unchecked if state=kFALSE.
-   
+
    if (state) {
       if (!IsChecked())
          CheckItem();
@@ -243,7 +243,7 @@ void TGListTreeItemStd::CheckAllChildren(Bool_t state)
          Toggle();
    }
    CheckChildren(GetFirstChild(), state);
-   UpdateState();   
+   UpdateState();
 }
 
 //______________________________________________________________________________
@@ -265,7 +265,7 @@ void TGListTreeItemStd::CheckChildren(TGListTreeItem *item, Bool_t state)
       if (item->GetFirstChild()) {
          CheckChildren(item->GetFirstChild(), state);
       }
-      item->UpdateState();   
+      item->UpdateState();
       item = item->GetNextSibling();
    }
 }
@@ -944,7 +944,7 @@ Bool_t TGListTree::HandleKey(Event_t *event)
 
       if (fUserControlled && fEventHandled)
          return kTRUE;
-      
+
       switch ((EKeySym)keysym) {
          case kKey_Enter:
          case kKey_Return:
@@ -1226,7 +1226,7 @@ void TGListTree::LineUp(Bool_t /*select*/)
 
    Int_t height = 0;
    if (!fCurrent) return;
-   
+
    TGDimension dim = GetPageDimension();
    TGPosition pos = GetPagePosition();
    const TGPicture *pic1 = fCurrent->GetPicture();
@@ -1253,7 +1253,7 @@ void TGListTree::LineDown(Bool_t /*select*/)
 
    Int_t height;
    if (!fCurrent) return;
-   
+
    TGDimension dim = GetPageDimension();
    TGPosition pos = GetPagePosition();
    const TGPicture *pic1 = fCurrent->GetPicture();
@@ -1563,7 +1563,7 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
          DrawNode(id, item, *xroot, yline);
       }
       if (item->IsOpen() && item->fFirstchild) {
-         gVirtualX->DrawLine(id, fLineGC, xbranch, ybranchp, xbranch, 
+         gVirtualX->DrawLine(id, fLineGC, xbranch, ybranchp, xbranch,
                              yp+height);
       }
       if (pic1)
@@ -1578,7 +1578,7 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
 }
 
 //______________________________________________________________________________
-void TGListTree::DrawOutline(Handle_t id, TGListTreeItem *item, Pixel_t col, 
+void TGListTree::DrawOutline(Handle_t id, TGListTreeItem *item, Pixel_t col,
                              Bool_t clear)
 {
    // Draw a outline of color 'col' around an item.
@@ -1596,7 +1596,7 @@ void TGListTree::DrawOutline(Handle_t id, TGListTreeItem *item, Pixel_t col,
 #ifdef R__HAS_COCOA
    gVirtualX->DrawRectangle(id, fDrawGC, 1, item->fY - pos.fY, dim.fWidth-2, item->fHeight + 1);
 #else
-   gVirtualX->DrawRectangle(id, fDrawGC, 1, item->fYtext-pos.fY-2, 
+   gVirtualX->DrawRectangle(id, fDrawGC, 1, item->fYtext-pos.fY-2,
                             dim.fWidth-3, FontHeight()+4);
 #endif
    gVirtualX->SetForeground(fDrawGC, fgBlackPixel);
@@ -1617,11 +1617,11 @@ void TGListTree::DrawActive(Handle_t id, TGListTreeItem *item)
 #ifdef R__HAS_COCOA
    gVirtualX->FillRectangle(id, fDrawGC, 1, item->fY - pos.fY, width, item->fHeight + 1);
 #else
-   gVirtualX->FillRectangle(id, fDrawGC, 1, item->fYtext-pos.fY-1, width, 
+   gVirtualX->FillRectangle(id, fDrawGC, 1, item->fYtext-pos.fY-1, width,
                             FontHeight()+3);
 #endif
    gVirtualX->SetForeground(fDrawGC, fgBlackPixel);
-   gVirtualX->DrawString(id, fActiveGC, item->fXtext, 
+   gVirtualX->DrawString(id, fActiveGC, item->fXtext,
                          item->fYtext - pos.fY + FontAscent(),
                          item->GetText(), item->GetTextLength());
 }
@@ -1654,7 +1654,7 @@ void TGListTree::DrawItemName(Handle_t id, TGListTreeItem *item)
       gVirtualX->SetForeground(fColorGC, TColor::Number2Pixel(item->GetColor()));
       if (fColorMode & kColorUnderline) {
          Int_t y = item->fYtext-pos.fY + FontAscent() + 2;
-         gVirtualX->DrawLine(id, fColorGC, item->fXtext, y, 
+         gVirtualX->DrawLine(id, fColorGC, item->fXtext, y,
                              item->fXtext + width, y);
       }
       if (fColorMode & kColorBox) {
@@ -1767,7 +1767,7 @@ void TGListTree::PDeleteItem(TGListTreeItem *item)
       MouseOver(0,fLastEventState);
    }
 
-   delete item; 
+   delete item;
 }
 
 //______________________________________________________________________________
@@ -2451,7 +2451,7 @@ const TGGC &TGListTree::GetActiveGC()
       const TGGC *selgc = gClient->GetResourcePool()->GetSelectedGC();
       if (selgc)
          gcv.fForeground = selgc->GetForeground();
-      else 
+      else
          gcv.fForeground = fgWhitePixel;
       fgActiveGC = gClient->GetGC(&gcv, kTRUE);
    }
@@ -2798,13 +2798,13 @@ void TGListTree::UpdateChecked(TGListTreeItem *item, Bool_t redraw)
       }
       parent = parent->GetParent();
       if (parent && fCheckMode == kRecursive) {
-         if (!parent->IsChecked() && parent->GetFirstChild() && 
+         if (!parent->IsChecked() && parent->GetFirstChild() &&
              !parent->GetFirstChild()->HasUnCheckedChild()) {
             parent->SetCheckBoxPictures(fClient->GetPicture("checked_t.xpm"),
                                         fClient->GetPicture("unchecked_t.xpm"));
             parent->CheckItem(kTRUE);
          }
-         else if (parent->IsChecked() && parent->GetFirstChild() && 
+         else if (parent->IsChecked() && parent->GetFirstChild() &&
                   !parent->GetFirstChild()->HasCheckedChild()) {
             parent->SetCheckBoxPictures(fClient->GetPicture("checked_t.xpm"),
                                         fClient->GetPicture("unchecked_t.xpm"));
@@ -2841,10 +2841,10 @@ TGListTreeItem *TGListTree::FindItemByObj(TGListTreeItem *item, void *ptr)
 //______________________________________________________________________________
 void TGListTree::GetChecked(TList *checked)
 {
-   // Add all checked list tree items of this list tree into 
+   // Add all checked list tree items of this list tree into
    // the list 'checked'. This list is not adopted and must
    // be deleted by the user later.
-   
+
    if (!checked || !fFirst) return;
    TGListTreeItem *current = fFirst;
    if (current->IsChecked()) {
@@ -2880,8 +2880,8 @@ void TGListTree::CheckAllChildren(TGListTreeItem *item, Bool_t state)
 {
    // Check all child items of 'item' and 'item' itself according
    // to the state value: kTRUE means check all, kFALSE - uncheck all.
-   
-   if (item) 
+
+   if (item)
       item->CheckAllChildren(state);
 }
 

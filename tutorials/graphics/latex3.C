@@ -1,7 +1,7 @@
 //Example illustrating a TPaveText with Latex inside
 //Author: Rene Brun
 void latex3() {
-   
+
    TCanvas *c1 = new TCanvas("c1");
    TPaveText *pt = new TPaveText(.05,.1,.95,.8);
 

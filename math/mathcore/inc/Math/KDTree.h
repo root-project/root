@@ -7,8 +7,8 @@
  *                                                                    *
  **********************************************************************/
 //
-// Header file for KDTree class 
-// 
+// Header file for KDTree class
+//
 
 
 #ifndef ROOT_Math_KDTree
@@ -52,7 +52,7 @@ namespace ROOT
 
            UInt_t   GetAxis() const       {return fAxis;}
            void     SetAxis(UInt_t iAxis) {fAxis = iAxis;}
-  
+
         private:
            UInt_t   fAxis; //axis at which the points are compared
         };
@@ -83,12 +83,12 @@ namespace ROOT
         class SplitNode;
         class BinNode;
         class TerminalNode;
-  
+
         class BaseNode
         {
         public:
            //constructor and destructor
-           BaseNode(BaseNode* pParent = 0);     
+           BaseNode(BaseNode* pParent = 0);
            virtual ~BaseNode();
 
            //providing usual functionality of a tree
@@ -98,7 +98,7 @@ namespace ROOT
            virtual void             GetPointsWithinDist(const point_type& rRef,value_type fDist,std::vector<const point_type*>& vFoundPoints) const = 0;
            virtual Bool_t           Insert(const point_type& rPoint) = 0;
            virtual void             Print(int iRow = 0) const = 0;
-    
+
            //navigating the tree
            BaseNode*&                LeftChild()        {return fLeftChild;}
            const BaseNode*           LeftChild() const  {return fLeftChild;}
@@ -106,7 +106,7 @@ namespace ROOT
            const BaseNode*           Parent() const     {return fParent;}
            BaseNode*&                RightChild()       {return fRightChild;}
            const BaseNode*           RightChild() const {return fRightChild;}
-      
+
            //information about relative position of current node
            BaseNode*&                GetParentPointer();
            virtual Bool_t            IsHeadNode() const {return false;}
@@ -116,7 +116,7 @@ namespace ROOT
            // node should never be copied or assigned
            BaseNode(const BaseNode& ) {}
            BaseNode& operator=(const BaseNode& ) {return *this;}
-    
+
            //links to adjacent nodes
            BaseNode*                 fParent;     //!pointer to parent node
            BaseNode*                 fLeftChild;  //!pointer to left child
@@ -133,10 +133,10 @@ namespace ROOT
            //delegate everything to the actual root node of the tree
            virtual const BinNode*   FindNode(const point_type& rPoint) const {return Parent()->FindNode(rPoint);}
            virtual void             GetClosestPoints(const point_type& rRef,UInt_t nPoints,std::vector<std::pair<const _DataPoint*,Double_t> >& vFoundPoints) const;
-           virtual void             GetPointsWithinDist(const point_type& rRef,value_type fDist,std::vector<const _DataPoint*>& vFoundPoints) const; 
+           virtual void             GetPointsWithinDist(const point_type& rRef,value_type fDist,std::vector<const _DataPoint*>& vFoundPoints) const;
            virtual Bool_t           Insert(const point_type& rPoint) {return Parent()->Insert(rPoint);}
            virtual void             Print(Int_t) const {Parent()->Print();}
-    
+
         private:
            // node should never be copied
            HeadNode(const HeadNode& ) {}
@@ -144,7 +144,7 @@ namespace ROOT
 
            virtual HeadNode*        Clone();
            virtual bool             IsHeadNode() const {return true;}
-    
+
            // only delegate everything else is private and should not be used
            using BaseNode::Parent;
            using BaseNode::LeftChild;
@@ -153,7 +153,7 @@ namespace ROOT
            using BaseNode::GetParentPointer;
            using BaseNode::IsLeftChild;
         };
-  
+
         class SplitNode : public BaseNode
         {
         public:
@@ -164,7 +164,7 @@ namespace ROOT
            //accessing information about this split node
            const Cut*               GetCut() const {return fCut;}
            virtual void             Print(Int_t iRow = 0) const;
-    
+
         private:
            // node should never be copied
            SplitNode(const SplitNode& ) {}
@@ -175,9 +175,9 @@ namespace ROOT
            virtual void             GetClosestPoints(const point_type& rRef,UInt_t nPoints,std::vector<std::pair<const _DataPoint*,Double_t> >& vFoundPoints) const;
            virtual void             GetPointsWithinDist(const point_type& rRef,value_type fDist,std::vector<const _DataPoint*>& vFoundPoints) const;
            virtual Bool_t           Insert(const point_type& rPoint);
-      		                  
+
            const Cut*               fCut;     //pointer to cut object owned by this node
-        };  
+        };
 
         class BinNode : public BaseNode
         {
@@ -191,7 +191,7 @@ namespace ROOT
            virtual ~BinNode() {}
 
            // usual bin operations
-           virtual void                            EmptyBin(); 
+           virtual void                            EmptyBin();
            virtual const BinNode*                  FindNode(const point_type& rPoint) const;
            point_type                              GetBinCenter() const;
            Double_t                                GetBinContent() const {return GetSumw();}
@@ -207,13 +207,13 @@ namespace ROOT
            Double_t                                GetSumw() const {return fSumw;}
            Double_t                                GetSumw2() const {return fSumw2;}
            virtual Bool_t                          Insert(const point_type& rPoint);
-           Bool_t                                  IsInBin(const point_type& rPoint) const;   
+           Bool_t                                  IsInBin(const point_type& rPoint) const;
            virtual void                            Print(int iRow = 0) const;
-    
+
         protected:
            virtual BinNode*                        Clone();
-				            
-           // intrinsic bin properties	            
+
+           // intrinsic bin properties
            std::vector<tBoundary>                  fBoundaries;    //bin boundaries
            Double_t                                fSumw;          //sum of weights
            Double_t                                fSumw2;         //sum of weights^2
@@ -236,7 +236,7 @@ namespace ROOT
            friend class KDTree<_DataPoint>;
            //save some typing
            typedef std::pair<value_type,value_type> tBoundary;
-    
+
         public:
            //constructor and desctructor
            TerminalNode(Double_t iBucketSize,BaseNode* pParent = 0);
@@ -252,12 +252,12 @@ namespace ROOT
            const std::vector<const point_type*>&   GetPoints() const {return fDataPoints;}
            virtual void                            GetPointsWithinDist(const point_type& rRef,value_type fDist,std::vector<const _DataPoint*>& vFoundPoints) const;
            virtual void                            Print(int iRow = 0) const;
-      
+
         private:
            // node should never be copied
            TerminalNode(const TerminalNode& ) {}
            TerminalNode& operator=(const TerminalNode& ) {return *this;}
-    
+
            // save some typing
            typedef typename std::vector<const point_type* >::iterator         data_it;
            typedef typename std::vector<const point_type* >::const_iterator   const_data_it;
@@ -275,7 +275,7 @@ namespace ROOT
            void                                    SetSplitOption(eSplitOption opt) {fSplitOption = opt;}
            data_it                                 SplitEffectiveEntries();
            data_it                                 SplitBinContent();
-           void                                    UpdateBoundaries(); 
+           void                                    UpdateBoundaries();
 
            Bool_t                                  fOwnData;       // terminal node owns the data objects (default = false)
            eSplitOption                            fSplitOption;   // according to which figure of merit the node is splitted
@@ -283,7 +283,7 @@ namespace ROOT
            UInt_t                                  fSplitAxis;     // axis at which the next split will occur
            std::vector<const _DataPoint*>          fDataPoints;    // data points in this bucket
         };
-    
+
      public:
         //////////////////////////////////////////////////////////////////////
         //
@@ -319,12 +319,12 @@ namespace ROOT
 
         private:
            iterator(BinNode* pNode): fBin(pNode) {}
-    
+
            Bin*     Next() const;
            Bin*     Previous() const;
 
            mutable Bin* fBin;
-        };  
+        };
 
         //constructor and destructor
         KDTree(UInt_t iBucketSize);
@@ -360,7 +360,7 @@ namespace ROOT
         KDTree();
         KDTree(const KDTree<point_type>& ) {}
         KDTree<point_type>& operator=(const KDTree<point_type>& ) {return *this;}
-  
+
         BaseNode*  fHead;
         Double_t   fBucketSize;
         Bool_t     fIsFrozen;

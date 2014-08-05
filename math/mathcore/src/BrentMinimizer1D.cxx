@@ -22,9 +22,9 @@
   **********************************************************************/
 
 // Header file for class BrentMinimizer1D
-// 
+//
 // Created by: Maline  at Mon Feb  4 09:32:36 2008
-// 
+//
 //
 
 #include "Math/BrentMinimizer1D.h"
@@ -42,16 +42,16 @@ static int gDefaultNpx = 100; // default nunmber of points used in the grid to b
 static int gDefaultNSearch = 10;  // nnumber of time the iteration (bracketing -Brent ) is repeted
 
 
-   BrentMinimizer1D::BrentMinimizer1D(): IMinimizer1D(),                                          
-                                         fFunction(0), 
-                                         fLogScan(false), fNIter(0), 
-                                         fNpx(0), fStatus(-1), 
-                                         fXMin(0), fXMax(0), fXMinimum(0) 
+   BrentMinimizer1D::BrentMinimizer1D(): IMinimizer1D(),
+                                         fFunction(0),
+                                         fLogScan(false), fNIter(0),
+                                         fNpx(0), fStatus(-1),
+                                         fXMin(0), fXMax(0), fXMinimum(0)
 {
 // Default Constructor.
    fNpx = gDefaultNpx;
 }
- 
+
 void BrentMinimizer1D::SetDefaultNpx(int n) { gDefaultNpx = n; }
 
 void BrentMinimizer1D::SetDefaultNSearch(int n) { gDefaultNSearch = n; }
@@ -59,15 +59,15 @@ void BrentMinimizer1D::SetDefaultNSearch(int n) { gDefaultNSearch = n; }
 
 void BrentMinimizer1D::SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup)
 {
-// Sets function to be minimized. 
+// Sets function to be minimized.
 
    fFunction = &f;
    fStatus = -1;  // reset the status
 
-   if (xlow >= xup) 
+   if (xlow >= xup)
    {
       double tmp = xlow;
-      xlow = xup; 
+      xlow = xup;
       xup = tmp;
    }
    fXMin = xlow;
@@ -75,7 +75,7 @@ void BrentMinimizer1D::SetFunction(const ROOT::Math::IGenFunction& f, double xlo
 }
 
 
- 
+
 double BrentMinimizer1D::FValMinimum() const
 {   return (*fFunction)(fXMinimum); }
 
@@ -93,24 +93,24 @@ bool BrentMinimizer1D::Minimize( int maxIter, double absTol , double relTol)
 // repet search (Bracketing + Brent) until max number of search is reached (default is 10)
 // maxITer refers to the iterations inside the Brent algorithm
 
-   if (!fFunction) { 
+   if (!fFunction) {
        MATH_ERROR_MSG("BrentMinimizer1D::Minimize", "Function has not been set");
        return false;
    }
 
-   if (fLogScan && fXMin <= 0) { 
+   if (fLogScan && fXMin <= 0) {
       MATH_ERROR_MSG("BrentMinimizer1D::Minimize", "xmin is < 0 and log scan is set - disable it");
-      fLogScan = false; 
+      fLogScan = false;
    }
 
-   fNIter = 0; 
+   fNIter = 0;
    fStatus = -1;
 
    double xmin = fXMin;
    double xmax = fXMax;
-   
+
    int maxIter1 = gDefaultNSearch;  // external loop (number of search )
-   int maxIter2 = maxIter;          // internal loop inside the Brent algorithm 
+   int maxIter2 = maxIter;          // internal loop inside the Brent algorithm
 
    int niter1 = 0;
    int niter2 = 0;
@@ -118,7 +118,7 @@ bool BrentMinimizer1D::Minimize( int maxIter, double absTol , double relTol)
    while (!ok){
       if (niter1 > maxIter1){
          MATH_ERROR_MSG("BrentMinimizer1D::Minimize", "Search didn't converge");
-         fStatus = -2; 
+         fStatus = -2;
          return false;
       }
       double x = BrentMethods::MinimStep(fFunction, 0, xmin, xmax, 0, fNpx,fLogScan);
@@ -128,9 +128,9 @@ bool BrentMinimizer1D::Minimize( int maxIter, double absTol , double relTol)
       fXMinimum = x;
    }
 
-   fStatus = 0; 
+   fStatus = 0;
    return true;
-} 
+}
 
 
 const char * BrentMinimizer1D::Name() const

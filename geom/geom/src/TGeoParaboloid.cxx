@@ -16,9 +16,9 @@
 //            - the surface of revolution of a parabola described by:
 //                 z = a*(x*x + y*y) + b
 //       The parameters a and b are automatically computed from:
-//            - rlo - the radius of the circle of intersection between the 
+//            - rlo - the radius of the circle of intersection between the
 //              parabolic surface and the plane z = -dz
-//            - rhi - the radius of the circle of intersection between the 
+//            - rhi - the radius of the circle of intersection between the
 //              parabolic surface and the plane z = +dz
 //         | -dz = a*rlo*rlo + b
 //         |  dz = a*rhi*rhi + b      where: rlo != rhi, both >= 0
@@ -35,7 +35,7 @@
 #include "TMath.h"
 
 ClassImp(TGeoParaboloid)
-   
+
 //_____________________________________________________________________________
 TGeoParaboloid::TGeoParaboloid()
 {
@@ -46,7 +46,7 @@ TGeoParaboloid::TGeoParaboloid()
    fA   = 0;
    fB   = 0;
    SetShapeBit(TGeoShape::kGeoParaboloid);
-}   
+}
 
 //_____________________________________________________________________________
 TGeoParaboloid::TGeoParaboloid(Double_t rlo, Double_t rhi, Double_t dz)
@@ -104,16 +104,16 @@ Double_t TGeoParaboloid::Capacity() const
    return capacity;
 }
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoParaboloid::ComputeBBox()
 {
 // compute bounding box of the tube
    fDX = TMath::Max(fRlo, fRhi);
    fDY = fDX;
    fDZ = fDz;
-}   
+}
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoParaboloid::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
@@ -128,7 +128,7 @@ void TGeoParaboloid::ComputeNormal(const Double_t *point, const Double_t *dir, D
    if (safz<safr) {
       norm[2] = TMath::Sign(1., dir[2]);
       return;
-   }   
+   }
    Double_t talf = -2.*fA*r;
    Double_t calf = 1./TMath::Sqrt(1.+talf*talf);
    Double_t salf = talf * calf;
@@ -142,7 +142,7 @@ void TGeoParaboloid::ComputeNormal(const Double_t *point, const Double_t *dir, D
       norm[0] = -norm[0];
       norm[1] = -norm[1];
       norm[2] = -norm[2];
-   }   
+   }
 }
 
 //_____________________________________________________________________________
@@ -187,7 +187,7 @@ Double_t TGeoParaboloid::DistToParaboloid(const Double_t *point, const Double_t 
    Double_t prod = c*ainv;
    Double_t delta = sum*sum - 4.*prod;
    if (delta<0) return dist; // big
-   delta = TMath::Sqrt(delta); 
+   delta = TMath::Sqrt(delta);
    Double_t sone = TMath::Sign(1.,ainv);
    Int_t i = -1;
    while (i<2) {
@@ -199,11 +199,11 @@ Double_t TGeoParaboloid::DistToParaboloid(const Double_t *point, const Double_t 
          Double_t phi = TMath::ATan2(point[1], point[0]);
          Double_t ndotd = talf*(TMath::Cos(phi)*dir[0]+TMath::Sin(phi)*dir[1])+dir[2];
          if (!in) ndotd *= -1;
-         if (ndotd<0) return dist;         
-      } else return dist;   
+         if (ndotd<0) return dist;
+      } else return dist;
    }
    return TGeoShape::Big();
-}      
+}
 
 //_____________________________________________________________________________
 Double_t TGeoParaboloid::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
@@ -215,13 +215,13 @@ Double_t TGeoParaboloid::DistFromInside(const Double_t *point, const Double_t *d
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
-   
+
    Double_t dz = TGeoShape::Big();
    if (dir[2]<0) {
       dz = -(point[2]+fDz)/dir[2];
    } else if (dir[2]>0) {
       dz = (fDz-point[2])/dir[2];
-   }      
+   }
    Double_t dpara = DistToParaboloid(point, dir, kTRUE);
    return TMath::Min(dz, dpara);
 }
@@ -261,13 +261,13 @@ Double_t TGeoParaboloid::DistFromOutside(const Double_t *point, const Double_t *
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoParaboloid::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
-                             Double_t /*start*/, Double_t /*step*/) 
+TGeoVolume *TGeoParaboloid::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
+                             Double_t /*start*/, Double_t /*step*/)
 {
 // Divide the paraboloid along one axis.
    Error("Divide", "Paraboloid divisions not implemented");
    return 0;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoParaboloid::GetBoundingCylinder(Double_t *param) const
@@ -278,8 +278,8 @@ void TGeoParaboloid::GetBoundingCylinder(Double_t *param) const
    param[1] = fDX;                 // Rmax
    param[1] *= param[1];
    param[2] = 0.;                  // Phi1
-   param[3] = 360.;                // Phi2 
-}   
+   param[3] = 360.;                // Phi2
+}
 
 //_____________________________________________________________________________
 TGeoShape *TGeoParaboloid::GetMakeRuntimeShape(TGeoShape *, TGeoMatrix *) const
@@ -303,7 +303,7 @@ void TGeoParaboloid::InspectShape() const
 
 //_____________________________________________________________________________
 TBuffer3D *TGeoParaboloid::MakeBuffer3D() const
-{ 
+{
    // Creates a TBuffer3D describing *this* shape.
    // Coordinates are in local reference frame.
 
@@ -321,7 +321,7 @@ TBuffer3D *TGeoParaboloid::MakeBuffer3D() const
       SetSegsAndPols(*buff);
    }
 
-   return buff; 
+   return buff;
 }
 
 //_____________________________________________________________________________
@@ -409,14 +409,14 @@ Double_t TGeoParaboloid::Safety(const Double_t *point, Bool_t in) const
    if (r0sq<0) {
       if (in) return 0.;
       return safz;
-   }   
+   }
    Double_t dr = TMath::Sqrt(rsq)-TMath::Sqrt(r0sq);
    if (in) {
       if (dr>-1.E-8) return 0.;
       Double_t dz = TMath::Abs(point[2]-z0);
       safr = -dr*dz/TMath::Sqrt(dr*dr+dz*dz);
    } else {
-      if (dr<1.E-8) return safz;   
+      if (dr<1.E-8) return safz;
       Double_t talf = -2.*fA*TMath::Sqrt(r0sq);
       Double_t salf = talf/TMath::Sqrt(1.+talf*talf);
       safr = TMath::Abs(dr*salf);
@@ -440,7 +440,7 @@ void TGeoParaboloid::SetParaboloidDimensions(Double_t rlo, Double_t rhi, Double_
    Double_t dd = 1./(fRhi*fRhi - fRlo*fRlo);
    fA = 2.*fDz*dd;
    fB = - fDz * (fRlo*fRlo + fRhi*fRhi)*dd;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoParaboloid::SetDimensions(Double_t *param)
@@ -450,7 +450,7 @@ void TGeoParaboloid::SetDimensions(Double_t *param)
    Double_t rhi    = param[1];
    Double_t dz     = param[2];
    SetParaboloidDimensions(rlo, rhi, dz);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoParaboloid::SetPoints(Double_t *points) const
@@ -460,7 +460,7 @@ void TGeoParaboloid::SetPoints(Double_t *points) const
 //   ifirst = 0
 //   ipoint(i,j) = 1+i*n+j;                              i=[0,n]  j=[0,n-1]
 //   ilast = 1+n*(n+1)
-// Nsegments = n*(2*n+3)  
+// Nsegments = n*(2*n+3)
 //   lower: (0, j+1);                                    j=[0,n-1]
 //   circle(i): (n*i+1+j, n*i+1+(j+1)%n);                i=[0,n]  j=[0,n-1]
 //   generator(i): (n*i+1+j, n*(i+1)+1+j);               i,j=[0,n-1]
@@ -492,7 +492,7 @@ void TGeoParaboloid::SetPoints(Double_t *points) const
       } else if (i==n) {
          r = fRhi;
          z = fDz;
-      } else {      
+      } else {
          tt = TMath::Tan(ttmin + i*dtt);
          delta = tt*tt - 4*fA*fB; // should be always positive (a*b<0)
          r = 0.5*(tt+TMath::Sqrt(delta))/fA;
@@ -506,7 +506,7 @@ void TGeoParaboloid::SetPoints(Double_t *points) const
          points[indx++] = r*sph;
          points[indx++] = z;
       }
-   } 
+   }
    // center of the upper endcap
    points[indx++] = 0; // x
    points[indx++] = 0; // y
@@ -529,8 +529,8 @@ Int_t TGeoParaboloid::GetNmeshVertices() const
 // Returns number of vertices on the paraboloid mesh.
    Int_t n = gGeoManager->GetNsegments();
    return (n*(n+1)+2);
-}   
-   
+}
+
 //_____________________________________________________________________________
 void TGeoParaboloid::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
@@ -539,10 +539,10 @@ void TGeoParaboloid::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= 
    out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
    out << "   rlo = " << fRlo << ";" << std::endl;
    out << "   rhi = " << fRhi << ";" << std::endl;
-   out << "   dz  = " << fDZ << ";" << std::endl;  
+   out << "   dz  = " << fDZ << ";" << std::endl;
    out << "   TGeoShape *" << GetPointerName() << " = new TGeoParaboloid(\"" << GetName() << "\", rlo,rhi,dz);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
-}         
+}
 
 //_____________________________________________________________________________
 void TGeoParaboloid::SetPoints(Float_t *points) const
@@ -570,7 +570,7 @@ void TGeoParaboloid::SetPoints(Float_t *points) const
       } else if (i==n) {
          r = fRhi;
          z = fDz;
-      } else {      
+      } else {
          tt = TMath::Tan(ttmin + i*dtt);
          delta = tt*tt - 4*fA*fB; // should be always positive (a*b<0)
          r = 0.5*(tt+TMath::Sqrt(delta))/fA;
@@ -584,7 +584,7 @@ void TGeoParaboloid::SetPoints(Float_t *points) const
          points[indx++] = r*sph;
          points[indx++] = z;
       }
-   } 
+   }
    // center of the upper endcap
    points[indx++] = 0; // x
    points[indx++] = 0; // y
@@ -620,10 +620,10 @@ const TBuffer3D & TGeoParaboloid::GetBuffer3D(Int_t reqSections, Bool_t localFra
       if (!buffer.fLocalFrame) {
          TransformPoints(buffer.fPnts, buffer.NbPnts());
       }
-      SetSegsAndPols(buffer);  
+      SetSegsAndPols(buffer);
       buffer.SetSectionsValid(TBuffer3D::kRaw);
    }
-      
+
    return buffer;
 }
 

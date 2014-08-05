@@ -51,9 +51,9 @@ namespace ROOT {
 class TClingClassInfo;
 
 class TClingDataMemberInfo {
-   
+
 private:
-   
+
    cling::Interpreter    *fInterp;    // Cling interpreter, we do *not* own.
    TClingClassInfo       *fClassInfo; // Class we are iterating over, we own.
    bool                   fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
@@ -64,15 +64,15 @@ private:
 
    llvm::SmallVector<clang::DeclContext *, 2>   fContexts; // Set of DeclContext that we will iterate over.
 
-   unsigned int                                 fContextIdx; // Index in fContexts of DeclContext we are iterating over.   
+   unsigned int                                 fContextIdx; // Index in fContexts of DeclContext we are iterating over.
    mutable std::string fIoType;
    mutable std::string fIoName;
    inline void CheckForIoTypeAndName () const;
 
 public:
-   
+
    ~TClingDataMemberInfo() { delete fClassInfo; }
-   
+
    explicit TClingDataMemberInfo(cling::Interpreter *interp)
    : fInterp(interp), fClassInfo(0), fFirstTime(true), fSingleDecl(0), fContextIdx(0U)
    {
@@ -81,13 +81,13 @@ public:
       // Move to first global variable.
       InternalNext();
    }
-   
+
    TClingDataMemberInfo(cling::Interpreter *, TClingClassInfo *);
-   
-   // Takes concrete decl and disables the iterator. 
+
+   // Takes concrete decl and disables the iterator.
    // ValueDecl is the common base between enum constant, var decl and field decl
    TClingDataMemberInfo(cling::Interpreter *, const clang::ValueDecl *, TClingClassInfo *);
-   
+
    TClingDataMemberInfo(const TClingDataMemberInfo &rhs)
    {
       fInterp = rhs.fInterp;
@@ -97,7 +97,7 @@ public:
       fIterStack = rhs.fIterStack;
       fSingleDecl = rhs.fSingleDecl;
    }
-   
+
    TClingDataMemberInfo &operator=(const TClingDataMemberInfo &rhs)
    {
       if (this != &rhs) {
@@ -112,7 +112,7 @@ public:
    }
 
    typedef TDictionary::DeclId_t DeclId_t;
-   
+
    int                ArrayDim() const;
    TClingClassInfo   *GetClassInfo() const { return fClassInfo; }
    const clang::Decl *GetDecl() const { return fSingleDecl ? fSingleDecl : *fIter; }
@@ -130,7 +130,7 @@ public:
    const char        *Name() const;
    const char        *Title();
    const char        *ValidArrayIndex() const;
-   
+
 };
 
 #endif // ROOT_TClingDataMemberInfo

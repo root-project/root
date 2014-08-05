@@ -224,7 +224,7 @@ Bool_t TProofDraw::ProcessSingle(Long64_t entry, Int_t i)
       w = fWeight * fSelect->EvalInstance(i);
    else
       w = fWeight;
-   
+
    PDB(kDraw,3) Info("ProcessSingle","w[%d] = %f", i, w);
 
    if (w != 0.0) {
@@ -428,7 +428,7 @@ Bool_t TProofDraw::CompileVariables()
       }
       fManager->Add(fVar[i]);
    }
-   
+
    fManager->Sync();
    if (fManager->GetMultiplicity()==-1) fTree->SetBit(TTree::kForceRead);
    if (fManager->GetMultiplicity()>=1) fMultiplicity = fManager->GetMultiplicity();
@@ -436,7 +436,7 @@ Bool_t TProofDraw::CompileVariables()
    return kTRUE;
 #if 0
    // Commenting out to silence Coverity:
-   // but why was this made inactive? 
+   // but why was this made inactive?
    if (fDimension==1) {
       TClass *cl = fVar[0]->EvalClass();
       if (cl) {

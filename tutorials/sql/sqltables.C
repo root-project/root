@@ -16,20 +16,20 @@ const char* userpass = "pass";
 //const char* userpass = "pass";
 
 
-void sqltables() 
+void sqltables()
 {
    tables_write();
    tables_read();
 }
 
-void tables_write() 
+void tables_write()
 {
    // first connect to data base
-   // "recreate" option delete all your tables !!!! 
+   // "recreate" option delete all your tables !!!!
    TSQLFile* f = new TSQLFile(dbname, "recreate", username, userpass);
    if (f->IsZombie()) { delete f; return; }
- 
-   // you can change configuration only until first object 
+
+   // you can change configuration only until first object
    // is writen to TSQLFile
    f->SetUseSuffixes(kFALSE);
    f->SetArrayLimit(1000);
@@ -47,14 +47,14 @@ void tables_write()
    // without kSingleKey all TBox objects will appear as separate keys
    TList* arr = new TList;
    for(Int_t n=0;n<10;n++) {
-      TBox* b = new TBox(n*10,n*100,n*20,n*200);  
+      TBox* b = new TBox(n*10,n*100,n*20,n*200);
       arr->Add(b, Form("option_%d_option",n));
    }
    arr->Write("list",TObject::kSingleKey);
 
    // clones array is also strored as single key
    TClonesArray clones("TBox",10);
-   for(int n=0;n<10;n++) 
+   for(int n=0;n<10;n++)
        new (clones[n]) TBox(n*10,n*100,n*20,n*200);
    clones.Write("clones",TObject::kSingleKey);
 
@@ -63,22 +63,22 @@ void tables_write()
 }
 
 
-void tables_read() 
+void tables_read()
 {
-   // now open connection to database for read-only 
+   // now open connection to database for read-only
    TSQLFile* f = new TSQLFile(dbname, "open", username, userpass);
    if (f->IsZombie()) { delete f; return; }
-   
+
    // see list of keys
    f->ls();
-   
+
    // get histogram from DB and draw it
    TH1* h1 = (TH1*) f->Get("histo");
    if (h1!=0) {
        h1->SetDirectory(0);
        h1->Draw();
    }
-   
+
    // get TList with other objects
    TObject* obj = f->Get("list");
    cout << "Printout of TList object" << endl;
@@ -99,7 +99,7 @@ void tables_read()
    cout << "================== TH1I QUERY ================ " << endl;
    cout << f->MakeSelectQuery(TH1I::Class()) << endl;
    cout << "================ END of TH1I QUERY ================ " << endl;
-   
+
    // close connection to database
    delete f;
 }

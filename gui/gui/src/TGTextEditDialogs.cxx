@@ -223,7 +223,7 @@ Bool_t TGSearchDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                switch (parm1) {
                   case 1:
                      string = fBSearch->GetString();
-                     if (fType->fBuffer) 
+                     if (fType->fBuffer)
                         delete [] fType->fBuffer;
                      fType->fBuffer = StrDup(string);
                      gLastSearchString = string;
@@ -273,7 +273,7 @@ Bool_t TGSearchDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                break;
             case kTE_ENTER:
                string = fBSearch->GetString();
-               if (fType->fBuffer) 
+               if (fType->fBuffer)
                   delete [] fType->fBuffer;
                fType->fBuffer = StrDup(string);
                gLastSearchString = string;
@@ -355,7 +355,7 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
 
    fLPrintCommand = new TGLabel(fF3, new TGHotString("Print command:"));
    fBPrintCommand = new TGTextBuffer(50);
-   if ((printProg) && (*printProg)) 
+   if ((printProg) && (*printProg))
       fBPrintCommand->AddText(0, *printProg);
    fPrintCommandEntry = new TGTextEntry(fF3, fBPrintCommand);
    fPrintCommandEntry->Associate(this);
@@ -365,7 +365,7 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    fF3->AddFrame(fPrintCommandEntry, fL6);
 
    fLPrinter = new TGLabel(fF4, new TGHotString("Printer:"));
-   if ((printerName) && (*printerName)) 
+   if ((printerName) && (*printerName))
       fPrinterEntry = new TGComboBox(fF4, *printerName);
    fBPrinter = fPrinterEntry->GetTextEntry()->GetBuffer();
    fPrinterEntry->Resize(150, fPrinterEntry->GetTextEntry()->GetDefaultHeight());
@@ -440,7 +440,7 @@ void TGPrintDialog::GetPrinters()
    Int_t idx = 1, dflt =1;
 
    if (gVirtualX->InheritsFrom("TGX11") || gVirtualX->InheritsFrom("TGCocoa")) {
-      char *lpstat = gSystem->Which(gSystem->Getenv("PATH"), "lpstat", 
+      char *lpstat = gSystem->Which(gSystem->Getenv("PATH"), "lpstat",
                                     kExecutePermission);
       if (lpstat == 0) return;
       TString defaultprinter = gSystem->GetFromPipe("lpstat -d");

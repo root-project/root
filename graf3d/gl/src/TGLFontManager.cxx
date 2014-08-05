@@ -192,7 +192,7 @@ void TGLFont::RenderHelper(const Char *txt, Double_t x, Double_t y, Double_t ang
    const Double_t dx = urx - llx, dy = ury - lly;
    Double_t xc = 0., yc = 0.;
    const UInt_t align = gVirtualX->GetTextAlign();
-   
+
    //Here's the nice X11 bullshido: you call gVirtualX->SetTextAlign(11),
    //later gVirtualX->GetTextAling() will give you 7. Brilliant!
    //But with Cocoa you'll have 11. As it should be, of course.
@@ -568,7 +568,7 @@ Int_t TGLFontManager::GetExtendedFontStartIndex()
    if (fgStaticInitDone == kFALSE) InitStatics();
 
    assert(fgExtendedFontStart > 0 && "GetExtendedFontStartIndex, invalid index");
-   
+
    return fgExtendedFontStart;
 }
 

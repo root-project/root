@@ -52,8 +52,8 @@ public:
    void          SetResolution(Double_t resolution=1);
 
    //new functions January 2006
-   const char   *Background(Double_t **spectrum,Int_t ssizex, Int_t ssizey,Int_t numberIterationsX,Int_t numberIterationsY,Int_t direction,Int_t filterType);   
-   const char   *SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssizey, Int_t averWindow);   
+   const char   *Background(Double_t **spectrum,Int_t ssizex, Int_t ssizey,Int_t numberIterationsX,Int_t numberIterationsY,Int_t direction,Int_t filterType);
+   const char   *SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssizey, Int_t averWindow);
    const char   *Deconvolution(Double_t **source, Double_t **resp, Int_t ssizex, Int_t ssizey,Int_t numberIterations, Int_t numberRepetitions, Double_t boost);
    Int_t         SearchHighRes(Double_t **source,Double_t **dest, Int_t ssizex, Int_t ssizey, Double_t sigma, Double_t threshold, Bool_t backgroundRemove,Int_t deconIterations, Bool_t markov, Int_t averWindow);
 

@@ -51,7 +51,7 @@ protected:
    TTableRange   *fCurrentRange;  // Range of data currently loaded
    TTableRange   *fDataRange;     // Full range of the data set
    TTableRange   *fGotoRange;     // Range used by Goto frame
-   TGTableFrame  *fTableFrame;    // Container for the frames 
+   TGTableFrame  *fTableFrame;    // Container for the frames
    TGCanvas      *fCanvas;        // Canvas that will contains the cells
    UInt_t         fCellWidth;     // Default cell width
    UInt_t         fCellHeight;    // Default cell width
@@ -81,14 +81,14 @@ protected:
    Pixel_t fEvenRowBackground;    // Background color for even numbered rows
    Pixel_t fHeaderBackground;     // Background color for headers
 
-   // Those are neither used nor even initialized: 
+   // Those are neither used nor even initialized:
    // static const TGGC *fgDefaultSelectGC; // Default select GC
    // static const TGGC *fgDefaultBckgndGC; // Default cell background GC
    // static const Int_t fgDefaultTMode;    // Default text justify mode
 
    // Data members to keep track of LayoutHints that can't be
    // automatically cleaned
-   TList *fCellHintsList; 
+   TList *fCellHintsList;
    TList *fRHdrHintsList;
    TList *fCHdrHintsList;
    TList *fMainHintsList;   // List for all hints used in the main table frame
@@ -103,9 +103,9 @@ protected:
 
    virtual void DoRedraw();
 
-   virtual void Expand(UInt_t nrows, UInt_t ncolumns); 
-   virtual void ExpandColumns(UInt_t ncolumns); 
-   virtual void ExpandRows(UInt_t nrows); 
+   virtual void Expand(UInt_t nrows, UInt_t ncolumns);
+   virtual void ExpandColumns(UInt_t ncolumns);
+   virtual void ExpandRows(UInt_t nrows);
 
    virtual UInt_t GetRHdrHeight() const;
    virtual UInt_t GetCHdrWidth() const;
@@ -115,15 +115,15 @@ protected:
    virtual void ShrinkRows(UInt_t nrows);
 
    virtual void UpdateHeaders(EHeaderType type);
-   virtual void SetInterface(TVirtualTableInterface *interface, 
+   virtual void SetInterface(TVirtualTableInterface *interface,
                              UInt_t nrows = 50, UInt_t ncolumns = 20);
    virtual void ResizeTable(UInt_t nrows, UInt_t ncolumns);
 
    virtual void UpdateRangeFrame();
 
 public:
-   TGTable(const TGWindow *p = 0, Int_t id = 0, 
-           TVirtualTableInterface *interface = 0, UInt_t nrows = 50, 
+   TGTable(const TGWindow *p = 0, Int_t id = 0,
+           TVirtualTableInterface *interface = 0, UInt_t nrows = 50,
            UInt_t ncolumns = 20);
    virtual ~TGTable();
 
@@ -134,22 +134,22 @@ public:
 //    virtual void Select(TGTableCell *celltl, TGTableCell *cellbr);
 //    virtual void Select(UInt_t xcell1, UInt_t ycell1, UInt_t xcell2, UInt_t ycell2);
 //    virtual void SelectAll();
-//    virtual void SelectRow(TGTableCell *cell); 
-//    virtual void SelectRow(UInt_t row); 
-//    virtual void SelectRows(UInt_t row, UInt_t nrows); 
-//    virtual void SelectColumn(TGTableCell *cell); 
-//    virtual void SelectColumn(UInt_t column); 
-//    virtual void SelectColumns(UInt_t column, UInt_t ncolumns); 
+//    virtual void SelectRow(TGTableCell *cell);
+//    virtual void SelectRow(UInt_t row);
+//    virtual void SelectRows(UInt_t row, UInt_t nrows);
+//    virtual void SelectColumn(TGTableCell *cell);
+//    virtual void SelectColumn(UInt_t column);
+//    virtual void SelectColumns(UInt_t column, UInt_t ncolumns);
 
-//    virtual void SetSelectGC(TGGC *gc); 
-//    virtual void SetTextJustify(Int_t tmode); 
+//    virtual void SetSelectGC(TGGC *gc);
+//    virtual void SetTextJustify(Int_t tmode);
 
    // Cells
-   virtual const TGTableCell* GetCell(UInt_t i, UInt_t j) const; 
-   virtual TGTableCell* GetCell(UInt_t i, UInt_t j); 
-   
-   virtual const TGTableCell* FindCell(TGString label) const; 
-   virtual TGTableCell* FindCell(TGString label); 
+   virtual const TGTableCell* GetCell(UInt_t i, UInt_t j) const;
+   virtual TGTableCell* GetCell(UInt_t i, UInt_t j);
+
+   virtual const TGTableCell* FindCell(TGString label) const;
+   virtual TGTableCell* FindCell(TGString label);
 
    virtual void Show();
 
@@ -176,7 +176,7 @@ public:
 //    // Remove rows or columns.
 //    virtual void RemoveRows(UInt_t row, UInt_t nrows = 1);
 //    virtual void RemoveColumns(UInt_t column, UInt_t ncolumns = 1);
-   
+
    // Update view
    virtual void UpdateView();
 
@@ -188,7 +188,7 @@ public:
    virtual UInt_t       GetNTableCells() const;
    virtual UInt_t       GetNDataCells() const;
    virtual const  TTableRange *GetCurrentRange() const;
-   
+
    virtual TVirtualTableInterface *GetInterface() { return fInterface; }
 
    virtual TGCanvas                 *GetCanvas() { return fCanvas; }
@@ -200,13 +200,13 @@ public:
    virtual TGTableHeader            *GetColumnHeader(const UInt_t column);
    virtual TGTableHeader            *GetTableHeader();
 
-//    virtual const TGGC*  GetSelectGC() const; 
-//    virtual const TGGC*  GetCellBckgndGC(TGTableCell *cell) const; 
-//    virtual const TGGC*  GetCellBckgndGC(UInt_t row, UInt_t column) const; 
-   
+//    virtual const TGGC*  GetSelectGC() const;
+//    virtual const TGGC*  GetCellBckgndGC(TGTableCell *cell) const;
+//    virtual const TGGC*  GetCellBckgndGC(UInt_t row, UInt_t column) const;
+
    virtual Pixel_t GetRowBackground(UInt_t row) const;
    virtual Pixel_t GetHeaderBackground() const ;
-   
+
    virtual void SetOddRowBackground(Pixel_t pixel);
    virtual void SetEvenRowBackground(Pixel_t pixel);
    virtual void SetHeaderBackground(Pixel_t pixel);
@@ -214,7 +214,7 @@ public:
 
    // Range manipulators
    virtual void MoveTable(Int_t rows, Int_t columns);
-   virtual void GotoTableRange(Int_t xtl, Int_t ytl, 
+   virtual void GotoTableRange(Int_t xtl, Int_t ytl,
                                Int_t xbr, Int_t ybr);
    // Operators
    virtual TGTableCell* operator() (UInt_t row, UInt_t column);

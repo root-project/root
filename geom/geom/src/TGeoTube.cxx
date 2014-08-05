@@ -171,7 +171,7 @@ Double_t TGeoTube::Capacity() const
 {
 // Computes capacity of the shape in [length^3]
    return TGeoTube::Capacity(fRmin,fRmax, fDz);
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoTube::Capacity(Double_t rmin, Double_t rmax, Double_t dz)
@@ -179,7 +179,7 @@ Double_t TGeoTube::Capacity(Double_t rmin, Double_t rmax, Double_t dz)
 // Computes capacity of the shape in [length^3]
    Double_t capacity = 2.*TMath::Pi()*(rmax*rmax-rmin*rmin)*dz;
    return capacity;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoTube::ComputeBBox()
@@ -616,7 +616,7 @@ TBuffer3D *TGeoTube::MakeBuffer3D() const
       nbPnts = 2*(n+1);
       nbSegs = 5*n;
       nbPols = 3*n;
-   }   
+   }
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
                                    nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols);
    if (buff)
@@ -770,7 +770,7 @@ void TGeoTube::SetSegsAndPols(TBuffer3D &buffer) const
       buffer.fPols[indx+3] = 3*n+(j+1)%n;
       buffer.fPols[indx+4] = 3*n+j;
    }
-   // top triangles (2n,3n-1)  
+   // top triangles (2n,3n-1)
    for (j = 0; j < n; j++) {
       indx = 6*n + 5*n + 5*j;
       buffer.fPols[indx  ] = c;
@@ -892,7 +892,7 @@ Bool_t TGeoTube::GetPointsOnSegments(Int_t npoints, Double_t *array) const
    if (npoints > (npoints/2)*2) {
       Error("GetPointsOnSegments","Npoints must be even number");
       return kFALSE;
-   }   
+   }
    Int_t nc = 0;
    if (HasRmin()) nc = (Int_t)TMath::Sqrt(0.5*npoints);
    else           nc = (Int_t)TMath::Sqrt(1.*npoints);
@@ -923,7 +923,7 @@ Bool_t TGeoTube::GetPointsOnSegments(Int_t npoints, Double_t *array) const
       }
    }
    return kTRUE;
-}                    
+}
 
 //_____________________________________________________________________________
 void TGeoTube::SetPoints(Double_t *points) const
@@ -950,7 +950,7 @@ void TGeoTube::SetPoints(Double_t *points) const
             points[indx+6*n] = dz;
             points[indx]     =-dz;
             indx++;
-         }   
+         }
          // (n, 2n-1) lower rmax circle
          // (3n, 4n-1) upper rmax circle
          for (j = 0; j < n; j++) {
@@ -983,7 +983,7 @@ void TGeoTube::SetPoints(Double_t *points) const
             points[indx]    =-dz;
             indx++;
          }
-      }   
+      }
    }
 }
 
@@ -1012,7 +1012,7 @@ void TGeoTube::SetPoints(Float_t *points) const
             points[indx+6*n] = dz;
             points[indx]     =-dz;
             indx++;
-         }   
+         }
          // (n, 2n-1) lower rmax circle
          // (3n, 4n-1) upper rmax circle
          for (j = 0; j < n; j++) {
@@ -1045,7 +1045,7 @@ void TGeoTube::SetPoints(Float_t *points) const
             points[indx]    =-dz;
             indx++;
          }
-      }   
+      }
    }
 }
 
@@ -1075,7 +1075,7 @@ void TGeoTube::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
       nvert = n*4;
       nsegs = n*8;
       npols = n*4;
-   }   
+   }
 }
 
 //_____________________________________________________________________________
@@ -1113,7 +1113,7 @@ const TBuffer3D & TGeoTube::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
          nbPnts = 2*(n+1);
          nbSegs = 5*n;
          nbPols = 3*n;
-      }   
+      }
       if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
@@ -1186,7 +1186,7 @@ TGeoTubeSeg::TGeoTubeSeg()
 TGeoTubeSeg::TGeoTubeSeg(Double_t rmin, Double_t rmax, Double_t dz,
                           Double_t phiStart, Double_t phiEnd)
             :TGeoTube(rmin, rmax, dz),
-             fPhi1(0.), fPhi2(0.), fS1(0.), fC1(0.), fS2(0.), fC2(0.), fSm(0.), fCm(0.), fCdfi(0.)            
+             fPhi1(0.), fPhi2(0.), fS1(0.), fC1(0.), fS2(0.), fC2(0.), fSm(0.), fCm(0.), fCdfi(0.)
 {
    // Default constructor specifying minimum and maximum radius.
    // The segment will be from phiStart to phiEnd expressed in degree.
@@ -1200,7 +1200,7 @@ TGeoTubeSeg::TGeoTubeSeg(const char *name, Double_t rmin, Double_t rmax, Double_
                           Double_t phiStart, Double_t phiEnd)
             :TGeoTube(name, rmin, rmax, dz)
 {
-   // Default constructor specifying minimum and maximum radius 
+   // Default constructor specifying minimum and maximum radius
    // The segment will be from phiStart to phiEnd expressed in degree.
    SetShapeBit(TGeoShape::kGeoTubeSeg);
    SetTubsDimensions(rmin, rmax, dz, phiStart, phiEnd);
@@ -1233,7 +1233,7 @@ void TGeoTubeSeg::AfterStreamer()
 {
 // Function called after streaming an object of this class.
    InitTrigonometry();
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoTubeSeg::InitTrigonometry()
@@ -1257,7 +1257,7 @@ Double_t TGeoTubeSeg::Capacity() const
 {
 // Computes capacity of the shape in [length^3]
    return TGeoTubeSeg::Capacity(fRmin,fRmax,fDz,fPhi1,fPhi2);
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoTubeSeg::Capacity(Double_t rmin, Double_t rmax, Double_t dz, Double_t phiStart, Double_t phiEnd)
@@ -1265,7 +1265,7 @@ Double_t TGeoTubeSeg::Capacity(Double_t rmin, Double_t rmax, Double_t dz, Double
 // Computes capacity of the shape in [length^3]
    Double_t capacity = TMath::Abs(phiEnd-phiStart)*TMath::DegToRad()*(rmax*rmax-rmin*rmin)*dz;
    return capacity;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoTubeSeg::ComputeBBox()
@@ -1995,7 +1995,7 @@ Double_t TGeoTubeSeg::Safety(const Double_t *point, Bool_t in) const
       if ((fPhi2-fPhi1)>=360.) return safe;
       Double_t safphi = TGeoShape::SafetyPhi(point,in,fPhi1,fPhi2);
       return TMath::Min(safe, safphi);
-   }   
+   }
    // Point expected to be outside
    Bool_t inphi  = kFALSE;
    Double_t cpsi=point[0]*fCm+point[1]*fSm;
@@ -2009,7 +2009,7 @@ Double_t TGeoTubeSeg::Safety(const Double_t *point, Bool_t in) const
       return safe;
    }
    // Point outside the phi range
-   // Compute projected radius of the (r,phi) position vector onto 
+   // Compute projected radius of the (r,phi) position vector onto
    // phi1 and phi2 edges and take the maximum for chosing the side.
    Double_t rproj = TMath::Max(point[0]*fC1+point[1]*fS1, point[0]*fC2+point[1]*fS2);
    saf[1] = fRmin-rproj;
@@ -2020,7 +2020,7 @@ Double_t TGeoTubeSeg::Safety(const Double_t *point, Bool_t in) const
       // rproj not within (rmin,rmax) - > no need to calculate safphi
       safe = TMath::Sqrt(rsq-rproj*rproj+safe*safe);
       return (saf[0]<0) ? safe : TMath::Sqrt(safe*safe+saf[0]*saf[0]);
-   }   
+   }
    Double_t safphi = TGeoShape::SafetyPhi(point,in,fPhi1,fPhi2);
    return (saf[0]<0) ? safphi : TMath::Sqrt(saf[0]*saf[0]+safphi*safphi);
 }
@@ -2048,7 +2048,7 @@ Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, D
       default:
          saf[0] = dz-TMath::Abs(point[2]);
    }
-   
+
    if (in) {
       saf[1] = r-rmin;
       saf[2] = rmax-r;
@@ -2056,16 +2056,16 @@ Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, D
       if ((phi2d-phi1d)>=360.) return safe;
       Double_t safphi = TGeoShape::SafetyPhi(point,in,phi1d,phi2d);
       return TMath::Min(safe, safphi);
-   }   
+   }
    // Point expected to be outside
    saf[0] = -saf[0];
    Bool_t inphi  = kFALSE;
    Double_t phi1 = phi1d*TMath::DegToRad();
    Double_t phi2 = phi2d*TMath::DegToRad();
-   
+
    Double_t fio = 0.5*(phi1+phi2);
    Double_t cm = TMath::Cos(fio);
-   Double_t sm = TMath::Sin(fio);   
+   Double_t sm = TMath::Sin(fio);
    Double_t cpsi=point[0]*cm+point[1]*sm;
    Double_t dfi = 0.5*(phi2-phi1);
    Double_t cdfi = TMath::Cos(dfi);
@@ -2078,13 +2078,13 @@ Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, D
       return safe;
    }
    // Point outside the phi range
-   // Compute projected radius of the (r,phi) position vector onto 
+   // Compute projected radius of the (r,phi) position vector onto
    // phi1 and phi2 edges and take the maximum for chosing the side.
    Double_t c1 = TMath::Cos(phi1);
    Double_t s1 = TMath::Sin(phi1);
    Double_t c2 = TMath::Cos(phi2);
    Double_t s2 = TMath::Sin(phi2);
-   
+
    Double_t rproj = TMath::Max(point[0]*c1+point[1]*s1, point[0]*c2+point[1]*s2);
    saf[1] = rmin-rproj;
    saf[2] = rproj-rmax;
@@ -2094,7 +2094,7 @@ Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, D
       // rproj not within (rmin,rmax) - > no need to calculate safphi
       safe = TMath::Sqrt(rsq-rproj*rproj+safe*safe);
       return (saf[0]<0) ? safe : TMath::Sqrt(safe*safe+saf[0]*saf[0]);
-   }   
+   }
    Double_t safphi = TGeoShape::SafetyPhi(point,in,phi1d,phi2d);
    return (saf[0]<0) ? safphi : TMath::Sqrt(saf[0]*saf[0]+safphi*safphi);
 }
@@ -2152,7 +2152,7 @@ Bool_t TGeoTubeSeg::GetPointsOnSegments(Int_t npoints, Double_t *array) const
    if (npoints > (npoints/2)*2) {
       Error("GetPointsOnSegments","Npoints must be even number");
       return kFALSE;
-   }   
+   }
    Int_t nc = (Int_t)TMath::Sqrt(0.5*npoints);
    Double_t dphi = (fPhi2-fPhi1)*TMath::DegToRad()/(nc-1);
    Double_t phi = 0;
@@ -2167,7 +2167,7 @@ Bool_t TGeoTubeSeg::GetPointsOnSegments(Int_t npoints, Double_t *array) const
       if (i == (nc-1)) {
          nphi = ntop;
          dphi = (fPhi2-fPhi1)*TMath::DegToRad()/(nphi-1);
-      }   
+      }
       z = -fDz + i*dz;
       // loop points on circle sections
       for (Int_t j=0; j<nphi; j++) {
@@ -2182,7 +2182,7 @@ Bool_t TGeoTubeSeg::GetPointsOnSegments(Int_t npoints, Double_t *array) const
    }
    return kTRUE;
 }
-   
+
 //_____________________________________________________________________________
 void TGeoTubeSeg::SetPoints(Double_t *points) const
 {
@@ -2441,7 +2441,7 @@ Double_t TGeoCtub::Capacity() const
 // Computes capacity of the shape in [length^3]
    Double_t capacity = TGeoTubeSeg::Capacity();
    return capacity;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoCtub::ComputeBBox()

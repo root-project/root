@@ -7,12 +7,12 @@
  *                                                                    *
  **********************************************************************/
 //
-// Implementation file for KDTree class 
-// 
+// Implementation file for KDTree class
+//
 
 
 #ifndef KD_TREE_ICC
-#define KD_TREE_ICC 
+#define KD_TREE_ICC
 
 // STL include(s)
 #include <iostream>
@@ -43,8 +43,8 @@ namespace ROOT
          //        the minimum bucket population.
          //        However, given a reasonably large bucket size with respect to characteristic
          //        event weights and sufficient statistics, most of the buckets will have
-         //        a population between [0.8 * iBucketSize .. 2 * iBucketSize]  
-  
+         //        a population between [0.8 * iBucketSize .. 2 * iBucketSize]
+
          // create dummy terminal node as head
          TerminalNode* pTerminal = new TerminalNode(iBucketSize);
          fHead = new HeadNode(*pTerminal);
@@ -72,7 +72,7 @@ namespace ROOT
          //Note: - In case the option SetOWner(true) has been called beforehand and
          //        the tree is not yet frozen, all contained data point objects are
          //        deleted as well.
-  
+
          delete fHead;
       }
 
@@ -89,7 +89,7 @@ namespace ROOT
          //Note: - In case the option SetOWner(true) has been called beforehand and
          //        the tree is not yet frozen, all contained data point objects are
          //        deleted as well.
-  
+
          for(iterator it = First(); it != End(); ++it)
             it->EmptyBin();
       }
@@ -104,7 +104,7 @@ namespace ROOT
          //represents the 'one step after the last bin' as well as 'one step before
          //the first bin'. However, you should not try to increment/decrement this
          //iterator.
-  
+
          return iterator(0);
       }
 
@@ -118,7 +118,7 @@ namespace ROOT
          //represents the 'one step after the last bin' as well as 'one step before
          //the first bin'. However, you should not try to increment/decrement this
          //iterator.
-  
+
          return iterator(0);
       }
 
@@ -169,7 +169,7 @@ namespace ROOT
          //
          //Note: - Technically it means that all TerminalNodes are converted to BinNodes
          //        resulting in a loss of all information related to individual data points.
-  
+
          // do it only once
          if(!fIsFrozen)
          {
@@ -186,7 +186,7 @@ namespace ROOT
                pBin->Parent() = (*bit)->Parent();
                delete *bit;
             }
-    
+
             fIsFrozen = true;
          }
       }
@@ -209,7 +209,7 @@ namespace ROOT
          //vFoundPoints is ordered in the sense that the point closest to the reference comes first.
          //
          //Note: - This method works only if the tree has not yet been frozen.
-  
+
          // check bad input and that tree is not frozen yet
          if((nPoints > 0) && (!fIsFrozen))
             fHead->GetClosestPoints(rRef,nPoints,vFoundPoints);
@@ -222,7 +222,7 @@ namespace ROOT
          //returns the total effective entries of the tree
          //
          //Note: - This is not the sum of effective entries of all buckets!
-  
+
          Double_t fSumw = 0;
          Double_t fSumw2 = 0;
          for(iterator it = First(); it != End(); ++it)
@@ -239,7 +239,7 @@ namespace ROOT
       UInt_t KDTree<_DataPoint>::GetEntries() const
       {
          //returns the number of filled data points
-  
+
          UInt_t iPoints = 0;
          for(iterator it = First(); it != End(); ++it)
             iPoints += it->GetEntries();
@@ -255,7 +255,7 @@ namespace ROOT
          //
          //Note: - The current tree remains unchanged.
          //      - The new tree is owned by the user (-> you should invoke 'delete' if you do not need it anymore)!
-  
+
          KDTree<_DataPoint>* pTree = new KDTree<_DataPoint>();
          pTree->fBucketSize = fBucketSize;
          pTree->fHead = fHead->Clone();
@@ -269,7 +269,7 @@ namespace ROOT
       UInt_t KDTree<_DataPoint>::GetNBins() const
       {
          //returns the number of buckets
-  
+
          UInt_t iBins = 0;
          for(iterator it = First(); it != End(); ++it)
             ++iBins;
@@ -293,7 +293,7 @@ namespace ROOT
          //
          //Note - This method works only if the tree has not yet been frozen.
          //     - Distance is defined as euclidian distance in a k-dimensional space.
-  
+
          // valid distance given and tree not frozen yet
          if((fDist > 0) && (!fIsFrozen))
             fHead->GetPointsWithinDist(rRef,fDist,vFoundPoints);
@@ -304,7 +304,7 @@ namespace ROOT
       Double_t KDTree<_DataPoint>::GetTotalSumw() const
       {
          //returns the total sum of weights
-  
+
          Double_t fSumw = 0;
          for(iterator it = First(); it != End(); ++it)
             fSumw += it->GetSumw();
@@ -317,7 +317,7 @@ namespace ROOT
       Double_t KDTree<_DataPoint>::GetTotalSumw2() const
       {
          //returns the total sum of weights^2
-  
+
          Double_t fSumw2 = 0;
          for(iterator it = First(); it != End(); ++it)
             fSumw2 += it->GetSumw2();
@@ -370,7 +370,7 @@ namespace ROOT
          //        deleted as well.
          //      - The 'frozen' status is reset to false. Otherwise you won't be able to
          //        create splittings and the tree would consist of only one large bucket.
-  
+
          // delete current tree
          delete fHead->Parent();
          // create new (and empty) top bucket
@@ -441,12 +441,12 @@ namespace ROOT
          //        returning the dimensionality of the data point.
          //      - The dimensionality of the two data points is higher than the currently
          //        set comparison axis.
-  
+
          assert(pFirst && pSecond && (fAxis < KDTree<_DataPoint>::Dimension()));
 
          return (pFirst->GetCoordinate(fAxis) < pSecond->GetCoordinate(fAxis));
       }
-  
+
 //______________________________________________________________________________
       template<class _DataPoint>
       bool KDTree<_DataPoint>::Cut::operator<(const _DataPoint& rPoint) const
@@ -462,7 +462,7 @@ namespace ROOT
          //        returning the dimensionality of the data point.
          //      - The dimensionality of the given data point is higher than the cut
          //        axis.
-  
+
          assert(Dimension() > fAxis);
          return (fCutValue < rPoint.GetCoordinate(fAxis));
       }
@@ -506,7 +506,7 @@ namespace ROOT
          //Note: - both children are deleted but no pointer rearrangement is done
          //        -> should not be a problem as long as you do not try to rely on
          //           tree internal information
-  
+
          delete LeftChild();
          delete RightChild();
       }
@@ -518,7 +518,7 @@ namespace ROOT
          //returns a reference to the pointer from the parent node to the current node
          //
          //Note: - This shoud never be called for the head node (as it is the head!)
-  
+
          assert(!IsHeadNode());
 
          if(Parent()->Parent() == this)
@@ -540,13 +540,13 @@ namespace ROOT
          //checks whether the current node is a left node
          //
          //Note: - returns false in the case of the head node (which is no child at all)
-  
+
          if(Parent()->IsHeadNode())
             return false;
          else
             return (Parent()->LeftChild() == this);
       }
-  
+
 //______________________________________________________________________________
       template<class _DataPoint>
       typename KDTree<_DataPoint>::HeadNode* KDTree<_DataPoint>::HeadNode::Clone()
@@ -555,7 +555,7 @@ namespace ROOT
          //
          //Note: - The Clone() function is propagated to the whole tree -> the returned
          //        pointer is the head node of a complete new tree.
-  
+
          BaseNode* pParent = Parent()->Clone();
          HeadNode* pHead = new HeadNode(*pParent);
          pParent->Parent() = pHead;
@@ -596,17 +596,17 @@ namespace ROOT
          //
          //Note: - As a split node can never be a leaf, always the two child nodes has to
          //        be passed at construction time.
-  
+
          this->LeftChild() = &rLeft;
          this->RightChild() = &rRight;
       }
-  
+
 //______________________________________________________________________________
       template<class _DataPoint>
       KDTree<_DataPoint>::SplitNode::~SplitNode()
       {
          // standard destructor
-  
+
          delete fCut;
       }
 
@@ -617,12 +617,12 @@ namespace ROOT
          //creates a direct copy of this node
          //
          //This also involves the copying of the child nodes.
-  
+
          BaseNode* pLeft = this->LeftChild()->Clone();
          BaseNode* pRight = this->RightChild()->Clone();
 
          SplitNode* pSplit = new SplitNode(fCut->GetAxis(),fCut->GetCutValue(),*pLeft,*pRight);
-  
+
          pLeft->Parent() = pSplit;
          pRight->Parent() = pSplit;
 
@@ -634,7 +634,7 @@ namespace ROOT
       const typename KDTree<_DataPoint>::BinNode* KDTree<_DataPoint>::SplitNode::FindNode(const _DataPoint& rPoint) const
       {
          //finds bin node containing the given reference point
-  
+
          // pPoint < cut -> left sub tree
          if(*fCut > rPoint)
             return this->LeftChild()->FindNode(rPoint);
@@ -655,7 +655,7 @@ namespace ROOT
          //       vFoundPoints - vector in which the result is stored as pair <pointer to found data point,distance to reference point>
          //
          //Note: vFoundPoints is ordered in the sense that the found point closest to the reference point comes first.
-  
+
          // rRef < cut -> left sub tree
          if(*fCut > rRef)
          {
@@ -671,7 +671,7 @@ namespace ROOT
          else
          {
             this->RightChild()->GetClosestPoints(rRef,nPoints,vFoundPoints);
-    
+
             // number of found points lower than wanted number of points
             // or: sphere with (radius = largest distance between rRef and vFoundPoints) intersects the splitting plane
             // --> look also in left sub bucket
@@ -692,7 +692,7 @@ namespace ROOT
          //       vFoundPoints - vector in which all found points are stored
          //
          //Note: vFoundPoints ist NOT ordered.
-  
+
          // does the sphere around rRef intersect the splitting plane?
          // no -> check only points in sub bucket which rRef belongs to
          if(fabs(rRef.GetCoordinate(fCut->GetAxis()) - fCut->GetCutValue()) > fDist)
@@ -702,7 +702,7 @@ namespace ROOT
                this->LeftChild()->GetPointsWithinDist(rRef,fDist,vFoundPoints);
             // rRef >= cut -> right sub tree
             else
-               this->RightChild()->GetPointsWithinDist(rRef,fDist,vFoundPoints);    
+               this->RightChild()->GetPointsWithinDist(rRef,fDist,vFoundPoints);
          }
          // yes -> check points in both sub buckets
          else
@@ -717,7 +717,7 @@ namespace ROOT
       inline Bool_t KDTree<_DataPoint>::SplitNode::Insert(const _DataPoint& rPoint)
       {
          //inserts a new data point in the tree
-  
+
          // pPoint < cut -> left sub tree
          if(*fCut > rPoint)
             return this->LeftChild()->Insert(rPoint);
@@ -731,7 +731,7 @@ namespace ROOT
       void KDTree<_DataPoint>::SplitNode::Print(int iRow) const
       {
          //prints some information about the current node
-  
+
          std::cout << "SplitNode at " << this << " in row " << iRow << std::endl;
          std::cout << "cut on " << fCut->GetCutValue() << " at axis " << fCut->GetAxis() << std::endl;
 
@@ -764,7 +764,7 @@ namespace ROOT
          //
          //Note: - The resulting bin node is NOT connected to any other node
          //        -> it is not part of any tree
-  
+
          this->Parent() = 0;
          this->LeftChild() = 0;
          this->RightChild() = 0;
@@ -775,7 +775,7 @@ namespace ROOT
       typename KDTree<_DataPoint>::BinNode* KDTree<_DataPoint>::BinNode::Clone()
       {
          //creates indentical copy which is not part of the tree anymore
-  
+
          return new BinNode(*this);
       }
 
@@ -784,7 +784,7 @@ namespace ROOT
       void KDTree<_DataPoint>::BinNode::EmptyBin()
       {
          //resets bin content, sumw, asumw2 and entries
-  
+
          fSumw2 = fSumw = 0;
          fEntries = 0;
       }
@@ -797,7 +797,7 @@ namespace ROOT
          //
          //Note: - Should not be used because it can lead to inconsistencies with respect
          //        bin boundaries.
-  
+
          fBoundaries = rhs.fBoundaries;
          fSumw = rhs.fSumw;
          fSumw2 = rhs.fSumw2;
@@ -825,7 +825,7 @@ namespace ROOT
          //
          //Note: - The bin center is defined as
          //        coordinate i = 0.5 * (lower bound i + uper bound i)
-  
+
          _DataPoint rPoint;
 
          for(UInt_t k = 0; k < Dimension(); ++k)
@@ -842,7 +842,7 @@ namespace ROOT
          //
          //Note: - The volume is defined as
          //        vol = product over i (upper bound i - lower bound i)
-  
+
          Double_t dVol = 1;
          for(typename std::vector<tBoundary>::const_iterator it = fBoundaries.begin(); it != fBoundaries.end(); ++it)
             dVol *= (it->second - it->first);
@@ -856,7 +856,7 @@ namespace ROOT
       Bool_t KDTree<_DataPoint>::BinNode::Insert(const _DataPoint& rPoint)
       {
          //inserts a new data point in this bin
-  
+
          if(IsInBin(rPoint))
          {
             ++fEntries;
@@ -874,7 +874,7 @@ namespace ROOT
       Bool_t KDTree<_DataPoint>::BinNode::IsInBin(const _DataPoint& rPoint) const
       {
          //checks whether the given point is inside the boundaries of this bin
-  
+
          for(UInt_t k = 0; k < Dimension(); ++k)
             if((rPoint.GetCoordinate(k) < fBoundaries.at(k).first) || (fBoundaries.at(k).second < rPoint.GetCoordinate(k)))
                return false;
@@ -887,7 +887,7 @@ namespace ROOT
       void KDTree<_DataPoint>::BinNode::Print(int) const
       {
          //prints some information about this bin node
-  
+
          std::cout << "BinNode at " << this << std::endl;
          std::cout << "containing " << GetEntries() << " entries" << std::endl;
          std::cout << "sumw = " << GetBinContent() << " sumw2 = " << GetSumw2() << " => effective entries = " << GetEffectiveEntries() << std::endl;
@@ -923,7 +923,7 @@ namespace ROOT
          //Note: - The bucket size has to be positive.
          //      - The standard split option is kEffective.
          //      - By default the data points are not owned by the tree.
-  
+
          assert(fBucketSize > 0);
       }
 
@@ -942,15 +942,15 @@ namespace ROOT
          //Input: iBucketSize - desired bucket size
          //       iSplitAxis  - axis for next splitting
          //       first,end   - iterators pointing to the beginning and end of data points
-         //                     which are copied to this TerminalNode 
-  
+         //                     which are copied to this TerminalNode
+
          // recalculate sumw and sumw2
          for(data_it it = fDataPoints.begin(); it != fDataPoints.end(); ++it)
          {
             this->fSumw += (*it)->GetWeight();
             this->fSumw2 += pow((*it)->GetWeight(),2);
          }
-  
+
          this->fEntries = fDataPoints.size();
       }
 
@@ -961,7 +961,7 @@ namespace ROOT
          //standard destructor
          //
          //Note: - If fOwnData is set, all associated data point objects are deleted
-      
+
          if(fOwnData)
          {
             for(typename std::vector<const _DataPoint*>::iterator it = fDataPoints.begin();
@@ -980,10 +980,10 @@ namespace ROOT
          //point-related information.
          //
          //Note: - The returned node is not owned by the tree but the user as to take care of it.
-      
+
          UpdateBoundaries();
          BinNode* pBin = new BinNode(*this);
-  
+
          return pBin;
       }
 
@@ -994,7 +994,7 @@ namespace ROOT
          //resets the bin content and removes all data points
          //
          //Note: - If fOwnData is set, all associated data points are deleted.
-      
+
          // delete data points
          if(fOwnData)
          {
@@ -1025,7 +1025,7 @@ namespace ROOT
          //        the minimum/maximum coordinate alogn this axis of all contained
          //        data points.
          //        This procedure maximises the density in the bins.
-      
+
          const_cast<TerminalNode*>(this)->UpdateBoundaries();
 
          return BinNode::GetBoundaries();
@@ -1035,7 +1035,7 @@ namespace ROOT
       template<class _DataPoint>
       void KDTree<_DataPoint>::TerminalNode::GetClosestPoints(const _DataPoint& rRef,UInt_t nPoints,
                                                               std::vector<std::pair<const _DataPoint*,Double_t> >& vFoundPoints) const
-      {  
+      {
          //finds the closest points around the given reference point
          //
          //Input: rRef         - reference point
@@ -1048,7 +1048,7 @@ namespace ROOT
          value_type fMaxDist = (vFoundPoints.size() < nPoints) ? std::numeric_limits<value_type>::max() : vFoundPoints.back().second;
          value_type fDist;
          typedef typename std::vector<std::pair<const _DataPoint*,Double_t> >::iterator t_pit;
-  
+
          // loop over all points and check distances
          for(typename std::vector<const _DataPoint*>::const_iterator it = fDataPoints.begin(); it != fDataPoints.end(); ++it)
          {
@@ -1073,9 +1073,9 @@ namespace ROOT
                // update maximal distance
                fMaxDist = (vFoundPoints.size() < nPoints) ? vFoundPoints.back().second : std::numeric_limits<value_type>::max();
             }
-         }  
+         }
       }
-    
+
 //______________________________________________________________________________
       template<class _DataPoint>
       void KDTree<_DataPoint>::TerminalNode::GetPointsWithinDist(const _DataPoint& rRef,value_type fDist,
@@ -1136,7 +1136,7 @@ namespace ROOT
       void KDTree<_DataPoint>::TerminalNode::Print(int iRow) const
       {
          //prints some information about this TerminalNode
-      
+
          std::cout << "TerminalNode at " << this << " in row " << iRow << std::endl;
          const_cast<TerminalNode*>(this)->UpdateBoundaries();
          BinNode::Print(iRow);
@@ -1175,12 +1175,12 @@ namespace ROOT
          //                         V
          //
          //                      SplitNode
-         //                     |         |      
+         //                     |         |
          //                    ...     new SplitNode
          //                           |             |
-         //                current TerminalNode   new TerminalNode  
+         //                current TerminalNode   new TerminalNode
          //                (modified)
-      
+
          data_it cut;
          switch(fSplitOption)
          {
@@ -1220,7 +1220,7 @@ namespace ROOT
 
          // update boundaries
          this->UpdateBoundaries();
-         pNew->UpdateBoundaries();  
+         pNew->UpdateBoundaries();
 
          // change splitting axis
          ++fSplitAxis;
@@ -1237,11 +1237,11 @@ namespace ROOT
          //
          //Note: - The vector containing the data points is partially ordered according to the
          //        coordinates of the current split axis at least until the position of cut.
-      
+
          // function pointer for comparing data points
          typename KDTree<_DataPoint>::ComparePoints cComp;
          cComp.SetAxis(fSplitAxis);
-  
+
          data_it first = fDataPoints.begin();
          data_it cut = first;
          data_it middle;
@@ -1283,7 +1283,7 @@ namespace ROOT
          // function pointer for comparing data points
          typename KDTree<_DataPoint>::ComparePoints cComp;
          cComp.SetAxis(fSplitAxis);
-  
+
          data_it first = fDataPoints.begin();
          data_it cut = first;
          data_it middle;
@@ -1305,7 +1305,7 @@ namespace ROOT
             }
             first = middle;
          }
-  
+
          return cut;
       }
 
@@ -1325,12 +1325,12 @@ namespace ROOT
          //        the minimum/maximum coordinate alogn this axis of all contained
          //        data points.
          //        This procedure maximises the density in the bins.
-      
+
          const value_type fMAX = 0.4 * std::numeric_limits<value_type>::max();
          const value_type fMIN = -1.0 * fMAX;
 
          this->fBoundaries = std::vector<tBoundary>(Dimension(),std::make_pair(fMIN,fMAX));
-  
+
          //walk back the tree and update bounds
          const BaseNode* pNode = this->Parent();
          const SplitNode* pSplit = 0;
@@ -1391,7 +1391,7 @@ namespace ROOT
       inline typename KDTree<_DataPoint>::iterator& KDTree<_DataPoint>::iterator::operator++()
       {
          //pre-increment operator
-      
+
          fBin = Next();
          return *this;
       }
@@ -1401,7 +1401,7 @@ namespace ROOT
       inline const typename KDTree<_DataPoint>::iterator& KDTree<_DataPoint>::iterator::operator++() const
       {
          //pre-increment operator
-      
+
          fBin = Next();
          return *this;
       }
@@ -1411,7 +1411,7 @@ namespace ROOT
       inline typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::iterator::operator++(int)
       {
          //post-increment operator
-      
+
          iterator tmp(*this);
          fBin = Next();
          return tmp;
@@ -1422,7 +1422,7 @@ namespace ROOT
       inline const typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::iterator::operator++(int) const
       {
          //post-increment operator
-      
+
          iterator tmp(*this);
          fBin = Next();
          return tmp;
@@ -1433,7 +1433,7 @@ namespace ROOT
       inline typename KDTree<_DataPoint>::iterator& KDTree<_DataPoint>::iterator::operator--()
       {
          //pre-decrement operator
-      
+
          fBin = Previous();
          return *this;
       }
@@ -1443,7 +1443,7 @@ namespace ROOT
       inline const typename KDTree<_DataPoint>::iterator& KDTree<_DataPoint>::iterator::operator--() const
       {
          //pre-decrement operator
-      
+
          fBin = Previous();
          return *this;
       }
@@ -1453,7 +1453,7 @@ namespace ROOT
       inline typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::iterator::operator--(int)
       {
          //post-decrement operator
-      
+
          iterator tmp(*this);
          fBin = Previous();
          return tmp;
@@ -1464,7 +1464,7 @@ namespace ROOT
       inline const typename KDTree<_DataPoint>::iterator KDTree<_DataPoint>::iterator::operator--(int) const
       {
          //post-decrement operator
-      
+
          iterator tmp(*this);
          fBin = Previous();
          return tmp;
@@ -1475,7 +1475,7 @@ namespace ROOT
       inline typename KDTree<_DataPoint>::iterator& KDTree<_DataPoint>::iterator::operator=(const typename KDTree<_DataPoint>::iterator& rhs)
       {
          //assignment operator
-      
+
          fBin = rhs.fBin;
          return *this;
       }
@@ -1487,7 +1487,7 @@ namespace ROOT
          //advance this iterator to the next bin
          //
          //Note: - Check for the end of all bins by comparing to End().
-      
+
          BaseNode* pNode = fBin;
 
          while(!pNode->IsHeadNode())

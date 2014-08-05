@@ -75,7 +75,7 @@ private:
    TGNumberEntry       *fBoxHeightEntry;        // Height of boxes
    TGCheckButton       *fAutoRefesh;            // Automatic redraw the scene
    TGNumberEntry       *fLevelDistanceEntry;    // Distance between levels
-   
+
 private:
    void           CalculatePosistion(TStructNode* parent);
    void           CheckMaxObjects(TStructNode* parent);
@@ -89,10 +89,10 @@ private:
    void           UpdateLabels( TStructNode* node );
 
 public:
-   TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, TList* colors, const TGWindow *p = NULL, 
+   TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, TList* colors, const TGWindow *p = NULL,
       UInt_t w = 800, UInt_t h = 600);
    ~TStructViewerGUI();
-   
+
    void           AutoRefreshButtonSlot(Bool_t on);
    void           BoxHeightValueSetSlot(Long_t h);
    void           CloseWindow();
@@ -117,8 +117,8 @@ public:
    void           UndoButtonSlot();
    void           Update(Bool_t resetCamera = false);
    void           UpdateButtonSlot();
-   
-   ClassDef(TStructViewerGUI, 1); // A GUI fo 3D struct viewer 
+
+   ClassDef(TStructViewerGUI, 1); // A GUI fo 3D struct viewer
 };
 
 #endif

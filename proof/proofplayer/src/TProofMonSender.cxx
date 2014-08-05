@@ -34,7 +34,7 @@ Int_t TProofMonSender::SetSendOptions(const char *sendopts)
    //           S      table with summary log
    //           D      table with dataset info
    //           F      table files info
-   // 
+   //
    //   2. The '-,+' in front disables/enables the related table; if
    //      absent '+' is assumed
    //
@@ -79,7 +79,7 @@ Int_t TProofMonSender::SetSendOptions(const char *sendopts)
             if (t == 'S') fSummaryVrs = v;
             if (t == 'D') fDataSetInfoVrs = v;
             if (t == 'F') fFileInfoVrs = v;
-         }         
+         }
       }
    }
 
@@ -88,7 +88,7 @@ Int_t TProofMonSender::SetSendOptions(const char *sendopts)
       Warning("SetSendOptions", "all tables are disabled!");
       return -1;
    }
-      
+
    // Notify
    TString snot = TString::Format("%s: sending:", GetTitle());
    if (TestBit(kSendSummary)) snot += TString::Format(" 'summary' (v:%d)", fSummaryVrs);

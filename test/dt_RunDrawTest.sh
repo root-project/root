@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 
 # Previous step is to do something like
 # root -l -q 'MakeRef.C("Event.old.split.root");'

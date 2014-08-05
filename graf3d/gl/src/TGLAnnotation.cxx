@@ -229,7 +229,7 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    // prepare colors
    Color_t bgCol = fBackColor;
    Color_t fgCol = fTextColor;
-   
+
    if (fUseColorSet)
    {
       fgCol = rnrCtx.ColorSet().Markup().GetColorIndex();

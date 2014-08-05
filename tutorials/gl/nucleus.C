@@ -1,8 +1,8 @@
 // Model of a nucleus built from TGeo classes.
-// 
+//
 // Author: Otto Schaile
 
-void nucleus(Int_t nProtons  = 40,Int_t  nNeutrons = 60) 
+void nucleus(Int_t nProtons  = 40,Int_t  nNeutrons = 60)
 {
    Double_t NeutronRadius = 60,
             ProtonRadius = 60,
@@ -29,17 +29,17 @@ void nucleus(Int_t nProtons  = 40,Int_t  nNeutrons = 60)
    Double_t worldx = 200.;
    Double_t worldy = 200.;
    Double_t worldz = 200.;
- 
-   TGeoVolume *top = geom->MakeBox("WORLD", EmptySpace, worldx, worldy, worldz); 
+
+   TGeoVolume *top = geom->MakeBox("WORLD", EmptySpace, worldx, worldy, worldz);
    geom->SetTopVolume(top);
 
-   TGeoVolume * proton  = geom->MakeSphere("proton",  Proton,  0., ProtonRadius); 
-   TGeoVolume * neutron = geom->MakeSphere("neutron", Neutron, 0., NeutronRadius); 
+   TGeoVolume * proton  = geom->MakeSphere("proton",  Proton,  0., ProtonRadius);
+   TGeoVolume * neutron = geom->MakeSphere("neutron", Neutron, 0., NeutronRadius);
    proton->SetLineColor(kRed);
    neutron->SetLineColor(kBlue);
 
    Double_t x, y, z, dummy;
-   Int_t i = 0; 
+   Int_t i = 0;
    while ( i<  nProtons) {
       gRandom->Rannor(x, y);
       gRandom->Rannor(z,dummy);
@@ -51,7 +51,7 @@ void nucleus(Int_t nProtons  = 40,Int_t  nNeutrons = 60)
          i++;
       }
    }
-   i = 0; 
+   i = 0;
    while ( i <  nNeutrons) {
       gRandom->Rannor(x, y);
       gRandom->Rannor(z,dummy);

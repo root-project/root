@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -19,7 +19,7 @@ namespace ROOT {
 
 //____________________________________________________________________________________
 /**
-   Class holding the result of Minos (lower and upper values) for a specific parameter 
+   Class holding the result of Minos (lower and upper values) for a specific parameter
  */
 
 class MinosError {
@@ -27,7 +27,7 @@ class MinosError {
 public:
 
    MinosError() : fParameter(0), fMinValue(0.), fUpper(MnCross()), fLower(MnCross()) {}
-  
+
    MinosError(unsigned int par, double min, const MnCross& low, const MnCross& up) : fParameter(par), fMinValue(min), fUpper(up), fLower(low) {}
 
    ~MinosError() {}
@@ -50,7 +50,7 @@ public:
       return -1.*LowerState().Error(Parameter())*(1. + fLower.Value());
    }
    double Upper() const {
-      if ( AtUpperLimit() ) return UpperState().Parameter( Parameter() ).UpperLimit() -  fMinValue;  
+      if ( AtUpperLimit() ) return UpperState().Parameter( Parameter() ).UpperLimit() -  fMinValue;
       return UpperState().Error(Parameter())*(1. + fUpper.Value());
    }
    unsigned int Parameter() const {return fParameter;}
@@ -69,7 +69,7 @@ public:
    double Min() const {return fMinValue;}
 
 private:
-  
+
    unsigned int fParameter;
    double fMinValue;
    MnCross fUpper;

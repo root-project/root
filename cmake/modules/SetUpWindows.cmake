@@ -10,7 +10,7 @@ set(CRYPTLIBS)
 if(CMAKE_COMPILER_IS_GNUCXX)
 
   set(ROOT_ARCHITECTURE win32gcc)
-  
+
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe  -Wall -W -Woverloaded-virtual -fPIC")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -Wall -W -fPIC")
   set(CMAKE_Fortran_FLAGS "${CMAKE_FORTRAN_FLAGS} -std=legacy")
@@ -32,13 +32,13 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_C_FLAGS_DEBUG            "-g  -fno-reorder-blocks -fno-schedule-insns -fno-inline")
   set(CMAKE_C_FLAGS_DEBUGFULL        "-g3 -fno-inline")
   set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
- 
+
   #---Set Linker flags----------------------------------------------------------------------
   set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS}")
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}")
 
   # Settings for cint
-  set(CPPPREP "${CMAKE_CXX_COMPILER} -E -C")  
+  set(CPPPREP "${CMAKE_CXX_COMPILER} -E -C")
   set(CXXOUT "-o ")
 
   set(EXEEXT "")

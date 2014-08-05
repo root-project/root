@@ -2,7 +2,7 @@ void exclusiongraph2()
 {
    // Draw several graphs with an exclusion zones.
    //Author: Olivier Couet
-   
+
    TCanvas *c = new TCanvas("c",
       "Charged Higgs L300 Contour",0,0,700,700);
    c->SetTickx();

@@ -89,7 +89,7 @@ private:
    TObject           *fReceivedObject; // last received object
    TSeqCollection    *fRootFiles;      // list of (remote) root files
    TRemoteObject     *fWorkingDir;     // working (remote) directory
-   
+
    static Int_t       fgPortAttempts;  // number of attempts to find a port
    static Int_t       fgPortLower;     // lower bound for ports
    static Int_t       fgPortUpper;     // upper bound for ports

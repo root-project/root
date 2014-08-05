@@ -31,32 +31,32 @@ class FTGL_EXPORT FTLibrary
     public:
         /**
          * Global acces point to the single FTLibrary object.
-         * 
+         *
          * @return  The global <code>FTLibrary</code> object.
          */
         static const FTLibrary& Instance();
 
         /**
          * Gets a pointer to the native Freetype library.
-         * 
-         * @return A handle to a FreeType library instance. 
+         *
+         * @return A handle to a FreeType library instance.
          */
         const FT_Library* GetLibrary() const { return library;}
-        
+
         /**
          * Queries the library for errors.
          *
          * @return  The current error code.
          */
         FT_Error Error() const { return err;}
-        
+
         /**
          * Destructor
          *
          * Disposes of the Freetype library
          */
         ~FTLibrary();
-        
+
     private:
         /**
          * Default constructors.
@@ -67,7 +67,7 @@ class FTGL_EXPORT FTLibrary
         FTLibrary();
         FTLibrary( const FT_Library&){}
         FTLibrary& operator=( const FT_Library&) { return *this; }
-        
+
         /**
          * Initialises the Freetype library
          *
@@ -80,7 +80,7 @@ class FTGL_EXPORT FTLibrary
          *          otherwise.
          */
         bool Initialise();
-        
+
         /**
          * Freetype library handle.
          */
@@ -91,7 +91,7 @@ class FTGL_EXPORT FTLibrary
          * Current error code. Zero means no error.
          */
         FT_Error err;
-        
+
 };
 
 #endif  //  __FTLibrary__

@@ -4,7 +4,7 @@ void shapes() {
 //The old geometry shapes (see script geodemo.C)
 //To see the output of this macro, click begin_html <a href="gif/shapes.gif" >here</a> end_html
 //Author: Rene Brun
-   
+
    TCanvas *c1 = new TCanvas("glc1","Geometry Shapes",200,10,700,500);
 
    //delete previous geometry objects in case this script is reexecuted

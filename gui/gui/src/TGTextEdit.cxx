@@ -64,7 +64,7 @@ public:
    TGTextEditHist() {}
    virtual ~TGTextEditHist() { Delete(); }
 
-   Bool_t Notify() { // 
+   Bool_t Notify() { //
       TObject *obj = Last();
       if (!obj) return kFALSE;
 
@@ -96,7 +96,7 @@ public:
    TInsCharCom(TGTextEdit *te, char ch) : TGTextEditCommand(te) {
       fEdit->InsChar(ch);
    }
-   Bool_t Notify() { // 
+   Bool_t Notify() { //
       fEdit->SetCurrent(fPos);
       fEdit->NextChar();
       fEdit->DelChar();
@@ -116,7 +116,7 @@ public:
       fChar = fEdit->GetText()->GetChar(fPos);
       fEdit->DelChar();
    }
-   Bool_t Notify() { // 
+   Bool_t Notify() { //
       if (fChar > 0) {
          fEdit->SetCurrent(fPos);
          fEdit->InsChar(fChar);
@@ -414,7 +414,7 @@ Bool_t TGTextEdit::Copy()
 {
    // Copy text.
 
-   if (!fIsMarked || ((fMarkedStart.fX == fMarkedEnd.fX) && 
+   if (!fIsMarked || ((fMarkedStart.fX == fMarkedEnd.fX) &&
        (fMarkedStart.fY == fMarkedEnd.fY))) {
       return kFALSE;
    }
@@ -573,7 +573,7 @@ void TGTextEdit::Delete(Option_t *)
    dcom->SetPos(fMarkedStart);
    dcom->SetEndPos(endPos);
 
-   if (delast || ((fText->GetLineLength(endPos.fY) == endPos.fX+1) && 
+   if (delast || ((fText->GetLineLength(endPos.fY) == endPos.fX+1) &&
        (fClipText->RowCount() > 1))) {
       TGLongPosition p = endPos;
 
@@ -1095,7 +1095,7 @@ Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
 
    if (event->fCode != kButton1) {
       return kFALSE;
-   } 
+   }
    if (!fText->GetCurrentLine()->GetText()) {// empty line
       return kFALSE;
    }
@@ -1140,7 +1140,7 @@ Bool_t TGTextEdit::HandleDoubleClick(Event_t *event)
       pos.fY = fText->RowCount() - 1;
    }
    pos.fX = ToObjXCoord(fVisible.fX + event->fX, pos.fY);
-  
+
    if (pos.fX >= fText->GetLineLength(pos.fY)) {
       pos.fX = fText->GetLineLength(pos.fY);
    }
@@ -1346,7 +1346,7 @@ Bool_t TGTextEdit::HandleKey(Event_t *event)
                Search(kFALSE);
                return kTRUE;
             case kKey_L:
-            {   
+            {
                Long_t ret = fCurrent.fY+1;
                new TGGotoDialog(fClient->GetDefaultRoot(), this, 400, 150, &ret);
                if (ret > -1) {
@@ -1559,7 +1559,7 @@ void TGTextEdit::Search(Bool_t close)
 
    static TGSearchType *srch = 0;
    Int_t ret = 0;
-   
+
    if (!srch) srch = new TGSearchType;
    srch->fClose = close;
 
@@ -1568,7 +1568,7 @@ void TGTextEdit::Search(Bool_t close)
          TGSearchDialog::SearchDialog() = new TGSearchDialog(fClient->GetDefaultRoot(),
                                                         fCanvas, 400, 150, srch, &ret);
       }
-      TGSearchDialog::SearchDialog()->Connect("TextEntered(char *)", "TGTextEdit", 
+      TGSearchDialog::SearchDialog()->Connect("TextEntered(char *)", "TGTextEdit",
                                           this, "Search(char *,Bool_t,Bool_t)");
       TGSearchDialog::SearchDialog()->MapRaised();
    } else {
@@ -1601,8 +1601,8 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
                         msg2.Form("Save \"%s\"?",
                                   untitled ? "Untitled" : fText->GetFileName());
-                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", 
-                                     msg2.Data(), kMBIconExclamation, 
+                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor",
+                                     msg2.Data(), kMBIconExclamation,
                                      kMBYes | kMBNo | kMBCancel, &retval);
 
                         if (retval == kMBCancel)
@@ -1682,7 +1682,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      if (!Search(fSearch->fBuffer, fSearch->fDirection,
                                  fSearch->fCaseSensitive)) {
                         msg2.Form("Couldn't find \"%s\"", fSearch->fBuffer);
-                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", 
+                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor",
                                      msg2.Data(), kMBIconExclamation, kMBOk, 0);
                      }
                      break;
@@ -2175,7 +2175,7 @@ void TGTextEdit::End()
 const TGGC &TGTextEdit::GetCursor0GC()
 {
    // Return selection graphics context for text cursor.
-   
+
    if (!fgCursor0GC) {
       fgCursor0GC = new TGGC(GetDefaultSelectedGC());
       fgCursor0GC->SetFunction(kGXxor);
@@ -2187,7 +2187,7 @@ const TGGC &TGTextEdit::GetCursor0GC()
 const TGGC &TGTextEdit::GetCursor1GC()
 {
    // Return default graphics context for text cursor.
-   
+
    if (!fgCursor1GC) {
       fgCursor1GC = new TGGC(GetDefaultGC());
       fgCursor1GC->SetFunction(kGXand);

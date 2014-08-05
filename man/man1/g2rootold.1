@@ -1,55 +1,55 @@
 .\"
 .\" $Id: g2rootold.1,v 1.1 2005/03/21 21:42:21 rdm Exp $
-.\" 
+.\"
 .TH G2ROOTOLD 1 "Version 3" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
 .\" other parms are allowed: see man(7), man(1)
 .SH NAME
 g2rootold \- convert GEANT geomtry files to ROOT files
 .SH SYNOPSIS
-.B g2rootoldd 
+.B g2rootoldd
 .I [-f map_name] geant_name macro_name
 .SH "DESCRIPTION"
-You can convert a 
-.B GEANT 
-(see 
-.I http://wwwinfo.cern.ch/asd/geant/index.html 
-fore more on 
+You can convert a
+.B GEANT
+(see
+.I http://wwwinfo.cern.ch/asd/geant/index.html
+fore more on
 .BR GEANT )
-geometry to 
-.B ROOT 
+geometry to
+.B ROOT
 geometry with the following steps
-.TP 
-1 
-Run the interactive version of 
-.B GEANT 
-and produce a Zebra RZ file 
-.IR detector.geom , 
+.TP
+1
+Run the interactive version of
+.B GEANT
+and produce a Zebra RZ file
+.IR detector.geom ,
 by typing the command:
-.sp 1 
+.sp 1
 .RS
 Geant > rz/file 21 \fIdetector.geom\fR on
 .RE
 .sp 1
 .TP
-2 
-Run the 
-.B g2rootold 
-program to convert the Zebra RZ file into a 
-.B ROOT 
-macro 
+2
+Run the
+.B g2rootold
+program to convert the Zebra RZ file into a
+.B ROOT
+macro
 .I detector.C:
-.sp 1 
+.sp 1
 .RS
 g2rootold \fIdetector.geom\fR \fIdetector.C\fR
 .RE
 .sp 1
-.TP 
+.TP
 3
-Run the following 
-.B ROOT 
+Run the following
+.B ROOT
 session;
-.sp 1 
+.sp 1
 .RS
 .nf
 root [1] .x detector.C
@@ -57,61 +57,61 @@ root [2] detector.Draw()
 root [3] c1.x3d()   // (this invokes the 3-d Root viewver)
 root [4] TFile f("detector.root","NEW") //open a new root file
 root [5] detector.Write() //Write the geometry structure
-root [6] f.Write() 
+root [6] f.Write()
 .fi
 .RE
 .sp 1
-Note that the 
-.I TNode 
-structure currently in 
-.B ROOT 
+Note that the
+.I TNode
+structure currently in
+.B ROOT
 was not designed as a replacement for a true geometry package. The
 idea was mainly to draw simple geometries in event display
 programs. We are currently investigating several alternatives for a
 true & efficient geometry package supporting;
 .TP
-- 
+-
 a disk data base with storage of multiple geometry versions
-.TP 
-- 
+.TP
+-
 an interactive editor and viewer
 .TP
-- 
+-
 with 3-d views
 .TP
-- 
+-
 but also 2-d cut views
-.TP 
-- 
-with interfaces to existing or future MC such as 
-.B GEANT3 
-or 
+.TP
+-
+with interfaces to existing or future MC such as
+.B GEANT3
+or
 .B GEANT4
 .PP
-A second program called 
+A second program called
 .B gh2root
-(see 
+(see
 .IR http://root.cern.ch/root/gh2root.html )
-generates automatically C++ code corresponding to the 
-.B GEANT3 Zebra 
-structures 
-.IR JSET , 
-.IR JVERTX , 
-.IR JKINE , 
-.I JHITS  
-and 
+generates automatically C++ code corresponding to the
+.B GEANT3 Zebra
+structures
+.IR JSET ,
+.IR JVERTX ,
+.IR JKINE ,
+.I JHITS
+and
 .I JDIGI.
 .SH "SEE ALSO"
 .RS
 .IR root (1),
 .IR g2root (1),
-.IR h2root(1), 
+.IR h2root(1),
 .RE
 and
-.RS 
+.RS
 .I The ROOT Users Guide
 .RE
-available from the main 
+available from the main
 .B ROOT
 website:
 .RS
@@ -120,7 +120,7 @@ website:
 .SH "ORIGINAL AUTHORS"
 The ROOT team (see web page above):
 .RS
-\fBRene Brun\fR and \fBFons Rademakers\fR 
+\fBRene Brun\fR and \fBFons Rademakers\fR
 .RE
 .SH "COPYRIGHT"
 This library is free software; you can redistribute it and/or modify
@@ -136,10 +136,10 @@ Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-.SH AUTHOR 
+.SH AUTHOR
 This manual page was written by Christian Holm Christensen
 <cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
-others). 
+others).
 .\"
 .\" $Log: g2rootold.1,v $
 .\" Revision 1.1  2005/03/21 21:42:21  rdm
@@ -192,4 +192,4 @@ others).
 .\" Revision 1.1  2000/12/08 17:41:00  rdm
 .\" man pages of all ROOT executables provided by Christian Holm.
 .\"
-.\" 
+.\"

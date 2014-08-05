@@ -1,6 +1,6 @@
-<br/> 
-<hr/> 
-<a name="tree"></a> 
+<br/>
+<hr/>
+<a name="tree"></a>
 <h3>Tree</h3>
 <ul>
 <li>Changed the MaxTreeSize default from 1.9 GBytes to 100 GBytes.</li>
@@ -12,16 +12,16 @@
     <li><pre lang="cxx">MinIf$(formula,condition),MaxIf$(formula,condition):</pre>return the minimum (maximum) (within one TTree entry)
                        of the value of the elements of the formula given as a parameter
                       if they match the condition. If not element match the condition, the result is zero.  To avoid the
-                       the result is zero.  To avoid the consequent peak a zero, use the 
-                       pattern: 
+                       the result is zero.  To avoid the consequent peak a zero, use the
+                       pattern:
        <pre lang="cxx">tree->Draw("MinIf$(formula,condition)","condition");</pre>
-                       which will avoid calculation MinIf$ for the entries that have no match 
+                       which will avoid calculation MinIf$ for the entries that have no match
                        for the condition.</li>
     </ul>
 </li>
 <li>Add support in TTreeFormula (and hence TTree::Draw and TTree::Scan) for the ternary condition operator ( cond ? if_expr : else_expr ).</li>
 <li>Significantly (by 2 order of magnitude) improved the performance of TTree::Draw calling C++ functions.</li>
-<li>Replace the function <tt>TSelectorDraw::MakeIndex</tt> and <tt>TSelectorDraw::GetNameByIndex</tt> 
+<li>Replace the function <tt>TSelectorDraw::MakeIndex</tt> and <tt>TSelectorDraw::GetNameByIndex</tt>
      with the function <tt>TSelectorDraw::SplitNames.</tt>  </li>
 <li>Add a return value to SetBranchAddress, a return value greater or equal to zero indicate success, a negative
 value indicates failure (in both case, the address is still updated).  Example:
@@ -50,38 +50,38 @@ The possible return values are:<ul>
 <li>Fix the default sorting order of baskets when the TTree is an older in-memory TTree.
 Enhance the sort order to use the 'entry number' when the seek position are equal.
 Consequently the default sort order for an older in-memory TTree is now
-essentially kSortBasketsByEntry rather than kSortBasketsByBranch (old 'correct' sort 
+essentially kSortBasketsByEntry rather than kSortBasketsByBranch (old 'correct' sort
 order) or 'random' (the 'broken' sort order prior to this release).</li>
 </ul>
 <h4>IMPORTANT enhancement in TTree::Fill:</h4>
 <p><b>Slides from a recent seminar describing the main features of ROOT IO and Trees  and the recent
-improvements described below</b> are available at 
+improvements described below</b> are available at
  <a href="http://root.cern.ch/files/brun_lcgapp09.pptx ">http://root.cern.ch/files/brun_lcgapp09.pptx </a>
-or 
+or
  <a href="http://root.cern.ch/files/brun_lcgapp09.pdf ">http://root.cern.ch/files/brun_lcgapp09.pdf </a>.</p>
 <p>The baskets are flushed and the Tree header saved at regular intervals (See AutoFlush and OptimizeBaskets)</p>
 
 <p>When the amount of data written so far (fTotBytes) is greater than fAutoFlush (see SetAutoFlush) all the baskets are flushed to disk.
 This makes future reading faster as it guarantees that baskets belonging to nearby entries will be on the same disk region.</p>
-<p>When the first call to flush the baskets happens, we also take this opportunity to optimize the baskets buffers. 
+<p>When the first call to flush the baskets happens, we also take this opportunity to optimize the baskets buffers.
 We also check if the number of bytes written is greater than fAutoSave (see SetAutoSave).
 In this case we also write the Tree header. This makes the Tree recoverable up to this point in case the program writing the Tree crashes.</p>
 <p>Note that the user can also decide to call FlushBaskets and AutoSave in her event loop on the base of the number of events written instead of the number of bytes written.</p>
 
 <h4>New function TTree::OptimizeBaskets</h4>
 <pre>
-void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option) 
+void TTree::OptimizeBaskets(Int_t maxMemory, Float_t minComp, Option_t *option)
 </pre>
 <p>This function may be called after having filled some entries in a Tree
 using the information in the existing branch buffers, it will reassign
 new branch buffer sizes to optimize time and memory.</p>
 
 <p>The function computes the best values for branch buffer sizes such that
-the total buffer sizes is less than maxMemory and nearby entries written 
+the total buffer sizes is less than maxMemory and nearby entries written
 at the same time.
-In case the branch compression factor for the data written so far is less 
+In case the branch compression factor for the data written so far is less
 than compMin, the compression is disabled.
- 
+
 if option ="d" an analysis report is printed.</p>
 
 <p>This function may also be called on an existing Tree to figure out the best values
@@ -157,7 +157,7 @@ to see the performance of the Tree Cache. The results can be:
 <li>saved to a file for processing later.</li>
 </ul>
 <pre>
-       Example of use                                                 
+       Example of use
  {
    TFile *f = TFile::Open("RelValMinBias-GEN-SIM-RECO.root");
    T = (TTree*)f-&gt;Get("Events");

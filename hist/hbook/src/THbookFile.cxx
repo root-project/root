@@ -236,7 +236,6 @@ extern "C" void  type_of_call hldir(DEFCHAR,DEFCHAR);
 
 Bool_t THbookFile::fgPawInit = kFALSE;
 Int_t  *THbookFile::fgLuns   = 0;
-R__EXTERN TTree *gTree;
 
 ClassImp(THbookFile)
 
@@ -300,7 +299,7 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
       printf("Error cannot open input file: %s\n",fname);
    }
    if (ier || quest[0]) {
-      fgLuns[fLun-10]=0; 
+      fgLuns[fLun-10]=0;
       fLun  = 0;
       fList = 0;
       fKeys = 0;
@@ -388,7 +387,7 @@ void THbookFile::Close(Option_t *)
 
    if(!IsOpen()) return;
    if (!fList) return;
-   
+
    gROOT->GetListOfBrowsables()->Remove(this);
 
    cd();
@@ -616,7 +615,7 @@ TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
    if (opt.Contains("l")) strlcat (cmd," 0",nch+1);
 
    gSystem->Exec(cmd);
-   
+
    delete [] cmd;
    if (opt.Contains("no")) {delete [] rfile; return 0;}
    TFile *f = new TFile(rfile);
@@ -670,7 +669,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
    char name[32];
    char block[32];
    char oldblock[32];
-   strlcpy(oldblock,"OLDBLOCK",32); 
+   strlcpy(oldblock,"OLDBLOCK",32);
    Int_t oldischar = -1;
    for (i=80;i>0;i--) {if (chtitl[i] == ' ') chtitl[i] = 0; }
    THbookTree *tree = new THbookTree(idname,id);
@@ -679,7 +678,6 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 
    char *bigbuf = tree->MakeX(500000);
 
-   gTree = tree;
 #ifndef WIN32
    hbnam(id,PASSCHAR(" "),bigbuf[0],PASSCHAR("$CLEAR"),0,1,6);
 #else
@@ -735,7 +733,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 
       if (ischar != oldischar || strcmp(oldblock,block) != 0) {
          varNumber = 0;
-         strlcpy(oldblock,block,32); 
+         strlcpy(oldblock,block,32);
          oldischar = ischar;
          Long_t add= (Long_t)&bigbuf[bufpos];
          Int_t lblock   = strlen(block);
@@ -743,7 +741,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
          hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar,lblock,4);
 #else
          hbnam(id,PASSCHAR(block),add,PASSCHAR("$SET"),ischar);
-#endif 
+#endif
 
       }
 
@@ -818,7 +816,6 @@ TObject *THbookFile::ConvertRWN(Int_t id)
    THbookTree *tree = new THbookTree(idname,id);
    tree->SetHbookFile(this);
    tree->SetType(0);
-   gTree = tree;
    Float_t *x = (Float_t*)tree->MakeX(nvar*4);
 
    Int_t first,last;

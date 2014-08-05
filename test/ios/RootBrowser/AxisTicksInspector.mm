@@ -21,7 +21,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
    unsigned primaryTicks;
    unsigned secondaryTicks;
    unsigned tertiaryTicks;
-   
+
    __weak ROOTObjectController *controller;
 
    TAxis *object;
@@ -31,9 +31,9 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-   
+
    [self view];
-   
+
    if (self) {
       // Custom initialization
       self.view.frame = componentFrame;
@@ -88,11 +88,11 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
    primaryTicks = nDivisions % 100;
    secondaryTicks = (nDivisions / 100) % 100;
    tertiaryTicks = (nDivisions / 10000) % 100;
-   
+
    primLabel.text = [NSString stringWithFormat : @"%u", primaryTicks];
    secLabel.text = [NSString stringWithFormat : @"%u", secondaryTicks];
    terLabel.text = [NSString stringWithFormat : @"%u", tertiaryTicks];
-   
+
    tickLength = object->GetTickLength();
    tickLengthLabel.text = [NSString stringWithFormat : @"%.2f", object->GetTickLength()];
 }
@@ -101,10 +101,10 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 - (void) setupInspector
 {
    const char *option = object->GetTicks();
-   
+
    if (!strcmp("+-", option))
       [ticksNegPos setSelectedSegmentIndex : 1];
-   else 
+   else
       [ticksNegPos setSelectedSegmentIndex : 0];
 
    [self setTicksWidgets];
@@ -155,7 +155,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
       }
       return;
    }
-   
+
    UILabel *labelToModify = 0;
    unsigned n = 0;
 
@@ -178,7 +178,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
       else
          return;
    }
-   
+
    labelToModify.text = [NSString stringWithFormat : @"%u", n];
    [self setTicks];
    [controller objectWasModifiedUpdateSelection : NO];
@@ -219,7 +219,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
       else
          return;
    }
-   
+
    labelToModify.text = [NSString stringWithFormat : @"%u", n];
    [self setTicks];
    [controller objectWasModifiedUpdateSelection : NO];

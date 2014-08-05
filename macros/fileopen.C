@@ -8,7 +8,7 @@ void onBrowserClose() {
    gApplication->Terminate(0);
 }
 
-void fileopen() 
+void fileopen()
 {
    TBrowser *b = new TBrowser;
    // or, to only browse the file:
@@ -16,4 +16,4 @@ void fileopen()
 
    // Quit ROOT when the browser gets closed:
    b->GetBrowserImp()->GetMainFrame()->Connect("CloseWindow()", 0, 0, "onBrowserClose()");
-} 
+}

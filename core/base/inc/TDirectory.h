@@ -119,7 +119,7 @@ public:
    virtual void        Clear(Option_t *option="");
    virtual TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE);
    virtual void        Close(Option_t *option="");
-   static TDirectory *&CurrentDirectory();  // Return the current directory for this thread.   
+   static TDirectory *&CurrentDirectory();  // Return the current directory for this thread.
    virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
    virtual Bool_t      cd(const char *path = 0);
    virtual void        DeleteAll(Option_t *option="");

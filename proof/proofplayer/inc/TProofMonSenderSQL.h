@@ -42,7 +42,7 @@ public:
                       const char *table = "proof.proofquerylog",
                       const char *dstab = 0, const char *filestab = 0);
    virtual ~TProofMonSenderSQL();
-   
+
    // Summary record
    Int_t SendSummary(TList *, const char *);
 
@@ -51,7 +51,7 @@ public:
 
    // Detailed information about files
    Int_t SendFileInfo(TDSet *, TList *, const char *, const char *);
-   
+
    ClassDef(TProofMonSenderSQL, 0); // Interface for PROOF monitoring
 };
 

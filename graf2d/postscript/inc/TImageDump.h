@@ -37,7 +37,7 @@ protected:
 
    Int_t  XtoPixel(Double_t x);
    Int_t  YtoPixel(Double_t y);
-   void   DrawDashPolyLine(Int_t npoints, TPoint *pt, UInt_t nDash, 
+   void   DrawDashPolyLine(Int_t npoints, TPoint *pt, UInt_t nDash,
                            const char* pDash, const char* col, UInt_t thick);
 
 public:
@@ -64,7 +64,7 @@ public:
    void *GetStream() const {  return (void*)fImage; }
    void  SetType(Int_t type = -111) { fType = type; }
    Int_t GetType() const { return fType; }
-   TImage *GetImage() const { return fImage; } 
+   TImage *GetImage() const { return fImage; }
 
    ClassDef(TImageDump,0)  // create image in batch mode
 };

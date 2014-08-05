@@ -53,7 +53,7 @@ public:
    // Access to the info's connected branch
    TBranch*         GetBranch()       const      {  return fBranch;       }
    // Access to the info's connected branch
-   void             SetBranch(TBranch* branch)   
+   void             SetBranch(TBranch* branch)
    {  fBranch = branch; if ( fNext ) fNext->SetBranch(branch);            }
    // Access to the offset of the data
    virtual Int_t    GetOffset()       const     {  return fOffset;       }

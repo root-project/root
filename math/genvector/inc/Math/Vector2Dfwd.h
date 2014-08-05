@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -9,53 +9,53 @@
   **********************************************************************/
 
 // Header file Vector2Dfwd
-// 
+//
 // Created by: Lorenzo Moneta  at Mon Apr 16 2007
-// 
-// 
-#ifndef ROOT_Math_Vector2Dfwd 
+//
+//
+#ifndef ROOT_Math_Vector2Dfwd
 #define ROOT_Math_Vector2Dfwd  1
 
 // forward declarations of displacement vectors (Vectors) and type defs definitions
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Math { 
+   namespace Math {
 
 
-      template<class CoordSystem, class Tag> class DisplacementVector2D; 
+      template<class CoordSystem, class Tag> class DisplacementVector2D;
 
-      template<typename T> class Cartesian2D;  
-      template<typename T> class Polar2D;  
+      template<typename T> class Cartesian2D;
+      template<typename T> class Polar2D;
 
-      class DefaultCoordinateSystemTag; 
+      class DefaultCoordinateSystemTag;
 
 
       /**
          2D Vector based on the cartesian coordinates x,y in double precision
       */
-      typedef DisplacementVector2D< Cartesian2D<double>, DefaultCoordinateSystemTag > XYVector; 
-      typedef XYVector XYVectorD; 
+      typedef DisplacementVector2D< Cartesian2D<double>, DefaultCoordinateSystemTag > XYVector;
+      typedef XYVector XYVectorD;
 
       /**
          2D Vector based on the cartesian coordinates x,y,z in single precision
       */
-      typedef DisplacementVector2D< Cartesian2D<float>, DefaultCoordinateSystemTag > XYVectorF; 
+      typedef DisplacementVector2D< Cartesian2D<float>, DefaultCoordinateSystemTag > XYVectorF;
 
 
       /**
-         2D Vector based on the polar coordinates rho, phi in double precision. 
+         2D Vector based on the polar coordinates rho, phi in double precision.
       */
-      typedef DisplacementVector2D< Polar2D<double>, DefaultCoordinateSystemTag > Polar2DVector; 
-      typedef Polar2DVector Polar2DVectorD; 
+      typedef DisplacementVector2D< Polar2D<double>, DefaultCoordinateSystemTag > Polar2DVector;
+      typedef Polar2DVector Polar2DVectorD;
 
       /**
-         2D Vector based on the polar coordinates rho, phi in single precision. 
+         2D Vector based on the polar coordinates rho, phi in single precision.
       */
-      typedef DisplacementVector2D< Polar2D<float>, DefaultCoordinateSystemTag > Polar2DVectorF; 
+      typedef DisplacementVector2D< Polar2D<float>, DefaultCoordinateSystemTag > Polar2DVectorF;
 
 
-    
+
 
    } // end namespace Math
 

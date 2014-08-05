@@ -343,7 +343,7 @@ public:
    virtual void DrawOutline(Handle_t id, TGListTreeItem *item, Pixel_t col=0xbbbbbb,
                             Bool_t clear=kFALSE);
    virtual void DrawActive(Handle_t id, TGListTreeItem *item);
-   
+
    virtual TGDimension GetDefaultSize() const
             { return TGDimension(fDefw, fDefh); }
 
@@ -395,9 +395,9 @@ public:
    void  HighlightItem(TGListTreeItem *item, Bool_t state, Bool_t draw);
    void  HighlightChildren(TGListTreeItem *item, Bool_t state, Bool_t draw);
    void  DisableOpen(Bool_t disable = kTRUE) { fDisableOpen = disable;}
-   void  GetChecked(TList *checked);       
-   void  GetCheckedChildren(TList *checked, TGListTreeItem *item);       
-   void  CheckAllChildren(TGListTreeItem *item, Bool_t state);       
+   void  GetChecked(TList *checked);
+   void  GetCheckedChildren(TList *checked, TGListTreeItem *item);
+   void  CheckAllChildren(TGListTreeItem *item, Bool_t state);
 
    TGListTreeItem *GetFirstItem()  const { return fFirst; }
    TGListTreeItem *GetSelected()   const { return fSelected; }

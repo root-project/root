@@ -27,7 +27,7 @@ namespace Minuit2 {
 
    class MPITerminate {
    public:
-      ~MPITerminate() { 
+      ~MPITerminate() {
 #ifdef MPIPROC
          if (MPI::Is_initialized() && !(MPI::Is_finalized())) {
             std::cout << "Info --> MPITerminate:: End MPI on #"
@@ -53,7 +53,7 @@ namespace Minuit2 {
       inline unsigned int NumElements4Job(unsigned int rank) const
       { return NumElements4JobIn()+((rank<NumElements4JobOut()) ? 1 : 0); }
 
-      inline unsigned int StartElementIndex() const 
+      inline unsigned int StartElementIndex() const
       { return ((fRank<NumElements4JobOut()) ? (fRank*NumElements4Job(fRank)) :
                 (fNelements-(fSize-fRank)*NumElements4Job(fRank))); }
 
@@ -63,16 +63,16 @@ namespace Minuit2 {
       inline unsigned int GetMPISize() const { return fSize; }
       inline unsigned int GetMPIRank() const { return fRank; }
 
-      bool SyncVector(ROOT::Minuit2::MnAlgebraicVector &mnvector);  
-      bool SyncSymMatrixOffDiagonal(ROOT::Minuit2::MnAlgebraicSymMatrix &mnmatrix);  
+      bool SyncVector(ROOT::Minuit2::MnAlgebraicVector &mnvector);
+      bool SyncSymMatrixOffDiagonal(ROOT::Minuit2::MnAlgebraicSymMatrix &mnmatrix);
 
       static unsigned int GetMPIGlobalRank() { StartMPI(); return fgGlobalRank; }
       static unsigned int GetMPIGlobalSize() { StartMPI(); return fgGlobalSize; }
       static inline void StartMPI() {
-#ifdef MPIPROC  
-         if (!(MPI::Is_initialized())) {    
-            MPI::Init();    
-            std::cout << "Info --> MPIProcess::StartMPI: Start MPI on #" 
+#ifdef MPIPROC
+         if (!(MPI::Is_initialized())) {
+            MPI::Init();
+            std::cout << "Info --> MPIProcess::StartMPI: Start MPI on #"
                       << MPI::COMM_WORLD.Get_rank() << " processor"
                       << std::endl;
          }
@@ -81,13 +81,13 @@ namespace Minuit2 {
 #endif
       }
 
-      static void TerminateMPI() { 
+      static void TerminateMPI() {
 #ifdef MPIPROC
          if (fgCommunicators[0]!=0 && fgCommunicators[1]!=0) {
             delete fgCommunicators[0]; fgCommunicators[0] = 0; fgIndecesComm[0] = 0;
             delete fgCommunicators[1]; fgCommunicators[1] = 0; fgIndecesComm[1] = 0;
          }
-      
+
          MPITerminate();
 
 #endif
@@ -115,10 +115,10 @@ namespace Minuit2 {
    private:
       unsigned int fNelements;
       unsigned int fSize;
-      unsigned int fRank;  
+      unsigned int fRank;
 
       static unsigned int fgGlobalSize;
-      static unsigned int fgGlobalRank;  
+      static unsigned int fgGlobalRank;
 
       static unsigned int fgCartSizeX;
       static unsigned int fgCartSizeY;

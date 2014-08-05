@@ -1,6 +1,6 @@
-<br/> 
-<hr/> 
-<a name="tree"></a> 
+<br/>
+<hr/>
+<a name="tree"></a>
 <h3>Tree Libraries</h3>
 
 <h4>Performance</h4>
@@ -14,7 +14,7 @@ Similarily, a pointer to the <tt>TTreeCache</tt> for a <tt>TTree</tt> can be obt
 data already accumulated in the buffer (i. no less than the value of <tt>TBuffer::Length</tt>).
 <p/>
 In <tt>TBranch::SetBasketSize</tt>, instead of using the hard minimum of 100, use
-100 + the length of the branch name (as 100 is too small to hold the 
+100 + the length of the branch name (as 100 is too small to hold the
 basket's key information for any branch name larger than 30 characters).</li>
 
 </ul>
@@ -79,7 +79,7 @@ class layout where the derived class is no longer provided in the
 compiled code but the abstract base class is still provided.
 
 It also happens when using schema evolution rules on a class derived
-from an abstract base class (in which case the system introduce 
+from an abstract base class (in which case the system introduce
 implicitly an emulated class deriving from the same base classes
 as the evolved from class).  To fix the issue, we introduce the <tt>TClass::GetStreamerInfoAbstractEmulated</tt>
 which will return a StreamerInfo representing an emulated version of the

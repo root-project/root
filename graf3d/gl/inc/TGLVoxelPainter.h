@@ -63,7 +63,7 @@ private:
    void    SetVoxelColor(const Float_t *rgba)const;
 
    Bool_t  HasSections()const;
-   void	   PreparePalette()const;
+   void    PreparePalette()const;
 
    TF1    *fTransferFunc;
 

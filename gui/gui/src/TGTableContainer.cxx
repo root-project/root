@@ -33,7 +33,7 @@ ClassImp(TGTableHeaderFrame)
 //////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-TGTableFrame::TGTableFrame(const TGWindow *p, UInt_t nrows, UInt_t ncolumns) 
+TGTableFrame::TGTableFrame(const TGWindow *p, UInt_t nrows, UInt_t ncolumns)
    : TQObject(), fFrame(0), fCanvas(0)
 {
    // Create the container used to view TGTableCells. p.
@@ -110,8 +110,8 @@ void TGTableFrame::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 }
 
 //_____________________________________________________________________________
-TGTableHeaderFrame::TGTableHeaderFrame(const TGWindow *p, TGTable *table, 
-                                       UInt_t w, UInt_t h, EHeaderType type, 
+TGTableHeaderFrame::TGTableHeaderFrame(const TGWindow *p, TGTable *table,
+                                       UInt_t w, UInt_t h, EHeaderType type,
                                        UInt_t options) :
    TGCompositeFrame(p, w, h, options), fX0(0), fY0(0), fTable(table)
 {
@@ -124,7 +124,7 @@ TGTableHeaderFrame::TGTableHeaderFrame(const TGWindow *p, TGTable *table,
       ChangeOptions(GetOptions() | kHorizontalFrame);
       fX0 = fTable->GetTableHeader()->GetWidth();
    } else {
-      Error("TGTableHeaderFrame::TGTableHeaderFrame", 
+      Error("TGTableHeaderFrame::TGTableHeaderFrame",
             "specify correct header type");
    }
 
@@ -148,7 +148,7 @@ void TGTableHeaderFrame::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
           (Int_t(el->fFrame->GetX()) >= xx - (Int_t)el->fFrame->GetWidth()) &&
           (Int_t(el->fFrame->GetY()) <= yy + Int_t(h + el->fFrame->GetHeight())) &&
           (Int_t(el->fFrame->GetX()) <= xx + Int_t(w + el->fFrame->GetWidth()))) {
-         
+
          fClient->NeedRedraw(el->fFrame);
       }
    }

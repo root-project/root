@@ -56,7 +56,7 @@ protected:
    Float_t  fPhi;             // Angle of box x axis with respect to main Xaxis
    TObject *fRefObject;       // Pointer to an object
 
-   TMarker3DBox(const TMarker3DBox&); 
+   TMarker3DBox(const TMarker3DBox&);
    TMarker3DBox& operator=(const TMarker3DBox&);
 
    enum { kTemporary = BIT(23) }; // Use TObject::fBits to record if we are temporary

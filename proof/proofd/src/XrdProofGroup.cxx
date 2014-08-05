@@ -122,7 +122,7 @@ void XrdProofGroup::Print()
    // Dump group content
    XPDLOC(GMGR, "Group::Print")
 
-   XrdSysMutexHelper mhp(fMutex); 
+   XrdSysMutexHelper mhp(fMutex);
 
    if (fName != "default") {
       TRACE(ALL, "+++ Group: "<<fName<<", size "<<fSize<<" member(s) ("<<fMembers<<")");
@@ -202,7 +202,7 @@ XrdProofGroupMgr::XrdProofGroupMgr(const char *fn)
 {
    // Constructor
 
-   ResetIter(); 
+   ResetIter();
    Config(fn);
 }
 
@@ -225,7 +225,7 @@ XrdOucString XrdProofGroupMgr::Export(const char *grp)
 {
    // Return a string describing the group
 
-   XrdSysMutexHelper mhp(fMutex); 
+   XrdSysMutexHelper mhp(fMutex);
 
    XrdOucString msg;
 
@@ -244,7 +244,7 @@ void XrdProofGroupMgr::Print(const char *grp)
 {
    // Return a string describing the group
 
-   XrdSysMutexHelper mhp(fMutex); 
+   XrdSysMutexHelper mhp(fMutex);
 
    if (!grp) {
       fGroups.Apply(PrintGroup, 0);
@@ -262,7 +262,7 @@ XrdProofGroup *XrdProofGroupMgr::GetGroup(const char *grp)
    // Returns the instance of for group 'grp.
    // Return 0 in the case the group does not exist
 
-   // If the group is defined and exists, check it 
+   // If the group is defined and exists, check it
    if (grp && strlen(grp) > 0) {
       XrdSysMutexHelper mhp(fMutex);
       return fGroups.Find(grp);
@@ -287,7 +287,7 @@ XrdProofGroup *XrdProofGroupMgr::GetUserGroup(const char *usr, const char *grp)
 
    XrdSysMutexHelper mhp(fMutex);
 
-   // If the group is defined and exists, check it 
+   // If the group is defined and exists, check it
    if (grp && strlen(grp) > 0) {
       g = fGroups.Find(grp);
       if (g && (!strncmp(g->Name(),"default",7) || g->HasMember(usr)))
@@ -355,7 +355,7 @@ int XrdProofGroupMgr::Config(const char *fn)
 
    // Nothing to do if the file did not change
    if (st.st_mtime <= fCfgFile.fMtime) return fGroups.Num();
-   
+
    // Save the modification time
    fCfgFile.fMtime = st.st_mtime;
 
@@ -373,7 +373,7 @@ int XrdProofGroupMgr::Config(const char *fn)
    if (ParseInfoFrom(fCfgFile.fName.c_str()) != 0) {
       TRACE(XERR, "problems parsing config file "<<fCfgFile.fName);
    }
-   
+
    // Notify the content
    Print(0);
 
@@ -561,7 +561,7 @@ int XrdProofGroupMgr::ReadPriorities()
          TRACE(XERR, "value missing: read line is: '"<<gl<<"'");
          continue;
       }
-      // Transform it in a usable value 
+      // Transform it in a usable value
       if (value.find('.') == STR_NPOS)
          value += '.';
       // Save it

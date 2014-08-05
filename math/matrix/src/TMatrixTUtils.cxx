@@ -53,7 +53,7 @@ TMatrixTRow_const<Element>::TMatrixTRow_const(const TMatrixT<Element> &matrix,In
       fInc = 0;
       return;
    }
- 
+
    fMatrix = &matrix;
    fPtr = matrix.GetMatrixArray()+fRowInd*matrix.GetNcols();
    fInc = 1;
@@ -1256,7 +1256,7 @@ void TMatrixTSub<Element>::operator*=(const TMatrixT<Element> &source)
       trp0 += ncols;                                        // Set trp0 to the (i+1)-th row
       R__ASSERT(trp0 == cp);
    }
- 
+
    R__ASSERT(cp == trp0_last && trp0 == trp0_last);
    if (isAllocated)
       delete [] trp;

@@ -1,8 +1,8 @@
 //
 // Author: Ilka Antcheva   1/12/2006
 
-// This macro gives an example of how to create a status bar 
-// related to an embedded canvas that shows the info of the selected object 
+// This macro gives an example of how to create a status bar
+// related to an embedded canvas that shows the info of the selected object
 // exactly as the status bar of any canvas window
 // To run it do either:
 // .x statusBar.C
@@ -27,7 +27,7 @@ class MyMainFrame : public TGMainFrame {
 private:
    TRootEmbeddedCanvas  *fEcan;
    TGStatusBar          *fStatusBar;
-   
+
 public:
    MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h);
    virtual ~MyMainFrame();
@@ -35,7 +35,7 @@ public:
    void DoDraw();
    void SetStatusText(const char *txt, Int_t pi);
    void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
-   
+
    ClassDef(MyMainFrame, 0)
 };
 
@@ -64,7 +64,7 @@ void MyMainFrame::DoDraw()
    gr->GetXaxis()->SetTitle("X title");
    gr->GetYaxis()->SetTitle("Y title");
    gr->Draw("ACP");
-   
+
    // TCanvas::Update() draws the frame, after which it can be changed
    c1->Update();
    c1->GetFrame()->SetFillColor(21);
@@ -112,10 +112,10 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    Int_t wid = fEcan->GetCanvasWindowId();
    TCanvas *myc = new TCanvas("MyCanvas", 10,10,wid);
    fEcan->AdoptCanvas(myc);
-   myc->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","MyMainFrame",this, 
+   myc->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","MyMainFrame",this,
                "EventInfo(Int_t,Int_t,Int_t,TObject*)");
 
-   AddFrame(fEcan, new TGLayoutHints(kLHintsTop | kLHintsLeft | 
+   AddFrame(fEcan, new TGLayoutHints(kLHintsTop | kLHintsLeft |
                                      kLHintsExpandX  | kLHintsExpandY,0,0,1,1));
    // status bar
    Int_t parts[] = {45, 15, 10, 30};
@@ -123,10 +123,10 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    fStatusBar->SetParts(parts, 4);
    fStatusBar->Draw3DCorner(kFALSE);
    AddFrame(fStatusBar, new TGLayoutHints(kLHintsExpandX, 0, 0, 10, 0));
-   
+
    // Create a horizontal frame containing two buttons
    TGHorizontalFrame *hframe = new TGHorizontalFrame(this, 200, 40);
-  
+
    TGTextButton *draw = new TGTextButton(hframe, "&Draw");
    draw->Connect("Clicked()", "MyMainFrame", this, "DoDraw()");
    hframe->AddFrame(draw, new TGLayoutHints(kLHintsCenterX, 5, 5, 3, 4));
@@ -136,7 +136,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
 
    AddFrame(hframe, new TGLayoutHints(kLHintsCenterX, 2, 2, 2, 2));
 
-   // Set a name to the main frame   
+   // Set a name to the main frame
    SetWindowName("Embedded Canvas Status Info");
    MapSubwindows();
 

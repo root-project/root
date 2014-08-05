@@ -11,6 +11,8 @@
 
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
+#include "TVirtualMutex.h"
+#include "TInterpreter.h" // For gInterpreterMutex
 #include "TStreamerElement.h"
 #include "TClassEdit.h"
 
@@ -45,7 +47,7 @@ void TSchemaRuleSet::ls(Option_t *) const
 {
    // The ls function lists the contents of a class on stdout. Ls output
    // is typically much less verbose then Dump().
-   
+
    TROOT::IndentLevel();
    std::cout << "TSchemaRuleSet for " << fClassName << ":\n";
    TROOT::IncreaseDirLevel();
@@ -54,7 +56,7 @@ void TSchemaRuleSet::ls(Option_t *) const
    while ((object = next())) {
       object->ls(fClassName);
    }
-   TROOT::DecreaseDirLevel();   
+   TROOT::DecreaseDirLevel();
 }
 
 //------------------------------------------------------------------------------
@@ -103,7 +105,12 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    TObject* obj;
    // Check only if we have some information about the class, otherwise we have
    // nothing to check against
-   if( rule->GetTarget()  && !(fClass->TestBit(TClass::kIsEmulation) && (fClass->GetStreamerInfos()==0 || fClass->GetStreamerInfos()->GetEntries()==0)) ) {
+   bool streamerInfosTest;
+   {
+     R__LOCKGUARD2(gInterpreterMutex);
+     streamerInfosTest = (fClass->GetStreamerInfos()==0 || fClass->GetStreamerInfos()->GetEntries()==0);
+   }
+   if( rule->GetTarget()  && !(fClass->TestBit(TClass::kIsEmulation) && streamerInfosTest) ) {
       TObjArrayIter titer( rule->GetTarget() );
       while( (obj = titer.Next()) ) {
          TObjString* str = (TObjString*)obj;
@@ -170,7 +177,7 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
 void TSchemaRuleSet::AsString(TString &out) const
 {
    // Fill the string 'out' with the string representation of the rule.
-   
+
    TObjArrayIter it( fAllRules );
    TSchemaRule *rule;
    while( (rule = (TSchemaRule*)it.Next()) ) {
@@ -183,7 +190,7 @@ void TSchemaRuleSet::AsString(TString &out) const
 Bool_t TSchemaRuleSet::HasRuleWithSourceClass( const TString &source ) const
 {
    // Return True if we have any rule whose source class is 'source'.
-   
+
    TObjArrayIter it( fAllRules );
    TObject *obj;
    while( (obj = it.Next()) ) {
@@ -194,7 +201,7 @@ Bool_t TSchemaRuleSet::HasRuleWithSourceClass( const TString &source ) const
    // There was no explicit rule, let's see we have implicit rules.
    if (fClass->GetCollectionProxy()) {
       if (fClass->GetCollectionProxy()->GetValueClass() == 0) {
-         // We have a numeric collection, let see if the target is 
+         // We have a numeric collection, let see if the target is
          // also a numeric collection.
          TClass *src = TClass::GetClass(source);
          if (src && src->GetCollectionProxy() &&
@@ -277,7 +284,7 @@ const TObjArray* TSchemaRuleSet::FindRules( const TString &source ) const
    TObjArrayIter it( fAllRules );
    TObjArray*    arr = new TObjArray();
    arr->SetOwner( kFALSE );
-   
+
    while( (obj = it.Next()) ) {
       TSchemaRule* rule = (TSchemaRule*)obj;
       if( rule->GetSourceClass() == source )
@@ -290,7 +297,7 @@ const TObjArray* TSchemaRuleSet::FindRules( const TString &source ) const
       if (fClass->GetCollectionProxy()->GetValueClass() == 0
           && (fClass->GetCollectionProxy()->GetCollectionType() == TClassEdit::kVector
               || (fClass->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated))) {
-         // We have a numeric collection, let see if the target is 
+         // We have a numeric collection, let see if the target is
          // also a numeric collection (humm just a vector for now)
          TClass *src = TClass::GetClass(source);
          if (src && src->GetCollectionProxy()) {
@@ -483,9 +490,9 @@ Bool_t TSchemaMatch::HasRuleWithSource( const TString& name, Bool_t needingAlloc
 {
    // Return true if the set of rules has at least one rule that has the data
    // member named 'name' as a source.
-   // If needingAlloc is true, only the rule that requires the data member to 
+   // If needingAlloc is true, only the rule that requires the data member to
    // be cached will be taken in consideration.
-   
+
    for( Int_t i = 0; i < GetEntries(); ++i ) {
       TSchemaRule* rule = (ROOT::TSchemaRule*)At(i);
       if( rule->HasSource( name ) ) {
@@ -516,7 +523,7 @@ Bool_t TSchemaMatch::HasRuleWithTarget( const TString& name, Bool_t willset ) co
    // Return true if the set of rules has at least one rule that has the data
    // member named 'name' as a target.
    // If willset is true, only the rule that will set the value of the data member.
-   
+
    for( Int_t i=0; i<GetEntries(); ++i) {
       ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)At(i);
       if( rule->HasTarget( name ) ) {
@@ -531,7 +538,7 @@ Bool_t TSchemaMatch::HasRuleWithTarget( const TString& name, Bool_t willset ) co
             }
             if (sources && name != sources->UncheckedAt(0)->GetName() ) {
                return kTRUE;
-            }            
+            }
             // If the rule has the same source and target and does not
             // have any actions, then it will not directly set the value.
             if (rule->GetReadFunctionPointer() || rule->GetReadRawFunctionPointer()) {
@@ -549,10 +556,10 @@ Bool_t TSchemaMatch::HasRuleWithTarget( const TString& name, Bool_t willset ) co
 void TSchemaRuleSet::Streamer(TBuffer &R__b)
 {
    // Stream an object of class ROOT::TSchemaRuleSet.
-   
+
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(ROOT::TSchemaRuleSet::Class(),this);
-      fAllRules->Clear(); 
+      fAllRules->Clear();
       fAllRules->AddAll(fPersistentRules);
    } else {
       GetClassCheckSum();

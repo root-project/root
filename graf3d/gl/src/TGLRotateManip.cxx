@@ -17,11 +17,11 @@
 #include "TError.h"
 
 //______________________________________________________________________________
-//                                                                      
-// Rotate manipulator - attaches to physical shape and draws local axes 
+//
+// Rotate manipulator - attaches to physical shape and draws local axes
 // widgets - rings drawn from attached physical center, in plane defined
-// by axis. User can mouse over (turns yellow) and L click/drag to      
-// rotate attached physical round the ring center.                      
+// by axis. User can mouse over (turns yellow) and L click/drag to
+// rotate attached physical round the ring center.
 // Widgets use standard 3D package axes colours: X red, Y green, Z blue.
 
 ClassImp(TGLRotateManip);
@@ -190,9 +190,9 @@ Bool_t TGLRotateManip::HandleButton(const Event_t& event, const TGLCamera& camer
          // Work out ring follow direction - if clicked on back or front of ring.
          // If plane/eye angle very shallow force to front
 
-			/* DISABLED - Force onto front always */
-			fShallowFront = kTRUE;
-			/*
+         /* DISABLED - Force onto front always */
+         fShallowFront = kTRUE;
+         /*
          if ((planeEyeAngle > -shallowDelta/3.0) && (planeEyeAngle < shallowDelta/3.0) ||
              Dot(fRingLine.Vector(), camera.FrustumPlane(TGLCamera::kNear).Norm()) < 0.0) {
             fShallowFront = kTRUE;

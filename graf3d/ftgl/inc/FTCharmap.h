@@ -20,7 +20,7 @@
  * freetype calls and will save significant amounts of memory when dealing
  * with unicode encoding
  *
- * @see "Freetype 2 Documentation" 
+ * @see "Freetype 2 Documentation"
  *
  */
 
@@ -45,7 +45,7 @@ class FTGL_EXPORT FTCharmap
          * @return  The current character map code.
          */
         FT_Encoding Encoding() const { return ftEncoding;}
-        
+
         /**
          * Sets the character map for the face.
          * Valid encodings as at Freetype 2.0.4
@@ -69,7 +69,7 @@ class FTGL_EXPORT FTCharmap
          *                  unavailable it will be set to ft_encoding_none.
          */
         bool CharMap( FT_Encoding encoding);
-        
+
         /**
          * Get the FTGlyphContainer index of the input character.
          *
@@ -105,18 +105,18 @@ class FTGL_EXPORT FTCharmap
          * @return  The current error code. Zero means no error.
          */
         FT_Error Error() const { return err;}
-        
+
     private:
         /**
          * Current character map code.
          */
         FT_Encoding ftEncoding;
-        
+
         /**
          * The current Freetype face.
          */
         const FT_Face ftFace;
-        
+
         /**
          * A structure that maps glyph indices to character codes
          *
@@ -124,12 +124,12 @@ class FTGL_EXPORT FTCharmap
          */
         typedef FTCharToGlyphIndexMap CharacterMap;
         CharacterMap charMap;
-        
+
         /**
          * Current error code.
          */
         FT_Error err;
-        
+
 };
 
 

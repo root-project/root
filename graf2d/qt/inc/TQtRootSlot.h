@@ -15,9 +15,9 @@
 // the  ROOT command line from the GUI signals
 // Optionally one can execute TApplication::Terminate method directly
 //
-// It provides a Qt slot to attach the the CINT C++ interpreter 
+// It provides a Qt slot to attach the the CINT C++ interpreter
 // to any Qt signal
-// To execute any C++ statement from the GUI one should connect 
+// To execute any C++ statement from the GUI one should connect
 // one's Qt signal with the Qt slot of the global instance of this class
 //________________________________________________________________________
 
@@ -43,11 +43,11 @@ private:
    void operator=(const TQtRootSlot &);
 protected:
    static TQtRootSlot *fgTQtRootSlot;
-   TQtRootSlot () {} 
+   TQtRootSlot () {}
 public:
    static TQtRootSlot *CintSlot();
    virtual ~TQtRootSlot() {}
-   
+
 public slots:
    void ProcessLine(const char *);
    void ProcessLine(const QString &);
@@ -59,7 +59,7 @@ public slots:
 #ifndef __CINT__
 signals:
    void Error(int error);
-#endif 
+#endif
 };
 
 bool QConnectCint(const QObject *sender, const char *signal);

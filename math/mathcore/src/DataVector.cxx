@@ -13,9 +13,9 @@
 #include "Fit/DataVector.h"
 
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Fit { 
+   namespace Fit {
 
 
    } // end namespace Fit

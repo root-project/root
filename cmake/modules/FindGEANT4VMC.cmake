@@ -21,20 +21,20 @@ FIND_PATH(GEANT4VMC_INCLUDE_DIR NAMES TG4G3Units.h PATHS
 )
 
 set(GEANT4VMC_INCLUDE_DIR
-${SIMPATH}/transport/geant4_vmc/source/global/include 
-${SIMPATH}/transport/geant4_vmc/source/geometry/include 
-${SIMPATH}/transport/geant4_vmc/source/digits+hits/include 
-${SIMPATH}/transport/geant4_vmc/source/physics/include 
-${SIMPATH}/transport/geant4_vmc/source/event/include 
-${SIMPATH}/transport/geant4_vmc/source/run/include 
-${SIMPATH}/transport/geant4_vmc/source/interfaces/include 
-${SIMPATH}/transport/geant4_vmc/source/visualization/include 
-${SIMPATH}/transport/geant4_vmc/include 
-${SIMPATH}/transport/vgm/packages/BaseVGM/include 
-${SIMPATH}/transport/vgm/packages/ClhepVGM/include 
-${SIMPATH}/transport/vgm/packages/Geant4GM/include 
-${SIMPATH}/transport/vgm/packages/RootGM/include 
-${SIMPATH}/transport/vgm/packages/VGM/include 
+${SIMPATH}/transport/geant4_vmc/source/global/include
+${SIMPATH}/transport/geant4_vmc/source/geometry/include
+${SIMPATH}/transport/geant4_vmc/source/digits+hits/include
+${SIMPATH}/transport/geant4_vmc/source/physics/include
+${SIMPATH}/transport/geant4_vmc/source/event/include
+${SIMPATH}/transport/geant4_vmc/source/run/include
+${SIMPATH}/transport/geant4_vmc/source/interfaces/include
+${SIMPATH}/transport/geant4_vmc/source/visualization/include
+${SIMPATH}/transport/geant4_vmc/include
+${SIMPATH}/transport/vgm/packages/BaseVGM/include
+${SIMPATH}/transport/vgm/packages/ClhepVGM/include
+${SIMPATH}/transport/vgm/packages/Geant4GM/include
+${SIMPATH}/transport/vgm/packages/RootGM/include
+${SIMPATH}/transport/vgm/packages/VGM/include
 ${SIMPATH}/transport/vgm/packages/XmlVGM/include
 )
 
@@ -91,7 +91,7 @@ if (GEANT4VMC_INCLUDE_DIR AND GEANT4VMC_LIBRARY_DIR AND VGM_LIBRARY_DIR)
 endif (GEANT4VMC_INCLUDE_DIR AND GEANT4VMC_LIBRARY_DIR AND VGM_LIBRARY_DIR)
 
 if (GEANT4VMC_FOUND)
-  SET(LD_LIBRARY_PATH ${LD_LIBRARY_PATH} ${GEANT4VMC_LIBRARY_DIR} 
+  SET(LD_LIBRARY_PATH ${LD_LIBRARY_PATH} ${GEANT4VMC_LIBRARY_DIR}
       ${VGM_LIBRARY_DIR})
 endif (GEANT4VMC_FOUND)
 

@@ -124,9 +124,9 @@ protected:
    TAxis               *fZaxis;            // z-axis
 
    // structure holding parameter value and limits
-   struct FuncParamData_t { 
+   struct FuncParamData_t {
       FuncParamData_t() {
-         fP[0] = 0; fP[1] = 0; fP[2] = 0; 
+         fP[0] = 0; fP[1] = 0; fP[2] = 0;
       }
       Double_t & operator[](UInt_t i) { return fP[i];}
       Double_t fP[3];
@@ -147,7 +147,7 @@ protected:
    TGNumberEntryField  *fIterations;       // contains maximum number of iterations
 
    TGStatusBar         *fStatusBar;        // statusbar widget
-   
+
    static TFitEditor *fgFitDialog;         // singleton fit panel
 
 protected:
@@ -236,9 +236,9 @@ public:
    virtual void   DoLibrary(Bool_t on);
    virtual void   DoMinMethod(Int_t );
    virtual void   DoPrintOpt(Bool_t on);
-   
+
 public:
-   typedef std::vector<FuncParamData_t > FuncParams_t; 
+   typedef std::vector<FuncParamData_t > FuncParams_t;
 
    friend class FitEditorUnitTesting;
    ClassDef(TFitEditor,0)  //Fit Panel interface

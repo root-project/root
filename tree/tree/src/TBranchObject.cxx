@@ -235,11 +235,11 @@ Int_t TBranchObject::GetEntry(Long64_t entry, Int_t getall)
 //______________________________________________________________________________
 Int_t TBranchObject::GetExpectedType(TClass *&expectedClass,EDataType &expectedType)
 {
-   // Fill expectedClass and expectedType with information on the data type of the 
+   // Fill expectedClass and expectedType with information on the data type of the
    // object/values contained in this branch (and thus the type of pointers
    // expected to be passed to Set[Branch]Address
    // return 0 in case of success and > 0 in case of failure.
-   
+
    expectedClass = 0;
    expectedType = kOther_t;
    TLeafObject* lobj = (TLeafObject*) GetListOfLeaves()->At(0);
@@ -295,9 +295,9 @@ void TBranchObject::Reset(Option_t* option)
    //
    // Existing buffers are deleted.
    // Entries, max and min are reset.
-   
+
    TBranch::Reset(option);
-   
+
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nbranches; ++i)  {
       TBranch* branch = (TBranch*) fBranches[i];
@@ -312,7 +312,7 @@ void TBranchObject::ResetAfterMerge(TFileMergeInfo *info)
    //
 
    TBranch::ResetAfterMerge(info);
-   
+
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nbranches; ++i)  {
       TBranch* branch = (TBranch*) fBranches[i];
@@ -591,7 +591,7 @@ void TBranchObject::SetupAddresses()
    // -- If the branch address is not set,  we set all addresses starting with
    // the top level parent branch.  This is required to be done in order for
    // GetOffset to be correct and for GetEntry to run.
- 
+
    if (fAddress == 0) {
       // try to create object
       if (!TestBit(kWarn)) {
@@ -605,7 +605,7 @@ void TBranchObject::SetupAddresses()
             SetBit(kWarn);
          }
       }
-   }   
+   }
 }
 
 //______________________________________________________________________________

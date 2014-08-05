@@ -35,10 +35,10 @@ protected:
    SQLHSTMT   fHstmt;
    Int_t      fFieldCount;
    char      **fBuffer;
-   ULong_t    *fLengths;  
-   
+   ULong_t    *fLengths;
+
    void        CopyFieldValue(Int_t field);
-   
+
 private:
    TODBCRow(const TODBCRow&);            // Not implemented.
    TODBCRow &operator=(const TODBCRow&); // Not implemented.

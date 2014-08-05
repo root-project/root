@@ -10,7 +10,7 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
-// 
+//
 // TProcessUUID
 //
 // This class is a specialized TProcessID managing the list of UUIDs.
@@ -25,7 +25,7 @@
 // The object corresponding to a TUUID at slot I can be found
 // via fObjects->At(I).
 // One can use two mechanisms to find the object corresponding to a TUUID:
-//  1- the input is the TUUID.AsString. One can find the corresponding 
+//  1- the input is the TUUID.AsString. One can find the corresponding
 //     TObjString object objs in fUUIDs via THashList::FindObject(name).
 //     The slot number is then objs->GetUniqueID().
 //  2- The input is the UUIDNumber. The slot number is UIUIDNumber
@@ -84,7 +84,7 @@ UInt_t TProcessUUID::AddUUID(TUUID &uuid, TObject *obj)
       if (number >= (UInt_t)fObjects->GetSize()) fObjects->AddAtAndExpand(obj,number);
       if (fObjects->UncheckedAt(number) == 0) fObjects->AddAt(obj,number);
       return number;
-   }   
+   }
 
    objs = new TObjString(uuids);
    fUUIDs->Add(objs);
@@ -104,10 +104,10 @@ UInt_t TProcessUUID::AddUUID(const char *uuids)
    // Add uuid with name uuids to the table of UUIDs
    // return entry number in the table
 
-   
+
    TObjString *objs = (TObjString*)fUUIDs->FindObject(uuids);
    if (objs) return objs->GetUniqueID();
-   
+
    UInt_t number;
    objs = new TObjString(uuids);
    fUUIDs->Add(objs);
@@ -121,7 +121,7 @@ UInt_t TProcessUUID::AddUUID(const char *uuids)
 TObjString *TProcessUUID::FindUUID(UInt_t number) const
 {
    //Find the TObjString by slot number
-   
+
    TObjLink *lnk = fUUIDs->FirstLink();
    while (lnk) {
       TObject *obj = lnk->GetObject();
@@ -135,7 +135,7 @@ TObjString *TProcessUUID::FindUUID(UInt_t number) const
 void TProcessUUID::RemoveUUID(UInt_t number)
 {
    //Remove entry number in the list of uuids
-   
+
    if (number > (UInt_t)fObjects->GetSize()) return;
    TObjLink *lnk = fUUIDs->FirstLink();
    while (lnk) {
@@ -149,4 +149,4 @@ void TProcessUUID::RemoveUUID(UInt_t number)
       }
       lnk = lnk->Next();
    }
-}   
+}

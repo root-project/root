@@ -28,27 +28,27 @@
 //                                                                         //
 //                                                                         //
 //____________________________________________________________________________
-    
+
 #include "TSpectrumFit.h"
 #include "TMath.h"
 
-ClassImp(TSpectrumFit)  
-    
+ClassImp(TSpectrumFit)
+
 //______________________________________________________________________________
-TSpectrumFit::TSpectrumFit() :TNamed("SpectrumFit", "Miroslav Morhac peak fitter") 
+TSpectrumFit::TSpectrumFit() :TNamed("SpectrumFit", "Miroslav Morhac peak fitter")
 {
    //default constructor
 
    fNPeaks = 0;
    fNumberIterations = 1;
    fXmin = 0;
-   fXmax = 100; 
+   fXmax = 100;
    fStatisticType = kFitOptimChiCounts;
-   fAlphaOptim = kFitAlphaHalving;     
-   fPower = kFitPower2;                
-   fFitTaylor = kFitTaylorOrderFirst;  
-   fAlpha =1; 
-   fChi = 0;                    
+   fAlphaOptim = kFitAlphaHalving;
+   fPower = kFitPower2;
+   fFitTaylor = kFitTaylorOrderFirst;
+   fAlpha =1;
+   fChi = 0;
    fPositionInit   = 0;
    fPositionCalc   = 0;
    fPositionErr   = 0;
@@ -62,16 +62,16 @@ TSpectrumFit::TSpectrumFit() :TNamed("SpectrumFit", "Miroslav Morhac peak fitter
    fSigmaInit = 2;
    fSigmaCalc = 1;
    fSigmaErr  = 0;
-   fTInit = 0; 
+   fTInit = 0;
    fTCalc = 0;
-   fTErr = 0; 
-   fBInit = 1; 
+   fTErr = 0;
+   fBInit = 1;
    fBCalc = 0;
-   fBErr = 0; 
-   fSInit = 0; 
+   fBErr = 0;
+   fSInit = 0;
    fSCalc = 0;
-   fSErr = 0; 
-   fA0Init = 0; 
+   fSErr = 0;
+   fA0Init = 0;
    fA0Calc = 0;
    fA0Err = 0;
    fA1Init = 0;
@@ -90,7 +90,7 @@ TSpectrumFit::TSpectrumFit() :TNamed("SpectrumFit", "Miroslav Morhac peak fitter
 }
 
 //______________________________________________________________________________
-TSpectrumFit::TSpectrumFit(Int_t numberPeaks) :TNamed("SpectrumFit", "Miroslav Morhac peak fitter") 
+TSpectrumFit::TSpectrumFit(Int_t numberPeaks) :TNamed("SpectrumFit", "Miroslav Morhac peak fitter")
 {
    //numberPeaks: number of fitted peaks (must be greater than zero)
    //the constructor allocates arrays for all fitted parameters (peak positions, amplitudes etc) and sets the member
@@ -139,47 +139,47 @@ T, S and slope B).</p>
 <p class=MsoNormal><span style='font-size:16.0pt'>&nbsp;</span></p>
 
 </div>
-   
+
 <!-- */
 // --> End_Html
-    
+
    if (numberPeaks <= 0){
       Error ("TSpectrumFit","Invalid number of peaks, must be > than 0");
       return;
    }
-   fNPeaks = numberPeaks;  
+   fNPeaks = numberPeaks;
    fNumberIterations = 1;
    fXmin = 0;
-   fXmax = 100; 
+   fXmax = 100;
    fStatisticType = kFitOptimChiCounts;
-   fAlphaOptim = kFitAlphaHalving;     
-   fPower = kFitPower2;                
-   fFitTaylor = kFitTaylorOrderFirst;  
-   fAlpha =1; 
-   fChi = 0;                    
+   fAlphaOptim = kFitAlphaHalving;
+   fPower = kFitPower2;
+   fFitTaylor = kFitTaylorOrderFirst;
+   fAlpha =1;
+   fChi = 0;
    fPositionInit   = new Double_t[numberPeaks];
-   fPositionCalc   = new Double_t[numberPeaks];   
-   fPositionErr   = new Double_t[numberPeaks];   
-   fFixPosition   = new Bool_t[numberPeaks];   
-   fAmpInit   = new Double_t[numberPeaks];   
-   fAmpCalc   = new Double_t[numberPeaks];   
-   fAmpErr    = new Double_t[numberPeaks];   
-   fFixAmp    = new Bool_t[numberPeaks];     
-   fArea      = new Double_t[numberPeaks];   
-   fAreaErr   = new Double_t[numberPeaks];      
+   fPositionCalc   = new Double_t[numberPeaks];
+   fPositionErr   = new Double_t[numberPeaks];
+   fFixPosition   = new Bool_t[numberPeaks];
+   fAmpInit   = new Double_t[numberPeaks];
+   fAmpCalc   = new Double_t[numberPeaks];
+   fAmpErr    = new Double_t[numberPeaks];
+   fFixAmp    = new Bool_t[numberPeaks];
+   fArea      = new Double_t[numberPeaks];
+   fAreaErr   = new Double_t[numberPeaks];
    fSigmaInit = 2;
    fSigmaCalc = 1;
    fSigmaErr  = 0;
-   fTInit = 0; 
+   fTInit = 0;
    fTCalc = 0;
-   fTErr = 0; 
-   fBInit = 1; 
+   fTErr = 0;
+   fBInit = 1;
    fBCalc = 0;
-   fBErr = 0; 
-   fSInit = 0; 
+   fBErr = 0;
+   fSInit = 0;
    fSCalc = 0;
-   fSErr = 0; 
-   fA0Init = 0; 
+   fSErr = 0;
+   fA0Init = 0;
    fA0Calc = 0;
    fA0Err = 0;
    fA1Init = 0;
@@ -196,29 +196,29 @@ T, S and slope B).</p>
    fFixA1 = true;
    fFixA2 = true;
 }
-    
-    
+
+
 
 //______________________________________________________________________________
-TSpectrumFit::~TSpectrumFit() 
+TSpectrumFit::~TSpectrumFit()
 {
    //destructor
-   delete [] fPositionInit;   
-   delete [] fPositionCalc;   
+   delete [] fPositionInit;
+   delete [] fPositionCalc;
    delete [] fPositionErr;
-   delete [] fFixPosition;      
-   delete [] fAmpInit;  
-   delete [] fAmpCalc;  
-   delete [] fAmpErr;   
+   delete [] fFixPosition;
+   delete [] fAmpInit;
+   delete [] fAmpCalc;
+   delete [] fAmpErr;
    delete [] fFixAmp;
-   delete [] fArea;  
-   delete [] fAreaErr;         
+   delete [] fArea;
+   delete [] fAreaErr;
 }
 
 //_____________________________________________________________________________
 /////////////////BEGINNING OF AUXILIARY FUNCTIONS USED BY FITTING FUNCTION Fit1//////////////////////////
-Double_t TSpectrumFit::Erfc(Double_t x) 
-{   
+Double_t TSpectrumFit::Erfc(Double_t x)
+{
 //////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                      //
 //                                                                          //
@@ -233,7 +233,7 @@ Double_t TSpectrumFit::Erfc(Double_t x)
    w = a * a;
    if (w < 700)
       c = exp(-w);
-   
+
    else {
       c = 0;
    }
@@ -244,7 +244,7 @@ Double_t TSpectrumFit::Erfc(Double_t x)
 }
 
 //____________________________________________________________________________
-Double_t TSpectrumFit::Derfc(Double_t x) 
+Double_t TSpectrumFit::Derfc(Double_t x)
 {
 //////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                      //
@@ -260,7 +260,7 @@ Double_t TSpectrumFit::Derfc(Double_t x)
    w = a * a;
    if (w < 700)
       c = exp(-w);
-   
+
    else {
       c = 0;
    }
@@ -271,8 +271,8 @@ Double_t TSpectrumFit::Derfc(Double_t x)
 
 //____________________________________________________________________________
 Double_t TSpectrumFit::Deramp(Double_t i, Double_t i0, Double_t sigma, Double_t t,
-                           Double_t s, Double_t b) 
-{   
+                           Double_t s, Double_t b)
+{
 //////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                      //
 //                                                                          //
@@ -290,7 +290,7 @@ Double_t TSpectrumFit::Deramp(Double_t i, Double_t i0, Double_t sigma, Double_t 
    p = (i - i0) / sigma;
    if ((p * p) < 700)
       q = exp(-p * p);
-   
+
    else {
       q = 0;
    }
@@ -311,8 +311,8 @@ Double_t TSpectrumFit::Deramp(Double_t i, Double_t i0, Double_t sigma, Double_t 
 
 //____________________________________________________________________________
 Double_t TSpectrumFit::Deri0(Double_t i, Double_t amp, Double_t i0, Double_t sigma,
-                          Double_t t, Double_t s, Double_t b) 
-{  
+                          Double_t t, Double_t s, Double_t b)
+{
 //////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                      //
 //                                                                          //
@@ -332,7 +332,7 @@ Double_t TSpectrumFit::Deri0(Double_t i, Double_t amp, Double_t i0, Double_t sig
    d = 2. * sigma;
    if ((p * p) < 700)
       r1 = 2. * p * exp(-p * p) / sigma;
-   
+
    else {
       r1 = 0;
    }
@@ -354,8 +354,8 @@ Double_t TSpectrumFit::Deri0(Double_t i, Double_t amp, Double_t i0, Double_t sig
 
 //____________________________________________________________________________
 Double_t TSpectrumFit::Derderi0(Double_t i, Double_t amp, Double_t i0,
-                             Double_t sigma) 
-{  
+                             Double_t sigma)
+{
 //////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                      //
 //                                                                          //
@@ -372,7 +372,7 @@ Double_t TSpectrumFit::Derderi0(Double_t i, Double_t amp, Double_t i0,
    p = (i - i0) / sigma;
    if ((p * p) < 700)
       r1 = exp(-p * p);
-   
+
    else {
       r1 = 0;
    }
@@ -385,8 +385,8 @@ Double_t TSpectrumFit::Derderi0(Double_t i, Double_t amp, Double_t i0,
 //____________________________________________________________________________
 Double_t TSpectrumFit::Dersigma(Int_t num_of_fitted_peaks, Double_t i,
                              const Double_t *parameter, Double_t sigma,
-                             Double_t t, Double_t s, Double_t b) 
-{  
+                             Double_t t, Double_t s, Double_t b)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -411,7 +411,7 @@ Double_t TSpectrumFit::Dersigma(Int_t num_of_fitted_peaks, Double_t i,
       if (TMath::Abs(p) < 3) {
          if ((p * p) < 700)
             r1 = 2. * p * p * exp(-p * p) / sigma;
-         
+
          else {
             r1 = 0;
          }
@@ -435,8 +435,8 @@ Double_t TSpectrumFit::Dersigma(Int_t num_of_fitted_peaks, Double_t i,
 
 //____________________________________________________________________________
 Double_t TSpectrumFit::Derdersigma(Int_t num_of_fitted_peaks, Double_t i,
-                               const Double_t *parameter, Double_t sigma) 
-{  
+                               const Double_t *parameter, Double_t sigma)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -458,7 +458,7 @@ Double_t TSpectrumFit::Derdersigma(Int_t num_of_fitted_peaks, Double_t i,
       if (TMath::Abs(p) < 3) {
          if ((p * p) < 700)
             r1 = exp(-p * p) * p * p * (4. * p * p - 6) / (sigma * sigma);
-         
+
          else {
             r1 = 0;
          }
@@ -471,8 +471,8 @@ Double_t TSpectrumFit::Derdersigma(Int_t num_of_fitted_peaks, Double_t i,
 
 //____________________________________________________________________________
 Double_t TSpectrumFit::Dert(Int_t num_of_fitted_peaks, Double_t i,
-                        const Double_t *parameter, Double_t sigma, Double_t b) 
-{  
+                        const Double_t *parameter, Double_t sigma, Double_t b)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -504,8 +504,8 @@ Double_t TSpectrumFit::Dert(Int_t num_of_fitted_peaks, Double_t i,
 
 //____________________________________________________________________________
 Double_t TSpectrumFit::Ders(Int_t num_of_fitted_peaks, Double_t i,
-                        const Double_t *parameter, Double_t sigma) 
-{  
+                        const Double_t *parameter, Double_t sigma)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -533,8 +533,8 @@ Double_t TSpectrumFit::Ders(Int_t num_of_fitted_peaks, Double_t i,
 //____________________________________________________________________________
 Double_t TSpectrumFit::Derb(Int_t num_of_fitted_peaks, Double_t i,
                         const Double_t *parameter, Double_t sigma, Double_t t,
-                        Double_t b) 
-{  
+                        Double_t b)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -562,7 +562,7 @@ Double_t TSpectrumFit::Derb(Int_t num_of_fitted_peaks, Double_t i,
          e = 700;
       if (e < -700)
          r1 = 0;
-      
+
       else
          r1 = r1 * exp(e);
       r = r + parameter[2 * j] * r1;
@@ -572,14 +572,14 @@ Double_t TSpectrumFit::Derb(Int_t num_of_fitted_peaks, Double_t i,
 }
 
 //____________________________________________________________________________
-Double_t TSpectrumFit::Dera1(Double_t i)       
+Double_t TSpectrumFit::Dera1(Double_t i)
 {
    //derivative of background according to a1
    return (i);
 }
 
 //____________________________________________________________________________
-Double_t TSpectrumFit::Dera2(Double_t i)      
+Double_t TSpectrumFit::Dera2(Double_t i)
 {
    //derivative of background according to a2
    return (i * i);
@@ -589,8 +589,8 @@ Double_t TSpectrumFit::Dera2(Double_t i)
 Double_t TSpectrumFit::Shape(Int_t num_of_fitted_peaks, Double_t i,
                          const Double_t *parameter, Double_t sigma, Double_t t,
                          Double_t s, Double_t b, Double_t a0, Double_t a1,
-                         Double_t a2) 
-{  
+                         Double_t a2)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -611,11 +611,11 @@ Double_t TSpectrumFit::Shape(Int_t num_of_fitted_peaks, Double_t i,
    for (j = 0; j < num_of_fitted_peaks; j++) {
       if (sigma > 0.0001)
          p = (i - parameter[2 * j + 1]) / sigma;
-      
+
       else {
          if (i == parameter[2 * j + 1])
             p = 0;
-         
+
          else
             p = 10;
       }
@@ -623,7 +623,7 @@ Double_t TSpectrumFit::Shape(Int_t num_of_fitted_peaks, Double_t i,
       if (TMath::Abs(p) < 3) {
          if ((p * p) < 700)
             r1 = exp(-p * p);
-         
+
          else {
             r1 = 0;
          }
@@ -646,8 +646,8 @@ Double_t TSpectrumFit::Shape(Int_t num_of_fitted_peaks, Double_t i,
 }
 
 //____________________________________________________________________________
-Double_t TSpectrumFit::Area(Double_t a, Double_t sigma, Double_t t, Double_t b) 
-{  
+Double_t TSpectrumFit::Area(Double_t a, Double_t sigma, Double_t t, Double_t b)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -665,7 +665,7 @@ Double_t TSpectrumFit::Area(Double_t a, Double_t sigma, Double_t t, Double_t b)
    r = (-1.) * r * r;
    if (TMath::Abs(r) < 700)
       r = a * sigma * (odm_pi + t * b * exp(r));
-   
+
    else {
       r = a * sigma * odm_pi;
    }
@@ -673,8 +673,8 @@ Double_t TSpectrumFit::Area(Double_t a, Double_t sigma, Double_t t, Double_t b)
 }
 
 //____________________________________________________________________________
-Double_t TSpectrumFit::Derpa(Double_t sigma, Double_t t, Double_t b) 
-{  
+Double_t TSpectrumFit::Derpa(Double_t sigma, Double_t t, Double_t b)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -691,14 +691,14 @@ Double_t TSpectrumFit::Derpa(Double_t sigma, Double_t t, Double_t b)
    r = (-1.) * r * r;
    if (TMath::Abs(r) < 700)
       r = sigma * (odm_pi + t * b * exp(r));
-   
+
    else {
       r = sigma * odm_pi;
    }
    return (r);
 }
-Double_t TSpectrumFit::Derpsigma(Double_t a, Double_t t, Double_t b) 
-{  
+Double_t TSpectrumFit::Derpsigma(Double_t a, Double_t t, Double_t b)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -715,7 +715,7 @@ Double_t TSpectrumFit::Derpsigma(Double_t a, Double_t t, Double_t b)
    r = (-1.) * r * r;
    if (TMath::Abs(r) < 700)
       r = a * (odm_pi + t * b * exp(r));
-   
+
    else {
       r = a * odm_pi;
    }
@@ -723,8 +723,8 @@ Double_t TSpectrumFit::Derpsigma(Double_t a, Double_t t, Double_t b)
 }
 
 //______________________________________________________________________________
-Double_t TSpectrumFit::Derpt(Double_t a, Double_t sigma, Double_t b) 
-{  
+Double_t TSpectrumFit::Derpt(Double_t a, Double_t sigma, Double_t b)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -741,7 +741,7 @@ Double_t TSpectrumFit::Derpt(Double_t a, Double_t sigma, Double_t b)
    r = (-1.) * r * r;
    if (TMath::Abs(r) < 700)
       r = a * sigma * b * exp(r);
-   
+
    else {
       r = 0;
    }
@@ -749,8 +749,8 @@ Double_t TSpectrumFit::Derpt(Double_t a, Double_t sigma, Double_t b)
 }
 
 //______________________________________________________________________________
-Double_t TSpectrumFit::Derpb(Double_t a, Double_t sigma, Double_t t, Double_t b) 
-{  
+Double_t TSpectrumFit::Derpb(Double_t a, Double_t sigma, Double_t t, Double_t b)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -766,7 +766,7 @@ Double_t TSpectrumFit::Derpb(Double_t a, Double_t sigma, Double_t t, Double_t b)
    r = (-1) * 0.25 / (b * b);
    if (TMath::Abs(r) < 700)
       r = a * sigma * t * exp(r) * (1 - 2 * r);
-   
+
    else {
       r = 0;
    }
@@ -775,7 +775,7 @@ Double_t TSpectrumFit::Derpb(Double_t a, Double_t sigma, Double_t t, Double_t b)
 
 //______________________________________________________________________________
 Double_t TSpectrumFit::Ourpowl(Double_t a, Int_t pw)
-{                               
+{
    //power function
    Double_t c;
    Double_t a2 = a*a;
@@ -794,20 +794,20 @@ Double_t TSpectrumFit::Ourpowl(Double_t a, Int_t pw)
 /////////////////FITTING FUNCTION WITHOUT MATRIX INVERSION///////////////////////////////////////
 
 //____________________________________________________________________________
-void TSpectrumFit::FitAwmi(Double_t *source) 
+void TSpectrumFit::FitAwmi(Double_t *source)
 {
 /////////////////////////////////////////////////////////////////////////////
-//        ONE-DIMENSIONAL FIT FUNCTION                                 
-//        ALGORITHM WITHOUT MATRIX INVERSION                                  
-//        This function fits the source spectrum. The calling program should 
-//        fill in input parameters of the TSpectrumFit class            
-//        The fitted parameters are written into           
-//        TSpectrumFit class output parameters and fitted data are written into 
-//        source spectrum.                                                    
-//                                                                          
-//        Function parameters:                                             
-//        source-pointer to the vector of source spectrum                  
-//                                                                         
+//        ONE-DIMENSIONAL FIT FUNCTION
+//        ALGORITHM WITHOUT MATRIX INVERSION
+//        This function fits the source spectrum. The calling program should
+//        fill in input parameters of the TSpectrumFit class
+//        The fitted parameters are written into
+//        TSpectrumFit class output parameters and fitted data are written into
+//        source spectrum.
+//
+//        Function parameters:
+//        source-pointer to the vector of source spectrum
+//
 /////////////////////////////////////////////////////////////////////////////
 //
 //Begin_Html <!--
@@ -1362,19 +1362,19 @@ pm-&gt;SetMarkerSize(1);   </span></p>
    rozmer = j;
    if (rozmer == 0){
       delete [] working_space;
-      Error ("FitAwmi","All parameters are fixed");   
+      Error ("FitAwmi","All parameters are fixed");
       return;
    }
    if (rozmer >= fXmax - fXmin + 1){
       delete [] working_space;
-      Error ("FitAwmi","Number of fitted parameters is larger than # of fitted points");   
-      return;    
+      Error ("FitAwmi","Number of fitted parameters is larger than # of fitted points");
+      return;
    }
    for (iter = 0; iter < fNumberIterations; iter++) {
       for (j = 0; j < rozmer; j++) {
          working_space[2 * shift + j] = 0, working_space[3 * shift + j] = 0;        //der,temp
       }
-      
+
           //filling vectors
       alpha = fAlpha;
       chi_opt = 0, pw = fPower - 2;
@@ -1392,7 +1392,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
             if (f > 0.00001)
                chi_opt += yw * TMath::Log(f) - f;
          }
-         
+
          else {
             if (ywm != 0)
                chi_opt += (yw - f) * (yw - f) / ywm;
@@ -1402,18 +1402,18 @@ pm-&gt;SetMarkerSize(1);   </span></p>
             if (f < 0.00001)
                ywm = 0.00001;
          }
-         
+
          else if (fStatisticType == kFitOptimMaxLikelihood) {
             ywm = f;
             if (f < 0.001)
                ywm = 0.001;
          }
-         
+
          else {
             if (ywm == 0)
                ywm = 1;
          }
-         
+
              //calculation of gradient vector
              for (j = 0, k = 0; j < fNPeaks; j++) {
             if (fFixAmp[j] == false) {
@@ -1430,7 +1430,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c;        //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c;        //der
@@ -1459,7 +1459,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                      if (((a + d) <= 0 && a >= 0) || ((a + d) >= 0 && a <= 0))
                         d = 0;
                   }
-                  
+
                   else
                      d = 0;
                   a = a + d;
@@ -1469,7 +1469,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c;        //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c;        //der
@@ -1497,7 +1497,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                   if (((a + d) <= 0 && a >= 0) || ((a + d) >= 0 && a <= 0))
                      d = 0;
                }
-               
+
                else
                   d = 0;
                a = a + d;
@@ -1507,7 +1507,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                   working_space[3 * shift + k] += b * c;        //temp
                }
-               
+
                else {
                   b = a * (yw - f) / ywm;
                   working_space[2 * shift + k] += b * c;        //der
@@ -1529,7 +1529,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                   working_space[3 * shift + k] += b * c;        //temp
                }
-               
+
                else {
                   b = a * (yw - f) / ywm;
                   working_space[2 * shift + k] += b * c;        //der
@@ -1551,7 +1551,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                   working_space[3 * shift + k] += b * c;        //temp
                }
-               
+
                else {
                   b = a * (yw - f) / ywm;
                   working_space[2 * shift + k] += b * c;        //der
@@ -1572,7 +1572,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                   working_space[3 * shift + k] += b * c;        //temp
                }
-               
+
                else {
                   b = a * (yw - f) / ywm;
                   working_space[2 * shift + k] += b * c;        //der
@@ -1592,7 +1592,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                   working_space[3 * shift + k] += b * c;        //temp
                }
-               
+
                else {
                   b = a * (yw - f) / ywm;
                   working_space[2 * shift + k] += b * c;        //der
@@ -1612,7 +1612,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                   working_space[3 * shift + k] += b * c;        //temp
                }
-               
+
                else {
                   b = a * (yw - f) / ywm;
                   working_space[2 * shift + k] += b * c;        //der
@@ -1632,7 +1632,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                   b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                   working_space[3 * shift + k] += b * c;        //temp
                }
-               
+
                else {
                   b = a * (yw - f) / ywm;
                   working_space[2 * shift + k] += b * c;        //der
@@ -1649,22 +1649,22 @@ pm-&gt;SetMarkerSize(1);   </span></p>
          else
             working_space[2 * shift + j] = 0;        //der[j]
       }
-      
+
       //calculate chi_opt
       chi2 = chi_opt;
       chi_opt = TMath::Sqrt(TMath::Abs(chi_opt));
-      
+
       //calculate new parameters
       regul_cycle = 0;
       for (j = 0; j < rozmer; j++) {
          working_space[4 * shift + j] = working_space[shift + j];        //temp_xk[j]=xk[j]
       }
-      
+
       do {
          if (fAlphaOptim == kFitAlphaOptimal) {
             if (fStatisticType != kFitOptimMaxLikelihood)
                chi_min = 10000 * chi2;
-            
+
             else
                chi_min = 0.1 * chi2;
             flag = 0;
@@ -1746,7 +1746,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                      if (f > 0.00001)
                         chi2 += yw * TMath::Log(f) - f;
                   }
-                  
+
                   else {
                      if (ywm != 0)
                         chi2 += (yw - f) * (yw - f) / ywm;
@@ -1758,7 +1758,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                     && fStatisticType == kFitOptimMaxLikelihood)) {
                   pmin = pi, chi_min = chi2;
                }
-               
+
                else
                   flag = 1;
                if (pi == 0.1)
@@ -1825,7 +1825,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                chi = chi_min;
             }
          }
-         
+
          else {
             for (j = 0; j < rozmer; j++) {
                working_space[shift + j] = working_space[4 * shift + j] + alpha * working_space[2 * shift + j];        //xk[j]=temp_xk[j]+pi*alpha*der[j]
@@ -1904,7 +1904,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
                   if (f > 0.00001)
                      chi += yw * TMath::Log(f) - f;
                }
-               
+
                else {
                   if (ywm != 0)
                      chi += (yw - f) * (yw - f) / ywm;
@@ -1915,7 +1915,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
          chi = TMath::Sqrt(TMath::Abs(chi));
          if (fAlphaOptim == kFitAlphaHalving && chi > 1E-6)
             alpha = alpha * chi_opt / (2 * chi);
-         
+
          else if (fAlphaOptim == kFitAlphaOptimal)
             alpha = alpha / 10.0;
          iter += 1;
@@ -1942,7 +1942,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
          working_space[peak_vel + 6]);
          chi_opt = (yw - f) * (yw - f) / yw;
          chi_cel += (yw - f) * (yw - f) / yw;
-         
+
              //calculate gradient vector
          for (j = 0, k = 0; j < fNPeaks; j++) {
             if (fFixAmp[j] == false) {
@@ -2073,17 +2073,17 @@ pm-&gt;SetMarkerSize(1);   </span></p>
             b = working_space[4 * shift + j];        //temp_xk[j]
             if (b == 0)
                b = 1;
-            
+
             else
                b = 1 / b;
             fAreaErr[i] = TMath::Sqrt(TMath::Abs(a * a * b * chi_er));
          }
-         
+
          else
             fAreaErr[i] = 0;
          j += 1;
       }
-      
+
       else {
          fAmpCalc[i] = fAmpInit[i];
          fAmpErr[i] = 0;
@@ -2095,7 +2095,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
             fPositionErr[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fPositionCalc[i] = fPositionInit[i];
          fPositionErr[i] = 0;
@@ -2107,7 +2107,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
          fSigmaErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSigmaCalc = fSigmaInit;
       fSigmaErr = 0;
@@ -2118,7 +2118,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
          fTErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fTCalc = fTInit;
       fTErr = 0;
@@ -2129,7 +2129,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
          fBErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fBCalc = fBInit;
       fBErr = 0;
@@ -2140,7 +2140,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
          fSErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSCalc = fSInit;
       fSErr = 0;
@@ -2151,7 +2151,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
          fA0Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fA0Calc = fA0Init;
       fA0Err = 0;
@@ -2162,7 +2162,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
          fA1Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fA1Calc = fA1Init;
       fA1Err = 0;
@@ -2173,7 +2173,7 @@ pm-&gt;SetMarkerSize(1);   </span></p>
          fA2Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fA2Calc = fA2Init;
       fA2Err = 0;
@@ -2191,12 +2191,12 @@ pm-&gt;SetMarkerSize(1);   </span></p>
    delete[]working_space;
    return;
 }
-    
+
 /////////////////FITTING FUNCTION WITH MATRIX INVERSION///////////////////////////////////////
 
 //_______________________________________________________________________________
 void TSpectrumFit::StiefelInversion(Double_t **a, Int_t size)
-{   
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -2213,10 +2213,10 @@ void TSpectrumFit::StiefelInversion(Double_t **a, Int_t size)
 //////////////////////////////////////////////////////////////////////////////////
    Int_t i, j, k = 0;
    Double_t sk = 0, b, lambdak, normk, normk_old = 0;
-   
+
    do {
       normk = 0;
-      
+
           //calculation of rk and norm
           for (i = 0; i < size; i++) {
          a[i][size + 2] = -a[i][size];        //rk=-C
@@ -2225,17 +2225,17 @@ void TSpectrumFit::StiefelInversion(Double_t **a, Int_t size)
          }
          normk += a[i][size + 2] * a[i][size + 2];        //calculation normk
       }
-      
+
       //calculation of sk
       if (k != 0) {
          sk = normk / normk_old;
       }
-      
+
       //calculation of uk
       for (i = 0; i < size; i++) {
          a[i][size + 3] = -a[i][size + 2] + sk * a[i][size + 3];        //uk=-rk+sk*uk-1
       }
-      
+
       //calculation of lambdak
       lambdak = 0;
       for (i = 0; i < size; i++) {
@@ -2246,7 +2246,7 @@ void TSpectrumFit::StiefelInversion(Double_t **a, Int_t size)
       }
       if (TMath::Abs(lambdak) > 1e-50)        //computer zero
          lambdak = normk / lambdak;
-      
+
       else
          lambdak = 0;
       for (i = 0; i < size; i++)
@@ -2258,20 +2258,20 @@ void TSpectrumFit::StiefelInversion(Double_t **a, Int_t size)
 }
 
 //_______________________________________________________________________________
-void TSpectrumFit::FitStiefel(Double_t *source) 
+void TSpectrumFit::FitStiefel(Double_t *source)
 {
 /////////////////////////////////////////////////////////////////////////////
-//        ONE-DIMENSIONAL FIT FUNCTION                                    
-//        ALGORITHM WITH MATRIX INVERSION (STIEFEL-HESTENS METHOD)            
-//        This function fits the source spectrum. The calling program should 
+//        ONE-DIMENSIONAL FIT FUNCTION
+//        ALGORITHM WITH MATRIX INVERSION (STIEFEL-HESTENS METHOD)
+//        This function fits the source spectrum. The calling program should
 //        fill in input parameters
-//        The fitted parameters are written into           
-//        output parameters and fitted data are written into 
-//        source spectrum.                                                    
-//                                                                          
-//        Function parameters:                                             
-//        source-pointer to the vector of source spectrum                  
-//                                                                         
+//        The fitted parameters are written into
+//        output parameters and fitted data are written into
+//        source spectrum.
+//
+//        Function parameters:
+//        source-pointer to the vector of source spectrum
+//
 /////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
@@ -2564,12 +2564,12 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
    if (rozmer == 0){
       Error ("FitAwmi","All parameters are fixed");
       delete [] working_space;
-      return;    
+      return;
    }
    if (rozmer >= fXmax - fXmin + 1){
-      Error ("FitAwmi","Number of fitted parameters is larger than # of fitted points");   
+      Error ("FitAwmi","Number of fitted parameters is larger than # of fitted points");
       delete [] working_space;
-      return;    
+      return;
    }
    Double_t **working_matrix = new Double_t *[rozmer];
    for (i = 0; i < rozmer; i++)
@@ -2581,12 +2581,12 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
             working_matrix[j][k] = 0;
          }
       }
-      
+
       //filling working matrix
       alpha = fAlpha;
       chi_opt = 0;
       for (i = fXmin; i <= fXmax; i++) {
-         
+
              //calculation of gradient vector
              for (j = 0, k = 0; j < fNPeaks; j++) {
             if (fFixAmp[j] == false) {
@@ -2660,7 +2660,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
             if (f > 0.00001)
                chi_opt += yw * TMath::Log(f) - f;
          }
-         
+
          else {
             if (ywm != 0)
                chi_opt += (yw - f) * (yw - f) / ywm;
@@ -2670,13 +2670,13 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
             if (f < 0.00001)
                ywm = 0.00001;
          }
-         
+
          else if (fStatisticType == kFitOptimMaxLikelihood) {
             ywm = f;
             if (f < 0.00001)
                ywm = 0.00001;
          }
-         
+
          else {
             if (ywm == 0)
                ywm = 1;
@@ -2694,7 +2694,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
          }
          if (fStatisticType == kFitOptimChiFuncValues)
             b = (f * f - yw * yw) / (ywm * ywm);
-         
+
          else
             b = (f - yw) / ywm;
          for (j = 0; j < rozmer; j++) {
@@ -2708,22 +2708,22 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
       for (i = 0; i < rozmer; i++) {
          working_space[2 * shift + i] = working_matrix[i][rozmer + 1];        //der
       }
-      
+
       //calculate chi_opt
       chi2 = chi_opt;
       chi_opt = TMath::Sqrt(TMath::Abs(chi_opt));
-      
+
       //calculate new parameters
       regul_cycle = 0;
       for (j = 0; j < rozmer; j++) {
          working_space[4 * shift + j] = working_space[shift + j];        //temp_xk[j]=xk[j]
       }
-      
+
       do {
          if (fAlphaOptim == kFitAlphaOptimal) {
             if (fStatisticType != kFitOptimMaxLikelihood)
                chi_min = 10000 * chi2;
-            
+
             else
                chi_min = 0.1 * chi2;
             flag = 0;
@@ -2805,7 +2805,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
                      if (f > 0.00001)
                         chi2 += yw * TMath::Log(f) - f;
                   }
-                  
+
                   else {
                      if (ywm != 0)
                         chi2 += (yw - f) * (yw - f) / ywm;
@@ -2817,7 +2817,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
                     && fStatisticType == kFitOptimMaxLikelihood)) {
                   pmin = pi, chi_min = chi2;
                }
-               
+
                else
                   flag = 1;
                if (pi == 0.1)
@@ -2884,7 +2884,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
                chi = chi_min;
             }
          }
-         
+
          else {
             for (j = 0; j < rozmer; j++) {
                working_space[shift + j] = working_space[4 * shift + j] + alpha * working_space[2 * shift + j];        //xk[j]=temp_xk[j]+alpha*der[j]
@@ -2963,7 +2963,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
                   if (f > 0.00001)
                      chi += yw * TMath::Log(f) - f;
                }
-               
+
                else {
                   if (ywm != 0)
                      chi += (yw - f) * (yw - f) / ywm;
@@ -2974,7 +2974,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
          chi = TMath::Sqrt(TMath::Abs(chi));
          if (fAlphaOptim == kFitAlphaHalving && chi > 1E-6)
             alpha = alpha * chi_opt / (2 * chi);
-         
+
          else if (fAlphaOptim == kFitAlphaOptimal)
             alpha = alpha / 10.0;
          iter += 1;
@@ -3001,7 +3001,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
          working_space[peak_vel + 6]);
          chi_opt = (yw - f) * (yw - f) / yw;
          chi_cel += (yw - f) * (yw - f) / yw;
-         
+
              //calculate gradient vector
              for (j = 0, k = 0; j < fNPeaks; j++) {
             if (fFixAmp[j] == false) {
@@ -3123,17 +3123,17 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
             b = working_space[4 * shift + j];        //temp_xk[j]
             if (b == 0)
                b = 1;
-            
+
             else
                b = 1 / b;
             fAreaErr[i] = TMath::Sqrt(TMath::Abs(a * a * b * chi_er));
          }
-         
+
          else
             fAreaErr[i] = 0;
          j += 1;
       }
-      
+
       else {
          fAmpCalc[i] = fAmpInit[i];
          fAmpErr[i] = 0;
@@ -3145,7 +3145,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
             fPositionErr[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //Der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fPositionCalc[i] = fPositionInit[i];
          fPositionErr[i] = 0;
@@ -3157,7 +3157,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
          fSigmaErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSigmaCalc = fSigmaInit;
       fSigmaErr = 0;
@@ -3168,7 +3168,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
          fTErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fTCalc = fTInit;
       fTErr = 0;
@@ -3179,7 +3179,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
          fBErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fBCalc = fBInit;
       fBErr = 0;
@@ -3190,7 +3190,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
          fSErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSCalc = fSInit;
       fSErr = 0;
@@ -3201,7 +3201,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
          fA0Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fA0Calc = fA0Init;
       fA0Err = 0;
@@ -3212,7 +3212,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
          fA1Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fA1Calc = fA1Init;
       fA1Err = 0;
@@ -3223,7 +3223,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
          fA2Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j]));        //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fA2Calc = fA2Init;
       fA2Err = 0;
@@ -3237,7 +3237,7 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
       working_space[peak_vel + 4], working_space[peak_vel + 5],
       working_space[peak_vel + 6]);
       source[i] = f;
-   } 
+   }
    for (i = 0; i < rozmer; i++)
       delete [] working_matrix[i];
    delete [] working_matrix;
@@ -3249,51 +3249,51 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
 void TSpectrumFit::SetFitParameters(Int_t xmin,Int_t xmax, Int_t numberIterations, Double_t alpha, Int_t statisticType, Int_t alphaOptim, Int_t power, Int_t fitTaylor)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION                                                      
-//                                                     
+//   SETTER FUNCTION
+//
 //   This function sets the following fitting parameters:
 //         -xmin, xmax - fitting region
 //         -numberIterations - # of desired iterations in the fit
 //         -alpha - convergence coefficient, it should be positive number and <=1, for details see references
-//         -statisticType - type of statistics, possible values kFitOptimChiCounts (chi square statistics with counts as weighting coefficients), kFitOptimChiFuncValues (chi square statistics with function values as weighting coefficients),kFitOptimMaxLikelihood 
+//         -statisticType - type of statistics, possible values kFitOptimChiCounts (chi square statistics with counts as weighting coefficients), kFitOptimChiFuncValues (chi square statistics with function values as weighting coefficients),kFitOptimMaxLikelihood
 //         -alphaOptim - optimization of convergence algorithm, possible values kFitAlphaHalving, kFitAlphaOptimal
 //         -power - possible values kFitPower2,4,6,8,10,12, for details see references. It applies only for Awmi fitting function.
 //         -fitTaylor - order of Taylor expansion, possible values kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi fitting function.
-//////////////////////////////////////////////////////////////////////////////   
-   if(xmin<0 || xmax <= xmin){ 
+//////////////////////////////////////////////////////////////////////////////
+   if(xmin<0 || xmax <= xmin){
       Error("SetFitParameters", "Wrong range");
       return;
-   }      
+   }
    if (numberIterations <= 0){
       Error("SetFitParameters","Invalid number of iterations, must be positive");
       return;
-   }      
+   }
    if (alpha <= 0 || alpha > 1){
       Error ("SetFitParameters","Invalid step coefficient alpha, must be > than 0 and <=1");
       return;
-   }      
+   }
    if (statisticType != kFitOptimChiCounts
         && statisticType != kFitOptimChiFuncValues
         && statisticType != kFitOptimMaxLikelihood){
       Error("SetFitParameters","Wrong type of statistic");
       return;
-   }      
+   }
    if (alphaOptim != kFitAlphaHalving
         && alphaOptim != kFitAlphaOptimal){
       Error("SetFitParameters","Wrong optimization algorithm");
       return;
-   }      
+   }
    if (power != kFitPower2 && power != kFitPower4
         && power != kFitPower6 && power != kFitPower8
         && power != kFitPower10 && power != kFitPower12){
       Error("SetFitParameters","Wrong power");
       return;
-   }      
+   }
    if (fitTaylor != kFitTaylorOrderFirst
         && fitTaylor != kFitTaylorOrderSecond){
       Error("SetFitParameters","Wrong order of Taylor development");
       return;
-   }      
+   }
    fXmin=xmin,fXmax=xmax,fNumberIterations=numberIterations,fAlpha=alpha,fStatisticType=statisticType,fAlphaOptim=alphaOptim,fPower=power,fFitTaylor=fitTaylor;
 }
 
@@ -3301,38 +3301,38 @@ void TSpectrumFit::SetFitParameters(Int_t xmin,Int_t xmax, Int_t numberIteration
 void TSpectrumFit::SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Double_t *positionInit, const Bool_t *fixPosition, const Double_t *ampInit, const Bool_t *fixAmp)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION                                                      
-//                                                     
+//   SETTER FUNCTION
+//
 //   This function sets the following fitting parameters of peaks:
 //         -sigma - initial value of sigma parameter
-//         -fixSigma - logical value of sigma parameter, which allows to fix the parameter (not to fit)   
+//         -fixSigma - logical value of sigma parameter, which allows to fix the parameter (not to fit)
 //         -positionInit - aray of initial values of peaks positions
 //         -fixPosition - array of logical values which allow to fix appropriate positions (not fit). However they are present in the estimated functional.
 //         -ampInit - aray of initial values of peaks amplitudes
-//         -fixAmp - aray of logical values which allow to fix appropriate amplitudes (not fit). However they are present in the estimated functional      
-//////////////////////////////////////////////////////////////////////////////   
-   
+//         -fixAmp - aray of logical values which allow to fix appropriate amplitudes (not fit). However they are present in the estimated functional
+//////////////////////////////////////////////////////////////////////////////
+
    Int_t i;
    if (sigma <= 0){
       Error ("SetPeakParameters","Invalid sigma, must be > than 0");
       return;
-   }      
+   }
    for(i=0; i < fNPeaks; i++){
       if((Int_t) positionInit[i] < fXmin || (Int_t) positionInit[i] > fXmax){
          Error ("SetPeakParameters","Invalid peak position, must be in the range fXmin, fXmax");
          return;
-      }         
+      }
       if(ampInit[i] < 0){
-         Error ("SetPeakParameters","Invalid peak amplitude, must be > than 0");        
+         Error ("SetPeakParameters","Invalid peak amplitude, must be > than 0");
          return;
-      }         
+      }
    }
    fSigmaInit = sigma,fFixSigma = fixSigma;
    for(i=0; i < fNPeaks; i++){
       fPositionInit[i] = (Double_t) positionInit[i];
       fFixPosition[i] = fixPosition[i];
       fAmpInit[i] = (Double_t) ampInit[i];
-      fFixAmp[i] = fixAmp[i]; 
+      fFixAmp[i] = fixAmp[i];
    }
 }
 
@@ -3340,58 +3340,58 @@ void TSpectrumFit::SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Doub
 void TSpectrumFit::SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Double_t a1Init, Bool_t fixA1, Double_t a2Init, Bool_t fixA2)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION                                                      
-//                                                     
+//   SETTER FUNCTION
+//
 //   This function sets the following fitting parameters of background:
 //         -a0Init - initial value of a0 parameter (backgroud is estimated as a0+a1*x+a2*x*x)
-//         -fixA0 - logical value of a0 parameter, which allows to fix the parameter (not to fit)  
+//         -fixA0 - logical value of a0 parameter, which allows to fix the parameter (not to fit)
 //         -a1Init - initial value of a1 parameter
-//         -fixA1 - logical value of a1 parameter, which allows to fix the parameter (not to fit)   
+//         -fixA1 - logical value of a1 parameter, which allows to fix the parameter (not to fit)
 //         -a2Init - initial value of a2 parameter
-//         -fixA2 - logical value of a2 parameter, which allows to fix the parameter (not to fit)     
-//////////////////////////////////////////////////////////////////////////////   
-   
+//         -fixA2 - logical value of a2 parameter, which allows to fix the parameter (not to fit)
+//////////////////////////////////////////////////////////////////////////////
+
    fA0Init = a0Init;
    fFixA0 = fixA0;
    fA1Init = a1Init;
    fFixA1 = fixA1;
    fA2Init = a2Init;
-   fFixA2 = fixA2;    
+   fFixA2 = fixA2;
 }
 
 //_______________________________________________________________________________
 void TSpectrumFit::SetTailParameters(Double_t tInit, Bool_t fixT, Double_t bInit, Bool_t fixB, Double_t sInit, Bool_t fixS)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION                                                      
-//                                                     
+//   SETTER FUNCTION
+//
 //   This function sets the following fitting parameters of tails of peaks
 //         -tInit - initial value of t parameter
-//         -fixT - logical value of t parameter, which allows to fix the parameter (not to fit)  
+//         -fixT - logical value of t parameter, which allows to fix the parameter (not to fit)
 //         -bInit - initial value of b parameter
-//         -fixB - logical value of b parameter, which allows to fix the parameter (not to fit)  
+//         -fixB - logical value of b parameter, which allows to fix the parameter (not to fit)
 //         -sInit - initial value of s parameter
-//         -fixS - logical value of s parameter, which allows to fix the parameter (not to fit)  
-//////////////////////////////////////////////////////////////////////////////   
-   
+//         -fixS - logical value of s parameter, which allows to fix the parameter (not to fit)
+//////////////////////////////////////////////////////////////////////////////
+
    fTInit = tInit;
    fFixT = fixT;
    fBInit = bInit;
    fFixB = fixB;
    fSInit = sInit;
-   fFixS = fixS;     
+   fFixS = fixS;
 }
 
 //_______________________________________________________________________________
 void TSpectrumFit::GetSigma(Double_t &sigma, Double_t &sigmaErr)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets the sigma parameter and its error
 //         -sigma - gets the fitted value of sigma parameter
 //         -sigmaErr - gets error value of sigma parameter
-//////////////////////////////////////////////////////////////////////////////   
+//////////////////////////////////////////////////////////////////////////////
    sigma=fSigmaCalc;
    sigmaErr=fSigmaErr;
 }
@@ -3400,8 +3400,8 @@ void TSpectrumFit::GetSigma(Double_t &sigma, Double_t &sigmaErr)
 void TSpectrumFit::GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Double_t &a1, Double_t &a1Err, Double_t &a2, Double_t &a2Err)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets the background parameters and their errors
 //         -a0 - gets the fitted value of a0 parameter
 //         -a0Err - gets error value of a0 parameter
@@ -3409,21 +3409,21 @@ void TSpectrumFit::GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Double
 //         -a1Err - gets error value of a1 parameter
 //         -a2 - gets the fitted value of a2 parameter
 //         -a2Err - gets error value of a2 parameter
-//////////////////////////////////////////////////////////////////////////////      
+//////////////////////////////////////////////////////////////////////////////
    a0 = fA0Calc;
    a0Err = fA0Err;
    a1 = fA1Calc;
    a1Err = fA1Err;
    a2 = fA2Calc;
-   a2Err = fA2Err;    
+   a2Err = fA2Err;
 }
 
 //_______________________________________________________________________________
 void TSpectrumFit::GetTailParameters(Double_t &t, Double_t &tErr, Double_t &b, Double_t &bErr, Double_t &s, Double_t &sErr)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets the tail parameters and their errors
 //         -t - gets the fitted value of t parameter
 //         -tErr - gets error value of t parameter
@@ -3431,12 +3431,12 @@ void TSpectrumFit::GetTailParameters(Double_t &t, Double_t &tErr, Double_t &b, D
 //         -bErr - gets error value of b parameter
 //         -s - gets the fitted value of s parameter
 //         -sErr - gets error value of s parameter
-//////////////////////////////////////////////////////////////////////////////         
+//////////////////////////////////////////////////////////////////////////////
    t = fTCalc;
    tErr = fTErr;
    b = fBCalc;
-   bErr = fBErr;  
+   bErr = fBErr;
    s = fSCalc;
-   sErr = fSErr;  
+   sErr = fSErr;
 }
 

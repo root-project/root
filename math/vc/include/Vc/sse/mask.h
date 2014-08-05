@@ -451,7 +451,7 @@ class Float8Mask
 
         Vc_ALWAYS_INLINE Vc_PURE int count() const {
 #ifdef VC_IMPL_POPCNT
-		return _mm_popcnt_u32(toInt());
+        return _mm_popcnt_u32(toInt());
 #else
 //X             int tmp1 = _mm_movemask_ps(k[0]);
 //X             int tmp2 = _mm_movemask_ps(k[1]);

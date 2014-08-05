@@ -48,134 +48,134 @@
 
 #include <vector>
 #include <map>
-#include <string> 
+#include <string>
 
 
 
-namespace ROOT { 
+namespace ROOT {
 
-namespace Math { 
+namespace Math {
 
 
    /**
       enumeration specifying the types of GSL minimizers
       @ingroup MultiMin
    */
-   enum EGSLMinimizerType { 
-      kConjugateFR, 
-      kConjugatePR, 
-      kVectorBFGS, 
-      kVectorBFGS2, 
+   enum EGSLMinimizerType {
+      kConjugateFR,
+      kConjugatePR,
+      kVectorBFGS,
+      kVectorBFGS2,
       kSteepestDescent
    };
 
 
-   class GSLMultiMinimizer; 
+   class GSLMultiMinimizer;
 
    class MinimTransformFunction;
 
 
 //_____________________________________________________________________________________
-/** 
-   GSLMinimizer class. 
-   Implementation of the ROOT::Math::Minimizer interface using the GSL multi-dimensional 
+/**
+   GSLMinimizer class.
+   Implementation of the ROOT::Math::Minimizer interface using the GSL multi-dimensional
    minimization algorithms.
 
-   See <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Multidimensional-Minimization.html">GSL doc</A> 
-   from more info on the GSL minimization algorithms. 
+   See <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Multidimensional-Minimization.html">GSL doc</A>
+   from more info on the GSL minimization algorithms.
 
-   The class implements the ROOT::Math::Minimizer interface and can be instantiated using the 
-   ROOT plugin manager (plugin name is "GSLMultiMin"). The varius minimization algorithms 
-   (conjugatefr, conjugatepr, bfgs, etc..) can be passed as enumerations and also as a string. 
-   The default algorithm is conjugatefr (Fletcher-Reeves conjugate gradient algorithm).  
+   The class implements the ROOT::Math::Minimizer interface and can be instantiated using the
+   ROOT plugin manager (plugin name is "GSLMultiMin"). The varius minimization algorithms
+   (conjugatefr, conjugatepr, bfgs, etc..) can be passed as enumerations and also as a string.
+   The default algorithm is conjugatefr (Fletcher-Reeves conjugate gradient algorithm).
 
    @ingroup MultiMin
-*/ 
+*/
 class GSLMinimizer : public ROOT::Math::BasicMinimizer {
 
-public: 
-
-   /** 
-      Default constructor
-   */ 
-   GSLMinimizer (ROOT::Math::EGSLMinimizerType type = ROOT::Math::kConjugateFR  ); 
+public:
 
    /**
-      Constructor with a string giving name of algorithm 
-    */
-   GSLMinimizer (const char *  type  ); 
+      Default constructor
+   */
+   GSLMinimizer (ROOT::Math::EGSLMinimizerType type = ROOT::Math::kConjugateFR  );
 
-   /** 
-      Destructor 
-   */ 
-   virtual ~GSLMinimizer (); 
+   /**
+      Constructor with a string giving name of algorithm
+    */
+   GSLMinimizer (const char *  type  );
+
+   /**
+      Destructor
+   */
+   virtual ~GSLMinimizer ();
 
 private:
    // usually copying is non trivial, so we make this unaccessible
 
-   /** 
+   /**
       Copy constructor
-   */ 
+   */
    GSLMinimizer(const GSLMinimizer &) : BasicMinimizer() {}
 
-   /** 
+   /**
       Assignment operator
-   */ 
-   GSLMinimizer & operator = (const GSLMinimizer & rhs) { 
+   */
+   GSLMinimizer & operator = (const GSLMinimizer & rhs) {
       if (this == &rhs) return *this;  // time saving self-test
       return *this;
    }
 
-public: 
+public:
 
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func); 
+   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func);
 
-   /// set the function to minimize 
+   /// set the function to minimize
    virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func) { BasicMinimizer::SetFunction(func);}
 
    /// method to perform the minimization
-   virtual  bool Minimize(); 
+   virtual  bool Minimize();
 
 
    /// return expected distance reached from the minimum
    virtual double Edm() const { return 0; } // not impl. }
 
 
-   /// return pointer to gradient values at the minimum 
-   virtual const double *  MinGradient() const; 
+   /// return pointer to gradient values at the minimum
+   virtual const double *  MinGradient() const;
 
-   /// number of function calls to reach the minimum 
-   virtual unsigned int NCalls() const;  
+   /// number of function calls to reach the minimum
+   virtual unsigned int NCalls() const;
 
 
    /// minimizer provides error and error matrix
-   virtual bool ProvidesError() const { return false; } 
+   virtual bool ProvidesError() const { return false; }
 
-   /// return errors at the minimum 
-   virtual const double * Errors() const { 
+   /// return errors at the minimum
+   virtual const double * Errors() const {
       return 0;
    }
 
-   /** return covariance matrices elements 
+   /** return covariance matrices elements
        if the variable is fixed the matrix is zero
        The ordering of the variables is the same as in errors
-   */ 
+   */
    virtual double CovMatrix(unsigned int , unsigned int ) const { return 0; }
 
 
 
 
-protected: 
+protected:
 
-private: 
-   
+private:
 
-   ROOT::Math::GSLMultiMinimizer * fGSLMultiMin; 
-   
+
+   ROOT::Math::GSLMultiMinimizer * fGSLMultiMin;
+
    double fLSTolerance;  // Line Search Tolerance
 
-}; 
+};
 
    } // end namespace Fit
 

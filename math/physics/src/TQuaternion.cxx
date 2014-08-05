@@ -4,12 +4,12 @@
 
 //////////////////////////////////////////////////////////////////////////
 //____________________
-//                                                                      
-//  A Quaternion Class 
+//
+//  A Quaternion Class
 // Begin_html
-// <p> Quaternion is a 4-component mathematic object quite convenient when dealing with 
-// space rotation (or reference frame transformation). </p> 
-// </p> 
+// <p> Quaternion is a 4-component mathematic object quite convenient when dealing with
+// space rotation (or reference frame transformation). </p>
+// </p>
 // <p> In short, think of quaternion Q as a 3-vector augmented by a real number. Q = Q|<sub>r</sub> + Q|<sub>V</sub>
 //
 // <p> <u> Quaternion multiplication :</u>
@@ -18,41 +18,41 @@
 // <br> Q.Q'        = (Q|<sub>r</sub> + Q|<sub>V</sub> )*( Q'|<sub>r</sub> + Q'|<sub>V</sub>)
 // <br>         = [ Q|<sub>r</sub>*Q'|<sub>r</sub> - Q|<sub>V</sub>*Q'|<sub>V</sub> ] + [ Q|<sub>r</sub>*Q'|<sub>V</sub> + Q'|<sub>r</sub>*Q|<sub>V</sub> + Q|<sub>V</sub> X Q'|<sub>V</sub> ]
 // <br>
-// <br> where : 
+// <br> where :
 // <br> Q|<sub>r</sub>*Q'|<sub>r</sub>  is a real number product of real numbers
 // <br> Q|<sub>V</sub>*Q'|<sub>V</sub> is a real number, scalar product of two 3-vectors
 // <br> Q|<sub>r</sub>*Q'|<sub>V</sub> is a 3-vector, scaling of a 3-vector by a real number
 // <br> Q|<sub>V</sub>XQ'|<sub>V</sub> is a 3-vector, cross product of two 3-vectors
 // <br>
-// <br> Thus, quaternion product is a generalization of real number product and product of a vector by a real number. Product of two pure vectors gives a quaternion whose real part is the opposite of scalar product and the vector part the cross product…
+// <br> Thus, quaternion product is a generalization of real number product and product of a vector by a real number. Product of two pure vectors gives a quaternion whose real part is the opposite of scalar product and the vector part the cross product.
 // </p>
 //
 // <p> The conjugate of a quaternion Q = Q|<sub>r</sub> + Q|<sub>V</sub> is Q_bar = Q|<sub>r</sub> - Q|<sub>V</sub>
 // </p>
 // <p> The magnitude of a quaternion Q is given by |Q|² = Q.Q_bar = Q_bar.Q = Q²|<sub>r</sub> + |Q|<sub>V</sub>|²
 // </p>
-// <p> Therefore, the inverse of a quaternion is Q<sup>-1</sup> = Q_bar /|Q|² 
+// <p> Therefore, the inverse of a quaternion is Q<sup>-1</sup> = Q_bar /|Q|²
 // </p>
 // <p> "unit" quaternion is a quaternion of magnitude 1 : |Q|² = 1.
 // <br> Unit quaternions are a subset of the quaternions set.
 // </p>
 //
 // <p> <u>Quaternion and rotations :</u>
-// </p> 
+// </p>
 //
 // <p> A rotation of angle <font face="Symbol">f</font> around a given axis, is represented by a unit quaternion Q :
 // <br> -        The axis of the rotation is given by the vector part of Q.
 // <br> -        The ratio between the magnitude of the vector part and the real part of Q equals tan(<font face="Symbol">f</font>/2).
-// </p> 
-// <p> In other words : Q = Q|<sub>r</sub> + Q|<sub>V</sub> = cos(<font face="Symbol">f</font>/2) + sin(<font face="Symbol">f</font>/2).u 
-// <br> (where u is a unit vector // to the rotation axis, 
+// </p>
+// <p> In other words : Q = Q|<sub>r</sub> + Q|<sub>V</sub> = cos(<font face="Symbol">f</font>/2) + sin(<font face="Symbol">f</font>/2).
+// <br> (where u is a unit vector // to the rotation axis,
 //                        cos(<font face="Symbol">f</font>/2) is the real part, sin(<font face="Symbol">f</font>/2).u is the vector part)
 // <br> Note : The quaternion of identity is Q<sub>I</sub> = cos(0) + sin(0)*(any vector) = 1.
 // </p>
 // <p> The composition of two rotations is described by the product of the two corresponding quaternions.
 // <br> As for 3-space rotations, quaternion multiplication is not commutative !
 // <br>
-// <br> Q = Q<sub>1</sub>.Q<sub>2</sub> represents the composition of the successive rotation R1 and R2 expressed in the <b>current</b> frame (the axis of rotation hold by Q<sub>2</sub> is expressed in the frame as it is after R1 rotation). 
+// <br> Q = Q<sub>1</sub>.Q<sub>2</sub> represents the composition of the successive rotation R1 and R2 expressed in the <b>current</b> frame (the axis of rotation hold by Q<sub>2</sub> is expressed in the frame as it is after R1 rotation).
 // <br> Q = Q<sub>2</sub>.Q<sub>1</sub> represents the composition of the successive rotation R1 and R2 expressed in the <b>initial</b> reference frame.
 // </p>
 // <p> The inverse of a rotation is a rotation about the same axis but of opposite angle, thus if Q is a unit quaternion,
@@ -60,7 +60,7 @@
 // <br> Q<sup>-1</sup> =cos(-<font face="Symbol">f</font>/2) + sin(-<font face="Symbol">f</font>/2).u = cos(<font face="Symbol">f</font>/2) - sin(<font face="Symbol">f</font>/2).u = Q|<sub>r</sub> -Q|<sub>V</sub> is its inverse quaternion.
 // </p>
 // <p> One verifies that :
-// <br> Q.Q<sup>-1</sup> = Q<sup>-1</sup>.Q = Q|<sub>r</sub>*Q|<sub>r</sub> + Q|<sub>V</sub>*Q|<sub>V</sub> + Q|<sub>r</sub>*Q|<sub>V</sub> -Q|<sub>r</sub>*Q|<sub>V</sub> + Q|<sub>V</sub>XQ|<sub>V</sub> 
+// <br> Q.Q<sup>-1</sup> = Q<sup>-1</sup>.Q = Q|<sub>r</sub>*Q|<sub>r</sub> + Q|<sub>V</sub>*Q|<sub>V</sub> + Q|<sub>r</sub>*Q|<sub>V</sub> -Q|<sub>r</sub>*Q|<sub>V</sub> + Q|<sub>V</sub>XQ|<sub>V</sub>
 // <br>                 = Q²|<sub>r</sub> + Q²|<sub>V</sub> = 1
 // </p>
 // <br>
@@ -72,7 +72,7 @@
 // <br> It is therefore faster than 3x3 matrixes multiplication involving 18 additions and 27 multiplications.
 // <br>
 // <br> On the contrary, rotation of a vector by the above formula ( Q*V*Q<sup>-1</sup> ) involves 18 additions and 24 multiplications, whereas multiplication of a 3-vector by a 3x3 matrix involves only 6 additions and 9 multiplications.
-// <br> 
+// <br>
 // <br> When dealing with numerous composition of space rotation, it is therefore faster to use quaternion product. On the other hand if a huge set of vectors must be rotated by a given quaternion, it is more optimized to convert the quaternion into a rotation matrix once, and then use that later to rotate the set of vectors.
 // </p>
 // <p> <u>More information :</u>
@@ -154,7 +154,7 @@ Double_t TQuaternion::GetQAngle() const {
    // Get angle of quaternion (rad)
    // N.B : this angle is half of the corresponding rotation angle
 
-   if (fRealPart == 0) return TMath::PiOver2(); 
+   if (fRealPart == 0) return TMath::PiOver2();
    Double_t denominator = fVectorPart.Mag();
    return atan(denominator/fRealPart);
 }
@@ -163,7 +163,7 @@ Double_t TQuaternion::GetQAngle() const {
 TQuaternion& TQuaternion::SetQAngle(Double_t angle) {
    // Set angle of quaternion (rad) - keep quaternion norm
    // N.B : this angle is half of the corresponding rotation angle
- 
+
    Double_t norm = Norm();
    Double_t normSinV = fVectorPart.Mag();
    if (normSinV != 0) fVectorPart *= (sin(angle)*norm/normSinV);
@@ -175,9 +175,9 @@ TQuaternion& TQuaternion::SetQAngle(Double_t angle) {
 //_____________________________________
 TQuaternion& TQuaternion::SetAxisQAngle(TVector3& v,Double_t QAngle) {
    // set quaternion from vector and angle (rad)
-   // quaternion is set as unitary 
+   // quaternion is set as unitary
    // N.B : this angle is half of the corresponding rotation angle
-        
+
    fVectorPart = v;
    double norm = v.Mag();
    if (norm>0) fVectorPart*=(1./norm);
@@ -187,7 +187,7 @@ TQuaternion& TQuaternion::SetAxisQAngle(TVector3& v,Double_t QAngle) {
    return (*this);
 }
 
-/**************** REAL TO QUATERNION ALGEBRA ****************************************/ 
+/**************** REAL TO QUATERNION ALGEBRA ****************************************/
 
 //_____________________________________
 TQuaternion TQuaternion::operator+(Double_t real) const {
@@ -205,7 +205,7 @@ TQuaternion TQuaternion::operator-(Double_t real) const {
 
 //_____________________________________
 TQuaternion TQuaternion::operator*(Double_t real) const {
-   // product of quaternion with a real 
+   // product of quaternion with a real
 
    return TQuaternion(fRealPart*real,fVectorPart.x()*real,fVectorPart.y()*real,fVectorPart.z()*real);
 }
@@ -229,7 +229,7 @@ TQuaternion operator - (Double_t r, const TQuaternion & q) { return (-q+r); }
 TQuaternion operator * (Double_t r, const TQuaternion & q) { return (q*r); }
 TQuaternion operator / (Double_t r, const TQuaternion & q) { return (q.Invert()*r); }
 
-/**************** VECTOR TO QUATERNION ALGEBRA ****************************************/ 
+/**************** VECTOR TO QUATERNION ALGEBRA ****************************************/
 
 //_____________________________________
 TQuaternion TQuaternion::operator+(const TVector3 &vect) const {
@@ -356,7 +356,7 @@ TQuaternion operator / (const TVector3 &vect, const TQuaternion &quat) {
    return res;
 }
 
-/**************** QUATERNION ALGEBRA ****************************************/ 
+/**************** QUATERNION ALGEBRA ****************************************/
 
 //_____________________________________
 TQuaternion& TQuaternion::operator*=(const TQuaternion &quaternion) {
@@ -506,7 +506,7 @@ TVector3 TQuaternion::Rotation(const TVector3 & vect) const {
       TQuaternion quat(*this);
       quat *= vect;
 
-      // only compute vect part : (real part has to be 0 ) : 
+      // only compute vect part : (real part has to be 0 ) :
       // VECT [ quat * ( this->Conjugate() ) ] = quat.fRealPart * -this->fVectorPart
       //                                                                                        + this->fRealPart * quat.fVectorPart
       //                                                                                        + quat.fVectorPart X (-this->fVectorPart)

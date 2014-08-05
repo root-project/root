@@ -231,7 +231,7 @@ template<class Element> void    Compare      (const TMatrixTBase<Element>  &m1,c
 
 template<class Element> Bool_t VerifyMatrixValue   (const TMatrixTBase<Element> &m,Element val,
                                                     Int_t verbose,Element maxDevAllow);
-template<class Element> Bool_t VerifyMatrixValue   (const TMatrixTBase<Element> &m,Element val,Int_t verbose) 
+template<class Element> Bool_t VerifyMatrixValue   (const TMatrixTBase<Element> &m,Element val,Int_t verbose)
                                                                            { return VerifyMatrixValue(m,val,verbose,Element(0.)); }
 template<class Element> Bool_t VerifyMatrixValue   (const TMatrixTBase<Element> &m,Element val)
                                                                            { return VerifyMatrixValue(m,val,1,Element(0.)); }

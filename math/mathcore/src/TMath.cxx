@@ -228,12 +228,12 @@ Double_t TMath::ErfcInverse(Double_t x)
    // returns  the inverse of the complementary error function
    // x must be  0<x<2
    // implement using  the quantile of the normal distribution
-   // instead of ErfInverse for better numerical precision for large x 
-   
+   // instead of ErfInverse for better numerical precision for large x
+
    // erfc-1(x) = - 1/sqrt(2) * normal_quantile( 0.5 * x)
-   return - 0.70710678118654752440 * TMath::NormQuantile( 0.5 * x); 
+   return - 0.70710678118654752440 * TMath::NormQuantile( 0.5 * x);
 }
-   
+
 
 
 
@@ -448,7 +448,7 @@ Double_t TMath::Gaus(Double_t x, Double_t mean, Double_t sigma, Bool_t norm)
    if (sigma == 0) return 1.e30;
    Double_t arg = (x-mean)/sigma;
    // for |arg| > 39  result is zero in double precision
-   if (arg < -39.0 || arg > 39.0) return 0.0; 
+   if (arg < -39.0 || arg > 39.0) return 0.0;
    Double_t res = TMath::Exp(-0.5*arg*arg);
    if (!norm) return res;
    return res/(2.50662827463100024*sigma); //sqrt(2*Pi)=2.50662827463100024
@@ -457,16 +457,16 @@ Double_t TMath::Gaus(Double_t x, Double_t mean, Double_t sigma, Bool_t norm)
 //______________________________________________________________________________
 Double_t TMath::Landau(Double_t x, Double_t mu, Double_t sigma, Bool_t norm)
 {
-   // The LANDAU function. 
+   // The LANDAU function.
    // mu is a location parameter and correspond approximatly to the most probable value
    // and sigma is a scale parameter (not the sigma of the full distribution which is not defined)
-   // Note that for mu=0 and sigma=1 (default values) the exact location of the maximum of the distribution 
+   // Note that for mu=0 and sigma=1 (default values) the exact location of the maximum of the distribution
    // (most proble value) is at x = -0.22278
    // This function has been adapted from the CERNLIB routine G110 denlan.
    // If norm=kTRUE (default is kFALSE) the result is divided by sigma
 
-   if (sigma <= 0) return 0; 
-   Double_t den = ::ROOT::Math::landau_pdf( (x-mu)/sigma ); 
+   if (sigma <= 0) return 0;
+   Double_t den = ::ROOT::Math::landau_pdf( (x-mu)/sigma );
    if (!norm) return den;
    return den/sigma;
 }
@@ -579,7 +579,7 @@ Double_t TMath::Poisson(Double_t x, Double_t par)
 Double_t TMath::PoissonI(Double_t x, Double_t par)
 {
   // compute the Poisson distribution function for (x,par)
-  // This is a non-smooth function.  
+  // This is a non-smooth function.
   // This function is equivalent to ROOT::Math::poisson_pdf
 //Begin_Html
 /*
@@ -588,7 +588,7 @@ Double_t TMath::PoissonI(Double_t x, Double_t par)
 //End_Html
 
    Int_t ix = Int_t(x);
-   return Poisson(ix,par); 
+   return Poisson(ix,par);
 }
 
 //______________________________________________________________________________
@@ -616,7 +616,7 @@ Double_t TMath::Prob(Double_t chi2,Int_t ndf)
       else          return 1;
    }
 
-   return ::ROOT::Math::chisquared_cdf_c(chi2,ndf); 
+   return ::ROOT::Math::chisquared_cdf_c(chi2,ndf);
 }
 
 //______________________________________________________________________________
@@ -773,7 +773,7 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
 //  A good description of the Kolmogorov test can be seen at:
 //    http://www.itl.nist.gov/div898/handbook/eda/section3/eda35g.htm
 
-//  LM: Nov 2010: clean up and returns now a zero distance when vectors are the same 
+//  LM: Nov 2010: clean up and returns now a zero distance when vectors are the same
 
    TString opt = option;
    opt.ToUpper();
@@ -807,7 +807,7 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
          ib++;
          if (ib >= nb) {ok = kTRUE; break;}
       } else {
-         // special cases for the ties 
+         // special cases for the ties
          double x = a[ia];
          while(a[ia] == x && ia < na) {
             rdiff -= sa;
@@ -843,7 +843,7 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
 Double_t TMath::Voigt(Double_t xx, Double_t sigma, Double_t lg, Int_t r)
 {
    // Computation of Voigt function (normalised).
-   // Voigt is a convolution of 
+   // Voigt is a convolution of
    // gauss(xx) = 1/(sqrt(2*pi)*sigma) * exp(xx*xx/(2*sigma*sigma)
    // and
    // lorentz(xx) = (1/pi) * (lg/2) / (xx*xx + lg*lg/4)
@@ -1179,41 +1179,41 @@ void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Do
 
    // re-implemented by L.M (9/11/2011) to fix bug https://savannah.cern.ch/bugs/?87251
    // following now exactly R implementation (available in library/stats/R/quantile.R )
-   // which follows precisely Hyndman-Fan paper 
+   // which follows precisely Hyndman-Fan paper
    // (older implementation had a bug for type =3)
 
    for (Int_t i=0; i<nprob; i++){
 
-      Double_t nppm = 0; 
+      Double_t nppm = 0;
       Double_t gamma = 0;
       Int_t j = 0;
 
       //Discontinuous functions
-      // type = 1,2, or 3 
+      // type = 1,2, or 3
       if (type < 4 ){
-         if (type == 3) 
+         if (type == 3)
             nppm = n*prob[i]-0.5;   // use m = -0.5
-         else 
+         else
             nppm = n*prob[i]; // use m = 0
 
          j = TMath::FloorNint(nppm);
 
          // LM : fix for numerical problems if nppm is actually equal to j, but results different for numerical error
-         // g in the paper is nppm -j  
+         // g in the paper is nppm -j
          if (type == 1)
             gamma = ( (nppm -j) > j*TMath::Limits<Double_t>::Epsilon() ) ? 1 : 0;
          else if (type == 2)
             gamma = ( (nppm -j) > j*TMath::Limits<Double_t>::Epsilon() ) ? 1 : 0.5;
          else if (type == 3)
-            // gamma = 0 for g=0 and j even 
+            // gamma = 0 for g=0 and j even
             gamma = ( TMath::Abs(nppm -j) <= j*TMath::Limits<Double_t>::Epsilon()   && TMath::Even(j) ) ? 0 : 1;
 
       }
-      else { 
+      else {
          // for continuous quantiles  type 4 to 9)
-         // define alpha and beta 
-         double a = 0; 
-         double b = 0; 
+         // define alpha and beta
+         double a = 0;
+         double b = 0;
          if (type == 4)       { a = 0; b = 1; }
          else if (type == 5)  { a = 0.5; b = 0.5; }
          else if (type == 6)  { a = 0.; b = 0.; }
@@ -1221,15 +1221,15 @@ void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Do
          else if (type == 8)  { a = 1./3.; b = a; }
          else if (type == 9)  { a = 3./8.; b = a; }
 
-         // be careful with machine precision 
+         // be careful with machine precision
          double eps  = 4 * TMath::Limits<Double_t>::Epsilon();
-         nppm = a + prob[i] * ( n + 1 -a -b);       // n * p + m 
+         nppm = a + prob[i] * ( n + 1 -a -b);       // n * p + m
          j = TMath::FloorNint(nppm + eps);
          gamma = nppm - j;
-         if (gamma < eps) gamma = 0; 
+         if (gamma < eps) gamma = 0;
       }
 
-      // since index j starts from 1 first is j-1 and second is j 
+      // since index j starts from 1 first is j-1 and second is j
       // add protection to keep indices in range [0,n-1]
       int first  = (j > 0 && j <=n) ? j-1 : ( j <=0 ) ? 0 : n-1;
       int second = (j > 0 && j < n) ?  j  : ( j <=0 ) ? 0 : n-1;
@@ -1243,7 +1243,7 @@ void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Do
          xjj = TMath::KOrdStat(n, x, second, ind);
       }
       quantiles[i] = (1-gamma)*xj + gamma*xjj;
-      // printf("x[j] = %12f  x[j+1] = %12f \n",xj, xjj);         
+      // printf("x[j] = %12f  x[j+1] = %12f \n",xj, xjj);
 
    }
 
@@ -2211,7 +2211,7 @@ Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
    // where each chi-square is first divided by it's number of degrees
    // of freedom.
    // Implementation by Anna Kreshuk.
-   
+
    return ::ROOT::Math::fdistribution_pdf(F,N,M);
 }
 
@@ -2244,7 +2244,7 @@ Double_t TMath::GammaDist(Double_t x, Double_t gamma, Double_t mu, Double_t beta
    //
    // The definition can be found in "Engineering Statistics Handbook" on site
    // http://www.itl.nist.gov/div898/handbook/eda/section3/eda366b.htm
-   // use now implementation in ROOT::Math::gamma_pdf 
+   // use now implementation in ROOT::Math::gamma_pdf
    //Begin_Html
    /*
    <img src="gif/gammadist.gif">
@@ -2255,7 +2255,7 @@ Double_t TMath::GammaDist(Double_t x, Double_t gamma, Double_t mu, Double_t beta
       Error("TMath::GammaDist", "illegal parameter values");
       return 0;
    }
-   return ::ROOT::Math::gamma_pdf(x, gamma, beta, mu); 
+   return ::ROOT::Math::gamma_pdf(x, gamma, beta, mu);
 }
 
 //______________________________________________________________________________
@@ -2315,8 +2315,8 @@ Double_t TMath::LogNormal(Double_t x, Double_t sigma, Double_t theta, Double_t m
    }
    // lognormal_pdf uses same definition of http://en.wikipedia.org/wiki/Log-normal_distribution
    // where mu = log(m)
-   
-   return ::ROOT::Math::lognormal_pdf(x, TMath::Log(m), sigma, theta); 
+
+   return ::ROOT::Math::lognormal_pdf(x, TMath::Log(m), sigma, theta);
 
 }
 
@@ -2665,7 +2665,7 @@ Double_t TMath::LandauI(Double_t x)
    //The algorithm was taken from the Cernlib function dislan(G110)
    //Reference: K.S.Kolbig and B.Schorr, "A program package for the Landau
    //distribution", Computer Phys.Comm., 31(1984), 97-111
-   
+
    return ::ROOT::Math::landau_cdf(x);
 }
 

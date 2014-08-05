@@ -36,7 +36,7 @@ public:
    TQCanvasImp(TCanvas *c, const char *name, UInt_t width, UInt_t height);
    TQCanvasImp(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TQCanvasImp();
-   
+
    ClassDef(TQCanvasImp,1)  //ABC describing Qt GUI independent main window
 };
 

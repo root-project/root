@@ -31,27 +31,27 @@ class TPieSliceEditor : public TGedFrame {
 
 private:
    TPieSlice *fPieSlice;
-   
+
 protected:
    TGTextEntry *fTitle;          // Slice label
    TGNumberEntry *fValue;        // Value of the slice
    TGNumberEntry *fOffset;    // Grafical offset in the radial direction
-   
+
    void ConnectSignals2Slots();
-   
+
 public:
-   TPieSliceEditor(const TGWindow *p = 0, 
+   TPieSliceEditor(const TGWindow *p = 0,
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
    ~TPieSliceEditor();
-   
+
    void SetModel(TObject *);
-   
+
    void DoTitle(const char*);
    void DoValue();
    void DoOffset();
-      
+
    ClassDef(TPieSliceEditor,0)        // piechart' slice editor
 };
 

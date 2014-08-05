@@ -43,7 +43,7 @@ public:
 
    TAxis&           RefAxis() { return fAxis; }
    TGLAxisPainter&  RefAxisPainter() { return fAxisPainter; }
-   
+
 
    void SetPosition(Float_t x, Float_t y) { fPosX = x; fPosY = y; }
    void SetSize(Float_t w, Float_t h) { fWidth = w; fHeight = h; }

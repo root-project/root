@@ -37,7 +37,7 @@ class TGIOS : public TVirtualX {
 public:
    TGIOS();
    TGIOS(const char *name, const char *title);
-   
+
    void SetLineColor(Color_t cindex);
    void SetLineStyle(Style_t linestyle);
    void SetLineWidth(Width_t width);
@@ -50,9 +50,9 @@ public:
    void SetTextColor(Color_t cindex);
    void SetTextFont(Font_t fontnumber);
    void SetTextSize(Float_t textsize);
-   
+
    void GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
-   
+
    using TVirtualX::SetTextFont;
 private:
    TGIOS(const TGIOS &rhs);

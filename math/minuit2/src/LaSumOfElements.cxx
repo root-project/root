@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -15,16 +15,16 @@ namespace ROOT {
    namespace Minuit2 {
 
 
-double mndasum(unsigned int, const double*, int); 
+double mndasum(unsigned int, const double*, int);
 
 double sum_of_elements(const LAVector& v) {
-   // calculate the absolute sum of the vector elements using mndasum 
+   // calculate the absolute sum of the vector elements using mndasum
    // which is a translation from dasum from BLAS
    return mndasum(v.size(), v.Data(), 1);
 }
 
 double sum_of_elements(const LASymMatrix& m) {
-   // calculate the absolute sum of all the matrix elements using mndasum 
+   // calculate the absolute sum of all the matrix elements using mndasum
    // which is a translation of dasum from BLAS
    return mndasum(m.size(), m.Data(), 1);
 }

@@ -23,15 +23,15 @@ namespace ROOT
    SchemaRuleClassMap_t gReadRawRules;
 
    static Bool_t ValidateRule( const std::map<std::string, std::string>& rule, std::string &error_string );
-   
-   static std::string::size_type FindEndSymbol(std::string &command) 
+
+   static std::string::size_type FindEndSymbol(std::string &command)
    {
       // Find the end of a symbol.
-      
+
       if (command.length() == 0) return std::string::npos;
       std::string::size_type cursor;
       unsigned int level = 0;
-      for (cursor = 0 ; cursor < command.length(); ++cursor) 
+      for (cursor = 0 ; cursor < command.length(); ++cursor)
       {
          switch( command[cursor] ) {
             case ' ':
@@ -60,8 +60,8 @@ namespace ROOT
       }
       return cursor;
    }
-   
-   
+
+
    //--------------------------------------------------------------------------
    Bool_t ParseRule( std::string command,
                      std::map<std::string, std::string> &result,
@@ -77,7 +77,7 @@ namespace ROOT
       //-----------------------------------------------------------------------
       if( command[command.size()-1] == ';' )
          command = command.substr( 0, command.size()-1 );
-      
+
       //-----------------------------------------------------------------------
       // If the first symbol does not end is not followed by equal then it
       // defaults to being the sourceClass.
@@ -85,7 +85,7 @@ namespace ROOT
       {
          std::string::size_type endsymbol = FindEndSymbol( command );
          if ( endsymbol == command.length() || command[endsymbol] == ' ' || command[endsymbol] == '\t' ) {
-            
+
 //         std::string::size_type space_pos = command.find( ' ' );
 //         std::string::size_type equal_pos = command.find( '=' );
 //         if ( space_pos < equal_pos) {
@@ -99,7 +99,7 @@ namespace ROOT
             }
 
             //-----------------------------------------------------------------------
-            // If the first symbol is the targetClass then the 2nd symbol can be 
+            // If the first symbol is the targetClass then the 2nd symbol can be
             // the source data member name.
             //-----------------------------------------------------------------------
 //            space_pos = command.find( ' ' );
@@ -111,7 +111,7 @@ namespace ROOT
                result["source"] = membervalue;
                result["target"] = membervalue;
                command = TSchemaRuleProcessor::Trim( command.substr( endsymbol+1 ) );
-            }               
+            }
          }
       }
 
@@ -171,7 +171,7 @@ namespace ROOT
          // Processing normal tag: "value"
          //--------------------------------------------------------------------
          else {
-            
+
             if( hasquote) {
                l = command.find( '"', 1 );
                if (l == std::string::npos ) {
@@ -184,7 +184,7 @@ namespace ROOT
                l = command.find(' ', 1);
                if (l == std::string::npos) l = command.size();
                result[key] = command.substr( 0, l );
-            }               
+            }
          }
 
          //--------------------------------------------------------------------
@@ -445,11 +445,11 @@ namespace ROOT
                      output << "         typedef " << it->first.fType;
                      output << " onfile_" << it->second << "_t" << it->first.fDimensions << ";\n";
                      output << "         ";
-                     output << "onfile_" << it->second << "_t &" << it->second << ";\n"; 
-                     
+                     output << "onfile_" << it->second << "_t &" << it->second << ";\n";
+
                   } else {
                      output << "         ";
-                     output << it->first.fType << " &" << it->second << ";\n"; 
+                     output << it->first.fType << " &" << it->second << ";\n";
                   }
                }
             }
@@ -470,7 +470,7 @@ namespace ROOT
                if (it->first.fDimensions.size() == 0) {
                   output << it->first.fType << " &onfile_" << it->second;
                } else {
-                  output << " onfile_" << it->second << "_t" << " &onfile_" << it->second;                  
+                  output << " onfile_" << it->second << "_t" << " &onfile_" << it->second;
                }
             }
             output << " ): ";
@@ -522,7 +522,7 @@ namespace ROOT
                   output << mappedName << "_Onfile::onfile_" << it->second << "_t";
                }
                output << "*)(onfile_add+offset_Onfile_";
-               output << mappedName << "_" << it->second << ")";  
+               output << mappedName << "_" << it->second << ")";
             }
             output << " );\n\n";
          }
@@ -563,7 +563,7 @@ namespace ROOT
       // Write the conversion function for Read rule, the function name
       // is being written to rule["funcname"]
 
-      std::string className = rule["targetClass"]; 
+      std::string className = rule["targetClass"];
 
       //-----------------------------------------------------------------------
       // Create the function name
@@ -612,7 +612,7 @@ namespace ROOT
       // Write the conversion function for ReadRaw rule, the function name
       // is being written to rule["funcname"]
 
-      std::string className = rule["targetClass"]; 
+      std::string className = rule["targetClass"];
 
       //-----------------------------------------------------------------------
       // Create the function name
@@ -658,7 +658,7 @@ namespace ROOT
       std::string::size_type it = 0;
       std::string::size_type s  = pat.size();
       std::string::size_type tr_len= tr.size();
-      
+
       if( s == 0 ) return;
 
       while( 1 ) {
@@ -715,7 +715,7 @@ namespace ROOT
             output << "      rule->fCode        = \"" << code;
             output << "\";" << std::endl;
          }
- 
+
          if( it->find( "version" ) != it->end() ) {
             output << "      rule->fVersion     = \"" << (*it)["version"];
             output << "\";" << std::endl;
@@ -846,6 +846,6 @@ namespace ROOT
       else
          it->second.push_back( rule );
    }
-   
-   
+
+
 }

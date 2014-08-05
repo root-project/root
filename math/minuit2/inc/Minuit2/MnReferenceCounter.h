@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -27,20 +27,20 @@ public:
 
   MnReferenceCounter() : fReferences(0) {}
 
-  MnReferenceCounter(const MnReferenceCounter& other) : 
+  MnReferenceCounter(const MnReferenceCounter& other) :
     fReferences(other.fReferences) {}
 
   MnReferenceCounter& operator=(const MnReferenceCounter& other) {
     fReferences = other.fReferences;
     return *this;
   }
-  
+
   ~MnReferenceCounter() {assert(fReferences == 0);}
-  
+
   void* operator new(size_t nbytes) {
     return StackAllocatorHolder::Get().Allocate(nbytes);
   }
-  
+
   void operator delete(void* p, size_t /*nbytes */) {
     StackAllocatorHolder::Get().Deallocate(p);
   }
@@ -50,9 +50,9 @@ public:
   void AddReference() const {fReferences++;}
 
   void RemoveReference() const {fReferences--;}
-  
+
 private:
-  
+
   mutable unsigned int fReferences;
 };
 

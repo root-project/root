@@ -27,7 +27,7 @@ ClassImp(TProofBenchRun)
 TProofBenchRun::TProofBenchRun(TProof *proof, const char *sel) : fSelName(sel)
 {
    // Constructor: check PROOF and load selectors PAR
-   
+
    fProof = proof;
    if (!fProof){
       fProof = gProof;
@@ -37,10 +37,10 @@ TProofBenchRun::TProofBenchRun(TProof *proof, const char *sel) : fSelName(sel)
       SetBit(kInvalidObject);
       return;
    }
-} 
+}
 
 //______________________________________________________________________________
 TProofBenchRun::~TProofBenchRun()
 {
    //destructor
-} 
+}

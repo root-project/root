@@ -123,7 +123,7 @@ BaseSelectionRule::ESelect BaseSelectionRule::GetSelected() const
 bool BaseSelectionRule::HasAttributeWithName(const std::string& attributeName) const
 {
    AttributesMap_t::const_iterator iter = fAttributes.find(attributeName);
-   
+
    if(iter!=fAttributes.end()) return true;
    else return false;
 }
@@ -131,21 +131,21 @@ bool BaseSelectionRule::HasAttributeWithName(const std::string& attributeName) c
 bool BaseSelectionRule::GetAttributeValue(const std::string& attributeName, std::string& returnValue) const
 {
    AttributesMap_t::const_iterator iter = fAttributes.find(attributeName);
-   
-   bool retVal = iter!=fAttributes.end();   
-   returnValue = retVal ? iter->second : "";   
-   return retVal;   
+
+   bool retVal = iter!=fAttributes.end();
+   returnValue = retVal ? iter->second : "";
+   return retVal;
 }
 
 void BaseSelectionRule::SetAttributeValue(const std::string& attributeName, const std::string& attributeValue)
 {
    fAttributes.insert(AttributesMap_t::value_type(attributeName, attributeValue));
-   
+
    int pos = attributeName.find("pattern");
    int pos_file = attributeName.find("file_pattern");
-   
+
    if (pos > -1) {
-      if (pos_file > -1) // if we have file_pattern 
+      if (pos_file > -1) // if we have file_pattern
          ProcessPattern(attributeValue, fFileSubPatterns);
       else ProcessPattern(attributeValue, fSubPatterns); // if we have pattern and proto_pattern
    }
@@ -159,15 +159,15 @@ const BaseSelectionRule::AttributesMap_t& BaseSelectionRule::GetAttributes() con
 void BaseSelectionRule::DebugPrint() const
 {
    Print(std::cout);
-}  
+}
 
 void BaseSelectionRule::PrintAttributes(std::ostream &out, int level) const
-{ 
+{
    std::string tabs;
    for (int i = 0; i < level; ++i) {
       tabs+='\t';
    }
-   
+
    if (!fAttributes.empty()) {
       for (AttributesMap_t::const_iterator iter = fAttributes.begin(); iter!=fAttributes.end(); ++iter) {
          out<<tabs<<iter->first<<" = "<<iter->second<<std::endl;
@@ -179,12 +179,12 @@ void BaseSelectionRule::PrintAttributes(std::ostream &out, int level) const
 }
 
 void BaseSelectionRule::PrintAttributes(int level) const
-{ 
+{
    PrintAttributes(std::cout, level);
 }
 #include <unistd.h>
-BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *decl, 
-                                                       const std::string& name, 
+BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *decl,
+                                                       const std::string& name,
                                                        const std::string& prototype,
                                                        bool isLinkdef) const
 {
@@ -201,24 +201,24 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
     *   name - the name of the Decl
     *   prototype - the prototype of the Decl (if it is function or method, otherwise "")
     *   file_name - name of the source file
-    *   isLinkdef - if the selection rules were generating from a linkdef.h file 
-    */ 
+    *   isLinkdef - if the selection rules were generating from a linkdef.h file
+    */
 
 
    const std::string& name_value = fName;
    const std::string& pattern_value = fPattern;
 
    // Check if we have in hands a typedef to a RecordDecl
-   const clang::CXXRecordDecl *D = llvm::dyn_cast<clang::CXXRecordDecl>(decl);   
+   const clang::CXXRecordDecl *D = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
    bool isTypedefNametoRecordDecl = false;
-   
+
    if (!D){
       //Either it's a CXXRecordDecl ot a TypedefNameDecl
       const clang::TypedefNameDecl* typedefNameDecl = llvm::dyn_cast<clang::TypedefNameDecl> (decl);
       isTypedefNametoRecordDecl = typedefNameDecl &&
                                   ROOT::TMetaUtils::GetUnderlyingRecordDecl(typedefNameDecl->getUnderlyingType());
       }
-   
+
    if (! isTypedefNametoRecordDecl && fCXXRecordDecl !=0 && fCXXRecordDecl != (void*)-1) {
       const clang::CXXRecordDecl *target = fCXXRecordDecl;
       if ( target && D && target == D ) {
@@ -231,11 +231,11 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
          return kName;
       } else if ( fCXXRecordDecl != (void*)-1 ) {
-         // Try a real match!         
+         // Try a real match!
          const clang::CXXRecordDecl *target
             = fHasFromTypedefAttribute ? nullptr : ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), *fInterp,
                                                    true /*diagnose*/, 0);
-         
+
          if ( target ) {
             const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = target;
          } else {
@@ -269,7 +269,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
             file_name = R__GetDeclSourceFileName(tmpltDecl);
             hasFileMatch = ((HasAttributeFileName() &&
                              //FIXME It would be much better to cache the rule stat result and compare to the clang::FileEntry
-                             (R__match_filename(file_name_value.c_str(),file_name))) 
+                             (R__match_filename(file_name_value.c_str(),file_name)))
                             ||
                             (HasAttributeFilePattern() &&
                              CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)));
@@ -302,7 +302,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
             return kName;
          }
       }
-      
+
       // We have file_name or file_pattern attribute but the
       // passed file_name is different than that in the selection rule then return no match
       return kNoMatch;
@@ -313,7 +313,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
       if (!patternMatched && !isLinkdef){
          std::string nameNoSpaces(name);
          nameNoSpaces.erase(std::remove_if(nameNoSpaces.begin(),nameNoSpaces.end(),isspace),
-                      nameNoSpaces.end());         
+                      nameNoSpaces.end());
          if (name.size()!=nameNoSpaces.size()){
             patternMatched=CheckPattern(nameNoSpaces, pattern_value, fSubPatterns, isLinkdef);
          }
@@ -356,22 +356,22 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
 /*
  * This method processes the pattern - which means that it splits it in a list of fSubPatterns.
  * The idea is the following - if we have a pattern = "this*pat*rn", it will be split in the
- * following list of subpatterns: "this", "pat", "rn". If we have "this*pat\*rn", it will be 
- * split in "this", "pat*rn", i.e. the star could be escaped. 
+ * following list of subpatterns: "this", "pat", "rn". If we have "this*pat\*rn", it will be
+ * split in "this", "pat*rn", i.e. the star could be escaped.
  */
 
-void BaseSelectionRule::ProcessPattern(const std::string& pattern, std::list<std::string>& out) 
+void BaseSelectionRule::ProcessPattern(const std::string& pattern, std::list<std::string>& out)
 {
    std::string temp = pattern;
    std::string split;
    int pos;
    bool escape = false;
-   
+
    if (pattern.size()==1 && pattern == "*"){
       out.push_back("");
       return;
    }
-   
+
    while (!temp.empty()){
       pos = temp.find("*");
       if (pos == -1) {
@@ -397,20 +397,20 @@ void BaseSelectionRule::ProcessPattern(const std::string& pattern, std::list<std
             // std::cout<<"3. pushed = "<<split<<std::endl;
             temp.clear(); // empty temp (the '*' was at the last position of temp, so we don't have anything else to process)
          }
-         temp = temp.substr(0, (temp.length()-1)); 
+         temp = temp.substr(0, (temp.length()-1));
       }
       else { // the '*' is at a random position in the pattern
          if (pos > 0 && temp.at(pos-1) == '\\') { // check if we have '\' before the '*'; if yes, we have to escape it
             split += temp.substr(0, pos-1); // remove the '\' and add the star to split
             split += temp.at(pos);
-            escape = true;                  // escape = true which means that we will add the next sub-pattern to that one 
-            
+            escape = true;                  // escape = true which means that we will add the next sub-pattern to that one
+
             // DEBUG std::cout<<"temp = "<<temp<<std::endl;
             temp = temp.substr(pos);
             // DEBUG std::cout<<"temp = "<<temp<<", split = "<<split<<std::endl;
          }
          else { // if we don't have '\' before the '*'
-            if (escape) { 
+            if (escape) {
                split += temp.substr(0, pos);
             }
             else {
@@ -437,7 +437,7 @@ bool BaseSelectionRule::EndsWithStar(const std::string& pattern) {
 }
 
 /*
- * This method checks if the given test string is matched against the pattern 
+ * This method checks if the given test string is matched against the pattern
  */
 
 bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string& pattern, const std::list<std::string>& patterns_list, bool isLinkdef)
@@ -452,63 +452,63 @@ bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string&
    pos1= pos2= pos3= std::string::npos;
    bool begin = BeginsWithStar(pattern);
    bool end = EndsWithStar(pattern);
-   
-   // we first check if the last sub-pattern is contained in the test string 
+
+   // we first check if the last sub-pattern is contained in the test string
    const std::string& last = patterns_list.back();
    size_t pos_end = test.rfind(last);
-   
+
    if (pos_end == std::string::npos) { // the last sub-pattern isn't conatained in the test string
       return false;
    }
-   if (!end) {  // if the pattern doesn't end with '*', the match has to be complete 
+   if (!end) {  // if the pattern doesn't end with '*', the match has to be complete
       // i.e. if the last sub-pattern is "sub" the test string should end in "sub" ("1111sub" is OK, "1111sub1" is not OK)
-      
+
       int len = last.length(); // length of last sub-pattern
       if ((pos_end+len) < test.length()) {
          return false;
       }
    }
-   
+
    // position of the first sub-pattern
    pos1 = test.find(*it);
-   
-   
+
+
    if (pos1 == std::string::npos || (!begin && pos1 != 0)) { // if the first sub-pattern isn't found in test or if it is found but the
       // pattern doesn't start with '*' and the sub-pattern is not at the first position
       //std::cout<<"\tNo match!"<<std::endl;
       return false;
    }
-   
+
    if (isLinkdef) { // A* selects all global classes, unions, structs but not the nested, i.e. not A::B
       // A::* selects the nested classes
       int len = (*it).length();
       int pos_colon = test.find("::", pos1+len);
-      
+
       if (pos_colon > -1) {
          return false;
       }
-      
+
    }
-   
+
    if (patterns_list.size() > 1) {
       if (((*it).length())+pos1 > pos_end) {
          // std::cout<<"\tNo match";
          return false; // end is contained in begin -> test = "A::B" sub-patterns = "A::", "::" will return false
-      } 
+      }
    }
-   
-   
+
+
    ++it;
-   
+
    for (; it != patterns_list.end(); ++it) {
-      // std::cout<<"sub-pattern = "<<*it<<std::endl; 
+      // std::cout<<"sub-pattern = "<<*it<<std::endl;
       pos2 = test.find(*it);
       if (pos2 <= pos1) {
          return false;
       }
       pos1 = pos2;
    }
-   
+
    return true;
 }
 

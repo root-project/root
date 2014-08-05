@@ -47,7 +47,7 @@
   class QPaintEvent;
   class QPaintDevice;
   class QResizeEvent;
-  class QSize;  
+  class QSize;
   class QString;
   class QEvent;
   class QSizePolicy;
@@ -96,25 +96,25 @@ public:
 
 //___________________________________________________________________
 class  TQtWidget : public QWidget {
-#ifndef __CINT__   
+#ifndef __CINT__
  Q_OBJECT
  friend class TQtSynchPainting;
 #endif
 private:
 
-    TQtWidget(const TQtWidget&);
-	 void operator=(const TQtWidget&);
+   TQtWidget(const TQtWidget&);
+   void operator=(const TQtWidget&);
    //----- Private bits, clients can only test but not change them
    UInt_t         fBits;       //bit field status word
    enum {
       kBitMask       = 0x00ffffff
    };
    bool fNeedStretch;
-#ifndef __CINT__   
+#ifndef __CINT__
    QPointer<TQtCanvasPainter> fCanvasDecorator;  //< The object to paint onto the TQtWidget on the top of TCanvas image
 #endif
 protected:
-   void Init(); 
+   void Init();
    void ResetCanvas() { fCanvas = 0;}
 
 public:
@@ -128,7 +128,7 @@ public:
   TQtWidget( QWidget* parent=0, Qt::WFlags f=0, bool embedded=TRUE);
 #else
   TQtWidget( QWidget* parent=0);
-#endif  
+#endif
   virtual ~TQtWidget();
   void SetCanvas(TCanvas *c);
 //  inline TCanvas  *GetCanvas() const         { return fCanvas;}
@@ -212,12 +212,12 @@ public:
    UInt_t   GetAllBits() const;
    void     SetAllBits(UInt_t f);
    void SetCanvasDecorator( TQtCanvasPainter *decorator);
-   
+
 public:
    // Static method to immitate ROOT as needed
    static TApplication *InitRint(Bool_t prompt=kFALSE, const char *appClassName="QtRint", int *argc=0, char **argv=0,
           void *options = 0, int numOptions = 0, Bool_t noLogo = kTRUE);
-   //  Proxy methods to access the TCanvas selected TObject 
+   //  Proxy methods to access the TCanvas selected TObject
    //  and last processed ROOT TCanvas event
    Int_t             GetEvent()       const;
    Int_t             GetEventX()      const;
@@ -231,7 +231,7 @@ public:
    void     EnableSignalEvents  (UInt_t f);
    void     DisableSignalEvents (UInt_t f);
    Bool_t   IsSignalEventEnabled(UInt_t f) const;
-   
+
    static TCanvas   *Canvas(TQtWidget *widget);
    static TQtWidget *Canvas(const TCanvas *canvas);
    static TQtWidget *Canvas(Int_t id);
@@ -248,7 +248,7 @@ public slots:
 #ifndef __CINT__
 protected slots:
    void RefreshCB();
-   
+
 signals:
    // emit the Qt signal when the double buffer of the TCamvas has been filled up
    void CanvasPainted();  // Signal the TCanvas has been painted onto the screen
@@ -265,7 +265,7 @@ signals:
 inline TCanvas  *TQtWidget::GetCanvas() const         { return fCanvas; }
 
 //______________________________________________________________________________
-inline const TQtWidgetBuffer  *TQtWidget::GetBuffer()  const { 
+inline const TQtWidgetBuffer  *TQtWidget::GetBuffer()  const {
    //  return the current widget buffer;
    return IsDoubleBuffered() ? fPixmapScreen : fPixmapID;
 }
@@ -310,7 +310,7 @@ inline void   TQtWidget::InvertBit(UInt_t f)      { fBits ^= f & kBitMask;      
 
 inline TQtCanvasPainter *TQtWidget::CanvasDecorator() { return fCanvasDecorator;   }
 inline void   TQtWidget::SetCanvasDecorator( TQtCanvasPainter *decorator) { fCanvasDecorator = decorator;}
-   
+
 inline void   TQtWidget::EnableSignalEvents  (UInt_t f){ SetBit  (f); }
 inline void   TQtWidget::DisableSignalEvents (UInt_t f){ ResetBit(f); }
 inline Bool_t TQtWidget::IsSignalEventEnabled(UInt_t f) const { return TestBit (f); }

@@ -31,8 +31,6 @@
 
 #include <cstring>
 
-R__EXTERN TTree* gTree;
-
 ClassImp(TBranchClones)
 
 //______________________________________________________________________________
@@ -339,7 +337,7 @@ void TBranchClones::ResetAfterMerge(TFileMergeInfo *info)
    //    Existing buffers are deleted
    //    Entries, max and min are reset
    //
-   
+
    fEntries  = 0;
    fTotBytes = 0;
    fZipBytes = 0;
@@ -405,7 +403,7 @@ void TBranchClones::Streamer(TBuffer& b)
       b >> fBranchCount;
       fClassName.Streamer(b);
       fBranches.Streamer(b);
-      fTree = gTree;
+      fTree = 0;
       TBranch* branch = 0;
       TLeaf* leaf = 0;
       Int_t nbranches = fBranches.GetEntriesFast();

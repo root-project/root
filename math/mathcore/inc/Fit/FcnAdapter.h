@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Author: L. Moneta    10/2005  
+// Author: L. Moneta    10/2005
 
 /**********************************************************************
  *                                                                    *
@@ -17,20 +17,20 @@
 
 //___________________________________________________________
 //
-// Adapt the interface used in TMinuit (and the TVirtualFitter) for 
-// passing the objective function in a IFunction  interface 
+// Adapt the interface used in TMinuit (and the TVirtualFitter) for
+// passing the objective function in a IFunction  interface
 // (ROOT::Math::IMultiGenFunction)
 //
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Fit { 
+   namespace Fit {
 
 class FcnAdapter : public ROOT::Math::IMultiGenFunction {
 
 public:
 
-   FcnAdapter(void (*fcn)(int&, double*, double&, double*, int ), int dim = 0) : 
+   FcnAdapter(void (*fcn)(int&, double*, double&, double*, int ), int dim = 0) :
       fDim(dim),
       fFCN(fcn)
    {}
@@ -39,27 +39,27 @@ public:
 
    virtual  unsigned int NDim() const { return fDim; }
 
-   ROOT::Math::IMultiGenFunction * Clone() const { 
+   ROOT::Math::IMultiGenFunction * Clone() const {
       return new FcnAdapter(fFCN,fDim);
    }
 
    void SetDimension(int dim) { fDim = dim; }
 
-private: 
+private:
 
-   virtual double DoEval(const double * x) const { 
-      double fval = 0; 
-      int dim = fDim; 
+   virtual double DoEval(const double * x) const {
+      double fval = 0;
+      int dim = fDim;
       // call with flag 4
-      fFCN(dim, 0, fval, const_cast<double *>(x), 4); 
-      return fval; 
+      fFCN(dim, 0, fval, const_cast<double *>(x), 4);
+      return fval;
    }
 
 private:
 
-   unsigned int fDim;  
+   unsigned int fDim;
    void (*fFCN)(int&, double*, double&, double*, int);
-   
+
 
 };
 

@@ -101,7 +101,7 @@ TGMdiMainFrame::TGMdiMainFrame(const TGWindow *p, TGMdiMenuBar *menuBar,
       main->BindKey(this, keycode, kKeyControlMask | kKeyShiftMask);
       keycode = gVirtualX->KeysymToKeycode(kKey_F4);
       main->BindKey(this, keycode, kKeyControlMask);
-      ((TGFrame *)main)->Connect("ProcessedConfigure(Event_t*)", 
+      ((TGFrame *)main)->Connect("ProcessedConfigure(Event_t*)",
                                  "TGMdiMainFrame", this, "UpdateMdiButtons()");
    }
 
@@ -234,7 +234,7 @@ Bool_t TGMdiMainFrame::RemoveMdiFrame(TGMdiFrame *frame)
    TGMdiFrameList *travel = fChildren;
 
    if (!frame) return kFALSE;
-   
+
    if (frame->IsEditable()) frame->SetEditable(kFALSE);
 
    while (travel && (travel->GetFrameId() != frame->GetId()))
@@ -288,7 +288,7 @@ Bool_t TGMdiMainFrame::SetCurrent(UInt_t id)
       if (fCurrent->GetDecorFrame()->IsMaximized() && fMenuBar)
          fMenuBar->ShowFrames(fCurrent->GetDecorFrame()->GetTitleBar()->GetWinIcon(),
                               fCurrent->GetDecorFrame()->GetTitleBar()->GetButtons());
-      
+
       Emit("SetCurrent(TGMdiFrame*)", (long)fCurrent->GetDecorFrame()->GetMdiFrame());
       return kTRUE;
    }
@@ -507,7 +507,7 @@ TGRectangle TGMdiMainFrame::GetMinimizedBBox() const
       if (travel->GetDecorFrame()->IsMinimized()) {
          TGRectangle wrect(travel->GetDecorFrame()->GetX(), travel->GetDecorFrame()->GetY(),
                            travel->GetDecorFrame()->GetWidth(), travel->GetDecorFrame()->GetHeight());
-         if (first) rect = wrect; 
+         if (first) rect = wrect;
          else rect.Merge(wrect);
          first = kFALSE;
       }
@@ -573,7 +573,7 @@ void TGMdiMainFrame::UpdateMdiButtons()
    TGMdiFrameList *travel;
    if (done) return;
    for (travel = fChildren; travel; travel = travel->GetNext()) {
-      if (!travel->GetDecorFrame()->IsMaximized() && 
+      if (!travel->GetDecorFrame()->IsMaximized() &&
           !travel->GetDecorFrame()->IsMinimized()) {
          travel->GetDecorFrame()->SetMdiButtons(travel->GetDecorFrame()->GetMdiButtons());
       }
@@ -594,7 +594,7 @@ void TGMdiMainFrame::ArrangeFrames(Int_t mode)
    Int_t y = 0;
    Int_t w = fWidth - 2 * fBorderWidth;  //GetContainer()->GetWidth();
    Int_t h = fHeight - 2 * fBorderWidth;  //GetContainer()->GetHeight();
-   
+
    fArrangementMode = mode;
 
    TGMdiFrameList *tmp, *travel;
@@ -1241,11 +1241,11 @@ void TGMdiMainFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    for (travel = fChildren; travel; travel = travel->GetNext()) {
       TGMdiFrame *mf = travel->GetDecorFrame()->GetMdiFrame();
       if (mf) mf->SavePrimitive(out, option);
-   } 
+   }
    if (fArrangementMode) {
       out << "   " << GetName() << "->ArrangeFrames(";
       switch (fArrangementMode) {
-      
+
          case kMdiTileHorizontal:
             out << "kMdiTileHorizontal);" << std::endl;
          break;
@@ -1263,7 +1263,7 @@ void TGMdiMainFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   " << GetName() << "->SetResizeMode(kMdiNonOpaque);" << std::endl;
 
    if (fCurrent)
-      out << "   " << GetName() << "->SetCurrent(" << GetCurrent()->GetName() 
+      out << "   " << GetName() << "->SetCurrent(" << GetCurrent()->GetName()
           << ");" << std::endl;
 }
 

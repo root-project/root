@@ -50,7 +50,7 @@
 
    CGContextTranslateCTM(ctx, 0.f, rect.size.height);
    CGContextScaleCTM(ctx, 1.f, -1.f);
-   
+
    pad->cd();
    pad->SetContext(ctx);
    if (showRotation) {
@@ -70,9 +70,9 @@
 }
 
 //______________________________________________________________________________
-- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *) event 
+- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *) event
 {
-   //Thanks to gyim, 
+   //Thanks to gyim,
    //http://stackoverflow.com/questions/1694529/allowing-interaction-with-a-uiview-under-another-uiview
    return NO;
 }

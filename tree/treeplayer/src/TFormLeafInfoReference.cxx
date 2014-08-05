@@ -60,7 +60,7 @@ TFormLeafInfoReference::~TFormLeafInfoReference()
 void TFormLeafInfoReference::Swap(TFormLeafInfoReference &other)
 {
    // Exception safe swap.
-   TFormLeafInfo::Swap(other); 
+   TFormLeafInfo::Swap(other);
    std::swap(fProxy,other.fProxy);
    std::swap(fBranch,other.fBranch);
 }
@@ -134,7 +134,7 @@ Int_t TFormLeafInfoReference::GetCounterValue(TLeaf* leaf)  {
 }
 
 //______________________________________________________________________________
-TClass* TFormLeafInfoReference::GetValueClass(TLeaf* leaf)  
+TClass* TFormLeafInfoReference::GetValueClass(TLeaf* leaf)
 {
    // Access to the value class of the reference proxy
 
@@ -142,7 +142,7 @@ TClass* TFormLeafInfoReference::GetValueClass(TLeaf* leaf)
 }
 
 //______________________________________________________________________________
-TClass* TFormLeafInfoReference::GetValueClass(void* obj)  
+TClass* TFormLeafInfoReference::GetValueClass(void* obj)
 {
    // Access to the value class of the reference proxy
 

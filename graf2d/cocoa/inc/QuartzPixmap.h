@@ -51,7 +51,7 @@
 - (unsigned) fWidth;
 - (unsigned) fHeight;
 
-- (void) copy : (NSObject<X11Drawable> *) src area : (ROOT::MacOSX::X11::Rectangle) area withMask : (QuartzImage *) mask 
+- (void) copy : (NSObject<X11Drawable> *) src area : (ROOT::MacOSX::X11::Rectangle) area withMask : (QuartzImage *) mask
          clipOrigin : (ROOT::MacOSX::X11::Point) origin toPoint : (ROOT::MacOSX::X11::Point) dstPoint;
 
 - (unsigned char *) readColorBits : (ROOT::MacOSX::X11::Rectangle) area;
@@ -114,7 +114,7 @@ bool AdjustCropArea(QuartzImage *srcImage, NSRect &cropArea);
 bool AdjustCropArea(QuartzPixmap *srcImage, Rectangle &cropArea);
 
 //Aux. function for TGCocoa.
-void FillPixmapBuffer(const unsigned char *bitmap, unsigned width, unsigned height, ULong_t foregroundPixel, 
+void FillPixmapBuffer(const unsigned char *bitmap, unsigned width, unsigned height, ULong_t foregroundPixel,
                       ULong_t backgroundPixel, unsigned depth, unsigned char *imageData);
 
 }

@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: J. Palacios, L. Moneta    2007  
+// Authors: J. Palacios, L. Moneta    2007
 
  /**********************************************************************
   *                                                                    *
@@ -8,21 +8,21 @@
   *                                                                    *
   **********************************************************************/
 
-// Header file for class Rotation in 3 dimensions, described by 3 Z-Y-X  Euler angles 
+// Header file for class Rotation in 3 dimensions, described by 3 Z-Y-X  Euler angles
 // representing a rotation along Z, Y and X
 //
 // Created by: Lorenzo Moneta, Wed. May 22, 2007
 //
 // Last update: $Id$
 //
-#ifndef ROOT_Math_GenVector_RotationZYX 
+#ifndef ROOT_Math_GenVector_RotationZYX
 #define ROOT_Math_GenVector_RotationZYX  1
 
 #ifndef ROOT_Math_Math
 #include "Math/Math.h"
 #endif
 
-#ifndef ROOT_Math_GenVector_Rotation3D 
+#ifndef ROOT_Math_GenVector_Rotation3D
 #include "Math/GenVector/Rotation3D.h"
 #endif
 
@@ -56,13 +56,13 @@ namespace Math {
 //__________________________________________________________________________________________
   /**
      Rotation class with the (3D) rotation represented by
-     angles describing first a rotation of 
-     an angle phi (yaw) about the  Z axis, 
-     followed by a rotation of an angle theta (pitch) about the new Y' axis, 
-     followed by a third rotation of an angle psi (roll) about the final X'' axis. 
+     angles describing first a rotation of
+     an angle phi (yaw) about the  Z axis,
+     followed by a rotation of an angle theta (pitch) about the new Y' axis,
+     followed by a third rotation of an angle psi (roll) about the final X'' axis.
      This is  sometimes referred to as the Euler 321 sequence.
-     It has not to be confused with the typical Goldstein definition of the Euler Angles 
-     (Z-X-Z or 313 sequence) which is used by the ROOT::Math::EulerAngles class.  
+     It has not to be confused with the typical Goldstein definition of the Euler Angles
+     (Z-X-Z or 313 sequence) which is used by the ROOT::Math::EulerAngles class.
 
 
      @ingroup GenVector
@@ -87,7 +87,7 @@ public:
    */
    RotationZYX( Scalar phi, Scalar theta, Scalar psi ) :
       fPhi(phi), fTheta(theta), fPsi(psi)
-   {Rectify();}			// Added 27 Jan. 06   JMM
+   {Rectify();}  // Added 27 Jan. 06   JMM
 
    /**
       Construct given a pair of pointers or iterators defining the
@@ -110,15 +110,15 @@ public:
    /**
       Construct from another supported rotation type (see gv_detail::convert )
    */
-   template <class OtherRotation> 
+   template <class OtherRotation>
    explicit RotationZYX(const OtherRotation & r) {gv_detail::convert(r,*this);}
 
 
    /**
       Assign from another supported rotation type (see gv_detail::convert )
    */
-   template <class OtherRotation> 
-   RotationZYX & operator=( OtherRotation const  & r ) { 
+   template <class OtherRotation>
+   RotationZYX & operator=( OtherRotation const  & r ) {
       gv_detail::convert(r,*this);
       return *this;
    }
@@ -139,8 +139,8 @@ public:
       fPhi   = *begin++;
       fTheta = *begin++;
       fPsi   = *begin++;
-      assert(begin == end); 
-      Rectify();		
+      assert(begin == end);
+      Rectify();
    }
 
    /**
@@ -156,7 +156,7 @@ public:
       *begin++ = fPhi;
       *begin++ = fTheta;
       *begin++ = fPsi;
-      assert(begin == end); 
+      assert(begin == end);
    }
 
    /**
@@ -173,8 +173,8 @@ public:
       Set the components phi, theta, psi based on three Scalars.
    */
    void SetComponents(Scalar phi, Scalar theta, Scalar psi) {
-      fPhi=phi; fTheta=theta; fPsi=psi; 
-      Rectify();			
+      fPhi=phi; fTheta=theta; fPsi=psi;
+      Rectify();
    }
 
    /**
@@ -185,27 +185,27 @@ public:
    }
 
    /**
-      Set Phi angle (Z rotation angle) 		
+      Set Phi angle (Z rotation angle)
    */
    void SetPhi(Scalar phi) { fPhi=phi; Rectify(); }
 
    /**
-      Return Phi angle (Z rotation angle) 		
+      Return Phi angle (Z rotation angle)
    */
    Scalar Phi() const { return fPhi; }
 
    /**
-      Set Theta angle (Y' rotation angle) 				
+      Set Theta angle (Y' rotation angle)
    */
    void SetTheta(Scalar theta) { fTheta=theta; Rectify(); }
 
    /**
-      Return Theta angle (Y' rotation angle) 				
+      Return Theta angle (Y' rotation angle)
    */
    Scalar Theta() const { return fTheta; }
 
    /**
-      Set Psi angle (X'' rotation angle)	    
+      Set Psi angle (X'' rotation angle)
    */
    void SetPsi(Scalar psi) { fPsi=psi; Rectify(); }
 
@@ -275,14 +275,14 @@ public:
    /**
       Invert a rotation in place
    */
-   void Invert(); 
+   void Invert();
 
    /**
       Return inverse of a rotation
    */
-   RotationZYX Inverse() const { 
-      RotationZYX r(*this); 
-      r.Invert(); 
+   RotationZYX Inverse() const {
+      RotationZYX r(*this);
+      r.Invert();
       return r;
    }
 
@@ -354,12 +354,12 @@ RotationZYX operator* (RotationZ const & r1, RotationZYX const & r2);
 /**
    Stream Output and Input
  */
-  // TODO - I/O should be put in the manipulator form 
+  // TODO - I/O should be put in the manipulator form
 
 std::ostream & operator<< (std::ostream & os, const RotationZYX & e);
- 
-  
+
+
 } // namespace Math
 } // namespace ROOT
 
-#endif // ROOT_Math_GenVector_RotationZYX 
+#endif // ROOT_Math_GenVector_RotationZYX

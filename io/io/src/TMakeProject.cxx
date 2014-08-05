@@ -576,11 +576,11 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
 {
    // Add to the header file anything that need to appear after the class
    // declaration (this includes some #pragma link).
- 
+
    TIter next(info->GetElements());
    TStreamerElement *element;
-   while( (element = (TStreamerElement*)next()) ) {      
-      Int_t stlType = TClassEdit::IsSTLCont(element->GetTypeName());      
+   while( (element = (TStreamerElement*)next()) ) {
+      Int_t stlType = TClassEdit::IsSTLCont(element->GetTypeName());
       if (stlType) {
          std::vector<std::string> inside;
          int nestedLoc;
@@ -593,7 +593,7 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
          } else if (key) {
             switch (stlkind)  {
                case ROOT::kSTLmap:
-               case ROOT::kSTLmultimap: 
+               case ROOT::kSTLmultimap:
                {
                   // Already done (see GenerateIncludeForTemplate
                   break;
@@ -612,7 +612,7 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
       }
    }
 }
-   
+
 //______________________________________________________________________________
 TString TMakeProject::UpdateAssociativeToVector(const char *name)
 {

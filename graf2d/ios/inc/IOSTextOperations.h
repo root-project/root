@@ -46,9 +46,9 @@ public:
    CTLineGuard(const char *textLine, CTFontRef font, Color_t color);
    CTLineGuard(const char *textLine, CTFontRef font, const std::vector<UniChar> &symbolMap);
    ~CTLineGuard();
-   
+
    void GetBounds(UInt_t &w, UInt_t &h)const;
-   
+
 private:
 
    void Init(const char *textLine, UInt_t nAttribs, CFStringRef *keys, CFTypeRef *values);
@@ -68,7 +68,7 @@ public:
 
    //Select the existing font or create a new one and select it.
    CTFontRef SelectFont(Font_t fontIndex, Float_t fontSize);
-   
+
    //Typographical bounds (whatever it means),
    //for the current selected font and text.
    void GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const;
@@ -76,7 +76,7 @@ public:
    double GetAscent()const;
    double GetDescent()const;
    double GetLeading()const;
-   
+
    const std::vector<UniChar> &GetSymbolMap()const
    {
       return fSymbolMap;
@@ -89,9 +89,9 @@ private:
 
    FontMap_t fFonts[fmdNOfFonts];
    CTFontRef fSelectedFont;
-   
+
    std::vector<UniChar> fSymbolMap;
-   
+
    void InitSymbolMap();
 };
 

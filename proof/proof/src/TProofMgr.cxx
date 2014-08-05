@@ -643,7 +643,7 @@ Int_t TProofMgr::Ping(const char *url, Bool_t checkxrd)
          u.SetPort(1094);
       }
    }
-   
+
    // Open the connection, disabling warnings ...
    Int_t oldLevel = gErrorIgnoreLevel;
    gErrorIgnoreLevel = kSysError+1;
@@ -730,7 +730,7 @@ Int_t TProofMgr::Ping(const char *url, Bool_t checkxrd)
       gErrorIgnoreLevel = oldLevel;
       return 1;
    }
-   
+
    // Restore ignore level
    gErrorIgnoreLevel = oldLevel;
    // Done
@@ -755,7 +755,7 @@ void TProofMgr::ReplaceSubdirs(const char *fn, TString &fdst, TList &dirph)
    }
    if (dirs.GetSize() <= 0) return;
    dirs.SetOwner(kTRUE);
-   
+
    TIter nxph(&dirph);
    TParameter<Int_t> *pi = 0;
    while ((pi = (TParameter<Int_t> *) nxph())) {
@@ -781,7 +781,7 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
    //                                    of the src path
    //      <bn>                          basename in the source path
    //      <bs>                          basename sans extension
-   //      <ex>                          Extension 
+   //      <ex>                          Extension
    //      <sn>                          serial number of file in the list
    //      <s0>                          as <sn> but zero padded
    //      <fn>                          the full file path
@@ -791,7 +791,7 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
    //      <gp>                          next-to immediate parent directory
    // So, for example, if the source filename for the 99-th file is
    //               protosrc://host//d0/d1/d2/d3/d4/d5/myfile
-   // then with dest = '/pool/user/<d3>/<d4>/<d5>/<s>/<bn>' and 
+   // then with dest = '/pool/user/<d3>/<d4>/<d5>/<s>/<bn>' and
    //           mss = 'protodst://hostdst//nm/
    // the corresponding destination path is
    //           protodst://hostdst//nm/pool/user/d3/d4/d5/99/myfile
@@ -812,7 +812,7 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
       ::Warning("TProofMgr::UploadFiles", "MSS is undefined!");
       return ds;
    }
-   
+
    TList dirph;
 
    // If the destination is defined we need to understand if we have place-holders
@@ -835,9 +835,9 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
       }
       dirph.SetOwner(kTRUE);
    }
-   // Generate template for zero-padded serial numbers 
-   TString sForm = TString::Format("%%0%dd", 
-				   Int_t(TMath::Log10(src->GetEntries()+1)));
+   // Generate template for zero-padded serial numbers
+   TString sForm = TString::Format("%%0%dd",
+                                   Int_t(TMath::Log10(src->GetEntries()+1)));
 
    // Now we will actually copy files and create the TList object
    ds = new TFileCollection();
@@ -872,7 +872,7 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
 
       // The file must be accessible
       if (gSystem->AccessPathName(furl->GetUrl()) == kFALSE) {
-         
+
          // Create the destination path
          TString fdst(mss);
          if (dest && strlen(dest) > 0) {
@@ -880,50 +880,50 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
          } else {
             fdst += TString::Format("/%s", furl->GetFile());
          }
-         
+
          // Replace filename and basename
          if (fdst.Contains("<bn>")) fdst.ReplaceAll("<bn>", gSystem->BaseName(furl->GetFile()));
          if (fdst.Contains("<fn>")) fdst.ReplaceAll("<fn>", furl->GetFile());
-	 if (fdst.Contains("<bs>")) { 
-	   // Basename sans 'extension' 
-	   TString bs(gSystem->BaseName(furl->GetFile()));
-	   Int_t idx = bs.Last('.');
-	   if (idx != kNPOS) bs.Remove(idx);
-	   fdst.ReplaceAll("<bs>", bs.Data());
-	 }
-	 if (fdst.Contains("<ex>")) { 
-	   // 'Extension' - that is the last part after the last '.'
-	   TString ex(furl->GetFile());
-	   Int_t idx = ex.Last('.');
-	   if (idx != kNPOS) ex.Remove(0, idx+1);
-	   else                       ex = "";
-	   fdst.ReplaceAll("<ex>", ex);
-	 }
-	 if (fdst.Contains("<pa>")) { 
-	   fdst.ReplaceAll("<pa>", 
-			   gSystem->BaseName(gSystem
-					     ->DirName(furl->GetFile())));
-	   
-	 }
-	 if (fdst.Contains("<gp>")) { 
-	   fdst.ReplaceAll("<gp>", 
-			   gSystem->BaseName(gSystem
-					     ->DirName(gSystem
-						       ->DirName(furl->GetFile()))));
-	   
-	 }
-	 
-
-         // Replace serial number         
-         if (fdst.Contains("<sn>")) {
-	   TString skn = TString::Format("%d", kn);
-	   fdst.ReplaceAll("<sn>", skn);
+         if (fdst.Contains("<bs>")) {
+            // Basename sans 'extension'
+            TString bs(gSystem->BaseName(furl->GetFile()));
+            Int_t idx = bs.Last('.');
+            if (idx != kNPOS) bs.Remove(idx);
+            fdst.ReplaceAll("<bs>", bs.Data());
          }
-	 if (fdst.Contains("<s0>")) { 
-	   TString skn = TString::Format(sForm.Data(), kn);
-	   fdst.ReplaceAll("<s0>", skn);
-	 }
-	 kn++;
+         if (fdst.Contains("<ex>")) {
+            // 'Extension' - that is the last part after the last '.'
+            TString ex(furl->GetFile());
+            Int_t idx = ex.Last('.');
+            if (idx != kNPOS) ex.Remove(0, idx+1);
+            else                       ex = "";
+            fdst.ReplaceAll("<ex>", ex);
+         }
+         if (fdst.Contains("<pa>")) {
+            fdst.ReplaceAll("<pa>",
+                            gSystem->BaseName(gSystem
+                                              ->DirName(furl->GetFile())));
+
+         }
+         if (fdst.Contains("<gp>")) {
+            fdst.ReplaceAll("<gp>",
+                            gSystem->BaseName(gSystem
+                                              ->DirName(gSystem
+                                                        ->DirName(furl->GetFile()))));
+
+         }
+
+
+         // Replace serial number
+         if (fdst.Contains("<sn>")) {
+            TString skn = TString::Format("%d", kn);
+            fdst.ReplaceAll("<sn>", skn);
+         }
+         if (fdst.Contains("<s0>")) {
+            TString skn = TString::Format(sForm.Data(), kn);
+            fdst.ReplaceAll("<s0>", skn);
+         }
+         kn++;
 
          // Replace user and group name
          UserGroup_t *pw = gSystem->GetUserInfo();
@@ -932,8 +932,8 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
             if (fdst.Contains("<gr>")) fdst.ReplaceAll("<gr>", pw->fGroup);
             delete pw;
          }
-	 if (gProof && fdst.Contains("<pg>")) 
-	   fdst.ReplaceAll("<pg>", gProof->GetGroup());
+         if (gProof && fdst.Contains("<pg>"))
+            fdst.ReplaceAll("<pg>", gProof->GetGroup());
 
          // Now replace the subdirs, if required
          if (dirph.GetSize() > 0)
@@ -953,7 +953,7 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
          }
       }
    }
-   
+
    // Return the TFileCollection
    return ds;
 }
@@ -976,7 +976,7 @@ TFileCollection *TProofMgr::UploadFiles(const char *srcfiles,
    //      <us>, <gr>                    the local user and group names.
    // So, for example, if the source filename for the 99-th file is
    //               protosrc://host//d0/d1/d2/d3/d4/d5/myfile
-   // then with dest = '/pool/user/<d3>/<d4>/<d5>/<s>/<bn>' and 
+   // then with dest = '/pool/user/<d3>/<d4>/<d5>/<s>/<bn>' and
    //           mss = 'protodst://hostdst//nm/
    // the corresponding destination path is
    //           protodst://hostdst//nm/pool/user/d3/d4/d5/99/myfile
@@ -999,7 +999,7 @@ TFileCollection *TProofMgr::UploadFiles(const char *srcfiles,
    }
 
    TString inpath(gSystem->ExpandPathName(srcfiles));
- 
+
    FileStat_t fst;
    if (gSystem->GetPathInfo(inpath.Data(), fst)) {
       ::Error("TProofMgr::UploadFiles",
@@ -1075,7 +1075,7 @@ Int_t TProofMgr::Rm(const char *what, const char *, const char *)
       Error("Rm", "path undefined!");
       return rc;
    }
-   
+
    TUrl u(what);
    if (!strcmp(u.GetProtocol(), "file")) {
       rc = gSystem->Unlink(u.GetFile());

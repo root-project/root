@@ -30,30 +30,30 @@ public:
 //////////////////////////////////////////////////////////////////////////
 //
 // TStructViewer viewer represents class, struct or other type as an object in 3D space.
-// At the top of the scene we can see objects which is our pointer. Under it we see 
-// pointers and collection elements. Collection must inherit from TCollection 
-// or be STL collecion. 
-// 
-// We can change the number of visible levels or objects on the scene with the  GUI or 
+// At the top of the scene we can see objects which is our pointer. Under it we see
+// pointers and collection elements. Collection must inherit from TCollection
+// or be STL collecion.
+//
+// We can change the number of visible levels or objects on the scene with the  GUI or
 // methods. The size of geometry objects is proportional to the memory taken by this object
-// or to the number of members inside this object. 
-// 
+// or to the number of members inside this object.
+//
 // An easy way to find some class in the viewer is to change the color of the type.
-// We can connect for example a TF2 class with red color or connect all classes 
-// inheriting from TF2 by adding plus to name. For example typename "TF2+" tells us 
+// We can connect for example a TF2 class with red color or connect all classes
+// inheriting from TF2 by adding plus to name. For example typename "TF2+" tells us
 // that all classes inheriting from TF2 will be red.
-// 
-// Navigation in viewer is very simple like in usual GLViewer. When you put the mouse over 
+//
+// Navigation in viewer is very simple like in usual GLViewer. When you put the mouse over
 // some object you can see some information about it (e.g. name, size, actual level).
 // When you double click this object, it becames top object on scene.
-// Undo and redo operation are supported. 
-// 
+// Undo and redo operation are supported.
+//
 // Begin_Html
 // <p> In this picture we can see TStructViewer with pointer to TList which contains
 // other collections and objects of various classes</p>
 // <img src="gif/TStructViewer1.jpg">
 // End_Html
-// 
+//
 // Begin_Html
 // <p> Other screenshot presents opened TStructNodeEditor</p>
 // <img src="gif/TStructViewer2.jpg">
@@ -72,12 +72,12 @@ TStructViewer::TStructViewer(void* ptr, const char * clname)
    fPointerClass = NULL;
    fTopNode = NULL;
 
-   // add default color 
+   // add default color
    fColors.Add(new TStructNodeProperty("+", 17));
 
    // creating GUI
    fGUI = new TStructViewerGUI(this, NULL, &fColors);
-   
+
    SetPointer(ptr, clname);
 }
 
@@ -182,11 +182,11 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
          } else {
             type = kClass;
          }
-            
+
          // creating TStructNode
          TStructNode* node = new TStructNode(dm->GetName(), dm->GetTypeName(), ptr, parent, size, type);
          AddNode(node, size);
-         
+
          CountMembers(TClass::GetClass(dm->GetTypeName()), node, ptr);
 
          // total size = size of parent + size of nodes daughters
@@ -201,7 +201,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
          }
          CountMembers(TClass::GetClass(dm->GetTypeName()), parent, ptr);
       }
-         
+
       //////////////////////////////////////////////////////////////////////////
       // STL COLLECTION
       //////////////////////////////////////////////////////////////////////////
@@ -277,7 +277,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
                if (clProxy->InheritsFrom(TObject::Class())) {
                   name = ((TObject*) element)->GetName();
                }
-               
+
                // create node
                TStructNode* node = new TStructNode(name, typeName, element, parent, size, kClass);
                // add addition information
@@ -290,7 +290,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
                parent->SetAllMembersCount(parent->GetAllMembersCount() + node->GetAllMembersCount());
             }
          }
-      } 
+      }
    }
 
    //////////////////////////////////////////////////////////////////////////
@@ -300,7 +300,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
    if(cl->InheritsFrom(TCollection::Class())) {
       // we change type of node to collection
       parent->SetNodeType(kCollection);
-   
+
       // return if invalid pointer to collection
       if (!pointer) {
          return;
@@ -315,7 +315,7 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
          if (TClass* cl3 = item->IsA()){
             size = cl3->Size();
          }
-         
+
          // if there is no dictionary
          if (size == 0) {
             size = sizeof(item);
@@ -327,9 +327,9 @@ void TStructViewer::CountMembers(TClass* cl, TStructNode* parent, void* pointer)
          AddNode(node, size);
          // increase parents counter
          parent->SetMembersCount(parent->GetMembersCount() + 1);
-         
+
          CountMembers(item->IsA(), node, item);
-         
+
          parent->SetTotalSize(parent->GetTotalSize() + node->GetTotalSize());
          parent->SetAllMembersCount(parent->GetAllMembersCount() + node->GetAllMembersCount());
       }
@@ -343,7 +343,7 @@ void TStructViewer::Draw(Option_t *option)
 
    TString opt(option);
    if(opt == "count") {
-      
+
    } else if (opt == "size") {
 
    }
@@ -352,7 +352,7 @@ void TStructViewer::Draw(Option_t *option)
    if (fTopNode) {
       fGUI->SetNodePtr(fTopNode);
    } else {
-      
+
    }
 }
 
@@ -368,7 +368,7 @@ TCanvas* TStructViewer::GetCanvas()
 TGMainFrame* TStructViewer::GetFrame()
 {
    // Returns pointer to main window
-  
+
    return fGUI;
 }
 //________________________________________________________________________
@@ -439,7 +439,7 @@ void TStructViewer::Reset()
    fLevelSize.Clear();
    fPointers.Clear();
    fLevelArray.Clear();
-   
+
    fTopNode = NULL;
 }
 
@@ -454,7 +454,7 @@ void TStructViewer::SetColor(TString name, Int_t color)
       if (name == prop->GetName()) {
          prop->SetColor(TColor::GetColor(color));
          fGUI->Update();
-         
+
          return;
       }
    }

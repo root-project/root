@@ -97,7 +97,7 @@ public:
 
           TVectorT<Element> &Use       (Int_t lwb,Int_t upb,Element *data);
    const  TVectorT<Element> &Use       (Int_t lwb,Int_t upb,const Element *data) const
-					 { return (const TVectorT<Element>&)(const_cast<TVectorT<Element> *>(this))->Use(lwb,upb,const_cast<Element *>(data)); }
+          { return (const TVectorT<Element>&)(const_cast<TVectorT<Element> *>(this))->Use(lwb,upb,const_cast<Element *>(data)); }
           TVectorT<Element> &Use       (Int_t n,Element *data);
    const  TVectorT<Element> &Use       (Int_t n,const Element *data) const ;
           TVectorT<Element> &Use       (TVectorT<Element> &v);
@@ -220,14 +220,14 @@ template<class Element> inline const Element &TVectorT<Element>::operator()(Int_
 template<class Element> inline Element &TVectorT<Element>::operator()(Int_t ind)
 {
    // Access a vector element.
-   
+
    R__ASSERT(IsValid());
    const Int_t aind = ind-fRowLwb;
    if (aind >= fNrows || aind < 0) {
       Error("operator()","Request index(%d) outside vector range of %d - %d",ind,fRowLwb,fRowLwb+fNrows);
       return fElements[0];
    }
-   
+
    return fElements[aind];
 }
 

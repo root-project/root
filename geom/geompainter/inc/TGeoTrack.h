@@ -41,7 +41,7 @@ enum EGeoParticleActions {
    kGeoPAllDaughters = BIT(9),
    kGeoPType         = BIT(10),
    kGeoPDrawn        = BIT(11)
-};   
+};
 
 private :
    Int_t          fPointsSize; // capacity of points array
@@ -56,7 +56,7 @@ public:
    TGeoTrack();
    TGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent=0, TObject *particle=0);
    virtual ~TGeoTrack();
-   
+
    virtual TVirtualGeoTrack *AddDaughter(Int_t id, Int_t pdgcode, TObject *particle=0);
    virtual Int_t       AddDaughter(TVirtualGeoTrack *other);
    virtual void        AddPoint(Double_t x, Double_t y, Double_t z, Double_t t);
@@ -79,16 +79,16 @@ public:
    virtual void        Print(Option_t *option="") const; // *MENU*
    virtual void        ResetTrack();
    Int_t               SearchPoint(Double_t time, Int_t istart=0) const;
-   void                SetBits(Bool_t is_default=kTRUE, Bool_t is_onelevel=kFALSE, 
+   void                SetBits(Bool_t is_default=kTRUE, Bool_t is_onelevel=kFALSE,
                                Bool_t is_all=kFALSE, Bool_t is_type=kFALSE);
    Int_t               Size(Int_t &imin, Int_t &imax);
    virtual void        Sizeof3D() const;
-   
+
    ClassDef(TGeoTrack, 1)              // geometry tracks class
 };
 
 #endif
-   
-   
-   
-   
+
+
+
+

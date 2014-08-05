@@ -39,7 +39,7 @@ CGAAStateGuard::CGAAStateGuard(CGContextRef ctx, bool enable)
                  fEnable(enable)
 {
    assert(ctx != 0 && "CGAAStateGuard, ctx parameter is null");
-   
+
    if (!enable)
       CGContextSetAllowsAntialiasing(ctx, false);
 }

@@ -51,7 +51,7 @@ protected:
    void     Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
                      Int_t /*nr_nonzeros*/ = -1);
 
-   static Element & NaNValue(); 
+   static Element & NaNValue();
 
 public:
 

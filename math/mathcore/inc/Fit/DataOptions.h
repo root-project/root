@@ -14,28 +14,28 @@
 #define ROOT_Fit_DataOptions
 
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Fit { 
+   namespace Fit {
 
 
 //___________________________________________________________________________________
-/** 
-   DataOptions : simple structure holding the options on how the data are filled 
+/**
+   DataOptions : simple structure holding the options on how the data are filled
 
    @ingroup FitData
-*/ 
+*/
 struct DataOptions {
 
 
-   /** 
+   /**
       Default constructor: use the default options
-   */ 
-   DataOptions () : 
-      fIntegral(false), 
+   */
+   DataOptions () :
+      fIntegral(false),
       fBinVolume(false),
-      fUseEmpty(false), 
-      fUseRange(false), 
+      fUseEmpty(false),
+      fUseRange(false),
       fErrors1(false),
       fExpErrors(false),
       fCoordErrors(true),
@@ -47,13 +47,13 @@ struct DataOptions {
    bool fBinVolume;   // normalize data by the bin volume (it is used in the Poisson likelihood fits)
    bool fUseEmpty;    // use empty bins (default is false) with a fixed error of 1
    bool fUseRange;    // use the function range when creating the fit data (default is false)
-   bool fErrors1;     // use all errors equal to 1, i.e. fit without errors (default is false) 
-   bool fExpErrors;   // use expected errors from the function and not from the data 
+   bool fErrors1;     // use all errors equal to 1, i.e. fit without errors (default is false)
+   bool fExpErrors;   // use expected errors from the function and not from the data
    bool fCoordErrors; // use errors on the x coordinates when available (default is true)
    bool fAsymErrors;  // use asymmetric errors in the value when available, selecting them according to the on sign of residual (default is true)
 
 
-}; 
+};
 
    } // end namespace Fit
 

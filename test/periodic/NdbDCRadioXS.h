@@ -9,12 +9,12 @@ class NdbDCRadioXS : public NdbMF
 protected:
 
 public:
-	NdbDCRadioXS()
-		: NdbMF(40, "Data covariances for radionuclide production "
-			"cross sections") {}
-	~NdbDCRadioXS() {}
+   NdbDCRadioXS()
+      : NdbMF(40, "Data covariances for radionuclide production "
+         "cross sections") {}
+   ~NdbDCRadioXS() {}
 
-	ClassDef(NdbDCRadioXS,1)
+   ClassDef(NdbDCRadioXS,1)
 
 }; // NdbDCRadioXS
 

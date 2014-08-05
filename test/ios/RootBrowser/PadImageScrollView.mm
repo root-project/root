@@ -66,12 +66,12 @@ static const CGFloat minZoom = 1.f;
       self.decelerationRate = UIScrollViewDecelerationRateFast;
 
       [self setContentSize : frame.size contentOffset : CGPointZero minScale : minZoom maxScale : maxZoom scale : 1];
-      
+
       UITapGestureRecognizer *doubleTap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(handleDoubleTap:)];
       doubleTap.numberOfTapsRequired = 2;
       [self addGestureRecognizer : doubleTap];
    }
-    
+
    return self;
 }
 
@@ -106,9 +106,9 @@ static const CGFloat minZoom = 1.f;
 //____________________________________________________________________________________________________
 - (void) resetToFrame : (CGRect) newFrame
 {
-   self.frame = newFrame; 
+   self.frame = newFrame;
    [self setContentSize : newFrame.size contentOffset : CGPointZero minScale : minZoom maxScale : maxZoom scale : 1];
-   
+
    if (nestedView.zoomed) {
       [self clearScroll];
       [self initPadView : newFrame];
@@ -118,7 +118,7 @@ static const CGFloat minZoom = 1.f;
 }
 
 //_________________________________________________________________
-- (CGRect)centeredFrameForScrollView:(UIScrollView *)scroll andUIView:(UIView *)rView 
+- (CGRect)centeredFrameForScrollView:(UIScrollView *)scroll andUIView:(UIView *)rView
 {
    CGSize boundsSize = scroll.bounds.size;
    CGRect frameToCenter = rView.frame;
@@ -136,7 +136,7 @@ static const CGFloat minZoom = 1.f;
    else {
       frameToCenter.origin.y = 0;
    }
-   
+
    return frameToCenter;
 }
 
@@ -151,9 +151,9 @@ static const CGFloat minZoom = 1.f;
 {
    const CGPoint offset = [scroll contentOffset];
    const CGRect newFrame = nestedView.frame;
-  
+
    [scroll setZoomScale : 1.f];
-   
+
    const unsigned base = [PadImageScrollView defaultImageFrame].size.width;
 
    scroll.minimumZoomScale = base / newFrame.size.width;
@@ -180,19 +180,19 @@ static const CGFloat minZoom = 1.f;
 
 //____________________________________________________________________________________________________
 - (CGRect)zoomRectForScale:(float)scale withCenter:(CGPoint)center {
-    
+
     CGRect zoomRect;
-    
-    // the zoom rect is in the content view's coordinates. 
+
+    // the zoom rect is in the content view's coordinates.
     //    At a zoom scale of 1.0, it would be the size of the imageScrollView's bounds.
     //    As the zoom scale decreases, so more content is visible, the size of the rect grows.
     zoomRect.size.height = [self frame].size.height / scale;
     zoomRect.size.width  = [self frame].size.width  / scale;
-    
+
     // choose an origin so as to get the right center.
     zoomRect.origin.x    = center.x - (zoomRect.size.width  / 2.0);
     zoomRect.origin.y    = center.y - (zoomRect.size.height / 2.0);
-    
+
     return zoomRect;
 }
 

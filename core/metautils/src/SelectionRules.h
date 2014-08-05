@@ -39,14 +39,14 @@ namespace ROOT{
 }
 
 class SelectionRules {
-   
+
 public:
    enum ESelectionFileTypes { // type of selection file
       kSelectionXMLFile,
       kLinkdefFile,
       kNumSelectionFileTypes
    };
-   
+
    SelectionRules(cling::Interpreter &interp,
                   ROOT::TMetaUtils::TNormalizedCtxt& normCtxt,
                   const std::vector<std::pair<std::string,std::string>>& namesForExclusion):
@@ -64,35 +64,35 @@ public:
             AddClassSelectionRule(csr);
             }
       }
-   
+
    void AddClassSelectionRule(ClassSelectionRule& classSel);
    bool HasClassSelectionRules() const;
    const std::list<ClassSelectionRule>& GetClassSelectionRules() const;
-   
+
    void AddFunctionSelectionRule(FunctionSelectionRule& funcSel);
    bool HasFunctionSelectionRules() const;
    const std::list<FunctionSelectionRule>& GetFunctionSelectionRules() const;
-   
+
    void AddVariableSelectionRule(VariableSelectionRule& varSel);
    bool HasVariableSelectionRules() const;
    const std::list<VariableSelectionRule>& GetVariableSelectionRules() const;
-   
+
    void AddEnumSelectionRule(EnumSelectionRule& enumSel);
    bool HasEnumSelectionRules() const;
    const std::list<EnumSelectionRule>& GetEnumSelectionRules() const;
-   
+
    void PrintSelectionRules() const; // print all selection rules
-   
+
    void ClearSelectionRules(); // clear all selection rules
-   
+
    void SetHasFileNameRule(bool file_rule);
    bool GetHasFileNameRule() const;
-   
+
    void SetDeep(bool deep);
    bool GetDeep() const;
-   
+
    // These method are called from clr-scan and return true if the Decl selected, false otherwise
-   //const BaseSelectionRule  *IsDeclSelected(clang::Decl* D) const; 
+   //const BaseSelectionRule  *IsDeclSelected(clang::Decl* D) const;
    const ClassSelectionRule *IsDeclSelected(clang::RecordDecl* D) const;
    const ClassSelectionRule *IsDeclSelected(clang::TypedefNameDecl* D) const;
    const ClassSelectionRule *IsDeclSelected(clang::NamespaceDecl* D) const;
@@ -104,7 +104,7 @@ public:
 
    const ClassSelectionRule *IsClassSelected(clang::Decl* D, const std::string& qual_name) const; // is the class selected
    const ClassSelectionRule *IsNamespaceSelected(clang::Decl* D, const std::string& qual_name) const; // is the class selected
-   
+
    // is the global function, variable, enum selected - the behavior is different for linkdef.h and selection.xml - that's why
    // we have two functions
    const BaseSelectionRule *IsVarSelected(clang::VarDecl* D, const std::string& qual_name) const;
@@ -113,11 +113,11 @@ public:
    const BaseSelectionRule *IsLinkdefVarSelected(clang::VarDecl* D, const std::string& qual_name) const;
    const BaseSelectionRule *IsLinkdefFunSelected(clang::FunctionDecl* D, const std::string& qual_name) const;
    const BaseSelectionRule *IsLinkdefEnumSelected(clang::EnumDecl* D, const std::string& qual_name) const;
-   
-   // is member (field, method, enum) selected; the behavior for linkdef.h methods is different   
+
+   // is member (field, method, enum) selected; the behavior for linkdef.h methods is different
    const BaseSelectionRule *IsMemberSelected(clang::Decl* D, const std::string& str_name) const;
    const BaseSelectionRule *IsLinkdefMethodSelected(clang::Decl* D, const std::string& qual_name) const;
-   
+
    // Return the number of rules
     unsigned int Size() const{return fClassSelectionRules.size()+
                                      fFunctionSelectionRules.size()+
@@ -126,54 +126,54 @@ public:
 
    // returns true if the parent is class or struct
    bool IsParentClass(clang::Decl* D) const;
-   
+
    // the same but returns also the parent name and qualified name
    bool IsParentClass(clang::Decl* D, std::string& parent_name, std::string& parent_qual_name) const;
-   
+
    // returns the parent name and qualified name
    bool GetParentName(clang::Decl* D, std::string& parent_name, std::string& parent_qual_name) const;
-   
-   
+
+
    //bool getParent(clang::Decl* D, clang::Decl* parent); - this method would have saved a lot of efforts but it crashes
    // and I didn't understand why
-   
+
    // gets the name and qualified name of the Decl
    bool GetDeclName(clang::Decl* D, std::string& name, std::string& qual_name) const;
-   
+
    // gets the qualname of the decl, no checks performed
    inline void GetDeclQualName(clang::Decl* D, std::string& qual_name) const;
 
    // gets the function prototype if the Decl (if it is global function or method)
    bool GetFunctionPrototype(clang::FunctionDecl* F, std::string& prototype) const;
-   
+
    bool IsSelectionXMLFile() const;
    bool IsLinkdefFile() const;
    void SetSelectionFileType(ESelectionFileTypes fileType);
-   
+
    // returns true if all selection rules are used at least once
    bool AreAllSelectionRulesUsed() const;
-   
+
    // Go through all the selections rules and lookup the name if any in the AST.
    // and force the instantiation of template if any are used in the rules.
    bool SearchNames(cling::Interpreter &interp);
 
    void FillCache(); // Fill the cache of all selection rules
-   
+
 private:
    std::list<ClassSelectionRule>    fClassSelectionRules;    // list of the class selection rules
    std::list<FunctionSelectionRule> fFunctionSelectionRules; // list of the global functions selection rules
    std::list<VariableSelectionRule> fVariableSelectionRules; // list of the global variables selection rules
    std::list<EnumSelectionRule>     fEnumSelectionRules;     // list of the enums selection rules
-   
+
    ESelectionFileTypes fSelectionFileType;
-   
+
    bool fIsDeep; // if --deep option passed from command line, this should be set to true
    bool fHasFileNameRule; // if we have a file name rule, this should be set to true
    long int fRulesCounter;
-   
+
    ROOT::TMetaUtils::TNormalizedCtxt& fNormCtxt;
    cling::Interpreter &fInterp;
-   
+
 };
 
 #endif

@@ -10,12 +10,12 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TInterpreter.h"
-   
+
 void ntuple1() {
    //Small tree analysis script
    // To see the output of this macro, click begin_html <a href="gif/ntuple1.gif">here</a> end_html
    //Author:: Rene Brun
-   
+
    //just in case this script is executed multiple times
    delete gROOT->GetListOfFiles()->FindObject("hsimple.root");
    delete gROOT->GetListOfCanvases()->FindObject("c1");

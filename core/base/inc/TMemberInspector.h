@@ -70,7 +70,7 @@ public:
                       Bool_t transient);
    void InspectMember(TClass* cl, const void* pobj, const char* name,
                       Bool_t isTransient);
-   
+
    void GenericShowMembers(const char *topClassName, const void *obj,
                            Bool_t transientMember);
 

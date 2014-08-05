@@ -8,25 +8,25 @@
  *                                                                    *
  **********************************************************************/
 
-// forward decalaration for the DataVector classes 
+// forward decalaration for the DataVector classes
 
 #ifndef ROOT_Fit_DataVectorfwd
 #define ROOT_Fit_DataVectorfwd
 
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Fit { 
-      
+   namespace Fit {
 
-      //template <class Point> class DataVector; 
-      //class DataVector; 
 
-      //class BinPoint; 
-      //class UnBinPoint; 
+      //template <class Point> class DataVector;
+      //class DataVector;
 
-      class BinData; 
-      class UnBinData; 
+      //class BinPoint;
+      //class UnBinPoint;
+
+      class BinData;
+      class UnBinData;
 
 
 

@@ -1,11 +1,11 @@
-.\" 
+.\"
 .\" $Id: rootd.1,v 1.3 2005/03/21 21:42:21 rdm Exp $
 .\"
-.TH ROOTD 1 "Version 4" "ROOT" 
+.TH ROOTD 1 "Version 4" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
 .\" other parms are allowed: see man(7), man(1)
 .SH NAME
-rootd \- The ROOT file server daemon 
+rootd \- The ROOT file server daemon
 .SH SYNOPSIS
 .B rootd
 .I "[options]"
@@ -24,7 +24,7 @@ when a client requests a connection to a  \fIrootd\fR server or by hand (i.e. fr
 the command line). The  \fIrootd\fR server works with the \fBROOT\fR
 \fITNetFile\fR, \fITFTP\fR and \fITNetSystem\fR classes. It allows access to remote directories and \fBROOT\fR files in either read or write mode from any \fBROOT\fR interactive session. By default \fRrootd\fR listens on port 1094, assigned to it by IANA.
 .SH "STARTING VIA (X)INETD"
-To run \fIrootd\fR via \fIinetd\fR(8) or \fIxinetd\fR(8) the port 1094 must be assigned to \fIrootd\fR in \fI/etc/services\fR; the following line should be added, if not present: 
+To run \fIrootd\fR via \fIinetd\fR(8) or \fIxinetd\fR(8) the port 1094 must be assigned to \fIrootd\fR in \fI/etc/services\fR; the following line should be added, if not present:
 .sp 1
 .RS
 .nf
@@ -41,9 +41,9 @@ rootd stream tcp nowait root <\fIbindir\fR>/rootd rootd \-i
 .RE
 .sp 1
 where <\fIbindir\fR> is the directory you have installed \fIrootd\fR
-in. 
-.PP 
-The \fIinetd\fR(8) daemon must re-read its configuration file to become aware of the new service. This can be done either by killing and restarting it manually 
+in.
+.PP
+The \fIinetd\fR(8) daemon must re-read its configuration file to become aware of the new service. This can be done either by killing and restarting it manually
 .sp 1
 .RS
 .nf
@@ -81,8 +81,8 @@ service rootd
 .fi
 .RE
 .sp 1
-where, again, <\fIbindir\fR> is the directory you have installed \fIrootd\fR in. 
-.PP 
+where, again, <\fIbindir\fR> is the directory you have installed \fIrootd\fR in.
+.PP
 The \fIxinetd\fR(8) daemon must be restarted:
 .sp 1
 .RS
@@ -95,11 +95,11 @@ If you installed \fBROOT\fR using some pre-compiled package (for
 example a \fBRedhat Linux\fR or a \fBDebian GNU/Linux\fR package),
 this may already be done for you.
 .PP
-The above configuration examples start the daemon with superuser privileges. Please refer to the \fIinetd\fR(8) or \fIxinetd\fR(8) documentation for ways of limiting the privileges. 
+The above configuration examples start the daemon with superuser privileges. Please refer to the \fIinetd\fR(8) or \fIxinetd\fR(8) documentation for ways of limiting the privileges.
 .SH "STARTING BY HAND"
-You can also start 
+You can also start
 \fIrootd\fR by hand running directly under your private account (no
-root system privileges needed). For example to start \fIrootd\fR 
+root system privileges needed). For example to start \fIrootd\fR
 listening on port 5151 just type:
 .sp 1
 .RS
@@ -109,11 +109,11 @@ rootd \-p 5151
 .RE
 .sp 1
 \fBNotice\fR: no & is needed \fIrootd\fR will go in background by
-itself. 
+itself.
 .SH "ANONYMOUS LOGINS"
 \fIrootd\fR can also be configured for anonymous usage (like anonymous
 ftp). To setup \fIrootd\fR to accept anonymous logins do the following
-(while being logged in as root): 
+(while being logged in as root):
 .IP 1
 Add the following line to /etc/passwd:
 .sp 1
@@ -121,10 +121,10 @@ Add the following line to /etc/passwd:
 .nf
 rootd:*:71:72:Anonymous rootd:/var/spool/rootd:/bin/false
 .fi
-.RE 
+.RE
 .IP
 where you may modify the uid, gid (71, 72) and the home directory to
-suite your system. 
+suite your system.
 .IP 2
 Add the following line to /etc/group:
 .sp 1
@@ -134,7 +134,7 @@ rootd:*:72:rootd
 .fi
 .RE
 .IP
-where the gid must match the gid in 
+where the gid must match the gid in
 .I /etc/passwd
 .IP 3
  Create the directories:
@@ -147,15 +147,15 @@ chmod 777 /var/spool/rootd/tmp
 .fi
 .RE
 .IP
-Where 
-.I /var/spool/rootd 
-must match the 
-.B rootd 
-home directory as specified in the 
-.B rootd 
-.I /etc/passwd 
+Where
+.I /var/spool/rootd
+must match the
+.B rootd
+home directory as specified in the
+.B rootd
+.I /etc/passwd
 entry.
-.IP 4 
+.IP 4
 To make writable directories for anonymous do, for example:
 .sp 1
 .RS 10
@@ -170,29 +170,29 @@ That's all.
 .PP
 If you installed \fBROOT\fR using some pre-compiled package (for
 example a \fBRedhat Linux\fR or a \fBDebian GNU/Linux\fR package),
-this may already be done for you. 
+this may already be done for you.
 .PP
 Several remarks:
-.TP 
-.B * 
+.TP
+.B *
 You can login to an anonymous server either with the names
-.I anonymous 
-or 
+.I anonymous
+or
 .I rootd.
 .TP
 .B *
-The passwd should be of type 
-.I user@host.domain 
+The passwd should be of type
+.I user@host.domain
 Only the @ is enforced for the time being.
 .TP
 .B *
-In anonymous mode the top of the file tree is set to the 
+In anonymous mode the top of the file tree is set to the
 .B rootd
 home directory, therefore only files below the home directory can be
-accessed. 
+accessed.
 .TP
 .B *
-Anonymous mode only works when the server is started via 
+Anonymous mode only works when the server is started via
 \fRinetd(8)\fR or \fRxinetd(8)\fR.
 .SH "ABOUT PASSWORD AUTHENTICATION"
 In system using shadow passwords, full access to the password field of the user information structure requires special privileges; this is typically granted if \fRrootd\fR is started by \fIinetd(8)\fR or \fIxinetd(8)\fR, as the in above examples. If the daemon is started in unprivileged mode, either from a regular account or by (x)inetd with reduced privileges, password-based authentication require users to create a file $HOME/.rootdpass containing an encrypted password (using \fIcrypt\fR(3)). The system tests the existence of this file before checking the system password files. An encrypted password can be created in the following way:
@@ -205,36 +205,36 @@ perl \-e '$pw = crypt("<secretpasswd>","salt"); print "$pw\n"'
 .sp 1
 storing the output string in $HOME/.rootdpass .
 .PP
-If the $HOME/.rootdpass does not exists and the system password file cannot be accessed, rootd attempts to run the authentication via an \fIsshd\fR(8) daemon. 
+If the $HOME/.rootdpass does not exists and the system password file cannot be accessed, rootd attempts to run the authentication via an \fIsshd\fR(8) daemon.
 .SH OPTIONS
-.\" .TP 
+.\" .TP
 .\" \fB-?\fR
 .\" Show summary of options.
 .TP
 \fB-b\fR <\fItcpwindowsize\fR>
 specifies the tcp window size in bytes (e.g. see http://www.psc.edu/networking/perf_tune.html). Default is 65535. Only change default for pipes with a high bandwidth*delay product.
-.TP   
+.TP
 \fB-d\fR <\fIlevel\fR>
 level of debug info written to syslogd
-0 = no debug (default), 1 = minimum, 2 = medium, 3 = maximum. 
+0 = no debug (default), 1 = minimum, 2 = medium, 3 = maximum.
 .TP
 \fB-D\fR <\fIrootdaemonrc\fR>
 read access rules from file <rootdaemonrc>. By default <root_etc_dir>/system.rootdaemonrc is used for access rules; for privately started daemons $HOME/.rootdaemonrc (if present) is read first.
 .TP
 \fB-f\fR
 run in the foreground (output on the window); useful for debugging purposes.
-.TP 
+.TP
 \fB-i\fR
 indicates that \fIrootd\fR was started by \fIinetd\fR(8) or \fIxinetd\fR(8).
 .TP
 \fB-noauth\fR
-do not require client authentication            
-.TP 
+do not require client authentication
+.TP
 \fB-p\fR <\fIport#\fR>[-<\fIport2#\fR>]
 specifies the port number to listen on. Use port-port2 to find the first available port in the indicated range. Use 0-N for range relative to default service port.
 .TP
 \fB-r\fR
-files can only be opened in read-only mode      
+files can only be opened in read-only mode
 .TP
 \fB-s\fR <\fIsshd_port#\fR>
 specifies the port number for the sshd daemon used for authentication (default is 22).
@@ -247,14 +247,14 @@ do not check /etc/hosts.equiv, $HOME/.rhosts for password-based authentication; 
 .SH "SEE ALSO"
 \fIroot\fR(1), \fIproofd\fR(1), \fIsystem.rootdaemonrc\fR(1)
 .PP
-For more information on the \fBROOT\fR system, please refer to 
+For more information on the \fBROOT\fR system, please refer to
 .UR http://root.cern.ch/
 .I http://root.cern.ch
 .UE
 .SH "ORIGINAL AUTHORS"
 The ROOT team (see web page above):
 .RS
-.B Rene Brun 
+.B Rene Brun
 and
 .B Fons Rademakers
 .RE
@@ -272,12 +272,12 @@ Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-.SH AUTHOR 
+.SH AUTHOR
 This manual page was originally written by Christian Holm Christensen
 <cholm@nbi.dk>, for the Debian GNU/Linux system and ROOT version 3.
 It has been modified by G. Ganis <g.ganis@cern.ch> to document new features
 included in ROOT version 4.
-.\" 
+.\"
 .\" $Log: rootd.1,v $
 .\" Revision 1.3  2005/03/21 21:42:21  rdm
 .\" From Christian Holm Christensen:

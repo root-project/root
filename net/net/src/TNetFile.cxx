@@ -385,7 +385,7 @@ Bool_t TNetFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 
    SetOffset(pos);
    return ReadBuffer(buf, len);
-}   
+}
 
 //______________________________________________________________________________
 Bool_t TNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
@@ -1152,7 +1152,7 @@ Bool_t TNetSystem::ConsistentWith(const char *path, void *dirptr)
          Info("ConsistentWith", "fUser:'%s' (%s), fHost:'%s' (%s), fPort:%d (%d)",
                                 fUser.Data(), user.Data(), fHost.Data(), host.Data(),
                                 fPort, port);
-      
+
       if (user == fUser && host == fHost && port == fPort)
          checknet = kTRUE;
    }

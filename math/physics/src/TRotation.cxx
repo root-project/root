@@ -114,28 +114,28 @@ angles of the rotated axes:
 
 <H3>
 Setting The Rotations</H3>
-The member function <TT>SetToIdentity()</TT> will set the rotation object 
+The member function <TT>SetToIdentity()</TT> will set the rotation object
 to the identity (no rotation).
 
-With a minor caveat, the Euler angles of the rotation may be set using 
-<TT>SetXEulerAngles()</TT> or individually set with <TT>SetXPhi()</TT>, 
-<TT>SetXTheta()</TT>, and <TT>SetXPsi()</TT>.  These routines set the Euler 
+With a minor caveat, the Euler angles of the rotation may be set using
+<TT>SetXEulerAngles()</TT> or individually set with <TT>SetXPhi()</TT>,
+<TT>SetXTheta()</TT>, and <TT>SetXPsi()</TT>.  These routines set the Euler
 angles using the X-convention which is defined by a rotation about the Z-axis,
 about the new X-axis, and about the new Z-axis.  This is the convention used
-in Landau and Lifshitz, Goldstein and other common physics texts.  The 
+in Landau and Lifshitz, Goldstein and other common physics texts.  The
 Y-convention euler angles can be set with <TT>SetYEulerAngles()</TT>,
-<TT>SetYPhi()</TT>, <TT>SetYTheta()</TT>, and <TT>SetYPsi()</TT>.  The caveat 
-is that Euler angles usually define the rotation of the new coordinate system 
-with respect to the original system, however, the TRotation class specifies 
-the rotation of the object in the original system (an active rotation).  To 
-recover the usual Euler rotations (ie. rotate the system not the object), you 
+<TT>SetYPhi()</TT>, <TT>SetYTheta()</TT>, and <TT>SetYPsi()</TT>.  The caveat
+is that Euler angles usually define the rotation of the new coordinate system
+with respect to the original system, however, the TRotation class specifies
+the rotation of the object in the original system (an active rotation).  To
+recover the usual Euler rotations (ie. rotate the system not the object), you
 must take the inverse of the rotation.
 
-The member functions <TT>SetXAxis()</TT>, <TT>SetYAxis()</TT>, and 
+The member functions <TT>SetXAxis()</TT>, <TT>SetYAxis()</TT>, and
 <TT>SetZAxis()</TT> will create a rotation which rotates the requested axis
-of the object to be parallel to a vector.  If used with one argument, the 
+of the object to be parallel to a vector.  If used with one argument, the
 rotation about that axis is arbitrary.  If used with two arguments, the
-second variable defines the <TT>XY</TT>, <TT>YZ</TT>, or <TT>ZX</TT> 
+second variable defines the <TT>XY</TT>, <TT>YZ</TT>, or <TT>ZX</TT>
 respectively.
 
 <H3>
@@ -146,9 +146,9 @@ Inverse rotation</H3>
 <BR><TT>&nbsp; b = a.Invert();&nbsp;&nbsp; // invert a and set b = a</TT>
 <H3>
 Compound Rotations</H3>
-The <TT>operator *</TT> has been implemented in a way that follows the 
-mathematical notation of a product of the two matrices which describe the 
-two consecutive rotations. Therefore the second rotation should be placed 
+The <TT>operator *</TT> has been implemented in a way that follows the
+mathematical notation of a product of the two matrices which describe the
+two consecutive rotations. Therefore the second rotation should be placed
 first:
 
 <P><TT>&nbsp; r = r2 * r1;</TT>
@@ -217,7 +217,7 @@ Double_t TRotation::operator() (int i, int j) const {
       if (j == 1) { return fzy; }
       if (j == 2) { return fzz; }
    }
-  
+
    Warning("operator()(i,j)", "bad indices (%d , %d)",i,j);
 
    return 0.0;
@@ -275,7 +275,7 @@ TRotation::TRotation(const TQuaternion & Q) {
       fyz = two_yz - two_xr;
       fzy = two_yz + two_xr;
 
-      // protect agains non-unit quaternion 
+      // protect agains non-unit quaternion
       if (TMath::Abs(mag2-1) > 1e-10) {
          fxx /= mag2;
          fyy /= mag2;
@@ -443,8 +443,8 @@ void TRotation::AngleAxis(Double_t &angle, TVector3 &axis) const {
 TRotation & TRotation::SetXEulerAngles(Double_t phi,
                                       Double_t theta,
                                       Double_t psi) {
-   // Rotate using the x-convention (Landau and Lifshitz, Goldstein, &c) by 
-   // doing the explicit rotations.  This is slightly less efficient than 
+   // Rotate using the x-convention (Landau and Lifshitz, Goldstein, &c) by
+   // doing the explicit rotations.  This is slightly less efficient than
    // directly applying the rotation, but makes the code much clearer.  My
    // presumption is that this code is not going to be a speed bottle neck.
 
@@ -452,7 +452,7 @@ TRotation & TRotation::SetXEulerAngles(Double_t phi,
    RotateZ(phi);
    RotateX(theta);
    RotateZ(psi);
-  
+
    return *this;
 }
 
@@ -460,7 +460,7 @@ TRotation & TRotation::SetYEulerAngles(Double_t phi,
                                        Double_t theta,
                                        Double_t psi) {
    // Rotate using the y-convention.
-    
+
    SetToIdentity();
    RotateZ(phi);
    RotateY(theta);
@@ -623,7 +623,7 @@ Double_t TRotation::GetYPsi(void) const {
    return GetXPsi() - TMath::Pi()/2;
 }
 
-TRotation & TRotation::SetXAxis(const TVector3& axis, 
+TRotation & TRotation::SetXAxis(const TVector3& axis,
                                 const TVector3& xyPlane) {
    //set X axis
    TVector3 xAxis(xyPlane);
@@ -642,7 +642,7 @@ TRotation & TRotation::SetXAxis(const TVector3& axis) {
    return SetXAxis(axis,xyPlane);
 }
 
-TRotation & TRotation::SetYAxis(const TVector3& axis, 
+TRotation & TRotation::SetYAxis(const TVector3& axis,
                                 const TVector3& yzPlane) {
    //set Y axis
    TVector3 xAxis(yzPlane);
@@ -661,7 +661,7 @@ TRotation & TRotation::SetYAxis(const TVector3& axis) {
    return SetYAxis(axis,yzPlane);
 }
 
-TRotation & TRotation::SetZAxis(const TVector3& axis, 
+TRotation & TRotation::SetZAxis(const TVector3& axis,
                                 const TVector3& zxPlane) {
    //set Z axis
    TVector3 xAxis(zxPlane);
@@ -683,7 +683,7 @@ TRotation & TRotation::SetZAxis(const TVector3& axis) {
 void TRotation::MakeBasis(TVector3& xAxis,
                           TVector3& yAxis,
                           TVector3& zAxis) const {
-   // Make the Z axis into a unit variable. 
+   // Make the Z axis into a unit variable.
    Double_t zmag = zAxis.Mag();
    if (zmag<TOLERANCE) {
       Warning("MakeBasis(X,Y,Z)","non-zero Z Axis is required");

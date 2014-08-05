@@ -63,7 +63,7 @@ namespace xmlio {
    extern const char* True;
    extern const char* False;
    extern const char* SInfos;
-    
+
    extern const char* Array;
    extern const char* Bool;
    extern const char* Char;
@@ -102,7 +102,7 @@ class TXMLSetup {
       Bool_t         IsStoreStreamerInfos() const { return fStoreStreamerInfos; }
       Bool_t         IsUseDtd() const { return fUseDtd; }
       Bool_t         IsUseNamespaces() const { return fUseNamespaces; }
-      
+
       virtual void   SetXmlLayout(EXMLLayout layout) { fXmlLayout = layout; }
       virtual void   SetStoreStreamerInfos(Bool_t iConvert = kTRUE) { fStoreStreamerInfos = iConvert; }
       virtual void   SetUsedDtd(Bool_t use = kTRUE) { fUseDtd = use; }
@@ -111,9 +111,9 @@ class TXMLSetup {
       const char*    XmlConvertClassName(const char* name);
       const char*    XmlClassNameSpaceRef(const TClass* cl);
       const char*    XmlGetElementName(const TStreamerElement* el);
-      
+
       Int_t          GetNextRefCounter() { return fRefCounter++; }
-      
+
       static TString DefaultXmlSetup();
       static void    SetNameSpaceBase(const char* namespacebase);
 
@@ -121,7 +121,7 @@ class TXMLSetup {
 
       TClass*        XmlDefineClass(const char* xmlClassName);
       const char*    GetElItemName(TStreamerElement* el);
-      
+
       Bool_t         IsValidXmlSetup(const char* setupstr);
       Bool_t         ReadSetupFromStr(const char* setupstr);
 
@@ -135,8 +135,8 @@ class TXMLSetup {
       Int_t          fRefCounter;      //!  counter , used to build id of xml references
 
       TString        fStrBuf;          //!  buffer, used in XmlDefineClass() function
-      
-      static TString fgNameSpaceBase;   
+
+      static TString fgNameSpaceBase;
 
    ClassDef(TXMLSetup,1) //settings to be stored in XML files
 };

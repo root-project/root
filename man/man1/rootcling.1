@@ -5,43 +5,43 @@
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
 .\" other parms are allowed: see man(7), man(1)
 .SH NAME
-rootcling \- ROOT Dictionary generator 
+rootcling \- ROOT Dictionary generator
 .SH SYNOPSIS
 .nf
-\fBrootcling \fIheader_file\fR[+][\-][!] ... [LinkDef.h] > \fIdict_file\fR 
+\fBrootcling \fIheader_file\fR[+][\-][!] ... [LinkDef.h] > \fIdict_file\fR
 \fBrootcling \fR[\-f] \fIdict_file \fR[\-c] \fIheader_file\fR[+][\-][!] ... [LinkDef.h]
 .fi
-.SH "DESCRIPTION" 
-The 
-.B rootcling 
-program generates the 
-.IR Streamer() , 
-.I TBuffer &operator>>() 
-and 
-.I ShowMembers() 
-methods for 
-.B ROOT 
+.SH "DESCRIPTION"
+The
+.B rootcling
+program generates the
+.IR Streamer() ,
+.I TBuffer &operator>>()
+and
+.I ShowMembers()
+methods for
+.B ROOT
 classes, i.e. classes using the
-.I ClassDef 
-and 
-.I ClassImp 
-macros. 
-In addition 
-.B rootcling 
-can also generate the 
-.B CINT 
+.I ClassDef
+and
+.I ClassImp
+macros.
+In addition
+.B rootcling
+can also generate the
+.B CINT
 dictionaries needed in order to get access to ones classes via the
-interpreter.  
-.PP 
-.B rootcling 
-can be used like: 
-.sp 1 
+interpreter.
+.PP
+.B rootcling
+can be used like:
+.sp 1
 .RS
 .nf
 .B rootcling TAttAxis.h[-][!] ... [LinkDef.h] > AxisGen.C
 .fi
 .RE
-or 
+or
 .RS
 .nf
 .B rootcling [-f] [AxDict.C] [-c] TAttAxis.h[-][!] ... [LinkDef.h]
@@ -49,43 +49,43 @@ or
 .RE
 .sp 1
 The difference between the two is that in the first case only the
-.I  Streamer() 
-and 
-.I ShowMembers() 
+.I  Streamer()
+and
+.I ShowMembers()
 methods are generated while in the latter case a  complete compileable
 file is generated (including the include statements). The first method
 also allows the output to be appended to an already existing file
-(using 
+(using
 .B >>
-). The optional minus behind the include file name tells 
-.B rootcling 
-to not generate the 
-.B Streamer() 
+). The optional minus behind the include file name tells
+.B rootcling
+to not generate the
+.B Streamer()
 method. A custom method must be provided by the user in that
-case. When using option 
-.B -c 
+case. When using option
+.B -c
 also the interpreter method interface stubs will be written to the
 output file (
-.B AxDict.C 
-in the above case).  
+.B AxDict.C
+in the above case).
 By default the output file will not be overwritten if it exists. Use
-the 
-.B -f (force) 
-option to overwite the output file.  
-.PP 
+the
+.B -f (force)
+option to overwite the output file.
+.PP
 Before specifying the first header file one can also add include file
-directories to be searched and preprocessor defines, like:  
-.sp 1 
+directories to be searched and preprocessor defines, like:
+.sp 1
 .RS
 .nf
 .B \-I$../include -DDebug
 .fi
 .RE
 .sp 1
-The (optional) file 
-.B LinkDef.h 
-looks like: 
-.sp 1 
+The (optional) file
+.B LinkDef.h
+looks like:
+.sp 1
 .RS
 .nf
 #ifdef __CINT__
@@ -107,61 +107,61 @@ looks like:
 #pragma link C++ enum EMessageTypes;
 
 #endif
-.fi 
+.fi
 .RE
 .sp 1
-This file tells 
-.B rootcling 
-for which classes the method interface stubs should be generated. A
-trailing `\-' in the class name tells 
-.B rootcling 
-to not generate the 
-.B Streamer() 
-method. This is necessary for those classes that need a customized 
-.B Streamer() 
-method. A trailing `!' in the class name tells 
+This file tells
 .B rootcling
-to not generate the 
-.B operator>>(TBuffer &b, MyClass *&obj) 
+for which classes the method interface stubs should be generated. A
+trailing `\-' in the class name tells
+.B rootcling
+to not generate the
+.B Streamer()
+method. This is necessary for those classes that need a customized
+.B Streamer()
+method. A trailing `!' in the class name tells
+.B rootcling
+to not generate the
+.B operator>>(TBuffer &b, MyClass *&obj)
 method. This is necessary to be able to write pointers to objects of
-classes not inheriting from 
-.I TObject. 
+classes not inheriting from
+.I TObject.
 When this file is not specified a default version exporting the
-classes with the names equal to the include files minus the 
-.B .h 
-is generated. 
-.PP 
-.B IMPORTANT: 
+classes with the names equal to the include files minus the
+.B .h
+is generated.
+.PP
+.B IMPORTANT:
 .TP
 1
-.B LinkDef.h 
-must be the last argument on the 
-.B rootcling command line. 
+.B LinkDef.h
+must be the last argument on the
+.B rootcling command line.
 .TP
 2
-Note that the 
-.B LinkDef 
+Note that the
+.B LinkDef
 file name MUST contain the string:
-.B LinkDef.h 
-or 
-.BR linkdef.h , 
-i.e. 
-.B NA49_LinkDef.h 
-is fine just like, 
-.BR mylinkdef.h . 
+.B LinkDef.h
+or
+.BR linkdef.h ,
+i.e.
+.B NA49_LinkDef.h
+is fine just like,
+.BR mylinkdef.h .
 .\" .El
 .SH "SEE ALSO"
 \fIroot\fR(1), \fIcint\fR(1)
 .PP
-.B rootcling 
-is  documented fully on  
+.B rootcling
+is  documented fully on
 .UR http://root.cern.ch/drupal/content/interacting-shared-libraries-rootcint
 .I ROOT web-site
 .UE
 .SH "ORIGINAL AUTHORS"
 The ROOT team (see web page above):
 .RS
-.B Rene Brun 
+.B Rene Brun
 and
 .B Fons Rademakers
 .RE
@@ -179,10 +179,10 @@ Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-.SH AUTHOR 
+.SH AUTHOR
 This manual page was written by Christian Holm Christensen
 <cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
-others). 
+others).
 .\"
 .\" $Log: rootcling.1,v $
 .\" Revision 1.2  2005/03/21 21:42:21  rdm

@@ -4,7 +4,7 @@
 <!ELEMENT PersonList (Person)+ >
 <!ELEMENT Person (FirstName,LastName,Gender,DateOfBirth,Address) >
 <!ATTLIST Person
-  ID	CDATA	#REQUIRED
+  ID CDATA #REQUIRED
 >
 
 <!ELEMENT FirstName (#PCDATA) >

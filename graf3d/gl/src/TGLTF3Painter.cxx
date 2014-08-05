@@ -130,7 +130,7 @@ void TGLTF3Painter::Pan(Int_t px, Int_t py)
             fBoxCut.MoveBox(px, py, fSelectedPart);
          } else {
             //MoveSection(px, py);
-	 }
+         }
       } else {
          //MoveSection(px, py);
       }
@@ -518,7 +518,7 @@ void TGLIsoPainter::Pan(Int_t px, Int_t py)
             fBoxCut.MoveBox(px, py, fSelectedPart);
          } else {
             //MoveSection(px, py);
-	 }
+         }
       } else {
          //MoveSection(px, py);
       }

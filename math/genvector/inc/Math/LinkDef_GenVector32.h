@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
 // Linkdef for Doublr32_t types
 
@@ -36,7 +36,7 @@
 
 // using a tag (only cartesian and cylindrical eta)
 
-#ifdef __CLING__ 
+#ifdef __CLING__
 // Work around CINT and autoloader deficiency with template default parameter
 // Those requests as solely for rlibmap, they do no need to be seen by rootcint
 #pragma link C++ class ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag >+;

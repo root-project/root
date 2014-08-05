@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
 #include "gsl/gsl_cdf.h"
 

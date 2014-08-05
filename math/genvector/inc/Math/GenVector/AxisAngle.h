@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
 /**********************************************************************
   *                                                                    *
@@ -14,7 +14,7 @@
 //
 // Last update: Wed May 11 10:37:10 2005
 //
-#ifndef ROOT_Math_GenVector_AxisAngle 
+#ifndef ROOT_Math_GenVector_AxisAngle
 #define ROOT_Math_GenVector_AxisAngle  1
 
 #include "Math/GenVector/Rotation3D.h"
@@ -34,9 +34,9 @@ namespace Math {
    /**
       AxisAngle class describing rotation represented with direction axis (3D Vector) and an
       angle of rotation around that axis.
-      
+
       @ingroup GenVector
-      
+
    */
 class AxisAngle {
 
@@ -69,9 +69,9 @@ public:
       the x, y, and z components of a unit axis vector, and the angle
       of rotation.
       Precondition:  The first three components are assumed to represent
-      the rotation axis vector and the 4-th the rotation angle.  
+      the rotation axis vector and the 4-th the rotation angle.
       The angle is assumed to be in the range (-pi,pi].
-      The axis vector is automatically normalized to be a unit vector  
+      The axis vector is automatically normalized to be a unit vector
    */
    template<class IT>
    AxisAngle(IT begin, IT end) { SetComponents(begin,end); }
@@ -89,15 +89,15 @@ public:
    /**
       Construct from another supported rotation type (see gv_detail::convert )
    */
-   template <class OtherRotation> 
+   template <class OtherRotation>
    explicit AxisAngle(const OtherRotation & r) {gv_detail::convert(r,*this);}
 
 
    /**
       Assign from another supported rotation type (see gv_detail::convert )
    */
-   template <class OtherRotation> 
-   AxisAngle & operator=( OtherRotation const  & r ) { 
+   template <class OtherRotation>
+   AxisAngle & operator=( OtherRotation const  & r ) {
       gv_detail::convert(r,*this);
       return *this;
    }
@@ -108,9 +108,9 @@ public:
       Set the axis and then the angle given a pair of pointers or iterators
       defining the beginning and end of an array of four Scalars.
       Precondition:  The first three components are assumed to represent
-      the rotation axis vector and the 4-th the rotation angle. 
+      the rotation axis vector and the 4-th the rotation angle.
       The angle is assumed to be in the range (-pi,pi].
-      The axis vector is automatically normalized to be a unit vector  
+      The axis vector is automatically normalized to be a unit vector
    */
    template<class IT>
 #ifndef NDEBUG
@@ -120,7 +120,7 @@ public:
 #endif
       IT a = begin; IT b = ++begin; IT c = ++begin;
       fAxis.SetCoordinates(*a,*b,*c);
-      fAngle = *(++begin); 
+      fAngle = *(++begin);
       assert (++begin==end);
       // re-normalize the vector
       double tot = fAxis.R();
@@ -139,7 +139,7 @@ public:
 #endif
       IT a = begin; IT b = ++begin; IT c = ++begin;
       fAxis.GetCoordinates(*a,*b,*c);
-      *(++begin) = fAngle;  
+      *(++begin) = fAngle;
       assert (++begin==end);
    }
 
@@ -150,9 +150,9 @@ public:
    void GetComponents(IT begin) const {
       double ax,ay,az = 0;
       fAxis.GetCoordinates(ax,ay,az);
-      *begin++ = ax; 
-      *begin++ = ay; 
-      *begin++ = az; 
+      *begin++ = ax;
+      *begin++ = ay;
+      *begin++ = az;
       *begin = fAngle;
    }
 
@@ -192,7 +192,7 @@ public:
    /**
       Rotation operation on a cartesian vector
    */
-   typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
+   typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector;
    XYZVector operator() (const XYZVector & v) const;
 
    /**
@@ -204,8 +204,8 @@ public:
       DisplacementVector3D< Cartesian3D<double> > xyz(v.X(), v.Y(), v.Z());
       DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
       DisplacementVector3D< CoordSystem, Tag > vNew;
-      vNew.SetXYZ( rxyz.X(), rxyz.Y(), rxyz.Z() ); 
-      return vNew; 
+      vNew.SetXYZ( rxyz.X(), rxyz.Y(), rxyz.Z() );
+      return vNew;
    }
 
    /**
@@ -335,7 +335,7 @@ AxisAngle operator* (RotationZ const & r1, AxisAngle const & r2);
 /**
    Stream Output and Input
  */
-  // TODO - I/O should be put in the manipulator form 
+  // TODO - I/O should be put in the manipulator form
 
 std::ostream & operator<< (std::ostream & os, const AxisAngle & a);
 

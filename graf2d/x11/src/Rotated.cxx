@@ -932,7 +932,7 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
       free(item);
       return 0;
    }
-   
+
    /* loop through each section in the string */
    do {
       XTextExtents(font, str3, strlen(str3), &dir, &asc, &desc,

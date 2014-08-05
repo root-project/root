@@ -192,7 +192,7 @@ TLorentzRotation::TLorentzRotation(Double_t bx,
                                    Double_t by,
                                    Double_t bz)
 {
-   //constructor   
+   //constructor
    SetBoost(bx, by, bz);
 }
 

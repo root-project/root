@@ -46,8 +46,8 @@ enum ETutorialsDefaults {
    //Transparent view with a text
    //and a pictogram for a hint.
    HintView *hintView;
-  
-   //Small views with pictograms: hints. 
+
+   //Small views with pictograms: hints.
    PictView *panPic;
    PictView *pinchPic;
    PictView *doubleTapPic;
@@ -70,16 +70,16 @@ enum ETutorialsDefaults {
 
    UIPanGestureRecognizer *padPanGestures[kTDNOfPads];
    UITapGestureRecognizer *padTapGestures[kTDNOfPads];
-   
+
    unsigned activeView;
-   
+
    CGSize oldSizes;
 
    ROOT::iOS::Demos::DemoBase *activeDemo;
-   
+
    //Either zoom or selection.
    ETutorialsMode appMode;
-   
+
    BOOL activeAnimation;
 }
 
@@ -119,16 +119,16 @@ enum ETutorialsDefaults {
 {
    const CGPoint padCenter = self.view.center;
    CGRect padRect = CGRectMake(padCenter.x - 320.f, padCenter.y - 310.f, 640.f, 640.f);
-   
+
    oldSizes.width = 640.f;
    oldSizes.height = 640.f;
-   
+
    parentView = [[UIView alloc] initWithFrame:padRect];
    parentView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
 
    [self.view addSubview:parentView];
 
-   //Trick with shadow and shadow path: 
+   //Trick with shadow and shadow path:
    //http://nachbaur.com/blog/fun-shadow-effects-using-custom-calayer-shadowpaths
    //Many thanks.
    parentView.layer.shadowColor = [UIColor blackColor].CGColor;
@@ -153,16 +153,16 @@ enum ETutorialsDefaults {
    }
 
    parentView.hidden = YES;
-   //   
+   //
    activeView = 0;
-   
+
    padRect = CGRectMake(padCenter.x - 320.f, padCenter.y - 310.f, 640.f, 640.f);
-   
+
    for (unsigned i = 0; i < 2; ++i) { // < kTDNOfPads
       selectionViews[i] = [[SelectionView alloc] initWithFrame:padRect];
       selectionViews[i].autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
       [self.view addSubview:selectionViews[i]];
-      selectionViews[i].hidden = YES;   
+      selectionViews[i].hidden = YES;
       selectionViews[i].opaque = NO;
    }
 }
@@ -187,7 +187,7 @@ enum ETutorialsDefaults {
    UITapGestureRecognizer *panTap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(showPanHint)];
    [panPic addGestureRecognizer:panTap];
    panPic.hidden = YES;
-   
+
    pictRect.origin.y = 590;
    doubleTapPic = [[PictView alloc] initWithFrame:pictRect andIcon:@"double_tap_gesture_icon_small.png"];
    doubleTapPic.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
@@ -202,7 +202,7 @@ enum ETutorialsDefaults {
    UITapGestureRecognizer *rotTap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(showRotationHint)];
    [rotatePic addGestureRecognizer:rotTap];
    rotatePic.hidden = YES;
-   
+
    singleTapPic = [[PictView alloc] initWithFrame:pictRect andIcon:@"single_tap_icon_small.png"];
    singleTapPic.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
    [self.view addSubview:singleTapPic];
@@ -235,13 +235,13 @@ enum ETutorialsDefaults {
 //_________________________________________________________________
 - (void)viewWillDisappear:(BOOL)animated
 {
-	[super viewWillDisappear:animated];
+   [super viewWillDisappear:animated];
 }
 
 //_________________________________________________________________
 - (void)viewDidDisappear:(BOOL)animated
-{  
-	[super viewDidDisappear:animated];
+{
+   [super viewDidDisappear:animated];
 }
 
 //_________________________________________________________________
@@ -276,17 +276,17 @@ enum ETutorialsDefaults {
 - (void)viewDidLoad
 {
    self.view.backgroundColor = [UIColor lightGrayColor];
-   
+
    [self initCPPObjects];
    [self initMainViews];
    [self initHints];
-   
+
    appMode = kTAZoom;
-  
+
    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleDoubleTapPad:)];
    [parentView addGestureRecognizer:tapGesture];
    tapGesture.numberOfTapsRequired = 2;
-      
+
    //Load a help view from a nib file.
    [[NSBundle mainBundle] loadNibNamed:@"HelpView" owner:self options:nil];
    CGRect helpFrame = help.frame;
@@ -295,11 +295,11 @@ enum ETutorialsDefaults {
    help.frame = helpFrame;
    help.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
    [self.view addSubview:help];
-         
+
    //Editor view and help view (created in a IB) are on top.
    [self.view bringSubviewToFront:help];
-   
-   //Shadow for editor.   
+
+   //Shadow for editor.
    tabBar.selectedItem = [tabBar.items objectAtIndex : 0];
 
    [super viewDidLoad];
@@ -310,9 +310,9 @@ enum ETutorialsDefaults {
 {
    [super viewDidUnload];
 
-	// Release any retained subviews of the main view.
-	// e.g. self.myOutlet = nil;
-	self.popoverController = nil;
+   // Release any retained subviews of the main view.
+   // e.g. self.myOutlet = nil;
+   self.popoverController = nil;
 }
 
 #pragma mark - Memory management
@@ -320,10 +320,10 @@ enum ETutorialsDefaults {
 //_________________________________________________________________
 - (void)didReceiveMemoryWarning
 {
-	// Releases the view if it doesn't have a superview.
+   // Releases the view if it doesn't have a superview.
    [super didReceiveMemoryWarning];
-	
-	// Release any cached data, images, etc that aren't in use.
+
+   // Release any cached data, images, etc that aren't in use.
 }
 
 //_________________________________________________________________
@@ -341,14 +341,14 @@ enum ETutorialsDefaults {
       panPic.hidden = NO;
       pinchPic.hidden = NO;
       doubleTapPic.hidden = NO;
-      
+
       singleTapPic.hidden = YES;
       rotatePic.hidden = YES;
 //      emptyPic.hidden = YES;
       //Hide selection pictograms.
    } else {
       //Show selection or rotate pictogram.
-      
+
       //Hide zoom mode's pictograms.
       panPic.hidden = YES;
       pinchPic.hidden = YES;
@@ -363,12 +363,12 @@ enum ETutorialsDefaults {
 - (void) setActiveDemo:(ROOT::iOS::Demos::DemoBase *)demo
 {
    help.hidden = YES;
-   
+
    if (demo != activeDemo) {
-   
+
       selectionViews[0].hidden = YES;
       selectionViews[1].hidden = YES;
-   
+
       parentView.hidden = NO;
       //Stop any animated demo (previously active).
       if (animationTimer) {
@@ -377,47 +377,47 @@ enum ETutorialsDefaults {
       }
       currentFrame = 0;
       //
-      
+
       //Prepare to make an animation: remove one view, show another.
       activeDemo = demo;
       [self prepareHints];
-   
+
       UIView * showView = 0;
       UIView * hideView = 0;
-      
+
       const unsigned hide = activeView;
       const unsigned show = !hide;
       activeView = show;
-   
+
       if (appMode == kTAZoom) {
          showView = scrollViews[show];
          hideView = scrollViews[hide];
       } else {
          showView = padViews[show];
-         hideView = padViews[hide];         
+         hideView = padViews[hide];
       }
 
       //This is temporary hack.
       [padViews[activeView] setProcessPan:activeDemo->Supports3DRotation()];
       [padViews[activeView] setProcessTap:!activeDemo->Supports3DRotation()];
 
-      //Remove old contents of pad, 
+      //Remove old contents of pad,
       //set pad's parameters (if required by demo)
       //reset demo (if required), add demo's primitives to pad.
       pad->Clear();
       activeDemo->AdjustPad(pad);
       activeDemo->ResetDemo();
       activeDemo->PresentDemo();
-      
+
       //Repaint active view's content.
       [padViews[activeView] setNeedsDisplay];
-      
+
       if (activeDemo->IsAnimated()) {
          //Start timer for animated demo.
          activeDemo->StartAnimation();
          animationTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 / 25 target:self selector:@selector(onTimer) userInfo:nil repeats:YES];
       }
-      
+
       //Make an animation: hide one view (demo), show another one.
       showView.hidden = NO;
       hideView.hidden = YES;
@@ -429,7 +429,7 @@ enum ETutorialsDefaults {
       transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
       // Now to set the type of transition.
       transition.type = kCATransitionReveal;
-		transition.subtype = kCATransitionFromLeft;
+      transition.subtype = kCATransitionFromLeft;
       // Finally, to avoid overlapping transitions we assign ourselves as the delegate for the animation and wait for the
       // -animationDidStop:finished: message. When it comes in, we will flag that we are no longer transitioning.
       //transitioning = YES;
@@ -453,7 +453,7 @@ enum ETutorialsDefaults {
       animationTimer = 0;
    } else {
       ++currentFrame;
-      activeDemo->NextStep();      
+      activeDemo->NextStep();
       [padViews[activeView] setNeedsDisplay];
    }
 }
@@ -463,21 +463,21 @@ enum ETutorialsDefaults {
 {
    UIScrollView *scroll = (UIScrollView *)padViews[view].superview;
    CGRect oldRect = padViews[view].frame;
-   
+
    if (abs(640.f - oldRect.size.width) < 0.01 && (abs(640.f - oldRect.size.height) < 0.01))
       return;
-      
+
    CGRect padRect = CGRectMake(0.f, 0.f, 640.f, 640.f);
    [padViews[view] removeFromSuperview];
    padViews[view] = [[PadView alloc] initWithFrame : padRect forPad : pad];
    [scroll addSubview:padViews[view]];
-  
+
    scroll.minimumZoomScale = 1.f;
    scroll.maximumZoomScale = 2.f;
    [scroll setZoomScale:1.f];
    scroll.contentSize = padRect.size;
    scroll.contentOffset = CGPointMake(0.f, 0.f);
-      
+
    oldSizes.width = 640.f;
    oldSizes.height = 640.f;
 }
@@ -500,7 +500,7 @@ enum ETutorialsDefaults {
 {
    if (appMode == kTAZoom)
       return;
- 
+
    //Zoom mode was selected.
    appMode = kTAZoom;
    //The mode was kTASelect previously.
@@ -509,12 +509,12 @@ enum ETutorialsDefaults {
       selectionViews[i].hidden = YES;
       [padViews[i] removeGestureRecognizer : padPanGestures[i]];
       [padViews[i] removeGestureRecognizer : padTapGestures[i]];
-      
+
       padViews[i].hidden = NO;
       [padViews[i] removeFromSuperview];
       [scrollViews[i] addSubview : padViews[i]];
    }
-   
+
    if (activeDemo) {
       scrollViews[activeView].hidden = NO;
       [self prepareHints];
@@ -536,17 +536,17 @@ enum ETutorialsDefaults {
       [self resizePadView : i];
 
       [padViews[i] removeFromSuperview];
-      
+
       padPanGestures[i] = [[UIPanGestureRecognizer alloc] initWithTarget:padViews[i] action:@selector(handlePanGesture:)];
       [padViews[i] addGestureRecognizer:padPanGestures[i]];
-      
+
       padTapGestures[i] = [[UITapGestureRecognizer alloc] initWithTarget:padViews[i] action:@selector(handleTapGesture:)];
       [padViews[i] addGestureRecognizer:padTapGestures[i]];
 
       [padViews[i] setSelectionView:selectionViews[i]];
-   
+
       [parentView addSubview:padViews[i]];
- 
+
       if (activeDemo) //In case no demo was selected - nothing to show yet.
          padViews[i].hidden = i == activeView ? NO : YES;
    }
@@ -604,7 +604,7 @@ enum ETutorialsDefaults {
 }
 
 //_________________________________________________________________
-- (CGRect) centeredFrameForScrollView : (UIScrollView *)scroll andUIView : (UIView *)rView 
+- (CGRect) centeredFrameForScrollView : (UIScrollView *)scroll andUIView : (UIView *)rView
 {
    CGSize boundsSize = scroll.bounds.size;
    CGRect frameToCenter = rView.frame;
@@ -629,18 +629,18 @@ enum ETutorialsDefaults {
    CGRect oldRect = padViews[activeView].frame;
    oldRect.origin.x = 0.f;
    oldRect.origin.y = 0.f;
-   
+
    if (abs(oldSizes.width - oldRect.size.width) < 0.01 && (abs(oldSizes.height - oldRect.size.height) < 0.01))
       return;
 
    oldSizes = oldRect.size;
-   
+
    [padViews[activeView] removeFromSuperview];
    padViews[activeView] = [[PadView alloc] initWithFrame : oldRect forPad : pad];
    [scrollView addSubview:padViews[activeView]];
-  
+
    [scrollView setZoomScale:1.f];
-   scrollView.contentSize = oldRect.size;   
+   scrollView.contentSize = oldRect.size;
    scrollView.contentOffset = off;
 
    scrollView.minimumZoomScale = 640.f / oldRect.size.width;
@@ -648,7 +648,7 @@ enum ETutorialsDefaults {
 }
 
 //_________________________________________________________________
-- (void)scrollViewDidZoom:(UIScrollView *)scrollView 
+- (void)scrollViewDidZoom:(UIScrollView *)scrollView
 {
    padViews[activeView].frame = [self centeredFrameForScrollView:scrollView andUIView:padViews[activeView]];
 }
@@ -678,20 +678,20 @@ enum ETutorialsDefaults {
       //Zoom to maximum.
       oldSizes = CGSizeMake(1280.f, 1280.f);
       CGRect newRect = CGRectMake(0.f, 0.f, 1280.f, 1280.f);
-      
+
       [padViews[activeView] removeFromSuperview];
 
       padViews[activeView] = [[PadView alloc] initWithFrame : newRect forPad : pad];
       [scrollViews[activeView] addSubview:padViews[activeView]];
-  
+
       [scrollViews[activeView] setZoomScale:1.f];
       scrollViews[activeView].contentSize = newRect.size;
 
       scrollViews[activeView].minimumZoomScale = 1.f;
       scrollViews[activeView].maximumZoomScale = 1.f;
 
-      const CGPoint tapXY = [tap locationInView : tap.view];  
-      scrollViews[activeView].contentOffset = CGPointMake(tapXY.x, tapXY.y);    
+      const CGPoint tapXY = [tap locationInView : tap.view];
+      scrollViews[activeView].contentOffset = CGPointMake(tapXY.x, tapXY.y);
    }
 }
 

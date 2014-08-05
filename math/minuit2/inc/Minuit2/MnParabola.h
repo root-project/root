@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -17,7 +17,7 @@ namespace ROOT {
    namespace Minuit2 {
 
 
-/** 
+/**
 
 This class defines a parabola of the form a*x*x + b*x + c
 
@@ -64,7 +64,7 @@ public:
 
   /**
 
-  Calculates the bigger of the two x values corresponding to the 
+  Calculates the bigger of the two x values corresponding to the
   given y Value.
 
   <p>
@@ -73,12 +73,12 @@ public:
   crash?? what is sqrt (-1.0) ?
 
   @param y the y Value for which the x Value is to be calculated.
-  
+
   @return the bigger one of the two corresponding values.
 
   */
 
-  // ok, at first glance it does not look like the formula for the quadratic 
+  // ok, at first glance it does not look like the formula for the quadratic
   // equation, but it is!  ;-)
   double X_pos(double y) const {return (sqrt(y/fA + Min()*Min() - fC/fA) + Min());}
   // maybe it is worth to check the performance improvement with the below formula??
@@ -88,7 +88,7 @@ public:
 
   /**
 
-  Calculates the smaller of the two x values corresponding to the 
+  Calculates the smaller of the two x values corresponding to the
   given y Value.
 
   <p>
@@ -97,7 +97,7 @@ public:
   crash?? what is sqrt (-1.0) ?
 
   @param y the y Value for which the x Value is to be calculated.
-  
+
   @return the smaller one of the two corresponding values.
 
   */
@@ -129,8 +129,8 @@ public:
 
   /**
 
-  Accessor to the coefficient of the quadratic term. 
-  
+  Accessor to the coefficient of the quadratic term.
+
   @return the coefficient of the quadratic term.
 
    */
@@ -140,9 +140,9 @@ public:
 
   /**
 
-  Accessor to the coefficient of the linear term. 
+  Accessor to the coefficient of the linear term.
 
-  @return the coefficient of the linear term. 
+  @return the coefficient of the linear term.
 
   */
 
@@ -151,7 +151,7 @@ public:
 
   /**
 
-  Accessor to the coefficient of the constant term. 
+  Accessor to the coefficient of the constant term.
 
   @return the coefficient of the constant term.
 

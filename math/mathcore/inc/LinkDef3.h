@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Author: L. Moneta    10/2005  
+// Author: L. Moneta    10/2005
 
 /**********************************************************************
  *                                                                    *
@@ -23,7 +23,7 @@
 #pragma link C++ class ROOT::Fit::FitResult+;
 #pragma link C++ class ROOT::Fit::ParameterSettings+;
 
-///skip  the dictionary for the fit method functions 
+///skip  the dictionary for the fit method functions
 #ifndef _WIN32
 
 #pragma link C++ class ROOT::Fit::Chi2FCN<ROOT::Math::IBaseFunctionMultiDim>-;

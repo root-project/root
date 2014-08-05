@@ -1,6 +1,6 @@
 //Create and draw a polar graph with PI axis
 //Author: Olivier Couet
-   
+
 void graphpolar2()
 {
    TCanvas * CPol = new TCanvas("CPol","TGraphPolar Example",500,500);

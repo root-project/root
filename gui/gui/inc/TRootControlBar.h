@@ -42,7 +42,7 @@ private:
    UInt_t          fBwidth;  // button width in pixels
 
 public:
-   TRootControlBar(TControlBar *c = 0, const char *title = "ROOT Control Bar", 
+   TRootControlBar(TControlBar *c = 0, const char *title = "ROOT Control Bar",
                    Int_t x = -999, Int_t y = -999);
    virtual ~TRootControlBar();
 

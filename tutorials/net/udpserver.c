@@ -4,7 +4,7 @@
 
 /* Converted to echo client/server with select() (timeout option).
    See testTUDPSocket.C */
-/* Compile with: gcc udpserver.c -o udpserver 
+/* Compile with: gcc udpserver.c -o udpserver
 /* on Windows: cl -nologo -Z7 -MD -GR -EHsc udpserver.c */
 /* 3/30/05 John Schultz */
 
@@ -31,7 +31,7 @@
 #define MAX_MSG 100
 
 int main(int argc, char *argv[]) {
-  
+
    int sd, rc, n, flags;
    unsigned cliLen;
    struct sockaddr_in cliAddr, servAddr;
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
 
    /* server infinite loop */
    while (1) {
-    
+
       /* init buffer */
       memset(msg,0x0,MAX_MSG);
 
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
       sendto(sd, msg, n, flags, (struct sockaddr *)&cliAddr, cliLen);
 
 /* END jcs 3/30/05 */
-    
+
    }/* end of server infinite loop */
    return 0;
 }

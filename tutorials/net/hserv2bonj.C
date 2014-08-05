@@ -16,7 +16,7 @@
    //   - Execute in the first window: .x hserv2.C
    //   - Execute in the second and third windows: .x hclient.C
    //Author: Fons Rademakers
-   
+
    // Create canvas and pads to display the histograms
    TCanvas *c1 = new TCanvas("c1","The Ntuple canvas",200,10,700,780);
    TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.52,0.98,0.98,21);

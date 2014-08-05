@@ -70,7 +70,7 @@ private:
 //
 class TGLTH3CompositionPainter: public TGLPlotPainter {
 public:
-   TGLTH3CompositionPainter(TGLTH3Composition *data, TGLPlotCamera *camera, 
+   TGLTH3CompositionPainter(TGLTH3Composition *data, TGLPlotCamera *camera,
                             TGLPlotCoordinates *coord);
 
    //TGLPlotPainter final-overriders.
@@ -85,14 +85,14 @@ private:
    //TGLPlotPainter final-overriders.
    void       InitGL()const;
    void       DeInitGL()const;
-   
+
    void       DrawPlot()const;
-   
+
    //Empty overriders.
    void       DrawSectionXOZ()const{}
    void       DrawSectionYOZ()const{}
    void       DrawSectionXOY()const{}
-   
+
    void       SetColor(Int_t color)const;
 
    TGLTH3Composition            *fData;

@@ -45,8 +45,8 @@ protected:
    Float_t    *fRmin;        //[fNz] pointer to array of inside radiuses
    Float_t    *fRmax;        //[fNz] pointer to array of outside radiuses
    Float_t    *fDz;          //[fNz] pointer to array of half lengths in z
-        
-   TPCON(const TPCON&); 
+
+   TPCON(const TPCON&);
    TPCON& operator=(const TPCON&);
 
    virtual void    MakeTableOfCoSin() const;  // Create the table of the fSiTab; fCoTab

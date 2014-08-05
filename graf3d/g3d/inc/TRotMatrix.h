@@ -44,7 +44,7 @@ public:
    enum {
       kReflection = BIT(23)   //  "Reflection" bit
    };
-      
+
    TRotMatrix();
    TRotMatrix(const char *name, const char *title, Double_t *matrix);
    TRotMatrix(const char *name, const char *title, Double_t theta, Double_t phi, Double_t psi);

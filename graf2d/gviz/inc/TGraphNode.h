@@ -59,13 +59,13 @@ public:
    virtual ~TGraphNode();
 
    void           CreateGVNode(GVizAgraph_t *gv);
-   virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);   
+   virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
    virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   void           SetGVNode(GVizAgnode_t *gvn) {fGVNode = gvn;}  
+   void           SetGVNode(GVizAgnode_t *gvn) {fGVNode = gvn;}
    virtual void   SetTextAngle(Float_t) {;}
    GVizAgnode_t  *GetGVNode() {return fGVNode;}
    void           Layout();
-   virtual void   Paint(Option_t *option="");   
+   virtual void   Paint(Option_t *option="");
    virtual void   SavePrimitive(std::ostream &, Option_t *);
    void           SaveAttributes(std::ostream &);
 

@@ -34,7 +34,7 @@ protected:
    Double_t  fYq2;    //y2 coordinate of the interquartile line
    Double_t *fY0;     //!second dataset, if specified
    TF1      *fF;      //theoretical density function, if specified
-   
+
    void      Quartiles();
    void      MakeQuantiles();
    void      MakeFunctionQuantiles();

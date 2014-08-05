@@ -27,7 +27,7 @@
 #include "TProofNodeInfo.h"
 #include "TProofBenchTypes.h"
 #include "TProof.h"
-#include "TMap.h" 
+#include "TMap.h"
 #include "TDSet.h"
 #include "TEnv.h"
 #include "TFileInfo.h"
@@ -141,7 +141,7 @@ void TSelEventGen::SlaveBegin(TTree *tree)
                Info("SlaveBegin", "using default directory: %s",
                                    fBaseDir.Data());
             }
-            found_basedir=kTRUE; 
+            found_basedir=kTRUE;
          }
          else{
             Error("SlaveBegin", "PROOF_BenchmarkBaseDir not type TNamed");
@@ -152,7 +152,7 @@ void TSelEventGen::SlaveBegin(TTree *tree)
          TParameter<Long64_t>* a=dynamic_cast<TParameter<Long64_t>*>(obj);
          if (a){
             fNEvents= a->GetVal();
-            found_nevents=kTRUE; 
+            found_nevents=kTRUE;
          }
          else{
             Error("SlaveBegin", "PROOF_BenchmarkEvents not type TParameter"
@@ -164,7 +164,7 @@ void TSelEventGen::SlaveBegin(TTree *tree)
          TParameter<Int_t>* a=dynamic_cast<TParameter<Int_t>*>(obj);
          if (a){
             fNTracks=a->GetVal();
-            found_ntracks=kTRUE; 
+            found_ntracks=kTRUE;
          }
          else{
             Error("SlaveBegin", "PROOF_BenchmarkNTracks not type TParameter"
@@ -176,7 +176,7 @@ void TSelEventGen::SlaveBegin(TTree *tree)
          TParameter<Int_t>* a=dynamic_cast<TParameter<Int_t>*>(obj);
          if (a){
             fNTracksMax=a->GetVal();
-            found_ntrkmax=kTRUE; 
+            found_ntrkmax=kTRUE;
          }
          else{
             Error("SlaveBegin", "PROOF_BenchmarkNTracksMax not type TParameter"
@@ -188,7 +188,7 @@ void TSelEventGen::SlaveBegin(TTree *tree)
          TParameter<Int_t>* a=dynamic_cast<TParameter<Int_t>*>(obj);
          if (a){
             fRegenerate=a->GetVal();
-            found_regenerate=kTRUE; 
+            found_regenerate=kTRUE;
          }
          else{
             Error("SlaveBegin", "PROOF_BenchmarkRegenerate not type TParameter"
@@ -204,7 +204,7 @@ void TSelEventGen::SlaveBegin(TTree *tree)
          continue;
       }
    }
-   
+
    if (!found_basedir){
       Warning("SlaveBegin", "PROOF_BenchmarkBaseDir not found; using default:"
                             " %s", fBaseDir.Data());
@@ -281,8 +281,8 @@ Long64_t TSelEventGen::GenerateFiles(const char *filename, Long64_t sizenevents)
 
 //   f->SetCompressionLevel(0); //no compression
    Int_t ntrks = fNTracks;
-   
-   Info("GenerateFiles", "Generating %s", filename);   
+
+   Info("GenerateFiles", "Generating %s", filename);
    while (sizenevents--){
       //event->Build(i++,fNTracksBench,0);
       if (fNTracksMax > fNTracks) {
@@ -355,13 +355,13 @@ Bool_t TSelEventGen::Process(Long64_t entry)
       }
    }
    TString fndset(filename);
-      
+
    // Set the Url for remote access
    TString seed = TString::Format("%s/%s", gSystem->HostName(), filename.Data()), dsrv;
    TUrl basedirurl(filename, kTRUE);
    if (!strcmp(basedirurl.GetProtocol(), "file")) {
       TProofServ::GetLocalServer(dsrv);
-      TProofServ::FilterLocalroot(fndset, dsrv);      
+      TProofServ::FilterLocalroot(fndset, dsrv);
    }
 
    //generate files
@@ -390,7 +390,7 @@ Bool_t TSelEventGen::Process(Long64_t entry)
          f->Close();
       }
       SafeDelete(f);
-   } 
+   }
 
    // Make sure there is enough space left of the device, if local
    TString bdir(fBaseDir);
@@ -413,7 +413,7 @@ Bool_t TSelEventGen::Process(Long64_t entry)
    if (!filefound) {  // Generate
       gRandom->SetSeed(static_cast<UInt_t>(TMath::Hash(seed)));
       if (fGenerateFun) {
-         TString fargs = TString::Format("\"%s\",%lld", filename.Data(), neventstogenerate);        
+         TString fargs = TString::Format("\"%s\",%lld", filename.Data(), neventstogenerate);
          entries_file = (Long64_t) fGenerateFun->Exec(fargs);
       } else {
          entries_file = GenerateFiles(filename, neventstogenerate);
@@ -429,7 +429,7 @@ Bool_t TSelEventGen::Process(Long64_t entry)
          fStatus = TSelector::kAbortFile;
          return kFALSE;
       }
-      
+
       SafeDelete(f);
    }
 

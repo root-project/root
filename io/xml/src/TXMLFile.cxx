@@ -339,7 +339,7 @@ void TXMLFile::Close(Option_t *option)
       fStreamerInfoNode = 0;
    }
 
-   {  
+   {
       TDirectory::TContext ctxt(this);
       // Delete all supported directories structures from memory
       TDirectoryFile::Close();

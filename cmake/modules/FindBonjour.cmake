@@ -1,4 +1,4 @@
-# - Try to find Bonjour 
+# - Try to find Bonjour
 # (See http://developer.apple.com/networking/bonjour/index.html)
 # By default available on MacOS X and on Linux via the Avahi package.
 # Check for libdns_sd
@@ -14,10 +14,10 @@ message(STATUS "Checking whether Bonjour/Avahi is supported")
 
 # Bonjour is built-in on MacOS X / iOS (i.e. available in libSystem)
 if(NOT APPLE)
-  find_path(BONJOUR_INCLUDE_DIR dns_sd.h 
+  find_path(BONJOUR_INCLUDE_DIR dns_sd.h
     PATHS /opt/dnssd/include /usr/include  /usr/local/include
   )
-  find_library(BONJOUR_LIBRARY 
+  find_library(BONJOUR_LIBRARY
     NAMES dns_sd
     PATHS /opt/dnssd/lib /usr/lib /usr/local/lib
   )
@@ -32,7 +32,7 @@ else()
 endif()
 if (CMAKE_SYSTEM_NAME MATCHES Linux)
   # The compatibility layer is needed for the Bonjour record management.
-  find_path(AVAHI_INCLUDE_DIR avahi-client/client.h 
+  find_path(AVAHI_INCLUDE_DIR avahi-client/client.h
     PATHS /opt/include /usr/include /usr/local/include
   )
   if(AVAHI_INCLUDE_DIR)
@@ -41,8 +41,8 @@ if (CMAKE_SYSTEM_NAME MATCHES Linux)
 
   # Also, the library is needed, as in Mac OS X. When found the compat
   # layer, also the other libraries must be in the same location.
-  foreach(l client common core) 
-    find_library(AVAHI_${l}_LIBRARY 
+  foreach(l client common core)
+    find_library(AVAHI_${l}_LIBRARY
       NAMES avahi-${l}.so
       PATHS /opt/lib /usr/lib /usr/local/lib
     )

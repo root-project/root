@@ -7,7 +7,7 @@
 @class HorizontalPickerView;
 @class LineWidthPicker;
 
-//Line inspector is a composition of two sub-inspectors: line color and width inspector + 
+//Line inspector is a composition of two sub-inspectors: line color and width inspector +
 //line style inspector.
 
 @interface LineInspector : UIViewController <ObjectInspectorComponent, HorizontalPickerDelegate> {

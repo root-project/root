@@ -8,7 +8,7 @@ ROOT_USE_PACKAGE(hist/hist)
 add_definitions(-DWARNINGMSG -DUSE_ROOT_ERROR)
 
 #---Deal with the parallel option on Minuit2. Probably it should be done using a build 'option' and not
-#   using a environment variable  -- NOT TESTED --- 
+#   using a environment variable  -- NOT TESTED ---
 if($ENV{USE_PARALLEL_MINUIT2})
   if($ENV{USE_OPENMP})
     add_definitions(-D_GLIBCXX_PARALLEL -fopenmp)

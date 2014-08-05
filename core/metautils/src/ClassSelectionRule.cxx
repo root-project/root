@@ -58,19 +58,19 @@ void ClassSelectionRule::Print(std::ostream &out) const
    }
    out<<"\t\tAttributes: "<<std::endl;
    PrintAttributes(out,2);
-   
+
    if (HasFieldSelectionRules()) {
       //out<<"\t\tHas field entries"<<std::endl;
       std::list<VariableSelectionRule> fields = GetFieldSelectionRules();
       std::list<VariableSelectionRule>::iterator fit = fields.begin();
       int j = 0;
-      
-      for (; fit != fields.end(); ++fit, ++j) 
+
+      for (; fit != fields.end(); ++fit, ++j)
          {
             out<<"\t\tField "<<j<<":"<<std::endl;
             out<<*fit;
           }
-   } 
+   }
    else {
       out<<"\t\tNo field sel rules"<<std::endl;
    }
@@ -79,8 +79,8 @@ void ClassSelectionRule::Print(std::ostream &out) const
       std::list<FunctionSelectionRule> methods = GetMethodSelectionRules();
       std::list<FunctionSelectionRule>::iterator mit = methods.begin();
       int k = 0;
-      
-      for (; mit != methods.end(); ++mit, ++k) 
+
+      for (; mit != methods.end(); ++mit, ++k)
          {
             out<<"\t\tMethod "<<k<<":"<<std::endl;
             out<<*mit;
@@ -173,6 +173,6 @@ bool ClassSelectionRule::RequestPrivate() const
 }
 
 int ClassSelectionRule::RequestedVersionNumber() const
-{ 
+{
    return fRequestedVersionNumber;
 }

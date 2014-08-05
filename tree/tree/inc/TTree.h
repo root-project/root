@@ -209,7 +209,7 @@ protected:
       kRemoveFriend      = BIT(11),
       kSetBranchStatus   = BIT(12)
    };
-   
+
 public:
    // SetBranchAddress return values
    enum ESetBranchAddressStatus {
@@ -232,12 +232,12 @@ public:
       kCircular    = BIT(12)
    };
 
-   // Split level modifier 
+   // Split level modifier
    enum {
       kSplitCollectionOfPointers = 100
    };
-   
-   class TClusterIterator 
+
+   class TClusterIterator
    {
    private:
       TTree    *fTree;        // TTree upon which we are iterating.
@@ -246,7 +246,7 @@ public:
       Long64_t fNextEntry;    // Where does the cluster end (exclusive).
 
       Long64_t GetEstimatedClusterSize();
-      
+
    protected:
       friend class TTree;
       TClusterIterator(TTree *tree, Long64_t firstEntry);
@@ -256,14 +256,14 @@ public:
       // as the TClusterIterator does not own the TTree.
       //  TClusterIterator(const TClusterIterator&);
       // ~TClusterIterator();
-      
+
       // No public constructors, the iterator must be
       // created via TTree::GetClusterIterator
 
       // Move on to the next cluster and return the starting entry
       // of this next cluster
       Long64_t Next();
-      
+
       // Return the start entry of the current cluster.
       Long64_t GetStartEntry() {
          return fStartEntry;
@@ -295,17 +295,17 @@ public:
    virtual Int_t           Branch(TList* list, Int_t bufsize = 32000, Int_t splitlevel = 99);
    virtual Int_t           Branch(const char* folder, Int_t bufsize = 32000, Int_t splitlevel = 99);
    virtual TBranch        *Branch(const char* name, void* address, const char* leaflist, Int_t bufsize = 32000);
-           TBranch        *Branch(const char* name, char* address, const char* leaflist, Int_t bufsize = 32000) 
+           TBranch        *Branch(const char* name, char* address, const char* leaflist, Int_t bufsize = 32000)
    {
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)address,leaflist,bufsize);
    }
-   TBranch        *Branch(const char* name, Long_t address, const char* leaflist, Int_t bufsize = 32000) 
+   TBranch        *Branch(const char* name, Long_t address, const char* leaflist, Int_t bufsize = 32000)
    {
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)address,leaflist,bufsize);
    }
-   TBranch        *Branch(const char* name, int address, const char* leaflist, Int_t bufsize = 32000) 
+   TBranch        *Branch(const char* name, int address, const char* leaflist, Int_t bufsize = 32000)
    {
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)(Long_t)address,leaflist,bufsize);
@@ -465,7 +465,7 @@ public:
    virtual Long64_t        Merge(TCollection* list, TFileMergeInfo *info);
    static  TTree          *MergeTrees(TList* list, Option_t* option = "");
    virtual Bool_t          Notify();
-   virtual void            OptimizeBaskets(ULong64_t maxMemory=10000000, Float_t minComp=1.1, Option_t *option=""); 
+   virtual void            OptimizeBaskets(ULong64_t maxMemory=10000000, Float_t minComp=1.1, Option_t *option="");
    TPrincipal             *Principal(const char* varexp = "", const char* selection = "", Option_t* option = "np", Long64_t nentries = 1000000000, Long64_t firstentry = 0);
    virtual void            Print(Option_t* option = "") const; // *MENU*
    virtual void            PrintCacheStats(Option_t* option = "") const;

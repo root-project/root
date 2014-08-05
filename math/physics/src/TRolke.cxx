@@ -1,10 +1,10 @@
 
 //////////////////////////////////////////////////////////////////////////////
 //
-//  TRolke 
+//  TRolke
 //
 //  This class computes confidence intervals for the rate of a Poisson
-//  process in the presence of uncertain background and/or efficiency. 
+//  process in the presence of uncertain background and/or efficiency.
 //
 //  The treatment and the resulting limits are fully frequentist. The
 //  limit calculations make use of the profile likelihood method.
@@ -17,9 +17,9 @@
 //
 //  For a full list of methods and their syntax, and build instructions,
 //  consult the header file TRolke.h.
-//  -------------------------------- 
+//  --------------------------------
 //
-//  Examples/tutorials are found in the separate file Rolke.C 
+//  Examples/tutorials are found in the separate file Rolke.C
 //  ---------------------------------------------------------
 //
 //////////////////////////////////////////////////////////////////////////////
@@ -36,25 +36,25 @@
 //       1: SetPoissonBkgBinomEff(x,y,z,tau,m)
 //
 //          Background: Poisson
-//          Efficiency: Binomial    
+//          Efficiency: Binomial
 //
-//          when the background is simultaneously measured 
+//          when the background is simultaneously measured
 //          from sidebands (or MC), and
-//          the signal efficiency was determined from Monte Carlo 
+//          the signal efficiency was determined from Monte Carlo
 //
 //       2: SetPoissonBkgGaussEff(x,y,em,sde,tau)
 //
 //          Background: Poisson
-//          Efficiency: Gaussian    
+//          Efficiency: Gaussian
 //
-//          when the background is simultaneously measured 
+//          when the background is simultaneously measured
 //          from sidebands (or MC), and
 //          the efficiency is modeled as Gaussian
 //
 //       3: SetGaussBkgGaussEff(x,bm,em,sde,sdb)
 //
 //          Background: Gaussian
-//          Efficiency: Gaussian    
+//          Efficiency: Gaussian
 //
 //          when background and efficiency can both be
 //          modeled as Gaussian.
@@ -62,29 +62,29 @@
 //       4: SetPoissonBkgKnownEff(x,y,tau,e)
 //
 //          Background: Poisson
-//          Efficiency: Known     
+//          Efficiency: Known
 //
-//          when the background is simultaneously measured 
+//          when the background is simultaneously measured
 //          from sidebands (or MC).
 //
 //       5: SetGaussBkgKnownEff(x,bm,sdb,e)
 //
 //          Background: Gaussian
-//          Efficiency: Known       
+//          Efficiency: Known
 //
 //          when background is Gaussian
 //
 //       6: SetKnownBkgBinomEff(x,z,b,m)
 //
-//          Background: Known    
-//          Efficiency: Binomial    
+//          Background: Known
+//          Efficiency: Binomial
 //
-//          when signal efficiency was determined from Monte Carlo 
+//          when signal efficiency was determined from Monte Carlo
 //
 //       7: SetKnownBkgGaussEff(x,em,sde,b)
 //
-//          Background: Known    
-//          Efficiency: Gaussian     
+//          Background: Known
+//          Efficiency: Gaussian
 //
 //          when background is known and efficiency Gaussian
 //
@@ -93,21 +93,21 @@
 //
 //  For all models:
 //  ---------------
-//    
+//
 //    x = number of observed events in the experiment
-//    
-//    Efficiency (e or em) is the detection probability for signal. 
+//
+//    Efficiency (e or em) is the detection probability for signal.
 //    A low efficiency hence generally means weaker limits.
-//    If the efficiency of an experiment (with analysis cuts) is 
+//    If the efficiency of an experiment (with analysis cuts) is
 //    dealt with elsewhere, em or e can be set to one.
 //
 //  For Poisson background measurements (sideband or MC):
 //  -----------------------------------------------------
 //
 //    y = number of observed events in background region
-//    tau = 
+//    tau =
 //        Either: the ratio between signal and background region
-//        in case background is observed. 
+//        in case background is observed.
 //        Or: the ratio between observed and simulated live-time
 //        in case background is determined from MC.
 //
@@ -115,10 +115,10 @@
 //  --------------------------------------
 //
 //    bm  = estimate of the background
-//    sdb = corresponding standard deviation 
+//    sdb = corresponding standard deviation
 //
 //    em  = estimate of the efficiency
-//    sde = corresponding standard deviation 
+//    sde = corresponding standard deviation
 //
 //        If the efficiency scale of dealt with elsewhere,
 //        set em to 1 and sde to the relative uncertainty.
@@ -136,7 +136,7 @@
 //     b = background expectation value (considered known)
 //
 //
-////////////////////////////////////////////////////////////////////  
+////////////////////////////////////////////////////////////////////
 //
 //
 //  The confidence level (CL) is set either at construction
@@ -146,7 +146,7 @@
 //
 //  Two options are offered to deal with cases where the maximum likelihood
 //  estimate (MLE) is not in the physical region. Version "bounded likelihood"
-//  is the one used by MINOS if bounds for the physical region are chosen. 
+//  is the one used by MINOS if bounds for the physical region are chosen.
 //  Unbounded likelihood (the default) allows the MLE to be in the
 //  unphysical region. It has however better coverage.
 //  For more details consult the reference (see below).
@@ -194,11 +194,11 @@
 ClassImp(TRolke)
 
 //__________________________________________________________________________
-TRolke::TRolke(Double_t CL, Option_t * /*option*/) 
+TRolke::TRolke(Double_t CL, Option_t * /*option*/)
 :  fCL(CL),
-   fUpperLimit(0.0), 
-   fLowerLimit(0.0), 
-   fBounding(false),  // true gives bounded likelihood   
+   fUpperLimit(0.0),
+   fLowerLimit(0.0),
+   fBounding(false),  // true gives bounded likelihood
    fNumWarningsDeprecated1(0),
    fNumWarningsDeprecated2(0)
 {
@@ -223,7 +223,7 @@ void TRolke::SetPoissonBkgBinomEff(Int_t x, Int_t y, Int_t z, Double_t tau, Int_
 //    tau : ratio parameter (read TRolke.cxx for details)
 //    m   : number of MC events generated
    SetModelParameters(
-	 x  ,       //   Int_t x,
+         x  ,       //   Int_t x,
          y  ,       //   Int_t y,
          z  ,       //   Int_t z,
          0  ,       //   Double_t bm,
@@ -234,7 +234,7 @@ void TRolke::SetPoissonBkgBinomEff(Int_t x, Int_t y, Int_t z, Double_t tau, Int_
          0  ,       //   Double_t sdb,
          tau,       //   Double_t tau,
          0  ,       //   Double_t b,
-         m);        //   Int_t m          
+         m);        //   Int_t m
 }
 
 void TRolke::SetPoissonBkgGaussEff(Int_t x, Int_t y, Double_t em, Double_t tau, Double_t sde)
@@ -244,7 +244,7 @@ void TRolke::SetPoissonBkgGaussEff(Int_t x, Int_t y, Double_t em, Double_t tau, 
 //    y   : number of observed events in background region
 //    em  : estimate of the efficiency
 //    tau : ratio parameter (read TRolke.cxx for details)
-//    sde : efficiency estimate's standard deviation 
+//    sde : efficiency estimate's standard deviation
    SetModelParameters(
          x  ,       //   Int_t x,
          y  ,       //   Int_t y,
@@ -267,8 +267,8 @@ void TRolke::SetGaussBkgGaussEff(Int_t x, Double_t bm, Double_t em, Double_t sde
 //    x   : number of observed events in the experiment
 //    bm  : estimate of the background
 //    em  : estimate of the efficiency
-//    sde : efficiency estimate's standard deviation 
-//    sdb : background estimate's standard deviation 
+//    sde : efficiency estimate's standard deviation
+//    sdb : background estimate's standard deviation
    SetModelParameters(
          x  ,       //   Int_t x,
          0  ,       //   Int_t y,
@@ -313,7 +313,7 @@ void TRolke::SetGaussBkgKnownEff(Int_t x, Double_t bm, Double_t sdb, Double_t e)
 // Model 5: Background - Gaussian, Efficiency - known    (x,bm,sdb,e
 //    x   : number of observed events in the experiment
 //    bm  : estimate of the background
-//    sdb : background estimate's standard deviation 
+//    sdb : background estimate's standard deviation
 //    e   : true efficiency (considered known)
    SetModelParameters(
          x  ,       //   Int_t x,
@@ -359,7 +359,7 @@ void TRolke::SetKnownBkgGaussEff(Int_t x, Double_t em, Double_t sde, Double_t b)
 // Model 7: Background - known, Efficiency - Gaussian    (x,em,sde,b)
 //    x   : number of observed events in the experiment
 //    em  : estimate of the efficiency
-//    sde : efficiency estimate's standard deviation 
+//    sde : efficiency estimate's standard deviation
 //    b   : background expectation value (considered known)
    SetModelParameters(
          x  ,       //   Int_t x,
@@ -379,11 +379,11 @@ void TRolke::SetKnownBkgGaussEff(Int_t x, Double_t em, Double_t sde, Double_t b)
 
 bool TRolke::GetLimits(Double_t& low, Double_t& high)
 {
-/* Calculate and get the upper and lower limits for the pre-specified model */ 
+/* Calculate and get the upper and lower limits for the pre-specified model */
    if ((f_mid<1)||(f_mid>7)) {
       std::cerr << "TRolke - Error: Model id "<< f_mid<<std::endl;
       if (f_mid<1) {
- 	 std::cerr << "TRolke - Please specify a model with e.g. 'SetGaussBkgGaussEff' (read the docs in Rolke.cxx )"<<std::endl; 
+         std::cerr << "TRolke - Please specify a model with e.g. 'SetGaussBkgGaussEff' (read the docs in Rolke.cxx )"<<std::endl;
       }
       return false;
    }
@@ -391,9 +391,9 @@ bool TRolke::GetLimits(Double_t& low, Double_t& high)
    ComputeInterval(f_x, f_y, f_z, f_bm, f_em, f_e, f_mid, f_sde, f_sdb, f_tau, f_b, f_m);
    low = fLowerLimit;
    high = fUpperLimit;
-   if (low < high) {     
+   if (low < high) {
       return true;
-   }else{ 
+   }else{
       std::cerr << "TRolke - Warning: no limits found" <<std::endl;
       return false;
    }
@@ -401,7 +401,7 @@ bool TRolke::GetLimits(Double_t& low, Double_t& high)
 
 Double_t TRolke::GetUpperLimit()
 {
-/* Calculate and get upper limit for the pre-specified model */ 
+/* Calculate and get upper limit for the pre-specified model */
    Double_t low(0), high(0);
    GetLimits(low,high);
    return fUpperLimit;
@@ -409,7 +409,7 @@ Double_t TRolke::GetUpperLimit()
 
 Double_t TRolke::GetLowerLimit()
 {
-/* Calculate and get lower limit for the pre-specified model */ 
+/* Calculate and get lower limit for the pre-specified model */
    Double_t low(0), high(0);
    GetLimits(low,high);
    return fLowerLimit;
@@ -417,7 +417,7 @@ Double_t TRolke::GetLowerLimit()
 
 Double_t TRolke::GetBackground()
 {
-/* Return a simple background value (estimate/truth) given the pre-specified model */ 
+/* Return a simple background value (estimate/truth) given the pre-specified model */
    Double_t background = 0;
    switch (f_mid) {
       case 1:
@@ -431,12 +431,12 @@ Double_t TRolke::GetBackground()
          break;
       case 6:
       case 7:
-	 background = f_b;
+         background = f_b;
          break;
       default:
-	 std::cerr << "TRolke::GetBackground(): Model NR: " <<
-	    f_mid << " unknown"<<std::endl;
-	 return 0;
+         std::cerr << "TRolke::GetBackground(): Model NR: " <<
+         f_mid << " unknown"<<std::endl;
+         return 0;
    }
    return background;
 }
@@ -477,7 +477,7 @@ bool TRolke::GetLimitsQuantile(Double_t& low, Double_t& high, Int_t& out_x, Doub
    For integral=0.5 this gives the median limits
    in repeated experiments. The returned out_x is the corresponding
    (e.g. median) value of x.
-   No uncertainties are considered for the Poisson weights when calculating 
+   No uncertainties are considered for the Poisson weights when calculating
    the Poisson integral */
    Double_t background = GetBackground();
    Double_t weight = 0;
@@ -505,11 +505,11 @@ bool TRolke::GetLimitsQuantile(Double_t& low, Double_t& high, Int_t& out_x, Doub
 bool TRolke::GetLimitsML(Double_t& low, Double_t& high, Int_t& out_x)
 {
 /* get the upper and lower limits for the most likely outcome.
-   The returned out_x is the corresponding value of x 
+   The returned out_x is the corresponding value of x
    No uncertainties are considered for the Poisson weights when finding ML */
    Double_t background = GetBackground();
 
-   Int_t loop_x = 0; // this can be optimized if needed. 
+   Int_t loop_x = 0; // this can be optimized if needed.
    Int_t loop_max = 1000 + (Int_t)background; //     --||--
 
    Double_t max = TMath::PoissonI(loop_x, background);
@@ -537,7 +537,7 @@ bool TRolke::GetLimitsML(Double_t& low, Double_t& high, Int_t& out_x)
 bool TRolke::GetCriticalNumber(Int_t& ncrit, Int_t maxtry)
 {
 // get the value of x corresponding to rejection of the null hypothesis.
-// This means a lower limit >0 with the pre-specified Confidence Level. 
+// This means a lower limit >0 with the pre-specified Confidence Level.
 // Optionally give maxtry; the maximum value of x to try. Of not, or if
 // maxtry<0 an automatic mode is used.
    Double_t background = GetBackground();
@@ -592,7 +592,7 @@ void TRolke::Print(Option_t*) const {
    std::cout << "*            em = "<<f_em  <<std::endl;
    std::cout << "*           sde = "<<f_sde <<std::endl;
    std::cout << "*           sdb = "<<f_sdb <<std::endl;
-   std::cout << "*             y = "<<f_y   <<std::endl;      
+   std::cout << "*             y = "<<f_y   <<std::endl;
    std::cout << "*           tau = "<<f_tau <<std::endl;
    std::cout << "*             e = "<<f_e   <<std::endl;
    std::cout << "*             b = "<<f_b   <<std::endl;
@@ -600,17 +600,17 @@ void TRolke::Print(Option_t*) const {
    std::cout << "*             z = "<<f_z   <<std::endl;
    std::cout << "*"<<std::endl;
    std::cout << "*            CL = "<<fCL <<std::endl;
-   std::cout << "*      Bounding = "<<fBounding <<std::endl;      
+   std::cout << "*      Bounding = "<<fBounding <<std::endl;
    std::cout << "*"<<std::endl;
    std::cout << "* calculated on demand only:"<<std::endl;
-   std::cout << "*   fUpperLimit = "<<fUpperLimit<<std::endl; 
-   std::cout << "*   fLowerLimit = "<<fLowerLimit<<std::endl;      
+   std::cout << "*   fUpperLimit = "<<fUpperLimit<<std::endl;
+   std::cout << "*   fLowerLimit = "<<fLowerLimit<<std::endl;
    std::cout << "*******************************************" <<std::endl;
 }
 
 
 Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m){
-/* Deprecated and error prone model selection interface. 
+/* Deprecated and error prone model selection interface.
    It's use is trongly discouraged. 'mid' is the model ID (1 to 7).
    This method is provided for backwards compatibility/developer use only. */
 //    x   : number of observed events in the experiment
@@ -620,8 +620,8 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
 //    em  : estimate of the efficiency
 //    e   : true efficiency (considered known)
 //    mid : internal model id (really, you should not use this method at all)
-//    sde : efficiency estimate's standard deviation 
-//    sdb : background estimate's standard deviation 
+//    sde : efficiency estimate's standard deviation
+//    sdb : background estimate's standard deviation
 //    tau : ratio parameter (read TRolke.cxx for details)
 //    b   : background expectation value (considered known)
 //    m   : number of MC events generated
@@ -633,7 +633,7 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
       fNumWarningsDeprecated2++;
    }
    SetModelParameters(
-	 x,
+         x,
          y,
          z,
          bm,
@@ -660,8 +660,8 @@ void TRolke::SetModelParameters(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t
 //    em  : estimate of the efficiency
 //    e   : true efficiency (considered known)
 //    mid : internal model id
-//    sde : efficiency estimate's standard deviation 
-//    sdb : background estimate's standard deviation 
+//    sde : efficiency estimate's standard deviation
+//    sdb : background estimate's standard deviation
 //    tau : ratio parameter (read TRolke.cxx for details)
 //    b   : background expectation value (considered known)
 //    m   : number of MC events generated
@@ -698,8 +698,8 @@ Double_t TRolke::ComputeInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_
 //    em  : estimate of the efficiency
 //    e   : true efficiency (considered known)
 //    mid : internal model id (really, you should not use this method at all)
-//    sde : efficiency estimate's standard deviation 
-//    sdb : background estimate's standard deviation 
+//    sde : efficiency estimate's standard deviation
+//    sdb : background estimate's standard deviation
 //    tau : ratio parameter (read TRolke.cxx for details)
 //    b   : background expectation value (considered known)
 //    m   : number of MC events generated
@@ -740,8 +740,8 @@ Double_t TRolke::Interval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, D
 //    em  : estimate of the efficiency
 //    e   : true efficiency (considered known)
 //    mid : internal model id (really, you should not use this method at all)
-//    sde : efficiency estimate's standard deviation 
-//    sdb : background estimate's standard deviation 
+//    sde : efficiency estimate's standard deviation
+//    sdb : background estimate's standard deviation
 //    tau : ratio parameter (read TRolke.cxx for details)
 //    b   : background expectation value (considered known)
 //    m   : number of MC events generated
@@ -942,9 +942,9 @@ Double_t TRolke::Likelihood(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t bm,
       case 7:
          return EvalLikeMod7(mu, x, em, sde, b, what);
       default:
-	 std::cerr << "TRolke::Likelihood(...): Model NR: " <<
-	    f_mid << " unknown"<<std::endl;
-	 return 0;
+         std::cerr << "TRolke::Likelihood(...): Model NR: " <<
+         f_mid << " unknown"<<std::endl;
+         return 0;
    }
 
    return 0;
@@ -999,23 +999,23 @@ Double_t TRolke::LikeMod1(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t y,
 
    double s = e*mu+b;
    double lls = - s;
-   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x); 
+   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
    double bg = tau*b;
    double llb =  -bg;
    if ( y > 0) llb =  y*TMath::Log( bg) - bg - LogFactorial(y);
 
    double lle = 0;  // binomial log-like
-   if (z == 0)         lle = m * TMath::Log(1-e); 
-   else if ( z == m)   lle = m * TMath::Log(e); 
-   else                lle =   z * TMath::Log(e) + (m - z)*TMath::Log(1 - e) + LogFactorial(m) - LogFactorial(m-z) - LogFactorial(z); 
+   if (z == 0)         lle = m * TMath::Log(1-e);
+   else if ( z == m)   lle = m * TMath::Log(e);
+   else                lle =   z * TMath::Log(e) + (m - z)*TMath::Log(1 - e) + LogFactorial(m) - LogFactorial(m-z) - LogFactorial(z);
 
-   double f = 2*( lls + llb + lle); 
+   double f = 2*( lls + llb + lle);
    return f;
 }
 
 
 // this code is non-sense - // need to solve using Minuit
-struct LikeFunction1 { 
+struct LikeFunction1 {
 };
 
 void TRolke::ProfLikeMod1(Double_t mu, Double_t &b, Double_t &e, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m)
@@ -1092,7 +1092,7 @@ Double_t TRolke::EvalLikeMod2(Double_t mu, Int_t x, Int_t y, Double_t em, Double
    if (what == 3) {
       if (mu == 0) {
          Double_t b = (x + y) / (1 + tau);
-         Double_t e = em ; 
+         Double_t e = em ;
          f = LikeMod2(mu, b, e, x, y, em, tau, v);
       } else {
          coef[3] = mu;
@@ -1103,9 +1103,9 @@ Double_t TRolke::EvalLikeMod2(Double_t mu, Int_t x, Int_t y, Double_t em, Double
          TMath::RootsCubic(coef, roots[0], roots[1], roots[2]);
 
          Double_t e = roots[1];
-         Double_t b; 
+         Double_t b;
          if ( v > 0) b = y / (tau + (em - e) / mu / v);
-         else b = y/tau; 
+         else b = y/tau;
          f = LikeMod2(mu, b, e, x, y, em, tau, v);
       }
    }
@@ -1121,11 +1121,11 @@ Double_t TRolke::LikeMod2(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t y,
 
    double s = e*mu+b;
    double lls = - s;
-   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x); 
+   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
    double bg = tau*b;
    double llb =  -bg;
    if ( y > 0) llb =  y*TMath::Log( bg) - bg - LogFactorial(y);
-   double lle = 0; 
+   double lle = 0;
    if ( v > 0) lle = - 0.9189385 - TMath::Log(v) / 2 - (em - e)*(em - e) / v / 2;
 
    return 2*( lls + llb + lle);
@@ -1164,9 +1164,9 @@ Double_t TRolke::EvalLikeMod3(Double_t mu, Int_t x, Double_t bm, Double_t em, Do
          Double_t e = em;
          f = LikeMod3(mu, b, e, x, bm, em, u, v);
       } else {
-         Double_t e = em; 
-         Double_t b = bm; 
-         if ( v > 0) { 
+         Double_t e = em;
+         Double_t b = bm;
+         if ( v > 0) {
             Double_t temp[3];
             temp[0] = mu * mu * v + u;
             temp[1] = mu * mu * mu * v * v + mu * v * u - mu * mu * v * em + mu * v * bm - 2 * u * em;
@@ -1189,10 +1189,10 @@ Double_t TRolke::LikeMod3(Double_t mu, Double_t b, Double_t e, Int_t x, Double_t
 
    double s = e*mu+b;
    double lls = - s;
-   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x); 
+   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
    double llb =  0;
    if ( u > 0) llb = - 0.9189385 - TMath::Log(u) / 2 - (bm - b)*(bm - b) / u / 2;
-   double lle = 0; 
+   double lle = 0;
    if ( v > 0) lle = - 0.9189385 - TMath::Log(v) / 2 - (em - e)*(em - e) / v / 2;
 
    return 2*( lls + llb + lle);
@@ -1236,7 +1236,7 @@ Double_t TRolke::LikeMod4(Double_t mu, Double_t b, Int_t x, Int_t y, Double_t ta
 
    double s = mu+b;
    double lls = - s;
-   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x); 
+   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
    double bg = tau*b;
    double llb =  -bg;
    if ( y > 0) llb =  y*TMath::Log( bg) - bg - LogFactorial(y);
@@ -1281,7 +1281,7 @@ Double_t TRolke::LikeMod5(Double_t mu, Double_t b, Int_t x, Double_t bm, Double_
 
    double s = mu+b;
    double lls = - s;
-   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x); 
+   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
    double llb =  0;
    if ( u > 0) llb = - 0.9189385 - TMath::Log(u) / 2 - (bm - b)*(bm - b) / u / 2;
 
@@ -1336,14 +1336,14 @@ Double_t TRolke::LikeMod6(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t z,
 
    double s = e*mu+b;
    double lls = - s;
-   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x); 
+   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
 
-   double lle = 0; 
-   if (z == 0)        lle = m * TMath::Log(1-e); 
-   else if ( z == m)  lle = m * TMath::Log(e); 
-   else               lle =   z * TMath::Log(e) + (m - z)*TMath::Log(1 - e) + LogFactorial(m) - LogFactorial(m-z) - LogFactorial(z); 
+   double lle = 0;
+   if (z == 0)        lle = m * TMath::Log(1-e);
+   else if ( z == m)  lle = m * TMath::Log(e);
+   else               lle =   z * TMath::Log(e) + (m - z)*TMath::Log(1 - e) + LogFactorial(m) - LogFactorial(m-z) - LogFactorial(z);
 
-   return 2* (lls + lle); 
+   return 2* (lls + lle);
 }
 
 
@@ -1391,9 +1391,9 @@ Double_t TRolke::LikeMod7(Double_t mu, Double_t b, Double_t e, Int_t x, Double_t
 
    double s = e*mu+b;
    double lls = - s;
-   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x); 
+   if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
 
-   double lle = 0; 
+   double lle = 0;
    if ( v > 0) lle = - 0.9189385 - TMath::Log(v) / 2 - (em - e)*(em - e) / v / 2;
 
    return 2*( lls + lle);
@@ -1417,7 +1417,7 @@ Double_t TRolke::EvalPolynomial(Double_t x, const Int_t  coef[], Int_t N)
 
 //______________________________________________________________________
 Double_t TRolke::EvalMonomial(Double_t x, const Int_t coef[], Int_t N)
-{   
+{
 // evaluate mononomial
    Double_t ans;
    const Int_t   *p;

@@ -69,6 +69,7 @@
 #include "TList.h"
 #include "TClass.h"
 #include "TROOT.h"
+#include "TVirtualMutex.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -352,16 +353,23 @@ void TList::Clear(Option_t *option)
       return;
    }
 
-   // In some case, for example TParallelCoord, a list (the pad's list of 
+   // In some case, for example TParallelCoord, a list (the pad's list of
    // primitives) will contain both the container and the containees
    // (the TParallelCoorVar) but if the Clear is being called from
    // the destructor of the container of this list, one of the first
    // thing done will be the remove the container (the pad) for the
-   // list (of Primitives of the canvas) that was connecting it 
+   // list (of Primitives of the canvas) that was connecting it
    // (indirectly) to the list of cleanups.
    // So let's temporarily add the current list and remove it later.
-   bool needRegister = fFirst && TROOT::Initialized() && !gROOT->GetListOfCleanups()->FindObject(this);
-   if (needRegister) gROOT->GetListOfCleanups()->Add(this);
+   bool needRegister = fFirst && TROOT::Initialized();
+   if(needRegister) {
+      R__LOCKGUARD2(gROOTMutex);
+      needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
+   }
+   if (needRegister) {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfCleanups()->Add(this);
+   }
    while (fFirst) {
       TObjLink *tlk = fFirst;
       fFirst = fFirst->Next();
@@ -376,7 +384,10 @@ void TList::Clear(Option_t *option)
       }
       delete tlk;
    }
-   if (needRegister) ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
+   if (needRegister) {
+      R__LOCKGUARD2(gROOTMutex);
+      ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
+   }
    fFirst = fLast = fCache = 0;
    fSize  = 0;
    Changed();
@@ -397,16 +408,23 @@ void TList::Delete(Option_t *option)
 
    if (slow) {
 
-      // In some case, for example TParallelCoord, a list (the pad's list of 
+      // In some case, for example TParallelCoord, a list (the pad's list of
       // primitives) will contain both the container and the containees
       // (the TParallelCoorVar) but if the Clear is being called from
       // the destructor of the container of this list, one of the first
       // thing done will be the remove the container (the pad) for the
-      // list (of Primitives of the canvas) that was connecting it 
+      // list (of Primitives of the canvas) that was connecting it
       // (indirectly) to the list of cleanups.
       // So let's temporarily add the current list and remove it later.
-      bool needRegister = fFirst && TROOT::Initialized() && !gROOT->GetListOfCleanups()->FindObject(this);
-      if (needRegister) gROOT->GetListOfCleanups()->Add(this);
+      bool needRegister = fFirst && TROOT::Initialized();
+      if(needRegister) {
+         R__LOCKGUARD2(gROOTMutex);
+         needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
+      }
+      if (needRegister) {
+         R__LOCKGUARD2(gROOTMutex);
+         gROOT->GetListOfCleanups()->Add(this);
+      }
       while (fFirst) {
          TObjLink *tlk = fFirst;
          fFirst = fFirst->Next();
@@ -419,7 +437,12 @@ void TList::Delete(Option_t *option)
 
          delete tlk;
       }
-      if (needRegister) ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
+
+      if (needRegister) {
+         R__LOCKGUARD2(gROOTMutex);
+         ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
+      }
+
       fFirst = fLast = fCache = 0;
       fSize  = 0;
 

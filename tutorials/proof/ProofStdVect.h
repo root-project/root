@@ -29,8 +29,8 @@ class ProofStdVect : public TSelector {
 public :
 
    // Specific members
-   Bool_t            fCreate; //! True if in create files mode 
-   
+   Bool_t            fCreate; //! True if in create files mode
+
    // Create mode
    TTree            *fTree;   //! The tree filled in create mode
    TFile            *fFile;   //! Output file in create mode

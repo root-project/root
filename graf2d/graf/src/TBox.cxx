@@ -93,7 +93,7 @@ TBox::TBox(const TBox &box) : TObject(box), TAttLine(box), TAttFill(box), TAttBB
 
 
 //______________________________________________________________________________
-TBox& TBox::operator=(const TBox& b) 
+TBox& TBox::operator=(const TBox& b)
 {
    // Assignment operator.
 
@@ -107,7 +107,7 @@ TBox& TBox::operator=(const TBox& b)
       fX2=b.fX2;
       fY2=b.fY2;
       fResizing=b.fResizing;
-   } 
+   }
    return *this;
 }
 
@@ -215,7 +215,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //
    //  If the mouse is clicked inside the box, the box is moved.
    //
-   //  If the mouse is clicked on the 4 edges (pL,pR,pTop,pBot), the box is 
+   //  If the mouse is clicked on the 4 edges (pL,pR,pTop,pBot), the box is
    //  rescaled parallel to this edge (same as Motif window manager).
    //
    //    pA                 pTop                       pB
@@ -239,7 +239,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!gPad->IsEditable() && event != kMouseEnter) return;
 
    if (TestBit(kCannotMove)) return;
-   
+
    const Int_t kMaxDiff = 7;
    const Int_t kMinSize = 20;
 
@@ -506,7 +506,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             fX2 = gPad->AbsPixeltoX(px2);
             fY2 = gPad->AbsPixeltoY(py2);
          }
-         if (pINSIDE) gPad->ShowGuidelines(this, event, 'i', true);         
+         if (pINSIDE) gPad->ShowGuidelines(this, event, 'i', true);
          if (pTop) gPad->ShowGuidelines(this, event, 't', true);
          if (pBot) gPad->ShowGuidelines(this, event, 'b', true);
          if (pL) gPad->ShowGuidelines(this, event, 'l', true);
@@ -620,7 +620,7 @@ void TBox::HideToolTip(Int_t event)
 Int_t TBox::IsInside(Double_t x, Double_t y) const
 {
    // Function which returns 1 if point x,y lies inside the box, 0 otherwise.
-   
+
    if (x < fX1 || x > fX2) return 0;
    if (y < fY1 || y > fY2) return 0;
    return 1;
@@ -761,14 +761,14 @@ Rectangle_t TBox::GetBBox()
    px2 = gPad->XtoPixel(fX2);
    py1 = gPad->YtoPixel(fY1);
    py2 = gPad->YtoPixel(fY2);
-   
+
    Int_t tmp;
    if (px1>px2) { tmp = px1; px1 = px2; px2 = tmp;}
    if (py1>py2) { tmp = py1; py1 = py2; py2 = tmp;}
-   
+
    BBox.fX = px1;
    BBox.fY = py1;
-   BBox.fWidth = px2-px1; 
+   BBox.fWidth = px2-px1;
    BBox.fHeight = py2-py1;
 
    return (BBox);

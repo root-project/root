@@ -173,7 +173,7 @@ public:
    void           CloseTab(Int_t id);
    void           DoTab(Int_t id);
    void           ApplyFilter(Int_t id);
-   
+
    void           CheckRemote(const char *str);
    void           DirSelected(const char *txt);
    void           DirChanged();

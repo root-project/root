@@ -35,7 +35,7 @@ public:
    TGlobal(DataMemberInfo_t *info = 0);
    TGlobal (const TGlobal &);
    TGlobal &operator=(const TGlobal &);
-   
+
    virtual       ~TGlobal();
    virtual Int_t  GetArrayDim() const;
    virtual DeclId_t GetDeclId() const;

@@ -14,8 +14,8 @@
 //                                                                      //
 // TGenerator                                                           //
 //                                                                      //
-// Is an base class, that defines the interface of ROOT to various    	//
-// event generators. Every event generator should inherit from       	//
+// Is an base class, that defines the interface of ROOT to various      //
+// event generators. Every event generator should inherit from          //
 // TGenerator or its subclasses.                                        //
 //                                                                      //
 // Derived class can overload the member  function GenerateEvent        //

@@ -7,9 +7,9 @@
 #include "TRandom.h"
 #include "TError.h"
 
-void parallelMergeClient() 
+void parallelMergeClient()
 {
-   // Client program which creates and fills 2 histograms and a TTree. 
+   // Client program which creates and fills 2 histograms and a TTree.
    // Every 1000000 fills the histograms and TTree is send to the server which displays the histogram.
    //
    // To run this demo do the following:
@@ -22,11 +22,11 @@ void parallelMergeClient()
    // "localhost" in the TSocket ctor below to the desired hostname.
    //
    //Author: Fons Rademakers, Philippe Canal
-   
+
    gBenchmark->Start("treeClient");
 
    TParallelMergingFile *file = (TParallelMergingFile*)TFile::Open("mergedClient.root?pmerge=localhost:1095","RECREATE");
-   
+
    file->Write();
    file->UploadAndReset();       // We do this early to get assigned an index.
    UInt_t idx = file->fServerIdx; // This works on in ACLiC.
@@ -44,7 +44,7 @@ void parallelMergeClient()
    tree->SetAutoFlush(4000000);
    tree->Branch("px",&px);
    tree->Branch("py",&py);
- 
+
    // Fill histogram randomly
    gRandom->SetSeed();
    const int kUPDATE = 1000000;

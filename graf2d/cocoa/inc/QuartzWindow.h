@@ -167,7 +167,7 @@
 - (void)     setX : (int) x Y : (int) y width : (unsigned) w height : (unsigned) h;
 - (void)     setX : (int) x Y : (int) y;
 
-- (void)     copy : (NSObject<X11Drawable> *) src area : (ROOT::MacOSX::X11::Rectangle) area withMask : (QuartzImage *)mask 
+- (void)     copy : (NSObject<X11Drawable> *) src area : (ROOT::MacOSX::X11::Rectangle) area withMask : (QuartzImage *)mask
              clipOrigin : (ROOT::MacOSX::X11::Point) origin toPoint : (ROOT::MacOSX::X11::Point) dstPoint;
 - (unsigned char *) readColorBits : (ROOT::MacOSX::X11::Rectangle) area;
 
@@ -251,10 +251,10 @@
 @property (nonatomic, assign) ECursor fCurrentCursor;
 
 //X11 "properties".
-- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize 
+- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize
          forType : (Atom_t) dataType format : (unsigned) format;
 - (BOOL) hasProperty : (const char *) propName;
-- (unsigned char *) getProperty : (const char *) propName returnType : (Atom_t *) type 
+- (unsigned char *) getProperty : (const char *) propName returnType : (Atom_t *) type
    returnFormat : (unsigned *) format nElements : (unsigned *) nElements;
 - (void) removeProperty : (const char *) propName;
 

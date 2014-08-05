@@ -63,7 +63,7 @@ TGViewFrame::TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options,
    fView = v;
 
    SetBackgroundColor(back);
-      
+
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
                          kButtonMotionMask, kNone, kNone);
@@ -127,7 +127,7 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
    fWhiteGC.SetGraphicsExposures(kTRUE);
    fWhiteGC.SetBackground(back);
 
-   // sets for guibuilding   
+   // sets for guibuilding
    if (fVsb) {
       fVsb->SetEditDisabled(kEditDisableGrab | kEditDisableBtnEnable);
    }
@@ -271,7 +271,7 @@ void TGView::DoRedraw()
    DrawBorder();
 
    if (!fExposedRegion.IsEmpty()) {
-      DrawRegion(fExposedRegion.fX, fExposedRegion.fY, 
+      DrawRegion(fExposedRegion.fX, fExposedRegion.fY,
                  fExposedRegion.fW, fExposedRegion.fH);
       fExposedRegion.Empty();
    }
@@ -291,9 +291,9 @@ Bool_t TGView::HandleExpose(Event_t *event)
       if (fExposedRegion.IsEmpty()) {
          fExposedRegion = rect;
       } else {
-         if (((!rect.fX && !fExposedRegion.fY) || 
-              (!rect.fY && !fExposedRegion.fX)) && 
-             ((rect.fX >= (int)fExposedRegion.fW) || 
+         if (((!rect.fX && !fExposedRegion.fY) ||
+              (!rect.fY && !fExposedRegion.fX)) &&
+             ((rect.fX >= (int)fExposedRegion.fW) ||
               (rect.fY >= (int)fExposedRegion.fH))) {
             DrawRegion(rect.fX, rect.fY, rect.fW, rect.fY);
          } else {
@@ -471,7 +471,7 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
    if (direction == kVertical) {
       if (new_top == fVisible.fY) {
          return;
-      } 
+      }
 
       points[0].fX = points[3].fX = 0;
       points[1].fX = points[2].fX = fCanvas->GetWidth();

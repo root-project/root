@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Author: L. Moneta Nov 2010 
+// Author: L. Moneta Nov 2010
 
 /**********************************************************************
  *                                                                    *
@@ -25,7 +25,7 @@
 
 // Helper class impelementing the
 // binomial probability and the likelihood ratio
-// used for ordering the interval in the FeldmanCousins interval class 
+// used for ordering the interval in the FeldmanCousins interval class
 class BinomialProbHelper {
 public:
    BinomialProbHelper(double rho, int x, int n)
@@ -68,12 +68,12 @@ class BinomialNeymanInterval  {
 public:
 
    BinomialNeymanInterval() :
-      fLower(0), 
+      fLower(0),
       fUpper(1),
       fAlpha(0)
    {}
 
-   void Init(double alpha) { 
+   void Init(double alpha) {
       fAlpha = alpha;
    }
 
@@ -103,7 +103,7 @@ public:
          if (x < x_l) x_l = x;
          if (x > x_r) x_r = x;
       }
-  
+
       return x_l <= x_r;
    }
 
@@ -128,7 +128,7 @@ public:
       const double tol = 1e-9;
       double rho_min, rho_max, rho;
       int x_l, x_r;
-  
+
       // Binary search for the smallest rho whose acceptance set has right
       // endpoint X; this is the lower endpoint of the rho interval.
       rho_min = 0; rho_max = 1;
@@ -141,7 +141,7 @@ public:
             rho_max = rho;
       }
       fLower = rho;
-  
+
       // Binary search for the largest rho whose acceptance set has left
       // endpoint X; this is the upper endpoint of the rho interval.
       rho_min = 0; rho_max = 1;

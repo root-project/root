@@ -36,7 +36,7 @@ void gradients()
    const Color_t &radialFill = colorIndices[0];
    const Color_t &linearFill = colorIndices[1];
    const Color_t &transparentFill = colorIndices[2];
-   
+
    //Create a canvas to check if we have a right back-end which supports gradients:
    TCanvas * const c = new TCanvas("cpie","Gradient colours demo", 700, 700);
    //Before we allocated any new colour or created any object:
@@ -71,12 +71,12 @@ void gradients()
    //semi-transparent):
    TText * const t = new TText(0.05, 0.7, "Can you see the text?");
    t->Draw();
-   
+
    //We create a nested pad on top to render a TPie in,
    //this way we still have a text (below) + TPie with
    //a fancy colour on top.
    TPad * const pad = new TPad("p", "p", 0., 0., 1., 1.);
-   
+
    //TPad itself is fully transparent:
    new TColor(transparentFill, 1., 1., 1., "transparent_fill_color", 0.);
    pad->SetFillColor(transparentFill);

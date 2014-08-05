@@ -45,7 +45,7 @@ TVirtualGeoPainter::~TVirtualGeoPainter()
 TVirtualGeoPainter *TVirtualGeoPainter::GeoPainter()
 {
    // Static function returning a pointer to the geometry painter.
-   // The painter will paint objects from the specified geometry. 
+   // The painter will paint objects from the specified geometry.
    // If the geometry painter does not exist a default painter is created.
 
    // if no painter set yet, create a default painter via the PluginManager

@@ -26,7 +26,7 @@
 namespace ROOT {
 namespace Math {
 
-template <class C> 
+template <class C>
 struct CoordinateTraits {
   static const std::string name() {
     std::string s = "NOT-A-COORDINATE-SYSTEM: ";
@@ -118,7 +118,7 @@ struct CoordinateTraits < PtEtaPhiM4D<Scalar> >{
 };
 
 
-} // namespace Math 
-} // namespace ROOT 
+} // namespace Math
+} // namespace ROOT
 
 #endif // COORDINATETRAITS_H

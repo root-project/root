@@ -42,7 +42,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
 
    if ( pos == std::string::npos )
       return 0;                              // this isn't a python style class
-   
+
    std::string mdName = clName.substr( 0, pos );
    clName = clName.substr( pos+1, std::string::npos );
 

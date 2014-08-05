@@ -2,7 +2,7 @@ void piechart()
 {
    // Pie chart example.
    //Authors: Olivier Couet, Guido Volpi
-   
+
    Float_t vals[] = {.2,1.1,.6,.9,2.3};
    Int_t colors[] = {2,3,4,5,6};
    Int_t nvals = sizeof(vals)/sizeof(vals[0]);

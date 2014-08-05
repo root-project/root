@@ -3,7 +3,7 @@ void zones() {
 // into adjacent subpads + axis labels on the top and right side
 // of the pads.
 //Author; Rene Brun
-   
+
    TCanvas *c1 = new TCanvas("c1","multipads",900,700);
    gStyle->SetOptStat(0);
    c1->Divide(2,2,0,0);
@@ -21,11 +21,11 @@ void zones() {
    gPad->SetTicky(2);
    h2->GetYaxis()->SetLabelOffset(0.01);
    h2->Draw();
-   
+
    c1->cd(3);
    h3->Draw();
 
    c1->cd(4);
    gPad->SetTicky(2);
    h4->Draw();
-}      
+}

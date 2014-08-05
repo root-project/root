@@ -172,7 +172,7 @@ TChain::~TChain()
 {
    // -- Destructor.
    gROOT->GetListOfCleanups()->Remove(this);
-   
+
    SafeDelete(fProofChain);
    fStatus->Delete();
    delete fStatus;
@@ -464,7 +464,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = kBigNumber */, co
    //Search for a a slash between the .root and the end
    Int_t nch = strlen(name) + strlen(treename);
    char *filename = new char[nch+1];
-   strlcpy(filename,name,nch+1); 
+   strlcpy(filename,name,nch+1);
    if (dot) {
       char *pos = filename + (dot-name) + 5;
       while (*pos) {
@@ -901,10 +901,10 @@ Bool_t TChain::GetBranchStatus(const char* branchname) const
 TTree::TClusterIterator TChain::GetClusterIterator(Long64_t /* firstentry */)
 {
    // Return an iterator over the cluster of baskets starting at firstentry.
-   // 
+   //
    // This iterator is not yet supported for TChain object.
    //
-   
+
    Fatal("GetClusterIterator","Not support for TChain object");
    return TTree::GetClusterIterator(-1);
 }
@@ -1025,7 +1025,7 @@ TFile* TChain::GetFile() const
 TLeaf* TChain::GetLeaf(const char* branchname, const char *leafname)
 {
    // -- Return a pointer to the leaf name in the current tree.
-   
+
    if (fProofChain && !(fProofChain->TestBit(kProofLite))) {
       // Make sure the element list is uptodate
       if (!TestBit(kProofUptodate))
@@ -1257,7 +1257,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    //   -2: The requested entry number of less than zero or too large for the chain.
    //       or too large for the large TTree.
    //   -3: The file corresponding to the entry could not be correctly open
-   //   -4: The TChainElement corresponding to the entry is missing or 
+   //   -4: The TChainElement corresponding to the entry is missing or
    //       the TTree is missing from the file.
    //
    // Note: This is the only routine which sets the value of fTree to
@@ -1407,7 +1407,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    if (fFile) {
       if (!fDirectory->GetList()->FindObject(this)) {
          if (fTree) {
-            // (fFile != 0 && fTree == 0) can happen when 
+            // (fFile != 0 && fTree == 0) can happen when
             // InvalidateCurrentTree is called (for example from
             // AddFriend).  Having fTree === 0 is necessary in that
             // case because in some cases GetTree is used as a check
@@ -1418,7 +1418,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
             if (tpf) {
                tpf->ResetCache();
                }
-            
+
             fFile->SetCacheRead(0, fTree);
             // If the tree has clones, copy them into the chain
             // clone list so we can change their branch addresses
@@ -1429,7 +1429,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
             //      TTree* clone = chain->GetTree()->CloneTree(0);
             //
             // We need to call the invalidate exactly here, since
-            // we no longer need the value of fTree and it is 
+            // we no longer need the value of fTree and it is
             // about to be deleted.
             InvalidateCurrentTree();
          }
@@ -1818,7 +1818,7 @@ Long64_t TChain::Merge(TCollection* /* list */, Option_t* /* option */ )
 Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 {
    // Merge all chains in the collection.  (NOT IMPLEMENTED)
-   
+
    Error("Merge", "not implemented");
    return -1;
 }
@@ -2108,7 +2108,7 @@ void TChain::RecursiveRemove(TObject *obj)
 void TChain::RemoveFriend(TTree* oldFriend)
 {
    // Remove a friend from the list of friends.
-   
+
    // We already have been visited while recursively looking
    // through the friends tree, let return
 
@@ -2121,7 +2121,7 @@ void TChain::RemoveFriend(TTree* oldFriend)
    if (fProofChain)
       // This updates the proxy chain when we will really use PROOF
       ResetBit(kProofUptodate);
-   
+
    // We need to invalidate the loading of the current tree because its list
    // of real friends is now obsolete.  It is repairable only from LoadTree.
    InvalidateCurrentTree();
@@ -2153,14 +2153,14 @@ void TChain::ResetAfterMerge(TFileMergeInfo *info)
 {
    // Resets the state of this chain after a merge (keep the customization but
    // forget the data).
-   
+
    fNtrees         = 0;
    fTreeNumber     = -1;
    fTree           = 0;
    fFile           = 0;
    fFiles->Delete();
    fTreeOffset[0]  = 0;
-   
+
    TTree::ResetAfterMerge(info);
 }
 
@@ -2220,7 +2220,7 @@ void TChain::ResetBranchAddress(TBranch *branch)
    TChainElement* element = (TChainElement*) fStatus->FindObject(branch->GetName());
    if (element) {
       element->SetBaddress(0);
-   }   
+   }
    if (fTree) {
       fTree->ResetBranchAddress(branch);
    }

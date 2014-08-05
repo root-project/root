@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
- 
+
 #ifndef ROOT_ResourceManagement
 #define ROOT_ResourceManagement
 
@@ -52,7 +52,7 @@ public:
    explicit RefGuardGeneric(RefType ref) : fRef(ref), fActive(kTRUE)
    {
    }
-   
+
    ~RefGuardGeneric()
    {
       if (fActive)
@@ -63,7 +63,7 @@ public:
    {
       return fRef;
    }
-   
+
    RefType Release()
    {
       fActive = kFALSE;
@@ -83,7 +83,7 @@ public:
    explicit RefGuard(RefType ref) : fRef(ref), fActive(kTRUE)
    {
    }
-   
+
    ~RefGuard()
    {
       if (fActive)
@@ -94,7 +94,7 @@ public:
    {
       return fRef;
    }
-   
+
    RefType Release()
    {
       fActive = kFALSE;
@@ -124,7 +124,7 @@ class CGStateGuard : NonCopyable {
 public:
    CGStateGuard(CGContextRef ctx);
    ~CGStateGuard();
-   
+
 private:
    CGContextRef fCtx;
 };
@@ -140,13 +140,13 @@ public:
       if (initRetain)
          CFRetain(fRef);
    }
-   
+
    SmartRef(const SmartRef &rhs)
       : fRef(rhs.fRef)
    {
       CFRetain(fRef);
    }
-   
+
    SmartRef &operator = (const SmartRef &rhs)
    {
       if (fRef != rhs.fRef) {
@@ -154,10 +154,10 @@ public:
          fRef = rhs.fRef;
          CFRetain(fRef);
       }
-      
+
       return *this;
    }
-   
+
    SmartRef &operator = (RefType ref)
    {
       if (fRef != ref) {
@@ -165,15 +165,15 @@ public:
          fRef = ref;
          CFRetain(fRef);
       }
-      
+
       return *this;
    }
-   
+
    ~SmartRef()
    {
       release(fRef);
    }
-   
+
    RefType Get()const
    {
       return fRef;

@@ -53,8 +53,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #ifndef ROOT_XrdFour
-#	include <sys/socket.h>
-#	include <netinet/in.h>
+#  include <sys/socket.h>
+#  include <netinet/in.h>
 #endif
 #include <sys/stat.h>
 #include <sys/un.h>

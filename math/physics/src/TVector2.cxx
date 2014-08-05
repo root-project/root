@@ -59,15 +59,15 @@ Double_t TVector2::Mod() const
 TVector2 TVector2::Unit() const
 {
    // return module normalized to 1
-   return (Mod2()) ? *this/Mod() : TVector2(); 
+   return (Mod2()) ? *this/Mod() : TVector2();
 }
 
 //______________________________________________________________________________
 Double_t TVector2::Phi() const
 {
    // return vector phi
-   return TMath::Pi()+TMath::ATan2(-fY,-fX); 
-} 
+   return TMath::Pi()+TMath::ATan2(-fY,-fX);
+}
 
 //______________________________________________________________________________
 Double_t TVector2::Phi_0_2pi(Double_t x) {
@@ -101,7 +101,7 @@ TVector2 TVector2::Rotate (Double_t phi) const
 }
 
 //______________________________________________________________________________
-void TVector2::SetMagPhi(Double_t mag, Double_t phi) 
+void TVector2::SetMagPhi(Double_t mag, Double_t phi)
 {
    //set vector using mag and phi
    Double_t amag = TMath::Abs(mag);

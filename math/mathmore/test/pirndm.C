@@ -11,7 +11,7 @@
 //    root "pirndm.C+(10)"
 //
 //Author: Rene Brun
-      
+
 #include "TROOT.h"
 #include "TStopwatch.h"
 #include "TMath.h"
@@ -31,17 +31,17 @@
 #endif
 #include <vector>
 #include <iostream>
-   
+
 TLegend *legend = 0;
 TCanvas *c1 = 0;
 TStopwatch timer;
 Double_t cputot = 0;
 
-std::vector<TH2D *>  vh2; 
+std::vector<TH2D *>  vh2;
 
-   
+
 //____________________________________________________________________
-template<class Random> 
+template<class Random>
 void piRandom(const char *name, Random *r, Long64_t n, Int_t color) {
 
    TH2D * h2 = new TH2D("h2",name,300,0,0.000003,300,0.,1.);
@@ -53,8 +53,8 @@ void piRandom(const char *name, Random *r, Long64_t n, Int_t color) {
    gr->SetMarkerColor(color);
    gr->SetLineColor(color);
    gr->SetLineWidth(2);
-   
-   Int_t k = 0;   
+
+   Int_t k = 0;
    Double_t diffpi;
    Long64_t npi   = 0;
    Double_t pi = TMath::Pi();
@@ -62,19 +62,19 @@ void piRandom(const char *name, Random *r, Long64_t n, Int_t color) {
    const Int_t NR2 = NR/2;
    Double_t rn[NR];
    Long64_t i = 0;
-   //double r1,r2; 
+   //double r1,r2;
    while (i<=n) {
       i += NR2;
       r->RndmArray(NR,rn);
       for (Int_t j=0;j<NR;j+=2) {
-          if (rn[j]*rn[j]+rn[j+1]*rn[j+1] <= 1) npi++;
-	  if (rn[j] < 0.001) h2->Fill(rn[j],rn[j+1]);
+         if (rn[j]*rn[j]+rn[j+1]*rn[j+1] <= 1) npi++;
+         if (rn[j] < 0.001) h2->Fill(rn[j],rn[j+1]);
       }
 //       r1 = r->Rndm();
 //       r2 = r->Rndm();
       //  if (r1*r1+r2*r2 <= 1) npi++;
       if (i && i % (n/10) == 0) {
-	  gSystem->ProcessEvents();
+         gSystem->ProcessEvents();
          Double_t norm = 4./Double_t(i);
          diffpi   = norm*npi - pi;
          gr->SetPoint(k,i,diffpi);
@@ -95,9 +95,9 @@ void piRandom(const char *name, Random *r, Long64_t n, Int_t color) {
    c1->Update();
    printf("RANDOM = %s : RT=%7.3f s, Cpu=%7.3f s\n",name,timer.RealTime(),cpu);
 
-//    TCanvas * c2 = new TCanvas(); 
+//    TCanvas * c2 = new TCanvas();
 //    h2->Draw();
-//    c2->Update(); 
+//    c2->Update();
 
 //    c1->SetSelected(c1);
    vh2.push_back(h2);
@@ -126,7 +126,7 @@ void ErrorBand(Long64_t n) {
    g->Draw("f");
 }
 
-         
+
 //________________________________________________________________________
 void pirndm(Long64_t n1=1, unsigned int seed = 0) {
    Long64_t n = n1*20000000;
@@ -151,7 +151,7 @@ void pirndm(Long64_t n1=1, unsigned int seed = 0) {
 
    ErrorBand(n);
    std::cout << "seed is " << seed << std::endl;
-   
+
    piRandom("TRandom",new TRandom(seed),n,kYellow);
    piRandom("TRandom2",new TRandom2(seed),n,kBlue);
    piRandom("TRandom3",new TRandom3(seed),n,kRed);
@@ -189,13 +189,13 @@ void pirndm(Long64_t n1=1, unsigned int seed = 0) {
    piRandom("new TRandom2",new TRandom2(std::rand()),n,kGreen);
 #endif
 #endif
-      
+
    // reftime calculated on MACOS Intel dualcore 2GHz
    // time for TRandom + TRandom2 + TRandom3 + TRandom1 for n = 10**7 (n1=5000)
    Double_t reftime = (4629.530 + 5358.100  + 5785.240 + 26012.17)/5000.;
    const Double_t rootmarks = 900*Double_t(n1)*reftime/cputot;
    TPaveLabel *pl = new TPaveLabel(0.2,0.92,0.8,0.98,Form("cpu time = %6.1fs - rootmarks = %6.1f",cputot,rootmarks),"brNDC");
-   pl->Draw();  
+   pl->Draw();
    printf("******************************************************************\n");
    printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
          gROOT->GetVersionDate(),gROOT->GetVersionTime());
@@ -206,22 +206,22 @@ void pirndm(Long64_t n1=1, unsigned int seed = 0) {
    c1->Print("pirndm.gif");
 
 
-   // draw 2D histos 
+   // draw 2D histos
    TCanvas * c2 = new TCanvas();
-   int nx = 0; 
-   int ny = vh2.size(); 
-   for ( nx = 1; nx < ny; nx++) { 
-     double r = double(vh2.size())/nx; 
-     ny = int(r - 0.01) + 1; 
+   int nx = 0;
+   int ny = vh2.size();
+   for ( nx = 1; nx < ny; nx++) {
+     double r = double(vh2.size())/nx;
+     ny = int(r - 0.01) + 1;
    }
    nx--;
    std::cout << nx << "  " << ny << "  " << vh2.size() << std::endl;
-   
-   c2->Divide(ny,nx); 
-   for (unsigned int i = 0; i < vh2.size(); ++i) { 
-     c2->cd (i+1); 
-     vh2[i]->Draw(); 
+
+   c2->Divide(ny,nx);
+   for (unsigned int i = 0; i < vh2.size(); ++i) {
+     c2->cd (i+1);
+     vh2[i]->Draw();
    }
-   c2->Update(); 
-   
+   c2->Update();
+
 }

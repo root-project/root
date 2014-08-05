@@ -81,7 +81,7 @@ namespace {
    // if this method creates new objects, always take ownership
       if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsCreator ) {
 
-      // either be a constructor with a fresh object proxy self ... 
+      // either be a constructor with a fresh object proxy self ...
          if ( pymeth->fMethodInfo->fFlags & MethodProxy::MethodInfo_t::kIsConstructor ) {
             if ( pymeth->fSelf )
                pymeth->fSelf->HoldOn();
@@ -215,9 +215,9 @@ namespace {
       int co_argcount = (methods.size() == 1 ? methods[0]->GetMaxArgs() : 1) + 1 /* for 'self' */;
 
    // TODO: static methods need no 'self' (but is harmless otherwise)
-	  	 
-   // for now, code object representing the statement 'pass' 	 
-      PyObject* co_code = PyString_FromStringAndSize( "d\x00\x00S", 4 ); 	 
+
+   // for now, code object representing the statement 'pass'
+      PyObject* co_code = PyString_FromStringAndSize( "d\x00\x00S", 4 );
 
    // tuples with all the const literals used in the function
       PyObject* co_consts = PyTuple_New( 0 );
@@ -235,7 +235,7 @@ namespace {
       } else
          PyTuple_SET_ITEM( co_varnames, 1, PyString_FromString( "*args" ) );
 
-   // filename is made-up 	 
+   // filename is made-up
       PyObject* co_filename = PyString_FromString( "ROOT.py" );
 
    // name is the function name, also through __name__ on the function itself
@@ -272,7 +272,7 @@ namespace {
       Py_DECREF( co_code );
 
       return code;
-#else 	 
+#else
 // not important for functioning of most code, so not implemented for p3 for now (TODO)
       pymeth = 0;
       if ( pymeth || !pymeth) Py_INCREF( Py_None );
@@ -602,7 +602,7 @@ namespace {
       if ( --(*pymeth->fMethodInfo->fRefCount) <= 0 ) {
          delete pymeth->fMethodInfo;
       }
- 
+
       PyObject_GC_Del( pymeth );
    }
 
@@ -787,7 +787,7 @@ void PyROOT::MethodProxy::AddMethod( PyCallable* pc )
    fMethodInfo->fMethods.push_back( pc );
    fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
 }
-      
+
 //____________________________________________________________________________
 void PyROOT::MethodProxy::AddMethod( MethodProxy* meth )
 {
@@ -798,7 +798,7 @@ void PyROOT::MethodProxy::AddMethod( MethodProxy* meth )
 
 //____________________________________________________________________________
 PyROOT::MethodProxy::MethodInfo_t::MethodInfo_t( const MethodInfo_t& s ) :
-   fName( s.fName ), fDispatchMap( s.fDispatchMap ), fMethods( s.fMethods ), fFlags( s.fFlags ) 
+   fName( s.fName ), fDispatchMap( s.fDispatchMap ), fMethods( s.fMethods ), fFlags( s.fFlags )
 {
    *s.fRefCount += 1;
    fRefCount = s.fRefCount;

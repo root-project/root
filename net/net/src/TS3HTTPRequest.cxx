@@ -29,7 +29,7 @@
 // http://code.google.com/apis/storage/docs/reference/v1/developer-guidev1.html#authentication
 //                                                                      //
 // Amazon:                                                              //
-// http://docs.aws.amazon.com/AmazonS3/latest/dev/S3_Authentication2.html 
+// http://docs.aws.amazon.com/AmazonS3/latest/dev/S3_Authentication2.html
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -65,12 +65,12 @@ TS3HTTPRequest::TS3HTTPRequest(EHTTPVerb httpVerb, const TString& host,
 {
    // Default constructor
 
-   fVerb      = httpVerb;      
-   fHost      = host;       
-   fBucket    = bucket;     
+   fVerb      = httpVerb;
+   fHost      = host;
+   fBucket    = bucket;
    fObjectKey = objectKey;
    fAuthType  = authType;
-   fAccessKey = accessKey;  
+   fAccessKey = accessKey;
    fSecretKey = secretKey;
 }
 
@@ -80,12 +80,12 @@ TS3HTTPRequest::TS3HTTPRequest(const TS3HTTPRequest& r)
 {
    // Copy constructor
 
-   fVerb      = r.fVerb;      
-   fHost      = r.fHost;       
-   fBucket    = r.fBucket;     
+   fVerb      = r.fVerb;
+   fHost      = r.fHost;
+   fBucket    = r.fBucket;
    fObjectKey = r.fObjectKey;
    fAuthType  = r.fAuthType;
-   fAccessKey = r.fAccessKey;  
+   fAccessKey = r.fAccessKey;
    fSecretKey = r.fSecretKey;
    fTimeStamp = r.fTimeStamp;
 }
@@ -199,7 +199,7 @@ TString TS3HTTPRequest::MakeDateHeader() const
 //______________________________________________________________________________
 TString TS3HTTPRequest::MakeAuthPrefix() const
 {
-   // Returns the authentication prefix 
+   // Returns the authentication prefix
 
    switch (fAuthType) {
       case kNoAuth: return "";
@@ -216,7 +216,7 @@ TString TS3HTTPRequest::MakeAuthHeader(TS3HTTPRequest::EHTTPVerb httpVerb) const
 
    if (fAuthType == kNoAuth)
       return "";
-   
+
    return TString::Format("Authorization: %s %s:%s%s",
       (const char*)MakeAuthPrefix(),
       (const char*)fAccessKey,
@@ -231,7 +231,7 @@ TString TS3HTTPRequest::GetRequest(TS3HTTPRequest::EHTTPVerb httpVerb, Bool_t ap
 
    // Set time stamp before computing this request's signature. The signature
    // includes the date.
-   SetTimeStamp(); 
+   SetTimeStamp();
    TString request = TString::Format("%s\r\n%s\r\n%s\r\n",
       (const char*)MakeRequestLine(httpVerb),
       (const char*)MakeHostHeader(),

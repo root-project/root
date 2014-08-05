@@ -1055,7 +1055,7 @@ bool XrdProofdNetMgr::IsLocal(const char *host, bool checkport)
       XrdClientUrlInfo uu(host);
       if (uu.Port <= 0) uu.Port = 1093;
       // Fully qualified name
-#ifndef ROOT_XrdFour      
+#ifndef ROOT_XrdFour
       char *fqn = XrdSysDNS::getHostName(uu.Host.c_str());
 #else
       XrdNetAddr aNA;
@@ -1068,7 +1068,7 @@ bool XrdProofdNetMgr::IsLocal(const char *host, bool checkport)
          if (!checkport || (uu.Port == fMgr->Port()))
             rc = 1;
       }
-#ifndef ROOT_XrdFour      
+#ifndef ROOT_XrdFour
       SafeFree(fqn);
 #endif
    }
@@ -1157,7 +1157,7 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
    } else {
       // Read portion of remote file
       XrdClientUrlInfo u(file);
-      if (u.User.length() <= 0) 
+      if (u.User.length() <= 0)
          u.User = p->Client()->User() ? p->Client()->User() : fMgr->EffectiveUser();
       buf = ReadBufferRemote(u.GetUrl().c_str(), file, ofs, lout, grep);
    }
@@ -1644,7 +1644,7 @@ char *XrdProofdNetMgr::ReadLogPaths(const char *msg, int isess)
                buf[len - 1] = 0;
                pbuf = buf + len;
                free(bmst);
-            }            
+            }
          } else {
             TRACE(DBG, "request for ourselves: ignore");
          }

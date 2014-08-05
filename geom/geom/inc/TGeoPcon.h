@@ -16,7 +16,7 @@
 #include "TGeoBBox.h"
 #endif
 
-  
+
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //
 // TGeoPcon - a composite polycone. It has at least 9 parameters :          //
@@ -35,9 +35,9 @@ protected:
    Int_t                 fNz;      // number of z planes (at least two)
    Double_t              fPhi1;    // lower phi limit (converted to [0,2*pi)
    Double_t              fDphi;    // phi range
-   Double_t             *fRmin;    //[fNz] pointer to array of inner radii 
-   Double_t             *fRmax;    //[fNz] pointer to array of outer radii 
-   Double_t             *fZ;       //[fNz] pointer to array of Z planes positions 
+   Double_t             *fRmin;    //[fNz] pointer to array of inner radii
+   Double_t             *fRmax;    //[fNz] pointer to array of outer radii
+   Double_t             *fZ;       //[fNz] pointer to array of Z planes positions
    Bool_t                fFullPhi; //! Full phi range flag
    Double_t              fC1;      //! Cosine of phi1
    Double_t              fS1;      //! Sine of phi1
@@ -46,10 +46,10 @@ protected:
    Double_t              fCm;      //! Cosine of (phi1+phi2)/2
    Double_t              fSm;      //! Sine of (phi1+phi2)/2
    Double_t              fCdphi;   //! Cosine of dphi
-   
+
    // methods
-   TGeoPcon(const TGeoPcon&); 
-   TGeoPcon& operator=(const TGeoPcon&); 
+   TGeoPcon(const TGeoPcon&);
+   TGeoPcon& operator=(const TGeoPcon&);
 
 public:
    // constructors
@@ -67,15 +67,15 @@ public:
    virtual Bool_t        Contains(const Double_t *point) const;
    virtual void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const;
    virtual void          DefineSection(Int_t snum, Double_t z, Double_t rmin, Double_t rmax);
-   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
-   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    Double_t              DistToSegZ(const Double_t *point, const Double_t *dir, Int_t &iz) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
                                 Double_t start, Double_t step);
    virtual const char   *GetAxisName(Int_t iaxis) const;
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
@@ -114,7 +114,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
-   ClassDef(TGeoPcon, 1)         // polycone class 
+   ClassDef(TGeoPcon, 1)         // polycone class
 };
 
 #endif

@@ -18,11 +18,11 @@ static int stlLoader()
       func.SetFuncProto(&cl,"Load","const char*",&offset);
 
       if (func.InterfaceMethod()) {
-         long tmp = G__int(G__calc("gSystem")); 
+         long tmp = G__int(G__calc("gSystem"));
          void * gsystem = (void*)tmp;
 
          func.SetArgs(buf);
-         func.Exec(gsystem);      
+         func.Exec(gsystem);
       }
    }
    return 0;

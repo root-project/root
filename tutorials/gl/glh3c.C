@@ -3,7 +3,7 @@
 void glh3c()
 {
   gStyle->SetCanvasPreferGL(kTRUE);
-  
+
 
   TGLTH3Composition * comp = new TGLTH3Composition;
   TH3F * h1 = new TH3F("h1", "h1", 10, -1., 1., 10, -1., 1., 10, -1., 1.);
@@ -15,7 +15,7 @@ void glh3c()
   TH3F * h3 = new TH3F("h3", "h3", 10, -1., 1., 10, -1., 1., 10, -1., 1.);
   h3->FillRandom("gaus");
   h3->SetFillColor(kBlue);
-  
+
   comp->AddTH3(h1);
   comp->AddTH3(h2, TGLTH3Composition::kSphere);
   comp->AddTH3(h3);

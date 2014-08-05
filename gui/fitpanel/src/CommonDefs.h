@@ -4,7 +4,7 @@ typedef std::vector<TF1*>::iterator             fSystemFuncIter;
 enum EFitPanel {
    kFP_FLIST, kFP_GAUS,  kFP_GAUSN, kFP_EXPO,  kFP_LAND,  kFP_LANDN,
    kFP_POL0,  kFP_POL1,  kFP_POL2,  kFP_POL3,  kFP_POL4,  kFP_POL5,
-   kFP_POL6,  kFP_POL7,  kFP_POL8,  kFP_POL9,  
+   kFP_POL6,  kFP_POL7,  kFP_POL8,  kFP_POL9,
    kFP_XYGAUS,kFP_XYEXP, kFP_XYLAN, kFP_XYLANN,
 // Above here -> All editable formulaes!
    kFP_USER,
@@ -13,14 +13,14 @@ enum EFitPanel {
    kFP_MLIST, kFP_MCHIS, kFP_MBINL, kFP_MUBIN, kFP_MUSER, kFP_MLINF, kFP_MUSR,
    kFP_DSAME, kFP_DNONE, kFP_DADVB, kFP_DNOST, kFP_PDEF,  kFP_PVER,  kFP_PQET,
    kFP_XMIN,  kFP_XMAX,  kFP_YMIN,  kFP_YMAX,  kFP_ZMIN,  kFP_ZMAX,
-   
+
    kFP_LMIN,  kFP_LMIN2, kFP_LFUM,  kFP_LGSL,  kFP_LGAS,  kFP_MIGRAD,kFP_SIMPLX,
-   kFP_FUMILI,kFP_COMBINATION,      kFP_MINMETHOD, 
+   kFP_FUMILI,kFP_COMBINATION,      kFP_MINMETHOD,
    kFP_GSLFR, kFP_GSLPR, kFP_BFGS,  kFP_BFGS2, kFP_GSLLM, kFP_GSLSA,
    kFP_SCAN,  kFP_TMVAGA,kFP_GALIB,
 
-   kFP_MERR,  kFP_MTOL,  kFP_MITR,  
-   
+   kFP_MERR,  kFP_MTOL,  kFP_MITR,
+
    kFP_UPDATE, kFP_FIT,   kFP_RESET, kFP_CLOSE,
 
    // New GUI elements from here!

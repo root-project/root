@@ -40,7 +40,7 @@
 // When using the format [0,0,8] (ie range not specified) you get the best
 // relative precision when storing and reading back the truncated x, say xt.
 // The variance of (x-xt)/x will be better than when specifying a range
-// for the same number of bits. However the precision relative to the 
+// for the same number of bits. However the precision relative to the
 // range (x-xt)/(xmax-xmin) will be worst, and vice-versa.
 // The format [0,0,8] is also interesting when the range of x is infinite
 // or unknown.
@@ -59,7 +59,7 @@
 #include "TLegend.h"
 #include "TFrame.h"
 #include "TPaveLabel.h"
-   
+
 class DemoDouble32  {
 private:
    Double_t    fD64;     //reference member with full double precision
@@ -87,7 +87,7 @@ private:
    Double32_t  fR6;      //[0,  0,  6] saved as a 32 bit float with a  6 bits mantissa
    Double32_t  fR4;      //[0,  0,  4] saved as a 32 bit float with a  4 bits mantissa
    Double32_t  fR2;      //[0,  0,  2] saved as a 32 bit float with a  2 bits mantissa
-       
+
 public:
    DemoDouble32() {;}
    void Set(Double_t ref);
@@ -98,12 +98,12 @@ void DemoDouble32::Set(Double_t ref) {
    fI18 = fI16 = fI14 = fI12 = fI10 = fI8  = fI6  = fI4  = fI2  = ref;
    fR14 = fR12 = fR10 = fR8  = fR6  = fR4  = fR2  = ref;
 }
-      
+
 void double32() {
    // show the use and precision of the Double32_t data type
-   
+
    DemoDouble32 *d = new DemoDouble32();
-   
+
    //create a Tree with 40000 objects DemoDouble32
    TFile::Open("DemoDouble32.root","recreate");
    TTree *T = new TTree("T","DemoDouble32");
@@ -117,7 +117,7 @@ void double32() {
       T->Fill();
    }
    T->Write();
-   
+
    //Create the frame histogram and the graphs
    TObjArray *branches = bd->GetListOfBranches();
    Int_t nb = branches->GetEntries();
@@ -147,9 +147,9 @@ void double32() {
    TGraph *gdval = new TGraph(nb); gdval->SetName("gdval");
    gdval->SetMarkerStyle(20);
    gdval->SetMarkerColor(kBlack);
-   TPaveLabel *title = new TPaveLabel(.15,.92,.85,.97,"Double32_t compression and precision","brNDC");   
+   TPaveLabel *title = new TPaveLabel(.15,.92,.85,.97,"Double32_t compression and precision","brNDC");
    title->Draw();
-   
+
    //loop on branches to get the precision and compression factors
    for (i=0;i<nb;i++) {
       br = (TBranch*)branches->At(i);
@@ -179,10 +179,10 @@ void double32() {
    legend->AddEntry(gdrange,"Log of precision wrt range","lp");
    legend->AddEntry(gdval,"Log of precision wrt value","lp");
    legend->Draw();
-   TPaveLabel *rang = new TPaveLabel(.75,.75,.88,.80,"[-pi,pi]","brNDC");   
+   TPaveLabel *rang = new TPaveLabel(.75,.75,.88,.80,"[-pi,pi]","brNDC");
    rang->Draw();
 }
-   
-   
-   
-       
+
+
+
+

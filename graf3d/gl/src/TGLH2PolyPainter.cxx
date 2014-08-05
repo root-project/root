@@ -226,7 +226,7 @@ void TGLH2PolyPainter::DrawExtrusion(const TGraph *poly, Double_t zMin, Double_t
    //Extrude polygon, described by TGraph.
    const Double_t *xs = poly->GetX();
    const Double_t *ys = poly->GetY();
-       
+
    const Int_t nV = poly->GetN();
 
    //nV can never be less than 3 - InitGeometry fails on such polygons.
@@ -569,7 +569,7 @@ void TGLH2PolyPainter::FillTemporaryPolygon(const Double_t *xs, const Double_t *
    //Since I probably have to re-orient polygon, I need a temporary polygon.
    const Double_t xScale = fCoord->GetXScale();
    const Double_t yScale = fCoord->GetYScale();
-  
+
    fPolygon.resize(nV * 3);
    for (Int_t j = 0; j < nV; ++j) {
       fPolygon[j * 3]     = xs[j] * xScale;
@@ -584,7 +584,7 @@ void TGLH2PolyPainter::FillTemporaryPolygon(const Double_t *xs, const Double_t *
 //______________________________________________________________________________
 void TGLH2PolyPainter::MakePolygonCCW()const
 {
-   //Code taken from the original TH2Poly. 
+   //Code taken from the original TH2Poly.
    const Int_t nV = Int_t(fPolygon.size() / 3);
    for (Int_t a = 0; a <= (nV / 2) - 1; a++) {
       const Int_t b = nV - 1 - a;
@@ -637,7 +637,7 @@ Bool_t IsPolygonCW(const Double_t *xs, const Double_t *ys, Int_t n)
    for (Int_t j = 0; j < n - 1; ++j)
       signedArea += xs[j] * ys[j + 1] - ys[j] * xs[j + 1];
 
-   return signedArea < 0.;         
+   return signedArea < 0.;
 }
 
 }

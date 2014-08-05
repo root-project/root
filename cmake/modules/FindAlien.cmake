@@ -1,5 +1,5 @@
 # Find the Alien includes and library.
-# 
+#
 # This module defines
 # ALIEN_INCLUDE_DIR, where to locate gapiUI.h file
 # ALIEN_LIBRARY, the libraries to link against to use Alien
@@ -13,18 +13,18 @@ endif()
 
 find_path(ALIEN_INCLUDE_DIR gapiUI.h
   ${ALIEN_DIR}/include $ENV{ALIEN_DIR}/include
-  /usr/local/include 
-  /opt/alien/api/include 
-  /opt/monalisa/include 
+  /usr/local/include
+  /opt/alien/api/include
+  /opt/monalisa/include
   /usr/include
   DOC "Specify the directory containing gapiUI.h"
 )
 
 find_library(ALIEN_LIBRARY NAMES gapiUI PATHS
   ${ALIEN_DIR}/lib $ENV{ALIEN_DIR}/lib
-  /usr/local/lib 
+  /usr/local/lib
   /opt/alien/api/lib
-  /opt/monalisa/lib 
+  /opt/monalisa/lib
   /usr/lib
   DOC "Specify the libgapiUI library here."
 )

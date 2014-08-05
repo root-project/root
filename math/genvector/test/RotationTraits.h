@@ -25,12 +25,12 @@
 namespace ROOT {
 namespace Math {
 
-template <class C> 
+template <class C>
 struct RotationTraits {
   static const std::string name() {return "NOT-A-ROTATION!";}
 };
 
-template <> 
+template <>
 struct RotationTraits < Rotation3D >{
   static const std::string name() {
     std::string s = "Rotation3D";
@@ -38,7 +38,7 @@ struct RotationTraits < Rotation3D >{
   }
 };
 
-template <> 
+template <>
 struct RotationTraits < AxisAngle >{
   static const std::string name() {
     std::string s = "AxisAngle";
@@ -46,7 +46,7 @@ struct RotationTraits < AxisAngle >{
   }
 };
 
-template <> 
+template <>
 struct RotationTraits < EulerAngles >{
   static const std::string name() {
     std::string s = "EulerAngles";
@@ -54,7 +54,7 @@ struct RotationTraits < EulerAngles >{
   }
 };
 
-template <> 
+template <>
 struct RotationTraits < Quaternion >{
   static const std::string name() {
     std::string s = "Quaternion";
@@ -62,7 +62,7 @@ struct RotationTraits < Quaternion >{
   }
 };
 
-template <> 
+template <>
 struct RotationTraits < RotationX >{
   static const std::string name() {
     std::string s = "RotationX";
@@ -70,7 +70,7 @@ struct RotationTraits < RotationX >{
   }
 };
 
-template <> 
+template <>
 struct RotationTraits < RotationY >{
   static const std::string name() {
     std::string s = "RotationY";
@@ -78,7 +78,7 @@ struct RotationTraits < RotationY >{
   }
 };
 
-template <> 
+template <>
 struct RotationTraits < RotationZ >{
   static const std::string name() {
     std::string s = "RotationZ";
@@ -86,7 +86,7 @@ struct RotationTraits < RotationZ >{
   }
 };
 
-template <> 
+template <>
 struct RotationTraits < LorentzRotation >{
   static const std::string name() {
     std::string s = "LorentzRotation";
@@ -95,7 +95,7 @@ struct RotationTraits < LorentzRotation >{
 };
 
 #ifdef TODO
-template <> 
+template <>
 struct RotationTraits < Boost >{
   static const std::string name() {
     std::string s = "Boost";
@@ -103,7 +103,7 @@ struct RotationTraits < Boost >{
   }
 };
 
-template <> 
+template <>
 struct RotationTraits < BoostX >{
   static const std::string name() {
     std::string s = "BoostX";
@@ -111,7 +111,7 @@ struct RotationTraits < BoostX >{
   }
 };
 
-template <> 
+template <>
 struct RotationTraits < BoostY >{
   static const std::string name() {
     std::string s = "BoostY";
@@ -119,7 +119,7 @@ struct RotationTraits < BoostY >{
   }
 };
 
-template <> 
+template <>
 struct RotationTraits < BoostZ >{
   static const std::string name() {
     std::string s = "BoostZ";
@@ -130,7 +130,7 @@ struct RotationTraits < BoostZ >{
 
 
 
-} // namespace Math 
-} // namespace ROOT 
+} // namespace Math
+} // namespace ROOT
 
 #endif // COORDINATETRAITS_H

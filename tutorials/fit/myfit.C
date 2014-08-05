@@ -6,7 +6,7 @@
 // Note also that in case of user defined functions, one must set
 // an initial value for each parameter.
 //Author: Rene Brun
-   
+
 Double_t fitf(Double_t *x, Double_t *par)
 {
    Double_t arg = 0;

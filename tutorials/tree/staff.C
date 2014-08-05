@@ -4,6 +4,6 @@ void staff() {
    TTree *T = (TTree*)f->Get("T");
    T->Draw("Grade:Age:Cost:Division:Nation","","gl5d");
 }
-   
-   
-   
+
+
+

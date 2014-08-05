@@ -29,7 +29,7 @@ public:
       printf("Change in param-list '%s', parameter '%s'.\n",
              pl->GetElementName(), parameter);
    }
-   
+
    ClassDef(TParamFollower, 0);
 };
 

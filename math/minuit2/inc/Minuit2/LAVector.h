@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -56,7 +56,7 @@ public:
     if(fData) StackAllocatorHolder::Get().Deallocate(fData);
   }
 
-  LAVector(const LAVector& v) : 
+  LAVector(const LAVector& v) :
     fSize(v.size()), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*v.size())) {
 //     std::cout<<"LAVector(const LAVector& v)"<<std::endl;
     memcpy(fData, v.Data(), fSize*sizeof(double));
@@ -72,14 +72,14 @@ public:
   }
 
   template<class T>
-  LAVector(const ABObj<vec, LAVector, T>& v) : 
+  LAVector(const ABObj<vec, LAVector, T>& v) :
     fSize(v.Obj().size()), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*v.Obj().size())) {
 //     std::cout<<"LAVector(const ABObj<LAVector, T>& v)"<<std::endl;
-//     std::cout<<"allocate "<<fSize<<std::endl;    
+//     std::cout<<"allocate "<<fSize<<std::endl;
     memcpy(fData, v.Obj().Data(), fSize*sizeof(T));
     (*this) *= T(v.f());
 //     std::cout<<"fData= "<<fData[0]<<" "<<fData[1]<<std::endl;
-  } 
+  }
 
   template<class A, class B, class T>
   LAVector(const ABObj<vec, ABSum<ABObj<vec, A, T>, ABObj<vec, B, T> >,T>& sum) : fSize(0), fData(0) {
@@ -97,7 +97,7 @@ public:
 //     std::cout<<"(*this)=sum.Obj().B();"<<std::endl;
     (*this) = sum.Obj().B();
 //     std::cout<<"(*this)+=sum.Obj().A();"<<std::endl;
-    (*this) += sum.Obj().A();  
+    (*this) += sum.Obj().A();
     (*this) *= double(sum.f());
 //     std::cout<<"leaving template<class A, class T> LAVector(const ABObj<ABSum<ABObj<LAVector,.."<<std::endl;
   }
@@ -108,7 +108,7 @@ public:
     (*this) = something.Obj();
     (*this) *= something.f();
   }
-  
+
   //
   template<class T>
   LAVector(const ABObj<vec, ABProd<ABObj<sym, LASymMatrix, T>, ABObj<vec, LAVector, T> >, T>& prod) : fSize(prod.Obj().B().Obj().size()), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*prod.Obj().B().Obj().size())) {
@@ -122,7 +122,7 @@ public:
   LAVector(const ABObj<vec, ABSum<ABObj<vec, ABProd<ABObj<sym, LASymMatrix, T>, ABObj<vec, LAVector, T> >, T>, ABObj<vec, LAVector, T> >, T>& prod) : fSize(0), fData(0) {
     (*this) = prod.Obj().B();
     (*this) += prod.Obj().A();
-    (*this) *= double(prod.f());    
+    (*this) *= double(prod.f());
   }
 
   //
@@ -165,7 +165,7 @@ public:
     Mndspmv("U", fSize, prod.f()*prod.Obj().A().f()*prod.Obj().B().f(), prod.Obj().A().Obj().Data(), prod.Obj().B().Data(), 1, 1., fData, 1);
     return *this;
   }
-  
+
   LAVector& operator*=(double scal) {
     Mndscal(fSize, scal, fData, 1);
     return *this;
@@ -190,15 +190,15 @@ public:
     assert(i<fSize);
     return fData[i];
   }
-  
+
   const double* Data() const {return fData;}
 
   double* Data() {return fData;}
-  
+
   unsigned int size() const {return fSize;}
-  
+
 private:
- 
+
   unsigned int fSize;
   double* fData;
 
@@ -226,7 +226,7 @@ public:
     } else {
       LAVector tmp(something.Obj());
       assert(fSize == tmp.size());
-      memcpy(fData, tmp.Data(), fSize*sizeof(double)); 
+      memcpy(fData, tmp.Data(), fSize*sizeof(double));
     }
     (*this) *= something.f();
     return *this;
@@ -268,12 +268,12 @@ public:
     if(fSize == 0 && fData == 0) {
       fSize = prod.Obj().B().Obj().size();
       fData = (double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*fSize);
-      Mndspmv("U", fSize, double(prod.f()*prod.Obj().A().f()*prod.Obj().B().f()), prod.Obj().A().Obj().Data(), prod.Obj().B().Obj().Data(), 1, 0., fData, 1);    
+      Mndspmv("U", fSize, double(prod.f()*prod.Obj().A().f()*prod.Obj().B().f()), prod.Obj().A().Obj().Data(), prod.Obj().B().Obj().Data(), 1, 0., fData, 1);
     } else {
       LAVector tmp(prod.Obj().B());
       assert(fSize == tmp.size());
       Mndspmv("U", fSize, double(prod.f()*prod.Obj().A().f()), prod.Obj().A().Obj().Data(), tmp.Data(), 1, 0., fData, 1);
-    }      
+    }
     return *this;
   }
 

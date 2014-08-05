@@ -120,7 +120,7 @@ void TEveProjectionManager::SetProjection(TEveProjection::EPType_e type)
             fProjections[type] = new TEveRhoZProjection();
             break;
          }
-	 case TEveProjection::kPT_3D:
+         case TEveProjection::kPT_3D:
          {
             fProjections[type] = new TEve3DProjection();
             break;

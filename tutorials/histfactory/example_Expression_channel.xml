@@ -1,5 +1,5 @@
 <!--
-    Single channel configuration exampple.  
+    Single channel configuration exampple.
     The top level configuration XML is example.xml
 
     NormalizedByTheory should be "True" (not "TRUE" or "true") for all non-data-driven backgrounds.
@@ -9,7 +9,7 @@
     Histogram inputs should be in pb and in top-level xml the lumi should be in 1/pb
     (The important thing is that they match... fb and 1/fb is also ok)
 
-    Note: Config.dtd needs to be accessible.  It can be found in ROOT release area.  
+    Note: Config.dtd needs to be accessible.  It can be found in ROOT release area.
     The file system path is relative to location of this XML file, not the executable.
 -->
 

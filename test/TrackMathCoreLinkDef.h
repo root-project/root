@@ -22,11 +22,11 @@
 #pragma link C++ class std::vector<TrackErrD >+;
 
 // typedefs must also be defined in the dictionaries
-#pragma link C++ typedef  Vector4D; 
+#pragma link C++ typedef  Vector4D;
 #pragma link C++  typedef Vector4D32;
 
-#pragma link C++ typedef Point3D; 
-#pragma link C++ typedef Point3D32; 
+#pragma link C++ typedef Point3D;
+#pragma link C++ typedef Point3D32;
 
 #pragma link C++ typedef  Matrix4D;
 #pragma link C++ typedef  Matrix4D32;

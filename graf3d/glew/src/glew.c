@@ -4,24 +4,24 @@
 ** Copyright (C) 2002-2008, Marcelo E. Magallon <mmagallo[]debian org>
 ** Copyright (C) 2002, Lev Povalahev
 ** All rights reserved.
-** 
-** Redistribution and use in source and binary forms, with or without 
+**
+** Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are met:
-** 
-** * Redistributions of source code must retain the above copyright notice, 
+**
+** * Redistributions of source code must retain the above copyright notice,
 **   this list of conditions and the following disclaimer.
-** * Redistributions in binary form must reproduce the above copyright notice, 
-**   this list of conditions and the following disclaimer in the documentation 
+** * Redistributions in binary form must reproduce the above copyright notice,
+**   this list of conditions and the following disclaimer in the documentation
 **   and/or other materials provided with the distribution.
-** * The name of the author may be used to endorse or promote products 
+** * The name of the author may be used to endorse or promote products
 **   derived from this software without specific prior written permission.
 **
-** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
-** AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+** THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+** AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 ** IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-** ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
-** LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
-** CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+** ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+** LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+** CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
 ** SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
 ** INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
 ** CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
@@ -102,7 +102,7 @@ void* NSGLGetProcAddress (const GLubyte *name)
   symbolName[0] = '_';
   symbol = NULL;
   /* if (NSIsSymbolNameDefined(symbolName))
-	 symbol = NSLookupAndBindSymbol(symbolName); */
+   symbol = NSLookupAndBindSymbol(symbolName); */
   symbol = image ? NSLookupSymbolInImage(image, symbolName, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND | NSLOOKUPSYMBOLINIMAGE_OPTION_RETURN_ON_ERROR) : NULL;
   free(symbolName);
   return symbol ? NSAddressOfSymbol(symbol) : NULL;
@@ -199,12 +199,12 @@ static GLboolean _glewStrSame1 (GLubyte** a, GLuint* na, const GLubyte* b, GLuin
   {
     GLuint i=0;
     while (i < nb && (*a)+i != NULL && b+i != NULL && (*a)[i] == b[i]) i++;
-	if(i == nb)
-	{
-		*a = *a + nb;
-		*na = *na - nb;
-		return GL_TRUE;
-	}
+     if(i == nb)
+     {
+        *a = *a + nb;
+        *na = *na - nb;
+        return GL_TRUE;
+     }
   }
   return GL_FALSE;
 }
@@ -215,12 +215,12 @@ static GLboolean _glewStrSame2 (GLubyte** a, GLuint* na, const GLubyte* b, GLuin
   {
     GLuint i=0;
     while (i < nb && (*a)+i != NULL && b+i != NULL && (*a)[i] == b[i]) i++;
-	if(i == nb)
-	{
-		*a = *a + nb;
-		*na = *na - nb;
-		return GL_TRUE;
-	}
+     if(i == nb)
+     {
+        *a = *a + nb;
+        *na = *na - nb;
+        return GL_TRUE;
+     }
   }
   return GL_FALSE;
 }
@@ -6144,14 +6144,14 @@ static GLboolean _glewInit_GL_WIN_swap_hint (GLEW_CONTEXT_ARG_DEF_INIT)
 
 /* ------------------------------------------------------------------------- */
 
-/* 
+/*
  * Search for name in the extensions string. Use of strstr()
  * is not sufficient because extension names can be prefixes of
  * other extension names. Could use strtok() but the constant
  * string returned by glGetString might be in read-only memory.
  */
 GLboolean glewGetExtension (const char* name)
-{    
+{
   GLubyte* p;
   GLubyte* end;
   GLuint len = _glewStrLen((const GLubyte*)name);
@@ -6181,82 +6181,82 @@ GLboolean glewGetExtension (const char* name)
 GLenum glewContextInit (GLEW_CONTEXT_ARG_DEF_LIST)
 {
   const GLubyte* s;
-  GLuint dot, major, minor;
-  /* query opengl version */
-  s = glGetString(GL_VERSION);
-  dot = _glewStrCLen(s, '.');
-  major = dot-1;
-  minor = dot+1;
-  if (dot == 0 || s[minor] == '\0')
-    return GLEW_ERROR_NO_GL_VERSION;
-  if (s[major] == '1' && s[minor] == '0')
-  {
-	return GLEW_ERROR_GL_VERSION_10_ONLY;
-  }
-  else
-  {
-    CONST_CAST(GLEW_VERSION_1_1) = GL_TRUE;
-	if (s[major] >= '2')
-	{
-      CONST_CAST(GLEW_VERSION_1_2) = GL_TRUE;
-      CONST_CAST(GLEW_VERSION_1_3) = GL_TRUE;
-      CONST_CAST(GLEW_VERSION_1_4) = GL_TRUE;
-	  CONST_CAST(GLEW_VERSION_1_5) = GL_TRUE;
-	  CONST_CAST(GLEW_VERSION_2_0) = GL_TRUE;
-	  if (s[minor] >= '1')
-	  {
-	    CONST_CAST(GLEW_VERSION_2_1) = GL_TRUE;
+   GLuint dot, major, minor;
+   /* query opengl version */
+   s = glGetString(GL_VERSION);
+   dot = _glewStrCLen(s, '.');
+   major = dot-1;
+   minor = dot+1;
+   if (dot == 0 || s[minor] == '\0')
+   return GLEW_ERROR_NO_GL_VERSION;
+   if (s[major] == '1' && s[minor] == '0')
+   {
+      return GLEW_ERROR_GL_VERSION_10_ONLY;
+   }
+   else
+   {
+      CONST_CAST(GLEW_VERSION_1_1) = GL_TRUE;
+      if (s[major] >= '2')
+      {
+         CONST_CAST(GLEW_VERSION_1_2) = GL_TRUE;
+         CONST_CAST(GLEW_VERSION_1_3) = GL_TRUE;
+         CONST_CAST(GLEW_VERSION_1_4) = GL_TRUE;
+         CONST_CAST(GLEW_VERSION_1_5) = GL_TRUE;
+         CONST_CAST(GLEW_VERSION_2_0) = GL_TRUE;
+         if (s[minor] >= '1')
+         {
+            CONST_CAST(GLEW_VERSION_2_1) = GL_TRUE;
+         }
       }
-	}
-	else
-	{
-	  if (s[minor] >= '5')
-	  {
-		CONST_CAST(GLEW_VERSION_1_2) = GL_TRUE;
-		CONST_CAST(GLEW_VERSION_1_3) = GL_TRUE;
-		CONST_CAST(GLEW_VERSION_1_4) = GL_TRUE;
-		CONST_CAST(GLEW_VERSION_1_5) = GL_TRUE;
-		CONST_CAST(GLEW_VERSION_2_0) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_2_1) = GL_FALSE;
-	  }
-	  if (s[minor] == '4')
-	  {
-		CONST_CAST(GLEW_VERSION_1_2) = GL_TRUE;
-		CONST_CAST(GLEW_VERSION_1_3) = GL_TRUE;
-		CONST_CAST(GLEW_VERSION_1_4) = GL_TRUE;
-		CONST_CAST(GLEW_VERSION_1_5) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_2_0) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_2_1) = GL_FALSE;
-	  }
-	  if (s[minor] == '3')
-	  {
-		CONST_CAST(GLEW_VERSION_1_2) = GL_TRUE;
-		CONST_CAST(GLEW_VERSION_1_3) = GL_TRUE;
-		CONST_CAST(GLEW_VERSION_1_4) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_1_5) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_2_0) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_2_1) = GL_FALSE;
-	  }
-	  if (s[minor] == '2')
-	  {
-		CONST_CAST(GLEW_VERSION_1_2) = GL_TRUE;
-		CONST_CAST(GLEW_VERSION_1_3) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_1_4) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_1_5) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_2_0) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_2_1) = GL_FALSE;
-	  }
-	  if (s[minor] < '2')
-	  {
-		CONST_CAST(GLEW_VERSION_1_2) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_1_3) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_1_4) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_1_5) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_2_0) = GL_FALSE;
-		CONST_CAST(GLEW_VERSION_2_1) = GL_FALSE;
-	  }
-	}
-  }
+      else
+      {
+         if (s[minor] >= '5')
+         {
+            CONST_CAST(GLEW_VERSION_1_2) = GL_TRUE;
+            CONST_CAST(GLEW_VERSION_1_3) = GL_TRUE;
+            CONST_CAST(GLEW_VERSION_1_4) = GL_TRUE;
+            CONST_CAST(GLEW_VERSION_1_5) = GL_TRUE;
+            CONST_CAST(GLEW_VERSION_2_0) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_2_1) = GL_FALSE;
+         }
+         if (s[minor] == '4')
+         {
+            CONST_CAST(GLEW_VERSION_1_2) = GL_TRUE;
+            CONST_CAST(GLEW_VERSION_1_3) = GL_TRUE;
+            CONST_CAST(GLEW_VERSION_1_4) = GL_TRUE;
+            CONST_CAST(GLEW_VERSION_1_5) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_2_0) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_2_1) = GL_FALSE;
+         }
+         if (s[minor] == '3')
+         {
+            CONST_CAST(GLEW_VERSION_1_2) = GL_TRUE;
+            CONST_CAST(GLEW_VERSION_1_3) = GL_TRUE;
+            CONST_CAST(GLEW_VERSION_1_4) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_1_5) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_2_0) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_2_1) = GL_FALSE;
+         }
+         if (s[minor] == '2')
+         {
+            CONST_CAST(GLEW_VERSION_1_2) = GL_TRUE;
+            CONST_CAST(GLEW_VERSION_1_3) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_1_4) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_1_5) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_2_0) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_2_1) = GL_FALSE;
+         }
+         if (s[minor] < '2')
+         {
+            CONST_CAST(GLEW_VERSION_1_2) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_1_3) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_1_4) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_1_5) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_2_0) = GL_FALSE;
+            CONST_CAST(GLEW_VERSION_2_1) = GL_FALSE;
+         }
+      }
+   }
   /* initialize extensions */
 #ifdef GL_VERSION_1_2
   if (glewExperimental || GLEW_VERSION_1_2) CONST_CAST(GLEW_VERSION_1_2) = !_glewInit_GL_VERSION_1_2(GLEW_CONTEXT_ARG_VAR_INIT);
@@ -8005,7 +8005,7 @@ static PFNWGLGETEXTENSIONSSTRINGARBPROC _wglewGetExtensionsStringARB = NULL;
 static PFNWGLGETEXTENSIONSSTRINGEXTPROC _wglewGetExtensionsStringEXT = NULL;
 
 GLboolean wglewGetExtension (const char* name)
-{    
+{
   GLubyte* p;
   GLubyte* end;
   GLuint len = _glewStrLen((const GLubyte*)name);
@@ -8866,7 +8866,7 @@ static GLboolean _glewInit_GLX_SUN_video_resize (GLXEW_CONTEXT_ARG_DEF_INIT)
 /* ------------------------------------------------------------------------ */
 
 GLboolean glxewGetExtension (const char* name)
-{    
+{
   GLubyte* p;
   GLubyte* end;
   GLuint len = _glewStrLen((const GLubyte*)name);

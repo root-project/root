@@ -46,7 +46,7 @@ private:
    TLine    *fLine;     //! pointer to utility line
    TText    *fText;     //! pointer to utility text
    TGraph   *fGraph;    //! pointer to utility graph
-      
+
    TColorWheel(const TColorWheel &org);             // no copy, use TObject::Clone()
    TColorWheel &operator=(const TColorWheel &rhs);  // idem
 
@@ -57,7 +57,7 @@ protected:
    void  PaintCircle(Int_t coffset,Int_t n,Double_t x, Double_t y, Double_t ang) const;
    void  PaintCircles(Int_t coffset, Double_t angle) const ;
    void  PaintGray() const;
-   void  PaintRectangles(Int_t coffset, Double_t angle) const; 
+   void  PaintRectangles(Int_t coffset, Double_t angle) const;
    void  Rotate(Double_t x, Double_t y, Double_t &u, Double_t &v, Double_t ang) const;
 
 public:

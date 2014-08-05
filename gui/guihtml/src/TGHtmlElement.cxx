@@ -83,7 +83,7 @@ TGHtmlTextElement::~TGHtmlTextElement()
 }
 
 //______________________________________________________________________________
-TGHtmlMarkupElement::TGHtmlMarkupElement(int type2, int argc, int arglen[], 
+TGHtmlMarkupElement::TGHtmlMarkupElement(int type2, int argc, int arglen[],
                                          char *av[]) : TGHtmlElement(type2)
 {
    // HTML mrkup element constructor.

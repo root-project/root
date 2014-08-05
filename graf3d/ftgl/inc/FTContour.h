@@ -34,7 +34,7 @@ class FTGL_EXPORT FTContour
         {
             pointList.clear();
         }
-        
+
         /**
          * Return a point at index.
          *
@@ -58,9 +58,9 @@ class FTGL_EXPORT FTContour
          * @param point The point to be added to the contour.
          */
         inline void AddPoint( FTPoint point);
-        
+
         inline void AddPoint( float x, float y);
-        
+
         /**
          * De Casteljau (bezier) algorithm contributed by Jed Soane
          * Evaluates a quadratic or conic (second degree) curve
@@ -78,7 +78,7 @@ class FTGL_EXPORT FTContour
          */
         typedef FTVector<FTPoint> PointVector;
         PointVector pointList;
-        
+
         /**
          * 2D array storing values of de Casteljau algorithm.
          */

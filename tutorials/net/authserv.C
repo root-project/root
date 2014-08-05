@@ -3,7 +3,7 @@
 
 //
 // This macro should be run together with authclient.C to test
-// authentication between two remote ROOT sessions. 
+// authentication between two remote ROOT sessions.
 // Run first the authserv.C within a ROOT session on the server
 // machine, eg. "srv.machi.ne":
 //
@@ -32,15 +32,15 @@ int authserv(int po = 3000)
 
    cout << "authserv: starting a (parallel) server socket on port "
         << po << " with authentication" << endl;
- 
+
    ss = new TPServerSocket(po);
 
    // Get the connection
    s = ss->Accept(oauth);
 
    // Print out;
-   if (s) 
-      if (s->IsAuthenticated()) 
+   if (s)
+      if (s->IsAuthenticated())
          cout << "authserv: srv auth socket: OK" << endl;
       else
          cout << "authserv: srv auth socket: failed" << endl;

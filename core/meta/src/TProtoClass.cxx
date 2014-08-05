@@ -160,7 +160,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
       for (TObject* element: *fPRealData) {
          if (element->IsA() == TObjString::Class()) {
             // We now check for the TClass entry, w/o loading. Indeed we did that above.
-            // If the class is not found, it means that really it was not selected and we 
+            // If the class is not found, it means that really it was not selected and we
             // replace it with an empty placeholder with the status of kForwardDeclared.
             // Interactivity will be of course possible but if IO is attempted, a warning
             // will be issued.

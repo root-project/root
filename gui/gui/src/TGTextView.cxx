@@ -183,7 +183,7 @@ void TGTextView::SetSelectBack(Pixel_t p)
 //______________________________________________________________________________
 void TGTextView::SetSelectFore(Pixel_t p)
 {
-   // set selected text color 
+   // set selected text color
 
    fSelGC.SetBackground(p);
    fSelGC.SetForeground(p);
@@ -751,7 +751,7 @@ Bool_t TGTextView::HandleTimer(TTimer *)
          }
          Int_t ady = TMath::Abs(dy) >> 3;
 
-         if (dy) {    
+         if (dy) {
             if (ady > kAutoScrollFudge) ady = kAutoScrollFudge;
             dy = kAcceleration[ady];
          } else {
@@ -1293,8 +1293,8 @@ void TGTextView::UnMark()
 {
    // Clear marked region.
 
-   if (!fIsMarked || 
-       ((fMarkedEnd.fY == fMarkedStart.fY) && 
+   if (!fIsMarked ||
+       ((fMarkedEnd.fY == fMarkedStart.fY) &&
        (fMarkedEnd.fX == fMarkedStart.fX))) {
       return;
    }

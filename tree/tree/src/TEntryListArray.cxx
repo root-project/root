@@ -17,11 +17,11 @@ TEntryListArray is an extension of TEntryList, used to hold selected entries and
 End_Html
 
 Begin_Html
-<h4> Usage with TTree::Draw to select entries and subentries </h4> 
+<h4> Usage with TTree::Draw to select entries and subentries </h4>
 <ol>
 <li> <b>To fill a list <i>elist</i> </b>:
     <pre>
-     tree->Draw(">> elist", "x > 0", "entrylistarray"); 
+     tree->Draw(">> elist", "x > 0", "entrylistarray");
     </pre>
 <li> <b>To use a list to select entries and subentries:</b>
   <pre>
@@ -40,7 +40,7 @@ Begin_Html
 The class derives from TEntryList and can be used basically in the same way. This same class is used to keep entries and subentries, so there are two types of TEntryListArray's:
 
 <ol>
-<li> The ones that only hold subentries 
+<li> The ones that only hold subentries
   <ul><li> fEntry is set to the entry# for which the subentries correspond
   <li> fSubLists must be 0</ul>
 <li> The ones that hold entries and eventually lists with subentries in fSubLists.
@@ -62,7 +62,7 @@ The class derives from TEntryList and can be used basically in the same way. Thi
   <li> RemoveSubList: to remove the given sublist
   <li> RemoveSubListForEntry: to remove the sublist corresponding to the given entry
   <li> SetEntry: to get / set a sublist for the given entry </ul>
-</ol>  
+</ol>
 End_Html */
 
 
@@ -375,7 +375,7 @@ Bool_t TEntryListArray::Enter(Long64_t entry, TTree *tree, Long64_t subentry)
 TEntryListArray* TEntryListArray::GetSubListForEntry(Long64_t entry, TTree *tree)
 {
    // Return the list holding the subentries for the given entry or 0
-   
+
    if (tree) {
       Long64_t localentry = tree->LoadTree(entry);
       SetTree(tree->GetTree());
@@ -392,7 +392,7 @@ TEntryListArray* TEntryListArray::GetSubListForEntry(Long64_t entry, TTree *tree
    if (!fSubLists || !fSubLists->GetEntries()) {
       return 0;
    }
-   
+
    if (!fSubListIter) {
       fSubListIter = new TIter(fSubLists);
       fLastSubListQueried = (TEntryListArray*) fSubListIter->Next();
@@ -402,13 +402,13 @@ TEntryListArray* TEntryListArray::GetSubListForEntry(Long64_t entry, TTree *tree
       // or where we stoped the last search
       // (it is 0 only if we reached the end of the loop)
       fSubListIter->Reset();
-      fLastSubListQueried = (TEntryListArray*) fSubListIter->Next(); 
+      fLastSubListQueried = (TEntryListArray*) fSubListIter->Next();
    }
-   
+
    if (entry == fLastSubListQueried->fEntry) {
       return fLastSubListQueried;
    }
-   
+
    while ((fLastSubListQueried = (TEntryListArray*) fSubListIter->Next())) {
       if (fLastSubListQueried->fEntry == entry) {
          return fLastSubListQueried;

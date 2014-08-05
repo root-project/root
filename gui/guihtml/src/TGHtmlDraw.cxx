@@ -425,7 +425,7 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
                      gVirtualX->DrawRectangle(drawable, gc, x - 7 - drawableLeft,
                                               y - 8 - drawableTop, 7, 7);
                   break;
-          
+
                case LI_TYPE_Enum_1:
                case LI_TYPE_Enum_A:
                case LI_TYPE_Enum_a:
@@ -435,7 +435,7 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
                   font = GetFont(src->fStyle.fFont);
                   if (font == 0) return;
                   w = font->TextWidth(zBuf, cnt);
-                  font->DrawChars(drawable, gc, zBuf, cnt, 
+                  font->DrawChars(drawable, gc, zBuf, cnt,
                                   x - w - drawableLeft, y - drawableTop);
                   break;
             }
@@ -445,7 +445,7 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
             TGHtmlHr *hr = (TGHtmlHr *) src;
             int relief = fRuleRelief;
             switch (relief) {
-               case HTML_RELIEF_RAISED: 
+               case HTML_RELIEF_RAISED:
                case HTML_RELIEF_SUNKEN:
                break;
                default:
@@ -462,7 +462,7 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
             int relief = fTableRelief;
             if ((!fBgImage || src->fStyle.fExpbg) && !table->fHasbg) {
                switch (relief) {
-                  case HTML_RELIEF_RAISED: 
+                  case HTML_RELIEF_RAISED:
                   case HTML_RELIEF_SUNKEN:
                      break;
                   default:
@@ -471,7 +471,7 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
                }
 
                DrawRect(drawable, src, table->fX - drawableLeft,
-                        table->fY - drawableTop, table->fW, table->fH, 
+                        table->fY - drawableTop, table->fW, table->fH,
                         table->fBorderWidth, relief);
             }
 
@@ -521,9 +521,9 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
                if (font == 0) return;
                font->DrawChars(drawable, gc,
                                image->fZAlt, strlen(image->fZAlt),
-                               image->fX - drawableLeft, 
+                               image->fX - drawableLeft,
                                image->fY - drawableTop);
-            }    
+            }
             break;
 
          default:
@@ -721,10 +721,10 @@ TGHtmlElement *TGHtml::FillOutBlock(TGHtmlBlock *p)
                //CANT_HAPPEN;
                break;
             }
-            if (y != txt->fY 
+            if (y != txt->fY
                   ||  style.fFont != pElem->fStyle.fFont
                   ||  style.fColor != pElem->fStyle.fColor
-                  ||  (style.fFlags & STY_FontMask) 
+                  ||  (style.fFlags & STY_FontMask)
                   != (pElem->fStyle.fFlags & STY_FontMask)) {
                go = 0;
             } else {
@@ -851,13 +851,13 @@ void TGHtml::FormBlocks()
 }
 
 //______________________________________________________________________________
-void TGHtml::DrawTableBgnd(int l, int t, int w, int h, 
+void TGHtml::DrawTableBgnd(int l, int t, int w, int h,
                            Drawable_t pixmap, TImage *image)
 {
    // Draw table background
 
    //int  mx, my, sh, sw, sx, sy, hd;
-   int dl, dt, dr, db,  left, top, right, bottom; 
+   int dl, dt, dr, db,  left, top, right, bottom;
 
    left = l - fVisible.fX;
    top  = t - fVisible.fY;

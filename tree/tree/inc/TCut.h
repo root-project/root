@@ -46,13 +46,13 @@ public:
    TCut&    operator+=(const TCut &rhs);
    TCut&    operator*=(const char *rhs);
    TCut&    operator*=(const TCut &rhs);
-   
+
    // Comparison
    Bool_t   operator==(const char *rhs) const;
    Bool_t   operator==(const TCut &rhs) const;
    Bool_t   operator!=(const char *rhs) const;
    Bool_t   operator!=(const TCut &rhs) const;
-   
+
    friend TCut operator+(const TCut &lhs, const char *rhs);
    friend TCut operator+(const char *lhs, const TCut &rhs);
    friend TCut operator+(const TCut &lhs, const TCut &rhs);

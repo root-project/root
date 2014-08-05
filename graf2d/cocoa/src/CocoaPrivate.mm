@@ -91,7 +91,7 @@ Drawable_t CocoaPrivate::RegisterDrawable(NSObject *nsObj)
 NSObject<X11Drawable> *CocoaPrivate::GetDrawable(Drawable_t drawableID)const
 {
    const_drawable_iterator drawableIter = fDrawables.find(drawableID);
-   
+
 #ifdef DEBUG_ROOT_COCOA
    if (drawableIter == fDrawables.end()) {
       NSLog(@"Fatal error: requested non-existing drawable %lu", drawableID);
@@ -182,7 +182,7 @@ Handle_t CocoaPrivate::RegisterGLContext(NSOpenGLContext *glContext)
          fHandleToGLContext.erase(fHandleToGLContext.find(fFreeGLContextID));
       throw;
    }
-   
+
    return fFreeGLContextID++;
 }
 
@@ -190,9 +190,9 @@ Handle_t CocoaPrivate::RegisterGLContext(NSOpenGLContext *glContext)
 void CocoaPrivate::DeleteGLContext(Handle_t contextID)
 {
    assert(fHandleToGLContext.find(contextID) != fHandleToGLContext.end() && "DeleteGLContext, bad context id");
-   
+
    handle2ctx_map::iterator h2cIt = fHandleToGLContext.find(contextID);
-   
+
    ctx2handle_map::iterator c2hIt = fGLContextToHandle.find(h2cIt->second.Get());
    assert(c2hIt != fGLContextToHandle.end() && "DeleteGLContext, inconsistent context map");
 
@@ -205,7 +205,7 @@ NSOpenGLContext *CocoaPrivate::GetGLContextForHandle(Handle_t ctxID)
 {
    if (fHandleToGLContext.find(ctxID) == fHandleToGLContext.end())
       return nil;
-   
+
    return fHandleToGLContext[ctxID].Get();
 }
 
@@ -214,7 +214,7 @@ Handle_t CocoaPrivate::GetHandleForGLContext(NSOpenGLContext *glContext)
 {
    if (fGLContextToHandle.find(glContext) == fGLContextToHandle.end())
       return Handle_t();
-   
+
    return fGLContextToHandle[glContext];
 }
 

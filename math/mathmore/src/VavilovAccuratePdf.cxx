@@ -1,6 +1,6 @@
 // @(#)root/mathmore:$Id$
 // Authors: B. List 29.4.2010
- 
+
 
  /**********************************************************************
   *                                                                    *
@@ -24,11 +24,11 @@
   **********************************************************************/
 
 // Implementation file for class VavilovAccuratePdf
-// 
+//
 // Created by: blist  at Thu Apr 29 11:19:00 2010
-// 
+//
 // Last update: Thu Apr 29 11:19:00 2010
-// 
+//
 
 #include "Math/VavilovAccuratePdf.h"
 #include "Math/VavilovAccurate.h"
@@ -47,7 +47,7 @@ VavilovAccuratePdf::VavilovAccuratePdf() {
 
 VavilovAccuratePdf::VavilovAccuratePdf(const double *p) {
    if (p)
-      for (int i = 0; i < 5; ++i) 
+      for (int i = 0; i < 5; ++i)
          fP[i] = p[i];
    else {
       fP[0] = 1;
@@ -55,27 +55,27 @@ VavilovAccuratePdf::VavilovAccuratePdf(const double *p) {
       fP[2] = 1;
       fP[3] = 1;
       fP[4] = 1;
-   }  
+   }
 }
 
 VavilovAccuratePdf::~VavilovAccuratePdf ()
-{} 
- 
+{}
+
 const double * VavilovAccuratePdf::Parameters() const {
    return fP;
 }
 
 void VavilovAccuratePdf::SetParameters(const double * p ) {
    if (p)
-      for (int i = 0; i < 5; ++i) 
+      for (int i = 0; i < 5; ++i)
          fP[i] = p[i];
 }
- 
+
 unsigned int VavilovAccuratePdf::NPar() const {
   return 5;
 }
 
-std::string VavilovAccuratePdf::ParameterName(unsigned int i) const { 
+std::string VavilovAccuratePdf::ParameterName(unsigned int i) const {
    switch (i) {
       case 0: return "Norm"; break;
       case 1: return "x0"; break;
@@ -85,7 +85,7 @@ std::string VavilovAccuratePdf::ParameterName(unsigned int i) const {
    }
    return "???";
 }
-      
+
 double VavilovAccuratePdf::DoEval(double x) const {
    VavilovAccurate v(fP[3], fP[4]);
    return fP[0]/fP[2]*v.Pdf ((x-fP[1])/fP[2]);

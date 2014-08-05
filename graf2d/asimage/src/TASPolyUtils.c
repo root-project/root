@@ -34,13 +34,13 @@ Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -143,15 +143,15 @@ SOFTWARE.
  *     register declarations.
  */
 typedef struct {
-    int minor_axis;	/* minor axis        */
-    int d;		/* decision variable */
-    int m, m1;		/* slope and slope+1 */
-    int incr1, incr2;	/* error increments */
+    int minor_axis;   /* minor axis        */
+    int d;            /* decision variable */
+    int m, m1;        /* slope and slope+1 */
+    int incr1, incr2; /* error increments */
 } BRESINFO;
 
 
 #define BRESINITPGONSTRUCT(dmaj, min1, min2, bres) \
-	BRESINITPGON(dmaj, min1, min2, bres.minor_axis, bres.d, \
+   BRESINITPGON(dmaj, min1, min2, bres.minor_axis, bres.d, \
                      bres.m, bres.m1, bres.incr1, bres.incr2)
 
 #define BRESINCRPGONSTRUCT(bres) \
@@ -181,7 +181,7 @@ typedef struct {
  *     the polygon by incrementing the y coordinate.  We
  *     keep a list of edges which the current scanline crosses,
  *     sorted by x.  This list is called the Active Edge Table (AET)
- *     As we change the y-coordinate, we update each entry in 
+ *     As we change the y-coordinate, we update each entry in
  *     in the active edge table to reflect the edges new xcoord.
  *     This list must be sorted at each scanline in case
  *     two edges intersect.
@@ -208,7 +208,7 @@ typedef struct {
  * for the winding number rule
  */
 #define CLOCKWISE          1
-#define COUNTERCLOCKWISE  -1 
+#define COUNTERCLOCKWISE  -1
 
 typedef struct _EdgeTableEntry {
      int ymax;             /* ycoord at which we exit this edge. */
@@ -366,7 +366,7 @@ static void CreateETandAET(int count, TPoint *pts, EdgeTable *ET, EdgeTableEntry
                            EdgeTableEntry *pETEs, ScanLineListBlock *pSLLBlock)
 {
    //     This routine creates the edge table for
-   //     scan converting polygons. 
+   //     scan converting polygons.
    //     The Edge Table (ET) looks like:
    //
    //    EdgeTable
@@ -443,8 +443,8 @@ static void CreateETandAET(int count, TPoint *pts, EdgeTable *ET, EdgeTableEntry
 
          InsertEdgeInET(ET, pETEs, top->fY, &pSLLBlock, &iSLLBlock);
 
-	      if (PrevPt->fY > ET->ymax) ET->ymax = PrevPt->fY;
-	      if (PrevPt->fY < ET->ymin) ET->ymin = PrevPt->fY;
+         if (PrevPt->fY > ET->ymax) ET->ymax = PrevPt->fY;
+         if (PrevPt->fY < ET->ymin) ET->ymin = PrevPt->fY;
          pETEs++;
       }
       PrevPt = CurrPt;

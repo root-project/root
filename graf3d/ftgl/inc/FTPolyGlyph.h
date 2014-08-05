@@ -14,7 +14,7 @@ class FTVectoriser;
 /**
  * FTPolyGlyph is a specialisation of FTGlyph for creating tessellated
  * polygon glyphs.
- * 
+ *
  * @see FTGlyphContainer
  * @see FTVectoriser
  *
@@ -45,13 +45,13 @@ class FTGL_EXPORT FTPolyGlyph : public FTGlyph
          * @return      The advance distance for this glyph.
          */
         virtual const FTPoint& Render( const FTPoint& pen);
-        
+
     private:
         /**
          * OpenGL display list
          */
         GLuint glList;
-    
+
 };
 
 

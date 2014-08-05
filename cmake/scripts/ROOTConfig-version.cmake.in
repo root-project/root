@@ -2,7 +2,7 @@
 # Installed Version as set from CMake
 #
 set(PACKAGE_VERSION "@ROOT_VERSION@")
- 
+
 #----------------------------------------------------------------------------
 # Check whether the requested PACKAGE_FIND_VERSION is compatible with this
 # installed version.

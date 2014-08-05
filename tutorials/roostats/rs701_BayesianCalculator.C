@@ -4,7 +4,7 @@
 // author: Gregory Schott
 // date Sep 2009
 //
-// This tutorial shows an example of using the BayesianCalculator class 
+// This tutorial shows an example of using the BayesianCalculator class
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -32,11 +32,11 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
   w->factory("PROD::model(pdf,prior_b)");
   RooAbsPdf* model = w->pdf("model");  // pdf*priorNuisance
   RooArgSet nuisanceParameters(*(w->var("b")));
-  
+
 
 
   RooAbsRealLValue* POI = w->var("s");
-  RooAbsPdf* priorPOI  = (RooAbsPdf *) w->factory("Uniform::priorPOI(s)");  
+  RooAbsPdf* priorPOI  = (RooAbsPdf *) w->factory("Uniform::priorPOI(s)");
   RooAbsPdf* priorPOI2 = (RooAbsPdf *) w->factory("GenericPdf::priorPOI2('1/sqrt(@0)',s)");
 
   w->factory("n[3]"); // observed number of events
@@ -57,12 +57,12 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
   bcalc.SetTestSize(size);
   SimpleInterval* interval = bcalc.GetInterval();
   double cl = bcalc.ConfidenceLevel();
-  std::cout << cl <<"% CL central interval: [ " << interval->LowerLimit() << " - " << interval->UpperLimit() 
-            << " ] or " 
+  std::cout << cl <<"% CL central interval: [ " << interval->LowerLimit() << " - " << interval->UpperLimit()
+            << " ] or "
             << cl+(1.-cl)/2 << "% CL limits\n";
   RooPlot * plot = bcalc.GetPosteriorPlot();
   TCanvas * c1 = new TCanvas("c1","Bayesian Calculator Result");
-  c1->Divide(1,2); 
+  c1->Divide(1,2);
   c1->cd(1);
   plot->Draw();
   c1->Update();
@@ -72,8 +72,8 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
   bcalc2.SetTestSize(size);
   SimpleInterval* interval2 = bcalc2.GetInterval();
   cl = bcalc2.ConfidenceLevel();
-  std::cout << cl <<"% CL central interval: [ " << interval2->LowerLimit() << " - " << interval2->UpperLimit() 
-            << " ] or " 
+  std::cout << cl <<"% CL central interval: [ " << interval2->LowerLimit() << " - " << interval2->UpperLimit()
+            << " ] or "
             << cl+(1.-cl)/2 << "% CL limits\n";
 
   RooPlot * plot2 = bcalc2.GetPosteriorPlot();
@@ -81,7 +81,7 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
   plot2->Draw();
   gPad->SetLogy();
   c1->Update();
-  
+
   // observe one event while expecting one background event -> the 95% CL upper limit on s is 4.10
   // observe one event while expecting zero background event -> the 95% CL upper limit on s is 4.74
 }

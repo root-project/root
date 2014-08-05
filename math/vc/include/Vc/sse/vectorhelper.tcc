@@ -362,7 +362,7 @@ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, c
     }
     template<> inline Vc_PURE M256 SortHelper<M256, 8>::sort(const M256 &_x)
     {
-	    M256 x = _x;
+        M256 x = _x;
         typedef SortHelper<_M128, 4> H;
 
         _M128 a, b, l, h;

@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -26,7 +26,7 @@ namespace ROOT {
 
 //extern StackAllocator gStackAllocator;
 
-/** result of the minimization; 
+/** result of the minimization;
     both internal and external (MnUserParameterState) representation available
     For the parameters at the Minimum
  */
@@ -39,22 +39,22 @@ public:
    class MnAboveMaxEdm {};
 
 public:
-   
-   /// constructor from only MinimumSeed. Minimum is only from seed result not the full minimization 
+
+   /// constructor from only MinimumSeed. Minimum is only from seed result not the full minimization
    BasicFunctionMinimum(const MinimumSeed& seed, double up) : fSeed(seed), fStates(std::vector<MinimumState>(1, MinimumState(seed.Parameters(), seed.Error(), seed.Gradient(), seed.Parameters().Fval(), seed.NFcn()))), fErrorDef(up), fAboveMaxEdm(false), fReachedCallLimit(false), fUserState(MnUserParameterState()) {}
-  
-   /// constructor at the end of a successfull minimization from seed and vector of states 
+
+   /// constructor at the end of a successfull minimization from seed and vector of states
    BasicFunctionMinimum(const MinimumSeed& seed, const std::vector<MinimumState>& states, double up) : fSeed(seed), fStates(states), fErrorDef(up), fAboveMaxEdm(false), fReachedCallLimit(false), fUserState(MnUserParameterState()) {}
-  
-   /// constructor at the end of a failed minimization due to exceeding function call limit 
+
+   /// constructor at the end of a failed minimization due to exceeding function call limit
    BasicFunctionMinimum(const MinimumSeed& seed, const std::vector<MinimumState>& states, double up, MnReachedCallLimit) : fSeed(seed), fStates(states), fErrorDef(up), fAboveMaxEdm(false), fReachedCallLimit(true), fUserState(MnUserParameterState()) {}
-  
+
    /// constructor at the end of a failed minimization due to edm above maximum value
    BasicFunctionMinimum(const MinimumSeed& seed, const std::vector<MinimumState>& states, double up, MnAboveMaxEdm) : fSeed(seed), fStates(states), fErrorDef(up), fAboveMaxEdm(true), fReachedCallLimit(false), fUserState(MnUserParameterState()) {}
 
    /// copy constructor
    BasicFunctionMinimum(const BasicFunctionMinimum& min) : fSeed(min.fSeed), fStates(min.fStates), fErrorDef(min.fErrorDef), fAboveMaxEdm(min.fAboveMaxEdm), fReachedCallLimit(min.fReachedCallLimit), fUserState(min.fUserState) {}
-  
+
    BasicFunctionMinimum& operator=(const BasicFunctionMinimum& min) {
       fSeed = min.fSeed;
       fStates = min.fStates;
@@ -70,15 +70,15 @@ public:
    /// add latest minimization state (for example add Hesse result after Migrad)
    void Add(const MinimumState& state ) {
       fStates.push_back(state);
-      // LM : update also the user state 
+      // LM : update also the user state
       fUserState = MnUserParameterState(State(), Up(), Seed().Trafo());
-      // reset maxedm flag. If new state has edm over max other method must be used 
+      // reset maxedm flag. If new state has edm over max other method must be used
       fAboveMaxEdm = false;
    }
 
-   ///Add a new state and flag that edm is above maximum  
+   ///Add a new state and flag that edm is above maximum
    void Add(const MinimumState& state, MnAboveMaxEdm) {
-      Add(state); 
+      Add(state);
       fAboveMaxEdm = true;
    }
 
@@ -87,17 +87,17 @@ public:
 
 // user representation of state at Minimum
    const MnUserParameterState& UserState() const {
-      if(!fUserState.IsValid()) 
+      if(!fUserState.IsValid())
          fUserState = MnUserParameterState(State(), Up(), Seed().Trafo());
       return fUserState;
    }
    const MnUserParameters& UserParameters() const {
-      if(!fUserState.IsValid()) 
+      if(!fUserState.IsValid())
          fUserState = MnUserParameterState(State(), Up(), Seed().Trafo());
       return fUserState.Parameters();
    }
    const MnUserCovariance& UserCovariance() const {
-      if(!fUserState.IsValid()) 
+      if(!fUserState.IsValid())
          fUserState = MnUserParameterState(State(), Up(), Seed().Trafo());
       return fUserState.Covariance();
    }
@@ -105,7 +105,7 @@ public:
    void* operator new(size_t nbytes) {
       return StackAllocatorHolder::Get().Allocate(nbytes);
    }
-  
+
    void operator delete(void* p, size_t /*nbytes */) {
       StackAllocatorHolder::Get().Deallocate(p);
    }
@@ -117,8 +117,8 @@ public:
    const FunctionGradient& Grad() const {return fStates.back().Gradient();}
    double Fval() const {return fStates.back().Fval();}
    double Edm() const {return fStates.back().Edm();}
-   int NFcn() const {return fStates.back().NFcn();}  
-  
+   int NFcn() const {return fStates.back().NFcn();}
+
    double Up() const {return fErrorDef;}
    bool IsValid() const {
       return State().IsValid() && !IsAboveMaxEdm() && !HasReachedCallLimit();
@@ -133,8 +133,8 @@ public:
    bool IsAboveMaxEdm() const {return fAboveMaxEdm;}
    bool HasReachedCallLimit() const {return fReachedCallLimit;}
 
-   void SetErrorDef( double up) { 
-      fErrorDef = up; 
+   void SetErrorDef( double up) {
+      fErrorDef = up;
       // update user state for new valeu of up (scaling of errors)
       fUserState = MnUserParameterState(State(), up, Seed().Trafo());
    }

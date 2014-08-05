@@ -123,7 +123,7 @@ if(CMD)
     endif()
 
     execute_process(COMMAND ${_cmd} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
-    
+
     string(REGEX REPLACE "([.]*)[;][-][e][;]([^;]+)([.]*)" "\\1;-e '\\2\\3'" res "${_cmd}")
     string(REPLACE ";" " " res "${res}")
     message("\n-- TEST COMMAND -- ")
@@ -140,7 +140,7 @@ if(CMD)
     elseif(NOT DEFINED RC AND _rc)
       message(FATAL_ERROR "error code: ${_rc}")
     endif()
-    
+
     if(CNVCMD)
       set(_outvar, "")
       string(REPLACE "^" ";" _outcnvcmd "${CNVCMD}^${OUT}")

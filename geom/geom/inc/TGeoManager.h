@@ -52,8 +52,8 @@ protected:
    static Int_t          fgMaxDaughters;    //! Maximum number of daughters
    static Int_t          fgMaxXtruVert;     //! Maximum number of Xtru vertices
 
-   TGeoManager(const TGeoManager&); 
-   TGeoManager& operator=(const TGeoManager&); 
+   TGeoManager(const TGeoManager&);
+   TGeoManager& operator=(const TGeoManager&);
 
 private :
    Double_t              fPhimin;           //! lowest range for phi cut
@@ -106,7 +106,7 @@ private :
    typedef NavigatorsMap_t::iterator                NavigatorsMapIt_t;
    typedef std::map<Long_t, Int_t>                  ThreadsMap_t;
    typedef ThreadsMap_t::const_iterator             ThreadsMapIt_t;
-   
+
    NavigatorsMap_t       fNavigators;       //! Map between thread id's and navigator arrays
    static ThreadsMap_t  *fgThreadId;        //! Thread id's map
    static Int_t          fgNumThreads;      //! Number of registered threads
@@ -246,7 +246,7 @@ public:
    TGeoNode              *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil=1E-5,
                                        const char *g3path="");
    void                   SetNmeshPoints(Int_t npoints=1000);
-   void                   SetCheckedNode(TGeoNode *node);                                    
+   void                   SetCheckedNode(TGeoNode *node);
    void                   Test(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void                   TestOverlaps(const char* path=""); // *MENU*
    Double_t               Weight(Double_t precision=0.01, Option_t *option="va"); // *MENU*
@@ -336,7 +336,7 @@ public:
                                    Int_t nz);
 
    TGeoPNEntry           *SetAlignableEntry(const char *unique_name, const char *path, Int_t uid=-1);
-   TGeoPNEntry           *GetAlignableEntry(const char *name) const;   
+   TGeoPNEntry           *GetAlignableEntry(const char *name) const;
    TGeoPNEntry           *GetAlignableEntry(Int_t index) const;
    TGeoPNEntry           *GetAlignableEntryByUID(Int_t uid) const;
    Int_t                  GetNAlignable(Bool_t with_uid=kFALSE) const;
@@ -408,7 +408,7 @@ public:
    Bool_t                 IsNullStep() const           {return GetCurrentNavigator()->IsNullStep();}
    Bool_t                 IsActivityEnabled() const    {return fActivity;}
    void                   SetOutside(Bool_t flag=kTRUE) {GetCurrentNavigator()->SetOutside(flag);}
-   
+
 
    //--- cleaning
    void                   CleanGarbage();

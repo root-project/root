@@ -1,5 +1,5 @@
 // @(#)root/smatrix:$Id$
-// Authors: T. Glebe, L. Moneta    2005  
+// Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_MatrixFunctions
 #define ROOT_Math_MatrixFunctions
@@ -32,11 +32,11 @@
 
 //doxygen tag
 /**
-   @defgroup MatrixFunctions Matrix Template Functions 
+   @defgroup MatrixFunctions Matrix Template Functions
    @ingroup SMatrixGroup
 
-   These function apply to matrices (and also Matrix expression) and can return a 
-   matrix expression of a particular defined type, like in the matrix multiplication or 
+   These function apply to matrices (and also Matrix expression) and can return a
+   matrix expression of a particular defined type, like in the matrix multiplication or
    a vector, like in the matrix-vector product or a scalar like in the Similarity vector-matrix product.
 */
 
@@ -53,9 +53,9 @@
 #include "Math/CholeskyDecomp.h"
 #endif
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
     template <class T, unsigned int D>
     class SVector;
@@ -79,8 +79,8 @@ SVector<T,D1> operator*(const SMatrix<T,D1,D2,R>& rhs, const SVector<T,D2>& lhs)
 #endif
 
 
-// matrix-vector product: 
-// use apply(i) function for matrices. Tested  (11/05/06) with using (i,j) but 
+// matrix-vector product:
+// use apply(i) function for matrices. Tested  (11/05/06) with using (i,j) but
 // performances are slightly worse (not clear  why)
 
 //==============================================================================
@@ -90,7 +90,7 @@ template <unsigned int I>
 struct meta_row_dot {
   template <class A, class B>
   static inline typename A::value_type f(const A& lhs, const B& rhs,
-					 const unsigned int offset) {
+                                         const unsigned int offset) {
     return lhs.apply(offset+I) * rhs.apply(I) + meta_row_dot<I-1>::f(lhs,rhs,offset);
   }
 };
@@ -103,7 +103,7 @@ template <>
 struct meta_row_dot<0> {
   template <class A, class B>
   static inline typename A::value_type f(const A& lhs, const B& rhs,
-					 const unsigned int offset) {
+                                         const unsigned int offset) {
     return lhs.apply(offset) * rhs.apply(0);
   }
 };
@@ -115,7 +115,7 @@ template <class Matrix, class Vector, unsigned int D2>
 class VectorMatrixRowOp {
 public:
 
-  typedef typename Vector::value_type T; 
+  typedef typename Vector::value_type T;
 
   ///
   VectorMatrixRowOp(const Matrix& lhs, const Vector& rhs) :
@@ -129,9 +129,9 @@ public:
     return meta_row_dot<D2-1>::f(lhs_, rhs_, i*D2);
   }
 
-   // check if passed pointer is in use  
+   // check if passed pointer is in use
    // check only the vector since this is a vector expression
-  inline bool IsInUse (const T * p) const { 
+  inline bool IsInUse (const T * p) const {
     return rhs_.IsInUse(p);
   }
 
@@ -149,8 +149,8 @@ template <unsigned int I>
 struct meta_col_dot {
   template <class Matrix, class Vector>
   static inline typename Matrix::value_type f(const Matrix& lhs, const Vector& rhs,
-					      const unsigned int offset) {
-    return lhs.apply(Matrix::kCols*I+offset) * rhs.apply(I) + 
+                                              const unsigned int offset) {
+    return lhs.apply(Matrix::kCols*I+offset) * rhs.apply(I) +
            meta_col_dot<I-1>::f(lhs,rhs,offset);
   }
 };
@@ -163,7 +163,7 @@ template <>
 struct meta_col_dot<0> {
   template <class Matrix, class Vector>
   static inline typename Matrix::value_type f(const Matrix& lhs, const Vector& rhs,
-					      const unsigned int offset) {
+                                              const unsigned int offset) {
     return lhs.apply(offset) * rhs.apply(0);
   }
 };
@@ -180,7 +180,7 @@ template <class Vector, class Matrix, unsigned int D1>
 class VectorMatrixColOp {
 public:
 
-  typedef typename Vector::value_type T; 
+  typedef typename Vector::value_type T;
   ///
   VectorMatrixColOp(const Vector& lhs, const Matrix& rhs) :
     lhs_(lhs), rhs_(rhs) {}
@@ -193,9 +193,9 @@ public:
     return meta_col_dot<D1-1>::f(rhs_, lhs_, i);
   }
 
-   // check if passed pointer is in use  
-   // check only the vector since this is a vector expression   
-   inline bool IsInUse (const T * p) const { 
+   // check if passed pointer is in use
+   // check only the vector since this is a vector expression
+   inline bool IsInUse (const T * p) const {
     return lhs_.IsInUse(p);
   }
 
@@ -207,7 +207,7 @@ protected:
 
 /**
    Matrix *  Vector multiplication   \f$ a(i) = \sum_{j} M(i,j) * b(j) \f$
-   returning a vector expression 
+   returning a vector expression
 
    @ingroup MatrixFunctions
  */
@@ -298,21 +298,21 @@ template <unsigned int I>
 struct meta_matrix_dot {
 
   template <class MatrixA, class MatrixB>
-  static inline typename MatrixA::value_type f(const MatrixA& lhs, 
+  static inline typename MatrixA::value_type f(const MatrixA& lhs,
                                                const MatrixB& rhs,
                                                const unsigned int offset) {
     return lhs.apply(offset/MatrixB::kCols*MatrixA::kCols + I) *
-           rhs.apply(MatrixB::kCols*I + offset%MatrixB::kCols) + 
+           rhs.apply(MatrixB::kCols*I + offset%MatrixB::kCols) +
            meta_matrix_dot<I-1>::f(lhs,rhs,offset);
   }
 
   // multiplication using i and j indeces
   template <class MatrixA, class MatrixB>
-  static inline typename MatrixA::value_type g(const MatrixA& lhs, 
+  static inline typename MatrixA::value_type g(const MatrixA& lhs,
                                                const MatrixB& rhs,
-                                               unsigned int i, 
-					       unsigned int j) {
-    return lhs(i, I) * rhs(I , j) + 
+                                               unsigned int i,
+                                               unsigned int j) {
+    return lhs(i, I) * rhs(I , j) +
            meta_matrix_dot<I-1>::g(lhs,rhs,i,j);
   }
 };
@@ -325,16 +325,16 @@ template <>
 struct meta_matrix_dot<0> {
 
   template <class MatrixA, class MatrixB>
-  static inline typename MatrixA::value_type f(const MatrixA& lhs, 
+  static inline typename MatrixA::value_type f(const MatrixA& lhs,
                                                const MatrixB& rhs,
                                                const unsigned int offset) {
     return lhs.apply(offset/MatrixB::kCols*MatrixA::kCols) *
            rhs.apply(offset%MatrixB::kCols);
   }
 
-  // multiplication using i and j 
+  // multiplication using i and j
   template <class MatrixA, class MatrixB>
-  static inline typename MatrixA::value_type g(const MatrixA& lhs, 
+  static inline typename MatrixA::value_type g(const MatrixA& lhs,
                                                const MatrixB& rhs,
                                                unsigned int i, unsigned int j) {
     return lhs(i,0) * rhs(0,j);
@@ -346,7 +346,7 @@ struct meta_matrix_dot<0> {
 // MatrixMulOp
 //==============================================================================
 /**
-   Class for Matrix-Matrix multiplication 
+   Class for Matrix-Matrix multiplication
 
    @ingroup Expression
  */
@@ -369,7 +369,7 @@ public:
     return meta_matrix_dot<D-1>::g(lhs_, rhs_, i, j);
   }
 
-  inline bool IsInUse (const T * p) const { 
+  inline bool IsInUse (const T * p) const {
     return lhs_.IsInUse(p) || rhs_.IsInUse(p);
   }
 
@@ -381,8 +381,8 @@ protected:
 
 
 /**
-   Matrix *  Matrix multiplication , \f$ C(i,j) = \sum_{k} A(i,k) * B(k,j)\f$ 
-   returning a matrix expression 
+   Matrix *  Matrix multiplication , \f$ C(i,j) = \sum_{k} A(i,k) * B(k,j)\f$
+   returning a matrix expression
 
    @ingroup MatrixFunctions
  */
@@ -523,8 +523,8 @@ public:
     return rhs_( j, i);
   }
 
-  inline bool IsInUse (const T * p) const { 
-    return rhs_.IsInUse(p); 
+  inline bool IsInUse (const T * p) const {
+    return rhs_.IsInUse(p);
   }
 
 protected:
@@ -533,7 +533,7 @@ protected:
 
 
 /**
-   Matrix Transpose   B(i,j) = A(j,i) 
+   Matrix Transpose   B(i,j) = A(j,i)
    returning a matrix expression
 
    @ingroup MatrixFunctions
@@ -561,7 +561,7 @@ inline Expr<TransposeOp<Expr<A,T,D1,D2,R>,T,D1,D2>, T, D2, D1, typename TranspPo
 }
 
 
-#ifdef ENABLE_TEMPORARIES_TRANSPOSE 
+#ifdef ENABLE_TEMPORARIES_TRANSPOSE
 // sometimes is faster to create a temp, not clear why
 
 //==============================================================================
@@ -572,7 +572,7 @@ inline SMatrix< T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>
  Transpose(const SMatrix<T,D1,D2, R>& rhs) {
   typedef TransposeOp<SMatrix<T,D1,D2,R>,T,D1,D2> MatTrOp;
 
-  return SMatrix< T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType> 
+  return SMatrix< T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>
     ( Expr<MatTrOp, T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>(MatTrOp(rhs)) );
 }
 
@@ -584,11 +584,11 @@ inline  SMatrix< T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>
  Transpose(const Expr<A,T,D1,D2,R>& rhs) {
   typedef TransposeOp<Expr<A,T,D1,D2,R>,T,D1,D2> MatTrOp;
 
-  return SMatrix< T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType> 
+  return SMatrix< T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>
     ( Expr<MatTrOp, T, D2, D1, typename TranspPolicy<T,D1,D2,R>::RepType>(MatTrOp(rhs)) );
 }
 
-#endif 
+#endif
 
 
 #ifdef OLD
@@ -659,7 +659,7 @@ inline T Product(const VecExpr<A,T,D>& lhs, const Expr<B,T,D,D,R>& rhs) {
 
 /**
    Similarity Vector - Matrix Product:  v^T * A * v
-   returning a scalar value of type T   \f$ s = \sum_{i,j} v(i) * A(i,j) * v(j)\f$ 
+   returning a scalar value of type T   \f$ s = \sum_{i,j} v(i) * A(i,j) * v(j)\f$
 
    @ingroup MatrixFunctions
  */
@@ -730,9 +730,9 @@ inline T Similarity(const VecExpr<A,T,D>& lhs, const Expr<B,T,D,D,R>& rhs) {
 
 
 /**
-   Similarity Matrix Product :  B = U * A * U^T for A symmetric 
-   returning a symmetric matrix expression: 
-   \f$ B(i,j) = \sum_{k,l} U(i,k) * A(k,l) * U(j,l) \f$ 
+   Similarity Matrix Product :  B = U * A * U^T for A symmetric
+   returning a symmetric matrix expression:
+   \f$ B(i,j) = \sum_{k,l} U(i,k) * A(k,l) * U(j,l) \f$
 
    @ingroup MatrixFunctions
  */
@@ -743,10 +743,10 @@ inline T Similarity(const VecExpr<A,T,D>& lhs, const Expr<B,T,D,D,R>& rhs) {
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const SMatrix<T,D1,D2,R>& lhs, const SMatrix<T,D2,D2,MatRepSym<T,D2> >& rhs) {
   SMatrix<T,D1,D2, MatRepStd<T,D1,D2> > tmp = lhs * rhs;
-  typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym; 
-  SMatrixSym mret; 
-  AssignSym::Evaluate(mret,  tmp * Transpose(lhs)  ); 
-  return mret; 
+  typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym;
+  SMatrixSym mret;
+  AssignSym::Evaluate(mret,  tmp * Transpose(lhs)  );
+  return mret;
 }
 
 //==============================================================================
@@ -757,10 +757,10 @@ inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const SMatrix<T,D1,D2,R>& lh
 template <class A, class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const Expr<A,T,D1,D2,R>& lhs, const SMatrix<T,D2,D2,MatRepSym<T,D2> >& rhs) {
   SMatrix<T,D1,D2,MatRepStd<T,D1,D2> > tmp = lhs * rhs;
-  typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym; 
-  SMatrixSym mret; 
-  AssignSym::Evaluate(mret,  tmp * Transpose(lhs)  ); 
-  return mret; 
+  typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym;
+  SMatrixSym mret;
+  AssignSym::Evaluate(mret,  tmp * Transpose(lhs)  );
+  return mret;
 }
 
 #ifdef XXX
@@ -772,17 +772,17 @@ inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const Expr<A,T,D1,D2,R>& lhs
 template <class T, unsigned int D1>
 inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const SMatrix<T,D1,D1,MatRepSym<T,D1> >& lhs, const SMatrix<T,D1,D1,MatRepSym<T,D1> >& rhs) {
   SMatrix<T,D1,D1, MatRepStd<T,D1,D1> > tmp = lhs * rhs;
-  typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym; 
-  SMatrixSym mret; 
-  AssignSym::Evaluate(mret,  tmp * lhs  ); 
-  return mret; 
+  typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym;
+  SMatrixSym mret;
+  AssignSym::Evaluate(mret,  tmp * lhs  );
+  return mret;
 }
 #endif
 
 
 /**
    Transpose Similarity Matrix Product :  B = U^T * A * U for A symmetric
-   returning a symmetric matrix expression: \f$ B(i,j) = \sum_{k,l} U(k,i) * A(k,l) * U(l,j) \f$ 
+   returning a symmetric matrix expression: \f$ B(i,j) = \sum_{k,l} U(k,i) * A(k,l) * U(l,j) \f$
 
    @ingroup MatrixFunctions
  */
@@ -793,10 +793,10 @@ inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const SMatrix<T,D1,D1,MatRep
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D2,D2,MatRepSym<T,D2> > SimilarityT(const SMatrix<T,D1,D2,R>& lhs, const SMatrix<T,D1,D1,MatRepSym<T,D1> >& rhs) {
   SMatrix<T,D1,D2,MatRepStd<T,D1,D2> > tmp = rhs * lhs;
-  typedef  SMatrix<T,D2,D2,MatRepSym<T,D2> > SMatrixSym; 
-  SMatrixSym mret; 
-  AssignSym::Evaluate(mret,  Transpose(lhs) * tmp ); 
-  return mret; 
+  typedef  SMatrix<T,D2,D2,MatRepSym<T,D2> > SMatrixSym;
+  SMatrixSym mret;
+  AssignSym::Evaluate(mret,  Transpose(lhs) * tmp );
+  return mret;
 }
 
 //==============================================================================
@@ -807,10 +807,10 @@ inline SMatrix<T,D2,D2,MatRepSym<T,D2> > SimilarityT(const SMatrix<T,D1,D2,R>& l
 template <class A, class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D2,D2,MatRepSym<T,D2> > SimilarityT(const Expr<A,T,D1,D2,R>& lhs, const SMatrix<T,D1,D1,MatRepSym<T,D1> >& rhs) {
   SMatrix<T,D1,D2,MatRepStd<T,D1,D2> > tmp = rhs * lhs;
-  typedef  SMatrix<T,D2,D2,MatRepSym<T,D2> > SMatrixSym; 
-  SMatrixSym mret; 
-  AssignSym::Evaluate(mret,  Transpose(lhs) * tmp ); 
-  return mret; 
+  typedef  SMatrix<T,D2,D2,MatRepSym<T,D2> > SMatrixSym;
+  SMatrixSym mret;
+  AssignSym::Evaluate(mret,  Transpose(lhs) * tmp );
+  return mret;
 }
 
 
@@ -834,8 +834,8 @@ inline SMatrix<T,D2,D2,MatRepSym<T,D2> > SimilarityT(const Expr<A,T,D1,D2,R>& lh
 // TensorMulOp
 //==============================================================================
 /**
-   Class for Tensor Multiplication (outer product) of two vectors   
-   giving a matrix 
+   Class for Tensor Multiplication (outer product) of two vectors
+   giving a matrix
 
    @ingroup Expression
  */
@@ -858,8 +858,8 @@ public:
     return lhs_.apply(i) * rhs_.apply(j);
   }
 
-  inline bool IsInUse (const typename Vector1::value_type * ) const { 
-    return false; 
+  inline bool IsInUse (const typename Vector1::value_type * ) const {
+    return false;
   }
 
 
@@ -873,8 +873,8 @@ protected:
 
 
 /**
-   Tensor Vector Product : M(i,j) = v(i) * v(j) 
-   returning a matrix expression 
+   Tensor Vector Product : M(i,j) = v(i) * v(j)
+   returning a matrix expression
 
    @ingroup VectFunction
  */
@@ -925,7 +925,7 @@ inline Expr<TensorMulOp<VecExpr<A,T,D1>, VecExpr<B,T,D2>  >, T, D1, D2 >
 }
 
 #endif
-#ifdef _WIN32 
+#ifdef _WIN32
 /// case of WINDOWS - problem using Expression (  C1001: INTERNAL COMPILER ERROR )
 
 //==============================================================================
@@ -934,7 +934,7 @@ inline Expr<TensorMulOp<VecExpr<A,T,D1>, VecExpr<B,T,D2>  >, T, D1, D2 >
 template <class T, unsigned int D1, unsigned int D2>
 inline SMatrix<T,D1,D2>  TensorProd(const SVector<T,D1>& lhs, const SVector<T,D2>& rhs) {
   SMatrix<T,D1,D2> tmp;
-  for (unsigned int i=0; i< D1; ++i) 
+  for (unsigned int i=0; i< D1; ++i)
     for (unsigned int j=0; j< D2; ++j) {
       tmp(i,j) = lhs[i]*rhs[j];
     }
@@ -988,20 +988,20 @@ inline SMatrix<T,D1,D2  > TensorProd(const VecExpr<A,T,D1>& lhs, const VecExpr<B
 // If the user wants to pass const objects need to copy the matrices
 // It will work only for symmetric matrices
 template <class T, unsigned int D>
-bool SolveChol( SMatrix<T, D, D, MatRepSym<T, D>  > & mat,  SVector<T, D> & vec ) { 
+bool SolveChol( SMatrix<T, D, D, MatRepSym<T, D>  > & mat,  SVector<T, D> & vec ) {
    CholeskyDecomp<T, D> decomp(mat);
-   return decomp.Solve(vec); 
+   return decomp.Solve(vec);
 }
 
 /// same function as before but not overwriting the matrix and returning a copy of the vector
 /// (this is the slow version)
 template <class T, unsigned int D>
-SVector<T,D> SolveChol( const SMatrix<T, D, D, MatRepSym<T, D>  > & mat,  const SVector<T, D> & vec, int & ifail  ) { 
-   SMatrix<T, D, D, MatRepSym<T, D> > atmp(mat); 
-   SVector<T,D> vret(vec); 
-   bool ok = SolveChol( atmp, vret); 
+SVector<T,D> SolveChol( const SMatrix<T, D, D, MatRepSym<T, D>  > & mat,  const SVector<T, D> & vec, int & ifail  ) {
+   SMatrix<T, D, D, MatRepSym<T, D> > atmp(mat);
+   SVector<T,D> vret(vec);
+   bool ok = SolveChol( atmp, vret);
    ifail =  (ok) ? 0 : -1;
-   return vret; 
+   return vret;
 }
 
 
@@ -1009,6 +1009,6 @@ SVector<T,D> SolveChol( const SMatrix<T, D, D, MatRepSym<T, D>  > & mat,  const 
   }  // namespace Math
 
 }  // namespace ROOT
-          
+
 
 #endif  /* ROOT_Math_MatrixFunctions */

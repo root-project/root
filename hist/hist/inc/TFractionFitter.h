@@ -1,6 +1,6 @@
 // @(#)root/hist:$Id$
 // Author: Frank Filthaut F.Filthaut@science.ru.nl  20/05/2002
-   
+
 #ifndef ROOT_TFractionFitter
 #define ROOT_TFractionFitter
 
@@ -20,8 +20,8 @@
 
 class TH1;
 
-namespace ROOT { 
-   namespace Fit  { 
+namespace ROOT {
+   namespace Fit  {
       class Fitter;
    }
 }
@@ -31,7 +31,7 @@ namespace ROOT {
 //
 // Fits MC fractions to data histogram (a la HMCMLL, see R. Barlow and C. Beeston,
 // Comp. Phys. Comm. 77 (1993) 219-228, and http://www.hep.man.ac.uk/~roger/hfrac.f).
-// 
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 class TFractionFitter: public TObject {
@@ -73,10 +73,10 @@ public:
    TH1* GetMCPrediction(Int_t parm) const;
 
    // FCN evaluation
-   Double_t EvaluateFCN(const Double_t * par) { 
-      Double_t f = 0; 
-      ComputeFCN(f, par, 0); 
-      return f; 
+   Double_t EvaluateFCN(const Double_t * par) {
+      Double_t f = 0;
+      ComputeFCN(f, par, 0);
+      return f;
    }
 
 private:

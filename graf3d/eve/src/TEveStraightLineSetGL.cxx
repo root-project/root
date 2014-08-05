@@ -92,7 +92,7 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    if (mL.GetDepthTest() == kFALSE && rnrCtx.Selection() == kFALSE)
    {
       glPushAttrib(GL_VIEWPORT_BIT);
-      glDepthRange(0, 0.1); 
+      glDepthRange(0, 0.1);
    }
 
    // lines

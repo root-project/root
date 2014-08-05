@@ -43,7 +43,7 @@ void THbookKey::Browse(TBrowser *b)
    // since it might contain new objects not yet saved.
 
    fDirectory->cd();
-   
+
    TObject *obj = fDirectory->GetList()->FindObject(GetName());
    if (obj && !obj->IsFolder()) {
       if (obj->InheritsFrom(TCollection::Class()))

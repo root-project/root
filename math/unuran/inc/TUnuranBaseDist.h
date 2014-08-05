@@ -21,50 +21,50 @@
 
 
 //______________________________________________________________________
-/** 
-   TUnuranBaseDist, base class for Unuran distribution classees such as 
+/**
+   TUnuranBaseDist, base class for Unuran distribution classees such as
    TUnuranContDist (for one-dimension) or TUnuranMultiContDist (multi-dimension)
-*/ 
+*/
 ///////////////////////////////////////////////////////////////////////
 class TUnuranBaseDist  {
 
-public: 
+public:
 
 
-   /** 
+   /**
       Destructor (no operations)
-   */ 
+   */
    virtual ~TUnuranBaseDist () {}
 
    /**
       Abstract clone method for a deep copy of the derived classes
     */
-   virtual TUnuranBaseDist * Clone() const = 0; 
+   virtual TUnuranBaseDist * Clone() const = 0;
 
 
-// private: 
+// private:
 //    /**
 //       Default constructor
 //     */
 //    TUnuranBaseDist() {}
 
-//    /** 
+//    /**
 //       Copy constructor
-//    */ 
-//    TUnuranBaseDist(const TUnuranBaseDist & ) {} 
+//    */
+//    TUnuranBaseDist(const TUnuranBaseDist & ) {}
 
-//    /** 
+//    /**
 //       Assignment operator
-//    */ 
+//    */
 //    TUnuranBaseDist & operator = (const TUnuranBaseDist & ) {
 //       return *this;
-//    } 
+//    }
 
 
    ClassDef(TUnuranBaseDist,1)  //Base class for Unuran distribution wrappers
 
 
-}; 
+};
 
 
 

@@ -18,11 +18,11 @@
 #pragma link C++ class vector<float>+;
 #endif
 
-void write() 
+void write()
 {
-  
+
    TFile *f = TFile::Open("hvector.root","RECREATE");
-   
+
    if (!f) { return; }
 
    // Create one histograms
@@ -65,9 +65,9 @@ void write()
          gRandom->Rannor(px,py);
          pz = px*px + py*py;
          Float_t random = gRandom->Rndm(1);
- 
+
          hpx->Fill(px);
-          
+
          vpx.push_back(px);
          vpy.push_back(py);
          vpz.push_back(pz);
@@ -84,16 +84,16 @@ void write()
       t->Fill();
    }
    f->Write();
-   
+
    delete f;
 }
 
 
-void read() 
+void read()
 {
-  
+
    TFile *f = TFile::Open("hvector.root","READ");
-   
+
    if (!f) { return; }
 
    TTree *t; f->GetObject("tvec",t);
@@ -108,23 +108,23 @@ void read()
    c1->GetFrame()->SetBorderMode(-1);
 
    const Int_t kUPDATE = 1000;
-   
+
    TBranch *bvpx = 0;
    t->SetBranchAddress("vpx",&vpx,&bvpx);
-   
+
 
    // Create one histograms
    TH1F *h = new TH1F("h","This is the px distribution",100,-4,4);
    h->SetFillColor(48);
 
    for (Int_t i = 0; i < 25000; i++) {
-      
+
       Long64_t tentry = t->LoadTree(i);
       bvpx->GetEntry(tentry);
-      
+
       for (UInt_t j = 0; j < vpx->size(); ++j) {
- 
-         h->Fill(vpx->at(j));          
+
+         h->Fill(vpx->at(j));
 
       }
       if (i && (i%kUPDATE) == 0) {
@@ -142,12 +142,12 @@ void read()
 }
 
 
-void hvector() 
+void hvector()
 {
    gBenchmark->Start("hvector");
 
    write();
    read();
-   
-   gBenchmark->Show("hvector");   
+
+   gBenchmark->Show("hvector");
 }

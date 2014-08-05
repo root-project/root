@@ -57,17 +57,17 @@ void PolyTest1::Reset(unsigned nVertices)
       Warning("Reset", "resetting nVertices parameter to %u", unsigned(kNPointsDefault));
       nVertices = kNPointsDefault;
    }
-   
+
    fXs.resize(nVertices);
    fYs.resize(nVertices);
 
    Double_t xMin = 0., xMax = 0., yMin = 0., yMax = 0.;
    gPad->GetRange(xMin, yMin, xMax, yMax);
    assert(xMax - xMin > 0 && yMax - yMin > 0 && "Reset, invalid canvas' ranges");
-   
+
    const Double_t xCentre = xMin + 0.5 * (xMax - xMin);
    const Double_t yCentre = yMin + 0.5 * (yMax - yMin);
-   
+
    const Double_t r = TMath::Min(xMax - xMin, yMax - yMin) * 0.8 / 2;
    const Double_t angle = TMath::TwoPi() / (nVertices - 1);
 
@@ -76,7 +76,7 @@ void PolyTest1::Reset(unsigned nVertices)
       fXs[i] = xCentre + currR * TMath::Cos(angle * i);
       fYs[i] = yCentre + currR * TMath::Sin(angle * i);
    }
-   
+
    fXs[nVertices - 1] = fXs[0];
    fYs[nVertices - 1] = fYs[0];
 }
@@ -97,7 +97,7 @@ void polytest1()
 {
    TCanvas * const cnv = new TCanvas;
    cnv->cd();
-   
+
    PolyTest1 * polygon = new PolyTest1(1000000);
    polygon->SetLineColor(kBlue);
    polygon->SetFillColor(kRed);

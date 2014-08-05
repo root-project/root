@@ -170,7 +170,7 @@ public:
    THilbertMatrixTSym(Int_t no_rows);
    THilbertMatrixTSym(Int_t row_lwb,Int_t row_upb);
    virtual ~THilbertMatrixTSym() {}
-  
+
    ClassDef(THilbertMatrixTSym,2)  // Template of Symmetric Hilbert Matrix class
 };
 

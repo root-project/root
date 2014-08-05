@@ -328,7 +328,7 @@ void TGHProgressBar::DoRedraw()
 TGVProgressBar::TGVProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
                               Pixel_t back, Pixel_t barcolor, GContext_t norm,
                               FontStruct_t font,UInt_t options) :
-      TGProgressBar(p, w, h, back, barcolor, norm, font, options) 
+      TGProgressBar(p, w, h, back, barcolor, norm, font, options)
 {
    // cconstructor
 

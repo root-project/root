@@ -2,7 +2,7 @@
 #include "TCanvas.h"
 #include "TNtuple.h"
 #include "TSpider.h"
-   
+
 // script illustrating the use of the TSpider class
 //Author: Bastien Dallapiazza
 void spider() {

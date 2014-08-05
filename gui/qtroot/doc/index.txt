@@ -1,7 +1,7 @@
 This directory contains TQtRootGuiFactory class to provide the default
 implementation of the  TGuiFactory class for the Qt-based ROOT applications.
 BEGIN_HTML
-The ROOT design allows for the different custom  implementations 
+The ROOT design allows for the different custom  implementations
 of the various ROOT GUI components.
 
 This directory provides the
@@ -14,7 +14,7 @@ See:
 <li><a href="ftp://root.cern.ch/root/doc/26ROOTandQt.pdf">
       The Chapter about ROOT/Qt Integration
     </a></li>
-<li><a href="http://root.bnl.gov">The full-fledged collection of Qt-based 
+<li><a href="http://root.bnl.gov">The full-fledged collection of Qt-based
         implementation of the other ROOT GUI interfaces.
     </a></li>
 <li><a href="http://root.bnl.gov/QtRoot/QtRoot.html#publications">List of

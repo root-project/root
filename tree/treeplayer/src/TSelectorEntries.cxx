@@ -45,10 +45,10 @@
 #include "TSelectorScalar.h"
 
 //______________________________________________________________________________
-TSelectorEntries::TSelectorEntries(TTree *tree, const char *selection) : 
-   fChain(tree), fSelect(0), fSelectedRows(0), fSelectMultiple(kFALSE) 
-{ 
-   // Default, constructor.   
+TSelectorEntries::TSelectorEntries(TTree *tree, const char *selection) :
+   fChain(tree), fSelect(0), fSelectedRows(0), fSelectMultiple(kFALSE)
+{
+   // Default, constructor.
 
    if (selection && selection[0]) {
       TSelectorEntries::SetSelection(selection);
@@ -56,16 +56,16 @@ TSelectorEntries::TSelectorEntries(TTree *tree, const char *selection) :
 }
 
 //______________________________________________________________________________
-TSelectorEntries::TSelectorEntries(const char *selection) : 
-   fChain(0), fSelect(0), fSelectedRows(0), fSelectMultiple(kFALSE) 
-{ 
+TSelectorEntries::TSelectorEntries(const char *selection) :
+   fChain(0), fSelect(0), fSelectedRows(0), fSelectMultiple(kFALSE)
+{
    // Constructor.
 
    TSelectorEntries::SetSelection(selection);
 }
 
 //______________________________________________________________________________
-TSelectorEntries::~TSelectorEntries() 
+TSelectorEntries::~TSelectorEntries()
 {
    // Destructor.
 
@@ -112,7 +112,7 @@ void TSelectorEntries::SlaveBegin(TTree *tree)
 Int_t TSelectorEntries::GetEntry(Long64_t entry, Int_t getall)
 {
    //read entry
-   return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; 
+   return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0;
 }
 
 //______________________________________________________________________________

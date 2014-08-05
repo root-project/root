@@ -1,7 +1,7 @@
-.\" 
+.\"
 .\" $Id:$
 .\"
-.TH PQ2 1 "Version 5" "ROOT" 
+.TH PQ2 1 "Version 5" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
 .\" other parms are allowed: see man(7), man(1)
 .SH NAME
@@ -81,13 +81,13 @@ Can also be specified via the environment variables PQ2PROOFURL or PQ2DSSRVURL (
 \fB-o\fR <\fIoptions\fR>
 Specify a string of options to be passed to the instance actuatlly performing the action; the exact meaning is action
 dependent.
-.TP 
+.TP
 \fB-s\fR <\fIservers\fR>
 Specify a server or a comma-separated list of servers to be used in the analysis when required by the action.
-.TP 
+.TP
 \fB-k\fR
 Keep the temporary files created during the analysis under $TMPDIR
-.TP 
+.TP
 \fB-v\fR
 Verbose mode
 .SH OPTIONS for action verify
@@ -117,11 +117,11 @@ Defines the ROOT file from where to fetch the output of a previous run (saved wi
 \fB-i\fR <\fIignored servers\fR>
 Specify a server or a comma-separated list of servers to be ignored in the analysis; this allows to exclude, for example,
 the redirector.
-.TP 
+.TP
 \fB-e\fR <\fIexcluded servers\fR>
 Specify a server or a comma-separated list of servers to be excluded from the target servers; this can be used, for example,
 to determine the files movements to drain a server.
-.TP 
+.TP
 \fB--plot\fR [<\fIplot file\fR>]
 Defines the file with the output plot with the original distribution with the server names and the +-10% limits;
 the extension (if known) defines the format; the default format is 'png' and the default name 'plot.png'.
@@ -135,7 +135,7 @@ See \fIsetup-pq2\fR(1).
 \fIpq2-info-server\fR(1), \fIpq2-ana-dist\fR(1),
 \fIpq2-put\fR(1), \fIpq2-verify\fR(1), \fIpq2-rm\fR(1), \fIpq2-cache\fR(1)
 .PP
-For more information on the \fBROOT\fR system, please refer to 
+For more information on the \fBROOT\fR system, please refer to
 .UR http://root.cern.ch/
 .I http://root.cern.ch
 .UE
@@ -155,5 +155,5 @@ Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-.SH AUTHOR 
+.SH AUTHOR
 This manual page was originally written by Gerardo Ganis <gerardo.ganis@cern.ch>, for ROOT version 5.

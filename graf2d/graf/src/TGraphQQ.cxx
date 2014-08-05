@@ -21,30 +21,30 @@ ClassImp(TGraphQQ)
 //______________________________________________________________________________
 //
 // This class allows to draw quantile-quantile plots
-// 
-// Plots can be drawn for 2 datasets or for a dataset and a theoretical 
+//
+// Plots can be drawn for 2 datasets or for a dataset and a theoretical
 // distribution function
-// 
+//
 // 2 datasets:
 //   Quantile-quantile plots are used to determine whether 2 samples come from
-//   the same distribution. 
-//   A qq-plot draws the quantiles of one dataset against the quantile of the 
+//   the same distribution.
+//   A qq-plot draws the quantiles of one dataset against the quantile of the
 //   the other. The quantiles of the dataset with fewer entries are on Y axis,
-//   with more entries - on X axis. 
-//   A straight line, going through 0.25 and 0.75 quantiles is also plotted 
-//   for reference. It represents a robust linear fit, not sensitive to the 
+//   with more entries - on X axis.
+//   A straight line, going through 0.25 and 0.75 quantiles is also plotted
+//   for reference. It represents a robust linear fit, not sensitive to the
 //   extremes of the datasets.
-//   If the datasets come from the same distribution, points of the plot should 
-//   fall approximately on the 45 degrees line. If they have the same 
-//   distribution function, but location or scale different parameters, 
-//   they should still fall on the straight line, but not the 45 degrees one. 
+//   If the datasets come from the same distribution, points of the plot should
+//   fall approximately on the 45 degrees line. If they have the same
+//   distribution function, but location or scale different parameters,
+//   they should still fall on the straight line, but not the 45 degrees one.
 //   The greater their departure from the straight line, the more evidence there
 //   is, that the datasets come from different distributions.
 //   The advantage of qq-plot is that it not only shows that the underlying
 //   distributions are different, but, unlike the analytical methods, it also
-//   gives information on the nature of this difference: heavier tails, 
+//   gives information on the nature of this difference: heavier tails,
 //   different location/scale, different shape, etc.
-//      
+//
 //   Some examples of qqplots of 2 datasets:
 //Begin_Html
 /*
@@ -52,30 +52,30 @@ ClassImp(TGraphQQ)
 */
 //End_Html
 //
-// 1 dataset: 
-//   Quantile-quantile plots are used to determine if the dataset comes from the 
+// 1 dataset:
+//   Quantile-quantile plots are used to determine if the dataset comes from the
 //   specified theoretical distribution, such as normal.
 //   A qq-plot draws quantiles of the dataset against quantiles of the specified
-//   theoretical distribution. 
+//   theoretical distribution.
 //   (NOTE, that density, not CDF should be specified)
-//   A straight line, going through 0.25 and 0.75 quantiles can also be plotted 
-//   for reference. It represents a robust linear fit, not sensitive to the 
-//   extremes of the dataset. 
+//   A straight line, going through 0.25 and 0.75 quantiles can also be plotted
+//   for reference. It represents a robust linear fit, not sensitive to the
+//   extremes of the dataset.
 //   As in the 2 datasets case, departures from straight line indicate departures
 //   from the specified distribution.
 //
-//   " The correlation coefficient associated with the linear fit to the data 
-//     in the probability plot (qq plot in our case) is a measure of the 
-//     goodness of the fit. 
-//     Estimates of the location and scale parameters  of the distribution 
-//     are given by the intercept and slope. Probability plots can be generated 
-//     for several competing distributions to see which provides the best fit, 
-//     and the probability plot generating the highest correlation coefficient 
+//   " The correlation coefficient associated with the linear fit to the data
+//     in the probability plot (qq plot in our case) is a measure of the
+//     goodness of the fit.
+//     Estimates of the location and scale parameters  of the distribution
+//     are given by the intercept and slope. Probability plots can be generated
+//     for several competing distributions to see which provides the best fit,
+//     and the probability plot generating the highest correlation coefficient
 //     is the best choice since it generates the straightest probability plot."
-//   From "Engineering statistic handbook", 
+//   From "Engineering statistic handbook",
 //   http://www.itl.nist.gov/div898/handbook/eda/section3/probplot.htm
 //
-//   Example of a qq-plot of a dataset from N(3, 2) distribution and 
+//   Example of a qq-plot of a dataset from N(3, 2) distribution and
 //           TMath::Gaus(0, 1) theoretical function. Fitting parameters
 //           are estimates of the distribution mean and sigma.
 //
@@ -84,20 +84,20 @@ ClassImp(TGraphQQ)
 <img src="gif/qqnormal.gif">
 */
 //End_Html//
-//   
-//   
+//
+//
 // References:
 // http://www.itl.nist.gov/div898/handbook/eda/section3/qqplot.htm
 // http://www.itl.nist.gov/div898/handbook/eda/section3/probplot.htm
-//   
- 
+//
+
 
 
 //______________________________________________________________________________
 TGraphQQ::TGraphQQ()
 {
    //default constructor
-   
+
    fF   = 0;
    fY0  = 0;
    fNy0 = 0;
@@ -110,10 +110,10 @@ TGraphQQ::TGraphQQ()
 
 
 //______________________________________________________________________________
-TGraphQQ::TGraphQQ(Int_t n, Double_t *x) 
+TGraphQQ::TGraphQQ(Int_t n, Double_t *x)
    : TGraph(n)
 {
-   //Creates a quantile-quantile plot of dataset x. 
+   //Creates a quantile-quantile plot of dataset x.
    //Theoretical distribution function can be defined later by SetFunction method
 
    fNy0 = 0;
@@ -129,7 +129,7 @@ TGraphQQ::TGraphQQ(Int_t n, Double_t *x)
    fF=0;
    fY0=0;
    delete [] index;
-} 
+}
 
 //______________________________________________________________________________
 TGraphQQ::TGraphQQ(Int_t n, Double_t *x, TF1 *f)
@@ -147,7 +147,7 @@ TGraphQQ::TGraphQQ(Int_t n, Double_t *x, TF1 *f)
    fF = f;
    fY0=0;
    MakeFunctionQuantiles();
-} 
+}
 
 
 //______________________________________________________________________________
@@ -272,7 +272,7 @@ void TGraphQQ::Quartiles()
 {
    // compute quartiles
    // a quartile is a 25 per cent or 75 per cent quantile
-   
+
    Double_t prob[]={0.25, 0.75};
    Double_t x[2];
    Double_t y[2];
@@ -284,10 +284,10 @@ void TGraphQQ::Quartiles()
       if (s.Contains("TMath::Gaus") || s.Contains("gaus")){
          x[0] = TMath::NormQuantile(0.25);
          x[1] = TMath::NormQuantile(0.75);
-      } else 
+      } else
          fF->GetQuantiles(2, x, prob);
    }
-   else 
+   else
       TMath::Quantiles(fNpoints, 2, fX, x, prob, kTRUE);
 
    fXq1=x[0]; fXq2=x[1]; fYq1=y[0]; fYq2=y[1];
@@ -297,7 +297,7 @@ void TGraphQQ::Quartiles()
 //______________________________________________________________________________
 void TGraphQQ::SetFunction(TF1 *f)
 {
-   //Sets the theoretical distribution function (density!) 
+   //Sets the theoretical distribution function (density!)
    //and computes its quantiles
 
    fF = f;

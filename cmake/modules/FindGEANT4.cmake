@@ -29,8 +29,8 @@ FIND_PATH(GEANT4_INCLUDE_DIR NAMES G4Event.hh PATHS
 
 SET(GEANT4_INCLUDE_DIR
 ${SIMPATH}/transport/geant4/include
-${SIMPATH}/transport/geant4/source/interfaces/common/include 
-${SIMPATH}/transport/geant4/physics_lists/hadronic/Packaging/include   
+${SIMPATH}/transport/geant4/source/interfaces/common/include
+${SIMPATH}/transport/geant4/physics_lists/hadronic/Packaging/include
 ${SIMPATH}/transport/geant4/physics_lists/hadronic/QGSP/include
 )
 

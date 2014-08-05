@@ -132,7 +132,7 @@ public:
    long f128(double d) const {return (long)(d + 128);}
    long f129(double d) const {return (long)(d + 129);}
    long f130(double d) const {return (long)(d + 130);}
-   
+
 private:
    Klass* fKlass;
 };

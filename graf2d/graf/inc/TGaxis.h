@@ -64,7 +64,7 @@ protected:
    static Float_t fYAxisExpXOffset; //!Exponent X offset for the Y axis
    static Float_t fYAxisExpYOffset; //!Exponent Y offset for the Y axis
 
-   TGaxis(const TGaxis&); 
+   TGaxis(const TGaxis&);
    TGaxis& operator=(const TGaxis&);
 
 public:
@@ -135,7 +135,7 @@ public:
    void                SetWmin(Double_t wmin) {fWmin = wmin;}
    void                SetWmax(Double_t wmax) {fWmax = wmax;}
    static void         SetExponentOffset(Float_t xoff=0., Float_t yoff=0., Option_t *axis="xy");
-                                                                   
+
    ClassDef(TGaxis,5)  //Graphics axis
 };
 

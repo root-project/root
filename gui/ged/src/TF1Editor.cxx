@@ -129,7 +129,7 @@ void TF1Editor::ConnectSignals2Slots()
    fSliderX->Connect("Pressed()","TF1Editor", this,"DoSliderXPressed()");
    fSliderX->Connect("Released()","TF1Editor", this,"DoSliderXReleased()");
    fSliderX->Connect("PositionChanged()","TF1Editor", this,"DoSliderXMoved()");
-   
+
    fInit = kFALSE;
 }
 
@@ -140,7 +140,7 @@ void TF1Editor::SetModel(TObject* obj)
    if (obj == 0 || !obj->InheritsFrom(TF1::Class())) {
       return;
    }
-   
+
    fF1 = (TF1*)obj;
    fAvoidSignal = kTRUE;
 
@@ -179,7 +179,7 @@ void TF1Editor::DoParameterSettings()
    TGMainFrame *main =  (TGMainFrame *)GetMainFrame();
    Double_t rmin = fSldMinX->GetNumber();
    Double_t rmax = fSldMaxX->GetNumber();
-   new TFunctionParametersDialog(gClient->GetDefaultRoot(), main, 
+   new TFunctionParametersDialog(gClient->GetDefaultRoot(), main,
                                  fF1, fGedEditor->GetPad(), rmin, rmax);
 
 }
@@ -215,7 +215,7 @@ void TF1Editor::DoSliderXMoved()
 
    fF1->SetNpx((Int_t)fNXpoints->GetNumber());
    TAxis *x = fF1->GetHistogram()->GetXaxis();
-   
+
    if (fDrawMode->GetState() == kButtonDown) {
       TString opt = fF1->GetDrawOption();
       opt.ToUpper();

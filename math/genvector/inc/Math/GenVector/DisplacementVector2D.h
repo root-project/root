@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -14,10 +14,10 @@
 // Created by: Lorenzo Moneta  at Mon Apr 16 2007
 //
 
-#ifndef ROOT_Math_GenVector_DisplacementVector2D 
+#ifndef ROOT_Math_GenVector_DisplacementVector2D
 #define ROOT_Math_GenVector_DisplacementVector2D  1
 
-#ifndef ROOT_Math_GenVector_Cartesian2D 
+#ifndef ROOT_Math_GenVector_Cartesian2D
 #include "Math/GenVector/Cartesian2D.h"
 #endif
 
@@ -29,11 +29,11 @@
 #include "Math/GenVector/GenVectorIO.h"
 #endif
 
-#ifndef ROOT_Math_GenVector_BitReproducible 
+#ifndef ROOT_Math_GenVector_BitReproducible
 #include "Math/GenVector/BitReproducible.h"
 #endif
 
-#ifndef ROOT_Math_GenVector_CoordinateSystemTags 
+#ifndef ROOT_Math_GenVector_CoordinateSystemTags
 #include "Math/GenVector/CoordinateSystemTags.h"
 #endif
 
@@ -55,10 +55,10 @@ namespace ROOT {
         One example is the XYVector which is a vector based on
         double precision x,y  data members by using the
         ROOT::Math::Cartesian2D<double> Coordinate system.
-        The class is having also an extra template parameter, the coordinate system tag, 
-        to be able to identify (tag) vector described in different reference coordinate system, 
-        like global or local coordinate systems.   
-        
+        The class is having also an extra template parameter, the coordinate system tag,
+        to be able to identify (tag) vector described in different reference coordinate system,
+        like global or local coordinate systems.
+
         @ingroup GenVector
      */
 
@@ -101,13 +101,13 @@ namespace ROOT {
            but with the same coordinate system tag
         */
         template <class OtherCoords>
-        explicit DisplacementVector2D( const PositionVector2D<OtherCoords,Tag> & p) : 
+        explicit DisplacementVector2D( const PositionVector2D<OtherCoords,Tag> & p) :
            fCoordinates ( p.Coordinates() ) { }
 
 
         /**
            Construct from a foreign 2D vector type, for example, Hep2Vector
-           Precondition: v must implement methods x() and  y() 
+           Precondition: v must implement methods x() and  y()
         */
         template <class ForeignVector>
         explicit DisplacementVector2D( const ForeignVector & v) :
@@ -143,7 +143,7 @@ namespace ROOT {
 
         /**
            Assignment from a foreign 2D vector type, for example, Hep2Vector
-           Precondition: v must implement methods x() and  y() 
+           Precondition: v must implement methods x() and  y()
         */
         template <class ForeignVector>
         DisplacementVector2D & operator= ( const ForeignVector & v) {
@@ -162,11 +162,11 @@ namespace ROOT {
         }
 
         /**
-           Set internal data based on 2 Scalar numbers. 
+           Set internal data based on 2 Scalar numbers.
            These are for example (x,y) for a cartesian vector or (r,phi) for a polar vector
        */
         DisplacementVector2D<CoordSystem, Tag>& SetCoordinates( Scalar a, Scalar b) {
-           fCoordinates.SetCoordinates(a, b);  
+           fCoordinates.SetCoordinates(a, b);
            return *this;
         }
 
@@ -247,16 +247,16 @@ namespace ROOT {
         /**
            Change X - Cartesian2D coordinates only
         */
-        DisplacementVector2D<CoordSystem, Tag>& SetX (Scalar a) { 
-           fCoordinates.SetX(a); 
+        DisplacementVector2D<CoordSystem, Tag>& SetX (Scalar a) {
+           fCoordinates.SetX(a);
            return *this;
         }
 
         /**
            Change Y - Cartesian2D coordinates only
         */
-        DisplacementVector2D<CoordSystem, Tag>& SetY (Scalar a) { 
-           fCoordinates.SetY(a); 
+        DisplacementVector2D<CoordSystem, Tag>& SetY (Scalar a) {
+           fCoordinates.SetY(a);
            return *this;
         }
 
@@ -264,8 +264,8 @@ namespace ROOT {
         /**
            Change R - Polar2D coordinates only
         */
-        DisplacementVector2D<CoordSystem, Tag>& SetR (Scalar a) { 
-           fCoordinates.SetR(a); 
+        DisplacementVector2D<CoordSystem, Tag>& SetR (Scalar a) {
+           fCoordinates.SetR(a);
            return *this;
         }
 
@@ -273,7 +273,7 @@ namespace ROOT {
         /**
            Change Phi - Polar2D  coordinates
         */
-        DisplacementVector2D<CoordSystem, Tag>& SetPhi (Scalar ang) { 
+        DisplacementVector2D<CoordSystem, Tag>& SetPhi (Scalar ang) {
            fCoordinates.SetPhi(ang);
            return *this;
         }
@@ -281,11 +281,11 @@ namespace ROOT {
 
 
         // ------ Operations combining two vectors ------
-        // -- need to have the specialized version in order to avoid 
+        // -- need to have the specialized version in order to avoid
 
         /**
            Return the scalar (dot) product of two displacement vectors.
-           It is possible to perform the product for any type of vector coordinates, 
+           It is possible to perform the product for any type of vector coordinates,
            but they must have the same coordinate system tag
         */
         template< class OtherCoords >
@@ -375,9 +375,9 @@ namespace ROOT {
         }
 
         /**
-           Rotate by an angle 
+           Rotate by an angle
          */
-        void Rotate( Scalar angle) { 
+        void Rotate( Scalar angle) {
            return fCoordinates.Rotate(angle);
         }
 
@@ -408,7 +408,7 @@ namespace ROOT {
 
         template <class OtherCoords, class OtherTag>
         DisplacementVector2D & operator=( const DisplacementVector2D<OtherCoords, OtherTag> & );
-      
+
 
         template <class OtherCoords, class OtherTag>
         DisplacementVector2D & operator=( const PositionVector2D<OtherCoords, OtherTag> & );

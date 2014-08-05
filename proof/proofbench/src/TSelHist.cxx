@@ -55,7 +55,7 @@ TSelHist::~TSelHist()
    SafeDelete(fRandom);
 
    // Info("TSelHist","destroying ...");
-   
+
    if (!fDraw){
    for (Int_t i=0; i < fNHists; i++) {
       if (fHist1D && fHist1D[i] && !fOutput->FindObject(fHist1D[i])) {
@@ -91,7 +91,7 @@ void TSelHist::Begin(TTree * /*tree*/)
    TString sinput;
    TObject *obj;
 
-   
+
    while ((obj = nxt())){
       sinput=obj->GetName();
       //Info("Begin", "object name=%s", sinput.Data());
@@ -108,7 +108,7 @@ void TSelHist::Begin(TTree * /*tree*/)
          }
          else{
             Error("Begin", "PROOF_BenchmarkNHists not type TParameter<Int_t>*");
-         } 
+         }
          continue;
       }
       if (sinput.Contains("PROOF_BenchmarkDraw")){
@@ -120,7 +120,7 @@ void TSelHist::Begin(TTree * /*tree*/)
          }
          else{
             Error("Begin", "PROOF_BenchmarkDraw not type TParameter<Int_t>*");
-         } 
+         }
          continue;
       }
    }
@@ -180,7 +180,7 @@ void TSelHist::SlaveBegin(TTree * /*tree*/)
          else{
             Error("SlaveBegin", "PROOF_BenchmarkNHists not type TParameter"
                                 "<Int_t>*");
-         } 
+         }
          continue;
       }
       if (sinput.Contains("PROOF_BenchmarkDraw")){
@@ -193,7 +193,7 @@ void TSelHist::SlaveBegin(TTree * /*tree*/)
          else{
             Error("SlaveBegin", "PROOF_BenchmarkDraw not type TParameter"
                                 "<Int_t>*");
-         } 
+         }
          continue;
       }
    }

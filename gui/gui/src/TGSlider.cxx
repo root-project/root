@@ -92,7 +92,7 @@ void TGSlider::CreateDisabledPicture()
       return;
    }
    TString back = gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0");
-   img2->FillRectangle(back.Data(), 0, 0, fSliderPic->GetWidth(), 
+   img2->FillRectangle(back.Data(), 0, 0, fSliderPic->GetWidth(),
                        fSliderPic->GetHeight());
    img->SetImage(fSliderPic->GetPicture(), fSliderPic->GetMask());
    Pixmap_t mask = img->GetMask();
@@ -168,7 +168,7 @@ void TGVSlider::DoRedraw()
    gVirtualX->ClearWindow(fId);
 
    GContext_t drawGC = IsEnabled() ? GetBlackGC()() : GetShadowGC()();
-   
+
    gVirtualX->DrawLine(fId, GetShadowGC()(), fWidth/2, 8, fWidth/2-1, 8);
    gVirtualX->DrawLine(fId, GetShadowGC()(), fWidth/2-1, 8, fWidth/2-1, fHeight-9);
    gVirtualX->DrawLine(fId, GetHilightGC()(), fWidth/2+1, 8, fWidth/2+1, fHeight-8);
@@ -363,7 +363,7 @@ void TGHSlider::DoRedraw()
    gVirtualX->ClearWindow(fId);
 
    GContext_t drawGC = IsEnabled() ? GetBlackGC()() : GetShadowGC()();
-   
+
    gVirtualX->DrawLine(fId, GetShadowGC()(), 8, fHeight/2, 8, fHeight/2-1);
    gVirtualX->DrawLine(fId, GetShadowGC()(), 8, fHeight/2-1, fWidth-9, fHeight/2-1);
    gVirtualX->DrawLine(fId, GetHilightGC()(), 8, fHeight/2+1, fWidth-8, fHeight/2+1);

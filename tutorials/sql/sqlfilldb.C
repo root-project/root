@@ -1,20 +1,20 @@
 void sqlfilldb(int nfiles = 1000)
 {
    // Fill run catalog with nfiles entries
-   
+
    const char *ins = "INSERT INTO runcatalog VALUES ('%s', %d,"
       " %d, %d, %d, %10.2f, '%s', '%s', '1997-01-15 20:16:28',"
       " '1999-01-15 20:16:28', '%s', '%s')";
-   
+
    char sql[4096];
    char dataset[32];
    char rawfile[128];
    int  tag, evt = 0;
-   
+
    // open connection to MySQL server on localhost
    TSQLServer *db = TSQLServer::Connect("mysql://localhost/test", "nobody", "");
    TSQLResult *res;
-   
+
    // first clean table of old entries
    res = db->Query("DELETE FROM runcatalog");
    delete res;
@@ -22,7 +22,7 @@ void sqlfilldb(int nfiles = 1000)
    // start timer
    TStopwatch timer;
    timer.Start();
-   
+
    // fill run catalog
    for (int i = 0; i < nfiles; i++) {
       sprintf(dataset, "testrun_%d", i);
@@ -35,7 +35,7 @@ void sqlfilldb(int nfiles = 1000)
       delete res;
       //printf("%s\n", sql);
    }
-   
+
    delete db;
 
    // stop timer and print results

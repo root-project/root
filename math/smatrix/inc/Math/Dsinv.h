@@ -1,5 +1,5 @@
 // @(#)root/smatrix:$Id$
-// Authors: T. Glebe, L. Moneta    2005  
+// Authors: T. Glebe, L. Moneta    2005
 
 #ifndef  ROOT_Math_Dsinv
 #define  ROOT_Math_Dsinv
@@ -32,9 +32,9 @@
 #include "Math/SMatrixDfwd.h"
 #endif
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
 /** Dsinv.
     Compute inverse of a symmetric, positive definite matrix of dimension
@@ -43,9 +43,9 @@ namespace ROOT {
     @author T. Glebe
 */
 template <class T, int n, int idim>
-class SInverter 
+class SInverter
 {
-  
+
 public:
   template <class MatrixRep>
   inline static bool Dsinv(MatrixRep& rhs) {
@@ -89,7 +89,7 @@ public:
     // compiler will compute the arguments!
     rhs[((idim << 1) + 1) + arrayOffset] = -rhs[((idim << 1) + 1) + arrayOffset];
     rhs[idim + 2 + arrayOffset] = rhs[((idim << 1)) + 1 + arrayOffset] * rhs[((idim << 1)) + 2 + arrayOffset];
-    
+
     if(n > 2) {
 
       for (j = 3; j <= n; ++j) {
@@ -139,24 +139,24 @@ public:
 
     return true;
   }
-  
+
 
     // for symmetric matrices
 
   static bool Dsinv(MatRepSym<T,n> & rhs) {
-    // not very efficient but need to re-do Dsinv for new storage of 
+    // not very efficient but need to re-do Dsinv for new storage of
     // symmetric matrices
     MatRepStd<T,n,n> tmp;
-    for (int i = 0; i< n*n; ++i) 
+    for (int i = 0; i< n*n; ++i)
       tmp[i] = rhs[i];
     // call dsinv
     if (! SInverter<T,n,n>::Dsinv(tmp) ) return false;
     //if (! Inverter<n>::Dinv(tmp) ) return false;
     // recopy the data
-    for (int i = 0; i< n*n; ++i) 
+    for (int i = 0; i< n*n; ++i)
       rhs[i] = tmp[i];
 
-    return true; 
+    return true;
 
   }
 
@@ -167,6 +167,6 @@ public:
   }  // namespace Math
 
 }  // namespace ROOT
-          
+
 
 #endif  /* ROOT_Math_Dsinv */

@@ -2,7 +2,7 @@ void surfaces() {
    //Draw 2-Dim functions
    // To see the output of this macro, click begin_html <a href="gif/surfaces.gif">here</a> end_html
    //Author: Rene Brun
-   
+
    TCanvas *c1 = new TCanvas("c1","Surfaces Drawing Options",200,10,700,900);
    c1->SetFillColor(42);
    gStyle->SetFrameFillColor(42);
@@ -35,7 +35,7 @@ void surfaces() {
    f2->SetLineWidth(1);
    f2->SetLineColor(5);
    f2->Draw("surf1");
-   
+
    //add axis titles. The titles are set on the intermediate
    //histogram used for visualisation. We must force this histogram
    //to be created, then force the redrawing of the two pads

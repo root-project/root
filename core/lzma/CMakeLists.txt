@@ -6,7 +6,7 @@
 #---The builtin LMZA library is built using the CMake ExternalProject standard module
 #   in cmake/modules/SearchInstalledSoftare.cmake
 
-#---Declare ZipLZMA sources as part of libCore------------------------------- 
+#---Declare ZipLZMA sources as part of libCore-------------------------------
 set(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZipLZMA.h)
 set(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/ZipLZMA.c)
 

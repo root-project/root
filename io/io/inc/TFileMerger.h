@@ -79,7 +79,7 @@ public:
 
       kAll            = BIT(2)|BIT(3),      // Merge all type of objects (default)
       kAllIncremental = kIncremental | kAll, // Merge incrementally all type of objects.
-      
+
       kOnlyListed     = BIT(4),        // Only the objects specified in fObjectNames list
       kSkipListed     = BIT(5)         // Skip objects specified in fObjectNames list
    };

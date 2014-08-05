@@ -25,7 +25,7 @@ namespace ROOT {
          template<> double T<1> (double x) { return x;}
          template<> double T<2> (double x) { return 2.0*x*x -1;}
          template<> double T<3> (double x) { return 4.0*x*x*x -3.0*x;}
-      
+
          template<> double Eval<0> (double , const double *c) { return c[0];}
          template<> double Eval<1> (double x, const double *c) { return c[1]*x + c[0];}
          template<> double Eval<2> (double x, const double *c) { return c[2]*Chebyshev::T<2>(x) + c[1]*x + c[0];}

@@ -15,12 +15,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 class TGenericTable : public TTable {
-protected:                                        
-   TTableDescriptor *fColDescriptors;     
-   virtual TTableDescriptor *GetDescriptorPointer() const { return fColDescriptors;}                 
-   virtual void SetDescriptorPointer(TTableDescriptor *list) { fColDescriptors = list;}        
+protected:
+   TTableDescriptor *fColDescriptors;
+   virtual TTableDescriptor *GetDescriptorPointer() const { return fColDescriptors;}
+   virtual void SetDescriptorPointer(TTableDescriptor *list) { fColDescriptors = list;}
    void SetGenericType(){ TTable::SetType(GetDescriptorPointer()->GetName()); }
- 
+
 public:
    class iterator {
    protected:
@@ -43,8 +43,8 @@ public:
              char *operator *(){ return fCurrentRow;}
              Bool_t operator==(const iterator &t) const { return (fCurrentRow == t.fCurrentRow); }
       Bool_t operator!=(const iterator &t) const { return !operator==(t); }
-   };                                        
-   TGenericTable() : TTable("TGenericTable",-1), fColDescriptors(0) {SetType("generic");}      
+   };
+   TGenericTable() : TTable("TGenericTable",-1), fColDescriptors(0) {SetType("generic");}
 
    // Create TGenericTable by C structure name provided
    TGenericTable(const char *structName, const char *name);
@@ -58,16 +58,16 @@ public:
 
    virtual ~TGenericTable();
 
-   char  *GetTable(Int_t i=0)   const { return ((char *)GetArray())+i*GetRowSize();}     
+   char  *GetTable(Int_t i=0)   const { return ((char *)GetArray())+i*GetRowSize();}
    TTableDescriptor  *GetTableDescriptors() const { return GetDescriptorPointer();}
    TTableDescriptor  *GetRowDescriptors()   const { return GetDescriptorPointer();}
-   char &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }             
-   const char &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const char *)(GetTable(i))); } 
+   char &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }
+   const char &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const char *)(GetTable(i))); }
    iterator begin()        { return ((const TGenericTable *)this)->begin();}
    iterator begin() const  {                      return GetNRows() ? iterator(*this, *GetTable(0)):end();}
    iterator end()   { return ((const TGenericTable *)this)->end(); }
    iterator end()   const  {Long_t i = GetNRows(); return i? iterator(*this, *GetTable(i)):iterator(*this);}
    ClassDef(TGenericTable,4) // Generic array of C-structure (a'la STL vector)
 };
- 
+
 #endif

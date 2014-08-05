@@ -47,7 +47,7 @@ protected:
    Bool_t             CtorAllocate();
    virtual void       FillZero(Int_t begin, Int_t end,
                                Bool_t from_ctor = kTRUE);
-   virtual Bool_t     DoMerge(const TGraph * g);       
+   virtual Bool_t     DoMerge(const TGraph * g);
 
 
 public:
@@ -88,12 +88,12 @@ public:
    virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
    virtual void    SetPointError(Double_t exl, Double_t exh,
                                  Double_t eyl, Double_t eyh,
-                                 Double_t exld=0, Double_t exhd=0,  
+                                 Double_t exld=0, Double_t exhd=0,
                                  Double_t eyld=0, Double_t eyhd=0); // *MENU*
    virtual void    SetPointError(Int_t i,
                                  Double_t exl, Double_t exh,
                                  Double_t eyl, Double_t eyh,
-                                 Double_t exld=0, Double_t exhd=0,  
+                                 Double_t exld=0, Double_t exhd=0,
                                  Double_t eyld=0, Double_t eyhd=0);
 
    ClassDef(TGraphBentErrors,1)  //A graph with bent, asymmetric error bars

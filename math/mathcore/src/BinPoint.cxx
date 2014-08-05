@@ -13,26 +13,26 @@
 #include "Fit/BinPoint.h"
 #include "Fit/DataRange.h"
 
-#include <cassert> 
+#include <cassert>
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Fit { 
+   namespace Fit {
 
 
-bool BinPoint::IsInRange(const DataRange & range) const 
+bool BinPoint::IsInRange(const DataRange & range) const
 {
    // check if given point is inside the given range
-  
-   unsigned int ndim = NDim(); 
-   // need to check that datarange size is same as point size 
-   if (range.NDim() == 0) return true; // (range is empty is equivalent to (-inf, + inf) 
+
+   unsigned int ndim = NDim();
+   // need to check that datarange size is same as point size
+   if (range.NDim() == 0) return true; // (range is empty is equivalent to (-inf, + inf)
    // in case not zero dimension must be equal to the coordinates
-   assert( ndim == range.NDim() );  
-   for (unsigned int i = 0; i < ndim; ++i) { 
-      if ( ! range.IsInside( fCoords[i] ) ) return false; 
+   assert( ndim == range.NDim() );
+   for (unsigned int i = 0; i < ndim; ++i) {
+      if ( ! range.IsInside( fCoords[i] ) ) return false;
    }
-   return true; 
+   return true;
 }
 
    } // end namespace Fit

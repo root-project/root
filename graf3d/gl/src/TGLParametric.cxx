@@ -334,7 +334,7 @@ Bool_t TGLParametricPlot::InitGeometry()
          }
          u += dU;
       }
-      
+
       TH3F hist("tmp", "tmp", 2, -1., 1., 2, -1., 1., 2, -1., 1.);
       hist.SetDirectory(0);
       //TAxis has a lot of attributes, defaults, set by ctor,
@@ -343,7 +343,7 @@ Bool_t TGLParametricPlot::InitGeometry()
       hist.GetXaxis()->Copy(fCartesianXAxis);
       hist.GetYaxis()->Copy(fCartesianYAxis);
       hist.GetZaxis()->Copy(fCartesianZAxis);
-   
+
       fCartesianXAxis.Set(fMeshSize, min.X(), max.X());
       fCartesianXAxis.SetTitle("x");//it's lost when copying from temp. hist.
       fCartesianYAxis.Set(fMeshSize, min.Y(), max.Y());

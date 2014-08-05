@@ -40,12 +40,12 @@ private:
 protected:
    Int_t              fCount;     //!Reference count to this object (from TFile)
    TObjArray         *fObjects;   //!Array pointing to the referenced objects
-   
+
    static TProcessID *fgPID;      //Pointer to current session ProcessID
    static TObjArray  *fgPIDs;     //Table of ProcessIDs
    static TExMap     *fgObjPIDs;  //Table pointer to pids
    static UInt_t      fgNumber;   //Referenced objects count
-  
+
 public:
    TProcessID();
    virtual ~TProcessID();
@@ -58,7 +58,7 @@ public:
    TObject         *GetObjectWithID(UInt_t uid);
    void             PutObjectWithID(TObject *obj, UInt_t uid=0);
    virtual void     RecursiveRemove(TObject *obj);
-   
+
    static TProcessID  *AddProcessID();
    static UInt_t       AssignID(TObject *obj);
    static void         Cleanup();
@@ -72,7 +72,7 @@ public:
    static  UInt_t      GetObjectCount();
    static  Bool_t      IsValid(TProcessID *pid);
    static  void        SetObjectCount(UInt_t number);
-         
+
    ClassDef(TProcessID,1)  //Process Unique Identifier in time and space
 };
 

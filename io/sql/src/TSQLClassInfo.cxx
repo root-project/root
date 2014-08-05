@@ -10,9 +10,9 @@
  *************************************************************************/
 
 //________________________________________________________________________
-// 
+//
 // TSQLClassInfo class containes info about tables specific to one class and
-// version. It provides names of table for that class. For each version of 
+// version. It provides names of table for that class. For each version of
 // class not more than two tables can exists. Normal table has typically
 // name like TH1_ver4 and additional table has name like TH1_raw4
 // List of this objects are kept by TSQLFile class
@@ -33,7 +33,7 @@ TSQLClassColumnInfo::TSQLClassColumnInfo() :
    fSQLName(),
    fSQLType()
 {
-   // default constructor 
+   // default constructor
 }
 
 //______________________________________________________________________________
@@ -45,9 +45,9 @@ TSQLClassColumnInfo::TSQLClassColumnInfo(const char* name,
    fSQLName(sqlname),
    fSQLType(sqltype)
 {
-   // normal constructor 
+   // normal constructor
 }
-                     
+
 //______________________________________________________________________________
 TSQLClassColumnInfo::~TSQLClassColumnInfo()
 {
@@ -73,8 +73,8 @@ TSQLClassInfo::TSQLClassInfo() :
 
 //______________________________________________________________________________
 TSQLClassInfo::TSQLClassInfo(Long64_t classid,
-                             const char* classname, 
-                             Int_t version) : 
+                             const char* classname,
+                             Int_t version) :
    TObject(),
    fClassName(classname),
    fClassVersion(version),
@@ -85,19 +85,19 @@ TSQLClassInfo::TSQLClassInfo(Long64_t classid,
    fRawtableExist(kFALSE)
 {
    // normal constructor of TSQLClassInfo class
-   // Sets names of tables, which are used for that version of class    
+   // Sets names of tables, which are used for that version of class
    fClassTable.Form("%s_ver%d", classname, version);
    fRawTable.Form("%s_raw%d", classname, version);
 }
-   
+
 //______________________________________________________________________________
 TSQLClassInfo::~TSQLClassInfo()
 {
 // destructor
 
    if (fColumns!=0) {
-      fColumns->Delete();  
-      delete fColumns; 
+      fColumns->Delete();
+      delete fColumns;
    }
 }
 
@@ -105,10 +105,10 @@ TSQLClassInfo::~TSQLClassInfo()
 void TSQLClassInfo::SetColumns(TObjArray* columns)
 {
 // assigns new list of columns
-    
+
    if (fColumns!=0) {
-      fColumns->Delete();  
-      delete fColumns; 
+      fColumns->Delete();
+      delete fColumns;
    }
    fColumns = columns;
 }
@@ -117,8 +117,8 @@ void TSQLClassInfo::SetColumns(TObjArray* columns)
 void TSQLClassInfo::SetTableStatus(TObjArray* columns, Bool_t israwtable)
 {
 // set current status of class tables
-    
-   SetColumns(columns); 
+
+   SetColumns(columns);
    fRawtableExist = israwtable;
 }
 
@@ -131,18 +131,18 @@ Int_t TSQLClassInfo::FindColumn(const char* name, Bool_t sqlname)
    // Return index of column in list (-1 if not found)
 
    if ((name==0) || (fColumns==0)) return -1;
-   
+
    TIter next(fColumns);
 
    TSQLClassColumnInfo* col = 0;
-   
+
    Int_t indx = 0;
-   
+
    while ((col = (TSQLClassColumnInfo*) next()) != 0) {
       const char* colname = sqlname ? col->GetSQLName() : col->GetName();
       if (strcmp(colname, name)==0) return indx;
       indx++;
    }
-   
+
    return -1;
 }

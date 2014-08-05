@@ -703,8 +703,8 @@ TGeoManager::~TGeoManager()
    if (fPdgNames) {fPdgNames->Delete(); SafeDelete( fPdgNames );}
    ClearNavigators();
    CleanGarbage();
-   SafeDelete( fPainter ); 
-   SafeDelete( fGLMatrix ); 
+   SafeDelete( fPainter );
+   SafeDelete( fGLMatrix );
    if (fSizePNEId) {
       delete [] fKeyPNEId;
       delete [] fValuePNEId;
@@ -839,24 +839,22 @@ TGeoNavigator *TGeoManager::AddNavigator()
    if (fClosed) nav->GetCache()->BuildInfoBranch();
    if (fMultiThread) TThread::UnLock();
    return nav;
-}   
-
-TTHREAD_TLS_DECLARE(TGeoNavigator*, tnav);
+}
 
 //_____________________________________________________________________________
 TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 {
 // Returns current navigator for the calling thread.
-   TTHREAD_TLS_INIT(TGeoNavigator*,tnav,0);
+   TTHREAD_TLS(TGeoNavigator*) tnav = 0;
    if (!fMultiThread) return fCurrentNavigator;
-   TGeoNavigator *nav = TTHREAD_TLS_GET(TGeoNavigator*,tnav);
+   TGeoNavigator *nav = tnav; // TTHREAD_TLS_GET(TGeoNavigator*,tnav);
    if (nav) return nav;
    Long_t threadId = TThread::SelfId();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) return 0;
    TGeoNavigatorArray *array = it->second;
    nav = array->GetCurrentNavigator();
-   TTHREAD_TLS_SET(TGeoNavigator*,tnav,nav);
+   tnav = nav; // TTHREAD_TLS_SET(TGeoNavigator*,tnav,nav);
    return nav;
 }
 
@@ -880,7 +878,7 @@ Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
    if (it == fNavigators.end()) {
       Error("SetCurrentNavigator", "No navigator defined for thread %ld\n", threadId);
       return kFALSE;
-   }   
+   }
    TGeoNavigatorArray *array = it->second;
    TGeoNavigator *nav = array->SetCurrentNavigator(index);
    if (!nav) {
@@ -897,7 +895,7 @@ void TGeoManager::SetNavigatorsLock(Bool_t flag)
 // Set the lock for navigators.
    fgLockNavigators = flag;
 }
-   
+
 //_____________________________________________________________________________
 void TGeoManager::ClearNavigators()
 {
@@ -909,7 +907,7 @@ void TGeoManager::ClearNavigators()
       arr = (*it).second;
       if (arr) delete arr;
    }
-   fNavigators.clear();   
+   fNavigators.clear();
    if (fMultiThread) TThread::UnLock();
 }
 
@@ -928,11 +926,11 @@ void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
             if (fMultiThread) TThread::UnLock();
             return;
          }
-      }   
+      }
    }
    Error("Remove navigator", "Navigator %p not found", nav);
    if (fMultiThread) TThread::UnLock();
-}      
+}
 
 //_____________________________________________________________________________
 void TGeoManager::SetMaxThreads(Int_t nthreads)
@@ -941,7 +939,7 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
    if (!fClosed) {
       Error("SetMaxThreads", "Cannot set maximum number of threads before closing the geometry");
       return;
-   }   
+   }
    if (fMaxThreads) {
       ClearThreadsMap();
       ClearThreadData();
@@ -950,7 +948,7 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
    if (fMaxThreads>0) {
       fMultiThread = kTRUE;
       CreateThreadData();
-   }   
+   }
 }
 
 //______________________________________________________________________________
@@ -986,8 +984,6 @@ void TGeoManager::ClearThreadsMap()
    TThread::UnLock();
 }
 
-TTHREAD_TLS_DECLARE(Int_t, tid);
-
 //_____________________________________________________________________________
 Int_t TGeoManager::ThreadId()
 {
@@ -995,8 +991,8 @@ Int_t TGeoManager::ThreadId()
 // manage data which is pspecific for a given thread.
 //   static __thread Int_t tid = -1;
 //   if (tid > -1) return tid;
-   TTHREAD_TLS_INIT(Int_t,tid,-1);
-   Int_t ttid = TTHREAD_TLS_GET(Int_t,tid);
+   TTHREAD_TLS(Int_t) tid = -1;
+   Int_t ttid = tid; // TTHREAD_TLS_GET(Int_t,tid);
    if (ttid > -1) return ttid;
    if (gGeoManager && !gGeoManager->IsMultiThread()) return 0;
    TGeoManager::ThreadsMapIt_t it = fgThreadId->find(TThread::SelfId());
@@ -1004,12 +1000,12 @@ Int_t TGeoManager::ThreadId()
    // Map needs to be updated.
    TThread::Lock();
    (*fgThreadId)[TThread::SelfId()] = fgNumThreads;
-   TTHREAD_TLS_SET(Int_t,tid,fgNumThreads);
+   tid = fgNumThreads; // TTHREAD_TLS_SET(Int_t,tid,fgNumThreads);
    fgNumThreads++;
    TThread::UnLock();
    return fgNumThreads-1;
 }
-   
+
 //_____________________________________________________________________________
 void TGeoManager::Browse(TBrowser *b)
 {
@@ -1460,7 +1456,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
          }
          SetTopVolume(fMasterVolume);
          if (fStreamVoxels && fgVerboseLevel>0) Info("CloseGeometry","Voxelization retrieved from file");
-      }   
+      }
       // Create a geometry navigator if not present
       if (!GetCurrentNavigator()) fCurrentNavigator = AddNavigator();
       nnavigators = GetListOfNavigators()->GetEntriesFast();
@@ -1513,7 +1509,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
    if (fgVerboseLevel>0) {
       Info("CloseGeometry","%i nodes/ %i volume UID's in %s", fNNodes, fUniqueVolumes->GetEntriesFast()-1, GetTitle());
       Info("CloseGeometry","----------------modeler ready----------------");
-   }   
+   }
 }
 
 //_____________________________________________________________________________
@@ -1672,11 +1668,11 @@ void TGeoManager::CountLevels()
          for (Int_t ibit=10; ibit<14; ibit++) {
             node->SetBit(BIT(ibit+4), node->TestBit(BIT(ibit)));
 //            node->ResetBit(BIT(ibit)); // cannot overwrite old crap for reproducibility
-         }   
-      }   
+         }
+      }
       if (node->GetVolume()->GetVoxels()) {
          if (node->GetNdaughters()>maxnodes) maxnodes = node->GetNdaughters();
-      }   
+      }
       if (next.GetLevel()>maxlevel) maxlevel = next.GetLevel();
       if (node->GetVolume()->GetShape()->IsA()==TGeoXtru::Class()) {
          TGeoXtru *xtru = (TGeoXtru*)node->GetVolume()->GetShape();
@@ -1687,8 +1683,8 @@ void TGeoManager::CountLevels()
    fgMaxDaughters = maxnodes;
    fgMaxXtruVert = maxvertices;
    if (fgVerboseLevel>0) Info("CountLevels", "max level = %d, max placements = %d", fgMaxLevel, fgMaxDaughters);
-}      
-  
+}
+
 //_____________________________________________________________________________
 Int_t TGeoManager::CountNodes(const TGeoVolume *vol, Int_t nlevels, Int_t option)
 {
@@ -1908,7 +1904,7 @@ Int_t TGeoManager::GetNumThreads()
 {
 // Returns number of threads that were set to use geometry.
    return fgNumThreads;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoHMatrix *TGeoManager::GetHMatrix()
@@ -2136,7 +2132,7 @@ void TGeoManager::SetTopVisible(Bool_t vis) {
 void TGeoManager::SetCheckedNode(TGeoNode *node) {
 // Assign a given node to be checked for ovelaps. Any other overlaps will be ignored.
    GetGeomPainter()->SetCheckedNode(node);
-}   
+}
 //_____________________________________________________________________________
 void TGeoManager::SetNmeshPoints(Int_t npoints)
 {
@@ -2144,7 +2140,7 @@ void TGeoManager::SetNmeshPoints(Int_t npoints)
 // for overlaps.
    GetGeomPainter()->SetNmeshPoints(npoints);
 }
-   
+
 //_____________________________________________________________________________
 void TGeoManager::SetVisOption(Int_t option) {
 // set drawing mode :
@@ -3258,7 +3254,7 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
    if (!GetCurrentNavigator()) {
       fCurrentNavigator = AddNavigator();
       return;
-   }      
+   }
    Int_t nnavigators = 0;
    TGeoNavigatorArray *arr = GetListOfNavigators();
    if (!arr) return;
@@ -3318,7 +3314,7 @@ void TGeoManager::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
 // position given by FindNextBoundary. If radius is not mentioned the full bounding
 // box will be sampled.
    GetGeomPainter()->CheckBoundaryErrors(ntracks, radius);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoManager::CheckBoundaryReference(Int_t icheck)
@@ -3327,7 +3323,7 @@ void TGeoManager::CheckBoundaryReference(Int_t icheck)
 // The shape for which the crossing failed is drawn with the starting point in red
 // and the extrapolated point to boundary (+/- failing push/pull) in yellow.
    GetGeomPainter()->CheckBoundaryReference(icheck);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option)
@@ -3340,14 +3336,14 @@ void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
 void TGeoManager::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option)
 {
 // Test for shape navigation methods. Summary for test numbers:
-//  1: DistFromInside/Outside. Sample points inside the shape. Generate 
-//    directions randomly in cos(theta). Compute DistFromInside and move the 
+//  1: DistFromInside/Outside. Sample points inside the shape. Generate
+//    directions randomly in cos(theta). Compute DistFromInside and move the
 //    point with bigger distance. Compute DistFromOutside back from new point.
 //    Plot d-(d1+d2)
 //
    GetGeomPainter()->CheckShape(shape, testNo, nsamples, option);
 }
-    
+
 //_____________________________________________________________________________
 void TGeoManager::CheckGeometryFull(Int_t ntracks, Double_t vx, Double_t vy, Double_t vz, Option_t *option)
 {
@@ -3411,7 +3407,7 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
       else if (vol->GetMedium() == dummy) {
          Warning("CheckGeometry", "Volume \"%s\" has no medium: assigned dummy medium and material", vol->GetName());
          vol->SetMedium(dummy);
-      }   
+      }
    }
 }
 
@@ -3458,7 +3454,7 @@ Double_t TGeoManager::Weight(Double_t precision, Option_t *option)
          Info("Weight", "Estimating weight of %s with %g %% precision", fTopVolume->GetName(), 100.*precision);
          printf("    event         weight         err\n");
          printf("========================================\n");
-      }   
+      }
    }
    weight = fPainter->Weight(precision, option);
    return weight;
@@ -3525,10 +3521,10 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
    if (sfile.Contains(".gdml")) {
       //Save geometry as a gdml file
       if (fgVerboseLevel>0) Info("Export","Exporting %s %s as gdml code", GetName(), GetTitle());
-	  //C++ version
+      //C++ version
       TString cmd ;
-	  cmd = TString::Format("TGDMLWrite::StartGDMLWriting(gGeoManager,\"%s\",\"%s\")", filename, option);
-	  gROOT->ProcessLineFast(cmd);
+      cmd = TString::Format("TGDMLWrite::StartGDMLWriting(gGeoManager,\"%s\",\"%s\")", filename, option);
+      gROOT->ProcessLineFast(cmd);
       return 1;
    }
    if (sfile.Contains(".root") || sfile.Contains(".xml")) {
@@ -3764,13 +3760,13 @@ void TGeoManager::TopToMaster(const Double_t *top, Double_t *master) const
 TGeoParallelWorld *TGeoManager::CreateParallelWorld(const char *name)
 {
 // Create a parallel world for prioritized navigation. This can be populated
-// with physical nodes and can be navigated independently using its API. 
+// with physical nodes and can be navigated independently using its API.
 // In case the flag SetUseParallelWorldNav is set, any navigation query in the
 // main geometry is checked against the parallel geometry, which gets priority
 // in case of overlaps with the main geometry volumes.
    fParallelWorld = new TGeoParallelWorld(name, this);
    return fParallelWorld;
-}   
+}
 
 //______________________________________________________________________________
 void TGeoManager::SetUseParallelWorldNav(Bool_t flag)
@@ -3785,7 +3781,7 @@ void TGeoManager::SetUseParallelWorldNav(Bool_t flag)
    if (!flag) {
       fUsePWNav = flag;
       return;
-   }   
+   }
    if (!fClosed) {
       Error("SetUseParallelWorldNav", "The geometry must be closed first");
       return;

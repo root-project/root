@@ -1,5 +1,5 @@
 // @(#)root/smatrix:$Id$
-// Authors: L. Moneta    2005  
+// Authors: L. Moneta    2005
 
 
 

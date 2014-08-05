@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Author:  L. Moneta 2012  
+// Author:  L. Moneta 2012
 
 /**********************************************************************
  *                                                                    *
@@ -15,11 +15,11 @@ namespace ROOT {
    namespace Minuit2 {
 
       class MinimumState;
-      class MnUserParameterState; 
+      class MnUserParameterState;
 
-      class MnTraceObject { 
+      class MnTraceObject {
 
-      public: 
+      public:
 
          MnTraceObject(int parNumber = -1) :
             fUserState(0),
@@ -29,7 +29,7 @@ namespace ROOT {
 
          virtual void Init(const MnUserParameterState & state) { fUserState = &state; }
 
-         virtual void operator() (int i, const MinimumState & state); 
+         virtual void operator() (int i, const MinimumState & state);
 
          const MnUserParameterState & UserState() const { return *fUserState; }
 
@@ -37,10 +37,10 @@ namespace ROOT {
 
          int  ParNumber() const { return fParNumber; }
 
-      private: 
+      private:
 
-         const MnUserParameterState * fUserState; 
-         int fParNumber; 
+         const MnUserParameterState * fUserState;
+         int fParNumber;
       };
 
    }  // namespace Minuit2

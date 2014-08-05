@@ -41,7 +41,7 @@ protected:
    Bool_t             CtorAllocate();
    virtual void       FillZero(Int_t begin, Int_t end,
                                Bool_t from_ctor = kTRUE);
-   virtual Bool_t     DoMerge(const TGraph * g);       
+   virtual Bool_t     DoMerge(const TGraph * g);
 
 
 public:

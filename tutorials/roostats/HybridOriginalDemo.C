@@ -1,5 +1,5 @@
 // Example on how to use the HybridCalculatorOriginal class
-// 
+//
 // Author: Gregory Schott
 #include "RooRandom.h"
 #include "RooRealVar.h"
@@ -81,16 +81,16 @@ void HybridOriginalDemo(int ntoys = 1000)
   myHybridCalc.SetTestStatistic(1);
   //myHybridCalc.SetTestStatistic(3); // profile likelihood ratio
 
-  myHybridCalc.SetNumberOfToys(ntoys); 
+  myHybridCalc.SetNumberOfToys(ntoys);
   myHybridCalc.UseNuisance(true);
 
-  // for speed up generation (do binned data) 
-  myHybridCalc.SetGenerateBinned(false); 
+  // for speed up generation (do binned data)
+  myHybridCalc.SetGenerateBinned(false);
 
   // calculate by running ntoys for the S+B and B hypothesis and retrieve the result
-  HybridResult* myHybridResult = myHybridCalc.GetHypoTest(); 
+  HybridResult* myHybridResult = myHybridCalc.GetHypoTest();
 
-  if (! myHybridResult) { 
+  if (! myHybridResult) {
      std::cerr << "\nError returned from Hypothesis test" << std::endl;
      return;
   }

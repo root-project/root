@@ -8,9 +8,9 @@
 #include "TSystem.h"
 #include "TRandom.h"
 #include <stdio.h>
-   
+
 void seism() {
-   
+
    TStopwatch sw; sw.Start();
    //set time offset
    TDatime dtime;
@@ -20,7 +20,7 @@ void seism() {
    c1->SetFillColor(42);
    c1->SetFrameFillColor(33);
    c1->SetGrid();
-   
+
    Float_t bintime = 1; //one bin = 1 second. change it to set the time scale
    TH1F *ht = new TH1F("ht","The ROOT seism",10,0,10*bintime);
    Float_t signal = 1000;
@@ -31,7 +31,7 @@ void seism() {
    ht->GetXaxis()->SetTimeDisplay(1);
    ht->GetYaxis()->SetNdivisions(520);
    ht->Draw();
-   
+
    for (Int_t i=1;i<2300;i++) {
       //======= Build a signal : noisy damped sine ======
       Float_t noise  = gRandom->Gaus(0,120);

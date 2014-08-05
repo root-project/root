@@ -115,9 +115,9 @@
 #define GL2PS_BLEND               4
 
 /* Text alignment (o=raster position; default mode is BL):
-   +---+ +---+ +---+ +---+ +---+ +---+ +-o-+ o---+ +---o 
-   | o | o   | |   o |   | |   | |   | |   | |   | |   | 
-   +---+ +---+ +---+ +-o-+ o---+ +---o +---+ +---+ +---+ 
+   +---+ +---+ +---+ +---+ +---+ +---+ +-o-+ o---+ +---o
+   | o | o   | |   o |   | |   | |   | |   | |   | |   |
+   +---+ +---+ +---+ +-o-+ o---+ +---o +---+ +---+ +---+
     C     CL    CR    B     BL    BR    T     TL    TR */
 
 #define GL2PS_TEXT_C  1
@@ -136,10 +136,10 @@ typedef GLfloat GL2PSrgba[4];
 extern "C" {
 #endif
 
-GL2PSDLL_API GLint gl2psBeginPage(const char *title, const char *producer, 
+GL2PSDLL_API GLint gl2psBeginPage(const char *title, const char *producer,
                                   GLint viewport[4], GLint format, GLint sort,
                                   GLint options, GLint colormode,
-                                  GLint colorsize, GL2PSrgba *colormap, 
+                                  GLint colorsize, GL2PSrgba *colormap,
                                   GLint nr, GLint ng, GLint nb, GLint buffersize,
                                   FILE *stream, const char *filename);
 GL2PSDLL_API GLint gl2psEndPage(void);
@@ -147,9 +147,9 @@ GL2PSDLL_API GLint gl2psSetOptions(GLint options);
 GL2PSDLL_API GLint gl2psGetOptions(GLint *options);
 GL2PSDLL_API GLint gl2psBeginViewport(GLint viewport[4]);
 GL2PSDLL_API GLint gl2psEndViewport(void);
-GL2PSDLL_API GLint gl2psText(const char *str, const char *fontname, 
+GL2PSDLL_API GLint gl2psText(const char *str, const char *fontname,
                              GLshort fontsize);
-GL2PSDLL_API GLint gl2psTextOpt(const char *str, const char *fontname, 
+GL2PSDLL_API GLint gl2psTextOpt(const char *str, const char *fontname,
                                 GLshort fontsize, GLint align, GLfloat angle);
 GL2PSDLL_API GLint gl2psSpecial(GLint format, const char *str);
 GL2PSDLL_API GLint gl2psDrawPixels(GLsizei width, GLsizei height,

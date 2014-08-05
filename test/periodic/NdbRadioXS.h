@@ -9,12 +9,12 @@ class NdbRadioXS : public NdbMF
 protected:
 
 public:
-	NdbRadioXS()
-		: NdbMF(10, "Cross section for radioactive nuclide production") {}
+   NdbRadioXS()
+      : NdbMF(10, "Cross section for radioactive nuclide production") {}
 
-	~NdbRadioXS() {}
+   ~NdbRadioXS() {}
 
-	ClassDef(NdbRadioXS,1)
+   ClassDef(NdbRadioXS,1)
 }; // NdbRadioXS
 
 #endif

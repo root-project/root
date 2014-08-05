@@ -2044,7 +2044,7 @@ Bool_t TRootCanvas::HandleDNDLeave()
 //______________________________________________________________________________
 void TRootCanvas::Activated(Int_t id)
 {
-   // Slot handling tab switching in the browser, to properly set the canvas 
+   // Slot handling tab switching in the browser, to properly set the canvas
    // and the model to the editor.
 
    if (fEmbedded) {

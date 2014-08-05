@@ -4,7 +4,7 @@
 #include "TMemFile.h"
 #include "TKey.h"
 #include "TBranchRef.h"
- 
+
 //
 // This macro can be used to get aggregate information on the size
 // take on disk or in memory by the various branches in a TTree.
@@ -76,10 +76,10 @@ Long64_t GetTotalSize( TBranch * br, bool ondisk, bool inclusive ) {
    f.WriteObject(br,"thisbranch");
    TKey* key = f.GetKey("thisbranch");
    Long64_t size;
-   if (ondisk) 
+   if (ondisk)
       size = key->GetNbytes();
-   else 
-      size = key->GetObjlen();      
+   else
+      size = key->GetObjlen();
    return GetBasketSize(br, ondisk, inclusive) + size;
 }
 
@@ -111,7 +111,7 @@ Long64_t GetTotalSize(TTree *t, bool ondisk) {
       f.WriteTObject(t);
       key = f.GetKey(t->GetName());
       ondiskSize = key->GetNbytes();
-      totalSize = key->GetObjlen();      
+      totalSize = key->GetObjlen();
    }
    if (t->GetBranchRef() ) {
       if (ondisk) {
@@ -120,20 +120,20 @@ Long64_t GetTotalSize(TTree *t, bool ondisk) {
          totalSize += GetBasketSize(t->GetBranchRef(), false, true);
       }
    }
-   if (ondisk) {      
+   if (ondisk) {
       return ondiskSize + GetBasketSize(t->GetListOfBranches(), /* ondisk */ true, /* inclusive */ true);
    } else {
       return totalSize + GetBasketSize(t->GetListOfBranches(), /* ondisk */ false, /* inclusive */ true);
    }
 }
 
-Long64_t sizeOnDisk(TTree *t) { 
+Long64_t sizeOnDisk(TTree *t) {
    // Return the size on disk on this TTree.
-   
+
    return GetTotalSize(t, true);
 }
 
-Long64_t sizeOnDisk(TBranch *branch, bool inclusive) 
+Long64_t sizeOnDisk(TBranch *branch, bool inclusive)
 {
    // Return the size on disk on this branch.
    // If 'inclusive' is true, include also the size
@@ -149,7 +149,7 @@ void printBranchSummary(TBranch *br)
    for( size_t i = 0; i < n; ++ i ) {
       TBranch *subbr = dynamic_cast<TBranch*>(br->GetListOfBranches()->At(i));
       cout << "  It's sub-branch \"" << subbr->GetName() << "\" takes " << sizeOnDisk(subbr,true) << " bytes on disk\n";
-   }   
+   }
 }
 
 void printTreeSummary(TTree *t)

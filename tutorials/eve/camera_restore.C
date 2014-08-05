@@ -17,7 +17,7 @@ void readCurrentCamera(const char* fname)
 {
   TGLCamera& c = gEve->GetDefaultGLViewer()->CurrentCamera();
   TFile* f = TFile::Open(fname, "READ");
-  if (!f) 
+  if (!f)
     return;
 
   if (f->GetKey(c.ClassName())) {

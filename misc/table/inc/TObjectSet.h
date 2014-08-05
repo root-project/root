@@ -38,7 +38,7 @@ public:
    virtual void     Delete(Option_t *opt="");
    virtual Bool_t   DoOwner(Bool_t done=kTRUE);
    virtual Long_t   HasData() const;
-   virtual TObject *GetObject() const; 
+   virtual TObject *GetObject() const;
    virtual TDataSet *Instance() const;
    virtual Bool_t   IsOwner() const;
    virtual void     SetObject(TObject *obj);

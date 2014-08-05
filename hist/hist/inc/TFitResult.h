@@ -38,7 +38,7 @@ class TFitResult:public TNamed, public ROOT::Fit::FitResult {
 public:
 
    // Default constructor for I/O
-   TFitResult(int status = 0): TNamed("TFitResult","TFitResult"), 
+   TFitResult(int status = 0): TNamed("TFitResult","TFitResult"),
                            ROOT::Fit::FitResult() {
       fStatus = status;
    };
@@ -57,15 +57,15 @@ public:
    TMatrixDSym GetCorrelationMatrix() const;
 
 
-   using TObject::Error; 
+   using TObject::Error;
 
    // need to re-implement to solve conflict with TObject::Error
-   double Error(unsigned int i) const { 
+   double Error(unsigned int i) const {
       return ParError(i);
    }
 
 private:
-   ClassDef(TFitResult,1)  // Class holding the result of the fit 
+   ClassDef(TFitResult,1)  // Class holding the result of the fit
 };
 
 #endif

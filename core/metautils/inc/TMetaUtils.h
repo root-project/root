@@ -76,7 +76,7 @@ namespace ROOT {
 
 // Forward Declarations --------------------------------------------------------
 class AnnotatedRecordDecl;
-      
+
 // Constants, typedefs and Enums -----------------------------------------------
 
 // Convention for the ROOT relevant properties
@@ -111,7 +111,7 @@ const int kSysError =   3000;
 const int kFatal    =   4000;
 const int kMaxLen   =   1024;
 
-// Classes ---------------------------------------------------------------------      
+// Classes ---------------------------------------------------------------------
 
 //______________________________________________________________________________
 class TNormalizedCtxt {
@@ -131,7 +131,7 @@ public:
    void AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, unsigned int i);
    int GetNargsToKeep(const clang::ClassTemplateDecl* templ) const;
    const TemplPtrIntMap_t GetTemplNargsToKeepMap() const { return fTemplatePtrArgsToKeepMap; }
-   
+
 };
 
 //______________________________________________________________________________
@@ -182,7 +182,7 @@ public:
                        int rRequestedVersionNumber,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
-   
+
    AnnotatedRecordDecl(long index,
                        const clang::RecordDecl *decl,
                        const char *requestName,
@@ -204,8 +204,8 @@ public:
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
                        const cling::Interpreter &interpret,
-                       const TNormalizedCtxt &normCtxt);   
-   
+                       const TNormalizedCtxt &normCtxt);
+
    AnnotatedRecordDecl(long index,
                        const clang::Type *requestedType,
                        const clang::RecordDecl *decl,
@@ -218,7 +218,7 @@ public:
                        int rRequestedVersionNumber,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
-   
+
    ~AnnotatedRecordDecl() {
       // Nothing to do we do not own the pointer;
    }
@@ -279,7 +279,7 @@ public:
    const clang::CXXRecordDecl *GetType() const;
 };
 typedef std::list<RConstructorType> RConstructorTypes;
-      
+
 // Functions -------------------------------------------------------------------
 
 //______________________________________________________________________________
@@ -683,7 +683,7 @@ int EncloseInNamespaces(const clang::Decl& decl, std::string& defString);
 const clang::RecordDecl* EncloseInScopes(const clang::Decl& decl, std::string& defString);
 
 //______________________________________________________________________________
-int FwdDeclFromRcdDecl(const clang::RecordDecl& recordDecl, 
+int FwdDeclFromRcdDecl(const clang::RecordDecl& recordDecl,
                        const cling::Interpreter& interpreter,
                        std::string& defString,
                        bool acceptStl=false);

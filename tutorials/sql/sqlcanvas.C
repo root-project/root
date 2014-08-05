@@ -13,13 +13,13 @@ const char* userpass = "pass";
 //const char* username = "user";
 //const char* userpass = "pass";
 
-void sqlcanvas() 
+void sqlcanvas()
 {
    canvas_write();
-   canvas_read(); 
+   canvas_read();
 }
-   
-void canvas_write() 
+
+void canvas_write()
 {
    //just in case this script is executed multiple times
    delete gROOT->GetListOfFiles()->FindObject("hsimple.root");
@@ -111,34 +111,34 @@ void canvas_write()
    c1->Update();
    gStyle->SetStatColor(19);
    gBenchmark->Show("ntuple1");
-   
+
    TSQLFile* fsql1 = new TSQLFile(dbname, "recreate", username, userpass);
    if (fsql1->IsZombie()) { delete fsql1; return; }
 
-//  changing TSQLFile configuration, you may improve speed 
+//  changing TSQLFile configuration, you may improve speed
 //  of reading or writing object to/from sql database
- 
+
 //   fsql1->SetUseSuffixes(kFALSE);
 //   fsql1->SetArrayLimit(1000);
 //   fsql1->SetUseIndexes(1);
 //   fsql1->SetTablesType("ISAM");
 //   fsql1->SetUseTransactions(kFALSE);
 
-  
+
    //  Unncomment this line to see all SQL commands in log file
    //  fsql1->StartLogFile("canvas.log");
-   
+
    gBenchmark->Start("writeSQL");
    c1->Write("Canvas");
    gBenchmark->Show("writeSQL");
    delete fsql1;
 }
 
-void canvas_read() 
+void canvas_read()
 {
    TFile* f2 = new TSQLFile(dbname, "open", username, userpass);
    if (f2->IsZombie()) { delete f2; return; }
-   
+
    f2->ls();
    gBenchmark->Start("readSQL");
    TCanvas* cc = (TCanvas*) f2->Get("Canvas");

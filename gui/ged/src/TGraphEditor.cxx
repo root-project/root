@@ -124,7 +124,7 @@ TGraphEditor::TGraphEditor(const TGWindow *p, Int_t width,
 TGraphEditor::~TGraphEditor()
 {
    // Destructor of graph editor.
-  
+
    // children of TGButonGroup are not deleted
    delete fShape;
    delete fShape0;
@@ -248,7 +248,7 @@ void TGraphEditor::DoShape()
    else if (fShape1->GetState() == kButtonDown) s = kSHAPE_SIMPLE;
    else if (fShape2->GetState() == kButtonDown) s = kSHAPE_BAR;
    else s = kSHAPE_FILL;
-   
+
    switch (s) {
 
       // change draw option to No Line:

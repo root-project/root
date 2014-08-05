@@ -804,15 +804,15 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
 
    // Get list of processed packets from the iterator
    PDB(kOutput, 2) Info("SavePartialResults", "fEvIter: %p", fEvIter);
-   
-   TList *packets = (fEvIter) ? fEvIter->GetPackets() : 0; 
+
+   TList *packets = (fEvIter) ? fEvIter->GetPackets() : 0;
    PDB(kOutput, 2) Info("SavePartialResults", "list of packets: %p, sz: %d",
                                               packets, (packets ? packets->GetSize(): -1));
 
    // Open the file
    const char *oopt = "UPDATE";
    // Check if the file has already been defined
-   TString baseName(fOutputFilePath); 
+   TString baseName(fOutputFilePath);
    if (fOutputFilePath.IsNull()) {
       baseName.Form("output-%s.q%d.root", gProofServ->GetTopSessionTag(), gProofServ->GetQuerySeqNum());
       if (gProofServ->GetDataDirOpts() && strlen(gProofServ->GetDataDirOpts()) > 0) {
@@ -880,7 +880,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
             } else {
                // ... or we set in automatic flush mode
                t->SetAutoFlush();
-            }         
+            }
          }
       } else if (queryend || fSaveResultsPerPacket) {
          // Save overwriting what's already there
@@ -953,7 +953,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
       while ((o = nxrm())) { fOutput->Remove(o); }
    }
    torm.SetOwner(kFALSE);
-   
+
    PDB(kOutput, 1)
       Info("SavePartialResults", "partial results saved to file");
    // We are done
@@ -995,12 +995,12 @@ Int_t TProofPlayer::AssertSelector(const char *selector_file)
    }
    // Done
    return 0;
-}  
+}
 //_____________________________________________________________________________
 void TProofPlayer::UpdateProgressInfo()
 {
    // Update fProgressStatus
- 
+
    if (fProgressStatus) {
       fProgressStatus->IncEntries(fProcessedRun);
       fProgressStatus->SetBytesRead(TFile::GetFileBytesRead()-fReadBytesRun);
@@ -1041,7 +1041,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       fSelectorClass = fSelector->IsA();
       version = fSelector->Version();
       if (version == 0 && IsClient()) fSelector->GetOutputList()->Clear();
- 
+
       fOutput = (THashList *) fSelector->GetOutputList();
 
       if (gProofServ)
@@ -1269,7 +1269,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          }
          while (refnum < 0 || num--) {
 
-            // Did we use all our time? 
+            // Did we use all our time?
             if (TestBit(TProofPlayer::kMaxProcTimeReached)) {
                fProcTime->Stop();
                if (!newrun && !TestBit(TProofPlayer::kMaxProcTimeExtended) && refnum > 0) {
@@ -1277,7 +1277,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                   Float_t xleft = (refnum > num) ? (Float_t) num / (Float_t) (refnum) : 1.;
                   if (xleft < 0.2) {
                      // Give another try, 1.5 times the remaining measured expected time
-                     Long_t mpt = (Long_t) (1500 * num / ((Double_t)(refnum - num) / fProcTime->RealTime())); 
+                     Long_t mpt = (Long_t) (1500 * num / ((Double_t)(refnum - num) / fProcTime->RealTime()));
                      SetBit(TProofPlayer::kMaxProcTimeExtended);
                      fProcTimeTimer->Start(mpt, kTRUE); // One shot
                      ResetBit(TProofPlayer::kMaxProcTimeReached);
@@ -1286,11 +1286,11 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
                if (TestBit(TProofPlayer::kMaxProcTimeReached)) {
                   Info("Process", "max proc time reached (%ld msecs): packet processing stopped:\n%s",
                                   maxproctime, lastMsg.Data());
-                 
+
                   break;
                }
             }
-            
+
             if (!(!fSelStatus->TestBit(TStatus::kNotOk) &&
                    fSelector->GetAbort() == TSelector::kContinue)) break;
 
@@ -1839,13 +1839,13 @@ Long64_t TProofPlayerLocal::Process(TSelector *selector,
       Error("Process", "selector object undefiend!");
       return -1;
    }
-   
+
    TDSetProxy *set = new TDSetProxy("", "", "");
    set->SetBit(TDSet::kEmpty);
    set->SetBit(TDSet::kIsLocal);
    Long64_t rc = Process(set, selector, option, nentries);
    SafeDelete(set);
-   
+
    // Done
    return rc;
 }
@@ -1866,7 +1866,7 @@ Long64_t TProofPlayerLocal::Process(const char *selector,
    set->SetBit(TDSet::kIsLocal);
    Long64_t rc = Process(set, selector, option, nentries);
    SafeDelete(set);
-   
+
    // Done
    return rc;
 }
@@ -2126,7 +2126,7 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
          }
          TStatus *tmpStatus = (TStatus *)GetOutput("PROOF_Status");
          if (!tmpStatus) AddOutputObject((tmpStatus = new TStatus()));
-         
+
          // Estimate how much data are missing
          Int_t ngood = dset->GetListOfElements()->GetSize();
          Int_t nbad = listOfMissingFiles->GetSize();
@@ -2183,7 +2183,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    } else {
       TPerfStats::Setup(fInput);
    }
-   
+
    TStopwatch elapsed;
 
    // Define filename
@@ -2243,7 +2243,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       TString emsg;
       if (TProof::SendInputData(fQuery, fProof, emsg) != 0)
          Warning("Process", "could not forward input data: %s", emsg.Data());
-      
+
       // Attach to the transient histogram with the assigned packets, if required
       if (fInput->FindObject("PROOF_StatsHist") != 0) {
          if (!(fProcPackets = (TH1I *) fOutput->FindObject("PROOF_ProcPcktHist"))) {
@@ -2468,7 +2468,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       Long64_t rc = -1;
       if (!IsClient() || GetExitStatus() != TProofPlayer::kAborted)
          rc = Finalize(kFALSE,sync);
-                  
+
       // Remove temporary input objects, if any
       if (inputtmp) {
          TIter nxi(inputtmp);
@@ -2733,7 +2733,7 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
       rmList->SetOwner(kTRUE);
       delete rmList;
    }
-   
+
    PDB(kOutput,1) Info("MergeOutputFiles", "done!");
 
    // Done
@@ -2788,7 +2788,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          status = new TStatus();
          fOutput->Add(status);
          TString emsg = TString::Format("Query aborted after %lld entries", GetEventsProcessed());
-         status->Add(emsg);        
+         status->Add(emsg);
       }
       status->SetExitStatus((Int_t) GetExitStatus());
 
@@ -2809,7 +2809,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
             TObject *o = 0;
             while ((o = nxo())) fOutput->Add(o);
          }
-         
+
          // If other invalid elements were found during processing, add them to the
          // list of missing elements
          TDSetElement *elem = 0;
@@ -3123,8 +3123,8 @@ void TProofPlayerRemote::MergeOutput()
          }
       }
       SafeDelete(fOutputLists);
-      
-   } else {      
+
+   } else {
 
       PDB(kOutput,1) Info("MergeOutput","fOutputLists empty");
    }
@@ -3154,7 +3154,7 @@ void TProofPlayerRemote::MergeOutput()
             if (dir.Last('/') != kNPOS) dir.Remove(dir.Last('/')+1);
             PDB(kOutput,2) Info("MergeOutput","dir: '%s'", dir.Data());
             pf->SetDir(dir);
-            // The raw dir; for xrootd based system we include the 'localroot', if any 
+            // The raw dir; for xrootd based system we include the 'localroot', if any
             TUrl u(dir);
             dir = u.GetFile();
             TString pfx  = gEnv->GetValue("Path.Localroot","");

@@ -47,7 +47,7 @@ private:
    TTreeTableInterface *fInterface;
 
 public:
-   TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols, 
+   TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols,
              UInt_t w = 100, UInt_t h = 100) ;
    virtual ~TableTest() ;
 
@@ -58,16 +58,16 @@ public:
 
    ClassDef(TableTest, 0)
 };
-                          
-TableTest::TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols, 
-                     UInt_t w, UInt_t h) 
-   : TGMainFrame(p, w, h),  fNTableRows(ntrows), fNTableColumns(ntcols), 
+
+TableTest::TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols,
+                     UInt_t w, UInt_t h)
+   : TGMainFrame(p, w, h),  fNTableRows(ntrows), fNTableColumns(ntcols),
      fTable(0)
 {
-   SetCleanup(kDeepCleanup) ;   
+   SetCleanup(kDeepCleanup) ;
    Connect("CloseWindow()", "TableTest", this, "DoExit()") ;
    DontCallClose() ;
-   
+
    // Open root file for the tree
    fFile = new TFile("$ROOTSYS/tutorials/hsimple.root");
 
@@ -88,19 +88,19 @@ TableTest::TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols,
    // Create the interface.
    fInterface = new TTreeTableInterface(ntuple, varexp.Data(), select.Data(),
                                         options.Data());
-   
+
    // Create the table and add it to the TableTest that is a TGMainFrame.
-   fTable = new TGTable(this, fIDs.GetUnID(), fInterface, fNTableRows, 
+   fTable = new TGTable(this, fIDs.GetUnID(), fInterface, fNTableRows,
                                 fNTableColumns);
    AddFrame(fTable, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-   
+
    // Calls to layout and draw the TableTest that is a TGMainFrame.
    SetWindowName("Tree Table Test") ;
    MapSubwindows() ;
    Layout();
    Resize(GetDefaultWidth()+20, 600) ;
    MapWindow() ;
-   
+
 } ;
 
 TableTest::~TableTest()
@@ -110,16 +110,16 @@ TableTest::~TableTest()
    fFile->Close();
    Cleanup() ;
 }
- 
+
  void TableTest::DoExit()
 {
    // Exit this application via the Exit button or Window Manager.
    // Use one of the both lines according to your needs.
    // Please note to re-run this macro in the same ROOT session,
    // you have to compile it to get signals/slots 'on place'.
-   
+
    DeleteWindow();            // to stay in the ROOT session
-   //   gApplication->Terminate();   // to exit and close the ROOT session   
+   //   gApplication->Terminate();   // to exit and close the ROOT session
 }
 
 TGTable *ntupleTableTest(UInt_t ntrows = 50, UInt_t ntcols = 10) {

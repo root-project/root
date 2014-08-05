@@ -121,7 +121,7 @@ TPaletteAxis::TPaletteAxis(const TPaletteAxis &palette) : TPave(palette)
 TPaletteAxis& TPaletteAxis::operator=(const TPaletteAxis &orig)
 {
    // Assignment operator.
-   
+
    orig.Copy( *this );
    return *this;
 }

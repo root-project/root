@@ -1846,7 +1846,7 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
          // Check if a continuation line
          if (cont == 1) {
             cont = 0;
-            strlcpy(rest, pstr, kMAXPATHLEN); 
+            strlcpy(rest, pstr, kMAXPATHLEN);
          } else {
             jm = -1;
             // Get 'host' first ...
@@ -2270,7 +2270,7 @@ int RpdSshAuth(const char *sstr)
    int lenU, ofs, opt;
    char rproto[20] = {0};
    sscanf(sstr, "%d %d %d %9s %d %127s %19s", &gRemPid, &ofs, &opt, pipeId, &lenU, user, rproto);
-   
+
    user[lenU] = '\0';
    gReUseRequired = (opt & kAUTH_REUSE_MSK);
 #ifdef R__SSL
@@ -2299,7 +2299,7 @@ int RpdSshAuth(const char *sstr)
          if (!fpipe) {
             pipeFile= gTmpDir + std::string("/RootSshPipe.") + pipeId;
             fpipe = fopen(pipeFile.c_str(), "r");
-         } 
+         }
          char pipe[kMAXPATHLEN];
          if (fpipe) {
             while (fgets(pipe, sizeof(pipe), fpipe)) {
@@ -4723,7 +4723,7 @@ int RpdUser(const char *sstr)
 
             if (gSaltRequired) {
                // The crypt man page says that alternative salts can be in the form '$1$...$';
-               // but on Ubuntu 10.04 the salt are in the form '$j$...$' where j is 6 or other. 
+               // but on Ubuntu 10.04 the salt are in the form '$j$...$' where j is 6 or other.
                if (passw[0] == '$' && passw[2] == '$') {
                   // Shadow passwd
                   char *pd = strstr(passw + 4, "$");

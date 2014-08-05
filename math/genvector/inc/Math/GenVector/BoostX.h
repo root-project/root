@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -9,11 +9,11 @@
   **********************************************************************/
 
 // Header file for BoostX
-// 
+//
 // Created by: Mark Fischler  Mon Nov 1  2005
-// 
+//
 // Last update: $Id$
-// 
+//
 #ifndef ROOT_Math_GenVector_BoostX
 #define ROOT_Math_GenVector_BoostX 1
 
@@ -28,10 +28,10 @@ namespace Math {
 
 //__________________________________________________________________________________________
    /**
-      Class representing a Lorentz Boost along the X axis, by beta. 
-      For efficiency, gamma is held as well. 
+      Class representing a Lorentz Boost along the X axis, by beta.
+      For efficiency, gamma is held as well.
 
-      @ingroup GenVector      
+      @ingroup GenVector
    */
 
 class BoostX {
@@ -49,9 +49,9 @@ public:
 
    enum EBoostMatrixIndex {
       kXX =  0, kXY =  1, kXZ =  2, kXT =  3
-    	      , kYY =  4, kYZ =  5, kYT =  6
-    		        , kZZ =  7, kZT =  8
-    			          , kTT =  9
+      , kYY =  4, kYZ =  5, kYT =  6
+      , kZZ =  7, kZT =  8
+      , kTT =  9
    };
 
   // ========== Constructors and Assignment =====================
@@ -90,25 +90,25 @@ public:
    GetComponents (Scalar& beta_x) const;
 
 
-   /** 
-       Retrieve the beta of the Boost 
-   */ 
+   /**
+       Retrieve the beta of the Boost
+   */
    Scalar Beta() const { return fBeta; }
 
-   /** 
-       Retrieve the gamma of the Boost 
-   */ 
+   /**
+       Retrieve the gamma of the Boost
+   */
    Scalar Gamma() const { return fGamma; }
 
-   /** 
-       Set the given beta of the Boost 
-   */ 
+   /**
+       Set the given beta of the Boost
+   */
    void  SetBeta(Scalar beta) { SetComponents(beta); }
-   
+
    /**
       The beta vector for this boost
    */
-   typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
+   typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector;
    XYZVector BetaVector() const;
 
    /**
@@ -117,20 +117,20 @@ public:
       Note -- 16 Scalars will be written into the array; if the array is not
       that large, then this will lead to undefined behavior.
    */
-   void 
-   GetLorentzRotation (Scalar r[]) const; 
-  
+   void
+   GetLorentzRotation (Scalar r[]) const;
+
    // =========== operations ==============
 
    /**
-      Lorentz transformation operation on a Minkowski ('Cartesian') 
+      Lorentz transformation operation on a Minkowski ('Cartesian')
       LorentzVector
    */
    LorentzVector< ROOT::Math::PxPyPzE4D<double> >
    operator() (const LorentzVector< ROOT::Math::PxPyPzE4D<double> > & v) const;
-  
+
    /**
-      Lorentz transformation operation on a LorentzVector in any 
+      Lorentz transformation operation on a LorentzVector in any
       coordinate system
    */
    template <class CoordSystem>
@@ -200,7 +200,7 @@ private:
 /**
    Stream Output and Input
 */
-// TODO - I/O should be put in the manipulator form 
+// TODO - I/O should be put in the manipulator form
 
 std::ostream & operator<< (std::ostream & os, const BoostX & b);
 

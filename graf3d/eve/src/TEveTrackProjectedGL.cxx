@@ -81,7 +81,7 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx& rnrCtx) const
    if (fM->fRnrPoints)
    {
       TGLUtil::RenderPolyMarkers(*fM, 0,
-				 fM->GetP(), fM->Size(),
+                                 fM->GetP(), fM->Size(),
                                  rnrCtx.GetPickRadius(),
                                  rnrCtx.Selection());
    }
@@ -105,7 +105,7 @@ void TEveTrackProjectedGL::DirectDraw(TGLRnrCtx& rnrCtx) const
          }
       }
       TGLUtil::RenderPolyMarkers(fM->fPropagator->RefPTBAtt(), 0,
-				 &pnts[0], nbptd,
+                                 &pnts[0], nbptd,
                                  rnrCtx.GetPickRadius(),
                                  rnrCtx.Selection());
    }

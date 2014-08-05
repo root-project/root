@@ -42,7 +42,7 @@ class BaseSelectionRule
 {
 public:
    typedef std::unordered_map<std::string, std::string> AttributesMap_t; // The liste of selection rule's attributes (name, pattern, ...)
-   
+
    enum ESelect { // a rule could be selected, vetoed or we don't care about it
       kYes,
       kNo,
@@ -59,12 +59,12 @@ private:
    long                   fIndex;                  // Index indicating the ordering of the rules.
    AttributesMap_t        fAttributes;             // list of the attributes of the selection/exclusion rule
    ESelect                fIsSelected;             // selected/vetoed/don't care
-   std::list<std::string> fSubPatterns;            // a list of subpatterns, generated form a pattern/proto_pattern attribute 
+   std::list<std::string> fSubPatterns;            // a list of subpatterns, generated form a pattern/proto_pattern attribute
    std::list<std::string> fFileSubPatterns;        // a list of subpatterns, generated form a file_pattern attribute
    bool                   fMatchFound;             // this is true if this selection rule has been used at least once
    const clang::CXXRecordDecl  *fCXXRecordDecl;    // Record decl of the entity searched for.
    const clang::Type           *fRequestedType;    // Same as the record decl but with some of the typedef preserved (Double32_t, Float16_t, etc..)
-   cling::Interpreter *fInterp; 
+   cling::Interpreter *fInterp;
 
    // Cached for performance
    std::string fName;
@@ -87,9 +87,9 @@ public:
    BaseSelectionRule(ESelect sel) : fIndex(-1),fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(NULL),fRequestedType(NULL),fInterp(NULL) {}
 
    BaseSelectionRule(long index, cling::Interpreter &interp) : fIndex(index),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp) {}
-   
+
    BaseSelectionRule(long index, ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp);
-   
+
    virtual void DebugPrint() const;
    virtual void Print(std::ostream &out) const = 0;
 
@@ -131,7 +131,7 @@ public:
 
    bool  HasInterpreter() const {return fInterp!=NULL; };
    void  SetInterpreter(cling::Interpreter& interp) {fInterp=&interp; };
-   
+
    const AttributesMap_t& GetAttributes() const; // returns the list of attributes
    void  PrintAttributes(int level) const;       // prints the list of attributes - level is the number of tabs from the beginning of the line
    void  PrintAttributes(std::ostream &out, int level) const;       // prints the list of attributes - level is the number of tabs from the beginning of the line
@@ -140,18 +140,18 @@ public:
 
    void  SetMatchFound(bool match); // set fMatchFound
    bool  GetMatchFound() const;     // get fMatchFound
-   
+
    const clang::Type *GetRequestedType() const;
    inline const clang::CXXRecordDecl *GetCXXRecordDecl() const {return fCXXRecordDecl;} ;
    void SetCXXRecordDecl(const clang::CXXRecordDecl *decl, const clang::Type *typeptr);
 
 protected:
    static bool  BeginsWithStar(const std::string& pattern); // returns true if a pattern begins with a star
-   
-   // Checks if the test string matches against the pattern (which has produced the list of sub-patterns patterns_list). There is 
+
+   // Checks if the test string matches against the pattern (which has produced the list of sub-patterns patterns_list). There is
    // difference if we are processing linkdef.h or selection.xmlpatterns
    static bool CheckPattern(const std::string& test, const std::string& pattern, const std::list<std::string>& patterns_list, bool isLinkdef);
-   
+
    static bool  EndsWithStar(const std::string& pattern);   // returns true of a pattern ends with a star
    static void  ProcessPattern(const std::string& pattern, std::list<std::string>& out); // divides a pattern into a list of sub-patterns
 };

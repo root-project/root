@@ -4,12 +4,12 @@
 //
 // This is an example of how Dom Parser walks the DOM tree recursively.
 // This example will parse any xml file.
-// 
+//
 // To run this program
 // .x DOMRecursive.C+
-// 
-// Requires: person.xml 
-// 
+//
+// Requires: person.xml
+//
 //////////////////////////////////////////////////////////////////////////////
 
 #include <Riostream.h>

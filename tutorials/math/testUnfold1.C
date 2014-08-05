@@ -58,7 +58,7 @@
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////
-// 
+//
 //  Test program for the classes TUnfold and related
 //
 //  (1) Generate Monte Carlo and Data events
@@ -112,11 +112,11 @@ void chisquare_corr(Int_t &npar, Double_t * /*gin */, Double_t &f, Double_t *u, 
   Double_t x;
   TH1 *hfit = (TH1*)gFitter->GetObjectFit();
   TF1 *f1   = (TF1*)gFitter->GetUserFunc();
-   
+
   f1->InitArgs(&x,u);
   npar = f1->GetNpar();
   f = 0;
-   
+
   Int_t npfit = 0;
   Int_t nPoints=hfit->GetNbinsX();
   Double_t *df=new Double_t[nPoints];
@@ -157,7 +157,7 @@ Double_t GenerateEvent(Double_t bgr, // relative fraction of background
     do {
       do {
         t=rnd->Rndm();
-      } while(t>=1.0); 
+      } while(t>=1.0);
       t=TMath::Tan((t-0.5)*TMath::Pi())*gamma+mass;
     } while(t<=0.0);
     return t;
@@ -220,7 +220,7 @@ int testUnfold1()
   Double_t const xmaxDet=10.0;
   Double_t const xminGen=0.0;
   Double_t const xmaxGen=10.0;
-  
+
   //============================================
   // generate MC distribution
   //
@@ -480,7 +480,7 @@ int testUnfold1()
   histMdetFold->SetLineColor(kBlue);
   histMdetFold->Draw();
   histMdetMC->Draw("SAME HIST");
-  
+
   TH1 *histInput=unfold.GetInput("Minput",";mass(det)");
 
   histInput->SetLineColor(kRed);

@@ -121,7 +121,7 @@ TCurlyArcEditor::~TCurlyArcEditor()
 void TCurlyArcEditor::ConnectSignals2Slots()
 {
    // Connect signals to slots.
- 
+
    fCenterXEntry->Connect("ValueSet(Long_t)", "TCurlyArcEditor", this, "DoCenterXY()");
    (fCenterXEntry->GetNumberEntry())->Connect("ReturnPressed()", "TCurlyArcEditor", this, "DoCenterXY()");
    fCenterYEntry->Connect("ValueSet(Long_t)", "TCurlyArcEditor", this, "DoCenterXY()");

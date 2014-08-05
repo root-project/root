@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -25,12 +25,12 @@ double SinParameterTransformation::Int2ext(double Value, double Upper, double Lo
 
 double SinParameterTransformation::Ext2int(double Value, double Upper, double Lower, const MnMachinePrecision& prec) const {
    // transformation from external (limited by Lower/Upper )  to internal (unlimited) values given the lower/upper limits
-   
+
    double piby2 = 2.*atan(1.);
    double distnn = 8.*sqrt(prec.Eps2());
    double vlimhi = piby2 - distnn;
    double vlimlo = -piby2 + distnn;
-   
+
    double yy = 2.*(Value - Lower)/(Upper - Lower) - 1.;
    double yy2 = yy*yy;
    if(yy2 > (1. - prec.Eps2())) {
@@ -43,9 +43,9 @@ double SinParameterTransformation::Ext2int(double Value, double Upper, double Lo
          //       std::cout<<"SinParameterTransformation warning: is at its Upper allowed limit."<<std::endl;
          return vlimhi;
       }
-      
+
    } else {
-      return asin(yy); 
+      return asin(yy);
    }
 }
 

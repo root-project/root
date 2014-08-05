@@ -49,7 +49,7 @@ public:
    TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height);
    TCanvasImp *CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height);
    void SetCustomFlag(Bool_t custom) { fCustom=custom; }
-   
+
    ClassDef(TQRootGuiFactory,1)  //Qt ROOT Gui factory
 
 };

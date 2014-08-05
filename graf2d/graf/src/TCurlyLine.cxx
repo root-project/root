@@ -315,7 +315,7 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       if (opaque) {
          gPad->ShowGuidelines(this, event);
-      } else {   
+      } else {
          if (p1) {
             fX1 = gPad->AbsPixeltoX(px);
             fY1 = gPad->AbsPixeltoY(py);
@@ -485,14 +485,14 @@ Rectangle_t TCurlyLine::GetBBox()
    px2 = gPad->XtoPixel(fX2);
    py1 = gPad->YtoPixel(fY1);
    py2 = gPad->YtoPixel(fY2);
-   
+
    Int_t tmp;
    if (px1>px2) { tmp = px1; px1 = px2; px2 = tmp;}
    if (py1>py2) { tmp = py1; py1 = py2; py2 = tmp;}
-   
+
    BBox.fX = px1;
    BBox.fY = py1;
-   BBox.fWidth = px2-px1; 
+   BBox.fWidth = px2-px1;
    BBox.fHeight = py2-py1;
 
    return (BBox);

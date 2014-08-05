@@ -128,7 +128,7 @@ protected:
    int               fMinForQuery; // Minimal number of workers for a query
    double            fNodesFraction; // the fraction of free units to assign
                                      // to a query.
-   bool              fUseFIFO;    // use FIFO or refuse if overloaded 
+   bool              fUseFIFO;    // use FIFO or refuse if overloaded
    std::list<XrdProofdProofServ *> fQueue; // the queue with sessions (jobs);
 
    XrdOucHash<XrdProofdDirective> fConfigDirectives; // Config directives

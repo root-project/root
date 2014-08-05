@@ -1,4 +1,4 @@
-# - Try to find Kerberos5 
+# - Try to find Kerberos5
 #  Check for libkrb5.a
 #
 #  KRB5_INCLUDE_DIR - where to find krb5.h, etc.
@@ -7,7 +7,7 @@
 #  KRB5_INIT        - kinit command
 #  KRB5_FOUND       - True if Kerberos 5 libraries found.
 
-find_path(KRB5_INCLUDE_DIR NAMES krb5.h 
+find_path(KRB5_INCLUDE_DIR NAMES krb5.h
   HINTS  $ENV{KRB5_DIR} ${KRB5_DIR}
   PATH_SUFFIXES include kerberos krb5)
 

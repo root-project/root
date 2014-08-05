@@ -201,7 +201,7 @@ DNDMainFrame::DNDMainFrame(const TGWindow *p, int w, int h) :
    if (rootsys[1] == ':' && rootsys[2] == '/')
       rootsys.Remove(0, 3);
 #endif
-   TString link = TString::Format("/%s/tutorials/image/rose512.jpg", 
+   TString link = TString::Format("/%s/tutorials/image/rose512.jpg",
                                   rootsys.Data());
    if (!gSystem->AccessPathName(link.Data(), kReadPermission)) {
       TImage *img = TImage::Open(link.Data());

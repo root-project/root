@@ -575,7 +575,7 @@ void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
    // Which metrics
    Int_t optMet = 0;  // # of files
    if (metrics && !strcmp(metrics, "S")) optMet = 1;  // Size in bytes
-   if (gverbose > 0) 
+   if (gverbose > 0)
       Printf("%s: using metrics: '%s'", action, glabMet[optMet]);
 
    TList distinfo;

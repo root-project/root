@@ -1,6 +1,6 @@
 //How to add a function to the class context menu
 //Author: Ilka Antcheva
-   
+
 #include "TH1.h"
 #include "TClassMenuItem.h"
 #include "TList.h"

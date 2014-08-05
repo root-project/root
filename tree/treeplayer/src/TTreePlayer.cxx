@@ -86,11 +86,8 @@
 
 
 R__EXTERN Foption_t Foption;
-R__EXTERN  TTree *gTree;
 
 TVirtualFitter *tFitter=0;
-
-extern void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
 ClassImp(TTreePlayer)
 
@@ -2847,41 +2844,7 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
    }
 }
 
-//______________________________________________________________________________
-void TreeUnbinnedFitLikelihood(Int_t & /*npar*/, Double_t * /*gin*/,
-                               Double_t &r, Double_t *par, Int_t /*flag*/)
-{
-   // The fit function used by the unbinned likelihood fit.
-
-   Double_t x[3];
-   TF1 *fitfunc = (TF1*)tFitter->GetObjectFit();
-   fitfunc->InitArgs(x,par);
-
-   Long64_t n = gTree->GetSelectedRows();
-   Double_t  *data1 = gTree->GetV1();
-   Double_t  *data2 = gTree->GetV2();
-   Double_t  *data3 = gTree->GetV3();
-   Double_t *weight = gTree->GetW();
-   Double_t logEpsilon = -230;   // protect against negative probabilities
-   Double_t logL = 0.0, prob;
-   //printf("n=%lld, data1=%x, weight=%x\n",n,data1,weight);
-
-   for(Long64_t i = 0; i < n; i++) {
-      if (weight[i] <= 0) continue;
-      x[0] = data1[i];
-      if (data2) x[1] = data2[i];
-      if (data3) x[2] = data3[i];
-      prob = fitfunc->EvalPar(x,par);
-      //printf("i=%lld, x=%g, w=%g, prob=%g, logL=%g\n",i,x[0],weight[i],prob,logL);
-      if(prob > 0) logL += TMath::Log(prob) * weight[i];
-      else         logL += logEpsilon * weight[i];
-   }
-
-   r = -2*logL;
-}
-
-
-//______________________________________________________________________________
+///______________________________________________________________________________
 Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const char *selection,Option_t *option ,Long64_t nentries, Long64_t firstentry)
 {
 //*-*-*-*-*-*Unbinned fit of one or more variable(s) from a Tree*-*-*-*-*-*
@@ -2945,8 +2908,6 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
 
 
 // new implementation using new Fitter classes
-
-   gTree = fTree; // not sure if this is still needed
 
    // function is given by name, find it in gROOT
    TF1* fitfunc = (TF1*)gROOT->GetFunction(funcname);

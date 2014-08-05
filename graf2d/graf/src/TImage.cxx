@@ -26,7 +26,7 @@ It allows for the reading and writing of images in different formats, several
 image manipulations (scaling, tiling, merging, etc.) and displaying in pads.
 <p>
 The concrete implementation of this class is done by the
-<a href="http://root.cern.ch/root/html/TASImage.html">TASImage</a> class. The 
+<a href="http://root.cern.ch/root/html/TASImage.html">TASImage</a> class. The
 methods are documented in that class.
 End_Html */
 

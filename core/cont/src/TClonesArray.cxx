@@ -348,24 +348,24 @@ TObject *TClonesArray::ConstructedAt(Int_t idx)
 {
    // Get an object at index 'idx' that is guaranteed to have been constructed.
    // It might be either a freshly allocated object or one that had already been
-   // allocated (and assumingly used).  In the later case, it is the callers 
+   // allocated (and assumingly used).  In the later case, it is the callers
    // responsability to insure that the object is returned to a known state,
    // usually by calling the Clear method on the TClonesArray.
    //
-   // Tests to see if the destructor has been called on the object.  
+   // Tests to see if the destructor has been called on the object.
    // If so, or if the object has never been constructed the class constructor is called using
    // New().  If not, return a pointer to the correct memory location.
    // This explicitly to deal with TObject classes that allocate memory
    // which will be reset (but not deallocated) in their Clear()
    // functions.
-   
+
    TObject *obj = (*this)[idx];
    if ( obj && obj->TestBit(TObject::kNotDeleted) ) {
       return obj;
    }
    return (fClass) ? static_cast<TObject*>(fClass->New(obj)) : 0;
 }
-   
+
 //______________________________________________________________________________
 TObject *TClonesArray::ConstructedAt(Int_t idx, Option_t *clear_options)
 {
@@ -374,13 +374,13 @@ TObject *TClonesArray::ConstructedAt(Int_t idx, Option_t *clear_options)
    // allocated (and assumingly used).  In the later case, the function Clear
    // will be called and passed the value of 'clear_options'
    //
-   // Tests to see if the destructor has been called on the object.  
+   // Tests to see if the destructor has been called on the object.
    // If so, or if the object has never been constructed the class constructor is called using
    // New().  If not, return a pointer to the correct memory location.
    // This explicitly to deal with TObject classes that allocate memory
    // which will be reset (but not deallocated) in their Clear()
    // functions.
-   
+
    TObject *obj = (*this)[idx];
    if ( obj && obj->TestBit(TObject::kNotDeleted) ) {
       obj->Clear(clear_options);
@@ -414,8 +414,8 @@ void TClonesArray::Clear(Option_t *option)
          TObject *obj = UncheckedAt(i);
          if (obj) {
             obj->Clear(cplus);
-            obj->ResetBit( kHasUUID ); 
-            obj->ResetBit( kIsReferenced ); 
+            obj->ResetBit( kHasUUID );
+            obj->ResetBit( kIsReferenced );
             obj->SetUniqueID( 0 );
          }
       }
@@ -697,7 +697,7 @@ void TClonesArray::SetClass(const TClass *cl, Int_t s)
    if (fClass->GetBaseClassOffset(TObject::Class())!=0) {
       MakeZombie();
       Error("SetClass", "%s must inherit from TObject as the left most base class.", classname);
-      return;      
+      return;
    }
    Int_t nch = strlen(classname)+2;
    char *name = new char[nch];
@@ -1046,7 +1046,7 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
 
    // move
    for (Int_t i = idx1; i <= idx2; i++) {
-      Int_t newindex = oldSize+i -idx1; 
+      Int_t newindex = oldSize+i -idx1;
       fCont[newindex] = tc->fCont[i];
       ::operator delete(fKeep->fCont[newindex]);
       (*fKeep)[newindex] = (*(tc->fKeep))[i];

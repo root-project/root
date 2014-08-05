@@ -2,7 +2,7 @@
 # CMakeLists.txt file for building ROOT core/textinout package
 ############################################################################
 
-ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx 
+ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx
                           ${CMAKE_CURRENT_SOURCE_DIR}/src/textinput/*.cpp)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)

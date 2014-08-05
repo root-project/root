@@ -2,7 +2,7 @@ void fillrandom() {
    //Fill a 1-D histogram from a parametric function
    // To see the output of this macro, click begin_html <a href="gif/fillrandom.gif">here</a>. end_html
    //Author: Rene Brun
-   
+
    TCanvas *c1 = new TCanvas("c1","The FillRandom example",200,10,700,900);
    c1->SetFillColor(18);
 

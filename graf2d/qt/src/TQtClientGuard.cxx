@@ -241,7 +241,7 @@ void TQtPixmapGuard::Delete(QPixmap *w)
 void TQtPixmapGuard::Disconnect(QPixmap *w, int found)
 {
    // Disconnect QPixmap
-   
+
    if (found <0) found =
 #if QT_VERSION < 0x40000
                    fQClientGuard.find(w);

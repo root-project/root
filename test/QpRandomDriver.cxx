@@ -16,7 +16,7 @@ int main(int argc,char *argv[])
     m1 = atoi(argv[2]);
     m2 = atoi(argv[3]);
   } else {
-    std::cout << std::endl 
+    std::cout << std::endl
          << " Usage: QpRandomDriver n my mz " << std::endl
          << " where n  = # primal variables, " << std::endl
          << "       my = # equality constraints, " << std::endl
@@ -41,7 +41,7 @@ int main(int argc,char *argv[])
   TQpResidual *resid = qp->MakeResiduals(prob);
 
   TGondzioSolver *s = new TGondzioSolver(qp,prob);
-  
+
   const Int_t status = s->Solve(prob,vars,resid);
   delete s;
 
@@ -56,8 +56,8 @@ int main(int argc,char *argv[])
     if (SolutionMatches(vars,soln,temp,1e-4)) {
       std::cout << "The solution appears to be correct." <<std::endl;
     } else {
-      std::cout << std::endl << "The solution may be wrong "
-	"(or the generated problem may be ill conditioned.)" <<std::endl;
+       std::cout << std::endl << "The solution may be wrong "
+            "(or the generated problem may be ill conditioned.)" <<std::endl;
     }
     delete temp;
   } else {

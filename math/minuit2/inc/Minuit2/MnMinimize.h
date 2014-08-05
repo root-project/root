@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -22,7 +22,7 @@ class FCNBase;
 
 /** API class for minimization using Variable Metric technology ("MIGRAD");
     allows for user interaction: set/change parameters, do minimization,
-    change parameters, re-do minimization etc.; 
+    change parameters, re-do minimization etc.;
     also used by MnMinos and MnContours;
  */
 
@@ -69,7 +69,7 @@ public:
    MnMinimize(const FCNGradientBase& fcn, const MnUserParameterState& par, const MnStrategy& str) : MnApplication(fcn, MnUserParameterState(par), str), fMinimizer(CombinedMinimizer()) {}
 
 
-   MnMinimize(const MnMinimize& migr) : MnApplication(migr.Fcnbase(), migr.State(), migr.Strategy(), migr.NumOfCalls()), fMinimizer(migr.fMinimizer) {}  
+   MnMinimize(const MnMinimize& migr) : MnApplication(migr.Fcnbase(), migr.State(), migr.Strategy(), migr.NumOfCalls()), fMinimizer(migr.fMinimizer) {}
 
    ~MnMinimize() {}
 

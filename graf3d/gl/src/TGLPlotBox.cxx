@@ -47,7 +47,7 @@ const Int_t TGLPlotBox::fgBackPairs[][2] =
     {1, 0}
    };
 
-const Int_t TGLPlotBox::fgFrontPairs[][2] = 
+const Int_t TGLPlotBox::fgFrontPairs[][2] =
    {
     {3, 0},
     {0, 1},
@@ -162,13 +162,13 @@ void TGLPlotBox::DrawFront()const
    const TGLDisableGuard lightGuard(GL_LIGHTING);
 //   const TGLEnableGuard blend(GL_BLEND);
 //   const TGLEnableGuard lineSmooth(GL_LINE_SMOOTH);
-   
+
   // glColor4d(0., 0., 0., 0.8);
    glColor3d(0., 0., 0.);
-   
-   const Int_t *vertInd = fgFramePlanes[fgFrontPairs[fFrontPoint][0]];   
+
+   const Int_t *vertInd = fgFramePlanes[fgFrontPairs[fFrontPoint][0]];
    DrawQuadOutline(f3DBox[vertInd[0]], f3DBox[vertInd[1]], f3DBox[vertInd[2]], f3DBox[vertInd[3]]);
-   
+
    vertInd = fgFramePlanes[fgFrontPairs[fFrontPoint][1]];
    DrawQuadOutline(f3DBox[vertInd[0]], f3DBox[vertInd[1]], f3DBox[vertInd[2]], f3DBox[vertInd[3]]);
 }
@@ -263,7 +263,7 @@ Int_t TGLPlotBox::FindFrontPoint()const
       gluProject(uBox[i][0], uBox[i][1], 0.5, mvMatrix, prMatrix, viewport,
                  &f2DBoxU[i + 4].X(), &f2DBoxU[i + 4].Y(), &f2DBoxU[i + 4].Z());
    }
-   
+
    //2D bbox must be in a canvas space, this can be affected by scaling
    //on retina displays.
    TGLUtil::InitializeIfNeeded();

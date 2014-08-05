@@ -63,9 +63,9 @@ TEveProjectable::~TEveProjectable()
 //______________________________________________________________________________
 void TEveProjectable::AnnihilateProjecteds()
 {
-   // Optimized destroy of projected elements with condition 
-   // there is only one parent for projected element. Method is 
-   // called from TEveElement::Annihilate(). 
+   // Optimized destroy of projected elements with condition
+   // there is only one parent for projected element. Method is
+   // called from TEveElement::Annihilate().
 
    for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
    {

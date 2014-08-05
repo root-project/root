@@ -33,7 +33,7 @@ protected:
    Int_t                    fId;         // unique Id
    Double_t                 fParams[20]; // parameters
    TGeoMaterial            *fMaterial;   // pointer to material
- 
+
 // methods
    TGeoMedium(const TGeoMedium&);
    TGeoMedium& operator=(const TGeoMedium&);
@@ -55,7 +55,7 @@ public:
    virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
    void                     SetId(Int_t id)     {fId = id;}
    void                     SetMaterial(TGeoMaterial *mat) {fMaterial = mat;}
-   virtual void             SetCerenkovProperties(TObject* cerenkov) {fMaterial->SetCerenkovProperties(cerenkov);}   
+   virtual void             SetCerenkovProperties(TObject* cerenkov) {fMaterial->SetCerenkovProperties(cerenkov);}
    ClassDef(TGeoMedium, 1)              // tracking medium
 
 };

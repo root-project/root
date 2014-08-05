@@ -4,20 +4,20 @@
 // author: Kyle Cranmer
 // date March. 2009
 //
-// This tutorial shows usage of a the BernsteinCorrection utility in RooStats.  
-// The idea is that one has a distribution coming either from data or Monte Carlo 
-// (called "reality" in the macro) and a nominal model that is not sufficiently 
+// This tutorial shows usage of a the BernsteinCorrection utility in RooStats.
+// The idea is that one has a distribution coming either from data or Monte Carlo
+// (called "reality" in the macro) and a nominal model that is not sufficiently
 // flexible to take into account the real distribution.  One wants to take into
 // account the systematic associated with this imperfect modeling by augmenting
 // the nominal model with some correction term (in this case a polynomial).
 // The BernsteinCorrection utility will import into your workspace a corrected model
 // given by nominal(x) * poly_N(x), where poly_N is an n-th order polynomial in
 // the Bernstein basis.  The degree N of the polynomial is chosen by specifying the tolerance
-// one has in adding an extra term to the polynomial.  
+// one has in adding an extra term to the polynomial.
 // The Bernstein basis is nice because it only has positive-definite terms
-// and works well with PDFs.  
+// and works well with PDFs.
 // Finally, the macro makes a plot of:
-//  - the data (drawn from 'reality'), 
+//  - the data (drawn from 'reality'),
 //  - the best fit of the nominal model (blue)
 //  - and the best fit corrected model.
 /////////////////////////////////////////////////////////////////////////
@@ -83,7 +83,7 @@ void rs_bernsteinCorrection(){
   // The tolerance sets the probability to add an unnecessary term.
   // lower tolerance will add fewer terms, while higher tolerance
   // will add more terms and provide a more flexible function.
-  Double_t tolerance = 0.05; 
+  Double_t tolerance = 0.05;
   BernsteinCorrection bernsteinCorrection(tolerance);
   Int_t degree = bernsteinCorrection.ImportCorrectedPdf(wks,"nominal","x","data");
 
@@ -96,15 +96,15 @@ void rs_bernsteinCorrection(){
   nominal.plotOn(frame);
 
   // plot the best fit corrected model in red
-  RooAbsPdf* corrected = wks->pdf("corrected");  
+  RooAbsPdf* corrected = wks->pdf("corrected");
   corrected->fitTo(*data,PrintLevel(-1));
   corrected->plotOn(frame,LineColor(kRed));
 
   // plot the correction term (* norm constant) in dashed green
   // should make norm constant just be 1, not depend on binning of data
-  RooAbsPdf* poly = wks->pdf("poly");  
+  RooAbsPdf* poly = wks->pdf("poly");
   poly->plotOn(frame,LineColor(kGreen), LineStyle(kDashed));
-  
+
   // this is a switch to check the sampling distribution
   // of -2 log LR for two comparisons:
   // the first is for n-1 vs. n degree polynomial corrections
@@ -127,7 +127,7 @@ void rs_bernsteinCorrection(){
     TH1F* samplingDistExtra = new TH1F("samplingDistExtra","",20,0,10);
     int numToyMC = 1000;
     bernsteinCorrection.CreateQSamplingDist(wks,"nominal","x","data",samplingDist, samplingDistExtra, degree,numToyMC);
-    
+
     c1->cd(2);
     samplingDistExtra->SetLineColor(kRed);
     samplingDistExtra->Draw();

@@ -32,7 +32,7 @@ class FTGL_EXPORT FTList
         ~FTList()
         {
             Node* next;
-            
+
             for( Node *walk = head; walk; walk = next)
             {
                 next = walk->next;
@@ -54,7 +54,7 @@ class FTGL_EXPORT FTList
         void push_back( const value_type& item)
         {
             Node* node = new Node( item);
-            
+
             if( head->next == NULL)
             {
                 head->next = node;
@@ -67,7 +67,7 @@ class FTGL_EXPORT FTList
             tail = node;
             ++listSize;
         }
-        
+
         /**
          * Get the item at the front of the list
          */
@@ -88,20 +88,20 @@ class FTGL_EXPORT FTList
         struct Node
         {
             Node()
-            :	next(NULL)
+            : next(NULL)
             {}
 
             Node( const value_type& item)
-            :	next(NULL)
+            : next(NULL)
             {
                 payload = item;
             }
-            
+
             Node* next;
-            
+
             value_type payload;
         };
-        
+
         size_type listSize;
 
         Node* head;

@@ -121,7 +121,7 @@ TStyleDialog::TStyleDialog(TStyleManager *sm, TStyle *cur, Int_t mode,
    h2->AddFrame(fTitleLabel, layoutTitleLabel);
    switch (fMode) {
       case 1:
-      case 2: 
+      case 2:
          fTitle = new TGTextEntry(h2, fCurStyle->GetTitle(), kTitle);
          break;
       case 3: {
@@ -317,7 +317,7 @@ void TStyleDialog::DoUpdate()
             return;
          }
          break;
-      case 2: 
+      case 2:
          TStyle *tmp = gROOT->GetStyle(fName->GetText());
          if (tmp && (tmp != fCurStyle)) {
             fWarnLabel->SetText("That name is already used by another style.");

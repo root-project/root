@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class GSLChebSeries
-// 
+//
 // Created by: moneta  at Thu Dec  2 16:50:07 2004
-// 
+//
 // Last update: Thu Dec  2 16:50:07 2004
-// 
+//
 #ifndef ROOT_Math_GSLChebSeries
 #define ROOT_Math_GSLChebSeries
 
@@ -38,35 +38,35 @@ namespace ROOT {
 namespace Math {
 
   /**
-     wrapper class for C struct gsl_cheb_series 
+     wrapper class for C struct gsl_cheb_series
   */
 
 class GSLChebSeries {
 
-public: 
-  GSLChebSeries(size_t n)  
-  { 
-    m_cs = gsl_cheb_alloc(n); 
+public:
+  GSLChebSeries(size_t n)
+  {
+    m_cs = gsl_cheb_alloc(n);
   }
 
-  virtual ~GSLChebSeries() { 
-    gsl_cheb_free(m_cs); 
+  virtual ~GSLChebSeries() {
+    gsl_cheb_free(m_cs);
   }
 
 private:
 // usually copying is non trivial, so we make this unaccessible
-  GSLChebSeries(const GSLChebSeries &); 
-  GSLChebSeries & operator = (const GSLChebSeries &); 
+  GSLChebSeries(const GSLChebSeries &);
+  GSLChebSeries & operator = (const GSLChebSeries &);
 
-public: 
+public:
 
   gsl_cheb_series * get() const { return m_cs; }
 
-private: 
+private:
 
-  gsl_cheb_series * m_cs; 
+  gsl_cheb_series * m_cs;
 
-}; 
+};
 
 
 } // namespace Math

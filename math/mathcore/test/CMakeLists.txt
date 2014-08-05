@@ -22,10 +22,10 @@ set(TestSource
     testSpecFuncBeta.cxx
     testSpecFuncBetaI.cxx
     testIntegrationMultiDim.cxx
-    fit/testFit.cxx 	
-    fit/testGraphFit.cxx 
+    fit/testFit.cxx
+    fit/testGraphFit.cxx
     fit/SparseDataComparer.cxx
-    fit/SparseFit4.cxx 
+    fit/SparseFit4.cxx
     fit/SparseFit3.cxx )
 
 
@@ -49,6 +49,6 @@ endif()
 foreach(file ${TestSource})
   get_filename_component(testname ${file} NAME_WE)
   ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname}) 
+  ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname})
 endforeach()
 

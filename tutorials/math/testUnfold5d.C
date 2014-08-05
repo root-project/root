@@ -35,7 +35,7 @@ using namespace std;
 */
 
 ///////////////////////////////////////////////////////////////////////
-// 
+//
 // Test program for the classes TUnfoldDensity and TUnfoldBinning
 //
 // A toy test of the TUnfold package
@@ -66,7 +66,7 @@ using namespace std;
 //            -> read  testUnfold5_histograms.root
 //            -> write testUnfold5_result.root
 //                     testUnfold5_result.ps
-// 
+//
 ///////////////////////////////////////////////////////////////////////
 
 // #define PRINT_MATRIX_L
@@ -137,8 +137,8 @@ void testUnfold5d()
   TUnfoldDensity unfold(histMCGenRec,TUnfold::kHistMapOutputHoriz,
                         regMode,constraintMode,densityFlags,
                         generatorBinning,detectorBinning,
-			REGULARISATION_DISTRIBUTION,
-			REGULARISATION_AXISSTEERING);
+                        REGULARISATION_DISTRIBUTION,
+                        REGULARISATION_AXISSTEERING);
 
   // define the input vector (the measured data distribution)
   unfold.SetInput(histDataReco /* ,0.0,1.0 */);

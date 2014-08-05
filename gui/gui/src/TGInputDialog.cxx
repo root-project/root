@@ -26,12 +26,12 @@ ClassImp(TGInputDialog)
 
 
 //______________________________________________________________________________
-TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main, 
-                             const char *prompt, const char *defval, 
+TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
+                             const char *prompt, const char *defval,
                              char *retstr, UInt_t options) :
       TGTransientFrame(p, main, 10, 10, options)
 {
-   /** Create simple input dialog.  
+   /** Create simple input dialog.
 
    It is important to know that the case where the constructor in
    which all the variables are initialized to their default values is
@@ -110,7 +110,7 @@ TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
    SetWMSizeHints(width, height, width, height, 0, 0);
 
    SetMWMHints(kMWMDecorAll | kMWMDecorResizeH | kMWMDecorMaximize |
-               kMWMDecorMinimize | kMWMDecorMenu, kMWMFuncAll | 
+               kMWMDecorMinimize | kMWMDecorMenu, kMWMFuncAll |
                kMWMFuncResize | kMWMFuncMaximize | kMWMFuncMinimize,
                kMWMInputModeless);
 
@@ -148,15 +148,15 @@ Bool_t TGInputDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      // here copy the string from text buffer to return variable
                      // coverity[secure_coding]
                      strcpy(fRetStr, fTE->GetBuffer()->GetString());
-                     // if user selected an empty string, set the second 
-                     // char to 1,in order to distinguish between empty string 
+                     // if user selected an empty string, set the second
+                     // char to 1,in order to distinguish between empty string
                      // selected with OK and Cancel button pressed
                      if (!strcmp(fRetStr, ""))
                         fRetStr[1] = 1;
                      delete this;
                      break;
                   case 2:
-                     // hack to detect the case where the user pressed the 
+                     // hack to detect the case where the user pressed the
                      // Cancel button
                      fRetStr[0] = 0;
                      fRetStr[1] = 0;
@@ -174,8 +174,8 @@ Bool_t TGInputDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                // here copy the string from text buffer to return variable
                // coverity[secure_coding]
                strcpy(fRetStr, fTE->GetBuffer()->GetString());
-               // if user selected an empty string, set the second 
-               // char to 1,in order to distinguish between empty string 
+               // if user selected an empty string, set the second
+               // char to 1,in order to distinguish between empty string
                // selected with OK and Cancel button pressed
                if (!strcmp(fRetStr, ""))
                   fRetStr[1] = 1;

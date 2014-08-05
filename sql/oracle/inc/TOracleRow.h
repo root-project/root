@@ -43,7 +43,7 @@ private:
 
    TOracleRow(const TOracleRow&);            // Not implemented.
    TOracleRow &operator=(const TOracleRow&); // Not implemented.
-   
+
 protected:
    void        GetRowData();
 

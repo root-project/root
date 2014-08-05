@@ -46,9 +46,9 @@ public:
    enum {
       kVariable  = 0,
       kParameter = 1,
-      kConstant  = 2 
+      kConstant  = 2
    };
-   TOperOffset();              
+   TOperOffset();
 protected:
    Short_t fType0;            // type     of operand  0
    Short_t fOffset0;          // offset   of operand  0
@@ -92,7 +92,7 @@ protected:
    TString             *fExprOptimized;  //![fNOperOptimized] List of expressions
    Int_t               *fOperOptimized;  //![fNOperOptimized] List of operators. (See documentation for changes made at version 7)
    TOperOffset         *fOperOffset;     //![fNOperOptimized]         Offsets of operrands
-   TFormulaPrimitive  **fPredefined;      //![fNPar] predefined function  
+   TFormulaPrimitive  **fPredefined;      //![fNPar] predefined function
    TFuncG               fOptimal; //!pointer to optimal function
 
    Int_t             PreCompile();
@@ -104,23 +104,23 @@ protected:
    inline Short_t    GetAction(Int_t code) const { return fOper[code] >> kTFOperShift; }
    inline Int_t      GetActionParam(Int_t code) const { return fOper[code] & kTFOperMask; }
 
-   inline void       SetAction(Int_t code, Int_t value, Int_t param = 0) { 
-      fOper[code]  = (value) << kTFOperShift; 
+   inline void       SetAction(Int_t code, Int_t value, Int_t param = 0) {
+      fOper[code]  = (value) << kTFOperShift;
       fOper[code] += param;
    }
    inline Int_t     *GetOperOptimized() const { return fOperOptimized; }
    inline Short_t    GetActionOptimized(Int_t code) const { return fOperOptimized[code] >> kTFOperShift; }
    inline Int_t      GetActionParamOptimized(Int_t code) const { return fOperOptimized[code] & kTFOperMask; }
 
-   inline void       SetActionOptimized(Int_t code, Int_t value, Int_t param = 0) { 
-      fOperOptimized[code]  = (value) << kTFOperShift; 
+   inline void       SetActionOptimized(Int_t code, Int_t value, Int_t param = 0) {
+      fOperOptimized[code]  = (value) << kTFOperShift;
       fOperOptimized[code] += param;
    }
 
    void            ClearFormula(Option_t *option="");
    virtual Bool_t  IsString(Int_t oper) const;
 
-   virtual void    Convert(UInt_t fromVersion); 
+   virtual void    Convert(UInt_t fromVersion);
    //
    // Functions  - used for formula evaluation
    Double_t        EvalParFast(const Double_t *x, const Double_t *params);
@@ -134,27 +134,27 @@ protected:
    // Action code for Version 6 and above.
    enum {
       kEnd      = 0,
-      kAdd      = 1, kSubstract = 2, 
+      kAdd      = 1, kSubstract = 2,
       kMultiply = 3, kDivide    = 4,
-      kModulo   = 5, 
+      kModulo   = 5,
 
-      kcos      = 10, ksin  = 11 , ktan  = 12, 
-      kacos     = 13, kasin = 14 , katan = 15, 
+      kcos      = 10, ksin  = 11 , ktan  = 12,
+      kacos     = 13, kasin = 14 , katan = 15,
       katan2    = 16,
-      kfmod     = 17, 
+      kfmod     = 17,
 
-      kpow      = 20, ksq = 21, ksqrt     = 22, 
+      kpow      = 20, ksq = 21, ksqrt     = 22,
 
       kstrstr   = 23,
 
       kmin      = 24, kmax = 25,
 
       klog      = 30, kexp = 31, klog10 = 32,
-      
+
       kpi     = 40,
 
-      kabs    = 41 , ksign= 42, 
-      kint    = 43 , 
+      kabs    = 41 , ksign= 42,
+      kint    = 43 ,
       kSignInv= 44 ,
       krndm   = 50 ,
 
@@ -173,7 +173,7 @@ protected:
       kLeftShift = 80, kRightShift = 81,
 
       kJumpIf = 82, kJump = 83,
-      
+
       kexpo   = 100 , kxexpo   = 100, kyexpo   = 101, kzexpo   = 102, kxyexpo   = 105,
       kgaus   = 110 , kxgaus   = 110, kygaus   = 111, kzgaus   = 112, kxygaus   = 115,
       klandau = 120 , kxlandau = 120, kylandau = 121, kzlandau = 122, kxylandau = 125,
@@ -213,7 +213,7 @@ public:
       kNormalized    = BIT(14),   // set to true if the function (ex gausn) is normalized
       kLinear        = BIT(16)    //set to true if the function is for linear fitting
    };
-   
+
                TFormula();
                TFormula(const char *name,const char *formula);
                TFormula(const TFormula &formula);
@@ -263,7 +263,7 @@ public:
    virtual void        Update() {;}
 
    static  void        SetMaxima(Int_t maxop=1000, Int_t maxpar=1000, Int_t maxconst=1000);
-   
+
    ClassDef(TFormula,8)  //The formula base class  f(x,y,z,par)
 };
 

@@ -1,10 +1,10 @@
 //macro illustrating how to animate a picture using a Timer
 //Author: Rene Brun
-   
+
 #include "TStyle.h"
 #include "TCanvas.h"
 #include "TF2.h"
-#include "TTimer.h"   
+#include "TTimer.h"
 
 Double_t pi;
 TF2 *f2;
@@ -27,7 +27,7 @@ void anim()
    TTimer *timer = new TTimer(20);
    timer->SetCommand("Animate()");
    timer->TurnOn();
-}   
+}
 void Animate()
 {
    //just in case the canvas has been deleted

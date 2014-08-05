@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -14,7 +14,7 @@
 //
 // Last update: Wed Thurs July 7, 2005
 //
-#ifndef ROOT_Math_GenVector_3DConversions 
+#ifndef ROOT_Math_GenVector_3DConversions
 #define ROOT_Math_GenVector_3DConversions  1
 
 #include "Math/GenVector/Rotation3Dfwd.h"
@@ -37,7 +37,7 @@ namespace gv_detail {
    struct ERROR_This_Rotation_Conversion_is_NOT_Supported {
       ERROR_This_Rotation_Conversion_is_NOT_Supported();
    };
-template<class R1, class R2> 
+template<class R1, class R2>
 void convert( R1 const &, R2 const) {
    ERROR_This_Rotation_Conversion_is_NOT_Supported();
 }
@@ -45,8 +45,8 @@ void convert( R1 const &, R2 const) {
 // ----------------------------------------------------------------------
 // conversions from Rotation3D
 /**
-   conversion functions from 3D rotation. 
-   For converting to Euler Angles see 
+   conversion functions from 3D rotation.
+   For converting to Euler Angles see
    <A><HREF="http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf">here</A>
  */
 
@@ -125,4 +125,4 @@ void convert( RotationZ const & from, Quaternion  & to);
 } //namespace Math
 } //namespace ROOT
 
-#endif // ROOT_Math_GenVector_3DConversions 
+#endif // ROOT_Math_GenVector_3DConversions

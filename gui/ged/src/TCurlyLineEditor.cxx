@@ -273,7 +273,7 @@ void TCurlyLineEditor::DoWavy()
    // Slot connected to the wavy / curly setting.
 
    if (fAvoidSignal) return;
-   if (fIsWavy->GetState() == kButtonDown) 
+   if (fIsWavy->GetState() == kButtonDown)
       fCurlyLine->SetCurly();
    else
       fCurlyLine->SetWavy();

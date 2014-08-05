@@ -9,7 +9,7 @@ void exec3()
    // about processed events. Note that slots can be either functions
    // or class methods. Compare this with tutorials exec1.C and exec2.C.
    //Author: Ilka Antcheva
-   
+
    // Temporary work around the lack of automatic refresh of the list
    // when a script is reloaded.
    gROOT->GetListOfGlobalFunctions()->Delete();

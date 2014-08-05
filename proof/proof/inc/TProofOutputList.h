@@ -29,14 +29,14 @@ class TProofOutputList : public TList {
 
 private:
    TList *fDontShow; // list of reg expression defining what should not be shown
-  
+
 public:
    TProofOutputList(const char *dontshow = "PROOF_*");
 TProofOutputList(TObject *o) : TList(o), fDontShow(0) { } // for backward compatibility, don't use
    virtual ~TProofOutputList();
 
    void AttachList(TList *alist);
-   
+
    virtual void ls(Option_t *option="") const ;
    virtual void Print(Option_t *option="") const;
    virtual void Print(Option_t *option, Int_t recurse) const
@@ -47,7 +47,7 @@ TProofOutputList(TObject *o) : TList(o), fDontShow(0) { } // for backward compat
                                 { TCollection::Print(option, regexp, recurse);}
 
    TList *GetDontShowList() { return fDontShow; }
-   
+
    ClassDef(TProofOutputList, 1);  // Output list specific TList derivation
 };
 

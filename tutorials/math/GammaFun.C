@@ -1,9 +1,9 @@
 // Example showing the usage of the major special math functions  (gamma, beta, erf)  in ROOT
 // To execute the macro type in:
 //
-// root[0]: .x GammaFun.C 
+// root[0]: .x GammaFun.C
 //
-// It will create one canvas with the representation 
+// It will create one canvas with the representation
 //of the tgamma, lgamma, beta, erf and erfc functions
 
 //
@@ -17,7 +17,7 @@
 #include "TStyle.h"
 #include "TPaveLabel.h"
 #include "TAxis.h"
-#include "TH1.h" 
+#include "TH1.h"
 
 void GammaFun() {
 
@@ -42,14 +42,14 @@ c1->Divide(2,2);
 c1->cd(1);
 gPad->SetGrid();
 gPad->SetFrameFillColor(19);
- 
+
 //setting the title in a label style
 TPaveLabel *p1 = new TPaveLabel(.1,.90 , (.1+.50),(.90+.10) ,"ROOT::Math::tgamma(x)", "NDC");
 p1->SetFillColor(0);
 p1->SetTextFont(22);
 p1->SetTextColor(kBlack);
 
-//setting graph 
+//setting graph
 // draw axis first (use TH1 to draw the frame)
 TH1F * h = new TH1F("htmp","",500,-2,5);
 h->SetMinimum(-20);
@@ -58,9 +58,9 @@ h->GetXaxis()->SetTitleSize(0.06);
 h->GetXaxis()->SetTitleOffset(.7);
 h->GetXaxis()->SetTitle("x");
 
-h->Draw(); 
+h->Draw();
 
-// draw the functions 3 times in the separate ranges to avoid singularities 
+// draw the functions 3 times in the separate ranges to avoid singularities
 f1a->SetLineWidth(2);
 f1a->SetLineColor(kBlue);
 

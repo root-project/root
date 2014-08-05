@@ -54,7 +54,7 @@
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////
-// 
+//
 //  Test program as an example for a user specific regularisation scheme
 //
 //  (1) Generate Monte Carlo and Data events
@@ -93,7 +93,7 @@ Double_t GenerateEvent(Double_t bgr, // relative fraction of background
     do {
       do {
         t=rnd->Rndm();
-      } while(t>=1.0); 
+      } while(t>=1.0);
       t=TMath::Tan((t-0.5)*TMath::Pi())*gamma+mass;
     } while(t<=0.0);
     return t;
@@ -134,7 +134,7 @@ Double_t DetectorEvent(Double_t mTrue) {
   }
 }
 
-int testUnfold2() 
+int testUnfold2()
 {
   // switch on histogram errors
   TH1::SetDefaultSumw2();
@@ -264,7 +264,7 @@ int testUnfold2()
   // this method scans the parameter tau and finds the kink in the L curve
   // finally, the unfolding is done for the "best" choice of tau
   iBest=unfold.ScanLcurve(nScan,tauMin,tauMax,&lCurve,&logTauX,&logTauY);
-  std::cout<<"tau="<<unfold.GetTau()<<"\n";  
+  std::cout<<"tau="<<unfold.GetTau()<<"\n";
   std::cout<<"chi**2="<<unfold.GetChi2A()<<"+"<<unfold.GetChi2L()
            <<" / "<<unfold.GetNdf()<<"\n";
 
@@ -292,7 +292,7 @@ int testUnfold2()
   unfold.GetFoldedOutput(histMdetFold);
 
   // store global correlation coefficients
-  TH1D *histRhoi=new TH1D("rho_I","mass",nGen,xminGen,xmaxGen);  
+  TH1D *histRhoi=new TH1D("rho_I","mass",nGen,xminGen,xmaxGen);
   unfold.GetRhoI(histRhoi,binMap);
 
   delete[] binMap;
@@ -354,7 +354,7 @@ int testUnfold2()
   lCurve->Draw("AL");
   bestLcurve->SetMarkerColor(kRed);
   bestLcurve->Draw("*");
- 
+
   output.SaveAs("testUnfold2.ps");
   return 0;
 }

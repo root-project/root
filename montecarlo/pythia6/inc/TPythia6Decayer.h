@@ -85,7 +85,7 @@ public:
    virtual void    SetForceDecay(Int_t type);
    virtual void    ForceDecay();
    void ForceParticleDecay(Int_t particle, Int_t* products,
-   			               Int_t* mult, Int_t npart);
+                           Int_t* mult, Int_t npart);
    void ForceParticleDecay(Int_t particle, Int_t product, Int_t mult);
    virtual Float_t GetPartialBranchingRatio(Int_t ipart);
    virtual Float_t GetLifetime(Int_t kf);

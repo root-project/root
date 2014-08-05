@@ -115,10 +115,10 @@ Bool_t TSQLMonitoringWriter::SendParameters(TList *values, const char *opt)
          }
       }
    }
-   
+
    TIter nxi(values);
    TObject *o = 0;
-      
+
    // now prepare the strings
    TString sql = TString::Format("INSERT INTO %s", table.Data());
 
@@ -169,14 +169,14 @@ Bool_t TSQLMonitoringWriter::SendParameters(TList *values, const char *opt)
          return kFALSE;
       }
       delete res;
-      
+
    } else {
       // Prepare for bulk submission
       o = nxi();
       TObjString *os = dynamic_cast<TObjString *>(o);
       if (!os) {
          Error("SendParameters", "bulk insert: first entry in list is not 'TObjString' but '%s'", o->ClassName() );
-         return kFALSE;         
+         return kFALSE;
       }
       // Continue preparing the string
       sql += TString::Format(" (%s) VALUES ", os->GetName());

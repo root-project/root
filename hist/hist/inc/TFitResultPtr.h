@@ -35,24 +35,24 @@ public:
 
    TFitResultPtr(TFitResult* p);
 
-   TFitResultPtr(const TFitResultPtr& rhs); 
+   TFitResultPtr(const TFitResultPtr& rhs);
 
    operator int() const { return fStatus; }
-   
+
    TFitResult& operator*() const;
 
    TFitResult* operator->() const;
 
    TFitResult* Get() const { return fPointer; }
 
-   TFitResultPtr& operator= (const TFitResultPtr& rhs); 
+   TFitResultPtr& operator= (const TFitResultPtr& rhs);
 
    virtual ~TFitResultPtr();
 
 private:
-   
+
    int fStatus;          // fit status code
-   TFitResult* fPointer; // Smart Pointer to TFitResult class  
+   TFitResult* fPointer; // Smart Pointer to TFitResult class
 
    ClassDef(TFitResultPtr,1)  //indirection to TFitResult
 };

@@ -11,7 +11,7 @@ void FITS_tutorial2()
    printf("they represent a radiation spectrum. The first row contains\n");
    printf("the flux data, whereas the second row the wavelengths.\n");
    printf("Data copyright: NASA\n\n");
-   
+
    if (!gROOT->IsBatch()) {
       //printf("Press ENTER to start..."); getchar();
    }
@@ -23,30 +23,30 @@ void FITS_tutorial2()
       printf("ERROR: could not access the HDU\n"); return;
    }
    printf("File successfully open!\n");
-   
-   
+
+
    // Dump the HDUs within the FITS file
    // and also their metadata
    //printf("Press ENTER to see summary of all data stored in the file:"); getchar();
    hdu->Print("F+");
-   
+
    printf("....................................\n");
    printf("We are going to generate a TGraph from vectors\n");
    //printf("within the primary array. Press ENTER to continue.."); getchar();
-   
+
    TVectorD *Y = hdu->GetArrayRow(0);
    TVectorD *X = hdu->GetArrayRow(1);
    TGraph *gr = new TGraph(*X,*Y);
-      
+
    // Show the graphic
    TCanvas *c = new TCanvas("c1", "FITS tutorial #2", 800, 800);
    gr->Draw("BA");
-   
-         
+
+
    // Clean up
    delete X;
    delete Y;
    delete hdu;
 }
 
- 
+

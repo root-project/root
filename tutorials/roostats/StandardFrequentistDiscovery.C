@@ -93,19 +93,19 @@ double StandardFrequentistDiscovery(
          cout <<"Done creating example input"<<endl;
          cout <<"---------------------\n\n"<<endl;
       }
-      
+
    }
    else
       filename = infile;
-   
+
    // Try to open the file
    TFile *file = TFile::Open(filename);
-   
+
    // if input file was specified byt not found, quit
    if(!file ){
       cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return -1;
-   } 
+   }
 
 
    /////////////////////////////////////////////////////////////
@@ -152,7 +152,7 @@ double StandardFrequentistDiscovery(
    ProfileLikelihoodTestStat* plts =  new ProfileLikelihoodTestStat(*mc->GetPdf());
    plts->SetOneSidedDiscovery(true);
    plts->SetVarName( "q_{0}/2" );
-   
+
    // ----------------------------------------------------
    // configure the ToyMCImportanceSampler with two test statistics
    ToyMCSampler toymcs(*plts, 50);
@@ -198,17 +198,17 @@ double StandardFrequentistDiscovery(
    TCanvas* c1 = new TCanvas();
    HypoTestPlot *plot = new HypoTestPlot(*freqCalcResult, 100, -0.49, 9.51 );
    plot->SetLogYaxis(true);
-   
+
    // add chi2 to plot
    int nPOI = 1;
    TF1* f = new TF1("f", TString::Format("1*ROOT::Math::chisquared_pdf(2*x,%d,0)",nPOI), 0,20);
    f->SetLineColor( kBlack );
    f->SetLineStyle( 7 );
    plot->AddTF1( f, TString::Format("#chi^{2}(2x,%d)",nPOI) );
-   
+
    plot->Draw();
    c1->SaveAs("standard_discovery_output.pdf");
-   
+
 
    return pvalue;
 }

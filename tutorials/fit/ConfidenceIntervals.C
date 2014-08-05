@@ -12,8 +12,8 @@ void ConfidenceIntervals()
 //Illustrates TVirtualFitter::GetConfidenceIntervals
 //This method computes confidence intervals for the fitted function
 //Author: Anna Kreshuk
-   
-   TCanvas *myc = new TCanvas("myc", 
+
+   TCanvas *myc = new TCanvas("myc",
       "Confidence intervals on the fitted function",1200, 500);
    myc->Divide(3,1);
 
@@ -55,19 +55,19 @@ void ConfidenceIntervals()
    myc->cd(2);
    //Create, fill and fit a histogram
    Int_t nh=5000;
-   TH1D *h = new TH1D("h", 
+   TH1D *h = new TH1D("h",
       "Fitted gaussian with .95 conf.band", 100, -3, 3);
    h->FillRandom("gaus", nh);
    TF1 *f = new TF1("fgaus", "gaus", -3, 3);
    f->SetLineWidth(2);
    h->Fit(f, "Q");
    h->Draw();
-   
+
    //Create a histogram to hold the confidence intervals
-   TH1D *hint = new TH1D("hint", 
+   TH1D *hint = new TH1D("hint",
       "Fitted gaussian with .95 conf.band", 100, -3, 3);
    (TVirtualFitter::GetFitter())->GetConfidenceIntervals(hint);
-   //Now the "hint" histogram has the fitted function values as the 
+   //Now the "hint" histogram has the fitted function values as the
    //bin contents and the confidence intervals as bin errors
    hint->SetStats(kFALSE);
    hint->SetFillColor(2);
@@ -85,7 +85,7 @@ void ConfidenceIntervals()
    for (i=0; i<ngr2; i++){
       f2->GetRandom2(x,y);
       // Generate a random number in [-e,e]
-      rnd = 2*gRandom->Rndm()*e-e; 
+      rnd = 2*gRandom->Rndm()*e-e;
       z = f2->Eval(x,y)*(1+rnd);
       gr2->SetPoint(i,x,y,z);
    }
@@ -98,7 +98,7 @@ void ConfidenceIntervals()
    f2->SetParameters(0.5,1.5);
    gr2->Fit(f2, "Q");
    //Compute the confidence intervals
-   (TVirtualFitter::GetFitter())->GetConfidenceIntervals(grint2);   
+   (TVirtualFitter::GetFitter())->GetConfidenceIntervals(grint2);
    //Now the "grint2" graph contains function values as z-coordinates
    //and confidence intervals as their errors
    //draw
@@ -119,7 +119,7 @@ void ConfidenceIntervals()
    myc->cd();
 
 }
-      
+
 
 
 

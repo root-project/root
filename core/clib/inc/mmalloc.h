@@ -70,7 +70,7 @@ extern int mmcheck PARAMS ((PTR, void (*) (void)));
 /* This cause a problem with VC++ (warning C4190) if extern "C" and with clang:
 include/mmalloc.h:73:25: warning: 'mmstats' has C-linkage specified, but returns user-defined type 'struct mmstats_t' which is incompatible with C [-Wreturn-type-c-linkage]
    This is because mmstats_t is only (intentionally see the FIXME) declared in mmprivate.h
-   and C (or just VC++ and clang in extern "C" mode) requires the struct to be fully 
+   and C (or just VC++ and clang in extern "C" mode) requires the struct to be fully
    declared before it is used (likely so that it can know whether it is a POD or not).
    Since mmprivate.h first include mmalloc.h, even including expliclty mmprivate.h
    we still can not get in a position where struct mmstats_t is fully declared before

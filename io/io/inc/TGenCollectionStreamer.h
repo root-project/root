@@ -37,10 +37,10 @@ protected:
 
 //   typedef void (TGenCollectionStreamer::*ReadBufferConv_t)(TBuffer &b, void *obj, const TClass *onFileClass);
 //   ReadBufferConv_t fReadBufferConvFunc;
-   
+
    typedef void (TGenCollectionStreamer::*ReadBuffer_t)(TBuffer &b, void *obj, const TClass *onFileClass);
    ReadBuffer_t fReadBufferFunc;
-   
+
    template <typename From, typename To> void ConvertBufferVectorPrimitives(TBuffer &b, void *obj, Int_t nElements);
    template <typename To> void ConvertBufferVectorPrimitivesFloat16(TBuffer &b, void *obj, Int_t nElements);
    template <typename To> void ConvertBufferVectorPrimitivesDouble32(TBuffer &b, void *obj, Int_t nElements);

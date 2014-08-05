@@ -52,7 +52,7 @@ public:
    HtmlSummary(const char *title);
    virtual ~HtmlSummary();
 
-   HtmlObjTable  *AddTable(const char *name, Int_t nfields, Int_t nvals, 
+   HtmlObjTable  *AddTable(const char *name, Int_t nfields, Int_t nvals,
                            Bool_t exp=kTRUE, Option_t *opt="");
    HtmlObjTable  *GetTable(Int_t at) const { return (HtmlObjTable *)fObjTables->At(at); }
    void           Build();
@@ -71,7 +71,7 @@ TGHtml      *fgHtml        = 0;
 //==============================================================================
 
 //______________________________________________________________________________
-HtmlObjTable::HtmlObjTable(const char *name, Int_t nfields, Int_t nvals, Bool_t exp) : 
+HtmlObjTable::HtmlObjTable(const char *name, Int_t nfields, Int_t nvals, Bool_t exp) :
    fName(name), fNValues(nvals), fNFields(nfields), fExpand(exp)
 {
    // Constructor.
@@ -111,7 +111,7 @@ void HtmlObjTable::Build()
 void HtmlObjTable::BuildTitle()
 {
    // Build table title.
-   
+
    fHtml += "<tr><td colspan=";
    fHtml += Form("%d>", fNFields+1);
    fHtml += "<table width=100% border=0 cellspacing=2 cellpadding=0 bgcolor=6e6ea0>";
@@ -154,7 +154,7 @@ void HtmlObjTable::BuildTable()
          fHtml += "<tr bgcolor=e0e0ff>";
       else
          fHtml += "<tr bgcolor=ffffff>";
-      
+
       TString name = fName;
       name.ReplaceAll(" ", "_");
       // checkboxes
@@ -266,7 +266,7 @@ void HtmlSummary::MakeFooter()
    fFooter += "Example of using Html widget to display tabular data";
    fFooter += "<br>";
    fFooter += "(c) 2007-2010 Bertrand Bellenot";
-   fFooter += "</font></strong></center></body></html>";  
+   fFooter += "</font></strong></center></body></html>";
    fHtml   += fFooter;
 }
 
@@ -302,7 +302,7 @@ void update_html_summary()
             TString ename  = tracks->GetElementName();
             if (ename.First('\'') != kNPOS)
                ename.Remove(ename.First('\''));
-            table = fgHtmlSummary->AddTable(ename.Data(), 5, 
+            table = fgHtmlSummary->AddTable(ename.Data(), 5,
                      tracks->NumChildren(), kTRUE, "first");
             table->SetLabel(0, "Momentum");
             table->SetLabel(1, "P_t");

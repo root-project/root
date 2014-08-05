@@ -30,8 +30,8 @@ ClassImp(TGSimpleTableInterface)
 //////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-TGSimpleTableInterface::TGSimpleTableInterface (Double_t **data, 
-                                                UInt_t nrows, UInt_t ncolumns) 
+TGSimpleTableInterface::TGSimpleTableInterface (Double_t **data,
+                                                UInt_t nrows, UInt_t ncolumns)
    : TVirtualTableInterface(), fData(data), fNRows(nrows), fNColumns(ncolumns)
 {
    // TGSimpleTableInterfac constructor.
@@ -39,7 +39,7 @@ TGSimpleTableInterface::TGSimpleTableInterface (Double_t **data,
 
 //______________________________________________________________________________
 TGSimpleTableInterface::~TGSimpleTableInterface()
-{ 
+{
    // TGSimpleTableInterface destructor.
 }
 

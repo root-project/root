@@ -179,7 +179,7 @@
 #include "TRealData.h"
 #include "TROOT.h"
 #include "TVirtualMutex.h"
- 
+
 #include <stdlib.h>
 
 
@@ -340,7 +340,7 @@ void TDataMember::Init(bool afterReading)
                Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",GetTitle());
                return;
             }
-            
+
             if (!afterReading &&  GetClass()->GetMethod(ptr1,"")) // check whether such method exists
                // FIXME: wrong in case called derives via multiple inheritance from this class
                fValueGetter = new TMethodCall(GetClass(),ptr1,"");
@@ -517,14 +517,14 @@ TDataMember::TDataMember(const TDataMember& dm) :
   fValueGetter(0),
   fValueSetter(0),
   fOptions(dm.fOptions ? (TList*)dm.fOptions->Clone() : 0)
-{ 
+{
    //copy constructor
    for(Int_t d = 0; d < fArrayDim; ++d)
       fArrayMaxIndex[d] = dm.fArrayMaxIndex[d];
 }
 
 //______________________________________________________________________________
-TDataMember& TDataMember::operator=(const TDataMember& dm) 
+TDataMember& TDataMember::operator=(const TDataMember& dm)
 {
    //assignement operator
    if(this!=&dm) {
@@ -553,7 +553,7 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
       fFullTypeName=dm.fFullTypeName;
       fTrueTypeName=dm.fTrueTypeName;
       fOptions = dm.fOptions ? (TList*)dm.fOptions->Clone() : 0;
-   } 
+   }
    return *this;
 }
 

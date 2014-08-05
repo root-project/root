@@ -33,7 +33,7 @@ class TKeyMapFile : public TNamed {
 private:
    TKeyMapFile(const TKeyMapFile&);            // TKeyMapFile objects are not copiable.
    TKeyMapFile& operator=(const TKeyMapFile&); // TKeyMapFile objects are not copiable.
-      
+
    TMapFile      *fMapFile;       //pointer to map file
 
 public:
@@ -41,7 +41,7 @@ public:
    TKeyMapFile(const char *name, const char *classname, TMapFile *mapfile);
    virtual ~TKeyMapFile() {;}
    virtual void      Browse(TBrowser *b);
-   
+
    ClassDef(TKeyMapFile,0);  //Utility class for browsing TMapFile objects.
 };
 

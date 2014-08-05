@@ -1,10 +1,10 @@
 #---------------------------------------------------------------------------------------------------
 # ROOT download test data files
-#   Script arguments: 
+#   Script arguments:
 #     DST destination directory
 
 if(NOT DST)
-  set(DST .) 
+  set(DST .)
 endif()
 
 set(rootsite http://root.cern.ch/files)
@@ -15,7 +15,7 @@ if(NOT EXISTS ${DST}/h1)
     file(DOWNLOAD ${rootsite}/h1/${f} ${DST}/h1/${f} TIMEOUT ${timeout} SHOW_PROGRESS)
   endforeach()
 else()
-  message(STATUS "Already existing files in ${DST}/h1")  
+  message(STATUS "Already existing files in ${DST}/h1")
 endif()
 
 if(NOT EXISTS ${DST}/event)
@@ -23,6 +23,6 @@ if(NOT EXISTS ${DST}/event)
     file(DOWNLOAD ${rootsite}/data/event_${n}.root ${DST}/event/event_${n}.root TIMEOUT ${timeout} SHOW_PROGRESS)
   endforeach()
 else()
-  message(STATUS "Already existing files in ${DST}/event")  
+  message(STATUS "Already existing files in ${DST}/event")
 endif()
 

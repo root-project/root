@@ -243,7 +243,7 @@ public:
    virtual Double_t*  GetCovarianceMatrix() const;
    virtual void       GetCovarianceMatrix(TMatrixD &matr);
    virtual Double_t   GetCovarianceMatrixElement(Int_t i, Int_t j) const {return fParCovar(i, j);}
-   virtual void       GetDesignMatrix(TMatrixD &matr); 
+   virtual void       GetDesignMatrix(TMatrixD &matr);
    virtual void       GetErrors(TVectorD &vpar);
    virtual Int_t      GetNumberTotalParameters() const {return fNfunctions;}
    virtual Int_t      GetNumberFreeParameters() const {return fNfunctions-fNfixed;}
@@ -261,7 +261,7 @@ public:
    virtual Int_t      Merge(TCollection *list);
    virtual void       PrintResults(Int_t level, Double_t amin=0) const;
    virtual void       ReleaseParameter(Int_t ipar);
-   virtual void       SetBasisFunctions(TObjArray * functions); 
+   virtual void       SetBasisFunctions(TObjArray * functions);
    virtual void       SetDim(Int_t n);
    virtual void       SetFormula(const char* formula);
    virtual void       SetFormula(TFormula *function);

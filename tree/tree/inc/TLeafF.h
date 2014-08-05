@@ -37,7 +37,7 @@ public:
    TLeafF();
    TLeafF(TBranch *parent, const char *name, const char *type);
    virtual ~TLeafF();
-   
+
    virtual void    Export(TClonesArray *list, Int_t n);
    virtual void    FillBasket(TBuffer &b);
    const char     *GetTypeName() const {return "Float_t";}
@@ -49,7 +49,7 @@ public:
    virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
    virtual void    ReadValue(std::istream& s, Char_t delim = ' ');
    virtual void    SetAddress(void *add=0);
-   
+
    ClassDef(TLeafF,1);  //A TLeaf for a 32 bit floating point data type.
 };
 

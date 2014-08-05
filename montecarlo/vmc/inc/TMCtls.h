@@ -43,23 +43,23 @@
 // Always build with thread support but keep a possibility to introduce
 // a build option
 #define VMC_MULTITHREADED 1
- 
-#if ( defined (VMC_MULTITHREADED) ) 
+
+#if ( defined (VMC_MULTITHREADED) )
 /*
   #if ( ( defined(__MACH__) && defined(__clang__) && defined(__x86_64__) ) || \
         ( defined(__MACH__) && defined(__GNUC__) && __GNUC__>=4 && __GNUC_MINOR__>=7 ) || \
         defined(__linux__) || defined(_AIX) ) && ( !defined(__CINT__) )
 */
   #if ( defined(__linux__) ) && ( !defined(__CINT__) )
-      //  Multi-threaded build: for POSIX systems 
+      //  Multi-threaded build: for POSIX systems
       #include <pthread.h>
       #define TMCThreadLocal __thread
   #else
       //#  error "No Thread Local Storage (TLS) technology supported for this platform. Use sequential build !"
-      #define TMCThreadLocal 
+      #define TMCThreadLocal
   #endif
 #else
-  #define TMCThreadLocal 
+  #define TMCThreadLocal
 #endif
 
 #endif //ROOT_TMCtls

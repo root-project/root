@@ -53,7 +53,7 @@ public:
    virtual void    SetAddress(void* addr = 0);
    virtual void    SetMaximum(Char_t max) { fMaximum = max; }
    virtual void    SetMinimum(Char_t min) { fMinimum = min; }
-   
+
    ClassDef(TLeafB,1);  //A TLeaf for an 8 bit Integer data type.
 };
 

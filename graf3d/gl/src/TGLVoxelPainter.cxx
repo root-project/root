@@ -414,7 +414,7 @@ void TGLVoxelPainter::FindVoxelColor(Double_t binContent, Float_t *rgba)const
    if (fTransferFunc) {
       rgba[3] = fTransferFunc->Eval(binContent);
    }
-   
+
    rgba[0] = tc[0] / 255.f;
    rgba[1] = tc[1] / 255.f;
    rgba[2] = tc[2] / 255.f;

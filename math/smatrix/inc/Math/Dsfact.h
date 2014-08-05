@@ -1,5 +1,5 @@
 // @(#)root/smatrix:$Id$
-// Authors: T. Glebe, L. Moneta    2005  
+// Authors: T. Glebe, L. Moneta    2005
 
 #ifndef ROOT_Math_Dsfact
 #define ROOT_Math_Dsfact
@@ -33,9 +33,9 @@
 #include "Math/MatrixRepresentationsStatic.h"
 #endif
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
 
 
@@ -43,14 +43,14 @@ namespace ROOT {
 /** Dsfact.
     Compute determinant of a symmetric, positive definite matrix of dimension
     $idim$ and order $n$.
-    
+
     @author T. Glebe
 */
 
 template <unsigned int n, unsigned int idim =n>
-class SDeterminant { 
+class SDeterminant {
 
-public: 
+public:
 template <class T>
 static bool Dsfact(MatRepStd<T,n,idim>& rhs, T& det) {
 
@@ -105,7 +105,7 @@ static bool Dsfact(MatRepStd<T,n,idim>& rhs, T& det) {
       const unsigned int lj = l + jpi;
 
       for (i = 1; i <= j; ++i) {
-	rhs[lj + arrayOffset] -= rhs[l + i * idim + arrayOffset] * rhs[i + jpi + arrayOffset];
+         rhs[lj + arrayOffset] -= rhs[l + i * idim + arrayOffset] * rhs[i + jpi + arrayOffset];
       } // for i
     } // for l
   } // for j
@@ -115,20 +115,20 @@ static bool Dsfact(MatRepStd<T,n,idim>& rhs, T& det) {
 
 
    // t.b.d re-implement methods for symmetric
-  // symmetric function (copy in a general  one) 
+  // symmetric function (copy in a general  one)
   template <class T>
   static bool Dsfact(MatRepSym<T,n> & rhs,  T & det) {
-    // not very efficient but need to re-do Dsinv for new storage of 
+    // not very efficient but need to re-do Dsinv for new storage of
     // symmetric matrices
-    MatRepStd<T,n> tmp; 
-    for (unsigned int i = 0; i< n*n; ++i) 
+    MatRepStd<T,n> tmp;
+    for (unsigned int i = 0; i< n*n; ++i)
       tmp[i] = rhs[i];
     if (!  SDeterminant<n>::Dsfact(tmp,det) ) return false;
 //     // recopy the data
-//     for (int i = 0; i< idim*n; ++i) 
+//     for (int i = 0; i< idim*n; ++i)
 //       rhs[i] = tmp[i];
 
-    return true; 
+    return true;
   }
 
 

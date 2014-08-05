@@ -130,7 +130,7 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
       parent = dynamic_cast<TGWindow *>(pad->GetCanvasImp());
    else if (TBrowser * const browser = fContextMenu->GetBrowser())
       parent = dynamic_cast<TGWindow *>(browser->GetBrowserImp());
-   
+
    if (parent)
       gVirtualX->SetWMTransientHint(GetId(), parent->GetId());
 #endif
@@ -795,7 +795,7 @@ void TRootContextMenu::RecursiveRemove(TObject *obj)
       // if the object being deleted is the one selected,
       // ungrab the mouse pointer and terminate (close) the menu
       fContextMenu->SetObject(0);
-      if (fHasGrab) 
+      if (fHasGrab)
          gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
       EndMenu(ud);
    }

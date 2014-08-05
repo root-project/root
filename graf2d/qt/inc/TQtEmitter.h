@@ -34,4 +34,4 @@ signals:
   void padPainted(QPixmap *p);
 };
 #endif
-#endif 
+#endif

@@ -1,16 +1,16 @@
 //
-// Example showing how to write and read a std vector of ROOT::Math LorentzVector in a ROOT tree. 
-// In the write() function a variable number of track Vectors is generated 
-// according to a Poisson distribution with random momentum uniformly distributed 
-// in phi and eta. 
-// In the read() the vectors are read back and the content analyzed and 
-// some information such as number of tracks per event or the track pt 
-// distributions are displayed  in a canvas. 
+// Example showing how to write and read a std vector of ROOT::Math LorentzVector in a ROOT tree.
+// In the write() function a variable number of track Vectors is generated
+// according to a Poisson distribution with random momentum uniformly distributed
+// in phi and eta.
+// In the read() the vectors are read back and the content analyzed and
+// some information such as number of tracks per event or the track pt
+// distributions are displayed  in a canvas.
 //
-// To execute the macro type in: 
+// To execute the macro type in:
 //
 //   root[0]: .x  mathcoreVectorCollection.C
-//Author: Andras Zsenei     
+//Author: Andras Zsenei
 
 
 
@@ -33,11 +33,11 @@ using namespace ROOT::Math;
 
 
 
-double write(int n) { 
+double write(int n) {
 
 
 
-  TRandom R; 
+  TRandom R;
   TStopwatch timer;
 
 
@@ -46,39 +46,39 @@ double write(int n) {
   // create tree
   TTree t1("t1","Tree with new LorentzVector");
 
-  std::vector<ROOT::Math::XYZTVector>  tracks; 
-  std::vector<ROOT::Math::XYZTVector> * pTracks = &tracks; 
+  std::vector<ROOT::Math::XYZTVector>  tracks;
+  std::vector<ROOT::Math::XYZTVector> * pTracks = &tracks;
   t1.Branch("tracks","std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >",&pTracks);
 
   double M = 0.13957;  // set pi+ mass
 
   timer.Start();
   double sum = 0;
-  for (int i = 0; i < n; ++i) { 
+  for (int i = 0; i < n; ++i) {
     int nPart = R.Poisson(5);
     pTracks->clear();
-    pTracks->reserve(nPart); 
+    pTracks->reserve(nPart);
     for (int j = 0; j < nPart; ++j) {
       double px = R.Gaus(0,10);
       double py = R.Gaus(0,10);
       double pt = sqrt(px*px +py*py);
       double eta = R.Uniform(-3,3);
       double phi = R.Uniform(0.0 , 2*TMath::Pi() );
-      RhoEtaPhiVector vcyl( pt, eta, phi); 
-      // set energy 
-      double E = sqrt( vcyl.R()*vcyl.R() + M*M);  
+      RhoEtaPhiVector vcyl( pt, eta, phi);
+      // set energy
+      double E = sqrt( vcyl.R()*vcyl.R() + M*M);
       XYZTVector q( vcyl.X(), vcyl.Y(), vcyl.Z(), E);
       // fill track vector
       pTracks->push_back(q);
-      // evaluate sum of components to check 
+      // evaluate sum of components to check
       sum += q.x()+q.y()+q.z()+q.t();
     }
-    t1.Fill(); 
+    t1.Fill();
   }
 
   f1.Write();
   timer.Stop();
-  std::cout << " Time for new Vector " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+  std::cout << " Time for new Vector " << timer.RealTime() << "  " << timer.CpuTime() << std::endl;
 
   t1.Print();
   return sum;
@@ -86,10 +86,10 @@ double write(int n) {
 
 
 
-double read() { 
+double read() {
 
 
-  TRandom R; 
+  TRandom R;
   TStopwatch timer;
 
 
@@ -111,16 +111,16 @@ double read() {
 
   timer.Start();
   int n = (int) t1->GetEntries();
-  std::cout << " Tree Entries " << n << std::endl; 
+  std::cout << " Tree Entries " << n << std::endl;
   double sum=0;
-  for (int i = 0; i < n; ++i) { 
+  for (int i = 0; i < n; ++i) {
     t1->GetEntry(i);
-    int ntrk = pTracks->size(); 
+    int ntrk = pTracks->size();
     h3->Fill(ntrk);
-    XYZTVector q; 
-    for (int j = 0; j < ntrk; ++j) { 
-      XYZTVector v = (*pTracks)[j]; 
-      q += v; 
+    XYZTVector q;
+    for (int j = 0; j < ntrk; ++j) {
+      XYZTVector v = (*pTracks)[j];
+      q += v;
       h3->Fill(v.E());
       h4->Fill(v.Pt());
       h5->Fill(v.Eta());
@@ -133,13 +133,13 @@ double read() {
 
 
   timer.Stop();
-  std::cout << " Time for new Vector " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+  std::cout << " Time for new Vector " << timer.RealTime() << "  " << timer.CpuTime() << std::endl;
 
 
-  
+
   TCanvas *c1 = new TCanvas("c1","demo of Trees",10,10,600,800);
-  c1->Divide(2,3); 
-  
+  c1->Divide(2,3);
+
   c1->cd(1);
   h1->Draw();
   c1->cd(2);
@@ -160,31 +160,31 @@ double read() {
 
 
 
-int mathcoreVectorCollection() { 
+int mathcoreVectorCollection() {
 
 
-#if defined(__CINT__) && !defined(__MAKECINT__) 
+#if defined(__CINT__) && !defined(__MAKECINT__)
 
-  gSystem->Load("libMathCore");  
-  gSystem->Load("libPhysics");  
+  gSystem->Load("libMathCore");
+  gSystem->Load("libPhysics");
   // in CINT need to do that after having loading the library
   using namespace ROOT::Math;
 
   cout << "This tutorial can run only using ACliC, compiling it by doing: " << endl;
-  cout << "\t  .x tutorials/math/mathcoreVectorCollection.C+" << endl; 
-  //gROOT->ProcessLine(".x tutorials/math/mathcoreVectorCollection.C+"); 
+  cout << "\t  .x tutorials/math/mathcoreVectorCollection.C+" << endl;
+  //gROOT->ProcessLine(".x tutorials/math/mathcoreVectorCollection.C+");
   return 0;
 
 #else
 
-  
+
   int nEvents = 10000;
 
   double s1 = write(nEvents);
 
   double s2 = read();
 
-  if (fabs(s1-s2) > s1*1.E-15 ) { 
+  if (fabs(s1-s2) > s1*1.E-15 ) {
     std::cout << "ERROR: Found difference in Vector when reading  ( " << s1 << " != " << s2 << " diff = " << fabs(s1-s2) << " ) " << std::endl;
     return -1;
   }
@@ -195,8 +195,8 @@ int mathcoreVectorCollection() {
 
 
 #ifndef __CINT__
-int main() { 
-  return mathcoreVectorCollection(); 
+int main() {
+  return mathcoreVectorCollection();
 }
 #endif
 

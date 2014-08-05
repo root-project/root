@@ -1124,7 +1124,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    } else {
       gClient->GetColorByName("red", fCurrentColor);
    }
-   
+
    // color sample
    TGCompositeFrame *cf3 = new TGCompositeFrame(cf, 10, 10);
    cf3->SetCleanup();
@@ -1149,7 +1149,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    fColorWheel->SetCanvas(wcan);
    fColorWheel->Draw();
    wcan->Update();
-   wcan->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","TGColorDialog",this, 
+   wcan->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","TGColorDialog",this,
                  "SetColorInfo(Int_t,Int_t,Int_t,TObject*)");
 
    tf = fTab->AddTab("Basic Colors");
@@ -1238,7 +1238,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    TGTextButton *cancel = new TGTextButton(hf, new TGHotString("Cancel"), kCDLG_CANCEL);
    fPreview = new TGTextButton(hf, new TGHotString("&Preview"), kCDLG_PREVIEW);
    fPreview->Connect("Clicked()", "TGColorDialog", this, "DoPreview()");
-   
+
    hf->AddFrame(ok, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 3, 0, 0));
    hf->AddFrame(cancel, new TGLayoutHints(kLHintsBottom | kLHintsExpandX,3, 0, 0, 0));
    hf->AddFrame(fPreview, new TGLayoutHints(kLHintsBottom | kLHintsExpandX,3, 0, 0, 0));
@@ -1309,9 +1309,9 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 TGColorDialog::~TGColorDialog()
 {
    // TGColorDialog destructor.
-   
+
    fEcanvas->GetCanvas()->Disconnect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)");
-   delete fEcanvas; 
+   delete fEcanvas;
    Cleanup();
 }
 
@@ -1371,7 +1371,7 @@ void TGColorDialog::CloseWindow()
    //must be deleted _before_ UnmapWindow.
    if (gVirtualX->InheritsFrom("TGX11") && fEcanvas->GetCanvas()->UseGL())
       fEcanvas->GetCanvas()->DeleteCanvasPainter();
-   
+
    UnmapWindow();
 }
 
@@ -1384,7 +1384,7 @@ void TGColorDialog::UpdateAlpha(ULong_t *c)
    Double_t alpha;
 
    if (TColor *color = gROOT->GetColor(TColor::GetColor(*c))) {
-      alpha = color->GetAlpha();    
+      alpha = color->GetAlpha();
       snprintf(tmp, 20, "%.1f", alpha);
       fAlb->Clear();
       fAlb->AddText(0,tmp);
@@ -1572,7 +1572,7 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
          }
          break;
    }
-   
+
    return kTRUE;
 }
 

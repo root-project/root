@@ -1,6 +1,6 @@
 // Test the TMath::LaplaceDist and TMath::LaplaceDistI functions
 // author: Anna Kreshuk
-   
+
 #include "TMath.h"
 #include "TCanvas.h"
 #include "TF1.h"
@@ -62,4 +62,4 @@ void mathLaplace(){
   legend2->AddEntry(f4,"alpha=2 beta=2","l");
   legend2->Draw();
   c1->cd();
-} 
+}

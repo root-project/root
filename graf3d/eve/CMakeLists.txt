@@ -11,8 +11,8 @@ ROOT_USE_PACKAGE(graf3d/glew)
 
 include_directories(${OPENGL_INCLUDE_DIR})
 
-set(headers1 TEveBrowser.h TEveChunkManager.h TEveCompound.h 
-             TEveElement*.h TEveEventManager.h TEveGValuators.h 
+set(headers1 TEveBrowser.h TEveChunkManager.h TEveCompound.h
+             TEveElement*.h TEveEventManager.h TEveGValuators.h
              TEveGedEditor.h TEveMacro.h TEveManager.h TEvePad.h TEveParamList.h
              TEveProjectionAxes*.h TEveProjectionBases.h TEveProjectionManager*.h
              TEveProjections.h TEveScene*.h TEveSelection.h TEveTrans*.h TEveTreeTools.h
@@ -25,7 +25,7 @@ set(headers2 TEveArrow*.h TEveBox*.h TEveCalo*.h
              TEveRGBAPalette*.h TEveScalableStraightLineSet*.h TEveStraightLineSet*.h
              TEveText*.h TEveTrack*.h TEveTriangleSet*.h TEveJetCone*.h
              TEvePlot3D*.h)
-             
+
 if(MACOSX_GLU_DEPRECATED)
   add_definitions(-Wno-deprecated-declarations)
 endif()

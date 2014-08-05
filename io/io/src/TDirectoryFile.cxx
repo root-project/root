@@ -116,7 +116,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
          Error("TDirectoryFile","Invalid class name: %s",classname);
          return;
       }
-   } else { 
+   } else {
       cl = IsA();
    }
 
@@ -128,13 +128,13 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
    fModified = kFALSE;
 
    R__LOCKGUARD2(gROOTMutex);
-   gROOT->GetUUIDs()->AddUUID(fUUID,this);   
+   gROOT->GetUUIDs()->AddUUID(fUUID,this);
 }
 
 //______________________________________________________________________________
 void TDirectoryFile::Init(TClass *cl)
 {
-   // Initialize the key associated with this directory (and the related 
+   // Initialize the key associated with this directory (and the related
    // data members.
 
    TFile* f = GetFile();
@@ -187,9 +187,9 @@ TDirectoryFile::~TDirectoryFile()
    // Delete our content before we become somewhat invalid
    // since some those objects (TTree for example) needs information
    // from this object.  Note that on some platform after the end
-   // of the body (i.e. thus during ~TDirectory which is also 
+   // of the body (i.e. thus during ~TDirectory which is also
    // contains this code) the exeuction of 'this->GetFile()' fails
-   // to return the 'proper' value (because it uses the wrong 
+   // to return the 'proper' value (because it uses the wrong
    // virtual function).
    if (fList) {
       fList->Delete("slow");
@@ -359,7 +359,7 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
    // If the object derives from TNamed, this function is called
    // by TNamed::Clone. TNamed::Clone uses the optional argument newname to set
    // a new name to the newly created object.
-   // 
+   //
    // If autoadd is true and if the object class has a
    // DirectoryAutoAdd function, it will be called at the end of the
    // function with the parameter gDirector.  This usually means that
@@ -390,8 +390,8 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
       TBufferFile buffer(TBuffer::kWrite,bufsize);
       buffer.MapObject(obj);  //register obj in map to handle self reference
       {
-         Bool_t isRef = obj->TestBit(kIsReferenced); 
-         ((TObject*)obj)->ResetBit(kIsReferenced);	
+         Bool_t isRef = obj->TestBit(kIsReferenced);
+         ((TObject*)obj)->ResetBit(kIsReferenced);
 
          ((TObject*)obj)->Streamer(buffer);
 
@@ -413,7 +413,7 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
       ROOT::DirAutoAdd_t func = obj->IsA()->GetDirectoryAutoAdd();
       if (func) {
          func(newobj,this);
-      }  
+      }
    }
    return newobj;
 }
@@ -424,6 +424,7 @@ TObject *TDirectoryFile::FindObjectAnyFile(const char *name) const
    // Scan the memory lists of all files for an object with name
 
    TFile *f;
+   R__LOCKGUARD2(gROOTMutex);
    TIter next(gROOT->GetListOfFiles());
    while ((f = (TFile*)next())) {
       TObject *obj = f->GetList()->FindObject(name);
@@ -1335,7 +1336,7 @@ Int_t TDirectoryFile::ReadTObject(TObject *obj, const char *keyname)
          return key->Read(obj);
       }
    }
-   Error("Read","Key not found"); 
+   Error("Read","Key not found");
    return 0;
 }
 
@@ -1365,7 +1366,7 @@ void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
    if (key) {
       cl = TClass::GetClass(key->GetClassName());
    }
-   // NOTE: We should check that the content is really mergeable and in 
+   // NOTE: We should check that the content is really mergeable and in
    // the in-mmeory list, before deleting the keys.
    if (fKeys) {
       fKeys->Delete("slow");
@@ -1754,7 +1755,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
    //  The function returns the total number of bytes written to the directory.
    //  It returns 0 if the object cannot be written.
    //
-   //  WARNING: in name avoid special characters like '^','$','.' that are used 
+   //  WARNING: in name avoid special characters like '^','$','.' that are used
    //  by the regular expression parser (see TRegexp).
 
    TDirectory::TContext ctxt(this);
@@ -1891,7 +1892,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
    TDirectory::TContext ctxt(this);
 
    if (fFile==0) return 0;
-   
+
    if (!cl) {
       Error("WriteObject","Unknown type for %s, it can not be written.",name);
       return 0;

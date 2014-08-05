@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -40,12 +40,12 @@ class LAVector;
 int Invert ( LASymMatrix & );
 
 /**
-   Class describing a symmetric matrix of size n.  
-   The size is specified as a run-time argument passed in the 
-   constructor. 
-   The class uses expression templates for the operations and functions. 
+   Class describing a symmetric matrix of size n.
+   The size is specified as a run-time argument passed in the
+   constructor.
+   The class uses expression templates for the operations and functions.
    Only the independent data are kept in the fdata array of size n*(n+1)/2
-   containing the lower triangular data   
+   containing the lower triangular data
  */
 
 class LASymMatrix {
@@ -72,7 +72,7 @@ public:
     if(fData) StackAllocatorHolder::Get().Deallocate(fData);
   }
 
-  LASymMatrix(const LASymMatrix& v) : 
+  LASymMatrix(const LASymMatrix& v) :
     fSize(v.size()), fNRow(v.Nrow()), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*v.size())) {
 //     std::cout<<"LASymMatrix(const LASymMatrix& v)"<<std::endl;
     memcpy(fData, v.Data(), fSize*sizeof(double));
@@ -88,14 +88,14 @@ public:
   }
 
   template<class T>
-  LASymMatrix(const ABObj<sym, LASymMatrix, T>& v) : 
+  LASymMatrix(const ABObj<sym, LASymMatrix, T>& v) :
     fSize(v.Obj().size()), fNRow(v.Obj().Nrow()), fData((double*)StackAllocatorHolder::Get().Allocate(sizeof(double)*v.Obj().size())) {
 //     std::cout<<"LASymMatrix(const ABObj<sym, LASymMatrix, T>& v)"<<std::endl;
-    //std::cout<<"allocate "<<fSize<<std::endl;    
+    //std::cout<<"allocate "<<fSize<<std::endl;
     memcpy(fData, v.Obj().Data(), fSize*sizeof(double));
     Mndscal(fSize, double(v.f()), fData, 1);
     //std::cout<<"fData= "<<fData[0]<<" "<<fData[1]<<std::endl;
-  } 
+  }
 
   template<class A, class B, class T>
   LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, A, T>, ABObj<sym, B, T> >,T>& sum) : fSize(0), fNRow(0), fData(0) {
@@ -114,7 +114,7 @@ public:
     //std::cout<<"(*this)=sum.Obj().B();"<<std::endl;
     (*this)=sum.Obj().B();
     //std::cout<<"(*this)+=sum.Obj().A();"<<std::endl;
-    (*this)+=sum.Obj().A();  
+    (*this)+=sum.Obj().A();
     //std::cout<<"leaving template<class A, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, LASymMatrix,.."<<std::endl;
   }
 
@@ -140,7 +140,7 @@ public:
 
     // recursive construction
     (*this)=sum.Obj().B();
-    (*this)+=sum.Obj().A();  
+    (*this)+=sum.Obj().A();
     //std::cout<<"leaving template<class A, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, LASymMatrix,.."<<std::endl;
   }
 
@@ -152,7 +152,7 @@ public:
 
     // recursive construction
     (*this)=sum.Obj().B();
-    (*this)+=sum.Obj().A();  
+    (*this)+=sum.Obj().A();
     //std::cout<<"leaving template<class A, class T> LASymMatrix(const ABObj<sym, ABSum<ABObj<sym, LASymMatrix,.."<<std::endl;
   }
 
@@ -208,7 +208,7 @@ public:
     Outer_prod(*this, m.Obj().Obj().Obj(), m.f()*m.Obj().Obj().f()*m.Obj().Obj().f());
     return *this;
   }
-  
+
   LASymMatrix& operator*=(double scal) {
     Mndscal(fSize, scal, fData, 1);
     return *this;
@@ -216,7 +216,7 @@ public:
 
   double operator()(unsigned int row, unsigned int col) const {
     assert(row<fNRow && col < fNRow);
-    if(row > col) 
+    if(row > col)
       return fData[col+row*(row+1)/2];
     else
       return fData[row+col*(col+1)/2];
@@ -224,24 +224,24 @@ public:
 
   double& operator()(unsigned int row, unsigned int col) {
     assert(row<fNRow && col < fNRow);
-    if(row > col) 
+    if(row > col)
       return fData[col+row*(row+1)/2];
     else
       return fData[row+col*(col+1)/2];
   }
-  
+
   const double* Data() const {return fData;}
 
   double* Data() {return fData;}
-  
+
   unsigned int size() const {return fSize;}
 
   unsigned int Nrow() const {return fNRow;}
-  
+
   unsigned int Ncol() const {return Nrow();}
 
 private:
- 
+
   unsigned int fSize;
   unsigned int fNRow;
   double* fData;
@@ -274,7 +274,7 @@ public:
       LASymMatrix tmp(something.Obj());
       tmp *= something.f();
       assert(fSize == tmp.size());
-      memcpy(fData, tmp.Data(), fSize*sizeof(double)); 
+      memcpy(fData, tmp.Data(), fSize*sizeof(double));
     }
     //std::cout<<"template<class A, class T> LASymMatrix& operator=(const ABObj<sym, ABObj<sym, A, T>, T>& something)"<<std::endl;
     return *this;
@@ -301,7 +301,7 @@ public:
   template<class A, class T>
   LASymMatrix& operator=(const ABObj<sym, ABSum<ABObj<sym, LASymMatrix, T>, ABObj<sym, A, T> >,T>& sum)  {
     //std::cout<<"template<class A, class T> LASymMatrix& operator=(const ABObj<sym, ABSum<ABObj<sym, LASymMatrix, T>, ABObj<sym, A, T> >,T>& sum)"<<std::endl;
-    
+
     if(fSize == 0 && fData == 0) {
       //std::cout<<"fSize == 0 && fData == 0"<<std::endl;
       (*this) = sum.Obj().B();

@@ -4,7 +4,7 @@
 # Script to produce source distribution and optionally binary distribution fluka_vmc.
 # Called by main Makefile.
 #
-# According to: 
+# According to:
 # $ROOTSYS/build/unix/makedist.sh
 # Author: Fons Rademakers, 29/2/2000
 #
@@ -29,14 +29,14 @@ fi
 VERSION=`cat fluka_vmc/version_number`
 MACHINE=`root-config --arch`
 if [ "x$MAKELIB" = "xfluka_vmc/lib" ]; then
-   if [ "x$GCC_VERS" = "x" ]; then  
+   if [ "x$GCC_VERS" = "x" ]; then
       TYPE=$MACHINE.
    else
       TYPE=$MACHINE.$GCC_VERS.
    fi
-else   
+else
   TYPE=""
-fi  
+fi
 TARFILE=fluka_vmc.$VERSION.$TYPE"tar"
 
 TAR=`which gtar`
@@ -46,7 +46,7 @@ if [ "$TAR" = '' ] || [ $stat = 0 ]; then
    TAR="tar cvf"
    rm -f $TARFILE.gz
    EXCLUDE=
-else 
+else
    TAR=$TAR" zcvf"
    rm -f $TARFILE.gz
    TARFILE=$TARFILE".gz"

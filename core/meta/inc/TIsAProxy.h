@@ -65,7 +65,7 @@ private:
    TClass *fClass;        //Actual TClass
 
 protected:
-   TInstrumentedIsAProxy(const TInstrumentedIsAProxy& iip) : 
+   TInstrumentedIsAProxy(const TInstrumentedIsAProxy& iip) :
      TVirtualIsAProxy(iip), fClass(iip.fClass) { }
    TInstrumentedIsAProxy& operator=(const TInstrumentedIsAProxy& iip)
      {if(this!=&iip) {TVirtualIsAProxy::operator=(iip); fClass=iip.fClass;}

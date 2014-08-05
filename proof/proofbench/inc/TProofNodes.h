@@ -55,7 +55,7 @@ public:
    TMap* GetMapOfNodes() const { return fNodes; }
    TMap* GetMapOfActiveNodes() const { return fActiveNodes; }
    void Print(Option_t* option="") const;
-   
+
    ClassDef(TProofNodes, 0) //Node and worker information
 };
 

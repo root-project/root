@@ -113,7 +113,7 @@ void TGPack::CheckSplitterVisibility()
          if (rvf)
          {
             // unmap first slider if necessary
-            if ( el->fSplitFE->fState == 0 ) { 
+            if ( el->fSplitFE->fState == 0 ) {
                el->fSplitFE->fState = 1;
                el->fSplitFE->fFrame->MapWindow();
             }

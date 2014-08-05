@@ -1,9 +1,9 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
 // rotation functions
 
-// rotation 3D  
+// rotation 3D
 #pragma link C++ function  ROOT::Math::Rotation3D::Rotation3D (double *, double*);
 #pragma link C++ function  ROOT::Math::Rotation3D::Rotation3D (ROOT::Math::XYZVector &, ROOT::Math::XYZVector &,ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::Rotation3D::SetComponents (ROOT::Math::XYZVector &, ROOT::Math::XYZVector &,ROOT::Math::XYZVector &);
@@ -37,7 +37,7 @@
 #pragma link C++ function  ROOT::Math::AxisAngle::operator* (const ROOT::Math::XYZPoint &);
 #pragma link C++ function  ROOT::Math::AxisAngle::operator* (const ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::AxisAngle::operator* (const ROOT::Math::XYZTVector &);
-// Euler angles 
+// Euler angles
 // #pragma link C++ function  ROOT::Math::EulerAngles::EulerAngles (const ROOT::Math::Rotation3D &);
 // #pragma link C++ function  ROOT::Math::EulerAngles::EulerAngles (const ROOT::Math::AxisAngle &);
 // #pragma link C++ function  ROOT::Math::EulerAngles::EulerAngles (const ROOT::Math::RotationZYX &);
@@ -57,7 +57,7 @@
 #pragma link C++ function  ROOT::Math::EulerAngles::operator* (const ROOT::Math::XYZPoint &);
 #pragma link C++ function  ROOT::Math::EulerAngles::operator* (const ROOT::Math::XYZVector &);
 #pragma link C++ function  ROOT::Math::EulerAngles::operator* (const ROOT::Math::XYZTVector &);
-// quaternion 
+// quaternion
 // #pragma link C++ function  ROOT::Math::Quaternion::Quaternion (const ROOT::Math::Rotation3D &);
 // #pragma link C++ function  ROOT::Math::Quaternion::Quaternion (const ROOT::Math::AxisAngle &);
 // #pragma link C++ function  ROOT::Math::Quaternion::Quaternion (const ROOT::Math::EulerAngles &);

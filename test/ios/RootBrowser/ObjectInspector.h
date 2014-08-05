@@ -4,7 +4,7 @@
 
 @class EditorView;
 
-@interface ObjectInspector : UIViewController <ObjectInspectorComponent> 
+@interface ObjectInspector : UIViewController <ObjectInspectorComponent>
 
 - (void) setROOTObjectController : (ROOTObjectController *)c;
 - (void) setROOTObject : (TObject *)o;

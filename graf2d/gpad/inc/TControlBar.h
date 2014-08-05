@@ -48,7 +48,7 @@ protected:
    Int_t           fOrientation;    //orientation
    TList          *fButtons;        //list of buttons
    Int_t           fNoroc;          //number of rows or columns
-   
+
 public:
    enum { kVertical = 1, kHorizontal = 2 };
 
@@ -63,7 +63,7 @@ public:
    void            AddControlBar(TControlBar *controlBar);
    void            AddControlBar(TControlBar &controlBar);
    void            AddSeparator();
-   TControlBarButton *GetClicked() const;      
+   TControlBarButton *GetClicked() const;
    TControlBarImp *GetControlBarImp() const   { return fControlBarImp; }
    TList          *GetListOfButtons() const   { return fButtons; }
    Int_t           GetNumberOfColumns() const { return fNoroc; }

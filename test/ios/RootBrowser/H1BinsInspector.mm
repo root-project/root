@@ -39,7 +39,7 @@
 
    axisRangeSlider = [[RangeSlider alloc] initWithFrame : CGRectMake(0.f, 210.f, 250.f, 60.f)];
    [self.view addSubview : axisRangeSlider];
-   
+
    [axisRangeSlider addTarget:self action:@selector(axisRangeChanged) forControlEvents : UIControlEventValueChanged];
 }
 
@@ -55,7 +55,7 @@
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation
 {
    // Return YES for supported orientations
-	return YES;
+   return YES;
 }
 
 //____________________________________________________________________________________________________
@@ -65,7 +65,7 @@
    minLabel.text = [NSString stringWithFormat:@"%.3g", axisRangeSlider.selectedMinimumValue];
    maxLabel.center = CGPointMake([axisRangeSlider getMaxThumbX], maxLabel.center.y);
    maxLabel.text = [NSString stringWithFormat:@"%.3g", axisRangeSlider.selectedMaximumValue];
-   
+
    //Update the histogram.
    object->GetXaxis()->SetRangeUser(axisRangeSlider.selectedMinimumValue, axisRangeSlider.selectedMaximumValue);
    [controller objectWasModifiedUpdateSelection : YES];
@@ -98,7 +98,7 @@
    const double xMax = xAxis->GetBinUpEdge(nBins);
    const double xMaxSelected = xAxis->GetBinUpEdge(xAxis->GetLast());
    maxLabel.text = [NSString stringWithFormat : @"%.3g", xMaxSelected];
-   
+
    [axisRangeSlider setSliderMin : xMin max : xMax selectedMin : xMinSelected selectedMax : xMaxSelected];
    minLabel.center = CGPointMake([axisRangeSlider getMinThumbX], minLabel.center.y);
    maxLabel.center = CGPointMake([axisRangeSlider getMaxThumbX], maxLabel.center.y);

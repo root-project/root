@@ -59,7 +59,7 @@
 #pragma link C++ class TDataSetManagerFile;
 
 // Dictionary for TDataSetManagerAliEn only if requested
-#ifdef ALIENDSMGR 
+#ifdef ALIENDSMGR
 #pragma link C++ class TDataSetManagerAliEn;
 #pragma link C++ class TAliEnFind;
 #endif

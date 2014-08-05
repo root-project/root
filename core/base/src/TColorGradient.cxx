@@ -79,7 +79,7 @@ void TColorGradient::ResetColor(UInt_t nPoints, const Double_t *points, const Co
 
    fColorPositions.assign(points, points + nPoints);
    fColors.resize(nPoints * 4);//4 == rgba.
-   
+
    Float_t rgba[4];
    for (UInt_t i = 0, pos = 0; i < nPoints; ++i, pos += 4) {
       const TColor *clearColor = gROOT->GetColor(colorIndices[i]);
@@ -157,7 +157,7 @@ void TColorGradient::RegisterColor(Color_t colorIndex)
          Warning("RegisterColor", "Color with index %d is already defined", colorIndex);
          return;
       }
-      
+
       if (TObjArray *colors = (TObjArray*)gROOT->GetListOfColors()) {
          colors->AddAtAndExpand(this, colorIndex);
       } else {
@@ -241,7 +241,7 @@ void TRadialGradient::SetStartEndR1R2(const Point &p1, Double_t r1, const Point 
    fR1 = r1;
    fEnd = p2;
    fR2 = r2;
-   
+
    fType = kExtended;
 }
 

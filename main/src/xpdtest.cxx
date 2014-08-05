@@ -73,7 +73,7 @@ int main(int argc, char **argv)
    //  PROOF daemon test program.
    //  Syntax
    //          xpdtest  <url> <sandbox_dir> <time_span>
-   // 
+   //
    //          <url>            URL to test; default 'localhost:1093'
    //          <sandbox_dir>    directory with users sandboxes; used to find out
    //                           users to check connection; default '/tmp/proofbox'
@@ -97,9 +97,9 @@ int main(int argc, char **argv)
       gSystem->Exit(0);
    }
    gDebug = (verbose) ? 1 : 0;
-   
+
    rc = 0;
-   
+
    // Set up log file if required
    RedirectHandle_t redirH;
    if (!logfile.IsNull()) {
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
          rc = 1;
       }
    }
-    
+
    // Setup URL
    TUrl u;
    TString defusr;
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
       }
    }
 
-   // Do ping 
+   // Do ping
    if (rc == 0) {
       set_timer(1, timeout);
       if ((rc = xpd_ping(u.GetHost(), u.GetPort())) != 0)
@@ -230,7 +230,7 @@ int parse_args(int argc, char **argv,
                TString &logfile, bool &keep, bool &verbose, long &to, TString &pidfile)
 {
    // Extract control info from arguments
-   
+
    url = "localhost:1093";
    sboxdir = "/tmp/proofbox";
    span = -1;
@@ -504,7 +504,7 @@ int xpd_ping(const char *host, int port)
       close(sd);
       return 1;
    }
-   
+
    // These 8 bytes are need by 'rootd/proofd' and discarded by XRD/XPD
    int dum[2];
    dum[0] = (int)htonl((int)4);
@@ -514,7 +514,7 @@ int xpd_ping(const char *host, int port)
       close(sd);
       return 1;
    }
-   
+
    // Read first server response
    int type;
    len = sizeof(type);
@@ -525,7 +525,7 @@ int xpd_ping(const char *host, int port)
       close(sd);
       return 1;
    }
-   
+
    // To host byte order
    type = ntohl(type);
    // Check if the server is the eXtended proofd
@@ -581,14 +581,14 @@ int getsocket(struct hostent *h, int port)
    localAddr.sin_family = AF_INET;
    localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
    localAddr.sin_port = htons(0);
-  
+
    rc = bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
    if(rc < 0) {
       perror("error ");
       close(sd);
       return -1;
    }
-                                
+
    /* connect to server */
    rc = connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
    if(rc < 0) {

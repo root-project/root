@@ -36,8 +36,8 @@
 namespace ROOT {
 namespace Math {
 
-Interpolator::Interpolator(unsigned int ndata, Interpolation::Type type ) { 
-   // allocate GSL interpolaiton object 
+Interpolator::Interpolator(unsigned int ndata, Interpolation::Type type ) {
+   // allocate GSL interpolaiton object
    fInterp = new GSLInterpolator(ndata, type);
 }
 
@@ -46,7 +46,7 @@ Interpolator::Interpolator(const std::vector<double> & x, const std::vector<doub
    // allocate and initialize GSL interpolation object with data
 
    size_t size = std::min( x.size(), y.size() );
-   
+
    fInterp = new GSLInterpolator(size, type);
 
    fInterp->Init(size, &x.front(), &y.front() );
@@ -66,20 +66,20 @@ Interpolator::Interpolator(const Interpolator &)
 
 Interpolator & Interpolator::operator = (const Interpolator &rhs)
 {
-   // dummy (private) assignment 
+   // dummy (private) assignment
    if (this == &rhs) return *this;  // time saving self-test
-   
+
    return *this;
 }
 
-bool Interpolator::SetData(unsigned int ndata, const double * x, const double *y) { 
+bool Interpolator::SetData(unsigned int ndata, const double * x, const double *y) {
    // set the interpolation data
-   return fInterp->Init(ndata, x, y); 
+   return fInterp->Init(ndata, x, y);
 }
-bool Interpolator::SetData(const std::vector<double> & x, const std::vector<double> &y) { 
+bool Interpolator::SetData(const std::vector<double> & x, const std::vector<double> &y) {
    // set the interpolation data
    size_t size = std::min( x.size(), y.size() );
-   return fInterp->Init(size, &x.front(), &y.front()); 
+   return fInterp->Init(size, &x.front(), &y.front());
 }
 
 
@@ -91,12 +91,12 @@ double Interpolator::Eval( double x ) const
 
 double Interpolator::Deriv( double x ) const
 {
-   // forward deriv evaluation   
+   // forward deriv evaluation
    return fInterp->Deriv(x);
 }
 
 double Interpolator::Deriv2( double x ) const {
-   // forward deriv evaluation   
+   // forward deriv evaluation
    return fInterp->Deriv2(x);
 }
 

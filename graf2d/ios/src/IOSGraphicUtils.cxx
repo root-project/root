@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
- 
+
 #include "TAttMarker.h"
 #include "TVirtualX.h"
 #include "TColor.h"
@@ -47,11 +47,11 @@ Bool_t IDEncoder::IdToColor(UInt_t id, Float_t *rgb) const
    const UInt_t red = id / fRadix2;
    const UInt_t green = (id - red * fRadix2) / fRadix;
    const UInt_t blue = (id - red * fRadix2 - green * fRadix) % fRadix;
-   
+
    rgb[0] = red * fStepSize / Float_t(fChannelSize);
    rgb[1] = green * fStepSize / Float_t(fChannelSize);
    rgb[2] = blue * fStepSize / Float_t(fChannelSize);
-   
+
    return kTRUE;
 }
 
@@ -61,7 +61,7 @@ UInt_t IDEncoder::ColorToId(UInt_t r, UInt_t g, UInt_t b) const
    const UInt_t red   = FixValue(r);
    const UInt_t green = FixValue(g);
    const UInt_t blue  = FixValue(b);
-   
+
    return fRadix2 * red + fRadix * green + blue;
 }
 
@@ -69,14 +69,14 @@ UInt_t IDEncoder::ColorToId(UInt_t r, UInt_t g, UInt_t b) const
 UInt_t IDEncoder::FixValue(UInt_t val) const
 {
    const UInt_t orig = val / fStepSize;
-   
+
    if (orig * fStepSize != val) {
       const UInt_t top = (orig + 1) * fStepSize - val;
       const UInt_t bottom = val - orig * fStepSize;
 
       if (top > bottom || orig + 1 >= fRadix)
          return orig;
-         
+
       return orig + 1;
    } else
       return orig;

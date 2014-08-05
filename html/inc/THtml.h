@@ -243,7 +243,7 @@ public:
    static void   LoadAllLibs();
 
    // Functions to generate documentation
-   void          Convert(const char *filename, const char *title, 
+   void          Convert(const char *filename, const char *title,
                          const char *dirname = "", const char *relpath="../",
                          Int_t includeOutput = kNoOutput,
                          const char* context = "");
@@ -403,7 +403,7 @@ protected:
 
    static void    *MakeClassThreaded(void* info);
 
-protected:   
+protected:
    TString        fCounter;         // counter string
    TString        fCounterFormat;   // counter printf-like format
    TString        fProductName;     // name of the product to document
@@ -420,7 +420,7 @@ protected:
    mutable TModuleDefinition *fModuleDef; // object translating classes to module names
    mutable TFileDefinition* fFileDef; // object translating classes to file names
    mutable TFileSysDB    *fLocalFiles; // files found locally for a given source path
-   Bool_t		fBatch; // Whether to enable GUI output
+   Bool_t  fBatch; // Whether to enable GUI output
 
    ClassDef(THtml,0)  //Convert class(es) into HTML file(s)
 };

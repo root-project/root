@@ -24,7 +24,7 @@ class TString;
 class TList;
 class TCollection;
 
-class TEntryList: public TNamed 
+class TEntryList: public TNamed
 {
  private:
    TEntryList& operator=(const TEntryList&); // Not implemented
@@ -43,7 +43,7 @@ class TEntryList: public TNamed
    Int_t            fTreeNumber;//! the index of the tree in the chain (used when the entry
                                 //list is used as input (TTree::SetEntryList())
 
-   Long64_t         fLastIndexQueried; //! used to optimize GetEntry() function from a loop 
+   Long64_t         fLastIndexQueried; //! used to optimize GetEntry() function from a loop
    Long64_t         fLastIndexReturned; //! used to optimize GetEntry() function from a loop
    Bool_t           fShift;            //! true when some sub-lists don't correspond to trees
                                        //(when the entry list is used as input in TChain)
@@ -80,7 +80,7 @@ class TEntryList: public TNamed
    virtual Int_t       GetTreeNumber() const { return fTreeNumber; }
    virtual Bool_t      GetReapplyCut() const { return fReapply; };
    virtual Int_t       Merge(TCollection *list);
-   
+
    virtual Long64_t    Next();
    virtual void        OptimizeStorage();
    virtual Int_t       RelocatePaths(const char *newloc, const char *oldloc = 0);

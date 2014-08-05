@@ -156,7 +156,7 @@ void TMacOSXSystem_ReadCallback(CFFileDescriptorRef fdref, CFOptionFlags /*callB
    //We do not need this descriptor anymore.
    assert(MacOSXSystem::fgInstance != 0 && "TMacOSXSystem_ReadCallback, MacOSXSystem's singleton is null");
    MacOSXSystem::fgInstance->UnregisterFileDescriptor(fdref);
-   
+
    CFFileDescriptorInvalidate(fdref);
    CFRelease(fdref);
 
@@ -209,7 +209,7 @@ MacOSXSystem::~MacOSXSystem()
 void MacOSXSystem::InitializeCocoa()
 {
    assert(fCocoaInitialized == false && "InitializeCocoa, Cocoa was initialized already");
-   
+
    [NSApplication sharedApplication];
    fPool.Reset();//TODO: test, should it be BEFORE shared application???
    fCocoaInitialized = true;
@@ -232,10 +232,10 @@ bool MacOSXSystem::SetFileDescriptors(const TSeqCollection *fileHandlers)
       TIter next(fileHandlers);
       while (TFileHandler * const handler = static_cast<TFileHandler *>(next())) {
          assert(handler->GetFd() != -1 && "SetFileDescriptors, invalid file descriptor");
-         
+
          if (handler->HasReadInterest())
             SetFileDescriptor(handler->GetFd(), kDTRead);
-         
+
          if (handler->HasWriteInterest())
             SetFileDescriptor(handler->GetFd(), kDTWrite);
       }
@@ -269,7 +269,7 @@ void MacOSXSystem::CloseFileDescriptors()
    for (; fdIter != end; ++fdIter) {
       CFFileDescriptorInvalidate(*fdIter);
       CFRelease(*fdIter);
-   }   
+   }
 
    fCFFileDescriptors.clear();
 }
@@ -291,7 +291,7 @@ void MacOSXSystem::SetFileDescriptor(int fd, DescriptorType fdType)
 
    CFFileDescriptorEnableCallBacks(fdref, read ? kCFFileDescriptorReadCallBack : kCFFileDescriptorWriteCallBack);
    CFRunLoopSourceRef runLoopSource = CFFileDescriptorCreateRunLoopSource(kCFAllocatorDefault, fdref, 0);
-      
+
    if (!runLoopSource) {
       CFRelease(fdref);
       throw std::runtime_error("MacOSXSystem::SetFileDescriptors: CFFileDescriptorCreateRunLoopSource failed");
@@ -329,17 +329,17 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    //Here I try to emulate TUnixSystem's behavior, which is quite twisted.
    //I'm not even sure, I need all this code :)
-   
+
    if (fFirstDispatch) {
       if (!fCocoaInitialized && !gROOT->IsBatch())
          InitializeCocoa();
 
       fFirstDispatch = false;
    }
-   
+
    if (!fCocoaInitialized)//We are in a batch mode (or 'batch').
       return TUnixSystem::DispatchOneEvent(pendingOnly);
-   
+
    Bool_t pollOnce = pendingOnly;
 
    while (true) {
@@ -390,7 +390,7 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
 
       // if in pendingOnly mode poll once file descriptor activity
       nextto = NextTimeOut(kTRUE);
-      
+
       if (pendingOnly) {
          //if (fFileHandler && !fFileHandler->GetSize())
          //   return;
@@ -400,13 +400,13 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
 
       //Wait for GUI events and for something else, like read/write from stdin/stdout (?).
       WaitEvents(nextto);
-      
+
       if (gXDisplay && gXDisplay->Notify()) {
          gVirtualX->Update(2);
          gVirtualX->Update(3);
-         if (!pendingOnly) 
+         if (!pendingOnly)
             return;
-      }      
+      }
 
       if (pendingOnly)
          return;
@@ -424,11 +424,11 @@ void TMacOSXSystem::InitializeCocoa()
 {
    if (fCocoaInitialized)
       return;
-   
+
    //TODO: add error handling and results check.
-   
+
    fPimpl->InitializeCocoa();
-   
+
    const ROOT::MacOSX::Util::AutoreleasePool pool;
 
    //[NSApplication sharedApplication];//TODO: clean-up this mess with pools and sharedApplication
@@ -437,13 +437,13 @@ void TMacOSXSystem::InitializeCocoa()
 
    //If you call run, it never returns unless app is finished. I have to stop Cocoa's event loop
    //processing, since we have our own event loop.
-  
+
    const ROOT::MacOSX::Util::NSScopeGuard<RunStopper> stopper([[RunStopper alloc] init]);
 
    //Delay? What it should be?
    [stopper.Get() performSelector : @selector(stopRun) withObject : nil afterDelay : 0.05];
    [NSApp run];
-   
+
    fCocoaInitialized = true;
 }
 
@@ -465,7 +465,7 @@ bool TMacOSXSystem::ProcessPendingEvents()
 void TMacOSXSystem::WaitEvents(Long_t nextto)
 {
    //Wait for GUI/Non-GUI events.
-   
+
    assert(fCocoaInitialized == true && "WaitEvents, called while Cocoa was not initialized");
 
    if (fFileHandler && !fPimpl->SetFileDescriptors(fFileHandler)) {
@@ -532,10 +532,10 @@ void TMacOSXSystem::ProcessApplicationDefinedEvent(void *e)
 {
    //Right now I have app. defined events only
    //for file descriptors. This can change in a future.
-   
+
    assert(fCocoaInitialized == true &&
           "ProcessApplicationDefinedEvent, called while Cocoa was not initialized");
-   
+
    NSEvent *event = (NSEvent *)e;
    assert(event != nil &&
           "ProcessApplicationDefinedEvent, event parameter is nil");
@@ -543,7 +543,7 @@ void TMacOSXSystem::ProcessApplicationDefinedEvent(void *e)
           "ProcessApplicationDefinedEvent, event parameter has wrong type");
 
    bool descriptorFound = false;
-   
+
    if (fReadmask->IsSet(event.data1)) {
       fReadready->Set(event.data1);
       descriptorFound = true;
@@ -553,12 +553,12 @@ void TMacOSXSystem::ProcessApplicationDefinedEvent(void *e)
       fWriteready->Set(event.data1);
       descriptorFound = true;
    }
-   
+
    if (!descriptorFound) {
       Error("ProcessApplicationDefinedEvent", "file descriptor %d was not found", int(event.data1));
       return;
    }
-   
+
    ++fNfd;
 }
 

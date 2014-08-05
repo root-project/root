@@ -1,7 +1,7 @@
 // Example describing the usage of different kinds of Associate Legendre Polynomials
 // To execute the macro type in:
 //
-// root[0]: .x LegendreAssoc.C 
+// root[0]: .x LegendreAssoc.C
 //
 // It draws common graphs for first 5
 // Associate Legendre Polynomials
@@ -31,20 +31,20 @@
 
 void LegendreAssoc()
 {
-  
+
   //const int n=5;
   gSystem->Load("libMathMore");
 
   std::cout <<"Drawing associate Legendre Polynomials.." << std::endl;
-  TCanvas *Canvas = new TCanvas("DistCanvas", "Associate Legendre polynomials", 10, 10, 1000, 600);  
+  TCanvas *Canvas = new TCanvas("DistCanvas", "Associate Legendre polynomials", 10, 10, 1000, 600);
   Canvas->SetFillColor(17);
   Canvas->Divide(2,1);
   Canvas->SetFrameFillColor(19);
-  TLegend *leg1 = new TLegend(0.5, 0.7, 0.8, 0.89); 
-  TLegend *leg2 = new TLegend(0.5, 0.7, 0.8, 0.89); 
+  TLegend *leg1 = new TLegend(0.5, 0.7, 0.8, 0.89);
+  TLegend *leg2 = new TLegend(0.5, 0.7, 0.8, 0.89);
   //leg->TLegend::SetNDC();
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//drawing the set of Legendre functions   
+//drawing the set of Legendre functions
   TF1* L[5];
 
     L[0]= new TF1("L_0", "ROOT::Math::assoc_legendre(1, 0,x)", -1, 1);
@@ -68,10 +68,10 @@ void LegendreAssoc()
     gPad->SetFillColor(kWhite);
     L[0]->SetMaximum(3);
     L[0]->SetMinimum(-2);
-    L[0]->SetTitle("Associate Legendre Polynomials");  
+    L[0]->SetTitle("Associate Legendre Polynomials");
     for(int nu = 0; nu < 5; nu++)
     {
-      //L[nu]->SetTitle("Legendre polynomials");  
+      //L[nu]->SetTitle("Legendre polynomials");
 
       L[nu]->SetLineStyle(1);
       L[nu]->SetLineWidth(2);
@@ -90,10 +90,10 @@ void LegendreAssoc()
     gPad->SetFillColor(kWhite);
     SL[0]->SetMaximum(1);
     SL[0]->SetMinimum(-1);
-    SL[0]->SetTitle("Spherical Legendre Polynomials");  
+    SL[0]->SetTitle("Spherical Legendre Polynomials");
     for(int nu = 0; nu < 5; nu++)
     {
-      //L[nu]->SetTitle("Legendre polynomials");  
+      //L[nu]->SetTitle("Legendre polynomials");
 
       SL[nu]->SetLineStyle(1);
       SL[nu]->SetLineWidth(2);
@@ -119,7 +119,7 @@ void LegendreAssoc()
     }
 
 
-  
+
 }
 
 #endif

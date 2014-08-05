@@ -1,17 +1,17 @@
 void mlpHiggs(Int_t ntrain=100) {
 // Example of a Multi Layer Perceptron
-// For a LEP search for invisible Higgs boson, a neural network 
-// was used to separate the signal from the background passing 
-// some selection cuts. Here is a simplified version of this network, 
+// For a LEP search for invisible Higgs boson, a neural network
+// was used to separate the signal from the background passing
+// some selection cuts. Here is a simplified version of this network,
 // taking into account only WW events.
 //Author: Christophe Delaere
-   
+
    if (!gROOT->GetClass("TMultiLayerPerceptron")) {
       gSystem->Load("libMLP");
    }
 
    // Prepare inputs
-   // The 2 trees are merged into one, and a "type" branch, 
+   // The 2 trees are merged into one, and a "type" branch,
    // equal to 1 for the signal and 0 for the background is added.
    const char *fname = "mlpHiggs.root";
    TFile *input = 0;
@@ -61,10 +61,10 @@ void mlpHiggs(Int_t ntrain=100) {
       background->GetEntry(i);
       simu->Fill();
    }
-   // Build and train the NN ptsumf is used as a weight since we are primarly 
+   // Build and train the NN ptsumf is used as a weight since we are primarly
    // interested  by high pt events.
    // The datasets used here are the same as the default ones.
-   TMultiLayerPerceptron *mlp = 
+   TMultiLayerPerceptron *mlp =
       new TMultiLayerPerceptron("@msumf,@ptsumf,@acolin:5:3:type",
                                 "ptsumf",simu,"Entry$%2","(Entry$+1)%2");
    mlp->Train(ntrain, "text,graph,update=10");
@@ -89,7 +89,7 @@ void mlpHiggs(Int_t ntrain=100) {
    mlpa_canvas->cd(4);
    // Use the NN to plot the results for each sample
    // This will give approx. the same result as DrawNetwork.
-   // All entries are used, while DrawNetwork focuses on 
+   // All entries are used, while DrawNetwork focuses on
    // the test sample. Also the xaxis range is manually set.
    TH1F *bg = new TH1F("bgh", "NN output", 50, -.5, 1.5);
    TH1F *sig = new TH1F("sigh", "NN output", 50, -.5, 1.5);

@@ -678,7 +678,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       }
       PyObject* modules = PySys_GetObject( const_cast<char*>("modules") );
       if ( modules && PyDict_Check( modules) ) {
-         
+
          PyDict_SetItemString( modules,
             const_cast<char*>(("ROOT."+pyfullname).c_str()), pyclass );
       }
@@ -817,7 +817,7 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
       if ( oldPyObject )
          return oldPyObject;
    }
-                       
+
 // downcast to real class for object returns
    if ( clActual && klass != clActual ) {
       address = (void*)((Long_t)address + Utility::DowncastOffset( clActual, klass, address, false /*derivedObj*/ ) );

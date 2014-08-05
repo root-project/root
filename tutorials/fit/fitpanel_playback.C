@@ -46,7 +46,7 @@ void fitpanel_playback()
    Int_t Step3_Size   =  file_size("Step3.png");
    Int_t Step4_Size   =  file_size("Step4.png");
    Int_t Step5_Size   =  file_size("Step5.png");
-   
+
 
    cout << "**********************************************************************" <<endl;
    cout << "*  Report of fitpanel_playback.C                                     *" <<endl;

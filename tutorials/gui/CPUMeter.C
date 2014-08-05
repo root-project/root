@@ -1,7 +1,7 @@
 
 // Simple macro showing capabilities of TGSpeedo widget.
 //Author: Bertrand Bellenot
-   
+
 #include "TSystem.h"
 #include "TGFrame.h"
 #include "TGWindow.h"
@@ -64,10 +64,10 @@ TGShapedMain::TGShapedMain(const TGWindow *p, int w, int h) :
    // To avoid closing the window while TGSpeedo is drawing
    Resize(GetDefaultSize());
    // Set fixed size
-   SetWMSizeHints(GetDefaultWidth(), GetDefaultHeight(), GetDefaultWidth(), 
+   SetWMSizeHints(GetDefaultWidth(), GetDefaultHeight(), GetDefaultWidth(),
                   GetDefaultHeight(), 1, 1);
    SetWindowName("ROOT CPU Load Meter");
-   fTimer->TurnOn();   
+   fTimer->TurnOn();
 }
 
 //______________________________________________________________________________
@@ -151,7 +151,7 @@ void CPUMeter()
    // set threshold values
    gSpeedo->SetThresholds(12.5, 50.0, 87.5);
    // set threshold colors
-   gSpeedo->SetThresholdColors(TGSpeedo::kGreen, TGSpeedo::kOrange, 
+   gSpeedo->SetThresholdColors(TGSpeedo::kGreen, TGSpeedo::kOrange,
                                TGSpeedo::kRed);
    // enable threshold
    gSpeedo->EnableThreshold();

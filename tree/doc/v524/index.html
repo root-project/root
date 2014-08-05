@@ -1,12 +1,12 @@
-<br> 
-<hr> 
-<a name="tree"></a> 
+<br>
+<hr>
+<a name="tree"></a>
 <h3>Tree</h3>
 <ul>
 <li>Significantly improve performance of TTree Proxy.</li>
 <li>Improve read performance of sub-branch containing vector of single types.</li>
 <li>Fix TTree::LoadBasket to properly handle the (new) case where no basket is stored with the TTree object.</li>
-<li>Fix the axis used for an histogram created by TTree::Draw for a branch of TString or std::string objects.</li> 
+<li>Fix the axis used for an histogram created by TTree::Draw for a branch of TString or std::string objects.</li>
 <li>MakeProxy now correctly support branches that created with a leaflist with more than one leaf
 (usually used for C-struct).</li>
 <li>TTree::CloneTree and TChain::Merge in fast mode now can recover from some mismatch errors between
@@ -22,7 +22,7 @@ a 'fast cloning' to handle files that requires schema evolution (albeit it is of
 <li>In TTree::ReadFile add the possibility to read multiple input files and add support for large/wide Trees definition.</li>
 <li>Added support for "5-D" plotting.</li>
 <li>Added support for std::bitset</li>
-<li>Reduce the memory used by the mechanism keeping track of the entry of variables sizes within a basket (fEntryOffset).   
+<li>Reduce the memory used by the mechanism keeping track of the entry of variables sizes within a basket (fEntryOffset).
 The memory used now automatically decrease if the number of entries in the basket is less than 1/4 oflength of fEntryOffset.
 Also the default length fEntryOffset can be set via TTree::SetDefaultEntryOffsetLen which can be optionially applied to the
 existing branches.</li>

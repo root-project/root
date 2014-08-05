@@ -185,7 +185,7 @@ TNode::TNode(const TNode& no) :
   fNodes(no.fNodes),
   fOption(no.fOption),
   fVisibility(no.fVisibility)
-{ 
+{
 //copy constructor
 }
 
@@ -348,11 +348,11 @@ void TNode::Draw(Option_t *option)
    TView *view = gPad->GetView();
    if (!view) {
       view = TView::CreateView(11,0,0);
-      // Set the view to perform a first autorange (frame) draw. 
+      // Set the view to perform a first autorange (frame) draw.
       // TViewer3DPad will revert view to normal painting after this
       if (view) view->SetAutoRange(kTRUE);
    }
-   
+
    // Create a 3D viewer to draw us
    gPad->GetViewer3D(option);
 }
@@ -632,7 +632,7 @@ void TNode::Master2Local(const Float_t *master, Float_t *local)
 void TNode::Paint(Option_t *option)
 {
    // Paint Referenced node with current parameters.
-   // 
+   //
    //  vis = 1  (default) shape is drawn
    //  vis = 0  shape is not drawn but its sons may be not drawn
    //  vis = -1 shape is not drawn. Its sons are not drawn
@@ -670,7 +670,7 @@ void TNode::Paint(Option_t *option)
 
          // Ask all shapes for kCore/kBoundingBox/kShapeSpecific
          // Not all will support the last two - which is fine
-         const TBuffer3D & buffer = 
+         const TBuffer3D & buffer =
             fShape->GetBuffer3D(TBuffer3D::kCore|TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific);
 
          Int_t reqSections = viewer3D->AddObject(buffer, &viewerWantsSons);

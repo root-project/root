@@ -447,7 +447,7 @@ void TProofBenchRunCPU::Run(Long64_t nevents, Int_t start, Int_t stop,
                }
                curdir->cd();
             }
-            
+
          } else {
             if (l)
                Warning("Run", "%s: tree not found", perfstats_name.Data());

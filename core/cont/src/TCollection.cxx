@@ -130,7 +130,7 @@ TObject *TCollection::Clone(const char *newname) const
 {
    // Make a clone of an collection using the Streamer facility.
    // If newname is specified, this will be the name of the new collection.
-   
+
    TCollection *new_collection = (TCollection*)TObject::Clone(newname);
    if (newname && strlen(newname)) new_collection->SetName(newname);
    return new_collection;
@@ -351,7 +351,7 @@ void TCollection::Print(Option_t *option, Int_t recurse) const
    {
       TIter next(this);
       TObject *object;
-      
+
       TROOT::IncreaseDirLevel();
       while ((object = next())) {
          PrintCollectionEntry(object, option, recurse - 1);

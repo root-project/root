@@ -38,7 +38,7 @@ protected:
    TProof* fProof;     // Proof
    TString fSelName;   // Name of the selector to be run
    TString fParList;   // List of PARs to be loaded
-   TString fSelOption; // Option field for processing the selector 
+   TString fSelOption; // Option field for processing the selector
 
 public:
 

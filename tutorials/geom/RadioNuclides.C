@@ -11,8 +11,8 @@ void RadioNuclides()
 // decay modes.
 //
 // The radionuclides table is loaded on demand by any call:
-//    TGeoElementRN *TGeoElementTable::GetElementRN(Int_t atomic_number, 
-//                                                  Int_t atomic_charge, 
+//    TGeoElementRN *TGeoElementTable::GetElementRN(Int_t atomic_number,
+//                                                  Int_t atomic_charge,
 //                                                  Int_t isomeric_number)
 // The isomeric number is optional and the default value is 0.
 //
@@ -23,13 +23,13 @@ void RadioNuclides()
 // elements:
 //    TGeoMixture(const char *name, Int_t nelements, Double_t density);
 //    TGeoMixture::AddElement(TGeoElement *elem, Double_t weight_fraction);
-// Once defined, one can retrieve the time evolution for the radioactive 
+// Once defined, one can retrieve the time evolution for the radioactive
 // materials/mixtures by using one of the 2 methods:
 //
 //    void TGeoMaterial::FillMaterialEvolution(TObjArray *population,
 //                                             Double_t   precision=0.001)
 // To use this method, one has to provide an empty TObjArray object that will
-// be filled with all elements coming from the decay chain of the initial 
+// be filled with all elements coming from the decay chain of the initial
 // radionuclides contained by the material/mixture. The precision represent the
 // cumulative branching ratio for which decay products are still considered.
 // The POPULATION list may contain stable elements as well as radionuclides,
@@ -42,7 +42,7 @@ void RadioNuclides()
 //    TGeoBatemanSol *TGeoElementRN::Ratio();
 //    void TGeoBatemanSol::Draw();
 //
-// Another method allows to create the evolution of a given radioactive 
+// Another method allows to create the evolution of a given radioactive
 // material/mixture at a given moment in time:
 //    TGeoMaterial::DecayMaterial(Double_t time, Double_t precision=0.001)
 // The method will create the mixture that result from the decay of a initial
@@ -231,9 +231,9 @@ void DrawPopulation(TObjArray *vect, TCanvas *can, Double_t tmin,
    TGeoElementRN *elem;
    TGeoBatemanSol *sol;
    can->SetLogy();
-   
+
    if (logx) can->SetLogx();
-   
+
 
    for (Int_t i=0; i<n; i++) {
       TGeoElement *el = (TGeoElement*)vect->At(i);
@@ -254,9 +254,9 @@ void DrawPopulation(TObjArray *vect, TCanvas *can, Double_t tmin,
                else func->SetTitle(
                   "Concentration of elements derived from mixture Ca53+Sr78;\
                   time[s];Ni/N0(Ca53)");
-            }   
-         }   
+            }
+         }
          else      sol->Draw("SAME");
       }
-   }      
+   }
 }

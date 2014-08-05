@@ -127,7 +127,7 @@ TGXYLayoutHints::TGXYLayoutHints(Double_t x, Double_t y, Double_t w, Double_t h,
 void TGXYLayoutHints::SavePrimitive(std::ostream &out, Option_t * /*option = ""*/)
 {
    // Save XY layout hints as a C++ statement(s) on output stream.
-   
+
    TString flag = "";
    if (fFlag & kLRubberX) {
       if (flag.Length() == 0)  flag  = "TGXYLayoutHints::kLRubberX";
@@ -146,10 +146,10 @@ void TGXYLayoutHints::SavePrimitive(std::ostream &out, Option_t * /*option = ""*
       else                     flag += " | TGXYLayoutHints::kLRubberH";
    }
 
-   out << ", new TGXYLayoutHints(" << GetX() << ", " << GetY() << ", " 
+   out << ", new TGXYLayoutHints(" << GetX() << ", " << GetY() << ", "
        << GetW() << ", " << GetH();
 
-   if (!flag.Length()) 
+   if (!flag.Length())
       out << ")";
    else
       out << ", " << flag << ")";
@@ -194,12 +194,12 @@ TGXYLayout::TGXYLayout(const TGXYLayout& xyl) :
   fFirstHeight(xyl.fFirstHeight),
   fTWidth(xyl.fTWidth),
   fTHeight(xyl.fTHeight)
-{ 
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TGXYLayout& TGXYLayout::operator=(const TGXYLayout& xyl) 
+TGXYLayout& TGXYLayout::operator=(const TGXYLayout& xyl)
 {
    //assignment operator
    if(this!=&xyl) {
@@ -211,7 +211,7 @@ TGXYLayout& TGXYLayout::operator=(const TGXYLayout& xyl)
       fFirstHeight=xyl.fFirstHeight;
       fTWidth=xyl.fTWidth;
       fTHeight=xyl.fTHeight;
-   } 
+   }
    return *this;
 }
 
@@ -292,7 +292,7 @@ TGDimension TGXYLayout::GetDefaultSize() const
 void TGXYLayout::SavePrimitive(std::ostream &out, Option_t * /*option = ""*/)
 {
    // Save XY layout manager as a C++ statement(s) on output stream.
-   
+
    out << "new TGXYLayout(" << fMain->GetName() << ")";
 
 }

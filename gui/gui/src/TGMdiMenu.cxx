@@ -156,7 +156,7 @@ void TGMdiMenuBar::HideFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
    // Hide specified frames
    fLeft->HideFrame(icon);
    fRight->HideFrame(buttons);
-   
+
    // Then show (restore) last frames
    TGFrameElement *el;
    el = (TGFrameElement *)fLeft->GetList()->Last();

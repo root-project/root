@@ -1,11 +1,11 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
-#ifndef ROOT_Math_Vector4D 
-#define ROOT_Math_Vector4D 
+#ifndef ROOT_Math_Vector4D
+#define ROOT_Math_Vector4D
 
 // defines typedefs to specific vectors and forward declarations
-// define additional (to Cartesian) coordinate system types 
+// define additional (to Cartesian) coordinate system types
 #include "Math/Vector4Dfwd.h"
 // generic LorentzVector class definition
 

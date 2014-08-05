@@ -52,16 +52,16 @@ public:
    // Defines options / status while merging:
    enum EStatusBits { kMultiply   = BIT(16),    // Use multiplication
                       kMax        = BIT(17),    // Take max value
-                      kMin        = BIT(18),    // Take min value        
+                      kMin        = BIT(18),    // Take min value
                       kFirst      = BIT(19),    // Take the first value
-                      kLast       = BIT(20),    // Take the last value        
-                      kIsConst    = BIT(21)     // Set if all values are equal       
+                      kLast       = BIT(20),    // Take the last value
+                      kIsConst    = BIT(21)     // Set if all values are equal
    };
 
 private:
    TString     fName;
    AParamType  fVal;
-   
+
    void        Reset() { ResetBit(kMultiply); ResetBit(kMax); ResetBit(kMin);
                          ResetBit(kFirst); ResetBit(kLast); }
 
@@ -104,7 +104,7 @@ public:
    virtual Int_t    Compare(const TObject *obj) const {
       // Compare two TParameter objects. Returns 0 when equal, -1 when this is
       // smaller and +1 when bigger (like strcmp).
-      
+
       if (this == obj) return 0;
       return fName.CompareTo(obj->GetName());
    }
@@ -122,7 +122,7 @@ public:
    }
 
    virtual Int_t Merge(TCollection *in);
-   
+
    ClassDef(TParameter,2)  //Named templated parameter type
 };
 
@@ -156,11 +156,11 @@ inline Int_t TParameter<AParamType>::Merge(TCollection *in) {
          n++;
       }
    }
-   
+
    return n;
 }
 
-// Specialization of Merge for Bool_t  
+// Specialization of Merge for Bool_t
 template <>
 inline Int_t TParameter<Bool_t>::Merge(TCollection *in)
 {
@@ -186,7 +186,7 @@ inline Int_t TParameter<Bool_t>::Merge(TCollection *in)
          n++;
       }
    }
-   
+
    return n;
 }
 

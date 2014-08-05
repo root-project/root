@@ -51,8 +51,8 @@ class TNeuron : public TNamed {
  public:
    enum ENeuronType { kOff, kLinear, kSigmoid, kTanh, kGauss, kSoftmax, kExternal };
 
-   TNeuron(ENeuronType type = kSigmoid, 
-           const char* name = "", const char* title = "", 
+   TNeuron(ENeuronType type = kSigmoid,
+           const char* name = "", const char* title = "",
            const char* extF = "", const char* extD  = "" );
    virtual ~TNeuron() {}
    inline TSynapse* GetPre(Int_t n) const { return (TSynapse*) fpre.At(n); }

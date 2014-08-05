@@ -65,7 +65,7 @@ void TEveSecondarySelectable::ProcessGLSelectionInternal(TGLSelectRecord& rec,
       {
          sset.insert(id);
          rec.SetSecSelResult(TGLSelectRecord::kEnteringSelection);
-      }  
+      }
    }
    else
    {

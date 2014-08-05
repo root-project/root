@@ -52,7 +52,7 @@ namespace ROOT {
    public:
       static RStl& Instance();
       ~RStl() {};
-      
+
       void GenerateTClassFor(const char *requestedName, const clang::CXXRecordDecl *stlClass, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
       void GenerateTClassFor(const clang::QualType &type, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt);
       void Print();
@@ -63,7 +63,7 @@ namespace ROOT {
                           bool &needCollectionProxy);
 //       void WriteStreamer(FILE *file,const clang::CXXRecordDecl *stlcl);
 //       void WriteStreamer(FILE *file);
-      
+
    private:
       RStl() : fList() {};
       RStl(const RStl&);

@@ -64,7 +64,7 @@ TQpVar::TQpVar()
    fNxlo = 0;
    fMcup = 0;
    fMclo = 0;
-   fNComplementaryVariables = 0;   
+   fNComplementaryVariables = 0;
 }
 
 

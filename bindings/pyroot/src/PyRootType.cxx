@@ -102,7 +102,7 @@ namespace {
          // are available as "methods" even though they're not really that
             if ( ! attr && ! PyRootType_CheckExact( pyclass ) && PyType_Check( pyclass ) ) {
                PyErr_Clear();
- 
+
                TScopeAdapter klass = TScopeAdapter::ByName( ((PyTypeObject*)pyclass)->tp_name );
                if ( klass.IsNamespace() ) {
 

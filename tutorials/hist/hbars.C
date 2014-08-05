@@ -16,10 +16,10 @@ void hbars() {
    TFile * f = TFile::Open(filename);
    if (!f) {
       Error("hbars","file cernstaff.root not found");
-      return; 
+      return;
    }
    TTree *T = (TTree*)f->Get("T");
-   if (!T) { 
+   if (!T) {
       Error("hbars","Tree T is not present in file %s",f->GetName() );
       return;
    }
@@ -27,11 +27,11 @@ void hbars() {
    TCanvas *c1 = new TCanvas("c1","histograms with bars",700,800);
    c1->SetFillColor(42);
    c1->Divide(1,2);
-   
+
    //horizontal bar chart
    c1->cd(1); gPad->SetGrid(); gPad->SetLogx(); gPad->SetFrameFillColor(33);
    T->Draw("Nation","","hbar2");
-   
+
    //vertical bar chart
    c1->cd(2); gPad->SetGrid(); gPad->SetFrameFillColor(33);
    T->Draw("Division>>hDiv","","goff");
@@ -47,12 +47,12 @@ void hbars() {
    hDivFR->SetBarOffset(0.55);
    hDivFR->SetFillColor(50);
    TH1 *h2 = hDivFR->DrawCopy("bar2,same");
-  
+
    TLegend *legend = new TLegend(0.55,0.65,0.76,0.82);
    legend->AddEntry(h1,"All nations","f");
    legend->AddEntry(h2,"French only","f");
    legend->Draw();
-   
+
    c1->cd();
    delete f;
 }

@@ -150,8 +150,8 @@ TString TEveCaloData::GetHighlightTooltip()
    for (vCellId_i i = fCellsHighlighted.begin(); i!=fCellsHighlighted.end(); ++i)
    {
       GetCellData(*i, cellData);
-      
-      s += TString::Format("%s %.2f (%.3f, %.3f)", 
+
+      s += TString::Format("%s %.2f (%.3f, %.3f)",
                            fSliceInfos[i->fSlice].fName.Data(), cellData.fValue,
                            cellData.Eta(), cellData.Phi());
 
@@ -216,7 +216,7 @@ void TEveCaloData::ProcessSelection(vCellId_t& sel_cells, TGLSelectRecord& rec)
    };
 
    vCellId_t& cells = rec.GetHighlight() ? fCellsHighlighted : fCellsSelected;
- 
+
    if (cells.empty())
    {
       if (!sel_cells.empty())
@@ -389,7 +389,7 @@ void TEveCaloData::DataChanged()
 void TEveCaloData::CellSelectionChanged()
 {
    // Tell users (TEveCaloViz instances using this data) that cell selection
-   // has changed and they should update selection cache if necessary. 
+   // has changed and they should update selection cache if necessary.
    // This is done by calling TEveCaloViz::CellSelectionChanged().
 
    TEveCaloViz* calo;
@@ -453,14 +453,14 @@ TEveCaloDataVec::~TEveCaloDataVec()
 Int_t TEveCaloDataVec::AddSlice()
 {
   // Add new slice.
-  
+
   fSliceInfos.push_back(SliceInfo_t());
-  fSliceVec.push_back(std::vector<Float_t> ()); 
+  fSliceVec.push_back(std::vector<Float_t> ());
   fSliceVec.back().resize(fGeomVec.size(), 0.f);
 
   return fSliceInfos.size() - 1;
 }
-  
+
 //______________________________________________________________________________
 Int_t TEveCaloDataVec::AddTower(Float_t etaMin, Float_t etaMax, Float_t phiMin, Float_t phiMax)
 {
@@ -479,7 +479,7 @@ Int_t TEveCaloDataVec::AddTower(Float_t etaMin, Float_t etaMax, Float_t phiMin, 
 
    if (phiMin < fPhiMin) fPhiMin = phiMin;
    if (phiMax > fPhiMax) fPhiMax = phiMax;
-  
+
    fTower = fGeomVec.size() - 1;
    return fTower;
 }
@@ -586,7 +586,7 @@ void TEveCaloDataVec::Rebin(TAxis* ax, TAxis* ay, vCellId_t &ids, Bool_t et, Reb
 
             Double_t ratio = TEveUtil::GetFraction(ax->GetBinLowEdge(i), ax->GetBinUpEdge(i), cd.EtaMin(), cd.EtaMax())
                            * TEveUtil::GetFraction(ay->GetBinLowEdge(j), ay->GetBinUpEdge(j), cd.PhiMin(), cd.PhiMax());
-            
+
             if (ratio > 1e-6f)
             {
                Float_t* slices = rdata.GetSliceVals(i + j*(ax->GetNbins()+2));
@@ -868,7 +868,7 @@ void TEveCaloDataHist::Rebin(TAxis* ax, TAxis* ay, TEveCaloData::vCellId_t &ids,
       val = rdata.GetSliceVals(bin);
       Double_t ratio = TEveUtil::GetFraction(ax->GetBinLowEdge(binx), ax->GetBinUpEdge(binx), cd.EtaMin(), cd.EtaMax())
                      * TEveUtil::GetFraction(ay->GetBinLowEdge(biny), ay->GetBinUpEdge(biny), cd.PhiMin(), cd.PhiMax());
-      
+
       val[(*it).fSlice] += cd.Value(et)*ratio;
    }
 }
@@ -903,9 +903,9 @@ Int_t TEveCaloDataHist::AddHistogram(TH2F* hist)
    fSliceInfos.push_back(SliceInfo_t());
    fSliceInfos.back().fName  = hist->GetName();
    fSliceInfos.back().fColor = hist->GetLineColor();
-   
+
    DataChanged();
-   
+
    return fSliceInfos.size() - 1;
 }
 
@@ -917,7 +917,7 @@ TH2F* TEveCaloDataHist::GetHist(Int_t slice) const
    assert(slice >= 0 && slice < fHStack->GetHists()->GetSize());
    return (TH2F*) fHStack->GetHists()->At(slice);
 }
-   
+
 //______________________________________________________________________________
 void TEveCaloDataHist::GetEtaLimits(Double_t &min, Double_t &max) const
 {

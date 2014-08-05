@@ -10,7 +10,7 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-//                                                                      
+//
 // TSQLColumnInfo
 //
 // Contains information about single column from SQL table
@@ -18,7 +18,7 @@
 //   GetTypeName() - field type name in string form as it is reported by correspondent
 //          database method. Some databases providing full type name like "numeric(20)",
 //          other showing only "NUMERIC". As a result, one cannot use this string directly
-//          to create new field of similar types in other table 
+//          to create new field of similar types in other table
 //   IsNullable() - says if field value can be NULL or not
 //   GetSQLType() - returns kind of sql type. Possible values:
 //      TSQLServer::kSQL_NONE        data type unknown
@@ -34,7 +34,7 @@
 //   GetLength() - length argument in type declaration like CHAR(len) or NUMERIC(len), -1 if not defined
 //   GetScale() - second argument in declarations like NUMERIC(len, s), -1 if not defined
 //   GetSigned() - is type signed(==1) or unsigned(==0), -1 if not defined
-//                                                                      
+//
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "TSQLColumnInfo.h"
@@ -45,7 +45,7 @@
 ClassImp(TSQLColumnInfo)
 
 //______________________________________________________________________________
-TSQLColumnInfo::TSQLColumnInfo() : 
+TSQLColumnInfo::TSQLColumnInfo() :
    TNamed(),
    fTypeName(),
    fSQLType(-1),
@@ -83,10 +83,10 @@ TSQLColumnInfo::TSQLColumnInfo(const char* columnname,
 void TSQLColumnInfo::Print(Option_t*) const
 {
    // Prints column information to standard output
-   
+
    TROOT::IndentLevel();
-   std::cout << "Column: " << GetName() 
-        << " type:'" << fTypeName << "'"; 
+   std::cout << "Column: " << GetName()
+        << " type:'" << fTypeName << "'";
    if (fSQLType>=0) {
       std::cout << " typeid:";
       switch (fSQLType) {
@@ -105,7 +105,7 @@ void TSQLColumnInfo::Print(Option_t*) const
    if (fSize>=0) std::cout << " size:" << fSize;
    if (fLength>=0) std::cout << " len:" << fLength;
    if (fScale>=0) std::cout << " scale:" << fScale;
-   if (fSigned>=0) { 
+   if (fSigned>=0) {
       if (fSigned==0)
          std::cout << " unsigned";
       else

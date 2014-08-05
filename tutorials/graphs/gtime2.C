@@ -1,14 +1,14 @@
 // example of TGraphTime showing how the class could be used to visualize
 // a set of particles with their time stamp in a MonteCarlo program.
 //Author: Rene Brun 14/07/2009
-   
+
 #include "TRandom3.h"
 #include "TMath.h"
 #include "TMarker.h"
 #include "TPaveLabel.h"
 #include "TArrow.h"
 #include "TGraphTime.h"
-   
+
 void gtime2(Int_t nsteps = 200, Int_t np=5000) {
    if (np > 5000) np = 5000;
    Int_t color[5000];
@@ -43,6 +43,6 @@ void gtime2(Int_t nsteps = 200, Int_t np=5000) {
    }
    g->Draw();
 }
-   
-   
-   
+
+
+

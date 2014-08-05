@@ -22,12 +22,12 @@ class FTGL_EXPORT FTSize
          * Default Constructor
          */
          FTSize();
-        
+
         /**
          * Destructor
          */
         virtual ~FTSize();
-        
+
         /**
          * Sets the char size for the current face.
          *
@@ -41,28 +41,28 @@ class FTGL_EXPORT FTSize
          * @return          <code>true</code> if the size has been set. Clients should check Error() for more information if this function returns false()
          */
         bool CharSize( FT_Face* face, unsigned int point_size, unsigned int x_resolution, unsigned int y_resolution);
-        
+
         /**
          * get the char size for the current face.
          *
          * @return The char size in points
          */
         unsigned int CharSize() const;
-        
+
         /**
          * Gets the global ascender height for the face in pixels.
          *
          * @return  Ascender height
          */
         float Ascender() const;
-        
+
         /**
          * Gets the global descender height for the face in pixels.
          *
          * @return  Ascender height
          */
         float Descender() const;
-        
+
         /**
          * Gets the global face height for the face.
          *
@@ -74,7 +74,7 @@ class FTGL_EXPORT FTSize
          * @return  height in pixels.
          */
         float Height() const;
-        
+
         /**
          * Gets the global face width for the face.
          *
@@ -86,7 +86,7 @@ class FTGL_EXPORT FTSize
          * @return  width in pixels.
          */
         float Width() const;
-        
+
         /**
          * Gets the underline position for the face.
          *
@@ -100,18 +100,18 @@ class FTGL_EXPORT FTSize
          * @return  The current error code.
          */
         FT_Error Error() const { return err; }
-        
+
     private:
         /**
          * The current Freetype face that this FTSize object relates to.
          */
         FT_Face* ftFace;
-        
+
         /**
          *  The Freetype size.
          */
         FT_Size ftSize;
-        
+
         /**
          *  The size in points.
          */
@@ -131,7 +131,7 @@ class FTGL_EXPORT FTSize
          * Current error code. Zero means no error.
          */
         FT_Error err;
-        
+
 };
 
 #endif  //  __FTSize__

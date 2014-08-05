@@ -33,7 +33,7 @@ TRootApplication::TRootApplication(const char *appClassName,
                                    Int_t *argc, char **argv)
 {
    // Create ROOT application environment.
-   
+
    fApplicationName = appClassName;
    fDisplay         = 0;
 

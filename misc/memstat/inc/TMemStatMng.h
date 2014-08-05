@@ -93,7 +93,7 @@ namespace Memstat {
       static void Close();                 //close MemStatManager
       void SetBufferSize(Int_t buffersize);
       void SetMaxCalls(Int_t maxcalls);
-      
+
    public:
       //stack data members
       void SetUseGNUBuiltinBacktrace(Bool_t newVal) {
@@ -138,7 +138,7 @@ namespace Memstat {
       Int_t     *fBufBtID;    //back trace identifier
       Int_t     *fIndex;      //array to sort fBufPos
       Bool_t    *fMustWrite;  //flag to write or not the entry
-            
+
    private:
       TMemStatFAddrContainer fFAddrs;
       TObjArray *fFAddrsList;

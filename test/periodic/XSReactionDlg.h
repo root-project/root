@@ -26,141 +26,141 @@ class XSReactionDlg : public TGTransientFrame
 {
 protected:
 
-	UInt_t		Z;
+   UInt_t      Z;
 
-	const TGWindow	*mainWindow;
+   const TGWindow   *mainWindow;
 
-	TGHorizontalFrame	*frm1,
-				*frm2,
-				*frm3,
-				*frm4,
-				*frm5;
+   TGHorizontalFrame   *frm1,
+            *frm2,
+            *frm3,
+            *frm4,
+            *frm5;
 
-	TGCompositeFrame	*Vfrm1,
-				*Vfrm2,
-				*Vfrm3;
+   TGCompositeFrame   *Vfrm1,
+            *Vfrm2,
+            *Vfrm3;
 
-	TGLayoutHints	*lHFixed,
-			*lHExpX,
-			*lHExpY,
-			*lHExpXY,
-			*lHBot,
-			*lHExpXCen,
-			*lHFixedCen;
+   TGLayoutHints   *lHFixed,
+         *lHExpX,
+         *lHExpY,
+         *lHExpXY,
+         *lHBot,
+         *lHExpXCen,
+         *lHFixedCen;
 
-	// ---- Material Items ----
-	TGGroupFrame	*materialGroup;
+   // ---- Material Items ----
+   TGGroupFrame   *materialGroup;
 
-	TGLabel		*elementLbl;
-	TGTextBuffer	*elementBuf; //!
-	TGTextEntry	*elementText;
-	XSStepButton	*elementStep;
+   TGLabel      *elementLbl;
+   TGTextBuffer   *elementBuf; //!
+   TGTextEntry   *elementText;
+   XSStepButton   *elementStep;
 
-	TGLabel		*nameLbl,
-			*mnemonicLbl,
+   TGLabel      *nameLbl,
+         *mnemonicLbl,
 
-			*chargeLbl,
-			*zLbl,
+         *chargeLbl,
+         *zLbl,
 
-			*massLbl,
-			*massValLbl,
+         *massLbl,
+         *massValLbl,
 
-			*isotopeLbl,
+         *isotopeLbl,
 
-			*densityLbl,
-			*densityValLbl,
+         *densityLbl,
+         *densityValLbl,
 
-			*meltingPtLbl,
-			*meltingValLbl,
-			*boilingPtLbl,
-			*boilingValLbl,
+         *meltingPtLbl,
+         *meltingValLbl,
+         *boilingPtLbl,
+         *boilingValLbl,
 
-			*oxidationLbl,
-			*oxidationValLbl,
+         *oxidationLbl,
+         *oxidationValLbl,
 
-			*isotopeInfoLbl,
-			*isotopeInfoValLbl;
+         *isotopeInfoLbl,
+         *isotopeInfoValLbl;
 
-	TGButton	*ptableButton;
+   TGButton   *ptableButton;
 
-	TGComboBox	*isotopeCombo;
+   TGComboBox   *isotopeCombo;
 
-	// ----- Reaction ----
-	TGGroupFrame	*reactionGroup;
+   // ----- Reaction ----
+   TGGroupFrame   *reactionGroup;
 
-	TGLabel		*projectileLbl,
-			*temperatureLbl,
-			*databaseLbl,
-			*reactionLbl,
-			*reactionInfoLbl,
-			*reactionInfoValLbl;
+   TGLabel      *projectileLbl,
+         *temperatureLbl,
+         *databaseLbl,
+         *reactionLbl,
+         *reactionInfoLbl,
+         *reactionInfoValLbl;
 
-	TGComboBox	*projectileCombo,
-			*temperatureCombo,
-			*databaseCombo;
+   TGComboBox   *projectileCombo,
+         *temperatureCombo,
+         *databaseCombo;
 
-	TGListBox	*reactionList;
+   TGListBox   *reactionList;
 
-	// ----- Options -----
-	TGGroupFrame	*optionGroup;
+   // ----- Options -----
+   TGGroupFrame   *optionGroup;
 
-	TGLabel		*lineWidthLbl,
-			*lineColorLbl,
-			*markerStyleLbl,
-			*markerColorLbl,
-			*markerSizeLbl,
-			*errorbarColorLbl;
+   TGLabel      *lineWidthLbl,
+         *lineColorLbl,
+         *markerStyleLbl,
+         *markerColorLbl,
+         *markerSizeLbl,
+         *errorbarColorLbl;
 
-	TGComboBox	*lineWidthCombo,
-			*lineColorCombo,
-			*markerStyleCombo,
-			*markerColorCombo,
-			*markerSizeCombo,
-			*errorbarColorCombo;
+   TGComboBox   *lineWidthCombo,
+         *lineColorCombo,
+         *markerStyleCombo,
+         *markerColorCombo,
+         *markerSizeCombo,
+         *errorbarColorCombo;
 
-	// ----- Info Group -----
-	TGGroupFrame	*infoGroup;
+   // ----- Info Group -----
+   TGGroupFrame   *infoGroup;
 
-	TGTextView	*infoView;
+   TGTextView   *infoView;
 
 
-	// ----- Execution Buttons ----
-	TGHorizontalFrame	*buttonFrame;
-	TGButton		*okButton,
-				*execButton,
-				*resetButton,
-				*closeButton;
+   // ----- Execution Buttons ----
+   TGHorizontalFrame   *buttonFrame;
+   TGButton      *okButton,
+            *execButton,
+            *resetButton,
+            *closeButton;
 
 
 public:
-	XSReactionDlg(const TGWindow *p,
-	        const TGWindow *main, UInt_t initZ, UInt_t w, UInt_t h);
-	~XSReactionDlg();
+   XSReactionDlg(const TGWindow *p,
+           const TGWindow *main, UInt_t initZ, UInt_t w, UInt_t h);
+   ~XSReactionDlg();
 
 protected:
-		void	InitColorCombo(TGComboBox *cb);
-		void	InitCombos();
-	const	char*	GetString(int box);
-		char*	CreatePath(int option);
-		int	UpdateContainer( TGListBox *lb, char *path, int option);
-		void	UpdateCurIsotope();
-		void	UpdateIsotopes();
-		void	UpdateProjectile();
-		void	UpdateDatabase();
-		void	UpdateReactions();
+      void   InitColorCombo(TGComboBox *cb);
+      void   InitCombos();
+   const   char*   GetString(int box);
+      char*   CreatePath(int option);
+      int   UpdateContainer( TGListBox *lb, char *path, int option);
+      void   UpdateCurIsotope();
+      void   UpdateIsotopes();
+      void   UpdateProjectile();
+      void   UpdateDatabase();
+      void   UpdateReactions();
 
-		void	SetElement(UInt_t aZ);
-		void	ElementEntryChanged();
+      void   SetElement(UInt_t aZ);
+      void   ElementEntryChanged();
 
-		void	UpdateGraph(NdbMTReactionXS *xs);
-		Bool_t	ExecCommand();
+      void   UpdateGraph(NdbMTReactionXS *xs);
+      Bool_t   ExecCommand();
 
-	virtual void	CloseWindow();
-		Bool_t	ProcessButton(Long_t param1, Long_t param2);
-		Bool_t	ProcessCombo(Long_t param1, Long_t param2);
-	virtual Bool_t	ProcessMessage(Long_t msg, Long_t param1, Long_t param2);
+   virtual void   CloseWindow();
+      Bool_t   ProcessButton(Long_t param1, Long_t param2);
+      Bool_t   ProcessCombo(Long_t param1, Long_t param2);
+   virtual Bool_t   ProcessMessage(Long_t msg, Long_t param1, Long_t param2);
 
-	//ClassDef(XSReactionDlg,1)
+   //ClassDef(XSReactionDlg,1)
 }; // XSReactionDlg
 
 #endif

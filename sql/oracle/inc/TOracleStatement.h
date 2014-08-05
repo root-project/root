@@ -41,7 +41,7 @@ protected:
       char* namebuf;
    };
 
-   oracle::occi::Environment *fEnv;         // environment 
+   oracle::occi::Environment *fEnv;         // environment
    oracle::occi::Connection  *fConn;        // connection to Oracle
    oracle::occi::Statement   *fStmt;        // executed statement
    oracle::occi::ResultSet   *fResult;      // query result (rows)
@@ -51,14 +51,14 @@ protected:
    Int_t                  fNumIterations;  // size of internal statement buffer
    Int_t                  fIterCounter; //counts nextiteration calls and process iterations, if required
    Int_t                  fWorkingMode; // 1 - settingpars, 2 - getting results
-   TString                fTimeFmt;     // format for date to string conversion, default "MM/DD/YYYY, HH24:MI:SS" 
+   TString                fTimeFmt;     // format for date to string conversion, default "MM/DD/YYYY, HH24:MI:SS"
 
    Bool_t      IsParSettMode() const { return fWorkingMode==1; }
    Bool_t      IsResultSet() const { return (fWorkingMode==2) && (fResult!=0); }
 
    void        SetBufferSize(Int_t size);
    void        CloseBuffer();
-   
+
 public:
    TOracleStatement(oracle::occi::Environment* env,
                     oracle::occi::Connection* conn,

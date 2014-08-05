@@ -877,7 +877,7 @@ const TBuffer3D & TXTRU::GetBuffer3D(Int_t reqSections) const
       buffer.fPols[indx++] = c;
       buffer.fPols[indx++] = fNxy;
       indx2 = (fNz-1)*fNxy;
-    
+
       for (j=0; j<fNxy; j++) {
          buffer.fPols[indx++] = indx2+j;
       }

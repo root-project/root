@@ -69,7 +69,7 @@ private:
    void           *fDirp;         // Directory pointer
    vecString       fDirList;      // Buffer for directory content
    Bool_t          fDirListValid; // fDirList content valid ?
-   TString         fDirEntry;     // Last dir entry 
+   TString         fDirEntry;     // Last dir entry
    TString         fUrl;          // Initial url
 
    static Bool_t   fgInitDone;    // Avoid initializing more than once
@@ -122,7 +122,7 @@ public:
    TXNetSystemConnectGuard(TXNetSystem *xn, const char *url);
    ~TXNetSystemConnectGuard();
 
-   bool IsValid() const { return ((fClientAdmin) ? 1 : 0); } 
+   bool IsValid() const { return ((fClientAdmin) ? 1 : 0); }
 
    XrdClientAdmin *ClientAdmin() const { return fClientAdmin; }
 

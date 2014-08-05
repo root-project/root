@@ -144,9 +144,9 @@ TGeometry::TGeometry(const TGeometry& geo) :
 {
    //copy constructor
    for(Int_t i=0; i<kMAXLEVELS; i++) {
-      for(Int_t j=0; j<kVectorSize; j++) 
+      for(Int_t j=0; j<kVectorSize; j++)
          fTranslation[i][j]=geo.fTranslation[i][j];
-      for(Int_t j=0; j<kMatrixSize; j++) 
+      for(Int_t j=0; j<kMatrixSize; j++)
          fRotMatrix[i][j]=geo.fRotMatrix[i][j];
       fIsReflection[i]=geo.fIsReflection[i];
    }
@@ -173,13 +173,13 @@ TGeometry& TGeometry::operator=(const TGeometry& geo)
       fY=geo.fY;
       fZ=geo.fZ;
       for(Int_t i=0; i<kMAXLEVELS; i++) {
-         for(Int_t j=0; j<kVectorSize; j++) 
+         for(Int_t j=0; j<kVectorSize; j++)
             fTranslation[i][j]=geo.fTranslation[i][j];
-         for(Int_t j=0; j<kMatrixSize; j++) 
+         for(Int_t j=0; j<kMatrixSize; j++)
             fRotMatrix[i][j]=geo.fRotMatrix[i][j];
          fIsReflection[i]=geo.fIsReflection[i];
       }
-   } 
+   }
    return *this;
 }
 
@@ -429,7 +429,7 @@ void TGeometry::Local2Master(Double_t *local, Double_t *master)
         + local[2]*matrix[8];
       master[0] = x; master[1] = y; master[2] = z;
    }
-   else 
+   else
       for (Int_t i=0;i<3;i++) master[i] = local[i];
 }
 
@@ -447,24 +447,24 @@ void TGeometry::Local2Master(Float_t *local, Float_t *master)
    if (GeomLevel()) {
       Float_t x,y,z;
       Float_t bomb = GetBomb();
- 
+
       Double_t *matrix = &fRotMatrix[GeomLevel()][0];
- 
+
       x = bomb*fX
         + local[0]*matrix[0]
         + local[1]*matrix[3]
         + local[2]*matrix[6];
- 
+
       y = bomb*fY
         + local[0]*matrix[1]
         + local[1]*matrix[4]
         + local[2]*matrix[7];
- 
+
       z = bomb*fZ
         + local[0]*matrix[2]
         + local[1]*matrix[5]
         + local[2]*matrix[8];
- 
+
       master[0] = x; master[1] = y; master[2] = z;
    }
    else

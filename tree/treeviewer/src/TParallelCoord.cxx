@@ -1188,7 +1188,7 @@ void TParallelCoord::SetVertDisplay(Bool_t vert)
    if (!gPad) return;
    TFrame* frame = gPad->GetFrame();
    if (!frame) return;
-   UInt_t ui = 0;   
+   UInt_t ui = 0;
    Double_t horaxisspace = (frame->GetX2() - frame->GetX1())/(fNvar-1);
    Double_t veraxisspace = (frame->GetY2() - frame->GetY1())/(fNvar-1);
    TIter next(fVarList);

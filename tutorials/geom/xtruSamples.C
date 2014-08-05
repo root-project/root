@@ -102,7 +102,7 @@ void xtruSamples()
   TNode* zconenode = new TNode("zconenode","zconenode",zcone);
   zconenode->SetLineColor(3);
 
-  Float_t dzstub = 2*rmax; 
+  Float_t dzstub = 2*rmax;
   TBRIK* zbrik = new TBRIK("zbrik","zbrik","void",rmax,rmax,dzstub);
   zbrik->SetVisibility(extravis);
   TNode* zbriknode = new TNode("zbriknode","zbriknode",zbrik);
@@ -116,7 +116,7 @@ void xtruSamples()
 // Tweak the pad so that it displays the entire geometry undistorted
   TVirtualPad *thisPad = gPad;
   if (thisPad) {
-    TView *view = thisPad->GetView(); 
+    TView *view = thisPad->GetView();
     if (!view) return;
     Double_t min[3],max[3],center[3];
     view->GetRange(min,max);

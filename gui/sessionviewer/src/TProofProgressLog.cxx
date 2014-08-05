@@ -113,7 +113,7 @@ void TProofProgressLog::Init(Int_t w, Int_t h)
    fLogList = 0;
    BuildLogList(kTRUE);
    fLogList->Resize(102,52);
-   fLogList->SetMultipleSelections(kTRUE); 
+   fLogList->SetMultipleSelections(kTRUE);
 
    //The SelectAll/ClearAll buttons
    TGHorizontalFrame *hfselbox = new TGHorizontalFrame(fVworkers, 20, 20);
@@ -496,7 +496,7 @@ void TProofProgressLog::DoLog(Bool_t grep)
             if (fTextType == kRaw) {
                if (gDebug >= 2)
                   Info("DoLog", "Retrieving unfiltered log for %s", ord.Data());
-               fProofLog->Retrieve(ord.Data(), TProofLog::kTrailing, 0, 0);               
+               fProofLog->Retrieve(ord.Data(), TProofLog::kTrailing, 0, 0);
             }
             else {
                if (gDebug >= 2)
@@ -531,7 +531,7 @@ void TProofProgressLog::LogMessage(const char *msg, Bool_t all)
 //______________________________________________________________________________
 void TProofProgressLog::SaveToFile()
 {
-   //Save the logs to a file 
+   //Save the logs to a file
    //Only the name of the file is taken, no expansion
 
    if (!fProofLog) DoLog();
@@ -539,7 +539,7 @@ void TProofProgressLog::SaveToFile()
    // File name: the default is <session-tag>.log
    TString filename = fFileName->GetText();
    if (filename.IsNull() || filename == "<session-tag>.log") {
-      filename = (fDialog && fDialog->fProof) ? 
+      filename = (fDialog && fDialog->fProof) ?
                   TString::Format("%s.log", fDialog->fProof->GetName()) :
                   TString("proof.log");
    }

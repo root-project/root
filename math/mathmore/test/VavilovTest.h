@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class VavilovTest
-// 
+//
 // Created by: blist  at Thu Apr 29 11:19:00 2010
-// 
+//
 // Last update: Thu Apr 29 11:19:00 2010
-// 
+//
 #ifndef ROOT_Math_VavilovTest
 #define ROOT_Math_VavilovTest
 
@@ -42,7 +42,7 @@ class Vavilov;
 //____________________________________________________________________________
 /**
    Test class for class Vavilov and its subclasses
-   
+
    For test purposes,
    the class contains a number of static function that return the tabulated
    values of the Vavilov pdf given by
@@ -55,17 +55,17 @@ class Vavilov;
   Washington (Nat. Akad. Sci.) 1964, 388 pp.
   Available from
   <A HREF="http://books.google.de/books?id=kmMrAAAAYAAJ&lpg=PP9&pg=PA187#v=onepage&q&f=false">Google books</A>
-   
+
    B. List 24.6.2010
-      
+
    */
-   
+
 
 class VavilovTest {
 
-public: 
-  
-   
+public:
+
+
    /**
       Test the pdf values against the tables of Seltzer and Berger.
       Returns 0 if the test is passed
@@ -73,10 +73,10 @@ public:
        @param v The Vavilov test object
        @param os Output stream
    */
-   static int PdfTest (Vavilov& v, std::ostream& os, 
-                       double maxabsdiff, double maxdiffmantissa, 
+   static int PdfTest (Vavilov& v, std::ostream& os,
+                       double maxabsdiff, double maxdiffmantissa,
                        double agreefraction, double agreediffmantissa);
-   
+
    /**
       Test the pdf values against the tables of Seltzer and Berger.
       Returns 0 if the test is passed
@@ -85,7 +85,7 @@ public:
        @param os Output stream
    */
    static int PdfTest (Vavilov& v, std::ostream& os);
-   
+
    /**
       Test the cdf values against the integral of the pdf
       Returns 0 if the test is passed
@@ -95,7 +95,7 @@ public:
    */
    static int CdfTest (Vavilov& v, std::ostream& os,
                        double maxabsdiff, double maxcdfdiff);
-   
+
    /**
       Test the cdf values against the integral of the pdf
       Returns 0 if the test is passed
@@ -104,7 +104,7 @@ public:
        @param os Output stream
    */
    static int CdfTest (Vavilov& v, std::ostream& os);
-   
+
    /**
       Test the quantile values against the cdf
       Returns 0 if the test is passed
@@ -113,7 +113,7 @@ public:
        @param os Output stream
    */
    static int QuantileTest (Vavilov& v, std::ostream& os, double maxabsdiff);
-   
+
    /**
       Test the quantile values against the cdf
       Returns 0 if the test is passed
@@ -122,7 +122,7 @@ public:
        @param os Output stream
    */
    static int QuantileTest (Vavilov& v, std::ostream& os);
-   
+
    /**
       Print a table of the pdf values to stream os
 
@@ -131,38 +131,38 @@ public:
        @param digits: Number of digits to be printed
    */
    static void PrintPdfTable (Vavilov& v, std::ostream& os, int digits = 3);
- 
-     
+
+
    /**
       Return the number of \f$\kappa\f$ values in the tables of Seltzer and Berger
    */
    static int GetSBNKappa ();
-   
+
    /**
       Return the \f$\kappa\f$ value for ikappa in the tables of Seltzer and Berger
    */
    static double GetSBKappa (int ikappa);
-   
+
    /**
       Return the number of \f$\beta^2\f$ values in the tables of Seltzer and Berger
    */
    static int GetSBNBeta2 ();
-    
+
    /**
       Return the \f$\beta^2\f$ value in the tables of Seltzer and Berger
    */
    static double GetSBBeta2 (int ibeta2);
-   
+
    /**
       Return the number of \f$\lambda\f$ values in the tables of Seltzer and Berger
    */
    static int GetSBNLambda (int ikappa);
-   
+
    /**
       Return the \f$\lambda\f$ value in the tables of Seltzer and Berger
    */
    static double GetSBLambda (int ikappa, int ilambda);
-   
+
    /**
       Return the value of \f$p(\lambda)\f$ in the tables of Seltzer and Berger
    */
@@ -174,8 +174,8 @@ public:
 
    static void GetQuantileTestParams (const Vavilov& v, double& maxabsdiff);
 
-                
-}; 
+
+};
 
 } // namespace Math
 } // namespace ROOT

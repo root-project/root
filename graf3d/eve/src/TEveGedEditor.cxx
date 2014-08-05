@@ -195,7 +195,7 @@ void TEveGedEditor::SpawnNewEditor(TObject* obj)
    if (fgExtraEditors->GetSize() >= fgMaxExtraEditors)
    {
       new TGMsgBox(gClient->GetDefaultRoot(), gEve->GetMainWindow(),
-                   "Clutter warning", 
+                   "Clutter warning",
                    "Maximum number of extra editors reached.",
                    kMBIconStop, kMBOk);
    }

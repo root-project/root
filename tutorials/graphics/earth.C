@@ -4,9 +4,9 @@
   //    "MERCATOR"   : Draw a contour via an Mercator projection
   //    "SINUSOIDAL" : Draw a contour via an Sinusoidal projection
   //    "PARABOLIC"  : Draw a contour via an Parabolic projection
-  // 
+  //
   //Author: Olivier Couet (from an original macro sent by Ernst-Jan Buis)
-    
+
    gStyle->SetPalette(1);
    gStyle->SetOptTitle(1);
    gStyle->SetOptStat(0);

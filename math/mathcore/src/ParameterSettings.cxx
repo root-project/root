@@ -13,12 +13,12 @@
 #include "Fit/ParameterSettings.h"
 
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Fit { 
+   namespace Fit {
 
 
-// ParameterSettings::ParameterSettings() 
+// ParameterSettings::ParameterSettings()
 // {
 //    // Default constructor implementation.
 // }

@@ -58,7 +58,7 @@ void example() {
   chan.SetData( "data", InputFile );
   chan.SetStatErrorConfig( 0.05, "Poisson" );
 
-  
+
   // Now, create some samples
 
 
@@ -80,21 +80,21 @@ void example() {
   background2.ActivateStatError();
   background2.AddOverallSys( "syst3", 0.95, 1.05  );
   chan.AddSample( background2 );
-  
+
 
   // Done with this channel
   // Add it to the measurement:
   meas.AddChannel( chan );
 
   // Collect the histograms from their files,
-  // print some output, 
+  // print some output,
   meas.CollectHistograms();
   meas.PrintTree();
 
   // One can print XML code to an
   // output directory:
   // meas.PrintXML( "xmlFromCCode", meas.GetOutputFilePrefix() );
-  
+
   // Now, do the measurement
   MakeModelAndMeasurementFast( meas );
 

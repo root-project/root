@@ -7,7 +7,7 @@
 #include "TExec.h"
 #include "TCanvas.h"
 
-   
+
 void Pal1()
 {
    static Int_t  colors[50];
@@ -54,16 +54,16 @@ TCanvas* multipalette() {
    f3->SetLineColor(kBlack);
 
    c3->cd(1);
-   f3->Draw("surf1"); 
+   f3->Draw("surf1");
    TExec *ex1 = new TExec("ex1","Pal1();");
    ex1->Draw();
-   f3->Draw("surf1 same"); 
+   f3->Draw("surf1 same");
 
    c3->cd(2);
-   f3->Draw("surf1"); 
+   f3->Draw("surf1");
    TExec *ex2 = new TExec("ex2","Pal2();");
    ex2->Draw();
-   f3->Draw("surf1 same"); 
+   f3->Draw("surf1 same");
 
    return c3;
 }

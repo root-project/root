@@ -28,7 +28,7 @@ PolarGraphDemo::PolarGraphDemo()
 
    Double_t xAFL[kNPointsAFL];
    Double_t yAFL[kNPointsAFL];
-  
+
    for (UInt_t i = 0; i < kNPointsAFL; ++i) {
       xAFL[i] = i * xStep + xMin;
       yAFL[i] = FPlot(xAFL[i]);
@@ -39,7 +39,7 @@ PolarGraphDemo::PolarGraphDemo()
    fPolarAFL->SetLineWidth(0.2);
    fPolarAFL->SetFillStyle(3012);
    fPolarAFL->SetFillColor(2);
-   
+
    Double_t xCP[kNPointsCP];
    Double_t yCP[kNPointsCP];
 

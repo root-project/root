@@ -458,13 +458,13 @@ int XrdProofdAux::AssertDir(const char *path, XrdProofUI ui, bool changeown)
 int XrdProofdAux::AssertBaseDir(const char *path, XrdProofUI ui)
 {
    // Make sure that the base dir of 'path' is either owned by 'ui' or
-   // gives full permissions to 'ui'. 
+   // gives full permissions to 'ui'.
    // If 'path' is a directory, go through the paths inside it recursively.
    // Return 0 in case of success, -1 in case of error
    XPDLOC(AUX, "Aux::AssertBaseDir")
 
    TRACE(DBG, path);
-  
+
    if (!path || strlen(path) <= 0)
       return -1;
 
@@ -473,7 +473,7 @@ int XrdProofdAux::AssertBaseDir(const char *path, XrdProofUI ui)
    int isl = base.rfind('/');
    if (isl != 0) base.erase(isl);
    TRACE(DBG, "base: " <<base);
-   
+
    struct stat st;
    if (stat(base.c_str(), &st) != 0) {
       // Failure: stop
@@ -484,7 +484,7 @@ int XrdProofdAux::AssertBaseDir(const char *path, XrdProofUI ui)
    // Check ownership and permissions
    if (ui.fUid != (int) st.st_uid) {
       unsigned pa = (st.st_mode & S_IRWXG);
-      if (ui.fGid != (int) st.st_gid) 
+      if (ui.fGid != (int) st.st_gid)
          pa |= (st.st_mode & S_IRWXO);
       else
          pa |= S_IRWXO;
@@ -493,7 +493,7 @@ int XrdProofdAux::AssertBaseDir(const char *path, XrdProofUI ui)
          return -1;
       }
    }
-   
+
    // Done
    return 0;
 }
@@ -670,7 +670,7 @@ int XrdProofdAux::ChangeToDir(const char *dir, XrdProofUI ui, bool changeown)
       }
    } else {
       if (chdir(dir) == -1) {
-         TRACE(XERR, changeown << ": can't change directory to "<< dir << 
+         TRACE(XERR, changeown << ": can't change directory to "<< dir <<
                      ", euid: " << geteuid() <<", uid:"<<getuid()<<"; errno: "<<errno);
          return -1;
       }
@@ -1737,7 +1737,7 @@ void XrdProofdPipe::Close()
 //__________________________________________________________________________
 int XrdProofdPipe::Post(int type, const char *msg)
 {
-   // Post message on the pipe 
+   // Post message on the pipe
    XPDLOC(AUX, "Pipe::Post")
 
 
@@ -1766,7 +1766,7 @@ int XrdProofdPipe::Post(int type, const char *msg)
 //__________________________________________________________________________
 int XrdProofdPipe::Recv(XpdMsg &msg)
 {
-   // Recv message from the pipe 
+   // Recv message from the pipe
    XPDLOC(AUX, "Pipe::Recv")
 
    if (IsValid()) {
@@ -1973,7 +1973,7 @@ void XrdProofdMultiStr::Init(const char *s)
 //__________________________________________________________________________
 bool XrdProofdMultiStr::Matches(const char *s)
 {
-   // Return true if 's' is compatible with this multi-string 
+   // Return true if 's' is compatible with this multi-string
 
    if (s && strlen(s)) {
       XrdOucString str(s);

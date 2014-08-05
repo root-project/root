@@ -310,7 +310,7 @@ void TGedPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    Layout();
    MapRaised();
 
-   gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask | 
+   gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
                           kPointerMotionMask, kNone,
                           fClient->GetResourcePool()->GetGrabCursor());
    gClient->WaitForUnmap(this);
@@ -553,7 +553,7 @@ void TGedSelect::DrawTriangle(GContext_t gc, Int_t x, Int_t y)
    // Draw small triangle.
 
    Point_t points[3];
-   
+
 #ifdef R__HAS_COCOA
    points[0].fX = x;
    points[0].fY = y;
@@ -631,7 +631,7 @@ void TGedPatternSelect::DoRedraw()
          TGedPatternFrame::SetFillStyle(fDrawGC, fPattern);
          gVirtualX->FillRectangle(fId, fDrawGC->GetGC(), x + 1, y + 1, w - 1, h - 1);
       }
-      
+
       gVirtualX->DrawRectangle(fId, GetShadowGC()(), x + 1, y + 1, w - 1, h - 1);
 #else
       gVirtualX->DrawRectangle(fId, GetShadowGC()(), x, y, w - 1, h - 1);

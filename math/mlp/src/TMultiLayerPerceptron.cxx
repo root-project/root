@@ -1520,7 +1520,7 @@ Bool_t TMultiLayerPerceptron::DumpWeights(Option_t * filename) const
    // Set filename to "-" (default) to dump to the standard output
    TString filen = filename;
    std::ostream * output;
-   if (filen == "") {   
+   if (filen == "") {
       Error("TMultiLayerPerceptron::DumpWeights()","Invalid file name");
       return kFALSE;
    }

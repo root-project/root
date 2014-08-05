@@ -17,20 +17,20 @@
 #include "Math/IFunctionfwd.h"
 #endif
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Math { 
+   namespace Math {
 
-      class IParametricFunctionOneDim; 
-      class IParametricGradFunctionOneDim; 
-      class IParametricFunctionMultiDim; 
-      class IParametricGradFunctionMultiDim; 
+      class IParametricFunctionOneDim;
+      class IParametricGradFunctionOneDim;
+      class IParametricFunctionMultiDim;
+      class IParametricGradFunctionMultiDim;
 
-      typedef IParametricFunctionOneDim        IParamFunction;   
-      typedef IParametricFunctionMultiDim      IParamMultiFunction; 
+      typedef IParametricFunctionOneDim        IParamFunction;
+      typedef IParametricFunctionMultiDim      IParamMultiFunction;
 
-      typedef IParametricGradFunctionOneDim        IParamGradFunction; 
-      typedef IParametricGradFunctionMultiDim      IParamMultiGradFunction; 
+      typedef IParametricGradFunctionOneDim        IParamGradFunction;
+      typedef IParametricGradFunctionMultiDim      IParamMultiGradFunction;
 
 
    } // end namespace Math

@@ -130,10 +130,10 @@ Int_t TSlaveLite::SetupServ(Int_t, const char *)
    }
    // Extract the unique tag
    (*msg) >> fSessionTag;
-   
+
    // Set the real name (temporarly set to ordinal for the setup)
    fName = gSystem->HostName();
-   
+
    // We are done
    return 0;
 }

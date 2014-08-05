@@ -50,7 +50,7 @@
 #include "TMath.h"
 
 ClassImp(TGeoPara)
-   
+
 //_____________________________________________________________________________
 TGeoPara::TGeoPara()
 {
@@ -63,7 +63,7 @@ TGeoPara::TGeoPara()
    fTxy = 0;
    fTxz = 0;
    fTyz = 0;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoPara::TGeoPara(Double_t dx, Double_t dy, Double_t dz, Double_t alpha,
@@ -144,9 +144,9 @@ Double_t TGeoPara::Capacity() const
 // Computes capacity of the shape in [length^3]
    Double_t capacity = 8.*fX*fY*fZ;
    return capacity;
-}      
+}
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoPara::ComputeBBox()
 {
 // compute bounding box
@@ -155,22 +155,22 @@ void TGeoPara::ComputeBBox()
    Double_t dz = fZ;
    TGeoBBox::SetBoxDimensions(dx, dy, dz);
    memset(fOrigin, 0, 3*sizeof(Double_t));
-}   
+}
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoPara::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT. 
+// Compute normal to closest surface from POINT.
    Double_t saf[3];
    // distance from point to higher Z face
    saf[0] = TMath::Abs(fZ-TMath::Abs(point[2])); // Z
 
-   Double_t yt = point[1]-fTyz*point[2];      
+   Double_t yt = point[1]-fTyz*point[2];
    saf[1] = TMath::Abs(fY-TMath::Abs(yt));       // Y
    // cos of angle YZ
    Double_t cty = 1.0/TMath::Sqrt(1.0+fTyz*fTyz);
 
-   Double_t xt = point[0]-fTxz*point[2]-fTxy*yt;      
+   Double_t xt = point[0]-fTxz*point[2]-fTxy*yt;
    saf[2] = TMath::Abs(fX-TMath::Abs(xt));       // X
    // cos of angle XZ
    Double_t ctx = 1.0/TMath::Sqrt(1.0+fTxy*fTxy+fTxz*fTxz);
@@ -183,7 +183,7 @@ void TGeoPara::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
          norm[2] = TMath::Sign(1.,dir[2]);
          return;
       case 1:
-         norm[0] = 0;   
+         norm[0] = 0;
          norm[1] = cty;
          norm[2] = - fTyz*cty;
          break;
@@ -196,7 +196,7 @@ void TGeoPara::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
       norm[0] = -norm[0];
       norm[1] = -norm[1];
       norm[2] = -norm[2];
-   }         
+   }
 }
 
 //_____________________________________________________________________________
@@ -222,7 +222,7 @@ Double_t TGeoPara::DistFromInside(const Double_t *point, const Double_t *dir, In
    // compute safety
       *safe = Safety(point, kTRUE);
       if (iact==0) return TGeoShape::Big();
-      if (iact==1 && step<*safe) return TGeoShape::Big(); 
+      if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    Double_t saf[2];
    Double_t snxt = TGeoShape::Big();
@@ -234,8 +234,8 @@ Double_t TGeoPara::DistFromInside(const Double_t *point, const Double_t *dir, In
       if (s<0) return 0.0;
       if (s<snxt) snxt = s;
    }
-   // distance from point to center axis on Y 
-   Double_t yt = point[1]-fTyz*point[2];      
+   // distance from point to center axis on Y
+   Double_t yt = point[1]-fTyz*point[2];
    saf[0] = fY+yt;
    saf[1] = fY-yt;
    Double_t dy = dir[1]-fTyz*dir[2];
@@ -243,9 +243,9 @@ Double_t TGeoPara::DistFromInside(const Double_t *point, const Double_t *dir, In
       s = (dy>0)?(saf[1]/dy):(-saf[0]/dy);
       if (s<0) return 0.0;
       if (s<snxt) snxt = s;
-   }   
-   // distance from point to center axis on X 
-   Double_t xt = point[0]-fTxz*point[2]-fTxy*yt;      
+   }
+   // distance from point to center axis on X
+   Double_t xt = point[0]-fTxz*point[2]-fTxy*yt;
    saf[0] = fX+xt;
    saf[1] = fX-xt;
    Double_t dx = dir[0]-fTxz*dir[2]-fTxy*dy;
@@ -253,7 +253,7 @@ Double_t TGeoPara::DistFromInside(const Double_t *point, const Double_t *dir, In
       s = (dx>0)?(saf[1]/dx):(-saf[0]/dx);
       if (s<0) return 0.0;
       if (s<snxt) snxt = s;
-   }   
+   }
    return snxt;
 }
 
@@ -275,21 +275,21 @@ Double_t TGeoPara::DistFromOutside(const Double_t *point, const Double_t *dir, I
       // outside Z
       if (point[2]*dir[2]>=0) return TGeoShape::Big();
       in = kFALSE;
-   }   
+   }
    Double_t yt=point[1]-fTyz*point[2];
    Double_t safy = TMath::Abs(yt)-fY;
-   Double_t dy=dir[1]-fTyz*dir[2];   
+   Double_t dy=dir[1]-fTyz*dir[2];
    if (safy>0) {
       if (yt*dy>=0) return TGeoShape::Big();
       in = kFALSE;
-   }   
+   }
    Double_t xt=point[0]-fTxy*yt-fTxz*point[2];
    Double_t safx = TMath::Abs(xt)-fX;
    Double_t dx=dir[0]-fTxy*dy-fTxz*dir[2];
    if (safx>0) {
       if (xt*dx>=0) return TGeoShape::Big();
       in = kFALSE;
-   }   
+   }
    // protection in case point is actually inside
    if (in) {
       if (safz>safx && safz>safy) {
@@ -302,7 +302,7 @@ Double_t TGeoPara::DistFromOutside(const Double_t *point, const Double_t *dir, I
       }
       if (yt*dy>0) return TGeoShape::Big();
       return 0.0;
-   }         
+   }
    Double_t xnew,ynew,znew;
    if (safz>0) {
       snxt = safz/TMath::Abs(dir[2]);
@@ -328,18 +328,18 @@ Double_t TGeoPara::DistFromOutside(const Double_t *point, const Double_t *dir, I
    if (safx>0) {
       snxt = safx/TMath::Abs(dx);
       znew = point[2]+snxt*dir[2];
-      if (TMath::Abs(znew)<=fZ) { 
+      if (TMath::Abs(znew)<=fZ) {
          ynew = point[1]+snxt*dir[1];
          Double_t ytn = ynew-fTyz*znew;
          if (TMath::Abs(ytn)<=fY) return snxt;
       }
-   }          
-   return TGeoShape::Big();                  
+   }
+   return TGeoShape::Big();
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
-                             Double_t start, Double_t step) 
+TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
+                             Double_t start, Double_t step)
 {
 //--- Divide this paralelipiped shape belonging to volume "voldiv" into ndiv equal volumes
 // called divname, from start position with the given step. Returns pointer
@@ -369,7 +369,7 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          break;
       default:
          Error("Divide", "Wrong axis type for division");
-         return 0;            
+         return 0;
    }
    vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
    vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
@@ -378,10 +378,10 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    finder->SetDivIndex(voldiv->GetNdaughters());
    for (Int_t ic=0; ic<ndiv; ic++) {
       voldiv->AddNodeOffset(vol, ic, start+step/2.+ic*step, opt.Data());
-      ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);    
+      ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
    }
    return vmulti;
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoPara::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
@@ -408,15 +408,15 @@ Double_t TGeoPara::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
          return dx;
    }
    return dx;
-}         
-            
+}
+
 //_____________________________________________________________________________
 void TGeoPara::GetBoundingCylinder(Double_t *param) const
 {
 //--- Fill vector param[4] with the bounding cylinder parameters. The order
 // is the following : Rmin, Rmax, Phi1, Phi2
    TGeoBBox::GetBoundingCylinder(param);
-}   
+}
 
 //_____________________________________________________________________________
 Int_t TGeoPara::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
@@ -441,7 +441,7 @@ Int_t TGeoPara::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    dd[2] = parambox->GetDZ();
    //-> check if Z range is fixed
    if (dd[2]<0) {
-      dd[2] = TMath::Min(origin[2]+fZ, fZ-origin[2]); 
+      dd[2] = TMath::Min(origin[2]+fZ, fZ-origin[2]);
       if (dd[2]<0) {
          Error("GetFittingBox", "wrong matrix");
          return 1;
@@ -457,24 +457,24 @@ Int_t TGeoPara::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    Double_t upper[8];
    Double_t lower[8];
    Double_t z=origin[2]-dd[2];
-   lower[0]=z*fTxz-fTxy*fY-fX; 
+   lower[0]=z*fTxz-fTxy*fY-fX;
    lower[1]=-fY+z*fTyz;
-   lower[2]=z*fTxz+fTxy*fY-fX; 
+   lower[2]=z*fTxz+fTxy*fY-fX;
    lower[3]=fY+z*fTyz;
-   lower[4]=z*fTxz+fTxy*fY+fX; 
+   lower[4]=z*fTxz+fTxy*fY+fX;
    lower[5]=fY+z*fTyz;
-   lower[6]=z*fTxz-fTxy*fY+fX; 
+   lower[6]=z*fTxz-fTxy*fY+fX;
    lower[7]=-fY+z*fTyz;
    z=origin[2]+dd[2];
-   upper[0]=z*fTxz-fTxy*fY-fX; 
+   upper[0]=z*fTxz-fTxy*fY-fX;
    upper[1]=-fY+z*fTyz;
-   upper[2]=z*fTxz+fTxy*fY-fX; 
+   upper[2]=z*fTxz+fTxy*fY-fX;
    upper[3]=fY+z*fTyz;
-   upper[4]=z*fTxz+fTxy*fY+fX; 
+   upper[4]=z*fTxz+fTxy*fY+fX;
    upper[5]=fY+z*fTyz;
-   upper[6]=z*fTxz-fTxy*fY+fX; 
+   upper[6]=z*fTxz-fTxy*fY+fX;
    upper[7]=-fY+z*fTyz;
-   
+
    Double_t ddmin=TGeoShape::Big();
    for (Int_t iaxis=0; iaxis<2; iaxis++) {
       if (dd[iaxis]>=0) continue;
@@ -489,7 +489,7 @@ Int_t TGeoPara::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    dy = dd[1];
    dz = dd[2];
    return 0;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoShape *TGeoPara::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
@@ -535,12 +535,12 @@ Double_t TGeoPara::Safety(const Double_t *point, Bool_t in) const
    // distance from point to higher Z face
    saf[0] = fZ-TMath::Abs(point[2]); // Z
 
-   Double_t yt = point[1]-fTyz*point[2];      
+   Double_t yt = point[1]-fTyz*point[2];
    saf[1] = fY-TMath::Abs(yt);       // Y
    // cos of angle YZ
    Double_t cty = 1.0/TMath::Sqrt(1.0+fTyz*fTyz);
 
-   Double_t xt = point[0]-fTxz*point[2]-fTxy*yt;      
+   Double_t xt = point[0]-fTxz*point[2]-fTxy*yt;
    saf[2] = fX-TMath::Abs(xt);       // X
    // cos of angle XZ
    Double_t ctx = 1.0/TMath::Sqrt(1.0+fTxy*fTxy+fTxz*fTxz);
@@ -563,7 +563,7 @@ void TGeoPara::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    out << "   alpha = " << fAlpha<< ";" << std::endl;
    out << "   theta = " << fTheta << ";" << std::endl;
    out << "   phi   = " << fPhi << ";" << std::endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoPara(\"" << GetName() << "\",dx,dy,dz,alpha,theta,phi);" << std::endl;  
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoPara(\"" << GetName() << "\",dx,dy,dz,alpha,theta,phi);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
@@ -582,7 +582,7 @@ void TGeoPara::SetDimensions(Double_t *param)
    Double_t ph  = param[5]*TMath::DegToRad();
    fTxz   = tth*TMath::Cos(ph);
    fTyz   = tth*TMath::Sin(ph);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoPara::SetPoints(Double_t *points) const

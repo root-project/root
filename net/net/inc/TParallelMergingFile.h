@@ -41,7 +41,7 @@
 class TSocket;
 class TArrayC;
 
-class TParallelMergingFile : public TMemFile 
+class TParallelMergingFile : public TMemFile
 {
 private:
    TSocket *fSocket;         // Socket to the parallel file merger server.
@@ -52,7 +52,7 @@ private:
    TMessage fMessage;
 
 public:
-   TParallelMergingFile(const char *filename, Option_t *option = "", const char *ftitle = "", Int_t compress = 1);   
+   TParallelMergingFile(const char *filename, Option_t *option = "", const char *ftitle = "", Int_t compress = 1);
    ~TParallelMergingFile();
 
    virtual void   Close(Option_t *option="");

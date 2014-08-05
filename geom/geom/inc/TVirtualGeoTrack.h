@@ -33,7 +33,7 @@
 // TVirtualGeoTrack - Base class for user-defined tracks attached to a    //
 //             geometry. Tracks are 3D objects made of points and they    //
 //             store a pointer to a TParticle. The geometry manager holds //
-//             a list of all tracks that will be deleted on destruction   // 
+//             a list of all tracks that will be deleted on destruction   //
 //             of TGeoManager object.                                     //
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
@@ -57,7 +57,7 @@ public:
    TVirtualGeoTrack();
    TVirtualGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent=0, TObject *particle=0);
    virtual ~TVirtualGeoTrack();
-   
+
    virtual TVirtualGeoTrack *AddDaughter(Int_t id, Int_t pdgcode, TObject *particle=0) = 0;
    virtual Int_t       AddDaughter(TVirtualGeoTrack *other) = 0;
    virtual void        AddPoint(Double_t x, Double_t y, Double_t z, Double_t t) = 0;
@@ -90,12 +90,12 @@ public:
    void                SetParent(TVirtualGeoTrack *parent) {fParent = parent;}
    void                SetId(Int_t id)       {fId = id;}
    virtual void        SetPDG(Int_t pdgcode) {fPDG = pdgcode;}
-   
+
    ClassDef(TVirtualGeoTrack, 1)              // virtual geometry tracks
 };
 
 #endif
 
-   
-   
-   
+
+
+

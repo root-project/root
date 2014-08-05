@@ -17,7 +17,7 @@
 //        Double32_t     fTemperature;
 //        Int_t          fMeasures[10];
 //        Double32_t     fMatrix[4][4];
-//        Double32_t    *fClosestDistance; //[fNvertex] indexed array! 
+//        Double32_t    *fClosestDistance; //[fNvertex] indexed array!
 //        EventHeader    fEvtHdr;
 //        TClonesArray  *fTracks;
 //        TRefArray     *fHighPt;            //array of High Pt tracks only
@@ -73,7 +73,7 @@
 //   Note:  This version of the class Event (see EventMT.h and EventMT.cxx
 //   for an alternative) uses static variables to improve performance (by
 //   reducing the number of memory allocations).  Consequently, only one
-//   instance of the class Event should be in use at a time (a 2nd instance 
+//   instance of the class Event should be in use at a time (a 2nd instance
 //   would share the array of Tracks with the first instance).
 //
 ////////////////////////////////////////////////////////////////////////
@@ -146,7 +146,7 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
   Clear();
   fHighPt->Delete();
   fMuons->Delete();
-  
+
   Int_t nch = 15;
   if (ev >= 100)   nch += 3;
   if (ev >= 10000) nch += 3;
@@ -176,13 +176,13 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
 
   //  Create and Fill the Track objects
   for (Int_t t = 0; t < ntrack; t++) AddTrack(random,ptmin);
-  
-  //Restore Object count 
+
+  //Restore Object count
   //To save space in the table keeping track of all referenced objects
-  //we assume that our events do not address each other. We reset the 
+  //we assume that our events do not address each other. We reset the
   //object count to what it was at the beginning of the event.
   TProcessID::SetObjectCount(ObjectNumber);
-}  
+}
 
 //______________________________________________________________________________
 Track *Event::AddTrack(Float_t random, Float_t ptmin)
@@ -263,7 +263,7 @@ Track::Track(const Track &orig) : TObject(orig),fTriggerBits(orig.fTriggerBits)
 
    fPx = orig.fPx;
    fPy = orig.fPy;
-   fPz = orig.fPx; 
+   fPz = orig.fPx;
    fRandom = orig.fRandom;
    fMass2 = orig.fMass2;
    fBx = orig.fBx;
@@ -349,11 +349,11 @@ Track::Track(Float_t random) : TObject(),fTriggerBits(64)
 Track &Track::operator=(const Track &orig)
 {
    // Copy a track
- 
+
    TObject::operator=(orig);
    fPx = orig.fPx;
    fPy = orig.fPy;
-   fPz = orig.fPx; 
+   fPz = orig.fPx;
    fRandom = orig.fRandom;
    fMass2 = orig.fMass2;
    fBx = orig.fBx;
@@ -366,7 +366,7 @@ Track &Track::operator=(const Track &orig)
    fZfirst = orig.fZfirst;
    fZlast  = orig.fZlast;
    fCharge = orig.fCharge;
-   
+
    fVertex[0] = orig.fVertex[0];
    fVertex[1] = orig.fVertex[1];
    fVertex[2] = orig.fVertex[2];
@@ -379,7 +379,7 @@ Track &Track::operator=(const Track &orig)
       } else {
          for(int i=0; i<fNsp; i++) {
             fPointValue[i] = orig.fPointValue[i];
-         }         
+         }
       }
    } else {
       if (fNsp) {
@@ -396,9 +396,9 @@ Track &Track::operator=(const Track &orig)
       }
    }
    fValid  = orig.fValid;
-   
+
    fTriggerBits = orig.fTriggerBits;
-   
+
    return *this;
 }
 
@@ -409,14 +409,14 @@ void Track::Clear(Option_t * /*option*/)
    // need to delete any of the arrays.
 
    TObject::Clear();
-   fTriggerBits.Clear(); 
+   fTriggerBits.Clear();
 }
 
 //______________________________________________________________________________
 void Track::Set(Float_t random)
 {
    // Set the values of the Track data members.
-   
+
    Float_t a,b,px,py;
    gRandom->Rannor(px,py);
    fPx = px;
@@ -442,11 +442,11 @@ void Track::Set(Float_t random)
    fZfirst = 50 + 5*a;
    fZlast  = 200 + 10*b;
    fCharge = Double32_t(Int_t(3*gRandom->Rndm(1)) - 1);
-   
+
    fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
    fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
    fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
-   
+
    fVertex[0] = gRandom->Gaus(0,0.1);
    fVertex[1] = gRandom->Gaus(0,0.2);
    fVertex[2] = gRandom->Gaus(0,10);
@@ -460,9 +460,9 @@ void Track::Set(Float_t random)
       } else {
          for(int i=0; i<fNsp; i++) {
             fPointValue[i] = i+1;
-         }         
+         }
       }
-      
+
    } else {
       if (fNsp) {
          delete [] fPointValue;

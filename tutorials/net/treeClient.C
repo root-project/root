@@ -7,9 +7,9 @@
 #include "TRandom.h"
 #include "TError.h"
 
-void treeClient(Bool_t evol=kFALSE) 
+void treeClient(Bool_t evol=kFALSE)
 {
-   // Client program which creates and fills 2 histograms and a TTree. 
+   // Client program which creates and fills 2 histograms and a TTree.
    // Every 1000000 fills the histograms and TTree is send to the server which displays the histogram.
    //
    // To run this demo do the following:
@@ -22,7 +22,7 @@ void treeClient(Bool_t evol=kFALSE)
    // "localhost" in the TSocket ctor below to the desired hostname.
    //
    //Author: Fons Rademakers, Philippe Canal
-   
+
    gBenchmark->Start("treeClient");
 
    // Open connection to server
@@ -36,22 +36,22 @@ void treeClient(Bool_t evol=kFALSE)
    // server tells us who we are
    Int_t status, version, kind;
    sock->Recv(status, kind);
-   if (kind != 0 /* kStartConnection */) 
+   if (kind != 0 /* kStartConnection */)
    {
       Error("treeClient","Unexpected server message: kind=%d status=%d\n",kind,status);
       delete sock;
       return;
    }
    sock->Recv(version, kind);
-   if (kind != 1 /* kStartConnection */) 
+   if (kind != 1 /* kStartConnection */)
    {
       Fatal("treeClient","Unexpected server message: kind=%d status=%d\n",kind,status);
    } else {
       Info("treeClient","Connected to fastMergeServer version %d\n",version);
    }
-   
+
    int idx = status;
-   
+
    Float_t messlen  = 0;
    Float_t cmesslen = 0;
 
@@ -69,7 +69,7 @@ void treeClient(Bool_t evol=kFALSE)
    tree->SetAutoFlush(4000000);
    tree->Branch("px",&px);
    tree->Branch("py",&py);
- 
+
    TMessage::EnableSchemaEvolutionForAll(evol);
    TMessage mess(kMESS_OBJECT);
 
@@ -94,7 +94,7 @@ void treeClient(Bool_t evol=kFALSE)
          sock->Send(mess);          // send message
          messlen  += mess.Length();
          cmesslen += mess.CompLength();
-         
+
          file->ResetAfterMerge(0);  // This resets only the TTree objects.
          hpx->Reset();
       }

@@ -38,15 +38,15 @@ class TBufferSQL2;
 class TSQLClassInfo;
 
 class TSQLFile : public TFile {
-    
+
    friend class TBufferSQL2;
    friend class TKeySQL;
    friend class TSQLStructure;
    friend class TSQLTableData;
-   friend class TSqlRegistry; 
+   friend class TSqlRegistry;
    friend class TSqlRawBuffer;
    friend class TSqlCmdsBuffer;
-    
+
 protected:
    enum ELockingKinds {
        kLockFree  = 0,
@@ -77,11 +77,11 @@ protected:
    void              IncrementModifyCounter();
    void              SetLocking(Int_t mode);
    Int_t             GetLocking();
-  
+
    // function for read/write access infos
    Bool_t            IsWriteAccess();
    Bool_t            IsReadAccess();
-  
+
    // generic sql functions
    TSQLResult*       SQLQuery(const char* cmd, Int_t flag = 0, Bool_t* res = 0);
    Bool_t            SQLCanStatement();
@@ -111,7 +111,7 @@ protected:
    TSQLClassInfo*    RequestSQLClassInfo(const TClass* cl);
    Bool_t            CreateClassTable(TSQLClassInfo* sqlinfo, TObjArray* colinfos);
    Bool_t            CreateRawTable(TSQLClassInfo* sqlinfo);
-   
+
    Bool_t            ProduceClassSelectQuery(TVirtualStreamerInfo* info, TSQLClassInfo* sqlinfo, TString& columns, TString& tables, Int_t& tablecnt);
    void              AddIdEntry(Long64_t tableid, Int_t subid, Int_t type,
                                 const char* name, const char* sqlname, const char* info);
@@ -136,7 +136,7 @@ protected:
    Long64_t          StoreObjectInTables(Long64_t keyid, const void* obj, const TClass* cl);
    Bool_t            WriteSpecialObject(Long64_t keyid, TObject* obj, const char* name, const char* title);
    TObject*          ReadSpecialObject(Long64_t keyid, TObject* obj = 0);
-  
+
    // sql specific types
    const char*       SQLCompatibleType(Int_t typ) const;
    const char*       SQLIntType() const;
@@ -153,11 +153,11 @@ protected:
    const char*       SQLNameSeparator() const      { return fOtherTypes[10]; }
    const char*       SQLValueQuote() const         { return fOtherTypes[11]; }
    const char*       SQLDefaultTableType() const   { return fOtherTypes[12]; }
-  
-   TSQLServer*       fSQL;             //! interface to SQL database 
-  
+
+   TSQLServer*       fSQL;             //! interface to SQL database
+
    TList*            fSQLClassInfos;   //! list of SQL class infos
-  
+
    Bool_t            fUseSuffixes;     //! use suffixes in column names like fValue:Int_t or fObject:pointer
    Int_t             fSQLIOversion;    //! version of SQL I/O which is stored in configurations
    Int_t             fArrayLimit;      //! limit for array size. when array bigger, its content converted to raw format
@@ -167,14 +167,14 @@ protected:
    Int_t             fUseIndexes;      //! use indexes for tables: 0 - off, 1 - only for basic tables, 2  + normal class tables, 3 - all tables
    Int_t             fModifyCounter;   //! indicates how many changes was done with database tables
    Int_t             fQuerisCounter;   //! how many query was applied
-  
+
    const char**      fBasicTypes;      //! pointer on list of basic types specific for currently connected SQL server
    const char**      fOtherTypes;      //! pointer on list of other SQL types like TEXT or blob
-  
+
    TString           fUserName;       //! user name, used to access objects from database
-  
+
    std::ofstream*    fLogFile;        //! log file with SQL statements
-   
+
    Bool_t            fIdsTableExists; //! indicate if IdsTable exists
    Int_t             fStmtCounter;    //! count numbers of active statements
 
@@ -189,7 +189,7 @@ public:
        kTransactionsAuto = 1,
        kTransactionsUser = 2
    };
-   
+
    enum EIndexesKinds {
        kIndexesNone      = 0,
        kIndexesBasic     = 1,
@@ -201,7 +201,7 @@ public:
    TSQLFile(const char* dbname, Option_t* option = "read", const char* user = "user", const char* pass = "pass");
    virtual ~TSQLFile();
 
-   // configuration of SQL 
+   // configuration of SQL
    Bool_t            GetUseSuffixes() const { return fUseSuffixes; }
    void              SetUseSuffixes(Bool_t on = kTRUE);
    Int_t             GetArrayLimit() const { return fArrayLimit; }
@@ -219,7 +219,7 @@ public:
    Bool_t            StartTransaction();
    Bool_t            Commit();
    Bool_t            Rollback();
-  
+
    // log file for SQL statements
    void              StartLogFile(const char* fname);  // *MENU*
    void              StopLogFile();                    // *MENU*
@@ -227,7 +227,7 @@ public:
    virtual void      Close(Option_t *option="");       // *MENU*
    virtual TKey*     CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
    virtual TKey*     CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Int_t bufsize);
-   virtual void      DrawMap(const char* ="*",Option_t* ="") {} 
+   virtual void      DrawMap(const char* ="*",Option_t* ="") {}
    virtual void      FillBuffer(char* &) {}
    virtual void      Flush() {}
 
@@ -251,7 +251,7 @@ public:
 
    virtual void      MakeFree(Long64_t, Long64_t) {}
    virtual void      MakeProject(const char *, const char* ="*", Option_t* ="new") {} // *MENU*
-   virtual void      Map() {} // 
+   virtual void      Map() {} //
    virtual void      Paint(Option_t* ="") {}
    virtual void      Print(Option_t* ="") const {}
    virtual Bool_t    ReadBuffer(char*, Int_t) { return kFALSE; }
@@ -270,7 +270,7 @@ public:
    virtual void      WriteFree() {}
    virtual void      WriteHeader();
    virtual void      WriteStreamerInfo();
-  
+
    ClassDef(TSQLFile,1)   // ROOT TFile interface to SQL database
 };
 

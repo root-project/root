@@ -86,9 +86,9 @@ protected:
    virtual Int_t GetHead();
    virtual void SetMsgReadBuffer10(const char* redirectLocation = 0, Bool_t tempRedirect = kFALSE);
    virtual void ProcessHttpHeader(const TString& headerLine);
-   
+
    // Modifiers of data members (to be used mainly by subclasses)
-   void SetAccessKey(const TString& accessKey) { fS3Request.SetAccessKey(accessKey); } 
+   void SetAccessKey(const TString& accessKey) { fS3Request.SetAccessKey(accessKey); }
    void SetSecretKey(const TString& secretKey) { fS3Request.SetSecretKey(secretKey); }
 
    // Data members
@@ -108,7 +108,7 @@ public:
    const TUrl&     GetUrl() const { return fUrl; }
 
    // Modifiers
-   virtual Bool_t	ReadBuffers(char* buf, Long64_t* pos, Int_t* len, Int_t nbuf);
+   virtual Bool_t ReadBuffers(char* buf, Long64_t* pos, Int_t* len, Int_t nbuf);
 
    ClassDef(TS3WebFile, 0)  // Read a ROOT file from a S3 server
 };

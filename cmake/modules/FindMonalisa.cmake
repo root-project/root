@@ -1,5 +1,5 @@
 # Find the Monalisa includes and library.
-# 
+#
 # This module defines
 # MONALISA_INCLUDE_DIR, where to locate ApMon.h file
 # MONALISA_LIBRARY, the libraries to link against to use Monalisa
@@ -15,8 +15,8 @@ find_path(MONALISA_INCLUDE_DIR ApMon.h
   ${MONALISA_DIR}/include
   $ENV{MONALISA_DIR}/include
   /usr/local/include
-  /opt/alien/api/include 
-  /opt/monalisa/include 
+  /opt/alien/api/include
+  /opt/monalisa/include
   /usr/include
   DOC "Specify the directory containing ApMon.h"
 )
@@ -26,7 +26,7 @@ find_library(MONALISA_LIBRARY NAMES apmoncpp PATHS
   $ENV{MONALISA_DIR}/lib
   /usr/local/lib
   /opt/alien/api/lib
-  /opt/monalisa/lib 
+  /opt/monalisa/lib
   /usr/lib
   DOC "Specify the libapmoncpp library here."
 )

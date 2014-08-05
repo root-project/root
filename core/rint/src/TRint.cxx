@@ -382,7 +382,7 @@ void TRint::Run(Bool_t retrn)
             if (!fNcmd)
                printf("\n");
             Bool_t rootfile = kFALSE;
-            
+
             if (file->TestBit(kExpression)) {
                snprintf(cmd, kMAXPATHLEN+50, "%s", (const char*)file->String());
             } else {
@@ -437,7 +437,7 @@ void TRint::Run(Bool_t retrn)
       // Allow end-of-file on the terminal to be noticed
       // after we finish processing the command line input files.
       fInputHandler->Activate();
-      
+
       ClearInputFiles();
 
       if (needGetlinemInit) Getlinem(kInit, GetPrompt());

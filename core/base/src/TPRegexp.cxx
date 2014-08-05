@@ -167,7 +167,7 @@ UInt_t TPRegexp::ParseMods(const TString &modStr) const
             break;
          default:
             Error("ParseMods", "illegal pattern modifier: %c", *m);
-	    opts = 0;
+            opts = 0;
       }
       ++m;
    }

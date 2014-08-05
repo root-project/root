@@ -58,38 +58,38 @@ FTGLTextureFont::~FTGLTextureFont()
 FTGlyph* FTGLTextureFont::MakeGlyph( unsigned int glyphIndex)
 {
     FT_GlyphSlot ftGlyph = face.Glyph( glyphIndex, FT_LOAD_NO_HINTING);
-    
+
     if( ftGlyph)
     {
         glyphHeight = static_cast<int>( charSize.Height());
         glyphWidth = static_cast<int>( charSize.Width());
-        
+
         if( textureIDList.empty())
         {
             textureIDList.push_back( CreateTexture());
             xOffset = yOffset = padding;
         }
-        
+
         if( xOffset > ( textureWidth - glyphWidth))
         {
             xOffset = padding;
             yOffset += glyphHeight;
-            
+
             if( yOffset > ( textureHeight - glyphHeight))
             {
                 textureIDList.push_back( CreateTexture());
                 yOffset = padding;
             }
         }
-        
+
         FTTextureGlyph* tempGlyph = new FTTextureGlyph( ftGlyph, textureIDList[textureIDList.size() - 1],
                                                         xOffset, yOffset, textureWidth, textureHeight);
         xOffset += static_cast<int>( tempGlyph->BBox().upperX - tempGlyph->BBox().lowerX + padding);
-        
+
         --remGlyphs;
         return tempGlyph;
     }
-    
+
     err = face.Error();
     return NULL;
 }
@@ -102,21 +102,21 @@ void FTGLTextureFont::CalculateTextureSize()
         glGetIntegerv( GL_MAX_TEXTURE_SIZE, (GLint*)&maximumGLTextureSize);
         assert(maximumGLTextureSize); // If you hit this then you have an invalid OpenGL context.
     }
-    
+
     textureWidth = NextPowerOf2( (remGlyphs * glyphWidth) + ( padding * 2));
     textureWidth = textureWidth > maximumGLTextureSize ? maximumGLTextureSize : textureWidth;
-    
+
     int h = static_cast<int>( (textureWidth - ( padding * 2)) / glyphWidth);
-        
+
     textureHeight = NextPowerOf2( (( numGlyphs / h) + 1) * glyphHeight);
     textureHeight = textureHeight > maximumGLTextureSize ? maximumGLTextureSize : textureHeight;
 }
 
 
 GLuint FTGLTextureFont::CreateTexture()
-{   
+{
     CalculateTextureSize();
-    
+
     int totalMemory = textureWidth * textureHeight;
     unsigned char* textureMemory = new unsigned char[totalMemory];
     memset( textureMemory, 0, totalMemory);
@@ -155,7 +155,7 @@ void FTGLTextureFont::PreRender()
 {
     FTFont::PreRender();
     glPushAttrib( GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
-    
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // GL_ONE
     glEnable(GL_ALPHA_TEST);

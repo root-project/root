@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -50,10 +50,10 @@ class PowerLawChi2FCN : public FCNBase {
 public:
 
   PowerLawChi2FCN(const std::vector<double>& meas,
-	      const std::vector<double>& pos,
-	      const std::vector<double>& mvar) : fMeasurements(meas),
-						 fPositions(pos),
-						 fMVariances(mvar) {}
+                  const std::vector<double>& pos,
+                  const std::vector<double>& mvar) : fMeasurements(meas),
+   fPositions(pos),
+   fMVariances(mvar) {}
 
   ~PowerLawChi2FCN() {}
 
@@ -65,7 +65,7 @@ public:
     for(unsigned int n = 0; n < fMeasurements.size(); n++) {
       chi2 += ((pl(fPositions[n]) - fMeasurements[n])*(pl(fPositions[n]) - fMeasurements[n])/fMVariances[n]);
     }
-    
+
     return chi2;
   }
 
@@ -81,12 +81,12 @@ class PowerLawLogLikeFCN : public FCNBase {
 
 public:
 
-  PowerLawLogLikeFCN(const std::vector<double>& meas, 
-		     const std::vector<double>& pos) : 
-    fMeasurements(meas), fPositions(pos) {}
-  
+  PowerLawLogLikeFCN(const std::vector<double>& meas,
+                     const std::vector<double>& pos) :
+   fMeasurements(meas), fPositions(pos) {}
+
   ~PowerLawLogLikeFCN() {}
-  
+
   double operator()(const std::vector<double>& par) const {
     assert(par.size() == 2);
     PowerLawFunc pl(par[0], par[1]);
@@ -97,7 +97,7 @@ public:
       double mu = pl(fPositions[n]);
       logsum += (k*log(mu) - mu);
     }
-    
+
     return -logsum;
   }
 
@@ -123,10 +123,10 @@ int main() {
 #endif
     if (!in) {
       std::cerr << "Error opening input data file" << std::endl;
-      return 1; 
+      return 1;
   }
 
-    
+
     double x = 0., y = 0., err = 0.;
     while(in>>x>>y>>err) {
       //       if(err < 1.e-8) continue;
@@ -137,14 +137,14 @@ int main() {
     std::cout<<"size= "<<var.size()<<std::endl;
   }
   {
-    // create Chi2 FCN function  
+    // create Chi2 FCN function
     std::cout<<">>> test Chi2"<<std::endl;
     PowerLawChi2FCN fFCN(measurements, positions, var);
-    
+
     MnUserParameters upar;
     upar.Add("p0", -2.3, 0.2);
     upar.Add("p1", 1100., 10.);
-    
+
     MnMigrad migrad(fFCN, upar);
     std::cout<<"start migrad "<<std::endl;
     FunctionMinimum min = migrad();
@@ -158,13 +158,13 @@ int main() {
   }
   {
     std::cout<<">>> test log LikeliHood"<<std::endl;
-    // create LogLikelihood FCN function  
+    // create LogLikelihood FCN function
     PowerLawLogLikeFCN fFCN(measurements, positions);
-    
+
     MnUserParameters upar;
     upar.Add("p0", -2.1, 0.2);
     upar.Add("p1", 1000., 10.);
-    
+
     MnMigrad migrad(fFCN, upar);
     std::cout<<"start migrad "<<std::endl;
     FunctionMinimum min = migrad();
@@ -180,13 +180,13 @@ int main() {
     std::cout<<">>> test Simplex"<<std::endl;
     PowerLawChi2FCN chi2(measurements, positions, var);
     PowerLawLogLikeFCN mlh(measurements, positions);
-    
+
     MnUserParameters upar;
     std::vector<double> par; par.push_back(-2.3); par.push_back(1100.);
     std::vector<double> err; err.push_back(1.); err.push_back(1.);
-    
+
     SimplexMinimizer simplex;
-    
+
     std::cout<<"start simplex"<<std::endl;
     FunctionMinimum min = simplex.Minimize(chi2, par, err);
     std::cout<<"minimum: "<<min<<std::endl;

@@ -18,16 +18,16 @@
 //  root > DrawFriend();
 //
 //  Author: Rene Brun
-      
+
 #include "TTree.h"
 #include "TFile.h"
 #include "TRandom.h"
 #include "TTree.h"
 #include "TTree.h"
-   
+
 Int_t Run, Event;
 Float_t x,y,z;
-   
+
 void CreateParentTree() {
    // create a simple TTree with 5 branches
    // Two branches ("Run" and "Event") will be used to index the Tree
@@ -58,7 +58,7 @@ void CreateFriendTree() {
    //   (see also tutorials copytree.C, copytree2.C and copytree3.C)
    // Create an index on the new TTree ("Run","Event")
    // Write the new TTree (including its index)
-   
+
    TFile *f = new TFile("treeparent.root");
    TTree *T = (TTree*)f->Get("T");
    TFile *ff = new TFile("treefriend.root","recreate");
@@ -74,7 +74,7 @@ void CompareTrees() {
    // The two TTrees created above are compared.
    // The subset of entries in the small TTree must be identical
    // to the entries in the original TTree.
-   
+
    TFile *f = new TFile("treeparent.root");
    TTree *T  = (TTree*)f->Get("T");
    TFile *ff = new TFile("treefriend.root");
@@ -92,7 +92,7 @@ void CompareTrees() {
    TF->SetBranchAddress("y",&fy);
    TF->SetBranchAddress("z",&fz);
    T->AddFriend(TF);
-   
+
    Long64_t nentries = T->GetEntries();
    Int_t nok = 0;
    for (Long64_t i=0;i<nentries;i++) {
@@ -102,8 +102,8 @@ void CompareTrees() {
       } else {
          if (TF->GetEntryWithIndex(Run,Event) > 0) {
             if (i <100) printf("i=%lld, Run=%d, Event=%d, x=%g, y=%g, z=%g,  : fRun=%d, fEvent=%d, fx=%g, fy=%g, fz=%g\n",i,Run,Event,x,y,z,fRun,fEvent,fx,fy,fz);
-         } 
-      } 
+         }
+      }
    }
    printf("nok = %d, fentries=%lld\n",nok,TF->GetEntries());
 
@@ -115,7 +115,7 @@ void DrawFriend() {
   // Draw a scatter plot of variable x in the parent TTree versus
   // the same variable in the subtree.
   // This should produce points along a straight line.
-   
+
    TFile *f  = TFile::Open("treeparent.root");
    TTree *T  = (TTree*)f->Get("T");
    T->AddFriend("TF","treefriend.root");

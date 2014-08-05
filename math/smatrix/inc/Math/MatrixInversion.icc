@@ -1,5 +1,5 @@
 // @(#)root/smatrix:$Id$
-// Authors: CLHEP authors, L. Moneta    2006  
+// Authors: CLHEP authors, L. Moneta    2006
 
 #ifndef ROOT_Math_MatrixInversion_icc
 #define ROOT_Math_MatrixInversion_icc
@@ -13,29 +13,29 @@
 // inversion algorithms for matrices
 // taken  from CLHEP (L. Moneta May 2006)
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
 
-  /** General Inversion for a symmetric matrix 
+  /** General Inversion for a symmetric matrix
       Bunch-Kaufman diagonal pivoting method
-      It is decribed in J.R. Bunch, L. Kaufman (1977). 
-      "Some Stable Methods for Calculating Inertia and Solving Symmetric 
-      Linear Systems", Math. Comp. 31, p. 162-179. or in Gene H. Golub, 
-      /Charles F. van Loan, "Matrix Computations" (the second edition 
+      It is decribed in J.R. Bunch, L. Kaufman (1977).
+      "Some Stable Methods for Calculating Inertia and Solving Symmetric
+      Linear Systems", Math. Comp. 31, p. 162-179. or in Gene H. Golub,
+      /Charles F. van Loan, "Matrix Computations" (the second edition
       has a bug.) and implemented in "lapack"
       Mario Stanke, 09/97
-      
+
   */
 
 
 
 template <unsigned int idim, unsigned int N>
-template<class T> 
+template<class T>
 void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 
-   typedef T value_type; 
+   typedef T value_type;
    //typedef double value_type;  // for making inversions in double's
 
 
@@ -49,13 +49,13 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
    // of length nrow.  We do not want to reallocate each time through
    // unless the size needs to grow.  We do not want to leak memory, even
    // by having a new without a delete that is only done once.
-  
 
-   SVector<T, MatRepSym<T,idim>::kRows> xvec; 
-   SVector<int, MatRepSym<T,idim>::kRows> pivv; 
-  
-   typedef int* pivIter; 
-   typedef T* mIter; 
+
+   SVector<T, MatRepSym<T,idim>::kRows> xvec;
+   SVector<int, MatRepSym<T,idim>::kRows> pivv;
+
+   typedef int* pivIter;
+   typedef T* mIter;
 
 
    // Note - resize shuld do  nothing if the size is already larger than nrow,
@@ -66,12 +66,12 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
    // x[i] is used as helper storage, needs to have at least size nrow.
    pivIter piv = pivv.begin();
    // piv[i] is used to store details of exchanges
-      
+
    value_type temp1, temp2;
    mIter ip, mjj, iq;
    value_type lambda, sigma;
    const value_type alpha = .6404; // = (1+sqrt(17))/8
-   // LM (04/2009) remove this useless check (it is not in LAPACK) which fails inversion of 
+   // LM (04/2009) remove this useless check (it is not in LAPACK) which fails inversion of
    // a matrix with  values < epsilon in the diagonal
    //
    //const double epsilon = 32*std::numeric_limits<T>::epsilon();
@@ -79,16 +79,16 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
    // it is set to zero.
    // this constant could be set to zero but then the algorithm
    // doesn't neccessarily detect that a matrix is singular
-  
+
    for (i = 0; i < nrow; i++)
       piv[i] = i+1;
-      
+
    ifail = 0;
-      
-   // compute the factorization P*A*P^T = L * D * L^T 
+
+   // compute the factorization P*A*P^T = L * D * L^T
    // L is unit lower triangular, D is direct sum of 1x1 and 2x2 matrices
    // L and D^-1 are stored in A = *this, P is stored in piv[]
-	
+
    for (j=1; j < nrow; j+=s)  // main loop over columns
    {
       mjj = rhs.Array() + j*(j-1)/2 + j-1;
@@ -101,7 +101,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
             lambda = std::abs(*ip);
             pivrow = i;
          }
-	  
+
       if (lambda == 0 )
       {
          if (*mjj == 0)
@@ -135,7 +135,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                s=1;
                pivrow = j;
             }
-            else if (std::abs(*(rhs.Array()+pivrow*(pivrow-1)/2+pivrow-1)) 
+            else if (std::abs(*(rhs.Array()+pivrow*(pivrow-1)/2+pivrow-1))
                      >= alpha * sigma)
                s=1;
             else
@@ -150,7 +150,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                return;
             }
             temp2 = *mjj = 1.0f/ *mjj; // invert D(j,j)
-		  
+
             // update A(j+1:n, j+1,n)
             for (i=j+1; i <= nrow; i++)
             {
@@ -164,15 +164,15 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                   ip++;
                }
             }
-            // update L 
-            ip = rhs.Array() + (j+1)*j/2 + j-1; 
+            // update L
+            ip = rhs.Array() + (j+1)*j/2 + j-1;
             for (i=j+1; i <= nrow; ip += i++)
                *ip *= static_cast<T> ( temp2 );
          }
-         else if (s==1) // 1x1 pivot 
+         else if (s==1) // 1x1 pivot
          {
             piv[j-1] = pivrow;
-		  
+
             // interchange rows and columns j and pivrow in
             // submatrix (j:n,j:n)
             ip = rhs.Array() + pivrow*(pivrow-1)/2 + j;
@@ -193,14 +193,14 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                *iq = *ip;
                *ip = static_cast<T>( temp1 );
             }
-		  
+
             if (*mjj == 0)
             {
                ifail = 1;
                return;
             }
             temp2 = *mjj = 1.0f / *mjj; // invert D(j,j)
-		  
+
             // update A(j+1:n, j+1:n)
             for (i = j+1; i <= nrow; i++)
             {
@@ -223,11 +223,11 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
          {
             piv[j-1] = -pivrow;
             piv[j] = 0; // that means this is the second row of a 2x2 pivot
-		  
-            if (j+1 != pivrow) 
+
+            if (j+1 != pivrow)
             {
                // interchange rows and columns j+1 and pivrow in
-               // submatrix (j:n,j:n) 
+               // submatrix (j:n,j:n)
                ip = rhs.Array() + pivrow*(pivrow-1)/2 + j+1;
                for (i=j+2; i < pivrow; i++, ip++)
                {
@@ -236,7 +236,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                   *ip = static_cast<T>( temp1 );
                }
                temp1 = *(mjj + j + 1);
-               *(mjj + j + 1) = 
+               *(mjj + j + 1) =
                   *(rhs.Array() + pivrow*(pivrow-1)/2 + pivrow-1);
                *(rhs.Array() + pivrow*(pivrow-1)/2 + pivrow-1) = static_cast<T>( temp1 );
                temp1 = *(mjj + j);
@@ -250,21 +250,21 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                   *iq = *ip;
                   *ip = static_cast<T>( temp1 );
                }
-            } 
+            }
             // invert D(j:j+1,j:j+1)
-            temp2 = *mjj * *(mjj + j + 1) - *(mjj + j) * *(mjj + j); 
+            temp2 = *mjj * *(mjj + j + 1) - *(mjj + j) * *(mjj + j);
             if (temp2 == 0)
                std::cerr
-                  << "SymMatrix::bunch_invert: error in pivot choice" 
+                  << "SymMatrix::bunch_invert: error in pivot choice"
                   << std::endl;
             temp2 = 1. / temp2;
-            // this quotient is guaranteed to exist by the choice 
+            // this quotient is guaranteed to exist by the choice
             // of the pivot
             temp1 = *mjj;
             *mjj = static_cast<T>( *(mjj + j + 1) * temp2 );
             *(mjj + j + 1) = static_cast<T>( temp1 * temp2 );
             *(mjj + j) = static_cast<T>( - *(mjj + j) * temp2 );
-		  
+
             if (j < nrow-1) // otherwise do nothing
             {
                // update A(j+2:n, j+2:n)
@@ -293,7 +293,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                   temp1 = *ip * *mjj + *(ip+1) * *(mjj + j);
 //                   if (std::abs(temp1) <= epsilon)
 //                      temp1 = 0;
-                  *(ip+1) = *ip * *(mjj + j) 
+                  *(ip+1) = *ip * *(mjj + j)
                      + *(ip+1) * *(mjj + j + 1);
 //                   if (std::abs(*(ip+1)) <= epsilon)
 //                      *(ip+1) = 0;
@@ -317,13 +317,13 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
    } // end of last pivot code
 
    // computing the inverse from the factorization
-	 
+
    for (j = nrow ; j >= 1 ; j -= s) // loop over columns
    {
       mjj = rhs.Array() + j*(j-1)/2 + j-1;
       if (piv[j-1] > 0) // 1x1 pivot, compute column j of inverse
       {
-         s = 1; 
+         s = 1;
          if (j < nrow)
          {
             ip = rhs.Array() + (j+1)*j/2 + j-1;
@@ -335,7 +335,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                ip = rhs.Array() + i*(i-1)/2 + j;
                for (k=0; k <= i-j-1; k++)
                   temp2 += *ip++ * x[k];
-               for (ip += i-1; k < nrow-j; ip += 1+j+k++) 
+               for (ip += i-1; k < nrow-j; ip += 1+j+k++)
                   temp2 += *ip * x[k];
                *(rhs.Array()+ i*(i-1)/2 + j-1) = static_cast<T>( -temp2 );
             }
@@ -350,7 +350,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
       {
          if (piv[j-1] != 0)
             std::cerr << "error in piv" << piv[j-1] << std::endl;
-         s=2; 
+         s=2;
          if (j < nrow)
          {
             ip = rhs.Array() + (j+1)*j/2 + j-1;
@@ -365,7 +365,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                for (ip += i-1; k < nrow-j; ip += 1+j+k++)
                   temp2 += *ip * x[k];
                *(rhs.Array()+ i*(i-1)/2 + j-1) = static_cast<T>( -temp2 );
-            }    
+            }
             temp2 = 0;
             ip = rhs.Array() + (j+1)*j/2 + j-1;
             for (k=0; k < nrow-j; ip += 1+j+k++)
@@ -395,11 +395,11 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
                temp2 += x[k] * *ip;
             *(mjj-j) -= static_cast<T>( temp2 );
          }
-      }  
-	  
-      // interchange rows and columns j and piv[j-1] 
+      }
+
+      // interchange rows and columns j and piv[j-1]
       // or rows and columns j and -piv[j-2]
-	  
+
       pivrow = (piv[j-1]==0)? -piv[j-2] : piv[j-1];
       ip = rhs.Array() + pivrow*(pivrow-1)/2 + j;
       for (i=j+1;i < pivrow; i++, ip++)
@@ -417,7 +417,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
          *(mjj-1) = *( rhs.Array() + pivrow*(pivrow-1)/2 + j-2);
          *( rhs.Array() + pivrow*(pivrow-1)/2 + j-2) = static_cast<T>( temp1 );
       }
-	  
+
       ip = rhs.Array() + (pivrow+1)*pivrow/2 + j-1;  // &A(i,j)
       iq = ip + pivrow-j;
       for (i = pivrow+1; i <= nrow; ip += i, iq += i++)
@@ -425,7 +425,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
          temp1 = *iq;
          *iq = *ip;
          *ip = static_cast<T>(temp1);
-      } 
+      }
    } // end of loop over columns (in computing inverse from factorization)
 
    return; // inversion successful
@@ -439,16 +439,16 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
 */
 
 template <unsigned int idim, unsigned int n>
-template<class T> 
+template<class T>
 int Inverter<idim,n>::DfactMatrix(MatRepStd<T,idim,n> & rhs, T &det, unsigned int *ir) {
-  
-   if (idim != n) return   -1; 
+
+   if (idim != n) return   -1;
 
    int ifail, jfail;
 
-   typedef T* mIter; 
+   typedef T* mIter;
 
-   typedef T value_type; 
+   typedef T value_type;
    //typedef double value_type;  // for making inversions in double's
 
 
@@ -477,7 +477,7 @@ int Inverter<idim,n>::DfactMatrix(MatRepStd<T,idim,n> & rhs, T &det, unsigned in
       unsigned int k = j;
       p = (std::abs(*mjj));
       if (j!=n) {
-         mIter mij = mj + n + j - 1; 
+         mIter mij = mj + n + j - 1;
          for (unsigned int i=j+1;i<=n;i++) {
             q = (std::abs(*(mij)));
             if (q > p) {
@@ -494,7 +494,7 @@ int Inverter<idim,n>::DfactMatrix(MatRepStd<T,idim,n> & rhs, T &det, unsigned in
                return ifail;
             }
             det = -det; // in this case the sign of the determinant
-            // must not change. So I change it twice. 
+            // must not change. So I change it twice.
          }
          mIter mjl = mj;
          mIter mkl = rhs.Array() + (k-1)*n;
@@ -560,26 +560,26 @@ int Inverter<idim,n>::DfactMatrix(MatRepStd<T,idim,n> & rhs, T &det, unsigned in
 
 
 
-    /** 
-	Inversion for General square matrices. 
+    /**
+	Inversion for General square matrices.
 	Code from  dfinv routine from CERNLIB
 	Assumed first the LU decomposition via DfactMatrix function
-	
+
 	taken from CLHEP : L. Moneta May 2006
     */
 
 template <unsigned int idim, unsigned int n>
-template<class T> 
+template<class T>
 int Inverter<idim,n>::DfinvMatrix(MatRepStd<T,idim,n> & rhs,unsigned int * ir) {
 
 
-   typedef T* mIter; 
+   typedef T* mIter;
 
-   typedef T value_type; 
+   typedef T value_type;
    //typedef double value_type;  // for making inversions in double's
 
 
-   if (idim != n) return   -1; 
+   if (idim != n) return   -1;
 
 
    value_type s31, s32;
@@ -600,7 +600,7 @@ int Inverter<idim,n>::DfinvMatrix(MatRepStd<T,idim,n> & rhs,unsigned int * ir) {
          mIter mj = rhs.Array();
          mIter mji = mj + i - 1;
          mIter mij = mi;
-         for (unsigned int j=1;j<=im2;j++) { 
+         for (unsigned int j=1;j<=im2;j++) {
             s31 = 0.0;
             s32 = *mji;
             mIter mkj = mj + j - 1;
@@ -682,4 +682,4 @@ int Inverter<idim,n>::DfinvMatrix(MatRepStd<T,idim,n> & rhs,unsigned int * ir) {
   }  // end namespace Math
 }    // end namespace ROOT
 
-#endif  
+#endif

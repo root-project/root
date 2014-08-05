@@ -1,21 +1,21 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
-#ifndef ROOT_Math_GenVector_PositionVector2Dfwd 
+#ifndef ROOT_Math_GenVector_PositionVector2Dfwd
 #define ROOT_Math_GenVector_PositionVector2Dfwd  1
 
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
-     /** 
+     /**
          Class describing a 2D Position vector
-     */ 
+     */
 
-     template <class CoordSystem, class Tag> 
-     class PositionVector2D; 
-     
+     template <class CoordSystem, class Tag>
+     class PositionVector2D;
+
   }
 }
 

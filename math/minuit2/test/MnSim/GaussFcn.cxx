@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -18,7 +18,7 @@ namespace ROOT {
 
 
 double GaussFcn::operator()(const std::vector<double>& par) const {
-  
+
   assert(par.size() == 3);
   GaussFunction gauss(par[0], par[1], par[2]);
 

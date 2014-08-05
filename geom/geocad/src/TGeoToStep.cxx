@@ -19,7 +19,7 @@
 // containing tree of geometries creating resulting geometry.                 //
 // Standard for the Exchange of Product model data (STEP) is an international //
 // standard for the exchange of industrial product data. It is typically used //
-// to exchange data between various CAD, CAM and CAE applications.            // 
+// to exchange data between various CAD, CAM and CAE applications.            //
 // TGeoToStep Class is using RootOCC class to translate the root geometry     //
 // in the corresponding OpenCascade geometry and  and TOCCToStep to write the //
 // OpenCascade geometry to the step File.                                     //
@@ -63,7 +63,7 @@ TGeoToStep::~TGeoToStep()
 }
 
 void * TGeoToStep::CreateGeometry()
-{	
+{
    //ROOT CAD CONVERSION
    fCreate = new TOCCToStep();
    fCreate->OCCShapeCreation(fGeometry);

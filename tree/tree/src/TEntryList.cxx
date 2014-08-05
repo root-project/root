@@ -37,7 +37,7 @@ Begin_Html
 
 <li> for a TChain (fLists data member is non-zero)
   It contains a TList of sub-lists (TEntryList objects, corresponding to each TTree)
-  Trees and lists are matched by the TTree name and its file name (full path). 
+  Trees and lists are matched by the TTree name and its file name (full path).
   All sub-lists are returned by the GetLists() function and individual lists are
   returned by GetEntryList() function. Such lists are no different from the lists for
   TTrees, described above.
@@ -59,15 +59,15 @@ Begin_Html
 <li> <b>Subtract</b>() - if the lists are for the same TTree, removes the entries of the second
                list from the first list. If the lists are for TChains, loops over all
                sub-lists
-<li> <b>GetEntry(n)</b> - returns the n-th entry number 
-<li> <b>Next</b>()      - returns next entry number. Note, that this function is 
+<li> <b>GetEntry(n)</b> - returns the n-th entry number
+<li> <b>Next</b>()      - returns next entry number. Note, that this function is
                 much faster than GetEntry, and it's called when GetEntry() is called
                 for 2 or more indices in a row.
 </ul>
 
 <h4>TTree::Draw() and TChain::Draw()</h4>
 
-  Use option <b>entrylist</b> to write the results of TTree::Draw and TChain::Draw into 
+  Use option <b>entrylist</b> to write the results of TTree::Draw and TChain::Draw into
   an entry list. Example:
 <pre>
      tree->Draw(">>elist", "x<0 && y>0", "entrylist");
@@ -112,7 +112,7 @@ such that the loop in the previous example can also be written as:
 
 <pre>for (Long64_t el = 0; el &lt; listEntries; el++) {
    Long64_t treeEntry = myelist-&gt;GetEntryAndTree(el,treenum);
-   Long64_t chainEntry = treeEntry+ch-&gt;GetTreeOffset()[treenum];  
+   Long64_t chainEntry = treeEntry+ch-&gt;GetTreeOffset()[treenum];
    printf("el=%lld, treeEntry=%lld, chainEntry=%lld, treenum=%d\n", el, treeEntry, chainEntry, treenum);
 
    ch-&gt;LoadTree(chainEntry); // this also returns treeEntry
@@ -124,9 +124,9 @@ such that the loop in the previous example can also be written as:
 <h4> TSelectors</h4>
 
   To fill an TEntryList from a TSelector correctly, one must add the TEntryList object
-  to the output list of the selector (TSelector::fOutput). This is the only way to 
+  to the output list of the selector (TSelector::fOutput). This is the only way to
   make the sub-lists of the TEntryList switch when the current tree of the TChain is
-  changed. 
+  changed.
 
 <h4> Using a TEntryList as input (TTree::SetEntryList() and TChain::SetEntryList())</h4>
 
@@ -139,9 +139,9 @@ such that the loop in the previous example can also be written as:
   TEntryList objects are automatically added to the current directory (like TTrees).
   However, in case of a TEntryList for a chain, only the top-level entry list is added,
   not the sub-lists for specific trees. Placing entry lists in the current directory
-  allows calling them as a part of a TTreeFormula expression, so if the user wants 
+  allows calling them as a part of a TTreeFormula expression, so if the user wants
   to extract a sublist from a TChain entry list via the GetEntryList() or some other
-  function, they have to add it to the current directory to be able to use it in 
+  function, they have to add it to the current directory to be able to use it in
   TTreeFormula expressions.
 
 <h4>TEntryList and TEventList</h4>
@@ -184,7 +184,7 @@ TEntryList::TEntryList() : fEntriesToProcess(0)
 }
 
 //______________________________________________________________________________
-TEntryList::TEntryList(const char *name, const char *title) : 
+TEntryList::TEntryList(const char *name, const char *title) :
    TNamed(name, title),
    fEntriesToProcess(0)
 {
@@ -426,7 +426,7 @@ void TEntryList::Add(const TEntryList *elist)
                fN = fN - nold + nnew;
             }
             if (fNBlocks<elist->fNBlocks){
-               Int_t nmax = elist->fNBlocks; 
+               Int_t nmax = elist->fNBlocks;
                for (i=nmin; i<nmax; i++){
                   block2 = (TEntryListBlock*)elist->fBlocks->UncheckedAt(i);
                   block1 = new TEntryListBlock(*block2);
@@ -474,10 +474,10 @@ void TEntryList::Add(const TEntryList *elist)
       if (!elist->fLists){
          //the other list doesn't have sublists
          TIter next(fLists);
-         TEntryList *el = 0; 
+         TEntryList *el = 0;
          Bool_t found = kFALSE;
          while ((el = (TEntryList*)next())){
-            if (!strcmp(el->fTreeName.Data(), elist->fTreeName.Data()) && 
+            if (!strcmp(el->fTreeName.Data(), elist->fTreeName.Data()) &&
                 !strcmp(el->fFileName.Data(), elist->fFileName.Data())){
             // if (el->fStringHash == elist->fStringHash){
                //found a list for the same tree
@@ -488,7 +488,7 @@ void TEntryList::Add(const TEntryList *elist)
                break;
             }
          }
-         if (!found){       
+         if (!found){
             el = new TEntryList(*elist);
             el->fLastIndexQueried = -1;
             el->fLastIndexReturned = 0;
@@ -762,7 +762,7 @@ Long64_t TEntryList::GetEntryAndTree(Int_t index, Int_t &treenum)
 void TEntryList::GetFileName(const char *filename, TString &fn, Bool_t *local)
 {
    // To be able to re-localize the entry-list we identify the file by just the
-   // name and the anchor, i.e. we drop protocol, host, options, ... 
+   // name and the anchor, i.e. we drop protocol, host, options, ...
    // The result in the form 'file#anchor' (or 'file', if no anchor is present)
    // is saved in 'fn'.
    // The function optionally (is 'local' is defined) checks file locality (i.e.
@@ -783,8 +783,8 @@ void TEntryList::GetFileName(const char *filename, TString &fn, Bool_t *local)
 TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename, Option_t *opt)
 {
    //return the entry list, correspoding to treename and filename
-   //By default, the filename is first tried as is, and then, if the corresponding list 
-   //is not found, the filename is expanded to the absolute path, and compared again. 
+   //By default, the filename is first tried as is, and then, if the corresponding list
+   //is not found, the filename is expanded to the absolute path, and compared again.
    //To avoid it, use option "ne"
 
    if (gDebug > 1)
@@ -887,7 +887,7 @@ Int_t TEntryList::Merge(TCollection *list)
       }
       Add(elist);
    }
-   return 0;   
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -961,7 +961,7 @@ Long64_t TEntryList::Next()
             fCurrent->fLastIndexQueried = -1;
             fCurrent->fLastIndexReturned = 0;
             fCurrent = (TEntryList*)fLists->After(fCurrent);
-            // fCurrent is guarantee to be non-zero because it is not the 'last' 
+            // fCurrent is guarantee to be non-zero because it is not the 'last'
             // element of the list.
             if (!fCurrent) return 0;
             if (!fShift)
@@ -1105,7 +1105,7 @@ void TEntryList::SetTree(const char *treename, const char *filename)
          if (!strcmp(fCurrent->fTreeName, treename) && !strcmp(fCurrent->fFileName, fn.Data())){
             return;
          }
-      } 
+      }
       TIter next(fLists);
       while ((elist = (TEntryList*)next())){
          if (newhash == elist->fStringHash){
@@ -1190,9 +1190,9 @@ void TEntryList::SetTree(const TTree *tree)
 {
    //If a list for a tree with such name and filename exists, sets it as the current sublist
    //If not, creates this list and sets it as the current sublist
-   //The name of the file, where the tree is, is taken as 
+   //The name of the file, where the tree is, is taken as
    //tree->GetTree()->GetCurrentFile()->GetName(), and then expanded either to the absolute path,
-   //or to full url. If, for some reason, you want to provide 
+   //or to full url. If, for some reason, you want to provide
    //the filename in a different format, use SetTree(const char *treename, const char *filename),
    //where the filename is taken "as is".
 
@@ -1231,7 +1231,7 @@ void TEntryList::Subtract(const TEntryList *elist)
       //check if lists are for the same tree
       if (!elist->fLists){
          //second list is also only for 1 tree
-         if (!strcmp(elist->fTreeName.Data(),fTreeName.Data()) && 
+         if (!strcmp(elist->fTreeName.Data(),fTreeName.Data()) &&
              !strcmp(elist->fFileName.Data(),fFileName.Data())){
             //same tree
             Long64_t n2 = elist->GetN();
@@ -1250,7 +1250,7 @@ void TEntryList::Subtract(const TEntryList *elist)
          templist = 0;
          Bool_t found = kFALSE;
          while ((templist = (TEntryList*)next1())){
-            if (!strcmp(templist->fTreeName.Data(),fTreeName.Data()) && 
+            if (!strcmp(templist->fTreeName.Data(),fTreeName.Data()) &&
                 !strcmp(templist->fFileName.Data(),fFileName.Data())){
                found = kTRUE;
                break;
@@ -1259,7 +1259,7 @@ void TEntryList::Subtract(const TEntryList *elist)
          if (found) {
             Subtract(templist);
          }
-      } 
+      }
    } else {
       //this list has sublists
       TIter next2(fLists);
@@ -1433,7 +1433,7 @@ static Int_t GetCommonString(TString a, TString b, TString &c)
       return ashort ? 1 : 2;
    }
    c = a(0,lcom);
-   // Done      
+   // Done
    return 0;
 }
 
@@ -1442,7 +1442,7 @@ Int_t TEntryList::ScanPaths(TList *roots, Bool_t notify)
 {
    // Scan the paths to find the common roots. If 'roots' is defined, add
    // the found roots to the list as TObjStrings.
-   // Return the number of roots found. 
+   // Return the number of roots found.
 
    TList *xrl = roots ? roots : new TList;
 
@@ -1499,7 +1499,7 @@ Int_t TEntryList::Scan(const char *fn, TList *roots)
 {
    // Scan TEntryList in 'fn' to find the common parts of paths.
    // If 'roots' is defined, add the found roots to the list as TObjStrings.
-   // Return the number of common root paths found. 
+   // Return the number of common root paths found.
 
    // Open the file for updating
    TFile *fl = TFile::Open(fn);

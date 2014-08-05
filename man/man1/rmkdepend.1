@@ -1,27 +1,27 @@
-.\" 
+.\"
 .\" $Id: rmkdepend.1,v 1.1 2000/12/08 17:41:01 rdm Exp $
-.\" 
+.\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
-.\" copy of this software and associated documentation files (the "Software"), 
-.\" to deal in the Software without restriction, including without limitation 
-.\" the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-.\" and/or sell copies of the Software, and to permit persons to whom the 
+.\" copy of this software and associated documentation files (the "Software"),
+.\" to deal in the Software without restriction, including without limitation
+.\" the rights to use, copy, modify, merge, publish, distribute, sublicense,
+.\" and/or sell copies of the Software, and to permit persons to whom the
 .\" Software furnished to do so, subject to the following conditions:
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included in
 .\" all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 .\" IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL 
-.\" THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
-.\" WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF 
-.\" OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+.\" THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+.\" WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+.\" OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.\" 
-.\" Except as contained in this notice, the name of the X Consortium shall not 
-.\" be used in advertising or otherwise to promote the sale, use or other 
-.\" dealing in this Software without prior written authorization from the 
+.\"
+.\" Except as contained in this notice, the name of the X Consortium shall not
+.\" be used in advertising or otherwise to promote the sale, use or other
+.\" dealing in this Software without prior written authorization from the
 .\" X Consortium.
 .TH RMKDEPEND 1 "Version 3" "ROOT"
 .UC 4
@@ -58,7 +58,7 @@ rmkdepend \- create dependencies in makefiles (ROOT Version)
 .I otheroptions
 \-\^\-
 ]
-.I sourcefile 
+.I sourcefile
 [
 .BI \-t targetfilename
 ]
@@ -174,7 +174,7 @@ This places a definition for
 in
 .B rmkdepend's
 symbol table.
-Without 
+Without
 .I =def\|
 the symbol becomes defined as ``1''.
 .TP 5
@@ -200,7 +200,7 @@ include directory; you can omit the
 to simply prevent searching the standard include directories.
 .TP 5
 .B \-a
-Append the dependencies to the end of the file instead of replacing them. 
+Append the dependencies to the end of the file instead of replacing them.
 .TP 5
 .B \-f\fImakefile\fP
 Filename.
@@ -245,20 +245,20 @@ This option enables you to change this width.
 .TP 5
 .B \-v
 Verbose operation.
-This option causes 
+This option causes
 .B rmkdepend
 to emit the list of files included by each input file on standard output.
 .TP 5
 .B \-m
 Warn about multiple inclusion.
-This option causes 
+This option causes
 .B rmkdepend
 to produce a warning if any input file includes another file more than
-once.  In previous versions of 
+once.  In previous versions of
 .B rmkdepend
 this was the default behavior; the default has been changed to better
 match the behavior of the C compiler, which does not consider multiple
-inclusion to be an error.  This option is provided for backward 
+inclusion to be an error.  This option is provided for backward
 compatibility, and to aid in debugging problems related to multiple
 inclusion.
 .TP 5
@@ -284,7 +284,7 @@ are processed normally.
 .TP 5
 .B \-t\fItargetfilename\fP
 Filename.
-This allows you to specify an alternate target filename to be use for the preceding file.  For example if you call 
+This allows you to specify an alternate target filename to be use for the preceding file.  For example if you call
 .sp
      rmkdepend -sobj -pbuild file.cxx -tlibrary.so
 .sp
@@ -403,10 +403,10 @@ it is cast in concrete.
 .SH AUTHOR
 Todd Brunhoff, Tektronix, Inc. and MIT Project Athena. Modified by
 Christian Holm Christensen <cholm@nbi.dk> for the \fBROOT\fR
-distribution. 
-.\" 
+distribution.
+.\"
 .\" $Log: rmkdepend.1,v $
 .\" Revision 1.1  2000/12/08 17:41:01  rdm
 .\" man pages of all ROOT executables provided by Christian Holm.
 .\"
-.\" 
+.\"

@@ -2,7 +2,7 @@
 // Author: Valeri Fine   28/07/2004
 
 //
-//  This is a copy of the all "abstract" TVirtualX methods to make sure 
+//  This is a copy of the all "abstract" TVirtualX methods to make sure
 //  we don't miss it with the implementation
 //
 /*************************************************************************
@@ -33,7 +33,7 @@ public:
    //but TGQt defines only versions without parameters.
    using TVirtualX::GetFontAscent;
    using TVirtualX::GetFontDescent;
-   
+
    virtual void      CreateOpenGLContext(Int_t wid=0);
    virtual void      DeleteOpenGLContext(Int_t wid=0);
    virtual void      DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode);
@@ -277,11 +277,11 @@ public:
    virtual Window_t     FindRWindow(Window_t win, Window_t dragwin, Window_t input, int x, int y, int maxd);
    virtual Bool_t       IsDNDAware(Window_t win, Atom_t *typelist);
 
-#if 0 
+#if 0
 //   Alas CINT does not understand the complex CPP statement below.
 //   This forces us to edit the file "by hand" (V.Fine 01/03/2005)
 //   #if  ROOT_VERSION_CODE < ROOT_VERSION(4,01,02)
-   
+
    //---- Methods used for OpenGL -----
    virtual Window_t     CreateGLWindow(Window_t wind, Visual_t visual = 0, Int_t depth = 0);
    virtual ULong_t      GetWinDC(Window_t wind);

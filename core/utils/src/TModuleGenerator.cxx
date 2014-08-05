@@ -48,10 +48,10 @@ TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
 {
 
    // Clean the dictionary name from characters which are not accepted in C++
-   std::string tmpName = fDictionaryName;   
+   std::string tmpName = fDictionaryName;
    fDictionaryName.clear();
    ROOT::TMetaUtils::GetCppName(fDictionaryName,tmpName.c_str());
-   
+
    // Need to resolve _where_ to create the pcm
    // We default in the lib subdirectory
    // otherwise we put it in the same directory as the dictionary file (for ACLiC)
@@ -84,21 +84,21 @@ void TModuleGenerator::ConvertToCppString(std::string& text) const{
    // FIXME: Optimisations for size could be put in
    // * Remove empty lines
    // * Remove comments
-   
+
    typedef std::vector<std::pair<std::string,std::string> > strPairs;
-   
+
    // Will be replaced by an initialiser list
    strPairs fromToPatterns;
    fromToPatterns.reserve(4);
    // \r -> "" (carriage return, empty char )
-   fromToPatterns.push_back(std::make_pair("\r",""));   
+   fromToPatterns.push_back(std::make_pair("\r",""));
    // \ -> \\'
    fromToPatterns.push_back(std::make_pair("\\","\\\\"));
    // " -> \"
-   fromToPatterns.push_back(std::make_pair("\"","\\\""));   
+   fromToPatterns.push_back(std::make_pair("\"","\\\""));
    // \n -> \\n"\n" (new line, ",new line, ")
    fromToPatterns.push_back(std::make_pair("\n","\\n\"\n\""));
-   
+
    for (auto const & fromTo : fromToPatterns){
       size_t start_pos = 0;
       const std::string& from = fromTo.first;
@@ -116,10 +116,10 @@ void TModuleGenerator::ConvertToCppString(std::string& text) const{
    if (textSize>=1 && text[textSize-1] != '\"' && text[textSize-1] != '\n'){
       text+='\"';
    }
-      
+
 
    text="\""+text;
-   
+
 }
 
 //______________________________________________________________________________
@@ -312,15 +312,15 @@ std::ostream& TModuleGenerator::WriteStringPairVec(const StringPairVec_t& vec,
 }
 
 //______________________________________________________________________________
-void TModuleGenerator::WriteRegistrationSource(std::ostream& out, 
-                                               bool inlineHeaders, 
+void TModuleGenerator::WriteRegistrationSource(std::ostream& out,
+                                               bool inlineHeaders,
                                                const std::string& fwdDeclnArgsToKeepString,
                                                const std::string& headersClassesMapString,
                                                const std::string& fwdDeclString) const
-{  
+{
 
    std::string payloadCode;
-   
+
    // Add defines and undefines to the payloadCode
    std::ostringstream definesAndUndefines;
    //    Anticipate the undefines.
@@ -335,7 +335,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out,
    WritePPUndefines(definesAndUndefines);
    WritePPDefines(definesAndUndefines);
    payloadCode += definesAndUndefines.str();
-   
+
    // If necessary, inline the headers
    std::string inlinedHeaders;
    if (inlineHeaders){
@@ -384,7 +384,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out,
 
    // Make it usable as string
    ConvertToCppString(payloadCode);
-   
+
    // Dictionary initialization code for loading the module
    out << "namespace {\n"
       "  void TriggerDictionaryInitialization_"
@@ -396,11 +396,11 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out,
       WriteHeaderArray(out);
    };
    out << "    };\n"
-      "    static const char* includePaths[] = {\n";                           
-   WriteIncludePathArray(out) << 
+      "    static const char* includePaths[] = {\n";
+   WriteIncludePathArray(out) <<
       "    };\n"
       "    static const char* fwdDeclCode = \n" << fwdDeclString << ";\n"
-      "    static const char* payloadCode = \n" << payloadCode << ";\n"      
+      "    static const char* payloadCode = \n" << payloadCode << ";\n"
       "    " << headersClassesMapString << "\n"
       "    static bool isInitialized = false;\n"
       "    if (!isInitialized) {\n"
@@ -420,7 +420,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out,
       "  TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl();\n"
       "}" << std::endl;
 }
-   
+
 //______________________________________________________________________________
 void TModuleGenerator::WriteContentHeader(std::ostream& out) const
 {

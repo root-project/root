@@ -40,12 +40,12 @@ ClassImp(TGInsets)
 ClassImp(TGRectangle)
 
 void TGRectangle::Merge(const TGRectangle &r)
-{ 
+{
    // Merge parameters
-   Int_t max_x = TMath::Max(fX + (Int_t) fW, r.fX + (Int_t) r.fW); 
+   Int_t max_x = TMath::Max(fX + (Int_t) fW, r.fX + (Int_t) r.fW);
    fX = TMath::Min(fX, r.fX);
-   Int_t max_y = TMath::Max(fY + (Int_t) fH, r.fY + (Int_t) r.fH); 
+   Int_t max_y = TMath::Max(fY + (Int_t) fH, r.fY + (Int_t) r.fH);
    fY = TMath::Min(fY, r.fY);
    fW = max_x - fX;
-   fH = max_y - fY; 
+   fH = max_y - fY;
 }

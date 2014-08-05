@@ -51,7 +51,7 @@ protected:
          TNamed(name, ""), fFiles(0), fMissing(0), fDSet(ds) { }
       virtual ~TDSetPlet() { }
    };
-    
+
 public:
 
    TProofMonSender(const char *n = "Abstract",
@@ -77,7 +77,7 @@ public:
 
    // Detailed information about files
    virtual Int_t SendFileInfo(TDSet *, TList *, const char *, const char *) = 0;
-   
+
    ClassDef(TProofMonSender,0); // Interface for PROOF monitoring
 };
 

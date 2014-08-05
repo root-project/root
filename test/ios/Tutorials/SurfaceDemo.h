@@ -15,13 +15,13 @@ class SurfaceDemo : public DemoBase {
 public:
    SurfaceDemo();
    ~SurfaceDemo();
-   
+
    //overriders.
    void ResetDemo() {}
    bool IsAnimated()const {return false;}
    unsigned NumOfFrames()const {return 1;}
    double AnimationTime()const {return 0.;}
-   
+
    void StartAnimation(){}
    void NextStep(){}
    void StopAnimation(){}
@@ -29,11 +29,11 @@ public:
    void AdjustPad(Pad *pad);
 
    void PresentDemo();
-   
+
    bool Supports3DRotation() const {return true;}
 private:
    std::auto_ptr<TF2> fSurface;
-   
+
    SurfaceDemo(const SurfaceDemo &rhs);
    SurfaceDemo &operator = (const SurfaceDemo &rhs);
 };

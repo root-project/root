@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class GSLRootHelper
-// 
+//
 // Created by: moneta  at Sun Nov 14 21:34:15 2004
-// 
+//
 // Last update: Sun Nov 14 21:34:15 2004
-// 
+//
 #ifndef ROOT_Math_GSLRootHelper
 #define ROOT_Math_GSLRootHelper
 
@@ -35,21 +35,21 @@
 namespace ROOT {
 namespace Math {
 
-  
-  /** 
-      Helper functions to test convergence of Root-Finding algorithms. 
+
+  /**
+      Helper functions to test convergence of Root-Finding algorithms.
       Used by ROOT::Math::RootFinder class (see there for the doc)
   */
 
 
    namespace GSLRootHelper {
 
-     int TestInterval(double xlow, double xup, double epsAbs, double epsRel); 
+     int TestInterval(double xlow, double xup, double epsAbs, double epsRel);
 
-     int TestDelta(double x1, double x0, double epsAbs, double epsRel); 
+     int TestDelta(double x1, double x0, double epsAbs, double epsRel);
 
      int  TestResidual(double f,  double epsAbs);
-   
+
    }
 
 } // namespace Math

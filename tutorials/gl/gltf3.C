@@ -19,7 +19,7 @@ void gltf3()
    title->SetFillColor(32);
    title->Draw();
 
-   TPad *tf3Pad  = new TPad("box", "box", 0.04, 0.04, 0.96, 0.8);   
+   TPad *tf3Pad  = new TPad("box", "box", 0.04, 0.04, 0.96, 0.8);
    tf3Pad->Draw();
 
    TFormula f1 = TFormula("f1", "x*x + y*y + z*z + 2*y - 1");

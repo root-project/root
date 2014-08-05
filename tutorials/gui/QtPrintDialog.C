@@ -2,11 +2,11 @@
 // Author: Valeri Fine   23/03/2006
 #ifndef __CINT__
 #  include <QPrintDialog>
-#  include <QPrinter> 
-#  include <QPainter> 
-#  include <QPixmap> 
-#  include <TCanvas.h> 
-#  include <TGQt.h> 
+#  include <QPrinter>
+#  include <QPainter>
+#  include <QPixmap>
+#  include <TCanvas.h>
+#  include <TGQt.h>
 #endif
 void  QtPrintDialog(TVirtualPad *pad = 0) {
   //
@@ -26,7 +26,7 @@ void  QtPrintDialog(TVirtualPad *pad = 0) {
   // begin_html <a href="http://root.bnl.gov/QtRoot/htmldoc/src/qtclasses.h.html">by $ROOTSYS/cint/lib/qtclasses.h</a> end_html
   //
   // All Qt classes can be used from ACLiC though.
-  
+
 #ifdef __CINT__
   // Load the qt cint dictionary.
   // One is recommended to do that at once somewhere.

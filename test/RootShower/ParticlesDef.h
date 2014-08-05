@@ -436,7 +436,7 @@ const particle_def_t particle_def[] = {
       { "Upsilon(11020)0"   ,    60553,    1.0e-20    },
       { "chi(b1)(2P)0"      ,    70553,    1.0e-20    },
       { "Rootino"           ,    0,        1.0e-20    }
-};  
+};
 
 #define total_defs 414
 

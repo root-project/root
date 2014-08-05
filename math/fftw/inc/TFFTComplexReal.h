@@ -13,16 +13,16 @@
 #define ROOT_TFFTComplexReal
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      
-// TFFTComplexReal                                                          
-//                                                                      
+//
+// TFFTComplexReal
+//
 // One of the interface classes to the FFTW package, can be used directly
 // or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
 //
 // Computes the inverse of the real-to-complex transforms (class TFFTRealComplex)
 // taking complex input (storing the non-redundant half of a logically Hermitian array)
 // to real output (see FFTW manual for more details)
-// 
+//
 // How to use it:
 // 1) Create an instance of TFFTComplexReal - this will allocate input and output
 //    arrays (unless an in-place transform is specified)
@@ -36,9 +36,9 @@
 // function and continue with steps 3)-5)
 // NOTE: 1) running Init() function will overwrite the input array! Don't set any data
 //          before running the Init() function
-//       2) FFTW computes unnormalized transform, so doing a transform followed by 
+//       2) FFTW computes unnormalized transform, so doing a transform followed by
 //          its inverse will lead to the original array scaled by the transform size
-//                                                                      
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TVirtualFFT
@@ -84,7 +84,7 @@ class TFFTComplexReal: public TVirtualFFT {
    virtual Double_t*  GetPointsReal(Bool_t fromInput=kFALSE) const;
    virtual void       GetPointsComplex(Double_t *re, Double_t *im, Bool_t fromInput = kFALSE) const ;
    virtual void       GetPointsComplex(Double_t *data, Bool_t fromInput = kFALSE) const ;
-   
+
    virtual void       SetPoint(Int_t ipoint, Double_t re, Double_t im = 0);
    virtual void       SetPoint(const Int_t *ipoint, Double_t re, Double_t im = 0);
    virtual void       SetPoints(const Double_t *data);

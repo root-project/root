@@ -62,7 +62,7 @@ public:
    virtual void      Close(Option_t *option=""); // *MENU*
    virtual TKey*     CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
    virtual TKey*     CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Int_t bufsize);
-   virtual void      DrawMap(const char* ="*",Option_t* ="") {} 
+   virtual void      DrawMap(const char* ="*",Option_t* ="") {}
    virtual void      FillBuffer(char* &) {}
    virtual void      Flush() {}
 
@@ -77,13 +77,13 @@ public:
    virtual Long64_t  GetSeekInfo() const {return 0; }
    virtual Long64_t  GetSize() const { return 0; }
    virtual TList*    GetStreamerInfoList();
-   Int_t             GetIOVersion() const { return fIOVersion; }          
+   Int_t             GetIOVersion() const { return fIOVersion; }
 
    virtual Bool_t    IsOpen() const;
 
    virtual void      MakeFree(Long64_t, Long64_t) {}
    virtual void      MakeProject(const char *, const char* ="*", Option_t* ="new") {} // *MENU*
-   virtual void      Map() {} // 
+   virtual void      Map() {} //
    virtual void      Paint(Option_t* ="") {}
    virtual void      Print(Option_t* ="") const {}
    virtual Bool_t    ReadBuffer(char*, Int_t) { return kFALSE; }
@@ -104,26 +104,26 @@ public:
    virtual void      WriteStreamerInfo();
 
    // XML specific functions
-   
+
    virtual void      SetXmlLayout(EXMLLayout layout);
    virtual void      SetStoreStreamerInfos(Bool_t iConvert = kTRUE);
    virtual void      SetUsedDtd(Bool_t use = kTRUE);
    virtual void      SetUseNamespaces(Bool_t iUseNamespaces = kTRUE);
-   
+
    Bool_t            AddXmlComment(const char* comment);
-   Bool_t            AddXmlStyleSheet(const char* href, 
+   Bool_t            AddXmlStyleSheet(const char* href,
                                       const char* type = "text/css",
                                       const char* title = 0,
                                       int alternate = -1,
                                       const char* media = 0,
                                       const char* charset = 0);
-   Bool_t            AddXmlLine(const char* line);                                   
+   Bool_t            AddXmlLine(const char* line);
 
-   TXMLEngine*       XML() { return fXML; } 
+   TXMLEngine*       XML() { return fXML; }
 
 protected:
    // functions to store streamer infos
-   
+
    void              StoreStreamerElement(XMLNodePointer_t node, TStreamerElement* elem);
    void              ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo* info);
 
@@ -140,13 +140,13 @@ protected:
    XMLDocPointer_t   fDoc;                  //!
 
    XMLNodePointer_t  fStreamerInfoNode;     //!  pointer of node with streamer info data
-   
+
    TXMLEngine*       fXML;                  //! object for interface with xml library
-   
+
    Int_t             fIOVersion;            //! indicates format of ROOT xml file
-   
+
    Long64_t          fKeyCounter;           //! counter of created keys, used for keys id
-   
+
 ClassDef(TXMLFile, 2)  //ROOT file in XML format
 };
 

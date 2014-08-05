@@ -22,7 +22,7 @@
   class QColor;
   class QPixmap;
 #endif
-  
+
 #include "GuiTypes.h"
 
 //________________________________________________________________________
@@ -131,7 +131,7 @@ inline bool TQtClientWidget::DeleteNotify(){return fDeleteNotify; }
 inline TQtWidget *TQtClientWidget::GetCanvasWidget() const
 { return fCanvasWidget;}
 //______________________________________________________________________________
-//inline Q3Accel *TQtClientWidget::HasAccel() const 
+//inline Q3Accel *TQtClientWidget::HasAccel() const
 //{  return fGrabbedKey; }
 
 //______________________________________________________________________________

@@ -1,5 +1,5 @@
 set (Libraries  Core Hist Gpad MathCore)
-set (testname stressVdt) 
+set (testname stressVdt)
 
 
 if( CMAKE_COMPILER_IS_GNUCXX AND GCC_MAJOR GREATER 3 AND GCC_MINOR GREATER 6 )
@@ -17,5 +17,5 @@ if( ModernGcc OR ModernClang)
 endif()
 
 ROOT_EXECUTABLE(${testname} ${testname}.cxx LIBRARIES ${Libraries} ADDITIONAL_COMPILE_FLAGS ${additional_compile_flags} )
- 
+
 ROOT_ADD_TEST(${testname} COMMAND ${testname} FAILREGEX "too") # for "too slow" and "too inaccurate" :)

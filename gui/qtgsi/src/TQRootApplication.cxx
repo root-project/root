@@ -18,7 +18,7 @@ bool TQRootApplication::fgDebug=kFALSE;
 bool TQRootApplication::fgWarning=kFALSE;
 
 ClassImp(TQRootApplication)
-   
+
 //______________________________________________________________________________
 void qMessageOutput( QtMsgType type, const char *msg )
 {
@@ -43,7 +43,7 @@ void qMessageOutput( QtMsgType type, const char *msg )
 }
 
 //______________________________________________________________________________
-TQRootApplication::TQRootApplication(int &argc, char **argv, int poll) : 
+TQRootApplication::TQRootApplication(int &argc, char **argv, int poll) :
       QApplication(argc,argv), fQTimer(0), fRTimer(0)
 {
    // Connect ROOT via Timer call back.

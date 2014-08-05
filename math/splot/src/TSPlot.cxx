@@ -1,5 +1,5 @@
 // @(#)root/splot:$Id$
-// Author: Muriel Pivk, Anna Kreshuk    10/2005  
+// Author: Muriel Pivk, Anna Kreshuk    10/2005
 
 /**********************************************************************
  *                                                                    *
@@ -61,7 +61,7 @@ A detail description of the formalism itself, called <!-- MATH
 <img src="gif/sPlot_img5.png" alt="$\hbox{$_s$}{\cal P}lot$" align="middle" border="0" height="34" width="48">, is given in&nbsp;[<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/node1.html#bib:sNIM">1</a>].
 
 </p><p>
-<b><font size="+2">The method</font></b> 
+<b><font size="+2">The method</font></b>
 
 </p><p>
 The <!-- MATH
@@ -86,7 +86,7 @@ The different terms of the log-Likelihood are:
 <li><!-- MATH
  ${\rm f}_i(y_e)$
  -->
-<img src="gif/sPlot_img10.png" alt="${\rm f}_i(y_e)$" align="middle" border="0" height="37" width="47">: the value of the PDFs of the discriminating variables <img src="gif/sPlot_img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> for the <img src="gif/sPlot_img12.png" alt="$i^{th}$" align="bottom" border="0" height="20" width="25"> species and for event <img src="gif/sPlot_img13.png" alt="$e$" align="bottom" border="0" height="17" width="13">, 
+<img src="gif/sPlot_img10.png" alt="${\rm f}_i(y_e)$" align="middle" border="0" height="37" width="47">: the value of the PDFs of the discriminating variables <img src="gif/sPlot_img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> for the <img src="gif/sPlot_img12.png" alt="$i^{th}$" align="bottom" border="0" height="20" width="25"> species and for event <img src="gif/sPlot_img13.png" alt="$e$" align="bottom" border="0" height="17" width="13">,
 </li>
 <li><img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">: the set of control variables which, by definition, do not appear in the expression of the Likelihood function <img src="gif/sPlot_img15.png" alt="${\cal L}$" align="bottom" border="0" height="18" width="18">.
 </li>
@@ -272,15 +272,15 @@ when obtained using a Likelihood fit, one can conclude that the<!-- MATH
 </p><p>
 
 </p><ol>
-<li>A maximum Likelihood fit is performed to obtain the yields <img src="gif/sPlot_img8.png" alt="$N_i$" align="middle" border="0" height="34" width="25"> of the various species. 
+<li>A maximum Likelihood fit is performed to obtain the yields <img src="gif/sPlot_img8.png" alt="$N_i$" align="middle" border="0" height="34" width="25"> of the various species.
 The fit relies on discriminating variables&nbsp;<img src="gif/sPlot_img11.png" alt="$y$" align="middle" border="0" height="33" width="15"> uncorrelated with a control variable&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15">:
-the later is therefore totally absent from the fit. 
+the later is therefore totally absent from the fit.
 </li>
 <li>The weights <img src="gif/sPlot_img29.png" alt="${_s{\cal P}}$" align="middle" border="0" height="34" width="27"> are calculated using Eq.&nbsp;(<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:weightxnotiny">2</a>) where the covariance matrix is taken from Minuit.
 </li>
-<li>Histograms of&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> are filled by weighting the events with <img src="gif/sPlot_img29.png" alt="${_s{\cal P}}$" align="middle" border="0" height="34" width="27">. 
+<li>Histograms of&nbsp;<img src="gif/sPlot_img14.png" alt="$x$" align="bottom" border="0" height="17" width="15"> are filled by weighting the events with <img src="gif/sPlot_img29.png" alt="${_s{\cal P}}$" align="middle" border="0" height="34" width="27">.
 </li>
-<li>Error bars per bin are given by Eq.&nbsp;(<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:ErrorPerBin">6</a>). 
+<li>Error bars per bin are given by Eq.&nbsp;(<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:ErrorPerBin">6</a>).
 </li>
 </ol>
 The <!-- MATH
@@ -307,7 +307,7 @@ The variable which is not incorporated in&nbsp;<img src="gif/sPlot_img11.png" al
 </p><div align="center"><a name="fig:pdfs"></a><a name="106"></a>
 <table>
 <caption align="bottom"><strong>Figure 1:</strong>
-Distributions of the three discriminating variables available to perform the Likelihood fit: 
+Distributions of the three discriminating variables available to perform the Likelihood fit:
 <img src="gif/sPlot_img32.png" alt="${m_{\rm ES}}$" align="middle" border="0" height="33" width="39">, <img src="gif/sPlot_img2.png" alt="$\Delta E$" align="bottom" border="0" height="17" width="35">, <img src="gif/sPlot_img3.png" alt="${\cal F}$" align="bottom" border="0" height="18" width="20">.
 Among the three variables, two are used to perform the fit while one is
 kept out of the fit to serve the purpose of a control variable. The
@@ -428,7 +428,7 @@ The results above can be obtained by running the tutorial TestSPlot.C
 
 
 //____________________________________________________________________
-TSPlot::TSPlot() : 
+TSPlot::TSPlot() :
  fTree(0),
  fTreename(0),
  fVarexp(0),
@@ -443,7 +443,7 @@ TSPlot::TSPlot() :
 }
 
 //____________________________________________________________________
-TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) : 
+TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) :
  fTreename(0),
  fVarexp(0),
  fSelection(0)
@@ -455,7 +455,7 @@ TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) :
    // ne :  total number of events
    // ns :  number of species
    // tree: input data
-   
+
    fNx = nx;
    fNy=ny;
    fNevents = ne;
@@ -473,7 +473,7 @@ TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) :
 TSPlot::~TSPlot()
 {
    // destructor
-   
+
    if (fNumbersOfEvents)
       delete [] fNumbersOfEvents;
    if (!fXvarHists.IsEmpty())
@@ -680,7 +680,7 @@ void TSPlot::FillXvarHists(Int_t nbins)
          h->Fill(fXvar(j, i));
       fXvarHists.Add(h);
    }
-                    
+
 }
 
 //____________________________________________________________________
@@ -758,7 +758,7 @@ TH1D *TSPlot::GetYvarHist(Int_t iyvar)
 {
 //Returns the histogram of variable iyvar.If histograms have not already
 //been filled, they are filled with default binning 100.
- 
+
    Int_t nbins = 100;
    if (fYvarHists.IsEmpty())
       FillYvarHists(nbins);
@@ -786,7 +786,7 @@ void TSPlot::FillYpdfHists(Int_t nbins)
       for (i=0; i<fNy; i++){
          snprintf(name,30, "pdf_species%d_y%d", ispecies, i);
          //TH1D *h = new TH1D(name, name, nbins, ypdfmin[ispecies*fNy+i], ypdfmax[ispecies*fNy+i]);
-         TH1D *h = new TH1D(name, name, nbins, fMinmax(0, fNx+fNy+ispecies*fNy+i), fMinmax(1, fNx+fNy+ispecies*fNy+i)); 
+         TH1D *h = new TH1D(name, name, nbins, fMinmax(0, fNx+fNy+ispecies*fNy+i), fMinmax(1, fNx+fNy+ispecies*fNy+i));
          for (j=0; j<fNevents; j++)
             h->Fill(fYpdf(j, ispecies*fNy+i));
          fYpdfHists.Add(h);
@@ -852,7 +852,7 @@ void TSPlot::FillSWeightsHists(Int_t nbins)
             h->Sumw2();
             for (Int_t ievent=0; ievent<fNevents; ievent++)
                h->Fill(fXvar(ievent, ivar), fSWeights(ievent, ispecies));
-            fSWeightsHists.AddLast(h); 
+            fSWeightsHists.AddLast(h);
          }
    }
 
@@ -919,7 +919,7 @@ void TSPlot::RefillHist(Int_t type, Int_t nvar, Int_t nbins, Double_t min, Doubl
       TH1D *h = new TH1D(name, name, nbins, min, max);
       for (j=0; j<fNevents;j++)
          h->Fill(fYvar(j, nvar));
-      fXvarHists.AddAt(h, nvar); 
+      fXvarHists.AddAt(h, nvar);
    }
    if (type==3){
       hremove = (TH1D*)fYpdfHists.RemoveAt(nspecies*fNy+nvar);
@@ -948,8 +948,8 @@ void TSPlot::RefillHist(Int_t type, Int_t nvar, Int_t nbins, Double_t min, Doubl
       h->Sumw2();
       for (Int_t ievent=0; ievent<fNevents; ievent++)
          h->Fill(fYvar(ievent, nvar), fSWeights(ievent, nspecies));
-      fSWeightsHists.AddAt(h, fNx*fNSpecies + fNSpecies*nvar+nspecies); 
-   }  
+      fSWeightsHists.AddAt(h, fNx*fNSpecies + fNSpecies*nvar+nspecies);
+   }
 }
 //____________________________________________________________________
 TH1D *TSPlot::GetSWeightsHist(Int_t ixvar, Int_t ispecies,Int_t iyexcl)
@@ -988,13 +988,13 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
    //
    //Variables fNx, fNy, fNSpecies and fNEvents should already be set!
    //
-   //In the 1st parameter it is assumed that first fNx variables are x(control variables), 
-   //then fNy y variables (discriminating variables), 
-   //then fNy*fNSpecies ypdf variables (probability distribution functions of dicriminating 
+   //In the 1st parameter it is assumed that first fNx variables are x(control variables),
+   //then fNy y variables (discriminating variables),
+   //then fNy*fNSpecies ypdf variables (probability distribution functions of dicriminating
    //variables for different species). The order of pdfs should be: species0_y0, species0_y1,...
    //species1_y0, species1_y1,...species[fNSpecies-1]_y0...
    //The 2nd parameter allows to make a cut
-   //TTree::Draw method description contains more details on specifying expression and selection 
+   //TTree::Draw method description contains more details on specifying expression and selection
 
    TTreeFormula **var;
    std::vector<TString> cnames;
@@ -1039,7 +1039,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
 
    fMinmax.ResizeTo(2, ncols);
    for (i=0; i<ncols; i++){
-      fMinmax(0, i)=1e30; 
+      fMinmax(0, i)=1e30;
       fMinmax(1, i)=-1e30;
    }
 
@@ -1097,7 +1097,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
          for (i=0;i<ncols;i++) {
             xvars[i] = var[i]->EvalInstance(inst);
          }
-         
+
          // curentry = entry-firstentry;
          //printf("event#%d\n", curentry);
          //for (i=0; i<ncols; i++)
@@ -1125,7 +1125,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
                   fMinmax(1, j*fNy+i+fNx+fNy) = fYpdf(selectedrows, j*fNy+i);
             }
          }
-      selectedrows++;   
+      selectedrows++;
       }
    }
    fNevents=selectedrows;

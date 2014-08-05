@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -12,7 +12,7 @@
 #include "Minuit2/MinimumError.h"
 
 #if defined(DEBUG) || defined(WARNINGMSG)
-#include "Minuit2/MnPrint.h" 
+#include "Minuit2/MnPrint.h"
 #endif
 
 
@@ -22,21 +22,21 @@ namespace ROOT {
 
 
 MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance& cov, unsigned int n) const {
-   // squeeze MnUserCovariance class 
-   // MnUserCovariance contasins the error matrix. Need to invert first to get the hessian, then 
+   // squeeze MnUserCovariance class
+   // MnUserCovariance contasins the error matrix. Need to invert first to get the hessian, then
    // after having squuezed the hessian, need to invert again to get the new error matrix
    assert(cov.Nrow() > 0);
    assert(n < cov.Nrow());
-   
+
    MnAlgebraicSymMatrix hess(cov.Nrow());
    for(unsigned int i = 0; i < cov.Nrow(); i++) {
       for(unsigned int j = i; j < cov.Nrow(); j++) {
          hess(i,j) = cov(i,j);
       }
    }
-   
+
    int ifail = Invert(hess);
-   
+
    if(ifail != 0) {
 #ifdef WARNINGMSG
       MN_INFO_MSG("MnUserCovariance inversion failed; return diagonal matrix;");
@@ -49,9 +49,9 @@ MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance& cov, un
       }
       return result;
    }
-   
+
    MnAlgebraicSymMatrix squeezed = (*this)(hess, n);
-   
+
    ifail = Invert(squeezed);
    if(ifail != 0) {
 #ifdef WARNINGMSG
@@ -63,13 +63,13 @@ MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance& cov, un
       }
       return result;
    }
-   
+
    return MnUserCovariance(std::vector<double>(squeezed.Data(), squeezed.Data() + squeezed.size()), squeezed.Nrow());
 }
 
 MinimumError MnCovarianceSqueeze::operator()(const MinimumError& err, unsigned int n) const {
    // squueze the minimum error class
-   // Remove index-row on the Hessian matrix and the get the new correct error matrix 
+   // Remove index-row on the Hessian matrix and the get the new correct error matrix
    // (inverse of new Hessian)
    MnAlgebraicSymMatrix hess = err.Hessian();
    MnAlgebraicSymMatrix squeezed = (*this)(hess, n);
@@ -84,7 +84,7 @@ MinimumError MnCovarianceSqueeze::operator()(const MinimumError& err, unsigned i
       }
       return MinimumError(tmp, MinimumError::MnInvertFailed());
    }
-   
+
    return MinimumError(squeezed, err.Dcovar());
 }
 
@@ -92,7 +92,7 @@ MnAlgebraicSymMatrix MnCovarianceSqueeze::operator()(const MnAlgebraicSymMatrix&
    // squueze a symmetrix matrix (remove entire row and column n)
    assert(hess.Nrow() > 0);
    assert(n < hess.Nrow());
-   
+
    MnAlgebraicSymMatrix hs(hess.Nrow() - 1);
    for(unsigned int i = 0, j = 0; i < hess.Nrow(); i++) {
       if(i == n) continue;
@@ -103,7 +103,7 @@ MnAlgebraicSymMatrix MnCovarianceSqueeze::operator()(const MnAlgebraicSymMatrix&
       }
       j++;
    }
-   
+
    return hs;
 }
 

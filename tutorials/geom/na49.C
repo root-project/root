@@ -5,7 +5,7 @@ void na49() {
 //   (see ROOT class TGeometry header for an example of use)
 //This shows an example of the old geometry package (now obsolete)
 //Author: Rene Brun
-   
+
 gBenchmark->Start("na49");
 
 TMaterial *mat;
@@ -19288,6 +19288,6 @@ CAVE1->cd();
    MTL_1->SetVisibility(-4);
    MTR_1->SetVisibility(-4);
    TOFR1->SetVisibility(-4);
-   
+
    gBenchmark->Show("na49");
 }

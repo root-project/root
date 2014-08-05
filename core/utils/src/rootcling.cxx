@@ -1350,7 +1350,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream& dictStrea
    dictStream << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "TClass *" << clsname << "::fgIsA = 0;  // static to hold class pointer" << std::endl
+   dictStream << "atomic_TClass_ptr " << clsname << "::fgIsA(0);  // static to hold class pointer" << std::endl
                  << std::endl
 
                  << "//_______________________________________"
@@ -1394,8 +1394,8 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream& dictStrea
       dictStream << "   Dictionary();\n";
    }
    else{
-      dictStream << "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
-      dictStream << fullname << "*)0x0)->GetClass();" << std::endl;
+      dictStream << "   if (!fgIsA) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
+      dictStream << fullname << "*)0x0)->GetClass(); }" << std::endl;
       }
    dictStream    << "   return fgIsA;" << std::endl
                  << "}" << std::endl << std::endl;
@@ -2502,7 +2502,7 @@ void ManipForRootmap(std::string& name)
       ReplaceAll(name,">>",">->");
    }
    ReplaceAll(name,"operator>->","operator>>");
-   
+
 }
 
 //______________________________________________________________________________
@@ -2766,7 +2766,7 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
          return 1;
       }
       classesList.push_back(normalizedName);
-      // Allow to autoload with the name of the class as it was specified in the 
+      // Allow to autoload with the name of the class as it was specified in the
       // selection xml or linkdef
       const char* reqName(selClass.GetRequestedName());
 
@@ -3033,6 +3033,8 @@ void CreateDictHeader(std::ostream& dictStream, const std::string& main_dictname
                << "#include \"TROOT.h\"\n"
                << "#include \"TBuffer.h\"\n"
                << "#include \"TMemberInspector.h\"\n"
+               << "#include \"TInterpreter.h\"" << std::endl
+               << "#include \"TVirtualMutex.h\"" << std::endl
                << "#include \"TError.h\"\n\n"
                << "#ifndef G__ROOT\n"
                << "#define G__ROOT\n"
@@ -3504,7 +3506,7 @@ int RootCling(int argc,
    std::string dictname;
    std::string dictpathname;
    int ic, force = 0, onepcm = 0;
-	bool ignoreExistingDict = false;
+   bool ignoreExistingDict = false;
    bool requestAllSymbols = isDeep;
 
    std::string currentDirectory;
@@ -4345,7 +4347,7 @@ int RootCling(int argc,
                              headersClassesMap,
                              headersDeclsMap,
                              interp);
-      
+
       std::string detectedUmbrella;
       for (auto& arg : pcmArgs){
          if (inlineInputHeader && !IsLinkdefFile(arg.c_str()) && IsHeaderName(arg)){
@@ -4479,7 +4481,6 @@ int RootCling(int argc,
 
    // Before returning, rename the files
    return tmpCatalog.commit();
-
 
 }
 

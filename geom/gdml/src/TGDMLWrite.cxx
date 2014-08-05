@@ -596,7 +596,7 @@ XMLNodePointer_t TGDMLWrite::CreateElementN(TGeoElement * element, XMLNodePointe
          if (!myIsotope) {
             Fatal("CreateElementN", "Missing isotopes for element %s", element->GetName());
             return mainN;
-         }   
+         }
 
          //Get name of the Isotope (
          TString lname = myIsotope->GetName();

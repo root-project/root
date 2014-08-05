@@ -161,7 +161,7 @@ public:
    PyObject* Dispatch( TProofProgressInfo* pi ) { return DispatchVA1( "TProofProgressInfo", pi, 0 ); }
    PyObject* Dispatch( TSlave* slave ) { return DispatchVA( "TSlave", slave, 0 ); }
    PyObject* Dispatch( TSlave* slave, TProofProgressInfo* pi );
-   
+
    ClassDef( TPyDispatcher, 1 );   // Python dispatcher class
 
 private:

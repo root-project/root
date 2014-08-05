@@ -14,12 +14,12 @@ void TestSPlot()
 //
 //It is an example of analysis of charmless B decays, performed for BABAR.
 //One is dealing with a data sample in which two species are present:
-//the first is termed signal and the second background. 
+//the first is termed signal and the second background.
 //A maximum Likelihood fit is performed to obtain the two yields N1 and N2
-//The fit relies on two discriminating variables collectively denoted y, 
+//The fit relies on two discriminating variables collectively denoted y,
 //which are chosen within three possible variables denoted Mes, dE and F.
 //The variable which is not incorporated in y, is used as the control variable x.
-//The distributions of discriminating variables and more details about the method 
+//The distributions of discriminating variables and more details about the method
 //can be found in the TSPlot class description
 //
 // NOTE: This script requires a data file "TestSPlot_toyMC.dat".
@@ -32,25 +32,25 @@ void TestSPlot()
    dir.ReplaceAll("TestSPlot.C","");
    dir.ReplaceAll("/./","/");
    TString dataFile = Form("%sTestSPlot_toyMC.dat",dir.Data());
-   
+
    //Read the data and initialize a TSPlot object
    TTree *datatree = new TTree("datatree", "datatree");
-   datatree->ReadFile(dataFile, 
+   datatree->ReadFile(dataFile,
                       "Mes/D:dE/D:F/D:MesSignal/D:MesBackground/D:dESignal/D:dEBackground/D:FSignal/D:FBackground/D",' ');
 
    TSPlot *splot = new TSPlot(0, 3, 5420, 2, datatree);
 
    //Set the selection for data tree
-   //Note the order of the variables: 
+   //Note the order of the variables:
    //first the control variables (not presented in this example),
-   //then the 3 discriminating variables, then their probability distribution 
-   //functions for the first species(signal) and then their pdfs for the 
+   //then the 3 discriminating variables, then their probability distribution
+   //functions for the first species(signal) and then their pdfs for the
    //second species(background)
    splot->SetTreeSelection(
       "Mes:dE:F:MesSignal:dESignal:FSignal:MesBackground:"
       "dEBackground:FBackground");
 
-   //Set the initial estimates of the number of events in each species 
+   //Set the initial estimates of the number of events in each species
    //- used as initial parameter values for the Minuit likelihood fit
    Int_t ne[2];
    ne[0]=500; ne[1]=5000;
@@ -63,19 +63,19 @@ void TestSPlot()
    splot->FillSWeightsHists(25);
 
    //Now let's look at the sPlots
-   //The first two histograms are sPlots for the Mes variable signal and 
-   //background. dE and F were chosen as discriminating variables to determine 
-   //N1 and N2, through a maximum Likelihood fit, and thus the sPlots for the 
+   //The first two histograms are sPlots for the Mes variable signal and
+   //background. dE and F were chosen as discriminating variables to determine
+   //N1 and N2, through a maximum Likelihood fit, and thus the sPlots for the
    //control variable Mes, unknown to the fit, was contructed.
-   //One can see that the sPlot for signal reproduces the PDF correctly, 
+   //One can see that the sPlot for signal reproduces the PDF correctly,
    //even when the latter vanishes.
    //
-   //The lower two histograms are sPlots for the F variables signal and 
-   //background. dE and Mes were chosen as discriminating variables to 
-   //determine N1 and N2, through a maximum Likelihood fit, and thus the 
+   //The lower two histograms are sPlots for the F variables signal and
+   //background. dE and Mes were chosen as discriminating variables to
+   //determine N1 and N2, through a maximum Likelihood fit, and thus the
    //sPlots for the control variable F, unknown to the fit, was contructed.
 
-   TCanvas *myc = new TCanvas("myc", 
+   TCanvas *myc = new TCanvas("myc",
    "sPlots of Mes and F signal and background", 800, 600);
    myc->SetFillColor(40);
 
@@ -128,7 +128,7 @@ void TestSPlot()
    sweight10->GetXaxis()->SetLabelSize(0.05);
    sweight10->GetYaxis()->SetLabelSize(0.06);
    sweight10->GetXaxis()->SetLabelOffset(0.02);
- 
+
    pad3->cd();
    pad3->SetGrid();
    TH1D *sweight02 = splot->GetSWeightsHist(-1, 0, 2);

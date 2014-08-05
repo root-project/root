@@ -6,7 +6,7 @@ void approx()
 //**********************************************
 // Macro to test interpolation function Approx
 // Author: Christian Stratowa, Vienna, Austria.
-// Created: 26 Aug 2001                           
+// Created: 26 Aug 2001
 //**********************************************
 
 
@@ -18,7 +18,7 @@ void approx()
 
 // x values, for which y values should be interpolated
    Int_t nout = 14;
-   Double_t xout[] = 
+   Double_t xout[] =
       {1.2,1.7,2.5,3.2,4.4,5.2,5.7,6.5,7.6,8.3,9.7,10.4,11.3,13};
 
 // create Canvas
@@ -32,7 +32,7 @@ void approx()
    grout = gs->Approx(grin,"linear");
    DrawSmooth(1,"Approx: ties = mean","X-axis","Y-axis");
 
-// re-initialize graph with data 
+// re-initialize graph with data
 // (since graph points were set to unique vales)
    grin = new TGraph(n,x,y);
 // interpolate at given points xout
@@ -65,7 +65,7 @@ void approx()
    delete gs;
 }
 
-void DrawSmooth(Int_t pad, const char *title, const char *xt, 
+void DrawSmooth(Int_t pad, const char *title, const char *xt,
    const char *yt)
 {
    vC1->cd(pad);

@@ -13,23 +13,23 @@ void xtruDraw() {
 
 // outline and z segment specifications
 
-  Float_t x[] = 
+  Float_t x[] =
     {   -177.292,   -308.432,   -308.432,   -305.435,   -292.456,    -280.01
     ,    -241.91,    -241.91,   -177.292,   -177.292,    177.292,    177.292
     ,     241.91,     241.91,     280.06,    297.942,    305.435,    308.432
     ,    308.432,    177.292,    177.292,   -177.292 };
-  Float_t y[] = 
+  Float_t y[] =
     {    154.711,    23.5712,     1.1938,     1.1938,     8.6868,     8.6868
     ,    -3.7592,   -90.0938,   -154.711,   -190.602,   -190.602,   -154.711
     ,   -90.0938,    -3.7592,     8.6868,     8.6868,     1.1938,     1.1938
     ,    23.5712,    154.711,    190.602,    190.602 };
-  Float_t z[] = 
+  Float_t z[] =
     {       0.00,      500.0 };
-  Float_t scale[] = 
+  Float_t scale[] =
     {       1.00,       1.00 };
-  Float_t x0[] = 
+  Float_t x0[] =
     {          0,          0 };
-  Float_t y0[] = 
+  Float_t y0[] =
     {          0,          0 };
 
   Int_t i;
@@ -56,7 +56,7 @@ void xtruDraw() {
 
   TVirtualPad *thisPad = gPad;
   if (thisPad) {
-    TView *view = thisPad->GetView(); 
+    TView *view = thisPad->GetView();
     if (!view) return;
     Double_t min[3],max[3],center[3];
     view->GetRange(min,max);

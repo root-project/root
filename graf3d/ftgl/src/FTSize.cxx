@@ -34,7 +34,7 @@ bool FTSize::CharSize( FT_Face* face, unsigned int pointSize, unsigned int xRes,
             ftSize = 0;
         }
     }
-    
+
     return !err;
 }
 
@@ -60,7 +60,7 @@ float FTSize::Descender() const
 float FTSize::Height() const
 {
     if (0 == ftSize) return 0.0f;
-    
+
     if (FT_IS_SCALABLE((*ftFace))) {
         return ( (*ftFace)->bbox.yMax - (*ftFace)->bbox.yMin) * ( (float)ftSize->metrics.y_ppem / (float)(*ftFace)->units_per_EM);
     } else {
@@ -72,7 +72,7 @@ float FTSize::Height() const
 float FTSize::Width() const
 {
     if( 0 == ftSize) return 0.0f;
-    
+
     if( FT_IS_SCALABLE((*ftFace))) {
         return ( (*ftFace)->bbox.xMax - (*ftFace)->bbox.xMin) * ( static_cast<float>(ftSize->metrics.x_ppem) / static_cast<float>((*ftFace)->units_per_EM));
     } else {

@@ -19,7 +19,7 @@
 // node, e.g. the number of Monte carlo events to be generated.         //
 // Packets sizes are generated taking into account the performance of   //
 // worker nodes, based on the time needed to process previous packets,  //
-// with the goal of having all workers ending at the same time.         // 
+// with the goal of having all workers ending at the same time.         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -191,7 +191,7 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
       fFixedNum = kTRUE;
    }
 
-   fCalibFrac = 0.01; 
+   fCalibFrac = 0.01;
    if (TProof::GetParameter(input, "PROOF_PacketizerCalibFrac", fCalibFrac) != 0 || fCalibFrac <= 0)
       fCalibFrac = 0.01;
    PDB(kPacketizer,1)
@@ -205,7 +205,7 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
    }
    PDB(kPacketizer,1)
       Info("TPacketizerUnit", "time limit is %lf", fMaxPacketTime);
-      
+
    // Different default for min packet time
    fMinPacketTime = 1;
    Double_t minPacketTime = 0;
@@ -216,7 +216,7 @@ TPacketizerUnit::TPacketizerUnit(TList *slaves, Long64_t num, TList *input,
    } else {
       fConfigParams->Add(new TParameter<Double_t>("PROOF_MinPacketTime", fMinPacketTime));
    }
-   
+
    fProcessing = 0;
    fAssigned = 0;
    fPacketSeq = 0;
@@ -468,23 +468,23 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
       PDB(kPacketizer,2)
          Info("GetNextPacket", "calibration: total entries %lld, workers %d, frac: %.1f %%, raw num: %lld",
                                fTotalEntries, fWrkStats->GetSize(), fCalibFrac * 100., num);
-      
+
       // Create a reference entry
       slstat->UpdatePerformance(0.);
 
    } else {
-      
+
       if (fNumPerWorker < 0) {
-         
+
          // Schedule tasks for workers based on the currently estimated processing speeds
 
          // Update performances
          // slstat->fStatus was updated before;
          slstat->UpdatePerformance(proctime);
-         
+
          // We need to estimate the total instantaneous rate: for the workers not having yet
          // one we assume the average of those having a measurement
-         // The optimal number for worker j is 
+         // The optimal number for worker j is
          //
          //                      n_j =  r_j / Sum r_i * N_left
          //
@@ -508,13 +508,13 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
                                         tmpWrk->GetName(), tmpWrk->GetOrdinal());
             }
          }
-         
+
          // Check consistency
          if (nrm <= 0) {
             Error("GetNextPacket", "no worker has consistent information: stop processing!");
             return (TDSetElement *)0;
          }
-         
+
          Double_t avgRate = sumRate / nrm;
          // Check if all workers had meaningful rate information
          if (nrm < fWrkStats->GetSize()) {
@@ -524,7 +524,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
          PDB(kPacketizer,2)
             Info("GetNextPacket", "rate: avg: %lf /s/wrk - sum: %lf /s (measurements %d out of %d)",
                                    avgRate, sumRate, nrm, fWrkStats->GetSize());
-         
+
          // Packet size for this worker
          Double_t wrkRate = (slstat->fRate > 0.) ? slstat->fRate : avgRate ;
          num = (Long64_t) ((fTotalEntries - fAssigned) * wrkRate / sumRate);
@@ -546,7 +546,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
                Info("GetNextPacket", "worker-%s (%s): time-limited packet size: %lld (lower limit: %.2f secs)",
                                      sl->GetOrdinal(), sl->GetName(), num, fMinPacketTime);
          }
-            
+
       } else {
          // Fixed number of cycles per worker
          num = fNumPerWorker - slstat->fLastProcessed;
@@ -564,7 +564,7 @@ TDSetElement *TPacketizerUnit::GetNextPacket(TSlave *sl, TMessage *r)
    slstat->fLastProcessed = fProcessing;
    // Set the start time of the current packet
    slstat->fTimeInstant = cTime;
-   
+
    // Update the sequential number
    fPacketSeq++;
    TString sseq = TString::Format("p%lld", fPacketSeq);

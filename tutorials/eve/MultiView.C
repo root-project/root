@@ -129,22 +129,22 @@ struct MultiView
    //---------------------------------------------------------------------------
 
    void ImportGeomRPhi(TEveElement* el)
-   { 
+   {
       fRPhiMgr->ImportElements(el, fRPhiGeomScene);
    }
 
    void ImportGeomRhoZ(TEveElement* el)
-   { 
+   {
       fRhoZMgr->ImportElements(el, fRhoZGeomScene);
    }
 
    void ImportEventRPhi(TEveElement* el)
-   { 
+   {
       fRPhiMgr->ImportElements(el, fRPhiEventScene);
    }
 
    void ImportEventRhoZ(TEveElement* el)
-   { 
+   {
       fRhoZMgr->ImportElements(el, fRhoZEventScene);
    }
 

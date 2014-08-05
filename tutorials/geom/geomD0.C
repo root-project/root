@@ -7,7 +7,7 @@
 // or       .x geomD0.C(1) top level detectors are visible
 //
 // Authors: Bertrand Bellenot, Rene Brun
-   
+
 void RecursiveInvisible(TGeoVolume *vol);
 void RecursiveTransparency(TGeoVolume *vol, Int_t transp);
 
@@ -23,7 +23,7 @@ void geomD0(Int_t allVisible=0) {
       RecursiveInvisible(gGeoManager->GetVolume("D0WL"));
       RecursiveTransparency(gGeoManager->GetVolume("MUON"), 90);
    }
-   
+
    gGeoManager->GetVolume("D0")->Draw("ogl");
 }
 

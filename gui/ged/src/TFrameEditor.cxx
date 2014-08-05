@@ -65,9 +65,9 @@ TFrameEditor::TFrameEditor(const TGWindow *p, Int_t width,
    bgr->ChangeOptions(kFitWidth|kChildFrame|kVerticalFrame);
    f2->AddFrame(bgr, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 4, 1, 0, 0));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-   
+
    TGCompositeFrame *f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGLabel *fSizeLbl = new TGLabel(f3, "Size:");                              
+   TGLabel *fSizeLbl = new TGLabel(f3, "Size:");
    f3->AddFrame(fSizeLbl, new TGLayoutHints(kLHintsCenterY | kLHintsLeft, 6, 1, 0, 0));
    fBsize = new TGLineWidthComboBox(f3, kFR_BSIZE);
    fBsize->Resize(92, 20);
@@ -78,10 +78,10 @@ TFrameEditor::TFrameEditor(const TGWindow *p, Int_t width,
 
 //______________________________________________________________________________
 TFrameEditor::~TFrameEditor()
-{ 
+{
    // Destructor of frame editor.
 
-   // children of TGButonGroup are not deleted 
+   // children of TGButonGroup are not deleted
    delete fBmode;
    delete fBmode0;
    delete fBmode1;
@@ -90,14 +90,14 @@ TFrameEditor::~TFrameEditor()
 
 //______________________________________________________________________________
 void TFrameEditor::ConnectSignals2Slots()
-{ 
+{
    // Connect signals to slots.
 
    fBmode->Connect("Toggled(Bool_t)","TFrameEditor",this,"DoBorderMode()");
    fBmode0->Connect("Toggled(Bool_t)","TFrameEditor",this,"DoBorderMode()");
    fBmode1->Connect("Toggled(Bool_t)","TFrameEditor",this,"DoBorderMode()");
-   fBsize->Connect("Selected(Int_t)", "TFrameEditor", this, "DoBorderSize(Int_t)"); 
-   
+   fBsize->Connect("Selected(Int_t)", "TFrameEditor", this, "DoBorderSize(Int_t)");
+
    fInit = kFALSE;
 }
 
@@ -107,7 +107,7 @@ void TFrameEditor::SetModel(TObject* obj)
    // Pick up the frame attributes.
 
    fFrame = (TFrame *)obj;
-   
+
    Int_t par;
 
    par = fFrame->GetBorderMode();
@@ -127,7 +127,7 @@ void TFrameEditor::SetModel(TObject* obj)
 void TFrameEditor::DoBorderMode()
 {
    // Slot connected to the border mode settings.
-   
+
    Int_t mode = 0;
    if (fBmode->GetState() == kButtonDown) mode = -1;
    else if (fBmode0->GetState() == kButtonDown) mode = 0;
@@ -148,7 +148,7 @@ void TFrameEditor::DoBorderMode()
 void TFrameEditor::DoBorderSize(Int_t size)
 {
    // Slot connected to the border size settings.
-   
+
    fFrame->SetBorderSize(size);
    Update();
 }

@@ -139,7 +139,7 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    parent = gPad;
 
    switch (event) {
-   
+
    case kArrowKeyPress:
    case kButton1Down:
 
@@ -339,7 +339,7 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Up:
-   
+
       if (opaque) {
          gPad->ShowGuidelines(this, event);
       } else {

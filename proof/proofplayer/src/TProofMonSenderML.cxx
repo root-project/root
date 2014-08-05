@@ -35,7 +35,7 @@
 TProofMonSenderML::TProofMonSenderML(const char *serv, const char *tag,
                                      const char *id, const char *subid,
                                      const char *opt)
-                  : TProofMonSender(serv, "ProofMonSenderML")  
+                  : TProofMonSender(serv, "ProofMonSenderML")
 {
    // Main constructor
 
@@ -67,7 +67,7 @@ TProofMonSenderML::TProofMonSenderML(const char *serv, const char *tag,
 TProofMonSenderML::~TProofMonSenderML()
 {
    // Destructor
-   
+
    SafeDelete(fWriter);
 }
 
@@ -198,7 +198,7 @@ Int_t TProofMonSenderML::SendSummary(TList *recs, const char *id)
          recs->Add(qtag);
    }
    if (xrecs != recs) SafeDelete(xrecs);
-   
+
    // Done
    return (rc ? 0 : -1);
 }
@@ -274,7 +274,7 @@ Int_t TProofMonSenderML::SendDataSetInfo(TDSet *dset, TList *missing,
    TDSetElement *e = 0, *ee = 0;
    TDSet *dsete = 0;
    TIter nxe(dset->GetListOfElements());
-   TString dse; 
+   TString dse;
    while ((o = nxe())) {
       if ((e = dynamic_cast<TDSetElement *>(o))) {
          dse = e->GetDataSet();
@@ -304,7 +304,7 @@ Int_t TProofMonSenderML::SendDataSetInfo(TDSet *dset, TList *missing,
                   }
                }
             }
-         }         
+         }
       } else {
          Warning("SendDataSetInfo", "ignoring unknown element type: '%s'", o->ClassName());
       }
@@ -314,7 +314,7 @@ Int_t TProofMonSenderML::SendDataSetInfo(TDSet *dset, TList *missing,
    if (missing) {
       TFileInfo *fi = 0;
       TIter nxm(missing);
-      TString dsfi, fn; 
+      TString dsfi, fn;
       while ((fi = (TFileInfo *) nxm())) {
          dsfi = fi->GetTitle();
          if (!dsfi.IsNull() && dsfi != "TFileInfo") {
@@ -331,7 +331,7 @@ Int_t TProofMonSenderML::SendDataSetInfo(TDSet *dset, TList *missing,
          }
       }
    }
-   
+
    // Prepare objects to be sent
    TList values;
    TNamed *nm_dsn = new TNamed("dsn", "");

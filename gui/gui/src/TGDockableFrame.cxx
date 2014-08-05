@@ -237,7 +237,7 @@ TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
    TGCompositeFrame::AddFrame(fButtons, fLb);
 
    fContainer = new TGCompositeFrame(this, 10, 10);
-   
+
    TGCompositeFrame::AddFrame(fContainer, fLc);
 
    fEnableHide   = kTRUE;

@@ -80,7 +80,7 @@ public:
 class TPerfStats : public TVirtualPerfStats {
 
 friend class TProofMonSender;
-   
+
 private:
    TTree         *fTrace;        //!TTree with trace events
    TTimeStamp     fTzero;        //!start time of this run
@@ -104,16 +104,16 @@ private:
    Bool_t         fDoTraceRate;  //!Trace processing rate in master
    Bool_t         fDoSlaveTrace; //!Full tracing in workers
    Bool_t         fDoQuota;      //!Save stats on SQL server for quota management
-   
-   Bool_t         fMonitorPerPacket; //!Whether to send the full entry per each packet 
+
+   Bool_t         fMonitorPerPacket; //!Whether to send the full entry per each packet
 
    TObjArray      fMonSenders;   //!Monitoring engines
 
    TString        fDataSet;      //!Dataset string
-   Int_t          fDataSetLen;   //!Maximum size of the dataset string fDataSet 
-   Int_t          fDataSetSize;  //!# of files in the dataset 
+   Int_t          fDataSetLen;   //!Maximum size of the dataset string fDataSet
+   Int_t          fDataSetSize;  //!# of files in the dataset
    TDSet         *fDSet;         //!Saved pointer to the TDSet object
-   TList         *fOutput;       //!Saved pointer to the output list 
+   TList         *fOutput;       //!Saved pointer to the output list
 
    static Long_t  fgVirtMemMax;   //! Max virtual memory used by this process
    static Long_t  fgResMemMax;    //! Max resident memory used by this process

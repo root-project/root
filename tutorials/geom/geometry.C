@@ -1,6 +1,6 @@
 //Example of the old geometry package (now obsolete)
 //Author: Rene Brun
-   
+
 void geometry() {
    TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("geometry.C","");

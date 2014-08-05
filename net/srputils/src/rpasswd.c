@@ -20,7 +20,7 @@
 #endif
 #endif
 #define STRFCPY(A,B) \
-	(strncpy((A), (B), sizeof(A) - 1), (A)[sizeof(A) - 1] = '\0')
+   (strncpy((A), (B), sizeof(A) - 1), (A)[sizeof(A) - 1] = '\0')
 extern int obscure P_((const char *, const char *, const struct passwd *));
 extern char *Basename P_((char *str));
 extern struct passwd *get_my_pwent P_((void));
@@ -83,7 +83,7 @@ Please use a combination of upper and lower case letters and numbers.\n"
 #define UNCHANGED "The password for %s is unchanged.\n"
 
 #define PASSWARN \
-	"\nWarning: weak password (enter it again to use it anyway).\n"
+   "\nWarning: weak password (enter it again to use it anyway).\n"
 
 /*
  * usage - print command usage and exit
@@ -183,21 +183,21 @@ static int new_password(const struct passwd *pw)
 /*
  * rpasswd - change a user's password file information
  *
- *	This command controls the password file and commands which are
- * 	used to modify it.
+ * This command controls the password file and commands which are
+ *    used to modify it.
  *
- *	The valid options are
+ * The valid options are
  *
- *	-c	config file name (default $HOME/.srootdpass.conf)
- *	-p	passwd file name (default $HOME/.srootdpass)
+ * -c config file name (default $HOME/.srootdpass.conf)
+ * -p passwd file name (default $HOME/.srootdpass)
  *
- *	Exit status:
- *	0 - success
- *	1 - permission denied
- *	2 - invalid combination of options
- *	3 - unexpected failure, password file unchanged
- *	5 - password file busy, try again later
- *	6 - invalid argument to option
+ * Exit status:
+ * 0 - success
+ * 1 - permission denied
+ * 2 - invalid combination of options
+ * 3 - unexpected failure, password file unchanged
+ * 5 - password file busy, try again later
+ * 6 - invalid argument to option
  */
 
 int main(int argc, char **argv)

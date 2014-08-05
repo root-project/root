@@ -456,7 +456,7 @@ Int_t TFileInfo::Compare(const TObject *obj) const
          }
       }
    } else {
-      if (this == obj) { 
+      if (this == obj) {
          rc = 0;
       } else if (TFileInfo::Class() != obj->IsA()) {
          rc = -1;

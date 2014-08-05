@@ -22,9 +22,9 @@ void ReverseXAxis (TH1 *h)
    h->GetXaxis()->SetLabelOffset(999);
    h->GetXaxis()->SetTickLength(0);
 
-   // Redraw the new axis 
+   // Redraw the new axis
    gPad->Update();
-   TGaxis *newaxis = new TGaxis(gPad->GetUxmax(), 
+   TGaxis *newaxis = new TGaxis(gPad->GetUxmax(),
                                 gPad->GetUymin(),
                                 gPad->GetUxmin(),
                                 gPad->GetUymin(),
@@ -41,9 +41,9 @@ void ReverseYAxis (TH1 *h)
    h->GetYaxis()->SetLabelOffset(999);
    h->GetYaxis()->SetTickLength(0);
 
-   // Redraw the new axis 
+   // Redraw the new axis
    gPad->Update();
-   TGaxis *newaxis = new TGaxis(gPad->GetUxmin(), 
+   TGaxis *newaxis = new TGaxis(gPad->GetUxmin(),
                                 gPad->GetUymax(),
                                 gPad->GetUxmin()-0.001,
                                 gPad->GetUymin(),

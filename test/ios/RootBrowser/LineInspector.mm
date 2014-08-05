@@ -48,13 +48,13 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
          LineStyleCell *newCell = [[LineStyleCell alloc] initWithFrame : cellFrame lineStyle : i + 1];
          [lineStyles addObject : newCell];
       }
-      
+
       lineStylePicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 20.f, 220.f, 70.f)];
       [lineStylePicker addItems : lineStyles];
       [self.view addSubview : lineStylePicker];
-      
+
       lineStylePicker.pickerDelegate = self;
-      
+
       lineColors = [[NSMutableArray alloc] init];
       for (unsigned i = 0; i < nROOTDefaultColors; ++i) {
          ColorCell *newCell = [[ColorCell alloc] initWithFrame : cellFrame];
@@ -65,7 +65,7 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
       lineColorPicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 105, 220.f, 70.f)];
       [lineColorPicker addItems : lineColors];
       [self.view addSubview : lineColorPicker];
-      
+
       lineColorPicker.pickerDelegate = self;
    }
 
@@ -76,7 +76,7 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 - (void)didReceiveMemoryWarning
 {
    // Releases the view if it doesn't have a superview.
-   [super didReceiveMemoryWarning];    
+   [super didReceiveMemoryWarning];
    // Release any cached data, images, etc that aren't in use.
 }
 
@@ -101,7 +101,7 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
    // Return YES for supported orientations
-	return YES;
+   return YES;
 }
 
 //____________________________________________________________________________________________________
@@ -116,7 +116,7 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
    using namespace ROOT::iOS::Browser;
 
    object = dynamic_cast<TAttLine *>(o);
-   
+
    unsigned item = 0;
    const Style_t lineStyle = object->GetLineStyle();
    if (lineStyle >= 1 && lineStyle <= 10)
@@ -132,9 +132,9 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
          break;
       }
    }
-   
+
    [lineColorPicker setSelectedItem : item];
-   
+
    //Line width is expected to be line width in pixels,
    //but it can hold additional information in case of
    //TGraph and have value like -2014.
@@ -180,7 +180,7 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
       else
          NSLog(@"check the code, bad item index from horizontal picker: %u must be < 11", item);
    }
-   
+
    [controller objectWasModifiedUpdateSelection : NO];
 }
 
@@ -211,7 +211,7 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 
    --lineWidth;
    [lineWidthPicker setLineWidth : lineWidth];
-   
+
    [self updateROOTLineWidth];
 
    [controller objectWasModifiedUpdateSelection : NO];
@@ -222,10 +222,10 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 {
    if (lineWidth == maxLineWidth)
       return;
-      
+
    ++lineWidth;
    [lineWidthPicker setLineWidth : lineWidth];
-   
+
    [self updateROOTLineWidth];
 
    [controller objectWasModifiedUpdateSelection : NO];

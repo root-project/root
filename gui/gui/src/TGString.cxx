@@ -40,7 +40,7 @@ ClassImp(TGHotString)
 
 //______________________________________________________________________________
 TGString::TGString(const TGString *s) : TString(s->Data())
-{ 
+{
    // cconstructor
 }
 

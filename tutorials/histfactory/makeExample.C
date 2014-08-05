@@ -1,13 +1,13 @@
 
 void makeDataDriven()
 {
-  
+
   TFile* file = new TFile("dataDriven.root", "RECREATE");
 
   TH1F* FlatHist = new TH1F("FlatHist","FlatHist", 2,0,2);
   FlatHist->SetBinContent( 1, 1.0 );
   FlatHist->SetBinContent( 2, 1.0 );
-    
+
   TH1F* Signal = new TH1F("Signal", "Signal", 2,0,2);
   Signal->SetBinContent(1, 10);
   Signal->SetBinContent(2, 80);
@@ -45,9 +45,9 @@ void makeDataDriven()
 
 void makeShapeSys2DDataset()
 {
-  
+
   TFile* file = new TFile("ShapeSys2D.root", "RECREATE");
-    
+
   TH2F* signal = new TH2F("signal", "signal", 2,0,2, 2,0,2);
   signal->SetBinContent(1, 1, 10);
   signal->SetBinContent(2, 1, 10);
@@ -99,9 +99,9 @@ void makeShapeSys2DDataset()
 
 void makeShapeSysDataset()
 {
-  
+
   TFile* file = new TFile("ShapeSys.root", "RECREATE");
-    
+
   TH1F* signal = new TH1F("signal", "signal", 2,0,2);
   signal->SetBinContent(1, 20);
   signal->SetBinContent(2, 10);
@@ -141,13 +141,13 @@ void makeShapeSysDataset()
 
 void makeStatErrorDataSet()
 {
-  
+
   TFile* file = new TFile("StatError.root", "RECREATE");
 
   TH1F* FlatHist = new TH1F("FlatHist","FlatHist", 2,0,2);
   FlatHist->SetBinContent( 1, 1.0 );
   FlatHist->SetBinContent( 2, 1.0 );
-    
+
   TH1F* signal = new TH1F("signal", "signal", 2,0,2);
   signal->SetBinContent(1, 20);
   signal->SetBinContent(2, 10);

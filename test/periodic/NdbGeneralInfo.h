@@ -9,12 +9,12 @@ class NdbGeneralInfo : public NdbMF
 protected:
 
 public:
-	NdbGeneralInfo()
-		: NdbMF(1, "General Information") {}
+   NdbGeneralInfo()
+      : NdbMF(1, "General Information") {}
 
-	~NdbGeneralInfo() {}
+   ~NdbGeneralInfo() {}
 
-	ClassDef(NdbGeneralInfo,1)
+   ClassDef(NdbGeneralInfo,1)
 
 }; // NdbGeneralInfo
 

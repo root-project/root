@@ -160,7 +160,7 @@ TGAppMainFrame::TGAppMainFrame(const TGWindow *p, int w, int h)
    fListBox->SetMultipleSelections(kFALSE);
    mdiFrame->AddFrame(fListBox,
                       new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
-   mdiFrame->AddFrame(new TGHSlider(mdiFrame, 50, kSlider1, 1, 
+   mdiFrame->AddFrame(new TGHSlider(mdiFrame, 50, kSlider1, 1,
                       kHorizontalFrame, ic),
                       new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
    mdiFrame->Move(400, 300);

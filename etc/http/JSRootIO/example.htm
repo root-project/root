@@ -5,13 +5,13 @@
    <meta http-equiv="X-UA-Compatible" content="IE=Edge; text/html">
 
    <title>JSRootIO drawing inside HTML page</title>
-   
+
    <script src="scripts/jquery.min.js" type="text/javascript"></script>
    <script src="scripts/jquery-ui.min.js" type="text/javascript"></script>
    <script src="scripts/d3.v3.min.js" type="text/javascript"></script>
    <script src="scripts/dtree.js" type="text/javascript"></script>
-	<link rel="stylesheet" type="text/css" href="style/jquery-ui.css"/>
-	<link rel="stylesheet" type="text/css" href="style/JSRootInterface.css"/>
+   <link rel="stylesheet" type="text/css" href="style/jquery-ui.css"/>
+   <link rel="stylesheet" type="text/css" href="style/JSRootInterface.css"/>
    <script src="scripts/jquery.mousewheel.js" type="text/javascript"></script>
    <script src="scripts/rawinflate.js" type="text/javascript"></script>
    <script src="scripts/JSRootCore.js" type="text/javascript"></script>
@@ -19,17 +19,17 @@
    <script src="fonts/helvetiker_regular.typeface.js" type="text/javascript"></script>
    <script src="scripts/JSRootIOEvolution.js" type="text/javascript"></script>
    <script src="scripts/JSRootPainter.js" type="text/javascript"></script>
-   
+
    <script type='text/javascript'>
 
       painter = null;
       cnt = 0;
-   
+
       function updateGUI() {
          // if getting histogram from THttpServer as JSON string, one should parse it like:
          // var histo = JSROOTCore.JSONR_unref(JSON.parse(your_json_string));
 
-         // this is just generation of histogram      
+         // this is just generation of histogram
          var histo = JSROOTCore.CreateTH2(20, 20);
          for (var iy=0;iy<20;iy++)
             for (var ix=0;ix<20;ix++) {
@@ -42,40 +42,40 @@
                }
                histo.setBinContent(bin, val);
             }
-            
+
          cnt++;
-         
+
          if (painter==null) {
             painter = JSROOTPainter.draw('object_draw', histo, "colz");
-         } else {   
-            painter.UpdateObject(histo);   
+         } else {
+            painter.UpdateObject(histo);
             painter.RedrawFrame();
-         } 
+         }
       }
-   
+
       function initGUI() {
 
          // draw for the first time
-         updateGUI(); 
-         
-         // regularly update 
+         updateGUI();
+
+         // regularly update
          setInterval(updateGUI, 3000);
       }
-      
+
       $(document).ready(initGUI);
-      
+
    </script>
 
-   
+
 </head>
 
 <body>
-  <h3>Text Before </h3> 
-   
+  <h3>Text Before </h3>
+
   <div id="object_draw" style="width: 800px; height:600px"></div>
 
-  <h3>Text After</h3> 
-  
+  <h3>Text After</h3>
+
 </body>
 </html>
 

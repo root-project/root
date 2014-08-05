@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -40,7 +40,7 @@ int main() {
 #endif
   if (!in) {
     std::cerr << "Error opening input data file" << std::endl;
-    return 1; 
+    return 1;
   }
 
 
@@ -59,7 +59,7 @@ int main() {
     std::cout<<"nmeas: "<<nmeas<<std::endl;
   }
 
-  // create FCN function  
+  // create FCN function
   GaussFcn fFCN(measurements, positions, var);
 
   std::vector<double> meas = fFCN.Measurements();
@@ -86,9 +86,9 @@ int main() {
   std::vector<double> init_val(3);
   init_val[0] = mean;
   init_val[1] = sqrt(rms2);
-  init_val[2] = area; 
+  init_val[2] = area;
   std::cout<<"initial fval: "<<fFCN(init_val)<<std::endl;
-  
+
   MnUserParameters upar;
   upar.Add("mean", mean, 1.);
   upar.Add("sigma", sqrt(rms2), 1.);
@@ -104,7 +104,7 @@ int main() {
   std::pair<double,double> e0 = Minos(0);
   std::pair<double,double> e1 = Minos(1);
   std::pair<double,double> e2 = Minos(2);
-  
+
   std::cout<<"par0: "<<min.UserState().Value("mean")<<" "<<e0.first<<" "<<e0.second<<std::endl;
   std::cout<<"par1: "<<min.UserState().Value(1)<<" "<<e1.first<<" "<<e1.second<<std::endl;
   std::cout<<"par2: "<<min.UserState().Value(2)<<" "<<e2.first<<" "<<e2.second<<std::endl;

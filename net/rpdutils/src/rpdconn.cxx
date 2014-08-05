@@ -279,7 +279,7 @@ int rpdconn::recv(int &type, std::string &msg)
                // Update counters
                len -= nr;
             } while (nr > 0 && len > 0);
-            
+
          }
          // Done
          return rc;
@@ -418,7 +418,7 @@ int rpdconn::senddesc(int desc)
          struct iovec iov[1];
          memset(iov, 0, sizeof(iov));
          // The recvmsg() call will NOT block unless a non-zero length data
-         // buffer is specified 
+         // buffer is specified
          char c = '\0';
          iov[0].iov_base = &c;
          iov[0].iov_len  = 1;
@@ -476,7 +476,7 @@ int rpdconn::recvdesc(int &desc)
          struct iovec iov[1];
          memset(iov, 0, sizeof(iov));
          // The recvmsg() call will NOT block unless a non-zero length data
-         // buffer is specified 
+         // buffer is specified
          char c;
          iov[0].iov_base = &c;
          iov[0].iov_len  = 1;
@@ -519,21 +519,21 @@ int rpdconn::recvdesc(int &desc)
 rpdtcp::rpdtcp(const char *h, int p) : rpdconn(), host(h), port(p), fd(-1)
 {
    // Constructor
- 
+
    struct hostent *hent = 0;
    if (!(hent = gethostbyname(h))) {
       fprintf(stderr, "rpdtcp::rpdtcp: ERROR: failure resolving host address (errno: %d)\n", errno);
       return;
    }
    memset(&addr, 0, sizeof(addr));
-    
-   // The structure   
+
+   // The structure
    struct sockaddr_in server;
    memset(&server, 0, sizeof(server));
    server.sin_family = hent->h_addrtype;
    memcpy((char *) &server.sin_addr.s_addr, hent->h_addr_list[0], hent->h_length);
    server.sin_port   = htons(port);
-     
+
    // Open socket
    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
       fprintf(stderr, "rpdtcp::rpdtcp: ERROR: failure getting socket descriptor (errno: %d)\n", errno);
@@ -555,7 +555,7 @@ rpdtcp::rpdtcp(const char *h, int p) : rpdconn(), host(h), port(p), fd(-1)
 
    // Set descriptors
    setdescriptors(fd, fd);
-   
+
    // Done
    return;
 }
@@ -608,7 +608,7 @@ rpdtcpsrv::rpdtcpsrv(int p, int backlog) : rpdtcp(p)
 rpdtcp *rpdtcpsrv::accept(int to, int *err)
 {
    // Accept a connection on the server socket.
-   // If to > 0, wait max to secs (granularity 1 sec). 
+   // If to > 0, wait max to secs (granularity 1 sec).
    // Return a rpdtcp object describing the open connection (to be destroyed
    // by the caller).
    // On error return a NULL pointer and the errno in *err, if defined;
@@ -632,7 +632,7 @@ rpdtcp *rpdtcpsrv::accept(int to, int *err)
       // Count waited time
       tw++;
    }
-     
+
    // Create the socket
    rpdtcp *c = 0;
    if (d < 0 && err) {
@@ -701,7 +701,7 @@ rpdunix::rpdunix(const char *p) : rpdtcp(0), sockpath(p)
 
    // Set descriptors
    setdescriptors(fd, fd);
-   
+
    // Done
    return;
 }
@@ -783,7 +783,7 @@ rpdunixsrv::rpdunixsrv(const char *p, int backlog) : rpdunix()
 
    // Save the path
    sockpath = p;
-   
+
    // Done
    return;
 }
@@ -792,7 +792,7 @@ rpdunixsrv::rpdunixsrv(const char *p, int backlog) : rpdunix()
 rpdunix *rpdunixsrv::accept(int to, int *err)
 {
    // Accept a connection on the server socket.
-   // If to > 0, wait max to secs (granularity 1 sec). 
+   // If to > 0, wait max to secs (granularity 1 sec).
    // Return a rpdunix object describing the open connection (to be destroyed
    // by the caller).
    // On error return a NULL pointer and the errno in *err, if defined;
@@ -844,20 +844,20 @@ rpdunix *rpdunixsrv::accept(int to, int *err)
 rpdudp::rpdudp(const char *h, int p) : rpdtcp(h,p)
 {
    // Constructor
- 
+
    struct hostent *hent = 0;
    if (!(hent = gethostbyname(h))) {
       fprintf(stderr, "rpdtcp::rpdtcp: ERROR: failure resolving host address (errno: %d)\n", errno);
       return;
    }
-   
-   // The structure   
+
+   // The structure
    struct sockaddr_in server;
    memset(&server, 0, sizeof(server));
    server.sin_family = hent->h_addrtype;
    memcpy((char *) &server.sin_addr.s_addr, hent->h_addr_list[0], hent->h_length);
    server.sin_port   = htons(port);
-    
+
    // Open socket
    if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
       fprintf(stderr, "rpdudp::rpdudp: ERROR: failure getting socket descriptor (errno: %d)\n", errno);
@@ -879,7 +879,7 @@ rpdudp::rpdudp(const char *h, int p) : rpdtcp(h,p)
 
    // Set descriptors
    setdescriptors(fd, fd);
-   
+
    // Done
    return;
 }
@@ -1052,7 +1052,7 @@ void rpdmsg::r_double(double &d)
    char *p= ((char *)buf.c_str()) + cur;
    while (*p == ' ') p++;
    float f;
-   sscanf(p, "%f", &f); 
+   sscanf(p, "%f", &f);
    d = (double) f;
    if ((p = (char *) strchr(p+1, ' '))) while (*p == ' ') p++;
 
@@ -1082,7 +1082,7 @@ void rpdmsg::r_string(std::string &s)
    // Remove single quotes, if any
    if (s[0] == '\'') s.erase(0,1);
    if (s.length() > 0 && s[s.length() - 1] == '\'') s.erase(s.length() - 1, std::string::npos);
-   
+
    // Update pointer
    if (e) {
       cur = (int) (e - (char *)buf.c_str()) + 1;

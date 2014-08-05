@@ -1,6 +1,6 @@
-// A simple example of entering  CINT commands and having the CINT output in a 
-// ROOT GUI application window. 
-// An editable combo box is used as a CINT prompt, a text view widget displays 
+// A simple example of entering  CINT commands and having the CINT output in a
+// ROOT GUI application window.
+// An editable combo box is used as a CINT prompt, a text view widget displays
 // the command output.
 // Author: Ilka Antcheva   06/07/2007
 
@@ -38,7 +38,7 @@ private:
    TGTextButton        *fExit;
    IDList               fIDs;
    TGComboBox          *fComboCmd;   // CINT command combobox
-   TGTextBuffer        *fCommandBuf; // text buffer in use 
+   TGTextBuffer        *fCommandBuf; // text buffer in use
    TGTextEntry         *fCommand;    // text entry for CINT commands
    TGTextView          *fTextView;   // display CINT output
    TString              fName;       // name of temp created file
@@ -51,12 +51,12 @@ public:
 
    ClassDef(MyApplication, 0)
 };
-                          
-MyApplication::MyApplication(const TGWindow *p, UInt_t w, UInt_t h) 
-   : TGMainFrame(p, w, h)   
+
+MyApplication::MyApplication(const TGWindow *p, UInt_t w, UInt_t h)
+   : TGMainFrame(p, w, h)
 {
    SetCleanup(kDeepCleanup);
-   
+
    Connect("CloseWindow()", "MyApplication", this, "DoExit()");
    DontCallClose();
 
@@ -107,15 +107,15 @@ MyApplication::MyApplication(const TGWindow *p, UInt_t w, UInt_t h)
 MyApplication::~MyApplication()
 {
    // Destructor.
-   
+
    Cleanup();
 }
 
 void MyApplication::DoExit()
 {
    // Close application window.
-   
-   gSystem->Unlink(fName.Data());   
+
+   gSystem->Unlink(fName.Data());
    gApplication->Terminate();
 }
 
@@ -125,7 +125,7 @@ void MyApplication::DoEnteredCommand()
 
    const char *command = fCommand->GetTitle();
    TString prompt;
-   
+
    if (strlen(command)) {
       // form temporary file path
       prompt = ((TRint*)gROOT->GetApplication())->GetPrompt();
@@ -149,7 +149,7 @@ void MyApplication::DoEnteredCommand()
    fTextView->ShowBottom();
 }
 
-void guiWithCINT() 
+void guiWithCINT()
 {
    new MyApplication(gClient->GetRoot(),600,300);
 }

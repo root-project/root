@@ -37,47 +37,47 @@ BEGIN_HTML
     <ul>
 
       <li> Base-classes for representation of visual objects that can
-	be presented in list-tree views, object-editors and rendered
-	via OpenGL (<tt>TEveElement</tt> and sub-classes).
+      be presented in list-tree views, object-editors and rendered
+   via OpenGL (<tt>TEveElement</tt> and sub-classes).
 
       <li> Application manager class <tt>TEveManager</tt> for top-level
-	management of elements, GUI components, geometries and events;
+   management of elements, GUI components, geometries and events;
 
       <li> Classes for presentation of full TGeo geometries
-	(<tt>TEveGeoNode</tt> and <tt>TEveGeoTopNode</tt>) as well as of
-	simplifed geometries via extraction of shape-data
-	(<tt>TEveGeoShape</tt>).
+   (<tt>TEveGeoNode</tt> and <tt>TEveGeoTopNode</tt>) as well as of
+   simplifed geometries via extraction of shape-data
+   (<tt>TEveGeoShape</tt>).
 
-	<p><img alt="CMS geometry." src="gif/eve-cmsgeo.png">
-	
+   <p><img alt="CMS geometry." src="gif/eve-cmsgeo.png">
+
       <li> Classes for presentation of trajectories or tracks
-	(<tt>TEveTrack</tt>, <tt>TEveTrackPropagator</tt>) and hits or
-	clusters (<tt>TEvePointSet</tt>, <tt>TEvePointSetArray</tt>).
+   (<tt>TEveTrack</tt>, <tt>TEveTrackPropagator</tt>) and hits or
+   clusters (<tt>TEvePointSet</tt>, <tt>TEvePointSetArray</tt>).
 
-	<p><img alt="A simulated ALICE pp@14TeV event in 3D." src="gif/eve-alice3d.png">
+   <p><img alt="A simulated ALICE pp@14TeV event in 3D." src="gif/eve-alice3d.png">
 
       <li> Base-classes for presentation of raw-data or digits
-	(<tt>TEveDigitSet</tt>, <tt>TEveQuadSet</tt> and
-	<tt>TEveBoxSet</tt>). A collection of objects can be assigned
-	common signal-to-color mapping (<tt>TEveRGBAPelette</tt>) and
-	surrounding frame (<tt>TEveFrameBox</tt>).
+   (<tt>TEveDigitSet</tt>, <tt>TEveQuadSet</tt> and
+   <tt>TEveBoxSet</tt>). A collection of objects can be assigned
+   common signal-to-color mapping (<tt>TEveRGBAPelette</tt>) and
+   surrounding frame (<tt>TEveFrameBox</tt>).
 
-	<p><img alt="Hexagonal and rectangular digits." src="gif/eve-quadset.png">
+   <p><img alt="Hexagonal and rectangular digits." src="gif/eve-quadset.png">
 
       <li> Base-classes for 2D projections with dynamically controllable
-	fish-eye magnification of the vertex region
-	(<tt>TEveProjectionManager</tt> and
-	<tt>TEveProjection</tt>). Tracks, points and geometries can be
-	projected automatically. R-phi and Rho-z projections are
-	currently supported.
+   fish-eye magnification of the vertex region
+   (<tt>TEveProjectionManager</tt> and
+   <tt>TEveProjection</tt>). Tracks, points and geometries can be
+   projected automatically. R-phi and Rho-z projections are
+   currently supported.
 
-	<p><img alt="A r-phi projection with fish-eye transformation
-	    of a simulated ALICE pp@14TeV event." src="gif/eve-aliceproj.png">
+   <p><img alt="A r-phi projection with fish-eye transformation
+       of a simulated ALICE pp@14TeV event." src="gif/eve-aliceproj.png">
 
       <li> <tt>TriangleSet</tt> class for presentation of generic
-	triangle meshes.
+   triangle meshes.
 
-	<p><img alt="3DS shuttle object." src="gif/eve-3ds.png">
+   <p><img alt="3DS shuttle object." src="gif/eve-3ds.png">
 
     </ul>
 END_HTML

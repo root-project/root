@@ -115,7 +115,7 @@ protected:
    TListOfFunctionTemplates *fFuncTemplate; //List of global function templates
    TListOfDataMembers*fGlobals;             //List of global variables
    TListOfFunctions*fGlobalFunctions;     //List of global functions
-   TSeqCollection  *fClosedObjects;       //List of closed objects from the list of files and sockets, so we can delete them if neededCl. 
+   TSeqCollection  *fClosedObjects;       //List of closed objects from the list of files and sockets, so we can delete them if neededCl.
    TSeqCollection  *fFiles;               //List of files
    TSeqCollection  *fMappedFiles;         //List of memory mapped files
    TSeqCollection  *fSockets;             //List of network sockets
@@ -156,9 +156,9 @@ protected:
    TListOfFunctions*GetGlobalFunctions();
 
 public:
-   
-   typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;   
-   
+
+   typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;
+
                      TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = 0);
    virtual           ~TROOT();
    void              AddClass(TClass *cl);
@@ -266,7 +266,7 @@ public:
    Long_t            ProcessLine(const char *line, Int_t *error = 0);
    Long_t            ProcessLineSync(const char *line, Int_t *error = 0);
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
-   Bool_t            ReadingObject() const { /* Deprecated (will be removed in next release) */ return fReadingObject; }
+   Bool_t            ReadingObject() const;
    void              RefreshBrowsers();
    static void       RegisterModule(const char* modulename,
                                     const char** headers,
@@ -291,7 +291,7 @@ public:
    void              SetEscape(Bool_t flag = kTRUE) { fEscape = flag; }
    void              SetLineIsProcessing() { fLineIsProcessing++; }
    void              SetLineHasBeenProcessed() { if (fLineIsProcessing) fLineIsProcessing--; }
-   void              SetReadingObject(Bool_t flag = kTRUE) { fReadingObject = flag; }
+   void              SetReadingObject(Bool_t flag = kTRUE);
    void              SetMustClean(Bool_t flag = kTRUE) { fMustClean=flag; }
    void              SetSelectedPrimitive(const TObject *obj) { fPrimitive = obj; }
    void              SetSelectedPad(TVirtualPad *pad) { fSelectPad = pad; }
@@ -313,7 +313,7 @@ public:
    static Int_t       ConvertVersionInt2Code(Int_t v);
    static Int_t       RootVersionCode();
    static const char**&GetExtraInterpreterArgs();
-   
+
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes
 };
 

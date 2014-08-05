@@ -54,7 +54,7 @@ void grad2()
    const Double_t locations[] = {0., 1.};
    const Color_t idx1[] = {customRed, kOrange};
    TLinearGradient * const gradFill1 = new TLinearGradient(grad1, 2, locations, idx1);
-   
+
    typedef TColorGradient::Point Point;
    //Starting and ending points for a gradient fill (it's a vertical gradient):
    gradFill1->SetStartEnd(Point(0., 0.), Point(0., 1.));
@@ -64,7 +64,7 @@ void grad2()
 
    //   d) Gradient from ROOT's kBlue to our custom green.
    const Color_t idx2[] = {customGreen, kBlue};
-   
+
    TLinearGradient * const gradFill2 = new TLinearGradient(grad2, 2, locations, idx2);
    //Vertical gradient fill.
    gradFill2->SetStartEnd(Point(0., 0), Point(0., 1.));

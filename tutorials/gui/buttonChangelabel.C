@@ -30,9 +30,9 @@ public:
 
 void MyMainFrame::ChangeStartLabel()
 {
-  // Slot connected to the Clicked() signal. 
+  // Slot connected to the Clicked() signal.
   // It will toggle labels "Start" and "Stop".
-  
+
   fStart->SetState(kButtonDown);
   if (!start) {
      fStart->SetText("&Stop");
@@ -46,9 +46,9 @@ void MyMainFrame::ChangeStartLabel()
 
 void MyMainFrame::ChangePauseLabel()
 {
-  // Slot connected to the Clicked() signal. 
+  // Slot connected to the Clicked() signal.
   // It will toggle labels "Resume" and "Pause".
-  
+
   fPause->SetState(kButtonDown);
   if (!pause) {
      fPause->SetText("&Resume");
@@ -65,28 +65,28 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
 {
    // Create a horizontal frame containing buttons
    fCframe = new TGCompositeFrame(this, 170, 20, kHorizontalFrame|kFixedWidth);
-   
+
    fStart = new TGTextButton(fCframe, "&Start");
    fStart->Connect("Clicked()", "MyMainFrame", this, "ChangeStartLabel()");
-   fCframe->AddFrame(fStart, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 
+   fCframe->AddFrame(fStart, new TGLayoutHints(kLHintsTop | kLHintsExpandX,
                                                3, 2, 2, 2));
    fStart->SetToolTipText("Click to toggle the button label (Start/Stop)");
    start = kFALSE;
-   
+
    fPause = new TGTextButton(fCframe, "&Pause");
    fPause->Connect("Clicked()", "MyMainFrame", this, "ChangePauseLabel()");
    fPause->SetToolTipText("Click to toggle the button label (Pause/Resume)");
    fCframe->AddFrame(fPause, new TGLayoutHints(kLHintsTop | kLHintsExpandX,
                                                3, 2, 2, 2));
    pause = kFALSE;
-   
+
    AddFrame(fCframe, new TGLayoutHints(kLHintsCenterX, 2, 2, 5, 1));
 
    fExit = new TGTextButton(this, "&Exit ","gApplication->Terminate(0)");
    AddFrame(fExit, new TGLayoutHints(kLHintsTop | kLHintsExpandX,5,5,2,2));
-   
+
    SetWindowName("Change Labels");
-   
+
    MapSubwindows();
    Resize(GetDefaultSize());
    MapWindow();

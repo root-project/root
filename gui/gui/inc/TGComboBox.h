@@ -49,7 +49,7 @@ protected:
 private:
    TGComboBoxPopup(const TGComboBoxPopup&);            // Not implemented
    TGComboBoxPopup& operator=(const TGComboBoxPopup&); // Not implemented
-   
+
 public:
    TGComboBoxPopup(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                    UInt_t options = kVerticalFrame,
@@ -117,7 +117,7 @@ public:
                         { fListBox->InsertEntry(s, id, afterID); Resize(); }
    virtual void InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t afterID)
                         { fListBox->InsertEntry(lbe, lhints, afterID); Resize(); }
-   virtual void NewEntry(const char *s = "Entry") 
+   virtual void NewEntry(const char *s = "Entry")
                         { fListBox->NewEntry(s); Resize(); }       //*MENU*
    virtual void RemoveEntry(Int_t id = -1);                        //*MENU*
    virtual void RemoveAll();                                       //*MENU*
@@ -167,9 +167,9 @@ public:
               Pixel_t back = GetWhitePixel());
 
    virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
-      
+
    ClassDef(TGLineStyleComboBox, 0)  // Line style combobox widget
-    
+
 };
 
 
@@ -187,12 +187,12 @@ public:
    TGLineWidthComboBox(const TGWindow *p = 0, Int_t id = -1,
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel(), Bool_t none=kFALSE);
-   
+
    virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGLineWidthComboBox, 0)  // Line width combobox widget
 
-     
+
 };
 
 
@@ -205,13 +205,13 @@ public:
 
 const Int_t kMaxFonts = 20;
 
-class TGFontTypeComboBox : public TGComboBox { 
+class TGFontTypeComboBox : public TGComboBox {
 
 protected:
-   FontStruct_t fFonts[kMaxFonts];      
+   FontStruct_t fFonts[kMaxFonts];
 
 public:
-   TGFontTypeComboBox(const TGWindow *p = 0, Int_t id = -1, 
+   TGFontTypeComboBox(const TGWindow *p = 0, Int_t id = -1,
             UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
             Pixel_t bask = GetWhitePixel());
    virtual ~TGFontTypeComboBox();

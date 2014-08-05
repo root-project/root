@@ -540,7 +540,7 @@ void TSessionServerFrame::OnBtnConnectClicked()
          fViewer->GetActDesc()->fConfigFile);
          desc = 0;
          sessions = fViewer->GetActDesc()->fProofMgr->QuerySessions("");
-         if (sessions) 
+         if (sessions)
             desc = (TProofDesc *)sessions->Last();
          if (desc) {
             fViewer->GetActDesc()->fProof->SetAlias(fViewer->GetActDesc()->fName);
@@ -847,7 +847,7 @@ Bool_t TSessionServerFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 //______________________________________________________________________________
 TSessionFrame::TSessionFrame(TGWindow* p, Int_t w, Int_t h) :
    TGCompositeFrame(p, w, h), fTab(0), fFA(0), fFB(0), fFC(0), fFD(0), fFE(0),
-   fCommandTxt(0), fCommandBuf(0), fInfoTextView(0), fClearCheck(0), 
+   fCommandTxt(0), fCommandBuf(0), fInfoTextView(0), fClearCheck(0),
    fBtnShowLog(0), fBtnNewQuery(0), fBtnGetQueries(0), fLBPackages(0),
    fBtnAdd(0), fBtnRemove(0), fBtnUp(0), fBtnDown(0), fBtnShow(0),
    fBtnShowEnabled(0), fChkMulti(0), fChkEnable(0), fBtnUpload(0),

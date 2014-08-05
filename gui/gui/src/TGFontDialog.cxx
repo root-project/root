@@ -283,7 +283,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    if (entry)
       fTextAligns->Resize(entry->GetWidth() + 20, entry->GetHeight() > 20 ?
                           entry->GetHeight() : 20);
- 
+
    vf->Layout();
    vf->Resize(vf->GetDefaultSize());
 
@@ -581,13 +581,13 @@ void TGFontDialog::UpdateStyleSize(const char *family)
    Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
    Bool_t all_sizes = !x11;
    Bool_t all_styles = !x11;
-   
+
    //
    if (gVirtualX->InheritsFrom("TGCocoa")) {
       all_sizes = kTRUE;
       all_styles = kFALSE;
    }
-   
+
    int szn = 0;
 
    fFontSizes->AddEntry("12", szn++);
@@ -788,7 +788,7 @@ void TGFontDialog::GetFontName()
    }
 
    TString oldFont = fLName;
-   fLName = TString::Format("-*-%s-%s-*-*-%s-*-*-*-*-*-%s-*", name, 
+   fLName = TString::Format("-*-%s-%s-*-*-%s-*-*-*-*-*-%s-*", name,
                             gFontStylesReal[sel].Data(), size, rgstry);
 
    if (oldFont != fLName) {

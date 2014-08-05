@@ -253,7 +253,7 @@ public:
    TMatrixTColumn(const TMatrixTColumn <Element>&mc);
 
    inline Element *GetPtr() const { return const_cast<Element *>(this->fPtr); }
- 
+
    inline const Element &operator()(Int_t i) const {
       R__ASSERT(this->fMatrix->IsValid());
       const Int_t arown = i-this->fMatrix->GetRowLwb();

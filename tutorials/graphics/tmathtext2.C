@@ -7,7 +7,7 @@
    TMathText l;
    l.SetTextSize(0.013);
    l.SetTextFont(132);
-   
+
    // Draw 1st Column
    l.SetTextAlign(12);
    float y, step, x1, x2;
@@ -173,7 +173,7 @@
    y -= step ; l.DrawMathText(x1, y, "\\emptyset"); l.DrawText(x2, y, "\\emptyset");
    y -= step ; l.DrawMathText(x1, y, "\\epsilon"); l.DrawText(x2, y, "\\epsilon");
    y -= step ; l.DrawMathText(x1, y, "\\eqcirc"); l.DrawText(x2, y, "\\eqcirc");
-   
+
    // Draw 3rd Column
    y = 0.99; step = 0.0126; x1 = 0.27; x2 = x1+0.02;
                l.DrawMathText(x1, y, "\\eqcolon"); l.DrawText(x2, y, "\\eqcolon");
@@ -255,7 +255,7 @@
    y -= step ; l.DrawMathText(x1, y, "\\ll"); l.DrawText(x2, y, "\\ll");
    y -= step ; l.DrawMathText(x1, y, "\\llcorner"); l.DrawText(x2, y, "\\llcorner");
    y -= step ; l.DrawMathText(x1, y, "\\lll"); l.DrawText(x2, y, "\\lll");
-   
+
    // Draw 4th Column
    y = 0.99; step = 0.0126; x1 = 0.40; x2 = x1+0.02;
                l.DrawMathText(x1, y, "\\llless"); l.DrawText(x2, y, "\\llless");
@@ -337,7 +337,7 @@
    y -= step ; l.DrawMathText(x1, y, "\\nparallel"); l.DrawText(x2, y, "\\nparallel");
    y -= step ; l.DrawMathText(x1, y, "\\nprec"); l.DrawText(x2, y, "\\nprec");
    y -= step ; l.DrawMathText(x1, y, "\\nrightarrow"); l.DrawText(x2, y, "\\nrightarrow");
-   
+
    // Draw 5th Column
    y = 0.99; step = 0.0126; x1 = 0.53; x2 = x1+0.02;
                l.DrawMathText(x1, y, "\\nsim"); l.DrawText(x2, y, "\\nsim");
@@ -419,7 +419,7 @@
    y -= step ; l.DrawMathText(x1, y, "\\smile"); l.DrawText(x2, y, "\\smile");
    y -= step ; l.DrawMathText(x1, y, "\\spadesuit"); l.DrawText(x2, y, "\\spadesuit");
    y -= step ; l.DrawMathText(x1, y, "\\sphericalangle"); l.DrawText(x2, y, "\\sphericalangle");
-   
+
    // Draw 6th Column
    y = 0.99; step = 0.0126; x1 = 0.66; x2 = x1+0.02;
                l.DrawMathText(x1, y, "\\sqcap"); l.DrawText(x2, y, "\\sqcap");
@@ -501,7 +501,7 @@
    y -= step ; l.DrawMathText(x1, y, "\\upepsilon"); l.DrawText(x2, y, "\\upepsilon");
    y -= step ; l.DrawMathText(x1, y, "\\upeta"); l.DrawText(x2, y, "\\upeta");
    y -= step ; l.DrawMathText(x1, y, "\\upgamma"); l.DrawText(x2, y, "\\upgamma");
-   
+
    // Draw 7th Column
    y = 0.99; step = 0.0126; x1 = 0.79; x2 = x1+0.02;
                l.DrawMathText(x1, y, "\\upharpoonleft"); l.DrawText(x2, y, "\\upharpoonleft");
@@ -584,7 +584,7 @@
    y -= step ; l.DrawMathText(x1, y, "\\bigcup"); l.DrawText(x2, y, "\\bigcup");
    y -= step ; l.DrawMathText(x1, y, "\\bigodot"); l.DrawText(x2, y, "\\bigodot");
 
-   
+
    // Draw 8th Column
    y = 0.99; step = 0.0126; x1 = 0.92; x2 = x1+0.02;
                l.DrawMathText(x1, y, "\\bigoplus"); l.DrawText(x2, y, "\\bigoplus");
@@ -614,7 +614,7 @@
    y -= step ; l.DrawMathText(x1, y, "\\slashint"); l.DrawText(x2, y, "\\slashint");
    y -= step ; l.DrawMathText(x1, y, "\\slashintop"); l.DrawText(x2, y, "\\slashintop");
    y -= step ; l.DrawMathText(x1, y, "\\sum"); l.DrawText(x2, y, "\\sum");
-   
+
    x2 = x2+0.02;
    y -= step ; l.DrawMathText(x1, y, "\\arccos"); l.DrawText(x2, y, "\\arccos");
    y -= step ; l.DrawMathText(x1, y, "\\arcsin"); l.DrawText(x2, y, "\\arcsin");
@@ -647,6 +647,6 @@
    y -= step ; l.DrawMathText(x1, y, "\\sup"); l.DrawText(x2, y, "\\sup");
    y -= step ; l.DrawMathText(x1, y, "\\tan"); l.DrawText(x2, y, "\\tan");
    y -= step ; l.DrawMathText(x1, y, "\\tanh"); l.DrawText(x2, y, "\\tanh");
-   
+
    return c1;
 }

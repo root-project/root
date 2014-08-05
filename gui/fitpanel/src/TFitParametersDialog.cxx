@@ -65,7 +65,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
    fHasChanges     (kFALSE),
    fImmediateDraw  (kTRUE),
    fRetCode        (ret_code)
-   
+
 {
    // Create a dialog for fit function parameters' settings.
 
@@ -190,7 +190,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
                                                  fFunc->GetParName(i)));
       fContMin->AddFrame(fParMin[i], new TGLayoutHints(kLHintsExpandX, 2, 2, 7, 5));
       fParMin[i]->SetNumber(fPmin[i]);
-      fParMin[i]->Connect("ReturnPressed()", "TFitParametersDialog", this, 
+      fParMin[i]->Connect("ReturnPressed()", "TFitParametersDialog", this,
                           "DoParMinLimit()");
       fParMin[i]->Connect("TabPressed()", "TFitParametersDialog", this, "HandleTab()");
       fParMin[i]->Connect("ShiftTabPressed()", "TFitParametersDialog", this, "HandleShiftTab()");
@@ -244,7 +244,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       (fParStp[i]->GetNumberEntry())->Connect("ReturnPressed()", "TFitParametersDialog",
                                               this, "DoParStep()");
       fParStp[i]->Connect("ValueSet(Long_t)", "TFitParametersDialog", this, "DoParStep()");
-      (fParStp[i]->GetNumberEntry())->Connect("TabPressed()", "TFitParametersDialog", this, "HandleTab()"); 
+      (fParStp[i]->GetNumberEntry())->Connect("TabPressed()", "TFitParametersDialog", this, "HandleTab()");
       (fParStp[i]->GetNumberEntry())->Connect("ShiftTabPressed()", "TFitParametersDialog", this, "HandleShiftTab()");
       fTextEntries.Add(fParStp[i]->GetNumberEntry());
    }
@@ -318,9 +318,9 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
          fParSld[i]->UnmapWindow();
       } else {
          if (fPmin[i]*fPmax[i] == 0 && fPmin[i] >= fPmax[i]) { //init
-            if (!fPval[i]) { 
+            if (!fPval[i]) {
                fParMin[i]->SetNumber(-10);
-               fParMax[i]->SetNumber(10); 
+               fParMax[i]->SetNumber(10);
             } else {
                fParMin[i]->SetNumber(-3*TMath::Abs(fPval[i]));
                fParMax[i]->SetNumber(3*TMath::Abs(fPval[i]));
@@ -344,7 +344,7 @@ TFitParametersDialog::~TFitParametersDialog()
 {
    // Destructor.
 
-   DisconnectSlots();   
+   DisconnectSlots();
    fTextEntries.Clear();
    Cleanup();
    delete [] fPval;
@@ -421,20 +421,20 @@ void TFitParametersDialog::DoParBound(Bool_t on)
                             "Parameter Limits", txt, kMBIconExclamation,kMBOk,&ret);
 
                fParBnd[i]->SetState(kButtonUp, kFALSE);
-               return;            
+               return;
             }
-            if ((fParVal[i]->GetNumber() < fParMin[i]->GetNumber()) || 
+            if ((fParVal[i]->GetNumber() < fParMin[i]->GetNumber()) ||
                 (fParVal[i]->GetNumber() > fParMax[i]->GetNumber())) {
                Double_t v = (fParMax[i]->GetNumber()+fParMin[i]->GetNumber())/2.;
                fParVal[i]->SetNumber(v);
                fFunc->SetParameter(i, v);
                fClient->NeedRedraw(fParVal[i]);
             }
-            fParVal[i]->SetLimits(TGNumberFormat::kNELLimitMinMax, 
+            fParVal[i]->SetLimits(TGNumberFormat::kNELLimitMinMax,
                                   fParMin[i]->GetNumber(),
                                   fParMax[i]->GetNumber());
             fClient->NeedRedraw(fParVal[i]);
-            fFunc->SetParLimits(i, fParMin[i]->GetNumber(), 
+            fFunc->SetParLimits(i, fParMin[i]->GetNumber(),
                                    fParMax[i]->GetNumber());
          } else {
             fParVal[i]->SetLimits(TGNumberFormat::kNELNoLimits);
@@ -442,9 +442,9 @@ void TFitParametersDialog::DoParBound(Bool_t on)
             fFunc->GetParLimits(i, fPmin[i], fPmax[i]);
             fPval[i] = fFunc->GetParameter(i);
             if (fPmin[i]*fPmax[i] == 0 && fPmin[i] >= fPmax[i]) { //init
-               if (!fPval[i]) { 
+               if (!fPval[i]) {
                   fParMin[i]->SetNumber(-10);
-                  fParMax[i]->SetNumber(10); 
+                  fParMax[i]->SetNumber(10);
                } else {
                   fParMin[i]->SetNumber(-10*TMath::Abs(fPval[i]));
                   fParMax[i]->SetNumber(10*TMath::Abs(fPval[i]));
@@ -700,7 +700,7 @@ void TFitParametersDialog::DoReset()
    else if ((fApply->GetState() == kButtonDisabled) && fHasChanges)
       fApply->SetState(kButtonUp);
    fHasChanges = kFALSE;
-   *fRetCode = kFPDBounded;   
+   *fRetCode = kFPDBounded;
    fReset->SetState(kButtonDisabled);
 }
 

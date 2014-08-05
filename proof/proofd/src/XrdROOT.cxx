@@ -272,7 +272,7 @@ int XrdROOT::ParseReleaseString(const char *release,
    min = atoi(tkn.c_str());
    if ((from = rel.tokenize(tkn, from, ' ')) == -1) return -1;
    patch = atoi(tkn.c_str());
-   
+
    return 0;
 }
 

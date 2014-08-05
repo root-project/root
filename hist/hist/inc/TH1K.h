@@ -27,12 +27,12 @@
 class TH1K : public TH1, public TArrayF {
 
 private:
-   void Sort(); 
+   void Sort();
 protected:
-   Int_t fReady;	//!
+   Int_t fReady;  //!
    Int_t fNIn;
-   Int_t fKOrd;	//!
-   Int_t fKCur;	//!
+   Int_t fKOrd;   //!
+   Int_t fKCur;   //!
 public:
    TH1K();
    TH1K(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup,Int_t k=0);
@@ -48,13 +48,13 @@ public:
    virtual Double_t  GetBinError(Int_t bin) const;
    virtual Double_t  GetBinError(Int_t bin,Int_t) const {return GetBinError(bin);}
    virtual Double_t  GetBinError(Int_t bin,Int_t,Int_t) const {return GetBinError(bin);}
-    
-    
+
+
    virtual void      Reset(Option_t *option="");
    virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
 
    void    SetKOrd(Int_t k){fKOrd=k;}
-   
+
    ClassDef(TH1K,1)  //1-Dim Nearest Kth neighbour method
 };
 

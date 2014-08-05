@@ -7,7 +7,7 @@ What is VDT?
 **VDT is a library of mathematical functions**, implemented in double and single
 precision. The implementation is **fast** and with the aid of modern compilers
 (e.g. gcc 4.7) vectorisable.
- 
+
 VDT exploits also Pade polynomials. A lot of ideas were inspired by the **cephes
 math library** (by Stephen L. Moshier, moshier@na-net.ornl.gov) as well as
 portions of actual code. The Cephes library can be found here:

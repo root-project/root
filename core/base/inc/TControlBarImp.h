@@ -35,15 +35,15 @@ protected:
    TControlBar *fControlBar; //TControlBar associated with this implementation
    Int_t        fXpos;       //Initial x position
    Int_t        fYpos;       //Initial y position
-   TControlBarButton *fClicked; //Last clicked button 
-   
+   TControlBarButton *fClicked; //Last clicked button
+
 public:
    TControlBarImp(TControlBar *c, const char * = "") : fControlBar(c), fXpos(0), fYpos(0), fClicked(0) { }
    TControlBarImp(TControlBar *c, const char *, Int_t, Int_t) : fControlBar(c), fXpos(0), fYpos(0), fClicked(0) { }
    virtual ~TControlBarImp() { }
 
    virtual TControlBar *GetControlBar() { return fControlBar; }
-   virtual TControlBarButton *GetClicked() { return fClicked; } 
+   virtual TControlBarButton *GetClicked() { return fClicked; }
 
    virtual void Create() { }
    virtual void Hide() { }

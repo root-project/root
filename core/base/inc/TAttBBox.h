@@ -33,12 +33,12 @@ protected:
    TAttBBox(const TAttBBox& tab) : fBBox(0) {
       BBoxInit(); if(tab.fBBox) for(Int_t i=0; i<6; i++) fBBox[i]=tab.fBBox[i];
    }
-   
+
 public:
    TAttBBox(): fBBox(0) { }
    virtual ~TAttBBox() { BBoxClear(); }
 
-   TAttBBox& operator=(const TAttBBox& tab) 
+   TAttBBox& operator=(const TAttBBox& tab)
      {if(this!=&tab) {BBoxInit(); if(tab.fBBox) for(Int_t i=0; i<6; i++) fBBox[i]=tab.fBBox[i];}
      return *this;}
 

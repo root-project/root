@@ -94,14 +94,14 @@ TClassMenuItem::TClassMenuItem(const TClassMenuItem& cmi) :
   fArgs(cmi.fArgs),
   fSubMenu(cmi.fSubMenu),
   fParent(cmi.fParent)
-{ 
+{
    //copy constructor
    // Note: It is the responsability of the caller/creator to add to to the
    // menu list.
 }
 
 //______________________________________________________________________________
-TClassMenuItem& TClassMenuItem::operator=(const TClassMenuItem& cmi) 
+TClassMenuItem& TClassMenuItem::operator=(const TClassMenuItem& cmi)
 {
    //assignement operator
    // Note: It is the responsability of the caller/creator to add to to the
@@ -118,7 +118,7 @@ TClassMenuItem& TClassMenuItem::operator=(const TClassMenuItem& cmi)
       fArgs=cmi.fArgs;
       fSubMenu=cmi.fSubMenu;
       fParent=cmi.fParent;
-   } 
+   }
    return *this;
 }
 

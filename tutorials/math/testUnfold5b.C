@@ -29,7 +29,7 @@ using namespace std;
 */
 
 ///////////////////////////////////////////////////////////////////////
-// 
+//
 // Test program for the classes TUnfoldDensity and TUnfoldBinning
 //
 // A toy test of the TUnfold package
@@ -60,7 +60,7 @@ using namespace std;
 //            -> read  testUnfold5_histograms.root
 //            -> write testUnfold5_result.root
 //                     testUnfold5_result.ps
-// 
+//
 ///////////////////////////////////////////////////////////////////////
 
 void testUnfold5b()

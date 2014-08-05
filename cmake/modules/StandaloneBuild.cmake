@@ -2,9 +2,9 @@
 # --- StandaloneBuild.cmake module----------------------------------------------------------------
 # This module provides the sufficent environemnt to be able to build ROOT as standalone projects
 # It only assumes a valid ROOTSYS that can be provided directly with the command line
-#              cmake -DROOTSYS=<ROOT Installation> <package source> 
+#              cmake -DROOTSYS=<ROOT Installation> <package source>
 ##################################################################################################
- 
+
 #---Find ROOT ------------------------------------------------------------------------------------
 if(DEFINED ROOTSYS AND NOT DEFINED ROOT_DIR)
   set(ROOT_DIR ${ROOTSYS}/cmake)

@@ -22,7 +22,7 @@ bool CreateTutorials(DemoBase **demos, const char *filePath)
       std::auto_ptr<LegoDemo> demo3(new LegoDemo);
       std::auto_ptr<ExclusionGraphDemo> demo4(new ExclusionGraphDemo);
       std::auto_ptr<H2PolyDemo> demo5(new H2PolyDemo(filePath));
-      
+
       demos[0] = demo0.release();
       demos[1] = demo1.release();
       demos[2] = demo2.release();

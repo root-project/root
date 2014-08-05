@@ -38,7 +38,7 @@ using namespace std;
 */
 
 ///////////////////////////////////////////////////////////////////////
-// 
+//
 // Test program for the class TUnfoldSys
 //
 // Simple toy tests of the TUnfold package
@@ -152,7 +152,7 @@ void testUnfold4()
         Double_t yObs=GenerateRecEvent(genShape[iGen]);
         histDetDATA->Fill(yObs);
      }
-     
+
      Int_t nMC=rnd->Poisson(nMC0);
      for(Int_t i=0;i<nMC;i++) {
         Int_t iGen=GenerateGenEvent(nGen,genFrac);
@@ -166,7 +166,7 @@ void testUnfold4()
         } */
      //========================
      // unfolding
-     
+
      // switch off info messages
 #ifndef DEBUG
      gErrorIgnoreLevel = 1001;
@@ -201,13 +201,13 @@ void testUnfold4()
         histPullArea[i]->Fill((histUnfold->GetBinContent(i+1)-genFrac[i]*nData0)/
                             histUnfold->GetBinError(i+1));
      }
-     
+
   }
   TCanvas output;
   output.Divide(3,2);
 
   gStyle->SetOptFit(1111);
-  
+
   for(int i=0;i<nGen;i++) {
      output.cd(i+1);
      histPullNC[i]->Fit("gaus");

@@ -264,7 +264,7 @@ Bool_t TGLContext::MakeCurrent()
       if (!fgGlewInitDone)
          GlewInit();
       fIdentity->DeleteGLResources();
-      
+
    }
 
    return rez;
@@ -287,7 +287,7 @@ void TGLContext::SwapBuffers()
       return;
    }
 
-   gVirtualX->FlushOpenGLBuffer(fPimpl->fGLContext);  
+   gVirtualX->FlushOpenGLBuffer(fPimpl->fGLContext);
 }
 
 //______________________________________________________________________________

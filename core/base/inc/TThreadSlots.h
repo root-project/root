@@ -17,23 +17,23 @@
 #endif
 
 namespace ROOT {
-   
+
    enum EThreadSlotReservation {
-      // Describe the system wide slot pre-allocation in the TThread 
+      // Describe the system wide slot pre-allocation in the TThread
       // 'special data' storage array ; meant to be used as thread local
       // storage.  (See TThread::Tsd)
-      // 
+      //
       // Slot 0 through 19 can be used for user application
       // Slot 20 and above are reserved for the global system
       kMaxUserThreadSlot   = 20,
-      
+
       // Slot reserved by ROOT's packages.
       kPadThreadSlot       = 20,
       kClassThreadSlot     = 21,
       kDirectoryThreadSlot = 22,
       kFileThreadSlot      = 23,
-      
-      kMaxThreadSlot       = 24  // Size of the array of thread local slots in TThread 
+
+      kMaxThreadSlot       = 24  // Size of the array of thread local slots in TThread
    };
 }
 

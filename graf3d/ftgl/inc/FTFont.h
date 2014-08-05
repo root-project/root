@@ -38,7 +38,7 @@ class FTGL_EXPORT FTFont
          * @param fontFilePath  font file path.
          */
         FTFont( const char* fontFilePath);
-        
+
         /**
          * Open and read a font from a buffer in memory. Sets Error flag.
          * The buffer is owned by the client and is NOT copied by FTGL. The
@@ -48,12 +48,12 @@ class FTGL_EXPORT FTFont
          * @param bufferSizeInBytes  the length of the buffer in bytes
          */
         FTFont( const unsigned char *pBufferBytes, size_t bufferSizeInBytes);
-        
+
         /**
          * Destructor
          */
         virtual ~FTFont();
-        
+
         /**
          * Attach auxiliary file to font e.g font metrics.
          *
@@ -99,7 +99,7 @@ class FTGL_EXPORT FTFont
          * @return pointer to the first encoding.
          */
         FT_Encoding* CharMapList();
-        
+
         /**
          * Set the char size for the current face.
          *
@@ -108,14 +108,14 @@ class FTGL_EXPORT FTFont
          * @return          <code>true</code> if size was set correctly
          */
         virtual bool FaceSize( const unsigned int size, const unsigned int res = 72);
-        
+
         /**
          * Get the current face size in points.
          *
          * @return face size
          */
         unsigned int FaceSize() const;
-        
+
         /**
          * Set the extrusion distance for the font. Only implemented by
          * FTGLExtrdFont
@@ -131,28 +131,28 @@ class FTGL_EXPORT FTFont
          *                 <code>false</code> turns OFF display lists.
          */
         void UseDisplayList( bool useList);
-        
+
         /**
          * Get the global ascender height for the face.
          *
          * @return  Ascender height
          */
         float Ascender() const;
-        
+
         /**
          * Gets the global descender height for the face.
          *
          * @return  Descender height
          */
         float Descender() const;
-        
+
         /**
          * Gets the line spacing for the font.
          *
          * @return  Line height
          */
         float LineHeight() const;
-        
+
         /**
          * Get the bounding box for a string.
          *
@@ -195,36 +195,36 @@ class FTGL_EXPORT FTFont
          */
         float Advance( const char* string);
 
-	/**
+        /**
          * Prepare for rendering
          */
         virtual void PreRender() { preRenderCalled = true; }
 
-	/**
+        /**
          * Cleanup after rendering
          */
         virtual void PostRender() { preRenderCalled = false; }
 
         /**
          * Render a string of characters
-         * 
-         * @param string    'C' style string to be output.   
+         *
+         * @param string    'C' style string to be output.
          */
         virtual void Render( const char* string );
 
         /**
          * Render a string of characters
-         * 
-         * @param string    'C' style string to be output.   
-	 * @param w_max     maximum width of text
-	 * @param w_fade    width at which text starts to fade
+         *
+         * @param string    'C' style string to be output.
+         * @param w_max     maximum width of text
+         * @param w_fade    width at which text starts to fade
          */
         virtual void Render( const char* string, float w_max, float w_fade );
 
         /**
          * Render a string of characters
-         * 
-         * @param string    wchar_t string to be output.     
+         *
+         * @param string    wchar_t string to be output.
          */
         virtual void Render( const wchar_t* string );
 
@@ -246,12 +246,12 @@ class FTGL_EXPORT FTFont
          * @return  An FT****Glyph or <code>null</code> on failure.
          */
         virtual FTGlyph* MakeGlyph( unsigned int g) = 0;
-        
+
         /**
          * Current face object
          */
         FTFace face;
-        
+
         /**
          * Current size object
          */
@@ -268,8 +268,8 @@ class FTGL_EXPORT FTFont
          * Current error code. Zero means no error.
          */
         FT_Error err;
-        
-    private:        
+
+    private:
         /**
          * Check that the glyph at <code>chr</code> exist. If not load it.
          *
@@ -289,7 +289,7 @@ class FTGL_EXPORT FTFont
          * An object that holds a list of glyphs
          */
         FTGlyphContainer* glyphList;
-        
+
         /**
          * Current pen or cursor position;
          */

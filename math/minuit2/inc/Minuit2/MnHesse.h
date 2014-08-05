@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -28,12 +28,12 @@ class MnUserTransformation;
 class MinimumState;
 class MnMachinePrecision;
 class MnFcn;
-class FunctionMinimum; 
+class FunctionMinimum;
 
 //_______________________________________________________________________
-/** 
-    API class for calculating the numerical covariance matrix 
-    (== 2x Inverse Hessian == 2x Inverse 2nd derivative); can be used by the 
+/**
+    API class for calculating the numerical covariance matrix
+    (== 2x Inverse Hessian == 2x Inverse 2nd derivative); can be used by the
     user or Minuit itself
  */
 
@@ -70,13 +70,13 @@ public:
    MnUserParameterState operator()(const FCNBase&, const MnUserParameters&, const MnUserCovariance&, unsigned int maxcalls=0) const;
    /// FCN + MnUserParameterState
    MnUserParameterState operator()(const FCNBase&, const MnUserParameterState&, unsigned int maxcalls=0) const;
-   /// 
-   /// API to use MnHesse after minimization when function mimimum is avalilable, otherwise information on the last state will be 
-   /// lost. (It would be needed to re-call the gradient and spend extra useless function calls) 
+   ///
+   /// API to use MnHesse after minimization when function mimimum is avalilable, otherwise information on the last state will be
+   /// lost. (It would be needed to re-call the gradient and spend extra useless function calls)
    /// The Function Minimum is updated (modified) by adding the Hesse results as last state of minimization
    ///
    void operator()(const FCNBase&, FunctionMinimum&, unsigned int maxcalls=0) const;
-   
+
 
    /// internal interface
    ///

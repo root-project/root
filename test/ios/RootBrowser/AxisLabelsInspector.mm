@@ -33,9 +33,9 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-   
+
    [self view];
-   
+
    if (self)
       [self view];
 
@@ -47,7 +47,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 {
     // Releases the view if it doesn't have a superview.
     [super didReceiveMemoryWarning];
-    
+
     // Release any cached data, images, etc that aren't in use.
 }
 
@@ -71,8 +71,8 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 //____________________________________________________________________________________________________
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    // Return YES for supported orientations
-	return YES;
+   // Return YES for supported orientations
+   return YES;
 }
 
 //____________________________________________________________________________________________________
@@ -85,10 +85,10 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 - (void) setROOTObject : (TObject *)o
 {
    object = dynamic_cast<TAxis *>(o);
-   
+
    sizeLabel.text = [NSString stringWithFormat : @"%.2f", object->GetLabelSize()];
    offsetLabel.text = [NSString stringWithFormat : @"%.3f", object->GetLabelOffset()];
-   
+
    noExp.on = object->GetNoExponent();
 }
 
@@ -99,7 +99,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 
    [fontInspector setROOTObjectController : controller];
    [fontInspector setROOTObject : object];
-   
+
    [self.navigationController pushViewController : fontInspector animated : YES];
 }
 
@@ -109,17 +109,17 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
    if (sender == plusSize) {
       if (object->GetLabelSize() + sizeStep > maxSize)
          return;
-      
+
       sizeLabel.text = [NSString stringWithFormat : @"%.2f", object->GetLabelSize() + sizeStep];
       object->SetLabelSize(object->GetLabelSize() + sizeStep);
    } else if (sender == plusOffset) {
       if (object->GetLabelOffset() + offsetStep > maxOffset)
          return;
-      
+
       offsetLabel.text = [NSString stringWithFormat : @"%.3f", object->GetLabelOffset() + offsetStep];
       object->SetLabelOffset(object->GetLabelOffset() + offsetStep);
    }
-   
+
    [controller objectWasModifiedUpdateSelection : NO];
 }
 
@@ -129,17 +129,17 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
    if (sender == minusSize) {
       if (object->GetLabelSize() - sizeStep < minSize)
          return;
-      
+
       sizeLabel.text = [NSString stringWithFormat : @"%.2f", object->GetLabelSize() - sizeStep];
       object->SetLabelSize(object->GetLabelSize() - sizeStep);
    } else if (sender == minusOffset) {
       if (object->GetLabelOffset() - offsetStep < minOffset)
          return;
-      
+
       offsetLabel.text = [NSString stringWithFormat : @"%.3f", object->GetLabelOffset() - offsetStep];
       object->SetLabelOffset(object->GetLabelOffset() - offsetStep);
    }
-   
+
    [controller objectWasModifiedUpdateSelection : NO];
 }
 

@@ -18,16 +18,16 @@
 #endif
 
 
-namespace ROOT { 
-   
-   namespace Fit { 
+namespace ROOT {
 
-      class DataRange; 
+   namespace Fit {
+
+      class DataRange;
       class BinData;
-      class UnBinData; 
+      class UnBinData;
    }
 
-   namespace Math { 
+   namespace Math {
    }
 }
 
@@ -36,38 +36,38 @@ namespace ROOT {
 //_______________________________________________________________________________
 /**
    TUnuranSampler class
-   class implementing  the ROOT::Math::DistSampler interface using the UNU.RAN 
-   package for sampling distributions. 
+   class implementing  the ROOT::Math::DistSampler interface using the UNU.RAN
+   package for sampling distributions.
 
 
 */
 
-class TRandom; 
-class TF1; 
-class TUnuran; 
+class TRandom;
+class TF1;
+class TUnuran;
 
-class TUnuranSampler : public ROOT::Math::DistSampler { 
+class TUnuranSampler : public ROOT::Math::DistSampler {
 
-public: 
+public:
 
-   /// default constructor 
-   TUnuranSampler(); 
+   /// default constructor
+   TUnuranSampler();
 
 
-   /// virtual destructor 
+   /// virtual destructor
    virtual ~TUnuranSampler();
 
 
-   using DistSampler::SetFunction; 
+   using DistSampler::SetFunction;
 
    /// set the parent function distribution to use for random sampling (one dim case)
-   void SetFunction(const ROOT::Math::IGenFunction & func)  { 
-      fFunc1D = &func; 
+   void SetFunction(const ROOT::Math::IGenFunction & func)  {
+      fFunc1D = &func;
       SetFunction<const ROOT::Math::IGenFunction>(func, 1);
    }
 
    /// set the Function using a TF1 pointer
-   void SetFunction(TF1 * pdf); 
+   void SetFunction(TF1 * pdf);
 
 
    /**
@@ -83,39 +83,39 @@ public:
    */
    bool Init(const ROOT::Math::DistSamplerOptions & opt );
 
-   /** 
-       Set the random engine to be used 
+   /**
+       Set the random engine to be used
        Needs to be called before Init to have effect
-   */ 
+   */
    void SetRandom(TRandom * r);
 
-   /** 
-       Set the random seed for the TRandom instances used by the sampler 
+   /**
+       Set the random seed for the TRandom instances used by the sampler
        classes
-       Needs to be called before Init to have effect      
-   */ 
+       Needs to be called before Init to have effect
+   */
    void SetSeed(unsigned int seed);
 
    /**
-      Set the print level 
+      Set the print level
       (if level=-1 use default)
     */
    void SetPrintLevel(int level) {fLevel = level;}
 
-   /* 
+   /*
       set the mode
     */
-   void SetMode(double mode) { 
-      fMode = mode; 
-      fHasMode = true; 
+   void SetMode(double mode) {
+      fMode = mode;
+      fHasMode = true;
    }
 
    /*
-     set the area 
+     set the area
     */
-   void SetArea(double area) { 
+   void SetArea(double area) {
       fArea = area;
-      fHasArea = true; 
+      fHasArea = true;
    }
 
    /**
@@ -125,9 +125,9 @@ public:
 
    /**
       sample one event in one dimension
-      better implementation could be provided by the derived classes   
+      better implementation could be provided by the derived classes
    */
-   double Sample1D();//  { 
+   double Sample1D();//  {
 //       return fUnuran->Sample();
 //    }
 
@@ -136,15 +136,15 @@ public:
       return false if sampling failed
    */
    bool Sample(double * x);
-//  { 
-//       if (!fOneDim) return fUnuran->SampleMulti(x); 
-//       x[0] = Sample1D(); 
-//       return true; 
-//    } 
+//  {
+//       if (!fOneDim) return fUnuran->SampleMulti(x);
+//       x[0] = Sample1D();
+//       return true;
+//    }
 
    /**
       sample one bin given an estimated of the pdf in the bin
-      (this can be function value at the center or its integral in the bin 
+      (this can be function value at the center or its integral in the bin
       divided by the bin width)
       By default do not do random sample, just return the function values
     */
@@ -152,17 +152,17 @@ public:
 
 
 
-protected: 
+protected:
 
    //initialization for 1D distributions
-   bool DoInit1D(const char * algo); 
+   bool DoInit1D(const char * algo);
    //initialization for 1D discrete distributions
-   bool DoInitDiscrete1D(const char * algo); 
+   bool DoInitDiscrete1D(const char * algo);
    //initialization for multi-dim distributions
-   bool DoInitND(const char * algo); 
-   
-   
-private: 
+   bool DoInitND(const char * algo);
+
+
+private:
 
    // private member
    bool                              fOneDim;      // flag to indicate if the function is 1 dimension

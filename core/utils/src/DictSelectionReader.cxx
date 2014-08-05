@@ -156,22 +156,22 @@ void DictSelectionReader::ManageFields(const clang::RecordDecl& recordDecl,
                                fieldsIt->getNameAsString());
          vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::comment,"||");
          csr.AddFieldSelectionRule(vsr);
-      }        
-      
+      }
+
       if (attrCode & ROOT::Meta::Selection::kTransient) {
          VariableSelectionRule vsr(BaseSelectionRule::kYes);
          vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::name,
                                fieldsIt->getNameAsString());
          vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::comment, "!");
          csr.AddFieldSelectionRule(vsr);
-      }                  
+      }
 
       if (attrCode & ROOT::Meta::Selection::kAutoSelected)
          fAutoSelectedClassFieldNames[className].insert(
              fieldsIt->getNameAsString());
       else if (attrCode & ROOT::Meta::Selection::kNoAutoSelected)
          fNoAutoSelectedClassFieldNames[className].insert(
-             fieldsIt->getNameAsString()); 
+             fieldsIt->getNameAsString());
 
    } // end loop on fields
 }
@@ -346,8 +346,8 @@ bool DictSelectionReader::VisitRecordDecl(clang::RecordDecl* recordDecl)
 }
 
 //______________________________________________________________________________
-/** 
- * Transform a name of a class instance into a pattern for selection 
+/**
+ * Transform a name of a class instance into a pattern for selection
  * e.g. myClass<double, int, ...> in the selection namespace
  * will translate into a pattern of the type myClass<*>
  **/
@@ -355,7 +355,7 @@ inline std::string DictSelectionReader::PatternifyName(const std::string& classN
 {
 
    return className.substr(0, className.find_first_of("<")) + "<*>";
-   
+
 }
 
 //______________________________________________________________________________

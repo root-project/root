@@ -31,7 +31,7 @@ public:
       Float_t  fThreshold; // Only display towers with higher energy.
       Color_t  fColor;     // Color used to draw this longitudinal slice.
       Color_t  fTransparency; // Transparency used to draw this longitudinal slice.
-      
+
       SliceInfo_t(): fName(""), fThreshold(0), fColor(kRed), fTransparency(0) {}
 
       virtual ~SliceInfo_t() {}
@@ -256,7 +256,7 @@ protected:
 public:
    TEveCaloDataVec(Int_t nslices);
    virtual ~TEveCaloDataVec();
-  
+
    Int_t AddSlice();
    Int_t AddTower(Float_t etaMin, Float_t etaMax, Float_t phiMin, Float_t phiMax);
    void  FillSlice(Int_t slice, Float_t value);
@@ -264,7 +264,7 @@ public:
 
    Int_t GetNCells() { return fGeomVec.size(); }
    std::vector<Float_t>&  GetSliceVals(Int_t slice) { return fSliceVec[slice]; }
-   std::vector<TEveCaloData::CellGeom_t>& GetCellGeom() { return fGeomVec; } 
+   std::vector<TEveCaloData::CellGeom_t>& GetCellGeom() { return fGeomVec; }
 
    virtual void GetCellList(Float_t etaMin, Float_t etaMax,
                             Float_t phi,    Float_t phiRng,
@@ -276,7 +276,7 @@ public:
    virtual void GetEtaLimits(Double_t &min, Double_t &max) const { min=fEtaMin, max=fEtaMax;}
    virtual void GetPhiLimits(Double_t &min, Double_t &max) const { min=fPhiMin; max=fPhiMax;}
 
-  
+
    virtual void  DataChanged();
    void          SetAxisFromBins(Double_t epsX=0.001, Double_t epsY=0.001);
 
@@ -315,7 +315,7 @@ public:
    THStack* GetStack() { return fHStack; }
 
    TH2F*    GetHist(Int_t slice) const;
-   
+
    Int_t   AddHistogram(TH2F* hist);
 
    ClassDef(TEveCaloDataHist, 0); // Manages calorimeter TH2F event data.

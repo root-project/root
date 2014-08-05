@@ -46,6 +46,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <atomic>
+
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
@@ -78,7 +80,7 @@ const ULong64_t kPidOffsetMask = 0xffffffffffffUL;
 const UChar_t kPidOffsetShift = 48;
 
 static TString gTDirectoryString = "TDirectory";
-UInt_t keyAbsNumber = 0;
+std::atomic<UInt_t> keyAbsNumber{0};
 
 ClassImp(TKey)
 
@@ -110,22 +112,22 @@ TKey::TKey(TDirectory* motherDir) : TNamed(), fDatime((UInt_t)0)
 TKey::TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset) : TNamed(), fDatime((UInt_t)0)
 {
    // Copy a TKey from its original directory to the new 'motherDir'
-   
+
    fMotherDir  = motherDir;
-   
+
    fPidOffset  = orig.fPidOffset + pidOffset;
    fNbytes     = orig.fNbytes;
    fObjlen     = orig.fObjlen;
    fClassName  = orig.fClassName;
    fName       = orig.fName;
    fTitle      = orig.fTitle;
-   
+
    fCycle      = fMotherDir->AppendKey(this);
    fSeekPdir   = 0;
    fSeekKey    = 0;
    fLeft       = 0;
 
-   fVersion    = TKey::Class_Version();   
+   fVersion    = TKey::Class_Version();
    Long64_t filepos = GetFile()->GetEND();
    if (filepos > TFile::kStartBigFile || fPidOffset) fVersion += 1000;
 
@@ -142,12 +144,12 @@ TKey::TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset) : TNamed
       alloc += bufferIncOffset;
       fNbytes += bufferIncOffset;
    }
-      
+
    fBufferRef  = new TBufferFile(TBuffer::kWrite, alloc);
-   fBuffer     = fBufferRef->Buffer(); 
-   
+   fBuffer     = fBufferRef->Buffer();
+
    // Steal the data from the old key.
-   
+
    TFile* f = orig.GetFile();
    if (f) {
       Int_t nsize = orig.fNbytes;
@@ -189,7 +191,7 @@ TKey::TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes, 
 {
    // Create a TKey object with the specified name, title for the given class.
    //
-   //  WARNING: in name avoid special characters like '^','$','.' that are used 
+   //  WARNING: in name avoid special characters like '^','$','.' that are used
    //  by the regular expression parser (see TRegexp).
 
    Build(motherDir, cl->GetName(), -1);
@@ -205,7 +207,7 @@ TKey::TKey(const TString &name, const TString &title, const TClass *cl, Int_t nb
 {
    // Create a TKey object with the specified name, title for the given class.
    //
-   //  WARNING: in name avoid special characters like '^','$','.' that are used 
+   //  WARNING: in name avoid special characters like '^','$','.' that are used
    //  by the regular expression parser (see TRegexp).
 
    Build(motherDir, cl->GetName(), -1);
@@ -221,7 +223,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
 {
    // Create a TKey object for a TObject* and fill output buffer
    //
-   //  WARNING: in name avoid special characters like '^','$','.' that are used 
+   //  WARNING: in name avoid special characters like '^','$','.' that are used
    //  by the regular expression parser (see TRegexp).
 
    R__ASSERT(obj);
@@ -294,7 +296,7 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
    // Create a TKey object for any object obj of class cl d and fill
    // output buffer.
    //
-   //  WARNING: in name avoid special characters like '^','$','.' that are used 
+   //  WARNING: in name avoid special characters like '^','$','.' that are used
    //  by the regular expression parser (see TRegexp).
 
    R__ASSERT(obj && cl);
@@ -432,7 +434,7 @@ void TKey::Browse(TBrowser *b)
          delete tobj;
          obj = 0;
       }
-   } 
+   }
 
    if (!obj)
       obj = ReadObj();
@@ -698,9 +700,9 @@ TObject *TKey::ReadObj()
    //  Streamer function to rebuilt itself.
    //
    //  Use TKey::ReadObjectAny to read any object non-derived from TObject
-   //  
+   //
    //  Note:
-   //  A C style cast can only be used in the case where the final class 
+   //  A C style cast can only be used in the case where the final class
    //  of this object derives from TObject as a first inheritance, otherwise
    //  one must use a dynamic_cast.
    //
@@ -823,7 +825,7 @@ TObject *TKey::ReadObj()
    }
 
    // Append the object to the directory if requested:
-   { 
+   {
       ROOT::DirAutoAdd_t addfunc = cl->GetDirectoryAutoAdd();
       if (addfunc) {
          addfunc(pobj, fMotherDir);
@@ -856,7 +858,7 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
    //  Although being public it is not supposed to be used outside ROOT.
    //  If used, you must make sure that the bufferRead is large enough to
    //  accomodate the object being read.
-   
+
 
    TClass *cl = TClass::GetClass(fClassName.Data());
    if (!cl) {
@@ -951,7 +953,7 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
    }
 
    // Append the object to the directory if requested:
-   { 
+   {
       ROOT::DirAutoAdd_t addfunc = cl->GetDirectoryAutoAdd();
       if (addfunc) {
          addfunc(pobj, fMotherDir);
@@ -1027,10 +1029,10 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
        // baseOffset will be -1 if cl does not inherit from expectedClass
       baseOffset = cl->GetBaseClassOffset(expectedClass);
       if (baseOffset == -1) {
-         // The 2 classes are unrelated, maybe there is a converter between the 2.  
+         // The 2 classes are unrelated, maybe there is a converter between the 2.
 
-         if (!expectedClass->GetSchemaRules() || 
-             !expectedClass->GetSchemaRules()->HasRuleWithSourceClass(cl->GetName())) 
+         if (!expectedClass->GetSchemaRules() ||
+             !expectedClass->GetSchemaRules()->HasRuleWithSourceClass(cl->GetName()))
          {
             // There is no converter
             return 0;
@@ -1170,7 +1172,7 @@ Int_t TKey::Read(TObject *obj)
    }
 
    // Append the object to the directory if requested:
-   { 
+   {
       ROOT::DirAutoAdd_t addfunc = obj->IsA()->GetDirectoryAutoAdd();
       if (addfunc) {
          addfunc(obj, fMotherDir);
@@ -1280,7 +1282,7 @@ void TKey::SetParent(const TObject *parent)
 void TKey::Reset()
 {
    // Reset the key as it had not been 'filled' yet.
-   
+
    fPidOffset  = 0;
    fNbytes     = 0;
    fBuffer     = 0;
@@ -1292,8 +1294,8 @@ void TKey::Reset()
    fDatime     = (UInt_t)0;
 
    // fBufferRef and fKeylen intentionally not reset/changed
-   
-   keyAbsNumber++; SetUniqueID(keyAbsNumber);   
+
+   keyAbsNumber++; SetUniqueID(keyAbsNumber);
 }
 
 //______________________________________________________________________________
@@ -1460,13 +1462,13 @@ Int_t TKey::WriteFileKeepBuffer(TFile *f)
    // Write the encoded object supported by this key.
    // The function returns the number of bytes committed to the file.
    // If a write error occurs, the number of bytes returned is -1.
-   
+
    if (!f) f = GetFile();
    if (!f) return -1;
-   
+
    Int_t nsize  = fNbytes;
    char *buffer = fBuffer;
-   
+
    if (fLeft > 0) nsize += sizeof(Int_t);
    f->Seek(fSeekKey);
 #if 0
@@ -1485,7 +1487,7 @@ Int_t TKey::WriteFileKeepBuffer(TFile *f)
       std::cout <<"   TKey Writing "<<nsize<< " bytes at address "<<fSeekKey
       <<" for ID= " <<GetName()<<" Title= "<<GetTitle()<<std::endl;
    }
-   
+
    return result==kTRUE ? -1 : nsize;
 }
 

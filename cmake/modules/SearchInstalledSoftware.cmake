@@ -34,10 +34,10 @@ if(NOT builtin_freetype)
     set(FREETYPE_INCLUDE_DIR ${FREETYPE_INCLUDE_DIR_freetype2})
   else()
     message(STATUS "FreeType not found. Switching on builtin_freetype option")
-    set(builtin_freetype ON CACHE BOOL "" FORCE) 	
+    set(builtin_freetype ON CACHE BOOL "" FORCE)
   endif()
 endif()
-if(builtin_freetype)  
+if(builtin_freetype)
   set(FREETYPE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/graf2d/freetype/freetype-2.3.12/include)
   set(FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR})
   if(WIN32)
@@ -54,15 +54,15 @@ if(NOT builtin_pcre)
   if(PCRE_FOUND)
   else()
     message(STATUS "PCRE not found. Switching on builtin_pcre option")
-    set(builtin_pcre ON CACHE BOOL "" FORCE) 	
-  endif() 
+    set(builtin_pcre ON CACHE BOOL "" FORCE)
+  endif()
 endif()
 if(builtin_pcre)
   set(PCRE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/core/pcre/pcre-7.8)
   if(WIN32)
-    set(PCRE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpcre.lib) 
+    set(PCRE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpcre.lib)
   else()
-    set(PCRE_LIBRARIES "-L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} -lpcre") 
+    set(PCRE_LIBRARIES "-L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} -lpcre")
   endif()
 endif()
 
@@ -73,26 +73,26 @@ if(NOT builtin_lzma)
   if(LZMA_FOUND)
   else()
     message(STATUS "LZMA not found. Switching on builtin_lzma option")
-    set(builtin_lzma ON CACHE BOOL "" FORCE) 	
-  endif() 
+    set(builtin_lzma ON CACHE BOOL "" FORCE)
+  endif()
 endif()
 if(builtin_lzma)
   set(lzma_version 5.0.3)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
     ExternalProject_Add(
-	  LZMA
-	  URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz 
-	  URL_MD5  65693dc257802b6778c28ed53ecca678
-	  PREFIX LZMA
-	  INSTALL_DIR ${CMAKE_BINARY_DIR}
+     LZMA
+     URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
+     URL_MD5  65693dc257802b6778c28ed53ecca678
+     PREFIX LZMA
+     INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND "" BUILD_COMMAND ""
-	  INSTALL_COMMAND cmake -E copy lib/liblzma.dll <INSTALL_DIR>/bin
-	  BUILD_IN_SOURCE 1)
+     INSTALL_COMMAND cmake -E copy lib/liblzma.dll <INSTALL_DIR>/bin
+     BUILD_IN_SOURCE 1)
     install(FILES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
-  else() 
+  else()
     if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
       set(LZMA_CFLAGS "-Wno-format-nonliteral")
     elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
@@ -100,7 +100,7 @@ if(builtin_lzma)
     endif()
     ExternalProject_Add(
       LZMA
-      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz 
+      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
       URL_MD5 858405e79590e9b05634c399497f4ba7
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --with-pic --disable-shared CFLAGS=${LZMA_CFLAGS}
@@ -163,7 +163,7 @@ if(NOT builtin_afterimage)
   find_package(AfterImage)
   if(NOT AFTERIMAGE_FOUND)
     message(STATUS "AfterImage not found. Switching on builtin_afterimage option")
-    set(builtin_afterimage ON CACHE BOOL "" FORCE) 	
+    set(builtin_afterimage ON CACHE BOOL "" FORCE)
   endif()
 endif()
 
@@ -195,13 +195,13 @@ if(mathmore OR builtin_gsl)
     find_package(GSL 1.10)
     if(NOT GSL_FOUND)
       message(STATUS "GSL not found. Set variable GSL_DIR to point to your GSL installation")
-      message(STATUS "               Alternatively, you can also enable the option 'builtin_gsl' to build the GSL libraries internally'") 
+      message(STATUS "               Alternatively, you can also enable the option 'builtin_gsl' to build the GSL libraries internally'")
       message(STATUS "               For the time being switching OFF 'mathmore' option")
       set(mathmore OFF CACHE BOOL "" FORCE)
     endif()
   else()
     set(gsl_version 1.15)
-    message(STATUS "Downloading and building GSL version ${gsl_version}") 
+    message(STATUS "Downloading and building GSL version ${gsl_version}")
     ExternalProject_Add(
       GSL
       URL http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
@@ -512,10 +512,10 @@ if(fitsio OR builtin_cfitsio)
   if(builtin_cfitsio)
     set(cfitsio_version 3.280)
     string(REPLACE "." "" cfitsio_version_no_dots ${cfitsio_version})
-    message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}") 
+    message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}")
     ExternalProject_Add(
       CFITSIO
-      URL ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz 
+      URL ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
       BUILD_IN_SOURCE 1
@@ -524,10 +524,10 @@ if(fitsio OR builtin_cfitsio)
     set(CFITSIO_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(fitsio ON CACHE BOOL "" FORCE)
   else()
-    message(STATUS "Looking for CFITSIO")  
+    message(STATUS "Looking for CFITSIO")
     find_package(CFITSIO)
     if(NOT CFITSIO_FOUND)
-      message(STATUS "CFITSIO not found. You can enable the option 'builtin_cfitsio' to build the library internally'") 
+      message(STATUS "CFITSIO not found. You can enable the option 'builtin_cfitsio' to build the library internally'")
       message(STATUS "                   For the time being switching off 'fitsio' option")
       set(fitsio OFF CACHE BOOL "" FORCE)
     endif()
@@ -582,7 +582,7 @@ endif()
 if(builtin_xrootd)
   set(xrootd_version 3.3.6)
   set(xrootd_versionnum 300030006)
-  message(STATUS "Downloading and building XROOTD version ${xrootd_version}") 
+  message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")                        # Otherwise it produces tones of warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags} -Wno-deprecated-declarations -Wno-duplicate-decl-specifier")
   ExternalProject_Add(
@@ -772,11 +772,11 @@ if(davix OR builtin_davix)
       PREFIX DAVIX
       #URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
       GIT_REPOSITORY http://git.cern.ch/pub/davix  GIT_TAG 0_3_0_branch
-      UPDATE_COMMAND git submodule update --recursive 
+      UPDATE_COMMAND git submodule update --recursive
       INSTALL_DIR ${CMAKE_BINARY_DIR}/DAVIX-install
       #PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} 
+                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                  -DBOOST_EXTERNAL=OFF
                  -DSTATIC_LIBRARY=ON
                  -DSHARED_LIBRARY=OFF
