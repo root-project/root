@@ -16,4 +16,4 @@ set(DAVIX_LIBRARIES ${DAVIX_LIBRARY})
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(DAVIX DEFAULT_MSG DAVIX_INCLUDE_DIR DAVIX_LIBRARY)
 
-mark_as_advanced(GFAL_FOUND GFAL_INCLUDE_DIR GFAL_LIBRARY)
+mark_as_advanced(DAVIX_FOUND DAVIX_INCLUDE_DIR DAVIX_LIBRARY)
