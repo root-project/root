@@ -722,11 +722,8 @@ if(davix OR builtin_davix)
     ExternalProject_Add(
       DAVIX
       PREFIX DAVIX
-      #URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
-      GIT_REPOSITORY http://git.cern.ch/pub/davix  GIT_TAG 0_3_0_branch
-      UPDATE_COMMAND git submodule update --recursive 
+      URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}/DAVIX-install
-      #PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} 
                  -DBOOST_EXTERNAL=OFF
@@ -740,7 +737,6 @@ if(davix OR builtin_davix)
                  -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                  -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
     )
-    #--TODO we need to install the dynamic library or build the static (which currently fails)
     if(${SYSCTL_OUTPUT} MATCHES x86_64)
       set(_LIBDIR "lib64")
     else()
