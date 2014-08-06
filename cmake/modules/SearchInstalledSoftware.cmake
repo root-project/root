@@ -628,8 +628,6 @@ endif()
 
 if(cling)
   if(builtin_llvm)
-    file(READ ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/configure _filestr)
-    string(REGEX REPLACE ".*PACKAGE_VERSION='([0-9]+[.][0-9]+).*" "\\1" LLVM_VERSION ${_filestr})
     set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/include
                           ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include
                           ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/clang/include

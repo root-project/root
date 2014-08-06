@@ -29,6 +29,11 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
 #---Add the sub-directory exclusing all the targets from all-----------------------------------------
 add_subdirectory(llvm/src EXCLUDE_FROM_ALL)
 
+#---Set into parent scope LLVM_VERSION --------------------------------------------------------------
+file(READ ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/configure _filestr)
+string(REGEX REPLACE ".*PACKAGE_VERSION='([0-9]+[.][0-9]+).*" "\\1" _llvm_version ${_filestr})
+set(LLVM_VERSION ${_llvm_version} PARENT_SCOPE)
+
 #---Added some missing dependencies------------------------------------------------------------------
 add_dependencies(clingUtils clangCodeGen)
 add_dependencies(clingInterpreter clangBasic clangAST ClangDriverOptions)
