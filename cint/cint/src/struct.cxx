@@ -1686,6 +1686,12 @@ try_again:
                         break;
                      }
                   }
+                  if (G__struct.name[i][0] == '@') {
+                     // We were returned the index/tag of a replaced tag entry, for example.
+                     // "@@ ex autload entry remove by typedef declaration @@TVectorD"
+                     // let's try again and/or fail elegantly
+                     break;
+                  }
                }
                return i;
             }
