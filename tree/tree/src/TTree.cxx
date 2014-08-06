@@ -2278,6 +2278,10 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
                --id;
                continue;
             }
+            if (clbase->GetListOfRealData()->GetSize() == 0) {
+               // Do not create a branch for empty bases.
+               continue;
+            }
          }
          if (dot) {
             if (dotlast) {
