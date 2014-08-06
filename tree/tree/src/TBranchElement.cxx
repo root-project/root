@@ -5513,8 +5513,7 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
          // -- This is a base class of cl.
          TClass* clOfBase = TClass::GetClass(elem->GetName());
          if ((clOfBase->Property() & kIsAbstract) && cl->InheritsFrom(TCollection::Class())) {
-            // -- Do nothing if we are abstract.
-            // FIXME: We should not test for TCollection here.
+            // -- Do nothing if we are one of the abstract collection (we know they have no data).
             return -1;
          }
          if ((btype == 31) || (btype == 41)) {
