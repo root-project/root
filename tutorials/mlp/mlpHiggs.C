@@ -95,13 +95,12 @@ void mlpHiggs(Int_t ntrain=100) {
    TH1F *sig = new TH1F("sigh", "NN output", 50, -.5, 1.5);
    bg->SetDirectory(0);
    sig->SetDirectory(0);
-   Double_t params[4];
+   Double_t params[3];
    for (i = 0; i < background->GetEntries(); i++) {
       background->GetEntry(i);
       params[0] = msumf;
       params[1] = ptsumf;
       params[2] = acolin;
-      params[3] = acopl;
       bg->Fill(mlp->Evaluate(0, params));
    }
    for (i = 0; i < signal->GetEntries(); i++) {
@@ -109,7 +108,6 @@ void mlpHiggs(Int_t ntrain=100) {
       params[0] = msumf;
       params[1] = ptsumf;
       params[2] = acolin;
-      params[3] = acopl;
       sig->Fill(mlp->Evaluate(0,params));
    }
    bg->SetLineColor(kBlue);
