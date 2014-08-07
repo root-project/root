@@ -15,6 +15,9 @@ if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
     set(ROOT_environ PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
 endif()
 
+#---Copy the CTestCustom.cmake file into the build directory--------
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+
 #---Provide a rootlogon.C file in the current build directory that
 #   will affect the way we run all tutorials.
 #   This overwrites the existing rootlogon.C and rootalias.C in the
