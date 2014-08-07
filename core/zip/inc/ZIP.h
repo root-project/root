@@ -101,7 +101,7 @@ ulg  R__Deflate OF((bits_internal_state *state));
 
         /* in trees.c */
 void R__ct_init     OF((ush *attr, int *method));
-int  R__ct_tally    OF((int dist, int lc));
+int  R__ct_tally    OF((bits_internal_state *state, int dist, int lc));
 ulg  R__flush_block OF((bits_internal_state *state, char far *buf, ulg stored_len, int eof));
 
         /* in bits.c */
