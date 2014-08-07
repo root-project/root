@@ -469,13 +469,13 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
     ush flags    = 0;
     ulg crc      = 0;
     int method   = Z_DEFLATED;
+    bits_internal_state state;
 
     if (tgtsize <= 6L) R__error("target buffer too small");
 #if 0
     crc = updcrc((char *)NULL, 0);
     crc = updcrc(src, (extent) srcsize);
 #endif
-    bits_internal_state state;
 #ifdef DYN_ALLOC
     state.R__window = 0;
     state.R__prev = 0;
@@ -583,6 +583,7 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   // 0 for selecting with R__ZipMode in a backward compatible way
   // 3 for selecting in other cases
   if (compressionAlgorithm == 3 || compressionAlgorithm == 0) {
+    bits_internal_state state;
     ush att      = (ush)UNKNOWN;
     ush flags    = 0;
     if (cxlevel > 9) cxlevel = 9;
@@ -595,7 +596,6 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     if (*srcsize > 0xffffff) R__error("source buffer too big");
     if (error_flag != 0) return;
 
-    bits_internal_state state;
 #ifdef DYN_ALLOC
     state.R__window = 0;
     state.R__prev = 0;
