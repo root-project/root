@@ -123,14 +123,15 @@ $(PYROOTO): CXXFLAGS += $(PYTHONINCDIR:%=-I%)
 $(PYTHON64O): CFLAGS += $(PYTHONINCDIR:%=-I%)
 ifeq ($(GCC_MAJOR),4)
 $(PYROOTO): CXXFLAGS += -fno-strict-aliasing
-endif
-ifneq ($(CLANG_MAJOR)$(GCC_MAJOR),)
-# Building with clang or GCC
+ifeq ($(subst $(GCC_MINOR),,0 1),0 1)
+# GCC >= 4.2
 $(PYROOTO) $(PYTHON64O) $(PYROOTDO): CXXFLAGS += -Wno-error=format
+endif
 endif
 
 ifneq ($(CLANG_MAJOR),)
 # Building with clang 
 $(PYROOTO) $(PYTHON64O) $(PYROOTDO): CXXFLAGS += -Wno-ignored-attributes
+$(PYROOTO) $(PYTHON64O) $(PYROOTDO): CXXFLAGS += -Wno-error=format
 endif
 
