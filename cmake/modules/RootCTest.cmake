@@ -39,7 +39,10 @@ if(WIN32)
   endforeach()
 endif()
 
-#--Add all subdirectories with tests-----------------------------------------------------------
+#---Copy CTestCustom.cmake to binary directory--------------------------------------------------
+configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
+
+#---Add all subdirectories with tests-----------------------------------------------------------
 
 get_property(test_dirs GLOBAL PROPERTY ROOT_TEST_SUBDIRS)
 foreach(d ${test_dirs})
