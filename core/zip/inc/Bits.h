@@ -313,7 +313,7 @@ void R__SetZipMode(int mode)
 /* ===========================================================================
  * Initialize the bit string routines.
  */
-void R__bi_init (bits_internal_state *state)
+int R__bi_init (bits_internal_state *state)
     /* FILE *zipfile;   output zip file, NULL for in-memory compression */
 {
     state->bi_buf = 0;
@@ -321,6 +321,7 @@ void R__bi_init (bits_internal_state *state)
 #ifdef DEBUG
     state->R__bits_sent = 0L;
 #endif
+   return 0;
 }
 
 /* ===========================================================================
@@ -472,6 +473,7 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
     ulg crc      = 0;
     int method   = Z_DEFLATED;
     bits_internal_state state;
+    int err;
 
     if (tgtsize <= 6L) R__error("target buffer too small");
 #if 0
@@ -497,7 +499,7 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
     R__bi_init(&state);
     R__ct_init(&att, &method);
     R__lm_init(&state,(level != 0 ? level : 1), &flags);
-    R__Deflate(&state);
+    R__Deflate(&state,&err);
     state.R__window_size = 0L; /* was updated by lm_init() */
 
     /* For portability, force little-endian order on all machines: */
@@ -552,7 +554,7 @@ local int R__mem_read(bits_internal_state *state,char *b, unsigned bsize)
  *                                                                     *
  ***********************************************************************/
 #define HDRSIZE 9
-static  __thread int error_flag;
+/* static  __thread int error_flag; */
 
 void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm)
      /* int cxlevel;                      compression level */
@@ -592,11 +594,15 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     level        = cxlevel;
 
     *irep        = 0;
-    error_flag   = 0;
-    if (*tgtsize <= 0) R__error("target buffer too small");
-    if (error_flag != 0) return;
-    if (*srcsize > 0xffffff) R__error("source buffer too big");
-    if (error_flag != 0) return;
+    /* error_flag   = 0; */
+    if (*tgtsize <= 0) {
+       R__error("target buffer too small");
+       return;
+    }
+    if (*srcsize > 0xffffff) {
+       R__error("source buffer too big");
+       return;
+    }
 
 #ifdef DYN_ALLOC
     state.R__window = 0;
@@ -614,14 +620,11 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     state.out_offset  = HDRSIZE;
     state.R__window_size = 0L;
 
-    R__bi_init(&state);      /* initialize bit routines */
-    if (error_flag != 0) return;
-    R__ct_init(&att, &method);     /* initialize tree routines */
-    if (error_flag != 0) return;
-    R__lm_init(&state,level, &flags);     /* initialize compression */
-    if (error_flag != 0) return;
-    R__Deflate(&state);                  /* compress data */
-    if (error_flag != 0) return;
+    if (0 != R__bi_init(&state) ) return;       /* initialize bit routines */
+    if (0 != R__ct_init(&att, &method)) return; /* initialize tree routines */
+    if (0 != R__lm_init(&state,level, &flags)) return; /* initialize compression */
+    R__Deflate(&state,&err);                  /* compress data */
+    if (err != 0) return;
 
     tgt[0] = 'C';               /* Signature 'C'-Chernyaev, 'S'-Smirnov */
     tgt[1] = 'S';
@@ -648,12 +651,15 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     unsigned l_in_size, l_out_size;
     *irep = 0;
 
-    error_flag   = 0;
-    if (*tgtsize <= 0) R__error("target buffer too small");
-    if (error_flag != 0) return;
-    if (*srcsize > 0xffffff) R__error("source buffer too big");
-    if (error_flag != 0) return;
-
+    /* error_flag   = 0; */
+    if (*tgtsize <= 0) {
+       R__error("target buffer too small");
+       return;
+    }
+    if (*srcsize > 0xffffff) {
+       R__error("source buffer too big");
+       return;
+    }
 
     stream.next_in   = (Bytef*)src;
     stream.avail_in  = (uInt)(*srcsize);
@@ -711,7 +717,7 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
 void R__error(char *msg)
 {
   if (verbose) fprintf(stderr,"R__zip: %s\n",msg);
-  error_flag = 1;
+  /* error_flag = 1; */
 }
 
 #ifdef _MSC_VER

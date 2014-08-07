@@ -95,17 +95,17 @@ static int level=6;             /* Compression level */
 #ifndef UTIL
 typedef struct bits_internal_state bits_internal_state;
         /* in deflate.c */
-void R__lm_init OF((bits_internal_state *state,int pack_level, ush *flags));
+int R__lm_init OF((bits_internal_state *state,int pack_level, ush *flags));
 void R__lm_free OF((void));
-ulg  R__Deflate OF((bits_internal_state *state));
+ulg  R__Deflate OF((bits_internal_state *state,int *errorflag));
 
         /* in trees.c */
-void R__ct_init     OF((ush *attr, int *method));
+int  R__ct_init     OF((ush *attr, int *method));
 int  R__ct_tally    OF((bits_internal_state *state, int dist, int lc));
-ulg  R__flush_block OF((bits_internal_state *state, char far *buf, ulg stored_len, int eof));
+ulg  R__flush_block OF((bits_internal_state *state, char far *buf, ulg stored_len, int eof,int *errorflag));
 
         /* in bits.c */
-void     R__bi_init    OF((bits_internal_state *state));
+int      R__bi_init    OF((bits_internal_state *state));
 void     R__send_bits  OF((bits_internal_state *state,int value, int length));
 unsigned R__bi_reverse OF((unsigned value, int length));
 void     R__bi_windup  OF((bits_internal_state *state));

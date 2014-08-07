@@ -169,7 +169,7 @@ local config configuration_table[10] = {
  */
 
 local void R__fill_window    OF((bits_internal_state *state));
-local ulg  R__Deflate_fast   OF((bits_internal_state *state));
+local ulg  R__Deflate_fast   OF((bits_internal_state *state,int *errorflag));
 
       int  R__longest_match  OF((bits_internal_state *state, IPos cur_match));
 #ifdef ASMV
@@ -210,13 +210,16 @@ local  void check_match OF((IPos start, IPos match, int length));
  *    MIN_LOOKAHEAD bytes (to avoid referencing memory beyond the end
  *    of window[] when looking for matches towards the end).
  */
-void R__lm_init (bits_internal_state *state, int pack_level, ush *flags)
+int R__lm_init (bits_internal_state *state, int pack_level, ush *flags)
     /* int pack_level;  0: store, 1: best speed, 9: best compression */
     /* ush *flags;      general purpose bit flag */
 {
     register unsigned j;
 
-    if (pack_level < 1 || pack_level > 9) R__error("bad pack level");
+    if (pack_level < 1 || pack_level > 9) {
+      R__error("bad pack level");
+      return 1;
+    }
 
     /* Do not slide the window if the whole input is already in memory
      * (window_size > 0)
@@ -231,13 +234,14 @@ void R__lm_init (bits_internal_state *state, int pack_level, ush *flags)
 #ifdef DYN_ALLOC
     if (state->R__window == NULL) {
         state->R__window = (uch*) fcalloc(WSIZE,   2*sizeof(uch));
-        if (state->R__window == NULL) R__error("window allocation");
+        if (state->R__window == NULL)  { R__error("window allocation"); return 1; }
     }
     if (state->R__prev == NULL) {
         state->R__prev   = (Pos*) fcalloc(WSIZE,     sizeof(Pos));
         state->R__head   = (Pos*) fcalloc(HASH_SIZE, sizeof(Pos));
         if (state->R__prev == NULL || state->R__head == NULL) {
             R__error("hash table allocation");
+            return 1;
         }
     }
 #endif /* DYN_ALLOC */
@@ -277,7 +281,7 @@ void R__lm_init (bits_internal_state *state, int pack_level, ush *flags)
 
     if (state->lookahead == 0 || state->lookahead == (unsigned)EOF) {
        state->eofile = 1, state->lookahead = 0;
-       return;
+       return 0;
     }
     state->eofile = 0;
     /* Make sure that we always have enough state->lookahead. This is important
@@ -290,6 +294,7 @@ void R__lm_init (bits_internal_state *state, int pack_level, ush *flags)
     /* If state->lookahead < MIN_MATCH, state->ins_h is garbage, but this is
      * not important since only literal bytes will be emitted.
      */
+    return 0;
 }
 
 /* ===========================================================================
@@ -454,7 +459,7 @@ int R__longest_match(bits_internal_state *state, IPos cur_match)
 /* ===========================================================================
  * Check that the match at match_start is indeed a match.
  */
-local void check_match(IPos start, IPos match, int length)
+local int check_match(IPos start, IPos match, int length)
 {
     /* check that the match is indeed a match */
     if (memcmp((char*)state->R__window + match,
@@ -463,11 +468,13 @@ local void check_match(IPos start, IPos match, int length)
             " start %d, match %d, length %d\n",
             start, match, length);
         R__error("invalid match");
+        return 1;
     }
     if (verbose > 1) {
         fprintf(stderr,"\\[%d,%d]", start-match, length);
         do { putc(state->R__window[start++], stderr); } while (--length != 0);
     }
+    return 0;
 }
 #else
 #  define check_match(start, match, length)
@@ -543,7 +550,7 @@ local void R__fill_window(bits_internal_state *state)
  */
 #define FLUSH_BLOCK(eof) \
    R__flush_block(state, state->R__block_start >= 0L ? (char*)&state->R__window[(unsigned)state->R__block_start] : \
-                (char*)NULL, (long)state->R__strstart - state->R__block_start, (eof))
+                (char*)NULL, (long)state->R__strstart - state->R__block_start, (eof),errorflag)
 
 /* ===========================================================================
  * Processes a new input file and return its compressed length. This
@@ -551,7 +558,7 @@ local void R__fill_window(bits_internal_state *state)
  * new strings in the dictionary only for unmatched strings or for short
  * matches. It is used only for the fast compression options.
  */
-local ulg R__Deflate_fast(bits_internal_state *state)
+local ulg R__Deflate_fast(bits_internal_state *state,int *errorflag)
 {
     IPos hash_head; /* head of the hash chain */
     int flush;      /* set if current block must be flushed */
@@ -632,7 +639,7 @@ local ulg R__Deflate_fast(bits_internal_state *state)
  * evaluation for matches: a match is finally adopted only if there is
  * no better match at the next window position.
  */
-ulg R__Deflate(bits_internal_state *state)
+ulg R__Deflate(bits_internal_state *state,int *errorflag)
 {
     IPos hash_head;          /* head of hash chain */
     IPos R__prev_match;      /* previous match */
@@ -643,7 +650,7 @@ ulg R__Deflate(bits_internal_state *state)
     /* extern ulg R__isize; */ /* byte length of input file, for debug only */
 #endif
 
-    if (level <= 3) return R__Deflate_fast(state); /* optimized for speed */
+    if (level <= 3) return R__Deflate_fast(state,errorflag); /* optimized for speed */
 
     /* Process the input block. */
     while (state->lookahead != 0) {
