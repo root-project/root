@@ -38,6 +38,8 @@
 #include "TAxis.h"
 #include "TView.h"
 
+#include "TVirtualMutex.h"
+
 class TCanvasInit {
 public:
    TCanvasInit() { TApplication::NeedGraphicsLibs(); }
@@ -683,10 +685,7 @@ void TCanvas::Clear(Option_t *option)
 
    if (fCanvasID == -1) return;
 
-   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
-      gInterpreter->Execute(this, IsA(), "Clear", option);
-      return;
-   }
+   R__LOCKGUARD2(gROOTMutex);
 
    TString opt = option;
    opt.ToLower();
@@ -739,34 +738,36 @@ void TCanvas::Close(Option_t *option)
    TCanvas *cansave = 0;
    if (padsave) cansave = (TCanvas*)gPad->GetCanvas();
 
-   if (fCanvasID == -1) goto deletepad;
+   if (fCanvasID != -1) {
 
-   if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
-      gInterpreter->Execute(this, IsA(), "Close", option);
-      return;
+      if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
+         gInterpreter->Execute(this, IsA(), "Close", option);
+         return;
+      }
+
+      R__LOCKGUARD2(gROOTMutex);
+
+      FeedbackMode(kFALSE);
+
+      cd();
+      TPad::Close(option);
+
+      if (!IsBatch()) {
+         gVirtualX->SelectWindow(fCanvasID);    //select current canvas
+
+         DeleteCanvasPainter();
+
+         if (fCanvasImp) fCanvasImp->Close();
+      }
+      fCanvasID = -1;
+      fBatch    = kTRUE;
+
+      gROOT->GetListOfCanvases()->Remove(this);
+
+      // Close actual window on screen
+      SafeDelete(fCanvasImp);
    }
 
-   FeedbackMode(kFALSE);
-
-   cd();
-   TPad::Close(option);
-
-   if (!IsBatch()) {
-      gVirtualX->SelectWindow(fCanvasID);    //select current canvas
-      
-      DeleteCanvasPainter();
-
-      if (fCanvasImp) fCanvasImp->Close();
-   }
-   fCanvasID = -1;
-   fBatch    = kTRUE;
-
-   gROOT->GetListOfCanvases()->Remove(this);
-
-   // Close actual window on screen
-   SafeDelete(fCanvasImp);
-
-deletepad:
    if (cansave == this) {
       gPad = (TCanvas *) gROOT->GetListOfCanvases()->First();
    } else {
@@ -1099,6 +1100,9 @@ void TCanvas::UseCurrentStyle()
       gInterpreter->Execute(this, IsA(), "UseCurrentStyle", "");
       return;
    }
+
+   R__LOCKGUARD2(gROOTMutex);
+
    TPad::UseCurrentStyle();
 
    if (gStyle->IsReading()) {
@@ -1542,6 +1546,8 @@ void TCanvas::Resize(Option_t *)
       gInterpreter->Execute(this, IsA(), "Resize", "");
       return;
    }
+
+   R__LOCKGUARD2(gROOTMutex);
 
    TPad *padsav  = (TPad*)gPad;
    cd();
@@ -2136,6 +2142,9 @@ void TCanvas::Update()
       gInterpreter->Execute(this, IsA(), "Update", "");
       return;
    }
+
+   R__LOCKGUARD2(gROOTMutex);
+
    fUpdating = kTRUE;
 
    if (!IsBatch()) FeedbackMode(kFALSE);      // Goto double buffer mode
