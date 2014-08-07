@@ -439,17 +439,22 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
                ${CMAKE_BINARY_DIR}/ROOTConfig.cmake @ONLY)
 
 #---To be used from the install tree--------------------------------------------------------------------------
+# Need to calculate actual relative paths from CMAKEDIR to other locations
+file(RELATIVE_PATH ROOT_CMAKE_TO_INCLUDE_DIR "${CMAKE_INSTALL_FULL_CMAKEDIR}" "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
+file(RELATIVE_PATH ROOT_CMAKE_TO_LIB_DIR "${CMAKE_INSTALL_FULL_CMAKEDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
+file(RELATIVE_PATH ROOT_CMAKE_TO_BIN_DIR "${CMAKE_INSTALL_FULL_CMAKEDIR}" "${CMAKE_INSTALL_FULL_BINDIR}")
+
 set(ROOT_INCLUDE_DIR_SETUP "
 # ROOT configured for the install with relative paths, so use these
-get_filename_component(ROOT_INCLUDE_DIRS \"\${_thisdir}/../include\" ABSOLUTE)
+get_filename_component(ROOT_INCLUDE_DIRS \"\${_thisdir}/${ROOT_CMAKE_TO_INCLUDE_DIR}\" ABSOLUTE)
 ")
 set(ROOT_LIBRARY_DIR_SETUP "
 # ROOT configured for the install with relative paths, so use these
-get_filename_component(ROOT_LIBRARY_DIR \"\${_thisdir}/../lib\" ABSOLUTE)
+get_filename_component(ROOT_LIBRARY_DIR \"\${_thisdir}/${ROOT_CMAKE_TO_LIB_DIR}\" ABSOLUTE)
 ")
 set(ROOT_BINARY_DIR_SETUP "
 # ROOT configured for the install with relative paths, so use these
-get_filename_component(ROOT_BINARY_DIR \"\${_thisdir}/../bin\" ABSOLUTE)
+get_filename_component(ROOT_BINARY_DIR \"\${_thisdir}/${ROOT_CMAKE_TO_BIN_DIR}\" ABSOLUTE)
 ")
 set(ROOT_MODULE_PATH_SETUP "
 # ROOT configured for use CMake modules from installation tree
