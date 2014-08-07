@@ -310,6 +310,8 @@ namespace ROOT {
       if (!initInterpreter) {
          initInterpreter = kTRUE;
          gROOTLocal->InitInterpreter();
+         // Load and init threads library
+         gROOTLocal->InitThreads();
       }
       return gROOTLocal;
    }
@@ -567,9 +569,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
       fBatch = kFALSE;  // put system in graphics mode (backward compatible)
       i++;
    }
-
-   // Load and init threads library
-   InitThreads();
 
    // Set initial/default list of browsable objects
    fBrowsables->Add(fRootFolder, "root");
@@ -1634,7 +1633,11 @@ void TROOT::InitThreads()
       char *path;
       if ((path = gSystem->DynamicPathName("libThread", kTRUE))) {
          delete [] path;
-         LoadClass("TThread", "Thread");
+         TInterpreter::EErrorCode code = TInterpreter::kNoError;
+         fInterpreter->Calc("TThread::Initialize();", &code);
+         if (code != TInterpreter::kNoError) {
+            Error("InitThreads","Thread mechanism not initialization properly.");
+         }
       }
    }
 }
