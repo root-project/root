@@ -985,7 +985,7 @@ ulg R__flush_block(bits_internal_state *state,char *buf, ulg stored_len, int eof
  * Save the match info and tally the frequency counts. Return true if
  * the current block must be flushed.
  */
-int R__ct_tally (int dist, int lc)
+int R__ct_tally (bits_internal_state *state, int dist, int lc)
     /* int dist;   distance of matched string */
     /* int lc;     match length-MIN_MATCH or unmatched char (if dist==0) */
 {
@@ -1017,7 +1017,7 @@ int R__ct_tally (int dist, int lc)
     if (level > 2 && (last_lit & 0xfff) == 0) {
         /* Compute an upper bound for the compressed length */
         ulg out_length = (ulg)last_lit*8L;
-        ulg in_length = (ulg)R__strstart-R__block_start;
+        ulg in_length = (ulg)state->R__strstart-state->R__block_start;
         int dcode;
         for (dcode = 0; dcode < D_CODES; dcode++) {
             out_length += (ulg)dyn_dtree[dcode].Freq*(5L+extra_dbits[dcode]);

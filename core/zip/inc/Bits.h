@@ -77,7 +77,7 @@
 /* #include "zip.h" */
 /* #include "ZIP.h" */
 
-extern ulg R__window_size; /* size of sliding window */
+/* extern ulg R__window_size; */ /* size of sliding window */
 
 
 /* ===========================================================================
@@ -98,6 +98,42 @@ local void R__flush_outbuf OF((bits_internal_state *state,unsigned w, unsigned s
 /* Number of bits used within bi_buf. (bi_buf might be implemented on
  * more than 16 bits on some systems.)
  */
+
+/* The following used to be declared (as globals) in ZDeflate.h */
+
+/* Compile with MEDIUM_MEM to reduce the memory requirements or
+ * with SMALL_MEM to use as little memory as possible. Use BIG_MEM if the
+ * entire input file can be held in memory (not possible on 16 bit systems).
+ * Warning: defining these symbols affects HASH_BITS (see below) and thus
+ * affects the compression ratio. The compressed output
+ * is still correct, and might even be smaller in some cases.
+ */
+
+#ifdef SMALL_MEM
+#   define HASH_BITS  13  /* Number of bits used to hash strings */
+#endif
+#ifdef MEDIUM_MEM
+#   define HASH_BITS  14
+#endif
+#ifndef HASH_BITS
+#   define HASH_BITS  15
+/* For portability to 16 bit machines, do not use values above 15. */
+#endif
+
+#define HASH_SIZE (unsigned)(1<<HASH_BITS)
+
+#if defined(BIG_MEM) || defined(MMAP)
+typedef unsigned Pos; /* must be at least 32 bits */
+#else
+typedef ush Pos;
+#endif
+typedef unsigned IPos;
+/* A Pos is an index in the character window. We use short instead of int to
+ * save space in the various tables. IPos is used only for parameter passing.
+ */
+
+/* end of ZDeflate.h section */
+
 
 struct bits_internal_state {
    unsigned short bi_buf;
@@ -133,7 +169,95 @@ struct bits_internal_state {
 /* Current input function. Set to R__mem_read for in-memory compression */
 
 #ifdef DEBUG
-ulg R__bits_sent;   /* bit length of the compressed data */
+   ulg R__bits_sent;   /* bit length of the compressed data */
+#endif
+
+   /* The following used to be declared (as globals) in ZDeflate.h */
+
+   /* ===========================================================================
+    * Local data used by the "longest match" routines.
+    */
+
+#ifndef DYN_ALLOC
+   uch    R__window[2L*WSIZE];
+   /* Sliding window. Input bytes are read into the second half of the window,
+    * and move to the first half later to keep a dictionary of at least WSIZE
+    * bytes. With this organization, matches are limited to a distance of
+    * WSIZE-MAX_MATCH bytes, but this ensures that IO is always
+    * performed with a length multiple of the block size. Also, it limits
+    * the window size to 64K, which is quite useful on MSDOS.
+    * To do: limit the window size to WSIZE+BSZ if SMALL_MEM (the code would
+    * be less efficient since the data would have to be copied WSIZE/BSZ times)
+    */
+   Pos    R__prev[WSIZE];
+   /* Link to older string with same hash index. To limit the size of this
+    * array to 64K, this link is maintained only for the last 32K strings.
+    * An index in this array is thus a window index modulo 32K.
+    */
+   Pos    R__head[HASH_SIZE];
+   /* Heads of the hash chains or NIL. If your compiler thinks that
+    * HASH_SIZE is a dynamic value, recompile with -DDYN_ALLOC.
+    */
+#else
+   uch    * near R__window ; /* = NULL; */
+   Pos    * near R__prev   ; /* = NULL; */
+   Pos    * near R__head;
+#endif
+   ulg R__window_size;
+   /* window size, 2*WSIZE except for MMAP or BIG_MEM, where it is the
+    * input file length plus MIN_LOOKAHEAD.
+    */
+
+   long R__block_start;
+   /* window position at the beginning of the current output block. Gets
+    * negative when the window is moved backwards.
+    */
+
+   /* local */ int sliding;
+   /* Set to false when the input file is already in memory */
+
+   /* local */ unsigned ins_h;  /* hash index of string to be inserted */
+
+#define H_SHIFT  ((HASH_BITS+MIN_MATCH-1)/MIN_MATCH)
+   /* Number of bits by which ins_h and del_h must be shifted at each
+    * input step. It must be such that after MIN_MATCH steps, the oldest
+    * byte no longer takes part in the hash key, that is:
+    *   H_SHIFT * MIN_MATCH >= HASH_BITS
+    */
+
+   unsigned int near R__prev_length;
+   /* Length of the best match at previous step. Matches not greater than this
+    * are discarded. This is used in the lazy match evaluation.
+    */
+
+   unsigned near R__strstart;      /* start of string to insert */
+   unsigned near R__match_start;   /* start of matching string */
+   /* local */ int           eofile;           /* flag set at end of input file */
+   /* local */ unsigned      lookahead;        /* number of valid bytes ahead in window */
+
+   unsigned near R__max_chain_length;
+   /* To speed up deflation, hash chains are never searched beyond this length.
+    * A higher limit improves compression ratio but degrades the speed.
+    */
+
+   /* local */ unsigned int max_lazy_match;
+   /* Attempt to find a better match only when the current match is strictly
+    * smaller than this value. This mechanism is used only for compression
+    * levels >= 4.
+    */
+#define max_insert_length  state->max_lazy_match
+   /* Insert new strings in the hash table only if the match length
+    * is not greater than this length. This saves time but degrades compression.
+    * max_insert_length is used only for compression levels <= 3.
+    */
+
+   unsigned near R__good_match;
+   /* Use a faster search when the previous match is longer than this */
+
+#ifdef  FULL_SEARCH
+# define R__nice_match MAX_MATCH
+#else
+   int near R__nice_match; /* Stop searching when current match exceeds this */
 #endif
 
 };
@@ -352,6 +476,10 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
     crc = updcrc(src, (extent) srcsize);
 #endif
     bits_internal_state state;
+#ifdef DYN_ALLOC
+    state.R__window = 0;
+    state.R__prev = 0;
+#endif
 
     /* R__read_buf  = R__mem_read; */
     /* assert(R__read_buf == R__mem_read); */
@@ -362,13 +490,13 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
     state.out_buf    = tgt;
     state.out_size   = (unsigned)tgtsize;
     state.out_offset = 2 + 4;
-    R__window_size = 0L;
+    state.R__window_size = 0L;
 
     R__bi_init(&state);
     R__ct_init(&att, &method);
     R__lm_init(&state,(level != 0 ? level : 1), &flags);
     R__Deflate(&state);
-    R__window_size = 0L; /* was updated by lm_init() */
+    state.R__window_size = 0L; /* was updated by lm_init() */
 
     /* For portability, force little-endian order on all machines: */
     tgt[0] = (char)(method & 0xff);
@@ -468,6 +596,10 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     if (error_flag != 0) return;
 
     bits_internal_state state;
+#ifdef DYN_ALLOC
+    state.R__window = 0;
+    state.R__prev = 0;
+#endif
 
     /* R__read_buf  = R__mem_read; */
     /* assert(R__read_buf == R__mem_read); */
@@ -478,7 +610,7 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     state.out_buf     = tgt;
     state.out_size    = (unsigned) (*tgtsize);
     state.out_offset  = HDRSIZE;
-    R__window_size = 0L;
+    state.R__window_size = 0L;
 
     R__bi_init(&state);      /* initialize bit routines */
     if (error_flag != 0) return;
