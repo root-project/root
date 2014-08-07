@@ -331,7 +331,7 @@ local void R__set_file_type  OF((void));
  * location of the internal file attribute (ascii/binary) and method
  * (DEFLATE/STORE).
  */
-void R__ct_init(ush *attr, int *method)
+int R__ct_init(ush *attr, int *method)
     /* ush  *attr;    pointer to internal file attribute */
     /* int  *method;  pointer to compression method */
 {
@@ -345,13 +345,16 @@ void R__ct_init(ush *attr, int *method)
     R__file_method = method;
     compressed_len = input_len = 0L;
 
-    if (static_dtree[0].Len != 0) return; /* ct_init already called */
+    if (static_dtree[0].Len != 0) return 0; /* ct_init already called */
 
 #ifdef DYN_ALLOC
     d_buf = (ush far*) fcalloc(DIST_BUFSIZE, sizeof(ush));
     l_buf = (uch far*) fcalloc(LIT_BUFSIZE/2, 2);
     /* Avoid using the value 64K on 16 bit machines */
-    if (l_buf == NULL || d_buf == NULL) R__error("R__ct_init: out of memory");
+    if (l_buf == NULL || d_buf == NULL) {
+       R__error("R__ct_init: out of memory");
+       return 1;
+    }
 #endif
 
     /* Initialize the mapping length (0..255) -> length code (0..28) */
@@ -408,6 +411,7 @@ void R__ct_init(ush *attr, int *method)
 
     /* Initialize the first block of the first file: */
     R__init_block();
+    return 0;
 }
 
 /* ===========================================================================
@@ -864,7 +868,7 @@ local void R__send_all_trees(bits_internal_state *state,int lcodes, int dcodes, 
  * trees or store, and output the encoded block to the zip file. This function
  * returns the total compressed length for the file so far.
  */
-ulg R__flush_block(bits_internal_state *state,char *buf, ulg stored_len, int eof)
+ulg R__flush_block(bits_internal_state *state,char *buf, ulg stored_len, int eof, int *errorflag)
     /* char *buf;         input block, or NULL if too old */
     /* ulg stored_len;    length of input block */
     /* int eof;           true if this is the last block for a file */
@@ -914,7 +918,7 @@ ulg R__flush_block(bits_internal_state *state,char *buf, ulg stored_len, int eof
     if (stored_len <= opt_lenb && eof && compressed_len == 0L && R__seekable()) {
 #endif
         /* Since LIT_BUFSIZE <= 2*WSIZE, the input data must be there: */
-        if (buf == (char *) NULL) R__error ("block vanished");
+        if (buf == (char *) NULL) { R__error ("block vanished"); *errorflag = 1; }
 
         R__copy_block(state, buf, (unsigned)stored_len, 0); /* without header */
         compressed_len = stored_len << 3;
