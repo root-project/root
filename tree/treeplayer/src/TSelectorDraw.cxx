@@ -1572,6 +1572,17 @@ void TSelectorDraw::TakeEstimate()
             if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         // In case the new lower limits of h2 axis are 0, it is better to set them to the minimum of
+         // the data set (which should be >0) to avoid data cut when plotting in log scale.
+         TAxis *aX = h2->GetXaxis();
+         TAxis *aY = h2->GetYaxis();
+         Double_t xmin = aX->GetXmin();
+         Double_t ymin = aY->GetXmin();
+         if (xmin == 0 || ymin == 0) {
+            if (aX->GetBinUpEdge(aX->FindFixBin(0.01*aX->GetBinWidth(aX->GetFirst()))) > fVmin[1]) xmin = fVmin[1];
+            if (aY->GetBinUpEdge(aY->FindFixBin(0.01*aY->GetBinWidth(aY->GetFirst()))) > fVmin[0]) ymin = fVmin[0];
+            h2->SetBins(aX->GetNbins(), xmin, aX->GetXmax(), aY->GetNbins(), ymin, aY->GetXmax());
+         }
       }
 
       if (!strstr(fOption.Data(), "same") && !strstr(fOption.Data(), "goff")) {
@@ -1647,6 +1658,17 @@ void TSelectorDraw::TakeEstimate()
             }
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         // In case the new lower limits of h2 axis are 0, it is better to set them to the minimum of
+         // the data set (which should be >0) to avoid data cut when plotting in log scale.
+         TAxis *aX = h2->GetXaxis();
+         TAxis *aY = h2->GetYaxis();
+         Double_t xmin = aX->GetXmin();
+         Double_t ymin = aY->GetXmin();
+         if (xmin == 0 || ymin == 0) {
+            if (aX->GetBinUpEdge(aX->FindFixBin(0.01*aX->GetBinWidth(aX->GetFirst()))) > fVmin[1]) xmin = fVmin[1];
+            if (aY->GetBinUpEdge(aY->FindFixBin(0.01*aY->GetBinWidth(aY->GetFirst()))) > fVmin[0]) ymin = fVmin[0];
+            h2->SetBins(aX->GetNbins(), xmin, aX->GetXmax(), aY->GetNbins(), ymin, aY->GetXmax());
+         }
       } else {
          for (i = 0; i < fNfill; i++) {
             if (fVmin[2] > fVal[2][i]) fVmin[2] = fVal[2][i];
