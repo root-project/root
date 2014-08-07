@@ -260,8 +260,8 @@ local config configuration_table[10] = {
  *  Prototypes for local functions.
  */
 
-local void R__fill_window    OF((void));
-local ulg  R__Deflate_fast   OF((void));
+local void R__fill_window    OF((bits_internal_state *state));
+local ulg  R__Deflate_fast   OF((bits_internal_state *state));
 
       int  R__longest_match  OF((IPos cur_match));
 #ifdef ASMV
@@ -302,7 +302,7 @@ local  void check_match OF((IPos start, IPos match, int length));
  *    MIN_LOOKAHEAD bytes (to avoid referencing memory beyond the end
  *    of window[] when looking for matches towards the end).
  */
-void R__lm_init (int pack_level, ush *flags)
+void R__lm_init (bits_internal_state *state, int pack_level, ush *flags)
     /* int pack_level;  0: store, 1: best speed, 9: best compression */
     /* ush *flags;      general purpose bit flag */
 {
@@ -365,7 +365,7 @@ void R__lm_init (int pack_level, ush *flags)
 #ifndef MAXSEG_64K
     if (sizeof(int) > 2) j <<= 1; /* Can read 64K in one step */
 #endif
-    lookahead = (*R__read_buf)((char*)R__window, j);
+    lookahead = R__mem_read(state,(char*)R__window, j);
 
     if (lookahead == 0 || lookahead == (unsigned)EOF) {
        eofile = 1, lookahead = 0;
@@ -375,7 +375,7 @@ void R__lm_init (int pack_level, ush *flags)
     /* Make sure that we always have enough lookahead. This is important
      * if input comes from a device such as a tty.
      */
-    while (lookahead < MIN_LOOKAHEAD && !eofile) R__fill_window();
+    while (lookahead < MIN_LOOKAHEAD && !eofile) R__fill_window(state);
 
     ins_h = 0;
     for (j=0; j<MIN_MATCH-1; j++) UPDATE_HASH(ins_h, R__window[j]);
@@ -574,7 +574,7 @@ local void check_match(IPos start, IPos match, int length)
  *    file reads are performed for at least two bytes (required for the
  *    translate_eol option).
  */
-local void R__fill_window()
+local void R__fill_window(bits_internal_state *state)
 {
     register unsigned n, m;
     unsigned more = (unsigned)(R__window_size - (ulg)lookahead - (ulg)R__strstart);
@@ -620,7 +620,7 @@ local void R__fill_window()
     }
     /* At this point, more >= 2 */
     if (!eofile) {
-        n = (*R__read_buf)((char*)R__window+R__strstart+lookahead, more);
+        n = R__mem_read(state,(char*)R__window+R__strstart+lookahead, more);
         if (n == 0 || n == (unsigned)EOF) {
             eofile = 1;
         } else {
@@ -634,7 +634,7 @@ local void R__fill_window()
  * IN assertion: strstart is set to the end of the current match.
  */
 #define FLUSH_BLOCK(eof) \
-   R__flush_block(R__block_start >= 0L ? (char*)&R__window[(unsigned)R__block_start] : \
+   R__flush_block(state, R__block_start >= 0L ? (char*)&R__window[(unsigned)R__block_start] : \
                 (char*)NULL, (long)R__strstart - R__block_start, (eof))
 
 /* ===========================================================================
@@ -643,7 +643,7 @@ local void R__fill_window()
  * new strings in the dictionary only for unmatched strings or for short
  * matches. It is used only for the fast compression options.
  */
-local ulg R__Deflate_fast()
+local ulg R__Deflate_fast(bits_internal_state *state)
 {
     IPos hash_head; /* head of the hash chain */
     int flush;      /* set if current block must be flushed */
@@ -713,7 +713,7 @@ local ulg R__Deflate_fast()
          * for the next match, plus MIN_MATCH bytes to insert the
          * string following the next match.
          */
-        while (lookahead < MIN_LOOKAHEAD && !eofile) R__fill_window();
+        while (lookahead < MIN_LOOKAHEAD && !eofile) R__fill_window(state);
 
     }
     return FLUSH_BLOCK(1); /* eof */
@@ -724,7 +724,7 @@ local ulg R__Deflate_fast()
  * evaluation for matches: a match is finally adopted only if there is
  * no better match at the next window position.
  */
-ulg R__Deflate()
+ulg R__Deflate(bits_internal_state *state)
 {
     IPos hash_head;          /* head of hash chain */
     IPos R__prev_match;      /* previous match */
@@ -735,7 +735,7 @@ ulg R__Deflate()
     /* extern ulg R__isize; */ /* byte length of input file, for debug only */
 #endif
 
-    if (level <= 3) return R__Deflate_fast(); /* optimized for speed */
+    if (level <= 3) return R__Deflate_fast(state); /* optimized for speed */
 
     /* Process the input block. */
     while (lookahead != 0) {
@@ -824,7 +824,7 @@ ulg R__Deflate()
          * for the next match, plus MIN_MATCH bytes to insert the
          * string following the next match.
          */
-        while (lookahead < MIN_LOOKAHEAD && !eofile) R__fill_window();
+        while (lookahead < MIN_LOOKAHEAD && !eofile) R__fill_window(state);
     }
     if (match_available) R__ct_tally (0, R__window[R__strstart-1]);
 
