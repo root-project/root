@@ -20,6 +20,11 @@ set(CTEST_CUSTOM_ERROR_EXCEPTION ${CTEST_CUSTOM_ERROR_EXCEPTION}
         "fatal error: cannot open file")
 
 #---Include other CTest Custom files----------------------------------------
-include(test/CTestCustom.cmake OPTIONAL)
-include(roottest/CTestCustom.cmake OPTIONAL)
-include(tutorials/CTestCustom.cmake OPTIONAL)
+if(DEFINED CTEST_BINARY_DIRECTORY)
+  set(dir ${CTEST_BINARY_DIRECTORY})
+else()
+  set(dir .)
+endif()
+include(${dir}/test/CTestCustom.cmake OPTIONAL)
+include(${dir}/roottest/CTestCustom.cmake OPTIONAL)
+include(${dir}/tutorials/CTestCustom.cmake OPTIONAL)
