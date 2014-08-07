@@ -299,21 +299,21 @@ local void R__gen_bitlen     OF((tree_desc near *desc));
 local void R__gen_codes      OF((ct_data near *tree, int max_code));
 local void R__build_tree     OF((tree_desc near *desc));
 local void R__scan_tree      OF((ct_data near *tree, int max_code));
-local void R__send_tree      OF((ct_data near *tree, int max_code));
+local void R__send_tree      OF((bits_internal_state *state,ct_data near *tree, int max_code));
 local int  R__build_bl_tree  OF((void));
-local void R__send_all_trees OF((int lcodes, int dcodes, int blcodes));
-local void R__compress_block OF((ct_data near *ltree, ct_data near *dtree));
+local void R__send_all_trees OF((bits_internal_state *state,int lcodes, int dcodes, int blcodes));
+local void R__compress_block OF((bits_internal_state *state,ct_data near *ltree, ct_data near *dtree));
 local void R__set_file_type  OF((void));
 
 
 #ifndef DEBUG
-#  define send_code(c, tree) R__send_bits(tree[c].Code, tree[c].Len)
+#  define send_code(c, tree) R__send_bits(state,tree[c].Code, tree[c].Len)
    /* Send a code of the given tree. c and tree must not have side effects */
 
 #else /* DEBUG */
 #  define send_code(c, tree) \
      { if (verbose>1) fprintf(stderr,"\ncd %3d ",(c)); \
-       R__send_bits(tree[c].Code, tree[c].Len); }
+       R__send_bits(state,tree[c].Code, tree[c].Len); }
 #endif
 
 #define d_code(dist) \
@@ -750,7 +750,7 @@ local void R__scan_tree (ct_data near *tree, int max_code)
  * Send a literal or distance tree in compressed form, using the codes in
  * bl_tree.
  */
-local void R__send_tree (ct_data near *tree, int max_code)
+local void R__send_tree (bits_internal_state *state,ct_data near *tree, int max_code)
     /* ct_data near *tree;  the tree to be scanned */
     /* int max_code;        and its largest code of non zero frequency */
 {
@@ -777,13 +777,13 @@ local void R__send_tree (ct_data near *tree, int max_code)
                 send_code(curlen, bl_tree); count--;
             }
             Assert(count >= 3 && count <= 6, " 3_6?");
-            send_code(REP_3_6, bl_tree); R__send_bits(count-3, 2);
+            send_code(REP_3_6, bl_tree); R__send_bits(state,count-3, 2);
 
         } else if (count <= 10) {
-            send_code(REPZ_3_10, bl_tree); R__send_bits(count-3, 3);
+            send_code(REPZ_3_10, bl_tree); R__send_bits(state,count-3, 3);
 
         } else {
-            send_code(REPZ_11_138, bl_tree); R__send_bits(count-11, 7);
+            send_code(REPZ_11_138, bl_tree); R__send_bits(state,count-11, 7);
         }
         count = 0; prevlen = curlen;
         if (nextlen == 0) {
@@ -833,7 +833,7 @@ local int R__build_bl_tree()
  * lengths of the bit length codes, the literal tree and the distance tree.
  * IN assertion: lcodes >= 257, dcodes >= 1, blcodes >= 4.
  */
-local void R__send_all_trees(int lcodes, int dcodes, int blcodes)
+local void R__send_all_trees(bits_internal_state *state,int lcodes, int dcodes, int blcodes)
     /* int lcodes, dcodes, blcodes;  number of codes for each tree */
 {
     int rank;                    /* index in bl_order */
@@ -842,20 +842,20 @@ local void R__send_all_trees(int lcodes, int dcodes, int blcodes)
     Assert (lcodes <= L_CODES && dcodes <= D_CODES && blcodes <= BL_CODES,
             "too many codes");
     Tracev((stderr, "\nbl counts: "));
-    R__send_bits(lcodes-257, 5);
+    R__send_bits(state,lcodes-257, 5);
     /* not +255 as stated in appnote.txt 1.93a or -256 in 2.04c */
-    R__send_bits(dcodes-1,   5);
-    R__send_bits(blcodes-4,  4); /* not -3 as stated in appnote.txt */
+    R__send_bits(state,dcodes-1,   5);
+    R__send_bits(state,blcodes-4,  4); /* not -3 as stated in appnote.txt */
     for (rank = 0; rank < blcodes; rank++) {
         Tracev((stderr, "\nbl code %2d ", bl_order[rank]));
-        R__send_bits(bl_tree[bl_order[rank]].Len, 3);
+        R__send_bits(state,bl_tree[bl_order[rank]].Len, 3);
     }
     Tracev((stderr, "\nbl tree: sent %ld", R__bits_sent));
 
-    R__send_tree((ct_data near *)dyn_ltree, lcodes-1); /* send the literal tree */
+    R__send_tree(state,(ct_data near *)dyn_ltree, lcodes-1); /* send the literal tree */
     Tracev((stderr, "\nlit tree: sent %ld", R__bits_sent));
 
-    R__send_tree((ct_data near *)dyn_dtree, dcodes-1); /* send the distance tree */
+    R__send_tree(state,(ct_data near *)dyn_dtree, dcodes-1); /* send the distance tree */
     Tracev((stderr, "\ndist tree: sent %ld", R__bits_sent));
 }
 
@@ -864,7 +864,7 @@ local void R__send_all_trees(int lcodes, int dcodes, int blcodes)
  * trees or store, and output the encoded block to the zip file. This function
  * returns the total compressed length for the file so far.
  */
-ulg R__flush_block(char *buf, ulg stored_len, int eof)
+ulg R__flush_block(bits_internal_state *state,char *buf, ulg stored_len, int eof)
     /* char *buf;         input block, or NULL if too old */
     /* ulg stored_len;    length of input block */
     /* int eof;           true if this is the last block for a file */
@@ -916,7 +916,7 @@ ulg R__flush_block(char *buf, ulg stored_len, int eof)
         /* Since LIT_BUFSIZE <= 2*WSIZE, the input data must be there: */
         if (buf == (char *) NULL) R__error ("block vanished");
 
-        R__copy_block(buf, (unsigned)stored_len, 0); /* without header */
+        R__copy_block(state, buf, (unsigned)stored_len, 0); /* without header */
         compressed_len = stored_len << 3;
         *R__file_method = STORE;
     } else
@@ -934,25 +934,25 @@ ulg R__flush_block(char *buf, ulg stored_len, int eof)
          * successful. If LIT_BUFSIZE <= WSIZE, it is never too late to
          * transform a block into a stored block.
          */
-        R__send_bits((STORED_BLOCK<<1)+eof, 3);  /* send block type */
+        R__send_bits(state,(STORED_BLOCK<<1)+eof, 3);  /* send block type */
         compressed_len = (compressed_len + 3 + 7) & ~7L;
         compressed_len += (stored_len + 4) << 3;
 
-        R__copy_block(buf, (unsigned)stored_len, 1); /* with header */
+        R__copy_block(state, buf, (unsigned)stored_len, 1); /* with header */
 
 #ifdef FORCE_METHOD
     } else if (level == 3) { /* force static trees */
 #else
     } else if (static_lenb == opt_lenb) {
 #endif
-        R__send_bits((STATIC_TREES<<1)+eof, 3);
-        R__compress_block( (ct_data near *)static_ltree,
+        R__send_bits(state,(STATIC_TREES<<1)+eof, 3);
+        R__compress_block(state, (ct_data near *)static_ltree,
                         (ct_data near *)static_dtree );
         compressed_len += 3 + static_len;
     } else {
-        R__send_bits((DYN_TREES<<1)+eof, 3);
-        R__send_all_trees(l_desc.max_code+1, d_desc.max_code+1, max_blindex+1);
-        R__compress_block((ct_data near *)dyn_ltree, (ct_data near *)dyn_dtree);
+        R__send_bits(state,(DYN_TREES<<1)+eof, 3);
+        R__send_all_trees(state, l_desc.max_code+1, d_desc.max_code+1, max_blindex+1);
+        R__compress_block(state, (ct_data near *)dyn_ltree, (ct_data near *)dyn_dtree);
         compressed_len += 3 + opt_len;
     }
     Assert (compressed_len == R__bits_sent, "bad compressed size");
@@ -972,7 +972,7 @@ ulg R__flush_block(char *buf, ulg stored_len, int eof)
 #else /* !PGP */
         Assert (input_len == R__isize, "bad input size");
 #endif
-        R__bi_windup();
+        R__bi_windup(state);
         compressed_len += 7;  /* align on byte boundary */
     }
     Tracev((stderr,"\ncomprlen %lu(%lu) ", compressed_len>>3,
@@ -1038,7 +1038,7 @@ int R__ct_tally (int dist, int lc)
 /* ===========================================================================
  * Send the block data compressed using the given Huffman trees
  */
-local void R__compress_block(ct_data near *ltree, ct_data near *dtree)
+local void R__compress_block(bits_internal_state *state, ct_data near *ltree, ct_data near *dtree)
     /* ct_data near *ltree;  literal tree */
     /* ct_data near *dtree;  distance tree */
 {
@@ -1064,7 +1064,7 @@ local void R__compress_block(ct_data near *ltree, ct_data near *dtree)
             extra = extra_lbits[code];
             if (extra != 0) {
                 lc -= base_length[code];
-                R__send_bits(lc, extra);        /* send the extra length bits */
+                R__send_bits(state,lc, extra);        /* send the extra length bits */
             }
             dist = d_buf[dx++];
             /* Here, dist is the match distance - 1 */
@@ -1075,7 +1075,7 @@ local void R__compress_block(ct_data near *ltree, ct_data near *dtree)
             extra = extra_dbits[code];
             if (extra != 0) {
                 dist -= base_dist[code];
-                R__send_bits(dist, extra);   /* send the extra distance bits */
+                R__send_bits(state,dist, extra);   /* send the extra distance bits */
             }
         } /* literal or match pair ? */
         flag >>= 1;

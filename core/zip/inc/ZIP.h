@@ -93,22 +93,23 @@ static int level=6;             /* Compression level */
 #endif
 
 #ifndef UTIL
+typedef struct bits_internal_state bits_internal_state;
         /* in deflate.c */
-void R__lm_init OF((int pack_level, ush *flags));
+void R__lm_init OF((bits_internal_state *state,int pack_level, ush *flags));
 void R__lm_free OF((void));
-ulg  R__Deflate OF((void));
+ulg  R__Deflate OF((bits_internal_state *state));
 
         /* in trees.c */
 void R__ct_init     OF((ush *attr, int *method));
 int  R__ct_tally    OF((int dist, int lc));
-ulg  R__flush_block OF((char far *buf, ulg stored_len, int eof));
+ulg  R__flush_block OF((bits_internal_state *state, char far *buf, ulg stored_len, int eof));
 
         /* in bits.c */
-void     R__bi_init    OF((FILE *zipfile));
-void     R__send_bits  OF((int value, int length));
+void     R__bi_init    OF((bits_internal_state *state));
+void     R__send_bits  OF((bits_internal_state *state,int value, int length));
 unsigned R__bi_reverse OF((unsigned value, int length));
-void     R__bi_windup  OF((void));
-void     R__copy_block OF((char far *buf, unsigned len, int header));
+void     R__bi_windup  OF((bits_internal_state *state));
+void     R__copy_block OF((bits_internal_state *state,char far *buf, unsigned len, int header));
 int      R__seekable   OF((void));
 /* On some platform (MacOS) marking this thread local does not work,
  however in our use this is a constant, so we do not really need to make it

@@ -49,7 +49,7 @@
  *
  *  INTERFACE
  *
- *      void R__bi_init (FILE *zipfile)
+ *      void R__bi_init (bits_internal_state *state)
  *          Initialize the bit string routines.
  *
  *      void R__send_bits (int value, int length)
@@ -77,14 +77,14 @@
 /* #include "zip.h" */
 /* #include "ZIP.h" */
 
-/* extern ulg R__window_size; */ /* size of sliding window */
+extern ulg R__window_size; /* size of sliding window */
 
 
 /* ===========================================================================
  *  Prototypes for local functions
  */
-local int  R__mem_read     OF((char *buf, unsigned size));
-local void R__flush_outbuf OF((unsigned w, unsigned size));
+/* local int  R__mem_read     OF((char *buf, unsigned size)); */
+local void R__flush_outbuf OF((bits_internal_state *state,unsigned w, unsigned size));
 
 
 /* ===========================================================================
@@ -94,62 +94,65 @@ local void R__flush_outbuf OF((unsigned w, unsigned size));
 #define __thread __declspec( thread )  
 #endif
 
-local __thread FILE *zfile; /* output zip file */
-
-local __thread unsigned short bi_buf;
-/* Output buffer. bits are inserted starting at the bottom (least significant
- * bits).
- */
-
 #define Buf_size (8 * 2*sizeof(char))
 /* Number of bits used within bi_buf. (bi_buf might be implemented on
  * more than 16 bits on some systems.)
  */
 
-local __thread int bi_valid;
+struct bits_internal_state {
+   unsigned short bi_buf;
+/* Output buffer. bits are inserted starting at the bottom (least significant
+ * bits).
+ */
+
+   int bi_valid;
 /* Number of valid bits in bi_buf.  All bits above the last valid bit
  * are always zero.
  */
 
-local __thread char *in_buf, *out_buf;
+   char *in_buf, *out_buf;
 /* Current input and output buffers. in_buf is used only for in-memory
  * compression.
  */
 
-local __thread unsigned in_offset, out_offset;
+   unsigned in_offset, out_offset;
 /* Current offset in input and output buffers. in_offset is used only for
  * in-memory compression. On 16 bit machiens, the buffer is limited to 64K.
  */
 
-local __thread unsigned in_size, out_size;
+   unsigned in_size, out_size;
 /* Size of current input and output buffers */
 
 /* On some platform (MacOS) marking this thread local does not work,
    however in our use this is a constant, so we do not really need to make it
    thread local */
 /* __thread */
-int (*R__read_buf) OF((char *buf, unsigned size)) = R__mem_read;
+/* not used?
+   int (*R__read_buf) OF((char *buf, unsigned size)) = R__mem_read;
+*/
 /* Current input function. Set to R__mem_read for in-memory compression */
 
 #ifdef DEBUG
 ulg R__bits_sent;   /* bit length of the compressed data */
 #endif
 
+};
+
 /* Output a 16 bit value to the bit stream, lower (oldest) byte first */
 #define PUTSHORT(w) \
-{ if (out_offset < out_size-1) { \
-    out_buf[out_offset++] = (char) ((w) & 0xff); \
-    out_buf[out_offset++] = (char) ((ush)(w) >> 8); \
+{ if (state->out_offset < state->out_size-1) { \
+    state->out_buf[state->out_offset++] = (char) ((w) & 0xff); \
+    state->out_buf[state->out_offset++] = (char) ((ush)(w) >> 8); \
   } else { \
-    R__flush_outbuf((w),2); \
+    R__flush_outbuf(state,(w),2); \
   } \
 }
 
 #define PUTBYTE(b) \
-{ if (out_offset < out_size) { \
-    out_buf[out_offset++] = (char) (b); \
+{ if (state->out_offset < state->out_size) { \
+    state->out_buf[state->out_offset++] = (char) (b); \
   } else { \
-    R__flush_outbuf((b),1); \
+    R__flush_outbuf(state,(b),1); \
   } \
 }
 
@@ -170,8 +173,8 @@ int R__ZipMode = 1;
 /* ===========================================================================
  *  Prototypes for local functions
  */
-local int  R__mem_read     OF((char *b,    unsigned bsize));
-local void R__flush_outbuf OF((unsigned w, unsigned bytes));
+local int  R__mem_read     OF((bits_internal_state *state, char *b,    unsigned bsize));
+local void R__flush_outbuf OF((bits_internal_state *state, unsigned w, unsigned bytes));
 
 /* ===========================================================================
    Function to set the ZipMode
@@ -184,14 +187,13 @@ void R__SetZipMode(int mode)
 /* ===========================================================================
  * Initialize the bit string routines.
  */
-void R__bi_init (FILE *zipfile)
+void R__bi_init (bits_internal_state *state)
     /* FILE *zipfile;   output zip file, NULL for in-memory compression */
 {
-    zfile  = zipfile;
-    bi_buf = 0;
-    bi_valid = 0;
+    state->bi_buf = 0;
+    state->bi_valid = 0;
 #ifdef DEBUG
-    R__bits_sent = 0L;
+    state->R__bits_sent = 0L;
 #endif
 }
 
@@ -199,27 +201,27 @@ void R__bi_init (FILE *zipfile)
  * Send a value on a given number of bits.
  * IN assertion: length <= 16 and value fits in length bits.
  */
-void R__send_bits(int value, int length)
+void R__send_bits(bits_internal_state *state, int value, int length)
     /* int value;   value to send */
     /* int length;  number of bits */
 {
 #ifdef DEBUG
     Tracevv((stderr," l %2d v %4x ", length, value));
     Assert(length > 0 && length <= 15, "invalid length");
-    R__bits_sent += (ulg)length;
+    state->R__bits_sent += (ulg)length;
 #endif
     /* If not enough room in bi_buf, use (valid) bits from bi_buf and
      * (16 - bi_valid) bits from value, leaving (width - (16-bi_valid))
      * unused bits in value.
      */
-    if (bi_valid > (int)Buf_size - length) {
-        bi_buf |= (value << bi_valid);
-        PUTSHORT(bi_buf);
-        bi_buf = (ush)value >> (Buf_size - bi_valid);
-        bi_valid += length - Buf_size;
+    if (state->bi_valid > (int)Buf_size - length) {
+        state->bi_buf |= (value << state->bi_valid);
+        PUTSHORT(state->bi_buf);
+        state->bi_buf = (ush)value >> (Buf_size - state->bi_valid);
+        state->bi_valid += length - Buf_size;
     } else {
-        bi_buf |= value << bi_valid;
-        bi_valid += length;
+        state->bi_buf |= value << state->bi_valid;
+        state->bi_valid += length;
     }
 }
 
@@ -243,38 +245,35 @@ unsigned R__bi_reverse(unsigned code, int len)
 /* ===========================================================================
  * Flush the current output buffer.
  */
-local void R__flush_outbuf(unsigned w, unsigned bytes)
+local void R__flush_outbuf(bits_internal_state *state, unsigned w, unsigned bytes)
     /* unsigned w;      value to flush */
     /* unsigned bytes;  number of bytes to flush (0, 1 or 2) */
 {
     R__error("output buffer too small for in-memory compression");
 
     /* Encrypt and write the output buffer: */
-    out_offset = 0;
+    state->out_offset = 0;
     if (bytes == 2) {
         PUTSHORT(w);
     } else if (bytes == 1) {
-        out_buf[out_offset++] = (char) (w & 0xff);
+        state->out_buf[state->out_offset++] = (char) (w & 0xff);
     }
 }
 
 /* ===========================================================================
  * Write out any remaining bits in an incomplete byte.
  */
-void R__bi_windup()
+void R__bi_windup(bits_internal_state *state)
 {
-    if (bi_valid > 8) {
-        PUTSHORT(bi_buf);
-    } else if (bi_valid > 0) {
-        PUTBYTE(bi_buf);
+    if (state->bi_valid > 8) {
+        PUTSHORT(state->bi_buf);
+    } else if (state->bi_valid > 0) {
+        PUTBYTE(state->bi_buf);
     }
-    if (zfile != (FILE *) NULL) {
-        R__flush_outbuf(0, 0);
-    }
-    bi_buf = 0;
-    bi_valid = 0;
+    state->bi_buf = 0;
+    state->bi_valid = 0;
 #ifdef DEBUG
-    R__bits_sent = (R__bits_sent+7) & ~7;
+    state->R__bits_sent = (state->R__bits_sent+7) & ~7;
 #endif
 }
 
@@ -282,12 +281,12 @@ void R__bi_windup()
  * Copy a stored block to the zip file, storing first the length and its
  * one's complement if requested.
  */
-void R__copy_block(char far *buf, unsigned len, int header)
+void R__copy_block(bits_internal_state *state, char far *buf, unsigned len, int header)
     /* char far *buf;  the input data */
     /* unsigned len;   its length */
     /* int header;     true if block header must be written */
 {
-    R__bi_windup();              /* align on byte boundary */
+    R__bi_windup(state);              /* align on byte boundary */
 
     if (header) {
         PUTSHORT((ush)len);
@@ -296,15 +295,15 @@ void R__copy_block(char far *buf, unsigned len, int header)
         R__bits_sent += 2*16;
 #endif
     }
-    if (out_offset + len > out_size) {
+    if (state->out_offset + len > state->out_size) {
         R__error("output buffer too small for in-memory compression");
-        if (verbose) fprintf(stderr, "R__zip: out_offset=%d, len=%d, out_size=%d\n",out_offset,len,out_size);
+        if (verbose) fprintf(stderr, "R__zip: out_offset=%d, len=%d, out_size=%d\n",state->out_offset,len,state->out_size);
     } else {
-        memcpy(out_buf + out_offset, buf, len);
-        out_offset += len;
+        memcpy(state->out_buf + state->out_offset, buf, len);
+        state->out_offset += len;
     }
 #ifdef DEBUG
-    R__bits_sent += (ulg)len<<3;
+    state->R__bits_sent += (ulg)len<<3;
 #endif
 }
 
@@ -352,21 +351,23 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
     crc = updcrc((char *)NULL, 0);
     crc = updcrc(src, (extent) srcsize);
 #endif
-    /* R__read_buf  = R__mem_read; */
-    assert(R__read_buf == R__mem_read);
-    in_buf    = src;
-    in_size   = (unsigned)srcsize;
-    in_offset = 0;
+    bits_internal_state state;
 
-    out_buf    = tgt;
-    out_size   = (unsigned)tgtsize;
-    out_offset = 2 + 4;
+    /* R__read_buf  = R__mem_read; */
+    /* assert(R__read_buf == R__mem_read); */
+    state.in_buf    = src;
+    state.in_size   = (unsigned)srcsize;
+    state.in_offset = 0;
+
+    state.out_buf    = tgt;
+    state.out_size   = (unsigned)tgtsize;
+    state.out_offset = 2 + 4;
     R__window_size = 0L;
 
-    R__bi_init((FILE *)NULL);
+    R__bi_init(&state);
     R__ct_init(&att, &method);
-    R__lm_init((level != 0 ? level : 1), &flags);
-    R__Deflate();
+    R__lm_init(&state,(level != 0 ? level : 1), &flags);
+    R__Deflate(&state);
     R__window_size = 0L; /* was updated by lm_init() */
 
     /* For portability, force little-endian order on all machines: */
@@ -377,7 +378,7 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
     tgt[4] = (char)((crc >> 16) & 0xff);
     tgt[5] = (char)((crc >> 24) & 0xff);
 
-    return (ulg)out_offset;
+    return (ulg)state.out_offset;
 }
 
 /* ===========================================================================
@@ -389,13 +390,13 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
  * difference on 16 bit machines. R__mem_read() may be called several
  * times for an in-memory compression.
  */
-local int R__mem_read(char *b, unsigned bsize)
+local int R__mem_read(bits_internal_state *state,char *b, unsigned bsize)
 {
-    if (in_offset < in_size) {
-        ulg block_size = in_size - in_offset;
+    if (state->in_offset < state->in_size) {
+        ulg block_size = state->in_size - state->in_offset;
         if (block_size > (ulg)bsize) block_size = (ulg)bsize;
-        memcpy(b, in_buf + in_offset, (unsigned)block_size);
-        in_offset += (unsigned)block_size;
+        memcpy(b, state->in_buf + state->in_offset, (unsigned)block_size);
+        state->in_offset += (unsigned)block_size;
         return (int)block_size;
     } else {
         return 0; /* end of input */
@@ -466,40 +467,42 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     if (*srcsize > 0xffffff) R__error("source buffer too big");
     if (error_flag != 0) return;
 
-    /* R__read_buf  = R__mem_read; */
-    assert(R__read_buf == R__mem_read);
-    in_buf    = src;
-    in_size   = (unsigned) (*srcsize);
-    in_offset = 0;
+    bits_internal_state state;
 
-    out_buf     = tgt;
-    out_size    = (unsigned) (*tgtsize);
-    out_offset  = HDRSIZE;
+    /* R__read_buf  = R__mem_read; */
+    /* assert(R__read_buf == R__mem_read); */
+    state.in_buf    = src;
+    state.in_size   = (unsigned) (*srcsize);
+    state.in_offset = 0;
+
+    state.out_buf     = tgt;
+    state.out_size    = (unsigned) (*tgtsize);
+    state.out_offset  = HDRSIZE;
     R__window_size = 0L;
 
-    R__bi_init((FILE *)NULL);      /* initialize bit routines */
+    R__bi_init(&state);      /* initialize bit routines */
     if (error_flag != 0) return;
     R__ct_init(&att, &method);     /* initialize tree routines */
     if (error_flag != 0) return;
-    R__lm_init(level, &flags);     /* initialize compression */
+    R__lm_init(&state,level, &flags);     /* initialize compression */
     if (error_flag != 0) return;
-    R__Deflate();                  /* compress data */
+    R__Deflate(&state);                  /* compress data */
     if (error_flag != 0) return;
 
     tgt[0] = 'C';               /* Signature 'C'-Chernyaev, 'S'-Smirnov */
     tgt[1] = 'S';
     tgt[2] = (char) method;
 
-    out_size  = out_offset - HDRSIZE;         /* compressed size */
-    tgt[3] = (char)(out_size & 0xff);
-    tgt[4] = (char)((out_size >> 8) & 0xff);
-    tgt[5] = (char)((out_size >> 16) & 0xff);
+    state.out_size  = state.out_offset - HDRSIZE;         /* compressed size */
+    tgt[3] = (char)(state.out_size & 0xff);
+    tgt[4] = (char)((state.out_size >> 8) & 0xff);
+    tgt[5] = (char)((state.out_size >> 16) & 0xff);
 
-    tgt[6] = (char)(in_size & 0xff);         /* decompressed size */
-    tgt[7] = (char)((in_size >> 8) & 0xff);
-    tgt[8] = (char)((in_size >> 16) & 0xff);
+    tgt[6] = (char)(state.in_size & 0xff);         /* decompressed size */
+    tgt[7] = (char)((state.in_size >> 8) & 0xff);
+    tgt[8] = (char)((state.in_size >> 16) & 0xff);
 
-    *irep     = out_offset;
+    *irep     = state.out_offset;
     return;
 
   // 1 is for ZLIB (which is the default), ZLIB is also used for any illegal
