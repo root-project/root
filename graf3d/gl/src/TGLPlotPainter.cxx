@@ -26,6 +26,8 @@
 #include "TH1.h"
 #include "TH3.h"
 #include "TF3.h"
+#include "TROOT.h"
+#include "TVirtualMutex.h"
 
 #include "TGLPlotPainter.h"
 #include "TGLPlotCamera.h"
@@ -144,6 +146,9 @@ TGLPlotPainter::TGLPlotPainter(TGLPlotCamera *camera)
 void TGLPlotPainter::Paint()
 {
    //Draw lego/surf/whatever you can.
+
+   R__LOCKGUARD2(gROOTMutex);
+
    fHighColor = kFALSE;
    fSelectionBase = fHighColor ? kHighColorSelectionBase : kTrueColorSelectionBase;
 

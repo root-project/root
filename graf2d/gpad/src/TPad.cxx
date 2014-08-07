@@ -57,6 +57,8 @@
 #include "TApplication.h"
 #include "TVirtualPadPainter.h"
 
+#include "TVirtualMutex.h"
+
 static Int_t gReadLevel = 0;
 
 Int_t TPad::fgMaxPickDistance = 5;
@@ -520,6 +522,8 @@ void TPad::Clear(Option_t *option)
    //   Set the bit with mypad->SetBit(TPad::kClearAfterCR)
 
    if (!IsEditable()) return;
+
+   R__LOCKGUARD2(gROOTMutex);
 
    if (!fPadPaint) {
       SafeDelete(fView);

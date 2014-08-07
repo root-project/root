@@ -19,6 +19,7 @@
 #include "TError.h"
 
 #include "TROOT.h"
+#include "TVirtualMutex.h"
 
 #include "TGLContextPrivate.h"
 #include "RConfigure.h"
@@ -61,6 +62,9 @@ TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault,
       gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SetContext((TGLWidget *)0x%lx, (TGLContext *)0x%lx)",
                                   (ULong_t)this, (ULong_t)wid, (ULong_t)shareList));
    } else {
+
+      R__LOCKGUARD2(gROOTMutex);
+
       SetContext(wid, shareList);
    }
 
@@ -170,6 +174,9 @@ Bool_t TGLContext::MakeCurrent()
    if (!gVirtualX->IsCmdThread())
       return Bool_t(gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->MakeCurrent()", this)));
    else {
+
+      R__LOCKGUARD2(gROOTMutex);
+
       Bool_t rez = wglMakeCurrent(fPimpl->fHDC, fPimpl->fGLContext);
       if (rez) {
          if (!fgGlewInitDone)
@@ -200,6 +207,9 @@ void TGLContext::SwapBuffers()
    if (!gVirtualX->IsCmdThread())
       gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SwapBuffers()", this));
    else {
+
+      R__LOCKGUARD2(gROOTMutex);
+
       if (fPimpl->fHWND)
          wglSwapLayerBuffers(fPimpl->fHDC, WGL_SWAP_MAIN_PLANE);
       else
@@ -216,6 +226,8 @@ void TGLContext::Release()
       gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->Release()", this));
       return;
    }
+
+   R__LOCKGUARD2(gROOTMutex);
 
    if (fPimpl->fHWND)
       ReleaseDC(fPimpl->fHWND, fPimpl->fHDC);

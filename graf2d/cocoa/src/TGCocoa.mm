@@ -45,6 +45,7 @@
 #include "TColor.h"
 #include "TROOT.h"
 #include "TEnv.h"
+#include "TVirtualMutex.h"
 
 //Style notes: I'm using a lot of asserts to check pre-conditions - mainly function parameters.
 //In asserts, expression always looks like 'p != 0' for "C++ pointer" (either object of built-in type
@@ -516,6 +517,8 @@ Int_t TGCocoa::GetDepth() const
 //______________________________________________________________________________
 void TGCocoa::Update(Int_t mode)
 {
+   R__LOCKGUARD2(gROOTMutex);
+
    if (mode == 2) {
       assert(gClient != 0 && "Update, gClient is null");
       gClient->DoRedraw();//Call DoRedraw for all widgets, who need to be updated.

@@ -19,6 +19,7 @@
 #include "TColor.h"
 #include "TStyle.h"
 #include "TH3.h"
+#include "TVirtualMutex.h"
 
 #include "TPolyMarker3D.h"
 #include "TGLPlotCamera.h"
