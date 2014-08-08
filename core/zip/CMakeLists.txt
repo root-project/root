@@ -16,7 +16,7 @@ Set(ZipOldSource
 
 Set(ZipNewHeaders
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/zlib.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/Tailor.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/inc/zconf.h
 )
 
 Set(ZipNewSource

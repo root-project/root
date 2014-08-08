@@ -23,7 +23,7 @@ ZIPOLDS      := $(MODDIRS)/ZDeflate.c   \
                 $(MODDIRS)/ZInflate.c
 
 ZIPNEWH      := $(MODDIRI)/zlib.h \
-                $(MODDIRI)/Tailor.h
+                $(MODDIRI)/zconf.h
 
 ZIPNEWS      := $(MODDIRS)/adler32.c    \
                 $(MODDIRS)/compress.c   \
