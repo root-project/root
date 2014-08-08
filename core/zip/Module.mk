@@ -22,6 +22,9 @@ ZIPOLDH      := $(MODDIRI)/RZip.h     \
 ZIPOLDS      := $(MODDIRS)/ZDeflate.c   \
                 $(MODDIRS)/ZInflate.c
 
+ZIPNEWH      := $(MODDIRI)/zlib.h \
+                $(MODDIRI)/Tailor.h
+
 ZIPNEWS      := $(MODDIRS)/adler32.c    \
                 $(MODDIRS)/compress.c   \
                 $(MODDIRS)/crc32.c      \
@@ -39,7 +42,7 @@ ZIPNEWS      := $(MODDIRS)/adler32.c    \
                 $(MODDIRS)/zutil.c
 
 ifeq ($(BUILTINZLIB),yes)
-ZIPH         := $(ZIPOLDH)
+ZIPH         := $(ZIPOLDH) $(ZIPNEWH)
 ZIPS         := $(ZIPOLDS) $(ZIPNEWS)
 else
 ZIPH         := $(ZIPOLDH)
