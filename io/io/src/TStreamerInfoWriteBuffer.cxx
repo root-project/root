@@ -800,6 +800,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 }
 
 template Int_t TStreamerInfo::WriteBufferAux<char**>(TBuffer &b, char ** const &arr, TCompInfo *const*const compinfo, Int_t first, Int_t last, Int_t narr,Int_t eoffset,Int_t mode);
+template Int_t TStreamerInfo::WriteBufferAux<TVirtualCollectionProxy>(TBuffer &b, TVirtualCollectionProxy const &arr, TCompInfo *const*const compinfo, Int_t first, Int_t last, Int_t narr,Int_t eoffset,Int_t mode);
 
 //______________________________________________________________________________
 Int_t TStreamerInfo::WriteBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc)
