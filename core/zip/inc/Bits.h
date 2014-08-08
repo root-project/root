@@ -90,11 +90,6 @@ local void R__flush_outbuf OF((bits_internal_state *state,unsigned w, unsigned s
 /* ===========================================================================
  * Local data used by the "bit string" routines.
  */
-#if defined(_MSC_VER)
-#  define __thread __declspec( thread )
-#elif defined(__APPLE__) && (!defined(__clang__) || !defined(MAC_OS_X_VERSION_10_7) || !defined(__x86_64__))
-#  define __thread
-#endif
 
 #define Buf_size (8 * 2*sizeof(char))
 /* Number of bits used within bi_buf. (bi_buf might be implemented on
@@ -724,6 +719,4 @@ void R__error(char *msg)
   /* error_flag = 1; */
 }
 
-#ifdef _MSC_VER
-#undef __thread
-#endif
+
