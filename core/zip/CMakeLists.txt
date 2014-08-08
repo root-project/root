@@ -14,6 +14,11 @@ Set(ZipOldSource
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ZInflate.c
 )
 
+Set(ZipNewHeaders
+  ${CMAKE_CURRENT_SOURCE_DIR}/inc/zlib.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/inc/Tailor.h
+)
+
 Set(ZipNewSource
   ${CMAKE_CURRENT_SOURCE_DIR}/src/adler32.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/compress.c
@@ -35,7 +40,7 @@ Set(ZipNewSource
 # Depending on the system either the old and the new
 # or only the old compression is build
 if(builtin_zlib)
-  set(ZLIB_HEADERS ${ZipOldHeaders})
+  set(ZLIB_HEADERS ${ZipNewHeaders} ${ZipOldHeaders})
   set(ZLIB_SRCS ${ZipNewSource} ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx ${CMAKE_CURRENT_SOURCE_DIR}/src/RZip.cxx)
 else()
   set(ZLIB_HEADERS ${ZipOldHeaders})
