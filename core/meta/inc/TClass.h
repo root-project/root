@@ -117,7 +117,7 @@ public:
 
    // Describe the current state of the TClass itself.
    enum EState {
-      kNoInfo,         // The state has not yet been initialized, i.e. the TClass
+      kNoInfo,          // The state has not yet been initialized, i.e. the TClass
                         // was just created and/or there is no trace of it in the interpreter.
       kForwardDeclared, // The interpreted knows the entity is a class but that's it.
       kEmulated,        // The information about the class only comes from a TStreamerInfo
