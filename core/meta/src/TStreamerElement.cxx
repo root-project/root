@@ -307,7 +307,7 @@ const char *TStreamerElement::GetFullName() const
 #ifdef R__HAS_THREAD_LOCAL
    thread_local TString name(kMaxLen);
 #else
-   TString &name( TTHREAD_TLS_INIT<2 /* must be unique */ ,TString>(name) );
+   TString &name( TTHREAD_TLS_INIT<2 /* must be unique */ ,TString>() );
 #endif
    char cdim[20];
    name = GetName();
