@@ -40,6 +40,10 @@
 #ifndef ROOT_ThreadLocalStorage
 #define ROOT_ThreadLocalStorage
 
+#ifndef ROOT_RConfig
+#include "RConfig.h"
+#endif
+
 #ifndef ROOT_RConfigure
 #include "RConfigure.h"
 #endif
