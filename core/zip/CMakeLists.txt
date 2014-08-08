@@ -16,7 +16,7 @@ Set(ZipOldSource
 
 Set(ZipNewHeaders
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/zlib.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/Tailor.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/inc/zconf.h
 )
 
 Set(ZipNewSource
@@ -58,7 +58,7 @@ set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR
 # variables are needed in the parent scope so they are exported
 # to the parent scope
 list(APPEND LibCore_SRCS ${ZLIB_SRCS})
-list(APPEND LibCore_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+list(APPEND LibCore_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(LibCore_SRCS ${LibCore_SRCS} PARENT_SCOPE)
 set(LibCore_INCLUDE_DIRS ${LibCore_INCLUDE} PARENT_SCOPE)
