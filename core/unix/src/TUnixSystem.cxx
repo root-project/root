@@ -36,6 +36,7 @@
 #include "Riostream.h"
 #include "TVirtualMutex.h"
 #include "TObjArray.h"
+#include "ThreadLocalStorage.h"
 #include <map>
 #if __cplusplus >= 201103L
 #include <atomic>
@@ -442,7 +443,7 @@ static void SigHandler(ESignals sig)
 //______________________________________________________________________________
 static const char *GetExePath()
 {
-#if __cplusplus >= 201103L
+#ifdef R__HAS_THREAD_LOCAL
    thread_local TString exepath;
 #else
    static TString exepath;

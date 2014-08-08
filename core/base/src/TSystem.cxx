@@ -52,6 +52,7 @@
 #include "TVirtualMutex.h"
 #include "compiledata.h"
 #include "RConfigure.h"
+#include "ThreadLocalStorage.h"
 
 const char *gRootDir;
 const char *gProgName;
@@ -2003,7 +2004,7 @@ TString &TSystem::GetLastErrorString()
 {
    // Return the thread local storage for the custom last error message
 
-#if __cplusplus >= 201103L
+#ifdef R__HAS_THREAD_LOCAL
    thread_local TString gLastErrorString;
 #else
    // Because of
