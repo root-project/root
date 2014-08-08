@@ -64,6 +64,16 @@
 #if defined(R__WIN32)
 #  define R__HAS_DECLSPEC_THREAD
 #endif
+#if __cplusplus >= 201103L
+#  if __GNUC__ <= 4 && __GNUC_MINOR__ < 80
+// The C++11 thread_local keyword is supported in GCC only since 4.8
+#define R__HAS___THREAD
+#else
+#define R__HAS_THREAD_LOCAL
+#endif
+
+#endif
+
 
 #ifdef __cplusplus
 
@@ -71,12 +81,6 @@
 
 #  define TTHREAD_TLS(type) static type
 #  define TTHREAD_TLS_ARRAY(type,size,name) static type name[size];
-#  define TTHREAD_TLS_PTR(name) &name
-
-#elif __cplusplus >= 201103L
-
-#  define TTHREAD_TLS(type) thread_local type
-#  define TTHREAD_TLS_ARRAY(type,size,name) thread_local type name[size];
 #  define TTHREAD_TLS_PTR(name) &name
 
 #elif defined(R__HAS_THREAD_LOCAL)
