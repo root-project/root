@@ -60,8 +60,8 @@ ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ZIPH))
 INCLUDEFILES += $(ZIPDEP)
 
 ##### local rules #####
-$(ZIPO) : CFLAGS += -I$(ZIPDIRI)
-$(ZIPO) : CXXFLAGS += -I$(ZIPDIRI)
+$(ZIPO) : CFLAGS += -I$(ZIPDIRS)
+$(ZIPO) : CXXFLAGS += -I$(ZIPDIRS)
 
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
