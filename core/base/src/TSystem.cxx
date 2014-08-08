@@ -2006,14 +2006,11 @@ TString &TSystem::GetLastErrorString()
 
 #ifdef R__HAS_THREAD_LOCAL
    thread_local TString gLastErrorString;
+   return gLastErrorString;
 #else
-   // Because of
-   //   error: ‘TSystem::fgLastErrorString’ cannot be thread-local because it has non-POD type ‘TString’
-   // we can not rely on the platform independent thread local
-   static TString gLastErrorString;
+   return TTHREAD_TLS_INIT<0 /* must be unique */, TString>();
 #endif
 
-   return gLastErrorString;
 }
 
 //______________________________________________________________________________

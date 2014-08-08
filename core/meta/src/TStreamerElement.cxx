@@ -44,10 +44,10 @@ const Int_t kMaxLen = 1024;
 static TString &IncludeNameBuffer() {
 #ifdef R__HAS_THREAD_LOCAL
    thread_local TString includeName(kMaxLen);
-#else
-   static TString includeName(kMaxLen);
-#endif
    return includeName;
+#else
+   return TTHREAD_TLS_INIT<1 /* must be unique */, TString>(kMaxLen);
+#endif
 }
 
 extern void *gMmallocDesc;
@@ -307,7 +307,7 @@ const char *TStreamerElement::GetFullName() const
 #ifdef R__HAS_THREAD_LOCAL
    thread_local TString name(kMaxLen);
 #else
-   static TString name(kMaxLen);
+   TString &name( TTHREAD_TLS_INIT<2 /* must be unique */ ,TString>(name) );
 #endif
    char cdim[20];
    name = GetName();

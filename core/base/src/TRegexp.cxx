@@ -147,7 +147,9 @@ const char *TRegexp::MakeWildcard(const char *re)
 #ifdef R__HAS_THREAD_LOCAL
    thread_local char buf[fgMaxpat];
 #else
-   static char buf[fgMaxpat];
+   //static char buf[fgMaxpat];
+   typedef char buf_t[fgMaxpat];
+   buf_t &buf( TTHREAD_TLS_INIT_ARRAY<4 /* must be unique */, buf_t, char>() );
 #endif
    char *s = buf;
    if (!re) return "";

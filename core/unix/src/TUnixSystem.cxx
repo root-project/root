@@ -446,7 +446,7 @@ static const char *GetExePath()
 #ifdef R__HAS_THREAD_LOCAL
    thread_local TString exepath;
 #else
-   static TString exepath;
+   TString &exepath( TTHREAD_TLS_INIT<3 /* must be unique */, TString>() );
 #endif
    if (exepath == "") {
 #if defined(R__MACOSX)
