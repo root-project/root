@@ -34,6 +34,7 @@ if(vc)
   endif()
   set(TARGET_ARCHITECTURE auto CACHE STRING "")
   add_subdirectory(vc)
+  mark_as_advanced(TARGET_ARCHITECTURE TEST_OPERATOR_FAILURES VC_IMPL)
 endif()
 
 if(vdt)

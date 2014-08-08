@@ -31,6 +31,8 @@ find_library(FASTCGI_LIBRARY NAMES fcgi PATHS
   DOC "Specify the FastCGI library here."
 )
 
+mark_as_advanced(FASTCGI_INCLUDE_DIR FASTCGI_LIBRARY)
+
 if(FASTCGI_INCLUDE_DIR AND FASTCGI_LIBRARY)
 include_directories(${FASTCGI_INCLUDE_DIR})
 endif()

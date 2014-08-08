@@ -117,10 +117,12 @@ else( WIN32 AND NOT CYGWIN AND NOT MSYS )
 
       include(FindPackageHandleStandardArgs)
       find_package_handle_standard_args(GSL REQUIRED_VARS GSL_INCLUDE_DIR GSL_LIBRARIES VERSION_VAR GSL_VERSION)
-      mark_as_advanced(GSL_CONFIG_EXECUTABLE)
 
     else( GSL_CONFIG_EXECUTABLE )
       message( STATUS "FindGSL: gsl-config not found.")
     endif( GSL_CONFIG_EXECUTABLE )
+
+    mark_as_advanced(GSL_CONFIG_EXECUTABLE)
+    
   endif( UNIX OR MSYS )
 endif( WIN32 AND NOT CYGWIN AND NOT MSYS )
