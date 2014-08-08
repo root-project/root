@@ -207,6 +207,40 @@ public:
 
 #endif
 
+// Available on all platforms
+template <int marker, typename T>
+T &TTHREAD_TLS_INIT() {
+   TTHREAD_TLS(T*) ptr(0);
+   TTHREAD_TLS(Bool_t) isInit(kFALSE);
+   if (!isInit) {
+      ptr = new T;
+      isInit = kTRUE;
+   }
+   return *ptr;
+}
+
+template <int marker, typename Array, typename T>
+Array &TTHREAD_TLS_INIT_ARRAY() {
+   TTHREAD_TLS(Array*) ptr(0);
+   TTHREAD_TLS(Bool_t) isInit(kFALSE);
+   if (!isInit) {
+      ptr = new Array[sizeof(Array)/sizeof(T)];
+      isInit = kTRUE;
+   }
+   return *ptr;
+}
+
+template <int marker, typename T, typename ArgType>
+T &TTHREAD_TLS_INIT(ArgType arg) {
+   TTHREAD_TLS(T*) ptr(0);
+   TTHREAD_TLS(Bool_t) isInit(kFALSE);
+   if (!isInit) {
+      ptr = new T(arg);
+      isInit = kTRUE;
+   }
+   return *ptr;
+}
+
 #else // __cplusplus
 
 #if defined(R__HAS_THREAD_LOCAL)
