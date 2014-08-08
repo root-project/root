@@ -50,10 +50,10 @@ endif()
 # Define all the header files which should be installed when
 # doing a "make install"
 install(FILES ${ZLIB_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # Add all source files of this subdirectory to the source files
-# neede to build the Core library
+# needed to build the Core library
 # Variables are only defined in this directory-. Some of the
 # variables are needed in the parent scope so they are exported
 # to the parent scope
