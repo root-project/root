@@ -51,14 +51,14 @@
 #if defined(R__MACOSX)
 #  if defined(__clang__) && defined(MAC_OS_X_VERSION_10_7) && (defined(__x86_64__) || defined(__i386__))
 #    define R__HAS___THREAD
-#  else
+#  elif !defined(R__HAS_PTHREAD)
 #    define R__HAS_PTHREAD
 #  endif
 #endif
 #if defined(R__LINUX) || defined(R__AIX)
 #  define R__HAS___THREAD
 #endif
-#if defined(R__SOLARIS)
+#if defined(R__SOLARIS) && !defined(R__HAS_PTHREAD)
 #  define R__HAS_PTHREAD
 #endif
 #if defined(R__WIN32)
