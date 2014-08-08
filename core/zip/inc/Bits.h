@@ -174,6 +174,8 @@ struct bits_internal_state {
    ulg R__bits_sent;   /* bit length of the compressed data */
 #endif
 
+   int error_flag;
+
    /* The following used to be declared (as globals) in ZDeflate.h */
 
    /* ===========================================================================
@@ -318,10 +320,11 @@ int R__bi_init (bits_internal_state *state)
 {
     state->bi_buf = 0;
     state->bi_valid = 0;
+    state->error_flag = 0;
 #ifdef DEBUG
     state->R__bits_sent = 0L;
 #endif
-   return 0;
+    return 0;
 }
 
 /* ===========================================================================
@@ -377,6 +380,7 @@ local void R__flush_outbuf(bits_internal_state *state, unsigned w, unsigned byte
     /* unsigned bytes;  number of bytes to flush (0, 1 or 2) */
 {
     R__error("output buffer too small for in-memory compression");
+    state->error_flag = 1;
 
     /* Encrypt and write the output buffer: */
     state->out_offset = 0;
@@ -425,6 +429,7 @@ void R__copy_block(bits_internal_state *state, char far *buf, unsigned len, int 
     if (state->out_offset + len > state->out_size) {
         R__error("output buffer too small for in-memory compression");
         if (verbose) fprintf(stderr, "R__zip: out_offset=%d, len=%d, out_size=%d\n",state->out_offset,len,state->out_size);
+        state->error_flag = 1;
     } else {
         memcpy(state->out_buf + state->out_offset, buf, len);
         state->out_offset += len;
@@ -473,9 +478,8 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
     ulg crc      = 0;
     int method   = Z_DEFLATED;
     bits_internal_state state;
-    int err;
 
-    if (tgtsize <= 6L) R__error("target buffer too small");
+    if (tgtsize <= 6L) { R__error("target buffer too small"); /* errorflag = 1; */ }
 #if 0
     crc = updcrc((char *)NULL, 0);
     crc = updcrc(src, (extent) srcsize);
@@ -499,7 +503,7 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
     R__bi_init(&state);
     R__ct_init(&att, &method);
     R__lm_init(&state,(level != 0 ? level : 1), &flags);
-    R__Deflate(&state,&err);
+    R__Deflate(&state,&(state.error_flag));
     state.R__window_size = 0L; /* was updated by lm_init() */
 
     /* For portability, force little-endian order on all machines: */
@@ -623,8 +627,8 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     if (0 != R__bi_init(&state) ) return;       /* initialize bit routines */
     if (0 != R__ct_init(&att, &method)) return; /* initialize tree routines */
     if (0 != R__lm_init(&state,level, &flags)) return; /* initialize compression */
-    R__Deflate(&state,&err);                  /* compress data */
-    if (err != 0) return;
+    R__Deflate(&state,&state.error_flag);                  /* compress data */
+    if (state.error_flag != 0) return;
 
     tgt[0] = 'C';               /* Signature 'C'-Chernyaev, 'S'-Smirnov */
     tgt[1] = 'S';
