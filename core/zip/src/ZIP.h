@@ -94,15 +94,17 @@ static int level=6;             /* Compression level */
 
 #ifndef UTIL
 typedef struct bits_internal_state bits_internal_state;
+typedef struct tree_internal_state tree_internal_state;
         /* in deflate.c */
 int R__lm_init OF((bits_internal_state *state,int pack_level, ush *flags));
 void R__lm_free OF((void));
 ulg  R__Deflate OF((bits_internal_state *state,int *errorflag));
 
         /* in trees.c */
-int  R__ct_init     OF((ush *attr, int *method));
+int  R__ct_init     OF((tree_internal_state *t_state, ush *attr, int *method));
 int  R__ct_tally    OF((bits_internal_state *state, int dist, int lc));
 ulg  R__flush_block OF((bits_internal_state *state, char far *buf, ulg stored_len, int eof,int *errorflag));
+tree_internal_state *R__get_thread_tree_state   OF((void));
 
         /* in bits.c */
 int      R__bi_init    OF((bits_internal_state *state));

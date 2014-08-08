@@ -259,6 +259,8 @@ struct bits_internal_state {
    int near R__nice_match; /* Stop searching when current match exceeds this */
 #endif
 
+   tree_internal_state *t_state;
+   /* Pointer to the ZTree internal state, this will be thread local */
 };
 
 /* Output a 16 bit value to the bit stream, lower (oldest) byte first */
@@ -496,7 +498,8 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
     state.R__window_size = 0L;
 
     R__bi_init(&state);
-    R__ct_init(&att, &method);
+    state.t_state = R__get_thread_tree_state();
+    R__ct_init(state.t_state, &att, &method);
     R__lm_init(&state,(level != 0 ? level : 1), &flags);
     R__Deflate(&state,&(state.error_flag));
     state.R__window_size = 0L; /* was updated by lm_init() */
@@ -620,7 +623,8 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     state.R__window_size = 0L;
 
     if (0 != R__bi_init(&state) ) return;       /* initialize bit routines */
-    if (0 != R__ct_init(&att, &method)) return; /* initialize tree routines */
+    state.t_state = R__get_thread_tree_state();
+    if (0 != R__ct_init(state.t_state,&att, &method)) return; /* initialize tree routines */
     if (0 != R__lm_init(&state,level, &flags)) return; /* initialize compression */
     R__Deflate(&state,&state.error_flag);                  /* compress data */
     if (state.error_flag != 0) return;
