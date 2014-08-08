@@ -345,7 +345,7 @@ R__send_bits(state,tree[c].Code, tree[c].Len); }
 #define MAX(a,b) (a >= b ? a : b)
 /* the arguments must not have side effects */
 
-void R__tree_desc_init(tree_desc *tree_desc,
+void R__tree_desc_init(tree_desc *tree_description,
                        ct_data near *dyn_tree,      /* the dynamic tree */
                        ct_data near *static_tree,   /* corresponding static tree or NULL */
                        int     near *extra_bits,    /* extra bits for each code or NULL */
@@ -355,13 +355,13 @@ void R__tree_desc_init(tree_desc *tree_desc,
                        int     max_code            /* largest code with non zero frequency */
 )
 {
-   tree_desc->dyn_tree = dyn_tree;
-   tree_desc->static_tree = static_tree;
-   tree_desc->extra_bits = extra_bits;
-   tree_desc->extra_base = extra_base;
-   tree_desc->elems = elems;
-   tree_desc->max_length = max_length;
-   tree_desc->max_code = max_code;
+   tree_description->dyn_tree = dyn_tree;
+   tree_description->static_tree = static_tree;
+   tree_description->extra_bits = extra_bits;
+   tree_description->extra_base = extra_base;
+   tree_description->elems = elems;
+   tree_description->max_length = max_length;
+   tree_description->max_code = max_code;
 }
 
 /* ===========================================================================
