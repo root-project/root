@@ -1737,8 +1737,8 @@ void TMVA::MethodBase::ReadVariablesFromXML( void* varnode )
       else {
          Log() << kINFO << "ERROR in <ReadVariablesFromXML>" << Endl;
          Log() << kINFO << "The definition (or the order) of the variables found in the input file is"  << Endl;
-         Log() << kINFO << "is not the same as the one declared in the Reader (which is necessary for" << Endl;
-         Log() << kINFO << "the correct working of the method):" << Endl;
+         Log() << kINFO << "not the same as the one declared in the Reader (which is necessary for the" << Endl;
+         Log() << kINFO << "correct working of the method):" << Endl;
          Log() << kINFO << "   var #" << varIdx <<" declared in Reader: " << existingVarInfo.GetExpression() << Endl;
          Log() << kINFO << "   var #" << varIdx <<" declared in file  : " << readVarInfo.GetExpression() << Endl;
          Log() << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
@@ -1774,12 +1774,12 @@ void TMVA::MethodBase::ReadSpectatorsFromXML( void* specnode )
          existingSpecInfo = readSpecInfo;
       } 
       else {
-         Log() << kINFO << "ERROR in <ReadVariablesFromXML>" << Endl;
-         Log() << kINFO << "The definition (or the order) of the variables found in the input file is"  << Endl;
-         Log() << kINFO << "is not the same as the one declared in the Reader (which is necessary for" << Endl;
-         Log() << kINFO << "the correct working of the method):" << Endl;
-         Log() << kINFO << "   var #" << specIdx <<" declared in Reader: " << existingSpecInfo.GetExpression() << Endl;
-         Log() << kINFO << "   var #" << specIdx <<" declared in file  : " << readSpecInfo.GetExpression() << Endl;
+         Log() << kINFO << "ERROR in <ReadSpectatorsFromXML>" << Endl;
+         Log() << kINFO << "The definition (or the order) of the spectators found in the input file is"  << Endl;
+         Log() << kINFO << "not the same as the one declared in the Reader (which is necessary for the" << Endl;
+         Log() << kINFO << "correct working of the method):" << Endl;
+         Log() << kINFO << "  spec #" << specIdx <<" declared in Reader: " << existingSpecInfo.GetExpression() << Endl;
+         Log() << kINFO << "  spec #" << specIdx <<" declared in file  : " << readSpecInfo.GetExpression() << Endl;
          Log() << kFATAL << "The expression declared to the Reader needs to be checked (name or order are wrong)" << Endl;
       }
       ch = gTools().GetNextChild(ch);
