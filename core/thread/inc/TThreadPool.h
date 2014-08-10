@@ -208,12 +208,14 @@ private:
       while (!pThis->fStopped) {
          task_t *task(NULL);
 
-         std::stringstream ss;
-         ss
+         {
+            TLockGuard lock(&pThis->fMutex);
+            std::stringstream ss;
+            ss
                << ">>>> Check for tasks."
                << " Number of Tasks: " << pThis->fTasks.size();
-         pThis->DbgLog(ss.str());
-
+            pThis->DbgLog(ss.str());
+         }
          // There is a task, let's take it
          {
             TLockGuard lock(&pThis->fMutex);
