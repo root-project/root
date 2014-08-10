@@ -50,6 +50,6 @@ endif()
 # Define all the header files which should be installed when
 # doing a "make install"
 install(FILES ${ZLIB_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 ROOT_OBJECT_LIBRARY(Zip ${ZLIB_SRCS})
