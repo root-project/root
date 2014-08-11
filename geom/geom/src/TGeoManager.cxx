@@ -951,7 +951,7 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
       NavigatorsMap_t::const_iterator it = fNavigators.find(0);
       if (it != fNavigators.end()) {
          TGeoNavigatorArray *array = it->second;
-         fNavigators.erase(it);
+         fNavigators.erase(it->first);
          fNavigators.insert(NavigatorsMap_t::value_type(threadId, array));
       }
    }
