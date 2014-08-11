@@ -258,7 +258,8 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
 
   set(targetname_libgen ${dictname}libgen)
 
-  add_library(${targetname_libgen} EXCLUDE_FROM_ALL MODULE ${dictname}.cxx)
+  add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictname}.cxx)
+  set_target_properties(${targetname_libgen} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
   target_link_libraries(${targetname_libgen} ${ROOT_LIBRARIES})
 
   set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
@@ -319,7 +320,8 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
                              SELECTION ${ARG_SELECTION}
                              ${reflex_pass_options})
 
-  add_library(${targetname_libgen} EXCLUDE_FROM_ALL MODULE ${gensrcdict})
+  add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${gensrcdict})
+  set_target_properties(${targetname_libgen} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
 
   if(ARG_LIBNAME)
     set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")

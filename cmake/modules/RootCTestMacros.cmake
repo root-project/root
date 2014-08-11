@@ -254,7 +254,7 @@ function(ROOTTEST_ADD_TEST test)
                         ${outcnvcmd}
                         CMPOUTPUT ${OUTREF_PATH}
                         WORKING_DIR ${test_working_dir}
-                        DIFFCMD sh ${ROOTTEST_DIR}/scripts/custom_diff.sh
+                        DIFFCMD ${ROOTTEST_DIR}/scripts/custom_diff.py
                         TIMEOUT 3600
                         ${environment}
                         ${build}
