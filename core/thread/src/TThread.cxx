@@ -54,20 +54,30 @@ static TMutex  *gMainInternalMutex = 0;
 static void ThreadInternalLock() { if (gMainInternalMutex) gMainInternalMutex->Lock(); }
 static void ThreadInternalUnLock() { if (gMainInternalMutex) gMainInternalMutex->UnLock(); }
 
+static Bool_t fgIsTearDown;
 
 //------------------------------------------------------------------------------
 
 // Set gGlobalMutex to 0 when Thread library gets unloaded
-class TGlobalMutexGuard {
+class TThreadTearDownGuard {
 public:
-   TGlobalMutexGuard() { }
-   ~TGlobalMutexGuard() {
+   TThreadTearDownGuard() { fgIsTearDown = kFALSE; }
+   ~TThreadTearDownGuard() {
+      // Note: we could insert here a wait for all thread to be finished.
+      // this is questionable though as we need to balance between fixing a
+      // user error (the thread was let lose and the caller did not explicit wait)
+      // and the risk that we can not terminate a failing process.
+
+      fgIsTearDown = kTRUE;
       TVirtualMutex *m = gGlobalMutex;
       gGlobalMutex = 0;
       delete m;
+      TThreadImp *imp = TThread::fgThreadImp;
+      TThread::fgThreadImp = 0;
+      delete imp;
    }
 };
-static TGlobalMutexGuard gGlobalMutexGuardInit;
+static TThreadTearDownGuard gTearDownGuard;
 
 //------------------------------------------------------------------------------
 
@@ -294,7 +304,7 @@ void TThread::Init()
 {
    // Initialize global state and variables once.
 
-   if (fgThreadImp) return;
+   if (fgThreadImp || fgIsTearDown) return;
 
    fgThreadImp = gThreadFactory->CreateThreadImp();
    gMainInternalMutex = new TMutex(kTRUE);
@@ -515,6 +525,7 @@ Long_t TThread::SelfId()
 {
    // Static method returning the id for the current thread.
 
+   if (fgIsTearDown) return -1;
    if (!fgThreadImp) Init();
 
    return fgThreadImp->SelfId();
