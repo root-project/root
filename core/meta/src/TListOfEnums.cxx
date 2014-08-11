@@ -27,20 +27,6 @@
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 
-//______________________________________________________________________________
-inline static Long64_t GetDeclIdHelper(const TEnum* en)
-{
-   // Accomodate the enum constants coming from rootpcms: the have no DeclId
-   // by definition
-#if defined(R__MUST_REVISIT)
-# if R__MUST_REVISIT(6,4)
-   "This special case can be removed once PCMs are available."
-# endif
-#endif
-      const Long64_t theId = (Long64_t) en->GetDeclId();
-      return (0 != theId) ? theId : (Long64_t)en;
-}
-
 ClassImp(TListOfEnums)
 
 //______________________________________________________________________________
@@ -70,9 +56,8 @@ void TListOfEnums::MapObject(TObject *obj)
    // Add pair<id, object> to the map of functions and their ids.
 
    TEnum *e = dynamic_cast<TEnum*>(obj);
-   //if (e && e->GetDeclId()) { // Form to be used with pcms
-   if (e && GetDeclIdHelper(e)) {
-      fIds->Add(GetDeclIdHelper(e),(Long64_t)e);
+   if (e && e->GetDeclId()) {
+      fIds->Add((Long64_t)e->GetDeclId(),(Long64_t)e);
    }
 }
 
@@ -361,7 +346,8 @@ void TListOfEnums::Unload()
    while (lnk) {
       TEnum *data = (TEnum *)lnk->GetObject();
 
-      fIds->Remove(GetDeclIdHelper(data));
+      if (data->GetDeclId())
+         fIds->Remove((Long64_t)data->GetDeclId());
       fUnloaded->Add(data);
 
       lnk = lnk->Next();
@@ -382,7 +368,8 @@ void TListOfEnums::Unload(TEnum *e)
    if (THashList::Remove(e)) {
       // We contains the object, let remove it from the other internal
       // list and move it to the list of unloaded objects.
-      fIds->Remove(GetDeclIdHelper(e));
+      if (e->GetDeclId())
+         fIds->Remove((Long64_t)e->GetDeclId());
       fUnloaded->Add(e);
    }
 }
