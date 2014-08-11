@@ -549,8 +549,8 @@ Double_t TMath::Poisson(Double_t x, Double_t par)
 {
   // compute the Poisson distribution function for (x,par)
   // The Poisson PDF is implemented by means of Euler's Gamma-function
-  // (for the factorial), so for all integer arguments it is correct.
-  // BUT for non-integer values it IS NOT equal to the Poisson distribution.
+  // (for the factorial), so for any x integer argument it is correct.
+  // BUT for non-integer x values, it IS NOT equal to the Poisson distribution.
   // see TMath::PoissonI to get a non-smooth function.
   // Note that for large values of par, it is better to call
   //     TMath::Gaus(x,par,sqrt(par),kTRUE)
