@@ -629,6 +629,8 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
   fSData->merge(sWeightData);
 
+  delete sWeightData; 
+
   //Restore yield values
 
   for(Int_t i = 0; i < yieldsTmp.getSize(); i++) 
