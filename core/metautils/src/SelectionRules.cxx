@@ -899,24 +899,18 @@ const BaseSelectionRule *SelectionRules::IsFunSelected(clang::FunctionDecl* D, c
 
 const BaseSelectionRule *SelectionRules::IsEnumSelected(clang::EnumDecl* D, const std::string& qual_name) const
 {
-   std::list<VariableSelectionRule>::const_iterator it;
-   std::list<VariableSelectionRule>::const_iterator it_end;
-
-   it = fEnumSelectionRules.begin();
-   it_end = fEnumSelectionRules.end();
-
    const BaseSelectionRule *selector = 0;
 
    // iterate through all the rules
    // we call this method only for genrefex variables, functions and enums - it is simpler than the class case:
    // if we have No - it is veto even if we have explicit yes as well
-   for(; it != it_end; ++it) {
-      if (BaseSelectionRule::kNoMatch != it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false)) {
-         if (it->GetSelected() == BaseSelectionRule::kNo) {
+   for(const auto& rule: fEnumSelectionRules) {
+      if (BaseSelectionRule::kNoMatch != rule.Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false)) {
+         if (rule.GetSelected() == BaseSelectionRule::kNo) {
             // The rule did explicitly request to not select this entity.
             return 0;
          } else {
-            selector = &(*it);
+            selector = &rule;
          }
       }
    }
