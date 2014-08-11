@@ -163,6 +163,10 @@ Int_t TJoinHelper::Join()
 
    fM->UnLock();
 
+   // And wait for the help to finish to avoid the risk that it is still
+   // running when the main tread is finished (and the thread library unloaded!)
+   TThread::fgThreadImp->Join(fH, 0);
+
    return fRc;
 }
 
