@@ -327,7 +327,8 @@ static void EmitEnums(const std::vector<clang::EnumDecl*>& enumvec) {
    for (const auto en: enumvec) {
       // Enums within tag decls are processed as part of the tag.
       if (clang::isa<clang::TranslationUnitDecl>(en->getDeclContext())
-          || clang::isa<clang::LinkageSpecDecl>(en->getDeclContext()))
+          || clang::isa<clang::LinkageSpecDecl>(en->getDeclContext())
+          || clang::isa<clang::NamespaceDecl>(en->getDeclContext()));
          AddEnumToROOTFile(en->getQualifiedNameAsString().c_str());
    }
 }

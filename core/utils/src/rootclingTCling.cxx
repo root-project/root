@@ -123,7 +123,30 @@ bool CloseStreamerInfoROOTFile()
 
    TObjArray enums;
    for (const auto& enumname: gEnumsToStore) {
-      TEnum* en = (TEnum*)gROOT->GetListOfEnums()->FindObject(enumname.c_str());
+      TEnum* en = nullptr;
+      const size_t lastSepPos = enumname.find_last_of("::");
+      if (lastSepPos != std::string::npos){
+         const std::string nsName = enumname.substr(0,lastSepPos-1);
+         TClass* tclassInstance = TClass::GetClass(nsName.c_str());
+         if (!tclassInstance){
+            std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find TClass instance for namespace "
+                   << nsName << '\n';
+            return false;
+         }
+         auto enumListPtr = tclassInstance->GetListOfEnums();
+         if (!enumListPtr){
+            std::cerr << "ERROR in CloseStreamerInfoROOTFile(): TClass instance for namespace "
+                   << nsName << " does not have any enum associated. This is an inconsistency." << '\n';
+            return false;
+         }
+         const std::string unqualifiedEnumName = enumname.substr(lastSepPos+1);
+         en = (TEnum*)enumListPtr->FindObject(unqualifiedEnumName.c_str());
+         en->SetTitle(nsName.c_str());
+      }
+      else {
+         en = (TEnum*)gROOT->GetListOfEnums()->FindObject(enumname.c_str());
+         en->SetTitle("");
+      }
       if (!en) {
          std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find enum "
                    << enumname << '\n';
