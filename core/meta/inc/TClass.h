@@ -119,6 +119,7 @@ public:
    enum EState {
       kNoInfo,          // The state has not yet been initialized, i.e. the TClass
                         // was just created and/or there is no trace of it in the interpreter.
+      kNamespaceForMeta,// Very transient state necessary to bootstrap namespace entries in ROOT Meta w/o interpreter information
       kForwardDeclared, // The interpreted knows the entity is a class but that's it.
       kEmulated,        // The information about the class only comes from a TStreamerInfo
       kInterpreted,     // The class is described completely/only in the interpreter database.

@@ -1013,6 +1013,13 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
    // Create a TClass object. This object does not contain anything. We mimic
    // the case of a class fwd declared in the interpreter.
    R__LOCKGUARD2(gInterpreterMutex);
+
+   // Treat the case in which a TClass instance is created for a namespace
+   if (theState == kNamespaceForMeta){
+      fProperty = kIsNamespace;
+      theState = kForwardDeclared; // it immediately decays in kForwardDeclared
+   }
+
    if (theState != kForwardDeclared && theState != kEmulated)
       ::Fatal("TClass::TClass",
               "A TClass entry cannot be initialized in a state different from kForwardDeclared or kEmulated.");
