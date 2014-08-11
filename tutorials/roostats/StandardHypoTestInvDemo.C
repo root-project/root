@@ -916,9 +916,11 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
       if (testStatType != 2 && testStatType != 3)
          Warning("StandardHypoTestInvDemo","Only the PL test statistic can be used with AsymptoticCalculator - use by default a two-sided PL");
    }
-   else if (type == 0 || type == 1)
+   else if (type == 0 || type == 1) {
       ((FrequentistCalculator*) hc)->SetToys(ntoys,ntoys/mNToysRatio);
-
+      // store also the fit information for each poi point used by calculator based on toys
+      if (mEnableDetOutput) ((FrequentistCalculator*) hc)->StoreFitInfo(true);
+   }
 
    // Get the result
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
