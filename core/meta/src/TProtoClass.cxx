@@ -100,7 +100,7 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
    if (fEnums) fEnums->Delete(opt);
    delete fEnums; fEnums = 0;
 }
-
+#include <iostream>
 //______________________________________________________________________________
 Bool_t TProtoClass::FillTClass(TClass* cl) {
    // Move data from this TProtoClass into cl.
@@ -140,7 +140,12 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    cl->fTitle = this->fTitle;
    cl->fBase = fBase;
    cl->fData = (TListOfDataMembers*)fData;
-   cl->fEnums = (TListOfEnums*)fEnums;
+   // We need to fill enums one by one to initialise the internal map which is
+   // transient
+   cl->fEnums = new TListOfEnums();
+   for (TObject* enumAsTObj : *fEnums){
+      cl->fEnums->Add((TEnum*) enumAsTObj);
+   }
    cl->fRealData = new TList(); // FIXME: this should really become a THashList!
 
    cl->fSizeof = fSizeof;
