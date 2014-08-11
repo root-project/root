@@ -102,7 +102,7 @@ TDecompChol::TDecompChol(const TDecompChol &another) : TDecompBase(another)
 //______________________________________________________________________________
 Bool_t TDecompChol::Decompose()
 {
-// Matrix A is decomposed in component U so that A = U^T*U^T
+// Matrix A is decomposed in component U so that A = U^T * U 
 // If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
 
    if (TestBit(kDecomposed)) return kTRUE;
