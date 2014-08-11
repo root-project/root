@@ -48,6 +48,16 @@ void TEnum::AddConstant(TEnumConstant* constant)
 {
    //Add a EnumConstant to the list of constants of the Enum Type.
 
+#if defined(R__MUST_REVISIT)
+# if R__MUST_REVISIT(6,4)
+   "This procedure can be removed once PCMs are available."
+# endif
+#endif
+   // Remove the old constant created from a rootpcm and replace with the full
+   // blown entity which has a mirror in the interpreter DB
+   if (TObject* constAsTObj = fConstantList.FindObject(constant->GetName()))
+      fConstantList.Remove(constAsTObj);
+
    fConstantList.Add(constant);
 }
 
