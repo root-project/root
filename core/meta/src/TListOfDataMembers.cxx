@@ -27,6 +27,21 @@
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 #include "TError.h"
+#include "TEnumConstant.h"
+
+//______________________________________________________________________________
+inline static Long64_t GetDeclIdHelper(const TGlobal* g)
+{
+   // Accomodate the enum constants coming from rootpcms: the have no DeclId
+   // by definition
+#if defined(R__MUST_REVISIT)
+# if R__MUST_REVISIT(6,4)
+   "This special case can be removed once PCMs are available."
+# endif
+#endif
+      const Long64_t theId = (Long64_t) g->GetDeclId();
+      return (0 != theId) ? theId : (Long64_t)g;
+}
 
 ClassImp(TListOfDataMembers)
 
@@ -62,7 +77,7 @@ void TListOfDataMembers::MapObject(TObject* obj)
    } else {
       TGlobal *g = dynamic_cast<TGlobal*>(obj);
       if (g) {
-         fIds->Add((Long64_t)g->GetDeclId(),(Long64_t)g);
+         fIds->Add(GetDeclIdHelper(g),(Long64_t)g);
       }
    }
 }
@@ -312,8 +327,9 @@ void TListOfDataMembers::UnmapObject(TObject* obj)
    } else {
       TGlobal *g = dynamic_cast<TGlobal*>(obj);
       if (g) {
-         if (g->GetDeclId()) {
-            fIds->Remove((Long64_t)g->GetDeclId());
+         //if (g->GetDeclId()) { //fomulation for pcms
+         if (Long64_t theId = GetDeclIdHelper(g)) { //fomulation for rootpcms
+            fIds->Remove(theId);
          }
          g->Update(0);
       }
