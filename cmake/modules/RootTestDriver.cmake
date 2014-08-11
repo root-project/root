@@ -187,10 +187,7 @@ if(POST)
 endif()
 
 if(CMPOUTPUT)
-  set(command COMMAND ${diff_cmd} ${OUT} ${CMPOUTPUT})
-
-  execute_process(${command} ${OUT} ${CMPOUTPUT} RESULT_VARIABLE _rc)
-
+  execute_process(COMMAND ${diff_cmd} ${OUT} ${CMPOUTPUT} RESULT_VARIABLE _rc)
   if(_rc)
     message(FATAL_ERROR "compare output error: ${_rc}")
   endif()
