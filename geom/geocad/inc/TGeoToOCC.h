@@ -30,7 +30,7 @@
 class TGeoToOCC
 {
 private:
-   void OCCDocCreation(); 
+   void OCCDocCreation();
    TopoDS_Shape OCC_Arb8(Double_t dz, Double_t * ivert, Double_t * points);
    TopoDS_Shape OCC_EllTube(Double_t Dx, Double_t Dy, Double_t Dz);
    TopoDS_Shape OCC_Torus(Double_t Rmin, Double_t Rmax, Double_t Rtor, Double_t SPhi, Double_t DPhi);
@@ -51,7 +51,7 @@ private:
    TopoDS_Shape fOccShape;
 
 public:
-   TGeoToOCC(); 
+   TGeoToOCC();
    virtual ~TGeoToOCC();
    TopoDS_Shape OCC_SimpleShape(TGeoShape *TG_Shape);
    TopoDS_Shape OCC_CompositeShape(TGeoCompositeShape *cs, TGeoHMatrix matrix);
@@ -59,5 +59,5 @@ public:
 
 };
 #endif
- 
+
 

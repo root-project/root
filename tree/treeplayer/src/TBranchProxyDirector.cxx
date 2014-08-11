@@ -38,7 +38,7 @@ ClassImp(ROOT::TBranchProxyDirector);
 namespace ROOT {
 
    // Helper function to call Reset on each TBranchProxy
-   void Reset(TBranchProxy *x) { x->Reset(); } 
+   void Reset(TBranchProxy *x) { x->Reset(); }
 
    // Helper function to call SetReadEntry on all TFriendProxy
    void ResetReadEntry(TFriendProxy *x) { x->ResetReadEntry(); }
@@ -51,21 +51,21 @@ namespace ROOT {
    };
 
 
-   TBranchProxyDirector::TBranchProxyDirector(TTree* tree, Long64_t i) : 
+   TBranchProxyDirector::TBranchProxyDirector(TTree* tree, Long64_t i) :
       fTree(tree),
-      fEntry(i) 
+      fEntry(i)
    {
       // Simple constructor
    }
 
-   TBranchProxyDirector::TBranchProxyDirector(TTree* tree, Int_t i) :  
+   TBranchProxyDirector::TBranchProxyDirector(TTree* tree, Int_t i) :
       // cint has a problem casting int to long long
       fTree(tree),
-      fEntry(i) 
+      fEntry(i)
    {
       // Simple constructor
    }
-      
+
    void TBranchProxyDirector::Attach(TBranchProxy* p) {
 
       // Attach a TBranchProxy object to this director.  The director just
@@ -84,15 +84,15 @@ namespace ROOT {
 
    TH1F* TBranchProxyDirector::CreateHistogram(const char *options) {
       // Create a temporary 1D histogram.
-      
+
       Int_t nbins = gEnv->GetValue("Hist.Binning.1D.x",100);
       Double_t vmin=0, vmax=0;
       Double_t xmin=0, xmax=0;
       Bool_t canExtend = kTRUE;
-      TString opt( options ); 
+      TString opt( options );
       Bool_t optSame = opt.Contains("same");
       if (optSame) canExtend = kFALSE;
-      
+
       if (gPad && optSame) {
          TListIter np(gPad->GetListOfPrimitives());
          TObject *op;
@@ -126,7 +126,7 @@ namespace ROOT {
       hist->GetXaxis()->SetTitle("var");
       hist->SetBit(kCanDelete);
       hist->SetDirectory(0);
-      
+
       if (opt.Length() && opt.Contains("e")) hist->Sumw2();
       return hist;
    }
@@ -141,11 +141,11 @@ namespace ROOT {
    }
 
    TTree* TBranchProxyDirector::SetTree(TTree *newtree) {
-      
+
       // Set the BranchProxy to be looking at a new tree.
       // Reset all.
       // Return the old tree.
-      
+
       TTree* oldtree = fTree;
       fTree = newtree;
       fEntry = -1;

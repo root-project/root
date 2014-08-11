@@ -47,7 +47,7 @@ class TEventIter : public TObject {
 
 public:
    enum EIterType { kData = 15};  // True if iterating over data
-  
+
 protected:
    TDSet         *fDSet;         // data set over which to iterate
 

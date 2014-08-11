@@ -84,7 +84,7 @@ class TTreeCloner {
 
    friend class CompareSeek;
    friend class CompareEntry;
-   
+
    void ImportClusterRanges();
 
 private:

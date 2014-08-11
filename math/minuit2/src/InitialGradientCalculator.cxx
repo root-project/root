@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -17,10 +17,10 @@
 
 #include <math.h>
 
-//#define DEBUG 
+//#define DEBUG
 
 #if defined(DEBUG) || defined(WARNINGMSG)
-#include "Minuit2/MnPrint.h" 
+#include "Minuit2/MnPrint.h"
 #endif
 
 
@@ -31,37 +31,37 @@ namespace ROOT {
 
 
 FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters& par) const {
-   // initial rough  estimate of the gradient using the parameter step size 
-   
+   // initial rough  estimate of the gradient using the parameter step size
+
    assert(par.IsValid());
-   
+
    unsigned int n = Trafo().VariableParameters();
    assert(n == par.Vec().size());
 
 #ifdef DEBUG
    std::cout << "Initial gradient calculator - params " << par.Vec() << std::endl;
 #endif
-   
+
    MnAlgebraicVector gr(n), gr2(n), gst(n);
-   
+
    for(unsigned int i = 0; i < n; i++) {
       unsigned int exOfIn = Trafo().ExtOfInt(i);
-      
+
       double var = par.Vec()(i);
       double werr = Trafo().Parameter(exOfIn).Error();
-      double sav = Trafo().Int2ext(i, var); 
+      double sav = Trafo().Int2ext(i, var);
       double sav2 = sav + werr;
       if(Trafo().Parameter(exOfIn).HasLimits()) {
          if(Trafo().Parameter(exOfIn).HasUpperLimit() &&
-            sav2 > Trafo().Parameter(exOfIn).UpperLimit()) 
+            sav2 > Trafo().Parameter(exOfIn).UpperLimit())
             sav2 = Trafo().Parameter(exOfIn).UpperLimit();
       }
       double var2 = Trafo().Ext2int(exOfIn, sav2);
       double vplu = var2 - var;
       sav2 = sav - werr;
       if(Trafo().Parameter(exOfIn).HasLimits()) {
-         if(Trafo().Parameter(exOfIn).HasLowerLimit() && 
-            sav2 < Trafo().Parameter(exOfIn).LowerLimit()) 
+         if(Trafo().Parameter(exOfIn).HasLowerLimit() &&
+            sav2 < Trafo().Parameter(exOfIn).LowerLimit())
             sav2 = Trafo().Parameter(exOfIn).LowerLimit();
       }
       var2 = Trafo().Ext2int(exOfIn, sav2);
@@ -80,13 +80,13 @@ FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters& 
       gst(i) = gstep;
 
 #ifdef DEBUG
-      std::cout << "computing initial gradient for parameter " << Trafo().Name(exOfIn) << " value = " << var 
+      std::cout << "computing initial gradient for parameter " << Trafo().Name(exOfIn) << " value = " << var
                 << " [ " << vmin << " , " << vplu << " ] " << "dirin " <<  dirin << " grd " << grd << " g2 " << g2 << std::endl;
 #endif
 
    }
-   
-   return FunctionGradient(gr, gr2, gst);  
+
+   return FunctionGradient(gr, gr2, gst);
 }
 
 FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters& par, const FunctionGradient&) const {

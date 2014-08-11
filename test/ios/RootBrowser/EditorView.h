@@ -12,7 +12,7 @@
 
 @class EditorPlateView;
 
-@interface EditorView : UIView 
+@interface EditorView : UIView
 
 + (CGFloat) editorAlpha;
 + (CGFloat) editorWidth;

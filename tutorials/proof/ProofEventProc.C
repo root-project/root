@@ -77,10 +77,10 @@ void ProofEventProc::SlaveBegin(TTree * /*tree*/)
    fPxPyHist->GetYaxis()->SetTitle("p_{Y}");
 
    fOutput->Add(fPxPyHist);
-   
+
    // Abort test, if any
    TParameter<Int_t> *pi = 0;
-   if (fInput) 
+   if (fInput)
       pi = dynamic_cast<TParameter<Int_t> *>(fInput->FindObject("ProofEventProc_TestAbort"));
    if (pi) fTestAbort = pi->GetVal();
    if (fTestAbort < -1 || fTestAbort > 1) {
@@ -90,7 +90,7 @@ void ProofEventProc::SlaveBegin(TTree * /*tree*/)
       Info("SlaveBegin", "running abort test: %d", fTestAbort);
    }
 
-   if (fTestAbort == 0) 
+   if (fTestAbort == 0)
       Abort("Test abortion during init", kAbortProcess);
 }
 
@@ -121,7 +121,7 @@ Bool_t ProofEventProc::Process(Long64_t entry)
    if (fTestAbort == 1) {
       Double_t rr = gRandom->Rndm();
       if (rr > 0.999) {
-         Info("Process", "%lld -> %f", entry, rr); 
+         Info("Process", "%lld -> %f", entry, rr);
          Abort("Testing file abortion", kAbortFile);
          return kTRUE;
       }
@@ -165,7 +165,7 @@ void ProofEventProc::SlaveTerminate()
       Warning("SlaveTerminate", "no proc elements list found!");
       return;
    }
-      
+
    // Add proc elements to the output list
    TIter nxpe(fProcElems);
    TObject *o = 0;
@@ -183,7 +183,7 @@ void ProofEventProc::Terminate()
    CheckRanges();
 
    if (gROOT->IsBatch()) return;
-   
+
    TCanvas* canvas = new TCanvas("event","event",800,10,700,780);
    canvas->Divide(2,2);
    TPad *pad1 = (TPad *) canvas->GetPad(1);
@@ -243,7 +243,7 @@ void ProofEventProc::CheckRanges()
    // Create the result object and add it to the list
    TNamed *nout = new TNamed("Range_Check", "OK");
    fOutput->Add(nout);
-   
+
    // Get info to check from the input list
    if (!fInput || (fInput && fInput->GetSize() <= 0)) {
       nout->SetTitle("No input list");

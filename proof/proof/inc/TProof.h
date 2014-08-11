@@ -407,7 +407,7 @@ public:
       kStopMerging    = 5,         //Master tells worker to stop merging (and return output)
       kOutputSent     = 6          //Worker reports sending its output to given worker
    };
-   
+
    enum EProofClearData {
       kPurge        = 0x1,
       kUnregistered = 0x2,
@@ -543,7 +543,7 @@ private:
    FILE           *fLogFileW;        //temp file to redirect logs
    FILE           *fLogFileR;        //temp file to read redirected logs
    Bool_t          fLogToWindowOnly; //send log to window only
-   
+
    Bool_t          fSaveLogToMacro;  // Whether to save received logs to TMacro fMacroLog (use with care)
    TMacro          fMacroLog;        // Macro with the saved (last) log
 
@@ -590,7 +590,7 @@ private:
    TString         fPerfTree;        // If non-null triggers saving of the performance info into fPerfTree
 
    TList          *fWrksOutputReady; // List of workers ready to send output (in control output sending mode)
-   
+
    static TPluginHandler *fgLogViewer;  // Log dialog box plugin
 
 protected:
@@ -768,7 +768,7 @@ protected:
 
    void         SetDSet(TDSet *dset) { fDSet = dset; }
    virtual void ValidateDSet(TDSet *dset);
-   
+
    Int_t   VerifyDataSetParallel(const char *uri, const char *optStr);
 
    TPluginHandler *GetProgressDialog() const { return fProgressDialog; }
@@ -780,7 +780,7 @@ protected:
    virtual void  SendInputDataFile();
    Int_t SendFile(const char *file, Int_t opt = (kBinary | kForward | kCp | kCpBin),
                   const char *rfile = 0, TSlave *sl = 0);
-   
+
    // Fast enable/disable feedback from Process
    void SetFeedback(TString &opt, TString &optfb, Int_t action);
    // Output file handling during Process
@@ -813,7 +813,7 @@ public:
    void        Touch();
    Int_t       Exec(const char *cmd, Bool_t plusMaster = kFALSE);
    Int_t       Exec(const char *cmd, const char *ord, Bool_t logtomacro = kFALSE);
-   
+
    TString     Getenv(const char *env, const char *ord = "0");
    Int_t       GetRC(const char *RCenv, Int_t &env, const char *ord = "0");
    Int_t       GetRC(const char *RCenv, Double_t &env, const char *ord = "0");
@@ -1045,7 +1045,7 @@ public:
    void        ShowLog(const char *queryref);
    Bool_t      SendingLogToWindow() const { return fLogToWindowOnly; }
    void        SendLogToWindow(Bool_t mode) { fLogToWindowOnly = mode; }
-   
+
    TMacro     *GetMacroLog() { return &fMacroLog; }
 
    void        ResetProgressDialogStatus() { fProgressDialogStarted = kFALSE; }
@@ -1076,7 +1076,7 @@ public:
    void        SetPrintProgress(PrintProgress_t pp) { fPrintProgress = pp; }
 
    void        SetProgressDialog(Bool_t on = kTRUE);
-   
+
    // Enable the performance tree
    Int_t       SavePerfTree(const char *pf = 0, const char *qref = 0);
    void        SetPerfTree(const char *pf = "perftree.root", Bool_t withWrks = kFALSE);

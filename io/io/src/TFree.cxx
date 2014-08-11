@@ -123,7 +123,7 @@ void TFree::FillBuffer(char *&buffer)
 TFree *TFree::GetBestFree(TList *lfree, Int_t nbytes)
 {
    // Return the best free segment where to store nbytes.
-   
+
    TFree *idcur = this;
    if (idcur == 0) return 0;
    TFree *idcur1 = 0;
@@ -140,9 +140,9 @@ TFree *TFree::GetBestFree(TList *lfree, Int_t nbytes)
       }
       idcur = (TFree*)lfree->After(idcur);
    } while (idcur !=0);
-   
+
    // return first segment >nbytes
-   if (idcur1) return idcur1;                                   
+   if (idcur1) return idcur1;
 
    //try big file
    idcur = (TFree*)lfree->Last();
@@ -184,4 +184,4 @@ Int_t TFree::Sizeof() const
    if (fLast > TFile::kStartBigFile) return 18;
    else                              return 10;
 }
-   
+

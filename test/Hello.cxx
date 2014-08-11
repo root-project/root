@@ -142,12 +142,12 @@ void Hello::Paint(Option_t *)
    }
 }
 
-void Hello::Print(Option_t * opt) const 
+void Hello::Print(Option_t * opt) const
 {
    fList->Print(opt);
 }
 
-void Hello::ls(Option_t *opt) const 
+void Hello::ls(Option_t *opt) const
 {
    fList->ls(opt);
 }

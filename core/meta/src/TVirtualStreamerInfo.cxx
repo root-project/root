@@ -19,6 +19,8 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TClass.h"
+#include "TVirtualMutex.h"
+#include "TInterpreter.h"
 #include "TVirtualStreamerInfo.h"
 #include "TPluginManager.h"
 #include "TStreamerElement.h"
@@ -51,7 +53,7 @@ TVirtualStreamerInfo::TVirtualStreamerInfo(TClass *cl)
 //______________________________________________________________________________
 TVirtualStreamerInfo::TVirtualStreamerInfo(const TVirtualStreamerInfo& info)
   : TNamed(info), fOptimized(kFALSE), fIsBuilt(kFALSE)
-{ 
+{
    //copy constructor
 }
 
@@ -61,7 +63,7 @@ TVirtualStreamerInfo& TVirtualStreamerInfo::operator=(const TVirtualStreamerInfo
    //assignment operator
    if(this!=&info) {
       TNamed::operator=(info);
-   } 
+   }
    return *this;
 }
 
@@ -112,8 +114,12 @@ TStreamerBasicType *TVirtualStreamerInfo::GetElementCounter(const char *countNam
    // Get pointer to a TStreamerBasicType in TClass *cl
    //static function
 
-   const TObjArray *sinfos = cl->GetStreamerInfos();
-   TVirtualStreamerInfo *info = (TVirtualStreamerInfo *)sinfos->At(cl->GetClassVersion());
+   TVirtualStreamerInfo *info;
+   {
+      R__LOCKGUARD(gInterpreterMutex);
+      const TObjArray *sinfos = cl->GetStreamerInfos();
+      info = (TVirtualStreamerInfo *)sinfos->At(cl->GetClassVersion());
+   }
 
    if (!info || !info->IsBuilt()) {
       // Even if the streamerInfo exist, it could still need to be 'build'
@@ -172,7 +178,7 @@ TVirtualStreamerInfo *TVirtualStreamerInfo::Factory()
          if (h->LoadPlugin() == -1) {
             ::Fatal("TVirtualStreamerInfo::Factory",
                     "The plugin handler for TVirtualStreamerInfo was found but failed to load!");
-         } 
+         }
          fgInfoFactory = (TVirtualStreamerInfo*) h->ExecPlugin(0);
          if (fgInfoFactory == 0) {
             ::Fatal("TVirtualStreamerInfo::Factory",
@@ -181,7 +187,7 @@ TVirtualStreamerInfo *TVirtualStreamerInfo::Factory()
       } else {
          TString filename("$ROOTSYS/etc/plugins/TVirtualStreamerInfo");
          gSystem->ExpandPathName(filename);
-         if (gSystem->AccessPathName(filename)) {            
+         if (gSystem->AccessPathName(filename)) {
             ::Fatal("TVirtualStreamerInfo::Factory",
                     "Cannot find the plugin handler for TVirtualStreamerInfo! "
                     "$ROOTSYS/etc/plugins/TVirtualStreamerInfo does not exist "

@@ -51,8 +51,8 @@ public:
 
   */
 
-  FumiliStandardMaximumLikelihoodFCN(const ParametricFunction& modelFCN,
-				     const std::vector<double>& pos)
+   FumiliStandardMaximumLikelihoodFCN(const ParametricFunction& modelFCN,
+                                      const std::vector<double>& pos)
   {
     this->SetModelFunction(modelFCN);
     unsigned int n = pos.size();
@@ -77,9 +77,9 @@ public:
 
   */
 
-  FumiliStandardMaximumLikelihoodFCN(const ParametricFunction& modelFCN,
-				     const std::vector<std::vector<double> >& pos) {
-    this->SetModelFunction(modelFCN);
+   FumiliStandardMaximumLikelihoodFCN(const ParametricFunction& modelFCN,
+                                      const std::vector<std::vector<double> >& pos) {
+      this->SetModelFunction(modelFCN);
     fPositions = pos;
 
   }

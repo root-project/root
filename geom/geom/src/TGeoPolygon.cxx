@@ -10,16 +10,16 @@
  *************************************************************************/
 
 //____________________________________________________________________________
-// TGeoPolygon - Arbitrary polygon class 
+// TGeoPolygon - Arbitrary polygon class
 //____________________________________________________________________________
 //
 // A polygon is a 2D shape defined by vertices in the XY plane. It is used by
 // TGeoXtru class for computing Contains() and Safety(). Only the pointers to
 // the actual lists of XY values are used - these are not owned by the class.
-// 
+//
 // To check if a point in XY plane is contained by a polygon, this is split
 // into an outscribed convex polygon and the remaining polygons of its subtracton
-// from the outscribed one. A point is INSIDE if it is 
+// from the outscribed one. A point is INSIDE if it is
 // contained by the outscribed polygon but NOT by the remaining ones. Since these
 // can also be arbitrary polygons at their turn, a tree structure is formed:
 //
@@ -37,7 +37,7 @@
 //
 // For creating a polygon without TGeoXtru class, one has to call the constructor
 // TGeoPolygon(nvert) and then SetXY(Double_t *x, Double_t *y) providing the
-// arrays of X and Y vertex positions (defined clockwise) that have to 'live' longer 
+// arrays of X and Y vertex positions (defined clockwise) that have to 'live' longer
 // than the polygon they will describe. This complication is due to efficiency reasons.
 // At the end one has to call the FinishPolygon() method.
 
@@ -72,7 +72,7 @@ TGeoPolygon::TGeoPolygon(Int_t nvert)
    if (nvert<3) {
       Fatal("Ctor", "Invalid number of vertices %i", nvert);
       return;
-   }   
+   }
    fNvert   = nvert;
    fNconvex = 0;
    fInd     = new Int_t[nvert];
@@ -94,7 +94,7 @@ TGeoPolygon::~TGeoPolygon()
    if (fDaughters) {
       fDaughters->Delete();
       delete fDaughters;
-   }   
+   }
 }
 //_____________________________________________________________________________
 Double_t TGeoPolygon::Area() const
@@ -109,7 +109,7 @@ Double_t TGeoPolygon::Area() const
       area += 0.5*(fX[i]*fY[j]-fX[j]*fY[i]);
    }
    return TMath::Abs(area);
-}      
+}
 
 //_____________________________________________________________________________
 Bool_t TGeoPolygon::Contains(const Double_t *point) const
@@ -117,25 +117,25 @@ Bool_t TGeoPolygon::Contains(const Double_t *point) const
 // Check if a point given by X = point[0], Y = point[1] is inside the polygon.
    Int_t i;
    TGeoPolygon *poly;
-   for (i=0; i<fNconvex; i++) 
+   for (i=0; i<fNconvex; i++)
       if (!IsRightSided(point, fIndc[i], fIndc[(i+1)%fNconvex])) return kFALSE;
    if (!fDaughters) return kTRUE;
    Int_t nd = fDaughters->GetEntriesFast();
    for (i=0; i<nd; i++) {
       poly = (TGeoPolygon*)fDaughters->UncheckedAt(i);
       if (poly->Contains(point)) return kFALSE;
-   }   
-   return kTRUE;      
+   }
+   return kTRUE;
 }
 
 //_____________________________________________________________________________
-void TGeoPolygon::ConvexCheck() 
+void TGeoPolygon::ConvexCheck()
 {
 // Check polygon convexity.
    if (fNvert==3) {
-      SetConvex(); 
+      SetConvex();
       return;
-   }    
+   }
    Int_t j,k;
    Double_t point[2];
    for (Int_t i=0; i<fNvert; i++) {
@@ -145,8 +145,8 @@ void TGeoPolygon::ConvexCheck()
       point[1] = fY[fInd[k]];
       if (!IsRightSided(point, fInd[i], fInd[j])) return;
    }
-   SetConvex();  
-}   
+   SetConvex();
+}
 
 //_____________________________________________________________________________
 void TGeoPolygon::Draw(Option_t *)
@@ -154,7 +154,7 @@ void TGeoPolygon::Draw(Option_t *)
 // Draw the polygon.
    if (!gGeoManager) return;
    gGeoManager->GetGeomPainter()->DrawPolygon(this);
-}      
+}
 
 //_____________________________________________________________________________
 void TGeoPolygon::FinishPolygon()
@@ -170,7 +170,7 @@ void TGeoPolygon::FinishPolygon()
 //      printf(" -> polygon convex -> same indices\n");
       memcpy(fIndc, fInd, fNvert*sizeof(Int_t));
       return;
-   }   
+   }
 //   printf(" -> polygon NOT convex\n");
    // make daughters if necessary
    if (IsConvex()) return;
@@ -191,19 +191,19 @@ void TGeoPolygon::FinishPolygon()
       // gap -> make polygon
       poly = new TGeoPolygon(nskip+1);
       poly->SetXY(fX,fY);
-      poly->SetNextIndex(fInd[fIndc[indconv]]);   
+      poly->SetNextIndex(fInd[fIndc[indconv]]);
       poly->SetNextIndex(fInd[fIndc[indnext]]);
       indback = fIndc[indnext]-1;
       if (indback < 0) indback+=fNvert;
       while (indback != fIndc[indconv]) {
-         poly->SetNextIndex(fInd[indback]); 
+         poly->SetNextIndex(fInd[indback]);
          indback--;
          if (indback < 0) indback+=fNvert;
       }
       poly->FinishPolygon();
       fDaughters->Add(poly);
       indconv++;
-   }   
+   }
    for (indconv=0; indconv<fNconvex; indconv++) fIndc[indconv] = fInd[fIndc[indconv]];
 }
 
@@ -249,7 +249,7 @@ Bool_t TGeoPolygon::IsSegConvex(Int_t i1, Int_t i2) const
       if (!IsRightSided(point, fInd[i1], fInd[i2])) return kFALSE;
    }
    return kTRUE;
-}      
+}
 
 //_____________________________________________________________________________
 Bool_t TGeoPolygon::IsIllegalCheck() const
@@ -279,7 +279,7 @@ Bool_t TGeoPolygon::IsIllegalCheck() const
    }
    return is_illegal;
 }
-   
+
 //_____________________________________________________________________________
 void TGeoPolygon::OutscribedConvex()
 {
@@ -300,24 +300,24 @@ void TGeoPolygon::OutscribedConvex()
             if (IsSegConvex(iseg, ivnew)) {
                conv = kTRUE;
                break;
-            } 
-            ivnew = (ivnew+1)%fNvert;  
-         } 
+            }
+            ivnew = (ivnew+1)%fNvert;
+         }
          if (!conv) {
 //            Error("OutscribedConvex","NO convex line connection to vertex %d\n", iseg);
             iseg++;
             continue;
-         }   
+         }
       } else {
          ivnew = (iseg+1)%fNvert;
-      }   
+      }
       // segment belonging to convex outscribed poligon
       if (!fNconvex) indconv[fNconvex++] = iseg;
       else if (indconv[fNconvex-1] != iseg) indconv[fNconvex++] = iseg;
       if (iseg<fNvert-1) indconv[fNconvex++] = ivnew;
       if (ivnew<iseg) break;
       iseg = ivnew;
-   }    
+   }
    if (!fNconvex) {
       delete [] indconv;
       Fatal("OutscribedConvex","cannot build outscribed convex");
@@ -341,18 +341,18 @@ Double_t TGeoPolygon::Safety(const Double_t *point, Int_t &isegment) const
       if (TGeoShape::IsSameWithinTolerance(safe,0)) {
          isegment = isegmin;
          return 0.;
-      }   
+      }
       i2 = (i1+1)%fNvert;
       p1[0] = fX[i1];
       p1[1] = fY[i1];
       p2[0] = fX[i2];
       p2[1] = fY[i2];
-      
+
       dx = p2[0] - p1[0];
       dy = p2[1] - p1[1];
       dpx = point[0] - p1[0];
       dpy = point[1] - p1[1];
-      
+
       lsq = dx*dx + dy*dy;
       if (TGeoShape::IsSameWithinTolerance(lsq,0)) {
          ssq = dpx*dpx + dpy*dpy;
@@ -361,7 +361,7 @@ Double_t TGeoPolygon::Safety(const Double_t *point, Int_t &isegment) const
             isegmin = i1;
          }
          continue;
-      } 
+      }
       u = (dpx*dx + dpy*dy)/lsq;
       if (u>1) {
          dpx = point[0]-p2[0];
@@ -372,7 +372,7 @@ Double_t TGeoPolygon::Safety(const Double_t *point, Int_t &isegment) const
             dpy -= u*dy;
          }
       }
-      ssq = dpx*dpx + dpy*dpy;      
+      ssq = dpx*dpx + dpy*dpy;
       if (ssq < safe) {
          safe = ssq;
          isegmin = i1;
@@ -398,7 +398,7 @@ void TGeoPolygon::SetNextIndex(Int_t index)
       Error("SetNextIndex", "all indices already set");
       return;
    }
-   fInd[fNconvex++] = index;  
+   fInd[fNconvex++] = index;
    if (fNconvex == fNvert) {
       if (!fX || !fY) return;
       Double_t area = 0.0;
@@ -419,7 +419,7 @@ void TGeoPolygon::SetXY(Double_t *x, Double_t *y)
    for (i=0; i<fNvert; i++) area += fX[fInd[i]]*fY[fInd[(i+1)%fNvert]]-fX[fInd[(i+1)%fNvert]]*fY[fInd[i]];
    if (area<0) TObject::SetBit(kGeoACW, kFALSE);
    else        TObject::SetBit(kGeoACW, kTRUE);
-   
+
    if (!fDaughters) return;
    TGeoPolygon *poly;
    Int_t nd = fDaughters->GetEntriesFast();

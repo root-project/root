@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class VavilovAccurateQuantile
-// 
+//
 // Created by: blist  at Thu Apr 29 11:19:00 2010
-// 
+//
 // Last update: Thu Apr 29 11:19:00 2010
-// 
+//
 #ifndef ROOT_Math_VavilovAccurateQuantile
 #define ROOT_Math_VavilovAccurateQuantile
 
@@ -43,10 +43,10 @@ namespace Math {
 //____________________________________________________________________________
 /**
    Class describing the Vavilov quantile function.
-   
+
    The probability density function of the Vavilov distribution
    is given by:
-  \f[ p(\lambda; \kappa, \beta^2) =  
+  \f[ p(\lambda; \kappa, \beta^2) =
   \frac{1}{2 \pi i}\int_{c-i\infty}^{c+i\infty} \phi(s) e^{\lambda s} ds\f]
    where \f$\phi(s) = e^{C} e^{\psi(s)}\f$
    with  \f$ C = \kappa (1+\beta^2 \gamma )\f$
@@ -55,17 +55,17 @@ namespace Math {
                \frac{1 - e^{\frac{-st}{\kappa}}}{t} \,\der t- \gamma \right )
                - \kappa \, e^{\frac{-s}{\kappa}}\f$.
    \f$ \gamma = 0.5772156649\dots\f$ is Euler's constant.
-   
+
    The parameters are:
    - 0: Norm: Normalization constant
    - 1: x0:   Location parameter
    - 2: xi:   Width parameter
    - 3: kappa: Parameter \f$\kappa\f$ of the Vavilov distribution
    - 4: beta2: Parameter \f$\beta^2\f$ of the Vavilov distribution
-   
+
    Benno List, June 2010
-       
-     
+
+
    @ingroup StatFunc
  */
 
@@ -77,18 +77,18 @@ class VavilovAccurateQuantile: public IParametricFunctionOneDim {
          Default constructor
       */
       VavilovAccurateQuantile();
-      
+
       /**
          Constructor with parameter values
-         @param p vector of doubles containing the parameter values (Norm, x0, xi, kappa, beta2). 
+         @param p vector of doubles containing the parameter values (Norm, x0, xi, kappa, beta2).
       */
       VavilovAccurateQuantile(const double *p);
-      
+
       /**
          Destructor
       */
       virtual ~VavilovAccurateQuantile ();
-      
+
       /**
          Access the parameter values
       */
@@ -96,11 +96,11 @@ class VavilovAccurateQuantile: public IParametricFunctionOneDim {
 
       /**
          Set the parameter values
-         @param p vector of doubles containing the parameter values (Norm, x0, xi, kappa, beta2). 
+         @param p vector of doubles containing the parameter values (Norm, x0, xi, kappa, beta2).
 
       */
       virtual void SetParameters(const double * p );
-       
+
       /**
          Return the number of Parameters
       */
@@ -110,29 +110,29 @@ class VavilovAccurateQuantile: public IParametricFunctionOneDim {
          Return the name of the i-th parameter (starting from zero)
        */
       virtual std::string ParameterName(unsigned int i) const;
-            
+
       /**
          Evaluate the function
 
-       @param x The Quantile \f$z\f$ , \f$0 \le z \le 1\f$ 
+       @param x The Quantile \f$z\f$ , \f$0 \le z \le 1\f$
        */
       virtual double DoEval(double x) const;
-   
+
       /**
          Evaluate the function, using parameters p
 
-       @param x The Quantile \f$z\f$, \f$0 \le z \le 1\f$ 
-         @param p vector of doubles containing the parameter values (Norm, x0, xi, kappa, beta2). 
+       @param x The Quantile \f$z\f$, \f$0 \le z \le 1\f$
+         @param p vector of doubles containing the parameter values (Norm, x0, xi, kappa, beta2).
        */
       virtual double DoEvalPar(double x, const double * p) const;
-   
+
       /**
          Return a clone of the object
        */
       virtual IBaseFunctionOneDim  * Clone() const;
-      
+
    private:
-     double fP[5];    
+     double fP[5];
 
 };
 

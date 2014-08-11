@@ -6,7 +6,7 @@
 #include "TParallelCoord.h"
 #include "TParallelCoordVar.h"
 #include "TParallelCoordRange.h"
-   
+
 // script illustrating the use of the TParalleCoord class
 //Author: Bastien Dallapiazza
 
@@ -27,16 +27,16 @@ void generate_random(Int_t i) {
 }
 
 void parallelcoord() {
-   
+
    TNtuple *nt = NULL;
-   
+
    Double_t s1x, s1y, s1z;
    Double_t s2x, s2y, s2z;
    Double_t s3x, s3y, s3z;
    r = new TRandom();;
 
    new TCanvas("c1", "c1",0,0,800,700);
-   gStyle->SetPalette(1);      	
+   gStyle->SetPalette(1);
 
    nt = new TNtuple("nt","Demo ntuple","x:y:z:u:v:w");
 
@@ -44,10 +44,10 @@ void parallelcoord() {
       r->Sphere(s1x, s1y, s1z, 0.1);
       r->Sphere(s2x, s2y, s2z, 0.2);
       r->Sphere(s3x, s3y, s3z, 0.05);
-      
+
       generate_random(i);
       nt->Fill(r1, r2, r3, r4, r5, r6);
-      
+
       generate_random(i);
       nt->Fill(s1x, s1y, s1z, s2x, s2y, s2z);
 
@@ -56,7 +56,7 @@ void parallelcoord() {
 
       generate_random(i);
       nt->Fill(s2x-1, s2y-1, s2z, s1x+.5, s1y+.5, s1z+.5);
-      
+
       generate_random(i);
       nt->Fill(r1, r2, r3, r4, r5, r6);
 

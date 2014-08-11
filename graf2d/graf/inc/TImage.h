@@ -108,7 +108,7 @@ public:
       kGreenChan = BIT(1),
       kBlueChan  = BIT(2),
       kAlphaChan = BIT(3),
-      kAllChan   = kRedChan | kGreenChan | kBlueChan | kAlphaChan 
+      kAllChan   = kRedChan | kGreenChan | kBlueChan | kAlphaChan
    };
 
 protected:
@@ -155,7 +155,7 @@ public:
 
    // Scale the image. (See TASImage::Scale)
    virtual void Scale(UInt_t /*width*/, UInt_t /*height*/) {}
-   
+
    // Slice the image. (See TASImage::Slice)
    virtual void Slice(UInt_t /*xStart*/, UInt_t /*xEnd*/, UInt_t /*yStart*/,  UInt_t /*yEnd*/,
                       UInt_t /*toWidth*/, UInt_t /*toHeight*/) {}
@@ -167,17 +167,17 @@ public:
    virtual void Crop(Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*width*/ = 0, UInt_t /*height*/ = 0) {}
 
    // Enlarge image. (See TASImage::Pad)
-   virtual void Pad(const char * /*color*/ = "#FFFFFFFF", UInt_t /*left*/ = 0, 
+   virtual void Pad(const char * /*color*/ = "#FFFFFFFF", UInt_t /*left*/ = 0,
                    UInt_t /*right*/ = 0, UInt_t /*top*/ = 0, UInt_t /*bottom*/ = 0) {}
 
    // Gaussian blurr. (See TASImage::Blur)
    virtual void Blur(Double_t /*horizontal*/ = 3, Double_t /*vertical*/ = 3) { }
-   
+
    // Reduces colordepth of an image. (See TASImage::Vectorize)
    virtual Double_t *Vectorize(UInt_t /*max_colors*/ = 256, UInt_t /*dither*/ = 4, Int_t /*opaque_threshold*/ = 0) { return 0; }
 
    // (See TASImage::HSV)
-   virtual void HSV(UInt_t /*hue*/ = 0, UInt_t /*radius*/ = 360, Int_t /*H*/ = 0, Int_t /*S*/ = 0, Int_t /*V*/ = 0, 
+   virtual void HSV(UInt_t /*hue*/ = 0, UInt_t /*radius*/ = 360, Int_t /*H*/ = 0, Int_t /*S*/ = 0, Int_t /*V*/ = 0,
                     Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*width*/ = 0, UInt_t /*height*/ = 0) {}
 
    // Render multipoint gradient inside a rectangle. (See TASImage::Gradient)
@@ -192,28 +192,28 @@ public:
 
    // Bevel effect. (See TASImage::Bevel)
    virtual void Bevel(Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*width*/ = 0, UInt_t /*height*/ = 0,
-                      const char * /*hi*/ = "#ffdddddd", const char * /*lo*/ = "#ff555555", 
+                      const char * /*hi*/ = "#ffdddddd", const char * /*lo*/ = "#ff555555",
                       UShort_t /*thick*/ = 1, Bool_t /*pressed*/ = kFALSE) {}
 
    virtual void BeginPaint(Bool_t /*fast*/ = kTRUE) {}
    virtual void EndPaint() {}
-   virtual void DrawLine(UInt_t /*x1*/, UInt_t /*y1*/, UInt_t /*x2*/, UInt_t /*y2*/, 
+   virtual void DrawLine(UInt_t /*x1*/, UInt_t /*y1*/, UInt_t /*x2*/, UInt_t /*y2*/,
                          const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
    virtual void DrawDashLine(UInt_t /*x1*/, UInt_t /*y1*/, UInt_t /*x2*/, UInt_t /*y2*/, UInt_t /*nDash*/,
                              const char * /*pDash*/, const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
-   virtual void DrawBox(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/, 
+   virtual void DrawBox(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/,
                          const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1, Int_t /*mode*/ = 0) {}
-   virtual void DrawRectangle(UInt_t /*x*/, UInt_t /*y*/, UInt_t /*w*/, UInt_t /*h*/, 
+   virtual void DrawRectangle(UInt_t /*x*/, UInt_t /*y*/, UInt_t /*w*/, UInt_t /*h*/,
                               const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
-   virtual void FillRectangle(const char * /*col*/ = 0, Int_t /*x*/ = 0, Int_t /*y*/ = 0, 
+   virtual void FillRectangle(const char * /*col*/ = 0, Int_t /*x*/ = 0, Int_t /*y*/ = 0,
                               UInt_t /*width*/ = 0, UInt_t /*height*/ = 0) {}
-   virtual void DrawPolyLine(UInt_t /*nn*/, TPoint * /*xy*/, const char * /*col*/ = "#000000", 
+   virtual void DrawPolyLine(UInt_t /*nn*/, TPoint * /*xy*/, const char * /*col*/ = "#000000",
                              UInt_t /*thick*/ = 1, TImage::ECoordMode /*mode*/ = kCoordModeOrigin) {}
    virtual void PutPixel(Int_t /*x*/, Int_t /*y*/, const char * /*col*/ = "#000000") {}
-   virtual void PolyPoint(UInt_t /*npt*/, TPoint * /*ppt*/, const char * /*col*/ = "#000000", 
+   virtual void PolyPoint(UInt_t /*npt*/, TPoint * /*ppt*/, const char * /*col*/ = "#000000",
                           TImage::ECoordMode /*mode*/ = kCoordModeOrigin) {}
    virtual void DrawSegments(UInt_t /*nseg*/, Segment_t * /*seg*/, const char * /*col*/ = "#000000", UInt_t /*thick*/ = 1) {}
-   virtual void DrawText(Int_t /*x*/ = 0, Int_t /*y*/ = 0, const char * /*text*/ = "", Int_t /*size*/ = 12, 
+   virtual void DrawText(Int_t /*x*/ = 0, Int_t /*y*/ = 0, const char * /*text*/ = "", Int_t /*size*/ = 12,
                          const char * /*color*/ = 0, const char * /*font*/ = "fixed",
                          EText3DType /*type*/ = TImage::kPlain, const char * /*fore_file*/ = 0, Float_t /*angle*/ = 0) { }
    virtual void DrawText(TText * /*text*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0) { }

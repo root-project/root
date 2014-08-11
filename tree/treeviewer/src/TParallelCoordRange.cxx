@@ -70,10 +70,10 @@ TParallelCoordRange::TParallelCoordRange(TParallelCoordVar *var, Double_t min, D
    }
    fMin = min;
    fMax = max;
-   
+
    fVar = var;
    fSelect = NULL;
-   
+
    if (!sel) {
       TParallelCoordSelect* s = var->GetParallel()->GetCurrentSelection();
       if (s) fSelect = s;
@@ -81,9 +81,9 @@ TParallelCoordRange::TParallelCoordRange(TParallelCoordVar *var, Double_t min, D
    } else {
       fSelect = sel;
    }
-   
+
    SetLineColor(fSelect->GetLineColor());
-   
+
    SetBit(kShowOnPad,kTRUE);
    SetBit(kLiveUpdate,var->GetParallel()->TestBit(TParallelCoord::kLiveUpdate));
 }
@@ -116,7 +116,7 @@ void TParallelCoordRange::Delete(const Option_t* /*options*/)
 Int_t TParallelCoordRange::DistancetoPrimitive(Int_t px, Int_t py)
 {
    // Compute the distance to the primitive.
-   
+
    if(TestBit(kShowOnPad)){
       Double_t xx,yy,thisx=0,thisy=0;
       xx = gPad->AbsPixeltoX(px);
@@ -153,12 +153,12 @@ void TParallelCoordRange::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
 
    if (!gPad) return;
    if (!gPad->IsEditable() && entry!=kMouseEnter) return;
-   
+
    Bool_t vert = fVar->GetVert();
    static Int_t pxold, pyold;
    static Int_t mindragged = -1; //-1:nothing dragged, 0:max dragged, 1:mindragged, 2:both dragged;
    Int_t plx1,plx2,ply1,ply2;
-   
+
    Double_t xx,yy,txxmin=0,txxmax=0,tyymin=0,tyymax=0;
    TFrame *frame = gPad->GetFrame();
    xx = gPad->AbsPixeltoX(px);
@@ -176,7 +176,7 @@ void TParallelCoordRange::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
       ply1 = gPad->YtoAbsPixel(tyymin-2*fSize);
       ply2 = gPad->YtoAbsPixel(tyymax-2*fSize);
    }
-   
+
    gPad->SetCursor(kPointer);
    gVirtualX->SetLineColor(-1);
    gVirtualX->SetLineWidth(1);
@@ -337,7 +337,7 @@ TPoint* TParallelCoordRange::GetBindingLinePoints(Int_t pos,Int_t mindragged)
    }
    if (mindragged==1) fVar->GetXYfromValue(fMax,txxo,tyyo);
    else fVar->GetXYfromValue(fMin,txxo,tyyo);
-   
+
    TPoint *bindline = new TPoint[2];
    if (fVar->GetVert()) {
       if (mindragged==1) {
@@ -403,7 +403,7 @@ TPoint* TParallelCoordRange::GetSliderPoints(Int_t pos)
       tyy = fVar->GetY();
       txx = gPad->AbsPixeltoX(pos);
    }
-   
+
    Int_t tx[5];
    Int_t ty[5];
    if (fVar->GetVert()) {
@@ -452,19 +452,19 @@ void TParallelCoordRange::Paint(Option_t* /*options*/)
 void TParallelCoordRange::PaintSlider(Double_t value, Bool_t fill)
 {
    // Paint a slider.
-   
+
    SetLineColor(fSelect->GetLineColor());
-   
+
    TPolyLine *p= new TPolyLine();
    p->SetLineStyle(1);
    p->SetLineColor(1);
    p->SetLineWidth(1);
-   
+
    Double_t *x = new Double_t[5];
    Double_t *y = new Double_t[5];
-   
+
    Double_t xx,yy;
-   
+
    fVar->GetXYfromValue(value,xx,yy);
    if(fVar->GetVert()){
       x[0] = xx; x[1]=x[4]=xx-fSize; x[2]=x[3]=xx-2*fSize;
@@ -473,7 +473,7 @@ void TParallelCoordRange::PaintSlider(Double_t value, Bool_t fill)
       y[0] = yy; y[1]=y[4]=yy-fSize; y[2]=y[3]= yy-2*fSize;
       x[0]=x[1]=x[4]=xx; x[2]=xx-fSize; x[3] = xx+fSize;
    }
-   if (fill) {     
+   if (fill) {
       p->SetFillStyle(1001);
       p->SetFillColor(0);
       p->PaintPolyLine(4,&x[1],&y[1],"f");
@@ -482,7 +482,7 @@ void TParallelCoordRange::PaintSlider(Double_t value, Bool_t fill)
       p->PaintPolyLine(4,&x[1],&y[1],"f");
    }
    p->PaintPolyLine(5,x,y);
-   
+
    delete p;
    delete [] x;
    delete [] y;
@@ -493,7 +493,7 @@ void TParallelCoordRange::PaintSlider(Double_t value, Bool_t fill)
 void TParallelCoordRange::Print(Option_t* /*options*/) const
 {
    // Print info about the range.
-   
+
    printf("On \"%s\" : min = %f, max = %f\n", fVar->GetTitle(), fMin, fMax);
 }
 
@@ -546,7 +546,7 @@ TParallelCoordSelect::TParallelCoordSelect()
    : TList(), TAttLine(kBlue,1,1)
 {
    // Default constructor.
-   
+
    fTitle = "Selection";
    SetBit(kActivated,kTRUE);
    SetBit(kShowRanges,kTRUE);
@@ -558,7 +558,7 @@ TParallelCoordSelect::TParallelCoordSelect(const char* title)
    : TList(), TAttLine(kBlue,1,1)
 {
    // Normal constructor.
-   
+
    fTitle = title;
    SetBit(kActivated,kTRUE);
    SetBit(kShowRanges,kTRUE);

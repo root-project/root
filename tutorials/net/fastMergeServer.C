@@ -17,12 +17,12 @@
 
 void fastMergeServer(bool cache = false) {
    // This script shows how to make a simple iterative server that
-   // can receive TMemFile from multiple clients and merge them into 
+   // can receive TMemFile from multiple clients and merge them into
    // a single file without block.
    //
    // Note: This server assumes that the client will reset the histogram
    // after each upload to simplify the merging.
-   // 
+   //
    // This server can accept connections while handling currently open connections.
    // Compare this script to hserv.C that blocks on accept.
    // In this script a server socket is created and added to a monitor.
@@ -39,7 +39,7 @@ void fastMergeServer(bool cache = false) {
    //   - Execute in the first window: .x fastMergerServer.C
    //   - Execute in the second and third windows: .x treeClient.C
    //Author: Fons Rademakers
-   
+
    // Open a server socket looking for connections on a named service or
    // on a specified port.
    //TServerSocket *ss = new TServerSocket("rootserv", kTRUE);
@@ -49,19 +49,19 @@ void fastMergeServer(bool cache = false) {
    }
 
    TMonitor *mon = new TMonitor;
-   
+
    mon->Add(ss);
 
    UInt_t clientCount = 0;
    TMemFile *transient = 0;
-   
+
    TFileMerger merger(kFALSE,kFALSE);
    merger.SetPrintLevel(0);
 
    enum StatusKind {
       kStartConnection = 0,
       kProtocol = 1,
-      
+
       kProtocolVersion = 1
    };
    if (cache) new TFileCacheWrite(merger.GetOutputFile(),32*1024*1024);
@@ -75,7 +75,7 @@ void fastMergeServer(bool cache = false) {
          if (clientCount > 100) {
             printf("only accept 100 clients connections\n");
             mon->Remove(ss);
-            ss->Close();         
+            ss->Close();
          } else {
             TSocket *client = ((TServerSocket *)s)->Accept();
             client->Send(clientCount, kStartConnection);
@@ -86,7 +86,7 @@ void fastMergeServer(bool cache = false) {
          }
          continue;
       }
-      
+
       s->Recv(mess);
 
       if (mess==0) {
@@ -114,7 +114,7 @@ void fastMergeServer(bool cache = false) {
          mess->ReadLong64(length); // '*mess >> length;' is broken in CINT for Long64_t.
 
          Info("fastMergeServer","Receive input from client %d for %s",clientId,filename.Data());
-         
+
          delete transient;
          transient = new TMemFile(filename,mess->Buffer() + mess->Length(),length);
          mess->SetBufferOffset(mess->Length()+length);

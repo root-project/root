@@ -13,14 +13,14 @@
 //______________________________________________________________________________
 // GButtonFrame
 //
-// A GButtonFrame is a frame containing the RootShower buttons. 
+// A GButtonFrame is a frame containing the RootShower buttons.
 //______________________________________________________________________________
 
 
 //______________________________________________________________________________
-GButtonFrame::GButtonFrame(const TGWindow* p, TGWindow* buttonHandler, 
-                           Int_t nextEventId, Int_t showTrackId, 
-                           Int_t interruptSimId) : 
+GButtonFrame::GButtonFrame(const TGWindow* p, TGWindow* buttonHandler,
+                           Int_t nextEventId, Int_t showTrackId,
+                           Int_t interruptSimId) :
                            TGCompositeFrame(p, 100, 100, kVerticalFrame)
 {
    // Create GButtonFrame object, with TGWindow parent *p.
@@ -82,7 +82,7 @@ void GButtonFrame::SetState(EState state)
          fStopSimButton->SetState(kButtonUp);
          break;
 
-   } // switch state 
+   } // switch state
    // make sure window gets updated...
    gClient->HandleInput();
 }

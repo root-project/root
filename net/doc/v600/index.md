@@ -55,7 +55,7 @@ A new HTTP Server package has been introduced. The idea behind such server is to
 ##### Starting HTTP server
 
 To start http server, at any time  create instance
-of the **`THttpServer`** class like: 
+of the **`THttpServer`** class like:
 
 ``` {.cpp}
 serv = new THttpServer("http:8080");
@@ -63,7 +63,7 @@ serv = new THttpServer("http:8080");
 
 This will start civetweb-based http server on port 8080.
 Then, one should be able to open address "http://localhost:8080"
-in any modern browser and browse objects created in application. By default, the server can access files, canvases and histograms via gROOT. All such objects can be displayed with JSRootIO graphics. 
+in any modern browser and browse objects created in application. By default, the server can access files, canvases and histograms via gROOT. All such objects can be displayed with JSRootIO graphics.
 
 At any time one could register other objects with the command:
 

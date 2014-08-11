@@ -255,27 +255,27 @@ void TFileDrawMap::DrawMarker(Int_t marker, Long64_t eseek)
    Int_t d;
    Int_t mark = marker%4;
    switch (mark) {
-      case 0 : 
+      case 0 :
          d = 6; //arrow
          gVirtualX->DrawLine(ix-3*d,iy,ix,iy);
          gVirtualX->DrawLine(ix-d,iy+d,ix,iy);
          gVirtualX->DrawLine(ix-d,iy-d,ix,iy);
          gVirtualX->DrawLine(ix-d,iy-d,ix-d,iy+d);
          break;
-      case 1 : 
+      case 1 :
          d = 5; //up triangle
          gVirtualX->DrawLine(ix-d,iy-d,ix+d,iy-d);
          gVirtualX->DrawLine(ix+d,iy-d,ix,iy+d);
          gVirtualX->DrawLine(ix,iy+d,ix-d,iy-d);
          break;
-      case 2 : 
+      case 2 :
          d = 5; //open square
          gVirtualX->DrawLine(ix-d,iy-d,ix+d,iy-d);
          gVirtualX->DrawLine(ix+d,iy-d,ix+d,iy+d);
          gVirtualX->DrawLine(ix+d,iy+d,ix-d,iy+d);
          gVirtualX->DrawLine(ix-d,iy+d,ix-d,iy-d);
          break;
-      case 3 : 
+      case 3 :
          d = 8; //cross
          gVirtualX->DrawLine(ix-d,iy,ix+d,iy);
          gVirtualX->DrawLine(ix,iy-d,ix,iy+d);

@@ -3,12 +3,12 @@
 //  root > .x multicolor.C
 //  root > .x multicolor.C(1)
 //Author: Rene Brun
-         
+
 #include "TCanvas.h"
 #include "TH2.h"
 #include "THStack.h"
 #include "TRandom.h"
-   
+
 void multicolor(Int_t stack=0) {
    TCanvas *c1 = new TCanvas;
    Int_t nbins = 20;
@@ -42,6 +42,6 @@ void multicolor(Int_t stack=0) {
    }
    hs->Draw("lego1");
 }
-      
-      
-   
+
+
+

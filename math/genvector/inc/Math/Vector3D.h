@@ -1,13 +1,13 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
-#ifndef ROOT_ROOT_Math_Vector3D  
-#define ROOT_ROOT_Math_Vector3D 
+#ifndef ROOT_ROOT_Math_Vector3D
+#define ROOT_ROOT_Math_Vector3D
 
 // defines typedefs to specific vectors and forward declarations
 #include "Math/Vector3Dfwd.h"
 
-// coordinate system types 
+// coordinate system types
 #include "Math/GenVector/Cartesian3D.h"
 #include "Math/GenVector/CylindricalEta3D.h"
 #include "Math/GenVector/Polar3D.h"

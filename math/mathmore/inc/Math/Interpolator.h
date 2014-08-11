@@ -55,7 +55,7 @@ namespace Math {
       See Interpolation::Type for the available interpolation algorithms, which are implemented using GSL.
       See also the <A HREF=http://www.gnu.org/software/gsl/manual/html_node/Interpolation.html">GSL manual</A> for more information.
       The class provides additional methods for computing derivatives and integrals of interpolating functions.
-      
+
       This class does not support copying.
       @ingroup Interpolation
    */
@@ -66,8 +66,8 @@ public:
 
    /**
       Constructs an interpolator class from  number of data points and with Interpolation::Type type.
-      The data can be set later on with the SetData method. 
-      In case the data size is not known, better using the default of zero or the next constructor later on. 
+      The data can be set later on with the SetData method.
+      In case the data size is not known, better using the default of zero or the next constructor later on.
       The default interpolation type is Cubic spline
    */
    Interpolator(unsigned int ndata = 0, Interpolation::Type type = Interpolation::kCSPLINE);
@@ -93,14 +93,14 @@ public:
       To be efficient, the size of the data must be the same of the value used in the constructor (ndata)
       If this is not  the case a new re-initialization is performed with the new data size
     */
-   bool SetData(const std::vector<double> & x, const std::vector<double> & y); 
+   bool SetData(const std::vector<double> & x, const std::vector<double> & y);
 
    /**
       Set the data vector ( x[] and y[] )
       To be efficient, the size of the data must be the same of the value used when  constructing the class (ndata)
       If this is not  the case a new re-initialization is performed with the new data size.
     */
-   bool SetData(unsigned int ndata, const double * x, const double *  y); 
+   bool SetData(unsigned int ndata, const double * x, const double *  y);
 
    /**
       Return the interpolated value at point x

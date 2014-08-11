@@ -11,15 +11,15 @@ void makePoints(Int_t n, Double_t *x, Double_t *y, Double_t *e, Int_t p);
 void fitLinear()
 {
    //Example of fitting with a linear function, using TLinearFitter
-   //This example is for a TGraphErrors, but it can also be used 
+   //This example is for a TGraphErrors, but it can also be used
    //when fitting a histogram, a TGraph2D or a TMultiGraph
    //Author: Anna Kreshuk
-   
+
    Int_t n = 40;
    Double_t *x = new Double_t[n];
    Double_t *y = new Double_t[n];
    Double_t *e = new Double_t[n];
-   TCanvas *myc = new TCanvas("myc", 
+   TCanvas *myc = new TCanvas("myc",
       "Fitting 3 TGraphErrors with linear functions");
    myc->SetFillColor(42);
    myc->SetGrid();
@@ -59,7 +59,7 @@ void fitLinear()
    gre4->Draw("*same");
    gre4->SetMarkerColor(kRed);
    gre4->SetLineColor(kRed);
-   //If you don't want to define the function, you can just pass the string 
+   //If you don't want to define the function, you can just pass the string
    //with the the formula:
    gre4->Fit("1 ++ exp(-x)");
    //Access the fit results:
@@ -76,7 +76,7 @@ void fitLinear()
    leg->SetFillColor(42);
 
 
-} 
+}
 
 void makePoints(Int_t n, Double_t *x, Double_t *y, Double_t *e, Int_t p)
 {

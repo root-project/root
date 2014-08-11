@@ -62,11 +62,11 @@ ClassImp(TGVScrollBar)
 class TSBRepeatTimer : public TTimer {
 private:
    TGScrollBar   *fScrollBar;   // scroll bar
-   Int_t 			      fSmallInc;    // step
+   Int_t          fSmallInc;    // step
 public:
-   TSBRepeatTimer(TGScrollBar *s, Long_t ms, Int_t inc) : TTimer(ms, kTRUE) 
+   TSBRepeatTimer(TGScrollBar *s, Long_t ms, Int_t inc) : TTimer(ms, kTRUE)
       { fScrollBar = s;  fSmallInc = inc; }
-      
+
    Bool_t Notify();
    Int_t  GetSmallInc() const { return fSmallInc; }
 };
@@ -94,7 +94,7 @@ TGScrollBarElement::TGScrollBarElement(const TGWindow *p, const TGPicture *pic,
    fStyle = 0;
    if (p && p->InheritsFrom("TGScrollBar"))
       fStyle = gClient->GetStyle();
-   
+
    fBgndColor = fBackground;
    fHighColor = gClient->GetResourcePool()->GetHighLightColor();
    AddInput(kEnterWindowMask | kLeaveWindowMask);
@@ -229,7 +229,7 @@ void TGScrollBarElement::DrawBorder()
             else { // not used in a scroll bar (e.g. in a combo box)
                gVirtualX->DrawRectangle(fId, GetShadowGC()(), 0, 0, fWidth-1, fHeight-1);
             }
-         } 
+         }
          else {
             gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, fWidth-2, 0);
             gVirtualX->DrawLine(fId, GetBckgndGC()(), 0, 0, 0, fHeight-2);

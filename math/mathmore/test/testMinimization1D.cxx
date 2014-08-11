@@ -21,32 +21,32 @@ void testMinimization1D() {
   ROOT::Math::IGenFunction & func = *polyf;
 
 
-  { 
-     // default (Brent) 
+  {
+     // default (Brent)
      ROOT::Math::GSLMinimizer1D min;
-     min.SetFunction(func,1,-10,10); 
-     min.Minimize(100,0.01,0.01); 
-     std::cout << "test Min1D " << min.Name() << "  Return code " << min.Status() << std::endl; 
-     
+     min.SetFunction(func,1,-10,10);
+     min.Minimize(100,0.01,0.01);
+     std::cout << "test Min1D " << min.Name() << "  Return code " << min.Status() << std::endl;
+
      std::cout.precision(20);
-  
+
      std::cout << "Found minimum: x = " << min.XMinimum() << "  f(x) = " << min.FValMinimum() << std::endl;
 
   }
   {
      // Golden Section
      ROOT::Math::GSLMinimizer1D min(ROOT::Math::Minim1D::kGOLDENSECTION);
-     min.SetFunction(func,1,-10,10); 
-     min.Minimize(100,0.01,0.01); 
-     std::cout << "test Min1D " << min.Name() << "  Return code " << min.Status() << std::endl; 
-     
+     min.SetFunction(func,1,-10,10);
+     min.Minimize(100,0.01,0.01);
+     std::cout << "test Min1D " << min.Name() << "  Return code " << min.Status() << std::endl;
+
      std::cout.precision(20);
-  
+
      std::cout << "Found minimum: x = " << min.XMinimum() << "  f(x) = " << min.FValMinimum() << std::endl;
 
   }
 
- 
+
 }
 
 

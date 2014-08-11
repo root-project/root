@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -13,7 +13,7 @@
 //
 // Last update: $Id$
 //
-#ifndef ROOT_Math_GenVector_Quaternion 
+#ifndef ROOT_Math_GenVector_Quaternion
 #define ROOT_Math_GenVector_Quaternion  1
 
 
@@ -74,7 +74,7 @@ public:
    /**
       Construct from another supported rotation type (see gv_detail::convert )
    */
-   template <class OtherRotation> 
+   template <class OtherRotation>
    explicit Quaternion(const OtherRotation & r) {gv_detail::convert(r,*this);}
 
 
@@ -95,8 +95,8 @@ public:
    /**
       Assign from another supported rotation type (see gv_detail::convert )
    */
-   template <class OtherRotation> 
-   Quaternion & operator=( OtherRotation const  & r ) { 
+   template <class OtherRotation>
+   Quaternion & operator=( OtherRotation const  & r ) {
       gv_detail::convert(r,*this);
       return *this;
    }
@@ -178,13 +178,13 @@ public:
    /**
       Rotation operation on a cartesian vector
    */
-   typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
-   XYZVector operator() (const XYZVector & v) const { 
+   typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector;
+   XYZVector operator() (const XYZVector & v) const {
 
       const Scalar alpha = fU*fU - fI*fI - fJ*fJ - fK*fK;
       const Scalar twoQv = 2*(fI*v.X() + fJ*v.Y() + fK*v.Z());
       const Scalar twoU  = 2 * fU;
-      return XYZVector  (  alpha * v.X() + twoU * (fJ*v.Z() - fK*v.Y()) + twoQv * fI , 
+      return XYZVector  (  alpha * v.X() + twoU * (fJ*v.Z() - fK*v.Y()) + twoQv * fI ,
                            alpha * v.Y() + twoU * (fK*v.X() - fI*v.Z()) + twoQv * fJ ,
                            alpha * v.Z() + twoU * (fI*v.Y() - fJ*v.X()) + twoQv * fK );
    }
@@ -198,8 +198,8 @@ public:
       DisplacementVector3D< Cartesian3D<double> > xyz(v.X(), v.Y(), v.Z());
       DisplacementVector3D< Cartesian3D<double> > rxyz = operator()(xyz);
       DisplacementVector3D< CoordSystem,Tag > vNew;
-      vNew.SetXYZ( rxyz.X(), rxyz.Y(), rxyz.Z() ); 
-      return vNew; 
+      vNew.SetXYZ( rxyz.X(), rxyz.Y(), rxyz.Z() );
+      return vNew;
    }
 
    /**
@@ -266,7 +266,7 @@ public:
    /**
       Multiply (combine) two rotations
    */
-   Quaternion operator * (const Quaternion  & q) const { 
+   Quaternion operator * (const Quaternion  & q) const {
       return Quaternion  (   fU*q.fU - fI*q.fI - fJ*q.fJ - fK*q.fK ,
                              fU*q.fI + fI*q.fU + fJ*q.fK - fK*q.fJ ,
                              fU*q.fJ - fI*q.fK + fJ*q.fU + fK*q.fI ,
@@ -343,7 +343,7 @@ Quaternion operator* (RotationZ const & r1, Quaternion const & r2);
 /**
    Stream Output and Input
  */
-  // TODO - I/O should be put in the manipulator form 
+  // TODO - I/O should be put in the manipulator form
 
 std::ostream & operator<< (std::ostream & os, const Quaternion & q);
 
@@ -351,4 +351,4 @@ std::ostream & operator<< (std::ostream & os, const Quaternion & q);
 }  // namespace Math
 }  // namespace ROOT
 
-#endif // ROOT_Math_GenVector_Quaternion 
+#endif // ROOT_Math_GenVector_Quaternion

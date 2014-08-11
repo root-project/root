@@ -156,7 +156,7 @@ int main()
    std::cout << s9.Strip(TString::kBoth) << "<<ends here" << std::endl;
 
    Printf("Using Print: %s (%d)\n", (const char*) s9, s9.Length());
-   
+
    // test comparisons
    TString s20 = "abc";
    TString s21 = "abcd";
@@ -175,7 +175,7 @@ int main()
    f.seekg(0, std::ios::end);
    Ssiz_t size = f.tellg();
    f.seekg(0, std::ios::beg);
-   
+
    TString fs;
    fs.ReadFile(f);
    Ok(33, size == fs.Length());
@@ -187,6 +187,6 @@ int main()
    fs.ReadToken(f2);   // read '//'
    fs.ReadToken(f2);   // read 'Author:'
    Ok(35, fs == "Author:");
-   
+
    return 0;
 }

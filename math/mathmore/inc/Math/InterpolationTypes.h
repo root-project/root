@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class InterpolationTypes
-// 
+//
 // Created by: moneta  at Fri Nov 26 15:40:58 2004
-// 
+//
 // Last update: Fri Nov 26 15:40:58 2004
-// 
+//
 #ifndef ROOT_Math_InterpolationTypes
 #define ROOT_Math_InterpolationTypes
 
@@ -36,12 +36,12 @@ namespace ROOT {
 namespace Math {
 
 
-  namespace Interpolation { 
+   namespace Interpolation {
 
-    /**
-       Enumeration defining the types of interpolation methods availables. 
-       Passed as argument to instantiate mathlib::Interpolator objects. 
-       The types available are (more information is available in the 
+      /**
+       Enumeration defining the types of interpolation methods availables.
+       Passed as argument to instantiate mathlib::Interpolator objects.
+       The types available are (more information is available in the
        <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Interpolation-Types.html">GSL manual</A>):
        <ul>
        <li>LINEAR interpolation;
@@ -49,22 +49,22 @@ namespace Math {
        <li>CSPLINE cubic spline with natural boundary conditions;
        <li>CSPLINE_PERIODIC cubic spline with periodic boundary conditions;
        <li>AKIMA, Akima spline with natural boundary conditions ( requires a minimum of 5 points);
-       <li>AKIMA_PERIODIC, Akima spline with periodic boundaries ( requires a minimum of 5 points); 
+       <li>AKIMA_PERIODIC, Akima spline with periodic boundaries ( requires a minimum of 5 points);
        </ul>
 
 
        @ingroup Interpolation
-     */
+       */
 
-    // enumerations for the type of interpolations
-    enum Type {  kLINEAR, 
-		 kPOLYNOMIAL, 
- 		 kCSPLINE, 
- 		 kCSPLINE_PERIODIC,  
-		 kAKIMA, 
-		 kAKIMA_PERIODIC
-    };
-  }
+      // enumerations for the type of interpolations
+      enum Type {  kLINEAR,
+         kPOLYNOMIAL,
+         kCSPLINE,
+         kCSPLINE_PERIODIC,
+         kAKIMA,
+         kAKIMA_PERIODIC
+      };
+   }
 
 
 } // namespace Math

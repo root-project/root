@@ -32,13 +32,13 @@
 
 namespace ROOT {
 namespace Quartz {
-   
+
 // Core Text's CTLine wrapper.
 class TextLine {
 public:
    TextLine(const char *textLine, CTFontRef font);
    TextLine(const std::vector<UniChar> &textLine, CTFontRef font);
-   
+
    TextLine(const char *textLine, CTFontRef font, Color_t color);
    TextLine(const std::vector<UniChar> &textLine, CTFontRef font, Color_t color);
    TextLine(const char *textLine, CTFontRef font, const CGFloat *rgb);

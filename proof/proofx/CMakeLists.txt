@@ -9,7 +9,7 @@ ROOT_USE_PACKAGE(proof/proofplayer)
 
 if(WIN32)
   set(headers TXProofMgr.h TXSlave.h TXSocket.h TXSocketHandler.h TXHandler.h)
-  set(sources TXProofMgr.cxx TXSlave.cxx TXSocket.cxx TXSocketHandler.cxx TXHandler.cxx 
+  set(sources TXProofMgr.cxx TXSlave.cxx TXSocket.cxx TXSocketHandler.cxx TXHandler.cxx
                ../proofd/src/XrdProofConn.cxx ../proofd/src/XrdProofPhyConn.cxx ../proofd/src/XProofProtUtils.cxx)
 else()
   ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)

@@ -129,9 +129,9 @@ void Cleanup();
 void PopupLogo(bool about)
 {
    //Popup a splashscreen window.
-   
+
    using namespace ROOT::ROOTX;
-   
+
    //Initialize and check what we can do:
    gDisplay = XOpenDisplay("");
    if (!gDisplay) {
@@ -164,7 +164,7 @@ void PopupLogo(bool about)
    SetBackgroundPixmapAndMask();
    //Center splashscreen.
    SetSplashscreenPosition();
-   
+
    if (CreateFont()) {//Request a custom font
       //Create a custom context
       if (CreateGC()) {
@@ -205,7 +205,7 @@ void PopupLogo(bool about)
 
    XSelectInput(gDisplay, gLogoWindow, ButtonPressMask | ExposureMask);
    XMapRaised(gDisplay, gLogoWindow);
-   
+
    gettimeofday(&gPopupTime, 0);
 }
 
@@ -257,16 +257,16 @@ void WaitLogo()
             foundExpose = true;
          //We also have other events in a queue, get rid of them!
       }
-      
+
       if (gDone)//Early exit.
          break;
-      
+
       if (foundExpose) {
          //So we ... kind of ... paint it twice????
          ScrollCredits(ypos);
          DrawVersion();
       }
-      
+
       Sleep(100);
 
       if (!gAbout && !StayUp(gStayUp) && gMayPopdown)
@@ -284,7 +284,7 @@ void WaitLogo()
 
    //Free/destroy windows, pixmaps, fonts, colors etc..
    Cleanup();
-   
+
 }
 
 //__________________________________________________________________
@@ -299,7 +299,7 @@ void CloseDisplay()
 {
    //Close connection to X server (called by child).
    using ROOT::ROOTX::gDisplay;
-   
+
    if (gDisplay)
       close(ConnectionNumber(gDisplay));
 }
@@ -338,9 +338,9 @@ bool CreateSplashscreenImageAndShapeMask()
    //    and the mask. If any of operations failed - go to 3.
    //    If both succeeded - return true.
    //3. Try to read image without transparency (mask not needed anymore).
-   
+
    bool LoadROOTSplashscreenPixmap(const char *imageFileName, bool needMask);
-   
+
    assert(gDisplay != 0 && "CreateSplashscreenImageAndShapeMask, gDisplay is None");
    assert(gLogoPixmap == 0 &&
           "CreateSplashscreenImageAndShapeMask, gLogoPixmap is initialized already");
@@ -409,7 +409,7 @@ bool LoadROOTSplashscreenPixmap(const char *imageFileName, bool needMask)
       return false;
 
    std::string path(100, ' ');
-   
+
 #ifdef ROOTICONPATH
    assert(strlen(ROOTICONPATH) != 0 &&
           "LoadROOTSplashscreenPixmap, invalid 'ROOTICONPATH'");
@@ -426,7 +426,7 @@ bool LoadROOTSplashscreenPixmap(const char *imageFileName, bool needMask)
 #endif
 
    Pixmap logo = None, mask = None;
-   
+
    //Bertrand! Many thanks for this simple but ... smart and not so obvious (??) idea
    //with a mask :) Without you I'll have two separate xpms :)
    const int ret = XpmReadFileToPixmap(gDisplay, gLogoWindow, (char *)path.c_str(), &logo,
@@ -470,7 +470,7 @@ bool CreateFont()
       if (!gFont)
          printf("Font creation failed\n");
    }
-   
+
    return gFont;
 }
 
@@ -486,7 +486,7 @@ bool CreateGC()
       printf("rootx - XCreateGC failed\n");
       return false;
    }
-   
+
    return gGC;
 }
 
@@ -514,7 +514,7 @@ bool CreateCustomColors()
 
    if (XAllocColor(gDisplay, gColormap, &textColor))
       gTextColor = textColor.pixel;
-   
+
    return gTextColor;
 }
 
@@ -535,7 +535,7 @@ void CreateTextPixmap()
 {
    assert(gDisplay != 0 && "CreateTextPixmap, gDisplay is None");
    assert(gLogoWindow != 0 && "CreateTextPixmap, gLogoWindow is None");
-   
+
    if (!gGC)//Something is wrong and we don't need pixmap anymore.
       return;
 
@@ -552,7 +552,7 @@ void CreateTextPixmap()
       gCreditsRect.x = 115;
    else
       gCreditsRect.x = 15;
-   
+
    assert(gHeight > 105 && "CreateTextPixmap, internal error - unexpected geometry");
    gCreditsRect.y = gHeight - 105;
 }
@@ -569,7 +569,7 @@ void SetBackgroundPixmapAndMask()
    winAttr.background_pixmap = gLogoPixmap;
    winAttr.override_redirect = True;
    XChangeWindowAttributes(gDisplay, gLogoWindow, mask, &winAttr);
-   
+
    if (gHasShapeExt) {
       assert(gShapeMask != 0 && "SetBackgroundPixmapAndMask, gShapeMask is None");
       XShapeCombineMask(gDisplay, gLogoWindow, ShapeBounding, 0, 0, gShapeMask, ShapeSet);
@@ -581,7 +581,7 @@ void SetSplashscreenPosition()
 {
    assert(gDisplay != 0 && "SetSplashscreenPosition, gDisplay is None");
    assert(gLogoWindow != 0 && "SetSplashscreenPosition, gLogoWindow is None");
-   
+
    Window rootWindow = Window();
    int x = 0, y = 0;
    unsigned int borderWidth = 0, depth = 0;
@@ -680,7 +680,7 @@ void DrawVersion()
    assert(gGC != 0 && "DrawVersion, gGC is None");
 
    std::string version("Version ");
-   version += ROOT_RELEASE;   
+   version += ROOT_RELEASE;
 
    XDrawString(gDisplay, gLogoWindow, gGC, gWidth - 90, gHeight - 15, version.data(),
                version.length());
@@ -694,12 +694,12 @@ int DrawCreditItem(const char *creditItem, const char **members, int y, bool dra
 
    assert(gFont != 0 && "DrawCreditItem, gFont is None");
    assert(gDisplay != 0 && "DrawCreditItem, gDisplay is None");
-   
+
    const int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
    assert(lineSpacing > 0 && "DrawCreditItem, lineSpacing must be positive");
-   
+
    std::string credit(creditItem);
-   
+
    for (unsigned i = 0; members && members[i]; ++i) {
       if (i)
          credit += ", ";
@@ -711,11 +711,11 @@ int DrawCreditItem(const char *creditItem, const char **members, int y, bool dra
             XDrawString(gDisplay, gCreditsPixmap, gGC, 0, y,
                         credit.data(), credit.length());
          }
-         
+
          y += lineSpacing;
          credit = "   ";
       }
-      
+
       credit += members[i];
    }
 
@@ -747,7 +747,7 @@ int DrawCredits(bool draw, bool extended)
           "DrawCredits, parameter 'draw' is true, but destination pixmap is None");
    const int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
    assert(lineSpacing > 0 && "DrawCredits, lineSpacing must be positive");
-   
+
    int y = lineSpacing;
    y = DrawCreditItem("Conception: ", gConception, y, draw);
    y += 2 * lineSpacing;
@@ -781,10 +781,10 @@ int DrawCredits(bool draw, bool extended)
          y = DrawCreditItem("one of our favorite users.", 0, y, draw);
       }
    }
-   
+
    if (gTextColor)
       XSetForeground(gDisplay, gGC, gBackground);//Text is white!
-   
+
    return y;
 }
 
@@ -793,7 +793,7 @@ void ReadContributors()
 {
    //Read the file $ROOTSYS/README/CREDITS for the names of the
    //contributors.
-   
+
    //TODO: re-write without ... good old C :)
    char buf[2048];
 #ifdef ROOTDOCDIR
@@ -848,7 +848,7 @@ void Cleanup()
       XFreePixmap(gDisplay, gLogoPixmap);
       gLogoPixmap = 0;
    }
-   
+
    if (gShapeMask) {
       assert(gDisplay != 0 && "Cleanup, gDisplay is None");
       XFreePixmap(gDisplay, gShapeMask);
@@ -860,7 +860,7 @@ void Cleanup()
       XFreePixmap(gDisplay, gCreditsPixmap);
       gCreditsPixmap = 0;
    }
-   
+
    if (gFont) {
       assert(gDisplay != 0 && "Cleanup, gDisplay is None");
       XFreeFont(gDisplay, gFont);
@@ -869,7 +869,7 @@ void Cleanup()
 
    //If any.
    FreeCustomColors();
-   
+
    if (gGC) {
       assert(gDisplay != 0 && "Cleanup, gDisplay is None");
       XFreeGC(gDisplay, gGC);

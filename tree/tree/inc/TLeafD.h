@@ -32,7 +32,7 @@ protected:
    Double_t       fMaximum;         //Maximum value if leaf range is specified
    Double_t       *fValue;          //!Pointer to data buffer
    Double_t       **fPointer;       //!Address of pointer to data buffer
-   
+
 public:
    TLeafD();
    TLeafD(TBranch *parent, const char *name, const char *type);
@@ -49,7 +49,7 @@ public:
    virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
    virtual void    ReadValue(std::istream& s, Char_t delim = ' ');
    virtual void    SetAddress(void *add=0);
-   
+
    ClassDef(TLeafD,1);  //A TLeaf for a 64 bit floating point data type.
 };
 

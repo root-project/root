@@ -1,4 +1,4 @@
-// This TableTest class is a simple example of how to use a TGTreeTable. 
+// This TableTest class is a simple example of how to use a TGTreeTable.
 // TableTest inherits from TGMainFrame to create a top
 // level frame to embed the TGTreeTable in. First, the staff.root file
 // is opened to obtain a tree. A TGTreeTable is then created using the
@@ -40,9 +40,9 @@ private:
    UInt_t        fNTableColumns;
    TGTreeTable  *fTreeTable;
    TFile        *fFile;
-   
+
 public:
-   TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols, 
+   TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols,
              UInt_t w = 100, UInt_t h = 100);
    virtual ~TableTest() ;
 
@@ -52,16 +52,16 @@ public:
 
    ClassDef(TableTest, 0)
 };
-                          
-TableTest::TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols, 
-                     UInt_t w, UInt_t h) 
-   : TGMainFrame(p, w, h), fNTableRows(ntrows), fNTableColumns(ntcols), 
+
+TableTest::TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols,
+                     UInt_t w, UInt_t h)
+   : TGMainFrame(p, w, h), fNTableRows(ntrows), fNTableColumns(ntcols),
      fTreeTable(0)
 {
-   SetCleanup(kDeepCleanup) ;   
+   SetCleanup(kDeepCleanup) ;
    Connect("CloseWindow()", "TableTest", this, "DoExit()") ;
    DontCallClose() ;
-   
+
    // Open the root file
    fFile = new TFile("$ROOTSYS/tutorials/tree/cernstaff.root");
 
@@ -89,7 +89,7 @@ TableTest::TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols,
    Layout();
    Resize(GetDefaultWidth()+20, 600) ;
    MapWindow() ;
-   
+
 } ;
 
 TableTest::~TableTest()
@@ -98,16 +98,16 @@ TableTest::~TableTest()
    fFile->Close();
    Cleanup() ;
 }
- 
+
  void TableTest::DoExit()
 {
    // Exit this application via the Exit button or Window Manager.
    // Use one of the both lines according to your needs.
    // Please note to re-run this macro in the same ROOT session,
    // you have to compile it to get signals/slots 'on place'.
-   
+
    DeleteWindow();            // to stay in the ROOT session
-   //   gApplication->Terminate();   // to exit and close the ROOT session   
+   //   gApplication->Terminate();   // to exit and close the ROOT session
 }
 
 TGTreeTable *gtreeTableTest(UInt_t ntrows = 50, UInt_t ntcols = 10) {

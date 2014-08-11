@@ -10,15 +10,15 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////
-//                                                                        
-// TGeoBranchArray - An array of daughter indices making a geometry path. 
+//
+// TGeoBranchArray - An array of daughter indices making a geometry path.
 //   Can be used to backup/restore a state. To setup an object of this type,
 // one should use:
 //   TGeoBranchArray *array = new TGeoBranchArray(level);
 //   array->InitFromNavigator(nav); (To initialize from current navigator state)
 // The navigator can be updated to reflect this path array:
-//   array->UpdateNavigator();  
-//                                                                        
+//   array->UpdateNavigator();
+//
 /////////////////////////////////////////////////////////////////////////////
 
 #include "TGeoBranchArray.h"
@@ -69,9 +69,9 @@ TGeoBranchArray::TGeoBranchArray(const TGeoBranchArray&  other)
       fArray = new TGeoNode*[fMaxLevel];
       if (fLevel+1) memcpy(fArray, other.fArray, (fLevel+1)*sizeof(TGeoNode*));
    }
-   if (other.fMatrix) fMatrix = new TGeoHMatrix(*(other.fMatrix));   
-}   
-      
+   if (other.fMatrix) fMatrix = new TGeoHMatrix(*(other.fMatrix));
+}
+
 //______________________________________________________________________________
 TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
 {
@@ -89,7 +89,7 @@ TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
    } else {
       fMaxLevel = other.fMaxLevel;
       fArray = new TGeoNode*[fMaxLevel];
-   }   
+   }
    fLevel = other.fLevel;
    if (fLevel+1) memcpy(fArray, other.fArray, (fLevel+1)*sizeof(TGeoNode*));
    if (other.fMatrix) {
@@ -99,7 +99,7 @@ TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
    fClient = other.fClient;
 //   TThread::UnLock();
    return *this;
-}   
+}
 
 //______________________________________________________________________________
 void TGeoBranchArray::AddLevel(Int_t dindex)
@@ -115,9 +115,9 @@ void TGeoBranchArray::AddLevel(Int_t dindex)
       memcpy(array, fArray, fLevel*sizeof(TGeoNode*));
       delete [] fArray;
       fArray = array;
-   }   
+   }
    fArray[fLevel] = fArray[fLevel-1]->GetVolume()->GetNode(dindex);
-}   
+}
 
 //______________________________________________________________________________
 Bool_t TGeoBranchArray::operator ==(const TGeoBranchArray& other) const
@@ -190,13 +190,13 @@ Long64_t TGeoBranchArray::BinarySearch(Long64_t n, const TGeoBranchArray **array
       else                          nbelow = middle;
    }
    return nbelow-1;
-}   
+}
 
 //______________________________________________________________________________
 Int_t TGeoBranchArray::Compare(const TObject *obj) const
 {
 // Compare with other object of same type. Returns -1 if this is smaller (first
-// smaller array value prevails), 0 if equal (size and values) and 1 if this is 
+// smaller array value prevails), 0 if equal (size and values) and 1 if this is
 // larger.
    Int_t i;
    TGeoBranchArray *other = (TGeoBranchArray*)obj;
@@ -211,7 +211,7 @@ Int_t TGeoBranchArray::Compare(const TObject *obj) const
    if (fLevel==otherLevel) return 0;
    if (fLevel<otherLevel) return -1;
    return 1;
-}   
+}
 
 //______________________________________________________________________________
 void TGeoBranchArray::CleanMatrix()
@@ -223,19 +223,19 @@ void TGeoBranchArray::CleanMatrix()
 //______________________________________________________________________________
 void TGeoBranchArray::Init(TGeoNode **branch, TGeoMatrix *global, Int_t level)
 {
-// Init the branch array from an array of nodes, the global matrix for the path and 
+// Init the branch array from an array of nodes, the global matrix for the path and
 // the level.
    if (!fMatrix) fMatrix = new TGeoHMatrix();
    fMatrix->CopyFrom(global);
    if (!fArray || level+1>fMaxLevel) {
-      delete [] fArray; 
+      delete [] fArray;
       fMaxLevel = level+1;
       fArray = new TGeoNode*[fMaxLevel];
    }
    fLevel = level;
    memcpy(fArray, branch, (fLevel+1)*sizeof(TGeoNode*));
 }
-   
+
 //______________________________________________________________________________
 void TGeoBranchArray::InitFromNavigator(TGeoNavigator *nav)
 {
@@ -246,7 +246,7 @@ void TGeoBranchArray::InitFromNavigator(TGeoNavigator *nav)
    if (!fMatrix) fMatrix = new TGeoHMatrix();
    fMatrix->CopyFrom(cache->GetCurrentMatrix());
    if (!fArray || level+1>fMaxLevel) {
-      delete [] fArray; 
+      delete [] fArray;
       fMaxLevel = level+1;
       fArray = new TGeoNode*[fMaxLevel];
    }
@@ -265,7 +265,7 @@ void TGeoBranchArray::GetPath(TString &path) const
       path += "/";
       path += fArray[i]->GetName();
    }
-}   
+}
 
 //______________________________________________________________________________
 void TGeoBranchArray::Print(Option_t *) const
@@ -274,7 +274,7 @@ void TGeoBranchArray::Print(Option_t *) const
    TString path;
    GetPath(path);
    printf("branch:    %s\n", path.Data());
-}      
+}
 
 //______________________________________________________________________________
 void TGeoBranchArray::Sort(Int_t n, TGeoBranchArray **array, Int_t *index, Bool_t down)
@@ -283,9 +283,9 @@ void TGeoBranchArray::Sort(Int_t n, TGeoBranchArray **array, Int_t *index, Bool_
    for (Int_t i=0; i<n; i++) index[i] = i;
    if (down)
       std::sort(index, index + n, compareBAdesc(array));
-   else   
+   else
       std::sort(index, index + n, compareBAasc(array));
-}      
+}
 
 //______________________________________________________________________________
 void TGeoBranchArray::UpdateNavigator(TGeoNavigator *nav) const

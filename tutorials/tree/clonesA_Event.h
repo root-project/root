@@ -25,7 +25,7 @@ class TUsrHitBuffer:public TObject {
       std::cout << "~~~~~~dtor TUsrHitBuffer " << this << std::endl;
       delete fHits;
    }
-   
+
 
    TUsrHit *AddHit(Int_t ev);
    Int_t GetBufSize() { return fHits->GetSize();}
@@ -55,7 +55,7 @@ class TMrbSubevent_Caen:public TObject {
    Int_t fTimeStamp;            // time stamp, same as fUniqueID
    TUsrHitBuffer fHitBuffer;    // hit buffer to store subevent data
 
-   ClassDef(TMrbSubevent_Caen, 1)	// [Analyze] Base class for subevents: CAEN data stored in hit buffer
+   ClassDef(TMrbSubevent_Caen, 1) // [Analyze] Base class for subevents: CAEN data stored in hit buffer
 };
 
 //______________________________________________________
@@ -67,7 +67,7 @@ class TUsrSevtData1:public TMrbSubevent_Caen {
    virtual ~TUsrSevtData1() {}
    void  SetEvent(Int_t ev);
    Int_t GetPileup() {return fPileup; };
-   
+
  protected:
    TString fSevtName;           // subevent name
    Int_t fMer;                  // data2.mer
@@ -84,7 +84,7 @@ class TUsrSevtData2:public TMrbSubevent_Caen {
    virtual ~TUsrSevtData2() {}
    void  SetEvent(Int_t ev);
    Int_t GetPileup() {return fPileup; };
-   
+
  protected:
    TString fSevtName;           // subevent name
    Int_t fMer;                  // data2.mer

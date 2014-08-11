@@ -982,13 +982,13 @@ Bool_t TGTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         new TGFontDialog(fClient->GetRoot(), this, &prop);
                         if (prop.fName != "") {
                            fontname.Form("-*-%s-%s-%c-*-*-%d-*-*-*-*-*-*-*",
-                                         prop.fName.Data(), 
+                                         prop.fName.Data(),
                                          prop.fBold ? "bold" : "medium",
                                          prop.fItalic ? 'i' : 'r',
                                          prop.fSize);
                            if (!gVirtualX->ListFonts(fontname, 10, count)) {
                               fontname.Form("-*-%s-%s-%c-*-*-%d-*-*-*-*-*-*-*",
-                                            prop.fName.Data(), 
+                                            prop.fName.Data(),
                                             prop.fBold ? "bold" : "medium",
                                             prop.fItalic ? 'o' : 'r',
                                             prop.fSize);

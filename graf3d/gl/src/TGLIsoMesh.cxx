@@ -19,7 +19,7 @@ namespace Rgl {
 //Functions for TGLTF3/TGLIso/TGL5DPainter.
 //______________________________________________________________________________
 template<class V>
-void DrawMesh(GLenum type, const std::vector<V> &vs, const std::vector<V> &ns, 
+void DrawMesh(GLenum type, const std::vector<V> &vs, const std::vector<V> &ns,
               const std::vector<UInt_t> &fTS)
 {
    //Surface with material and lighting.
@@ -33,7 +33,7 @@ void DrawMesh(GLenum type, const std::vector<V> &vs, const std::vector<V> &ns,
 }
 
 //______________________________________________________________________________
-void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns, 
+void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns,
               const std::vector<UInt_t> &ts)
 {
    //Call function-template.
@@ -41,7 +41,7 @@ void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns,
 }
 
 //______________________________________________________________________________
-void DrawMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns, 
+void DrawMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns,
               const std::vector<UInt_t> &ts)
 {
    //Call function-template.
@@ -75,8 +75,8 @@ void DrawMesh(const std::vector<Double_t> &vs, const std::vector<UInt_t> &ts)
 
 //______________________________________________________________________________
 template<class V, class GLN, class GLV>
-void DrawMesh(GLN normal3, GLV vertex3, const std::vector<V> &vs, 
-              const std::vector<V> &ns, const std::vector<UInt_t> &fTS, 
+void DrawMesh(GLN normal3, GLV vertex3, const std::vector<V> &vs,
+              const std::vector<V> &ns, const std::vector<UInt_t> &fTS,
               const TGLBoxCut &box)
 {
    //Mesh with cut.
@@ -94,10 +94,10 @@ void DrawMesh(GLN normal3, GLV vertex3, const std::vector<V> &vs,
 
       normal3(&ns[t[0] * 3]);
       vertex3(&vs[t[0] * 3]);
-      
+
       normal3(&ns[t[1] * 3]);
       vertex3(&vs[t[1] * 3]);
-      
+
       normal3(&ns[t[2] * 3]);
       vertex3(&vs[t[2] * 3]);
    }
@@ -106,7 +106,7 @@ void DrawMesh(GLN normal3, GLV vertex3, const std::vector<V> &vs,
 }
 
 //______________________________________________________________________________
-void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns, 
+void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns,
               const std::vector<UInt_t> &ts, const TGLBoxCut &box)
 {
    //Call function-template.
@@ -114,7 +114,7 @@ void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns,
 }
 
 //______________________________________________________________________________
-void DrawMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns, 
+void DrawMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns,
               const std::vector<UInt_t> &ts, const TGLBoxCut &box)
 {
    //Call function-template.
@@ -123,7 +123,7 @@ void DrawMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns,
 
 //______________________________________________________________________________
 template<class V, class GLV>
-void DrawMesh(GLV vertex3, const std::vector<V> &vs, const std::vector<UInt_t> &fTS, 
+void DrawMesh(GLV vertex3, const std::vector<V> &vs, const std::vector<UInt_t> &fTS,
               const TGLBoxCut &box)
 {
    //Mesh with cut.

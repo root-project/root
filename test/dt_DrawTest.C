@@ -25,7 +25,7 @@ void DrawSkippable(TTree* tree, const char* what, const char* where, Bool_t draw
 void DrawSkippable(TTree* tree, const char* what, const char* cond,
                    const char* where, Bool_t draw = true) {
    //cerr << "Doing " << what << " which is " << skip << endl;
-   if (draw) { 
+   if (draw) {
       TString cut = what;
       cut.Append(">>");
       cut.Append(where);
@@ -48,11 +48,11 @@ void DrawMarks() {
   Float_t ct = gBenchmark->GetCpuTime("DrawTest");
 
   // gBenchmark->Print("DrawTest");
-  
+
   Float_t rootmarks = 200*(rt_base + cp_base)/(rt + ct);
-  
+
   printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
- 
+
 }
 
 
@@ -71,7 +71,7 @@ TDirectory* GenerateDrawHist(TTree *tree, int quietLevel = 0, int level = 3)
 
    gBenchmark = new TBenchmark();
    gBenchmark->Start("DrawTest");
-   
+
    // Each tree->Draw generates an histogram
    DrawSkippable(tree,"GetNtrack()","hGetNtrack",(level>0 && gHasLibrary));
 
@@ -142,7 +142,7 @@ TDirectory* GenerateDrawHist(TTree *tree, int quietLevel = 0, int level = 3)
    DrawSkippable(tree,"fPx:fPy[fNpoint/6]","fPy[fNpoint/6]>0","hPxInd",(level>0));
 
    // Test of simple function calls
-   DrawSkippable(tree,"sqrt(fNtrack)","hSqrtNtrack",(level>0));   
+   DrawSkippable(tree,"sqrt(fNtrack)","hSqrtNtrack",(level>0));
 
    // Test string operations
    DrawSkippable(tree,"fEvtHdr.fEvtNum","fType==\"type1\" ","hString",(level>0));
@@ -195,8 +195,8 @@ TDirectory* GenerateDrawHist(TTree *tree, int quietLevel = 0, int level = 3)
    DrawSkippable(tree,"MaxIf$(fPx,fPy>1.0):Max$(fPy)","Sum$(fPy>1.0)>0","hMaxPx",level>2);
    DrawSkippable(tree,"MinIf$(fPx,fPy>1.0):Min$(fPy)","Sum$(fPy>1.0)>0","hMinPx",level>2);
 
-   if (quietLevel<2) gBenchmark->Show("DrawTest");   
-   else gBenchmark->Stop("DrawTest");  
+   if (quietLevel<2) gBenchmark->Show("DrawTest");
+   else gBenchmark->Stop("DrawTest");
    gBenchmark->Start("DrawTest");
 
    return hfile;

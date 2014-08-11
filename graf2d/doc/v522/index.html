@@ -1,6 +1,6 @@
-<br> 
-<hr> 
-<a name="graf2d"></a> 
+<br>
+<hr>
+<a name="graf2d"></a>
 
 
 <h3>Graphical Output</h3>
@@ -13,14 +13,14 @@
      {
         TCanvas* can = new TCanvas("can");
         double margin = 1e-10;
-        can->Divide(2, 2, margin, margin); 
+        can->Divide(2, 2, margin, margin);
         TH1D* hist = new TH1D("hist" , "", 1, 0, 1);
         hist->Draw();
         can->SaveAs("can.pdf");
-     }  
+     }
      </pre>
-     because Acrobat does not work when a PDF file contains reals with 
-     exponents, which is the cavse with the file "can.pdf". This problem is 
+     because Acrobat does not work when a PDF file contains reals with
+     exponents, which is the cavse with the file "can.pdf". This problem is
      now fixed. Note that "can.pdf" could be read by "ghostview" and printed.
 <li> PDF file now use the fonts encoding <tt>WinAnsiEncoding</tt>. This allows
      to print any characters with accent etc.. like on the screen. An similar
@@ -58,7 +58,7 @@
 <li> Synchronizing libAfterImage with Sasha'a latest version.
 <li> <tt>TASImage::Merge (const TImage im, const char op, Int_t x, Int_t y) </tt>
      with x and/or y not equal 0 did not clip the overlayed picture correctly.
-<li> Make sure a rectangle drawn will <tt>TAsimage::DrawRectangle</tt> appears 
+<li> Make sure a rectangle drawn will <tt>TAsimage::DrawRectangle</tt> appears
      after calling <tt>gPad->Modified()</tt>.
 <li> Images can be saved (canvas->Print) from within threads.
 </ul>
@@ -67,16 +67,16 @@
 
 <h4>TColor</h4>
 <ul>
-<li> <tt>CreateGradientColorTable</tt> now calls 
+<li> <tt>CreateGradientColorTable</tt> now calls
      <tt>TColor::InitializeColors()</tt>. This is needed because is some cases
      <tt>TColor::InitializeColors()</tt> has not been called before and the
      following erro messages were issued:
      <pre>
      Warning in <TColor::TColor>: color 1 already defined
      Warning in <TColor::TColor>: color 2 already defined
-     Warning in <TColor::TColor>: color 3 already defined 
+     Warning in <TColor::TColor>: color 3 already defined
      [...]
-     </pre> 
+     </pre>
 <li> <tt>TColor::AsHexString</tt> was not returning the proper value in case
      of gray scale mode. Before this change gray scale mode did not work in
      pictures generated in batch.
@@ -105,7 +105,7 @@ The drawing option &quot;[]&quot; has been change to &quot;||&quot;. The new
 option &quot;[]&quot; is the same as &quot;||&quot; except that some ticks are
 drawn at the end of the horizontal and vertical lines at the end of the error
 bars. This new way of drawing the option "[]" shows better to which error
-bar the additional tick marks belong. The following example, which has been 
+bar the additional tick marks belong. The following example, which has been
 provided by Thomas Ullrich <thomas.ullrich@bnl.gov>, shows it clearly.
 <center>
 <img alt="example of option []" src="graf2d_01.gif">
@@ -118,9 +118,9 @@ in "Not Editable" mode.
 
 <h4>TPad</h4>
 
-Improvments in <tt>TPad::BuildLegend</tt>: If the pad contains some 
+Improvments in <tt>TPad::BuildLegend</tt>: If the pad contains some
 <tt>TMultiGraph</tt> or <tt>THStack</tt> the individual graphs or histograms
-in them are automatically added to the <tt>TLegend</tt> produced by 
+in them are automatically added to the <tt>TLegend</tt> produced by
 <tt>TPad::BuildLegend</tt>.
 
 <h4>TGaxis</h4>

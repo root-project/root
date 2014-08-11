@@ -19,11 +19,11 @@
 // The macro belows shows an example of controlbar.
 // To execute an item, click with the left mouse button.
 // To see the HELP of a button, click on the right mouse button.
-// 
+//
 // You have access to the last clicked button via the method
-// GetClicked(). For example, bar->GetClicked()->GetName() 
-// will return the name of the last clicked button. 
-// 
+// GetClicked(). For example, bar->GetClicked()->GetName()
+// will return the name of the last clicked button.
+//
 //
 //{
 //   gROOT.Reset("a");
@@ -203,7 +203,7 @@ void TControlBar::AddSeparator()
 void TControlBar::Create()
 {
    // Create controlbar.
-  
+
    if( fControlBarImp ) {
       fControlBarImp->Create();
    }
@@ -237,7 +237,7 @@ void TControlBar::Initialize(Int_t x, Int_t y)
    } else {
       fControlBarImp = gGuiFactory->CreateControlBarImp( this, GetName(), x, y );
    }
-  
+
    fButtons       = new TList();
    fNoroc         = 1;
 }
@@ -342,10 +342,10 @@ void TControlBar::Show()
 //_______________________________________________________________________
 TControlBarButton *TControlBar::GetClicked() const
 {
-   // Returns a pointer to the last clicked controlbar button;    
+   // Returns a pointer to the last clicked controlbar button;
    // null if no button was clicked yet
-   
-   if (!fControlBarImp->GetClicked()) 
+
+   if (!fControlBarImp->GetClicked())
       Printf("None of the controlbar buttons is clicked yet");
    return fControlBarImp->GetClicked();
 }

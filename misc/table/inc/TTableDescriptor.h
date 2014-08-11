@@ -27,9 +27,9 @@ private:
    TTableDescriptor &operator=(const TTableDescriptor &dsc); // Intentionally not implemented.
 protected:
    friend class TTable;
-   TClass  *fRowClass;                  // TClass defining 
+   TClass  *fRowClass;                  // TClass defining
                                           // the table row C-structure
-   TTableDescriptor *fSecondDescriptor; // shadow descriptor 
+   TTableDescriptor *fSecondDescriptor; // shadow descriptor
                                           // to back TTable::Streamer
    static TString fgCommentsName;        // The name of dataset to keep the comments fields
    virtual void Init(TClass *classPtr);
@@ -75,19 +75,19 @@ public:
    TDataSet       *MakeCommentField(Bool_t createFlag=kTRUE);
 
 //    ClassDefTable(TTableDescriptor,tableDescriptor_st)
-protected:                                        
-   static  TTableDescriptor *fgColDescriptors;     
+protected:
+   static  TTableDescriptor *fgColDescriptors;
    virtual TTableDescriptor *GetDescriptorPointer() const;
    virtual void SetDescriptorPointer(TTableDescriptor *list);
-public:                                           
-   typedef tableDescriptor_st* iterator;                   
-   TTableDescriptor() : TTable("TTableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}      
-   TTableDescriptor(const char *name) : TTable(name,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}     
+public:
+   typedef tableDescriptor_st* iterator;
+   TTableDescriptor() : TTable("TTableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}
+   TTableDescriptor(const char *name) : TTable(name,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}
    TTableDescriptor(Int_t n) : TTable("TTableDescriptor",n,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}
    TTableDescriptor(const char *name,Int_t n) : TTable(name,n,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}
-   tableDescriptor_st *GetTable(Int_t i=0) const { return ((tableDescriptor_st *)GetArray())+i;}                       
-   tableDescriptor_st &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }             
-   const tableDescriptor_st &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const tableDescriptor_st *)(GetTable(i))); } 
+   tableDescriptor_st *GetTable(Int_t i=0) const { return ((tableDescriptor_st *)GetArray())+i;}
+   tableDescriptor_st &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }
+   const tableDescriptor_st &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const tableDescriptor_st *)(GetTable(i))); }
    tableDescriptor_st *begin() const  {                      return GetNRows()? GetTable(0):0;}
    tableDescriptor_st *end()   const  {Long_t i = GetNRows(); return          i? GetTable(i):0;}
    static const char *TableDictionary();

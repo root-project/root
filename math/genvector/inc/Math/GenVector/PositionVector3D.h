@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -14,14 +14,14 @@
 //
 // Last update: $Id$
 //
-#ifndef ROOT_Math_GenVector_PositionVector3D 
+#ifndef ROOT_Math_GenVector_PositionVector3D
 #define ROOT_Math_GenVector_PositionVector3D  1
 
-#ifndef ROOT_Math_GenVector_DisplacementVector3Dfwd 
+#ifndef ROOT_Math_GenVector_DisplacementVector3Dfwd
 #include "Math/GenVector/DisplacementVector3Dfwd.h"
 #endif
 
-#ifndef ROOT_Math_GenVector_Cartesian3D 
+#ifndef ROOT_Math_GenVector_Cartesian3D
 #include "Math/GenVector/Cartesian3D.h"
 #endif
 
@@ -29,11 +29,11 @@
 #include "Math/GenVector/GenVectorIO.h"
 #endif
 
-#ifndef ROOT_Math_GenVector_BitReproducible 
+#ifndef ROOT_Math_GenVector_BitReproducible
 #include "Math/GenVector/BitReproducible.h"
 #endif
 
-#ifndef ROOT_Math_GenVector_CoordinateSystemTags 
+#ifndef ROOT_Math_GenVector_CoordinateSystemTags
 #include "Math/GenVector/CoordinateSystemTags.h"
 #endif
 
@@ -47,16 +47,16 @@ namespace ROOT {
 
 //__________________________________________________________________________________________
     /**
-              Class describing a generic position vector (point) in 3 dimensions.
-              This class is templated on the type of Coordinate system.
-              One example is the XYZPoint which is a vector based on
-              double precision x,y,z data members by using the
-              ROOT::Math::Cartesian3D<double> Coordinate system.
-	      The class is having also an extra template parameter, the coordinate system tag, 
-	      to be able to identify (tag) vector described in different reference coordinate system, 
-	      like global or local coordinate systems.   
+     Class describing a generic position vector (point) in 3 dimensions.
+     This class is templated on the type of Coordinate system.
+     One example is the XYZPoint which is a vector based on
+     double precision x,y,z data members by using the
+     ROOT::Math::Cartesian3D<double> Coordinate system.
+     The class is having also an extra template parameter, the coordinate system tag,
+     to be able to identify (tag) vector described in different reference coordinate system,
+     like global or local coordinate systems.
 
-	      @ingroup GenVector
+     @ingroup GenVector
     */
 
     template <class CoordSystem, class Tag = DefaultCoordinateSystemTag >
@@ -195,10 +195,10 @@ namespace ROOT {
          Set internal data based on 3 Scalars at *begin to *end
        */
       template <class IT>
-#ifndef NDEBUG 
-      PositionVector3D<CoordSystem, Tag>& SetCoordinates( IT begin, IT end ) 
+#ifndef NDEBUG
+      PositionVector3D<CoordSystem, Tag>& SetCoordinates( IT begin, IT end )
 #else
-      PositionVector3D<CoordSystem, Tag>& SetCoordinates( IT begin, IT /* end */ ) 
+      PositionVector3D<CoordSystem, Tag>& SetCoordinates( IT begin, IT /* end */ )
 #endif
       { IT a = begin; IT b = ++begin; IT c = ++begin;
         assert (++begin==end);
@@ -222,7 +222,7 @@ namespace ROOT {
          get internal data into 3 Scalars at *begin to *end (3 past begin)
        */
       template <class IT>
-#ifndef NDEBUG 
+#ifndef NDEBUG
       void GetCoordinates( IT begin, IT end ) const
 #else
       void GetCoordinates( IT begin, IT /* end */ ) const
@@ -237,11 +237,11 @@ namespace ROOT {
        */
       template <class IT>
       void GetCoordinates( IT begin ) const {
-         Scalar a,b,c = 0; 
+         Scalar a,b,c = 0;
          GetCoordinates (a,b,c);
-         *begin++ = a; 
-         *begin++ = b; 
-         *begin   = c; 
+         *begin++ = a;
+         *begin++ = b;
+         *begin   = c;
       }
 
       /**
@@ -366,11 +366,11 @@ namespace ROOT {
        PositionVector3D<CoordSystem, Tag>& SetEta (Scalar etaval) { fCoordinates.SetEta(etaval); return *this;}
 
       // ------ Operations combining two vectors ------
-      // need to specialize to exclude those with a different tags 
+      // need to specialize to exclude those with a different tags
 
      /**
-          Return the scalar (Dot) product of this with a displacement vector in 
-	  any coordinate system, but with the same tag
+      Return the scalar (Dot) product of this with a displacement vector in
+      any coordinate system, but with the same tag
       */
       template< class OtherCoords >
       Scalar Dot( const  DisplacementVector3D<OtherCoords,Tag> & v) const {
@@ -486,7 +486,7 @@ namespace ROOT {
 
       template <class OtherCoords, class OtherTag>
       PositionVector3D & operator=( const DisplacementVector3D<OtherCoords, OtherTag> & );
-      
+
       template <class OtherCoords, class OtherTag>
       PositionVector3D & operator+=(const  DisplacementVector3D<OtherCoords, OtherTag> & );
 

@@ -74,7 +74,7 @@ protected:
    Double_t         **ExpandAndCopy(Int_t size, Int_t iend);
    virtual void       FillZero(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE);
    Double_t         **ShrinkAndCopy(Int_t size, Int_t iend);
-   virtual Bool_t     DoMerge(const TGraph * g);       
+   virtual Bool_t     DoMerge(const TGraph * g);
 
 public:
    // TGraph status bits
@@ -153,7 +153,7 @@ public:
    TAxis                *GetXaxis() const ;
    TAxis                *GetYaxis() const ;
    virtual Int_t         GetPoint(Int_t i, Double_t &x, Double_t &y) const;
-   
+
    virtual void          InitExpo(Double_t xmin=0, Double_t xmax=0);
    virtual void          InitGaus(Double_t xmin=0, Double_t xmax=0);
    virtual void          InitPolynom(Double_t xmin=0, Double_t xmax=0);
@@ -166,7 +166,7 @@ public:
    virtual Int_t         Merge(TCollection* list);
    virtual void          Paint(Option_t *chopt="");
    void                  PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
-   void                  PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt); 
+   void                  PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
    virtual void          PaintStats(TF1 *fit);
    virtual void          Print(Option_t *chopt="") const;
    virtual void          RecursiveRemove(TObject *obj);

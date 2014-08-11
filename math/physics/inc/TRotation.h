@@ -20,9 +20,9 @@
 class TQuaternion;
 
 class TRotation : public TObject {
-    
+
 public:
-    
+
 class TRotationRow {
 public:
    inline TRotationRow(const TRotation &, int);
@@ -95,7 +95,7 @@ private:
 
    TRotation & RotateZ(Double_t);
    // Rotation around the z-axis.
- 
+
    TRotation & Rotate(Double_t, const TVector3 &);
    inline TRotation & Rotate(Double_t, const TVector3 *);
    // Rotation around a specified vector.
@@ -118,7 +118,7 @@ private:
 
    inline TRotation & SetToIdentity();
    // Set equal to the identity rotation.
- 
+
    TRotation & SetXEulerAngles(Double_t phi, Double_t theta, Double_t psi);
    void SetXPhi(Double_t);
    void SetXTheta(Double_t);
@@ -172,7 +172,7 @@ private:
    void MakeBasis(TVector3& xAxis, TVector3& yAxis, TVector3& zAxis) const;
    // Take two input vectors (in xAxis, and zAxis) and turn them into an
    // orthogonal basis.  This is an internal helper function used to implement
-   // the Set?Axis functions, but is exposed because the functionality is 
+   // the Set?Axis functions, but is exposed because the functionality is
    // often useful.
 
 protected:

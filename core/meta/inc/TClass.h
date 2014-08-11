@@ -39,10 +39,13 @@
 #include <set>
 #include <vector>
 
+#include <atomic>
+#ifndef ROOT_ThreadLocalStorage
+#include "ThreadLocalStorage.h"
+#endif
 class TBaseClass;
 class TBrowser;
 class TDataMember;
-class TClassRef;
 class TCling;
 class TMethod;
 class TRealData;
@@ -114,7 +117,7 @@ public:
 
    // Describe the current state of the TClass itself.
    enum EState {
-      kNoInfo,         // The state has not yet been initialized, i.e. the TClass
+      kNoInfo,          // The state has not yet been initialized, i.e. the TClass
                         // was just created and/or there is no trace of it in the interpreter.
       kForwardDeclared, // The interpreted knows the entity is a class but that's it.
       kEmulated,        // The information about the class only comes from a TStreamerInfo
@@ -127,8 +130,22 @@ public:
 
 private:
 
+   // TClass objects can be created as a result of opening a TFile (in which
+   // they are in emulated mode) or as a result of loading the dictionary for
+   // the corresponding class.   When a dictionary is loaded any pre-existing
+   // emulated TClass is replaced by the one created/coming from the dictionary.
+   // To have a reference that always point to the 'current' TClass object for
+   // a given class, one should use a TClassRef.
+   // TClassRef works by holding on to the fPersistentRef which is updated
+   // atomically whenever a TClass is replaced.  During the replacement the
+   // value of fPersistentRef is set to zero, leading the TClassRef to call
+   // TClass::GetClass which is also locked by the replacement.   At the end
+   // of the replacement, fPersistentRef points to the new TClass object.
+   std::atomic<TClass**> fPersistentRef;//!Persistent address of pointer to this TClass object and its successors.
+
+
    mutable TObjArray *fStreamerInfo;    //Array of TVirtualStreamerInfo
-   mutable std::map<std::string, TObjArray*> *fConversionStreamerInfo; //Array of the streamer infos derived from another class.
+   mutable std::atomic<std::map<std::string, TObjArray*>*> fConversionStreamerInfo; //Array of the streamer infos derived from another class.
    TList             *fRealData;        //linked list for persistent members including base classes
    TList             *fBase;            //linked list for base classes
    TListOfDataMembers*fData;            //linked list for data members
@@ -176,14 +193,14 @@ private:
 
            Bool_t     fHasRootPcmInfo : 1;      //!Whether info was loaded from a root pcm.
    mutable Bool_t     fCanLoadClassInfo : 1;    //!Indicates whether the ClassInfo is supposed to be available.
-   mutable Bool_t     fVersionUsed : 1;         //!Indicates whether GetClassVersion has been called
    mutable Bool_t     fIsOffsetStreamerSet : 1; //!saved remember if fOffsetStreamer has been set.
+   mutable std::atomic<Bool_t> fVersionUsed;     //!Indicates whether GetClassVersion has been called
 
    mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
    EState             fState;           //!Current 'state' of the class (Emulated,Interpreted,Loaded)
-   mutable TVirtualStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
-   TClassRef         *fRefStart;        //!List of references to this object
+   mutable std::atomic<TVirtualStreamerInfo*>  fCurrentInfo;     //!cached current streamer info.
+   mutable std::atomic<TVirtualStreamerInfo*>  fLastReadInfo;    //!cached streamer info used in the last read.
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
    ROOT::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
 
@@ -205,6 +222,7 @@ private:
 
    void               SetClassVersion(Version_t version);
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
+   TVirtualStreamerInfo* DetermineCurrentStreamerInfo();
 
    void SetStreamerImpl();
 
@@ -219,9 +237,8 @@ private:
 
    static IdMap_t    *GetIdMap();       //Map from typeid to TClass pointer
    static DeclIdMap_t *GetDeclIdMap();  //Map from DeclId_t to TClass pointer
-   static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
-   static Int_t       fgClassCount;     //provides unique id for a each class
-                                        //stored in TObject::fUniqueID
+   static std::atomic<Int_t>     fgClassCount;  //provides unique id for a each class
+                                                //stored in TObject::fUniqueID
    // Internal status bits
    enum { kLoading = BIT(14), kUnloading = BIT(14) };
    // Internal streamer type.
@@ -239,12 +256,11 @@ private:
    // name (the hash key), and fOrigName holds the original class name
    // (the value to which the key maps).
    //
-   class TNameMapNode
-     : public TObjString
+   class TNameMapNode : public TObjString
    {
    public:
-     TNameMapNode (const char* typedf, const char* orig);
-     TString fOrigName;
+      TNameMapNode (const char* typedf, const char* orig);
+      TString fOrigName;
    };
 
    // These are the above-referenced hash tables.  (The pointers are null
@@ -282,7 +298,6 @@ public:
 
    void               AddInstance(Bool_t heap = kFALSE) { fInstanceCount++; if (heap) fOnHeap++; }
    void               AddImplFile(const char *filename, int line);
-   void               AddRef(TClassRef *ref);
    static Bool_t      AddRule(const char *rule);
    static Int_t       ReadRules(const char *filename);
    static Int_t       ReadRules();
@@ -328,8 +343,10 @@ public:
    const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
    TVirtualStreamerInfo     *GetCurrentStreamerInfo() {
       if (fCurrentInfo) return fCurrentInfo;
-      else return (fCurrentInfo=(TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion)));
+      else return DetermineCurrentStreamerInfo();
    }
+   TVirtualStreamerInfo     *GetLastReadInfo() const { return fLastReadInfo; }
+   void                      SetLastReadInfo(TVirtualStreamerInfo *info) { fLastReadInfo = info; }
    TList             *GetListOfDataMembers(Bool_t load = kTRUE);
    TList             *GetListOfEnums(Bool_t load = kTRUE);
    TList             *GetListOfFunctionTemplates(Bool_t load = kTRUE);
@@ -362,6 +379,11 @@ public:
    ROOT::NewFunc_t    GetNew() const;
    ROOT::NewArrFunc_t GetNewArray() const;
    Int_t              GetNmethods();
+#ifdef __CINT__
+   TClass           **GetPersistentRef() const { return fPersistentRef; }
+#else
+   TClass      *const*GetPersistentRef() const { return fPersistentRef; }
+#endif
    TRealData         *GetRealData(const char *name) const;
    TVirtualRefProxy  *GetReferenceProxy()  const   {  return fRefProxy; }
    const ROOT::TSchemaRuleSet *GetSchemaRules() const;
@@ -401,7 +423,6 @@ public:
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t              ReadBuffer(TBuffer &b, void *pointer);
    void               RegisterStreamerInfo(TVirtualStreamerInfo *info);
-   void               RemoveRef(TClassRef *ref);
    void               RemoveStreamerInfo(Int_t slot);
    void               ReplaceWith(TClass *newcl) const;
    void               ResetCaches();
@@ -466,7 +487,7 @@ public:
    inline void        Streamer(void *obj, TBuffer &b, const TClass *onfile_class = 0) const
    {
       // Inline for performance, skipping one function call.
-       (this->*fStreamerImpl)(obj,b,onfile_class);
+      (this->*fStreamerImpl)(obj,b,onfile_class);
    }
 
    ClassDef(TClass,0)  //Dictionary containing class information
@@ -474,25 +495,25 @@ public:
 
 namespace ROOT {
 
-   #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
-      template <typename T> struct IsPointer { enum { kVal = 0 }; };
-      template <typename T> struct IsPointer<T*> { enum { kVal = 1 }; };
-   #else
-      template <typename T> Bool_t IsPointer(const T* /* dummy */) { return false; };
-      template <typename T> Bool_t IsPointer(const T** /* dummy */) { return true; };
-   #endif
+#ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
+   template <typename T> struct IsPointer { enum { kVal = 0 }; };
+   template <typename T> struct IsPointer<T*> { enum { kVal = 1 }; };
+#else
+   template <typename T> Bool_t IsPointer(const T* /* dummy */) { return false; };
+   template <typename T> Bool_t IsPointer(const T** /* dummy */) { return true; };
+#endif
 
    template <typename T> TClass* GetClass(      T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
    template <typename T> TClass* GetClass(const T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
 
-   #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
-      // This can only be used when the template overload resolution can distringuish between
-      // T* and T**
-      template <typename T> TClass* GetClass(      T**       /* dummy */) { return GetClass((T*)0); }
-      template <typename T> TClass* GetClass(const T**       /* dummy */) { return GetClass((T*)0); }
-      template <typename T> TClass* GetClass(      T* const* /* dummy */) { return GetClass((T*)0); }
-      template <typename T> TClass* GetClass(const T* const* /* dummy */) { return GetClass((T*)0); }
-   #endif
+#ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
+   // This can only be used when the template overload resolution can distringuish between
+   // T* and T**
+   template <typename T> TClass* GetClass(      T**       /* dummy */) { return GetClass((T*)0); }
+   template <typename T> TClass* GetClass(const T**       /* dummy */) { return GetClass((T*)0); }
+   template <typename T> TClass* GetClass(      T* const* /* dummy */) { return GetClass((T*)0); }
+   template <typename T> TClass* GetClass(const T* const* /* dummy */) { return GetClass((T*)0); }
+#endif
 
    extern TClass *CreateClass(const char *cname, Version_t id,
                               const char *dfil, const char *ifil,

@@ -82,7 +82,7 @@ namespace PyROOT {
 
 
 //- helper for memory regulation (no PyTypeObject equiv. member in p2.2) -----
-   void op_dealloc_nofree( ObjectProxy* );   
+   void op_dealloc_nofree( ObjectProxy* );
 
 } // namespace PyROOT
 

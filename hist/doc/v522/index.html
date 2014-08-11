@@ -1,37 +1,37 @@
-<br> 
-<hr> 
-<a name="hist"></a> 
+<br>
+<hr>
+<a name="hist"></a>
 <h3>Histogram package</h3>
 <p>
 Modify implementation of the Fit function in the histograms and data classes to use a new common implementation, defined in the file <tt>HFitImpl.cxx</tt>. This file provides the implementation of the function used for bin fitting of the data objects of the histogram package, TH1's, TGraph, TMultiGraph, TGraph2D,  and un-binned maximum likelihood fit for TTree data (used by the <tt>TTree::UnbinnedFit</tt> method).
 
 <h4><tt>HFitInterface.h</tt></h4>
-  Header file defining functions in the namespace <tt>ROOT::Fit</tt> providing functions required for fitting the data objects of the histogram package. These functions are used for example from other libraries like the FitPanel or the TTreePlayer for performing the fits. 
+  Header file defining functions in the namespace <tt>ROOT::Fit</tt> providing functions required for fitting the data objects of the histogram package. These functions are used for example from other libraries like the FitPanel or the TTreePlayer for performing the fits.
   <ul>
 <li>
     <tt>ROOT::Fit::FitObject</tt>: function for fitting the various data objects. The user must pass in addition to a pointer to the fit object, the fit options (via the <tt>FOption</tt> class and not a string), the minimizer options and the fit data range.
     <li>
   <tt>ROOT::Fit::FillData</tt>: function for filling the fit data from the histogram data objects. Used for fitting an histogram using the <tt>ROOT::Fit::Fitter</tt> class.
     <li>
-    <tt>ROOT::Fit::UnBinFit</tt>:: function for fitting an unbinned data sets, for example obtained from TTree data.  
+    <tt>ROOT::Fit::UnBinFit</tt>:: function for fitting an unbinned data sets, for example obtained from TTree data.
   </li>
   </ul>
- 
+
 
   <h4>TBackCompFitter</h4>
-  New class providing a backward compatible implementation of the 
-	  <tt>TVirtualFitter</tt> using the new fitting class. It is wrapping the functionality of the <tt>ROOT::Math::Fitter</tt> and it 
-	  can be used to retrieve the fit information (result and
-	  configuration) via the
-	  TVirtualFitter API from <tt>FitConfig</tt> and <tt>FitResult</tt>. A static instance of this class 
-	  is created after calling the histograms and graph Fit methods in order to retrieve the full fit information after having fit. This instace will be deleted only when the next fit is executed.
+  New class providing a backward compatible implementation of the
+     <tt>TVirtualFitter</tt> using the new fitting class. It is wrapping the functionality of the <tt>ROOT::Math::Fitter</tt> and it
+     can be used to retrieve the fit information (result and
+     configuration) via the
+     TVirtualFitter API from <tt>FitConfig</tt> and <tt>FitResult</tt>. A static instance of this class
+     is created after calling the histograms and graph Fit methods in order to retrieve the full fit information after having fit. This instace will be deleted only when the next fit is executed.
   This gives full backward compatibility functionality in fitting.
   This class in addition to the TVirtualFitter provides the following functionality:
   <ul>
     <li>access direct to references to <tt>ROOT::Fit::FitResult</tt>  and <tt>ROOT::FitConfig</tt> objects via the member functions <tt>TBackCompFitter::GetFitResult()</tt> and <tt>TBackCompFitter::GetFitConfig()</tt>
     <li>Possibility to set the fit the fit function directly as a function pointer to a muldi-dimensional function interface instead of using the TMinuit FCN style API.
-    <li>New methods for making in a easy way contour , with <tt>TBackCompFitter::Contour</tt>, and scan plots of the objective function, with <tt>TBackCompFitter::Scan</tt>. Both Scan and Contour takes as input a TGraph which on exit will be filled with the scanned or contour points.  
-    
+    <li>New methods for making in a easy way contour , with <tt>TBackCompFitter::Contour</tt>, and scan plots of the objective function, with <tt>TBackCompFitter::Scan</tt>. Both Scan and Contour takes as input a TGraph which on exit will be filled with the scanned or contour points.
+
   </ul>
 
   <h4>TH1</h4>
@@ -48,7 +48,7 @@ Modify implementation of the Fit function in the histograms and data classes to 
       <li>Add possibility to be used in the FitPanel (add a <tt>TH2::FitPanel()</tt> method).
     <li>Add also here the new function <tt>TH2::Interpolate</tt>. </li>
     <li>fix a bug in the resulting statistics in TH2::ProjectionX(Y) when all range was used
-    <li>fix a bug in getting the right axis and limits in TH2::ProfileX(Y) 
+    <li>fix a bug in getting the right axis and limits in TH2::ProfileX(Y)
       </ul>
 
   <h4>TH3</h4>
@@ -76,7 +76,7 @@ Modify implementation of the Fit function in the histograms and data classes to 
   <h4>THnSparse</h4>
   <li>fix a bug in SetBinError
   <li>fix in THnSParse::Rebin
-  <li>fix error calculation in Multiply 
+  <li>fix error calculation in Multiply
 
 <h4>TGraph</h4>
 
@@ -114,9 +114,9 @@ Modify implementation of the Fit function in the histograms and data classes to 
 
 <h4>TGraphPainter</h4>
 <ul>
-<li> When a histogram was drawn in a larger frame than its limits (using the 
-  option "SAME"), the `outside' vertical lines for the first and last bins 
-  were not drawn. The macro below demonstrates the problem: 
+<li> When a histogram was drawn in a larger frame than its limits (using the
+  option "SAME"), the `outside' vertical lines for the first and last bins
+  were not drawn. The macro below demonstrates the problem:
 <pre>
   {
      TH1D h("h", "h", 10., 0., 1.);
@@ -139,8 +139,8 @@ Modify implementation of the Fit function in the histograms and data classes to 
      return the color index of the bin (i,j).
      <br>
      This function should be used after an histogram has been plotted with the
-     option COL or COLZ like in the following example:  
-     <pre> 
+     option COL or COLZ like in the following example:
+     <pre>
        h2->Draw("COLZ");
        gPad->Update();
        TPaletteAxis *palette =
@@ -148,7 +148,7 @@ Modify implementation of the Fit function in the histograms and data classes to 
        Int_t ci = palette->GetBinColor(20,15);
      </pre>
      Then it is possible to retrieve the RGB components in the following way:
-     <pre> 
+     <pre>
        TColor *c = gROOT->GetColor(ci);
        float x,y,z;
        c->GetRGB(x,y,z);
@@ -160,7 +160,7 @@ Modify implementation of the Fit function in the histograms and data classes to 
 
 <ul>
   <li>
-  Fixed a bug in <tt>TFormula::GetExprFormula</tt>. Now the correct formula is returned for expressions based on CINT type functions. 
+  Fixed a bug in <tt>TFormula::GetExprFormula</tt>. Now the correct formula is returned for expressions based on CINT type functions.
 </li>
 </ul>
 
@@ -201,7 +201,7 @@ The simple following macro was enough to show the problem:
 <li> Make the data member <tt>fHistogram</tt> persistent in order to save the
      axis attributes which may have been changed during a root session (like,
      for instance, the axis titles).</li>
-<li> When a THStack is drawn with the option "pads", the number of lines is 
+<li> When a THStack is drawn with the option "pads", the number of lines is
      now optimized to make sure there is no empty line.  </li>
 </ul>
 
@@ -224,11 +224,11 @@ implemented to help finding a good choice of this parameter.
   </ul>
 
 
-<br> 
-<hr> 
+<br>
+<hr>
 
 <h3>FitPanel</h3>
-Add a new revised version of the Fit Panel with the following functionality: 
+Add a new revised version of the Fit Panel with the following functionality:
 <ul>
 
  <li> Add support now for fitting, in addition to the TH1 and TGraph
@@ -260,10 +260,10 @@ Add a new revised version of the Fit Panel with the following functionality:
   setting the parameters (values, limits, etc..)</li>
 
  </ul>
-Here is how the fit panel is now: 
+Here is how the fit panel is now:
   <p><img alt="Fit Panel" src="FitPanel.gif"></img></p>
 These are the currently support methods for the new Advance Graphics dialog:
   <p><img alt="Fit Panel" src="Contour.gif"></img>&nbsp;<img alt="Fit Panel" src="Scan.gif"></img></p>
-    
 
-  
+
+

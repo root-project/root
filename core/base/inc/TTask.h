@@ -50,8 +50,8 @@ public:
    TTask();
    TTask(const char* name, const char *title);
    virtual ~TTask();
-   TTask(const TTask &task);          
-   TTask& operator=(const TTask& tt); 
+   TTask(const TTask &task);
+   TTask& operator=(const TTask& tt);
 
    virtual void  Abort();  // *MENU*
    virtual void  Add(TTask *task) {fTasks->Add(task);}

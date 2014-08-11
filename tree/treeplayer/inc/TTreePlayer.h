@@ -65,10 +65,10 @@ protected:
    void           TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject *obj, Option_t *option);
    void           TakeEstimate(Int_t nfill, Int_t &npoints, Int_t action, TObject *obj, Option_t *option);
    void           DeleteSelectorFromFile();
-   
+
 public:
    TTreePlayer();
-   virtual ~TTreePlayer();   
+   virtual ~TTreePlayer();
    virtual TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname);
    virtual TTree    *CopyTree(const char *selection, Option_t *option
                               ,Long64_t nentries, Long64_t firstentry);

@@ -12,7 +12,7 @@
 
 /**
  * FTPixmapGlyph is a specialisation of FTGlyph for creating pixmaps.
- * 
+ *
  * @see FTGlyphContainer
  *
  */
@@ -38,7 +38,7 @@ class  FTGL_EXPORT FTPixmapGlyph : public FTGlyph
          * @return      The advance distance for this glyph.
          */
         virtual const FTPoint& Render( const FTPoint& pen);
-        
+
         // attributes
 
     private:
@@ -51,17 +51,17 @@ class  FTGL_EXPORT FTPixmapGlyph : public FTGlyph
          * The height of the glyph 'image'
          */
         int destHeight;
-        
+
         /**
          * Vector from the pen position to the topleft corner of the pixmap
          */
         FTPoint pos;
-        
+
         /**
          * Pointer to the 'image' data
          */
         unsigned char* data;
-        
+
 };
 
 

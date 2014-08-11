@@ -26,7 +26,7 @@ class TGCheckButton;
 class TStructNodeEditor : public TGedFrame {
 
 protected:
-   TList               *fColors;                // Pointer to list with class colors 
+   TList               *fColors;                // Pointer to list with class colors
    TStructNode         *fNode;                  // Pointer to node which is edited
    TGNumberEntry       *fMaxObjectsNumberEntry; // Sets maximum number of nodes on scene
    TGNumberEntry       *fMaxLevelsNumberEntry;  // Sets maximum number of visible levels on scene
@@ -46,7 +46,7 @@ protected:
 public:
    TStructNodeEditor(TList* colors, const TGWindow *p = 0, Int_t width = 140, Int_t height = 30,
       UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground());
-   ~TStructNodeEditor(); 
+   ~TStructNodeEditor();
 
    void  ApplyButtonSlot();
    void  AutoRefreshButtonSlot(Bool_t on);

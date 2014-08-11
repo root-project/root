@@ -44,7 +44,7 @@ protected:
     Bool_t      fScaling;         //!True when TProfile::Scale is called
     Double_t    fTsumwy;          //Total Sum of weight*Y
     Double_t    fTsumwy2;         //Total Sum of weight*Y*Y
-    TArrayD     fBinSumw2;        //Array of sum of squares of weights per bin 
+    TArrayD     fBinSumw2;        //Array of sum of squares of weights per bin
 
 static Bool_t   fgApproximate;    //bin error approximation option
 
@@ -133,7 +133,7 @@ public:
    virtual void     SetBinsLength(Int_t n=-1);
    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
    virtual void     SetErrorOption(Option_t *option=""); // *MENU*
-   virtual void     Sumw2(Bool_t flag = kTRUE); 
+   virtual void     Sumw2(Bool_t flag = kTRUE);
 
    ClassDef(TProfile,6)  //Profile histogram class
 };

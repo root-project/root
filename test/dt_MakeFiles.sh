@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 
 size=50
 tracks=600

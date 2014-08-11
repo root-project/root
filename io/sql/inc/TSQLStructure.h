@@ -55,66 +55,66 @@ class TSQLClassInfo;
 class TBufferSQL2;
 
 class TSQLColumnData : public TObject {
-    
-protected:   
+
+protected:
    TString     fName;             //!  name of the table column
    TString     fType;             //!  type of the table column
    TString     fValue;            //!  value of the table column
    Bool_t      fNumeric;          //!  for numeric quotes (double quotes) are not required
 public:
    TSQLColumnData();
-   TSQLColumnData(const char* name,   
-                  const char* sqltype, 
-                  const char* value, 
+   TSQLColumnData(const char* name,
+                  const char* sqltype,
+                  const char* value,
                   Bool_t numeric);
 
    TSQLColumnData(const char* name, Long64_t value);
    virtual ~TSQLColumnData();
-  
+
    virtual const char* GetName() const { return fName.Data(); }
    const char* GetType() const { return fType.Data(); }
    const char* GetValue() const { return fValue.Data(); }
    Bool_t IsNumeric() const { return fNumeric; }
-  
+
    ClassDef(TSQLColumnData, 1); // Single SQL column data.
 };
 
 //______________________________________________________________________
 
 class TSQLTableData : public TObject {
-  
+
 protected:
    TSQLFile*      fFile;           //!
    TSQLClassInfo* fInfo;           //!
    TObjArray      fColumns;        //! collection of columns
    TObjArray*     fColInfos;       //! array with TSQLClassColumnInfo, used later for TSQLClassInfo
-   
+
    TString DefineSQLName(const char* fullname);
    Bool_t HasSQLName(const char* sqlname);
-   
+
 public:
    TSQLTableData(TSQLFile* f = 0, TSQLClassInfo* info = 0);
    virtual ~TSQLTableData();
 
    void AddColumn(const char* name, Long64_t value);
-   void AddColumn(const char* name, 
-                  const char* sqltype, 
-                  const char* value, 
+   void AddColumn(const char* name,
+                  const char* sqltype,
+                  const char* value,
                   Bool_t numeric);
-   
+
    TObjArray* TakeColInfos();
-   
+
    Int_t GetNumColumns();
    const char* GetColumn(Int_t n);
    Bool_t IsNumeric(Int_t n);
-   
+
    ClassDef(TSQLTableData, 1); // Collection of columns data for single SQL table
 };
 
 //______________________________________________________________________
 
 class TSQLStructure : public TObject {
-protected:   
+protected:
 
    Bool_t           CheckNormalClassPair(TSQLStructure* vers, TSQLStructure* info);
 
@@ -141,15 +141,15 @@ protected:
 public:
    TSQLStructure();
    virtual ~TSQLStructure();
-  
+
    TSQLStructure*   GetParent() const { return fParent; }
    void             SetParent(TSQLStructure* p) { fParent = p; }
    Int_t            NumChilds() const;
    TSQLStructure*   GetChild(Int_t n) const;
- 
+
    void             SetType(Int_t typ) { fType = typ; }
    Int_t            GetType() const { return fType; }
-   
+
    // this part requried for writing to SQL tables
    void             SetObjectRef(Long64_t refid, const TClass* cl);
    void             SetObjectPointer(Long64_t ptrid);
@@ -163,7 +163,7 @@ public:
    void             SetArrayIndex(Int_t indx, Int_t cnt=1);
    void             SetArray(Int_t sz = -1);
    void             ChangeValueOnly(const char* value);
-   
+
    TClass*          GetObjectClass() const;
    TClass*          GetVersionClass() const;
    TStreamerInfo*   GetStreamerInfo() const;
@@ -176,25 +176,25 @@ public:
    const char*      GetValue() const;
    Int_t            GetArrayIndex() const { return fArrayIndex; }
    Int_t            GetRepeatCounter() const { return fRepeatCnt; }
-  
+
    void             Add(TSQLStructure* child);
    void             AddVersion(const TClass* cl, Int_t version = -100);
    void             AddValue(const char* value, const char* tname = 0);
    void             ChildArrayIndex(Int_t index, Int_t cnt = 1);
 
    // this is part specially for reading of sql tables
-  
+
    Long64_t         DefineObjectId(Bool_t recursive = kTRUE);
-  
+
    void             SetObjectData(TSQLObjectData* objdata);
    void             AddObjectData(TSQLObjectData* objdata);
    TSQLObjectData*  GetObjectData(Bool_t search = false);
-  
+
    virtual void     Print(Option_t* option = "") const;
    void             PrintLevel(Int_t level) const;
-  
+
    Bool_t           ConvertToTables(TSQLFile* f, Long64_t keyid, TObjArray* cmds);
-  
+
    Int_t            LocateElementColumn(TSQLFile* f, TBufferSQL2* buf, TSQLObjectData* data);
 
    static Bool_t    UnpackTObject(TSQLFile* f, TBufferSQL2* buf, TSQLObjectData* data, Long64_t objid, Int_t clversion);
@@ -205,7 +205,7 @@ public:
    static Int_t     DefineElementColumnType(TStreamerElement* elem, TSQLFile* f);
    static TString   DefineElementColumnName(TStreamerElement* elem, TSQLFile* f, Int_t indx = 0);
    static void      AddStrBrackets(TString &s, const char* quote);
-  
+
    enum ESQLTypes {
       kSqlObject       = 10001,
       kSqlPointer      = 10002,
@@ -219,7 +219,7 @@ public:
       kSqlCustomClass  = 10010,
       kSqlCustomElement= 10011
    };
-   
+
    enum ESQLColumns {
       kColUnknown      = 0,
       kColSimple       = 1,
@@ -233,30 +233,30 @@ public:
       kColTString      = 9,
       kColRawData      = 10
    };
-   
+
    enum ESQLIdType {
       kIdTable    = 0,
       kIdRawTable = 1,
       kIdColumn   = 2
-   }; 
-       
-  
+   };
+
+
    ClassDef(TSQLStructure, 1); // Table/structure description used internally by YBufferSQL.
 };
 
 // text constants, used in SQL I/O
 
 namespace sqlio {
-    
+
    extern Long64_t atol64(const char* value);
-    
+
    extern const Int_t Ids_NullPtr;
    extern const Int_t Ids_RootDir;
    extern const Int_t Ids_TSQLFile;
    extern const Int_t Ids_StreamerInfos;
    extern const Int_t Ids_FirstKey;
    extern const Int_t Ids_FirstObject;
-    
+
    extern const char* ObjectRef;
    extern const char* ObjectRef_Arr;
    extern const char* ObjectPtr;
@@ -273,7 +273,7 @@ namespace sqlio {
    extern const char* PointerSuffix;
    extern const char* StrSuffix;
    extern const char* LongStrPrefix;
-    
+
    extern const char* Array;
    extern const char* Bool;
    extern const char* Char;
@@ -291,7 +291,7 @@ namespace sqlio {
    extern const char* CharStar;
    extern const char* True;
    extern const char* False;
-    
+
    extern const char* KeysTable;
    extern const char* KeysTableIndex;
    extern const char* KT_Name;
@@ -303,12 +303,12 @@ namespace sqlio {
    extern const char* DT_Create;
    extern const char* DT_Modified;
    extern const char* DT_UUID;
-    
+
    extern const char* ObjectsTable;
    extern const char* ObjectsTableIndex;
    extern const char* OT_Class;
    extern const char* OT_Version;
-   
+
    extern const char* IdsTable;
    extern const char* IdsTableIndex;
    extern const char* IT_TableID;
@@ -317,17 +317,17 @@ namespace sqlio {
    extern const char* IT_FullName;
    extern const char* IT_SQLName;
    extern const char* IT_Info;
-    
+
    extern const char* BT_Field;
    extern const char* BT_Value;
-    
+
    extern const char* StringsTable;
    extern const char* ST_Value;
-    
+
    extern const char* ConfigTable;
    extern const char* CT_Field;
    extern const char* CT_Value;
-    
+
    extern const char* cfg_Version;
    extern const char* cfg_UseSufixes;
    extern const char* cfg_ArrayLimit;

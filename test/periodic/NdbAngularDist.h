@@ -9,11 +9,11 @@ class NdbAngularDist : public NdbMF
 protected:
 
 public:
-	NdbAngularDist()
-		: NdbMF(4, "Angular distributions for emitted particles") {}
-	~NdbAngularDist() {}
+   NdbAngularDist()
+      : NdbMF(4, "Angular distributions for emitted particles") {}
+   ~NdbAngularDist() {}
 
-	ClassDef(NdbAngularDist,1)
+   ClassDef(NdbAngularDist,1)
 
 }; // NdbMfAngularDist
 

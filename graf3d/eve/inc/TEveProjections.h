@@ -96,7 +96,7 @@ public:
 
    virtual void        SetCenter(TEveVector& v) { fCenter = v; }
    virtual Float_t*    GetProjectedCenter();
-  
+
    void                SetDisplaceOrigin(bool);
    Bool_t              GetDisplaceOrigin() const { return fDisplaceOrigin; }
 
@@ -169,7 +169,7 @@ public:
 
    virtual void        ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
 
-   virtual void        SetCenter(TEveVector& v); 
+   virtual void        SetCenter(TEveVector& v);
    virtual Float_t*    GetProjectedCenter() { return fProjectedCenter.Arr(); }
 
    virtual Bool_t      HasSeveralSubSpaces() const { return kTRUE; }
@@ -219,7 +219,7 @@ public:
    ClassDef(TEve3DProjection, 0); // 3D scaling "projection"
 };
 
-// AMT: temporary workaround till root pactches are integrated in CMSSW 	 
-#define TEVEPROJECTIONS_DISPLACE_ORIGIN_MODE	 
-	 
+// AMT: temporary workaround till root pactches are integrated in CMSSW
+#define TEVEPROJECTIONS_DISPLACE_ORIGIN_MODE
+
 #endif

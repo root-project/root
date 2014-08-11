@@ -3,20 +3,20 @@
 // - On most unix systems it is installed by default.
 // - On Windows it has to be installed from http://pages.cs.wisc.edu/~ghost/
 //   also the place where gswin32c.exe sits should be added in the PATH. One
-//   way to do it is: 
+//   way to do it is:
 //     1. Start the Control Panel
 //     2. Double click on System
 //     3, Open the "Advanced" tab
 //     4. Click on the "Environment Variables" button
 //     5. Find "Path" in "System varibale list", click on it.
 //     6. Click on the "Edit" button.
-//     7. In the "Variable value" field add the path of gswin32c 
+//     7. In the "Variable value" field add the path of gswin32c
 //        (after a ";") it should be something like:
 //        "C:\Program Files\gs\gs8.13\bin"
 //     8. click "OK" as much as needed.
 //
 //Author: Valeriy Onoutchin
-   
+
 #include "TROOT.h"
 #include "TCanvas.h"
 #include "TImage.h"
@@ -48,5 +48,5 @@ void psview()
    TPad *eps = new TPad("eps", "eps", 0., 0., 1., 0.75);
    eps->Draw();
    eps->cd();
-   ps->Draw("xxx"); 
+   ps->Draw("xxx");
 }

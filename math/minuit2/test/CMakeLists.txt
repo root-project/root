@@ -4,7 +4,7 @@ find_package(ROOT REQUIRED)
 include_directories(${ROOT_INCLUDE_DIRS})
 
 set(TestSource
-      testMinimizer.cxx 
+      testMinimizer.cxx
 )
 
 set(TestSourceMnTutorial
@@ -14,7 +14,7 @@ set(TestSourceMnTutorial
     MnTutorial/Quad12FMain.cxx
 )
 
-set(TestSourceMnSim 
+set(TestSourceMnSim
     MnSim/DemoGaussSim.cxx
     MnSim/DemoFumili.cxx
     MnSim/PaulTest.cxx
@@ -39,16 +39,16 @@ endforeach()
 
 ROOT_LINKER_LIBRARY(Minuit2TestMnSim MnSim/GaussDataGen.cxx MnSim/GaussFcn.cxx MnSim/GaussFcn2.cxx LIBRARIES Minuit2)
 
-#input text files 
-configure_file(MnSim/paul.txt paul.txt @COPY_ONLY) 
-configure_file(MnSim/paul2.txt paul2.txt @COPY_ONLY) 
-configure_file(MnSim/paul3.txt paul3.txt @COPY_ONLY) 
-configure_file(MnSim/paul4.txt paul4.txt @COPY_ONLY) 
+#input text files
+configure_file(MnSim/paul.txt paul.txt @COPY_ONLY)
+configure_file(MnSim/paul2.txt paul2.txt @COPY_ONLY)
+configure_file(MnSim/paul3.txt paul3.txt @COPY_ONLY)
+configure_file(MnSim/paul4.txt paul4.txt @COPY_ONLY)
 
 foreach(file ${TestSourceMnSim})
   get_filename_component(testname ${file} NAME_WE)
   ROOT_EXECUTABLE(${testname} ${file} LIBRARIES Minuit2 Minuit2TestMnSim)
-  ROOT_ADD_TEST(minuit2-${testname} COMMAND ${testname}) 
+  ROOT_ADD_TEST(minuit2-${testname} COMMAND ${testname})
 endforeach()
 
 #for the global tests using ROOT libs (Minuit2 should be taken via the PluginManager)
@@ -59,7 +59,7 @@ set(RootLibraries Core RIO Net Hist Graf Graf3d Gpad Tree
 foreach(file ${TestSource})
   get_filename_component(testname ${file} NAME_WE)
   ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${RootLibraries} )
-  ROOT_ADD_TEST(minuit2-${testname} COMMAND ${testname}) 
+  ROOT_ADD_TEST(minuit2-${testname} COMMAND ${testname})
 endforeach()
 
 

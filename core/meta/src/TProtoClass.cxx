@@ -160,10 +160,13 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
       for (TObject* element: *fPRealData) {
          if (element->IsA() == TObjString::Class()) {
             // We now check for the TClass entry, w/o loading. Indeed we did that above.
-            // If the class is not found, it means that really it was not selected and we 
+            // If the class is not found, it means that really it was not selected and we
             // replace it with an empty placeholder with the status of kForwardDeclared.
             // Interactivity will be of course possible but if IO is attempted, a warning
             // will be issued.
+            int autoparsingOldval=gInterpreter->SetClassAutoparsing(false);
+            // Disable autoparsing which might be triggered by the use of ResolvedTypedef
+            // and the fallback new TClass() below.
             currentRDClass = TClass::GetClass(element->GetName(), false /* Load */ );
             if (!currentRDClass && !element->TestBit(TRealData::kTransient)) {
                if (gDebug>1)
@@ -172,10 +175,11 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
                        element->GetName());
                currentRDClass = new TClass(element->GetName(),1,TClass::kForwardDeclared, true /*silent*/);
             }
+            gInterpreter->SetClassAutoparsing(autoparsingOldval);
          } else {
             if (!currentRDClass) continue;
             TProtoRealData* prd = (TProtoRealData*)element;
-            if (TRealData* rd = prd->CreateRealData(currentRDClass)) {
+            if (TRealData* rd = prd->CreateRealData(currentRDClass, cl)) {
                cl->fRealData->AddLast(rd);
             }
          }
@@ -210,13 +214,15 @@ TProtoClass::TProtoRealData::~TProtoRealData()
 }
 
 //______________________________________________________________________________
-TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass) const
+TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
+                                                       TClass* parent) const
 {
    // Create a TRealData from this, with its data member coming from dmClass.
    TDataMember* dm = (TDataMember*)dmClass->GetListOfDataMembers()->FindObject(GetName());
    if (!dm && dmClass->GetState()!=TClass::kForwardDeclared) {
       Error("CreateRealData",
-           "Cannot find data member %s::%s!", dmClass->GetName(), GetName());
+            "Cannot find data member %s::%s for parent %s!", dmClass->GetName(),
+            GetName(), parent->GetName());
       return nullptr;
    }
    TRealData* rd = new TRealData(GetTitle(), fOffset, dm);

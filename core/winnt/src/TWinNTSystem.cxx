@@ -1029,8 +1029,13 @@ fGUIThreadHandle(0), fGUIThreadId(0)
             check_path = buf;
             check_path += "\\etc";
          }
-         if (buf[0])
+         if (buf[0]) {
             Setenv("ROOTSYS", buf);
+            TString path = buf;
+            path += "\\bin;";
+            path += Getenv("PATH");
+            Setenv("PATH", path.Data());
+         }
       }
    }
 #endif
@@ -1277,8 +1282,8 @@ const char *TWinNTSystem::GetError()
    // Return system error string.
 
    Int_t err = GetErrno();
-   if (err == 0 && fLastErrorString != "")
-      return fLastErrorString;
+   if (err == 0 && GetLastErrorString() != "")
+      return GetLastErrorString();
    if (err < 0 || err >= sys_nerr) {
       static TString error_msg;
       error_msg.Form("errno out of range %d", err);
@@ -2486,7 +2491,7 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
       ::SetErrorMode(nOldErrorMode);
       return kFALSE;
    }
-   fLastErrorString = GetError();
+   GetLastErrorString() = GetError();
    // restore previous error mode
    ::SetErrorMode(nOldErrorMode);
    return kTRUE;
@@ -2545,7 +2550,7 @@ int TWinNTSystem::Rename(const char *f, const char *t)
    // Rename a file. Returns 0 when successful, -1 in case of failure.
 
    int ret = ::rename(f, t);
-   fLastErrorString = GetError();
+   GetLastErrorString() = GetError();
    return ret;
 }
 

@@ -436,6 +436,15 @@ bool Sema::BuildCXXNestedNameSpecifier(Scope *S,
     if (!LookupCtx->isDependentContext() &&
         RequireCompleteDeclContext(SS, LookupCtx))
       return true;
+    if (!LookupCtx->isDependentContext()) {
+      if (RequireCompleteDeclContext(SS, LookupCtx)) {
+        return true;
+      } else if (TagDecl* TD = dyn_cast<TagDecl>(LookupCtx)) {
+        // Update the DeclContext to point to the Tag definition.
+        LookupCtx = TD->getDefinition();
+      }
+    }
+
 
     LookupQualifiedName(Found, LookupCtx);
 

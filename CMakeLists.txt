@@ -48,6 +48,7 @@ ROOT_SHOW_OPTIONS()
 
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
+add_subdirectory (interpreter)
 add_subdirectory (core)
 add_subdirectory (build)
 add_subdirectory (math)
@@ -83,7 +84,7 @@ get_property(__allFiles GLOBAL PROPERTY ROOT_DICTIONARY_FILES)
 add_custom_command(OUTPUT include/allLinkDef.h include/allHeaders.h cppflags.txt
                    COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${CMAKE_SOURCE_DIR} '*'
                    DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${__allFiles})
-set(__cxxflags -D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DLDAP_DEPRECATED -DQT3_SUPPORT -Wno-deprecated 
+set(__cxxflags -D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DLDAP_DEPRECATED -DQT3_SUPPORT -Wno-deprecated
                -Iinclude -Ietc -Ietc/cling -I${CMAKE_SOURCE_DIR})
 add_custom_command(OUTPUT etc/allDict.cxx.pch
                   COMMAND bin/rootcling_tmp -1 -f etc/allDict.cxx -noDictSelection -c ${__cxxflags} `cat cppflags.txt | sort | uniq` include/allHeaders.h include/allLinkDef.h
@@ -106,8 +107,8 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(FILES LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
   install(DIRECTORY README/ DESTINATION ${CMAKE_INSTALL_DOCDIR} PATTERN ".svn" EXCLUDE)
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
-                         PATTERN ".svn" EXCLUDE 
-                         REGEX system.rootrc EXCLUDE 
+                         PATTERN ".svn" EXCLUDE
+                         REGEX system.rootrc EXCLUDE
                          REGEX root.mimes EXCLUDE)
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR} PATTERN ".svn" EXCLUDE)
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR} PATTERN ".svn" EXCLUDE)
@@ -121,6 +122,9 @@ endif()
 
 #---Configure Testing using CTest----------------------------------------------------------------
 if(testing)
+  if(gnuinstall)
+    message(FATAL_ERROR "You cannot enable to run the tests in the build directory (testing=ON) and at the same time select a GNU style installation (gnuinstall=ON). This is because the code is built with the final installation location (CMAKE_INSTALL_PREFIX) for many ancillary files (tutorials, etc, icons, macros, etc.) and these are not available before installation. Tests can be run against the installation once is completed. See the instructions in the web")
+  endif()
   include(RootCTest)
   if(roottest)
     find_package(Git REQUIRED)

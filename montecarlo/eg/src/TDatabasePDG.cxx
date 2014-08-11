@@ -79,7 +79,7 @@ TDatabasePDG::~TDatabasePDG()
       if (fPdgMap) delete fPdgMap;
    }
                                 // classes do not own particles...
-   if (fListOfClasses) { 
+   if (fListOfClasses) {
       fListOfClasses->Delete();
       delete fListOfClasses;
    }

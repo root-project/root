@@ -99,12 +99,12 @@ TTUBE::TTUBE(const TTUBE& tu) :
   fAspectRatio(tu.fAspectRatio),
   fSiTab(tu.fSiTab),
   fCoTab(tu.fCoTab)
-{ 
+{
    //copy constructor
 }
 
 //______________________________________________________________________________
-TTUBE& TTUBE::operator=(const TTUBE& tu) 
+TTUBE& TTUBE::operator=(const TTUBE& tu)
 {
    //assignement operator
    if(this!=&tu) {
@@ -116,7 +116,7 @@ TTUBE& TTUBE::operator=(const TTUBE& tu)
       fAspectRatio=tu.fAspectRatio;
       fSiTab=tu.fSiTab;
       fCoTab=tu.fCoTab;
-   } 
+   }
    return *this;
 }
 
@@ -195,12 +195,12 @@ void TTUBE::SetNumberOfDivisions (Int_t ndiv)
 void TTUBE::SetPoints(Double_t *points) const
 {
    // Create TUBE points
-        
+
    Int_t j, n;
    Int_t indx = 0;
-       
+
    n = GetNumberOfDivisions();
-   
+
    if (points) {
       if (!fCoTab)   MakeTableOfCoSin();
       for (j = 0; j < n; j++) {
@@ -315,7 +315,7 @@ void TTUBE::Sizeof3D() const
    gSize3D.numPoints += n*4;
    gSize3D.numSegs   += n*8;
    gSize3D.numPolys  += n*4;
-}  
+}
 
 
 //______________________________________________________________________________
@@ -328,7 +328,7 @@ void TTUBE::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          R__b.ReadClassBuffer(TTUBE::Class(), this, R__v, R__s, R__c);
-         return;  
+         return;
       }
       //====process old versions before automatic schema evolution
       TShape::Streamer(R__b);
@@ -355,7 +355,7 @@ const TBuffer3D & TTUBE::GetBuffer3D(Int_t reqSections) const
    TShape::FillBuffer3D(buffer, reqSections);
 
    // TODO: Although we now have a TBuffer3DTube class for
-   // tube shapes, we do not use it for old geometry tube, as 
+   // tube shapes, we do not use it for old geometry tube, as
    // OGL viewer needs various rotation matrix info we can't easily
    // pass yet. To be revisited.
 

@@ -39,7 +39,7 @@ NamespaceImp(TMatrixTSymCramerInv);
 #endif
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TMatrixTSymCramerInv::Inv2x2(TMatrixTSym<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 2) {
@@ -68,7 +68,7 @@ Bool_t TMatrixTSymCramerInv::Inv2x2(TMatrixTSym<Element> &m,Double_t *determ)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 3) {
@@ -126,7 +126,7 @@ Bool_t TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<Element> &m,Double_t *determ)
    pM[6] = pM[2];
    pM[7] = pM[5];
    pM[8] = s*c22;
-  
+
    return kTRUE;
 }
 
@@ -153,7 +153,7 @@ Bool_t TMatrixTSymCramerInv::Inv3x3(TMatrixTSym<Element> &m,Double_t *determ)
 #define SF33 15
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 4) {
@@ -181,7 +181,7 @@ Bool_t TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Element> &m,Double_t *determ)
    const Double_t mDet2_23_23 = pM[SF22]*pM[SF33] - pM[SF23]*pM[SF32];
 
   // SFind all NECESSSFRY 3x3 dets:   (10 of them)
-  
+
    const Double_t mDet3_012_012 = pM[SF00]*mDet2_12_12 - pM[SF01]*mDet2_12_02
                                 + pM[SF02]*mDet2_12_01;
    const Double_t mDet3_013_012 = pM[SF00]*mDet2_13_12 - pM[SF01]*mDet2_13_02
@@ -234,24 +234,24 @@ Bool_t TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Element> &m,Double_t *determ)
    pM[SF33] =  mDet3_012_012 * oneOverDet;
 
    for (Int_t irow = 0; irow < 4; irow++) {
-      const Int_t rowOff1 = irow*4; 
+      const Int_t rowOff1 = irow*4;
       for (Int_t icol = 0; icol < irow; icol++) {
-         const Int_t rowOff2 = icol*4; 
+         const Int_t rowOff2 = icol*4;
          pM[rowOff1+icol] = pM[rowOff2+irow];
       }
-   } 
+   }
 
    return kTRUE;
 }
 
 // Mij are indices for a 5x5 matrix.
-    
+
 #define SM00 0
 #define SM01 1
 #define SM02 2
 #define SM03 3
 #define SM04 4
-  
+
 #define SM10 1
 #define SM11 6
 #define SM12 7
@@ -277,7 +277,7 @@ Bool_t TMatrixTSymCramerInv::Inv4x4(TMatrixTSym<Element> &m,Double_t *determ)
 #define SM44 24
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 5) {
@@ -417,12 +417,12 @@ Bool_t TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Element> &m,Double_t *determ)
    pM[SM44] = mDet4_0123_0123 * oneOverDet;
 
    for (Int_t irow = 0; irow < 5; irow++) {
-      const Int_t rowOff1 = irow*5; 
+      const Int_t rowOff1 = irow*5;
       for (Int_t icol = 0; icol < irow; icol++) {
-         const Int_t rowOff2 = icol*5; 
+         const Int_t rowOff2 = icol*5;
          pM[rowOff1+icol] = pM[rowOff2+irow];
       }
-   } 
+   }
 
    return kTRUE;
 }
@@ -472,7 +472,7 @@ Bool_t TMatrixTSymCramerInv::Inv5x5(TMatrixTSym<Element> &m,Double_t *determ)
 #define SA55 35
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 6 || m.GetNcols() != 6 || m.GetRowLwb() != m.GetColLwb()) {
@@ -750,7 +750,7 @@ Bool_t TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<Element> &m,Double_t *determ)
    const Double_t mDet5_12345_12345 = pM[SA11]*mDet4_2345_2345 - pM[SA12]*mDet4_2345_1345
                                     + pM[SA13]*mDet4_2345_1245 - pM[SA14]*mDet4_2345_1235 + pM[SA15]*mDet4_2345_1234;
 
-   // Find the determinant 
+   // Find the determinant
 
    const Double_t det = pM[SA00]*mDet5_12345_12345 - pM[SA01]*mDet5_12345_02345 + pM[SA02]*mDet5_12345_01345
                       - pM[SA03]*mDet5_12345_01245 + pM[SA04]*mDet5_12345_01235 - pM[SA05]*mDet5_12345_01234;
@@ -794,12 +794,12 @@ Bool_t TMatrixTSymCramerInv::Inv6x6(TMatrixTSym<Element> &m,Double_t *determ)
    pM[SA55] =  mDet5_01234_01234*oneOverDet;
 
    for (Int_t irow = 0; irow < 6; irow++) {
-      const Int_t rowOff1 = irow*6; 
+      const Int_t rowOff1 = irow*6;
       for (Int_t icol = 0; icol < irow; icol++) {
-         const Int_t rowOff2 = icol*6; 
+         const Int_t rowOff2 = icol*6;
          pM[rowOff1+icol] = pM[rowOff2+irow];
       }
-   } 
+   }
 
    return kTRUE;
 }

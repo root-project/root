@@ -20,15 +20,22 @@
 // Describe Streamer information for one class version                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+#include <atomic>
 
 #ifndef ROOT_TVirtualStreamerInfo
 #include "TVirtualStreamerInfo.h"
 #endif
 
+#ifndef ROOT_ThreadLocalStorage
+#include "ThreadLocalStorage.h"
+#endif
+
 #include "TVirtualCollectionProxy.h"
 
-#if (defined(_MSC_VER) && (_MSC_VER < 1300))
-#define R__BROKEN_FUNCTION_TEMPLATES
+#if (defined(_MSC_VER) && (_MSC_VER < 1300)) || defined(R__ALPHA) || \
+    (defined(R__MACOSX) && defined(R__GNU) && __GNUC__==3 && __GNUC_MINOR__<=3) || \
+    (defined(R__MACOSX) && defined(__xlC__))
+#error C++ template support is insufficient (member function template)
 #endif
 
 class TFile;
@@ -46,27 +53,36 @@ namespace TStreamerInfoActions { class TActionSequence; }
 
 class TStreamerInfo : public TVirtualStreamerInfo {
 
-#ifdef R__BROKEN_FUNCTION_TEMPLATES
-public:
-#endif
    class TCompInfo {
    // Class used to cache information (see fComp)
    private:
-      TCompInfo(const TCompInfo&); // Not implemented
-      TCompInfo& operator=(const TCompInfo&); // Not implemented
+      // TCompInfo(const TCompInfo&) = default;
+      // TCompInfo& operator=(const TCompInfo&) = default;
    public:
-      TClass          *fClass;
-      TClass          *fNewClass;
-      TString          fClassName;
-      TMemberStreamer *fStreamer;
-      TCompInfo() : fClass(0), fNewClass(0), fClassName(""), fStreamer(0) {};
+      Int_t             fType;
+      Int_t             fNewType;
+      Int_t             fOffset;
+      Int_t             fLength;
+      TStreamerElement *fElem;     // Not Owned
+      ULong_t           fMethod;
+      TClass           *fClass;    // Not Owned
+      TClass           *fNewClass; // Not Owned
+      TString           fClassName;
+      TMemberStreamer  *fStreamer; // Not Owned
+      TCompInfo() : fType(-1), fNewType(0), fOffset(0), fLength(0), fElem(0), fMethod(0),
+                    fClass(0), fNewClass(0), fClassName(), fStreamer(0) {};
       ~TCompInfo() {};
       void Update(const TClass *oldcl, TClass *newcl);
    };
+   friend class TStreamerInfoActions::TActionSequence;
+
+public:
+   // make the opaque pointer public.
+   typedef TCompInfo TCompInfo_t;
 
 protected:
    //---------------------------------------------------------------------------
-   // Adatper class used to handle streaming collection of pointers
+   // Adapter class used to handle streaming collection of pointers
    //---------------------------------------------------------------------------
    class TPointerCollectionAdapter
    {
@@ -88,29 +104,28 @@ private:
    Int_t             fClassVersion;      //Class version identifier
    Int_t             fOnFileClassVersion;//!Class version identifier as stored on file.
    Int_t             fNumber;            //!Unique identifier
-   Int_t             fNdata;             //!number of optmized types
    Int_t             fSize;              //!size of the persistent class
-   Int_t            *fType;              //![fNdata]
-   Int_t            *fNewType;           //![fNdata]
-   Int_t            *fOffset;            //![fNdata]
-   Int_t            *fLength;            //![fNdata]
-   ULong_t          *fElem;              //![fNdata]
-   ULong_t          *fMethod;            //![fNdata]
-   TCompInfo        *fComp;              //![fNdata] additional info
+   Int_t             fNdata;             //!number of optimized elements
+   Int_t             fNfulldata;         //!number of elements
+   Int_t             fNslots;            //!total numbrer of slots in fComp.
+   TCompInfo        *fComp;              //![fNslots with less than fElements->GetEntries()*1.5 used] Compiled info
+   TCompInfo       **fCompOpt;           //![fNdata]
+   TCompInfo       **fCompFull;          //![fElements->GetEntries()]
    TClass           *fClass;             //!pointer to class
    TObjArray        *fElements;          //Array of TStreamerElements
    Version_t         fOldVersion;        //! Version of the TStreamerInfo object read from the file
    Int_t             fNVirtualInfoLoc;   //! Number of virtual info location to update.
    ULong_t          *fVirtualInfoLoc;    //![fNVirtualInfoLoc] Location of the pointer to the TStreamerInfo inside the object (when emulated)
-   ULong_t           fLiveCount;         //! Number of outstanding pointer to this StreamerInfo.
+   std::atomic<ULong_t> fLiveCount;      //! Number of outstanding pointer to this StreamerInfo.
+   TStreamerInfoActions::TActionSequence *fReadObjectWise;        //! List of read action resulting from the compilation.
+   TStreamerInfoActions::TActionSequence *fReadMemberWise;        //! List of read action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fReadMemberWiseVecPtr;  //! List of read action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fWriteObjectWise;       //! List of write action resulting from the compilation.
+   TStreamerInfoActions::TActionSequence *fWriteMemberWise;       //! List of write action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fWriteMemberWiseVecPtr; //! List of write action resulting from the compilation for use in member wise streaming.
 
-   TStreamerInfoActions::TActionSequence *fReadObjectWise;      //! List of read action resulting from the compilation.
-   TStreamerInfoActions::TActionSequence *fReadMemberWise;      //! List of read action resulting from the compilation for use in member wise streaming.
-   TStreamerInfoActions::TActionSequence *fWriteObjectWise;     //! List of write action resulting from the compilation.
-   TStreamerInfoActions::TActionSequence *fWriteMemberWise;     //! List of write action resulting from the compilation for use in member wise streaming.
+   static std::atomic<Int_t>             fgCount;     //Number of TStreamerInfo instances
 
-   static  Int_t     fgCount;            //Number of TStreamerInfo instances
-   static TStreamerElement *fgElement;   //Pointer to current TStreamerElement
    template <typename T> static T GetTypedValueAux(Int_t type, void *ladd, int k, Int_t len);
    static void       PrintValueAux(char *ladd, Int_t atype, TStreamerElement * aElement, Int_t aleng, Int_t *count);
 
@@ -122,8 +137,11 @@ private:
 private:
    TStreamerInfo(const TStreamerInfo&);            // TStreamerInfo are copiable.  Not Implemented.
    TStreamerInfo& operator=(const TStreamerInfo&); // TStreamerInfo are copiable.  Not Implemented.
-   void AddReadAction(Int_t index, TStreamerElement* element);
-   void AddWriteAction(Int_t index, TStreamerElement* element);
+   void AddReadAction(TStreamerInfoActions::TActionSequence *readSequence, Int_t index, TCompInfo *compinfo);
+   void AddWriteAction(TStreamerInfoActions::TActionSequence *writeSequence, Int_t index, TCompInfo *compinfo);
+   void AddReadMemberWiseVecPtrAction(TStreamerInfoActions::TActionSequence *readSequence, Int_t index, TCompInfo *compinfo);
+   void AddWriteMemberWiseVecPtrAction(TStreamerInfoActions::TActionSequence *writeSequence, Int_t index, TCompInfo *compinfo);
+
 public:
 
    //status bits
@@ -131,7 +149,8 @@ public:
           kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
           kRecovered             = BIT(14),
           kNeedCheck             = BIT(15),
-          kIsCompiled            = BIT(16)
+          kIsCompiled            = BIT(16),
+          kBuildOldUsed          = BIT(17)
    };
 
    enum EReadWrite {
@@ -156,24 +175,24 @@ public:
       kMissing     = 99999
    };
 
-//	Some comments about EReadWrite
-//	kBase    : base class element
-//	kOffsetL : fixed size array
-//	kOffsetP : pointer to object
-//	kCounter : counter for array size
-//	kCharStar: pointer to array of char
-//	kBits    : TObject::fBits in case of a referenced object
-//	kObject  : Class  derived from TObject
-//	kObjectp : Class* derived from TObject and with    comment field //->Class
-//	kObjectP : Class* derived from TObject and with NO comment field //->Class
-//	kAny     : Class  not derived from TObject
-//	kAnyp    : Class* not derived from TObject with    comment field //->Class
-//	kAnyP    : Class* not derived from TObject with NO comment field //->Class
+// Some comments about EReadWrite
+// kBase    : base class element
+// kOffsetL : fixed size array
+// kOffsetP : pointer to object
+// kCounter : counter for array size
+// kCharStar: pointer to array of char
+// kBits    : TObject::fBits in case of a referenced object
+// kObject  : Class  derived from TObject
+// kObjectp : Class* derived from TObject and with    comment field //->Class
+// kObjectP : Class* derived from TObject and with NO comment field //->Class
+// kAny     : Class  not derived from TObject
+// kAnyp    : Class* not derived from TObject with    comment field //->Class
+// kAnyP    : Class* not derived from TObject with NO comment field //->Class
 // kAnyPnoVT: Class* not derived from TObject with NO comment field //->Class and Class has NO virtual table
 // kSTLp    : Pointer to STL container.
-//	kTString	: TString, special case
-//	kTObject	: TObject, special case
-//	kTNamed  : TNamed , special case
+// kTString : TString, special case
+// kTObject : TObject, special case
+// kTNamed  : TNamed , special case
 
 
 
@@ -200,25 +219,28 @@ public:
    Int_t               GetClassVersion() const {return fClassVersion;}
    Int_t               GetDataMemberOffset(TDataMember *dm, TMemberStreamer *&streamer) const;
    TObjArray          *GetElements() const {return fElements;}
-   ULong_t            *GetElems()   const {return fElem;}
-   TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Bool_t forCollection) { return forCollection ? fReadMemberWise : fReadObjectWise; }
+   TStreamerElement   *GetElem(Int_t id) const {return fComp[id].fElem;}  // Return the element for the list of optimized elements (max GetNdata())
+   TStreamerElement   *GetElement(Int_t id) const {return (TStreamerElement*)fElements->At(id);} // Return the element for the complete list of elements (max GetElements()->GetEntries())
+   Int_t               GetElementOffset(Int_t id) const {return fCompFull[id]->fOffset;}
+   TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Bool_t forCollection) { return forCollection ? fReadMemberWiseVecPtr : fReadMemberWise; }
    TStreamerInfoActions::TActionSequence *GetReadObjectWiseActions() { return fReadObjectWise; }
-   TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions(Bool_t forCollection) { return forCollection ? fWriteMemberWise : fWriteObjectWise; }
+   TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions(Bool_t forCollection) { return forCollection ? fWriteMemberWiseVecPtr : fWriteMemberWise; }
    TStreamerInfoActions::TActionSequence *GetWriteObjectWiseActions() { return fWriteObjectWise; }
    Int_t               GetNdata()   const {return fNdata;}
+   Int_t               GetNelement() const { return fElements->GetEntries(); }
    Int_t               GetNumber()  const {return fNumber;}
-   Int_t              *GetLengths() const {return fLength;}
-   ULong_t            *GetMethods() const {return fMethod;}
-   Int_t              *GetNewTypes() const {return fNewType;}
+   Int_t               GetLength(Int_t id) const {return fComp[id].fLength;}
+   ULong_t             GetMethod(Int_t id) const {return fComp[id].fMethod;}
+   Int_t               GetNewType(Int_t id) const {return fComp[id].fNewType;}
    Int_t               GetOffset(const char *) const;
-   Int_t              *GetOffsets() const {return fOffset;}
+   Int_t               GetOffset(Int_t id) const {return fComp[id].fOffset;}
    Version_t           GetOldVersion() const {return fOldVersion;}
    Int_t               GetOnFileClassVersion() const {return fOnFileClassVersion;}
    Int_t               GetSize()    const;
    Int_t               GetSizeElements()    const;
    TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const;
    TStreamerElement   *GetStreamerElementReal(Int_t i, Int_t j) const;
-   Int_t              *GetTypes()   const {return fType;}
+   Int_t               GetType(Int_t id)   const {return fComp[id].fType;}
    template <typename T> T GetTypedValue(char *pointer, Int_t i, Int_t j, Int_t len) const;
    template <typename T> T GetTypedValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
    template <typename T> T GetTypedValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
@@ -238,41 +260,28 @@ public:
    void                PrintValueClones(const char *name, TClonesArray *clones, Int_t i, Int_t eoffset, Int_t lenmax=1000) const;
    void                PrintValueSTL(const char *name, TVirtualCollectionProxy *cont, Int_t i, Int_t eoffset, Int_t lenmax=1000) const;
 
-#ifdef R__BROKEN_FUNCTION_TEMPLATES
-   // Support for non standard compilers
-   Int_t               ReadBuffer(TBuffer &b,  char** const &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
-   Int_t               ReadBufferSkip(TBuffer &b, char** const &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-   Int_t               ReadBufferConv(TBuffer &b, char** const &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-   Int_t               ReadBufferArtificial(TBuffer &b, char** const &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-   Int_t               ReadBuffer(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
-   Int_t               ReadBufferSkip(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-   Int_t               ReadBufferConv(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-   Int_t               ReadBufferArtificial(TBuffer &b, const TVirtualCollectionProxy &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-   Int_t               ReadBuffer(TBuffer &b, const TVirtualArray &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
-   Int_t               ReadBufferSkip(TBuffer &b, const TVirtualArray &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-   Int_t               ReadBufferConv(TBuffer &b, const TVirtualArray &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-   Int_t               ReadBufferArtificial(TBuffer &b, const TVirtualArray &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-#else
    template <class T>
-   Int_t               ReadBuffer(TBuffer &b, const T &arrptr, Int_t first,Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
+   Int_t               ReadBuffer(TBuffer &b, const T &arrptr, TCompInfo *const*const compinfo, Int_t first, Int_t last, Int_t narr=1,Int_t eoffset=0,Int_t mode=0);
    template <class T>
-   Int_t               ReadBufferSkip(TBuffer &b, const T &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   Int_t               ReadBufferSkip(TBuffer &b, const T &arrptr, const TCompInfo *compinfo,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    template <class T>
-   Int_t               ReadBufferConv(TBuffer &b, const T &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
+   Int_t               ReadBufferConv(TBuffer &b, const T &arrptr, const TCompInfo *compinfo,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
    template <class T>
-   Int_t               ReadBufferArtificial(TBuffer &b, const T &arrptr, Int_t i,Int_t kase, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
-#endif
+   Int_t               ReadBufferArtificial(TBuffer &b, const T &arrptr, TStreamerElement *aElement, Int_t narr, Int_t eoffset);
 
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
-   Int_t               ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset );
+   Int_t               ReadBufferSTL(TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t eoffset, Bool_t v7 = kTRUE );
    void                SetCheckSum(UInt_t checksum) {fCheckSum = checksum;}
    void                SetClass(TClass *cl) {fClass = cl;}
    void                SetClassVersion(Int_t vers) {fClassVersion=vers;}
    void                TagFile(TFile *fFile);
+private:
+   // Try to remove those functions from the public interface.
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
-   Int_t               WriteBufferSTL   (TBuffer &b, TVirtualCollectionProxy *cont,   Int_t nc, Int_t first, Int_t eoffset );
-   Int_t               WriteBufferSTLPtrs( TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset );
+   Int_t               WriteBufferSTL   (TBuffer &b, TVirtualCollectionProxy *cont,   Int_t nc);
+   Int_t               WriteBufferSTLPtrs( TBuffer &b, TVirtualCollectionProxy *cont, Int_t nc, Int_t first, Int_t eoffset);
+public:
    virtual void        Update(const TClass *oldClass, TClass *newClass);
 
    virtual TVirtualCollectionProxy *GenEmulatedProxy(const char* class_name, Bool_t silent);
@@ -282,17 +291,10 @@ public:
 
    static TStreamerElement   *GetCurrentElement();
 
-
-#ifdef R__BROKEN_FUNCTION_TEMPLATES
-   // Support for non standard compilers
-   Int_t               WriteBufferAux      (TBuffer &b, char ** const &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
-   Int_t               WriteBufferAux      (TBuffer &b, const TVirtualCollectionProxy &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
-   Int_t               WriteBufferAux      (TBuffer &b, const TPointerCollectionAdapter &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
-   Int_t               WriteBufferAux      (TBuffer &b, const TVirtualArray &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
-#else
+public:
+   // For access by the StreamerInfoActions.
    template <class T>
-   Int_t               WriteBufferAux      (TBuffer &b, const T &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
-#endif
+   Int_t               WriteBufferAux      (TBuffer &b, const T &arr, TCompInfo *const*const compinfo, Int_t first, Int_t last, Int_t narr,Int_t eoffset,Int_t mode);
 
    //WARNING this class version must be the same as TVirtualStreamerInfo
    ClassDef(TStreamerInfo,9)  //Streamer information for one class version

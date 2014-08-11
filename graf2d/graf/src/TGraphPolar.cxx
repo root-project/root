@@ -26,12 +26,12 @@ Begin_Macro(source)
    Double_t radius[8];
    Double_t etheta[8];
    Double_t eradius[8];
-	          
+
    for (int i=0; i<8; i++) {
       theta[i]   = (i+1)*(TMath::Pi()/4.);
-      radius[i]  = (i+1)*0.05; 
+      radius[i]  = (i+1)*0.05;
       etheta[i]  = TMath::Pi()/8.;
-      eradius[i] = 0.05; 
+      eradius[i] = 0.05;
    }
 
    TGraphPolar * grP1 = new TGraphPolar(8, theta, radius, etheta, eradius);
@@ -118,7 +118,7 @@ void TGraphPolar::Draw(Option_t* options)
 
 
 //______________________________________________________________________________
-Double_t *TGraphPolar::GetXpol() 
+Double_t *TGraphPolar::GetXpol()
 {
    // Return points in polar coordinates.
 

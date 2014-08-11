@@ -34,7 +34,7 @@
 class TProfile;
 
 class TH2 : public TH1 {
-   
+
 protected:
    Double_t     fScalefactor;     //Scale factor
    Double_t     fTsumwy;          //Total Sum of weight*Y
@@ -111,8 +111,8 @@ public:
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
    virtual Long64_t Merge(TCollection *list);
    virtual TH2     *RebinX(Int_t ngroup=2, const char *newname="");
-   virtual TH2     *RebinY(Int_t ngroup=2, const char *newname="");  
-   virtual TH2     *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname="");     
+   virtual TH2     *RebinY(Int_t ngroup=2, const char *newname="");
+   virtual TH2     *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname="");
       TProfile     *ProfileX(const char *name="_pfx", Int_t firstybin=1, Int_t lastybin=-1, Option_t *option="") const;   // *MENU*
       TProfile     *ProfileY(const char *name="_pfy", Int_t firstxbin=1, Int_t lastxbin=-1, Option_t *option="") const;   // *MENU*
          TH1D      *ProjectionX(const char *name="_px", Int_t firstybin=0, Int_t lastybin=-1, Option_t *option="") const; // *MENU*
@@ -129,7 +129,7 @@ public:
    virtual TH1     *ShowBackground(Int_t niter=20, Option_t *option="same");
    virtual Int_t    ShowPeaks(Double_t sigma=2, Option_t *option="", Double_t threshold=0.05); // *MENU*
    virtual void     Smooth(Int_t ntimes=1, Option_t *option=""); // *MENU*
-           
+
    ClassDef(TH2,4)  //2-Dim histogram base class
 };
 

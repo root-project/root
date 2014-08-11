@@ -6,8 +6,8 @@
 //
 // This tutorial shows a more complex example using the FeldmanCousins utility
 // to create a confidence interval for a toy neutrino oscillation experiment.
-// The example attempts to faithfully reproduce the toy example described in Feldman & Cousins' 
-// original paper, Phys.Rev.D57:3873-3889,1998. 
+// The example attempts to faithfully reproduce the toy example described in Feldman & Cousins'
+// original paper, Phys.Rev.D57:3873-3889,1998.
 //
 // to run it:
 // .x tutorials/roostats/rs401d_FeldmanCousins.C+
@@ -72,23 +72,23 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
 
 
   /*
-    Taken from Feldman & Cousins paper, Phys.Rev.D57:3873-3889,1998. 
+    Taken from Feldman & Cousins paper, Phys.Rev.D57:3873-3889,1998.
     e-Print: physics/9711021 (see page 13.)
 
-    Quantum mechanics dictates that the probability of such a transformation is given by the formula 
+    Quantum mechanics dictates that the probability of such a transformation is given by the formula
     P (νµ → ν e ) = sin^2 (2θ) sin^2 (1.27 ∆m^2 L /E )
-    where P is the probability for a νµ to transform into a νe , L is the distance in km between 
-    the creation of the neutrino from meson decay and its interaction in the detector, E is the 
-    neutrino energy in GeV, and ∆m^2 = |m^2− m^2 | in (eV/c^2 )^2 . 
+    where P is the probability for a νµ to transform into a νe , L is the distance in km between
+    the creation of the neutrino from meson decay and its interaction in the detector, E is the
+    neutrino energy in GeV, and ∆m^2 = |m^2− m^2 | in (eV/c^2 )^2 .
 
-    To demonstrate how this works in practice, and how it compares to alternative approaches 
-    that have been used, we consider a toy model of a typical neutrino oscillation experiment. 
-    The toy model is deﬁned by the following parameters: Mesons are assumed to decay to 
-    neutrinos uniformly in a region 600 m to 1000 m from the detector. The expected background 
-    from conventional νe interactions and misidentiﬁed νµ interactions is assumed to be 100 
-    events in each of 5 energy bins which span the region from 10 to 60 GeV. We assume that 
-    the νµ ﬂux is such that if P (νµ → ν e ) = 0.01 averaged over any bin, then that bin would 
-    have an expected additional contribution of 100 events due to νµ → ν e oscillations. 
+    To demonstrate how this works in practice, and how it compares to alternative approaches
+    that have been used, we consider a toy model of a typical neutrino oscillation experiment.
+    The toy model is deﬁned by the following parameters: Mesons are assumed to decay to
+    neutrinos uniformly in a region 600 m to 1000 m from the detector. The expected background
+    from conventional νe interactions and misidentiﬁed νµ interactions is assumed to be 100
+    events in each of 5 energy bins which span the region from 10 to 60 GeV. We assume that
+    the νµ ﬂux is such that if P (νµ → ν e ) = 0.01 averaged over any bin, then that bin would
+    have an expected additional contribution of 100 events due to νµ → ν e oscillations.
    */
 
   // Make signal model model
@@ -104,14 +104,14 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
   //    root [1] x.makePdf("NuMuToNuE_Oscillation","L,E,deltaMSq","","pow(sin(1.27*deltaMSq*L/E),2)")
   NuMuToNuE_Oscillation PnmuTone("PnmuTone","P(#nu_{#mu} #rightarrow #nu_{e}",L,E,deltaMSq);
 
-  // only E is observable, so create the signal model by integrating out L 
+  // only E is observable, so create the signal model by integrating out L
   RooAbsPdf* sigModel = PnmuTone.createProjection(L);
 
-  // create   \int dE' dL' P(E',L' | \Delta m^2). 
-  // Given RooFit will renormalize the PDF in the range of the observables, 
+  // create   \int dE' dL' P(E',L' | \Delta m^2).
+  // Given RooFit will renormalize the PDF in the range of the observables,
   // the average probability to oscillate in the experiment's acceptance
   // needs to be incorporated into the extended term in the likelihood.
-  // Do this by creating a RooAbsReal representing the integral and divide by 
+  // Do this by creating a RooAbsReal representing the integral and divide by
   // the area in the E-L plane.
   // The integral should be over "primed" observables, so we need
   // an independent copy of PnmuTone not to interfere with the original.
@@ -120,19 +120,19 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
   RooRealVar EPrime("EPrime","", 15,10,60,"GeV");
   RooRealVar LPrime("LPrime","", .800,.600, 1.0,"km"); // need these units in formula
   NuMuToNuE_Oscillation PnmuTonePrime("PnmuTonePrime","P(#nu_{#mu} #rightarrow #nu_{e}",
-				      LPrime,EPrime,deltaMSq);
+                                      LPrime,EPrime,deltaMSq);
   RooAbsReal* intProbToOscInExp = PnmuTonePrime.createIntegral(RooArgSet(EPrime,LPrime));
 
   // Getting the flux is a bit tricky.  It is more celear to include a cross section term that is not
   // explicitly refered to in the text, eg.
   // # events in bin = flux * cross-section for nu_e interaction in E bin * average prob nu_mu osc. to nu_e in bin
-  // let maxEventsInBin = flux * cross-section for nu_e interaction in E bin 
+  // let maxEventsInBin = flux * cross-section for nu_e interaction in E bin
   // maxEventsInBin * 1% chance per bin =  100 events / bin
   // therefore maxEventsInBin = 10,000.
-  // for 5 bins, this means maxEventsTot = 50,000   
+  // for 5 bins, this means maxEventsTot = 50,000
   RooConstVar maxEventsTot("maxEventsTot","maximum number of sinal events",50000);
   RooConstVar inverseArea("inverseArea","1/(#Delta E #Delta L)",
-			   1./(EPrime.getMax()-EPrime.getMin())/(LPrime.getMax()-LPrime.getMin()));
+                          1./(EPrime.getMax()-EPrime.getMin())/(LPrime.getMax()-LPrime.getMin()));
 
   // sigNorm = maxEventsTot * (\int dE dL prob to oscillate in experiment / Area) * sin^2(2\theta)
   RooProduct sigNorm("sigNorm", "", RooArgSet(maxEventsTot, *intProbToOscInExp, inverseArea, sinSq2theta));
@@ -144,7 +144,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
 
   // total model
   RooAddPdf model("model","",RooArgList(*sigModel,bkgEShape),
-		  RooArgList(sigNorm,bkgNorm));
+                  RooArgList(sigNorm,bkgNorm));
 
   // for debugging, check model tree
   //  model.printCompactTree();
@@ -159,14 +159,14 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
 
   //////////////////////////////////////////////
   // n events in data to data, simply sum of sig+bkg
-  Int_t nEventsData = bkgNorm.getVal()+sigNorm.getVal(); 
+  Int_t nEventsData = bkgNorm.getVal()+sigNorm.getVal();
   cout << "generate toy data with nEvents = " << nEventsData << endl;
-  // adjust random seed to get a toy dataset similar to one in paper. 
+  // adjust random seed to get a toy dataset similar to one in paper.
   // Found by trial and error (3 trials, so not very "fine tuned")
-  RooRandom::randomGenerator()->SetSeed(3); 
+  RooRandom::randomGenerator()->SetSeed(3);
   // create a toy dataset
   RooDataSet* data = model.generate(RooArgSet(E), nEventsData);
-  
+
   /////////////////////////////////////////////
   // make some plots
   TCanvas* dataCanvas = new TCanvas("dataCanvas");
@@ -231,7 +231,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
   ///////// show use of ProfileLikeihoodCalculator utility in RooStats
   RooStats::ProfileLikelihoodCalculator plc(*data, modelConfig);
   plc.SetTestSize(.1);
-  
+
   ConfInterval* plcInterval = plc.GetInterval();
 
   ///////////////////////////////////////////////////////////////////
@@ -280,11 +280,11 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
 
         if (interval){
            if (interval->IsInInterval( *tmpPoint ) ) {
-              forContour->SetBinContent( hist->FindBin(tmpPoint->getRealValue("sinSq2theta"), 
-                       tmpPoint->getRealValue("deltaMSq")),	 1);
+              forContour->SetBinContent( hist->FindBin(tmpPoint->getRealValue("sinSq2theta"),
+                       tmpPoint->getRealValue("deltaMSq")), 1);
            }else{
-              forContour->SetBinContent( hist->FindBin(tmpPoint->getRealValue("sinSq2theta"), 
-                       tmpPoint->getRealValue("deltaMSq")),	 0);
+              forContour->SetBinContent( hist->FindBin(tmpPoint->getRealValue("sinSq2theta"),
+                       tmpPoint->getRealValue("deltaMSq")), 0);
            }
         }
 
@@ -310,7 +310,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
      mcPlot->Draw();
   }
   dataCanvas->Update();
-  
+
   LikelihoodIntervalPlot plotInt((LikelihoodInterval*)plcInterval);
   plotInt.SetTitle("90% Confidence Intervals");
   if (mcInt)
@@ -322,7 +322,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins=false, bool doMCMC = true)
   /// print timing info
   t.Stop();
   t.Print();
-    
+
 
 }
 

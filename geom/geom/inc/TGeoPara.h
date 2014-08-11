@@ -35,8 +35,8 @@ protected :
    Double_t              fY;        // Y half-length
    Double_t              fZ;        // Z half-length
    Double_t              fAlpha;     // angle w.r.t Y from the center of low Y to the hihg Y
-   Double_t              fTheta;     // polar angle of segment between low and hi Z surfaces    
-   Double_t              fPhi;       // azimuthal angle of segment between low and hi Z surfaces 
+   Double_t              fTheta;     // polar angle of segment between low and hi Z surfaces
+   Double_t              fPhi;       // azimuthal angle of segment between low and hi Z surfaces
    Double_t              fTxy;       // tangent of XY section angle
    Double_t              fTxz;       // tangent of XZ section angle
    Double_t              fTyz;       // tangent of XZ section angle
@@ -57,13 +57,13 @@ public:
    virtual void          ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize);
    virtual Bool_t        Contains(const Double_t *point) const;
    virtual void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const;
-   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
-   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
                                 Double_t start, Double_t step);
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;

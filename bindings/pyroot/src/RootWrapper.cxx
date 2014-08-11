@@ -208,8 +208,9 @@ namespace {
          return kTRUE;
       }
 
-   // this point is only reached if this is not an STL class, but that's ok
-      return kTRUE;
+   // this point is only reached if this is not an STL class, notify that no
+   // changes were made
+      return kFALSE;
    }
 
 } // unnamed namespace
@@ -519,10 +520,10 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
    TScopeAdapter klass = TScopeAdapter::ByName( lookup );
    if ( ! (Bool_t)klass || klass.FunctionMemberSize() == 0 ) {
    // special action for STL classes to enforce loading dict lib
-      LoadDictionaryForSTLType( name, klass.Id() );
-
-   // lookup again, if this was an STL class, we (may) now have a full dictionary
-      klass = TScopeAdapter::ByName( lookup );
+      if ( LoadDictionaryForSTLType( name, klass.Id() ) ) {
+      // lookup again, we (may) now have a full dictionary
+         klass = TScopeAdapter::ByName( lookup );
+      }
    }
 
    if ( ! (Bool_t)klass && gInterpreter->CheckClassTemplate( lookup.c_str() ) ) {
@@ -546,7 +547,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
          klass = TScopeAdapter::ByName( "ROOT::"+fullname );
          if ( (Bool_t)klass ) {
             PyObject* rtns = PyObject_GetAttr( gRootModule, PyStrings::gROOTns );
-            PyObject* pyclass = PyObject_GetAttrString( rtns, (char*)fullname.c_str() );
+            PyObject* pyclass = MakeRootClassFromString( fullname, rtns );
             Py_DECREF( rtns );
             return pyclass;
          }
@@ -677,7 +678,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       }
       PyObject* modules = PySys_GetObject( const_cast<char*>("modules") );
       if ( modules && PyDict_Check( modules) ) {
-         
+
          PyDict_SetItemString( modules,
             const_cast<char*>(("ROOT."+pyfullname).c_str()), pyclass );
       }
@@ -816,7 +817,7 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
       if ( oldPyObject )
          return oldPyObject;
    }
-                       
+
 // downcast to real class for object returns
    if ( clActual && klass != clActual ) {
       address = (void*)((Long_t)address + Utility::DowncastOffset( clActual, klass, address, false /*derivedObj*/ ) );
@@ -878,7 +879,8 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
       if ( Utility::Compound( gbl->GetFullTypeName() ) != "" )
          return BindRootObject( (void*)gbl->GetAddress(), klass, kTRUE );
 
-      return BindRootObject( (void*)gbl->GetAddress(), klass );
+   // for by-value globals, to ensure setability
+      return (PyObject*)PropertyProxy_New< TGlobal* >( gbl );
    }
 
    if ( gbl->GetAddress() &&       // check for enums and consts

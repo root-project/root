@@ -38,8 +38,8 @@ class TGeoNavigator : public TObject
 {
 
 protected:
-   TGeoNavigator(const TGeoNavigator&); 
-   TGeoNavigator& operator=(const TGeoNavigator&); 
+   TGeoNavigator(const TGeoNavigator&);
+   TGeoNavigator& operator=(const TGeoNavigator&);
    TGeoNode             *FindInCluster(Int_t *cluster, Int_t nc);
    Int_t                 GetTouchedCluster(Int_t start, Double_t *point, Int_t *check_list,
                                            Int_t ncheck, Int_t *result);
@@ -77,7 +77,7 @@ private :
    TGeoManager          *fGeometry;         //! current geometry
    TGeoNodeCache        *fCache;            //! cache of states
    TGeoVolume           *fCurrentVolume;    //! current volume
-   TGeoNode             *fCurrentNode;      //! current node    
+   TGeoNode             *fCurrentNode;      //! current node
    TGeoNode             *fTopNode;          //! top physical node
    TGeoNode             *fLastNode;         //! last searched node
    TGeoNode             *fNextNode;         //! next node that will be crossed
@@ -87,7 +87,7 @@ private :
    TGeoHMatrix          *fGlobalMatrix;     //! current pointer to cached global matrix
    TGeoHMatrix          *fDivMatrix;        //! current local matrix of the selected division cell
    TString               fPath;             //! path to current node
-    
+
 public :
    TGeoNavigator();
    TGeoNavigator(TGeoManager* geom);
@@ -184,7 +184,7 @@ public :
    void                   SetCldirChecked(Double_t *dir) {memcpy(fCldirChecked, dir, 3*sizeof(Double_t));}
    void                   SetLastSafetyForPoint(Double_t safe, const Double_t *point) {fLastSafety=safe; memcpy(fLastPoint,point,3*sizeof(Double_t));}
    void                   SetLastSafetyForPoint(Double_t safe, Double_t x, Double_t y, Double_t z) {fLastSafety=safe; fLastPoint[0]=x; fLastPoint[1]=y, fLastPoint[2]=z;}
-   
+
    //--- point/vector reference frame conversion
    void                   LocalToMaster(const Double_t *local, Double_t *master) const {fCache->LocalToMaster(local, master);}
    void                   LocalToMasterVect(const Double_t *local, Double_t *master) const {fCache->LocalToMasterVect(local, master);}
@@ -204,7 +204,7 @@ public :
    Bool_t                 PopPoint() {fCurrentOverlapping=fCache->PopState(fNmany,fPoint); fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel(); fGlobalMatrix=fCache->GetCurrentMatrix();return fCurrentOverlapping;}
    Bool_t                 PopPoint(Int_t index) {fCurrentOverlapping=fCache->PopState(fNmany,index, fPoint); fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel(); fGlobalMatrix=fCache->GetCurrentMatrix();return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
-   
+
    ClassDef(TGeoNavigator, 0)          // geometry navigator class
 };
 
@@ -224,7 +224,7 @@ class TGeoNavigatorArray : public TObjArray
 private:
    TGeoNavigator         *fCurrentNavigator; // Current navigator
    TGeoManager           *fGeoManager;       // Manager to which it applies
-   
+
    TGeoNavigatorArray(const TGeoNavigatorArray&);
    TGeoNavigatorArray& operator=(const TGeoNavigatorArray&);
 
@@ -232,12 +232,12 @@ public:
    TGeoNavigatorArray() : TObjArray(), fCurrentNavigator(0), fGeoManager(0) {}
    TGeoNavigatorArray(TGeoManager *mgr) : TObjArray(), fCurrentNavigator(0), fGeoManager(mgr) {SetOwner();}
    virtual ~TGeoNavigatorArray() {}
-   
+
    TGeoNavigator         *AddNavigator();
-   inline TGeoNavigator  *GetCurrentNavigator() const {return fCurrentNavigator;}   
+   inline TGeoNavigator  *GetCurrentNavigator() const {return fCurrentNavigator;}
    TGeoNavigator         *SetCurrentNavigator(Int_t inav) {return (fCurrentNavigator=(TGeoNavigator*)At(inav));}
 
    ClassDef(TGeoNavigatorArray, 0)       // An array of navigators
-};   
+};
 #endif
-   
+

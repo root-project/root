@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -9,11 +9,11 @@
   **********************************************************************/
 
 // Header file for Boost
-// 
+//
 // Created by: Mark Fischler  Mon Nov 1  2005
-// 
+//
 // Last update: $Id$
-// 
+//
 #ifndef ROOT_Math_GenVector_Boost
 #define ROOT_Math_GenVector_Boost 1
 
@@ -38,7 +38,7 @@ namespace ROOT {
      specialized Lorentz boosts.
      Also, the 3-D rotation classes can be considered to be special Lorentz
      transformations which do not mix space and time components.
-     
+
      @ingroup GenVector
 
   */
@@ -58,9 +58,9 @@ public:
 
   enum EBoostMatrixIndex {
       kXX =  0, kXY =  1, kXZ =  2, kXT =  3
-    	      , kYY =  4, kYZ =  5, kYT =  6
-    		        , kZZ =  7, kZT =  8
-    			          , kTT =  9
+     , kYY =  4, kYZ =  5, kYT =  6
+     , kZZ =  7, kZT =  8
+     , kTT =  9
   };
 
   // ========== Constructors and Assignment =====================
@@ -73,8 +73,8 @@ public:
   /**
      Construct given a three Scalars beta_x, beta_y, and beta_z
    */
-  Boost(Scalar beta_x, Scalar beta_y, Scalar beta_z) 
-  				{ SetComponents(beta_x, beta_y, beta_z); }
+  Boost(Scalar beta_x, Scalar beta_y, Scalar beta_z)
+   { SetComponents(beta_x, beta_y, beta_z); }
 
   /**
      Construct given a beta vector (which must have methods x(), y(), z())
@@ -91,35 +91,35 @@ public:
   Boost(IT begin, IT end) { SetComponents(begin,end); }
 
    /**
-      copy constructor 
+      copy constructor
    */
-   Boost(Boost const & b) { 
+   Boost(Boost const & b) {
       *this = b;
    }
 
   /**
-     Construct from an axial boost 
+     Construct from an axial boost
   */
 
-  explicit Boost( BoostX const & bx ) {SetComponents(bx.BetaVector());} 
-  explicit Boost( BoostY const & by ) {SetComponents(by.BetaVector());} 
-  explicit Boost( BoostZ const & bz ) {SetComponents(bz.BetaVector());} 
+  explicit Boost( BoostX const & bx ) {SetComponents(bx.BetaVector());}
+  explicit Boost( BoostY const & by ) {SetComponents(by.BetaVector());}
+  explicit Boost( BoostZ const & bz ) {SetComponents(bz.BetaVector());}
 
   // The compiler-generated copy ctor, copy assignment, and dtor are OK.
 
    /**
-      Assignment operator 
+      Assignment operator
     */
-   Boost & 
-   operator=(Boost const & rhs ) { 
+   Boost &
+   operator=(Boost const & rhs ) {
     for (unsigned int i=0; i < 10; ++i) {
-       fM[i] = rhs.fM[i]; 
+       fM[i] = rhs.fM[i];
     }
     return *this;
    }
 
   /**
-     Assign from an axial pure boost 
+     Assign from an axial pure boost
   */
   Boost &
   operator=( BoostX const & bx ) { return operator=(Boost(bx)); }
@@ -143,21 +143,21 @@ public:
   SetComponents (Scalar beta_x, Scalar beta_y, Scalar beta_z);
 
   /**
-     Get components into beta_x, beta_y, and beta_z 
+     Get components into beta_x, beta_y, and beta_z
   */
   void
   GetComponents (Scalar& beta_x, Scalar& beta_y, Scalar& beta_z) const;
 
   /**
-     Set components from a beta vector 
+     Set components from a beta vector
   */
   template <class Avector>
   void
-  SetComponents (const Avector & beta) 
-		  	{ SetComponents(beta.x(), beta.y(), beta.z()); } 
+  SetComponents (const Avector & beta)
+   { SetComponents(beta.x(), beta.y(), beta.z()); }
 
   /**
-     Set given a pair of pointers or iterators defining the beginning and end of 
+     Set given a pair of pointers or iterators defining the beginning and end of
      an array of three Scalars to use as beta_x,beta _y, and beta_z
    */
   template<class IT>
@@ -172,7 +172,7 @@ public:
   }
 
   /**
-     Get given a pair of pointers or iterators defining the beginning and end of 
+     Get given a pair of pointers or iterators defining the beginning and end of
      an array of three Scalars into which to place beta_x, beta_y, and beta_z
    */
   template<class IT>
@@ -187,22 +187,22 @@ public:
   }
 
   /**
-     Get given a pointer or an iterator defining the beginning of 
+     Get given a pointer or an iterator defining the beginning of
      an array into which to place beta_x, beta_y, and beta_z
    */
   template<class IT>
   void GetComponents(IT begin ) const {
-     double bx,by,bz = 0;      
+     double bx,by,bz = 0;
      GetComponents (bx,by,bz);
-     *begin++ = bx; 
-     *begin++ = by; 
-     *begin = bz; 
+     *begin++ = bx;
+     *begin++ = by;
+     *begin = bz;
   }
-   
+
   /**
      The beta vector for this boost
    */
-  typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector; 
+  typedef  DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag > XYZVector;
   XYZVector BetaVector() const;
 
   /**
@@ -211,20 +211,20 @@ public:
      Note -- 16 Scalars will be written into the array; if the array is not
      that large, then this will lead to undefined behavior.
   */
-  void 
-  GetLorentzRotation (Scalar r[]) const; 
-  
+  void
+  GetLorentzRotation (Scalar r[]) const;
+
   // =========== operations ==============
 
   /**
-     Lorentz transformation operation on a Minkowski ('Cartesian') 
+     Lorentz transformation operation on a Minkowski ('Cartesian')
      LorentzVector
   */
   LorentzVector< ROOT::Math::PxPyPzE4D<double> >
   operator() (const LorentzVector< ROOT::Math::PxPyPzE4D<double> > & v) const;
-  
+
   /**
-     Lorentz transformation operation on a LorentzVector in any 
+     Lorentz transformation operation on a LorentzVector in any
      coordinate system
    */
   template <class CoordSystem>
@@ -281,7 +281,7 @@ public:
     return ! operator==(rhs);
   }
 
-protected: 
+protected:
 
   void SetIdentity();
 
@@ -296,7 +296,7 @@ private:
 /**
    Stream Output and Input
  */
-  // TODO - I/O should be put in the manipulator form 
+  // TODO - I/O should be put in the manipulator form
 
 std::ostream & operator<< (std::ostream & os, const Boost & b);
 

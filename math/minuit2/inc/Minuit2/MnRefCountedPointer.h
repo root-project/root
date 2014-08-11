@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -23,26 +23,26 @@ public:
 
   // Default constructor needed for use inside array, vector, etc.
   MnRefCountedPointer() : fPtr(0), fCounter(0) {}
-  
-  MnRefCountedPointer(T* pt) : 
+
+  MnRefCountedPointer(T* pt) :
     fPtr(pt), fCounter(new MnReferenceCounter()) {AddReference();}
 
-  MnRefCountedPointer(const MnRefCountedPointer<T>& other) : 
+  MnRefCountedPointer(const MnRefCountedPointer<T>& other) :
     fPtr(other.fPtr), fCounter(other.fCounter) {AddReference();}
 
   ~MnRefCountedPointer() {
     /*
     if(References() == 0) {
-      if(fPtr) delete fPtr; 
+      if(fPtr) delete fPtr;
       if(fCounter) delete fCounter;
     }
     else RemoveReference();
     */
     if(References() != 0) RemoveReference();
   }
-  
+
   bool IsValid() const {return fPtr != 0;}
-  
+
   MnRefCountedPointer& operator=(const MnRefCountedPointer<T>& other) {
     if(this != &other && fPtr != other.fPtr) {
       RemoveReference();
@@ -64,13 +64,13 @@ public:
   T* Get() const {return fPtr;}
 
   T* operator->() const {DoCheck(); return fPtr;}
-  
+
   T& operator*() const {DoCheck(); return *fPtr;}
-  
+
   bool operator==(const  T* otherP) const {return fPtr == otherP;}
- 
+
   bool operator<(const  T* otherP) const {return fPtr < otherP;}
- 
+
   unsigned int References() const {return fCounter->References();}
 
   void AddReference() const {fCounter->AddReference();}
@@ -78,19 +78,19 @@ public:
   void RemoveReference() {
     fCounter->RemoveReference();
     if(References() == 0) {
-      delete fPtr; fPtr=0; 
+      delete fPtr; fPtr=0;
       delete fCounter; fCounter=0;
     }
   }
-  
-private:
-  
-  T*  fPtr;  
-  MnReferenceCounter* fCounter;
- 
+
 private:
 
-  void DoCheck() const {assert(IsValid());}  
+  T*  fPtr;
+  MnReferenceCounter* fCounter;
+
+private:
+
+  void DoCheck() const {assert(IsValid());}
 };
 
   }  // namespace Minuit2

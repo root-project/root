@@ -73,7 +73,7 @@ TextLine::TextLine(const char *textLine, CTFontRef font)
 TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font)
              : fCTLine(0),
                fCTFont(font)
-   
+
 {
    //TODO: why don't I have asserts on parameters here?
 
@@ -104,7 +104,7 @@ TextLine::TextLine(const char *textLine, CTFontRef font, Color_t color)
 
    const CFScopeGuard<CGColorRef> textColor(CGColorCreate(rgbColorSpace.Get(), cgRgba));
    //Not clear from docs, if textColor.Get() can be 0.
-   
+
    CFStringRef keys[] = {kCTFontAttributeName, kCTForegroundColorAttributeName};
    CFTypeRef values[] = {font, textColor.Get()};
 
@@ -121,7 +121,7 @@ TextLine::TextLine(const char *textLine, CTFontRef font, const CGFloat *rgb)
    //Create attributed string with font and color.
    using ROOT::MacOSX::Util::CFScopeGuard;
    CFScopeGuard<CGColorSpaceRef> rgbColorSpace(CGColorSpaceCreateDeviceRGB());
-   
+
    if (!rgbColorSpace.Get())
       throw std::runtime_error("TexLine: color space is null");
 
@@ -155,7 +155,7 @@ TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font, Color_t
 
    const CFScopeGuard<CGColorRef> textColor(CGColorCreate(rgbColorSpace.Get(), cgRgba));
    //Not clear from docs, if textColor.Get() can be 0.
-   
+
    CFStringRef keys[] = {kCTFontAttributeName, kCTForegroundColorAttributeName};
    CFTypeRef values[] = {font, textColor.Get()};
 
@@ -197,7 +197,7 @@ void TextLine::GetAscentDescent(Int_t &asc, Int_t &desc)const
       CGRect box = BBoxForCTRun(fCTFont, firstRun);
       if (CGRectIsNull(box))
          return;
-      
+
       for (CFIndex i = 1, e = CFArrayGetCount(runs); i < e; ++i) {
          CTRunRef run = static_cast<CTRunRef>(CFArrayGetValueAtIndex(runs, i));
          CGRect nextBox = BBoxForCTRun(fCTFont, run);
@@ -216,7 +216,7 @@ void TextLine::GetAscentDescent(Int_t &asc, Int_t &desc)const
 void TextLine::Init(const char *textLine, UInt_t nAttribs, CFStringRef *keys, CFTypeRef *values)
 {
    using MacOSX::Util::CFScopeGuard;
-   
+
    //Strong reference must be replaced with scope guards.
    const CFScopeGuard<CFDictionaryRef> stringAttribs(CFDictionaryCreate(kCFAllocatorDefault, (const void **)keys, (const void **)values,
                                                      nAttribs, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
@@ -238,11 +238,11 @@ void TextLine::Init(const char *textLine, UInt_t nAttribs, CFStringRef *keys, CF
 void TextLine::Init(const std::vector<UniChar> &unichars, UInt_t nAttribs, CFStringRef *keys, CFTypeRef *values)
 {
    using MacOSX::Util::CFScopeGuard;
-   
+
    const CFScopeGuard<CFStringRef> wrappedUniString(CFStringCreateWithCharacters(kCFAllocatorDefault, &unichars[0], unichars.size()));
    const CFScopeGuard<CFDictionaryRef> stringAttribs(CFDictionaryCreate(kCFAllocatorDefault, (const void **)keys, (const void **)values,
                                                            nAttribs, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
-   
+
    if (!stringAttribs.Get())
       throw std::runtime_error("TextLine: null attribs");
 
@@ -271,11 +271,11 @@ void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y)const
 
    CGContextSetAllowsAntialiasing(ctx, 1);
    UInt_t w = 0, h = 0;
-   
+
    GetBounds(w, h);
-   
-   Double_t xc = 0., yc = 0.;   
-   const UInt_t hAlign = UInt_t(gVirtualX->GetTextAlign() / 10);   
+
+   Double_t xc = 0., yc = 0.;
+   const UInt_t hAlign = UInt_t(gVirtualX->GetTextAlign() / 10);
    switch (hAlign) {
    case 1:
       xc = 0.5 * w;
@@ -298,9 +298,9 @@ void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y)const
       yc = -0.5 * h;
       break;
    }
-   
+
    CGContextSetTextPosition(ctx, 0., 0.);
-   CGContextTranslateCTM(ctx, x, y);  
+   CGContextTranslateCTM(ctx, x, y);
    CGContextRotateCTM(ctx, gVirtualX->GetTextAngle() * TMath::DegToRad());
    CGContextTranslateCTM(ctx, xc, yc);
    CGContextTranslateCTM(ctx, -0.5 * w, -0.5 * h);
@@ -312,7 +312,7 @@ void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y)const
 void DrawTextLineNoKerning(CGContextRef ctx, CTFontRef font, const std::vector<UniChar> &text, Int_t x, Int_t y)
 {
    typedef std::vector<CGSize>::size_type size_type;
-   
+
    if (!text.size())//This can happen with ROOT's GUI.
       return;
 
@@ -325,11 +325,11 @@ void DrawTextLineNoKerning(CGContextRef ctx, CTFontRef font, const std::vector<U
       ::Error("DrawTextLineNoKerning", "Font could not encode all Unicode characters in a text");
       return;
    }
-   
+
    std::vector<CGSize> glyphAdvances(glyphs.size());
    CTFontGetAdvancesForGlyphs(font, kCTFontHorizontalOrientation, &glyphs[0], &glyphAdvances[0], glyphs.size());
 
-   CGFloat currentX = x;  
+   CGFloat currentX = x;
    std::vector<CGPoint> glyphPositions(glyphs.size());
    glyphPositions[0].x = currentX;
    glyphPositions[0].y = y;
@@ -339,7 +339,7 @@ void DrawTextLineNoKerning(CGContextRef ctx, CTFontRef font, const std::vector<U
       glyphPositions[i].x = currentX;
       glyphPositions[i].y = y;
    }
-   
+
    CTFontDrawGlyphs(font, &glyphs[0], &glyphPositions[0], glyphs.size(), ctx);
 }
 

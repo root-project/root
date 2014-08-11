@@ -42,7 +42,7 @@ public:
    Bool_t  IsStaged(const char *path);
    Int_t   Locate(const char *path, TString &endpath);
    Bool_t  Matches(const char *s);
-   
+
    Bool_t  IsValid() const { return (fSystem ? kTRUE : kFALSE); }
 
    void    Print(Option_t *option = "") const;

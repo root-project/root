@@ -224,7 +224,7 @@ TEveManager::~TEveManager()
 
    gROOT->GetListOfBrowsables()->Remove(fMacroFolder);
    delete fMacroFolder;
-   
+
    delete fGeometryAliases;
    delete fGeometries;
    delete fVizDB;

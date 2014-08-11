@@ -56,7 +56,7 @@ Double_t TRandom2::Rndm(Int_t)
 
 #define TAUSWORTHE(s,a,b,c,d) (((s &c) <<d) & 0xffffffffUL ) ^ ((((s <<a) & 0xffffffffUL )^s) >>b)
 
-   // scale by 1./(Max<UINT> + 1) = 1./4294967296 
+   // scale by 1./(Max<UINT> + 1) = 1./4294967296
    const double kScale = 2.3283064365386963e-10;    // range in 32 bit ( 1/(2**32)
 
    fSeed  = TAUSWORTHE (fSeed, 13, 19, 4294967294UL, 12);
@@ -129,7 +129,7 @@ void TRandom2::SetSeed(UInt_t seed)
       if (fSeed2 < 16) fSeed2 += 16UL;
    } else {
       // initialize using a TUUID
-      TUUID u; 
+      TUUID u;
       UChar_t uuid[16];
       u.GetUUID(uuid);
       fSeed  =  int(uuid[3])*16777216 + int(uuid[2])*65536 + int(uuid[1])*256 + int(uuid[0]);
@@ -137,7 +137,7 @@ void TRandom2::SetSeed(UInt_t seed)
       fSeed2  =  int(uuid[11])*16777216 + int(uuid[10])*65536 + int(uuid[9])*256 + int(uuid[8]);
       // use also the other bytes
       UInt_t seed3 = int(uuid[15])*16777216 + int(uuid[14])*65536 + int(uuid[13])*256 + int(uuid[12]);
-      fSeed2 += seed3; 
+      fSeed2 += seed3;
 
 
 

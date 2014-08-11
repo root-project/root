@@ -82,7 +82,7 @@ private:
    //Overriders
    void         InitGL()const;
    void         DeInitGL()const;
-   
+
    void         DrawPlot()const;
 
    void         DrawLegoCartesian()const;

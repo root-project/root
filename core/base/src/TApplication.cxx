@@ -453,8 +453,8 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             fFiles->Add(expr);
             argv[i] = null;
          } else {
-            Warning("GetOptions", "-e must be followed by an expression.");           
-         }   
+            Warning("GetOptions", "-e must be followed by an expression.");
+         }
 
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
          Long64_t size;
@@ -615,7 +615,7 @@ void TApplication::LoadGraphicsLibs()
    TString title1 = "ROOT interface to ";
    TString nativex, title;
    TString nativeg = "root";
-   
+
 #ifdef R__WIN32
    nativex = "win32gdk";
    name    = "Win32gdk";
@@ -623,7 +623,7 @@ void TApplication::LoadGraphicsLibs()
 #elif defined(R__HAS_COCOA)
    nativex = "quartz";
    name    = "quartz";
-   title   = title1 + "Quartz"; 
+   title   = title1 + "Quartz";
 #else
    nativex = "x11";
    name    = "X11";
@@ -888,7 +888,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 #else
       return PrintFile("$(ROOTSYS)/README/CREDITS");
 #endif
-     
+
    }
 
    if (!strncmp(line, ".pwd", 4)) {
@@ -1200,7 +1200,7 @@ void TApplication::Terminate(Int_t status)
          ProcessLine("TMemStat::Close()");
          fUseMemstat = kFALSE;
       }
-   
+
       gSystem->Exit(status);
    }
 }

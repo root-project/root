@@ -13,7 +13,7 @@ export PATH=$ROOTSYS/etc/proof/utils/pq2:$PATH
 # Path to the repository via server (superseeded by '-u srvurl' or --url=srvurl)
 # It MUST contain the full directory spefication. To test the goodness of the path
 # run gSystem->AccessPathName("<path>", kReadPermissions) in a ROOT shell: this command
-# will return 0 is the path is good. 
+# will return 0 is the path is good.
 # export PQ2DSSRVURL="root://datasrv.doma.in//the/data/set/server/dir
 # setenv PQ2DSSRVURL "root://datasrv.doma.in//the/data/set/server/dir
 #
@@ -24,7 +24,7 @@ export PATH=$ROOTSYS/etc/proof/utils/pq2:$PATH
 # export PQ2PROOFURL="proof://master.doma.in"
 # setenv PQ2PROOFURL "proof://master.doma.in"
 #
-# To disable the use of the cache when browsing via a remote server uncomment the following 
+# To disable the use of the cache when browsing via a remote server uncomment the following
 # export DATASETCACHE="no"
 # setenv DATASETCACHE "no"
 # The location of the local cache is controlled by the following variable (the default is

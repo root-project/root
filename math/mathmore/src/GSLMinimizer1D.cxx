@@ -22,11 +22,11 @@
   **********************************************************************/
 
 // Implementation file for class GSLMinimizer1D
-// 
+//
 // Created by: moneta  at Wed Dec  1 15:04:51 2004
-// 
+//
 // Last update: Wed Dec  1 15:04:51 2004
-// 
+//
 
 #include <assert.h>
 
@@ -40,17 +40,17 @@
 #include "gsl/gsl_min.h"
 #include "gsl/gsl_errno.h"
 
-#include <iostream> 
+#include <iostream>
 #include <cmath>
 
-namespace ROOT { 
+namespace ROOT {
 
-namespace Math { 
+namespace Math {
 
 
-GSLMinimizer1D::GSLMinimizer1D(Minim1D::Type type) : 
-    fXmin(0), fXlow(0), fXup(0), fMin(0), fLow(0), fUp(0), 
-    fIter(0), fStatus(-1), fIsSet(false), 
+GSLMinimizer1D::GSLMinimizer1D(Minim1D::Type type) :
+    fXmin(0), fXlow(0), fXup(0), fMin(0), fLow(0), fUp(0),
+    fIter(0), fStatus(-1), fIsSet(false),
     fMinimizer(0), fFunction(0)
 {
    // construct a minimizer passing the algorithm type as an enumeration
@@ -58,26 +58,26 @@ GSLMinimizer1D::GSLMinimizer1D(Minim1D::Type type) :
    const gsl_min_fminimizer_type* T = 0 ;
    switch ( type )
    {
-   case Minim1D::kGOLDENSECTION          : 
-      T = gsl_min_fminimizer_goldensection; 
+   case Minim1D::kGOLDENSECTION          :
+      T = gsl_min_fminimizer_goldensection;
       break ;
    case Minim1D::kBRENT       :
-      T = gsl_min_fminimizer_brent; 
+      T = gsl_min_fminimizer_brent;
       break ;
    default :
-      // default case is brent 
-      T = gsl_min_fminimizer_brent; 
+      // default case is brent
+      T = gsl_min_fminimizer_brent;
       break ;
    }
 
-   fMinimizer = new GSL1DMinimizerWrapper(T); 
+   fMinimizer = new GSL1DMinimizerWrapper(T);
    fFunction  = new GSLFunctionWrapper();
 
 }
 
-GSLMinimizer1D::~GSLMinimizer1D() 
+GSLMinimizer1D::~GSLMinimizer1D()
 {
-   // destructor: clean up minimizer and function pointers 
+   // destructor: clean up minimizer and function pointers
 
    if (fMinimizer) delete fMinimizer;
    if (fFunction)  delete  fFunction;
@@ -88,104 +88,104 @@ GSLMinimizer1D::GSLMinimizer1D(const GSLMinimizer1D &): IMinimizer1D()
    // dummy copy ctr
 }
 
-GSLMinimizer1D & GSLMinimizer1D::operator = (const GSLMinimizer1D &rhs) 
+GSLMinimizer1D & GSLMinimizer1D::operator = (const GSLMinimizer1D &rhs)
 {
-   // dummy operator = 
+   // dummy operator =
    if (this == &rhs) return *this;  // time saving self-test
    return *this;
 }
 
-void GSLMinimizer1D::SetFunction(  GSLFuncPointer f, void * p, double xmin, double xlow, double xup) { 
-   // set the function to be minimized 
+void GSLMinimizer1D::SetFunction(  GSLFuncPointer f, void * p, double xmin, double xlow, double xup) {
+   // set the function to be minimized
    assert(fFunction);
    assert(fMinimizer);
-   fXlow = xlow; 
+   fXlow = xlow;
    fXup = xup;
    fXmin = xmin;
-   fFunction->SetFuncPointer( f ); 
-   fFunction->SetParams( p ); 
+   fFunction->SetFuncPointer( f );
+   fFunction->SetParams( p );
 
 #ifdef DEBUG
    std::cout << " [ "<< xlow << " , " << xup << " ]" << std::endl;
 #endif
 
    int status = gsl_min_fminimizer_set( fMinimizer->Get(), fFunction->GetFunc(), xmin, xlow, xup);
-   if (status != GSL_SUCCESS) 
-      std::cerr <<"GSLMinimizer1D: Error:  Interval [ "<< xlow << " , " << xup << " ] does not contain a minimum" << std::endl; 
+   if (status != GSL_SUCCESS)
+      std::cerr <<"GSLMinimizer1D: Error:  Interval [ "<< xlow << " , " << xup << " ] does not contain a minimum" << std::endl;
 
 
-   fIsSet = true; 
+   fIsSet = true;
    fStatus = -1;
    return;
 }
 
 int GSLMinimizer1D::Iterate() {
-   // perform an iteration and update values 
+   // perform an iteration and update values
    if (!fIsSet) {
       std::cerr << "GSLMinimizer1D- Error: Function has not been set in Minimizer" << std::endl;
-      return -1; 
+      return -1;
    }
- 
+
    int status =  gsl_min_fminimizer_iterate(fMinimizer->Get());
    // update values
    fXmin = gsl_min_fminimizer_x_minimum(fMinimizer->Get() );
    fMin = gsl_min_fminimizer_f_minimum(fMinimizer->Get() );
    // update interval values
-   fXlow =  gsl_min_fminimizer_x_lower(fMinimizer->Get() ); 
+   fXlow =  gsl_min_fminimizer_x_lower(fMinimizer->Get() );
    fXup =  gsl_min_fminimizer_x_upper(fMinimizer->Get() );
-   fLow =  gsl_min_fminimizer_f_lower(fMinimizer->Get() ); 
+   fLow =  gsl_min_fminimizer_f_lower(fMinimizer->Get() );
    fUp =  gsl_min_fminimizer_f_upper(fMinimizer->Get() );
    return status;
 }
 
-double GSLMinimizer1D::XMinimum() const { 
+double GSLMinimizer1D::XMinimum() const {
    // return x value at function minimum
    return fXmin;
 }
 
-double GSLMinimizer1D::XLower() const { 
+double GSLMinimizer1D::XLower() const {
    // return lower x value of bracketing interval
-   return fXlow; 
+   return fXlow;
 }
 
-double GSLMinimizer1D::XUpper() const { 
+double GSLMinimizer1D::XUpper() const {
    // return upper x value of bracketing interval
    return fXup;
 }
 
-double GSLMinimizer1D::FValMinimum() const { 
+double GSLMinimizer1D::FValMinimum() const {
    // return function value at minimum
    return fMin;
 }
 
-double GSLMinimizer1D::FValLower() const { 
+double GSLMinimizer1D::FValLower() const {
    // return function value at x lower
-   return fLow; 
+   return fLow;
 }
 
-double GSLMinimizer1D::FValUpper() const { 
+double GSLMinimizer1D::FValUpper() const {
    // return function value at x upper
    return fUp;
 }
 
 const char * GSLMinimizer1D::Name() const {
    // return name of minimization algorithm
-   return gsl_min_fminimizer_name(fMinimizer->Get() ); 
+   return gsl_min_fminimizer_name(fMinimizer->Get() );
 }
 
-bool GSLMinimizer1D::Minimize (int maxIter, double absTol, double relTol) 
-{ 
+bool GSLMinimizer1D::Minimize (int maxIter, double absTol, double relTol)
+{
    // find the minimum via multiple iterations
-   fStatus = -1; 
-   int iter = 0; 
-   int status = 0; 
-   do { 
+   fStatus = -1;
+   int iter = 0;
+   int status = 0;
+   do {
       iter++;
       status = Iterate();
-      if (status != GSL_SUCCESS) { 
+      if (status != GSL_SUCCESS) {
          MATH_ERROR_MSG("GSLMinimizer1D::Minimize","error returned when performing an iteration");
-         fStatus = status; 
-         return false; 
+         fStatus = status;
+         return false;
       }
 
 #ifdef DEBUG
@@ -193,26 +193,26 @@ bool GSLMinimizer1D::Minimize (int maxIter, double absTol, double relTol)
                 << " fmin " << fMin << " f(a) " << fLow << " f(b) " << fUp << std::endl;
 #endif
 
-  
-      status =  TestInterval(fXlow, fXup, absTol, relTol); 
-      if (status == GSL_SUCCESS) { 
+
+      status =  TestInterval(fXlow, fXup, absTol, relTol);
+      if (status == GSL_SUCCESS) {
          fIter = iter;
          fStatus = status;
-         return true; 
+         return true;
       }
    }
-   while (status == GSL_CONTINUE && iter < maxIter); 
-   if (status == GSL_CONTINUE) { 
+   while (status == GSL_CONTINUE && iter < maxIter);
+   if (status == GSL_CONTINUE) {
       double tol = std::abs(fXup-fXlow);
       MATH_INFO_MSGVAL("GSLMinimizer1D::Minimize","exceeded max iterations, reached tolerance is not sufficient",tol);
    }
-   fStatus = status; 
+   fStatus = status;
    return false;
 }
 
 
-int GSLMinimizer1D::TestInterval( double xlow, double xup, double epsAbs, double epsRel) { 
-// static function to test interval 
+int GSLMinimizer1D::TestInterval( double xlow, double xup, double epsAbs, double epsRel) {
+// static function to test interval
    return gsl_min_test_interval(xlow, xup, epsAbs, epsRel);
 }
 

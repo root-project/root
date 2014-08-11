@@ -30,7 +30,7 @@ Bool_t TGEventHandler::HandleEvent(Event_t *ev)
 }
 
 //______________________________________________________________________________
-void TGEventHandler::SendMessage(const TGWindow *w, Long_t msg, Long_t parm1, 
+void TGEventHandler::SendMessage(const TGWindow *w, Long_t msg, Long_t parm1,
                                  Long_t parm2)
 {
    // Send message (i.e. event) to window w. Message is encoded in one long

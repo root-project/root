@@ -1,15 +1,15 @@
 // @(#)root/ruby:$Id$
 // Author:  Elias Athanasopoulos, May 2004
 
-/* 
+/*
  * ruby-root global enumeration methods
  *
  * ROOT enumerations are Ruby methods in ruby-root and
  * not constants, in order to keep the low-case 'k'.
- * 
+ *
  * --elathan  <elathan@phys.uoa.gr>
- * 
- * (c) 2003, 2004 
+ *
+ * (c) 2003, 2004
  */
 
 static VALUE
@@ -219,23 +219,23 @@ void init_global_enums (void)
   rb_define_method (rb_cObject, "kCircle", VALUEFUNC (rr_kCircle), 0);
   rb_define_method (rb_cObject, "kMultiply", VALUEFUNC (rr_kMultiply), 0);
   rb_define_method (rb_cObject, "kFullDotSmall", VALUEFUNC (rr_kFullDotSmall),
-		    0);
+          0);
   rb_define_method (rb_cObject, "kFullDotMedium",
-		    VALUEFUNC (rr_kFullDotMedium), 0);
+          VALUEFUNC (rr_kFullDotMedium), 0);
   rb_define_method (rb_cObject, "kFullDotLarge", VALUEFUNC (rr_kFullDotLarge),
-		    0);
+          0);
   rb_define_method (rb_cObject, "kFullCircle", VALUEFUNC (rr_kFullCircle), 0);
   rb_define_method (rb_cObject, "kFullSquare", VALUEFUNC (rr_kFullSquare), 0);
   rb_define_method (rb_cObject, "kFullTriangleUp",
-		    VALUEFUNC (rr_kFullTriangleUp), 0);
+          VALUEFUNC (rr_kFullTriangleUp), 0);
   rb_define_method (rb_cObject, "kFullTriangleDown",
-		    VALUEFUNC (rr_kFullTriangleDown), 0);
+          VALUEFUNC (rr_kFullTriangleDown), 0);
   rb_define_method (rb_cObject, "kOpenCircle", VALUEFUNC (rr_kOpenCircle), 0);
   rb_define_method (rb_cObject, "kOpenSquare", VALUEFUNC (rr_kOpenSquare), 0);
   rb_define_method (rb_cObject, "kOpenTriangleUp",
-		    VALUEFUNC (rr_kOpenTriangleUp), 0);
+          VALUEFUNC (rr_kOpenTriangleUp), 0);
   rb_define_method (rb_cObject, "kOpenDiamond", VALUEFUNC (rr_kOpenDiamond),
-		    0);
+          0);
   rb_define_method (rb_cObject, "kOpenCross", VALUEFUNC (rr_kOpenCross), 0);
   rb_define_method (rb_cObject, "kFullStar", VALUEFUNC (rr_kFullStar), 0);
   rb_define_method (rb_cObject, "kOpenStar", VALUEFUNC (rr_kOpenStar), 0);

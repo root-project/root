@@ -32,22 +32,22 @@
       trackBackground.frame = CGRectMake(0.f, self.frame.size.height / 2 - trackBackground.frame.size.height / 2, self.frame.size.width - padding * 2, trackBackground.frame.size.height);
       trackBackground.center = CGPointMake(self.frame.size.width / 2, self.frame.size.height / 2);
       [self addSubview : trackBackground];
-        
+
       track = [[UIImageView alloc] initWithImage : [UIImage imageNamed:@"bar-highlight.png"]];
       track.frame = CGRectMake(0.f, self.frame.size.height / 2 - track.frame.size.height / 2, self.frame.size.width - padding * 2, track.frame.size.height);
       track.center = CGPointMake(self.frame.size.width / 2, self.frame.size.height / 2);
       [self addSubview : track];
-        
+
       minThumb = [[UIImageView alloc] initWithImage : [UIImage imageNamed : @"handle.png"] highlightedImage : [UIImage imageNamed : @"handle-hover.png"]];
       minThumb.frame = CGRectMake(0.f, 0.f, self.frame.size.height,self.frame.size.height);
       minThumb.contentMode = UIViewContentModeCenter;
-		minThumb.center = CGPointMake([self xForValue : selectedMinimumValue], self.frame.size.height / 2);
-		[self addSubview : minThumb];
-        
+      minThumb.center = CGPointMake([self xForValue : selectedMinimumValue], self.frame.size.height / 2);
+      [self addSubview : minThumb];
+
       maxThumb = [[UIImageView alloc] initWithImage : [UIImage imageNamed : @"handle.png"] highlightedImage : [UIImage imageNamed : @"handle-hover.png"]];
       maxThumb.frame = CGRectMake(0.f, 0.f, self.frame.size.height, self.frame.size.height);
       maxThumb.contentMode = UIViewContentModeCenter;
-		maxThumb.center = CGPointMake([self xForValue : selectedMaximumValue], self.frame.size.height / 2);
+      maxThumb.center = CGPointMake([self xForValue : selectedMaximumValue], self.frame.size.height / 2);
       [self addSubview : maxThumb];
 
       [self updateTrackHighlight];
@@ -63,12 +63,12 @@
    maximumValue = max;
    selectedMinimumValue = sMin;
    selectedMaximumValue = sMax;
-   
+
    minimumRange = 0.2 * (maximumValue - minimumValue);
-   
+
    minThumb.center = CGPointMake([self xForValue : selectedMinimumValue], self.frame.size.height / 2);
    maxThumb.center = CGPointMake([self xForValue : selectedMaximumValue], self.frame.size.height / 2);
-   
+
    [self updateTrackHighlight];
 }
 
@@ -102,21 +102,21 @@
 {
    if(!minThumbOn && !maxThumbOn)
       return NO;
-    
+
    CGPoint touchPoint = [touch locationInView:self];
    if(minThumbOn) {
       minThumb.center = CGPointMake(MAX([self xForValue : minimumValue], MIN(touchPoint.x, [self xForValue : selectedMaximumValue - minimumRange])), minThumb.center.y);
-      selectedMinimumValue = [self valueForX : minThumb.center.x];     
+      selectedMinimumValue = [self valueForX : minThumb.center.x];
    }
-    
+
    if (maxThumbOn) {
       maxThumb.center = CGPointMake(MIN([self xForValue : maximumValue], MAX(touchPoint.x, [self xForValue : selectedMinimumValue + minimumRange])), maxThumb.center.y);
       selectedMaximumValue = [self valueForX : maxThumb.center.x];
    }
-   
+
    [self updateTrackHighlight];
    [self setNeedsDisplay];
-    
+
    [self sendActionsForControlEvents : UIControlEventValueChanged];
 
    return YES;

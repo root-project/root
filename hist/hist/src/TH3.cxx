@@ -1566,7 +1566,7 @@ Long64_t TH3::Merge(TCollection *list)
 
    TIter next(&inlist);
    TH3* h = this;
-   do { 
+   do {
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
       allHaveLimits = allHaveLimits && hasLimits;
 
@@ -1575,9 +1575,9 @@ Long64_t TH3::Merge(TCollection *list)
 
          // this is done in case the first histograms are empty and
          // the histogram have different limits
-         if (firstHistWithLimits ) { 
+         if (firstHistWithLimits ) {
             // set axis limits in the case the first histogram did not have limits
-            if (h != this ) { 
+            if (h != this ) {
               if (!SameLimitsAndNBins(fXaxis, *(h->GetXaxis())) ) {
                 if (h->GetXaxis()->GetXbins()->GetSize() != 0) fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
                 else                                           fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
@@ -3218,7 +3218,7 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
                   }
                }
                Int_t binNew = hnew->GetBin( xover *(newxbins+1),
-                                            yover*(newybins+1), zover*(newzbins+1) );
+                                           yover*(newybins+1), zover*(newzbins+1) );
                hnew->SetBinContent(binNew,binContent);
                if (oldSumw2) hnew->fSumw2.fArray[binNew] = binSumw2;
             }
@@ -3258,8 +3258,8 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
             hnew->SetBinContent(xbin,0,zbin,binContent0);
             hnew->SetBinContent(xbin,newybins+1,zbin,binContent2);
             if (oldSumw2) {
-            hnew->SetBinError(xbin,0,zbin,TMath::Sqrt(binError0));
-            hnew->SetBinError(xbin,newybins+1,zbin,TMath::Sqrt(binError2) );
+               hnew->SetBinError(xbin,0,zbin,TMath::Sqrt(binError0));
+               hnew->SetBinError(xbin,newybins+1,zbin,TMath::Sqrt(binError2) );
             }
             oldzbin2 += nzgroup;
          }
@@ -3294,8 +3294,8 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
             hnew->SetBinContent(0,ybin,zbin,binContent0);
             hnew->SetBinContent(newxbins+1,ybin,zbin,binContent2);
             if (oldSumw2) {
-            hnew->SetBinError(0,ybin,zbin,TMath::Sqrt(binError0));
-            hnew->SetBinError(newxbins+1,ybin,zbin,TMath::Sqrt(binError2) );
+               hnew->SetBinError(0,ybin,zbin,TMath::Sqrt(binError0));
+               hnew->SetBinError(newxbins+1,ybin,zbin,TMath::Sqrt(binError2) );
             }
             oldzbin2 += nzgroup;
          }
@@ -3330,8 +3330,8 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
             hnew->SetBinContent(xbin,ybin,0,binContent0);
             hnew->SetBinContent(xbin,ybin,newzbins+1,binContent2);
             if (oldSumw2) {
-            hnew->SetBinError(xbin,ybin,0,TMath::Sqrt(binError0));
-            hnew->SetBinError(xbin,ybin,newzbins+1,TMath::Sqrt(binError2) );
+               hnew->SetBinError(xbin,ybin,0,TMath::Sqrt(binError0));
+               hnew->SetBinError(xbin,ybin,newzbins+1,TMath::Sqrt(binError2) );
             }
             oldybin2 += nygroup;
          }

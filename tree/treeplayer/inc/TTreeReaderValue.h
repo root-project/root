@@ -79,7 +79,7 @@ namespace ROOT {
       void* GetAddress();
 
       const char* GetBranchName() const { return fBranchName; }
-      
+
    protected:
       TTreeReaderValueBase(TTreeReader* reader = 0, const char* branchname = 0, TDictionary* dict = 0);
 

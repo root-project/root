@@ -50,7 +50,7 @@ Double_t result( Double_t *x, Double_t *par)
 //_________________________________________________________________
 void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
 {
-   TCanvas *c1 = new TCanvas("waves", "A double slit experiment", 
+   TCanvas *c1 = new TCanvas("waves", "A double slit experiment",
       300,40, 1004, 759);
    c1->Range(0, -10,  30, 10);
    c1->SetFillColor(0);

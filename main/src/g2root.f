@@ -34,44 +34,44 @@
 *  An interactive session
 * ------------------------
 *
-*   Provided that a geometry was successfully built and closed , the manager class will 
-*  register itself to ROOT and the logical/physical structures will become immediately 
-*  browsable. The ROOT browser will display starting from the geometry folder : the list of 
-*  transformations and materials, the top volume and the top logical node. These last 
-*  two can be fully expanded, any intermediate volume/node in the browser being subject 
+*   Provided that a geometry was successfully built and closed , the manager class will
+*  register itself to ROOT and the logical/physical structures will become immediately
+*  browsable. The ROOT browser will display starting from the geometry folder : the list of
+*  transformations and materials, the top volume and the top logical node. These last
+*  two can be fully expanded, any intermediate volume/node in the browser being subject
 *  of direct access context menu operations (right mouse button click). All user
 *  utilities of classes TGeoManager, TGeoVolume and TGeoNode can be called via the
 *  context menu.
 *
 * see http://root.cern.ch/root/htmldoc/gif/t_browser.jpg
-* 
+*
 *   --- Drawing the geometry
-* 
+*
 *    Any logical volume can be drawn via TGeoVolume::Draw() member function.
 *  This can be direcly accessed from the context menu of the volume object
-*  directly from the browser. 
+*  directly from the browser.
 *    There are several drawing options that can be set with
 *  TGeoManager::SetVisOption(Int_t opt) method :
 *  opt=0 - only the content of the volume is drawn, N levels down (default N=3).
 *     This is the default behavior. The number of levels to be drawn can be changed
 *     via TGeoManager::SetVisLevel(Int_t level) method.
-* 
+*
 * see http://root.cern.ch/root/htmldoc/gif/t_frame0.jpg
-* 
+*
 *  opt=1 - the final leaves (e.g. daughters with no containment) of the branch
-*     starting from volume are drawn down to the current number of levels. 
+*     starting from volume are drawn down to the current number of levels.
 *                                      WARNING : This mode is memory consuming
 *     depending of the size of geometry, so drawing from top level within this mode
-*     should be handled with care for expensive geometries. In future there will be 
+*     should be handled with care for expensive geometries. In future there will be
 *     a limitation on the maximum number of nodes to be visualized.
-* 
+*
 * see http://root.cern.ch/root/htmldoc/gif/t_frame1.jpg
-* 
+*
 *  opt=2 - only the clicked volume is visualized. This is automatically set by
 *     TGeoVolume::DrawOnly() method
 *  opt=3 - only a given path is visualized. This is automatically set by
 *     TGeoVolume::DrawPath(const char *path) method
-* 
+*
 *     The current view can be exploded in cartesian, cylindrical or spherical
 *  coordinates :
 *    TGeoManager::SetExplodedView(Int_t opt). Options may be :
@@ -80,49 +80,49 @@
 *         TGeoManager::SetBombX(Double_t bomb) and corresponding Y and Z.
 *  - 2  - bomb in cylindrical coordinates. Only the bomb factors on Z and R
 *         are considered
-* 
+*
 * see http://root.cern.ch/root/htmldoc/gif/t_frameexpl.jpg
-* 
+*
 *  - 3  - bomb in radial spherical coordinate : TGeoManager::SetBombR()
-* 
+*
 *  Volumes themselves support different visualization settings :
 *     - TGeoVolume::SetVisibility() : set volume visibility.
 *     - TGeoVolume::VisibleDaughters() : set daughters visibility.
 *  All these actions automatically updates the current view if any.
-* 
+*
 *   --- Checking the geometry
-* 
+*
 *   Several checking methods are accesible from the volume context menu. They
 *  generally apply only to the visible parts of the drawn geometry in order to
 *  ease geometry checking, and their implementation is in the TGeoChecker class
 *  from the painting package.
-* 
+*
 *  1. Checking a given point.
 *    Can be called from TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z).
 *  This method is drawing the daughters of the volume containing the point one
 *  level down, printing the path to the deepest physical node holding this point.
 *  It also computes the closest distance to any boundary. The point will be drawn
 *  in red.
-* 
+*
 * see http://root.cern.ch/root/htmldoc/gif/t_checkpoint.jpg
-* 
+*
 *   2. Shooting random points.
-*    Can be called from TGeoVolume::RandomPoints() (context menu function) and 
+*    Can be called from TGeoVolume::RandomPoints() (context menu function) and
 *  it will draw this volume with current visualization settings. Random points
-*  are generated in the bounding box of the top drawn volume. The points are 
+*  are generated in the bounding box of the top drawn volume. The points are
 *  classified and drawn with the color of their deepest container. Only points
 *  in visible nodes will be drawn.
-* 
+*
 * see http://root.cern.ch/root/htmldoc/gif/t_random1.jpg
-* 
-* 
+*
+*
 *   3. Raytracing.
 *    Can be called from TGeoVolume::RandomRays() (context menu of volumes) and
 *  will shoot rays from a given point in the local reference frame with random
 *  directions. The intersections with displayed nodes will appear as segments
 *  having the color of the touched node. Drawn geometry will be then made invisible
 *  in order to enhance rays.
-* 
+*
 * see http://root.cern.ch/root/htmldoc/gif/t_random2.jpg
 *
 *    IMPORTANT NOTE
@@ -193,12 +193,12 @@
       character *8 crecl
       integer npar, lrecl
 
-      
+
       call hlimit(nwpaw)
 
       npar = iargc()
       if (npar.eq.0) then
-         print *, 
+         print *,
      +       'Invoke g2root [-f map_name] geant_name macro_name [lrecl]'
          go to 90
       endif
@@ -299,7 +299,7 @@ C
       parameter (MAXPOS=250000)
 *      parameter (MAXPOS=50000)
       common/cnpos/nodepos(MAXPOS),nodediv(MAXPOS),nvflags(MAXPOS),
-     +npflags(MAXPOS),nppflags(MAXPOS)  
+     +npflags(MAXPOS),nppflags(MAXPOS)
 
       CHARACTER*4 KSHAP(30),klshap(30)
       character*20 matname,medname
@@ -489,7 +489,7 @@ C----------------------------------------------
  77   nvflags(ivo) = 0
       nlevel = 0
       call markdiv(1,1)
- 
+
       do 200 ivo = 1,nvolum
          if (nvflags(ivo).eq.2) goto 200
          jv=lq(jvolum-ivo)
@@ -518,7 +518,7 @@ C----------------------------------------------
          do 89 ivo = 1,nvolum
  89      nvflags(ivo) = 0
          call node(1,1,0)
-      endif   
+      endif
 
       write(51,2223)
       write(51,2222)
@@ -557,7 +557,7 @@ C
       common/clevel/nodeold(20),nlevel
 
       common/cnpos/nodepos(MAXPOS),nodediv(MAXPOS),nvflags(MAXPOS),
-     +npflags(MAXPOS),nppflags(MAXPOS)  
+     +npflags(MAXPOS),nppflags(MAXPOS)
 
 *      dimension qjv(1000)
       character*16 cname
@@ -643,7 +643,7 @@ C
      +      ,JVOLUM,JXYZ  ,JGPAR ,JGPAR2,JSKLT
 C
       common/cnpos/nodepos(MAXPOS),nodediv(MAXPOS),nvflags(MAXPOS),
-     +npflags(MAXPOS),nppflags(MAXPOS)  
+     +npflags(MAXPOS),nppflags(MAXPOS)
       character *(*) cname
       character*16 astring,cmater, pname, rname
       character*128 creals
@@ -715,8 +715,8 @@ C
          dummypars(4) = hyst
          dummypars(5) = hydz
          npar0 = -5
-       endif  
-         
+       endif
+
 *      print 2351, cname(1:n1),kshap(ishape)
 * 2351      format('Volume:',a, ' shape=',a)
       if (npar.le.0) then
@@ -748,15 +748,15 @@ C
          write(line,2002)pname(1:np),kshap(ishape)(1:nshape)
      +         ,rname(1:nrr),cmater(1:ncmat),creals(1:ncr)
          nch=lenocc(line)
-         write(51,'(a)')line(1:nch) 
-      endif           
+         write(51,'(a)')line(1:nch)
+      endif
 2000  format(
      + 'TGeoVolume',' *',a,' = gGeoManager->Make',a,'("',a,'",'
      +,a,a,');')
 2001  format('TGeoVolumeMulti *',a,' = gGeoManager->MakeVolumeMulti("'
      +,a,'", ',a,');')
 2002  format(' ',a,'->AddVolume(gGeoManager->Make',a,'("',a,'",',
-     +a,a,'));')          
+     +a,a,'));')
       nch = lenocc(line)
       if (iposp.eq.0) write(51,'(a)')line(1:nch)
       if(ishape.eq.11)then
@@ -867,7 +867,7 @@ C
       common/clevel/nodeold(20),nlevel
 
       common/cnpos/nodepos(MAXPOS),nodediv(MAXPOS),nvflags(MAXPOS),
-     +npflags(MAXPOS),nppflags(MAXPOS)  
+     +npflags(MAXPOS),nppflags(MAXPOS)
 
       dimension qjv(1000)
       character*16 cnode,cname,mname,anode,mother,pname, rname
@@ -944,14 +944,14 @@ C
                      ifirst = 1
                      npflags(ivom) = 1
                   else
-                     npflags(ivom) = npflags(ivom)+1   
-                  endif   
+                     npflags(ivom) = npflags(ivom)+1
+                  endif
                else
                   icurrent = nppflags(ivom)
                   call toint(icurrent,astring1,nci1)
                   imulti = 1
-                  nppflags(ivom) = nppflags(ivom)+1   
-               endif   
+                  nppflags(ivom) = nppflags(ivom)+1
+               endif
                npar = q(jin+9)
                call ucopy(q(jinvom+1),qjv(1),6)
                qjv(5) = npar
@@ -982,7 +982,7 @@ C
             itrans = 1
             if ((abs(q(jin+5)).lt.1E-30).and.
      +          (abs(q(jin+6)).lt.1E-30).and.
-     +          (abs(q(jin+7)).lt.1E-30)) then 
+     +          (abs(q(jin+7)).lt.1E-30)) then
                itrans = 0
             endif
             irot=q(jin+4)
@@ -1022,7 +1022,7 @@ C
  3000          format(a,a,'->AddNode(',a,',',a,',',a,');')
                else
                write(line,3002)cblank(1:nlevel),mother(1:nmother),
-     +               pname(1:np), astring1(1:nci1),astring(1:nci), 
+     +               pname(1:np), astring1(1:nci1),astring(1:nci),
      +               matrixs(1:ncmats)
  3002          format(a,a,'->AddNode(',a,'->GetVolume(',a,'),',a
      +                ,',',a,');')
@@ -1034,12 +1034,12 @@ C
  3001          format(a,a,'->AddNodeOverlap(',a,',',a,',',a,');')
                else
                write(line,3003)cblank(1:nlevel),mother(1:nmother),
-     +               pname(1:np), astring1(1:nci1), astring(1:nci), 
+     +               pname(1:np), astring1(1:nci1), astring(1:nci),
      +               matrixs(1:ncmats)
  3003          format(a,a,'->AddNodeOverlap(',a,'->GetVolume(',a,'),',a
      +                ,',',a,');')
                endif
-            endif 
+            endif
             nch = lenocc(line)
             if (iposp.eq.0) write(51,'(a)')line(1:nch)
             npar=q(jv+5)
@@ -1100,16 +1100,16 @@ C
       character *16 pname
       nind = 0
       pname = ' '
-      write(pname,'(a4)')cname 
+      write(pname,'(a4)')cname
       do i=1,4
           nind = nind+1
           pname(nind:nind)=cname(i:i)
-          if(ichar(cname(i:i)).eq.0) then 
+          if(ichar(cname(i:i)).eq.0) then
              pname(nind:nind)=' '
              nind = nind+1
              pname(nind:nind)=' '
           endif
-          if(ichar(cname(i:i)).eq.92) then 
+          if(ichar(cname(i:i)).eq.92) then
              pname(nind:nind)=char(92)
              nind = nind+1
              pname(nind:nind)=char(92)
@@ -1118,30 +1118,30 @@ C
              pname(nind:nind)=char(92)
              nind = nind+1
              pname(nind:nind)=char(34)
-          endif 
+          endif
       enddo
 *------ supress blanks
 2333  if (pname(lenocc(pname):lenocc(pname)).eq.' ') then
          pname = pname(1:lenocc(pname)-1)
          goto 2333
       endif
-      end      
-      
+      end
+
       subroutine ptname(cname, pname)
       character *4 cname
       character *16 pname
       pname = ' '
-      write(pname,'(a4)')cname 
+      write(pname,'(a4)')cname
       do i=1,4
-          if(ichar(cname(i:i)).eq.0) then 
+          if(ichar(cname(i:i)).eq.0) then
              pname(i:i)='_'
              pname(5:5)='_'
           endif
-          if(ichar(cname(i:i)).eq.92) then 
+          if(ichar(cname(i:i)).eq.92) then
              pname(i:i)='a'
              pname(5:5)='a'
           endif
-          if(cname(i:i).eq.'?') then 
+          if(cname(i:i).eq.'?') then
              pname(i:i)='b'
              pname(5:5)='b'
           endif
@@ -1266,7 +1266,7 @@ C
          pname='Z'//pname(1:lenocc(pname))
       endif
       end
-      
+
       subroutine cdnode(node)
       common/clevel/nodeold(20),nlevel
       character*16 anode

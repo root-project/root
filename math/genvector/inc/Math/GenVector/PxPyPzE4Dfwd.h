@@ -1,15 +1,15 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
-#ifndef ROOT_Math_GenVector_PxPyPzE4Dfwd 
+#ifndef ROOT_Math_GenVector_PxPyPzE4Dfwd
 #define ROOT_Math_GenVector_PxPyPzE4Dfwd  1
 
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
-template <class Scalar> 
+template <class Scalar>
 class PxPyPzE4D;
 
   } // end namespace Math

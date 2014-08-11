@@ -22,7 +22,7 @@ ProofEvent::ProofEvent()
    // Constructor
 
    fEvent = 0;
-   fNtrack = -1; 
+   fNtrack = -1;
    fHisto = 0;
    fRandom = 0;
 }

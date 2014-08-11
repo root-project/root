@@ -2,24 +2,24 @@
  * exp.h
  * The basic idea is to exploit Pade polynomials.
  * A lot of ideas were inspired by the cephes math library (by Stephen L. Moshier
- * moshier@na-net.ornl.gov) as well as actual code. 
+ * moshier@na-net.ornl.gov) as well as actual code.
  * The Cephes library can be found here:  http://www.netlib.org/cephes/
- * 
+ *
  *  Created on: Jun 23, 2012
  *      Author: Danilo Piparo, Thomas Hauth, Vincenzo Innocente
  */
 
-/* 
+/*
  * VDT is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -33,7 +33,7 @@
 namespace vdt{
 
 namespace details{
-  
+
   const double EXP_LIMIT = 708;
 
   const double PX1exp = 1.26177193074810590878E-4;
@@ -71,7 +71,7 @@ inline double fast_exp(double initial_x){
 
     double x = initial_x;
     double px=details::fpfloor(details::LOG2E * x +0.5);
- 
+
     const int32_t n = int32_t(px);
 
     x -= px * 6.93145751953125E-1;
@@ -109,14 +109,14 @@ inline double fast_exp(double initial_x){
             x = 0.;
 
     return x;
-    
+
 }
 
 // Exp single precision --------------------------------------------------------
 
 /// Exponential Function single precision
 inline float fast_expf(float initial_x) {
-	
+
     float x = initial_x;
 
     float z = details::fpfloor( details::LOG2EF * x +0.5f ); /* floor() truncates toward -infinity. */

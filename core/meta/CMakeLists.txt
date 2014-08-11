@@ -12,15 +12,11 @@ ROOT_OBJECT_LIBRARY(Meta ${sources})
 
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TCling*.cxx)
 add_definitions(${CLING_CXXFLAGS})
-include_directories(${LLVM_INCLUDE_DIR} ${CLING_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/io/io/inc)
+include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/io/io/inc)
 set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/TClingCallbacks.cxx COMPILE_FLAGS -fno-rtti)
 
 ROOT_OBJECT_LIBRARY(MetaLLVM ${sources})
 add_dependencies(MetaLLVM CLING)
-
-#ROOT_GENERATE_DICTIONARY(G__Cling ${CMAKE_CURRENT_SOURCE_DIR}/src/TCling.h
-#                         MODULE Cling DEPENDENCIES Core
-#                         LINKDEF LinkDefCling.h)
 
 ROOT_LINKER_LIBRARY(Cling
                     ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx

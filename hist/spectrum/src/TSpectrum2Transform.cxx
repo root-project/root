@@ -23,7 +23,7 @@
 //      (1994) 280-284.                                                    //
 //  [2] Morhac M., Matousek V., New adaptive Cosine-Walsh  transform and   //
 //      its application to nuclear data compression, IEEE Transactions on  //
-//      Signal Processing 48 (2000) 2693.                                  //  
+//      Signal Processing 48 (2000) 2693.                                  //
 //  [3] Morhac M., Matousek V., Data compression using new fast adaptive   //
 //      Cosine-Haar transforms, Digital Signal Processing 8 (1998) 63.     //
 //  [4] Morhac M., Matousek V.: Multidimensional nuclear data compression  //
@@ -34,10 +34,10 @@
 #include "TSpectrum2Transform.h"
 #include "TMath.h"
 
-ClassImp(TSpectrum2Transform)  
-    
-//____________________________________________________________________________    
-TSpectrum2Transform::TSpectrum2Transform() 
+ClassImp(TSpectrum2Transform)
+
+//____________________________________________________________________________
+TSpectrum2Transform::TSpectrum2Transform()
 {
    //default constructor
    fSizeX = 0, fSizeY = 0;
@@ -52,16 +52,16 @@ TSpectrum2Transform::TSpectrum2Transform()
    fEnhanceCoeff=0.5;
 }
 
-//____________________________________________________________________________    
+//____________________________________________________________________________
 TSpectrum2Transform::TSpectrum2Transform(Int_t sizeX, Int_t sizeY) :TObject()
 {
 //the constructor creates TSpectrum2Transform object. Its sizes must be > than zero and must be power of 2.
-//It sets default transform type to be Cosine transform. Transform parameters can be changed using setter functions.   
+//It sets default transform type to be Cosine transform. Transform parameters can be changed using setter functions.
    Int_t j1, j2, n;
    if (sizeX <= 0 || sizeY <= 0){
       Error ("TSpectrumTransform","Invalid length, must be > than 0");
       return;
-   }    
+   }
    j1 = 0;
    n = 1;
    for (; n < sizeX;) {
@@ -70,7 +70,7 @@ TSpectrum2Transform::TSpectrum2Transform(Int_t sizeX, Int_t sizeY) :TObject()
    }
    if (n != sizeX){
       Error ("TSpectrumTransform","Invalid length, must be power of 2");
-      return;   
+      return;
    }
    j2 = 0;
    n = 1;
@@ -80,8 +80,8 @@ TSpectrum2Transform::TSpectrum2Transform(Int_t sizeX, Int_t sizeY) :TObject()
    }
    if (n != sizeY){
       Error ("TSpectrumTransform","Invalid length, must be power of 2");
-      return;   
-   }   
+      return;
+   }
    fSizeX = sizeX, fSizeY = sizeY;
    fTransformType = kTransformCos;
    fDegree = 0;
@@ -89,14 +89,14 @@ TSpectrum2Transform::TSpectrum2Transform(Int_t sizeX, Int_t sizeY) :TObject()
    fXmin = sizeX/4;
    fXmax = sizeX-1;
    fYmin = sizeY/4;
-   fYmax = sizeY-1;   
+   fYmax = sizeY-1;
    fFilterCoeff=0;
    fEnhanceCoeff=0.5;
 }
 
 
 //______________________________________________________________________________
-TSpectrum2Transform::~TSpectrum2Transform() 
+TSpectrum2Transform::~TSpectrum2Transform()
 {
    //destructor
 }
@@ -104,7 +104,7 @@ TSpectrum2Transform::~TSpectrum2Transform()
 
 //////////AUXILIARY FUNCTIONS FOR TRANSFORM BASED FUNCTIONS////////////////////////
 //_____________________________________________________________________________
-void TSpectrum2Transform::Haar(Double_t *working_space, Int_t num, Int_t direction) 
+void TSpectrum2Transform::Haar(Double_t *working_space, Int_t num, Int_t direction)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -187,7 +187,7 @@ void TSpectrum2Transform::Haar(Double_t *working_space, Int_t num, Int_t directi
 }
 
 //_____________________________________________________________________________
-void TSpectrum2Transform::Walsh(Double_t *working_space, Int_t num) 
+void TSpectrum2Transform::Walsh(Double_t *working_space, Int_t num)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -212,7 +212,7 @@ void TSpectrum2Transform::Walsh(Double_t *working_space, Int_t num)
    for (m = 1; m <= iter; m++) {
       if (m == 1)
          nump = 1;
-      
+
       else
          nump = nump * 2;
       mnum = num / nump;
@@ -244,7 +244,7 @@ void TSpectrum2Transform::Walsh(Double_t *working_space, Int_t num)
 }
 
 //_____________________________________________________________________________
-void TSpectrum2Transform::BitReverse(Double_t *working_space, Int_t num) 
+void TSpectrum2Transform::BitReverse(Double_t *working_space, Int_t num)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -285,7 +285,7 @@ void TSpectrum2Transform::BitReverse(Double_t *working_space, Int_t num)
 
 //_____________________________________________________________________________
 void TSpectrum2Transform::Fourier(Double_t *working_space, Int_t num, Int_t hartley,
-                           Int_t direction, Int_t zt_clear) 
+                           Int_t direction, Int_t zt_clear)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -387,7 +387,7 @@ void TSpectrum2Transform::Fourier(Double_t *working_space, Int_t num, Int_t hart
          b = b / a;
          working_space[i + num] = b;
       }
-      
+
       else {
          b = working_space[i];
          c = working_space[i + num];
@@ -410,7 +410,7 @@ void TSpectrum2Transform::Fourier(Double_t *working_space, Int_t num, Int_t hart
 
 //_____________________________________________________________________________
 void TSpectrum2Transform::BitReverseHaar(Double_t *working_space, Int_t shift, Int_t num,
-                                  Int_t start) 
+                                  Int_t start)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -458,7 +458,7 @@ void TSpectrum2Transform::BitReverseHaar(Double_t *working_space, Int_t shift, I
 
 //_____________________________________________________________________________
 Int_t TSpectrum2Transform::GeneralExe(Double_t *working_space, Int_t zt_clear, Int_t num,
-                             Int_t degree, Int_t type) 
+                             Int_t degree, Int_t type)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -523,7 +523,7 @@ Int_t TSpectrum2Transform::GeneralExe(Double_t *working_space, Int_t zt_clear, I
             wr = TMath::Cos(arg);
             wi = TMath::Sin(arg);
          }
-         
+
          else {
             wr = 1;
             wi = 0;
@@ -538,7 +538,7 @@ Int_t TSpectrum2Transform::GeneralExe(Double_t *working_space, Int_t zt_clear, I
                a0r = 1 / TMath::Sqrt(2.0);
                b0r = 1 / TMath::Sqrt(2.0);
             }
-            
+
             else {
                a0r = 1;
                b0r = 0;
@@ -579,7 +579,7 @@ Int_t TSpectrum2Transform::GeneralExe(Double_t *working_space, Int_t zt_clear, I
 
 //_____________________________________________________________________________
 Int_t TSpectrum2Transform::GeneralInv(Double_t *working_space, Int_t num, Int_t degree,
-                             Int_t type) 
+                             Int_t type)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -616,7 +616,7 @@ Int_t TSpectrum2Transform::GeneralInv(Double_t *working_space, Int_t num, Int_t 
    for (m = 1; m <= iter; m++) {
       if (m == 1)
          nump = 1;
-      
+
       else
          nump = nump * 2;
       mnum = num / nump;
@@ -640,7 +640,7 @@ Int_t TSpectrum2Transform::GeneralInv(Double_t *working_space, Int_t num, Int_t 
             wr = TMath::Cos(arg);
             wi = TMath::Sin(arg);
          }
-         
+
          else {
             wr = 1;
             wi = 0;
@@ -655,7 +655,7 @@ Int_t TSpectrum2Transform::GeneralInv(Double_t *working_space, Int_t num, Int_t 
                a0r = 1 / TMath::Sqrt(2.0);
                b0r = 1 / TMath::Sqrt(2.0);
             }
-            
+
             else {
                a0r = 1;
                b0r = 0;
@@ -701,7 +701,7 @@ Int_t TSpectrum2Transform::GeneralInv(Double_t *working_space, Int_t num, Int_t 
 //_____________________________________________________________________________
 void TSpectrum2Transform::HaarWalsh2(Double_t **working_matrix,
                               Double_t *working_vector, Int_t numx, Int_t numy,
-                              Int_t direction, Int_t type) 
+                              Int_t direction, Int_t type)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -752,7 +752,7 @@ void TSpectrum2Transform::HaarWalsh2(Double_t **working_matrix,
          }
       }
    }
-   
+
    else if (direction == kTransformInverse) {
       for (i = 0; i < numx; i++) {
          for (j = 0; j < numy; j++) {
@@ -794,7 +794,7 @@ void TSpectrum2Transform::HaarWalsh2(Double_t **working_matrix,
 
 //_____________________________________________________________________________
 void TSpectrum2Transform::FourCos2(Double_t **working_matrix, Double_t *working_vector,
-                            Int_t numx, Int_t numy, Int_t direction, Int_t type) 
+                            Int_t numx, Int_t numy, Int_t direction, Int_t type)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -877,7 +877,7 @@ void TSpectrum2Transform::FourCos2(Double_t **working_matrix, Double_t *working_
             working_matrix[i][j] = working_vector[i];
             if (type == kTransformFourier)
                working_matrix[i][j + numy] = working_vector[i + numx];
-            
+
             else
                working_matrix[i][j + numy] = working_vector[i + 2 * numx];
          }
@@ -887,7 +887,7 @@ void TSpectrum2Transform::FourCos2(Double_t **working_matrix, Double_t *working_
             working_vector[j] = working_matrix[i][j];
             if (type == kTransformFourier)
                working_vector[j + numy] = working_matrix[i][j + numy];
-            
+
             else
                working_vector[j + 2 * numy] = working_matrix[i][j + numy];
          }
@@ -929,20 +929,20 @@ void TSpectrum2Transform::FourCos2(Double_t **working_matrix, Double_t *working_
             working_matrix[i][j] = working_vector[j];
             if (type == kTransformFourier)
                working_matrix[i][j + numy] = working_vector[j + numy];
-            
+
             else
                working_matrix[i][j + numy] = working_vector[j + 2 * numy];
          }
       }
    }
-   
+
    else if (direction == kTransformInverse) {
       for (i = 0; i < numx; i++) {
          for (j = 0; j < numy; j++) {
             working_vector[j] = working_matrix[i][j];
             if (type == kTransformFourier)
                working_vector[j + numy] = working_matrix[i][j + numy];
-            
+
             else
                working_vector[j + 2 * numy] = working_matrix[i][j + numy];
          }
@@ -995,7 +995,7 @@ void TSpectrum2Transform::FourCos2(Double_t **working_matrix, Double_t *working_
             working_matrix[i][j] = working_vector[j];
             if (type == kTransformFourier)
                working_matrix[i][j + numy] = working_vector[j + numy];
-            
+
             else
                working_matrix[i][j + numy] = working_vector[j + 2 * numy];
          }
@@ -1005,7 +1005,7 @@ void TSpectrum2Transform::FourCos2(Double_t **working_matrix, Double_t *working_
             working_vector[i] = working_matrix[i][j];
             if (type == kTransformFourier)
                working_vector[i + numx] = working_matrix[i][j + numy];
-            
+
             else
                working_vector[i + 2 * numx] = working_matrix[i][j + numy];
          }
@@ -1065,7 +1065,7 @@ void TSpectrum2Transform::FourCos2(Double_t **working_matrix, Double_t *working_
 //_____________________________________________________________________________
 void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_vector,
                             Int_t numx, Int_t numy, Int_t direction, Int_t type,
-                            Int_t degree) 
+                            Int_t degree)
 {
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
@@ -1097,7 +1097,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                working_vector[kstup + i % jstup] = val;
                working_vector[kstup + 2 * jstup - 1 - i % jstup] = val;
             }
-            
+
             else if (type == kTransformSinWalsh
                      || type == kTransformSinHaar) {
                jstup = (Int_t) TMath::Power(2, degree) / 2;
@@ -1106,7 +1106,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                working_vector[kstup + i % jstup] = val;
                working_vector[kstup + 2 * jstup - 1 - i % jstup] = -val;
             }
-            
+
             else
                working_vector[i] = val;
          }
@@ -1133,7 +1133,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                b = working_vector[kstup + i % jstup];
                if (i % jstup == 0)
                   a = b / TMath::Sqrt(2.0);
-               
+
                else
                   a = b / a;
                working_vector[i] = a;
@@ -1155,7 +1155,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                b = working_vector[jstup + kstup + i % jstup];
                if (i % jstup == 0)
                   a = b / TMath::Sqrt(2.0);
-               
+
                else
                   a = b / a;
                working_vector[jstup + kstup / 2 - i % jstup - 1] = a;
@@ -1165,7 +1165,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
          }
          if (type > kTransformWalshHaar)
             kstup = (Int_t) TMath::Power(2, degree - 1);
-         
+
          else
             kstup = (Int_t) TMath::Power(2, degree);
          jstup = numx / kstup;
@@ -1176,7 +1176,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                  || type == kTransformWalshHaar)
                working_vector[numx + i + 2 * numx] =
                    working_vector[l + i / jstup + 2 * numx];
-            
+
             else
                working_vector[numx + i + 4 * numx] =
                    working_vector[l + i / jstup + 4 * numx];
@@ -1188,7 +1188,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                  || type == kTransformWalshHaar)
                working_vector[i + 2 * numx] =
                    working_vector[numx + i + 2 * numx];
-            
+
             else
                working_vector[i + 4 * numx] =
                    working_vector[numx + i + 4 * numx];
@@ -1199,7 +1199,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                  || type == kTransformFourierHaar
                  || type == kTransformWalshHaar)
                working_matrix[i][j + numy] = working_vector[i + 2 * numx];
-            
+
             else
                working_matrix[i][j + numy] = working_vector[i + 4 * numx];
          }
@@ -1221,7 +1221,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                working_vector[kstup + 2 * jstup - 1 - j % jstup +
                                4 * numy] = valz;
             }
-            
+
             else if (type == kTransformSinWalsh
                      || type == kTransformSinHaar) {
                jstup = (Int_t) TMath::Power(2, degree) / 2;
@@ -1233,7 +1233,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                working_vector[kstup + 2 * jstup - 1 - j % jstup +
                                4 * numy] = -valz;
             }
-            
+
             else {
                working_vector[j] = valx;
                working_vector[j + 2 * numy] = valz;
@@ -1262,7 +1262,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                b = working_vector[kstup + j % jstup];
                if (j % jstup == 0)
                   a = b / TMath::Sqrt(2.0);
-               
+
                else
                   a = b / a;
                working_vector[j] = a;
@@ -1284,7 +1284,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                b = working_vector[jstup + kstup + j % jstup];
                if (j % jstup == 0)
                   a = b / TMath::Sqrt(2.0);
-               
+
                else
                   a = b / a;
                working_vector[jstup + kstup / 2 - j % jstup - 1] = a;
@@ -1294,7 +1294,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
          }
          if (type > kTransformWalshHaar)
             kstup = (Int_t) TMath::Power(2, degree - 1);
-         
+
          else
             kstup = (Int_t) TMath::Power(2, degree);
          jstup = numy / kstup;
@@ -1305,7 +1305,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                  || type == kTransformWalshHaar)
                working_vector[numy + j + 2 * numy] =
                    working_vector[l + j / jstup + 2 * numy];
-            
+
             else
                working_vector[numy + j + 4 * numy] =
                    working_vector[l + j / jstup + 4 * numy];
@@ -1317,7 +1317,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                  || type == kTransformWalshHaar)
                working_vector[j + 2 * numy] =
                    working_vector[numy + j + 2 * numy];
-            
+
             else
                working_vector[j + 4 * numy] =
                    working_vector[numy + j + 4 * numy];
@@ -1328,13 +1328,13 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                  || type == kTransformFourierHaar
                  || type == kTransformWalshHaar)
                working_matrix[i][j + numy] = working_vector[j + 2 * numy];
-            
+
             else
                working_matrix[i][j + numy] = working_vector[j + 4 * numy];
          }
       }
    }
-   
+
    else if (direction == kTransformInverse) {
       for (i = 0; i < numx; i++) {
          kstup = (Int_t) TMath::Power(2, degree);
@@ -1345,13 +1345,13 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                  || type == kTransformFourierHaar
                  || type == kTransformWalshHaar)
                working_vector[j + 2 * numy] = working_matrix[i][j + numy];
-            
+
             else
                working_vector[j + 4 * numy] = working_matrix[i][j + numy];
          }
          if (type > kTransformWalshHaar)
             kstup = (Int_t) TMath::Power(2, degree - 1);
-         
+
          else
             kstup = (Int_t) TMath::Power(2, degree);
          jstup = numy / kstup;
@@ -1362,7 +1362,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                  || type == kTransformWalshHaar)
                working_vector[numy + l + j / jstup + 2 * numy] =
                    working_vector[j + 2 * numy];
-            
+
             else
                working_vector[numy + l + j / jstup + 4 * numy] =
                    working_vector[j + 4 * numy];
@@ -1374,7 +1374,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                  || type == kTransformWalshHaar)
                working_vector[j + 2 * numy] =
                    working_vector[numy + j + 2 * numy];
-            
+
             else
                working_vector[j + 4 * numy] =
                    working_vector[numy + j + 4 * numy];
@@ -1402,7 +1402,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                   working_vector[2 * numy + kstup + j % jstup +
                                   4 * numy] = 0;
                }
-               
+
                else {
                   b = TMath::Sin(a);
                   a = TMath::Cos(a);
@@ -1418,7 +1418,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                   working_vector[2 * numy + kstup + jstup] = 0;
                   working_vector[2 * numy + kstup + jstup + 4 * numy] = 0;
                }
-               
+
                else {
                   working_vector[2 * numy + kstup + 2 * jstup -
                                   j % jstup] =
@@ -1456,7 +1456,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                   working_vector[2 * numy + kstup + jstup + j % jstup +
                                   4 * numy] = 0;
                }
-               
+
                else {
                   b = TMath::Sin(a);
                   a = TMath::Cos(a);
@@ -1474,7 +1474,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                   working_vector[2 * numy + kstup] = 0;
                   working_vector[2 * numy + kstup + 4 * numy] = 0;
                }
-               
+
                else {
                   working_vector[2 * numy + kstup + j % jstup] =
                       working_vector[2 * numy + kstup + 2 * jstup -
@@ -1502,7 +1502,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                valx = working_vector[kstup + j % jstup];
                valz = working_vector[kstup + j % jstup + 4 * numy];
             }
-            
+
             else {
                valx = working_vector[j];
                valz = working_vector[j + 2 * numy];
@@ -1520,13 +1520,13 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                  || type == kTransformFourierHaar
                  || type == kTransformWalshHaar)
                working_vector[i + 2 * numx] = working_matrix[i][j + numy];
-            
+
             else
                working_vector[i + 4 * numx] = working_matrix[i][j + numy];
          }
          if (type > kTransformWalshHaar)
             kstup = (Int_t) TMath::Power(2, degree - 1);
-         
+
          else
             kstup = (Int_t) TMath::Power(2, degree);
          jstup = numx / kstup;
@@ -1537,7 +1537,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                  || type == kTransformWalshHaar)
                working_vector[numx + l + i / jstup + 2 * numx] =
                    working_vector[i + 2 * numx];
-            
+
             else
                working_vector[numx + l + i / jstup + 4 * numx] =
                    working_vector[i + 4 * numx];
@@ -1549,7 +1549,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                  || type == kTransformWalshHaar)
                working_vector[i + 2 * numx] =
                    working_vector[numx + i + 2 * numx];
-            
+
             else
                working_vector[i + 4 * numx] =
                    working_vector[numx + i + 4 * numx];
@@ -1577,7 +1577,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                   working_vector[2 * numx + kstup + i % jstup +
                                   4 * numx] = 0;
                }
-               
+
                else {
                   b = TMath::Sin(a);
                   a = TMath::Cos(a);
@@ -1593,7 +1593,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                   working_vector[2 * numx + kstup + jstup] = 0;
                   working_vector[2 * numx + kstup + jstup + 4 * numx] = 0;
                }
-               
+
                else {
                   working_vector[2 * numx + kstup + 2 * jstup -
                                   i % jstup] =
@@ -1631,7 +1631,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                   working_vector[2 * numx + kstup + jstup + i % jstup +
                                   4 * numx] = 0;
                }
-               
+
                else {
                   b = TMath::Sin(a);
                   a = TMath::Cos(a);
@@ -1649,7 +1649,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                   working_vector[2 * numx + kstup] = 0;
                   working_vector[2 * numx + kstup + 4 * numx] = 0;
                }
-               
+
                else {
                   working_vector[2 * numx + kstup + i % jstup] =
                       working_vector[2 * numx + kstup + 2 * jstup -
@@ -1676,7 +1676,7 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
                kstup = 2 * kstup * jstup;
                val = working_vector[kstup + i % jstup];
             }
-            
+
             else
                val = working_vector[i];
             working_matrix[i][j] = val;
@@ -1688,27 +1688,27 @@ void TSpectrum2Transform::General2(Double_t **working_matrix, Double_t *working_
 
 ///////////////////////END OF AUXILIARY TRANSFORM2 FUNCTIONS//////////////////////////////////////////
 
-    
+
 //////////TRANSFORM2 FUNCTION - CALCULATES DIFFERENT 2-D DIRECT AND INVERSE ORTHOGONAL TRANSFORMS//////
 //_____________________________________________________________________________
 void TSpectrum2Transform::Transform(const Double_t **fSource, Double_t **fDest)
 {
 //////////////////////////////////////////////////////////////////////////////////////////
-/* TWO-DIMENSIONAL TRANSFORM FUNCTION                    */ 
-/* This function transforms the source spectrum. The calling program               */ 
-/*      should fill in input parameters.                                          */ 
-/* Transformed data are written into dest spectrum.                                */ 
-/*                         */ 
-/* Function parameters:                      */ 
-/* fSource-pointer to the matrix of source spectrum, its size should               */ 
-/*             be fSizex*fSizey except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR       */ 
-/*             transform. These need fSizex*2*fSizey length to supply real and          */ 
-/*             imaginary coefficients.                                                  */ 
-/* fDest-pointer to the matrix of destination data, its size should be             */ 
-/*           fSizex*fSizey except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These      */ 
-/*           need fSizex*2*fSizey length to store real and imaginary coefficients       */ 
-/* fSizex,fSizey-basic dimensions of source and dest spectra                       */ 
-/*                         */ 
+/* TWO-DIMENSIONAL TRANSFORM FUNCTION                    */
+/* This function transforms the source spectrum. The calling program               */
+/*      should fill in input parameters.                                          */
+/* Transformed data are written into dest spectrum.                                */
+/*                         */
+/* Function parameters:                      */
+/* fSource-pointer to the matrix of source spectrum, its size should               */
+/*             be fSizex*fSizey except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR       */
+/*             transform. These need fSizex*2*fSizey length to supply real and          */
+/*             imaginary coefficients.                                                  */
+/* fDest-pointer to the matrix of destination data, its size should be             */
+/*           fSizex*fSizey except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These      */
+/*           need fSizex*2*fSizey length to store real and imaginary coefficients       */
+/* fSizex,fSizey-basic dimensions of source and dest spectra                       */
+/*                         */
 //////////////////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
@@ -2137,7 +2137,7 @@ trans-&gt;Draw(&quot;SURF&quot;);      </span></p>
          break;
       }
    }
-   
+
    else if (fDirection == kTransformInverse) {
       switch (fTransformType) {
       case kTransformHaar:
@@ -2269,22 +2269,22 @@ trans-&gt;Draw(&quot;SURF&quot;);      </span></p>
 //////////END OF TRANSFORM2 FUNCTION/////////////////////////////////
 //_______________________________________________________________________________________
 //////////FILTER2_ZONAL FUNCTION - CALCULATES DIFFERENT 2-D ORTHOGONAL TRANSFORMS, SETS GIVEN REGION TO FILTER COEFFICIENT AND TRANSFORMS IT BACK//////
-void TSpectrum2Transform::FilterZonal(const Double_t **fSource, Double_t **fDest) 
+void TSpectrum2Transform::FilterZonal(const Double_t **fSource, Double_t **fDest)
 {
 //////////////////////////////////////////////////////////////////////////////////////////
-/* TWO-DIMENSIONAL FILTER ZONAL FUNCTION                      */ 
-/* This function transforms the source spectrum. The calling program               */ 
-/*      should fill in input parameters. Then it sets transformed                       */ 
-/*      coefficients in the given region to the given                                   */ 
-/*      filter_coeff and transforms it back                                             */ 
-/* Filtered data are written into dest spectrum.                                   */ 
-/*                         */ 
-/* Function parameters:                      */ 
-/* fSource-pointer to the matrix of source spectrum, its size should               */ 
-/*             be fSizeX*fSizeY                                                         */ 
-/* fDest-pointer to the matrix of destination data, its size should be             */ 
-/*           fSizeX*fSizeY                                                              */ 
-/*                         */ 
+/* TWO-DIMENSIONAL FILTER ZONAL FUNCTION                      */
+/* This function transforms the source spectrum. The calling program               */
+/*      should fill in input parameters. Then it sets transformed                       */
+/*      coefficients in the given region to the given                                   */
+/*      filter_coeff and transforms it back                                             */
+/* Filtered data are written into dest spectrum.                                   */
+/*                         */
+/* Function parameters:                      */
+/* fSource-pointer to the matrix of source spectrum, its size should               */
+/*             be fSizeX*fSizeY                                                         */
+/* fDest-pointer to the matrix of destination data, its size should be             */
+/*           fSizeX*fSizeY                                                              */
+/*                         */
 //////////////////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
@@ -2716,18 +2716,18 @@ trans-&gt;Draw(&quot;SURF&quot;);     </span></p>
 void TSpectrum2Transform::Enhance(const Double_t **fSource, Double_t **fDest)
 {
 //////////////////////////////////////////////////////////////////////////////////////////
-/* TWO-DIMENSIONAL ENHANCE ZONAL FUNCTION                     */ 
-/* This function transforms the source spectrum. The calling program               */ 
-/*      should fill in input parameters. Then it multiplies transformed                 */ 
-/*      coefficients in the given region by the given                                   */ 
-/*      enhance_coeff and transforms it back                                            */ 
-/*                         */ 
-/* Function parameters:                      */ 
-/* fSource-pointer to the matrix of source spectrum, its size should               */ 
-/*             be fSizeX*fSizeY                                                         */ 
-/* fDest-pointer to the matrix of destination data, its size should be             */ 
-/*           fSizeX*fSizeY                                                              */ 
-/*                         */ 
+/* TWO-DIMENSIONAL ENHANCE ZONAL FUNCTION                     */
+/* This function transforms the source spectrum. The calling program               */
+/*      should fill in input parameters. Then it multiplies transformed                 */
+/*      coefficients in the given region by the given                                   */
+/*      enhance_coeff and transforms it back                                            */
+/*                         */
+/* Function parameters:                      */
+/* fSource-pointer to the matrix of source spectrum, its size should               */
+/*             be fSizeX*fSizeY                                                         */
+/* fDest-pointer to the matrix of destination data, its size should be             */
+/*           fSizeX*fSizeY                                                              */
+/*                         */
 //////////////////////////////////////////////////////////////////////////////////////////
 //Begin_Html <!--
 /* -->
@@ -3142,13 +3142,13 @@ style='font-size:10.0pt'>  trans-&gt;Draw(&quot;SURF&quot;);     </span></p>
 void TSpectrum2Transform::SetTransformType(Int_t transType, Int_t degree)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION                                                      
-//                                                     
+//   SETTER FUNCION
+//
 //   This function sets the following parameters for transform:
 //         -transType - type of transform (Haar, Walsh, Cosine, Sine, Fourier, Hartley, Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar)
 //         -degree - degree of mixed transform, applies only for Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar transforms
-//////////////////////////////////////////////////////////////////////////////      
-   
+//////////////////////////////////////////////////////////////////////////////
+
    Int_t j1, j2, n;
    j1 = 0;
    n = 1;
@@ -3164,54 +3164,54 @@ void TSpectrum2Transform::SetTransformType(Int_t transType, Int_t degree)
    }
    if (transType < kTransformHaar || transType > kTransformSinHaar){
       Error ("TSpectrumTransform","Invalid type of transform");
-      return;       
+      return;
    }
    if (transType >= kTransformFourierWalsh && transType <= kTransformSinHaar) {
       if (degree > j1 || degree > j2 || degree < 1){
          Error ("TSpectrumTransform","Invalid degree of mixed transform");
-         return;          
+         return;
       }
    }
    fTransformType = transType;
    fDegree = degree;
 }
-    
+
 //______________________________________________________________________
 void TSpectrum2Transform::SetRegion(Int_t xmin, Int_t xmax, Int_t ymin, Int_t ymax)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION                                                      
-//                                                     
+//   SETTER FUNCION
+//
 //   This function sets the filtering or enhancement region:
 //         -xmin, xmax, ymin, ymax
-//////////////////////////////////////////////////////////////////////////////         
-   if(xmin<0 || xmax < xmin || xmax >= fSizeX){ 
-      Error("TSpectrumTransform", "Wrong range");      
+//////////////////////////////////////////////////////////////////////////////
+   if(xmin<0 || xmax < xmin || xmax >= fSizeX){
+      Error("TSpectrumTransform", "Wrong range");
       return;
-   }         
-   if(ymin<0 || ymax < ymin || ymax >= fSizeY){ 
-      Error("TSpectrumTransform", "Wrong range");      
+   }
+   if(ymin<0 || ymax < ymin || ymax >= fSizeY){
+      Error("TSpectrumTransform", "Wrong range");
       return;
-   }            
+   }
    fXmin = xmin;
    fXmax = xmax;
    fYmin = ymin;
-   fYmax = ymax;   
+   fYmax = ymax;
 }
 
 //______________________________________________________________________
 void TSpectrum2Transform::SetDirection(Int_t direction)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION                                                      
-//                                                     
+//   SETTER FUNCION
+//
 //   This function sets the direction of the transform:
 //         -direction (forward or inverse)
-//////////////////////////////////////////////////////////////////////////////      
-   if(direction != kTransformForward && direction != kTransformInverse){ 
-      Error("TSpectrumTransform", "Wrong direction");      
+//////////////////////////////////////////////////////////////////////////////
+   if(direction != kTransformForward && direction != kTransformInverse){
+      Error("TSpectrumTransform", "Wrong direction");
       return;
-   }         
+   }
    fDirection = direction;
 }
 
@@ -3219,11 +3219,11 @@ void TSpectrum2Transform::SetDirection(Int_t direction)
 void TSpectrum2Transform::SetFilterCoeff(Double_t filterCoeff)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION                                                      
-//                                                     
+//   SETTER FUNCION
+//
 //   This function sets the filter coefficient:
 //         -filterCoeff - after the transform the filtered region (xmin, xmax, ymin, ymax) is replaced by this coefficient. Applies only for filtereng operation.
-//////////////////////////////////////////////////////////////////////////////      
+//////////////////////////////////////////////////////////////////////////////
    fFilterCoeff = filterCoeff;
 }
 
@@ -3231,11 +3231,11 @@ void TSpectrum2Transform::SetFilterCoeff(Double_t filterCoeff)
 void TSpectrum2Transform::SetEnhanceCoeff(Double_t enhanceCoeff)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCION                                                      
-//                                                     
+//   SETTER FUNCION
+//
 //   This function sets the enhancement coefficient:
 //         -enhanceCoeff - after the transform the enhanced region (xmin, xmax, ymin, ymax) is multiplied by this coefficient. Applies only for enhancement operation.
-//////////////////////////////////////////////////////////////////////////////      
+//////////////////////////////////////////////////////////////////////////////
    fEnhanceCoeff = enhanceCoeff;
 }
-    
+

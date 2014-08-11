@@ -431,7 +431,7 @@ TString TTreeSQL::CreateBranches(TSQLResult * rs)
          prevBranch = branchName;
       }
 
-      if(type.CompareTo("varchar",TString::kIgnoreCase)==0 || type.CompareTo("varchar2",TString::kIgnoreCase)==0 || type.CompareTo("char",TString::kIgnoreCase)==0 ) { 
+      if(type.CompareTo("varchar",TString::kIgnoreCase)==0 || type.CompareTo("varchar2",TString::kIgnoreCase)==0 || type.CompareTo("char",TString::kIgnoreCase)==0 ) {
          char siz[6];
          snprintf(siz,6,"[%d]",prec);
          decl.Append( leafName+siz+"/C:" );
@@ -661,7 +661,7 @@ std::vector<Int_t> *TTreeSQL::GetColumnIndice(TBranch *branch)
                col = i;
                break;
             }
-         }         
+         }
       }
       if(col>=0){
          columns->push_back(col);

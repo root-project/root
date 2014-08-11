@@ -2,7 +2,7 @@ set(ROOT_ARCHITECTURE linux)
 set(ROOT_PLATFORM linux)
 
 execute_process(COMMAND uname -m OUTPUT_VARIABLE SYSCTL_OUTPUT)
-    
+
 if(${SYSCTL_OUTPUT} MATCHES x86_64)
   message(STATUS "Found a 64bit system")
   set(BIT_ENVIRONMENT "-m64")
@@ -35,7 +35,7 @@ else()
   endif()
 endif()
 
-set(SYSLIBS "-lm -ldl ${CMAKE_THREAD_LIBS_INIT} -rdynamic") 
+set(SYSLIBS "-lm -ldl ${CMAKE_THREAD_LIBS_INIT} -rdynamic")
 set(XLIBS "${XPMLIBDIR} ${XPMLIB} ${X11LIBDIR} -lXext -lX11")
 set(CILIBS "-lm -ldl -rdynamic")
 set(CRYPTLIBS "-lcrypt")
@@ -112,7 +112,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
   set(SOEXT "so")
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
-  
+
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -wd1476")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -restrict")
 
@@ -123,7 +123,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
 
 
   # Check icc compiler version and set compile flags according to the
-  execute_process(COMMAND ${CMAKE_CXX_COMPILER} -v  
+  execute_process(COMMAND ${CMAKE_CXX_COMPILER} -v
                   ERROR_VARIABLE _icc_version_info ERROR_STRIP_TRAILING_WHITESPACE)
 
   string(REGEX REPLACE "(^V|^icc[ ]v|^icpc[ ]v)ersion[ ]([0-9]+)\\.[0-9]+.*" "\\2" ICC_MAJOR "${_icc_version_info}")
@@ -132,27 +132,27 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
   message(STATUS "Found ICC major version ${ICC_MAJOR}")
   message(STATUS "Found ICC minor version ${ICC_MINOR}")
 
-  if(ICC_MAJOR EQUAL 9)  
+  if(ICC_MAJOR EQUAL 9)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd1572")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -wd1572")
-  endif()  
+  endif()
 
-  if(ICC_MAJOR EQUAL 10)  
+  if(ICC_MAJOR EQUAL 10)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd1572")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -wd1572")
-  endif()  
+  endif()
 
-  if(ICC_MAJOR EQUAL 11)  
+  if(ICC_MAJOR EQUAL 11)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${BIT_ENVIRONMENT} -wd1572 -wd279")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${BIT_ENVIRONMENT} -wd1572 -wd279")
     set(CMAKE_SHARED_LINKER_FLAGS "${BIT_ENVIRONMENT} -Wl,--no-undefined")
-  endif()  
+  endif()
 
-  if(ICC_MAJOR EQUAL 12)  
+  if(ICC_MAJOR EQUAL 12)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${BIT_ENVIRONMENT} -wd1572 -wd279")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${BIT_ENVIRONMENT} -wd1572 -wd279")
     set(CMAKE_SHARED_LINKER_FLAGS "${BIT_ENVIRONMENT} -Wl,--no-undefined")
-  endif()  
+  endif()
 
   if(ICC_MAJOR EQUAL 13)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${BIT_ENVIRONMENT} -wd1572 -wd279")
@@ -179,7 +179,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
   set(CMAKE_C_FLAGS_DEBUG            "-g -O2")
 
   #Settings for cint
-  set(CPPPREP "${CXX} -E -C")  
+  set(CPPPREP "${CXX} -E -C")
   set(CXXOUT "-o ")
   set(EXPLICITLINK "no") #TODO
 
@@ -187,4 +187,4 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
   set(SOEXT "so")
 
 endif()
-  
+

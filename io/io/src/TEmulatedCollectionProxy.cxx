@@ -88,7 +88,7 @@ void TEmulatedCollectionProxy::Destructor(void* p, Bool_t dtorOnly) const
       const_cast<TEmulatedCollectionProxy*>(this)->Clear("force");
    } else {
       const_cast<TEmulatedCollectionProxy*>(this)->Clear("force");
-   }      
+   }
    if (dtorOnly) {
       ((Cont_t*)p)->~Cont_t();
    } else {
@@ -196,7 +196,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
    return 0;
 }
 
-Bool_t TEmulatedCollectionProxy::IsValid() const 
+Bool_t TEmulatedCollectionProxy::IsValid() const
 {
    // Return true if the collection proxy was well initialized.
    return  (0 != fCreateEnv.call);
@@ -559,7 +559,7 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)
 void TEmulatedCollectionProxy::ReadBuffer(TBuffer &b, void *obj, const TClass *onfileClass)
 {
    // Read portion of the streamer.
-   
+
    SetOnFileClass((TClass*)onfileClass);
    ReadBuffer(b,obj);
 }
@@ -668,7 +668,7 @@ static TStreamerInfo *R__GenerateTClassForPair(const std::string &fname, const s
    // Generate a TStreamerInfo for a std::pair<fname,sname>
    // This TStreamerInfo is then used as if it was read from a file to generate
    // and emulated TClass.
-   
+
    TStreamerInfo *i = (TStreamerInfo*)TClass::GetClass("pair<const int,int>")->GetStreamerInfo()->Clone();
    std::string pname = "pair<"+fname+","+sname;
    pname += (pname[pname.length()-1]=='>') ? " >" : ">";
@@ -679,7 +679,7 @@ static TStreamerInfo *R__GenerateTClassForPair(const std::string &fname, const s
    Int_t size = 0;
    if (fel) {
       i->GetElements()->Add( fel );
-      
+
       size = fel->GetSize();
       Int_t sp = sizeof(void *);
       //align the non-basic data types (required on alpha and IRIX!!)

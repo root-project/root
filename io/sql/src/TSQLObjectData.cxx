@@ -173,7 +173,7 @@ Bool_t TSQLObjectData::LocateColumn(const char* colname, Bool_t isblob)
       fLocatedField = GetClassFieldName(ncol);
       fLocatedValue = fClassRow->GetField(ncol);
    }
-  
+
 
 /*   for (Int_t ncol=1;ncol<numfields;ncol++) {
       const char* fieldname = GetClassFieldName(ncol);
@@ -202,14 +202,14 @@ Bool_t TSQLObjectData::LocateColumn(const char* colname, Bool_t isblob)
 //______________________________________________________________________________
 Bool_t TSQLObjectData::ShiftBlobRow()
 {
-   // shift cursor to next blob value 
-    
+   // shift cursor to next blob value
+
    if (fBlobStmt!=0) {
       Bool_t res = fBlobStmt->NextResultRow();
       if (!res) { delete fBlobStmt; fBlobStmt = 0; }
       return res;
    }
-   
+
    delete fBlobRow;
    fBlobRow = fBlobData ? fBlobData->Next() : 0;
    return fBlobRow!=0;
@@ -221,7 +221,7 @@ Bool_t TSQLObjectData::ExtractBlobValues()
    // extract from curent blob row value and names identifiers
 
    const char* name = 0;
-   
+
    Bool_t hasdata = kFALSE;
 
    if (fBlobStmt!=0) {
@@ -236,13 +236,13 @@ Bool_t TSQLObjectData::ExtractBlobValues()
          name = fBlobRow->GetField(0);
       }
    }
-   
+
    if (name==0) {
       fBlobPrefixName = 0;
-      fBlobTypeName = 0; 
+      fBlobTypeName = 0;
       return kFALSE;
    }
-   
+
    const char* separ = strstr(name, ":"); //SQLNameSeparator()
 
    if (separ==0) {
@@ -343,7 +343,7 @@ Bool_t TSQLObjectData::VerifyDataType(const char* tname, Bool_t errormsg)
    // here maybe type of column can be checked
    if (!IsBlobData()) return kTRUE;
 
-   if (gDebug>4) 
+   if (gDebug>4)
       if ((fBlobTypeName==0) && errormsg) {
          Error("VerifyDataType","fBlobTypeName is null");
          return kFALSE;
@@ -354,7 +354,7 @@ Bool_t TSQLObjectData::VerifyDataType(const char* tname, Bool_t errormsg)
    TString v2(tname);
 
 //   if (strcmp(fBlobTypeName,tname)!=0) {
-   if (v1!=v2) { 
+   if (v1!=v2) {
       if (errormsg)
          Error("VerifyDataType","Data type missmatch %s - %s", fBlobTypeName, tname);
       return kFALSE;
@@ -379,7 +379,7 @@ Bool_t TSQLObjectData::PrepareForRawData()
 
 //________________________________________________________________________
 //
-// TSQLObjectDataPool contains list (pool) of data from single class table 
+// TSQLObjectDataPool contains list (pool) of data from single class table
 // for differents objects, all belonging to the same key.
 // This is typical situation when list of objects stored as single key.
 // To optimize reading of such data, one query is submitted and results of that
@@ -415,7 +415,7 @@ TSQLObjectDataPool::~TSQLObjectDataPool()
 {
    // Destructor of TSQLObjectDataPool class
    // Deletes not used rows and class data table
-   
+
    if (fClassData!=0) delete fClassData;
    if (fRowsPool!=0) {
       fRowsPool->Delete();
@@ -427,29 +427,29 @@ TSQLObjectDataPool::~TSQLObjectDataPool()
 TSQLRow* TSQLObjectDataPool::GetObjectRow(Long64_t objid)
 {
    // Returns single sql row with object data for that class
-   
+
    if (fClassData==0) return 0;
-   
+
    Long64_t rowid;
-         
+
    if (fRowsPool!=0) {
       TObjLink* link = fRowsPool->FirstLink();
       while (link!=0) {
          TSQLRow* row = (TSQLRow*) link->GetObject();
          rowid = sqlio::atol64(row->GetField(0));
          if (rowid==objid) {
-            fRowsPool->Remove(link);   
+            fRowsPool->Remove(link);
             return row;
          }
-         
-         link = link->Next();   
+
+         link = link->Next();
       }
    }
-   
+
    while (fIsMoreRows) {
       TSQLRow* row = fClassData->Next();
-      if (row==0) 
-         fIsMoreRows = kFALSE; 
+      if (row==0)
+         fIsMoreRows = kFALSE;
       else {
          rowid = sqlio::atol64(row->GetField(0));
          if (rowid==objid) return row;
@@ -457,7 +457,7 @@ TSQLRow* TSQLObjectDataPool::GetObjectRow(Long64_t objid)
          fRowsPool->Add(row);
       }
    }
-   
+
    return 0;
 }
-  
+

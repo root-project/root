@@ -8,10 +8,10 @@
   *                                                                    *
   **********************************************************************/
 
-/** 
-    Header file declaring the special functions present in both 
-    MathCore and  optionally MathMore. 
-    The MathMore ones are included only if ROOT has been built with MathMore. 
+/**
+    Header file declaring the special functions present in both
+    MathCore and  optionally MathMore.
+    The MathMore ones are included only if ROOT has been built with MathMore.
 */
 
 
@@ -30,7 +30,7 @@
 #include "Math/SpecFuncMathCore.h"
 #endif
 
-#ifdef R__HAS_MATHMORE  
+#ifdef R__HAS_MATHMORE
 // in case Mathmore exists include their GSL based special functions
 
 #ifndef ROOT_Math_SpecFuncMathMore

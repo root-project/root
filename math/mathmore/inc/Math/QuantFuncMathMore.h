@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
 
 
@@ -26,7 +26,7 @@
 
 
 #if defined(__CINT__) && !defined(__MAKECINT__)
-// avoid to include header file when using CINT 
+// avoid to include header file when using CINT
 #ifndef _WIN32
 #include "../lib/libMathMore.so"
 #else
@@ -45,52 +45,52 @@ namespace Math {
 
 
 
-  /** @defgroup QuantFunc Quantile Functions 
-   *  @ingroup StatFunc 
+  /** @defgroup QuantFunc Quantile Functions
+   *  @ingroup StatFunc
    *
-   *  Inverse functions of the cumulative distribution functions 
-   *  and the inverse of the complement of the cumulative distribution functions 
+   *  Inverse functions of the cumulative distribution functions
+   *  and the inverse of the complement of the cumulative distribution functions
    *  for various distributions.
    *  The functions with the extension <em>_quantile</em> calculate the
-   *  inverse of the <em>_cdf</em> function, the 
+   *  inverse of the <em>_cdf</em> function, the
    *  lower tail integral of the probability density function
    *  \f$D^{-1}(z)\f$ where
    *
    *  \f[ D(x) = \int_{-\infty}^{x} p(x') dx' \f]
    *
-   *  while those with the <em>_quantile_c</em> extension calculate the 
-   *  inverse of the <em>_cdf_c</em> functions, the upper tail integral of the probability 
+   *  while those with the <em>_quantile_c</em> extension calculate the
+   *  inverse of the <em>_cdf_c</em> functions, the upper tail integral of the probability
    *  density function \f$D^{-1}(z) \f$ where
    *
    *  \f[ D(x) = \int_{x}^{+\infty} p(x') dx' \f]
    *
-   * The implementation used is that of 
+   * The implementation used is that of
    * <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">GSL</A>.
    *
-   * <strong>NOTE:</strong> In the old releases (< 5.14) the <em>_quantile</em> functions were called 
-   * <em>_quant_inv</em> and the <em>_quantile_c</em> functions were called 
-   * <em>_prob_inv</em>. 
-   * These names are currently kept for backward compatibility, but 
+   * <strong>NOTE:</strong> In the old releases (< 5.14) the <em>_quantile</em> functions were called
+   * <em>_quant_inv</em> and the <em>_quantile_c</em> functions were called
+   * <em>_prob_inv</em>.
+   * These names are currently kept for backward compatibility, but
    * their usage is deprecated.
    */
 
-   /** @name Quantile Functions from MathMore 
-   * The implementation used is that of 
+   /** @name Quantile Functions from MathMore
+   * The implementation used is that of
    * <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Random-Number-Distributions.html">GSL</A>.
-   */ 
+   */
 
   //@{
 
 
   /**
 
-  Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
+  Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution
   function of the upper tail of Student's t-distribution
-  (#tdistribution_cdf_c). For detailed description see 
+  (#tdistribution_cdf_c). For detailed description see
   <A HREF="http://mathworld.wolfram.com/Studentst-Distribution.html">
-  Mathworld</A>. The implementation used is that of 
+  Mathworld</A>. The implementation used is that of
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC305">GSL</A>.
-  
+
   @ingroup QuantFunc
 
   */
@@ -102,13 +102,13 @@ namespace Math {
 
   /**
 
-  Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
+  Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution
   function of the lower tail of Student's t-distribution
-  (#tdistribution_cdf). For detailed description see 
+  (#tdistribution_cdf). For detailed description see
   <A HREF="http://mathworld.wolfram.com/Studentst-Distribution.html">
-  Mathworld</A>. The implementation used is that of 
+  Mathworld</A>. The implementation used is that of
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC305">GSL</A>.
-  
+
   @ingroup QuantFunc
 
   */
@@ -119,25 +119,25 @@ namespace Math {
 #ifdef HAVE_OLD_STAT_FUNC
 
   //@}
-   /** @name Backward compatible functions */ 
+   /** @name Backward compatible functions */
 
 
    }
    inline double chisquared_quant_inv(double x, double r) {
-      return chisquared_quantile  (x, r ); 
+      return chisquared_quantile  (x, r );
    }
-   
+
 
    inline double gamma_quant_inv(double x, double alpha, double theta) {
-      return gamma_quantile   (x, alpha, theta ); 
+      return gamma_quantile   (x, alpha, theta );
    }
 
    inline double tdistribution_prob_inv(double x, double r) {
-      return tdistribution_quantile_c  (x, r ); 
+      return tdistribution_quantile_c  (x, r );
    }
 
    inline double tdistribution_quant_inv(double x, double r) {
-      return tdistribution_quantile    (x, r ); 
+      return tdistribution_quantile    (x, r );
    }
 
 #endif
@@ -151,11 +151,11 @@ namespace MathMore {
 
   /**
 
-  Re-implementation in MathMore of the Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
-  function of the lower tail of the \f$\chi^2\f$ distribution 
-  with \f$r\f$ degrees of freedom (#chisquared_cdf). For detailed description see 
+  Re-implementation in MathMore of the Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution
+  function of the lower tail of the \f$\chi^2\f$ distribution
+  with \f$r\f$ degrees of freedom (#chisquared_cdf). For detailed description see
   <A HREF="http://mathworld.wolfram.com/Chi-SquaredDistribution.html">
-  Mathworld</A>. The implementation used is that of 
+  Mathworld</A>. The implementation used is that of
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC303">GSL</A>.
 
   @ingroup QuantFunc
@@ -169,13 +169,13 @@ namespace MathMore {
 
   /**
 
-  Re-implementation in MathMore of the Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution 
+  Re-implementation in MathMore of the Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution
   function of the lower tail of the gamma distribution
-  (#gamma_cdf). For detailed description see 
+  (#gamma_cdf). For detailed description see
   <A HREF="http://mathworld.wolfram.com/GammaDistribution.html">
-  Mathworld</A>. The implementation used is that of 
+  Mathworld</A>. The implementation used is that of
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC300">GSL</A>.
-  
+
   @ingroup QuantFunc
 
   */

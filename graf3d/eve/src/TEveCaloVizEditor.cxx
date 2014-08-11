@@ -407,7 +407,7 @@ TEveCalo3DEditor::TEveCalo3DEditor(const TGWindow *p, Int_t width, Int_t height,
    fFrameTransparency = new TGNumberEntry(f, 0., 2, -1,
                                      TGNumberFormat::kNESInteger, TGNumberFormat::kNEANonNegative,
                                      TGNumberFormat::kNELLimitMinMax, 0, 100);
-    
+
    fFrameTransparency->SetHeight(18);
    fFrameTransparency->GetNumberEntry()->SetToolTipText("Transparency: 0 is opaque, 100 fully transparent.");
    f->AddFrame(fFrameTransparency, new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));

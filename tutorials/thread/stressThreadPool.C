@@ -2,13 +2,15 @@
 // root [0] .L stressThreadPool.C++
 // root [1] stressThreadPool(5, true)
 // where 5 is a number of Threads in the pool
-// there will be then nThreads * 10 tasks pushed to the test 
+// there will be then nThreads * 10 tasks pushed to the test
 
 // STD
 #include <iostream>
 #include <iterator>
 #include <vector>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 // ThreadPool
 #include "TThreadPool.h"
 // ROOT
@@ -28,7 +30,7 @@ class TTestTask: public TThreadPoolTaskImp<TTestTask, EProc> {
 public:
    bool runTask(EProc /*_param*/) {
       m_tid = TThread::SelfId();
-      sleep(g_sleeptime);
+      TThread::Sleep(g_sleeptime, 0L);
       return true;
    }
    unsigned long threadID() const {
@@ -51,10 +53,10 @@ void stressThreadPool(size_t _numThreads = 5, bool _needDbg = false)
    TThreadPool<TTestTask, EProc> threadPool(_numThreads, _needDbg);
    vector <TTestTask> tasksList(numTasks);
    // Pushing 4 * numTasks task in the pool
-   // We want to dain the task queue before pushing a next bunch of tasks (just to show you a Drain method ;) ) 
+   // We want to dain the task queue before pushing a next bunch of tasks (just to show you a Drain method ;) )
    for (size_t j = 0; j < 4; ++j )
    {
-      cout << "+++++++++ Starting iteration #" << j << " ++++++++++++"<< endl; 
+      cout << "+++++++++ Starting iteration #" << j << " ++++++++++++"<< endl;
       for (size_t i = 0; i < numTasks; ++i) {
          threadPool.PushTask(tasksList[i], start);
       }

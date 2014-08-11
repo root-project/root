@@ -1,18 +1,18 @@
 // Standard demo of the Feldman-Cousins calculator
 /*
-StandardFeldmanCousinsDemo 
+StandardFeldmanCousinsDemo
 
 Author: Kyle Cranmer
 date: Dec. 2010
 
-This is a standard demo that can be used with any ROOT file 
+This is a standard demo that can be used with any ROOT file
 prepared in the standard way.  You specify:
  - name for input ROOT file
  - name of workspace inside ROOT file that holds model and data
  - name of ModelConfig that specifies details for calculator tools
- - name of dataset 
+ - name of dataset
 
-With default parameters the macro will attempt to run the 
+With default parameters the macro will attempt to run the
 standard hist2workspace example and read the ROOT file
 that it produces.
 
@@ -44,12 +44,12 @@ using namespace RooFit;
 using namespace RooStats;
 
 void StandardFeldmanCousinsDemo(const char* infile = "",
-		      const char* workspaceName = "combined",
-		      const char* modelConfigName = "ModelConfig",
-		      const char* dataName = "obsData"){
+                                const char* workspaceName = "combined",
+                                const char* modelConfigName = "ModelConfig",
+                                const char* dataName = "obsData"){
 
   /////////////////////////////////////////////////////////////
-  // First part is just to access a user-defined file 
+  // First part is just to access a user-defined file
   // or create the standard example file if it doesn't exist
   ////////////////////////////////////////////////////////////
   const char* filename = "";
@@ -74,7 +74,7 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
   }
   else
     filename = infile;
-   
+
   // Try to open the file
   TFile *file = TFile::Open(filename);
 
@@ -82,9 +82,9 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
   if(!file ){
     cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
     return;
-  } 
+  }
 
-  
+
   /////////////////////////////////////////////////////////////
   // Tutorial starts here
   ////////////////////////////////////////////////////////////
@@ -116,20 +116,20 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
   // in the model config
   FeldmanCousins fc(*data,*mc);
   fc.SetConfidenceLevel(0.95); // 95% interval
-  //fc.AdditionalNToysFactor(0.1); // to speed up the result 
+  //fc.AdditionalNToysFactor(0.1); // to speed up the result
   fc.UseAdaptiveSampling(true); // speed it up a bit
   fc.SetNBins(10); // set how many points per parameter of interest to scan
   fc.CreateConfBelt(true); // save the information in the belt for plotting
 
   // Since this tool needs to throw toy MC the PDF needs to be
   // extended or the tool needs to know how many entries in a dataset
-  // per pseudo experiment.  
+  // per pseudo experiment.
   // In the 'number counting form' where the entries in the dataset
   // are counts, and not values of discriminating variables, the
   // datasets typically only have one entry and the PDF is not
-  // extended.  
+  // extended.
   if(!mc->GetPdf()->canBeExtended()){
-    if(data->numEntries()==1)     
+    if(data->numEntries()==1)
       fc.FluctuateNumDataEntries(false);
     else
       cout <<"Not sure what to do about this model" <<endl;
@@ -138,13 +138,13 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
   // We can use PROOF to speed things along in parallel
   //  ProofConfig pc(*w, 1, "workers=4", kFALSE);
   //  ToyMCSampler*  toymcsampler = (ToyMCSampler*) fc.GetTestStatSampler();
-  //  toymcsampler->SetProofConfig(&pc);	// enable proof
+  //  toymcsampler->SetProofConfig(&pc); // enable proof
 
 
   // Now get the interval
   PointSetInterval* interval = fc.GetInterval();
   ConfidenceBelt* belt = fc.GetConfidenceBelt();
- 
+
   // print out the iterval on the first Parameter of Interest
   RooRealVar* firstPOI = (RooRealVar*) mc->GetParametersOfInterest()->first();
   cout << "\n95% interval on " <<firstPOI->GetName()<<" is : ["<<
@@ -153,16 +153,16 @@ void StandardFeldmanCousinsDemo(const char* infile = "",
 
   //////////////////////////////////////////////
   // No nice plots yet, so plot the belt by hand
-  
+
   // Ask the calculator which points were scanned
   RooDataSet* parameterScan = (RooDataSet*) fc.GetPointsToScan();
   RooArgSet* tmpPoint;
 
   // make a histogram of parameter vs. threshold
   TH1F* histOfThresholds = new TH1F("histOfThresholds","",
-				    parameterScan->numEntries(),
-				    firstPOI->getMin(),
-				    firstPOI->getMax());
+                                    parameterScan->numEntries(),
+                                    firstPOI->getMin(),
+                                    firstPOI->getMax());
 
   // loop through the points that were tested and ask confidence belt
   // what the upper/lower thresholds were.

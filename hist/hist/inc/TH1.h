@@ -79,13 +79,13 @@ class TVirtualHistPainter;
 
 class TH1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
-public: 
+public:
 
    // enumeration specifying type of statistics for bin errors
-   enum  EBinErrorOpt { 
+   enum  EBinErrorOpt {
          kNormal = 0,    // errors with Normal (Wald) approximation: errorUp=errorLow= sqrt(N)
          kPoisson = 1 ,  // errors from Poisson interval at 68.3% (1 sigma)
-         kPoisson2 = 2   // errors from Poisson interval at 95% CL (~ 2 sigma)            
+         kPoisson2 = 2   // errors from Poisson interval at 95% CL (~ 2 sigma)
    };
 
    // enumeration specifying which axes can be extended
@@ -122,7 +122,7 @@ protected:
     Int_t         fDimension;       //!Histogram dimension (1, 2 or 3 dim)
     Double_t     *fIntegral;        //!Integral of bins used by GetRandom
     TVirtualHistPainter *fPainter;  //!pointer to histogram painter
-    EBinErrorOpt  fBinStatErrOpt;   //option for bin statistical errors 
+    EBinErrorOpt  fBinStatErrOpt;   //option for bin statistical errors
     static Int_t  fgBufferSize;     //!default buffer size for automatic histograms
     static Bool_t fgAddDirectory;   //!flag to add histograms to the directory
     static Bool_t fgStatOverflows;  //!flag to use under/overflows in statistics
@@ -150,7 +150,7 @@ protected:
    static Bool_t    RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis);
    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
 
-   virtual Double_t DoIntegral(Int_t ix1, Int_t ix2, Int_t iy1, Int_t iy2, Int_t iz1, Int_t iz2, Double_t & err, 
+   virtual Double_t DoIntegral(Int_t ix1, Int_t ix2, Int_t iy1, Int_t iy2, Int_t iz1, Int_t iz2, Double_t & err,
                                Option_t * opt, Bool_t doerr = kFALSE) const;
 
 
@@ -172,13 +172,13 @@ public:
       kNoTitle     = BIT(17), // don't draw the histogram title
       kIsAverage   = BIT(18)  // Bin contents are average (used by Add)
    };
-   // size of statistics data (size of  array used in GetStats()/ PutStats ) 
+   // size of statistics data (size of  array used in GetStats()/ PutStats )
    // s[0]  = sumw       s[1]  = sumw2
-   // s[2]  = sumwx      s[3]  = sumwx2                     
+   // s[2]  = sumwx      s[3]  = sumwx2
    // s[4]  = sumwy      s[5]  = sumwy2   s[6]  = sumwxy
-   // s[7]  = sumwz      s[8]  = sumwz2   s[9]  = sumwxz   s[10]  = sumwyz  
+   // s[7]  = sumwz      s[8]  = sumwz2   s[9]  = sumwxz   s[10]  = sumwyz
    // s[11] = sumwt      s[12] = sumwt2                 (11 and 12 used only by TProfile3D)
-   enum { 
+   enum {
       kNstat       = 13  // size of statistics data (up to TProfile3D)
    };
 
@@ -302,7 +302,7 @@ public:
    virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum=0);
    virtual Double_t GetRandom() const;
    virtual void     GetStats(Double_t *stats) const;
-           Double_t GetStdDev(Int_t axis=1) const { return GetRMS(axis); }                  
+           Double_t GetStdDev(Int_t axis=1) const { return GetRMS(axis); }
            Double_t GetStdDevError(Int_t axis=1) const { return GetRMSError(axis); }
    virtual Double_t GetSumOfWeights() const;
    virtual TArrayD *GetSumw2() {return &fSumw2;}
@@ -358,7 +358,7 @@ public:
    virtual void     SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax,
                             Int_t nz, Double_t zmin, Double_t zmax);
    virtual void     SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t * yBins, Int_t nz,
-			    const Double_t *zBins);
+                            const Double_t *zBins);
    virtual void     SetBinsLength(Int_t = -1) { } //redefined in derived classes
    virtual void     SetBinErrorOption(EBinErrorOpt type) { fBinStatErrOpt = type; }
    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
@@ -375,7 +375,7 @@ public:
    virtual void     SetLabelFont(Style_t font=62, Option_t *axis="X");
    virtual void     SetLabelOffset(Float_t offset=0.005, Option_t *axis="X");
    virtual void     SetLabelSize(Float_t size=0.02, Option_t *axis="X");
-   
+
    /*
     * Set the minimum / maximum value for the Y axis (1-D histograms) or Z axis (2-D histograms)
     *   By default the maximum / minimum value used in drawing is the maximum / minimum value of the histogram
@@ -409,20 +409,20 @@ public:
 
 
    // TODO: Remove obsolete methods in v6-02
-   virtual Double_t GetCellContent(Int_t binx, Int_t biny) const 
+   virtual Double_t GetCellContent(Int_t binx, Int_t biny) const
                         { Obsolete("GetCellContent", "v6-00", "v6-02"); return GetBinContent(GetBin(binx, biny)); }
-   virtual Double_t GetCellError(Int_t binx, Int_t biny) const 
+   virtual Double_t GetCellError(Int_t binx, Int_t biny) const
                         { Obsolete("GetCellError", "v6-00", "v6-02"); return GetBinError(binx, biny); }
-   virtual void     RebinAxis(Double_t x, TAxis *axis) 
-                        { Obsolete("RebinAxis", "v6-00", "v6-02"); ExtendAxis(x, axis); } 
-   virtual void     SetCellContent(Int_t binx, Int_t biny, Double_t content) 
+   virtual void     RebinAxis(Double_t x, TAxis *axis)
+                        { Obsolete("RebinAxis", "v6-00", "v6-02"); ExtendAxis(x, axis); }
+   virtual void     SetCellContent(Int_t binx, Int_t biny, Double_t content)
                         { Obsolete("SetCellContent", "v6-00", "v6-02"); SetBinContent(GetBin(binx, biny), content); }
    virtual void     SetCellError(Int_t binx, Int_t biny, Double_t content)
                         { Obsolete("SetCellError", "v6-00", "v6-02"); SetBinError(binx, biny, content); }
 
    ClassDef(TH1,7)  //1-Dim histogram base class
 
-protected: 
+protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const;
    virtual void     UpdateBinContent(Int_t bin, Double_t content);
    virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const { return fSumw2.fN ? fSumw2.fArray[bin] : RetrieveBinContent(bin); }
@@ -499,7 +499,7 @@ public:
 
 protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const { return Double_t (fArray[bin]); }
-   virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Short_t (content); } 
+   virtual void     UpdateBinContent(Int_t bin, Double_t content) { fArray[bin] = Short_t (content); }
 };
 
 TH1S operator*(Double_t c1, const TH1S &h1);

@@ -1,7 +1,7 @@
 //
-// Macro illustrating automatic dictionary generation and I/O with Lorentz Vectors of floats  
-// The dictionary for LorentzVector of float is not in the libMathCore, therefore 
-// is generated when parsed the file with CINT. 
+// Macro illustrating automatic dictionary generation and I/O with Lorentz Vectors of floats
+// The dictionary for LorentzVector of float is not in the libMathCore, therefore
+// is generated when parsed the file with CINT.
 //
 //  To run  this macro you must do
 //
@@ -25,20 +25,20 @@
 #include "Math/Vector4D.h"
 
 
-#ifdef __MAKECINT__ 
-#pragma link C++ class ROOT::Math::PxPyPzE4D<float>+; 
+#ifdef __MAKECINT__
+#pragma link C++ class ROOT::Math::PxPyPzE4D<float>+;
 #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> >+;
 #pragma link C++ typedef ROOT::Math::XYZTVectorF;
-#endif 
+#endif
 
 using namespace ROOT::Math;
- 
 
 
-void write(int n) { 
+
+void write(int n) {
 
 
-  TRandom R; 
+  TRandom R;
   TStopwatch timer;
 
 
@@ -53,32 +53,32 @@ void write(int n) {
   t1.Branch("LV branch","ROOT::Math::XYZTVectorF",&v1);
 
   timer.Start();
-  for (int i = 0; i < n; ++i) { 
-        double Px = R.Gaus(0,10);
-	double Py = R.Gaus(0,10);
-	double Pz = R.Gaus(0,10);
-	double E  = R.Gaus(100,10);
-	//CylindricalEta4D<double> & c = v1->Coordinates();
-	//c.SetValues(Px,pY,pZ,E);
-	v1->SetCoordinates(Px,Py,Pz,E);
-	t1.Fill(); 
+  for (int i = 0; i < n; ++i) {
+     double Px = R.Gaus(0,10);
+     double Py = R.Gaus(0,10);
+     double Pz = R.Gaus(0,10);
+     double E  = R.Gaus(100,10);
+     //CylindricalEta4D<double> & c = v1->Coordinates();
+     //c.SetValues(Px,pY,pZ,E);
+     v1->SetCoordinates(Px,Py,Pz,E);
+     t1.Fill();
   }
 
   f1.Write();
   timer.Stop();
-  std::cout << " Time for new Float Vector " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+  std::cout << " Time for new Float Vector " << timer.RealTime() << "  " << timer.CpuTime() << std::endl;
 
   t1.Print();
 
 }
 
 
-void read() { 
+void read() {
 
 
 
 
-  TRandom R; 
+  TRandom R;
   TStopwatch timer;
 
 
@@ -93,39 +93,39 @@ void read() {
 
   timer.Start();
   int n = (int) t1->GetEntries();
-  std::cout << " Tree Entries " << n << std::endl; 
+  std::cout << " Tree Entries " << n << std::endl;
   double etot=0;
-  for (int i = 0; i < n; ++i) { 
+  for (int i = 0; i < n; ++i) {
     t1->GetEntry(i);
     etot += v1->E();
   }
 
 
   timer.Stop();
-  std::cout << " Time for new Float Vector " << timer.RealTime() << "  " << timer.CpuTime() << std::endl; 
+  std::cout << " Time for new Float Vector " << timer.RealTime() << "  " << timer.CpuTime() << std::endl;
 
-  std::cout << " E average" << n<< "  " << etot << "  " << etot/double(n) << endl; 
+  std::cout << " E average" << n<< "  " << etot << "  " << etot/double(n) << endl;
 
 
 }
 
 
 
-void runIt() { 
+void runIt() {
 
 
-#if defined(__CINT__) && !defined(__MAKECINT__) 
-  gSystem->Load("libMathCore");  
-  gSystem->Load("libPhysics");  
+#if defined(__CINT__) && !defined(__MAKECINT__)
+  gSystem->Load("libMathCore");
+  gSystem->Load("libPhysics");
   using namespace ROOT::Math;
 
   cout << "This tutorial can run only using ACliC, you must run it by doing: " << endl;
-  cout << "\t  .L tutorials/math/mathcoreVectorFloatIO.C+" << endl; 
-  cout << "\t  runIt()" << endl; 
+  cout << "\t  .L tutorials/math/mathcoreVectorFloatIO.C+" << endl;
+  cout << "\t  runIt()" << endl;
 
 #endif
 
-  
+
   int nEvents = 100000;
 
   write(nEvents);
@@ -133,17 +133,17 @@ void runIt() {
   read();
 }
 
-void mathcoreVectorFloatIO() { 
+void mathcoreVectorFloatIO() {
 
-#if defined(__CINT__) && !defined(__MAKECINT__) 
-  gSystem->Load("libMathCore");  
-  gSystem->Load("libPhysics");  
+#if defined(__CINT__) && !defined(__MAKECINT__)
+  gSystem->Load("libMathCore");
+  gSystem->Load("libPhysics");
   using namespace ROOT::Math;
 
   cout << "This tutorial can run only using ACliC, you must run it by doing: " << endl;
-  cout << "\t  .L tutorials/math/mathcoreVectorFloatIO.C+" << endl; 
-  cout << "\t  runIt()" << endl; 
+  cout << "\t  .L tutorials/math/mathcoreVectorFloatIO.C+" << endl;
+  cout << "\t  runIt()" << endl;
 
 #endif
 
-}  
+}

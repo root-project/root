@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -26,20 +26,20 @@ class FumiliGradientCalculator : public GradientCalculator {
 
 public:
 
-  FumiliGradientCalculator(const FumiliFCNBase& fcn, const MnUserTransformation& state, int n) : 
-    fFcn(fcn), 
-    fTransformation(state), 
-    fHessian(MnAlgebraicSymMatrix(n) ) 
+  FumiliGradientCalculator(const FumiliFCNBase& fcn, const MnUserTransformation& state, int n) :
+    fFcn(fcn),
+    fTransformation(state),
+    fHessian(MnAlgebraicSymMatrix(n) )
   {}
 
   ~FumiliGradientCalculator() {}
-	       
+
   FunctionGradient operator()(const MinimumParameters&) const;
 
   FunctionGradient operator()(const MinimumParameters&,
-				      const FunctionGradient&) const;
+                              const FunctionGradient&) const;
 
-  const MnUserTransformation& Trafo() const {return fTransformation;} 
+  const MnUserTransformation& Trafo() const {return fTransformation;}
 
   const MnAlgebraicSymMatrix & Hessian() const { return fHessian; }
 

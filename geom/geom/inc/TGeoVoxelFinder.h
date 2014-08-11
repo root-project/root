@@ -20,8 +20,8 @@ class TGeoVolume;
 struct TGeoStateInfo;
 
 /*************************************************************************
- * TGeoVoxelFinder - finder class handling voxels 
- *  
+ * TGeoVoxelFinder - finder class handling voxels
+ *
  *************************************************************************/
 
 class TGeoVoxelFinder : public TObject
@@ -71,7 +71,7 @@ protected:
 
    TGeoVoxelFinder(const TGeoVoxelFinder&);
    TGeoVoxelFinder& operator=(const TGeoVoxelFinder&);
-   
+
    void                BuildVoxelLimits();
    Int_t              *GetExtraX(Int_t islice, Bool_t left, Int_t &nextra) const;
    Int_t              *GetExtraY(Int_t islice, Bool_t left, Int_t &nextra) const;
@@ -83,13 +83,13 @@ protected:
    Int_t              *GetValidExtra(Int_t n1, UChar_t *array1, Int_t *list, Int_t &ncheck, TGeoStateInfo &td);
    Int_t              *GetValidExtra(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2, Int_t *list, Int_t &ncheck, TGeoStateInfo &td);
    Int_t              *GetVoxelCandidates(Int_t i, Int_t j, Int_t k, Int_t &ncheck, TGeoStateInfo &td);
-   Bool_t              Intersect(Int_t n1, UChar_t *array1, Int_t &nf, Int_t *result); 
+   Bool_t              Intersect(Int_t n1, UChar_t *array1, Int_t &nf, Int_t *result);
    Bool_t              Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2,
-                             Int_t &nf, Int_t *result); 
+                             Int_t &nf, Int_t *result);
    Bool_t              Intersect(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2,
-                             Int_t n3, UChar_t *array3, Int_t &nf, Int_t *result); 
-   Bool_t              IntersectAndStore(Int_t n1, UChar_t *array1, TGeoStateInfo &td); 
-   Bool_t              IntersectAndStore(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2, TGeoStateInfo &td); 
+                             Int_t n3, UChar_t *array3, Int_t &nf, Int_t *result);
+   Bool_t              IntersectAndStore(Int_t n1, UChar_t *array1, TGeoStateInfo &td);
+   Bool_t              IntersectAndStore(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2, TGeoStateInfo &td);
    Bool_t              IntersectAndStore(Int_t n1, UChar_t *array1, Int_t n2, UChar_t *array2,
                              Int_t n3, UChar_t *array3, TGeoStateInfo &td);
    void                SortAll(Option_t *option="");
@@ -105,7 +105,7 @@ public :
    virtual Double_t    Efficiency();
    virtual Int_t      *GetCheckList(const Double_t *point, Int_t &nelem, TGeoStateInfo &td);
    Int_t              *GetCheckList(Int_t &nelem, TGeoStateInfo &td) const;
-   virtual Int_t      *GetNextCandidates(const Double_t *point, Int_t &ncheck, TGeoStateInfo &td); 
+   virtual Int_t      *GetNextCandidates(const Double_t *point, Int_t &ncheck, TGeoStateInfo &td);
    virtual void        FindOverlaps(Int_t inode) const;
    Bool_t              IsInvalid() const {return TObject::TestBit(kGeoInvalidVoxels);}
    Bool_t              NeedRebuild() const {return TObject::TestBit(kGeoRebuildVoxels);}

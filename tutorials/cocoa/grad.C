@@ -34,9 +34,9 @@ void grad()
       delete cnv;
       return;
    }
-   
+
    typedef TColorGradient::Point Point;
-   
+
    //3. Create custom colors.
    //Linear gradient is defined by: 1) colors (to interpolate between them),
    //2) coordinates for these colors along the gradient axis [0., 1.].
@@ -45,7 +45,7 @@ void grad()
    //(gradient->SetCoordinateMode(TColorGradient::kObjectBoundingMode))
    //or bounding rect of a pad (gradient->SetCoordinateMode(TColorGradient::kPadMode)).
    //kObjectBoundingMode is the default one.
-   
+
    const Color_t &frameGradient = colorIndices[2];//This gradient is a mixture of colorIndices[0] and colorIndices[1]
    //Fill color for a pad frame:
    {
@@ -67,20 +67,20 @@ void grad()
    {
       const Double_t locations[] = {0., 1.};
       const Color_t gradientIndices[2] = {30, 38};//We create a gradient from system colors.
-      
+
       //Gradient for a pad.
       TLinearGradient * const gradFill2 = new TLinearGradient(padGradient, 2, locations, gradientIndices);
       //Vertical:
       gradFill2->SetStartEnd(Point(0., 0.), Point(0., 1.));
    }
-   
+
    //Another gradient from three standard colors:
    const Color_t &histGradient = colorIndices[4];
    //Fill color for a histogram:
    {
       const Color_t gradientIndices[3] = {kYellow, kOrange, kRed};
       const Double_t locations[3] = {0., 0.5, 1.};
-      
+
       //Gradient for a histogram.
       TLinearGradient * const gradFill3 = new TLinearGradient(histGradient, 3, locations, gradientIndices);
       //Vertical:
@@ -89,7 +89,7 @@ void grad()
 
    cnv->SetFillColor(padGradient);
    cnv->SetFrameFillColor(frameGradient);
-   
+
    TH1F * const hist = new TH1F("a1", "b1", 20, -3., 3.);
    hist->SetFillColor(histGradient);
    hist->FillRandom("gaus", 100000);

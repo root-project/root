@@ -49,10 +49,10 @@ static char *Trim(char *z);
 
 
 //______________________________________________________________________________
-TGHtmlUri::TGHtmlUri(const char *zUri) 
+TGHtmlUri::TGHtmlUri(const char *zUri)
 {
    // Parse a text URI into an HtmlUri structure.
-   
+
    int n;
 
    fZScheme = fZAuthority = fZPath = fZQuery = fZFragment = (char *) 0;
@@ -201,7 +201,7 @@ char *TGHtmlUri::BuildUri()
 {
    // Create a string to hold the given URI. Memory to hold the string is
    // allocated with new[] and must be freed by the calling function.
-  
+
    int n = 1;
    char *z;
 
@@ -251,7 +251,7 @@ char *TGHtmlUri::BuildUri()
 
 
 //______________________________________________________________________________
-static char *StrNDup(const char *z, int n) 
+static char *StrNDup(const char *z, int n)
 {
    // Duplicate a string of length n.
 
@@ -270,7 +270,7 @@ static char *StrNDup(const char *z, int n)
 static void ReplaceStr(char **pzDest, const char *zSrc)
 {
    // Replace the string in *pzDest with the string in zSrc
-   
+
    if (*pzDest != 0) delete[] *pzDest;
    if (zSrc == 0) {
       *pzDest = 0;
@@ -280,7 +280,7 @@ static void ReplaceStr(char **pzDest, const char *zSrc)
 }
 
 #if 0  // not used
-static char *Trim(char *z) 
+static char *Trim(char *z)
 {
    // Remove leading and trailing spaces from the given string. Return
    // a new string allocated with new[].
@@ -361,7 +361,7 @@ char *TGHtml::ResolveUri(const char *zUri)
                zBuf[i+1] = 0;
                continue;
             }
-            if (i > 0 && zBuf[i] == '/' && zBuf[i+1] == '.' && 
+            if (i > 0 && zBuf[i] == '/' && zBuf[i+1] == '.' &&
                 zBuf[i+2] == '.' && (zBuf[i+3] == '/' || zBuf[i+3] == 0)) {
                for (j = i - 1; j >= 0 && zBuf[j] != '/'; --j) {}
                if (zBuf[i+3]) {
@@ -382,7 +382,7 @@ char *TGHtml::ResolveUri(const char *zUri)
       ReplaceStr(&base->fZFragment, term->fZFragment);
    }
    delete term;
-  
+
    result = base->BuildUri();
    delete base;
 

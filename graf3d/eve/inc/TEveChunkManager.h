@@ -98,7 +98,7 @@ public:
 
       Bool_t  next();
       void    reset() { fCurrent = 0; fAtomIndex = -1; fNextChunk = fAtomsToGo = 0; }
-      
+
       Char_t* operator()() { return fCurrent; }
       Char_t* operator*()  { return fCurrent; }
       Int_t   index()      { return fAtomIndex; }

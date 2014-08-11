@@ -172,7 +172,7 @@ Long64_t TSeqCollection::Merge(TCollection *list)
    // list have to contain a histogram and a tree. In case the list contains
    // collections, the objects in the input lists must also be collections with
    // the same structure and number of objects.
-   // If some objects inside the collection are instances of a class that do not 
+   // If some objects inside the collection are instances of a class that do not
    // have a Merge function (like TObjString), rather than merging, a copy of each
    // instance (via a call to Clone) is appended to the output.
    //

@@ -4,7 +4,7 @@
 //if the file containing the geometry is not found in the local
 //directory, it is automatically read from the ROOT web site.
 // Author: Rene Brun
-      
+
 void geomAlice_itsv() {
    TGeoManager::Import("http://root.cern.ch/files/alice2.root");
    gGeoManager->DefaultColors();

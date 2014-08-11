@@ -38,24 +38,24 @@ class PragmaLinkCollector;
 class LinkdefReaderPragmaHandler;
 class PragmaExtraInclude;
 
-class LinkdefReader 
+class LinkdefReader
 {
 
 public:
    LinkdefReader(cling::Interpreter &interp,
                  ROOT::TMetaUtils::RConstructorTypes& IOConstructorTypes);
-   
-   bool LoadIncludes(std::string &extraInclude);   
+
+   bool LoadIncludes(std::string &extraInclude);
    bool Parse(SelectionRules& sr, llvm::StringRef code, const std::vector<std::string> &parserArgs, const char *llvmdir);
 
-   
+
 private:
 
    friend class PragmaCreateCollector;
    friend class PragmaLinkCollector;
    friend class LinkdefReaderPragmaHandler;
    friend class PragmaExtraInclude;
-   
+
    long fLine;  // lines count - for error messages
    long fCount; // Number of rules created so far.
    SelectionRules    *fSelectionRules;     // set of rules being filleed.
@@ -89,11 +89,11 @@ private:
       kElse,
       kUnrecognized
    };
-   
+
    // used to create string to tag kind association to use in switch constructions
    static std::map<std::string, EPragmaNames> fgMapPragmaNames;
    static std::map<std::string, ECppNames> fgMapCppNames;
-   
+
    static void PopulatePragmaMap();
    static void PopulateCppMap();
 
@@ -101,7 +101,7 @@ private:
 
    bool AddInclude(std::string include);
    bool AddRule(std::string ruletype, std::string identifier, bool linkOn, bool requestOnlyTClass, Options *option = 0);
-   
+
    bool ProcessFunctionPrototype(std::string& proto, bool& name); // transforms the function prototypes to a more unified form
    bool ProcessOperators(std::string& pattern); // transforms the operators statement to the suitable function pattern
 

@@ -16,10 +16,12 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/e
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons)
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts)
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros)
+execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tutorials ${CMAKE_BINARY_DIR}/tutorials)
+
 
 #---Install the headers which are needed to run the tests from the binary tree-----------------
 add_custom_target(move_headers ALL ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
-                                   -DCOMPONENTS="headers\;tutorials"
+                                   -DCOMPONENTS="headers"
                                    -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake )
 
 #---Test products should not be poluting the standard destinations--------------------------------
@@ -27,7 +29,19 @@ unset(CMAKE_LIBRARY_OUTPUT_DIRECTORY)
 unset(CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
 unset(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
 
-#--Add all subdirectories with tests-----------------------------------------------------------
+if(WIN32)
+  foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
+    unset(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG})
+    unset(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG})
+    unset(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG})
+  endforeach()
+endif()
+
+#---Copy CTestCustom.cmake to binary directory--------------------------------------------------
+configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
+
+#---Add all subdirectories with tests-----------------------------------------------------------
 
 get_property(test_dirs GLOBAL PROPERTY ROOT_TEST_SUBDIRS)
 foreach(d ${test_dirs})

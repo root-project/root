@@ -43,11 +43,11 @@ TBasketSQL::TBasketSQL() : TBasket(), fResultPtr(0), fRowPtr(0), fInsertQuery(0)
 }
 
 //_________________________________________________________________________
-TBasketSQL::TBasketSQL(const char *name, const char *title, TBranch *branch, 
-                         TSQLResult ** rs, TString *insert_query, 
+TBasketSQL::TBasketSQL(const char *name, const char *title, TBranch *branch,
+                         TSQLResult ** rs, TString *insert_query,
                          std::vector<Int_t> *vc, TSQLRow **r) :
   fResultPtr(rs),fRowPtr(r)
-{ 
+{
    // Regular constructor.
 
    SetName(name);
@@ -83,8 +83,8 @@ TBasketSQL::~TBasketSQL()
 }
 
 //_________________________________________________________________________
-void TBasketSQL::CreateBuffer(const char *name, TString title, 
-                              std::vector<Int_t> *vc, 
+void TBasketSQL::CreateBuffer(const char *name, TString title,
+                              std::vector<Int_t> *vc,
                               TBranch *branch, TSQLResult ** rs)
 {
    // Create a TSQLBuffer for this basket.
@@ -103,11 +103,11 @@ void TBasketSQL::CreateBuffer(const char *name, TString title,
    if(vc==0) {
       fBufferRef = 0;
       Error("CreateBuffer","Need a vector of columns\n");
-   } else {    
+   } else {
       fBufferRef   = new TBufferSQL(TBuffer::kWrite, fBufferSize, vc, fInsertQuery, fRowPtr);
    }
    fHeaderOnly  = kTRUE;
-   fLast        = 0; 
+   fLast        = 0;
    //Streamer(*fBufferRef);
    fBuffer      = 0;
    fBranch      = branch;
@@ -136,7 +136,7 @@ Int_t TBasketSQL::ReadBasketBytes(Long64_t , TFile *)
 
 //_________________________________________________________________________
 Int_t TBasketSQL::ReadBasketBuffers(Long64_t , Int_t, TFile *)
-{	 
+{
    // See TBasket::ReadBasketBuffers.  This is not implemented in TBasketSQL.
 
    Error("ReadBasketBuffers","This member function should not be called!");
@@ -145,7 +145,7 @@ Int_t TBasketSQL::ReadBasketBuffers(Long64_t , Int_t, TFile *)
 
 //_________________________________________________________________________
 void TBasketSQL::Reset()
-{	 
+{
    // See TBasket::Reset
 
    TBasket::Reset();
@@ -153,7 +153,7 @@ void TBasketSQL::Reset()
 
 
 //_________________________________________________________________________
-void TBasketSQL::Update(Int_t, Int_t) 
+void TBasketSQL::Update(Int_t, Int_t)
 {
    // See TBasket::Update.
 

@@ -1,6 +1,6 @@
 #ifndef ROOT_TBENCH
 #define ROOT_TBENCH
-   
+
 #include "TClonesArray.h"
 namespace stdext {}
 #include <vector>
@@ -83,7 +83,7 @@ namespace stdext {
   }
 }
 #if defined R__TEMPLATE_OVERLOAD_BUG
-template <> 
+template <>
 #endif
 inline TBuffer &operator>>(TBuffer &buf,THit *&obj)
 {
@@ -159,7 +159,7 @@ public:
 
   ClassDef(TSTLhitDeque,1) // STL vector of THit
 };
-      
+
 //-------------------------------------------------------------
 class TSTLhitMultiset {
 protected:
@@ -344,7 +344,7 @@ public:
 
   ClassDef(TSTLhitStarSet,1) // STL vector of pointers to THit
 };
-      
+
 //-------------------------------------------------------------
 class TSTLhitStarMultiSet {
 protected:
@@ -363,7 +363,7 @@ public:
 
   ClassDef(TSTLhitStarMultiSet,1) // STL vector of pointers to THit
 };
-      
+
 //-------------------------------------------------------------
 class TSTLhitStarMap {
 protected:
@@ -382,7 +382,7 @@ public:
 
   ClassDef(TSTLhitStarMap,1) // STL vector of pointers to THit
 };
-      
+
 //-------------------------------------------------------------
 class TSTLhitStarMultiMap {
 protected:
@@ -401,7 +401,7 @@ public:
 
   ClassDef(TSTLhitStarMultiMap,1) // STL vector of pointers to THit
 };
-      
+
 //-------------------------------------------------------------
 class TCloneshit {
 protected:

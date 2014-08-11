@@ -67,24 +67,24 @@ public:
    TSVDUnfold( const TSVDUnfold& other );
 
    // Destructor
-   virtual ~TSVDUnfold(); 
+   virtual ~TSVDUnfold();
 
    // Set option to normalize unfolded spectrum to unit area
-   // "normalize" - switch 
+   // "normalize" - switch
    void     SetNormalize ( Bool_t normalize ) { fNormalize = normalize; }
 
    // Do the unfolding
    // "kreg"   - number of singular values used (regularisation)
    TH1D*    Unfold       ( Int_t kreg );
 
-   // Determine for given input error matrix covariance matrix of unfolded 
+   // Determine for given input error matrix covariance matrix of unfolded
    // spectrum from toy simulation
    // "cov"    - covariance matrix on the measured spectrum, to be propagated
    // "ntoys"  - number of pseudo experiments used for the propagation
    // "seed"   - seed for pseudo experiments
    TH2D*    GetUnfoldCovMatrix( const TH2D* cov, Int_t ntoys, Int_t seed = 1 );
 
-   // Determine covariance matrix of unfolded spectrum from finite statistics in 
+   // Determine covariance matrix of unfolded spectrum from finite statistics in
    // response matrix
    // "ntoys"  - number of pseudo experiments used for the propagation
    // "seed"   - seed for pseudo experiments
@@ -104,15 +104,15 @@ public:
 
    // Obtain the computed inverse of the covariance matrix
    TH2D*    GetXinv() const;
-   
+
    //Obtain the covariance matrix on the data
    TH2D*    GetBCov() const;
 
    // Helper functions
    Double_t ComputeChiSquared( const TH1D& truspec, const TH1D& unfspec );
 
-private: 
-   
+private:
+
    // Helper functions for vector and matrix operations
    void            FillCurvatureMatrix( TMatrixD& tCurv, TMatrixD& tC ) const;
    static Double_t GetCurvature       ( const TVectorD& vec, const TMatrixD& curv );
@@ -130,7 +130,7 @@ private:
 
    static TVectorD VecDiv                 ( const TVectorD& vec1, const TVectorD& vec2, Int_t zero = 0 );
    static void     RegularisedSymMatInvert( TMatrixDSym& mat, Double_t eps = 1e-3 );
-   
+
    // Class members
    Int_t       fNdim;        //! Truth and reconstructed dimensions
    Int_t       fDdim;        //! Derivative for curvature matrix
@@ -154,8 +154,8 @@ private:
    Bool_t      fToyMode;     //! Internal switch for covariance matrix propagation
    Bool_t      fMatToyMode;  //! Internal switch for evaluation of statistical uncertainties from response matrix
 
-   
-   ClassDef( TSVDUnfold, 0 ) // Data unfolding using Singular Value Decomposition (hep-ph/9509307)   
+
+   ClassDef( TSVDUnfold, 0 ) // Data unfolding using Singular Value Decomposition (hep-ph/9509307)
 };
 
 #endif

@@ -17,7 +17,7 @@
 
 
 
-void exampleTKDE(int n = 1000) { 
+void exampleTKDE(int n = 1000) {
 
  // generate some gaussian points
 
@@ -32,11 +32,11 @@ void exampleTKDE(int n = 1000) {
 
    std::vector<double> data(n);
    for (int i = 0; i < n; ++i) {
-      if (i < 0.4*n) { 
+      if (i < 0.4*n) {
          data[i] = gRandom->Gaus(2,1);
          h1->Fill(data[i]);
       }
-      else { 
+      else {
          data[i] = gRandom->Gaus(7,1.5);
          h1->Fill(data[i]);
       }
@@ -48,7 +48,7 @@ void exampleTKDE(int n = 1000) {
    h1->SetTitle("Bi-Gaussian");
    h1->Draw();
 
-   // drawn true normalized density 
+   // drawn true normalized density
    TF1 * f1 = new TF1("f1","0.4*ROOT::Math::normal_pdf(x,1,2)+0.6*ROOT::Math::normal_pdf(x,1.5,7)",xmin,xmax);
    f1->SetLineColor(kGreen+2);
    f1->Draw("SAME");
@@ -76,7 +76,7 @@ void exampleTKDE(int n = 1000) {
    // TF1 * const hk = kde->GetFunction(1000);
    // hk->SetLineColor(kBlue);
    // hk->Draw("same");
-   
+
    // TF1 * fl = kde->GetLowerFunction(0.684);
    // TF1 * fu = kde->GetUpperFunction(0.684);
    // fl->Draw("SAME");

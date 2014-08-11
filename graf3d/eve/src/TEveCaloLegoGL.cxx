@@ -419,7 +419,7 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
 {
    // Draw z-axis and z-box at the appropriate grid corner-point including
    // tick-marks and labels.
-   
+
    // set font size first depending on size of projected axis
 
    TGLMatrix mm;
@@ -444,7 +444,7 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
 
    Float_t tickLength = TMath::Max(fM->GetData()->GetEtaBins()->GetTickLength(), 0.02f);
    Float_t labelOffset = TMath::Max(fM->GetData()->GetEtaBins()->GetLabelOffset(), 0.02f);
-   
+
    // Z axis
    //
    if (fM->fData->Empty() == kFALSE)
@@ -453,12 +453,12 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
       Double_t omin=0, omax=0, bw1;
       THLimitsFinder::Optimize(0, fMaxVal, fM->fNZSteps, omin, omax, ondiv, bw1);
       worldRef.Set(fZAxisTitlePos.fX, fZAxisTitlePos.fY, fZAxisTitlePos.fZ);
-      TGLVector3 zto = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, 0, fAxisPainter.GetLabelPixelFontSize(),  &mm);                  
+      TGLVector3 zto = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, 0, fAxisPainter.GetLabelPixelFontSize(),  &mm);
       // check z axis title does not overalp with label
       if ( fZAxisTitlePos.fZ - omax <   fAxisPainter.GetLabelPixelFontSize())
          fZAxisTitlePos.fZ = omax + zto.Z();
 
-      
+
       fZAxis->SetAxisColor(fGridColor);
       fZAxis->SetLabelColor(fFontColor);
       fZAxis->SetTitleColor(fFontColor);
@@ -551,7 +551,7 @@ void TEveCaloLegoGL::DrawAxis3D(TGLRnrCtx & rnrCtx) const
    fAxisPainter.RefDir().Set(1, 0, 0);
    fAxisPainter.RefTMOff(0).Set(0, yOff, 0);
    glTranslatef(0, fXAxisTitlePos.fY, 0);
-   
+
    ax.SetNdivisions(fM->GetData()->GetEtaBins()->GetNdivisions());
    ax.SetLimits(fM->GetEtaMin(), fM->GetEtaMax());
    ax.SetTitle(fM->GetData()->GetEtaBins()->GetTitle());
@@ -669,7 +669,7 @@ void TEveCaloLegoGL::DrawAxis2D(TGLRnrCtx & rnrCtx) const
    fAxisPainter.PaintAxis(rnrCtx, &ax);
    glPopMatrix();
 
-   fAxisPainter.SetTMNDim(2); 
+   fAxisPainter.SetTMNDim(2);
 }
 
 //______________________________________________________________________________
@@ -1021,7 +1021,7 @@ void TEveCaloLegoGL::DrawCells2D(TGLRnrCtx &rnrCtx, vCell2D_t& cells2D) const
          glEnd();
 
          if (fM->f2DMode == TEveCaloLego::kValSizeOutline)
-         { 
+         {
             glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);
             Float_t z    = 0;
             Float_t zOff = fMaxVal*0.001 ; // avoid polygon stipling
@@ -1107,7 +1107,7 @@ void TEveCaloLegoGL::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* /*
    }
 
    TGLUtil::LockColor();
-   if (!fM->fData->GetCellsHighlighted().empty()) 
+   if (!fM->fData->GetCellsHighlighted().empty())
    {
       glColor4ubv(rnrCtx.ColorSet().Selection(3).CArr());
       DrawSelectedCells(rnrCtx, fM->fData->GetCellsHighlighted());
@@ -1140,7 +1140,7 @@ void TEveCaloLegoGL::DrawSelectedCells(TGLRnrCtx & rnrCtx, TEveCaloData::vCellId
    {
       fM->fData->GetCellData((*i), cellData);
       if (fM->CellInEtaPhiRng(cellData))
-         cellsSelected.push_back(*i); 
+         cellsSelected.push_back(*i);
    }
 
    // prepare rebin for 2D or 3D if necessary

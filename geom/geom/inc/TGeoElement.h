@@ -84,14 +84,14 @@ public:
    // Specific activity (in Bq/gram)
    virtual Double_t         GetSpecificActivity() const {return 0.;}
    Bool_t                   HasIsotopes() const {return (fNisotopes==0)?kFALSE:kTRUE;}
-   Bool_t                   IsDefined() const {return TObject::TestBit(kElemDefined);}   
+   Bool_t                   IsDefined() const {return TObject::TestBit(kElemDefined);}
    virtual Bool_t           IsRadioNuclide() const {return kFALSE;}
    Bool_t                   IsUsed() const {return TObject::TestBit(kElemUsed);}
    virtual void             Print(Option_t *option = "") const;
-   void                     SetDefined(Bool_t flag=kTRUE) {TObject::SetBit(kElemDefined,flag);}                    
-   void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kElemUsed,flag);}                    
+   void                     SetDefined(Bool_t flag=kTRUE) {TObject::SetBit(kElemDefined,flag);}
+   void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kElemUsed,flag);}
    static TGeoElementTable *GetElementTable();
-   
+
 
    ClassDef(TGeoElement, 2)              // base element class
 };
@@ -114,7 +114,7 @@ public:
    TGeoIsotope();
    TGeoIsotope(const char *name, Int_t z, Int_t n, Double_t a);
    virtual ~TGeoIsotope() {}
-   
+
    Int_t                    GetZ() const {return fZ;}
    Int_t                    GetN() const {return fN;}
    Double_t                 GetA() const {return fA;}
@@ -122,7 +122,7 @@ public:
    virtual void             Print(Option_t *option = "") const;
 
    ClassDef(TGeoIsotope, 1)              // Isotope class defined by Z,N,A
-};   
+};
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
@@ -151,19 +151,19 @@ protected:
    TGeoBatemanSol          *fRatio;    // Time evolution of proportion by number
 
    TObjArray               *fDecays;   // List of decay modes
-   
+
    void                     MakeName(Int_t a, Int_t z, Int_t iso);
 
 private:
-   TGeoElementRN(const TGeoElementRN& elem); 
-   TGeoElementRN& operator=(const TGeoElementRN& elem); 
+   TGeoElementRN(const TGeoElementRN& elem);
+   TGeoElementRN& operator=(const TGeoElementRN& elem);
 
 public:
    TGeoElementRN();
-   TGeoElementRN(Int_t A, Int_t Z, Int_t iso, Double_t level, 
+   TGeoElementRN(Int_t A, Int_t Z, Int_t iso, Double_t level,
          Double_t deltaM, Double_t halfLife, const char* JP,
          Double_t natAbun, Double_t th_f, Double_t tg_f, Double_t th_s,
-         Double_t tg_s, Int_t status); 
+         Double_t tg_s, Int_t status);
    virtual ~TGeoElementRN();
 
    void                     AddDecay(Int_t decay, Int_t diso, Double_t branchingRatio, Double_t qValue);
@@ -179,15 +179,15 @@ public:
    Int_t                    MassNo()      const {return (Int_t)fA;}
    Int_t                    AtomicNo()    const {return fZ;}
    Int_t                    IsoNo()       const {return fIso;}
-   Double_t                 Level()       const {return fLevel;}    
-   Double_t                 MassEx()      const {return fDeltaM;}   
+   Double_t                 Level()       const {return fLevel;}
+   Double_t                 MassEx()      const {return fDeltaM;}
    Double_t                 HalfLife()    const {return fHalfLife;}
-   Double_t                 NatAbun()     const {return fNatAbun;}  
-   const char*              PJ()          const {return fTitle.Data();}   
-   Double_t                 TH_F()        const {return fTH_F;}     
-   Double_t                 TG_F()        const {return fTG_F;}     
-   Double_t                 TH_S()        const {return fTH_S;}     
-   Double_t                 TG_S()        const {return fTG_S;}     
+   Double_t                 NatAbun()     const {return fNatAbun;}
+   const char*              PJ()          const {return fTitle.Data();}
+   Double_t                 TH_F()        const {return fTH_F;}
+   Double_t                 TG_F()        const {return fTG_F;}
+   Double_t                 TH_S()        const {return fTH_S;}
+   Double_t                 TG_S()        const {return fTG_S;}
    Double_t                 Status()      const {return fStatus;}
    Bool_t                   Stable()      const {return !fDecays;}
    TObjArray               *Decays()      const {return fDecays;}
@@ -201,7 +201,7 @@ public:
    virtual void             Print(Option_t *option = "") const;
    static TGeoElementRN    *ReadElementRN(const char *record, Int_t &ndecays);
    virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
-  
+
    ClassDef(TGeoElementRN, 2)           // radionuclides class
 };
 
@@ -225,7 +225,7 @@ public:
       kBitMask32  = 0xffffffff,
       k2BetaMinus   = BIT(0),
       kBetaMinus    = BIT(1),
-      kNeutronEm    = BIT(2), 
+      kNeutronEm    = BIT(2),
       kProtonEm     = BIT(3),
       kAlpha        = BIT(4),
       kECF          = BIT(5),
@@ -282,7 +282,7 @@ private:
    typedef struct {
       Double_t   cn;     // Concentration for element 'i': Ni/Ntop
       Double_t   lambda; // Decay coef. for element 'i'
-   } BtCoef_t;     
+   } BtCoef_t;
    TGeoElementRN           *fElem;            // Referred RN element
    TGeoElementRN           *fElemTop;         // Top RN element
    Int_t                    fCsize;           // Size of the array of coefficients
@@ -300,7 +300,7 @@ public:
 
    TGeoBatemanSol& operator=(const TGeoBatemanSol& other);
    TGeoBatemanSol& operator+=(const TGeoBatemanSol& other);
-   
+
    Double_t                 Concentration(Double_t time) const;
    virtual void             Draw(Option_t *option="");
    void                     GetCoeff(Int_t i, Double_t &cn, Double_t &lambda) const {cn=fCoeff[i].cn; lambda=fCoeff[i].lambda;}
@@ -315,8 +315,8 @@ public:
    void                     Normalize(Double_t factor);
 
    ClassDef(TGeoBatemanSol,1)       // Solution for the Bateman equation
-};   
-   
+};
+
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TGeoElemIter - iterator for decay chains.                              //
@@ -340,9 +340,9 @@ protected:
 
 public:
    TGeoElemIter(TGeoElementRN *top, Double_t limit=1.e-4);
-   TGeoElemIter(const TGeoElemIter &iter); 
+   TGeoElemIter(const TGeoElemIter &iter);
    virtual ~TGeoElemIter();
-   
+
    TGeoElemIter   &operator=(const TGeoElemIter &iter);
    TGeoElementRN  *operator()();
    TGeoElementRN           *Next();
@@ -354,7 +354,7 @@ public:
    Double_t                 GetRatio() const               {return fRatio;}
    virtual void             Print(Option_t *option="") const;
    void                     SetLimitRatio(Double_t limit)  {fLimitRatio = limit;}
-   
+
    ClassDef(TGeoElemIter,0)    // Iterator for radionuclide chains.
 };
 
@@ -380,8 +380,8 @@ private:
    ElementRNMap_t           fElementsRN; //! map of RN elements with ENDF key
 
 protected:
-   TGeoElementTable(const TGeoElementTable&); 
-   TGeoElementTable& operator=(const TGeoElementTable&); 
+   TGeoElementTable(const TGeoElementTable&);
+   TGeoElementTable& operator=(const TGeoElementTable&);
 
 public:
    // constructors
@@ -394,7 +394,7 @@ public:
    enum EGeoETStatus {
       kETDefaultElements = BIT(14),
       kETRNElements      = BIT(15)
-   };      
+   };
    void                     AddElement(const char *name, const char *title, Int_t z, Double_t a);
    void                     AddElement(const char *name, const char *title, Int_t z, Int_t n, Double_t a);
    void                     AddElementRN(TGeoElementRN *elem);

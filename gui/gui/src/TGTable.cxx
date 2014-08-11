@@ -40,17 +40,17 @@ ClassImp(TTableRange)
 //______________________________________________________________________________
 /* Begin_Html
 <center><h2>TGTable</h2></center>
-<br><br>                                                                    
-TGTable implements a table widget to display data in rows and       
-columns. The data is supplied by a TVirtualTableInterface.          
 <br><br>
-The table is a TGCanvas to make use of already available viewport   
-functionality and drawing optimizations.                            
+TGTable implements a table widget to display data in rows and
+columns. The data is supplied by a TVirtualTableInterface.
 <br><br>
-The top left cell in a table has coordinates (0,0)                  
+The table is a TGCanvas to make use of already available viewport
+functionality and drawing optimizations.
 <br><br>
-A TObjArray is used internally to ensure little overhead and fast   
-acces to cells.                                                     
+The top left cell in a table has coordinates (0,0)
+<br><br>
+A TObjArray is used internally to ensure little overhead and fast
+acces to cells.
 <br><br>
 If the data source has more rows than the default 50 rows of cells in
 memory, buttons at the bottom of the table can be used to load the
@@ -64,9 +64,9 @@ table. Tab will switch between the enties, return will move to the
 currently entered range and resize the table if needed. Clicking the
 goto button has the same effect.
 <br><br>
-A TGTable is created by first creating an appropriate               
-TVirtualTableInterface from the data that needs visualization and   
-then creating the TGTable using this interface.                     
+A TGTable is created by first creating an appropriate
+TVirtualTableInterface from the data that needs visualization and
+then creating the TGTable using this interface.
 <br><br>
 A simple macro to use a TGTable with a TGSimpleTableInterface:
 End_Html
@@ -88,18 +88,18 @@ Begin_Macro(source, gui)
    mainframe->SetCleanup(kDeepCleanup) ;
 
    // Create an interface
-   TGSimpleTableInterface *iface = new TGSimpleTableInterface(data, 6, 5); 
+   TGSimpleTableInterface *iface = new TGSimpleTableInterface(data, 6, 5);
 
    // Create the table
-   TGTable *table = new TGTable(mainframe, 999, iface); 
+   TGTable *table = new TGTable(mainframe, 999, iface);
 
    // Add the table to the main frame
    mainframe->AddFrame(table, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    //Update data
-   data[5][1] = 3.01; 
+   data[5][1] = 3.01;
    //update the table view
-   table->Update(); 
+   table->Update();
 
    // Layout and map the main frame
    mainframe->SetWindowName("Tree Table Test") ;
@@ -124,14 +124,14 @@ Begin_Macro(source, gui)
    TNtuple *ntuple = (TNtuple *)file->Get("ntuple");
 
    // Create an interface
-   TTreeTableInterface *iface = new TTreeTableInterface(ntuple); 
+   TTreeTableInterface *iface = new TTreeTableInterface(ntuple);
 
    // Create a main frame to contain the table
    TGMainFrame* mainframe = new TGMainFrame(0, 400, 200);
    mainframe->SetCleanup(kDeepCleanup) ;
 
    // Create the table
-   TGTable *table = new TGTable(mainframe, 999, iface, 10, 6); 
+   TGTable *table = new TGTable(mainframe, 999, iface, 10, 6);
 
    // Add the table to the main frame
    mainframe->AddFrame(table, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
@@ -141,7 +141,7 @@ Begin_Macro(source, gui)
    // Add a column
    iface->AddColumn("(px+py)/(px-py)", 0);
    //update the table view
-   table->Update(); 
+   table->Update();
 
    // Layout and map the main frame
    mainframe->SetWindowName("Tree Table Test") ;
@@ -162,11 +162,11 @@ End_Macro
 // TList *TGTable::fgEditList = 0 ;
 
 //______________________________________________________________________________
-TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface, 
-                 UInt_t nrows, UInt_t ncolumns) 
-   : TGCompositeFrame(p, 500, 500, kVerticalFrame), TGWidget(id), fRows(0), 
-     fRowHeaders(0), fColumnHeaders(0), fReadOnly(kFALSE), fSelectColor(0), 
-     fTMode(0), fAllData(kFALSE), fTableFrame(0), fCanvas(0), fCellWidth(80), 
+TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface,
+                 UInt_t nrows, UInt_t ncolumns)
+   : TGCompositeFrame(p, 500, 500, kVerticalFrame), TGWidget(id), fRows(0),
+     fRowHeaders(0), fColumnHeaders(0), fReadOnly(kFALSE), fSelectColor(0),
+     fTMode(0), fAllData(kFALSE), fTableFrame(0), fCanvas(0), fCellWidth(80),
      fCellHeight(25), fInterface(interface)
 {
    // TGTable constuctor.
@@ -180,7 +180,7 @@ TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface,
    fCHdrHintsList = new TList(hints);
    fMainHintsList = new TList(hints);
 
-   // To be done: GetBackground colors for .rootrc 
+   // To be done: GetBackground colors for .rootrc
    SetBackgroundColor(GetWhitePixel());
    fEvenRowBackground = TColor::RGB2Pixel(204, 255, 204);
    fOddRowBackground  = TColor::RGB2Pixel(255, 255, 255);
@@ -227,7 +227,7 @@ TGTable::~TGTable()
 }
 
 //______________________________________________________________________________
-void TGTable::Init() 
+void TGTable::Init()
 {
    // Initialise the TGTable.
 
@@ -236,29 +236,29 @@ void TGTable::Init()
 
    // Main layout frames
    fTopFrame = new TGHorizontalFrame(this, fWidth, fCellHeight);
-   fTopExtraFrame = new TGHorizontalFrame(fTopFrame, fWidth - fCellWidth, 
+   fTopExtraFrame = new TGHorizontalFrame(fTopFrame, fWidth - fCellWidth,
                                           fCellHeight);
    TGString *str = new TGString();
    *str += GetNTableRows();
    *str += "x";
    *str += GetNTableColumns();
    *str += " Table";
-   fTableHeader = new TGTableHeader(fTopFrame, this, str, 0, 
+   fTableHeader = new TGTableHeader(fTopFrame, this, str, 0,
                                     kTableHeader);
 
    fBottomFrame = new TGHorizontalFrame(this, fWidth, fHeight - fCellHeight);
-   fRHdrFrame = new TGTableHeaderFrame(fBottomFrame, this, fCellWidth, 
+   fRHdrFrame = new TGTableHeaderFrame(fBottomFrame, this, fCellWidth,
                                        fHeight - fCellHeight, kRowHeader);
-   fCHdrFrame = new TGTableHeaderFrame(fTopExtraFrame, this, fWidth - fCellWidth, 
+   fCHdrFrame = new TGTableHeaderFrame(fTopExtraFrame, this, fWidth - fCellWidth,
                                        fCellHeight, kColumnHeader);
 
    // Frame for the buttons at the bottom
    fButtonFrame = new TGHorizontalFrame(this, 200, 50);
-   fNextButton = new TGTextButton(fButtonFrame, "Next", WidgetId() + 2000); 
-   fPrevButton = new TGTextButton(fButtonFrame, "Previous", WidgetId() + 2001); 
-   fUpdateButton = new TGTextButton(fButtonFrame, "Update", WidgetId() + 2002); 
+   fNextButton = new TGTextButton(fButtonFrame, "Next", WidgetId() + 2000);
+   fPrevButton = new TGTextButton(fButtonFrame, "Previous", WidgetId() + 2001);
+   fUpdateButton = new TGTextButton(fButtonFrame, "Update", WidgetId() + 2002);
 
-   fCanvas = new TGCanvas(fBottomFrame, ncolumns * fCellWidth, 
+   fCanvas = new TGCanvas(fBottomFrame, ncolumns * fCellWidth,
                           nrows * fCellHeight, 0);
    fTableFrame = new TGTableFrame(fCanvas->GetViewPort(), nrows, ncolumns);
    fTableFrame->SetCanvas(fCanvas);
@@ -271,7 +271,7 @@ void TGTable::Init()
    fFirstCellEntry = new TGTextEntry(fRangeFrame, "0,0", WidgetId() + 2050);
    fFirstCellEntry->SetWidth(100);
    fFirstCellEntry->SetAlignment(kTextRight);
-   fFirstCellEntry->Connect("TextChanged(const char *)", "TGTable", this, 
+   fFirstCellEntry->Connect("TextChanged(const char *)", "TGTable", this,
                             "UserRangeChange()");
    fFirstCellEntry->Connect("ReturnPressed()", "TGTable", this, "Goto()");
 
@@ -285,16 +285,16 @@ void TGTable::Init()
    fRangeEntry->Connect("TextChanged(const char *)", "TGTable", this,
                         "UserRangeChange()");
    fRangeEntry->Connect("ReturnPressed()", "TGTable", this, "Goto()");
-   fRangeEntry->Connect("TabPressed()", "TGTextEntry", fFirstCellEntry, 
+   fRangeEntry->Connect("TabPressed()", "TGTextEntry", fFirstCellEntry,
                             "SetFocus()");
-   fFirstCellEntry->Connect("TabPressed()", "TGTextEntry", fRangeEntry, 
+   fFirstCellEntry->Connect("TabPressed()", "TGTextEntry", fRangeEntry,
                             "SetFocus()");
 
    fGotoRange->fXbr = GetNTableRows();
    fGotoRange->fYbr = GetNTableColumns();
-   fGotoButton = new TGTextButton(fRangeFrame, "Goto", WidgetId() + 2003); 
+   fGotoButton = new TGTextButton(fRangeFrame, "Goto", WidgetId() + 2003);
    fGotoButton->SetState(kButtonDisabled);
-   
+
    // Set frame backgrounds
    fCHdrFrame->SetBackgroundColor(fBackground);
    fRHdrFrame->SetBackgroundColor(fBackground);
@@ -311,13 +311,13 @@ void TGTable::Init()
    TGString *label = 0;
    fRowHeaders = new TObjArray(nrows);
    for(i = 0; i < nrows; i++) {
-      TGTableHeader *hdr = new TGTableHeader(fRHdrFrame, this, 
-                                             label, i, kRowHeader); 
+      TGTableHeader *hdr = new TGTableHeader(fRHdrFrame, this,
+                                             label, i, kRowHeader);
       fRowHeaders->AddAt(hdr, i);
    }
    fColumnHeaders = new TObjArray(ncolumns);
    for(i = 0; i < ncolumns; i++) {
-      TGTableHeader *hdr = new TGTableHeader(fCHdrFrame, this, 
+      TGTableHeader *hdr = new TGTableHeader(fCHdrFrame, this,
                                              label, i, kColumnHeader);
       fColumnHeaders->AddAt(hdr, i);
    }
@@ -335,7 +335,7 @@ void TGTable::Init()
    }
 
    // Check if the table covers all the data
-   if ((GetNDataColumns() >= GetNTableColumns()) && 
+   if ((GetNDataColumns() >= GetNTableColumns()) &&
        (GetNDataRows() >= GetNTableRows())) {
       fAllData = kTRUE;
    } else {
@@ -360,7 +360,7 @@ void TGTable::Init()
          fCanvas->AddFrame(GetCell(i,j), lhints);
       }
    }
-   
+
    // Add frames to the range frame
    lhints = new TGLayoutHints(kLHintsRight | kLHintsCenterY, 3, 30, 4, 4);
    fRangeFrame->AddFrame(fGotoButton, lhints);
@@ -386,15 +386,15 @@ void TGTable::Init()
    fTopFrame->AddFrame(fTopExtraFrame, lhints);
    lhints = new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandY);
    fBottomFrame->AddFrame(fRHdrFrame, lhints);
-   lhints =  new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX 
+   lhints =  new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX
                                | kLHintsExpandY);
    fBottomFrame->AddFrame(fCanvas, lhints);
 
    // Add buttons to button frame
    lhints = new TGLayoutHints(kLHintsRight | kLHintsCenterY, 3, 30, 4, 4);
-   fButtonFrame->AddFrame(fNextButton, lhints);   
+   fButtonFrame->AddFrame(fNextButton, lhints);
    lhints = new TGLayoutHints(kLHintsRight | kLHintsCenterY, 3, 3, 4, 4);
-   fButtonFrame->AddFrame(fPrevButton, lhints);   
+   fButtonFrame->AddFrame(fPrevButton, lhints);
    lhints = new TGLayoutHints(kLHintsRight | kLHintsCenterY, 3, 30, 4, 4);
    fButtonFrame->AddFrame(fUpdateButton, lhints);
    fButtonFrame->Resize();
@@ -402,7 +402,7 @@ void TGTable::Init()
 
    lhints = new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX);
    AddFrame(fTopFrame, lhints);
-   lhints = new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX | 
+   lhints = new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX |
                               kLHintsExpandY);
    AddFrame(fBottomFrame, lhints);
    lhints = new TGLayoutHints(kLHintsExpandX | kLHintsTop);
@@ -434,7 +434,7 @@ void TGTable::DoRedraw()
 }
 
 //______________________________________________________________________________
-void TGTable::Expand(UInt_t nrows, UInt_t ncolumns) 
+void TGTable::Expand(UInt_t nrows, UInt_t ncolumns)
 {
    // Expand a TGTable by nrows and ncolumns.
 
@@ -443,7 +443,7 @@ void TGTable::Expand(UInt_t nrows, UInt_t ncolumns)
 }
 
 //______________________________________________________________________________
-void TGTable::ExpandColumns(UInt_t ncolumns) 
+void TGTable::ExpandColumns(UInt_t ncolumns)
 {
    // Expand the columns of a TGTable by ncolumns.
 
@@ -456,8 +456,8 @@ void TGTable::ExpandColumns(UInt_t ncolumns)
    fColumnHeaders->Expand(ntcolumns + ncolumns);
 
    for (i = 0; i < ncolumns; i++) {
-      TGTableHeader *header = new TGTableHeader(fCHdrFrame, this, label, 
-                                                ntcolumns + i, 
+      TGTableHeader *header = new TGTableHeader(fCHdrFrame, this, label,
+                                                ntcolumns + i,
                                                 kColumnHeader);
       fColumnHeaders->AddAt(header, ntcolumns + i);
    }
@@ -465,7 +465,7 @@ void TGTable::ExpandColumns(UInt_t ncolumns)
    for (i = 0; i < ntrows; i++) {
       GetRow(i)->Expand(ntcolumns + ncolumns);
       for (j = 0; j < ncolumns; j++) {
-         TGTableCell *cell = new TGTableCell(fCanvas->GetContainer(), this, label, i, 
+         TGTableCell *cell = new TGTableCell(fCanvas->GetContainer(), this, label, i,
                                              ntcolumns + j);
          if (GetRow(i)) GetRow(i)->AddAt(cell, ntcolumns + j);
       }
@@ -473,7 +473,7 @@ void TGTable::ExpandColumns(UInt_t ncolumns)
 
    fCurrentRange->fXbr += ncolumns;
 
-   if ((GetNDataColumns() == GetNTableColumns()) && 
+   if ((GetNDataColumns() == GetNTableColumns()) &&
        (GetNDataRows() == GetNTableRows())) {
       fAllData = kTRUE;
    } else {
@@ -482,11 +482,11 @@ void TGTable::ExpandColumns(UInt_t ncolumns)
 }
 
 //______________________________________________________________________________
-void TGTable::ExpandRows(UInt_t nrows) 
+void TGTable::ExpandRows(UInt_t nrows)
 {
    // Expand the rows of a TGTable by nrows.
 
-   UInt_t i = 0, j = 0; 
+   UInt_t i = 0, j = 0;
 
    UInt_t ntrows = GetNTableRows();
    UInt_t ntcolumns = GetNTableColumns();
@@ -495,21 +495,21 @@ void TGTable::ExpandRows(UInt_t nrows)
    fRowHeaders->Expand(ntrows + nrows);
    for (i = 0; i < nrows; i++) {
       TObjArray *row = new TObjArray(ntcolumns);
-      fRows->AddAt(row, ntrows + i);  
+      fRows->AddAt(row, ntrows + i);
       TGString *label = 0;
-      TGTableHeader *header = new TGTableHeader(fRHdrFrame, this, label, 
+      TGTableHeader *header = new TGTableHeader(fRHdrFrame, this, label,
                                                 ntrows + i, kRowHeader);
       fRowHeaders->AddAt(header, ntrows + i);
       for (j = 0; j < ntcolumns ; j++) {
-         TGTableCell *cell = new TGTableCell(fCanvas->GetContainer(), this, label, 
+         TGTableCell *cell = new TGTableCell(fCanvas->GetContainer(), this, label,
                                              ntrows + i, j);
          if (GetRow(ntrows + i)) GetRow(ntrows + i)->AddAt(cell, j);
       }
    }
-   
+
    fCurrentRange->fYbr += nrows;
 
-   if ((GetNDataColumns() == GetNTableColumns()) && 
+   if ((GetNDataColumns() == GetNTableColumns()) &&
        (GetNDataRows() == GetNTableRows())) {
       fAllData = kTRUE;
    } else {
@@ -544,7 +544,7 @@ UInt_t TGTable::GetRHdrHeight() const
 }
 
 //______________________________________________________________________________
-void TGTable::Shrink(UInt_t nrows, UInt_t ncolumns) 
+void TGTable::Shrink(UInt_t nrows, UInt_t ncolumns)
 {
    // Shrink the TGTable by nrows and ncolumns.
 
@@ -553,7 +553,7 @@ void TGTable::Shrink(UInt_t nrows, UInt_t ncolumns)
 }
 
 //______________________________________________________________________________
-void TGTable::ShrinkColumns(UInt_t ncolumns) 
+void TGTable::ShrinkColumns(UInt_t ncolumns)
 {
    // Shrink the columns of the TGTable by ncolumns.
 
@@ -597,7 +597,7 @@ void TGTable::ShrinkColumns(UInt_t ncolumns)
    fCurrentRange->fXbr -= ncolumns;
 
 
-   if ((GetNDataColumns() == GetNTableColumns()) && 
+   if ((GetNDataColumns() == GetNTableColumns()) &&
        (GetNDataRows() == GetNTableRows())) {
       fAllData = kTRUE;
    } else {
@@ -606,7 +606,7 @@ void TGTable::ShrinkColumns(UInt_t ncolumns)
 }
 
 //______________________________________________________________________________
-void TGTable::ShrinkRows(UInt_t nrows) 
+void TGTable::ShrinkRows(UInt_t nrows)
 {
    // Shrink the rows of the TGTable by nrows.
 
@@ -645,7 +645,7 @@ void TGTable::ShrinkRows(UInt_t nrows)
 
    fCurrentRange->fYbr -= nrows;
 
-   if ((GetNDataColumns() == GetNTableColumns()) && 
+   if ((GetNDataColumns() == GetNTableColumns()) &&
        (GetNDataRows() == GetNTableRows())) {
       fAllData = kTRUE;
    } else {
@@ -677,7 +677,7 @@ void TGTable::UpdateHeaders(EHeaderType type)
 }
 
 //______________________________________________________________________________
-void TGTable::SetInterface(TVirtualTableInterface *interface, 
+void TGTable::SetInterface(TVirtualTableInterface *interface,
                            UInt_t nrows, UInt_t ncolumns)
 {
    // Set the interface that the TGTable uses to interface.
@@ -706,7 +706,7 @@ void TGTable::SetInterface(TVirtualTableInterface *interface,
 
    GotoTableRange(0, 0, x, y);
 
-   if ((GetNDataColumns() == GetNTableColumns()) && 
+   if ((GetNDataColumns() == GetNTableColumns()) &&
        (GetNDataRows() == GetNTableRows())) {
       fAllData = kTRUE;
    } else {
@@ -717,7 +717,7 @@ void TGTable::SetInterface(TVirtualTableInterface *interface,
 //______________________________________________________________________________
 void TGTable::ResizeTable(UInt_t newnrows, UInt_t newncolumns)
 {
-   // Resize the table to newnrows and newncolumns and add all the frames to 
+   // Resize the table to newnrows and newncolumns and add all the frames to
    // their parent frames.
 
    UInt_t oldnrows = GetNTableRows();
@@ -743,8 +743,8 @@ void TGTable::ResizeTable(UInt_t newnrows, UInt_t newncolumns)
       }
    }
 
-   // Update the layoutmanager and add the frames.   
-   if ((newncolumns != oldncolumns) || (newnrows != oldnrows)) {      
+   // Update the layoutmanager and add the frames.
+   if ((newncolumns != oldncolumns) || (newnrows != oldnrows)) {
       container->RemoveAll();
       fCellHintsList->Delete();
 
@@ -754,7 +754,7 @@ void TGTable::ResizeTable(UInt_t newnrows, UInt_t newncolumns)
       fCHdrFrame->RemoveAll();
       fCHdrHintsList->Delete();
 
-      container->SetLayoutManager(new TGMatrixLayout(container, 
+      container->SetLayoutManager(new TGMatrixLayout(container,
                                                      newnrows, newncolumns));
       // Add frames to layout frames
       TGLayoutHints *lhints = 0;
@@ -784,7 +784,7 @@ void TGTable::UpdateRangeFrame()
    // Update the range shown in the range frame.
 
    TString tl, range;
-   
+
    tl += fCurrentRange->fYtl;
    tl += ",";
    tl += fCurrentRange->fXtl;
@@ -955,11 +955,11 @@ void TGTable::Show()
    for (j = 0; j < ncolumns + 1; j++) {
       if (j == 0) {
          hdr = fTableHeader;
-         if (hdr) std::cout << " " << std::setw(12) << std::right 
+         if (hdr) std::cout << " " << std::setw(12) << std::right
                             << hdr->GetLabel()->GetString() << " ";
       } else {
          hdr = GetColumnHeader(j - 1);
-         if (hdr) std::cout << " " << std::setw(12) << std::right 
+         if (hdr) std::cout << " " << std::setw(12) << std::right
                             << hdr->GetLabel()->GetString() << " ";
       }
    }
@@ -969,11 +969,11 @@ void TGTable::Show()
       for (j = 0; j < ncolumns + 1; j++) {
          if (j == 0) {
             hdr = GetRowHeader(i);
-            if (hdr) std::cout << " " << std::setw(12) << std::right 
+            if (hdr) std::cout << " " << std::setw(12) << std::right
                                << hdr->GetLabel()->GetString() << " ";
          } else {
             cell = GetCell(i, j - 1);
-            if (cell) std::cout << " " << std::setw(12) << std::right 
+            if (cell) std::cout << " " << std::setw(12) << std::right
                                 << cell->GetLabel()->GetString() << " ";
          }
       }
@@ -1054,7 +1054,7 @@ void TGTable::Show()
 // }
 
 //______________________________________________________________________________
-void TGTable::UpdateView() 
+void TGTable::UpdateView()
 {
    // Update and layout the visible part of the TGTable.
 
@@ -1086,7 +1086,7 @@ void TGTable::UpdateView()
          if(cell) cell->SetLabel(label);
       }
    }
-   
+
    MapSubwindows();
    Layout();
    gClient->NeedRedraw(fTableHeader);
@@ -1102,7 +1102,7 @@ void TGTable::UpdateView()
 UInt_t TGTable::GetNTableRows() const
 {
    // Return the amount of rows in the table.
-   
+
    return fCurrentRange->fYbr - fCurrentRange->fYtl;
 }
 
@@ -1182,7 +1182,7 @@ const TGTableHeader *TGTable::GetColumnHeader(const UInt_t column) const
 TGTableHeader *TGTable::GetColumnHeader(const UInt_t column)
 {
    // Return a pointer to the header of column.
-   
+
    return (TGTableHeader *)fColumnHeaders->At(column);
 }
 
@@ -1242,7 +1242,7 @@ void TGTable::SetOddRowBackground(Pixel_t pixel)
    UInt_t ncolumns = GetNTableColumns();
    UInt_t i = 0, j = 0;
    TGTableCell *cell = 0;
-   
+
    for (i = 0; i < nrows; i++) {
       for (j = 0; j < ncolumns; j++) {
          if (i % 2) {
@@ -1251,7 +1251,7 @@ void TGTable::SetOddRowBackground(Pixel_t pixel)
          }
       }
    }
-   
+
    UInt_t width = fCanvas->GetViewPort()->GetWidth();
    UInt_t height = fCanvas->GetViewPort()->GetHeight();
    fTableFrame->DrawRegion(0, 0, width, height);
@@ -1273,7 +1273,7 @@ void TGTable::SetEvenRowBackground(Pixel_t pixel)
 
    for (i = 0; i < nrows; i++) {
       for (j = 0; j < ncolumns; j++) {
-         if (!(i % 2)) { 
+         if (!(i % 2)) {
             cell = GetCell(i,j);
             if (cell) cell->SetBackgroundColor(fEvenRowBackground);
          }
@@ -1329,7 +1329,7 @@ void TGTable::SetDefaultColors()
 //______________________________________________________________________________
 void TGTable::MoveTable(Int_t rows, Int_t columns)
 {
-   // Move and layout the table to the specified range. 
+   // Move and layout the table to the specified range.
 
    if (fAllData) return;
 
@@ -1344,7 +1344,7 @@ void TGTable::MoveTable(Int_t rows, Int_t columns)
 //______________________________________________________________________________
 void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
 {
-   // Move and resize the table to the specified range. 
+   // Move and resize the table to the specified range.
 
    if (fAllData) return;
 
@@ -1368,7 +1368,7 @@ void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
       ytl = ybr;
       ybr = temp;
    }
-   
+
    if((xtl < 0) || (xbr < 0)) {
       Info("TGTable::GotoTableRange", "Column boundry out of bounds, adjusting");
       xtl = 0;
@@ -1435,18 +1435,18 @@ TGTableCell *TGTable::operator() (UInt_t row, UInt_t column)
    // Operator for easy cell acces.
 
    return GetCell(row, column);
-}  
+}
 
 //______________________________________________________________________________
 void TGTable::ScrollCHeaders(Int_t xpos)
 {
    // Scroll the column headers horizontally.
 
-   if (!fCHdrFrame) return;   
+   if (!fCHdrFrame) return;
 
    fCHdrFrame->Move(- xpos, 0);
    fCHdrFrame->Resize();
-   fCHdrFrame->DrawRegion(0, 0, fCHdrFrame->GetWidth(), 
+   fCHdrFrame->DrawRegion(0, 0, fCHdrFrame->GetWidth(),
                           fCHdrFrame->GetHeight());
 }
 
@@ -1455,11 +1455,11 @@ void TGTable::ScrollRHeaders(Int_t ypos)
 {
    // Scroll the row headers vertically
 
-   if (!fRHdrFrame) return;   
+   if (!fRHdrFrame) return;
 
    fRHdrFrame->Move(fRHdrFrame->GetX(), -ypos);
    fRHdrFrame->Resize();
-   fRHdrFrame->DrawRegion(0, 0, fRHdrFrame->GetWidth(), 
+   fRHdrFrame->DrawRegion(0, 0, fRHdrFrame->GetWidth(),
                           fRHdrFrame->GetHeight());
 }
 
@@ -1488,7 +1488,7 @@ void TGTable::Goto()
    // on of the text entries in the range frame.
 
    if (fGotoButton->GetState() == kButtonUp) {
-      GotoTableRange(fGotoRange->fXtl, fGotoRange->fYtl, 
+      GotoTableRange(fGotoRange->fXtl, fGotoRange->fYtl,
                      fGotoRange->fXbr, fGotoRange->fYbr);
       UpdateRangeFrame();
    }
@@ -1506,7 +1506,7 @@ void TGTable::UserRangeChange()
    TString itl = topleft(0,pos);
    TString jtl = topleft(pos+1, topleft.Length());
 
-   if (itl.Contains(' ') || itl.Contains('\t') || 
+   if (itl.Contains(' ') || itl.Contains('\t') ||
        jtl.Contains(' ') || jtl.Contains('\t')) return;
 
    if (!itl.IsAlnum() || !jtl.IsAlnum()) return;
@@ -1522,7 +1522,7 @@ void TGTable::UserRangeChange()
    TString ir = range(0,pos);
    TString jr = range(pos+1, range.Length());
 
-   if (ir.Contains(' ') || ir.Contains('\t') || 
+   if (ir.Contains(' ') || ir.Contains('\t') ||
        jr.Contains(' ') || jr.Contains('\t')) return;
    if (!ir.IsAlnum() || !jr.IsAlnum()) return;
 
@@ -1538,13 +1538,13 @@ void TGTable::UserRangeChange()
 }
 
 //______________________________________________________________________________
-void TGTable::Update() 
+void TGTable::Update()
 {
    // Update the range of the available data and refresh the current view.
 
    fDataRange->fXbr = fInterface->GetNColumns();
    fDataRange->fYbr = fInterface->GetNRows();
-   
+
    GotoTableRange(fCurrentRange->fXtl, fCurrentRange->fYtl,
                   fCurrentRange->fXbr, fCurrentRange->fYbr);
 
@@ -1562,7 +1562,7 @@ void TTableRange::Print()
 {
    // Print the values of a range.
 
-   std::cout << "Range = (" << fXtl << "," << fYtl << ")->(" 
+   std::cout << "Range = (" << fXtl << "," << fYtl << ")->("
              << fXbr << "," << fYbr << ")" << std::endl;
 }
 
@@ -1571,10 +1571,10 @@ Bool_t TTableRange::operator==(TTableRange &other)
 {
    // Operator to determine if 2 ranges are equal
 
-   if ((fXtl == other.fXtl) && (fYtl == other.fYtl) && 
+   if ((fXtl == other.fXtl) && (fYtl == other.fYtl) &&
        (fXbr == other.fXbr) && (fYbr == other.fYbr)) {
       return kTRUE;
    } else {
       return kFALSE;
-   }           
+   }
 }

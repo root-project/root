@@ -2,7 +2,7 @@
    //
    // This macro produces the flowchart of TFormula::Eval
    //Author: Rene Brun
-   
+
    gROOT->Reset();
 
    c1 = new TCanvas("c1");

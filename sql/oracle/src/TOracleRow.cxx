@@ -152,7 +152,7 @@ void TOracleRow::GetRowData()
         case SQLT_IBDOUBLE:
            res = fResult->getString(field+1);
            break;
-        default: 
+        default:
            Error("GetRowData","Oracle type %d was not yet tested - please inform ROOT developers", fDataType);
            continue;
       }

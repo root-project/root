@@ -2,7 +2,7 @@ void pad2png()
 {
    // Create a canvas and save as png.
    //Author: Valeriy Onuchin
-   
+
    TCanvas *c = new TCanvas;
    TH1F *h = new TH1F("gaus", "gaus", 100, -5, 5);
    h->FillRandom("gaus", 10000);

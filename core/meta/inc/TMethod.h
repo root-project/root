@@ -65,7 +65,7 @@ public:
    virtual TList          *GetListOfMethodArgs();
    virtual void            SetMenuItem(EMenuItemKind menuItem) {fMenuItem=menuItem;}
 
-   virtual Bool_t          Update(MethodInfo_t *info); 
+   virtual Bool_t          Update(MethodInfo_t *info);
 
    ClassDef(TMethod,0)  //Dictionary for a class member function (method)
 };

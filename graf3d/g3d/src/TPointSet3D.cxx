@@ -32,7 +32,7 @@
 // Copy-constructor and assignment operator COPIES the ids if the are
 // not owned and CLONES them if they are owned.
 //
-// The ids are not streamed. 
+// The ids are not streamed.
 
 ClassImp(TPointSet3D);
 

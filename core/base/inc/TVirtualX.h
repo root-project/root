@@ -90,7 +90,7 @@ public:
    virtual void      CopyPixmap(Int_t wid, Int_t xpos, Int_t ypos);
    virtual void      CreateOpenGLContext(Int_t wid=0);
    virtual void      DeleteOpenGLContext(Int_t wid=0);
-   
+
    //---- OpenGL related stuff, required only with R__HAS_COCOA ----
    virtual Double_t  GetOpenGLScalingFactor();
    virtual Window_t  CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format);
@@ -345,7 +345,7 @@ public:
    virtual void         SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist);
    virtual Window_t     FindRWindow(Window_t win, Window_t dragwin, Window_t input, int x, int y, int maxd);
    virtual Bool_t       IsDNDAware(Window_t win, Atom_t *typelist);
-   
+
    virtual void         BeginModalSessionFor(Window_t window);
 
    virtual Bool_t       IsCmdThread() const { return kTRUE; }

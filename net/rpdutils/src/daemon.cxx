@@ -48,7 +48,7 @@
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
 #define USE_SIGCHLD
-#define	SIGCLD SIGCHLD
+#define SIGCLD SIGCHLD
 #endif
 
 #if defined(linux) || defined(__hpux) || defined(__sun) || defined(__sgi) || \

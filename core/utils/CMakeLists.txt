@@ -5,7 +5,7 @@ ROOT_USE_PACKAGE(core/metautils)
 ROOT_USE_PACKAGE(io/io)
 
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/../metautils/src ${LLVM_INCLUDE_DIR} ${CLING_INCLUDE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/../metautils/src ${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
 add_definitions(${CLING_CXXFLAGS} -Wno-shadow -Wno-unused-parameter)
 ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           src/TModuleGenerator.cxx src/rootcling.cxx src/rootclingTCling.cxx
@@ -13,7 +13,7 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           $<TARGET_OBJECTS:BaseTROOT>
                           $<TARGET_OBJECTS:MetaLLVM>
                           $<TARGET_OBJECTS:Clib>
-                          $<TARGET_OBJECTS:MetaUtils> 
+                          $<TARGET_OBJECTS:MetaUtils>
                           $<TARGET_OBJECTS:MetaUtilsLLVM>
                           $<TARGET_OBJECTS:RIOObjs>
                           $<TARGET_OBJECTS:ThreadObjs>
@@ -26,8 +26,8 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           ${macosx_objects}
                           ${unix_objects}
                           ${winnt_objects}
-                          LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY} 
-                                    ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} 
+                          LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
+                                    ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                                     ${CMAKE_TINFO_LIBS} ${corelinklibs})
 
 add_dependencies(rootcling CLING LLVMRES)
@@ -36,12 +36,17 @@ add_custom_command(TARGET rootcling POST_BUILD
                    COMMAND ln -f rootcling rootcint
                    COMMAND ln -f rootcling genreflex
                    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES 
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
                          "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint;${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex")
 
-install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
-                  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
-                  DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+if(CMAKE_HOST_UNIX)
+  install(CODE "execute_process(COMMAND ln -f rootcling rootcint WORKING_DIRECTORY \$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR})")
+  install(CODE "execute_process(COMMAND ln -f rootcling genreflex WORKING_DIRECTORY \$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR})")
+else()
+  install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
+                    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
+                    DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+endif()
 
 add_custom_command(OUTPUT rootcling_tmp.cxx
                    COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx ${CMAKE_CURRENT_BINARY_DIR}/rootcling_tmp.cxx
@@ -50,8 +55,8 @@ set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_S
 ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/DictSelectionReader.cxx
                               src/TModuleGenerator.cxx ${CMAKE_CURRENT_BINARY_DIR}/rootcling_tmp.cxx
                               ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
-                              $<TARGET_OBJECTS:Clib> 
-                              $<TARGET_OBJECTS:MetaUtils> 
+                              $<TARGET_OBJECTS:Clib>
+                              $<TARGET_OBJECTS:MetaUtils>
                               $<TARGET_OBJECTS:MetaUtilsLLVM>
                               LIBRARIES ${CLING_LIBRARIES}  ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_TINFO_LIBS}
                               NOINSTALL)
@@ -60,17 +65,18 @@ set_source_files_properties(src/LinkdefReader.cxx PROPERTIES COMPILE_FLAGS -fno-
 set_source_files_properties(src/rootclingTCling.cxx PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/meta/src)
 
 #---Deal with LLVM resource here----------------------------------------------
-set(files_to_copy COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/LLVM-install/include/llvm/Config/llvm-config.h
+set(files_to_copy COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include/llvm/Config/llvm-config.h
                                         ${CMAKE_BINARY_DIR}/etc/cling/llvm/Config/llvm-config.h)
 
 install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/llvm/Config DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/llvm)
-install(DIRECTORY ${CMAKE_BINARY_DIR}/LLVM-install/lib/clang/${LLVM_VERSION}/include/
+install(DIRECTORY ${CMAKE_BINARY_DIR}/interpreter/llvm/src/lib/clang/${LLVM_VERSION}/include/
         DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/lib/clang/${LLVM_VERSION}/include USE_SOURCE_PERMISSIONS)
 
 
 #---Install a bunch of files to /etc/cling------------------------------------
-set(clinginclude ${CMAKE_BINARY_DIR}/CLING-install/include)
-set(llvminclude ${CMAKE_BINARY_DIR}/LLVM-install/include)
+set(clinginclude    ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
+set(llvminclude     ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/include)
+set(llvminclude-bin ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include)
 
 foreach(file  Interpreter/DynamicExprInfo.h
               Interpreter/DynamicLookupRuntimeUniverse.h
@@ -103,16 +109,21 @@ foreach( file llvm/ADT/IntrusiveRefCntPtr.h
               llvm/Support/SwapByteOrder.h
               llvm/Support/type_traits.h )
   get_filename_component(path ${file} PATH)
-  list(APPEND files_to_copy COMMAND cmake -E copy ${llvminclude}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
-  install(FILES ${llvminclude}/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
+  if(EXISTS ${llvminclude}/${file})
+    list(APPEND files_to_copy COMMAND cmake -E copy ${llvminclude}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
+    install(FILES ${llvminclude}/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
+  else()
+    list(APPEND files_to_copy COMMAND cmake -E copy ${llvminclude-bin}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
+    install(FILES ${llvminclude-bin}/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
+  endif()
 endforeach()
 
 add_custom_target(LLVMRES COMMAND cmake -E make_directory
                                   ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
                           COMMAND cmake -E copy_directory
-                                  ${CMAKE_BINARY_DIR}/LLVM-install/lib/clang/${LLVM_VERSION}/include
-                                  ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include  
-                          ${files_to_copy}                      
+                                  ${CMAKE_BINARY_DIR}/interpreter/llvm/src/lib/clang/${LLVM_VERSION}/include
+                                  ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
+                          ${files_to_copy}
                           DEPENDS CLING)
 
 

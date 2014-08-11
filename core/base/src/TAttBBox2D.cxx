@@ -11,7 +11,7 @@
 
 #include "TAttBBox2D.h"
 
-ClassImp(TAttBBox2D) 
+ClassImp(TAttBBox2D)
 
 TAttBBox2D::~TAttBBox2D()
 {

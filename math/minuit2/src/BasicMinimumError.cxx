@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -10,18 +10,18 @@
 #include "Minuit2/BasicMinimumError.h"
 
 #if defined(DEBUG) || defined(WARNINGMSG)
-#include "Minuit2/MnPrint.h" 
+#include "Minuit2/MnPrint.h"
 #endif
 
 
 namespace ROOT {
-   
+
    namespace Minuit2 {
-      
-      
-      
+
+
+
 MnAlgebraicSymMatrix BasicMinimumError::Hessian() const {
-   // calculate Heassian: inverse of error matrix 
+   // calculate Heassian: inverse of error matrix
    MnAlgebraicSymMatrix tmp(fMatrix);
    int ifail = Invert(tmp);
    if(ifail != 0) {
@@ -38,5 +38,5 @@ MnAlgebraicSymMatrix BasicMinimumError::Hessian() const {
 }
 
    }  // namespace Minuit2
-   
+
 }  // namespace ROOT

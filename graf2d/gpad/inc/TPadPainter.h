@@ -34,7 +34,7 @@ public:
    Color_t  GetLineColor() const;
    Style_t  GetLineStyle() const;
    Width_t  GetLineWidth() const;
-   
+
    void     SetLineColor(Color_t lcolor);
    void     SetLineStyle(Style_t lstyle);
    void     SetLineWidth(Width_t lwidth);
@@ -53,7 +53,7 @@ public:
    Font_t   GetTextFont()  const;
    Float_t  GetTextSize()  const;
    Float_t  GetTextMagnitude() const;
-   
+
    void     SetTextAlign(Short_t align);
    void     SetTextAngle(Float_t tangle);
    void     SetTextColor(Color_t tcolor);
@@ -66,7 +66,7 @@ public:
    void     CopyDrawable(Int_t id, Int_t px, Int_t py);
    void     DestroyDrawable();
    void     SelectDrawable(Int_t device);
-   
+
    //TASImage support (noop for a non-gl pad).
    void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
                        Int_t dstX, Int_t dstY, Bool_t enableAlphaBlending);
@@ -74,26 +74,26 @@ public:
 
    void     DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
    void     DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2);
-   
+
    void     DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMode mode);
    //TPad needs double and float versions.
    void     DrawFillArea(Int_t n, const Double_t *x, const Double_t *y);
    void     DrawFillArea(Int_t n, const Float_t *x, const Float_t *y);
-   
+
    //TPad needs both double and float versions of DrawPolyLine.
    void     DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y);
    void     DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y);
    void     DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v);
-   
+
    //TPad needs both versions.
    void     DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y);
    void     DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y);
-   
+
    void     DrawText(Double_t x, Double_t y, const char *text, ETextMode mode);
    void     DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode mode);
    void     DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode);
    void     DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode mode);
-   
+
    //jpg, png, bmp, gif output.
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const;
 
@@ -103,7 +103,7 @@ private:
    TPadPainter(TPadPainter && rhs) = delete;
    TPadPainter & operator = (const TPadPainter &rhs) = delete;
    TPadPainter & operator = (TPadPainter && rhs) = delete;
-   
+
    ClassDef(TPadPainter, 0) //Abstract interface for painting in TPad
 };
 

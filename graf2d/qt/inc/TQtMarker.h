@@ -29,7 +29,7 @@ class QPainter;
 
 ////////////////////////////////////////////////////////////////////////
 //
-// TQtMarker - class-utility to convert the ROOT TMarker object shape 
+// TQtMarker - class-utility to convert the ROOT TMarker object shape
 //             in to the Qt QPolygon.
 //
 ////////////////////////////////////////////////////////////////////////
@@ -53,11 +53,11 @@ public:
    TQtMarker &operator=(const TAttMarker&);
    TQtMarker(const TAttMarker&);
    virtual ~TQtMarker();
-	void  DrawPolyMarker(QPainter &p, int n, TPoint *xy);
-	void  SetMarkerAttributes(const TAttMarker& markerAttributes);
-	void  SetColor(Color_t mcolor);
+   void  DrawPolyMarker(QPainter &p, int n, TPoint *xy);
+   void  SetMarkerAttributes(const TAttMarker& markerAttributes);
+   void  SetColor(Color_t mcolor);
    void  SetPenAttributes(int type);
-	Color_t  GetColor() const;
+   Color_t  GetColor() const;
 
    int     GetNumber()  const;
    const   QPolygon &GetNodes() const;
@@ -68,18 +68,18 @@ public:
 };
 
 //_________________________________________________________
-inline TQtMarker &TQtMarker::operator=(const TQtMarker&m) 
+inline TQtMarker &TQtMarker::operator=(const TQtMarker&m)
 {
    fNumNode  = m.fNumNode;
-   fChain    = m.fChain; 
+   fChain    = m.fChain;
    fCindex   = m.fCindex;
    fMarkerType=m.fMarkerType;
    fLineWidth =m.fLineWidth;
-	return *this;
+   return *this;
 }
 //_________________________________________________________
 inline TQtMarker::TQtMarker(const TQtMarker&m) : fNumNode(m.fNumNode),
-fChain(m.fChain), fCindex(m.fCindex),fMarkerType(m.fMarkerType),fLineWidth(m.fLineWidth) 
+fChain(m.fChain), fCindex(m.fCindex),fMarkerType(m.fMarkerType),fLineWidth(m.fLineWidth)
 , fLineOption()
 {}
 

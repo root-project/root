@@ -1038,7 +1038,7 @@ Bool_t TODBCStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
          len = fBuffer[npar].fBelementsize;
          strlcpy((char*) addr, value, len+1);
          fBuffer[npar].fBlenarray[fBufferCounter] = len;
-         
+
       } else if (len>0) {
          strlcpy((char*) addr, value, maxsize);
          fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NTS;
@@ -1048,7 +1048,7 @@ Bool_t TODBCStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
       }
    } else {
       *((char*) addr) = 0;
-      fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NTS;      
+      fBuffer[npar].fBlenarray[fBufferCounter] = SQL_NTS;
    }
 
    return kTRUE;

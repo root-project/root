@@ -86,9 +86,9 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir=0)
          TString methodTitle;
          TMVAGlob::GetMethodTitle(methodTitle,titDir);
          TIter nextKey( titDir->GetListOfKeys() );
-	 TKey *hkey;
-         while ((hkey = TMVAGlob::NextKey(nextKey,"TH1"))) {
-            TH1 *h = (TH1*)hkey->ReadObj();
+         TKey *hkey2;
+         while ((hkey2 = TMVAGlob::NextKey(nextKey,"TH1"))) {
+            TH1 *h = (TH1*)hkey2->ReadObj();
             TString hname = h->GetName();
             if (hname.Contains( hNameRef ) && hname.BeginsWith( "MVA_" )) {
                if (type==3 && h->GetMaximum() > y2) y2 = h->GetMaximum();
@@ -130,9 +130,9 @@ void plot_efficiencies( TFile* file, Int_t type = 2, TDirectory* BinDir=0)
          TString methodTitle;
          TMVAGlob::GetMethodTitle(methodTitle,titDir);
          TIter nextKey( titDir->GetListOfKeys() );
-	 TKey *hkey;
-         while ((hkey = TMVAGlob::NextKey(nextKey,"TH1"))) {
-            TH1 *h = (TH1*)hkey->ReadObj();
+         TKey *hkey2;
+         while ((hkey2 = TMVAGlob::NextKey(nextKey,"TH1"))) {
+            TH1 *h = (TH1*)hkey2->ReadObj();
             TString hname = h->GetName();
             if (hname.Contains( hNameRef ) && hname.BeginsWith( "MVA_" )) {
                h->SetLineWidth(3);

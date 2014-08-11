@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -18,15 +18,15 @@ void SimplexParameters::Update(double y, const MnAlgebraicVector& p) {
    // update the SimplexParameter object with a new value y = FCN(p)
    fSimplexParameters[Jh()] = std::pair<double, MnAlgebraicVector>(y, p);
    if(y < fSimplexParameters[Jl()].first) fJLow = Jh();
-   
+
    unsigned int jh = 0;
    for(unsigned int i = 1; i < fSimplexParameters.size(); i++) {
       if(fSimplexParameters[i].first > fSimplexParameters[jh].first) jh = i;
    }
    fJHigh = jh;
-   
+
    return;
-} 
+}
 
 MnAlgebraicVector SimplexParameters::Dirin() const {
    // find simplex direction (vector from big to smaller parameter points)
@@ -38,8 +38,8 @@ MnAlgebraicVector SimplexParameters::Dirin() const {
          if(fSimplexParameters[j].second(i) > pbig) pbig = fSimplexParameters[j].second(i);
       }
       dirin(i) = pbig - plit;
-   } 
-   
+   }
+
    return dirin;
 }
 

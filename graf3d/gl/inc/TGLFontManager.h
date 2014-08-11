@@ -139,7 +139,7 @@ protected:
    static TObjArray     fgFontFileArray;      // map font-id to ttf-font-file
    // Default fonts - for gl/eve, "extended" - for gl-pad
    static Int_t         fgExtendedFontStart;
-   
+
    static FontSizeVec_t fgFontSizeArray;      // map of valid font-size
    static Bool_t        fgStaticInitDone;     // global initialization flag
    static void          InitStatics();

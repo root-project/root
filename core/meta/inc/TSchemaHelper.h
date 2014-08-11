@@ -30,7 +30,7 @@ namespace ROOT
    {
       TSchemaHelper(): fTarget(), fSourceClass(),
        fSource(), fCode(), fVersion(), fChecksum(),
-       fInclude(), fEmbed(kTRUE), fFunctionPtr( 0 ), 
+       fInclude(), fEmbed(kTRUE), fFunctionPtr( 0 ),
        fAttributes() {}
       std::string fTarget;
       std::string fSourceClass;

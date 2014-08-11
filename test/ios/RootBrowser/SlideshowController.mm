@@ -15,9 +15,9 @@
 
    unsigned visiblePad;
    unsigned nCurrentObject;
-   
+
    ROOT::iOS::Browser::FileContainer *fileContainer;
-   
+
    NSTimer *timer;
 }
 
@@ -28,12 +28,12 @@
    UIInterfaceOrientationIsPortrait(orientation) ? mainFrame = CGRectMake(0.f, 44.f, 768.f, 960.f)
                                                  : (mainFrame = CGRectMake(0.f, 44.f, 1024.f, 704.f));
 
-   
+
    parentView.frame = mainFrame;
-   
+
    CGRect padFrame = [SlideView slideFrame];
    padFrame.origin = CGPointMake(mainFrame.size.width / 2 - padFrame.size.width / 2, mainFrame.size.height / 2 - padFrame.size.height / 2);
-   
+
    padParentView.frame = padFrame;
 
    if (padViews[0]) {
@@ -68,7 +68,7 @@
       [self view];
 
       fileContainer = container;
-      
+
       if (fileContainer->GetNumberOfObjects()) {
          [self initPadViews];
 
@@ -111,7 +111,7 @@
 - (void)viewDidLoad
 {
    [super viewDidLoad];
-   
+
    [self correctFramesForOrientation : self.interfaceOrientation];
 }
 
@@ -151,7 +151,7 @@
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
    // Return YES for supported orientations
-	
+
    return YES;
 }
 
@@ -165,7 +165,7 @@
 //____________________________________________________________________________________________________
 - (void) changeViews
 {
-   const UIViewAnimationTransition animations[] = {UIViewAnimationTransitionFlipFromLeft, UIViewAnimationTransitionFlipFromRight, 
+   const UIViewAnimationTransition animations[] = {UIViewAnimationTransitionFlipFromLeft, UIViewAnimationTransitionFlipFromRight,
                                                    UIViewAnimationTransitionCurlUp, UIViewAnimationTransitionCurlDown};
    const UIViewAnimationTransition currentAnimation = animations[rand() % 4];
 
@@ -179,7 +179,7 @@
 
    padViews[viewToHide].hidden = YES;
    padViews[viewToShow].hidden = NO;
-   
+
    [UIView commitAnimations];
 
    nCurrentObject + 1 == fileContainer->GetNumberOfObjects() ? nCurrentObject = 0 : ++nCurrentObject;

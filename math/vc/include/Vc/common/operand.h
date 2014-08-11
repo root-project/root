@@ -45,9 +45,9 @@ template<typename Result, typename Left, typename Right> class BinaryOperation :
     Right m_right;
     public:
 #if VC_CXX11
-        Vc_ALWAYS_INLINE BinaryOperation(Left &&l, Right &&r) 
+        Vc_ALWAYS_INLINE BinaryOperation(Left &&l, Right &&r)
 #endif
-        operator Result() 
+        operator Result()
 };
 
 } // namespace Vc

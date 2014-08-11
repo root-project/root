@@ -62,6 +62,7 @@
 #ifndef ROOT_TMVA_RegressionVariance
 #include "TMVA/RegressionVariance.h"
 #endif
+#include "TMVA/DataSetInfo.h"
 
 class TRandom3;
 
@@ -85,7 +86,7 @@ namespace TMVA {
 
       // the constructur needed for constructing the decision tree via training with events
       DecisionTree( SeparationBase *sepType, Float_t minSize,
-                    Int_t nCuts,
+                    Int_t nCuts, DataSetInfo* = NULL,
                     UInt_t cls =0,
                     Bool_t randomisedTree=kFALSE, Int_t useNvars=0, Bool_t usePoissonNvars=kFALSE, 
                     UInt_t nMaxDepth=9999999, 
@@ -242,9 +243,12 @@ namespace TMVA {
       UInt_t     fMaxDepth;      // max depth
       UInt_t     fSigClass;      // class which is treated as signal when building the tree
       static const Int_t  fgDebugLevel = 0;     // debug level determining some printout/control plots etc.
-      Int_t     fTreeID;        // just an ID number given to the tree.. makes debugging easier as tree knows who it is.
+      Int_t     fTreeID;        // just an ID number given to the tree.. makes debugging easier as tree knows who he is.
 
       Types::EAnalysisType  fAnalysisType;   // kClassification(=0=false) or kRegression(=1=true)
+
+      DataSetInfo*  fDataSetInfo;
+
 
       ClassDef(DecisionTree,0)               // implementation of a Decision Tree
    };

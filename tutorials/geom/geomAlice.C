@@ -4,7 +4,7 @@
 //if the file containing the geometry is not found in the local
 //directory, it is automatically read from the ROOT web site.
 // Author: Rene Brun
-      
+
 void geomAlice()
 {
    TGeoManager::Import("http://root.cern.ch/files/alice2.root");
@@ -40,7 +40,7 @@ void geomAlice()
    gGeoManager->GetVolume("QBS4")->InvisibleAll();
    gGeoManager->GetVolume("QBS5")->InvisibleAll();
    gGeoManager->GetVolume("QBS6")->InvisibleAll();
-   
+
    gGeoManager->GetVolume("ALIC")->Draw("ogl");
    new TBrowser;
 }

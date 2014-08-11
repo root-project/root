@@ -19,6 +19,7 @@
 #include "TGNumberEntry.h"
 #include "TGButtonGroup.h"
 #include "TROOT.h"
+#include "TVirtualMutex.h"
 
 #include "TVirtualGL.h"
 #include "TVirtualX.h"
@@ -519,6 +520,8 @@ void TGLPShapeObjEditor::DrawSphere()const
       gROOT->ProcessLineFast(Form("((TGLPShapeObjEditor *)0x%lx)->DrawSphere()", (ULong_t)this));
       return;
    }
+
+   R__LOCKGUARD2(gROOTMutex);
 
    fMatView->MakeCurrent();
    glViewport(0, 0, fMatView->GetWidth(), fMatView->GetHeight());

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Id$
+// @(#)root/tree
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -47,7 +47,7 @@ public:
    TBranchClones(TTree *tree, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
    TBranchClones(TBranch *parent, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
    virtual ~TBranchClones();
-   
+
    virtual void    Browse(TBrowser *b);
    virtual Int_t   Fill();
    virtual const char* GetClassName() const { return fClassName; }
@@ -60,6 +60,7 @@ public:
    virtual void    ResetAfterMerge(TFileMergeInfo *);
    virtual void    SetAddress(void *add);
    virtual void    SetBasketSize(Int_t buffsize);
+   virtual void    SetTree(TTree *tree) { fTree = tree; fBranchCount->SetTree(tree); }
    virtual void    UpdateFile();
 
    ClassDef(TBranchClones,2);  //Branch in case of an array of clone objects

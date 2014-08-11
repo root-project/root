@@ -51,7 +51,7 @@
 TRandom *gRandom = new TRandom3();
 #ifdef R__COMPLETE_MEM_TERMINATION
 namespace {
-   struct TRandomCleanup { 
+   struct TRandomCleanup {
       ~TRandomCleanup() { delete gRandom; gRandom = 0; }
    };
    static TRandomCleanup gCleanupRandom;
@@ -121,7 +121,7 @@ Double_t TRandom3::Rndm(Int_t)
    y ^= ((y << 15) & kTemperingMaskC );
    y ^=  (y >> 18);
 
-   // 2.3283064365386963e-10 == 1./(max<UINt_t>+1)  -> then returned value cannot be = 1.0  
+   // 2.3283064365386963e-10 == 1./(max<UINt_t>+1)  -> then returned value cannot be = 1.0
    if (y) return ( (Double_t) y * 2.3283064365386963e-10); // * Power(2,-32)
    return Rndm();
 }
@@ -205,7 +205,7 @@ void TRandom3::SetSeed(UInt_t seed)
       }
 
    } else {
-         
+
       // use TRandom2 (which is based on TUUId to generate the seed
       // TRandom2 works fairly well  and has been tested against example
       // layout in https://savannah.cern.ch/bugs/?99516
@@ -213,8 +213,8 @@ void TRandom3::SetSeed(UInt_t seed)
       for (Int_t i = 0; i< 624; i++) {
          fMt[i]   = static_cast<UInt_t> (4294967296.*r.Rndm());
       }
-      // warm up the generator calling it 10 times 
-      for (Int_t i = 0; i < 10; ++i) Rndm(); 
+      // warm up the generator calling it 10 times
+      for (Int_t i = 0; i < 10; ++i) Rndm();
    }
 
 

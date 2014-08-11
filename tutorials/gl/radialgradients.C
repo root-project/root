@@ -93,7 +93,7 @@ bool add_ellipse(const Double_t xC, const Double_t yC, const Double_t r)
    TEllipse * const newEllipse = new TEllipse(xC, yC, r, r);
    newEllipse->SetFillColor(newColor);
    newEllipse->Draw();
-   
+
    return true;
 }
 
@@ -105,7 +105,7 @@ void radialgradients()
    gRandom->SetSeed(4357);//;)
 
    gStyle->SetCanvasPreferGL(kTRUE);
-   
+
    TCanvas * const cnv = new TCanvas("radial gradients", "radial gradients", 800, 800);
    if (!cnv->UseGL()) {
       ::Error("radialgradients", "this demo OpenGL");
@@ -116,7 +116,7 @@ void radialgradients()
    for (unsigned i = 0; i < 100; ++i)
       if (!add_ellipse(gRandom->Rndm(), gRandom->Rndm(), 0.5 * gRandom->Rndm()))
          break;
-   
+
    cnv->Modified();
    cnv->Update();
 }

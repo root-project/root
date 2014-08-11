@@ -243,7 +243,7 @@ void TEveUtil::ColorFromIdx(Color_t ci, UChar_t col[4], Char_t transparency)
 
 //______________________________________________________________________________
 void TEveUtil::ColorFromIdx(Float_t f1, Color_t c1, Float_t f2, Color_t c2,
-			    UChar_t col[4], Bool_t alpha)
+                            UChar_t col[4], Bool_t alpha)
 {
    // Fill col with weighted RGBA values corresponding to
    // color-indices c1 and c2. If alpha is true, set alpha component

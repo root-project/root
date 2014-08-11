@@ -34,7 +34,7 @@ TVirtualPadPainter *TVirtualPadPainter::PadPainter(Option_t *type)
 
    TVirtualPadPainter *painter = 0;
    TPluginHandler *h = gPluginMgr->FindHandler("TVirtualPadPainter", type);
-   
+
    if (h && h->LoadPlugin() != -1)
       painter = (TVirtualPadPainter *) h->ExecPlugin(0);
 

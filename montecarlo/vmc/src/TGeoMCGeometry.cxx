@@ -85,7 +85,7 @@ TGeoManager* TGeoMCGeometry::GetTGeoManager() const
   if ( ! gGeoManager ) new TGeoManager("TGeo", "Root geometry manager");
 
   return gGeoManager;
-}  
+}
 
 //_____________________________________________________________________________
 Double_t* TGeoMCGeometry::CreateDoubleArray(Float_t* array, Int_t size) const

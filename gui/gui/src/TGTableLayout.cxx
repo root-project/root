@@ -562,7 +562,7 @@ void TGTableLayout::Layout()
    TGFrameElement *ptr;
    UInt_t border_width = fMain->GetBorderWidth();
    while ((ptr = (TGFrameElement*) next())) {
-      TGTableLayoutHints *layout = 
+      TGTableLayoutHints *layout =
             dynamic_cast<TGTableLayoutHints*>(ptr->fLayout);
       if (!layout) {
          Error("TGTableLayout::Layout", "didn't get TGTableLayoutHints");

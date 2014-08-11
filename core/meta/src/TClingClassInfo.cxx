@@ -127,7 +127,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const Type &tag)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), 
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0),
      fTitle(""), fOffsetCache(0)
 {
    Init(tag);
@@ -137,7 +137,7 @@ void TClingClassInfo::AddBaseOffsetValue(const clang::Decl* decl, ptrdiff_t offs
 {
    // Add the offset value from this class to the non-virtual base class
    // determined by the parameter decl.
-   
+
    OffsetPtrFunc_t executableFunc = 0;
    fOffsetCache[decl] = std::make_pair(offset, executableFunc);
 }
@@ -358,7 +358,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
             }
          }
       }
-      
+
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const FunctionDecl *fd;
@@ -448,7 +448,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
             }
          }
       }
-      
+
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const FunctionDecl *fd;
@@ -512,7 +512,7 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
             }
          }
       }
-      
+
    }
    if (poffset) {
       *poffset = 0L;
@@ -619,7 +619,7 @@ ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address, b
 static bool HasBody(const clang::FunctionDecl &decl, const cling::Interpreter &interp)
 {
    if (decl.hasBody()) return true;
-   
+
    GlobalDecl GD;
    if (const CXXConstructorDecl* Ctor = dyn_cast<CXXConstructorDecl>(&decl))
      GD = GlobalDecl(Ctor, Ctor_Complete);
@@ -652,7 +652,7 @@ bool TClingClassInfo::HasDefaultConstructor() const
    const CXXRecordDecl* CRD = llvm::dyn_cast<CXXRecordDecl>(fDecl);
    if (!CRD) {
       // Namespaces do not have constructors.
-      return false; 
+      return false;
    }
    if (CRD->hasTrivialDefaultConstructor()) {
       // This class has a default constructor that can be called,
@@ -789,7 +789,7 @@ bool TClingClassInfo::IsLoaded() const
 {
    // IsLoaded in CINT was meaning is known to the interpreter
    // and has a complete definition.
-   // IsValid in Cling (as in CING) means 'just' is known to the 
+   // IsValid in Cling (as in CING) means 'just' is known to the
    // interpreter.
    if (!IsValid()) {
       return false;
@@ -938,7 +938,7 @@ int TClingClassInfo::Next()
 {
    return InternalNext();
 }
-   
+
 void *TClingClassInfo::New(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    // Invoke a new expression to use the class constructor

@@ -1,5 +1,5 @@
 # Find the LZMA includes and library.
-# 
+#
 # This module defines
 # LZMA_INCLUDE_DIR, where to locate LZMA header files
 # LZMA_LIBRARIES, the libraries to link against to use Pythia6

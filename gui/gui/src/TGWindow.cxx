@@ -236,6 +236,6 @@ const char *TGWindow::GetName()const
       w->fName.ReplaceAll(" ", "");
    if (w->fName.Contains(":"))
       w->fName.ReplaceAll(":", "");
-      
+
    return fName.Data();
 }

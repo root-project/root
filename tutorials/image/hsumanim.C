@@ -22,7 +22,7 @@ void hsumanim() {
   s2->SetFillColor(46);
   TSlider *slider = 0;
   gSystem->Unlink("hsumanim.gif"); // delete old file
-  
+
 // Fill histograms randomly
   gRandom->SetSeed();
   const Int_t kUPDATE = 500;
@@ -62,8 +62,8 @@ void hsumanim() {
   c1->Modified();
   // make infinite animation by adding "++" to the file name
   if (gROOT->IsBatch()) c1->Print("hsumanim.gif++");
-  
+
   //You can view the animated file hsumanim.gif with Netscape/IE or mozilla
-  
+
   gBenchmark->Show("hsum");
 }

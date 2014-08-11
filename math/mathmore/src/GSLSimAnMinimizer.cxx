@@ -18,12 +18,12 @@
 #include "Math/MultiNumGradFunction.h"   // needed to use transformation function
 #include "Math/FitMethodFunction.h"
 
-#include <iostream> 
+#include <iostream>
 #include <cassert>
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Math { 
+   namespace Math {
 
 
 
@@ -38,41 +38,41 @@ GSLSimAnMinimizer::GSLSimAnMinimizer( int /* ROOT::Math::EGSLSimAnMinimizerType 
    SetPrintLevel(0);
 }
 
-GSLSimAnMinimizer::~GSLSimAnMinimizer () { 
+GSLSimAnMinimizer::~GSLSimAnMinimizer () {
 }
 
 
-bool GSLSimAnMinimizer::Minimize() { 
+bool GSLSimAnMinimizer::Minimize() {
    // set initial parameters of the minimizer
-   int debugLevel = PrintLevel(); 
+   int debugLevel = PrintLevel();
 
-   if (debugLevel >=1 ) std::cout <<"Minimize using GSLSimAnMinimizer " << std::endl; 
+   if (debugLevel >=1 ) std::cout <<"Minimize using GSLSimAnMinimizer " << std::endl;
 
    const ROOT::Math::IMultiGenFunction * function = ObjFunction();
-   if (function == 0) { 
+   if (function == 0) {
       MATH_ERROR_MSG("GSLSimAnMinimizer::Minimize","Function has not been set");
-      return false; 
+      return false;
    }
 
-   // vector of internal values (copied by default) 
+   // vector of internal values (copied by default)
    unsigned int npar = NPar();
    std::vector<double> xvar;
-   std::vector<double> steps(StepSizes(),StepSizes()+npar);   
+   std::vector<double> steps(StepSizes(),StepSizes()+npar);
 
    // needed for the transformation
    MultiNumGradFunction * gradFunc = new MultiNumGradFunction( *function );
    gradFunc->SetOwnership();
 
    MinimTransformFunction * trFunc  = CreateTransformation(xvar, gradFunc );
-   // ObjFunction() will return now the new transformed function 
+   // ObjFunction() will return now the new transformed function
 
-   if (trFunc) { 
+   if (trFunc) {
       // transform also the step sizes
       trFunc->InvStepTransformation(X(), StepSizes(), &steps[0]);
-      steps.resize( trFunc->NDim() ); 
+      steps.resize( trFunc->NDim() );
    }
 
-   assert (xvar.size() == steps.size() );         
+   assert (xvar.size() == steps.size() );
 
 
 #ifdef DEBUG
@@ -84,9 +84,9 @@ bool GSLSimAnMinimizer::Minimize() {
    if (trFunc) std::cout << "ftrans(x) = " <<  (*trFunc) (&xvar.front() ) << std::endl;
 #endif
 
-   // output vector 
-   std::vector<double> xmin(xvar.size() ); 
-  
+   // output vector
+   std::vector<double> xmin(xvar.size() );
+
 
    int iret = fSolver.Solve(*ObjFunction(), &xvar.front(), &steps.front(), &xmin[0], (debugLevel > 1) );
 
@@ -95,33 +95,33 @@ bool GSLSimAnMinimizer::Minimize() {
    SetFinalValues(&xmin.front());
 
 
-   if (debugLevel >=1 ) { 
-      if (iret == 0)  
-         std::cout << "GSLSimAnMinimizer: Minimum Found" << std::endl;  
-      else 
-         std::cout << "GSLSimAnMinimizer: Error in solving" << std::endl;  
+   if (debugLevel >=1 ) {
+      if (iret == 0)
+         std::cout << "GSLSimAnMinimizer: Minimum Found" << std::endl;
+      else
+         std::cout << "GSLSimAnMinimizer: Error in solving" << std::endl;
 
       int pr = std::cout.precision(18);
       std::cout << "FVAL         = " << MinValue() << std::endl;
       std::cout.precision(pr);
-      for (unsigned int i = 0; i < NDim(); ++i) 
-         std::cout << VariableName(i) << "\t  = " << X()[i] << std::endl; 
+      for (unsigned int i = 0; i < NDim(); ++i)
+         std::cout << VariableName(i) << "\t  = " << X()[i] << std::endl;
    }
-                                                           
 
-   return ( iret == 0) ? true : false; 
+
+   return ( iret == 0) ? true : false;
 }
 
 
-unsigned int GSLSimAnMinimizer::NCalls() const { 
-   // return number of function calls 
-   const ROOT::Math::MinimTransformFunction * tfunc = dynamic_cast<const ROOT::Math::MinimTransformFunction *>(ObjFunction());   
-   const ROOT::Math::MultiNumGradFunction * f = 0; 
+unsigned int GSLSimAnMinimizer::NCalls() const {
+   // return number of function calls
+   const ROOT::Math::MinimTransformFunction * tfunc = dynamic_cast<const ROOT::Math::MinimTransformFunction *>(ObjFunction());
+   const ROOT::Math::MultiNumGradFunction * f = 0;
    if (tfunc) f = dynamic_cast<const ROOT::Math::MultiNumGradFunction *>(tfunc->OriginalFunction());
-   else 
+   else
       f = dynamic_cast<const ROOT::Math::MultiNumGradFunction *>(ObjFunction());
    if (f) return f->NCalls();
-   return 0; 
+   return 0;
 }
 
 

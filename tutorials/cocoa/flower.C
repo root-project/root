@@ -34,12 +34,12 @@ typedef vector_type::size_type size_type;
 void create_flower(vector_type &xs, vector_type &ys, size_type nPoints, Double_t r)
 {
    assert(nPoints > 100 && "create_flower, number of points is too small");
-   
+
    xs.resize(nPoints + 1);
    ys.resize(nPoints + 1);
-   
+
    const Double_t angle = 21. * TMath::Pi() / nPoints;
-   
+
    for (size_type i = 0; i <= nPoints; ++i) {
       const Double_t u = i * angle;
       const Double_t p4 = TMath::Sin(17 * u / 3);
@@ -61,7 +61,7 @@ void flower()
       ::Error("flower", "failed to create custom colors");
       return;
    }
-   
+
    //1. I have to create a canvas to initialize gVirtualX.
    TCanvas * const cnv = new TCanvas("Chrysanthemum", "Chrysanthemum", 900, 900);
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
@@ -71,7 +71,7 @@ void flower()
    }
 
    cnv->cd();//Just to suppress a warning if compiled.
-   
+
    vector_type xs, ys;
 
    //2. Create graphs and custom colors for each graph.
@@ -106,6 +106,6 @@ void flower()
    flower->Add(gr1);
    flower->Add(gr2);
    flower->Add(gr3);
-   
+
    flower->Draw("AFP");
 }

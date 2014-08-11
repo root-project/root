@@ -32,7 +32,7 @@ class TVirtualIndex : public TNamed {
 
 protected:
    TTree         *fTree;          //! pointer to Tree
-  
+
 public:
    TVirtualIndex();
    virtual               ~TVirtualIndex();
@@ -46,7 +46,7 @@ public:
    virtual TTree         *GetTree()         const {return fTree;}
    virtual void           UpdateFormulaLeaves(const TTree *parent) = 0;
    virtual void           SetTree(const TTree *T) = 0;
-   
+
    ClassDef(TVirtualIndex,1);  //Abstract interface for Tree Index
 };
 

@@ -102,7 +102,7 @@ namespace {
          // are available as "methods" even though they're not really that
             if ( ! attr && ! PyRootType_CheckExact( pyclass ) && PyType_Check( pyclass ) ) {
                PyErr_Clear();
- 
+
                TScopeAdapter klass = TScopeAdapter::ByName( ((PyTypeObject*)pyclass)->tp_name );
                if ( klass.IsNamespace() ) {
 
@@ -159,7 +159,11 @@ namespace {
                PyErr_Clear();
             // get class name to look up CINT tag info ...
                attr = GetRootGlobalFromString( name /*, tag */ );
-               if ( attr )
+               if ( PropertyProxy_Check( attr ) ) {
+                  PyObject_SetAttr( (PyObject*)Py_TYPE(pyclass), pyname, attr );
+                  Py_DECREF( attr );
+                  attr = PyType_Type.tp_getattro( pyclass, pyname );
+               } else if ( attr )
                   PyObject_SetAttr( pyclass, pyname, attr );
             }
 

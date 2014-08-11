@@ -51,72 +51,72 @@
 
 
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Math { 
+   namespace Math {
 
 
 
 //_____________________________________________________________________________________
-/** 
+/**
    GSLSimAnMinimizer class for minimization using simulated annealing
-   using the algorithm from 
+   using the algorithm from
    <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Simulated-Annealing.html">
    GSL</A>.
-   It implements the ROOT::Minimizer interface and 
+   It implements the ROOT::Minimizer interface and
    a plug-in (name "GSLSimAn") exists to instantiate this class via the plug-in manager
 
    @ingroup MultiMin
-*/ 
+*/
 class GSLSimAnMinimizer : public  ROOT::Math::BasicMinimizer {
 
-public: 
+public:
 
-   /** 
+   /**
       Default constructor
-   */ 
-   GSLSimAnMinimizer (int type = 0); 
+   */
+   GSLSimAnMinimizer (int type = 0);
 
-   /** 
+   /**
       Destructor (no operations)
-   */ 
-   virtual ~GSLSimAnMinimizer ();  
+   */
+   virtual ~GSLSimAnMinimizer ();
 
 private:
    // usually copying is non trivial, so we make this unaccessible
 
-   /** 
+   /**
       Copy constructor
-   */ 
-   GSLSimAnMinimizer(const GSLSimAnMinimizer &) : ROOT::Math::BasicMinimizer() {} 
+   */
+   GSLSimAnMinimizer(const GSLSimAnMinimizer &) : ROOT::Math::BasicMinimizer() {}
 
-   /** 
+   /**
       Assignment operator
-   */ 
+   */
    GSLSimAnMinimizer & operator = (const GSLSimAnMinimizer & rhs)  {
       if (this == &rhs) return *this;  // time saving self-test
       return *this;
    }
 
-public: 
+public:
 
 
    /// method to perform the minimization
-   virtual  bool Minimize(); 
+   virtual  bool Minimize();
 
-   //number of calls 
-   unsigned int NCalls() const; 
+   //number of calls
+   unsigned int NCalls() const;
 
 
-protected: 
+protected:
 
-private: 
-   
+private:
 
-   ROOT::Math::GSLSimAnnealing  fSolver; 
-   
 
-}; 
+   ROOT::Math::GSLSimAnnealing  fSolver;
+
+
+};
 
    } // end namespace Math
 

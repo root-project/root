@@ -152,7 +152,7 @@ public:
                                         Int_t *touched = 0, Int_t *opened = 0, Int_t *disappeared = 0,
                                         TList *flist = 0, Long64_t avgsz = -1, const char *mss = 0,
                                         Int_t maxfiles = -1, const char *stageopts = 0);
-   static Bool_t            CheckStagedStatus(TFileInfo *fileInfo, Int_t fopt, Int_t maxfiles, 
+   static Bool_t            CheckStagedStatus(TFileInfo *fileInfo, Int_t fopt, Int_t maxfiles,
                                               Int_t newstagedfiles, TFileStager* stager, Bool_t createStager,
                                               Bool_t dbg, Bool_t &changed, Bool_t& touched,
                                               Bool_t& disappeared);

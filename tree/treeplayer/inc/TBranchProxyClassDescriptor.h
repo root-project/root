@@ -64,7 +64,7 @@ namespace ROOT {
       const char* GetSubBranchPrefix() const;
 
       const char* GetRawSymbol() const;
-      
+
       TVirtualStreamerInfo *GetInfo() const { return fInfo; }
 
       UInt_t GetSplitLevel() const;

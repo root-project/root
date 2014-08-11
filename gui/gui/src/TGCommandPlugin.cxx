@@ -42,9 +42,9 @@ TGCommandPlugin::TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h) :
    fHf->AddFrame(fComboCmd, new TGLayoutHints(kLHintsCenterY |
                  kLHintsRight | kLHintsExpandX, 5, 5, 1, 1));
    fHf->AddFrame(fLabel = new TGLabel(fHf, "Command (local):"),
-                 new TGLayoutHints(kLHintsCenterY | kLHintsRight, 
+                 new TGLayoutHints(kLHintsCenterY | kLHintsRight,
                  5, 5, 1, 1));
-   AddFrame(fHf, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+   AddFrame(fHf, new TGLayoutHints(kLHintsLeft | kLHintsTop |
             kLHintsExpandX, 3, 3, 3, 3));
    fCommand->Connect("ReturnPressed()", "TGCommandPlugin", this,
                      "HandleCommand()");
@@ -54,7 +54,7 @@ TGCommandPlugin::TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h) :
    fStatus = new TGTextView(this, 10, 100, 1);
    fStatus->SetSelectBack(pxl);
    fStatus->SetSelectFore(TGFrame::GetWhitePixel());
-   AddFrame(fStatus, new TGLayoutHints(kLHintsLeft | kLHintsTop | 
+   AddFrame(fStatus, new TGLayoutHints(kLHintsLeft | kLHintsTop |
             kLHintsExpandX | kLHintsExpandY, 3, 3, 3, 3));
    fPid = gSystem->GetPid();
    TString defhist(Form("%s/.root_hist", gSystem->UnixPathName(
@@ -81,7 +81,7 @@ TGCommandPlugin::~TGCommandPlugin()
 {
    // Destructor.
 
-   TString pathtmp = TString::Format("%s/command.%d.log", 
+   TString pathtmp = TString::Format("%s/command.%d.log",
                                      gSystem->TempDirectory(), fPid);
    gSystem->Unlink(pathtmp);
    delete fTimer;
@@ -124,7 +124,7 @@ void TGCommandPlugin::HandleCommand()
    if (strlen(string) > 1) {
       // form temporary file path
       TString sPrompt = "root []";
-      TString pathtmp = TString::Format("%s/command.%d.log", 
+      TString pathtmp = TString::Format("%s/command.%d.log",
                                         gSystem->TempDirectory(), fPid);
       TApplication *app = gROOT->GetApplication();
       if (app->InheritsFrom("TRint"))

@@ -130,7 +130,7 @@ TVolumePosition *TVolumeViewIter::UpdateTempMatrix(TVolumePosition *curPosition)
          newTranslation[1] = oldTranslation[1] + curPosition->GetY();
          newTranslation[2] = oldTranslation[2] + curPosition->GetZ();
          newPosition = SetPositionAt(curNode,newTranslation[0],newTranslation[1],newTranslation[2]);
-         if (newPosition) {;} //intentionally not used         
+         if (newPosition) {;} //intentionally not used
       }
    } else {
       newPosition =  SetPositionAt(*curPosition);

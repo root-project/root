@@ -37,7 +37,7 @@ void qtrootexample1::init()
 {
    TKey *key;
    TFile *fxDiskFile;
-    
+
    (TQRootCanvas1->GetCanvas())->Divide(2,2);
    fxDiskFile = new TFile("test.root");
    TIter next(fxDiskFile->GetListOfKeys());

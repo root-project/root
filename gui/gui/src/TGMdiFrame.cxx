@@ -190,15 +190,15 @@ void TGMdiFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    // Save a MDIframe as a C++ statement(s) on output stream out
 
    char quote = '"';
-   
+
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
-   
+
    TGMdiTitleBar *tb = fMain->GetWindowList()->GetDecorFrame()->GetTitleBar();
-   
+
    out << std::endl <<"   // MDI frame "<< quote << GetWindowName() << quote << std::endl;
    out << "   TGMdiFrame *";
    out << GetName() << " = new TGMdiFrame(" << fMain->GetName()
-       << "," << GetWidth() + GetBorderWidth()*2 
+       << "," << GetWidth() + GetBorderWidth()*2
        << "," << GetHeight() + tb->GetHeight() + GetBorderWidth()*2;
 
    if (fBackground == GetDefaultFrameBackground()) {
@@ -214,15 +214,15 @@ void TGMdiFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 
    SavePrimitiveSubframes(out, option);
-   
+
    out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
        << quote << ");" << std::endl;
    out << "   " << GetName() << "->SetMdiHints(" << GetMdiHintsString()
        << ");" << std::endl;
    if ((GetX() != 5) && (GetY() != 23))
-      out << "   " << GetName() << "->Move(" << GetX() << "," << GetY() 
+      out << "   " << GetName() << "->Move(" << GetX() << "," << GetY()
           << ");" << std::endl;
-          
+
    out << "   " << GetName() << "->MapSubwindows();" << std::endl;
    out << "   " << GetName() << "->Layout();" << std::endl;
 }

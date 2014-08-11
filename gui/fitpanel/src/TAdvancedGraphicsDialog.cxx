@@ -34,7 +34,7 @@
 #include <string>
 
 TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(const TGWindow *p, const TGWindow *main):
-   TGTransientFrame(p, main, 10, 10, kVerticalFrame), 
+   TGTransientFrame(p, main, 10, 10, kVerticalFrame),
    fFitter((TBackCompFitter *) TVirtualFitter::GetFitter())
 {
    // Creates the Advanced Graphics Dialog.
@@ -125,7 +125,7 @@ void TAdvancedGraphicsDialog::CreateContourFrame()
    TGLabel* label = new TGLabel(frame, "Number of Points: ");
    frame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 0));
 
-   fContourPoints = new TGNumberEntry(frame, 40, 
+   fContourPoints = new TGNumberEntry(frame, 40,
                                 5, kAGD_SCANMIN,
                                 TGNumberFormat::kNESInteger,
                                 TGNumberFormat::kNEAPositive,
@@ -180,7 +180,7 @@ void TAdvancedGraphicsDialog::CreateContourFrame()
    fContourFrame->AddFrame(frame, new TGLayoutHints(kLHintsExpandX, 5, 5, 0, 5));
 
    frame = new TGHorizontalFrame(fContourFrame);
-   
+
    label = new TGLabel(frame, "Fill Colour: ");
    frame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 0));
 
@@ -206,7 +206,7 @@ void TAdvancedGraphicsDialog::CreateScanFrame()
    TGLabel* label = new TGLabel(frame, "Number of Points: ");
    frame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 0));
 
-   fScanPoints = new TGNumberEntry(frame, 40, 
+   fScanPoints = new TGNumberEntry(frame, 40,
                                 5, kAGD_SCANMIN,
                                 TGNumberFormat::kNESInteger,
                                 TGNumberFormat::kNEAPositive,
@@ -235,8 +235,8 @@ void TAdvancedGraphicsDialog::CreateScanFrame()
    frame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 0));
 
    double val = fFitter->GetParameter( fScanPar->GetSelected() - kAGD_PARCOUNTER );
-   double err = fFitter->GetParError( fScanPar->GetSelected() - kAGD_PARCOUNTER ); 
-   fScanMin = new TGNumberEntry(frame, val - 2.*err , 
+   double err = fFitter->GetParError( fScanPar->GetSelected() - kAGD_PARCOUNTER );
+   fScanMin = new TGNumberEntry(frame, val - 2.*err ,
                                 5, kAGD_SCANMIN,
                                 TGNumberFormat::kNESRealFour,
                                 TGNumberFormat::kNEAAnyNumber,
@@ -256,7 +256,7 @@ void TAdvancedGraphicsDialog::CreateScanFrame()
    fScanMax->GetNumberEntry()->SetToolTipText("Sets the maximum parameter value");
    frame->AddFrame(fScanMax, new TGLayoutHints(kLHintsNormal, 2, 0, 5, 0));
    fScanFrame->AddFrame(frame, new TGLayoutHints(kLHintsExpandX, 5, 5, 0, 0));
-   
+
 }
 
 //______________________________________________________________________________
@@ -271,7 +271,7 @@ void TAdvancedGraphicsDialog::CreateConfFrame()
    TGLabel* label = new TGLabel(frame, "Confidence Level: ");
    frame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 0));
 
-   fConfLevel = new TGNumberEntry(frame, 0.95, 
+   fConfLevel = new TGNumberEntry(frame, 0.95,
                                   5, kAGD_SCANMIN,
                                   TGNumberFormat::kNESRealTwo,
                                   TGNumberFormat::kNEAPositive,
@@ -283,7 +283,7 @@ void TAdvancedGraphicsDialog::CreateConfFrame()
    fConfFrame->AddFrame(frame, new TGLayoutHints(kLHintsExpandX, 5, 5, 0, 0));
 
    frame = new TGHorizontalFrame(fConfFrame);
-   
+
    label = new TGLabel(frame, "Fill Colour: ");
    frame->AddFrame(label, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 0));
 
@@ -293,7 +293,7 @@ void TAdvancedGraphicsDialog::CreateConfFrame()
    fConfFrame->AddFrame(frame, new TGLayoutHints(kLHintsExpandX, 5, 5, 0, 5));
 }
 
-void TAdvancedGraphicsDialog::AddParameters(TGComboBox* comboBox) 
+void TAdvancedGraphicsDialog::AddParameters(TGComboBox* comboBox)
 {
    // Add all the parameters of the VirtualFitter into a comboBox
    // (helper method)
@@ -324,7 +324,7 @@ void TAdvancedGraphicsDialog::DoChangedScanPar(Int_t selected)
    // depending on the selected parameter.
 
    double val = fFitter->GetParameter( selected - kAGD_PARCOUNTER );
-   double err = fFitter->GetParError(  selected - kAGD_PARCOUNTER ); 
+   double err = fFitter->GetParError(  selected - kAGD_PARCOUNTER );
    fScanMin->SetNumber( val -2 * err );
    fScanMax->SetNumber( val +2 * err );
 }
@@ -357,7 +357,7 @@ void TAdvancedGraphicsDialog::DrawContour()
       options = "ALF";
    } else
       options = "LF";
-   graph = new TGraph( static_cast<int>(fContourPoints->GetNumber()) ); 
+   graph = new TGraph( static_cast<int>(fContourPoints->GetNumber()) );
    Int_t par1 = fContourPar1->GetSelected() - kAGD_PARCOUNTER;
    Int_t par2 = fContourPar2->GetSelected() - kAGD_PARCOUNTER;
    if ( par1 == par2 ) {
@@ -365,12 +365,12 @@ void TAdvancedGraphicsDialog::DrawContour()
       return;
    }
    // contour error is actually the desired confidence level
-   Double_t cl = fContourError->GetNumber(); 
+   Double_t cl = fContourError->GetNumber();
    fFitter->Contour( par1, par2, graph, cl);
    graph->SetFillColor( TColor::GetColor( fContourColor->GetColor() ) );
    graph->GetXaxis()->SetTitle( fFitter->GetParName(par1) );
    graph->GetYaxis()->SetTitle( fFitter->GetParName(par2) );
-   graph->Draw( options.c_str() ); 
+   graph->Draw( options.c_str() );
    gPad->Update();
 }
 
@@ -385,9 +385,9 @@ void TAdvancedGraphicsDialog::DrawScan()
       delete graph;
    graph = new TGraph( static_cast<int>(fScanPoints->GetNumber()) );
    Int_t par = fScanPar->GetSelected() - kAGD_PARCOUNTER;
-   fFitter->Scan( par, graph, 
+   fFitter->Scan( par, graph,
                   fScanMin->GetNumber(),
-                  fScanMax->GetNumber() ); 
+                  fScanMax->GetNumber() );
    graph->SetLineColor(kBlue);
    graph->SetLineWidth(2);
    graph->GetXaxis()->SetTitle(fFitter->GetParName(par) );
@@ -405,9 +405,9 @@ void TAdvancedGraphicsDialog::DrawConfidenceLevels()
    const ROOT::Fit::FitResult& result = fFitter->GetFitResult();
    const ROOT::Fit::FitResult::IModelFunction* function = result.FittedFunction();
    const ROOT::Fit::BinData* data = dynamic_cast<const ROOT::Fit::BinData*>(&(fFitter->GetFitData()));
-   if ( !data ) 
+   if ( !data )
    {
-      Error("DrawConfidenceLevels","Unbinned data set cannot draw confidence levels."); 
+      Error("DrawConfidenceLevels","Unbinned data set cannot draw confidence levels.");
       return;
    }
 

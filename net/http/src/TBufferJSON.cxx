@@ -1,4 +1,4 @@
-// $Id$
+//
 // Author: Sergey Linev  4.03.2014
 
 /*************************************************************************
@@ -854,20 +854,20 @@ void TBufferJSON::DecrementLevel(TVirtualStreamerInfo *info)
 }
 
 //______________________________________________________________________________
-void TBufferJSON::SetStreamerElementNumber(Int_t number)
+void TBufferJSON::SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_type)
 {
    // Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
    // and add/verify next element of xml structure
    // This calls allows separate data, correspondent to one class member, from another
 
    if (gDebug > 3)
-      Info("SetStreamerElementNumber", "Number %d", number);
+      Info("SetStreamerElementNumber", "Element name %s", elem->GetName());
 
-   WorkWithElement(0, number);
+   WorkWithElement(elem, comp_type);
 }
 
 //______________________________________________________________________________
-void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t number)
+void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
 {
    // This is call-back from streamer which indicates
    // that class member will be streamed
@@ -905,22 +905,12 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t number)
       return;
    }
 
-   Int_t comp_type = 0;
-
-   if ((number >= 0) && (elem == 0)) {
-
-      TStreamerInfo *info = stack->fInfo;
-      if (!stack->IsStreamerInfo()) {
-         Error("WorkWithElement", "Problem in Inc/Dec level");
-         return;
-      }
-
-      comp_type = info->GetTypes()[number];
-
-      elem = info->GetStreamerElementReal(number, 0);
-   } else if (elem) {
-      comp_type = elem->GetType();
+   TStreamerInfo *info = stack->fInfo;
+   if (!stack->IsStreamerInfo()) {
+      Error("WorkWithElement", "Problem in Inc/Dec level");
+      return;
    }
+   Int_t number = info->GetElements()->IndexOf(elem);
 
    if (gDebug > 3)
       Info("WorkWithElement", "    Start element %s type %d",
@@ -1981,9 +1971,9 @@ void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n,
          TStreamerInfo* info = Stack(1)->fInfo;                              \
          Int_t startnumber = Stack(0)->fElemNumber;                          \
          fExpectedChain = kFALSE;                                            \
-         Int_t number(0), index(0);                                          \
+         Int_t index(0);                                          \
          while (index<n) {                                                   \
-            elem = info->GetStreamerElementReal(startnumber, number++);       \
+            elem = (TStreamerElement*)info->GetElements()->At(startnumber++); \
             if (elem->GetType()<TStreamerInfo::kOffsetL) {                    \
                JsonWriteBasic(vname[index]);                                   \
                PerformPostProcessing(Stack(0), elem);                          \
@@ -2688,7 +2678,7 @@ Int_t TBufferJSON::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
             iter != end; ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter).PrintDebug(*this, obj);
          (*iter)(*this, obj);
       }
@@ -2698,7 +2688,7 @@ Int_t TBufferJSON::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
             iter != end;  ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter)(*this, obj);
       }
    }
@@ -2722,7 +2712,7 @@ Int_t TBufferJSON::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
       for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
             iter != end; ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter).PrintDebug(*this, *(char **)start_collection); // Warning: This limits us to TClonesArray and vector of pointers.
          (*iter)(*this, start_collection, end_collection);
       }
@@ -2732,7 +2722,7 @@ Int_t TBufferJSON::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
       for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
             iter != end; ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter)(*this, start_collection, end_collection);
       }
    }
@@ -2761,7 +2751,7 @@ Int_t TBufferJSON::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
             iter != end; ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter).PrintDebug(*this, arr0);
          (*iter)(*this, start_collection, end_collection, loopconfig);
       }
@@ -2771,7 +2761,7 @@ Int_t TBufferJSON::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
             iter != end; ++iter) {
          // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fElemId);
+         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem,(*iter).fConfiguration->fCompInfo->fType);
          (*iter)(*this, start_collection, end_collection, loopconfig);
       }
    }

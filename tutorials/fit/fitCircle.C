@@ -1,5 +1,5 @@
 //Generate points distributed with some errors around a circle
-//Fit a circle through the points and draw 
+//Fit a circle through the points and draw
 //To run the script, do, eg
 //   root > .x fitCircle.C   (10000 points by default)
 //   root > .x fitCircle.C(100);  (with only 100 points
@@ -47,7 +47,7 @@ void fitCircle(Int_t n=10000) {
    }
    c1->DrawFrame(-5,-5,5,5);
    gr->Draw("p");
-   
+
    //Fit a circle to the graph points
    TVirtualFitter::SetDefaultFitter("Minuit");  //default is Minuit
    TVirtualFitter *fitter = TVirtualFitter::Fitter(0, 3);

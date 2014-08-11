@@ -2,7 +2,7 @@
 /*
 IntervalExamples
 
-Author Kyle Cranmer 
+Author Kyle Cranmer
 date   Sep. 2010
 
 An example that shows confidence intervals with four techniques.
@@ -59,7 +59,7 @@ using namespace RooStats ;
 
 void IntervalExamples()
 {
-  
+
   // Time this macro
   TStopwatch t;
   t.Start();
@@ -85,7 +85,7 @@ void IntervalExamples()
   RooDataSet* data = wspace->pdf("normal")->generate(*wspace->set("obs"),100);
   data->Print();
 
-  // for convenience later on 
+  // for convenience later on
   RooRealVar* x = wspace->var("x");
   RooRealVar* mu = wspace->var("mu");
 
@@ -98,14 +98,14 @@ void IntervalExamples()
   LikelihoodInterval* plInt = plc.GetInterval();
 
   // example use of Feldman-Cousins
-  FeldmanCousins fc(*data, *modelConfig); 
+  FeldmanCousins fc(*data, *modelConfig);
   fc.SetConfidenceLevel( confidenceLevel);
   fc.SetNBins(100); // number of points to test per parameter
   fc.UseAdaptiveSampling(true); // make it go faster
 
   // Here, we consider only ensembles with 100 events
   // The PDF could be extended and this could be removed
-  fc.FluctuateNumDataEntries(false); 
+  fc.FluctuateNumDataEntries(false);
 
   // Proof
   //  ProofConfig pc(*wspace, 4, "workers=4", kFALSE);    // proof-lite
@@ -130,47 +130,47 @@ void IntervalExamples()
   MCMCCalculator mc(*data, *modelConfig);
   mc.SetConfidenceLevel( confidenceLevel);
   // special options
-  mc.SetNumBins(200);	  // bins used internally for representing posterior
+  mc.SetNumBins(200);        // bins used internally for representing posterior
   mc.SetNumBurnInSteps(500); // first N steps to be ignored as burn-in
   mc.SetNumIters(100000);    // how long to run chain
   mc.SetLeftSideTailFraction(0.5); // for central interval
   MCMCInterval* mcInt = mc.GetInterval();
-  
+
   // for this example we know the expected intervals
-  double expectedLL = data->mean(*x) 
+  double expectedLL = data->mean(*x)
     + ROOT::Math::normal_quantile(  (1-confidenceLevel)/2,1)
     / sqrt(data->numEntries());
-  double expectedUL = data->mean(*x) 
+  double expectedUL = data->mean(*x)
     + ROOT::Math::normal_quantile_c((1-confidenceLevel)/2,1)
     / sqrt(data->numEntries()) ;
 
   // Use the intervals
-  std::cout << "expected interval is [" << 
-    expectedLL << ", " << 
-    expectedUL << "]" << endl; 
+  std::cout << "expected interval is [" <<
+    expectedLL << ", " <<
+    expectedUL << "]" << endl;
 
-  cout << "plc interval is [" << 
-    plInt->LowerLimit(*mu) << ", " << 
+  cout << "plc interval is [" <<
+    plInt->LowerLimit(*mu) << ", " <<
     plInt->UpperLimit(*mu) << "]" << endl;
 
-  std::cout << "fc interval is ["<<  
+  std::cout << "fc interval is ["<<
     interval->LowerLimit(*mu) << " , "  <<
     interval->UpperLimit(*mu) << "]" << endl;
 
-  cout << "bc interval is [" << 
-    bcInt->LowerLimit() << ", " << 
+  cout << "bc interval is [" <<
+    bcInt->LowerLimit() << ", " <<
     bcInt->UpperLimit() << "]" << endl;
 
-  cout << "mc interval is [" << 
-    mcInt->LowerLimit(*mu) << ", " << 
+  cout << "mc interval is [" <<
+    mcInt->LowerLimit(*mu) << ", " <<
     mcInt->UpperLimit(*mu) << "]" << endl;
-  
+
   mu->setVal(0);
-  cout << "is mu=0 in the interval? " << 
+  cout << "is mu=0 in the interval? " <<
     plInt->IsInInterval(RooArgSet(*mu)) << endl;
 
- 
-  // make a reasonable style 
+
+  // make a reasonable style
   gStyle->SetCanvasColor(0);
   gStyle->SetCanvasBorderMode(0);
   gStyle->SetPadBorderMode(0);
@@ -180,7 +180,7 @@ void IntervalExamples()
   gStyle->SetFillColor(0);
   gStyle->SetFrameFillColor(0);
   gStyle->SetStatColor(0);
- 
+
 
   // some plots
   TCanvas* canvas = new TCanvas("canvas");

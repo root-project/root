@@ -22,7 +22,7 @@
 // node, e.g. the number of Monte carlo events to be generated.         //
 // Packets sizes are generated taking into account the performance of   //
 // worker nodes, based on the time needed to process previous packets,  //
-// with the goal of having all workers ending at the same time.         // 
+// with the goal of having all workers ending at the same time.         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

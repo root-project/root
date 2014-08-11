@@ -30,17 +30,17 @@
    gr2->SetMarkerColor(kRed);
    gr2->SetMarkerStyle(20);
    gr2->Fit("pol5","q");
-   
+
    mg->Add(gr2);
-   
+
    mg->Draw("ap");
-   
+
      //force drawing of canvas to generate the fit TPaveStats
    c1->Update();
    TPaveStats *stats1 = (TPaveStats*)gr1->GetListOfFunctions()->FindObject("stats");
    TPaveStats *stats2 = (TPaveStats*)gr2->GetListOfFunctions()->FindObject("stats");
-   stats1->SetTextColor(kBlue); 
-   stats2->SetTextColor(kRed); 
+   stats1->SetTextColor(kBlue);
+   stats2->SetTextColor(kRed);
    stats1->SetX1NDC(0.12); stats1->SetX2NDC(0.32); stats1->SetY1NDC(0.75);
    stats2->SetX1NDC(0.72); stats2->SetX2NDC(0.92); stats2->SetY1NDC(0.78);
    c1->Modified();

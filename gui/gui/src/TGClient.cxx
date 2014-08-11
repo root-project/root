@@ -67,17 +67,17 @@ AddPseudoGlobals() {
 void TriggerDictionaryInitialization_libGui();
 class TGClientInit {
 public:
-   TGClientInit() { 
+   TGClientInit() {
       if (ROOT::gROOTLocal && ROOT::gROOTLocal->IsBatch()) {
          // For now check if the heaeder files (or the module containing them)
          // has been loaded in Cling.
-         // This is required because the dictionaries must be initialized 
-         // __before__ the TGClient creation which will induce the creation 
+         // This is required because the dictionaries must be initialized
+         // __before__ the TGClient creation which will induce the creation
          // of a TClass object which will need the dictionary for TGClient!
          TriggerDictionaryInitialization_libGui();
          new TGClient();
       }
-      TApplication::NeedGraphicsLibs(); 
+      TApplication::NeedGraphicsLibs();
    }
 };
 static TGClientInit gClientInit;
@@ -732,10 +732,10 @@ void TGClient::WaitForUnmap(TGWindow *w)
 
    fWaitForWindow = w->GetId();
    fWaitForEvent  = kUnmapNotify;
-   
+
    //Let VirtualX know, that we are
    //in a nested loop for a window w.
-   //Noop on X11/win32gdk.   
+   //Noop on X11/win32gdk.
    if (gVirtualX)
       gVirtualX->BeginModalSessionFor(w->GetId());
 

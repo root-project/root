@@ -38,18 +38,18 @@
 #endif
 
 /**
-   @defgroup TempFunction Generic Template Functions 
+   @defgroup TempFunction Generic Template Functions
    @ingroup SMatrixGroup
 
-   These functions apply for any type T, such as a scalar, a vector or a matrix. 
+   These functions apply for any type T, such as a scalar, a vector or a matrix.
  */
 /**
-   @defgroup VectFunction Vector Template Functions 
+   @defgroup VectFunction Vector Template Functions
    @ingroup SMatrixGroup
 
-   These functions apply to SVector types (and also to Vector expressions) and can 
-   return a vector expression or 
-   a scalar, like in the Dot product, or a matrix, like in the Tensor product 
+   These functions apply to SVector types (and also to Vector expressions) and can
+   return a vector expression or
+   a scalar, like in the Dot product, or a matrix, like in the Tensor product
  */
 
 
@@ -62,7 +62,7 @@ namespace ROOT {
 template <class T, unsigned int D> class SVector;
 
 
-/** square  
+/** square
     Template function to compute \f$x\cdot x \f$, for any type T returning a type T
 
     @ingroup TempFunction
@@ -117,7 +117,7 @@ inline int Round(const T& x) {
 
 
 /** sign.
-    Template to compute the sign of a number 
+    Template to compute the sign of a number
 
     @ingroup TempFunction
     @author T. Glebe
@@ -152,8 +152,8 @@ struct meta_dot<0> {
 };
 
 
-/** 
-    Vector dot product. 
+/**
+    Vector dot product.
     Template to compute \f$\vec{a}\cdot\vec{b} = \sum_i a_i\cdot b_i \f$.
 
     @ingroup VectFunction
@@ -217,7 +217,7 @@ struct meta_mag<0> {
 };
 
 
-/** 
+/**
     Vector magnitude square
     Template to compute \f$|\vec{v}|^2 = \sum_iv_i^2 \f$.
 
@@ -240,8 +240,8 @@ inline T Mag2(const VecExpr<A,T,D>& rhs) {
   return meta_mag<D-1>::f(rhs, T());
 }
 
-/** 
-    Vector magnitude (Euclidian norm) 
+/**
+    Vector magnitude (Euclidian norm)
     Compute : \f$ |\vec{v}| = \sqrt{\sum_iv_i^2} \f$.
 
     @ingroup VectFunction
@@ -288,7 +288,7 @@ inline T Lmag2(const VecExpr<A,T,4>& rhs) {
 }
 
 /** Lmag: Minkowski Lorentz-Vector norm (only for 4-dim vectors)
-    Length of a vector Lorentz-Vector: 
+    Length of a vector Lorentz-Vector:
     \f$ |\vec{v}| = \sqrt{v_0^2 - v_1^2 - v_2^2 -v_3^2} \f$.
 
     @ingroup VectFunction
@@ -323,11 +323,11 @@ inline T Lmag(const VecExpr<A,T,4>& rhs) {
 template <class T>
 inline SVector<T,3> Cross(const SVector<T,3>& lhs, const SVector<T,3>& rhs) {
   return SVector<T,3>(lhs.apply(1)*rhs.apply(2) -
-		      lhs.apply(2)*rhs.apply(1),
-		      lhs.apply(2)*rhs.apply(0) -
-		      lhs.apply(0)*rhs.apply(2),
-		      lhs.apply(0)*rhs.apply(1) -
-		      lhs.apply(1)*rhs.apply(0));
+                      lhs.apply(2)*rhs.apply(1),
+                      lhs.apply(2)*rhs.apply(0) -
+                      lhs.apply(0)*rhs.apply(2),
+                      lhs.apply(0)*rhs.apply(1) -
+                      lhs.apply(1)*rhs.apply(0));
 }
 
 //==============================================================================
@@ -336,11 +336,11 @@ inline SVector<T,3> Cross(const SVector<T,3>& lhs, const SVector<T,3>& rhs) {
 template <class A, class T>
 inline SVector<T,3> Cross(const VecExpr<A,T,3>& lhs, const SVector<T,3>& rhs) {
   return SVector<T,3>(lhs.apply(1)*rhs.apply(2) -
-		      lhs.apply(2)*rhs.apply(1),
-		      lhs.apply(2)*rhs.apply(0) -
-		      lhs.apply(0)*rhs.apply(2),
-		      lhs.apply(0)*rhs.apply(1) -
-		      lhs.apply(1)*rhs.apply(0));
+                      lhs.apply(2)*rhs.apply(1),
+                      lhs.apply(2)*rhs.apply(0) -
+                      lhs.apply(0)*rhs.apply(2),
+                      lhs.apply(0)*rhs.apply(1) -
+                      lhs.apply(1)*rhs.apply(0));
 }
 
 //==============================================================================
@@ -349,11 +349,11 @@ inline SVector<T,3> Cross(const VecExpr<A,T,3>& lhs, const SVector<T,3>& rhs) {
 template <class T, class A>
 inline SVector<T,3> Cross(const SVector<T,3>& lhs, const VecExpr<A,T,3>& rhs) {
   return SVector<T,3>(lhs.apply(1)*rhs.apply(2) -
-		      lhs.apply(2)*rhs.apply(1),
-		      lhs.apply(2)*rhs.apply(0) -
-		      lhs.apply(0)*rhs.apply(2),
-		      lhs.apply(0)*rhs.apply(1) -
-		      lhs.apply(1)*rhs.apply(0));
+                      lhs.apply(2)*rhs.apply(1),
+                      lhs.apply(2)*rhs.apply(0) -
+                      lhs.apply(0)*rhs.apply(2),
+                      lhs.apply(0)*rhs.apply(1) -
+                      lhs.apply(1)*rhs.apply(0));
 }
 
 //==============================================================================
@@ -362,11 +362,11 @@ inline SVector<T,3> Cross(const SVector<T,3>& lhs, const VecExpr<A,T,3>& rhs) {
 template <class A, class B, class T>
 inline SVector<T,3> Cross(const VecExpr<A,T,3>& lhs, const VecExpr<B,T,3>& rhs) {
   return SVector<T,3>(lhs.apply(1)*rhs.apply(2) -
-		      lhs.apply(2)*rhs.apply(1),
-		      lhs.apply(2)*rhs.apply(0) -
-		      lhs.apply(0)*rhs.apply(2),
-		      lhs.apply(0)*rhs.apply(1) -
-		      lhs.apply(1)*rhs.apply(0));
+                      lhs.apply(2)*rhs.apply(1),
+                      lhs.apply(2)*rhs.apply(0) -
+                      lhs.apply(0)*rhs.apply(2),
+                      lhs.apply(0)*rhs.apply(1) -
+                      lhs.apply(1)*rhs.apply(0));
 }
 
 

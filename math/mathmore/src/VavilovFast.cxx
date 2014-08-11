@@ -1,6 +1,6 @@
 // @(#)root/mathmore:$Id$
 // Authors: B. List 29.4.2010
- 
+
 
  /**********************************************************************
   *                                                                    *
@@ -24,11 +24,11 @@
   **********************************************************************/
 
 // Implementation file for class VavilovFast
-// 
+//
 // Created by: blist  at Thu Apr 29 11:19:00 2010
-// 
+//
 // Last update: Thu Apr 29 11:19:00 2010
-// 
+//
 
 
 #include "Math/VavilovFast.h"
@@ -49,18 +49,18 @@ namespace Math {
 VavilovFast *VavilovFast::fgInstance = 0;
 
 
-VavilovFast::VavilovFast(double kappa, double beta2) 
+VavilovFast::VavilovFast(double kappa, double beta2)
 {
    SetKappaBeta2 (kappa, beta2);
 }
 
 
-VavilovFast::~VavilovFast() 
+VavilovFast::~VavilovFast()
 {
    // desctructor (clean up resources)
 }
 
-void VavilovFast::SetKappaBeta2 (double kappa, double beta2) 
+void VavilovFast::SetKappaBeta2 (double kappa, double beta2)
 {
    // Modified version of void TMath::VavilovSet(Double_t rkappa, Double_t beta2, Bool_t mode, Double_t *WCM, Double_t *AC, Double_t *HC, Int_t &itype, Int_t &npt)
    fKappa = kappa;
@@ -454,7 +454,7 @@ double VavilovFast::Cdf (double x, double kappa, double beta2) {
    //density function computed numerically in an accurate way: our approximation
    //shows a difference of less than 3% around the peak of the density function, slowly
    //increasing going towards the extreme tails to the right and to the left"
-   
+
    if (kappa != fKappa || beta2 != fBeta2) SetKappaBeta2 (kappa, beta2);
    return Cdf (x);
 }
@@ -472,7 +472,7 @@ double VavilovFast::Cdf_c (double x, double kappa, double beta2) {
    //density function computed numerically in an accurate way: our approximation
    //shows a difference of less than 3% around the peak of the density function, slowly
    //increasing going towards the extreme tails to the right and to the left"
-   
+
    if (kappa != fKappa || beta2 != fBeta2) SetKappaBeta2 (kappa, beta2);
    return Cdf_c (x);
 }
@@ -504,12 +504,12 @@ double VavilovFast::Quantile (double z) const {
            y += fHC[k]*h[k+1];
          }
          if (y > 0) fu = fHC[8]*std::exp(-0.5*x*x);
-      } 
+      }
       else if (fItype == 2) {
          double x = rlam*rlam;
          fu = fAC[1]*std::exp(-fAC[2]*(rlam+fAC[5]*x)-
               fAC[3]*std::exp(-fAC[4]*(rlam+fAC[6]*x)));
-      } 
+      }
       else if (fItype == 3) {
          if (rlam < fAC[7]) {
             double x = rlam*rlam;
@@ -519,7 +519,7 @@ double VavilovFast::Quantile (double z) const {
             double x = 1/rlam;
             fu = (fAC[11]*x+fAC[12])*x;
          }
-      } 
+      }
       else {
          fu = fAC[13]*Pdf(rlam);  // in VAVRAN: AC(10) -> difference between VAVRAN and VAVSET
       }
@@ -568,7 +568,7 @@ VavilovFast *VavilovFast::GetInstance() {
    if (!fgInstance) fgInstance = new VavilovFast (1, 1);
    return fgInstance;
 }
-   
+
 VavilovFast *VavilovFast::GetInstance(double kappa, double beta2) {
    if (!fgInstance) fgInstance = new VavilovFast (kappa, beta2);
    else if (kappa != fgInstance->fKappa || beta2 != fgInstance->fBeta2) fgInstance->SetKappaBeta2 (kappa, beta2);

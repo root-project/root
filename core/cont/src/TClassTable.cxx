@@ -108,11 +108,11 @@ namespace ROOT {
          TObjString *key;
          while((key = (TObjString*)next())) {
             delete key;
-         }         
+         }
       }
 #endif
 
-      void Add(const char *key, TClassRec *&obj) 
+      void Add(const char *key, TClassRec *&obj)
       {
          // Add <key,value> pair to the map.
 
@@ -278,7 +278,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
       }
 //       if (splitname.IsSTLCont()==0) {
       if (!TClassEdit::IsStdClass(shortName.c_str())) {
-         // Warn only for class that are not STD classes 
+         // Warn only for class that are not STD classes
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }
       return;
@@ -287,9 +287,9 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
       if (oldcl) { //  && oldcl->GetClassInfo()) {
          // As a work-around to ROOT-6012, we need to register the class even if
          // it is not a template instance, because a forward declaration in the header
-         // files loaded by the current dictionary wil also de-activate the update 
+         // files loaded by the current dictionary wil also de-activate the update
          // class info mechanism!
-  
+
          // The TClass exist and already has a class info, so it must
          // correspond to a class template instantiation which the interpreter
          // was able to make with the library containing the TClass Init.

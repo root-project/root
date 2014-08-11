@@ -47,7 +47,7 @@ private:
 
    // Helper for managing the compressed buffer.
    void InitializeCompressedBuffer(Int_t len, TFile* file);
- 
+
 protected:
    Int_t       fBufferSize;      //fBuffer length in bytes
    Int_t       fNevBufSize;      //Length in Int_t of fEntryOffset OR fixed length of each entry if fEntryOffset is null!
@@ -62,12 +62,12 @@ protected:
    Int_t       fLastWriteBufferSize; //! Size of the buffer last time we wrote it to disk
 
 public:
-   
+
    TBasket();
    TBasket(TDirectory *motherDir);
    TBasket(const char *name, const char *title, TBranch *branch);
    virtual ~TBasket();
-   
+
    virtual void    AdjustSize(Int_t newsize);
    virtual void    DeleteEntryOffset();
    virtual Int_t   DropBuffers();
@@ -92,7 +92,7 @@ public:
            void    SetNevBufSize(Int_t n) { fNevBufSize=n; }
    virtual void    SetReadMode();
    virtual void    SetWriteMode();
-   inline  void    Update(Int_t newlast) { Update(newlast,newlast); }; 
+   inline  void    Update(Int_t newlast) { Update(newlast,newlast); };
    virtual void    Update(Int_t newlast, Int_t skipped);
    virtual Int_t   WriteBuffer();
 

@@ -22,7 +22,7 @@ class FTGL_EXPORT FTPoint
             values[1] = 0;
             values[2] = 0;
         }
-        
+
         /**
          * Constructor.
          *
@@ -36,7 +36,7 @@ class FTGL_EXPORT FTPoint
             values[1] = y;
             values[2] = z;
         }
-        
+
         /**
          * Constructor. This converts an FT_Vector to an FT_Point
          *
@@ -48,7 +48,7 @@ class FTGL_EXPORT FTPoint
             values[1] = ft_vector.y;
             values[2] = 0;
         }
-        
+
         /**
          * Operator += In Place Addition.
          *
@@ -79,8 +79,8 @@ class FTGL_EXPORT FTPoint
 
             return temp;
         }
-        
-        
+
+
         /**
          * Operator *
          *
@@ -96,8 +96,8 @@ class FTGL_EXPORT FTPoint
 
             return temp;
         }
-        
-        
+
+
         /**
          * Operator *
          *
@@ -125,8 +125,8 @@ class FTGL_EXPORT FTPoint
          * @return true if a & b are not equal
          */
         friend bool operator != ( const FTPoint &a, const FTPoint &b);
-        
-        
+
+
         /**
          * Cast to FTGL_DOUBLE*
          */
@@ -134,7 +134,7 @@ class FTGL_EXPORT FTPoint
         {
             return values;
         }
-        
+
 
         /**
          * Setters
@@ -150,7 +150,7 @@ class FTGL_EXPORT FTPoint
         FTGL_DOUBLE X() const { return values[0];};
         FTGL_DOUBLE Y() const { return values[1];};
         FTGL_DOUBLE Z() const { return values[2];};
-        
+
     private:
         /**
          * The point data

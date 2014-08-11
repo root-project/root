@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -21,14 +21,14 @@ namespace ROOT {
 class FCNBase;
 
 //_________________________________________________________________________
-/** 
-    API class for minimization using the Simplex method, which does not need and use 
-    the derivatives of the function, but only function values. 
-    More information on the minimization method is available 
+/**
+    API class for minimization using the Simplex method, which does not need and use
+    the derivatives of the function, but only function values.
+    More information on the minimization method is available
     <A HREF="http://seal.web.cern.ch/mathlibs/documents/minuit/mntutorial.pdf">here</A>.
-    
+
     It allows for user interaction: set/change parameters, do minimization,
-    change parameters, re-do minimization etc.; 
+    change parameters, re-do minimization etc.;
  */
 
 class MnSimplex : public MnApplication {
@@ -53,7 +53,7 @@ public:
    /// construct from FCNBase + MnUserParameterState + MnStrategy
    MnSimplex(const FCNBase& fcn, const MnUserParameterState& par, const MnStrategy& str) : MnApplication(fcn, MnUserParameterState(par), str), fMinimizer(SimplexMinimizer()) {}
 
-   MnSimplex(const MnSimplex& migr) : MnApplication(migr.Fcnbase(), migr.State(), migr.Strategy(), migr.NumOfCalls()), fMinimizer(migr.fMinimizer) {}  
+   MnSimplex(const MnSimplex& migr) : MnApplication(migr.Fcnbase(), migr.State(), migr.Strategy(), migr.NumOfCalls()), fMinimizer(migr.fMinimizer) {}
 
    ~MnSimplex() {}
 

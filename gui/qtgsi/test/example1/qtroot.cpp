@@ -104,12 +104,12 @@ const char * fileSaveText = "Click this button to save the file you are "
 const char * filePrintText = "Click this button to print the file you "
 "are editing.\n\n"
 "You can also select the Print command from the File menu.";
-const char* updateHisto = " update histograms "; 
-const char* clearHisto = " clear histograms "; 
+const char* updateHisto = " update histograms ";
+const char* clearHisto = " clear histograms ";
 
 
 //---------------------------------------------------------------------------
-//            Qt &Root user Application window example 
+//            Qt &Root user Application window example
 //---------------------------------------------------------------------------
 
 

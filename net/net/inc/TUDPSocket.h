@@ -58,7 +58,7 @@ friend class TServerSocket;
 
 public:
    enum EStatusBits { kIsUnix = BIT(16),    // set if unix socket
-                      kBrokenConn = BIT(17) // set if conn reset by peer or broken 
+                      kBrokenConn = BIT(17) // set if conn reset by peer or broken
                     };
    enum EInterest { kRead = 1, kWrite = 2 };
    enum EServiceType { kSOCKD, kROOTD, kPROOFD };
@@ -106,11 +106,11 @@ public:
    TUDPSocket(const char *host, const char *service);
    TUDPSocket(const char *host, Int_t port);
    TUDPSocket(const char *sockpath);
-   
+
    TUDPSocket(Int_t descriptor);
    TUDPSocket(Int_t descriptor, const char *sockpath);
    TUDPSocket(const TUDPSocket &s);
-   
+
    virtual ~TUDPSocket() { Close(); }
 
    virtual void          Close(Option_t *opt="");
@@ -160,12 +160,12 @@ public:
    void                  SetUrl(const char *url) { fUrl = url; }
 
    void                  Touch() { R__LOCKGUARD2(fLastUsageMtx); fLastUsage.Set(); }
-   
+
    static ULong64_t      GetSocketBytesSent();
    static ULong64_t      GetSocketBytesRecv();
 
    static void           NetError(const char *where, Int_t error);
-   
+
    ClassDef(TUDPSocket,0)  //This class implements UDP client sockets
 };
 

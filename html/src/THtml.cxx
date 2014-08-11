@@ -1632,8 +1632,8 @@ void THtml::CreateListOfClasses(const char* filter)
             if (classPtr->GetClassInfo() &&
                 (gInterpreter->ClassInfo_Property(classPtr->GetClassInfo()) & kIsDefinedInStd))
               continue;
-            if (classPtr->GetDeclFileName() && (!strncmp(classPtr->GetDeclFileName(), "prec_stl/", 9) || 
-                                                strstr(classPtr->GetDeclFileName(), "include/c++/") || 
+            if (classPtr->GetDeclFileName() && (!strncmp(classPtr->GetDeclFileName(), "prec_stl/", 9) ||
+                                                strstr(classPtr->GetDeclFileName(), "include/c++/") ||
                                                 !strncmp(classPtr->GetDeclFileName(), "/usr/include",12)))
                continue;
             if (classPtr->GetDeclFileName() && (
@@ -1703,9 +1703,9 @@ void THtml::CreateListOfClasses(const char* filter)
                } // lib name known
                continue;
             } else {
-               if (matchesSelection && (!classPtr->GetDeclFileName() || 
-                                        !strstr(classPtr->GetDeclFileName(),"prec_stl/") || 
-                                        !strstr(classPtr->GetDeclFileName(), "include/c++/") || 
+               if (matchesSelection && (!classPtr->GetDeclFileName() ||
+                                        !strstr(classPtr->GetDeclFileName(),"prec_stl/") ||
+                                        !strstr(classPtr->GetDeclFileName(), "include/c++/") ||
                                         strncmp(classPtr->GetDeclFileName(), "/usr/include",12)))
                   classesDeclFileNotFound.AddLast(classPtr);
                continue;

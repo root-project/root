@@ -29,6 +29,9 @@
 
 #include "TGLOutput.h"
 
+#include "TROOT.h"
+#include "TVirtualMutex.h"
+
 #include "TVirtualPad.h" // Remove when pad removed - use signal
 #include "TVirtualX.h"
 
@@ -547,6 +550,8 @@ void TGLViewer::DoDraw(Bool_t swap_buffers)
    // to ensure thread safety. For PrintObjects repeated Draw() calls are made.
    // If no draw lock taken get one now.
 
+   R__LOCKGUARD2(gROOTMutex);
+
    fRedrawTimer->Stop();
 
    if (CurrentLock() != kDrawLock) {
@@ -560,7 +565,7 @@ void TGLViewer::DoDraw(Bool_t swap_buffers)
 
    if (fGLDevice == -1 && (fViewport.Width() <= 1 || fViewport.Height() <= 1)) {
       if (gDebug > 2) {
-	 Info("TGLViewer::DoDraw()", "zero surface area, draw skipped.");
+         Info("TGLViewer::DoDraw()", "zero surface area, draw skipped.");
       }
       return;
    }
@@ -1159,6 +1164,8 @@ Bool_t TGLViewer::DoSelect(Int_t x, Int_t y)
    // Select lock should already been taken in other thread in
    // TGLViewer::ReqSelect().
 
+   R__LOCKGUARD2(gROOTMutex);
+
    if (CurrentLock() != kSelectLock) {
       Error("TGLViewer::DoSelect", "expected kSelectLock, found %s", LockName(CurrentLock()));
       return kFALSE;
@@ -1225,6 +1232,8 @@ Bool_t TGLViewer::RequestSecondarySelect(Int_t x, Int_t y)
 Bool_t TGLViewer::DoSecondarySelect(Int_t x, Int_t y)
 {
    // Secondary selection.
+
+   R__LOCKGUARD2(gROOTMutex);
 
    if (CurrentLock() != kSelectLock) {
       Error("TGLViewer::DoSecondarySelect", "expected kSelectLock, found %s", LockName(CurrentLock()));
@@ -1334,6 +1343,8 @@ Bool_t TGLViewer::DoOverlaySelect(Int_t x, Int_t y)
 {
    // Perform GL selection, picking overlay objects only.
    // Return TRUE if the selected overlay-element has changed.
+
+   R__LOCKGUARD2(gROOTMutex);
 
    if (CurrentLock() != kSelectLock) {
       Error("TGLViewer::DoOverlaySelect", "expected kSelectLock, found %s", LockName(CurrentLock()));

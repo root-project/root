@@ -5,7 +5,7 @@
    // in the pads (sleeping for 0.1 seconds before starting a new read-out
    // cycle). This script runs in an infinite loop, so use ctrl-c to stop it.
    //Author: Fons Rademakers
-   
+
    gROOT->Reset();
 
    // Create a new canvas and 3 pads

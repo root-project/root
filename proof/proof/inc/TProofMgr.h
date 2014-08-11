@@ -140,8 +140,8 @@ public:
                               const char *alias = 0, Bool_t xpd = kTRUE);
    static Int_t        Ping(const char *url, Bool_t checkxrd = kFALSE);
 
-   static TFileCollection *UploadFiles(TList *src, const char *mss, const char *dest = 0); 
-   static TFileCollection *UploadFiles(const char *txtfile, const char *mss, const char *dest = 0); 
+   static TFileCollection *UploadFiles(TList *src, const char *mss, const char *dest = 0);
+   static TFileCollection *UploadFiles(const char *txtfile, const char *mss, const char *dest = 0);
 
    ClassDef(TProofMgr,0)  // Abstract PROOF manager interface
 };

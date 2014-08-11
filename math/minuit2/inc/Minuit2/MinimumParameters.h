@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -22,16 +22,16 @@ class MinimumParameters {
 
 public:
 
-  MinimumParameters(unsigned int n) : 
+  MinimumParameters(unsigned int n) :
    fData(MnRefCountedPointer<BasicMinimumParameters>(new BasicMinimumParameters(n))) {}
 
   /** takes the Parameter vector */
-  MinimumParameters(const MnAlgebraicVector& avec, double fval) : 
+  MinimumParameters(const MnAlgebraicVector& avec, double fval) :
    fData(MnRefCountedPointer<BasicMinimumParameters>(new BasicMinimumParameters(avec, fval)))  {}
-  
+
   /** takes the Parameter vector plus step size x1 - x0 = dirin */
   MinimumParameters(const MnAlgebraicVector& avec, const MnAlgebraicVector& dirin, double fval) : fData(MnRefCountedPointer<BasicMinimumParameters>(new BasicMinimumParameters(avec, dirin, fval)))  {}
-  
+
   ~MinimumParameters() {}
 
   MinimumParameters(const MinimumParameters& par) : fData(par.fData) {}

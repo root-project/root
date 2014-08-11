@@ -25,14 +25,14 @@ void Legendre()
 {
   gSystem->Load("libMathMore");
 
-  TCanvas *Canvas = new TCanvas("DistCanvas", "Legendre polynomials example", 10, 10, 750, 600);  
+  TCanvas *Canvas = new TCanvas("DistCanvas", "Legendre polynomials example", 10, 10, 750, 600);
   Canvas->SetFillColor(17);
   Canvas->SetGrid();
   Canvas->SetFrameFillColor(19);
-  TLegend *leg = new TLegend(0.5, 0.7, 0.4, 0.89); 
+  TLegend *leg = new TLegend(0.5, 0.7, 0.4, 0.89);
   //leg->TLegend::SetNDC();
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//drawing the set of Legendre functions   
+//drawing the set of Legendre functions
   TF1* L[5];
   for(int nu = 0; nu <= 4; nu++)
   {
@@ -44,7 +44,7 @@ void Legendre()
   }
   L[0]->SetMaximum(1);
   L[0]->SetMinimum(-1);
-  L[0]->SetTitle("Legendre polynomials"); 
+  L[0]->SetTitle("Legendre polynomials");
   leg->AddEntry(L[0]->DrawCopy(), " L_{0}(x)", "l");
   leg->AddEntry(L[1]->DrawCopy("same"), " L_{1}(x)", "l");
   leg->AddEntry(L[2]->DrawCopy("same"), " L_{2}(x)", "l");

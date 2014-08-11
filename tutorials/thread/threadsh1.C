@@ -59,7 +59,7 @@ void *joiner(void *)
 
 void closed(Int_t id)
 {
-   // kill the thread matching the canvas being closed 
+   // kill the thread matching the canvas being closed
    t[id]->Kill();
    // and set the canvas pointer to 0
    c[id] = 0;

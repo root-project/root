@@ -10,20 +10,20 @@
  *************************************************************************/
 
 //____________________________________________________________________________
-// TGeoShape - Base abstract class for all shapes. 
+// TGeoShape - Base abstract class for all shapes.
 //____________________________________________________________________________
 //
 //
-//   Shapes are geometrical objects that provide the basic modelling 
+//   Shapes are geometrical objects that provide the basic modelling
 // functionality. They provide the definition of the LOCAL frame of coordinates,
 // with respect to which they are defined. Any implementation of a shape deriving
 // from the base TGeoShape class has to provide methods for :
-//  - finding out if a point defined in their local frame is or not contained 
+//  - finding out if a point defined in their local frame is or not contained
 // inside;
 //  - computing the distance from a local point to getting outside/entering the
 // shape, given a known direction;
 //  - computing the maximum distance in any direction from a local point that
-// does NOT result in a boundary crossing of the shape (safe distance); 
+// does NOT result in a boundary crossing of the shape (safe distance);
 //  - computing the cosines of the normal vector to the crossed shape surface,
 // given a starting local point and an ongoing direction.
 //   All the features above are globally managed by the modeller in order to
@@ -41,31 +41,31 @@
 // of composites). This allows the creation of a quite large number of different
 // shape topologies and combinations.
 //
-//   Shapes are named objects and register themselves to the manager class at 
-// creation time. This is responsible for their final deletion. Shapes 
+//   Shapes are named objects and register themselves to the manager class at
+// creation time. This is responsible for their final deletion. Shapes
 // can be created without name if their retreival by name is no needed. Generally
 // shapes are objects that are usefull only at geometry creation stage. The pointer
-// to a shape is in fact needed only when referring to a given volume and it is 
+// to a shape is in fact needed only when referring to a given volume and it is
 // always accessible at that level. A shape may be referenced by several volumes,
 // therefore its deletion is not possible once volumes were defined based on it.
-// 
-// 
-// 
+//
+//
+//
 // Creating shapes
 //================
 //   Shape objects embeed only the minimum set of parameters that are fully
 // describing a valid physical shape. For instance, a tube is represented by
 // its half length, the minimum radius and the maximum radius. Shapes are used
-// togeather with media in order to create volumes, which in their turn 
+// togeather with media in order to create volumes, which in their turn
 // are the main components of the geometrical tree. A specific shape can be created
-// stand-alone : 
+// stand-alone :
 //
 //   TGeoBBox *box = new TGeoBBox("s_box", halfX, halfY, halfZ); // named
 //   TGeoTube *tub = new TGeoTube(rmin, rmax, halfZ);            // no name
 //   ...  (see each specific shape constructors)
 //
-//   Sometimes it is much easier to create a volume having a given shape in one 
-// step, since shapes are not direcly linked in the geometrical tree but volumes 
+//   Sometimes it is much easier to create a volume having a given shape in one
+// step, since shapes are not direcly linked in the geometrical tree but volumes
 // are :
 //
 //   TGeoVolume *vol_box = gGeoManager->MakeBox("BOX_VOL", "mat1", halfX, halfY, halfZ);
@@ -92,7 +92,7 @@
 // a given direction. The direction is given by its director cosines with respect
 // to the local shape coordinate system. This method provides additional
 // information according the value of IACT input parameter :
-//   IACT = 0     => compute only safe distance and fill it at the location 
+//   IACT = 0     => compute only safe distance and fill it at the location
 //                   given by SAFE
 //   IACT = 1     => a proposed STEP is supplied. The safe distance is computed
 //                   first. If this is bigger than STEP than the proposed step
@@ -117,10 +117,10 @@
 // E) Double_t *Normal(Double_t *point[3], Double_t *dir[3], Bool_t inside)
 //
 //   - returns director cosines of normal to the crossed shape surface from a
-// given point towards a direction. One has to specify if the point is inside 
+// given point towards a direction. One has to specify if the point is inside
 // or outside shape. According to this, the normal will be outwards or inwards
 // shape respectively. Normal components are statically stored by shape class,
-// so it has to be copied after retreival in a different array. 
+// so it has to be copied after retreival in a different array.
 //
 // Dividing shapes
 //=================
@@ -198,8 +198,8 @@ TGeoShape::~TGeoShape()
 void TGeoShape::CheckShape(Int_t testNo, Int_t nsamples, Option_t *option)
 {
 // Test for shape navigation methods. Summary for test numbers:
-//  1: DistFromInside/Outside. Sample points inside the shape. Generate 
-//    directions randomly in cos(theta). Compute DistFromInside and move the 
+//  1: DistFromInside/Outside. Sample points inside the shape. Generate
+//    directions randomly in cos(theta). Compute DistFromInside and move the
 //    point with bigger distance. Compute DistFromOutside back from new point.
 //    Plot d-(d1+d2)
 //
@@ -210,13 +210,13 @@ void TGeoShape::CheckShape(Int_t testNo, Int_t nsamples, Option_t *option)
    TGeoShape *shape = (TGeoShape*)this;
    gGeoManager->CheckShape(shape, testNo, nsamples, option);
 }
-   
+
 //_____________________________________________________________________________
 Double_t TGeoShape::ComputeEpsMch()
 {
 // Compute machine round-off double precision error as the smallest number that
 // if added to 1.0 is different than 1.0.
-   Double_t temp1 = 1.0; 
+   Double_t temp1 = 1.0;
    Double_t temp2 = 1.0 + temp1;
    Double_t mchEps;
    while (temp2>1.0) {
@@ -226,16 +226,16 @@ Double_t TGeoShape::ComputeEpsMch()
    }
    fgEpsMch = mchEps;
    return fgEpsMch;
-}   
-   
+}
+
 //_____________________________________________________________________________
 Double_t TGeoShape::EpsMch()
 {
    //static function returning the machine round-off error
-   
+
    return fgEpsMch;
 }
-   
+
 //_____________________________________________________________________________
 const char *TGeoShape::GetName() const
 {
@@ -266,7 +266,7 @@ Bool_t TGeoShape::IsCloseToPhi(Double_t epsil, const Double_t *point, Double_t c
    Double_t saf = TMath::Min(saf1,saf2);
    if (saf<epsil) return kTRUE;
    return kFALSE;
-}   
+}
 
 //_____________________________________________________________________________
 Bool_t TGeoShape::IsInPhiRange(const Double_t *point, Double_t phi1, Double_t phi2)
@@ -277,9 +277,9 @@ Bool_t TGeoShape::IsInPhiRange(const Double_t *point, Double_t phi1, Double_t ph
    Double_t ddp = phi-phi1;
    if (ddp>phi2-phi1) return kFALSE;
    return kTRUE;
-}   
+}
 
-//_____________________________________________________________________________  
+//_____________________________________________________________________________
 Bool_t TGeoShape::IsCrossingSemiplane(const Double_t *point, const Double_t *dir, Double_t cphi, Double_t sphi, Double_t &snext, Double_t &rxy)
 {
 // Compute distance from POINT to semiplane defined by PHI angle along DIR. Computes
@@ -309,15 +309,15 @@ Bool_t TGeoShape::IsCrossingSemiplane(const Double_t *point, const Double_t *dir
    return kTRUE;
 }
 
-//_____________________________________________________________________________  
+//_____________________________________________________________________________
 Bool_t TGeoShape::IsSameWithinTolerance(Double_t a, Double_t b)
 {
 // Check if two numbers differ with less than a tolerance.
    if (TMath::Abs(a-b)<1.E-10) return kTRUE;
    return kFALSE;
-}   
+}
 
-//_____________________________________________________________________________  
+//_____________________________________________________________________________
 Bool_t TGeoShape::IsSegCrossing(Double_t x1, Double_t y1, Double_t x2, Double_t y2,Double_t x3, Double_t y3,Double_t x4, Double_t y4)
 {
 // Check if segments (A,B) and (C,D) are crossing,
@@ -338,11 +338,11 @@ Bool_t TGeoShape::IsSegCrossing(Double_t x1, Double_t y1, Double_t x2, Double_t 
    if (!stand1) {
       a1 = (x2*y1-x1*y2)/dx1;
       b1 = (y2-y1)/dx1;
-   }   
+   }
    if (!stand2) {
       a2 = (x4*y3-x3*y4)/dx2;
       b2 = (y4-y3)/dx2;
-   }   
+   }
    if (stand1 && stand2) {
       // Segments parallel and vertical
       if (TMath::Abs(x1-x3)<eps) {
@@ -354,7 +354,7 @@ Bool_t TGeoShape::IsSegCrossing(Double_t x1, Double_t y1, Double_t x2, Double_t 
       // Different x values
       return kFALSE;
    }
-   
+
    if (stand1) {
       // First segment vertical
       xm = x1;
@@ -384,7 +384,7 @@ Bool_t TGeoShape::IsSegCrossing(Double_t x1, Double_t y1, Double_t x2, Double_t 
    check = (xm-x3)*(xm-x4)+(ym-y3)*(ym-y4);
    if (check > -eps) return kFALSE;
    return kTRUE;
-}         
+}
 
 //_____________________________________________________________________________
 Double_t TGeoShape::DistToPhiMin(const Double_t *point, const Double_t *dir, Double_t s1, Double_t c1,
@@ -436,21 +436,21 @@ void TGeoShape::NormalPhi(const Double_t *point, const Double_t *dir, Double_t *
    norm[2] = 0;
    norm[0] = -s;
    norm[1] = c;
-   if (dir[0]*norm[0]+dir[1]*norm[1] < 0) { 
+   if (dir[0]*norm[0]+dir[1]*norm[1] < 0) {
       norm[0] = s;
       norm[1] = -c;
    }
-}           
- 
+}
+
 //_____________________________________________________________________________
 Double_t TGeoShape::SafetyPhi(const Double_t *point, Bool_t in, Double_t phi1, Double_t phi2)
 {
 // Static method to compute safety w.r.t a phi corner defined by cosines/sines
 // of the angles phi1, phi2.
    Bool_t inphi = TGeoShape::IsInPhiRange(point, phi1, phi2);
-   if (inphi && !in) return -TGeoShape::Big(); 
+   if (inphi && !in) return -TGeoShape::Big();
    phi1 *= TMath::DegToRad();
-   phi2 *= TMath::DegToRad();  
+   phi2 *= TMath::DegToRad();
    Double_t c1 = TMath::Cos(phi1);
    Double_t s1 = TMath::Sin(phi1);
    Double_t c2 = TMath::Cos(phi2);
@@ -462,15 +462,15 @@ Double_t TGeoShape::SafetyPhi(const Double_t *point, Bool_t in, Double_t phi1, D
    Double_t saf1 = (rproj<0)?TGeoShape::Big():TMath::Sqrt(safsq);
    rproj = point[0]*c2+point[1]*s2;
    safsq = rsq-rproj*rproj;
-   if (safsq<0) return 0.;   
+   if (safsq<0) return 0.;
    Double_t saf2 = (rproj<0)?TGeoShape::Big():TMath::Sqrt(safsq);
    Double_t safe = TMath::Min(saf1, saf2); // >0
    if (safe>1E10) {
       if (in) return TGeoShape::Big();
       return -TGeoShape::Big();
    }
-   return safe;   
-}        
+   return safe;
+}
 
 //_____________________________________________________________________________
 Double_t TGeoShape::SafetySeg(Double_t r, Double_t z, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Bool_t outer)
@@ -482,7 +482,7 @@ Double_t TGeoShape::SafetySeg(Double_t r, Double_t z, Double_t r1, Double_t z1, 
    if (crossp < 0) {
       if (((z-z1)*(z2-z)) > -1.E-10) return 0;
       return TGeoShape::Big();
-   }   
+   }
    // Compute (1,P) dot (1,2)
    Double_t c1 = (z-z1)*(z2-z1)+(r-r1)*(r2-r1);
    // Negative c1 means point (1) is closest
@@ -516,14 +516,14 @@ TGeoMatrix *TGeoShape::GetTransform()
 {
 // Returns current transformation matrix that applies to shape.
    return fgTransform;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoShape::SetTransform(TGeoMatrix *matrix)
 {
 // Set current transformation matrix that applies to shape.
    fgTransform = matrix;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
@@ -539,8 +539,8 @@ void TGeoShape::TransformPoints(Double_t *points, UInt_t NbPnts) const
          points[i+1] = dmaster[1];
          points[i+2] = dmaster[2];
       }
-      return;   
-   }   
+      return;
+   }
    if (!gGeoManager) return;
    Bool_t bomb = (gGeoManager->GetBombMode()==0)?kFALSE:kTRUE;
 
@@ -565,9 +565,9 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
 {
    // Fill the supplied buffer, with sections in desired frame
    // See TBuffer3D.h for explanation of sections, frame etc.
-  
+
    // Catch this common potential error here
-   // We have to set kRawSize (unless already done) to allocate buffer space 
+   // We have to set kRawSize (unless already done) to allocate buffer space
    // before kRaw can be filled
    if (reqSections & TBuffer3D::kRaw) {
       if (!(reqSections & TBuffer3D::kRawSizes) && !buffer.SectionsValid(TBuffer3D::kRawSizes)) {
@@ -578,20 +578,20 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
    if (reqSections & TBuffer3D::kCore) {
       // If writing core section all others will be invalid
       buffer.ClearSectionsValid();
- 
+
       // Check/grab some objects we need
-      if (!gGeoManager) { 
-         R__ASSERT(kFALSE); 
-         return; 
+      if (!gGeoManager) {
+         R__ASSERT(kFALSE);
+         return;
       }
       const TGeoVolume * paintVolume = gGeoManager->GetPaintVolume();
       if (!paintVolume) paintVolume = gGeoManager->GetTopVolume();
-      if (!paintVolume) { 
+      if (!paintVolume) {
          buffer.fID = const_cast<TGeoShape *>(this);
          buffer.fColor = 0;
          buffer.fTransparency = 0;
-//         R__ASSERT(kFALSE); 
-//         return; 
+//         R__ASSERT(kFALSE);
+//         return;
       } else {
          buffer.fID = const_cast<TGeoVolume *>(paintVolume);
          buffer.fColor = paintVolume->GetLineColor();
@@ -602,7 +602,7 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
             if (paintVolume->GetMaterial()->GetDensity() < visdensity) {
                buffer.fTransparency = 90;
             }
-         }   
+         }
       }
 
       buffer.fLocalFrame = localFrame;
@@ -614,27 +614,27 @@ void TGeoShape::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t local
          // Still lighting gets wrong...
             if (buffer.Type() < TBuffer3DTypes::kTube) r2 = kTRUE;
          }
-      }      
+      }
       buffer.fReflection = ((r1&(!r2))|(r2&!(r1)));
-      
+
       // Set up local -> master translation matrix
       if (localFrame) {
          TGeoMatrix * localMasterMat = 0;
          if (TGeoShape::GetTransform()) {
             localMasterMat = TGeoShape::GetTransform();
-         } else {   
+         } else {
             localMasterMat = gGeoManager->GetCurrentMatrix();
 
-         // For overlap drawing the correct matrix needs to obtained in 
+         // For overlap drawing the correct matrix needs to obtained in
          // from GetGLMatrix() - this should not be applied in the case
          // of composite shapes
             if (gGeoManager->IsMatrixTransform() && !IsComposite()) {
                localMasterMat = gGeoManager->GetGLMatrix();
             }
          }
-         if (!localMasterMat) { 
-            R__ASSERT(kFALSE); 
-            return; 
+         if (!localMasterMat) {
+            R__ASSERT(kFALSE);
+            return;
          }
          localMasterMat->GetHomogenousMatrix(buffer.fLocalMaster);
       } else {
@@ -695,10 +695,10 @@ void TGeoShape::Draw(Option_t *option)
 // Draw this shape.
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (option && option[0]) {
-      painter->DrawShape(this, option); 
+      painter->DrawShape(this, option);
    } else {
       painter->DrawShape(this, gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
-   }  
+   }
 }
 
 //_____________________________________________________________________________
@@ -707,8 +707,8 @@ void TGeoShape::Paint(Option_t *option)
 // Paint this shape.
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (option && option[0]) {
-      painter->PaintShape(this, option); 
+      painter->PaintShape(this, option);
    } else {
       painter->PaintShape(this, gEnv->GetValue("Viewer3D.DefaultDrawOption",""));
-   }  
+   }
 }

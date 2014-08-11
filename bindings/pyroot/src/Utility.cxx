@@ -661,7 +661,7 @@ const std::string PyROOT::Utility::Compound( const std::string& name )
 // for arrays (TODO: deal with the actual size)
    if ( compound == "]" )
        return "[]";
- 
+
    return compound;
 }
 

@@ -197,7 +197,7 @@ void TFoamVect::Print(Option_t *option) const
 // Printout of all vector components on "std::cout"
    if(!option) Error("Print ", "No option set \n");
    Int_t i;
-   Int_t pr = std::cout.precision(7); 
+   Int_t pr = std::cout.precision(7);
    std::cout << "(";
    for(i=0; i<fDim-1; i++) std::cout  << std::setw(12) << *(fCoords+i) << ",";
    std::cout  << std::setw(12) << *(fCoords+fDim-1);

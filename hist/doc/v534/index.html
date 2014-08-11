@@ -1,6 +1,6 @@
-<br/> 
-<hr/> 
-<a name="hist"></a> 
+<br/>
+<hr/>
+<a name="hist"></a>
 <h3>Histogram Libraries</h3>
 
 <h3>THn, THnBase, THNSparse</h3>
@@ -28,14 +28,14 @@ When a <tt>TF1</tt> was clipped vertically, horizotal lines appeared at the maxi
 when the function was draw with a line width greater than 1.
 The follwoing macro reproduces the problem:
 <pre>
-{ 
-   TCanvas *c1=new TCanvas("c1", "A canvas", 10,0, 800, 600); 
-   c1->SetLogy(); 
-   histo_dummy=c1->DrawFrame(0,1e-4,27,10); 
-   TF1 gaussian_func("gaussian_func","gaus",0,25.4); 
-   gaussian_func.SetLineColor(kRed); 
-   gaussian_func.SetParameters(1e-2,10,3); 
-   gaussian_func.Draw("same"); 
+{
+   TCanvas *c1=new TCanvas("c1", "A canvas", 10,0, 800, 600);
+   c1->SetLogy();
+   histo_dummy=c1->DrawFrame(0,1e-4,27,10);
+   TF1 gaussian_func("gaussian_func","gaus",0,25.4);
+   gaussian_func.SetLineColor(kRed);
+   gaussian_func.SetParameters(1e-2,10,3);
+   gaussian_func.Draw("same");
 }
 </pre>
 </li>
@@ -45,23 +45,23 @@ When two histograms where painted on top of each other with the option BOX (the
 was not zero.
 </li>
 <li>
-Take into account the absolute value of the histogram's minimum to compute the 
+Take into account the absolute value of the histogram's minimum to compute the
 maximal boxes' size when an histogram is drawn with the option BOX.
 </li>
 <li>
 Add support for drawing the asymmetric errors for the TH1 and TH2
 </li>
 <li>
-The fit function was not drawn in the correct range when a fitted 2D histogram was painted 
+The fit function was not drawn in the correct range when a fitted 2D histogram was painted
 with the option lego or surf.
 </li>
 <li>
 With option TEXT, do not draw the bins with 0 content for 1D
-histograms to be consistent with the 2D histograms case. 
+histograms to be consistent with the 2D histograms case.
 Example:
 <pre>
 root [0] TH1D * histo = new TH1D ("histo","",20,-5.,5.) ;
-root [1] histo->FillRandom("gaus",1000) ; 
+root [1] histo->FillRandom("gaus",1000) ;
 root [2] histo->Draw("hist,text") ;
 </pre>
 </li>
@@ -73,7 +73,7 @@ root [2] histo->Draw("hist,text") ;
 A time axis defined with the GMT option, saved into a root file in a
 given time zone, was different when displayed in an other time zone.
 The time zone offset in which the axis was created is now saved with
- the time axis offset allowing to make the right adjustments when 
+ the time axis offset allowing to make the right adjustments when
 the axis is displayed in an other time zone.
 </li>
 </ul>
@@ -81,7 +81,7 @@ the axis is displayed in an other time zone.
 <h3>TGraph2DPainter</h3>
 <ul>
 <li>
-Because of the range along the Z axis, the following macro produced a wrong plot. 
+Because of the range along the Z axis, the following macro produced a wrong plot.
 The markers' colors did not match the palette and some of them were not clipped.
 <pre>
 {
@@ -100,20 +100,20 @@ The markers' colors did not match the palette and some of them were not clipped.
 
 <h3>TMultiGraph</h3>
 <ul>
-<li>A new option <tt>3D</tt> allows to draw the graphs in a 3D space. See the 
+<li>A new option <tt>3D</tt> allows to draw the graphs in a 3D space. See the
 following example:
 <pre>
 {
    c1 = new TCanvas("c1","multigraph L3",200,10,700,500);
    c1->SetFrameFillColor(30);
-   
+
    TMultiGraph *mg = new TMultiGraph();
-   
+
    TGraph *gr1 = new TGraph(); gr1->SetLineColor(kBlue);
    TGraph *gr2 = new TGraph(); gr2->SetLineColor(kRed);
    TGraph *gr3 = new TGraph(); gr3->SetLineColor(kGreen);
    TGraph *gr4 = new TGraph(); gr4->SetLineColor(kOrange);
-   
+
    Double_t dx = 6.28/100;
    Double_t x  = -3.14;
    for (int i=0; i&lt;=100; i++) {
@@ -123,12 +123,12 @@ following example:
       gr3->SetPoint(i,x,TMath::Cos(x*x));
       gr4->SetPoint(i,x,TMath::Cos(x*x*x));
    }
-      
+
    mg->Add(gr4); gr4->SetTitle("Cos(x*x*x)"); gr4->SetLineWidth(3);
    mg->Add(gr3); gr3->SetTitle("Cos(x*x)")  ; gr3->SetLineWidth(3);
    mg->Add(gr2); gr2->SetTitle("Cos(x)")    ; gr2->SetLineWidth(3);
    mg->Add(gr1); gr1->SetTitle("2*Sin(x)")  ; gr1->SetLineWidth(3);
-      
+
    mg->Draw("a fb  l3d");
 }
 </pre>

@@ -305,7 +305,7 @@ Float_t* TEveProjection::GetProjectedCenter()
 
    if (fDisplaceOrigin)
       return zero.Arr();
-   else 
+   else
       return fCenter.Arr();
 }
 
@@ -315,7 +315,7 @@ void  TEveProjection::SetDisplaceOrigin(Bool_t x)
    // Set flag to displace for center.
    // This options is useful if want to have projected center
    // at (0, 0) position in projected coordinates and want to dismiss
-   // gap around projected center in RhoZ projection. 
+   // gap around projected center in RhoZ projection.
 
    fDisplaceOrigin = x;
    // update projected center
@@ -454,7 +454,7 @@ Float_t TEveProjection::GetValForScreenPos(Int_t axisIdx, Float_t sv)
    {
       xL = 0;
       xR = kMaxVal;
-      
+
       int cnt = 0;
       while (cnt < kMaxSteps)
       {
@@ -477,13 +477,13 @@ Float_t TEveProjection::GetValForScreenPos(Int_t axisIdx, Float_t sv)
       int cnt = 0;
       while (cnt < kMaxSteps)
       {
-         vec.Mult(dirVec, xL); 
+         vec.Mult(dirVec, xL);
          if (fDisplaceOrigin) vec += fCenter;
 
          ProjectVector(vec, 0);
          if (vec[axisIdx] <= sv) break;
          xR = xL; xL *= 2;
-         if (++cnt >= kMaxSteps) 
+         if (++cnt >= kMaxSteps)
             throw eH + Form("negative projected %f, value %f,xL, xR ( %f, %f)\n", vec[axisIdx], sv, xL, xR);
       }
    }
@@ -505,13 +505,13 @@ Float_t TEveProjection::GetValForScreenPos(Int_t axisIdx, Float_t sv)
          xR = xM;
       else
          xL = xM;
-      if (++cnt >= kMaxSteps) 
+      if (++cnt >= kMaxSteps)
          throw eH + Form("can't converge %f %f, l/r %f/%f, idx=%d\n", vec[axisIdx], sv, xL, xR, axisIdx);
 
    } while (TMath::Abs(vec[axisIdx] - sv) >= fgEps);
 
 
-   return xM; 
+   return xM;
 }
 
 //______________________________________________________________________________
@@ -573,7 +573,7 @@ void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
    using namespace TMath;
 
    if (fDisplaceOrigin) {
-      x -= fCenter.fX; 
+      x -= fCenter.fX;
       y -= fCenter.fY;
       z -= fCenter.fZ;
    }
@@ -591,7 +591,7 @@ void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
 
       // distort
 
-      if (!fDisplaceOrigin) {  
+      if (!fDisplaceOrigin) {
          x -= fProjectedCenter.fX;
          y -= fProjectedCenter.fY;
       }
@@ -610,7 +610,7 @@ void TEveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
       else
          y =  y * fScaleR / (1.0f + Abs(y)*fDistortion);
 
-      if (!fDisplaceOrigin) {  
+      if (!fDisplaceOrigin) {
          x += fProjectedCenter.fX;
          y += fProjectedCenter.fY;
       }
@@ -729,7 +729,7 @@ void TEveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
    // Project point.
 
    using namespace TMath;
- 
+
    if (fDisplaceOrigin)
    {
       x  -= fCenter.fX;

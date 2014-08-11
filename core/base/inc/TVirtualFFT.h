@@ -5,9 +5,9 @@
 #define ROOT_TVirtualFFT
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      
-// TVirtualFFT                                                       
-//                                                                     
+//
+// TVirtualFFT
+//
 // TVirtualFFT is an interface class for Fast Fourier Transforms.
 //
 //
@@ -19,21 +19,21 @@
 //
 // Available transform types:
 // FFT:
-// - "C2CFORWARD" - a complex input/output discrete Fourier transform (DFT) 
+// - "C2CFORWARD" - a complex input/output discrete Fourier transform (DFT)
 //                  in one or more dimensions, -1 in the exponent
-// - "C2CBACKWARD"- a complex input/output discrete Fourier transform (DFT) 
+// - "C2CBACKWARD"- a complex input/output discrete Fourier transform (DFT)
 //                  in one or more dimensions, +1 in the exponent
 // - "R2C"        - a real-input/complex-output discrete Fourier transform (DFT)
 //                  in one or more dimensions,
-// - "C2R"        - inverse transforms to "R2C", taking complex input 
-//                  (storing the non-redundant half of a logically Hermitian array) 
+// - "C2R"        - inverse transforms to "R2C", taking complex input
+//                  (storing the non-redundant half of a logically Hermitian array)
 //                  to real output
-// - "R2HC"       - a real-input DFT with output in "halfcomplex" format, 
+// - "R2HC"       - a real-input DFT with output in "halfcomplex" format,
 //                  i.e. real and imaginary parts for a transform of size n stored as
 //                  r0, r1, r2, ..., rn/2, i(n+1)/2-1, ..., i2, i1
 // - "HC2R"       - computes the reverse of FFTW_R2HC, above
 // - "DHT"        - computes a discrete Hartley transform
-// 
+//
 // Sine/cosine transforms:
 // Different types of transforms are specified by parameter kind of the SineCosine() static
 // function. 4 different kinds of sine and cosine transforms are available
@@ -45,17 +45,17 @@
 //  DST-II (RODFT10 in FFTW3 notation)- kind=5
 //  DST-III(RODFT01 in FFTW3 notation)- kind=6
 //  DST-IV (RODFT11 in FFTW3 notation)- kind=7
-// Formulas and detailed descriptions can be found in the chapter 
+// Formulas and detailed descriptions can be found in the chapter
 // "What FFTW really computes" of the FFTW manual
 //
-// NOTE: FFTW computes unnormalized transforms, so doing a transform, followed by its 
+// NOTE: FFTW computes unnormalized transforms, so doing a transform, followed by its
 //       inverse will give the original array, multiplied by normalization constant
-//       (transform size(N) for FFT, 2*(N-1) for DCT-I, 2*(N+1) for DST-I, 2*N for 
+//       (transform size(N) for FFT, 2*(N-1) for DCT-I, 2*(N+1) for DST-I, 2*N for
 //       other sine/cosine transforms)
 //
 // How to use it:
-// Call to the static function FFT returns a pointer to a fast fourier transform 
-// with requested parameters. Call to the static function SineCosine returns a 
+// Call to the static function FFT returns a pointer to a fast fourier transform
+// with requested parameters. Call to the static function SineCosine returns a
 // pointer to a sine or cosine transform with requested parameters. Example:
 // {
 //    Int_t N = 10; Double_t *in = new Double_t[N];
@@ -72,11 +72,11 @@
 //    ...
 // }
 // Different options are explained in the function comments
-// 
 //
-// 
 //
-//                                     
+//
+//
+//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TObject
@@ -117,7 +117,7 @@ class TVirtualFFT: public TObject {
    virtual Double_t*  GetPointsReal(Bool_t fromInput=kFALSE) const = 0;
    virtual void       GetPointsComplex(Double_t *re, Double_t *im, Bool_t fromInput = kFALSE) const = 0;
    virtual void       GetPointsComplex(Double_t *data, Bool_t fromInput = kFALSE) const = 0;
-   
+
    virtual void       SetPoint(Int_t ipoint, Double_t re, Double_t im = 0) = 0;
    virtual void       SetPoint(const Int_t *ipoint, Double_t re, Double_t im = 0) = 0;
    virtual void       SetPoints(const Double_t *data) = 0;

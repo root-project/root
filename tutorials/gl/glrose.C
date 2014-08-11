@@ -5,11 +5,11 @@ void glrose()
   //Define and set user's palette,
    //use polar system.
    const Int_t paletteSize = 10;
-   Float_t rgb[paletteSize * 3] = 
-      {0.80f, 0.55f, 0.40f, 
-       0.85f, 0.60f, 0.45f, 
-       0.90f, 0.65f, 0.50f, 
-       0.95f, 0.70f, 0.55f, 
+   Float_t rgb[paletteSize * 3] =
+      {0.80f, 0.55f, 0.40f,
+       0.85f, 0.60f, 0.45f,
+       0.90f, 0.65f, 0.50f,
+       0.95f, 0.70f, 0.55f,
        1.f,   0.75f, 0.60f,
        1.f,   0.80f, 0.65f,
        1.f,   0.85f, 0.70f,
@@ -32,7 +32,7 @@ void glrose()
    title->SetFillColor(32);
    title->Draw();
 
-   TPad *rosePad  = new TPad("box", "box", 0.04, 0.04, 0.96, 0.8);   
+   TPad *rosePad  = new TPad("box", "box", 0.04, 0.04, 0.96, 0.8);
    rosePad->Draw();
 
 

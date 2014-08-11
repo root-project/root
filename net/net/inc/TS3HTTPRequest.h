@@ -32,7 +32,7 @@
 // http://code.google.com/apis/storage/docs/reference/v1/developer-guidev1.html#authentication
 //                                                                      //
 // Amazon:                                                              //
-// http://docs.aws.amazon.com/AmazonS3/latest/dev/S3_Authentication2.html 
+// http://docs.aws.amazon.com/AmazonS3/latest/dev/S3_Authentication2.html
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

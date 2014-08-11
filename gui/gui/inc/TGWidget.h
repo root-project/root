@@ -67,7 +67,7 @@ protected:
    TString          fCommand;      // command to be executed
 
    TGWidget(const TGWidget& tgw):
-     fWidgetId(tgw.fWidgetId), fWidgetFlags(tgw.fWidgetFlags), 
+     fWidgetId(tgw.fWidgetId), fWidgetFlags(tgw.fWidgetFlags),
      fMsgWindow(tgw.fMsgWindow), fCommand(tgw.fCommand) { }
    TGWidget& operator=(const TGWidget& tgw) {
      if(this!=&tgw) {
@@ -77,7 +77,7 @@ protected:
    Int_t ClearFlags(Int_t flags) { return fWidgetFlags &= ~flags; }
 
 public:
-   TGWidget(): 
+   TGWidget():
      fWidgetId(-1), fWidgetFlags(0), fMsgWindow(0), fCommand() { }
    TGWidget(Int_t id):
      fWidgetId(id), fWidgetFlags(0), fMsgWindow(0), fCommand() { }

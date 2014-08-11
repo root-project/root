@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,21 +23,21 @@
   **********************************************************************/
 
 // Header file for class Derivator
-// 
+//
 // class for calculating Derivative of functions
-// 
+//
 // Created by: moneta  at Sat Nov 13 14:46:00 2004
-// 
+//
 // Last update: Sat Nov 13 14:46:00 2004
-// 
+//
 #ifndef ROOT_Math_Derivator
 #define ROOT_Math_Derivator
 
-/** 
+/**
     @defgroup Deriv Numerical Differentiation
     @ingroup NumAlgo
 */
- 
+
 #ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
 #endif
@@ -52,15 +52,15 @@ namespace Math {
 
 
 
-class GSLDerivator; 
+class GSLDerivator;
 
 //_______________________________________________________________________
-/** 
-    Class for computing numerical derivative of a function. 
-    Presently this class is implemented only using the numerical derivatives 
+/**
+    Class for computing numerical derivative of a function.
+    Presently this class is implemented only using the numerical derivatives
     algorithms provided by GSL
     using the implementation class ROOT::Math::GSLDerivator
-    
+
     This class does not support copying
 
     @ingroup Deriv
@@ -73,173 +73,173 @@ public:
    /**
       signature for function pointers used by GSL
    */
-   typedef double ( * GSLFuncPointer ) ( double, void * ); 
+   typedef double ( * GSLFuncPointer ) ( double, void * );
 
    /**
-      Empty Construct for a Derivator class 
+      Empty Construct for a Derivator class
       Need to set the function afterwards with Derivator::SetFunction
    */
    Derivator();
    /**
-      Construct using a ROOT::Math::IGenFunction interface 
+      Construct using a ROOT::Math::IGenFunction interface
     */
    explicit Derivator(const IGenFunction &f);
    /**
-      Construct using a GSL function pointer type 
+      Construct using a GSL function pointer type
        @param f :  free function pointer of the GSL required type
-       @param p :  pointer to the object carrying the function state 
+       @param p :  pointer to the object carrying the function state
                     (for example the function object itself)
     */
    explicit Derivator(const GSLFuncPointer &f, void * p = 0);
 
-   /// destructor 
-   virtual ~Derivator(); 
+   /// destructor
+   virtual ~Derivator();
 
    // disable copying
-private: 
+private:
 
    Derivator(const Derivator &);
-   Derivator & operator = (const Derivator &); 
+   Derivator & operator = (const Derivator &);
 
-public: 
+public:
 
 
 #ifdef LATER
-   /** 
+   /**
        Template methods for generic functions
        Set the function f for evaluating the derivative.
-       The function type must implement the assigment operator, 
+       The function type must implement the assigment operator,
        <em>  double  operator() (  double  x ) </em>
    */
    template <class UserFunc>
-   inline void SetFunction(const UserFunc &f) { 
-      const void * p = &f; 
-      SetFunction(  &GSLFunctionAdapter<UserFunc>::F, const_cast<void *>(p) ); 
+   inline void SetFunction(const UserFunc &f) {
+      const void * p = &f;
+      SetFunction(  &GSLFunctionAdapter<UserFunc>::F, const_cast<void *>(p) );
    }
 #endif
 
-   /** 
-      Set the function for calculating the derivatives. 
+   /**
+      Set the function for calculating the derivatives.
       The function must implement the ROOT::Math::IGenFunction signature
    */
    void SetFunction(const IGenFunction &f);
 
 
-   /** 
-       Set the function f for evaluating the derivative using a GSL function pointer type 
+   /**
+       Set the function f for evaluating the derivative using a GSL function pointer type
        @param f :  free function pointer of the GSL required type
-       @param p :  pointer to the object carrying the function state 
+       @param p :  pointer to the object carrying the function state
                     (for example the function object itself)
    */
    void SetFunction( const GSLFuncPointer &f, void * p = 0);
-    
- 
-   
-   /** 
-       Computes the numerical derivative of a function f at a point x. 
-       It uses Derivator::EvalCentral to compute the derivative using an 
+
+
+
+   /**
+       Computes the numerical derivative of a function f at a point x.
+       It uses Derivator::EvalCentral to compute the derivative using an
        adaptive central difference algorithm with a step size h
    */
 
    double Eval(double x, double h = 1E-8) const;
 
 
-    
-   /** 
-       Computes the numerical derivative at a point x using an adaptive central 
-       difference algorithm with a step size h. 
-   */
-   double EvalCentral( double x, double h = 1E-8) const; 
 
-   /** 
-       Computes the numerical derivative at a point x using an adaptive forward 
+   /**
+       Computes the numerical derivative at a point x using an adaptive central
+       difference algorithm with a step size h.
+   */
+   double EvalCentral( double x, double h = 1E-8) const;
+
+   /**
+       Computes the numerical derivative at a point x using an adaptive forward
        difference algorithm with a step size h.
        The function is evaluated only at points greater than x and at x itself.
    */
-   double EvalForward( double x, double h = 1E-8) const; 
+   double EvalForward( double x, double h = 1E-8) const;
 
-   /** 
-       Computes the numerical derivative at a point x using an adaptive backward 
+   /**
+       Computes the numerical derivative at a point x using an adaptive backward
        difference algorithm with a step size h.
        The function is evaluated only at points less than x and at x itself.
    */
-   double EvalBackward( double x, double h = 1E-8) const; 
+   double EvalBackward( double x, double h = 1E-8) const;
 
-   /** @name --- Static methods --- 
-       This methods don't require to use a Derivator object, and are designed to be used in 
+   /** @name --- Static methods ---
+       This methods don't require to use a Derivator object, and are designed to be used in
        fast calculation. Error and status code cannot be retrieved in this case
     */
 
-   /** 
-       Computes the numerical derivative of a function f at a point x. 
-       It uses Derivator::EvalCentral to compute the derivative using an 
+   /**
+       Computes the numerical derivative of a function f at a point x.
+       It uses Derivator::EvalCentral to compute the derivative using an
        adaptive central difference algorithm with a step size h
    */
    static double Eval(const IGenFunction & f, double x, double h = 1E-8);
 
-   /** 
-       Computes the numerical derivative of a function f at a point x using an adaptive central 
+   /**
+       Computes the numerical derivative of a function f at a point x using an adaptive central
        difference algorithm with a step size h
-   */     
+   */
    static double EvalCentral(const IGenFunction & f, double x, double h = 1E-8);
 
 
-   /** 
-       Computes the numerical derivative of a function f at a point x using an adaptive forward 
+   /**
+       Computes the numerical derivative of a function f at a point x using an adaptive forward
        difference algorithm with a step size h.
        The function is evaluated only at points greater than x and at x itself
-   */    
+   */
    static double EvalForward(const IGenFunction & f, double x, double h = 1E-8);
 
-   /** 
-       Computes the numerical derivative of a function f at a point x using an adaptive backward 
+   /**
+       Computes the numerical derivative of a function f at a point x using an adaptive backward
        difference algorithm with a step size h.
        The function is evaluated only at points less than x and at x itself
-   */    
+   */
    static double EvalBackward(const IGenFunction & f, double x, double h = 1E-8);
 
    // Derivatives for multi-dimension functions
    /**
-      Evaluate the partial derivative of a multi-dim function 
+      Evaluate the partial derivative of a multi-dim function
       with respect coordinate x_icoord at the point x[]
-    */ 
+    */
    static double Eval(const IMultiGenFunction & f, const double * x, unsigned int icoord = 0, double h = 1E-8);
 
    /**
-      Evaluate the derivative with respect a parameter for one-dim parameteric function 
+      Evaluate the derivative with respect a parameter for one-dim parameteric function
       at the point ( x,p[]) with respect the parameter p_ipar
-    */ 
+    */
    static double Eval(IParamFunction & f, double x, const double * p, unsigned int ipar = 0, double h = 1E-8);
 
    /**
-      Evaluate the derivative with respect a parameter for a multi-dim parameteric function 
+      Evaluate the derivative with respect a parameter for a multi-dim parameteric function
       at the point ( x[],p[]) with respect the parameter p_ipar
-    */ 
+    */
    static double Eval(IParamMultiFunction & f, const double * x, const double * p, unsigned int ipar = 0, double h = 1E-8);
 
 
    /**
       return the error status of the last derivative calculation
-   */     
-   int Status() const; 
+   */
+   int Status() const;
 
    /**
       return  the result of the last derivative calculation
    */
-   double Result() const; 
+   double Result() const;
 
    /**
       return the estimate of the absolute error of the last derivative calculation
    */
-   double Error() const; 
+   double Error() const;
 
 
-private: 
+private:
 
 
-   mutable GSLDerivator * fDerivator;  
+   mutable GSLDerivator * fDerivator;
 
-}; 
+};
 
 
 

@@ -23,7 +23,7 @@ class FTGL_EXPORT FTGLPolygonFont : public FTFont
          * @param fontFilePath  font file path.
          */
         FTGLPolygonFont( const char* fontFilePath);
-        
+
         /**
          * Open and read a font from a buffer in memory. Sets Error flag.
          *
@@ -31,12 +31,12 @@ class FTGL_EXPORT FTGLPolygonFont : public FTFont
          * @param bufferSizeInBytes  the length of the buffer in bytes
          */
         FTGLPolygonFont( const unsigned char *pBufferBytes, size_t bufferSizeInBytes);
-        
+
         /**
          * Destructor
          */
         ~FTGLPolygonFont();
-        
+
     private:
         /**
          * Construct a FTPolyGlyph.
@@ -45,7 +45,7 @@ class FTGL_EXPORT FTGLPolygonFont : public FTFont
          * @return  An FTPolyGlyph or <code>null</code> on failure.
          */
         inline virtual FTGlyph* MakeGlyph( unsigned int g);
-        
+
 };
 
 

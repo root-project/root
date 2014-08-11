@@ -1,4 +1,4 @@
-// Simple TStructViewer tutorial 
+// Simple TStructViewer tutorial
 
 #include <TRandom.h>
 #include <TList.h>

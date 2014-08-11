@@ -11,7 +11,7 @@
 
 #if 1
 
-#if !defined(__CLING__) 
+#if !defined(__CLING__)
 // Regular section, the user must make sure explicitly that the
 // correct set of header is included (or not).
 
@@ -20,7 +20,7 @@
 
 #else
 
-// Loaded inside Cling, we need to mitigate duplication 
+// Loaded inside Cling, we need to mitigate duplication
 // ourselves.
 
 #include <ldap.h>
@@ -36,9 +36,9 @@ struct LDAP;
 struct LDAPMessage;
 struct LDAPMod;
 
-#define LDAP_VERSION1	1
-#define LDAP_VERSION2	2
-#define LDAP_VERSION3	3
+#define LDAP_VERSION1 1
+#define LDAP_VERSION2 2
+#define LDAP_VERSION3 3
 
 const int LDAP_PORT              = 389;
 

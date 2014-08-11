@@ -34,7 +34,7 @@
 class XpdObjectQ;
 class XrdProofdProtocol;
 class XrdScheduler;
-  
+
 class XpdObject {
 public:
    friend class XpdObjectQ;
@@ -60,12 +60,12 @@ private:
 /******************************************************************************/
 /*                           x r d _ O b j e c t Q                            */
 /******************************************************************************/
-  
+
 // Note to properly cleanup this type of queue you must call Set() at least
 // once to cause the time element to be sceduled.
 
 class XrdOucTrace;
-  
+
 class XpdObjectQ : public XrdJob {
 public:
 
@@ -76,7 +76,7 @@ public:
             {fSched = sp; fTrace = tp; fTraceON = traceChk;}
    void DoIt();
 
-   XpdObjectQ(const char *id, const char *desc) : XrdJob(desc) 
+   XpdObjectQ(const char *id, const char *desc) : XrdJob(desc)
           {fCurage = fCount = 0; fMaxage = 0; fTraceID = 0; fSched = 0; fTraceID = id;
            fMaxinQ = 32; fMininQ = 16; fFirst = 0; }
 

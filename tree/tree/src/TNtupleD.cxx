@@ -59,7 +59,7 @@ TNtupleD::TNtupleD(const char *name, const char *title, const char *varlist, Int
 //
 //      NOTE:
 //       -Use TTree to create branches with variables of different data types.
-//       -Use TTree when the number of branches is large (> 100). 
+//       -Use TTree when the number of branches is large (> 100).
 //*-*
 
    Int_t i;
@@ -87,7 +87,7 @@ TNtupleD::TNtupleD(const char *name, const char *title, const char *varlist, Int
    char descriptor[100];
    for (i=0;i<fNvar;i++) {
       Int_t pv = pvars[i];
-      snprintf(descriptor,100,"%s/D",&vars[pv]);      
+      snprintf(descriptor,100,"%s/D",&vars[pv]);
       TTree::Branch(&vars[pv],&fArgs[i],descriptor,bufsize);
    }
 
@@ -216,11 +216,11 @@ Long64_t TNtupleD::ReadStream(std::istream &inputStream, const char * /*branchDe
          TTree::Fill();
          ++nlines;
       }
-      inputStream.ignore(8192,newline);   
+      inputStream.ignore(8192,newline);
    }
    return nlines;
    */
-   
+
    //The last argument - true == strict mode.
    return ROOT::TreeUtils::FillNtupleFromStream<Double_t, TNtupleD>(inputStream, *this, delimiter, true);
 }
@@ -239,7 +239,7 @@ void TNtupleD::Streamer(TBuffer &b)
       for (Int_t i=0;i<fNvar;i++) {
          TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
          if (branch) branch->SetAddress(&fArgs[i]);
-      }      
+      }
    } else {
       b.WriteClassBuffer(TNtupleD::Class(),this);
    }

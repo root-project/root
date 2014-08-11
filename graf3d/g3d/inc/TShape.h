@@ -50,7 +50,7 @@ protected:
    Int_t           fNumber;      //Shape number
    Int_t           fVisibility;  //Visibility flag
    TMaterial      *fMaterial;    //Pointer to material
-   
+
    virtual void    FillBuffer3D(TBuffer3D & buffer, Int_t reqSections) const;
    Int_t           GetBasicColor() const;
 

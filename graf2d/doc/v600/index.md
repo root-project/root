@@ -5,22 +5,22 @@
 -   In some cases dashed lines with a line width greater than "1" were
     not drawn.
 -   The `TLatex` symbol `#tilde`, was misplaced.
--   In `TASImage::DrawtText`, `TTF::SetTextSize` was called with a rounded 
-    value (to pixel). This cause some misplacements of character in TLatex 
+-   In `TASImage::DrawtText`, `TTF::SetTextSize` was called with a rounded
+    value (to pixel). This cause some misplacements of character in TLatex
     formulae.
-    
+
 ### TPDF and TPostScript
 
 -   Parenthesis can be used in PDF and PS file names.
 -   In PDF files, italic greek characters were not correct for non null
     text angle.
-    
+
 ### TImageDump
 -   Fix a `TBox` clipping issue.
 
 ### TSVG
 -   Some markers did not show in Google-Chrome.
-    
+
 ### New class TTeXDump: Graphics interface to TeX
 
 This class allow to generate `PGF/TikZ` vector graphics output
@@ -79,7 +79,7 @@ file `simple.pdf`.
 
 -   `TPad::SaveAs` produces named macros in .C files.
 -   Change the way the string input is done in the Pad toolbar for text
-    and Pave Label. It doesn't use anymore the `TGX11` function `RequestString`. 
+    and Pave Label. It doesn't use anymore the `TGX11` function `RequestString`.
     Now the text appears directly as it will show and it is possible to
     enter several text string. The input is not block in the `RequestString` event loop.
 -   The toolbar methods now work without XOR mode (useful for OpenGL()).
@@ -98,16 +98,16 @@ file `simple.pdf`.
 -   In some case the format use to build the axis labels was incorrect.
     (cf: Jira report ROOT-5635).
 -   New static function to change the position of the "power of 10"
-    near the axis. A static function is used instead of  data members 
+    near the axis. A static function is used instead of  data members
     in `TAxis` in order to keep the `TAxis` class small. Adding two
     floating point numbers in that class (in fact in `TAttAxis`) would
     have a none negligible effect on the Root files' sizes as there is
-    at least two axis per histogram and that there is often 1000th 
+    at least two axis per histogram and that there is often 1000th
     histograms in a single file.
     So we choose to follow the same mechanism as for the `SetMaxDigits`
     static method. The new function is: `SetExponentOffset`.
     Example:
-    
+
 ``` {.cpp}
 ...
    TGaxis::SetMaxDigits(2);
@@ -115,21 +115,21 @@ file `simple.pdf`.
    TGaxis::SetExponentOffset(-0.05, 0.01, "x"); // Y and Y offset for X axis
 ...
    hist->Draw();
-```   
- 
+```
+
 -   `TGaxis::SetMaxDigits()` was not acitve on standalone `TGaxis`.
-    
+
 ### TLegend
 
 -   The line attribute of objects in the legend were not taken into
     account with the option "e".
--   In case of automatic computation of the legend items' size, the 
+-   In case of automatic computation of the legend items' size, the
     text size was wrong if the font precision was set to 3.
--   Improve the spacing between lines. Due to the way the vertical 
-    text centring is done (bounding based) the spacing between lines 
+-   Improve the spacing between lines. Due to the way the vertical
+    text centring is done (bounding based) the spacing between lines
     may appeared irregular in some cases.
 -   The error bar in the legend (option "E") didn't have the line
-    attributes when drawn alone (without option "L"). 
+    attributes when drawn alone (without option "L").
 
 ### TPie
 
@@ -163,7 +163,7 @@ file `simple.pdf`.
 ```
 
    ![TMathText example](mathtext.png "TMathText example")
-   
+
 -   Implement `\\frac` using `\\over`.
 -   Treat `\\mbox` as `\\hbox` to improve the compatibility with TTexDump.
 
@@ -184,37 +184,37 @@ file `simple.pdf`.
 
 -   Implement `#backslash`.
 -   Implement `DrawLatexNDC`.
--   Implement `#minus` and `#plus` typographically better than the 
+-   Implement `#minus` and `#plus` typographically better than the
     standard `"-"` and `"+"`.
 -   Make sure all greek and math symbols are printed correctly by `TTexDump`.
--   Implement dummy operators `#mbox` and `#hbox` to improve the compatibility 
+-   Implement dummy operators `#mbox` and `#hbox` to improve the compatibility
     between `TLatex`, `TMathText` and `TTexDump`.
--   Some operators like `#minus`, `#plus`, `#mp`, `#hbar` etc ... 
-    ignored the color  defined by the operator `#color`. 
+-   Some operators like `#minus`, `#plus`, `#mp`, `#hbar` etc ...
+    ignored the color  defined by the operator `#color`.
 -   With the Cocoa backend on Mac the text string were a bit too large
-    compared to the TTF rendering. 
+    compared to the TTF rendering.
 
 ### TPave
 
--   Implement `SetX1()` etc ... for `TPave` and inherited classes to make sure the 
+-   Implement `SetX1()` etc ... for `TPave` and inherited classes to make sure the
     NDC coordinates are also defined.
 
 ### TLinearGradient and TRadialGradient
 
 -   Two new classes to support color gradient: `TLinearGradient` and `TRadialGradient`.
-    Both classes inherit from `TColor` and can be used the same way as ROOT's 
+    Both classes inherit from `TColor` and can be used the same way as ROOT's
     standard colors in `TAttFill` (`SetFillColor(newColorIndex)`).
     Gradient fill can be created using either RGBA values directly, or from
     color indices (colors from the ROOT's color table).
 -   TRadialGradient supports a simple radial gradient (center + radius)
     and an "extended" radial gradient (starting/ending points + two radii).
--   The new gradient fill option is available either with OpenGL ("gl-in-pad") 
+-   The new gradient fill option is available either with OpenGL ("gl-in-pad")
     or with a Cocoa backend (OS X only).
 -   Please note, at the moment, a color gradient can not be saved
     in a ROOT file or a pdf/ps file. It can be saved as an image (png/jpg etc.).
--   There are several demos in the tutorials/cocoa and tutorials/gl sub-directories 
-    explaining how to use these new classes: 
-    * grad.C 
+-   There are several demos in the tutorials/cocoa and tutorials/gl sub-directories
+    explaining how to use these new classes:
+    * grad.C
     * grad2.C
     * radialgradients.C.
 

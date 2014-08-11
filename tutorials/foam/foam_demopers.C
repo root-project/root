@@ -14,9 +14,9 @@
 
 Int_t foam_demopers()
 {
-   
+
   gSystem->Load("libFoam");
-   
+
   // need to load the foam_demo tutorial for the definition of the function
   TString macroName = gSystem->UnixPathName(__FILE__);
   macroName.ReplaceAll("foam_demopers.C","foam_demo.C");
@@ -40,7 +40,7 @@ Int_t foam_demopers()
   //*******************************************
 //  FoamX->PrintCells();
   FoamX->CheckAll(1);
-   
+
  //N.B. the integrand functions need to be reset
  // because cannot be made persistent
 #ifdef __CINT__

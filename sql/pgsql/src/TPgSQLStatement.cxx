@@ -49,7 +49,7 @@ TPgSQLStatement::TPgSQLStatement(PgSQL_Stmt_t* stmt, Bool_t errout):
    // Normal constructor.
    // Checks if statement contains parameters tags.
 
-   // Given fRes not used, we retrieve the statement using the connection. 
+   // Given fRes not used, we retrieve the statement using the connection.
    if (fStmt->fRes != NULL) {
       PQclear(fStmt->fRes);
    }
@@ -157,7 +157,7 @@ Bool_t TPgSQLStatement::Process()
    CheckStmt("Process",kFALSE);
 
    // We create the prepared statement below, MUST delete the old one
-   // from our constructor first! 
+   // from our constructor first!
    if (fStmt->fRes != NULL) {
       PQclear(fStmt->fRes);
    }

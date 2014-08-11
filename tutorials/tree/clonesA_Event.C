@@ -16,7 +16,7 @@ void clonesA_Event() {
    gROOT->ProcessLine("clonesA_Event(true)");
 }
 
-#else 
+#else
 
 void clonesA_Event_w()
 {
@@ -48,7 +48,7 @@ void clonesA_Event_w()
    tree->Print();
    delete hfile;
 }
- 
+
 void clonesA_Event_r()
 {
    //read the Tree
@@ -69,7 +69,7 @@ void clonesA_Event_r()
    }
    delete hfile;
 }
- 
+
 void clonesA_Event(bool /*secondrun*/) {
    // Embedding this load inside the first run of the script is not yet
    // supported in v6

@@ -64,7 +64,7 @@ void TSelHandleDataSet::SlaveBegin(TTree *)
          }
       }
    }
-   
+
    // Use default if nothing found in the input list
    if (!fType) fType = new TPBHandleDSType(TPBHandleDSType::kReleaseCache);
 }
@@ -142,7 +142,7 @@ void TSelHandleDataSet::CopyFile(const char *fn)
    TString dst = TString::Format("%s/%s", fDestDir.Data(), basefn.Data());
    if (!TFile::Cp(fn, dst.Data())) {
       Error("CopyFile", "problems copying file '%s' to '%s'", fn, dst.Data());
-      return;      
+      return;
    }
    Info("CopyFile", "file '%s' created ...", dst.Data());
 
@@ -214,13 +214,13 @@ Bool_t TSelHandleDataSet::Process(Long64_t entry)
       }
    } else if (fType->GetType() == TPBHandleDSType::kRemoveFiles) {
       // Remove the file
-      RemoveFile(url.GetFileAndOptions());     
+      RemoveFile(url.GetFileAndOptions());
    } else if (fType->GetType() == TPBHandleDSType::kCopyFiles) {
       // Copy file
-      CopyFile(url.GetFileAndOptions());     
+      CopyFile(url.GetFileAndOptions());
    } else {
       // Type unknown
-      Warning("Process", "type: %d is unknown", fType->GetType());     
+      Warning("Process", "type: %d is unknown", fType->GetType());
    }
 
    return kTRUE;

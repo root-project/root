@@ -84,7 +84,7 @@ ROOT::TTreeReaderValueBase::ProxyRead() {
 }
 
 //______________________________________________________________________________
-TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() { 
+TLeaf* ROOT::TTreeReaderValueBase::GetLeaf() {
    // If we are reading a leaf, return the corresponding TLeaf.
 
    if (fLeafName.Length() > 0){
@@ -200,11 +200,11 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
             nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
             leafName = branchName(leafNameExpression);
             branchName = branchName(0, branchName.Length() - leafName.Length());
-            
+
             branch = fTreeReader->GetTree()->GetBranch(branchName);
             if (!branch) branch = fTreeReader->GetTree()->GetBranch(branchName + ".");
             if (leafName.Length()) nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
-            
+
             while (!branch && branchName.Contains(".")){
                leafName = branchName(leafNameExpression);
                branchName = branchName(0, fBranchName.Length() - leafName.Length());
@@ -228,7 +228,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                TClass *elementClass = 0;
 
                TObjArray *myObjArray = myBranchElement->GetInfo()->GetElements();
-               Int_t     *myOffsets  = myBranchElement->GetInfo()->GetOffsets();
+               TVirtualStreamerInfo *myInfo = myBranchElement->GetInfo();
 
                while (nameStack.size() && found){
                   found = false;
@@ -238,16 +238,16 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                      TStreamerElement *tempStreamerElement = (TStreamerElement*)myObjArray->At(i);
 
                      if (!strcmp(tempStreamerElement->GetName(), traversingBranch.Data())){
-                        offset += myOffsets[i];
+                        offset += myInfo->GetElementOffset(i);
 
                         traversingBranch = nameStack.back();
                         nameStack.pop_back();
 
                         elementClass = tempStreamerElement->GetClass();
-                        if (elementClass){
-                           TVirtualStreamerInfo *tempStreamerInfo = elementClass->GetStreamerInfo(0);
-                           myObjArray = tempStreamerInfo->GetElements();
-                           myOffsets = tempStreamerInfo->GetOffsets();
+                        if (elementClass) {
+                           myInfo = elementClass->GetStreamerInfo(0);
+                           myObjArray = myInfo->GetElements();
+                           // FIXME: this is odd, why is 'i' not also reset????
                         }
                         else {
                            finalDataType = TDataType::GetDataType((EDataType)tempStreamerElement->GetType());
@@ -283,7 +283,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
                }
             }
 
-            
+
             if (!fStaticClassOffsets.size()) {
                Error("CreateProxy()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
                fProxy = 0;
@@ -335,7 +335,7 @@ void ROOT::TTreeReaderValueBase::CreateProxy() {
          return;
       }
    }
-   
+
 
    // Update named proxy's dictionary
    if (namedProxy && !namedProxy->GetDict()) {
@@ -374,8 +374,8 @@ const char* ROOT::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
    dict = 0;
    if (branch->IsA() == TBranchElement::Class()) {
       TBranchElement* brElement = (TBranchElement*)branch;
-      if (brElement->GetType() == TBranchElement::kSTLNode || 
-            brElement->GetType() == TBranchElement::kLeafNode || 
+      if (brElement->GetType() == TBranchElement::kSTLNode ||
+            brElement->GetType() == TBranchElement::kLeafNode ||
             brElement->GetType() == TBranchElement::kObjectNode) {
 
          TStreamerInfo *streamerInfo = brElement->GetInfo();

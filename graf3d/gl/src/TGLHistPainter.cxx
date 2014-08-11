@@ -254,18 +254,18 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 {
    //Selects plot or axis.
    //9999 is the magic number, ROOT's classes use in DistancetoPrimitive.
-   
+
    //[tp: return statement added.
    //tp]
-   
+
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->DistancetoPrimitive(px, py) : 9999;
    else {
       //Adjust px and py - canvas can have several pads inside, so we need to convert
       //the from canvas' system into pad's.
-      
+
       //Retina-related adjustments must be done inside!!!
-      
+
       py = gPad->GetWh() - py;
 
       //One hist can be appended to several pads,
@@ -337,7 +337,7 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          //px and py ARE NOT coordinates.
          py -= Int_t((1 - gPad->GetHNDC() - gPad->GetYlowNDC()) * gPad->GetWh());
          px -= Int_t(gPad->GetXlowNDC() * gPad->GetWw());
-         
+
          //We also have to take care of retina displays with a different viewports.
          TGLUtil::InitializeIfNeeded();
          const Float_t scale = TGLUtil::GetScreenScalingFactor();
@@ -577,7 +577,7 @@ void TGLHistPainter::Paint(Option_t *o)
    if (fPlotType == kGLDefaultPlot) {
       //In case of default plot pad
       //should not copy gl-buffer (it will be simply black)
-      
+
       //[tp: code was commented.
       //gPad->SetCopyGLDevice(kFALSE);
       //tp]
@@ -591,7 +591,7 @@ void TGLHistPainter::Paint(Option_t *o)
          //With gl-plot, pad should copy
          //gl-buffer into the final pad/canvas pixmap/DIB.
          //fGLDevice.SetGLDevice(glContext);
-         
+
          //[tp: code commented.
          //gPad->SetCopyGLDevice(kTRUE);
          //tp]
@@ -618,7 +618,7 @@ Bool_t FindAndRemoveOption(TString &options, const char *toFind)
       options.Remove(index, len);
       return kTRUE;
    }
-   
+
    return kFALSE;
 }
 
@@ -630,9 +630,9 @@ TGLHistPainter::ParsePaintOption(const TString &o)const
 {
    //In principle, we can have several conflicting options: "lego surf pol sph", surfbb: surf, fb, bb.
    //but only one will be selected, which one - depends on parsing order in this function.
-   
+
    TString options(o);
-   
+
    PlotOption_t parsedOption = {kGLDefaultPlot, kGLCartesian,
                                 kTRUE, kTRUE, kTRUE, //Show back box, show front box, show axes.
                                 Bool_t(gPad->GetLogx()), Bool_t(gPad->GetLogy()),
@@ -665,7 +665,7 @@ TGLHistPainter::ParsePaintOption(const TString &o)const
       parsedOption.fBackBox = kFALSE;
    if (FindAndRemoveOption(options, "fb"))
       parsedOption.fFrontBox = kFALSE;
-      
+
    //Check A option.
    if (FindAndRemoveOption(options, "a"))
       parsedOption.fDrawAxes = kFALSE;
@@ -713,7 +713,7 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
       fCoord.SetZLog(gPad->GetLogz());
       fCoord.SetCoordType(option.fCoordType);
       fGLPainter->AddOption(addOption);
-      
+
       fGLPainter->SetDrawFrontBox(option.fFrontBox);
       fGLPainter->SetDrawBackBox(option.fBackBox);
       fGLPainter->SetDrawAxes(option.fDrawAxes);
@@ -738,21 +738,21 @@ void TGLHistPainter::PadToViewport(Bool_t /*selectionPass*/)
    TGLRect vp;
    vp.Width()  = Int_t(gPad->GetAbsWNDC() * gPad->GetWw());
    vp.Height() = Int_t(gPad->GetAbsHNDC() * gPad->GetWh());
-   
+
    vp.X() = Int_t(gPad->XtoAbsPixel(gPad->GetX1()));
    vp.Y() = Int_t((gPad->GetWh() - gPad->YtoAbsPixel(gPad->GetY1())));
-   
+
    TGLUtil::InitializeIfNeeded();
    const Float_t scale = TGLUtil::GetScreenScalingFactor();
 
    if (scale > 1.f) {
       vp.X() = Int_t(vp.X() * scale);
       vp.Y() = Int_t(vp.Y() * scale);
-      
+
       vp.Width() = Int_t(vp.Width() * scale);
       vp.Height() = Int_t(vp.Height() * scale);
    }
-   
+
    fCamera.SetViewport(vp);
    if (fCamera.ViewportChanged() && fGLPainter.get())
       fGLPainter->InvalidateSelection();

@@ -121,7 +121,7 @@
                              GLConstants3(abc_prefix) \
                              GLConstants4(abc_prefix) \
                              GLConstants5(abc_prefix) \
-			     GLConstants6(abc_prefix)
+                             GLConstants6(abc_prefix)
 #endif
 
 

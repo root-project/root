@@ -51,8 +51,8 @@ protected:
    Bool_t          fIsLearning;  //! true if cache is in learning mode
    Bool_t          fIsManual;    //! true if cache is StopLearningPhase was used
    Bool_t          fFirstBuffer; //! true if first buffer is used for prefetching
-   Bool_t          fOneTime;     //! used in the learning phase 
-   Bool_t          fReverseRead; //!  reading in reverse mode 
+   Bool_t          fOneTime;     //! used in the learning phase
+   Bool_t          fReverseRead; //!  reading in reverse mode
    Int_t           fFillTimes;   //!  how many times we can fill the current buffer
    Bool_t          fFirstTime;   //! save the fact that we processes the first entry
    Long64_t        fFirstEntry;  //! save the value of the first entry
@@ -60,6 +60,7 @@ protected:
    Bool_t          fEnabled;     //! cache enabled for cached reading
    EPrefillType    fPrefillType; // Whether a prefilling is enabled (and if applicable which type)
    static  Int_t   fgLearnEntries; // number of entries used for learning mode
+   Bool_t          fAutoSized;   //! true if cache size was calculated automatically
 
 private:
    TTreeCache(const TTreeCache &);            //this class cannot be copied
@@ -77,13 +78,15 @@ public:
    virtual void         Disable() {fEnabled = kFALSE;}
    virtual void         Enable() {fEnabled = kTRUE;}
    const TObjArray     *GetCachedBranches() const { return fBranches; }
+   EPrefillType         GetConfiguredPrefillType() const;
    Double_t             GetEfficiency() const;
    Double_t             GetEfficiencyRel() const;
    virtual Int_t        GetEntryMin() const {return fEntryMin;}
    virtual Int_t        GetEntryMax() const {return fEntryMax;}
    static Int_t         GetLearnEntries();
    virtual EPrefillType GetLearnPrefill() const {return fPrefillType;}
-   TTree               *GetTree() const;
+   TTree               *GetTree() const {return fTree;}
+   Bool_t               IsAutoSized() const {return fAutoSized;}
    virtual Bool_t       IsEnabled() const {return fEnabled;}
    virtual Bool_t       IsLearning() const {return fIsLearning;}
 
@@ -92,9 +95,10 @@ public:
 
    virtual void         Print(Option_t *option="") const;
    virtual Int_t        ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   virtual Int_t        ReadBufferNormal(char *buf, Long64_t pos, Int_t len); 
+   virtual Int_t        ReadBufferNormal(char *buf, Long64_t pos, Int_t len);
    virtual Int_t        ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len);
    virtual void         ResetCache();
+   void                 SetAutoSized(Bool_t val) {fAutoSized = val;}
    virtual void         SetEntryRange(Long64_t emin,   Long64_t emax);
    virtual void         SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect);
    virtual void         SetLearnPrefill(EPrefillType type = kNoPrefill);

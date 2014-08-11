@@ -7,168 +7,10 @@
 
 var d_tree, key_tree;
 
-var kWhite = 0, kBlack = 1, kGray = 920, kRed = 632, kGreen = 416, kBlue = 600,
-    kYellow = 400, kMagenta = 616, kCyan = 432, kOrange = 800, kSpring = 820,
-    kTeal = 840, kAzure = 860, kViolet = 880, kPink = 900;
+//var kWhite = 0, kBlack = 1, kGray = 920, kRed = 632, kGreen = 416, kBlue = 600,
+//    kYellow = 400, kMagenta = 616, kCyan = 432, kOrange = 800, kSpring = 820,
+//    kTeal = 840, kAzure = 860, kViolet = 880, kPink = 900;
 
-var symbols_map = {
-   // greek letters
-   '#alpha' : '\u03B1',
-   '#beta' : '\u03B2',
-   '#chi' : '\u03C7',
-   '#delta' : '\u03B4',
-   '#varepsilon' : '\u03B5',
-   '#phi' : '\u03C6',
-   '#gamma' : '\u03B3',
-   '#eta' : '\u03B7',
-   '#iota' : '\u03B9',
-   '#varphi' : '\u03C6',
-   '#kappa' : '\u03BA',
-   '#lambda' : '\u03BB',
-   '#mu' : '\u03BC',
-   '#nu' : '\u03BD',
-   '#omicron' : '\u03BF',
-   '#pi' : '\u03C0',
-   '#theta' : '\u03B8',
-   '#rho' : '\u03C1',
-   '#sigma' : '\u03C3',
-   '#tau' : '\u03C4',
-   '#upsilon' : '\u03C5',
-   '#varomega' : '\u03D6',
-   '#omega' : '\u03C9',
-   '#xi' : '\u03BE',
-   '#psi' : '\u03C8',
-   '#zeta' : '\u03B6',
-   '#Alpha' : '\u0391',
-   '#Beta' : '\u0392',
-   '#Chi' : '\u03A7',
-   '#Delta' : '\u0394',
-   '#Epsilon' : '\u0395',
-   '#Phi' : '\u03A6',
-   '#Gamma' : '\u0393',
-   '#Eta' : '\u0397',
-   '#Iota' : '\u0399',
-   '#vartheta' : '\u03D1',
-   '#Kappa' : '\u039A',
-   '#Lambda' : '\u039B',
-   '#Mu' : '\u039C',
-   '#Nu' : '\u039D',
-   '#Omicron' : '\u039F',
-   '#Pi' : '\u03A0',
-   '#Theta' : '\u0398',
-   '#Rho' : '\u03A1',
-   '#Sigma' : '\u03A3',
-   '#Tau' : '\u03A4',
-   '#Upsilon' : '\u03A5',
-   '#varsigma' : '\u03C2',
-   '#Omega' : '\u03A9',
-   '#Xi' : '\u039E',
-   '#Psi' : '\u03A8',
-   '#Zeta' : '\u0396',
-   '#varUpsilon' : '\u03D2',
-   '#epsilon' : '\u03B5',
-   // math symbols
-
-   '#sqrt' : '\u221A',
-
-   // from TLatex tables #2 & #3
-   '#leq' : '\u2264',
-   '#/' : '\u2044',
-   '#infty' : '\u221E',
-   '#voidb' : '\u0192',
-   '#club' : '\u2663',
-   '#diamond' : '\u2666',
-   '#heart' : '\u2665',
-   '#spade' : '\u2660',
-   '#leftrightarrow' : '\u2194',
-   '#leftarrow' : '\u2190',
-   '#uparrow' : '\u2191',
-   '#rightarrow' : '\u2192',
-   '#downarrow' : '\u2193',
-   '#circ' : '\u02C6', // ^
-   '#pm' : '\xB1',
-   '#doublequote' : '\u2033',
-   '#geq' : '\u2265',
-   '#times' : '\xD7',
-   '#propto' : '\u221D',
-   '#partial' : '\u2202',
-   '#bullet' : '\u2022',
-   '#divide' : '\xF7',
-   '#neq' : '\u2260',
-   '#equiv' : '\u2261',
-   '#approx' : '\u2248', // should be \u2245 ?
-   '#3dots' : '\u2026',
-   '#cbar' : '\u007C',
-   '#topbar' : '\xAF',
-   '#downleftarrow' : '\u21B5',
-   '#aleph' : '\u2135',
-   '#Jgothic' : '\u2111',
-   '#Rgothic' : '\u211C',
-   '#voidn' : '\u2118',
-   '#otimes' : '\u2297',
-   '#oplus' : '\u2295',
-   '#oslash' : '\u2205',
-   '#cap' : '\u2229',
-   '#cup' : '\u222A',
-   '#supseteq' : '\u2287',
-   '#supset' : '\u2283',
-   '#notsubset' : '\u2284',
-   '#subseteq' : '\u2286',
-   '#subset' : '\u2282',
-   '#int' : '\u222B',
-   '#in' : '\u2208',
-   '#notin' : '\u2209',
-   '#angle' : '\u2220',
-   '#nabla' : '\u2207',
-   '#oright' : '\xAE',
-   '#ocopyright' : '\xA9',
-   '#trademark' : '\u2122',
-   '#prod' : '\u220F',
-   '#surd' : '\u221A',
-   '#upoint' : '\u22C5',
-   '#corner' : '\xAC',
-   '#wedge' : '\u2227',
-   '#vee' : '\u2228',
-   '#Leftrightarrow' : '\u21D4',
-   '#Leftarrow' : '\u21D0',
-   '#Uparrow' : '\u21D1',
-   '#Rightarrow' : '\u21D2',
-   '#Downarrow' : '\u21D3',
-   '#LT' : '\x3C',
-   '#void1' : '\xAE',
-   '#copyright' : '\xA9',
-   '#void3' : '\u2122',
-   '#sum' : '\u2211',
-   '#arctop' : '',
-   '#lbar' : '',
-   '#arcbottom' : '',
-   '#void8' : '',
-   '#bottombar' : '\u230A',
-   '#arcbar' : '',
-   '#ltbar' : '',
-   '#AA' : '\u212B',
-   '#aa' : '\u00E5',
-   '#void06' : '',
-   '#GT' : '\x3E',
-   '#forall' : '\u2200',
-   '#exists' : '\u2203',
-   '#bar' : '',
-   '#vec' : '',
-   '#dot' : '\u22C5',
-   '#hat' : '\xB7',
-   '#ddot' : '',
-   '#acute' : '\acute',
-   '#grave' : '',
-   '#check' : '\u2713',
-   '#tilde' : '\u02DC',
-   '#slash' : '\u2044',
-   '#hbar' : '\u0127',
-   '#box' : '',
-   '#Box' : '',
-   '#parallel' : '',
-   '#perp' : '\u22A5',
-   '#odot' : ''
-};
 
 var tooltip = function() {
    var id = 'tt';
@@ -472,26 +314,11 @@ function getRootMarker(markers, i) {
    };
 };
 
-function stringWidth(svg, line, font_name, font_weight, font_size, font_style) {
-   /* compute the bounding box of a string by using temporary svg:text */
-   var text = svg.append("svg:text")
-       .attr("class", "temp_text")
-       .attr("font-family", font_name)
-       .attr("font-weight", font_weight)
-       .attr("font-style", font_style)
-       .attr("font-size", font_size)
-       .style("opacity", 0)
-       .text(line);
-   var w = text.node().getBBox().width;
-   text.remove();
-   return w;
-}
-
 function format_id(id) {
    /* format the string id to remove specials characters
       (that cannot be used in id strings) */
    var g_id = id;
-   if (g_id == "") g_id = "random_histo_" + random_id++;
+   if (g_id == "") g_id = "random_histo_" + JSROOTCore.id_counter++;
    while (g_id.indexOf(' ') != -1)
       g_id = g_id.replace(' ', '_');
    while (g_id.indexOf(':') != -1)
@@ -596,10 +423,13 @@ var gStyle = {
       'StatColor'     : 0,
       'StatStyle'     : 1001,
       'StatFont'      : 42,
-      'StatFontSize'  : 0,
+      'StatFontSize'  : 9,
       'StatTextColor' : 1,
-      'TimeOffset'    : 788918400000 // UTC time at 01/01/95
+      'TimeOffset'    : 788918400000, // UTC time at 01/01/95
+      'StatFormat'    : function(v) { return (Math.abs(v) < 1e5) ? v.toFixed(5) : v.toExponential(7); },
+      'StatEntriesFormat'  : function(v) { return (Math.abs(v) < 1e7) ? v.toFixed(0) : v.toExponential(7); }
    };
+
 
 
 
@@ -607,13 +437,13 @@ var gStyle = {
 
    if (typeof JSROOTPainter == 'object'){
       var e1 = new Error('JSROOTPainter is already defined');
-      e1.source = 'JSROOTD3ExpPainter.js';
+      e1.source = 'JSROOTPainter.js';
       throw e1;
    }
 
    if (typeof d3 != 'object') {
       var e1 = new Error('This extension requires d3.v2.js');
-      e1.source = 'JSROOTD3ExpPainter.js';
+      e1.source = 'JSROOTPainter.js';
       throw e1;
    }
 
@@ -647,7 +477,11 @@ var gStyle = {
 
    JSROOTPainter.version = '4.1 2014/05/12';
 
-   JSROOTPainter.fUserPainters = null; // list of user painters, called with arguments painter(vis, obj, opt) 
+   JSROOTPainter.d3v3 = (d3.version.charAt(0) == '3');
+
+   // if (JSROOTPainter.d3v3) console.log("d3_v3_js"); else console.log("d3_v2_js");
+
+   JSROOTPainter.fUserPainters = null; // list of user painters, called with arguments painter(vis, obj, opt)
 
    /*
     * Helper functions
@@ -1198,14 +1032,62 @@ var gStyle = {
          b = hue2rgb(p, q, h - 1/3);
       }
       return 'rgb('+Math.round(r * 255)+', '+Math.round(g * 255)+', '+Math.round(b * 255)+')';
-   };
+   }
+
+   JSROOTPainter.chooseTimeFormat = function(range, nticks) {
+      if (nticks<1) nticks = 1;
+      var awidth = range / nticks;
+      var reasformat = 0;
+
+      // code from TAxis::ChooseTimeFormat
+      // width in seconds ?
+      if (awidth>=.5) {
+         reasformat = 1;
+         //  width in minutes ?
+         if (awidth>=30) {
+            awidth /= 60; reasformat = 2;
+            //  width in hours ?
+            if (awidth>=30) {
+               awidth /=60; reasformat = 3;
+               //  width in days ?
+               if (awidth>=12) {
+                  awidth /= 24; reasformat = 4;
+                  // width in months ?
+                  if (awidth>=15.218425) {
+                     awidth /= 30.43685; reasformat = 5;
+                     //  width in years ?
+                     if (awidth>=6) {
+                        awidth /= 12; reasformat = 6;
+                        if (awidth>=2) {
+                           awidth /= 12; reasformat = 7;
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+
+      switch (reasformat) {
+         case 0: return "%S";
+         case 1: return "%Mm%S";
+         case 2: return "%Hh%M";
+         case 3: return "%d-%Hh";
+         case 4: return "%d/%m";
+         case 5: return "%d/%m/%y";
+         case 6: return "%d/%m/%y";
+         case 7: return "%m/%y";
+      }
+
+      return "%Y";
+   }
 
    JSROOTPainter.getTimeFormat = function(axis) {
       var timeFormat = axis['fTimeFormat'];
       var idF = timeFormat.indexOf('%F');
       if (idF >= 0) return timeFormat.substr(0, idF);
       return timeFormat;
-   };
+   }
 
    JSROOTPainter.getTimeOffset = function(axis) {
       var timeFormat = axis['fTimeFormat'];
@@ -1232,7 +1114,7 @@ var gStyle = {
       }
 
       return gStyle['TimeOffset'];
-   };
+   }
 
    JSROOTPainter.formatExp = function(label) {
       var str = label;
@@ -1284,6 +1166,165 @@ var gStyle = {
       return str;
    };
 
+   JSROOTPainter.symbols_map = {
+         // greek letters
+         '#alpha' : '\u03B1',
+         '#beta' : '\u03B2',
+         '#chi' : '\u03C7',
+         '#delta' : '\u03B4',
+         '#varepsilon' : '\u03B5',
+         '#phi' : '\u03C6',
+         '#gamma' : '\u03B3',
+         '#eta' : '\u03B7',
+         '#iota' : '\u03B9',
+         '#varphi' : '\u03C6',
+         '#kappa' : '\u03BA',
+         '#lambda' : '\u03BB',
+         '#mu' : '\u03BC',
+         '#nu' : '\u03BD',
+         '#omicron' : '\u03BF',
+         '#pi' : '\u03C0',
+         '#theta' : '\u03B8',
+         '#rho' : '\u03C1',
+         '#sigma' : '\u03C3',
+         '#tau' : '\u03C4',
+         '#upsilon' : '\u03C5',
+         '#varomega' : '\u03D6',
+         '#omega' : '\u03C9',
+         '#xi' : '\u03BE',
+         '#psi' : '\u03C8',
+         '#zeta' : '\u03B6',
+         '#Alpha' : '\u0391',
+         '#Beta' : '\u0392',
+         '#Chi' : '\u03A7',
+         '#Delta' : '\u0394',
+         '#Epsilon' : '\u0395',
+         '#Phi' : '\u03A6',
+         '#Gamma' : '\u0393',
+         '#Eta' : '\u0397',
+         '#Iota' : '\u0399',
+         '#vartheta' : '\u03D1',
+         '#Kappa' : '\u039A',
+         '#Lambda' : '\u039B',
+         '#Mu' : '\u039C',
+         '#Nu' : '\u039D',
+         '#Omicron' : '\u039F',
+         '#Pi' : '\u03A0',
+         '#Theta' : '\u0398',
+         '#Rho' : '\u03A1',
+         '#Sigma' : '\u03A3',
+         '#Tau' : '\u03A4',
+         '#Upsilon' : '\u03A5',
+         '#varsigma' : '\u03C2',
+         '#Omega' : '\u03A9',
+         '#Xi' : '\u039E',
+         '#Psi' : '\u03A8',
+         '#Zeta' : '\u0396',
+         '#varUpsilon' : '\u03D2',
+         '#epsilon' : '\u03B5',
+         // math symbols
+
+         '#sqrt' : '\u221A',
+
+         // from TLatex tables #2 & #3
+         '#leq' : '\u2264',
+         '#/' : '\u2044',
+         '#infty' : '\u221E',
+         '#voidb' : '\u0192',
+         '#club' : '\u2663',
+         '#diamond' : '\u2666',
+         '#heart' : '\u2665',
+         '#spade' : '\u2660',
+         '#leftrightarrow' : '\u2194',
+         '#leftarrow' : '\u2190',
+         '#uparrow' : '\u2191',
+         '#rightarrow' : '\u2192',
+         '#downarrow' : '\u2193',
+         '#circ' : '\u02C6', // ^
+         '#pm' : '\xB1',
+         '#doublequote' : '\u2033',
+         '#geq' : '\u2265',
+         '#times' : '\xD7',
+         '#propto' : '\u221D',
+         '#partial' : '\u2202',
+         '#bullet' : '\u2022',
+         '#divide' : '\xF7',
+         '#neq' : '\u2260',
+         '#equiv' : '\u2261',
+         '#approx' : '\u2248', // should be \u2245 ?
+         '#3dots' : '\u2026',
+         '#cbar' : '\u007C',
+         '#topbar' : '\xAF',
+         '#downleftarrow' : '\u21B5',
+         '#aleph' : '\u2135',
+         '#Jgothic' : '\u2111',
+         '#Rgothic' : '\u211C',
+         '#voidn' : '\u2118',
+         '#otimes' : '\u2297',
+         '#oplus' : '\u2295',
+         '#oslash' : '\u2205',
+         '#cap' : '\u2229',
+         '#cup' : '\u222A',
+         '#supseteq' : '\u2287',
+         '#supset' : '\u2283',
+         '#notsubset' : '\u2284',
+         '#subseteq' : '\u2286',
+         '#subset' : '\u2282',
+         '#int' : '\u222B',
+         '#in' : '\u2208',
+         '#notin' : '\u2209',
+         '#angle' : '\u2220',
+         '#nabla' : '\u2207',
+         '#oright' : '\xAE',
+         '#ocopyright' : '\xA9',
+         '#trademark' : '\u2122',
+         '#prod' : '\u220F',
+         '#surd' : '\u221A',
+         '#upoint' : '\u22C5',
+         '#corner' : '\xAC',
+         '#wedge' : '\u2227',
+         '#vee' : '\u2228',
+         '#Leftrightarrow' : '\u21D4',
+         '#Leftarrow' : '\u21D0',
+         '#Uparrow' : '\u21D1',
+         '#Rightarrow' : '\u21D2',
+         '#Downarrow' : '\u21D3',
+         '#LT' : '\x3C',
+         '#void1' : '\xAE',
+         '#copyright' : '\xA9',
+         '#void3' : '\u2122',
+         '#sum' : '\u2211',
+         '#arctop' : '',
+         '#lbar' : '',
+         '#arcbottom' : '',
+         '#void8' : '',
+         '#bottombar' : '\u230A',
+         '#arcbar' : '',
+         '#ltbar' : '',
+         '#AA' : '\u212B',
+         '#aa' : '\u00E5',
+         '#void06' : '',
+         '#GT' : '\x3E',
+         '#forall' : '\u2200',
+         '#exists' : '\u2203',
+         '#bar' : '',
+         '#vec' : '',
+         '#dot' : '\u22C5',
+         '#hat' : '\xB7',
+         '#ddot' : '',
+         '#acute' : '\acute',
+         '#grave' : '',
+         '#check' : '\u2713',
+         '#tilde' : '\u02DC',
+         '#slash' : '\u2044',
+         '#hbar' : '\u0127',
+         '#box' : '',
+         '#Box' : '',
+         '#parallel' : '',
+         '#perp' : '\u22A5',
+         '#odot' : ''
+      };
+
    JSROOTPainter.translateLaTeX = function(string) {
       var str = string;
       str = this.translateExp(str);
@@ -1320,14 +1361,28 @@ var gStyle = {
          }
       }
       while (str.indexOf('#/') != -1)
-         str = str.replace('#/', symbols_map['#/']);
-      for (x in symbols_map) {
+         str = str.replace('#/', JSROOTPainter.symbols_map['#/']);
+      for (x in JSROOTPainter.symbols_map) {
          while (str.indexOf(x) != -1)
-            str = str.replace(x, symbols_map[x]);
+            str = str.replace(x, JSROOTPainter.symbols_map[x]);
       }
       return str;
    };
 
+   JSROOTPainter.stringWidth = function(svg, line, font_size, fontDetails) {
+      /* compute the bounding box of a string by using temporary svg:text */
+      var text = svg.append("svg:text")
+      .attr("class", "temp_text")
+      .attr("font-family", fontDetails['name'])
+      .attr("font-weight", fontDetails['weight'])
+      .attr("font-style", fontDetails['style'])
+      .attr("font-size", font_size)
+      .style("opacity", 0)
+      .text(line);
+      var w = text.node().getBBox().width;
+      text.remove();
+      return w;
+   }
 
 
 
@@ -1337,10 +1392,14 @@ var gStyle = {
 
    JSROOTPainter.histoDialog = function(item) {
 
-      var painter = $("#dialog").data("Painter");
+      var x = document.getElementById('root_ctx_menu');
+      if(!x) return;
 
-      $("#dialog").dialog("close");
-      $("#dialog").empty();
+      var painter = $("#root_ctx_menu").data("Painter");
+      $("#root_ctx_menu").dialog("close");
+      $("#root_ctx_menu").empty();
+
+      x.parentNode.removeChild(x);
 
       painter.ExeContextMenu(item);
    }
@@ -1352,6 +1411,7 @@ var gStyle = {
       this.vis   = null;  // canvas where object is drawn
       this.first = null;  // pointer on first painter
       this.draw_g = null;  // container for all draw objects
+      this.original_view_changed = false;  // indicate that original zoom changed and one should recalculate statistic
    }
 
    JSROOTPainter.ObjectPainter.prototype.IsObject = function(obj) {
@@ -1383,8 +1443,11 @@ var gStyle = {
          // create dummy here and not need to check if it exists or not
          this['zoom_xmin'] = 0;
          this['zoom_xmax'] = 0;
+         this['zoom_xpad'] = true; // indicate that zooming specified from pad
+
          this['zoom_ymin'] = 0;
          this['zoom_ymax'] = 0;
+         this['zoom_ypad'] = true; // indicate that zooming specified from pad
 
          if (this.pad && typeof(this.pad) != 'undefined') {
             this['zoom_xmin'] = this.pad.fUxmin;
@@ -1424,19 +1487,191 @@ var gStyle = {
 
    JSROOTPainter.ObjectPainter.prototype.RedrawFrame = function(selobj) {
       // call Redraw methods for each painter in the frame
-      // if selobj specifief, painter with selected object will be redrawn
+      // if selobj specified, painter with selected object will be redrawn
 
       if (!this.vis) return;
 
       for (var n=0;n<this.vis['painters'].length;n++) {
 
-         painter = this.vis['painters'][n];
+         var painter = this.vis['painters'][n];
 
          if ((selobj!=null) && !painter.IsObject(selobj)) continue;
 
          painter.Redraw();
       }
    }
+
+   JSROOTPainter.ObjectPainter.prototype.RemoveDrag = function(id)
+   {
+      var drag_rect_name = id + "_drag_rect";
+      var resize_rect_name = id + "_resize_rect";
+      if (this[drag_rect_name]) { this[drag_rect_name].remove(); this[drag_rect_name] = null; }
+      if (this[resize_rect_name]) { this[resize_rect_name].remove(); this[resize_rect_name] = null; }
+   }
+
+   JSROOTPainter.ObjectPainter.prototype.AddDrag = function(id, main_rect, callback) {
+
+      var pthis = this;
+
+      var drag_rect_name = id + "_drag_rect";
+      var resize_rect_name = id + "_resize_rect";
+
+      var istitle = (main_rect.node().tagName == "text");
+
+      var rect_width = function() {
+         if (istitle)
+            return main_rect.node().getBBox().width;
+         else
+            return Number(main_rect.attr("width"));
+      }
+
+      var rect_height = function() {
+         if (istitle)
+            return main_rect.node().getBBox().height;
+         else
+            return Number(main_rect.attr("height"));
+      }
+
+      var rect_x = function() {
+         var x = Number(main_rect.attr("x"));
+         if (istitle) x -= rect_width()/2;
+         return x;
+      }
+
+      var rect_y = function() {
+         var y = Number(main_rect.attr("y"));
+         if (istitle) y -= rect_height();
+         return y;
+      }
+
+      var drag_move = d3.behavior.drag()
+          .origin(Object)
+          .on("dragstart", function() {
+             d3.event.sourceEvent.preventDefault();
+
+             pthis[drag_rect_name] =
+                pthis.vis.append("rect")
+                .attr("class", "zoom")
+                .attr("id", drag_rect_name)
+                .attr("x", rect_x())
+                .attr("y", rect_y())
+                .attr("width", rect_width())
+                .attr("height", rect_height())
+                .style("cursor", "move");
+          })
+          .on("drag", function() {
+             d3.event.sourceEvent.preventDefault();
+             pthis[drag_rect_name].attr("x", Number(pthis[drag_rect_name].attr("x")) + d3.event.dx);
+             pthis[drag_rect_name].attr("y", Number(pthis[drag_rect_name].attr("y")) + d3.event.dy);
+             d3.event.sourceEvent.stopPropagation();
+          })
+          .on("dragend", function() {
+             d3.event.sourceEvent.preventDefault();
+
+             pthis[drag_rect_name].style("cursor", "auto");
+
+             var x = Number(pthis[drag_rect_name].attr("x"));
+             var y = Number(pthis[drag_rect_name].attr("y"));
+
+             var dx = x - rect_x();
+             var dy = y - rect_y();
+
+             pthis[drag_rect_name].remove();
+             pthis[drag_rect_name] = null;
+
+             if (istitle) {
+                main_rect.attr("x", x + rect_width()/2).attr("y", y + rect_height());
+             } else {
+                main_rect.attr("x", x).attr("y", y);
+                pthis[resize_rect_name]
+                   .attr("x", x + rect_width() - 20)
+                   .attr("y", y + rect_height() - 20);
+             }
+
+             callback.move(x, y, dx, dy);
+
+             // do it after call-back - rectangle has correct coordinates
+             if (istitle)
+                pthis[resize_rect_name]
+                  .attr("x", rect_x() + rect_width() - 20)
+                  .attr("y", rect_y() + rect_height() - 20);
+          });
+
+      var drag_resize =
+         d3.behavior.drag()
+          .origin(Object)
+          .on("dragstart", function() {
+             d3.event.sourceEvent.preventDefault();
+             pthis[drag_rect_name] =
+                pthis.vis.append("rect")
+                .attr("class", "zoom")
+                .attr("id", drag_rect_name)
+                .attr("x", rect_x())
+                .attr("y", rect_y())
+                .attr("width", rect_width())
+                .attr("height", rect_height())
+                .style("cursor", "se-resize");
+
+             // main_rect.style("cursor", "move");
+          })
+          .on("drag", function() {
+             d3.event.sourceEvent.preventDefault();
+             pthis[drag_rect_name].attr("width", Number(pthis[drag_rect_name].attr("width")) + d3.event.dx);
+             pthis[drag_rect_name].attr("height", Number(pthis[drag_rect_name].attr("height")) + d3.event.dy);
+             d3.event.sourceEvent.stopPropagation();
+          })
+          .on("dragend", function() {
+             d3.event.sourceEvent.preventDefault();
+             pthis[drag_rect_name].style("cursor", "auto");
+
+             var newwidth = Number(pthis[drag_rect_name].attr("width"));
+             var newheight = Number(pthis[drag_rect_name].attr("height"));
+
+             pthis[drag_rect_name].remove();
+             pthis[drag_rect_name] = null;
+
+             callback.resize(newwidth, newheight);
+
+             // do it after call-back - rectangle has correct coordinates
+             if (istitle)
+                pthis[resize_rect_name]
+                  .attr("x", rect_x() + rect_width() - 20)
+                  .attr("y", rect_y() + rect_height() - 20);
+
+             // console.log(resize_rect_name + " x = " + rect_x() + "  width = " + rect_width());
+             // console.log(resize_rect_name + " y = " + rect_y() + "  height = " + rect_height());
+          });
+
+
+      if (this[resize_rect_name] == null) {
+
+         main_rect.call(drag_move);
+
+         this[resize_rect_name] =
+            this.vis.append("rect")
+              .attr("id", resize_rect_name)
+              .style("opacity", "0")
+              .style("cursor", "se-resize")
+              .call(drag_resize);
+      } else {
+         // ensure that small resize rect appears after large move rect
+         var prnt = this[resize_rect_name].node().parentNode;
+
+         // first move small resize rec before main_rect
+         prnt.removeChild(this[resize_rect_name].node());
+         prnt.insertBefore(this[resize_rect_name].node(), main_rect.node());
+         // than swap them while big rect should be in the front
+         prnt.removeChild(main_rect.node());
+         prnt.insertBefore(main_rect.node(), this[resize_rect_name].node());
+      }
+
+      this[resize_rect_name]
+          .attr("x", rect_x() + rect_width() - 20)
+          .attr("y", rect_y() + rect_height() - 20)
+          .attr("width", 20)
+          .attr("height", 20);
+   }
+
 
    JSROOTPainter.ObjectPainter.prototype.FindPainterFor = function(selobj)
    {
@@ -1446,7 +1681,7 @@ var gStyle = {
       if (!this.vis) return null;
 
       for (var n=0;n<this.vis['painters'].length;n++) {
-         painter = this.vis['painters'][n];
+         var painter = this.vis['painters'][n];
 
          if (painter.IsObject(selobj)) return painter;
       }
@@ -1544,7 +1779,10 @@ var gStyle = {
          obj['zoom_ymax'] = 0;
       }
 
-      if (changed) this.RedrawFrame();
+      if (changed) {
+         obj.original_view_changed = true;
+         this.RedrawFrame();
+      }
    }
 
    JSROOTPainter.ObjectPainter.prototype.Zoom = function(xmin, xmax, ymin, ymax) {
@@ -1558,6 +1796,7 @@ var gStyle = {
          obj['zoom_ymin'] = ymin;
          obj['zoom_ymax'] = ymax;
       }
+      obj.original_view_changed = true;
       this.RedrawFrame();
    }
 
@@ -1678,7 +1917,7 @@ var gStyle = {
    };
 
    JSROOTPainter.createFrame = function(vis, frame) {
-      var w = vis.attr("width"), h = vis.attr("height");
+      var w = Number(vis.attr("width")), h = Number(vis.attr("height"));
       var width = w, height = h;
       var lm = w*0.12, rm = w*0.05, tm = h*0.12, bm = h*0.12;
 
@@ -1697,14 +1936,15 @@ var gStyle = {
          if (pad) {
             var xspan = width / Math.abs(pad['fX2'] - pad['fX1']);
             var yspan = height / Math.abs(pad['fY2'] - pad['fY1']);
-            px1 = (frame['fX1'] - pad['fX1']) * xspan;
-            py1 = (frame['fY1'] - pad['fY1']) * yspan;
-            px2 = (frame['fX2'] - pad['fX1']) * xspan;
-            py2 = (frame['fY2'] - pad['fY1']) * yspan;
-            if (px1 < px2) {pxl = px1; pxt = px2;}
-            else           {pxl = px2; pxt = px1;}
-            if (py1 < py2) {pyl = py1; pyt = py2;}
-            else           {pyl = py2; pyt = py1;}
+            var px1 = (frame['fX1'] - pad['fX1']) * xspan;
+            var py1 = (frame['fY1'] - pad['fY1']) * yspan;
+            var px2 = (frame['fX2'] - pad['fX1']) * xspan;
+            var py2 = (frame['fY2'] - pad['fY1']) * yspan;
+            var pxl, pxt, pyl, pyt;
+            if (px1 < px2) { pxl = px1; pxt = px2; }
+            else           { pxl = px2; pxt = px1; }
+            if (py1 < py2) { pyl = py1; pyt = py2; }
+            else           { pyl = py2; pyt = py1; }
             lm = pxl;
             bm = pyl;
             w = pxt - pxl;
@@ -1805,7 +2045,7 @@ var gStyle = {
    JSROOTPainter.Func1DPainter.prototype = Object.create( JSROOTPainter.ObjectPainter.prototype );
 
    JSROOTPainter.Func1DPainter.prototype.IsObject = function(obj) {
-      return this.tf1 == obj;
+      return this.tf1 === obj;
    }
 
    JSROOTPainter.Func1DPainter.prototype.Redraw = function()
@@ -1960,7 +2200,7 @@ var gStyle = {
 
    JSROOTPainter.Func1DPainter.prototype.DrawBins = function()
    {
-      var w = this.frame.attr("width"), h = this.frame.attr("height");
+      var w = Number(this.frame.attr("width")), h = Number(this.frame.attr("height"));
 
       this.RemoveDraw();
 
@@ -2061,7 +2301,7 @@ var gStyle = {
    JSROOTPainter.GraphPainter.prototype = Object.create( JSROOTPainter.ObjectPainter.prototype );
 
    JSROOTPainter.GraphPainter.prototype.IsObject = function(obj) {
-      return this.graph == obj;
+      return this.graph === obj;
    }
 
    JSROOTPainter.GraphPainter.prototype.Redraw = function()
@@ -2255,7 +2495,7 @@ var gStyle = {
       if (this.graph['fLineWidth'] > 32767)
          wk *= -1;
 
-      var w = this.frame.attr("width"), h = this.frame.attr("height");
+      var w = Number(this.frame.attr("width")), h = Number(this.frame.attr("height"));
 
       var ratio = w / h;
 
@@ -2484,7 +2724,7 @@ var gStyle = {
 
    JSROOTPainter.GraphPainter.prototype.DrawBins = function()
    {
-      var w = this.frame.attr("width"), h = this.frame.attr("height");
+      var w = Number(this.frame.attr("width")), h = Number(this.frame.attr("height"));
 
       this.RemoveDraw();
       this.draw_g = this.first.svg_frame.append("svg:g");
@@ -2692,11 +2932,10 @@ var gStyle = {
             .data(this.bins)
             .enter()
             .append("svg:path")
-            .attr("transform", function(d) {return "translate(" + x(d.x) + "," + y(d.y) + ")"})
+            .attr("transform", function(d) { return "translate(" + x(d.x) + " , " + y(d.y) + ")"} )
             .style("fill", filled ? root_colors[this.graph['fMarkerColor']] : "none")
             .style("stroke", root_colors[this.graph['fMarkerColor']])
             .attr("d", marker);
-
 
          if (gStyle.Tooltip > 1)
             markers
@@ -2747,93 +2986,37 @@ var gStyle = {
       return painter;
    }
 
-   JSROOTPainter.drawGrid = function(vis, histo, pad, x, y) {
-      var gridx = false, gridy = false;
-      if (pad && typeof(pad) != 'undefined') {
-         gridx = pad['fGridx'];
-         gridy = pad['fGridy'];
-      }
-      var ndivx = histo['fXaxis']['fNdivisions'];
-      var n1ax = ndivx%100;
-      var n2ax = (ndivx%10000 - n1ax)/100;
-      var n3ax = ndivx/10000;
-      var nn3x = Math.max(n3ax,1);
-      var nn2x = Math.max(n2ax,1)*nn3x;
-      var nn1x = Math.max(n1ax,1)*nn2x;
-
-      var ndivy = histo['fYaxis']['fNdivisions'];
-      var n1ay = ndivy%100;
-      var n2ay = (ndivy%10000 - n1ay)/100;
-      var n3ay = ndivy/10000;
-      var nn3y = Math.max(n3ay,1);
-      var nn2y = Math.max(n2ay,1)*nn3y;
-      var nn1y = Math.max(n1ay,1)*nn2y;
-
-      vis.selectAll(".gridLine").remove();
-
-      /* add a grid on x axis, if the option is set */
-      if (gridx) {
-         vis.selectAll("gridLine")
-            .data(x.ticks(n1ax))
-            .enter()
-            .append("svg:line")
-            .attr("class", "gridLine")
-            .attr("x1", x)
-            .attr("y1", vis.attr("height"))
-            .attr("x2", x)
-            .attr("y2", 0)
-            .style("stroke", "black")
-            .style("stroke-width", histo['fLineWidth'])
-            .style("stroke-dasharray", root_line_styles[11]);
-      }
-
-      /* add a grid on y axis, if the option is set */
-      if (gridy) {
-         vis.selectAll("gridLine")
-            .data(y.ticks(n1ay))
-            .enter()
-            .append("svg:line")
-            .attr("class", "gridLine")
-            .attr("x1", 0)
-            .attr("y1", y)
-            .attr("x2", vis.attr("width"))
-            .attr("y2", y)
-            .style("stroke", "black")
-            .style("stroke-width", histo['fLineWidth'])
-            .style("stroke-dasharray", root_line_styles[11]);
-      }
-   };
-
-
-
    // ============================================================
 
    JSROOTPainter.PavePainter = function(pave) {
       JSROOTPainter.ObjectPainter.call(this);
       this.pavetext = pave;
       this.Enabled = true;
+      this.main_rect = null;
+      this.drag_rect = null;
+      this.resize_rect = null;
    }
 
    JSROOTPainter.PavePainter.prototype = Object.create( JSROOTPainter.ObjectPainter.prototype );
 
 
    JSROOTPainter.PavePainter.prototype.IsObject = function(obj) {
-      return this.pavetext == obj;
+      return this.pavetext === obj;
    }
 
    JSROOTPainter.PavePainter.prototype.DrawPaveText = function() {
       var pavetext = this.pavetext;
       var vis = this.vis;
 
-      var i, j, lw, w = vis.attr("width"), h = vis.attr("height");
+      var j, w = Number(vis.attr("width")), h = Number(vis.attr("height"));
 
       var pos_x = pavetext['fX1NDC'] * w;
       var pos_y = (1.0 - pavetext['fY1NDC']) * h;
       var width = Math.abs(pavetext['fX2NDC'] - pavetext['fX1NDC']) * w;
       var height = Math.abs(pavetext['fY2NDC'] - pavetext['fY1NDC']) * h;
       pos_y -= height;
-      var line, nlines = pavetext['fLines'].arr.length;
-      var font_size = Math.round(height / (nlines * 1.6));
+      var nlines = pavetext['fLines'].arr.length;
+      var font_size = Math.round(height / (nlines * 1.2));
       var fcolor = root_colors[pavetext['fFillColor']];
       var lcolor = root_colors[pavetext['fLineColor']];
       var tcolor = root_colors[pavetext['fTextColor']];
@@ -2843,7 +3026,6 @@ var gStyle = {
       // 1=left adjusted, 2=centered, 3=right adjusted
       // 1=bottom adjusted, 2=centered, 3=top adjusted
       // "middle", "start", "end"
-
 
       var align = 'start', halign = Math.round(pavetext['fTextAlign']/10);
       var baseline = 'bottom', valign = pavetext['fTextAlign']%10;
@@ -2860,7 +3042,7 @@ var gStyle = {
             lmargin = pavetext['fMargin'] * width;
             break;
          case 2:
-            lmargin = width/2;
+            lmargin = width / 2;
             break;
          case 3:
             lmargin = width - (pavetext['fMargin'] * width);
@@ -2873,34 +3055,73 @@ var gStyle = {
       var fontDetails = getFontDetails(root_fonts[Math.floor(pavetext['fTextFont']/10)]);
       var lwidth = pavetext['fBorderSize'] ? pavetext['fBorderSize'] : 0;
 
-      this.draw_g = vis.append("svg:g")
+      if (this.main_rect == null) {
+         this.main_rect = this.vis.append("rect");
+      } else {
+         // force main rect of the stat box be last item in the primitives to kept it on the top
+         var prnt = this.main_rect.node().parentNode;
+         prnt.removeChild(this.main_rect.node());
+         prnt.appendChild(this.main_rect.node());
+      }
+
+      this.main_rect
          .attr("x", pos_x)
          .attr("y", pos_y)
-         .attr("width", width)
-         .attr("height", height)
-         .attr("transform", "translate(" + pos_x + "," + pos_y + ")");
-
-      this.draw_g.append("svg:rect")
-         .attr("x", 0)
-         .attr("y", 0)
          .attr("height", height)
          .attr("width", width)
          .attr("fill", fcolor)
          .style("stroke-width", lwidth ? 1 : 0)
          .style("stroke", lcolor);
 
-      var first_stat = 0;
-      var num_cols = 0;
-      var lw = 0;
-      var draw_font_size = font_size;
+      var pthis = this;
+
+      this.AddDrag("stat", this.main_rect, {
+         move: function(x, y, dx, dy) {
+            pthis.draw_g.attr("transform", "translate(" + x + "," + y + ")");
+
+            pthis.pavetext['fX1NDC'] += dx / Number(pthis.vis.attr("width"));
+            pthis.pavetext['fX2NDC'] += dx / Number(pthis.vis.attr("width"));
+            pthis.pavetext['fY1NDC'] -= dy / Number(pthis.vis.attr("height"));
+            pthis.pavetext['fY2NDC'] -= dy / Number(pthis.vis.attr("height"));
+         },
+         resize: function(width, height) {
+            pthis.pavetext['fX2NDC'] = pthis.pavetext['fX1NDC'] + width/Number(pthis.vis.attr("width"));
+            pthis.pavetext['fY1NDC'] = pthis.pavetext['fY2NDC'] - height/Number(pthis.vis.attr("height"));
+
+            pthis.RemoveDraw();
+            pthis.DrawPaveText();
+         }
+      });
+
+      // container to just to recalculate coordinates
+      this.draw_g =
+         vis.append("svg:g").attr("transform", "translate(" + pos_x + "," + pos_y + ")");
+
+      var first_stat = 0, num_cols = 0;
+      var maxlw = 0;
+      var lines = new Array;
+
+      // adjust font size
+      for (j=0; j<nlines; ++j) {
+         var line = JSROOTPainter.translateLaTeX(pavetext['fLines'].arr[j]['fTitle']);
+
+         lines.push(line);
+
+         var lw = lmargin + JSROOTPainter.stringWidth(vis, line, font_size, fontDetails);
+         if (lw > maxlw) maxlw = lw;
+
+         if ((j==0) || (line.indexOf('|')<0)) continue;
+         if (first_stat === 0) first_stat = j;
+         var parts = line.split("|");
+         if (parts.length>num_cols) num_cols = parts.length;
+      }
+
+      if (maxlw > width)
+        font_size = font_size * (width / maxlw);
+
+      var stepy = height / nlines;
 
       if (nlines == 1) {
-         line = JSROOTPainter.translateLaTeX(pavetext['fLines'].arr[0]['fTitle']);
-         lw = lmargin + stringWidth(vis, line, fontDetails['name'], fontDetails['weight'],
-                                    font_size, fontDetails['style']);
-         if (lw > width)
-            draw_font_size = font_size * 0.97 * (width / lw);
-
          this.draw_g.append("text")
             .attr("text-anchor", align)
             .attr("x", lmargin)
@@ -2908,41 +3129,33 @@ var gStyle = {
             .attr("font-family", fontDetails['name'])
             .attr("font-weight", fontDetails['weight'])
             .attr("font-style", fontDetails['style'])
-            .attr("font-size", draw_font_size)
+            .attr("font-size", font_size)
             .attr("fill", tcolor)
-            .text(line);
-
-         draw_font_size = font_size;
+            .text(lines[0]);
       }
       else {
 
          for (j=0; j<nlines; ++j) {
             var jcolor = root_colors[pavetext['fLines'].arr[j]['fTextColor']];
             if (pavetext['fLines'].arr[j]['fTextColor'] == 0)  jcolor = tcolor;
-            line = JSROOTPainter.translateLaTeX(pavetext['fLines'].arr[j]['fTitle']);
-            lw = lmargin + stringWidth(vis, line, fontDetails['name'], fontDetails['weight'],
-                                       font_size, fontDetails['style']);
-            if (lw > width)
-               draw_font_size = font_size * 0.96 * (width / lw);
+            var posy = j * stepy + font_size;
+
             if (pavetext['_typename'] == 'JSROOTIO.TPaveStats') {
-               var posy = (j == 0) ? (font_size * 1.2) :
-                                      font_size * (0.05 + (j+1) * 1.45);
                if ((first_stat>0) && (j>=first_stat)) {
-                  posy -= draw_font_size*0.3; // dut to middle allignment
-                  var parts = line.split("|");
+                  var parts = lines[j].split("|");
                   for (var n=0;n<parts.length;n++)
                      this.draw_g.append("text")
                      .attr("text-anchor", "middle")
                      .attr("x",  width*(n+0.5)/num_cols)
-                     .attr("y", posy + font_size*0.6)
+                     .attr("y", posy)
                      .attr("font-family", fontDetails['name'])
                      .attr("font-weight", fontDetails['weight'])
                      .attr("font-style", fontDetails['style'])
-                     .attr("font-size", draw_font_size)
+                     .attr("font-size", font_size)
                      .attr("fill", jcolor)
                      .text(parts[n]);
                } else
-               if ((j==0) || (line.indexOf('=')<0)) {
+               if ((j==0) || (lines[j].indexOf('=')<0)) {
                   this.draw_g.append("text")
                      .attr("text-anchor", (j == 0) ? "middle" : "start")
                      .attr("x", ((j==0) ? width/2 : pavetext['fMargin'] * width))
@@ -2950,11 +3163,11 @@ var gStyle = {
                      .attr("font-family", fontDetails['name'])
                      .attr("font-weight", fontDetails['weight'])
                      .attr("font-style", fontDetails['style'])
-                     .attr("font-size", draw_font_size)
+                     .attr("font-size", font_size)
                      .attr("fill", jcolor)
-                     .text(line);
+                     .text(lines[j]);
                } else {
-                  var parts = line.split("=");
+                  var parts = lines[j].split("=");
                   for (var n=0;n<2;n++)
                      this.draw_g.append("text")
                      .attr("text-anchor", (n==0) ? "start" : "end")
@@ -2963,7 +3176,7 @@ var gStyle = {
                      .attr("font-family", fontDetails['name'])
                      .attr("font-weight", fontDetails['weight'])
                      .attr("font-style", fontDetails['style'])
-                     .attr("font-size", draw_font_size)
+                     .attr("font-size", font_size)
                      .attr("fill", jcolor)
                      .text(parts[n]);
                }
@@ -2971,49 +3184,47 @@ var gStyle = {
                this.draw_g.append("text")
                   .attr("text-anchor", "start")
                   .attr("x", lmargin)
-                  .attr("y", (j+1) * (font_size * 1.4))
+                  .attr("y", posy)
                   .attr("font-family", fontDetails['name'])
                   .attr("font-weight", fontDetails['weight'])
                   .attr("font-style", fontDetails['style'])
-                  .attr("font-size", draw_font_size)
+                  .attr("font-size", font_size)
                   .attr("fill", jcolor)
-                  .text(line);
+                  .text(lines[j]);
             }
-            draw_font_size = font_size;
          }
       }
 
-      if (pavetext['fBorderSize'] && pavetext['_typename'] == 'JSROOTIO.TPaveStats') {
+      if (pavetext['fBorderSize'] && (pavetext['_typename'] == 'JSROOTIO.TPaveStats')) {
          this.draw_g.append("svg:line")
             .attr("class", "pavedraw")
             .attr("x1", 0)
-            .attr("y1", font_size * 1.6)
+            .attr("y1", stepy)
             .attr("x2", width)
-            .attr("y2", font_size * 1.6)
+            .attr("y2", stepy)
             .style("stroke", lcolor)
             .style("stroke-width", lwidth ? 1 : 'none');
       }
 
       if ((first_stat > 0) && (num_cols > 1)) {
-         var yy = (1.4 * first_stat + 0.6) * font_size;
 
-         this.draw_g.append("svg:line")
-         .attr("x1", 0)
-         .attr("y1", yy)
-         .attr("x2", width)
-         .attr("y2", yy)
-         .style("stroke", lcolor)
-         .style("stroke-width", lwidth ? 1 : 'none');
+         for (var nrow = first_stat; nrow < nlines; nrow++)
+            this.draw_g.append("svg:line")
+              .attr("x1", 0)
+              .attr("y1", nrow*stepy)
+              .attr("x2", width)
+              .attr("y2", nrow*stepy)
+              .style("stroke", lcolor)
+              .style("stroke-width", lwidth ? 1 : 'none');
 
          for (var ncol = 0; ncol<num_cols-1; ncol++)
             this.draw_g.append("svg:line")
             .attr("x1", width/num_cols*(ncol+1))
-            .attr("y1", yy)
+            .attr("y1", first_stat * stepy)
             .attr("x2", width/num_cols*(ncol+1) )
             .attr("y2", height)
             .style("stroke", lcolor)
             .style("stroke-width", lwidth ? 1 : 'none');
-
       }
 
       if (lwidth && lwidth > 1) {
@@ -3032,7 +3243,7 @@ var gStyle = {
             .style("stroke", lcolor)
             .style("stroke-width", lwidth);
       }
-   };
+   }
 
    JSROOTPainter.PavePainter.prototype.AddLine = function(txt) {
       this.pavetext['fLines'].arr.push( {'fTitle': txt, "fTextColor": 1} );
@@ -3068,14 +3279,18 @@ var gStyle = {
       this.RemoveDraw();
 
       // if pavetext artificially disabled, do not redraw it
-      if (!this.Enabled) return;
+      if (!this.Enabled) {
+         this.RemoveDrag("stat");
+         if (this.main_rect) { this.main_rect.remove(); this.main_rect = null; }
+         return;
+      }
 
-      // fill statistic
+      // recalculate statistic when manipulation with view were done
+      // if (this.first.original_view_changed)
       this.FillStatistic();
 
       this.DrawPaveText();
    }
-
 
    JSROOTPainter.DrawPaveText = function(vis, pavetext)
    {
@@ -3091,7 +3306,10 @@ var gStyle = {
 
       painter.SetFrame(vis, true);
 
-      if ('_AutoCreated' in pavetext) painter.FillStatistic();
+
+      // refill statistic in any case
+      // if ('_AutoCreated' in pavetext)
+      painter.FillStatistic();
 
       painter.DrawPaveText();
 
@@ -3111,7 +3329,7 @@ var gStyle = {
 
 
    JSROOTPainter.ColzPalettePainter.prototype.IsObject = function(obj) {
-      return this.palette == obj;
+      return this.palette === obj;
    }
 
    JSROOTPainter.ColzPalettePainter.prototype.DrawPalette = function() {
@@ -3121,7 +3339,7 @@ var gStyle = {
       var minbin = this.first.minbin;
       var maxbin = this.first.maxbin;
 
-      var width = vis.attr("width"), height = vis.attr("height");
+      var width = Number(vis.attr("width")), height = Number(vis.attr("height"));
 
       var pos_x = palette['fX1NDC'] * width;
       var pos_y = height - palette['fY1NDC'] * height;
@@ -3208,6 +3426,46 @@ var gStyle = {
                .attr("font-size", axisTitleFontSize )
                .text(title);
       }
+
+      if (this.main_rect == null) {
+         this.main_rect = this.vis.append("rect")
+                              .attr("id","colz_move_rect")
+                              .style("opacity", "0");
+      } else {
+         // ensure that all color drawing inserted before move rect
+         var prnt = this.main_rect.node().parentNode;
+         prnt.removeChild(this.draw_g.node());
+         prnt.insertBefore(this.draw_g.node(), this.main_rect.node());
+      }
+
+      this.main_rect
+         .attr("x", pos_x)
+         .attr("y", pos_y)
+         .attr("width", s_width)
+         .attr("height", s_height);
+
+      var pthis = this;
+
+      this.AddDrag("colz", this.main_rect, {
+         move: function(x, y, dx, dy) {
+
+            pthis.draw_g.attr("transform", "translate(" + x + "," + y + ")");
+
+            pthis.palette['fX1NDC'] += dx / Number(pthis.vis.attr("width"));
+            pthis.palette['fX2NDC'] += dx / Number(pthis.vis.attr("width"));
+            pthis.palette['fY1NDC'] -= dy / Number(pthis.vis.attr("height"));
+            pthis.palette['fY2NDC'] -= dy / Number(pthis.vis.attr("height"));
+         },
+         resize: function(width, height) {
+            pthis.palette['fX2NDC'] = pthis.palette['fX1NDC'] + width/Number(pthis.vis.attr("width"));
+            pthis.palette['fY1NDC'] = pthis.palette['fY2NDC'] - height/Number(pthis.vis.attr("height"));
+
+            pthis.RemoveDraw();
+            pthis.DrawPalette();
+         }
+      });
+
+
    }
 
    JSROOTPainter.ColzPalettePainter.prototype.Redraw = function() {
@@ -3215,7 +3473,11 @@ var gStyle = {
       this.RemoveDraw();
 
       // if palette artificially disabled, do not redraw it
-      if (!this.Enabled) return;
+      if (!this.Enabled) {
+         this.RemoveDrag("colz");
+         if (this.main_rect) { this.main_rect.remove(); this.main_rect = null; }
+         return;
+      }
 
       this.DrawPalette();
    }
@@ -3240,9 +3502,8 @@ var gStyle = {
    JSROOTPainter.HistPainter.prototype = Object.create( JSROOTPainter.ObjectPainter.prototype );
 
 
-
    JSROOTPainter.HistPainter.prototype.IsObject = function(obj) {
-      return this.histo == obj;
+      return this.histo === obj;
    }
 
    JSROOTPainter.HistPainter.prototype.Dimension = function() {
@@ -3320,7 +3581,7 @@ var gStyle = {
    JSROOTPainter.HistPainter.prototype.CreateXY = function()
    {
       // here we create x,y objects which maps our physical coordnates into pixels
-      // while only first painter really need such object, all others just copy it
+      // while only first painter really need such object, all others just reuse it
 
       if (this.first) {
          this['x'] = this.first['x'];
@@ -3328,33 +3589,44 @@ var gStyle = {
          return;
       }
 
-      // special case used for drawing multiple graphs in the same frame
-      var w = this.frame.attr("width"), h = this.frame.attr("height");
+      var w = Number(this.frame.attr("width")), h = Number(this.frame.attr("height"));
+
+      this['scale_xmin'] = this.xmin;
+      this['scale_xmax'] = this.xmax;
+      if (this.zoom_xmin != this.zoom_xmax) {
+         this['scale_xmin'] = this.zoom_xmin;
+         this['scale_xmax'] = this.zoom_xmax;
+      }
 
       if (this.options.Logx) {
-         this.xlogmax = this.xmax <= 0 ? 1 : this.xmax;
-         this.xlogmin = this.xmin <= 0 ? this.xlogmax * 0.0001 : this.xmin;
-         this['x'] = d3.scale.log().domain([this.xlogmin, this.xlogmax]).range([0, w]);
+         if (this.scale_xmax <= 0) this.scale_xmax = 0;
+         if ((this.scale_xmin <= 0) || (this.scale_xmin >= this.scale_xmax)) this.scale_xmin = this.scale_xmax * 0.0001;
+         this['x'] = d3.scale.log().domain([this.scale_xmin, this.scale_xmax]).range([0, w]).clamp(true);
+      } else {
+         this['x'] = d3.scale.linear().domain([this.scale_xmin, this.scale_xmax]).range([0, w]);
       }
-      else
-         this['x'] = d3.scale.linear().domain([this.xmin,this.xmax]).range([0, w]);
 
-      if (this.zoom_xmin != this.zoom_xmax)
-         this.x.domain([this.zoom_xmin, this.zoom_xmax]);
+      this['scale_ymin'] = this.ymin;
+      this['scale_ymax'] = this.ymax;
 
-      // $("#report").append("<br> ymin " + this.ymin + "  ymax " + this.ymax);
+      if (this.zoom_ypad) {
+         if (this.histo.fMinimum != -1111) this.zoom_ymin = this.histo.fMinimum;
+         if (this.histo.fMaximum != -1111) this.zoom_ymax = this.histo.fMaximum;
+         this['zoom_ypad'] = false;
+      }
+
+      if (this.zoom_ymin != this.zoom_ymax) {
+         this['scale_ymin'] = this.zoom_ymin;
+         this['scale_ymax'] = this.zoom_ymax;
+      }
 
       if (this.options.Logy) {
-         this.ylogmax = this.ymax <= 0 ? 1 : this.ymax;
-         this.ylogmin = this.ymin <= 0 ? this.ylogmax * 0.0001 : this.ymin;
-         this['y'] = d3.scale.log().domain([this.ylogmin, this.ylogmax]).range([h, 0]);
-      } else
-         this['y'] = d3.scale.linear().domain([this.ymin, this.ymax]).range([h, 0]);
-
-      if (this.zoom_ymin!=this.zoom_ymax)
-         this.y.domain([this.zoom_ymin, this.zoom_ymax]);
-
-      // console.log("creating X-Y done");
+         if (this.scale_ymax<=0) this.scale_ymax = 1;
+         if ((this.scale_ymin<=0) || (this.scale_ymin>=this.scale_ymax)) this.scale_ymin = 0.0001 * this.scale_ymax;
+         this['y'] = d3.scale.log().domain([this.scale_ymin, this.scale_ymax]).range([h, 0]).clamp(true);
+      } else {
+         this['y'] = d3.scale.linear().domain([this.scale_ymin, this.scale_ymax]).range([h, 0]);
+      }
    }
 
    JSROOTPainter.HistPainter.prototype.CountStat = function()
@@ -3366,39 +3638,19 @@ var gStyle = {
       // grid can only be drawn by first painter
       if (this.first) return;
 
-      var ndivx = this.histo['fXaxis']['fNdivisions'];
-      var n1ax = ndivx%100;
-      var n2ax = (ndivx%10000 - n1ax)/100;
-      var n3ax = ndivx/10000;
-      var nn3x = Math.max(n3ax,1);
-      var nn2x = Math.max(n2ax,1)*nn3x;
-      var nn1x = Math.max(n1ax,1)*nn2x;
-
-      var ndivy = this.histo['fYaxis']['fNdivisions'];
-      var n1ay = ndivy%100;
-      var n2ay = (ndivy%10000 - n1ay)/100;
-      var n3ay = ndivy/10000;
-      var nn3y = Math.max(n3ay,1);
-      var nn2y = Math.max(n2ay,1)*nn3y;
-      var nn1y = Math.max(n1ay,1)*nn2y;
-
-      // $("#report").append(" draw grids");
-
       this.frame.selectAll(".gridLine").remove();
       /* add a grid on x axis, if the option is set */
 
       // add a grid on x axis, if the option is set
       if (this.show_gridx) {
 
-         // $("#report").append(" draw grid x:" + n1ax);
-
          this.frame.selectAll("gridLine")
-         .data(this.x.ticks(n1ax))
+         .data(this.x.ticks(this.x_nticks))
          .enter()
          .append("svg:line")
          .attr("class", "gridLine")
          .attr("x1", this.x)
-         .attr("y1", this.frame.attr("height"))
+         .attr("y1", Number(this.frame.attr("height")))
          .attr("x2", this.x)
          .attr("y2", 0)
          .style("stroke", "black")
@@ -3409,16 +3661,14 @@ var gStyle = {
       // add a grid on y axis, if the option is set
       if (this.show_gridy) {
 
-         // $("#report").append(" draw grid y:" + n1ay);
-
          this.frame.selectAll("gridLine")
-         .data(this.y.ticks(n1ay))
+         .data(this.y.ticks(this.y_nticks))
          .enter()
          .append("svg:line")
          .attr("class", "gridLine")
          .attr("x1", 0)
          .attr("y1", this.y)
-         .attr("x2", this.frame.attr("width"))
+         .attr("x2", Number(this.frame.attr("width")))
          .attr("y2", this.y)
          .style("stroke", "black")
          .style("stroke-width", this.histo['fLineWidth'])
@@ -3460,7 +3710,10 @@ var gStyle = {
 
       if (this.first) return;
 
-      var w = this.frame.attr("width"), h = this.frame.attr("height");
+      this['x_axis_sub'] = null;
+      this['y_axis_sub'] = null;
+
+      var w = Number(this.frame.attr("width")), h = Number(this.frame.attr("height"));
       var noexpx = this.histo['fXaxis'].TestBit(EAxisBits.kNoExponent);
       var noexpy = this.histo['fYaxis'].TestBit(EAxisBits.kNoExponent);
       var moreloglabelsx = this.histo['fXaxis'].TestBit(EAxisBits.kMoreLogLabels);
@@ -3470,13 +3723,13 @@ var gStyle = {
       if (this.histo['fYaxis']['fXmax'] < 100 && this.histo['fYaxis']['fXmax']/this.histo['fYaxis']['fXmin'] < 100) noexpy = true;
 
       var ndivx = this.histo['fXaxis']['fNdivisions'];
-      var n1ax = ndivx%100;
-      var n2ax = (ndivx%10000 - n1ax)/100;
+      this['x_nticks'] = ndivx%100; // used also to draw grids
+      var n2ax = (ndivx%10000 - this.x_nticks)/100;
       var n3ax = ndivx/10000;
 
       var ndivy = this.histo['fYaxis']['fNdivisions'];
-      var n1ay = ndivy%100;
-      var n2ay = (ndivy%10000 - n1ay)/100;
+      this['y_nticks'] = ndivy%100; // used also to draw grids
+      var n2ay = (ndivy%10000 - this.y_nticks)/100;
       var n3ay = ndivy/10000;
 
       /* X-axis label */
@@ -3540,19 +3793,15 @@ var gStyle = {
        */
       var xrange = this.xmax - this.xmin;
       if (this.histo['fXaxis']['fTimeDisplay']) {
-         if (n1ax > 8) n1ax = 8;
+         if (this.x_nticks > 8) this.x_nticks = 8;
          var timeformatx = JSROOTPainter.getTimeFormat(this.histo['fXaxis']);
 
          this['timeoffsetx'] = JSROOTPainter.getTimeOffset(this.histo['fXaxis']);
 
-         if (timeformatx.length == 0) {
-            if (xrange>315360000) timeformatx = "%Y"; else
-            if (xrange>24192000)  timeformatx = "%Y/%m"; else
-            if (xrange>864000)    timeformatx = "%Y/%m/%d"; else
-            if (xrange>36000)     timeformatx = "%Hh%M"; else
-            if (xrange>600)       timeformatx = "%Hh%Mm%S"; else
-                                  timeformatx = "%Mm%S";
-         }
+         var scale_xrange = this.scale_xmax - this.scale_xmin;
+
+         if ((timeformatx.length == 0) || (scale_xrange < 0.1*xrange))
+            timeformatx = JSROOTPainter.chooseTimeFormat(scale_xrange, this.x_nticks);
 
          this['dfx'] = d3.time.format(timeformatx);
 
@@ -3562,7 +3811,7 @@ var gStyle = {
              .tickPadding(xAxisLabelOffset)
              .tickSize(-xDivLength, -xDivLength/2, -xDivLength/4)
              .tickFormat(function(d) { return pthis.dfx(new Date(pthis.timeoffsetx + d*1000)); })
-             .ticks(n1ax);
+             .ticks(this.x_nticks);
       }
       else if (this.options.Logx) {
          this['x_axis'] = d3.svg.axis()
@@ -3600,25 +3849,21 @@ var gStyle = {
                 // avoid rounding problems around 0
                 if ((Math.abs(d)<1e-14) && (Math.abs(xrange)>1e-5)) d = 0;
                 return parseFloat(d.toPrecision(12));
-             })
-            .ticks(n1ax);
+            })
+            .ticks(this.x_nticks);
       }
 
       var yrange = this.ymax - this.ymin;
       if (this.histo['fYaxis']['fTimeDisplay']) {
-         if (n1ay > 8) n1ay = 8;
+         if (this.y_nticks > 8) this.y_nticks = 8;
          var timeformaty = JSROOTPainter.getTimeFormat(this.histo['fYaxis']);
 
          this['timeoffsety'] = JSROOTPainter.getTimeOffset(this.histo['fYaxis']);
 
-         if (timeformaty.length == 0) {
-            if (yrange>315360000) timeformaty = "%Y"; else
-            if (yrange>24192000)  timeformaty = "%Y/%m"; else
-            if (yrange>864000)    timeformaty = "%Y/%m/%d"; else
-            if (yrange>36000)     timeformaty = "%Hh%M"; else
-            if (yrange>600)       timeformaty = "%Hh%Mm%S"; else
-                                  timeformaty = "%Mm%S";
-         }
+         var scale_yrange = this.scale_ymax - this.scale_ymin;
+
+         if ((timeformaty.length == 0) || (scale_yrange < 0.1*yrange))
+            timeformaty = JSROOTPainter.chooseTimeFormat(scale_yrange, this.y_nticks);
 
          this['dfy'] = d3.time.format(timeformaty);
 
@@ -3628,7 +3873,7 @@ var gStyle = {
                .tickPadding(yAxisLabelOffset)
                .tickSize(-yDivLength, -yDivLength/2, -yDivLength/4)
                .tickFormat(function(d) { return pthis.dfy(new Date(pthis.timeoffsety + d * 1000)); })
-               .ticks(n1ay);
+               .ticks(this.y_nticks);
       }
       else if (this.options.Logy) {
          this['y_axis'] = d3.svg.axis()
@@ -3655,7 +3900,7 @@ var gStyle = {
                }});
       }
       else {
-         if (n1ay >= 10) n1ay -= 2;
+         if (this.y_nticks >= 10) this.y_nticks -= 2;
          this['y_axis'] = d3.svg.axis()
            .scale(this.y)
            .orient("left")
@@ -3666,17 +3911,54 @@ var gStyle = {
               if ((Math.abs(d)<1e-14) && (Math.abs(yrange)>1e-5)) d = 0;
               return parseFloat(d.toPrecision(12));
            })
-           .ticks(n1ay);
+           .ticks(this.y_nticks);
+
       }
 
+      // this is additional ticks, required in d3.v3
+      if (JSROOTPainter.d3v3 && (n2ax>0) && !this.options.Logx)
+        this['x_axis_sub'] = d3.svg.axis()
+         .scale(this.x)
+         .orient("bottom")
+         .tickPadding(xAxisLabelOffset)
+         .innerTickSize(-xDivLength/2)
+         .tickFormat(function(d) { return; })
+         .ticks(this.x_nticks*n2ax);
+
+      // this is additional ticks, required in d3.v3
+      if (JSROOTPainter.d3v3 && (n2ay>0) && !this.options.Logy)
+         this['y_axis_sub'] = d3.svg.axis()
+          .scale(this.y)
+          .orient("left")
+          .tickPadding(yAxisLabelOffset)
+          .innerTickSize(-yDivLength/2)
+          .tickFormat(function(d) { return; })
+          .ticks(this.y_nticks*n2ay);
+
+
       if ('xax' in this) this['xax'].remove();
-      this['xax'] = this.frame.append("svg:g").attr("class", "xaxis");
-      this.xax.attr("transform", "translate(0," + h + ")")
-              .call(this.x_axis);
+      if ('xaxsub' in this) this['xaxsub'].remove();
+
+      this['xax'] =
+         this.frame.append("svg:g")
+                   .attr("class", "xaxis")
+                   .attr("transform", "translate(0," + h + ")")
+                   .call(this.x_axis);
+
+      if (JSROOTPainter.d3v3 && this['x_axis_sub'])
+         this['xaxsub'] =
+            this.frame.append("svg:g")
+                      .attr("class", "xaxis")
+                      .attr("transform", "translate(0," + h + ")")
+                      .call(this.x_axis_sub);
 
       if ('yax' in this) this['yax'].remove();
-      this['yax'] = this.frame.append("svg:g").attr("class", "yaxis");
-      this.yax.call(this.y_axis);
+      if ('yaxsub' in this) this['yaxsub'].remove();
+
+      this['yax'] = this.frame.append("svg:g").attr("class", "yaxis").call(this.y_axis);
+
+      if (JSROOTPainter.d3v3 && this['y_axis_sub'])
+         this['yaxsub'] = this.frame.append("svg:g").attr("class", "yaxis").call(this.y_axis_sub);
 
       var xAxisLabelFontDetails = getFontDetails(root_fonts[Math.floor(this.histo['fXaxis']['fLabelFont']/10)]);
       var yAxisLabelFontDetails = getFontDetails(root_fonts[Math.floor(this.histo['fXaxis']['fLabelFont']/10)]);
@@ -3721,27 +4003,42 @@ var gStyle = {
 
 
    JSROOTPainter.HistPainter.prototype.DrawTitle = function() {
-      var w = this.vis.attr("width"), h = this.vis.attr("height");
+      var w = Number(this.vis.attr("width")), h = Number(this.vis.attr("height"));
       var font_size = Math.round(0.050 * h);
       var l_title = JSROOTPainter.translateLaTeX(this.histo['fTitle']);
 
       if (!this.pad || typeof(this.pad) == 'undefined') {
-         if (!('draw_title' in this))
-            this['draw_title'] = this.vis.append("text").attr("class", "title");
 
-         this.draw_title
-            .attr("text-anchor", "middle")
-            .attr("x", w/2)
-            .attr("y", 1 + font_size /*0.07 * this.vis.attr("height")*/)
-            .attr("font-family", "Arial")
-            .attr("font-size", font_size)
-            .text(l_title);
+         if (!('draw_title' in this))
+            this['draw_title'] =
+               this.vis.append("text")
+                .attr("class", "title")
+                .attr("text-anchor", "middle")
+                .attr("x", w/2)
+                .attr("y", 1 + font_size /* 0.07*h */)
+                .attr("font-family", "Arial")
+                .attr("font-size", font_size);
+
+         this.draw_title.text(l_title);
+
+         // console.log("title height = " + this.draw_title.node().getBBox().height + "  font size = " + font_size);
+
+         var pthis = this;
+
+         this.AddDrag("title", this.draw_title, {
+            move: function(x, y) {
+               // pthis.draw_title.attr("x",x).attr("y", y);
+            },
+            resize: function(width, height) {
+               font_size = height*0.8;
+               pthis.draw_title.attr("font-size", font_size);
+            }
+         });
+
       }
    }
 
    JSROOTPainter.HistPainter.prototype.ToggleStat = function() {
-
-      // $("#report").append("HistPainter.prototype.ToggleStat");
 
       var stat = this.FindStat();
 
@@ -3755,17 +4052,17 @@ var gStyle = {
          return;
       }
 
-      var painter = this.FindPainterFor(stat);
-      if (painter == null) {
+      var statpainter = this.FindPainterFor(stat);
+      if (statpainter == null) {
          alert("Did not found painter for existing stat??");
          return;
       }
 
-      painter.Enabled = !painter.Enabled;
+      statpainter.Enabled = !statpainter.Enabled;
 
       // when stat box is drawed, it always can be draw individualy while it should be last
       // for colz RedrawFrame is used
-      painter.Redraw();
+      statpainter.Redraw();
    }
 
    JSROOTPainter.HistPainter.prototype.GetSelectIndex = function(axis,size,add) {
@@ -3906,8 +4203,7 @@ var gStyle = {
 
    JSROOTPainter.HistPainter.prototype.DrawFunctions = function() {
 
-      /// draw statistics box & other TPaveTexts, which are belongs to histogram
-
+      // draw statistics box & other TPaveTexts, which are belongs to histogram
       // should be called once to create all painters, which are than updated separately
 
       if (!('fFunctions' in this.histo)) return;
@@ -3944,7 +4240,7 @@ var gStyle = {
             funcpainter.Enabled = (this.options.Zscale > 0) && (this.options.Color>0);
          }
 
-         // we do it to preserve oder in which objects are drawn
+         // we do it to preserve order in which objects are drawn
          // therefore we need to guarantee that painters are in the same order
          if (funcpainter!=null) {
             lastpainter.PlacePainterAfterMe(funcpainter);
@@ -3954,16 +4250,13 @@ var gStyle = {
    }
 
    JSROOTPainter.HistPainter.prototype.Redraw = function() {
-      //if (console) console.time("Redraw");
       this.CreateXY();
       this.CountStat();
-      this.DrawGrids();
       this.DrawAxes();
+      this.DrawGrids();
       this.DrawBins();
       this.DrawTitle();
       this.DrawFunctions();
-//    if (console) console.timeEnd("Redraw");
-
    }
 
    JSROOTPainter.HistPainter.prototype.AddInteractive = function() {
@@ -3972,7 +4265,7 @@ var gStyle = {
 
 //      if (!this.draw_content) return;
 
-      var width = this.frame.attr("width"), height = this.frame.attr("height");
+      var width = Number(this.frame.attr("width")), height = Number(this.frame.attr("height"));
       var e, origin, curr = null, rect = null;
       var lasttouch = new Date(0);
 
@@ -4052,39 +4345,12 @@ var gStyle = {
 
          if (arr.length != 2) return;
 
-         // $("#report").append("<br> double-touch temp_id");
-
          d3.event.preventDefault();
 
          closeAllExtras();
 
          var pnt1 = arr[0];
          var pnt2 = arr[1];
-
-         /*
-         $("#report").append("<br> first  x:" + pnt1[0].toFixed(1) + "  y:"+pnt1[1].toFixed(1));
-         $("#report").append("<br> second x:" + pnt2[0].toFixed(1) + "  y:"+pnt2[1].toFixed(1));
-         $("#report").append("<br> height = " + height + "  width = " + width);
-
-         var abc = d3.touches(document.getElementById("temp_id"));
-         if (abc) {
-            $("#report").append("<br> abc[0] x:" + abc[0][0].toFixed(1) + "  y:"+abc[0][1].toFixed(1));
-            $("#report").append("<br> abc[1] x:" + abc[1][0].toFixed(1) + "  y:"+abc[1][1].toFixed(1));
-         } else {
-            $("#report").append("<br>abc fail");
-         }
-         */
-
-         /*
-         if (origin[0] < 0) {
-            $("#report").append("<br> Start only Y");
-         } else
-         if (origin[1] > height) {
-            $("#report").append("<br> Start only X");
-         } else {
-            $("#report").append("<br> Start  X and Y");
-         }
-         */
 
          curr = new Array; // minimum
          origin = new Array; // maximum
@@ -4115,15 +4381,13 @@ var gStyle = {
          rect = pthis.frame
                  .append("rect")
                  .attr("class", "zoom")
-                 .attr("id", "zoom_rect")
+                 .attr("id", "zoomRect")
                  .attr("x", curr[0])
                  .attr("y", curr[1])
                  .attr("width", origin[0] - curr[0])
                  .attr("height", origin[1] - curr[1]);
 
          // pthis.frame.on("dblclick", unZoom);
-
-//         $("#report").append("<br> Start select x:" + origin[0] + "  y:" + origin[1]);
 
          d3.select(window)
             .on("touchmove.zoomRect", moveTouchSel)
@@ -4174,7 +4438,7 @@ var gStyle = {
          if (zoom_kind<100) return;
 
          d3.event.preventDefault();
-         d3.select(window).on("touchmove.zoomRect", null).on("touchend.zoomRect", null).on("touchcancel.zoomRect", null);;
+         d3.select(window).on("touchmove.zoomRect", null).on("touchend.zoomRect", null).on("touchcancel.zoomRect", null);
          d3.select("body").classed("noselect", false);
 
          var xmin=0, xmax = 0, ymin = 0, ymax = 0;
@@ -4331,16 +4595,21 @@ var gStyle = {
          // ignore context menu when touches zooming is ongoing
          if (zoom_kind>100) return;
 
+         var ctx_menu = document.getElementById('root_ctx_menu');
+         if(ctx_menu) ctx_menu.parentNode.removeChild(ctx_menu);
 
-         $("#dialog").empty();
+         ctx_menu = document.createElement('div');
+         ctx_menu.setAttribute('id', 'root_ctx_menu');
+         pthis.vis.node().parentNode.appendChild(ctx_menu);
 
-         pthis.FillContextMenu($("#dialog"));
+         $("#root_ctx_menu").empty();
 
-         $("#dialog").data("Painter", pthis);
-         //$("#dialog").data("Frame", vis);
-         $("#dialog").data("shown", true);
+         pthis.FillContextMenu($("#root_ctx_menu"));
 
-         $("#dialog").dialog({
+         $("#root_ctx_menu").data("Painter", pthis);
+         $("#root_ctx_menu").data("shown", true);
+
+         $("#root_ctx_menu").dialog({
             title: pthis.histo['fName'],
             closeOnEscape: true,
             autoOpen: false,
@@ -4351,13 +4620,15 @@ var gStyle = {
             position : {my: "left+3 top+3", of: d3.event, collision:"fit"}
          });
 
-         $( "#dialog" ).dialog("open");
+         $("#root_ctx_menu").dialog("open");
        }
 
       function closeAllExtras() {
-         if ($("#dialog").data("shown")) {
-            $( "#dialog" ).dialog("close");
-            $( "#dialog" ).empty();
+         var x = document.getElementById('root_ctx_menu');
+         if(x) {
+            $("#root_ctx_menu").dialog("close");
+            $("#root_ctx_menu").empty();
+            x.parentNode.removeChild(x);
          }
          closeTooltip(true);
          if (rect != null) { rect.remove(); rect = null; }
@@ -4409,7 +4680,7 @@ var gStyle = {
          rect = pthis.frame
                  .append("rect")
                  .attr("class", "zoom")
-                 .attr("id", "zoom_rect");
+                 .attr("id", "zoomRect");
 
          pthis.frame.on("dblclick", unZoom);
 
@@ -4582,14 +4853,14 @@ var gStyle = {
       for (var i=0;i<this.nbinsx;++i) {
          var value = this.histo.getBinContent(i+1);
          hsum += value;
-         if (value < hmin) hmin = value;
+         if (value < hmin) hmin = value; else
          if (value > hmax) hmax = value;
       }
 
-      this.stat_entries = 0;
-      if (('fBuffer' in this.histo) && (this.histo['fBuffer'].length>0)) this.stat_entries = this.histo['fBuffer'][0];
-      //if ((this.stat_entries == 0) && ('fEntries' in this.histo)) this.stat_entries = this.histo['fEntries'];
-      if (this.stat_entries == 0) this.stat_entries = hsum;
+      this.stat_entries = hsum;
+
+      // if (('fBuffer' in this.histo) && (this.histo['fBuffer'].length>0)) this.stat_entries = this.histo['fBuffer'][0];
+      // if ((this.stat_entries == 0) && ('fEntries' in this.histo)) this.stat_entries = this.histo['fEntries'];
 
       // used in CreateXY and tooltip providing
       this.xmin = this.histo['fXaxis']['fXmin'];
@@ -4642,10 +4913,10 @@ var gStyle = {
       var left = this.GetSelectIndex("x","left");
       var right = this.GetSelectIndex("x","right");
 
-      // $("#report").append("<br> count statistic " + left + "  " + right);
+      // console.log("  xleft = " + left + " xright = " + right);
 
       for (var i=left;i<right;i++) {
-         var xx = this.xmin + i*this.binwidthx;
+         var xx = this.xmin + (i+0.5)*this.binwidthx;
          var yy = this.histo.getBinContent(i+1);
          this.stat_sum0 += yy;
          this.stat_sum1 += xx * yy;
@@ -4671,58 +4942,44 @@ var gStyle = {
          stat.AddLine(this.histo['fName']);
 
       if (print_entries > 0)
-         if (this.stat_entries<1e7)
-            stat.AddLine("Entries = " + this.stat_entries.toFixed(0));
-         else
-            stat.AddLine("Entries = " + this.stat_entries.toExponential(5));
+         stat.AddLine("Entries = " + gStyle.StatEntriesFormat(this.stat_entries));
 
       if (print_mean > 0) {
          var res = 0;
          if (this.stat_sum0 > 0) res = this.stat_sum1/this.stat_sum0;
-         stat.AddLine("Mean = " + res.toFixed(2));
+         stat.AddLine("Mean = " + gStyle.StatFormat(res));
       }
 
       if (print_rms > 0) {
          var res = 0;
          if (this.stat_sum0 > 0)
             res = Math.sqrt(this.stat_sum2/this.stat_sum0 - Math.pow(this.stat_sum1/this.stat_sum0, 2));
-         stat.AddLine("RMS = " + res.toFixed(3));
+         stat.AddLine("RMS = " + gStyle.StatFormat(res));
       }
 
       if (print_under > 0) {
          var res = 0;
          if (this.histo['fArray'].length > 0) res = this.histo['fArray'][0];
-         stat.AddLine("Underflow = " + res.toFixed(0));
+         stat.AddLine("Underflow = " + gStyle.StatFormat(res));
       }
 
-      if (print_over> 0) {
+      if (print_over > 0) {
          var res = 0;
          if (this.histo['fArray'].length > 0) res = this.histo['fArray'][this.histo['fArray'].length-1];
-         stat.AddLine("Overflow = " + res.toFixed(0));
+         stat.AddLine("Overflow = " + gStyle.StatFormat(res));
       }
 
-      if (print_integral> 0) {
-         stat.AddLine("Integral = " + this.stat_sum0.toFixed(0));
+      if (print_integral > 0) {
+         stat.AddLine("Integral = " + gStyle.StatEntriesFormat(this.stat_sum0));
       }
 
       if (print_skew> 0)
-         stat.AddLine("Skew = 0");
+         stat.AddLine("Skew = not avail");
 
       if (print_kurt> 0)
-         stat.AddLine("Kurt = 0");
+         stat.AddLine("Kurt = not avail");
 
-      /*
-      if ((histo['fDimension'] == 2) && this.first.stat_matrix) {
-         // add special count statistic
-         var m = this.first.stat_matrix;
-
-         this.AddLine(""+ m[6].toFixed(0)+ " | " + m[7].toFixed(0) +  " | " + m[7].toFixed(0));
-         this.AddLine(""+ m[3].toFixed(0)+ " | " + m[4].toFixed(0) +  " | " + m[5].toFixed(0));
-         this.AddLine(""+ m[0].toFixed(0)+ " | " + m[1].toFixed(0) +  " | " + m[2].toFixed(0));
-      }
-      */
-
-      // adjust the size of the stats box wrt the number of lines
+      // adjust the size of the stats box with the number of lines
       var nlines = stat.pavetext['fLines'].arr.length;
       var stath = nlines * gStyle.StatFontSize;
       if (stath <= 0 || 3 == (gStyle.StatFont%10)) {
@@ -4740,7 +4997,7 @@ var gStyle = {
 
       var left = this.GetSelectIndex("x","left",-1);
       var right = this.GetSelectIndex("x","right",2);
-      var width = this.svg_frame.attr("width");
+      var width = Number(this.svg_frame.attr("width"));
       var stepi = 1;
 
       this.draw_bins = new Array;
@@ -4761,9 +5018,6 @@ var gStyle = {
          if ((stepi>1) && (i+stepi>right)) stepi = (right-i);
          x1 = x2; x2 += stepi*this.binwidthx;
 
-         // protect againt logx scale
-         if ((this.options.Logx>0) && (x1<=this.xlogmin)) continue;
-
          grx1 = grx2; grx2 = this.x(x2);
          if (grx1 < 0) grx1 = this.x(x1);
 
@@ -4773,9 +5027,6 @@ var gStyle = {
             var ccc = this.histo.getBinContent(i+ii+1);
             if (ccc>cont) { cont = ccc; pmax = i + ii; }
          }
-
-         // protect agains logy scale
-         if ((this.options.Logy>0) && (cont<=this.ylogmin)) cont = this.ylogmin;
 
          gry = this.y(cont);
 
@@ -4815,7 +5066,7 @@ var gStyle = {
 
    JSROOTPainter.Hist1DPainter.prototype.DrawErrors = function()
    {
-      var w = this.svg_frame.attr("width"), h = this.svg_frame.attr("height");
+      var w = Number(this.svg_frame.attr("width")), h = Number(this.svg_frame.attr("height"));
       /* Add a panel for each data point */
       var info_marker = getRootMarker(root_markers, this.histo['fMarkerStyle']);
       var shape = info_marker['shape'], filled = info_marker['toFill'],
@@ -4939,7 +5190,7 @@ var gStyle = {
 
       if (this.options.Error > 0) { this.DrawErrors(); return; }
 
-      var width = this.svg_frame.attr("width"), height = this.svg_frame.attr("height");
+      var width = Number(this.svg_frame.attr("width")), height = Number(this.svg_frame.attr("height"));
 
       var pthis = this;
 
@@ -5099,9 +5350,9 @@ var gStyle = {
 
       painter.CountStat();
 
-      painter.DrawGrids();
-
       painter.DrawAxes();
+
+      painter.DrawGrids();
 
       painter.DrawBins();
 
@@ -5361,18 +5612,20 @@ var gStyle = {
       var yleft = this.GetSelectIndex("y","left");
       var yright = this.GetSelectIndex("y","right");
 
-      // $("#report").append("<br> count statistic " + left + "  " + right);
+      //console.log("  xleft = " + xleft + " xright = " + xright);
+      //console.log("  yleft = " + yleft + " yright = " + yright);
 
-      for (var xi=0;xi<=this.nbinsx;xi++) {
-         var xside = xi<=xleft ? 0 : (xi<=xright ? 1 : 2);
-         var xx = this.xmin + (xi-1)*this.binwidthx;
+      for (var xi=0;xi<=this.nbinsx+1;xi++) {
+         var xside = (xi<=xleft) ? 0 : (xi>xright ? 2 : 1);
+         var xx = this.xmin + (xi-0.5)*this.binwidthx;
 
-         for (var yi=0;yi<=this.nbinsx;yi++) {
-            var yside = yi<=yleft ? 0 : (yi<=yright ? 1 : 2);
-            var yy = this.ymin + (yi-1)*this.binwidthy;
+         for (var yi=0;yi<=this.nbinsx+1;yi++) {
+            var yside = (yi<=yleft) ? 0 : (yi>yright ? 2 : 1);
+            var yy = this.ymin + (yi-0.5)*this.binwidthy;
 
             var zz = this.histo.getBinContent(xi,yi);
-            this.stat_entries+=zz;
+
+            this.stat_entries += zz;
 
             this.stat_matrix[yside*3 + xside]+=zz;
 
@@ -5407,37 +5660,42 @@ var gStyle = {
          stat.AddLine(this.histo['fName']);
 
       if (print_entries > 0)
-         stat.AddLine("Entries = " + this.stat_entries.toFixed(0));
+         stat.AddLine("Entries = " + gStyle.StatEntriesFormat(this.stat_entries));
+
+
+      var meanx = 0, meany = 0;
+      if (this.stat_sum0 > 0) {
+         meanx = this.stat_sumx1/this.stat_sum0;
+         meany = this.stat_sumy1/this.stat_sum0;
+      }
 
       if (print_mean > 0) {
-         var resx = 0, resy = 0;
-         if (this.stat_sum0 > 0) {
-            resx = this.stat_sumx1/this.stat_sum0;
-            resy = this.stat_sumy1/this.stat_sum0;
-         }
-         stat.AddLine("Mean x = " + resx.toFixed(2));
-         stat.AddLine("Mean y = " + resy.toFixed(2));
+         stat.AddLine("Mean x = " + gStyle.StatFormat(meanx));
+         stat.AddLine("Mean y = " + gStyle.StatFormat(meany));
+      }
+
+      var rmsx = 0, rmsy = 0;
+      if (this.stat_sum0 > 0) {
+         rmsx = Math.sqrt(this.stat_sumx2/this.stat_sum0 - meanx*meanx);
+         rmsy = Math.sqrt(this.stat_sumy2/this.stat_sum0 - meany*meany);
       }
 
       if (print_rms > 0) {
-         var resx = 0, resy = 0;
-         if (this.stat_sum0 > 0) {
-            resx = Math.sqrt(this.stat_sumx2/this.stat_sum0 - Math.pow(this.stat_sumx1/this.stat_sum0, 2));
-            resy = Math.sqrt(this.stat_sumy2/this.stat_sum0 - Math.pow(this.stat_sumy1/this.stat_sum0, 2));
-         }
-         stat.AddLine("RMS x = " + resx.toFixed(3));
-         stat.AddLine("RMS y = " + resy.toFixed(3));
+         stat.AddLine("RMS x = " + gStyle.StatFormat(rmsx));
+         stat.AddLine("RMS y = " + gStyle.StatFormat(rmsy));
       }
 
       if (print_integral > 0) {
-         stat.AddLine("Integral = " + this.stat_matrix[4].toFixed(0));
+         stat.AddLine("Integral = " + gStyle.StatEntriesFormat(this.stat_matrix[4]));
       }
 
-//      if (print_skew> 0)
-//         stat.AddLine("Skew = 0");
+      if (print_skew > 0) {
+         stat.AddLine("Skewness x = <undef>");
+         stat.AddLine("Skewness y = <undef>");
+      }
 
-//      if (print_kurt> 0)
-//         stat.AddLine("Kurt = 0");
+      if (print_kurt > 0)
+         stat.AddLine("Kurt = <undef>");
 
       if ((print_under > 0) || (print_over > 0)) {
          var m = this.stat_matrix;
@@ -5508,8 +5766,7 @@ var gStyle = {
          yfactor = 0.5 * h / (j2-j1) / (this.maxbin - this.minbin);
       }
 
-      var x1, y2, x2, y2, grx1, gry1, grx2, gry2, fillcol, shrx, shry;
-      var point;
+      var x1, y1, x2, y2, grx1, gry1, grx2, gry2, fillcol, shrx, shry, binz, point;
 
       var local_bins = new Array;
 
@@ -5540,8 +5797,8 @@ var gStyle = {
                   point = {
                      x: grx1,
                      y: gry2,
-                     width: 1+grx2-grx1,
-                     height: 1+gry1-gry2,
+                     width: grx2 - grx1 + 1,
+                     height: gry1 - gry2 + 1,
                      stroke: "none",
                      fill: this.getValueColor(binz)
                   }
@@ -5551,12 +5808,11 @@ var gStyle = {
                case 1:
                   shrx = xfactor * (this.maxbin - binz);
                   shry = yfactor * (this.maxbin - binz);
-
                   point = {
                      x: grx1 + shrx,
                      y: gry2 + shry,
-                     width: grx2-grx1-2*shrx,
-                     height: gry1-gry2-2*shry,
+                     width: grx2 - grx1 - 2*shrx,
+                     height: gry1 - gry2 - 2*shry,
                      stroke: this.linecolor,
                      fill: this.fillcolor
                   }
@@ -5594,7 +5850,7 @@ var gStyle = {
 
       this.draw_g = this.svg_frame.append("svg:g");
 
-      var w = this.frame.attr("width"), h = this.frame.attr("height");
+      var w = Number(this.frame.attr("width")), h = Number(this.frame.attr("height"));
 
 //    this.options.Scat =1;
 //    this.histo['fMarkerStyle'] = 2;
@@ -5668,7 +5924,6 @@ var gStyle = {
             markers.append("svg:title").text(function(d) { return d.tip; });
       }
       else {
-
          var drawn_bins = this.draw_g.selectAll(".bins")
                .data(local_bins)
                .enter()
@@ -5747,9 +6002,9 @@ var gStyle = {
 
       painter.CountStat();
 
-      painter.DrawGrids();
-
       painter.DrawAxes();
+
+      painter.DrawGrids();
 
       painter.DrawBins();
 
@@ -5776,13 +6031,12 @@ var gStyle = {
    {
       this.RemoveDraw();
 
-      var w = this.frame.attr("width"), h = this.frame.attr("height"), size = 100;
+      var w = Number(this.frame.attr("width")), h = Number(this.frame.attr("height")), size = 100;
 
       var xmin = this.xmin, xmax = this.xmax;
       if (this.zoom_xmin != this.zoom_xmax) { xmin = this.zoom_xmin; xmax = this.zoom_xmax; }
       var ymin = this.ymin, ymax = this.ymax;
       if (this.zoom_ymin != this.zoom_ymax) { ymin = this.zoom_ymin; ymax = this.zoom_ymax; }
-
 
       if (this.options.Logx) {
          var tx = d3.scale.log().domain([xmin, xmax]).range([-size, size]);
@@ -6070,7 +6324,7 @@ var gStyle = {
             }
          }
       }
-      var w = vis.attr("width"), h = vis.attr("height"), size = 100;
+      var w = Number(vis.attr("width")), h = Number(vis.attr("height")), size = 100;
       if (logx) {
          var tx = d3.scale.log().domain([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]).range([-size, size]);
          var utx = d3.scale.log().domain([-size, size]).range([histo['fXaxis']['fXmin'], histo['fXaxis']['fXmax']]);
@@ -6394,7 +6648,7 @@ var gStyle = {
    };
 
    JSROOTPainter.drawLatex = function(vis, string, x, y, attr) {
-      var w = vis.attr("width"), h = vis.attr("height");
+      var w = Number(vis.attr("width")), h = Number(vis.attr("height"));
       while (string.indexOf('#') != -1)
          string = string.replace('#', '\\');
       string = string.replace(' ', '\\: ');
@@ -6428,16 +6682,16 @@ var gStyle = {
 
       var x=0, y=0, w=0, h=0;
       if (pave['fInit'] == 0) {
-          x = pave['fX1'] * vis.attr("width")
-          y = vis.attr("height") - pave['fY1'] * vis.attr("height");
-          w = (pave['fX2'] - pave['fX1']) * vis.attr("width");
-          h = (pave['fY2'] - pave['fY1']) * vis.attr("height");
+          x = pave['fX1'] * Number(vis.attr("width"));
+          y = Number(vis.attr("height")) - pave['fY1'] * Number(vis.attr("height"));
+          w = (pave['fX2'] - pave['fX1']) * Number(vis.attr("width"));
+          h = (pave['fY2'] - pave['fY1']) * Number(vis.attr("height"));
       }
       else {
-          x = pave['fX1NDC'] * vis.attr("width")
-          y = vis.attr("height") - pave['fY1NDC'] * vis.attr("height");
-          w = (pave['fX2NDC'] - pave['fX1NDC']) * vis.attr("width");
-          h = (pave['fY2NDC'] - pave['fY1NDC']) * vis.attr("height");
+          x = pave['fX1NDC'] * Number(vis.attr("width"));
+          y = Number(vis.attr("height")) - pave['fY1NDC'] * Number(vis.attr("height"));
+          w = (pave['fX2NDC'] - pave['fX1NDC']) * Number(vis.attr("width"));
+          h = (pave['fY2NDC'] - pave['fY1NDC']) * Number(vis.attr("height"));
       }
       y -= h;
       var fillcolor = root_colors[pave['fFillColor']];
@@ -6471,8 +6725,7 @@ var gStyle = {
       var max_len = 0, mul = 1.4;
       for (var j=0; j<nlines; ++j) {
          line = JSROOTPainter.translateLaTeX(pave.fPrimitives.arr[j]['fLabel']);
-         lw = tpos_x + stringWidth(vis, line, fontDetails['name'], fontDetails['weight'],
-                                   font_size, fontDetails['style']);
+         lw = tpos_x + JSROOTPainter.stringWidth(vis, line, font_size, fontDetails);
          if (lw > max_len) max_len = lw;
       }
       if (max_len > w) {
@@ -6569,8 +6822,8 @@ var gStyle = {
             xf[3] = xf[0];
             yf[3] = yf[2];
             for (var j=0;j<4;j++) {
-               xf[j] = xf[j] * vis.attr("width");
-               yf[j] = yf[j] * vis.attr("height");
+               xf[j] = xf[j] * Number(vis.attr("width"));
+               yf[j] = yf[j] * Number(vis.attr("height"));
             }
             var ww = xf[1] - xf[0];
             var hh = yf[2] - yf[0];
@@ -6821,27 +7074,11 @@ var gStyle = {
                   .style("background-color", fillcolor);
    }
 
-   JSROOTPainter.drawObject = function(obj, idx)
-   {
-      var render_to = '#histogram' + idx;
-      if (typeof($(render_to)[0]) == 'undefined') {
-         obj = null;
-         // $("#report").append("<br>no place for draw");
-         return;
-      }
-      $(render_to).empty();
-
-      var vis = JSROOTPainter.createCanvas($(render_to), obj);
-      if (vis == null) return false;
-
-      return JSROOTPainter.drawObjectInFrame(vis, obj);
-   };
-
    JSROOTPainter.canDrawObject = function(classname)
    {
       if (!classname) return false;
 
-      if ((this.fUserPainters != null) && 
+      if ((this.fUserPainters != null) &&
           (typeof(this.fUserPainters[classname]) === 'function')) return true;
 
       if (classname.match(/\bJSROOTIO.TH1/) ||
@@ -6860,74 +7097,8 @@ var gStyle = {
       return false;
    }
 
-   JSROOTPainter.drawObjectInFrame = function(vis, obj, opt)
-   {
-      // ignore objects without type information - for instance, TList
-      if (obj == null) return;
-
-      if (!('_typename' in obj)) return;
-
-      var classname = obj['_typename'];
-
-      if (classname == 'JSROOTIO.TCanvas') {
-         vis['ROOT:canvas'] = obj;
-         vis['ROOT:pad'] = obj;
-         for (var i=0; i<obj.fPrimitives.arr.length; ++i) {
-            // console.log("Draw canvas primitive " + obj.fPrimitives.arr[i]._typename + " opt = " + obj.fPrimitives.opt[i]);
-            JSROOTPainter.drawObjectInFrame(vis, obj.fPrimitives.arr[i], obj.fPrimitives.opt[i]);
-         }
-         return 1;
-      }
-
-      if (classname == 'JSROOTIO.TFrame')
-         return JSROOTPainter.createFrame(vis, obj);
-
-      if (classname == 'JSROOTIO.TPad')
-         return JSROOTPainter.drawPad(vis, obj, opt);
-
-      if (classname == 'JSROOTIO.TPaveLabel')
-         return JSROOTPainter.drawPaveLabel(vis, obj);
-
-      if (classname == 'JSROOTIO.TLegend')
-         return JSROOTPainter.drawLegend(vis, obj, opt);
-
-      if (classname == 'JSROOTIO.TPaveText')
-         return JSROOTPainter.DrawPaveText(vis, obj);
-
-      if ((classname == 'JSROOTIO.TLatex') || (classname == 'JSROOTIO.TText'))
-         return JSROOTPainter.drawText(vis, obj);
-
-      if (classname.match(/\bJSROOTIO.TH1/) || (classname == "JSROOTIO.TProfile"))
-         return JSROOTPainter.drawHistogram1D(vis, obj, opt);
-
-      if (classname.match(/\bJSROOTIO.TH2/))
-         return JSROOTPainter.drawHistogram2D(vis, obj, opt);
-
-      if (classname.match(/\bJSROOTIO.TH3/))
-         return JSROOTPainter.drawHistogram3D(vis, obj, opt);
-
-      if (classname == 'JSROOTIO.THStack')
-         return JSROOTPainter.drawHStack(vis, obj, opt);
-
-      if (classname == 'JSROOTIO.TF1')
-         return JSROOTPainter.drawFunction(vis, obj);
-
-      if (classname.match(/\bJSROOTIO.TGraph/) ||
-          classname.match(/\bRooHist/) ||
-          classname.match(/\RooCurve/))
-         return JSROOTPainter.drawGraph(vis, obj, opt);
-
-      if (classname == 'JSROOTIO.TMultiGraph')
-         return JSROOTPainter.drawMultiGraph(vis, obj, opt);
-
-      if ((this.fUserPainters != null) && typeof(this.fUserPainters[classname]) === 'function')
-         return this.fUserPainters[classname](vis, obj, opt);
-
-      return -1;
-   }
-
    JSROOTPainter.drawPad = function(vis, pad) {
-      var width = vis.attr("width"), height = vis.attr("height");
+      var width = Number(vis.attr("width")), height = Number(vis.attr("height"));
       var x = pad['fAbsXlowNDC'] * width;
       var y = height - pad['fAbsYlowNDC'] * height;
       var w = pad['fAbsWNDC'] * width;
@@ -6969,7 +7140,7 @@ var gStyle = {
    };
 
    JSROOTPainter.drawPaveLabel = function(vis, pavelabel) {
-      var w = vis.attr("width"), h = vis.attr("height");
+      var w = Number(vis.attr("width")), h = Number(vis.attr("height"));
       var pos_x = pavelabel['fX1NDC'] * w;
       var pos_y = (1.0 - pavelabel['fY1NDC']) * h;
       var width = Math.abs(pavelabel['fX2NDC'] - pavelabel['fX1NDC']) * w;
@@ -7025,9 +7196,7 @@ var gStyle = {
 
       var line = JSROOTPainter.translateLaTeX(pavelabel['fLabel']);
 
-
-      var lw = stringWidth(vis, line, fontDetails['name'], fontDetails['weight'],
-                           font_size, fontDetails['style']);
+      var lw = JSROOTPainter.stringWidth(vis, line, font_size, fontDetails);
       if (lw > width)
          font_size *= 0.98 * (width / lw);
 
@@ -7061,9 +7230,6 @@ var gStyle = {
       }
    };
 
-
-
-
    JSROOTPainter.drawText = function(vis, text)
    {
       // align = 10*HorizontalAlign + VerticalAlign
@@ -7072,7 +7238,7 @@ var gStyle = {
 
       var pad = vis['ROOT:pad'];
 
-      var i, w = vis.attr("width"), h = vis.attr("height");
+      var i, w = Number(vis.attr("width")), h = Number(vis.attr("height"));
       var align = 'start', halign = Math.round(text['fTextAlign']/10);
       var baseline = 'bottom', valign = text['fTextAlign']%10;
       if (halign == 1) align = 'start';
@@ -7247,7 +7413,7 @@ var gStyle = {
          }
          else if (keys[i]['className'].match('TCanvas')) {
             node_img = source_dir+'img/canvas.png';
-         } 
+         }
          else if (this.canDrawObject(keys[i]['className'])) {
             node_img = source_dir+'img/graph.png';
          }
@@ -7266,7 +7432,6 @@ var gStyle = {
       content += "<p><a href='javascript: key_tree.openAll();'>open all</a> | <a href='javascript: key_tree.closeAll();'>close all</a></p>";
       content += key_tree;
       $(container).html(content);
-
    };
 
    JSROOTPainter.addCollectionContents = function(fullname, dir_id, list, container) {
@@ -7299,7 +7464,6 @@ var gStyle = {
    };
 
    JSROOTPainter.displayStreamerInfos = function(streamerInfo, container) {
-
       delete d;
       var content = "<p><a href='javascript: d_tree.openAll();'>open all</a> | <a href='javascript: d_tree.closeAll();'>close all</a></p>";
       d_tree = new dTree('d_tree');
@@ -7348,6 +7512,100 @@ var gStyle = {
       $(container).html(content);
    };
 
+
+   JSROOTPainter.drawObjectInFrame = function(vis, obj, opt)
+   {
+      // ignore objects without type information - for instance, TList
+      if ((typeof obj != 'object') || (!('_typename' in obj))) return;
+
+      var classname = obj['_typename'];
+
+      if (classname == 'JSROOTIO.TCanvas') {
+         vis['ROOT:canvas'] = obj;
+         vis['ROOT:pad'] = obj;
+         for (var i=0; i<obj.fPrimitives.arr.length; ++i) {
+            // console.log("Draw canvas primitive " + obj.fPrimitives.arr[i]._typename + " opt = " + obj.fPrimitives.opt[i]);
+            JSROOTPainter.drawObjectInFrame(vis, obj.fPrimitives.arr[i], obj.fPrimitives.opt[i]);
+         }
+         return;
+      }
+
+      if (classname == 'JSROOTIO.TFrame')
+         return JSROOTPainter.createFrame(vis, obj);
+
+      if (classname == 'JSROOTIO.TPad')
+         return JSROOTPainter.drawPad(vis, obj, opt);
+
+      if (classname == 'JSROOTIO.TPaveLabel')
+         return JSROOTPainter.drawPaveLabel(vis, obj);
+
+      if (classname == 'JSROOTIO.TLegend')
+         return JSROOTPainter.drawLegend(vis, obj, opt);
+
+      if (classname == 'JSROOTIO.TPaveText')
+         return JSROOTPainter.DrawPaveText(vis, obj);
+
+      if ((classname == 'JSROOTIO.TLatex') || (classname == 'JSROOTIO.TText'))
+         return JSROOTPainter.drawText(vis, obj);
+
+      if (classname.match(/\bJSROOTIO.TH1/) || (classname == "JSROOTIO.TProfile"))
+         return JSROOTPainter.drawHistogram1D(vis, obj, opt);
+
+      if (classname.match(/\bJSROOTIO.TH2/))
+         return JSROOTPainter.drawHistogram2D(vis, obj, opt);
+
+      if (classname.match(/\bJSROOTIO.TH3/))
+         return JSROOTPainter.drawHistogram3D(vis, obj, opt);
+
+      if (classname == 'JSROOTIO.THStack')
+         return JSROOTPainter.drawHStack(vis, obj, opt);
+
+      if (classname == 'JSROOTIO.TF1')
+         return JSROOTPainter.drawFunction(vis, obj);
+
+      if (classname.match(/\bJSROOTIO.TGraph/) ||
+          classname.match(/\bRooHist/) ||
+          classname.match(/\RooCurve/))
+         return JSROOTPainter.drawGraph(vis, obj, opt);
+
+      if (classname == 'JSROOTIO.TMultiGraph')
+         return JSROOTPainter.drawMultiGraph(vis, obj, opt);
+
+      if ((this.fUserPainters != null) && typeof(this.fUserPainters[classname]) === 'function')
+         return this.fUserPainters[classname](vis, obj, opt);
+   }
+
+   JSROOTPainter.draw = function(divid, obj, opt)
+   {
+      if ((typeof obj != 'object') || (!('_typename' in obj))) return;
+
+      var render_to = "#" + divid;
+
+      var fillcolor = 'white';
+
+      d3.select(render_to).style("background-color", fillcolor);
+
+      var svg = d3.select(render_to)
+                   .append("svg")
+//                   .attr({"width": "100%", "height": "100%"})
+                   .attr("width", $(render_to).width())
+                   .attr("height", $(render_to).height())
+                   .style("background-color", fillcolor)
+                   .attr("viewBox", "0 0 " + $(render_to).width() + " " + $(render_to).height())
+                   .attr("preserveAspectRatio", "xMidYMid meet")
+                   .attr("pointer-events", "all")
+                   .call(d3.behavior.zoom().on("zoom", JSROOTPainter.redraw));
+
+      var painter = JSROOTPainter.drawObjectInFrame(svg, obj, opt);
+
+      return painter;
+   }
+
+
+
+   // comment out - now it is handled via CSS files
+
+   /*
    var style = "<style>\n"
       +".xaxis path, .xaxis line, .yaxis path, .yaxis line, .zaxis path, .zaxis line {\n"
       +"   fill: none;\n"
@@ -7363,10 +7621,10 @@ var gStyle = {
       +"  stroke: steelblue;\n"
       +"  fill-opacity: 0.1;\n"
       +"}\n"
-      /* Correct overflow not hidden in IE9 */
       +"svg:not(:root) { overflow: hidden; }\n"
       +"</style>\n";
    $(style).prependTo("body");
+   */
 
 })();
 
@@ -7381,24 +7639,24 @@ var gStyle = {
 (function(){
 
    Amore_String_Streamer = function(buf, obj, prop, streamer) {
-      
+
       console.log("read property " + prop + " of typename " + streamer[prop]['typename']);
-      
+
       obj[prop] = buf.ReadTString();
    }
-   
+
    Amore_Painter = function(vis, obj, opt) {
-      // custom draw function. 
-      
+      // custom draw function.
+
       console.log("Draw user type " + obj['_typename']);
-      
+
       JSROOTPainter.drawObjectInFrame(vis, obj['fVal'], opt);
    }
-   
+
    JSROOTIO.addUserStreamer("amore::core::String_t", Amore_String_Streamer);
 
    JSROOTPainter.addUserPainter("JSROOTIO.amore::core::MonitorObjectHisto<TH1F>", Amore_Painter);
-   
+
 })();
 
 */

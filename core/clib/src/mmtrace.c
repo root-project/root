@@ -28,7 +28,7 @@ Boston, MA 02111-1307, USA.  */
 #include <stdio.h>
 #include "mmprivate.h"
 
-#ifndef	__GNU_LIBRARY__
+#ifndef __GNU_LIBRARY__
 extern char *getenv ();
 #endif
 
@@ -36,9 +36,9 @@ extern char *getenv ();
 static FILE *mallstream;
 #endif
 
-#if 0	/* FIXME:  Disabled for now. */
+#if 0 /* FIXME:  Disabled for now. */
 static char mallenv[] = "MALLOC_TRACE";
-static char mallbuf[BUFSIZ];	/* Buffer for the output.  */
+static char mallbuf[BUFSIZ]; /* Buffer for the output.  */
 #endif
 
 /* Address to breakpoint on accesses to... */
@@ -134,7 +134,7 @@ tr_reallochook (md, ptr, size)
     fprintf (mallstream, "! %08lx %x\n", (unsigned long) ptr, (unsigned) size);
   else
     fprintf (mallstream, "< %08lx\n> %08lx %x\n", (unsigned long) ptr,
-	     (unsigned long) hdr, (unsigned) size);
+             (unsigned long) hdr, (unsigned) size);
 
   if (hdr == mallwatch)
     tr_break ();
@@ -151,30 +151,30 @@ tr_reallochook (md, ptr, size)
 int
 mmtrace ()
 {
-#if 0	/* FIXME!  This is disabled for now until we figure out how to
-	   maintain a stack of hooks per heap, since we might have other
-	   hooks (such as set by mmcheck) active also. */
+#if 0 /* FIXME!  This is disabled for now until we figure out how to
+         maintain a stack of hooks per heap, since we might have other
+         hooks (such as set by mmcheck) active also. */
   char *mallfile;
 
-  mallfile = getenv (mallenv);
-  if (mallfile  != NULL || mallwatch != NULL)
-    {
+   mallfile = getenv (mallenv);
+   if (mallfile  != NULL || mallwatch != NULL)
+   {
       mallstream = fopen (mallfile != NULL ? mallfile : "/dev/null", "w");
       if (mallstream != NULL)
-	{
-	  /* Be sure it doesn't mmalloc its buffer!  */
-	  setbuf (mallstream, mallbuf);
-	  fprintf (mallstream, "= Start\n");
-	  old_mfree_hook = mdp -> mfree_hook;
-	  mdp -> mfree_hook = (mmfree_fun_t) tr_freehook;
-	  old_mmalloc_hook = mdp -> mmalloc_hook;
-	  mdp -> mmalloc_hook = (mmalloc_fun_t) tr_mallochook;
-	  old_mrealloc_hook = mdp -> mrealloc_hook;
-	  mdp -> mrealloc_hook = (mmrealloc_fun_t) tr_reallochook;
-	}
-    }
+      {
+         /* Be sure it doesn't mmalloc its buffer!  */
+         setbuf (mallstream, mallbuf);
+         fprintf (mallstream, "= Start\n");
+         old_mfree_hook = mdp -> mfree_hook;
+         mdp -> mfree_hook = (mmfree_fun_t) tr_freehook;
+         old_mmalloc_hook = mdp -> mmalloc_hook;
+         mdp -> mmalloc_hook = (mmalloc_fun_t) tr_mallochook;
+         old_mrealloc_hook = mdp -> mrealloc_hook;
+         mdp -> mrealloc_hook = (mmrealloc_fun_t) tr_reallochook;
+      }
+   }
 
-#endif	/* 0 */
+#endif /* 0 */
 
   return (1);
 }

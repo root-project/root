@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -14,7 +14,7 @@
 //
 // Last update: $Id$
 //
-#ifndef ROOT_Math_GenVector_RotationZ 
+#ifndef ROOT_Math_GenVector_RotationZ
 #define ROOT_Math_GenVector_RotationZ  1
 
 
@@ -34,9 +34,9 @@ namespace Math {
 
 //__________________________________________________________________________________________
    /**
-      Rotation class representing a 3D rotation about the Z axis by the angle of rotation.  
-      For efficiency reason, in addition to the the angle, the sine and cosine of the angle are held 
-      
+      Rotation class representing a 3D rotation about the Z axis by the angle of rotation.
+      For efficiency reason, in addition to the the angle, the sine and cosine of the angle are held
+
       @ingroup GenVector
    */
 
@@ -59,9 +59,9 @@ public:
    */
    explicit RotationZ( Scalar angle ) :   fAngle(angle),
                                           fSin(std::sin(angle)),
-                                          fCos(std::cos(angle)) 
+                                          fCos(std::cos(angle))
    {
-      Rectify(); 
+      Rectify();
    }
 
    // The compiler-generated copy ctor, copy assignment, and dtor are OK.
@@ -86,8 +86,8 @@ public:
    void SetAngle (Scalar angle) {
       fSin=std::sin(angle);
       fCos=std::cos(angle);
-      fAngle= angle; 
-      Rectify();     
+      fAngle= angle;
+      Rectify();
    }
    void SetComponents (Scalar angle) { SetAngle(angle); }
 
@@ -113,7 +113,7 @@ public:
 //   /**
 //      Rotation operation on a cartesian vector
 //    */
-//   typedef  DisplacementVector3D< Cartesian3D<double> > XYZVector; 
+//   typedef  DisplacementVector3D< Cartesian3D<double> > XYZVector;
 //   XYZVector operator() (const XYZVector & v) const {
 //     return XYZVector
 //       ( fCos*v.x()-fSin*v.y(), fCos*v.y()+fSin*v.x(), v.z() );
@@ -218,9 +218,9 @@ public:
 
 private:
 
-   Scalar fAngle;   // rotation angle 
-   Scalar fSin;     // sine of the rotation angle 
-   Scalar fCos;     // cosine of the rotaiton angle 
+   Scalar fAngle;   // rotation angle
+   Scalar fSin;     // sine of the rotation angle
+   Scalar fCos;     // cosine of the rotaiton angle
 
 };  // RotationZ
 
@@ -237,16 +237,16 @@ Distance ( const RotationZ& r1, const R & r2) {return gv_detail::dist(r1,r2);}
 /**
    Stream Output and Input
  */
-  // TODO - I/O should be put in the manipulator form 
+  // TODO - I/O should be put in the manipulator form
 
 inline
 std::ostream & operator<< (std::ostream & os, const RotationZ & r) {
   os << " RotationZ(" << r.Angle() << ") ";
   return os;
-} 
-  
+}
+
 
 }  // namespace Math
 }  // namespace ROOT
 
-#endif // ROOT_Math_GenVector_RotationZ 
+#endif // ROOT_Math_GenVector_RotationZ

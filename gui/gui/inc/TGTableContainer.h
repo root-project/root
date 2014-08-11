@@ -40,13 +40,13 @@ public:
 class TGTableHeaderFrame: public TGCompositeFrame {
 
 protected:
-   Int_t    fX0;     // X coordinate of the header frame 
+   Int_t    fX0;     // X coordinate of the header frame
    Int_t    fY0;     // Y coordinate of the header frame
    TGTable *fTable;  // Table that this frame belongs to
 
 public:
-   TGTableHeaderFrame(const TGWindow *p, TGTable *table = 0, UInt_t w = 1, 
-                      UInt_t h = 1, EHeaderType type = kColumnHeader, 
+   TGTableHeaderFrame(const TGWindow *p, TGTable *table = 0, UInt_t w = 1,
+                      UInt_t h = 1, EHeaderType type = kColumnHeader,
                       UInt_t option = 0);
    ~TGTableHeaderFrame() {}
 

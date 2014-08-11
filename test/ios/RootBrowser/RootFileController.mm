@@ -24,22 +24,22 @@
 - (id) initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
 {
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
-   
+
    if (self) {
       [self view];
-      
+
       fileContainers = [[NSMutableArray alloc] init];
-   
+
       self.navigationItem.title = @"ROOT files";
       self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle : @"Back to ROOT files" style:UIBarButtonItemStylePlain target : nil action : nil];
       self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle : @"Open file" style:UIBarButtonItemStylePlain target : self action : @selector(showFileOpenView)];
 
       scrollView.bounces = NO;
-      
+
       [self.view bringSubviewToFront : fileOpenView];
-      
+
       fileNameField.clearButtonMode = UITextFieldViewModeAlways;
-      
+
       UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hideFileOpenView)];
       [self.view addGestureRecognizer : tap];
    }
@@ -77,15 +77,15 @@
       fileViewFrame = CGRectMake(0.f, 44.f, 768.f, 120.f);
    } else {
       mainFrame = CGRectMake(0.f, 0.f, 1024.f, 748.f);
-      scrollFrame = CGRectMake(0.f, 44.f, 1024.f, 704.f);   
+      scrollFrame = CGRectMake(0.f, 44.f, 1024.f, 704.f);
       fileViewFrame = CGRectMake(0.f, 44.f, 1024.f, 120.f);
    }
-   
+
    self.view.frame = mainFrame;
    scrollView.frame = scrollFrame;
-   
+
    fileOpenView.frame = fileViewFrame;
-   
+
    [self placeFileShortcuts];
 }
 
@@ -115,7 +115,7 @@
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation
 {
     // Return YES for supported orientations
-	return YES;
+    return YES;
 }
 
 //____________________________________________________________________________________________________
@@ -131,7 +131,7 @@
 {
    //Open the file and read its contents.
    using namespace ROOT::iOS::Browser;
-   
+
    FileContainer *fileContainer = FileContainer::CreateFileContainer([fileName cStringUsingEncoding : [NSString defaultCStringEncoding]]);
 
    if (!fileContainer) {
@@ -148,7 +148,7 @@
    FileShortcut *newShortcut = [[FileShortcut alloc] initWithFrame : shortcutFrame controller : self fileContainer : fileContainer];
    if (newShortcut) {//What if alloc returned nil?
       [fileContainers addObject : newShortcut];
-      [scrollView addSubview : newShortcut];   
+      [scrollView addSubview : newShortcut];
       [self placeFileShortcuts];
    }  else
       FileContainer::DeleteFileContainer(fileContainer);
@@ -196,7 +196,7 @@
    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
    // Now to set the type of transition.
    transition.type = kCATransitionPush;
-   
+
    if (!fileOpenView.hidden)
       transition.subtype = kCATransitionFromBottom;
    else

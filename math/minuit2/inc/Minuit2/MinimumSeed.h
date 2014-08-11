@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -24,20 +24,20 @@ class MinimumError;
 class FunctionGradient;
 class MnUserTransformation;
 
-/** MinimumSeed contains the starting values for the minimization produced 
+/** MinimumSeed contains the starting values for the minimization produced
     by the SeedGenerator.
  */
 
 class MinimumSeed {
 
 public:
-  
+
   MinimumSeed(const MinimumState& st, const MnUserTransformation& trafo) : fData(MnRefCountedPointer<BasicMinimumSeed>(new BasicMinimumSeed(st, trafo))) {}
-  
+
   ~MinimumSeed() {}
 
   MinimumSeed(const MinimumSeed& seed) : fData(seed.fData) {}
-  
+
   MinimumSeed& operator=(const MinimumSeed& seed) {
     fData = seed.fData;
     return *this;

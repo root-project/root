@@ -50,7 +50,7 @@ protected:
    const char* GetOutputNeuronTitle(Int_t out);
 
 public:
-   TMLPAnalyzer(TMultiLayerPerceptron& net): 
+   TMLPAnalyzer(TMultiLayerPerceptron& net):
       fNetwork(&net), fAnalysisTree(0), fIOTree(0) {}
    TMLPAnalyzer(TMultiLayerPerceptron* net):
       fNetwork(net), fAnalysisTree(0), fIOTree(0) {}

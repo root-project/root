@@ -15,7 +15,7 @@
 #ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
 #endif
-  
+
 class TGeoPolygon;
 
 ////////////////////////////////////////////////////////////////////////////
@@ -53,14 +53,14 @@ protected:
    Double_t              fZcurrent; // current Z position
    Double_t             *fX;     //[fNvert] X positions for polygon vertices
    Double_t             *fY;     //[fNvert] Y positions for polygon vertices
-   Double_t             *fZ;     //[fNz] array of Z planes positions 
+   Double_t             *fZ;     //[fNz] array of Z planes positions
    Double_t             *fScale; //[fNz] array of scale factors (for each Z)
    Double_t             *fX0;    //[fNz] array of X offsets (for each Z)
    Double_t             *fY0;    //[fNz] array of Y offsets (for each Z)
 
    mutable std::vector<ThreadData_t*> fThreadData; //! Navigation data per thread
    mutable Int_t                      fThreadSize; //! size of thread-specific array
-   TGeoXtru(const TGeoXtru&); 
+   TGeoXtru(const TGeoXtru&);
    TGeoXtru& operator=(const TGeoXtru&);
 
    // methods
@@ -88,10 +88,10 @@ public:
    virtual void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const;
    Bool_t                DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *yv);
    virtual void          DefineSection(Int_t snum, Double_t z, Double_t x0=0., Double_t y0=0., Double_t scale=1.);
-   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
-   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
@@ -124,7 +124,7 @@ public:
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const;
 
-   ClassDef(TGeoXtru, 3)         // extruded polygon class 
+   ClassDef(TGeoXtru, 3)         // extruded polygon class
 };
 
 #endif

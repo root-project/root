@@ -75,7 +75,7 @@ They are optimized for quick access: they are distributed evenly, and short.
 Classes are grouped in modules; these, too, are listed ontop of the list of classes.
 
 <h3><a id="parts_inh"></a>Inheritance</h3>
-All classes along with their derived and base classes are shown in the 
+All classes along with their derived and base classes are shown in the
 <a href="./ClassInheritance.html">Class Hierarchy</a>.
 The documentation for each class also shows the inheritance diagram.
 The class hierarchy is meant to give an overview of available classes
@@ -85,7 +85,7 @@ and their relations.
 <h3><a id="modules_what"></a>What they are</h3>
 Classes are grouped into modules. For ROOT, this is done on a per-directory basis:
 each module corresponds to a sub-directory. In other cases one module might represent
-one library. Either way, modules are meant to combine similar or related classes, 
+one library. Either way, modules are meant to combine similar or related classes,
 allowing users to find classes close by context. If you need some functionality that
 you cannot find in a class you know, you might want to check for classes in the same
 module - maybe one of them does what you need.
@@ -95,20 +95,20 @@ Modules are listed ontop of the <a href="./ClassIndex.html">Class Index</a> and 
 of the <a href="./LibraryDependencies.html">Library Dependencies Chart</a>.
 
 <h3><a id="module_libdep"></a>Modules' Library Dependencies</h3>
-Each module is assumed to be part of a library. The dependencies of libraries are 
+Each module is assumed to be part of a library. The dependencies of libraries are
 not only relevant for linking, but often reflect also the contextual dependencies.
 The dependencies of all modules are shown in the
 <a href="./LibraryDependencies.html">Library Dependencies Chart</a>.
 
 <h2><a id="class"></a>Class Reference</h2>
-Pages like the one for <a href="http://root.cern.ch/root/html/TH2.html">TH2</a> are 
+Pages like the one for <a href="http://root.cern.ch/root/html/TH2.html">TH2</a> are
 class references. They document the use and functionality of a class.
 
 <h3><a id="class_sect"></a>Sections</h3>
 Each class reference page has a class documentation, which documents what the class
-can be used for, and gives hints on how to use it. This allows you to figure out 
-whether a certain class is appropriate for what you try to do. The page then lists 
-all available members; they define a class's functionality and its interaction with 
+can be used for, and gives hints on how to use it. This allows you to figure out
+whether a certain class is appropriate for what you try to do. The page then lists
+all available members; they define a class's functionality and its interaction with
 your code. The next item is a tabbed set of charts, which allow you to study the
 class's inheritance diagram, what members get inherited from where, and which members
 are re-implemented, which files get indirectly included by including the class's
@@ -121,7 +121,7 @@ We will now go through all these parts in detail.
 <h3><a id="class_links"></a>Link Box</h3>
 On the top of the page you can find a list of links. The first line contains the current
 "location", giving the home page, the module name, and the class name.
-The second line links to generic pages, like ROOT's home page, the 
+The second line links to generic pages, like ROOT's home page, the
 <a href="#parts_classes">Class Index</a>, and the <a href="#parts_inh">Class Hierarchy</a>.
 The last line allows you to jump to the sections of the current page and a colored
 version of the class's header and source file.
@@ -148,14 +148,14 @@ of the box, and show it again by clicking on the "+".
 <h3><a id="class_mem"></a>List of Data and Function Members</h3>
 <p>The central part of a class are its members. Some are available to you; some
 are hidden from you, because they are only meant to be used internally.
-As an example, a class might allow you to set, access, and print its values, or store 
-them into a file. 
-Because methods should have reasonable names, often the method name itself is already 
+As an example, a class might allow you to set, access, and print its values, or store
+them into a file.
+Because methods should have reasonable names, often the method name itself is already
 a hint on what it does.
 If you want to get a <a href="http://root.cern.ch/root/html/TNamed.html">TNamed</a>'s
 name, you will immediately see TNamed::GetName() in its list of functions.
 A click on this name will send you to the documentation for the method.
-If you <a href="class_mem_disp">enabled the display of inherited members</a> you will see 
+If you <a href="class_mem_disp">enabled the display of inherited members</a> you will see
 some members with a class name prefix. It tells you where this method has been defined.</p>
 
 <h4><a id="class_mem_disp"></a>Display Options</h4>
@@ -170,14 +170,14 @@ so you will have the same setting next time you look at the class documentation.
 
 <h4><a id="class_mem_access"></a>Access (public / protected / private)</h4>
 Not all members are available to everyone (check any C++ introduction to learn why).
-Public members have a green bar on their left, protected ones have a yellow one, and 
+Public members have a green bar on their left, protected ones have a yellow one, and
 private members are marked with a red bar. Of course you won't see any protected or
 private members if you hide them in the <a href="#class_mem_disp">display options</a>.
 
 <h4><a id="class_mem_inh"></a>Inheritance</h4>
 You can often access members of a class's base classes, just as if they are defined
 in the derived class. A <a href="http://root.cern.ch/root/html/TH1.html">histogram</a>,
-for example, has a name, and you can access it using GetName() as defined in its base 
+for example, has a name, and you can access it using GetName() as defined in its base
 class <a href="http://root.cern.ch/root/html/TNamed.html">TNamed</a>. If you want to see
 all available members, and not just the ones defined in the current class, in the
 <a href="#class_mem_disp">display options</a>. They will be prefixed with the name of
@@ -199,7 +199,7 @@ or hidden by a derived class.
 
 <h4><a id="charts_inc"></a>Includes</h4>
 The Includes chart shows which files are indirectly included by including the class's
-header. Most headers will #include some files, so by #including that header you also 
+header. Most headers will #include some files, so by #including that header you also
 #include the #included files, and so on. A illegible chart often means you should
 read a bit on the C++ trick known as "forward declaration". Including too many headers
 has some nasty consequences, like compile time, additional dependencies, etc.

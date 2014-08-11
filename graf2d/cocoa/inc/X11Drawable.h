@@ -37,7 +37,7 @@
 //                                                                                 //
 /////////////////////////////////////////////////////////////////////////////////////
 
-@protocol X11Drawable 
+@protocol X11Drawable
 @optional
 
 @property (nonatomic, assign) unsigned fID;   //Drawable's id for GUI and TGCocoa.
@@ -159,10 +159,10 @@
 @property (nonatomic, assign) BOOL fIsDNDAware;
 
 //"Properties" (X11 properties)
-- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize 
+- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize
          forType : (Atom_t) dataType format : (unsigned) format;
 - (BOOL) hasProperty : (const char *) propName;
-- (unsigned char *) getProperty : (const char *) propName returnType : (Atom_t *) type 
+- (unsigned char *) getProperty : (const char *) propName returnType : (Atom_t *) type
    returnFormat : (unsigned *) format nElements : (unsigned *) nElements;
 - (void) removeProperty : (const char *) propName;
 

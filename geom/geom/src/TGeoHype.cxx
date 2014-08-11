@@ -24,7 +24,7 @@
 //_____________________________________________________________________________
 // TGeoHype - Hyperboloid class defined by 5 parameters. Bounded by:
 //            - Two z planes at z=+/-dz
-//            - Inner and outer lateral surfaces. These represent the surfaces 
+//            - Inner and outer lateral surfaces. These represent the surfaces
 //              described by the revolution of 2 hyperbolas about the Z axis:
 //               r^2 - (t*z)^2 = a^2
 //
@@ -34,8 +34,8 @@
 //            a = distance between hyperbola and Z axis at z=0
 //
 //          The inner hyperbolic surface is described by:
-//              r^2 - (tin*z)^2 = rin^2 
-//           - absence of the inner surface (filled hyperboloid can be forced 
+//              r^2 - (tin*z)^2 = rin^2
+//           - absence of the inner surface (filled hyperboloid can be forced
 //             by rin=0 and sin=0
 //          The outer hyperbolic surface is described by:
 //              r^2 - (tout*z)^2 = rout^2
@@ -48,12 +48,12 @@
 //           - rin = 0, tin != 0     => inner surface conical
 //           - tin=0 AND/OR tout=0   => corresponding surface(s) cyllindrical
 //             e.g. tin=0 AND tout=0 => shape becomes a tube with: rmin,rmax,dz
-//    
+//
 //_____________________________________________________________________________
 
 
 ClassImp(TGeoHype)
-   
+
 //_____________________________________________________________________________
 TGeoHype::TGeoHype()
 {
@@ -65,7 +65,7 @@ TGeoHype::TGeoHype()
    fTinsq = 0.;
    fTout = 0.;
    fToutsq = 0.;
-}   
+}
 
 
 //_____________________________________________________________________________
@@ -75,8 +75,8 @@ TGeoHype::TGeoHype(Double_t rin, Double_t stin, Double_t rout, Double_t stout, D
 // Constructor specifying hyperboloid parameters.
    SetShapeBit(TGeoShape::kGeoHype);
    SetHypeDimensions(rin, stin, rout, stout, dz);
-   // dz<0 can be used to force dz of hyperboloid fit the container volume 
-   if (fDz<0) SetShapeBit(kGeoRunTimeShape); 
+   // dz<0 can be used to force dz of hyperboloid fit the container volume
+   if (fDz<0) SetShapeBit(kGeoRunTimeShape);
    ComputeBBox();
 }
 //_____________________________________________________________________________
@@ -86,8 +86,8 @@ TGeoHype::TGeoHype(const char *name,Double_t rin, Double_t stin, Double_t rout, 
 // Constructor specifying parameters and name.
    SetShapeBit(TGeoShape::kGeoHype);
    SetHypeDimensions(rin, stin, rout, stout, dz);
-   // dz<0 can be used to force dz of hyperboloid fit the container volume 
-   if (fDz<0) SetShapeBit(kGeoRunTimeShape); 
+   // dz<0 can be used to force dz of hyperboloid fit the container volume
+   if (fDz<0) SetShapeBit(kGeoRunTimeShape);
    ComputeBBox();
 }
 
@@ -103,8 +103,8 @@ TGeoHype::TGeoHype(Double_t *param)
 // param[4] = stout
    SetShapeBit(TGeoShape::kGeoHype);
    SetDimensions(param);
-   // dz<0 can be used to force dz of hyperboloid fit the container volume 
-   if (fDz<0) SetShapeBit(kGeoRunTimeShape); 
+   // dz<0 can be used to force dz of hyperboloid fit the container volume
+   if (fDz<0) SetShapeBit(kGeoRunTimeShape);
    ComputeBBox();
 }
 
@@ -120,10 +120,10 @@ Double_t TGeoHype::Capacity() const
 // Computes capacity of the shape in [length^3]
    Double_t capacity = 2.*TMath::Pi()*fDz*(fRmax*fRmax-fRmin*fRmin) +
                        (2.*TMath::Pi()/3.)*fDz*fDz*fDz*(fToutsq-fTinsq);
-   return capacity;                    
-}   
+   return capacity;
+}
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoHype::ComputeBBox()
 {
 // Compute bounding box of the hyperboloid
@@ -135,23 +135,23 @@ void TGeoHype::ComputeBBox()
       SetShapeBit(kGeoInvalidShape);
       Error("ComputeBBox", "Shape %s hyperbolic surfaces are malformed: rin=%g, stin=%g, rout=%g, stout=%g",
              GetName(), fRmin, fStIn, fRmax, fStOut);
-      return;       
-   }   
-   
+      return;
+   }
+
    fDX = fDY = TMath::Sqrt(RadiusHypeSq(fDz, kFALSE));
    fDZ = fDz;
-}   
+}
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoHype::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Compute normal to closest surface from POINT. 
+// Compute normal to closest surface from POINT.
    Double_t saf[3];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
    Double_t rin = (HasInner())?(TMath::Sqrt(RadiusHypeSq(point[2],kTRUE))):0.;
    Double_t rout = TMath::Sqrt(RadiusHypeSq(point[2],kFALSE));
-   saf[0] = TMath::Abs(fDz-TMath::Abs(point[2])); 
+   saf[0] = TMath::Abs(fDz-TMath::Abs(point[2]));
    saf[1] = (HasInner())?TMath::Abs(rin-r):TGeoShape::Big();
    saf[2] = TMath::Abs(rout-r);
    Int_t i = TMath::LocMin(3,saf);
@@ -167,7 +167,7 @@ void TGeoHype::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
    Double_t phi = TMath::ATan2(point[1], point[0]);
    Double_t cphi = TMath::Cos(phi);
    Double_t sphi = TMath::Sin(phi);
-   
+
    norm[0] = ct*cphi;
    norm[1] = ct*sphi;
    norm[2] = st;
@@ -175,7 +175,7 @@ void TGeoHype::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
       norm[0] = -norm[0];
       norm[1] = -norm[1];
       norm[2] = -norm[2];
-   }   
+   }
 }
 
 //_____________________________________________________________________________
@@ -209,20 +209,20 @@ Double_t TGeoHype::DistFromInside(const Double_t *point, const Double_t *dir, In
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
-   // compute distance to surface 
+   // compute distance to surface
    // Do Z
    Double_t sz = TGeoShape::Big();
-   if (dir[2]>0) { 
+   if (dir[2]>0) {
       sz = (fDz-point[2])/dir[2];
-      if (sz<=0.) return 0.;      
+      if (sz<=0.) return 0.;
    } else {
       if (dir[2]<0) {
          sz = -(fDz+point[2])/dir[2];
-         if (sz<=0.) return 0.; 
+         if (sz<=0.) return 0.;
       }
-   }           
-   
-   
+   }
+
+
    // Do R
    Double_t srin = TGeoShape::Big();
    Double_t srout = TGeoShape::Big();
@@ -255,7 +255,7 @@ Double_t TGeoHype::DistFromOutside(const Double_t *point, const Double_t *dir, I
    // Do Z
    Double_t xi, yi, zi;
    Double_t sz = TGeoShape::Big();
-   if (TMath::Abs(point[2])>=fDz) { 
+   if (TMath::Abs(point[2])>=fDz) {
       // We might find Z plane crossing
       if ((point[2]*dir[2]) < 0) {
          // Compute distance to Z (always positive)
@@ -284,16 +284,16 @@ Double_t TGeoHype::DistFromOutside(const Double_t *point, const Double_t *dir, I
          zi = point[2] + s[1]*dir[2];
          if (TMath::Abs(zi) <= fDz) sin = s[1];
       }
-   }      
+   }
    npos = DistToHype(point, dir, s, kFALSE, kFALSE);
    if (npos) {
-      zi = point[2] + s[0]*dir[2]; 
+      zi = point[2] + s[0]*dir[2];
       if (TMath::Abs(zi) <= fDz) sout = s[0];
       else if (npos==2) {
          zi = point[2] + s[1]*dir[2];
          if (TMath::Abs(zi) <= fDz) sout = s[1];
-      }      
-   }   
+      }
+   }
    return TMath::Min(sin, sout);
 }
 
@@ -313,7 +313,7 @@ Int_t TGeoHype::DistToHype(const Double_t *point, const Double_t *dir, Double_t 
    }
    Double_t a = dir[0]*dir[0] + dir[1]*dir[1] - t0*dir[2]*dir[2];
    Double_t b = t0*point[2]*dir[2] - point[0]*dir[0] - point[1]*dir[1];
-   Double_t c = point[0]*point[0] + point[1]*point[1] - t0*point[2]*point[2] - r0*r0;      
+   Double_t c = point[0]*point[0] + point[1]*point[1] - t0*point[2]*point[2] - r0*r0;
 
    if (TMath::Abs(a) < TGeoShape::Tolerance()) {
       if (TMath::Abs(b) < TGeoShape::Tolerance()) return 0;
@@ -322,12 +322,12 @@ Int_t TGeoHype::DistToHype(const Double_t *point, const Double_t *dir, Double_t 
       s[0] = snext;
       return 1;
    }
-   
+
    Double_t delta = b*b - a*c;
    Double_t ainv = 1./a;
    Int_t npos = 0;
    if (delta < 0.) return 0;
-   delta = TMath::Sqrt(delta); 
+   delta = TMath::Sqrt(delta);
    Double_t sone = TMath::Sign(1.,ainv);
    Int_t i = -1;
    while (i<2) {
@@ -344,18 +344,18 @@ Int_t TGeoHype::DistToHype(const Double_t *point, const Double_t *dir, Double_t 
          if (in) ndotd *= -1;
          if (ndotd<0) s[npos++] = snext;
       } else          s[npos++] = snext;
-   }   
+   }
    return npos;
 }
-   
+
 //_____________________________________________________________________________
-TGeoVolume *TGeoHype::Divide(TGeoVolume * /*voldiv*/, const char *divname, Int_t /*iaxis*/, Int_t /*ndiv*/, 
-                             Double_t /*start*/, Double_t /*step*/) 
+TGeoVolume *TGeoHype::Divide(TGeoVolume * /*voldiv*/, const char *divname, Int_t /*iaxis*/, Int_t /*ndiv*/,
+                             Double_t /*start*/, Double_t /*step*/)
 {
 // Cannot divide hyperboloids.
    Error("Divide", "Hyperboloids cannot be divided. Division volume %s not created", divname);
    return 0;
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoHype::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
@@ -382,8 +382,8 @@ Double_t TGeoHype::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
          return dx;
    }
    return dx;
-}         
-            
+}
+
 //_____________________________________________________________________________
 void TGeoHype::GetBoundingCylinder(Double_t *param) const
 {
@@ -411,9 +411,9 @@ TGeoShape *TGeoHype::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
       if (zmax<0) return 0;
       dz=zmax;
    } else {
-      Error("GetMakeRuntimeShape", "Shape %s does not have negative Z range", GetName());   
+      Error("GetMakeRuntimeShape", "Shape %s does not have negative Z range", GetName());
       return 0;
-   }   
+   }
    TGeoShape *hype = new TGeoHype(GetName(), dz, fRmax, fStOut, fRmin, fStIn);
    return hype;
 }
@@ -428,14 +428,14 @@ void TGeoHype::InspectShape() const
    printf("    Rout = %11.5f\n", fRmax);
    printf("    sout = %11.5f\n", fStOut);
    printf("    dz   = %11.5f\n", fDz);
-   
+
    printf(" Bounding box:\n");
    TGeoBBox::InspectShape();
 }
 
 //_____________________________________________________________________________
 TBuffer3D *TGeoHype::MakeBuffer3D() const
-{ 
+{
    // Creates a TBuffer3D describing *this* shape.
    // Coordinates are in local reference frame.
 
@@ -443,7 +443,7 @@ TBuffer3D *TGeoHype::MakeBuffer3D() const
    Bool_t hasRmin = HasInner();
    Int_t nbPnts = (hasRmin)?(2*n*n):(n*n+2);
    Int_t nbSegs = (hasRmin)?(4*n*n):(n*(2*n+1));
-   Int_t nbPols = (hasRmin)?(2*n*n):(n*(n+1)); 
+   Int_t nbPols = (hasRmin)?(2*n*n):(n*(n+1));
 
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
                                    nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols);
@@ -453,7 +453,7 @@ TBuffer3D *TGeoHype::MakeBuffer3D() const
       SetSegsAndPols(*buff);
    }
 
-   return buff; 
+   return buff;
 }
 
 //_____________________________________________________________________________
@@ -481,7 +481,7 @@ void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
    //        iseg = isgenout + i*n + j, i=0,n-2,  j=0,n-1
    //        seg(i,j) = [irout+n*i+j] and [irout+n*(i+1)+j]
    //   Lower cap : [islow = isgenout + n*(n-1)], n radial segments
-   //        iseg = islow + j,  j=0,n-1   
+   //        iseg = islow + j,  j=0,n-1
    //        seg(j) = [irin + j] and [irout+j]
    //   Upper cap: [ishi = islow + n], nradial segments
    //        iseg = ishi + j, j=0,n-1
@@ -496,7 +496,7 @@ void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
    //   Upper cap: [ishi = islow +n]
    //        iseg = ishi + j, j=0,n-1
    //        seg[j] = [irin+1] and [irout+n*(n-1) + j]
-   
+
    Int_t isin = 0;
    Int_t isgenin = (hasRmin)?(isin+n*n):0;
    Int_t isout = (hasRmin)?(isgenin+n*(n-1)):0;
@@ -523,17 +523,17 @@ void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
             buff.fSegs[npt+1] = irin+n*i+j;
             buff.fSegs[npt+2] = irin+n*(i+1)+j;
          }
-      }      
+      }
    }
    // Fill outer circle segments (n*n)
-   for (i=0; i<n; i++) {   
-      for (j=0; j<n; j++) { 
-         npt = 3*(isout + n*i+j);     
+   for (i=0; i<n; i++) {
+      for (j=0; j<n; j++) {
+         npt = 3*(isout + n*i+j);
          buff.fSegs[npt]   = c;
          buff.fSegs[npt+1] = irout+n*i+j;
          buff.fSegs[npt+2] = irout+n*i+((j+1)%n);
       }
-   }      
+   }
    // Fill outer generators (n*(n-1))
    for (i=0; i<n-1; i++) {
       for (j=0; j<n; j++) {
@@ -542,7 +542,7 @@ void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
          buff.fSegs[npt+1] = irout+n*i+j;
          buff.fSegs[npt+2] = irout+n*(i+1)+j;
       }
-   }      
+   }
    // Fill lower cap (n)
    for (j=0; j<n; j++) {
       npt = 3*(islo+j);
@@ -550,7 +550,7 @@ void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
       buff.fSegs[npt+1] = irin;
       if (hasRmin) buff.fSegs[npt+1] += j;
       buff.fSegs[npt+2] = irout + j;
-   }   
+   }
    // Fill upper cap (n)
    for (j=0; j<n; j++) {
       npt = 3*(ishi+j);
@@ -558,7 +558,7 @@ void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
       buff.fSegs[npt+1] = irin+1;
       if (hasRmin) buff.fSegs[npt+1] += n*(n-1)+j-1;
       buff.fSegs[npt+2] = irout + n*(n-1)+j;
-   }   
+   }
 
    // Fill polygons
    // Inner polygons: [ipin = 0] (n-1) slices * n (edges)
@@ -601,7 +601,7 @@ void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
       }
    }
    // Outer polygons n*(n-1)
-   for (i=0; i<n-1; i++) {        
+   for (i=0; i<n-1; i++) {
       for (j=0; j<n; j++) {
          npt = 6*(ipout+n*i+j);
          buff.fPols[npt]   = c;
@@ -614,7 +614,7 @@ void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
    }
    // End caps
    if (hasRmin) {
-      for (j=0; j<n; j++) {  
+      for (j=0; j<n; j++) {
          npt = 6*(iplo+j);
          buff.fPols[npt]   = c+1;
          buff.fPols[npt+1] = 4;
@@ -623,7 +623,7 @@ void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
          buff.fPols[npt+4] = isout+j;
          buff.fPols[npt+5] = islo+((j+1)%n);
       }
-      for (j=0; j<n; j++) {  
+      for (j=0; j<n; j++) {
          npt = 6*(ipup+j);
          buff.fPols[npt]   = c+2;
          buff.fPols[npt+1] = 4;
@@ -632,8 +632,8 @@ void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
          buff.fPols[npt+4] = isout+n*(n-1)+j;
          buff.fPols[npt+5] = ishi+j;
       }
-   } else {      
-      for (j=0; j<n; j++) {  
+   } else {
+      for (j=0; j<n; j++) {
          npt = 6*iplo+5*j;
          buff.fPols[npt]   = c+1;
          buff.fPols[npt+1] = 3;
@@ -641,7 +641,7 @@ void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
          buff.fPols[npt+3] = islo+((j+1)%n);
          buff.fPols[npt+4] = islo+j;
       }
-      for (j=0; j<n; j++) {  
+      for (j=0; j<n; j++) {
          npt = 6*iplo+5*(n+j);
          buff.fPols[npt]   = c+2;
          buff.fPols[npt+1] = 3;
@@ -649,7 +649,7 @@ void TGeoHype::SetSegsAndPols(TBuffer3D &buff) const
          buff.fPols[npt+3] = ishi+j;
          buff.fPols[npt+4] = ishi+((j+1)%n);
       }
-   }   
+   }
 }
 
 //_____________________________________________________________________________
@@ -666,7 +666,7 @@ Double_t TGeoHype::RadiusHypeSq(Double_t z, Bool_t inner) const
    }
    return (r0*r0+tsq*z*z);
 }
-         
+
 //_____________________________________________________________________________
 Double_t TGeoHype::ZHypeSq(Double_t r, Bool_t inner) const
 {
@@ -681,7 +681,7 @@ Double_t TGeoHype::ZHypeSq(Double_t r, Bool_t inner) const
    }
    if (TMath::Abs(tsq) < TGeoShape::Tolerance()) return TGeoShape::Big();
    return ((r*r-r0*r0)/tsq);
-}     
+}
 
 //_____________________________________________________________________________
 Double_t TGeoHype::Safety(const Double_t *point, Bool_t in) const
@@ -690,7 +690,7 @@ Double_t TGeoHype::Safety(const Double_t *point, Bool_t in) const
 // to option. The matching point on the shape is stored in spoint.
    Double_t safe, safrmin, safrmax;
    if (in) {
-      safe    = fDz-TMath::Abs(point[2]); 
+      safe    = fDz-TMath::Abs(point[2]);
       safrmin = SafetyToHype(point, kTRUE, in);
       if (safrmin < safe) safe = safrmin;
       safrmax = SafetyToHype(point, kFALSE,in);
@@ -700,8 +700,8 @@ Double_t TGeoHype::Safety(const Double_t *point, Bool_t in) const
       safrmin = SafetyToHype(point, kTRUE, in);
       if (safrmin > safe) safe = safrmin;
       safrmax = SafetyToHype(point, kFALSE,in);
-      if (safrmax > safe) safe = safrmax;      
-   }   
+      if (safrmax > safe) safe = safrmax;
+   }
    return safe;
 }
 
@@ -728,16 +728,16 @@ Double_t TGeoHype::SafetyToHype(const Double_t *point, Bool_t inner, Bool_t in) 
       tsq = fToutsq;
    }
    if (TMath::Abs(dr)<TGeoShape::Tolerance()) return 0.;
-   // 1. dr<0 => approximate safety with distance to tangent to hyperbola in z = |point[2]|   
+   // 1. dr<0 => approximate safety with distance to tangent to hyperbola in z = |point[2]|
    Double_t m;
    if (dr<0) {
       m = rh/(tsq*TMath::Abs(point[2]));
       saf = -m*dr/TMath::Sqrt(1.+m*m);
       return saf;
    }
-   // 2. dr>0 => approximate safety with distance from point to segment P1(r(z0),z0) and P2(r0, z(r0))   
+   // 2. dr>0 => approximate safety with distance from point to segment P1(r(z0),z0) and P2(r0, z(r0))
    m = (TMath::Sqrt(ZHypeSq(r,inner)) - TMath::Abs(point[2]))/dr;
-   saf = m*dr/TMath::Sqrt(1.+m*m);        
+   saf = m*dr/TMath::Sqrt(1.+m*m);
    return saf;
 }
 
@@ -753,7 +753,7 @@ void TGeoHype::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    out << "   stout = " << fStOut << ";" << std::endl;
    out << "   dz    = " << fDz << ";" << std::endl;
    out << "   TGeoShape *" << GetPointerName() << " = new TGeoHype(\"" << GetName() << "\",rin,stin,rout,stout,dz);" << std::endl;
-   TObject::SetBit(TGeoShape::kGeoSavePrimitive);  
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 //_____________________________________________________________________________
@@ -771,7 +771,7 @@ void TGeoHype::SetHypeDimensions(Double_t rin, Double_t stin, Double_t rout, Dou
    fToutsq = fTout*fTout;
    if ((fRmin==0) && (fStIn==0)) SetShapeBit(kGeoRSeg, kTRUE);
    else                          SetShapeBit(kGeoRSeg, kFALSE);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoHype::SetDimensions(Double_t *param)
@@ -788,7 +788,7 @@ void TGeoHype::SetDimensions(Double_t *param)
    Double_t rout = param[3];
    Double_t stout = param[4];
    SetHypeDimensions(rin, stin, rout, stout, dz);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoHype::SetPoints(Double_t *points) const
@@ -820,10 +820,10 @@ void TGeoHype::SetPoints(Double_t *points) const
       points[indx++] = 0.;
       points[indx++] = 0.;
       points[indx++] = -fDz;
-      points[indx++] = 0.;         
+      points[indx++] = 0.;
       points[indx++] = 0.;
       points[indx++] = fDz;
-   }   
+   }
    // Outer surface points
    for (i=0; i<n; i++) {
       z = -fDz + i*dz;
@@ -867,10 +867,10 @@ void TGeoHype::SetPoints(Float_t *points) const
       points[indx++] = 0.;
       points[indx++] = 0.;
       points[indx++] = -fDz;
-      points[indx++] = 0.;         
+      points[indx++] = 0.;
       points[indx++] = 0.;
       points[indx++] = fDz;
-   }   
+   }
    // Outer surface points
    for (i=0; i<n; i++) {
       z = -fDz + i*dz;
@@ -892,7 +892,7 @@ void TGeoHype::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
    Bool_t hasRmin = HasInner();
    nvert = (hasRmin)?(2*n*n):(n*n+2);
    nsegs = (hasRmin)?(4*n*n):(n*(2*n+1));
-   npols = (hasRmin)?(2*n*n):(n*(n+1)); 
+   npols = (hasRmin)?(2*n*n):(n*(n+1));
 }
 
 //_____________________________________________________________________________
@@ -930,7 +930,7 @@ const TBuffer3D & TGeoHype::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
       Bool_t hasRmin = HasInner();
       Int_t nbPnts = (hasRmin)?(2*n*n):(n*n+2);
       Int_t nbSegs = (hasRmin)?(4*n*n):(n*(2*n+1));
-      Int_t nbPols = (hasRmin)?(2*n*n):(n*(n+1)); 
+      Int_t nbPols = (hasRmin)?(2*n*n):(n*(n+1));
       if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
@@ -941,10 +941,10 @@ const TBuffer3D & TGeoHype::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
          TransformPoints(buffer.fPnts, buffer.NbPnts());
       }
 
-      SetSegsAndPols(buffer);      
+      SetSegsAndPols(buffer);
       buffer.SetSectionsValid(TBuffer3D::kRaw);
    }
-      
+
    return buffer;
 }
 

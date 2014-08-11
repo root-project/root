@@ -148,7 +148,7 @@ std::string TFunction::GetReturnTypeNormalizedName() const
    // which include Double32_t, Float16_t, [U]Long64_t and std::string.  It
    // also has std:: removed [This is subject to change].
    //
-   
+
    if (fInfo == 0 || gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
    return gCling->MethodInfo_TypeNormalizedName(fInfo);
 }
@@ -184,7 +184,7 @@ Long_t TFunction::Property() const
 Long_t TFunction::ExtraProperty() const
 {
    // Get property description word. For meaning of bits see EProperty.
-   
+
    return fInfo ? gCling->MethodInfo_ExtraProperty(fInfo) : 0;
 }
 
@@ -272,7 +272,7 @@ Bool_t TFunction::Update(MethodInfo_t *info)
 
    if (info == 0) {
       if (fInfo) gCling->MethodInfo_Delete(fInfo);
-      fInfo = 0;      
+      fInfo = 0;
       if (fMethodArgs) {
         for (Int_t i = 0; i < fMethodArgs->LastIndex() + 1; i ++) {
            TMethodArg *arg = (TMethodArg *) fMethodArgs->At( i );

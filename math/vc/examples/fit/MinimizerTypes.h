@@ -43,7 +43,7 @@ struct GSL_NLS {
    static std::string name2() { return ""; }
 };
 
-struct LINEAR { 
+struct LINEAR {
    static std::string name() { return "Linear"; }
    static std::string name2() { return ""; }
 };

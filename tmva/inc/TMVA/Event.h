@@ -108,6 +108,7 @@ namespace TMVA {
       void     SetVal                ( UInt_t ivar, Float_t val );
       void     SetTarget             ( UInt_t itgt, Float_t value );
       void     SetSpectator          ( UInt_t ivar, Float_t value );
+      void     SetVariableArrangement( std::vector<UInt_t>* const m ) const;
 
       void     SetDoNotBoost         () const  { fDoNotBoost = kTRUE; }
       static void ClearDynamicVariables() {}
@@ -124,9 +125,12 @@ namespace TMVA {
 
 
       mutable std::vector<Float_t>   fValues;          // the event values ; mutable, to be able to copy the dynamic values in there
+
+      mutable std::vector<Float_t>   fValuesRearranged;   // the event values ; mutable, to be able to copy the dynamic values in there
       mutable std::vector<Float_t*>* fValuesDynamic;   // the event values
       std::vector<Float_t>   fTargets;         // target values for regression
       mutable std::vector<Float_t>   fSpectators;      // "visisting" variables not used in MVAs ; mutable, to be able to copy the dynamic values in there
+      mutable std::vector<UInt_t>*   fVariableArrangement;  // needed for MethodCategories, where we can train on other than the main variables
 
       UInt_t                         fClass;           // class number
       Double_t                       fWeight;          // event weight (product of global and individual weights)

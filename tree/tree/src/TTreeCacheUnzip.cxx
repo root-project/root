@@ -111,7 +111,7 @@ TTreeCacheUnzip::TTreeCacheUnzip(TTree *tree, Int_t buffersize) : TTreeCache(tre
    fUnzipBufferSize(0),
    fNUnzip(0),
    fNFound(0),
-   fNStalls(0),                                                                 
+   fNStalls(0),
    fNMissed(0)
 {
    // Constructor.
@@ -224,9 +224,9 @@ Bool_t TTreeCacheUnzip::FillBuffer()
       TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
       Long64_t entry = tree->GetReadEntry();
 
-      // If the entry is in the range we previously prefetched, there is 
+      // If the entry is in the range we previously prefetched, there is
       // no point in retrying.   Note that this will also return false
-      // during the training phase (fEntryNext is then set intentional to 
+      // during the training phase (fEntryNext is then set intentional to
       // the end of the training phase).
       if (fEntryCurrent <= entry  && entry < fEntryNext) return kFALSE;
 
@@ -402,7 +402,7 @@ void TTreeCacheUnzip::SendUnzipStartSignal(Bool_t broadcast)
 
    if (broadcast)
       fUnzipStartCondition->Broadcast();
-   else 
+   else
       fUnzipStartCondition->Signal();
 }
 
@@ -688,7 +688,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
       // We go straight to TTreeCache/TfileCacheRead, in order to get the info we need
       //  pointer to the original zipped chunk
       //  its index in the original unsorted offsets lists
-      //  
+      //
       // Actually there are situations in which copying the buffer is not
       // useful. But the choice is among doing once more a small memcpy or a binary search in a large array. I prefer the former.
       // Also, here we prefer not to trigger the (re)population of the chunks in the TFileCacheRead. That is
@@ -768,7 +768,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
                   }
                   else {
                      memcpy(*buf, fUnzipChunks[seekidx], fUnzipLen[seekidx]);
-	             delete fUnzipChunks[seekidx];
+                     delete fUnzipChunks[seekidx];
                      fTotalUnzipBytes -= fUnzipLen[seekidx];
                      fUnzipChunks[seekidx] = 0;
                      SendUnzipStartSignal(kFALSE);
@@ -1092,10 +1092,8 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
                   break;
                }
             }
-	    if (idxtounzip < 0) fBlocksToGo = 0;
+            if (idxtounzip < 0) fBlocksToGo = 0;
          }
-
-
       }
 
    } // lock scope
@@ -1138,7 +1136,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
       }
 
 
-      if (gDebug > 0) 
+      if (gDebug > 0)
       Info("UnzipCache", "Going to unzip block %d", idxtounzip);
 
       readbuf = ReadBufferExt(locbuff, rdoffs, rdlen, loc);
@@ -1155,7 +1153,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
          fUnzipChunks[idxtounzip] = 0;
          fUnzipLen[idxtounzip] = 0;
          fUnzipDoneCondition->Signal();
-         
+
          startindex = 0;
          return 1;
       }

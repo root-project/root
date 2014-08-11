@@ -52,9 +52,9 @@ namespace ROOT {
       TList    fListOfTopProxies;
       TList   *fCurrentListOfTopProxies; //!
       TList    fListOfForwards;
-      TTreeProxyGenerator(TTree* tree, const char *script, const char *fileprefix, 
+      TTreeProxyGenerator(TTree* tree, const char *script, const char *fileprefix,
                           const char *option, UInt_t maxUnrolling);
-      TTreeProxyGenerator(TTree* tree, const char *script, const char *cutscript, 
+      TTreeProxyGenerator(TTree* tree, const char *script, const char *cutscript,
                           const char *fileprefix, const char *option, UInt_t maxUnrolling);
 
       TBranchProxyClassDescriptor* AddClass(TBranchProxyClassDescriptor *desc);

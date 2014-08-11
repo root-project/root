@@ -27,14 +27,14 @@ TColumnView::TColumnView(const char *colName,TTable *table):TChair(table)
 }
 //______________________________________________________________________________
 TColumnView::~TColumnView()
-{ 
+{
    //destructor
 }
 //______________________________________________________________________________
 void TColumnView::Browse(TBrowser *)
 {
    // Create a column histogram for the simple column
-   if (!IsFolder()) 
+   if (!IsFolder())
    {
       Draw(GetName(),"");
       if (gPad) {
@@ -56,8 +56,8 @@ TH1 *TColumnView::Histogram(const char *selection)
 }
 
 //______________________________________________________________________________
-Bool_t  TColumnView::IsFolder() const 
-{ 
+Bool_t  TColumnView::IsFolder() const
+{
    // Treat the column with the pointer to the "Ptr" as a "folder"
    Bool_t isFolder = kFALSE;
    const TTable *thisTable = Table();

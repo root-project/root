@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -22,20 +22,20 @@ namespace ROOT {
 
 
 
-/** 
+/**
 
 Function which has parameters. For example, one could define
 a one-dimensional Gaussian, by considering x as an input coordinate
 for the evaluation of the function, and the mean and the square root
 of the variance as parameters.
 <p>
-AS OF NOW PARAMETRICFUNCTION INHERITS FROM FCNBASE INSTEAD OF 
+AS OF NOW PARAMETRICFUNCTION INHERITS FROM FCNBASE INSTEAD OF
 GENERICFUNCTION. THIS IS ONLY BECAUSE NUMERICAL2PGRADIENTCALCULATOR
 NEEDS AN FCNBASE OBJECT AND WILL BE CHANGED!!!!!!!!!!!!!!!!
 
 @ingroup Minuit
 
-\todo ParametricFunction and all the classes that inherit from it 
+\todo ParametricFunction and all the classes that inherit from it
 are inheriting also FCNBase so that the Gradient calculation has
 the Up() member function. That is not really good...
 
@@ -49,13 +49,13 @@ public:
 
   /**
 
-  Constructor which initializes the ParametricFunction with the 
+  Constructor which initializes the ParametricFunction with the
   parameters given as input.
 
   @param params vector containing the initial Parameter values
 
   */
-  
+
   ParametricFunction(const std::vector<double>& params) : par(params) {}
 
 
@@ -179,7 +179,7 @@ public:
  protected:
 
   /**
-  
+
   The vector containing the parameters of the function
   It is mutable for "historical reasons" as in the hierarchy
   methods and classes are const and all the implications of changing
@@ -195,5 +195,5 @@ public:
   }  // namespace Minuit2
 
 }  // namespace ROOT
- 
+
 #endif  // ROOT_Minuit2_ParametricFunction

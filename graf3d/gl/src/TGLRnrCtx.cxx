@@ -103,7 +103,7 @@ TGLRnrCtx::TGLRnrCtx(TGLViewerBase* viewer) :
    fGrabbedImage  (0)
 {
    // Constructor.
-   
+
    fColorSetStack = new lpTGLColorSet_t;
    fColorSetStack->push_back(0);
 
@@ -402,7 +402,7 @@ void TGLRnrCtx::RegisterFont(Int_t size, const char* name, Int_t mode, TGLFont& 
 GLUquadric *TGLRnrCtx::GetGluQuadric()
 {
    // Initialize fQuadric.
-   
+
    if (!fQuadric) {
       if ((fQuadric = gluNewQuadric())) {
          gluQuadricOrientation(fQuadric, (GLenum)GLU_OUTSIDE);
@@ -410,7 +410,7 @@ GLUquadric *TGLRnrCtx::GetGluQuadric()
       } else
          Error("TGLRnrCtx::GetGluQuadric", "gluNewQuadric failed");
    }
-   
+
    return fQuadric;
 }
 

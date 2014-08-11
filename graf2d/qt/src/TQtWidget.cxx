@@ -67,7 +67,7 @@ TQtWidgetBuffer::TQtWidgetBuffer(const TQtWidgetBuffer &b)
 : fWidget(b.fWidget),fBuffer(0), fIsImage(b.fIsImage)
 {
    // Copy ctor. Create the copy and account the new widget size
-   if (fWidget && (fWidget->size() != QSize(0,0))) { 
+   if (fWidget && (fWidget->size() != QSize(0,0))) {
       if (fIsImage) {
          QImage resized =((QImage*)b.fBuffer)->scaled (fWidget->size());
          fBuffer = new  QImage(resized);
@@ -76,7 +76,7 @@ TQtWidgetBuffer::TQtWidgetBuffer(const TQtWidgetBuffer &b)
          fBuffer = new  QPixmap(resized);
       }
    }
-} 
+}
 //___________________________________________________________________
 TQtWidgetBuffer:: ~TQtWidgetBuffer()
 {
@@ -90,7 +90,7 @@ void TQtWidgetBuffer::Clear()
 {
    // Clear the buffer with the transparent color
    if (fBuffer &&  !fIsImage ) {
-#ifdef R__WIN32   
+#ifdef R__WIN32
          ((QPixmap*)fBuffer)->fill(Qt::transparent);
 #else
          QPainter p(fBuffer);
@@ -198,7 +198,7 @@ TQtWidget::TQtWidget(QWidget* mother, Qt::WFlags f,bool embedded) :
      ,fBits(0),fNeedStretch(false),fCanvas(0),fPixmapID(0)
      ,fPixmapScreen(0),fPaint(TRUE),fSizeChanged(FALSE)
      ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
-     ,fInsidePaintEvent(false),fOldMousePos(-1,-1),fIgnoreLeaveEnter(0),fRefreshTimer(0) 
+     ,fInsidePaintEvent(false),fOldMousePos(-1,-1),fIgnoreLeaveEnter(0),fRefreshTimer(0)
 { setObjectName("tqtwidget"); Init() ;}
 
 //_____________________________________________________________________________
@@ -260,15 +260,15 @@ TQtWidget::~TQtWidget()
 }
 
 //______________________________________________________________________________
-void TQtWidget::AdjustBufferSize() 
+void TQtWidget::AdjustBufferSize()
 {
    // Adjust the widget buffer size
    TQtWidgetBuffer &buf = SetBuffer();
    QSize s(buf.Width(),buf.Height());
    if ( s != size() )  {
 #if 0
-       qDebug() << "TQtWidget::AdjustBufferSize(): " 
-             << this 
+       qDebug() << "TQtWidget::AdjustBufferSize(): "
+             << this
              << s << size();
 #endif
       if (fPixmapID) {
@@ -357,10 +357,10 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
           for (int i = 0; i < args.size(); ++i) {
              QString nextarg = args.at(i);
              Int_t nchi = nextarg.length()+1;
-             localArgv[i]= new char[nchi]; 
+             localArgv[i]= new char[nchi];
              memcpy(localArgv[i], nextarg.toAscii().constData(),nchi-1);
              localArgv[i][nchi-1]=0;
-          } 
+          }
        } else {
          localArgv  = argv;
        }
@@ -394,7 +394,7 @@ TApplication *TQtWidget::InitRint( Bool_t /*prompt*/, const char *appClassName, 
 void TQtWidget::Erase()
 {
   // Erases the entire widget and its double buffer
- 
+
   SetBuffer();
 //  buf.fill(this,QPoint(0,0));
   if (fPixmapScreen)  fPixmapScreen->Clear();
@@ -429,7 +429,7 @@ void TQtWidget::Disconnect()
 void TQtWidget::Refresh()
 {
    // [slot]  to allow Qt signal refreshing the ROOT TCanvas if needed
-   // use the permanent single shot timer to eliminate 
+   // use the permanent single shot timer to eliminate
    // the redundand refreshing for the sake of the performance
    if (!fRefreshTimer) {
       fRefreshTimer  = new QTimer(this);
@@ -452,12 +452,12 @@ void TQtWidget::RefreshCB()
    }
    if (!fInsidePaintEvent) { update(); }
    else {
-      qDebug() << " TQtWidget::Refresh() update inside of paintEvent !!!" << this; 
+      qDebug() << " TQtWidget::Refresh() update inside of paintEvent !!!" << this;
    }
 }
 //_____________________________________________________________________________
-void TQtWidget::SetCanvas(TCanvas *c) 
-{ 
+void TQtWidget::SetCanvas(TCanvas *c)
+{
    //  remember my host TCanvas and adopt its name
    fCanvas = c;
    // qDebug() << "TQtWidget::SetCanvas(TCanvas *c)" << fCanvas << fCanvas->GetName() ;
@@ -557,17 +557,17 @@ void TQtWidget::mousePressEvent (QMouseEvent *e)
          break;
       }
       case Qt::MidButton:   rootButton = kButton2Down; break;
-      default: break;
+         default: break;
       };
       if (rootButton != kNoEvent) {
          e->accept();
-	 if (rootButton == kButton3Down) {
-           bool lastvalue = c->TestBit(kNoContextMenu);
-           c->SetBit(kNoContextMenu);
-	   c->HandleInput(rootButton, e->x(), e->y());
-           c->SetBit(kNoContextMenu, lastvalue);
+         if (rootButton == kButton3Down) {
+            bool lastvalue = c->TestBit(kNoContextMenu);
+            c->SetBit(kNoContextMenu);
+            c->HandleInput(rootButton, e->x(), e->y());
+            c->SetBit(kNoContextMenu, lastvalue);
          } else {
-	   c->HandleInput(rootButton, e->x(), e->y());
+            c->HandleInput(rootButton, e->x(), e->y());
          }
          EmitSignal(kMousePressEvent);
          return;
@@ -586,7 +586,7 @@ void TQtWidget::mouseMoveEvent (QMouseEvent * e)
    //  kButton1Motion = 21, kButton2Motion = 22, kButton3Motion = 23, kKeyPress = 24
    EEventType rootButton = kMouseMotion;
    if ( fOldMousePos != e->pos() && fIgnoreLeaveEnter < 2  ) { // workaround of Qt 4.5.x bug
-      fOldMousePos = e->pos(); 
+      fOldMousePos = e->pos();
       TCanvas *c = Canvas();
       if (c && !fWrapper){
          if (e->buttons() & Qt::LeftButton) { rootButton = kButton1Motion; }
@@ -724,11 +724,11 @@ void TQtWidget::resizeEvent(QResizeEvent *e)
       {
          fSizeChanged=TRUE;
 #if 0
-         if (Qt::LeftButton == QApplication::mouseButtons()) 
+         if (Qt::LeftButton == QApplication::mouseButtons())
          {
             fNeedStretch=true;
             fPaint = false;
-         } else 
+         } else
 #endif
          {
             fPaint = kTRUE;
@@ -970,7 +970,7 @@ TQtWidgetBuffer  &TQtWidget::SetBuffer() {
    return  *buf;
 }
 //______________________________________________________________________________
-QPixmap  *TQtWidget::GetOffScreenBuffer()  const { 
+QPixmap  *TQtWidget::GetOffScreenBuffer()  const {
    //  return the current widget buffer;
    return fPixmapID ? (QPixmap  *)fPixmapID->Buffer():0;
 }

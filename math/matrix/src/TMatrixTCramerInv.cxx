@@ -39,7 +39,7 @@ NamespaceImp(TMatrixTCramerInv);
 #endif
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TMatrixTCramerInv::Inv2x2(TMatrixT<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 2 || m.GetNcols() != 2 || m.GetRowLwb() != m.GetColLwb()) {
@@ -70,7 +70,7 @@ Bool_t TMatrixTCramerInv::Inv2x2(TMatrixT<Element> &m,Double_t *determ)
 }
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TMatrixTCramerInv::Inv3x3(TMatrixT<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 3 || m.GetNcols() != 3 || m.GetRowLwb() != m.GetColLwb()) {
@@ -129,7 +129,7 @@ Bool_t TMatrixTCramerInv::Inv3x3(TMatrixT<Element> &m,Double_t *determ)
    pM[6] = s*c02;
    pM[7] = s*c12;
    pM[8] = s*c22;
-  
+
    return kTRUE;
 }
 
@@ -156,7 +156,7 @@ Bool_t TMatrixTCramerInv::Inv3x3(TMatrixT<Element> &m,Double_t *determ)
 #define GF33 15
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TMatrixTCramerInv::Inv4x4(TMatrixT<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 4 || m.GetNcols() != 4 || m.GetRowLwb() != m.GetColLwb()) {
@@ -189,15 +189,15 @@ Bool_t TMatrixTCramerInv::Inv4x4(TMatrixT<Element> &m,Double_t *determ)
 
   // Find all NECESSARY 3x3 dets:   (16 of them)
 
-   const Double_t det3_012_012 = pM[GF00]*det2_12_12 - pM[GF01]*det2_12_02 
+   const Double_t det3_012_012 = pM[GF00]*det2_12_12 - pM[GF01]*det2_12_02
                                  + pM[GF02]*det2_12_01;
-   const Double_t det3_012_013 = pM[GF00]*det2_12_13 - pM[GF01]*det2_12_03 
+   const Double_t det3_012_013 = pM[GF00]*det2_12_13 - pM[GF01]*det2_12_03
                                  + pM[GF03]*det2_12_01;
-   const Double_t det3_012_023 = pM[GF00]*det2_12_23 - pM[GF02]*det2_12_03 
+   const Double_t det3_012_023 = pM[GF00]*det2_12_23 - pM[GF02]*det2_12_03
                                  + pM[GF03]*det2_12_02;
-   const Double_t det3_012_123 = pM[GF01]*det2_12_23 - pM[GF02]*det2_12_13 
+   const Double_t det3_012_123 = pM[GF01]*det2_12_23 - pM[GF02]*det2_12_13
                                  + pM[GF03]*det2_12_12;
-   const Double_t det3_013_012 = pM[GF00]*det2_13_12 - pM[GF01]*det2_13_02 
+   const Double_t det3_013_012 = pM[GF00]*det2_13_12 - pM[GF01]*det2_13_02
                                  + pM[GF02]*det2_13_01;
    const Double_t det3_013_013 = pM[GF00]*det2_13_13 - pM[GF01]*det2_13_03
                                  + pM[GF03]*det2_13_01;
@@ -205,7 +205,7 @@ Bool_t TMatrixTCramerInv::Inv4x4(TMatrixT<Element> &m,Double_t *determ)
                                  + pM[GF03]*det2_13_02;
    const Double_t det3_013_123 = pM[GF01]*det2_13_23 - pM[GF02]*det2_13_13
                                  + pM[GF03]*det2_13_12;
-   const Double_t det3_023_012 = pM[GF00]*det2_23_12 - pM[GF01]*det2_23_02 
+   const Double_t det3_023_012 = pM[GF00]*det2_23_12 - pM[GF01]*det2_23_02
                                  + pM[GF02]*det2_23_01;
    const Double_t det3_023_013 = pM[GF00]*det2_23_13 - pM[GF01]*det2_23_03
                                  + pM[GF03]*det2_23_01;
@@ -213,18 +213,18 @@ Bool_t TMatrixTCramerInv::Inv4x4(TMatrixT<Element> &m,Double_t *determ)
                                  + pM[GF03]*det2_23_02;
    const Double_t det3_023_123 = pM[GF01]*det2_23_23 - pM[GF02]*det2_23_13
                                  + pM[GF03]*det2_23_12;
-   const Double_t det3_123_012 = pM[GF10]*det2_23_12 - pM[GF11]*det2_23_02 
+   const Double_t det3_123_012 = pM[GF10]*det2_23_12 - pM[GF11]*det2_23_02
                                  + pM[GF12]*det2_23_01;
-   const Double_t det3_123_013 = pM[GF10]*det2_23_13 - pM[GF11]*det2_23_03 
+   const Double_t det3_123_013 = pM[GF10]*det2_23_13 - pM[GF11]*det2_23_03
                                   + pM[GF13]*det2_23_01;
-   const Double_t det3_123_023 = pM[GF10]*det2_23_23 - pM[GF12]*det2_23_03 
+   const Double_t det3_123_023 = pM[GF10]*det2_23_23 - pM[GF12]*det2_23_03
                                  + pM[GF13]*det2_23_02;
-   const Double_t det3_123_123 = pM[GF11]*det2_23_23 - pM[GF12]*det2_23_13 
+   const Double_t det3_123_123 = pM[GF11]*det2_23_23 - pM[GF12]*det2_23_13
                                  + pM[GF13]*det2_23_12;
 
   // Find the 4x4 det:
 
-   const Double_t det = pM[GF00]*det3_123_123 - pM[GF01]*det3_123_023 
+   const Double_t det = pM[GF00]*det3_123_123 - pM[GF01]*det3_123_023
                         + pM[GF02]*det3_123_013 - pM[GF03]*det3_123_012;
    if (determ)
       *determ = det;
@@ -293,7 +293,7 @@ Bool_t TMatrixTCramerInv::Inv4x4(TMatrixT<Element> &m,Double_t *determ)
 #define GM44 24
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TMatrixTCramerInv::Inv5x5(TMatrixT<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 5 || m.GetNcols() != 5 || m.GetRowLwb() != m.GetColLwb()) {
@@ -381,60 +381,60 @@ Bool_t TMatrixTCramerInv::Inv5x5(TMatrixT<Element> &m,Double_t *determ)
 
   // Find all NECESSARY 4x4 dets:   (25 of them)
 
-   const Double_t det4_0123_0123 = pM[GM00]*det3_123_123 - pM[GM01]*det3_123_023 
+   const Double_t det4_0123_0123 = pM[GM00]*det3_123_123 - pM[GM01]*det3_123_023
                                    + pM[GM02]*det3_123_013 - pM[GM03]*det3_123_012;
-   const Double_t det4_0123_0124 = pM[GM00]*det3_123_124 - pM[GM01]*det3_123_024 
+   const Double_t det4_0123_0124 = pM[GM00]*det3_123_124 - pM[GM01]*det3_123_024
                                    + pM[GM02]*det3_123_014 - pM[GM04]*det3_123_012;
-   const Double_t det4_0123_0134 = pM[GM00]*det3_123_134 - pM[GM01]*det3_123_034 
+   const Double_t det4_0123_0134 = pM[GM00]*det3_123_134 - pM[GM01]*det3_123_034
                                    + pM[GM03]*det3_123_014 - pM[GM04]*det3_123_013;
-   const Double_t det4_0123_0234 = pM[GM00]*det3_123_234 - pM[GM02]*det3_123_034 
+   const Double_t det4_0123_0234 = pM[GM00]*det3_123_234 - pM[GM02]*det3_123_034
                                    + pM[GM03]*det3_123_024 - pM[GM04]*det3_123_023;
-   const Double_t det4_0123_1234 = pM[GM01]*det3_123_234 - pM[GM02]*det3_123_134 
+   const Double_t det4_0123_1234 = pM[GM01]*det3_123_234 - pM[GM02]*det3_123_134
                                    + pM[GM03]*det3_123_124 - pM[GM04]*det3_123_123;
-   const Double_t det4_0124_0123 = pM[GM00]*det3_124_123 - pM[GM01]*det3_124_023 
+   const Double_t det4_0124_0123 = pM[GM00]*det3_124_123 - pM[GM01]*det3_124_023
                                    + pM[GM02]*det3_124_013 - pM[GM03]*det3_124_012;
-   const Double_t det4_0124_0124 = pM[GM00]*det3_124_124 - pM[GM01]*det3_124_024 
+   const Double_t det4_0124_0124 = pM[GM00]*det3_124_124 - pM[GM01]*det3_124_024
                                    + pM[GM02]*det3_124_014 - pM[GM04]*det3_124_012;
-   const Double_t det4_0124_0134 = pM[GM00]*det3_124_134 - pM[GM01]*det3_124_034 
+   const Double_t det4_0124_0134 = pM[GM00]*det3_124_134 - pM[GM01]*det3_124_034
                                    + pM[GM03]*det3_124_014 - pM[GM04]*det3_124_013;
-   const Double_t det4_0124_0234 = pM[GM00]*det3_124_234 - pM[GM02]*det3_124_034 
+   const Double_t det4_0124_0234 = pM[GM00]*det3_124_234 - pM[GM02]*det3_124_034
                                    + pM[GM03]*det3_124_024 - pM[GM04]*det3_124_023;
-   const Double_t det4_0124_1234 = pM[GM01]*det3_124_234 - pM[GM02]*det3_124_134 
+   const Double_t det4_0124_1234 = pM[GM01]*det3_124_234 - pM[GM02]*det3_124_134
                                    + pM[GM03]*det3_124_124 - pM[GM04]*det3_124_123;
-   const Double_t det4_0134_0123 = pM[GM00]*det3_134_123 - pM[GM01]*det3_134_023 
+   const Double_t det4_0134_0123 = pM[GM00]*det3_134_123 - pM[GM01]*det3_134_023
                                    + pM[GM02]*det3_134_013 - pM[GM03]*det3_134_012;
-   const Double_t det4_0134_0124 = pM[GM00]*det3_134_124 - pM[GM01]*det3_134_024 
+   const Double_t det4_0134_0124 = pM[GM00]*det3_134_124 - pM[GM01]*det3_134_024
                                    + pM[GM02]*det3_134_014 - pM[GM04]*det3_134_012;
-   const Double_t det4_0134_0134 = pM[GM00]*det3_134_134 - pM[GM01]*det3_134_034 
+   const Double_t det4_0134_0134 = pM[GM00]*det3_134_134 - pM[GM01]*det3_134_034
                                    + pM[GM03]*det3_134_014 - pM[GM04]*det3_134_013;
-   const Double_t det4_0134_0234 = pM[GM00]*det3_134_234 - pM[GM02]*det3_134_034 
+   const Double_t det4_0134_0234 = pM[GM00]*det3_134_234 - pM[GM02]*det3_134_034
                                    + pM[GM03]*det3_134_024 - pM[GM04]*det3_134_023;
-   const Double_t det4_0134_1234 = pM[GM01]*det3_134_234 - pM[GM02]*det3_134_134 
+   const Double_t det4_0134_1234 = pM[GM01]*det3_134_234 - pM[GM02]*det3_134_134
                                    + pM[GM03]*det3_134_124 - pM[GM04]*det3_134_123;
-   const Double_t det4_0234_0123 = pM[GM00]*det3_234_123 - pM[GM01]*det3_234_023 
+   const Double_t det4_0234_0123 = pM[GM00]*det3_234_123 - pM[GM01]*det3_234_023
                                    + pM[GM02]*det3_234_013 - pM[GM03]*det3_234_012;
-   const Double_t det4_0234_0124 = pM[GM00]*det3_234_124 - pM[GM01]*det3_234_024 
+   const Double_t det4_0234_0124 = pM[GM00]*det3_234_124 - pM[GM01]*det3_234_024
                                    + pM[GM02]*det3_234_014 - pM[GM04]*det3_234_012;
-   const Double_t det4_0234_0134 = pM[GM00]*det3_234_134 - pM[GM01]*det3_234_034 
+   const Double_t det4_0234_0134 = pM[GM00]*det3_234_134 - pM[GM01]*det3_234_034
                                    + pM[GM03]*det3_234_014 - pM[GM04]*det3_234_013;
-   const Double_t det4_0234_0234 = pM[GM00]*det3_234_234 - pM[GM02]*det3_234_034 
+   const Double_t det4_0234_0234 = pM[GM00]*det3_234_234 - pM[GM02]*det3_234_034
                                    + pM[GM03]*det3_234_024 - pM[GM04]*det3_234_023;
-   const Double_t det4_0234_1234 = pM[GM01]*det3_234_234 - pM[GM02]*det3_234_134 
+   const Double_t det4_0234_1234 = pM[GM01]*det3_234_234 - pM[GM02]*det3_234_134
                                    + pM[GM03]*det3_234_124 - pM[GM04]*det3_234_123;
-   const Double_t det4_1234_0123 = pM[GM10]*det3_234_123 - pM[GM11]*det3_234_023 
+   const Double_t det4_1234_0123 = pM[GM10]*det3_234_123 - pM[GM11]*det3_234_023
                                    + pM[GM12]*det3_234_013 - pM[GM13]*det3_234_012;
-   const Double_t det4_1234_0124 = pM[GM10]*det3_234_124 - pM[GM11]*det3_234_024 
+   const Double_t det4_1234_0124 = pM[GM10]*det3_234_124 - pM[GM11]*det3_234_024
                                     + pM[GM12]*det3_234_014 - pM[GM14]*det3_234_012;
-   const Double_t det4_1234_0134 = pM[GM10]*det3_234_134 - pM[GM11]*det3_234_034 
+   const Double_t det4_1234_0134 = pM[GM10]*det3_234_134 - pM[GM11]*det3_234_034
                                    + pM[GM13]*det3_234_014 - pM[GM14]*det3_234_013;
-   const Double_t det4_1234_0234 = pM[GM10]*det3_234_234 - pM[GM12]*det3_234_034 
+   const Double_t det4_1234_0234 = pM[GM10]*det3_234_234 - pM[GM12]*det3_234_034
                                    + pM[GM13]*det3_234_024 - pM[GM14]*det3_234_023;
-   const Double_t det4_1234_1234 = pM[GM11]*det3_234_234 - pM[GM12]*det3_234_134 
+   const Double_t det4_1234_1234 = pM[GM11]*det3_234_234 - pM[GM12]*det3_234_134
                                    + pM[GM13]*det3_234_124 - pM[GM14]*det3_234_123;
 
   // Find the 5x5 det:
 
-   const Double_t det = pM[GM00]*det4_1234_1234 - pM[GM01]*det4_1234_0234 + pM[GM02]*det4_1234_0134 
+   const Double_t det = pM[GM00]*det4_1234_1234 - pM[GM01]*det4_1234_0234 + pM[GM02]*det4_1234_0134
                         - pM[GM03]*det4_1234_0124 + pM[GM04]*det4_1234_0123;
    if (determ)
       *determ = det;
@@ -525,7 +525,7 @@ Bool_t TMatrixTCramerInv::Inv5x5(TMatrixT<Element> &m,Double_t *determ)
 #define GA55 35
 
 //______________________________________________________________________________
-template<class Element> 
+template<class Element>
 Bool_t TMatrixTCramerInv::Inv6x6(TMatrixT<Element> &m,Double_t *determ)
 {
    if (m.GetNrows() != 6 || m.GetNcols() != 6 || m.GetRowLwb() != m.GetColLwb()) {
@@ -665,163 +665,163 @@ Bool_t TMatrixTCramerInv::Inv6x6(TMatrixT<Element> &m,Double_t *determ)
    const Double_t det3_345_235 = pM[GA32]*det2_45_35 - pM[GA33]*det2_45_25 + pM[GA35]*det2_45_23;
    const Double_t det3_345_245 = pM[GA32]*det2_45_45 - pM[GA34]*det2_45_25 + pM[GA35]*det2_45_24;
    const Double_t det3_345_345 = pM[GA33]*det2_45_45 - pM[GA34]*det2_45_35 + pM[GA35]*det2_45_34;
- 
+
   // Find all NECESSGARY 4x4 dets:  (75 of them)
 
-   const Double_t det4_1234_0123 = pM[GA10]*det3_234_123 - pM[GA11]*det3_234_023 
+   const Double_t det4_1234_0123 = pM[GA10]*det3_234_123 - pM[GA11]*det3_234_023
                                    + pM[GA12]*det3_234_013 - pM[GA13]*det3_234_012;
-   const Double_t det4_1234_0124 = pM[GA10]*det3_234_124 - pM[GA11]*det3_234_024 
+   const Double_t det4_1234_0124 = pM[GA10]*det3_234_124 - pM[GA11]*det3_234_024
                                    + pM[GA12]*det3_234_014 - pM[GA14]*det3_234_012;
-   const Double_t det4_1234_0125 = pM[GA10]*det3_234_125 - pM[GA11]*det3_234_025 
+   const Double_t det4_1234_0125 = pM[GA10]*det3_234_125 - pM[GA11]*det3_234_025
                                    + pM[GA12]*det3_234_015 - pM[GA15]*det3_234_012;
-   const Double_t det4_1234_0134 = pM[GA10]*det3_234_134 - pM[GA11]*det3_234_034 
+   const Double_t det4_1234_0134 = pM[GA10]*det3_234_134 - pM[GA11]*det3_234_034
                                    + pM[GA13]*det3_234_014 - pM[GA14]*det3_234_013;
    const Double_t det4_1234_0135 = pM[GA10]*det3_234_135 - pM[GA11]*det3_234_035
                                    + pM[GA13]*det3_234_015 - pM[GA15]*det3_234_013;
    const Double_t det4_1234_0145 = pM[GA10]*det3_234_145 - pM[GA11]*det3_234_045
                                    + pM[GA14]*det3_234_015 - pM[GA15]*det3_234_014;
-   const Double_t det4_1234_0234 = pM[GA10]*det3_234_234 - pM[GA12]*det3_234_034 
+   const Double_t det4_1234_0234 = pM[GA10]*det3_234_234 - pM[GA12]*det3_234_034
                                    + pM[GA13]*det3_234_024 - pM[GA14]*det3_234_023;
-   const Double_t det4_1234_0235 = pM[GA10]*det3_234_235 - pM[GA12]*det3_234_035 
+   const Double_t det4_1234_0235 = pM[GA10]*det3_234_235 - pM[GA12]*det3_234_035
                                    + pM[GA13]*det3_234_025 - pM[GA15]*det3_234_023;
-   const Double_t det4_1234_0245 = pM[GA10]*det3_234_245 - pM[GA12]*det3_234_045 
+   const Double_t det4_1234_0245 = pM[GA10]*det3_234_245 - pM[GA12]*det3_234_045
                                    + pM[GA14]*det3_234_025 - pM[GA15]*det3_234_024;
-   const Double_t det4_1234_0345 = pM[GA10]*det3_234_345 - pM[GA13]*det3_234_045 
+   const Double_t det4_1234_0345 = pM[GA10]*det3_234_345 - pM[GA13]*det3_234_045
                                    + pM[GA14]*det3_234_035 - pM[GA15]*det3_234_034;
-   const Double_t det4_1234_1234 = pM[GA11]*det3_234_234 - pM[GA12]*det3_234_134 
+   const Double_t det4_1234_1234 = pM[GA11]*det3_234_234 - pM[GA12]*det3_234_134
                                    + pM[GA13]*det3_234_124 - pM[GA14]*det3_234_123;
-   const Double_t det4_1234_1235 = pM[GA11]*det3_234_235 - pM[GA12]*det3_234_135 
+   const Double_t det4_1234_1235 = pM[GA11]*det3_234_235 - pM[GA12]*det3_234_135
                                    + pM[GA13]*det3_234_125 - pM[GA15]*det3_234_123;
-   const Double_t det4_1234_1245 = pM[GA11]*det3_234_245 - pM[GA12]*det3_234_145 
+   const Double_t det4_1234_1245 = pM[GA11]*det3_234_245 - pM[GA12]*det3_234_145
                                    + pM[GA14]*det3_234_125 - pM[GA15]*det3_234_124;
-   const Double_t det4_1234_1345 = pM[GA11]*det3_234_345 - pM[GA13]*det3_234_145 
+   const Double_t det4_1234_1345 = pM[GA11]*det3_234_345 - pM[GA13]*det3_234_145
                                    + pM[GA14]*det3_234_135 - pM[GA15]*det3_234_134;
-   const Double_t det4_1234_2345 = pM[GA12]*det3_234_345 - pM[GA13]*det3_234_245 
+   const Double_t det4_1234_2345 = pM[GA12]*det3_234_345 - pM[GA13]*det3_234_245
                                    + pM[GA14]*det3_234_235 - pM[GA15]*det3_234_234;
-   const Double_t det4_1235_0123 = pM[GA10]*det3_235_123 - pM[GA11]*det3_235_023 
+   const Double_t det4_1235_0123 = pM[GA10]*det3_235_123 - pM[GA11]*det3_235_023
                                    + pM[GA12]*det3_235_013 - pM[GA13]*det3_235_012;
-   const Double_t det4_1235_0124 = pM[GA10]*det3_235_124 - pM[GA11]*det3_235_024 
+   const Double_t det4_1235_0124 = pM[GA10]*det3_235_124 - pM[GA11]*det3_235_024
                                    + pM[GA12]*det3_235_014 - pM[GA14]*det3_235_012;
-   const Double_t det4_1235_0125 = pM[GA10]*det3_235_125 - pM[GA11]*det3_235_025 
+   const Double_t det4_1235_0125 = pM[GA10]*det3_235_125 - pM[GA11]*det3_235_025
                                    + pM[GA12]*det3_235_015 - pM[GA15]*det3_235_012;
-   const Double_t det4_1235_0134 = pM[GA10]*det3_235_134 - pM[GA11]*det3_235_034 
+   const Double_t det4_1235_0134 = pM[GA10]*det3_235_134 - pM[GA11]*det3_235_034
                                    + pM[GA13]*det3_235_014 - pM[GA14]*det3_235_013;
-   const Double_t det4_1235_0135 = pM[GA10]*det3_235_135 - pM[GA11]*det3_235_035 
+   const Double_t det4_1235_0135 = pM[GA10]*det3_235_135 - pM[GA11]*det3_235_035
                                    + pM[GA13]*det3_235_015 - pM[GA15]*det3_235_013;
-   const Double_t det4_1235_0145 = pM[GA10]*det3_235_145 - pM[GA11]*det3_235_045 
+   const Double_t det4_1235_0145 = pM[GA10]*det3_235_145 - pM[GA11]*det3_235_045
                                    + pM[GA14]*det3_235_015 - pM[GA15]*det3_235_014;
-   const Double_t det4_1235_0234 = pM[GA10]*det3_235_234 - pM[GA12]*det3_235_034 
+   const Double_t det4_1235_0234 = pM[GA10]*det3_235_234 - pM[GA12]*det3_235_034
                                    + pM[GA13]*det3_235_024 - pM[GA14]*det3_235_023;
-   const Double_t det4_1235_0235 = pM[GA10]*det3_235_235 - pM[GA12]*det3_235_035 
+   const Double_t det4_1235_0235 = pM[GA10]*det3_235_235 - pM[GA12]*det3_235_035
                                    + pM[GA13]*det3_235_025 - pM[GA15]*det3_235_023;
-   const Double_t det4_1235_0245 = pM[GA10]*det3_235_245 - pM[GA12]*det3_235_045 
+   const Double_t det4_1235_0245 = pM[GA10]*det3_235_245 - pM[GA12]*det3_235_045
                                    + pM[GA14]*det3_235_025 - pM[GA15]*det3_235_024;
-   const Double_t det4_1235_0345 = pM[GA10]*det3_235_345 - pM[GA13]*det3_235_045 
+   const Double_t det4_1235_0345 = pM[GA10]*det3_235_345 - pM[GA13]*det3_235_045
                                    + pM[GA14]*det3_235_035 - pM[GA15]*det3_235_034;
-   const Double_t det4_1235_1234 = pM[GA11]*det3_235_234 - pM[GA12]*det3_235_134 
+   const Double_t det4_1235_1234 = pM[GA11]*det3_235_234 - pM[GA12]*det3_235_134
                                    + pM[GA13]*det3_235_124 - pM[GA14]*det3_235_123;
-   const Double_t det4_1235_1235 = pM[GA11]*det3_235_235 - pM[GA12]*det3_235_135 
+   const Double_t det4_1235_1235 = pM[GA11]*det3_235_235 - pM[GA12]*det3_235_135
                                    + pM[GA13]*det3_235_125 - pM[GA15]*det3_235_123;
-   const Double_t det4_1235_1245 = pM[GA11]*det3_235_245 - pM[GA12]*det3_235_145 
+   const Double_t det4_1235_1245 = pM[GA11]*det3_235_245 - pM[GA12]*det3_235_145
                                    + pM[GA14]*det3_235_125 - pM[GA15]*det3_235_124;
-   const Double_t det4_1235_1345 = pM[GA11]*det3_235_345 - pM[GA13]*det3_235_145 
+   const Double_t det4_1235_1345 = pM[GA11]*det3_235_345 - pM[GA13]*det3_235_145
                                    + pM[GA14]*det3_235_135 - pM[GA15]*det3_235_134;
-   const Double_t det4_1235_2345 = pM[GA12]*det3_235_345 - pM[GA13]*det3_235_245 
+   const Double_t det4_1235_2345 = pM[GA12]*det3_235_345 - pM[GA13]*det3_235_245
                                    + pM[GA14]*det3_235_235 - pM[GA15]*det3_235_234;
-   const Double_t det4_1245_0123 = pM[GA10]*det3_245_123 - pM[GA11]*det3_245_023 
+   const Double_t det4_1245_0123 = pM[GA10]*det3_245_123 - pM[GA11]*det3_245_023
                                    + pM[GA12]*det3_245_013 - pM[GA13]*det3_245_012;
-   const Double_t det4_1245_0124 = pM[GA10]*det3_245_124 - pM[GA11]*det3_245_024 
+   const Double_t det4_1245_0124 = pM[GA10]*det3_245_124 - pM[GA11]*det3_245_024
                                    + pM[GA12]*det3_245_014 - pM[GA14]*det3_245_012;
-   const Double_t det4_1245_0125 = pM[GA10]*det3_245_125 - pM[GA11]*det3_245_025 
+   const Double_t det4_1245_0125 = pM[GA10]*det3_245_125 - pM[GA11]*det3_245_025
                                    + pM[GA12]*det3_245_015 - pM[GA15]*det3_245_012;
-   const Double_t det4_1245_0134 = pM[GA10]*det3_245_134 - pM[GA11]*det3_245_034 
+   const Double_t det4_1245_0134 = pM[GA10]*det3_245_134 - pM[GA11]*det3_245_034
                                    + pM[GA13]*det3_245_014 - pM[GA14]*det3_245_013;
-   const Double_t det4_1245_0135 = pM[GA10]*det3_245_135 - pM[GA11]*det3_245_035 
+   const Double_t det4_1245_0135 = pM[GA10]*det3_245_135 - pM[GA11]*det3_245_035
                                    + pM[GA13]*det3_245_015 - pM[GA15]*det3_245_013;
-   const Double_t det4_1245_0145 = pM[GA10]*det3_245_145 - pM[GA11]*det3_245_045 
+   const Double_t det4_1245_0145 = pM[GA10]*det3_245_145 - pM[GA11]*det3_245_045
                                    + pM[GA14]*det3_245_015 - pM[GA15]*det3_245_014;
-   const Double_t det4_1245_0234 = pM[GA10]*det3_245_234 - pM[GA12]*det3_245_034 
+   const Double_t det4_1245_0234 = pM[GA10]*det3_245_234 - pM[GA12]*det3_245_034
                                    + pM[GA13]*det3_245_024 - pM[GA14]*det3_245_023;
-   const Double_t det4_1245_0235 = pM[GA10]*det3_245_235 - pM[GA12]*det3_245_035 
+   const Double_t det4_1245_0235 = pM[GA10]*det3_245_235 - pM[GA12]*det3_245_035
                                    + pM[GA13]*det3_245_025 - pM[GA15]*det3_245_023;
-   const Double_t det4_1245_0245 = pM[GA10]*det3_245_245 - pM[GA12]*det3_245_045 
+   const Double_t det4_1245_0245 = pM[GA10]*det3_245_245 - pM[GA12]*det3_245_045
                                    + pM[GA14]*det3_245_025 - pM[GA15]*det3_245_024;
-   const Double_t det4_1245_0345 = pM[GA10]*det3_245_345 - pM[GA13]*det3_245_045 
+   const Double_t det4_1245_0345 = pM[GA10]*det3_245_345 - pM[GA13]*det3_245_045
                                    + pM[GA14]*det3_245_035 - pM[GA15]*det3_245_034;
-   const Double_t det4_1245_1234 = pM[GA11]*det3_245_234 - pM[GA12]*det3_245_134 
+   const Double_t det4_1245_1234 = pM[GA11]*det3_245_234 - pM[GA12]*det3_245_134
                                    + pM[GA13]*det3_245_124 - pM[GA14]*det3_245_123;
-   const Double_t det4_1245_1235 = pM[GA11]*det3_245_235 - pM[GA12]*det3_245_135 
+   const Double_t det4_1245_1235 = pM[GA11]*det3_245_235 - pM[GA12]*det3_245_135
                                    + pM[GA13]*det3_245_125 - pM[GA15]*det3_245_123;
-   const Double_t det4_1245_1245 = pM[GA11]*det3_245_245 - pM[GA12]*det3_245_145 
+   const Double_t det4_1245_1245 = pM[GA11]*det3_245_245 - pM[GA12]*det3_245_145
                                    + pM[GA14]*det3_245_125 - pM[GA15]*det3_245_124;
-   const Double_t det4_1245_1345 = pM[GA11]*det3_245_345 - pM[GA13]*det3_245_145 
+   const Double_t det4_1245_1345 = pM[GA11]*det3_245_345 - pM[GA13]*det3_245_145
                                    + pM[GA14]*det3_245_135 - pM[GA15]*det3_245_134;
-   const Double_t det4_1245_2345 = pM[GA12]*det3_245_345 - pM[GA13]*det3_245_245 
+   const Double_t det4_1245_2345 = pM[GA12]*det3_245_345 - pM[GA13]*det3_245_245
                                    + pM[GA14]*det3_245_235 - pM[GA15]*det3_245_234;
-   const Double_t det4_1345_0123 = pM[GA10]*det3_345_123 - pM[GA11]*det3_345_023 
+   const Double_t det4_1345_0123 = pM[GA10]*det3_345_123 - pM[GA11]*det3_345_023
                                    + pM[GA12]*det3_345_013 - pM[GA13]*det3_345_012;
-   const Double_t det4_1345_0124 = pM[GA10]*det3_345_124 - pM[GA11]*det3_345_024 
+   const Double_t det4_1345_0124 = pM[GA10]*det3_345_124 - pM[GA11]*det3_345_024
                                    + pM[GA12]*det3_345_014 - pM[GA14]*det3_345_012;
-   const Double_t det4_1345_0125 = pM[GA10]*det3_345_125 - pM[GA11]*det3_345_025 
+   const Double_t det4_1345_0125 = pM[GA10]*det3_345_125 - pM[GA11]*det3_345_025
                                    + pM[GA12]*det3_345_015 - pM[GA15]*det3_345_012;
-   const Double_t det4_1345_0134 = pM[GA10]*det3_345_134 - pM[GA11]*det3_345_034 
+   const Double_t det4_1345_0134 = pM[GA10]*det3_345_134 - pM[GA11]*det3_345_034
                                    + pM[GA13]*det3_345_014 - pM[GA14]*det3_345_013;
-   const Double_t det4_1345_0135 = pM[GA10]*det3_345_135 - pM[GA11]*det3_345_035 
+   const Double_t det4_1345_0135 = pM[GA10]*det3_345_135 - pM[GA11]*det3_345_035
                                    + pM[GA13]*det3_345_015 - pM[GA15]*det3_345_013;
-   const Double_t det4_1345_0145 = pM[GA10]*det3_345_145 - pM[GA11]*det3_345_045 
+   const Double_t det4_1345_0145 = pM[GA10]*det3_345_145 - pM[GA11]*det3_345_045
                                    + pM[GA14]*det3_345_015 - pM[GA15]*det3_345_014;
-   const Double_t det4_1345_0234 = pM[GA10]*det3_345_234 - pM[GA12]*det3_345_034 
+   const Double_t det4_1345_0234 = pM[GA10]*det3_345_234 - pM[GA12]*det3_345_034
                                    + pM[GA13]*det3_345_024 - pM[GA14]*det3_345_023;
-   const Double_t det4_1345_0235 = pM[GA10]*det3_345_235 - pM[GA12]*det3_345_035 
+   const Double_t det4_1345_0235 = pM[GA10]*det3_345_235 - pM[GA12]*det3_345_035
                                    + pM[GA13]*det3_345_025 - pM[GA15]*det3_345_023;
-   const Double_t det4_1345_0245 = pM[GA10]*det3_345_245 - pM[GA12]*det3_345_045 
+   const Double_t det4_1345_0245 = pM[GA10]*det3_345_245 - pM[GA12]*det3_345_045
                                    + pM[GA14]*det3_345_025 - pM[GA15]*det3_345_024;
-   const Double_t det4_1345_0345 = pM[GA10]*det3_345_345 - pM[GA13]*det3_345_045 
+   const Double_t det4_1345_0345 = pM[GA10]*det3_345_345 - pM[GA13]*det3_345_045
                                    + pM[GA14]*det3_345_035 - pM[GA15]*det3_345_034;
-   const Double_t det4_1345_1234 = pM[GA11]*det3_345_234 - pM[GA12]*det3_345_134 
+   const Double_t det4_1345_1234 = pM[GA11]*det3_345_234 - pM[GA12]*det3_345_134
                                    + pM[GA13]*det3_345_124 - pM[GA14]*det3_345_123;
-   const Double_t det4_1345_1235 = pM[GA11]*det3_345_235 - pM[GA12]*det3_345_135 
+   const Double_t det4_1345_1235 = pM[GA11]*det3_345_235 - pM[GA12]*det3_345_135
                                    + pM[GA13]*det3_345_125 - pM[GA15]*det3_345_123;
-   const Double_t det4_1345_1245 = pM[GA11]*det3_345_245 - pM[GA12]*det3_345_145 
+   const Double_t det4_1345_1245 = pM[GA11]*det3_345_245 - pM[GA12]*det3_345_145
                                    + pM[GA14]*det3_345_125 - pM[GA15]*det3_345_124;
-   const Double_t det4_1345_1345 = pM[GA11]*det3_345_345 - pM[GA13]*det3_345_145 
+   const Double_t det4_1345_1345 = pM[GA11]*det3_345_345 - pM[GA13]*det3_345_145
                                    + pM[GA14]*det3_345_135 - pM[GA15]*det3_345_134;
-   const Double_t det4_1345_2345 = pM[GA12]*det3_345_345 - pM[GA13]*det3_345_245 
+   const Double_t det4_1345_2345 = pM[GA12]*det3_345_345 - pM[GA13]*det3_345_245
                                    + pM[GA14]*det3_345_235 - pM[GA15]*det3_345_234;
-   const Double_t det4_2345_0123 = pM[GA20]*det3_345_123 - pM[GA21]*det3_345_023 
+   const Double_t det4_2345_0123 = pM[GA20]*det3_345_123 - pM[GA21]*det3_345_023
                                    + pM[GA22]*det3_345_013 - pM[GA23]*det3_345_012;
-   const Double_t det4_2345_0124 = pM[GA20]*det3_345_124 - pM[GA21]*det3_345_024 
+   const Double_t det4_2345_0124 = pM[GA20]*det3_345_124 - pM[GA21]*det3_345_024
                                    + pM[GA22]*det3_345_014 - pM[GA24]*det3_345_012;
-   const Double_t det4_2345_0125 = pM[GA20]*det3_345_125 - pM[GA21]*det3_345_025 
+   const Double_t det4_2345_0125 = pM[GA20]*det3_345_125 - pM[GA21]*det3_345_025
                                    + pM[GA22]*det3_345_015 - pM[GA25]*det3_345_012;
-   const Double_t det4_2345_0134 = pM[GA20]*det3_345_134 - pM[GA21]*det3_345_034 
+   const Double_t det4_2345_0134 = pM[GA20]*det3_345_134 - pM[GA21]*det3_345_034
                                    + pM[GA23]*det3_345_014 - pM[GA24]*det3_345_013;
-   const Double_t det4_2345_0135 = pM[GA20]*det3_345_135 - pM[GA21]*det3_345_035 
+   const Double_t det4_2345_0135 = pM[GA20]*det3_345_135 - pM[GA21]*det3_345_035
                                    + pM[GA23]*det3_345_015 - pM[GA25]*det3_345_013;
-   const Double_t det4_2345_0145 = pM[GA20]*det3_345_145 - pM[GA21]*det3_345_045 
+   const Double_t det4_2345_0145 = pM[GA20]*det3_345_145 - pM[GA21]*det3_345_045
                                    + pM[GA24]*det3_345_015 - pM[GA25]*det3_345_014;
-   const Double_t det4_2345_0234 = pM[GA20]*det3_345_234 - pM[GA22]*det3_345_034 
+   const Double_t det4_2345_0234 = pM[GA20]*det3_345_234 - pM[GA22]*det3_345_034
                                    + pM[GA23]*det3_345_024 - pM[GA24]*det3_345_023;
-   const Double_t det4_2345_0235 = pM[GA20]*det3_345_235 - pM[GA22]*det3_345_035 
+   const Double_t det4_2345_0235 = pM[GA20]*det3_345_235 - pM[GA22]*det3_345_035
                                    + pM[GA23]*det3_345_025 - pM[GA25]*det3_345_023;
-   const Double_t det4_2345_0245 = pM[GA20]*det3_345_245 - pM[GA22]*det3_345_045 
+   const Double_t det4_2345_0245 = pM[GA20]*det3_345_245 - pM[GA22]*det3_345_045
                                    + pM[GA24]*det3_345_025 - pM[GA25]*det3_345_024;
-   const Double_t det4_2345_0345 = pM[GA20]*det3_345_345 - pM[GA23]*det3_345_045 
+   const Double_t det4_2345_0345 = pM[GA20]*det3_345_345 - pM[GA23]*det3_345_045
                                    + pM[GA24]*det3_345_035 - pM[GA25]*det3_345_034;
-   const Double_t det4_2345_1234 = pM[GA21]*det3_345_234 - pM[GA22]*det3_345_134 
+   const Double_t det4_2345_1234 = pM[GA21]*det3_345_234 - pM[GA22]*det3_345_134
                                    + pM[GA23]*det3_345_124 - pM[GA24]*det3_345_123;
-   const Double_t det4_2345_1235 = pM[GA21]*det3_345_235 - pM[GA22]*det3_345_135 
+   const Double_t det4_2345_1235 = pM[GA21]*det3_345_235 - pM[GA22]*det3_345_135
                                    + pM[GA23]*det3_345_125 - pM[GA25]*det3_345_123;
-   const Double_t det4_2345_1245 = pM[GA21]*det3_345_245 - pM[GA22]*det3_345_145 
+   const Double_t det4_2345_1245 = pM[GA21]*det3_345_245 - pM[GA22]*det3_345_145
                                    + pM[GA24]*det3_345_125 - pM[GA25]*det3_345_124;
-   const Double_t det4_2345_1345 = pM[GA21]*det3_345_345 - pM[GA23]*det3_345_145 
+   const Double_t det4_2345_1345 = pM[GA21]*det3_345_345 - pM[GA23]*det3_345_145
                                    + pM[GA24]*det3_345_135 - pM[GA25]*det3_345_134;
-   const Double_t det4_2345_2345 = pM[GA22]*det3_345_345 - pM[GA23]*det3_345_245 
+   const Double_t det4_2345_2345 = pM[GA22]*det3_345_345 - pM[GA23]*det3_345_245
                                    + pM[GA24]*det3_345_235 - pM[GA25]*det3_345_234;
 
   // Find all NECESSGARY 5x5 dets:  (36 of them)
 
-   const Double_t det5_01234_01234 = pM[GA00]*det4_1234_1234 - pM[GA01]*det4_1234_0234 
+   const Double_t det5_01234_01234 = pM[GA00]*det4_1234_1234 - pM[GA01]*det4_1234_0234
                                      + pM[GA02]*det4_1234_0134 - pM[GA03]*det4_1234_0124 + pM[GA04]*det4_1234_0123;
    const Double_t det5_01234_01235 = pM[GA00]*det4_1234_1235 - pM[GA01]*det4_1234_0235
                                      + pM[GA02]*det4_1234_0135 - pM[GA03]*det4_1234_0125 + pM[GA05]*det4_1234_0123;
@@ -833,70 +833,70 @@ Bool_t TMatrixTCramerInv::Inv6x6(TMatrixT<Element> &m,Double_t *determ)
                                      + pM[GA03]*det4_1234_0245 - pM[GA04]*det4_1234_0235 + pM[GA05]*det4_1234_0234;
    const Double_t det5_01234_12345 = pM[GA01]*det4_1234_2345 - pM[GA02]*det4_1234_1345
                                      + pM[GA03]*det4_1234_1245 - pM[GA04]*det4_1234_1235 + pM[GA05]*det4_1234_1234;
-   const Double_t det5_01235_01234 = pM[GA00]*det4_1235_1234 - pM[GA01]*det4_1235_0234 
+   const Double_t det5_01235_01234 = pM[GA00]*det4_1235_1234 - pM[GA01]*det4_1235_0234
                                      + pM[GA02]*det4_1235_0134 - pM[GA03]*det4_1235_0124 + pM[GA04]*det4_1235_0123;
-   const Double_t det5_01235_01235 = pM[GA00]*det4_1235_1235 - pM[GA01]*det4_1235_0235 
+   const Double_t det5_01235_01235 = pM[GA00]*det4_1235_1235 - pM[GA01]*det4_1235_0235
                                      + pM[GA02]*det4_1235_0135 - pM[GA03]*det4_1235_0125 + pM[GA05]*det4_1235_0123;
-   const Double_t det5_01235_01245 = pM[GA00]*det4_1235_1245 - pM[GA01]*det4_1235_0245 
+   const Double_t det5_01235_01245 = pM[GA00]*det4_1235_1245 - pM[GA01]*det4_1235_0245
                                      + pM[GA02]*det4_1235_0145 - pM[GA04]*det4_1235_0125 + pM[GA05]*det4_1235_0124;
-   const Double_t det5_01235_01345 = pM[GA00]*det4_1235_1345 - pM[GA01]*det4_1235_0345 
+   const Double_t det5_01235_01345 = pM[GA00]*det4_1235_1345 - pM[GA01]*det4_1235_0345
                                      + pM[GA03]*det4_1235_0145 - pM[GA04]*det4_1235_0135 + pM[GA05]*det4_1235_0134;
-   const Double_t det5_01235_02345 = pM[GA00]*det4_1235_2345 - pM[GA02]*det4_1235_0345 
+   const Double_t det5_01235_02345 = pM[GA00]*det4_1235_2345 - pM[GA02]*det4_1235_0345
                                      + pM[GA03]*det4_1235_0245 - pM[GA04]*det4_1235_0235 + pM[GA05]*det4_1235_0234;
-   const Double_t det5_01235_12345 = pM[GA01]*det4_1235_2345 - pM[GA02]*det4_1235_1345 
+   const Double_t det5_01235_12345 = pM[GA01]*det4_1235_2345 - pM[GA02]*det4_1235_1345
                                      + pM[GA03]*det4_1235_1245 - pM[GA04]*det4_1235_1235 + pM[GA05]*det4_1235_1234;
-   const Double_t det5_01245_01234 = pM[GA00]*det4_1245_1234 - pM[GA01]*det4_1245_0234 
+   const Double_t det5_01245_01234 = pM[GA00]*det4_1245_1234 - pM[GA01]*det4_1245_0234
                                      + pM[GA02]*det4_1245_0134 - pM[GA03]*det4_1245_0124 + pM[GA04]*det4_1245_0123;
-   const Double_t det5_01245_01235 = pM[GA00]*det4_1245_1235 - pM[GA01]*det4_1245_0235 
+   const Double_t det5_01245_01235 = pM[GA00]*det4_1245_1235 - pM[GA01]*det4_1245_0235
                                      + pM[GA02]*det4_1245_0135 - pM[GA03]*det4_1245_0125 + pM[GA05]*det4_1245_0123;
-   const Double_t det5_01245_01245 = pM[GA00]*det4_1245_1245 - pM[GA01]*det4_1245_0245 
+   const Double_t det5_01245_01245 = pM[GA00]*det4_1245_1245 - pM[GA01]*det4_1245_0245
                                      + pM[GA02]*det4_1245_0145 - pM[GA04]*det4_1245_0125 + pM[GA05]*det4_1245_0124;
-   const Double_t det5_01245_01345 = pM[GA00]*det4_1245_1345 - pM[GA01]*det4_1245_0345 
+   const Double_t det5_01245_01345 = pM[GA00]*det4_1245_1345 - pM[GA01]*det4_1245_0345
                                      + pM[GA03]*det4_1245_0145 - pM[GA04]*det4_1245_0135 + pM[GA05]*det4_1245_0134;
-   const Double_t det5_01245_02345 = pM[GA00]*det4_1245_2345 - pM[GA02]*det4_1245_0345 
+   const Double_t det5_01245_02345 = pM[GA00]*det4_1245_2345 - pM[GA02]*det4_1245_0345
                                      + pM[GA03]*det4_1245_0245 - pM[GA04]*det4_1245_0235 + pM[GA05]*det4_1245_0234;
-   const Double_t det5_01245_12345 = pM[GA01]*det4_1245_2345 - pM[GA02]*det4_1245_1345 
+   const Double_t det5_01245_12345 = pM[GA01]*det4_1245_2345 - pM[GA02]*det4_1245_1345
                                      + pM[GA03]*det4_1245_1245 - pM[GA04]*det4_1245_1235 + pM[GA05]*det4_1245_1234;
-   const Double_t det5_01345_01234 = pM[GA00]*det4_1345_1234 - pM[GA01]*det4_1345_0234 
+   const Double_t det5_01345_01234 = pM[GA00]*det4_1345_1234 - pM[GA01]*det4_1345_0234
                                      + pM[GA02]*det4_1345_0134 - pM[GA03]*det4_1345_0124 + pM[GA04]*det4_1345_0123;
-   const Double_t det5_01345_01235 = pM[GA00]*det4_1345_1235 - pM[GA01]*det4_1345_0235 
+   const Double_t det5_01345_01235 = pM[GA00]*det4_1345_1235 - pM[GA01]*det4_1345_0235
                                      + pM[GA02]*det4_1345_0135 - pM[GA03]*det4_1345_0125 + pM[GA05]*det4_1345_0123;
-   const Double_t det5_01345_01245 = pM[GA00]*det4_1345_1245 - pM[GA01]*det4_1345_0245 
+   const Double_t det5_01345_01245 = pM[GA00]*det4_1345_1245 - pM[GA01]*det4_1345_0245
                                      + pM[GA02]*det4_1345_0145 - pM[GA04]*det4_1345_0125 + pM[GA05]*det4_1345_0124;
-   const Double_t det5_01345_01345 = pM[GA00]*det4_1345_1345 - pM[GA01]*det4_1345_0345 
+   const Double_t det5_01345_01345 = pM[GA00]*det4_1345_1345 - pM[GA01]*det4_1345_0345
                                      + pM[GA03]*det4_1345_0145 - pM[GA04]*det4_1345_0135 + pM[GA05]*det4_1345_0134;
-   const Double_t det5_01345_02345 = pM[GA00]*det4_1345_2345 - pM[GA02]*det4_1345_0345 
+   const Double_t det5_01345_02345 = pM[GA00]*det4_1345_2345 - pM[GA02]*det4_1345_0345
                                      + pM[GA03]*det4_1345_0245 - pM[GA04]*det4_1345_0235 + pM[GA05]*det4_1345_0234;
-   const Double_t det5_01345_12345 = pM[GA01]*det4_1345_2345 - pM[GA02]*det4_1345_1345 
+   const Double_t det5_01345_12345 = pM[GA01]*det4_1345_2345 - pM[GA02]*det4_1345_1345
                                      + pM[GA03]*det4_1345_1245 - pM[GA04]*det4_1345_1235 + pM[GA05]*det4_1345_1234;
-   const Double_t det5_02345_01234 = pM[GA00]*det4_2345_1234 - pM[GA01]*det4_2345_0234 
+   const Double_t det5_02345_01234 = pM[GA00]*det4_2345_1234 - pM[GA01]*det4_2345_0234
                                      + pM[GA02]*det4_2345_0134 - pM[GA03]*det4_2345_0124 + pM[GA04]*det4_2345_0123;
-   const Double_t det5_02345_01235 = pM[GA00]*det4_2345_1235 - pM[GA01]*det4_2345_0235 
+   const Double_t det5_02345_01235 = pM[GA00]*det4_2345_1235 - pM[GA01]*det4_2345_0235
                                      + pM[GA02]*det4_2345_0135 - pM[GA03]*det4_2345_0125 + pM[GA05]*det4_2345_0123;
-   const Double_t det5_02345_01245 = pM[GA00]*det4_2345_1245 - pM[GA01]*det4_2345_0245 
+   const Double_t det5_02345_01245 = pM[GA00]*det4_2345_1245 - pM[GA01]*det4_2345_0245
                                      + pM[GA02]*det4_2345_0145 - pM[GA04]*det4_2345_0125 + pM[GA05]*det4_2345_0124;
-   const Double_t det5_02345_01345 = pM[GA00]*det4_2345_1345 - pM[GA01]*det4_2345_0345 
+   const Double_t det5_02345_01345 = pM[GA00]*det4_2345_1345 - pM[GA01]*det4_2345_0345
                                      + pM[GA03]*det4_2345_0145 - pM[GA04]*det4_2345_0135 + pM[GA05]*det4_2345_0134;
-   const Double_t det5_02345_02345 = pM[GA00]*det4_2345_2345 - pM[GA02]*det4_2345_0345 
+   const Double_t det5_02345_02345 = pM[GA00]*det4_2345_2345 - pM[GA02]*det4_2345_0345
                                      + pM[GA03]*det4_2345_0245 - pM[GA04]*det4_2345_0235 + pM[GA05]*det4_2345_0234;
-   const Double_t det5_02345_12345 = pM[GA01]*det4_2345_2345 - pM[GA02]*det4_2345_1345 
+   const Double_t det5_02345_12345 = pM[GA01]*det4_2345_2345 - pM[GA02]*det4_2345_1345
                                      + pM[GA03]*det4_2345_1245 - pM[GA04]*det4_2345_1235 + pM[GA05]*det4_2345_1234;
-   const Double_t det5_12345_01234 = pM[GA10]*det4_2345_1234 - pM[GA11]*det4_2345_0234 
+   const Double_t det5_12345_01234 = pM[GA10]*det4_2345_1234 - pM[GA11]*det4_2345_0234
                                      + pM[GA12]*det4_2345_0134 - pM[GA13]*det4_2345_0124 + pM[GA14]*det4_2345_0123;
-   const Double_t det5_12345_01235 = pM[GA10]*det4_2345_1235 - pM[GA11]*det4_2345_0235 
+   const Double_t det5_12345_01235 = pM[GA10]*det4_2345_1235 - pM[GA11]*det4_2345_0235
                                      + pM[GA12]*det4_2345_0135 - pM[GA13]*det4_2345_0125 + pM[GA15]*det4_2345_0123;
-   const Double_t det5_12345_01245 = pM[GA10]*det4_2345_1245 - pM[GA11]*det4_2345_0245 
+   const Double_t det5_12345_01245 = pM[GA10]*det4_2345_1245 - pM[GA11]*det4_2345_0245
                                      + pM[GA12]*det4_2345_0145 - pM[GA14]*det4_2345_0125 + pM[GA15]*det4_2345_0124;
-   const Double_t det5_12345_01345 = pM[GA10]*det4_2345_1345 - pM[GA11]*det4_2345_0345 
+   const Double_t det5_12345_01345 = pM[GA10]*det4_2345_1345 - pM[GA11]*det4_2345_0345
                                      + pM[GA13]*det4_2345_0145 - pM[GA14]*det4_2345_0135 + pM[GA15]*det4_2345_0134;
-   const Double_t det5_12345_02345 = pM[GA10]*det4_2345_2345 - pM[GA12]*det4_2345_0345 
+   const Double_t det5_12345_02345 = pM[GA10]*det4_2345_2345 - pM[GA12]*det4_2345_0345
                                      + pM[GA13]*det4_2345_0245 - pM[GA14]*det4_2345_0235 + pM[GA15]*det4_2345_0234;
-   const Double_t det5_12345_12345 = pM[GA11]*det4_2345_2345 - pM[GA12]*det4_2345_1345 
+   const Double_t det5_12345_12345 = pM[GA11]*det4_2345_2345 - pM[GA12]*det4_2345_1345
                                      + pM[GA13]*det4_2345_1245 - pM[GA14]*det4_2345_1235 + pM[GA15]*det4_2345_1234;
 
-  // Find the determinant 
+  // Find the determinant
 
-   const Double_t det = pM[GA00]*det5_12345_12345 - pM[GA01]*det5_12345_02345 + pM[GA02]*det5_12345_01345 
+   const Double_t det = pM[GA00]*det5_12345_12345 - pM[GA01]*det5_12345_02345 + pM[GA02]*det5_12345_01345
                         - pM[GA03]*det5_12345_01245 + pM[GA04]*det5_12345_01235 - pM[GA05]*det5_12345_01234;
    if (determ)
       *determ = det;

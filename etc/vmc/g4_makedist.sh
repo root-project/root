@@ -4,7 +4,7 @@
 # Script to produce source and optionally binary distribution of geant4_vmc.
 # Called by main Makefile.
 #
-# According to: 
+# According to:
 # $ROOTSYS/build/unix/makedist.sh
 # Author: Fons Rademakers, 29/2/2000
 #
@@ -29,14 +29,14 @@ fi
 VERSION=`cat geant4_vmc/version_number`
 MACHINE=`root-config --arch`
 if [ "x$MAKELIB" = "xgeant4_vmc/lib" ]; then
-   if [ "x$GCC_VERS" = "x" ]; then  
+   if [ "x$GCC_VERS" = "x" ]; then
       TYPE=$MACHINE.
    else
       TYPE=$MACHINE.$GCC_VERS.
    fi
-else   
+else
   TYPE=""
-fi  
+fi
 TARFILE=geant4_vmc.$VERSION.$TYPE"tar"
 
 TAR="tar zcvf"

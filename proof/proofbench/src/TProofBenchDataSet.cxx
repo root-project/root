@@ -34,7 +34,7 @@ ClassImp(TProofBenchDataSet)
 TProofBenchDataSet::TProofBenchDataSet(TProof *proof)
 {
    // Constructor
-   
+
    fProof = proof ? proof : gProof;
 }
 
@@ -87,7 +87,7 @@ Int_t TProofBenchDataSet::CopyFiles(const char *dset, const char *destdir)
    if (!destdir || (destdir && strlen(destdir) <= 0)) {
       Error("CopyFiles", "specifying a destination dir is mandatory!");
       return -1;
-   }      
+   }
 
    // Set the destination dir
    if (fProof) fProof->SetParameter("PROOF_Benchmark_DestDir", destdir);
@@ -140,7 +140,7 @@ Int_t TProofBenchDataSet::Handle(const char *dset, TObject *type)
       return -1;
    }
    fcmap->Print();
-   
+
    // Load the selector, if needed
    TString selName("TSelHandleDataSet");
    if (!TClass::GetClass(selName)) {
@@ -191,7 +191,7 @@ Int_t TProofBenchDataSet::Handle(const char *dset, TObject *type)
    fProof->GetInputList()->Remove(fcmap);
    delete fcmap;
    delete fc;
-   
+
    // Done
    return 0;
 }

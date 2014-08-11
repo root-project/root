@@ -1,18 +1,18 @@
 // This macro makes use of some basic graphics primitives such as line, arrow
 // and text. It as been written using the TCanvas ToolBar to produce a first
 // draft and was then modified for fine adjustments. Note also the use
-// of C funtions. They allow to simplify the macro reading and editing by 
+// of C funtions. They allow to simplify the macro reading and editing by
 // avoiding code repetition or defining some graphics attributes in one single
 // place. This technique to generate drawings may appear not very user friendly
 // compare to all the "wysiwyg" graphics editors available. In some cases it can
-// be more powerful than a GUI interface because it allows to generate very 
+// be more powerful than a GUI interface because it allows to generate very
 // precise drawing and using computation to generate them.
 //Author: Olivier Couet
 
 void mass_spectrum()
 {
    TCanvas *C = new TCanvas("C","C",800,500);
-   
+
    hline (0.10,0.25);
    hline (0.10,0.80);
    hline (0.30,0.90);
@@ -33,11 +33,11 @@ void mass_spectrum()
 
    arrow(0.15, 0.25, 0.15, 0.19, 1);
    arrow(0.15, 0.80, 0.15, 0.74, 1);
-   
+
    arrow(0.50, 0.60, 0.50, 0.54, 1);
    arrow(0.60, 0.68, 0.60, 0.62, 1);
    arrow(0.94, 0.75, 0.94, 0.69, 1);
-   
+
    arrow(0.32, 0.35, 0.32, 0.19, 1);
    arrow(0.36, 0.35, 0.36, 0.19, 1);
    arrow(0.38, 0.35, 0.38, 0.19, 1);

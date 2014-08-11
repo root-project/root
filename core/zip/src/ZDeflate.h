@@ -82,6 +82,7 @@
  * is still correct, and might even be smaller in some cases.
  */
 
+#if BITS_NOT_INCLUDED
 #ifdef SMALL_MEM
 #   define HASH_BITS  13  /* Number of bits used to hash strings */
 #endif
@@ -90,10 +91,11 @@
 #endif
 #ifndef HASH_BITS
 #   define HASH_BITS  15
-   /* For portability to 16 bit machines, do not use values above 15. */
+/* For portability to 16 bit machines, do not use values above 15. */
+#endif
 #endif
 
-#define HASH_SIZE (unsigned)(1<<HASH_BITS)
+/* #define HASH_SIZE (unsigned)(1<<HASH_BITS) now in Bits.h */
 #define HASH_MASK (HASH_SIZE-1)
 #define WMASK     (WSIZE-1)
 /* HASH_SIZE and WSIZE must be powers of two */
@@ -124,98 +126,9 @@
 #  define MAXSEG_64K
 #endif
 
-/* ===========================================================================
- * Local data used by the "longest match" routines.
- */
-
-#if defined(BIG_MEM) || defined(MMAP)
-  typedef unsigned Pos; /* must be at least 32 bits */
-#else
-  typedef ush Pos;
-#endif
-typedef unsigned IPos;
-/* A Pos is an index in the character window. We use short instead of int to
- * save space in the various tables. IPos is used only for parameter passing.
- */
-
-#ifndef DYN_ALLOC
-  uch    R__window[2L*WSIZE];
-  /* Sliding window. Input bytes are read into the second half of the window,
-   * and move to the first half later to keep a dictionary of at least WSIZE
-   * bytes. With this organization, matches are limited to a distance of
-   * WSIZE-MAX_MATCH bytes, but this ensures that IO is always
-   * performed with a length multiple of the block size. Also, it limits
-   * the window size to 64K, which is quite useful on MSDOS.
-   * To do: limit the window size to WSIZE+BSZ if SMALL_MEM (the code would
-   * be less efficient since the data would have to be copied WSIZE/BSZ times)
-   */
-  Pos    R__prev[WSIZE];
-  /* Link to older string with same hash index. To limit the size of this
-   * array to 64K, this link is maintained only for the last 32K strings.
-   * An index in this array is thus a window index modulo 32K.
-   */
-  Pos    R__head[HASH_SIZE];
-  /* Heads of the hash chains or NIL. If your compiler thinks that
-   * HASH_SIZE is a dynamic value, recompile with -DDYN_ALLOC.
-   */
-#else
-  uch    * near R__window = NULL;
-  Pos    * near R__prev   = NULL;
-  Pos    * near R__head;
-#endif
-ulg R__window_size;
-/* window size, 2*WSIZE except for MMAP or BIG_MEM, where it is the
- * input file length plus MIN_LOOKAHEAD.
- */
-
-long R__block_start;
-/* window position at the beginning of the current output block. Gets
- * negative when the window is moved backwards.
- */
-
-local int sliding;
-/* Set to false when the input file is already in memory */
-
-local unsigned ins_h;  /* hash index of string to be inserted */
-
-#define H_SHIFT  ((HASH_BITS+MIN_MATCH-1)/MIN_MATCH)
-/* Number of bits by which ins_h and del_h must be shifted at each
- * input step. It must be such that after MIN_MATCH steps, the oldest
- * byte no longer takes part in the hash key, that is:
- *   H_SHIFT * MIN_MATCH >= HASH_BITS
- */
-
-unsigned int near R__prev_length;
-/* Length of the best match at previous step. Matches not greater than this
- * are discarded. This is used in the lazy match evaluation.
- */
-
-      unsigned near R__strstart;      /* start of string to insert */
-      unsigned near R__match_start;   /* start of matching string */
-local int           eofile;           /* flag set at end of input file */
-local unsigned      lookahead;        /* number of valid bytes ahead in window */
-
-unsigned near R__max_chain_length;
-/* To speed up deflation, hash chains are never searched beyond this length.
- * A higher limit improves compression ratio but degrades the speed.
- */
-
-local unsigned int max_lazy_match;
-/* Attempt to find a better match only when the current match is strictly
- * smaller than this value. This mechanism is used only for compression
- * levels >= 4.
- */
-#define max_insert_length  max_lazy_match
-/* Insert new strings in the hash table only if the match length
- * is not greater than this length. This saves time but degrades compression.
- * max_insert_length is used only for compression levels <= 3.
- */
-
-unsigned near R__good_match;
-/* Use a faster search when the previous match is longer than this */
 
 
-/* Values for max_lazy_match, good_match and max_chain_length, depending on
+/* Values for state->max_lazy_match, good_match and max_chain_length, depending on
  * the desired pack level (0..9). The values given below have been tuned to
  * exclude worst case performance for pathological files. Better values may be
  * found for specific files.
@@ -228,11 +141,6 @@ typedef struct config {
    ush max_chain;
 } config;
 
-#ifdef  FULL_SEARCH
-# define R__nice_match MAX_MATCH
-#else
-  int near R__nice_match; /* Stop searching when current match exceeds this */
-#endif
 
 local config configuration_table[10] = {
 /*      good lazy nice chain */
@@ -260,10 +168,10 @@ local config configuration_table[10] = {
  *  Prototypes for local functions.
  */
 
-local void R__fill_window    OF((void));
-local ulg  R__Deflate_fast   OF((void));
+local void R__fill_window    OF((bits_internal_state *state));
+local ulg  R__Deflate_fast   OF((bits_internal_state *state,int *errorflag));
 
-      int  R__longest_match  OF((IPos cur_match));
+      int  R__longest_match  OF((bits_internal_state *state, IPos cur_match));
 #ifdef ASMV
       void match_init OF((void)); /* asm code initialization */
 #endif
@@ -289,9 +197,9 @@ local  void check_match OF((IPos start, IPos match, int length));
  *    (except for the last MIN_MATCH-1 bytes of the input file).
  */
 #define INSERT_STRING(s, match_head) \
-   (UPDATE_HASH(ins_h, R__window[(s) + MIN_MATCH-1]), \
-    R__prev[(s) & WMASK] = match_head = R__head[ins_h], \
-    R__head[ins_h] = (s))
+   (UPDATE_HASH(state->ins_h, state->R__window[(s) + MIN_MATCH-1]), \
+    state->R__prev[(s) & WMASK] = match_head = state->R__head[state->ins_h], \
+    state->R__head[state->ins_h] = (s))
 
 /* ===========================================================================
  * Initialize the "longest match" routines for a new file
@@ -302,34 +210,38 @@ local  void check_match OF((IPos start, IPos match, int length));
  *    MIN_LOOKAHEAD bytes (to avoid referencing memory beyond the end
  *    of window[] when looking for matches towards the end).
  */
-void R__lm_init (int pack_level, ush *flags)
+int R__lm_init (bits_internal_state *state, int pack_level, ush *flags)
     /* int pack_level;  0: store, 1: best speed, 9: best compression */
     /* ush *flags;      general purpose bit flag */
 {
     register unsigned j;
 
-    if (pack_level < 1 || pack_level > 9) R__error("bad pack level");
+    if (pack_level < 1 || pack_level > 9) {
+      R__error("bad pack level");
+      return 1;
+    }
 
     /* Do not slide the window if the whole input is already in memory
      * (window_size > 0)
      */
-    sliding = 0;
-    if (R__window_size == 0L) {
-        sliding = 1;
-        R__window_size = (ulg)2L*WSIZE;
+    state->sliding = 0;
+    if (state->R__window_size == 0L) {
+        state->sliding = 1;
+        state->R__window_size = (ulg)2L*WSIZE;
     }
 
     /* Use dynamic allocation if compiler does not like big static arrays: */
 #ifdef DYN_ALLOC
-    if (R__window == NULL) {
-        R__window = (uch*) fcalloc(WSIZE,   2*sizeof(uch));
-        if (R__window == NULL) R__error("window allocation");
+    if (state->R__window == NULL) {
+        state->R__window = (uch*) fcalloc(WSIZE,   2*sizeof(uch));
+        if (state->R__window == NULL)  { R__error("window allocation"); return 1; }
     }
-    if (R__prev == NULL) {
-        R__prev   = (Pos*) fcalloc(WSIZE,     sizeof(Pos));
-        R__head   = (Pos*) fcalloc(HASH_SIZE, sizeof(Pos));
-        if (R__prev == NULL || R__head == NULL) {
+    if (state->R__prev == NULL) {
+        state->R__prev   = (Pos*) fcalloc(WSIZE,     sizeof(Pos));
+        state->R__head   = (Pos*) fcalloc(HASH_SIZE, sizeof(Pos));
+        if (state->R__prev == NULL || state->R__head == NULL) {
             R__error("hash table allocation");
+            return 1;
         }
     }
 #endif /* DYN_ALLOC */
@@ -337,17 +249,17 @@ void R__lm_init (int pack_level, ush *flags)
     /* Initialize the hash table (avoiding 64K overflow for 16 bit systems).
      * prev[] will be initialized on the fly.
      */
-    R__head[HASH_SIZE-1] = NIL;
-    memset((char*)R__head, NIL, (unsigned)(HASH_SIZE-1)*sizeof(*R__head));
+    state->R__head[HASH_SIZE-1] = NIL;
+    memset((char*)state->R__head, NIL, (unsigned)(HASH_SIZE-1)*sizeof(*state->R__head));
 
     /* Set the default configuration parameters:
      */
-    max_lazy_match   = configuration_table[pack_level].max_lazy;
-    R__good_match    = configuration_table[pack_level].good_length;
+    state->max_lazy_match   = configuration_table[pack_level].max_lazy;
+    state->R__good_match    = configuration_table[pack_level].good_length;
 #ifndef FULL_SEARCH
-    R__nice_match    = configuration_table[pack_level].nice_length;
+    state->R__nice_match    = configuration_table[pack_level].nice_length;
 #endif
-    R__max_chain_length = configuration_table[pack_level].max_chain;
+    state->R__max_chain_length = configuration_table[pack_level].max_chain;
     if (pack_level == 1) {
        *flags |= FAST;
     } else if (pack_level == 9) {
@@ -355,8 +267,8 @@ void R__lm_init (int pack_level, ush *flags)
     }
     /* ??? reduce max_chain_length for binary files */
 
-    R__strstart = 0;
-    R__block_start = 0L;
+    state->R__strstart = 0;
+    state->R__block_start = 0L;
 #ifdef ASMV
     match_init(); /* initialize the asm code */
 #endif
@@ -365,23 +277,24 @@ void R__lm_init (int pack_level, ush *flags)
 #ifndef MAXSEG_64K
     if (sizeof(int) > 2) j <<= 1; /* Can read 64K in one step */
 #endif
-    lookahead = (*R__read_buf)((char*)R__window, j);
+    state->lookahead = R__mem_read(state,(char*)state->R__window, j);
 
-    if (lookahead == 0 || lookahead == (unsigned)EOF) {
-       eofile = 1, lookahead = 0;
-       return;
+    if (state->lookahead == 0 || state->lookahead == (unsigned)EOF) {
+       state->eofile = 1, state->lookahead = 0;
+       return 0;
     }
-    eofile = 0;
-    /* Make sure that we always have enough lookahead. This is important
+    state->eofile = 0;
+    /* Make sure that we always have enough state->lookahead. This is important
      * if input comes from a device such as a tty.
      */
-    while (lookahead < MIN_LOOKAHEAD && !eofile) R__fill_window();
+    while (state->lookahead < MIN_LOOKAHEAD && !state->eofile) R__fill_window(state);
 
-    ins_h = 0;
-    for (j=0; j<MIN_MATCH-1; j++) UPDATE_HASH(ins_h, R__window[j]);
-    /* If lookahead < MIN_MATCH, ins_h is garbage, but this is
+    state->ins_h = 0;
+    for (j=0; j<MIN_MATCH-1; j++) UPDATE_HASH(state->ins_h, state->R__window[j]);
+    /* If state->lookahead < MIN_MATCH, state->ins_h is garbage, but this is
      * not important since only literal bytes will be emitted.
      */
+    return 0;
 }
 
 /* ===========================================================================
@@ -390,14 +303,14 @@ void R__lm_init (int pack_level, ush *flags)
 void R__lm_free()
 {
 #ifdef DYN_ALLOC
-    if (R__window != NULL) {
-        fcfree(R__window);
-        R__window = NULL;
+    if (state->R__window != NULL) {
+        fcfree(state->R__window);
+        state->R__window = NULL;
     }
-    if (R__prev != NULL) {
-        fcfree(R__prev);
-        fcfree(R__head);
-        R__prev = R__head = NULL;
+    if (state->R__prev != NULL) {
+        fcfree(state->R__prev);
+        fcfree(state->R__head);
+        state->R__prev = state->R__head = NULL;
     }
 #endif /* DYN_ALLOC */
 }
@@ -416,15 +329,15 @@ void R__lm_free()
  * if desired.  A 68000 version is in amiga/match_68.a -- this could be used
  * with other 68000 based systems such as Macintosh with a little effort.
  */
-int R__longest_match(IPos cur_match)
+int R__longest_match(bits_internal_state *state, IPos cur_match)
     /* IPos cur_match; */                       /* current match */
 {
-    unsigned chain_length = R__max_chain_length;   /* max hash chain length */
-    register uch *scan = R__window + R__strstart;     /* current string */
+    unsigned chain_length = state->R__max_chain_length;   /* max hash chain length */
+    register uch *scan = state->R__window + state->R__strstart;     /* current string */
     register uch *match;                        /* matched string */
     register int len;                           /* length of current match */
-    int best_len = R__prev_length;              /* best match length so far */
-    IPos limit = R__strstart > (IPos)MAX_DIST ? R__strstart - (IPos)MAX_DIST : NIL;
+    int best_len = state->R__prev_length;              /* best match length so far */
+    IPos limit = state->R__strstart > (IPos)MAX_DIST ? state->R__strstart - (IPos)MAX_DIST : NIL;
     /* Stop when cur_match becomes <= limit. To simplify the code,
      * we prevent matches with the string of window index 0.
      */
@@ -440,24 +353,24 @@ int R__longest_match(IPos cur_match)
     /* Compare two bytes at a time. Note: this is not always beneficial.
      * Try with and without -DUNALIGNED_OK to check.
      */
-    register uch *strend = R__window + R__strstart + MAX_MATCH - 1;
+    register uch *strend = state->R__window + state->R__strstart + MAX_MATCH - 1;
     register ush scan_start = *(ush*)scan;
     register ush scan_end   = *(ush*)(scan+best_len-1);
 #else
-    register uch *strend = R__window + R__strstart + MAX_MATCH;
+    register uch *strend = state->R__window + state->R__strstart + MAX_MATCH;
     register uch scan_end1  = scan[best_len-1];
     register uch scan_end   = scan[best_len];
 #endif
 
     /* Do not waste too much time if we already have a good match: */
-    if (R__prev_length >= R__good_match) {
+    if (state->R__prev_length >= state->R__good_match) {
         chain_length >>= 2;
     }
-    Assert(R__strstart <= R__window_size-MIN_LOOKAHEAD, "insufficient lookahead");
+    Assert(state->R__strstart <= state->R__window_size-MIN_LOOKAHEAD, "insufficient lookahead");
 
     do {
-        Assert(cur_match < R__strstart, "no future");
-        match = R__window + cur_match;
+        Assert(cur_match < state->R__strstart, "no future");
+        match = state->R__window + cur_match;
 
         /* Skip to next match if the match length cannot increase
          * or if the match length is less than 2:
@@ -487,8 +400,8 @@ int R__longest_match(IPos cur_match)
                  scan < strend);
         /* The funny "do {}" generates better code on most compilers */
 
-        /* Here, scan <= window+R__strstart+257 */
-        Assert(scan <= R__window+(unsigned)(R__window_size-1), "wild scan");
+        /* Here, scan <= window+state->R__strstart+257 */
+        Assert(scan <= state->R__window+(unsigned)(state->R__window_size-1), "wild scan");
         if (*scan == *match) scan++;
 
         len = (MAX_MATCH - 1) - (int)(strend-scan);
@@ -525,9 +438,9 @@ int R__longest_match(IPos cur_match)
 #endif /* UNALIGNED_OK */
 
         if (len > best_len) {
-            R__match_start = cur_match;
+            state->R__match_start = cur_match;
             best_len = len;
-            if (len >= R__nice_match) break;
+            if (len >= state->R__nice_match) break;
 #ifdef UNALIGNED_OK
             scan_end = *(ush*)(scan+best_len-1);
 #else
@@ -535,7 +448,7 @@ int R__longest_match(IPos cur_match)
             scan_end   = scan[best_len];
 #endif
         }
-    } while ((cur_match = R__prev[cur_match & WMASK]) > limit
+    } while ((cur_match = state->R__prev[cur_match & WMASK]) > limit
              && --chain_length != 0);
 
     return best_len;
@@ -546,20 +459,22 @@ int R__longest_match(IPos cur_match)
 /* ===========================================================================
  * Check that the match at match_start is indeed a match.
  */
-local void check_match(IPos start, IPos match, int length)
+local int check_match(IPos start, IPos match, int length)
 {
     /* check that the match is indeed a match */
-    if (memcmp((char*)R__window + match,
-                (char*)R__window + start, length) != EQUAL) {
+    if (memcmp((char*)state->R__window + match,
+                (char*)state->R__window + start, length) != EQUAL) {
         fprintf(stderr,
             " start %d, match %d, length %d\n",
             start, match, length);
         R__error("invalid match");
+        return 1;
     }
     if (verbose > 1) {
         fprintf(stderr,"\\[%d,%d]", start-match, length);
-        do { putc(R__window[start++], stderr); } while (--length != 0);
+        do { putc(state->R__window[start++], stderr); } while (--length != 0);
     }
+    return 0;
 }
 #else
 #  define check_match(start, match, length)
@@ -567,17 +482,17 @@ local void check_match(IPos start, IPos match, int length)
 
 /* ===========================================================================
  * Fill the window when the lookahead becomes insufficient.
- * Updates strstart and lookahead, and sets eofile if end of input file.
+ * Updates strstart and lookahead, and sets state->eofile if end of input file.
  *
- * IN assertion: lookahead < MIN_LOOKAHEAD && strstart + lookahead > 0
- * OUT assertions: at least one byte has been read, or eofile is set;
+ * IN assertion: state->lookahead < MIN_LOOKAHEAD && strstart + state->lookahead > 0
+ * OUT assertions: at least one byte has been read, or state->eofile is set;
  *    file reads are performed for at least two bytes (required for the
  *    translate_eol option).
  */
-local void R__fill_window()
+local void R__fill_window(bits_internal_state *state)
 {
     register unsigned n, m;
-    unsigned more = (unsigned)(R__window_size - (ulg)lookahead - (ulg)R__strstart);
+    unsigned more = (unsigned)(state->R__window_size - (ulg)state->lookahead - (ulg)state->R__strstart);
     /* Amount of free space at the end of the window. */
 
     /* If the window is almost full and there is insufficient lookahead,
@@ -585,32 +500,32 @@ local void R__fill_window()
      */
     if (more == (unsigned)EOF) {
         /* Very unlikely, but possible on 16 bit machine if strstart == 0
-         * and lookahead == 1 (input done one byte at time)
+         * and state->lookahead == 1 (input done one byte at time)
          */
         more--;
 
     /* For MMAP or BIG_MEM, the whole input file is already in memory
      * so we must not perform sliding. We must however call file_read
-     * in order to compute the crc, update lookahead and possibly set eofile.
+     * in order to compute the crc, update state->lookahead and possibly set state->eofile.
      */
-    } else if (R__strstart >= WSIZE+MAX_DIST && sliding) {
+    } else if (state->R__strstart >= WSIZE+MAX_DIST && state->sliding) {
 
         /* By the IN assertion, the window is not empty so we can't confuse
          * more == 0 with more == 64K on a 16 bit machine.
          */
-        memcpy((char*)R__window, (char*)R__window+WSIZE, (unsigned)WSIZE);
-        R__match_start -= WSIZE;
-        R__strstart    -= WSIZE; /* we now have strstart >= MAX_DIST: */
+        memcpy((char*)state->R__window, (char*)state->R__window+WSIZE, (unsigned)WSIZE);
+        state->R__match_start -= WSIZE;
+        state->R__strstart    -= WSIZE; /* we now have strstart >= MAX_DIST: */
 
-        R__block_start -= (long) WSIZE;
+        state->R__block_start -= (long) WSIZE;
 
         for (n = 0; n < HASH_SIZE; n++) {
-            m = R__head[n];
-            R__head[n] = (Pos)(m >= WSIZE ? m-WSIZE : NIL);
+            m = state->R__head[n];
+            state->R__head[n] = (Pos)(m >= WSIZE ? m-WSIZE : NIL);
         }
         for (n = 0; n < WSIZE; n++) {
-            m = R__prev[n];
-            R__prev[n] = (Pos)(m >= WSIZE ? m-WSIZE : NIL);
+            m = state->R__prev[n];
+            state->R__prev[n] = (Pos)(m >= WSIZE ? m-WSIZE : NIL);
             /* If n is not on any hash chain, prev[n] is garbage but
              * its value will never be used.
              */
@@ -619,12 +534,12 @@ local void R__fill_window()
         if (verbose) putc('.', stderr);
     }
     /* At this point, more >= 2 */
-    if (!eofile) {
-        n = (*R__read_buf)((char*)R__window+R__strstart+lookahead, more);
+    if (!state->eofile) {
+        n = R__mem_read(state,(char*)state->R__window+state->R__strstart+state->lookahead, more);
         if (n == 0 || n == (unsigned)EOF) {
-            eofile = 1;
+            state->eofile = 1;
         } else {
-            lookahead += n;
+            state->lookahead += n;
         }
     }
 }
@@ -634,8 +549,8 @@ local void R__fill_window()
  * IN assertion: strstart is set to the end of the current match.
  */
 #define FLUSH_BLOCK(eof) \
-   R__flush_block(R__block_start >= 0L ? (char*)&R__window[(unsigned)R__block_start] : \
-                (char*)NULL, (long)R__strstart - R__block_start, (eof))
+   R__flush_block(state, state->R__block_start >= 0L ? (char*)&state->R__window[(unsigned)state->R__block_start] : \
+                (char*)NULL, (long)state->R__strstart - state->R__block_start, (eof),errorflag)
 
 /* ===========================================================================
  * Processes a new input file and return its compressed length. This
@@ -643,37 +558,37 @@ local void R__fill_window()
  * new strings in the dictionary only for unmatched strings or for short
  * matches. It is used only for the fast compression options.
  */
-local ulg R__Deflate_fast()
+local ulg R__Deflate_fast(bits_internal_state *state,int *errorflag)
 {
     IPos hash_head; /* head of the hash chain */
     int flush;      /* set if current block must be flushed */
     unsigned match_length = 0;  /* length of best match */
 
-    R__prev_length = MIN_MATCH-1;
-    while (lookahead != 0) {
+    state->R__prev_length = MIN_MATCH-1;
+    while (state->lookahead != 0) {
         /* Insert the string window[strstart .. strstart+2] in the
          * dictionary, and set hash_head to the head of the hash chain:
          */
-        INSERT_STRING(R__strstart, hash_head);
+        INSERT_STRING(state->R__strstart, hash_head);
 
         /* Find the longest match, discarding those <= prev_length.
          * At this point we have always match_length < MIN_MATCH
          */
-        if (hash_head != NIL && R__strstart - hash_head <= MAX_DIST) {
+        if (hash_head != NIL && state->R__strstart - hash_head <= MAX_DIST) {
             /* To simplify the code, we prevent matches with the string
              * of window index 0 (in particular we have to avoid a match
              * of the string with itself at the start of the input file).
              */
-            match_length = R__longest_match (hash_head);
+            match_length = R__longest_match (state, hash_head);
             /* R__longest_match() sets match_start */
-            if (match_length > lookahead) match_length = lookahead;
+            if (match_length > state->lookahead) match_length = state->lookahead;
         }
         if (match_length >= MIN_MATCH) {
-            check_match(R__strstart, R__match_start, match_length);
+            check_match(state->R__strstart, state->R__match_start, match_length);
 
-            flush = R__ct_tally(R__strstart-R__match_start, match_length - MIN_MATCH);
+            flush = R__ct_tally(state,state->R__strstart-state->R__match_start, match_length - MIN_MATCH);
 
-            lookahead -= match_length;
+            state->lookahead -= match_length;
 
             /* Insert new strings in the hash table only if the match length
              * is not too large. This saves time but degrades compression.
@@ -681,39 +596,39 @@ local ulg R__Deflate_fast()
             if (match_length <= max_insert_length) {
                 match_length--; /* string at strstart already in hash table */
                 do {
-                    R__strstart++;
-                    INSERT_STRING(R__strstart, hash_head);
+                    state->R__strstart++;
+                    INSERT_STRING(state->R__strstart, hash_head);
                     /* strstart never exceeds WSIZE-MAX_MATCH, so there are
-                     * always MIN_MATCH bytes ahead. If lookahead < MIN_MATCH
+                     * always MIN_MATCH bytes ahead. If state->lookahead < MIN_MATCH
                      * these bytes are garbage, but it does not matter since
                      * the next lookahead bytes will be emitted as literals.
                      */
                 } while (--match_length != 0);
-                R__strstart++;
+                state->R__strstart++;
             } else {
-                R__strstart += match_length;
+                state->R__strstart += match_length;
                 match_length = 0;
-                ins_h = R__window[R__strstart];
-                UPDATE_HASH(ins_h, R__window[R__strstart+1]);
+                state->ins_h = state->R__window[state->R__strstart];
+                UPDATE_HASH(state->ins_h, state->R__window[state->R__strstart+1]);
 #if MIN_MATCH != 3
                 Call UPDATE_HASH() MIN_MATCH-3 more times
 #endif
             }
         } else {
             /* No match, output a literal byte */
-            Tracevv((stderr,"%c",R__window[R__strstart]));
-            flush = R__ct_tally (0, R__window[R__strstart]);
-            lookahead--;
-            R__strstart++;
+            Tracevv((stderr,"%c",state->R__window[state->R__strstart]));
+            flush = R__ct_tally (state, 0, state->R__window[state->R__strstart]);
+            state->lookahead--;
+            state->R__strstart++;
         }
-        if (flush) FLUSH_BLOCK(0), R__block_start = R__strstart;
+        if (flush) FLUSH_BLOCK(0), state->R__block_start = state->R__strstart;
 
         /* Make sure that we always have enough lookahead, except
          * at the end of the input file. We need MAX_MATCH bytes
          * for the next match, plus MIN_MATCH bytes to insert the
          * string following the next match.
          */
-        while (lookahead < MIN_LOOKAHEAD && !eofile) R__fill_window();
+        while (state->lookahead < MIN_LOOKAHEAD && !state->eofile) R__fill_window(state);
 
     }
     return FLUSH_BLOCK(1); /* eof */
@@ -724,7 +639,7 @@ local ulg R__Deflate_fast()
  * evaluation for matches: a match is finally adopted only if there is
  * no better match at the next window position.
  */
-ulg R__Deflate()
+ulg R__Deflate(bits_internal_state *state,int *errorflag)
 {
     IPos hash_head;          /* head of hash chain */
     IPos R__prev_match;      /* previous match */
@@ -735,33 +650,33 @@ ulg R__Deflate()
     /* extern ulg R__isize; */ /* byte length of input file, for debug only */
 #endif
 
-    if (level <= 3) return R__Deflate_fast(); /* optimized for speed */
+    if (level <= 3) return R__Deflate_fast(state,errorflag); /* optimized for speed */
 
     /* Process the input block. */
-    while (lookahead != 0) {
+    while (state->lookahead != 0) {
 
         /* Insert the string window[strstart .. strstart+2] in the
          * dictionary, and set hash_head to the head of the hash chain:
          */
-        INSERT_STRING(R__strstart, hash_head);
+        INSERT_STRING(state->R__strstart, hash_head);
 
         /* Find the longest match, discarding those <= prev_length.
          */
-        R__prev_length = match_length, R__prev_match = R__match_start;
+        state->R__prev_length = match_length, R__prev_match = state->R__match_start;
         match_length = MIN_MATCH-1;
 
-        if (hash_head != NIL && R__prev_length < max_lazy_match &&
-            R__strstart - hash_head <= MAX_DIST) {
+        if (hash_head != NIL && state->R__prev_length < state->max_lazy_match &&
+            state->R__strstart - hash_head <= MAX_DIST) {
             /* To simplify the code, we prevent matches with the string
              * of window index 0 (in particular we have to avoid a match
              * of the string with itself at the start of the input file).
              */
-            match_length = R__longest_match (hash_head);
+            match_length = R__longest_match (state,hash_head);
             /* R__longest_match() sets match_start */
-            if (match_length > lookahead) match_length = lookahead;
+            if (match_length > state->lookahead) match_length = state->lookahead;
 
             /* Ignore a length 3 match if it is too distant: */
-            if (match_length == MIN_MATCH && R__strstart-R__match_start > TOO_FAR){
+            if (match_length == MIN_MATCH && state->R__strstart-state->R__match_start > TOO_FAR){
                 /* If prev_match is also MIN_MATCH, match_start is garbage
                  * but we will ignore the current match anyway.
                  */
@@ -771,52 +686,52 @@ ulg R__Deflate()
         /* If there was a match at the previous step and the current
          * match is not better, output the previous match:
          */
-        if (R__prev_length >= MIN_MATCH && match_length <= R__prev_length) {
+        if (state->R__prev_length >= MIN_MATCH && match_length <= state->R__prev_length) {
 
-            check_match(R__strstart-1, R__prev_match, R__prev_length);
+            check_match(state->R__strstart-1, R__prev_match, state->R__prev_length);
 
-            flush = R__ct_tally(R__strstart-1-R__prev_match, R__prev_length - MIN_MATCH);
+            flush = R__ct_tally(state,state->R__strstart-1-R__prev_match, state->R__prev_length - MIN_MATCH);
 
             /* Insert in hash table all strings up to the end of the match.
              * strstart-1 and strstart are already inserted.
              */
-            lookahead -= R__prev_length-1;
-            R__prev_length -= 2;
+            state->lookahead -= state->R__prev_length-1;
+            state->R__prev_length -= 2;
             do {
-                R__strstart++;
-                INSERT_STRING(R__strstart, hash_head);
+                state->R__strstart++;
+                INSERT_STRING(state->R__strstart, hash_head);
                 /* strstart never exceeds WSIZE-MAX_MATCH, so there are
                  * always MIN_MATCH bytes ahead. If lookahead < MIN_MATCH
                  * these bytes are garbage, but it does not matter since the
                  * next lookahead bytes will always be emitted as literals.
                  */
-            } while (--R__prev_length != 0);
+            } while (--state->R__prev_length != 0);
             match_available = 0;
             match_length = MIN_MATCH-1;
-            R__strstart++;
-            if (flush) FLUSH_BLOCK(0), R__block_start = R__strstart;
+            state->R__strstart++;
+            if (flush) FLUSH_BLOCK(0), state->R__block_start = state->R__strstart;
 
         } else if (match_available) {
             /* If there was no match at the previous position, output a
              * single literal. If there was a match but the current match
              * is longer, truncate the previous match to a single literal.
              */
-            Tracevv((stderr,"%c",R__window[R__strstart-1]));
-            if (R__ct_tally (0, R__window[R__strstart-1])) {
-                FLUSH_BLOCK(0), R__block_start = R__strstart;
+            Tracevv((stderr,"%c",state->R__window[state->R__strstart-1]));
+            if (R__ct_tally (state, 0, state->R__window[state->R__strstart-1])) {
+                FLUSH_BLOCK(0), state->R__block_start = state->R__strstart;
             }
-            R__strstart++;
-            lookahead--;
+            state->R__strstart++;
+            state->lookahead--;
         } else {
             /* There is no previous match to compare with, wait for
              * the next step to decide.
              */
             match_available = 1;
-            R__strstart++;
-            lookahead--;
+            state->R__strstart++;
+            state->lookahead--;
         }
 #ifdef DEBUG
-        Assert (R__strstart <= R__isize && lookahead <= R__isize, "a bit too far");
+        Assert (state->R__strstart <= state->R__isize && state->lookahead <= state->R__isize, "a bit too far");
 #endif
 
         /* Make sure that we always have enough lookahead, except
@@ -824,9 +739,9 @@ ulg R__Deflate()
          * for the next match, plus MIN_MATCH bytes to insert the
          * string following the next match.
          */
-        while (lookahead < MIN_LOOKAHEAD && !eofile) R__fill_window();
+        while (state->lookahead < MIN_LOOKAHEAD && !state->eofile) R__fill_window(state);
     }
-    if (match_available) R__ct_tally (0, R__window[R__strstart-1]);
+    if (match_available) R__ct_tally (state, 0, state->R__window[state->R__strstart-1]);
 
     return FLUSH_BLOCK(1); /* eof */
 }

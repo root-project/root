@@ -670,10 +670,10 @@ Int_t TUrl::GetIntValueFromOptions(const char *key) const
 Bool_t TUrl::HasOption(const char *key) const
 {
    // Returns true if the given key appears in the URL options list.
-   
+
    if (!key) return kFALSE;
    ParseOptions();
-   
+
    if (fOptionsMap && fOptionsMap->FindObject(key))
       return kTRUE;
    return kFALSE;

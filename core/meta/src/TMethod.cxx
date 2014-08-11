@@ -218,7 +218,7 @@ TDataMember *TMethod::FindDataMember()
    } else {
       if (fMethodArgs)
          if (fMethodArgs->GetSize() != 1) return 0;
-      
+
       TMethodArg *a = 0;
       if (fMethodArgs) a = (TMethodArg*)(fMethodArgs->First());
 
@@ -348,7 +348,7 @@ Bool_t TMethod::Update(MethodInfo_t *info)
       delete fSetterMethod; fSetterMethod = 0;
       if (fInfo) {
          SetMenuItem(gCling->MethodInfo_Title(fInfo));
-      }  
+      }
       return kTRUE;
    } else {
       return kFALSE;

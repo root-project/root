@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -24,23 +24,23 @@ void mnbins(double a1, double a2, int naa, double& bl, double& bh, int& nb, doub
 //*-*        PROGRAM MAKES REASONABLE BINNING FROM BL TO BH OF WIDTH BWID
 //*-*        F. JAMES,   AUGUST, 1974 , stolen for Minuit, 1988
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   
+
    /* Local variables */
    double awid,ah, al, sigfig, sigrnd, alb;
    int kwid, lwid, na=0, log_;
-   
+
    al = a1 < a2 ? a1 : a2;
    //     al = std::min(a1,a2);
    //     ah = std::max(a1,a2);
    ah = a1 > a2 ? a1 : a2;
    if (al == ah) ah = al + 1;
-   
+
    //*-*-       IF NAA .EQ. -1 , PROGRAM USES BWID INPUT FROM CALLING ROUTINE
    if (naa == -1) goto L150;
 L10:
       na = naa - 1;
    if (na < 1) na = 1;
-   
+
    //*-*-        GET NOMINAL BIN WIDTH IN EXPON FORM
 L20:
       awid = (ah-al) / double(na);

@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -29,7 +29,7 @@ int main() {
   std::vector<double> meas = gdg.Measurements();
   std::vector<double> var = gdg.Variances();
 
-  
+
 
   // Estimate initial starting values for parameters
   double x = 0.;
@@ -56,16 +56,16 @@ int main() {
 
 
 
-  // create FCN function for Fumili using model function 
+  // create FCN function for Fumili using model function
   GaussianModelFunction modelFunction;
   FumiliStandardChi2FCN fFCN(modelFunction, meas, pos, var);
-  
-  { 
 
-    std::cout << "Minimize using FUMILI : \n" << std::endl; 
-    MnFumiliMinimize fumili(fFCN, upar); 
+  {
 
-    
+    std::cout << "Minimize using FUMILI : \n" << std::endl;
+    MnFumiliMinimize fumili(fFCN, upar);
+
+
     // Minimize
     FunctionMinimum min = fumili();
 
@@ -75,7 +75,7 @@ int main() {
 
   {
 
-    std::cout << "Minimize using MIGRAD : \n" << std::endl; 
+    std::cout << "Minimize using MIGRAD : \n" << std::endl;
     MnMigrad migrad(fFCN, upar);
 
     // Minimize

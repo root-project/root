@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -24,11 +24,11 @@ class GaussFcn2 : public FCNBase {
 public:
 
   GaussFcn2(const std::vector<double>& meas,
-	  const std::vector<double>& pos,
-	  const std::vector<double>& mvar) : fMeasurements(meas),
-					     fPositions(pos),
-					     fMVariances(mvar), 
-					     fMin(0.) {Init();}
+            const std::vector<double>& pos,
+            const std::vector<double>& mvar) : fMeasurements(meas),
+   fPositions(pos),
+   fMVariances(mvar),
+   fMin(0.) {Init();}
   ~GaussFcn2() {}
 
   virtual void Init();
@@ -36,11 +36,11 @@ public:
   virtual double Up() const {return 1.;}
   virtual double operator()(const std::vector<double>&) const;
   virtual double ErrorDef() const {return Up();}
-  
+
   std::vector<double> Measurements() const {return fMeasurements;}
   std::vector<double> Positions() const {return fPositions;}
   std::vector<double> Variances() const {return fMVariances;}
-  
+
 private:
 
   std::vector<double> fMeasurements;

@@ -44,7 +44,7 @@ TGSplitTool::TGSplitTool(const TGWindow *p, const TGFrame *f)
 
    fRectGC.SetFillStyle(kFillSolid);
    fRectGC.SetForeground(0x99ff99);
-   
+
    TClass *cl = TClass::GetClass("TGSplitFrame");
    cl->MakeCustomMenuList();
    TList *ml = cl->GetMenuList();
@@ -77,10 +77,10 @@ TGSplitTool::~TGSplitTool()
 //______________________________________________________________________________
 void TGSplitTool::AddRectangle(TGFrame *frame, Int_t x, Int_t y, Int_t w, Int_t h)
 {
-   // Add a rectangle representation of a split frame in the map, together 
+   // Add a rectangle representation of a split frame in the map, together
    // with the frame itself.
 
-   TGRectMap *rect = new TGRectMap(x, y, w, h); 
+   TGRectMap *rect = new TGRectMap(x, y, w, h);
    fMap.Add(rect, frame);
 }
 
@@ -92,9 +92,9 @@ void TGSplitTool::DoRedraw()
    TGRectMap *rect;
    TMapIter next(&fMap);
    while ((rect = (TGRectMap*)next())) {
-      gVirtualX->FillRectangle(fId, GetBckgndGC()(), rect->fX, 
+      gVirtualX->FillRectangle(fId, GetBckgndGC()(), rect->fX,
                                rect->fY, rect->fW, rect->fH);
-      gVirtualX->DrawRectangle(fId, GetBlackGC()(), rect->fX, rect->fY, 
+      gVirtualX->DrawRectangle(fId, GetBlackGC()(), rect->fX, rect->fY,
                                rect->fW, rect->fH);
    }
    DrawBorder();
@@ -127,10 +127,10 @@ Bool_t TGSplitTool::HandleButton(Event_t *event)
       if (rect->Contains(event->fX, event->fY)) {
          frm = (TGSplitFrame *)fMap.GetValue((const TObject *)rect);
          gVirtualX->TranslateCoordinates(event->fWindow,
-                                         gClient->GetDefaultRoot()->GetId(), 
+                                         gClient->GetDefaultRoot()->GetId(),
                                          event->fX, event->fY, px, py, wtarget);
          fContextMenu->Popup(px, py, frm);
-         // connect PoppedDown signal to close the tool window 
+         // connect PoppedDown signal to close the tool window
          // when the menu is closed
          TRootContextMenu *menu = ((TRootContextMenu *)fContextMenu->GetContextMenuImp());
          ((TGPopupMenu *)menu)->Connect("PoppedDown()", "TGSplitTool", this, "Hide()");
@@ -153,14 +153,14 @@ Bool_t TGSplitTool::HandleMotion(Event_t *event)
          // if inside a rectangle, highlight it
          if (rect != oldrect) {
             if (oldrect) {
-               gVirtualX->FillRectangle(fId, GetBckgndGC()(), oldrect->fX, 
+               gVirtualX->FillRectangle(fId, GetBckgndGC()(), oldrect->fX,
                                         oldrect->fY, oldrect->fW, oldrect->fH);
-               gVirtualX->DrawRectangle(fId, GetBlackGC()(), oldrect->fX, oldrect->fY, 
+               gVirtualX->DrawRectangle(fId, GetBlackGC()(), oldrect->fX, oldrect->fY,
                                         oldrect->fW, oldrect->fH);
             }
-            gVirtualX->FillRectangle(fId, fRectGC(), rect->fX, rect->fY, rect->fW, 
+            gVirtualX->FillRectangle(fId, fRectGC(), rect->fX, rect->fY, rect->fW,
                                      rect->fH);
-            gVirtualX->DrawRectangle(fId, GetBlackGC()(), rect->fX, rect->fY, 
+            gVirtualX->DrawRectangle(fId, GetBlackGC()(), rect->fX, rect->fY,
                                      rect->fW, rect->fH);
             oldrect = rect;
          }
@@ -168,9 +168,9 @@ Bool_t TGSplitTool::HandleMotion(Event_t *event)
       }
    }
    if (oldrect) {
-      gVirtualX->FillRectangle(fId, GetBckgndGC()(), oldrect->fX, 
+      gVirtualX->FillRectangle(fId, GetBckgndGC()(), oldrect->fX,
                                oldrect->fY, oldrect->fW, oldrect->fH);
-      gVirtualX->DrawRectangle(fId, GetBlackGC()(), oldrect->fX, oldrect->fY, 
+      gVirtualX->DrawRectangle(fId, GetBlackGC()(), oldrect->fX, oldrect->fY,
                                oldrect->fW, oldrect->fH);
    }
    return kTRUE;
@@ -227,8 +227,8 @@ void TGSplitTool::Show(Int_t x, Int_t y)
    RaiseWindow();
 
    // last argument kFALSE forces all specified events to this window
-   gVirtualX->GrabPointer(fId, kButtonPressMask | kPointerMotionMask, kNone, 
-                          fClient->GetResourcePool()->GetGrabCursor(), 
+   gVirtualX->GrabPointer(fId, kButtonPressMask | kPointerMotionMask, kNone,
+                          fClient->GetResourcePool()->GetGrabCursor(),
                           kTRUE, kFALSE);
    // Long_t args[2];
    // args[0] = x;
@@ -237,7 +237,7 @@ void TGSplitTool::Show(Int_t x, Int_t y)
 
 //______________________________________________________________________________
 TGSplitFrame::TGSplitFrame(const TGWindow *p, UInt_t w, UInt_t h,
-        UInt_t options) : TGCompositeFrame(p, w, h, options), 
+        UInt_t options) : TGCompositeFrame(p, w, h, options),
         fFrame(0), fSplitter(0), fFirst(0), fSecond(0)
 {
    // Default constructor.
@@ -253,7 +253,7 @@ TGSplitFrame::TGSplitFrame(const TGWindow *p, UInt_t w, UInt_t h,
 TGSplitFrame::~TGSplitFrame()
 {
    // Destructor. Make cleanup.
-   
+
    delete fSplitTool;
    Cleanup();
 }
@@ -321,7 +321,7 @@ void TGSplitFrame::Close()
 //______________________________________________________________________________
 void TGSplitFrame::CloseAndCollapse()
 {
-   // Close (unmap, remove from the list of frames and destroy) the frame 
+   // Close (unmap, remove from the list of frames and destroy) the frame
    // contained in this split frame. Then unsplit the parent frame.
 
    if (!fSplitter || !fFirst || !fSecond) {
@@ -345,7 +345,7 @@ void TGSplitFrame::Docked(TGFrame* frame)
 //______________________________________________________________________________
 void TGSplitFrame::ExtractFrame()
 {
-   // Extract the frame contained in this split frame an reparent it in a 
+   // Extract the frame contained in this split frame an reparent it in a
    // transient frame. Keep a pointer on the transient frame to be able to
    // swallow the child frame back to this.
 
@@ -421,13 +421,13 @@ void TGSplitFrame::HSplit(UInt_t h)
    fSplitter = new TGHSplitter(this, 4, 4);
    // set the splitter's frame to the first one
    fSplitter->SetFrame(fFirst, kTRUE);
-   fSplitter->Connect("ProcessedEvent(Event_t*)", "TGSplitFrame", this, 
+   fSplitter->Connect("ProcessedEvent(Event_t*)", "TGSplitFrame", this,
                       "OnSplitterClicked(Event_t*)");
    // add all frames
    TGCompositeFrame::AddFrame(fFirst, new TGLayoutHints(kLHintsExpandX));
-   TGCompositeFrame::AddFrame(fSplitter, new TGLayoutHints(kLHintsLeft | 
+   TGCompositeFrame::AddFrame(fSplitter, new TGLayoutHints(kLHintsLeft |
                               kLHintsTop | kLHintsExpandX));
-   TGCompositeFrame::AddFrame(fSecond, new TGLayoutHints(kLHintsExpandX | 
+   TGCompositeFrame::AddFrame(fSecond, new TGLayoutHints(kLHintsExpandX |
                               kLHintsExpandY));
 }
 
@@ -450,13 +450,13 @@ void TGSplitFrame::VSplit(UInt_t w)
    fSplitter = new TGVSplitter(this, 4, 4);
    // set the splitter's frame to the first one
    fSplitter->SetFrame(fFirst, kTRUE);
-   fSplitter->Connect("ProcessedEvent(Event_t*)", "TGSplitFrame", this, 
+   fSplitter->Connect("ProcessedEvent(Event_t*)", "TGSplitFrame", this,
                       "OnSplitterClicked(Event_t*)");
    // add all frames
    TGCompositeFrame::AddFrame(fFirst, new TGLayoutHints(kLHintsExpandY));
-   TGCompositeFrame::AddFrame(fSplitter, new TGLayoutHints(kLHintsLeft | 
+   TGCompositeFrame::AddFrame(fSplitter, new TGLayoutHints(kLHintsLeft |
                               kLHintsTop | kLHintsExpandY));
-   TGCompositeFrame::AddFrame(fSecond, new TGLayoutHints(kLHintsExpandX | 
+   TGCompositeFrame::AddFrame(fSecond, new TGLayoutHints(kLHintsExpandX |
                               kLHintsExpandY));
 }
 
@@ -477,7 +477,7 @@ void TGSplitFrame::MapToSPlitTool(TGSplitFrame *top)
          if (parent->GetOptions() & kHorizontalFrame)
             rx = parent->GetFirst()->GetWidth();
       }
-      gVirtualX->TranslateCoordinates(GetId(), top->GetId(), 
+      gVirtualX->TranslateCoordinates(GetId(), top->GetId(),
                                       fX, fY, px, py, wtarget);
       cx = ((px-rx)/10)+2;
       cy = ((py-ry)/10)+2;
@@ -504,7 +504,7 @@ void TGSplitFrame::OnSplitterClicked(Event_t *event)
    if (event->fCode != kButton3)
       return;
    gVirtualX->TranslateCoordinates(event->fWindow,
-                                   gClient->GetDefaultRoot()->GetId(), 
+                                   gClient->GetDefaultRoot()->GetId(),
                                    event->fX, event->fY, px, py, wtarget);
    TGSplitFrame *top = GetTopFrame();
    top->GetSplitTool()->Reset();
@@ -516,15 +516,15 @@ void TGSplitFrame::OnSplitterClicked(Event_t *event)
 //______________________________________________________________________________
 void TGSplitFrame::SplitHor()
 {
-   // Horizontally split the frame, and if it contains a child frame, ask 
-   // the user where to keep it (top or bottom). This is the method used 
+   // Horizontally split the frame, and if it contains a child frame, ask
+   // the user where to keep it (top or bottom). This is the method used
    // via the context menu.
 
    char side[200];
    snprintf(side, 200, "top");
    if (fFrame) {
       new TGInputDialog(gClient->GetRoot(), GetTopFrame(),
-               "In which side the actual frame has to be kept (top / bottom)", 
+               "In which side the actual frame has to be kept (top / bottom)",
                side, side);
       if ( strcmp(side, "") == 0 )  // Cancel button was pressed
          return;
@@ -535,7 +535,7 @@ void TGSplitFrame::SplitHor()
 //______________________________________________________________________________
 void TGSplitFrame::SplitHorizontal(const char *side)
 {
-   // Horizontally split the frame, and if it contains a child frame, ask 
+   // Horizontally split the frame, and if it contains a child frame, ask
    // the user where to keep it (top or bottom). This method is the actual
    // implementation.
 
@@ -564,15 +564,15 @@ void TGSplitFrame::SplitHorizontal(const char *side)
 //______________________________________________________________________________
 void TGSplitFrame::SplitVer()
 {
-   // Vertically split the frame, and if it contains a child frame, ask 
-   // the user where to keep it (left or right). This is the method used 
+   // Vertically split the frame, and if it contains a child frame, ask
+   // the user where to keep it (left or right). This is the method used
    // via the context menu.
 
    char side[200];
    snprintf(side, 200, "left");
    if (fFrame) {
       new TGInputDialog(gClient->GetRoot(), GetTopFrame(),
-               "In which side the actual frame has to be kept (left / right)", 
+               "In which side the actual frame has to be kept (left / right)",
                side, side);
       if ( strcmp(side, "") == 0 )  // Cancel button was pressed
          return;
@@ -583,7 +583,7 @@ void TGSplitFrame::SplitVer()
 //______________________________________________________________________________
 void TGSplitFrame::SplitVertical(const char *side)
 {
-   // Vertically split the frame, and if it contains a child frame, ask 
+   // Vertically split the frame, and if it contains a child frame, ask
    // the user where to keep it (left or right). This method is the actual
    // implementation.
 
@@ -641,7 +641,7 @@ void TGSplitFrame::SwitchFrames(TGFrame *frame, TGCompositeFrame *dest,
 {
    // Switch (exchange) two frames.
    // frame is the source, dest is the destination (the new parent)
-   // prev is the frame that has to be exchanged with the source 
+   // prev is the frame that has to be exchanged with the source
    // (the one actually in the destination)
 
    // get parent of the source (its container)

@@ -9,16 +9,16 @@ void FFT()
 
 //This tutorial illustrates the Fast Fourier Transforms interface in ROOT.
 //FFT transform types provided in ROOT:
-// - "C2CFORWARD" - a complex input/output discrete Fourier transform (DFT) 
+// - "C2CFORWARD" - a complex input/output discrete Fourier transform (DFT)
 //                  in one or more dimensions, -1 in the exponent
-// - "C2CBACKWARD"- a complex input/output discrete Fourier transform (DFT) 
+// - "C2CBACKWARD"- a complex input/output discrete Fourier transform (DFT)
 //                  in one or more dimensions, +1 in the exponent
 // - "R2C"        - a real-input/complex-output discrete Fourier transform (DFT)
 //                  in one or more dimensions,
-// - "C2R"        - inverse transforms to "R2C", taking complex input 
-//                  (storing the non-redundant half of a logically Hermitian array) 
+// - "C2R"        - inverse transforms to "R2C", taking complex input
+//                  (storing the non-redundant half of a logically Hermitian array)
 //                  to real output
-// - "R2HC"       - a real-input DFT with output in ¡Èhalfcomplex¡É format, 
+// - "R2HC"       - a real-input DFT with output in ¡Èhalfcomplex¡É format,
 //                  i.e. real and imaginary parts for a transform of size n stored as
 //                  r0, r1, r2, ..., rn/2, i(n+1)/2-1, ..., i2, i1
 // - "HC2R"       - computes the reverse of FFTW_R2HC, above
@@ -67,18 +67,18 @@ void FFT()
    c1_5->SetFrameFillColor(42);
    c1_6->SetFillColor(30);
    c1_6->SetFrameFillColor(42);
-   
+
    c1_1->cd();
    TH1::AddDirectory(kFALSE);
-     
+
    //A function to sample
    TF1 *fsin = new TF1("fsin", "sin(x)+sin(2*x)+sin(0.5*x)+1", 0, 4*TMath::Pi());
    fsin->Draw();
-   
+
    Int_t n=25;
    TH1D *hsin = new TH1D("hsin", "hsin", n+1, 0, 4*TMath::Pi());
    Double_t x;
-   
+
    //Fill the histogram with function values
    for (Int_t i=0; i<=n; i++){
       x = (Double_t(i)/n)*(4*TMath::Pi());
@@ -87,7 +87,7 @@ void FFT()
    hsin->Draw("same");
    fsin->GetXaxis()->SetLabelSize(0.05);
    fsin->GetYaxis()->SetLabelSize(0.05);
-   
+
    c1_2->cd();
    //Compute the transform and look at the magnitude of the output
    TH1 *hm =0;
@@ -95,14 +95,14 @@ void FFT()
    hm = hsin->FFT(hm, "MAG");
    hm->SetTitle("Magnitude of the 1st transform");
    hm->Draw();
-   //NOTE: for "real" frequencies you have to divide the x-axes range with the range of your function 
+   //NOTE: for "real" frequencies you have to divide the x-axes range with the range of your function
    //(in this case 4*Pi); y-axes has to be rescaled by a factor of 1/SQRT(n) to be right: this is not done automatically!
-   
+
    hm->SetStats(kFALSE);
    hm->GetXaxis()->SetLabelSize(0.05);
    hm->GetYaxis()->SetLabelSize(0.05);
-   c1_3->cd();   
-   //Look at the phase of the output   
+   c1_3->cd();
+   //Look at the phase of the output
    TH1 *hp = 0;
    hp = hsin->FFT(hp, "PH");
    hp->SetTitle("Phase of the 1st transform");
@@ -110,7 +110,7 @@ void FFT()
    hp->SetStats(kFALSE);
    hp->GetXaxis()->SetLabelSize(0.05);
    hp->GetYaxis()->SetLabelSize(0.05);
-   
+
    //Look at the DC component and the Nyquist harmonic:
    Double_t re, im;
    //That's the way to get the current transform object:
@@ -126,7 +126,7 @@ void FFT()
    Double_t *re_full = new Double_t[n];
    Double_t *im_full = new Double_t[n];
    fft->GetPointsComplex(re_full,im_full);
-  
+
    //Now let's make a backward transform:
    TVirtualFFT *fft_back = TVirtualFFT::FFT(1, &n, "C2R M K");
    fft_back->SetPointsComplex(re_full,im_full);
@@ -137,7 +137,7 @@ void FFT()
    hb->SetTitle("The backward transform result");
    hb->Draw();
    //NOTE: here you get at the x-axes number of bins and not real values
-   //(in this case 25 bins has to be rescaled to a range between 0 and 4*Pi; 
+   //(in this case 25 bins has to be rescaled to a range between 0 and 4*Pi;
    //also here the y-axes has to be rescaled (factor 1/bins)
    hb->SetStats(kFALSE);
    hb->GetXaxis()->SetLabelSize(0.05);
@@ -148,7 +148,7 @@ void FFT()
 //********* Data array - same transform ********//
 
    //Allocate an array big enough to hold the transform output
-   //Transform output in 1d contains, for a transform of size N, 
+   //Transform output in 1d contains, for a transform of size N,
    //N/2+1 complex numbers, i.e. 2*(N/2+1) real numbers
    //our transform is of size n+1, because the histogram has n+1 bins
 
@@ -163,7 +163,7 @@ void FFT()
    //Third parameter (option) consists of 3 parts:
    //-transform type:
    // real input/complex output in our case
-   //-transform flag: 
+   //-transform flag:
    // the amount of time spent in planning
    // the transform (see TVirtualFFT class description)
    //-to create a new TVirtualFFT object (option "K") or use the global (default)

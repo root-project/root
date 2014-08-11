@@ -68,7 +68,7 @@ TList *TProofBench::fgGraphs = new TList;
 Double_t funp1(Double_t *xx, Double_t *par)
 {
    // Simple polynomial 1st degree
-   
+
    Double_t res = par[0] + par[1] * xx[0];
    return res;
 }
@@ -77,7 +77,7 @@ Double_t funp1(Double_t *xx, Double_t *par)
 Double_t funp2(Double_t *xx, Double_t *par)
 {
    // Simple polynomial 2nd degree
-   
+
    Double_t res = par[0] + par[1] * xx[0] + par[2] * xx[0] * xx[0];
    return res;
 }
@@ -86,7 +86,7 @@ Double_t funp2(Double_t *xx, Double_t *par)
 Double_t funp1n(Double_t *xx, Double_t *par)
 {
    // Normalized 1st degree
-   
+
    Double_t res = par[0] / xx[0] + par[1];
    return res;
 }
@@ -95,7 +95,7 @@ Double_t funp1n(Double_t *xx, Double_t *par)
 Double_t funp2n(Double_t *xx, Double_t *par)
 {
    // Normalized 2nd degree
-   
+
    Double_t res = par[0] / xx[0] + par[1] + par[2] * xx[0];
    return res;
 }
@@ -104,7 +104,7 @@ Double_t funp2n(Double_t *xx, Double_t *par)
 Double_t funio(Double_t *xx, Double_t *par)
 {
    // I/O saturated rate function
-   
+
    Double_t sat = par[0] / par[1] * (xx[0] * par[1] / par[2] - 1.);
    if (xx[0] < par[2] / par[1]) sat = 0.;
    Double_t res = par[0] * xx[0] / (1. + sat);
@@ -115,7 +115,7 @@ Double_t funio(Double_t *xx, Double_t *par)
 Double_t funiov(Double_t *xx, Double_t *par)
 {
    // I/O saturated rate function with varying Rcpu
-   
+
    // par[0] = rio
    // par[1] = b1
    // par[2] = b2
@@ -138,10 +138,10 @@ Double_t funiov(Double_t *xx, Double_t *par)
 Double_t funcpuv(Double_t *xx, Double_t *par)
 {
    // Function with varying Rcpu
-   
+
    // par[0] = offset
-   // par[1] = rate contribution from real cores 
-   // par[2] = rate contribution from hyper cores 
+   // par[1] = rate contribution from real cores
+   // par[2] = rate contribution from hyper cores
 
    Double_t n = (xx[0] - par[0]);
    Double_t rcpu = par[1] * n;
@@ -155,10 +155,10 @@ Double_t funcpuv(Double_t *xx, Double_t *par)
 Double_t funcpuvn(Double_t *xx, Double_t *par)
 {
    // Function with varying Rcpu normalized
-   
+
    // par[0] = offset
-   // par[1] = rate contribution from real cores 
-   // par[2] = rate contribution from hyper cores 
+   // par[1] = rate contribution from real cores
+   // par[2] = rate contribution from hyper cores
 
    Double_t n = (xx[0] - par[0]);
    Double_t rcpu = par[1] * n;
@@ -177,7 +177,7 @@ TProofBench::TProofBench(const char *url, const char *outfile, const char *proof
               fRunCPU(0), fRunDS(0), fDS(0), fDebug(kFALSE), fDescription(0)
 {
    // Constructor: check PROOF and load selectors PAR
-   
+
    SetBit(kInvalidObject);
    if (!url) {
       Error("TProofBench", "specifying a PROOF master url is mandatory - cannot continue");
@@ -229,13 +229,13 @@ TProofBench::TProofBench(const char *url, const char *outfile, const char *proof
    if (SetOutFile(outfile, kFALSE) != 0)
       Warning("TProofBench", "problems opening '%s' - ignoring: use SetOutFile to try"
                                    " again or with another file", outfile);
-} 
+}
 
 //______________________________________________________________________________
 TProofBench::~TProofBench()
 {
    // Destructor
-   
+
    CloseOutFile();
    if (fUnlinkOutfile) gSystem->Unlink(fOutFileName);
    SafeDelete(fReadType);
@@ -290,7 +290,7 @@ Int_t TProofBench::SetOutFile(const char *outfile, Bool_t verbose)
       if (!fOutFile->IsZombie()) fOutFile->Close();
       SafeDelete(fOutFile);
    }
-   
+
    fOutFileName = outfile;
    if (fOutFileName == "<default>") {
       // Default output file: proofbench-<master>-<DayMonthYear-hhmm>.root
@@ -404,7 +404,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
       ::Error("DrawCPU", "could not open file '%s' ...", outfile);
       return;
    }
-   
+
    // Get description
    TString description("<not available>");
    TNamed *nmdesc = (TNamed *) fout->Get("PB_description");
@@ -468,8 +468,8 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
       if ((ymi > 0 && mmi < ymi) || (ymi < 0.)) ymi = mmi;
    }
 
-   TProfile *pf = (doMax) ? pfmx : pfav;   
-   Int_t kmx = (doMax) ? kmmx : kamx; 
+   TProfile *pf = (doMax) ? pfmx : pfav;
+   Int_t kmx = (doMax) ? kmmx : kamx;
 
    // Create the canvas
    TCanvas *cpu = new TCanvas("cpu", "Rate vs wrks",204,69,1050,502);
@@ -488,7 +488,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
    hgr->GetXaxis()->SetTitleOffset(0.62);
    hgr->GetYaxis()->SetTitleSize(0.08);
    hgr->GetYaxis()->SetTitleOffset(0.52);
-   hgr->GetYaxis()->SetTitle("Rate (events/s)");      
+   hgr->GetYaxis()->SetTitle("Rate (events/s)");
 
    TLegend *leg = 0;
    if (isNorm) {
@@ -530,7 +530,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
    gPad->Update();
 
    if (dofit > 0) {
-      TGraphErrors *gr = (doMax) ? grmx : grav;   
+      TGraphErrors *gr = (doMax) ? grmx : grav;
       // Make sure the fitting functions are defined
       Double_t xmi = 0.9;
       if (nbins > 5) xmi = 1.5;
@@ -663,14 +663,14 @@ TGraphErrors *TProofBench::GetGraph(TDirectory *d, const char *pfn, Int_t &nb,
          ymx = yy;
          kmx = k;
       } else {
-         if (yy < ymi) ymi = yy; 
+         if (yy < ymi) ymi = yy;
          if (yy > ymx) { ymx = yy; kmx = k; }
       }
       gr->SetPoint(k-1, xx, yy);
       gr->SetPointError(k-1, ex, ey);
    }
 
-   // Done  
+   // Done
    return gr;
 }
 
@@ -740,8 +740,8 @@ void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
 {
    // Get performance specs. Check file 'path', or files in directory 'path'
    // (default current directory).
-   // The degree of the polynomial used for the fit is 'degfit' (default 1). 
-   
+   // The degree of the polynomial used for the fit is 'degfit' (default 1).
+
    // Locate the file (ask if many)
    TString pp(path), fn, oo;
    if (pp.IsNull()) pp = gSystem->WorkingDirectory();
@@ -820,7 +820,7 @@ void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
                } else {
                   emsg.Form("'%s' is not a ROOT file - abort", fn.Data());
                }
-            } else { 
+            } else {
                emsg.Form("could not read first 4 bytes from '%s' - abort", fn.Data());
             }
             SafeDelete(f);
@@ -845,7 +845,7 @@ void TProofBench::GetPerfSpecs(const char *path, Int_t degfit)
    } else if (filels.GetSize() > 1) {
       TIter nxf(&filels);
       Int_t idx = 0;
-      Printf("Several possible files found:"); 
+      Printf("Several possible files found:");
       while ((nm = (fileDesc *) nxf())) {
          Printf("  %d\t%s\t%s\t%s (file: %s)", idx++, nm->GetTitle(),
                 TTimeStamp(nm->fMtime).AsString("s"), nm->fDesc.Data(), nm->GetName());
@@ -890,18 +890,18 @@ Int_t TProofBench::RunDataSet(const char *dset,
    SafeDelete(fRunDS);
    TPBReadType *readType = fReadType;
    if (!readType) readType = new TPBReadType(TPBReadType::kReadOpt);
-   fRunDS = new TProofBenchRunDataRead(fDS, readType, fOutFile); 
+   fRunDS = new TProofBenchRunDataRead(fDS, readType, fOutFile);
    if (!fDataSel.IsNull()) fRunDS->SetSelName(fDataSel);
    if (!fSelOption.IsNull()) fRunDS->SetSelOption(fSelOption);
    if (!fDataPar.IsNull()) fRunDS->SetParList(fDataPar);
    fRunDS->SetReleaseCache(fReleaseCache);
    fRunDS->Run(dset, start, stop, step, fNtries, fDebug, -1);
    if (!fReadType) SafeDelete(readType);
-   
+
    // Close the file
    if (SetOutFile(0) != 0)
       Warning("RunDataSet", "problems closing '%s'", fOutFileName.Data());
-   
+
    // Done
    return 0;
 }
@@ -924,7 +924,7 @@ Int_t TProofBench::RunDataSetx(const char *dset, Int_t start, Int_t stop)
    SafeDelete(fRunDS);
    TPBReadType *readType = fReadType;
    if (!readType) readType = new TPBReadType(TPBReadType::kReadOpt);
-   fRunDS = new TProofBenchRunDataRead(fDS, readType, fOutFile); 
+   fRunDS = new TProofBenchRunDataRead(fDS, readType, fOutFile);
    if (!fDataSel.IsNull()) fRunDS->SetSelName(fDataSel);
    if (!fSelOption.IsNull()) fRunDS->SetSelOption(fSelOption);
    if (!fDataPar.IsNull()) fRunDS->SetParList(fDataPar);
@@ -934,7 +934,7 @@ Int_t TProofBench::RunDataSetx(const char *dset, Int_t start, Int_t stop)
    // Close the file
    if (SetOutFile(0) != 0)
       Warning("RunDataSetx", "problems closing '%s'", fOutFileName.Data());
-   
+
    // Done
    return 0;
 }
@@ -968,7 +968,7 @@ void TProofBench::DrawDataSet(const char *outfile,
       ::Error("DrawDataSet", "could not open file '%s' ...", outfile);
       return;
    }
-   
+
    // Get description
    TString description("<not available>");
    TNamed *nmdesc = (TNamed *) fout->Get("PB_description");
@@ -1002,14 +1002,14 @@ void TProofBench::DrawDataSet(const char *outfile,
       isIO = kFALSE;
    } else {
       hprofn.Form("%s%s_DataRead_QR_IO", ln, lx);
-      hmaxn.Form("%s%s_DataRead_PS_MaxIO", ln, lx);      
+      hmaxn.Form("%s%s_DataRead_PS_MaxIO", ln, lx);
    }
 
    Double_t xmin = -1., xmax = -1.;
    Double_t ami = -1., amx = -1., mmi = -1., mmx = -1.;
    Int_t kamx = -1, kmmx = -1, nbins = -1;
    Double_t ymx = -1., ymi = -1.;
- 
+
    TProfile *pfav = 0;
    TGraphErrors *grav = 0;
    if (doAvg) {
@@ -1039,8 +1039,8 @@ void TProofBench::DrawDataSet(const char *outfile,
       if ((ymi > 0 && mmi < ymi) || (ymi < 0.)) ymi = mmi;
    }
 
-   TProfile *pf = (doMax) ? pfmx : pfav;   
-   Int_t kmx = (doMax) ? kmmx : kamx; 
+   TProfile *pf = (doMax) ? pfmx : pfav;
+   Int_t kmx = (doMax) ? kmmx : kamx;
 
    // Create the canvas
    TCanvas *cpu = new TCanvas("dataset", "Rate vs wrks",204,69,1050,502);
@@ -1063,7 +1063,7 @@ void TProofBench::DrawDataSet(const char *outfile,
    if (isIO) {
       hgr->GetYaxis()->SetTitle("Rate (MB/s)");
    } else {
-      hgr->GetYaxis()->SetTitle("Rate (events/s)");      
+      hgr->GetYaxis()->SetTitle("Rate (events/s)");
    }
 
    TLegend *leg = 0;
@@ -1106,7 +1106,7 @@ void TProofBench::DrawDataSet(const char *outfile,
 
    Double_t normrate = -1.;
    if (dofit > 0) {
-      TGraphErrors *gr = (doMax) ? grmx : grav;   
+      TGraphErrors *gr = (doMax) ? grmx : grav;
       // Make sure the fitting functions are defined
       Double_t xmi = 0.9;
       if (nbins > 5) xmi = 1.5;
@@ -1172,7 +1172,7 @@ void TProofBench::DrawEfficiency(const char *outfile,
       ::Error("DrawEfficiency", "could not open file '%s' ...", outfile);
       return;
    }
-   
+
    // Get description
    TString description("<not available>");
    TNamed *nmdesc = (TNamed *) fout->Get("PB_description");
@@ -1202,7 +1202,7 @@ void TProofBench::DrawEfficiency(const char *outfile,
    for (Int_t i = fst; i <= lst; i++) {
       if ((d = (TDirectory *) fout->Get(dirs[i]))) {
          dirn = dirs[i];
-         ln = labs[i]; 
+         ln = labs[i];
          break;
       }
    }
@@ -1220,7 +1220,7 @@ void TProofBench::DrawEfficiency(const char *outfile,
    Double_t xmin = -1., xmax = -1.;
    Int_t kmx = -1, nbins = -1;
    Double_t ymx = -1., ymi = -1.;
- 
+
    TProfile *pf = 0;
    TGraphErrors *gr = 0;
    if (!(gr = GetGraph(d, hprof, nbins, xmin, xmax, ymi, ymx, kmx, pf))) {
@@ -1313,7 +1313,7 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
    //          'event'            <datadir>/event_<ord>_<#>.root
    //          '/mss/event'       /mss/event_<ord>_<#>.root
    //          'root://srv//mss/event?remote=1'
-   //                             root://srv//mss/event_<ord>_<#>?remote=1.root          
+   //                             root://srv//mss/event_<ord>_<#>?remote=1.root
    // Default selector is TSelEventGen. Use SetDataGenSel and SetDataGenPar to change it
    // and to pass the list of PARs defining the alternative selector.
    // The argument 'nevt' controls the number of events per file (-1 for the default,
@@ -1439,7 +1439,7 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
       fProof->SetParameter("PROOF_ProcessNotAssigned", oldnotass);
    else
       fProof->DeleteParameters("PROOF_ProcessNotAssigned");
-   
+
    // Cleanup
    if (fProof->GetInputList()) fProof->GetInputList()->Remove(filesmap);
    filesmap->SetOwner(kTRUE);
@@ -1484,7 +1484,7 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
    } else {
       Warning("MakeDataSet", "dataset '%s' was not generated!", fDataSet.Data());
    }
-   
+
    SafeDelete(fc);
 
    // Done
@@ -1541,7 +1541,7 @@ Int_t TProofBench::CopyDataSet(const char *dset, const char *dsetdst, const char
       fcn->Add(new TFileInfo(fn));
    }
    delete fc;
-      
+
    // Do it via the dataset handler
    if (!fDS) fDS = new TProofBenchDataSet(fProofDS);
    if (fDS->CopyFiles(dset, destdir) != 0) {
@@ -1569,7 +1569,7 @@ void TProofBench::SetProofDS(TProof *pds)
    // Set the PROOF instance to be used for dataset operations, like releasing
    // cache ...
    // Use SetProofDS(0) to reset and using the default PROOF
-   
+
    if (pds && !pds->IsValid()) {
       Error("SetProofDS", "trying to set an invalid PROOF instance");
       return;

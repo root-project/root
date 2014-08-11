@@ -404,7 +404,7 @@ void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
          fAxisPainter.RnrLabels();
          fAxisPainter.RnrLines();
          glPopMatrix();
-         
+
          // Top.
          glPushMatrix();
          glTranslatef( 0, t, 0);

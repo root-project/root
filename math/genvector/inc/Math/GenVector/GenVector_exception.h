@@ -1,7 +1,7 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
-#ifndef ROOT_Math_GenVector_GenVector_exception 
+#ifndef ROOT_Math_GenVector_GenVector_exception
 #define ROOT_Math_GenVector_GenVector_exception  1
 
 // ======================================================================
@@ -23,7 +23,7 @@ namespace Math {
 
 class GenVector_exception;
 void Throw(GenVector_exception & e);
-namespace GenVector { 
+namespace GenVector {
    void   Throw(const char *);
 }
 
@@ -37,20 +37,20 @@ public:
    GenVector_exception( const std::string &  s )
       : runtime_error(s)
    { }
-   
+
 // Compiler-generated copy ctor, copy assignment, dtor are fine
 // Inherited what() from runtime_error is fine
 
    static bool EnableThrow()  { bool tmp = fgOn; fgOn = true;  return tmp; }
    static bool DisableThrow() { bool tmp = fgOn; fgOn = false; return tmp; }
-   
+
 
 private:
    friend void Throw(GenVector_exception &);
-   friend void GenVector::Throw(const char *); 
+   friend void GenVector::Throw(const char *);
 
    static bool fgOn;
-  
+
 };  // GenVector_exception
 
 
@@ -58,11 +58,11 @@ private:
 // Epilog
 
 /// throw explicity GenVector exceptions
-void Throw(GenVector_exception & e); 
+void Throw(GenVector_exception & e);
 
-namespace GenVector { 
+namespace GenVector {
    /// function throwing exception, by creating internally a GenVector_exception only when needed
-   void Throw(const char *); 
+   void Throw(const char *);
 }
 
 

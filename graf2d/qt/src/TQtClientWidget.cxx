@@ -53,7 +53,7 @@ TQtClientWidget::TQtClientWidget(TQtClientGuard *guard, QWidget* mother, const c
    setObjectName(name);
    setAttribute(Qt::WA_PaintOnScreen);
    setAttribute(Qt::WA_PaintOutsidePaintEvent);
-   setAutoFillBackground(true); 
+   setAutoFillBackground(true);
  //   fEraseColor  = new QColor("red");
 //   fErasePixmap = new QPixmap(palette().brush(QPalette::Window).texture());
 }
@@ -71,7 +71,7 @@ TQtClientWidget::~TQtClientWidget()
    fNormalPointerCursor = 0; // to prevent the cursor shape restoring
    UnSetButtonMask(true);
    UnSetKeyMask();
-   delete fEraseColor;  fEraseColor  = 0; 
+   delete fEraseColor;  fEraseColor  = 0;
    delete fErasePixmap; fErasePixmap = 0;
    if (!IsClosing())
       gQt->SendDestroyEvent(this);  // notify TGClient we have been destroyed
@@ -94,9 +94,9 @@ void TQtClientWidget::closeEvent(QCloseEvent *ev)
 void TQtClientWidget::setEraseColor(const QColor &color)
 {
    // Color to paint widget background with our PainEvent
-   if (!fEraseColor) 
+   if (!fEraseColor)
       fEraseColor = new QColor(color);
-   else 
+   else
       *fEraseColor = color;
    QPalette pp = palette();
    pp.setColor(QPalette::Window, *fEraseColor);
@@ -108,7 +108,7 @@ void TQtClientWidget::setEraseColor(const QColor &color)
 void TQtClientWidget::setErasePixmap (const QPixmap &pixmap)
 {
    // pixmap to paint widget background with our PainEvent
-   if (!fErasePixmap) 
+   if (!fErasePixmap)
       fErasePixmap = new QPixmap(pixmap);
    else
       *fErasePixmap = pixmap;
@@ -137,8 +137,8 @@ bool TQtClientWidget::IsGrabbed(Event_t &ev)
 //   fprintf(stderr,"\n -1- TQtClientWidget::IsGrabbed  parent = %p mask %o register = %d "
 //          , parent, ButtonEventMask(),TGQt::IsRegistered(parent));
    if (     ButtonEventMask()
-         && !isHidden() 
-         && !(   mother 
+         && !isHidden()
+         && !(   mother
                && dynamic_cast<TQtClientWidget*>(mother)  // TGQt::IsRegistered(parent)
                && ((TQtClientWidget *)mother)->IsGrabbed(ev)
              )
@@ -147,12 +147,12 @@ bool TQtClientWidget::IsGrabbed(Event_t &ev)
 
         //Test whether the current button is grabbed by this window
         bool msk = (ev.fState & fGrabButtonMask) || (fGrabButtonMask & kAnyModifier);
-        
+
         if ((fButton == kAnyButton) && msk)
            grab = true;
-        else 
+        else
            grab = (fButton == EMouseButton(ev.fCode)) && msk;
-        
+
         // Check whether this window holds the pointer coordinate
         TQtClientWidget *w = (TQtClientWidget *)TGQt::wid(ev.fWindow);
         if (grab && (w != this) ) {
@@ -177,14 +177,14 @@ TQtClientWidget *TQtClientWidget::IsKeyGrabbed(const Event_t &ev)
    // fprintf(stderr,"Do we grab ? current window %p; event window = %p  code <%c>, grabber = %p\n",TGQt::wid(this), TGQt::rootwid(TGQt::wid(ev.fWindow)), ev.fCode,fGrabbedKey);
    TQtClientWidget *grabbed = 0;
    UInt_t modifier = ev.fState;
-    
+
    if (SetKeyMask(ev.fCode,  modifier, kTestKey)) grabbed = this;
    if (grabbed && ( ev.fType == kKeyRelease)) {
       SetKeyMask(ev.fCode,  modifier, kRemove);
    }
    TQtClientWidget *wg = this;
    if (!grabbed) {
-      // check parent 
+      // check parent
       do {
           wg = (TQtClientWidget *)wg->parentWidget();
       }  while ( wg && (grabbed = wg->IsKeyGrabbed(ev)) );
@@ -218,7 +218,7 @@ void TQtClientWidget::GrabEvent(Event_t &ev, bool /*own*/)
   // TGQt::PrintEvent(ev);
 }
 //______________________________________________________________________________
-void TQtClientWidget::SelectInput (UInt_t evmask) 
+void TQtClientWidget::SelectInput (UInt_t evmask)
 {
    // Select input and chech whether qwe nat mouse tracking
    fSelectEventMask=evmask;
@@ -336,19 +336,19 @@ void TQtClientWidget::Accelerate()
   int l = key.count();
   int keycode = key[l-1];
   Qt::KeyboardModifiers state = Qt::NoModifier;
-  
+
   if (keycode & Qt::SHIFT) state |=  Qt::ShiftModifier;
   if (keycode & Qt::META)  state |=  Qt::MetaModifier;
   if (keycode & Qt::CTRL)  state |=  Qt::ControlModifier;
   if (keycode & Qt::ALT)   state |=  Qt::AltModifier;
-        
+
   // Create ROOT event
   QKeyEvent ac(QEvent::KeyPress,keycode & 0x01FFFFFF,state);
-  // call Event filter directly 
+  // call Event filter directly
   TQtClientFilter *f = gQt->QClientFilter();
-  if (f) f->AddKeyEvent(ac,this); 
+  if (f) f->AddKeyEvent(ac,this);
   QKeyEvent acRelease(QEvent::KeyRelease,keycode & 0x01FFFFFF,state);
-  if (f) f->AddKeyEvent(acRelease,this); 
+  if (f) f->AddKeyEvent(acRelease,this);
 }
 //______________________________________________________________________________
 void TQtClientWidget::Disconnect()
@@ -370,5 +370,5 @@ void TQtClientWidget::paintEvent( QPaintEvent *e )
          gClient->NeedRedraw(fMyRootWindow,kTRUE);
       }
    }
-#endif   
+#endif
 }

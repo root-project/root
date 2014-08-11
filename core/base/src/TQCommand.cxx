@@ -300,15 +300,15 @@ TQCommand::TQCommand(TObject *obj, const char *redo, const char *undo) :
 TQCommand::TQCommand(const TQCommand &com) : TList(), TQObject()
 {
    // Copy constructor.
-   
+
    fRedo = new TQConnection(*(com.fRedo));
    fUndo = new TQConnection(*(com.fUndo));
-   
+
    fRedoArgs = 0;
    fUndoArgs = 0;
    fNRargs = com.fNRargs;
    fNUargs = com.fNUargs;
-   
+
    if (fNRargs > 0) {
       fRedoArgs = new Long_t[fNRargs];
       for (int i = 0; i< fNRargs; i++) {
@@ -327,7 +327,7 @@ TQCommand::TQCommand(const TQCommand &com) : TList(), TQObject()
    fTitle = com.fTitle;
    fObject = com.fObject;
    fState = com.fState;
-   
+
    // copy merged commands
    TIter next(&com);
    TQCommand *obj;
@@ -425,7 +425,7 @@ void TQCommand::Merge(TQCommand *c)
 Long64_t TQCommand::Merge(TCollection *collection,TFileMergeInfo*)
 {
    // Merge a collection of TQCommand.
-    
+
    TIter next(collection);
    while (TObject* o = next()) {
       TQCommand *command = dynamic_cast<TQCommand*> (o);
@@ -936,7 +936,7 @@ void TQCommand::PrintCollectionHeader(Option_t* /*option*/) const
    // Print collection header.
 
    TROOT::IndentLevel();
-   printf("%d %s\n", fStatus, GetName()); 
+   printf("%d %s\n", fStatus, GetName());
 }
 
 ///////////////////////////////////////////////////////////////////////////////

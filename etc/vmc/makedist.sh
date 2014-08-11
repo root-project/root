@@ -7,10 +7,10 @@
 #
 # Usage: fl_makedist.sh -p package [OPTIONS]
 #           -p package        package name: geant3, geant4_vmc, fluka_vmc
-#           -c gcc_version    gcc version 
-#           -b                make binary distribution 
+#           -c gcc_version    gcc version
+#           -b                make binary distribution
 #           -i                make installation in the path defined in dedicated
-#                             environment variable  
+#                             environment variable
 #
 # By I.Hrivnacova, 01/04/2010
 
@@ -39,11 +39,11 @@ do
     * ) echo "Unimplemented option chosen."
         echo "Usage:"
         echo "makedist.sh  -p package [OPTIONS]"
-        echo "   -p package        package name: geant3, geant4_vmc, fluka_vmc" 
-        echo "   -c gcc_version    gcc version"  
-        echo "   -b                make binary distribution"  
+        echo "   -p package        package name: geant3, geant4_vmc, fluka_vmc"
+        echo "   -c gcc_version    gcc version"
+        echo "   -b                make binary distribution"
         echo "   -i                make installation in path defined in dedicated"
-        echo "                     environment variable" 
+        echo "                     environment variable"
         EXIT=1
         ;;
   esac
@@ -61,7 +61,7 @@ if [ "x$PACKAGE" = "xgeant321" ]; then
   PREFIX=$G3VMC_INSTALL
   DIRNAME="geant3"
   # special extension for distribution file name
-  NAMEEXT="21+_vmc" 
+  NAMEEXT="21+_vmc"
   BINFILES="geant3/lib"
   cd $RUNDIR
   MACHINE=`root-config --arch`
@@ -71,7 +71,7 @@ if [ "x$PACKAGE" = "xgeant321" ]; then
   for param in $SOURCES; do
     TARFILES="$TARFILES geant3/$param"
   done
-fi        
+fi
 
 # geant4_vmc
 #
@@ -102,7 +102,7 @@ fi
 #
 if [ "$BINDIST" = "1" ]; then
   TARFILES="$TARFILES $BINFILES"
-fi  
+fi
 
 # go to run directory
 #
@@ -115,12 +115,12 @@ if [ "$MAKETAR" = "1" ]; then
   MACHINE=`root-config --arch`
   TYPE=""
   if [ "$BINDIST" = "1" ]; then
-     if [ "x$GCC_VERS" = "x" ]; then  
+     if [ "x$GCC_VERS" = "x" ]; then
         TYPE=$MACHINE.
      else
         TYPE=$MACHINE.$GCC_VERS.
      fi
-  fi  
+  fi
   TARFILE=$DIRNAME$NAMEEXT.$VERSION.$TYPE"tar"
 
   TAR="tar zcvf"
@@ -135,16 +135,16 @@ fi
 #
 if [ "$INSTALL" = "1" ]; then
   if [ "x$PREFIX" = "x" ]; then
-    echo "Destination directory $PREFIX not defined"        
+    echo "Destination directory $PREFIX not defined"
     EXIT=1
-  fi  
+  fi
   if [ ! -d $PREFIX ]; then
-    echo "Destination directory $PREFIX not found" 
+    echo "Destination directory $PREFIX not found"
     EXIT=1
-  fi  
-  echo "Installing $DIRNAME in $PREFIX ..." 
+  fi
+  echo "Installing $DIRNAME in $PREFIX ..."
   cp -r $BINFILES $PREFIX
-fi   
+fi
 
 cd $CURDIR
 

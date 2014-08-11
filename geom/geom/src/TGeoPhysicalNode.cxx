@@ -154,7 +154,7 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
    if (newmat == gGeoIdentity) {
       Error("Align", "Cannot align using gGeoIdentity. Use some default matrix constructor to represent identities.");
       return kFALSE;
-   }   
+   }
    TGeoNode *node = GetNode();
    if (node->IsOffset()) {
       Error("Align", "Cannot align division nodes: %s\n",node->GetName());
@@ -198,20 +198,20 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
                delete [] id;
                Fatal("Align", "Cannot make copy node for %s", node->GetName());
                return kFALSE;
-            }   
+            }
             // Correct pointers to mother and volume
             nnode->SetVolume(vd);
             nnode->SetMotherVolume(vm);
             // Decouple old node from mother volume and connect new one
             if (vm->TestBit(TGeoVolume::kVolumeImportNodes)) {
                gGeoManager->GetListOfGShapes()->Add(nnode);
-            }   
+            }
             vm->GetNodes()->RemoveAt(id[i]);
             vm->GetNodes()->AddAt(nnode,id[i]);
             fNodes->RemoveAt(i+1);
             fNodes->AddAt(nnode,i+1);
      //       node->GetVolume()->Release();
-         }   
+         }
          // Consider new cloned volume as mother and continue
          vm = vd;
       }
@@ -284,7 +284,7 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
                aligned = 0; // to prevent updating its matrix
             }
          }
-      }      
+      }
       // Register matrix and make it the active one
       if (!newmat->IsRegistered()) newmat->RegisterYourself();
       if (aligned) {
@@ -294,7 +294,7 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
          TGeoHMatrix *up = GetMatrix(fLevel-1);
          *global = up;
          global->Multiply(newmat);
-      }   
+      }
    }
    // Change the shape for the aligned node
    if (newshape) vd->SetShape(newshape);
@@ -513,8 +513,8 @@ Bool_t TGeoPhysicalNode::IsMatchingState(TGeoNavigator *nav) const
    TGeoNode **branch = (TGeoNode **) cache->GetBranch();
    for (Int_t i=0; i<=fLevel; i++)
       if (fNodes->At(i) != branch[i]) return kFALSE;
-   return kTRUE;   
-}   
+   return kTRUE;
+}
 
 ClassImp(TGeoPNEntry)
 

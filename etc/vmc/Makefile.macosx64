@@ -30,7 +30,7 @@ AWK	  = awk
 # The options
 #
 #
-CXXOPTS       = $(OPT) -m64 -pipe -Wall -W -Woverloaded-virtual  
+CXXOPTS       = $(OPT) -m64 -std=c++11 -pipe -Wall -W -Woverloaded-virtual  
 COPT	      = $(OPT) -m64
 FOPT	      = $(OPT) -m64 -fno-second-underscore
 

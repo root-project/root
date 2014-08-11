@@ -6,22 +6,22 @@ Set(libname )
 
 # Find all headers except the LinkDef file and copy
 # them to the include subdirectory of the build directory
-File(GLOB ${libname}Headers "${CMAKE_CURRENT_SOURCE_DIR}" 
+File(GLOB ${libname}Headers "${CMAKE_CURRENT_SOURCE_DIR}"
           "${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h"
     )
-List(REMOVE_ITEM ${libname}Headers 
-                 "${CMAKE_CURRENT_SOURCE_DIR}" 
+List(REMOVE_ITEM ${libname}Headers
+                 "${CMAKE_CURRENT_SOURCE_DIR}"
                  "${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef.h"
     )
 
 INSTALL_HEADERS("${libname}Headers")
 
 # Find all source files
-File(GLOB ${libname}Source "${CMAKE_CURRENT_SOURCE_DIR}" 
+File(GLOB ${libname}Source "${CMAKE_CURRENT_SOURCE_DIR}"
           "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx"
     )
-List(REMOVE_ITEM ${libname}Source 
-                 "${CMAKE_CURRENT_SOURCE_DIR}" 
+List(REMOVE_ITEM ${libname}Source
+                 "${CMAKE_CURRENT_SOURCE_DIR}"
     )
 
 # Define the LinkDef and the output file which are needed
@@ -30,23 +30,23 @@ List(REMOVE_ITEM ${libname}Source
 Set(LinkDef ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef.h)
 Set(Dictionary ${CMAKE_CURRENT_BINARY_DIR}/G__${libname}.cxx)
 
-Set(INCLUDE_DIRS 
-    ${CMAKE_SOURCE_DIR}/hist/hist/inc 
+Set(INCLUDE_DIRS
+    ${CMAKE_SOURCE_DIR}/hist/hist/inc
 )
 
 
-GENERATE_DICTIONARY("${${libname}Headers}" 
-                    "${LinkDef}" "${Dictionary}" 
+GENERATE_DICTIONARY("${${libname}Headers}"
+                    "${LinkDef}" "${Dictionary}"
                     "${INCLUDE_DIRS}" ""
                    )
 
 Set(INCLUDE_DIRECTORIES
     ${CMAKE_CURRENT_SOURCE_DIR}/inc
-#    ${CMAKE_SOURCE_DIR}/hist/hist/inc 
-#    ${CMAKE_SOURCE_DIR}/core/meta/inc 
+#    ${CMAKE_SOURCE_DIR}/hist/hist/inc
+#    ${CMAKE_SOURCE_DIR}/core/meta/inc
 #    ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${ROOT_INCLUDE_DIR} 
-   ) 
+   ${ROOT_INCLUDE_DIR}
+   )
 
 Set(DEPENDENCIES )
 

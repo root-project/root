@@ -92,7 +92,7 @@ public:
 //
 class XrdProofGroupMgr {
 private:
-   XrdOucString              fIterator; // Keeps track of groups already processed 
+   XrdOucString              fIterator; // Keeps track of groups already processed
    XrdOucHash<XrdProofGroup> fGroups;  // Keeps track of groups managed by this instance
    XrdSysRecMutex            fMutex;   // Mutex to protect access to fGroups
 

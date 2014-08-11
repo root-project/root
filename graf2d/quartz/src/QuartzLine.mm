@@ -34,7 +34,7 @@ Bool_t SetLineColor(CGContextRef ctx, Color_t colorIndex)
    //Do as TGX11 does.
    if (!color)
       color = gROOT->GetColor(kWhite);
-   
+
    if (!color)
       return kFALSE;
 
@@ -69,17 +69,17 @@ void SetLineType(CGContextRef ctx, Int_t n, Int_t *dash)
       CGContextSetLineDash(ctx, 0, NULL, 0);
    }
 }
-   
+
 //______________________________________________________________________________
 void SetLineStyle(CGContextRef ctx, Int_t lstyle)
 {
    // Set current line style in the context ctx.
    assert(ctx != 0 && "SetLineStyle, ctx parameter is null");
-      
+
    static Int_t dashed[2] = {3, 3};
    static Int_t dotted[2] = {1, 2};
    static Int_t dasheddotted[4] = {3, 4, 1, 4};
-      
+
    if (lstyle <= 1 ) {
       SetLineType(ctx, 0, 0);
    } else if (lstyle == 2) {
@@ -111,8 +111,8 @@ void SetLineWidth(CGContextRef ctx, Int_t width)
    //
    // width - the line width in pixels
    assert(ctx != 0 && "SetLineWidth, ctx parameter is null");
-   
-            
+
+
    if (width < 0)
       return;
 
@@ -137,18 +137,18 @@ void DrawPolyLine(CGContextRef ctx, Int_t n, TPoint * xy)
    // Draw a line through all points.
    // n         : number of points
    // xy        : list of points
-   
+
    assert(ctx != 0 && "DrawPolyLine, ctx parameter is null");
    assert(xy != 0 && "DrawPolyLine, xy parameter is null");
-   
+
    CGContextBeginPath(ctx);
    CGContextMoveToPoint(ctx, xy[0].fX, xy[0].fY);
    for (Int_t i = 1; i < n; ++i)
       CGContextAddLineToPoint(ctx, xy[i].fX, xy[i].fY);
-   
+
    if (xy[n - 1].fX == xy[0].fX && xy[n - 1].fY == xy[0].fY)
       CGContextClosePath(ctx);
-   
+
    CGContextStrokePath(ctx);
 }
 

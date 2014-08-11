@@ -259,7 +259,7 @@ Int_t TAxis::FindBin(Double_t x)
    if (x < fXmin) {              //*-* underflow
       bin = 0;
       if (fParent == 0) return bin;
-      if (!CanExtend()) return bin; 
+      if (!CanExtend()) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN)
@@ -288,9 +288,9 @@ Int_t TAxis::FindBin(const char *label)
    // bit TAxis::kCanExtend; of the axis.
    //   - if the bit is set add the new label and if the number of labels exceeds
    //      the number of bins, double the number of bins via TH1::LabelsInflate
-   //   - if the bit is not set and the histogram has labels in each bin 
+   //   - if the bit is not set and the histogram has labels in each bin
    //        set the bit automatically and consider the histogram as alphanumeric
-   //     if histogram has only some bins with labels then the histogram is not 
+   //     if histogram has only some bins with labels then the histogram is not
    //     consider alphanumeric and return -1
    //
    // -1 is returned only when the Axis has no parent histogram
@@ -312,13 +312,13 @@ Int_t TAxis::FindBin(const char *label)
    TObjString *obj = (TObjString*)fLabels->FindObject(label);
    if (obj) return (Int_t)obj->GetUniqueID();
 
-   // if labels is not in the list and we have already labels 
-   if (!IsAlphanumeric()) { 
-      if (HasBinWithoutLabel()) { 
+   // if labels is not in the list and we have already labels
+   if (!IsAlphanumeric()) {
+      if (HasBinWithoutLabel()) {
          Warning("FindBin","Label %s is not in the list and the axis is not alphanumeric - ignore it",label);
-         return -1; 
+         return -1;
       }
-      else { 
+      else {
          Info("FindBin","Label %s not in the list will be added to the histogram",label);
          SetCanExtend(kTRUE);
          SetAlphanumeric(kTRUE);
@@ -466,8 +466,8 @@ Double_t TAxis::GetBinUpEdge(Int_t bin) const
    if (!fXbins.fN || bin < 1 || bin>fNbins) {
       Double_t binwidth = (fXmax - fXmin) / Double_t(fNbins);
       return fXmin + bin*binwidth;
-   } 
-   return fXbins.fArray[bin]; 
+   }
+   return fXbins.fArray[bin];
 }
 
 //______________________________________________________________________________
@@ -785,15 +785,15 @@ void TAxis::SetRange(Int_t first, Int_t last)
 
    //  If first == last == 0 or if last < first or if the range specified does
    //  not intersect at all with the maximum available range [0, fNbins + 1],
-   //  then the range is reset by removing the bit TAxis::kAxisRange. In this 
-   //  case the functions TAxis::GetFirst() and TAxis::GetLast() will return 1 
+   //  then the range is reset by removing the bit TAxis::kAxisRange. In this
+   //  case the functions TAxis::GetFirst() and TAxis::GetLast() will return 1
    //  and fNbins.
 
    //  If the range specified partially intersects [0, fNbins + 1], then the
    //  intersection range is set. For instance, if first == -2 and last == fNbins,
    //  then the set range is [0, fNbins] (fFirst = 0 and fLast = fNbins).
-   // 
-   //  NOTE: for historical reasons, SetRange(0,0) resets the range even though Bin 0 is 
+   //
+   //  NOTE: for historical reasons, SetRange(0,0) resets the range even though Bin 0 is
    //       technically reserved for the underflow; in order to set the range of the axis
    //       so that it only includes the underflow, use SetRange(a,0), where a < 0
 
@@ -831,8 +831,8 @@ void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
          return;
       }
    }
-   Int_t ifirst = FindFixBin(ufirst); 
-   Int_t ilast = FindFixBin(ulast); 
+   Int_t ifirst = FindFixBin(ufirst);
+   Int_t ilast = FindFixBin(ulast);
    // fixes for numerical error and for https://savannah.cern.ch/bugs/index.php?99777
    if (GetBinUpEdge(ifirst) <= ufirst ) ifirst += 1;
    if (GetBinLowEdge(ilast) >= ulast ) ilast -= 1;
@@ -933,7 +933,7 @@ void TAxis::SetTimeOffset(Double_t toffset, Option_t *option)
    // offset is always saved in GMT to allow file transport
    // to different time zones
    utctis = gmtime(&timeoff);
-   
+
    strftime(tmp,20,"%Y-%m-%d %H:%M:%S",utctis);
    fTimeFormat.Append(tmp);
 

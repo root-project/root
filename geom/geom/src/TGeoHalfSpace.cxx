@@ -22,7 +22,7 @@
 #include "TMath.h"
 
 ClassImp(TGeoHalfSpace)
-   
+
 //_____________________________________________________________________________
 TGeoHalfSpace::TGeoHalfSpace()
 {
@@ -31,7 +31,7 @@ TGeoHalfSpace::TGeoHalfSpace()
    SetShapeBit(TGeoShape::kGeoInvalidShape);
    memset(fP, 0, 3*sizeof(Double_t));
    memset(fN, 0, 3*sizeof(Double_t));
-}   
+}
 
 //_____________________________________________________________________________
 TGeoHalfSpace::TGeoHalfSpace(const char *name, Double_t *p, Double_t *n)
@@ -62,7 +62,7 @@ TGeoHalfSpace::~TGeoHalfSpace()
 // destructor
 }
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoHalfSpace::ComputeNormal(const Double_t * /*point*/, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
@@ -71,7 +71,7 @@ void TGeoHalfSpace::ComputeNormal(const Double_t * /*point*/, const Double_t *di
       norm[0] = -norm[0];
       norm[1] = -norm[1];
       norm[2] = -norm[2];
-   }   
+   }
 }
 
 //_____________________________________________________________________________
@@ -84,7 +84,7 @@ Bool_t TGeoHalfSpace::Contains(const Double_t *point) const
    r[2] = fP[2]-point[2];
    Double_t rdotn = r[0]*fN[0]+r[1]*fN[1]+r[2]*fN[2];
    if (rdotn < 0) return kFALSE;
-   return kTRUE;   
+   return kTRUE;
 }
 
 //_____________________________________________________________________________
@@ -92,7 +92,7 @@ Int_t TGeoHalfSpace::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
 // A half-space does not have a mesh primitive
    return 999;
-}   
+}
 
 //_____________________________________________________________________________
 Double_t TGeoHalfSpace::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
@@ -102,19 +102,19 @@ Double_t TGeoHalfSpace::DistFromInside(const Double_t *point, const Double_t *di
    r[0] = fP[0]-point[0];
    r[1] = fP[1]-point[1];
    r[2] = fP[2]-point[2];
-   Double_t rdotn = r[0]*fN[0]+r[1]*fN[1]+r[2]*fN[2];   
-   if (iact<3 && safe) {   
+   Double_t rdotn = r[0]*fN[0]+r[1]*fN[1]+r[2]*fN[2];
+   if (iact<3 && safe) {
       *safe = rdotn;
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
-   // compute distance to plane 
+   // compute distance to plane
    Double_t snxt = TGeoShape::Big();
    Double_t ddotn = dir[0]*fN[0]+dir[1]*fN[1]+dir[2]*fN[2];
    if (TMath::Abs(ddotn)<TGeoShape::Tolerance()) return snxt;
    snxt = rdotn/ddotn;
    if (snxt<0) return TGeoShape::Big();
-   return snxt;  
+   return snxt;
 }
 
 //_____________________________________________________________________________
@@ -125,7 +125,7 @@ Double_t TGeoHalfSpace::DistFromOutside(const Double_t *point, const Double_t *d
    r[0] = fP[0]-point[0];
    r[1] = fP[1]-point[1];
    r[2] = fP[2]-point[2];
-   Double_t rdotn = r[0]*fN[0]+r[1]*fN[1]+r[2]*fN[2];   
+   Double_t rdotn = r[0]*fN[0]+r[1]*fN[1]+r[2]*fN[2];
    if (iact<3 && safe) {
       *safe = -rdotn;
       if (iact==0) return TGeoShape::Big();
@@ -137,17 +137,17 @@ Double_t TGeoHalfSpace::DistFromOutside(const Double_t *point, const Double_t *d
    if (TMath::Abs(ddotn)<TGeoShape::Tolerance()) return snxt;
    snxt = rdotn/ddotn;
    if (snxt<0) return TGeoShape::Big();
-   return snxt;  
+   return snxt;
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoHalfSpace::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
-                             Double_t /*start*/, Double_t /*step*/) 
+TGeoVolume *TGeoHalfSpace::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/,
+                             Double_t /*start*/, Double_t /*step*/)
 {
 // Divide the shape along one axis.
    Error("Divide", "Half-spaces cannot be divided");
    return 0;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoHalfSpace::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
@@ -176,7 +176,7 @@ Double_t TGeoHalfSpace::Safety(const Double_t *point, Bool_t /*in*/) const
    r[0] = fP[0]-point[0];
    r[1] = fP[1]-point[1];
    r[2] = fP[2]-point[2];
-   Double_t rdotn = r[0]*fN[0]+r[1]*fN[1]+r[2]*fN[2];   
+   Double_t rdotn = r[0]*fN[0]+r[1]*fN[1]+r[2]*fN[2];
    return TMath::Abs(rdotn);
 }
 
@@ -194,7 +194,7 @@ void TGeoHalfSpace::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= "
    out << "   norm[2]  = " << fN[2] << ";" << std::endl;
    out << "   TGeoShape *" << GetPointerName() << " = new TGeoHalfSpace(\"" << GetName() << "\", point,norm);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
-}         
+}
 
 //_____________________________________________________________________________
 void TGeoHalfSpace::SetDimensions(Double_t *param)
@@ -206,7 +206,7 @@ void TGeoHalfSpace::SetDimensions(Double_t *param)
    fN[0] /= nsq;
    fN[1] /= nsq;
    fN[2] /= nsq;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoHalfSpace::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const

@@ -75,7 +75,7 @@ Float_t TPythia8Decayer::GetPartialBranchingRatio(Int_t /*ipart*/)
    return 0.0;
 }
 //___________________________________________________________________________
-Float_t TPythia8Decayer::GetLifetime(Int_t pdg) 
+Float_t TPythia8Decayer::GetLifetime(Int_t pdg)
 {
    //return lifetime in seconds of teh particle with PDG number pdg
    return (fPythia8->Pythia8()->particleData.tau0(pdg) * 3.3333e-12) ;
@@ -92,7 +92,7 @@ void    TPythia8Decayer::ReadDecayTable()
 void TPythia8Decayer::AppendParticle(Int_t pdg, TLorentzVector* p)
 {
    // Append a particle to the stack
-   fPythia8->Pythia8()->event.append(pdg, 11, 0, 0, p->Px(), p->Py(), p->Pz(), p->E(), p->M());   
+   fPythia8->Pythia8()->event.append(pdg, 11, 0, 0, p->Px(), p->Py(), p->Pz(), p->E(), p->M());
 }
 
 

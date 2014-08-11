@@ -50,7 +50,7 @@
 //
 //      root[] runProof("h1,fillList")
 //
-//      To use the list previously created for the events used for the 
+//      To use the list previously created for the events used for the
 //      final plots add the option 'useList':
 //
 //      root[] runProof("h1,useList")
@@ -92,7 +92,7 @@
 //
 //      Selector: ProofPythia.h.C
 //
-//      This runs Pythia8 generation based on main03.cc example in Pythia 8.1 
+//      This runs Pythia8 generation based on main03.cc example in Pythia 8.1
 //
 //      To run this analysis ROOT must be configured with pythia8.
 //
@@ -251,16 +251,16 @@
 //      Use parallel unzipping in reading files where relevant
 //      e.g. root[] runProof("eventproc(punzip)")
 //
-//   6. cache=<bytes> (or <kbytes>K or <mbytes>M) 
+//   6. cache=<bytes> (or <kbytes>K or <mbytes>M)
 //
 //      Change the size of the tree cache; 0 or <0 disables the cache,
 //      value cane be in bytes (no suffix), kilobytes (suffix 'K') or
-//      megabytes (suffix 'M'), e.g. root[] runProof("eventproc(cache=0)") 
+//      megabytes (suffix 'M'), e.g. root[] runProof("eventproc(cache=0)")
 //
 //   7. submergers[=S]
 //
 //      Enabling merging via S submergers or the optimal number if S is
-//      not specified, e.g. root[] runProof("simple(hist=1000,submergers)") 
+//      not specified, e.g. root[] runProof("simple(hist=1000,submergers)")
 //
 //   8. rateest=average
 //
@@ -286,7 +286,7 @@
 //
 //   A rough parsing of the URL is done to determine the locality of the cluster.
 //   If using a tunnel the URL can start by localhost even for external clusters:
-//   in such cases the default locality determination will be wrong, so one has 
+//   in such cases the default locality determination will be wrong, so one has
 //   to tell explicity that the cluster is external via the option field, e.g.
 //
 //      root[] runProof("simple","localhost:33002/?external")
@@ -476,9 +476,9 @@ void runProof(const char *what = "simple",
 
    // Parse 'what'; it is in the form 'analysis(arg1,arg2,...)'
    TString args(what);
-   args.ReplaceAll("("," "); 
-   args.ReplaceAll(")"," "); 
-   args.ReplaceAll(","," "); 
+   args.ReplaceAll("("," ");
+   args.ReplaceAll(")"," ");
+   args.ReplaceAll(","," ");
    Ssiz_t from = 0;
    TString act, tok;
    if (!args.Tokenize(act, from, " ")) {
@@ -688,7 +688,7 @@ void runProof(const char *what = "simple",
    } else {
       proof->DeleteParameters("PROOF_UseMergers");
    }
-   
+
    // The performance tree
    if (makePerfTree) {
       proof->SetParameter("PROOF_StatsHist", "");
@@ -782,7 +782,7 @@ void runProof(const char *what = "simple",
       }
       // The selector
       sel.Form("%s/tree/h1analysis.C%s", tutorials.Data(), aMode.Data());
-      // Run it 
+      // Run it
       Printf("\nrunProof: running \"h1\"\n");
       TString xopt = TString::Format("%s %s", aFeedback.Data(), opt.Data());
       chain->Process(sel.Data(),xopt,nevt,first);
@@ -856,7 +856,7 @@ void runProof(const char *what = "simple",
       proof->UploadPackage(eventpar);
       proof->EnablePackage("event");
       Printf("Enabled packages...\n");
-      proof->ShowEnabledPackages(); 
+      proof->ShowEnabledPackages();
 
       // Setting the default number of events, if needed
       nevt = (nevt < 0) ? 100 : nevt;
@@ -879,8 +879,8 @@ void runProof(const char *what = "simple",
       proof->UploadPackage(eventpar);
       proof->EnablePackage("event");
       Printf("Enabled packages...\n");
-      proof->ShowEnabledPackages(); 
-      
+      proof->ShowEnabledPackages();
+
       // Load ProcFileElements (to check processed ranges)
       TString pfelem = TString::Format("%s/proof/ProcFileElements.C", tutorials.Data());
       gSystem->ExpandPathName(pfelem);
@@ -999,7 +999,7 @@ void runProof(const char *what = "simple",
    } else if (act == "ntuple") {
 
       // ProofNtuple is an example of non-data driven analysis; it
-      // creates and fills a disk resident ntuple with automatic file merging 
+      // creates and fills a disk resident ntuple with automatic file merging
 
       if (first > 0)
          // Meaningless for this tutorial
@@ -1062,7 +1062,7 @@ void runProof(const char *what = "simple",
          // Notify
          Printf("runProof: taking randoms from '%s'", fnr.Data());
       }
-      
+
       // The selector string
       sel.Form("%s/proof/ProofNtuple.C%s", tutorials.Data(), aMode.Data());
 
@@ -1075,7 +1075,7 @@ void runProof(const char *what = "simple",
          proof->DeleteParameters("PROOF_USE_NTP_RNDM");
          proof->SetInputDataFile(0);
       }
-      
+
    } else if (act == "dataset") {
 
       // This is an example of analysis creating data files on each node which are
@@ -1216,7 +1216,7 @@ void runProof(const char *what = "simple",
       proof->ClearData(TProof::kUnregistered | TProof::kForceClear);
 
    } else if (act == "simplefile") {
-      
+
       // ProofSimpleFile is an example of non-data driven analysis with merging
       // via file and objcets saved in different directories; it creates and
       // fills with random numbers two sets of a given number of histos
@@ -1246,7 +1246,7 @@ void runProof(const char *what = "simple",
 
       // The number of histograms is added as parameter in the input list
       proof->SetParameter("ProofSimple_NHist", (Long_t)nhist);
-      
+
       // Output file
       TString fout(aOutFile);
       if (fout.IsNull()) {
@@ -1277,7 +1277,7 @@ void runProof(const char *what = "simple",
          }
       }
       proof->AddInput(new TNamed("PROOF_OUTPUTFILE", fout.Data()));
-      
+
       // The selector string
       sel.Form("%s/proof/ProofSimpleFile.C%s", tutorials.Data(), aMode.Data());
       //
@@ -1391,7 +1391,7 @@ void plotNtuple(TProof *p, const char *ds, const char *ntptitle)
 //______________________________________________________________________________
 void SavePerfTree(TProof *proof, const char *fn)
 {
-   // Save PROOF timing information from TPerfStats to file 'fn' 
+   // Save PROOF timing information from TPerfStats to file 'fn'
 
    if (!proof) {
       Printf("PROOF must be run to save output performance information");;
@@ -1401,7 +1401,7 @@ void SavePerfTree(TProof *proof, const char *fn)
       Printf("PROOF outputlist undefined or empty");;
       return;
    }
-   
+
    TFile f(fn, "RECREATE");
    if (f.IsZombie()) {
       Printf("ERROR: could not open file '%s' for writing", fn);;

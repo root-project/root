@@ -65,8 +65,8 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
     gval.fFont = font->GetFontHandle();
     gClient->GetColorByName("yellow", gval.fBackground);
     fTextGC = gClient->GetGC(&gval, kTRUE);
-   
-   
+
+
    ULong_t bcolor, ycolor;
    gClient->GetColorByName("yellow", ycolor);
    gClient->GetColorByName("blue", bcolor);
@@ -81,11 +81,11 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
                        labelfont);
    AddFrame(fLbl2,  new TGLayoutHints(kLHintsCenterX, 5, 5, 3, 4));
    fLbl2->SetTextColor(ycolor);
-   
+
    fLbl3 = new TGLabel(this, "Normal Label");
    AddFrame(fLbl3,  new TGLayoutHints(kLHintsCenterX, 5, 5, 3, 4));
 
-   fLbl4 = new TGLabel(this, "Multi-line label, resized\nto 300x80 pixels", 
+   fLbl4 = new TGLabel(this, "Multi-line label, resized\nto 300x80 pixels",
                        fTextGC->GetGC(), labelfont, kChildFrame, bcolor);
    AddFrame(fLbl4, new TGLayoutHints(kLHintsCenterX, 5, 5, 3, 4));
    fLbl4->SetTextColor(ycolor);

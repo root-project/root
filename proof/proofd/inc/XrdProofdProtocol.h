@@ -144,7 +144,7 @@ public:
 
    bool                          fSuperUser;       // TRUE for privileged clients (admins)
 
-   XrdOucString                  fUserIn;          // Incoming user name (can be different from the fPClient one) 
+   XrdOucString                  fUserIn;          // Incoming user name (can be different from the fPClient one)
    XrdOucString                  fGroupIn;         // Explicit group request from incoming user
    XrdProofdClient              *fPClient;         // Our reference XrdProofdClient
    XrdOucString                  fAdminPath;       // Admin path for this client

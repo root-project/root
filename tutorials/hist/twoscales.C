@@ -4,14 +4,14 @@
 #include "TH1.h"
 #include "TGaxis.h"
 #include "TRandom.h"
-   
+
 void twoscales()
 {
    //example of macro illustrating how to superimpose two histograms
    //with different scales in the "same" pad.
    // To see the output of this macro, click begin_html <a href="gif/twoscales.gif" >here</a> end_html
    //Author: Rene Brun
-     
+
    TCanvas *c1 = new TCanvas("c1","hists with different scales",600,400);
 
    //create/fill draw h1
@@ -20,13 +20,13 @@ void twoscales()
    Int_t i;
    for (i=0;i<10000;i++) h1->Fill(gRandom->Gaus(0,1));
    h1->Draw();
-   c1->Update();  
-    
+   c1->Update();
+
    //create hint1 filled with the bins integral of h1
    TH1F *hint1 = new TH1F("hint1","h1 bins integral",100,-3,3);
    Float_t sum = 0;
    for (i=1;i<=100;i++) {
-      sum += h1->GetBinContent(i); 
+      sum += h1->GetBinContent(i);
       hint1->SetBinContent(i,sum);
    }
 
@@ -36,7 +36,7 @@ void twoscales()
    hint1->SetLineColor(kRed);
    hint1->Scale(scale);
    hint1->Draw("same");
-   
+
    //draw an axis on the right side
    TGaxis *axis = new TGaxis(gPad->GetUxmax(),gPad->GetUymin(),
          gPad->GetUxmax(), gPad->GetUymax(),0,rightmax,510,"+L");

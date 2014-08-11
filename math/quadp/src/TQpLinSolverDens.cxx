@@ -119,7 +119,7 @@ void TQpLinSolverDens::PutZDiagonal(TVectorD &zdiag)
 //______________________________________________________________________________
 void TQpLinSolverDens::SolveCompressed(TVectorD &compressedRhs)
 {
-// Perform the actual solve using the factors produced in factor. 
+// Perform the actual solve using the factors produced in factor.
 // rhs on input contains the aggregated right-hand side of the augmented system;
 //  on output contains the solution in aggregated form .
 

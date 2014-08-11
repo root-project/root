@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -22,10 +22,10 @@ namespace ROOT {
 class MinimumState;
 
 //_____________________________________________________________________________
-/** 
-    class which holds the external user and/or internal Minuit representation 
-    of the parameters and errors; 
-    transformation internal <-> external on demand;  
+/**
+    class which holds the external user and/or internal Minuit representation
+    of the parameters and errors;
+    transformation internal <-> external on demand;
  */
 
 class MnUserParameterState {
@@ -33,9 +33,9 @@ class MnUserParameterState {
 public:
 
    /// default constructor (invalid state)
-   MnUserParameterState() : fValid(false), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0), fEDM(0), fNFcn(0), 
-                            fParameters(MnUserParameters()), fCovariance(MnUserCovariance()), 
-                            fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance()) {} 
+   MnUserParameterState() : fValid(false), fCovarianceValid(false), fGCCValid(false), fCovStatus(-1), fFVal(0), fEDM(0), fNFcn(0),
+                            fParameters(MnUserParameters()), fCovariance(MnUserCovariance()),
+                            fIntParameters(std::vector<double>()), fIntCovariance(MnUserCovariance()) {}
 
    /// construct from user parameters (before minimization)
    MnUserParameterState(const std::vector<double>&, const std::vector<double>&);
@@ -55,10 +55,10 @@ public:
    ~MnUserParameterState() {}
 
    MnUserParameterState(const MnUserParameterState& state) : fValid(state.fValid),
-                                                             fCovarianceValid(state.fCovarianceValid), fGCCValid(state.fGCCValid), fCovStatus(state.fCovStatus), 
+                                                             fCovarianceValid(state.fCovarianceValid), fGCCValid(state.fGCCValid), fCovStatus(state.fCovStatus),
                                                              fFVal(state.fFVal), fEDM(state.fEDM), fNFcn(state.fNFcn),
                                                              fParameters(state.fParameters),
-                                                             fCovariance(state.fCovariance), 
+                                                             fCovariance(state.fCovariance),
                                                              fGlobalCC(state.fGlobalCC), fIntParameters(state.fIntParameters), fIntCovariance(state.fIntCovariance) {}
 
    MnUserParameterState& operator=(const MnUserParameterState& state) {
@@ -75,7 +75,7 @@ public:
          fGlobalCC = state.fGlobalCC;
          fIntParameters = state.fIntParameters;
          fIntCovariance = state.fIntCovariance;
-      }   
+      }
       return *this;
    }
 
@@ -92,7 +92,7 @@ public:
    const MnUserCovariance& IntCovariance() const {return fIntCovariance;}
 
    // covariance matrix status (0 = not valid, 1 approximate, 2, full but made pos def, 3 accurate and not pos def
-   int CovarianceStatus() const { return fCovStatus; } 
+   int CovarianceStatus() const { return fCovStatus; }
 
    //transformation internal <-> external
    const MnUserTransformation& Trafo() const {return fParameters.Trafo();}
@@ -103,7 +103,7 @@ public:
 
    double Fval() const {return fFVal;}
    double Edm() const {return fEDM;}
-   unsigned int NFcn() const {return fNFcn;}  
+   unsigned int NFcn() const {return fNFcn;}
 
 
 public:
@@ -112,7 +112,7 @@ public:
 
    //access to parameters (row-wise)
    const std::vector<ROOT::Minuit2::MinuitParameter>& MinuitParameters() const;
-   //access to parameters and errors in column-wise representation 
+   //access to parameters and errors in column-wise representation
    std::vector<double> Params() const;
    std::vector<double> Errors() const;
 
@@ -139,7 +139,7 @@ public:
 
    double Value(unsigned int) const;
    double Error(unsigned int) const;
-  
+
    //interaction via Name of Parameter
    void Fix(const std::string &);
    void Release(const std::string &);
@@ -152,11 +152,11 @@ public:
 
    double Value(const std::string &) const;
    double Error(const std::string &) const;
-  
+
    //convert Name into external number of Parameter
    unsigned int Index(const std::string &) const;
    //convert external number into Name of Parameter
-   const std::string & GetName(unsigned int) const; 
+   const std::string & GetName(unsigned int) const;
    // mantain interface with const char * for backward compatibility
    const char* Name(unsigned int) const;
 
@@ -171,11 +171,11 @@ public:
 
 
 private:
-  
+
    bool fValid;
    bool fCovarianceValid;
    bool fGCCValid;
-   int  fCovStatus; // covariance matrix status   
+   int  fCovStatus; // covariance matrix status
    double fFVal;
    double fEDM;
    unsigned int fNFcn;

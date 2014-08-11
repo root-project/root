@@ -38,7 +38,7 @@ public:
    TLeafI();
    TLeafI(TBranch *parent, const char *name, const char *type);
    virtual ~TLeafI();
-   
+
    virtual void    Export(TClonesArray *list, Int_t n);
    virtual void    FillBasket(TBuffer &b);
    const char     *GetTypeName() const;
@@ -54,7 +54,7 @@ public:
    virtual void    SetAddress(void *add=0);
    virtual void    SetMaximum(Int_t max) {fMaximum = max;}
    virtual void    SetMinimum(Int_t min) {fMinimum = min;}
-   
+
    ClassDef(TLeafI,1);  //A TLeaf for an Integer data type.
 };
 

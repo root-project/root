@@ -4,33 +4,33 @@ Installation of ROOT from source
 Contents:
 =========
 
-	1.    Getting the source
-	2.    Getting ready to build
-	3.    Choosing the installation method
-	3.1.  Environment driven build
-	3.2.  Fixed locations build
-	3.3.  Redhat packages
-	3.4.  Debian GNU/Linux packages
-	4.    Installation Location
-	5.    Makefile targets
-	6.    Installing optional add-on libraries
-	6.1.  Using the environment
-	6.2.  Using "configure" flags
-	7.    Information on third party software
-	7.1.  Posix Thread usage
-	7.2.  OpenGL library
-	7.3.  SHIFT managed tape I/O
-	7.4.  ZEBRA file conversion tools
-	7.5.  MySQL client
-	7.6.  PostGreSQL Client
-	7.7.  SapDB Client
-	7.8.  Pythia Event Generators
-	7.9.  Venus Event Generators
-	7.10. Secure Remote Password (SRP) Authentication
-	7.11. AFS Authentication
-	7.12. Kerberos Authentication
-	7.13. Globus Authentication
-	7.14. SSH Authentication
+   1.    Getting the source
+   2.    Getting ready to build
+   3.    Choosing the installation method
+   3.1.  Environment driven build
+   3.2.  Fixed locations build
+   3.3.  Redhat packages
+   3.4.  Debian GNU/Linux packages
+   4.    Installation Location
+   5.    Makefile targets
+   6.    Installing optional add-on libraries
+   6.1.  Using the environment
+   6.2.  Using "configure" flags
+   7.    Information on third party software
+   7.1.  Posix Thread usage
+   7.2.  OpenGL library
+   7.3.  SHIFT managed tape I/O
+   7.4.  ZEBRA file conversion tools
+   7.5.  MySQL client
+   7.6.  PostGreSQL Client
+   7.7.  SapDB Client
+   7.8.  Pythia Event Generators
+   7.9.  Venus Event Generators
+   7.10. Secure Remote Password (SRP) Authentication
+   7.11. AFS Authentication
+   7.12. Kerberos Authentication
+   7.13. Globus Authentication
+   7.14. SSH Authentication
 
 1. Getting the source:
 ======================
@@ -192,7 +192,7 @@ packages do:
 1) Make a tar-ball of the source tree:
 
         cd ../
-        tar -czvf root-v<version>.source.tar.gz 
+        tar -czvf root-v<version>.source.tar.gz
 
   where <version>=<major>.<minor>.<revision> is the version number of
   ROOT (see the file build/version_number).
@@ -696,7 +696,7 @@ More information is available from:
 7.9. Venus Event Generators:
 ----------------------------
 To build the event generator interface for Venus, you need to have the
-Venus libraries.  The sources can be downloaded from 
+Venus libraries.  The sources can be downloaded from
 
     ftp://root.cern.ch/root/venus/
 
@@ -775,5 +775,5 @@ There is no need to build special modules for SSH authentication.
 
 
 Local Variables:
-      mode: text 
+      mode: text
 End:

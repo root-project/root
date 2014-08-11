@@ -27,7 +27,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "qmutex.h"
-      
+
 class TQtLockGuard {
 
 private:
@@ -43,10 +43,10 @@ inline TQtLockGuard::TQtLockGuard(QMutex *mutex)
 { fMutex = mutex; if (fMutex) fMutex->lock(); }
 
 //____________________________________________________________________
-inline TQtLockGuard::~TQtLockGuard() 
+inline TQtLockGuard::~TQtLockGuard()
 { if (fMutex) fMutex->unlock(); }
 
-   
+
 // Zero overhead macros in case not compiled with thread support
 #ifdef QT_THREAD_SUPPORT
 

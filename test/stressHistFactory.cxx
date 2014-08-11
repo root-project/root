@@ -95,7 +95,7 @@ Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
 
    list<RooUnitTest*> testList;
    testList.push_back(new PdfComparison(fref, writeRef, verbose));
-   
+
    TString suiteType = TString::Format(" Starting S.T.R.E.S.S. %s",
                                        allTests ? "full suite" : (oneTest ? TString::Format("test %d", testNumber).Data() : "basic suite")
                                       );
@@ -105,14 +105,14 @@ Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
 
    gBenchmark->Start("stressHistFactory");
 
-   int nFailed = 0; 
+   int nFailed = 0;
    {
       Int_t i;
       list<RooUnitTest*>::iterator iter;
 
       if (oneTest && (testNumber <= 0 || (UInt_t) testNumber > testList.size())) {
          cout << "Tests are numbered from 1 to " << testList.size() << endl;
-         return -1; 
+         return -1;
       } else {
          for (iter = testList.begin(), i = 1; iter != testList.end(); iter++, i++) {
             if (!oneTest || testNumber == i) {

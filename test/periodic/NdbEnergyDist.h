@@ -9,12 +9,12 @@ class NdbEnergyDist : public NdbMF
 protected:
 
 public:
-	NdbEnergyDist()
-		: NdbMF(5, "Energy distributions for emitted particles") {}
+   NdbEnergyDist()
+      : NdbMF(5, "Energy distributions for emitted particles") {}
 
-	~NdbEnergyDist() {}
+   ~NdbEnergyDist() {}
 
-	ClassDef(NdbEnergyDist,1)
+   ClassDef(NdbEnergyDist,1)
 
 }; // NdbEnergyDist
 

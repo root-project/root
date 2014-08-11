@@ -32,7 +32,7 @@ then
    do
       echo "========== $i =========="
       $REMSH $i $PS -uaxw | $AWK 'BEGIN { ms = ss = 0 }
-                             {if (/'$user'/ && /proofs/ &&  !/awk/) 
+                             {if (/'$user'/ && /proofs/ &&  !/awk/)
                                  if (substr($9,1,1) ~ /[0-9]/) {
                                     printf("%-10s %-7s %s   %6s   %s %s\n", $1,$2,$9,$10,$11,$12)
                                     if ($12 == "proofserv") ms++;

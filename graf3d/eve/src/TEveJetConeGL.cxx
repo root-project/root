@@ -160,7 +160,7 @@ void TEveJetConeGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 
       glNormal3fv(curr_normal);
       glVertex3fv(fP[i]);
-         
+
       prev_normal = curr_normal;
 
       prev = i;

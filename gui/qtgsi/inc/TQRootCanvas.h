@@ -21,7 +21,7 @@
 // @short Graphic Qt Widget based Canvas
 //
 // @authors Denis Bertini <d.bertini@gsi.de>
-//	   M. AL-Turany  <m.al-turany@gsi.de>
+//    M. AL-Turany  <m.al-turany@gsi.de>
 //version 2.0
 //////////////////////////////////////////////////////////////////////
 
@@ -64,7 +64,7 @@ class TQRootCanvas : public QWidget
 private:
    TQRootCanvas(const TQRootCanvas &);
    TQRootCanvas& operator=(const TQRootCanvas &);
-      
+
 public:
 
    TQRootCanvas( QWidget *parent = 0, const char *name = 0 ,TCanvas *c=0);
@@ -173,7 +173,7 @@ protected:
    Bool_t fNeedResize;           // Resize flag
    Bool_t fIsCanvasOwned;        // Ownership flag
    QWidget *fParent,*fTabWin;    // parent widgets
-   
+
    ClassDef(TQRootCanvas,1)  //interface to Qt eventloop to handle user input
 };
 

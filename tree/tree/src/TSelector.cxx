@@ -199,7 +199,7 @@ TSelector *TSelector::GetSelector(const char *filename)
 
    // we can now create an instance of the class
    TSelector *selector = (TSelector*)gCling->ClassInfo_New(cl);
-   if (!selector || isCompiled) { 
+   if (!selector || isCompiled) {
       gCling->ClassInfo_Delete(cl);
       return selector;
    }
@@ -241,12 +241,12 @@ Bool_t TSelector::IsStandardDraw(const char *selec)
    return stdselec;
 }
 
-Bool_t TSelector::ProcessCut(Long64_t /*entry*/) 
-{ 
+Bool_t TSelector::ProcessCut(Long64_t /*entry*/)
+{
    //    This method is called before processing entry. It is the user's responsability to read
-   //    the corresponding entry in memory (may be just a partial read).     
-   //    The function returns kTRUE if the entry must be processed,          
-   //    kFALSE otherwise. This method is obsolete, use Process().          
+   //    the corresponding entry in memory (may be just a partial read).
+   //    The function returns kTRUE if the entry must be processed,
+   //    kFALSE otherwise. This method is obsolete, use Process().
    //
    // WARNING when a selector is used with a TChain:
    //    in the Process, ProcessCut, ProcessFill function, you must use
@@ -254,12 +254,12 @@ Bool_t TSelector::ProcessCut(Long64_t /*entry*/)
    //    entry is always the local entry number in the current tree.
    //    Assuming that fChain is the pointer to the TChain being processed,
    //    use fChain->GetTree()->GetEntry(entry);
-   
-   return kTRUE; 
+
+   return kTRUE;
 }
 
-void TSelector::ProcessFill(Long64_t /*entry*/) 
-{ 
+void TSelector::ProcessFill(Long64_t /*entry*/)
+{
    // This method is called for all selected entries. User fills histograms
    // in this function.  This method is obsolete, use Process().
    //
@@ -290,6 +290,6 @@ Bool_t TSelector::Process(Long64_t /*entry*/) {
    //
    // The return value is currently not used.
 
-   return kFALSE; 
+   return kFALSE;
 }
 

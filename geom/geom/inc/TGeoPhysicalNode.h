@@ -48,7 +48,7 @@ protected:
    TObjArray        *fNodes;          // branch of nodes
    TGeoHMatrix      *fMatrixOrig;     // original local matrix of the last node in the path
 
-   TGeoPhysicalNode(const TGeoPhysicalNode&); 
+   TGeoPhysicalNode(const TGeoPhysicalNode&);
    TGeoPhysicalNode& operator=(const TGeoPhysicalNode&);
 
    void              SetAligned(Bool_t flag=kTRUE) {TObject::SetBit(kGeoPNodeAligned,flag);}
@@ -79,8 +79,8 @@ public:
    TGeoNode         *GetNode(Int_t level=-1) const;
    TGeoShape        *GetShape(Int_t level=-1) const;
    TGeoVolume       *GetVolume(Int_t level=-1) const;
-   
- 
+
+
    Bool_t            IsAligned() const {return TObject::TestBit(kGeoPNodeAligned);}
    Bool_t            IsMatchingState(TGeoNavigator *nav) const;
    Bool_t            IsVolAttributes() const {return TObject::TestBit(kGeoPNodeVolAtt);}
@@ -112,13 +112,13 @@ class TGeoPNEntry : public TNamed
 private:
    enum EPNEntryFlags {
       kPNEntryOwnMatrix = BIT(14)
-   };   
+   };
    TGeoPhysicalNode   *fNode;        // Physical node to which this applies
    const TGeoHMatrix  *fMatrix;      // Additional matrix
    TGeoHMatrix        *fGlobalOrig;  // Original global matrix for the linked physical node
 
 protected:
-   TGeoPNEntry(const TGeoPNEntry& pne) 
+   TGeoPNEntry(const TGeoPNEntry& pne)
      : TNamed(pne), fNode(pne.fNode), fMatrix(NULL), fGlobalOrig(NULL) { }
    TGeoPNEntry& operator=(const TGeoPNEntry& pne)
      {if(this!=&pne) {TNamed::operator=(pne); fNode=pne.fNode; fMatrix=pne.fMatrix;}
@@ -128,7 +128,7 @@ public:
    TGeoPNEntry();
    TGeoPNEntry(const char *unique_name, const char *path);
    virtual ~TGeoPNEntry();
-   
+
    inline const char   *GetPath() const {return GetTitle();}
    const TGeoHMatrix   *GetMatrix() const {return fMatrix;}
    TGeoHMatrix      *GetMatrixOrig() const {if (fNode) return fNode->GetOriginalMatrix(); else return NULL;};
@@ -136,7 +136,7 @@ public:
    TGeoPhysicalNode *GetPhysicalNode() const {return fNode;}
    void              SetMatrix(const TGeoHMatrix *matrix);
    void              SetPhysicalNode(TGeoPhysicalNode *node);
-   
+
    ClassDef(TGeoPNEntry, 4)                  // a physical node entry with unique name
 };
 

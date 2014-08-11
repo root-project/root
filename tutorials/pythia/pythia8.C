@@ -4,7 +4,7 @@
 // to run, do
 //  root > .x pythia8.C
 //
-// Note that before executing this script, 
+// Note that before executing this script,
 //   -the env variable PYTHIA8 must point to the pythia8100 (or newer) directory
 //   -the env variable PYTHIA8DATA must be defined and it must point to $PYTHIA8/xmldoc
 //
@@ -14,7 +14,7 @@ void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
    if (!p8dataenv) {
       const char *p8env = gSystem->Getenv("PYTHIA8");
       if (!p8env) {
-         Error("pythia8.C", 
+         Error("pythia8.C",
                "Environment variable PYTHIA8 must contain path to pythia directory!");
          return;
       }
@@ -22,14 +22,14 @@ void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
       p8d += "/xmldoc";
       gSystem->Setenv("PYTHIA8DATA", p8d);
    }
-      
+
    const char* path = gSystem->ExpandPathName("$PYTHIA8DATA");
    if (gSystem->AccessPathName(path)) {
-         Error("pythia8.C", 
+         Error("pythia8.C",
                "Environment variable PYTHIA8DATA must contain path to $PYTHIA8/xmldoc directory !");
       return;
    }
-    
+
 // Load libraries
 #ifndef G__WIN32 // Pythia8 is a static library on Windows
    gSystem->Load("$PYTHIA8/lib/libpythia8");
@@ -39,19 +39,19 @@ void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
 // Histograms
    TH1F* etaH = new TH1F("etaH", "Pseudorapidity", 120, -12., 12.);
    TH1F* ptH  = new TH1F("ptH",  "pt",              50,   0., 10.);
-    
+
 
 // Array of particles
    TClonesArray* particles = new TClonesArray("TParticle", 1000);
 // Create pythia8 object
    TPythia8* pythia8 = new TPythia8();
-    
+
 // Configure
    pythia8->ReadString("HardQCD:all = on");
 
 
-// Initialize 
-    
+// Initialize
+
    pythia8->Initialize(2212 /* p */, 2212 /* p */, 14000. /* TeV */);
 
 // Event loop

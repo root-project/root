@@ -30,14 +30,14 @@
 class TSpectrum2Transform : public TObject {
 protected:
    Int_t     fSizeX;                      //x length of transformed data
-   Int_t     fSizeY;                      //y length of transformed data   
+   Int_t     fSizeY;                      //y length of transformed data
    Int_t     fTransformType;              //type of transformation (Haar, Walsh, Cosine, Sine, Fourier, Hartley, Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar)
    Int_t     fDegree;                     //degree of mixed transform, applies only for Fourier-Walsh, Fourier-Haar, Walsh-Haar, Cosine-Walsh, Cosine-Haar, Sine-Walsh, Sine-Haar transforms
    Int_t     fDirection;                  //forward or inverse transform
    Int_t     fXmin;                       //first channel x of filtered or enhanced region
    Int_t     fXmax;                       //last channel x of filtered or enhanced region
    Int_t     fYmin;                       //first channel y of filtered or enhanced region
-   Int_t     fYmax;                       //last channel y of filtered or enhanced region   
+   Int_t     fYmax;                       //last channel y of filtered or enhanced region
    Double_t   fFilterCoeff;                //value set in the filtered region
    Double_t   fEnhanceCoeff;               //multiplication coefficient applied in enhanced region;
 public:
@@ -61,18 +61,18 @@ public:
    TSpectrum2Transform();
    TSpectrum2Transform(Int_t sizeX, Int_t sizeY);
    virtual ~TSpectrum2Transform();
-   
-protected:   
+
+protected:
    void                BitReverse(Double_t *working_space,Int_t num);
    void                BitReverseHaar(Double_t *working_space,Int_t shift,Int_t num,Int_t start);
-   void                FourCos2(Double_t **working_matrix,Double_t *working_vector,Int_t numx,Int_t numy,Int_t direction,Int_t type);   
+   void                FourCos2(Double_t **working_matrix,Double_t *working_vector,Int_t numx,Int_t numy,Int_t direction,Int_t type);
    void                Fourier(Double_t *working_space,Int_t num,Int_t hartley,Int_t direction,Int_t zt_clear);
-   void                General2(Double_t **working_matrix,Double_t *working_vector,Int_t numx,Int_t numy,Int_t direction,Int_t type,Int_t degree);   
+   void                General2(Double_t **working_matrix,Double_t *working_vector,Int_t numx,Int_t numy,Int_t direction,Int_t type,Int_t degree);
    Int_t               GeneralExe(Double_t *working_space,Int_t zt_clear,Int_t num,Int_t degree,Int_t type);
    Int_t               GeneralInv(Double_t *working_space,Int_t num,Int_t degree,Int_t type);
    void                Haar(Double_t *working_space,Int_t num,Int_t direction);
    void                HaarWalsh2(Double_t **working_matrix,Double_t *working_vector,Int_t numx,Int_t numy,Int_t direction,Int_t type);
-   void                Walsh(Double_t *working_space,Int_t num);   
+   void                Walsh(Double_t *working_space,Int_t num);
 
 public:
    void                Enhance(const Double_t **fSource, Double_t **fDest);

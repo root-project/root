@@ -175,49 +175,49 @@ Int_t TPythia8::ImportParticles(TClonesArray *particles, Option_t *option)
 
    if (!strcmp(option,"") || !strcmp(option,"Final")) {
       for (i = 0; i < fNumberOfParticles; i++) {
-	if (fPythia->event[i].id() == 90) continue;
+         if (fPythia->event[i].id() == 90) continue;
          if (fPythia->event[i].isFinal()) {
             new(clonesParticles[nparts]) TParticle(
-                fPythia->event[i].id(),
-                fPythia->event[i].isFinal(),
-                fPythia->event[i].mother1() + ioff,
-                fPythia->event[i].mother2() + ioff,
-                fPythia->event[i].daughter1() + ioff,
-                fPythia->event[i].daughter2() + ioff,
-                fPythia->event[i].px(),     // [GeV/c]
-                fPythia->event[i].py(),     // [GeV/c]
-                fPythia->event[i].pz(),     // [GeV/c]
-                fPythia->event[i].e(),      // [GeV]
-                fPythia->event[i].xProd(),  // [mm]
-                fPythia->event[i].yProd(),  // [mm]
-                fPythia->event[i].zProd(),  // [mm]
-                fPythia->event[i].tProd()); // [mm/c]
-		nparts++;
-	    } // final state partice
-	} // particle loop
-    } else if (!strcmp(option,"All")) {
-	for (i = 0; i < fNumberOfParticles; i++) {
-	  if (fPythia->event[i].id() == 90) continue;
-	    new(clonesParticles[nparts]) TParticle(
-		fPythia->event[i].id(),
-		fPythia->event[i].isFinal(),
-		fPythia->event[i].mother1() + ioff,
-		fPythia->event[i].mother2() + ioff,
-		fPythia->event[i].daughter1() + ioff,
-		fPythia->event[i].daughter2() + ioff,
-		fPythia->event[i].px(),       // [GeV/c]
-		fPythia->event[i].py(),       // [GeV/c]
-		fPythia->event[i].pz(),       // [GeV/c]
-		fPythia->event[i].e(),        // [GeV]
-		fPythia->event[i].xProd(),    // [mm]
-		fPythia->event[i].yProd(),    // [mm]
-		fPythia->event[i].zProd(),    // [mm]
-		fPythia->event[i].tProd());   // [mm/c]
-     	        nparts++;
-	} // particle loop
-    }
-    if(ioff==-1)     fNumberOfParticles--;
-    return nparts;
+                                                   fPythia->event[i].id(),
+                                                   fPythia->event[i].isFinal(),
+                                                   fPythia->event[i].mother1() + ioff,
+                                                   fPythia->event[i].mother2() + ioff,
+                                                   fPythia->event[i].daughter1() + ioff,
+                                                   fPythia->event[i].daughter2() + ioff,
+                                                   fPythia->event[i].px(),     // [GeV/c]
+                                                   fPythia->event[i].py(),     // [GeV/c]
+                                                   fPythia->event[i].pz(),     // [GeV/c]
+                                                   fPythia->event[i].e(),      // [GeV]
+                                                   fPythia->event[i].xProd(),  // [mm]
+                                                   fPythia->event[i].yProd(),  // [mm]
+                                                   fPythia->event[i].zProd(),  // [mm]
+                                                   fPythia->event[i].tProd()); // [mm/c]
+            nparts++;
+         } // final state partice
+      } // particle loop
+   } else if (!strcmp(option,"All")) {
+      for (i = 0; i < fNumberOfParticles; i++) {
+         if (fPythia->event[i].id() == 90) continue;
+         new(clonesParticles[nparts]) TParticle(
+                                                fPythia->event[i].id(),
+                                                fPythia->event[i].isFinal(),
+                                                fPythia->event[i].mother1() + ioff,
+                                                fPythia->event[i].mother2() + ioff,
+                                                fPythia->event[i].daughter1() + ioff,
+                                                fPythia->event[i].daughter2() + ioff,
+                                                fPythia->event[i].px(),       // [GeV/c]
+                                                fPythia->event[i].py(),       // [GeV/c]
+                                                fPythia->event[i].pz(),       // [GeV/c]
+                                                fPythia->event[i].e(),        // [GeV]
+                                                fPythia->event[i].xProd(),    // [mm]
+                                                fPythia->event[i].yProd(),    // [mm]
+                                                fPythia->event[i].zProd(),    // [mm]
+                                                fPythia->event[i].tProd());   // [mm/c]
+         nparts++;
+      } // particle loop
+   }
+   if(ioff==-1)     fNumberOfParticles--;
+   return nparts;
 }
 
 //___________________________________________________________________________

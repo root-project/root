@@ -59,22 +59,22 @@ public:
 
    void GenerateCrossingEvent(NSEvent *theEvent);
    void GeneratePointerMotionEvent(NSEvent *theEvent);
-   
+
    //TODO: instead of passing EMouseButton, use info from NSEvent???
    void GenerateButtonPressEvent(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
    void GenerateButtonReleaseEvent(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
-   
+
    void GenerateKeyPressEvent(NSView<X11Window> *eventView, NSEvent *theEvent);
    void GenerateKeyReleaseEvent(NSView<X11Window> *eventView, NSEvent *theEvent);
-   
+
    void GenerateFocusChangeEvent(NSView<X11Window> *eventView);
-   
+
    void SetPointerGrab(NSView<X11Window> *grabView, unsigned eventMask, bool ownerEvents);
    void CancelPointerGrab();
-   
+
    void SetInputFocus(NSView<X11Window> *focusView);
    unsigned GetInputFocus()const;
-   
+
    //Window winID was either deleted or unmapped.
    //If it's a grab view or a parent of a grab view - cancel grab.
    //If it's a "view under pointer" - reset view under pointer.
@@ -97,10 +97,10 @@ private:
 
    void GenerateButtonReleaseEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
    void GenerateButtonReleaseEventActiveGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
-   
+
    void GenerateKeyPressEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent);
    void GenerateKeyReleaseEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent);
-   
+
    void GenerateKeyEventActiveGrab(NSView<X11Window> *eventView, NSEvent *theEvent);//Both press/release events.
    void GenerateKeyEventForView(NSView<X11Window> *view, NSEvent *theEvent);//Both press/release events.
 
@@ -108,7 +108,7 @@ private:
    void FindKeyGrabView(NSView<X11Window> *eventView, NSEvent *theEvent);
 
    NSView<X11Window> *fViewUnderPointer;
-   
+
    PointerGrab fPointerGrabType;
    unsigned fGrabEventMask;
    bool fOwnerEvents;

@@ -141,7 +141,7 @@ public:
    virtual void  ChangeBackground(Pixel_t back);
    virtual void  SetAccelerated(Bool_t m = kTRUE) { fAccelerated = m; }
          Bool_t  IsAccelerated() const { return fAccelerated; }
- 
+
    virtual void MapSubwindows() { TGWindow::MapSubwindows(); }
    TGScrollBarElement *GetHead() const { return fHead; }
    TGScrollBarElement *GetTail() const { return fTail; }

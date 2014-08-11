@@ -25,7 +25,7 @@
    UIPopoverController *searchPopover;
    SearchController *searchController;
    UIBarButtonItem *slideShowBtn;
-   
+
    BOOL animateDirAfterLoad;
    BOOL animateObjAfterLoad;
    unsigned spotElement;
@@ -49,7 +49,7 @@
    toolbar.barStyle = UIBarStyleBlackTranslucent;
 
    NSMutableArray *items = [[NSMutableArray alloc] initWithCapacity : 2];
-   
+
    searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(0.f, 0.f, 150.f, 44.f)];
    searchBar.delegate = self;
 
@@ -58,14 +58,14 @@
 
    slideShowBtn = [[UIBarButtonItem alloc] initWithTitle : @"Slide show" style : UIBarButtonItemStyleBordered target : self action : @selector(startSlideshow)];
    [items addObject : slideShowBtn];
-   
+
    [toolbar setItems : items animated : NO];
-   
+
    UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithCustomView : toolbar];
    rightItem.style = UIBarButtonItemStylePlain;
    self.navigationItem.rightBarButtonItem = rightItem;
-   
-   
+
+
 }
 
 //____________________________________________________________________________________________________
@@ -88,7 +88,7 @@
 {
    // Releases the view if it doesn't have a superview.
    [super didReceiveMemoryWarning];
-    
+
    // Release any cached data, images, etc that aren't in use.
 }
 
@@ -108,12 +108,12 @@
       scrollFrame = CGRectMake(0.f, 44.f, 768.f, 960.f);
    } else {
       mainFrame = CGRectMake(0.f, 0.f, 1024.f, 748.f);
-      scrollFrame = CGRectMake(0.f, 44.f, 1024.f, 704.f);   
+      scrollFrame = CGRectMake(0.f, 44.f, 1024.f, 704.f);
    }
-   
+
    self.view.frame = mainFrame;
    scrollView.frame = scrollFrame;
-   
+
    if ([[scrollView subviews] count])
       [ShorcutUtil placeShortcuts : objectShortcuts inScrollView : scrollView withSize : CGSizeMake([ObjectShortcut iconWidth], [ObjectShortcut iconHeight] + [ObjectShortcut textHeight]) andSpace : 100.f];
 }
@@ -159,11 +159,11 @@
 - (BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
    // Return YES for supported orientations
-	return YES;
+   return YES;
 }
 
 //____________________________________________________________________________________________________
-- (void) willAnimateRotationToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation duration:(NSTimeInterval)duration 
+- (void) willAnimateRotationToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation duration:(NSTimeInterval)duration
 {
    //TODO: all this staff with manual geometry management should be deleted, as soon as I switch to
    //ThumbnailView class.
@@ -172,7 +172,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) didRotateFromInterfaceOrientation : (UIInterfaceOrientation)fromInterfaceOrientation 
+- (void) didRotateFromInterfaceOrientation : (UIInterfaceOrientation)fromInterfaceOrientation
 {
    //Bring back the popover after rotating.
    if (searchPopover) {
@@ -200,11 +200,11 @@
       UIGraphicsEndImageContext();
       return;
    }
-      
+
    //Now draw into this context.
    CGContextTranslateCTM(ctx, 0.f, rect.size.height);
    CGContextScaleCTM(ctx, 1.f, -1.f);
-      
+
    //Fill bitmap with white first.
    CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
    CGContextFillRect(ctx, rect);
@@ -214,10 +214,10 @@
    pad->SetViewWH(rect.size.width, rect.size.height);
    pad->SetContext(ctx);
    pad->PaintThumbnail();
-   
+
    UIImage *thumbnailImage = UIGraphicsGetImageFromCurrentImageContext();//autoreleased UIImage.
    UIGraphicsEndImageContext();
-       
+
    ObjectShortcut *shortcut = [[ObjectShortcut alloc] initWithFrame : [ObjectShortcut defaultRect] controller : self forObjectAtIndex:objIndex withThumbnail : thumbnailImage];
    shortcut.layer.shadowColor = [UIColor blackColor].CGColor;
    shortcut.layer.shadowOffset = CGSizeMake(20.f, 20.f);
@@ -261,7 +261,7 @@
    fileContainer = container;
    self.navigationItem.title = [NSString stringWithFormat : @"Contents of %s", container->GetFileName()];
    slideShowBtn.enabled = fileContainer->GetNumberOfObjects() > 1 ? YES : NO;
-   
+
    //Prepare objects' thymbnails.
    [self addObjectsIntoScrollview];
    [self correctFramesForOrientation : [UIApplication sharedApplication].statusBarOrientation];
@@ -306,13 +306,13 @@
    typedef ROOT::iOS::Browser::FileContainer::size_type size_type;
 
    if (auto nEntities = fileContainer->GetNumberOfDescriptors()) {
-      if (!searchPopover) {         
+      if (!searchPopover) {
          UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController : searchController];
          searchPopover = [[UIPopoverController alloc] initWithContentViewController : navController];
          searchPopover.delegate = self;
          searchPopover.passthroughViews = [NSArray arrayWithObject : searchBar];
       }
-      
+
       NSMutableArray *keys = [[NSMutableArray alloc] init];
       for (size_type i = 0; i < nEntities; ++i) {
          const auto &descriptor = fileContainer->GetElementDescriptor(i);
@@ -322,7 +322,7 @@
          newKey.elementIndex = i;
          [keys addObject : newKey];
       }
-      
+
       searchController.keys = keys;
       [searchPopover presentPopoverFromRect : [searchBar bounds] inView : searchBar permittedArrowDirections : UIPopoverArrowDirectionAny animated : YES];
    }
@@ -334,20 +334,20 @@
    if (searchPopover) {
       [searchPopover dismissPopoverAnimated:YES];
       searchPopover = nil;
-   }  
+   }
 
    [aSearchBar resignFirstResponder];
 }
 
 //____________________________________________________________________________________________________
-- (void) searchBar : (UISearchBar *)searchBar textDidChange : (NSString *)searchText 
+- (void) searchBar : (UISearchBar *)searchBar textDidChange : (NSString *)searchText
 {
    // When the search string changes, filter the recents list accordingly.
    [searchController filterResultsUsingString : searchText];
 }
 
 //____________________________________________________________________________________________________
-- (void) searchBarSearchButtonClicked : (UISearchBar *)aSearchBar 
+- (void) searchBarSearchButtonClicked : (UISearchBar *)aSearchBar
 {
    //NSLog(@"search clicked");
    [searchPopover dismissPopoverAnimated : YES];
@@ -357,7 +357,7 @@
 #pragma mark - Popover controller delegate.
 
 //____________________________________________________________________________________________________
-- (void) popoverControllerDidDismissPopover : (UIPopoverController *)popoverController 
+- (void) popoverControllerDidDismissPopover : (UIPopoverController *)popoverController
 {
    //NSLog(@"popover dismiss");
    [searchBar resignFirstResponder];
@@ -374,7 +374,7 @@
    [searchPopover dismissPopoverAnimated : YES];
    searchPopover = nil;
    [searchBar resignFirstResponder];
-   
+
    const auto &descriptor = fileContainer->GetElementDescriptor(key.elementIndex);
    if (descriptor.fOwner == fileContainer) {
       descriptor.fIsDir ? [self highlightDirectory : descriptor.fIndex] : [self highlightObject : descriptor.fIndex];
@@ -387,7 +387,7 @@
          contentController->animateDirAfterLoad = YES;
       else
          contentController->animateObjAfterLoad = YES;
-      
+
       contentController->spotElement = descriptor.fIndex;
 
       [self.navigationController pushViewController : contentController animated : YES];
@@ -434,7 +434,7 @@
             newBounds.origin.y = newY;
             [scrollView scrollRectToVisible : newBounds animated : YES];
          }
-         
+
          [self animateShortcut : sh];
 
          break;
@@ -457,7 +457,7 @@
             newBounds.origin.y = newY;
             [scrollView scrollRectToVisible : newBounds animated : YES];
          }
-         
+
          [self animateShortcut : sh];
 
          break;

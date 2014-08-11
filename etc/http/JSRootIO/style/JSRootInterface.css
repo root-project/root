@@ -63,7 +63,7 @@ input.tb {
 .ui-icon-triangle-1-e { background-position: -32px -16px; }
 .ui-icon-triangle-1-s { background-position: -64px -16px; }
 
-.ui-accordion { 
+.ui-accordion {
    width: 100%; margin-right: 15px;
 }
 .ui-accordion-header {
@@ -79,27 +79,27 @@ input.tb {
    position: relative;
    /*text-align:center;*/
 }
-.ui-accordion-header-active { 
+.ui-accordion-header-active {
    border-bottom: 0;
 }
-.ui-accordion-icons .ui-accordion-header a { 
-   padding-left: 2.2em; 
+.ui-accordion-icons .ui-accordion-header a {
+   padding-left: 2.2em;
 }
-.ui-accordion .ui-accordion-header .ui-icon { 
-   left: .5em; 
-   margin-top: -8px; 
-   position: absolute; 
-   top: 50%; 
+.ui-accordion .ui-accordion-header .ui-icon {
+   left: .5em;
+   margin-top: -8px;
+   position: absolute;
+   top: 50%;
 }
 .ui-accordion .ui-accordion-content {
    border: 1px solid #aaaaaa;
    border-top: 0;
-   margin-top: -2px; 
+   margin-top: -2px;
    margin-bottom: 2px;
    overflow:hidden;
    padding: 3px 0px 3px 0px;
 }
-.ui-state-active { 
+.ui-state-active {
    background: #ffffff;
    border-bottom: 0;
    color: #3a3a3a;
@@ -109,8 +109,8 @@ input.tb {
 }
 
 button.closeButton {
-   margin-top: -3px; 
-   margin-right: -2px; 
+   margin-top: -3px;
+   margin-right: -2px;
    float: right;
 }
 
@@ -132,32 +132,32 @@ button.closeButton {
 |--------------------------------------------------*/
 
 .dtree {
-	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
-	font-size: 11px;
-	color: #666;
-	white-space: nowrap;
+   font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+   font-size: 11px;
+   color: #666;
+   white-space: nowrap;
 }
 .dtree img {
-	border: 0px;
-	vertical-align: middle;
+   border: 0px;
+   vertical-align: middle;
 }
 .dtree a {
-	color: #333;
-	text-decoration: none;
+   color: #333;
+   text-decoration: none;
 }
 .dtree a.node, .dtree a.nodeSel {
-	white-space: nowrap;
-	padding: 1px 2px 1px 2px;
+   white-space: nowrap;
+   padding: 1px 2px 1px 2px;
 }
 .dtree a.node:hover, .dtree a.nodeSel:hover {
-	color: #333;
-	text-decoration: underline;
+   color: #333;
+   text-decoration: underline;
 }
 .dtree a.nodeSel {
-	background-color: #c0d2ec;
+   background-color: #c0d2ec;
 }
 .dtree .clip {
-	overflow: hidden;
+   overflow: hidden;
 }
 
 /*--------------------------------------------------|
@@ -188,4 +188,24 @@ button.closeButton {
    margin-left:5px;
    overflow:hidden;
 }
+
+/* from JSRootD3Painter */
+.xaxis path, .xaxis line, .yaxis path, .yaxis line, .zaxis path, .zaxis line {
+   fill: none;
+   stroke: #000;
+   shape-rendering: crispEdges;
+}
+.brush .extent {
+    stroke: #fff;
+    fill-opacity: .125;
+    shape-rendering: crispEdges;
+}
+rect.zoom {
+    stroke: steelblue;
+    fill-opacity: 0.1;
+
+}
+/* Correct overflow not hidden in IE9 */
+svg:not(:root) { overflow: hidden; }
+
 

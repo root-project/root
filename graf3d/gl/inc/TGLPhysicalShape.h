@@ -68,7 +68,7 @@ private:
    UChar_t                 fSelected;     //! selected state
    Bool_t                  fInvertedWind; //! face winding TODO: can get directly from fTransform?
    Bool_t                  fModified;     //! has been modified - retain across scene rebuilds
-   Bool_t                  fIsScaleForRnr;//! cache 
+   Bool_t                  fIsScaleForRnr;//! cache
 
    // Methods
    void            UpdateBoundingBox();

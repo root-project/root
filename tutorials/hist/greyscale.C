@@ -1,7 +1,7 @@
 {
    // Create grey scale of nxn boxes.
    //Author: Olivier Couet
-   
+
    if (gVirtualX) {
       Int_t n;
       gVirtualX->GetPlanes(n);

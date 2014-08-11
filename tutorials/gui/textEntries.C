@@ -1,6 +1,6 @@
 // Author: Valeriy Onuchin   25/08/2007
 //
-// This macro gives an example of how to set/change text entry attributes. 
+// This macro gives an example of how to set/change text entry attributes.
 //
 // To run it do either:
 // .x textEntries.C
@@ -17,7 +17,7 @@
 class GroupBox : public TGGroupFrame {
 private:
    TGComboBox  *fCombo; // combo box
-   TGTextEntry *fEntry; // text entry 
+   TGTextEntry *fEntry; // text entry
 
 public:
    GroupBox(const TGWindow *p, const char *name, const char *title);
@@ -29,7 +29,7 @@ public:
 
 //______________________________________________________________________________
 GroupBox::GroupBox(const TGWindow *p, const char *name, const char *title) :
-   TGGroupFrame(p, name) 
+   TGGroupFrame(p, name)
 {
    // Group frame containing combobox and text entry.
 
@@ -60,7 +60,7 @@ protected:
 public:
    TextEntryWindow();
    virtual ~TextEntryWindow() { delete fMain; }
-   
+
    ClassDef(TextEntryWindow, 0);
 };
 
@@ -71,7 +71,7 @@ TextEntryWindow::TextEntryWindow()
    // Main test window.
 
    TGComboBox  *combo;
-   TGTextEntry *entry; 
+   TGTextEntry *entry;
 
    fMain = new TGMainFrame(gClient->GetRoot(), 10, 10, kVerticalFrame);
 

@@ -18,7 +18,7 @@
 #ifdef R__QTGUITHREAD
 #include "TWin32Semaphore.h"
 
-class TWaitCondition : public TWin32Semaphore 
+class TWaitCondition : public TWin32Semaphore
 {
    public:
      TWaitCondition() : TWin32Semaphore() {}
@@ -33,7 +33,7 @@ class TWaitCondition
    public:
      TWaitCondition()  {}
      ~TWaitCondition() {}
-	  bool wait (unsigned long time=ULONG_MAX ) { if (time) {/* Wait() */}  return TRUE;}
+     bool wait (unsigned long time=ULONG_MAX ) { if (time) {/* Wait() */}  return TRUE;}
      void wakeOne () { /* Release();*/  }
 };
 

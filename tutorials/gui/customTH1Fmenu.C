@@ -1,12 +1,12 @@
 //How to customize a context menu for a class
 //Author: Ilka antcheva
-   
+
 {
    cl = gROOT->GetClass("TH1F");
-   
+
    cl->MakeCustomMenuList();
    ml = cl->GetMenuList();
-   
+
    ((TClassMenuItem*)ml->At(1))->SetTitle("Add histos...");
    ((TClassMenuItem*)ml->At(2))->SetTitle("Divide histos...");
    ((TClassMenuItem*)ml->At(3))->SetTitle("Draw panel...");
@@ -28,7 +28,7 @@
    ((TClassMenuItem*)ml->At(22))->SetTitle("Set line attributes...");
    ((TClassMenuItem*)ml->At(24))->SetTitle("Set fill attributes...");
    ((TClassMenuItem*)ml->At(26))->SetTitle("Set marker attributes...");
-   
+
 // Remove separators at the end, between attributes
    mi = (TClassMenuItem*)ml->At(23);
    delete mi;

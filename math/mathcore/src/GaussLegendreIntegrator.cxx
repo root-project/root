@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: David Gonzalez Maline    01/2008 
+// Authors: David Gonzalez Maline    01/2008
 
 /**********************************************************************
  *                                                                    *
@@ -16,7 +16,7 @@
 namespace ROOT {
 namespace Math {
 
-   GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps) : 
+   GaussLegendreIntegrator::GaussLegendreIntegrator(int num, double eps) :
       GaussIntegrator(eps, eps)
 {
    // Basic contructor
@@ -29,7 +29,7 @@ namespace Math {
 
 GaussLegendreIntegrator::~GaussLegendreIntegrator()
 {
-   // Default Destructor 
+   // Default Destructor
 
 
    delete [] fX;
@@ -77,7 +77,7 @@ double GaussLegendreIntegrator::DoIntegral(double a, double b, const IGenFunctio
    fLastResult = result*b0;
    return fLastResult;
 }
-   
+
 
 void GaussLegendreIntegrator::SetRelTolerance (double eps)
 {
@@ -150,14 +150,14 @@ void GaussLegendreIntegrator::CalcGaussLegendreSamplingPoints()
    }
 }
 
-ROOT::Math::IntegratorOneDimOptions  GaussLegendreIntegrator::Options() const { 
-   ROOT::Math::IntegratorOneDimOptions opt; 
-   opt.SetAbsTolerance(0); 
-   opt.SetRelTolerance(fEpsRel); 
-   opt.SetWKSize(0); 
-   opt.SetNPoints(fNum); 
+ROOT::Math::IntegratorOneDimOptions  GaussLegendreIntegrator::Options() const {
+   ROOT::Math::IntegratorOneDimOptions opt;
+   opt.SetAbsTolerance(0);
+   opt.SetRelTolerance(fEpsRel);
+   opt.SetWKSize(0);
+   opt.SetNPoints(fNum);
    opt.SetIntegrator("GaussLegendre");
-   return opt; 
+   return opt;
 }
 
 void GaussLegendreIntegrator::SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt)
@@ -165,13 +165,13 @@ void GaussLegendreIntegrator::SetOptions(const ROOT::Math::IntegratorOneDimOptio
    //   set integration options
 //    std::cout << "fEpsilon = " << fEpsilon << std::endl;
 //    std::cout << opt.RelTolerance() << " abs " << opt.AbsTolerance() << std::endl;
-   //double tol = opt.RelTolerance(); fEpsilon = tol; 
-   fEpsRel = opt.RelTolerance(); 
+   //double tol = opt.RelTolerance(); fEpsilon = tol;
+   fEpsRel = opt.RelTolerance();
 //    std::cout << "fEpsilon = " << fEpsilon << std::endl;
-   fNum = opt.NPoints(); 
+   fNum = opt.NPoints();
    if (fNum <= 7)  MATH_WARN_MSGVAL("GaussLegendreIntegrator::SetOptions","setting a low number of points ",fNum);
    CalcGaussLegendreSamplingPoints();
 }
 
-} // end namespace Math  
+} // end namespace Math
 } // end namespace ROOT

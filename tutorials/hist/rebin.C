@@ -3,7 +3,7 @@
 //   that the population per bin is about the same.
 //  -rebin a variable binwidth histogram into another one.
 //Author: Rene Brun
-   
+
 #include "TH1.h"
 #include "TCanvas.h"
 void rebin() {
@@ -29,7 +29,7 @@ void rebin() {
    //new rebinned histogram should have about 10 entries per bin
    TH1F *hnew = new TH1F("hnew","rebinned",k,xbins);
    hnew->FillRandom("gaus",10*nentries);
-   
+
    //rebin hnew keeping only 50% of the bins
    Double_t xbins2[501];
    Int_t kk=0;

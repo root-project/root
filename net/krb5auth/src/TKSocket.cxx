@@ -77,7 +77,7 @@ int krb5_net_read(krb5_context /*context*/, int fd, register char *buf, register
             continue;
 
          /* XXX this interface sucks! */
-	      errno = SOCKET_ERRNO;
+         errno = SOCKET_ERRNO;
 
          return(cc);          /* errno is already set */
       } else if (cc == 0) {

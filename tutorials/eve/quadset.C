@@ -194,7 +194,7 @@ TEveQuadSet* quadset_hex(Float_t x=0, Float_t y=0, Float_t z=0,
          gEve->AddElement(q);
          gEve->Redraw3D();
       }
-      
+
       return q;
    }
 }
@@ -210,7 +210,7 @@ TEveQuadSet* quadset_hexid(Float_t x=0, Float_t y=0, Float_t z=0,
    TEveQuadSet* q = new TEveQuadSet("HexagonXY");
 
    {
-      
+
       q->SetOwnIds(kTRUE);
       q->Reset(TEveQuadSet::kQT_HexagonXY, kFALSE, 32);
       for (Int_t i=0; i<num; ++i)

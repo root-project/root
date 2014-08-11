@@ -7,7 +7,7 @@
 #  GLOBUS_LIBRARIES (not cached)
 #  GLOBUS_xxx_LIBRARY
 
-find_path(GLOBUS_INCLUDE_DIR NAMES globus_common.h  
+find_path(GLOBUS_INCLUDE_DIR NAMES globus_common.h
           HINTS ${GLOBUS_DIR}/include $ENV{GLOBUS_LOCATION}/include
                 /opt/globus/include
           PATH_SUFFIXES gcc32 gcc32dbg gcc32pthr gcc32dbgpthr
@@ -19,19 +19,19 @@ endif()
 
 set(GLOBUS_INCLUDE_DIRS ${GLOBUS_INCLUDE_DIR})
 
-set(libraries gssapi_gsi gss_assist gsi_credential common gsi_callback proxy_ssl 
-              gsi_sysconfig openssl_error oldgaa gsi_cert_utils 
+set(libraries gssapi_gsi gss_assist gsi_credential common gsi_callback proxy_ssl
+              gsi_sysconfig openssl_error oldgaa gsi_cert_utils
               openssl gsi_proxy_core callout)
 
 foreach( lib ${libraries})
-  find_library(GLOBUS_${lib}_LIBRARY NAMES globus_${lib}_${flavour} HINTS 
+  find_library(GLOBUS_${lib}_LIBRARY NAMES globus_${lib}_${flavour} HINTS
                ${GLOBUS_DIR}/lib $ENV{GLOBUS_LOCATION}/lib)
   if(GLOBUS_${lib}_LIBRARY)
     set(GLOBUS_${lib}_FOUND 1)
     list(APPEND GLOBUS_LIBRARIES ${GLOBUS_${lib}_LIBRARY})
     mark_as_advanced(GLOBUS_${lib}_LIBRARY)
   endif()
-endforeach() 
+endforeach()
 
 
 # handle the QUIETLY and REQUIRED arguments and set GLOBUS_FOUND to TRUE if

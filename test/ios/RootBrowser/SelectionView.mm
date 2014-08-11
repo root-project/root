@@ -63,14 +63,14 @@
 - (void)drawRect : (CGRect)rect
 {
    CGContextRef ctx = UIGraphicsGetCurrentContext();
-   
+
    CGContextSaveGState(ctx);
 
    CGContextClearRect(ctx, rect);
    CGContextTranslateCTM(ctx, 0.f, rect.size.height);
    CGContextScaleCTM(ctx, 1.f, -1.f);
 
-   pad->cd();   
+   pad->cd();
    pad->SetViewWH(rect.size.width, rect.size.height);
    pad->SetContext(ctx);
 
@@ -85,16 +85,16 @@
       CGContextTranslateCTM(ctx, -2.5f, -2.5f);
       pad->PaintSelected();
    }
-   
+
    //If we selected object has a polyline or polygon, markers will be painted.
    //But if it's a TAxis, I can not simply draw a marker for a line segment,
    //since TAxis has a lot of lines (ticks and marks).
    //I have to find the position for this markers here and paint them.
    if (dynamic_cast<TAxis *>(pad->GetSelected()))
       [self showSelectedAxis : ctx withRect : rect];
-   
+
    CGContextRestoreGState(ctx);
-   
+
    if (panActive) {
       CGContextSetRGBFillColor(ctx, 0.f, 0.f, 1.f, 0.2f);
       if (!verticalPanDirection)
@@ -105,9 +105,9 @@
 }
 
 //____________________________________________________________________________________________________
-- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *) event 
+- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *) event
 {
-   //Thanks to gyim, 
+   //Thanks to gyim,
    //http://stackoverflow.com/questions/1694529/allowing-interaction-with-a-uiview-under-another-uiview
    return NO;
 }

@@ -56,6 +56,9 @@ etc/allDict.h
 /config/Makefile.config
 /config/Makefile.comp
 
+# /core/base/src/
+core/base/src/RGitCommit.h
+
 # /core/lzma/src/
 /core/lzma/src/xz-5.0.3
 

@@ -228,7 +228,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b, const TCl
          if (fVal->fKind != EDataType(kBOOL_t))  {
             fResize(fEnv->fObject,fEnv->fSize);
             fEnv->fIdx = 0;
-            
+
             TVirtualVectorIterators iterators(fFunctionCreateIterators);
             iterators.CreateIterators(fEnv->fObject);
             itmstore = (StreamHelper*)iterators.fBegin;
@@ -379,7 +379,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
    StreamHelper* itm = 0;
    char   buffer[8096];
    void*  memory = 0;
-   
+
    TClass* onFileValClass = (onFileClass ? onFileClass->GetCollectionProxy()->GetValueClass() : 0);
 
    fEnv->fSize = nElements;
@@ -389,7 +389,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
          fResize(fEnv->fObject,fEnv->fSize);
          fEnv->fIdx = 0;
-         
+
          {
             TVirtualVectorIterators iterators(fFunctionCreateIterators);
             iterators.CreateIterators(fEnv->fObject);
@@ -503,7 +503,7 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
          fResize(fEnv->fObject,fEnv->fSize);
          fEnv->fIdx = 0;
-         
+
          {
             TVirtualVectorIterators iterators(fFunctionCreateIterators);
             iterators.CreateIterators(fEnv->fObject);
@@ -536,7 +536,7 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
             case kIsClass:
                DOLOOP(
                   char **where = (char**)(void*) & i;
-                  pinfo->ReadBuffer(b, where, -1);
+                  b.ApplySequence(*(pinfo->GetReadObjectWiseActions()), where);
                );
          }
 #undef DOLOOP
@@ -553,7 +553,7 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
             case kIsClass:
                DOLOOP(
                   char **where = (char**)(void*) & i;
-                  pinfo->ReadBuffer(b, where, -1);
+                  b.ApplySequence(*(pinfo->GetReadObjectWiseActions()), where);
                );
                fFeed(fEnv->fStart,fEnv->fObject,fEnv->fSize);
                fDestruct(fEnv->fStart,fEnv->fSize);
@@ -573,7 +573,7 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
 void TGenCollectionStreamer::ReadMapHelper(StreamHelper *i, Value *v, Bool_t vsn3,  TBuffer &b)
 {
    // helper class to read std::map
-   
+
    float f;
 
    switch (v->fCase) {
@@ -1135,7 +1135,7 @@ void TGenCollectionStreamer::ConvertBufferVectorPrimitives(TBuffer &b, void *obj
 {
    From *temp = new From[nElements];
    b.ReadFastArray(temp, nElements);
-   std::vector<To> *const vec = (std::vector<To>*)(obj);      
+   std::vector<To> *const vec = (std::vector<To>*)(obj);
    for(Int_t ind = 0; ind < nElements; ++ind) {
       (*vec)[ind] = (To)temp[ind];
    }
@@ -1147,7 +1147,7 @@ void TGenCollectionStreamer::ConvertBufferVectorPrimitivesFloat16(TBuffer &b, vo
 {
    Float16_t *temp = new Float16_t[nElements];
    b.ReadFastArrayFloat16(temp, nElements);
-   std::vector<To> *const vec = (std::vector<To>*)(obj);      
+   std::vector<To> *const vec = (std::vector<To>*)(obj);
    for(Int_t ind = 0; ind < nElements; ++ind) {
       (*vec)[ind] = (To)temp[ind];
    }
@@ -1159,7 +1159,7 @@ void TGenCollectionStreamer::ConvertBufferVectorPrimitivesDouble32(TBuffer &b, v
 {
    Double32_t *temp = new Double32_t[nElements];
    b.ReadFastArrayDouble32(temp, nElements);
-   std::vector<To> *const vec = (std::vector<To>*)(obj);      
+   std::vector<To> *const vec = (std::vector<To>*)(obj);
    for(Int_t ind = 0; ind < nElements; ++ind) {
       (*vec)[ind] = (To)temp[ind];
    }
@@ -1195,7 +1195,7 @@ void TGenCollectionStreamer::ReadBufferVectorPrimitives(TBuffer &b, void *obj, c
    int nElements = 0;
    b >> nElements;
    fResize(obj,nElements);
-   
+
    if (onFileClass) {
       DispatchConvertBufferVectorPrimitives<basictype>(b,obj,nElements,onFileClass->GetCollectionProxy());
    } else {
@@ -1210,7 +1210,7 @@ void TGenCollectionStreamer::ReadBufferVectorPrimitivesFloat16(TBuffer &b, void 
    int nElements = 0;
    b >> nElements;
    fResize(obj,nElements);
-   
+
    if (onFileClass) {
       DispatchConvertBufferVectorPrimitives<Float16_t>(b,obj,nElements,onFileClass->GetCollectionProxy());
    } else {
@@ -1225,7 +1225,7 @@ void TGenCollectionStreamer::ReadBufferVectorPrimitivesDouble32(TBuffer &b, void
    int nElements = 0;
    b >> nElements;
    fResize(obj,nElements);
-   
+
    if (onFileClass) {
       DispatchConvertBufferVectorPrimitives<Double32_t>(b,obj,nElements,onFileClass->GetCollectionProxy());
    } else {
@@ -1241,7 +1241,7 @@ void TGenCollectionStreamer::ReadBuffer(TBuffer &b, void *obj, const TClass *onF
 {
    // Call the specialized function.  The first time this call ReadBufferDefault which
    // actually set to fReadBufferFunc to the 'right' specialized version.
-   
+
    (this->*fReadBufferFunc)(b,obj,onFileClass);
 }
 
@@ -1249,13 +1249,13 @@ void TGenCollectionStreamer::ReadBuffer(TBuffer &b, void *obj)
 {
    // Call the specialized function.  The first time this call ReadBufferDefault which
    // actually set to fReadBufferFunc to the 'right' specialized version.
-   
+
    (this->*fReadBufferFunc)(b,obj,0);
 }
 
 void TGenCollectionStreamer::ReadBufferDefault(TBuffer &b, void *obj, const TClass *onFileClass)
 {
- 
+
    fReadBufferFunc = &TGenCollectionStreamer::ReadBufferGeneric;
 
    // We will need this later, so let's make sure it is initialized.
@@ -1354,7 +1354,7 @@ void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj, const TCla
                   TGenCollectionProxy::Clear("force");
                } // a resize will be called in ReadPrimitives/ReadObjects.
                else if (fVal->fKind == EDataType(kBOOL_t)) {
-                  fClear.invoke(fEnv);                  
+                  fClear.invoke(fEnv);
                }
             }
             switch (fVal->fCase) {

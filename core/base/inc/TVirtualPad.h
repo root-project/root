@@ -255,10 +255,10 @@ public:
    virtual Int_t               GetGLDevice() = 0;
    virtual void                SetCopyGLDevice(Bool_t copy) = 0;
    virtual TVirtualPadPainter *GetPainter() = 0;
-   
+
    virtual Bool_t PadInSelectionMode() const;
    virtual Bool_t PadInHighlightMode() const;
-   
+
    virtual void PushTopLevelSelectable(TObject *top);
    virtual void PushSelectableObject(TObject *obj);
    virtual void PopTopLevelSelectable();
@@ -277,7 +277,7 @@ class TPickerStackGuard {
 public:
    TPickerStackGuard(TObject *obj);
    ~TPickerStackGuard();
-   
+
 private:
    TPickerStackGuard(const TPickerStackGuard &rhs);
    TPickerStackGuard &operator = (const TPickerStackGuard &rhs);

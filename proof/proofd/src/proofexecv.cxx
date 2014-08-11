@@ -118,7 +118,7 @@ int main(int argc, char **argv)
       Info("ERROR: process type %d not yet implemented", gType);
       exit(1);
    }
-   
+
    // Done
    exit(0);
 }
@@ -127,12 +127,12 @@ int main(int argc, char **argv)
 void start_rootd(int argc, char **argv)
 {
    // Process a request to start a rootd server
-   
+
    if (argc < 6) {
       Info("argc=%d: at least 5 additional arguments required - exit", argc);
       return;
    }
-   
+
    // Parse arguments:
    //     1     process type (2=top-master, 1=sub-master 0=worker, 3=test, 10=admin, 20=rootd)
    //     2     debug level
@@ -147,7 +147,7 @@ void start_rootd(int argc, char **argv)
       Info("ERROR: failure calling back parent on '%s'", sockpath.c_str());
       return;
    }
-   
+
    int rcc = 0;
    // Receive the open descriptor to be used in rootd
    int fd = -1;
@@ -158,7 +158,7 @@ void start_rootd(int argc, char **argv)
    }
    // Close the connection to the parent
    delete uconn;
-   
+
    // Force stdin/out to point to the socket FD (this will also bypass the
    // close on exec setting for the socket)
    if (dup2(fd, STDIN_FILENO) != 0)
@@ -169,7 +169,7 @@ void start_rootd(int argc, char **argv)
    // Prepare execv
    int na = argc - 4;
    char **argvv = new char *[na + 1];
-  
+
    // Fill arguments
    argvv[0] = argv[4];
    int ia = 5, ka = 1;
@@ -178,7 +178,7 @@ void start_rootd(int argc, char **argv)
       ka++; ia++;
    }
    argvv[na] = 0;
-      
+
    // Run the program
    execv(argv[4], argvv);
 
@@ -192,7 +192,7 @@ void start_rootd(int argc, char **argv)
 void start_ps(int argc, char **argv)
 {
    // Process a request to start a proofserv process
-   
+
    if (argc < 6) {
       Info("argc=%d: at least 5 additional arguments required - exit", argc);
       return;
@@ -208,9 +208,9 @@ void start_ps(int argc, char **argv)
 
 #if 0
    int dbg = 1;
-   while (dbg) {} 
+   while (dbg) {}
 #endif
-   
+
    // Open error logfile
    std::string errlog(argv[6]);
    if (!(gLogger = fopen(errlog.c_str(), "a"))) {
@@ -218,7 +218,7 @@ void start_ps(int argc, char **argv)
            errlog.c_str(), (int) errno);
       return;
    }
-   
+
    // Pid string
    char spid[20];
    snprintf(spid, 20, "%d", (int)getpid());
@@ -234,7 +234,7 @@ void start_ps(int argc, char **argv)
    uid_t gid = pw->pw_gid;
 
    std::string::size_type loc = 0;
-   
+
    // All relevant files an directories derived from argv[4], inclusing base-path for temporary
    // env- and rc-files
    std::string sessdir(argv[4]), logfile(argv[4]), tenvfile, trcfile;
@@ -246,12 +246,12 @@ void start_ps(int argc, char **argv)
       // Sub-masters, workers (the session dir is already fully defined ...)
       tenvfile = sessdir;
       if ((loc = sessdir.rfind('/')) != std::string::npos) sessdir.erase(loc, std::string::npos);
-   }      
+   }
    if ((loc = tenvfile.rfind("<pid>")) != std::string::npos) tenvfile.erase(loc, std::string::npos);
    trcfile = tenvfile;
    tenvfile += ".env";
    trcfile += ".rootrc";
-   
+
    // Complete the session dir path and assert it
    if ((loc = sessdir.find("<pid>")) != std::string::npos) sessdir.replace(loc, 5, spid);
    if (assertdir(sessdir, uid, gid, 0755) != 0) {
@@ -259,26 +259,26 @@ void start_ps(int argc, char **argv)
       return;
    }
    Info("session dir: %s", sessdir.c_str());
-   
+
    // The session files now
    while ((loc = logfile.find("<pid>")) != std::string::npos) { logfile.replace(loc, 5, spid); }
    std::string stag(logfile), envfile(logfile), userdir(logfile), rcfile(logfile);
    logfile += ".log";
    envfile += ".env";
    rcfile += ".rootrc";
-   
+
    // Assert working directory
    if (assertdir(userdir, uid, gid, 0755) != 0) {
       Info("ERROR: could not assert dir '%s'", userdir.c_str());
       return;
    }
-   
+
    // The session tag
    if ((loc = stag.rfind('/')) != std::string::npos) stag.erase(0, loc);
    if ((loc = stag.find('-')) != std::string::npos) loc = stag.find('-', loc+1);
    if (loc != std::string::npos) stag.erase(0, loc+1);
    Info("session tag: %s", stag.c_str());
-   
+
    // Call back the parent, so that it can move to other processes
    std::string sockpath = argv[5];
    rpdunix *uconn = new rpdunix(sockpath.c_str());
@@ -295,7 +295,7 @@ void start_ps(int argc, char **argv)
       delete uconn;
       return;
    }
-   
+
    // Receive the adminpath and the executable path
    rpdmsg msg;
    if ((rcc = uconn->recv(msg)) != 0) {
@@ -310,7 +310,7 @@ void start_ps(int argc, char **argv)
    Info("partial admin path: %s", adminpath.c_str());
    Info("executable: %s", pspath.c_str());
    Info("parent pid: %d", ppid);
-   
+
    // Receive information about dataset and data dir(s)
    msg.reset();
    if ((rcc = uconn->recv(msg)) != 0) {
@@ -369,8 +369,8 @@ void start_ps(int argc, char **argv)
       return;
    }
    delete uconn;
-   
-   // Login now   
+
+   // Login now
    if (loginuser(userdir, user, uid, gid) != 0) {
       Info("ERROR: problems login user '%s' in", user.c_str());
       return;
@@ -383,7 +383,7 @@ void start_ps(int argc, char **argv)
       return;
    }
 #endif
-   
+
    // Prepare for execv
    char *argvv[6] = {0};
 
@@ -410,7 +410,7 @@ void start_ps(int argc, char **argv)
    argvv[3] = (char *)sxpd;
    argvv[4] = (char *)slog;
    argvv[5] = 0;
-   
+
    // Unblock SIGUSR1 and SIGUSR2
    sigset_t myset;
    sigemptyset(&myset);
@@ -420,7 +420,7 @@ void start_ps(int argc, char **argv)
 
    Info("%d: uid: %d, euid: %d", (int)getpid(), getuid(), geteuid());
    Info("argvv: '%s' '%s' '%s' '%s' '%s'", argvv[0],  argvv[1], argvv[2], argvv[3],  argvv[4]);
-      
+
    // Run the program
    execv(pspath.c_str(), argvv);
 
@@ -471,7 +471,7 @@ int loginuser(const std::string &home, const std::string &user, uid_t uid, gid_t
       Info("loginuser: ERROR: can't acquire '%s' identity", user.c_str());
       return -1;
    }
-   
+
    // Done
    return 0;
 }
@@ -548,7 +548,7 @@ int completercfile(const std::string &rcfile, const std::string &sessdir,
                    const std::string &stag, const std::string &adminpath)
 {
    // Finalize the rc file with the missing pieces
-   
+
    FILE *frc = fopen(rcfile.c_str(), "a");
    if (!frc) {
       Info("completercfile: ERROR: unable to open rc file: '%s' (errno: %d)", rcfile.c_str(), errno);
@@ -557,15 +557,15 @@ int completercfile(const std::string &rcfile, const std::string &sessdir,
 
    fprintf(frc, "# The session working dir\n");
    fprintf(frc, "ProofServ.SessionDir: %s\n", sessdir.c_str());
-   
+
    fprintf(frc, "# Session tag\n");
    fprintf(frc, "ProofServ.SessionTag: %s\n", stag.c_str());
-   
+
    fprintf(frc, "# Admin path\n");
    fprintf(frc, "ProofServ.AdminPath: %s%d.status\n", adminpath.c_str(), (int)getpid());
 
    fclose(frc);
-   
+
    // Done
    return 0;
 }
@@ -575,7 +575,7 @@ int setproofservenv(const std::string &envfile,
                     const std::string &logfile, const std::string &rcfile)
 {
    // Initialize the environment following the content of 'envfile'
-   
+
    if (envfile.length() <= 0) return -1;
 
    int len = 0;
@@ -594,7 +594,7 @@ int setproofservenv(const std::string &envfile,
    putenv(h);
    if (gDebug > 0)
       Info("setproofservenv: set '%s'", h);
-   
+
    std::fstream fin(envfile.c_str(), std::ios::in);
    if (!fin.good()) {
       Info("setproofservenv: ERROR: unable to open env file: %s (errno: %d)", envfile.c_str(), errno);
@@ -654,7 +654,7 @@ int exportsock(rpdunix *conn)
    char *rootopensock = new char[33];
    snprintf(rootopensock, 33, "ROOTOPENSOCK=%d", d);
    putenv(rootopensock);
-   
+
    // Done
    return 0;
 }
@@ -726,7 +726,7 @@ int setownerships(int euid, const std::string &us, const std::string &gr,
       return -1;
    }
 
-   // If applicable, make sure that the private dataset dir for this user exists 
+   // If applicable, make sure that the private dataset dir for this user exists
    // and has the right permissions
    if (dsrcs.length() > 0) {
       std::string dsrc(dsrcs);
@@ -753,7 +753,7 @@ int setownerships(int euid, const std::string &us, const std::string &gr,
       } while ((loc = dsrcs.find(',', loc)) != std::string::npos);
    }
 
-   // If applicable, make sure that the private data dir for this user exists 
+   // If applicable, make sure that the private data dir for this user exists
    // and has the right permissions
    if (ddir.length() > 0 && ord.length() > 0 && stag.length() > 0) {
       std::string dgr(ddir);

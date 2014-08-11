@@ -1,15 +1,15 @@
 // This script illustrates the danger of using asymmetric symbols.
 // Non-symmetric symbols should be used carefully in plotting.
 // These two graphs show how misleading a careless use of symbols can be.
-// The two plots represent the same data sets but because of a bad symbol 
-// choice, the two plots on the top appear further apart than for the bottom 
+// The two plots represent the same data sets but because of a bad symbol
+// choice, the two plots on the top appear further apart than for the bottom
 // example.
 //Author: Olivier Couet
-   
+
 void markerwarning()
 {
    const int Nph = 14;
-   double np_ph[Nph]  = {353.4,300.2,254.3,215.2,181.0,151.3,125.2,102.7, 
+   double np_ph[Nph]  = {353.4,300.2,254.3,215.2,181.0,151.3,125.2,102.7,
       83.3, 66.7, 52.5, 40.2, 30.2, 22.0};
    double nc_ph[Nph]  = {3.890,3.734,3.592,3.453,3.342,3.247,3.151,3.047,
       2.965,2.858,2.701,2.599,2.486,2.328};
@@ -35,23 +35,23 @@ void markerwarning()
    float maxPlotPart  = 395;
    float Marker_Size  = 1.3;
    int   Marker_Style = 8;
-  
+
    float Et_200_Min   = 0.71;
    float Et_200_Max   = 3.80;
    float Et_130_Min   = 1.21;
    float Et_130_Max   = 3.29;
-  
+
    float Nc_200_Min   = 1.31;
    float Nc_200_Max   = 4.30;
    float Nc_130_Min   = 1.51;
    float Nc_130_Max   = 3.89;
-  
+
    TCanvas *canvasNc = new TCanvas("canvasNc", "Multiplicity",630,10,600,500);
-  
+
    gStyle->SetOptStat(0);
    canvasNc->SetFillColor(10);
    canvasNc->SetBorderSize(0);
-  
+
    // Primitives in Nc200 pad
    TPad *padNcUP = new TPad("padNcUP","200 GeV",0.07,0.60,1.,1.00);
    padNcUP->Draw();
@@ -63,7 +63,7 @@ void markerwarning()
    padNcUP->SetRightMargin(Right_margin);
    padNcUP->SetTopMargin(Top_margin+0.005);
    padNcUP->SetBottomMargin(0.00);
-  
+
    TH1F* frameNcUP = new TH1F("frameNcUP","",100,0,maxPlotPart);
    frameNcUP->GetYaxis()->SetLabelOffset(0.005);
    frameNcUP->GetYaxis()->SetLabelSize(0.10);
@@ -72,17 +72,17 @@ void markerwarning()
    frameNcUP->SetNdivisions(505,"Y");
    frameNcUP->SetNdivisions(505,"X");
    frameNcUP->Draw();
-  
+
    brUP->SetMarkerStyle(22);
    brUP->SetMarkerSize (2.0);
-   brUP->Draw("P");                    
-  
+   brUP->Draw("P");
+
    phDN->SetMarkerStyle(23);
    phDN->SetMarkerSize (2);
    phDN->Draw("P");
-  
+
    canvasNc->cd();
-  
+
    // Primitives in Nc130 pad
    TPad *padNcDN = new TPad("padNcDN","130 GeV",0.07,0.02,1.,0.60);
    padNcDN->Draw();
@@ -94,7 +94,7 @@ void markerwarning()
    padNcDN->SetRightMargin(Right_margin);
    padNcDN->SetTopMargin(Top_margin+0.005);
    padNcDN->SetBottomMargin(0.30);
-  
+
    TH1F* frameNcDN = new TH1F("frameNcDN","",100,0,maxPlotPart);
    frameNcDN->GetYaxis()->SetLabelOffset(0.005);
    frameNcDN->GetYaxis()->SetLabelSize(0.07);
@@ -105,11 +105,11 @@ void markerwarning()
    frameNcDN->SetNdivisions(505,"Y");
    frameNcDN->SetNdivisions(505,"X");
    frameNcDN->Draw();
-  
+
    brDN->SetMarkerStyle(23);
    brDN->SetMarkerSize (2.0);
-   brDN->Draw("P");                    
-             
+   brDN->Draw("P");
+
    phUP->SetMarkerStyle(22);
    phUP->SetMarkerSize (2);
    phUP->Draw("P");

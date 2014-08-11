@@ -46,7 +46,7 @@ TF12::TF12(const char *name, TF2 *f2, Double_t xy, Option_t *option)
    //   Create a TF12 (special TF1) from a projection of a TF2
    //   for a fix value of Y if option="X" or X if option="Y"
    // This value may be changed at any time via TF12::SetXY(xy)
-   
+
    SetName(name);
    fF2 = f2;
    TString opt=option;
@@ -143,7 +143,7 @@ Double_t TF12::EvalPar(const Double_t *x, const Double_t *params)
    //   x[0] is the value along X if fCase =0, the value along Y if fCase=1
    // if params is non null, the array will be used instead of the internal TF2
    // parameters
-   
+
    if (!fF2) return 0;
    Double_t xx[2];
    if (fCase == 0) {
@@ -168,14 +168,14 @@ void TF12::SavePrimitive(std::ostream & /*out*/, Option_t * /*option*/ /*= ""*/)
 
 
 //______________________________________________________________________________
-void TF12::SetXY(Double_t xy) 
+void TF12::SetXY(Double_t xy)
 {
    // set the value of the constant for the TF2
    //   constant in X when projecting along Y
    //   constant in Y when projecting along X
    //  The function title is set to include the value of the constant
    //  The current pad is updated
-   
+
    fXY = xy;
    if (!fF2) return;
    if (fCase == 0) SetTitle(Form("%s (y=%g)",fF2->GetTitle(),xy));

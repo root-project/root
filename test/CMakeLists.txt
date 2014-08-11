@@ -12,6 +12,10 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+#---Copy the CTestCustom.cmake file into the build directory---------------------------------
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+
+
 if(CMAKE_SYSTEM_NAME MATCHES Darwin)
   # To avoid to set ld_Library_path to locate the test libraries
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,@loader_path/.")
@@ -104,7 +108,7 @@ ROOT_ADD_TEST(test-stresslinear COMMAND stressLinear FAILREGEX "FAILED|Error in"
 
 #--stressGraphics------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressGraphics stressGraphics.cxx LIBRARIES Graf Gpad Postscript)
-configure_file(stressGraphics.ref stressGraphics.ref @COPY_ONLY) 
+configure_file(stressGraphics.ref stressGraphics.ref @COPY_ONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/graphics/earth.dat earth.dat @COPY_ONLY)
 ROOT_ADD_TEST(test-stressgraphics ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH} COMMAND stressGraphics -b -k FAILREGEX "FAILED|Error in")
 
@@ -129,7 +133,7 @@ ROOT_ADD_TEST(test-stressvector COMMAND stressVector FAILREGEX "FAILED|Error in"
 #--stressTMVA--------------------------------------------------------------------------------------
 if(ROOT_tmva_FOUND)
   ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
-  ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b)  
+  ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b)
 endif()
 
 #--stressMathMore----------------------------------------------------------------------------------
@@ -147,13 +151,13 @@ ROOT_ADD_TEST(test-stressmathcore COMMAND stressMathCore FAILREGEX "FAILED|Error
 #--stressRooFit----------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND)
   ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit)
-  ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED|Error in")  
+  ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED|Error in")
 endif()
 
 #--stressRooStats----------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND)
   ROOT_EXECUTABLE(stressRooStats stressRooStats.cxx LIBRARIES RooStats)
-  ROOT_ADD_TEST(test-stressroostats COMMAND stressRooStats -f ${CMAKE_SOURCE_DIR}/test/stressRooStats_ref.root FAILREGEX "FAILED|Error in")  
+  ROOT_ADD_TEST(test-stressroostats COMMAND stressRooStats -f ${CMAKE_SOURCE_DIR}/test/stressRooStats_ref.root FAILREGEX "FAILED|Error in")
 endif()
 
 #--stressHistFactory--------------------------------------------------------------------------------
@@ -161,7 +165,7 @@ if(ROOT_roofit_FOUND)
 if(ROOT_xml_FOUND)
   ROOT_EXECUTABLE(stressHistFactory stressHistFactory.cxx LIBRARIES RooStats HistFactory XMLParser)
   file(COPY ${CMAKE_SOURCE_DIR}/test/HistFactoryTest.tar DESTINATION  ${CMAKE_CURRENT_BINARY_DIR} )
-  ROOT_ADD_TEST(test-stressHistFactory ENVIRONMENT ROOTSYS=${CMAKE_BINARY_DIR} COMMAND stressHistFactory -f ${CMAKE_SOURCE_DIR}/test/stressHistFactory_ref.root FAILREGEX "FAILED|Error in")  
+  ROOT_ADD_TEST(test-stressHistFactory ENVIRONMENT ROOTSYS=${CMAKE_BINARY_DIR} COMMAND stressHistFactory -f ${CMAKE_SOURCE_DIR}/test/stressHistFactory_ref.root FAILREGEX "FAILED|Error in")
 endif()
 endif()
 
@@ -189,7 +193,7 @@ if(WIN32)
   set(cleantmpfiles POSTCMD cmd /c del AutoDict_*)
 endif()
 ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
-              PRECMD ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/stressInterpreter.cxx 
+              PRECMD ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/stressInterpreter.cxx
                                               $<TARGET_FILE_DIR:stressInterpreter>/stressInterpreter.cxx
               ${cleantmpfiles}
               FAILREGEX Error|FAILED)
@@ -200,30 +204,30 @@ ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
 
 #--stressProof-------------------------------------------------------------------------------
 if(NOT WIN32 AND ROOT_xrootd_FOUND)
-  add_custom_target(TestData ALL COMMAND ${CMAKE_COMMAND} -DDST=${CMAKE_SOURCE_DIR}/files -P ${CMAKE_CURRENT_SOURCE_DIR}/rootDownloadData.cmake)  
+  add_custom_target(TestData ALL COMMAND ${CMAKE_COMMAND} -DDST=${CMAKE_SOURCE_DIR}/files -P ${CMAKE_CURRENT_SOURCE_DIR}/rootDownloadData.cmake)
   ROOT_EXECUTABLE(stressProof stressProof.cxx LIBRARIES Proof ProofPlayer Hist)
-  ROOT_ADD_TEST(test-stressproof COMMAND stressProof lite:// 
+  ROOT_ADD_TEST(test-stressproof COMMAND stressProof lite://
                                          -h1 ${CMAKE_SOURCE_DIR}/files/h1 -event ${CMAKE_SOURCE_DIR}/files/event
                                          -l /tmp/stressProof-%d.log -cleanlog -catlog -noprogress
                                          ENVIRONMENT PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
-                                         FAILREGEX "FAILED|Error in")  
+                                         FAILREGEX "FAILED|Error in")
 endif()
 
 #--testbits----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(testbits testbits.cxx LIBRARIES Core)
-ROOT_ADD_TEST(test-testbits COMMAND testbits)  
+ROOT_ADD_TEST(test-testbits COMMAND testbits)
 
 #--ctorture----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(ctorture ctorture.cxx LIBRARIES MathCore)
-ROOT_ADD_TEST(test-ctorture COMMAND ctorture)  
+ROOT_ADD_TEST(test-ctorture COMMAND ctorture)
 
 #--qprandom----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(QpRandomDriver QpRandomDriver.cxx LIBRARIES Quadp)
-ROOT_ADD_TEST(test-qprandom COMMAND QpRandomDriver 10 2 2)  
+ROOT_ADD_TEST(test-qprandom COMMAND QpRandomDriver 10 2 2)
 
 #--threads----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(threads threads.cxx LIBRARIES Thread Hist Gpad)
-#ROOT_ADD_TEST(test-threads COMMAND threads)  
+#ROOT_ADD_TEST(test-threads COMMAND threads)
 
 
 

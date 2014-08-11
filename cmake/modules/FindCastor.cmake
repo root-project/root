@@ -1,4 +1,4 @@
-# - Try to find CASTOR 
+# - Try to find CASTOR
 #  (See http://savannah.cern.ch/files/?group=castor)
 #  Check for rfio_api.h, stager_api.h for CASTOR 2 and libshift
 #
@@ -13,7 +13,7 @@ if(CASTOR_INCLUDE_DIR)
   set(CASTOR_FIND_QUIETLY 1)
 endif()
 
-find_path(CASTOR_INCLUDE_DIR NAMES rfio_api.h PATHS 
+find_path(CASTOR_INCLUDE_DIR NAMES rfio_api.h PATHS
   $ENV{CASTOR_DIR}/include
   /cern/pro/include
   /cern/new/include
@@ -21,8 +21,8 @@ find_path(CASTOR_INCLUDE_DIR NAMES rfio_api.h PATHS
   /opt/shift/include
   /usr/local/shift/include
   /usr/include/shift
-  /usr/local/include/shift 
-  /usr/include 
+  /usr/local/include/shift
+  /usr/include
   /usr/local/include
 )
 if(CASTOR_INCLUDE_DIR)
@@ -31,7 +31,7 @@ if(CASTOR_INCLUDE_DIR)
   string(REGEX REPLACE "BASEVERSION[ ]*[\"][ ]*([^ \"]+)" "\\1" CASTOR_VERSION ${cont})
 endif()
 
-set(locations  $ENV{CASTOR_DIR}/lib /cern/pro/lib /cern/new/lib /cern/old/lib 
+set(locations  $ENV{CASTOR_DIR}/lib /cern/pro/lib /cern/new/lib /cern/old/lib
               /opt/shift/lib /usr/local/shift/lib
               /usr/lib/shift /usr/local/lib/shift /usr/lib64 /usr/lib /usr/local/lib)
 

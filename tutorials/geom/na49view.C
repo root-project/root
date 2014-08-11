@@ -4,7 +4,7 @@ void na49view() {
    // a begin_html <a href="gif/na49canvas.gif">Canvas</a> end_html
    // with 2 views of the NA49 detector using the old obsolete geometry package.
    //Author: Rene Brun
-   
+
    TCanvas *c1 = new TCanvas("c1","The NA49 canvas",200,10,700,780);
 
    gBenchmark->Start("na49view");
@@ -18,6 +18,7 @@ void na49view() {
    na49title->Draw();
    //
    TFile *nageom = new TFile("na49.root");
+   if (!nageom || nageom->IsZombie()) return;
    TGeometry *n49 =(TGeometry*)gROOT->FindObject("na49");
    n49->SetBomb(1.2);
    n49->cd();     //Set current geometry

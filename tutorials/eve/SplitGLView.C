@@ -58,15 +58,15 @@
 #include <TWin32SplashThread.h>
 #endif
 
-const char *filetypes[] = { 
+const char *filetypes[] = {
    "ROOT files",    "*.root",
    "All files",     "*",
-   0,               0 
+   0,               0
 };
 
-const char *rcfiletypes[] = { 
+const char *rcfiletypes[] = {
    "All files",     "*",
-   0,               0 
+   0,               0
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,8 +87,8 @@ protected:
    virtual void          DoRedraw() {}
 
 public:
-   TGShapedToolTip(const char *picname, Int_t cx=0, Int_t cy=0, Int_t cw=0, 
-                   Int_t ch=0, Int_t tx=0, Int_t ty=0, Int_t th=0, 
+   TGShapedToolTip(const char *picname, Int_t cx=0, Int_t cy=0, Int_t cw=0,
+                   Int_t ch=0, Int_t tx=0, Int_t ty=0, Int_t th=0,
                    const char *col="#ffffff");
    virtual ~TGShapedToolTip();
 
@@ -153,7 +153,7 @@ public:
    HtmlSummary(const char *title);
    virtual ~HtmlSummary();
 
-   HtmlObjTable  *AddTable(const char *name, Int_t nfields, Int_t nvals, 
+   HtmlObjTable  *AddTable(const char *name, Int_t nfields, Int_t nvals,
                            Bool_t exp=kTRUE, Option_t *opt="");
    HtmlObjTable  *GetTable(Int_t at) const { return (HtmlObjTable *)fObjTables->At(at); }
    void           Build();
@@ -171,7 +171,7 @@ public:
    enum EMyCommands {
       kFileOpen, kFileExit, kFileLoadConfig, kFileSaveConfig,
       kHelpAbout, kGLPerspYOZ, kGLPerspXOZ, kGLPerspXOY, kGLXOY,
-      kGLXOZ, kGLZOY, kGLOrthoRotate, kGLOrthoDolly, kSceneUpdate, 
+      kGLXOZ, kGLZOY, kGLOrthoRotate, kGLOrthoDolly, kSceneUpdate,
       kSceneUpdateAll, kSummaryUpdate
    };
 
@@ -234,10 +234,10 @@ HtmlSummary *SplitGLView::fgHtmlSummary = 0;
 TGHtml *SplitGLView::fgHtml = 0;
 
 //______________________________________________________________________________
-TGShapedToolTip::TGShapedToolTip(const char *pname, Int_t cx, Int_t cy, Int_t cw, 
-                             Int_t ch, Int_t tx, Int_t ty, Int_t th, 
-                             const char *col) : 
-   TGShapedFrame(pname, gClient->GetDefaultRoot(), 400, 300, kTempFrame | 
+TGShapedToolTip::TGShapedToolTip(const char *pname, Int_t cx, Int_t cy, Int_t cw,
+                             Int_t ch, Int_t tx, Int_t ty, Int_t th,
+                             const char *col) :
+   TGShapedFrame(pname, gClient->GetDefaultRoot(), 400, 300, kTempFrame |
                  kHorizontalFrame), fEc(0), fHist(0)
 {
    // Shaped window constructor
@@ -253,7 +253,7 @@ TGShapedToolTip::TGShapedToolTip(const char *pname, Int_t cx, Int_t cy, Int_t cw
       Int_t lhRight  = fWidth-cx-cw;
       Int_t lhBottom = fHeight-cy-ch;
       fEc = new TRootEmbeddedCanvas("ec", this, cw, ch, 0);
-      AddFrame(fEc, new TGLayoutHints(kLHintsTop | kLHintsLeft, cx, 
+      AddFrame(fEc, new TGLayoutHints(kLHintsTop | kLHintsLeft, cx,
                                       lhRight, cy, lhBottom));
    }
    MapSubwindows();
@@ -262,7 +262,7 @@ TGShapedToolTip::TGShapedToolTip(const char *pname, Int_t cx, Int_t cy, Int_t cw
 }
 
 //______________________________________________________________________________
-TGShapedToolTip::~TGShapedToolTip() 
+TGShapedToolTip::~TGShapedToolTip()
 {
    // Destructor.
 
@@ -273,10 +273,10 @@ TGShapedToolTip::~TGShapedToolTip()
 }
 
 //______________________________________________________________________________
-void TGShapedToolTip::CloseWindow() 
+void TGShapedToolTip::CloseWindow()
 {
    // Close shaped window.
-   
+
    DeleteWindow();
 }
 
@@ -311,7 +311,7 @@ void TGShapedToolTip::CreateCanvas(Int_t cx, Int_t cy, Int_t cw, Int_t ch)
    Int_t lhRight  = fWidth-cx-cw;
    Int_t lhBottom = fHeight-cy-ch;
    fEc = new TRootEmbeddedCanvas("ec", this, cw, ch, 0);
-   AddFrame(fEc, new TGLayoutHints(kLHintsTop | kLHintsLeft, cx, 
+   AddFrame(fEc, new TGLayoutHints(kLHintsTop | kLHintsLeft, cx,
                                    lhRight, cy, lhBottom));
    MapSubwindows();
    Resize();
@@ -381,7 +381,7 @@ void TGShapedToolTip::SetTextColor(const char *col)
 }
 
 //______________________________________________________________________________
-void TGShapedToolTip::SetTextAttributes(Int_t tx, Int_t ty, Int_t th, 
+void TGShapedToolTip::SetTextAttributes(Int_t tx, Int_t ty, Int_t th,
                                         const char *col)
 {
    // Set text attributes (position, size and color).
@@ -418,7 +418,7 @@ void TGShapedToolTip::Show(Int_t x, Int_t y, const char *text, TH1 *hist)
 }
 
 //______________________________________________________________________________
-HtmlObjTable::HtmlObjTable(const char *name, Int_t nfields, Int_t nvals, Bool_t exp) : 
+HtmlObjTable::HtmlObjTable(const char *name, Int_t nfields, Int_t nvals, Bool_t exp) :
    fName(name), fNValues(nvals), fNFields(nfields), fExpand(exp)
 {
    // Constructor.
@@ -458,7 +458,7 @@ void HtmlObjTable::Build()
 void HtmlObjTable::BuildTitle()
 {
    // Build table title.
-   
+
    fHtml += "<tr><td colspan=";
    fHtml += Form("%d>", fNFields+1);
    fHtml += "<table width=100% border=0 cellspacing=2 cellpadding=0 bgcolor=6e6ea0>";
@@ -501,7 +501,7 @@ void HtmlObjTable::BuildTable()
          fHtml += "<tr bgcolor=e0e0ff>";
       else
          fHtml += "<tr bgcolor=ffffff>";
-      
+
       TString name = fName;
       name.ReplaceAll(" ", "_");
       // checkboxes
@@ -613,7 +613,7 @@ void HtmlSummary::MakeFooter()
    fFooter += "Example of using Html widget to display tabular data";
    fFooter += "<br>";
    fFooter += "(c) 2007-2010 Bertrand Bellenot";
-   fFooter += "</font></strong></center></body></html>";  
+   fFooter += "</font></strong></center></body></html>";
    fHtml   += fFooter;
 }
 
@@ -662,13 +662,13 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
 
    // create the main menu bar
    fMenuBar = new TGMenuBar(this, 1, 1, kHorizontalFrame);
-   fMenuBar->AddPopup("&File", fMenuFile, new TGLayoutHints(kLHintsTop | 
+   fMenuBar->AddPopup("&File", fMenuFile, new TGLayoutHints(kLHintsTop |
                       kLHintsLeft, 0, 4, 0, 0));
-   fMenuBar->AddPopup("&Camera", fMenuCamera, new TGLayoutHints(kLHintsTop | 
+   fMenuBar->AddPopup("&Camera", fMenuCamera, new TGLayoutHints(kLHintsTop |
                       kLHintsLeft, 0, 4, 0, 0));
-   fMenuBar->AddPopup("&Scene", fMenuScene, new TGLayoutHints(kLHintsTop | 
+   fMenuBar->AddPopup("&Scene", fMenuScene, new TGLayoutHints(kLHintsTop |
                       kLHintsLeft, 0, 4, 0, 0));
-   fMenuBar->AddPopup("&Help", fMenuHelp, new TGLayoutHints(kLHintsTop | 
+   fMenuBar->AddPopup("&Help", fMenuHelp, new TGLayoutHints(kLHintsTop |
                       kLHintsRight));
 
    AddFrame(fMenuBar, new TGLayoutHints(kLHintsTop | kLHintsExpandX));
@@ -682,7 +682,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
                        "HandleMenu(Int_t)");
    fMenuHelp->Connect("Activated(Int_t)", "SplitGLView", this,
                       "HandleMenu(Int_t)");
-   
+
    if (fIsEmbedded && gEve) {
       // use status bar from the browser
       fStatusBar = gEve->GetBrowser()->GetStatusBar();
@@ -692,7 +692,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
       Int_t parts[] = {45, 15, 10, 30};
       fStatusBar = new TGStatusBar(this, 50, 10);
       fStatusBar->SetParts(parts, 4);
-      AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 
+      AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsExpandX,
                0, 0, 10, 0));
    }
 
@@ -720,19 +720,19 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    but1->Connect("Clicked(TGLViewerBase*)", "SplitGLView", this, "SwapToMainView(TGLViewerBase*)");
    but2 = new TGLOverlayButton(fViewer0, "Undock", 70.0, -10.0, 55.0, 16.0);
    but2->Connect("Clicked(TGLViewerBase*)", "SplitGLView", this, "UnDock(TGLViewerBase*)");
-   frm->AddFrame(fViewer0->GetFrame(), new TGLayoutHints(kLHintsExpandX | 
+   frm->AddFrame(fViewer0->GetFrame(), new TGLayoutHints(kLHintsExpandX |
                  kLHintsExpandY));
    // set the camera to perspective (XOZ) for this viewer
    fViewer0->SetCurrentCamera(TGLViewer::kCameraPerspXOZ);
    // connect signal we are interested to
-   fViewer0->Connect("MouseOver(TGLPhysicalShape*)", "SplitGLView", this, 
+   fViewer0->Connect("MouseOver(TGLPhysicalShape*)", "SplitGLView", this,
                       "OnMouseOver(TGLPhysicalShape*)");
-   fViewer0->Connect("Activated()", "SplitGLView", this, 
+   fViewer0->Connect("Activated()", "SplitGLView", this,
                       "OnViewerActivated()");
-   fViewer0->Connect("MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)", 
-                      "SplitGLView", this, 
+   fViewer0->Connect("MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)",
+                      "SplitGLView", this,
                       "OnMouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)");
-   fViewer0->Connect("Clicked(TObject*)", "SplitGLView", this, 
+   fViewer0->Connect("Clicked(TObject*)", "SplitGLView", this,
                       "OnClicked(TObject*)");
    fViewer[0] = new TEveViewer("SplitGLViewer[0]");
    fViewer[0]->SetGLViewer(fViewer0, fViewer0->GetFrame());
@@ -760,20 +760,20 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    but3->Connect("Clicked(TGLViewerBase*)", "SplitGLView", this, "SwapToMainView(TGLViewerBase*)");
    but4 = new TGLOverlayButton(fViewer1, "Undock", 70.0, -10.0, 55.0, 16.0);
    but4->Connect("Clicked(TGLViewerBase*)", "SplitGLView", this, "UnDock(TGLViewerBase*)");
-   frm->AddFrame(fViewer1->GetFrame(), new TGLayoutHints(kLHintsExpandX | 
+   frm->AddFrame(fViewer1->GetFrame(), new TGLayoutHints(kLHintsExpandX |
                   kLHintsExpandY));
 
    // set the camera to orthographic (XOY) for this viewer
    fViewer1->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
    // connect signal we are interested to
-   fViewer1->Connect("MouseOver(TGLPhysicalShape*)", "SplitGLView", this, 
+   fViewer1->Connect("MouseOver(TGLPhysicalShape*)", "SplitGLView", this,
                       "OnMouseOver(TGLPhysicalShape*)");
-   fViewer1->Connect("Activated()", "SplitGLView", this, 
+   fViewer1->Connect("Activated()", "SplitGLView", this,
                       "OnViewerActivated()");
-   fViewer1->Connect("MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)", 
-                      "SplitGLView", this, 
+   fViewer1->Connect("MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)",
+                      "SplitGLView", this,
                       "OnMouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)");
-   fViewer1->Connect("Clicked(TObject*)", "SplitGLView", this, 
+   fViewer1->Connect("Clicked(TObject*)", "SplitGLView", this,
                       "OnClicked(TObject*)");
    fViewer[1] = new TEveViewer("SplitGLViewer[1]");
    fViewer[1]->SetGLViewer(fViewer1, fViewer1->GetFrame());
@@ -804,20 +804,20 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
    but5->Connect("Clicked(TGLViewerBase*)", "SplitGLView", this, "SwapToMainView(TGLViewerBase*)");
    but6 = new TGLOverlayButton(fViewer2, "Undock", 70.0, -10.0, 55.0, 16.0);
    but6->Connect("Clicked(TGLViewerBase*)", "SplitGLView", this, "UnDock(TGLViewerBase*)");
-   frm->AddFrame(fViewer2->GetFrame(), new TGLayoutHints(kLHintsExpandX | 
+   frm->AddFrame(fViewer2->GetFrame(), new TGLayoutHints(kLHintsExpandX |
                   kLHintsExpandY));
 
    // set the camera to orthographic (XOY) for this viewer
    fViewer2->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
    // connect signal we are interested to
-   fViewer2->Connect("MouseOver(TGLPhysicalShape*)", "SplitGLView", this, 
+   fViewer2->Connect("MouseOver(TGLPhysicalShape*)", "SplitGLView", this,
                       "OnMouseOver(TGLPhysicalShape*)");
-   fViewer2->Connect("Activated()", "SplitGLView", this, 
+   fViewer2->Connect("Activated()", "SplitGLView", this,
                       "OnViewerActivated()");
-   fViewer2->Connect("MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)", 
-                      "SplitGLView", this, 
+   fViewer2->Connect("MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)",
+                      "SplitGLView", this,
                       "OnMouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)");
-   fViewer2->Connect("Clicked(TObject*)", "SplitGLView", this, 
+   fViewer2->Connect("Clicked(TObject*)", "SplitGLView", this,
                       "OnClicked(TObject*)");
    fViewer[2] = new TEveViewer("SplitGLViewer[2]");
    fViewer[2]->SetGLViewer(fViewer2, fViewer2->GetFrame());
@@ -853,7 +853,7 @@ SplitGLView::SplitGLView(const TGWindow *p, UInt_t w, UInt_t h, Bool_t embed) :
          "SplitGLView", this, "ItemClicked(TGListTreeItem*, Int_t, Int_t, Int_t)");
    }
 
-   fShapedToolTip = new TGShapedToolTip("Default.png", 120, 22, 160, 110, 
+   fShapedToolTip = new TGShapedToolTip("Default.png", 120, 22, 160, 110,
                                         23, 115, 12, "#ffff80");
    Resize(GetDefaultSize());
    MapSubwindows();
@@ -866,25 +866,25 @@ SplitGLView::~SplitGLView()
 {
    // Clean up main frame...
    //Cleanup();
-   
+
    fMenuFile->Disconnect("Activated(Int_t)", this, "HandleMenu(Int_t)");
    fMenuCamera->Disconnect("Activated(Int_t)", this, "HandleMenu(Int_t)");
    fMenuScene->Disconnect("Activated(Int_t)", this, "HandleMenu(Int_t)");
    fMenuHelp->Disconnect("Activated(Int_t)", this, "HandleMenu(Int_t)");
-   fViewer0->Disconnect("MouseOver(TGLPhysicalShape*)", this, 
+   fViewer0->Disconnect("MouseOver(TGLPhysicalShape*)", this,
                          "OnMouseOver(TGLPhysicalShape*)");
    fViewer0->Disconnect("Activated()", this, "OnViewerActivated()");
-   fViewer0->Disconnect("MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)", 
+   fViewer0->Disconnect("MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)",
                          this, "OnMouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)");
-   fViewer1->Disconnect("MouseOver(TGLPhysicalShape*)", this, 
+   fViewer1->Disconnect("MouseOver(TGLPhysicalShape*)", this,
                          "OnMouseOver(TGLPhysicalShape*)");
    fViewer1->Disconnect("Activated()", this, "OnViewerActivated()");
-   fViewer1->Disconnect("MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)", 
+   fViewer1->Disconnect("MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)",
                          this, "OnMouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)");
-   fViewer2->Disconnect("MouseOver(TGLPhysicalShape*)", this, 
+   fViewer2->Disconnect("MouseOver(TGLPhysicalShape*)", this,
                          "OnMouseOver(TGLPhysicalShape*)");
    fViewer2->Disconnect("Activated()", this, "OnViewerActivated()");
-   fViewer2->Disconnect("MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)", 
+   fViewer2->Disconnect("MouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)",
                          this, "OnMouseIdle(TGLPhysicalShape*,UInt_t,UInt_t)");
    if (!fIsEmbedded) {
       delete fViewer[0];
@@ -1084,7 +1084,7 @@ void SplitGLView::OnMouseIdle(TGLPhysicalShape *shape, UInt_t posx, UInt_t posy)
    if (shape && shape->GetLogical() && shape->GetLogical()->GetExternal()) {
       // get the actual viewer who actually emitted the signal
       TGLEmbeddedViewer *actViewer = dynamic_cast<TGLEmbeddedViewer*>((TQObject*)gTQSender);
-      // then translate coordinates from the root (screen) coordinates 
+      // then translate coordinates from the root (screen) coordinates
       // to the actual frame (viewer) ones
       gVirtualX->TranslateCoordinates(actViewer->GetFrame()->GetId(),
                gClient->GetDefaultRoot()->GetId(), posx, posy, x, y,
@@ -1092,7 +1092,7 @@ void SplitGLView::OnMouseIdle(TGLPhysicalShape *shape, UInt_t posx, UInt_t posy)
       // Then display our tooltip at this x,y location
       if (fShapedToolTip) {
          fShapedToolTip->Show(x+5, y+5, Form("%s\n     \n%s",
-                              shape->GetLogical()->GetExternal()->IsA()->GetName(), 
+                              shape->GetLogical()->GetExternal()->IsA()->GetName(),
                               shape->GetLogical()->GetExternal()->GetName()), h1f);
       }
    }
@@ -1106,7 +1106,7 @@ void SplitGLView::OnMouseOver(TGLPhysicalShape *shape)
 
    // display information on the physical shape in the status bar
    if (shape && shape->GetLogical() && shape->GetLogical()->GetExternal())
-      fStatusBar->SetText(Form("Mouse Over: \"%s\"", 
+      fStatusBar->SetText(Form("Mouse Over: \"%s\"",
          shape->GetLogical()->GetExternal()->GetName()), 0);
    else
       fStatusBar->SetText("", 0);
@@ -1402,7 +1402,7 @@ void SplitGLView::UpdateSummary()
             TString ename  = tracks->GetElementName();
             if (ename.First('\'') != kNPOS)
                ename.Remove(ename.First('\''));
-            table = fgHtmlSummary->AddTable(ename.Data(), 5, 
+            table = fgHtmlSummary->AddTable(ename.Data(), 5,
                      tracks->NumChildren(), kTRUE, "first");
             table->SetLabel(0, "Momentum");
             table->SetLabel(1, "P_t");

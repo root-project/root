@@ -1,6 +1,6 @@
-<br> 
-<hr> 
-<a name="core"></a> 
+<br>
+<hr>
+<a name="core"></a>
 <h3>Core</h3>
 <h4>Collections</h4>
 <ul>
@@ -23,19 +23,19 @@ with
      virtual void        PrintCollectionEntry(TObject* entry, Option_t* option,
                                               Int_t recurse) const;
 </pre>
-<li>Improve performance of reading TExMap object (50 times faster) using an updated, 
+<li>Improve performance of reading TExMap object (50 times faster) using an updated,
 slightly larger (16%) on file format for the TExMap object.
 </li>
 </ul>
 <h4>ACLiC</h4>
 <ul><li>Fix problem finding rootcint in the --prefix configuration.</li>
 <li>Change the naming convention for the temporary files created by ACLiC, instead of randomly named ACLiC now uses:<pre>scriptname_scriptextension_ACLiC_function.extension</pre></li>
-<li>When ACLiC need to revert to the temp directory for storing the library, it now create the directory 
+<li>When ACLiC need to revert to the temp directory for storing the library, it now create the directory
 structure under a directory named after the userid.
 </li>
 <li>Allow white space in the name of the directory where a script to be compiled by ACLiC resides.</li>
 <li>Add optional 5th argument to <tt>CompileMacro</tt> to allow set the file bit
-	  mode of the directory created.</li>
+   mode of the directory created.</li>
 <li>Avoid looking for Microsoft's link.exe when we already have it (and hence avoid complaining about cygpath when cygwin is not even installed.</li>
 </ul>
 <h4>Meta</h4>
@@ -53,6 +53,6 @@ structure under a directory named after the userid.
 <h4>TSystem</h4>
 <ul>
 <li><tt>DirName</tt> now properly handle
-	  repeated '/'; this allow <tt>mkdir("a/b//c",true);</tt> to succeed.</li>
+   repeated '/'; this allow <tt>mkdir("a/b//c",true);</tt> to succeed.</li>
 <li>Extended the support for UNIX sockets on a generic path</li>
-</ul> 
+</ul>

@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Author: L. Moneta    10/2005  
+// Author: L. Moneta    10/2005
 
 /**********************************************************************
  *                                                                    *
@@ -23,9 +23,9 @@
 #include <iterator>
 #include <cassert>
 
-int verbose = 0; 
+int verbose = 0;
 
-double fitFunc( double *x , double * p) { 
+double fitFunc( double *x , double * p) {
 
   double A = p[0];
   double B = p[1];
@@ -36,13 +36,13 @@ double fitFunc( double *x , double * p) {
 
 
 void makePoints(Int_t n, std::vector<double> &  x, std::vector<double> & y, std::vector<double> & e)
-{ 
+{
   Int_t i;
   TRandom3 r;
 
-  double A = 1; 
-  double B = 2; 
-  double C = 1; 
+  double A = 1;
+  double B = 2;
+  double C = 1;
 
   for (i=0; i<n; i++) {
     x[i] = r.Uniform(-2, 2);
@@ -53,13 +53,13 @@ void makePoints(Int_t n, std::vector<double> &  x, std::vector<double> & y, std:
 }
 
 
-void doFit(int n,const char * fitter) 
-{ 
+void doFit(int n,const char * fitter)
+{
 
 
-   std::vector<double> x(n); 
-   std::vector<double> y(n); 
-   std::vector<double> e(n); 
+   std::vector<double> x(n);
+   std::vector<double> y(n);
+   std::vector<double> e(n);
 
    double initPar[3] = { 1, 1, 2 };
 
@@ -81,15 +81,15 @@ void doFit(int n,const char * fitter)
    TVirtualFitter::SetDefaultFitter(fitter);
 
 
-   int npass = (verbose) ? 1 : 100; 
+   int npass = (verbose) ? 1 : 100;
    TStopwatch timer;
    timer.Start();
-   for (int i = 0; i < npass; ++i) { 
+   for (int i = 0; i < npass; ++i) {
      f->SetParameters(initPar);
      //f->FixParameter(1,2.);
-     if (verbose) 
+     if (verbose)
         gre3->Fit(f,"v");
-     else 
+     else
         gre3->Fit(f,"q");
    }
    timer.Stop();
@@ -102,17 +102,17 @@ void doFit(int n,const char * fitter)
    double * cv = theFitter->GetCovarianceMatrix();
    assert(cv != 0);
    for (int i = 0; i < np ; ++i) {
-      for (int j = 0; j < np ; ++j) 
+      for (int j = 0; j < np ; ++j)
          std::cout << cv[j + i*np] << "\t";
       std::cout << std::endl;
    }
 
 
-   
+
    //Access the fit results
    TF1 *f3 = gre3->GetFunction("f2");
    //std::cout << "draw function" << f3 << std::endl;
-   if (f3) { 
+   if (f3) {
      f3->SetLineWidth(1);
      f3->SetLineColor(kRed);
      f3->Draw("same");
@@ -130,18 +130,18 @@ void doFit(int n,const char * fitter)
 
 }
 
-void testGraphFit(int n = 500) { 
+void testGraphFit(int n = 500) {
   TCanvas *myc = new TCanvas("myc", "Fitting 3 TGraphErrors with linear functions");
   myc->Divide(1,2);
   myc->SetFillColor(42);
   myc->SetGrid();
   gStyle->SetOptFit();
 
-  myc->cd(1); 
+  myc->cd(1);
  doFit(n,"Minuit");
  myc->Update();
 
-  myc->cd(2); 
+  myc->cd(2);
   doFit(n,"Minuit2");
  myc->Update();
 
@@ -151,16 +151,16 @@ void testGraphFit(int n = 500) {
 int main(int argc, char **argv)
 {
 
-   bool showGraphics = false; 
+   bool showGraphics = false;
 
-   // Parse command line arguments                                                                                                                                                                     
+   // Parse command line arguments
    for (Int_t i = 1 ;  i < argc ; i++) {
       std::string arg = argv[i] ;
 
      if (arg == "-v") {
          std::cout << "Running in verbose mode" << std::endl;
          verbose = 1;
-         showGraphics = true; 
+         showGraphics = true;
       }
 
       if (arg == "-g") {

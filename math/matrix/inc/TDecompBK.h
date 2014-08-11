@@ -54,11 +54,11 @@ public :
 
    virtual       void      SetMatrix (const TMatrixDSym &a);
 
-   virtual Bool_t   Decompose  ();    
+   virtual Bool_t   Decompose  ();
    virtual Bool_t   Solve      (      TVectorD &b);
    virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = Solve(x); return x; }
-   virtual Bool_t   Solve      (      TMatrixDColumn &b);     
-   virtual Bool_t   TransSolve (      TVectorD &b)            { return Solve(b); } 
+   virtual Bool_t   Solve      (      TMatrixDColumn &b);
+   virtual Bool_t   TransSolve (      TVectorD &b)            { return Solve(b); }
    virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = Solve(x); return x; }
    virtual Bool_t   TransSolve (      TMatrixDColumn &b)      { return Solve(b); }
    virtual void     Det        (Double_t &/*d1*/,Double_t &/*d2*/)

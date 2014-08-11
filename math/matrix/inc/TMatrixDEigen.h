@@ -43,7 +43,7 @@ public :
 
    enum {kWorkMax = 100}; // size of work array
 
-   TMatrixDEigen() 
+   TMatrixDEigen()
      : fEigenVectors(), fEigenValuesRe(), fEigenValuesIm() {};
    TMatrixDEigen(const TMatrixD &a);
    TMatrixDEigen(const TMatrixDEigen &another);

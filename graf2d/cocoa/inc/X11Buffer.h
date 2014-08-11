@@ -52,7 +52,7 @@ class Command {
 protected:
    const Drawable_t fID;
    const GCValues_t fGC;
-   
+
 public:
    Command(Drawable_t wid);
    Command(Drawable_t wid, const GCValues_t &gc);
@@ -64,7 +64,7 @@ public:
    virtual void Execute()const = 0;
    virtual void Execute(CGContextRef /*ctx*/)const;
 
-private:   
+private:
    Command(const Command &rhs);
    Command &operator = (const Command &rhs);
 };
@@ -123,9 +123,9 @@ public:
    {
       return true;
    }
-   
+
    void Execute()const;
-   
+
 };
 
 class DrawString : public Command {
@@ -135,12 +135,12 @@ private:
 
 public:
    DrawString(Drawable_t wid, const GCValues_t &gc, const Point &point, const std::string &text);
-   
+
    bool IsGraphicsCommand()const
    {
       return true;
    }
-   
+
    void Execute()const;
 };
 
@@ -150,27 +150,27 @@ private:
 
 public:
    FillRectangle(Drawable_t wid, const GCValues_t &gc, const Rectangle_t &rectangle);
-   
+
    bool IsGraphicsCommand()const
    {
       return true;
    }
-   
+
    void Execute()const;
 };
 
 class FillPolygon : public Command {
 private:
    std::vector<Point_t> fPolygon;
-   
+
 public:
    FillPolygon(Drawable_t wid, const GCValues_t &gc, const Point_t *points, Int_t nPoints);
-   
+
    bool IsGraphicsCommand()const
    {
       return true;
    }
-   
+
    void Execute()const;
 };
 
@@ -180,12 +180,12 @@ private:
 
 public:
    DrawRectangle(Drawable_t wid, const GCValues_t &gc, const Rectangle_t &rectangle);
-   
+
    bool IsGraphicsCommand()const
    {
       return true;
    }
-   
+
    void Execute()const;
 };
 
@@ -195,12 +195,12 @@ private:
 
 public:
    UpdateWindow(QuartzView *view);
-   
+
    bool IsGraphicsCommand()const
    {
       return true;
    }
-   
+
    void Execute()const;
 };
 
@@ -218,7 +218,7 @@ private:
 
 public:
    DrawBoxXor(Window_t windowID, const Point &p1, const Point &p2);
-   
+
    void Execute()const;
    void Execute(CGContextRef ctx)const;
 };
@@ -230,7 +230,7 @@ private:
 
 public:
    DrawLineXor(Window_t windowID, const Point &p1, const Point &p2);
-   
+
    void Execute()const;
    void Execute(CGContextRef ctx)const;
 };
@@ -239,11 +239,11 @@ class CommandBuffer {
 private:
    CommandBuffer(const CommandBuffer &rhs);
    CommandBuffer &operator = (const CommandBuffer &rhs);
-   
+
    std::vector<Command *> fCommands;
    std::vector<QuartzView *> fViewBranch;
 
-   std::vector<Command *> fXorOps;   
+   std::vector<Command *> fXorOps;
 public:
    typedef std::vector<Command *>::size_type size_type;
 
@@ -260,25 +260,25 @@ public:
    void AddDrawRectangle(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, UInt_t w, UInt_t h);
    void AddUpdateWindow(QuartzView *view);
    void AddDeletePixmap(Pixmap_t pixmap);
-   
+
    //'XOR' graphics for canvas.
    void AddDrawBoxXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
-   void AddDrawLineXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2);   
+   void AddDrawLineXor(Window_t windowID, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
 
    void Flush(Details::CocoaPrivate *impl);
-   void FlushXOROps(Details::CocoaPrivate *impl);   
+   void FlushXOROps(Details::CocoaPrivate *impl);
    void RemoveOperationsForDrawable(Drawable_t wid);
    void RemoveGraphicsOperationsForWindow(Window_t wid);
    void RemoveXORGraphicsOperationsForWindow(Window_t wid);
-   
+
    size_type BufferSize()const
    {
       return fCommands.size();
    }
 private:
    void ClearCommands();
-   void ClearXOROperations();   
-   
+   void ClearXOROperations();
+
    //Clip related stuff.
 
    struct WidgetRect {
@@ -291,16 +291,16 @@ private:
          : fX1(0), fY1(0), fX2(0), fY2(0)
       {
       }
-      
+
       WidgetRect(int leftX, int bottomY, int rightX, int topY)
          : fX1(leftX), fY1(bottomY), fX2(rightX), fY2(topY)
       {
       }
    };
-   
+
    void ClipOverlaps(QuartzView *view);
    void BuildClipRegion(const WidgetRect &rect);
-   
+
    std::vector<WidgetRect> fRectsToClip;
    std::vector<CGRect> fClippedRegion;
    std::vector<int> fXBounds;

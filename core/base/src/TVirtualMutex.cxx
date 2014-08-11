@@ -39,6 +39,6 @@ ClassImp(TLockGuard)
 
 // Global mutex set in TThread::Init protecting creation
 // of other (preferrably local) mutexes. Note that in this
-// concept gGlobalMutex must be used in TStorage to prevent 
+// concept gGlobalMutex must be used in TStorage to prevent
 // lockup of the system (see TMutex::Factory)
 TVirtualMutex *gGlobalMutex = 0;

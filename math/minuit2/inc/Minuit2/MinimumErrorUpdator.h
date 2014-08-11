@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -27,7 +27,7 @@ public:
   virtual ~MinimumErrorUpdator() {}
 
   virtual MinimumError Update(const MinimumState&, const MinimumParameters&,
-			      const FunctionGradient&) const = 0;
+                              const FunctionGradient&) const = 0;
 
 };
 

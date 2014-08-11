@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -14,7 +14,7 @@
 # pragma warning(disable:4244)  // conversion from __w64 to int
 #endif
 
-#if defined(__sun) && !defined(linux) 
+#if defined(__sun) && !defined(linux)
 #include <stdlib.h>
 #endif
 

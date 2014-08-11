@@ -55,7 +55,7 @@ inline unsigned FindFreeCustomColorIndices(Color_t (&indices)[N])
       if (tmp[nFound] == -1)
          break;
    }
-   
+
    if (nFound == N)
       std::copy(tmp, tmp + N, indices);
 

@@ -3,7 +3,7 @@ void basic() {
 //  Read data from an ascii file and create a root file with an histogram and an ntuple.
 //   see a variant of this macro in basic2.C
 //Author: Rene Brun
-      
+
 
 // read file $ROOTSYS/tutorials/tree/basic.dat
 // this file has 3 columns of float data

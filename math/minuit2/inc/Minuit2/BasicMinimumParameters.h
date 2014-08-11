@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -26,12 +26,12 @@ class BasicMinimumParameters {
 public:
 
   BasicMinimumParameters(unsigned int n) : fParameters(MnAlgebraicVector(n)), fStepSize(MnAlgebraicVector(n)), fFVal(0.), fValid(false), fHasStep(false) {}
-  
-  BasicMinimumParameters(const MnAlgebraicVector& avec, double fval) : 
+
+  BasicMinimumParameters(const MnAlgebraicVector& avec, double fval) :
     fParameters(avec), fStepSize(avec.size()), fFVal(fval), fValid(true), fHasStep(false) {}
-  
+
   BasicMinimumParameters(const MnAlgebraicVector& avec, const MnAlgebraicVector& dirin, double fval) : fParameters(avec), fStepSize(dirin), fFVal(fval), fValid(true), fHasStep(true) {}
-  
+
   ~BasicMinimumParameters() {}
 
   BasicMinimumParameters(const BasicMinimumParameters& par) : fParameters(par.fParameters), fStepSize(par.fStepSize), fFVal(par.fFVal), fValid(par.fValid), fHasStep(par.fHasStep) {}
@@ -40,7 +40,7 @@ public:
     fParameters = par.fParameters;
     fStepSize = par.fStepSize;
     fFVal = par.fFVal;
-    fValid = par.fValid; 
+    fValid = par.fValid;
     fHasStep = par.fHasStep;
     return *this;
   }
@@ -48,7 +48,7 @@ public:
   void* operator new(size_t nbytes) {
     return StackAllocatorHolder::Get().Allocate(nbytes);
   }
-  
+
   void operator delete(void* p, size_t /*nbytes*/) {
     StackAllocatorHolder::Get().Deallocate(p);
   }

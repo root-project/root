@@ -22,18 +22,18 @@
 #include "Fit/BinData.h"
 #endif
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Fit { 
+   namespace Fit {
 
       // This is a proxy to a std::list<Box>
       class ProxyListBox;
 
-      class SparseData : public FitData  { 
+      class SparseData : public FitData  {
       public:
          //Constructor with a vector
          SparseData(std::vector<double>& min, std::vector<double>& max);
-         
+
          //Constructor with a dimension and two arrays
          SparseData(const unsigned int dim, double min[], double max[]);
 
@@ -46,10 +46,10 @@ namespace ROOT {
          unsigned int NDim() const;
 
          // Adds a new bin specified by the vectors
-         void Add(std::vector<double>& min, std::vector<double>& max, 
+         void Add(std::vector<double>& min, std::vector<double>& max,
                   const double content, const double error = 1.0);
-         
-         void GetPoint(const unsigned int i, 
+
+         void GetPoint(const unsigned int i,
                        std::vector<double>& min, std::vector<double>&max,
                        double& content, double& error);
 
@@ -62,13 +62,13 @@ namespace ROOT {
          void GetBinDataIntegral(BinData&) const;
          // Same as before, but including zero content bins
          void GetBinDataNoZeros(BinData&) const;
-         
-      private : 
+
+      private :
          ProxyListBox *fList;
       };
-      
+
    } // end namespace Fit
-   
+
 } // end namespace ROOT
 
 

@@ -7,9 +7,6 @@
 ** Copyright (C) 2007 by Valeri Fine. Brookhaven National Laboratory.
 **                                    All rights reserved.
 **
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
 **
 *****************************************************************************/
 ///////////////////////////////////////////////////////////////////////////
@@ -18,17 +15,17 @@
 // the  ROOT command line from the GUI signals
 // Optionally one can execute TApplication::Terminate method directly
 //
-// It provides a Qt slot to attach the the CINT C++ interpreter 
+// It provides a Qt slot to attach the the CINT C++ interpreter
 // to any Qt signal
-// To execute any C++ statement from the GUI one should connect 
+// To execute any C++ statement from the GUI one should connect
 // one's Qt signal with the Qt slot of the global instance of this class
 //
 //  connect(GUI object, SIGNAL(const char *editedLine),TQtRootSlot::CintSlot(),SLOT(ProcessLine(const char*)))
 //
-//  To terminate the ROOT from Qt GUI element connect the signal with 
+//  To terminate the ROOT from Qt GUI element connect the signal with
 //  the Terminate  or TerminateAndQuite slot.
 //  For example to terminate ROOT and Qt smoothly do
-//  
+//
 //  connect(qApp,SIGNAL(lastWindowClosed()),TQtRootSlot::CintSlot(),SLOT(TerminateAndQuit())
 //
 //  To terminate just ROOT (in case the Qt is terminated by the other means)
@@ -62,7 +59,7 @@ void TQtRootSlot::EndOfLine()
 //____________________________________________________
 void TQtRootSlot::ProcessLine(const QString &command)
 {
-     // execute the arbitrary ROOT /CINt command via 
+     // execute the arbitrary ROOT /CINt command via
      // CINT C++ interpreter and emit the result
    std::string cmd = command.toStdString();
    ProcessLine(cmd.c_str());
@@ -71,7 +68,7 @@ void TQtRootSlot::ProcessLine(const QString &command)
 //____________________________________________________
 void TQtRootSlot::ProcessLine(const char *command)
 {
-     // execute the arbitrary ROOT /CINt command via 
+     // execute the arbitrary ROOT /CINt command via
      // CINT C++ interpreter and emit the result
      int error;
      gROOT->ProcessLine(command,&error);
@@ -126,7 +123,7 @@ bool QConnectCint(const QObject * sender, const char * signal)
 //__________________________________________________________________
 bool QConnectTerminate(const QObject * sender, const char * signal)
 {
-   // Connect the Qt signal to the "TApplication::Terminate" method 
+   // Connect the Qt signal to the "TApplication::Terminate" method
    // Any extra parameters of the Qt signal are discarded
    return
    QObject::connect(sender,signal

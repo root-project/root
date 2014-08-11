@@ -51,7 +51,7 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
 {
    if (!ci) {
       // We are meant to iterate over the global namespace (well at least CINT did).
-      fClassInfo = new TClingClassInfo(interp);      
+      fClassInfo = new TClingClassInfo(interp);
    } else {
       fClassInfo = new TClingClassInfo(*ci);
    }
@@ -67,15 +67,15 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
       const TagDecl *TD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(llvm::dyn_cast<TagDecl>(D));
       if (TD)
          fIter = TD->decls_begin();
-      
+
       // Move to first data member.
       InternalNext();
       fFirstTime = true;
-   }      
+   }
 
 }
 
-TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp, 
+TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            const clang::ValueDecl *ValD,
                                            TClingClassInfo *ci)
 : fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp)), fFirstTime(true),
@@ -85,30 +85,30 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
    assert((ci || isa<TranslationUnitDecl>(ValD->getDeclContext()) ||
           (ValD->getDeclContext()->isTransparentContext() && isa<TranslationUnitDecl>(ValD->getDeclContext()->getParent()) ) ||
            isa<EnumConstantDecl>(ValD)) && "Not TU?");
-   assert((isa<VarDecl>(ValD) || 
-           isa<FieldDecl>(ValD) || 
+   assert((isa<VarDecl>(ValD) ||
+           isa<FieldDecl>(ValD) ||
            isa<EnumConstantDecl>(ValD) ||
            isa<IndirectFieldDecl>(ValD)) &&
-          "The decl should be either VarDecl or FieldDecl or EnumConstDecl");  
-   
+          "The decl should be either VarDecl or FieldDecl or EnumConstDecl");
+
 }
 
-void TClingDataMemberInfo::CheckForIoTypeAndName() const 
-{  
+void TClingDataMemberInfo::CheckForIoTypeAndName() const
+{
    // Three cases:
    // 1) 00: none to be checked
    // 2) 01: type to be checked
    // 3) 10: none to be checked
    // 4) 11: both to be checked
    unsigned int code = fIoType.empty() + (int(fIoName.empty()) << 1);
-   
+
    if (code == 0) return;
-   
+
    const Decl* decl = GetDecl();
-   
-   if (code == 3 || code == 2) ROOT::TMetaUtils::ExtractAttrPropertyFromName(*decl,"ioname",fIoName);   
+
+   if (code == 3 || code == 2) ROOT::TMetaUtils::ExtractAttrPropertyFromName(*decl,"ioname",fIoName);
    if (code == 3 || code == 1) ROOT::TMetaUtils::ExtractAttrPropertyFromName(*decl,"iotype",fIoType);
-   
+
 }
 
 TDictionary::DeclId_t TClingDataMemberInfo::GetDeclId() const
@@ -236,7 +236,7 @@ int TClingDataMemberInfo::MaxIndex(int dim) const
 int TClingDataMemberInfo::InternalNext()
 {
    assert(!fSingleDecl && "This is not an iterator!");
-   
+
    bool increment = true;
    // Move to next acceptable data member.
    while (fFirstTime || *fIter) {
@@ -314,7 +314,7 @@ long TClingDataMemberInfo::Offset() const
       uint64_t bits = Layout.getFieldOffset(FldD->getFieldIndex());
       int64_t offset = Context.toCharUnitsFromBits(bits).getQuantity();
       return static_cast<long>(offset);
-   } 
+   }
    else if (const VarDecl *VD = dyn_cast<VarDecl>(D)) {
       if (VD->getType()->isIntegralType(C) && VD->hasInit() &&
           VD->checkInitIsICE()) {
@@ -325,8 +325,8 @@ long TClingDataMemberInfo::Offset() const
       }
       return reinterpret_cast<long>(fInterp->getAddressOfGlobal(GlobalDecl(VD)));
    }
-   // FIXME: We have to explicitly check for not enum constant because the 
-   // implementation of getAddressOfGlobal relies on mangling the name and in 
+   // FIXME: We have to explicitly check for not enum constant because the
+   // implementation of getAddressOfGlobal relies on mangling the name and in
    // clang there is misbehaviour in MangleContext::shouldMangleDeclName.
    // enum constants are esentially numbers and don't get addresses. However
    // ROOT expects the address to the enum constant initalizer to be returned.
@@ -339,7 +339,7 @@ long TClingDataMemberInfo::Offset() const
 #else
       // In this case in the second part.
       return reinterpret_cast<long>(((char*)ECD->getInitVal().getRawData())+sizeof(long) );
-#endif   
+#endif
    return -1L;
 }
 
@@ -467,7 +467,7 @@ int TClingDataMemberInfo::TypeSize() const
    if (!IsValid()) {
       return -1;
    }
-      
+
    // Sanity check the current data member.
    clang::Decl::Kind dk = GetDecl()->getKind();
    if ((dk != clang::Decl::Field) && (dk != clang::Decl::Var) &&
@@ -491,10 +491,10 @@ const char *TClingDataMemberInfo::TypeName() const
    if (!IsValid()) {
       return 0;
    }
-   
+
    CheckForIoTypeAndName();
    if (!fIoType.empty()) return fIoType.c_str();
-   
+
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
@@ -523,8 +523,8 @@ const char *TClingDataMemberInfo::TypeTrueName(const ROOT::TMetaUtils::TNormaliz
    }
 
    CheckForIoTypeAndName();
-   if (!fIoType.empty()) return fIoType.c_str();      
-      
+   if (!fIoType.empty()) return fIoType.c_str();
+
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
@@ -556,7 +556,7 @@ const char *TClingDataMemberInfo::Name() const
 
    CheckForIoTypeAndName();
    if (!fIoName.empty()) return fIoName.c_str();
-   
+
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
@@ -576,7 +576,7 @@ const char *TClingDataMemberInfo::Title()
    if (!IsValid()) {
       return 0;
    }
-   
+
    //NOTE: We can't use it as a cache due to the "thoughtful" self iterator
    //if (fTitle.size())
    //   return fTitle.c_str();
@@ -586,12 +586,12 @@ const char *TClingDataMemberInfo::Title()
    std::string attribute_s;
    const Decl* decl = GetDecl();
    for (Decl::attr_iterator attrIt = decl->attr_begin();
-        attrIt!=decl->attr_end() && !titleFound ;++attrIt){      
+        attrIt!=decl->attr_end() && !titleFound ;++attrIt){
       if (0 == ROOT::TMetaUtils::extractAttrString(*attrIt, attribute_s) &&
           attribute_s.find(ROOT::TMetaUtils::propNames::separator) == std::string::npos){
          fTitle = attribute_s;
          titleFound=true;
-      }        
+      }
    }
 
    if (!titleFound && !GetDecl()->isFromASTFile()) {
@@ -600,7 +600,7 @@ const char *TClingDataMemberInfo::Title()
       // created an annotation
       fTitle = ROOT::TMetaUtils::GetComment(*GetDecl()).str();
    }
-   
+
    return fTitle.c_str();
 }
 

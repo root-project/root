@@ -124,7 +124,7 @@ private:
 
 public:
 
-   ~TClingCallFunc() { 
+   ~TClingCallFunc() {
       delete fMethod;
    }
 

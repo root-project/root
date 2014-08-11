@@ -22,10 +22,10 @@ class CGStateGuard {
 public:
    CGStateGuard(CGContextRef ctx);
    ~CGStateGuard();
-   
+
 private:
    CGContextRef fCtx;
-   
+
    CGStateGuard(const CGStateGuard &rhs);
    CGStateGuard &operator = (const CGStateGuard &rhs);
 };

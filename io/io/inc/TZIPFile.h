@@ -90,7 +90,7 @@ protected:
       kDIR_EXT_ATTR_OFF   = 38,   kDIR_EXT_ATTR_LEN       = 4,
       kDIR_ENTRY_POS_OFF  = 42,   kDIR_ENTRY_POS_LEN      = 4,
       kDIR_HEADER_SIZE    = 46,
-      
+
       // - Offsets into the Zip64 end of central directory record (EDR)
       kZIP64_EDR_MAGIC_OFF      = 0,
       kZIP64_EDR_SIZE_OFF       = 4,  kZIP64_EDR_SIZE_LEN       = 8,
@@ -103,7 +103,7 @@ protected:
       kZIP64_EDR_DIR_SIZE_OFF   = 40, kZIP64_EDR_DIR_SIZE_LEN   = 8,
       kZIP64_EDR_DIR_OFFSET_OFF = 48, kZIP64_EDR_DIR_OFFSET_LEN = 8,
       kZIP64_EDR_HEADER_SIZE    = 56,
-      
+
       // - Offsets into the Zip64 end of central directory locator (EDL)
       kZIP64_EDL_MAGIC_OFF      = 0,
       kZIP64_EDL_DISK_OFF       = 4,  kZIP64_EDL_DISK_LEN       = 4,
@@ -134,7 +134,7 @@ protected:
       kENTRY_NAMELEN_OFF  = 26,   kENTRY_NAMELEN_LEN      = 2,
       kENTRY_EXTRALEN_OFF = 28,   kENTRY_EXTRALEN_LEN     = 2,
       kENTRY_HEADER_SIZE  = 30,
-      
+
       // - Offsets into the Zip64 Extended Information Extra Field
       kZIP64_EXTENDED_MAGIC_OFF      = 0,  kZIP64_EXTENDED_MAGIC_LEN      = 2,
       kZIP64_EXTENDED_SIZE_OFF       = 2,  kZIP64_EXTENDED_SIZE_LEN       = 2,

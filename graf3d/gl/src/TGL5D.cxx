@@ -40,7 +40,7 @@ TGL5DDataSet::TGL5DDataSet(TTree *tree)
       Error("TGL5Data", "Null pointer tree.");
       throw std::runtime_error("");
    }
-   
+
    fNP = tree->GetSelectedRows();
 
    Info("TGL5DDataSet", "Number of selected rows: %d", Int_t(fNP))   ;
@@ -57,7 +57,7 @@ TGL5DDataSet::TGL5DDataSet(TTree *tree)
       Error("TGL5DDataSet", "One or all of vN is a null pointer.");
       throw std::runtime_error("");
    }
-   //   
+   //
    FindRange(fNP, fV1, fV1MinMax);
    FindRange(fNP, fV2, fV2MinMax);
    FindRange(fNP, fV3, fV3MinMax);
@@ -67,7 +67,7 @@ TGL5DDataSet::TGL5DDataSet(TTree *tree)
    const Double_t v1Add = 0.1 * (fV1MinMax.second - fV1MinMax.first);
    const Double_t v2Add = 0.1 * (fV2MinMax.second - fV2MinMax.first);
    const Double_t v3Add = 0.1 * (fV3MinMax.second - fV3MinMax.first);
-   //Adjust ranges.   
+   //Adjust ranges.
    fV1MinMax.first  -= v1Add, fV1MinMax.second += v1Add;
    fV1Range = fV1MinMax.second - fV1MinMax.first;
    fV2MinMax.first  -= v2Add, fV2MinMax.second += v2Add;
@@ -82,7 +82,7 @@ TGL5DDataSet::TGL5DDataSet(TTree *tree)
    hist.GetXaxis()->Copy(fXAxis);
    hist.GetYaxis()->Copy(fYAxis);
    hist.GetZaxis()->Copy(fZAxis);
-   
+
    fXAxis.Set(kDefaultNB, fV1MinMax.first, fV1MinMax.second);
    fYAxis.Set(kDefaultNB, fV2MinMax.first, fV2MinMax.second);
    fZAxis.Set(kDefaultNB, fV3MinMax.first, fV3MinMax.second);
@@ -245,7 +245,7 @@ void FindRange(Long64_t size, const Double_t *src, Rgl::Range_t &range)
    //Find both min and max on a range in one pass through sequence.
    range.first  = src[0];
    range.second = src[0];
-   
+
    for (Long64_t i = 1; i < size; ++i) {
       range.first  = TMath::Min(range.first,  src[i]);
       range.second = TMath::Max(range.second, src[i]);

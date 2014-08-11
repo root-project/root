@@ -48,7 +48,7 @@ void TKeyMapFile::Browse(TBrowser *b)
    TObject *obj = gDirectory->Get((char*)GetName());
    delete obj;
    obj = fMapFile->Get(GetName(),0);
-   
+
    if( b && obj )
       obj->Browse( b );
 }

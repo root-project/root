@@ -199,7 +199,7 @@ public:
    TFormLeafInfoNumerical(TVirtualCollectionProxy *holder_of);
    TFormLeafInfoNumerical(EDataType kind);
    TFormLeafInfoNumerical(const TFormLeafInfoNumerical& orig);
-   
+
    virtual TFormLeafInfo* DeepCopy() const;
    void Swap(TFormLeafInfoNumerical &other);
    TFormLeafInfoNumerical &operator=(const TFormLeafInfoNumerical &orig);
@@ -423,7 +423,7 @@ public:
    Int_t fVirtDim;           // number of the virtual dimension to which this object correspond.
    Int_t fPrimaryIndex;      // Index of the dimensions that is indexing the second dimension's size
    Int_t fSecondaryIndex;    // Index of the second dimension
-   
+
 protected:
    TFormLeafInfoMultiVarDim(TClass* classptr, Long_t offset,
                             TStreamerElement* element) : TFormLeafInfo(classptr,offset,element),fNsize(0),fSizes(),fCounter2(0),fSumOfSizes(0),fDim(0),fVirtDim(0),fPrimaryIndex(-1),fSecondaryIndex(-1) {}
@@ -434,7 +434,7 @@ public:
    TFormLeafInfoMultiVarDim();
    TFormLeafInfoMultiVarDim(const TFormLeafInfoMultiVarDim& orig);
    ~TFormLeafInfoMultiVarDim();
-   
+
    void Swap(TFormLeafInfoMultiVarDim &other);
    TFormLeafInfoMultiVarDim &operator=(const TFormLeafInfoMultiVarDim &orig);
 
@@ -444,7 +444,7 @@ public:
    //virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
    //   return TFormLeafInfo::ReadValue(where,instance);
    //}
-   
+
    virtual void     LoadSizes(TBranch* branch);
    virtual Int_t    GetPrimaryIndex();
    virtual void     SetPrimaryIndex(Int_t index);
@@ -482,7 +482,7 @@ public:
 //______________________________________________________________________________
 //
 // TFormLeafInfoMultiVarDimCollection is a small helper class to implement reading
-// a data member which is a collection inside a TClonesArray or collection object 
+// a data member which is a collection inside a TClonesArray or collection object
 // stored in a TTree.  This is the version used for split access
 //
 class TFormLeafInfoMultiVarDimCollection : public TFormLeafInfoMultiVarDim {
@@ -492,7 +492,7 @@ public:
    TFormLeafInfoMultiVarDimCollection(TClass* classptr, Long_t offset,
       TStreamerElement* element, TFormLeafInfo* parent);
    // The default copy constructor is the right implementation.
-   
+
    virtual TFormLeafInfo* DeepCopy() const;
 
    virtual Int_t GetArrayLength() { return 0; }
@@ -506,7 +506,7 @@ public:
 //______________________________________________________________________________
 //
 // TFormLeafInfoMultiVarDimClones is a small helper class to implement reading
-// a data member which is a TClonesArray inside a TClonesArray or collection object 
+// a data member which is a TClonesArray inside a TClonesArray or collection object
 // stored in a TTree.  This is the version used for split access
 //
 class TFormLeafInfoMultiVarDimClones : public TFormLeafInfoMultiVarDim {
@@ -556,7 +556,7 @@ public:
 
 //______________________________________________________________________________
 //
-// TFormLeafTTree is a small helper class to implement reading 
+// TFormLeafTTree is a small helper class to implement reading
 // from the containing TTree object itself.
 
 class TFormLeafInfoTTree : public TFormLeafInfo {

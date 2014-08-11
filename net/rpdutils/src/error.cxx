@@ -45,7 +45,7 @@ extern "C" {
 #include "rpderr.h"
 #include "rpdp.h"
 
-// This is the only really global 
+// This is the only really global
 extern int     gDebug;
 
 namespace ROOT {

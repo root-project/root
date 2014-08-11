@@ -278,7 +278,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   else()
     set(deduced_arg_module ${dict_base_name})
   endif()
-  
+
   #---Set the library output directory-----------------------
   if(DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     set(library_output_dir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
@@ -303,7 +303,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(rootmap_name ${library_output_dir}/${libprefix}${deduced_arg_module}.rootmap)
   endif()
 
-  set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
+  if(CMAKE_ROOTTEST_NOROOTMAP)
+    set(rootmapname )
+    set(rootmapargs )
+  else()
+    set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
+  endif()
 
   #---Get the library and module dependencies-----------------
   if(ARG_DEPENDENCIES)
@@ -382,7 +387,7 @@ function(ROOT_LINKER_LIBRARY library)
       #    set(lib_objs ${lib_objs} ${library}.dir/${CMAKE_CFG_INTDIR}/${name}.obj)
       #  endif()
       #endforeach()
-	  set(lib_objs ${lib_objs} ${library}.dir/${CMAKE_CFG_INTDIR}/*.obj)
+     set(lib_objs ${lib_objs} ${library}.dir/${CMAKE_CFG_INTDIR}/*.obj)
     else()
       foreach(src1 ${lib_srcs})
         if(NOT src1 MATCHES "[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
@@ -439,11 +444,11 @@ function(ROOT_LINKER_LIBRARY library)
   endif()
   if(WIN32 AND ARG_TYPE STREQUAL SHARED)
     if(CMAKE_GENERATOR MATCHES "Visual Studio")
-      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug/lib${library}.pdb
+      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
               CONFIGURATIONS Debug
               DESTINATION ${CMAKE_INSTALL_BINDIR}
               COMPONENT libraries)
-      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/RelWithDebInfo/lib${library}.pdb
+      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
               CONFIGURATIONS RelWithDebInfo
               DESTINATION ${CMAKE_INSTALL_BINDIR}
               COMPONENT libraries)
@@ -467,7 +472,7 @@ function(ROOT_OBJECT_LIBRARY library)
   if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
      add_dependencies(${library} ${CMAKE_MATCH_2})
   endif()
-  #--- Fill the property OBJECTS with all the object files 
+  #--- Fill the property OBJECTS with all the object files
   #    This is needed becuase the generator expression $<TARGET_OBJECTS:target>
   #    does not get expanded when used in custom command dependencies
   get_target_property(sources ${library} SOURCES)
@@ -551,7 +556,7 @@ function(ROOT_GENERATE_ROOTMAP library)
   CMAKE_PARSE_ARGUMENTS(ARG "" "LIBRARY" "LINKDEF;DEPENDENCIES" ${ARGN})
   get_filename_component(libname ${library} NAME_WE)
   get_filename_component(path ${library} PATH)
-  
+
   #---Set the library output directory-----------------------
   if(DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     set(library_output_dir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
@@ -674,29 +679,6 @@ function(REFLEX_BUILD_DICTIONARY dictionary headerfiles selectionfile )
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---SET_RUNTIME_PATH( var [LD_LIBRARY_PATH | PATH] )
-#---------------------------------------------------------------------------------------------------
-function( SET_RUNTIME_PATH var pathname)
-  set( dirs ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR})
-  get_property(found_packages GLOBAL PROPERTY PACKAGES_FOUND)
-  get_property(found_projects GLOBAL PROPERTY PROJECTS_FOUND)
-  foreach( package ${found_projects} ${found_packages} )
-     foreach( env ${${package}_environment})
-         if(env MATCHES "^${pathname}[+]=.*")
-            string(REGEX REPLACE "^${pathname}[+]=(.+)" "\\1"  val ${env})
-            set(dirs ${dirs} ${val})
-         endif()
-     endforeach()
-  endforeach()
-  if(WIN32)
-    string(REPLACE ";" "[:]" dirs "${dirs}")
-  else()
-    string(REPLACE ";" ":" dirs "${dirs}")
-  endif()
-  set(${var} "${dirs}" PARENT_SCOPE)
-endfunction()
-
-#---------------------------------------------------------------------------------------------------
 #---ROOT_CHECK_OUT_OF_SOURCE_BUILD( )
 #---------------------------------------------------------------------------------------------------
 macro(ROOT_CHECK_OUT_OF_SOURCE_BUILD)
@@ -787,8 +769,6 @@ function(ROOT_ADD_TEST test)
 
   if(ARG_WORKING_DIR)
     set(_command ${_command} -DCWD=${ARG_WORKING_DIR})
-  else()
-    set(_command ${_command} -DCWD=${CMAKE_CURRENT_BINARY_DIR})
   endif()
 
   if(ARG_DEBUG)
@@ -821,6 +801,8 @@ function(ROOT_ADD_TEST test)
   if(ARG_CHECKERR)
     set(_command ${_command} -DCHECKERR=true)
   endif()
+
+  set(_command ${_command} -DSYS=${ROOTSYS})
 
   #- Handle ENVIRONMENT argument
   if(ARG_ENVIRONMENT)
@@ -903,8 +885,20 @@ function(ROOT_ADD_TEST test)
 endfunction()
 
 #----------------------------------------------------------------------------
-# function ROOT_ADD_TEST_SUBDIRECTORY( <name> )
+# ROOT_ADD_TEST_SUBDIRECTORY( <name> )
+#----------------------------------------------------------------------------
 function(ROOT_ADD_TEST_SUBDIRECTORY subdir)
   file(RELATIVE_PATH subdir ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${subdir})
   set_property(GLOBAL APPEND PROPERTY ROOT_TEST_SUBDIRS ${subdir})
 endfunction()
+
+#----------------------------------------------------------------------------
+# ROOT_ADD_BUILTIN_DEPENDENCIES(target EXTERNAL)
+#----------------------------------------------------------------------------
+macro(ROOT_ADD_BUILTIN_DEPENDENCIES target EXTERNAL)
+  add_custom_command(OUTPUT ${${EXTERNAL}_LIBRARIES} DEPENDS ${EXTERNAL})
+  add_custom_target(${EXTERNAL}LIBS DEPENDS ${${EXTERNAL}_LIBRARIES})
+  add_dependencies(${target} ${EXTERNAL}LIBS)
+endmacro()
+
+

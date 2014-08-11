@@ -1,5 +1,5 @@
 // @(#)root/g3d:$Id$
-// Author: Nenad Buncic 17/09/95 
+// Author: Nenad Buncic 17/09/95
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *

@@ -8,7 +8,7 @@
 //     the histograms by clicking on the "hpx", "hpxpy" and "hprof"
 //     buttons
 //Author: Fons Rademakers
-   
+
 #include "TGButton.h"
 #include "TRootEmbeddedCanvas.h"
 #include "TGLayout.h"

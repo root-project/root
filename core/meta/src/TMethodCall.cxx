@@ -142,7 +142,7 @@ TObject *TMethodCall::Clone(const char *) const
 }
 
 //______________________________________________________________________________
-// FIXME: We don't need to split that into lookup scope and lookup member. 
+// FIXME: We don't need to split that into lookup scope and lookup member.
 // Consider merging the implementation with the new lookup functionality.
 static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinfo)
 {
@@ -179,21 +179,21 @@ void TMethodCall::Init(TClass *cl, CallFunc_t *function, Long_t offset)
 {
    // Initialize the method invocation environment based on
    // the CallFunc object and the TClass describing the function context.
-   
+
    if (!function) {
       fOffset = 0;
       fDtorOnly = kFALSE;
       fRetType  = kNone;
       return;
    }
-   
+
    MethodInfo_t* info = gCling->CallFunc_FactoryMethod(function);
 
    if (!fFunc)
       fFunc = gCling->CallFunc_Factory();
    else
       gCling->CallFunc_Init(fFunc);
-   
+
    fClass = cl;
    if (fClass) {
       fMetPtr = new TMethod(info,cl);
@@ -205,20 +205,20 @@ void TMethodCall::Init(TClass *cl, CallFunc_t *function, Long_t offset)
    fProto  = fMetPtr->GetSignature()+1; // skip leading )
    Ssiz_t s = fProto.Last(')');
    fProto.Remove(s); // still need to remove default values :(
-   
+
    fOffset = offset;
-   
+
    fDtorOnly = kFALSE;
    fRetType  = kNone;
-   
+
    gCling->CallFunc_SetFunc(fFunc,info);
-   
+
 }
 
 //______________________________________________________________________________
 void TMethodCall::Init(TFunction *function)
 {
-   // Initialize the method invocation environment based on 
+   // Initialize the method invocation environment based on
    // the TFunction object.
 
    if (!function) return;
@@ -227,16 +227,16 @@ void TMethodCall::Init(TFunction *function)
       fFunc = gCling->CallFunc_Factory();
    else
       gCling->CallFunc_Init(fFunc);
-  
+
    TMethod *m = dynamic_cast<TMethod*>(function);
-   fClass = m ? m->GetClass() : 0;   
+   fClass = m ? m->GetClass() : 0;
    fMetPtr = function;
    fMethod = function->GetName();
    fParams = "";
    fProto  = function->GetSignature()+1; // skip leading )
    Ssiz_t s = fProto.Last(')');
    fProto.Remove(s); // still need to remove default values :(
-    
+
    fDtorOnly = kFALSE;
    fRetType  = kNone;
 
@@ -286,7 +286,7 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
                                      const char *proto,
                                      Bool_t objectIsConst, TClass *cl,
                                      const ClassInfo_t *cinfo,
-                                     ROOT::EFunctionMatchMode mode /* = ROOT::kConversionMatch */) 
+                                     ROOT::EFunctionMatchMode mode /* = ROOT::kConversionMatch */)
 {
    // This function implements Init and InitWithPrototype.
 
@@ -309,7 +309,7 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
    ClassInfo_t *scope = 0;
    if (cl) scope = (ClassInfo_t*)cl->GetClassInfo();
    else    scope = (ClassInfo_t*)cinfo;
-  
+
    if (!scope) return;
 
    R__LOCKGUARD2(gInterpreterMutex);
@@ -412,14 +412,14 @@ void TMethodCall::Execute(void *object)
    // Execute the method (with preset arguments) for the specified object.
 
    if (!fFunc) return;
-   
+
    R__LOCKGUARD2(gInterpreterMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
    if (!fDtorOnly && fMethod[0]=='~') {
       Error("Execute","TMethodCall can no longer be use to call the operator delete and the destructor at the same time");
    }
-   gCling->CallFunc_Exec(fFunc,address); 
+   gCling->CallFunc_Exec(fFunc,address);
 }
 
 //______________________________________________________________________________
@@ -428,7 +428,7 @@ void TMethodCall::Execute(void *object, const char *params)
    // Execute the method for the specified object and argument values.
 
    if (!fFunc) return;
-   
+
    R__LOCKGUARD2(gInterpreterMutex);
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
@@ -445,7 +445,7 @@ void TMethodCall::Execute(void *object, Long_t &retLong)
    // Execute the method (with preset arguments) for the specified object.
 
    if (!fFunc) return;
-   
+
    R__LOCKGUARD2(gInterpreterMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
@@ -460,7 +460,7 @@ void TMethodCall::Execute(void *object, const char *params, Long_t &retLong)
    // Execute the method for the specified object and argument values.
 
    if (!fFunc) return;
-   
+
    R__LOCKGUARD2(gInterpreterMutex);
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
@@ -477,7 +477,7 @@ void TMethodCall::Execute(void *object, Double_t &retDouble)
    // Execute the method (with preset arguments) for the specified object.
 
    if (!fFunc) return;
-   
+
    R__LOCKGUARD2(gInterpreterMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
@@ -492,7 +492,7 @@ void TMethodCall::Execute(void *object, const char *params, Double_t &retDouble)
    // Execute the method for the specified object and argument values.
 
    if (!fFunc) return;
-   
+
    R__LOCKGUARD2(gInterpreterMutex);
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
@@ -509,7 +509,7 @@ void TMethodCall::Execute(void *object, char **retText)
    // Execute the method (with preset arguments) for the specified object.
 
    if (!fFunc) return;
-   
+
    R__LOCKGUARD2(gInterpreterMutex);
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
@@ -524,7 +524,7 @@ void TMethodCall::Execute(void *object, const char *params, char **retText)
    // Execute the method for the specified object and argument values.
 
    if (!fFunc) return;
-   
+
    R__LOCKGUARD2(gInterpreterMutex);
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
@@ -611,6 +611,6 @@ void TMethodCall::SetParam(ULong64_t ull)
 {
    // Add a unsigned long long method parameter.
 
-   if (!fFunc) return;   
+   if (!fFunc) return;
    gCling->CallFunc_SetArg(fFunc,ull);
 }

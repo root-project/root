@@ -92,7 +92,7 @@ private:
                                 const TString &option);
 
    void           PadToViewport(Bool_t selectionPass = kFALSE);
-                                
+
    TGLHistPainter(const TGLHistPainter &);
    TGLHistPainter &operator = (const TGLHistPainter &);
 

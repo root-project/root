@@ -2590,9 +2590,15 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                   if (declCtxt && !templateName.getAsQualifiedTemplateName()){
                      clang::NamespaceDecl* ns = clang::dyn_cast<clang::NamespaceDecl>(declCtxt);
                      clang::NestedNameSpecifier* nns;
-                     if (ns) nns = cling::utils::TypeName::CreateNestedNameSpecifier(Ctx, ns);
-                     else nns = cling::utils::TypeName::CreateNestedNameSpecifier(Ctx,llvm::dyn_cast<clang::TagDecl>(declCtxt),
-                                                                                  false /*FullyQualified*/);
+                     if (ns) {
+                        nns = cling::utils::TypeName::CreateNestedNameSpecifier(Ctx, ns);
+                     } else if (clang::TagDecl* TD = llvm::dyn_cast<clang::TagDecl>(declCtxt)) {
+                        nns = cling::utils::TypeName::CreateNestedNameSpecifier(Ctx,TD, false /*FullyQualified*/);
+                     } else {
+                        // TU scope
+                        desArgs.push_back(*I);
+                        continue;
+                     }
                      clang::TemplateName templateNameWithNSS ( Ctx.getQualifiedTemplateName(nns, false, templateDecl) );
                      desArgs.push_back(clang::TemplateArgument(templateNameWithNSS));
                      mightHaveChanged = true;
@@ -2721,7 +2727,7 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Decla
 
    if (errnum) *errnum = VALID;
 
-   if (title.size() == 0 || (title[0] != '[')) return 0; 
+   if (title.size() == 0 || (title[0] != '[')) return 0;
    size_t rightbracket = title.find(']');
    if (rightbracket == llvm::StringRef::npos) return 0;
 
@@ -4516,13 +4522,21 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTmplDecl(const clang::Template
    int retCode = PrepareArgsForFwdDecl(templatePrefixString,*tmplParamList,interpreter);
    if (retCode!=0){
       Warning(0,
-               "Problems with arguments for forward declaration of class %s",
+               "Problems with arguments for forward declaration of class %s\n",
                templDecl.getNameAsString().c_str());
       return retCode;
    }
    templatePrefixString = "template " + templatePrefixString + " ";
 
-   defString = templatePrefixString + "class " + templDecl.getNameAsString() + ";";
+   defString = templatePrefixString + "class " + templDecl.getNameAsString();
+   if (llvm::isa<clang::TemplateTemplateParmDecl>(&templDecl)) {
+      // When fwd delcaring the template template arg of
+      //   namespace N { template <template <class T> class C> class X; }
+      // we don't need to put it into any namespace, and we want no trailing
+      // ';'
+      return 0;
+   }
+   defString += ';';
    return EncloseInNamespaces(templDecl, defString);
 }
 
@@ -4778,7 +4792,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionD
    // Extract the fwd declaration of a function
    defString = fcnDecl.getNameAsString();
 
-   // Treat parameters   
+   // Treat parameters
    std::string paramString;
    auto paramArray = fcnDecl.parameters ();
    unsigned int pCounter=0;

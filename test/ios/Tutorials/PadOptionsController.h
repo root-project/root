@@ -22,7 +22,7 @@ class Pad;
    __weak IBOutlet UISwitch *logX_;
    __weak IBOutlet UISwitch *logY_;
    __weak IBOutlet UISwitch *logZ_;
-   
+
    __weak IBOutlet UIPickerView *colorPicker_;
    __weak IBOutlet UIPickerView *patternPicker_;
 }

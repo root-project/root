@@ -44,7 +44,7 @@ downsample_matrix::downsample_matrix(const TMatrix &orig_matrix)
                       (orig_matrix.GetNrows()+1)/2 + orig_matrix.GetRowLwb()-1,
                       orig_matrix.GetColLwb(),
                       (orig_matrix.GetNcols()+1)/2 + orig_matrix.GetColLwb()-1),
-		      fOrigMatrix(orig_matrix)
+fOrigMatrix(orig_matrix)
 { }
 
 // "construct" the new matrix (when the lazy matrix is being "rolled out")

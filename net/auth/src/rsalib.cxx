@@ -22,24 +22,24 @@ MA  02110-1301  USA
 ******************************************************************************/
 
 /*******************************************************************************
-*                                            									       *
+*                                                                              *
 *       Simple RSA public key code.                                            *
 *       Adaptation in library for ROOT by G. Ganis, July 2003                  *
 *       (gerardo.ganis@cern.ch)                                                *
-*									                                                    *
+*                                                                              *
 *******************************************************************************/
 
-#include	<stdio.h>
-#include	<string.h>
-#include	<ctype.h>
-#include	<stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
 #include <errno.h>
 
-#include	"rsaaux.h"
-#include	"rsalib.h"
+#include "rsaaux.h"
+#include "rsalib.h"
 
-static int	g_clear_siz;            /* clear-text blocksize	        */
-static int	g_enc_siz;              /* encoded blocksize            */
+static int g_clear_siz;            /* clear-text blocksize         */
+static int g_enc_siz;              /* encoded blocksize            */
                                     /* g_clear_siz < g_enc_siz      */
 
 int gLog = 0;
@@ -211,38 +211,38 @@ int rsa_decode(char *bufin, int lin, rsa_NUMBER n, rsa_NUMBER e)
 
 
 /*******************************************************************************
- *									       *
+ *                                                                              *
  * nio.c                                                                        *
  *                                                                              *
  ********************************************************************************/
 
 
 /*
- *	rsa_NUMBER io
+ * rsa_NUMBER io
  */
 
 /*
- *		Funktionen
+ *    Funktionen
  *
- * int	num_sput( n, s, l)
- *		rsa_NUMBER *n;
- *		char s[l];
- *			schreibt *n als Hex-Zahl in s
+ * int num_sput( n, s, l)
+ *      rsa_NUMBER *n;
+ *      char s[l];
+ *         schreibt *n als Hex-Zahl in s
  *
- * int	num_fput( n, f )
- *		rsa_NUMBER *n;
- *		FILE *f;
- *			schreibt *n als Hex-Zahl in File f
+ * int   num_fput( n, f )
+ *      rsa_NUMBER *n;
+ *      FILE *f;
+ *         schreibt *n als Hex-Zahl in File f
  *
- * int	num_sget( n, s )
- *		rsa_NUMBER *n;
- *		char *s;
- *			liest Hex-Zahl s in *n ein
+ * int   num_sget( n, s )
+ *      rsa_NUMBER *n;
+ *      char *s;
+ *         liest Hex-Zahl s in *n ein
  *
- * int	num_fget( n, f )
- *		rsa_NUMBER *n;
- *		FILE *f;
- *			liest eine Hex-Zahl von f in *n ein
+ * int   num_fget( n, f )
+ *      rsa_NUMBER *n;
+ *      FILE *f;
+ *         liest eine Hex-Zahl von f in *n ein
  *
  */
 
@@ -480,7 +480,7 @@ int rsa_cmp(rsa_NUMBER *c1, rsa_NUMBER *c2)
    if ( (l=c1->n_len) != c2->n_len)
       return( l - c2->n_len);
 
-   /* vergleiche als arrays	*/
+   /* vergleiche als arrays   */
    return( n_cmp( c1->n_part, c2->n_part, l) );
 }
 
@@ -488,7 +488,7 @@ void rsa_assign(rsa_NUMBER *d, rsa_NUMBER *s)
 {
    int l;
 
-   if (s == d)			/* nichts zu kopieren		*/
+   if (s == d)         /* nichts zu kopieren      */
       return;
 
    if ((l=s->n_len))

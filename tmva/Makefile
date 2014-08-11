@@ -63,7 +63,6 @@ DICTH3       := $(patsubst %,inc/TMVA/%,$(DICTH3))
 DICTH4       := $(patsubst %,inc/TMVA/%,$(DICTH4))
 DICTH        := $(DICTH1) $(DICTH2) $(DICTH3) $(DICTH4)
 
-
 SKIPCPPLIST  := 
 SKIPHLIST    := $(DICTHEAD) $(DICTL)
 LIBFILE      := lib/lib$(PACKAGE).a

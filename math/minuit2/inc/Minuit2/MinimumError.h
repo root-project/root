@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -17,8 +17,8 @@ namespace ROOT {
 
    namespace Minuit2 {
 
- 
-/** MinimumError keeps the inv. 2nd derivative (inv. Hessian) used for 
+
+/** MinimumError keeps the inv. 2nd derivative (inv. Hessian) used for
     calculating the Parameter step size (-V*g) and for the covariance Update
     (ErrorUpdator). The covariance matrix is equal to twice the inv. Hessian.
  */
@@ -33,11 +33,11 @@ public:
   class MnInvertFailed {};
 
 public:
-  
+
   MinimumError(unsigned int n) : fData(MnRefCountedPointer<BasicMinimumError>(new BasicMinimumError(n))) {}
- 
+
   MinimumError(const MnAlgebraicSymMatrix& mat, double dcov) : fData(MnRefCountedPointer<BasicMinimumError>(new BasicMinimumError(mat, dcov))) {}
-  
+
   MinimumError(const MnAlgebraicSymMatrix& mat, MnHesseFailed) : fData(MnRefCountedPointer<BasicMinimumError>(new BasicMinimumError(mat, BasicMinimumError::MnHesseFailed()))) {}
 
   MinimumError(const MnAlgebraicSymMatrix& mat, MnMadePosDef) : fData(MnRefCountedPointer<BasicMinimumError>(new BasicMinimumError(mat, BasicMinimumError::MnMadePosDef()))) {}

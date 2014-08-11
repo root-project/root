@@ -157,64 +157,64 @@ static const Double_t gVlow=-1.0e150;
 #define SW2 setprecision(7) << std::setw(12)
 
 // class to wrap a global function in a TFoamIntegrand function
-class FoamIntegrandFunction : public TFoamIntegrand { 
+class FoamIntegrandFunction : public TFoamIntegrand {
 
 public:
 
-   typedef Double_t (*FunctionPtr)(Int_t, Double_t*); 
+   typedef Double_t (*FunctionPtr)(Int_t, Double_t*);
 
    FoamIntegrandFunction(FunctionPtr func) : fFunc(func) {}
 
    virtual ~FoamIntegrandFunction() {}
 
    // evaluate the density using the provided function pointer
-   Double_t Density (Int_t nDim, Double_t * x) { 
-      return fFunc(nDim,x); 
+   Double_t Density (Int_t nDim, Double_t * x) {
+      return fFunc(nDim,x);
    }
 
-private: 
+private:
 
-   FunctionPtr fFunc; 
-   
+   FunctionPtr fFunc;
+
 };
 
 
 //________________________________________________________________________________________________
-TFoam::TFoam() : 
-   fDim(0), fNCells(0), fRNmax(0), 
-   fOptDrive(0), fChat(0), fOptRej(0), 
-   fNBin(0), fNSampl(0), fEvPerBin(0), 
-   fMaskDiv(0), fInhiDiv(0), fOptPRD(0), fXdivPRD(0), 
-   fNoAct(0), fLastCe(0), fCells(0), 
-   fMCMonit(0), fMaxWtRej(0), fCellsAct(0), fPrimAcu(0), 
-   fHistEdg(0), fHistDbg(0), fHistWt(0), 
-   fMCvect(0), fMCwt(0), fRvec(0), 
-   fRho(0), fMethodCall(0), fPseRan(0), 
-   fNCalls(0), fNEffev(0), 
-   fSumWt(0), fSumWt2(0), 
-   fSumOve(0), fNevGen(0), 
-   fWtMax(0), fWtMin(0), 
-   fPrime(0), fMCresult(0), fMCerror(0), 
+TFoam::TFoam() :
+   fDim(0), fNCells(0), fRNmax(0),
+   fOptDrive(0), fChat(0), fOptRej(0),
+   fNBin(0), fNSampl(0), fEvPerBin(0),
+   fMaskDiv(0), fInhiDiv(0), fOptPRD(0), fXdivPRD(0),
+   fNoAct(0), fLastCe(0), fCells(0),
+   fMCMonit(0), fMaxWtRej(0), fCellsAct(0), fPrimAcu(0),
+   fHistEdg(0), fHistDbg(0), fHistWt(0),
+   fMCvect(0), fMCwt(0), fRvec(0),
+   fRho(0), fMethodCall(0), fPseRan(0),
+   fNCalls(0), fNEffev(0),
+   fSumWt(0), fSumWt2(0),
+   fSumOve(0), fNevGen(0),
+   fWtMax(0), fWtMin(0),
+   fPrime(0), fMCresult(0), fMCerror(0),
    fAlpha(0)
 {
   // Default constructor for streamer, user should not use it.
 }
 //_________________________________________________________________________________________________
 TFoam::TFoam(const Char_t* Name) :
-   fDim(0), fNCells(0), fRNmax(0), 
-   fOptDrive(0), fChat(0), fOptRej(0), 
-   fNBin(0), fNSampl(0), fEvPerBin(0), 
-   fMaskDiv(0), fInhiDiv(0), fOptPRD(0), fXdivPRD(0), 
-   fNoAct(0), fLastCe(0), fCells(0), 
-   fMCMonit(0), fMaxWtRej(0), fCellsAct(0), fPrimAcu(0), 
-   fHistEdg(0), fHistDbg(0), fHistWt(0), 
-   fMCvect(0), fMCwt(0), fRvec(0), 
-   fRho(0), fMethodCall(0), fPseRan(0), 
-   fNCalls(0), fNEffev(0), 
-   fSumWt(0), fSumWt2(0), 
-   fSumOve(0), fNevGen(0), 
-   fWtMax(0), fWtMin(0), 
-   fPrime(0), fMCresult(0), fMCerror(0), 
+   fDim(0), fNCells(0), fRNmax(0),
+   fOptDrive(0), fChat(0), fOptRej(0),
+   fNBin(0), fNSampl(0), fEvPerBin(0),
+   fMaskDiv(0), fInhiDiv(0), fOptPRD(0), fXdivPRD(0),
+   fNoAct(0), fLastCe(0), fCells(0),
+   fMCMonit(0), fMaxWtRej(0), fCellsAct(0), fPrimAcu(0),
+   fHistEdg(0), fHistDbg(0), fHistWt(0),
+   fMCvect(0), fMCwt(0), fRvec(0),
+   fRho(0), fMethodCall(0), fPseRan(0),
+   fNCalls(0), fNEffev(0),
+   fSumWt(0), fSumWt2(0),
+   fSumOve(0), fNevGen(0),
+   fWtMax(0), fWtMin(0),
+   fPrime(0), fMCresult(0), fMCerror(0),
    fAlpha(0)
 {
 // User constructor, to be employed by the user
@@ -280,7 +280,7 @@ TFoam::~TFoam()
    if (fPrimAcu) delete [] fPrimAcu; //double[]
    if (fMaskDiv) delete [] fMaskDiv; //int[]
    if (fInhiDiv) delete [] fInhiDiv; //int[]
- 
+
    if( fXdivPRD!= 0) {
       for(i=0; i<fDim; i++) delete fXdivPRD[i]; // TFoamVect*[]
       delete [] fXdivPRD;
@@ -289,16 +289,16 @@ TFoam::~TFoam()
    if (fHistWt)  delete fHistWt;
 
    // delete histogram arrays
-   if (fHistEdg) { 
-      fHistEdg->Delete(); 
-      delete fHistEdg; 
+   if (fHistEdg) {
+      fHistEdg->Delete();
+      delete fHistEdg;
    }
-   if (fHistDbg) { 
-      fHistDbg->Delete(); 
-      delete fHistDbg; 
+   if (fHistDbg) {
+      fHistDbg->Delete();
+      delete fHistDbg;
    }
    // delete function object if it has been created here in SetRhoInt
-   if (fRho && dynamic_cast<FoamIntegrandFunction*>(fRho) ) delete fRho; 
+   if (fRho && dynamic_cast<FoamIntegrandFunction*>(fRho) ) delete fRho;
 }
 
 
@@ -786,7 +786,7 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
    // Determines the best edge-candidate and the position of the division plane
    // for the future cell division, in the case of the optimization of the maximum weight.
    // It exploits results of the cell MC exploration run stored in fHistEdg.
-   
+
    Int_t    kProj,iBin;
    Double_t carve,carvTot,carvMax,carvOne,binMax,binTot;
    Int_t    jLow,jUp,iLow,iUp;
@@ -911,19 +911,19 @@ void TFoam::Grow()
          Int_t kEcho=10;
          if(fLastCe>=10000) kEcho=100;
          if( (fLastCe%kEcho)==0) {
-	   if (fChat>0) {
-	     if(fDim<10)
-	       std::cout<<fDim<<std::flush;
-             else
-	       std::cout<<"."<<std::flush;
-	     if( (fLastCe%(100*kEcho))==0)  std::cout<<"|"<<fLastCe<<std::endl<<std::flush;
-	   }
-	 }
+            if (fChat>0) {
+               if(fDim<10)
+                  std::cout<<fDim<<std::flush;
+               else
+                  std::cout<<"."<<std::flush;
+               if( (fLastCe%(100*kEcho))==0)  std::cout<<"|"<<fLastCe<<std::endl<<std::flush;
+            }
+         }
       }
       if( Divide( newCell )==0) break;  // and divide it into two
    }
    if (fChat>0) {
-     std::cout<<std::endl<<std::flush;
+      std::cout<<std::endl<<std::flush;
    }
    CheckAll(0);   // set arg=1 for more info
 }// Grow
@@ -1012,7 +1012,7 @@ void TFoam::MakeActiveList()
    // Fill-in tables of active cells
 
    fPrime = 0.0; n = 0;
-   for(iCell=0; iCell<=fLastCe; iCell++) { 
+   for(iCell=0; iCell<=fLastCe; iCell++) {
       if (fCells[iCell]->GetStat()==1) {
          fPrime += fCells[iCell]->GetPrim();
          fCellsAct->Add(fCells[iCell]);
@@ -1063,12 +1063,12 @@ void TFoam::SetRho(TFoamIntegrand *fun)
 void TFoam::SetRhoInt(Double_t (*fun)(Int_t, Double_t *) )
 {
 // User may use this method to set the distribution object as a global function pointer
-// (and not as an interpreted function). 
+// (and not as an interpreted function).
 
    // This is needed for both AClic and Cling
    if (fun) {
       // delete function object if it has been created here in SetRho
-      if (fRho && dynamic_cast<FoamIntegrandFunction*>(fRho) ) delete fRho; 
+      if (fRho && dynamic_cast<FoamIntegrandFunction*>(fRho) ) delete fRho;
       fRho= new FoamIntegrandFunction(fun);
    } else
       Error("SetRho", "Bad function \n" );

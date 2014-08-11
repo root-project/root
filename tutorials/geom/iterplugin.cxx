@@ -17,7 +17,7 @@ public:
    Int_t fColor;             // Current color
    Int_t fReplica;           // replica number (1 to 4)
 
-   ClassDef(iterplugin, 0)   // A simple user iterator plugin that changes volume color    
+   ClassDef(iterplugin, 0)   // A simple user iterator plugin that changes volume color
 };
 
 ClassImp(iterplugin)

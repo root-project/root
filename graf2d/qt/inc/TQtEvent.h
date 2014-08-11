@@ -18,7 +18,7 @@
 class TQtObject;
 class TWaitCondition;
 //______________________________________________________________________________
-class TQtEvent : public QEvent 
+class TQtEvent : public QEvent
 {
 
 private:

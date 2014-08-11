@@ -10,9 +10,9 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      
-//                       TTreePerfStats                                                       
-//                                                                      
+//
+//                       TTreePerfStats
+//
 //        TTree I/O performance measurement. see example of use below.
 //
 // The function FileReadEvent is called from TFile::ReadBuffer.
@@ -27,7 +27,7 @@
 // The TTreePerfStats object can be saved in a ROOT file in such a way that
 // its inspection can be done outside the job that generated it.
 //
-//       Example of use                                                 
+//       Example of use
 // {
 //   TFile *f = TFile::Open("RelValMinBias-GEN-SIM-RECO.root");
 //   T = (TTree*)f->Get("Events");
@@ -140,7 +140,7 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fGraphIO->SetName("ioperf");
    fGraphIO->SetTitle(Form("%s/%s",fFile->GetName(),T->GetName()));
    fGraphIO->SetUniqueID(999999999);
-   fGraphTime = new TGraphErrors(0);   
+   fGraphTime = new TGraphErrors(0);
    fGraphTime->SetLineColor(kRed);
    fGraphTime->SetName("iotime");
    fGraphTime->SetTitle("Real time vs entries");
@@ -159,7 +159,7 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fUnzipTime     = 0;
    fRealTimeAxis  = 0;
    fCompress      = (T->GetTotBytes()+0.00001)/T->GetZipBytes();
-   
+
    Bool_t isUNIX = strcmp(gSystem->GetName(), "Unix") == 0;
    if (isUNIX)
       fHostInfo = gSystem->GetFromPipe("uname -a");
@@ -178,7 +178,7 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
 TTreePerfStats::~TTreePerfStats()
 {
    // Destructor
-   
+
    fTree = 0;
    fFile = 0;
    delete fGraphIO;
@@ -198,7 +198,7 @@ TTreePerfStats::~TTreePerfStats()
 void TTreePerfStats::Browse(TBrowser * /*b*/)
 {
    // Browse
-   
+
    Draw();
    gPad->Update();
 }
@@ -207,7 +207,7 @@ void TTreePerfStats::Browse(TBrowser * /*b*/)
 Int_t TTreePerfStats::DistancetoPrimitive(Int_t px, Int_t py)
 {
    // Return distance to one of the objects in the TTreePerfStats
-   
+
    const Int_t kMaxDiff = 7;
    Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
    Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
@@ -242,7 +242,7 @@ void TTreePerfStats::Draw(Option_t *option)
    // connecting the blocks
 
    Finish();
-   
+
    TString opt = option;
    if (strlen(option)==0) opt = "al";
    opt.ToLower();
@@ -267,7 +267,7 @@ void TTreePerfStats::Draw(Option_t *option)
 void TTreePerfStats::ExecuteEvent(Int_t /*event*/, Int_t /*px*/, Int_t /*py*/)
 {
    // Return distance to one of the objects in the TTreePerfStats
-   
+
 }
 
 //______________________________________________________________________________
@@ -302,7 +302,7 @@ void TTreePerfStats::UnzipEvent(TObject * tree, Long64_t /* pos */, Double_t sta
    // pos is where in the file the compressed buffer came from
    // complen is the length of the compressed buffer
    // objlen is the length of the de-compressed buffer
-   
+
    if (tree == this->fTree){
       Double_t tnow = TTimeStamp();
       Double_t dtime = tnow-start;
@@ -336,7 +336,7 @@ void TTreePerfStats::Finish()
       fGraphTime->GetEY()[i]  = 0;
    }
 }
-   
+
 
 //______________________________________________________________________________
 void TTreePerfStats::Paint(Option_t *option)
@@ -354,11 +354,11 @@ void TTreePerfStats::Paint(Option_t *option)
    fGraphIO->GetXaxis()->SetLabelSize(0.03);
    fGraphIO->GetYaxis()->SetLabelSize(0.03);
    fGraphIO->Paint(option);
-   
+
    TString opts(option);
    opts.ToLower();
    Bool_t unzip = opts.Contains("unzip");
-   
+
    //superimpose the time info (max 10 points)
    if (fGraphTime) {
       fGraphTime->Paint("l");
@@ -401,7 +401,7 @@ void TTreePerfStats::Paint(Option_t *option)
       fPave->AddText(Form("Real Time = %7.3f s",fRealTime));
       fPave->AddText(Form("CPU  Time = %7.3f s",fCpuTime));
       fPave->AddText(Form("Disk Time = %7.3f s",fDiskTime));
-      if (unzip) { 
+      if (unzip) {
          fPave->AddText(Form("UnzipTime = %7.3f s",fUnzipTime));
       }
       fPave->AddText(Form("Disk IO   = %7.3f MB/s",1e-6*fBytesRead/fDiskTime));
@@ -411,7 +411,7 @@ void TTreePerfStats::Paint(Option_t *option)
       fPave->AddText(Form("ReadCP    = %7.3f MB/s",1e-6*fBytesRead/fCpuTime));
    }
    fPave->Paint();
-   
+
    if (!fHostInfoText) {
       fHostInfoText = new TText(0.01,0.01,fHostInfo.Data());
       fHostInfoText->SetNDC();
@@ -430,7 +430,7 @@ void TTreePerfStats::Print(Option_t * option) const
    Bool_t unzip = opts.Contains("unzip");
    TTreePerfStats *ps = (TTreePerfStats*)this;
    ps->Finish();
-      
+
    Double_t extra = 100.*fBytesReadExtra/fBytesRead;
    printf("TreeCache = %d MBytes\n",Int_t(fTreeCacheSize/1000000));
    printf("N leaves  = %d\n",fNleaves);
@@ -446,7 +446,7 @@ void TTreePerfStats::Print(Option_t * option) const
    if (unzip) {
       printf("Strm Time = %7.3f seconds\n",fCpuTime-fUnzipTime);
       printf("UnzipTime = %7.3f seconds\n",fUnzipTime);
-   }      
+   }
    printf("Disk IO   = %7.3f MBytes/s\n",1e-6*fBytesRead/fDiskTime);
    printf("ReadUZRT  = %7.3f MBytes/s\n",1e-6*fCompress*fBytesRead/fRealTime);
    printf("ReadUZCP  = %7.3f MBytes/s\n",1e-6*fCompress*fBytesRead/fCpuTime);
@@ -455,14 +455,14 @@ void TTreePerfStats::Print(Option_t * option) const
    if (unzip) {
       printf("ReadStrCP = %7.3f MBytes/s\n",1e-6*fCompress*fBytesRead/(fCpuTime-fUnzipTime));
       printf("ReadZipCP = %7.3f MBytes/s\n",1e-6*fCompress*fBytesRead/fUnzipTime);
-   }      
+   }
 }
 
 //______________________________________________________________________________
 void TTreePerfStats::SaveAs(const char *filename, Option_t * /*option*/) const
 {
    // Save this object to filename
-   
+
    TTreePerfStats *ps = (TTreePerfStats*)this;
    ps->Finish();
    ps->TObject::SaveAs(filename);

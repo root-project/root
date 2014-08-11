@@ -14,6 +14,8 @@
 #include "TInterpreter.h"
 #include <limits.h>
 
+#include "TVirtualMutex.h" // For R__LOCKGUARD
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 //  Each class (see TClass) has a linked list of its base class(es).    //
@@ -31,7 +33,7 @@ ClassImp(TBaseClass)
 
 //______________________________________________________________________________
 TBaseClass::TBaseClass(BaseClassInfo_t *info, TClass *cl) :
-TDictionary(), fInfo(info), fClass(cl), fDelta(INT_MAX),
+   TDictionary(), fInfo(info), fClass(cl), fDelta(INT_MAX),
    fProperty(-1), fSTLType(-1)
 {
    // Default TBaseClass ctor. TBaseClasses are constructed in TClass
@@ -77,9 +79,10 @@ Int_t TBaseClass::GetDelta()
    // Initialized to INT_MAX to signal that it's unset; -1 is a valid value
    // meaning "cannot calculate base offset".
    if (fDelta == INT_MAX) {
+      R__LOCKGUARD(gInterpreterMutex);
       if (Property() & kIsVirtualBase)
          fDelta = -1;
-      else
+      else if (fInfo)
          fDelta = (Int_t)gCling->BaseClassInfo_Offset(fInfo);
    }
    return fDelta;
@@ -126,8 +129,10 @@ ROOT::ESTLType TBaseClass::IsSTLContainer()
 Long_t TBaseClass::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
-   if (fProperty == -1)
+   if (fProperty == -1 && fInfo) {
+      R__LOCKGUARD(gInterpreterMutex);
       fProperty = gCling->BaseClassInfo_Property(fInfo);
+   }
    return fProperty;
 }
 

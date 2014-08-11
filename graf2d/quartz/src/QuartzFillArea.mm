@@ -48,18 +48,18 @@ struct GradientParameters {
    //Only for radial gradient fill:
    CGFloat fStartRadius;
    CGFloat fEndRadius;
-   
+
    //For the 'simple' radial gradient we use
    //only fStartPoint (it's a center actually)
    //and fStartRadius.
-   
+
    //Something else:...
-   
+
    GradientParameters()
       : fStartPoint(), fEndPoint(), fStartRadius(0.), fEndRadius(0.)
    {
    }
-   
+
    GradientParameters(const CGPoint &start, const CGPoint &end)
       : fStartPoint(start), fEndPoint(end), fStartRadius(0.), fEndRadius(0.)
    {
@@ -81,13 +81,13 @@ CGRect FindBoundingBox(Int_t nPoints, const TPoint *xy)
    //we need a bounding rect for a polygon.
    assert(nPoints > 2 && "FindBoundingBox, invalid number of points in a polygon");
    assert(xy != nullptr && "FindBoundingBox, parameter 'xy' is null");
-   
+
    CGPoint bottomLeft = {};
    bottomLeft.x = xy[0].fX;
    bottomLeft.y = xy[0].fY;
-   
+
    CGPoint topRight = bottomLeft;
-   
+
    for (Int_t i = 1; i < nPoints; ++i) {
       bottomLeft.x = std::min(bottomLeft.x, CGFloat(xy[i].fX));
       bottomLeft.y = std::min(bottomLeft.y, CGFloat(xy[i].fY));
@@ -95,7 +95,7 @@ CGRect FindBoundingBox(Int_t nPoints, const TPoint *xy)
       topRight.x = std::max(topRight.x, CGFloat(xy[i].fX));
       topRight.y = std::max(topRight.y, CGFloat(xy[i].fY));
    }
-   
+
    return CGRectMake(bottomLeft.x, bottomLeft.y,
                      topRight.x - bottomLeft.x,
                      topRight.y - bottomLeft.y);
@@ -116,12 +116,12 @@ bool CalculateGradientStartEnd(const GradientType *grad,
           "CalculateGradientStartEnd, parameter 'n' is not a valid number of points");
    assert(polygon != nullptr &&
           "CalculateGradientStartEnd, parameter 'polygon' is null");
-   
+
    const TColorGradient::ECoordinateMode mode = grad->GetCoordinateMode();
 
    CGPoint start = CGPointMake(grad->GetStart().fX, grad->GetStart().fY);
    CGPoint end = CGPointMake(grad->GetEnd().fX, grad->GetEnd().fY);
-   
+
    const CGRect &bbox = FindBoundingBox(n, polygon);
 
    if (!bbox.size.width || !bbox.size.height)
@@ -141,10 +141,10 @@ bool CalculateGradientStartEnd(const GradientType *grad,
       end.x *= sizeOfDrawable.width;
       end.y *= sizeOfDrawable.height;
    }
-   
+
    params.fStartPoint = start;
    params.fEndPoint = end;
-   
+
    return true;
 }
 
@@ -173,7 +173,7 @@ bool CalculateGradientRadiuses(const TRadialGradient *grad,
 
    if (grad->GetCoordinateMode() == TColorGradient::kObjectBoundingMode) {
       const CGFloat scale = std::max(bbox.size.width, bbox.size.height);
-      
+
       startRadius *= scale;
       endRadius *= scale;
    } else {
@@ -182,10 +182,10 @@ bool CalculateGradientRadiuses(const TRadialGradient *grad,
       startRadius *= scale;
       endRadius *= scale;
    }
-   
+
    params.fStartRadius = startRadius;
    params.fEndRadius = endRadius;
-   
+
    return true;
 }
 
@@ -224,7 +224,7 @@ bool CalculateSimpleRadialGradientParameters(const TRadialGradient *grad,
       center.x *= sizeOfDrawable.width;
       center.y *= sizeOfDrawable.height;
    }
-   
+
    params.fStartPoint = center;
    params.fStartRadius = radius;
 
@@ -244,7 +244,7 @@ bool CalculateGradientParameters(const TColorGradient *extendedColor,
    assert(n > 2 && "CalculateGradientParameters, parameter 'n' is not a valid number of points");
    assert(polygon != nullptr &&
           "CalculateGradientParameters, parameter 'polygon' is null");
-   
+
    if (const TLinearGradient * const gl = dynamic_cast<const TLinearGradient *>(extendedColor))
       return CalculateGradientStartEnd(gl, sizeOfDrawable, n, polygon, params);
    else if (const TRadialGradient * const gr = dynamic_cast<const TRadialGradient *>(extendedColor)) {
@@ -256,7 +256,7 @@ bool CalculateGradientParameters(const TColorGradient *extendedColor,
          return false;
       }
    }
-   
+
    assert(0 && "CalculateGradientParamters, unknown gradient type");
 
    return false;
@@ -270,7 +270,7 @@ Bool_t SetFillColor(CGContextRef ctx, Color_t colorIndex)
    assert(ctx != nullptr && "SetFillColor, ctx parameter is null");
 
    const TColor *color = gROOT->GetColor(colorIndex);
-   
+
    //TGX11 selected color 0 (which is white).
    if (!color)
       color = gROOT->GetColor(kWhite);
@@ -283,7 +283,7 @@ Bool_t SetFillColor(CGContextRef ctx, Color_t colorIndex)
    Float_t rgb[3] = {};
    color->GetRGB(rgb[0], rgb[1], rgb[2]);
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
-   
+
    return kTRUE;
 }
 
@@ -302,7 +302,7 @@ void DrawPattern(void *data, CGContextRef ctx)
          if (gStipples[stencilIndex][i] & (1 << j))
             CGContextFillRect(ctx, CGRectMake(x, y, 1, 1));
       }
-      
+
       for (int j = 0; j < 8; ++j, ++x) {
          if (gStipples[stencilIndex][i + 1] & (1 << j))
             CGContextFillRect(ctx, CGRectMake(x, y, 1, 1));
@@ -319,7 +319,7 @@ bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex)
    const TColor *fillColor = gROOT->GetColor(gVirtualX->GetFillColor());
    if (!fillColor)
       fillColor = gROOT->GetColor(kWhite);
-   
+
    if (!fillColor)
       return false;
 
@@ -355,9 +355,9 @@ bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex)
 bool SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex)
 {
    assert(ctx != nullptr && "SetFillAreaParameters, ctx parameter is null");
-   
+
    const unsigned fillStyle = gVirtualX->GetFillStyle() / 1000;
-   
+
    //2 is hollow, 1 is solid and 3 is a hatch, !solid and !hatch - this is from O.C.'s code.
    if (fillStyle == 2 || (fillStyle != 1 && fillStyle != 3)) {
       if (!SetLineColor(ctx, gVirtualX->GetFillColor())) {
@@ -386,17 +386,17 @@ bool SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex)
 
    return true;
 }
-   
+
 //______________________________________________________________________________
 void DrawBox(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2, bool hollow)
 {
    // Draw a box
-            
+
    if (x1 > x2)
       std::swap(x1, x2);
    if (y1 > y2)
       std::swap(y1, y2);
-   
+
    if (hollow)
       CGContextStrokeRect(ctx, CGRectMake(x1, y1, x2 - x1, y2 - y1));
    else
@@ -412,24 +412,24 @@ void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow)
 
    assert(ctx != nullptr && "DrawFillArea, ctx parameter is null");
    assert(xy != nullptr && "DrawFillArea, xy parameter is null");
-                  
+
    CGContextBeginPath(ctx);
-      
+
    CGContextMoveToPoint(ctx, xy[0].fX, xy[0].fY);
-   for (Int_t i = 1; i < n; ++i) 
+   for (Int_t i = 1; i < n; ++i)
       CGContextAddLineToPoint(ctx, xy[i].fX, xy[i].fY);
 
    CGContextClosePath(ctx);
-      
+
    const unsigned fillStyle = gVirtualX->GetFillStyle() / 1000;
-   
+
    //2 is hollow, 1 is solid and 3 is a hatch, !solid and !hatch - this is from O.C.'s code.
    if (fillStyle == 2 || (fillStyle != 1 && fillStyle != 3)) {
       CGContextStrokePath(ctx);
    } else if (fillStyle == 1) {
       if (shadow)
          CGContextSetShadow(ctx, shadowOffset, shadowBlur);
-      
+
       CGContextFillPath(ctx);
    } else {
       if (shadow)
@@ -459,7 +459,7 @@ void DrawPolygonWithGradientFill(CGContextRef ctx, const TColorGradient *extende
       ::Error("DrawPolygonWithGradientFill", "CGPathCreateMutable failed");
       return;
    }
-   
+
    //Create a gradient.
    //TODO: must be a generic RGB color space???
    const CFScopeGuard<CGColorSpaceRef> baseSpace(CGColorSpaceCreateDeviceRGB());
@@ -467,7 +467,7 @@ void DrawPolygonWithGradientFill(CGContextRef ctx, const TColorGradient *extende
       ::Error("DrawPolygonWithGradientFill", "CGColorSpaceCreateDeviceRGB failed");
       return;
    }
-   
+
    const CFScopeGuard<CGGradientRef> gradient(CGGradientCreateWithColorComponents(baseSpace.Get(),
                                               extendedColor->GetColors(),
                                               extendedColor->GetColorPositions(),
@@ -477,14 +477,14 @@ void DrawPolygonWithGradientFill(CGContextRef ctx, const TColorGradient *extende
       ::Error("DrawPolygonWithGradientFill", "CGGradientCreateWithColorComponents failed");
       return;
    }
-   
+
 
    CGPathMoveToPoint(path.Get(), nullptr, xy[0].fX, xy[0].fY);
    for (Int_t i = 1; i < nPoints; ++i)
       CGPathAddLineToPoint(path.Get(), nullptr, xy[i].fX, xy[i].fY);
-   
+
    CGPathCloseSubpath(path.Get());
-   
+
    if (drawShadow) {
       //To have shadow and gradient at the same time,
       //I first have to fill polygon, and after that

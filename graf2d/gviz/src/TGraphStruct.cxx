@@ -46,7 +46,7 @@ three classes:
 <li> TGraphStruct: holds the graph structure. It uses the graphiz library to
      layout the graphs and the ROOT graphics to paint them.
 <li> TGraphNode: Is a graph node object which can be added in a TGraphStruct.
-<li> TGraphEdge: Is an edge object connecting two nodes which can be added in 
+<li> TGraphEdge: Is an edge object connecting two nodes which can be added in
      a TGraphStruct.
 </ol>
 End_Html

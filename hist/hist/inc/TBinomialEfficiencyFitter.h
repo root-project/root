@@ -37,8 +37,8 @@
 class TH1;
 class TF1;
 
-namespace ROOT { 
-   namespace Fit { 
+namespace ROOT {
+   namespace Fit {
       class Fitter;
    }
 }
@@ -55,7 +55,7 @@ protected:
    Bool_t           fRange;          //True if the fit range must be taken from the function range
    ROOT::Fit::Fitter *fFitter;       //pointer to the real fitter
 
-private: 
+private:
 
    void   ComputeFCN(Double_t& f, const Double_t* par);
 
@@ -68,10 +68,10 @@ public:
    void   SetPrecision(Double_t epsilon);
    TFitResultPtr  Fit(TF1 *f1, Option_t* option = "");
    ROOT::Fit::Fitter * GetFitter();
-   Double_t  EvaluateFCN(const Double_t * par) { 
-      Double_t f = 0; 
-      ComputeFCN(f, par); 
-      return f; 
+   Double_t  EvaluateFCN(const Double_t * par) {
+      Double_t f = 0;
+      ComputeFCN(f, par);
+      return f;
    }
 
    ClassDef(TBinomialEfficiencyFitter, 1) //Binomial Fitter for the division of two histograms

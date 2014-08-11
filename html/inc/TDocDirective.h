@@ -105,8 +105,8 @@ private:
    TString CreateSubprocessInputFile();
 
 public:
-   TDocMacroDirective(): 
-      TDocDirective("MACRO"), fMacro(0), fNeedGraphics(kFALSE), 
+   TDocMacroDirective():
+      TDocDirective("MACRO"), fMacro(0), fNeedGraphics(kFALSE),
       fShowSource(kFALSE), fIsFilename(kTRUE) {};
    virtual ~TDocMacroDirective();
 
@@ -135,8 +135,8 @@ protected:
    virtual void GetBoundingBox(TLatex& latex, const char* text, Float_t& width, Float_t& height);
 
 public:
-   TDocLatexDirective(): 
-      TDocDirective("LATEX"), fLatex(0), fFontSize(16), 
+   TDocLatexDirective():
+      TDocDirective("LATEX"), fLatex(0), fFontSize(16),
       fSepIsRegexp(kFALSE), fBBCanvas(0) {};
    virtual ~TDocLatexDirective();
 

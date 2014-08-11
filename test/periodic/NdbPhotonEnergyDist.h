@@ -9,11 +9,11 @@ class NdbPhotonEnergyDist : public NdbMF
 protected:
 
 public:
-	NdbPhotonEnergyDist()
-		: NdbMF(15, "Energy distributions for photon production") {}
-	~NdbPhotonEnergyDist() {}
+   NdbPhotonEnergyDist()
+      : NdbMF(15, "Energy distributions for photon production") {}
+   ~NdbPhotonEnergyDist() {}
 
-	ClassDef(NdbPhotonEnergyDist,1)
+   ClassDef(NdbPhotonEnergyDist,1)
 }; // NdbPhotonEnergyDist
 
 #endif

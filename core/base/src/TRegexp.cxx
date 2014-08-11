@@ -143,7 +143,7 @@ const char *TRegexp::MakeWildcard(const char *re)
    // from *.eps). The special treatment of "/" allows the easy matching of
    // pathnames, e.g. "*.root" will match "aap.root", but not "pipo/aap.root".
 
-   static char buf[fgMaxpat];
+   thread_local char buf[fgMaxpat];
    char *s = buf;
    if (!re) return "";
    int len = strlen(re);

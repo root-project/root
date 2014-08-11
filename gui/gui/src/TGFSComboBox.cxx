@@ -251,7 +251,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
          else
             gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
          gLbc[idx].fId     = 1000;
-         gLbc[idx].fIndent = 0; 
+         gLbc[idx].fIndent = 0;
          gLbc[idx].fFlags  = 0;
          ++idx;
       }
@@ -260,7 +260,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
          gLbc[idx].fPath = StrDup("/");
          gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
          gLbc[idx].fId     = 1000;
-         gLbc[idx].fIndent = 1; 
+         gLbc[idx].fIndent = 1;
          gLbc[idx].fFlags  = 0;
          ++idx;
       }
@@ -270,21 +270,21 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
       gLbc[idx].fPath = StrDup("/");
       gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
       gLbc[idx].fId     = 1000;
-      gLbc[idx].fIndent = 1; 
+      gLbc[idx].fIndent = 1;
       gLbc[idx].fFlags  = 0;
       ++idx;
       gLbc[idx].fName = StrDup("Floppy");
       gLbc[idx].fPath = StrDup("/floppy");
       gLbc[idx].fPixmap = StrDup("fdisk_t.xpm");
       gLbc[idx].fId     = 2000;
-      gLbc[idx].fIndent = 1; 
+      gLbc[idx].fIndent = 1;
       gLbc[idx].fFlags  = 0;
       ++idx;
       gLbc[idx].fName = StrDup("CD-ROM");
       gLbc[idx].fPath = StrDup("/cdrom");
       gLbc[idx].fPixmap = StrDup("cdrom_t.xpm");
       gLbc[idx].fId     = 3000;
-      gLbc[idx].fIndent = 1; 
+      gLbc[idx].fIndent = 1;
       gLbc[idx].fFlags  = 0;
       ++idx;
    }
@@ -292,7 +292,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
    gLbc[idx].fPath   = StrDup("$HOME");
    gLbc[idx].fPixmap = StrDup("home_t.xpm");
    gLbc[idx].fId     = (idx+1) * 1000;
-   gLbc[idx].fIndent = 1; 
+   gLbc[idx].fIndent = 1;
    gLbc[idx].fFlags  = 0;
    ++idx;
 #ifndef ROOTPREFIX
@@ -304,7 +304,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
 #endif
    gLbc[idx].fPixmap = StrDup("root_t.xpm");
    gLbc[idx].fId     = (idx+1) * 1000;
-   gLbc[idx].fIndent = 1; 
+   gLbc[idx].fIndent = 1;
    gLbc[idx].fFlags  = 0;
    ++idx;
 
@@ -450,7 +450,7 @@ void TGFSComboBox::Update(const char *path)
                strlcpy(dirname, tailpath, (semi-tailpath)+1);
                picname = "folder_t.xpm";
             }
-            if ((mpath[strlen(mpath)-1] != '/') && 
+            if ((mpath[strlen(mpath)-1] != '/') &&
                 (mpath[strlen(mpath)-1] != '\\')) {
                strlcat(mpath, "/", 1024-strlen(mpath));
             }

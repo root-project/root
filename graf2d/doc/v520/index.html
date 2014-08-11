@@ -64,7 +64,7 @@
 
 <h4>PDF</h4>
 <ul>
-<li> Text rotated at 270 degrees was not correct. The PDF rotation matrix 
+<li> Text rotated at 270 degrees was not correct. The PDF rotation matrix
      contained very small values close to 0 instead of 0. Acrobat reader
      produced a wrong output and also printed result was wrong.
      &quot;gv&quot; worked.
@@ -85,11 +85,11 @@
 <h3>TPad</h3>
 <ul>
 <li> In batch mode it was not possible to generate a bitmap file (gif,
-     jpeg etc..) with a filename containing &quot;)&quot;, 
+     jpeg etc..) with a filename containing &quot;)&quot;,
      &quot;(&quot;, &quot;]&quot; or &quot;[&quot;.
 <li> The Tickx and Tixky attributes were not saved properly by SavePrimitive.
 <li> PaintPolyLineNDC was not working in case of PS output.
-<li> In ExecuteEvent. A problem was found Mathieu de Naurois 
+<li> In ExecuteEvent. A problem was found Mathieu de Naurois
      &lt;denauroi@in2p3.fr&gt;.
      It can be reproduced by the following sequence:
      <ol>
@@ -132,8 +132,8 @@
 <ul>
 <li> For 2D histograms, when all the bins' contents were negative, the boxes
      were not painted correctly.
-<li> For 3D histograms painted using OpenGL (drawing options "glbox" and 
-     "glbox1") a minus sign on negative bins is added in order to  
+<li> For 3D histograms painted using OpenGL (drawing options "glbox" and
+     "glbox1") a minus sign on negative bins is added in order to
      distinguish them from positive bins.
      <img alt="example of GLBOX" src="graf2d_01.gif">
 <li> In <tt>THistPainter::PaintH3</tt> the palette is drawn in case of option
@@ -187,7 +187,7 @@
 
 <h4>Documentation</h4>
 <ul>
-<li> Better comments in THelix. 
+<li> Better comments in THelix.
 <li> Option &quot;FUNC&quot; was not documented in THistPainter..
 <li> Update the help for animated gif generation in TPad.
 <li> Update TAttMarker documentation about the non scalable markers.

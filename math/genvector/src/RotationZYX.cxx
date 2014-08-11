@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -109,7 +109,7 @@ operator * ( RotationZ const & r, RotationZYX const & e )  {
 void RotationZYX::Rectify()
 {
    // rectify . The angle theta must be defined between [-PI/2,PI.2]
-   //  same as Euler- Angles, just here Theta is shifted by PI/2 with respect to 
+   //  same as Euler- Angles, just here Theta is shifted by PI/2 with respect to
    // the theta of the EulerAngles class
 
    Scalar theta2 = fTheta + M_PI_2;
@@ -123,22 +123,22 @@ void RotationZYX::Rectify()
          fPsi =  fPsi + Pi();
       }
       // ftheta is shifted of PI/2 w.r.t theta2
-      fTheta = theta2 - M_PI_2; 
+      fTheta = theta2 - M_PI_2;
    }
-   
+
    if ( fPhi <= -Pi()|| fPhi > Pi() ) {
       fPhi = fPhi - std::floor( fPhi/(2*Pi()) +.5 ) * 2*Pi();
    }
-   
+
    if ( fPsi <= -Pi()|| fPsi > Pi() ) {
       fPsi = fPsi - std::floor( fPsi/(2*Pi()) +.5 ) * 2*Pi();
    }
-   
+
 } // Rectify()
 
 void RotationZYX::Invert()
 {
-   // invert this rotation. 
+   // invert this rotation.
    // use Rotation3D. TO Do :have algorithm to invert it directly
    Rotation3D r(*this);
    //Quaternion r(*this);
@@ -151,8 +151,8 @@ void RotationZYX::Invert()
 std::ostream & operator<< (std::ostream & os, const RotationZYX & e) {
    // TODO - this will need changing for machine-readable issues
    //        and even the human readable form may need formatiing improvements
-   os << "\n{phi(Z angle): " << e.Phi() << "   theta(Y angle): " << e.Theta() 
-   << "   psi(X angle): " << e.Psi() << "}\n"; 
+   os << "\n{phi(Z angle): " << e.Phi() << "   theta(Y angle): " << e.Theta()
+   << "   psi(X angle): " << e.Psi() << "}\n";
    return os;
 }
 

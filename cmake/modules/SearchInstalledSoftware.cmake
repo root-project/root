@@ -34,10 +34,10 @@ if(NOT builtin_freetype)
     set(FREETYPE_INCLUDE_DIR ${FREETYPE_INCLUDE_DIR_freetype2})
   else()
     message(STATUS "FreeType not found. Switching on builtin_freetype option")
-    set(builtin_freetype ON CACHE BOOL "" FORCE) 	
+    set(builtin_freetype ON CACHE BOOL "" FORCE)
   endif()
 endif()
-if(builtin_freetype)  
+if(builtin_freetype)
   set(FREETYPE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/graf2d/freetype/freetype-2.3.12/include)
   set(FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR})
   if(WIN32)
@@ -54,15 +54,15 @@ if(NOT builtin_pcre)
   if(PCRE_FOUND)
   else()
     message(STATUS "PCRE not found. Switching on builtin_pcre option")
-    set(builtin_pcre ON CACHE BOOL "" FORCE) 	
-  endif() 
+    set(builtin_pcre ON CACHE BOOL "" FORCE)
+  endif()
 endif()
 if(builtin_pcre)
   set(PCRE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/core/pcre/pcre-7.8)
   if(WIN32)
-    set(PCRE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpcre.lib) 
+    set(PCRE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libpcre.lib)
   else()
-    set(PCRE_LIBRARIES "-L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} -lpcre") 
+    set(PCRE_LIBRARIES "-L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} -lpcre")
   endif()
 endif()
 
@@ -73,26 +73,26 @@ if(NOT builtin_lzma)
   if(LZMA_FOUND)
   else()
     message(STATUS "LZMA not found. Switching on builtin_lzma option")
-    set(builtin_lzma ON CACHE BOOL "" FORCE) 	
-  endif() 
+    set(builtin_lzma ON CACHE BOOL "" FORCE)
+  endif()
 endif()
 if(builtin_lzma)
   set(lzma_version 5.0.3)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
     ExternalProject_Add(
-	  LZMA
-	  URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz 
-	  URL_MD5  65693dc257802b6778c28ed53ecca678
-	  PREFIX LZMA
-	  INSTALL_DIR ${CMAKE_BINARY_DIR}
+     LZMA
+     URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
+     URL_MD5  65693dc257802b6778c28ed53ecca678
+     PREFIX LZMA
+     INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND "" BUILD_COMMAND ""
-	  INSTALL_COMMAND cmake -E copy lib/liblzma.dll <INSTALL_DIR>/bin/${CMAKE_CFG_INTDIR}
-	  BUILD_IN_SOURCE 1)
+     INSTALL_COMMAND cmake -E copy lib/liblzma.dll <INSTALL_DIR>/bin
+     BUILD_IN_SOURCE 1)
     install(FILES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
-  else() 
+  else()
     if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
       set(LZMA_CFLAGS "-Wno-format-nonliteral")
     elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
@@ -100,12 +100,12 @@ if(builtin_lzma)
     endif()
     ExternalProject_Add(
       LZMA
-      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz 
+      URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
       URL_MD5 858405e79590e9b05634c399497f4ba7
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --with-pic --disable-shared CFLAGS=${LZMA_CFLAGS}
       BUILD_IN_SOURCE 1)
-    set(LZMA_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -llzma)
+    set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lzma${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   endif()
 endif()
@@ -163,7 +163,7 @@ if(NOT builtin_afterimage)
   find_package(AfterImage)
   if(NOT AFTERIMAGE_FOUND)
     message(STATUS "AfterImage not found. Switching on builtin_afterimage option")
-    set(builtin_afterimage ON CACHE BOOL "" FORCE) 	
+    set(builtin_afterimage ON CACHE BOOL "" FORCE)
   endif()
 endif()
 
@@ -189,27 +189,30 @@ if(asimage)
 endif()
 
 #---Check for GSL library---------------------------------------------------------------
-if(mathmore)
+if(mathmore OR builtin_gsl)
   message(STATUS "Looking for GSL")
   if(NOT builtin_gsl)
     find_package(GSL 1.10)
     if(NOT GSL_FOUND)
       message(STATUS "GSL not found. Set variable GSL_DIR to point to your GSL installation")
-      message(STATUS "               Alternatively, you can also enable the option 'builtin_gsl' to build the GSL libraries internally'") 
+      message(STATUS "               Alternatively, you can also enable the option 'builtin_gsl' to build the GSL libraries internally'")
       message(STATUS "               For the time being switching OFF 'mathmore' option")
       set(mathmore OFF CACHE BOOL "" FORCE)
     endif()
   else()
     set(gsl_version 1.15)
-    message(STATUS "Downloading and building GSL version ${gsl_version}") 
+    message(STATUS "Downloading and building GSL version ${gsl_version}")
     ExternalProject_Add(
       GSL
       URL http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no
     )
     set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-    set(GSL_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -lgsl -lgslcblas -lm)
+    foreach(l gsl gslcblas)
+      list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+    endforeach()
+    set(mathmore ON CACHE BOOL "" FORCE)
   endif()
 endif()
 
@@ -505,31 +508,31 @@ if(fftw3)
 endif()
 
 #---Check for fitsio-------------------------------------------------------------------
-if(fitsio)
+if(fitsio OR builtin_cfitsio)
   if(builtin_cfitsio)
     set(cfitsio_version 3.280)
     string(REPLACE "." "" cfitsio_version_no_dots ${cfitsio_version})
-    message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}") 
+    message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}")
     ExternalProject_Add(
       CFITSIO
-      URL ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz 
+      URL ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
       BUILD_IN_SOURCE 1
     )
     set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-    set(CFITSIO_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -lcfitsio)
+    set(CFITSIO_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(fitsio ON CACHE BOOL "" FORCE)
   else()
-    message(STATUS "Looking for CFITSIO")  
+    message(STATUS "Looking for CFITSIO")
     find_package(CFITSIO)
     if(NOT CFITSIO_FOUND)
-      message(STATUS "CFITSIO not found. You can enable the option 'builtin_cfitsio' to build the library internally'") 
+      message(STATUS "CFITSIO not found. You can enable the option 'builtin_cfitsio' to build the library internally'")
       message(STATUS "                   For the time being switching off 'fitsio' option")
       set(fitsio OFF CACHE BOOL "" FORCE)
     endif()
   endif()
 endif()
-
 
 #---Check Shadow password support----------------------------------------------------
 if(shadowpw)
@@ -579,7 +582,7 @@ endif()
 if(builtin_xrootd)
   set(xrootd_version 3.3.6)
   set(xrootd_versionnum 300030006)
-  message(STATUS "Downloading and building XROOTD version ${xrootd_version}") 
+  message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")                        # Otherwise it produces tones of warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags} -Wno-deprecated-declarations -Wno-duplicate-decl-specifier")
   ExternalProject_Add(
@@ -616,146 +619,34 @@ else()
   set(netxng OFF)
 endif()
 
-#---Check for cling and llvm ----------------------------------------------------------------
+#---Check for cling and llvm --------------------------------------------------------
 find_library(CMAKE_TINFO_LIBS NAMES tinfo ncurses)
 mark_as_advanced(CMAKE_TINFO_LIBS)
 if(NOT CMAKE_TINFO_LIBS)
   set(CMAKE_TINFO_LIBS "")   #  Often if not found is still OK
 endif()
+
 if(cling)
-  if(NOT DEFINED LLVM_BUILD_TYPE)
-    set(LLVM_BUILD_TYPE Release)
-  endif()
-  if(LLVM_BUILD_TYPE STREQUAL "Debug")
-    set(LLVM_ENABLE_ASSERTIONS "YES")
-  else()
-    set(LLVM_ENABLE_ASSERTIONS "NO")
-  endif()
-
   if(builtin_llvm)
-    set(LLVM_SOURCE_DIR ${CMAKE_SOURCE_DIR}/interpreter/llvm/src)
-    set(LLVM_INSTALL_DIR ${CMAKE_BINARY_DIR}/LLVM-install)
-    ExternalProject_Add(
-      LLVM
-      PREFIX LLVM
-      SOURCE_DIR ${LLVM_SOURCE_DIR}
-      INSTALL_DIR ${CMAKE_BINARY_DIR}/LLVM-install
-      CMAKE_ARGS -DLLVM_INCLUDE_TESTS=OFF
-                 -DLLVM_INCLUDE_EXAMPLES=OFF
-                 -DLLVM_BUILD_TOOLS=OFF
-                 -DLLVM_TARGETS_TO_BUILD=X86
-                 -DLLVM_FORCE_USE_OLD_TOOLCHAIN=ON
-                 -DCMAKE_BUILD_TYPE=${LLVM_BUILD_TYPE}
-                 -DLLVM_ENABLE_ASSERTIONS=${LLVM_ENABLE_ASSERTIONS}
-                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                 -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-                 -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-                 -DLLVM_NOCLING=ON
-                 -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-                 -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -P <BINARY_DIR>/cmake_install.cmake
-      LOG_INSTALL 1
-    )
-    ExternalProject_Get_Property(LLVM STAMP_DIR BINARY_DIR)
-    file(REMOVE ${STAMP_DIR}/LLVM-build)     # Deleting stamp file to force a configure
-
-    #---The list of libraires is optatined by runnning 'llvm-config --libs'
-    set(LLVM_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LLVM-install/include)
-    set(LLVM_LIBRARIES ${BINARY_DIR}/lib/libclangFrontend.a
-                       ${BINARY_DIR}/lib/libclangSerialization.a
-                       ${BINARY_DIR}/lib/libclangDriver.a
-                       ${BINARY_DIR}/lib/libclangCodeGen.a
-                       ${BINARY_DIR}/lib/libclangParse.a
-                       ${BINARY_DIR}/lib/libclangSema.a
-                       ${BINARY_DIR}/lib/libclangAnalysis.a
-                       ${BINARY_DIR}/lib/libclangRewriteCore.a
-                       ${BINARY_DIR}/lib/libclangAST.a
-                       ${BINARY_DIR}/lib/libclangBasic.a
-                       ${BINARY_DIR}/lib/libclangEdit.a
-                       ${BINARY_DIR}/lib/libclangLex.a
-                       ${BINARY_DIR}/lib/libLLVMInstrumentation.a
-                       ${BINARY_DIR}/lib/libLLVMIRReader.a
-                       ${BINARY_DIR}/lib/libLLVMAsmParser.a
-                       ${BINARY_DIR}/lib/libLLVMDebugInfo.a
-                       ${BINARY_DIR}/lib/libLLVMOption.a
-                       ${BINARY_DIR}/lib/libLLVMLTO.a
-                       ${BINARY_DIR}/lib/libLLVMLinker.a
-                       ${BINARY_DIR}/lib/libLLVMipo.a
-                       ${BINARY_DIR}/lib/libLLVMVectorize.a
-                       ${BINARY_DIR}/lib/libLLVMBitWriter.a
-                       ${BINARY_DIR}/lib/libLLVMTableGen.a
-                       ${BINARY_DIR}/lib/libLLVMX86Disassembler.a
-                       ${BINARY_DIR}/lib/libLLVMX86AsmParser.a
-                       ${BINARY_DIR}/lib/libLLVMX86CodeGen.a
-                       ${BINARY_DIR}/lib/libLLVMX86Desc.a
-                       ${BINARY_DIR}/lib/libLLVMX86Info.a
-                       ${BINARY_DIR}/lib/libLLVMX86AsmPrinter.a
-                       ${BINARY_DIR}/lib/libLLVMX86Utils.a
-                       ${BINARY_DIR}/lib/libLLVMSelectionDAG.a
-                       ${BINARY_DIR}/lib/libLLVMAsmPrinter.a
-                       ${BINARY_DIR}/lib/libLLVMMCDisassembler.a
-                       ${BINARY_DIR}/lib/libLLVMMCParser.a
-                       ${BINARY_DIR}/lib/libLLVMInterpreter.a
-                       ${BINARY_DIR}/lib/libLLVMMCJIT.a
-                       ${BINARY_DIR}/lib/libLLVMJIT.a
-                       ${BINARY_DIR}/lib/libLLVMCodeGen.a
-                       ${BINARY_DIR}/lib/libLLVMObjCARCOpts.a
-                       ${BINARY_DIR}/lib/libLLVMScalarOpts.a
-                       ${BINARY_DIR}/lib/libLLVMInstCombine.a
-                       ${BINARY_DIR}/lib/libLLVMTransformUtils.a
-                       ${BINARY_DIR}/lib/libLLVMipa.a
-                       ${BINARY_DIR}/lib/libLLVMAnalysis.a
-                       ${BINARY_DIR}/lib/libLLVMRuntimeDyld.a
-                       ${BINARY_DIR}/lib/libLLVMExecutionEngine.a
-                       ${BINARY_DIR}/lib/libLLVMTarget.a
-                       ${BINARY_DIR}/lib/libLLVMMC.a
-                       ${BINARY_DIR}/lib/libLLVMObject.a
-                       ${BINARY_DIR}/lib/libLLVMBitReader.a
-                       ${BINARY_DIR}/lib/libLLVMCore.a
-                       ${BINARY_DIR}/lib/libLLVMSupport.a )
-    file(READ ${LLVM_SOURCE_DIR}/configure _filestr)
-    string(REGEX REPLACE ".*PACKAGE_VERSION='([0-9]+[.][0-9]+).*" "\\1" LLVM_VERSION ${_filestr})
+    set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/include
+                          ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include
+                          ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/clang/include
+                          ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include)
+    set(LLVM_LIBRARIES clangDriver clangFrontend)
   else()
-    find_package(LLVM REQUIRED)
+    find_package(LLVM REQUIRED)  # should define the same variables LLVM_XXXX
   endif()
 
-  ExternalProject_Add(
-    CLING
-    PREFIX CLING
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/interpreter/cling
-    INSTALL_DIR ${CMAKE_BINARY_DIR}/CLING-install
-    CMAKE_ARGS -DCLING_PATH_TO_LLVM_SOURCE=${CMAKE_SOURCE_DIR}/interpreter/llvm/src
-               -DCLING_PATH_TO_LLVM_BUILD=${CMAKE_BINARY_DIR}/LLVM-install
-               -DLLVM_FORCE_USE_OLD_TOOLCHAIN=ON
-               -DCMAKE_BUILD_TYPE=${LLVM_BUILD_TYPE}
-               -DLLVM_ENABLE_ASSERTIONS=${LLVM_ENABLE_ASSERTIONS}
-               -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-               -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-               -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-               -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-    INSTALL_COMMAND ${CMAKE_COMMAND} -P <BINARY_DIR>/cmake_install.cmake
-    LOG_INSTALL 1
-  )
-  ExternalProject_Get_Property(CLING STAMP_DIR BINARY_DIR)
-  file(REMOVE ${STAMP_DIR}/CLING-build)     # Deleting stamp file to force a configure
-  set(CLING_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CLING-install/include)
-  set(CLING_LIBRARIES ${BINARY_DIR}/lib/libclingInterpreter.a
-                      ${BINARY_DIR}/lib/libclingMetaProcessor.a
-                      ${BINARY_DIR}/lib/libclingUtils.a
-                      ${LLVM_LIBRARIES})
-  #--Additional flags obtained from llvm-config --cxxflags
+  set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
   set(CLING_CXXFLAGS "-fvisibility-inlines-hidden -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
   if (CMAKE_COMPILER_IS_GNUCXX)
     set(CLING_CXXFLAGS "${CLING_CXXFLAGS} -Wno-missing-field-initializers")
   endif()
-  add_dependencies(CLING LLVM)
+  #---These are the libraries that we link ROOT with CLING---------------------------
+  set(CLING_LIBRARIES clingInterpreter clingMetaProcessor clingUtils)
+  add_custom_target(CLING)
+  add_dependencies(CLING ${CLING_LIBRARIES} clang-headers)
 endif()
-
 
 #---Check for gfal-------------------------------------------------------------------
 if(gfal)
@@ -863,37 +754,45 @@ if(hdfs)
 endif()
 
 #---Check for DavIx library-----------------------------------------------------------
-if(davix)
+if(davix OR builtin_davix)
   if(builtin_davix)
-    set(DAVIX_VERSION 0.3.1)
+    if(NOT davix)
+      set(davix ON CACHE BOOL "" FORCE)
+    endif()
+    set(DAVIX_VERSION 0.3.4)
     message(STATUS "Downloading and building Davix version ${DAVIX_VERSION}")
+    string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")                      # Otherwise it produces tones of warnings
+    string(REPLACE "-W " "" __cxxflags "${__cxxflags} -Wno-unused-const-variable")
+    string(REPLACE "-Wall " "" __cflags "${CMAKE_C_FLAGS}")                          # Otherwise it produces tones of warnings
+    string(REPLACE "-W " "" __cflags "${__cflags} -Wno-format -Wno-implicit-function-declaration")
     ExternalProject_Add(
       DAVIX
       PREFIX DAVIX
-      #URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
-      GIT_REPOSITORY http://git.cern.ch/pub/davix  GIT_TAG 0_3_0_branch
-      UPDATE_COMMAND git submodule update --recursive 
+      URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}/DAVIX-install
-      PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} 
+                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                  -DBOOST_EXTERNAL=OFF
                  -DSTATIC_LIBRARY=ON
                  -DSHARED_LIBRARY=OFF
                  -DENABLE_TOOLS=OFF
                  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                 -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-                 -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+                 -DCMAKE_C_FLAGS=${__cflags}
+                 -DCMAKE_CXX_FLAGS=${__cxxflags}
                  -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                  -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
     )
-    #--TODO we need to install the dynamic library or build the static (which currently fails)
+    if(${SYSCTL_OUTPUT} MATCHES x86_64)
+      set(_LIBDIR "lib64")
+    else()
+      set(_LIBDIR "lib")
+    endif()
     set(DAVIX_INCLUDE_DIR ${CMAKE_BINARY_DIR}/DAVIX-install/include/davix)
-    set(DAVIX_LIBRARY ${CMAKE_BINARY_DIR}/DAVIX-install/lib/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DAVIX_LIBRARY ${CMAKE_BINARY_DIR}/DAVIX-install/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
     foreach(l davix neon boost_static_internal)
-      list(APPEND DAVIX_LIBRARIES ${CMAKE_BINARY_DIR}/DAVIX-install/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+      list(APPEND DAVIX_LIBRARIES ${CMAKE_BINARY_DIR}/DAVIX-install/${_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
     endforeach()
   else()
     message(STATUS "Looking for DAVIX")

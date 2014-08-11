@@ -29,4 +29,11 @@
 #   undef ROOT_XrdNoUtils
 #endif
 
+// This is when the header and library packaging changed (v3.1.0)
+#if (ROOTXRDVERS >= 400000000)
+#   define ROOT_XrdFour
+#else
+#   undef ROOT_XrdFour
+#endif
+
 #endif

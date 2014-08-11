@@ -8,9 +8,9 @@
 - (id) initWithFrame : (CGRect)frame andIcon : (NSString *)iconName
 {
    //self = [super initWithFrame:frame];
-   
+
    self = [super initWithImage : [UIImage imageNamed : iconName]];
-   
+
    if (self) {
       self.frame = frame;
       //View is transparent with shadow (under non-transparent pixels in a picture).
@@ -21,7 +21,7 @@
       self.layer.shadowOffset = CGSizeMake(3.f, 3.f);
       self.userInteractionEnabled = YES;
    }
-   
+
    return self;
 }
 

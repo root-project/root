@@ -24,7 +24,7 @@ when storing the object in a TTree and in a collection object, use:
 ### I/O Schema Checksum
 
 The algorithm used to calculate a single number giving an indication on whether
-the schema layout has changed (i.e. if two StreamerInfo are equivalent) have 
+the schema layout has changed (i.e. if two StreamerInfo are equivalent) have
 been update to
 
 - Use the normalized name for the types (i.e. two different spelling of the same
@@ -58,20 +58,20 @@ check the base classes.
 
 ``` {.cpp}
        TFileMerger::PartialMerge(flags | kOnlyListed)
-```            
+```
 
    This will merge only the objects in the files having the names in
    the specified list. If a folder is specified, it whole content will
    be merged
 
 ``` {.cpp}
-        TFileMerger::PartialMerge(flags | kSkipListed)  
-```           
+        TFileMerger::PartialMerge(flags | kSkipListed)
+```
 
    This will skip merging for the specified objects. If a folder is
    specified, its whole content will be skipped
 
    Important note:
-   The kOnlyListed and kSkipListed flags have to be bitwise OR-ed 
+   The kOnlyListed and kSkipListed flags have to be bitwise OR-ed
    on top of the merging defaults: kAll | kIncremental (as in the example $ROOTSYS/tutorials/io/mergeSelective.C)
 

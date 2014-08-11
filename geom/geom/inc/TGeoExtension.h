@@ -21,10 +21,10 @@
 //______________________________________________________________________________
 //   TGeoExtension - ABC for user objects attached to TGeoVolume or TGeoNode.
 //                   Provides interface for getting a reference (grab) and
-//                   releasing the extension object (release), allowing for 
+//                   releasing the extension object (release), allowing for
 //                   derived classes to implement reference counted sharing.
 //                   The user who should attach extensions to logical volumes
-//                   or nodes BEFORE applying misalignment information so that 
+//                   or nodes BEFORE applying misalignment information so that
 //                   these will be available to all copies.
 //______________________________________________________________________________
 
@@ -33,7 +33,7 @@ class TGeoExtension : public TObject
 protected:
    TGeoExtension() : TObject() {}
    virtual ~TGeoExtension() {}
- 
+
 public:
    // Method called whenever requiring a pointer to the extension
    // Equivalent to new()
@@ -47,8 +47,8 @@ public:
 
 
 //______________________________________________________________________________
-//   TGeoRCExtension - Reference counted extension which has a pointer to and 
-//                   owns a user defined TObject. This class can be used as 
+//   TGeoRCExtension - Reference counted extension which has a pointer to and
+//                   owns a user defined TObject. This class can be used as
 //                   model for a reference counted derivation from TGeoExtension.
 //                   The user object becomes owned by the extension.
 //______________________________________________________________________________
@@ -66,8 +66,8 @@ public:
 
    void                 SetUserObject(TObject *obj) {fUserObject = obj;}
    TObject             *GetUserObject() const       {return fUserObject;}
-   
-   
+
+
 private:
    // Copy constructor and assignment not allowed
    TGeoRCExtension(const TGeoRCExtension &); // Not implemented

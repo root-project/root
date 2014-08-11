@@ -72,7 +72,7 @@ TEventIter::TEventIter()
    fElemNum = 0;
    fElemCur = -1;
    ResetBit(TEventIter::kData);
-   
+
    if ((fPackets = new TList)) {
       TString n("ProcessedPackets_");
       if (gProofServ) n += gProofServ->GetOrdinal();
@@ -105,7 +105,7 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
    fElemNum = 0;
    fElemCur = -1;
    ResetBit(TEventIter::kData);
-  
+
    if ((fPackets = new TList)) {
       TString n("ProcessedPackets_");
       if (gProofServ) n += gProofServ->GetOrdinal();
@@ -311,7 +311,7 @@ Int_t TEventIterUnit::GetNextPacket(Long64_t &fst, Long64_t &num,
    num = fElem->GetNum();
    if (num == 0) return -1;
    fst = fElem->GetFirst();
-  
+
    // Done
    return 0;
 }
@@ -517,7 +517,7 @@ Int_t TEventIterObj::GetNextPacket(Long64_t &first, Long64_t &num,
 
    first = ++fElemCur;
    num = fElemNum;
-   
+
    // Done
    return 0;
 }
@@ -525,7 +525,7 @@ Int_t TEventIterObj::GetNextPacket(Long64_t &first, Long64_t &num,
 void TEventIterObj::PreProcessEvent(Long64_t)
 {
    // To be executed before by TProofPlayer calling TSelector::Process
-   
+
    --fNum;
    ++fCur;
    TKey *key = (TKey*) fNextKey->Next();
@@ -632,7 +632,7 @@ Long64_t TEventIterObj::GetNextEvent()
 
    --fElemNum;
    ++fElemCur;
-   
+
    // Pre-event processing
    PreProcessEvent(fElemCur);
 
@@ -1006,7 +1006,7 @@ Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num,
       rest = fElem->GetNum();
       if (fElemCur >= 0) rest -= (fElemCur + 1 - fElemFirst);
    }
-      
+
    SafeDelete(fElem);
 
    while (fElem == 0 || fElemNum == 0 || fCur < fFirst-1) {
@@ -1017,7 +1017,7 @@ Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num,
          gPerfStats->SetBytesRead(bytesRead);
          fOldBytesRead = totBytesRead;
       }
-      
+
       if (fElem) {
          // Save it to the list of processed packets
          if (fPackets) {
@@ -1046,7 +1046,7 @@ Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num,
          corrupted = kFALSE;
          fElem->SetBit(TDSetElement::kNewPacket);
          fElem->ResetBit(TDSetElement::kCorrupted);
-         
+
          TTree *newTree = GetTrees(fElem);
          if (newTree) {
             if (newTree != fTree) {
@@ -1126,7 +1126,7 @@ Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num,
       }
       attach = kFALSE;
    }
-   
+
    // Fill the output now
    num = fElemNum;
    if (fEntryList) {
@@ -1180,7 +1180,7 @@ Long64_t TEventIterTree::GetNextEvent()
    // When files are aborted during processing (via TSelector::kAbortFile) the player
    // invalidates the element by settign this bit. We need to ask for a new packet
    Bool_t corrupted = (fElem && fElem->TestBit(TDSetElement::kCorrupted)) ? kTRUE : kFALSE;
-      
+
    if (fElem) fElem->ResetBit(TDSetElement::kNewPacket);
 
    while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 || corrupted) {
@@ -1204,7 +1204,7 @@ Long64_t TEventIterTree::GetNextEvent()
             SafeDelete(fElem);
          }
       }
-      
+
       while (!fElem) {
          // For a corrupted/invalid file the request for a new packet is with totalEntries = -1
          // (the default) so that the packetizer invalidates the element
@@ -1224,7 +1224,7 @@ Long64_t TEventIterTree::GetNextEvent()
          corrupted = kFALSE;
          fElem->SetBit(TDSetElement::kNewPacket);
          fElem->ResetBit(TDSetElement::kCorrupted);
-         
+
          TTree *newTree = GetTrees(fElem);
          if (newTree) {
             if (newTree != fTree) {

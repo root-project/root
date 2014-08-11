@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
 #include "Math/GenVector/BitReproducible.h"
 
@@ -7,8 +7,8 @@
 #include <iomanip>
 #include <exception>
 
-namespace ROOT { 
-namespace Math { 
+namespace ROOT {
+namespace Math {
 namespace GenVector_detail {
 
 bool BitReproducible::fgByte_order_known = false;

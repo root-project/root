@@ -23,11 +23,11 @@
  </ol>
  In both cases, a UShort_t* is used. The second option is better in case
  less than 1/16 or more than 15/16 of entries pass the selection, and the representation can be
- changed by calling OptimizeStorage() function. 
+ changed by calling OptimizeStorage() function.
  When the block is being filled, it's always stored as bits, and the OptimizeStorage()
  function is called by TEntryList when it starts filling the next block. If
- Enter() or Remove() is called after OptimizeStorage(), representation is 
- again changed to 1). 
+ Enter() or Remove() is called after OptimizeStorage(), representation is
+ again changed to 1).
 End_Html
 Begin_Macro(source)
 entrylistblock_figure1.C
@@ -36,7 +36,7 @@ End_Macro
 Begin_Html
  <h4>Operations on blocks (see also function comments)</h4>
 <ul>
- <li> <b>Merge</b>() - adds all entries from one block to the other. If the first block 
+ <li> <b>Merge</b>() - adds all entries from one block to the other. If the first block
              uses array representation, it's changed to bits representation only
              if the total number of passing entries is still less than kBlockSize
  <li> <b>GetEntry(n)</b> - returns n-th non-zero entry.
@@ -179,7 +179,7 @@ Bool_t TEntryListBlock::Remove(Int_t entry)
          fIndices[i] &= (0xFFFF^(1<<j));
          fNPassed--;
          return 1;
-      } else { 
+      } else {
          return 0;
       }
    }
@@ -221,14 +221,14 @@ Int_t TEntryListBlock::Contains(Int_t entry)
       if (!fIndices || fNPassed==0){
          //all entries pass
          return kTRUE;
-      } 
+      }
       if (entry > fIndices[fNPassed-1])
          return kTRUE;
       for (Int_t i= fCurrent; i<fNPassed; i++){
          if (fIndices[i]==entry){
             fCurrent = i;
             return kFALSE;
-         } 
+         }
          if (fIndices[i]>entry){
             fCurrent = i;
             return kTRUE;
@@ -412,8 +412,8 @@ Int_t TEntryListBlock::GetEntry(Int_t entry)
                //all entries pass
                fLastIndexReturned = entry;
                return fLastIndexReturned;
-            } 
-            for (i=0; i<fIndices[0]; i++){               
+            }
+            for (i=0; i<fIndices[0]; i++){
                entries_found++;
                if (entries_found==entry+1){
                   fLastIndexReturned = i;
@@ -436,7 +436,7 @@ Int_t TEntryListBlock::GetEntry(Int_t entry)
                   return fLastIndexReturned;
                }
             }
-         }   
+         }
       }
       return -1;
    }
@@ -471,7 +471,7 @@ Int_t TEntryListBlock::Next()
       fLastIndexQueried++;
       return fLastIndexReturned;
 
-   } 
+   }
    if (fType==1) {
       fLastIndexQueried++;
       if (fPassing){
@@ -484,7 +484,7 @@ Int_t TEntryListBlock::Next()
             }
          return fLastIndexReturned;
       }
-      
+
    }
    return -1;
 }
@@ -502,7 +502,7 @@ void TEntryListBlock::Print(const Option_t *option) const
 //______________________________________________________________________________
 void TEntryListBlock::PrintWithShift(Int_t shift) const
 {
-   //print the indices of this block + shift (used from TEntryList::Print()) to 
+   //print the indices of this block + shift (used from TEntryList::Print()) to
    //print the corrent values
 
    Int_t i;
@@ -613,7 +613,7 @@ void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
          indexnew[ibite] ^= 1<<ibit;
       }
       fNPassed = kBlockSize*16-fNPassed;
-   } 
+   }
    if (fIndices)
       delete [] fIndices;
    fIndices = indexnew;

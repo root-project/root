@@ -70,7 +70,7 @@ public:
    void   SetActive(Bool_t a);
 
    void   ResetBoxGeometry();
-   
+
    void   SetFactor(Double_t f){fFactor = f;}
 
    void   DrawBox(Bool_t selectionPass, Int_t selected)const;
@@ -91,7 +91,7 @@ public:
          return kTRUE;
       return kFALSE;
    }
-   
+
    Rgl::Range_t GetXRange()const{return fXRange;}
    Rgl::Range_t GetYRange()const{return fYRange;}
    Rgl::Range_t GetZRange()const{return fZRange;}
@@ -206,7 +206,7 @@ protected:
    TGLPlotCoordinates   *fCoord;
    TGLPlotCamera        *fCamera;
    TGLSelectionBuffer    fSelection;
-   
+
    Bool_t                fUpdateSelection;
    Bool_t                fSelectionPass;
    Int_t                 fSelectedPart;
@@ -263,7 +263,7 @@ public:
    virtual void     ProcessEvent(Int_t event, Int_t px, Int_t py) = 0;
    //Used by GLpad
    void             SetPadColor(const TColor *color);
-   
+
    virtual void     SetFrameColor(const TColor *frameColor);
    //Camera is external to painter, if zoom was changed, or camera
    //was rotated, selection must be invalidated.
@@ -276,7 +276,7 @@ public:
    };
 
    Bool_t           CutAxisSelected()const{return !fHighColor && fSelectedPart <= kZAxis && fSelectedPart >= kXAxis;}
-   
+
    void SetDrawFrontBox(Bool_t b) {fBackBox.SetDrawFront(b);}
    void SetDrawBackBox(Bool_t b) {fBackBox.SetDrawBack(b);}
    void SetDrawAxes(Bool_t s) {fDrawAxes = s;}
@@ -296,14 +296,14 @@ protected:
    virtual void     ClearBuffers()const;
 
    void             PrintPlot()const;
-   
+
    //Attention! After one of this methods was called,
    //the GL_MATRIX_MODE could become different from what
-   //you had before the call: for example, SaveModelviewMatrix will 
+   //you had before the call: for example, SaveModelviewMatrix will
    //change it to GL_MODELVIEW.
    void             SaveModelviewMatrix()const;
    void             SaveProjectionMatrix()const;
-   
+
    void             RestoreModelviewMatrix()const;
    void             RestoreProjectionMatrix()const;
 

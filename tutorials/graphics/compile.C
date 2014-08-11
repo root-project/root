@@ -2,7 +2,7 @@
    //
    // This macro produces the flowchart of TFormula::Compile
    //Author: Rene Brun
-   
+
    gROOT->Reset();
    c1 = new TCanvas("c1");
    c1->Range(0,0,1,1);

@@ -1,12 +1,12 @@
 // @(#)root/physics:$Id$
-// Author: Rene Brun , Valerio Filippini  06/09/2000 
+// Author: Rene Brun , Valerio Filippini  06/09/2000
 
 //_____________________________________________________________________________________
 //
 //  Utility class to generate n-body event,
 //  with constant cross-section (default)
 //  or with Fermi energy dependence (opt="Fermi").
-//  The event is generated in the center-of-mass frame, 
+//  The event is generated in the center-of-mass frame,
 //  but the decay products are finally boosted
 //  using the betas of the original particle.
 //
@@ -28,7 +28,7 @@ const Int_t kMAXP = 18;
 ClassImp(TGenPhaseSpace)
 
 //_____________________________________________________________________________________
-Double_t TGenPhaseSpace::PDK(Double_t a, Double_t b, Double_t c) 
+Double_t TGenPhaseSpace::PDK(Double_t a, Double_t b, Double_t c)
 {
    //the PDK function
    Double_t x = (a-b-c)*(a+b+c)*(a-b+c)*(a+b-c);
@@ -37,11 +37,11 @@ Double_t TGenPhaseSpace::PDK(Double_t a, Double_t b, Double_t c)
 }
 
 //_____________________________________________________________________________________
-Int_t DoubleMax(const void *a, const void *b) 
+Int_t DoubleMax(const void *a, const void *b)
 {
    //special max function
-   Double_t aa = * ((Double_t *) a); 
-   Double_t bb = * ((Double_t *) b); 
+   Double_t aa = * ((Double_t *) a);
+   Double_t bb = * ((Double_t *) b);
    if (aa > bb) return  1;
    if (aa < bb) return -1;
    return 0;
@@ -84,7 +84,7 @@ TGenPhaseSpace& TGenPhaseSpace::operator=(const TGenPhaseSpace &gen)
 }
 
 //__________________________________________________________________________________________________
-Double_t TGenPhaseSpace::Generate() 
+Double_t TGenPhaseSpace::Generate()
 {
    //  Generate a random final state.
    //  The function returns the weigth of the current event.
@@ -150,9 +150,9 @@ Double_t TGenPhaseSpace::Generate()
       for (j=0; j<=i; j++) fDecPro[j].Boost(0,beta,0);
       i++;
    }
- 
+
    //
-   //---> final boost of all particles  
+   //---> final boost of all particles
    //
    for (n=0;n<fNt;n++) fDecPro[n].Boost(fBeta[0],fBeta[1],fBeta[2]);
 
@@ -163,8 +163,8 @@ Double_t TGenPhaseSpace::Generate()
 }
 
 //__________________________________________________________________________________
-TLorentzVector *TGenPhaseSpace::GetDecay(Int_t n) 
-{ 
+TLorentzVector *TGenPhaseSpace::GetDecay(Int_t n)
+{
    //return Lorentz vector corresponding to decay n
    if (n>fNt) return 0;
    return fDecPro+n;
@@ -172,8 +172,8 @@ TLorentzVector *TGenPhaseSpace::GetDecay(Int_t n)
 
 
 //_____________________________________________________________________________________
-Bool_t TGenPhaseSpace::SetDecay(TLorentzVector &P, Int_t nt, 
-   const Double_t *mass, Option_t *opt) 
+Bool_t TGenPhaseSpace::SetDecay(TLorentzVector &P, Int_t nt,
+   const Double_t *mass, Option_t *opt)
 {
    // input:
    // TLorentzVector &P:    decay particle (Momentum, Energy units are Gev/C, GeV)
@@ -206,9 +206,9 @@ Bool_t TGenPhaseSpace::SetDecay(TLorentzVector &P, Int_t nt,
    //   opt == "Fermi"  --> fermi energy dependence for cross section
    //   else            --> constant cross section as function of TECM (default)
    //
-   if (strcasecmp(opt,"fermi")==0) {  
+   if (strcasecmp(opt,"fermi")==0) {
       // ffq[] = pi * (2*pi)**(FNt-2) / (FNt-2)!
-      Double_t ffq[] = {0 
+      Double_t ffq[] = {0
                      ,3.141592, 19.73921, 62.01255, 129.8788, 204.0131
                      ,256.3704, 268.4705, 240.9780, 189.2637
                      ,132.1308,  83.0202,  47.4210,  24.8295
@@ -236,7 +236,7 @@ Bool_t TGenPhaseSpace::SetDecay(TLorentzVector &P, Int_t nt,
       fBeta[1] = P(1)*w;
       fBeta[2] = P(2)*w;
    }
-   else fBeta[0]=fBeta[1]=fBeta[2]=0; 
+   else fBeta[0]=fBeta[1]=fBeta[2]=0;
 
-   return kTRUE; 
+   return kTRUE;
 }

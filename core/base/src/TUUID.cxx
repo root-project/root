@@ -111,6 +111,8 @@
 #include "TInetAddress.h"
 #include "TMD5.h"
 #include "Bytes.h"
+#include "TVirtualMutex.h"
+#include "ThreadLocalStorage.h"
 #include <string.h>
 #include <stdlib.h>
 #ifdef R__WIN32
@@ -132,10 +134,14 @@ TUUID::TUUID()
 {
    // Create a UUID.
 
-   static uuid_time_t time_last;
-   static UShort_t    clockseq;
-   static Bool_t firstTime = kTRUE;
+   TTHREAD_TLS(uuid_time_t) time_last;
+   TTHREAD_TLS(UShort_t) clockseq(0);
+   TTHREAD_TLS(Bool_t) firstTime(kTRUE);
+   uuid_time_t *time_last_ptr = TTHREAD_TLS_PTR(time_last);
+
    if (firstTime) {
+      R__LOCKGUARD2(gROOTMutex); // rand and random are not thread safe.
+
       if (gSystem) {
          // try to get a unique seed per process
          UInt_t seed = (UInt_t) (Long64_t(gSystem->Now()) + gSystem->GetPid());
@@ -145,7 +151,7 @@ TUUID::TUUID()
          srandom(seed);
 #endif
       }
-      GetCurrentTime(&time_last);
+      GetCurrentTime(time_last_ptr);
 #ifdef R__WIN32
       clockseq = 1+(UShort_t)(65536*rand()/(RAND_MAX+1.0));
 #else
@@ -160,7 +166,7 @@ TUUID::TUUID()
    GetCurrentTime(&timestamp);
 
    // if clock went backward change clockseq
-   if (CmpTime(&timestamp, &time_last) == -1) {
+   if (CmpTime(&timestamp, time_last_ptr) == -1) {
       clockseq = (clockseq + 1) & 0x3FFF;
       if (clockseq == 0) clockseq++;
    }
@@ -321,12 +327,14 @@ void TUUID::GetCurrentTime(uuid_time_t *timestamp)
 
    const UShort_t uuids_per_tick = 1024;
 
-   static uuid_time_t time_last;
-   static UShort_t    uuids_this_tick;
-   static Bool_t      init = kFALSE;
+   TTHREAD_TLS(uuid_time_t) time_last;
+   TTHREAD_TLS(UShort_t)    uuids_this_tick(0);
+   TTHREAD_TLS(Bool_t)      init(kFALSE);
+
+   uuid_time_t *time_last_ptr = TTHREAD_TLS_PTR(time_last);
 
    if (!init) {
-      GetSystemTime(&time_last);
+      GetSystemTime(time_last_ptr);
       uuids_this_tick = uuids_per_tick;
       init = kTRUE;
    }
@@ -337,7 +345,7 @@ void TUUID::GetCurrentTime(uuid_time_t *timestamp)
       GetSystemTime(&time_now);
 
       // if clock reading changed since last UUID generated
-      if (CmpTime(&time_last, &time_now))  {
+      if (CmpTime(time_last_ptr, &time_now))  {
          // reset count of uuid's generated with this clock reading
          uuids_this_tick = 0;
          break;

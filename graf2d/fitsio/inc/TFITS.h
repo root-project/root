@@ -48,26 +48,26 @@ public:
       kImageHDU,
       kTableHDU
    };
-   
+
    enum EColumnTypes {     // Column data types
       kRealNumber,
       kString,
       kRealVector
    };
-   
+
    struct HDURecord {       // FITS HDU record
       TString fKeyword;
       TString fValue;
       TString fComment;
    };
-   
+
    struct Column {               //Information of a table column
       TString            fName;      // Column's name
       enum EColumnTypes  fType;      // Column's data type
-      Int_t              fDim;       // When cells contain real number vectors, this field indicates 
+      Int_t              fDim;       // When cells contain real number vectors, this field indicates
                                      // the dimension of this vector (number of components), being 1 for scalars.
    };
-   
+
    union Cell {                 //Table cell contents
       Char_t       *fString;
       Double_t      fRealNumber;
@@ -92,15 +92,15 @@ protected:
                                           // fCells[fNRows..2*fNRows-1] -> cells of column 1
                                           // fCells[2*fNRows..3*fNRows-1] -> cells of column 2
                                           // fCells[(fNColumns-1)*fNRows..fNColumns*fNRows-1] -> cells of column fNColumns-1
-   
-   
+
+
    Bool_t            LoadHDU(TString& filepath_filter);
    static void       CleanFilePath(const char *filepath_with_filter, TString &dst);
    void              PrintHDUMetadata(const Option_t *opt="") const;
    void              PrintFileMetadata(const Option_t *opt="") const;
    void              PrintColumnInfo(const Option_t *) const;
    void              PrintFullTable(const Option_t *) const;
-      
+
 public:
    TFITSHDU(const char *filepath_with_filter);
    TFITSHDU(const char *filepath, Int_t extension_number);
@@ -119,7 +119,7 @@ public:
    TMatrixD          *ReadAsMatrix(Int_t layer = 0, Option_t *opt="");
    TVectorD          *GetArrayRow(UInt_t row);
    TVectorD          *GetArrayColumn(UInt_t col);
-   
+
    //Table readers
    Int_t              GetTabNColumns() const { return fNColumns; }
    Int_t              GetTabNRows()    const { return fNRows; }
@@ -133,13 +133,13 @@ public:
    TVectorD          *GetTabRealVectorCell(Int_t rownum, const char *colname);
    TObjArray         *GetTabRealVectorCells(Int_t colnum);
    TObjArray         *GetTabRealVectorCells(const char *colname);
-   
+
    //Misc
    void               Draw(Option_t *opt="");
    Bool_t             Change(const char *filter);
    Bool_t             Change(Int_t extension_number);
-   
-   
+
+
    ClassDef(TFITSHDU,0)  // Class interfacing FITS HDUs
 };
 

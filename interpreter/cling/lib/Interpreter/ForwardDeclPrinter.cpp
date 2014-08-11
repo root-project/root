@@ -1,5 +1,5 @@
 #include "ForwardDeclPrinter.h"
-
+#include "llvm/Support/Path.h"
 namespace cling {
   using namespace clang;
   static QualType GetBaseType(QualType T) {
@@ -49,8 +49,14 @@ namespace cling {
 //          A->printPretty(Out, Policy);
 //        }
 //      }
+    //FIXME: This ignores previous attributes
+    //Do not simply uncomment the above code
+    //In some cases, it prints attribs without the strings at all
+
+    //FIXME: Must print file id or full path
+
     Out << " __attribute__((annotate(\""
-        << m_SMgr.getFilename(D->getSourceRange().getBegin()) << "\"))) ";
+        << m_SMgr.getFilename(D->getSourceRange().getBegin())  << "\"))) ";
   }
 
   void ForwardDeclPrinter::ProcessDeclGroup(SmallVectorImpl<Decl*>& Decls) {
@@ -136,7 +142,6 @@ namespace cling {
     this->Indent();
     Visit(*D);
 
-    // FIXME: Need to be able to tell the FwdPrinter when
     const char *Terminator = 0;
     if (isa<OMPThreadPrivateDecl>(*D))
         Terminator = 0;
@@ -200,8 +205,10 @@ namespace cling {
   }
 
   void ForwardDeclPrinter::VisitEnumDecl(EnumDecl *D) {
-    if (D->getName().size() == 0)
+    if (D->getName().size() == 0 || !D->isFixed()) {
+      m_SkipFlag = true;
       return;
+    }
 
     if (!Policy.SuppressSpecifiers && D->isModulePrivate())
       Out << "__module_private__ ";
@@ -223,9 +230,6 @@ namespace cling {
 //        VisitDeclContext(D);
 //        Indent() << "};\n";
 //      }
-
-
-    Indent() << ";\n";
   }
 
   void ForwardDeclPrinter::VisitRecordDecl(RecordDecl *D) {
@@ -252,15 +256,10 @@ namespace cling {
   }
 
   void ForwardDeclPrinter::VisitFunctionDecl(FunctionDecl *D) {
-    if (D->getNameAsString().size() == 0 || D->getNameAsString()[0] == '_')
-      return;
-    if (D->getStorageClass() == SC_Static)
-      return;
-     /*FIXME:Ugly Hack: should idealy never be triggerred */
-    if (D->isCXXClassMember()) {
+    if (shouldSkipFunction(D)) {
+      m_SkipFlag = true;
       return;
     }
-
     CXXConstructorDecl *CDecl = dyn_cast<CXXConstructorDecl>(D);
       CXXConversionDecl *ConversionDecl = dyn_cast<CXXConversionDecl>(D);
       /*FIXME:Ugly Hack*/
@@ -474,9 +473,6 @@ namespace cling {
     //    D->getBody()->printPretty(Out, 0, SubPolicy, Indentation);
 
     }
-//      Out << " __attribute__((annotate(\""
-//          << m_SMgr.getFilename(D->getSourceRange().getBegin())<< "\"))) ";
-//      Out <<";\n";
   }
 
   void ForwardDeclPrinter::VisitFriendDecl(FriendDecl *D) {
@@ -534,8 +530,9 @@ namespace cling {
 
 
   void ForwardDeclPrinter::VisitVarDecl(VarDecl *D) {
-    //FIXME:Ugly hack
-    if(D->getStorageClass() == SC_Static) {
+    if(D->getStorageClass() == SC_Static
+        || hasNestedNameSpecifier(D->getType()) ) {
+      m_SkipFlag = true;
       return;
     }
     if(D->isDefinedOutsideFunctionOrMethod() && !(D->getStorageClass() == SC_Extern))
@@ -574,6 +571,7 @@ namespace cling {
     //So, we ignore restrict here
     T.removeLocalRestrict();
     T.print(Out, Policy, D->getName());
+//    llvm::outs()<<D->getName()<<"\n";
     T.addRestrict();
 
     Expr *Init = D->getInit();
@@ -591,9 +589,11 @@ namespace cling {
       if ((D->getInitStyle() == VarDecl::CallInit) && !isa<ParenListExpr>(Init))
         Out << "(";
       else if (D->getInitStyle() == VarDecl::CInit) {
-//            Out << " = "; //FOR skipping default function args
+          if(!D->isDefinedOutsideFunctionOrMethod())
+            Out << " = "; //Comment for skipping default function args
       }
-//          Init->printPretty(Out, 0, Policy, Indentation);//FOR skipping defalt function args
+      if(!D->isDefinedOutsideFunctionOrMethod())
+        Init->printPretty(Out, 0, Policy, Indentation);//Comment for skipping defalt function args
       if ((D->getInitStyle() == VarDecl::CallInit) && !isa<ParenListExpr>(Init))
         Out << ")";
       }
@@ -635,10 +635,10 @@ namespace cling {
 //      VisitDeclContext(D);
     for(auto dit=D->decls_begin();dit!=D->decls_end();++dit) {
       this->Visit(*dit);
-      Out << ";\n";
+      printSemiColon();
     }
-
     Indent() << "}\n";
+    m_SkipFlag = true;
   }
 
   void ForwardDeclPrinter::VisitUsingDirectiveDecl(UsingDirectiveDecl *D) {
@@ -657,22 +657,22 @@ namespace cling {
 
   void ForwardDeclPrinter::VisitEmptyDecl(EmptyDecl *D) {
 //    prettyPrintAttributes(D);
+      m_SkipFlag = true;
   }
 
   void ForwardDeclPrinter::VisitCXXRecordDecl(CXXRecordDecl *D) {
 
     if(ClassDeclNames.find(D->getNameAsString()) != ClassDeclNames.end()
-          /*|| D->getName().startswith("_")*/)
-      return;
-
-    if (D->getNameAsString().size() == 0)
-      return;
+          || D->getNameAsString().size() == 0) {
+        m_SkipFlag = true;
+        return;
+    }
 
     if (!Policy.SuppressSpecifiers && D->isModulePrivate())
       Out << "__module_private__ ";
     Out << D->getKindName();
-    Out << " __attribute__((annotate(\""
-        << m_SMgr.getFilename(D->getSourceRange().getBegin()) << "\"))) ";
+    if(D->isCompleteDefinition())
+      prettyPrintAttributes(D);
     if (D->getIdentifier())
       Out << ' ' << *D ;
 
@@ -704,8 +704,10 @@ namespace cling {
     //    VisitDeclContext(D);
     //    Indent() << "}";
     //  }
-//      Out << ";\n";
-    ClassDeclNames.insert(D->getNameAsString());
+    Out << ";\n";
+    m_SkipFlag = true;
+    if(D->isCompleteDefinition())
+      ClassDeclNames.insert(D->getNameAsString());
   }
 
   void ForwardDeclPrinter::VisitLinkageSpecDecl(LinkageSpecDecl *D) {
@@ -742,6 +744,7 @@ namespace cling {
       if (const TemplateTypeParmDecl *TTP =
             dyn_cast<TemplateTypeParmDecl>(Param)) {
 
+
         if (TTP->wasDeclaredWithTypename())
           Out << "typename ";
         else
@@ -755,9 +758,9 @@ namespace cling {
         if (Args) {
           Out << " = ";
           Args->get(i).print(Policy, Out);
-        } else if (TTP->hasDefaultArgument()) {
-//            Out << " = ";
-//            Out << TTP->getDefaultArgument().getAsString(Policy);
+        } else if (TTP->hasDefaultArgument() && TTP->getName().size() != 0) {
+            Out << " = ";
+            Out << TTP->getDefaultArgument().getAsString(Policy);
           };
       } else if (const NonTypeTemplateParmDecl *NTTP =
                    dyn_cast<NonTypeTemplateParmDecl>(Param)) {
@@ -774,8 +777,8 @@ namespace cling {
           Out << " = ";
           Args->get(i).print(Policy, Out);
         } else if (NTTP->hasDefaultArgument()) {
-//            Out << " = ";
-//            NTTP->getDefaultArgument()->printPretty(Out, 0, Policy, Indentation);
+            Out << " = ";
+            NTTP->getDefaultArgument()->printPretty(Out, 0, Policy, Indentation);
         }
       } else if (const TemplateTemplateParmDecl *TTPD =
                    dyn_cast<TemplateTemplateParmDecl>(Param)) {
@@ -802,13 +805,15 @@ namespace cling {
   }
 
   void ForwardDeclPrinter::VisitFunctionTemplateDecl(FunctionTemplateDecl *D) {
-    if(D->getNameAsString().size() == 0 || D->getNameAsString()[0] == '_')
-      return;
-//    if (D->getStorageClass() == SC_Static)
-//      return;
-    /*FIXME:Ugly Hack: should idealy never be triggerred */
-    if (D->isCXXClassMember())
-      return;
+    if(D->getNameAsString().size() == 0
+         || D->getNameAsString()[0] == '_'
+         || D->isCXXClassMember()
+         || hasNestedNameSpecifier(D->getAsFunction()->getReturnType())
+         || isOperator(D->getAsFunction())) {
+        m_SkipFlag = true;
+        return;
+    }
+
 
     if (PrintInstantiation) {
       TemplateParameterList *Params = D->getTemplateParameters();
@@ -824,8 +829,10 @@ namespace cling {
 
   void ForwardDeclPrinter::VisitClassTemplateDecl(ClassTemplateDecl *D) {
     if(ClassDeclNames.find(D->getNameAsString()) != ClassDeclNames.end()
-      || D->getName().size() == 0 )
-     return;
+         || D->getName().size() == 0 ) {
+        m_SkipFlag = true;
+        return;
+    }
     if (PrintInstantiation) {
       TemplateParameterList *Params = D->getTemplateParameters();
       for (ClassTemplateDecl::spec_iterator I = D->spec_begin(),
@@ -843,5 +850,51 @@ namespace cling {
 
       //D->dump();
 
+  }
+  void ForwardDeclPrinter::printSemiColon(bool flag) {
+    if (flag) {
+      if(!m_SkipFlag)
+        Out << ";\n";
+      else
+        m_SkipFlag = false;
+    }
+    else Out << ";\n";
+  }
+  bool ForwardDeclPrinter::hasNestedNameSpecifier(QualType q) {
+    //FIXME: Results in assert failures for incomplete types
+    //Also, find a better way to check this instead of the following
+    //TODO: May not cover all cases, more testing needed
+    //Eg: typedef int foo; inside a class
+//    auto t = q.getTypePtr();
+//    if ( t->isBuiltinType() )
+//      return false;
+//    if ( t->isAggregateType() ) {
+//      CXXRecordDecl* decl = t->getAsCXXRecordDecl();
+//      DeclContext* dc = decl->getDeclContext();
+//      return isa<CXXRecordDecl>(dc);
+//    }
+    return false;
+  }
+  bool ForwardDeclPrinter::isOperator(FunctionDecl *D) {
+    return D->getNameAsString().find("operator") == 0;
+  }
+  bool ForwardDeclPrinter::shouldSkipFunction(FunctionDecl *D) {
+    bool param = false;
+    //will be true if any of the params turn out to have nested types
+
+    for (unsigned i = 0, e = D->getNumParams(); i != e; ++i) {
+      if (hasNestedNameSpecifier(D->getParamDecl(i)->getType()))
+        param = true;
+    }
+
+    if (D->getNameAsString().size() == 0
+      || D->getNameAsString()[0] == '_'
+      || D->getStorageClass() == SC_Static
+      || D->isCXXClassMember()
+      || hasNestedNameSpecifier(D->getReturnType())
+      || param
+      || isOperator(D) )
+        return true;
+    return false;
   }
 }//end namespace cling

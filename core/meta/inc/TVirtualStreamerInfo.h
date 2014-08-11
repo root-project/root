@@ -60,7 +60,8 @@ public:
           kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
           kRecovered             = BIT(14),
           kNeedCheck             = BIT(15),
-          kIsCompiled            = BIT(16)
+          kIsCompiled            = BIT(16),
+          kBuildOldUsed          = BIT(17)
    };
 
    enum EReadWrite {
@@ -78,31 +79,31 @@ public:
       kSTLstring   = ROOT::kSTLstring /* 365 */,
       kStreamer    = 500, kStreamLoop = 501,
       kCache       = 600,  // Cache the value in memory than is not part of the object but is accessible via a SchemaRule
-      kArtificial  = 1000, 
+      kArtificial  = 1000,
       kCacheNew    = 1001,
       kCacheDelete = 1002,
       kNeedObjectForVirtualBaseClass = 99997,
       kMissing     = 99999
    };
 
-//	Some comments about EReadWrite
-//	kBase    : base class element
-//	kOffsetL : fixed size array
-//	kOffsetP : pointer to object
-//	kCounter : counter for array size
-//	kCharStar: pointer to array of char
-//	kBits    : TObject::fBits in case of a referenced object
-//	kObject  : Class  derived from TObject
-//	kObjectp : Class* derived from TObject and with    comment field //->Class
-//	kObjectP : Class* derived from TObject and with NO comment field //->Class
-//	kAny     : Class  not derived from TObject
-//	kAnyp    : Class* not derived from TObject with    comment field //->Class
-//	kAnyP    : Class* not derived from TObject with NO comment field //->Class
+// Some comments about EReadWrite
+// kBase    : base class element
+// kOffsetL : fixed size array
+// kOffsetP : pointer to object
+// kCounter : counter for array size
+// kCharStar: pointer to array of char
+// kBits    : TObject::fBits in case of a referenced object
+// kObject  : Class  derived from TObject
+// kObjectp : Class* derived from TObject and with    comment field //->Class
+// kObjectP : Class* derived from TObject and with NO comment field //->Class
+// kAny     : Class  not derived from TObject
+// kAnyp    : Class* not derived from TObject with    comment field //->Class
+// kAnyP    : Class* not derived from TObject with NO comment field //->Class
 // kAnyPnoVT: Class* not derived from TObject with NO comment field //->Class and Class has NO virtual table
 // kSTLp    : Pointer to STL container.
-//	kTString	: TString, special case
-//	kTObject	: TObject, special case
-//	kTNamed  : TNamed , special case
+// kTString : TString, special case
+// kTObject : TObject, special case
+// kTNamed  : TNamed , special case
 
 
 
@@ -124,15 +125,17 @@ public:
    virtual TClass     *GetClass() const  = 0;
    virtual UInt_t      GetCheckSum() const = 0;
    virtual Int_t       GetClassVersion() const = 0;
-   virtual ULong_t    *GetElems()   const = 0;
+   virtual TStreamerElement *GetElem(Int_t id) const = 0;
+   virtual TStreamerElement *GetElement(Int_t id) const = 0;
    virtual TObjArray  *GetElements() const = 0;
    virtual Int_t       GetOffset(const char *) const = 0;
-   virtual Int_t      *GetOffsets() const = 0;
+   virtual Int_t       GetOffset(Int_t id) const = 0;
+   virtual Int_t       GetElementOffset(Int_t id) const = 0;
    virtual Version_t   GetOldVersion() const = 0;
    virtual Int_t       GetOnFileClassVersion() const = 0;
    virtual Int_t       GetNumber()  const = 0;
    virtual Int_t       GetSize()    const = 0;
-   virtual TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const = 0;
+   virtual TStreamerElement *GetStreamerElement(const char*datamember, Int_t& offset) const = 0;
            Bool_t      IsBuilt() const { return fIsBuilt; }
            Bool_t      IsCompiled() const { return TestBit(kIsCompiled); }
            Bool_t      IsOptimized() const { return fOptimized; }

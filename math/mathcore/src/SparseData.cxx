@@ -27,9 +27,9 @@
 
 using namespace std;
 
-namespace ROOT { 
+namespace ROOT {
 
-   namespace Fit { 
+   namespace Fit {
 
       //This class is a helper. It represents a bin in N
       //dimensions. The change in the name is to avoid name collision.
@@ -38,17 +38,17 @@ namespace ROOT {
       public:
          // Creates a Box with limits specified by the vectors and
          // content=value and error=error
-         Box(const vector<double>& min, const vector<double>& max, 
+         Box(const vector<double>& min, const vector<double>& max,
              const double value = 0.0, const double error = 1.0):
             fMin(min), fMax(max), fVal(value), fError(error)
          { }
-         
+
          // Compares to Boxes to see if they are equal in all its
          // variables. This is to be used by the std::find algorithm
          bool operator==(const Box& b)
-         { return (fMin == b.fMin) && (fMax == b.fMax) 
+         { return (fMin == b.fMin) && (fMax == b.fMax)
                && (fVal == b.fVal) && (fError == b.fError);  }
-         
+
          // Get the list of minimum coordinates
          const vector<double>& GetMin() const { return fMin; }
          // Get the list of maximum coordinates
@@ -57,20 +57,20 @@ namespace ROOT {
          double GetVal() const { return fVal; }
          // Get the rror of the Box
          double GetError() const { return fError; }
-         
+
          // Add an amount to the content of the Box
          void AddVal(const double value) { fVal += value; }
-         
+
          friend class BoxContainer;
          friend ostream& operator <<(ostream& os, const Box& b);
-         
+
       private:
          vector<double> fMin;
          vector<double> fMax;
          double fVal;
          double fError;
       };
-      
+
       // This class is just a helper to be used in std::for_each to
       // simplify the code later. It's just a definition of a method
       // that will discern whether a Box is included into another one
@@ -82,10 +82,10 @@ namespace ROOT {
          //Constructs the BoxContainer object with a Box that is meant
          //to include another one that will be provided later
          BoxContainer(const Box& b): fBox(b) {}
-         
+
          bool operator() (const Box& b1)
          { return operator()(fBox, b1);  }
-         
+
          // Looks if b2 is included in b1
          bool operator() (const Box& b1, const Box& b2)
          {
@@ -98,7 +98,7 @@ namespace ROOT {
                boxit++;
                bigit++;
             }
-            
+
             boxit = b2.fMax.begin();
             bigit = b1.fMin.begin();
             while ( isIn && boxit != b2.fMax.end() )
@@ -107,40 +107,40 @@ namespace ROOT {
                boxit++;
                bigit++;
             }
-            
+
             return isIn;
          }
       };
-      
+
       // Another helper class to be used in std::for_each to simplify
       // the code later. It implements the operator() to know if a
       // specified Box is big enough to contain any 'space' inside.
       class AreaComparer
       {
       public:
-         AreaComparer(vector<double>::iterator iter): 
-            fThereIsArea(true), 
+         AreaComparer(vector<double>::iterator iter):
+            fThereIsArea(true),
             fIter(iter),
             fLimit(8 * std::numeric_limits<double>::epsilon())
          {};
-         
+
          void operator() (double value)
          {
             if ( fabs(value- (*fIter)) < fLimit )
 //             if ( TMath::AreEqualRel(value, (*fIter), fLimit) )
                fThereIsArea = false;
-            
+
             fIter++;
          }
-         
+
          bool IsThereArea() { return fThereIsArea; }
-         
+
       private:
          bool fThereIsArea;
          vector<double>::iterator fIter;
          double fLimit;
       };
-      
+
 
       // This is the key of the SparseData structure. This method
       // will, by recursion, divide the area passed as an argument in
@@ -155,28 +155,28 @@ namespace ROOT {
       {
          vector<double> boxmin(min);
          vector<double> boxmax(max);
-         
+
          boxmin[n] = min[n];
          boxmax[n] = bmin[n];
          if ( for_each(boxmin.begin(), boxmin.end(), AreaComparer(boxmax.begin())).IsThereArea() )
             l.push_back(Box(boxmin, boxmax));
-         
+
          boxmin[n] = bmin[n];
          boxmax[n] = bmax[n];
-         if ( n == 0 ) 
+         if ( n == 0 )
          {
             if ( for_each(boxmin.begin(), boxmin.end(), AreaComparer(boxmax.begin())).IsThereArea() )
                l.push_back(Box(boxmin, boxmax, val, error));
          }
          else
             DivideBox(boxmin, boxmax, bmin, bmax, size, n-1, l, val, error);
-         
+
          boxmin[n] = bmax[n];
          boxmax[n] = max[n];
          if ( for_each(boxmin.begin(), boxmin.end(), AreaComparer(boxmax.begin())).IsThereArea() )
             l.push_back(Box(boxmin, boxmax));
       }
-      
+
       class ProxyListBox
       {
       public:
@@ -220,14 +220,14 @@ namespace ROOT {
          // Returns the number of points stored, including the 0 ones.
          return fList->GetList().size();
       }
-      
+
       unsigned int SparseData::NDim() const
       {
          // Returns the number of dimension of the SparseData object.
          return fList->Begin()->GetMin().size();
       }
 
-      void SparseData::Add(std::vector<double>& min, std::vector<double>& max, 
+      void SparseData::Add(std::vector<double>& min, std::vector<double>& max,
                            const double content, const double error)
       {
          // Add a box to the stored ones. For that, it will look for
@@ -264,7 +264,7 @@ namespace ROOT {
          }
       }
 
-      void SparseData::GetPoint(const unsigned int i, 
+      void SparseData::GetPoint(const unsigned int i,
                                 std::vector<double>& min, std::vector<double>&max,
                                 double& content, double& error)
       {
@@ -274,7 +274,7 @@ namespace ROOT {
          unsigned int counter = 0;
          list<Box>::iterator it = fList->Begin();
          while ( it != fList->End() && counter != i ) {
-            ++it; 
+            ++it;
             ++counter;
          }
 
@@ -301,7 +301,7 @@ namespace ROOT {
          list<Box>::iterator it = fList->Begin();
          const unsigned int dim = it->GetMin().size();
 
-         bd.Initialize(fList->GetList().size(), dim); 
+         bd.Initialize(fList->GetList().size(), dim);
          // Visit all the stored Boxes
          for ( ; it != fList->End(); ++it )
          {
@@ -323,7 +323,7 @@ namespace ROOT {
 
          list<Box>::iterator it = fList->Begin();
 
-         bd.Initialize(fList->GetList().size(), it->GetMin().size()); 
+         bd.Initialize(fList->GetList().size(), it->GetMin().size());
          // Visit all the stored Boxes
          for ( ; it != fList->End(); ++it )
          {
@@ -367,9 +367,9 @@ namespace ROOT {
          os << "max: ";
          copy(b.GetMax().begin(), b.GetMax().end(), ostream_iterator<double>(os, " "));
          os << "val: " << b.GetVal();
-         
+
          return os;
-      }     
+      }
    } // end namespace Fit
 
 } // end namespace ROOT

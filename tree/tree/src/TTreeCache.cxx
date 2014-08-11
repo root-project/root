@@ -41,6 +41,7 @@
 //   referenced by the list are put in the cache.                       //
 //                                                                      //
 //  The learning period is started or restarted when:
+//     - A TTree automatically creates a cache
 //     - TTree::SetCacheSize is called for the first time.
 //     - TTree::SetCacheSize is called a second time with a different size.
 //     - TTreeCache::StartLearningPhase is called.
@@ -87,11 +88,16 @@
 //     HOW TO USE the TreeCache
 //     =========================
 //
-//  A few use cases are discussed below. It is not simple to activate the cache
-//  by default (except case1 below) because there are many possible configurations.
-//  In some applications you know a priori the list of branches to read.
-//  In other applications the analysis loop calls several layers of user functions
-//  where it is impossible to predict a priori which branches will be used. This
+//  A few use cases are discussed below. A cache may be created with automatic sizing
+//  when a TTree is used:
+//
+//  Caches are created and automatically sized for TTrees when TTreeCache.Size or
+//  the environment variable ROOT_TTREECACHE_SIZE is set to a sizing factor.
+//
+//  But there are many possible configurations where manual control may be wanted.
+//  In some applications you know a priori the list of branches to read. In other
+//  applications the analysis loop calls several layers of user functions where it
+//  is impossible to predict a priori which branches will be used. This
 //  is probably the most frequent case. In this case ROOT I/O will flag used
 //  branches automatically when a branch buffer is read during the learning phase.
 //  The TreeCache interface provides functions to instruct the cache about the used
@@ -113,7 +119,7 @@
 //  in case you process only a subset of the events, otherwise you run the risk
 //  to store in the cache entries that you do not need.
 //
-//      --example 2a 
+//      --example 2a
 //--
 //   TTree *T = (TTree*)f->Get("mytree");
 //   Long64_t nentries = T->GetEntries();
@@ -126,7 +132,7 @@
 //--      ... here you process your entry
 //
 //
-//      --example 2b 
+//      --example 2b
 //  in the Process function we read a subset of the branches.
 //  Only the branches used in the first entry will be put in the cache
 //--
@@ -181,8 +187,8 @@
 //   --example 3b
 //      in your analysis loop, you always use 2 branches in the main loop.
 //      you also call some analysis functions where a few more branches will be read.
-//      but you do not know a priori which ones. There is no point in prefetching 
-//      branches that will be used very rarely. 
+//      but you do not know a priori which ones. There is no point in prefetching
+//      branches that will be used very rarely.
 //--
 //   TTree *T = (TTree*)f->Get("mytree");
 //   Long64_t nentries = T->GetEntries();
@@ -228,6 +234,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TSystem.h"
+#include "TEnv.h"
 #include "TTreeCache.h"
 #include "TChain.h"
 #include "TList.h"
@@ -267,7 +275,8 @@ TTreeCache::TTreeCache() : TFileCacheRead(),
    fFirstEntry(-1),
    fReadDirectionSet(kFALSE),
    fEnabled(kTRUE),
-   fPrefillType(TTreeCache::kNoPrefill)
+   fPrefillType(GetConfiguredPrefillType()),
+   fAutoSized(kFALSE)
 {
    // Default Constructor.
 }
@@ -291,11 +300,12 @@ TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->Get
    fOneTime(kFALSE),
    fReverseRead(0),
    fFillTimes(0),
-   fFirstTime(kTRUE),                                                        
+   fFirstTime(kTRUE),
    fFirstEntry(-1),
    fReadDirectionSet(kFALSE),
    fEnabled(kTRUE),
-   fPrefillType(TTreeCache::kNoPrefill)
+   fPrefillType(GetConfiguredPrefillType()),
+   fAutoSized(kFALSE)
 {
    // Constructor.
 
@@ -311,7 +321,7 @@ TTreeCache::~TTreeCache()
 
    // Informe the TFile that we have been deleted (in case
    // we are deleted explicitly by legacy user code).
-   if (fFile) fFile->SetCacheRead(0, fTree);   
+   if (fFile) fFile->SetCacheRead(0, fTree);
 
    delete fBranches;
    if (fBrNames) {fBrNames->Delete(); delete fBrNames; fBrNames=0;}
@@ -332,7 +342,7 @@ void TTreeCache::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
    // the expected TTree), then prefill the cache.  (We expect that in future
    // release the Prefill-ing will be the default so we test for that inside the
    // LearnPrefill call).
-   if (fNbranches == 0 && b->GetReadEntry() == fEntryMin) LearnPrefill();
+   if (fNbranches == 0 && fEntryMin >= 0 && b->GetReadEntry() == fEntryMin) LearnPrefill();
 
    //Is branch already in the cache?
    Bool_t isNew = kTRUE;
@@ -389,9 +399,9 @@ void TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
       branch = (TBranch*)leaf->GetBranch();
       TString s = branch->GetName();
       if (!all) { //Regexp gives wrong result for [] in name
-         TString longname; 
+         TString longname;
          longname.Form("%s.%s",fTree->GetName(),branch->GetName());
-         if (strcmp(bname,branch->GetName()) 
+         if (strcmp(bname,branch->GetName())
              && longname != bname
              && s.Index(re) == kNPOS) continue;
       }
@@ -506,9 +516,9 @@ void TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
       branch = (TBranch*)leaf->GetBranch();
       TString s = branch->GetName();
       if (!all) { //Regexp gives wrong result for [] in name
-         TString longname; 
+         TString longname;
          longname.Form("%s.%s",fTree->GetName(),branch->GetName());
-         if (strcmp(bname,branch->GetName()) 
+         if (strcmp(bname,branch->GetName())
              && longname != bname
              && s.Index(re) == kNPOS) continue;
       }
@@ -594,7 +604,7 @@ Bool_t TTreeCache::FillBuffer()
             }
          }
 
-         if (fReverseRead) { 
+         if (fReverseRead) {
             // Reverse reading with prefetching
             if (fEntryCurrent >0 && entry < fEntryNext) {
                // We can prefetch the next buffer
@@ -608,7 +618,7 @@ Bool_t TTreeCache::FillBuffer()
                return kFALSE;
             }
             if (entry < 0) return kFALSE;
-            fFirstBuffer = !fFirstBuffer; 
+            fFirstBuffer = !fFirstBuffer;
          }
          else {
             // Normal reading with prefetching
@@ -631,9 +641,9 @@ Bool_t TTreeCache::FillBuffer()
       }
    }
 
-   // If the entry is in the range we previously prefetched, there is 
+   // If the entry is in the range we previously prefetched, there is
    // no point in retrying.   Note that this will also return false
-   // during the training phase (fEntryNext is then set intentional to 
+   // during the training phase (fEntryNext is then set intentional to
    // the end of the training phase).
    if (fEntryCurrent <= entry && entry < fEntryNext) return kFALSE;
 
@@ -681,7 +691,7 @@ Bool_t TTreeCache::FillBuffer()
          fNtotCurrentBuf = fBNtot;
       }
    }
-   else { 
+   else {
       TFileCacheRead::Prefetch(0,0);
       fNtotCurrentBuf = fNtot;
    }
@@ -717,7 +727,7 @@ Bool_t TTreeCache::FillBuffer()
             for (;j<nb;j++) {
                // This basket has already been read, skip it
                if (j<blistsize && b->GetListOfBaskets()->UncheckedAt(j)) continue;
-               
+
                Long64_t pos = b->GetBasketSeek(j);
                Int_t len = lbaskets[j];
                if (pos <= 0 || len <= 0) continue;
@@ -739,7 +749,7 @@ Bool_t TTreeCache::FillBuffer()
                   continue;
                }
                fNReadPref++;
-               
+
                if ( (fNtotCurrentBuf+len) > fBufferSizeMin ) {
                   // Humm ... we are going to go over the requested size.
                   if (clusterIterations > 0) {
@@ -799,18 +809,18 @@ Bool_t TTreeCache::FillBuffer()
                   // Humm something wrong happened.
                   Warning("FillBuffer","There is more data in this cluster (starting at entry %lld to %lld, current=%lld) than usual ... with %d %.3f%% of the branches we already have %d bytes (instead of %d)",
                           fEntryCurrent,fEntryNext, entries[j], i, (100.0*i) / ((float)fNbranches), fNtotCurrentBuf,fBufferSizeMin);
-                  
+
                }
                if (pass==1) {
                   // In the first pass, we record one basket per branch and move on to the next branch.
                   break;
                }
             }
-            
+
             if (j < nextMinBasket) nextMinBasket = j;
             if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtotCurrentBuf=%d\n",minEntry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtotCurrentBuf);
          }
-      } // loop for the 2 passes. 
+      } // loop for the 2 passes.
       clusterIterations++;
 
       minEntry = clusterIter.Next();
@@ -818,7 +828,7 @@ Bool_t TTreeCache::FillBuffer()
          fFillTimes++;
       }
 
-      // Continue as long as we still make progress (prevNtot < fNtotCurrentBuf), that the next entry range to be looked at, 
+      // Continue as long as we still make progress (prevNtot < fNtotCurrentBuf), that the next entry range to be looked at,
       // which start at 'minEntry', is not past the end of the requested range (minEntry < fEntryMax)
       // and we guess that we not going to go over the requested amount of memory by asking for another set
       // of entries (fBufferSizeMin > ((Long64_t)fNtotCurrentBuf*(clusterIterations+1))/clusterIterations).
@@ -826,7 +836,7 @@ Bool_t TTreeCache::FillBuffer()
       // and thus (fNtotCurrentBuf / clusterIterations) * (clusterIterations+1) is a good guess at what the next total size
       // would be if we run the loop one more time.   fNtotCurrentBuf and clusterIterations are Int_t but can sometimes
       // be 'large' (i.e. 30Mb * 300 intervals) and can overflow the numercial limit of Int_t (i.e. become
-      // artificially negative).   To avoid this issue we promote fNtotCurrentBuf to a long long (64 bits rather than 32 bits) 
+      // artificially negative).   To avoid this issue we promote fNtotCurrentBuf to a long long (64 bits rather than 32 bits)
       if (!((fBufferSizeMin > ((Long64_t)fNtotCurrentBuf*(clusterIterations+1))/clusterIterations) && (prevNtot < fNtotCurrentBuf) && (minEntry < fEntryMax)))
          break;
 
@@ -854,6 +864,25 @@ Bool_t TTreeCache::FillBuffer()
    }
    fIsLearning = kFALSE;
    return kTRUE;
+}
+
+//______________________________________________________________________________
+TTreeCache::EPrefillType TTreeCache::GetConfiguredPrefillType() const
+{
+   // Return the desired prefill type from the environment or resource variable
+   // 0 - No prefill
+   // 1 - All branches
+
+   const char *stcp;
+   Int_t s = 0;
+
+   if (!(stcp = gSystem->Getenv("ROOT_TTREECACHE_PREFILL")) || !*stcp) {
+      s = gEnv->GetValue("TTreeCache.Prefill", 0);
+   } else {
+      s = TString(stcp).Atoi();
+   }
+
+   return static_cast<TTreeCache::EPrefillType>(s);
 }
 
 //_____________________________________________________________________________
@@ -891,14 +920,6 @@ Int_t TTreeCache::GetLearnEntries()
    //see SetLearnEntries
 
    return fgLearnEntries;
-}
-
-//_____________________________________________________________________________
-TTree *TTreeCache::GetTree() const
-{
-   //return Tree in the cache
-   if (fNbranches <= 0) return 0;
-   return ((TBranch*)(fBranches->UncheckedAt(0)))->GetTree();
 }
 
 //_____________________________________________________________________________
@@ -974,8 +995,8 @@ Int_t TTreeCache::ReadBufferNormal(char *buf, Long64_t pos, Int_t len){
 //_____________________________________________________________________________
 Int_t TTreeCache::ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len){
 
-   // Used to read a chunk from a block previously fetched. It will call FillBuffer 
-   // even if the cache lookup succeeds, because it will try to prefetch the next block 
+   // Used to read a chunk from a block previously fetched. It will call FillBuffer
+   // even if the cache lookup succeeds, because it will try to prefetch the next block
    // as soon as we start reading from the current block.
 
    if (TFileCacheRead::ReadBuffer(buf, pos, len) == 1){
@@ -1013,8 +1034,8 @@ Int_t TTreeCache::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    // prefetched blocks read from fBuffer.
    // Otherwise try to fill the cache from the list of selected branches,
    // and recheck if pos is now in the list.
-   // Returns 
-   //    -1 in case of read failure, 
+   // Returns
+   //    -1 in case of read failure,
    //     0 in case not in cache,
    //     1 in case read from cache.
    // This function overloads TFileCacheRead::ReadBuffer.
@@ -1097,6 +1118,8 @@ void TTreeCache::SetLearnPrefill(TTreeCache::EPrefillType type /* = kNoPrefill *
    // The two value currently supported are:
    //   TTreeCache::kNoPrefill    disable the prefilling
    //   TTreeCache::kAllBranches  fill the cache with baskets from all branches.
+   // The default prefilling behavior can be controlled by setting
+   // TTreeCache.Prefill or the environment variable ROOT_TTREECACHE_PREFILL.
 
    fPrefillType = type;
 }
@@ -1117,7 +1140,7 @@ void TTreeCache::StartLearningPhase()
 }
 
 //_____________________________________________________________________________
-void TTreeCache::StopLearningPhase() 
+void TTreeCache::StopLearningPhase()
 {
    // This is the counterpart of StartLearningPhase() and can be used to stop
    // the learning phase. It's useful when the user knows exactly what branches
@@ -1156,7 +1179,7 @@ void TTreeCache::UpdateBranches(TTree *tree)
    if (fBrNames->GetEntries() == 0 && fIsLearning) {
       // We still need to learn.
       fEntryNext = fEntryMin + fgLearnEntries;
-   } else {      
+   } else {
       // We learnt from a previous file.
       fIsLearning = kFALSE;
       fEntryNext = -1;

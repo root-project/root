@@ -84,7 +84,7 @@ TGeoMedium::TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, I
 }
 
 //-----------------------------------------------------------------------------
-TGeoMedium::TGeoMedium(const TGeoMedium& gm) : 
+TGeoMedium::TGeoMedium(const TGeoMedium& gm) :
   TNamed(gm),
   fId(gm.fId),
   fMaterial(gm.fMaterial)
@@ -92,9 +92,9 @@ TGeoMedium::TGeoMedium(const TGeoMedium& gm) :
    //copy constructor
    for(Int_t i=0; i<20; i++) fParams[i]=gm.fParams[i];
 }
- 
+
 //-----------------------------------------------------------------------------
-TGeoMedium& TGeoMedium::operator=(const TGeoMedium& gm) 
+TGeoMedium& TGeoMedium::operator=(const TGeoMedium& gm)
 {
    //assignment operator
    if(this!=&gm) {
@@ -102,10 +102,10 @@ TGeoMedium& TGeoMedium::operator=(const TGeoMedium& gm)
       fId=gm.fId;
       for(Int_t i=0; i<20; i++) fParams[i]=gm.fParams[i];
       fMaterial=gm.fMaterial;
-   } 
+   }
    return *this;
 }
- 
+
 //-----------------------------------------------------------------------------
 TGeoMedium::~TGeoMedium()
 {
@@ -119,7 +119,7 @@ char *TGeoMedium::GetPointerName() const
    static TString name;
    name = TString::Format("pMed%d", GetUniqueID());
    return (char*)name.Data();
-}    
+}
 
 //_____________________________________________________________________________
 void TGeoMedium::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
@@ -137,7 +137,7 @@ void TGeoMedium::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   par[5]  = " << fParams[5] << "; // deemax" << std::endl;
    out << "   par[6]  = " << fParams[6] << "; // epsil" << std::endl;
    out << "   par[7]  = " << fParams[7] << "; // stmin" << std::endl;
-   
+
    out << "   " << GetPointerName() << " = new TGeoMedium(\"" << GetName() << "\", numed," << fMaterial->GetPointerName() << ", par);" << std::endl;
    SetBit(TGeoMedium::kMedSavePrimitive);
 }

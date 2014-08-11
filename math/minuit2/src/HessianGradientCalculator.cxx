@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -35,14 +35,14 @@ FunctionGradient HessianGradientCalculator::operator()(const MinimumParameters& 
    // use initial gradient as starting point
    InitialGradientCalculator gc(fFcn, fTransformation, fStrategy);
    FunctionGradient gra = gc(par);
-   
-   return (*this)(par, gra);  
+
+   return (*this)(par, gra);
 }
 
 FunctionGradient HessianGradientCalculator::operator()(const MinimumParameters& par, const FunctionGradient& Gradient) const {
    // interface of the base class. Use DeltaGradient for op.
    std::pair<FunctionGradient, MnAlgebraicVector> mypair = DeltaGradient(par, Gradient);
-   
+
    return mypair.first;
 }
 
@@ -69,22 +69,22 @@ double HessianGradientCalculator::GradTolerance() const {
 std::pair<FunctionGradient, MnAlgebraicVector> HessianGradientCalculator::DeltaGradient(const MinimumParameters& par, const FunctionGradient& Gradient) const {
    // calculate gradient for Hessian
    assert(par.IsValid());
-   
+
    MnAlgebraicVector x = par.Vec();
    MnAlgebraicVector grd = Gradient.Grad();
    const MnAlgebraicVector& g2 = Gradient.G2();
    //const MnAlgebraicVector& gstep = Gradient.Gstep();
    // update also gradient step sizes
    MnAlgebraicVector gstep = Gradient.Gstep();
-   
+
    double fcnmin = par.Fval();
    //   std::cout<<"fval: "<<fcnmin<<std::endl;
-   
+
    double dfmin = 4.*Precision().Eps2()*(fabs(fcnmin)+Fcn().Up());
-   
+
    unsigned int n = x.size();
    MnAlgebraicVector dgrd(n);
-   
+
    MPIProcess mpiproc(n,0);
    // initial starting values
    unsigned int startElementIndex = mpiproc.StartElementIndex();
@@ -115,19 +115,19 @@ std::pair<FunctionGradient, MnAlgebraicVector> HessianGradientCalculator::DeltaG
          grdnew = (fs1-fs2)/(2.*d);
          dgmin = Precision().Eps()*(fabs(fs1) + fabs(fs2))/d;
          //if(fabs(grdnew) < Precision().Eps()) break;
-         if (grdnew == 0) break; 
+         if (grdnew == 0) break;
          double change = fabs((grdold-grdnew)/grdnew);
          if(change > chgold && j > 1) break;
          chgold = change;
          grd(i) = grdnew;
          //LM : update also the step sizes
-         gstep(i) = d; 
+         gstep(i) = d;
 
          if(change < 0.05) break;
          if(fabs(grdold-grdnew) < dgmin) break;
          if(d < dmin) break;
          d *= 0.2;
-      }  
+      }
 
       dgrd(i) = std::max(dgmin, fabs(grdold-grdnew));
 
@@ -136,11 +136,11 @@ std::pair<FunctionGradient, MnAlgebraicVector> HessianGradientCalculator::DeltaG
 #endif
 
    }
-   
+
    mpiproc.SyncVector(grd);
    mpiproc.SyncVector(gstep);
    mpiproc.SyncVector(dgrd);
-   
+
    return std::pair<FunctionGradient, MnAlgebraicVector>(FunctionGradient(grd, g2, gstep), dgrd);
 }
 

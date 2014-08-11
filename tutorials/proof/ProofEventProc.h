@@ -48,13 +48,13 @@ public :
    Bool_t          fIsValid;
    void            InitEvent() { event = 0 ;  fEventName = 0; fTracks = 0;
                                  fHighPt = 0; fMuons = 0; fH = 0; fIsValid = kFALSE; }
-   
+
    // Read controller
    Bool_t          fFullRead;
-   
+
    // Abortion test
    Int_t           fTestAbort;   // -1 none, 0 init, 1 file
-   
+
    // Event ranges
    Long64_t        fEntMin; // Min entry num of the current element
    Long64_t        fEntMax; // Max entry num of the current element
@@ -173,7 +173,7 @@ Bool_t ProofEventProc::Notify()
    fEntMin = -1;
    fEntMax = -1;
 
-   // Point to current element   
+   // Point to current element
    if (fProcElems) fProcElem = (ProcFileElements *) fProcElems->FindObject(fn);
    if (!fProcElem) {
       Info("Notify", "assigned new file: create ProcFileElements entry");
@@ -181,7 +181,7 @@ Bool_t ProofEventProc::Notify()
       if (!fProcElems) fProcElems = new TList;
       if (fProcElems) fProcElems->Add(fProcElem);
    }
-   
+
    // Get branch pointers
    b_event_fType = fChain->GetBranch("fType[20]");
    b_fEventName = fChain->GetBranch("fEventName");

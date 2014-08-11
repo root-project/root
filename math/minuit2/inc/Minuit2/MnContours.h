@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -39,13 +39,13 @@ class MnContours {
 public:
 
    /// construct from FCN + Minimum
-   MnContours(const FCNBase& fcn, const FunctionMinimum& min) : fFCN(fcn), fMinimum(min), fStrategy(MnStrategy(1)) {} 
+   MnContours(const FCNBase& fcn, const FunctionMinimum& min) : fFCN(fcn), fMinimum(min), fStrategy(MnStrategy(1)) {}
 
    /// construct from FCN + Minimum + strategy
-   MnContours(const FCNBase& fcn, const FunctionMinimum& min, unsigned int stra) : fFCN(fcn), fMinimum(min), fStrategy(MnStrategy(stra)) {} 
+   MnContours(const FCNBase& fcn, const FunctionMinimum& min, unsigned int stra) : fFCN(fcn), fMinimum(min), fStrategy(MnStrategy(stra)) {}
 
    /// construct from FCN + Minimum + strategy
-   MnContours(const FCNBase& fcn, const FunctionMinimum& min, const MnStrategy& stra) : fFCN(fcn), fMinimum(min), fStrategy(stra) {} 
+   MnContours(const FCNBase& fcn, const FunctionMinimum& min, const MnStrategy& stra) : fFCN(fcn), fMinimum(min), fStrategy(stra) {}
 
    ~MnContours() {}
 

@@ -35,9 +35,9 @@
 namespace ROOT {
 namespace Quartz {
 
-void DrawPolyMarker(CGContextRef ctx, const std::vector<TPoint> &marker, 
+void DrawPolyMarker(CGContextRef ctx, const std::vector<TPoint> &marker,
                     Size_t markerSize, Style_t markerStyle);
-void DrawPolyMarker(CGContextRef ctx, unsigned nPoints, const TPoint *marker, 
+void DrawPolyMarker(CGContextRef ctx, unsigned nPoints, const TPoint *marker,
                     Size_t markerSize, Style_t markerStyle);
 
 }

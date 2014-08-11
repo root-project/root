@@ -20,7 +20,7 @@ private:
 public:
    PolarGraphDemo();
    ~PolarGraphDemo();
-   
+
    //overriders.
    void ResetDemo() {}
    bool IsAnimated()const {return false;}
@@ -34,12 +34,12 @@ public:
    void AdjustPad(Pad *pad);
 
    void PresentDemo();
-   
+
    bool Supports3DRotation() const {return false;}
 private:
    std::auto_ptr<TGraphPolar> fPolarAFL; //polar graph with draw option "AFL"
    std::auto_ptr<TGraphPolar> fPolarCP;  //polar graph with draw option "CP"
-   
+
    PolarGraphDemo(const PolarGraphDemo &rhs);
    PolarGraphDemo &operator = (const PolarGraphDemo &rhs);
 };

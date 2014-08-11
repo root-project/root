@@ -1,13 +1,13 @@
 #include "TGeoManager.h"
-   
-void robot() 
+
+void robot()
 {
   // Drawing a famous Korean robot, TaekwonV, using ROOT geometry class.
   // Name: robot.C
   // Author: Jin Hui Hwang, Dept. of Physics, Univ. of Seoul
   // Reviewed by Sunman Kim (sunman98@hanmail.net)
   // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
-  // 
+  //
   // How to run: .x robot.C in ROOT terminal, then use OpenGL
   //
   // This macro was created for the evaluation of Computational Physics course in 2006.
@@ -16,19 +16,19 @@ void robot()
 
    TGeoManager *Robot = new TGeoManager("Robot","This is Taegwon V");
 
-   TGeoMaterial *vacuum=new TGeoMaterial("vacuum",0,0,0);  
-   TGeoMaterial *Fe=new TGeoMaterial("Fe",55.845,26,7.87); 
+   TGeoMaterial *vacuum=new TGeoMaterial("vacuum",0,0,0);
+   TGeoMaterial *Fe=new TGeoMaterial("Fe",55.845,26,7.87);
 
    TGeoMedium *Air=new TGeoMedium("Vacuum",0,vacuum);
    TGeoMedium *Iron=new TGeoMedium("Iron",1,Fe);
 
    // create volume
 
-   TGeoVolume *top=Robot->MakeBox("top",Air,1000,1000,1000);   
-   Robot->SetTopVolume(top);     
-   Robot->SetTopVisible(0); 
+   TGeoVolume *top=Robot->MakeBox("top",Air,1000,1000,1000);
+   Robot->SetTopVolume(top);
+   Robot->SetTopVisible(0);
       // If you want to see the boundary, please input the number, 1 instead of 0.
-      // Like this, geom->SetTopVisible(1); 
+      // Like this, geom->SetTopVisible(1);
 
 
 
@@ -36,10 +36,10 @@ void robot()
    TGeoVolume *Band=Robot->MakeEltu("Band",Iron,20,20,2.5);
      Band->SetLineColor(12);
      Band->SetFillColor(12);
-   TGeoVolume *Band_b=Robot->MakeSphere("Band_b",Iron,0,2,0,180,180,360);  
+   TGeoVolume *Band_b=Robot->MakeSphere("Band_b",Iron,0,2,0,180,180,360);
      Band_b->SetLineColor(2);
      Band_b->SetFillColor(2);
-   TGeoVolume *Head=Robot->MakeSphere("Head",Iron,0,19,0,180,180,360);  
+   TGeoVolume *Head=Robot->MakeSphere("Head",Iron,0,19,0,180,180,360);
      Head->SetLineColor(17);
      Head->SetFillColor(17);
    TGeoVolume *Horn=Robot->MakeSphere("Horn",Iron,0,10,60,180,240,300);
@@ -50,7 +50,7 @@ void robot()
    int N = 10;
 
    for (int i=0; i<=N;i++){
-      top->AddNodeOverlap(Band_b,1,new TGeoCombiTrans(sin(2*Phi/N*i)*19,-cos(2*Phi/N*i)*19,90, 
+      top->AddNodeOverlap(Band_b,1,new TGeoCombiTrans(sin(2*Phi/N*i)*19,-cos(2*Phi/N*i)*19,90,
          new TGeoRotation("R1",-90+(360/N*i),-90,90)));
    }
    top->AddNodeOverlap(Head,1,new TGeoCombiTrans(0,0,87.5,new TGeoRotation("R2",0,-90,0)));
@@ -63,7 +63,7 @@ void robot()
          10- 10/pcs*i ,10,180-(120/pcs)*i,180-((120/pcs) * (i-1)),240,300);
       Horn->SetLineColor(2);
       Horn->SetFillColor(2);
-      top->AddNodeOverlap(Horn,1,new TGeoCombiTrans(0,8,102,new TGeoRotation("R2",0,140,0)));   
+      top->AddNodeOverlap(Horn,1,new TGeoCombiTrans(0,8,102,new TGeoRotation("R2",0,140,0)));
       top->AddNodeOverlap(Horn,1,new TGeoCombiTrans(0,-8,102,new TGeoRotation("R2",180,140,0)));
    }
 
@@ -95,7 +95,7 @@ void robot()
    TGeoVolume *Tuck_2=Robot->MakeBox("Tuck_2",Iron,3,1,14);
      Tuck_2->SetLineColor(2);
      Tuck_2->SetFillColor(2);
-   TGeoVolume *Tuck_j=Robot->MakeSphere("Tuck_j",Iron,0,3.5,0,180,0,360);  
+   TGeoVolume *Tuck_j=Robot->MakeSphere("Tuck_j",Iron,0,3.5,0,180,0,360);
      Tuck_j->SetLineColor(5);
      Tuck_j->SetFillColor(5);
           TGeoVolume *Ear=Robot->MakeCons("Ear",Iron,1,0,3,0,3,0,360);
@@ -159,7 +159,7 @@ void robot()
       top->AddNodeOverlap(Hear,1,new TGeoTranslation(0,0,89-i));
    }
 
-   // neck 
+   // neck
    TGeoVolume *Mock=Robot->MakeTrd2("Mock",Iron,1,1,7,6.5,20);
      Mock->SetLineColor(17);
      Mock->SetFillColor(17);
@@ -170,7 +170,7 @@ void robot()
      Mock_s->SetLineColor(17);
      Mock_s->SetFillColor(17);
 
-   // drawing neck 
+   // drawing neck
           top->AddNodeOverlap(Mock,1,new TGeoCombiTrans(-5,4.7,50,new TGeoRotation("R2",-30,0,-10)));
           top->AddNodeOverlap(Mock,1,new TGeoCombiTrans(-5,-4.7,50,new TGeoRotation("R2",30,0,10)));
           top->AddNodeOverlap(Mock_1,1,new TGeoCombiTrans(11,-4,50,new TGeoRotation("R2",130,-8,10)));
@@ -183,10 +183,10 @@ void robot()
    TGeoVolume *Gasem=Robot->MakeBox("Gasem",Iron,16,50,20);
      Gasem->SetLineColor(12);
      Gasem->SetFillColor(12);
-   TGeoVolume *Gasem_b1=Robot->MakeSphere("Gasem_b1",Iron,0,15,0,180,0,360);  
+   TGeoVolume *Gasem_b1=Robot->MakeSphere("Gasem_b1",Iron,0,15,0,180,0,360);
      Gasem_b1->SetLineColor(12);
      Gasem_b1->SetFillColor(12);
-   TGeoVolume *Gasem_b2=Robot->MakeSphere("Gasem_b2",Iron,0,13,0,180,0,360);  
+   TGeoVolume *Gasem_b2=Robot->MakeSphere("Gasem_b2",Iron,0,13,0,180,0,360);
      Gasem_b2->SetLineColor(12);
      Gasem_b2->SetFillColor(12);
    TGeoVolume *Gasem_1=Robot->MakeEltu("Gasem_1",Iron,13,13,20);
@@ -269,8 +269,8 @@ void robot()
    top->AddNodeOverlap(V,1,new TGeoCombiTrans(-30,-18.3,16,new TGeoRotation("R2",0,135,0)));
    top->AddNodeOverlap(V_m,1,new TGeoTranslation(-30,-37,35));
    top->AddNodeOverlap(V_m,1,new TGeoTranslation(-30,37,35));
-   
-   // abdomen 
+
+   // abdomen
    TGeoVolume *Bea=Robot->MakeEltu("Bea",Iron,20,37,25);
      Bea->SetLineColor(17);
      Bea->SetFillColor(17);
@@ -281,11 +281,11 @@ void robot()
      Beakop->SetLineColor(10);
      Beakop->SetFillColor(10);
 
-   // drawing abdomen 
+   // drawing abdomen
    top->AddNodeOverlap(Bea,1,new TGeoTranslation(3,0,-30));
    top->AddNodeOverlap(Bea_d,1,new TGeoTranslation(3,0,-10));
    top->AddNodeOverlap(Beakop,1,new TGeoCombiTrans(-12.1,0,-50, new TGeoRotation("R2",90,90,0)));
-   
+
    // Gungdi
    TGeoVolume *Gungdi=Robot->MakeEltu("Gungdi",Iron,25,50,18);
      Gungdi->SetLineColor(12);
@@ -328,7 +328,7 @@ void robot()
    TGeoVolume *Jong=Robot->MakeEltu("Jong",Iron,22,22,50);
      Jong->SetLineColor(12);
      Jong->SetFillColor(12);
-   TGeoVolume *Bal=Robot->MakeSphere("Bal",Iron,0,22,0,180,180,360);  
+   TGeoVolume *Bal=Robot->MakeSphere("Bal",Iron,0,22,0,180,180,360);
      Bal->SetLineColor(12);
      Bal->SetFillColor(12);
 
@@ -343,11 +343,11 @@ void robot()
         Mu->SetFillColor(4);
       top->AddNodeOverlap(Mu,1,new TGeoTranslation(3,-25,-171-i));
       top->AddNodeOverlap(Mu,1,new TGeoTranslation(3,25,-171-i));
-      
+
    }
    top->AddNodeOverlap(Bal,1,new TGeoCombiTrans(-10,-25,-270,new TGeoRotation("R2",270,-90,0)));
    top->AddNodeOverlap(Bal,1,new TGeoCombiTrans(-10,25,-270,new TGeoRotation("R2",270,-90,0)));
-   
+
    // arms
    TGeoVolume *S=Robot->MakeSphere("S",Iron,0,25,0,180,180,360);
      S->SetLineColor(17);
@@ -401,19 +401,19 @@ void robot()
 
    //drawing hands
    top->AddNodeOverlap(Son_d,1,new TGeoCombiTrans(3,-80,-105,new TGeoRotation("R2",0,90,0)));
-   for (int i=0; i<4; i++) {   
+   for (int i=0; i<4; i++) {
       top->AddNodeOverlap(Son_g,1,new TGeoCombiTrans(-6+6*i,-72,-118,new TGeoRotation("R2",0,-10,0)));
    }
-   for (int i=0; i<4; i++) {   
+   for (int i=0; i<4; i++) {
       top->AddNodeOverlap(Son_g,1,new TGeoCombiTrans(-6+6*i,-67,-113,new TGeoRotation("R2",0,110,0)));
    }
    top->AddNodeOverlap(Son_g1,1,new TGeoCombiTrans(-5,-70,-98,new TGeoRotation("R2",0,0,0)));
    top->AddNodeOverlap(Son_g2,1,new TGeoCombiTrans(-5,-65,-102,new TGeoRotation("R2",0,60,0)));
    top->AddNodeOverlap(Son_d,1,new TGeoCombiTrans(3,80,-105,new TGeoRotation("R2",0,90,0)));
-   for (int i=0; i<4; i++) {   
+   for (int i=0; i<4; i++) {
       top->AddNodeOverlap(Son_g,1,new TGeoCombiTrans(-6+6*i,72,-118,new TGeoRotation("R2",0,10,0)));
    }
-   for (int i=0; i<4; i++) {   
+   for (int i=0; i<4; i++) {
       top->AddNodeOverlap(Son_g,1,new TGeoCombiTrans(-6+6*i,67,-113,new TGeoRotation("R2",0,70,0)));
    }
    top->AddNodeOverlap(Son_g1,1,new TGeoCombiTrans(-5,70,-98,new TGeoRotation("R2",0,0,0)));

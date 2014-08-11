@@ -273,7 +273,7 @@ public:
          Error("Compare", "input is not a TPacketizer::TFileNode object");
          return 0;
       }
-      
+
       // how many more events it has than obj
 
       if (fStrategy == 1) {
@@ -1738,7 +1738,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
             if (file->GetElement()) {
                if (fileCorrupted) {
                   Info("GetNextPacket", "%s: file '%s' turned corrupted: invalidating file (%lld)",
-                                       sl->GetOrdinal(), file->GetElement()->GetName(), restEntries); 
+                                       sl->GetOrdinal(), file->GetElement()->GetName(), restEntries);
                   Int_t nunproc = AddProcessed(sl, status, latency);
                   PDB(kPacketizer,1)
                      Info("GetNextPacket", "%s: %d entries un-processed", sl->GetOrdinal(), nunproc);
@@ -1761,7 +1761,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
                   file->GetElement()->SetBit(TDSetElement::kCorrupted);
                } else {
                   Info("GetNextPacket", "%s: file '%s' could not be open: invalidating related element",
-                                        sl->GetOrdinal(), file->GetElement()->GetName()); 
+                                        sl->GetOrdinal(), file->GetElement()->GetName());
                }
                // Invalidate the element
                file->GetElement()->Invalidate();
@@ -1775,7 +1775,7 @@ TDSetElement *TPacketizerAdaptive::GetNextPacket(TSlave *sl, TMessage *r)
             RemoveActive(file);
          } else {
             Info("GetNextPacket", "%s: error raised by worker, but TFileStat object invalid:"
-                                  " protocol error?", sl->GetOrdinal()); 
+                                  " protocol error?", sl->GetOrdinal());
          }
       }
    } else {

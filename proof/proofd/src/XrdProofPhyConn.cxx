@@ -31,8 +31,11 @@
 #include "XrdSec/XrdSecInterface.hh"
 
 #ifndef WIN32
-#include <sys/socket.h>
+#ifndef ROOT_XrdFour
+#  include <sys/socket.h>
+#endif
 #include <sys/types.h>
+#include <netdb.h>
 #include <pwd.h>
 #else
 #include <Winsock2.h>

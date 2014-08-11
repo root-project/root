@@ -75,7 +75,7 @@ const char *TMethodArg::GetTypeName() const
 const char *TMethodArg::GetFullTypeName() const
 {
    // Get full type description of method argument, e.g.: "class TDirectory*".
-   
+
    return gCling->MethodArgInfo_TypeName(fInfo);
 }
 
@@ -87,7 +87,7 @@ std::string TMethodArg::GetTypeNormalizedName() const
    // which include Double32_t, Float16_t, [U]Long64_t and std::string.  It
    // also has std:: removed [This is subject to change].
    //
-   
+
    return gCling->MethodArgInfo_TypeNormalizedName(fInfo);
 }
 

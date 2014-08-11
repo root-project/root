@@ -499,7 +499,7 @@ long TClingBaseClassInfo::Property() const
       Error("TClingBaseClassInfo::Property",
             "The derived class or the base class do not have a CXXRecordDecl.");
       return property;
-   } 
+   }
 
    clang::CXXBasePaths Paths(/*FindAmbiguities=*/false, /*RecordPaths=*/true,
                              /*DetectVirtual=*/true);

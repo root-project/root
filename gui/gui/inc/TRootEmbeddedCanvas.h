@@ -42,7 +42,7 @@ protected:
    Bool_t                  fAutoFit;          // canvas container keeps same size as canvas
    Int_t                   fButton;           // currently pressed button
    Atom_t                 *fDNDTypeList;      // handles DND types
-   
+
    virtual Bool_t HandleContainerButton(Event_t *ev);
    virtual Bool_t HandleContainerDoubleClick(Event_t *ev);
    virtual Bool_t HandleContainerConfigure(Event_t *ev);

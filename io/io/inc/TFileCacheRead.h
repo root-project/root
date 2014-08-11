@@ -47,7 +47,7 @@ protected:
    Int_t          fNoCacheReadCalls; // Number of read calls by basket to fill cached tree
 
    Bool_t         fAsyncReading;
-   Bool_t         fEnablePrefetching;// reading by prefetching asynchronously 
+   Bool_t         fEnablePrefetching;// reading by prefetching asynchronously
 
    Int_t          fNseek;            // Number of blocks to be prefetched
    Int_t          fNtot;             // Total size of prefetched blocks
@@ -72,19 +72,19 @@ protected:
    Int_t          fBNtot;
    Int_t          fBNb;
    Int_t          fBSeekSize;
-   Long64_t      *fBSeek;        //[fBNseek] 
-   Long64_t      *fBSeekSort;    //[fBNseek] 
-   Int_t         *fBSeekIndex;   //[fBNseek] 
+   Long64_t      *fBSeek;        //[fBNseek]
+   Long64_t      *fBSeekSort;    //[fBNseek]
+   Int_t         *fBSeekIndex;   //[fBNseek]
    Long64_t      *fBPos;         //[fBNb]
-   Int_t         *fBSeekLen;     //[fBNseek] 
-   Int_t         *fBSeekSortLen; //[fBNseek] 
-   Int_t         *fBSeekPos;     //[fBNseek] 
+   Int_t         *fBSeekLen;     //[fBNseek]
+   Int_t         *fBSeekSortLen; //[fBNseek]
+   Int_t         *fBSeekPos;     //[fBNseek]
    Int_t         *fBLen;         //[fBNb]
    Bool_t         fBIsSorted;
    Bool_t         fBIsTransferred;
 
    void SetEnablePrefetchingImpl(Bool_t setPrefetching = kFALSE); // Can not be virtual as it is called from the constructor.
-   
+
 private:
    TFileCacheRead(const TFileCacheRead &);            //cannot be copied
    TFileCacheRead& operator=(const TFileCacheRead &);

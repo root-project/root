@@ -52,7 +52,7 @@ protected:
    Bool_t         fTextChanged;  // has text changed
    GContext_t     fNormGC;       // graphics context used for drawing label
    TGFont        *fFont;         // font to draw label
-   TGTextLayout  *fTLayout;      // text layout   
+   TGTextLayout  *fTLayout;      // text layout
    Bool_t         fHasOwnFont;   // kTRUE - font defined locally,  kFALSE - globally
    Bool_t         fDisabled;     // if kTRUE label looks disabled (shaded text)
 
@@ -83,7 +83,7 @@ public:
 
    virtual ~TGLabel();
 
-   virtual TGDimension GetDefaultSize() const; 
+   virtual TGDimension GetDefaultSize() const;
 
    const TGString *GetText() const { return fText; }
    virtual const char *GetTitle() const { return fText->Data(); }

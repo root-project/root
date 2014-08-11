@@ -8,7 +8,7 @@ void pserv()
    //   - Execute in the first window: .x pserv.C
    //   - Execute in the second window: .x pclient.C
    //Author: Fons Rademakers
-   
+
    // Open a parallel server socket looking for connections on a named
    // service or on a specified port.
    //TPServerSocket *ss = new TServerSocket("rootserv", kTRUE);

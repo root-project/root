@@ -84,7 +84,7 @@ if(libcxx)
 endif()
 
 
-#---Need to locate thead libraries and options to set properly some compilation flags---------------- 
+#---Need to locate thead libraries and options to set properly some compilation flags----------------
 find_package(Threads)
 
 #---Setup details depending opn the major platform type----------------------------------------------

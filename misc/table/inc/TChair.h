@@ -29,7 +29,7 @@ protected:
    TTable  *fTable;     // the "TTable" object this object is pthe proxy for
    ULong_t  fLastIndx;  // index pof the last used  table row;
    void    *fLastRow;   // pointer to the last used table row; fLastRow = table[fLastIndx]
-   
+
          TTable *GetThisTable()       {return fTable; }
    const TTable *GetThisTable() const {return fTable; }
    static void  *GetOffset(const void *base,ULong_t offset) { return (void  *)((Char_t *)base + offset);}

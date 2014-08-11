@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -11,7 +11,7 @@
 #define ROOT_Minuit2_LaInverse
 
 /** LAPACK Algebra
-    specialize the Invert function for LASymMatrix 
+    specialize the Invert function for LASymMatrix
  */
 
 #include "Minuit2/MatrixInverse.h"

@@ -49,19 +49,19 @@ protected:
    TGCheckButton      *fProbability;      // probability check box
 
    virtual void ConnectSignals2Slots();
-   
+
 public:
    TPaveStatsEditor(const TGWindow *p=0,
                     Int_t width = 140, Int_t height = 30,
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TPaveStatsEditor(); 
+   virtual ~TPaveStatsEditor();
 
    virtual void   SetModel(TObject* obj);
    virtual void   DoStatOptions();
    virtual void   DoFitOptions();
    virtual void   SetValuesON(Bool_t on);
-           
+
    ClassDef(TPaveStatsEditor,0)  // GUI for editing TPaveStats
 };
 

@@ -29,13 +29,13 @@ public:
    virtual void    SetDebugLevel(Int_t debug) {fDebug = debug;}
 protected:
    void AppendParticle(Int_t pdg, TLorentzVector* p);
-   void ClearEvent(); 
+   void ClearEvent();
 private:
    TPythia8* fPythia8;          // Pointer to pythia8
    Int_t     fDebug;            // Debug level
-   
+
    ClassDef(TPythia8Decayer, 1) // Particle Decayer using Pythia8
-    
+
 };
 #endif
 

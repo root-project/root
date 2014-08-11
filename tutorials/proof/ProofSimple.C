@@ -111,7 +111,7 @@ void ProofSimple::Begin(TTree * /*tree*/)
       //         <empty> or other       keep in memory
 
       fHasNtuple = 1;
-      
+
       TString ontp(nm->GetTitle());
       if (ontp.Contains("|plot") || ontp == "plot") {
          fPlotNtuple = kTRUE;
@@ -157,7 +157,7 @@ void ProofSimple::SlaveBegin(TTree * /*tree*/)
       fHist[i]->SetFillColor(kRed);
       fOutput->Add(fHist[i]);
    }
-   
+
    // 3D Histos array
    if (fInput->FindObject("ProofSimple_NHist3")) {
       TParameter<Long_t> *p =
@@ -179,13 +179,13 @@ void ProofSimple::SlaveBegin(TTree * /*tree*/)
          fOutput->Add(fHist3[i]);
       }
    }
-   
+
    // Histo with labels
    if (fInput->FindObject("ProofSimple_TestLabelMerging")) {
       fHLab = new TH1F("hlab", "Test merging of histograms with automatic labels", 10, 0., 10.);
       fOutput->Add(fHLab);
    }
-   
+
    // Ntuple
    TNamed *nm = dynamic_cast<TNamed *>(fInput->FindObject("ProofSimple_Ntuple"));
    if (nm) {
@@ -200,7 +200,7 @@ void ProofSimple::SlaveBegin(TTree * /*tree*/)
       //         <empty> or other       keep in memory
 
       fHasNtuple = 1;
-      
+
       TString ontp(nm->GetTitle());
       if (ontp.Contains("|plot") || ontp == "plot") {
          fPlotNtuple = kTRUE;
@@ -237,15 +237,15 @@ void ProofSimple::SlaveBegin(TTree * /*tree*/)
          ontp.Replace(0,7,"");
          Ssiz_t iof = ontp.Index("|");
          if (iof != kNPOS) ontp.Remove(0, iof + 1);
-         TString dsname = (!ontp.IsNull()) ? ontp.Data() : "dataset_ntuple";         
+         TString dsname = (!ontp.IsNull()) ? ontp.Data() : "dataset_ntuple";
          UInt_t opt = TProofOutputFile::kRegister | TProofOutputFile::kOverwrite | TProofOutputFile::kVerify;
          fProofFile = new TProofOutputFile("SimpleNtuple.root",
                                           TProofOutputFile::kDataset, opt, dsname.Data());
          fHasNtuple = 2;
       } else if (!ontp.IsNull()) {
-         Warning("SlaveBegin", "ntuple options unknown: ignored (%s)", ontp.Data()); 
+         Warning("SlaveBegin", "ntuple options unknown: ignored (%s)", ontp.Data());
       }
-      
+
       // Open the file, if required
       if (fProofFile) {
          // Open the file
@@ -258,7 +258,7 @@ void ProofSimple::SlaveBegin(TTree * /*tree*/)
             return;
          }
       }
- 
+
       // Now we create the ntuple
       fNtp = new TNtuple("ntuple","Demo ntuple","px:py:pz:random:i");
       // File resident, if required
@@ -269,7 +269,7 @@ void ProofSimple::SlaveBegin(TTree * /*tree*/)
          fOutput->Add(fNtp);
       }
    }
-   
+
    // Set random seed
    fRandom = new TRandom3(0);
 }
@@ -321,7 +321,7 @@ Bool_t ProofSimple::Process(Long64_t entry)
       }
    }
    if (fNtp) FillNtuple(entry);
-   
+
    return kTRUE;
 }
 
@@ -452,7 +452,7 @@ void ProofSimple::Terminate()
             for (Int_t i = 0; i < nb; i++) {
                TString lab = TString::Format("hl%d", i);
                Int_t ib = fHLab->GetXaxis()->FindBin(lab);
-               Info("Terminate","  %s [%d]:\t%f", lab.Data(), ib, fHLab->GetBinContent(ib)/entb); 
+               Info("Terminate","  %s [%d]:\t%f", lab.Data(), ib, fHLab->GetBinContent(ib)/entb);
             }
          } else
             Warning("Terminate", "no entries in the hlab histogram!");
@@ -480,7 +480,7 @@ void ProofSimple::Terminate()
          } else {
             Error("Terminate", "could not open file: %s", outputFile.Data());
          }
-         if (!fFile) return; 
+         if (!fFile) return;
 
       } else {
          Error("Terminate", "TProofOutputFile not found");
@@ -589,7 +589,7 @@ Int_t ProofSimple::GetHistosFromFC(TCanvas *cv)
    }
    if (!fc_found) return -1;
    if (!hs_found) return -1;
-   
+
    for (Int_t i = 0; i < fNhist; i++) {
       cv->cd(i+1);
       if (fHist[i]) {

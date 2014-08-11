@@ -11,11 +11,11 @@ class TAxis;
    __weak IBOutlet UIButton *plusSize;
    __weak IBOutlet UIButton *minusSize;
    __weak IBOutlet UILabel *sizeLabel;
-   
+
    __weak IBOutlet UIButton *plusOffset;
    __weak IBOutlet UIButton *minusOffset;
    __weak IBOutlet UILabel *offsetLabel;
-   
+
    __weak IBOutlet UISwitch *noExp;
 }
 

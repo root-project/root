@@ -35,7 +35,7 @@ using namespace std;
 
 struct TBenchData {
    TBenchData() : cp1(0), nbytes1(0), cp2w(0), cp2r(0), cx3(0), nbytes3(0), cp3w(0), cp3r(0)  {}
-   TBenchData(const char *name, Double_t i_cp1, Float_t i_cx3, Long64_t i_nbytes1, Long64_t i_nbytes3, Double_t i_cp2w, Double_t i_cp3w, Double_t i_cp2r, Double_t i_cp3r) 
+   TBenchData(const char *name, Double_t i_cp1, Float_t i_cx3, Long64_t i_nbytes1, Long64_t i_nbytes3, Double_t i_cp2w, Double_t i_cp3w, Double_t i_cp2r, Double_t i_cp3r)
      :  fName(name), cp1(i_cp1), nbytes1(i_nbytes1), cp2w(i_cp2w), cp2r(i_cp2r), cx3(i_cx3), nbytes3(i_nbytes3), cp3w(i_cp3w), cp3r(i_cp3r) {}
    TString fName;
    Double_t rt1;
@@ -52,7 +52,7 @@ struct TBenchData {
    Double_t cp3w;
    Double_t rt3r;
    Double_t cp3r;
-   
+
    Double_t cptot() { return cp1 + cp2w + cp2r + cp3w + cp3r; }
 };
 
@@ -62,7 +62,7 @@ template <class TGen> TBenchData runTest(const char *name, int nevents, int nhit
 
    TBenchData data;
    data.fName = name;
-   
+
    timer.Start();
    TGen *STLhit = new TGen(nhits);
    STLhit->MakeTree(0,nevents,0,0,data.cx);
@@ -77,28 +77,28 @@ template <class TGen> TBenchData runTest(const char *name, int nevents, int nhit
    data.rt2w = timer.RealTime();
    data.cp2w = timer.CpuTime();
    printf("2 %-26s w: RT=%6.2f s  Cpu=%6.2f s, size= %8lld bytes, cx=%5.2f\n",data.fName.Data(),data.rt2w,data.cp2w,data.nbytes1,data.cx);
-   
+
    timer.Start(kTRUE);
    STLhit->ReadTree();
    timer.Stop();
    data.rt2r = timer.RealTime();
    data.cp2r = timer.CpuTime();
    printf("3 %-26s r: RT=%6.2f s  Cpu=%6.2f s\n",data.fName.Data(),data.rt2r,data.cp2r);
-   
+
    timer.Start(kTRUE);
    data.nbytes3 = STLhit->MakeTree(1,nevents,1,splitlevel,data.cx3);
    timer.Stop();
    data.rt3w = timer.RealTime();
    data.cp3w = timer.CpuTime();
    printf("4 %-26s w: RT=%6.2f s  Cpu=%6.2f s, size= %8lld bytes, cx=%5.2f\n",data.fName.Data(),data.rt3w,data.cp3w,data.nbytes3,data.cx3);
-   
+
    timer.Start(kTRUE);
    STLhit->ReadTree();
    timer.Stop();
    data.rt3r = timer.RealTime();
    data.cp3r = timer.CpuTime();
    printf("5 %-26s r: RT=%6.2f s  Cpu=%6.2f s\n",data.fName.Data(),data.rt3r,data.cp3r);
-   
+
    delete STLhit;
    return data;
 }
@@ -113,9 +113,9 @@ template <class TGen> TBenchData runTest(const char *name, int nevents, int nhit
 
 int main(int argc, char **argv)
 {
-   bool writereferences = false;   
+   bool writereferences = false;
    bool memberwise = false;
-   
+
    TVirtualStreamerInfo::SetStreamMemberWise(kFALSE);
    // by default stream objects objectwise
    // if program option "-m" is specified, stream memberwise
@@ -130,12 +130,12 @@ int main(int argc, char **argv)
    }
    int nhits       = 1000;
    int nevents     = 400;
-   
+
    Double_t cptot = 0;
-   
+
    //delete temp file used for the benchmark
    gSystem->Unlink("bench.root");
-   
+
    vector<TBenchData> results;
    vector<TBenchData> references;
    references.push_back( TBenchData( "vector<THit> level=99",   0.44,   5.37, 39724266, 7392775,   0.96,   2.15,   0.32,   0.73 ) );
@@ -172,100 +172,100 @@ int main(int argc, char **argv)
    references.push_back( TBenchData( "set<THit*> level=99 (NS)",   0.38,   4.29, 45257081, 10550593,   1.23,   3.01,1.28,   2.14 ) );
    references.push_back( TBenchData( "multiset<THit*> level=99 (NS)",   0.45,   4.28, 45257136, 10572288,   1.27,   3.03,   1.61,   1.50 ) );
    references.push_back( TBenchData( "TClonesArray(TObjHit) level= 0",   0.28,   4.96, 39666751, 8006156,   0.55,   1.76,   0.16,   0.64 ) );
-   references.push_back( TBenchData( "TClonesArray(TObjHit) level=99",   0.37,   5.37, 39722797, 7392577,   0.55,   2.07,   0.17,   0.46 ) );    
+   references.push_back( TBenchData( "TClonesArray(TObjHit) level=99",   0.37,   5.37, 39722797, 7392577,   0.55,   2.07,   0.17,   0.46 ) );
 
    /// STL VECTOR
    runTest<TSTLhit>( "vector<THit> level=99", nevents, nhits, 99, cptot, results );
    /// STL VECTOR not split.
    runTest<TSTLhit>( "vector<THit> level= 0", nevents, nhits,  0, cptot, results );
-   
+
    /// STL VECTOR not split, member wise mode
    memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
    runTest<TSTLhit>( "vector<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
    TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
-   
+
    // STL list
    runTest<TSTLhitList>( "list<THit> level=99", nevents, nhits, 99, cptot, results );
    runTest<TSTLhitList>( "list<THit> level= 0", nevents, nhits,  0, cptot, results );
    memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
    runTest<TSTLhitList>( "list<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
    TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
-   
+
    // STL DEQUE
    runTest<TSTLhitDeque>( "deque<THit> level=99", nevents, nhits, 99, cptot, results );
    runTest<TSTLhitDeque>( "deque<THit> level= 0", nevents, nhits,  0, cptot, results );
    memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
    runTest<TSTLhitDeque>( "deque<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
    TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
-   
+
    // STL SET
    runTest<TSTLhitSet>( "set<THit> level=99", nevents, nhits, 99, cptot, results );
    runTest<TSTLhitSet>( "set<THit> level= 0", nevents, nhits,  0, cptot, results );
    memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
    runTest<TSTLhitSet>( "set<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
    TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
-   
+
    // STL MULTI SET
    runTest<TSTLhitMultiset>( "multiset<THit> level=99", nevents, nhits, 99, cptot, results );
    runTest<TSTLhitMultiset>( "multiset<THit> level= 0", nevents, nhits,  0, cptot, results );
    memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
    runTest<TSTLhitMultiset>( "multiset<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
    TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
-   
+
    // STL map
    runTest<TSTLhitMap>( "map<THit> level=99", nevents, nhits, 99, cptot, results );
    runTest<TSTLhitMap>( "map<THit> level= 0", nevents, nhits,  0, cptot, results );
    memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
    runTest<TSTLhitMap>( "map<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
    TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
-   
+
    // STL multimap
    runTest<TSTLhitMultiMap>( "multimap<THit> level=99", nevents, nhits, 99, cptot, results );
    runTest<TSTLhitMultiMap>( "multimap<THit> level= 0", nevents, nhits,  0, cptot, results );
    memberwise = TVirtualStreamerInfo::SetStreamMemberWise(true);
    runTest<TSTLhitMultiMap>( "multimap<THit> level= 0 MW", nevents, nhits,  0, cptot, results );
    TVirtualStreamerInfo::SetStreamMemberWise(memberwise);
-   
+
    //__________________________________________________________________________
    //
    //testing STL vector of pointers to THit
    runTest<TSTLhitStar>( "vector<THit*> level=25599", nevents, nhits, 25599, cptot, results );
-   
+
    // STL list*
    runTest<TSTLhitStarList>( "list<THit*> level=25599", nevents, nhits, 25599, cptot, results );
-   
+
    // STL DEQUE*
    runTest<TSTLhitStarDeque>( "deque<THit*> level=25599", nevents, nhits, 25599, cptot, results );
-   
+
    // STL SET*
    runTest<TSTLhitStarSet>( "set<THit*> level=25599", nevents, nhits, 25599, cptot, results );
-  
+
    // STL MULTI SET*
    runTest<TSTLhitStarMultiSet>( "multiset<THit*> level=25599", nevents, nhits, 25599, cptot, results );
-   
+
    // STL MAP*
    runTest<TSTLhitStarMap>( "map<THit*> level=99", nevents, nhits, 99, cptot, results );
-   
+
    // STL MULTIMAP*
    runTest<TSTLhitStarMultiMap>( "multimap<THit*> level=99", nevents, nhits, 99, cptot, results );
-   
+
    //__________________________________________________________________________
    //
    //testing STL vector of pointers to THit (NOSPLIT)
    runTest<TSTLhitStar>( "vector<THit*> level=99 (NS)", nevents, nhits, 99, cptot, results );
-   
+
    // STL list* (NOSPLIT)
    runTest<TSTLhitStarList>( "list<THit*> level=99 (NS)", nevents, nhits, 99, cptot, results );
-   
+
    // STL DEQUE* (NOSPLIT)
    runTest<TSTLhitStarDeque>( "deque<THit*> level=99 (NS)", nevents, nhits, 99, cptot, results );
-   
+
    // STL SET* (NOSPLIT)
    runTest<TSTLhitStarSet>( "set<THit*> level=99 (NS)", nevents, nhits, 99, cptot, results );
-   
+
    // STL MULTI SET* (NOSPLIT)
    runTest<TSTLhitStarMultiSet>( "multiset<THit*> level=99 (NS)", nevents, nhits, 99, cptot, results );
-   
+
    //___________________________________________________________________________
    //
    //testing TClonesArray of TObjHit deriving from THit
@@ -274,11 +274,11 @@ int main(int argc, char **argv)
 
    Double_t cpref = 195.43;
    Double_t rootmarks = cpref*800/cptot;
-   
+
    for(unsigned int t=references.size(); t<results.size(); ++t) {
       references.push_back(TBenchData());
    }
-   
+
    //print all results
    char line1[100], line2[100];
    printf("\n");
@@ -336,7 +336,7 @@ int main(int argc, char **argv)
    printf("* Total CPU time              %8.2f    %8.2f                            *\n",cptot,cpref);
    printf("* Estimated ROOTMARKS         %8.2f      800.00                            *\n",rootmarks);
    printf("******************************************************************************\n");
-   
+
    if (writereferences) {
       for(unsigned int t=0; t<results.size() && t<references.size(); ++t) {
          printf("references.push_back( TBenchData( \"%s\", %6.2f, %6.2f, %lld, %lld, %6.2f, %6.2f, %6.2f, %6.2f ) );\n",

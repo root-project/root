@@ -18,14 +18,14 @@ ClassImp(TStructNode);
 //________________________________________________________________________
 //////////////////////////////////////////////////////////////////////////
 //
-// TStructNode - class which represent a node. Node has all information 
-// about some pointer. It keeps information such as name of object, type, 
-// size of pointers class, size of node and daughter nodes, number of child 
+// TStructNode - class which represent a node. Node has all information
+// about some pointer. It keeps information such as name of object, type,
+// size of pointers class, size of node and daughter nodes, number of child
 // nodes. It is also used to store information needed to draw TGeoVolume.
 // It is for example x, y and z coordinates.
 // Condition fVisible tells us that node is visible and should be drawn.
 // fCollapsed tells us that we can see daughter nodes.
-// 
+//
 //////////////////////////////////////////////////////////////////////////
 
 EScalingType TStructNode::fgScalBy = kMembers;
@@ -33,7 +33,7 @@ EScalingType TStructNode::fgScalBy = kMembers;
 //________________________________________________________________________
 TStructNode::TStructNode(TString name, TString typeName, void* pointer, TStructNode* parent, ULong_t size, ENodeType type)
 {
-   // Constructs node with name "name" of class "typeName" and given parent "parent" which represents pointer "pointer". 
+   // Constructs node with name "name" of class "typeName" and given parent "parent" which represents pointer "pointer".
    // Size of node is set to "size" and type is set to "type"
 
    fName = name;
@@ -71,14 +71,14 @@ Int_t TStructNode::Compare(const TObject* obj) const
    // Overrided method. Compare to objects of TStructNode class.
 
    TStructNode* node = (TStructNode*)obj;
-   
+
    if (GetVolume() < node->GetVolume()) {
       return -1;
    }
    if(GetVolume() > node->GetVolume()) {
       return 1;
    }
-   
+
    if (this > node) {
       return 1;
    }
@@ -192,7 +192,7 @@ void* TStructNode::GetPointer() const
 //________________________________________________________________________
 ULong_t TStructNode::GetRelativeMembersCount() const
 {
-   // Returns relative numbers of members. If node is collapsed, then method returns number of all members, 
+   // Returns relative numbers of members. If node is collapsed, then method returns number of all members,
    // it's node and its daughters, otherwise it returns number of members of node
 
    if (fCollapsed) {
@@ -204,7 +204,7 @@ ULong_t TStructNode::GetRelativeMembersCount() const
 //________________________________________________________________________
 ULong_t TStructNode::GetRelativeSize() const
 {
-   // Returns relative size of node. If node is collapsed, then function returns size of node and dauthers, 
+   // Returns relative size of node. If node is collapsed, then function returns size of node and dauthers,
    // otherwise returns size of node only.
 
    if (fCollapsed) {
@@ -216,7 +216,7 @@ ULong_t TStructNode::GetRelativeSize() const
 //________________________________________________________________________
 ULong_t TStructNode::GetRelativeVolume() const
 {
-   // Returns size or number of members. If ScaleBy is set to kMembers and node is collapsed, then it 
+   // Returns size or number of members. If ScaleBy is set to kMembers and node is collapsed, then it
    // returns all number of members. If node isn't collapsed it returns number of members.
    // If Scaleby is set to kSize and node is collapsed, then it returns total size of node and daughters,
    // else it returns size of node, otherwise it returns 0.

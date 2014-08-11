@@ -71,8 +71,10 @@ namespace cling {
     return AR_Failure;
   }
 
-  MetaSema::ActionResult MetaSema::actOnTCommand(llvm::StringRef file) {
-      return AR_Failure;
+  MetaSema::ActionResult MetaSema::actOnTCommand(llvm::StringRef inputFile,
+                                                 llvm::StringRef outputFile) {
+    m_Interpreter.GenerateAutoloadingMap(inputFile, outputFile);
+    return AR_Success;
   }
 
   MetaSema::ActionResult MetaSema::actOnRedirectCommand(llvm::StringRef file,
@@ -343,7 +345,7 @@ namespace cling {
   void MetaSema::actOnClassCommand() const {
     DisplayClasses(m_MetaProcessor.getOuts(), &m_Interpreter, true);
   }
-  
+
   void MetaSema::actOnNamespaceCommand() const {
     DisplayNamespaces(m_MetaProcessor.getOuts(), &m_Interpreter);
   }

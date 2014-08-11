@@ -1,5 +1,5 @@
-// A simple example of creating icon image from XPM data, 
-// included into the code. 
+// A simple example of creating icon image from XPM data,
+// included into the code.
 //
 // Author: Ilka Antcheva   27/09/2007
 
@@ -39,14 +39,14 @@ const char * const icon1[] =
 "   ..ooo@@OO    ",
 "     ..OOO      ",
 "                "
-}; 
+};
 
 class MyMainFrame : public TGMainFrame {
 
 public:
    MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h);
    virtual ~MyMainFrame();
-   
+
    void DoExit();
 
    ClassDef(MyMainFrame, 0)
@@ -67,15 +67,15 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    ULong_t yellow;
    gClient->GetColorByName("yellow", yellow);
 
-   // Create a picture from the XPM data 
+   // Create a picture from the XPM data
    TGPicturePool *picpool = gClient->GetResourcePool()->GetPicturePool();
    const TGPicture *iconpic = picpool->GetPicture(name.Data(),(char **)icon1);
    TGIcon *icon = new TGIcon(this, iconpic, 40, 40, kChildFrame, yellow);
    AddFrame(icon, new TGLayoutHints(kLHintsLeft, 1,15,1,1));
-   
+
    TGTextButton *exit = new TGTextButton(this, "&Exit","gApplication->Terminate(0)");
    AddFrame(exit, new TGLayoutHints(kLHintsExpandX,2,0,2,2));
-   
+
    SetWindowName("Icon test");
    MapSubwindows();
    Resize(GetDefaultSize());

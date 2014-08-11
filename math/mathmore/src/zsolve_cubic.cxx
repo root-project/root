@@ -1,17 +1,17 @@
 /* poly/zsolve_cubic.c
- * 
+ *
  * Copyright (C) 1996, 1997, 1998, 1999, 2000, 2007 Brian Gough
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
@@ -28,8 +28,8 @@
 #define SWAP(a,b) do { double tmp = b ; b = a ; a = tmp ; } while(0)
 
 int
-gsl_poly_complex_solve_cubic (double a, double b, double c, 
-                              gsl_complex *z0, gsl_complex *z1, 
+gsl_poly_complex_solve_cubic (double a, double b, double c,
+                              gsl_complex *z0, gsl_complex *z1,
                               gsl_complex *z2)
 {
   double q = (a * a - 3 * b);
@@ -54,7 +54,7 @@ gsl_poly_complex_solve_cubic (double a, double b, double c,
       GSL_IMAG (*z2) = 0;
       return 3;
     }
-  else if (R2 == Q3) 
+  else if (R2 == Q3)
     {
       /* this test is actually R2 == Q3, written in a form suitable
          for exact computation with integers */
@@ -90,12 +90,12 @@ gsl_poly_complex_solve_cubic (double a, double b, double c,
       double sqrtQ = sqrt (Q);
       double sqrtQ3 = sqrtQ * sqrtQ * sqrtQ;
       double ctheta = R / sqrtQ3;
-      double theta = 0; 
-      if ( ctheta <= -1.0) 
+      double theta = 0;
+      if ( ctheta <= -1.0)
          theta = M_PI;
-      else if ( ctheta < 1.0) 
+      else if ( ctheta < 1.0)
          theta = acos (R / sqrtQ3);
-      
+
       double norm = -2 * sqrtQ;
       double r0 = norm * cos (theta / 3) - a / 3;
       double r1 = norm * cos ((theta + 2.0 * M_PI) / 3) - a / 3;

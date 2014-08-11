@@ -39,18 +39,18 @@
                 f2cFortran (KMCCARTY)
       Dec 2005: If f2cFortran is defined, enforce REAL functions in FORTRAN
                 returning "double" in C.  This was one of the items on
-		Burkhard's TODO list. (KMCCARTY)
+       Burkhard's TODO list. (KMCCARTY)
       Dec 2005: Modifications to support 8-byte integers. (MR)
-		USE AT YOUR OWN RISK!
+      USE AT YOUR OWN RISK!
       Feb 2006  Added logic to typedef the symbol 'LONGLONG' to an appropriate
                 intrinsic 8-byte integer datatype  (WDP)
       Apr 2006: Modifications to support gfortran (and g77 with -fno-f2c flag)
                 since by default it returns "float" for FORTRAN REAL function.
                 (KMCCARTY)
       May 2008: Revert commenting out of "extern" in COMMON_BLOCK_DEF macro.
-		Add braces around do-nothing ";" in 3 empty while blocks to
-		get rid of compiler warnings.  Thanks to ROOT developers
-		Jacek Holeczek and Rene Brun for these suggestions. (KMCCARTY)
+      Add braces around do-nothing ";" in 3 empty while blocks to
+      get rid of compiler warnings.  Thanks to ROOT developers
+      Jacek Holeczek and Rene Brun for these suggestions. (KMCCARTY)
  *******/
 
 /*
@@ -178,7 +178,7 @@ only C calling FORTRAN subroutines will work using K&R style.*/
 #define f2cFortran
 #endif
 #if defined(__FreeBSD__)
-#define	f2cFortran
+#define  f2cFortran
 #endif
 #if defined(__hpux)             /* 921107: Use __hpux instead of __hp9000s300 */
 #define       hpuxFortran       /*         Should also allow hp9000s7/800 use.*/
@@ -583,18 +583,18 @@ return cstr; }
 
 #ifdef vmsFortran
 typedef struct dsc$descriptor_s fstring;
-#define DSC$DESCRIPTOR_A(DIMCT)  		                               \
+#define DSC$DESCRIPTOR_A(DIMCT)                                      \
 struct {                                                                       \
-  unsigned short dsc$w_length;	        unsigned char	 dsc$b_dtype;	       \
-  unsigned char	 dsc$b_class;	                 char	*dsc$a_pointer;	       \
-           char	 dsc$b_scale;	        unsigned char	 dsc$b_digits;         \
+  unsigned short dsc$w_length;          unsigned char  dsc$b_dtype;          \
+  unsigned char    dsc$b_class;                    char   *dsc$a_pointer;          \
+           char    dsc$b_scale;           unsigned char    dsc$b_digits;         \
   struct {                                                                     \
-    unsigned		       : 3;	  unsigned dsc$v_fl_binscale : 1;      \
+    unsigned             : 3;     unsigned dsc$v_fl_binscale : 1;      \
     unsigned dsc$v_fl_redim    : 1;       unsigned dsc$v_fl_column   : 1;      \
     unsigned dsc$v_fl_coeff    : 1;       unsigned dsc$v_fl_bounds   : 1;      \
-  } dsc$b_aflags;	                                                       \
-  unsigned char	 dsc$b_dimct;	        unsigned long	 dsc$l_arsize;	       \
-           char	*dsc$a_a0;	                 long	 dsc$l_m [DIMCT];      \
+  } dsc$b_aflags;                                                          \
+  unsigned char    dsc$b_dimct;           unsigned long    dsc$l_arsize;          \
+           char   *dsc$a_a0;                    long    dsc$l_m [DIMCT];      \
   struct {                                                                     \
     long dsc$l_l;                         long dsc$l_u;                        \
   } dsc$bounds [DIMCT];                                                        \
@@ -2520,4 +2520,4 @@ string. */
 #endif
 
 
-#endif	 /* __CFORTRAN_LOADED */
+#endif    /* __CFORTRAN_LOADED */

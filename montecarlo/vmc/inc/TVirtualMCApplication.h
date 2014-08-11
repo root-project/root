@@ -122,7 +122,7 @@ private:
 inline void TVirtualMCApplication::Field(const Double_t* /*x*/, Double_t* b) const {
    // No magnetic field
    b[0] = 0; b[1] = 0; b[2] = 0;
-}   
+}
 
 #endif //ROOT_TVirtualMCApplication
 

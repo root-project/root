@@ -99,7 +99,7 @@ TCTUB::~TCTUB()
 static Double_t Product(const Double_t *x, const Float_t *y)
 {
    // Product.
-   
+
    Double_t s = 0;
    for (int i= 0 ; i <2 ; i++ ) s += x[i]*y[i];
    return s;
@@ -167,7 +167,7 @@ void TCTUB::Streamer(TBuffer &R__b)
       R__b.ReadStaticArray(fCosHigh);
       R__b.CheckByteCount(R__s, R__c, TCTUB::IsA());
       //====end of old versions
-      
+
    } else {
       R__b.WriteClassBuffer(TCTUB::Class(),this);
    }

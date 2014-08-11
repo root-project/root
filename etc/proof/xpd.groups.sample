@@ -14,7 +14,7 @@
 ###
 ### Define group properties.
 ### A property is defined by a name, a nominal value and an effective value
-### (values must be integers); the syntax is 
+### (values must be integers); the syntax is
 ###     property  <group> <name> <nominal_value> [<effective_value>]
 ### The defaul effective value is the nominal value.
 ### It is up to the application to give a meaning to the values.

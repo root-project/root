@@ -35,7 +35,7 @@ Papers describing OpenGL in ROOT:
   href="http://indico.cern.ch/contributionDisplay.py?contribId=93&sessionId=4&confId=048">
   ROOT 3D graphics</a>, presented
   at CHEP 2006.
-   
+
   <li> <a
   href="http://indico.cern.ch/contributionDisplay.py?contribId=23&confId=13356">
   3D graphics with OpenGL: recent improvements and plans</a>,

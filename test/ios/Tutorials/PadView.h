@@ -15,7 +15,7 @@ class Pad;
 }
 }
 
-@interface PadView : UIView 
+@interface PadView : UIView
 
 - (id) initWithFrame : (CGRect)frame forPad : (ROOT::iOS::Pad*)pad;
 

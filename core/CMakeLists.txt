@@ -8,6 +8,7 @@ ROOT_USE_PACKAGE(core/cont)
 ROOT_USE_PACKAGE(core/meta)
 ROOT_USE_PACKAGE(core/metautils)
 ROOT_USE_PACKAGE(core/textinput)
+ROOT_USE_PACKAGE(core/thread)
 ROOT_USE_PACKAGE(core/unix)
 ROOT_USE_PACKAGE(core/winnt)
 ROOT_USE_PACKAGE(core/macosx)
@@ -78,7 +79,6 @@ add_custom_command(OUTPUT  ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp)
 set_source_files_properties(${CMAKE_BINARY_DIR}/RGitCommit.h.tmp PROPERTIES GENERATED TRUE)
-message("dep_targets=${dep_targets}")
 add_dependencies(gitcommit ${dep_targets})
 
 set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
@@ -102,10 +102,14 @@ ROOT_LINKER_LIBRARY(Core
                     LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY}
                               ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs} )
 
-add_dependencies(Core TEXTINPUT_DICTIONARY)
-
 if(cling)
   add_dependencies(Core CLING)
+endif()
+if(builtin_pcre)
+  add_dependencies(Core PCRE)
+endif()
+if(builtin_lzma)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(Core LZMA)
 endif()
 
 #----------------------------------------------------------------------------------------

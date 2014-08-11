@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
 
 /// linkdef for LorentzVectors
@@ -28,9 +28,9 @@
 #pragma link C++ function  ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >::operator=(const  ROOT::Math::LorentzVector<ROOT::Math::PxPyPzM4D<double> > &);
 #pragma link C++ function  ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >::operator=(const  ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<double> > &);
 
-// for the following operations add only case with itself and with x-y-z-t vectors 
+// for the following operations add only case with itself and with x-y-z-t vectors
 
-// Dot product 
+// Dot product
 
 #pragma link C++ function  ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >::Dot(const  ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > &);
 #pragma link C++ function  ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >::Dot(const  ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<double> > &);
@@ -111,7 +111,7 @@
 #pragma link C++ function  ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<double> >::operator-(const  ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > &);
 #pragma link C++ function  ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<double> >::operator-(const  ROOT::Math::LorentzVector<ROOT::Math::PxPyPzM4D<double> > &);
 
-// operator * 
+// operator *
 // (these still don't work) (are defined in VectorUtil_Cint)
 //#pragma link C++ function ROOT::Math::operator*( const double & , ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > );
 //#pragma link C++ function ROOT::Math::operator*( const double & , ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<double> > );
@@ -124,7 +124,7 @@
 #pragma link C++ function  ROOT::Math::VectorUtil::DeltaPhi ( const  ROOT::Math::LorentzVector< ROOT::Math::PxPyPzM4D< double> > &, const  ROOT::Math::LorentzVector< ROOT::Math::PxPyPzM4D< double> > &);
 #pragma link C++ function  ROOT::Math::VectorUtil::DeltaPhi ( const  ROOT::Math::LorentzVector< ROOT::Math::PtEtaPhiM4D< double> > &, const  ROOT::Math::LorentzVector< ROOT::Math::PtEtaPhiM4D< double> > &);
 
-// deltaR 
+// deltaR
 
 #pragma link C++ function  ROOT::Math::VectorUtil::DeltaR ( const  ROOT::Math::LorentzVector< ROOT::Math::PxPyPzE4D< double> > &, const  ROOT::Math::LorentzVector< ROOT::Math::PxPyPzE4D< double> > &);
 #pragma link C++ function  ROOT::Math::VectorUtil::DeltaR ( const  ROOT::Math::LorentzVector< ROOT::Math::PtEtaPhiE4D< double> > &, const  ROOT::Math::LorentzVector< ROOT::Math::PtEtaPhiE4D< double> > &);
@@ -145,7 +145,7 @@
 #pragma link C++ function  ROOT::Math::VectorUtil::Angle ( const  ROOT::Math::LorentzVector< ROOT::Math::PxPyPzM4D< double> > &, const  ROOT::Math::LorentzVector< ROOT::Math::PxPyPzM4D< double> > &);
 #pragma link C++ function  ROOT::Math::VectorUtil::Angle ( const  ROOT::Math::LorentzVector< ROOT::Math::PtEtaPhiM4D< double> > &, const  ROOT::Math::LorentzVector< ROOT::Math::PtEtaPhiM4D< double> > &);
 
-// invariantMass 
+// invariantMass
 
 #pragma link C++ function  ROOT::Math::VectorUtil::InvariantMass ( const  ROOT::Math::LorentzVector< ROOT::Math::PxPyPzE4D< double> > &, const  ROOT::Math::LorentzVector< ROOT::Math::PxPyPzE4D< double> > &);
 #pragma link C++ function  ROOT::Math::VectorUtil::InvariantMass ( const  ROOT::Math::LorentzVector< ROOT::Math::PxPyPzE4D< double> > &, const  ROOT::Math::LorentzVector< ROOT::Math::PtEtaPhiE4D< double> > &);

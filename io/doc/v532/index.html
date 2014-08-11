@@ -1,11 +1,11 @@
-<br/> 
-<hr/> 
-<a name="io"></a> 
+<br/>
+<hr/>
+<a name="io"></a>
 <h3>I/O Libraries</h3>
 
 <h4>LZMA Compression and compression Level setting</h4>
 
-ROOT I/O now support the LZMA compression algorithm to compress data in 
+ROOT I/O now support the LZMA compression algorithm to compress data in
 addition to the ZLIB compression algorithm.
 LZMA compression typically results in smaller files, but takes more
 CPU time to compress data. To use the new feature, the external XZ
@@ -22,7 +22,7 @@ ZLIB compression is still the default.
 
 <h5>Setting the Compression Level and Algorithm</h5>
 
-There are three equivalent ways to set the compression level and 
+There are three equivalent ways to set the compression level and
 algorithm. For example, to set the compression to the LZMA algorithm
 and compression level 5.
 <ol><li><pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
@@ -40,12 +40,12 @@ f.SetCompressionAlgorithm(ROOT::kLZMA);
 f.SetCompressionLevel(5);
 </pre></li>
 </ol>
-These methods work for <tt>TFile</tt>, <tt>TBranch</tt>, <tt>TMessage</tt>, <tt>TSocket</tt>, and <tt>TBufferXML</tt>. 
+These methods work for <tt>TFile</tt>, <tt>TBranch</tt>, <tt>TMessage</tt>, <tt>TSocket</tt>, and <tt>TBufferXML</tt>.
 The compression algorithm and level settings only affect compression of
-data after they have been set. <tt>TFile</tt> passes its settings to a TTree's branches 
-only at the time the branches are created. This can be overidden by 
-explicitly setting the level and algorithm for the branch. These classes 
-also have the following methods to access the algorithm and level for 
+data after they have been set. <tt>TFile</tt> passes its settings to a TTree's branches
+only at the time the branches are created. This can be overidden by
+explicitly setting the level and algorithm for the branch. These classes
+also have the following methods to access the algorithm and level for
 compression.
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
 Int_t GetCompressionAlgorithm() const;
@@ -96,7 +96,7 @@ The new <tt>TMemFile</tt> class support the <tt>TFile</tt> interface but only st
 the information in memory.   This version is limited to <tt>32MB</tt>.
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
    TMessage mess;
-   ... 
+   ...
    mess->ReadFastArray(scratch,length);
    transient = new TMemFile("hsimple.memroot",scratch,length);
 </pre>
@@ -117,7 +117,7 @@ returns the data to 0 but keep the customizations).
 <ul>
 <li>New option 'par' in to pack in a PAR file the generated
 code. The first argument defines the directory and the name of the package.
-For example, the following generates a PAR package equivalent to 
+For example, the following generates a PAR package equivalent to
 tutorials/proof/event.par:
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
   root [] TFile *f = TFile::Open("http://root.cern.ch/files/data/event_1.root")
@@ -151,7 +151,7 @@ For example:
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
     TFile::Open("mergedClient.root?pmerge","RECREATE"); // For now contact localhost:1095
     TFile::Open("mergedClient.root?pmerge=localhost:1095","RECREATE");
-    TFile::Open("rootd://root.cern.ch/files/output.root?pmerger=pcanal:password@locahost:1095","NEW") 
+    TFile::Open("rootd://root.cern.ch/files/output.root?pmerger=pcanal:password@locahost:1095","NEW")
 </pre>
 <tt>tutorials/net/treeClient.C</tt> and <tt>fastMergeServer.C</tt>: update to follow the change in interfaces
 Introduce the tutorials <tt>parallelMergerClient.C</tt> and the temporary tutorials <tt>parallelMergerServer.C</tt>
@@ -177,16 +177,16 @@ Yhe argument defines the type of merge as define by the bit values in <tt>EParti
 </li>
 <li>Prevent <tt>TFileMerger</tt> (and <tt>hadd</tt>) from trying to open too many files.
 Add a new member function <tt>TFileMerger::SetMaxOpenedFiles</tt> and
-new command line option to <tt>hadd</tt> ( <tt>-n requested_max</tt> ) to allow 
+new command line option to <tt>hadd</tt> ( <tt>-n requested_max</tt> ) to allow
 the user to reduce the number of files opened even further.
 </li>
 <li>Update hadd and TFileMerger so that they prefix all their information message
 with their names (when running hadd, the TFileMerger message are prefixed by hadd):
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
-$ hadd -v 0 -f output.root input1.root input2.root 
-$ hadd -v 1 -f output.root input1.root input2.root 
+$ hadd -v 0 -f output.root input1.root input2.root
+$ hadd -v 1 -f output.root input1.root input2.root
 hadd merged 2 input files in output.root.
-$ hadd -v 2 -f output.root input1.root input2.root 
+$ hadd -v 2 -f output.root input1.root input2.root
 hadd target file: output.root
 hadd Source file 1: input1.root
 hadd Source file 2: input2.root
@@ -196,8 +196,8 @@ hadd Target path: output.root:/
 <li>Introduce non-static version of <tt>TFile::Cp</tt> allows the copy of
 an existing <tt>TFile</tt> object.
 </li><li>
-Introduce new explicit interface for providing reseting 
-capability after a merge.  If a class has a method with 
+Introduce new explicit interface for providing reseting
+capability after a merge.  If a class has a method with
 the name and signature:
 <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">
    void ResetAfterMerge(TFileMergeInfo*);
@@ -211,7 +211,7 @@ a method with the name and signature:
    void Reset(Optiont_t *);
 </pre>
 </li><li>
-<tt>TClass</tt> now provides a quick access to these merging 
+<tt>TClass</tt> now provides a quick access to these merging
 function via <tt>TClass::GetResetAfterMerge</tt>.   The wrapper function
 is automatically created by rootcint and can be installed
 via <tt>TClass::SetResetAfterMerge</tt>.   The wrapper function should have
@@ -220,7 +220,7 @@ the signature/type <tt>ROOT::ResetAfterMergeFunc_t</tt>:
    void (*)(void *thisobj, TFileMergeInfo*);
 </pre>
 <tt>ResetAfterMerge</tt> functions were added to the following classes:
-<tt>TDirectoryFile</tt>, <tt>TMemFile</tt>, <tt>TTree</tt>, <tt>TChain</tt>, <tt>TBranch</tt>, <tt>TBranchElement</tt>, 
+<tt>TDirectoryFile</tt>, <tt>TMemFile</tt>, <tt>TTree</tt>, <tt>TChain</tt>, <tt>TBranch</tt>, <tt>TBranchElement</tt>,
 <tt>TBranchClones</tt>, <tt>TBranchObject</tt> and <tt>TBranchRef</tt>.
 </li>
 <li>Avoid leaking the inner object in a container like  <tt>vector&lt;vector&lt;MyClass*&gt; &gt; </tt>
@@ -228,7 +228,7 @@ and  <tt>vector&lt;vector&lt;MyClass*&gt; *&gt; </tt>.
 </li>
 <li>Put in place the infrastructure to optimize the I/O writes in the same way we optimized the I/O reads.
 </li>
-<li>Add the function <tt>TBuffer::AutoExpand</tt> to centralize the automatic 
+<li>Add the function <tt>TBuffer::AutoExpand</tt> to centralize the automatic
 buffer extension policy.  This enable the ability to tweak it later
 (for example instead of always doubling the size, increasing by
 only at most 2Mb or take hints from the number of entries already

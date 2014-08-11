@@ -134,7 +134,7 @@ SettingsDialog::SettingsDialog(const TGWindow *p, const TGWindow *main, UInt_t w
    fFirstEntry = 0;
    fLastEntry  = 30;
    fListBox->Resize(120, 110);
-    
+
    fF3->Resize(fF3->GetDefaultSize());
 
    fF4 = new TGGroupFrame(tf, "E0 / B", kVerticalFrame);
@@ -154,7 +154,7 @@ SettingsDialog::SettingsDialog(const TGWindow *p, const TGWindow *main, UInt_t w
    fTxt4->SetText(tmp);
    sprintf(tmp,"%1.4f",gRootShower->fB);
    fTxt5->SetText(tmp);
-    
+
    TGLayoutHints *fL5 = new TGLayoutHints(kLHintsBottom | kLHintsExpandX |
                                           kLHintsExpandY, 2, 2, 5, 1);
    AddFrame(fTab, fL5);
@@ -208,13 +208,13 @@ SettingsDialog::~SettingsDialog()
    delete fHelpButton;
    delete fFrame1;
    delete fListBox;
-   delete fF3; 
+   delete fF3;
    delete fF4;
-   delete fTxt4; 
+   delete fTxt4;
    delete fTxt5;
    delete fTab;
    delete fL3;
-   delete fL2; 
+   delete fL2;
    delete fL1;
 }
 

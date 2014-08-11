@@ -34,7 +34,7 @@ TFile *hsimple(Int_t get=0)
       // if the file does not exist, it is created
       TString fullPath = dir+"hsimple.root";
       if (!gSystem->AccessPathName(fullPath,kFileExists)) {
-	 hfile = TFile::Open(fullPath); //in $ROOTSYS/tutorials
+         hfile = TFile::Open(fullPath); //in $ROOTSYS/tutorials
          if (hfile) return hfile;
       }
       //otherwise try $PWD/hsimple.root
@@ -44,12 +44,8 @@ TFile *hsimple(Int_t get=0)
       }
    }
    //no hsimple.root file found. Must generate it !
-   //generate hsimple.root in $ROOTSYS/tutorials if we have write access
-   if (!gSystem->AccessPathName(dir,kWritePermission)) {
-      filename = dir+"hsimple.root";
-   } else if (!gSystem->AccessPathName(".",kWritePermission)) {
-      //otherwise generate hsimple.root in the current directory
-   } else {
+   //generate hsimple.root in current directory if we have write access
+   if (gSystem->AccessPathName(".",kWritePermission)) {
       printf("you must run the script in a directory with write access\n");
       return 0;
    }
@@ -64,7 +60,7 @@ TFile *hsimple(Int_t get=0)
    TNtuple *ntuple = new TNtuple("ntuple","Demo ntuple","px:py:pz:random:i");
 
    gBenchmark->Start("hsimple");
-  
+
    // Create a new canvas.
    TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",200,10,700,500);
    c1->SetFillColor(42);
@@ -101,7 +97,7 @@ TFile *hsimple(Int_t get=0)
    hpx->SetFillColor(48);
    c1->Modified();
    return hfile;
-  
+
 // Note that the file is automatically close when application terminates
 // or when the file destructor is called.
 }

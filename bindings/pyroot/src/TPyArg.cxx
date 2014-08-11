@@ -66,7 +66,7 @@ TPyArg::TPyArg( Int_t value )
 {
 // Construct a TPyArg from an integer value.
    fPyObject = PyInt_FromLong( value );
-}  
+}
 
 //____________________________________________________________________________
 TPyArg::TPyArg( Long_t value )
@@ -77,10 +77,10 @@ TPyArg::TPyArg( Long_t value )
 
 //____________________________________________________________________________
 TPyArg::TPyArg( Double_t value )
-{  
+{
 // Construct a TPyArg from a double value.
    fPyObject = PyFloat_FromDouble( value );
-}  
+}
 
 //____________________________________________________________________________
 TPyArg::TPyArg( const char* value )

@@ -50,7 +50,7 @@ protected:
    void CalcDrawScale(const TGLBoundingBox& box, const TGLCamera& camera,
                       Double_t& base, TGLVector3 axis[3]) const;
 
-   const UChar_t* ColorFor(UInt_t widget) const; 
+   const UChar_t* ColorFor(UInt_t widget) const;
 
 public:
    TGLManip();

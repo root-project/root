@@ -1,5 +1,5 @@
 // This program can be execute from the command line as folows:
-//     
+//
 //      root -l foam_kanwa.C
 //_____________________________________________________________________________
 
@@ -67,7 +67,7 @@ Int_t foam_kanwa(){
   FoamX->GetIntegMC( MCresult, MCerror);  // get MC integral, should be one
   cout << " MCresult= " << MCresult << " +- " << MCerror <<endl;
   cout<<"--- kanwa ended ---"<<endl;
-  
+
   return 0;
 }//kanwa
 

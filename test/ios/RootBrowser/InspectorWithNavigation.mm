@@ -9,7 +9,7 @@
    if (self) {
       self.navigationBar.hidden = YES;
    }
-   
+
    return self;
 }
 
@@ -50,7 +50,7 @@
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
    // Return YES for supported orientations
-	return YES;
+   return YES;
 }
 
 //____________________________________________________________________________________________________

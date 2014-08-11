@@ -191,7 +191,7 @@ Bool_t ProofNtuple::Process(Long64_t entry)
    if (fNtpRndm) {
       // Get the entry
       Float_t *ar = fNtpRndm->GetArgs();
-      Long64_t ent = entry % fNtpRndm->GetEntries(); 
+      Long64_t ent = entry % fNtpRndm->GetEntries();
       fNtpRndm->GetEntry(ent);
       random = ar[0];
       px = (Float_t) TMath::ErfInverse((Double_t)(ar[1]*2 - 1.)) * TMath::Sqrt(2.);
@@ -208,7 +208,7 @@ Bool_t ProofNtuple::Process(Long64_t entry)
    fNtp->Fill(px,py,pz,random,i);
 
    if (!fNtp2) return kTRUE;
-   
+
    // The second ntuple
    Float_t vz = random * 2. - 1.;
    fNtp2->Fill(px,py,vz);
@@ -281,7 +281,7 @@ void ProofNtuple::Terminate()
       } else {
          Error("Terminate", "could not open file: %s", outputFile.Data());
       }
-      if (!fFile) return; 
+      if (!fFile) return;
 
    } else {
       Error("Terminate", "TProofOutputFile not found");

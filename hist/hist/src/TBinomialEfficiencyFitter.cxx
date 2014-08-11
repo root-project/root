@@ -94,7 +94,7 @@ ClassImp(TBinomialEfficiencyFitter)
 //______________________________________________________________________________
 TBinomialEfficiencyFitter::TBinomialEfficiencyFitter() {
    // default constructor
-  
+
    fNumerator   = 0;
    fDenominator = 0;
    fFunction    = 0;
@@ -124,8 +124,8 @@ TBinomialEfficiencyFitter::TBinomialEfficiencyFitter(const TH1 *numerator, const
 //______________________________________________________________________________
 TBinomialEfficiencyFitter::~TBinomialEfficiencyFitter() {
    // destructor
-   
-   if (fFitter) delete fFitter; 
+
+   if (fFitter) delete fFitter;
    fFitter = 0;
 }
 
@@ -158,11 +158,11 @@ ROOT::Fit::Fitter* TBinomialEfficiencyFitter::GetFitter()
 
    if (!fFitter)  fFitter = new ROOT::Fit::Fitter();
    return fFitter;
-   
+
 }
 
 //______________________________________________________________________________
-TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option) 
+TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
 {
    // Carry out the fit of the given function to the given histograms.
    //
@@ -173,7 +173,7 @@ TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    // function (the default is to use the entire histogram).
    //
    // If option "S" a TFitResult object is returned and it can be used to obtain
-   //  additional fit information, like covariance or correlation matrix. 
+   //  additional fit information, like covariance or correlation matrix.
    //
    // Note that all parameter values, limits, and step sizes are copied
    // from the input fit function f1 (so they should be set before calling
@@ -201,7 +201,7 @@ TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    Int_t i, npar;
    npar = f1->GetNpar();
    if (npar <= 0) {
-      Error("Fit", "function %s has illegal number of parameters = %d", 
+      Error("Fit", "function %s has illegal number of parameters = %d",
             f1->GetName(), npar);
       return -3;
    }
@@ -242,34 +242,34 @@ TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
 
       parameters.push_back(ROOT::Fit::ParameterSettings(f1->GetParName(i), f1->GetParameter(i), we) );
 
-      Double_t plow, pup; 
+      Double_t plow, pup;
       f1->GetParLimits(i,plow,pup);
       if (plow*pup != 0 && plow >= pup) { // this is a limitation - cannot fix a parameter to zero value
          parameters.back().Fix();
       }
-      else if (plow < pup ) { 
+      else if (plow < pup ) {
          parameters.back().SetLimits(plow,pup);
       }
    }
 
-   // fcn must be set after setting the parameters 
+   // fcn must be set after setting the parameters
    ROOT::Math::Functor fcnFunction(this, &TBinomialEfficiencyFitter::EvaluateFCN, npar);
    fFitter->SetFCN(static_cast<ROOT::Math::IMultiGenFunction&>(fcnFunction));
 
 
-   // in case default value of 1.0 is used 
-   if (fFitter->Config().MinimizerOptions().ErrorDef() == 1.0 ) { 
+   // in case default value of 1.0 is used
+   if (fFitter->Config().MinimizerOptions().ErrorDef() == 1.0 ) {
       fFitter->Config().MinimizerOptions().SetErrorDef(0.5);
    }
 
-   if (verbose)   { 
+   if (verbose)   {
       fFitter->Config().MinimizerOptions().SetPrintLevel(3);
    }
    else if (quiet) {
       fFitter->Config().MinimizerOptions().SetPrintLevel(0);
    }
-   
-      
+
+
 
    // perform the actual fit
 
@@ -278,32 +278,32 @@ TFitResultPtr TBinomialEfficiencyFitter::Fit(TF1 *f1, Option_t* option)
    if ( !status && !quiet)
       Warning("Fit","Abnormal termination of minimization.");
 
-   
+
    //Store fit results in fitFunction
-   const ROOT::Fit::FitResult & fitResult = fFitter->Result(); 
-   if (!fitResult.IsEmpty() ) { 
-      // set in f1 the result of the fit      
+   const ROOT::Fit::FitResult & fitResult = fFitter->Result();
+   if (!fitResult.IsEmpty() ) {
+      // set in f1 the result of the fit
       f1->SetNDF(fitResult.Ndf() );
 
       //f1->SetNumberFitPoints(...);  // this is set in ComputeFCN
 
-      f1->SetParameters( &(fitResult.Parameters().front()) ); 
-      if ( int( fitResult.Errors().size()) >= f1->GetNpar() ) 
-         f1->SetParErrors( &(fitResult.Errors().front()) ); 
+      f1->SetParameters( &(fitResult.Parameters().front()) );
+      if ( int( fitResult.Errors().size()) >= f1->GetNpar() )
+         f1->SetParErrors( &(fitResult.Errors().front()) );
 
       f1->SetChisquare(2.*fitResult.MinFcnValue());    // store goodness of fit (Baker&Cousins)
       f1->SetNDF(f1->GetNumberFitPoints()- fitResult.NFreeParameters());
       Info("result"," chi2 %f ndf %d ",2.*fitResult.MinFcnValue(), fitResult.Ndf() );
 
    }
-   // create a new result class if needed 
-   if (saveResult) { 
+   // create a new result class if needed
+   if (saveResult) {
       TFitResult* fr = new TFitResult(fitResult);
       TString name = TString::Format("TBinomialEfficiencyFitter_result_of_%s",f1->GetName() );
       fr->SetName(name); fr->SetTitle(name);
       return TFitResultPtr(fr);
    }
-   else { 
+   else {
       return TFitResultPtr(fitResult.Status() );
    }
 
@@ -387,28 +387,28 @@ void TBinomialEfficiencyFitter::ComputeFCN(Double_t& f, const Double_t* par)
             Double_t nNum = fNumerator->GetBinContent(bin);
 
             // count maximum value to use in the likelihood for inf
-            // i.e. a number much larger than the other terms  
-            if (nDen> nmax) nmax = nDen; 
+            // i.e. a number much larger than the other terms
+            if (nDen> nmax) nmax = nDen;
             if (nDen <= 0.) continue;
             npoints++;
-      
+
             // mu is the average of the function over the bin OR
             // the function evaluated at the bin centre
-            // As yet, there is nothing to prevent mu from being 
+            // As yet, there is nothing to prevent mu from being
             // outside the range <0,1> !!
 
             Double_t mu = 0;
             switch (nDim) {
                case 1:
                   mu = (fAverage) ?
-                     fFunction->Integral(xlow, xup, fEpsilon) 
+                     fFunction->Integral(xlow, xup, fEpsilon)
                         / (xup-xlow) :
                      fFunction->Eval(fDenominator->GetBinCenter(bin));
                   break;
                case 2:
                   {
                      mu = (fAverage) ?
-                        ((TF2*)fFunction)->Integral(xlow, xup, ylow, yup, fEpsilon) 
+                        ((TF2*)fFunction)->Integral(xlow, xup, ylow, yup, fEpsilon)
                         / ((xup-xlow)*(yup-ylow)) :
                      fFunction->Eval(fDenominator->GetXaxis()->GetBinCenter(xbin),
                      fDenominator->GetYaxis()->GetBinCenter(ybin));
@@ -435,7 +435,7 @@ void TBinomialEfficiencyFitter::ComputeFCN(Double_t& f, const Double_t* par)
             if (nDen - nNum != 0.) {
                if (1. - mu > 0.)
                   f -= (nDen - nNum) * TMath::Log((1. - mu)*nDen/(nDen-nNum));
-               else 
+               else
                   f -= nmax * -1E30; // crossing our fingers
             }
          }

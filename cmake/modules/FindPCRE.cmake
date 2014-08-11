@@ -1,5 +1,5 @@
 # Find the PCRE includes and library.
-# 
+#
 # This module defines
 # PCRE_INCLUDE_DIR, where to locate PCRE header files
 # PCRE_LIBRARIES, the libraries to link against to use Pythia6
@@ -23,7 +23,7 @@ if(PCRE_CONFIG_EXECUTABLE)
     set(PCRE_INCLUDE_DIR ${PCRE_PREFIX}/include)
   endif()
   execute_process(COMMAND ${PCRE_CONFIG_EXECUTABLE} --libs OUTPUT_VARIABLE PCRE_LIBRARIES OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(PCRE_FOUND 1)  
+  set(PCRE_FOUND 1)
 endif()
 
 if(PCRE_FOUND)

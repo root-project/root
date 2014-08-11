@@ -48,7 +48,7 @@ public:
    template <typename T>
    static void Scale(T* p, Double_t c1, Option_t * option);
 
-   template <typename T> 
+   template <typename T>
    static void Sumw2(T* p, Bool_t flag );
 
    template <typename T>
@@ -101,7 +101,7 @@ Bool_t TProfileHelper::Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Dou
    p1->GetStats(s1);
    p2->GetStats(s2);
    for (i=0;i<TH1::kNstat;i++) {
-      if (i == 1) s0[i] = c1*c1*s1[i] + c2*c2*s2[i]; 
+      if (i == 1) s0[i] = c1*c1*s1[i] + c2*c2*s2[i];
       else        s0[i] = ac1*s1[i] + ac2*s2[i];
    }
    p->PutStats(s0);
@@ -112,11 +112,11 @@ Bool_t TProfileHelper::Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Dou
    Double_t *er1 = p1->GetW2();   Double_t *er2 = p2->GetW2();
    Double_t *en1 = p1->GetB();    Double_t *en2 = p2->GetB();
    Double_t *ew1 = p1->GetB2();   Double_t *ew2 = p2->GetB2();
-   // create sumw2 per bin if not set 
+   // create sumw2 per bin if not set
    if (p->fBinSumw2.fN == 0 && (p1->fBinSumw2.fN != 0 || p2->fBinSumw2.fN != 0) ) p->Sumw2();
-   // if p1 has not the sum of weight squared/bin stored use just the sum of weights  
+   // if p1 has not the sum of weight squared/bin stored use just the sum of weights
    if (ew1 == 0) ew1 = en1;
-   if (ew2 == 0) ew2 = en2; 
+   if (ew2 == 0) ew2 = en2;
    for (bin =0;bin< p->fN;bin++) {
       p->fArray[bin]             = c1*cu1[bin] + c2*cu2[bin];
       p->fSumw2.fArray[bin]      = ac1*er1[bin] + ac2*er2[bin];
@@ -127,40 +127,40 @@ Bool_t TProfileHelper::Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Dou
 }
 
 template <typename T>
-void TProfileHelper::BuildArray(T* p) { 
+void TProfileHelper::BuildArray(T* p) {
    // Build the extra profile data structure in addition to the histograms
-   // this are:    array of bin entries:  fBinEntries 
+   // this are:    array of bin entries:  fBinEntries
    //              array of sum of profiled observable value - squared
-   //              stored in TH1::fSumw2 
+   //              stored in TH1::fSumw2
    //              array of some of weight squared (optional) in TProfile::fBinSumw2
    p->fBinEntries.Set(p->fNcells);
-   p->fSumw2.Set(p->fNcells);  
+   p->fSumw2.Set(p->fNcells);
    if (TH1::GetDefaultSumw2() || p->fBinSumw2.fN > 0 ) p->fBinSumw2.Set(p->fNcells);
 }
 
 
 template <typename T>
-Double_t TProfileHelper::GetBinEffectiveEntries(T* p, Int_t bin) 
+Double_t TProfileHelper::GetBinEffectiveEntries(T* p, Int_t bin)
 {
-//            Return bin effective entries for a weighted filled Profile histogram. 
-//            In case of an unweighted profile, it is equivalent to the number of entries per bin   
-//            The effective entries is defined as the square of the sum of the weights divided by the 
-//            sum of the weights square. 
-//            TProfile::Sumw2() must be called before filling the profile with weights. 
-//            Only by calling this method the  sum of the square of the weights per bin is stored. 
-//  
+//            Return bin effective entries for a weighted filled Profile histogram.
+//            In case of an unweighted profile, it is equivalent to the number of entries per bin
+//            The effective entries is defined as the square of the sum of the weights divided by the
+//            sum of the weights square.
+//            TProfile::Sumw2() must be called before filling the profile with weights.
+//            Only by calling this method the  sum of the square of the weights per bin is stored.
+//
 
    if (p->fBuffer) p->BufferEmpty();
 
    if (bin < 0 || bin >= p->fNcells) return 0;
    double sumOfWeights = p->fBinEntries.fArray[bin];
-   if ( p->fBinSumw2.fN == 0 || p->fBinSumw2.fN != p->fNcells) { 
-      // this can happen  when reading an old file 
+   if ( p->fBinSumw2.fN == 0 || p->fBinSumw2.fN != p->fNcells) {
+      // this can happen  when reading an old file
       p->fBinSumw2.Set(0);
       return sumOfWeights;
    }
-   double sumOfWeightsSquare = p->fBinSumw2.fArray[bin]; 
-   return ( sumOfWeightsSquare > 0 ?  sumOfWeights * sumOfWeights /   sumOfWeightsSquare : 0 ); 
+   double sumOfWeightsSquare = p->fBinSumw2.fArray[bin];
+   return ( sumOfWeightsSquare > 0 ?  sumOfWeights * sumOfWeights /   sumOfWeightsSquare : 0 );
 }
 
 template <typename T>
@@ -197,7 +197,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
 
    do {
 
-      // skip empty histograms 
+      // skip empty histograms
       // if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
 
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
@@ -207,19 +207,19 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
          h->BufferEmpty();
 
 #ifdef LATER
-         // this is done in case the first histograms are empty and 
+         // this is done in case the first histograms are empty and
          // the histogram have different limits
-         if (firstNonEmptyHist ) { 
+         if (firstNonEmptyHist ) {
             // set axis limits in the case the first histogram was empty
-            if (h != p ) { 
-               if (!p->SameLimitsAndNBins(p->fXaxis, *(h->GetXaxis())) ) 
+            if (h != p ) {
+               if (!p->SameLimitsAndNBins(p->fXaxis, *(h->GetXaxis())) )
                   p->fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),h->GetXaxis()->GetXmax());
-               if (!p->SameLimitsAndNBins(p->fYaxis, *(h->GetYaxis())) ) 
+               if (!p->SameLimitsAndNBins(p->fYaxis, *(h->GetYaxis())) )
                   p->fYaxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),h->GetYaxis()->GetXmax());
-               if (!p->SameLimitsAndNBins(p->fZaxis, *(h->GetZaxis())) ) 
+               if (!p->SameLimitsAndNBins(p->fZaxis, *(h->GetZaxis())) )
                   p->fZaxis.Set(h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),h->GetZaxis()->GetXmax());
             }
-            firstNonEmptyHist = kFALSE;     
+            firstNonEmptyHist = kFALSE;
          }
 #endif
 
@@ -237,16 +237,16 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
                      h->GetZaxis()->GetXmax());
          }
          else {
-            // check first if histograms have same bins 
-            if (!p->SameLimitsAndNBins(newXAxis, *(h->GetXaxis())) || 
-                !p->SameLimitsAndNBins(newYAxis, *(h->GetYaxis())) || 
-                !p->SameLimitsAndNBins(newZAxis, *(h->GetZaxis())) ) { 
+            // check first if histograms have same bins
+            if (!p->SameLimitsAndNBins(newXAxis, *(h->GetXaxis())) ||
+                !p->SameLimitsAndNBins(newYAxis, *(h->GetYaxis())) ||
+                !p->SameLimitsAndNBins(newZAxis, *(h->GetZaxis())) ) {
 
                allSameLimits = kFALSE;
                // recompute in this case the optimal limits
-               // The condition to works is that the histogram have same bin with 
+               // The condition to works is that the histogram have same bin with
                // and one common bin edge
-               
+
                if (!p->RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
                   Error("TProfileHelper::Merge", "Cannot merge profiles %d dim - limits are inconsistent:\n "
                      "first: (%d, %f, %f), second: (%d, %f, %f)",p->GetDimension(),
@@ -288,7 +288,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    // but one needs first to clone this histogram to perform the merge
    // The clone is not needed when all histograms have the same limits
    T * hclone = 0;
-   if (!allSameLimits) { 
+   if (!allSameLimits) {
       // We don't want to add the clone to gDirectory,
       // so remove our kMustCleanup bit temporarily
       Bool_t mustCleanup = p->TestBit(kMustCleanup);
@@ -345,9 +345,9 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
          }
       }
       if (!initialLimitsFound) {
-         if (hclone) { 
+         if (hclone) {
             inlist.Remove(hclone);
-            delete hclone; 
+            delete hclone;
          }
          return (Int_t) p->GetEntries();  // all histograms have been processed
       }
@@ -360,7 +360,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    p->GetStats(totstats);
    Double_t nentries = p->GetEntries();
    Bool_t canExtend = p->CanExtendAllAxes();
-   p->SetCanExtend(TH1::kNoAxis); // reset, otherwise setting the under/overflow will extend the axis 
+   p->SetCanExtend(TH1::kNoAxis); // reset, otherwise setting the under/overflow will extend the axis
 
    while ( (h=static_cast<T*>(next())) ) {
       // process only if the histogram has limits; otherwise it was processed before
@@ -378,7 +378,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
                // histogram have different limits:
                // find global bin number in p given the x,y,z axis bin numbers in h
                // in case of nont equal axes
-               // we can use FindBin on p axes because SetCanExtend(TH1::kNoAxis) has been called 
+               // we can use FindBin on p axes because SetCanExtend(TH1::kNoAxis) has been called
                if ( h->GetW()[hbin] != 0 && (h->IsBinUnderflow(hbin) || h->IsBinOverflow(hbin)) ) {
                   // reject cases where underflow/overflow are there and bin content is not zero
                   Error("TProfileHelper::Merge", "Cannot merge profiles - they have"
@@ -398,7 +398,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
             p->fArray[pbin]             += h->GetW()[hbin];
             p->fSumw2.fArray[pbin]      += h->GetW2()[hbin];
             p->fBinEntries.fArray[pbin] += h->GetB()[hbin];
-            if (p->fBinSumw2.fN) { 
+            if (p->fBinSumw2.fN) {
                if ( h->GetB2() ) p->fBinSumw2.fArray[pbin] += h->GetB2()[hbin];
                else p->fBinSumw2.fArray[pbin] += h->GetB()[hbin];
             }
@@ -410,7 +410,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    //copy merged stats
    p->PutStats(totstats);
    p->SetEntries(nentries);
-   if (hclone) { 
+   if (hclone) {
       inlist.Remove(hclone);
       delete hclone;
    }
@@ -497,21 +497,21 @@ template <typename T>
 void TProfileHelper::Sumw2(T* p, Bool_t flag)
 {
    // Create/Delete structure to store sum of squares of weights per bin  *-*-*-*-*-*-*-*
-   //   This is needed to compute  the correct statistical quantities  
-   //    of a profile filled with weights 
-   //  
+   //   This is needed to compute  the correct statistical quantities
+   //    of a profile filled with weights
+   //
    //
    //  This function is automatically called when the histogram is created
    //  if the static function TH1::SetDefaultSumw2 has been called before.
-   
-   if (!flag) { 
-      // clear array if existing or do nothing 
+
+   if (!flag) {
+      // clear array if existing or do nothing
       if (p->fBinSumw2.fN > 0 ) p->fBinSumw2.Set(0);
       return;
    }
 
    if ( p->fBinSumw2.fN == p->fNcells) {
-      if (!p->fgDefaultSumw2) 
+      if (!p->fgDefaultSumw2)
          Warning("Sumw2","Sum of squares of profile bin weights structure already created");
       return;
    }
@@ -520,7 +520,7 @@ void TProfileHelper::Sumw2(T* p, Bool_t flag)
 
    // by default fill with the sum of weights which are stored in fBinEntries
    for (Int_t bin=0; bin<p->fNcells; bin++) {
-      p->fBinSumw2.fArray[bin] = p->fBinEntries.fArray[bin]; 
+      p->fBinSumw2.fArray[bin] = p->fBinEntries.fArray[bin];
    }
 }
 
@@ -530,7 +530,7 @@ void TProfileHelper::LabelsDeflate(T* p, Option_t *ax)
    // Reduce the number of bins for this axis to the number of bins having a label.
    // Works only for the given axis passed in the option
    // The method will remove only the extra bins existing after the last "labeled" bin.
-   // Note that if there are "un-labeled" bins present between "labeled" bins they will not be removed 
+   // Note that if there are "un-labeled" bins present between "labeled" bins they will not be removed
 
 
    TAxis *axis = p->GetXaxis();
@@ -542,15 +542,15 @@ void TProfileHelper::LabelsDeflate(T* p, Option_t *ax)
    }
    if (!axis->GetLabels()) return;
 
-   // find bin with last labels 
-   // bin number is object ID in list of labels 
+   // find bin with last labels
+   // bin number is object ID in list of labels
    // therefore max bin number is number of bins of the deflated histograms
    TIter next(axis->GetLabels());
    TObject *obj;
    Int_t nbins = 0;
    while ((obj = next())) {
       Int_t ibin = obj->GetUniqueID();
-      if (ibin > nbins) nbins = ibin; 
+      if (ibin > nbins) nbins = ibin;
    }
    if (nbins < 1) nbins = 1;
    T *hold = (T*)p->IsA()->New();;
@@ -613,7 +613,7 @@ void TProfileHelper::LabelsInflate(T* p, Option_t *ax)
    nbins *= 2;
    axis->Set(nbins,xmin,xmax);
    // reset the array of content according to the axis
-   p->SetBinsLength(-1);  
+   p->SetBinsLength(-1);
    Int_t ncells = p->fN;
    p->fBinEntries.Set(ncells);
    p->fSumw2.Set(ncells);
@@ -626,7 +626,7 @@ void TProfileHelper::LabelsInflate(T* p, Option_t *ax)
       p->GetBinXYZ(ibin, binx, biny, binz);
       Int_t bin = hold->GetBin(binx, biny, binz);
 
-      if (p->IsBinUnderflow(ibin) || p->IsBinOverflow(ibin)) {      
+      if (p->IsBinUnderflow(ibin) || p->IsBinOverflow(ibin)) {
          p->UpdateBinContent(ibin, 0.0);
          p->fBinEntries.fArray[ibin] = 0.0;
          p->fSumw2.fArray[ibin] = 0.0;
@@ -642,7 +642,7 @@ void TProfileHelper::LabelsInflate(T* p, Option_t *ax)
 }
 
 template <typename T>
-void TProfileHelper::SetErrorOption(T* p, Option_t * option) { 
+void TProfileHelper::SetErrorOption(T* p, Option_t * option) {
    // set the profile option
    TString opt = option;
    opt.ToLower();
@@ -659,7 +659,7 @@ Double_t TProfileHelper::GetBinError(T* p, Int_t bin)
 
    if (p->fBuffer) p->BufferEmpty();
 
-   if (bin < 0 || bin >= p->fNcells) return 0; 
+   if (bin < 0 || bin >= p->fNcells) return 0;
    Double_t cont = p->fArray[bin];                  // sum of bin w *y
    Double_t sum  = p->fBinEntries.fArray[bin];      // sum of bin weights
    Double_t err2 = p->fSumw2.fArray[bin];           // sum of bin w * y^2
@@ -682,7 +682,7 @@ Double_t TProfileHelper::GetBinError(T* p, Int_t bin)
    }
 
    // if approximate compute the sums (of w, wy and wy2) using all the bins
-   //  when the variance in y is zero 
+   //  when the variance in y is zero
    Double_t test = 1;
    if (err2 != 0 && neff < 5) test = eprim2*sum/err2;
    //Int_t cellLimit = (p->GetDimension() == 3)?1000404:10404;
@@ -691,25 +691,25 @@ Double_t TProfileHelper::GetBinError(T* p, Int_t bin)
       p->GetStats(stats);
       Double_t ssum = stats[0];
       // for 1D profile
-      int index = 4;  // index in the stats array for 1D 
+      int index = 4;  // index in the stats array for 1D
       if (p->GetDimension() == 2) index = 7;   // for 2D
       if (p->GetDimension() == 3) index = 11;   // for 3D
-      Double_t scont = stats[index];  
-      Double_t serr2 = stats[index+1];  
-      
-      // compute mean and variance in y 
+      Double_t scont = stats[index];
+      Double_t serr2 = stats[index+1];
+
+      // compute mean and variance in y
       Double_t scontsum = scont/ssum;                                  // global mean
-      Double_t seprim2  = TMath::Abs(serr2/ssum - scontsum*scontsum);  // global variance  
+      Double_t seprim2  = TMath::Abs(serr2/ssum - scontsum*scontsum);  // global variance
       eprim           = 2*TMath::Sqrt(seprim2);                        // global std (why factor of 2 ??)
       sum = ssum;
    }
    sum = TMath::Abs(sum);
 
-   // case option "S" return standard deviation in y 
+   // case option "S" return standard deviation in y
    if (p->fErrorMode == kERRORSPREAD) return eprim;
 
-   // default case : fErrorMode = kERRORMEAN 
-   // return standard error on the mean of y 
+   // default case : fErrorMode = kERRORMEAN
+   // return standard error on the mean of y
    //if (neff == 0) std::cerr << "NEFF = 0 for bin " << bin << "   " << eprim << "  " << neff << "  " << std::endl;
    return eprim/TMath::Sqrt(neff);
 
@@ -717,10 +717,10 @@ Double_t TProfileHelper::GetBinError(T* p, Int_t bin)
 
 
 template <typename T>
-void TProfileHelper::SetBinEntries(T* p, Int_t bin, Double_t w) { 
-//    Set the number of entries in bin for the profile 
-//    In case the profile stores the sum of weight squares - set the sum of weight square to the number entries  
-//    (i.e. assume the entries have been filled all with a weight == 1 )   
+void TProfileHelper::SetBinEntries(T* p, Int_t bin, Double_t w) {
+//    Set the number of entries in bin for the profile
+//    In case the profile stores the sum of weight squares - set the sum of weight square to the number entries
+//    (i.e. assume the entries have been filled all with a weight == 1 )
 
    if (bin < 0 || bin >= p->fNcells) return;
    p->fBinEntries.fArray[bin] = w;

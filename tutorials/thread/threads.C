@@ -5,7 +5,7 @@
 // This is not needed anymore due to the rootmap facility which
 // automatically loads the needed libraries.
 //Author: Victor Perevovchikov
-   
+
 #include "TThread.h"
 #include <Riostream.h>
 

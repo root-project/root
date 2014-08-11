@@ -111,7 +111,7 @@ private:
    Int_t          fNseg;              //Number of track segments
    Int_t          fNvertex;
    UInt_t         fFlag;
-   Double32_t     fTemperature;       
+   Double32_t     fTemperature;
    Int_t          fMeasures[10];
    Double32_t     fMatrix[4][4];
    Double32_t    *fClosestDistance;   //[fNvertex][0,0,6]

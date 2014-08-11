@@ -178,7 +178,7 @@ void TTUBS::Sizeof3D() const
 
    gSize3D.numPoints += n*4;
    gSize3D.numSegs   += n*8;
-   gSize3D.numPolys  += n*4-2;  
+   gSize3D.numPolys  += n*4-2;
 }
 
 
@@ -192,7 +192,7 @@ const TBuffer3D & TTUBS::GetBuffer3D(Int_t reqSections) const
    TShape::FillBuffer3D(buffer, reqSections);
 
    // TODO: Although we now have a TBuffer3DTubeSeg class for
-   // tube segment shapes, we do not use it for old geometry shapes, as 
+   // tube segment shapes, we do not use it for old geometry shapes, as
    // OGL viewer needs various rotation matrix info we can't easily
    // pass yet. To be revisited.
 

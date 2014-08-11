@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -35,7 +35,7 @@ private:
 
   template<class a, class b, class c>
   ABObj& operator=(const ABObj<a,b,c>&) {return *this;}
-  
+
 public:
 
   ABObj(const M& obj) : fObject(obj), fFactor(T(1.)) {}
@@ -44,11 +44,11 @@ public:
 
   ~ABObj() {}
 
-  ABObj(const ABObj& obj) : 
+  ABObj(const ABObj& obj) :
     fObject(obj.fObject), fFactor(obj.fFactor) {}
 
   template<class b, class c>
-  ABObj(const ABObj<mtype,b,c>& obj) : 
+  ABObj(const ABObj<mtype,b,c>& obj) :
      fObject(M(obj.Obj() )), fFactor(T(obj.f() )) {}
 
   const M& Obj() const {return fObject;}
@@ -71,7 +71,7 @@ public:
 private:
 
   ABObj& operator=(const ABObj&) {return *this;}
-  
+
 public:
 
   ABObj(const LAVector& obj) : fObject(obj), fFactor(double(1.)) {}
@@ -80,13 +80,13 @@ public:
 
   ~ABObj() {}
 
-  // remove copy constructure to Fix a problem in AIX 
+  // remove copy constructure to Fix a problem in AIX
   // should be able to use the compiler generated one
-//   ABObj(const ABObj& obj) : 
+//   ABObj(const ABObj& obj) :
 //     fObject(obj.fObject), fFactor(obj.fFactor) {}
 
   template<class c>
-  ABObj(const ABObj<vec,LAVector,c>& obj) : 
+  ABObj(const ABObj<vec,LAVector,c>& obj) :
     fObject(obj.fObject), fFactor(double(obj.fFactor)) {}
 
   const LAVector& Obj() const {return fObject;}
@@ -109,7 +109,7 @@ public:
 private:
 
   ABObj& operator=(const ABObj&) {return *this;}
-  
+
 public:
 
   ABObj(const LASymMatrix& obj) : fObject(obj), fFactor(double(1.)) {}
@@ -118,11 +118,11 @@ public:
 
   ~ABObj() {}
 
-  ABObj(const ABObj& obj) : 
+  ABObj(const ABObj& obj) :
     fObject(obj.fObject), fFactor(obj.fFactor) {}
 
   template<class c>
-  ABObj(const ABObj<vec,LASymMatrix,c>& obj) : 
+  ABObj(const ABObj<vec,LASymMatrix,c>& obj) :
     fObject(obj.fObject), fFactor(double(obj.fFactor)) {}
 
   const LASymMatrix& Obj() const {return fObject;}

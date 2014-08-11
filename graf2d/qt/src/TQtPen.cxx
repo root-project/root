@@ -5,16 +5,13 @@
 ** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
 **                                    All rights reserved.
 **
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
 **
 *****************************************************************************/
 
 
 /////////////////////////////////////////////////////////////////////////////////
 //
-// TQtPen class is Qt QPen with ROOT TAttLine interface 
+// TQtPen class is Qt QPen with ROOT TAttLine interface
 //
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -33,30 +30,30 @@
 //______________________________________________________________________________
 TQtPen::TQtPen(): QPen(),TAttLine()
 {
-	// TQtPen default ctor
+   // TQtPen default ctor
 }
 //______________________________________________________________________________
-TQtPen::TQtPen(const TAttLine &line) : QPen() 
+TQtPen::TQtPen(const TAttLine &line) : QPen()
 {
-	// Copy ctor to copy ROOT TAttLine object
+   // Copy ctor to copy ROOT TAttLine object
    SetLineAttributes(line);
 }
 
 //______________________________________________________________________________
 TQtPen &TQtPen::operator=(const TAttLine &line)
 {
-	// Assigns the  Qt pen attributes from ROOT TAttLine object
+   // Assigns the  Qt pen attributes from ROOT TAttLine object
    SetLineAttributes(line);
-	return *this;
+   return *this;
 }
 
 //______________________________________________________________________________
 void  TQtPen::SetLineAttributes(const TAttLine &lineAttributes)
 {
-	// Maps the ROOT TAttLine attributes to QPen attributes
-	SetLineColor(lineAttributes.GetLineColor());
-	SetLineStyle(lineAttributes.GetLineStyle());
-	SetLineWidth(lineAttributes.GetLineWidth());
+   // Maps the ROOT TAttLine attributes to QPen attributes
+   SetLineColor(lineAttributes.GetLineColor());
+   SetLineStyle(lineAttributes.GetLineStyle());
+   SetLineWidth(lineAttributes.GetLineWidth());
 }
 
 //______________________________________________________________________________

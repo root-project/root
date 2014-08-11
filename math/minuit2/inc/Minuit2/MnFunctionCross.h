@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -25,17 +25,17 @@ class MnStrategy;
 class MnCross;
 
 /**
-   MnFunctionCross 
+   MnFunctionCross
 */
 
 class MnFunctionCross {
 
 public:
-  
-  MnFunctionCross(const FCNBase& fcn, const MnUserParameterState& state, double fval, const MnStrategy& stra) : fFCN(fcn), fState(state), fFval(fval), fStrategy(stra) {} 
-  
+
+  MnFunctionCross(const FCNBase& fcn, const MnUserParameterState& state, double fval, const MnStrategy& stra) : fFCN(fcn), fState(state), fFval(fval), fStrategy(stra) {}
+
   ~MnFunctionCross() {}
-  
+
   MnCross operator()(const std::vector<unsigned int>&, const std::vector<double>&, const std::vector<double>&, double, unsigned int) const;
 
 private:

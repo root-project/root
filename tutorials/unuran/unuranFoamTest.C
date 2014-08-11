@@ -1,8 +1,8 @@
 // This program must be compiled and executed with Aclic as follows
-//     
+//
 // .x unuranFoamTest.C+
 //
-// it is an extension of tutorials foam_kanwa.C to compare 
+// it is an extension of tutorials foam_kanwa.C to compare
 // generation of a 2D distribution with unuran and Foam
 //_____________________________________________________________________________
 
@@ -40,26 +40,26 @@ Double_t Camel2(Int_t nDim, Double_t *Xarg){
   return 0.5*Dist;
 }// Camel2
 
-class FoamFunction : public TFoamIntegrand { 
+class FoamFunction : public TFoamIntegrand {
    public:
    virtual ~FoamFunction() {}
-   double Density(int nDim, double * x) { 
-      return Camel2(nDim,x); 
+   double Density(int nDim, double * x) {
+      return Camel2(nDim,x);
    }
    ClassDef(FoamFunction,1);
-   
+
 };
 
-TH2 * hFoam; 
-TH2 * hUnr; 
+TH2 * hFoam;
+TH2 * hUnr;
 
 
 Int_t run_foam(int nev){
   cout<<"--- kanwa started ---"<<endl;
   gSystem->Load("libFoam.so");
-  TH2D  *hst_xy = new TH2D("foam_hst_xy" ,  "FOAM x-y plot", 50,0,1.0, 50,0,1.0); 
+  TH2D  *hst_xy = new TH2D("foam_hst_xy" ,  "FOAM x-y plot", 50,0,1.0, 50,0,1.0);
   hFoam = hst_xy;
-  
+
   Double_t *MCvect =new Double_t[2]; // 2-dim vector generated in the MC run
   //
   TRandom     *PseRan   = new TRandom3();  // Create random number generator
@@ -73,9 +73,9 @@ Int_t run_foam(int nev){
   // From now on FoamX is ready to generate events
 
    // test first the time
-   TStopwatch w; 
+   TStopwatch w;
 
-  w.Start(); 
+  w.Start();
   FoamX->Initialize();       // Initialize simulator, may take time...
 
   //int nshow=5000;
@@ -97,7 +97,7 @@ Int_t run_foam(int nev){
   }// loop
   w.Stop();
 
-  double time = w.CpuTime()*1.E9/nev; 
+  double time = w.CpuTime()*1.E9/nev;
   cout << "Time using FOAM \t\t " << "   \t=\t " << time << "\tns/call" << endl;
 
   //
@@ -107,18 +107,18 @@ Int_t run_foam(int nev){
   FoamX->GetIntegMC( MCresult, MCerror);  // get MC integral, should be one
   cout << " MCresult= " << MCresult << " +- " << MCerror <<endl;
   cout<<"--- kanwa ended ---"<<endl;
-  
+
   return 0;
 }//kanwa
 
 
 
 double UCamel2(double * x, double *) {
-   return Camel2(2,x); 
-} 
+   return Camel2(2,x);
+}
 
-int run_unuran(int nev, std::string method = "hitro") { 
-   // use unuran 
+int run_unuran(int nev, std::string method = "hitro") {
+   // use unuran
 
    std::cout << "run unuran " << std::endl;
 
@@ -131,33 +131,33 @@ int run_unuran(int nev, std::string method = "hitro") {
 
    TUnuranMultiContDist dist(f);
 
-   TRandom3 r; 
- 
-   TUnuran unr(&r,2);  // 2 is debug level 
+   TRandom3 r;
+
+   TUnuran unr(&r,2);  // 2 is debug level
 
 
    // test first the time
-   TStopwatch w; 
+   TStopwatch w;
 
-   w.Start(); 
+   w.Start();
 
-   // init unuran 
-   bool ret =   unr.Init(dist,method); 
-   if (!ret) { 
-      std::cerr << "Error initializing unuran with method " << unr.MethodName() << endl; 
+   // init unuran
+   bool ret =   unr.Init(dist,method);
+   if (!ret) {
+      std::cerr << "Error initializing unuran with method " << unr.MethodName() << endl;
       return -1;
-   } 
+   }
 
-   double x[2]; 
+   double x[2];
    for (int i = 0; i < nev; ++i) {
       unr.SampleMulti(x);
       h1->Fill(x[0],x[1]);
-//       if (method == "gibbs" && i < 100) 
-//          std::cout << x[0] << " , " << x[1] << std::endl; 
+//       if (method == "gibbs" && i < 100)
+//          std::cout << x[0] << " , " << x[1] << std::endl;
    }
 
-   w.Stop(); 
-   double time = w.CpuTime()*1.E9/nev; 
+   w.Stop();
+   double time = w.CpuTime()*1.E9/nev;
    cout << "Time using Unuran  " << unr.MethodName() << "   \t=\t " << time << "\tns/call" << endl;
    h1->Draw("lego2");
    return 0;
@@ -182,8 +182,8 @@ Int_t unuranFoamTest(){
 
 
   std::cout <<"\nChi2 Test Results (UNURAN-FOAM):\t";
-  // test chi2 
+  // test chi2
   hFoam->Chi2Test(hUnr,"UUP");
 
   return 0;
-}  
+}

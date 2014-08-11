@@ -36,8 +36,8 @@ side-by-side will be possible.
 ## Build System
 ROOT 6.00/00 can be built either using the classic "./configure;make" method or using CMake.
 The CMake system has been completed for this version and should be functionally equivalent
-to the classic one. The [detailed instructions](http://root.cern.ch/drupal/content/building-root-cmake) are available. 
-In upcoming releases the classic method will slowly be deprecated in favor of the CMake one. 
+to the classic one. The [detailed instructions](http://root.cern.ch/drupal/content/building-root-cmake) are available.
+In upcoming releases the classic method will slowly be deprecated in favor of the CMake one.
 
 ## Core Libraries
 
@@ -79,7 +79,7 @@ Cling does not allow this anymore. We might add this feature later if demand exi
 
 #### Using symbols that are only available at runtime: load libFoo; foo()
 CINT was processing macros line by line; Cling compiles code.
-When calling a function (or in general using a symbol) that is provided by a library loaded at runtime, 
+When calling a function (or in general using a symbol) that is provided by a library loaded at runtime,
 Cling will in some cases report an unresolved symbol:
 
 ``` {.cpp}
@@ -90,7 +90,7 @@ Cling will in some cases report an unresolved symbol:
    }
 ```
 
-You will currently have to provide a rootmap file for libEvent (which also requires include 
+You will currently have to provide a rootmap file for libEvent (which also requires include
 guards for Event.h). This might get fixed in a later version ([ROOT-4691](https://sft.its.cern.ch/jira/browse/ROOT-4691)).
 
 #### Using identifiers that are only available at runtime: gROOT->LoadMacro("foo.h"); foo()
@@ -164,19 +164,19 @@ macro: *\_\_ROOTCLING\_\_* is now defined during the parsing. The macros
 `#pragma` statement.
 
 The genreflex executable is still available, it preserves the same command
-line options as in version 5 and provides new ones. Old selection XML files 
-are transparently usable by the new implementation. On the other hand some 
-of the new functionalities can be hardly backported to version 5. See 
-genreflex help for all the details about commandline switches and selection 
-files. It is important to note that it is not anymore a python script 
+line options as in version 5 and provides new ones. Old selection XML files
+are transparently usable by the new implementation. On the other hand some
+of the new functionalities can be hardly backported to version 5. See
+genreflex help for all the details about commandline switches and selection
+files. It is important to note that it is not anymore a python script
 interfaced to GCCXML but rather a wrapper around rootcling.
 
 In order to specify the classes selection, three methods are available:
 
 1)   Selection XML file. This file can be read by both genreflex and rootcling.
 2)   LinkDef file. This file can be read by rootcling.
-3)   Selection namespace (also called *dictselection*). Available both for 
-     rootcling and genreflex. See the documentation of the 
+3)   Selection namespace (also called *dictselection*). Available both for
+     rootcling and genreflex. See the documentation of the
      `ROOT::Meta::Selection` namespace for all the details.
 
 *Warning*
@@ -184,7 +184,7 @@ In order to specify the classes selection, three methods are available:
 It is important to note that during the parsing of the header files,
 rootcint no longer defines *\_\_CINT\_\_* and genreflex no longer defines
 *\_\_GCCXML\_\_*.  This means in particular that data members that were
-made transient by hiding them from rootcint or genreflex now *must* be 
+made transient by hiding them from rootcint or genreflex now *must* be
 *explicitly* marked as transient.  For rootcint or rootcling use:
 
 ``` {.cpp}
@@ -214,22 +214,22 @@ same directory of the libraries which contain the compiled dictionaries.
 
 ### rlibmap
 
-The tools used to generate rootmap files are rootcling and genreflex. The 
+The tools used to generate rootmap files are rootcling and genreflex. The
 rlibmap tool is not present any more in ROOT starting from release 6.00.00.
 
 ### Rootmap files
 
 To enhance the set of functionalities offered by ROOT and its new interpreter,
-the format of the rootmaps evolved. Rootmap in the old format cannot be 
+the format of the rootmaps evolved. Rootmap in the old format cannot be
 produced anymore but only read. The new rootmaps can be still be concatenated.
 A rootmap file now contains:
 
--   One (or more) section for forward declarations. These are real C++ 
+-   One (or more) section for forward declarations. These are real C++
     forward declarations of templates and namespaces. This is needed for Cling
     to be able to parse templates' instantiations and for some autoloading
     functionalities.
--   One (or more) libraries sections. These sections describe the ensamble of 
-    the autoload keys related to one or more shared libraries. An autoload key 
+-   One (or more) libraries sections. These sections describe the ensamble of
+    the autoload keys related to one or more shared libraries. An autoload key
     can be a class name, a namespace name, a typedef or alias or a header file name.
 -   Single line comments, which start with a "#" character.
 
@@ -316,7 +316,7 @@ of the `TDataType` describing a typedef.
     independant from ROOT. It is enough to save the object in a file
     with the extension ".cc". The code as to save each objet should be
     implement in each `SavePrimitive` function like in `TF1`.
-    
+
 -   In `SetPalette` predefined palettes were redefined even if it was
     not necessary.
 
@@ -343,19 +343,19 @@ of the `TDataType` describing a typedef.
 -   Provide symbolic values for different styles.
 -   New method `SetFillColorAlpha(ci, alpha)` to set the color index
     `ci` with a transparency percentage.
-    
+
 ### TAttMarker
 
 -   New method `SetMarkerColorAlpha(ci, alpha)` to set the color index
     `ci` with a transparency percentage.
-    
+
 ### TAttLine
 
 -   New method `SetLineColorAlpha(ci, alpha)` to set the color index
     `ci` with a transparency percentage.
-    
+
 ### TAttAxis
 
--   `SetLabelColor` and `SetLabelColor` have an optional parameter 
+-   `SetLabelColor` and `SetLabelColor` have an optional parameter
     `alpha` allowing to change the transparency of the axis labels and
      axis body.

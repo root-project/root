@@ -88,6 +88,7 @@ public:
    virtual TLeaf    *FindLeaf(const char* name);
    virtual TBranch  *GetBranch(const char* name);
    virtual Bool_t    GetBranchStatus(const char* branchname) const;
+   virtual Long64_t  GetCacheSize() const { return fTree ? fTree->GetCacheSize() : fCacheSize; }
    virtual Long64_t  GetChainEntryNumber(Long64_t entry) const;
    virtual TClusterIterator GetClusterIterator(Long64_t firstentry);
            Int_t     GetNtrees() const { return fNtrees; }

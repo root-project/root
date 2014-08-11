@@ -99,7 +99,7 @@ private:
 protected:
    TGLabel          *fLabel;      //label of attribute frame
    TGCompositeFrame *f1, *f2;     //container frames
-   TGToolTip        *fTip; 	      //tool tip associated with button
+   TGToolTip        *fTip;        //tool tip associated with button
 
 public:
    TGedNameFrame(const TGWindow *p =0 ,

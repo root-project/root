@@ -102,7 +102,7 @@ void TDrawFeedback::Feedback(TList *objs)
       if (fAll || fNames->FindObject(name.Data())) {
 
          if (TH1 *h = dynamic_cast<TH1*>(o)) {
-            
+
             // Basic service provided fro histograms, each one drawn in
             // a separate canvas named '<histogram_name>_canvas'
 

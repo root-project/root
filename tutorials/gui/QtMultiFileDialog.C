@@ -20,15 +20,15 @@ TList *QtMultiFileDialog(const char *style="") {
   // To use it with no ACLiC, omit the trailing "++"
   // root [] .x QtMultiFileDialog.C
   //
-  // The QtMultiFileDialog creates TList of TObjString objects and 
-  // returns its pointer. 
+  // The QtMultiFileDialog creates TList of TObjString objects and
+  // returns its pointer.
   //
   // The "QtFileDialog.C" macro provides the simplified version of the "QtMultiFileDialog.C"
   //
   // Option: you can change the look and feel of the Qt file dialog
   // ======= by providing the optional parameter "style":
   //         The number of the available styles is defined by your local
-  //         Qt installation. 
+  //         Qt installation.
   //         Try: "windows", "motif", "kde", "platinum" etc
   //
   // The full list of the Qt classes available from Cint is defined by
@@ -41,9 +41,9 @@ TList *QtMultiFileDialog(const char *style="") {
   // One is recommended to do that at once somewhere.
   // For example from one's custom rootlogon.C script
   gSystem->Load("$ROOTSYS/cint/cint/include/qtcint");
-#endif   
+#endif
   QStyle *saveStyle =  0;
-  if (!QString(style).isEmpty()) { 
+  if (!QString(style).isEmpty()) {
      saveStyle = QApplication::style();
      QApplication::setStyle(style);
   }

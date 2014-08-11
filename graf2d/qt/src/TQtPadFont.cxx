@@ -5,9 +5,6 @@
 ** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
 **                                    All rights reserved.
 **
-** This file may be distributed under the terms of the Q Public License
-** as defined by Trolltech AS of Norway and appearing in the file
-** LICENSE.QPL included in the packaging of this file.
 **
 *****************************************************************************/
 
@@ -125,7 +122,7 @@ void  TQtPadFont::SetTextFont(const char *fontname, int italic_, int bold_)
 #endif
 
 #if 0
-   qDebug() << "TGQt::SetTextFont font:"    << fontname 
+   qDebug() << "TGQt::SetTextFont font:"    << fontname
             << " bold="  << bold_
             << " italic="<< italic_;
 #endif
@@ -262,14 +259,14 @@ void  TQtPadFont::SetTextSize(Float_t textsize)
     SetTextSize(static_cast<float>(npixels));
  }
 //______________________________________________________________________________
-const char *TQtPadFont::RomanFontName() 
-{ 
+const char *TQtPadFont::RomanFontName()
+{
    // Get the system name for the "Roman" font
    return fgRomanFontName;
 }
 
 //______________________________________________________________________________
-const char *TQtPadFont::ArialFontName() 
+const char *TQtPadFont::ArialFontName()
 {
    // Get the system name for the "Arial" font
    return fgArialFontName;
@@ -277,19 +274,19 @@ const char *TQtPadFont::ArialFontName()
 
 //______________________________________________________________________________
 const char *TQtPadFont::CourierFontName()
-{ 
+{
    // Get the system name for the "Courier" font
    return fgCourierFontName;
 }
 //______________________________________________________________________________
-const char *TQtPadFont::SymbolFontFamily() 
-{ 
+const char *TQtPadFont::SymbolFontFamily()
+{
    // Get the system name for the "Symbol" font
    return fgSymbolFontFamily;
 }
 //______________________________________________________________________________
 void TQtPadFont::SetSymbolFontFamily(const char *symbolFnName)
-{ 
+{
    // Set the system name for the "Symbol" font
    fgSymbolFontFamily = symbolFnName;  // we need the TString here !!!
 }

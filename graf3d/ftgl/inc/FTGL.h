@@ -18,10 +18,10 @@ typedef float    FTGL_FLOAT;
     #define FT_RENDER_MODE_NORMAL ft_render_mode_normal
 #endif
 
-  
+
 #ifdef WIN32
 
-    // Under windows avoid including <windows.h> is overrated. 
+    // Under windows avoid including <windows.h> is overrated.
     // Sure, it can be avoided and "name space pollution" can be
     // avoided, but why? It really doesn't make that much difference
     // these days.
@@ -35,7 +35,7 @@ typedef float    FTGL_FLOAT;
 
 #else
 
-    // Non windows platforms - don't require nonsense as seen above :-)    
+    // Non windows platforms - don't require nonsense as seen above :-)
     #ifndef __gl_h_
         #ifdef __APPLE_CC__
             #include <OpenGL/gl.h>
@@ -43,11 +43,11 @@ typedef float    FTGL_FLOAT;
         #else
             #include <GL/gl.h>
             #include <GL/glu.h>
-        #endif                
+        #endif
 
     #endif
 
-    // Required for compatibility with glext.h style function definitions of 
+    // Required for compatibility with glext.h style function definitions of
     // OpenGL extensions, such as in src/osg/Point.cpp.
     #ifndef APIENTRY
         #define APIENTRY
@@ -55,7 +55,7 @@ typedef float    FTGL_FLOAT;
 #endif
 
 // Compiler-specific conditional compilation
-#ifdef _MSC_VER // MS Visual C++ 
+#ifdef _MSC_VER // MS Visual C++
 
     // Disable various warning.
     // 4786: template name too long
@@ -66,21 +66,21 @@ typedef float    FTGL_FLOAT;
     // The following definitions control how symbols are exported.
     // If the target is a static library ensure that FTGL_LIBRARY_STATIC
     // is defined. If building a dynamic library (ie DLL) ensure the
-    // FTGL_LIBRARY macro is defined, as it will mark symbols for 
-    // export. If compiling a project to _use_ the _dynamic_ library 
-    // version of the library, no definition is required. 
+    // FTGL_LIBRARY macro is defined, as it will mark symbols for
+    // export. If compiling a project to _use_ the _dynamic_ library
+    // version of the library, no definition is required.
     #ifdef FTGL_LIBRARY_STATIC      // static lib - no special export required
     #  define FTGL_EXPORT
     #elif FTGL_LIBRARY              // dynamic lib - must export/import symbols appropriately.
     #  define FTGL_EXPORT //  __declspec(dllexport)
     #else
     #  define FTGL_EXPORT //  __declspec(dllimport)
-    #endif 
+    #endif
 
 #else
     // Compiler that is not MS Visual C++.
     // Ensure that the export symbol is defined (and blank)
     #define FTGL_EXPORT
-#endif  
+#endif
 
 #endif  //  __FTGL__

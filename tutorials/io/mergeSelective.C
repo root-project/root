@@ -6,12 +6,12 @@ void mergeSelective(Int_t nfiles=5)
 // of input files, specified via the interface:
 //      TFileMerger::AddObjectNames(const char *names)
 // The method can be called several times to add object names, or using a single
-// strings with names separated by a blank. Directory names contained in the files 
+// strings with names separated by a blank. Directory names contained in the files
 // to be merged are accepted.
 //
 // Two modes are supported:
 // == kOnlyListed: via TFileMerger::PartialMerge(kOnlyListed)
-//    This will merge only the objects in the files having the names in the 
+//    This will merge only the objects in the files having the names in the
 //    specified list. If a folder is specified, it whole content will be merged
 //
 // == kSkipListed: via TFileMerger::PartialMerge(kSkipListed)
@@ -29,9 +29,9 @@ void mergeSelective(Int_t nfiles=5)
 // = folder       (TDirectory)
 //      - hpx1    (TH1F)
 //
-// The example first merges exclusively hprof and the content of "folder", 
+// The example first merges exclusively hprof and the content of "folder",
 // producing the file exclusive.root, then merges all content but skipping
-// hprof and the content of "folder". The result can be inspected in the 
+// hprof and the content of "folder". The result can be inspected in the
 // browser.
 
    // Create the files to be merged
@@ -40,7 +40,7 @@ void mergeSelective(Int_t nfiles=5)
    if (gROOT->LoadMacro("$ROOTSYS/tutorials/hsimple.C")) return;
    Int_t i;
    for (i=0; i<nfiles; i++) CreateFile(Form("tomerge%03d.root",i));
-   
+
    //------------------------------------
    // Merge only the listed objects
    //------------------------------------
@@ -65,7 +65,7 @@ void mergeSelective(Int_t nfiles=5)
    mode = default_mode | TFileMerger::kSkipListed;
    fm->PartialMerge(mode);
    delete fm;
-  
+
 
    // Cleanup initial files
    for (i=0; i<nfiles; i++) gSystem->Unlink(Form("tomerge%03d.root",i));
@@ -84,7 +84,7 @@ void CreateFile(const char *fname)
    TH1F *hpx = (TH1F*)example->Get("hpx");
    hpx->SetName("hpx1");
    TFile::Cp(example->GetName(), fname);
-   TFile *file = TFile::Open(fname, "UPDATE");   
+   TFile *file = TFile::Open(fname, "UPDATE");
    file->mkdir("folder")->cd();
    hpx->Write();
    file->Close();
@@ -93,5 +93,5 @@ void CreateFile(const char *fname)
    if (sname.Contains("000")) {
       TFile::Cp(fname, "original.root");
       TFile::Open("original.root");
-   }   
+   }
 }

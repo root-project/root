@@ -127,7 +127,7 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
     : TGFrame(p, 1, 1, options)
 {
    // Create button base class part.
- 
+
    fWidgetId    = id;
    fWidgetFlags = kWidgetWantFocus;
    fMsgWindow   = p;
@@ -187,7 +187,7 @@ void TGButton::SetState(EButtonState state, Bool_t emit)
 
    if (state == kButtonDisabled)
       fWidgetFlags &= ~kWidgetIsEnabled;
-   else 
+   else
       fWidgetFlags |= kWidgetIsEnabled;
    if (state != fState) {
       switch (state) {
@@ -247,8 +247,8 @@ void TGButton::SetStyle(const char *style)
 
 //______________________________________________________________________________
 Bool_t TGButton::IsDown() const
-{ 
-   if (fStyle > 0) 
+{
+   if (fStyle > 0)
       return (fOptions & kSunkenFrame);
    return !(fOptions & kRaisedFrame);
 }
@@ -357,7 +357,7 @@ Bool_t TGButton::HandleCrossing(Event_t *event)
       else
          fTip->Hide();
    }
-   
+
    if (fStyle > 0) {
       if ((event->fType == kEnterNotify) && (fState != kButtonDisabled)) {
          fBgndColor = fHighColor;
@@ -608,7 +608,7 @@ void TGTextButton::SetText(TGHotString *new_label)
       }
       delete fLabel;
    }
-   
+
    fLabel = new_label;
    if ((hotchar = fLabel->GetHotChar()) != 0) {
       if (main && ((fHKeycode = gVirtualX->KeysymToKeycode(hotchar)) != 0)) {
@@ -1139,11 +1139,11 @@ void TGCheckButton::Init()
 
    if (!fOn) {
       Error("TGCheckButton", "checked_t.xpm not found");
-   } else if (!fOff) {     
+   } else if (!fOff) {
       Error("TGCheckButton", "unchecked_t.xpm not found");
-   } else if (!fDisOn) {     
+   } else if (!fDisOn) {
       Error("TGCheckButton", "checked_dis_t.xpm not found");
-   } else if (!fDisOff) {     
+   } else if (!fDisOff) {
       Error("TGCheckButton", "unchecked_dis_t.xpm not found");
    }
    int hotchar;
@@ -1171,7 +1171,7 @@ void TGCheckButton::Init()
 TGCheckButton::~TGCheckButton()
 {
    // Delete a check button.
-   
+
    if (fOn)  fClient->FreePicture(fOn);
    if (fOff) fClient->FreePicture(fOff);
    if (fDisOn)  fClient->FreePicture(fDisOn);
@@ -1184,12 +1184,12 @@ TGDimension TGCheckButton::GetDefaultSize() const
    // default size
 
    UInt_t w = !fTWidth ? fOff->GetWidth() : fTWidth + fOff->GetWidth() + 9;
-   UInt_t h = !fTHeight ? fOff->GetHeight() : fTHeight + 2;                      
+   UInt_t h = !fTHeight ? fOff->GetHeight() : fTHeight + 2;
 
    w = GetOptions() & kFixedWidth ? fWidth : w;
    h = GetOptions() & kFixedHeight ? fHeight : h;
 
-   return TGDimension(w, h);           
+   return TGDimension(w, h);
 }
 
 //______________________________________________________________________________
@@ -1199,7 +1199,7 @@ void TGCheckButton::SetState(EButtonState state, Bool_t emit)
 
    if (state == kButtonDisabled)
       fWidgetFlags &= ~kWidgetIsEnabled;
-   else 
+   else
       fWidgetFlags |= kWidgetIsEnabled;
    PSetState(state, emit);
 }
@@ -1252,7 +1252,7 @@ void TGCheckButton::PSetState(EButtonState state, Bool_t emit)
 }
 
 //______________________________________________________________________________
-void TGCheckButton::SetDisabledAndSelected(Bool_t enable) 
+void TGCheckButton::SetDisabledAndSelected(Bool_t enable)
 {
    // Set the state of a check button to disabled and either on or
    // off.
@@ -1552,8 +1552,8 @@ TGDimension TGRadioButton::GetDefaultSize() const
 
    w = GetOptions() & kFixedWidth ? fWidth : w;
    h = GetOptions() & kFixedHeight ? fHeight : h;
-                      
-   return TGDimension(w, h);           
+
+   return TGDimension(w, h);
 }
 //______________________________________________________________________________
 void TGRadioButton::SetState(EButtonState state, Bool_t emit)
@@ -1562,13 +1562,13 @@ void TGRadioButton::SetState(EButtonState state, Bool_t emit)
 
    if (state == kButtonDisabled)
       fWidgetFlags &= ~kWidgetIsEnabled;
-   else 
+   else
       fWidgetFlags |= kWidgetIsEnabled;
    PSetState(state, emit);
 }
 
 //______________________________________________________________________________
-void TGRadioButton::SetDisabledAndSelected(Bool_t enable) 
+void TGRadioButton::SetDisabledAndSelected(Bool_t enable)
 {
    // Set the state of a radio button to disabled and either on or
    // off.
@@ -1830,7 +1830,7 @@ void TGButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    if (option && strstr(option, "keep_names"))
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
-   
+
    if (fState == kButtonDown) {
       out << "   " << GetName() << "->SetState(kButtonDown);"  << std::endl;
    }
@@ -2055,7 +2055,7 @@ void TGRadioButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       outext.Insert(fLabel->GetHotPos()-1, "&");
    if (outext.First('\n') >= 0)
       outext.ReplaceAll("\n", "\\n");
-   
+
    out << "   TGRadioButton *";
    out << GetName() << " = new TGRadioButton(" << fParent->GetName()
        << "," << quote << outext.Data() << quote;
@@ -2112,8 +2112,8 @@ void TGRadioButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 //______________________________________________________________________________
-TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel, 
-                           TGPopupMenu *popmenu, Bool_t split, Int_t id, 
+TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel,
+                           TGPopupMenu *popmenu, Bool_t split, Int_t id,
                            GContext_t norm, FontStruct_t fontstruct, UInt_t options)
                            : TGTextButton(p, menulabel, id, norm, fontstruct, options)
 {
@@ -2142,7 +2142,7 @@ TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel,
    const TList *list = fPopMenu->GetListOfEntries();
    UInt_t lwidth = 0, lheight = 0;
    UInt_t twidth = 0, theight = 0;
-   
+
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {
       font = fClient->GetFontPool()->GetFont(fgDefaultFont);
@@ -2183,7 +2183,7 @@ TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel,
                               &dummy, &fTHeight);
    }
    fTBWidth = fTWidth + 8;
-   fHeight = fTHeight + 7;      
+   fHeight = fTHeight + 7;
    Resize(fTBWidth + fMBWidth, fHeight);
 
    ChangeOptions(GetOptions() | kFixedSize);
@@ -2279,7 +2279,7 @@ void TGSplitButton::DrawTriangle(const GContext_t gc, Int_t x, Int_t y)
 }
 
 //______________________________________________________________________________
-void TGSplitButton::CalcSize() 
+void TGSplitButton::CalcSize()
 {
    // Calculate the size of the button.
 
@@ -2287,15 +2287,15 @@ void TGSplitButton::CalcSize()
    fTWidth = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
-   
+
    fTBWidth = fTWidth + 8;
-   fHeight = fTHeight + 7;      
+   fHeight = fTHeight + 7;
    fWidth = fTBWidth;
 }
 
 //______________________________________________________________________________
 Bool_t TGSplitButton::HandleSButton(Event_t *event)
-{                    
+{
    // Handle mouse button event in case the button is split.
 
    if (fState == kButtonDisabled) return kFALSE;
@@ -2311,7 +2311,7 @@ Bool_t TGSplitButton::HandleSButton(Event_t *event)
 
    Bool_t inMB = (event->fX >= (Int_t)(fWidth -fMBWidth)) && (event->fY >= 0) &&
       (event->fX <= (Int_t)fWidth) && (event->fY <= (Int_t)fHeight);
-   
+
    // We don't need to check the button number as GrabButton will
    // only allow button1 events
 
@@ -2343,8 +2343,8 @@ Bool_t TGSplitButton::HandleSButton(Event_t *event)
                bclick = kTRUE;
                SetState(kButtonUp);
                Released();
-               fgReleaseBtn = fId;               
-            } 
+               fgReleaseBtn = fId;
+            }
          }else {
             SetState(kButtonUp);
          }
@@ -2364,7 +2364,7 @@ Bool_t TGSplitButton::HandleSButton(Event_t *event)
       } else { // ButtonRelease
          if (fState == kButtonDown) {
             SetState(kButtonUp);
-         }                
+         }
          if (fMBState == kButtonEngaged && mbpress) {
             mbpress = kFALSE;
             SetMBState(kButtonUp);
@@ -2375,7 +2375,7 @@ Bool_t TGSplitButton::HandleSButton(Event_t *event)
          } else if (fMBState == kButtonDown && mbpress) {
             MBClicked();
             SetMBState(kButtonEngaged);
-            SetMenuState(kTRUE);            
+            SetMenuState(kTRUE);
             fgReleaseBtn = 0;
          } else {
             SetMBState(kButtonUp);
@@ -2393,7 +2393,7 @@ Bool_t TGSplitButton::HandleSButton(Event_t *event)
             gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
             activate = kTRUE;
          }
-      }      
+      }
    }
    if (bclick) {
       Clicked();
@@ -2485,7 +2485,7 @@ Bool_t TGSplitButton::HandleSKey(Event_t *event)
 
    // We don't need to check the key number as GrabKey will only
    // allow fHotchar events if Alt button is pressed (kKeyMod1Mask)
-   
+
    if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
       if (fState == kButtonEngaged) return kTRUE;
       SetState(kButtonDown);
@@ -2498,7 +2498,7 @@ Bool_t TGSplitButton::HandleSKey(Event_t *event)
       if (fStayDown) {
          SetState(kButtonEngaged);
       } else {
-         SetState(kButtonUp);         
+         SetState(kButtonUp);
          Released();
       }
       click = kTRUE;
@@ -2515,9 +2515,9 @@ Bool_t TGSplitButton::HandleSKey(Event_t *event)
 }
 
 //______________________________________________________________________________
-void TGSplitButton::SetMenuState(Bool_t state) 
+void TGSplitButton::SetMenuState(Bool_t state)
 {
-   // Popup the attached menu. 
+   // Popup the attached menu.
 
    if (state) {
       Int_t    ax, ay;
@@ -2527,7 +2527,7 @@ void TGSplitButton::SetMenuState(Bool_t state)
          Int_t n_entries = 0;
          TGMenuEntry *entry = 0;
          TIter next(fPopMenu->GetListOfEntries());
-         
+
          while ((entry = (TGMenuEntry *) next())) {
             if ((entry->GetType() != kMenuSeparator) &&
                 (entry->GetType() != kMenuLabel)) {
@@ -2562,7 +2562,7 @@ void TGSplitButton::DoRedraw()
 
    int x, y;
    TGFrame::DoRedraw();
-   
+
    if (fState == kButtonDisabled) fMBState = kButtonDisabled;
    else if (fMBState == kButtonDisabled) fMBState = kButtonUp;
 
@@ -2613,17 +2613,17 @@ void TGSplitButton::DoRedraw()
    }
 
    // Draw the parts of the button needed when a menu is attached.
-   
+
    // triangle position
    x = fWidth - 11;
    y = fHeight - 10;
-   
+
    if (fSplit) {
       // separator position
       Int_t lx = fWidth - fMBWidth;
       Int_t ly = 2;
       Int_t lh = fHeight - 2;
-      
+
       if(fMBState == kButtonDown || fMBState == kButtonEngaged) {
          x++;
          y++;
@@ -2657,7 +2657,7 @@ void TGSplitButton::DoRedraw()
          DrawTriangle(fNormGC, x, y);
       }
    }
-   
+
 }
 
 //______________________________________________________________________________
@@ -2680,7 +2680,7 @@ void TGSplitButton::BindMenuKeys(Bool_t on)
 
    TGMenuEntry *e = 0;
    TIter next(fPopMenu->GetListOfEntries());
-   
+
    while ((e = (TGMenuEntry*)next())) {
       Int_t hot = 0;
       if (e->GetLabel()) {
@@ -2715,7 +2715,7 @@ void TGSplitButton::SetText(TGHotString *new_label)
 
    Int_t hotchar;
    static Bool_t longlabeltip = kFALSE;
-   const TGMainFrame *main = (TGMainFrame *) GetMainFrame();   
+   const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
 
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
    if (!font) {
@@ -2744,7 +2744,7 @@ void TGSplitButton::SetText(TGHotString *new_label)
       fTip = 0;
       longlabeltip = kFALSE;
    }
-         
+
    if (fLabel) {
       if (main && fHKeycode) {
          main->RemoveBind(this, fHKeycode, kKeyMod1Mask);
@@ -2828,7 +2828,7 @@ void TGSplitButton::SetFont(const char *fontName, Bool_t global)
 void TGSplitButton::SetMBState(EButtonState state)
 {
    // Set the state of the Menu Button part
-   
+
    if (state != fMBState) {
       fMBState = state;
       DoRedraw();
@@ -2839,7 +2839,7 @@ void TGSplitButton::SetMBState(EButtonState state)
 void TGSplitButton::SetSplit(Bool_t split)
 {
    // Set the split status of a button.
-   
+
    if(split) {
       fStayDown = kFALSE;
       Disconnect(fPopMenu, "PoppedDown()");
@@ -2875,7 +2875,7 @@ void TGSplitButton::SetSplit(Bool_t split)
 
 //______________________________________________________________________________
 Bool_t TGSplitButton::HandleButton(Event_t *event)
-{                    
+{
    // Handle button events.
 
    if (fState == kButtonDisabled) return kFALSE;
@@ -2927,7 +2927,7 @@ Bool_t TGSplitButton::HandleButton(Event_t *event)
          SetMenuState(kFALSE);
          gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
          activate = kTRUE;
-      }      
+      }
    }
    if (click) {
       Clicked();
@@ -2948,7 +2948,7 @@ Bool_t TGSplitButton::HandleButton(Event_t *event)
          }
       }
    }
-     
+
    return kTRUE;
 
 }
@@ -2958,13 +2958,13 @@ Bool_t TGSplitButton::HandleCrossing(Event_t *event)
 {
    // Handle mouse crossing event.
 
-   if (fSplit) { 
+   if (fSplit) {
       return HandleSCrossing(event);
    } else {
       return TGButton::HandleCrossing(event);
    }
 }
-   
+
 //______________________________________________________________________________
 Bool_t TGSplitButton::HandleKey(Event_t *event)
 {
@@ -3028,28 +3028,28 @@ Bool_t TGSplitButton::HandleKey(Event_t *event)
          ev.fX = ev.fY = 1;
          UInt_t keysym;
          char tmp[2];
-         
+
          gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
 
          TGMenuEntry *ce = 0;
          TIter next(fPopMenu->GetListOfEntries());
-         
+
          while ((ce = (TGMenuEntry*)next())) {
             UInt_t hot = 0;
             if (ce->GetLabel()) hot = ce->GetLabel()->GetHotChar();
             if (!hot || (hot != keysym)) continue;
-         
+
             fPopMenu->Activate(ce);
             gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
             SetMenuState(kFALSE);
             ev.fType = kButtonRelease;
             ev.fWindow = fPopMenu->GetId();
             fKeyNavigate = kFALSE;
-            return HandleButton(&ev);            
+            return HandleButton(&ev);
          }
 
          ce = fPopMenu->GetCurrent();
-         
+
          switch ((EKeySym)keysym) {
          case kKey_Up:
             if (ce) ce = (TGMenuEntry*)fPopMenu->GetListOfEntries()->Before(ce);
@@ -3117,7 +3117,7 @@ Bool_t TGSplitButton::HandleMotion(Event_t *event)
             SetState(kButtonUp);
             SetMBState(kButtonDown);
          }
-            
+
       }
    }
    return kTRUE;
@@ -3137,7 +3137,7 @@ void TGSplitButton::Layout()
       if (font) fFontStruct = font->GetFontStruct();
    }
    if (font) {
-      fTLayout = font->ComputeTextLayout(fLabel->GetString(), 
+      fTLayout = font->ComputeTextLayout(fLabel->GetString(),
                                          fLabel->GetLength(),
                                          fWrapLength, kTextLeft, 0,
                                          &dummya, &dummyb);
@@ -3156,17 +3156,17 @@ void TGSplitButton::Layout()
 }
 
 //______________________________________________________________________________
-void TGSplitButton::HandleMenu(Int_t id) 
+void TGSplitButton::HandleMenu(Int_t id)
 {
    // Handle a menu item activation.
-   
+
    SetMenuState(kFALSE);
 
    if (fSplit) {
       SetMBState(kButtonUp);
       Disconnect(this, "Clicked()", this);
       // connect clicked to the ItemClicked signal with the correct id
-      Connect("Clicked()", "TGSplitButton", this, 
+      Connect("Clicked()", "TGSplitButton", this,
               TString::Format("ItemClicked(=%d)", id));
 
       // reenable hidden entries

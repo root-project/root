@@ -260,7 +260,7 @@ void TXSlave::Init(const char *host, Int_t stype)
    if (!fProof->GetManager() && !envlist.IsNull() &&
       ((TXSocket *)fSocket)->GetXrdProofdVersion() <= 1001) {
       Info("Init","user envs setting sent but unsupported remotely - RemoteProtocol : %d",
-                     ((TXSocket *)fSocket)->GetXrdProofdVersion()); 
+                     ((TXSocket *)fSocket)->GetXrdProofdVersion());
    }
 
    // Set the reference to TProof
@@ -275,7 +275,7 @@ void TXSlave::Init(const char *host, Int_t stype)
    // Set remote session ID
    fProof->fSessionID = ((TXSocket *)fSocket)->GetSessionID();
 
-   // Extract the log file path and, if any, set URL entry point for the default data pool 
+   // Extract the log file path and, if any, set URL entry point for the default data pool
    ParseBuffer();
 
    // Remove socket from global TROOT socket list. Only the TProof object,
@@ -303,7 +303,7 @@ void TXSlave::Init(const char *host, Int_t stype)
 void TXSlave::ParseBuffer()
 {
    // Parse fBuffer after a connection attempt
-   
+
    // Set URL entry point for the default data pool
    TString buffer(((TXSocket *)fSocket)->fBuffer);
    if (!buffer.IsNull()) {
@@ -327,7 +327,7 @@ void TXSlave::ParseBuffer()
    // Done
    return;
 }
-   
+
 //______________________________________________________________________________
 Int_t TXSlave::SetupServ(Int_t, const char *)
 {

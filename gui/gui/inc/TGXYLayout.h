@@ -146,8 +146,8 @@ protected:
    Int_t             fTWidth;         // text width of a default character "1234567890" / 10
    Int_t             fTHeight;        // text height
 
-   TGXYLayout(const TGXYLayout&); 
-   TGXYLayout& operator=(const TGXYLayout&); 
+   TGXYLayout(const TGXYLayout&);
+   TGXYLayout& operator=(const TGXYLayout&);
 
 public:
    TGXYLayout(TGCompositeFrame *main);

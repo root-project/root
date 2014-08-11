@@ -92,7 +92,7 @@ ClassImp(TMVA::DecisionTree)
 
 //_______________________________________________________________________
 TMVA::DecisionTree::DecisionTree():
-   BinaryTree(),
+BinaryTree(),
    fNvars          (0),
    fNCuts          (-1),
    fUseFisherCuts  (kFALSE),
@@ -115,7 +115,8 @@ TMVA::DecisionTree::DecisionTree():
    fMaxDepth       (999999),
    fSigClass       (0),
    fTreeID         (0),
-   fAnalysisType   (Types::kClassification)
+   fAnalysisType   (Types::kClassification),
+   fDataSetInfo    (NULL)
 {
    // default constructor using the GiniIndex as separation criterion,
    // no restrictions on minium number of events in a leave note or the
@@ -123,7 +124,7 @@ TMVA::DecisionTree::DecisionTree():
 }
 
 //_______________________________________________________________________
-TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize, Int_t nCuts, UInt_t cls,
+TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize, Int_t nCuts, DataSetInfo* dataInfo, UInt_t cls,
                                   Bool_t randomisedTree, Int_t useNvars, Bool_t usePoissonNvars,
                                   UInt_t nMaxDepth, Int_t iSeed, Float_t purityLimit, Int_t treeID):
    BinaryTree(),
@@ -149,7 +150,8 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize
    fMaxDepth       (nMaxDepth),
    fSigClass       (cls),
    fTreeID         (treeID),
-   fAnalysisType   (Types::kClassification)
+   fAnalysisType   (Types::kClassification),
+   fDataSetInfo    (dataInfo)
 {
    // constructor specifying the separation type, the min number of
    // events in a no that is still subjected to further splitting, the
@@ -197,7 +199,8 @@ TMVA::DecisionTree::DecisionTree( const DecisionTree &d ):
    fMaxDepth   (d.fMaxDepth),
    fSigClass   (d.fSigClass),
    fTreeID     (d.fTreeID),
-   fAnalysisType(d.fAnalysisType)
+   fAnalysisType(d.fAnalysisType),
+   fDataSetInfo    (d.fDataSetInfo)
 {
    // copy constructor that creates a true copy, i.e. a completely independent tree
    // the node copy will recursively copy all the nodes
@@ -381,6 +384,9 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    // to execeed the min requested number of events per dauther node
    // (NOTE: make sure that at the eventSample at the ROOT node has sum_of_weights == sample.size() !
    //   if ((eventSample.size() >= 2*fMinSize ||s+b >= 2*fMinSize) && node->GetDepth() < fMaxDepth 
+   // std::cout << "------------------------------------------------------------------"<<std::endl;
+   // std::cout << "------------------------------------------------------------------"<<std::endl;
+   // std::cout << " eveSampleSize = "<< eventSample.size() << " s+b="<<s+b << std::endl;
    if ((eventSample.size() >= 2*fMinSize  && s+b >= 2*fMinSize) && node->GetDepth() < fMaxDepth 
        && ( ( s!=0 && b !=0 && !DoRegression()) || ( (s+b)!=0 && DoRegression()) ) ) {
       Double_t separationGain;
@@ -394,22 +400,22 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
          // no cut can actually do anything to improve the node
          // hence, naturally, the current node is a leaf node
          if (DoRegression()) {
-	    node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
-	    node->SetResponse(target/(s+b));
-	    if( (target2/(s+b) - target/(s+b)*target/(s+b)) < std::numeric_limits<double>::epsilon() ){
-	       node->SetRMS(0);
-	    }else{
-	       node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
-	    }
+            node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
+            node->SetResponse(target/(s+b));
+            if( (target2/(s+b) - target/(s+b)*target/(s+b)) < std::numeric_limits<double>::epsilon() ){
+               node->SetRMS(0);
+            }else{
+               node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
+            }
          }
          else {
             node->SetSeparationIndex(fSepType->GetSeparationIndex(s,b));
-	    
-	    if (node->GetPurity() > fNodePurityLimit) node->SetNodeType(1);
-	    else node->SetNodeType(-1);
-	 }
+           
+            if (node->GetPurity() > fNodePurityLimit) node->SetNodeType(1);
+            else node->SetNodeType(-1);
+         }
          if (node->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(node->GetDepth());
-
+         
       } else {
 
          std::vector<const TMVA::Event*> leftSample; leftSample.reserve(nevents);
@@ -430,15 +436,21 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
                nLeftUnBoosted += eventSample[ie]->GetOriginalWeight();
             }
          }
+         // std::cout << " left:" << leftSample.size()
+         //           << " right:" << rightSample.size() 
+         //           << " total:" << leftSample.size()+rightSample.size()
+         //           << std::endl
+         //           << " while the separation is thought to be " << separationGain
+         //           <<   std::endl;;
 
          // sanity check
          if (leftSample.empty() || rightSample.empty()) {
-            Log() << kFATAL << "<TrainNode> all events went to the same branch" << Endl
+            Log() << kERROR << "<TrainNode> all events went to the same branch" << Endl
                   << "---                       Hence new node == old node ... check" << Endl
                   << "---                         left:" << leftSample.size()
                   << " right:" << rightSample.size() << Endl
-                  << "--- this should never happen, please write a bug report to Helge.Voss@cern.ch"
-                  << Endl;
+                  << " while the separation is thought to be " << separationGain
+                  << kFATAL << "--- this should never happen, please write a bug report to Helge.Voss@cern.ch" << Endl;
          }
 
          // continue building daughter nodes for the left and the right eventsample
@@ -459,7 +471,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
          node->SetLeft(leftNode);
          node->SetRight(rightNode);
 
-	 this->BuildTree(rightSample, rightNode);
+         this->BuildTree(rightSample, rightNode);
          this->BuildTree(leftSample,  leftNode );
 
       }
@@ -468,11 +480,11 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
       if (DoRegression()) {
          node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
          node->SetResponse(target/(s+b));
-	 if( (target2/(s+b) - target/(s+b)*target/(s+b)) < std::numeric_limits<double>::epsilon() ) {
-	    node->SetRMS(0);
-	 }else{
-	    node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
-	 }
+         if( (target2/(s+b) - target/(s+b)*target/(s+b)) < std::numeric_limits<double>::epsilon() ) {
+            node->SetRMS(0);
+         }else{
+            node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
+         }
       }
       else {
          node->SetSeparationIndex(fSepType->GetSeparationIndex(s,b));
@@ -598,9 +610,9 @@ Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
       //      tool = new ExpectedErrorPruneTool(logfile);
       tool = new ExpectedErrorPruneTool();
    else if (fPruneMethod == kCostComplexityPruning) 
-      {
-         tool = new CostComplexityPruneTool();
-      }
+   {
+      tool = new CostComplexityPruneTool();
+   }
    else {
       Log() << kFATAL << "Selected pruning method not yet implemented "
             << Endl;
@@ -869,7 +881,7 @@ TMVA::Node* TMVA::DecisionTree::GetNode( ULong_t sequence, UInt_t depth )
 
 //_______________________________________________________________________
 void TMVA::DecisionTree::GetRandomisedVariables(Bool_t *useVariable, UInt_t *mapVariable, UInt_t &useNvars){
-  //
+   //
    for (UInt_t ivar=0; ivar<fNvars; ivar++) useVariable[ivar]=kFALSE;
    if (fUseNvars==0) { // no number specified ... choose s.th. which hopefully works well 
       // watch out, should never happen as it is initialised automatically in MethodBDT already!!!
@@ -895,7 +907,7 @@ void TMVA::DecisionTree::GetRandomisedVariables(Bool_t *useVariable, UInt_t *map
 
 //_______________________________________________________________________
 Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
-                                           TMVA::DecisionTreeNode *node )
+                                            TMVA::DecisionTreeNode *node )
 {
    // Decide how to split a node using one of the variables that gives
    // the best separation of signal/background. In order to do this, for each 
@@ -997,9 +1009,10 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    }
 
 
-   const UInt_t nBins = fNCuts+1;
    UInt_t cNvars = fNvars;
    if (fUseFisherCuts && fisherOK) cNvars++;  // use the Fisher output simple as additional variable
+
+   UInt_t* nBins = new UInt_t [cNvars];
 
    Double_t** nSelS = new Double_t* [cNvars];
    Double_t** nSelB = new Double_t* [cNvars];
@@ -1009,14 +1022,22 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    Double_t** target2 = new Double_t* [cNvars];
    Double_t** cutValues = new Double_t* [cNvars];
 
-   for (UInt_t i=0; i<cNvars; i++) {
-      nSelS[i] = new Double_t [nBins];
-      nSelB[i] = new Double_t [nBins];
-      nSelS_unWeighted[i] = new Double_t [nBins];
-      nSelB_unWeighted[i] = new Double_t [nBins];
-      target[i] = new Double_t [nBins];
-      target2[i] = new Double_t [nBins];
-      cutValues[i] = new Double_t [nBins];
+   for (UInt_t ivar=0; ivar<cNvars; ivar++) {
+      nBins[ivar] = fNCuts+1;
+      if (ivar < fNvars) {
+         if (fDataSetInfo->GetVariableInfo(ivar).GetVarType() == 'I') {
+            nBins[ivar] = node->GetSampleMax(ivar) - node->GetSampleMin(ivar) + 1; 
+         }
+      }
+     
+      nSelS[ivar] = new Double_t [nBins[ivar]];
+      nSelB[ivar] = new Double_t [nBins[ivar]];
+      nSelS_unWeighted[ivar] = new Double_t [nBins[ivar]];
+      nSelB_unWeighted[ivar] = new Double_t [nBins[ivar]];
+      target[ivar] = new Double_t [nBins[ivar]];
+      target2[ivar] = new Double_t [nBins[ivar]];
+      cutValues[ivar] = new Double_t [nBins[ivar]];
+   
    }
 
    Double_t *xmin = new Double_t[cNvars]; 
@@ -1026,12 +1047,12 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       if (ivar < fNvars){
          xmin[ivar]=node->GetSampleMin(ivar);
          xmax[ivar]=node->GetSampleMax(ivar);
-	 if (xmax[ivar]-xmin[ivar] < std::numeric_limits<double>::epsilon() ) {
-	   //  std::cout << " variable " << ivar << " has no proper range in (xmax[ivar]-xmin[ivar] = " << xmax[ivar]-xmin[ivar] << std::endl;
-	   //  std::cout << " will set useVariable[ivar]=false"<<std::endl;
-	   useVariable[ivar]=kFALSE;
-	 }
-
+         if (xmax[ivar]-xmin[ivar] < std::numeric_limits<double>::epsilon() ) {
+            //  std::cout << " variable " << ivar << " has no proper range in (xmax[ivar]-xmin[ivar] = " << xmax[ivar]-xmin[ivar] << std::endl;
+            //  std::cout << " will set useVariable[ivar]=false"<<std::endl;
+            useVariable[ivar]=kFALSE;
+         }
+         
       } else { // the fisher variable
          xmin[ivar]=999;
          xmax[ivar]=-999;
@@ -1046,7 +1067,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
             if (result < xmin[ivar]) xmin[ivar]=result;
          }
       }
-      for (UInt_t ibin=0; ibin<nBins; ibin++) {
+      for (UInt_t ibin=0; ibin<nBins[ivar]; ibin++) {
          nSelS[ivar][ibin]=0;
          nSelB[ivar][ibin]=0;
          nSelS_unWeighted[ivar][ibin]=0;
@@ -1073,12 +1094,17 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
          // (NOTE, the cuts at xmin or xmax would just give the whole sample and
          //  hence can be safely omitted
          
-         Double_t istepSize =( xmax[ivar] - xmin[ivar] ) / Double_t(nBins);
-         // std::cout << "min="<<xmin[ivar]  
+         Double_t istepSize =( xmax[ivar] - xmin[ivar] ) / Double_t(nBins[ivar]);
+         if (ivar < fNvars) {
+            if (fDataSetInfo->GetVariableInfo(ivar).GetVarType() == 'I') istepSize = 1;
+         }
+
+         // std::cout << "ivar="<<ivar
+         //           <<" min="<<xmin[ivar]  
          //           << " max="<<xmax[ivar] 
          //           << " widht=" << istepSize 
-         //           << std::endl;
-         for (Int_t icut=0; icut<fNCuts; icut++) {
+         //           << " nBins["<<ivar<<"]="<<nBins[ivar]<<std::endl;
+         for (UInt_t icut=0; icut<nBins[ivar]-1; icut++) {
             cutValues[ivar][icut]=xmin[ivar]+(Double_t(icut+1))*istepSize;
             //            std::cout << " cutValues["<<ivar<<"]["<<icut<<"]=" <<  cutValues[ivar][icut] << std::endl;
          }
@@ -1113,7 +1139,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
                
             }
             // "maximum" is nbins-1 (the "-1" because we start counting from 0 !!
-            iBin = TMath::Min(Int_t(nBins-1),TMath::Max(0,int (nBins*(eventData-xmin[ivar])/(xmax[ivar]-xmin[ivar]) ) ));
+            iBin = TMath::Min(Int_t(nBins[ivar]-1),TMath::Max(0,int (nBins[ivar]*(eventData-xmin[ivar])/(xmax[ivar]-xmin[ivar]) ) ));
             if (eventSample[iev]->GetClass() == fSigClass) {
                nSelS[ivar][iBin]+=eventWeight;
                nSelS_unWeighted[ivar][iBin]++;
@@ -1132,7 +1158,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    // now turn the "histogram" into a cumulative distribution
    for (UInt_t ivar=0; ivar < cNvars; ivar++) {
       if (useVariable[ivar]) {
-         for (UInt_t ibin=1; ibin < nBins; ibin++) {
+         for (UInt_t ibin=1; ibin < nBins[ivar]; ibin++) {
             nSelS[ivar][ibin]+=nSelS[ivar][ibin-1];
             nSelS_unWeighted[ivar][ibin]+=nSelS_unWeighted[ivar][ibin-1];
             nSelB[ivar][ibin]+=nSelB[ivar][ibin-1];
@@ -1142,13 +1168,13 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
                target2[ivar][ibin]+=target2[ivar][ibin-1];
             }
          }
-         if (nSelS_unWeighted[ivar][nBins-1] +nSelB_unWeighted[ivar][nBins-1] != eventSample.size()) {
+         if (nSelS_unWeighted[ivar][nBins[ivar]-1] +nSelB_unWeighted[ivar][nBins[ivar]-1] != eventSample.size()) {
             Log() << kFATAL << "Helge, you have a bug ....nSelS_unw..+nSelB_unw..= "
-                  << nSelS_unWeighted[ivar][nBins-1] +nSelB_unWeighted[ivar][nBins-1] 
+                  << nSelS_unWeighted[ivar][nBins[ivar]-1] +nSelB_unWeighted[ivar][nBins[ivar]-1] 
                   << " while eventsample size = " << eventSample.size()
                   << Endl;
          }
-         double lastBins=nSelS[ivar][nBins-1] +nSelB[ivar][nBins-1];
+         double lastBins=nSelS[ivar][nBins[ivar]-1] +nSelB[ivar][nBins[ivar]-1];
          double totalSum=nTotS+nTotB;
          if (TMath::Abs(lastBins-totalSum)/totalSum>0.01) {
             Log() << kFATAL << "Helge, you have another bug ....nSelS+nSelB= "
@@ -1162,7 +1188,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    // the best separationGain at the current stage
    for (UInt_t ivar=0; ivar < cNvars; ivar++) {
       if (useVariable[ivar]) {
-         for (UInt_t iBin=0; iBin<nBins-1; iBin++) { // the last bin contains "all events" -->skip
+         for (UInt_t iBin=0; iBin<nBins[ivar]-1; iBin++) { // the last bin contains "all events" -->skip
             // the separationGain is defined as the various indices (Gini, CorssEntropy, e.t.c)
             // calculated by the "SamplePurities" fom the branches that would go to the
             // left or the right from this node if "these" cuts were used in the Node:
@@ -1186,15 +1212,16 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
             Double_t br = b-bl;
             Double_t srW = sW-slW;
             Double_t brW = bW-blW;
+            //            std::cout << "sl="<<sl << " bl="<<bl<<" fMinSize="<<fMinSize << "sr="<<sr << " br="<<br  <<std::endl;
             if ( ((sl+bl)>=fMinSize && (sr+br)>=fMinSize)
                  && ((slW+blW)>=fMinSize && (srW+brW)>=fMinSize) 
-              ) {
+                 ) {
 
                if (DoRegression()) {
                   sepTmp = fRegType->GetSeparationGain(nSelS[ivar][iBin]+nSelB[ivar][iBin], 
                                                        target[ivar][iBin],target2[ivar][iBin],
                                                        nTotS+nTotB,
-                                                       target[ivar][nBins-1],target2[ivar][nBins-1]);
+                                                       target[ivar][nBins[ivar]-1],target2[ivar][nBins[ivar]-1]);
                } else {
                   sepTmp = fSepType->GetSeparationGain(nSelS[ivar][iBin], nSelB[ivar][iBin], nTotS, nTotB);
                }
@@ -1218,23 +1245,23 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       }
    }
 
-   if (DoRegression()) {
-      node->SetSeparationIndex(fRegType->GetSeparationIndex(nTotS+nTotB,target[0][nBins-1],target2[0][nBins-1]));
-      node->SetResponse(target[0][nBins-1]/(nTotS+nTotB));
-      if ( (target2[0][nBins-1]/(nTotS+nTotB) - target[0][nBins-1]/(nTotS+nTotB)*target[0][nBins-1]/(nTotS+nTotB)) < std::numeric_limits<double>::epsilon() ) {
-	 node->SetRMS(0);
-      }else{ 
-	 node->SetRMS(TMath::Sqrt(target2[0][nBins-1]/(nTotS+nTotB) - target[0][nBins-1]/(nTotS+nTotB)*target[0][nBins-1]/(nTotS+nTotB)));
-      }
-   }
-   else {
-      node->SetSeparationIndex(fSepType->GetSeparationIndex(nTotS,nTotB));
-      if (mxVar >=0){ 
-	if (nSelS[mxVar][cutIndex[mxVar]]/nTotS > nSelB[mxVar][cutIndex[mxVar]]/nTotB) cutType=kTRUE;
-	else cutType=kFALSE;
-      }      
-   }
    if (mxVar >= 0) {    
+      if (DoRegression()) {
+         node->SetSeparationIndex(fRegType->GetSeparationIndex(nTotS+nTotB,target[0][nBins[mxVar]-1],target2[0][nBins[mxVar]-1]));
+         node->SetResponse(target[0][nBins[mxVar]-1]/(nTotS+nTotB));
+         if ( (target2[0][nBins[mxVar]-1]/(nTotS+nTotB) - target[0][nBins[mxVar]-1]/(nTotS+nTotB)*target[0][nBins[mxVar]-1]/(nTotS+nTotB)) < std::numeric_limits<double>::epsilon() ) {
+            node->SetRMS(0);
+         }else{ 
+            node->SetRMS(TMath::Sqrt(target2[0][nBins[mxVar]-1]/(nTotS+nTotB) - target[0][nBins[mxVar]-1]/(nTotS+nTotB)*target[0][nBins[mxVar]-1]/(nTotS+nTotB)));
+         }
+      }
+      else {
+         node->SetSeparationIndex(fSepType->GetSeparationIndex(nTotS,nTotB));
+         if (mxVar >=0){ 
+            if (nSelS[mxVar][cutIndex[mxVar]]/nTotS > nSelB[mxVar][cutIndex[mxVar]]/nTotB) cutType=kTRUE;
+            else cutType=kFALSE;
+         }      
+      }
       node->SetSelector((UInt_t)mxVar);
       node->SetCutValue(cutValues[mxVar][cutIndex[mxVar]]);
       node->SetCutType(cutType);
@@ -1260,8 +1287,21 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
    else {
       separationGainTotal = 0;
    }
-  
 
+   // if (mxVar > -1) {
+   //   std::cout << "------------------------------------------------------------------"<<std::endl;
+   //   std::cout << "cutting on Var: " << mxVar << " with cutIndex " << cutIndex[mxVar] << " being: " << cutValues[mxVar][cutIndex[mxVar]] << std::endl;
+   //   std::cout << " nSelS = " << nSelS_unWeighted[mxVar][cutIndex[mxVar]] << " nSelB = " << nSelB_unWeighted[mxVar][cutIndex[mxVar]] << " (right) sum:= " << nSelS_unWeighted[mxVar][cutIndex[mxVar]] + nSelB_unWeighted[mxVar][cutIndex[mxVar]] << std::endl;
+   //   std::cout << " nSelS = " << nTotS_unWeighted - nSelS_unWeighted[mxVar][cutIndex[mxVar]] << " nSelB = " << nTotB_unWeighted-nSelB_unWeighted[mxVar][cutIndex[mxVar]] << " (left) sum:= " << nTotS_unWeighted + nTotB_unWeighted - nSelS_unWeighted[mxVar][cutIndex[mxVar]] - nSelB_unWeighted[mxVar][cutIndex[mxVar]] << std::endl;
+   //   std::cout << " nSelS = " << nSelS[mxVar][cutIndex[mxVar]] << " nSelB = " << nSelB[mxVar][cutIndex[mxVar]] << std::endl;
+   //   std::cout << " s/s+b " << nSelS_unWeighted[mxVar][cutIndex[mxVar]]/( nSelS_unWeighted[mxVar][cutIndex[mxVar]] + nSelB_unWeighted[mxVar][cutIndex[mxVar]]) 
+   //             << " s/s+b " << (nTotS - nSelS_unWeighted[mxVar][cutIndex[mxVar]])/( nTotS-nSelS_unWeighted[mxVar][cutIndex[mxVar]] + nTotB-nSelB_unWeighted[mxVar][cutIndex[mxVar]]) << std::endl;
+   //   std::cout << " nTotS = " << nTotS << " nTotB = " << nTotB << std::endl;
+   //   std::cout << " separationGainTotal " << separationGainTotal << std::endl;
+   // } else {
+   //   std::cout << "------------------------------------------------------------------"<<std::endl;
+   //   std::cout << " obviously didn't find new mxVar " << mxVar << std::endl;
+   // }
    for (UInt_t i=0; i<cNvars; i++) {
       delete [] nSelS[i];
       delete [] nSelB[i];
@@ -1296,7 +1336,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
 
 //_______________________________________________________________________
 std::vector<Double_t>  TMVA::DecisionTree::GetFisherCoefficients(const EventConstList &eventSample, UInt_t nFisherVars, UInt_t *mapVarInFisher){ 
-  // calculate the fisher coefficients for the event sample and the variables used
+   // calculate the fisher coefficients for the event sample and the variables used
 
    std::vector<Double_t> fisherCoeff(fNvars+1);
 
@@ -1445,15 +1485,15 @@ std::vector<Double_t>  TMVA::DecisionTree::GetFisherCoefficients(const EventCons
    TMatrixD invCov( *theMat );
    if ( TMath::Abs(invCov.Determinant()) < 10E-24 ) {
       Log() << kWARNING << "FisherCoeff matrix is almost singular with deterninant="
-              << TMath::Abs(invCov.Determinant()) 
-              << " did you use the variables that are linear combinations or highly correlated?" 
-              << Endl;
+            << TMath::Abs(invCov.Determinant()) 
+            << " did you use the variables that are linear combinations or highly correlated?" 
+            << Endl;
    }
    if ( TMath::Abs(invCov.Determinant()) < 10E-120 ) {
       Log() << kFATAL << "FisherCoeff matrix is singular with determinant="
-              << TMath::Abs(invCov.Determinant())  
-              << " did you use the variables that are linear combinations?" 
-              << Endl;
+            << TMath::Abs(invCov.Determinant())  
+            << " did you use the variables that are linear combinations?" 
+            << Endl;
    }
 
    invCov.Invert();
@@ -1489,7 +1529,7 @@ std::vector<Double_t>  TMVA::DecisionTree::GetFisherCoefficients(const EventCons
 
 //_______________________________________________________________________
 Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
-                                           TMVA::DecisionTreeNode *node )
+                                            TMVA::DecisionTreeNode *node )
 {
   
    // train a node by finding the single optimal cut for a single variable

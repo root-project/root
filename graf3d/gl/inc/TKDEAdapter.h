@@ -21,18 +21,18 @@
 #include "TKDEFGT.h"
 #endif
 
-//KDE adapter is a "data source" adapter for 
+//KDE adapter is a "data source" adapter for
 //Marching cubes alhorithm. It produces scalar
 //values in regular grid's nodes, using TKDEFGT class
 //to estimate a density.
-//IMPORTANT: This class is not intended for end-user's code, 
-//it's used and _must_ be used only as an argument while 
+//IMPORTANT: This class is not intended for end-user's code,
+//it's used and _must_ be used only as an argument while
 //instantiating mesh builder's class template.
 //That's why all members are protected
 //or private - end user cannot create object's of this class.
 //But mesh builder, derived from this class,
-//knows exactly how to use this class correctly. 
-//SetDimenions and SetE/GetE are public members, it will be derived by mesh 
+//knows exactly how to use this class correctly.
+//SetDimenions and SetE/GetE are public members, it will be derived by mesh
 //builder's instantiation and used inside TGL5DPainter class.
 
 namespace Rgl {

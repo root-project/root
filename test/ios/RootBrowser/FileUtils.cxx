@@ -59,7 +59,7 @@ void RemoveErrorDrawOption(TString &options)
          if (std::isdigit(nextChar) && (nextChar - '0' >= 1 && nextChar - '0' <= 4))
             n = 2;
       }
-   
+
       options.Remove(pos, n);
    }
 }
@@ -95,7 +95,7 @@ TObject *ReadObjectForKey(TDirectoryFile *inputFile, const TKey *key, TString &o
       option = "surf1";
    if (dynamic_cast<TMultiGraph *>(obj.get()))
       option = "acp";
-   
+
    //All this "home-made memory management" is an ugly and broken thing.
    obj->SetBit(kCanDelete, kFALSE);
    obj->SetBit(kMustCleanup, kFALSE);
@@ -167,7 +167,7 @@ EHistogramErrorOption FileContainer::GetErrorDrawOption(size_type ind)const
    const Ssiz_t pos = options.Index("E");
    if (pos == kNPOS)
       return hetNoError;
-   
+
    if (pos + 1 < options.Length()) {
       const char nextChar = options[pos + 1];
       if (nextChar == '1')
@@ -179,7 +179,7 @@ EHistogramErrorOption FileContainer::GetErrorDrawOption(size_type ind)const
       if (nextChar == '4')
          return hetE4;
    }
-   
+
    return hetE;
 }
 
@@ -252,20 +252,20 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
    const TList *objKeys = dir->GetListOfKeys();
    if (!objKeys)
       return;
-   
+
    TString option;
    std::vector<TObject *> objs;
    std::vector<FileContainer *> dirs;
    std::vector<TString> opts;
    std::vector<FileContainerElement> descriptors;
-   
+
    TObjLink *link = objKeys->FirstLink();
-   
+
    try {
       while (link) {
          const TKey *key = static_cast<TKey *>(link->GetObject());
          const TString className(key->GetClassName());
-            
+
          if (className == "TDirectoryFile") {
             std::auto_ptr<TDirectoryFile> nestedDir(static_cast<TDirectoryFile *>(dir->Get(key->GetName())));
             if (nestedDir.get()) {
@@ -273,7 +273,7 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
                std::auto_ptr<FileContainer> nestedContainer(new FileContainer(key->GetName()));
                ScanDirectory(nestedDir.get(), visibleTypes, nestedContainer.get());
                nestedContainer->AttachPads();
-               
+
                FileContainerElement newDescriptor(key->GetName(), currentContainer, true, dirs.size());
                descriptors.push_back(newDescriptor);
                descriptors.insert(descriptors.end(), nestedContainer->fContentDescriptors.begin(), nestedContainer->fContentDescriptors.end());
@@ -291,7 +291,7 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
             objs.push_back(newObject.get());//bad_alloc.
             newObject.release();
          }
-      
+
          link = link->Next();
       }
    } catch (const std::exception &) {
@@ -301,7 +301,7 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
          delete dir;
       throw;
    }
-   
+
    currentContainer->fObjects.swap(objs);
    currentContainer->fDirectories.swap(dirs);
    currentContainer->fOptions.swap(opts);
@@ -314,16 +314,16 @@ FileContainer *FileContainer::CreateFileContainer(const char *fullPath)
    try {
       std::set<TString> visibleTypes;
       FillVisibleTypes(visibleTypes);
-   
+
       std::auto_ptr<TFile> inputFile(TFile::Open(fullPath, "read"));
       if (!inputFile.get())
          return 0;
-      
+
       const std::string fileName(gSystem->BaseName(fullPath));
       std::auto_ptr<FileContainer> topLevel(new FileContainer(fileName));
-      
+
       ScanDirectory(inputFile.get(), visibleTypes, topLevel.get());
-      
+
       //
       //Attach pads.
       topLevel->AttachPads();

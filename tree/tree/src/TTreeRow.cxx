@@ -34,7 +34,7 @@ TTreeRow::TTreeRow()
    fFields      = 0;
    fOriginal    = 0;
    fRow         = 0;
-   
+
 }
 
 //______________________________________________________________________________
@@ -46,7 +46,7 @@ TTreeRow::TTreeRow(Int_t nfields)
    fFields      = 0;
    fOriginal    = 0;
    fRow         = 0;
-   
+
 }
 
 //______________________________________________________________________________
@@ -71,7 +71,7 @@ TTreeRow::TTreeRow(TSQLRow *original)
    fOriginal    = 0;
    fColumnCount = 0;
    fRow         = 0;
-   
+
    if (!original) {
       Error("TTreeRow", "original may not be 0");
       return;
@@ -137,7 +137,7 @@ ULong_t TTreeRow::GetFieldLength(Int_t field)
 }
 
 //______________________________________________________________________________
-const char *TTreeRow::GetField(Int_t field) 
+const char *TTreeRow::GetField(Int_t field)
 {
    // Get specified field from row (0 <= field < GetFieldCount()).
 

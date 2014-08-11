@@ -12,10 +12,10 @@ while [ "$1" != "" ]; do
    -o) args="$args $1"; shift;
        dllname="$1"; dllbase=`basename $1`;
        if [ "`echo $dllname | sed 's#^lib/.*\.dll$##'`" != "$dllname" ]; then
-	   isdll=1
-	   args="$args bin/$dllbase"
+          isdll=1
+          args="$args bin/$dllbase"
        else
-	   args="$args $1"
+          args="$args $1"
        fi ;;
    *) args="$args $1" ;;
    esac

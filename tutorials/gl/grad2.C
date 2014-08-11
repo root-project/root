@@ -26,7 +26,7 @@ void grad2()
       ::Error("grad2", "can not allocate new custom colors");
       return;
    }
-   
+
    //'Aliases' (instead of freeIndices[someIndex])
    const Color_t customRed = freeIndices[0], grad1 = freeIndices[1];
    const Color_t customGreen = freeIndices[2], grad2 = freeIndices[3];
@@ -56,11 +56,11 @@ void grad2()
    //         (gradient->SetCoordinateMode(TColorGradient::kObjectBoundingMode))
    //         or bounding rect of a pad (gradient->SetCoordinateMode(TColorGradient::kPadMode)).
    //         kObjectBoundingMode is the default one.
-   
+
    const Double_t locations[] = {0., 1.};
    const Color_t idx1[] = {customRed, kOrange};
    TLinearGradient * const gradFill1 = new TLinearGradient(grad1, 2, locations, idx1);
-   
+
    typedef TColorGradient::Point Point;
    //Starting and ending points for a gradient fill (it's a vertical gradient):
    gradFill1->SetStartEnd(Point(0., 0.), Point(0., 1.));
@@ -70,7 +70,7 @@ void grad2()
 
    //   d) Gradient from ROOT's kBlue to our custom green.
    const Color_t idx2[] = {customGreen, kBlue};
-   
+
    TLinearGradient * const gradFill2 = new TLinearGradient(grad2, 2, locations, idx2);
    //Vertical gradient fill.
    gradFill2->SetStartEnd(Point(0., 0.), Point(0., 1.));

@@ -2216,7 +2216,7 @@ void TGaxis::SetExponentOffset(Float_t xoff, Float_t yoff, Option_t *axis)
    // It is in % of the pad size. It can be negative.
    // axis specifies which axis ("x","y"), default = "x"
    // if axis="xz" set the two axes
-   
+
    TString opt = axis;
    opt.ToLower();
 

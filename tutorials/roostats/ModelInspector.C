@@ -18,7 +18,7 @@
 // the min and max range of the sliders are used to define the upper & lower variation
 // the pointer position of the slider is the central blue curve.
 //
-// Click the FIT button to 
+// Click the FIT button to
 //
 // To Do:
 //  - check boxes to specify which nuisance parameters used in making variation
@@ -28,8 +28,8 @@
 //  - a button to make the log likelihood plots
 //  - a dialog to open the desired file
 //  - ability to see teh signal and background contributions?
-//   
-   
+//
+
 #include "TGButton.h"
 #include "TRootEmbeddedCanvas.h"
 #include "TGLayout.h"
@@ -75,7 +75,7 @@ private:
    TGLayoutHints       *fLcan;
    TF1                 *fFitFcn;
   RooPlot* fPlot;
-  RooWorkspace* fWS;  
+  RooWorkspace* fWS;
   TFile* fFile;
   ModelConfig* fMC;
   RooAbsData* fData;
@@ -88,12 +88,12 @@ private:
   map<TGTripleHSlider*,TGLabel*> fLabelMap;
 
   TGButton* fFitButton;
-  TGTextButton *fExitButton; 
+  TGTextButton *fExitButton;
 
    // BB: a TGCanvas and a vertical frame are needed for using scrollbars
    TGCanvas *fCan;
    TGVerticalFrame *fVFrame;
-  
+
    TGHorizontalFrame   *fHframe0, *fHframe1, *fHframe2;
    TGLayoutHints       *fBly, *fBfly1, *fBfly2, *fBfly3;
    TGTripleHSlider     *fHslider1;
@@ -117,10 +117,10 @@ public:
 };
 
 //______________________________________________________________________________
-ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsData* data) 
+ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsData* data)
   : TGMainFrame(gClient->GetRoot(), 100, 100)
 {
-  
+
   RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
   fWS = w;
   fMC = mc;
@@ -128,7 +128,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsDat
   RooSimultaneous* simPdf = NULL;
   Int_t numCats = 1;
   if(strcmp(fMC->GetPdf()->ClassName(),"RooSimultaneous")==0){
-    cout <<"Is a simultaneous PDF"<< endl;     
+    cout <<"Is a simultaneous PDF"<< endl;
     simPdf = (RooSimultaneous*)(fMC->GetPdf());
     RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
     cout <<" with " << channelCat->numTypes() << " categories"<<endl;
@@ -137,7 +137,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsDat
     cout <<"Is not a simultaneous PDF"<<endl;
   }
   fFitRes=0;
-  
+
 
   //char buf[32];
    SetCleanup(kDeepCleanup);
@@ -210,8 +210,8 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsDat
    parameters.add(*fMC->GetNuisanceParameters());
    TIterator* it = parameters.createIterator();
    RooRealVar* param=NULL;
-   
-   // BB: This is the part needed in order to have scrollbars 
+
+   // BB: This is the part needed in order to have scrollbars
    fCan = new TGCanvas(this, 100, 100, kFixedSize);
    AddFrame(fCan, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
    fVFrame = new TGVerticalFrame(fCan->GetViewPort(), 10, 10);
@@ -225,15 +225,15 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace* w, ModelConfig* mc, RooAbsDat
 
      TGLabel* hlabel = new TGLabel(hframek,Form("%s = %.3f +%.3f",param->GetName(),param->getVal(),param->getError()));
      TGTripleHSlider* hsliderk = new TGTripleHSlider(hframek, 190, kDoubleScaleBoth, HSId1,
-				     kHorizontalFrame,
-				     GetDefaultFrameBackground(),
-				     kFALSE, kFALSE, kFALSE, kFALSE);
-     hsliderk->Connect("PointerPositionChanged()", "ModelInspectorGUI", 
-			this, "DoSlider()");
-     hsliderk->Connect("PositionChanged()", "ModelInspectorGUI", 
-			this, "DoSlider()");
+                                                     kHorizontalFrame,
+                                                     GetDefaultFrameBackground(),
+                                                     kFALSE, kFALSE, kFALSE, kFALSE);
+     hsliderk->Connect("PointerPositionChanged()", "ModelInspectorGUI",
+                       this, "DoSlider()");
+     hsliderk->Connect("PositionChanged()", "ModelInspectorGUI",
+                       this, "DoSlider()");
      hsliderk->SetRange(param->getMin(),param->getMax());
-     
+
      hframek->Resize(200, 25);
      fSliderList.Add(hsliderk);
      fFrameList.Add(hframek);
@@ -345,7 +345,7 @@ void ModelInspectorGUI::DoSlider()
     // if not SimPdf
     /////////////////////////////////////////////
 
-    // pre loop      
+    // pre loop
     map<TGTripleHSlider*,const char*>::iterator it;;
     delete fPlot;
     fPlot = ((RooRealVar*)fMC->GetObservables()->first())->frame();
@@ -362,7 +362,7 @@ void ModelInspectorGUI::DoSlider()
     }
     normCount = fMC->GetPdf()->expectedEvents(*fMC->GetObservables());
     fMC->GetPdf()->plotOn(fPlot,LineColor(kRed),Normalization(normCount,RooAbsReal::NumEvent));
-    
+
     // low loop
     it = fSliderMap.begin();
     for(; it!=fSliderMap.end(); ++it){
@@ -371,7 +371,7 @@ void ModelInspectorGUI::DoSlider()
       }
     normCount = fMC->GetPdf()->expectedEvents(*fMC->GetObservables());
     fMC->GetPdf()->plotOn(fPlot,LineColor(kGreen),Normalization(normCount,RooAbsReal::NumEvent));
-    
+
     // central oop
     it = fSliderMap.begin();
     for(; it!=fSliderMap.end(); ++it){
@@ -381,7 +381,7 @@ void ModelInspectorGUI::DoSlider()
     normCount = fMC->GetPdf()->expectedEvents(*fMC->GetObservables());
     fMC->GetPdf()->plotOn(fPlot,LineColor(kBlue),Normalization(normCount,RooAbsReal::NumEvent));
     fPlot->Draw();
-    
+
     fCanvas->GetCanvas()->Modified();
     fCanvas->GetCanvas()->Update();
     ////////////////////////////////////////////////////////////////////////////
@@ -420,10 +420,10 @@ void ModelInspectorGUI::DoSlider()
       // high loop
       it = fSliderMap.begin();
       for(; it!=fSliderMap.end(); ++it){
-	const char* name = it->second;
-	fWS->var(name)->setVal(it->first->GetMaxPosition());
-	RooRealVar* param = fWS->var(name);
-	fLabelMap[it->first]->SetText(Form("%s = %.3f [%.3f,%.3f]",param->GetName(),it->first->GetPointerPosition(),it->first->GetMinPosition(),it->first->GetMaxPosition()));
+         const char* name = it->second;
+         fWS->var(name)->setVal(it->first->GetMaxPosition());
+         RooRealVar* param = fWS->var(name);
+         fLabelMap[it->first]->SetText(Form("%s = %.3f [%.3f,%.3f]",param->GetName(),it->first->GetPointerPosition(),it->first->GetMinPosition(),it->first->GetMaxPosition()));
       }
       normCount = pdftmp->expectedEvents(*obs);
       pdftmp->plotOn(fPlot,LineColor(kRed),LineWidth(2.),Normalization(normCount,RooAbsReal::NumEvent)) ;
@@ -432,10 +432,10 @@ void ModelInspectorGUI::DoSlider()
       // low loop
       it = fSliderMap.begin();
       for(; it!=fSliderMap.end(); ++it){
-	const char* name = it->second;
-	fWS->var(name)->setVal(it->first->GetMinPosition());
-	RooRealVar* param = fWS->var(name);
-	fLabelMap[it->first]->SetText(Form("%s = %.3f [%.3f,%.3f]",param->GetName(),it->first->GetPointerPosition(),it->first->GetMinPosition(),it->first->GetMaxPosition()));
+         const char* name = it->second;
+         fWS->var(name)->setVal(it->first->GetMinPosition());
+         RooRealVar* param = fWS->var(name);
+         fLabelMap[it->first]->SetText(Form("%s = %.3f [%.3f,%.3f]",param->GetName(),it->first->GetPointerPosition(),it->first->GetMinPosition(),it->first->GetMaxPosition()));
       }
       normCount = pdftmp->expectedEvents(*obs);
       pdftmp->plotOn(fPlot,LineColor(kGreen),LineWidth(2.),Normalization(normCount,RooAbsReal::NumEvent)) ;
@@ -443,24 +443,24 @@ void ModelInspectorGUI::DoSlider()
       // central loop
       it = fSliderMap.begin();
       for(; it!=fSliderMap.end(); ++it){
-	const char* name = it->second;
-	fWS->var(name)->setVal(it->first->GetPointerPosition());
-	RooRealVar* param = fWS->var(name);
-	fLabelMap[it->first]->SetText(Form("%s = %.3f [%.3f,%.3f]",param->GetName(),it->first->GetPointerPosition(),it->first->GetMinPosition(),it->first->GetMaxPosition()));
+         const char* name = it->second;
+         fWS->var(name)->setVal(it->first->GetPointerPosition());
+         RooRealVar* param = fWS->var(name);
+         fLabelMap[it->first]->SetText(Form("%s = %.3f [%.3f,%.3f]",param->GetName(),it->first->GetPointerPosition(),it->first->GetMinPosition(),it->first->GetMaxPosition()));
       }
       normCount = pdftmp->expectedEvents(*obs);
       if(!fFitRes)
-	pdftmp->plotOn(fPlot,LineColor(kBlue),LineWidth(2.),Normalization(normCount,RooAbsReal::NumEvent)) ;
+         pdftmp->plotOn(fPlot,LineColor(kBlue),LineWidth(2.),Normalization(normCount,RooAbsReal::NumEvent)) ;
       else{
-	pdftmp->plotOn(fPlot,Normalization(normCount,RooAbsReal::NumEvent),VisualizeError(*fFitRes,*fMC->GetNuisanceParameters()),FillColor(kYellow)) ;
-	pdftmp->plotOn(fPlot,LineColor(kBlue),LineWidth(2.),Normalization(normCount,RooAbsReal::NumEvent)) ;
-      msglevel = RooMsgService::instance().globalKillBelow();
-      RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
-      fData->plotOn(fPlot,MarkerSize(1),Cut(Form("%s==%s::%s",channelCat->GetName(),channelCat->GetName(),tt->GetName())),DataError(RooAbsData::None));
-      RooMsgService::instance().setGlobalKillBelow(msglevel);
+         pdftmp->plotOn(fPlot,Normalization(normCount,RooAbsReal::NumEvent),VisualizeError(*fFitRes,*fMC->GetNuisanceParameters()),FillColor(kYellow)) ;
+         pdftmp->plotOn(fPlot,LineColor(kBlue),LineWidth(2.),Normalization(normCount,RooAbsReal::NumEvent)) ;
+         msglevel = RooMsgService::instance().globalKillBelow();
+         RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
+         fData->plotOn(fPlot,MarkerSize(1),Cut(Form("%s==%s::%s",channelCat->GetName(),channelCat->GetName(),tt->GetName())),DataError(RooAbsData::None));
+         RooMsgService::instance().setGlobalKillBelow(msglevel);
       }
       fPlot->Draw();
-    }    
+    }
     fCanvas->GetCanvas()->Modified();
     fCanvas->GetCanvas()->Update();
     ///////////////////////////////////////////
@@ -497,9 +497,9 @@ void ModelInspectorGUI::DoExit()
 
 
 void ModelInspector(const char* infile = "",
-		      const char* workspaceName = "combined",
-		      const char* modelConfigName = "ModelConfig",
-		      const char* dataName = "obsData"){
+                    const char* workspaceName = "combined",
+                    const char* modelConfigName = "ModelConfig",
+                    const char* dataName = "obsData"){
 
 #ifdef __CINT__
   cout <<"You must use ACLIC for this.  Use ModelInspector.C+"<<endl;
@@ -507,10 +507,10 @@ void ModelInspector(const char* infile = "",
 #endif
 
   /////////////////////////////////////////////////////////////
-  // First part is just to access a user-defined file 
+  // First part is just to access a user-defined file
   // or create the standard example file if it doesn't exist
   ////////////////////////////////////////////////////////////
- 
+
    const char* filename = "";
    if (!strcmp(infile,"")) {
       filename = "results/example_combined_GaussExample_model.root";
@@ -529,22 +529,22 @@ void ModelInspector(const char* infile = "",
          cout <<"Done creating example input"<<endl;
          cout <<"---------------------\n\n"<<endl;
       }
-      
+
    }
    else
       filename = infile;
-   
+
    // Try to open the file
    TFile *file = TFile::Open(filename);
-   
+
    // if input file was specified byt not found, quit
    if(!file ){
       cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
    }
-   
 
-  
+
+
   /////////////////////////////////////////////////////////////
   // Tutorial starts here
   ////////////////////////////////////////////////////////////

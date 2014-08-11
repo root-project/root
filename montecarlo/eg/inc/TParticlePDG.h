@@ -43,9 +43,9 @@ protected:
   Int_t            fY;                          // X,Y: quantum numbers for the 4-th generation
   Int_t            fX;                          //
   Int_t            fStable;                     // 1 if stable, 0 otherwise
-                                        
+
   TObjArray*       fDecayList;                  // array of decay channels
-                                
+
   TString          fParticleClass;              // lepton, meson etc
 
   Int_t            fTrackingCode;               // G3 tracking code of the particle
@@ -53,7 +53,7 @@ protected:
 //------------------------------------------------------------------------------
 // functions
 //------------------------------------------------------------------------------
-   TParticlePDG(const TParticlePDG&); 
+   TParticlePDG(const TParticlePDG&);
    TParticlePDG& operator=(const TParticlePDG&);
 
 public:
@@ -62,12 +62,12 @@ public:
    TParticlePDG(int pdg_code);
    TParticlePDG(const char* Name, const char* Title, Double_t Mass,
                 Bool_t Stable, Double_t Width, Double_t Charge,
-                const char* ParticleClass, Int_t PdgCode, Int_t Anti, 
+                const char* ParticleClass, Int_t PdgCode, Int_t Anti,
                 Int_t TrackingCode);
 
    virtual ~TParticlePDG();
    // ****** access methods
-  
+
    Int_t           PdgCode      () const { return fPdgCode; }
    Double_t        Mass         () const { return fMass; }
    Double_t        Charge       () const { return fCharge; } //charge in units of |e|/3
@@ -88,7 +88,7 @@ public:
 
    TObjArray*      DecayList    () { return fDecayList; }
 
-   Int_t   NDecayChannels () const { 
+   Int_t   NDecayChannels () const {
      return (fDecayList) ? fDecayList->GetEntriesFast() : 0;
    }
 
@@ -102,12 +102,12 @@ public:
 
    void   SetAntiParticle(TParticlePDG* ap) { fAntiParticle = ap; }
 
-   Int_t  AddDecayChannel(Int_t        Type, 
-                          Double_t     BranchingRatio, 
-                          Int_t        NDaughters, 
+   Int_t  AddDecayChannel(Int_t        Type,
+                          Double_t     BranchingRatio,
+                          Int_t        NDaughters,
                           Int_t*       DaughterPdgCode);
 
-   virtual void  PrintDecayChannel(TDecayChannel* dc, Option_t* opt = "") const; 
+   virtual void  PrintDecayChannel(TDecayChannel* dc, Option_t* opt = "") const;
 
    virtual void  Print(Option_t* opt = "") const; // *MENU*
 

@@ -38,7 +38,7 @@ public:
    virtual ~TQApplication();
    virtual void LoadGraphicsLibs();
    void SetCustomized();
-   
+
    ClassDef(TQApplication,0) //creates ROOT environment with the Qt windowing system
 };
 

@@ -9,7 +9,7 @@ void parallel_world(Bool_t usepw=kTRUE, Bool_t useovlp=kTRUE)
 // dangerous cases when the hidden volumes are sensitive.
 // This macro demonstrates how to use the "parallel world" feature to assign
 // highest navigation priority to some physical paths in geometry.
-// 
+//
 
    TGeoManager *geom = new TGeoManager("parallel_world", "Showcase for prioritized physical paths");
    TGeoMaterial *matV = new TGeoMaterial("Vac", 0,0,0);
@@ -26,24 +26,24 @@ void parallel_world(Bool_t usepw=kTRUE, Bool_t useovlp=kTRUE)
    // The volume for the support
    TGeoVolume *support = new TGeoVolume("block",sblock, medAl);
    support->SetLineColor(kGreen);
-   
+
    // Shape for the sensor to be prioritized in case of overlap
    TGeoBBox *ssensor = new TGeoBBox("sensor", 19,9,0.2);
    // The volume for the sensor
    TGeoVolume *sensor = new TGeoVolume("sensor",ssensor, medSi);
    sensor->SetLineColor(kRed);
-   
+
    // Chip assembly of support+sensor
    TGeoVolumeAssembly *chip = new TGeoVolumeAssembly("chip");
    chip->AddNode(support, 1);
    chip->AddNode(sensor,1, new TGeoTranslation(0,0,-2.1));
-   
-   // A ladder that normally sags 
+
+   // A ladder that normally sags
    TGeoBBox *sladder = new TGeoBBox("sladder", 20,300,5);
    // The volume for the ladder
-   TGeoVolume *ladder = new TGeoVolume("ladder",sladder, medAl);   
+   TGeoVolume *ladder = new TGeoVolume("ladder",sladder, medAl);
    ladder->SetLineColor(kBlue);
-   
+
    // Add nodes
    top->AddNode(ladder,1);
    for (Int_t i=0; i<10; i++)
@@ -58,7 +58,7 @@ void parallel_world(Bool_t usepw=kTRUE, Bool_t useovlp=kTRUE)
       if (useovlp) pw->AddOverlap(ladder);
       pw->CloseGeometry();
       gGeoManager->SetUseParallelWorldNav(kTRUE);
-   } 
+   }
    TString cname;
    cname = usepw ? "cpw" : "cnopw";
    TCanvas *c = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(cname);
@@ -93,5 +93,5 @@ void align()
       TGeoTranslation *tr = new TGeoTranslation(0., -225.+50.*i, 10-sag);
       node->Align(tr);
       if (pw) pw->AddNode(node);
-   }   
+   }
 }

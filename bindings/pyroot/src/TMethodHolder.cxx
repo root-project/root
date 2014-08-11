@@ -123,7 +123,7 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
    for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
       std::string fullType =
          fMethod.TypeOf().FunctionParameterAt( iarg ).Name( Rflx::QUALIFIED | Rflx::SCOPED );
-   // CLING WORKAROUND -- 
+   // CLING WORKAROUND --
       fullType = Utility::ResolveTypedef( fullType, (TClass*)fClass.Id() );
    // -- END CLING WORKAROUND
 
@@ -276,7 +276,7 @@ void PyROOT::TMethodHolder::SetPyError_( PyObject* msg )
          PyROOT_PyUnicode_AsString( doc ), details.c_str() );
    }
 
-   Py_XDECREF( etype ); 
+   Py_XDECREF( etype );
    Py_DECREF( doc );
    Py_XDECREF( msg );
 }

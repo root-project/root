@@ -41,8 +41,8 @@ protected:
 
 public:
    TBasketSQL();
-   TBasketSQL(const char *name, const char *title, 
-              TBranch *branch, TSQLResult **rs, 
+   TBasketSQL(const char *name, const char *title,
+              TBranch *branch, TSQLResult **rs,
               TString *insert_query, std::vector<Int_t> *vc, TSQLRow **row);
    ~TBasketSQL();
    void    PrepareBasket(Long64_t entry);

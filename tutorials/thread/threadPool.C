@@ -6,7 +6,9 @@
 #include <iostream>
 #include <iterator>
 #include <vector>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 // ThreadPool
 #include "TThreadPool.h"
 // ROOT
@@ -28,7 +30,7 @@ class TTestTask: public TThreadPoolTaskImp<TTestTask, EProc>
 public:
    bool runTask(EProc /*_param*/) {
       m_tid = TThread::SelfId();
-      sleep(g_sleeptime);
+      TThread::Sleep(g_sleeptime, 0L);
       return true;
    }
    unsigned long threadID() const {
@@ -48,7 +50,7 @@ void threadPool(size_t _numThreads = 10, bool _needDbg = false)
 
    // create a thread pool object
    // _numThreads - a number of threads in the pool
-   // _needDbg - defines whether to show debug messages  
+   // _needDbg - defines whether to show debug messages
    TThreadPool<TTestTask, EProc> threadPool(_numThreads, _needDbg);
 
    // create a container of tasks

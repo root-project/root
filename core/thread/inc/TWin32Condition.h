@@ -39,12 +39,12 @@ typedef struct
 
    HANDLE sema_;
    // Semaphore used to queue up threads waiting for the condition to
-   // become signaled. 
+   // become signaled.
 
    HANDLE waiters_done_;
    // An auto-reset event used by the broadcast/signal thread to wait
    // for all the waiting thread(s) to wake up and be released from the
-   // semaphore. 
+   // semaphore.
 
    size_t was_broadcast_;
    // Keeps track of whether we were broadcasting or signaling.  This

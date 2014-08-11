@@ -35,13 +35,13 @@ class FTGL_EXPORT FTGLBitmapFont : public FTFont
          * Destructor
          */
         ~FTGLBitmapFont();
-        
-	/**
+
+        /**
          * Prepare for rendering
          */
         virtual void PreRender();
 
-	/**
+        /**
          * Cleanup after rendering
          */
         virtual void PostRender();
@@ -54,6 +54,6 @@ class FTGL_EXPORT FTGLBitmapFont : public FTFont
          * @return  An FTBitmapGlyph or <code>null</code> on failure.
          */
         inline virtual FTGlyph* MakeGlyph( unsigned int g);
-                
+
 };
 #endif  //  __FTGLBitmapFont__

@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -56,13 +56,13 @@ void GaussFcn2::Init() {
 //   std::cout<<"FCN initial mean: "<<mean<<std::endl;
 //   std::cout<<"FCN initial sigma: "<<sqrt(rms2)<<std::endl;
 
-  std::vector<double> par; 
+  std::vector<double> par;
   par.push_back(mean); par.push_back(sqrt(rms2)); par.push_back(c);
   par.push_back(mean); par.push_back(sqrt(rms2)); par.push_back(c);
 
   fMin = (*this)(par);
 //   std::cout<<"GaussFcnHistoData2 initial chi2: "<<fMin<<std::endl;
-         
+
 }
 
 

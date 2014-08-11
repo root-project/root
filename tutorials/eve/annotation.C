@@ -57,7 +57,7 @@ void annotation(Float_t a=10, Float_t d=5, Float_t x=0, Float_t y=0, Float_t z=0
    b->SetVertex(7, x + a, y - a, z + a);
    gEve->AddElement(b);
    gEve->Redraw3D(kTRUE);
-  
+
    // add overlay text
    TGLViewer* v = gEve->GetDefaultGLViewer();
    TDatime time;
@@ -65,7 +65,7 @@ void annotation(Float_t a=10, Float_t d=5, Float_t x=0, Float_t y=0, Float_t z=0
    ann->SetTextSize(0.1);// % of window diagonal
 
    // set timer to update text every second
-   MyTimer* timer = new MyTimer(ann); 
+   MyTimer* timer = new MyTimer(ann);
    timer->SetTime(1000);
    timer->Reset();
    timer->TurnOn();

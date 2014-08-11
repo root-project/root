@@ -8,9 +8,6 @@
 #
 # Copyright (C) 2002 by Valeri Fine.  All rights reserved.
 #
-# This file may be distributed under the terms of the Q Public License
-# as defined by Trolltech AS of Norway and appearing in the file
-# LICENSE.QPL included in the packaging of this file.
 #-------------------------------------------------------------------------
 #
 # Usage: (aux file for rootcint.pri qmake include file)
@@ -59,25 +56,25 @@ win32 {
 #-- permanent components to be included into any ".pro" file to build the RootCint dictionary
 
 win32 {
-   LIBS	+=                                                                                                 \
+   LIBS +=                                                                                                 \
       -include:_G__cpp_setupG__Hist       -include:_G__cpp_setupG__G3D                                     \
       -include:_G__cpp_setupG__GPad       -include:_G__cpp_setupG__Tree   -include:_G__cpp_setupG__Rint    \
       -include:_G__cpp_setupG__PostScript -include:_G__cpp_setupG__Matrix -include:_G__cpp_setupG__Physics \
       -include:_G__cpp_setupG__Gui1       -include:_G__cpp_setupG__Geom1 
     
    exists( $$(ROOTSYS)/lib/libRIO.lib ) {
-      LIBS	+= -include:_G__cpp_setupG__IO
+      LIBS += -include:_G__cpp_setupG__IO
    }   
 
    exists( $$(ROOTSYS)/lib/libTable.lib ) {
-      LIBS	+= -include:_G__cpp_setupG__Table
+      LIBS += -include:_G__cpp_setupG__Table
    }   
 
    exists( $%(ROOTSYS)/lib/libQtRootGui.lib ) {
-      LIBS	+=  -include:_G__cpp_setupG__QtGUI     
+      LIBS +=  -include:_G__cpp_setupG__QtGUI
    }   
    
-   LIBS	+=                                                                                               \
+   LIBS +=                                                                                               \
     "$(ROOTSYS)/lib/libCore.lib"   "$(ROOTSYS)/lib/libCint.lib"     "$(ROOTSYS)/lib/libHist.lib"         \
     "$(ROOTSYS)/lib/libGraf.lib"   "$(ROOTSYS)/lib/libGraf3d.lib"   "$(ROOTSYS)/lib/libGpad.lib"         \
     "$(ROOTSYS)/lib/libTree.lib"   "$(ROOTSYS)/lib/libRint.lib"     "$(ROOTSYS)/lib/libPostscript.lib"   \
@@ -86,15 +83,15 @@ win32 {
     "$(ROOTSYS)/lib/libGQt.lib"   
     
    exists( $$(ROOTSYS)/lib/libRIO.lib ) {
-      LIBS	+= "$(ROOTSYS)/lib/libRIO.lib" 
+      LIBS += "$(ROOTSYS)/lib/libRIO.lib"
    }   
 
    exists( $$(ROOTSYS)/lib/libTable.lib ) {
-      LIBS	+=  "$(ROOTSYS)/lib/libTable.lib"
+      LIBS +=  "$(ROOTSYS)/lib/libTable.lib"
    }   
        
    exists( $$(ROOTSYS)/lib/libQtRootGui.lib ) {
-      LIBS	+=  "$(ROOTSYS)/lib/libQtRootGui.lib"
+      LIBS +=  "$(ROOTSYS)/lib/libQtRootGui.lib"
    }   
 }
 
@@ -108,7 +105,7 @@ unix {
     exists ($$libFile ) {
         LIBS += -lQtRootGui
     }
-    LIBS	+= $$system(${ROOTSYS}/bin/root-config --glibs)
+    LIBS += $$system(${ROOTSYS}/bin/root-config --glibs)
     libFile = $$(ROOTSYS)/lib/libTable.$$QMAKE_EXTENSION_SHLIB 
     exists( $$libFile ) {
         LIBS += -lTable
@@ -117,11 +114,11 @@ unix {
     LIBS *= -lGQt 
     
     exists( $$(ROOTSYS)/lib/libQtRootGui.$$QMAKE_EXTENSION_SHLIB ) {
-          LIBS	*=  -lQtRootGui  
+          LIBS *=  -lQtRootGui
           message ( "Found Qt extensions library !!!") 
     }
 }
-FORCELINKLIST	+=                                                                  \
+FORCELINKLIST +=                                                                  \
         _G__cpp_setupG__Hist        _G__cpp_setupG__Graf1   _G__cpp_setupG__G3D     \
         _G__cpp_setupG__GPad        _G__cpp_setupG__Tree    _G__cpp_setupG__Rint    \
         _G__cpp_setupG__PostScript  _G__cpp_setupG__Matrix  _G__cpp_setupG__Physics \
@@ -130,14 +127,14 @@ FORCELINKLIST	+=                                                                
 mac {
   equals(TEMPLATE, app_fake) {
   # this trick does not work yet (To be fixed. V.Fine)
-      LIBS	+=  $$join( FORCELINKLIST, " -u ")                                                                
+      LIBS +=  $$join( FORCELINKLIST, " -u ")
 
       exists( $$(ROOTSYS)/lib/libTable.lib ) {
-         LIBS	+= -u _G__cpp_setupG__Table
+         LIBS += -u _G__cpp_setupG__Table
       }   
 
       exists( $$(ROOTSYS)/lib/libQtRootGui.lib ) {
-         LIBS	+=  -u _G__cpp_setupG__QtGUI     
+         LIBS +=  -u _G__cpp_setupG__QtGUI     
       }
   }
 # -- trick to force the trivial symbolic link under UNIX

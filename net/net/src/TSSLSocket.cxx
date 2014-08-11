@@ -226,7 +226,7 @@ Int_t TSSLSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
      // through this socket. They will be updated when the data is actually
      // read. This avoids double counting.
      if (opt == kPeek) return n;
-     
+
      offset += n;
      remain -= n;
    }

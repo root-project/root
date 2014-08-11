@@ -1,6 +1,6 @@
 // inverse of gamma and beta from Cephes library
 // see:  http://www.netlib.org/cephes
-// 
+//
 // Copyright 1985, 1987, 2000 by Stephen L. Moshier
 
 
@@ -11,18 +11,18 @@
 
 #include <cmath>
 
-#include <limits> 
+#include <limits>
 
-namespace ROOT { 
-namespace Math { 
+namespace ROOT {
+namespace Math {
 
-namespace Cephes { 
+namespace Cephes {
 
 
 
-/*							
+/*
  *
- *	Inverse of Normal distribution function
+ * Inverse of Normal distribution function
  *
  *
  *
@@ -74,7 +74,7 @@ Copyright 1984, 1987, 1989, 2000 by Stephen L. Moshier
 
 
 static double s2pi = 2.50662827463100050242E0;
-  
+
 static double P0[5] = {
 -5.99633501014107895267E1,
  9.80010754185999661536E1,
@@ -144,7 +144,7 @@ double ndtri( double y0 )
       return( + std::numeric_limits<double>::infinity() );
    code = 1;
    y = y0;
-   if( y > (1.0 - 0.13533528323661269189) ) 
+   if( y > (1.0 - 0.13533528323661269189) )
    {
       y = 1.0 - y;
       code = 0;
@@ -154,13 +154,13 @@ double ndtri( double y0 )
       y = y - 0.5;
       y2 = y * y;
       x = y + y * (y2 * Polynomialeval( y2, P0, 4)/ Polynomial1eval( y2, Q0, 8 ));
-      x = x * s2pi; 
+      x = x * s2pi;
       return(x);
    }
    x = std::sqrt( -2.0 * std::log(y) );
    x0 = x - std::log(x)/x;
    z = 1.0/x;
-   if( x < 8.0 ) 
+   if( x < 8.0 )
       x1 = z * Polynomialeval( z, P1, 8 )/ Polynomial1eval ( z, Q1, 8 );
    else
       x1 = z * Polynomialeval( z, P2, 8 )/ Polynomial1eval( z, Q2, 8 );
@@ -173,7 +173,7 @@ double ndtri( double y0 )
 
 
 
-/*							
+/*
  *
  *      Inverse of complemented imcomplete gamma integral
  *
@@ -199,7 +199,7 @@ double ndtri( double y0 )
  *  where
  *
  *  t = 1 - d - ndtri(p) sqrt(d)
- * 
+ *
  * and
  *
  *  d = 1/9a,
@@ -228,22 +228,22 @@ double igami( double a, double y0 )
    int i, dir;
 
    // check the domain
-   if (a<= 0) { 
-      MATH_ERROR_MSG("Cephes::igami","Wrong domain for parameter a (must be > 0)"); 
-      return 0; 
+   if (a<= 0) {
+      MATH_ERROR_MSG("Cephes::igami","Wrong domain for parameter a (must be > 0)");
+      return 0;
    }
-   if (y0 <= 0) { 
-      //if (y0<0) MATH_ERROR_MSG("Cephes::igami","Wrong domain for y (must be in [0,1])"); 
+   if (y0 <= 0) {
+      //if (y0<0) MATH_ERROR_MSG("Cephes::igami","Wrong domain for y (must be in [0,1])");
       return std::numeric_limits<double>::infinity();
    }
-   if (y0 >= 1) { 
-      //if (y0>1) MATH_ERROR_MSG("Cephes::igami","Wrong domain for y (must be in [0,1])"); 
-      return 0; 
+   if (y0 >= 1) {
+      //if (y0>1) MATH_ERROR_MSG("Cephes::igami","Wrong domain for y (must be in [0,1])");
+      return 0;
    }
-      
+
 
 /* bound the solution */
-   static double kMAXNUM = std::numeric_limits<double>::max(); 
+   static double kMAXNUM = std::numeric_limits<double>::max();
    x0 = kMAXNUM;
    yl = 0;
    x1 = 0;
@@ -332,7 +332,7 @@ ihalve:
             d = 0.5;
          }
          else if( dir > 1 )
-            d = 0.5 * d + 0.5; 
+            d = 0.5 * d + 0.5;
          else
             d = (y0 - yl)/(yh - yl);
          dir += 1;
@@ -362,7 +362,7 @@ done:
 }
 
 
-/*							
+/*
  *
  *      Inverse of imcomplete beta integral
  *
@@ -414,13 +414,13 @@ double incbi( double aa, double bb, double yy0 )
    int i, rflg, dir, nflg;
 
    // check the domain
-   if (aa<= 0) { 
-      MATH_ERROR_MSG("Cephes::incbi","Wrong domain for parameter a (must be > 0)"); 
-      return 0; 
+   if (aa<= 0) {
+      MATH_ERROR_MSG("Cephes::incbi","Wrong domain for parameter a (must be > 0)");
+      return 0;
    }
-   if (bb<= 0) { 
-      MATH_ERROR_MSG("Cephes::incbi","Wrong domain for parameter b (must be > 0)"); 
-      return 0; 
+   if (bb<= 0) {
+      MATH_ERROR_MSG("Cephes::incbi","Wrong domain for parameter b (must be > 0)");
+      return 0;
    }
 
 
@@ -526,7 +526,7 @@ ihalve:
          else if( dir > 3 )
             di = 1.0 - (1.0 - di) * (1.0 - di);
          else if( dir > 1 )
-            di = 0.5 * di + 0.5; 
+            di = 0.5 * di + 0.5;
          else
             di = (y0 - y)/(yh - yl);
          dir += 1;

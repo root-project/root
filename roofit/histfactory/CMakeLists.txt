@@ -16,6 +16,10 @@ ROOT_EXECUTABLE(hist2workspace MakeModelAndMeasurements.cxx hist2workspace.cxx
                                          Graf Gpad Minuit Foam RooStats XMLParser)
                                          
 
+if(builtin_gsl)
+  ROOT_ADD_BUILTIN_DEPENDENCIES(hist2workspace GSL)
+endif()
+
 file(COPY config/prepareHistFactory DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prepareHistFactory
                 PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ

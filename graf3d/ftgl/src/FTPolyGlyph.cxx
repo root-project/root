@@ -18,12 +18,12 @@ FTPolyGlyph::FTPolyGlyph( FT_GlyphSlot glyph, bool useDisplayList1)
     {
         return;
     }
-    
+
     unsigned int horizontalTextureScale = glyph->face->size->metrics.x_ppem * 64;
-    unsigned int verticalTextureScale = glyph->face->size->metrics.y_ppem * 64;        
-        
+    unsigned int verticalTextureScale = glyph->face->size->metrics.y_ppem * 64;
+
     vectoriser.MakeMesh( 1.0);
-    
+
     if( useDisplayList1)
     {
         glList = glGenLists( 1);
@@ -40,10 +40,10 @@ FTPolyGlyph::FTPolyGlyph( FT_GlyphSlot glyph, bool useDisplayList1)
             for( unsigned int pointIndex = 0; pointIndex < subMesh->PointCount(); ++pointIndex)
             {
                 FTPoint point = subMesh->Point(pointIndex);
-                
+
                 glTexCoord2f( point.X() / horizontalTextureScale,
                               point.Y() / verticalTextureScale);
-                
+
                 glVertex3f( point.X() / 64.0f,
                             point.Y() / 64.0f,
                             0.0f);
@@ -70,8 +70,8 @@ const FTPoint& FTPolyGlyph::Render( const FTPoint& pen)
 
     if( glList)
     {
-        glCallList( glList);    
+        glCallList( glList);
     }
-    
+
     return advance;
 }

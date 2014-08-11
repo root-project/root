@@ -224,12 +224,12 @@ TVirtualFitter(),
    fRobust    =kFALSE;
    fNfunctions = 0;
    fFormulaSize = 0;
-   fH = 0; 
+   fH = 0;
 }
 
 //______________________________________________________________________________
-TLinearFitter::TLinearFitter(Int_t ndim) : 
-   fVal() 
+TLinearFitter::TLinearFitter(Int_t ndim) :
+   fVal()
 {
    //The parameter stands for number of dimensions in the fitting formula
    //The input data is stored. If you don't want to store the input data,
@@ -250,7 +250,7 @@ TLinearFitter::TLinearFitter(Int_t ndim) :
    fRobust = kFALSE;
    fNfunctions = 0;
    fFormulaSize = 0;
-   fH = 0; 
+   fH = 0;
 }
 
 //______________________________________________________________________________
@@ -339,13 +339,13 @@ TLinearFitter::TLinearFitter(const TLinearFitter& tlf) :
    fAtbTemp(tlf.fAtbTemp),
    fAtbTemp2(tlf.fAtbTemp2),
    fAtbTemp3(tlf.fAtbTemp3),
-   fFunctions( * (TObjArray *)tlf.fFunctions.Clone()), 
+   fFunctions( * (TObjArray *)tlf.fFunctions.Clone()),
    fY(tlf.fY),
    fY2(tlf.fY2),
    fY2Temp(tlf.fY2Temp),
    fX(tlf.fX),
    fE(tlf.fE),
-   fInputFunction(tlf.fInputFunction), 
+   fInputFunction(tlf.fInputFunction),
    fVal(),
    fNpoints(tlf.fNpoints),
    fNfunctions(tlf.fNfunctions),
@@ -359,7 +359,7 @@ TLinearFitter::TLinearFitter(const TLinearFitter& tlf) :
    fChisquare(tlf.fChisquare),
    fH(tlf.fH),
    fRobust(tlf.fRobust),
-   fFitsample(tlf.fFitsample), 
+   fFitsample(tlf.fFitsample),
    fFixedParams(0)
 {
    // Copy ctor
@@ -369,11 +369,11 @@ TLinearFitter::TLinearFitter(const TLinearFitter& tlf) :
 
    if ( tlf.fFixedParams && fNfixed > 0 ) {
       fFixedParams=new Bool_t[fNfixed];
-      for(Int_t i=0; i<fNfixed; ++i) 
+      for(Int_t i=0; i<fNfixed; ++i)
          fFixedParams[i]=tlf.fFixedParams[i];
    }
-   if (tlf.fFormula) { 
-      fFormula = new char[fFormulaSize+1]; 
+   if (tlf.fFormula) {
+      fFormula = new char[fFormulaSize+1];
       strlcpy(fFormula,tlf.fFormula,fFormulaSize+1);
    }
 
@@ -385,11 +385,11 @@ TLinearFitter::~TLinearFitter()
 {
    // Linear fitter cleanup.
 
-   if (fFormula) { 
+   if (fFormula) {
       delete [] fFormula;
       fFormula = 0;
    }
-   if (fFixedParams) { 
+   if (fFixedParams) {
       delete [] fFixedParams;
       fFixedParams = 0;
    }
@@ -399,7 +399,7 @@ TLinearFitter::~TLinearFitter()
 }
 
 //______________________________________________________________________________
-TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf) 
+TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
 {
    // Assignment operator
 
@@ -419,21 +419,21 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fAtbTemp.ResizeTo(tlf.fAtbTemp);    fAtbTemp=tlf.fAtbTemp;
       fAtbTemp2.ResizeTo(tlf.fAtbTemp2);    fAtbTemp2=tlf.fAtbTemp2;
       fAtbTemp3.ResizeTo(tlf.fAtbTemp3);    fAtbTemp3=tlf.fAtbTemp3;
-      
-      fFunctions.Delete(); 
+
+      fFunctions.Delete();
       fFunctions= *(TObjArray*) tlf.fFunctions.Clone();
-      
-      fY.ResizeTo(tlf.fY);    fY = tlf.fY; 
+
+      fY.ResizeTo(tlf.fY);    fY = tlf.fY;
       fX.ResizeTo(tlf.fX);    fX = tlf.fX;
       fE.ResizeTo(tlf.fE);    fE = tlf.fE;
 
       fY2 = tlf.fY2;
       fY2Temp = tlf.fY2Temp;
       for(Int_t i = 0; i < 1000; i++) fVal[i] = tlf.fVal[i];
-      
+
       if(fInputFunction) delete fInputFunction; fInputFunction = 0;
       if(tlf.fInputFunction) fInputFunction = new TFormula(*tlf.fInputFunction);
-      
+
       fNpoints=tlf.fNpoints;
       fNfunctions=tlf.fNfunctions;
       fFormulaSize=tlf.fFormulaSize;
@@ -441,28 +441,28 @@ TLinearFitter& TLinearFitter::operator=(const TLinearFitter& tlf)
       fNfixed=tlf.fNfixed;
       fSpecial=tlf.fSpecial;
 
-      if(fFormula) delete [] fFormula; fFormula = 0; 
-      if (tlf.fFormula) { 
-         fFormula = new char[fFormulaSize+1]; 
+      if(fFormula) delete [] fFormula; fFormula = 0;
+      if (tlf.fFormula) {
+         fFormula = new char[fFormulaSize+1];
          strlcpy(fFormula,tlf.fFormula,fFormulaSize+1);
       }
 
       fIsSet=tlf.fIsSet;
       fStoreData=tlf.fStoreData;
       fChisquare=tlf.fChisquare;
-     
+
       fH=tlf.fH;
       fRobust=tlf.fRobust;
       fFitsample=tlf.fFitsample;
-       
-      if(fFixedParams) delete [] fFixedParams; fFixedParams = 0; 
+
+      if(fFixedParams) delete [] fFixedParams; fFixedParams = 0;
       if ( tlf.fFixedParams && fNfixed > 0 ) {
          fFixedParams=new Bool_t[fNfixed];
-         for(Int_t i=0; i< fNfixed; ++i) 
+         for(Int_t i=0; i< fNfixed; ++i)
             fFixedParams[i]=tlf.fFixedParams[i];
       }
 
-   } 
+   }
    return *this;
 }
 
@@ -506,12 +506,12 @@ void TLinearFitter::Add(TLinearFitter *tlf)
    }
    fY2 += tlf->fY2;
    fY2Temp += tlf->fY2Temp;
-   fNpoints += tlf->fNpoints;  
+   fNpoints += tlf->fNpoints;
    //fInputFunction=(TFormula*)tlf.fInputFunction->Clone();
 
    fChisquare=0;
    fH=0;
-   fRobust=0;   
+   fRobust=0;
 }
 
 //______________________________________________________________________________
@@ -544,7 +544,7 @@ void TLinearFitter::AddPoint(Double_t *x, Double_t y, Double_t e)
    // (see implementation of SetFormula method)
    if (fFunctions.IsEmpty()&&(!fInputFunction)&&(fSpecial<=200)){
       Error("AddPoint", "Point can't be added, because the formula hasn't been set");
-      return; 
+      return;
    }
    if (!fRobust) AddToDesign(x, y, e);
 }
@@ -684,7 +684,7 @@ void TLinearFitter::AddTempMatrices()
       fAtbTemp3.Zero();
       fAtbTemp2.Zero();
       fAtbTemp.Zero();
-      
+
       fY2+=fY2Temp;
       fY2Temp=0;
       }
@@ -871,7 +871,7 @@ Int_t TLinearFitter::Eval()
          return 1;
       }
    }
-  
+
    AddTempMatrices();
 
 //fixing fixed parameters, if there are any
@@ -1027,7 +1027,7 @@ void TLinearFitter::ReleaseParameter(Int_t ipar)
 void TLinearFitter::GetAtbVector(TVectorD &v)
 {
    //Get the Atb vector - a vector, used for internal computations
-   
+
    if (v.GetNoElements()!=fAtb.GetNoElements())
       v.ResizeTo(fAtb.GetNoElements());
    v = fAtb;
@@ -1413,12 +1413,12 @@ Int_t TLinearFitter::Merge(TCollection *list)
       }
       Add(lfit);
    }
-   return 0;   
+   return 0;
 }
 //______________________________________________________________________________
 void TLinearFitter::SetBasisFunctions(TObjArray * functions)
 {
-   //set the basis functions in case the fitting function is not 
+   //set the basis functions in case the fitting function is not
    // set directly
    // The TLinearFitter will manage and delete the functions contained in the list
 
@@ -1454,7 +1454,7 @@ void TLinearFitter::SetBasisFunctions(TObjArray * functions)
    fChisquare=0;
 
 }
-   
+
 
 //______________________________________________________________________________
 void TLinearFitter::SetDim(Int_t ndim)
@@ -1759,7 +1759,7 @@ Int_t TLinearFitter::GraphLinearFitter(Double_t h)
             if (e<0 || fitOption.W1)
                e=1;
             temp2/=(e*e);
-            
+
             sumtotal+=temp2;
          }
          fChisquare=sumtotal;
@@ -1824,14 +1824,14 @@ Int_t TLinearFitter::Graph2DLinearFitter(Double_t h)
                continue;
             }
             z   = gz[bin];
-            
+
             temp=f2->Eval(x[0], x[1]);
             temp2=(z-temp)*(z-temp);
             e=gr->GetErrorZ(bin);
             if (e<0 || fitOption.W1)
                e=1;
             temp2/=(e*e);
-            
+
             sumtotal+=temp2;
          }
          fChisquare=sumtotal;
@@ -1899,10 +1899,10 @@ Int_t TLinearFitter::MultiGraphLinearFitter(Double_t h)
                if (e<0 || fitOption.W1)
                   e=1;
                temp2/=(e*e);
-               
+
                sumtotal+=temp2;
             }
-            
+
          }
          fChisquare=sumtotal;
          f1->SetChisquare(fChisquare);
@@ -1980,7 +1980,7 @@ Int_t TLinearFitter::HistLinearFitter()
                   if (!f1->IsInside(x)) continue;
                   bin = hfit->GetBin(binx,biny,binz);
                   cu  = hfit->GetBinContent(bin);
-                  
+
                   if (fitOption.W1) {
                      if (fitOption.W1==1 && cu == 0) continue;
                      eu = 1;
@@ -1995,7 +1995,7 @@ Int_t TLinearFitter::HistLinearFitter()
                }
             }
          }
-         
+
          fChisquare=sumtotal;
          f1->SetChisquare(fChisquare);
       }
@@ -2008,14 +2008,14 @@ void TLinearFitter::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
       Int_t old_matr_size = fNfunctions;
-      R__b.ReadClassBuffer(TLinearFitter::Class(),this); 
+      R__b.ReadClassBuffer(TLinearFitter::Class(),this);
       if (old_matr_size < fNfunctions) {
          fDesignTemp.ResizeTo(fNfunctions, fNfunctions);
          fAtbTemp.ResizeTo(fNfunctions);
-         
+
          fDesignTemp2.ResizeTo(fNfunctions, fNfunctions);
          fDesignTemp3.ResizeTo(fNfunctions, fNfunctions);
-         
+
          fAtbTemp2.ResizeTo(fNfunctions);
          fAtbTemp3.ResizeTo(fNfunctions);
       }
@@ -2023,7 +2023,7 @@ void TLinearFitter::Streamer(TBuffer &R__b)
       if (fAtb.NonZeros()==0) AddTempMatrices();
       R__b.WriteClassBuffer(TLinearFitter::Class(),this);
    }
-} 
+}
 
 //______________________________________________________________________________
 Int_t TLinearFitter::EvalRobust(Double_t h)

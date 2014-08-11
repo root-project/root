@@ -1,6 +1,6 @@
 340
 1 (n,total)
-Neutron total cross section.  Sum of MT=2, 4, 5, 11, 16-18, 
+Neutron total cross section.  Sum of MT=2, 4, 5, 11, 16-18,
 22-26, 28-37, 41-42, 44-45, and 102-117.
 
 Redundant.  Undefined for incident charged particles.
@@ -34,20 +34,20 @@ in File 6.  Not allowed in Files 4, 5.
 10 (z,continuum)
 Total continuum reaction; exclues all discrete reactions.
 
-Redundant; to be used for derived files only. 
+Redundant; to be used for derived files only.
 
 11 (z,2nd)
-Production of two neutrons and a deuteron, plus a residual. 
+Production of two neutrons and a deuteron, plus a residual.
 
 
 
 16 (z,2n)
-Production of two neutrons, plus a residual. 
+Production of two neutrons, plus a residual.
 
 
 
 17 (z,2n)
-Production of three neutrons, plus a residual. 
+Production of three neutrons, plus a residual.
 
 
 
@@ -58,115 +58,115 @@ if present.
 Redundant if MT=19 is present.  Basic otherwise.
 
 19 (z,f)
-First-chance fission. 
+First-chance fission.
 
 
 
 20 (z,nf)
-Second-chance fission. 
+Second-chance fission.
 
 
 
 21 (z,2nf)
-Third-chance fission. 
+Third-chance fission.
 
 
 
 22 (z,na)
-Production of a neutron and alpha particle, plus a residual. 
+Production of a neutron and alpha particle, plus a residual.
 
 
 
 23 (z,n3a)
-Production of a neutron and three alpha particles, plus a residual. 
+Production of a neutron and three alpha particles, plus a residual.
 
 
 
 24 (z,2na)
-Production of two neutrons and an alpha particle, plus a residual. 
+Production of two neutrons and an alpha particle, plus a residual.
 
 
 
 25 (z,3na)
-Production of three neutrons and an alpha particle, plus a residual. 
+Production of three neutrons and an alpha particle, plus a residual.
 
 
 
 27 (z,abs)
-Absorption.  Sum of MT=18 and MT=102-117. 
+Absorption.  Sum of MT=18 and MT=102-117.
 
 Redundant.  Rarely used.
 
 28 (z,np)
-Production of a neutron and a proton, plus a residual. 
+Production of a neutron and a proton, plus a residual.
 
 
 
 29 (z,n2a)
-Production of a neutron and two alpha particles, plus a residual. 
+Production of a neutron and two alpha particles, plus a residual.
 
 
 
 30 (z,2n2a)
-Production of two neutrons and two alpha particles, plus a residual. 
+Production of two neutrons and two alpha particles, plus a residual.
 
 
 
 32 (z,nd)
-Production of a neutron and a deuteron, plus a residual. 
+Production of a neutron and a deuteron, plus a residual.
 
 
 
 33 (z,nt)
-Production of a neutron and a triton, plus a residual. 
+Production of a neutron and a triton, plus a residual.
 
 
 
 34 (z,n3He)
-Production of a neutron and a 3He particle, 
+Production of a neutron and a 3He particle,
 plus a residual.
 
 
 
 35 (z,nd2a)
-Production of a neutron, a deuteron, and two alpha particles, 
+Production of a neutron, a deuteron, and two alpha particles,
 plus a residual.
 
 
 
 36 (z,nt2a)
-Production of a neutron, a triton, and two alpha particles, 
+Production of a neutron, a triton, and two alpha particles,
 plus a residual.
 
 
 
 37 (z,4n)
-Production of four neutrons, plus a residual. 
+Production of four neutrons, plus a residual.
 
 
 
 38 (z,3nf)
-Fourth-change fission. 
+Fourth-change fission.
 
 
 
 41 (z,2np)
-Production of two neutrons and a proton, plus a residual. 
+Production of two neutrons and a proton, plus a residual.
 
 
 
 42 (z,3np)
-Production of three neutrons and a proton, plus a residual. 
+Production of three neutrons and a proton, plus a residual.
 
 
 
 44 (z,n2p)
-Production of a neutron and two protons, plus a residual. 
+Production of a neutron and two protons, plus a residual.
 
 
 
 45 (z,npa)
-Production of a neutron, a proton, and an alpha particle, 
+Production of a neutron, a proton, and an alpha particle,
 plus a residual.
 
 
@@ -424,7 +424,7 @@ above discrete representation.
 
 
 101 (z,disap)
-Disappearance.  Sum of MT=102-117. 
+Disappearance.  Sum of MT=102-117.
 
 Redundant.  Rarely used.
 
@@ -455,10 +455,10 @@ For incident tritons, this is inelastic scattering, and MT=700 is
 undefined (use MT=2).
 
 106 (z,3He)
-Production of a <SUP3He particles, plus a residual.  Sum 
+Production of a <SUP3He particles, plus a residual.  Sum
 of MT=750-799, if they are present.
 
-For incident 3He particles, this is inelastic scattering, 
+For incident 3He particles, this is inelastic scattering,
 and MT=750 is undefined (use MT=2).
 
 107 (z,a)
@@ -469,7 +469,7 @@ For incident alphas, this is inelastic scattering, and MT=800 is
 undefined (use MT=2).
 
 108 (z,2a)
-Production of two alphas, plus a residual. 
+Production of two alphas, plus a residual.
 
 
 
@@ -484,7 +484,7 @@ Production of two protons, plus a residual.
 
 
 112 (z,pa)
-Production of a proton and an alpha particle, plus a residual. 
+Production of a proton and an alpha particle, plus a residual.
 
 
 
@@ -509,7 +509,7 @@ Production of a proton and a triton, plus a residual.
 
 
 117 (z,da)
-Production of a deuteron and an alpha particle, plus a residual. 
+Production of a deuteron and an alpha particle, plus a residual.
 
 
 
@@ -1414,601 +1414,601 @@ above discrete representation.
 
 
 750 (z,3He0)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the ground state.
 
 Not allowed for incident 3He particles.  Use MT=2.
 
 751 (z,3He1)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the first excited state.
 
 
 
 752 (z,3He2)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 2nd excited state.
 
 
 
 753 (z,3He3)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 3rd excited state.
 
 
 
 754 (z,3He4)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 4th excited state.
 
 
 
 755 (z,3He5)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 5th excited state.
 
 
 
 756 (z,3He6)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 6th excited state.
 
 
 
 757 (z,3He7)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 7th excited state.
 
 
 
 758 (z,3He8)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 8th excited state.
 
 
 
 759 (z,3He9)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 9th excited state.
 
 
 
 760 (z,3He10)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 10th excited state.
 
 
 
 761 (z,3He11)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 11th excited state.
 
 
 
 762 (z,3He12)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 12th excited state.
 
 
 
 763 (z,3He13)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 13th excited state.
 
 
 
 764 (z,3He14)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 14th excited state.
 
 
 
 765 (z,3He15)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 15th excited state.
 
 
 
 766 (z,3He16)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 16th excited state.
 
 
 
 767 (z,3He17)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 17th excited state.
 
 
 
 768 (z,3He18)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 18th excited state.
 
 
 
 769 (z,3He19)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 19th excited state.
 
 
 
 770 (z,3He20)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 20th excited state.
 
 
 
 771 (z,3He21)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 21th excited state.
 
 
 
 772 (z,3He22)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 22th excited state.
 
 
 
 773 (z,3He23)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 23th excited state.
 
 
 
 774 (z,3He24)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 24th excited state.
 
 
 
 775 (z,3He25)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 25th excited state.
 
 
 
 776 (z,3He26)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 26th excited state.
 
 
 
 777 (z,3He27)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 27th excited state.
 
 
 
 778 (z,3He28)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 28th excited state.
 
 
 
 779 (z,3He29)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 29th excited state.
 
 
 
 780 (z,3He30)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 30th excited state.
 
 
 
 781 (z,3He31)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 31th excited state.
 
 
 
 782 (z,3He32)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 32th excited state.
 
 
 
 783 (z,3He33)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 33th excited state.
 
 
 
 784 (z,3He34)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 34th excited state.
 
 
 
 785 (z,3He35)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 35th excited state.
 
 
 
 786 (z,3He36)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 36th excited state.
 
 
 
 787 (z,3He37)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 37th excited state.
 
 
 
 788 (z,3He38)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 38th excited state.
 
 
 
 789 (z,3He39)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 39th excited state.
 
 
 
 790 (z,3He40)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 40th excited state.
 
 
 
 791 (z,3He41)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 41th excited state.
 
 
 
 792 (z,3He42)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 42th excited state.
 
 
 
 793 (z,3He43)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 43th excited state.
 
 
 
 794 (z,3He44)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 44th excited state.
 
 
 
 795 (z,3He45)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 45th excited state.
 
 
 
 796 (z,3He46)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 46th excited state.
 
 
 
 797 (z,3He47)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 47th excited state.
 
 
 
 798 (z,3He48)
-Production of a 3He particle, leaving the residual 
+Production of a 3He particle, leaving the residual
 nucleus in the 48th excited state.
 
 
 
 799 (z,3Hec)
-Production of a 3He particle in the continuum not 
+Production of a 3He particle in the continuum not
 included in the above discrete representation.
 
 
 
 800 (z,a0)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the ground state.
 
 Not allowed for incident alphas.  Use MT=2.
 
 801 (z,a1)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the first excited state.
 
 
 
 802 (z,a2)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 2nd excited state.
 
 
 
 803 (z,a3)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 3rd excited state.
 
 
 
 804 (z,a4)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 4th excited state.
 
 
 
 805 (z,a5)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 5th excited state.
 
 
 
 806 (z,a6)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 6th excited state.
 
 
 
 807 (z,a7)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 7th excited state.
 
 
 
 808 (z,a8)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 8th excited state.
 
 
 
 809 (z,a9)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 9th excited state.
 
 
 
 810 (z,a10)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 10th excited state.
 
 
 
 811 (z,a11)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 11th excited state.
 
 
 
 812 (z,a12)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 12th excited state.
 
 
 
 813 (z,a13)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 13th excited state.
 
 
 
 814 (z,a14)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 14th excited state.
 
 
 
 815 (z,a15)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 15th excited state.
 
 
 
 816 (z,a16)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 16th excited state.
 
 
 
 817 (z,a17)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 17th excited state.
 
 
 
 818 (z,a18)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 18th excited state.
 
 
 
 819 (z,a19)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 19th excited state.
 
 
 
 820 (z,a20)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 20th excited state.
 
 
 
 821 (z,a21)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 21th excited state.
 
 
 
 822 (z,a22)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 22th excited state.
 
 
 
 823 (z,a23)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 23th excited state.
 
 
 
 824 (z,a24)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 24th excited state.
 
 
 
 825 (z,a25)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 25th excited state.
 
 
 
 826 (z,a26)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 26th excited state.
 
 
 
 827 (z,a27)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 27th excited state.
 
 
 
 828 (z,a28)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 28th excited state.
 
 
 
 829 (z,a29)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 29th excited state.
 
 
 
 830 (z,a30)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 30th excited state.
 
 
 
 831 (z,a31)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 31th excited state.
 
 
 
 832 (z,a32)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 32th excited state.
 
 
 
 833 (z,a33)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 33th excited state.
 
 
 
 834 (z,a34)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 34th excited state.
 
 
 
 835 (z,a35)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 35th excited state.
 
 
 
 836 (z,a36)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 36th excited state.
 
 
 
 837 (z,a37)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 37th excited state.
 
 
 
 838 (z,a38)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 38th excited state.
 
 
 
 839 (z,a39)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 39th excited state.
 
 
 
 840 (z,a40)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 40th excited state.
 
 
 
 841 (z,a41)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 41th excited state.
 
 
 
 842 (z,a42)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 42th excited state.
 
 
 
 843 (z,a43)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 43th excited state.
 
 
 
 844 (z,a44)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 44th excited state.
 
 
 
 845 (z,a45)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 45th excited state.
 
 
 
 846 (z,a46)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 46th excited state.
 
 
 
 847 (z,a47)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 47th excited state.
 
 
 
 848 (z,a48)
-Production of an alpha particle, leaving the residual 
+Production of an alpha particle, leaving the residual
 nucleus in the 48th excited state.
 
 
 
 849 (z,ac)
-Production of an alpha particle in the continuum not 
+Production of an alpha particle in the continuum not
 included in the above discrete representation.
 
 

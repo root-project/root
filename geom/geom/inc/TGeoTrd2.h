@@ -16,7 +16,7 @@
 #include "TGeoBBox.h"
 #endif
 
-  
+
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TGeoTrd2 - a trapezoid with both x and y lengths varying with z. It    //
@@ -34,7 +34,7 @@ protected:
    Double_t              fDy1; // half length in Y at lower Z surface (-dz)
    Double_t              fDy2; // half length in Y at higher Z surface (+dz)
    Double_t              fDz;  // half length in Z
- 
+
    // methods
 
 public:
@@ -53,13 +53,13 @@ public:
    virtual void          ComputeBBox();
    virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
    virtual void          ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize);
-   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
-   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
                                 Double_t start, Double_t step);
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;

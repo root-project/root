@@ -13,7 +13,7 @@ ClassImp(TUsrHit)
    fEventNumber = ev;
    fModuleNumber = ev%4;
    fChannel  = ev+1000;
-   for (Int_t i=0;i<3;i++) fEventTime[i] = 100+ev;  
+   for (Int_t i=0;i<3;i++) fEventTime[i] = 100+ev;
 }
 
 //______________________________________________________

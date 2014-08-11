@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Author: L. Moneta    10/2006  
+// Author: L. Moneta    10/2006
 
 /**********************************************************************
  *                                                                    *
@@ -32,7 +32,7 @@ namespace ROOT {
 
    namespace Minuit2 {
 
-/** 
+/**
 
 
 template wrapped class for adapting to FumiliFCNBase signature
@@ -43,33 +43,33 @@ template wrapped class for adapting to FumiliFCNBase signature
 
 */
 
-template< class Function> 
+template< class Function>
 class FumiliFCNAdapter : public FumiliFCNBase {
 
 public:
 
-//   typedef ROOT::Math::FitMethodFunction Function; 
-   typedef typename Function::Type_t Type_t; 
+//   typedef ROOT::Math::FitMethodFunction Function;
+   typedef typename Function::Type_t Type_t;
 
-   FumiliFCNAdapter(const Function & f, unsigned int ndim, double up = 1.) : 
+   FumiliFCNAdapter(const Function & f, unsigned int ndim, double up = 1.) :
       FumiliFCNBase( ndim ),
-      fFunc(f) , 
+      fFunc(f) ,
       fUp (up)
    {}
 
    ~FumiliFCNAdapter() {}
 
-  
-   double operator()(const std::vector<double>& v) const { 
-      return fFunc.operator()(&v[0]); 
+
+   double operator()(const std::vector<double>& v) const {
+      return fFunc.operator()(&v[0]);
    }
-   double operator()(const double *  v) const { 
-      return fFunc.operator()(v); 
+   double operator()(const double *  v) const {
+      return fFunc.operator()(v);
    }
    double Up() const {return fUp;}
 
-   void SetErrorDef(double up) { fUp = up; } 
-  
+   void SetErrorDef(double up) { fUp = up; }
+
    //virtual std::vector<double> Gradient(const std::vector<double>&) const;
 
    // forward interface
@@ -77,24 +77,24 @@ public:
 
 
  /**
-     evaluate gradient hessian and function value needed by fumili 
+     evaluate gradient hessian and function value needed by fumili
    */
    void EvaluateAll( const std::vector<double> & v);
 
 private:
-   
+
 
 //data member
 
-   const Function & fFunc; 
-   double fUp; 
+   const Function & fFunc;
+   double fUp;
 };
 
 
 template<class Function>
-void FumiliFCNAdapter<Function>::EvaluateAll( const std::vector<double> & v) { 
+void FumiliFCNAdapter<Function>::EvaluateAll( const std::vector<double> & v) {
 
-   //typedef FumiliFCNAdapter::Function Function; 
+   //typedef FumiliFCNAdapter::Function Function;
 
    //evaluate all elements
    unsigned int npar = Dimension();
@@ -102,66 +102,66 @@ void FumiliFCNAdapter<Function>::EvaluateAll( const std::vector<double> & v) {
    assert(npar == v.size());
    //must distinguish case of likelihood or LS
 
-   std::vector<double> & grad = Gradient(); 
-   std::vector<double> & hess = Hessian(); 
-   // reset  
+   std::vector<double> & grad = Gradient();
+   std::vector<double> & hess = Hessian();
+   // reset
    assert(grad.size() == npar);
-   grad.assign( npar, 0.0); 
+   grad.assign( npar, 0.0);
    hess.assign( hess.size(), 0.0);
-   
-   double sum = 0; 
+
+   double sum = 0;
    unsigned int ndata = fFunc.NPoints();
 
-   std::vector<double> gf(npar); 
- 
+   std::vector<double> gf(npar);
+
    //loop on the data points
 
-   
-   // assume for now least-square
-   if (fFunc.Type() == Function::kLeastSquare) { 
 
-      for (unsigned int i = 0; i < ndata; ++i) { 
-         // calculate data element and gradient 
+   // assume for now least-square
+   if (fFunc.Type() == Function::kLeastSquare) {
+
+      for (unsigned int i = 0; i < ndata; ++i) {
+         // calculate data element and gradient
          double fval = fFunc.DataElement(&v.front(), i, &gf[0]);
 
          // t.b.d should protect for bad  values of fval
          sum += fval*fval;
 
-         for (unsigned int j = 0; j < npar; ++j) { 
+         for (unsigned int j = 0; j < npar; ++j) {
             grad[j] += 2. * fval * gf[j];
-            for (unsigned int k = j; k < npar; ++ k) { 
-               int idx =  j + k*(k+1)/2; 
-               hess[idx] += 2.0 * gf[j] * gf[k];  
+            for (unsigned int k = j; k < npar; ++ k) {
+               int idx =  j + k*(k+1)/2;
+               hess[idx] += 2.0 * gf[j] * gf[k];
             }
          }
       }
    }
-   else if (fFunc.Type() == Function::kLogLikelihood) {  
+   else if (fFunc.Type() == Function::kLogLikelihood) {
 
 
-      for (unsigned int i = 0; i < ndata; ++i) { 
+      for (unsigned int i = 0; i < ndata; ++i) {
 
-         // calculate data element and gradient 
+         // calculate data element and gradient
          // return value is log of pdf and derivative of the log(Pdf)
          double fval = fFunc.DataElement(&v.front(), i, &gf[0]);
 
          sum -= fval;
-         
-         for (unsigned int j = 0; j < npar; ++j) { 
-            double gfj = gf[j] ; 
+
+         for (unsigned int j = 0; j < npar; ++j) {
+            double gfj = gf[j] ;
             grad[j] -= gfj;
-            for (unsigned int k = j; k < npar; ++ k) { 
-               int idx =  j + k*(k+1)/2; 
-               hess[idx] +=  gfj * gf[k] ;  
+            for (unsigned int k = j; k < npar; ++ k) {
+               int idx =  j + k*(k+1)/2;
+               hess[idx] +=  gfj * gf[k] ;
             }
          }
       }
    }
-   else { 
+   else {
       MN_ERROR_MSG("FumiliFCNAdapter: type of fit method is not supported, it must be chi2 or log-likelihood");
    }
 }
-      
+
 
    } // end namespace Minuit2
 

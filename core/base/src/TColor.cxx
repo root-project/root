@@ -264,7 +264,7 @@ A new color can be created transparent the following way:
 An example of tranparency usage with parallel coordinates can be found
 in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>.
 <p>
-To ease the creation of a transparent color the static method 
+To ease the creation of a transparent color the static method
 <tt>GetColorTransparent(Int_t color, Float_t a)</tt> is provided.
 In the following example the <tt>trans_red</tt> color index point to
 a red color 30% transparent. The alpha value of the color index
@@ -274,7 +274,7 @@ a red color 30% transparent. The alpha value of the color index
    Int_t trans_red = GetColorTransparent(kRed, 0.3);
 </pre>
 <p>
-This function is also used in the methods 
+This function is also used in the methods
 <tt>SetFillColorAlpha()</tt>, <tt>SetLineColorAlpha()</tt>,
 <tt>SetMarkerColorAlpha()</tt> and <tt>SetTextColorAlpha()</tt>.
 In the following example the fill color of the histogram <tt>histo</tt>
@@ -1294,16 +1294,16 @@ Int_t TColor::GetColorTransparent(Int_t n, Float_t a)
    Static function: Returns the transparent color number corresponding to n.
    The transparency level is given by the alpha value a.
    End_html */
-   
+
    if (n < 0) return -1;
-   
+
    TColor *color = gROOT->GetColor(n);
    TColor *colort = new TColor(gROOT->GetListOfColors()->GetLast()+1,
                                color->GetRed(), color->GetGreen(), color->GetBlue());
    colort->SetAlpha(a);
    colort->SetName(Form("%s_transparent",color->GetName()));
    return colort->GetNumber();
-}   
+}
 
 
 //______________________________________________________________________________

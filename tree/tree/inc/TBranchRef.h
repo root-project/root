@@ -53,7 +53,7 @@ public:
    virtual void    ResetAfterMerge(TFileMergeInfo *);
    virtual Int_t   SetParent(const TObject* obj, Int_t branchID);
    virtual void    SetRequestedEntry(Long64_t entry) {fRequestedEntry = entry;}
-   
+
    ClassDef(TBranchRef,1);  //to support referenced objects on other branches
 };
 

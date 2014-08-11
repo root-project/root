@@ -9,5 +9,10 @@
 
 ### TLatex
 
--  The interface to TMathText did not work when the size was set in pixel 
-   (precision 3). 
+-  The interface to TMathText did not work when the size was set in pixel
+   (precision 3).
+
+### TTeXDump
+
+- The marker definition is now inside the picture definition. Being outside
+  produced some side effect on the picture positioning. (cf Jira Report 6470).

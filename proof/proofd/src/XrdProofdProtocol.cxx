@@ -167,6 +167,10 @@ int XrdProofdProtCfg::DoDirective(XrdProofdDirective *d,
    return 0;
 }
 
+#if (ROOTXRDVERS >= 300030000)
+XrdVERSIONINFO(XrdgetProtocol,xproofd);
+XrdVERSIONINFO(XrdgetProtocolPort,xproofd);
+#endif
 
 extern "C" {
 //_________________________________________________________________________________
@@ -380,7 +384,7 @@ int XrdProofdProtocol::StartRootd(XrdLink *lp, XrdOucString &emsg)
    if (fgMgr->RootdFork()) {
 
       // Start rootd using fork()
-      
+
       pid_t pid;
       if ((pid = fgMgr->Sched()->Fork(lp->Name()))) {
          if (pid < 0) {
@@ -390,7 +394,7 @@ int XrdProofdProtocol::StartRootd(XrdLink *lp, XrdOucString &emsg)
          return 0;
       }
       // In the child ...
-      
+
       // Restablish standard error for the program we will exec
       dup2(fStdErrFD, STDERR_FILENO);
       close(fStdErrFD);
@@ -406,9 +410,9 @@ int XrdProofdProtocol::StartRootd(XrdLink *lp, XrdOucString &emsg)
       _exit(17);
 
    } else {
-      
+
       // Start rootd using system + proofexecv
-   
+
       // ROOT version
       XrdROOT *roo = fgMgr->ROOTMgr()->DefaultVersion();
       if (!roo) {
@@ -464,7 +468,7 @@ int XrdProofdProtocol::StartRootd(XrdLink *lp, XrdOucString &emsg)
    // Done
    return 0;
 }
-   
+
 //_____________________________________________________________________________
 int XrdProofdProtocol::Stats(char *buff, int blen, int)
 {
@@ -749,8 +753,8 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
          if (!fd && errno != ENOENT) {
             TRACE(XERR, "unable to create path: " <<discpath<<" (errno: "<<errno<<")");
          } else if (fd) {
-            fclose(fd);  
-         } 
+            fclose(fd);
+         }
 
          // Remove protocol and response from attached client/proofserv instances
          // Set reconnect flag if proofserv instances attached to this client are still running
@@ -761,7 +765,7 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
             fgMgr->SessionMgr()->DisconnectFromProofServ(fPid);
             if((fConnType == 0) && fgMgr->SessionMgr()->Alive(this)) {
                TRACE(REQ, "Non-destroyed proofserv processes attached to this protocol ("<<this<<
-                          "), setting reconnect time");             
+                          "), setting reconnect time");
                fgMgr->SessionMgr()->SetReconnectTime(true);
             }
             fgMgr->SessionMgr()->CheckActiveSessions(0);
@@ -1272,7 +1276,7 @@ int XrdProofdProtocol::Ping()
    TRACEP(this, REQ, "psid: "<<psid<<", async: "<<asyncopt);
 
    // For connections to servers find the server session; manager connections
-   // (psid == -1) do not have any session attached 
+   // (psid == -1) do not have any session attached
    XrdProofdProofServ *xps = 0;
    if (!fPClient || (psid > -1 && !(xps = fPClient->GetServer(psid)))) {
       TRACEP(this,  XERR, "session ID not found: "<<psid);

@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors:  M. Fischler  2005  
+// Authors:  M. Fischler  2005
 
  /**********************************************************************
   *                                                                    *
@@ -24,39 +24,39 @@
 #include <algorithm>
 
 //#ifdef TEX
-/**   
+/**
 
-	A variable names bgamma appears in several places in this file. A few
-	words of elaboration are needed to make its meaning clear.  On page 69
-	of Misner, Thorne and Wheeler, (Exercise 2.7) the elements of the matrix
-	for a general Lorentz boost are given as
+   A variable names bgamma appears in several places in this file. A few
+   words of elaboration are needed to make its meaning clear.  On page 69
+   of Misner, Thorne and Wheeler, (Exercise 2.7) the elements of the matrix
+   for a general Lorentz boost are given as
 
-	\f[	\Lambda^{j'}_k = \Lambda^{k'}_j
-			     = (\gamma - 1) n^j n^k + \delta^{jk}  \f]
+   \f[   \Lambda^{j'}_k = \Lambda^{k'}_j
+              = (\gamma - 1) n^j n^k + \delta^{jk}  \f]
 
-	where the n^i are unit vectors in the direction of the three spatial
-	axes.  Using the definitions, \f$ n^i = \beta_i/\beta \f$ , then, for example,
+   where the n^i are unit vectors in the direction of the three spatial
+   axes.  Using the definitions, \f$ n^i = \beta_i/\beta \f$ , then, for example,
 
-	\f[	\Lambda_{xy} = (\gamma - 1) n_x n_y
-			     = (\gamma - 1) \beta_x \beta_y/\beta^2  \f]
+   \f[   \Lambda_{xy} = (\gamma - 1) n_x n_y
+              = (\gamma - 1) \beta_x \beta_y/\beta^2  \f]
 
-	By definition, \f[	\gamma^2 = 1/(1 - \beta^2)  \f]
+   By definition, \f[   \gamma^2 = 1/(1 - \beta^2)  \f]
 
-	so that	\f[	\gamma^2 \beta^2 = \gamma^2 - 1  \f]
+   so that   \f[   \gamma^2 \beta^2 = \gamma^2 - 1  \f]
 
-	or	\f[	\beta^2 = (\gamma^2 - 1)/\gamma^2  \f]
+   or   \f[   \beta^2 = (\gamma^2 - 1)/\gamma^2  \f]
 
-	If we insert this into the expression for \f$ \Lambda_{xy} \f$, we get
+   If we insert this into the expression for \f$ \Lambda_{xy} \f$, we get
 
-	\f[	\Lambda_{xy} = (\gamma - 1) \gamma^2/(\gamma^2 - 1) \beta_x \beta_y \f]
+   \f[   \Lambda_{xy} = (\gamma - 1) \gamma^2/(\gamma^2 - 1) \beta_x \beta_y \f]
 
-	or, finally
+   or, finally
 
-	\f[	\Lambda_{xy} = \gamma^2/(\gamma+1) \beta_x \beta_y  \f]
+   \f[   \Lambda_{xy} = \gamma^2/(\gamma+1) \beta_x \beta_y  \f]
 
-	The expression \f$ \gamma^2/(\gamma+1) \f$ is what we call <em>bgamma</em> in the code below.
+   The expression \f$ \gamma^2/(\gamma+1) \f$ is what we call <em>bgamma</em> in the code below.
 
-	\class ROOT::Math::Boost
+   \class ROOT::Math::Boost
 */
 //#endif
 
@@ -77,11 +77,11 @@ void Boost::SetComponents (Scalar bx, Scalar by, Scalar bz) {
    // set the boost beta as 3 components
    Scalar bp2 = bx*bx + by*by + bz*bz;
    if (bp2 >= 1) {
-      GenVector::Throw ( 
+      GenVector::Throw (
                               "Beta Vector supplied to set Boost represents speed >= c");
-      // SetIdentity(); 
+      // SetIdentity();
       return;
-   }    
+   }
    Scalar gamma = 1.0 / std::sqrt(1.0 - bp2);
    Scalar bgamma = gamma * gamma / (1.0 + gamma);
    fM[kXX] = 1.0 + bgamma * bx * bx;
@@ -113,11 +113,11 @@ Boost::BetaVector() const {
 }
 
 void Boost::GetLorentzRotation (Scalar r[]) const {
-   // get Lorentz rotation corresponding to this boost as an array of 16 values 
-   r[kLXX] = fM[kXX];  r[kLXY] = fM[kXY];  r[kLXZ] = fM[kXZ];  r[kLXT] = fM[kXT];  
-   r[kLYX] = fM[kXY];  r[kLYY] = fM[kYY];  r[kLYZ] = fM[kYZ];  r[kLYT] = fM[kYT];  
-   r[kLZX] = fM[kXZ];  r[kLZY] = fM[kYZ];  r[kLZZ] = fM[kZZ];  r[kLZT] = fM[kZT];  
-   r[kLTX] = fM[kXT];  r[kLTY] = fM[kYT];  r[kLTZ] = fM[kZT];  r[kLTT] = fM[kTT];  
+   // get Lorentz rotation corresponding to this boost as an array of 16 values
+   r[kLXX] = fM[kXX];  r[kLXY] = fM[kXY];  r[kLXZ] = fM[kXZ];  r[kLXT] = fM[kXT];
+   r[kLYX] = fM[kXY];  r[kLYY] = fM[kYY];  r[kLYZ] = fM[kYZ];  r[kLYT] = fM[kYT];
+   r[kLZX] = fM[kXZ];  r[kLZY] = fM[kYZ];  r[kLZZ] = fM[kZZ];  r[kLZT] = fM[kZT];
+   r[kLTX] = fM[kXT];  r[kLTY] = fM[kYT];  r[kLTZ] = fM[kZT];  r[kLTT] = fM[kTT];
 }
 
 void Boost::Rectify() {
@@ -125,16 +125,16 @@ void Boost::Rectify() {
    // but may have drifted due to round-off error from many operations,
    // this forms an "exact" orthosymplectic matrix for the Lorentz Rotation
    // again.
-   
-   if (fM[kTT] <= 0) {	
-      GenVector::Throw ( 
+
+   if (fM[kTT] <= 0) {
+      GenVector::Throw (
                               "Attempt to rectify a boost with non-positive gamma");
       return;
-   }    
+   }
    DisplacementVector3D< Cartesian3D<Scalar> > beta ( fM[kXT], fM[kYT], fM[kZT] );
    beta /= fM[kTT];
-   if ( beta.mag2() >= 1 ) {			    
-      beta /= ( beta.R() * ( 1.0 + 1.0e-16 ) );  
+   if ( beta.mag2() >= 1 ) {
+      beta /= ( beta.R() * ( 1.0 + 1.0e-16 ) );
    }
    SetComponents ( beta );
 }
@@ -146,8 +146,8 @@ Boost::operator() (const LorentzVector< PxPyPzE4D<double> > & v) const {
    Scalar y = v.Py();
    Scalar z = v.Pz();
    Scalar t = v.E();
-   return LorentzVector< PxPyPzE4D<double> > 
-      ( fM[kXX]*x + fM[kXY]*y + fM[kXZ]*z + fM[kXT]*t 
+   return LorentzVector< PxPyPzE4D<double> >
+      ( fM[kXX]*x + fM[kXY]*y + fM[kXZ]*z + fM[kXT]*t
         , fM[kXY]*x + fM[kYY]*y + fM[kYZ]*z + fM[kYT]*t
         , fM[kXZ]*x + fM[kYZ]*y + fM[kZZ]*z + fM[kZT]*t
         , fM[kXT]*x + fM[kYT]*y + fM[kZT]*z + fM[kTT]*t );
@@ -161,10 +161,10 @@ void Boost::Invert() {
 }
 
 Boost Boost::Inverse() const {
-   // return inverse of boost 
+   // return inverse of boost
    Boost tmp(*this);
    tmp.Invert();
-   return tmp; 
+   return tmp;
 }
 
 
@@ -175,9 +175,9 @@ std::ostream & operator<< (std::ostream & os, const Boost & b) {
    //        and even the human readable form needs formatiing improvements
    double m[16];
    b.GetLorentzRotation(m);
-   os << "\n" << m[0]  << "  " << m[1]  << "  " << m[2]  << "  " << m[3]; 
-   os << "\n" << "\t"  << "  " << m[5]  << "  " << m[6]  << "  " << m[7]; 
-   os << "\n" << "\t"  << "  " << "\t"  << "  " << m[10] << "  " << m[11]; 
+   os << "\n" << m[0]  << "  " << m[1]  << "  " << m[2]  << "  " << m[3];
+   os << "\n" << "\t"  << "  " << m[5]  << "  " << m[6]  << "  " << m[7];
+   os << "\n" << "\t"  << "  " << "\t"  << "  " << m[10] << "  " << m[11];
    os << "\n" << "\t"  << "  " << "\t"  << "  " << "\t"  << "  " << m[15] << "\n";
    return os;
 }

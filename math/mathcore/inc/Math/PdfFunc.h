@@ -8,10 +8,10 @@
   *                                                                    *
   **********************************************************************/
 
-/** 
-    Header file declaring the pdf distributions present in both 
-    MathCore and optionally MathMore. 
-    The MathMore ones are included only if ROOT has been built with MathMore. 
+/**
+    Header file declaring the pdf distributions present in both
+    MathCore and optionally MathMore.
+    The MathMore ones are included only if ROOT has been built with MathMore.
 */
 
 
@@ -29,7 +29,7 @@
 #endif
 
 // // include distributions from MathMore when is there
-// #ifdef R__HAS_MATHMORE  
+// #ifdef R__HAS_MATHMORE
 
 // // extra cdf in MathMore
 // #ifndef ROOT_Math_PdfFuncMathMore

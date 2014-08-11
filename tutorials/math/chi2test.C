@@ -1,8 +1,8 @@
-// Example to use chi2 test for comparing two histograms 
-// One unweighted histogram is compared with a weighted histogram. 
-// The normalized residuals are retrieved and plotted in a simple graph. 
-// The QQ plot of the normalized residual using the 
-// normal distribution is also plotted. 
+// Example to use chi2 test for comparing two histograms
+// One unweighted histogram is compared with a weighted histogram.
+// The normalized residuals are retrieved and plotted in a simple graph.
+// The QQ plot of the normalized residual using the
+// normal distribution is also plotted.
 //
 //Authors: Nikolai Gagunashvili, Daniel Haertl, Lorenzo Moneta
 
@@ -20,7 +20,7 @@
 TCanvas * chi2test(Float_t w=0)
 {
   // Note: The parameter w is used to produce the 2 pictures in
-  // the TH1::Chi2Test method. The 1st picture is produced with 
+  // the TH1::Chi2Test method. The 1st picture is produced with
   // w=0 and the 2nd with w=17 (see TH1::Chi2Test() help).
 
   // Define Histograms.
@@ -171,7 +171,7 @@ TCanvas * chi2test(Float_t w=0)
   qqplot->Draw("AP");
 
   c1->cd(0);
-  
+
   c1->Update();
    return c1;
 }

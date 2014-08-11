@@ -64,6 +64,7 @@ static Int_t *gLibraryVersion    = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionIdx = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionMax = 256;
 
+
 ClassImp(TProcessEventTimer)
 
 //______________________________________________________________________________
@@ -246,7 +247,7 @@ void TSystem::SetErrorStr(const char *errstr)
    // library that does not use standard errno).
 
    ResetErrno();   // so GetError() uses the fLastErrorString
-   fLastErrorString = errstr;
+   GetLastErrorString() = errstr;
 }
 
 //______________________________________________________________________________
@@ -254,8 +255,8 @@ const char *TSystem::GetError()
 {
    // Return system error string.
 
-   if (GetErrno() == 0 && fLastErrorString != "")
-      return fLastErrorString;
+   if (GetErrno() == 0 && GetLastErrorString() != "")
+      return GetLastErrorString();
    return Form("errno: %d", GetErrno());
 }
 
@@ -1984,6 +1985,24 @@ void TSystem::ListLibraries(const char *regexp)
    Printf("-----------------------");
    Printf("%d libraries loaded", i);
    Printf("=======================");
+}
+
+//______________________________________________________________________________
+TString &TSystem::GetLastErrorString()
+{
+   // Return the thread local storage for the custom last error message
+
+   thread_local TString gLastErrorString;
+
+   return gLastErrorString;
+}
+
+//______________________________________________________________________________
+const TString &TSystem::GetLastErrorString() const
+{
+   // Return the thread local storage for the custom last error message
+
+   return const_cast<TSystem*>(this)->GetLastErrorString();
 }
 
 //______________________________________________________________________________

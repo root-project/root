@@ -9,11 +9,11 @@ class NdbPhotonMult : public NdbMF
 protected:
 
 public:
-	NdbPhotonMult()
-		: NdbMF(12, "Multiplicities for photon production") {}
-	~NdbPhotonMult() {}
+   NdbPhotonMult()
+      : NdbMF(12, "Multiplicities for photon production") {}
+   ~NdbPhotonMult() {}
 
-	ClassDef(NdbPhotonMult,1)
+   ClassDef(NdbPhotonMult,1)
 }; // NdbPhotonMult
 
 #endif

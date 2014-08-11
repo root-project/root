@@ -258,7 +258,7 @@ void TRotMatrix::Streamer(TBuffer &R__b)
       R__b.ReadStaticArray(fMatrix);
       R__b.CheckByteCount(R__s, R__c, TRotMatrix::IsA());
       //====end of old versions
-      
+
    } else {
       R__b.WriteClassBuffer(TRotMatrix::Class(),this);
    }

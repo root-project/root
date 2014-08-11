@@ -184,7 +184,7 @@ void run_selector_tests(TString selector_file, Int_t fps, Int_t niter,
             } else {
                cout << perfstats_name.Data() << " tree not found" << endl << flush;
             }
-         
+
             //save outputhistos
             TString ptdist_name = "pt_dist";
             TH1* h = dynamic_cast<TH1*>(l->FindObject(ptdist_name.Data()));

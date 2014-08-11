@@ -14,7 +14,7 @@
 //                                                                         //
 //   email:fyzimiro@savba.sk,    fax:+421 7 54772479                       //
 //                                                                         //
-//  The original code in C has been repackaged as a C++ class by R.Brun    //                        
+//  The original code in C has been repackaged as a C++ class by R.Brun    //
 //                                                                         //
 //  The algorithms in this class have been published in the following      //
 //  references:                                                            //
@@ -32,24 +32,24 @@
 #include "TSpectrum2Fit.h"
 #include "TMath.h"
 
-ClassImp(TSpectrum2Fit)  
-    
+ClassImp(TSpectrum2Fit)
+
 //______________________________________________________________________________
-TSpectrum2Fit::TSpectrum2Fit() :TNamed("Spectrum2Fit", "Miroslav Morhac peak fitter") 
+TSpectrum2Fit::TSpectrum2Fit() :TNamed("Spectrum2Fit", "Miroslav Morhac peak fitter")
 {
    //default constructor
    fNPeaks = 0;
-   fNumberIterations = 1;  
+   fNumberIterations = 1;
    fXmin = 0;
    fXmax = 100;
    fYmin = 0;
    fYmax = 100;
    fStatisticType = kFitOptimChiCounts;
-   fAlphaOptim    = kFitAlphaHalving;     
-   fPower         = kFitPower2;                
-   fFitTaylor     = kFitTaylorOrderFirst;  
-   fAlpha = 1; 
-   fChi   = 0;                    
+   fAlphaOptim    = kFitAlphaHalving;
+   fPower         = kFitPower2;
+   fFitTaylor     = kFitTaylorOrderFirst;
+   fAlpha = 1;
+   fChi   = 0;
    fPositionInitX   = 0;
    fPositionCalcX   = 0;
    fPositionErrX    = 0;
@@ -85,30 +85,30 @@ TSpectrum2Fit::TSpectrum2Fit() :TNamed("Spectrum2Fit", "Miroslav Morhac peak fit
    fTxyInit = 0;
    fTxyCalc = 0;
    fTxyErr  = 0;
-   fTxInit  = 0; 
-   fTxCalc  = 0; 
-   fTxErr   = 0; 
-   fTyInit  = 0; 
-   fTyCalc  = 0; 
-   fTyErr   = 0; 
-   fBxInit  = 1; 
-   fBxCalc  = 0; 
-   fBxErr   = 0; 
-   fByInit  = 1; 
-   fByCalc  = 0; 
-   fByErr   = 0; 
+   fTxInit  = 0;
+   fTxCalc  = 0;
+   fTxErr   = 0;
+   fTyInit  = 0;
+   fTyCalc  = 0;
+   fTyErr   = 0;
+   fBxInit  = 1;
+   fBxCalc  = 0;
+   fBxErr   = 0;
+   fByInit  = 1;
+   fByCalc  = 0;
+   fByErr   = 0;
    fSxyInit = 0;
    fSxyCalc = 0;
    fSxyErr  = 0;
-   fSxInit  = 0; 
-   fSxCalc  = 0; 
-   fSxErr   = 0; 
-   fSyInit  = 0; 
-   fSyCalc  = 0; 
-   fSyErr   = 0; 
-   fA0Init  = 0; 
-   fA0Calc  = 0; 
-   fA0Err   = 0; 
+   fSxInit  = 0;
+   fSxCalc  = 0;
+   fSxErr   = 0;
+   fSyInit  = 0;
+   fSyCalc  = 0;
+   fSyErr   = 0;
+   fA0Init  = 0;
+   fA0Calc  = 0;
+   fA0Err   = 0;
    fAxInit  = 0;
    fAxCalc  = 0;
    fAxErr   = 0;
@@ -126,24 +126,24 @@ TSpectrum2Fit::TSpectrum2Fit() :TNamed("Spectrum2Fit", "Miroslav Morhac peak fit
    fFixSigmaY  = false;
    fFixRo  = true;
    fFixTxy = true;
-   fFixTx  = true;   
-   fFixTy  = true;   
+   fFixTx  = true;
+   fFixTy  = true;
    fFixBx  = true;
-   fFixBy  = true;   
+   fFixBy  = true;
    fFixSxy = true;
-   fFixSx  = true;   
-   fFixSy  = true;   
+   fFixSx  = true;
+   fFixSy  = true;
    fFixA0  = true;
    fFixAx  = true;
    fFixAy  = true;
-         
-}   
+
+}
 //______________________________________________________________________________
-TSpectrum2Fit::TSpectrum2Fit(Int_t numberPeaks) :TNamed("Spectrum2Fit", "Miroslav Morhac peak fitter") 
+TSpectrum2Fit::TSpectrum2Fit(Int_t numberPeaks) :TNamed("Spectrum2Fit", "Miroslav Morhac peak fitter")
 {
    //numberPeaks: number of fitted peaks (must be greater than zero)
    //the constructor allocates arrays for all fitted parameters (peak positions, amplitudes etc) and sets the member
-   //variables to their default values. One can change these variables by member functions (setters) of TSpectrumFit class.    
+   //variables to their default values. One can change these variables by member functions (setters) of TSpectrumFit class.
 //Begin_Html <!--
 /* -->
 <div class=Section1>
@@ -158,46 +158,46 @@ width=600 height=401 src="gif/spectrum2fit_constructor_image001.gif"></span></su
 </div>
 
 <!-- */
-// --> End_Html   
+// --> End_Html
    if (numberPeaks <= 0){
       Error ("TSpectrum2Fit","Invalid number of peaks, must be > than 0");
       return;
    }
-   fNPeaks = numberPeaks; 
-   fNumberIterations = 1;  
+   fNPeaks = numberPeaks;
+   fNumberIterations = 1;
    fXmin = 0;
    fXmax = 100;
    fYmin = 0;
    fYmax = 100;
    fStatisticType = kFitOptimChiCounts;
-   fAlphaOptim = kFitAlphaHalving;     
-   fPower = kFitPower2;                
-   fFitTaylor = kFitTaylorOrderFirst;  
-   fAlpha = 1; 
-   fChi   = 0;                    
+   fAlphaOptim = kFitAlphaHalving;
+   fPower = kFitPower2;
+   fFitTaylor = kFitTaylorOrderFirst;
+   fAlpha = 1;
+   fChi   = 0;
    fPositionInitX   = new Double_t[numberPeaks];
-   fPositionCalcX   = new Double_t[numberPeaks];   
-   fPositionErrX    = new Double_t[numberPeaks];   
+   fPositionCalcX   = new Double_t[numberPeaks];
+   fPositionErrX    = new Double_t[numberPeaks];
    fPositionInitY   = new Double_t[numberPeaks];
-   fPositionCalcY   = new Double_t[numberPeaks];   
-   fPositionErrY    = new Double_t[numberPeaks];   
+   fPositionCalcY   = new Double_t[numberPeaks];
+   fPositionErrY    = new Double_t[numberPeaks];
    fPositionInitX1  = new Double_t[numberPeaks];
-   fPositionCalcX1  = new Double_t[numberPeaks];   
-   fPositionErrX1   = new Double_t[numberPeaks];   
+   fPositionCalcX1  = new Double_t[numberPeaks];
+   fPositionErrX1   = new Double_t[numberPeaks];
    fPositionInitY1  = new Double_t[numberPeaks];
-   fPositionCalcY1  = new Double_t[numberPeaks];   
-   fPositionErrY1   = new Double_t[numberPeaks];   
-   fAmpInit    = new Double_t[numberPeaks];   
-   fAmpCalc    = new Double_t[numberPeaks];   
-   fAmpErr     = new Double_t[numberPeaks];   
-   fAmpInitX1  = new Double_t[numberPeaks];   
-   fAmpCalcX1  = new Double_t[numberPeaks];   
-   fAmpErrX1   = new Double_t[numberPeaks];   
-   fAmpInitY1  = new Double_t[numberPeaks];   
-   fAmpCalcY1  = new Double_t[numberPeaks];   
-   fAmpErrY1   = new Double_t[numberPeaks];   
-   fVolume     = new Double_t[numberPeaks];   
-   fVolumeErr  = new Double_t[numberPeaks];      
+   fPositionCalcY1  = new Double_t[numberPeaks];
+   fPositionErrY1   = new Double_t[numberPeaks];
+   fAmpInit    = new Double_t[numberPeaks];
+   fAmpCalc    = new Double_t[numberPeaks];
+   fAmpErr     = new Double_t[numberPeaks];
+   fAmpInitX1  = new Double_t[numberPeaks];
+   fAmpCalcX1  = new Double_t[numberPeaks];
+   fAmpErrX1   = new Double_t[numberPeaks];
+   fAmpInitY1  = new Double_t[numberPeaks];
+   fAmpCalcY1  = new Double_t[numberPeaks];
+   fAmpErrY1   = new Double_t[numberPeaks];
+   fVolume     = new Double_t[numberPeaks];
+   fVolumeErr  = new Double_t[numberPeaks];
    fSigmaInitX = 2;
    fSigmaCalcX = 0;
    fSigmaErrX  = 0;
@@ -210,100 +210,100 @@ width=600 height=401 src="gif/spectrum2fit_constructor_image001.gif"></span></su
    fTxyInit = 0;
    fTxyCalc = 0;
    fTxyErr  = 0;
-   fTxInit  = 0; 
-   fTxCalc  = 0; 
-   fTxErr   = 0; 
-   fTyInit  = 0; 
-   fTyCalc  = 0; 
-   fTyErr   = 0; 
-   fBxInit  = 1; 
-   fBxCalc  = 0; 
-   fBxErr   = 0; 
-   fByInit  = 1; 
-   fByCalc  = 0; 
-   fByErr   = 0; 
+   fTxInit  = 0;
+   fTxCalc  = 0;
+   fTxErr   = 0;
+   fTyInit  = 0;
+   fTyCalc  = 0;
+   fTyErr   = 0;
+   fBxInit  = 1;
+   fBxCalc  = 0;
+   fBxErr   = 0;
+   fByInit  = 1;
+   fByCalc  = 0;
+   fByErr   = 0;
    fSxyInit = 0;
    fSxyCalc = 0;
    fSxyErr  = 0;
-   fSxInit  = 0; 
-   fSxCalc  = 0; 
-   fSxErr   = 0; 
-   fSyInit  = 0; 
-   fSyCalc  = 0; 
-   fSyErr   = 0; 
-   fA0Init  = 0; 
-   fA0Calc  = 0; 
-   fA0Err   = 0; 
+   fSxInit  = 0;
+   fSxCalc  = 0;
+   fSxErr   = 0;
+   fSyInit  = 0;
+   fSyCalc  = 0;
+   fSyErr   = 0;
+   fA0Init  = 0;
+   fA0Calc  = 0;
+   fA0Err   = 0;
    fAxInit  = 0;
    fAxCalc  = 0;
    fAxErr   = 0;
    fAyInit  = 0;
    fAyCalc  = 0;
    fAyErr   = 0;
-   fFixPositionX    = new Bool_t[numberPeaks];   
-   fFixPositionY    = new Bool_t[numberPeaks];      
-   fFixPositionX1   = new Bool_t[numberPeaks];     
-   fFixPositionY1   = new Bool_t[numberPeaks];          
-   fFixAmp     = new Bool_t[numberPeaks];     
-   fFixAmpX1   = new Bool_t[numberPeaks];        
-   fFixAmpY1   = new Bool_t[numberPeaks];           
+   fFixPositionX    = new Bool_t[numberPeaks];
+   fFixPositionY    = new Bool_t[numberPeaks];
+   fFixPositionX1   = new Bool_t[numberPeaks];
+   fFixPositionY1   = new Bool_t[numberPeaks];
+   fFixAmp     = new Bool_t[numberPeaks];
+   fFixAmpX1   = new Bool_t[numberPeaks];
+   fFixAmpY1   = new Bool_t[numberPeaks];
    fFixSigmaX  = false;
    fFixSigmaY  = false;
    fFixRo  = true;
    fFixTxy = true;
-   fFixTx  = true;   
-   fFixTy  = true;   
+   fFixTx  = true;
+   fFixTy  = true;
    fFixBx  = true;
-   fFixBy  = true;   
+   fFixBy  = true;
    fFixSxy = true;
-   fFixSx  = true;   
-   fFixSy  = true;   
+   fFixSx  = true;
+   fFixSy  = true;
    fFixA0  = true;
    fFixAx  = true;
    fFixAy  = true;
 }
 
 //______________________________________________________________________________
-TSpectrum2Fit::~TSpectrum2Fit() 
+TSpectrum2Fit::~TSpectrum2Fit()
 {
    // destructor
-   delete [] fPositionInitX;   
-   delete [] fPositionCalcX;   
+   delete [] fPositionInitX;
+   delete [] fPositionCalcX;
    delete [] fPositionErrX;
-   delete [] fFixPositionX;      
-   delete [] fPositionInitY;   
-   delete [] fPositionCalcY;   
+   delete [] fFixPositionX;
+   delete [] fPositionInitY;
+   delete [] fPositionCalcY;
    delete [] fPositionErrY;
    delete [] fFixPositionY;
-   delete [] fPositionInitX1;   
-   delete [] fPositionCalcX1;   
+   delete [] fPositionInitX1;
+   delete [] fPositionCalcX1;
    delete [] fPositionErrX1;
-   delete [] fFixPositionX1;      
-   delete [] fPositionInitY1;   
-   delete [] fPositionCalcY1;   
+   delete [] fFixPositionX1;
+   delete [] fPositionInitY1;
+   delete [] fPositionCalcY1;
    delete [] fPositionErrY1;
-   delete [] fFixPositionY1;            
-   delete [] fAmpInit;  
-   delete [] fAmpCalc;  
-   delete [] fAmpErr;   
+   delete [] fFixPositionY1;
+   delete [] fAmpInit;
+   delete [] fAmpCalc;
+   delete [] fAmpErr;
    delete [] fFixAmp;
-   delete [] fAmpInitX1;  
-   delete [] fAmpCalcX1;  
-   delete [] fAmpErrX1;   
+   delete [] fAmpInitX1;
+   delete [] fAmpCalcX1;
+   delete [] fAmpErrX1;
    delete [] fFixAmpX1;
-   delete [] fAmpInitY1;  
-   delete [] fAmpCalcY1;  
-   delete [] fAmpErrY1;   
-   delete [] fFixAmpY1;    
-   delete [] fVolume;  
-   delete [] fVolumeErr;         
+   delete [] fAmpInitY1;
+   delete [] fAmpCalcY1;
+   delete [] fAmpErrY1;
+   delete [] fFixAmpY1;
+   delete [] fVolume;
+   delete [] fVolumeErr;
 }
 
 
 /////////////////BEGINNING OF AUXILIARY FUNCTIONS USED BY FITTING FUNCTIONS//////////////////////////
 //______________________________________________________________________________
-Double_t TSpectrum2Fit::Erfc(Double_t x) 
-{   
+Double_t TSpectrum2Fit::Erfc(Double_t x)
+{
 //////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                      //
 //                                                                          //
@@ -319,7 +319,7 @@ Double_t TSpectrum2Fit::Erfc(Double_t x)
    w = a * a;
    if (w < 700)
       c = exp(-w);
-   
+
    else {
       c = 0;
    }
@@ -330,8 +330,8 @@ Double_t TSpectrum2Fit::Erfc(Double_t x)
 }
 
 //______________________________________________________________________________
-Double_t TSpectrum2Fit::Derfc(Double_t x) 
-{  
+Double_t TSpectrum2Fit::Derfc(Double_t x)
+{
 //////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                      //
 //                                                                          //
@@ -347,7 +347,7 @@ Double_t TSpectrum2Fit::Derfc(Double_t x)
    w = a * a;
    if (w < 700)
       c = exp(-w);
-   
+
    else {
       c = 0;
    }
@@ -358,7 +358,7 @@ Double_t TSpectrum2Fit::Derfc(Double_t x)
 
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Ourpowl(Double_t a, Int_t pw)
-{                               
+{
    //power function
    Double_t c;
    Double_t a2 = a*a;
@@ -373,7 +373,7 @@ Double_t TSpectrum2Fit::Ourpowl(Double_t a, Int_t pw)
    return (c);
 }
 void TSpectrum2Fit::StiefelInversion(Double_t **a, Int_t size)
-{  
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -390,10 +390,10 @@ void TSpectrum2Fit::StiefelInversion(Double_t **a, Int_t size)
 //////////////////////////////////////////////////////////////////////////////////
    Int_t i, j, k = 0;
    Double_t sk = 0, b, lambdak, normk, normk_old = 0;
-   
+
    do {
       normk = 0;
-      
+
          //calculation of rk and norm
       for (i = 0; i < size; i++) {
          a[i][size + 2] = -a[i][size]; //rk=-C
@@ -402,17 +402,17 @@ void TSpectrum2Fit::StiefelInversion(Double_t **a, Int_t size)
          }
          normk += a[i][size + 2] * a[i][size + 2]; //calculation normk
       }
-      
+
       //calculation of sk
       if (k != 0) {
          sk = normk / normk_old;
       }
-      
+
       //calculation of uk
       for (i = 0; i < size; i++) {
          a[i][size + 3] = -a[i][size + 2] + sk * a[i][size + 3]; //uk=-rk+sk*uk-1
       }
-      
+
       //calculation of lambdak
       lambdak = 0;
       for (i = 0; i < size; i++) {
@@ -423,7 +423,7 @@ void TSpectrum2Fit::StiefelInversion(Double_t **a, Int_t size)
       }
       if (TMath::Abs(lambdak) > 1e-50) //computer zero
          lambdak = normk / lambdak;
-      
+
       else
          lambdak = 0;
       for (i = 0; i < size; i++)
@@ -440,8 +440,8 @@ Double_t TSpectrum2Fit::Shape2(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                             Double_t sigmay, Double_t ro, Double_t a0, Double_t ax,
                             Double_t ay, Double_t txy, Double_t sxy, Double_t tx,
                             Double_t ty, Double_t sx, Double_t sy, Double_t bx,
-                            Double_t by) 
-{  
+                            Double_t by)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -470,7 +470,7 @@ Double_t TSpectrum2Fit::Shape2(Int_t numOfFittedPeaks, Double_t x, Double_t y,
          e = (p * p - 2 * ro * p * r + r * r) / (2 * (1 - ro * ro));
          if (e < 700)
             r1 = exp(-e);
-         
+
          else {
             r1 = 0;
          }
@@ -495,7 +495,7 @@ Double_t TSpectrum2Fit::Shape2(Int_t numOfFittedPeaks, Double_t x, Double_t y,
          e = p * p / 2;
          if (e < 700)
             r1 = exp(-e);
-         
+
          else {
             r1 = 0;
          }
@@ -519,7 +519,7 @@ Double_t TSpectrum2Fit::Shape2(Int_t numOfFittedPeaks, Double_t x, Double_t y,
          e = r * r / 2;
          if (e < 700)
             r1 = exp(-e);
-         
+
          else {
             r1 = 0;
          }
@@ -546,8 +546,8 @@ Double_t TSpectrum2Fit::Shape2(Int_t numOfFittedPeaks, Double_t x, Double_t y,
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Deramp2(Double_t x, Double_t y, Double_t x0, Double_t y0,
                             Double_t sigmax, Double_t sigmay, Double_t ro,
-                            Double_t txy, Double_t sxy, Double_t bx, Double_t by) 
-{  
+                            Double_t txy, Double_t sxy, Double_t bx, Double_t by)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -573,7 +573,7 @@ Double_t TSpectrum2Fit::Deramp2(Double_t x, Double_t y, Double_t x0, Double_t y0
       e = (p * p - 2 * ro * p * r + r * r) / (2 * (1 - ro * ro));
       if (e < 700)
          r1 = exp(-e);
-      
+
       else {
          r1 = 0;
       }
@@ -597,8 +597,8 @@ Double_t TSpectrum2Fit::Deramp2(Double_t x, Double_t y, Double_t x0, Double_t y0
 
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Derampx(Double_t x, Double_t x0, Double_t sigmax, Double_t tx,
-                             Double_t sx, Double_t bx) 
-{  
+                             Double_t sx, Double_t bx)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -621,7 +621,7 @@ Double_t TSpectrum2Fit::Derampx(Double_t x, Double_t x0, Double_t sigmax, Double
       p = p * p / 2;
       if (p < 700)
          r1 = exp(-p);
-      
+
       else {
          r1 = 0;
       }
@@ -646,8 +646,8 @@ Double_t TSpectrum2Fit::Derampx(Double_t x, Double_t x0, Double_t sigmax, Double
 Double_t TSpectrum2Fit::Deri02(Double_t x, Double_t y, Double_t a, Double_t x0,
                             Double_t y0, Double_t sigmax, Double_t sigmay,
                             Double_t ro, Double_t txy, Double_t sxy, Double_t bx,
-                            Double_t by) 
-{  
+                            Double_t by)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -674,7 +674,7 @@ Double_t TSpectrum2Fit::Deri02(Double_t x, Double_t y, Double_t a, Double_t x0,
       e = (p * p - 2 * ro * p * r + r * r) / (2 * (1 - ro * ro));
       if (e < 700)
          r1 = exp(-e);
-      
+
       else {
          r1 = 0;
       }
@@ -705,8 +705,8 @@ Double_t TSpectrum2Fit::Deri02(Double_t x, Double_t y, Double_t a, Double_t x0,
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Derderi02(Double_t x, Double_t y, Double_t a, Double_t x0,
                               Double_t y0, Double_t sigmax, Double_t sigmay,
-                              Double_t ro) 
-{  
+                              Double_t ro)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -730,7 +730,7 @@ Double_t TSpectrum2Fit::Derderi02(Double_t x, Double_t y, Double_t a, Double_t x
       e = (p * p - 2 * ro * p * r + r * r) / (2 * (1 - ro * ro));
       if (e < 700)
          r1 = exp(-e);
-      
+
       else {
          r1 = 0;
       }
@@ -744,8 +744,8 @@ Double_t TSpectrum2Fit::Derderi02(Double_t x, Double_t y, Double_t a, Double_t x
 Double_t TSpectrum2Fit::Derj02(Double_t x, Double_t y, Double_t a, Double_t x0,
                             Double_t y0, Double_t sigmax, Double_t sigmay,
                             Double_t ro, Double_t txy, Double_t sxy, Double_t bx,
-                            Double_t by) 
-{  
+                            Double_t by)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -772,7 +772,7 @@ Double_t TSpectrum2Fit::Derj02(Double_t x, Double_t y, Double_t a, Double_t x0,
       e = (p * p - 2 * ro * p * r + r * r) / (2 * (1 - ro * ro));
       if (e < 700)
          r1 = exp(-e);
-      
+
       else {
          r1 = 0;
       }
@@ -803,8 +803,8 @@ Double_t TSpectrum2Fit::Derj02(Double_t x, Double_t y, Double_t a, Double_t x0,
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Derderj02(Double_t x, Double_t y, Double_t a, Double_t x0,
                                Double_t y0, Double_t sigmax, Double_t sigmay,
-                               Double_t ro) 
-{  
+                               Double_t ro)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -828,7 +828,7 @@ Double_t TSpectrum2Fit::Derderj02(Double_t x, Double_t y, Double_t a, Double_t x
       e = (p * p - 2 * ro * p * r + r * r) / (2 * (1 - ro * ro));
       if (e < 700)
          r1 = exp(-e);
-      
+
       else {
          r1 = 0;
       }
@@ -842,8 +842,8 @@ Double_t TSpectrum2Fit::Derderj02(Double_t x, Double_t y, Double_t a, Double_t x
 
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Deri01(Double_t x, Double_t ax, Double_t x0, Double_t sigmax,
-                            Double_t tx, Double_t sx, Double_t bx) 
-{  
+                            Double_t tx, Double_t sx, Double_t bx)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -866,7 +866,7 @@ Double_t TSpectrum2Fit::Deri01(Double_t x, Double_t ax, Double_t x0, Double_t si
       e = p * p / 2;
       if (e < 700)
          r1 = exp(-e);
-      
+
       else {
          r1 = 0;
       }
@@ -892,8 +892,8 @@ Double_t TSpectrum2Fit::Deri01(Double_t x, Double_t ax, Double_t x0, Double_t si
 
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Derderi01(Double_t x, Double_t ax, Double_t x0,
-                               Double_t sigmax) 
-{  
+                               Double_t sigmax)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -912,7 +912,7 @@ Double_t TSpectrum2Fit::Derderi01(Double_t x, Double_t ax, Double_t x0,
       e = p * p / 2;
       if (e < 700)
          r1 = exp(-e);
-      
+
       else {
          r1 = 0;
       }
@@ -927,8 +927,8 @@ Double_t TSpectrum2Fit::Dersigmax(Int_t numOfFittedPeaks, Double_t x, Double_t y
                                const Double_t *parameter, Double_t sigmax,
                                Double_t sigmay, Double_t ro, Double_t txy,
                                Double_t sxy, Double_t tx, Double_t sx, Double_t bx,
-                               Double_t by) 
-{  
+                               Double_t by)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -959,7 +959,7 @@ Double_t TSpectrum2Fit::Dersigmax(Int_t numOfFittedPeaks, Double_t x, Double_t y
          e = (p * p - 2 * ro * p * r + r * r) / (2 * (1 - ro * ro));
          if (e < 700)
             e = exp(-e);
-         
+
          else {
             e = 0;
          }
@@ -989,7 +989,7 @@ Double_t TSpectrum2Fit::Dersigmax(Int_t numOfFittedPeaks, Double_t x, Double_t y
          b = p * p / 2;
          if (b < 700)
             e = exp(-b);
-         
+
          else {
             e = 0;
          }
@@ -1018,8 +1018,8 @@ Double_t TSpectrum2Fit::Dersigmax(Int_t numOfFittedPeaks, Double_t x, Double_t y
 Double_t TSpectrum2Fit::Derdersigmax(Int_t numOfFittedPeaks, Double_t x,
                                   Double_t y, const Double_t *parameter,
                                   Double_t sigmax, Double_t sigmay,
-                                  Double_t ro) 
-{  
+                                  Double_t ro)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1046,7 +1046,7 @@ Double_t TSpectrum2Fit::Derdersigmax(Int_t numOfFittedPeaks, Double_t x,
          e = (p * p - 2 * ro * p * r + r * r) / (2 * (1 - ro * ro));
          if (e < 700)
             e = exp(-e);
-         
+
          else {
             e = 0;
          }
@@ -1064,7 +1064,7 @@ Double_t TSpectrum2Fit::Derdersigmax(Int_t numOfFittedPeaks, Double_t x,
          b = p * p / 2;
          if (b < 700)
             e = exp(-b);
-         
+
          else {
             e = 0;
          }
@@ -1080,8 +1080,8 @@ Double_t TSpectrum2Fit::Dersigmay(Int_t numOfFittedPeaks, Double_t x, Double_t y
                                const Double_t *parameter, Double_t sigmax,
                                Double_t sigmay, Double_t ro, Double_t txy,
                                Double_t sxy, Double_t ty, Double_t sy, Double_t bx,
-                               Double_t by) 
-{  
+                               Double_t by)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1112,7 +1112,7 @@ Double_t TSpectrum2Fit::Dersigmay(Int_t numOfFittedPeaks, Double_t x, Double_t y
          e = (p * p - 2 * ro * p * r + r * r) / (2 * (1 - ro * ro));
          if (e < 700)
             e = exp(-e);
-         
+
          else {
             e = 0;
          }
@@ -1142,7 +1142,7 @@ Double_t TSpectrum2Fit::Dersigmay(Int_t numOfFittedPeaks, Double_t x, Double_t y
          b = r * r / 2;
          if (b < 700)
             e = exp(-b);
-         
+
          else {
             e = 0;
          }
@@ -1171,8 +1171,8 @@ Double_t TSpectrum2Fit::Dersigmay(Int_t numOfFittedPeaks, Double_t x, Double_t y
 Double_t TSpectrum2Fit::Derdersigmay(Int_t numOfFittedPeaks, Double_t x,
                                   Double_t y, const Double_t *parameter,
                                   Double_t sigmax, Double_t sigmay,
-                                  Double_t ro) 
-{  
+                                  Double_t ro)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1199,7 +1199,7 @@ Double_t TSpectrum2Fit::Derdersigmay(Int_t numOfFittedPeaks, Double_t x,
          e = (p * p - 2 * ro * p * r + r * r) / (2 * (1 - ro * ro));
          if (e < 700)
             e = exp(-e);
-         
+
          else {
             e = 0;
          }
@@ -1217,7 +1217,7 @@ Double_t TSpectrum2Fit::Derdersigmay(Int_t numOfFittedPeaks, Double_t x,
          b = r * r / 2;
          if (b < 700)
             e = exp(-b);
-         
+
          else {
             e = 0;
          }
@@ -1231,8 +1231,8 @@ Double_t TSpectrum2Fit::Derdersigmay(Int_t numOfFittedPeaks, Double_t x,
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Derro(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                            const Double_t *parameter, Double_t sx, Double_t sy,
-                           Double_t r) 
-{  
+                           Double_t r)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1261,7 +1261,7 @@ Double_t TSpectrum2Fit::Derro(Int_t numOfFittedPeaks, Double_t x, Double_t y,
          ex = rx / (2 * (1 - r * r));
          if ((ex) < 700)
             ex = exp(-ex);
-         
+
          else {
             ex = 0;
          }
@@ -1276,8 +1276,8 @@ Double_t TSpectrum2Fit::Derro(Int_t numOfFittedPeaks, Double_t x, Double_t y,
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Dertxy(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                             const Double_t *parameter, Double_t sigmax,
-                            Double_t sigmay, Double_t bx, Double_t by) 
-{  
+                            Double_t sigmay, Double_t bx, Double_t by)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1316,8 +1316,8 @@ Double_t TSpectrum2Fit::Dertxy(Int_t numOfFittedPeaks, Double_t x, Double_t y,
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Dersxy(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                             const Double_t *parameter, Double_t sigmax,
-                            Double_t sigmay) 
-{  
+                            Double_t sigmay)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1349,8 +1349,8 @@ Double_t TSpectrum2Fit::Dersxy(Int_t numOfFittedPeaks, Double_t x, Double_t y,
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Dertx(Int_t numOfFittedPeaks, Double_t x,
                            const Double_t *parameter, Double_t sigmax,
-                           Double_t bx) 
-{  
+                           Double_t bx)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1385,8 +1385,8 @@ Double_t TSpectrum2Fit::Dertx(Int_t numOfFittedPeaks, Double_t x,
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Derty(Int_t numOfFittedPeaks, Double_t x,
                            const Double_t *parameter, Double_t sigmax,
-                           Double_t bx) 
-{  
+                           Double_t bx)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1420,8 +1420,8 @@ Double_t TSpectrum2Fit::Derty(Int_t numOfFittedPeaks, Double_t x,
 
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Dersx(Int_t numOfFittedPeaks, Double_t x,
-                           const Double_t *parameter, Double_t sigmax) 
-{  
+                           const Double_t *parameter, Double_t sigmax)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1450,8 +1450,8 @@ Double_t TSpectrum2Fit::Dersx(Int_t numOfFittedPeaks, Double_t x,
 
 //______________________________________________________________________________
 Double_t TSpectrum2Fit::Dersy(Int_t numOfFittedPeaks, Double_t x,
-                           const Double_t *parameter, Double_t sigmax) 
-{  
+                           const Double_t *parameter, Double_t sigmax)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1482,8 +1482,8 @@ Double_t TSpectrum2Fit::Dersy(Int_t numOfFittedPeaks, Double_t x,
 Double_t TSpectrum2Fit::Derbx(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                            const Double_t *parameter, Double_t sigmax,
                            Double_t sigmay, Double_t txy, Double_t tx, Double_t bx,
-                           Double_t by) 
-{  
+                           Double_t by)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1541,8 +1541,8 @@ Double_t TSpectrum2Fit::Derbx(Int_t numOfFittedPeaks, Double_t x, Double_t y,
 Double_t TSpectrum2Fit::Derby(Int_t numOfFittedPeaks, Double_t x, Double_t y,
                            const Double_t *parameter, Double_t sigmax,
                            Double_t sigmay, Double_t txy, Double_t ty, Double_t bx,
-                           Double_t by) 
-{  
+                           Double_t by)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1597,8 +1597,8 @@ Double_t TSpectrum2Fit::Derby(Int_t numOfFittedPeaks, Double_t x, Double_t y,
 }
 
 //______________________________________________________________________________
-Double_t TSpectrum2Fit::Volume(Double_t a, Double_t sx, Double_t sy, Double_t ro) 
-{  
+Double_t TSpectrum2Fit::Volume(Double_t a, Double_t sx, Double_t sy, Double_t ro)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1613,7 +1613,7 @@ Double_t TSpectrum2Fit::Volume(Double_t a, Double_t sx, Double_t sy, Double_t ro
    r = 1 - ro * ro;
    if (r > 0)
       r = TMath::Sqrt(r);
-   
+
    else {
       return (0);
    }
@@ -1622,8 +1622,8 @@ Double_t TSpectrum2Fit::Volume(Double_t a, Double_t sx, Double_t sy, Double_t ro
 }
 
 //______________________________________________________________________________
-Double_t TSpectrum2Fit::Derpa2(Double_t sx, Double_t sy, Double_t ro) 
-{  
+Double_t TSpectrum2Fit::Derpa2(Double_t sx, Double_t sy, Double_t ro)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1638,7 +1638,7 @@ Double_t TSpectrum2Fit::Derpa2(Double_t sx, Double_t sy, Double_t ro)
    r = 1 - ro * ro;
    if (r > 0)
       r = TMath::Sqrt(r);
-   
+
    else {
       return (0);
    }
@@ -1647,8 +1647,8 @@ Double_t TSpectrum2Fit::Derpa2(Double_t sx, Double_t sy, Double_t ro)
 }
 
 //______________________________________________________________________________
-Double_t TSpectrum2Fit::Derpsigmax(Double_t a, Double_t sy, Double_t ro) 
-{  
+Double_t TSpectrum2Fit::Derpsigmax(Double_t a, Double_t sy, Double_t ro)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1664,7 +1664,7 @@ Double_t TSpectrum2Fit::Derpsigmax(Double_t a, Double_t sy, Double_t ro)
    r = 1 - ro * ro;
    if (r > 0)
       r = TMath::Sqrt(r);
-   
+
    else {
       return (0);
    }
@@ -1673,8 +1673,8 @@ Double_t TSpectrum2Fit::Derpsigmax(Double_t a, Double_t sy, Double_t ro)
 }
 
 //______________________________________________________________________________
-Double_t TSpectrum2Fit::Derpsigmay(Double_t a, Double_t sx, Double_t ro) 
-{  
+Double_t TSpectrum2Fit::Derpsigmay(Double_t a, Double_t sx, Double_t ro)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1690,7 +1690,7 @@ Double_t TSpectrum2Fit::Derpsigmay(Double_t a, Double_t sx, Double_t ro)
    r = 1 - ro * ro;
    if (r > 0)
       r = TMath::Sqrt(r);
-   
+
    else {
       return (0);
    }
@@ -1699,8 +1699,8 @@ Double_t TSpectrum2Fit::Derpsigmay(Double_t a, Double_t sx, Double_t ro)
 }
 
 //______________________________________________________________________________
-Double_t TSpectrum2Fit::Derpro(Double_t a, Double_t sx, Double_t sy, Double_t ro) 
-{  
+Double_t TSpectrum2Fit::Derpro(Double_t a, Double_t sx, Double_t sy, Double_t ro)
+{
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCTION                                                          //
 //                                                                              //
@@ -1716,7 +1716,7 @@ Double_t TSpectrum2Fit::Derpro(Double_t a, Double_t sx, Double_t sy, Double_t ro
    r = 1 - ro * ro;
    if (r > 0)
       r = TMath::Sqrt(r);
-   
+
    else {
       return (0);
    }
@@ -1728,20 +1728,20 @@ Double_t TSpectrum2Fit::Derpro(Double_t a, Double_t sx, Double_t sy, Double_t ro
 /////////////////END OF AUXILIARY FUNCTIONS USED BY FITTING FUNCTION fit2//////////////////////////
 /////////////////FITTING FUNCTION WITHOUT MATRIX INVERSION///////////////////////////////////////
 //______________________________________________________________________________
-void TSpectrum2Fit::FitAwmi(Double_t **source) 
+void TSpectrum2Fit::FitAwmi(Double_t **source)
 {
 /////////////////////////////////////////////////////////////////////////////
-// TWO-DIMENSIONAL FIT FUNCTION                
-//  ALGORITHM WITHOUT MATRIX INVERSION 
+// TWO-DIMENSIONAL FIT FUNCTION
+//  ALGORITHM WITHOUT MATRIX INVERSION
 //  This function fits the source spectrum. The calling program should
-//  fill in input parameters of the TSpectrum2Fit class. 
-//  The fitted parameters are written into           
-//  TSpectrum2Fit class output parameters and fitted data are written into 
-//  source spectrum.                                                    
-//                                                                          
-//        Function parameters:                                             
-//        source-pointer to the matrix of source spectrum                  
-//                                                                         
+//  fill in input parameters of the TSpectrum2Fit class.
+//  The fitted parameters are written into
+//  TSpectrum2Fit class output parameters and fitted data are written into
+//  source spectrum.
+//
+//        Function parameters:
+//        source-pointer to the matrix of source spectrum
+//
 /////////////////////////////////////////////////////////////////////////////
 //
 //Begin_Html <!--
@@ -2756,7 +2756,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
       for (j = 0; j < size; j++) {
          working_space[2 * shift + j] = 0, working_space[3 * shift + j] = 0; //der,temp
       }
-      
+
           //filling vectors
       alpha = fAlpha;
       chi_opt = 0, pw = fPower - 2;
@@ -2783,7 +2783,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                if (f > 0.00001)
                   chi_opt += yw * TMath::Log(f) - f;
             }
-            
+
             else {
                if (ywm != 0)
                   chi_opt += (yw - f) * (yw - f) / ywm;
@@ -2793,18 +2793,18 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                if (f < 0.00001)
                   ywm = 0.00001;
             }
-            
+
             else if (fStatisticType == kFitOptimMaxLikelihood) {
                ywm = f;
                if (f < 0.00001)
                   ywm = 0.00001;
             }
-            
+
             else {
                if (ywm == 0)
                   ywm = 1;
             }
-            
+
                 //calculation of gradient vector
                 for (j = 0, k = 0; j < fNPeaks; j++) {
                if (fFixAmp[j] == false) {
@@ -2826,7 +2826,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                         b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                         working_space[3 * shift + k] += b * c; //temp
                      }
-                     
+
                      else {
                         b = a * (yw - f) / ywm;
                         working_space[2 * shift + k] += b * c; //der
@@ -2865,7 +2865,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                              && a <= 0))
                            d = 0;
                      }
-                     
+
                      else
                         d = 0;
                      a = a + d;
@@ -2875,7 +2875,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                         b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                         working_space[3 * shift + k] += b * c; //temp
                      }
-                     
+
                      else {
                         b = a * (yw - f) / ywm;
                         working_space[2 * shift + k] += b * c; //der
@@ -2914,7 +2914,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                              && a <= 0))
                            d = 0;
                      }
-                     
+
                      else
                         d = 0;
                      a = a + d;
@@ -2924,7 +2924,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                         b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                         working_space[3 * shift + k] += b * c; //temp
                      }
-                     
+
                      else {
                         b = a * (yw - f) / ywm;
                         working_space[2 * shift + k] += b * c; //der
@@ -2948,7 +2948,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                         b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                         working_space[3 * shift + k] += b * c; //temp
                      }
-                     
+
                      else {
                         b = a * (yw - f) / ywm;
                         working_space[2 * shift + k] += b * c; //der
@@ -2972,7 +2972,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                         b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                         working_space[3 * shift + k] += b * c; //temp
                      }
-                     
+
                      else {
                         b = a * (yw - f) / ywm;
                         working_space[2 * shift + k] += b * c; //der
@@ -3002,7 +3002,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                              && a <= 0))
                            d = 0;
                      }
-                     
+
                      else
                         d = 0;
                      a = a + d;
@@ -3012,7 +3012,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                         b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                         working_space[3 * shift + k] += b * c; //temp
                      }
-                     
+
                      else {
                         b = a * (yw - f) / ywm;
                         working_space[2 * shift + k] += b * c; //Der
@@ -3042,7 +3042,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                              && a <= 0))
                            d = 0;
                      }
-                     
+
                      else
                         d = 0;
                      a = a + d;
@@ -3052,7 +3052,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                         b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                         working_space[3 * shift + k] += b * c; //temp
                      }
-                     
+
                      else {
                         b = a * (yw - f) / ywm;
                         working_space[2 * shift + k] += b * c; //der
@@ -3088,7 +3088,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      if (((a + d) <= 0 && a >= 0) || ((a + d) >= 0 && a <= 0))
                         d = 0;
                   }
-                  
+
                   else
                      d = 0;
                   a = a + d;
@@ -3098,7 +3098,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3133,7 +3133,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      if (((a + d) <= 0 && a >= 0) || ((a + d) >= 0 && a <= 0))
                         d = 0;
                   }
-                  
+
                   else
                      d = 0;
                   a = a + d;
@@ -3143,7 +3143,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3166,7 +3166,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      if (((a + d) <= 0 && a >= 0) || ((a + d) >= 0 && a <= 0))
                         d = 0;
                   }
-                  
+
                   else
                      d = 0;
                   a = a + d;
@@ -3176,7 +3176,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3196,7 +3196,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3216,7 +3216,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3236,7 +3236,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3260,7 +3260,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3282,7 +3282,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3304,7 +3304,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3326,7 +3326,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3347,7 +3347,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3368,7 +3368,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3394,7 +3394,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3420,7 +3420,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      b = a * a * (4 * yw - 2 * f) / (ywm * ywm);
                      working_space[3 * shift + k] += b * c; //temp
                   }
-                  
+
                   else {
                      b = a * (yw - f) / ywm;
                      working_space[2 * shift + k] += b * c; //der
@@ -3438,22 +3438,22 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          else
             working_space[2 * shift + j] = 0; //der[j]
       }
-      
+
       //calculate chi_opt
       chi2 = chi_opt;
       chi_opt = TMath::Sqrt(TMath::Abs(chi_opt));
-      
+
       //calculate new parameters
       regul_cycle = 0;
       for (j = 0; j < size; j++) {
          working_space[4 * shift + j] = working_space[shift + j]; //temp_xk[j]=xk[j]
       }
-      
+
       do {
          if (fAlphaOptim == kFitAlphaOptimal) {
             if (fStatisticType != kFitOptimMaxLikelihood)
                chi_min = 10000 * chi2;
-            
+
             else
                chi_min = 0.1 * chi2;
             flag = 0;
@@ -3623,7 +3623,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                         if (f > 0.00001)
                            chi2 += yw * TMath::Log(f) - f;
                      }
-                     
+
                      else {
                         if (ywm != 0)
                            chi2 += (yw - f) * (yw - f) / ywm;
@@ -3636,7 +3636,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                     && fStatisticType == kFitOptimMaxLikelihood)) {
                   pmin = pi, chi_min = chi2;
                }
-               
+
                else
                   flag = 1;
                if (pi == 0.1)
@@ -3782,7 +3782,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                chi = chi_min;
             }
          }
-         
+
          else {
             for (j = 0; j < size; j++) {
                working_space[shift + j] = working_space[4 * shift + j] + alpha * working_space[2 * shift + j]; //xk[j]=temp_xk[j]+pi*alpha*der[j]
@@ -3948,7 +3948,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      if (f > 0.00001)
                         chi += yw * TMath::Log(f) - f;
                   }
-                  
+
                   else {
                      if (ywm != 0)
                         chi += (yw - f) * (yw - f) / ywm;
@@ -3960,7 +3960,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          chi = TMath::Sqrt(TMath::Abs(chi));
          if (fAlphaOptim == kFitAlphaHalving && chi > 1E-6)
             alpha = alpha * chi_opt / (2 * chi);
-         
+
          else if (fAlphaOptim == kFitAlphaOptimal)
             alpha = alpha / 10.0;
          iter += 1;
@@ -3996,7 +3996,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                         working_space[peak_vel + 13]);
             chi_opt = (yw - f) * (yw - f) / yw;
             chi_cel += (yw - f) * (yw - f) / yw;
-            
+
                 //calculate gradient vector
                 for (j = 0, k = 0; j < fNPeaks; j++) {
                if (fFixAmp[j] == false) {
@@ -4320,7 +4320,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
             b = working_space[4 * shift + j]; //temp_xk[j]
             if (b == 0)
                b = 1;
-            
+
             else
                b = 1 / b;
             c = c + a * a * b;
@@ -4332,7 +4332,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
             b = working_space[4 * shift + peak_vel]; //temp_xk[j]
             if (b == 0)
                b = 1;
-            
+
             else
                b = 1 / b;
             c = c + a * a * b;
@@ -4344,7 +4344,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
             b = working_space[4 * shift + peak_vel + 1]; //temp_xk[j]
             if (b == 0)
                b = 1;
-            
+
             else
                b = 1 / b;
             c = c + a * a * b;
@@ -4356,14 +4356,14 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
             b = working_space[4 * shift + peak_vel + 2]; //temp_xk[j]
             if (b == 0)
                b = 1;
-            
+
             else
                b = 1 / b;
             c = c + a * a * b;
          }
          fVolumeErr[i] = TMath::Sqrt(TMath::Abs(chi_er * c));
       }
-      
+
       else {
          fVolumeErr[i] = 0;
       }
@@ -4373,7 +4373,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
             fAmpErr[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fAmpCalc[i] = fAmpInit[i];
          fAmpErr[i] = 0;
@@ -4384,7 +4384,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
             fPositionErrX[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fPositionCalcX[i] = fPositionInitX[i];
          fPositionErrX[i] = 0;
@@ -4395,7 +4395,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
             fPositionErrY[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fPositionCalcY[i] = fPositionInitY[i];
          fPositionErrY[i] = 0;
@@ -4406,7 +4406,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
             fAmpErrX1[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fAmpCalcX1[i] = fAmpInitX1[i];
          fAmpErrX1[i] = 0;
@@ -4417,7 +4417,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
             fAmpErrY1[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fAmpCalcY1[i] = fAmpInitY1[i];
          fAmpErrY1[i] = 0;
@@ -4428,7 +4428,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
             fPositionErrX1[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fPositionCalcX1[i] = fPositionInitX1[i];
          fPositionErrX1[i] = 0;
@@ -4439,7 +4439,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
             fPositionErrY1[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fPositionCalcY1[i] = fPositionInitY1[i];
          fPositionErrY1[i] = 0;
@@ -4451,7 +4451,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fSigmaErrX = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSigmaCalcX = fSigmaInitX;
       fSigmaErrX = 0;
@@ -4462,7 +4462,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fSigmaErrY = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSigmaCalcY = fSigmaInitY;
       fSigmaErrY = 0;
@@ -4473,7 +4473,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fRoErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fRoCalc = fRoInit;
       fRoErr = 0;
@@ -4484,7 +4484,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fA0Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fA0Calc = fA0Init;
       fA0Err = 0;
@@ -4495,7 +4495,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fAxErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fAxCalc = fAxInit;
       fAxErr = 0;
@@ -4506,7 +4506,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fAyErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fAyCalc = fAyInit;
       fAyErr = 0;
@@ -4517,7 +4517,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fTxyErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fTxyCalc = fTxyInit;
       fTxyErr = 0;
@@ -4528,7 +4528,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fSxyErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSxyCalc = fSxyInit;
       fSxyErr = 0;
@@ -4539,7 +4539,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fTxErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fTxCalc = fTxInit;
       fTxErr = 0;
@@ -4550,7 +4550,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fTyErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fTyCalc = fTyInit;
       fTyErr = 0;
@@ -4561,7 +4561,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fSxErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSxCalc = fSxInit;
       fSxErr = 0;
@@ -4572,7 +4572,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fSyErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSyCalc = fSyInit;
       fSyErr = 0;
@@ -4583,7 +4583,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fBxErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fBxCalc = fBxInit;
       fBxErr = 0;
@@ -4594,7 +4594,7 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
          fByErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fByCalc = fByInit;
       fByErr = 0;
@@ -4619,8 +4619,8 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
                      working_space[peak_vel + 12],
                      working_space[peak_vel + 13]);
          source[i1][i2] = f;
-      } 
-   } 
+      }
+   }
    delete [] working_space;
    return;
 }
@@ -4629,22 +4629,22 @@ search-&gt;Draw(&quot;SURF&quot;);   </span></p>
 
 
 // ____________________________________________________________________________________________________________________________
-void TSpectrum2Fit::FitStiefel(Double_t **source) 
+void TSpectrum2Fit::FitStiefel(Double_t **source)
 {
 /////////////////////////////////////////////////////////////////////////////
-// TWO-DIMENSIONAL FIT FUNCTION USING STIEFEL-HESTENS               
-//  ALGORITHM.  
+// TWO-DIMENSIONAL FIT FUNCTION USING STIEFEL-HESTENS
+//  ALGORITHM.
 //  This function fits the source spectrum. The calling program should
-//  fill in input parameters of the TSpectrum2Fit class. 
-//  The fitted parameters are written into           
-//  TSpectrum2Fit class output parameters and fitted data are written into 
-//  source spectrum.                                                    
-//                                                                          
-//        Function parameters:                                             
-//        source-pointer to the matrix of source spectrum                  
-//                                                                         
+//  fill in input parameters of the TSpectrum2Fit class.
+//  The fitted parameters are written into
+//  TSpectrum2Fit class output parameters and fitted data are written into
+//  source spectrum.
+//
+//        Function parameters:
+//        source-pointer to the matrix of source spectrum
+//
 /////////////////////////////////////////////////////////////////////////////
-//   
+//
 //Begin_Html <!--
 /* -->
 <div class=Section1>
@@ -5004,7 +5004,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             working_matrix[j][k] = 0;
          }
       }
-      
+
       //filling working matrix
       alpha = fAlpha;
       chi_opt = 0;
@@ -5227,7 +5227,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                if (f > 0.00001)
                   chi_opt += yw * TMath::Log(f) - f;
             }
-            
+
             else {
                if (ywm != 0)
                   chi_opt += (yw - f) * (yw - f) / ywm;
@@ -5237,13 +5237,13 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                if (f < 0.00001)
                   ywm = 0.00001;
             }
-            
+
             else if (fStatisticType == kFitOptimMaxLikelihood) {
                ywm = f;
                if (f < 0.00001)
                   ywm = 0.00001;
             }
-            
+
             else {
                if (ywm == 0)
                   ywm = 1;
@@ -5262,7 +5262,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             }
             if (fStatisticType == kFitOptimChiFuncValues)
                b = (f * f - yw * yw) / (ywm * ywm);
-            
+
             else
                b = (f - yw) / ywm;
             for (j = 0; j < size; j++) {
@@ -5278,22 +5278,22 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
       for (i = 0; i < size; i++) {
          working_space[2 * shift + i] = working_matrix[i][size + 1]; //der
       }
-      
+
       //calculate chi_opt
       chi2 = chi_opt;
       chi_opt = TMath::Sqrt(TMath::Abs(chi_opt));
-      
+
       //calculate new parameters
       regul_cycle = 0;
       for (j = 0; j < size; j++) {
          working_space[4 * shift + j] = working_space[shift + j]; //temp_xk[j]=xk[j]
       }
-      
+
       do {
          if (fAlphaOptim == kFitAlphaOptimal) {
             if (fStatisticType != kFitOptimMaxLikelihood)
                chi_min = 10000 * chi2;
-            
+
             else
                chi_min = 0.1 * chi2;
             flag = 0;
@@ -5463,7 +5463,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                         if (f > 0.00001)
                            chi2 += yw * TMath::Log(f) - f;
                      }
-                     
+
                      else {
                         if (ywm != 0)
                            chi2 += (yw - f) * (yw - f) / ywm;
@@ -5476,7 +5476,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                     && fStatisticType == kFitOptimMaxLikelihood)) {
                   pmin = pi, chi_min = chi2;
                }
-               
+
                else
                   flag = 1;
                if (pi == 0.1)
@@ -5622,7 +5622,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                chi = chi_min;
             }
          }
-         
+
          else {
             for (j = 0; j < size; j++) {
                working_space[shift + j] = working_space[4 * shift + j] + alpha * working_space[2 * shift + j]; //xk[j]=temp_xk[j]+pi*alpha*der[j]
@@ -5788,7 +5788,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                      if (f > 0.00001)
                         chi += yw * TMath::Log(f) - f;
                   }
-                  
+
                   else {
                      if (ywm != 0)
                         chi += (yw - f) * (yw - f) / ywm;
@@ -5800,7 +5800,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          chi = TMath::Sqrt(TMath::Abs(chi));
          if (fAlphaOptim == kFitAlphaHalving && chi > 1E-6)
             alpha = alpha * chi_opt / (2 * chi);
-         
+
          else if (fAlphaOptim == kFitAlphaOptimal)
             alpha = alpha / 10.0;
          iter += 1;
@@ -5836,7 +5836,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                         working_space[peak_vel + 13]);
             chi_opt = (yw - f) * (yw - f) / yw;
             chi_cel += (yw - f) * (yw - f) / yw;
-            
+
                 //calculate gradient vector
                 for (j = 0, k = 0; j < fNPeaks; j++) {
                if (fFixAmp[j] == false) {
@@ -6139,7 +6139,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             b = working_space[4 * shift + j]; //temp_xk[j]
             if (b == 0)
                b = 1;
-            
+
             else
                b = 1 / b;
             c = c + a * a * b;
@@ -6151,7 +6151,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             b = working_space[4 * shift + peak_vel]; //temp_xk[j]
             if (b == 0)
                b = 1;
-            
+
             else
                b = 1 / b;
             c = c + a * a * b;
@@ -6163,7 +6163,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             b = working_space[4 * shift + peak_vel + 1]; //temp_xk[j]
             if (b == 0)
                b = 1;
-            
+
             else
                b = 1 / b;
             c = c + a * a * b;
@@ -6175,14 +6175,14 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             b = working_space[4 * shift + peak_vel + 2]; //temp_xk[j]
             if (b == 0)
                b = 1;
-            
+
             else
                b = 1 / b;
             c = c + a * a * b;
          }
          fVolumeErr[i] = TMath::Sqrt(TMath::Abs(chi_er * c));
       }
-      
+
       else {
          fVolumeErr[i] = 0;
       }
@@ -6192,7 +6192,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             fAmpErr[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fAmpCalc[i] = fAmpInit[i];
          fAmpErr[i] = 0;
@@ -6203,7 +6203,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             fPositionErrX[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fPositionCalcX[i] = fPositionInitX[i];
          fPositionErrX[i] = 0;
@@ -6214,7 +6214,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             fPositionErrY[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fPositionCalcY[i] = fPositionInitY[i];
          fPositionErrY[i] = 0;
@@ -6225,7 +6225,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             fAmpErrX1[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fAmpCalcX1[i] = fAmpInitX1[i];
          fAmpErrX1[i] = 0;
@@ -6236,7 +6236,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             fAmpErrY1[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fAmpCalcY1[i] = fAmpInitY1[i];
          fAmpErrY1[i] = 0;
@@ -6247,7 +6247,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             fPositionErrX1[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fPositionCalcX1[i] = fPositionInitX1[i];
          fPositionErrX1[i] = 0;
@@ -6258,7 +6258,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
             fPositionErrY1[i] = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
          j += 1;
       }
-      
+
       else {
          fPositionCalcY1[i] = fPositionInitY1[i];
          fPositionErrY1[i] = 0;
@@ -6270,7 +6270,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fSigmaErrX = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSigmaCalcX = fSigmaInitX;
       fSigmaErrX = 0;
@@ -6281,7 +6281,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fSigmaErrY = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSigmaCalcY = fSigmaInitY;
       fSigmaErrY = 0;
@@ -6292,7 +6292,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fRoErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fRoCalc = fRoInit;
       fRoErr = 0;
@@ -6303,7 +6303,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fA0Err = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fA0Calc = fA0Init;
       fA0Err = 0;
@@ -6314,7 +6314,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fAxErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fAxCalc = fAxInit;
       fAxErr = 0;
@@ -6325,7 +6325,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fAyErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fAyCalc = fAyInit;
       fAyErr = 0;
@@ -6336,7 +6336,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fTxyErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fTxyCalc = fTxyInit;
       fTxyErr = 0;
@@ -6347,7 +6347,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fSxyErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSxyCalc = fSxyInit;
       fSxyErr = 0;
@@ -6358,7 +6358,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fTxErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fTxCalc = fTxInit;
       fTxErr = 0;
@@ -6369,7 +6369,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fTyErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fTyCalc = fTyInit;
       fTyErr = 0;
@@ -6380,7 +6380,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fSxErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSxCalc = fSxInit;
       fSxErr = 0;
@@ -6391,7 +6391,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fSyErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fSyCalc = fSyInit;
       fSyErr = 0;
@@ -6402,7 +6402,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fBxErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fBxCalc = fBxInit;
       fBxErr = 0;
@@ -6413,7 +6413,7 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
          fByErr = TMath::Sqrt(TMath::Abs(working_space[2 * shift + j])) / TMath::Sqrt(TMath::Abs(working_space[3 * shift + j])); //der[j]/temp[j]
       j += 1;
    }
-   
+
    else {
       fByCalc = fByInit;
       fByErr = 0;
@@ -6438,9 +6438,9 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
                      working_space[peak_vel + 12],
                      working_space[peak_vel + 13]);
          source[i1][i2] = f;
-   
-      } 
-   } 
+
+      }
+   }
    for (i = 0; i < size; i++) delete [] working_matrix[i];
    delete [] working_matrix;
    delete [] working_space;
@@ -6450,52 +6450,52 @@ search-&gt;Draw(&quot;SURF&quot;);</span></p>
 void TSpectrum2Fit::SetFitParameters(Int_t xmin,Int_t xmax,Int_t ymin,Int_t ymax, Int_t numberIterations, Double_t alpha, Int_t statisticType, Int_t alphaOptim, Int_t power, Int_t fitTaylor)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION                                                      
-//                                                     
+//   SETTER FUNCTION
+//
 //   This function sets the following fitting parameters:
 //         -xmin, xmax, ymin, ymax - fitting region
 //         -numberIterations - # of desired iterations in the fit
 //         -alpha - convergence coefficient, it should be positive number and <=1, for details see references
-//         -statisticType - type of statistics, possible values kFitOptimChiCounts (chi square statistics with counts as weighting coefficients), kFitOptimChiFuncValues (chi square statistics with function values as weighting coefficients),kFitOptimMaxLikelihood 
+//         -statisticType - type of statistics, possible values kFitOptimChiCounts (chi square statistics with counts as weighting coefficients), kFitOptimChiFuncValues (chi square statistics with function values as weighting coefficients),kFitOptimMaxLikelihood
 //         -alphaOptim - optimization of convergence algorithm, possible values kFitAlphaHalving, kFitAlphaOptimal
 //         -power - possible values kFitPower2,4,6,8,10,12, for details see references. It applies only for Awmi fitting function.
 //         -fitTaylor - order of Taylor expansion, possible values kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi fitting function.
-//////////////////////////////////////////////////////////////////////////////   
-   
-   if(xmin<0 || xmax <= xmin || ymin<0 || ymax <= ymin){ 
+//////////////////////////////////////////////////////////////////////////////
+
+   if(xmin<0 || xmax <= xmin || ymin<0 || ymax <= ymin){
       Error("SetFitParameters", "Wrong range");
       return;
-   }      
+   }
    if (numberIterations <= 0){
       Error("SetFitParameters","Invalid number of iterations, must be positive");
       return;
-   }      
+   }
    if (alpha <= 0 || alpha > 1){
       Error ("SetFitParameters","Invalid step coefficient alpha, must be > than 0 and <=1");
       return;
-   }      
+   }
    if (statisticType != kFitOptimChiCounts
         && statisticType != kFitOptimChiFuncValues
         && statisticType != kFitOptimMaxLikelihood){
       Error("SetFitParameters","Wrong type of statistic");
       return;
-   }      
+   }
    if (alphaOptim != kFitAlphaHalving
         && alphaOptim != kFitAlphaOptimal){
       Error("SetFitParameters","Wrong optimization algorithm");
       return;
-   }      
+   }
    if (power != kFitPower2 && power != kFitPower4
         && power != kFitPower6 && power != kFitPower8
         && power != kFitPower10 && power != kFitPower12){
       Error("SetFitParameters","Wrong power");
       return;
-   }      
+   }
    if (fitTaylor != kFitTaylorOrderFirst
         && fitTaylor != kFitTaylorOrderSecond){
       Error("SetFitParameters","Wrong order of Taylor development");
       return;
-   }      
+   }
    fXmin=xmin,fXmax=xmax,fYmin=ymin,fYmax=ymax,fNumberIterations=numberIterations,fAlpha=alpha,fStatisticType=statisticType,fAlphaOptim=alphaOptim,fPower=power,fFitTaylor=fitTaylor;
 }
 
@@ -6503,27 +6503,27 @@ void TSpectrum2Fit::SetFitParameters(Int_t xmin,Int_t xmax,Int_t ymin,Int_t ymax
 void TSpectrum2Fit::SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_t sigmaY, Bool_t fixSigmaY, Double_t ro, Bool_t fixRo, const Double_t *positionInitX, const Bool_t *fixPositionX, const Double_t *positionInitY, const Bool_t *fixPositionY, const Double_t *positionInitX1, const Bool_t *fixPositionX1, const Double_t *positionInitY1, const Bool_t *fixPositionY1, const Double_t *ampInit, const Bool_t *fixAmp, const Double_t *ampInitX1, const Bool_t *fixAmpX1, const Double_t *ampInitY1, const Bool_t *fixAmpY1)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION                                                      
-//                                                     
+//   SETTER FUNCTION
+//
 //   This function sets the following fitting parameters of peaks:
 //         -sigmaX - initial value of sigma x parameter
-//         -fixSigmaX - logical value of sigma x parameter, which allows to fix the parameter (not to fit)   
+//         -fixSigmaX - logical value of sigma x parameter, which allows to fix the parameter (not to fit)
 //         -sigmaY - initial value of sigma y parameter
-//         -fixSigmaY - logical value of sigma y parameter, which allows to fix the parameter (not to fit) 
+//         -fixSigmaY - logical value of sigma y parameter, which allows to fix the parameter (not to fit)
 //         -ro - initial value of ro parameter (correlation coefficient)
-//         -fixRo - logical value of ro parameter, which allows to fix the parameter (not to fit)     
+//         -fixRo - logical value of ro parameter, which allows to fix the parameter (not to fit)
 //         -positionInitX - aray of initial values of peaks x positions
 //         -fixPositionX - array of logical values which allow to fix appropriate x positions (not fit). However they are present in the estimated functional.
 //         -positionInitY - aray of initial values of peaks y positions
 //         -fixPositionY - array of logical values which allow to fix appropriate y positions (not fit). However they are present in the estimated functional.
 //         -ampInit - aray of initial values of  2D peaks amplitudes
-//         -fixAmp - aray of logical values which allow to fix appropriate amplitudes of 2D peaks (not fit). However they are present in the estimated functional      
+//         -fixAmp - aray of logical values which allow to fix appropriate amplitudes of 2D peaks (not fit). However they are present in the estimated functional
 //         -ampInitX1 - aray of initial values of amplitudes of  1D ridges in x direction
-//         -fixAmpX1 - aray of logical values which allow to fix appropriate amplitudes of 1D ridges in x direction (not fit). However they are present in the estimated functional      
+//         -fixAmpX1 - aray of logical values which allow to fix appropriate amplitudes of 1D ridges in x direction (not fit). However they are present in the estimated functional
 //         -ampInitY1 - aray of initial values of amplitudes of  1D ridges in y direction
-//         -fixAmpY1 - aray of logical values which allow to fix appropriate amplitudes of 1D ridges in y direction (not fit). However they are present in the estimated functional      
-//////////////////////////////////////////////////////////////////////////////   
-   
+//         -fixAmpY1 - aray of logical values which allow to fix appropriate amplitudes of 1D ridges in y direction (not fit). However they are present in the estimated functional
+//////////////////////////////////////////////////////////////////////////////
+
    if (sigmaX <= 0 || sigmaY <= 0){
       Error ("SetPeakParameters","Invalid sigma, must be > than 0");
       return;
@@ -6531,54 +6531,54 @@ void TSpectrum2Fit::SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_
    if (ro < -1 || ro > 1){
       Error ("SetPeakParameters","Invalid ro, must be from region <-1,1>");
       return;
-   }    
+   }
    Int_t i;
    for(i=0; i < fNPeaks; i++){
       if(positionInitX[i] < fXmin || positionInitX[i] > fXmax){
          Error ("SetPeakParameters","Invalid peak position, must be in the range fXmin, fXmax");
          return;
-      }         
+      }
       if(positionInitY[i] < fYmin || positionInitY[i] > fYmax){
          Error ("SetPeakParameters","Invalid peak position, must be in the range fYmin, fYmax");
          return;
-      }               
+      }
       if(positionInitX1[i] < fXmin || positionInitX1[i] > fXmax){
          Error ("SetPeakParameters","Invalid ridge position, must be in the range fXmin, fXmax");
          return;
-      }         
+      }
       if(positionInitY1[i] < fYmin || positionInitY1[i] > fYmax){
          Error ("SetPeakParameters","Invalid ridge position, must be in the range fYmin, fYmax");
          return;
-      }                     
+      }
       if(ampInit[i] < 0){
-         Error ("SetPeakParameters","Invalid peak amplitude, must be > than 0");        
+         Error ("SetPeakParameters","Invalid peak amplitude, must be > than 0");
          return;
-      }         
+      }
       if(ampInitX1[i] < 0){
-         Error ("SetPeakParameters","Invalid x ridge amplitude, must be > than 0");        
+         Error ("SetPeakParameters","Invalid x ridge amplitude, must be > than 0");
          return;
-      }               
+      }
       if(ampInitY1[i] < 0){
-         Error ("SetPeakParameters","Invalid y ridge amplitude, must be > than 0");        
+         Error ("SetPeakParameters","Invalid y ridge amplitude, must be > than 0");
          return;
-      }               
+      }
    }
    fSigmaInitX = sigmaX, fFixSigmaX = fixSigmaX, fSigmaInitY = sigmaY, fFixSigmaY = fixSigmaY, fRoInit = ro, fFixRo = fixRo;
    for(i=0; i < fNPeaks; i++){
       fPositionInitX[i] = positionInitX[i];
       fFixPositionX[i] = fixPositionX[i];
       fPositionInitY[i] = positionInitY[i];
-      fFixPositionY[i] = fixPositionY[i];      
+      fFixPositionY[i] = fixPositionY[i];
       fPositionInitX1[i] = positionInitX1[i];
       fFixPositionX1[i] = fixPositionX1[i];
       fPositionInitY1[i] = positionInitY1[i];
-      fFixPositionY1[i] = fixPositionY1[i];            
+      fFixPositionY1[i] = fixPositionY1[i];
       fAmpInit[i] = ampInit[i];
-      fFixAmp[i] = fixAmp[i]; 
+      fFixAmp[i] = fixAmp[i];
       fAmpInitX1[i] = ampInitX1[i];
-      fFixAmpX1[i] = fixAmpX1[i];       
+      fFixAmpX1[i] = fixAmpX1[i];
       fAmpInitY1[i] = ampInitY1[i];
-      fFixAmpY1[i] = fixAmpY1[i];             
+      fFixAmpY1[i] = fixAmpY1[i];
    }
 }
 
@@ -6586,84 +6586,84 @@ void TSpectrum2Fit::SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_
 void TSpectrum2Fit::SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Double_t axInit, Bool_t fixAx, Double_t ayInit, Bool_t fixAy)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION                                                      
-//                                                     
+//   SETTER FUNCTION
+//
 //   This function sets the following fitting parameters of background:
 //         -a0Init - initial value of a0 parameter (backgroud is estimated as a0+ax*x+ay*y)
-//         -fixA0 - logical value of a0 parameter, which allows to fix the parameter (not to fit)  
+//         -fixA0 - logical value of a0 parameter, which allows to fix the parameter (not to fit)
 //         -axInit - initial value of ax parameter
-//         -fixAx - logical value of ax parameter, which allows to fix the parameter (not to fit)   
+//         -fixAx - logical value of ax parameter, which allows to fix the parameter (not to fit)
 //         -ayInit - initial value of ay parameter
-//         -fixAy - logical value of ay parameter, which allows to fix the parameter (not to fit)     
-//////////////////////////////////////////////////////////////////////////////   
-   
+//         -fixAy - logical value of ay parameter, which allows to fix the parameter (not to fit)
+//////////////////////////////////////////////////////////////////////////////
+
    fA0Init = a0Init;
    fFixA0 = fixA0;
    fAxInit = axInit;
    fFixAx = fixAx;
    fAyInit = ayInit;
-   fFixAy = fixAy;    
+   fFixAy = fixAy;
 }
 
 //______________________________________________________________________________
 void TSpectrum2Fit::SetTailParameters(Double_t tInitXY, Bool_t fixTxy, Double_t tInitX, Bool_t fixTx, Double_t tInitY, Bool_t fixTy, Double_t bInitX, Bool_t fixBx, Double_t bInitY, Bool_t fixBy, Double_t sInitXY, Bool_t fixSxy, Double_t sInitX, Bool_t fixSx, Double_t sInitY, Bool_t fixSy)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION                                                      
-//                                                     
+//   SETTER FUNCTION
+//
 //   This function sets the following fitting parameters of tails of peaks
 //         -tInitXY - initial value of txy parameter
-//         -fixTxy - logical value of txy parameter, which allows to fix the parameter (not to fit)  
+//         -fixTxy - logical value of txy parameter, which allows to fix the parameter (not to fit)
 //         -tInitX - initial value of tx parameter
 //         -fixTx - logical value of tx parameter, which allows to fix the parameter (not to fit)
 //         -tInitY - initial value of ty parameter
-//         -fixTy - logical value of ty parameter, which allows to fix the parameter (not to fit)    
+//         -fixTy - logical value of ty parameter, which allows to fix the parameter (not to fit)
 //         -bInitX - initial value of bx parameter
-//         -fixBx - logical value of bx parameter, which allows to fix the parameter (not to fit) 
+//         -fixBx - logical value of bx parameter, which allows to fix the parameter (not to fit)
 //         -bInitY - initial value of by parameter
-//         -fixBy - logical value of by parameter, which allows to fix the parameter (not to fit)   
+//         -fixBy - logical value of by parameter, which allows to fix the parameter (not to fit)
 //         -sInitXY - initial value of sxy parameter
-//         -fixSxy - logical value of sxy parameter, which allows to fix the parameter (not to fit) 
+//         -fixSxy - logical value of sxy parameter, which allows to fix the parameter (not to fit)
 //         -sInitX - initial value of sx parameter
 //         -fixSx - logical value of sx parameter, which allows to fix the parameter (not to fit)
 //         -sInitY - initial value of sy parameter
-//         -fixSy - logical value of sy parameter, which allows to fix the parameter (not to fit)     
-//////////////////////////////////////////////////////////////////////////////      
+//         -fixSy - logical value of sy parameter, which allows to fix the parameter (not to fit)
+//////////////////////////////////////////////////////////////////////////////
    fTxyInit = tInitXY;
    fFixTxy = fixTxy;
    fTxInit = tInitX;
    fFixTx = fixTx;
    fTyInit = tInitY;
-   fFixTy = fixTy;    
+   fFixTy = fixTy;
    fBxInit = bInitX;
    fFixBx = fixBx;
    fByInit = bInitY;
-   fFixBy = fixBy;  
+   fFixBy = fixBy;
    fSxyInit = sInitXY;
-   fFixSxy = fixSxy;     
+   fFixSxy = fixSxy;
    fSxInit = sInitX;
    fFixSx = fixSx;
    fSyInit = sInitY;
-   fFixSy = fixSy;              
+   fFixSy = fixSy;
 }
 
 //______________________________________________________________________________
 void TSpectrum2Fit::GetPositions(Double_t *positionsX, Double_t *positionsY, Double_t *positionsX1, Double_t *positionsY1)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets the positions of fitted 2D peaks and 1D ridges
 //         -positionX - gets vector of x positions of 2D peaks
 //         -positionY - gets vector of y positions of 2D peaks
 //         -positionX1 - gets vector of x positions of 1D ridges
 //         -positionY1 - gets vector of y positions of 1D ridges
-//////////////////////////////////////////////////////////////////////////////      
+//////////////////////////////////////////////////////////////////////////////
    for( Int_t i=0; i < fNPeaks; i++){
       positionsX[i]  = fPositionCalcX[i];
-      positionsY[i]  = fPositionCalcY[i];      
+      positionsY[i]  = fPositionCalcY[i];
       positionsX1[i] = fPositionCalcX1[i];
-      positionsY1[i] = fPositionCalcY1[i];            
+      positionsY1[i] = fPositionCalcY1[i];
    }
 }
 
@@ -6671,20 +6671,20 @@ void TSpectrum2Fit::GetPositions(Double_t *positionsX, Double_t *positionsY, Dou
 void TSpectrum2Fit::GetPositionErrors(Double_t *positionErrorsX, Double_t *positionErrorsY, Double_t *positionErrorsX1, Double_t *positionErrorsY1)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets the errors of positions of fitted 2D peaks and 1D ridges
 //         -positionErrorsX - gets vector of errors of x positions of 2D peaks
 //         -positionErrorsY - gets vector of errors of y positions of 2D peaks
 //         -positionErrorsX1 - gets vector of errors of x positions of 1D ridges
 //         -positionErrorsY1 - gets vector of errors of y positions of 1D ridges
-//////////////////////////////////////////////////////////////////////////////      
-   
+//////////////////////////////////////////////////////////////////////////////
+
    for( Int_t i=0; i < fNPeaks; i++){
       positionErrorsX[i] = fPositionErrX[i];
-      positionErrorsY[i] = fPositionErrY[i];      
-      positionErrorsX1[i] = fPositionErrX1[i];      
-      positionErrorsY1[i] = fPositionErrY1[i];      
+      positionErrorsY[i] = fPositionErrY[i];
+      positionErrorsX1[i] = fPositionErrX1[i];
+      positionErrorsY1[i] = fPositionErrY1[i];
    }
 }
 
@@ -6692,18 +6692,18 @@ void TSpectrum2Fit::GetPositionErrors(Double_t *positionErrorsX, Double_t *posit
 void TSpectrum2Fit::GetAmplitudes(Double_t *amplitudes, Double_t *amplitudesX1, Double_t *amplitudesY1)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets the amplitudes of fitted 2D peaks and 1D ridges
 //         -amplitudes - gets vector of amplitudes of 2D peaks
 //         -amplitudesX1 - gets vector of amplitudes of 1D ridges in x direction
 //         -amplitudesY1 - gets vector of amplitudes of 1D ridges in y direction
-//////////////////////////////////////////////////////////////////////////////      
-   
+//////////////////////////////////////////////////////////////////////////////
+
    for( Int_t i=0; i < fNPeaks; i++){
       amplitudes[i] = fAmpCalc[i];
-      amplitudesX1[i] = fAmpCalcX1[i];      
-      amplitudesY1[i] = fAmpCalcY1[i];      
+      amplitudesX1[i] = fAmpCalcX1[i];
+      amplitudesY1[i] = fAmpCalcY1[i];
    }
 }
 
@@ -6711,18 +6711,18 @@ void TSpectrum2Fit::GetAmplitudes(Double_t *amplitudes, Double_t *amplitudesX1, 
 void TSpectrum2Fit::GetAmplitudeErrors(Double_t *amplitudeErrors, Double_t *amplitudeErrorsX1, Double_t *amplitudeErrorsY1)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets the amplitudes of fitted 2D peaks and 1D ridges
 //         -amplitudeErrors - gets vector of amplitudes errors of 2D peaks
 //         -amplitudeErrorsX1 - gets vector of amplitudes errors of 1D ridges in x direction
 //         -amplitudesErrorY1 - gets vector of amplitudes errors of 1D ridges in y direction
-//////////////////////////////////////////////////////////////////////////////      
-   
+//////////////////////////////////////////////////////////////////////////////
+
    for( Int_t i=0; i < fNPeaks; i++){
       amplitudeErrors[i] = fAmpErr[i];
-      amplitudeErrorsX1[i] = fAmpErrX1[i];      
-      amplitudeErrorsY1[i] = fAmpErrY1[i];      
+      amplitudeErrorsX1[i] = fAmpErrX1[i];
+      amplitudeErrorsY1[i] = fAmpErrY1[i];
    }
 }
 
@@ -6730,11 +6730,11 @@ void TSpectrum2Fit::GetAmplitudeErrors(Double_t *amplitudeErrors, Double_t *ampl
 void TSpectrum2Fit::GetVolumes(Double_t *volumes)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets the volumes of fitted 2D peaks
 //         -volumes - gets vector of volumes of 2D peaks
-//////////////////////////////////////////////////////////////////////////////         
+//////////////////////////////////////////////////////////////////////////////
    for( Int_t i=0; i < fNPeaks; i++){
       volumes[i] = fVolume[i];
    }
@@ -6744,11 +6744,11 @@ void TSpectrum2Fit::GetVolumes(Double_t *volumes)
 void TSpectrum2Fit::GetVolumeErrors(Double_t *volumeErrors)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets errors of the volumes of fitted 2D peaks
 //         -volumeErrors - gets vector of volumes errors of 2D peaks
-//////////////////////////////////////////////////////////////////////////////            
+//////////////////////////////////////////////////////////////////////////////
    for( Int_t i=0; i < fNPeaks; i++){
       volumeErrors[i] = fVolumeErr[i];
    }
@@ -6758,12 +6758,12 @@ void TSpectrum2Fit::GetVolumeErrors(Double_t *volumeErrors)
 void TSpectrum2Fit::GetSigmaX(Double_t &sigmaX, Double_t &sigmaErrX)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets the sigma x parameter and its error
 //         -sigmaX - gets the fitted value of sigma x parameter
 //         -sigmaErrX - gets error value of sigma x parameter
-//////////////////////////////////////////////////////////////////////////////      
+//////////////////////////////////////////////////////////////////////////////
    sigmaX=fSigmaCalcX;
    sigmaErrX=fSigmaErrX;
 }
@@ -6772,12 +6772,12 @@ void TSpectrum2Fit::GetSigmaX(Double_t &sigmaX, Double_t &sigmaErrX)
 void TSpectrum2Fit::GetSigmaY(Double_t &sigmaY, Double_t &sigmaErrY)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets the sigma y parameter and its error
 //         -sigmaY - gets the fitted value of sigma y parameter
 //         -sigmaErrY - gets error value of sigma y parameter
-//////////////////////////////////////////////////////////////////////////////         
+//////////////////////////////////////////////////////////////////////////////
    sigmaY=fSigmaCalcY;
    sigmaErrY=fSigmaErrY;
 }
@@ -6786,12 +6786,12 @@ void TSpectrum2Fit::GetSigmaY(Double_t &sigmaY, Double_t &sigmaErrY)
 void TSpectrum2Fit::GetRo(Double_t &ro, Double_t &roErr)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets the ro parameter and its error
 //         -ro - gets the fitted value of ro parameter
 //         -roErr - gets error value of ro parameter
-//////////////////////////////////////////////////////////////////////////////         
+//////////////////////////////////////////////////////////////////////////////
    ro=fRoCalc;
    roErr=fRoErr;
 }
@@ -6800,8 +6800,8 @@ void TSpectrum2Fit::GetRo(Double_t &ro, Double_t &roErr)
 void TSpectrum2Fit::GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Double_t &ax, Double_t &axErr, Double_t &ay, Double_t &ayErr)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets the background parameters and their errors
 //         -a0 - gets the fitted value of a0 parameter
 //         -a0Err - gets error value of a0 parameter
@@ -6809,22 +6809,22 @@ void TSpectrum2Fit::GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Doubl
 //         -axErr - gets error value of ax parameter
 //         -ay - gets the fitted value of ay parameter
 //         -ayErr - gets error value of ay parameter
-//////////////////////////////////////////////////////////////////////////////      
-   
+//////////////////////////////////////////////////////////////////////////////
+
    a0 = fA0Calc;
    a0Err = fA0Err;
    ax = fAxCalc;
    axErr = fAxErr;
    ay = fAyCalc;
-   ayErr = fAyErr;    
+   ayErr = fAyErr;
 }
 
 //______________________________________________________________________________
 void TSpectrum2Fit::GetTailParameters(Double_t &txy, Double_t &txyErr, Double_t &tx, Double_t &txErr, Double_t &ty, Double_t &tyErr, Double_t &bx, Double_t &bxErr, Double_t &by, Double_t &byErr, Double_t &sxy, Double_t &sxyErr, Double_t &sx, Double_t &sxErr, Double_t &sy, Double_t &syErr)
 {
 //////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION                                                      
-//                                                     
+//   GETTER FUNCTION
+//
 //   This function gets the tail parameters and their errors
 //         -txy - gets the fitted value of txy parameter
 //         -txyErr - gets error value of txy parameter
@@ -6842,22 +6842,22 @@ void TSpectrum2Fit::GetTailParameters(Double_t &txy, Double_t &txyErr, Double_t 
 //         -sxErr - gets error value of sx parameter
 //         -sy - gets the fitted value of sy parameter
 //         -syErr - gets error value of sy parameter
-//////////////////////////////////////////////////////////////////////////////            
+//////////////////////////////////////////////////////////////////////////////
    txy = fTxyCalc;
    txyErr = fTxyErr;
    tx = fTxCalc;
-   txErr = fTxErr;  
+   txErr = fTxErr;
    ty = fTyCalc;
-   tyErr = fTyErr;  
+   tyErr = fTyErr;
    bx = fBxCalc;
-   bxErr = fBxErr;  
+   bxErr = fBxErr;
    by = fByCalc;
-   byErr = fByErr;    
+   byErr = fByErr;
    sxy = fSxyCalc;
-   sxyErr = fSxyErr;  
+   sxyErr = fSxyErr;
    sx = fSxCalc;
-   sxErr = fSxErr;    
+   sxErr = fSxErr;
    sy = fSyCalc;
-   syErr = fSyErr;    
+   syErr = fSyErr;
 }
 

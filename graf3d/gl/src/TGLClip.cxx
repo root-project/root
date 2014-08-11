@@ -111,7 +111,7 @@ void TGLClip::Setup(const TGLVector3&, const TGLVector3&)
    // clipping objects.
 
    Warning("TGLClip::Setup", "Called on base-class -- should be re-implemented in derived class.");
-   
+
 }
 
 //______________________________________________________________________________
@@ -305,7 +305,7 @@ void TGLClipBox::Setup(const TGLVector3& min_point, const TGLVector3& max_point)
    cbl->Resize(min_point, max_point);
 
    IncTimeStamp();
-   fValid = kTRUE; 
+   fValid = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -336,7 +336,7 @@ ClassImp(TGLClipSet);
 
 //______________________________________________________________________________
 TGLClipSet::TGLClipSet() :
-   TGLOverlayElement(kViewer), 
+   TGLOverlayElement(kViewer),
    fClipPlane   (new TGLClipPlane),
    fClipBox     (new TGLClipBox),
    fCurrentClip (0),

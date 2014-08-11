@@ -25,14 +25,14 @@ private:
 protected:
 
 public:
-   TGSimpleTableInterface(Double_t **data, UInt_t nrows = 2, 
+   TGSimpleTableInterface(Double_t **data, UInt_t nrows = 2,
                           UInt_t ncolumns = 2);
    virtual ~TGSimpleTableInterface();
 
    virtual Double_t    GetValue(UInt_t row, UInt_t column);
    virtual const char *GetValueAsString(UInt_t row, UInt_t column);
    virtual const char *GetRowHeader(UInt_t row);
-   virtual const char *GetColumnHeader(UInt_t column); 
+   virtual const char *GetColumnHeader(UInt_t column);
    virtual UInt_t      GetNRows() { return fNRows; }
    virtual UInt_t      GetNColumns() { return fNColumns; }
 

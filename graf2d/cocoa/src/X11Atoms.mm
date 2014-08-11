@@ -86,7 +86,7 @@ void InitWithPredefinedAtoms(name_to_atom_map &nameToAtom, std::vector<std::stri
 
    for (unsigned i = 0; i < nPredefined; ++i)
       nameToAtom[predefinedAtoms[i]] = i + 1;
-   
+
    atomNames.assign(predefinedAtoms, predefinedAtoms + nPredefined);
 }
 

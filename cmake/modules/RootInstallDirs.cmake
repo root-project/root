@@ -230,23 +230,23 @@ mark_as_advanced(
 
 # Result directories
 #
-foreach(dir BINDIR 
-            LIBDIR 
+foreach(dir BINDIR
+            LIBDIR
             INCLUDEDIR
-            SYSCONFDIR 
-            MANDIR 
-            DATAROOTDIR 
-            DATADIR 
-            MACRODIR 
-            CINTINCDIR 
-            ICONDIR 
-            FONTDIR 
-            SRCDIR 
-            DOCDIR 
-            TESTDIR 
-            TUTDIR 
+            SYSCONFDIR
+            MANDIR
+            DATAROOTDIR
+            DATADIR
+            MACRODIR
+            CINTINCDIR
+            ICONDIR
+            FONTDIR
+            SRCDIR
+            DOCDIR
+            TESTDIR
+            TUTDIR
             ACLOCALDIR
-            ELISPDIR 
+            ELISPDIR
             CMAKEDIR )
   if(NOT IS_ABSOLUTE ${CMAKE_INSTALL_${dir}})
     set(CMAKE_INSTALL_FULL_${dir} "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_${dir}}")

@@ -38,7 +38,7 @@
 // TGeoHype               ->           OCC_Hype(..)                           //
 // TGeoXtru               ->           OCC_Xtru(..)                           //
 // TGeoCompositeShape     ->           OCC_CompositeShape(..)                 //
-//                                                                            // 
+//                                                                            //
 // A log file is created in /tmp/TGeoCad.log                                  //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,13 +116,13 @@
 
 
 TGeoToOCC::TGeoToOCC():fOccShape()
-{	
+{
 
 }
 
 TGeoToOCC::~TGeoToOCC()
 {
-	
+
 }
 
 TopoDS_Shape TGeoToOCC::OCC_SimpleShape(TGeoShape *TG_Shape)
@@ -152,7 +152,7 @@ TopoDS_Shape TGeoToOCC::OCC_SimpleShape(TGeoShape *TG_Shape)
    } else if(TG_Shape->IsA()==TGeoConeSeg::Class()) {
       TGeoConeSeg* TG_ConeSeg=(TGeoConeSeg*)TG_Shape;
       Double_t r  = (TG_ConeSeg->GetPhi2()-TG_ConeSeg->GetPhi1());
-      return OCC_Cones(TG_ConeSeg->GetRmin1(), TG_ConeSeg->GetRmax1(),TG_ConeSeg->GetRmin2(), TG_ConeSeg->GetRmax2(), 
+      return OCC_Cones(TG_ConeSeg->GetRmin1(), TG_ConeSeg->GetRmax1(),TG_ConeSeg->GetRmin2(), TG_ConeSeg->GetRmax2(),
       TG_ConeSeg->GetDz(), (TG_ConeSeg->GetPhi1())*M_PI/180., r*M_PI/180.);
    } else if(TG_Shape->IsA()==TGeoTorus::Class()) {
       TGeoTorus* TG_Torus=(TGeoTorus*)TG_Shape;
@@ -160,7 +160,7 @@ TopoDS_Shape TGeoToOCC::OCC_SimpleShape(TGeoShape *TG_Shape)
       if (DPhi<0)
       DPhi=(Double_t)TG_Torus->GetPhi1()-TG_Torus->GetDphi();
       Double_t Phi1= (Double_t)TG_Torus->GetPhi1();
-      return OCC_Torus((Double_t)TG_Torus->GetRmin(),(Double_t)TG_Torus->GetRmax(),(Double_t)TG_Torus->GetR(), 
+      return OCC_Torus((Double_t)TG_Torus->GetRmin(),(Double_t)TG_Torus->GetRmax(),(Double_t)TG_Torus->GetR(),
       Phi1*M_PI/180., DPhi*M_PI/180.);
    } else if(TG_Shape->IsA()==TGeoSphere::Class()) {
       TGeoSphere* TG_Sphere=(TGeoSphere*)TG_Shape;
@@ -176,14 +176,14 @@ TopoDS_Shape TGeoToOCC::OCC_SimpleShape(TGeoShape *TG_Shape)
       TGeoPgon* TG_Pgon=(TGeoPgon*)TG_Shape;
       Int_t numpoints=TG_Pgon->GetNmeshVertices();
       Double_t *p = new Double_t[3*numpoints];
-      TG_Pgon->SetPoints(p); 
+      TG_Pgon->SetPoints(p);
       return OCC_Pgon(TG_Pgon->GetNsegments(),TG_Pgon->GetNz(),p,TG_Pgon->GetPhi1(),TG_Pgon->GetDphi(),numpoints*3);
    } else if(TG_Shape->IsA()==TGeoHype::Class()) {
       TGeoHype* TG_Hype=(TGeoHype*)TG_Shape;
       return OCC_Hype(TG_Hype->GetRmin(), TG_Hype->GetRmax(), TG_Hype->GetStIn(), TG_Hype->GetStOut(),TG_Hype->GetDz());
    } else if(TG_Shape->IsA()==TGeoXtru::Class()) {
       return OCC_Xtru((TGeoXtru*)TG_Shape);
-   } else if (TG_Shape->IsA()==TGeoBBox::Class()) { 
+   } else if (TG_Shape->IsA()==TGeoBBox::Class()) {
       TGeoBBox * TG_Box=(TGeoBBox*)TG_Shape;
       const Double_t * Origin = TG_Box->GetOrigin();
       return OCC_Box(TG_Box->GetDX(),TG_Box->GetDY(),TG_Box->GetDZ(),Origin[0],Origin[1],Origin[2]);
@@ -202,17 +202,17 @@ TopoDS_Shape TGeoToOCC::OCC_SimpleShape(TGeoShape *TG_Shape)
       TGeoBBox * TG_Ass=(TGeoBBox*)TG_Shape;
       return OCC_Box(TG_Ass->GetDX(),TG_Ass->GetDY(),TG_Ass->GetDZ(),0,0,0);
    } else if (TG_Shape->IsA()==TGeoPara::Class()) {
-      TGeoPara * TG_Para=(TGeoPara*)TG_Shape; 
+      TGeoPara * TG_Para=(TGeoPara*)TG_Shape;
       Double_t vertex[24];
       TG_Shape->SetPoints(vertex);
       return OCC_ParaTrap(vertex);
    }  else if (TG_Shape->IsA()==TGeoTrap::Class()) {
-      TGeoTrap * TG_Trap=(TGeoTrap*)TG_Shape; 
+      TGeoTrap * TG_Trap=(TGeoTrap*)TG_Shape;
       Double_t vertex[24];
       TG_Shape->SetPoints(vertex);
       return OCC_ParaTrap(vertex);
    } else if (TG_Shape->IsA()==TGeoGtra::Class()) {
-      TGeoGtra * TG_Tra=(TGeoGtra*)TG_Shape; 
+      TGeoGtra * TG_Tra=(TGeoGtra*)TG_Shape;
       Double_t vertex[24];
       TG_Shape->SetPoints(vertex);
       return OCC_ParaTrap(vertex);
@@ -230,7 +230,7 @@ TopoDS_Shape TGeoToOCC::OCC_CompositeShape(TGeoCompositeShape *comp, TGeoHMatrix
    TopoDS_Shape leftOCCShape;
    TopoDS_Shape rightOCCShape;
    TopoDS_Shape result;
-   GProp_GProps System; 
+   GProp_GProps System;
    GProp_GProps System2;
    TGeoBoolNode *boolNode=comp->GetBoolNode();
    TGeoShape *rightShape=boolNode->GetRightShape();
@@ -239,10 +239,10 @@ TopoDS_Shape TGeoToOCC::OCC_CompositeShape(TGeoCompositeShape *comp, TGeoHMatrix
    TString leftSName = leftShape->IsA()->GetName();
    TGeoMatrix *leftMtx=boolNode->GetLeftMatrix();
    TGeoMatrix *rightMtx=boolNode->GetRightMatrix();
-   TGeoHMatrix  leftGlobMatx=m*(*leftMtx); 
-   if(leftSName == "TGeoCompositeShape") { 
+   TGeoHMatrix  leftGlobMatx=m*(*leftMtx);
+   if(leftSName == "TGeoCompositeShape") {
       leftOCCShape=OCC_CompositeShape((TGeoCompositeShape*)leftShape, leftGlobMatx);
-   } else { 
+   } else {
       t=leftGlobMatx.GetTranslation();
       r=leftGlobMatx.GetRotationMatrix();
       Transl.SetTranslation(gp_Vec(t[0],t[1],t[2]));
@@ -255,7 +255,7 @@ TopoDS_Shape TGeoToOCC::OCC_CompositeShape(TGeoCompositeShape *comp, TGeoHMatrix
       Transformation.Perform(OCC_SimpleShape(leftShape),true);
       TopoDS_Shape shapeTransf = Transformation.Shape();
       Translation.Perform(shapeTransf, Standard_True);
-      leftOCCShape = Translation.Shape();  
+      leftOCCShape = Translation.Shape();
    }
    TGeoHMatrix  rightGlobMatx=m*(*rightMtx);
    if(rightSName == "TGeoCompositeShape" ) {
@@ -275,15 +275,15 @@ TopoDS_Shape TGeoToOCC::OCC_CompositeShape(TGeoCompositeShape *comp, TGeoHMatrix
       Transformation.Perform(sh,true);
       TopoDS_Shape shapeTransf = Transformation.Shape();
       Translation.Perform(shapeTransf, Standard_True);
-      rightOCCShape = Translation.Shape(); 
+      rightOCCShape = Translation.Shape();
    }
    TGeoBoolNode::EGeoBoolType boolOper=boolNode->GetBooleanOperator();
-   if(TGeoBoolNode::kGeoUnion == boolOper){ 
+   if(TGeoBoolNode::kGeoUnion == boolOper){
       if (leftOCCShape.IsNull())out<<"leftshape is null"<<endl;
       if (rightOCCShape.IsNull())out<<"rightshape is null"<<endl;
       leftOCCShape.Closed(true);
       rightOCCShape.Closed(true);
-      BRepAlgoAPI_Fuse Result(leftOCCShape, rightOCCShape); 
+      BRepAlgoAPI_Fuse Result(leftOCCShape, rightOCCShape);
       Result.Build();
       result=Result.Shape();
       result.Closed(true);
@@ -294,7 +294,7 @@ TopoDS_Shape TGeoToOCC::OCC_CompositeShape(TGeoCompositeShape *comp, TGeoHMatrix
       result=Result.Shape();
       result.Closed(true);
       return Reverse(result);
-   } else if(TGeoBoolNode::kGeoSubtraction ==boolOper) { 
+   } else if(TGeoBoolNode::kGeoSubtraction ==boolOper) {
       if (leftOCCShape.IsNull())out<<"leftshape is null"<<endl;
       if (rightOCCShape.IsNull())out<<"rightshape is null"<<endl;
       out.close();
@@ -302,7 +302,7 @@ TopoDS_Shape TGeoToOCC::OCC_CompositeShape(TGeoCompositeShape *comp, TGeoHMatrix
       if (System.Mass() < 0.0) rightOCCShape.Reverse();
       BRepGProp::VolumeProperties(leftOCCShape, System2);
       if (System2.Mass() < 0.0) leftOCCShape.Reverse();
-      BRepAlgoAPI_Cut Result(leftOCCShape,rightOCCShape); 
+      BRepAlgoAPI_Cut Result(leftOCCShape,rightOCCShape);
       Result.Build();
       result=Result.Shape();
       return Reverse(result);
@@ -357,12 +357,12 @@ TopoDS_Shape TGeoToOCC::OCC_Torus(Double_t Rmin, Double_t Rmax, Double_t Rtor,
    t.SetRotation(gp::OZ(), SPhi);
    BRepBuilderAPI_Transform brepT(tor , t);
    fOccShape = brepT.Shape();
-   return  Reverse(fOccShape); 
+   return  Reverse(fOccShape);
 }
 
 
-TopoDS_Shape TGeoToOCC::OCC_Sphere(Double_t rmin, Double_t rmax, 
-                                    Double_t phi1, Double_t Dphi, 
+TopoDS_Shape TGeoToOCC::OCC_Sphere(Double_t rmin, Double_t rmax,
+                                    Double_t phi1, Double_t Dphi,
                                     Double_t theta1, Double_t Dtheta)
 {
    TopoDS_Edge eO;
@@ -371,19 +371,19 @@ TopoDS_Shape TGeoToOCC::OCC_Sphere(Double_t rmin, Double_t rmax,
    TopoDS_Edge eI;
    TopoDS_Face f;
    TopoDS_Wire w;
-   
+
 
    if(rmin==0&&phi1==0&&Dphi==2*M_PI&&theta1==0&&Dtheta==M_PI) {
       TopoDS_Solid s= BRepPrimAPI_MakeSphere(rmax);
       return s;
    }
-   Handle(Geom_TrimmedCurve) arcO =   GC_MakeArcOfCircle (gp_Circ (gp_Ax2 (gp_Pnt(0., 0., 0.), 
-                                                              gp_Dir (0, 1,0)),rmax),theta1, 
+   Handle(Geom_TrimmedCurve) arcO =   GC_MakeArcOfCircle (gp_Circ (gp_Ax2 (gp_Pnt(0., 0., 0.),
+                                                              gp_Dir (0, 1,0)),rmax),theta1,
                                                                theta1+Dtheta, true);
    BRepBuilderAPI_MakeEdge makeEO(arcO);
    eO = TopoDS::Edge(makeEO.Shape());
    if(rmin>0) {
-      Handle(Geom_TrimmedCurve) arcI =   GC_MakeArcOfCircle (gp_Circ (gp_Ax2 (gp_Pnt(0.,0., 0.), 
+      Handle(Geom_TrimmedCurve) arcI =   GC_MakeArcOfCircle (gp_Circ (gp_Ax2 (gp_Pnt(0.,0., 0.),
                                                                                    gp_Dir (0,1, 0)),rmin),
                                                                   theta1, theta1+Dtheta,true);
 
@@ -409,8 +409,8 @@ TopoDS_Shape TGeoToOCC::OCC_Sphere(Double_t rmin, Double_t rmax,
    return Reverse(fOccShape);
 }
 
-TopoDS_Shape TGeoToOCC::OCC_Tube(Double_t rmin, Double_t rmax, 
-                           Double_t dz, Double_t phi1, 
+TopoDS_Shape TGeoToOCC::OCC_Tube(Double_t rmin, Double_t rmax,
+                           Double_t dz, Double_t phi1,
                            Double_t phi2)
 {
    TopoDS_Solid innerCyl;
@@ -421,7 +421,7 @@ TopoDS_Shape TGeoToOCC::OCC_Tube(Double_t rmin, Double_t rmax,
    gp_Trsf TR;
    if (rmin==0) rmin=rmin+0.00001;
    if (rmax==0) rmax=rmax+0.00001;
-   if (phi1==0&&phi2==0) { 
+   if (phi1==0&&phi2==0) {
      innerCyl = BRepPrimAPI_MakeCylinder(rmin,dz*2);
      outerCyl = BRepPrimAPI_MakeCylinder(rmax,dz*2);
    } else {
@@ -458,11 +458,11 @@ TopoDS_Shape TGeoToOCC::OCC_Cones(Double_t rmin1, Double_t rmax1, Double_t rmin2
    if (rmax1==0) rmax1=rmax1+0.000001;
    if(rmin1!=rmin2)
       innerCon = BRepPrimAPI_MakeCone(rmin1,rmin2,dz*2,phi2);
-   else 
+   else
       innerCon = BRepPrimAPI_MakeCylinder(rmin1,dz*2,phi2);
    if(rmax1!=rmax2)
       outerCon = BRepPrimAPI_MakeCone(rmax1,rmax2,dz*2,phi2);
-   else 
+   else
       outerCon = BRepPrimAPI_MakeCylinder(rmax1,dz*2,phi2);
    BRepAlgoAPI_Cut cutResult(outerCon, innerCon);
    cutResult.Build();
@@ -478,7 +478,7 @@ TopoDS_Shape TGeoToOCC::OCC_Cones(Double_t rmin1, Double_t rmax1, Double_t rmin2
    return Reverse(fOccShape);
 }
 
-TopoDS_Shape TGeoToOCC::OCC_Cuttub(Double_t rmin, Double_t rmax, Double_t dz, 
+TopoDS_Shape TGeoToOCC::OCC_Cuttub(Double_t rmin, Double_t rmax, Double_t dz,
                            Double_t phi1, Double_t Dphi,const Double_t * Nlow,const Double_t * Nhigh)
 {
    out.open("/tmp/TGeoCad.log",ios::app);
@@ -490,7 +490,7 @@ TopoDS_Shape TGeoToOCC::OCC_Cuttub(Double_t rmin, Double_t rmax, Double_t dz,
    TopoDS_Shape tubs;
    TopoDS_Shell sH, sL;
    ShapeFix_ShapeTolerance FTol;
-   Double_t tolerance=1; 
+   Double_t tolerance=1;
 
    gp_Trsf TT;
    gp_Trsf TR;
@@ -505,7 +505,7 @@ TopoDS_Shape TGeoToOCC::OCC_Cuttub(Double_t rmin, Double_t rmax, Double_t dz,
    if (anExp2.More()) {
       TopoDS_Shape aTmpShape = anExp2.Current();
       tubs = TopoDS::Solid (aTmpShape);
-   } 
+   }
    /*TT.SetRotation(gp_Ax1(gp_Pnt(0.,0.,0.), gp_Vec(0., 0., 1.)),phi1);
    BRepBuilderAPI_Transform theTT(TT);
    theTT.Perform(tubs, Standard_True);
@@ -520,7 +520,7 @@ TopoDS_Shape TGeoToOCC::OCC_Cuttub(Double_t rmin, Double_t rmax, Double_t dz,
    if ((Nlow[1]>-1e-4)||(Nlow[1]<1e-4)) nlow1=0;
    Handle(Geom_Plane) pH = new Geom_Plane (gp_Pnt(0,0,dz), gp_Dir(nhigh0,nhigh1,Nhigh[2]));
    Handle(Geom_Plane) pL = new Geom_Plane (gp_Pnt(0,0,-dz), gp_Dir(nlow0,nlow1,Nlow[2]));
-   
+
   /* gp_Dir D(nhigh0,nhigh1,Nhigh[2]);
    gp_Pnt P(0,0,dz);
    gp_Pln Plan(P,D);
@@ -548,10 +548,10 @@ TopoDS_Shape TGeoToOCC::OCC_Cuttub(Double_t rmin, Double_t rmax, Double_t dz,
       sL=shell2.Shell();
    else
       out<<"error shell 2"<<shell2.Error()<<endl;
-   
+
    FTol.SetTolerance(sH, tolerance ,TopAbs_SHELL);
    FTol.SetTolerance(sL, tolerance ,TopAbs_SHELL);
-   
+
    BRepBuilderAPI_MakeSolid solid (sH, sL);
    solid.Build();
    TopoDS_Solid cut=solid.Solid();
@@ -584,15 +584,15 @@ TopoDS_Shape TGeoToOCC::OCC_Xtru(TGeoXtru * TG_Xtru)
    Double_t z [nz];
    gp_Trsf TR;
    TopoDS_Wire w;
-   BRepOffsetAPI_ThruSections sect(true,true); 
+   BRepOffsetAPI_ThruSections sect(true,true);
    for (Int_t i=0;i<nz;i++) {
-      for (Int_t pp=0;pp<vert;pp++) { 
+      for (Int_t pp=0;pp<vert;pp++) {
          x[pp]=TG_Xtru->GetXOffset(i)+(TG_Xtru->GetScale(i)*TG_Xtru->GetX(pp));
          y[pp]=TG_Xtru->GetYOffset(i)+(TG_Xtru->GetScale(i)*TG_Xtru->GetY(pp));
       }
       z[i]=TG_Xtru->GetZ(i);
       w=TGeoToOCC::Polygon(x,y,z[i],vert);
-      sect.AddWire(w);	
+      sect.AddWire(w);
    }
    sect.Build();
    if (sect.IsDone()) fOccShape = sect.Shape();
@@ -601,7 +601,7 @@ TopoDS_Shape TGeoToOCC::OCC_Xtru(TGeoXtru * TG_Xtru)
 
 
 TopoDS_Shape TGeoToOCC::OCC_Hype(Double_t rmin, Double_t  rmax,Double_t  stin, Double_t stout, Double_t  dz )
-{	
+{
    gp_Pnt p(0, 0, 0);
    gp_Dir d(0, 0, 1);
    TopoDS_Vertex vIn,vOut;
@@ -619,21 +619,21 @@ TopoDS_Shape TGeoToOCC::OCC_Hype(Double_t rmin, Double_t  rmax,Double_t  stin, D
    Double_t xO,xI;
    if(stout>0) {
       Double_t aO = rmax;
-      Double_t bO = (rmax/(tan(stout))); 
-      xO = aO*sqrt(1+(dz*dz)/(bO*bO)); 
+      Double_t bO = (rmax/(tan(stout)));
+      xO = aO*sqrt(1+(dz*dz)/(bO*bO));
       gp_Hypr hyO( gp_Ax2 (p, d ), aO, bO);
-      vOut = BRepBuilderAPI_MakeVertex(gp_Pnt(xO,dz,0)); 
+      vOut = BRepBuilderAPI_MakeVertex(gp_Pnt(xO,dz,0));
       vOut1 = BRepBuilderAPI_MakeVertex(gp_Pnt(xO,-dz,0));
-      makeHyEO=BRepBuilderAPI_MakeEdge(hyO,vOut,vOut1); 
+      makeHyEO=BRepBuilderAPI_MakeEdge(hyO,vOut,vOut1);
    }
-   else 
+   else
       makeHyEO=BRepBuilderAPI_MakeEdge(gp_Pnt(rmax,-dz,0), gp_Pnt(rmax,dz,0));
    if(stin>0) {
-      Double_t aI = rmin; 
-      Double_t bI = (rmin/(tan(stin))); 
-      xI = aI*sqrt(1+(dz*dz)/(bI*bI)); 
+      Double_t aI = rmin;
+      Double_t bI = (rmin/(tan(stin)));
+      xI = aI*sqrt(1+(dz*dz)/(bI*bI));
       gp_Hypr hyI( gp_Ax2 (p, d ), aI, bI);
-      vIn = BRepBuilderAPI_MakeVertex(gp_Pnt(xI,dz,0)); 
+      vIn = BRepBuilderAPI_MakeVertex(gp_Pnt(xI,dz,0));
       vIn1  = BRepBuilderAPI_MakeVertex(gp_Pnt(xI,-dz,0));
       makeHyEI=BRepBuilderAPI_MakeEdge(hyI,vIn,vIn1);
     }
@@ -659,7 +659,7 @@ TopoDS_Shape TGeoToOCC::OCC_Hype(Double_t rmin, Double_t  rmax,Double_t  stin, D
 
 TopoDS_Shape TGeoToOCC::OCC_ParaTrap (Double_t *vertex)
 {
-   BRepOffsetAPI_ThruSections sect(true,true); 
+   BRepOffsetAPI_ThruSections sect(true,true);
    TopoDS_Wire w;
    TopoDS_Face ff;
    Int_t punti=0;
@@ -670,7 +670,7 @@ TopoDS_Shape TGeoToOCC::OCC_ParaTrap (Double_t *vertex)
    TopoDS_Edge e4;
    gp_Pnt p1;
    gp_Pnt p2;
-   gp_Pnt p3; 
+   gp_Pnt p3;
    gp_Pnt p4;
 
    while (f<24) {
@@ -681,7 +681,7 @@ TopoDS_Shape TGeoToOCC::OCC_ParaTrap (Double_t *vertex)
       e1=BRepBuilderAPI_MakeEdge(p1,p2 );
       e2=BRepBuilderAPI_MakeEdge(p2,p3 );
       e3=BRepBuilderAPI_MakeEdge(p3,p4 );
-      e4=BRepBuilderAPI_MakeEdge(p4,p1 ); 
+      e4=BRepBuilderAPI_MakeEdge(p4,p1 );
       w = BRepBuilderAPI_MakeWire(e1,e2,e3,e4);
       sect.AddWire(w);
    }
@@ -708,7 +708,7 @@ TopoDS_Shape TGeoToOCC::OCC_Arb8(Double_t dz, Double_t * ivert, Double_t *points
    Int_t x=0,y=0,z=0;
    gp_Pnt point;
    for (Int_t i=0;i<8;i++) {
-     
+
       x=count++;y=count++;z=count++;
       point=gp_Pnt(points[x],points[y],points[z]);
       if (points[x]<=0.1) { tolerance=1;}
@@ -726,7 +726,7 @@ TopoDS_Shape TGeoToOCC::OCC_Arb8(Double_t dz, Double_t * ivert, Double_t *points
    out<<pathArray->Value(1).X()<<" "<<pathArray->Value(1).Y()<<" "<<pathArray->Value(1).Z()<<endl;
    poly1.Close();
    wire1=poly1.Wire();
-   
+
    poly2.Add(pathArray->Value(0));
    out<<pathArray->Value(0).X()<<pathArray->Value(0).Y()<<pathArray->Value(0).Z()<<endl;
    poly2.Add(pathArray->Value(1));
@@ -775,7 +775,7 @@ TopoDS_Shape TGeoToOCC::OCC_Arb8(Double_t dz, Double_t * ivert, Double_t *points
    out<<pathArray->Value(6).X()<<pathArray->Value(6).Y()<<pathArray->Value(6).Z()<<endl;
    poly6.Add(pathArray->Value(5));
    out<<pathArray->Value(5).X()<<pathArray->Value(5).Y()<<pathArray->Value(5).Z()<<endl;
-   
+
    poly6.Close();
    wire6=poly6.Wire();
 
@@ -785,7 +785,7 @@ TopoDS_Shape TGeoToOCC::OCC_Arb8(Double_t dz, Double_t * ivert, Double_t *points
    FTol.SetTolerance(wire4, tolerance ,TopAbs_WIRE);
    FTol.SetTolerance(wire5, tolerance ,TopAbs_WIRE);
    FTol.SetTolerance(wire6, tolerance ,TopAbs_WIRE);
-   
+
    ff  = BRepBuilderAPI_MakeFace(wire1);
    if (ff.IsNull()) out<<"face1 is null"<<endl;
    ff1 = BRepBuilderAPI_MakeFace(wire2);
@@ -811,11 +811,11 @@ TopoDS_Shape TGeoToOCC::OCC_Arb8(Double_t dz, Double_t * ivert, Double_t *points
    if (sewedShape.IsNull()) out<<"Arb8 error"<<endl;
 
    TopExp_Explorer anExp (sewedShape, TopAbs_SHELL);
-   if (anExp.More()) { 
+   if (anExp.More()) {
       aTmpShape = anExp.Current();
       newShell = TopoDS::Shell (aTmpShape);
    }
-   BRepBuilderAPI_MakeSolid mySolid(newShell); 
+   BRepBuilderAPI_MakeSolid mySolid(newShell);
    out.close();
    return Reverse(mySolid.Solid());
 }
@@ -835,8 +835,8 @@ TopoDS_Shape TGeoToOCC::OCC_Box(Double_t dx, Double_t dy, Double_t dz, Double_t 
 TopoDS_Shape TGeoToOCC::OCC_Trd(Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2, Double_t dz)
 {
    TopoDS_Wire wire;
-   BRepOffsetAPI_ThruSections sect(true,true); 
- 
+   BRepOffsetAPI_ThruSections sect(true,true);
+
    TopoDS_Edge edge1;
    TopoDS_Edge edge2;
    TopoDS_Edge edge3;
@@ -880,25 +880,25 @@ TopoDS_Wire TGeoToOCC::Polygon(Double_t *x, Double_t *y, Double_t z, Int_t num )
    for(i=0; i<num; i++) {
       poly.Add(gp_Pnt(x[i], y[i],z));
    }
-   poly.Add(gp_Pnt(x[0], y[0], z)); 
+   poly.Add(gp_Pnt(x[0], y[0], z));
    poly.Close();
    w=poly.Wire();
    return w;
 }
 
 
-TopoDS_Shape TGeoToOCC::OCC_Pcon(Double_t startPhi, Double_t deltaPhi, 
+TopoDS_Shape TGeoToOCC::OCC_Pcon(Double_t startPhi, Double_t deltaPhi,
                           Int_t zNum, Double_t *rMin, Double_t *rMax, Double_t *z)
 {
-   
-   TopoDS_Shape pCone; 
+
+   TopoDS_Shape pCone;
    TopoDS_Shape cone;
    Double_t zHalf=0.0;
    gp_Trsf Transl;
    gp_Trsf Transf;
-   for(Int_t nCon=0; nCon<zNum-1; nCon++) { 
+   for(Int_t nCon=0; nCon<zNum-1; nCon++) {
       zHalf = (z[nCon+1]-z[nCon])/2.;
-      if ((zHalf==0)||(zHalf<0)) zHalf=0.1;  
+      if ((zHalf==0)||(zHalf<0)) zHalf=0.1;
       cone = OCC_Cones(rMin[nCon], rMax[nCon], rMin[(nCon+1)], rMax[(nCon+1)],zHalf, startPhi, deltaPhi);
       Double_t r[] = {1,0,0,0,1,0,0,0,1};
       Double_t t[] = {0,0,zHalf+z[nCon]};
@@ -912,20 +912,20 @@ TopoDS_Shape TGeoToOCC::OCC_Pcon(Double_t startPhi, Double_t deltaPhi,
       Transformation.Perform(cone,true);
       cone = Transformation.Shape();
       Translation.Perform(cone, Standard_True);
-      cone = Translation.Shape(); 
+      cone = Translation.Shape();
       if(nCon>0) {
          BRepAlgoAPI_Fuse fuse(pCone, cone);
          pCone=fuse.Shape();
       } else
          pCone=cone;
-   }	
+   }
    return Reverse(pCone);
 }
 
- 
+
 TopoDS_Shape TGeoToOCC::OCC_Pgon(Int_t np, Int_t nz, Double_t * p, Double_t phi1, Double_t DPhi, Int_t numpoint)
-{  
-   BRepOffsetAPI_ThruSections sectInner(true,true); 
+{
+   BRepOffsetAPI_ThruSections sectInner(true,true);
    BRepOffsetAPI_ThruSections sectOuter(true,true);
    BRepLib_MakePolygon aPoly2;
    TopoDS_Face  f;
@@ -958,14 +958,14 @@ TopoDS_Shape TGeoToOCC::OCC_Pgon(Int_t np, Int_t nz, Double_t * p, Double_t phi1
       for(Int_t j=0; j<2; j++) {
          BRepLib_MakePolygon aPoly;
          for (Int_t h=0;h<nzvert;h++){
-            xx=p[ind++];yy=p[ind++];zz=p[ind++]; 
+            xx=p[ind++];yy=p[ind++];zz=p[ind++];
             point=gp_Pnt(xx,yy,zz);
             aPoly.Add(point);
          }
          aPoly.Close();
          if (j==0) {
             w1  = aPoly.Wire();
-            sectInner.AddWire(w1); 
+            sectInner.AddWire(w1);
          }
          if (j==1) {
             w2  = aPoly.Wire();
@@ -990,12 +990,12 @@ TopoDS_Shape TGeoToOCC::OCC_Pgon(Int_t np, Int_t nz, Double_t * p, Double_t phi1
       if (fabs(p[cc])>Zmax) {
          Zmax=fabs(p[cc]);
       }
-      if(numpoint-1==cc) break; 
+      if(numpoint-1==cc) break;
       aa=aa+3;
       bb=bb+3;
       cc=cc+3;
    }
-   if (Xmax>Ymax) 
+   if (Xmax>Ymax)
       max=Xmax;
    else
       max=Ymax;
@@ -1003,7 +1003,7 @@ TopoDS_Shape TGeoToOCC::OCC_Pgon(Int_t np, Int_t nz, Double_t * p, Double_t phi1
       fOccShape=Result.Shape();
       return Reverse(fOccShape);
    } else {
-      myCut=BRepPrimAPI_MakeCylinder (max+1,2*Zmax,(360.-DPhi)*M_PI/180.); 
+      myCut=BRepPrimAPI_MakeCylinder (max+1,2*Zmax,(360.-DPhi)*M_PI/180.);
       TT.SetRotation(gp_Ax1(gp_Pnt(0.,0.,0.), gp_Vec(0., 0., 1.)), (-90.0+phi1)*M_PI/180.0);
       BRepBuilderAPI_Transform theTT(TT);
       theTT.Perform(myCut, Standard_True);
@@ -1025,7 +1025,7 @@ TopoDS_Shape TGeoToOCC::Reverse(TopoDS_Shape Shape)
 {
    BRepClass3d_SolidClassifier * setPrecision= new BRepClass3d_SolidClassifier (Shape);
    setPrecision->PerformInfinitePoint(Precision::Confusion());
-   if (setPrecision->State() == TopAbs_IN) { 
+   if (setPrecision->State() == TopAbs_IN) {
       //cout<<"reverse"<<endl;
       Shape.Reverse();
    }

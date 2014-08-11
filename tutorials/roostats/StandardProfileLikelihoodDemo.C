@@ -1,18 +1,18 @@
 // Standard demo of the Profile Likelihood calculcator
 /*
-StandardProfileLikelihoodDemo 
+StandardProfileLikelihoodDemo
 
 Author: Kyle Cranmer
 date: Dec. 2010
 
-This is a standard demo that can be used with any ROOT file 
+This is a standard demo that can be used with any ROOT file
 prepared in the standard way.  You specify:
  - name for input ROOT file
  - name of workspace inside ROOT file that holds model and data
  - name of ModelConfig that specifies details for calculator tools
- - name of dataset 
+ - name of dataset
 
-With default parameters the macro will attempt to run the 
+With default parameters the macro will attempt to run the
 standard hist2workspace example and read the ROOT file
 that it produces.
 
@@ -39,15 +39,15 @@ using namespace RooFit;
 using namespace RooStats;
 
 void StandardProfileLikelihoodDemo(const char* infile = "",
-		      const char* workspaceName = "combined",
-		      const char* modelConfigName = "ModelConfig",
-		      const char* dataName = "obsData"){
+                                   const char* workspaceName = "combined",
+                                   const char* modelConfigName = "ModelConfig",
+                                   const char* dataName = "obsData"){
 
   /////////////////////////////////////////////////////////////
-  // First part is just to access a user-defined file 
+  // First part is just to access a user-defined file
   // or create the standard example file if it doesn't exist
   ////////////////////////////////////////////////////////////
-   const char* filename = "";   
+   const char* filename = "";
    if (!strcmp(infile,"")) {
       filename = "results/example_combined_GaussExample_model.root";
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
@@ -65,20 +65,20 @@ void StandardProfileLikelihoodDemo(const char* infile = "",
          cout <<"Done creating example input"<<endl;
          cout <<"---------------------\n\n"<<endl;
       }
-      
+
    }
    else
       filename = infile;
-   
+
    // Try to open the file
    TFile *file = TFile::Open(filename);
-   
+
    // if input file was specified byt not found, quit
    if(!file ){
       cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
    }
-  
+
   /////////////////////////////////////////////////////////////
   // Tutorial starts here
   ////////////////////////////////////////////////////////////
@@ -119,11 +119,11 @@ void StandardProfileLikelihoodDemo(const char* infile = "",
     interval->UpperLimit(*firstPOI) <<"] "<<endl;
 
   // make a plot
-  
+
   cout << "making a plot of the profile likelihood function ....(if it is taking a lot of time use less points or the TF1 drawing option)\n";
   LikelihoodIntervalPlot plot(interval);
   plot.SetNPoints(50);  // do not use too many points, it could become very slow for some models
   plot.Draw("");  // use option TF1 if too slow (plot.Draw("tf1")
-  
+
 
 }

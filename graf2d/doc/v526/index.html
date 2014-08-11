@@ -1,6 +1,6 @@
-<br/> 
-<hr/> 
-<a name="graf2d"></a> 
+<br/>
+<hr/>
+<a name="graf2d"></a>
 
 
 <h3>Graphical Output</h3>
@@ -16,7 +16,7 @@
       c-&gt;SaveAs("c.eps");
     }
     </pre>
-    The font 122 is the greek one. With a such TLatex "a" becomes "alpha", 
+    The font 122 is the greek one. With a such TLatex "a" becomes "alpha",
     "b" becomes " beta" etc ... It is not the recommended way to do greek
     characters with TLatex, but it should work anyway.</li>
 <li> In TPostScript::DrawPolyMarker: do not draw the markers is the marker size
@@ -25,9 +25,9 @@
 </ul>
 
 <h4>TASImage</h4>
-<ul> 
+<ul>
 <li> The text size adjustment applied <tt>TASImage::DrawText</tt>
-  was not valid (scale factor of 1.044). The text size was wrong and the 
+  was not valid (scale factor of 1.044). The text size was wrong and the
   following macro produced a wrong title when ran in batch:
   <pre>
   {
@@ -54,11 +54,11 @@
 
 <h3>Interface to <em>graphviz</em></h3>
 
-Thanks to three new classes (<tt>TGraphStruct</tt>, <tt>TGraphNode</tt> and 
+Thanks to three new classes (<tt>TGraphStruct</tt>, <tt>TGraphNode</tt> and
 <tt>TGraphEdge</tt>) ROOT provides
-an interface to the graphs visualization package <em>graphviz</em>. Graph 
+an interface to the graphs visualization package <em>graphviz</em>. Graph
 visualization is a way of representing structural information as diagrams of
-abstract graphs and networks. 
+abstract graphs and networks.
 <br/>
 Example:
 <center>
@@ -72,7 +72,7 @@ The previous image is produced by the following ROOT macro:
    // Author: Olivier Couet
    {
       TGraphStruct *gs = new TGraphStruct();
-   
+
       // create some nodes and put them in the graph in one go ...
       TGraphNode *n0 = gs-&gt;AddNode("n0","Node 0");
       TGraphNode *n1 = gs-&gt;AddNode("n1","First node");
@@ -124,7 +124,7 @@ The previous image is produced by the following ROOT macro:
    </pre>
 
 This new funtionnality relies on the <em>graphivz</em> package.
-This package can be downloaded from 
+This package can be downloaded from
 <a href="http://www.graphviz.org/">http://www.graphviz.org/</a>.
 <p>
 At installation time, to find <em>graphviz</em>, the ROOT's configure file looks in
@@ -136,7 +136,7 @@ configure flags:</p>
 </pre>
 <p>To install <em>graphviz</em> (if needed) it is recommended to use the following configure flags:</p>
 <pre>
---enable-static=yes --enable-shared=no --with-pic --prefix="graphviz installed here" 
+--enable-static=yes --enable-shared=no --with-pic --prefix="graphviz installed here"
 </pre>
 <p>On 64 bits machines, the ROOT sources are compiled with the option -m64. In
 that case graphviz should be also compiled in 64 bits mode. It might be the
@@ -162,7 +162,7 @@ the list of objects in the previous steps, but with different attributes.
 
 <h4>TLatex</h4>
 <ul>
-<li> In the following macro the <tt>#int</tt> and <tt>#sum</tt> symbols had 
+<li> In the following macro the <tt>#int</tt> and <tt>#sum</tt> symbols had
      wrong limits placement if the character just before started with "#".
    <pre>
    {
@@ -184,14 +184,14 @@ the list of objects in the previous steps, but with different attributes.
    <li>Making a special case for #int and #sum and giving them even
       lower precedence than "^" and "_".</li>
    </ol>
-   Oleksandr Grebenyuk <tt>&lt;ogrebenyuk@lbl.gov&gt;</tt> helped a lot solving this 
+   Oleksandr Grebenyuk <tt>&lt;ogrebenyuk@lbl.gov&gt;</tt> helped a lot solving this
    issue.</li>
 </ul>
 
 <h4>TMarker</h4>
 <ul>
 <li> The markers picking now takes into account the marker size. This is
-     useful for big markers, because there is no need to pick exactly the 
+     useful for big markers, because there is no need to pick exactly the
      marker's center.</li>
 </ul>
 
@@ -209,7 +209,7 @@ the list of objects in the previous steps, but with different attributes.
 <h4>TPie</h4>
 <ul>
 <li> <tt>TPie::GetEntryVal(i)</tt> returned <tt>GetSlice(i)-&gt;GetRadiusOffset()</tt>
-instead of <tt>GetSlice(i)-&gt;GetValue()</tt>. Very likely the code was 
+instead of <tt>GetSlice(i)-&gt;GetValue()</tt>. Very likely the code was
 copied/pasted from the method <tt>TPie::GetEntryRadiusOffset(i)</tt>.</li>
 </ul>
 

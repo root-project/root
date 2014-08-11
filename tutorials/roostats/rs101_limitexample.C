@@ -6,7 +6,7 @@
 //
 // This tutorial shows an example of creating a simple
 // model for a number counting experiment with uncertainty
-// on both the background rate and signal efficeincy. We then 
+// on both the background rate and signal efficeincy. We then
 // use a Confidence Interval Calculator to set a limit on the signal.
 //
 //
@@ -101,8 +101,8 @@ void rs101_limitexample()
 
 
   // First, let's use a Calculator based on the Profile Likelihood Ratio
-  //ProfileLikelihoodCalculator plc(*data, *modelWithConstraints, paramOfInterest); 
-  ProfileLikelihoodCalculator plc(*data, modelConfig); 
+  //ProfileLikelihoodCalculator plc(*data, *modelWithConstraints, paramOfInterest);
+  ProfileLikelihoodCalculator plc(*data, modelConfig);
   plc.SetTestSize(.05);
   ConfInterval* lrint = plc.GetInterval();  // that was easy.
 
@@ -201,8 +201,8 @@ void rs101_limitexample()
   // assert(parameterScan);
   // parameterScan->Draw("s:ratioSigEff:ratioBkgEff","","candle goff");
   TGraph2D *gr = new TGraph2D(parScanData->numEntries());
-  for (int ievt = 0; ievt < parScanData->numEntries(); ++ievt) { 
-     const RooArgSet * evt = parScanData->get(ievt); 
+  for (int ievt = 0; ievt < parScanData->numEntries(); ++ievt) {
+     const RooArgSet * evt = parScanData->get(ievt);
      double x = evt->getRealValue("ratioBkgEff");
      double y = evt->getRealValue("ratioSigEff");
      double z = evt->getRealValue("s");

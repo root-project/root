@@ -16,23 +16,23 @@ ClassImp(TGeoExtension)
 //______________________________________________________________________________
 //   TGeoExtension - ABC for user objects attached to TGeoVolume or TGeoNode.
 //                   Provides interface for getting a reference (grab) and
-//                   releasing the extension object (release), allowing for 
+//                   releasing the extension object (release), allowing for
 //                   derived classes to implement reference counted sharing.
 //                   The user who should attach extensions to logical volumes
-//                   or nodes BEFORE applying misalignment information so that 
+//                   or nodes BEFORE applying misalignment information so that
 //                   these will be available to all copies.
 //______________________________________________________________________________
 
 ClassImp(TGeoRCExtension)
 
 //______________________________________________________________________________
-//   TGeoRCExtension - Reference counted extension which has a pointer to and 
-//                   owns a user defined TObject. This class can be used as 
+//   TGeoRCExtension - Reference counted extension which has a pointer to and
+//                   owns a user defined TObject. This class can be used as
 //                   model for a reference counted derivation from TGeoExtension.
 //______________________________________________________________________________
 
-// Note: Creating a TGeoRCExtension with new() automatically grabs it, but the 
-// creator has to Release it before the pointer gets out of scope. 
+// Note: Creating a TGeoRCExtension with new() automatically grabs it, but the
+// creator has to Release it before the pointer gets out of scope.
 // The following sequence is valid:
 //
 //   // producer:

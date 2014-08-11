@@ -57,9 +57,9 @@ protected:
    TGComboBox        *fDrawOption;        // Draw options combobox
    TGComboBox        *fFileType;          // File type combobox
    TContextMenu      *fContextMenu;       // pointer to context menu
-   TGPictureButton   *fSortButton;        // "Sort" button 
-   TGPictureButton   *fRefreshButton;     // "Refresh" button 
-   TGPictureButton   *fFilterButton;      // "Filter" button 
+   TGPictureButton   *fSortButton;        // "Sort" button
+   TGPictureButton   *fRefreshButton;     // "Refresh" button
+   TGPictureButton   *fFilterButton;      // "Filter" button
    const TGPicture   *fRootIcon;          // Root files icon
    const TGPicture   *fFileIcon;          // System files icon
    const TGPicture   *fCachedPic;         // Cached picture

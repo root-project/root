@@ -100,7 +100,7 @@ void  TTablePadView3D::SetAnglesFactors(Double_t factors[3])
 
 //______________________________________________________________________________
 void  TTablePadView3D::SetScale(Float_t scale)
-{ 
+{
    //set view scale
    fScale = scale;
 }

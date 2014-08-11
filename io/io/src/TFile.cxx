@@ -121,11 +121,11 @@
 
 using std::sqrt;
 
-Long64_t TFile::fgBytesRead  = 0;
-Long64_t TFile::fgBytesWrite = 0;
-Long64_t TFile::fgFileCounter = 0;
+std::atomic<Long64_t> TFile::fgBytesRead{0};
+std::atomic<Long64_t> TFile::fgBytesWrite{0};
+std::atomic<Long64_t> TFile::fgFileCounter{0};
+std::atomic<Int_t>    TFile::fgReadCalls{0};
 Int_t    TFile::fgReadaheadSize = 256000;
-Int_t    TFile::fgReadCalls = 0;
 Bool_t   TFile::fgReadInfo = kTRUE;
 TList   *TFile::fgAsyncOpenRequests = 0;
 TString  TFile::fgCacheFileDir;
@@ -522,7 +522,7 @@ TFile::~TFile()
 
    SafeDelete(fAsyncHandle);
    SafeDelete(fCacheRead);
-   SafeDelete(fCacheReadMap);   
+   SafeDelete(fCacheReadMap);
    SafeDelete(fCacheWrite);
    SafeDelete(fProcessIDs);
    SafeDelete(fFree);
@@ -633,7 +633,7 @@ void TFile::Init(Bool_t create)
          delete [] header;
          goto zombie;
       }
-      
+
       // make sure this is a ROOT file
       if (strncmp(header, "root", 4)) {
          Error("Init", "%s not a ROOT file", GetName());
@@ -900,7 +900,7 @@ void TFile::Close(Option_t *option)
          cache->Close();
       }
    }
-      
+
    // Delete all supported directories structures from memory
    // If gDirectory points to this object or any of the nested
    // TDirectoryFile, TDirectoryFile::Close will induce the proper cd.
@@ -984,12 +984,12 @@ TFile *&TFile::CurrentFile()
    // Note that if 'cd' has been called on a TDirectory that does not belong to a file,
    // gFile will be unchanged and still points to the file of the previous current
    // directory that was a file.
-   
+
    static TFile *currentFile = 0;
    if (!gThreadTsd)
       return currentFile;
    else
-      return *(TFile**)(*gThreadTsd)(&currentFile,ROOT::kFileThreadSlot);   
+      return *(TFile**)(*gThreadTsd)(&currentFile,ROOT::kFileThreadSlot);
 }
 
 //______________________________________________________________________________
@@ -1357,7 +1357,7 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
    // This is not fatal as this only means that we won't get it 'right'
    // if we ever need to Recover the file before the block is actually
    // (attempted to be reused.
-   // coverity[unchecked_value] 
+   // coverity[unchecked_value]
    WriteBuffer(psave, nb);
    if (fMustFlush) Flush();
    delete [] psave;
@@ -1421,7 +1421,7 @@ void TFile::Map()
                  GetName(),idcur);
          break;
       }
-      
+
       buffer=header;
       frombuf(buffer, &nbytes);
       if (!nbytes) {
@@ -2117,11 +2117,11 @@ void TFile::SetCacheRead(TFileCacheRead *cache, TObject* tree, ECacheAction acti
    // will be flushed when it is removed from the file, and it will disconnect
    // the cache object from the file.  In almost all cases, this is what you want.
    // If you want to disconnect the cache temporarily from this tree and re-attach
-   // later to the same fil, you can set action to kDoNotDisconnect.  This will allow 
-   // things like prefetching to continue in the background while it is no longer the 
+   // later to the same fil, you can set action to kDoNotDisconnect.  This will allow
+   // things like prefetching to continue in the background while it is no longer the
    // default cache for the TTree.  Except for a few expert use cases, kDisconnect is
    // likely the correct setting.
-   // 
+   //
    // WARNING: if action=kDoNotDisconnect, you MUST delete the cache before TFile.
    //
 
@@ -2521,7 +2521,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          if (dir == 0) {
             if (gSystem->mkdir(dirname) < 0) {
                Error("MakeProject","cannot create directory '%s'",dirname);
-               return;               
+               return;
             }
          }
          // clear directory
@@ -2544,7 +2544,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          }
          if (gSystem->mkdir(dirname) < 0) {
             Error("MakeProject","cannot create directory '%s'",dirname);
-            return;               
+            return;
          }
       }
       if (dir) {
@@ -2786,7 +2786,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    } else {
       path.Form("%s/%sLinkDef.h",clean_dirname.Data(),subdirname.Data());
    }
-      
+
    // Create the LinkDef.h or xml selection file by looping on all *.h files
    // replace any existing file.
 #ifdef R__WINGCC
@@ -2962,7 +2962,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    if (!makepar) {
       // add compilation line
       TString sdirname(subdirname);
-      
+
       TString cmd = gSystem->GetMakeSharedLib();
       TString sources = TString::Format("%sProjectSource.cxx ", sdirname.Data());
       cmd.ReplaceAll("$SourceFiles",sources.Data());
@@ -3063,7 +3063,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 #endif
    }
 
-   
+
    if (!makepar && !opt.Contains("nocompilation")) {
       // now execute the generated script compiling and generating the shared lib
       path = gSystem->WorkingDirectory();
@@ -3909,14 +3909,14 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 
          // Pass the full name including the url options:
          f = (TFile*) gROOT->ProcessLineFast(TString::Format("new TParallelMergingFile(\"%s\",\"%s\",\"%s\",%d)",n.Data(),option,ftitle,compress));
-        
+
       } else {
          // Resolve the file type; this also adjusts names
          TString lfname = gEnv->GetValue("Path.Localroot", "");
          type = GetType(name, option, &lfname);
-         
+
          if (type == kLocal) {
-            
+
             // Local files
             if (lfname.IsNull()) {
                urlname.SetHost("");
@@ -3924,27 +3924,27 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                lfname = urlname.GetUrl();
             }
             f = new TFile(lfname.Data(), option, ftitle, compress);
-            
+
          } else if (type == kNet) {
-            
+
             // Network files
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
                if (h->LoadPlugin() == -1)
                   return 0;
                f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, netopt);
             }
-            
+
          } else if (type == kWeb) {
-            
+
             // Web files
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
                if (h->LoadPlugin() == -1)
                   return 0;
                f = (TFile*) h->ExecPlugin(2, name.Data(), option);
             }
-            
+
          } else if (type == kFile) {
-            
+
             // 'file:' protocol
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
                 h->LoadPlugin() == 0) {
@@ -3952,9 +3952,9 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
             } else
                f = new TFile(name.Data(), option, ftitle, compress);
-            
+
          } else {
-            
+
             // no recognized specification: try the plugin manager
             if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name.Data()))) {
                if (h->LoadPlugin() == -1)
@@ -3973,7 +3973,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
             }
          }
       }
-      
+
       if (f && f->IsZombie()) {
          delete f;
          f = 0;
@@ -4580,6 +4580,7 @@ TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(const char* name)
    }
 
    // Check also the list of files open
+   R__LOCKGUARD2(gROOTMutex);
    TSeqCollection *of = gROOT->GetListOfFiles();
    if (of && (of->GetSize() > 0)) {
       TIter nxf(of);
@@ -4626,6 +4627,7 @@ const TUrl *TFile::GetEndpointUrl(const char* name)
    }
 
    // Check also the list of files open
+   R__LOCKGUARD2(gROOTMutex);
    TSeqCollection *of = gROOT->GetListOfFiles();
    if (of && (of->GetSize() > 0)) {
       TIter nxf(of);
@@ -4692,7 +4694,7 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t buffersize)
    // AliEn files need to know where the source file is
    if (!strcmp(dURL.GetProtocol(), "alien"))
       opt += TString::Format("&source=%s", GetName());
-   
+
    dURL.SetOptions(opt);
 
    char *copybuffer = 0;
@@ -4806,12 +4808,12 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
 {
    // Allows to copy file from src to dst URL. Returns kTRUE in case of success,
    // kFALSE otherwise.
-   
+
    TUrl sURL(src, kTRUE);
 
    // Files will be open in RAW mode
    TString raw = "filetype=raw";
-   
+
    // Set optimization options for the source file
    TString opt = sURL.GetOptions();
    if (opt != "") opt += "&";
@@ -4836,7 +4838,7 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
 
    if (sfile) sfile->Close();
    if (sfile) delete sfile;
-   
+
    return success;
 }
 

@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -28,12 +28,12 @@ public:
 
     return ( x*x );
   }
-  
+
   std::vector<double> Gradient(const std::vector<double>& par) const {
-    
+
     double x = par[0];
-    
-    return ( std::vector<double>(1, 2.*x) );  
+
+    return ( std::vector<double>(1, 2.*x) );
   }
 
   void SetErrorDef(double up) {fErrorDef = up;}

@@ -87,7 +87,7 @@ Int_t TGeoOverlap::Compare(const TObject *obj) const
 // Method to compare this overlap with another. Returns :
 //   -1 - this is smaller than OBJ
 //    0 - equal
-//    1 - greater 
+//    1 - greater
    TGeoOverlap *other = 0;
    other = (TGeoOverlap*)obj;
    if (!other) {
@@ -97,7 +97,7 @@ Int_t TGeoOverlap::Compare(const TObject *obj) const
    if (IsExtrusion()) {
       if (other->IsExtrusion()) return (fOverlap<=other->GetOverlap())?1:-1;
       return -1;
-   } else {   
+   } else {
       if (other->IsExtrusion()) return 1;
       return (fOverlap<=other->GetOverlap())?1:-1;
    }
@@ -139,11 +139,11 @@ void TGeoOverlap::Print(Option_t *) const
 // Print detailed info.
    PrintInfo();
    printf(" - first volume: %s at position:\n", fVolume1->GetName());
-   fMatrix1->Print();   
-   fVolume1->InspectShape();   
+   fMatrix1->Print();
+   fVolume1->InspectShape();
    printf(" - second volume: %s at position:\n", fVolume2->GetName());
-   fMatrix2->Print();   
-   fVolume2->InspectShape();   
+   fMatrix2->Print();
+   fVolume2->InspectShape();
 }
 
 //______________________________________________________________________________
@@ -189,8 +189,8 @@ void TGeoOverlap::SampleOverlap(Int_t npoints)
             break;
          }
          continue;
-      }  
-      ipoint++;          
+      }
+      ipoint++;
       // Check if the point is inside the first volume
       fMatrix2->LocalToMaster(pt, master);
       fMatrix1->MasterToLocal(master, pt);
@@ -202,7 +202,7 @@ void TGeoOverlap::SampleOverlap(Int_t npoints)
       if (!marker) {
          marker = new TPolyMarker3D();
          marker->SetMarkerColor(kRed);
-      }   
+      }
       marker->SetNextPoint(master[0], master[1], master[2]);
    }
    if (!iovlp) return;
@@ -214,7 +214,7 @@ void TGeoOverlap::SampleOverlap(Int_t npoints)
    Double_t err = 1./TMath::Sqrt(Double_t(iovlp));
    Info("SampleOverlap", "#Overlap %s has %g +/- %g [cm3]",
          GetName(), capacity, err*capacity);
-}        
+}
 
 //______________________________________________________________________________
 void TGeoOverlap::Sizeof3D() const
@@ -239,13 +239,13 @@ void TGeoOverlap::Validate() const
          safe1 = fVolume1->GetShape()->Safety(local, kFALSE);
          printf("point %d: safe1=%f\n", i, safe1);
       } else {
-         fMatrix1->MasterToLocal(point,local);  
+         fMatrix1->MasterToLocal(point,local);
          safe1 = fVolume1->GetShape()->Safety(local, kTRUE);
-         fMatrix2->MasterToLocal(point,local);  
+         fMatrix2->MasterToLocal(point,local);
          safe2 = fVolume2->GetShape()->Safety(local, kTRUE);
          printf("point %d: safe1=%f safe2=%f\n", i, safe1,safe2);
       }
    }
 }
-         
-         
+
+

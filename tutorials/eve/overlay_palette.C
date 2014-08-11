@@ -1,5 +1,5 @@
 void overlay_palette()
-{ 
+{
    TEveManager::Create();
 
    TEveRGBAPalette *p = new TEveRGBAPalette(0, 100);

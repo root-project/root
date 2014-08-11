@@ -24,13 +24,13 @@
 
 // Header file for class GSLMultiMinFunctionAdapter
 //
-// Generic adapter for gsl_multimin_function signature 
-// usable for any c++ class which defines operator( ) 
-// 
+// Generic adapter for gsl_multimin_function signature
+// usable for any c++ class which defines operator( )
+//
 // Created by: Lorenzo Moneta  at Fri Nov 12 16:58:51 2004
-// 
+//
 // Last update: Fri Nov 12 16:58:51 2004
-// 
+//
 #ifndef ROOT_Math_GSLMultiFitFunctionAdapter
 #define ROOT_Math_GSLMultiFitFunctionAdapter
 
@@ -47,78 +47,78 @@ namespace Math {
 
 
   /**
-     Class for adapting a C++ functor class to C function pointers used by GSL MultiFit 
+     Class for adapting a C++ functor class to C function pointers used by GSL MultiFit
      Algorithm
-     The templated C++ function class must implement: 
+     The templated C++ function class must implement:
 
     <em> double operator( const double *  x)</em>
-    and if the derivatives are required: 
+    and if the derivatives are required:
     <em> void Gradient( const double *   x, double * g)</em>
-    and 
+    and
     <em> void FdF( const double *   x, double &f, double * g)</em>
-    
-    This class defines static methods with will be used to fill the 
-    \a gsl_multimin_function and 
-    \a gsl_multimin_function_fdf structs used by GSL. 
-    See for examples the 
+
+    This class defines static methods with will be used to fill the
+    \a gsl_multimin_function and
+    \a gsl_multimin_function_fdf structs used by GSL.
+    See for examples the
     <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Providing-a-function-to-minimize.html#Providing-a-function-to-minimize">GSL online manual</A>
 
    @ingroup MultiMin
-  */ 
-     
+  */
 
-template<class FuncVector> 
+
+template<class FuncVector>
 class GSLMultiFitFunctionAdapter {
 
-public: 
-    
-   static int F( const gsl_vector * x, void * p, gsl_vector * f ) { 
+public:
+
+   static int F( const gsl_vector * x, void * p, gsl_vector * f ) {
       // p is a pointer to an iterator of functions
       unsigned int n = f->size;
-      // need to copy iterator otherwise next time the function is called it wont work 
+      // need to copy iterator otherwise next time the function is called it wont work
       FuncVector  & funcVec = *( reinterpret_cast< FuncVector *> (p) );
-      if (n == 0) return -1; 
-      for (unsigned int i = 0; i < n ; ++i) { 
+      if (n == 0) return -1;
+      for (unsigned int i = 0; i < n ; ++i) {
          gsl_vector_set(f, i, (funcVec[i])(x->data) );
       }
-      return 0; 
+      return 0;
    }
 
-    
-   static int Df(  const gsl_vector * x, void * p, gsl_matrix * h) { 
-      
+
+   static int Df(  const gsl_vector * x, void * p, gsl_matrix * h) {
+
       // p is a pointer to an iterator of functions
       unsigned int n = h->size1;
       unsigned int npar = h->size2;
-      if (n == 0) return -1; 
-      if (npar == 0) return -2; 
+      if (n == 0) return -1;
+      if (npar == 0) return -2;
       FuncVector  & funcVec = *( reinterpret_cast< FuncVector *> (p) );
-      for (unsigned int i = 0; i < n ; ++i) { 
+      for (unsigned int i = 0; i < n ; ++i) {
          double * g = (h->data)+i*npar;   //pointer to start  of i-th row
          assert ( npar == (funcVec[i]).NDim() );
-         (funcVec[i]).Gradient(x->data, g); 
+         (funcVec[i]).Gradient(x->data, g);
       }
-      return 0; 
+      return 0;
    }
 
-   /// evaluate derivative and function at the same time 
-   static int FDf(  const gsl_vector * x, void * p,  gsl_vector * f, gsl_matrix * h) { 
+   /// evaluate derivative and function at the same time
+   static int FDf(  const gsl_vector * x, void * p,  gsl_vector * f, gsl_matrix * h) {
       // should be implemented in the function
       // p is a pointer to an iterator of functions
       unsigned int n = h->size1;
       unsigned int npar = h->size2;
-      if (n == 0) return -1; 
-      if (npar == 0) return -2; 
+      if (n == 0) return -1;
+      if (npar == 0) return -2;
       FuncVector  & funcVec = *( reinterpret_cast< FuncVector *> (p) );
-      assert ( f->size == n); 
-      for (unsigned int i = 0; i < n ; ++i) { 
+      assert ( f->size == n);
+      for (unsigned int i = 0; i < n ; ++i) {
          assert ( npar == (funcVec[i]).NDim() );
-         double fval = 0; 
+         double fval = 0;
          double * g = (h->data)+i*npar;   //pointer to start  of i-th row
-         (funcVec[i]).FdF(x->data, fval, g); 
+         (funcVec[i]).FdF(x->data, fval, g);
          gsl_vector_set(f, i, fval  );
       }
-      return 0; 
+      return 0;
    }
 
 };

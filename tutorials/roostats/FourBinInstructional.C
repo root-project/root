@@ -1,47 +1,47 @@
-//  This example is a generalization of the on/off problem.  
+//  This example is a generalization of the on/off problem.
 
 /*
 FourBin Instructional Tutorial:
- authors: 
+ authors:
  Kyle Cranmer <cranmer@cern.ch>
  Tanja Rommerskirchen <tanja.rommerskirchen@cern.ch>
 
  date: June 1, 2010
 
- This example is a generalization of the on/off problem.  
+ This example is a generalization of the on/off problem.
 It's a common setup for SUSY searches.  Imagine that one has two
-variables "x" and "y" (eg. missing ET and SumET), see figure.  
+variables "x" and "y" (eg. missing ET and SumET), see figure.
 The signal region has high values of both of these variables (top right).
 One can see low values of "x" or "y" acting as side-bands.  If we
-just used "y" as a sideband, we would have the on/off problem.  
- - In the signal region we observe non events and expect s+b events.  
- - In the region with low values of "y" (bottom right) 
-   we observe noff events and expect tau*b events.  
+just used "y" as a sideband, we would have the on/off problem.
+ - In the signal region we observe non events and expect s+b events.
+ - In the region with low values of "y" (bottom right)
+   we observe noff events and expect tau*b events.
 Note the significance of tau.  In the background only case:
    tau ~ <expectation off> / <expectation on>
 If tau is known, this model is sufficient, but often tau is not known exactly.
-So one can use low values of "x" as an additional constraint for tau.  
-Note that this technique critically depends on the notion that the 
-joint distribution for "x" and "y" can be factorized.  
+So one can use low values of "x" as an additional constraint for tau.
+Note that this technique critically depends on the notion that the
+joint distribution for "x" and "y" can be factorized.
 Generally, these regions have many events, so it the ratio can be
-measured very precisely there.  So we extend the model to describe the 
+measured very precisely there.  So we extend the model to describe the
 left two boxes... denoted with "bar".
   - In the upper left we observe nonbar events and expect bbar events
   - In the bottom left we observe noffbar events and expect tau bbar events
 Note again we have:
    tau ~ <expecation off bar> / <expectation on bar>
-One can further expand the model to account for the systematic associated 
-to assuming the distribution of "x" and "y" factorizes (eg. that 
+One can further expand the model to account for the systematic associated
+to assuming the distribution of "x" and "y" factorizes (eg. that
 tau is the same for off/on and offbar/onbar). This can be done in several
 ways, but here we introduce an additional parameter rho, which so that
 one set of models will use tau and the other tau*rho. The choice is arbitary,
-but it has consequences on the numerical stability of the algorithms.  
+but it has consequences on the numerical stability of the algorithms.
 The "bar" measurements typically have more events (& smaller relative errors).
 If we choose <expectation noffbar> = tau * rho * <expectation noonbar>, the
-product tau*rho will be known very precisely (~1/sqrt(bbar)) and the contour 
+product tau*rho will be known very precisely (~1/sqrt(bbar)) and the contour
 in those parameters will be narrow and have a non-trivial tau~1/rho shape.
-However, if we choose to put rho on the non/noff measurements (where the 
-product will have an error ~1/sqrt(b)), the contours will be more ameanable 
+However, if we choose to put rho on the non/noff measurements (where the
+product will have an error ~1/sqrt(b)), the contours will be more ameanable
 to numerical techniques.  Thus, here we choose to define
    tau := <expecation off bar> / (<expectation on bar>)
    rho := <expecation off> / (<expectation on> * tau)
@@ -64,7 +64,7 @@ to numerical techniques.  Thus, here we choose to define
 Left in this way, the problem is under-constrained.  However, one may
 have some auxiliary measurement (usually based on Monte Carlo) to
 constrain rho.  Let us call this auxiliary measurement that gives
-the nominal value of rho "rhonom".  Thus, there is a 'constraint' term in 
+the nominal value of rho "rhonom".  Thus, there is a 'constraint' term in
 the full model: P(rhonom | rho).  In this case, we consider a Gaussian
 constraint with standard deviation sigma.
 
@@ -76,15 +76,15 @@ In the example, the initial values of the parameters are
   - rho  = 1
   (sigma for rho = 20%)
 and in the toy dataset:
-   - non = 139 
+   - non = 139
    - noff = 528
    - nonbar = 993
    - noffbar = 4906
    - rhonom = 1.27824
 
-Note, the covariance matrix of the parameters has large off-diagonal terms.  
+Note, the covariance matrix of the parameters has large off-diagonal terms.
 Clearly s,b are anti-correlated.  Similary, since noffbar >> nonbar, one would
-expect bbar,tau to be anti-correlated.  
+expect bbar,tau to be anti-correlated.
 
 This can be seen below.
             GLOBAL      b    bbar   rho      s     tau
@@ -94,15 +94,15 @@ This can be seen below.
         s  0.76250  -0.762 -0.146  0.718  1.000  0.160
       tau  0.92084  -0.209 -0.912 -0.000  0.160  1.000
 
-Similarly, since tau*rho appears as a product, we expect rho,tau 
-to be anti-correlated. When the error on rho is significantly 
-larger than 1/sqrt(bbar), tau is essentially known and the 
-correlation is minimal (tau mainly cares about bbar, and rho about b,s).  
-In the alternate parametrizaton (bbar* tau * rho) the correlation coefficient 
+Similarly, since tau*rho appears as a product, we expect rho,tau
+to be anti-correlated. When the error on rho is significantly
+larger than 1/sqrt(bbar), tau is essentially known and the
+correlation is minimal (tau mainly cares about bbar, and rho about b,s).
+In the alternate parametrizaton (bbar* tau * rho) the correlation coefficient
 for rho,tau is large (and negative).
 
 
-The code below uses best-practices for RooFit & RooStats as of 
+The code below uses best-practices for RooFit & RooStats as of
 June 2010.  It proceeds as follows:
  - create a workspace to hold the model
  - use workspace factory to quickly create the terms of the model
@@ -141,7 +141,7 @@ using namespace RooFit;
 using namespace RooStats;
 
 void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bool doMCMC=false){
-  
+
   // let's time this challenging example
   TStopwatch t;
   t.Start();
@@ -161,7 +161,7 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
 
   wspace->factory("Uniform::prior_poi({s})");
   wspace->factory("Uniform::prior_nuis({b,bbar,tau, rho})");
-  wspace->factory("PROD::prior(prior_poi,prior_nuis)"); 
+  wspace->factory("PROD::prior(prior_poi,prior_nuis)");
 
   ///////////////////////////////////////////
   // Control some interesting variations
@@ -184,7 +184,7 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
   ////////////////////////////////////////////////////////////
   // Generate toy data
   // generate toy data assuming current value of the parameters
-  // import into workspace. 
+  // import into workspace.
   // add Verbose() to see how it's being generated
   RooDataSet* data =   wspace->pdf("model")->generate(*wspace->set("obs"),1);
   //  data->Print("v");
@@ -215,11 +215,11 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
   plInt->LowerLimit( *wspace->var("s") ); // get ugly print out of the way. Fix.
   RooMsgService::instance().setGlobalKillBelow(msglevel);
 
-  // use FeldmaCousins (takes ~20 min)  
+  // use FeldmaCousins (takes ~20 min)
   FeldmanCousins fc(*data, *modelConfig);
   fc.SetConfidenceLevel(0.95);
   //number counting: dataset always has 1 entry with N events observed
-  fc.FluctuateNumDataEntries(false); 
+  fc.FluctuateNumDataEntries(false);
   fc.UseAdaptiveSampling(true);
   fc.SetNBins(40);
   PointSetInterval* fcInt = NULL;
@@ -228,7 +228,7 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
   }
 
 
-  // use BayesianCalculator (only 1-d parameter of interest, slow for this problem)  
+  // use BayesianCalculator (only 1-d parameter of interest, slow for this problem)
   BayesianCalculator bc(*data, *modelConfig);
   bc.SetConfidenceLevel(0.95);
   SimpleInterval* bInt = NULL;
@@ -262,7 +262,7 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
 
   //////////////////////////////////////
   // Make some  plots
-  TCanvas* c1 = (TCanvas*) gROOT->Get("c1");  
+  TCanvas* c1 = (TCanvas*) gROOT->Get("c1");
   if(!c1)
     c1 = new TCanvas("c1");
 
@@ -285,40 +285,40 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
     bc.SetScanOfPosterior(20);
     RooPlot* bplot = bc.GetPosteriorPlot();
     bplot->Draw();
-  } 
+  }
 
   if(doMCMC){
-    if(doBayesian && wspace->set("poi")->getSize() == 1) 
+    if(doBayesian && wspace->set("poi")->getSize() == 1)
       c1->cd(3);
-    else 
+    else
       c1->cd(2);
-    MCMCIntervalPlot mcPlot(*mcInt); 
+    MCMCIntervalPlot mcPlot(*mcInt);
     mcPlot.Draw();
   }
 
   ////////////////////////////////////
   // querry intervals
-  cout << "Profile Likelihood interval on s = [" << 
+  cout << "Profile Likelihood interval on s = [" <<
     plInt->LowerLimit( *wspace->var("s") ) << ", " <<
-    plInt->UpperLimit( *wspace->var("s") ) << "]" << endl; 
+    plInt->UpperLimit( *wspace->var("s") ) << "]" << endl;
   //Profile Likelihood interval on s = [12.1902, 88.6871]
 
-   
+
   if(doBayesian && wspace->set("poi")->getSize() == 1)   {
-    cout << "Bayesian interval on s = [" << 
+    cout << "Bayesian interval on s = [" <<
       bInt->LowerLimit( ) << ", " <<
       bInt->UpperLimit( ) << "]" << endl;
-  }  
-  
-  if(doFeldmanCousins){    
-    cout << "Feldman Cousins interval on s = [" << 
+  }
+
+  if(doFeldmanCousins){
+    cout << "Feldman Cousins interval on s = [" <<
       fcInt->LowerLimit( *wspace->var("s") ) << ", " <<
       fcInt->UpperLimit( *wspace->var("s") ) << "]" << endl;
     //Feldman Cousins interval on s = [18.75 +/- 2.45, 83.75 +/- 2.45]
   }
 
   if(doMCMC){
-    cout << "MCMC interval on s = [" << 
+    cout << "MCMC interval on s = [" <<
       mcInt->LowerLimit(*wspace->var("s") ) << ", " <<
       mcInt->UpperLimit(*wspace->var("s") ) << "]" << endl;
     //MCMC interval on s = [15.7628, 84.7266]
@@ -326,6 +326,6 @@ void FourBinInstructional(bool doBayesian=false, bool doFeldmanCousins=false, bo
   }
 
   t.Print();
-   
+
 
 }

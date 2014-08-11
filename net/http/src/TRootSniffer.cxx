@@ -8,6 +8,7 @@
 #include "TProfile.h"
 #include "TCanvas.h"
 #include "TFile.h"
+#include "TKey.h"
 #include "TList.h"
 #include "TMemFile.h"
 #include "TStreamerInfo.h"
@@ -95,21 +96,22 @@ void TRootSnifferScanRec::BeforeNextChild()
 }
 
 //______________________________________________________________________________
-void TRootSnifferScanRec::MakeItemName(const char *objname, TString &_itemname)
+void TRootSnifferScanRec::MakeItemName(const char *objname, TString &_itemname, Bool_t cut_slashes)
 {
    // constructs item name from object name
-   // if special symbols like '/', '#', ':', '&', '?',   are used in object name
+   // if special symbols like '/', '#', ':', '&', '?'  are used in object name
    // they will be replaced with '_'.
    // To avoid item name duplication, additional id number can be appended
+   // If specified, object name until slash will be removed at all
 
    std::string nnn = objname;
 
    size_t pos = nnn.find_last_of("/");
-   if (pos != std::string::npos) nnn = nnn.substr(pos + 1);
+   if (cut_slashes && (pos != std::string::npos)) nnn = nnn.substr(pos + 1);
    if (nnn.empty()) nnn = "item";
 
    // replace all special symbols which can make problem in http (not in xml)
-   while ((pos = nnn.find_first_of("#:&?")) != std::string::npos)
+   while ((pos = nnn.find_first_of("#:&?/\'")) != std::string::npos)
       nnn.replace(pos, 1, "_");
 
    _itemname = nnn.c_str();
@@ -186,7 +188,7 @@ void TRootSnifferScanRec::SetRootClass(TClass *cl)
 }
 
 //______________________________________________________________________________
-Bool_t TRootSnifferScanRec::Done()
+Bool_t TRootSnifferScanRec::Done() const
 {
    // returns true if scanning is done
    // Can happen when searched element is found
@@ -204,6 +206,27 @@ Bool_t TRootSnifferScanRec::Done()
    return kFALSE;
 }
 
+
+//______________________________________________________________________________
+Bool_t TRootSnifferScanRec::IsReadyForResult() const
+{
+   // Checks if result will be accepted.
+   // Used to verify if sniffer should read object from the file
+
+   if (Done()) return kFALSE;
+
+   // only when doing search, result will be propagated
+   if ((mask & (mask_Search | mask_CheckChld)) == 0) return kFALSE;
+
+   // only when full search path is scanned
+   if (searchpath != 0) return kFALSE;
+
+   if (store == 0) return kFALSE;
+
+   return kTRUE;
+}
+
+
 //______________________________________________________________________________
 Bool_t TRootSnifferScanRec::SetResult(void *obj, TClass *cl, TDataMember *member, Int_t chlds)
 {
@@ -211,15 +234,7 @@ Bool_t TRootSnifferScanRec::SetResult(void *obj, TClass *cl, TDataMember *member
 
    if (Done()) return kTRUE;
 
-   // only when doing search, result will be propagated
-   if ((mask & (mask_Search | mask_CheckChld)) == 0) return kFALSE;
-
-   //DOUT0("Set RESULT obj = %p search path = %s", obj, searchpath ? searchpath : "-null-");
-
-   // only when full search path is scanned
-   if (searchpath != 0) return kFALSE;
-
-   if (store == 0) return kFALSE;
+   if (!IsReadyForResult()) return kFALSE;
 
    store->SetResult(obj, cl, member, chlds);
 
@@ -280,8 +295,8 @@ Bool_t TRootSnifferScanRec::CanExpandItem()
 Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
                                      const char *obj_name)
 {
-   // method verifies if new level of hierarchy should be started with provided
-   // object
+   // Method verifies if new level of hierarchy
+   // should be started with provided object.
    // If required, all necessary nodes and fields will be created
    // Used when different collection kinds should be scanned
 
@@ -294,7 +309,7 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
 
    TString obj_item_name;
 
-   super.MakeItemName(obj_name, obj_item_name);
+   super.MakeItemName(obj_name, obj_item_name, obj && obj->InheritsFrom(TDirectoryFile::Class()));
 
    lvl = super.lvl;
    store = super.store;
@@ -353,7 +368,8 @@ TRootSniffer::TRootSniffer(const char *name, const char *objpath) :
    TNamed(name, "sniffer of root objects"),
    fObjectsPath(objpath),
    fMemFile(0),
-   fSinfoSize(0)
+   fSinfoSize(0),
+   fReadOnly(kTRUE)
 {
    // constructor
 }
@@ -463,6 +479,12 @@ void TRootSniffer::ScanObject(TRootSnifferScanRec &rec, TObject *obj)
    // mark object as expandable for direct child of extra folder
    // or when non drawable object is scanned
 
+   if (!fReadOnly && obj->InheritsFrom(TKey::Class()) && rec.IsReadyForResult()) {
+      TObject* keyobj = ((TKey*) obj)->ReadObj();
+      if (keyobj!=0)
+         if (rec.SetResult(keyobj, keyobj->IsA())) return;
+   }
+
    if (rec.SetResult(obj, obj->IsA())) return;
 
    int isextra = rec.ExtraFolderLevel();
@@ -472,7 +494,30 @@ void TRootSniffer::ScanObject(TRootSnifferScanRec &rec, TObject *obj)
       rec.has_more = kTRUE;
    }
 
-   rec.SetRootClass(obj->IsA());
+   // special handling of TKey class - in non-readonly mode
+   // sniffer allowed to fetch objects
+
+   TClass* obj_class = obj->IsA();
+
+   if (!fReadOnly && obj->InheritsFrom(TKey::Class())) {
+      TKey* key = (TKey *) obj;
+      if (strcmp(key->GetClassName(),"TDirectoryFile")==0) {
+         if (rec.lvl==0) {
+            TDirectory* dir = dynamic_cast<TDirectory*> (key->ReadObj());
+            if (dir!=0) {
+               obj = dir;
+               obj_class = dir->IsA();
+            }
+         } else {
+            rec.SetField(dabc_prop_more, "true");
+            rec.has_more = kTRUE;
+         }
+      } else {
+         obj_class = TClass::GetClass(key->GetClassName());
+      }
+   }
+
+   rec.SetRootClass(obj_class);
 
    if (obj->InheritsFrom(TFolder::Class())) {
       // starting from special folder, we automatically scan members
@@ -482,7 +527,8 @@ void TRootSniffer::ScanObject(TRootSnifferScanRec &rec, TObject *obj)
 
       ScanCollection(rec, fold->GetListOfFolders());
    } else if (obj->InheritsFrom(TDirectory::Class())) {
-      ScanCollection(rec, ((TDirectory *) obj)->GetList());
+      TDirectory* dir = (TDirectory *) obj;
+      ScanCollection(rec, dir->GetList(), 0, kFALSE, dir->GetListOfKeys());
    } else if (obj->InheritsFrom(TTree::Class())) {
       ScanCollection(rec, ((TTree *) obj)->GetListOfLeaves());
    } else if (obj->InheritsFrom(TBranch::Class())) {
@@ -492,16 +538,16 @@ void TRootSniffer::ScanObject(TRootSnifferScanRec &rec, TObject *obj)
    }
 
    // here we should know how many childs are accumulated
-   rec.SetResult(obj, obj->IsA(), 0, rec.num_childs);
+   rec.SetResult(obj, obj_class, 0, rec.num_childs);
 }
 
 //______________________________________________________________________________
 void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
-                                  const char *foldername, Bool_t extra)
+                                  const char *foldername, Bool_t extra, TCollection* keys_lst)
 {
    // scan collection content
 
-   if ((lst == 0) || (lst->GetSize() == 0)) return;
+   if (((lst == 0) || (lst->GetSize() == 0)) && ((keys_lst==0) || (keys_lst->GetSize()==0))) return;
 
    TRootSnifferScanRec folderrec;
    if (foldername) {
@@ -512,16 +558,33 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
    {
       TRootSnifferScanRec &master = foldername ? folderrec : rec;
 
-      TIter iter(lst);
-      TObject *obj(0);
+      if (lst!=0) {
+         TIter iter(lst);
+         TObject *obj(0);
 
-      while ((obj = iter()) != 0) {
-         TRootSnifferScanRec chld;
-         if (chld.GoInside(master, obj)) {
-            ScanObject(chld, obj);
-            if (chld.Done()) break;
+         while ((obj = iter()) != 0) {
+            TRootSnifferScanRec chld;
+            if (chld.GoInside(master, obj)) {
+               ScanObject(chld, obj);
+               if (chld.Done()) break;
+            }
          }
       }
+
+      if (keys_lst!=0) {
+         TIter iter(keys_lst);
+         TObject *obj(0);
+
+         while ((obj = iter()) != 0) {
+            if ((lst!=0) && lst->FindObject(obj->GetName())) continue;
+            TRootSnifferScanRec chld;
+            if (chld.GoInside(master, obj)) {
+               ScanObject(chld, obj);
+               if (chld.Done()) break;
+            }
+         }
+      }
+
    }
 }
 

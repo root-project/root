@@ -360,7 +360,7 @@ Int_t TXProofServ::CreateServer()
    // if master, start slave servers
    if (IsMaster()) {
       TString master;
-      
+
       if (fConfFile.BeginsWith("lite:")) {
          master = "lite://";
       } else {
@@ -423,7 +423,7 @@ Int_t TXProofServ::CreateServer()
                                                             fLogLevel,
                                                             fTopSessionTag.Data()));
       }
-      
+
       // Save worker info
       if (fProof) fProof->SaveWorkerInfo();
 
@@ -890,7 +890,7 @@ TProofServ::EQueryAction TXProofServ::GetWorkers(TList *workers,
                      }
                   } else {
                      // Release this worker (to cleanup the session list in the coordinator and get a fresh
-                     // and correct list next call) 
+                     // and correct list next call)
                      TProofNodeInfo *ni = new TProofNodeInfo(tok);
                      ReleaseWorker(ni->GetOrdinal().Data());
                   }

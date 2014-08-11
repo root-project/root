@@ -17,7 +17,7 @@ list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/TMetaUtils.h)
 
 set(MetaUtils_dict_headers ${headers} PARENT_SCOPE)
 
-include_directories(${LLVM_INCLUDE_DIR} ${CLING_INCLUDE_DIR})
+include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
 add_definitions(${CLING_CXXFLAGS})
 
 ROOT_OBJECT_LIBRARY(MetaUtils ${sources})

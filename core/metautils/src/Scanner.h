@@ -1,7 +1,7 @@
 // @(#)root/utils/src:$Id$
 // Author: Philippe Canal November 2011 ;
 // 16/04/2010 and Velislava Spasova.
-// originated from Zdenek Culik   
+// originated from Zdenek Culik
 
 
 /*************************************************************************
@@ -43,7 +43,7 @@ class SelectionRules;
 
 class RScanner: public clang::RecursiveASTVisitor<RScanner>
 {
-   
+
 public:
    class AnnotatedNamespaceDecl {
    public:
@@ -59,22 +59,22 @@ public:
       long fRuleIndex;
       bool fRequestOnlyTClass;
    };
-   
-   typedef std::vector<AnnotatedNamespaceDecl> NamespaceColl_t;   
+
+   typedef std::vector<AnnotatedNamespaceDecl> NamespaceColl_t;
    typedef std::vector<ROOT::TMetaUtils::AnnotatedRecordDecl>   ClassColl_t;
    typedef std::vector<clang::TypedefNameDecl*> TypedefColl_t;
    typedef std::vector<clang::FunctionDecl*> FunctionColl_t;
    typedef std::vector<clang::VarDecl*> VariableColl_t;
    typedef void (*DeclCallback)(const char *type);
-   
+
    enum class EScanType : char {kNormal, kTwoPasses, kOnePCM};
-   
+
    RScanner (SelectionRules &rules,
              EScanType stype,
              const cling::Interpreter &interpret,
              ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
              unsigned int verbose = 0);
-   
+
    // Configure the vistitor to also visit template instantiation.
    bool shouldVisitTemplateInstantiations() const { return true; }
 
@@ -83,7 +83,7 @@ public:
 
    // Don't descend into templates partial specialization (but only instances thereof).
    bool TraverseClassTemplatePartialSpecializationDecl(clang::ClassTemplatePartialSpecializationDecl*) { return true; }
-      
+
    bool VisitEnumDecl(clang::EnumDecl* D); //Visitor for every EnumDecl i.e. enumeration node in the AST
    bool VisitFieldDecl(clang::FieldDecl* D); //Visitor for e field inside a class
    bool VisitFunctionDecl(clang::FunctionDecl* D); //Visitor for every FunctionDecl i.e. function node in the AST
@@ -93,7 +93,7 @@ public:
    bool VisitVarDecl(clang::VarDecl* D); //Visitor for every VarDecl i.e. variable node in the AST
 
    bool TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl); //Function called by VisitTypedefNameDecl and VisitRecordDecl
-   
+
    bool TraverseDeclContextHelper(clang::DeclContext *DC); // Here is the code magic :) - every Decl
    // according to its type is processed by the corresponding Visitor method
 
@@ -112,7 +112,7 @@ public:
 
    static const char* fgClangDeclKey; // property key used for CLang declaration objects
    static const char* fgClangFuncKey; // property key for function (demangled) names
-   
+
    // public for now, the list of selected classes.
    ClassColl_t     fSelectedClasses;
    NamespaceColl_t fSelectedNamespaces;
@@ -121,7 +121,7 @@ public:
    VariableColl_t  fSelectedVariables;
 
    virtual ~ RScanner ();
-      
+
 private:
 
    std::string ConvTemplateArguments(const clang::TemplateArgumentList& list) const;
@@ -158,7 +158,7 @@ private:
    void UnknownType(clang::QualType qual_type) const;
    void UnsupportedDecl(clang::Decl* D,const std::string &txt = "") const;
    void UnsupportedType(clang::QualType qual_type) const;
-   
+
    const clang::SourceManager* fSourceManager;
    const cling::Interpreter &fInterpreter;
    static const int fgDeclLast = clang::Decl::Var;

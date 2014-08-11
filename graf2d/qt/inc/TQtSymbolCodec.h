@@ -29,8 +29,8 @@ public:
     QByteArray fromUnicode(const QString& uc, int& lenInOut) const;
     virtual QByteArray convertFromUnicode( const QChar * input, int number, ConverterState *state ) const;
     virtual QString    convertToUnicode(const char *chars, int len, ConverterState *state) const;
-    
-    QString toUnicode(const char* chars, int len) const;   
+
+    QString toUnicode(const char* chars, int len) const;
     int heuristicContentMatch(const char* chars, int len) const;
 };
 

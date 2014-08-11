@@ -2,7 +2,7 @@
 # CMakeLists.txt file for building ROOT math/unurun package
 ############################################################################
 
-#---Define package related variables----------------------------------------------------------------- 
+#---Define package related variables-----------------------------------------------------------------
 set(UNR_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(UNR_VERSION "1.8.0-root")
 set(UNR_TARNAME "unuran-${UNR_VERSION}")
@@ -18,7 +18,7 @@ endif()
 
 if(WIN32)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.win.in  ${UNR_UNTARDIR}/config.h)
-else()  
+else()
   #---Define special compiler settings for unurun-----------------------------------------------------
   set(UNR_CC ${CMAKE_C_COMPILER})
   if(ROOT_ARCHITECTURE MATCHES hpuxia64acc)
@@ -36,7 +36,7 @@ else()
   endif()
 
   #---configure unuran (required for creating the config.h used by unuran source files)----------------
-  add_custom_command(OUTPUT ${UNR_UNTARDIR}/config.h  
+  add_custom_command(OUTPUT ${UNR_UNTARDIR}/config.h
                      COMMAND GNUMAKE=make ./configure CC=${UNR_CC} CFLAGS=${UNR_CFLAGS} > /dev/null 2>& 1
                      WORKING_DIRECTORY ${UNR_UNTARDIR})
 endif()

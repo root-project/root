@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
 
 #include "Math/Math.h"
@@ -15,9 +15,9 @@ namespace Math {
 
    double beta_quantile_c(double z, double a, double b) {
       // use Cephes and proprety of icomplete beta function
-      if ( z < 0.5) 
+      if ( z < 0.5)
          return 1. - ROOT::Math::Cephes::incbi(b,a,z);
-      else 
+      else
          return ROOT::Math::Cephes::incbi(a,b,1.0-z);
 
    }
@@ -32,26 +32,26 @@ namespace Math {
 
    double cauchy_quantile_c(double z, double b) {
       // inverse of Caucy is simply the tan(PI(z-0.5))
-      if (z == 0) return std::numeric_limits<double>::infinity(); 
+      if (z == 0) return std::numeric_limits<double>::infinity();
       if (z == 1) return - std::numeric_limits<double>::infinity();
-      if (z < 0.5)  
+      if (z < 0.5)
          // use fact that tan(PI(0.5-z)) = 1/tan(PI*z)
-         return  b / std::tan( M_PI * z ); 
-      else 
-         return  b * std::tan( M_PI * (0.5 -  z ) ); 
+         return  b / std::tan( M_PI * z );
+      else
+         return  b * std::tan( M_PI * (0.5 -  z ) );
    }
 
 
 
    double cauchy_quantile(double z, double b) {
       // inverse of Caucy is simply the tan(PI(z-0.5))
-      if (z == 0) return - std::numeric_limits<double>::infinity(); 
+      if (z == 0) return - std::numeric_limits<double>::infinity();
       if (z == 1) return + std::numeric_limits<double>::infinity();
-      if (z < 0.5)  
+      if (z < 0.5)
          // use fact that tan(PI(0.5-z)) = 1/tan(PI*z)
-         return  - b / std::tan( M_PI * z ); 
-      else 
-         return  b * std::tan( M_PI * ( z -  0.5 ) ); 
+         return  - b / std::tan( M_PI * z );
+      else
+         return  b * std::tan( M_PI * ( z -  0.5 ) );
 
    }
 
@@ -59,21 +59,21 @@ namespace Math {
 
    double chisquared_quantile_c(double z, double r) {
       // use Cephes igami which return inverse of complemented regularized gamma
-      return 2.* ROOT::Math::Cephes::igami( 0.5 *r, z); 
+      return 2.* ROOT::Math::Cephes::igami( 0.5 *r, z);
 
    }
 
 
    double chisquared_quantile(double z, double r) {
-      // if possible, should use MathMore function ROOT::Math::chisquared_quantile for z close to zero 
-      // otherwise will always return zero for z  value smaller than eps 
-      return 2.* ROOT::Math::Cephes::igami( 0.5 *r, 1. - z); 
+      // if possible, should use MathMore function ROOT::Math::chisquared_quantile for z close to zero
+      // otherwise will always return zero for z  value smaller than eps
+      return 2.* ROOT::Math::Cephes::igami( 0.5 *r, 1. - z);
    }
 
 
    double exponential_quantile_c(double z, double lambda) {
 
-      return - std::log(z)/ lambda; 
+      return - std::log(z)/ lambda;
 
    }
 
@@ -88,37 +88,37 @@ namespace Math {
 
    double fdistribution_quantile_c(double z, double n, double m) {
       // use cephes incbi function and use propreties of incomplete beta for case <> 0.5
-      if (n == 0) return 0;  // is value of cdf for n = 0 
-      if (z < 0.5) { 
-         double y =  ROOT::Math::Cephes::incbi( .5*m, .5*n, z); 
-         return m/(n * y) - m/n; 
+      if (n == 0) return 0;  // is value of cdf for n = 0
+      if (z < 0.5) {
+         double y =  ROOT::Math::Cephes::incbi( .5*m, .5*n, z);
+         return m/(n * y) - m/n;
       }
-      else { 
-         double y =  ROOT::Math::Cephes::incbi( .5*n, .5*m, 1.0 - z); 
+      else {
+         double y =  ROOT::Math::Cephes::incbi( .5*n, .5*m, 1.0 - z);
          // will lose precision for y approx to 1
-         return  m * y /(n * ( 1. - y) ); 
+         return  m * y /(n * ( 1. - y) );
       }
    }
 
    double fdistribution_quantile(double z, double n, double m) {
       // use cephes incbi function
-      if (n == 0) return 0;  // is value of cdf for n = 0 
-      double y =  ROOT::Math::Cephes::incbi( .5*n, .5*m, z); 
+      if (n == 0) return 0;  // is value of cdf for n = 0
+      double y =  ROOT::Math::Cephes::incbi( .5*n, .5*m, z);
       // will lose precision for y approx to 1
-      return  m * y /(n * ( 1. - y) ); 
+      return  m * y /(n * ( 1. - y) );
    }
 
 
    double gamma_quantile_c(double z, double alpha, double theta) {
 
-      return theta * ROOT::Math::Cephes::igami( alpha, z); 
+      return theta * ROOT::Math::Cephes::igami( alpha, z);
 
    }
 
    double gamma_quantile(double z, double alpha, double theta) {
-      // if possible, should use MathMore function ROOT::Math::gamma_quantile for z close to zero 
-      // otherwise will always return zero for z  value smaller than eps 
-      return theta * ROOT::Math::Cephes::igami( alpha, 1.- z); 
+      // if possible, should use MathMore function ROOT::Math::gamma_quantile for z close to zero
+      // otherwise will always return zero for z  value smaller than eps
+      return theta * ROOT::Math::Cephes::igami( alpha, 1.- z);
    }
 
 
@@ -141,7 +141,7 @@ namespace Math {
 
 
    double lognormal_quantile_c(double z, double m, double s) {
-      // if y is log normal, u = exp(y) is log-normal distributed  
+      // if y is log normal, u = exp(y) is log-normal distributed
       double y = - s * ROOT::Math::Cephes::ndtri(z) + m;
       return std::exp(y);
    }
@@ -149,7 +149,7 @@ namespace Math {
 
 
    double lognormal_quantile(double z, double m, double s) {
-      // if y is log normal, u = exp(y) is log-normal distributed  
+      // if y is log normal, u = exp(y) is log-normal distributed
       double y = s * ROOT::Math::Cephes::ndtri(z) + m;
       return std::exp(y);
 
@@ -174,7 +174,7 @@ namespace Math {
 
    double uniform_quantile_c(double z, double a, double b) {
 
-      return a * z  + b * (1.0 - z);  
+      return a * z  + b * (1.0 - z);
 
    }
 
@@ -362,9 +362,9 @@ namespace Math {
          51.005773,53.437996,56.123356,59.103894 };
 
       if (xi <= 0) return 0;
-      if (z <= 0) return -std::numeric_limits<double>::infinity(); 
+      if (z <= 0) return -std::numeric_limits<double>::infinity();
       if (z >= 1) return std::numeric_limits<double>::infinity();
-      
+
       double ranlan, u, v;
       u = 1000*z;
       int i = int(u);
@@ -396,6 +396,6 @@ namespace Math {
    double landau_quantile_c(double z, double xi) {
       return landau_quantile(1.-z,xi);
    }
-   
+
 } // namespace Math
 } // namespace ROOT

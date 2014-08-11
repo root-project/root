@@ -201,7 +201,7 @@ public:
          Streamer(b,obj,0,(TClass*)onfileClass);
       }
    }
-   
+
    /// Virtual copy constructor.
    virtual TClassStreamer *Generate() const {
       return new TCollectionClassStreamer(*this);
@@ -234,7 +234,7 @@ public:
    virtual ~TCollectionMemberStreamer()             { }
    /// Streamer for I/O handling
    virtual void operator()(TBuffer &buff,void *obj,Int_t siz=0)
-   { Streamer(buff, obj, siz, 0); /* FIXME */ }   
+   { Streamer(buff, obj, siz, 0); /* FIXME */ }
 };
 
 #endif

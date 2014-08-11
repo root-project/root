@@ -10,9 +10,9 @@
 @implementation EditorPlateView {
    UIImage *plateImage;
    UILabel *editorLabel;
-   
+
    UIImage *arrowImage;
-   
+
    EditorView *topView;
 }
 
@@ -40,14 +40,14 @@
 #else
       editorLabel.textAlignment = UITextAlignmentCenter;
 #endif
-      
+
       editorLabel.textColor = [UIColor whiteColor];
       [self addSubview : editorLabel];
       editorLabel.text = name;
       topView = tv;
 
       plateImage = [UIImage imageNamed:@"editor_plate.png"];
-        
+
       arrowImage = [UIImage imageNamed:@"editor_state_arrow.png"];
       arrowImageView = [[UIImageView alloc] initWithImage : arrowImage];
       CGRect arrowFrame = arrowImageView.frame;
@@ -55,7 +55,7 @@
       arrowFrame.origin.y = frame.size.height / 2 - arrowFrame.size.height / 2;
       arrowImageView.frame = arrowFrame;
       [self addSubview : arrowImageView];
-      
+
       UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(handleTap:)];
       [self addGestureRecognizer:tap];
       self.editorName = name;

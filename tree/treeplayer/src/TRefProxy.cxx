@@ -27,7 +27,7 @@
 
 
 //______________________________________________________________________________
-Bool_t TRefProxy::Update()  
+Bool_t TRefProxy::Update()
 {
    // TVirtualRefProxy overload: Update (and propagate) cached information
 
@@ -35,7 +35,7 @@ Bool_t TRefProxy::Update()
 }
 
 //______________________________________________________________________________
-TClass* TRefProxy::GetValueClass(void* data) const  
+TClass* TRefProxy::GetValueClass(void* data) const
 {
    // TVirtualRefProxy overload: Access to value class
 
@@ -44,7 +44,7 @@ TClass* TRefProxy::GetValueClass(void* data) const
 }
 
 //______________________________________________________________________________
-void* TRefProxy::GetObject(TFormLeafInfoReference* info, void* data, int)  
+void* TRefProxy::GetObject(TFormLeafInfoReference* info, void* data, int)
 {
    // Access referenced object(-data)
 

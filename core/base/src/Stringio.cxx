@@ -35,7 +35,7 @@ std::istream& TString::ReadFile(std::istream& strm)
 
    // any positive number of reasonable size for a file
    const Ssiz_t incr = 256;
-   
+
    Clobber(end-cur);
 
    while(1) {
@@ -90,7 +90,7 @@ std::istream& TString::ReadToDelim(std::istream& strm, char delim)
 
    // any positive number of reasonable size for a string
    const Ssiz_t incr = 32;
-   
+
    Clobber(incr);
 
    int p = strm.peek();             // Check if we are already at delim

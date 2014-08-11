@@ -293,7 +293,7 @@ Bool_t TGViewPort::HandleConfigureNotify(Event_t *event)
 
    TGContainer *cont = (TGContainer*)fContainer;
 
-   // protection 
+   // protection
    if ((event->fWidth > 32768) || (event->fHeight  > 32768)) {
       return kFALSE;
    }
@@ -796,9 +796,9 @@ void TGContainer::DoRedraw()
    DrawRegion(0, 0, GetWidth(), GetHeight());
 #else
    if (!fExposedRegion.IsEmpty()) {
-      DrawRegion(fExposedRegion.fX, fExposedRegion.fY, 
+      DrawRegion(fExposedRegion.fX, fExposedRegion.fY,
                  fExposedRegion.fW, fExposedRegion.fH);
-      
+
       fExposedRegion.Empty();
    }
 #endif
@@ -808,7 +808,7 @@ void TGContainer::DoRedraw()
 void TGContainer::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Draw a region of container in viewport.
-   // x, y, w, h are position and dimension of area to be 
+   // x, y, w, h are position and dimension of area to be
    // redrawn in viewport coordinates.
 
    static GContext_t gcBg = 0;
@@ -847,7 +847,7 @@ void TGContainer::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 
    TGPosition pos = GetPagePosition();
 
-   // translate coordinates in viewport into coordinates in container 
+   // translate coordinates in viewport into coordinates in container
    Int_t xx = pos.fX + x;
    Int_t yy = pos.fY + y;
 
@@ -998,7 +998,7 @@ Bool_t TGContainer::HandleButton(Event_t *event)
          fDragging = kTRUE;
          fX0 = fXf = fXp;
          fY0 = fYf = fYp;
-         gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0-pos.fX, fY0-pos.fY, 
+         gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0-pos.fX, fY0-pos.fY,
                                   fXf-fX0, fYf-fY0);
       }
    }
@@ -1071,7 +1071,7 @@ const TGPicture *TGContainer::GetObjPicture(TGFrame *f)
 void TGContainer::SetDragPixmap(const TGPicture *p)
 {
    // Set drag window pixmaps and hotpoint.
-   
+
    Pixmap_t pic, mask;
    TGPicture *selpic = new TGSelectedPicture(gClient, p);
    pic  = selpic->GetPicture();
@@ -1148,7 +1148,7 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
    if (gDNDManager->IsDragging()) {
       gDNDManager->Drag(event->fXRoot, event->fYRoot,
                         TGDNDManager::GetDNDActionCopy(), event->fTime);
-   } 
+   }
    else if (fDragging) {
 
       gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0-pos.fX, fY0-pos.fY,
@@ -1210,7 +1210,7 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
       }
       gVirtualX->DrawRectangle(fId, GetLineGC()(), fX0-pos.fX, fY0-pos.fY,
                                fXf-fX0, fYf-fY0);
-   } 
+   }
    else {
       TGFrame *over_frame = 0;
 
@@ -1424,7 +1424,7 @@ TGFrame *TGContainer::FindFrameByName(const char *name)
       sname.ReplaceAll("*", "");
    }
 
-   TGFrameElement *fe = (TGFrameElement*)FindItem(sname.Data(), direction, 
+   TGFrameElement *fe = (TGFrameElement*)FindItem(sname.Data(), direction,
                                                   caseSensitive, subString);
    if (!fe) {  // find again
       if (fLastActiveEl) DeActivateItem(fLastActiveEl);
@@ -1468,7 +1468,7 @@ void TGContainer::Search(Bool_t close)
 
    if (!close) {
       if (!TGSearchDialog::SearchDialog()) {
-         TGSearchDialog::SearchDialog() = new TGSearchDialog(fClient->GetDefaultRoot(), 
+         TGSearchDialog::SearchDialog() = new TGSearchDialog(fClient->GetDefaultRoot(),
                                                              fCanvas, 400, 150, srch, &ret);
       }
       TGSearchDialog::SearchDialog()->Connect("TextEntered(char *)", "TGContainer", this,

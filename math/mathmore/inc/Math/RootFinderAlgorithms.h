@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Author: L. Moneta, A. Zsenei   08/2005 
+// Author: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for GSL ROOT Finder Algorithms
-// 
+//
 // Created by: moneta  at Sun Nov 14 14:07:50 2004
-// 
+//
 // Last update: Sun Nov 14 14:07:50 2004
-// 
+//
 #ifndef ROOT_Math_GSLRootFinderAlgorithms
 #define ROOT_Math_GSLRootFinderAlgorithms
 
@@ -48,80 +48,80 @@ namespace Math {
 
   */
 
-namespace Roots { 
+namespace Roots {
 
 //________________________________________________________________________________________________________
      /**
         Roots::Bisection
-	Bisection algorithm, simplest algorithm for bracketing the roots of a function, but slowest one.
-	See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Bracketing-Algorithms.html">GSL manual</A> for more information
-	@ingroup RootFinders
+      Bisection algorithm, simplest algorithm for bracketing the roots of a function, but slowest one.
+      See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Bracketing-Algorithms.html">GSL manual</A> for more information
+      @ingroup RootFinders
      */
 
    class Bisection : public GSLRootFinder {
-       
-   public: 
 
-      Bisection(); 
+   public:
+
+      Bisection();
       virtual ~Bisection();
-       
+
    private:
       // usually copying is non trivial, so we make this unaccessible
 
-      Bisection(const Bisection &); 
-      Bisection & operator = (const Bisection &); 
+      Bisection(const Bisection &);
+      Bisection & operator = (const Bisection &);
 
-   }; 
+   };
 
 //________________________________________________________________________________________________________
    /**
-      False Position algorithm based on linear interpolation. 
+      False Position algorithm based on linear interpolation.
       See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Bracketing-Algorithms.html">GSL manual</A> for more information
       @ingroup RootFinders
    */
 
    class FalsePos : public GSLRootFinder {
-       
-   public: 
 
-      FalsePos(); 
+   public:
+
+      FalsePos();
       virtual ~FalsePos();
-       
+
    private:
       // usually copying is non trivial, so we make this unaccessible
-      FalsePos(const FalsePos &); 
-      FalsePos & operator = (const FalsePos &); 
+      FalsePos(const FalsePos &);
+      FalsePos & operator = (const FalsePos &);
 
-   }; 
+   };
 
 
 
 //________________________________________________________________________________________________________
    /**
-      Brent-Dekker algorithm which combines an interpolation strategy with the bisection algorithm 
+      Brent-Dekker algorithm which combines an interpolation strategy with the bisection algorithm
       See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Bracketing-Algorithms.html">
       GSL manual</A> for more information
-	
+
       @ingroup RootFinders
    */
 
    class Brent : public GSLRootFinder {
-       
-   public: 
 
-      Brent(); 
+   public:
+
+      Brent();
       virtual ~Brent();
-       
+
    private:
       // usually copying is non trivial, so we make this unaccessible
-      Brent(const Brent &); 
-      Brent & operator = (const Brent &); 
+      Brent(const Brent &);
+      Brent & operator = (const Brent &);
 
-   }; 
+   };
 
-     
+
    //----------------------------------------------------------------------
-   // algorithm with derivatives 
+   // algorithm with derivatives
    //----------------------------------------------------------------------
 
 //________________________________________________________________________________________________________
@@ -134,41 +134,41 @@ namespace Roots {
    */
 
    class Newton : public GSLRootFinderDeriv {
-       
-   public: 
 
-      Newton(); 
+   public:
+
+      Newton();
       virtual ~Newton();
-       
+
    private:
       // usually copying is non trivial, so we make this unaccessible
-      Newton(const Newton &); 
-      Newton & operator = (const Newton &); 
+      Newton(const Newton &);
+      Newton & operator = (const Newton &);
 
-   }; 
+   };
 
-    
+
 //________________________________________________________________________________________________________
    /**
-      \a Secant algorithm, simplified version of Newton method, which does not require the derivative at every step. 
+      \a Secant algorithm, simplified version of Newton method, which does not require the derivative at every step.
       See the <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Root-Finding-Algorithms-using-Derivatives.html">
       GSL manual</A> for more information
       @ingroup RootFinders
    */
 
    class Secant : public GSLRootFinderDeriv {
-       
-   public: 
 
-      Secant(); 
+   public:
+
+      Secant();
       virtual ~Secant();
-       
+
    private:
       // usually copying is non trivial, so we make this unaccessible
-      Secant(const Secant &); 
-      Secant & operator = (const Secant &); 
+      Secant(const Secant &);
+      Secant & operator = (const Secant &);
 
-   }; 
+   };
 
 //________________________________________________________________________________________________________
    /**
@@ -180,18 +180,18 @@ namespace Roots {
    */
 
    class Steffenson : public GSLRootFinderDeriv {
-       
-   public: 
 
-      Steffenson(); 
+   public:
+
+      Steffenson();
       virtual ~Steffenson();
-       
+
    private:
       // usually copying is non trivial, so we make this unaccessible
-      Steffenson(const Steffenson &); 
-      Steffenson & operator = (const Steffenson &); 
+      Steffenson(const Steffenson &);
+      Steffenson & operator = (const Steffenson &);
 
-   }; 
+   };
 
 
 }

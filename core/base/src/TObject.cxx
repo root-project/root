@@ -55,7 +55,7 @@ Bool_t TObject::fgObjectStat = kTRUE;
 ClassImp(TObject)
 
 //______________________________________________________________________________
-TObject::TObject() : fUniqueID(0), fBits(kNotDeleted)
+TObject::TObject() : fBits(kNotDeleted) //Need to leave FUniqueID unset
 {
    // TObject constructor. It sets the two data words of TObject to their
    // initial values. The unique ID is set to 0 and the status word is
@@ -64,8 +64,10 @@ TObject::TObject() : fUniqueID(0), fBits(kNotDeleted)
    // (see TEnv) the object is added to the global TObjectTable for
    // bookkeeping.
 
-   if (TStorage::IsOnHeap(this))
+   if (TStorage::FilledByObjectAlloc(&fUniqueID))
       fBits |= kIsOnHeap;
+
+   fUniqueID = 0;
 
    if (fgObjectStat) TObjectTable::AddObj(this);
 }
@@ -75,16 +77,18 @@ TObject::TObject(const TObject &obj)
 {
    // TObject copy ctor.
 
-   fUniqueID = obj.fUniqueID;  // when really unique don't copy
-   fBits     = obj.fBits;
+   fBits = obj.fBits;
 
-   if (TStorage::IsOnHeap(this))
+   if (TStorage::FilledByObjectAlloc(&fUniqueID))
       fBits |= kIsOnHeap;
    else
       fBits &= ~kIsOnHeap;
 
    fBits &= ~kIsReferenced;
    fBits &= ~kCanDelete;
+
+   //Set only after used in above call
+   fUniqueID = obj.fUniqueID;  // when really unique don't copy
 
    if (fgObjectStat) TObjectTable::AddObj(this);
 }

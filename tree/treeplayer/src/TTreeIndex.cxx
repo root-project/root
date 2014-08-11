@@ -204,13 +204,13 @@ TTreeIndex::~TTreeIndex()
 }
 
 //______________________________________________________________________________
-void TTreeIndex::Append(const TVirtualIndex *add, Bool_t delaySort ) 
+void TTreeIndex::Append(const TVirtualIndex *add, Bool_t delaySort )
 {
    // Append 'add' to this index.  Entry 0 in add will become entry n+1 in this.
    // If delaySort is true, do not sort the value, then you must call
    // Append(0,kFALSE);
 
-   
+
    if (add && add->GetN()) {
       // Create new buffer (if needed)
 
@@ -234,7 +234,7 @@ void TTreeIndex::Append(const TVirtualIndex *add, Bool_t delaySort )
       // Copy data
       Long_t size = sizeof(Long64_t) * oldn;
       Long_t add_size = sizeof(Long64_t) * add->GetN();
-      
+
       memcpy(fIndex,oldIndex, size);
       memcpy(fIndexValues,oldValues, size);
       memcpy(fIndexValuesMinor,oldValues2, size);
@@ -574,11 +574,11 @@ void TTreeIndex::UpdateFormulaLeaves(const TTree *parent)
 
    if (fMajorFormula)       { fMajorFormula->UpdateFormulaLeaves();}
    if (fMinorFormula)       { fMinorFormula->UpdateFormulaLeaves();}
-   if (fMajorFormulaParent) { 
+   if (fMajorFormulaParent) {
       if (parent) fMajorFormulaParent->SetTree(const_cast<TTree*>(parent));
       fMajorFormulaParent->UpdateFormulaLeaves();
    }
-   if (fMinorFormulaParent) { 
+   if (fMinorFormulaParent) {
       if (parent) fMinorFormulaParent->SetTree(const_cast<TTree*>(parent));
       fMinorFormulaParent->UpdateFormulaLeaves();
    }

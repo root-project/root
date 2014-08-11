@@ -1,6 +1,6 @@
 // This example compare what the system time function gmtime and localtime give
 // with what gives TGaxis. It can be used as referenced test to check if TGaxis
-// is working properly. 
+// is working properly.
 // The original code was developped by Philippe Gras (CEA Saclay. IRFU/SEDI)
 //Author: Philippe Gras, Bertrand Bellenot, Olivier Couet
 

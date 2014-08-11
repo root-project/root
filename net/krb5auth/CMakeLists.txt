@@ -16,7 +16,7 @@ endif()
 
 ROOT_GENERATE_DICTIONARY(G__Krb5Auth TKSocket.h MODULE Krb5Auth LINKDEF LinkDef.h)
 
-ROOT_LINKER_LIBRARY(Krb5Auth *.cxx G__Krb5Auth.cxx LIBRARIES ${KRB5_LIBRARIES} ${COMERR_LIBRARIES} 
+ROOT_LINKER_LIBRARY(Krb5Auth *.cxx G__Krb5Auth.cxx LIBRARIES ${KRB5_LIBRARIES} ${COMERR_LIBRARIES}
                                                    DEPENDENCIES RootAuth Net )
 
 ROOT_INSTALL_HEADERS()

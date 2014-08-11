@@ -1,21 +1,21 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
-#ifndef ROOT_Math_GenVector_Quaternionfwd 
+#ifndef ROOT_Math_GenVector_Quaternionfwd
 #define ROOT_Math_GenVector_Quaternionfwd  1
 
 
-namespace ROOT { 
+namespace ROOT {
 
-  namespace Math { 
+  namespace Math {
 
-  /** 
+  /**
       Class describing a rotation represented by a quaternion
-   */ 
+   */
 
-class Quaternion; 
+class Quaternion;
 
 }  // namespace Math
 }  // namespace ROOT
 
-#endif  // ROOT_Math_GenVector_Quaternionfwd 
+#endif  // ROOT_Math_GenVector_Quaternionfwd

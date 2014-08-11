@@ -34,7 +34,7 @@
 namespace ROOT {
 namespace iOS {
 
-const CFStringRef fixedFontNames[FontManager::fmdNOfFonts] = 
+const CFStringRef fixedFontNames[FontManager::fmdNOfFonts] =
                                      {
                                       CFSTR("TimesNewRomanPS-ItalicMT"),
                                       CFSTR("TimesNewRomanPS-BoldMT"),
@@ -51,7 +51,7 @@ const CFStringRef fixedFontNames[FontManager::fmdNOfFonts] =
                                       CFSTR("TimesNewRomanPSMT")
                                      };
 
-const char *cStrFontNames[FontManager::fmdNOfFonts] = 
+const char *cStrFontNames[FontManager::fmdNOfFonts] =
                               {
                                "TimesNewRomanPS-ItalicMT",
                                "TimesNewRomanPS-BoldMT",
@@ -75,7 +75,7 @@ CTLineGuard::CTLineGuard(const char *textLine, CTFontRef font)
    //Create attributed string with one attribue: the font.
    CFStringRef keys[] = {kCTFontAttributeName};
    CFTypeRef values[] = {font};
-   
+
    Init(textLine, 1, keys, values);
 }
 
@@ -95,7 +95,7 @@ CTLineGuard::CTLineGuard(const char *textLine, CTFontRef font, Color_t /*color*/
 
    Util::RefGuardGeneric<CGColorRef, CGColorRelease> textColor(CGColorCreate(rgbColorSpace.Get(), rgba));
    //Not clear from docs, if textColor.Get() can be 0.
-   
+
    CFStringRef keys[] = {kCTFontAttributeName, kCTForegroundColorAttributeName};
    CFTypeRef values[] = {font, textColor.Get()};
 
@@ -121,10 +121,10 @@ CTLineGuard::CTLineGuard(const char *textLine, CTFontRef font, const std::vector
    std::vector<UniChar> convertedLine(length);
    for (unsigned i = 0; i < length; ++i)
       convertedLine[i] = symbolMap[(unsigned char)textLine[i]];
-   
+
    CFStringRef keys[] = {kCTFontAttributeName, kCTForegroundColorAttributeName};
    CFTypeRef values[] = {font, textColor.Get()};
-   
+
    Init(convertedLine, 2, keys, values);
 }
 
@@ -134,7 +134,7 @@ CTLineGuard::~CTLineGuard()
    CFRelease(fCTLine);
 }
 
-//_________________________________________________________________   
+//_________________________________________________________________
 void CTLineGuard::GetBounds(UInt_t &w, UInt_t &h)const
 {
    CGFloat ascent = 0.f, descent = 0.f, leading = 0.f;
@@ -146,11 +146,11 @@ void CTLineGuard::GetBounds(UInt_t &w, UInt_t &h)const
 void CTLineGuard::Init(const char *textLine, UInt_t nAttribs, CFStringRef *keys, CFTypeRef *values)
 {
    Util::RefGuard<CFDictionaryRef> stringAttribs(
-                                                 CFDictionaryCreate(kCFAllocatorDefault, 
+                                                 CFDictionaryCreate(kCFAllocatorDefault,
                                                                     (const void **)keys,
-                                                                    (const void **)values, 
+                                                                    (const void **)values,
                                                                     nAttribs,
-                                                                    &kCFTypeDictionaryKeyCallBacks, 
+                                                                    &kCFTypeDictionaryKeyCallBacks,
                                                                     &kCFTypeDictionaryValueCallBacks)
                                                 );
 
@@ -172,11 +172,11 @@ void CTLineGuard::Init(const char *textLine, UInt_t nAttribs, CFStringRef *keys,
 void CTLineGuard::Init(const std::vector<UniChar> &textLine, UInt_t nAttribs, CFStringRef *keys, CFTypeRef *values)
 {
    Util::RefGuard<CFDictionaryRef> stringAttribs(
-                                                 CFDictionaryCreate(kCFAllocatorDefault, 
+                                                 CFDictionaryCreate(kCFAllocatorDefault,
                                                                     (const void **)keys,
-                                                                    (const void **)values, 
+                                                                    (const void **)values,
                                                                     nAttribs,
-                                                                    &kCFTypeDictionaryKeyCallBacks, 
+                                                                    &kCFTypeDictionaryKeyCallBacks,
                                                                     &kCFTypeDictionaryValueCallBacks)
                                                 );
 
@@ -215,21 +215,21 @@ CTFontRef FontManager::SelectFont(Font_t fontIndex, Float_t fontSize)
 
    if (fontIndex > fmdNOfFonts || !fontIndex)
       throw std::runtime_error("SelectFont: index");
-   
+
    fontIndex -= 1;
-   
+
    if (fontIndex == 11 && !fSymbolMap.size())
       InitSymbolMap();
-   
+
    const UInt_t fixedSize = UInt_t(fontSize);
    FontMapIter_t it = fFonts[fontIndex].find(fixedSize);
-   
+
    if (it == fFonts[fontIndex].end()) {
       //Insert the new font.
       Util::RefGuard<CTFontRef> font(CTFontCreateWithName(fixedFontNames[fontIndex], fixedSize, 0));
       if (!font.Get()) //With Apple's lame documentation it's not clear, if function can return 0.
          throw std::runtime_error(std::string("SelectFont: create") + cStrFontNames[fontIndex]);
- 
+
       fFonts[fontIndex][fixedSize] = font.Get();
       return fSelectedFont = font.Release();
    }
@@ -242,7 +242,7 @@ void FontManager::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
 {
    if (!fSelectedFont)
       throw std::runtime_error("GetTextBounds: font not selected");
-   
+
    Font_t fontIndex = gVirtualX->GetTextFont() / 10 - 1;
 
    if (fontIndex == 11) {
@@ -277,7 +277,7 @@ Double_t FontManager::GetLeading()const
 {
    if (!fSelectedFont)
       throw std::runtime_error("GetLeading");
-      
+
    return CTFontGetLeading(fSelectedFont);
 }
 
@@ -309,7 +309,7 @@ void FontManager::InitSymbolMap()
    fSymbolMap[117] = 0x3C5; //upsilon
    fSymbolMap[102] = 0x3C6; //phi
    fSymbolMap[99]  = 0x3C7; //chi
-   fSymbolMap[121] = 0x3C8; //psi 
+   fSymbolMap[121] = 0x3C8; //psi
    fSymbolMap[119] = 0x3C9; //omega
 
    fSymbolMap[65] = 0x391; //Alpha

@@ -11,9 +11,9 @@
 
 #ifndef ROOT_TColumnView
 #define ROOT_TColumnView
- 
+
 #include "TChair.h"
- 
+
 //______________________________________________________________________________
 //
 //  TColumnView - helper class to browse the TTable objects via ROOT TBrowser
@@ -21,7 +21,7 @@
 class TColumnView : public TChair {
 
 public:
-   TColumnView(const char *colName="", TTable *table=0); 
+   TColumnView(const char *colName="", TTable *table=0);
    virtual        ~TColumnView();
    virtual void    Browse(TBrowser *b);
    TH1            *Histogram(const char *selection=""); // *MENU*

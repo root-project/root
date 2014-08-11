@@ -22,7 +22,7 @@
 
 namespace std {} using namespace std;
 
-void std_string_streamer(TBuffer &b, void *objadd) 
+void std_string_streamer(TBuffer &b, void *objadd)
 {
    // Streamer function for std::string object.
    string *obj = (string*)objadd;

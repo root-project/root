@@ -46,8 +46,8 @@ class TQtClientFilter : public QObject {
    friend class TGQt;
    friend class TQtClientWidget;
 private:
-         void operator=(const TQtClientFilter &);
-			TQtClientFilter(const TQtClientFilter &);
+   void operator=(const TQtClientFilter &);
+   TQtClientFilter(const TQtClientFilter &);
 protected:
    TQtEventQueue             *fRootEventQueue;
    TQtNextEventMessage       *fNotifyClient;

@@ -51,7 +51,7 @@ TBuffer::TBuffer(EMode mode)
 
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
-   
+
    SetReAllocFunc( 0 );
 }
 
@@ -88,7 +88,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
    // If the new buffer is _not_ adopted and no memory allocation routine
    // is provided, a Fatal error will be issued if the Buffer attempts to
    // expand.
-   
+
    fBufSize  = bufsiz;
    fMode     = mode;
    fVersion  = 0;
@@ -110,7 +110,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
    }
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
-   
+
    SetReAllocFunc( reallocfunc );
 
    if (buf && ( (fMode&kWrite)!=0 ) && fBufSize < 0) {
@@ -140,7 +140,7 @@ void TBuffer::AutoExpand(Int_t size_needed)
    // which avoiding too much memory wastage.
    // If the size_needed is larger than the current size, the policy
    // is to expand to double the current size or the size_needed which ever is largest.
-   
+
    if (size_needed > fBufSize) {
       if (size_needed > 2*fBufSize) {
          Expand(size_needed);
@@ -178,10 +178,10 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
          fBufSize = newsiz - kExtraSpace;
       } else {
          fBufSize = newsiz;
-      }         
+      }
    }
    fBufMax = fBuffer + fBufSize;
-   
+
    SetReAllocFunc( reallocfunc );
 
    if (buf && ( (fMode&kWrite)!=0 ) && fBufSize < 0) {
@@ -214,7 +214,7 @@ void TBuffer::Expand(Int_t newsize, Bool_t copy)
       if (fReAllocFunc == TStorage::ReAllocChar) {
          Fatal("Expand","Failed to expand the data buffer using TStorage::ReAllocChar.");
       } if (fReAllocFunc == R__NoReAllocChar) {
-         Fatal("Expand","Failed to expand the data buffer because TBuffer does not own it and no custom memory reallocator was provided.");         
+         Fatal("Expand","Failed to expand the data buffer because TBuffer does not own it and no custom memory reallocator was provided.");
       } else {
          Fatal("Expand","Failed to expand the data buffer using custom memory reallocator 0x%lx.", (Long_t)fReAllocFunc);
       }
@@ -251,7 +251,7 @@ void  TBuffer::SetReAllocFunc(ReAllocCharFun_t reallocfunc )
 {
    // Set which memory reallocation method to use.  If reallocafunc is null,
    // reset it to the defaul value (TStorage::ReAlloc)
-   
+
    if (reallocfunc) {
       fReAllocFunc = reallocfunc;
    } else {
@@ -327,7 +327,7 @@ void TBuffer::PushDataCache(TVirtualArray *obj)
 {
    // Push a new data cache area onto the list of area to be used for
    // temporarily store 'missing' data members.
-   
+
    fCacheStack.push_back(obj);
 }
 
@@ -336,7 +336,7 @@ TVirtualArray *TBuffer::PeekDataCache() const
 {
    // Return the 'current' data cache area from the list of area to be used for
    // temporarily store 'missing' data members.
-   
+
    if (fCacheStack.empty()) return 0;
    return fCacheStack.back();
 }
@@ -346,7 +346,7 @@ TVirtualArray *TBuffer::PopDataCache()
 {
    // Pop and Return the 'current' data cache area from the list of area to be used for
    // temporarily store 'missing' data members.
-   
+
    TVirtualArray *val = PeekDataCache();
    fCacheStack.pop_back();
    return val;

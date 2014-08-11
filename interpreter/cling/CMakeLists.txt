@@ -22,7 +22,7 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
       message(FATAL_ERROR "Please set CLING_PATH_TO_LLVM_SOURCE to the root directory of LLVM source code.")
     else()
       get_filename_component(LLVM_MAIN_SRC_DIR ${CLING_PATH_TO_LLVM_SOURCE}
-	ABSOLUTE)
+    ABSOLUTE)
       list(APPEND CMAKE_MODULE_PATH "${LLVM_MAIN_SRC_DIR}/cmake/modules")
     endif()
   endif()
@@ -121,7 +121,7 @@ macro(add_cling_library name)
       set_source_files_properties(${tds}} PROPERTIES HEADER_FILE_ONLY ON)
 
       if(headers OR tds)
-	set(srcs ${headers} ${tds})
+         set(srcs ${headers} ${tds})
       endif()
     endif()
   endif(MSVC_IDE OR XCODE)
@@ -156,9 +156,11 @@ macro(add_cling_executable name)
   set_target_properties(${name} PROPERTIES FOLDER "Cling executables")
 endmacro(add_cling_executable)
 
+get_filename_component(_realpath ${CMAKE_CURRENT_SOURCE_DIR}/../clang/include REALPATH)
 include_directories(BEFORE
   ${CMAKE_CURRENT_BINARY_DIR}/../clang/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/../clang/include
+  # ${CMAKE_CURRENT_SOURCE_DIR}/../clang/include
+  ${_realpath}
   )
 
 include_directories(BEFORE

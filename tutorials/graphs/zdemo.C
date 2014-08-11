@@ -65,7 +65,7 @@ void zdemo()
    pad2->Draw();
 
 //
-// Cross-section of direct photon production in pp collisions 
+// Cross-section of direct photon production in pp collisions
 // at 500 GeV vs Pt
 //
    energ = 63;
@@ -119,7 +119,7 @@ void zdemo()
    gr1->Draw("LP");
 
 //
-// Cross-section of direct photon production in pp collisions 
+// Cross-section of direct photon production in pp collisions
 // at 200 GeV vs Pt
 //
 
@@ -139,7 +139,7 @@ void zdemo()
    gr2->Draw("LP");
 
 //
-// Cross-section of direct photon production in pp collisions 
+// Cross-section of direct photon production in pp collisions
 // at 500 GeV vs Pt
 //
    energ = 500;
@@ -227,7 +227,7 @@ void zdemo()
    c1->Update();
 }
 
-void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN, 
+void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN,
    Float_t PTMAX, Float_t DELP)
 {
   Int_t I;

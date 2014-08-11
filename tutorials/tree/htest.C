@@ -7,7 +7,7 @@
 // root > htr3()
 //
 //Author: Rene Brun
-      
+
 void htw() {
    //create a Tree with a few branches of type histogram
    //25000 entries are filled in the Tree

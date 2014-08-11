@@ -222,7 +222,7 @@ Float_t TEvePolygonSetProjected::AddPolygon(std::list<Int_t>& pp, vpPolygon_t& p
       if (start_idx < 0)
             continue;
       if (++start_idx >= refP.fNPnts) start_idx = 0;
-      
+
       // Same orientation duplicate
       {
          std::list<Int_t>::iterator u = ++pp.begin();

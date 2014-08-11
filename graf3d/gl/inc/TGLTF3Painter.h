@@ -63,7 +63,7 @@ public:
 private:
    void    InitGL()const;
    void    DeInitGL()const;
-   
+
    void    DrawPlot()const;
    //
    void    DrawToSelectionBuffer()const;
@@ -130,7 +130,7 @@ private:
    //TGLPlotPainter final-overriders.
    void     InitGL()const;
    void     DeInitGL()const;
-   
+
    void     DrawPlot()const;
    void     DrawSectionXOZ()const;
    void     DrawSectionYOZ()const;

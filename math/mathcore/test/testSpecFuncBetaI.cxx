@@ -36,7 +36,7 @@ TGraph* drawPoints(Double_t x[], Double_t y[], int color, int style = 1)
    return g;
 }
 
-int testSpecFuncBetaI() 
+int testSpecFuncBetaI()
 {
    vector<Double_t> x( ARRAYSIZE );
    vector<Double_t> yb( ARRAYSIZE );
@@ -49,21 +49,21 @@ int testSpecFuncBetaI()
    unsigned int index = 0;
    for ( double i = MIN; i < MAX; i += INCREMENT )
    {
-      if (verbose) { 
-         cout << "i:"; cout.width(5); cout << i 
-              << " index: "; cout.width(5); cout << index 
+      if (verbose) {
+         cout << "i:"; cout.width(5); cout << i
+              << " index: "; cout.width(5); cout << index
               << " TMath::BetaIncomplete(x,a,b): "; cout.width(10); cout << TMath::BetaIncomplete(i,a,b)
               << " ROOT::Math::inc_beta(a,a,b): "; cout.width(10); cout << ROOT::Math::inc_beta(i,a,b)
               << endl;
       }
-      
+
       x[index] = i;
 
       yb[index] = TMath::BetaIncomplete(i,a,b);
       ymb[index] = ROOT::Math::inc_beta(i,a,b);
       if ( std::fabs( yb[index] - ymb[index] ) > ERRORLIMIT )
       {
-         cout << "i " << i   
+         cout << "i " << i
               << " yb[index] " << yb[index]
               << " ymb[index] " << ymb[index]
               << " " << std::fabs( yb[index] - ymb[index] )
@@ -76,22 +76,22 @@ int testSpecFuncBetaI()
    if ( showGraphics )
    {
 
-      TCanvas* c1 = new TCanvas("c1", "Two Graphs", 600, 400); 
+      TCanvas* c1 = new TCanvas("c1", "Two Graphs", 600, 400);
       TH2F* hpx = new TH2F("hpx", "Two Graphs(hpx)", ARRAYSIZE, MIN, MAX, ARRAYSIZE, 0, 5);
       hpx->SetStats(kFALSE);
       hpx->Draw();
-      
+
       int color = 2;
-      
+
       TGraph *gb, *gmb;
       gb = drawPoints(&x[0], &yb[0], color++);
       gmb = drawPoints(&x[0], &ymb[0], color++, 7);
-      
+
       TLegend* legend = new TLegend(0.61,0.72,0.86,0.86);
       legend->AddEntry(gb, "TMath::BetaIncomplete()");
       legend->AddEntry(gmb, "ROOT::Math::inc_beta()");
       legend->Draw();
-      
+
       c1->Show();
    }
 
@@ -100,25 +100,25 @@ int testSpecFuncBetaI()
    return status;
 }
 
-int main(int argc, char **argv) 
+int main(int argc, char **argv)
 {
-  // Parse command line arguments 
+  // Parse command line arguments
   for (Int_t i=1 ;  i<argc ; i++) {
      std::string arg = argv[i] ;
-     if (arg == "-g") { 
+     if (arg == "-g") {
       showGraphics = true;
      }
-     if (arg == "-v") { 
+     if (arg == "-v") {
       showGraphics = true;
       verbose = true;
      }
-     if (arg == "-h") { 
+     if (arg == "-h") {
         cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
         cerr << "  where:\n";
         cerr << "     -g : graphics mode\n";
         cerr << "     -v : verbose  mode";
         cerr << endl;
-        return -1; 
+        return -1;
      }
    }
 

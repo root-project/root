@@ -114,5 +114,5 @@ void TTRAP::SetPoints(Double_t *points) const
       points[18] =  fDz*tx+tth2*fH2+fTl2 ; points[19] =  fH2+fDz*ty ; points[20] = fDz;
       points[21] =  fDz*tx-tth2*fH2+fBl2 ; points[22] = -fH2+fDz*ty ; points[23] = fDz;
    }
-   
+
 }

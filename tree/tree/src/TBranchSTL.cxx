@@ -247,7 +247,7 @@ Int_t TBranchSTL::Fill()
          continue;
       }
 
-      // coverity[dereference] since this is a TBranchSTL by definition the collection contains pointers to objects. 
+      // coverity[dereference] since this is a TBranchSTL by definition the collection contains pointers to objects.
       actClass = cl->GetActualClass( element );
       brIter = fBranchMap.find( actClass );
 
@@ -515,17 +515,17 @@ Int_t TBranchSTL::GetExpectedType(TClass *&expectedClass,EDataType &expectedType
    // object/values contained in this branch (and thus the type of pointers
    // expected to be passed to Set[Branch]Address
    // return 0 in case of success and > 0 in case of failure.
-   
+
    expectedClass = 0;
    expectedType = kOther_t;
-   
+
    if (fID < 0) {
       expectedClass = TClass::GetClass( fContName );
    } else {
       // Case of an object data member.  Here we allow for the
       // variable name to be ommitted.  Eg, for Event.root with split
       // level 1 or above  Draw("GetXaxis") is the same as Draw("fH.GetXaxis()")
-      TStreamerElement* element = (TStreamerElement*) GetInfo()->GetElems()[fID];
+      TStreamerElement* element = GetInfo()->GetElement(fID);
       if (element) {
          expectedClass = element->GetClassPointer();
          if (!expectedClass) {
@@ -579,8 +579,6 @@ TStreamerInfo* TBranchSTL::GetInfo() const
             }
          }
       }
-      fInfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-      fInfo->BuildOld();
    }
    return fInfo;
 }
@@ -621,8 +619,7 @@ void TBranchSTL::Print(const char *option) const
    } else if (strncmp(option,"debugInfo",strlen("debugInfo"))==0)  {
       Printf("Branch %s uses:\n",GetName());
       if (fID>=0) {
-         ULong_t* elems = GetInfo()->GetElems();
-         ((TStreamerElement*) elems[fID])->ls();
+         GetInfo()->GetElement(fID)->ls();
       }
       for (Int_t i = 0; i < fBranches.GetEntriesFast(); ++i) {
          TBranchElement* subbranch = (TBranchElement*)fBranches.At(i);

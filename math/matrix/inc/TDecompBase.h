@@ -96,12 +96,12 @@ public :
    ClassDef(TDecompBase,2) // Matrix Decomposition Base
 };
 
-Double_t TDecompBase::SetTol(Double_t newTol) 
+Double_t TDecompBase::SetTol(Double_t newTol)
 {
-   const Double_t oldTol = fTol; 
-   if (newTol >= 0.0) 
-      fTol = newTol; 
-   return oldTol; 
+   const Double_t oldTol = fTol;
+   if (newTol >= 0.0)
+      fTol = newTol;
+   return oldTol;
 }
 
 Bool_t DefHouseHolder  (const TVectorD &vc,Int_t     lp,Int_t     l,Double_t &up,Double_t &b,Double_t tol=0.0);

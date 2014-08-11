@@ -20,7 +20,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <sys/types.h>
-#include <netinet/in.h>
+#ifndef ROOT_XrdFour
+#  include <netinet/in.h>
+#endif
 #include <inttypes.h>
 #include <string.h>
 

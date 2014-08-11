@@ -3,16 +3,16 @@
 #include <TSQLResult.h>
 #include <TSQLRow.h>
 #endif
-   
+
 void sqlselect()
 {
    TSQLServer *db = TSQLServer::Connect("mysql://localhost/test","nobody", "");
 
    printf("Server info: %s\n", db->ServerInfo());
-   
+
    TSQLRow *row;
    TSQLResult *res;
-   
+
    // list databases available on server
    printf("\nList all databases on server %s\n", db->GetHost());
    res = db->GetDataBases();
@@ -31,7 +31,7 @@ void sqlselect()
       delete row;
    }
    delete res;
-   
+
    // list columns in table "runcatalog" in database "mysql"
    printf("\nList all columns in table \"runcatalog\" in database \"test\" on server %s\n",
           db->GetHost());
@@ -51,12 +51,12 @@ void sqlselect()
                      "WHERE tag&(1<<2) AND (run=490001 OR run=300122)";
 //   const char *sql = "select count(*) from test.runcatalog "
 //                     "WHERE tag&(1<<2)";
-   
+
    res = db->Query(sql);
 
    int nrows = res->GetRowCount();
    printf("\nGot %d rows in result\n", nrows);
-   
+
    int nfields = res->GetFieldCount();
    for (int i = 0; i < nfields; i++)
       printf("%40s", res->GetFieldName(i));
@@ -64,7 +64,7 @@ void sqlselect()
    for (int i = 0; i < nfields*40; i++)
       printf("=");
    printf("\n");
-   
+
    for (int i = 0; i < nrows; i++) {
       row = res->Next();
       for (int j = 0; j < nfields; j++) {
@@ -73,7 +73,7 @@ void sqlselect()
       printf("\n");
       delete row;
    }
-   
+
    delete res;
    delete db;
 

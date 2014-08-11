@@ -39,7 +39,7 @@ protected:
    Bool_t           fReapply;     //  If true, TTree::Draw will 'reapply' the original cut
    Long64_t        *fList;        //[fN]Array of elements
    TDirectory      *fDirectory;   //! Pointer to directory holding this tree
-   
+
 public:
    TEventList();
    TEventList(const char *name, const char *title="",Int_t initsize=0, Int_t delta = 0);
@@ -69,9 +69,9 @@ public:
    virtual void      SetReapplyCut(Bool_t apply = kFALSE) {fReapply = apply;}; // *TOGGLE*
    virtual void      Sort();
    virtual void      Subtract(const TEventList *list);
-   
+
    TEventList&       operator=(const TEventList &list);
-   
+
    friend TEventList operator+(const TEventList &list1, const TEventList &list2);
    friend TEventList operator-(const TEventList &list1, const TEventList &list2);
    friend TEventList operator*(const TEventList &list1, const TEventList &list2);

@@ -20,16 +20,16 @@ const CGFloat tapInterval = 0.15f;
 
 @interface PadView () {
    ROOT::iOS::Pad *pad;
-   
+
    __weak ROOTObjectController *controller;
-   
+
    CGFloat currentScale;
 
    BOOL panActive;
-   
+
    CGPoint tapPt;
    BOOL processSecondTap;
-   
+
    BOOL isMutable;
 }
 
@@ -51,9 +51,9 @@ const CGFloat tapInterval = 0.15f;
    if (self) {
       controller = c;
       pad = pd;
-      
+
       isMutable = YES;
-      
+
       frame.origin = CGPointZero;
       selectionView = [[SelectionView alloc] initWithFrame : frame withPad : pad];
       selectionView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
@@ -71,12 +71,12 @@ const CGFloat tapInterval = 0.15f;
       controller = nil;
       pad = nullptr;
       selectionView = nil;
-      
+
       isMutable = NO;
-      
+
       self.multipleTouchEnabled = NO;
    }
-   
+
    return self;
 }
 
@@ -104,7 +104,7 @@ const CGFloat tapInterval = 0.15f;
    pad->cd();
    pad->SetContext(ctx);
    pad->Paint();
-   
+
    if (isMutable && !selectionView.hidden)
       [selectionView setNeedsDisplay];
 }
@@ -144,7 +144,7 @@ const CGFloat tapInterval = 0.15f;
    //Now draw into this context.
    CGContextTranslateCTM(ctx, 0.f, rect.size.height);
    CGContextScaleCTM(ctx, 1.f, -1.f);
-      
+
    //Disable anti-aliasing, to avoid "non-clear" colors.
    CGContextSetAllowsAntialiasing(ctx, 0);
    //Fill bitmap with black (nothing under cursor).
@@ -158,16 +158,16 @@ const CGFloat tapInterval = 0.15f;
 
    pad->SetContext(ctx);
    pad->PaintForSelection();
-   
+
    UIImage *uiImageForPicking = UIGraphicsGetImageFromCurrentImageContext();//autoreleased UIImage.
    CGImageRef cgImageForPicking = uiImageForPicking.CGImage;
    CGImageRetain(cgImageForPicking);//It must live as long, as I need :)
-   
+
    UIGraphicsEndImageContext();
-   
+
    return cgImageForPicking;
 
-} 
+}
 
 //____________________________________________________________________________________________________
 - (BOOL) fillPickingBufferFromCGImage : (CGImageRef) cgImage
@@ -175,21 +175,21 @@ const CGFloat tapInterval = 0.15f;
    if (!isMutable)
       return NO;
 
-	const size_t pixelsW = CGImageGetWidth(cgImage);
-	const size_t pixelsH = CGImageGetHeight(cgImage);
-	//Declare the number of bytes per row. Each pixel in the bitmap
-	//is represented by 4 bytes; 8 bits each of red, green, blue, and
-	//alpha.
-	const int bitmapBytesPerRow = pixelsW * 4;
-	const int bitmapByteCount = bitmapBytesPerRow * pixelsH;
-	
-	//Use the generic RGB color space.
-	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	if (!colorSpace) {
+   const size_t pixelsW = CGImageGetWidth(cgImage);
+   const size_t pixelsH = CGImageGetHeight(cgImage);
+   //Declare the number of bytes per row. Each pixel in the bitmap
+   //is represented by 4 bytes; 8 bits each of red, green, blue, and
+   //alpha.
+   const int bitmapBytesPerRow = pixelsW * 4;
+   const int bitmapByteCount = bitmapBytesPerRow * pixelsH;
+
+   //Use the generic RGB color space.
+   CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+   if (!colorSpace) {
       //Log error: color space allocation failed.
       return NO;
    }
-	
+
    unsigned char *buffer = (unsigned char*)malloc(bitmapByteCount);
    if (!buffer) {
       //Log error: memory allocation failed.
@@ -197,31 +197,31 @@ const CGFloat tapInterval = 0.15f;
       return NO;
    }
 
-	// Create the bitmap context. We want pre-multiplied ARGB, 8-bits 
-	// per component. Regardless of what the source image format is 
-	// (CMYK, Grayscale, and so on) it will be converted over to the format
-	// specified here by CGBitmapContextCreate.
+   // Create the bitmap context. We want pre-multiplied ARGB, 8-bits
+   // per component. Regardless of what the source image format is
+   // (CMYK, Grayscale, and so on) it will be converted over to the format
+   // specified here by CGBitmapContextCreate.
    CGContextRef ctx = CGBitmapContextCreate(buffer, pixelsW, pixelsH, 8, bitmapBytesPerRow, colorSpace, kCGImageAlphaPremultipliedFirst);
 
    CGColorSpaceRelease(colorSpace);
 
-	if (!ctx) {
+   if (!ctx) {
       //Log error: bitmap context creation failed.
       free(buffer);
       return NO;
    }
-	
-	const CGRect rect = CGRectMake(0.f, 0.f, pixelsW, pixelsH); 
-	//Draw the image to the bitmap context. Once we draw, the memory 
-	//allocated for the context for rendering will then contain the 
-	//raw image data in the specified color space.
-   
+
+   const CGRect rect = CGRectMake(0.f, 0.f, pixelsW, pixelsH);
+   //Draw the image to the bitmap context. Once we draw, the memory
+   //allocated for the context for rendering will then contain the
+   //raw image data in the specified color space.
+
    CGContextSetAllowsAntialiasing(ctx, 0);//Check, if I need this for a bitmap.
-	CGContextDrawImage(ctx, rect, cgImage);
+   CGContextDrawImage(ctx, rect, cgImage);
 
    pad->SetSelectionBuffer(pixelsW, pixelsH, buffer);
-	// When finished, release the context
-	CGContextRelease(ctx); 
+   // When finished, release the context
+   CGContextRelease(ctx);
    free(buffer);
 
    return YES;
@@ -239,7 +239,7 @@ const CGFloat tapInterval = 0.15f;
 
    const BOOL res = [self fillPickingBufferFromCGImage : cgImage];
    CGImageRelease(cgImage);
-   
+
    return res;
 }
 
@@ -254,7 +254,7 @@ const CGFloat tapInterval = 0.15f;
 - (BOOL) pointOnSelectedObject : (CGPoint) pt
 {
    //check if there is any object in pt.
-   
+
    if (!isMutable)
       return NO;
 
@@ -272,14 +272,14 @@ const CGFloat tapInterval = 0.15f;
 - (void) handleSingleTap
 {
    //Make a selection, fill the editor, disable double tap.
-   
+
    if (!isMutable)
       return;
-   
+
    const CGPoint scaledTapPt = [self scaledPoint : tapPt];
    if (!pad->SelectionIsValid() && ![self initPadPicking])
       return;
-      
+
    pad->Pick(scaledTapPt.x, scaledTapPt.y);
    //Tell controller that selection has probably changed.
    [controller objectWasSelected : pad->GetSelected()];
@@ -298,7 +298,7 @@ const CGFloat tapInterval = 0.15f;
       tapPt = [touch locationInView : self];
       //Gesture can be any of them:
       processSecondTap = YES;
-   } 
+   }
 }
 
 //____________________________________________________________________________________________________
@@ -318,7 +318,7 @@ const CGFloat tapInterval = 0.15f;
             else
                selectionView.verticalPanDirection = YES;
             selectionView.panStart = tapPt;
-            
+
             pad->ExecuteEventAxis(kButton1Down, tapPt.x, tapPt.y, axis);
          } else {
             const CGPoint newPt = [[touches anyObject] locationInView : self];
@@ -345,7 +345,7 @@ const CGFloat tapInterval = 0.15f;
       [NSObject cancelPreviousPerformRequestsWithTarget : self];
       [self handleDoubleTap];
    }
-   
+
    if (selectionView.panActive) {
       panActive = NO;
       selectionView.panActive = NO;
@@ -366,7 +366,7 @@ const CGFloat tapInterval = 0.15f;
    //This is zoom/unzoom action or axis unzoom.
    if (!isMutable)
       return;
-   
+
    const CGPoint scaledTapPt = [self scaledPoint : tapPt];
    TAxis *axis = dynamic_cast<TAxis *>(pad->GetSelected());
 
@@ -381,7 +381,7 @@ const CGFloat tapInterval = 0.15f;
    } else {
       [controller handleDoubleTapOnPad : tapPt];
    }
-   
+
    UIScrollView *parent = (UIScrollView *)[self superview];
    parent.canCancelContentTouches = YES;
    parent.delaysContentTouches = YES;

@@ -12,6 +12,7 @@
 #   OUT   File to collect stdout and stderr.
 #   ENV   Environment VAR1=Value1;VAR2=Value2.
 #   CWD   Current working directory.
+#   SYS   Value of ROOTSYS
 #   DBG   Debug flag.
 #   RC    Return code for success.
 #
@@ -77,17 +78,20 @@ if(ENV)
   endforeach()
 endif()
 
+if(WIN32 AND SYS)
+  file(TO_NATIVE_PATH ${SYS}/bin _path)
+  set(ENV{PATH} "${_path};$ENV{PATH}")
+endif()
+
+#---Copy files to current direcotory----------------------------------------------------------------
 if(COPY)
   foreach(copyfile ${_copy_files})
-
     execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${copyfile} ${CMAKE_CURRENT_BINARY_DIR}
                     RESULT_VARIABLE _rc)
-
     if(_rc)
       message(FATAL_ERROR "Copying file ${copyfile} to ${CMAKE_CURRENT_BINARY_DIR} failed! Error code : ${_rc}")
     endif()
   endforeach()
-
 endif()
 
 #---Execute pre-command-----------------------------------------------------------------------------
@@ -100,6 +104,8 @@ endif()
 
 if(CMD)
   #---Execute the actual test ------------------------------------------------------------------------
+  string (REPLACE ";" " " _strcmd "${_cmd}")
+  message("Command: ${_strcmd}")
   if(OUT)
 
     # log stdout
@@ -117,10 +123,15 @@ if(CMD)
     endif()
 
     execute_process(COMMAND ${_cmd} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
-    
-    message("-- BEGIN TEST OUTPUT --")
+
+    string(REGEX REPLACE "([.]*)[;][-][e][;]([^;]+)([.]*)" "\\1;-e '\\2\\3'" res "${_cmd}")
+    string(REPLACE ";" " " res "${res}")
+    message("\n-- TEST COMMAND -- ")
+    message("\ncd ${CWD}")
+    message("\n${res}")
+    message("\n-- BEGIN TEST OUTPUT --")
     message("${_outvar}")
-    message("-- END TEST OUTPUT --")
+    message("\n-- END TEST OUTPUT --")
 
     file(WRITE ${OUT} "${_outvar}")
 
@@ -129,12 +140,12 @@ if(CMD)
     elseif(NOT DEFINED RC AND _rc)
       message(FATAL_ERROR "error code: ${_rc}")
     endif()
-    
+
     if(CNVCMD)
       set(_outvar, "")
       string(REPLACE "^" ";" _outcnvcmd "${CNVCMD}^${OUT}")
       execute_process(COMMAND ${_outcnvcmd} ${_chkout} ${_chkerr} RESULT_VARIABLE _rc)
-      file(WRITE ${OUT} ${_outvar})
+      file(WRITE ${OUT} "${_outvar}")
 
       if(DEFINED RC AND (NOT _rc EQUAL RC))
         message(FATAL_ERROR "error code: ${_rc}")

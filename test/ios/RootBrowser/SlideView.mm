@@ -35,7 +35,7 @@ const CGRect slideFrame = CGRectMake(0.f, 0.f, 650.f, 650.f);
       self.layer.shadowOffset = CGSizeMake(10.f, 10.f);
       self.layer.shadowPath = [UIBezierPath bezierPathWithRect : slideFrame].CGPath;
    }
-   
+
    return self;
 }
 
@@ -57,7 +57,7 @@ const CGRect slideFrame = CGRectMake(0.f, 0.f, 650.f, 650.f);
 
    CGContextTranslateCTM(ctx, 0.f, rect.size.height);
    CGContextScaleCTM(ctx, 1.f, -1.f);
-   
+
    pad->cd();
    pad->SetViewWH(rect.size.width, rect.size.height);
    pad->SetContext(ctx);

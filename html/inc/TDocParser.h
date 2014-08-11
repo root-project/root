@@ -137,27 +137,27 @@ protected:
    void           AddClassDataMembersRecursively(TBaseClass* bc);
    EParseContext  Context() const { return fParseContext.empty() ? kComment : (EParseContext)(fParseContext.back() & kParseContextMask); }
    virtual void   ExpandCPPLine(TString& line, Ssiz_t& pos);
-   virtual Bool_t HandleDirective(TString& keyword, Ssiz_t& pos, 
+   virtual Bool_t HandleDirective(TString& keyword, Ssiz_t& pos,
       TString& word, Ssiz_t& copiedToCommentUpTo);
    virtual void   InitKeywords() const;
    virtual TClass* IsDirective(const TString& line, Ssiz_t pos, const TString& word, Bool_t& begin) const;
-   TMethod*       LocateMethodInCurrentLine(Ssiz_t& posMethodName, TString& ret, 
+   TMethod*       LocateMethodInCurrentLine(Ssiz_t& posMethodName, TString& ret,
       TString& name, TString& params, Bool_t& isconst,
-      std::ostream &srcOut, TString &anchor, 
+      std::ostream &srcOut, TString &anchor,
       std::ifstream& sourcefile, Bool_t allowPureVirtual);
    void           LocateMethodsInSource(std::ostream& out);
    void           LocateMethodsInHeaderInline(std::ostream& out);
    void           LocateMethodsInHeaderClassDecl(std::ostream& out);
    void           LocateMethods(std::ostream& out, const char* filename,
-                                Bool_t lookForSourceInfo = kTRUE, 
-                                Bool_t useDocxxStyle = kFALSE, 
+                                Bool_t lookForSourceInfo = kTRUE,
+                                Bool_t useDocxxStyle = kFALSE,
                                 Bool_t allowPureVirtual = kFALSE,
-                                const char* methodPattern = 0, 
+                                const char* methodPattern = 0,
                                 const char* sourceExt = 0);
    virtual Bool_t ProcessComment();
    void           RemoveCommentContext(Bool_t cxxcomment);
    void           WriteClassDoc(std::ostream& out, Bool_t first = kTRUE);
-   void           WriteMethod(std::ostream& out, TString& ret, 
+   void           WriteMethod(std::ostream& out, TString& ret,
                               TString& name, TString& params,
                               Bool_t isconst,
                               const char* file, TString& anchor,

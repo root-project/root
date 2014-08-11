@@ -111,7 +111,7 @@ void TQpDataBase::RandomlyChooseBoundedVariables(
                            TVectorD &xupp,TVectorD &ixupp,Double_t &ix,Double_t percentLowerOnly,
                            Double_t percentUpperOnly,Double_t percentBound)
 {
-// Randomly choose  x and its boundaries 
+// Randomly choose  x and its boundaries
 
    const Int_t n = x.GetNrows();
 

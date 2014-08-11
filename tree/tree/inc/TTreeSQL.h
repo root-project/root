@@ -45,7 +45,7 @@ class TTreeSQL : public TTree {
 protected:
    Int_t                  fCurrentEntry;
    TString                fDB;
-   TString                fInsertQuery;   
+   TString                fInsertQuery;
    TString                fQuery;
    TString                fTable;
    TSQLResult            *fResult;
@@ -58,16 +58,16 @@ protected:
    Bool_t                 CheckTable(const TString &table) const;
    TString                CreateBranches(TSQLResult * rs);
    std::vector<Int_t>    *GetColumnIndice(TBranch *branch);
-   void                   Init();   
+   void                   Init();
    void                   ResetQuery();
    TString                ConvertTypeName(const TString& typeName );
    virtual void           CreateBranch(const TString& branchName,const TString &typeName);
    Bool_t                 CreateTable(const TString& table);
-   virtual TBasket       *CreateBasket(TBranch * br); 
+   virtual TBasket       *CreateBasket(TBranch * br);
 
    virtual TBranch *BranchImp(const char *branchname, const char *classname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImp(const char *branchname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel);
-   
+
 public:
    TTreeSQL(TSQLServer * server, TString DB, const TString& table);
 

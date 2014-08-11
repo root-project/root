@@ -1,7 +1,7 @@
-// This draws the Mathematical Symbols letters as a table and save the result 
+// This draws the Mathematical Symbols letters as a table and save the result
 // as GIF, PS, PDF and SVG files.
 //Author: Rene Brun
-   
+
 void latex5() {
    TCanvas *c1 = new TCanvas("mathsymb","Mathematical Symbols",600,600);
 

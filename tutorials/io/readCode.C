@@ -2,11 +2,11 @@
    //with sub-directories and read the objects in each sub-directory.
    //This example uses the file produced by the tutorial importCode.C
    //Author: Rene Brun
-      
+
 #include "TFile.h"
 #include "TKey.h"
 #include "TMacro.h"
-   
+
 Int_t nlines = 0;
 Int_t nfiles = 0;
 Int_t ndirs = 0;
@@ -37,8 +37,8 @@ void readdir(TDirectory *dir) {
       delete macro;
    }
 }
-         
-      
+
+
 void readCode() {
    TFile *f = new TFile("code.root");
    if (f->IsZombie()) {
@@ -48,9 +48,9 @@ void readCode() {
    printf("Reading file ==> code.root\n");
    printf("File size in bytes       = %lld\n",f->GetEND());
    printf("File compression factor  = %g\n",f->GetCompressionFactor());
-   
+
    readdir(f);
-   
+
    printf("Number of sub-dirs       = %d\n",ndirs);
    printf("Number of macro files    = %d\n",nfiles);
    printf("Number of lines in mac   = %d\n",nlines);

@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -17,10 +17,10 @@ namespace ROOT {
    namespace Minuit2 {
 
 
-/** 
-    determines the relative floating point arithmetic precision. The 
-    SetPrecision() method can be used to override Minuit's own determination, 
-    when the user knows that the {FCN} function Value is not calculated to 
+/**
+    determines the relative floating point arithmetic precision. The
+    SetPrecision() method can be used to override Minuit's own determination,
+    when the user knows that the {FCN} function Value is not calculated to
     the nominal machine accuracy.
  */
 

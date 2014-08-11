@@ -67,12 +67,12 @@ public:
 
    //new functions January 2006
    const char         *Background(Double_t *spectrum, Int_t ssize,Int_t numberIterations,Int_t direction, Int_t filterOrder,bool smoothing,Int_t smoothWindow,bool compton);
-   const char         *SmoothMarkov(Double_t *source, Int_t ssize, Int_t averWindow);   
-   const char         *Deconvolution(Double_t *source, const Double_t *response,Int_t ssize, Int_t numberIterations,Int_t numberRepetitions, Double_t boost );    
-   const char         *DeconvolutionRL(Double_t *source, const Double_t *response,Int_t ssize, Int_t numberIterations,Int_t numberRepetitions, Double_t boost );    
-   const char         *Unfolding(Double_t *source,const Double_t **respMatrix,Int_t ssizex, Int_t ssizey,Int_t numberIterations,Int_t numberRepetitions, Double_t boost);    
-   Int_t               SearchHighRes(Double_t *source,Double_t *destVector, Int_t ssize,Double_t sigma, Double_t threshold,bool backgroundRemove,Int_t deconIterations,bool markov, Int_t averWindow);   
-   Int_t               Search1HighRes(Double_t *source,Double_t *destVector, Int_t ssize,Double_t sigma, Double_t threshold,bool backgroundRemove,Int_t deconIterations,bool markov, Int_t averWindow);   
+   const char         *SmoothMarkov(Double_t *source, Int_t ssize, Int_t averWindow);
+   const char         *Deconvolution(Double_t *source, const Double_t *response,Int_t ssize, Int_t numberIterations,Int_t numberRepetitions, Double_t boost );
+   const char         *DeconvolutionRL(Double_t *source, const Double_t *response,Int_t ssize, Int_t numberIterations,Int_t numberRepetitions, Double_t boost );
+   const char         *Unfolding(Double_t *source,const Double_t **respMatrix,Int_t ssizex, Int_t ssizey,Int_t numberIterations,Int_t numberRepetitions, Double_t boost);
+   Int_t               SearchHighRes(Double_t *source,Double_t *destVector, Int_t ssize,Double_t sigma, Double_t threshold,bool backgroundRemove,Int_t deconIterations,bool markov, Int_t averWindow);
+   Int_t               Search1HighRes(Double_t *source,Double_t *destVector, Int_t ssize,Double_t sigma, Double_t threshold,bool backgroundRemove,Int_t deconIterations,bool markov, Int_t averWindow);
 
    static Int_t        StaticSearch(const TH1 *hist, Double_t sigma=2, Option_t *option="goff", Double_t threshold=0.05);
    static TH1         *StaticBackground(const TH1 *hist,Int_t niter=20, Option_t *option="");

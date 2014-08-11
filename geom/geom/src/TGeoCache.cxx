@@ -91,7 +91,7 @@ TGeoNodeCache::TGeoNodeCache(TGeoNode *top, Bool_t nodeid, Int_t capacity)
    }
    for (Int_t i=0; i<fGeoInfoStackSize; i++) {
       fInfoBranch[i] = 0;
-   }   
+   }
    fMatrix = fMatrixBranch[0] = fMPB[0];
    fNodeBranch[0] = top;
    fNodeIdArray = 0;
@@ -116,7 +116,7 @@ TGeoNodeCache::~TGeoNodeCache()
    delete [] fNodeBranch;
    if (fInfoBranch) {
       for (Int_t i=0; i<fGeoInfoStackSize; i++) delete fInfoBranch[i];
-   }   
+   }
    delete [] fInfoBranch;
    if (fNodeIdArray)  delete [] fNodeIdArray;
 }
@@ -145,7 +145,7 @@ void TGeoNodeCache::BuildInfoBranch()
    else if (fInfoBranch[0]) return;
    for (Int_t i=0; i<fGeoInfoStackSize; i++) {
       fInfoBranch[i] = new TGeoStateInfo();
-   }   
+   }
 }
 
 //_____________________________________________________________________________
@@ -308,14 +308,14 @@ TGeoStateInfo *TGeoNodeCache::GetInfo()
       fGeoInfoStackSize *= 2;
    }
    return fInfoBranch[fInfoLevel++];
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoNodeCache::ReleaseInfo()
 {
 // Release last used state info pointer.
    fInfoLevel--;
-}   
+}
 
 //_____________________________________________________________________________
 const char *TGeoNodeCache::GetPath()
@@ -454,7 +454,7 @@ TGeoCacheState::TGeoCacheState(Int_t capacity)
    for (Int_t i=0; i<capacity; i++) {
       fMatrixBranch[i] = new TGeoHMatrix("global");
       fNodeBranch[i] = 0;
-   }   
+   }
 }
 
 //_____________________________________________________________________________
@@ -513,7 +513,7 @@ TGeoCacheState::~TGeoCacheState()
    if (fNodeBranch) {
       for (Int_t i=0; i<fCapacity; i++) {
          delete fMatrixBranch[i];
-      }   
+      }
       delete [] fNodeBranch;
       delete [] fMatrixBranch;
       delete [] fMatPtr;

@@ -8,7 +8,7 @@ void fitslicesy() {
 //    This macro shows also how to annotate a picture, change
 //    some pad parameters.
 //Author: Rene Brun
-   
+
 // Change some default parameters in the current style
    gStyle->SetLabelSize(0.06,"x");
    gStyle->SetLabelSize(0.06,"y");

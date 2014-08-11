@@ -9,13 +9,13 @@ class NdbDataCovariances : public NdbMF
 protected:
 
 public:
-	NdbDataCovariances()
-		: NdbMF(30, "Data covariances obtained from parameter "
-			"covariances and sensitivities") {}
+   NdbDataCovariances()
+      : NdbMF(30, "Data covariances obtained from parameter "
+         "covariances and sensitivities") {}
 
-	~NdbDataCovariances() {}
+   ~NdbDataCovariances() {}
 
-	ClassDef(NdbDataCovariances,1)
+   ClassDef(NdbDataCovariances,1)
 
 }; // NdbDataCovariances
 

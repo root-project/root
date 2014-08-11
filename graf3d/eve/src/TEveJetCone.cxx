@@ -156,7 +156,7 @@ TEveVector TEveJetCone::CalcBaseVec(Float_t eta, Float_t phi) const
 
       if (fLimits.fX != 0) vec *= fLimits.fX;
    }
-   else 
+   else
    {
       vec *= fLimits.fX;
    }

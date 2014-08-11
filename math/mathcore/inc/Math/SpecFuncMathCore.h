@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: Andras Zsenei & Lorenzo Moneta   06/2005 
+// Authors: Andras Zsenei & Lorenzo Moneta   06/2005
 
 /**********************************************************************
  *                                                                    *
@@ -42,10 +42,10 @@ namespace Math {
 
    \f[ erf(x) = \frac{2}{\sqrt{\pi}} \int_{0}^{x} e^{-t^2} dt  \f]
 
-   For detailed description see 
+   For detailed description see
    <A HREF="http://mathworld.wolfram.com/Erf.html">
-   Mathworld</A>. 
-   The implementation used is that of 
+   Mathworld</A>.
+   The implementation used is that of
    <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_7.html#SEC102">GSL</A>.
    This function is provided only for convenience,
    in case your standard C++ implementation does not support
@@ -66,9 +66,9 @@ namespace Math {
 
    \f[ erfc(x) = 1 - erf(x) = \frac{2}{\sqrt{\pi}} \int_{x}^{\infty} e^{-t^2} dt  \f]
 
-   For detailed description see <A HREF="http://mathworld.wolfram.com/Erfc.html"> Mathworld</A>. 
+   For detailed description see <A HREF="http://mathworld.wolfram.com/Erfc.html"> Mathworld</A>.
    The implementation used is that of  <A HREF="http://www.netlib.org/cephes">Cephes</A> from S. Moshier.
-   
+
    @ingroup SpecFunc
 
    */
@@ -76,7 +76,7 @@ namespace Math {
 
    double erfc(double x);
 
-  
+
    /**
 
    The gamma function is defined to be the extension of the
@@ -84,9 +84,9 @@ namespace Math {
 
    \f[ \Gamma(x) = \int_{0}^{\infty} t^{x-1} e^{-t} dt  \f]
 
-   For detailed description see 
+   For detailed description see
    <A HREF="http://mathworld.wolfram.com/GammaFunction.html">
-   Mathworld</A>. 
+   Mathworld</A>.
    The implementation used is that of  <A HREF="http://www.netlib.org/cephes">Cephes</A> from S. Moshier.
 
    @ingroup SpecFunc
@@ -97,34 +97,34 @@ namespace Math {
    double tgamma(double x);
 
 
-   /** 
+   /**
 
-   Calculates the logarithm of the gamma function 
+   Calculates the logarithm of the gamma function
 
    The implementation used is that of  <A HREF="http://www.netlib.org/cephes">Cephes</A> from S. Moshier.
    @ingroup SpecFunc
-   
+
    */
    double lgamma(double x);
 
 
    /**
-      Calculates the normalized (regularized) lower incomplete gamma function (lower integral) 
+      Calculates the normalized (regularized) lower incomplete gamma function (lower integral)
 
       \f[ P(a, x) = \frac{ 1} {\Gamma(a) } \int_{0}^{x} t^{a-1} e^{-t} dt  \f]
 
 
-      For a detailed description see 
+      For a detailed description see
       <A HREF="http://mathworld.wolfram.com/RegularizedGammaFunction.html">
-      Mathworld</A>. 
+      Mathworld</A>.
       The implementation used is that of  <A HREF="http://www.netlib.org/cephes">Cephes</A> from S. Moshier.
-      In this implementation both a and x must be positive. If a is negative 1.0 is returned for every x. 
-      This is correct only if a is negative integer. 
+      In this implementation both a and x must be positive. If a is negative 1.0 is returned for every x.
+      This is correct only if a is negative integer.
       For a>0 and x<0  0 is returned (this is correct only for a>0 and x=0).
-   
+
       @ingroup SpecFunc
    */
-   double inc_gamma(double a, double x ); 
+   double inc_gamma(double a, double x );
 
    /**
       Calculates the normalized (regularized) upper incomplete gamma function (upper integral)
@@ -132,27 +132,27 @@ namespace Math {
       \f[ Q(a, x) = \frac{ 1} {\Gamma(a) } \int_{x}^{\infty} t^{a-1} e^{-t} dt  \f]
 
 
-      For a detailed description see 
+      For a detailed description see
       <A HREF="http://mathworld.wolfram.com/RegularizedGammaFunction.html">
-      Mathworld</A>. 
+      Mathworld</A>.
       The implementation used is that of  <A HREF="http://www.netlib.org/cephes">Cephes</A> from S. Moshier.
-      In this implementation both a and x must be positive. If a is negative, 0 is returned for every x. 
-      This is correct only if a is negative integer. 
+      In this implementation both a and x must be positive. If a is negative, 0 is returned for every x.
+      This is correct only if a is negative integer.
       For a>0 and x<0  1 is returned (this is correct only for a>0 and x=0).
-   
+
       @ingroup SpecFunc
    */
-   double inc_gamma_c(double a, double x ); 
+   double inc_gamma_c(double a, double x );
 
    /**
-  
+
    Calculates the beta function.
 
    \f[ B(x,y) = \frac{\Gamma(x) \Gamma(y)}{\Gamma(x+y)} \f]
 
-   for x>0 and y>0. For detailed description see 
+   for x>0 and y>0. For detailed description see
    <A HREF="http://mathworld.wolfram.com/BetaDistribution.html">
-   Mathworld</A>. 
+   Mathworld</A>.
 
    @ingroup SpecFunc
 
@@ -163,38 +163,38 @@ namespace Math {
 
 
    /**
-  
+
    Calculates the normalized (regularized) incomplete beta function.
 
-   \f[ B(x, a, b ) =  \frac{ \int_{0}^{x} u^{a-1} (1-u)^{b-1} du } { B(a,b) } \f] 
+   \f[ B(x, a, b ) =  \frac{ \int_{0}^{x} u^{a-1} (1-u)^{b-1} du } { B(a,b) } \f]
 
-   for 0<=x<=1,  a>0,  and b>0. For detailed description see 
+   for 0<=x<=1,  a>0,  and b>0. For detailed description see
    <A HREF="http://mathworld.wolfram.com/RegularizedBetaFunction.html">
-   Mathworld</A>. 
+   Mathworld</A>.
    The implementation used is that of  <A HREF="http://www.netlib.org/cephes">Cephes</A> from S. Moshier.
 
    @ingroup SpecFunc
 
    */
 
-   double inc_beta( double x, double a, double b); 
+   double inc_beta( double x, double a, double b);
 
 
 
 
   /**
-  
+
   Calculates the sine integral.
 
   \f[ Si(x) = - \int_{0}^{x} \frac{\sin t}{t} dt \f]
 
-  For detailed description see 
+  For detailed description see
   <A HREF="http://mathworld.wolfram.com/SineIntegral.html">
-  Mathworld</A>. The implementation used is that of 
+  Mathworld</A>. The implementation used is that of
   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c336/top.html">
   CERNLIB</A>,
-  based on Y.L. Luke, The special functions and their approximations, v.II, (Academic Press, New York l969) 325-326. 
-  
+  based on Y.L. Luke, The special functions and their approximations, v.II, (Academic Press, New York l969) 325-326.
+
 
   @ingroup SpecFunc
 
@@ -206,21 +206,21 @@ namespace Math {
 
 
   /**
-  
+
   Calculates the real part of the cosine integral \Re(Ci).
-  
+
   For x<0, the imaginary part is \pi i and has to be added by the user,
   for x>0 the imaginary part of Ci(x) is 0.
 
   \f[ Ci(x) = - \int_{x}^{\infty} \frac{\cos t}{t} dt = \gamma + \ln x + \int_{0}^{x} \frac{\cos t - 1}{t} dt\f]
 
-  For detailed description see 
+  For detailed description see
   <A HREF="http://mathworld.wolfram.com/CosineIntegral.html">
-  Mathworld</A>. The implementation used is that of 
+  Mathworld</A>. The implementation used is that of
   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c336/top.html">
   CERNLIB</A>,
-  based on Y.L. Luke, The special functions and their approximations, v.II, (Academic Press, New York l969) 325-326. 
-  
+  based on Y.L. Luke, The special functions and their approximations, v.II, (Academic Press, New York l969) 325-326.
+
 
   @ingroup SpecFunc
 
@@ -228,8 +228,8 @@ namespace Math {
 
   double cosint(double x);
 
-   
-   
+
+
 
 } // namespace Math
 } // namespace ROOT

@@ -41,7 +41,7 @@ public:
       TProtoRealData() {}
       TProtoRealData(const TRealData* rd);
       virtual ~TProtoRealData();
-      TRealData* CreateRealData(TClass* currentClass) const;
+      TRealData* CreateRealData(TClass* currentClass, TClass* parent) const;
       ClassDef(TProtoRealData, 2);//Persistent version of TRealData
    };
 

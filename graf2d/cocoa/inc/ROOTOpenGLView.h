@@ -33,7 +33,7 @@
 @property (nonatomic, retain) NSOpenGLContext *fOpenGLContext;
 
 //ROOT's GL uses pixel format (TGLFormat class) when TGLWidget is
-//created, after that, pixel format never changed (though I can do 
+//created, after that, pixel format never changed (though I can do
 //this with ROOTOpenGLView, there is no interface in ROOT's GL code for this).
 //So, pixel format is a property of ROOTOpenGLView. GL-view owns pixel format,
 //it can also be reset externally (again, GL module never does this).

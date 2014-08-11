@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -40,12 +40,12 @@ int main() {
 #endif
   if (!in) {
     std::cerr << "Error opening input data file" << std::endl;
-    return 1; 
+    return 1;
   }
 
 
   // read input data
-  { 
+  {
     double x = 0., y = 0., width = 0., err = 0., un1 = 0., un2 = 0.;
     while(in>>x>>y>>width>>err>>un1>>un2) {
       if(err < 1.e-8) continue;
@@ -61,7 +61,7 @@ int main() {
     std::cout<<"nmeas: "<<nmeas<<std::endl;
   }
 
-  // create FCN function  
+  // create FCN function
   GaussFcn2 fFCN(measurements, positions, var);
 
   std::vector<double> meas = fFCN.Measurements();
@@ -89,10 +89,10 @@ int main() {
 
   init_val[0] = mean;
   init_val[1] = sqrt(rms2);
-  init_val[2] = area; 
+  init_val[2] = area;
   init_val[3] = mean;
   init_val[4] = sqrt(rms2);
-  init_val[5] = area; 
+  init_val[5] = area;
 
 // ('Norm', 'Mean', 'Sigma')
 // (3286.919999999996, 8676.4053709004238, 3123.5358310131301)
@@ -104,10 +104,10 @@ int main() {
   /*
   init_val[0] = 10000.;
   init_val[1] = 3000;
-  init_val[2] = 1300; 
+  init_val[2] = 1300;
   init_val[3] = 7000;
   init_val[4] = 1000;
-  init_val[5] = 1800; 
+  init_val[5] = 1800;
   */
   std::cout<<"initial fval: "<<fFCN(init_val)<<std::endl;
 

@@ -18,6 +18,7 @@
 #include "TTreeCache.h"
 #include "TVirtualPerfStats.h"
 #include "TTimeStamp.h"
+#include "RZip.h"
 
 // TODO: Copied from TBranch.cxx
 #if (__GNUC__ >= 3) || defined(__INTEL_COMPILER)
@@ -32,11 +33,6 @@
   #define R__likely(expr) expr
 #endif
 
-extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm);
-extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
-extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);
-
-const Int_t  kMAXBUF = 0xFFFFFF;
 const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest bytes of
                                               // the fEntryOffset are used to stored displacement.
 
@@ -82,7 +78,7 @@ TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir),fCompressedBufferRef(0
 }
 
 //_______________________________________________________________________
-TBasket::TBasket(const char *name, const char *title, TBranch *branch) : 
+TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
    TKey(branch->GetDirectory()),fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
 {
    // Basket normal constructor, used during writing.
@@ -161,7 +157,7 @@ void TBasket::AdjustSize(Int_t newsize)
 }
 
 //_______________________________________________________________________
-Long64_t TBasket::CopyTo(TFile *to) 
+Long64_t TBasket::CopyTo(TFile *to)
 {
    // Copy the basket of this branch onto the file to.
 
@@ -222,7 +218,7 @@ Int_t TBasket::GetEntryPointer(Int_t entry)
 
 //_______________________________________________________________________
 Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tree)
-{ 
+{
    // Load basket buffers in memory without unziping.
    // This function is called by TTreeCloner.
    // The function returns 0 in case of success, 1 in case of error.
@@ -306,13 +302,13 @@ void TBasket::MoveEntries(Int_t dentries)
          fEntryOffset[i]  = fEntryOffset[i+dentries] - moved;
       }
       for (i = fNevBufSize-dentries; i<fNevBufSize; ++i) {
-         fDisplacement[i] = 0;      
+         fDisplacement[i] = 0;
          fEntryOffset[i]  = 0;
       }
 
    } else {
       // If there is no EntryOffset array, this means
-      // that each entry has the same size and that 
+      // that each entry has the same size and that
       // it does not point to other objects (hence there
       // is no need for a displacement array).
       bufbegin = GetKeylen() + dentries*fNevBufSize;
@@ -330,7 +326,7 @@ void TBasket::MoveEntries(Int_t dentries)
 Int_t TBasket::ReadBasketBuffersUncompressedCase()
 {
    // By-passing buffer unzipping has been requested and is
-   // possible (only 1 entry in this basket). 
+   // possible (only 1 entry in this basket).
    fBuffer = fBufferRef->Buffer();
 
    // Make sure that the buffer is set at the END of the data
@@ -430,7 +426,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
 
    if(!fBranch->GetDirectory()) {
       return -1;
-   }  
+   }
 
    Bool_t oldCase;
    char *rawUncompressedBuffer, *rawCompressedBuffer;
@@ -452,7 +448,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       }
    }
 
-   // Determine which buffer to use, so that we can avoid a memcpy in case of 
+   // Determine which buffer to use, so that we can avoid a memcpy in case of
    // the basket was not compressed.
    TBuffer* readBufferRef;
    if (R__unlikely(fBranch->GetCompressionLevel()==0)) {
@@ -471,7 +467,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       Error("ReadBasketBuffers", "Unable to allocate buffer.");
       return 1;
    }
-   
+
    if (pf) {
       Int_t st = pf->ReadBuffer(readBufferRef->Buffer(),pos,len);
       if (st < 0) {
@@ -564,7 +560,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
             goto AfterBuffer;
          }
 
-         R__unzip(&nin, rawCompressedObjectBuffer, &nbuf, rawUncompressedObjectBuffer, &nout);
+         R__unzip(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout);
          if (!nout) break;
          noutot += nout;
          nintot += nin;
@@ -608,14 +604,14 @@ AfterBuffer:
    }
    // Read the array of diplacement if any.
    delete [] fDisplacement;
-   fDisplacement = 0; 
+   fDisplacement = 0;
    if (fBufferRef->Length() != len) {
       // There is more data in the buffer!  It is the displacement
       // array.  If len is less than TBuffer::kMinimalSize the actual
       // size of the buffer is too large, so we can not use the
       // fBufferRef->BufferSize()
       fBufferRef->ReadArray(fDisplacement);
-   }        
+   }
 
    return 0;
 }
@@ -643,7 +639,7 @@ void TBasket::Reset()
    // the constructor (and potentially attaching a TBuffer.)
    // Reduce memory used by fEntryOffset and the TBuffer if needed ..
 
-   // Name, Title, fClassName, fBranch 
+   // Name, Title, fClassName, fBranch
    // stay the same.
 
    // Downsize the buffer if needed.
@@ -653,7 +649,7 @@ void TBasket::Reset()
    Long_t newSize = -1;
    if (curSize > 2*curLen)
    {
-      Long_t curBsize = fBranch->GetBasketSize();      
+      Long_t curBsize = fBranch->GetBasketSize();
       if (curSize > 2*curBsize ) {
          Long_t avgSize = (Long_t)(fBranch->GetTotBytes() / (1+fBranch->GetWriteBasket())); // Average number of bytes per basket so far
          if (curSize > 2*avgSize) {
@@ -681,7 +677,7 @@ void TBasket::Reset()
    if (newSize != -1) {
       fBufferRef->Expand(newSize,kFALSE);     // Expand without copying the existing data.
    }
-   
+
    TKey::Reset();
 
    Int_t newNevBufSize = fBranch->GetEntryOffsetLen();
@@ -698,9 +694,9 @@ void TBasket::Reset()
 
    fNevBuf      = 0;
    Int_t *storeEntryOffset = fEntryOffset;
-   fEntryOffset = 0; 
+   fEntryOffset = 0;
    Int_t *storeDisplacement = fDisplacement;
-   fDisplacement= 0; 
+   fDisplacement= 0;
    fBuffer      = 0;
 
    fBufferRef->Reset();
@@ -720,7 +716,7 @@ void TBasket::Reset()
    fEntryOffset = storeEntryOffset;
    if (fNevBufSize) {
       for (Int_t i=0;i<fNevBufSize;i++) fEntryOffset[i] = 0;
-   }   
+   }
 }
 
 //_______________________________________________________________________
@@ -907,7 +903,7 @@ Int_t TBasket::WriteBuffer()
 
    TFile *file = fBranch->GetFile(kWrite);
    if (!file) return 0;
-   if (!file->IsWritable()) { 
+   if (!file->IsWritable()) {
       return -1;
    }
    fMotherDir = file; // fBranch->GetDirectory();
@@ -937,8 +933,8 @@ Int_t TBasket::WriteBuffer()
    // Transfer fEntryOffset table at the end of fBuffer.
    fLast = fBufferRef->Length();
    if (fEntryOffset) {
-      // Note: We might want to investigate the compression gain if we 
-      // transform the Offsets to fBuffer in entry length to optimize 
+      // Note: We might want to investigate the compression gain if we
+      // transform the Offsets to fBuffer in entry length to optimize
       // compression algorithm.  The aggregate gain on a (random) CMS files
       // is around 5.5%. So the code could something like:
       //      for(Int_t z = fNevBuf; z > 0; --z) {
@@ -960,7 +956,7 @@ Int_t TBasket::WriteBuffer()
    Int_t cxlevel = fBranch->GetCompressionLevel();
    Int_t cxAlgorithm = fBranch->GetCompressionAlgorithm();
    if (cxlevel > 0) {
-      Int_t nbuffers = 1 + (fObjlen - 1) / kMAXBUF;
+      Int_t nbuffers = 1 + (fObjlen - 1) / kMAXZIPBUF;
       Int_t buflen = fKeylen + fObjlen + 9 * nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
       InitializeCompressedBuffer(buflen, file);
       if (!fCompressedBufferRef) {
@@ -975,11 +971,11 @@ Int_t TBasket::WriteBuffer()
       nzip   = 0;
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
-         else bufmax = kMAXBUF;
+         else bufmax = kMAXZIPBUF;
          //compress the buffer
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
 
-         // test if buffer has really been compressed. In case of small buffers 
+         // test if buffer has really been compressed. In case of small buffers
          // when the buffer contains random data, it may happen that the compressed
          // buffer is larger than the input. In this case, we write the original uncompressed buffer
          if (nout == 0 || nout >= fObjlen) {
@@ -999,8 +995,8 @@ Int_t TBasket::WriteBuffer()
          }
          bufcur += nout;
          noutot += nout;
-         objbuf += kMAXBUF;
-         nzip   += kMAXBUF;
+         objbuf += kMAXZIPBUF;
+         nzip   += kMAXZIPBUF;
       }
       nout = noutot;
       Create(noutot,file);

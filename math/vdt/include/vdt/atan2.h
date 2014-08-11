@@ -104,7 +104,7 @@ inline float fast_atan2f( float y, float x ) {
 
     // To avoid the fpe, we protect against /0.
     const float oneIfXXZero = (xx==0.f);
-    
+
     float t=yy/(xx/*+oneIfXXZero*/);
     float z=t;
     if( t > 0.4142135623730950f ) // * tan pi/8
@@ -112,7 +112,7 @@ inline float fast_atan2f( float y, float x ) {
 
     //printf("%e %e %e %e\n",yy,xx,t,z);
     float z2 = z * z;
-    
+
     float ret =(((( 8.05374449538e-2f * z2
                     - 1.38776856032E-1f) * z2
                     + 1.99777106478E-1f) * z2
@@ -121,7 +121,7 @@ inline float fast_atan2f( float y, float x ) {
 
     // Here we put the result to 0 if xx was 0, if not nothing happens!
     ret*= (1.f - oneIfXXZero);
-    
+
     // move back in place
     if (y==0.f) ret=0.f;
     if( t > 0.4142135623730950f ) ret += details::PIO4F;
@@ -137,7 +137,7 @@ inline float fast_atan2f( float y, float x ) {
 
 //------------------------------------------------------------------------------
 // // Vector signatures
-// 
+//
 // void atan2v(const uint32_t size, double const * __restrict__ iarray, double const * __restrict__ iarray2, double* __restrict__ oarray);
 // void fast_atan2v(const uint32_t size, double const * __restrict__ iarray, double const * __restrict__ iarray2, double* __restrict__ oarray);
 // void atan2fv(const uint32_t size, float const * __restrict__ iarray, float const * __restrict__ iarray2, float* __restrict__ oarray);

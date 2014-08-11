@@ -228,7 +228,7 @@ void TTable::AsString(void *buf, EColumnType type, Int_t width,std::ostream &out
   //
    int prevPrec = out.precision();
    const std::ios_base::fmtflags prevFmt = out.flags();
-   
+
    switch (type) {
       case kFloat:
          out << std::dec  << std::setw(width) << std::setprecision(width-3) << *(float *)buf;
@@ -276,9 +276,9 @@ void TTable::AsString(void *buf, EColumnType type, Int_t width,std::ostream &out
 
 //________________________________________________________________________
 const char *TTable::GetTypeName(TTable::EColumnType type)
-{  
+{
    //return table type name
-   return  fgTypeName[type]; 
+   return  fgTypeName[type];
 }
 
 //________________________________________________________________________

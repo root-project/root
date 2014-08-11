@@ -784,7 +784,7 @@ void TH2Editor::SetModel(TObject* obj)
    if (fBinHist && (obj != fHist)) {
       //we have probably moved to a different pad.
       //let's restore the original histogram
-      if (fHist) { 
+      if (fHist) {
          fHist->Reset();
          fHist->SetBins(fBinHist->GetXaxis()->GetNbins(),
                         fBinHist->GetXaxis()->GetXmin(),
@@ -983,19 +983,19 @@ void TH2Editor::SetModel(TObject* obj)
 
 
    // Check if histogram is from ntupla/tree or not.
-   // If it is a standard histogram or a ntupla based histogram  
-   // show a different frame in case of rebinning (fBinCont) with sliders and bin number entries 
-   // connected to different methods. 
-   // For example  the entry field fBinXNumberEntry is connected to 
+   // If it is a standard histogram or a ntupla based histogram
+   // show a different frame in case of rebinning (fBinCont) with sliders and bin number entries
+   // connected to different methods.
+   // For example  the entry field fBinXNumberEntry is connected to
    // the method DoBinLabel in case of non-ntupla histograms which just call Th1::Rebin
-   // In csae of a tree based histogram the entry field fBinNumberEntry1 is used which is connected to 
-   // TH1Editor::DoBinLabel1 which is re-filling the histograms with the cached values from the TTreePlayer. 
-   // Since the actual number of histogram entry can be larger than the cache size of the TTreePlayer 
+   // In csae of a tree based histogram the entry field fBinNumberEntry1 is used which is connected to
+   // TH1Editor::DoBinLabel1 which is re-filling the histograms with the cached values from the TTreePlayer.
+   // Since the actual number of histogram entry can be larger than the cache size of the TTreePlayer
    // (see JIRA ROOT-5900 or http://root.cern.ch/phpBB3/viewtopic.php?f=3&t=17107 )
-   // the GUI frame based on a non-tupla histogram is used when the number of entries of the histogram is 
+   // the GUI frame based on a non-tupla histogram is used when the number of entries of the histogram is
    // not the same as the number of filled entries in the TTreePlayer object.
 
-   if (!player || player->GetHistogram()!=fHist || 
+   if (!player || player->GetHistogram()!=fHist ||
        fHist->GetEntries() != player->GetNfill())  {
       Int_t n1 = 0, n2 =0;
       Int_t upx =0, upy =0;
@@ -1590,7 +1590,7 @@ void TH2Editor::DoBinReleased()
    if (fDelaydraw->GetState()==kButtonDown){
       if (!fBinHist) {
          fBinHist = (TH2*)fHist->Clone("BinHist");
-         fBinHist->SetDirectory(0); // TH2Editor manages this histogram 
+         fBinHist->SetDirectory(0); // TH2Editor manages this histogram
       }
       Int_t nx = fBinHist->GetXaxis()->GetNbins();
       Int_t ny = fBinHist->GetYaxis()->GetNbins();
@@ -2937,7 +2937,7 @@ void TH2Editor::RecursiveRemove(TObject* obj)
    // If the contained histogram obj is deleted we must set its pointer to zero
 
    if (obj == fHist) {
-      fHist = 0;    
+      fHist = 0;
    }
 }
 

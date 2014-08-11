@@ -191,9 +191,9 @@ TEveElement::~TEveElement()
    // Destructor. Do not call this method directly, either call Destroy() or
    // Annihilate(). See also DestroyElements() and AnnihilateElements() if you
    // need to delete all children of an element.
-  
+
    if (fDestructing != kAnnihilate)
-   { 
+   {
       fDestructing = kStandard;
       RemoveElementsInternal();
 
@@ -202,7 +202,7 @@ TEveElement::~TEveElement()
          (*p)->RemoveElementLocal(this);
          (*p)->fChildren.remove(this);
          --((*p)->fNumChildren);
-      }  
+      }
    }
 
    fParents.clear();
@@ -1670,10 +1670,10 @@ void TEveElement::AnnihilateRecursively()
 
    fChildren.clear();
    fNumChildren = 0;
-   
+
    fDestructing = kAnnihilate;
    PreDeleteElement();
- 
+
    delete this;
 }
 
@@ -1681,7 +1681,7 @@ void TEveElement::AnnihilateRecursively()
 void TEveElement::Annihilate()
 {
    // Optimized destruction without check of reference-count.
-   // Parents are not notified about child destruction. 
+   // Parents are not notified about child destruction.
    // The method should only be used when an element does not have
    // more than one parent -- otherwise an exception is thrown.
 
@@ -1716,9 +1716,9 @@ void TEveElement::Annihilate()
 
 //______________________________________________________________________________
 void TEveElement::AnnihilateElements()
-{  
+{
    // Annihilate elements.
-   
+
    while (!fChildren.empty())
    {
       TEveElement* c = fChildren.front();

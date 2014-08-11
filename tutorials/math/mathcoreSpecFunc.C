@@ -2,9 +2,9 @@
 // taking full advantage of the precision and speed of the C99 compliant
 // environments. To execute the macro type in:
 //
-// root[0]: .x mathcoreSpecFunc.C 
+// root[0]: .x mathcoreSpecFunc.C
 //
-// It will create two canvases: 
+// It will create two canvases:
 //
 //   a) one with the representation of the tgamma, lgamma, erf and erfc functions
 //   b) one with the relative difference between the old ROOT versions and the

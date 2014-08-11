@@ -38,7 +38,7 @@
 // XPROOF client version: increase whenever a non backward compatible
 // change occur
 //  ->1      first version being tested by ALICE
-const Int_t kXPROOF_Protocol = 1; 
+const Int_t kXPROOF_Protocol = 1;
 
 class TStopwatch;
 class TXSocket;

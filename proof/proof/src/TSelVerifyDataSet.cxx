@@ -226,7 +226,7 @@ void TSelVerifyDataSet::SlaveBegin(TTree *)
 Bool_t TSelVerifyDataSet::Process(Long64_t entry)
 {
    // Process a single entry
-   
+
    TDSetElement *fCurrent = 0;
    TPair *elemPair = 0;
    if (fInput && (elemPair = dynamic_cast<TPair *>
@@ -238,7 +238,7 @@ Bool_t TSelVerifyDataSet::Process(Long64_t entry)
       Error("Process", "entry %lld: current element not found!", entry);
       return kFALSE;
    }
- 
+
    TFileInfo *fileInfo = dynamic_cast<TFileInfo*>(fCurrent->GetAssocObj(0));
    if (!fileInfo) {
       Error("Process", "can not get TFileInfo; returning");
@@ -277,7 +277,7 @@ Bool_t TSelVerifyDataSet::Process(Long64_t entry)
       if (changed) fChangedDs = kTRUE;
       if (touched) fTouched++;
       if (disappeared) fDisappeared++;
-  
+
       SafeDelete(stager);
 
       PDB(kSelector, 1) Info("Process",
@@ -323,7 +323,7 @@ Bool_t TSelVerifyDataSet::Process(Long64_t entry)
       if (changed) fChangedDs = kTRUE;
       if (opened) fOpened++;
    }
- 
+
    PDB(kSelector, 1) {
       Info("Process", "updated fileinfo: ");
       newfileinfo->Print("L");
@@ -337,7 +337,7 @@ Bool_t TSelVerifyDataSet::Process(Long64_t entry)
 void TSelVerifyDataSet::SlaveTerminate()
 {
    // Worker Terminate
-   
+
    if (fSubDataSet) {
       fSubDataSet->Update();
       if (fSubDataSet->GetNFiles() > 0) {

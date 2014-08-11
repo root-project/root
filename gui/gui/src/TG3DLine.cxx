@@ -29,7 +29,7 @@ ClassImp(TGVertical3DLine)
 
 //______________________________________________________________________________
 TGHorizontal3DLine::TGHorizontal3DLine(const TGWindow *p, UInt_t w, UInt_t h,
-                                       UInt_t options, Pixel_t back) : 
+                                       UInt_t options, Pixel_t back) :
                     TGFrame(p, w, h, options, back)
 {
    // constructor
@@ -40,7 +40,7 @@ TGHorizontal3DLine::TGHorizontal3DLine(const TGWindow *p, UInt_t w, UInt_t h,
 
 //______________________________________________________________________________
 TGVertical3DLine::TGVertical3DLine(const TGWindow *p, UInt_t w, UInt_t h,
-                                   UInt_t options, Pixel_t back) : 
+                                   UInt_t options, Pixel_t back) :
                   TGFrame(p, w, h, options, back)
 {
    // constructor

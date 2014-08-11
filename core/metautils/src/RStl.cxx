@@ -80,16 +80,16 @@ void ROOT::RStl::GenerateTClassFor(const clang::QualType &type, const cling::Int
          }
       }
    }
-   
+
    fList.insert( ROOT::TMetaUtils::AnnotatedRecordDecl(++fgCount,type.getTypePtr(),stlclass,"",false /* for backward compatibility rather than 'true' .. neither really make a difference */,false,false,false,-1, interp, normCtxt) );
-   
+
    // fprintf(stderr,"Registered the STL class %s as needing a dictionary\n",R__GetQualifiedName(*stlclass).c_str());
 
    for(unsigned int i=0; i <  templateCl->getTemplateArgs().size(); ++i) {
       const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(i) );
       if (arg.getKind() == clang::TemplateArgument::Type) {
          const clang::NamedDecl *decl = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
-         
+
          if (decl && TClassEdit::STLKind( decl->getName().str().c_str() ) != 0 )
             {
                const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
@@ -120,8 +120,8 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
       ROOT::TMetaUtils::Error("RStl::GenerateTClassFor","%s not in a template",
             ROOT::TMetaUtils::GetQualifiedName(*stlclass).c_str());
    }
-   
-   
+
+
    if ( TClassEdit::STLKind( stlclass->getName().str().c_str() )  == ROOT::kSTLvector ) {
       const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(0) );
       if (arg.getKind() == clang::TemplateArgument::Type) {
@@ -135,15 +135,15 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
          }
       }
    }
-   
+
    fList.insert( ROOT::TMetaUtils::AnnotatedRecordDecl(++fgCount,stlclass,requestedName,true,false,false,false,-1, interp,normCtxt) );
-   
+
    TClassEdit::TSplitType splitType( requestedName, (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
    for(unsigned int i=0; i <  templateCl->getTemplateArgs().size(); ++i) {
       const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(i) );
       if (arg.getKind() == clang::TemplateArgument::Type) {
          const clang::NamedDecl *decl = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
-         
+
          if (decl && TClassEdit::STLKind( decl->getName().str().c_str() ) != 0 )
             {
                const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
@@ -214,9 +214,9 @@ void ROOT::RStl::WriteClassInit(std::ostream &ostr,
          result = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
       }
 
-      // std::string fullname = R__GetQualifiedName(*iter->GetRecordDecl());      
+      // std::string fullname = R__GetQualifiedName(*iter->GetRecordDecl());
       // fprintf(stderr,"RStl is generating TClass for %ld %s %s %s\n",iter->GetRuleIndex(),iter->GetRequestedName(),iter->GetNormalizedName(),fullname.c_str());
-     
+
       ROOT::TMetaUtils::WriteClassInit(ostr, *iter, result, interp, normCtxt, ctorTypes, needCollectionProxy);
       ROOT::TMetaUtils::WriteAuxFunctions(ostr, *iter, result, interp, ctorTypes, normCtxt);
    }
@@ -235,17 +235,17 @@ void ROOT::RStl::WriteClassInit(std::ostream &ostr,
 //    std::string typedefName;
 //    ROOT::TMetaUtils::GetCppName(typedefName, shortTypeName.c_str());
 //    streamerName += typedefName;
-   
+
 //    const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (stlcl);
 //    if (!tmplt_specialization) return;
 
-//    int stltype = TClassEdit::STLKind(tmplt_specialization->getName().str().c_str()); 
+//    int stltype = TClassEdit::STLKind(tmplt_specialization->getName().str().c_str());
 
 //    const clang::TemplateArgument &arg0( tmplt_specialization->getTemplateArgs().get(0) );
 
 //    clang::QualType firstType = arg0.getAsType();
 //    clang::QualType secondType;
-   
+
 //    const char *tclFirst=0,*tclSecond=0;
 //    std::string firstFullName, secondFullName;
 

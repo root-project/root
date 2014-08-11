@@ -48,7 +48,7 @@ TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
 
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
                                      const clang::TypedefNameDecl *TdefD)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(TdefD), 
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(TdefD),
      fTitle("")
 {
    // Initialize with a clang::TypedefDecl.
@@ -276,7 +276,7 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
    }
    const clang::ASTContext &ctxt = fInterp->getCI()->getASTContext();
    ROOT::TMetaUtils::GetNormalizedName(truename, ctxt.getTypedefType(td), *fInterp, normCtxt);
-   
+
    return truename.c_str();
 }
 
@@ -308,7 +308,7 @@ const char *TClingTypedefInfo::Title()
 
    // Try to get the comment either from the annotation or the header file if present
 
-   // Iterate over the redeclarations, we can have muliple definitions in the 
+   // Iterate over the redeclarations, we can have muliple definitions in the
    // redecl chain (came from merging of pcms).
    if (const TypedefNameDecl *TND = llvm::dyn_cast<TypedefNameDecl>(GetDecl())) {
       if ( (TND = ROOT::TMetaUtils::GetAnnotatedRedeclarable(TND)) ) {

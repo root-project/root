@@ -58,7 +58,7 @@ protected:
    TString fDataSet;             // Name of the dataset
    Int_t   fNFilesWrk;           // Number of files generated files per worker
    Int_t   fNumWrkMax;           // Max number of workers (required for dynamic setups)
-   Bool_t  fReleaseCache;        // Release cache for data reads between runs 
+   Bool_t  fReleaseCache;        // Release cache for data reads between runs
 
    TString fCPUSel;              // Selector to be used for CPU benchmarks
    TString fCPUPar;              // List of par files to be loaded for CPU benchmarks
@@ -66,7 +66,7 @@ protected:
    TString fDataPar;             // List of par files to be loaded for data benchmarks
    TString fDataGenSel;          // Selector to be used for generate data for benchmarks
    TString fDataGenPar;          // List of par files to be loaded to generate data for benchmarks
-   TString fSelOption;           // Option field for processing the selector 
+   TString fSelOption;           // Option field for processing the selector
 
    TProofBenchRunCPU      *fRunCPU; // Instance to run CPU scans
    TProofBenchRunDataRead *fRunDS;  // Instance to run data-read scans
@@ -111,7 +111,7 @@ public:
                      Bool_t regenerate = kFALSE);
    Int_t ReleaseCache(const char *dset);
    Int_t RemoveDataSet(const char *dset);
-                    
+
    void  CloseOutFile();
    Int_t OpenOutFile(Bool_t wrt = kFALSE, Bool_t verbose = kTRUE);
    Int_t SetOutFile(const char *outfile, Bool_t verbose = kTRUE);

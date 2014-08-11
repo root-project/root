@@ -39,7 +39,7 @@
 
       ticksInspector = [[AxisTicksInspector alloc] initWithNibName : @"AxisTicksInspector" bundle : nil];
       [self.view addSubview : ticksInspector.view];
-   
+
       //
       AxisTitleInspector *titleInspectorCompositor = [[AxisTitleInspector alloc] initWithNibName : @"AxisTitleInspector" bundle : nil];
       titleInspector = [[InspectorWithNavigation alloc] initWithRootViewController : titleInspectorCompositor];
@@ -47,16 +47,16 @@
       [self.view addSubview : titleInspector.view];
       titleInspector.view.hidden = YES;
       //
-      
+
       AxisLabelsInspector *labelInspectorCompositor = [[AxisLabelsInspector alloc] initWithNibName : @"AxisLabelsInspector" bundle : nil];
       labelInspector = [[InspectorWithNavigation alloc] initWithRootViewController : labelInspectorCompositor];
       labelInspector.view.frame = [AxisLabelsInspector inspectorFrame];
       [self.view addSubview : labelInspector.view];
       labelInspector.view.hidden = YES;
-   
+
       tabBar.selectedItem = [[tabBar items] objectAtIndex : 0];
    }
-    
+
    return self;
 }
 
@@ -89,7 +89,7 @@
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
    // Return YES for supported orientations
-	return YES;
+   return YES;
 }
 
 #pragma mark - ObjectInspectorComponent's protocol.
@@ -123,7 +123,7 @@
    tabBar.selectedItem = [[tabBar items] objectAtIndex : 0];
    [titleInspector resetInspector];
    [labelInspector resetInspector];
-   
+
    [self showTicksInspector];
 }
 

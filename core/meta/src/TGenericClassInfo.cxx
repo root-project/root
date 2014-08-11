@@ -538,19 +538,19 @@ namespace ROOT {
    void TGenericClassInfo::SetMerge(MergeFunc_t func)
    {
       // Install a new wrapper around the Merge function.
-      
+
       fMerge = func;
       if (fClass) fClass->SetMerge(fMerge);
    }
-   
+
    void TGenericClassInfo::SetResetAfterMerge(ResetAfterMergeFunc_t func)
    {
       // Install a new wrapper around the Merge function.
-      
+
       fResetAfterMerge = func;
       if (fClass) fClass->SetResetAfterMerge(fResetAfterMerge);
    }
-   
+
    NewFunc_t TGenericClassInfo::GetNew() const
    {
       // Get the wrapper around 'new'.

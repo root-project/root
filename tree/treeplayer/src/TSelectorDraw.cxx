@@ -176,9 +176,9 @@ void TSelectorDraw::Begin(TTree *tree)
    }
    fCleanElist = kFALSE;
    fTreeElist = inElist;
-   
+
    fTreeElistArray = inElist ? dynamic_cast<TEntryListArray*>(fTreeElist) : 0;
-   
+
 
    if (inElist && inElist->GetReapplyCut()) {
       realSelection *= inElist->GetTitle();
@@ -511,6 +511,8 @@ void TSelectorDraw::Begin(TTree *tree)
       if (opt.Contains("prof") && fDimension > 1) {
          // ignore "prof" for 1D.
          if (!profile || olddim != fDimension) mustdelete = 1;
+      } else if (opt.Contains("col") && fDimension>2) {
+         if (olddim+1 != fDimension) mustdelete = 1;
       } else {
          if (olddim != fDimension) mustdelete = 1;
       }
@@ -714,6 +716,10 @@ void TSelectorDraw::Begin(TTree *tree)
          if (fDimension == 3 && opt.Contains("prof")) {
             fNbins[1] = gEnv->GetValue("Hist.Binning.3D.Profy", 20);
             fNbins[2] = gEnv->GetValue("Hist.Binning.3D.Profx", 20);
+         }
+         if (fDimension == 3 && opt.Contains("col")) {
+            fNbins[0] = gEnv->GetValue("Hist.Binning.2D.y", 40);
+            fNbins[1] = gEnv->GetValue("Hist.Binning.2D.x", 40);
          }
          if (optSame) {
             TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
@@ -1013,7 +1019,7 @@ Bool_t TSelectorDraw::CompileVariables(const char *varexp, const char *selection
 //______________________________________________________________________________
 Double_t* TSelectorDraw::GetVal(Int_t i) const
 {
-   // Return the last values corresponding to the i-th component 
+   // Return the last values corresponding to the i-th component
    // of the formula being processed (where the component are ':' separated).
    // The actual number of entries is:
    //     GetSelectedRows() % tree->GetEstimate()
@@ -1038,7 +1044,7 @@ Double_t* TSelectorDraw::GetVal(Int_t i) const
 //______________________________________________________________________________
 TTreeFormula* TSelectorDraw::GetVar(Int_t i) const
 {
-   // Return the TTreeFormula corresponding to the i-th component 
+   // Return the TTreeFormula corresponding to the i-th component
    // of the request formula (where the component are ':' separated).
 
    if (i < 0 || i >= fDimension)
@@ -1180,7 +1186,7 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t entry)
 
    // Calculate the first values
    if (fSelect) {
-      // coverity[var_deref_model] fSelectMultiple==kTRUE => fSelect != 0 
+      // coverity[var_deref_model] fSelectMultiple==kTRUE => fSelect != 0
       fW[fNfill] = fWeight * fSelect->EvalInstance(0);
       if (!fW[fNfill] && !fSelectMultiple) return;
    } else fW[fNfill] = fWeight;
@@ -1207,7 +1213,7 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t entry)
    for (Int_t i = 1; i < ndata; i++) {
       if (subList && !subList->Contains(i)) continue;
       if (fSelectMultiple) {
-         // coverity[var_deref_model] fSelectMultiple==kTRUE => fSelect != 0 
+         // coverity[var_deref_model] fSelectMultiple==kTRUE => fSelect != 0
          ww = fWeight * fSelect->EvalInstance(i);
          if (ww == 0) continue;
          if (fNfill == nfill0) {
@@ -1339,7 +1345,7 @@ void TSelectorDraw::TakeAction()
          enlist->Enter(enumb);
       } else {
          TEventList *evlist = (TEventList*)fObject;
-         Long64_t enumb = fTree->GetChainOffset() + fTree->GetTree()->GetReadEntry(); 
+         Long64_t enumb = fTree->GetChainOffset() + fTree->GetTree()->GetReadEntry();
          if (evlist->GetIndex(enumb) < 0) evlist->Enter(enumb);
       }
    }
@@ -1481,7 +1487,7 @@ void TSelectorDraw::TakeAction()
       // Using CINT to avoid a dependency in TParallelCoord
       if (!fOption.Contains("goff"))
          gROOT->ProcessLine(Form("TParallelCoord::BuildParallelCoord((TSelectorDraw*)0x%lx,0x%lx)",
-                                (ULong_t)this, (ULong_t)candle));     
+                                (ULong_t)this, (ULong_t)candle));
    } else if (fAction == 8) {
       //gROOT->ProcessLineFast(Form("(new TGL5DDataSet((TTree *)0x%1x))->Draw(\"%s\");", fTree, fOption.Data()));
    }
@@ -1566,6 +1572,17 @@ void TSelectorDraw::TakeEstimate()
             if (fVmax[1] < fVal[1][i]) fVmax[1] = fVal[1][i];
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         // In case the new lower limits of h2 axis are 0, it is better to set them to the minimum of
+         // the data set (which should be >0) to avoid data cut when plotting in log scale.
+         TAxis *aX = h2->GetXaxis();
+         TAxis *aY = h2->GetYaxis();
+         Double_t xmin = aX->GetXmin();
+         Double_t ymin = aY->GetXmin();
+         if (xmin == 0 || ymin == 0) {
+            if (aX->GetBinUpEdge(aX->FindFixBin(0.01*aX->GetBinWidth(aX->GetFirst()))) > fVmin[1]) xmin = fVmin[1];
+            if (aY->GetBinUpEdge(aY->FindFixBin(0.01*aY->GetBinWidth(aY->GetFirst()))) > fVmin[0]) ymin = fVmin[0];
+            h2->SetBins(aX->GetNbins(), xmin, aX->GetXmax(), aY->GetNbins(), ymin, aY->GetXmax());
+         }
       }
 
       if (!strstr(fOption.Data(), "same") && !strstr(fOption.Data(), "goff")) {
@@ -1641,6 +1658,22 @@ void TSelectorDraw::TakeEstimate()
             }
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h2, fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+         // In case the new lower limits of h2 axis are 0, it is better to set them to the minimum of
+         // the data set (which should be >0) to avoid data cut when plotting in log scale.
+         TAxis *aX = h2->GetXaxis();
+         TAxis *aY = h2->GetYaxis();
+         Double_t xmin = aX->GetXmin();
+         Double_t ymin = aY->GetXmin();
+         if (xmin == 0 || ymin == 0) {
+            if (aX->GetBinUpEdge(aX->FindFixBin(0.01*aX->GetBinWidth(aX->GetFirst()))) > fVmin[1]) xmin = fVmin[1];
+            if (aY->GetBinUpEdge(aY->FindFixBin(0.01*aY->GetBinWidth(aY->GetFirst()))) > fVmin[0]) ymin = fVmin[0];
+            h2->SetBins(aX->GetNbins(), xmin, aX->GetXmax(), aY->GetNbins(), ymin, aY->GetXmax());
+         }
+      } else {
+         for (i = 0; i < fNfill; i++) {
+            if (fVmin[2] > fVal[2][i]) fVmin[2] = fVal[2][i];
+            if (fVmax[2] < fVal[2][i]) fVmax[2] = fVal[2][i];
+         }
       }
       //__________________________3D scatter plot_______________________
    } else if (fAction == 3 || fAction == 13) {
@@ -1728,6 +1761,11 @@ void TSelectorDraw::TakeEstimate()
             if (fVmax[3] < fVal[3][i]) fVmax[3] = fVal[3][i];
          }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(h3, fVmin[2], fVmax[2], fVmin[1], fVmax[1], fVmin[0], fVmax[0]);
+      } else {
+         for (i = 0; i < fNfill; i++) {
+            if (fVmin[3] > fVal[3][i]) fVmin[3] = fVal[3][i];
+            if (fVmax[3] < fVal[3][i]) fVmax[3] = fVal[3][i];
+         }
       }
    }
    //__________________________Parallel coordinates plot / candle chart_______________________

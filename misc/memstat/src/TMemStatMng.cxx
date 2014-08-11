@@ -196,7 +196,7 @@ TMemStatMng::~TMemStatMng()
 
    Info("~TMemStatMng", ">>> All free/malloc calls count: %d", fBTIDCount);
    Info("~TMemStatMng", ">>> Unique BTIDs count: %zu", fBTChecksums.size());
-   
+
    Disable();
 }
 
@@ -441,7 +441,7 @@ void TMemStatMng::AddPointer(void *ptr, Int_t size)
    // for Debug. A counter of all (de)allacations.
    ++fBTIDCount;
 
-   Int_t btid(generateBTID(digest, stackentries, stptr));   
+   Int_t btid(generateBTID(digest, stackentries, stptr));
 
    if(btid <= 0)
       Error("AddPointer", "bad BT id");
@@ -464,8 +464,8 @@ void TMemStatMng::FillTree()
 {
    //loop on all entries in the buffer and fill the output Tree
    //entries with alloc and free in the buffer are eliminated
-   
-   
+
+
    //eliminate alloc/free pointing to the same location in the current buffer
    TMath::Sort(fBufN,fBufPos,fIndex,kFALSE);
    memset(fMustWrite,0,fBufN*sizeof(Bool_t));
@@ -487,9 +487,9 @@ void TMemStatMng::FillTree()
       if (indmin == indmax) fMustWrite[indmin] = kTRUE;
       if (fBufNBytes[indmin] == -1) fMustWrite[indmin] = kTRUE;
       if (fBufNBytes[indmax] > 0)   fMustWrite[indmax] = kTRUE;
-      i = j;  
+      i = j;
    }
-   
+
    // now fill the Tree with the remaining allocs/frees
    for (i=0;i<fBufN;i++) {
       if (!fMustWrite[i]) continue;
@@ -499,7 +499,7 @@ void TMemStatMng::FillTree()
       fBtID   = fBufBtID[i];
       fDumpTree->Fill();
    }
-   
+
    fBufN = 0;
    if (fDumpTree->GetEntries() >= fMaxCalls) TMemStatMng::GetInstance()->Disable();
-}   
+}

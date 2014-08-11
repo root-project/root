@@ -1,6 +1,6 @@
 //+ Fitting 1-D histograms with minuit2
 // @(#)root/minuit2:$Id$
-// Author: L. Moneta    10/2005  
+// Author: L. Moneta    10/2005
 
 /**********************************************************************
  *                                                                    *
@@ -34,7 +34,7 @@ Double_t background(Double_t *x, Double_t *par) {
 
 // Lorenzian Peak function
 Double_t lorentzianPeak(Double_t *x, Double_t *par) {
-   return (0.5*par[0]*par[1]/TMath::Pi()) / 
+   return (0.5*par[0]*par[1]/TMath::Pi()) /
    TMath::Max( 1.e-10,(x[0]-par[2])*(x[0]-par[2]) + .25*par[1]*par[1]);
 }
 
@@ -60,7 +60,7 @@ bool DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    histo = new TH1D(fitter,title.c_str(),200,0,3);
 
    TString fitterType(fitter);
-   
+
    timer.Start();
    bool ok = true;
    // fill histogram many times
@@ -108,12 +108,12 @@ int minuit2FitBench(Int_t npass=20) {
    fitFcn->SetNpx(200);
    gStyle->SetOptFit();
    gStyle->SetStatY(0.6);
-   
+
    bool ok = true;
    //with Minuit
    c1->cd(1);
    ok &= DoFit("Minuit",gPad,npass);
-   
+
    //with Fumili
    c1->cd(2);
    ok &= DoFit("Fumili",gPad,npass);
@@ -121,11 +121,11 @@ int minuit2FitBench(Int_t npass=20) {
    //with Minuit2
    c1->cd(3);
    ok &= DoFit("Minuit2",gPad,npass);
-   
+
    //with Fumili2
    c1->cd(4);
    ok &= DoFit("Fumili2",gPad,npass);
-   
+
    c1->SaveAs("FitBench.root");
    return (ok) ? 0 : 1;
 }

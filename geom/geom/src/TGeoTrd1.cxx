@@ -49,7 +49,7 @@
 #include "TMath.h"
 
 ClassImp(TGeoTrd1)
-   
+
 //_____________________________________________________________________________
 TGeoTrd1::TGeoTrd1()
 {
@@ -62,7 +62,7 @@ TGeoTrd1::TGeoTrd1()
 TGeoTrd1::TGeoTrd1(Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
          :TGeoBBox(0,0,0)
 {
-// constructor. 
+// constructor.
    SetShapeBit(kGeoTrd1);
    fDx1 = dx1;
    fDx2 = dx2;
@@ -80,7 +80,7 @@ TGeoTrd1::TGeoTrd1(Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
 TGeoTrd1::TGeoTrd1(const char *name, Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
          :TGeoBBox(name, 0,0,0)
 {
-// constructor. 
+// constructor.
    SetShapeBit(kGeoTrd1);
    fDx1 = dx1;
    fDx2 = dx2;
@@ -121,7 +121,7 @@ Double_t TGeoTrd1::Capacity() const
 // Computes capacity of the shape in [length^3]
    Double_t capacity = 4.*(fDx1+fDx2)*fDy*fDz;
    return capacity;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoTrd1::ComputeBBox()
@@ -133,7 +133,7 @@ void TGeoTrd1::ComputeBBox()
    memset(fOrigin, 0, 3*sizeof(Double_t));
 }
 
-//_____________________________________________________________________________   
+//_____________________________________________________________________________
 void TGeoTrd1::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
 // Compute normal to closest surface from POINT.
@@ -159,10 +159,10 @@ void TGeoTrd1::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
          if (dot<0) {
             norm[0] = -norm[0];
             norm[2] = -norm[2];
-         }   
+         }
          if (safe<1E-6) return;
       }
-   }      
+   }
    // check Y facettes
    safe = TMath::Abs(fDy-TMath::Abs(point[1]));
    if (safe<safemin) {
@@ -210,15 +210,15 @@ Double_t TGeoTrd1::DistFromInside(const Double_t *point, const Double_t *dir, In
       dist[0]=-(point[2]+fDz)/dir[2];
    } else if (dir[2]>0) {
       dist[0]=(fDz-point[2])/dir[2];
-   } 
-   if (dist[0]<=0) return 0.0;     
+   }
+   if (dist[0]<=0) return 0.0;
    // now check X facettes
    cn = -dir[0]+fx*dir[2];
    if (cn>0) {
       dist[1] = point[0]+distx;
       if (dist[1]<=0) return 0.0;
       dist[1] /= cn;
-   }   
+   }
    cn = dir[0]+fx*dir[2];
    if (cn>0) {
       Double_t s = distx-point[0];
@@ -231,8 +231,8 @@ Double_t TGeoTrd1::DistFromInside(const Double_t *point, const Double_t *dir, In
       dist[2]=-(point[1]+fDy)/dir[1];
    } else if (dir[1]>0) {
       dist[2]=(fDy-point[1])/dir[1];
-   }  
-   if (dist[2]<=0) return 0.0;    
+   }
+   if (dist[2]<=0) return 0.0;
    snxt = dist[TMath::LocMin(3,dist)];
    return snxt;
 }
@@ -253,7 +253,7 @@ void TGeoTrd1::GetVisibleCorner(const Double_t *point, Double_t *vertex, Double_
       trd1->SetShapeBit(kGeoVisX);
       normals[0]=calf;
       normals[2]=salf;
-   } else {   
+   } else {
       trd1->SetShapeBit(kGeoVisX, kFALSE);
       normals[0]=-calf;
       normals[2]=salf;
@@ -264,15 +264,15 @@ void TGeoTrd1::GetVisibleCorner(const Double_t *point, Double_t *vertex, Double_
       normals[4]=1;
    } else {
       trd1->SetShapeBit(kGeoVisY, kFALSE);
-      normals[4]=-1;  
-   }   
+      normals[4]=-1;
+   }
    if (point[2]>fDz) {
    // hi z face visible
       trd1->SetShapeBit(kGeoVisZ);
       normals[8]=1;
    } else {
       trd1->SetShapeBit(kGeoVisZ, kFALSE);
-      normals[8]=-1;  
+      normals[8]=-1;
    }
    SetVertex(vertex);
 }
@@ -291,12 +291,12 @@ void TGeoTrd1::GetOppositeCorner(const Double_t * /*point*/, Int_t inorm, Double
    // change y face
       trd1->SetShapeBit(kGeoVisY, !TestShapeBit(kGeoVisY));
       normals[4]=-normals[4];
-   } 
+   }
    if (inorm != 2) {
    // hi z face visible
       trd1->SetShapeBit(kGeoVisZ, !TestShapeBit(kGeoVisZ));
       normals[8]=-normals[8];
-   } 
+   }
    SetVertex(vertex);
 }
 
@@ -321,7 +321,7 @@ Double_t TGeoTrd1::DistFromOutside(const Double_t *point, const Double_t *dir, I
    Double_t safx = distx-TMath::Abs(point[0]);
    Double_t safy = fDy-TMath::Abs(point[1]);
    Double_t safz = fDz-TMath::Abs(point[2]);
-   
+
    //--- Compute distance to this shape
    // first check if Z facettes are crossed
    if (point[2]<=-fDz) {
@@ -344,7 +344,7 @@ Double_t TGeoTrd1::DistFromOutside(const Double_t *point, const Double_t *dir, I
          ynew = point[1]+snxt*dir[1];
          if (TMath::Abs(ynew) <= fDy) return snxt;
       }
-   }   
+   }
    // check if X facettes are crossed
    if (point[0]<=-distx) {
       cn = -dir[0]+fx*dir[2];
@@ -357,7 +357,7 @@ Double_t TGeoTrd1::DistFromOutside(const Double_t *point, const Double_t *dir, I
          znew = point[2]+snxt*dir[2];
          if (TMath::Abs(znew) <= fDz) return snxt;
       }
-   }            
+   }
    if (point[0]>=distx) {
       cn = dir[0]+fx*dir[2];
       if (cn>=0) return TGeoShape::Big();
@@ -372,7 +372,7 @@ Double_t TGeoTrd1::DistFromOutside(const Double_t *point, const Double_t *dir, I
    }
    // finally check Y facettes
    if (point[1]<=-fDy) {
-      cn = -dir[1];            
+      cn = -dir[1];
       if (cn>=0) return TGeoShape::Big();
       in = kFALSE;
       snxt = (point[1]+fDy)/cn;
@@ -384,8 +384,8 @@ Double_t TGeoTrd1::DistFromOutside(const Double_t *point, const Double_t *dir, I
          if (TMath::Abs(xnew) < dx) return snxt;
       }
    } else if (point[1]>=fDy) {
-      cn = dir[1];        
-      if (cn>=0) return TGeoShape::Big();    
+      cn = dir[1];
+      if (cn>=0) return TGeoShape::Big();
       in = kFALSE;
       snxt = (fDy-point[1])/cn;
       // find extrapolated X and Z
@@ -406,24 +406,24 @@ Double_t TGeoTrd1::DistFromOutside(const Double_t *point, const Double_t *dir, I
       if (point[1]*dir[1]>=0) return TGeoShape::Big();
       return 0.0;
    }
-   cn = TMath::Sign(1.0,point[0])*dir[0]+fx*dir[2];     
+   cn = TMath::Sign(1.0,point[0])*dir[0]+fx*dir[2];
    if (cn>=0) return TGeoShape::Big();
    return 0.0;
 }
 
 //_____________________________________________________________________________
-TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
-                             Double_t start, Double_t step) 
+TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
+                             Double_t start, Double_t step)
 {
 //--- Divide this trd1 shape belonging to volume "voldiv" into ndiv volumes
 // called divname, from start position with the given step. Returns pointer
 // to created division cell volume in case of Y divisions. For Z divisions just
-// return the pointer to the volume to be divided. In case a wrong 
+// return the pointer to the volume to be divided. In case a wrong
 // division axis is supplied, returns pointer to volume that was divided.
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
-   TGeoPatternFinder *finder;  //--- finder to be attached 
+   TGeoPatternFinder *finder;  //--- finder to be attached
    TString opt = "";           //--- option to be attached
    Double_t zmin, zmax, dx1n, dx2n;
    Int_t id;
@@ -435,9 +435,9 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
       case 2:
          finder = new TGeoPatternY(voldiv, ndiv, start, end);
          voldiv->SetFinder(finder);
-         finder->SetDivIndex(voldiv->GetNdaughters());            
+         finder->SetDivIndex(voldiv->GetNdaughters());
          shape = new TGeoTrd1(fDx1, fDx2, step/2, fDz);
-         vol = new TGeoVolume(divname, shape, voldiv->GetMedium()); 
+         vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          vmulti->AddVolume(vol);
          opt = "Y";
@@ -449,7 +449,7 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
       case 3:
          finder = new TGeoPatternZ(voldiv, ndiv, start, end);
          voldiv->SetFinder(finder);
-         finder->SetDivIndex(voldiv->GetNdaughters());            
+         finder->SetDivIndex(voldiv->GetNdaughters());
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          for (id=0; id<ndiv; id++) {
             zmin = start+id*step;
@@ -457,9 +457,9 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             dx1n = 0.5*(fDx1*(fDz-zmin)+fDx2*(fDz+zmin))/fDz;
             dx2n = 0.5*(fDx1*(fDz-zmax)+fDx2*(fDz+zmax))/fDz;
             shape = new TGeoTrd1(dx1n, dx2n, fDy, step/2.);
-            vol = new TGeoVolume(divname, shape, voldiv->GetMedium()); 
+            vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
             vmulti->AddVolume(vol);
-            opt = "Z";             
+            opt = "Z";
             voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
@@ -490,7 +490,7 @@ Double_t TGeoTrd1::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
          return dx;
    }
    return dx;
-}         
+}
 
 //_____________________________________________________________________________
 void TGeoTrd1::GetBoundingCylinder(Double_t *param) const
@@ -498,7 +498,7 @@ void TGeoTrd1::GetBoundingCylinder(Double_t *param) const
 //--- Fill vector param[4] with the bounding cylinder parameters. The order
 // is the following : Rmin, Rmax, Phi1, Phi2
    TGeoBBox::GetBoundingCylinder(param);
-}   
+}
 
 //_____________________________________________________________________________
 Int_t TGeoTrd1::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
@@ -523,7 +523,7 @@ Int_t TGeoTrd1::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    dd[2] = parambox->GetDZ();
    //-> check if Z range is fixed
    if (dd[2]<0) {
-      dd[2] = TMath::Min(origin[2]+fDz, fDz-origin[2]); 
+      dd[2] = TMath::Min(origin[2]+fDz, fDz-origin[2]);
       if (dd[2]<0) {
          Error("GetFittingBox", "wrong matrix");
          return 1;
@@ -531,7 +531,7 @@ Int_t TGeoTrd1::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    }
    //-> check if Y range is fixed
    if (dd[1]<0) {
-      dd[1] = TMath::Min(origin[1]+fDy, fDy-origin[1]); 
+      dd[1] = TMath::Min(origin[1]+fDy, fDy-origin[1]);
       if (dd[1]<0) {
          Error("GetFittingBox", "wrong matrix");
          return 1;
@@ -547,18 +547,18 @@ Int_t TGeoTrd1::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    Double_t fx = 0.5*(fDx1-fDx2)/fDz;
    Double_t dx0 = 0.5*(fDx1+fDx2);
    Double_t z=origin[2]-dd[2];
-   dd[0] = dx0-fx*z-origin[0]; 
+   dd[0] = dx0-fx*z-origin[0];
    z=origin[2]+dd[2];
    dd[0] = TMath::Min(dd[0], dx0-fx*z-origin[0]);
    if (dd[0]<0) {
       Error("GetFittingBox", "wrong matrix");
       return 1;
-   }   
+   }
    dx = dd[0];
    dy = dd[1];
    dz = dd[2];
    return 0;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoShape *TGeoTrd1::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
@@ -628,9 +628,9 @@ void TGeoTrd1::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    out << "   dx2 = " << fDx2 << ";" << std::endl;
    out << "   dy  = " << fDy  << ";" << std::endl;
    out << "   dz  = " << fDZ  << ";" << std::endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTrd1(\"" << GetName() << "\", dx1,dx2,dy,dz);" << std::endl;  
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoTrd1(\"" << GetName() << "\", dx1,dx2,dy,dz);" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
-}         
+}
 
 //_____________________________________________________________________________
 void TGeoTrd1::SetDimensions(Double_t *param)
@@ -641,7 +641,7 @@ void TGeoTrd1::SetDimensions(Double_t *param)
    fDy  = param[2];
    fDz  = param[3];
    ComputeBBox();
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoTrd1::SetVertex(Double_t *vertex) const
@@ -652,7 +652,7 @@ void TGeoTrd1::SetVertex(Double_t *vertex) const
          vertex[0] = fDx2;
          vertex[2] = fDz;
          vertex[1] = (TestShapeBit(kGeoVisY))?fDy:-fDy;
-      } else {   
+      } else {
          vertex[0] = fDx1;
          vertex[2] = -fDz;
          vertex[1] = (TestShapeBit(kGeoVisY))?fDy:-fDy;
@@ -662,13 +662,13 @@ void TGeoTrd1::SetVertex(Double_t *vertex) const
          vertex[0] = -fDx2;
          vertex[2] = fDz;
          vertex[1] = (TestShapeBit(kGeoVisY))?fDy:-fDy;
-      } else {   
+      } else {
          vertex[0] = -fDx1;
          vertex[2] = -fDz;
          vertex[1] = (TestShapeBit(kGeoVisY))?fDy:-fDy;
       }
-   }            
-} 
+   }
+}
 
 //_____________________________________________________________________________
 void TGeoTrd1::SetPoints(Double_t *points) const

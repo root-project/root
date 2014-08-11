@@ -22,7 +22,7 @@
 //
 //   A helix in its own frame can be defined with a pivotal point
 //   (x0,y0,z0), the velocity at that point (vx0,vy0,vz0), and
-//   an angular frequency w.  Combining vx0 and vy0 to a transverse 
+//   an angular frequency w.  Combining vx0 and vy0 to a transverse
 //   velocity vt0 one can parametrize the helix as
 //
 //    x(t) = x0 - vt0 / w * sin(-w * t + phi0)
@@ -210,12 +210,12 @@ THelix& THelix::operator=(const THelix& hx)
       fPhi0=hx.fPhi0;
       fVz=hx.fVz;
       fW=hx.fW;
-      for(Int_t i=0; i<3; i++) 
+      for(Int_t i=0; i<3; i++)
          fAxis[i]=hx.fAxis[i];
       fRotMat=hx.fRotMat;
-      for(Int_t i=0; i<2; i++) 
+      for(Int_t i=0; i<2; i++)
          fRange[i]=hx.fRange[i];
-   } 
+   }
    return *this;
 }
 

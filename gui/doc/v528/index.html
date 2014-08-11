@@ -1,6 +1,6 @@
-<br/> 
-<hr/> 
-<a name="gui"></a> 
+<br/>
+<hr/>
+<a name="gui"></a>
 <h3>GUI</h3>
 
 <h4>TGFileDialog</h4>
@@ -19,7 +19,7 @@
 <li> Enabled <tt>CurrentChanged(TGFrame*)</tt> and <tt>CurrentChanged(Int_t,Int_t)</tt> signals, allowing to handle keyboard navigation/selection.
 <br/> For example:
 <pre>   TGLBContainer *lbc = (TGLBContainer *)fListBox->GetContainer();
-   lbc->Connect("CurrentChanged(TGFrame*)", "MyGuiClass", this, "CurrentChanged(TGFrame*)"); 
+   lbc->Connect("CurrentChanged(TGFrame*)", "MyGuiClass", this, "CurrentChanged(TGFrame*)");
 
    void MyGuiClass::CurrentChanged(TGFrame *f)
    {
@@ -46,7 +46,7 @@
 The sorting is applied only in the current directory and the browser remembers every sorted directory.
 For this purpose, a new picture button has been added to the file browser plug-in (the status of this button reflects the sorting status of each directory)
 <br/>Another button has been added to the file browser plug-in, used for refreshing the current directory in the list tree.
-Refreshing now checks also if files still exist in the current directory 
+Refreshing now checks also if files still exist in the current directory
 (for the case where files have been deleted by the user or by another application)</li>
 <li> Allow to change graphic properties of an object (e.g. a histogram) in a Root file via the context menu from the browser (by opening a ged editor)</li>
 <li> Size of directories, trees, and objects associated to keys inside Root files, or any kind of browsable object can be displayed in their associated tooltip, as soon as their GetObjectInfo() method returns their size as a long long int formatted in a const char * ("%lld")</li>

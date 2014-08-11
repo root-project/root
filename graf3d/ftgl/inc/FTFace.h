@@ -65,7 +65,7 @@ class FTGL_EXPORT FTFace
          * @return pointer to an FT_Face.
          */
         FT_Face* Face() const { return ftFace;}
-        
+
         /**
          * Sets the char size for the current face.
          *
@@ -91,7 +91,7 @@ class FTGL_EXPORT FTFace
          * @return pointer to the first encoding.
          */
         FT_Encoding* CharMapList();
-        
+
         /**
          * Gets the kerning vector between two glyphs
          */
@@ -113,7 +113,7 @@ class FTGL_EXPORT FTFace
          * @return  The current error code.
          */
         FT_Error Error() const { return err; }
-        
+
     private:
         /**
          * The Freetype face
@@ -124,12 +124,12 @@ class FTGL_EXPORT FTFace
          * The size object associated with this face
          */
         FTSize  charSize;
-        
+
         /**
          * The number of glyphs in this face
          */
         int numGlyphs;
-        
+
         FT_Encoding* fontEncodingList;
 
         /**

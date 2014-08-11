@@ -405,7 +405,7 @@ TDavixFile::~TDavixFile()
 void TDavixFile::Init(Bool_t init)
 {
    (void) init;
-   //initialize davix   
+   //initialize davix
    d_ptr->init();
    // pre-open file
    if ((d_ptr->getDavixFileInstance()) == NULL){

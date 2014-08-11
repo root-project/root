@@ -41,7 +41,7 @@ public:
       Attributes(){}
       Attributes(const std::string& nName, const std::string& nValue) : fName(nName), fValue(nValue) {}
    };
-   
+
 private:
    long fCount;
    cling::Interpreter &fInterp;
@@ -49,7 +49,7 @@ private:
    //SelectionRules& fSelectionRules;
    //std::string fXMLFileName;
    //std::ifstream fXMLInStream;
-   
+
    // enumeration - lists the posible tag elements in the selection file
    enum ETagNames {
       kClass,
@@ -57,10 +57,11 @@ private:
       kVariable,
       kEnum,
       kMethod,
+      kEndMethod,
       kField,
+      kEndField,
       kProperties,
       kVersion,
-      
       kStartIgnore,
       kLcgdict,
       kSelection,
@@ -72,15 +73,16 @@ private:
       kEndLcgdict,
       kBeginIoread,
       kEndIoread,
-      
+      kBeginIoreadRaw,
+      kEndIoreadRaw,
       kInvalid,
       kNumTagNames
    };
-   
+
    // used to create string to tag kind association to use in switch constructions
    static std::map<std::string, ETagNames> fgMapTagNames;
    static void PopulateMap();
-   
+
    static bool GetNextTag(std::ifstream &file, std::string& out, int& lineCount); // gets the next tag out of the in stream
    static bool IsStandaloneTag(const std::string& tag); // returns true if the tag is standalone - i.e. <class name = "x" />
    static bool IsClosingTag(const std::string& tag); // eturns true if the tag is closing tag, i.e. </class>
@@ -91,17 +93,17 @@ private:
    static bool CheckIsTagOK(const std::string& tag); // for a given tag checks if the tag is the correct format, i.e
    // < class name="x"> will return false but <class name="x"> will return true
    static bool IsTagComment(const std::string& tag); // Check that this is not an XML comment: <!-- comment -->
-   
+
 public:
    // Constructors
    XMLReader(cling::Interpreter &interp) : fCount(0), fInterp(interp) {}
    /* XMLReader(const std::string& fileName):
     fXMLFileName(fileName) {}*/
-   
+
    //const std::string& getXMLFileName();
    //std::ifstream& getXMLInStream();
    //std::ifstream& openXMLInStream(const std::string& fileName);
-   
+
    // main parsing function - should be called over an open input file stream
    bool Parse(std::ifstream &file, SelectionRules& out);
 

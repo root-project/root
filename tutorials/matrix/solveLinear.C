@@ -20,7 +20,7 @@
 //
 //  2. SVD
 //   One can show that solving A x = b for x with A of size (m x n) and m > n
-//   through a Singular Value Decomposition is equivalent to miminizing 
+//   through a Singular Value Decomposition is equivalent to miminizing
 //   (A x - b)^T (A x - b)
 //   Numerically , this is the most stable method of all 5
 //
@@ -45,7 +45,7 @@
 //   For ill-conditioned linear problems it is better to use the fact it is
 //   a linear fit as in 2 .
 //
-// Another interesting thing is the way we assign data to the vectors and 
+// Another interesting thing is the way we assign data to the vectors and
 // matrices through adoption .
 // This allows data assignment without physically moving bytes around .
 //

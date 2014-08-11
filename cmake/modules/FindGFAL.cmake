@@ -8,7 +8,7 @@
 
 find_path(GFAL_INCLUDE_DIR NAMES gfal_api.h HINTS ${GFAL_DIR}/include $ENV{GFAL_DIR}/inlcude)
 find_library(GFAL_LIBRARIES NAMES gfal gfal2 HINTS ${GFAL_DIR}/lib $ENV{GFAL_DIR}/lib)
-find_path(SRM_IFCE_INCLUDE_DIR  gfal_srm_ifce_types.h HINTS ${SRM_IFCE_DIR}/include $ENV{SRM_IFCE_DIR}/include) 
+find_path(SRM_IFCE_INCLUDE_DIR  gfal_srm_ifce_types.h HINTS ${SRM_IFCE_DIR}/include $ENV{SRM_IFCE_DIR}/include)
 
 set(GFAL_INCLUDE_DIRS ${GFAL_INCLUDE_DIR} ${SRM_IFCE_INCLUDE_DIR})
 

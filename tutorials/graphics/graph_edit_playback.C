@@ -1,6 +1,6 @@
 // This macro plays a recorded ROOT session showing how to perform various
-// interactive graphical editing operations. The initial graphics setup 
-// was created using the following root commands: 
+// interactive graphical editing operations. The initial graphics setup
+// was created using the following root commands:
 /*
      TRecorder *t = new TRecorder();
      t->Start("graphedit_playback.root");
@@ -18,9 +18,9 @@
      h1->FillRandom("gaus",10000);
      h1->Draw();
      gPad->Update();
-    
+
      // Here the following "sketch" was done.
-    
+
      t->Stop();
 */
 // Note: The previous commands should be copy/pasted into a ROOT session, not
@@ -42,7 +42,7 @@
 //       Change fill color
 //       Move stat box
 //       Change fill color
-//       Move title 
+//       Move title
 //       Change fill color using wheel color
 //       Select Y axis
 //       Change axis title

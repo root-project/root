@@ -70,7 +70,7 @@ For all functions that do actual matching replaced the default value
 of 'Int_t nMatchMax' argument from 30 to 10. PCRE internals require
 the index buffer to be 3-times the number of allowed matches. This
 multiplication is now performed in individual functions and nMatchMax
-is really the number of allowed matches. Two function calls in 
+is really the number of allowed matches. Two function calls in
 TString passing this number explicitly have been updated.
 </li>
 </ul>
@@ -95,8 +95,8 @@ New tutorial regexp_pme.C.
 <li>Add a new TClass interface to be able to trigger the "auto addition of object
 to a TDirectory object".  If a class has a member function:
 <pre>        DirectoryAutoAdd(TDirectory*)</pre>
-it will now be accessible (when the dictionary is generated via rootcint 
-for now) via TClass::GetDirectoryAutoAdd which return a wrapper with the 
+it will now be accessible (when the dictionary is generated via rootcint
+for now) via TClass::GetDirectoryAutoAdd which return a wrapper with the
 signature:<pre>
         void (*)(void *this_obj,TDirectory *where_to_add)
 </pre>
@@ -112,7 +112,7 @@ The background is the following. While working on the PROOF code I found
 that enumerating TList is an inconvenient and a long operation, I had to
 write the same code all over the place and make duplications. I tried
 to use STD algorithms with it, namely std::for_each, and failed.
-I therefore decided to enable std::for_each algorithm for ROOT 
+I therefore decided to enable std::for_each algorithm for ROOT
 Containers/Iterators by making as few as possible changes, without rewriting
 iterators at all. Now with only two simple lines of code one is able to
 iterate through a container:

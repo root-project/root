@@ -1,6 +1,6 @@
 // @(#)root/mathmore:$Id$
 // Authors: B. List 29.4.2010
- 
+
 
  /**********************************************************************
   *                                                                    *
@@ -24,11 +24,11 @@
   **********************************************************************/
 
 // Implementation file for class Vavilov
-// 
+//
 // Created by: blist  at Thu Apr 29 11:19:00 2010
-// 
+//
 // Last update: Thu Apr 29 11:19:00 2010
-// 
+//
 
 
 #include "Math/Vavilov.h"
@@ -55,7 +55,7 @@ Vavilov::Vavilov()
 {
 }
 
-Vavilov::~Vavilov() 
+Vavilov::~Vavilov()
 {
    // desctructor (clean up resources)
 }
@@ -66,7 +66,7 @@ double Vavilov::Mode() const {
    if (x>-0.223172) x = -0.223172;
    double eps = 0.01;
    double dx;
-  
+
    do {
       double p0 = Pdf (x - eps);
       double p1 = Pdf (x);
@@ -88,7 +88,7 @@ double Vavilov::Mode(double kappa, double beta2) {
 double Vavilov::Mean() const {
    return Mean (GetKappa(), GetBeta2());
 }
- 
+
 double Vavilov::Mean(double kappa, double beta2) {
    return eu-1-std::log(kappa)-beta2;
 }
@@ -96,7 +96,7 @@ double Vavilov::Mean(double kappa, double beta2) {
 double Vavilov::Variance() const {
    return Variance (GetKappa(), GetBeta2());
 }
- 
+
 double Vavilov::Variance(double kappa, double beta2) {
    return (1-0.5*beta2)/kappa;
 }
@@ -104,7 +104,7 @@ double Vavilov::Variance(double kappa, double beta2) {
 double Vavilov::Skewness() const {
    return Skewness (GetKappa(), GetBeta2());
 }
- 
+
 double Vavilov::Skewness(double kappa, double beta2) {
    return (0.5-beta2/3)/(kappa*kappa) * std::pow ((1-0.5*beta2)/kappa, -1.5);
 }
@@ -113,7 +113,7 @@ double Vavilov::Skewness(double kappa, double beta2) {
 double Vavilov::Kurtosis() const {
    return Kurtosis (GetKappa(), GetBeta2());
 }
- 
+
 double Vavilov::Kurtosis(double kappa, double beta2) {
    return (1./3-0.25*beta2)*pow (1-0.5*beta2, -2)/kappa;
 }

@@ -13,11 +13,11 @@
 -   The zoom on axis and on 2D histogram has be improved. A shaded area is shown instead on simple lines. Also it is possible to zoom a 2D histogram with a shaded rectangle.
 
 ### Saving Files
--	When saving files from a canvas, the default file type is now .pdf instead of .ps, since pdf is probably becoming more popular than ps.
--	In the "File Save Dialog", there is now a default file name and its extension (if a specific one is selected), and the name is highlighted, so when the user types something, only the file name is changed.
--	The default file type can be changed with a new `Canvas.SaveAsDefaultType` option in `etc/system.rootrc` (default being pdf).
+-  When saving files from a canvas, the default file type is now .pdf instead of .ps, since pdf is probably becoming more popular than ps.
+-  In the "File Save Dialog", there is now a default file name and its extension (if a specific one is selected), and the name is highlighted, so when the user types something, only the file name is changed.
+-  The default file type can be changed with a new `Canvas.SaveAsDefaultType` option in `etc/system.rootrc` (default being pdf).
 
 ### ROOT browser and pad editor
--	The Pad Editor is now embedded in the left tab of the browser instead of inside the canvas itself, so the layout of the canvas remains untouched when opening the editor.
+-  The Pad Editor is now embedded in the left tab of the browser instead of inside the canvas itself, so the layout of the canvas remains untouched when opening the editor.
 
 

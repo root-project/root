@@ -387,12 +387,12 @@ MyClass();   // Or a constructor with all its arguments defaulted.
 
 ## rootcling: The Cling Dictionary Generator
 
-A way in which dictionaries can be generated is via the `rootcling` 
-utility. This tool generates takes as input a set of headers and 
+A way in which dictionaries can be generated is via the `rootcling`
+utility. This tool generates takes as input a set of headers and
 generates in output the dictionary C++ code and a `pcm` file.
-This latter file is fundamental for the correct functioning of the 
-dictionary at runtime. It should be located in the directory where 
-the shared library is installed in which the compiled dictionary 
+This latter file is fundamental for the correct functioning of the
+dictionary at runtime. It should be located in the directory where
+the shared library is installed in which the compiled dictionary
 resides.
 
 NOTA BENE: the dictionaries that will be used within the same project
@@ -513,7 +513,7 @@ Now using `rootcling` we can generate the dictionary file.
 rootcling eventdict.cxx -c TEvent.h TTrack.h
 ```
 
-Looking in the file `eventdict.cxx` we can see, the` Streamer()` 
+Looking in the file `eventdict.cxx` we can see, the` Streamer()`
 and` ShowMembers() `methods for the two classes.
 `Streamer()` is used to stream an object to/from a **`TBuffer`** and
 `ShowMembers()` is used by the `Dump()` and `Inspect()` methods of
@@ -635,7 +635,7 @@ Int_t     fTempValue; //! temporary state value
 ### The LinkDef.h File
 
 
-**Step 3:** The `LinkDef.h` file tells `rootcling` which classes should 
+**Step 3:** The `LinkDef.h` file tells `rootcling` which classes should
 be added to the dictionary.
 
 ``` {.cpp}
@@ -1124,27 +1124,27 @@ link: <http://root.cern.ch/root/RootCintMan.html>
 ## genreflex: A Comfortable Interface to rootcling
 
 Version 5 supported both `Cint` and `Reflex` dictionaries. The tool to create
-`Reflex` dictionaries was a Python script called `genreflex` and was very 
+`Reflex` dictionaries was a Python script called `genreflex` and was very
 successful in the user community.
 Even if version 6 has only one type of dictionaries, `cling` dictionaries,
 a re-implementation of `genreflex` is provided.
-More precisely, in ROOT6, `genreflex` is nothing but a wrapper around 
+More precisely, in ROOT6, `genreflex` is nothing but a wrapper around
 `rootcling`, which offers an identical CLI and behaviour to the old Python
 tool.
-The input to `genreflex` is a C++ header file, a set of switches and a 
-*selection XML file*. The output, as for `rootcling`, is a C++ dictionary 
+The input to `genreflex` is a C++ header file, a set of switches and a
+*selection XML file*. The output, as for `rootcling`, is a C++ dictionary
 source and a `pcm` files.
-An exhaustive documentation of the CLI switches of `genreflex` can be 
+An exhaustive documentation of the CLI switches of `genreflex` can be
 inspected with the `genreflex --help` command.
 
-The entity corresponding to the `LinkDef` file for `genreflex` is the 
+The entity corresponding to the `LinkDef` file for `genreflex` is the
 *selection XML file*, also called *selection XML* or simply *selection file*.
-A *selection XML file* allows to describe a list of classes for which 
-the dictionaries are to be created. In addition, it allows to specify 
-properties of classes or data members, without the need to add comments in 
-the source code. This is of primary importance when dictionaries must be 
+A *selection XML file* allows to describe a list of classes for which
+the dictionaries are to be created. In addition, it allows to specify
+properties of classes or data members, without the need to add comments in
+the source code. This is of primary importance when dictionaries must be
 created for classes residing in code which cannot be modified.
-For a complete description of the structure of the *selection XML files* 
+For a complete description of the structure of the *selection XML files*
 and the way in which attributes can be set, refer to the `genreflex --help`
 command.
 
@@ -1153,13 +1153,13 @@ of `rootcling` invocations instead of `LinkDef` files.
 
 ### The `ROOT::Meta::Selection` namespace
 
-Not only `LinkDef` and `selection` files allow to select the classes for which 
-the dictionaries must be created: a third method is available. This is 
-represented by the `ROOT::Meta::Selection` namespace. The idea behind this 
-technique is that all the classes which are located in this special namespace 
-are automatically selected for dictionary generation. All the properties and 
-annotations allowed by `LinkDef` and `selection XML` files are possible. 
-For a detailed documentation of the features of the `ROOT::Meta::Selection` 
+Not only `LinkDef` and `selection` files allow to select the classes for which
+the dictionaries must be created: a third method is available. This is
+represented by the `ROOT::Meta::Selection` namespace. The idea behind this
+technique is that all the classes which are located in this special namespace
+are automatically selected for dictionary generation. All the properties and
+annotations allowed by `LinkDef` and `selection XML` files are possible.
+For a detailed documentation of the features of the `ROOT::Meta::Selection`
 namespace, refer to its online documentation.
 
 ## Adding a Class with ACLiC

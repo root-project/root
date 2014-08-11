@@ -148,12 +148,12 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
         double Q3 = Q * Q * Q;
         double R2 = R * R;
 
-        disc = R2 - Q3; 
+        disc = R2 - Q3;
 
-//       more numerical problems with this calculation of disc          
+//       more numerical problems with this calculation of disc
 //       double CR2 = 729 * rcub * rcub;
 //       double CQ3 = 2916 * qcub * qcub * qcub;
-//       disc = (CR2 - CQ3) / 2125764.0;       
+//       disc = (CR2 - CQ3) / 2125764.0;
 
 
         if (0 == R && 0 == Q)
@@ -162,7 +162,7 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
             u[1] = -rc / 3;
             u[2] = -rc / 3;
           }
-        else if (R2 == Q3) 
+        else if (R2 == Q3)
           {
             double sqrtQ = sqrt (Q);
             if (R > 0)
@@ -183,12 +183,12 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
             double sqrtQ = sqrt (Q);
             double sqrtQ3 = sqrtQ * sqrtQ * sqrtQ;
             double ctheta = R / sqrtQ3;
-            double theta = 0; 
+            double theta = 0;
             // protect against numerical error can make this larger than one
             if ( fabs(ctheta) < 1.0 )
-               theta = acos( ctheta); 
-            else if ( ctheta <= -1.0) 
-               theta = M_PI; 
+               theta = acos( ctheta);
+            else if ( ctheta <= -1.0)
+               theta = M_PI;
 
             double norm = -2 * sqrtQ;
 
@@ -219,7 +219,7 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
        * mt=2 : 0 real roots
        * mt=3 : 2 real roots
        */
-      // when disc == 0  2 roots are identicals 
+      // when disc == 0  2 roots are identicals
       if (0 >= disc)
         {
           mt = 2;
@@ -273,7 +273,7 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
       gsl_complex prod_w = gsl_complex_mul (w1, w2);
       //gsl_complex mod_prod_w = gsl_complex_abs (prod_w);
       /*
-	Changed from gsl_complex to double in order to make it compile.
+       Changed from gsl_complex to double in order to make it compile.
       */
       double mod_prod_w = gsl_complex_abs (prod_w);
       if (0.0 != mod_prod_w)

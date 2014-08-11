@@ -17,7 +17,7 @@ const CGFloat markerPos = 100.f;
    UIImageView *arrowView;
    UIImage *frameImage;
    UIImage *backgroundImage;
-   
+
    unsigned selectedItem;
 }
 
@@ -30,17 +30,17 @@ const CGFloat markerPos = 100.f;
    self = [super initWithFrame : frame];
    if (self) {
       self.backgroundColor = [UIColor clearColor];
-   
+
       contentScroll = [[UIScrollView alloc] initWithFrame : CGRectMake(10.f, 10.f, pickerWidth, cellHeight)];
       contentScroll.scrollEnabled = YES;
       contentScroll.pagingEnabled = NO;
       contentScroll.delegate = self;
       contentScroll.showsVerticalScrollIndicator = NO;
       contentScroll.showsHorizontalScrollIndicator = NO;
-      
+
       contentScroll.backgroundColor = [UIColor clearColor];
       [self addSubview : contentScroll];
-      
+
       backgroundImage = [UIImage imageNamed : @"picker_bkn.png"];
       frameImage = [UIImage imageNamed : @"picker_frame_bkn.png"];
 
@@ -48,42 +48,42 @@ const CGFloat markerPos = 100.f;
       dropshadowLayer.startPoint = CGPointMake(0.0f, 0.0f);
       dropshadowLayer.endPoint = CGPointMake(0.0f, 1.0f);
       dropshadowLayer.opacity = 1.0;
-      dropshadowLayer.frame = CGRectMake(contentScroll.frame.origin.x, contentScroll.frame.origin.y, 
+      dropshadowLayer.frame = CGRectMake(contentScroll.frame.origin.x, contentScroll.frame.origin.y,
                                          contentScroll.frame.size.width, contentScroll.frame.size.height);
       dropshadowLayer.locations = [NSArray arrayWithObjects : [NSNumber numberWithFloat : 0.0f],
                                                               [NSNumber numberWithFloat : 0.05f],
                                                               [NSNumber numberWithFloat : 0.2f],
                                                               [NSNumber numberWithFloat : 0.8f],
-                                                              [NSNumber numberWithFloat : 0.95f],                                   
+                                                              [NSNumber numberWithFloat : 0.95f],
                                                               [NSNumber numberWithFloat : 1.0f], nil];
-      dropshadowLayer.colors = [NSArray arrayWithObjects : 
-                                             (id)[[UIColor colorWithRed : 0.05f green : 0.05f blue : 0.05f alpha : 0.75f] CGColor], 
-                                             (id)[[UIColor colorWithRed : 0.25f green : 0.25f blue : 0.25f alpha : 0.55f] CGColor], 
-                                             (id)[[UIColor colorWithRed : 1.f green : 1.f blue : 1.f alpha : 0.05f] CGColor], 
-                                             (id)[[UIColor colorWithRed : 1.f green : 1.f blue : 1.f alpha : 0.05f] CGColor], 
+      dropshadowLayer.colors = [NSArray arrayWithObjects :
+                                             (id)[[UIColor colorWithRed : 0.05f green : 0.05f blue : 0.05f alpha : 0.75f] CGColor],
+                                             (id)[[UIColor colorWithRed : 0.25f green : 0.25f blue : 0.25f alpha : 0.55f] CGColor],
+                                             (id)[[UIColor colorWithRed : 1.f green : 1.f blue : 1.f alpha : 0.05f] CGColor],
+                                             (id)[[UIColor colorWithRed : 1.f green : 1.f blue : 1.f alpha : 0.05f] CGColor],
                                              (id)[[UIColor colorWithRed : 0.25f green : 0.25f blue : 0.25f alpha : 0.55f] CGColor],
                                              (id)[[UIColor colorWithRed : 0.05f green : 0.05f blue : 0.05f alpha : 0.75f] CGColor], nil];
 
       [self.layer insertSublayer:dropshadowLayer above : contentScroll.layer];
-        
+
       CAGradientLayer *gradientLayer = [CAGradientLayer layer];
       gradientLayer.startPoint = CGPointMake(0.0f, 0.0f);
       gradientLayer.endPoint = CGPointMake(1.0f, 0.0f);
       gradientLayer.opacity = 1.0;
-      gradientLayer.frame = CGRectMake(contentScroll.frame.origin.x, contentScroll.frame.origin.y, 
+      gradientLayer.frame = CGRectMake(contentScroll.frame.origin.x, contentScroll.frame.origin.y,
                                       contentScroll.frame.size.width, contentScroll.frame.size.height);
       gradientLayer.locations = [NSArray arrayWithObjects:
                                 [NSNumber numberWithFloat:0.0f],
                                 [NSNumber numberWithFloat:0.05f],
                                 [NSNumber numberWithFloat:0.3f],
                                 [NSNumber numberWithFloat:0.7f],
-                                [NSNumber numberWithFloat:0.95f],                                   
+                                [NSNumber numberWithFloat:0.95f],
                                 [NSNumber numberWithFloat:1.0f], nil];
       gradientLayer.colors = [NSArray arrayWithObjects:
-                             (id)[[UIColor colorWithRed:0.05f green:0.05f blue:0.05f alpha:0.95] CGColor], 
-                             (id)[[UIColor colorWithRed:0.25f green:0.25f blue:0.25f alpha:0.8] CGColor], 
-                             (id)[[UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:0.1] CGColor], 
-                             (id)[[UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:0.1] CGColor], 
+                             (id)[[UIColor colorWithRed:0.05f green:0.05f blue:0.05f alpha:0.95] CGColor],
+                             (id)[[UIColor colorWithRed:0.25f green:0.25f blue:0.25f alpha:0.8] CGColor],
+                             (id)[[UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:0.1] CGColor],
+                             (id)[[UIColor colorWithRed:1.0f green:1.0f blue:1.0f alpha:0.1] CGColor],
                              (id)[[UIColor colorWithRed:0.25f green:0.25f blue:0.25f alpha:0.8] CGColor],
                              (id)[[UIColor colorWithRed:0.05f green:0.05f blue:0.05f alpha:0.95] CGColor], nil];
       [self.layer insertSublayer:gradientLayer above:dropshadowLayer];

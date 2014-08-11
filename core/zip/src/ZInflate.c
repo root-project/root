@@ -1120,7 +1120,7 @@ int R__Inflate_free()
 #define HDRSIZE 9
 
 int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
-{ 
+{
   // Reads header envelope, and determines target size.
   // Returns 0 in case of success.
 

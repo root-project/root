@@ -4,7 +4,7 @@
 There is a new home!!!
 -----------------
 https://github.com/bel2125/civetweb
-Bel has been taking the lead on Civetweb, so teh official repositiory 
+Bel has been taking the lead on Civetweb, so teh official repositiory
 is being moved under his control for ease of maintanence.
 
 Project Mission
@@ -74,7 +74,7 @@ Support
 -------
 
 The original Mongoose project is recommended if support is needed.  However,
-this is very easy to install and use. 
+this is very easy to install and use.
 
 Contributions
 ---------------
@@ -86,7 +86,7 @@ DO NOT APPLY fixes copied from Mongoose to this project to prevent GPL tainting.
 ### Author
 
 The original Author was Sergey Lyubka.  He still controls the original
-Mongoose project.  However, he has changed or said he would 
+Mongoose project.  However, he has changed or said he would
 change licenses after writing and distributing the original code this
 project is based on.
 

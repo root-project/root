@@ -57,7 +57,7 @@ class TGTextButton;
 class TGColorPalette : public TGFrame, public TGWidget {
 
 private:
-   
+
    TGColorPalette(const TGColorPalette&); // Not implemented
    TGColorPalette& operator=(const TGColorPalette&); // Not implemented
 
@@ -118,7 +118,7 @@ protected:
    Int_t        fClick;          // mouse click location (kCLICK_NONE, kCLICK_HS, kCLICK_L)
    Int_t        fCx;             // x position in hs colormap
    Int_t        fCy;             // y position in hs colormap
-   Int_t        fCz;             // position in lightness slider 
+   Int_t        fCz;             // position in lightness slider
    Pixel_t      fCurrentColor;   // currently selected color value
    Rectangle_t  fColormapRect;   // hue / saturation colormap rectangle
    Rectangle_t  fSliderRect;     // color lightness slider rectangle
@@ -180,13 +180,13 @@ protected:
    TGTextEntry    *fRte, *fGte, *fBte, *fHte, *fLte, *fSte, *fAle; // RGB/HLS text entries
    TGTextBuffer   *fRtb, *fGtb, *fBtb, *fHtb, *fLtb, *fStb, *fAlb; // RGB/HLS associated buffers
    Bool_t          fWaitFor;         // call WaitFor method in constructor
-   
+
    TGTab               *fTab;        //tab widget holding the color selectors
    TRootEmbeddedCanvas *fEcanvas;    //embedded canvas holding the color wheel
    TColorWheel         *fColorWheel; //color wheel
    TGLabel             *fColorInfo;  //color info
    TGTextButton        *fPreview;    //preview button;
-   
+
    void           UpdateRGBentries(Pixel_t *c);
    void           UpdateHLSentries(Pixel_t *c);
    void           UpdateAlpha(Pixel_t *c);

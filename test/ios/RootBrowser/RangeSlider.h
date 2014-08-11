@@ -15,10 +15,10 @@
    float selectedMaximumValue;
 
    float padding;
-    
+
    BOOL maxThumbOn;
    BOOL minThumbOn;
-    
+
    UIImageView *minThumb;
    UIImageView *maxThumb;
    UIImageView *track;

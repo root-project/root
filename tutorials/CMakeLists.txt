@@ -5,14 +5,30 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 project(tutorials)
 find_package(ROOT REQUIRED)
 
-
 if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
   set(ROOT_root_CMD root.exe)
   set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
                    ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
                    ROOTSYS=${CMAKE_BINARY_DIR}
                    PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
+  else()
+    set(ROOT_environ PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
 endif()
+
+#---Copy the CTestCustom.cmake file into the build directory--------
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+
+#---Provide a rootlogon.C file in the current build directory that
+#   will affect the way we run all tutorials.
+#   This overwrites the existing rootlogon.C and rootalias.C in the
+#   tutorials directory which is copied to the build area.
+#-------------------------------------------------------------------
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogon.C "{
+  // Needed by ACLiC to use the current dicrectory for scratch area
+  gSystem->SetBuildDir(\".\", kTRUE);
+}")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootalias.C "")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogoff.C "{}")
 
 #---Definition of the helper function--------------------------------
 function(ROOT_ADD_TUTORIAL macrofile rc)
@@ -33,7 +49,7 @@ if(NOT ROOT_minuit2_FOUND)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
-  set(roofit_veto  fit/RoofitDemo.C 
+  set(roofit_veto  fit/RoofitDemo.C
                    roofit/*.C roostats/*.C histfactory/*.C)
 endif()
 
@@ -51,8 +67,8 @@ if(NOT ROOT_fitsio_FOUND)
 endif()
 
 if(NOT ROOT_mathmore_FOUND)
-  set(mathmore_veto 
-      math/quasirandom.C 
+  set(mathmore_veto
+      math/quasirandom.C
       math/exampleMultiRoot.C
       math/Bessel.C
       math/LegendreAssoc.C
@@ -80,7 +96,7 @@ set(gui_veto fit/fitpanel_playback.C
              geom/*.C
              gl/*.C
              gui/*.C
-             hist/exec1.C 
+             hist/exec1.C
              hist/exec2.C
              image/*.C
              graphics/psview.C graphics/gtime.C
@@ -103,19 +119,19 @@ set(extra_veto
   pythia/*.C
   sql/*.C
   tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
-  tree/tree0.C 
-  tree/tree2a.C 
+  tree/tree0.C
+  tree/tree2a.C
   tree/tree4.C
   roostats/rs401d_FeldmanCousins.C  # Takes too much time
   roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
-  tree/copytree2.C 
-  tree/copytree3.C 
+  tree/copytree2.C
+  tree/copytree3.C
   tree/copytree.C
   tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
   tree/h1chain.C
   http/*.C)
-  
+
 set(all_veto hsimple.C
              ${extra_veto}
              ${gui_veto}
@@ -127,7 +143,7 @@ set(all_veto hsimple.C
              ${mathmore_veto}
              ${fftw3_veto}
              ${gviz_veto})
-             
+
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
 
@@ -138,7 +154,7 @@ message(STATUS "${veto}/${total} tutorials have been vetoed for various reasons"
 list(REMOVE_ITEM tutorials ${tutorials_veto})
 
 #---Special return code------------------------------------------------
-set(returncode_1 fit/fit2a.C fit/graph2dfit.C 
+set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphics/archi.C graphics/arrow.C
                  graphics/crown.C graphics/diamond.C
                  graphics/earth.C graphics/ellipse.C
@@ -147,10 +163,9 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphs/exclusiongraph.C graphs/multigraph.C
                  graphs/multipalette.C
                  graphs/graphstruct.C
-                 hist/ContourList.C hist/hstack.C 
-                 hist/h2proj.C 
+                 hist/ContourList.C hist/hstack.C
+                 hist/h2proj.C
                  hist/th2polyBoxes.C
-                 io/fildir.C 
                  math/chi2test.C )
 #---Dependencies------------------------------------------------------
 set(math-testUnfold5d-depends tutorial-math-testUnfold5c)
@@ -162,9 +177,10 @@ set(histfactory-example-depends tutorial-histfactory-makeExample)
 set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
 set(foam-foam_demopers-depends tutorial-foam-foam_demo)
-#--many roostats tutorials depending on having creating the file first with histfactory 
+set(tree-staff-depends  tutorial-tree-cernbuild)
+#--many roostats tutorials depending on having creating the file first with histfactory
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
-               StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo 
+               StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo
                StandardHypoTestInvDemo StandardProfileInspectorDemo StandardTestStatDistributionDemo
                OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands)
   set(roostats-${tname}-depends tutorial-roostats-StandardProfileLikelihoodDemo)
@@ -172,8 +188,13 @@ endforeach()
 
 #---Loop over all tutorials and define the corresponding test---------
 
+#---Define the primordial tutorials-----------------------------------
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
                 PASSRC 1 FAILREGEX "Error in" "error:" LABELS tutorial)
+ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
+                FAILREGEX "Error in" "error:" LABELS tutorial)
+
+#---Loop over all tutorials and define the corresponding test---------
 foreach(t ${tutorials})
   list(FIND returncode_1 ${t} index)
   if(index EQUAL -1)
@@ -183,8 +204,8 @@ foreach(t ${tutorials})
   endif()
   string(REPLACE ".C" "" tname ${t})
   string(REPLACE "/" "-" tname ${tname})
-  ROOT_ADD_TEST(tutorial-${tname} 
-                COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}
+  ROOT_ADD_TEST(tutorial-${tname}
+                COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}
@@ -210,10 +231,10 @@ if(ROOT_python_FOUND)
   list(REMOVE_ITEM pytutorials ${pyveto})
 
   #---Python tutorials dependencies--------------------------------------
-  set(pyroot-hsimple-depends tutorial-hsimple)
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple)
   set(pyroot-benchmarks-depends tutorial-pyroot-hsimple)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom)
+  set(pyroot-na49view-depends tutorial-geom-geometry)
 
   foreach(t ${pytutorials})
     string(REPLACE ".py" "" tname ${t})
@@ -229,7 +250,7 @@ endif()
 
 
 
-                   
+
 
 
 

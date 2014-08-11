@@ -115,6 +115,7 @@
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
 #include "TFunctionTemplate.h"
+#include "ThreadLocalStorage.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -216,7 +217,7 @@ namespace {
                          const char* fwdDeclCode,
                          void (*triggerFunc)(),
                          const TROOT::FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
-                         const char** classesHeaders): 
+                         const char** classesHeaders):
                            fModuleName(moduleName),
                            fHeaders(headers),
                            fPayloadCode(payloadCode),
@@ -225,18 +226,18 @@ namespace {
                            fTriggerFunc(triggerFunc),
                            fClassesHeaders(classesHeaders),
                            fFwdNargsToKeepColl(fwdDeclsArgToSkip){}
-        
+
       const char* fModuleName; // module name
       const char** fHeaders; // 0-terminated array of header files
       const char* fPayloadCode; // Additional code to be given to cling at library load
       const char* fFwdDeclCode; // Additional code to let cling know about selected classes and functions
-      const char** fIncludePaths; // 0-terminated array of header files      
+      const char** fIncludePaths; // 0-terminated array of header files
       void (*fTriggerFunc)(); // Pointer to the dict initialization used to find the library name
       const char** fClassesHeaders; // 0-terminated list of classes and related header files
-      const TROOT::FwdDeclArgsToKeepCollection_t fFwdNargsToKeepColl; // Collection of 
-                                                                      // pairs of template fwd decls and number of 
-   };   
-   
+      const TROOT::FwdDeclArgsToKeepCollection_t fFwdNargsToKeepColl; // Collection of
+                                                                      // pairs of template fwd decls and number of
+   };
+
    std::vector<ModuleHeaderInfo_t>& GetModuleHeaderInfoBuffer() {
       static std::vector<ModuleHeaderInfo_t> moduleHeaderInfoBuffer;
       return moduleHeaderInfoBuffer;
@@ -256,7 +257,7 @@ namespace ROOT {
    class TROOTAllocator {
       // Simple wrapper to separate, time-wise, the call to the
       // TROOT destructor and the actual free-ing of the memory.
-      // 
+      //
       // Since the interpreter implementation (currently TCling) is
       // loaded via dlopen by libCore, the destruction of its global
       // variable (i.e. in particular clang's) is scheduled before
@@ -277,10 +278,10 @@ namespace ROOT {
       // the service of the interpreter ... which of course
       // fails if libCling is already unloaded by that information
       // has not been registered per se.
-      // 
+      //
       // To solve this problem, we now schedule the destruction
-      // of the TROOT object to happen _just_ before the 
-      // unloading/destruction of libCling so that we can 
+      // of the TROOT object to happen _just_ before the
+      // unloading/destruction of libCling so that we can
       // maximize the amount of clean-up we can do correctly
       // and we can still allocate the TROOT object's memory
       // statically.
@@ -309,6 +310,8 @@ namespace ROOT {
       if (!initInterpreter) {
          initInterpreter = kTRUE;
          gROOTLocal->InitInterpreter();
+         // Load and init threads library
+         gROOTLocal->InitThreads();
       }
       return gROOTLocal;
    }
@@ -391,10 +394,10 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    ROOT::gROOTLocal = this;
    gDirectory = 0;
-  
+
    // initialize gClassTable is not already done
    if (!gClassTable) new TClassTable;
-  
+
    SetName(name);
    SetTitle(title);
 
@@ -567,9 +570,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
       i++;
    }
 
-   // Load and init threads library
-   InitThreads();
-
    // Set initial/default list of browsable objects
    fBrowsables->Add(fRootFolder, "root");
    fBrowsables->Add(fProofs, "PROOF Sessions");
@@ -591,7 +591,7 @@ TROOT::~TROOT()
 
       // If the interpreter has not yet been initialized, don't bother
       ROOT::gGetROOT = &ROOT::GetROOT1;
- 
+
       // Mark the object as invalid, so that we can veto some actions
       // (like autoloading) while we are in the destructor.
       SetBit(TObject::kInvalidObject);
@@ -870,7 +870,7 @@ void TROOT::EndOfProcessCleanups()
    // those that must be executed before the library start being unloaded.
 
    CloseFiles();
-   
+
    if (gInterpreter) {
       gInterpreter->ResetGlobals();
    }
@@ -1633,7 +1633,11 @@ void TROOT::InitThreads()
       char *path;
       if ((path = gSystem->DynamicPathName("libThread", kTRUE))) {
          delete [] path;
-         LoadClass("TThread", "Thread");
+         TInterpreter::EErrorCode code = TInterpreter::kNoError;
+         fInterpreter->Calc("TThread::Initialize();", &code);
+         if (code != TInterpreter::kNoError) {
+            Error("InitThreads","Thread mechanism not initialization properly.");
+         }
       }
    }
 }
@@ -2102,6 +2106,24 @@ void TROOT::ReadGitInfo()
    delete [] filename;
 }
 
+Bool_t &GetReadingObject() {
+   TTHREAD_TLS(Bool_t) fgReadingObject = false;
+   return fgReadingObject;
+}
+
+//______________________________________________________________________________
+Bool_t TROOT::ReadingObject() const
+{
+   /* Deprecated (will be removed in next release) */
+   return GetReadingObject();
+}
+
+void TROOT::SetReadingObject(Bool_t flag)
+{
+   GetReadingObject() = flag;
+}
+
+
 //______________________________________________________________________________
 const char *TROOT::GetGitDate()
 {
@@ -2141,13 +2163,13 @@ void TROOT::RefreshBrowsers()
 static void CallCloseFiles()
 {
    // Insure that the files, canvases and sockets are closed.
-   
+
    if (TROOT::Initialized() && ROOT::gROOTLocal) gROOT->CloseFiles();
 }
 
 //______________________________________________________________________________
 void TROOT::RegisterModule(const char* modulename,
-                           const char** headers,                           
+                           const char** headers,
                            const char** includePaths,
                            const char* payloadCode,
                            const char* fwdDeclCode,
@@ -2158,7 +2180,7 @@ void TROOT::RegisterModule(const char* modulename,
    // Called by static dictionary initialization to register clang modules
    // for headers. Calls TCling::RegisterModule() unless gCling
    // is NULL, i.e. during startup, where the information is buffered in
-   // the static GetModuleHeaderInfoBuffer().   
+   // the static GetModuleHeaderInfoBuffer().
 
 
    // First a side track to insure proper end of process behavior.
@@ -2217,7 +2239,7 @@ void TROOT::RegisterModule(const char* modulename,
    // libCore is 'dlclose'd or right after the end of main.
 
    atexit(CallCloseFiles);
-   
+
    // Now register with TCling.
    if (gCling) {
       gCling->RegisterModule(modulename, headers, includePaths, payloadCode, fwdDeclCode,

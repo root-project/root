@@ -27,7 +27,7 @@ class VariableSelectionRule final : public BaseSelectionRule
 public:
    VariableSelectionRule(ESelect sel) : BaseSelectionRule(sel) {}
    VariableSelectionRule(long index, cling::Interpreter &interp) : BaseSelectionRule(index, interp) {}
-   VariableSelectionRule(long index, ESelect sel, std::string attributeName, std::string attributeValue, cling::Interpreter &interp) 
+   VariableSelectionRule(long index, ESelect sel, std::string attributeName, std::string attributeValue, cling::Interpreter &interp)
        : BaseSelectionRule(index, sel, attributeName, attributeValue, interp){}
 
    void Print(std::ostream &out) const;

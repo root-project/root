@@ -7,8 +7,8 @@
 - (id) init
 {
    if (self = [super init])
-      [NSApp setDelegate : self];
-   
+      [NSApp setDelegate : (id<NSFileManagerDelegate>)self];
+
    return self;
 }
 

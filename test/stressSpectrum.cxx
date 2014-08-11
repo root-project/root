@@ -162,7 +162,7 @@ void stress1(Int_t ntimes) {
    Double_t p1ref = 70.21; //ref numbers obtained with ntimes=1000
    Double_t p2ref = 65.03;
    Double_t p3ref =  8.54;
-      
+
    //printf("p1=%g+-%g, p2=%g+-%g, p3=%g+-%g\n",p1,ep1,p2,ep2,p3,ep3);
 
    char sok[20];
@@ -205,7 +205,7 @@ void stress2(Int_t np2) {
    //now the real stuff
    TSpectrum2 *s = new TSpectrum2(2*npeaks);
    Int_t nfound = s->Search(h2,2,"goff noMarkov");
-   
+
    //searching good and ghost peaks (approximation)
    Int_t pf,ngood = 0;
    Double_t *xpeaks = s->GetPositionX();
@@ -229,7 +229,7 @@ void stress2(Int_t np2) {
       }
       if (nf == 0) nghost++;
    }
-   
+
    delete s;
    delete f2;
    delete h2;
@@ -247,7 +247,7 @@ void stress2(Int_t np2) {
    printf("Peak2 : found =%d/%d, good =%d, ghost =%2d,---------------------------- %s\n",
           nfound,npeaks,ngood,nghost,sok);
 }
-   
+
 void stressSpectrum(Int_t ntimes=100) {
    std::cout << "****************************************************************************" <<std::endl;
    std::cout << "*  Starting  stress S P E C T R U M                                        *" <<std::endl;
@@ -267,7 +267,7 @@ void stressSpectrum(Int_t ntimes=100) {
          gROOT->GetVersionDate(),gROOT->GetVersionTime());
    printf("****************************************************************************\n");
 }
-   
+
 #ifndef __CINT__
 
 int main(int argc, char **argv)

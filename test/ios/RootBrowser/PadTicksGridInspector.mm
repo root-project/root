@@ -18,7 +18,7 @@
 
    if (self) {
    }
-   
+
    return self;
 }
 
@@ -26,7 +26,7 @@
 - (void) setROOTObject : (TObject *)o
 {
    object = static_cast<TVirtualPad *>(o);
-   
+
    //I do not check the result of cast here, it's done on upper level.
    gridX.on = object->GetGridx();
    gridY.on = object->GetGridy();
@@ -69,7 +69,7 @@
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
    // Return YES for supported orientations
-	return YES;
+   return YES;
 }
 
 #pragma mark - Inspector's actions.
@@ -81,7 +81,7 @@
       object->SetGridx(g.on);
    else if (g == gridY)
       object->SetGridy(g.on);
-   
+
    [controller objectWasModifiedUpdateSelection : NO];
 }
 
@@ -92,7 +92,7 @@
       object->SetTickx(t.on);
    else if (t == ticksY)
       object->SetTicky(t.on);
-   
+
    [controller objectWasModifiedUpdateSelection : NO];
 }
 

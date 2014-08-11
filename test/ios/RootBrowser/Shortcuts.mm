@@ -17,13 +17,13 @@
    const CGFloat shortcutHeight = size.height;
    const unsigned nPicksInRow = scrollFrame.size.width / (shortcutWidth + addSpace);
    const CGFloat addXY = (scrollFrame.size.width - (shortcutWidth + addSpace) * nPicksInRow) / 2;
-   
+
    NSEnumerator *enumerator = [shortcuts objectEnumerator];
    UIView *v = [enumerator nextObject];
    for (unsigned n = 0; v; v = [enumerator nextObject], ++n) {
       const unsigned col = n % nPicksInRow;
       const unsigned row = n / nPicksInRow;
-      
+
       const CGFloat x = addXY + addSpace / 2 + col * (shortcutWidth + addSpace);
       const CGFloat y = row * shortcutHeight + addXY;
 
@@ -31,7 +31,7 @@
       frame.origin = CGPointMake(x, y);
       v.frame = frame;
    }
-   
+
    scrollView.contentSize = CGSizeMake(scrollFrame.size.width, addXY + ([shortcuts count] + nPicksInRow - 1) / nPicksInRow * shortcutHeight);
    scrollView.contentOffset = CGPointZero;
 }

@@ -110,7 +110,7 @@ private:
    Int_t                  fColorScheme;
 
    TGLParametricEquation *fEquation;
-   
+
    TAxis                  fCartesianXAxis;
    TAxis                  fCartesianYAxis;
    TAxis                  fCartesianZAxis;
@@ -130,7 +130,7 @@ public:
 private:
    void     InitGL()const;
    void     DeInitGL()const;
-   
+
    void     DrawPlot()const;
 
    void     InitColors();

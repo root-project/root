@@ -130,7 +130,7 @@ namespace {
 template <typename returnType>
 returnType sv_to(const cling::Value& val)
 {
-   QualType QT = val.getType();
+   QualType QT = val.getType().getDesugaredType(val.getASTContext());
    if (QT->isMemberPointerType()) {
       const MemberPointerType* MPT = QT->getAs<MemberPointerType>();
       if (MPT->isMemberDataPointer()) {
@@ -736,7 +736,7 @@ TClingCallFunc::make_wrapper()
                   Pattern->getTemplateSpecializationKind();
                if (
                      // The pattern is an ordinary member function.
-                     (PTK == FunctionDecl::TK_NonTemplate) || 
+                     (PTK == FunctionDecl::TK_NonTemplate) ||
                      // The pattern is an explicit specialization, and
                      // so is not a template.
                      ((PTK != FunctionDecl::TK_FunctionTemplate) &&
@@ -790,7 +790,7 @@ TClingCallFunc::make_wrapper()
                   Pattern->getTemplateSpecializationKind();
                if (
                      // The pattern is an ordinary member function.
-                     (PTK == FunctionDecl::TK_NonTemplate) || 
+                     (PTK == FunctionDecl::TK_NonTemplate) ||
                      // The pattern is an explicit specialization, and
                      // so is not a template.
                      ((PTK != FunctionDecl::TK_FunctionTemplate) &&
@@ -847,7 +847,7 @@ TClingCallFunc::make_wrapper()
                   Pattern->getTemplateSpecializationKind();
                if (
                      // The pattern is an ordinary member function.
-                     (PTK == FunctionDecl::TK_NonTemplate) || 
+                     (PTK == FunctionDecl::TK_NonTemplate) ||
                      // The pattern is an explicit specialization, and
                      // so is not a template.
                      ((PTK != FunctionDecl::TK_FunctionTemplate) &&

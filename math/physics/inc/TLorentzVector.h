@@ -339,9 +339,9 @@ inline void TLorentzVector::SetPxPyPzE(Double_t px, Double_t py, Double_t pz, Do
 }
 
 inline void TLorentzVector::SetXYZM(Double_t  x, Double_t  y, Double_t  z, Double_t m) {
-   if ( m  >= 0 ) 
+   if ( m  >= 0 )
       SetXYZT( x, y, z, TMath::Sqrt(x*x+y*y+z*z+m*m) );
-   else 
+   else
       SetXYZT( x, y, z, TMath::Sqrt( TMath::Max((x*x+y*y+z*z-m*m), 0. ) ) );
 }
 

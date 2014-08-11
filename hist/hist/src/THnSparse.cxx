@@ -147,7 +147,7 @@ THnSparseCoordCompression::THnSparseCoordCompression(Int_t dim, const Int_t* nbi
 {
    // Initialize a THnSparseCoordCompression object with "dim" dimensions
    // and "bins" holding the number of bins for each dimension; it
-   // stores the 
+   // stores the
 
    fBitOffsets = new Int_t[dim + 1];
 
@@ -481,9 +481,9 @@ void THnSparseArrayChunk::Sumw2()
    // Turn on support of errors
    if (!fSumw2)
       fSumw2 = new TArrayD(fContent->GetSize());
-   // fill the structure with the current content 
+   // fill the structure with the current content
    for (Int_t bin=0; bin < fContent->GetSize(); bin++) {
-      fSumw2->fArray[bin] = fContent->GetAt(bin); 
+      fSumw2->fArray[bin] = fContent->GetAt(bin);
    }
 
 }
@@ -742,7 +742,7 @@ Double_t THnSparse::GetBinContent(Long64_t idx, Int_t* coord /* = 0 */) const
             Int_t sizeCompact = cc->GetBufferSize();
             cc->SetCoordFromBuffer(chunk->fCoordinates + idx * sizeCompact,
                                                   coord);
-                                                                               
+
          }
          return chunk->fContent->GetAt(idx);
       }

@@ -72,15 +72,15 @@ protected:
       kIsInteger   = BIT(17), // true if the branch contains an integer variable
       kNeedEntries = BIT(18)  // true if the formula uses Entries$
    };
-   enum { 
-      kDirect, kDataMember, kMethod, 
+   enum {
+      kDirect, kDataMember, kMethod,
       kIndexOfEntry, kEntries, kLength, kIteration, kLengthFunc, kSum, kEntryList,
       kTreeMember,
       kIndexOfLocalEntry,
       kMin, kMax
 
    };
-   enum { 
+   enum {
       kAlias           = 200,
       kAliasString     = 201,
       kAlternate       = 202,

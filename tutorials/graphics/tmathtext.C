@@ -22,6 +22,6 @@
    c1->Print("c1.png");
    c1->Print("c1.ps");
    c1->Print("c1.eps");
-   
+
    return c1;
 }

@@ -12,4 +12,4 @@
 #define LINKEDLIBS "-LIBPATH:%ROOTSYS% lib/libCore.lib lib/libCint.lib lib/libRint.lib "
 #define INCLUDEPATH "-I%ROOTSYS%/include"
 #define OBJEXT "obj"
-#define SOEXT "dll" 
+#define SOEXT "dll"

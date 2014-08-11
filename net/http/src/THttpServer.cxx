@@ -196,6 +196,12 @@ THttpServer::THttpServer(const char *engine) :
    // Checks where ROOT sources (via $ROOTSYS variable)
    // Sources are required to locate files and scripts,
    // which will be provided to the web clients by request
+   // As argument, one specifies engine kind which should be
+   // created like "http:8080". One could specify several engines
+   // at once, separating them with ; like "http:8080;fastcgi:9000"
+   // One also can configure readonly flag for sniffer like
+   // "http:8080;readonly" or "http:8080;readwrite"
+
 
    fMainThrdId = TThread::SelfId();
 
@@ -230,7 +236,24 @@ THttpServer::THttpServer(const char *engine) :
    // start timer
    SetTimer(100, kTRUE);
 
-   CreateEngine(engine);
+   if (strchr(engine,';')==0) {
+      CreateEngine(engine);
+   } else {
+      TObjArray* lst = TString(engine).Tokenize(";");
+
+      for (Int_t n=0;n<=lst->GetLast();n++) {
+         const char* opt = lst->At(n)->GetName();
+         if ((strcmp(opt,"readonly")==0) || (strcmp(opt,"ro")==0)) {
+            GetSniffer()->SetReadOnly(kTRUE);
+         } else
+         if ((strcmp(opt,"readwrite")==0) || (strcmp(opt,"rw")==0)) {
+            GetSniffer()->SetReadOnly(kFALSE);
+         } else
+            CreateEngine(opt);
+      }
+
+      delete lst;
+   }
 }
 
 //______________________________________________________________________________
@@ -449,6 +472,12 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
       arg->SetFile();
 
+      return;
+   }
+
+   if (arg->fFileName == "draw.htm") {
+      arg->fContent = fDrawPage;
+      arg->SetFile();
       return;
    }
 

@@ -25,12 +25,12 @@ void write(Int_t nev=100) {
    TTree *T = new TTree("T","Event example with Jets");
    JetEvent *event = new JetEvent;
    T->Branch("event","JetEvent",&event,8000,2);
-   
+
    for (Int_t ev=0;ev<nev;ev++) {
       event->Build();
       T->Fill();
    }
-   
+
    T->Print();
    T->Write();
 }
@@ -42,15 +42,15 @@ void read() {
   JetEvent *event = 0;
   T->SetBranchAddress("event", &event);
   Long64_t nentries = T->GetEntries();
-  
+
   for (Long64_t ev=0;ev<nentries;ev++) {
       T->GetEntry(ev);
       if (ev) continue; //dump first event only
       cout << " Event: "<< ev
            << "  Jets: " << event->GetNjet()
-	   << "  Tracks: " << event->GetNtrack()
-	   << "  Hits A: " << event->GetNhitA()
-	   << "  Hits B: " << event->GetNhitB() << endl;
+           << "  Tracks: " << event->GetNtrack()
+           << "  Hits A: " << event->GetNhitA()
+           << "  Hits B: " << event->GetNhitB() << endl;
   }
 }
 
@@ -60,7 +60,7 @@ void pileup(Int_t nev=200) {
   TFile f("JetEvent.root");
   TTree *T = (TTree*)f.Get("T");
   // Long64_t nentries = T->GetEntries();
-  
+
   const Int_t LOOPMAX=10;
   JetEvent *events[LOOPMAX];
   Int_t loop;
@@ -85,7 +85,7 @@ void jets(Int_t nev=100, Int_t npileup=200, Bool_t secondrun = true) {
    pileup(npileup);
 }
 
-#else 
+#else
 
 //void jets(Int_t nev=100, Int_t npileup=200, Bool_t secondrun);
 void jets(Int_t nev=100, Int_t npileup=200) {

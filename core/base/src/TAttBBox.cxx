@@ -66,5 +66,5 @@ void TAttBBox::AssertBBoxExtents(Float_t epsilon)
          fBBox[i]   = b - 0.5*epsilon;
          fBBox[i+1] = b + 0.5*epsilon;
       }
-   } 
+   }
 }

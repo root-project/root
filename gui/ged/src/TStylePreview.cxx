@@ -92,7 +92,7 @@ TStylePreview::~TStylePreview()
 //______________________________________________________________________________
 void TStylePreview::Update(TStyle *style, TVirtualPad *pad)
 {
-   // Update the preview with possibly another style and 
+   // Update the preview with possibly another style and
    // another object than previously.
 
    TCanvas *c;
@@ -122,7 +122,7 @@ void TStylePreview::Update(TStyle *style, TVirtualPad *pad)
 void TStylePreview::MapTheWindow()
 {
    // Initialize the layout algorithm.
-   
+
    MapSubwindows();
    TCanvas *c = fPad->GetCanvas();
    if (c) {
@@ -141,6 +141,6 @@ void TStylePreview::MapTheWindow()
 TCanvas *TStylePreview::GetMainCanvas()
 {
    // Return pointer to the selected canvas.
-   
+
    return fEcan->GetCanvas();
 }

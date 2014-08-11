@@ -25,7 +25,7 @@ var kClassMask = 0x80000000;
 
    if (typeof JSROOTIO == "object"){
       var e1 = new Error("JSROOTIO is already defined");
-      e1.source = "JSROOTIO.core.js";
+      e1.source = "JSRootIOEvolution.js";
       throw e1;
    }
 
@@ -38,7 +38,6 @@ var kClassMask = 0x80000000;
    JSROOTIO.version = "2.9 2014/05/12";
 
    JSROOTIO.debug = false;
-
 
    JSROOTIO.fUserStreamers = null; // map of user-streamer function like func(buf,obj,prop,streamerinfo)
 
@@ -990,7 +989,7 @@ var kClassMask = 0x80000000;
          var ver = buf.ReadVersion();
 
          // first base classes
-         for (prop in this) {
+         for (var prop in this) {
             if (!this[prop] || typeof(this[prop]) === "function")
                continue;
             if (this[prop]['typename'] === 'BASE') {
@@ -1005,7 +1004,7 @@ var kClassMask = 0x80000000;
             }
          }
          // then class members
-         for (prop in this) {
+         for (var prop in this) {
 
             if (!this[prop] || typeof(this[prop]) === "function") continue;
 
@@ -1340,7 +1339,6 @@ var kClassMask = 0x80000000;
 
                   if (!file.fAcceptRanges && (filecontent.length != len) &&
                       (file.fEND == filecontent.length)) {
-                    // $('#report').append("<br> seems to be, we get full file");
                     file.fFullFileContent = filecontent;
                     filecontent = file.fFullFileContent.substr(pos, len);
                   }
@@ -1617,12 +1615,8 @@ var kClassMask = 0x80000000;
                   userCallback(file);
             };
             file.ReadObjBuffer(key, callback2);
-
+            
             JSROOTPainter.displayListOfKeys(file.fKeys, '#status');
-
-            // the next two lines are for debugging/info purpose
-            //$("#status").append("file header: " + file.fLogMsg  + "<br/>");
-            //JSROOTPainter.displayListOfKeyDetails(file.fKeys, '#status');
          };
          this.ReadBuffer(this.fNbytesInfo, callback1);
       };

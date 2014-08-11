@@ -33,8 +33,8 @@
 #include "TPluginManager.h"
 #include "TROOT.h"
 #include "TVirtualMutex.h"
-#else 
-// all the minimizer implementation classes 
+#else
+// all the minimizer implementation classes
 //#define HAS_MINUIT2
 #ifdef HAS_MINUIT2
 #include "Minuit2/Minuit2Minimizer.h"
@@ -61,16 +61,16 @@
 #include <iostream>
 #endif
 
-#ifndef MATH_NO_PLUGIN_MANAGER 
-// use ROOT Plugin Manager to create Minimizer concrete classes 
+#ifndef MATH_NO_PLUGIN_MANAGER
+// use ROOT Plugin Manager to create Minimizer concrete classes
 
-ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string & minimizerType,const std::string & algoType)  
+ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string & minimizerType,const std::string & algoType)
 {
-   // create Minimizer using the plug-in manager given the type of Minimizer (MINUIT, MINUIT2, FUMILI, etc..) and 
+   // create Minimizer using the plug-in manager given the type of Minimizer (MINUIT, MINUIT2, FUMILI, etc..) and
    // algorithm (MIGRAD, SIMPLEX, etc..)
 
    const char * minim = minimizerType.c_str();
-   const char * algo = algoType.c_str();  
+   const char * algo = algoType.c_str();
 
    //case of fumili2
    std::string s1,s2;
@@ -80,8 +80,8 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
       minim = s1.c_str();
       algo =  s2.c_str();
    }
-   if (minimizerType == "TMinuit") { 
-      s1 = "Minuit"; 
+   if (minimizerType == "TMinuit") {
+      s1 = "Minuit";
       minim = s1.c_str();
    }
    if (minimizerType.find("cmaes")!=std::string::npos
@@ -90,16 +90,13 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
        s1 = minimizerType;
        minim = s1.c_str();
      }
-
-   //std::cout << "minimizerType: " << minimizerType << " / minim: " << minim << std::endl;
+   if (minimizerType.empty() ) minim = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
    
-   if (minimizerType.empty() ) minim = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str(); 
-
    R__LOCKGUARD2(gROOTMutex);
 
    // create Minimizer using the PM
-   TPluginHandler *h; 
-   gDebug = 3; 
+   TPluginHandler *h;
+   //gDebug = 3;
    if ((h = gROOT->GetPluginManager()->FindHandler("ROOT::Math::Minimizer",minim ))) {
       if (h->LoadPlugin() == -1)  {
 #ifdef DEBUG
@@ -109,48 +106,47 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
       }
 
       // create plug-in with required algorithm
-      ROOT::Math::Minimizer * min = reinterpret_cast<ROOT::Math::Minimizer *>( h->ExecPlugin(1,algo ) ); 
+      ROOT::Math::Minimizer * min = reinterpret_cast<ROOT::Math::Minimizer *>( h->ExecPlugin(1,algo ) );
 #ifdef DEBUG
-      if (min != 0) 
+      if (min != 0)
          std::cout << "Loaded Minimizer " << minimizerType << "  " << algoType << std::endl;
-      else 
+      else
          std::cout << "Error creating Minimizer " << minimizerType << "  " << algoType << std::endl;
 #endif
-      //std::cout << "min: " << min << std::endl;
       return min; 
    }
    std::cout << "returning 0\n";
    return 0;
-                                                                                          
+
 }
 
-#else 
+#else
 
-// use directly classes instances 
+// use directly classes instances
 
-ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string & minimizerType, const std::string & algoType)  
+ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string & minimizerType, const std::string & algoType)
 {
-   // static method to create a minimizer . 
+   // static method to create a minimizer .
    // not using PM so direct dependency on all libraries (Minuit, Minuit2, MathMore, etc...)
    // The default is the Minuit2 minimizer or GSL Minimizer
 
-   // should use enumerations instead of string ?  
-   
-   Minimizer * min = 0; 
-   std::string algo = algoType; 
+   // should use enumerations instead of string ?
+
+   Minimizer * min = 0;
+   std::string algo = algoType;
 
 
 #ifdef HAS_MINUIT2
-   if (minimizerType ==  "Minuit2")        
-      min = new ROOT::Minuit2::Minuit2Minimizer(algoType.c_str()); 
-   if (minimizerType ==  "Fumili2")        
-      min = new ROOT::Minuit2::Minuit2Minimizer("fumili"); 
+   if (minimizerType ==  "Minuit2")
+      min = new ROOT::Minuit2::Minuit2Minimizer(algoType.c_str());
+   if (minimizerType ==  "Fumili2")
+      min = new ROOT::Minuit2::Minuit2Minimizer("fumili");
 #endif
 
 #ifdef HAS_MINUIT
    // use TMinuit
-   if (minimizerType ==  "Minuit" || minimizerType ==  "TMinuit")        
-      min = new TMinuitMinimizer(algoType.c_str());        
+   if (minimizerType ==  "Minuit" || minimizerType ==  "TMinuit")
+      min = new TMinuitMinimizer(algoType.c_str());
 #endif
 
 #ifdef HAS_CMAES
@@ -160,41 +156,41 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
 #endif
    
 #ifdef R__HAS_MATHMORE
-   // use GSL minimizer 
-   if (minimizerType ==  "GSL")        
-      min = new ROOT::Math::GSLMinimizer(algoType.c_str());        
+   // use GSL minimizer
+   if (minimizerType ==  "GSL")
+      min = new ROOT::Math::GSLMinimizer(algoType.c_str());
 
-   else if (minimizerType ==  "GSL_NLS")        
-      min = new ROOT::Math::GSLNLSMinimizer();        
+   else if (minimizerType ==  "GSL_NLS")
+      min = new ROOT::Math::GSLNLSMinimizer();
 
-   else if (minimizerType ==  "GSL_SIMAN")        
-      min = new ROOT::Math::GSLSimAnMinimizer();        
+   else if (minimizerType ==  "GSL_SIMAN")
+      min = new ROOT::Math::GSLSimAnMinimizer();
 #endif
 
 
 #ifdef HAS_MINUIT2
    // DEFAULT IS MINUIT2 based on MIGRAD id minuit2 exists
    else
-      min = new ROOT::Minuit2::Minuit2Minimizer(); 
+      min = new ROOT::Minuit2::Minuit2Minimizer();
 #endif
 
-   return min; 
+   return min;
 }
 
 #endif
 
-ROOT::Math::DistSampler * ROOT::Math::Factory::CreateDistSampler(const std::string & type) { 
-#ifdef MATH_NO_PLUGIN_MANAGER 
-   MATH_ERROR_MSG("Factory::CreateDistSampler","ROOT plug-in manager not available"); 
-   return 0; 
-#else 
-   // create a DistSampler class using the ROOT plug-in manager 
+ROOT::Math::DistSampler * ROOT::Math::Factory::CreateDistSampler(const std::string & type) {
+#ifdef MATH_NO_PLUGIN_MANAGER
+   MATH_ERROR_MSG("Factory::CreateDistSampler","ROOT plug-in manager not available");
+   return 0;
+#else
+   // create a DistSampler class using the ROOT plug-in manager
    const char * typeName = type.c_str();
    if (type.empty() )  typeName = ROOT::Math::DistSamplerOptions::DefaultSampler().c_str();
 
    R__LOCKGUARD2(gROOTMutex);
 
-   TPluginManager *pm = gROOT->GetPluginManager(); 
+   TPluginManager *pm = gROOT->GetPluginManager();
    assert(pm != 0);
    TPluginHandler *h = pm->FindHandler("ROOT::Math::DistSampler", typeName );
    if (h != 0) {
@@ -205,7 +201,7 @@ ROOT::Math::DistSampler * ROOT::Math::Factory::CreateDistSampler(const std::stri
 
       ROOT::Math::DistSampler * smp = reinterpret_cast<ROOT::Math::DistSampler *>( h->ExecPlugin(0) );
       assert(smp != 0);
-      return smp; 
+      return smp;
    }
    MATH_ERROR_MSGVAL("Factory::CreateDistSampler","Error finding DistSampler plug-in",typeName);
    return 0;

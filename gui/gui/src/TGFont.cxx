@@ -1993,7 +1993,7 @@ Bool_t TGFontPool::ParseFontName(const char *string, FontAttributes_t *fa)
          continue;
       }
       n = FindStateNum(gSlantMap, s);
-      // tell coverity that n is an integer value, and not an enum, even if 
+      // tell coverity that n is an integer value, and not an enum, even if
       // we compare it with an enum value (which is -1 in both case anyway)
       // coverity[mixed_enums]
       if ((EFontSlant)n != kFontSlantUnknown) {

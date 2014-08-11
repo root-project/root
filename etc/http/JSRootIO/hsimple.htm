@@ -11,39 +11,39 @@
 
    <script type='text/javascript'>
       var gcnt = 0;
-   
+
       function loadFile() {
          var inp = document.getElementById("urlToLoad");
-         
+
          if (inp==null) {
             setTimeout(loadFile, 100);
             return;
          }
-         
+
          if (inp.value=="") {
             inp.value = "files/hsimple.root";
             ReadFile();
             setTimeout(loadFile, 100);
             return;
          }
-         
+
          if ((gFile == null) || (gcnt++<5)) {
             setTimeout(loadFile, 100);
             return;
          }
-         
+
          showObject('hpx',1);
       }
-   
+
       function localGuiInit() {
-         var pos = document.URL.lastIndexOf("/"); 
+         var pos = document.URL.lastIndexOf("/");
          source_dir = document.URL.substr(0, pos+1);
          BuildSimpleGUI();
-         
+
          setTimeout(loadFile, 100);
       }
    </script>
-      
+
    </head>
 
    <body onload="localGuiInit()">

@@ -2,7 +2,7 @@ void tornado() {
 //Show 3-d polymarkers
 // To see the output of this macro, click begin_html <a href="gif/tornado.gif" >here</a> end_html
 //Author: Rene Brun
-   
+
     gBenchmark->Start("tornado");
 
     double PI = 3.141592653;

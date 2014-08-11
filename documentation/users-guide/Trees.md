@@ -2998,11 +2998,11 @@ A Box Plot (also known as a “box-and whisker” plot or “candle stick” plo
 is a convenient way to describe graphically a data distribution (D) with only
 the five numbers. It was invented in 1977 by John Tukey. The five numbers are:
 
-1.	The minimum value of the distribution D (Min).
-2.	The lower quartile (Q1): 25% of the data points in D are less than Q1.
-3.	The median (M): 50% of the data points in D are less than M.
-4.	The upper quartile (Q3): 75% of the data points in D are less than Q3.
-5.	The maximum value of the distribution D (Max).
+1. The minimum value of the distribution D (Min).
+2. The lower quartile (Q1): 25% of the data points in D are less than Q1.
+3. The median (M): 50% of the data points in D are less than M.
+4. The upper quartile (Q3): 75% of the data points in D are less than Q3.
+5. The maximum value of the distribution D (Max).
 
 ![A box plot describes a distribution with only five numbers. ](pictures/bp1.png)
 

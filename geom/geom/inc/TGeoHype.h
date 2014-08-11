@@ -17,10 +17,10 @@
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
-//                                                                        
+//
 // TGeoHype - Hyperboloid class defined by 5 parameters. Bounded by:
 //            - Two z planes at z=+/-dz
-//            - Inner and outer lateral surfaces. These represent the surfaces 
+//            - Inner and outer lateral surfaces. These represent the surfaces
 //              described by the revolution of 2 hyperbolas about the Z axis:
 //               r^2 - (t*z)^2 = a^2
 //
@@ -30,8 +30,8 @@
 //            a = distance between hyperbola and Z axis at z=0
 //
 //          The inner hyperbolic surface is described by:
-//              r^2 - (tin*z)^2 = rin^2 
-//           - absence of the inner surface (filled hyperboloid can be forced 
+//              r^2 - (tin*z)^2 = rin^2
+//           - absence of the inner surface (filled hyperboloid can be forced
 //             by rin=0 and sin=0
 //          The outer hyperbolic surface is described by:
 //              r^2 - (tout*z)^2 = rout^2
@@ -40,7 +40,7 @@
 //           - rin < rout
 //           - rout > 0
 //           - rin^2 + (tin*dz)^2 > rout^2 + (tout*dz)^2
-//                                                                        
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 
@@ -77,15 +77,15 @@ public:
    virtual void          ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize);
    virtual Bool_t        Contains(const Double_t *point) const;
    virtual void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const;
-   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
-   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1, 
+   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
    virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    Int_t                 DistToHype(const Double_t *point, const Double_t *dir, Double_t *s, Bool_t inner, Bool_t in) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv, 
+   virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
                                 Double_t start, Double_t step);
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const;
    virtual void          GetBoundingCylinder(Double_t *param) const;

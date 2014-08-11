@@ -226,7 +226,7 @@ public:
    XrdOucString  fOpts;    // Options for this source
    XrdOucString  fObscure; // Obscure options to pass through
    XrdProofdDSInfo(const char *t, const char *u, bool local, bool rw,
-                   const char *o = "Ar:Av:", const char *obscure = "") : 
+                   const char *o = "Ar:Av:", const char *obscure = "") :
                    fType(t), fUrl(u), fLocal(local), fRW(rw), fOpts(o),
                    fObscure(obscure) { }
    XrdOucString ToString() const {

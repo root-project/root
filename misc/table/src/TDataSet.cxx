@@ -394,15 +394,15 @@ TDataSet *TDataSet::First() const
 void TDataSet::AddMain(TDataSet *set)
 {
    //add data set to main data set
-   
+
    if (fgMainSet && set) fgMainSet->AddFirst(set);
 }
 
 //______________________________________________________________________________
-TDataSet *TDataSet::GetMainSet() 
+TDataSet *TDataSet::GetMainSet()
 {
    //return pointer to the main dataset
-   
+
    return fgMainSet;
 }
 

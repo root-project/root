@@ -13,7 +13,7 @@ void glbox()
    TPad *box1Pad = new TPad("box1", "box1", 0.52, 0.02, 0.98, 0.82);
    boxPad->Draw();
    box1Pad->Draw();
-   
+
    TH3F *h31 = new TH3F("h31", "h31", 10, -1, 1, 10, -1, 1, 10, -1, 1);
    h31->FillRandom("gaus");
    h31->SetFillColor(2);

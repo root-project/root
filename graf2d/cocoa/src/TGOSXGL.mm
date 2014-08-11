@@ -19,11 +19,11 @@ ClassImp(TGOSXGLManager)
 TGOSXGLManager::TGOSXGLManager()
 {
    //Constructor.
-   
+
    //gGLManager is a singleton, it's created by the plugin manager
    //(either from TRootCanvas or TRootEmbeddedCanvas),
    //never by user.
-   
+
    assert(gGLManager == 0 && "TGOSXGLManager, gGLManager is initialized");
    gGLManager = this;
 
@@ -37,7 +37,7 @@ TGOSXGLManager::TGOSXGLManager()
 TGOSXGLManager::~TGOSXGLManager()
 {
    //Destructor.
-   
+
    //TODO: do we really need this and does ROOT ever deletes 'this'?
    if (gROOT && gROOT->GetListOfSpecials())
       gROOT->GetListOfSpecials()->Remove(this);
@@ -53,7 +53,7 @@ Int_t TGOSXGLManager::InitGLWindow(Window_t parentID)
 
    //TODO: this values actually are quite random, as it was in TX11GLManager/TGWin32GLManager,
    //find something better!
-   
+
    format.push_back(component_type(Rgl::kDoubleBuffer, 1));//1 means nothing, kDoubleBuffer is enough :)
    format.push_back(component_type(Rgl::kStencil, 8));
    format.push_back(component_type(Rgl::kDepth, 32));
@@ -68,7 +68,7 @@ Int_t TGOSXGLManager::InitGLWindow(Window_t parentID)
    Int_t x = 0, y = 0;
    UInt_t width = 0, height = 0;
    gVirtualX->GetWindowSize(parentID, x, y, width, height);
-   
+
    const Window_t glWin = gVirtualX->CreateOpenGLWindow(parentID, width, height, format);
    if (glWin != kNone) {
       //TRootCanvas/TRootEmbeddedCanvas never do this,
@@ -188,7 +188,7 @@ Bool_t TGOSXGLManager::PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py)
 {
    //Analog of TObject::DistancetoPrimitive
    assert(plot != 0 && "PlotSelected, parameter 'plot' is null");
-   
+
    return plot->PlotSelected(px, py);
 }
 
@@ -197,7 +197,7 @@ char *TGOSXGLManager::GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py)
 {
    //Analog of TObject::GetObjectInfo
    assert(plot != 0 && "GetPlotInfo, parameter 'plot' is null");
-   
+
    return plot->GetPlotInfo(px, py);
 }
 

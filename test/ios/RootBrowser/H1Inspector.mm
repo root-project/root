@@ -10,7 +10,7 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 @interface H1Inspector () {
    H1ErrorsInspector *errorInspector;
    H1BinsInspector *binsInspector;
-   
+
    TObject *object;
    __weak ROOTObjectController *controller;
 }
@@ -20,29 +20,29 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 
 @end
 
-@implementation H1Inspector 
+@implementation H1Inspector
 
 //____________________________________________________________________________________________________
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-   
+
    if (self) {
       [self view];
-      
+
       errorInspector = [[H1ErrorsInspector alloc] initWithNibName : @"H1ErrorsInspector" bundle : nil];
       errorInspector.view.frame = nestedComponentFrame;
       [self.view addSubview : errorInspector.view];
       errorInspector.view.hidden = YES;
-      
+
       binsInspector = [[H1BinsInspector alloc] initWithNibName : @"H1BinsInspector" bundle : nil];
       binsInspector.view.frame = nestedComponentFrame;
       [self.view addSubview : binsInspector.view];
       binsInspector.view.hidden = NO;
-      
+
       tabBar.selectedItem = [[tabBar items] objectAtIndex : 0];
    }
-   
+
    return self;
 }
 
@@ -51,7 +51,7 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 {
     // Releases the view if it doesn't have a superview.
     [super didReceiveMemoryWarning];
-    
+
     // Release any cached data, images, etc that aren't in use.
 }
 
@@ -75,8 +75,8 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 //____________________________________________________________________________________________________
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    // Return YES for supported orientations
-	return YES;
+   // Return YES for supported orientations
+   return YES;
 }
 
 #pragma mark - ObjectInspectorComponent protocol.

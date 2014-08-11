@@ -49,21 +49,21 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax)
 // example:
 //  With the input parameters xmin=-1.467 and xmax=2.344, the function
 //  will compute better limits -1.8 and 2.7 and store them in the axis.
-         
+
    Int_t newbins;
    TAxis *xaxis = h->GetXaxis();
-   
+
    if (xmin >= xmax) {
       if (xaxis->GetLabels()) {xmin  = 0; xmax  = xmin +xaxis->GetNbins();}
       else                    {xmin -= 1; xmax += 1;}
-   }   
-   
+   }
+
    THLimitsFinder::OptimizeLimits(xaxis->GetNbins(),
                                   newbins,xmin,xmax,
                                   xaxis->TestBit(TAxis::kIsInteger));
-   
+
    h->SetBins(newbins,xmin,xmax);
- 
+
    return 0;
 }
 
@@ -77,24 +77,24 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Doubl
    Int_t newbinsx,newbinsy;
    TAxis *xaxis = h->GetXaxis();
    TAxis *yaxis = h->GetYaxis();
-   
+
    if (xmin >= xmax) {
       if (xaxis->GetLabels()) {xmin  = 0; xmax  = xmin +xaxis->GetNbins();}
       else                    {xmin -= 1; xmax += 1;}
-   }   
+   }
    if (ymin >= ymax) {
       if (yaxis->GetLabels()) {ymin  = 0; ymax  = ymin +yaxis->GetNbins();}
       else                    {ymin -= 1; ymax += 1;}
-   }      
-   
+   }
+
    THLimitsFinder::OptimizeLimits(xaxis->GetNbins(),
                                   newbinsx,xmin,xmax,
                                   xaxis->TestBit(TAxis::kIsInteger));
-   
+
    THLimitsFinder::OptimizeLimits(yaxis->GetNbins(),
                                   newbinsy,ymin,ymax,
                                   yaxis->TestBit(TAxis::kIsInteger));
-  
+
    h->SetBins(newbinsx,xmin,xmax,newbinsy,ymin,ymax);
    return 0;
 }
@@ -110,60 +110,60 @@ Int_t THLimitsFinder::FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Doubl
    TAxis *xaxis = h->GetXaxis();
    TAxis *yaxis = h->GetYaxis();
    TAxis *zaxis = h->GetZaxis();
-   
+
    if (xmin >= xmax) {
       if (xaxis->GetLabels()) {xmin  = 0; xmax  = xmin +xaxis->GetNbins();}
       else                    {xmin -= 1; xmax += 1;}
-   }   
+   }
    if (ymin >= ymax) {
       if (yaxis->GetLabels()) {ymin  = 0; ymax  = ymin +yaxis->GetNbins();}
       else                    {ymin -= 1; ymax += 1;}
-   }      
+   }
    if (zmin >= zmax) {
       if (zaxis->GetLabels()) {zmin  = 0; zmax  = zmin +zaxis->GetNbins();}
       else                    {zmin -= 1; zmax += 1;}
-   }         
-   
+   }
+
    THLimitsFinder::OptimizeLimits(xaxis->GetNbins(),
                                   newbinsx,xmin,xmax,
                                   xaxis->TestBit(TAxis::kIsInteger));
-   
+
    THLimitsFinder::OptimizeLimits(yaxis->GetNbins(),
                                   newbinsy,ymin,ymax,
                                   yaxis->TestBit(TAxis::kIsInteger));
-   
+
    THLimitsFinder::OptimizeLimits(zaxis->GetNbins(),
                                   newbinsz,zmin,zmax,
                                   zaxis->TestBit(TAxis::kIsInteger));
-  
+
    h->SetBins(newbinsx,xmin,xmax,newbinsy,ymin,ymax,newbinsz,zmin,zmax);
    return 0;
 }
 
 //______________________________________________________________________________
-THLimitsFinder *THLimitsFinder::GetLimitsFinder() 
+THLimitsFinder *THLimitsFinder::GetLimitsFinder()
 {
 // Return pointer to the current finder.
 // Create one if none exists
 // Use SetLimitsFinder to set a user defined finder.
-   
+
    if (!fgLimitsFinder) fgLimitsFinder = new THLimitsFinder();
    return fgLimitsFinder;
 }
 
 //______________________________________________________________________________
-void THLimitsFinder::SetLimitsFinder(THLimitsFinder *finder) 
+void THLimitsFinder::SetLimitsFinder(THLimitsFinder *finder)
 {
 // This static function can be used to specify a finder derived from THLimitsFinder.
 // The finder may redefine the functions FindGoodLimits.
 // Note that the redefined functions may call THLimitsFinder::FindGoodLimits.
-      
+
    fgLimitsFinder = finder;
 }
 
 //______________________________________________________________________________
 void THLimitsFinder::Optimize(Double_t A1,  Double_t A2,  Int_t nold ,
-                              Double_t &BinLow, Double_t &BinHigh, 
+                              Double_t &BinLow, Double_t &BinHigh,
                               Int_t &nbins, Double_t &BinWidth,
                               Option_t *option)
 {
@@ -172,11 +172,11 @@ void THLimitsFinder::Optimize(Double_t A1,  Double_t A2,  Int_t nold ,
 // Input parameters:
 //
 //  A1,A2          : Original axis limits
-//  BinLow,BinHigh : Optimized axis limits. They should be initialized by the 
+//  BinLow,BinHigh : Optimized axis limits. They should be initialized by the
 //                   calling method for instance to 0.
 //  nold           : Original number of divisions.
 //  nbins          : Optimized number of divisions.
-//  BinWidth       : Optimized bin width. It should be initialized by the 
+//  BinWidth       : Optimized bin width. It should be initialized by the
 //                   calling method for instance to 0.
 //  option         : "T" means Time axis.
 
@@ -249,7 +249,7 @@ L20:
    sigfig = awidth*TMath::Power(10,-jlog) -1e-10;
    //in the above statement, it is important to substract 1e-10
    //to avoid precision problems if the tests below
-   
+
 //      Round mantissa
 
    switch (roundmode) {
@@ -285,7 +285,7 @@ L20:
          else                     siground = 7;
          break;
       default :
-      
+
 //      Round mantissa up to 1, 2, 2.5, 5, or 10 in case of decimal number
          if      (sigfig <= 1)    siground = 1;
          else if (sigfig <= 2)    siground = 2;
@@ -358,7 +358,7 @@ void THLimitsFinder::OptimizeLimits(Int_t nbins, Int_t &newbins, Double_t &xmin,
 // Optimize axis limits.
 // When isInter=kTRUE, the function makes an integer binwidth
 // and recompute the number of bins accordingly.
-   
+
    Double_t binlow = 0,binhigh = 0,binwidth=0;
    Int_t n=0;
    Double_t dx = 0.1*(xmax-xmin);
@@ -367,9 +367,9 @@ void THLimitsFinder::OptimizeLimits(Int_t nbins, Int_t &newbins, Double_t &xmin,
    Double_t umax = xmax + dx;
    if (umin < 0 && xmin >= 0) umin = 0;
    if (umax > 0 && xmax <= 0) umax = 0;
-   
+
    THLimitsFinder::Optimize(umin,umax,nbins,binlow,binhigh,n,binwidth,"");
-   
+
    if (binwidth <= 0 || binwidth > 1.e+39) {
       xmin = -1;
       xmax = 1;

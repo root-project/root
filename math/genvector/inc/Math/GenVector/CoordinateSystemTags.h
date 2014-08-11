@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id$
-// Authors: W. Brown, M. Fischler, L. Moneta    2005  
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
 
  /**********************************************************************
   *                                                                    *
@@ -15,7 +15,7 @@
 //
 //
 
-#ifndef ROOT_Math_GenVector_CoordinateSystemTags 
+#ifndef ROOT_Math_GenVector_CoordinateSystemTags
 #define ROOT_Math_GenVector_CoordinateSystemTags  1
 
 
@@ -28,30 +28,30 @@ namespace Math {
 //__________________________________________________________________________________________
    /**
       DefaultCoordinateSystemTag
-      Default tag for identifying any coordinate system 
-      
+      Default tag for identifying any coordinate system
+
       @ingroup GenVector
    */
-   
-   class  DefaultCoordinateSystemTag {}; 
+
+   class  DefaultCoordinateSystemTag {};
 
 
 //__________________________________________________________________________________________
    /**
       Tag for identifying vectors based on a global coordinate system
-      
+
       @ingroup GenVector
    */
-   class  GlobalCoordinateSystemTag {}; 
-   
+   class  GlobalCoordinateSystemTag {};
+
 //__________________________________________________________________________________________
    /**
       Tag for identifying vectors based on a local coordinate system
-      
+
       @ingroup GenVector
    */
-   class   LocalCoordinateSystemTag {}; 
-   
+   class   LocalCoordinateSystemTag {};
+
 
 }  // namespace Math
 

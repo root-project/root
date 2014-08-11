@@ -103,7 +103,7 @@ public:
    void        SetActivated(Bool_t on);
    void        SetShowRanges(Bool_t s);
    void        SetTitle(const char* title) {fTitle = title;}
-   
+
    ClassDef(TParallelCoordSelect,1); // A TParallelCoordSelect is a specialised TList to hold TParallelCoordRanges used by TParallelCoord.
 };
 

@@ -293,7 +293,7 @@ Bool_t TEveCaloViz::AssertCellIdCache() const
 {
    // Assert cell id cache is ok.
    // Returns true if the cache has been updated.
- 
+
    TEveCaloViz* cv = const_cast<TEveCaloViz*>(this);
    if (!fCellIdCacheOK) {
       cv->BuildCellIdCache();
@@ -641,13 +641,13 @@ void TEveCalo2D::BuildCellIdCache()
          {
             sumE = 0; sumEt = 0;
             for (TEveCaloData::vCellId_i it = cids->begin(); it != cids->end(); it++)
-            {  
+            {
                fData->GetCellData(*it, cellData);
                sumE  += cellData.Value(kFALSE);
                sumEt += cellData.Value(kTRUE);
             }
             fMaxESumBin  = TMath::Max(fMaxESumBin,  sumE);
-            fMaxEtSumBin = TMath::Max(fMaxEtSumBin, sumEt);  
+            fMaxEtSumBin = TMath::Max(fMaxEtSumBin, sumEt);
          }
       }
       ComputeBBox();
@@ -695,7 +695,7 @@ void TEveCalo2D::CellSelectionChangedInternal(TEveCaloData::vCellId_t& inputCell
          continue;
 
       for (TEveCaloData::vCellId_i i = idsInBin->begin(); i != idsInBin->end(); i++)
-      { 
+      {
          for (TEveCaloData::vCellId_i j = inputCells.begin(); j != inputCells.end(); j++)
          {
             if( (*i).fTower == (*j).fTower && (*i).fSlice == (*j).fSlice)
@@ -714,7 +714,7 @@ void TEveCalo2D::CellSelectionChangedInternal(TEveCaloData::vCellId_t& inputCell
 void TEveCalo2D::SetScaleAbs(Bool_t sa)
 {
    // Set absolute scale in projected calorimeter.
-   
+
    TEveCaloViz::SetScaleAbs(sa);
    BuildCellIdCache();
 }

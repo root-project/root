@@ -5,7 +5,7 @@
 * are missing.
 *
 *-------------------------------------------------------------------------------
-      
+
       SUBROUTINE HNTVAR2(ID1,IVAR,CHTAG,CHFULL,BLOCK,NSUB,ITYPE,ISIZE
      +                  ,NBITS,IELEM)
       INTEGER   ZBITS,  ZNDIM,  ZNOENT, ZNPRIM, ZNRZB,  ZIFCON,
@@ -1401,7 +1401,7 @@
                ENDIF
             ELSEIF (ITYPE .EQ. 2) THEN
                IF (ISIZE .EQ. 2) THEN
- 
+
                ELSEIF (ISIZE .EQ. 4) THEN
                   IF (INDVAR) THEN
                      IF (USEBUF) THEN
@@ -1453,7 +1453,7 @@
                ENDIF
             ELSEIF (ITYPE .EQ. 3) THEN
                IF (ISIZE .EQ. 2) THEN
- 
+
                ELSEIF (ISIZE .EQ. 4) THEN
                   IF (NBITS .EQ. 32) THEN
                      IF (USEBUF) THEN
@@ -1484,9 +1484,9 @@
                ENDIF
             ELSEIF (ITYPE .EQ. 4) THEN
                IF (ISIZE .EQ. 1) THEN
- 
+
                ELSEIF (ISIZE .EQ. 2) THEN
- 
+
                ELSEIF (ISIZE .EQ. 4) THEN
                   ILOGI = JBYT(IQ(LR2+IFIRST), NB+1, NBITS)
                   IF (ILOGI .EQ. 1) THEN
@@ -2296,7 +2296,7 @@
                   EPRIM=SQRT(ABS(ERR2/SUMP - (CONT/SUMP)**2))
                ELSE
                   EPRIM=SQRT(ABS(ERR2/SUMP))
-               ENDIF                         
+               ENDIF
                IF(EPRIM.LE.0..AND.SUMP.GE.1.)THEN
                   IF(IOPTS.EQ.2)THEN
                      EPRIM=1./SQRT(12.)
@@ -2936,7 +2936,7 @@
       ENDIF
    70 RETURN
       END
- 
+
 *-------------------------------------------------------------------------------
       SUBROUTINE HNBUFR(IDD)
       INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
@@ -3072,7 +3072,7 @@
       CALL HNTMP(IDD)
    50 RETURN
       END
- 
+
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNTRD(INDX, IOFF, IBANK, IERROR)
@@ -3372,7 +3372,7 @@
          RETURN
       ENDIF
  40   END
- 
+
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNTVAR(ID1,IVAR,CHTAG,BLOCK,NSUB,ITYPE,ISIZE,IELEM)
@@ -3673,7 +3673,7 @@
       print*, '>>>>>> CALL HNTMPF(IDD, FATAL)'
 ******CALL HNTMPF(IDD, FATAL)
       END
- 
+
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HNBFWR(IDD)

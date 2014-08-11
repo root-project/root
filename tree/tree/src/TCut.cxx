@@ -72,7 +72,7 @@ TCut::~TCut()
 Bool_t TCut::operator==(const char *rhs) const
 {
    // Comparison.
-   
+
    return fTitle == rhs;
 }
 
@@ -80,7 +80,7 @@ Bool_t TCut::operator==(const char *rhs) const
 Bool_t TCut::operator==(const TCut &rhs) const
 {
    // Comparison.
-   
+
    return fTitle == rhs.fTitle;
 }
 
@@ -88,7 +88,7 @@ Bool_t TCut::operator==(const TCut &rhs) const
 Bool_t TCut::operator!=(const char *rhs) const
 {
    // Comparison.
-   
+
    return fTitle != rhs;
 }
 
@@ -96,7 +96,7 @@ Bool_t TCut::operator!=(const char *rhs) const
 Bool_t TCut::operator!=(const TCut &rhs) const
 {
    // Comparison.
-   
+
    return fTitle != rhs.fTitle;
 }
 
@@ -122,7 +122,7 @@ TCut& TCut::operator=(const TCut& rhs)
 TCut& TCut::operator+=(const char *rhs)
 {
    // Addition.
-   
+
    if (!rhs || !rhs[0]) return *this;
    if (fTitle.Length() == 0)
       fTitle = rhs;
@@ -135,7 +135,7 @@ TCut& TCut::operator+=(const char *rhs)
 TCut& TCut::operator+=(const TCut& rhs)
 {
    // Addition.
-   
+
    if (rhs.fTitle.Length() == 0) return *this;
    if (fTitle.Length() == 0)
       fTitle = rhs;
@@ -174,7 +174,7 @@ TCut& TCut::operator*=(const TCut& rhs)
 TCut operator+(const TCut& lhs, const char *rhs)
 {
    // Addition.
-   
+
    return TCut(lhs) += rhs;
 }
 
@@ -182,7 +182,7 @@ TCut operator+(const TCut& lhs, const char *rhs)
 TCut operator+(const char *lhs, const TCut& rhs)
 {
    // Addition.
-   
+
    return TCut(lhs) += rhs;
 }
 
@@ -190,7 +190,7 @@ TCut operator+(const char *lhs, const TCut& rhs)
 TCut operator+(const TCut& lhs, const TCut& rhs)
 {
    // Addition.
-   
+
    return TCut(lhs) += rhs;
 }
 

@@ -5,5 +5,5 @@
       gui = new HistAction(gClient->GetRoot(),1,1);
    } else {
       printf("Unable to load libHistViewer\n");
-   } 
+   }
 }

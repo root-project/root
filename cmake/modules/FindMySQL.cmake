@@ -13,7 +13,7 @@ if(NOT WIN32)
   find_program(MYSQL_CONFIG_EXECUTABLE mysql_config
     /usr/bin/
     /usr/local/bin
-    ${MYSQL_DIR}/bin $ENV{MYSQL_DIR}/bin 
+    ${MYSQL_DIR}/bin $ENV{MYSQL_DIR}/bin
   )
 endif()
 

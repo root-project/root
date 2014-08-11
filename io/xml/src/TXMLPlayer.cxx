@@ -1019,7 +1019,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(std::ostream& fs, TClass* cl, TStreamerSTL
 
       if (stltyp<0) return false;
    }
-   
+
    Bool_t akaarrayaccess = (narg==1) && (argtype[0]<20);
 
    char tabs[30], tabs2[30];

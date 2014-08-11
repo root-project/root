@@ -24,39 +24,39 @@ const int increment = 10;  // increment factor (multiplicative)
 const int arraysize = int(std::log10(double(maxsize/minsize)))+1;
 
 bool showGraphics = false;
-bool verbose = false; 
+bool verbose = false;
 
 template <typename T> bool testBinarySearch(const int n, double* tTMath, double* tStd)
 {
    std::cout << "Testing size n = " << n <<  "\t(Time / call in microsec.) " << std::endl;
 
    vector<T> k(n);
-   TStopwatch t; 
+   TStopwatch t;
    TRandom2 r( time( 0 ) );
    for ( Int_t i = 0; i < n; i++) {
-      k[i] = (T) r.Integer( maxint ); 
+      k[i] = (T) r.Integer( maxint );
    }
 
    std::sort(k.begin(), k.end());
 
    int npass = npass0/std::log10(double(10*n/minsize));
 
-   int s1 = 0; 
-   t.Start(); 
-   for (int j = 0; j < npass; ++j) { 
+   int s1 = 0;
+   t.Start();
+   for (int j = 0; j < npass; ++j) {
       for ( T elem = 0; elem < maxint; ++elem ) {
          Long_t index = TMath::BinarySearch((Long_t) n, &k[0], elem);
-         s1 += index; 
+         s1 += index;
       }
    }
-   t.Stop(); 
+   t.Stop();
    *tTMath = t.RealTime()/npass*1.E6;
    cout << "TMath::BinarySearch time :\t " << *tTMath << endl;
 //   cout << "sum " << s1 << endl;
 
    int s2 = 0;
-   t.Start(); 
-   for (int j = 0; j < npass; ++j) { 
+   t.Start();
+   for (int j = 0; j < npass; ++j) {
       for ( T elem = 0; elem < maxint; ++elem ) {
          T* pind;
          pind = std::lower_bound(&k[0], &k[n], elem);
@@ -64,7 +64,7 @@ template <typename T> bool testBinarySearch(const int n, double* tTMath, double*
          s2+= index2;
       }
    }
-   t.Stop(); 
+   t.Stop();
    *tStd = t.RealTime()/double(npass)*1.E6;
    std::cout << "std::binary_search time:\t " << *tStd << '\n' << std::endl;
 //   cout << "sum " << s2 << endl;
@@ -84,20 +84,20 @@ bool binarySearchTime()
 
    //cout << (maxsize-minsize)/10 + 1 << endl;
 
-   bool ok = true; 
-   int j = 0; int i = minsize; 
-   while ( i <= maxsize) 
+   bool ok = true;
+   int j = 0; int i = minsize;
+   while ( i <= maxsize)
    {
       ok &= testBinarySearch<Double_t>(i, &tM[j], &tS[j]);
-      index[j] = i; 
+      index[j] = i;
       j++;
       i *= increment;
    }
-   int ntest = j; 
+   int ntest = j;
 
-   if (verbose) { 
+   if (verbose) {
       cout << " TMATH - time  ---  std time " << std::endl;
-      for ( int i = 0; i < ntest; ++i) { 
+      for ( int i = 0; i < ntest; ++i) {
          cout << " size = " << index[i] << " :  " << tM[i] << ' ' << tS[i] << endl;
       }
    }
@@ -113,30 +113,30 @@ bool binarySearchTime()
       gM->SetMarkerStyle(20);
       gM->SetTitle("TMath::BinarySearch()");
       gM->Draw("ALP");
-      
+
       TGraph* gS = new TGraph(arraysize, &index[0], &tS[0]);
       gS->SetLineColor(3);
       gS->SetLineWidth(3);
       gS->SetMarkerStyle(20);
       gS->SetTitle("std::binary_search()");
       gS->Draw("SAME");
-      
+
       TLegend* legend = new TLegend(0.15,0.72,0.4,0.86);
       legend->AddEntry(gM, "TMath::BinarySearch()");
       legend->AddEntry(gS, "std::binary_search()");
       legend->Draw();
-      
+
       gM->SetTitle("Comparision of Searching Time");
       gM->GetXaxis()->SetTitle("Array Size");
       gM->GetYaxis()->SetTitle("Time");
-      
-      
+
+
       c1->Show();
    }
 
-   if (ok) 
+   if (ok)
       cout << "Test done!" << endl;
-   else 
+   else
       cout << "Error: Test Failed!" << endl;
    return ok;
 }
@@ -144,23 +144,23 @@ bool binarySearchTime()
 int main(int argc, char **argv)
 {
 
-  // Parse command line arguments 
+  // Parse command line arguments
   for (Int_t i=1 ;  i<argc ; i++) {
      std::string arg = argv[i] ;
-     if (arg == "-g") { 
+     if (arg == "-g") {
       showGraphics = true;
      }
-     if (arg == "-v") { 
+     if (arg == "-v") {
       showGraphics = true;
       verbose = true;
      }
-     if (arg == "-h") { 
+     if (arg == "-h") {
         cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
         cerr << "  where:\n";
         cerr << "     -g : graphics mode\n";
         cerr << "     -v : verbose  mode";
         cerr << endl;
-        return -1; 
+        return -1;
      }
    }
 
@@ -178,5 +178,5 @@ int main(int argc, char **argv)
       theApp = 0;
    }
 
-   return (ok) ? 0 : 1; 
+   return (ok) ? 0 : 1;
 }

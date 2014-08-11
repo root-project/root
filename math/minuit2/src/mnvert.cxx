@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -16,28 +16,28 @@ namespace ROOT {
    namespace Minuit2 {
 
 
-/** Inverts a symmetric matrix. Matrix is first scaled to have all ones on 
-    the diagonal (equivalent to change of units) but no pivoting is done 
-    since matrix is positive-definite. 
+/** Inverts a symmetric matrix. Matrix is first scaled to have all ones on
+    the diagonal (equivalent to change of units) but no pivoting is done
+    since matrix is positive-definite.
  */
 
 int mnvert(MnAlgebraicSymMatrix& a) {
-  
+
    unsigned int nrow = a.Nrow();
    MnAlgebraicVector s(nrow);
    MnAlgebraicVector q(nrow);
    MnAlgebraicVector pp(nrow);
-   
+
    for(unsigned int i = 0; i < nrow; i++) {
       double si = a(i,i);
       if (si < 0.) return 1;
       s(i) = 1./std::sqrt(si);
    }
-   
+
    for(unsigned int i = 0; i < nrow; i++)
       for(unsigned int j = i; j < nrow; j++)
          a(i,j) *= (s(i)*s(j));
-   
+
    for(unsigned i = 0; i < nrow; i++) {
       unsigned int k = i;
       if(a(k,k) == 0.) return 1;
@@ -61,13 +61,13 @@ int mnvert(MnAlgebraicSymMatrix& a) {
       }
       for(unsigned int j = 0; j < nrow; j++)
          for(k = j; k < nrow; k++)
-            a(j,k) += (pp(j)*q(k)); 
+            a(j,k) += (pp(j)*q(k));
    }
-   
+
    for(unsigned int j = 0; j < nrow; j++)
       for(unsigned int k = j; k < nrow; k++)
-         a(j,k) *= (s(j)*s(k)); 
-   
+         a(j,k) *= (s(j)*s(k));
+
    return 0;
 }
 

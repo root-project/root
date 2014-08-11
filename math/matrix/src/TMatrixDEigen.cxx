@@ -52,7 +52,7 @@ TMatrixDEigen::TMatrixDEigen(const TMatrixD &a)
 // Constructor for eigen-problem of matrix A .
 
    R__ASSERT(a.IsValid());
- 
+
    const Int_t nRows  = a.GetNrows();
    const Int_t nCols  = a.GetNcols();
    const Int_t rowLwb = a.GetRowLwb();

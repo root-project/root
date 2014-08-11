@@ -22,7 +22,7 @@
 
 /////////////////////////// HTML calendar //////////////////////////////////////
 
-TString monthNames[12] = {"January", "February", "March", "April", 
+TString monthNames[12] = {"January", "February", "March", "April",
                           "May", "June", "July", "August", "September",
                           "October", "November", "December"};
 
@@ -30,7 +30,7 @@ TString monthNames[12] = {"January", "February", "March", "April",
 class HtmlDayName {
 public:                 // make them public for shorter code
    TString fDay;        // day name, e.g. "Sunday"
-   TString fAlign;      // name align inside table cell 
+   TString fAlign;      // name align inside table cell
    TString fBgColor;    // cell background color
    TString fFontSize;   // text font size
    TString fFontColor;  // text color
@@ -168,8 +168,8 @@ void HtmlMonthTable::BuildDays()
          fHtml += "<TD align=left width=14% ";
 
          // hightlight today's cell
-         if ((fToday.GetYear() == fYear) && 
-             (fToday.GetMonth() == fMonth) && 
+         if ((fToday.GetYear() == fYear) &&
+             (fToday.GetMonth() == fMonth) &&
              (fToday.GetDay() == day)) {
             fHtml += " bgcolor=" + fTodayColor;
          } else {
@@ -220,7 +220,7 @@ public:
 HtmlCalendar::HtmlCalendar(Int_t year, Int_t month) : fMonthTable(year, month)
 {
    // Constructor.
-   
+
    fYear = year;
    fMonth = month;
 
@@ -235,8 +235,8 @@ HtmlCalendar::HtmlCalendar(Int_t year, Int_t month) : fMonthTable(year, month)
 //______________________________________________________________________________
 void HtmlCalendar::SetDate(Int_t year, Int_t month)
 {
-   // Create calendar for month/year. 
- 
+   // Create calendar for month/year.
+
    fYear = year;
    fMonth = month;
 
@@ -282,7 +282,7 @@ private:
    TGComboBox     *fMonthBox;   // month selector
    TGNumberEntry  *fYearEntry;  // year selector
    TGNumberEntry  *fFontEntry;  // font size selector
-   TGColorSelect  *fTableColor; // selector of background color of table 
+   TGColorSelect  *fTableColor; // selector of background color of table
    TGColorSelect  *fCellColor;  // selector of background color of table's cells
 
 public:
@@ -305,14 +305,14 @@ CalendarWindow::~CalendarWindow()
 }
 
 //______________________________________________________________________________
-CalendarWindow::CalendarWindow() 
+CalendarWindow::CalendarWindow()
 {
    // Main  window.
 
    fMain = new TGMainFrame(gClient->GetRoot(), 10, 10, kVerticalFrame);
    fMain->SetCleanup(kDeepCleanup); // delete all subframes on exit
 
-   // Controls 
+   // Controls
    TGHorizontalFrame *controls = new TGHorizontalFrame(fMain);
    fMain->AddFrame(controls, new TGLayoutHints(kLHintsCenterX, 1, 1, 1, 1));
 
@@ -332,7 +332,7 @@ CalendarWindow::CalendarWindow()
    controls->AddFrame(dateLabel, new TGLayoutHints(kLHintsLeft|kLHintsCenterY,
                                                    5, 2, 2, 2));
 
-   // 
+   //
    fMonthBox = new TGComboBox(controls);
    for (int i = 0; i < 12; i++) {
       fMonthBox->AddEntry(monthNames[i].Data(), i+1);
@@ -340,8 +340,8 @@ CalendarWindow::CalendarWindow()
    fMonthBox->Select(today.GetMonth());
    controls->AddFrame(fMonthBox, new TGLayoutHints(kLHintsLeft, 5, 5, 2, 2));
 
-   fYearEntry = new TGNumberEntry(controls, today.GetYear(), 5, -1, 
-                                  TGNumberFormat::kNESInteger, 
+   fYearEntry = new TGNumberEntry(controls, today.GetYear(), 5, -1,
+                                  TGNumberFormat::kNESInteger,
                                   TGNumberFormat::kNEAPositive,
                                   TGNumberFormat::kNELLimitMin, 1995);
    controls->AddFrame(fYearEntry, new TGLayoutHints(kLHintsLeft, 5, 5, 2, 2));
@@ -350,11 +350,11 @@ CalendarWindow::CalendarWindow()
 
    TGLabel *fontLabel = new TGLabel(controls, "Font Size:");
    controls->AddFrame(fontLabel, new TGLayoutHints(kLHintsLeft|kLHintsCenterY,
-                                                   30, 2, 2, 2));  
+                                                   30, 2, 2, 2));
 
    Int_t fontsize = atoi(fHtmlText->fMonthTable.fCellFontSize.Data());
    fFontEntry = new TGNumberEntry(controls, fontsize, 2, -1,
-                                  TGNumberFormat::kNESInteger, 
+                                  TGNumberFormat::kNESInteger,
                                   TGNumberFormat::kNEAPositive,
                                   TGNumberFormat::kNELLimitMax, 0, 7);
    controls->AddFrame(fFontEntry, new TGLayoutHints(kLHintsLeft, 5, 5, 2, 2));
@@ -380,7 +380,7 @@ CalendarWindow::CalendarWindow()
                                                     5, 2, 2, 2));
 
    // connect signals
-   fMonthBox->Connect("Selected(Int_t)", "CalendarWindow", this, 
+   fMonthBox->Connect("Selected(Int_t)", "CalendarWindow", this,
                       "UpdateHTML()");
    fYearEntry->GetNumberEntry()->Connect("TextChanged(char*)", "CalendarWindow",
                                          this, "UpdateHTML()");

@@ -60,7 +60,7 @@ void transp_text()
       h->GetXaxis()->SetBinLabel(i, people[i - 1]);
 
    h->Draw();
-   
+
    TPaveText * const pt = new TPaveText(0.3, 0.3, 0.98, 0.98, "brNDC");
    //Transparent 'rectangle' with transparent text.
    pt->SetFillColor(grayColorIndex);
@@ -68,7 +68,7 @@ void transp_text()
 
    pt->SetTextSize(0.5);
    pt->SetTextAlign(12);
-   
+
    pt->AddText("Hello");
    pt->Draw();
 }

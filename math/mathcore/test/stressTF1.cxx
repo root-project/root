@@ -13,11 +13,11 @@ using namespace std;
 const double XMIN = 0, XMAX = 2*TMath::Pi();
 const Int_t NB = 100;
 const Int_t REP = 100000;
-const double TNORM = REP / 1000000.; 
+const double TNORM = REP / 1000000.;
 
-double sumTime = 0; 
+double sumTime = 0;
 
-int ncall = 0; 
+int ncall = 0;
 
 
 void DrawFunction(TF1* f1)
@@ -35,7 +35,7 @@ void DrawFunction(TF1* f1)
    TH2F* hpx = new TH2F("hpx", "Sin(x)", NB, XMIN, XMAX, NB, -1,1);
    hpx->SetStats(kFALSE);
    hpx->Draw();
-   
+
    TGraph* gf = new TGraph(NB, x, y);
    gf->SetLineColor(1);
    gf->SetLineWidth(3);
@@ -48,7 +48,7 @@ void DrawFunction(TF1* f1)
    axis->SetLineStyle(2);
    axis->SetTitle("Function: axis");
    axis->Draw("SAME");
-   
+
 }
 
 int PrintStatus(const char* begin, double result, double expected, double time)
@@ -80,7 +80,7 @@ int TestRoot(TF1* f1)
    TStopwatch w;
    double totalTime = 0;
 
-   cout << "ROOT TEST\n" 
+   cout << "ROOT TEST\n"
         << "---------------------------------------------------------"
         << endl;
 
@@ -122,13 +122,13 @@ int TestMaxMin(TF1* f1)
    TStopwatch w;
    double totalTime = 0;
 
-   cout << "MAXMIN TEST\n" 
+   cout << "MAXMIN TEST\n"
         << "---------------------------------------------------------"
         << endl;
 
    w.Start(kTRUE);
    for ( int j = 0; j < REP; ++j ) {
-      ncall = 0; 
+      ncall = 0;
       x = f1->GetMaximumX(XMIN, TMath::Pi());
    }
    w.Stop();
@@ -159,11 +159,11 @@ int TestDerivative(TF1* f1)
    TStopwatch w;
    double totalTime = 0;
 
-   cout << "Derivative TEST\n" 
+   cout << "Derivative TEST\n"
         << "---------------------------------------------------------"
         << endl;
 
-   for ( double i = XMIN; i < XMAX; i += 1.5 )   
+   for ( double i = XMIN; i < XMAX; i += 1.5 )
    {
       w.Start(kTRUE);
       for ( int j = 0; j < REP; ++j )
@@ -188,11 +188,11 @@ int TestIntegral(TF1* f1)
    TStopwatch w;
    double totalTime = 0;
 
-   cout << "Integral TEST\n" 
+   cout << "Integral TEST\n"
         << "---------------------------------------------------------"
         << endl;
 
-   for ( double i = XMIN; i < XMAX; i += 1.5 )   
+   for ( double i = XMIN; i < XMAX; i += 1.5 )
    {
       w.Start(kTRUE);
       for ( int j = 0; j < REP/10; ++j )
@@ -210,13 +210,13 @@ int TestIntegral(TF1* f1)
    return status;
 }
 
-double func(double * x, double * p) { 
-   double xx = *x; 
+double func(double * x, double * p) {
+   double xx = *x;
    ncall++;
-   //return sin(xx)*cos(xx)+ sin(2.*xx)*cos(2.*xx); 
-   return p[0]*sin(xx) + p[1]; 
+   //return sin(xx)*cos(xx)+ sin(2.*xx)*cos(2.*xx);
+   return p[0]*sin(xx) + p[1];
 }
-int stressTF1() 
+int stressTF1()
 {
    int status = 0;
    sumTime = 0;
@@ -225,7 +225,7 @@ int stressTF1()
    TF1* f1 = new TF1("f1", func, XMIN, XMAX,2);
    //DrawFunction(f1);
    double par[2] = {1.,0.};
-   f1->SetParameters(par); 
+   f1->SetParameters(par);
 
    cout << "Starting Tests..." << endl;
 
@@ -236,7 +236,7 @@ int stressTF1()
 
    cout << "End of Tests..." << endl;
    cout << "Total time for all tests: " << sumTime << endl;
-   
+
 
    return status;
 }

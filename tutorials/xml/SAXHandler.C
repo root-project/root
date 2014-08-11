@@ -7,8 +7,8 @@
 // file, if sucessfully parsed.
 //
 // To run this program do:
-// .x SAXHandler.C 
-// 
+// .x SAXHandler.C
+//
 // Requires: saxexample.xml
 //
 //////////////////////////////////////////////////////////////////////////////

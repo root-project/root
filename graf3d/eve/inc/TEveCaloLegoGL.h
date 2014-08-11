@@ -104,7 +104,7 @@ private:
    void    DrawAxis2D(TGLRnrCtx &rnrCtx) const;
    void    DrawHistBase(TGLRnrCtx &rnrCtx) const;
 
-   // highlight 
+   // highlight
    void    DrawSelectedCells(TGLRnrCtx & rnrCtx, TEveCaloData::vCellId_t cells) const;
 
    // top view

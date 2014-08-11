@@ -20,11 +20,11 @@
 // A Chain Index with majorname and minorname.
 // It uses tree indices of all the trees in the chain instead of building
 // a new index.
-// The index values from the first tree should be less then 
+// The index values from the first tree should be less then
 // all the index values from the second tree, and so on.
 // If a tree in the chain doesn't have an index the index will be created
 // and kept inside this chain index.
-// 
+//
 //////////////////////////////////////////////////////////////////////////
 
 
@@ -42,7 +42,7 @@ class TChainIndex : public TVirtualIndex {
 
 public:
    class TChainIndexEntry {
-      // holds a description of indices of trees in the chain. 
+      // holds a description of indices of trees in the chain.
    public:
       TChainIndexEntry() : fMinIndexValue(0), fMinIndexValMinor(0),
                            fMaxIndexValue(0), fMaxIndexValMinor(0),

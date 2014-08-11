@@ -101,7 +101,7 @@ enum ETestCommandIdentifiers {
 
 Int_t mb_button_id[13] = { kMBYes, kMBNo, kMBOk, kMBApply,
                            kMBRetry, kMBIgnore, kMBCancel,
-                           kMBClose, kMBYesAll, kMBNoAll, 
+                           kMBClose, kMBYesAll, kMBNoAll,
                            kMBNewer, kMBAppend, kMBDismiss};
 
 EMsgBoxIcon mb_icon[4] = { kMBIconStop, kMBIconQuestion,
@@ -2319,7 +2319,7 @@ Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h) :
    fL1 = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 3, 3, 3, 3);
    AddFrame(fEdit, fL1);
 
-   // set selected text colors 
+   // set selected text colors
    Pixel_t pxl;
    gClient->GetColorByName("#ccccff", pxl);
    fEdit->SetSelectBack(pxl);

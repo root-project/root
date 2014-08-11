@@ -28,7 +28,6 @@
 #include "Xrd/XrdPoll.hh"
 #include "Xrd/XrdScheduler.hh"
 #include "XrdNet/XrdNet.hh"
-#include "XrdNet/XrdNetPeer.hh"
 #include "XrdOuc/XrdOucRash.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPriv.hh"
@@ -286,7 +285,7 @@ XrdProofdProofServMgr::XrdProofdProofServMgr(XrdProofdManager *mgr,
    fCurrentSessions = 0;
 
    fSeqSessionN = 0;
-   
+
    fCredsSaver = 0;
 
    // Defaults can be changed via 'proofservmgr'
@@ -1271,7 +1270,7 @@ int XrdProofdProofServMgr::DoDirectivePutEnv(char *val, XrdOucStream *cfg, bool)
 
    // Parse env variables to be passed to 'proofserv':
    XrdOucString users, groups, rcval, rcnam;
-   int smi = -1, smx = -1, vmi = -1, vmx = -1; 
+   int smi = -1, smx = -1, vmi = -1, vmx = -1;
    bool hex = 0;
    ExtractEnv(val, cfg, users, groups, rcval, rcnam, smi, smx, vmi, vmx, hex);
 
@@ -1279,7 +1278,7 @@ int XrdProofdProofServMgr::DoDirectivePutEnv(char *val, XrdOucStream *cfg, bool)
    int iequ = rcnam.find('=');
    if (iequ == STR_NPOS) return -1;
    rcnam.erase(iequ);
-   
+
    // Fill entries
    FillEnvList(&fProofServEnvs, rcnam.c_str(), rcval.c_str(),
                                 users.c_str(), groups.c_str(), smi, smx, vmi, vmx, hex);
@@ -1292,20 +1291,20 @@ int XrdProofdProofServMgr::DoDirectivePutRc(char *val, XrdOucStream *cfg, bool)
 {
    // Process 'putrc' directives.
    // Syntax:
-   //    xpd.putrc  [u:<usr1>,<usr2>,...] [g:<grp1>,<grp2>,...] 
+   //    xpd.putrc  [u:<usr1>,<usr2>,...] [g:<grp1>,<grp2>,...]
    //               [s:[svnmin][-][svnmax]] [v:[vermin][-][vermax]] RcVarName RcVarValue
-   // NB: <usr1>,... and <grp1>,... may contain the wild card '*' 
+   // NB: <usr1>,... and <grp1>,... may contain the wild card '*'
 
    if (!val || !cfg)
       // undefined inputs
       return -1;
-   
+
    // Parse rootrc variables to be passed to 'proofserv':
    XrdOucString users, groups, rcval, rcnam;
-   int smi = -1, smx = -1, vmi = -1, vmx = -1; 
+   int smi = -1, smx = -1, vmi = -1, vmx = -1;
    bool hex = 0;
    ExtractEnv(val, cfg, users, groups, rcval, rcnam, smi, smx, vmi, vmx, hex);
-   
+
    // Fill entries
    FillEnvList(&fProofServRCs, rcnam.c_str(), rcval.c_str(),
                                users.c_str(), groups.c_str(), smi, smx, vmi, vmx, hex);
@@ -1322,7 +1321,7 @@ void XrdProofdProofServMgr::ExtractEnv(char *val, XrdOucStream *cfg,
    // Extract env information from the stream 'cfg'
 
    XrdOucString ssvn, sver;
-   int idash = -1; 
+   int idash = -1;
    while (val && val[0]) {
       if (!strncmp(val, "u:", 2)) {
          users = val;
@@ -1381,7 +1380,7 @@ void XrdProofdProofServMgr::FillEnvList(std::list<XpdEnv> *el, const char *nam, 
       TRACE(ALL, "env list undefined!");
       return;
    }
-   
+
    XrdOucString users(usrs), groups(grps);
    // Transform version numbers in the human unreadable format used internally (version code)
    if (vmi > 0) vmi = XpdEnv::ToVersCode(vmi, hex);
@@ -1748,13 +1747,13 @@ void XrdProofdProofServMgr::ParseCreateBuffer(XrdProofdProtocol *p,
 }
 
 //_________________________________________________________________________________
-int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
+int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
 {
    // Handle a request to create a new session
-   XPDLOC(SMGR, "ProofServMgr::CreateFork")
+   XPDLOC(SMGR, "ProofServMgr::Create")
 
    int psid = -1, rc = 0;
-   XPD_SETRESP(p, "CreateFork");
+   XPD_SETRESP(p, "Create");
 
    TRACEP(p, DBG, "enter");
    XrdOucString msg;
@@ -1768,12 +1767,12 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
       int cursess = CurrentSessions();
       TRACEP(p,ALL," cursess: "<<cursess);
       if (mxsess <= cursess) {
-         XPDFORM(msg, " ++++ Max number of sessions reached (%d) - please retry later ++++ \n", cursess); 
+         XPDFORM(msg, " ++++ Max number of sessions reached (%d) - please retry later ++++ \n", cursess);
          response->Send(kXR_attn, kXPD_srvmsg, (char *) msg.c_str(), msg.length());
          response->Send(kXP_TooManySess, "cannot start a new session");
          return 0;
       }
-      // If we fail this guarantees that the counters are decreased, if needed 
+      // If we fail this guarantees that the counters are decreased, if needed
       mcGuard.Set(&fCurrentSessions);
    }
 
@@ -1795,7 +1794,7 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
    // Parse buffer
    int intwait;
    XrdOucString tag, ord, cffile, uenvs;
-   ParseCreateBuffer(p, xps, tag, ord, cffile, uenvs, intwait); 
+   ParseCreateBuffer(p, xps, tag, ord, cffile, uenvs, intwait);
 
    // Notify
    TRACEP(p, DBG, "{ord,cfg,psid,cid,log}: {"<<ord<<","<<cffile<<","<<psid
@@ -1967,7 +1966,7 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
          exit(1);
       }
       TRACE(FORK, (int)getpid() << ": proofserv env set up");
-      
+
       // Setup OK: now we go
       // Communicate the logfile path
       if (fcp.Post(1, xps->Fileout()) != 0) {
@@ -1986,7 +1985,7 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
       // Close pipes
       fpc.Close();
       fcp.Close();
-      
+
       TRACE(FORK, (int)getpid()<<": user: "<<p->Client()->User()<<
                   ", uid: "<<getuid()<<", euid:"<<geteuid()<<
                   ", psrv: "<<xps->ROOT()->PrgmSrv()<<", argvv[1]: "<<argvv[1]);
@@ -2023,7 +2022,7 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
    // Log prefix
    XrdOucString npfx;
    XPDFORM(npfx, "%s-%s:", (p->ConnType() == kXPD_MasterWorker) ? "wrk" : "mst", xps->Ordinal());
-   
+
    // Cleanup current socket, if any
    if (xps->UNIXSock()) {
       TRACEP(p, FORK,"current UNIX sock: "<<xps->UNIXSock() <<", path: "<<xps->UNIXSockPath());
@@ -2084,7 +2083,7 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
          TRACEP(p, XERR, emsg.c_str());
       }
    }
-   // Communicate sockpath or failure, if any 
+   // Communicate sockpath or failure, if any
    if (!pathrc) {
       // Communicate the path to child
       if ((pathrc = fpc.Post(0, sockpath.c_str())) != 0) {
@@ -2101,7 +2100,7 @@ int XrdProofdProofServMgr::CreateFork(XrdProofdProtocol *p)
          TRACEP(p, XERR, emsg.c_str());
       }
    }
-   
+
    if (pathrc != 0) {
       // Failure
       xps->Reset();
@@ -2277,7 +2276,7 @@ int XrdProofdProofServMgr::CreateAdminPath(XrdProofdProofServ *xps,
                                            XrdProofdProtocol *p, int pid,
                                            XrdOucString &emsg)
 {
-   // Create the admin path for the starting session 
+   // Create the admin path for the starting session
    // Return 0 on success, -1 on error (error message in 'emsg')
 
    XrdOucString path;
@@ -2292,13 +2291,13 @@ int XrdProofdProofServMgr::CreateAdminPath(XrdProofdProofServ *xps,
    // Done
    return 0;
 }
- 
+
 //_________________________________________________________________________________
 int XrdProofdProofServMgr::CreateSockPath(XrdProofdProofServ *xps,
                                           XrdProofdProtocol *p,
                                           unsigned int seq, XrdOucString &emsg)
 {
-   // Create the socket path for the starting session 
+   // Create the socket path for the starting session
    // Return 0 on success, -1 on error (error message in 'emsg')
    XPDLOC(SMGR, "ProofServMgr::CreateSockPath")
 
@@ -2328,6 +2327,7 @@ int XrdProofdProofServMgr::CreateSockPath(XrdProofdProofServ *xps,
    return 0;
 }
 
+#if 0
 //_________________________________________________________________________________
 int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
 {
@@ -2347,7 +2347,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       }
       return CreateFork(p);
    }
-   
+
    TRACEP(p, DBG, "enter");
    XrdOucString msg;
 
@@ -2360,12 +2360,12 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       int cursess = CurrentSessions();
       TRACEP(p,ALL," cursess: "<<cursess);
       if (mxsess <= cursess) {
-         XPDFORM(msg, " ++++ Max number of sessions reached (%d) - please retry later ++++ \n", cursess); 
+         XPDFORM(msg, " ++++ Max number of sessions reached (%d) - please retry later ++++ \n", cursess);
          response->Send(kXR_attn, kXPD_srvmsg, (char *) msg.c_str(), msg.length());
          response->Send(kXP_TooManySess, "cannot start a new session");
          return 0;
       }
-      // If we fail this guarantees that the counters are decreased, if needed 
+      // If we fail this guarantees that the counters are decreased, if needed
       mcGuard.Set(&fCurrentSessions);
    }
 
@@ -2387,7 +2387,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    // Parse buffer
    int intwait;
    XrdOucString tag, ord, cffile, uenvs;
-   ParseCreateBuffer(p, xps, tag, ord, cffile, uenvs, intwait); 
+   ParseCreateBuffer(p, xps, tag, ord, cffile, uenvs, intwait);
 
    // Notify
    TRACEP(p, ALL, "{ord,cfg,psid,cid,log}: {"<<ord<<","<<cffile<<","<<psid
@@ -2430,8 +2430,8 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
       XPDFORM(envfile, "%s/%s-%s-%s.env", in.fSessionDir.c_str(), ndtype, xps->Ordinal(),  in.fSessionTag.c_str());
    }
 
-   TRACE(ALL, "RC: "<< rcfile); 
-   TRACE(ALL, "env: "<< envfile); 
+   TRACE(ALL, "RC: "<< rcfile);
+   TRACE(ALL, "env: "<< envfile);
    // Create the RC-file ...
    if (CreateProofServRootRc(p, &in, rcfile.c_str()) != 0) {
       // Failure: reset the instance
@@ -2475,9 +2475,9 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
          XPDFORM(errlog, "%s.errlog", in.fSessionDir.c_str());
       }
    }
-   TRACE(ALL, "sessdir: "<< sessdir); 
-   TRACE(ALL, "errlog: "<< errlog); 
-   
+   TRACE(ALL, "sessdir: "<< sessdir);
+   TRACE(ALL, "errlog: "<< errlog);
+
    // Launch the proofserv
    XrdNetPeer *peersrv = 0;
    int pid = -1;
@@ -2614,6 +2614,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    // Over
    return 0;
 }
+#endif
 
 //_________________________________________________________________________________
 void XrdProofdProofServMgr::SendErrLog(const char *errlog, XrdProofdResponse *r)
@@ -2659,7 +2660,7 @@ void XrdProofdProofServMgr::SendErrLog(const char *errlog, XrdProofdResponse *r)
    close(ierr);
    emsg = "------------------------------------------------";
    r->Send(kXR_attn, kXPD_srvmsg, 2, (char *) emsg.c_str(), emsg.length());
-      
+
    // Done
    return;
 }
@@ -2796,6 +2797,7 @@ int XrdProofdProofServMgr::Recover(XpdClientSessions *cl)
    return nr;
 }
 
+#ifndef ROOT_XrdFour
 //______________________________________________________________________________
 int XrdProofdProofServMgr::AcceptPeer(XrdProofdProofServ *xps,
                                       int to, XrdOucString &msg)
@@ -2907,6 +2909,115 @@ int XrdProofdProofServMgr::SetupProtocol(XrdNetPeer &peerpsrv,
    return 0;
 }
 
+#else
+
+//______________________________________________________________________________
+int XrdProofdProofServMgr::AcceptPeer(XrdProofdProofServ *xps,
+                                      int to, XrdOucString &msg)
+{
+   // Accept a callback from a starting-up server and setup the related protocol
+   // object. Used for old servers.
+   // Return 0 if successful or -1 in case of failure.
+   XPDLOC(SMGR, "ProofServMgr::AcceptPeer")
+
+   // We will get back a peer to initialize a link
+   XrdNetAddr netaddr;
+
+   // Check inputs
+   if (!xps || !xps->UNIXSock()) {
+      XPDFORM(msg, "session pointer undefined or socket invalid: %p", xps);
+      return -1;
+   }
+   TRACE(REQ, "waiting for server callback for "<<to<<" secs ... on "<<xps->UNIXSockPath());
+
+   // Perform regular accept
+   if (!(xps->UNIXSock()->Accept(netaddr, 0, to))) {
+      msg = "timeout";
+      return -1;
+   }
+
+   // Setup the protocol serving this peer
+   if (SetupProtocol(netaddr, xps, msg) != 0) {
+      msg = "could not assert connected peer: ";
+      return -1;
+   }
+
+   // Done
+   return 0;
+}
+
+//______________________________________________________________________________
+int XrdProofdProofServMgr::SetupProtocol(XrdNetAddr &netaddr,
+                                         XrdProofdProofServ *xps, XrdOucString &msg)
+{
+   // Setup the protocol object serving the peer described by 'peerpsrv'
+   XPDLOC(SMGR, "ProofServMgr::SetupProtocol")
+
+   // We will get back a peer to initialize a link
+   XrdLink   *linkpsrv = 0;
+   XrdProtocol *xp = 0;
+   int lnkopts = 0;
+   bool go = 1;
+
+   // Allocate a new network object
+   if (!(linkpsrv = XrdLink::Alloc(netaddr, lnkopts))) {
+      msg = "could not allocate network object: ";
+      go = 0;
+   }
+
+   if (go) {
+      TRACE(DBG, "connection accepted: matching protocol ... ");
+      // Get a protocol object off the stack (if none, allocate a new one)
+      XrdProofdProtocol *p = new XrdProofdProtocol();
+      if (!(xp = p->Match(linkpsrv))) {
+         msg = "match failed: protocol error: ";
+         go = 0;
+      }
+      delete p;
+   }
+
+   if (go) {
+      // Save path into the protocol instance: it may be needed during Process
+      XrdOucString apath(xps->AdminPath());
+      apath += ".status";
+      ((XrdProofdProtocol *)xp)->SetAdminPath(apath.c_str());
+      // Take a short-cut and process the initial request as a sticky request
+      if (xp->Process(linkpsrv) != 0) {
+         msg = "handshake with internal link failed: ";
+         go = 0;
+      }
+   }
+
+   // Attach this link to the appropriate poller and enable it.
+   if (go && !XrdPoll::Attach(linkpsrv)) {
+      msg = "could not attach new internal link to poller: ";
+      go = 0;
+   }
+
+   if (!go) {
+      // Close the link
+      if (linkpsrv)
+         linkpsrv->Close();
+      return -1;
+   }
+
+   // Tight this protocol instance to the link
+   linkpsrv->setProtocol(xp);
+
+   TRACE(REQ, "Protocol "<<xp<<" attached to link "<<linkpsrv<<" ("<< netaddr.Name() <<")");
+
+   // Schedule it
+   fMgr->Sched()->Schedule((XrdJob *)linkpsrv);
+
+   // Save the protocol in the session instance
+   xps->SetProtocol((XrdProofdProtocol *)xp);
+
+   // Done
+   return 0;
+}
+
+#endif
+
 //______________________________________________________________________________
 int XrdProofdProofServMgr::Detach(XrdProofdProtocol *p)
 {
@@ -2985,8 +3096,8 @@ static int WriteSessEnvs(const char *, XpdEnv *env, void *s)
    XPDLOC(SMGR, "WriteSessEnvs")
 
    XrdOucString emsg;
-   
-   XpdWriteEnv_t *xwe = (XpdWriteEnv_t *)s;  
+
+   XpdWriteEnv_t *xwe = (XpdWriteEnv_t *)s;
 
    if (env && xwe && xwe->fMgr && xwe->fClient &&  xwe->fEnv) {
       if (env->fEnv.length() > 0) {
@@ -3396,7 +3507,7 @@ void XrdProofdProofServMgr::GetTagDirs(int pid,
          // If the child, make sure the directory exists ...
          if (XrdProofdAux::AssertDir(sessiondir.c_str(), p->Client()->UI(),
                                     fMgr->ChangeOwn()) == -1) {
-            TRACE(XERR, "problems asserting dir '"<<sessiondir<<"' - errno: "<<errno);  
+            TRACE(XERR, "problems asserting dir '"<<sessiondir<<"' - errno: "<<errno);
             return;
          }
       }
@@ -3429,9 +3540,9 @@ void XrdProofdProofServMgr::GetTagDirs(int pid,
          XPDFORM(sesswrkdir, "%s/master-%s-%s", sessiondir.c_str(), xps->Ordinal(), sesstag.c_str());
       }
    } else {
-      TRACE(XERR, "negative pid ("<<pid<<"): should not have got here!");  
+      TRACE(XERR, "negative pid ("<<pid<<"): should not have got here!");
    }
-   
+
    // Done
    return;
 }
@@ -3541,7 +3652,7 @@ int XrdProofdProofServMgr::SetProofServEnv(XrdProofdProtocol *p, void *input)
                      " last session (errno: "<<errno<<")");
       }
    }
-   
+
    // We are done
    TRACE(REQ, "done");
    return 0;
@@ -3564,7 +3675,7 @@ int XrdProofdProofServMgr::CreateProofServEnvFile(XrdProofdProtocol *p, void *in
 
    // Attach the structure
    ProofServEnv_t *in = (ProofServEnv_t *)input;
-   
+
    // Session proxy
    XrdProofdProofServ *xps = in->fPS;
    if (!xps) {
@@ -3682,7 +3793,7 @@ int XrdProofdProofServMgr::CreateProofServEnvFile(XrdProofdProtocol *p, void *in
          XPDFORM(uh, "%s@%s", fMgr->EffectiveUser(), fMgr->Host());
       } else {
          XPDFORM(uh, "<effuser>@%s", fMgr->Host());
-      } 
+      }
       XPDFORM(locdatasrv, "rootd://%s:%d", uh.c_str(), fMgr->Port());
    }
    int nrk = fMgr->ResolveKeywords(locdatasrv, p->Client());
@@ -3774,7 +3885,7 @@ int XrdProofdProofServMgr::CreateProofServEnvFile(XrdProofdProtocol *p, void *in
 
    // Close file
    fclose(fenv);
-   
+
    // We are done
    return 0;
 }
@@ -3795,7 +3906,7 @@ int XrdProofdProofServMgr::CreateProofServRootRc(XrdProofdProtocol *p,
 
    // Attach the structure
    ProofServEnv_t *in = (ProofServEnv_t *)input;
-   
+
    // Session proxy
    XrdProofdProofServ *xps = in->fPS;
    if (!xps) {
@@ -4042,7 +4153,7 @@ int XrdProofdProofServMgr::CreateProofServRootRc(XrdProofdProtocol *p,
 
    // Done with this
    fclose(frc);
-   
+
    // Done
    return 0;
 }
@@ -4483,7 +4594,7 @@ int XrdProofdProofServMgr::SetUserOwnerships(XrdProofdProtocol *p,
 
    TRACE(REQ, "enter");
 
-   // If applicable, make sure that the private dataset dir for this user exists 
+   // If applicable, make sure that the private dataset dir for this user exists
    // and has the right permissions
    if (fMgr->DataSetSrcs()->size() > 0) {
       XrdProofUI ui;
@@ -4516,7 +4627,7 @@ int XrdProofdProofServMgr::SetUserOwnerships(XrdProofdProtocol *p,
       }
    }
 
-   // If applicable, make sure that the private data dir for this user exists 
+   // If applicable, make sure that the private data dir for this user exists
    // and has the right permissions
    if (fMgr->DataDir() && strlen(fMgr->DataDir()) > 0 &&
        fMgr->DataDirOpts() && strlen(fMgr->DataDirOpts()) > 0 && ord && stag) {
@@ -5168,14 +5279,14 @@ int XpdEnv::Matches(const char *usr, const char *grp, int svn, int ver)
 
    // Check the subversion number
    TRACE(HDBG, fEnv <<", svn:"<<svn);
-   if (fSvnMin > 0 && svn < fSvnMin) return -1; 
-   if (fSvnMax > 0 && svn > fSvnMax) return -1; 
+   if (fSvnMin > 0 && svn < fSvnMin) return -1;
+   if (fSvnMax > 0 && svn > fSvnMax) return -1;
 
    // Check the version code
    TRACE(HDBG, fEnv <<", ver:"<<ver);
-   if (fVerMin > 0 && ver < fVerMin) return -1; 
-   if (fVerMax > 0 && ver > fVerMax) return -1; 
-   
+   if (fVerMin > 0 && ver < fVerMin) return -1;
+   if (fVerMax > 0 && ver > fVerMax) return -1;
+
    // If we are here then it matches
    return nmtc;
 }
@@ -5185,7 +5296,7 @@ int XpdEnv::ToVersCode(int ver, bool hex)
 {
    // Transform version number ver (format patch + 100*minor + 10000*maj, e.g. 52706)
    // If 'hex' is true, the components are decoded as hex numbers
-   
+
    int maj = -1, min = -1, ptc = -1, xv = ver;
    if (hex) {
       maj = xv / 65536;
@@ -5208,7 +5319,7 @@ void XpdEnv::Print(const char *what)
 {
    // Print the content of this env
    XPDLOC(SMGR, what)
-   
+
    XrdOucString vmi("-1"), vmx("-1");
    if (fVerMin > 0) {
       int maj = (fVerMin >> 16);

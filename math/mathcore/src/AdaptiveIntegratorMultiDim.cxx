@@ -14,33 +14,33 @@ namespace Math {
 
 
 AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim(double absTol, double relTol, unsigned int maxpts, unsigned int size):
-   fDim(0), 
-   fMinPts(0), 
+   fDim(0),
+   fMinPts(0),
    fMaxPts(maxpts),
-   fSize(size), 
+   fSize(size),
    fAbsTol(absTol),
    fRelTol(relTol),
-   fResult(0), 
+   fResult(0),
    fError(0), fRelError(0),
    fNEval(0),
    fStatus(-1),
    fFun(0)
 {
    // constructor - without passing a function
-   if (fAbsTol <= 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance(); 
-   if (fRelTol <= 0) fRelTol = ROOT::Math::IntegratorMultiDimOptions::DefaultRelTolerance(); 
-   if (fMaxPts == 0) fMaxPts = ROOT::Math::IntegratorMultiDimOptions::DefaultNCalls(); 
-   if (fSize   == 0) fSize = ROOT::Math::IntegratorMultiDimOptions::DefaultWKSize(); 
+   if (fAbsTol <= 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance();
+   if (fRelTol <= 0) fRelTol = ROOT::Math::IntegratorMultiDimOptions::DefaultRelTolerance();
+   if (fMaxPts == 0) fMaxPts = ROOT::Math::IntegratorMultiDimOptions::DefaultNCalls();
+   if (fSize   == 0) fSize = ROOT::Math::IntegratorMultiDimOptions::DefaultWKSize();
 }
 
 AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim( const IMultiGenFunction &f, double absTol, double relTol, unsigned int maxpts, unsigned int size):
-   fDim(f.NDim()), 
-   fMinPts(0), 
+   fDim(f.NDim()),
+   fMinPts(0),
    fMaxPts(maxpts),
    fSize(size),
    fAbsTol(absTol),
    fRelTol(relTol),
-   fResult(0), 
+   fResult(0),
    fError(0), fRelError(0),
    fNEval(0),
    fStatus(-1),
@@ -48,10 +48,10 @@ AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim( const IMultiGenFunction 
 {
    // constructur passing a multi-dimensional function interface
    // constructor - without passing a function
-   if (fAbsTol <= 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance(); 
-   if (fRelTol <= 0) fRelTol = ROOT::Math::IntegratorMultiDimOptions::DefaultRelTolerance(); 
-   if (fMaxPts == 0) fMaxPts = ROOT::Math::IntegratorMultiDimOptions::DefaultNCalls(); 
-   if (fSize   == 0) fSize = ROOT::Math::IntegratorMultiDimOptions::DefaultWKSize(); 
+   if (fAbsTol <= 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance();
+   if (fRelTol <= 0) fRelTol = ROOT::Math::IntegratorMultiDimOptions::DefaultRelTolerance();
+   if (fMaxPts == 0) fMaxPts = ROOT::Math::IntegratorMultiDimOptions::DefaultNCalls();
+   if (fSize   == 0) fSize = ROOT::Math::IntegratorMultiDimOptions::DefaultWKSize();
 }
 
 
@@ -81,7 +81,7 @@ double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double *
    //     an N-dimensional rectangular region, J. Comput. Appl. Math. 6 (1980) 295-302.
    //   2.A. van Doren and L. de Ridder, An adaptive algorithm for numerical
    //     integration over an n-dimensional cube, J.Comput. Appl. Math. 2 (1976) 207-217.
-  
+
    //to be changed later
    unsigned int n=fDim;
    bool kFALSE = false;
@@ -141,8 +141,8 @@ double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double *
    nfnevl = 0;
    relerr = 0;
    // does not work for 1D functions
-   if (n < 2 || n > 15) { 
-      MATH_WARN_MSGVAL("AdaptiveIntegratorMultiDim::Integral","Wrong function dimension",n); 
+   if (n < 2 || n > 15) {
+      MATH_WARN_MSGVAL("AdaptiveIntegratorMultiDim::Integral","Wrong function dimension",n);
       return 0;
    }
 
@@ -157,7 +157,7 @@ double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double *
    unsigned int isbrgs = irgnst;
 
 
-   unsigned int minpts = fMinPts; 
+   unsigned int minpts = fMinPts;
    unsigned int maxpts = std::max(fMaxPts, irlcls) ;//specified maximal number of function evaluations
 
    if (minpts < 1)      minpts = irlcls;
@@ -170,7 +170,7 @@ double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double *
    unsigned int iwk = std::max( fSize, irgnst*(1 +maxpts/irlcls)/2 );
    double *wk = new double[iwk+10];
 
-   unsigned int j; 
+   unsigned int j;
    for (j=0; j<n; j++) {
       ctr[j] = (xmax[j] + xmin[j])*0.5;//center of a hypercube
       wth[j] = (xmax[j] - xmin[j])*0.5;//its width
@@ -180,7 +180,7 @@ double AdaptiveIntegratorMultiDim::DoIntegral(const double* xmin, const double *
    double rgncmp=0, rgnval, rgnerr;
 
    unsigned int j1, k, l, m, idvaxn=0, idvax0=0, isbtmp, isbtpp;
- 
+
    //InitArgs(z,fParams);
 
 L20:
@@ -204,7 +204,7 @@ L20:
       if (absValue) f2 += std::abs((*fFun)(z));
       else          f2 += (*fFun)(z);
       wthl[j] = xl4*wth[j];
-      z[j]    = ctr[j] - wthl[j]; 
+      z[j]    = ctr[j] - wthl[j];
       if (absValue) f3 = std::abs((*fFun)(z));
       else          f3 = (*fFun)(z);
       z[j]    = ctr[j] + wthl[j];
@@ -300,7 +300,7 @@ L140:
    }
 
 L160: //to divide or not
-   wk[isbrgn-1] = rgnerr;//storing value & error in last 
+   wk[isbrgn-1] = rgnerr;//storing value & error in last
    wk[isbrgn-2] = rgnval;//table records
    wk[isbrgn-3] = double(idvaxn);//coordinate with biggest error
    for (j=0;j<n;j++) {
@@ -355,12 +355,12 @@ L160: //to divide or not
    fRelError = relerr;
    fNEval = nfnevl;
    delete [] wk;
-  
+
    return result;         //an approximate value of the integral
 }
 
 
-  
+
 double AdaptiveIntegratorMultiDim::Integral(const IMultiGenFunction &f, const double* xmin, const double * xmax)
 {
    // calculate integral passing a function object
@@ -369,15 +369,15 @@ double AdaptiveIntegratorMultiDim::Integral(const IMultiGenFunction &f, const do
 
 }
 
-ROOT::Math::IntegratorMultiDimOptions  AdaptiveIntegratorMultiDim::Options() const { 
+ROOT::Math::IntegratorMultiDimOptions  AdaptiveIntegratorMultiDim::Options() const {
    // return the used options
-   ROOT::Math::IntegratorMultiDimOptions opt; 
-   opt.SetAbsTolerance(fAbsTol); 
-   opt.SetRelTolerance(fRelTol); 
-   opt.SetNCalls(fMaxPts); 
-   opt.SetWKSize(fSize); 
+   ROOT::Math::IntegratorMultiDimOptions opt;
+   opt.SetAbsTolerance(fAbsTol);
+   opt.SetRelTolerance(fRelTol);
+   opt.SetNCalls(fMaxPts);
+   opt.SetWKSize(fSize);
    opt.SetIntegrator("ADAPTIVE");
-   return opt; 
+   return opt;
 }
 
 void AdaptiveIntegratorMultiDim::SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt)
@@ -386,7 +386,7 @@ void AdaptiveIntegratorMultiDim::SetOptions(const ROOT::Math::IntegratorMultiDim
    if (opt.IntegratorType() != IntegrationMultiDim::kADAPTIVE) {
       MATH_ERROR_MSG("AdaptiveIntegratorMultiDim::SetOptions","Invalid options");
       return;
-   }      
+   }
    SetAbsTolerance( opt.AbsTolerance() );
    SetRelTolerance( opt.RelTolerance() );
    SetMaxPts( opt.NCalls() );

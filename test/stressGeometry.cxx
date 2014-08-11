@@ -1,7 +1,7 @@
 // Program to check a TGeo geometry
 // The first time you run this program, the geometry files will be taken
 // from http://root.cern.ch/files
-//   
+//
 //    How the program works
 // If the file <geom_name>_ref.root does not exist, it is generated. The file
 // contains a TTree with Npoints (default=100000) obtained with the following
@@ -10,7 +10,7 @@
 //   -a direction theta, phi is generated uniformly in -2pi<phi<2pi and 0<theta<pi
 //   -gGeoManager finds the geometry path for the point
 //   -the number of boundaries (nbound), total length (length), safety distance
-// from the starting point (safe) and number of radiation lengths (rad) from x,y,z 
+// from the starting point (safe) and number of radiation lengths (rad) from x,y,z
 // is calculated to the exit of the detector. The total number of crossings, detector
 // weight and total number of radiation lengths for all tracks are stored as user info in the tree.
 //
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 }
 
 #endif
-   
+
 // data structure for one point
 typedef struct {
    Double_t x,y,z,theta,phi;      // Initial track position and direction
@@ -75,9 +75,9 @@ typedef struct {
    Float_t  rad;                  // Number of radiation lengths up to exit
 } p_t;
 p_t p;
-  
+
 const Int_t NG = 33;
-const char *exps[NG] = {"aleph",  
+const char *exps[NG] = {"aleph",
                         "barres",
                         "felix",
                         "phenix",
@@ -95,21 +95,21 @@ const char *exps[NG] = {"aleph",
                         "wa91",
                         "sdc",
                         "integral",
-                        "ams", 
+                        "ams",
                         "brahms",
                         "gem",
                         "tesla",
                         "btev",
-                        "cdf",  
-                        "hades2", 
+                        "cdf",
+                        "hades2",
                         "lhcbfull",
-                        "star", 
-                        "sld",   
-                        "cms",   
+                        "star",
+                        "sld",
+                        "cms",
                         "alice3",
-                        "babar2", 
+                        "babar2",
                         "belle",
-                        "atlas" 
+                        "atlas"
 };
 const Int_t versions[NG] =  {4, //aleph
                              3, //barres
@@ -212,12 +212,12 @@ Double_t boxes[NG][3] = {{600,600,500},     // aleph
                          {300,300,400},     // babar2
                          {440,440,538},     // belle
                          {1000,1000,1500}   // atlas
-};                     
+};
 // Total and reference times
 Double_t tpstot = 0;
 Double_t tpsref = 112.1; //time including the generation of the ref files
 Bool_t testfailed = kFALSE;
-                         
+
 Int_t iexp[NG];
 Bool_t gen_ref=kFALSE;
 void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, Int_t &nbound, Float_t &length, Float_t &safe, Float_t &rad, Bool_t verbose=kFALSE);
@@ -229,7 +229,7 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
    TGeoManager::SetVerboseLevel(0);
    gen_ref = generate_ref;
    gErrorIgnoreLevel = 10;
-   
+
    fprintf(stderr,"******************************************************************\n");
    fprintf(stderr,"* STRESS GEOMETRY\n");
    TString opt = exp;
@@ -254,20 +254,20 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
       if (gGeoManager) {
          delete gGeoManager;
          gGeoManager = 0;
-      }   
+      }
       TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname.Data()));
       if (!gGeoManager) return;
-         
+
       fname = TString::Format("files/%s_ref_%d.root", exps[i],versions[i]);
-      
+
       if (gen_ref || !TFile::Open(Form("http://root.cern.ch/files/%s_ref_%d.root",exps[i],versions[i]),"CACHEREAD")) {
          if (!gen_ref) fprintf(stderr,"File: %s does not exist, generating it\n", fname.Data());
          else               fprintf(stderr,"Generating reference file %s\n", fname.Data());
          WriteRef(i);
       }
-   
+
       ReadRef(i);
-   }   
+   }
    if (all && tpstot>0) {
       Float_t rootmarks = 800*tpsref/tpstot;
       Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
@@ -308,12 +308,12 @@ void ReadRef(Int_t kexp) {
       fname = TString::Format("http://root.cern.ch/files/%s_ref_%d.root", exps[kexp],versions[kexp]);
    else
       fname.Format("files/%s_ref_%d.root", exps[kexp],versions[kexp]);
-   
+
    f = TFile::Open(fname,"CACHEREAD");
    if (!f) {
       fprintf(stderr,"Reference file %s not found ! Skipping.\n", fname.Data());
       return;
-   }   
+   }
    // fprintf(stderr,"Reference file %s found\n", fname.Data());
    fname = TString::Format("%s_diff.root", exps[kexp]);
    TFile fdiff(fname,"RECREATE");
@@ -326,7 +326,7 @@ void ReadRef(Int_t kexp) {
    if (!vref) {
       fprintf(stderr," ERROR: User info not found, regenerate reference file\n");
       return;
-   }   
+   }
    TVectorD vect(4);
    TVectorD vect_ref = *vref;
    Int_t nbound;
@@ -349,7 +349,7 @@ void ReadRef(Int_t kexp) {
       diff += TMath::Abs(length-p.length);
       diff += TMath::Abs(safe-p.safe);
       diff += TMath::Abs(rad-p.rad);
-      if (((p.rad>0) && (TMath::Abs(rad-p.rad)/p.rad)>diffmax) || 
+      if (((p.rad>0) && (TMath::Abs(rad-p.rad)/p.rad)>diffmax) ||
            TMath::Abs(nbound-p.nbound)>100) {
          nbad++;
          if (nbad < 10) {
@@ -365,7 +365,7 @@ void ReadRef(Int_t kexp) {
          p.safe   = safe;
          p.rad    = rad;
          TD->Fill();
-      }    
+      }
    }
    diff = 0.;
    //for (Int_t j=1; j<4; j++) diff += TMath::Abs(vect_ref(j)-vect(j));
@@ -375,17 +375,17 @@ void ReadRef(Int_t kexp) {
       fprintf(stderr,"Total nbound=%g   ref=%g\n", vect(1), vect_ref(1));
       fprintf(stderr,"Total length=%g   ref=%g\n", vect(2), vect_ref(2));
       fprintf(stderr,"Total    rad=%g   ref=%g\n", vect(3), vect_ref(3));
-      nbad++;  
-   }   
-      
+      nbad++;
+   }
+
    if (nbad) {
       testfailed = kTRUE;
       TD->AutoSave();
       TD->Print();
-   }   
+   }
    delete TD;
    delete f;
-   
+
    Double_t cp = sw.CpuTime();
    tpstot += cp;
    if (nbad > 0) fprintf(stderr,"*     stress %-15s  found %5d bad points ............. failed\n",exps[kexp],nbad);
@@ -427,7 +427,7 @@ void WriteRef(Int_t kexp) {
          T->Fill();
          i++;
       }
-   }   
+   }
    T->AutoSave();
    T->GetUserInfo()->Remove(&vect);
 //   T->Print();
@@ -457,13 +457,13 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
       fprintf(stderr,"Track: (%15.10f,%15.10f,%15.10f,%15.10f,%15.10f,%15.10f)\n",
                        x,y,z,xp,yp,zp);
       path = gGeoManager->GetPath();
-   }                    
+   }
    TGeoNode *nextnode = gGeoManager->GetCurrentNode();
    safe = gGeoManager->Safety();
    while (nextnode) {
       med = 0;
       if (nextnode) med = nextnode->GetVolume()->GetMedium();
-      else return;      
+      else return;
       shape = nextnode->GetVolume()->GetShape();
       lastnode = nextnode;
       nextnode = gGeoManager->FindNextBoundaryAndStep();
@@ -478,12 +478,12 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
             if (snext<1.E-8) continue;
             // We managed to cross the layer
             ismall = 0;
-         } else {  
+         } else {
             // Relocate point
             if (ismall > 3) {
                fprintf(stderr,"ERROR: Small steps in: %s shape=%s\n",gGeoManager->GetPath(), shape->ClassName());
                return;
-            }   
+            }
             memcpy(pt,gGeoManager->GetCurrentPoint(),3*sizeof(Double_t));
             const Double_t *dir = gGeoManager->GetCurrentDirection();
             for (Int_t i=0;i<3;i++) pt[i] += epsil*dir[i];
@@ -499,12 +499,12 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
 //            fprintf(stderr,"Woops - out\n");
                gGeoManager->CdUp();
                nextnode = gGeoManager->GetCurrentNode();
-            }   
+            }
             continue;
-         }   
+         }
       } else {
          ismall = 0;
-      }      
+      }
       nbound++;
       length += snext;
       if (med) {
@@ -514,19 +514,19 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
             rad += lastrad*snext;
          } else {
             lastrad = 0.;
-         }      
+         }
          if (verbose) {
             fprintf(stderr," STEP #%d: %s\n",nbound, path.Data());
             fprintf(stderr,"    step=%g  length=%g  rad=%g %s\n", snext,length,
                    med->GetMaterial()->GetDensity()*snext/med->GetMaterial()->GetRadLen(),med->GetName());
             path =  gGeoManager->GetPath();
-         }   
+         }
       }
-   }   
+   }
 }
-  
+
 void InspectDiff(const char* exp="alice",Long64_t ientry=-1) {
-   Int_t nbound = 0;   
+   Int_t nbound = 0;
    Float_t length = 0.;
    Float_t safe   = 0.;
    Float_t rad    = 0.;
@@ -536,7 +536,7 @@ void InspectDiff(const char* exp="alice",Long64_t ientry=-1) {
    } else {
       TGeoManager::Import(fname);
    }
-   fname = TString::Format("%s_diff.root",exp);   
+   fname = TString::Format("%s_diff.root",exp);
    TFile f(fname);
    if (f.IsZombie()) return;
    TTree *TD = (TTree*)f.Get("TD");
@@ -551,7 +551,7 @@ void InspectDiff(const char* exp="alice",Long64_t ientry=-1) {
       fprintf(stderr,"   OLD: nbound=%d  length=%g  safe=%g  rad=%g\n", p.nbound,p.length,p.safe,p.rad);
       FindRad(p.x,p.y,p.z, p.theta, p.phi, nbound,length,safe,rad, kTRUE);
       return;
-   }   
+   }
    for (Long64_t i=0;i<nentries;i++) {
       fprintf(stderr,"DIFFERENCE #%lld\n", i);
       TD->GetEntry(2*i);
@@ -560,7 +560,7 @@ void InspectDiff(const char* exp="alice",Long64_t ientry=-1) {
       fprintf(stderr,"   OLD: nbound=%d  length=%g  safe=%g rad=%g\n", p.nbound,p.length,p.safe,p.rad);
       FindRad(p.x,p.y,p.z, p.theta, p.phi, nbound,length,safe,rad, kTRUE);
    }
-}   
+}
 
 void InspectRef(const char *exp, Int_t vers) {
 // Inspect current reference.
@@ -596,6 +596,6 @@ void InspectRef(const char *exp, Int_t vers) {
 //   fprintf(stderr,"Total weight:  %g [kg]\n", vect(0));
    fprintf(stderr,"Total nbound:  %g boundaries crossed\n", vect(1));
    fprintf(stderr,"Total length:  %g [m]\n", 0.01*vect(2));
-   fprintf(stderr,"Total nradlen: %f\n", vect(3));   
+   fprintf(stderr,"Total nradlen: %f\n", vect(3));
    fprintf(stderr,"=====================================\n");
 }

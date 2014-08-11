@@ -269,12 +269,12 @@ TFileCollection *TFileCollection::GetStagedSubset()
 }
 
 //______________________________________________________________________________
-Long64_t TFileCollection::Merge(TCollection *li) 
+Long64_t TFileCollection::Merge(TCollection *li)
 {
    // Merge all TFileCollection objects in li into this TFileCollection object.
    // Updates counters at the end.
    // Returns the number of merged collections or -1 in case of error.
-   
+
 
    if (!li) return 0;
    if (li->IsEmpty()) return 0;
@@ -682,7 +682,7 @@ void TFileCollection::Sort(Bool_t useindex)
 
    if (!fList)
      return;
-   
+
    // Make sure the relevant bit has teh wanted value
    if (useindex) {
       SetBitAll(TFileInfo::kSortWithIndex);

@@ -125,7 +125,7 @@ public:
 
    Float_t GetColorBrightness() const { return fBrightness; }
    void    SetColorBrightness(Float_t b);
-  
+
    Bool_t  UseLightColorSet()   const { return fUseLightColorSet; }
    void    SwitchColorSet();
 

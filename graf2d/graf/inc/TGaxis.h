@@ -64,7 +64,7 @@ protected:
    static Float_t fYAxisExpXOffset; //!Exponent X offset for the Y axis
    static Float_t fYAxisExpYOffset; //!Exponent Y offset for the Y axis
 
-   TGaxis(const TGaxis&); 
+   TGaxis(const TGaxis&);
    TGaxis& operator=(const TGaxis&);
 
 public:
@@ -123,6 +123,7 @@ public:
    virtual void        SetNoExponent(Bool_t noExponent=kTRUE);  // *MENU*
    virtual void        SetDecimals(Bool_t dot=kTRUE);  // *MENU*
    void                SetTickSize(Float_t ticksize) {fTickSize = ticksize;} // *MENU*
+   void                SetTickLength(Float_t ticklength) {SetTickSize(ticklength);}
    void                SetGridLength(Float_t gridlength) {fGridLength = gridlength;}
    void                SetTimeFormat(const char *tformat);
    void                SetTimeOffset(Double_t toffset, Option_t *option="local");
@@ -134,7 +135,7 @@ public:
    void                SetWmin(Double_t wmin) {fWmin = wmin;}
    void                SetWmax(Double_t wmax) {fWmax = wmax;}
    static void         SetExponentOffset(Float_t xoff=0., Float_t yoff=0., Option_t *axis="xy");
-                                                                   
+
    ClassDef(TGaxis,5)  //Graphics axis
 };
 

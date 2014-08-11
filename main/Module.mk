@@ -45,6 +45,14 @@ PROOFSERVEXE :=
 PROOFSERVSH  :=
 endif
 
+##### xproofd #####
+ifneq ($(BUILDXPROOFD),yes)
+XPROOFDSH  :=
+ifneq ($(PROOFLIB),)
+XPROOFDSH  := bin/xproofd
+endif
+endif
+
 ##### xpdtest #####
 XPDTESTS   := $(MODDIRS)/xpdtest.cxx
 XPDTESTO   := $(call stripsrc,$(XPDTESTS:.cxx=.o))
@@ -111,7 +119,7 @@ SSH2RPD         :=
 endif
 
 # used in the main Makefile
-ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) \
+ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVEXE) $(PROOFSERVSH) $(XPROOFDSH) \
                 $(XPDTESTEXE) $(HADD) $(SSH2RPD) $(ROOTSEXE) $(ROOTSSH)
 ifneq ($(F77),)
 ALLEXECS     += $(H2ROOT) $(G2ROOT)
@@ -140,6 +148,11 @@ $(PROOFSERVEXE): $(PROOFSERVO) $(BOOTLIBSDEP)
 
 $(PROOFSERVSH): $(call stripsrc,$(MAINDIRS)/proofserv.sh)
 		@echo "Install proofserv wrapper."
+		@cp $< $@
+		@chmod 0755 $@
+
+$(XPROOFDSH): $(call stripsrc,$(MAINDIRS)/xproofd.sh)
+		@echo "Install xproofd wrapper."
 		@cp $< $@
 		@chmod 0755 $@
 
@@ -191,7 +204,7 @@ clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
-		   $(PROOFSERVEXE) $(PROOFSERVSH)  $(XPDTESTDEP) $(XPDTESTEXE) \
+		   $(PROOFSERVEXE) $(PROOFSERVSH) $(XPROOFDSH) $(XPDTESTDEP) $(XPDTESTEXE) \
 		   $(HADDDEP) $(HADD) $(H2ROOTDEP) $(H2ROOT) $(G2ROOT) \
 		   $(SSH2RPDDEP) $(SSH2RPD) $(ROOTSEXEDEP) $(ROOTSEXE) \
 		   $(ROOTSSH)

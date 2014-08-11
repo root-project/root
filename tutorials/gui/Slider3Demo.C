@@ -1,7 +1,7 @@
 
 // Simple macro showing capabilities of triple slider
 //Authors: Bertrand Bellenot, Ilka Antcheva
-   
+
 #include "TGButton.h"
 #include "TRootEmbeddedCanvas.h"
 #include "TGLayout.h"
@@ -80,9 +80,9 @@ TTripleSliderDemo::TTripleSliderDemo() : TGMainFrame(gClient->GetRoot(), 100, 10
                                    kHorizontalFrame,
                                    GetDefaultFrameBackground(),
                                    kFALSE, kFALSE, kFALSE, kFALSE);
-   fHslider1->Connect("PointerPositionChanged()", "TTripleSliderDemo", 
+   fHslider1->Connect("PointerPositionChanged()", "TTripleSliderDemo",
                       this, "DoSlider()");
-   fHslider1->Connect("PositionChanged()", "TTripleSliderDemo", 
+   fHslider1->Connect("PositionChanged()", "TTripleSliderDemo",
                       this, "DoSlider()");
    fHslider1->SetRange(0.05,5.0);
 

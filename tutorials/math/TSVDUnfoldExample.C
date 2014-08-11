@@ -1,5 +1,5 @@
-//  Data unfolding using Singular Value Decomposition 
-// 
+//  Data unfolding using Singular Value Decomposition
+//
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TSVDUnfold example                                                   //
@@ -44,7 +44,7 @@ Double_t Reconstruct( Double_t xt, TRandom3& R )
    }
 }
 
-void TSVDUnfoldExample() 
+void TSVDUnfoldExample()
 {
    gROOT->Reset();
    gROOT->SetStyle("Plain");
@@ -53,7 +53,7 @@ void TSVDUnfoldExample()
    TRandom3 R;
 
    const Double_t cutdummy= -99999.0;
-   
+
    // --- Data/MC toy generation -----------------------------------
 
    // The MC input
@@ -85,8 +85,8 @@ void TSVDUnfoldExample()
       Double_t xt = R.Gaus(0.0, 2.0);
       datatrue->Fill(xt);
       Double_t x = Reconstruct( xt, R );
-      if (x != cutdummy) 
-	data->Fill(x);
+      if (x != cutdummy)
+      data->Fill(x);
    }
 
    cout << "Created toy distributions and errors for: " << endl;
@@ -96,7 +96,7 @@ void TSVDUnfoldExample()
 
    // Fill the data covariance matrix
    for (int i=1; i<=data->GetNbinsX(); i++) {
-       statcov->SetBinContent(i,i,data->GetBinError(i)*data->GetBinError(i)); 
+       statcov->SetBinContent(i,i,data->GetBinError(i)*data->GetBinError(i));
    }
 
    // --- Here starts the actual unfolding -------------------------
@@ -123,23 +123,23 @@ void TSVDUnfoldExample()
    // using the measured covariance matrix as input to generate the toys
    // 100 toys should usually be enough
    // The same method can be used for different covariance matrices separately.
-   TH2D* ustatcov = tsvdunf->GetUnfoldCovMatrix( statcov, 100 );   
+   TH2D* ustatcov = tsvdunf->GetUnfoldCovMatrix( statcov, 100 );
 
    // Now compute the error matrix on the unfolded distribution originating
    // from the finite detector matrix statistics
-   TH2D* uadetcov = tsvdunf->GetAdetCovMatrix( 100 );   
+   TH2D* uadetcov = tsvdunf->GetAdetCovMatrix( 100 );
 
    // Sum up the two (they are uncorrelated)
    ustatcov->Add( uadetcov );
 
-   //Get the computed regularized covariance matrix (always corresponding to total uncertainty passed in constructor) and add uncertainties from finite MC statistics. 
+   //Get the computed regularized covariance matrix (always corresponding to total uncertainty passed in constructor) and add uncertainties from finite MC statistics.
    TH2D* utaucov = tsvdunf->GetXtau();
    utaucov->Add( uadetcov );
 
    //Get the computed inverse of the covariance matrix
    TH2D* uinvcov = tsvdunf->GetXinv();
 
-   
+
    // --- Only plotting stuff below ------------------------------
 
    for (int i=1; i<=unfres->GetNbinsX(); i++) {

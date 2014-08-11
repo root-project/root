@@ -7,8 +7,8 @@
  *                                                                    *
  **********************************************************************/
 //
-// Implementation of template functions for TDataPoint class 
-// 
+// Implementation of template functions for TDataPoint class
+//
 
 
 #ifndef ROOT_TDataPoint_ICC
@@ -42,15 +42,15 @@ TDataPoint<K,_val_type>::TDataPoint():
    //standard constructor
    //
    //sets the weight to 1 and initialises all coordinates with 0
-   
+
    // at least one dimension
    assert(kDimension > 0);
-   
+
    for(UInt_t k = 0; k < K; ++k)
       m_vCoordinates[k] = 0;
 }
 
-#ifndef __MAKECINT__    
+#ifndef __MAKECINT__
 //______________________________________________________________________________
 template<unsigned int K,typename _val_type>
 template<typename _coord_type>
@@ -61,14 +61,14 @@ TDataPoint<K,_val_type>::TDataPoint(const _coord_type* pData,_val_type fWeight):
    //
    //Input: pData   - arrray with kDimension coordinates
    //       fWeight - weight (default = 1)
-  
+
    // at least one dimension
    assert(kDimension > 0);
    // fill coordinates
    for(unsigned int i = 0; i < kDimension; ++i)
       m_vCoordinates[i] = pData[i];
 }
-    
+
 //______________________________________________________________________________
 template<unsigned int K,typename _val_type>
 template<typename _val>
@@ -79,7 +79,7 @@ _val_type TDataPoint<K,_val_type>::Distance(const TDataPoint<K,_val>& rPoint) co
    //returns the euclidian distance to the given data point
    //
    //Input: rPoint - data point of same dimensionality
-  
+
    _val_type fDist2 = 0;
    for(unsigned int i = 0; i < kDimension; ++i)
       fDist2 += pow(GetCoordinate(i) - rPoint.GetCoordinate(i),2);
@@ -95,7 +95,7 @@ inline _val_type TDataPoint<K,_val_type>::GetCoordinate(unsigned int iAxis) cons
    //returns the coordinate at the given axis
    //
    //Input: iAxis - axis in the range of [0...kDimension-1]
-  
+
    assert(iAxis < kDimension);
    return m_vCoordinates[iAxis];
 }
@@ -108,7 +108,7 @@ inline void TDataPoint<K,_val_type>::SetCoordinate(unsigned int iAxis,_val_type 
    //
    //Input: iAxis  - axis in the range of [0...kDimension-1]
    //       fValue - new coordinate
-  
+
    assert(iAxis < kDimension);
    m_vCoordinates[iAxis] = fValue;
 }
@@ -123,7 +123,7 @@ inline Bool_t TDataPoint<K,_val_type>::Less(TDataPoint<K,_val_type>& rPoint,unsi
    //
    //Input: rPoint - second point to compare to (of same dimensionality)
    //       iAxis  - axis in the range of [0...kDimension-1]
-  
+
    assert(iAxis < kDimension);
    return (m_vCoordinates[iAxis] < rPoint.GetCoordinate(iAxis));
 }

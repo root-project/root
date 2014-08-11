@@ -82,7 +82,7 @@ protected:
    virtual void SearchPattern();
    virtual void OnAutoScroll();
    virtual void RepeatSearch();
-   
+
 private:
    TGContainer(const TGContainer&);               // not implemented
    TGContainer& operator=(const TGContainer&);    // not implemented

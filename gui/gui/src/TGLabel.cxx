@@ -67,7 +67,7 @@ TGLabel::TGLabel(const TGWindow *p, TGString *text, GContext_t norm,
 
    if (!font) {
       font = fgDefaultFont->GetFontStruct();
-   } 
+   }
 
    fFont = fClient->GetFontPool()->GetFont(font);
    fTLayout = fFont->ComputeTextLayout(fText->GetString(), fText->GetLength(),
@@ -239,7 +239,7 @@ void TGLabel::DoRedraw()
 
                if (f3DStyle == kRaisedFrame) {
                   Pixel_t t = hi;
-                  hi = sh; 
+                  hi = sh;
                   sh = t;
                }
 
@@ -265,7 +265,7 @@ void TGLabel::DoRedraw()
       }
       static TGGC *gc1 = 0;
       static TGGC *gc2 = 0;
- 
+
       if (!gc1) {
          gc1 = fClient->GetResourcePool()->GetGCPool()->FindGC(GetHilightGC()());
          gc1 = new TGGC(*gc1); // copy

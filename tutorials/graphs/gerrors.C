@@ -2,7 +2,7 @@ void gerrors() {
    //Draw a graph with error bars
    // To see the output of this macro, click begin_html <a href="gif/gerrors.gif">here</a>. end_html
    //Author: Rene Brun
-   
+
    TCanvas *c1 = new TCanvas("c1","A Simple Graph with error bars",200,10,700,500);
 
    c1->SetFillColor(42);

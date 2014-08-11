@@ -538,7 +538,7 @@ void TAlienCollection::Status()
         100.0 * offlinefilesize / (onlinefilesize + offlinefilesize +
                                    0.0000001));
    Info("Status", "=========================================\n");
-   
+
    delete statuslist;
 }
 

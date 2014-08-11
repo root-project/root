@@ -98,7 +98,7 @@ TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot)
    TEveCaloLego* lego = new TEveCaloLego(data);
    s->AddElement(lego);
 
-   // By the default lego extends is (1x1x1). Resize it to put in 'natural' 
+   // By the default lego extends is (1x1x1). Resize it to put in 'natural'
    // coordinates, so that y extend in 2*Pi and set height of lego two times
    //  smaller than y extend to have better view in 3D perspective.
    lego->InitMainTrans();

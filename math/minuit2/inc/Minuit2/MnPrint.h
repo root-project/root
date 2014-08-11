@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -32,7 +32,7 @@ namespace ROOT {
 
 
 /**
-    define std::ostream operators for output 
+    define std::ostream operators for output
 */
 
 class FunctionMinimum;
@@ -68,22 +68,22 @@ std::ostream& operator<<(std::ostream&, const MinosError&);
 class ContoursError;
 std::ostream& operator<<(std::ostream&, const ContoursError&);
 
-      
-// class define static print level values 
 
-class MnPrint { 
+// class define static print level values
+
+class MnPrint {
 
 public:
    // set print level and return the previous one
    static int SetLevel(int level);
-   
+
    // return current level
-   static int Level(); 
-   
-   // print current minimization state 
+   static int Level();
+
+   // print current minimization state
    static void PrintState(std::ostream & os, const MinimumState & state, const char * msg, int iter = -1);
 
-   // print current minimization state 
+   // print current minimization state
    static void PrintState(std::ostream & os, double fcn, double edm, int ncalls, const char * msg, int iter = -1);
 
    // print FCN value with right precision adding optionally end line
@@ -103,7 +103,7 @@ public:
 
 #ifndef MNLOG
 #define MN_OS std::cerr
-#else 
+#else
 #define MN_OS MNLOG
 #endif
 
@@ -114,9 +114,9 @@ public:
    if (MnPrint::Level() >= 0) MN_OS << "Error: " << str \
        << std::endl;
 # define MN_INFO_VAL(x) \
-   if (MnPrint::Level() > 0) MN_OS << "Info: " << #x << " = " << (x) << std::endl; 
+   if (MnPrint::Level() > 0) MN_OS << "Info: " << #x << " = " << (x) << std::endl;
 # define MN_ERROR_VAL(x) \
-   if (MnPrint::Level() >= 0) MN_OS << "Error: " << #x << " = " << (x) << std::endl; 
+   if (MnPrint::Level() >= 0) MN_OS << "Error: " << #x << " = " << (x) << std::endl;
 
 
 // same giving a location
@@ -130,16 +130,16 @@ public:
 # define MN_INFO_VAL2(loc,x) \
    if (MnPrint::Level() > 0) MN_OS << "Info in " << loc << " : " << #x << " = " << (x) << std::endl;
 # define MN_ERROR_VAL2(loc,x) \
-   if (MnPrint::Level() >= 0) MN_OS << "Error in " << loc << " : " << #x << " = " << (x) << std::endl; 
+   if (MnPrint::Level() >= 0) MN_OS << "Error in " << loc << " : " << #x << " = " << (x) << std::endl;
 
 
 
 #else
-// use ROOT error reporting system 
+// use ROOT error reporting system
 #include "TError.h"
 #include "Math/Util.h"
 
-// this first two should be used only with string literals to 
+// this first two should be used only with string literals to
 // avoid warning produced by the format in TError
 #define  MN_INFO_MSG(str) \
    ::Info("Minuit2",str);
@@ -147,24 +147,24 @@ public:
    ::Error("Minuit2",str);
 # define MN_INFO_VAL(x) \
    {std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-      ::Info("Minuit2","%s",str.c_str() );} 
+      ::Info("Minuit2","%s",str.c_str() );}
 # define MN_ERROR_VAL(x) \
    {std::string str = std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Error("Minuit2","%s",str.c_str() );} 
+   ::Error("Minuit2","%s",str.c_str() );}
 
 # define MN_INFO_MSG2(loc,txt) \
    {std::string str = std::string(loc) + std::string(" : ") + std::string(txt); \
-   ::Info("Minuit2","%s",str.c_str() );} 
+   ::Info("Minuit2","%s",str.c_str() );}
 # define MN_ERROR_MSG2(loc,txt) \
    {std::string str = std::string(loc) + std::string(" : ") + std::string(txt); \
-   ::Error("Minuit2","%s",str.c_str() );} 
+   ::Error("Minuit2","%s",str.c_str() );}
 
 # define MN_INFO_VAL2(loc,x) \
    {std::string str = std::string(loc) + std::string(" : ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Info("Minuit2","%s",str.c_str() );} 
+   ::Info("Minuit2","%s",str.c_str() );}
 # define MN_ERROR_VAL2(loc,x) \
    {std::string str = std::string(loc) + std::string(" : ") + std::string(#x) + std::string(" = ") + ROOT::Math::Util::ToString(x); \
-   ::Error("Minuit2","%s",str.c_str() );} 
+   ::Error("Minuit2","%s",str.c_str() );}
 
 
 

@@ -36,7 +36,7 @@
 // the class doc header, the class description, members overview, and method
 // documentation. All generic output functionality is in TDocOutput; it is
 // re-used in this derived class.
-// 
+//
 // You usually do not use this class yourself; it is invoked indirectly by
 // THtml. Customization of the output should happen via the interfaces defined
 // by THtml.
@@ -150,7 +150,7 @@ void TClassDocOutput::ListFunctions(std::ostream& classFile)
       const char* accessID [] = {"priv", "prot", "publ"};
       const char* accesstxt[] = {"private", "protected", "public"};
 
-      classFile << "id=\"func" << accessID[access] << "\"><b>" 
+      classFile << "id=\"func" << accessID[access] << "\"><b>"
          << accesstxt[access] << ":</b>" << std::endl
          << "<table class=\"func\" id=\"tabfunc" << accessID[access] << "\" cellspacing=\"0\">" << std::endl;
 
@@ -245,11 +245,11 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
    // Write the list of data members and enums
 
    // make a loop on data members
-   Bool_t haveDataMembers = (fParser->GetDataMembers(TDocParser::kPrivate)->GetEntries() || 
-                             fParser->GetDataMembers(TDocParser::kProtected)->GetEntries() || 
-                             fParser->GetDataMembers(TDocParser::kPublic)->GetEntries() || 
-                             fParser->GetEnums(TDocParser::kPublic)->GetEntries() || 
-                             fParser->GetEnums(TDocParser::kProtected)->GetEntries() || 
+   Bool_t haveDataMembers = (fParser->GetDataMembers(TDocParser::kPrivate)->GetEntries() ||
+                             fParser->GetDataMembers(TDocParser::kProtected)->GetEntries() ||
+                             fParser->GetDataMembers(TDocParser::kPublic)->GetEntries() ||
+                             fParser->GetEnums(TDocParser::kPublic)->GetEntries() ||
+                             fParser->GetEnums(TDocParser::kProtected)->GetEntries() ||
                              fParser->GetEnums(TDocParser::kPrivate)->GetEntries());
 
    if (!haveDataMembers) return;
@@ -273,7 +273,7 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
       const char* accessID [] = {"priv", "prot", "publ"};
       const char* accesstxt[] = {"private", "protected", "public"};
 
-      classFile << "id=\"" << what << accessID[access%3] << "\"><b>" 
+      classFile << "id=\"" << what << accessID[access%3] << "\"><b>"
          << accesstxt[access%3] << ":</b>" << std::endl
          << "<table class=\"data\" id=\"tab" << what << accessID[access%3] << "\" cellspacing=\"0\">" << std::endl;
 
@@ -309,9 +309,9 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
             Ssiz_t startClassName = 0;
             if (!enumName.BeginsWith("enum "))
                classFile << "enum ";
-            else 
+            else
                startClassName = 5;
-            
+
             Ssiz_t endClassName = enumName.Last(':'); // need template handling here!
             if (endClassName != kNPOS && endClassName > 0 && enumName[endClassName - 1] == ':') {
                // TClass* cl = fHtml->GetClass(TString(enumName(startClassName, endClassName - startClassName - 1)));
@@ -392,7 +392,7 @@ Bool_t TClassDocOutput::ClassDotCharts(std::ostream& out)
 //
 // Input: out      - output file stream
 
-   if (!fHtml->HaveDot()) 
+   if (!fHtml->HaveDot())
       return kFALSE;
 
    TString title(fCurrentClass->GetName());
@@ -631,7 +631,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
    std::stringstream ssDep;
    std::list<TClass*> writeBasesFor;
    writeBasesFor.push_back(fCurrentClass);
-   Bool_t haveBases = fCurrentClass->GetListOfBases() && 
+   Bool_t haveBases = fCurrentClass->GetListOfBases() &&
       fCurrentClass->GetListOfBases()->GetSize();
    if (haveBases) {
       outdot << "{" << std::endl;
@@ -678,7 +678,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
          TClass* writeAndMoreFor = 0;
          while ((baseDerived = (TBaseClass*) iBaseOfDerived())) {
             TClass* clBaseDerived = baseDerived->GetClassPointer();
-            if (clBaseDerived->InheritsFrom(fCurrentClass) 
+            if (clBaseDerived->InheritsFrom(fCurrentClass)
                && wroteNode.find(clBaseDerived) != wroteNode.end()) {
                unsigned int& count = entriesPerDerived[clBaseDerived];
                if (count < maxClassesPerDerived) {
@@ -688,7 +688,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
                   ++count;
                } else if (count == maxClassesPerDerived) {
                   writeAndMoreFor = clBaseDerived;
-                  ssDep << "\"...andmore" << clBaseDerived->GetName() << "\"-> \"" 
+                  ssDep << "\"...andmore" << clBaseDerived->GetName() << "\"-> \""
                      << clBaseDerived->GetName() << "\";" << std::endl;
                   ++count;
                }
@@ -824,7 +824,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
          {
             TIter iMeth(cl->GetListOfMethods());
             TMethod* meth = 0;
-            while ((meth = (TMethod*) iMeth())) 
+            while ((meth = (TMethod*) iMeth()))
                methMap[meth->GetName()] = meth;
          }
 
@@ -847,7 +847,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
                prevColumnNodeFunc = nodeName;
 
             outdot << "\"" << nodeName << "\" [label=\"" << meth->GetName() << "\"";
-            if (cl != fCurrentClass && 
+            if (cl != fCurrentClass &&
                fCurrentClass->GetMethodAny(meth->GetName()))
                outdot << ",color=\"#777777\"";
             else if (meth->Property() & kIsPrivate)
@@ -882,7 +882,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
          TBaseClass* base = 0;
          while ((base = (TBaseClass*)iBase())) {
             ssDep << "  \"clusterNode" << numColumns - 1 << cl->GetName() << "\" -> "
-                  << " \"clusterNode0" << base->GetName() << "\" [ltail=\"cluster" << cl->GetName() 
+                  << " \"clusterNode0" << base->GetName() << "\" [ltail=\"cluster" << cl->GetName()
                   << "\",lhead=\"cluster" << base->GetName() << "\"";
             if (base != cl->GetListOfBases()->First())
                ssDep << ",weight=0";
@@ -901,7 +901,7 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
 
 //______________________________________________________________________________
 Bool_t TClassDocOutput::CreateDotClassChartIncl(const char* filename) {
-// Build the include dependency graph for one class in 
+// Build the include dependency graph for one class in
 // GraphViz/Dot format
 //
 // Input: filename - output dot file incl. path
@@ -955,7 +955,7 @@ Bool_t TClassDocOutput::CreateDotClassChartIncl(const char* filename) {
          if (line.compare(pos, 8, "include ") != 0) continue;
          pos += 8;
          while (line[pos] == ' ' || line[pos] == '\t') ++pos;
-         if (line[pos] != '"' && line[pos] != '<') 
+         if (line[pos] != '"' && line[pos] != '<')
             continue;
          char delim = line[pos];
          if (delim == '<') delim = '>';
@@ -985,7 +985,7 @@ Bool_t TClassDocOutput::CreateDotClassChartIncl(const char* filename) {
 
 //______________________________________________________________________________
 Bool_t TClassDocOutput::CreateDotClassChartLib(const char* filename) {
-// Build the library dependency graph for one class in 
+// Build the library dependency graph for one class in
 // GraphViz/Dot format
 //
 // Input: filename - output dot file incl. path
@@ -1137,7 +1137,7 @@ Bool_t TClassDocOutput::CreateHierarchyDot()
             dotout << "\"" << base->GetName() << "\"";
          }
          dotout << "};" << std::endl;
-      } else 
+      } else
          // write out current class - no bases
          dotout << "\"" << cdi->GetName() << "\";" << std::endl;
 
@@ -1169,8 +1169,8 @@ Bool_t TClassDocOutput::CreateHierarchyDot()
 }
 
 //______________________________________________________________________________
-void TClassDocOutput::CreateSourceOutputStream(std::ostream& out, const char* extension, 
-                                     TString& sourceHtmlFileName) 
+void TClassDocOutput::CreateSourceOutputStream(std::ostream& out, const char* extension,
+                                     TString& sourceHtmlFileName)
 {
    // Open a Class.cxx.html file, where Class is defined by classPtr, and .cxx.html by extension
    // It's created in fHtml->GetOutputDir()/src. If successful, the HTML header is written to out.
@@ -1190,7 +1190,7 @@ void TClassDocOutput::CreateSourceOutputStream(std::ostream& out, const char* ex
    sourceHtmlFileName += extension;
    dynamic_cast<std::ofstream&>(out).open(sourceHtmlFileName);
    if (!out) {
-      Warning("LocateMethodsInSource", "Can't open beautified source file '%s' for writing!", 
+      Warning("LocateMethodsInSource", "Can't open beautified source file '%s' for writing!",
          sourceHtmlFileName.Data());
       sourceHtmlFileName.Remove(0);
       return;
@@ -1281,9 +1281,9 @@ void TClassDocOutput::DescendHierarchy(std::ostream& out, TClass* basePtr, Int_t
 //______________________________________________________________________________
 void TClassDocOutput::MakeTree(Bool_t force /*= kFALSE*/)
 {
-   // Create an output file with a graphical representation of the class 
+   // Create an output file with a graphical representation of the class
    // inheritance. If force, replace existing output file.
-   // This routine does nothing if fHtml->HaveDot() is true - use 
+   // This routine does nothing if fHtml->HaveDot() is true - use
    // ClassDotCharts() instead!
 
    // class tree only if no dot, otherwise it's part of charts
@@ -1321,7 +1321,7 @@ void TClassDocOutput::MakeTree(Bool_t force /*= kFALSE*/)
       Error("MakeTree", "Cannot create a TCanvas!");
       return;
    }
-   
+
    // make a class tree
    ClassTree(psCanvas, force);
 
@@ -1407,7 +1407,7 @@ void TClassDocOutput::WriteClassDescription(std::ostream& out, const TString& de
       }
    }
 
-   out << "</div>" << std::endl 
+   out << "</div>" << std::endl
        << "</div></div>" << std::endl;
 
    ListFunctions(out);
@@ -1459,7 +1459,7 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
       sLib = libDup;
       delete[] libDup;
    }
-   classFile << "<script type=\"text/javascript\">WriteFollowPageBox('" 
+   classFile << "<script type=\"text/javascript\">WriteFollowPageBox('"
              << sTitle << "','" << sLib << "','" << sInclude << "');</script>" << std::endl;
 
    TString modulename;
@@ -1582,7 +1582,7 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
 
 
 //______________________________________________________________________________
-void TClassDocOutput::WriteMethod(std::ostream& out, TString& ret, 
+void TClassDocOutput::WriteMethod(std::ostream& out, TString& ret,
                                   TString& name, TString& params,
                                   const char* filename, TString& anchor,
                                   TString& comment, TString& codeOneLiner,
@@ -1643,7 +1643,7 @@ void TClassDocOutput::WriteMethod(std::ostream& out, TString& ret,
       out << "<div class=\"funccomm\"><pre>" << comment << "</pre></div>" << std::endl;
 
    if (codeOneLiner.Length()) {
-      out << std::endl << "<div class=\"code\"><code class=\"inlinecode\">" 
+      out << std::endl << "<div class=\"code\"><code class=\"inlinecode\">"
           << codeOneLiner << "</code></div>" << std::endl
           << "<div style=\"clear:both;\"></div>" << std::endl;
       codeOneLiner.Remove(0);

@@ -24,6 +24,7 @@
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
 #include "cling/Utils/AST.h"
+#include "cling/Interpreter/AutoloadCallback.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/GlobalDecl.h"
@@ -98,7 +99,7 @@ namespace cling {
   }
 
   void Interpreter::PushTransactionRAII::pop() const {
-    if (Transaction* T 
+    if (Transaction* T
         = m_Interpreter->m_IncrParser->endTransaction(m_Transaction)) {
       assert(T == m_Transaction && "Ended different transaction?");
       m_Interpreter->m_IncrParser->commitTransaction(T);
@@ -178,6 +179,7 @@ namespace cling {
     m_IncrParser.reset(new IncrementalParser(this, LeftoverArgs.size(),
                                              &LeftoverArgs[0],
                                              llvmdir));
+
     Sema& SemaRef = getSema();
     Preprocessor& PP = SemaRef.getPreprocessor();
     // Enable incremental processing, which prevents the preprocessor destroying
@@ -497,7 +499,7 @@ namespace cling {
     return Interpreter::kSuccess;
   }
 
-  Interpreter::CompilationResult 
+  Interpreter::CompilationResult
   Interpreter::parse(const std::string& input, Transaction** T /*=0*/) const {
     CompilationOptions CO;
     CO.CodeGeneration = 0;
@@ -516,7 +518,7 @@ namespace cling {
     //Copied from clang's PPDirectives.cpp
     bool isAngled = false;
     // Clang doc says:
-    // "LookupFrom is set when this is a \#include_next directive, it specifies 
+    // "LookupFrom is set when this is a \#include_next directive, it specifies
     // the file to start searching from."
     const DirectoryLookup* LookupFrom = 0;
     const DirectoryLookup* CurDir = 0;
@@ -533,7 +535,7 @@ namespace cling {
     // Copied from PPDirectives.cpp
     SmallVector<std::pair<IdentifierInfo *, SourceLocation>, 2> path;
     for (Module *mod = suggestedModule.getModule(); mod; mod = mod->Parent) {
-      IdentifierInfo* II 
+      IdentifierInfo* II
         = &getSema().getPreprocessor().getIdentifierTable().get(mod->Name);
       path.push_back(std::make_pair(II, fileNameLoc));
     }
@@ -574,7 +576,7 @@ namespace cling {
                               clang::diag::MAP_IGNORE, SourceLocation());
     return DeclareInternal(input, CO);
   }
-  
+
   Interpreter::CompilationResult
   Interpreter::declare(const std::string& input, Transaction** T/*=0 */) {
     CompilationOptions CO;
@@ -916,7 +918,7 @@ namespace cling {
   }
 
   Interpreter::CompilationResult
-  Interpreter::DeclareInternal(const std::string& input, 
+  Interpreter::DeclareInternal(const std::string& input,
                                const CompilationOptions& CO,
                                Transaction** T /* = 0 */) const {
     StateDebuggerRAII stateDebugger(this);
@@ -927,7 +929,7 @@ namespace cling {
           *T = lastT;
         return Interpreter::kSuccess;
       }
-      return Interpreter::kFailure;     
+      return Interpreter::kFailure;
     }
 
     // Even if the transaction was empty it is still success.
@@ -1080,17 +1082,17 @@ namespace cling {
                                        bool ValuePrinterReq) {
     Sema& TheSema = getCI()->getSema();
     // The evaluation should happen on the global scope, because of the wrapper
-    // that is created. 
+    // that is created.
     //
     // We can't PushDeclContext, because we don't have scope.
-    Sema::ContextRAII pushDC(TheSema, 
+    Sema::ContextRAII pushDC(TheSema,
                              TheSema.getASTContext().getTranslationUnitDecl());
 
     Value Result;
     getCallbacks()->SetIsRuntime(true);
     if (ValuePrinterReq)
       echo(expr, &Result);
-    else 
+    else
       evaluate(expr, Result);
     getCallbacks()->SetIsRuntime(false);
 
@@ -1189,13 +1191,8 @@ namespace cling {
   }
 
   void Interpreter::GenerateAutoloadingMap(llvm::StringRef inFile,
-                                           llvm::StringRef outFile) {
-//    cling::Transaction* T = 0;
-
-//    CompilationResult result = this->declare(std::string("#include \"")
-//                                             + std::string(inFile) + "\"", &T);
-    llvm::SmallVector<std::string,30> incpaths;
-    GetIncludePaths(incpaths,true,false);
+                                           llvm::StringRef outFile,
+                                           bool enableMacros) {
 
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;
@@ -1207,15 +1204,36 @@ namespace cling {
     cling::Transaction* T = m_IncrParser->Parse
             (std::string("#include \"") + std::string(inFile) + "\"", CO);
 
-//    if (result != CompilationResult::kSuccess) {
-//      llvm::outs() << "Compilation failure\n";
-//      return;
-//    }
+    // If this was already #included we will get a T == 0.
+    if (!T)
+      return;
+
     std::string err;
     llvm::raw_fd_ostream out(outFile.data(), err,
                              llvm::sys::fs::OpenFlags::F_None);
 
+
     ForwardDeclPrinter visitor(out,getSema().getSourceManager());
+
+    std::vector<std::string> macrodefs;
+    if(enableMacros) {
+      for(auto mit = T->macros_begin(); mit != T->macros_end(); ++mit) {
+        Transaction::MacroDirectiveInfo macro = *mit;
+        if ( macro.m_MD->getKind() == MacroDirective::MD_Define) {
+          const MacroInfo* MI = macro.m_MD->getMacroInfo();
+          if ( MI ->getNumTokens()>1 )
+            //FIXME: We can not display function like macros yet
+            continue;
+          out<<"#define " << macro.m_II->getName()<< ' ';
+          for (unsigned i = 0, e = MI->getNumTokens(); i != e; ++i) {
+            const Token &Tok = MI->getReplacementToken(i);
+            out << Tok.getName() << ' ';
+            macrodefs.push_back(macro.m_II->getName());
+          }
+          out << '\n';
+        }
+      }
+    }
 
     for(auto dcit = T->decls_begin(); dcit != T->decls_end(); ++dcit) {
       Transaction::DelayCallInfo& dci = *dcit;
@@ -1226,29 +1244,23 @@ namespace cling {
         for(auto dit = dci.m_DGR.begin(); dit != dci.m_DGR.end(); ++dit) {
           clang::Decl* decl = *dit;
 
-          //skip logic start
-          bool skip = false;
-          auto filename = getSema().getSourceManager().getFilename
-                  (decl->getSourceRange().getBegin());
-          auto path = llvm::sys::path::parent_path(filename);
-          for (auto p : incpaths) {
-            if (llvm::sys::fs::equivalent(p,path)
-                    || llvm::sys::fs::equivalent
-                    (p,llvm::sys::path::parent_path(path))) {
-              skip = true;
-              break;
-            }
-          }
-          if (skip)
-            continue;
-          //skip logic end
-
           visitor.Visit(decl);
-          out << ";\n";
+          visitor.printSemiColon();
         }
       }
     }
+    if(enableMacros) {
+      for (auto m : macrodefs ) {
+        out << "#undef " << m << "\n";
+      }
+    }
+
     T->setState(Transaction::kCommitted);
+    unload(1);
     return;
   }
+  void Interpreter::EnableAutoloading() {
+    m_Callbacks.reset(new AutoloadCallback(this));
+  }
+
 } //end namespace cling

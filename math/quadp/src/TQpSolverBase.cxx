@@ -114,7 +114,7 @@ void TQpSolverBase::Start(TQpProbBase *formulation,TQpVar *iterate,TQpDataBase *
                           TQpResidual *resid,TQpVar *step)
 {
 // Implements a default starting-point heuristic. While interior-point theory
-//  places fairly loose restrictions on the choice of starting point, the choice 
+//  places fairly loose restrictions on the choice of starting point, the choice
 // of heuristic can significantly affect the robustness and efficiency of the
 //  algorithm.
 
@@ -264,8 +264,8 @@ void TQpSolverBase::DoMonitor(TQpDataBase *data,TQpVar *vars,TQpResidual *resids
 Int_t TQpSolverBase::DoStatus(TQpDataBase *data,TQpVar *vars,TQpResidual *resids,
                               Int_t i,Double_t mu,Int_t level)
 {
-// Tests for termination. Unless the user supplies a specific termination 
-// routine, this method calls another method defaultStatus, which returns 
+// Tests for termination. Unless the user supplies a specific termination
+// routine, this method calls another method defaultStatus, which returns
 // a code indicating the current convergence status.
 
    return this->DefStatus(data,vars,resids,i,mu,level);

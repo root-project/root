@@ -162,7 +162,7 @@ int rpdpriv::changeto(uid_t newuid, gid_t newgid)
    // Return 0 on success, < 0 (== -errno) if any error occurs.
 
 #if !defined(WINDOWS)
-   // Current UGID 
+   // Current UGID
    uid_t oeuid = geteuid();
    gid_t oegid = getegid();
 
@@ -263,7 +263,7 @@ int rpdpriv::changeperm(uid_t newuid, gid_t newgid)
       if (getresuid(&ruid, &euid, &suid) != 0) {
          return RPPERR(errno);
       }
-      // Make sure the new UIDs are all equal to the one asked 
+      // Make sure the new UIDs are all equal to the one asked
       if (ruid != newuid || euid != newuid) {
          return RPPERR(errno);
       }
@@ -290,13 +290,13 @@ void rpdpriv::dumpugid(const char *msg)
    if (getresgid(&rgid, &egid, &sgid) != 0)
       return;
 
-   cout << "rpdpriv: "  << endl; 
-   cout << "rpdpriv: dump values: " << (msg ? msg : "") << endl; 
-   cout << "rpdpriv: "  << endl; 
-   cout << "rpdpriv: real       = (" << ruid <<","<< rgid <<")" << endl; 
-   cout << "rpdpriv: effective  = (" << euid <<","<< egid <<")" << endl; 
-   cout << "rpdpriv: saved      = (" << suid <<","<< sgid <<")" << endl; 
-   cout << "rpdpriv: "  << endl; 
+   cout << "rpdpriv: "  << endl;
+   cout << "rpdpriv: dump values: " << (msg ? msg : "") << endl;
+   cout << "rpdpriv: "  << endl;
+   cout << "rpdpriv: real       = (" << ruid <<","<< rgid <<")" << endl;
+   cout << "rpdpriv: effective  = (" << euid <<","<< egid <<")" << endl;
+   cout << "rpdpriv: saved      = (" << suid <<","<< sgid <<")" << endl;
+   cout << "rpdpriv: "  << endl;
 #endif
 }
 

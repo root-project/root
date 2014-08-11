@@ -74,7 +74,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
      :TH1(name,title,nbinsx,xbins)
 {
    // See comments in the TH1 base class constructors.
-   
+
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -90,7 +90,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
      :TH1(name,title,nbinsx,xlow,xup)
 {
    // See comments in the TH1 base class constructors.
-   
+
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -107,7 +107,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
      :TH1(name,title,nbinsx,xbins)
 {
    // See comments in the TH1 base class constructors.
-   
+
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -124,7 +124,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
      :TH1(name,title,nbinsx,xbins)
 {
    // See comments in the TH1 base class constructors.
-   
+
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -274,7 +274,7 @@ void TH2::Copy(TObject &obj) const
 Int_t TH2::Fill(Double_t )
 {
    // Invalid Fill method.
-   
+
    Error("Fill", "Invalid signature - do nothing");
    return -1;
 }
@@ -1508,9 +1508,9 @@ Long64_t TH2::Merge(TCollection *list)
 
          // this is done in case the first histograms are empty and
          // the histogram have different limits
-         if (firstHistWithLimits ) { 
+         if (firstHistWithLimits ) {
             // set axis limits in the case the first histogram did not have limits
-            if (h != this ) { 
+            if (h != this ) {
               if (!SameLimitsAndNBins(fXaxis, *(h->GetXaxis())) ) {
                 if (h->GetXaxis()->GetXbins()->GetSize() != 0) fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
                 else                                           fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
@@ -1649,7 +1649,7 @@ Long64_t TH2::Merge(TCollection *list)
 
    while ((h=(TH2*)next())) {
 
-      // skip empty histograms 
+      // skip empty histograms
       Double_t histEntries = h->GetEntries();
       if (h->fTsumw == 0 && histEntries == 0) continue;
 
@@ -1673,7 +1673,7 @@ Long64_t TH2::Merge(TCollection *list)
                bin = binx +(nx+2)*biny;
 
                cu = h->RetrieveBinContent(bin);
-               if (!allSameLimits) { 
+               if (!allSameLimits) {
                   if (cu != 0 && ( (!sameLimitsX && (binx == 0 || binx == nx+1)) || (!sameLimitsY && (biny == 0 || biny == ny+1)) )) {
                      Error("Merge", "Cannot merge histograms - the histograms have"
                            " different limits and undeflows/overflows are present."
@@ -2532,7 +2532,7 @@ TH1D* TH2::QuantilesX( Double_t prob, const char * name) const
    // prob is the probability content for the quantile (0.5 is the default for the median)
    // An approximate error for the quantile is computed assuming that the distribution in
    // the other variable is normal.
-   
+
    return DoQuantiles(true, name, prob);
 }
 
@@ -2716,8 +2716,8 @@ void TH2::Smooth(Int_t ntimes, Option_t *option)
    // Smooth bin contents of this 2-d histogram using kernel algorithms
    // similar to the ones used in the raster graphics community.
    // Bin contents in the active range are replaced by their smooth values.
-   // If Errors are defined via Sumw2, they are also scaled and computed. 
-   // However, note the resulting errors will be correlated between different-bins, so 
+   // If Errors are defined via Sumw2, they are also scaled and computed.
+   // However, note the resulting errors will be correlated between different-bins, so
    // the errors should not be used blindly to perform any calculation involving several bins,
    // like fitting the histogram.  One would need to compute also the bin by bin correlation matrix.
    //
@@ -3373,7 +3373,7 @@ ClassImp(TH2I)
 TH2I::TH2I(): TH2(), TArrayI()
 {
    // Constructor.
-   
+
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
 }
@@ -3591,7 +3591,7 @@ ClassImp(TH2F)
 TH2F::TH2F(): TH2(), TArrayF()
 {
    // Constructor.
-   
+
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
 }
@@ -3854,7 +3854,7 @@ ClassImp(TH2D)
 TH2D::TH2D(): TH2(), TArrayD()
 {
    // Constructor.
-   
+
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
 }

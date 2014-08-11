@@ -2,7 +2,7 @@ void fit2d()
 {
    //example illustrating how to fit a 2-d histogram of type y=f(x)
    //Author: Rene Brun
-   
+
    // generate a 2-d histogram using a TCutG
    const Int_t n = 6;
    Float_t x[n] = {0.092,0.83,0.94,0.81,0.12,0.1};
@@ -20,9 +20,9 @@ void fit2d()
    c1->cd(1);
    h2->Draw();
    c1->cd(2);
-   
+
    //use a TProfile to convert the 2-d to 1-d problem
    TProfile *prof = h2->ProfileX();
    prof->Fit("pol1");
 }
-   
+

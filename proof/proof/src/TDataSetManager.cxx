@@ -1293,7 +1293,7 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
          if (bchanged_fi) bchanged_ds = kTRUE;
          if (btouched) ftouched++;
          if (bdisappeared) fdisappeared++;
- 
+
          // Notify
          if (dbg && (ftouched+fdisappeared) % 100 == 0)
             ::Info("TDataSetManager::ScanDataSet", "opening %d: file: %s",
@@ -1347,7 +1347,7 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
 
          // For real time monitoring
          gSystem->DispatchOneEvent(kTRUE);
-         bchanged_fi = kFALSE; 
+         bchanged_fi = kFALSE;
          bopened = kFALSE;
 
          ProcessFile(fileInfo, sopt, checkstg, doall, stager, createStager,
@@ -1379,12 +1379,12 @@ Int_t TDataSetManager::ScanDataSet(TFileCollection *dataset,
 }
 
 //______________________________________________________________________________
-Bool_t TDataSetManager::CheckStagedStatus(TFileInfo *fileInfo, Int_t fopt, Int_t maxfiles, 
+Bool_t TDataSetManager::CheckStagedStatus(TFileInfo *fileInfo, Int_t fopt, Int_t maxfiles,
                                           Int_t newstagedfiles, TFileStager* stager,
                                           Bool_t createStager, Bool_t dbg, Bool_t& changed,
                                           Bool_t& touched, Bool_t& disappeared)
 {
-   // Check stage status of the file described by "fileInfo". 
+   // Check stage status of the file described by "fileInfo".
    // fopt is same as "fopt" in TDataSetManager::ScanDataSet, which is repeated below:
    // The int fopt controls which files have to be processed (or added to the list
    // if ropt is 1 - see below); 'fopt' is defined in term of csopt and fsopt:
@@ -1457,7 +1457,7 @@ Bool_t TDataSetManager::CheckStagedStatus(TFileInfo *fileInfo, Int_t fopt, Int_t
          TString urlmod;
          if (TDataSetManager::CheckDataSetSrvMaps(curl, urlmod) && !(urlmod.IsNull()))
             furl = urlmod.Data();
-         TUrl url(furl);   
+         TUrl url(furl);
          url.SetAnchor("");
 
          // Check if file is still available, if touch is set actually read from the file
@@ -1497,7 +1497,7 @@ Bool_t TDataSetManager::CheckStagedStatus(TFileInfo *fileInfo, Int_t fopt, Int_t
 
    // Only open maximum number of 'new' files
    if (maxfiles > 0 && newstagedfiles >= maxfiles)
-      return kFALSE; 
+      return kFALSE;
 
    // Hard check of the staged status, if required
    if (checkstg) {
@@ -1670,7 +1670,7 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
    Int_t timeout = gEnv->GetValue("DataSet.ScanFile.OpenTimeout", -1);
    TString fileopt;
    if (timeout > 0) fileopt.Form("TIMEOUT=%d", timeout);
-   
+
    // To determine the size we have to open the file without the anchor
    // (otherwise we get the size of the contained file - in case of a zip archive)
    // We open in raw mode which makes sure that the opening succeeds, even if
@@ -1699,15 +1699,15 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
       fileinfo->SetBit(TFileInfo::kStaged);
 
       fileinfo->SetUUID(file->GetUUID().AsString());
-      
+
       // Add url of the disk server in front of the list
       if (file->GetEndpointUrl()) {
          // add endpoint url if it is not a local file
          TUrl eurl(*(file->GetEndpointUrl()));
 
          if (strcmp(eurl.GetProtocol(), "file") ||
-            !strcmp(eurl.GetProtocol(), url->GetProtocol())) { 
-            
+            !strcmp(eurl.GetProtocol(), url->GetProtocol())) {
+
             eurl.SetOptions(url->GetOptions());
             eurl.SetAnchor(url->GetAnchor());
 
@@ -1754,7 +1754,7 @@ Int_t TDataSetManager::ScanFile(TFileInfo *fileinfo, Bool_t dbg)
       TUrl eurl(*(file->GetEndpointUrl()));
 
       if (strcmp(eurl.GetProtocol(), "file") ||
-         !strcmp(eurl.GetProtocol(), url->GetProtocol())) { 
+         !strcmp(eurl.GetProtocol(), url->GetProtocol())) {
 
          eurl.SetOptions(url->GetOptions());
          eurl.SetAnchor(url->GetAnchor());
@@ -1921,7 +1921,7 @@ TList *TDataSetManager::GetDataSetSrvMaps()
 
    return fgDataSetSrvMaps;
 }
- 
+
 //_______________________________________________________________________________________
 Bool_t TDataSetManager::CheckDataSetSrvMaps(TUrl *furl, TString &file1, TList *srvmaplist)
 {

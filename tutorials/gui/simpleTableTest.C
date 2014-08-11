@@ -1,5 +1,5 @@
-// This TableTest class is a simple example of how to use a TGSimpleTable 
-// that creates and owns it's own TGSimpleTableInterface. 
+// This TableTest class is a simple example of how to use a TGSimpleTable
+// that creates and owns it's own TGSimpleTableInterface.
 // TableTest inherits from TGMainFrame to
 // create a top level frame to embed the TGTable in. First the data
 // needed is created. Then the TGSimpleTable is created using this
@@ -45,9 +45,9 @@ private:
    UInt_t         fNTableRows;
    UInt_t         fNTableColumns;
    TGSimpleTable *fSimpleTable;
-   
+
 public:
-   TableTest(const TGWindow *p, UInt_t ndrows, UInt_t ndcols, 
+   TableTest(const TGWindow *p, UInt_t ndrows, UInt_t ndcols,
              UInt_t ntrows, UInt_t ntcols, UInt_t w = 100, UInt_t h = 100) ;
    virtual ~TableTest() ;
 
@@ -57,18 +57,18 @@ public:
 
    ClassDef(TableTest, 0)
 };
-                          
-TableTest::TableTest(const TGWindow *p,  UInt_t ndrows, UInt_t ndcols, 
-                     UInt_t ntrows, UInt_t ntcols, UInt_t w, UInt_t h) 
+
+TableTest::TableTest(const TGWindow *p,  UInt_t ndrows, UInt_t ndcols,
+                     UInt_t ntrows, UInt_t ntcols, UInt_t w, UInt_t h)
    : TGMainFrame(p, w, h), fData(0), fNDataRows(ndrows), fNDataColumns(ndcols),
      fNTableRows(ntrows), fNTableColumns(ntcols), fSimpleTable(0)
 {
-   SetCleanup(kDeepCleanup) ;   
+   SetCleanup(kDeepCleanup) ;
    Connect("CloseWindow()", "TableTest", this, "DoExit()") ;
    DontCallClose() ;
-      
+
    // Create the needed data.
-   Int_t i = 0, j = 0; 
+   Int_t i = 0, j = 0;
    fData = new Double_t*[fNDataRows];
    for (i = 0; i < (Int_t)fNDataRows; i++) {
       fData[i] = new Double_t[fNDataColumns];
@@ -76,44 +76,44 @@ TableTest::TableTest(const TGWindow *p,  UInt_t ndrows, UInt_t ndcols,
          fData[i][j] = 10 * i + j;
       }
    }
-   
+
    // Create the table and add it to the TableTest that is a TGMainFrame.
-   fSimpleTable = new TGSimpleTable(this, IDs.GetUnID(), fData, fNTableRows, 
+   fSimpleTable = new TGSimpleTable(this, IDs.GetUnID(), fData, fNTableRows,
                                     fNTableColumns);
    AddFrame(fSimpleTable, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
-   
+
    // Calls to layout and draw the TableTest that is a TGMainFrame.
    SetWindowName("TGSimpleTable Test") ;
    MapSubwindows() ;
    Layout();
    Resize(GetDefaultWidth()+20, 600) ;
    MapWindow() ;
-   
+
 } ;
 
 TableTest::~TableTest()
 {
    // Destructor
-   UInt_t i = 0; 
+   UInt_t i = 0;
    for (i = 0; i < fNDataRows; i++) {
       delete[] fData[i];
    }
    delete[] fData;
    Cleanup() ;
  }
- 
+
  void TableTest::DoExit()
 {
    // Exit this application via the Exit button or Window Manager.
    // Use one of the both lines according to your needs.
    // Please note to re-run this macro in the same ROOT session,
    // you have to compile it to get signals/slots 'on place'.
-   
+
    DeleteWindow();            // to stay in the ROOT session
-   //   gApplication->Terminate();   // to exit and close the ROOT session   
+   //   gApplication->Terminate();   // to exit and close the ROOT session
 }
 
-TGSimpleTable *simpleTableTest(UInt_t ndrows = 500, UInt_t ndcols = 20, 
+TGSimpleTable *simpleTableTest(UInt_t ndrows = 500, UInt_t ndcols = 20,
                    UInt_t ntrows = 50, UInt_t ntcols = 10) {
    TableTest *test = new TableTest(0, ndrows, ndcols, ntrows, ntcols, 500, 200);
    return test->GetTable();

@@ -27,6 +27,14 @@
 
 #include "XpdSysPthread.h"
 
+#include "XrdProofdXrdVers.h"
+#ifndef ROOT_XrdFour
+#  include <sys/types.h>
+#  include <sys/socket.h>
+#  include "XrdNet/XrdNetPeer.hh"
+#else
+#  include "XrdNet/XrdNetAddr.hh"
+#endif
 #include "XrdOuc/XrdOucHash.hh"
 #include "XrdOuc/XrdOucString.hh"
 
@@ -116,7 +124,7 @@ public:
               fSvnMin = smi; fSvnMax = smx; fVerMin = vmi; fVerMax = vmx; }
    int Matches(const char *usr, const char *grp, int svn = -1, int ver = -1);
    void Print(const char *what);
-   static int     ToVersCode(int ver, bool hex = 0);       
+   static int     ToVersCode(int ver, bool hex = 0);
 };
 
 class XrdProofdProofServMgr : public XrdProofdConfig {
@@ -166,7 +174,7 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
    XrdSecCredsSaver_t fCredsSaver; // If defined, function to be used to save the credentials
 
    std::map<XrdProofdProtocol*,int> fDestroyTimes; // Tracks destroyed sessions
-   
+
    int                DoDirectiveProofServMgr(char *, XrdOucStream *, bool);
    int                DoDirectivePutEnv(char *, XrdOucStream *, bool);
    int                DoDirectivePutRc(char *, XrdOucStream *, bool);
@@ -179,17 +187,21 @@ class XrdProofdProofServMgr : public XrdProofdConfig {
                                   const char *usrs = 0, const char *grps = 0,
                                   int smi = -1, int smx = -1, int vmi = -1, int vmx = -1, bool hex = 0);
    unsigned int       GetSeqSessionN() { XrdSysMutexHelper mhp(fMutex); return ++fSeqSessionN; }
-   
+
    int                CreateAdminPath(XrdProofdProofServ *xps,
                                       XrdProofdProtocol *p, int pid, XrdOucString &emsg);
    int                CreateSockPath(XrdProofdProofServ *xps, XrdProofdProtocol *p,
                                      unsigned int seq, XrdOucString &emsg);
-   int                CreateFork(XrdProofdProtocol *p);
+//   int                CreateFork(XrdProofdProtocol *p);
    int                CreateProofServEnvFile(XrdProofdProtocol *p,
                                             void *input, const char *envfn, const char *rcfn);
    int                CreateProofServRootRc(XrdProofdProtocol *p,
                                             void *input, const char *rcfn);
+#ifndef ROOT_XrdFour
    int                SetupProtocol(XrdNetPeer &peerpsrv,
+#else
+   int                SetupProtocol(XrdNetAddr &netaddr,
+#endif
                                     XrdProofdProofServ *xps, XrdOucString &e);
    void               ParseCreateBuffer(XrdProofdProtocol *p,  XrdProofdProofServ *xps,
                                         XrdOucString &tag, XrdOucString &ord,

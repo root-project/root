@@ -813,5 +813,5 @@ void TGLViewerEditor::UpdateStereo()
    fViewer->SetStereoZeroParallax  (fStereoZeroParallax->GetNumber());
    fViewer->SetStereoEyeOffsetFac  (fStereoEyeOffsetFac->GetNumber());
    fViewer->SetStereoFrustumAsymFac(fStereoFrustumAsymFac->GetNumber());
-   ViewerRedraw(); 
+   ViewerRedraw();
 }

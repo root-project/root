@@ -43,7 +43,7 @@ private:
    TFPBlock &operator=(const TFPBlock&); // Not implemented.
 
 public:
-   
+
    TFPBlock(Long64_t*, Int_t*, Int_t);
    virtual ~TFPBlock();
 
@@ -133,7 +133,7 @@ inline char* TFPBlock::GetBuffer() const
 inline char* TFPBlock::GetPtrToPiece(Int_t index) const
 {
    // Get block buffer.
- 
+
   return (fBuffer + fRelOffset[index]);
 }
 

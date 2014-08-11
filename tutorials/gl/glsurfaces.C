@@ -2,14 +2,14 @@
 // This example draws 6 surfaces using OpenGL in pad (one is remake
 // of a classic surfaces.C, another contains 4 surfaces).
 //
-// The commands used are exactly the same as with a normal pad. 
+// The commands used are exactly the same as with a normal pad.
 // The only command to add is: gStyle->SetCanvasPreferGL(true);
 // Authors: Rene Brun, Timur Pocheptsov
 
 void glsurfaces()
 {
    gStyle->SetPalette(0);
-   
+
    // after this command all legos surfaces (surf/srf1/surf2/surf4/tf3
    // options) are automatically rendered with OpenGL.
    gStyle->SetCanvasPreferGL(kTRUE);
@@ -40,7 +40,7 @@ void glsurfaces()
    pad2->cd();
    pad2->SetLogz();
    f2clone->Draw("glsurf1");
-   
+
    //add axis titles. The titles are set on the intermediate
    //histogram used for visualisation. We must force this histogram
    //to be created, then force the redrawing of the two pads

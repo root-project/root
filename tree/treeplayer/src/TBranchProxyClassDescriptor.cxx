@@ -48,7 +48,7 @@ namespace ROOT {
       fRawSymbol.ReplaceAll("&","rf");
       if (IsClones())
          fRawSymbol.Prepend("TClaPx_");
-      else if (IsSTL()) 
+      else if (IsSTL())
          fRawSymbol.Prepend("TStlPx_");
       else
          fRawSymbol.Prepend("TPx_");
@@ -211,7 +211,7 @@ namespace ROOT {
       // Return true if the class needed by the branch is loaded
       return IsLoaded(GetTitle());
    }
-      
+
    Bool_t TBranchProxyClassDescriptor::IsLoaded(const char *classname)
    {
       // Return true if the class needed by the branch is loaded
@@ -389,14 +389,14 @@ namespace ROOT {
                fprintf(hf,"%-*sconst %s& At(UInt_t i) {\n",offset+3," ",type);
                TClass *stlCl = TClass::GetClass(fContainerName);
                TClass *cl = TClass::GetClass(GetTitle());
-               if (cl->GetMethodWithPrototype(cl->GetName(),"TRootIOCtor*")) {  
+               if (cl->GetMethodWithPrototype(cl->GetName(),"TRootIOCtor*")) {
                   fprintf(hf,"%-*s   static %s default_val((TRootIOCtor*)0);\n",offset+3," ",type);
                } else {
                   fprintf(hf,"%-*s   static %s default_val;\n",offset+3," ",type);
                }
                fprintf(hf,"%-*s   if (!obj.Read()) return default_val;\n",offset+3," ");
                if (stlCl->GetCollectionProxy()->GetValueClass() == cl) {
-                  fprintf(hf,"%-*s   %s *temp = & obj.GetPtr()->at(i);\n",offset+3," ",type);                  
+                  fprintf(hf,"%-*s   %s *temp = & obj.GetPtr()->at(i);\n",offset+3," ",type);
                } else {
                   fprintf(hf,"%-*s   %s *temp = (%s *)( obj.GetProxy()->GetStlStart(i) );\n",offset+3," ",type,type);
                }

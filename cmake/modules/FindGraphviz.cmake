@@ -1,4 +1,4 @@
-# Try to find Graphviz. 
+# Try to find Graphviz.
 # This will define:
 # GRAPHVIZ_FOUND - system has Graphviz
 # GRAPHVIZ_INCLUDE_DIR - the Graphviz include directory
@@ -16,13 +16,13 @@ set(GRAPHVIZ_LIBRARIES ${GRAPHVIZ_gvc_LIBRARY} ${GRAPHVIZ_graph_LIBRARY} ${GRAPH
 
 # handle the QUIETLY and REQUIRED arguments and set GRAPHVIZ_FOUND to TRUE if all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(GRAPHVIZ DEFAULT_MSG GRAPHVIZ_INCLUDE_DIR 
+find_package_handle_standard_args(GRAPHVIZ DEFAULT_MSG GRAPHVIZ_INCLUDE_DIR
                                                        GRAPHVIZ_cdt_LIBRARY
-                                                       GRAPHVIZ_gvc_LIBRARY 
-                                                       GRAPHVIZ_graph_LIBRARY 
+                                                       GRAPHVIZ_gvc_LIBRARY
+                                                       GRAPHVIZ_graph_LIBRARY
                                                        GRAPHVIZ_pathplan_LIBRARY)
 
-mark_as_advanced(GRAPHVIZ_INCLUDE_DIR 
+mark_as_advanced(GRAPHVIZ_INCLUDE_DIR
                  GRAPHVIZ_cdt_LIBRARY
                  GRAPHVIZ_graph_LIBRARY
                  GRAPHVIZ_gvc_LIBRARY

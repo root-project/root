@@ -2,7 +2,7 @@
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
-   
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -27,22 +27,22 @@
 //_____________________________________________________________________________
 //  TGeoBoolNode - base class for Boolean operations between two shapes.
 //===============
-// A Boolean node describes a Boolean operation between 'left' and 'right' 
+// A Boolean node describes a Boolean operation between 'left' and 'right'
 // shapes positioned with respect to an ARBITRARY reference frame. The boolean
 // node is referenced by a mother composite shape and its shape components may
 // be primitive but also composite shapes. The later situation leads to a binary
 // tree hierarchy. When the parent composite shape is used to create a volume,
-// the reference frame of the volume is chosen to match the frame in which 
+// the reference frame of the volume is chosen to match the frame in which
 // node shape components were defined.
 //
-// The positioned shape components may or may not be disjoint. The specific 
-// implementations for Boolean nodes are: 
+// The positioned shape components may or may not be disjoint. The specific
+// implementations for Boolean nodes are:
 //
 //    TGeoUnion - representing the Boolean  union of two positioned shapes
 //
-//    TGeoSubtraction - representing the Boolean subtraction of two positioned 
+//    TGeoSubtraction - representing the Boolean subtraction of two positioned
 //                shapes
-// 
+//
 //    TGeoIntersection - representing the Boolean intersection of two positioned
 //                shapes
 //_____________________________________________________________________________
@@ -71,7 +71,7 @@ TGeoBoolNode::ThreadData_t& TGeoBoolNode::GetThreadData() const
    if (tid >= fThreadSize) {
       Error("GetThreadData", "Thread id=%d bigger than maximum declared thread number %d. \nUse TGeoManager::SetMaxThreads properly !!!",
              tid, fThreadSize);
-   }          
+   }
    if (tid >= fThreadSize)
    {
       fThreadData.resize(tid + 1);
@@ -81,7 +81,7 @@ TGeoBoolNode::ThreadData_t& TGeoBoolNode::GetThreadData() const
    {
    if (fThreadData[tid] == 0)
       fThreadData[tid] = new ThreadData_t;
-   }   
+   }
    TThread::UnLock();
 */
    return *fThreadData[tid];
@@ -181,11 +181,11 @@ TGeoBoolNode::TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, 
    if (!fLeft) {
       Error("ctor", "left shape is NULL");
       return;
-   }   
+   }
    if (!fRight) {
       Error("ctor", "right shape is NULL");
       return;
-   }   
+   }
 }
 
 //______________________________________________________________________________
@@ -214,8 +214,8 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
 
    if (stransf.Length() == 0) {
       mat = gGeoIdentity;
-   } else {   
-      mat = (TGeoMatrix*)gGeoManager->GetListOfMatrices()->FindObject(stransf.Data());    
+   } else {
+      mat = (TGeoMatrix*)gGeoManager->GetListOfMatrices()->FindObject(stransf.Data());
    }
    if (!mat) {
       Error("MakeBranch", "transformation %s not found", stransf.Data());
@@ -224,7 +224,7 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
    switch (boolop) {
       case 0:
          // elementary shape
-         shape = (TGeoShape*)gGeoManager->GetListOfShapes()->FindObject(sleft.Data()); 
+         shape = (TGeoShape*)gGeoManager->GetListOfShapes()->FindObject(sleft.Data());
          if (!shape) {
             Error("MakeBranch", "shape %s not found", sleft.Data());
             return kFALSE;
@@ -251,12 +251,12 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
          newshape += sright;
          shape = new TGeoCompositeShape(newshape.Data());
          break;
-   }      
+   }
    if (boolop && (!shape || !shape->IsValid())) {
       Error("MakeBranch", "Shape %s not valid", newshape.Data());
       if (shape) delete shape;
       return kFALSE;
-   }      
+   }
    if (left) {
       fLeft = shape;
       fLeftMat = mat;
@@ -264,7 +264,7 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
       fRight = shape;
       fRightMat = mat;
    }
-   return kTRUE;                  
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -274,8 +274,8 @@ void TGeoBoolNode::Paint(Option_t * option)
    TVirtualViewer3D * viewer = gPad->GetViewer3D();
    if (!viewer) return;
 
-   // Components of composite shape hierarchies for local frame viewers are painted 
-   // in coordinate frame of the top level composite shape. So we force 
+   // Components of composite shape hierarchies for local frame viewers are painted
+   // in coordinate frame of the top level composite shape. So we force
    // conversion to this.  See TGeoPainter::PaintNode for loading of GLMatrix.
    Bool_t localFrame = kFALSE; //viewer->PreferLocalFrame();
 
@@ -306,15 +306,15 @@ void TGeoBoolNode::Paint(Option_t * option)
       viewer->AddObject(rightBuffer);
    }
 
-   *glmat = &mat;   
+   *glmat = &mat;
 }
 
 //_____________________________________________________________________________
 void TGeoBoolNode::RegisterMatrices()
 {
 // Register all matrices of the boolean node and descendents.
-   if (!fLeftMat->IsIdentity()) fLeftMat->RegisterYourself();   
-   if (!fRightMat->IsIdentity()) fRightMat->RegisterYourself();   
+   if (!fLeftMat->IsIdentity()) fLeftMat->RegisterYourself();
+   if (!fRightMat->IsIdentity()) fRightMat->RegisterYourself();
    if (fLeft->IsComposite()) ((TGeoCompositeShape*)fLeft)->GetBoolNode()->RegisterMatrices();
    if (fRight->IsComposite()) ((TGeoCompositeShape*)fRight)->GetBoolNode()->RegisterMatrices();
 }
@@ -342,8 +342,8 @@ Bool_t TGeoBoolNode::ReplaceMatrix(TGeoMatrix *mat, TGeoMatrix *newmat)
       replaced = kTRUE;
    }
    return replaced;
-}   
-       
+}
+
 //_____________________________________________________________________________
 void TGeoBoolNode::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
@@ -353,11 +353,11 @@ void TGeoBoolNode::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (!fLeftMat->IsIdentity()) {
       fLeftMat->RegisterYourself();
       fLeftMat->SavePrimitive(out,option);
-   }      
+   }
    if (!fRightMat->IsIdentity()) {
       fRightMat->RegisterYourself();
       fRightMat->SavePrimitive(out,option);
-   }      
+   }
 }
 
 //______________________________________________________________________________
@@ -393,7 +393,7 @@ TGeoBoolNode *TGeoUnion::MakeClone() const
 {
 // Make a clone of this. Pointers are preserved.
    return new TGeoUnion(fLeft, fRight, fLeftMat, fRightMat);
-}   
+}
 
 //______________________________________________________________________________
 void TGeoUnion::Paint(Option_t *option)
@@ -463,7 +463,7 @@ void TGeoUnion::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *
       if (pt[1]>ymax) ymax=pt[1];
       if (pt[2]<zmin) zmin=pt[2];
       if (pt[2]>zmax) zmax=pt[2];
-   }   
+   }
    for (i=8; i<16; i++) {
       fRightMat->LocalToMaster(&vert[3*i], &pt[0]);
       if (pt[0]<xmin) xmin=pt[0];
@@ -472,7 +472,7 @@ void TGeoUnion::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *
       if (pt[1]>ymax) ymax=pt[1];
       if (pt[2]<zmin) zmin=pt[2];
       if (pt[2]>zmax) zmax=pt[2];
-   }   
+   }
    dx = 0.5*(xmax-xmin);
    origin[0] = 0.5*(xmin+xmax);
    dy = 0.5*(ymax-ymin);
@@ -516,21 +516,21 @@ void TGeoUnion::ComputeNormal(const Double_t *point, const Double_t *dir, Double
       fRight->ComputeNormal(local,ldir,lnorm);
       fRightMat->LocalToMasterVect(lnorm, norm);
       return;
-   }            
+   }
    fLeftMat->MasterToLocal(point, local);
    if (fLeft->Contains(local)) {
       fLeftMat->MasterToLocalVect(dir, ldir);
       fLeft->ComputeNormal(local,ldir,lnorm);
       fLeftMat->LocalToMasterVect(lnorm, norm);
       return;
-   }   
+   }
    fRightMat->MasterToLocal(point, local);
    if (fRight->Contains(local)) {
       fRightMat->MasterToLocalVect(dir, ldir);
       fRight->ComputeNormal(local,ldir,lnorm);
       fRightMat->LocalToMasterVect(lnorm, norm);
       return;
-   }   
+   }
    // Propagate forward/backward to see which of the components is intersected first
    local[0] = point[0] + 1E-5*dir[0];
    local[1] = point[1] + 1E-5*dir[1];
@@ -542,7 +542,7 @@ void TGeoUnion::ComputeNormal(const Double_t *point, const Double_t *dir, Double
       local[2] = point[2] - 1E-5*dir[2];
       if (!Contains(local)) return;
    }
-   ComputeNormal(local,dir,norm);   
+   ComputeNormal(local,dir,norm);
 }
 
 //______________________________________________________________________________
@@ -587,7 +587,7 @@ Double_t TGeoUnion::DistFromInside(const Double_t *point, const Double_t *dir, I
          inside1 = kTRUE;
          d1 = fLeft->DistFromInside(local1, ldir, 3);
          d1 += eps;
-      } else {      
+      } else {
          d2 = fRight->DistFromOutside(local, rdir, 3);
          if (d2<1.E-3) {
            eps = d2+TGeoShape::Tolerance();
@@ -596,17 +596,17 @@ Double_t TGeoUnion::DistFromInside(const Double_t *point, const Double_t *dir, I
            d2 = fRight->DistFromInside(local, rdir, 3);
            d2 += eps;
         }
-     }      
+     }
    }
    while (inside1 || inside2) {
       if (inside1 && inside2) {
-         if (d1<d2) {      
+         if (d1<d2) {
             snxt += d1;
             node->SetSelected(1);
             // propagate to exit of left shape
             inside1 = kFALSE;
             for (i=0; i<3; i++) master[i] += d1*dir[i];
-            // check if propagated point is in right shape        
+            // check if propagated point is in right shape
             fRightMat->MasterToLocal(master, local);
             inside2 = fRight->Contains(local);
             if (!inside2) return snxt;
@@ -618,14 +618,14 @@ Double_t TGeoUnion::DistFromInside(const Double_t *point, const Double_t *dir, I
             // propagate to exit of right shape
             inside2 = kFALSE;
             for (i=0; i<3; i++) master[i] += d2*dir[i];
-            // check if propagated point is in left shape        
+            // check if propagated point is in left shape
             fLeftMat->MasterToLocal(master, local);
             inside1 = fLeft->Contains(local);
             if (!inside1) return snxt;
             d1 = fLeft->DistFromInside(local, ldir, 3);
             if (d1 < TGeoShape::Tolerance()) return snxt;
          }
-      } 
+      }
       if (inside1) {
          snxt += d1;
          node->SetSelected(1);
@@ -634,15 +634,15 @@ Double_t TGeoUnion::DistFromInside(const Double_t *point, const Double_t *dir, I
          for (i=0; i<3; i++) {
             master[i] += d1*dir[i];
             pushed[i] = master[i]+(1.+d1)*TGeoShape::Tolerance()*dir[i];
-         }   
-         // check if propagated point is in right shape        
+         }
+         // check if propagated point is in right shape
          fRightMat->MasterToLocal(pushed, local);
          inside2 = fRight->Contains(local);
          if (!inside2) return snxt;
          d2 = fRight->DistFromInside(local, rdir, 3);
          if (d2 < TGeoShape::Tolerance()) return snxt;
          d2 += (1.+d1)*TGeoShape::Tolerance();
-      }   
+      }
       if (inside2) {
          snxt += d2;
          node->SetSelected(2);
@@ -651,8 +651,8 @@ Double_t TGeoUnion::DistFromInside(const Double_t *point, const Double_t *dir, I
          for (i=0; i<3; i++) {
             master[i] += d2*dir[i];
             pushed[i] = master[i]+(1.+d2)*TGeoShape::Tolerance()*dir[i];
-         }   
-         // check if propagated point is in left shape        
+         }
+         // check if propagated point is in left shape
          fLeftMat->MasterToLocal(pushed, local);
          inside1 = fLeft->Contains(local);
          if (!inside1) return snxt;
@@ -660,7 +660,7 @@ Double_t TGeoUnion::DistFromInside(const Double_t *point, const Double_t *dir, I
          if (d1 < TGeoShape::Tolerance()) return snxt;
          d1 += (1.+d2)*TGeoShape::Tolerance();
       }
-   }      
+   }
    return snxt;
 }
 
@@ -690,7 +690,7 @@ Double_t TGeoUnion::DistFromOutside(const Double_t *point, const Double_t *dir, 
    } else {
       snxt = d2;
       node->SetSelected(2);
-   }      
+   }
    return snxt;
 }
 
@@ -729,7 +729,7 @@ Int_t TGeoUnion::GetNpoints()
    delete [] points1;
    delete [] points2;
    delete [] points;
-   return fNpoints;         
+   return fNpoints;
 }
 
 //______________________________________________________________________________
@@ -749,7 +749,7 @@ Double_t TGeoUnion::Safety(const Double_t *point, Bool_t in) const
    if (in1)        return saf1;
    if (in2)        return saf2;
    return TMath::Min(saf1,saf2);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoUnion::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
@@ -763,7 +763,7 @@ void TGeoUnion::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    else                         out << "0,";
    if (!fRightMat->IsIdentity()) out << fRightMat->GetPointerName() << ");" << std::endl;
    else                         out << "0);" << std::endl;
-}   
+}
 
 //______________________________________________________________________________
 void TGeoUnion::Sizeof3D() const
@@ -771,7 +771,7 @@ void TGeoUnion::Sizeof3D() const
 // Register 3D size of this shape.
    TGeoBoolNode::Sizeof3D();
 }
-   
+
 
 ClassImp(TGeoSubtraction)
 
@@ -780,7 +780,7 @@ TGeoBoolNode *TGeoSubtraction::MakeClone() const
 {
 // Make a clone of this. Pointers are preserved.
    return new TGeoSubtraction(fLeft, fRight, fLeftMat, fRightMat);
-}   
+}
 
 //______________________________________________________________________________
 void TGeoSubtraction::Paint(Option_t *option)
@@ -849,14 +849,14 @@ void TGeoSubtraction::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Doub
       if (pt[1]>ymax) ymax=pt[1];
       if (pt[2]<zmin) zmin=pt[2];
       if (pt[2]>zmax) zmax=pt[2];
-   }   
+   }
    dx = 0.5*(xmax-xmin);
    origin[0] = 0.5*(xmin+xmax);
    dy = 0.5*(ymax-ymin);
    origin[1] = 0.5*(ymin+ymax);
    dz = 0.5*(zmax-zmin);
    origin[2] = 0.5*(zmin+zmax);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoSubtraction::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
@@ -886,7 +886,7 @@ void TGeoSubtraction::ComputeNormal(const Double_t *point, const Double_t *dir, 
       fRight->ComputeNormal(local,ldir, lnorm);
       fRightMat->LocalToMasterVect(lnorm,norm);
       return;
-   }   
+   }
    fLeftMat->MasterToLocal(point,local);
    if (!fLeft->Contains(local)) {
       fLeftMat->MasterToLocalVect(dir,ldir);
@@ -903,7 +903,7 @@ void TGeoSubtraction::ComputeNormal(const Double_t *point, const Double_t *dir, 
       local[1] = point[1]-1E-5*dir[1];
       local[2] = point[2]-1E-5*dir[2];
       if (Contains(local)) return;
-   }  
+   }
    ComputeNormal(local,dir,norm);
 }
 
@@ -953,9 +953,9 @@ Double_t TGeoSubtraction::DistFromInside(const Double_t *point, const Double_t *
    } else {
       snxt = d2;
       node->SetSelected(2);
-   }      
+   }
    return snxt;
-}   
+}
 
 //______________________________________________________________________________
 Double_t TGeoSubtraction::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact,
@@ -990,19 +990,19 @@ Double_t TGeoSubtraction::DistFromOutside(const Double_t *point, const Double_t 
          // now master outside '-'; check if inside '+'
          fLeftMat->MasterToLocal(&master[0], &local[0]);
          if (fLeft->Contains(&local[0])) return snxt;
-      } 
+      }
       // master outside '-' and outside '+' ;  find distances to both
       node->SetSelected(1);
       fLeftMat->MasterToLocal(&master[0], &local[0]);
       d2 = fLeft->DistFromOutside(&local[0], &ldir[0], iact, step, safe);
       if (d2>1E20) return TGeoShape::Big();
-      
+
       fRightMat->MasterToLocal(&master[0], &local[0]);
       d1 = fRight->DistFromOutside(&local[0], &rdir[0], iact, step, safe);
       if (d2<d1-TGeoShape::Tolerance()) {
          snxt += d2+epsil;
          return snxt;
-      }   
+      }
       // propagate to '-'
       snxt += d1+epsil;
       for (i=0; i<3; i++) master[i] += (d1+1E-8)*dir[i];
@@ -1046,7 +1046,7 @@ Int_t TGeoSubtraction::GetNpoints()
    delete [] points1;
    delete [] points2;
    delete [] points;
-   return fNpoints;         
+   return fNpoints;
 }
 
 //______________________________________________________________________________
@@ -1066,7 +1066,7 @@ Double_t TGeoSubtraction::Safety(const Double_t *point, Bool_t in) const
    if (in1)        return TMath::Min(saf1,saf2);
    if (in2)        return TMath::Max(saf1,saf2);
    return saf1;
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoSubtraction::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
@@ -1080,7 +1080,7 @@ void TGeoSubtraction::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
    else                         out << "0,";
    if (!fRightMat->IsIdentity()) out << fRightMat->GetPointerName() << ");" << std::endl;
    else                         out << "0);" << std::endl;
-}   
+}
 
 //______________________________________________________________________________
 void TGeoSubtraction::Sizeof3D() const
@@ -1096,7 +1096,7 @@ TGeoBoolNode *TGeoIntersection::MakeClone() const
 {
 // Make a clone of this. Pointers are preserved.
    return new TGeoIntersection(fLeft, fRight, fLeftMat, fRightMat);
-}   
+}
 
 //______________________________________________________________________________
 void TGeoIntersection::Paint(Option_t *option)
@@ -1168,8 +1168,8 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
          if (pt[1]>ymax1) ymax1=pt[1];
          if (pt[2]<zmin1) zmin1=pt[2];
          if (pt[2]>zmax1) zmax1=pt[2];
-      }   
-   }   
+      }
+   }
    if (!hs2) {
       if (((TGeoBBox*)fRight)->IsNullBox()) fRight->ComputeBBox();
       ((TGeoBBox*)fRight)->SetBoxPoints(&vert[24]);
@@ -1182,25 +1182,25 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
          if (pt[2]<zmin2) zmin2=pt[2];
          if (pt[2]>zmax2) zmax2=pt[2];
       }
-   }      
+   }
    if (hs1) {
       dx = 0.5*(xmax2-xmin2);
-      origin[0] = 0.5*(xmax2+xmin2);   
+      origin[0] = 0.5*(xmax2+xmin2);
       dy = 0.5*(ymax2-ymin2);
-      origin[1] = 0.5*(ymax2+ymin2);   
+      origin[1] = 0.5*(ymax2+ymin2);
       dz = 0.5*(zmax2-zmin2);
-      origin[2] = 0.5*(zmax2+zmin2);   
+      origin[2] = 0.5*(zmax2+zmin2);
       return;
-   }            
+   }
    if (hs2) {
       dx = 0.5*(xmax1-xmin1);
-      origin[0] = 0.5*(xmax1+xmin1);   
+      origin[0] = 0.5*(xmax1+xmin1);
       dy = 0.5*(ymax1-ymin1);
-      origin[1] = 0.5*(ymax1+ymin1);   
+      origin[1] = 0.5*(ymax1+ymin1);
       dz = 0.5*(zmax1-zmin1);
-      origin[2] = 0.5*(zmax1+zmin1);   
+      origin[2] = 0.5*(zmax1+zmin1);
       return;
-   }   
+   }
    Double_t sort[4];
    Int_t isort[4];
    sort[0] = xmin1;
@@ -1215,7 +1215,7 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
       return;
    }
    dx = 0.5*(sort[isort[2]]-sort[isort[1]]);
-   origin[0] = 0.5*(sort[isort[1]]+sort[isort[2]]);   
+   origin[0] = 0.5*(sort[isort[1]]+sort[isort[2]]);
    sort[0] = ymin1;
    sort[1] = ymax1;
    sort[2] = ymin2;
@@ -1228,7 +1228,7 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
       return;
    }
    dy = 0.5*(sort[isort[2]]-sort[isort[1]]);
-   origin[1] = 0.5*(sort[isort[1]]+sort[isort[2]]);   
+   origin[1] = 0.5*(sort[isort[1]]+sort[isort[2]]);
    sort[0] = zmin1;
    sort[1] = zmax1;
    sort[2] = zmin2;
@@ -1241,8 +1241,8 @@ void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Dou
       return;
    }
    dz = 0.5*(sort[isort[2]]-sort[isort[1]]);
-   origin[2] = 0.5*(sort[isort[1]]+sort[isort[2]]);   
-}   
+   origin[2] = 0.5*(sort[isort[1]]+sort[isort[2]]);
+}
 
 //_____________________________________________________________________________
 void TGeoIntersection::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
@@ -1265,7 +1265,7 @@ void TGeoIntersection::ComputeNormal(const Double_t *point, const Double_t *dir,
       fRight->ComputeNormal(local,ldir,lnorm);
       fRightMat->LocalToMasterVect(lnorm, norm);
       return;
-   }            
+   }
    fLeftMat->MasterToLocal(point,local);
    if (!fLeft->Contains(local)) {
       fLeftMat->MasterToLocalVect(dir,ldir);
@@ -1281,16 +1281,16 @@ void TGeoIntersection::ComputeNormal(const Double_t *point, const Double_t *dir,
       return;
    }
    // point is inside intersection.
-   local[0] = point[0] + 1E-5*dir[0];   
-   local[1] = point[1] + 1E-5*dir[1];   
+   local[0] = point[0] + 1E-5*dir[0];
+   local[1] = point[1] + 1E-5*dir[1];
    local[2] = point[2] + 1E-5*dir[2];
    if (Contains(local)) {
-      local[0] = point[0] - 1E-5*dir[0];   
-      local[1] = point[1] - 1E-5*dir[1];   
+      local[0] = point[0] - 1E-5*dir[0];
+      local[1] = point[1] - 1E-5*dir[1];
       local[2] = point[2] - 1E-5*dir[2];
       if (Contains(local)) return;
    }
-   ComputeNormal(local,dir,norm);   
+   ComputeNormal(local,dir,norm);
 }
 
 //______________________________________________________________________________
@@ -1339,9 +1339,9 @@ Double_t TGeoIntersection::DistFromInside(const Double_t *point, const Double_t 
    } else {
       snxt = d2;
       node->SetSelected(2);
-   }      
+   }
    return snxt;
-}   
+}
 
 //______________________________________________________________________________
 Double_t TGeoIntersection::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact,
@@ -1377,7 +1377,7 @@ Double_t TGeoIntersection::DistFromOutside(const Double_t *point, const Double_t
       if (d1<1.E-3) inleft = kFALSE;
       if (d2<1.E-3) inright = kFALSE;
       if (inleft && inright) return snext;
-   }   
+   }
 
    while (1) {
       d1 = d2 = 0;
@@ -1386,12 +1386,12 @@ Double_t TGeoIntersection::DistFromOutside(const Double_t *point, const Double_t
          d1 = TMath::Max(d1,tol);
          if (d1>1E20) return TGeoShape::Big();
       }
-      if (!inright) {  
+      if (!inright) {
          d2 = fRight->DistFromOutside(rpt,rdir,3);
          d2 = TMath::Max(d2,tol);
          if (d2>1E20) return TGeoShape::Big();
       }
-   
+
       if (d1>d2) {
          // propagate to left shape
          snext += d1;
@@ -1404,7 +1404,7 @@ Double_t TGeoIntersection::DistFromOutside(const Double_t *point, const Double_t
          // check if propagated point is inside right shape
          inright = fRight->Contains(rpt);
          if (inright) return snext;
-         // here inleft=true, inright=false         
+         // here inleft=true, inright=false
       } else {
          // propagate to right shape
          snext += d2;
@@ -1418,10 +1418,10 @@ Double_t TGeoIntersection::DistFromOutside(const Double_t *point, const Double_t
          inleft = fLeft->Contains(lpt);
          if (inleft) return snext;
          // here inleft=false, inright=true
-      }            
-   }   
+      }
+   }
    return snext;
-}      
+}
 
 //______________________________________________________________________________
 Int_t TGeoIntersection::GetNpoints()
@@ -1456,7 +1456,7 @@ Int_t TGeoIntersection::GetNpoints()
    delete [] points1;
    delete [] points2;
    delete [] points;
-   return fNpoints;         
+   return fNpoints;
 }
 
 //______________________________________________________________________________
@@ -1476,7 +1476,7 @@ Double_t TGeoIntersection::Safety(const Double_t *point, Bool_t in) const
    if (in1)        return saf2;
    if (in2)        return saf1;
    return TMath::Max(saf1,saf2);
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoIntersection::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
@@ -1490,7 +1490,7 @@ void TGeoIntersection::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
    else                         out << "0,";
    if (!fRightMat->IsIdentity()) out << fRightMat->GetPointerName() << ");" << std::endl;
    else                         out << "0);" << std::endl;
-}   
+}
 
 //______________________________________________________________________________
 void TGeoIntersection::Sizeof3D() const

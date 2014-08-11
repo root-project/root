@@ -1,9 +1,9 @@
-//Example for fitting signal/background. 
+//Example for fitting signal/background.
 // This example can be executed with:
 // root > .x FittingDemo.C  (using the CINT interpreter)
 // root > .x FittingDemo.C+ (using the native complier via ACLIC)
 //Author: Rene Brun
-   
+
 #include "TH1.h"
 #include "TMath.h"
 #include "TF1.h"
@@ -18,8 +18,8 @@ Double_t background(Double_t *x, Double_t *par) {
 
 // Lorenzian Peak function
 Double_t lorentzianPeak(Double_t *x, Double_t *par) {
-  return (0.5*par[0]*par[1]/TMath::Pi()) / 
-    TMath::Max( 1.e-10,(x[0]-par[2])*(x[0]-par[2]) 
+  return (0.5*par[0]*par[1]/TMath::Pi()) /
+    TMath::Max( 1.e-10,(x[0]-par[2])*(x[0]-par[2])
    + .25*par[1]*par[1]);
 }
 
@@ -30,9 +30,9 @@ Double_t fitFunction(Double_t *x, Double_t *par) {
 
 void FittingDemo() {
  //Bevington Exercise by Peter Malzacher, modified by Rene Brun
- 
+
    const int nBins = 60;
-   
+
    Double_t data[nBins] = { 6, 1,10,12, 6,13,23,22,15,21,
                            23,26,36,25,27,35,40,44,66,81,
                            75,57,48,45,46,41,35,36,53,32,
@@ -43,35 +43,35 @@ void FittingDemo() {
    c1->SetFillColor(33);
    c1->SetFrameFillColor(41);
    c1->SetGrid();
-   
+
    TH1F *histo = new TH1F("histo",
       "Lorentzian Peak on Quadratic Background",60,0,3);
    histo->SetMarkerStyle(21);
    histo->SetMarkerSize(0.8);
    histo->SetStats(0);
-       
+
    for(int i=0; i < nBins;  i++) histo->SetBinContent(i+1,data[i]);
-   
+
    // create a TF1 with the range from 0 to 3 and 6 parameters
    TF1 *fitFcn = new TF1("fitFcn",fitFunction,0,3,6);
    fitFcn->SetNpx(500);
    fitFcn->SetLineWidth(4);
    fitFcn->SetLineColor(kMagenta);
-    
+
    // first try without starting values for the parameters
-   // This defaults to 1 for each param. 
+   // This defaults to 1 for each param.
    // this results in an ok fit for the polynomial function
-   // however the non-linear part (lorenzian) does not 
+   // however the non-linear part (lorenzian) does not
    // respond well.
    fitFcn->SetParameters(1,1,1,1,1,1);
    histo->Fit("fitFcn","0");
-   
+
    // second try: set start values for some parameters
    fitFcn->SetParameter(4,0.2); // width
    fitFcn->SetParameter(5,1);   // peak
- 
+
    histo->Fit("fitFcn","V+","ep");
-   
+
    // improve the picture:
    TF1 *backFcn = new TF1("backFcn",background,0,3,3);
    backFcn->SetLineColor(kRed);
@@ -79,16 +79,16 @@ void FittingDemo() {
    signalFcn->SetLineColor(kBlue);
    signalFcn->SetNpx(500);
    Double_t par[6];
-  
+
    // writes the fit results into the par array
    fitFcn->GetParameters(par);
-    
+
    backFcn->SetParameters(par);
    backFcn->Draw("same");
- 
+
    signalFcn->SetParameters(&par[3]);
-   signalFcn->Draw("same"); 
-   
+   signalFcn->Draw("same");
+
    // draw the legend
    TLegend *legend=new TLegend(0.6,0.65,0.88,0.85);
    legend->SetTextFont(72);
@@ -98,5 +98,5 @@ void FittingDemo() {
    legend->AddEntry(signalFcn,"Signal fit","l");
    legend->AddEntry(fitFcn,"Global Fit","l");
    legend->Draw();
-   
+
 }

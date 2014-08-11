@@ -1,5 +1,5 @@
 # Find the FFTW includes and library.
-# 
+#
 # This module defines
 # FFTW_INCLUDE_DIR, where to locate fftw3.h file
 # FFTW_LIBRARIES, the libraries to link against to use fftw3
@@ -24,7 +24,7 @@ find_library(FFTW_LIBRARY NAMES fftw3 fftw3-3 PATHS
   $ENV{FFTW_DIR}/lib
   $ENV{FFTW3} $ENV{FFTW3}/lib $ENV{FFTW3}/.libs
   /usr/local/lib
-  /usr/lib 
+  /usr/lib
   /opt/fftw3/lib
   DOC "Specify the fttw3 library here."
 )

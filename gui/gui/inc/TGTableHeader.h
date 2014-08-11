@@ -19,7 +19,7 @@ enum EHeaderType {
    kColumnHeader,
    kRowHeader,
    kTableHeader
-};   
+};
 
 class TGWindow;
 
@@ -36,21 +36,21 @@ protected:
    void        Init();
 
 public:
-   TGTableHeader(const TGWindow *p = 0, TGTable *table = 0, 
-                 TGString *label = 0, UInt_t position = 0, 
+   TGTableHeader(const TGWindow *p = 0, TGTable *table = 0,
+                 TGString *label = 0, UInt_t position = 0,
                  EHeaderType type = kColumnHeader, UInt_t width = 80,
                  UInt_t height = 25, GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
-   TGTableHeader(const TGWindow *p, TGTable *table, const char *label, 
-                 UInt_t position, EHeaderType type = kColumnHeader, 
-                 UInt_t width = 80, UInt_t height = 25, 
+   TGTableHeader(const TGWindow *p, TGTable *table, const char *label,
+                 UInt_t position, EHeaderType type = kColumnHeader,
+                 UInt_t width = 80, UInt_t height = 25,
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
    virtual ~TGTableHeader();
 
-   virtual void SetWidth(UInt_t width);    
+   virtual void SetWidth(UInt_t width);
    virtual void SetHeight(UInt_t height);
 
    virtual void SetLabel(const char *label);

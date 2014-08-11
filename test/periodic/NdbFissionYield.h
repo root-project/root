@@ -9,11 +9,11 @@ class NdbFissionYield : public NdbMF
 protected:
 
 public:
-	NdbFissionYield()
-		: NdbMF(8, "Radioactivity and fission-product yield data") {}
-	~NdbFissionYield() {}
+   NdbFissionYield()
+      : NdbMF(8, "Radioactivity and fission-product yield data") {}
+   ~NdbFissionYield() {}
 
-	ClassDef(NdbFissionYield,1)
+   ClassDef(NdbFissionYield,1)
 
 }; // NdbFissionYield
 

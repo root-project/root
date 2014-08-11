@@ -42,10 +42,10 @@ class TBrowser : public TNamed {
 
 private:
    TObject       *fLastSelectedObject; //!The last TObject selected by user
-   
+
    TBrowser(const TBrowser&);             // TBrowser can not be copied since we do not know the type of the TBrowserImp (and it can not be 'Cloned')
    TBrowser& operator=(const TBrowser&);  // TBrowser can not be copied since we do not know the type of the TBrowserImp (and it can not be 'Cloned')
-   
+
 protected:
    TBrowserImp   *fImp;                //!Window system specific browser implementation
    TBrowserTimer *fTimer;              //!Browser's timer
@@ -107,15 +107,15 @@ public:
    void          SetDrawOption(Option_t *option="") { fImp->SetDrawOption(option); }
    Option_t     *GetDrawOption() const { return  fImp->GetDrawOption(); }
 
-   Long_t        ExecPlugin(const char *name = 0, const char *fname = 0, 
+   Long_t        ExecPlugin(const char *name = 0, const char *fname = 0,
                             const char *cmd = 0, Int_t pos = 1, Int_t subpos = -1) {
-                    return fImp->ExecPlugin(name, fname, cmd, pos, subpos); 
+                    return fImp->ExecPlugin(name, fname, cmd, pos, subpos);
                  }
    void          SetStatusText(const char *txt, Int_t col) {
-                    fImp->SetStatusText(txt, col); 
+                    fImp->SetStatusText(txt, col);
                  }
    void          StartEmbedding(Int_t pos, Int_t subpos) {
-                    fImp->StartEmbedding(pos, subpos); 
+                    fImp->StartEmbedding(pos, subpos);
                  }
    void          StopEmbedding(const char *name = "") { fImp->StopEmbedding(name); }
 

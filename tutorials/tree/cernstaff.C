@@ -17,7 +17,7 @@ void cernstaff () {
    TH2F *hN = (TH2F*)gDirectory->Get("hN");
    hN->SetMarkerSize(1.6);
    hN->SetStats(0);
-   
+
    //make profile of Average cost per Nation
    c1->cd(2); gPad->SetGrid();
    gPad->SetLeftMargin(0.12);
@@ -30,7 +30,7 @@ void cernstaff () {
    hNation->SetStats(0);
    hNation->SetMarkerStyle(21);
    hNation->Draw();
-   
+
    //make stacked plot of Nations versus Grade
    c1->cd(3); gPad->SetGrid();
    THStack *hGrades = new THStack("hGrades","Nations versus Grade");
@@ -62,7 +62,7 @@ void cernstaff () {
    legend->AddEntry(hCH,"CH","f");
    legend->AddEntry(hFR,"FR","f");
    legend->Draw();
-   
+
    //make histogram of age distribution
    c1->cd(4); gPad->SetGrid();
    T->Draw("Age");
@@ -70,17 +70,17 @@ void cernstaff () {
    TH1F *hRetired = (TH1F*)gDirectory->Get("hRetired");
    hRetired->SetFillColor(kRed);
    hRetired->SetFillStyle(3010);
-   
+
    TArrow *arrow = new TArrow(32,169,55,74,0.03,"|>");
    arrow->SetFillColor(1);
    arrow->SetFillStyle(1001);
    arrow->Draw();
-   
+
    TPaveText *pt = new TPaveText(0.12,0.8,0.55,0.88,"brNDC");
    pt->SetFillColor(18);
    pt->AddText("People at CERN in 1988");
    pt->AddText("and retired in 2002");
    pt->Draw();
-   
-   c1->cd(); 
+
+   c1->cd();
 }

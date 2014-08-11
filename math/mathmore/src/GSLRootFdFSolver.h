@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Header file for class GSLRootFdFSolver
-// 
+//
 // Created by: moneta  at Sun Nov 14 17:23:06 2004
-// 
+//
 // Last update: Sun Nov 14 17:23:06 2004
-// 
+//
 #ifndef ROOT_Math_GSLRootFdFSolver
 #define ROOT_Math_GSLRootFdFSolver
 
@@ -40,18 +40,18 @@ namespace Math {
 
 
 /**
-   Root-Finder with derivatives implementation class using  GSL  
+   Root-Finder with derivatives implementation class using  GSL
 
    @ingroup RootFinders
  */
 class GSLRootFdFSolver {
 
-public: 
+public:
 
-  GSLRootFdFSolver(const gsl_root_fdfsolver_type * type) { 
-    fSolver = gsl_root_fdfsolver_alloc( type); 
+  GSLRootFdFSolver(const gsl_root_fdfsolver_type * type) {
+    fSolver = gsl_root_fdfsolver_alloc( type);
   }
-  virtual ~GSLRootFdFSolver() { 
+  virtual ~GSLRootFdFSolver() {
     gsl_root_fdfsolver_free( fSolver);
   }
 
@@ -62,18 +62,18 @@ public:
 
 /* public:  */
 
-  gsl_root_fdfsolver * Solver() const { return fSolver; } 
-  
-
-protected: 
+  gsl_root_fdfsolver * Solver() const { return fSolver; }
 
 
-private: 
+protected:
+
+
+private:
 
   gsl_root_fdfsolver *fSolver;
 
 
-}; 
+};
 
 } // namespace Math
 } // namespace ROOT

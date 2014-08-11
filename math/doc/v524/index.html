@@ -1,6 +1,6 @@
-<br> 
-<hr> 
-<a name="math"></a> 
+<br>
+<hr>
+<a name="math"></a>
 <h3>Math Libraries</h3>
 
 <hr>
@@ -34,17 +34,17 @@
    <li><tt>bool Hesse()</tt>: to perform a full calculation of the Hessian matrix
    </ul>
    </li>
-  
+
   <li><tt><b>TMath</b></tt>
   <ul>
     <li>
-    Fix a numerical problem in <tt>TMath::ErfcInverse</tt> for small input values. Now the normal quantile function is used for implementing it.  
+    Fix a numerical problem in <tt>TMath::ErfcInverse</tt> for small input values. Now the normal quantile function is used for implementing it.
     </li>
     </ul>
     </li>
 </ul>
  <h4>MathMore</h4>
-  <ul> 
+  <ul>
     <li>Fix 2 bugs in the quartic equation solver (see issue <a href="https://savannah.cern.ch/bugs/?49031">#49031</a>).
     <ul><li>
     A protection has been added against numerical errors which could cause NaN due to wrong inputs to an <tt>acos</tt> function. This problem appears also in the GSL cubic solver. A new GSL patched cubic function has been then added in MathMore.
@@ -57,8 +57,8 @@
  </ul>
 
   <h4>SMatrix</h4>
-  <ul> 
-    <li>Remove an unneeded check on the element value in the factorization routines used for inverting the matrices (both for the LU and for the  Bunch-Kaufmann factorization). The check was preventing to inverting matrices when some of the matrix elements (like the diagonal) were smaller than an epsilon value set to ~ 10-15. This is not needed since it is enough to check that the values are not zero (i.e. when the matrix is singular). This bug was causing several failures in the CMS code when inverting matrices.  
+  <ul>
+    <li>Remove an unneeded check on the element value in the factorization routines used for inverting the matrices (both for the LU and for the  Bunch-Kaufmann factorization). The check was preventing to inverting matrices when some of the matrix elements (like the diagonal) were smaller than an epsilon value set to ~ 10-15. This is not needed since it is enough to check that the values are not zero (i.e. when the matrix is singular). This bug was causing several failures in the CMS code when inverting matrices.
     </li>
     <li>Add the Cholesky decomposition method for symmetric positive defined matrices (thanks to Manuel Schiller). A class has been introduced,
        <tt>ROOT::Math::CholeskyDecomp</tt> which provaids methods for decomposing or  inverting a matrix and also for  solving a linear system.
@@ -72,8 +72,8 @@
   <li>Add support in the SMatrix class for operator m[i][j]
   <li>Add in the dictionary the typedefs for some square and symmetrix matrices based on double and floats (up to size 7) defined in the file Math/SMatrixDfwd and Math/SMatrixFfwd
   </li>
-      
-       
+
+
  </ul>
 
  <h4>Minuit</h4>
@@ -100,10 +100,10 @@
     </li>
     <li>Fix a bug in the sign of the derivative for sine transformation which are used with double bound parameters. The bug could affect the minimization of function with user provided gradient and bound parameters and bound parameters. It could also affected Fumili2. Furthermore, a wrong sign for the correlation matrix could also have been obtained in some cases with bound parameters.
     </li>
-    <li>Use a tolerance of 0.01 instead of 0.05 in MnContours. The value of 0.01 is the same used in Minos. This is sufficient to get good quality contours. 
+    <li>Use a tolerance of 0.01 instead of 0.05 in MnContours. The value of 0.01 is the same used in Minos. This is sufficient to get good quality contours.
     <li>Improve also the debug in MnContour. Add printing of points as info messages
     <li>Remove some un-necessary assert() when defining the minimization parameters.
-    <li>Fix a bug in MnHesse to return the information if the matrix was made pos def. In addition change in MinimumError the codition that when the matrix was made pos def the status of the error is still considered valid and not invalid as before. This makes also the function minimum valid when a matrix was decleared pos def.    
+    <li>Fix a bug in MnHesse to return the information if the matrix was made pos def. In addition change in MinimumError the codition that when the matrix was made pos def the status of the error is still considered valid and not invalid as before. This makes also the function minimum valid when a matrix was decleared pos def.
     <li>Improvements in the  Minuit2Minimizer class:
     <ul>
       <li>
@@ -115,9 +115,9 @@
       </ul>
       </li>
     <li>
-    Fix a problem in building the parallel version of Minuit2. The parallel version is built if the environment variables USE_PARALLEL_MINUIT2 and USE_OPENMP are set before compiling Minuit2 on a compiler which supports openMP (for example gcc version >= 4.2) 
+    Fix a problem in building the parallel version of Minuit2. The parallel version is built if the environment variables USE_PARALLEL_MINUIT2 and USE_OPENMP are set before compiling Minuit2 on a compiler which supports openMP (for example gcc version >= 4.2)
     </li>
-    <li>Add, thanks to Alfio Lazzaro, support for running Minuit2 using multi-process by using MPI. A new class MPIProcess deals with starting and terminating the MPI process. Each process calculates independently the derivatives for a given set of parameters. 
+    <li>Add, thanks to Alfio Lazzaro, support for running Minuit2 using multi-process by using MPI. A new class MPIProcess deals with starting and terminating the MPI process. Each process calculates independently the derivatives for a given set of parameters.
       A Minuit2 library with MPI support can be built by defining before compilation the environment variables USE_PARALLEL_MINUIT2 and USE_MPI.
 </li>
 </ul>

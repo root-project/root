@@ -58,7 +58,7 @@
 //    o  TImagePalette(Int_t ncolors, Int_t *colors)                    //
 //        if ncolors <= 0 a default palette (see below) of 50 colors    //
 //        is defined.                                                   //
-//                                                                      //   
+//                                                                      //
 //        if ncolors == 1 && colors == 0, then                          //
 //        a Pretty Palette with a Spectrum Violet->Red is created.      //
 //                                                                      //
@@ -401,7 +401,7 @@ TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
          fColorRed[i] = UShort_t(red[i]*255) << 8;
          fColorGreen[i] = UShort_t(green[i]*255) << 8;
          fColorBlue[i] = UShort_t(blue[i]*255) << 8;
-         fColorAlpha[i] = 65280;   
+         fColorAlpha[i] = 65280;
       }
       return;
    }

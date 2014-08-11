@@ -10,7 +10,7 @@ FTCharmap::FTCharmap( FTFace* face)
     {
         err = FT_Set_Charmap( ftFace, ftFace->charmaps[0]);
     }
-    
+
     ftEncoding = ftFace->charmap->encoding;
 }
 
@@ -27,9 +27,9 @@ bool FTCharmap::CharMap( FT_Encoding encoding)
     {
         return true;
     }
-    
+
     err = FT_Select_Charmap( ftFace, encoding );
-    
+
     if( !err)
     {
         ftEncoding = encoding;
@@ -38,7 +38,7 @@ bool FTCharmap::CharMap( FT_Encoding encoding)
     {
         ftEncoding = ft_encoding_none;
     }
-        
+
     charMap.clear();
     return !err;
 }

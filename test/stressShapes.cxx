@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 
 #endif
 //--- This macro creates a simple geometry based on all shapes known
-//--- by TGeo. The first test generates 1 million random points inside 
+//--- by TGeo. The first test generates 1 million random points inside
 //--- the bounding box of each shape and computes the volume of the
 //--- shape as Vbbox*Ninside/Ntotal.
 //--- The second test tracks 100K random rays in the geometry, histogramming
@@ -62,7 +62,7 @@ void sample_volume(Int_t ivol)
       point[1] = oy-dy+2*dy*gRandom->Rndm();
       point[2] = oz-dz+2*dz*gRandom->Rndm();
       if (shape->Contains(point)) iin++;
-   }    
+   }
    ratio = Double_t(iin)/Double_t(ngen);
    Double_t vbox = 8*dx*dy*dz;
    Double_t vv = vbox*ratio;
@@ -81,7 +81,7 @@ void length()
       7.718, 3.238, 19.09, 14.85};
    const Double_t mean[16] = {19.34, 22.53, 18.87, 21.95, 23.29,
       16.73, 15.09, 9.516, 12.68, 8.852, 9.518, 7.432,
-      8.881, 6.489, 28.29, 22.74}; 
+      8.881, 6.489, 28.29, 22.74};
    TObjArray *vlist = gGeoManager->GetListOfVolumes();
    TGeoVolume *volume;
    Int_t nvolumes = vlist->GetEntriesFast();
@@ -95,7 +95,7 @@ void length()
       hist = new TH1F(volume->GetName(), "lengths inside", 100, 0, 100);
       hist->SetCanExtend(TH1::kAllAxes);
       hlist->Add(hist);
-   }   
+   }
    Int_t nrays = 100000;
 
    Double_t dir[3];
@@ -133,7 +133,7 @@ void length()
             step += 1E-3;
          }
          if (istep>10000) break;
-	       len[icrt] += step;
+           len[icrt] += step;
          hist = (TH1F*)(hlist->At(icrt));
          hist->Fill(step);
          // now see if we can make an other step
@@ -159,8 +159,8 @@ void length()
       snprintf(result,16, "FAILED");
       if (dmean<0.01) {
          if (drms<0.01) snprintf(result,16,"OK");
-      }   
-      printf("   %-4s : mean_len=%7.4g RMS=%7.4g total_len=%11.4g ... %s\n", 
+      }
+      printf("   %-4s : mean_len=%7.4g RMS=%7.4g total_len=%11.4g ... %s\n",
              volume->GetName(), hist->GetMean(), hist->GetRMS(), len[i],result);
    }
    hlist->Delete();
@@ -179,10 +179,10 @@ void stressShapes()
 #ifdef __CINT__
    gSystem->Load("libGeom");
 #endif
-   
+
    gBenchmark = new TBenchmark();
    gBenchmark->Start("stressShapes");
-   
+
    TGeoManager *geom = new TGeoManager("stressShapes", "arbitrary shapes");
    TGeoMaterial *mat;
    TGeoMixture *mix;
@@ -296,7 +296,7 @@ TGeoMedium *med16 = new TGeoMedium("RHONEYCM",16,16,0,0,0,20,0.1000000E+11,0.212
    //---> close geometry
    geom->CloseGeometry("d");
    geom->DefaultColors();
-   
+
    TIter next(gGeoManager->GetListOfVolumes());
    TGeoVolume *vol = (TGeoVolume*)next();
    Int_t ivol=1;
@@ -304,7 +304,7 @@ TGeoMedium *med16 = new TGeoMedium("RHONEYCM",16,16,0,0,0,20,0.1000000E+11,0.212
    while ((vol=(TGeoVolume*)next())) {
       sample_volume(ivol);
       ivol++;
-   }      
+   }
    printf("=== testing global tracking ...\n");
    length();
 

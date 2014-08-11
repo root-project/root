@@ -35,7 +35,7 @@ void regexp()
 {
    // Substitute example :
    // Find a word that starts with "peper" and ends with "koek" .
- 
+
    TString s1("lekkere pepernotenkoek");
    TPRegexp r1("\\bpeper(\\w+)koek\\b");
 
@@ -60,13 +60,13 @@ void regexp()
    // of parentheses match in the regexp string, counting opening parentheses from left to right .
    // In the following example, we are trying to catch a date MMDDYYYY in a string and rearrange
    // it to DDMMYYY . "(\\d{1,2}) matches only 1 or 2 digits etc .
- 
+
    TString s3("on 09/24/1959 the world stood still");
    TPRegexp("\\b(\\d{1,2})/(\\d{1,2})/(\\d{4})\\b").Substitute(s3,"$2-$1-$3");
    cout << s3 << endl;
 
    // Match Example :
-   // The following example shows how to extract a protocol and port number from an URL string . 
+   // The following example shows how to extract a protocol and port number from an URL string .
    // Note again the parentheses in the regexp string : "(\\w+)" requires a non-empty
    // alphanumeric string while "(\\d+)" wants a pure digital string .
    // The matched substrings together with the full matched string are returned in a
@@ -90,7 +90,7 @@ void regexp()
    // criteria:
    // 1) It should be of the form string1@string2 . The "^" and "$" ensure that we compare the complete
    //    email string
-   // 2) ([\\w-\\.]+)  : 
+   // 2) ([\\w-\\.]+)  :
    //    string1 is only allowed to be composed out of the alphanumeric characters, "-" and "." .
    //    The "+" ensures that string1 can not be empty .
    // 3) string2 is matched against three different parts :

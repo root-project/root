@@ -4,7 +4,7 @@
 // author: Gregory Schott
 // date Sep 2009
 //
-// This tutorial shows an example of using the HypoTestInverterOriginal class 
+// This tutorial shows an example of using the HypoTestInverterOriginal class
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +46,7 @@ void rs801_HypoTestInverterOriginal()
   HybridCalculatorOriginal myhc(*data, totPdf, bkgPdf,0,0);
   myhc.SetTestStatistic(2);
   myhc.SetNumberOfToys(1000);
-  myhc.UseNuisance(false);                            
+  myhc.UseNuisance(false);
 
   // run the hypothesis-test invertion
   HypoTestInverterOriginal myInverter(myhc,r);
@@ -54,9 +54,9 @@ void rs801_HypoTestInverterOriginal()
   myInverter.UseCLs(true);
   // myInverter.RunFixedScan(5,1,6);
   // scan for a 95% UL
-  myInverter.RunAutoScan(3.,5,myInverter.Size()/2,0.005);  
-  // run an alternative autoscan algorithm 
-  // myInverter.RunAutoScan(1,6,myInverter.Size()/2,0.005,1);  
+  myInverter.RunAutoScan(3.,5,myInverter.Size()/2,0.005);
+  // run an alternative autoscan algorithm
+  // myInverter.RunAutoScan(1,6,myInverter.Size()/2,0.005,1);
   //myInverter.RunOnePoint(3.9);
 
 
@@ -73,6 +73,6 @@ void rs801_HypoTestInverterOriginal()
   std::cout << "an estimated error on this upper limit is: " << ulError << std::endl;
   // expected result: 4.10
 }
-int main() { 
+int main() {
    rs801_HypoTestInverter();
 }

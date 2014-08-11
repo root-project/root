@@ -32,7 +32,7 @@ TQtRootApplication::TQtRootApplication(const char *appClassName,
                                    Int_t *argc, char **argv)
 {
    // An implementation of the TApplicationImp for Qt-based GUI.
-   
+
    fApplicationName = appClassName;
    fDisplay         = 0;
 

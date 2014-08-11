@@ -9,7 +9,7 @@
 #include <cstdlib>
 #include <typeinfo>
 #include <iomanip>
-#include <fstream> 
+#include <fstream>
 
 #include <limits>
 
@@ -39,18 +39,18 @@ using namespace CLHEP;
 
 // wrapper for stdrand
 
-class RandomStd { 
-public: 
-  RandomStd() { 
-    fScale = 1./(double(RAND_MAX) + 1.); 
+class RandomStd {
+public:
+  RandomStd() {
+    fScale = 1./(double(RAND_MAX) + 1.);
   }
 
   inline void RndmArray(int n, double * x) {
-    for ( double * itr = x; itr != x+n; ++itr) 
-      *itr= fScale*double(std::rand()); 
+    for ( double * itr = x; itr != x+n; ++itr)
+      *itr= fScale*double(std::rand());
   }
-  inline double Uniform() { 
-    return fScale*double(std::rand()); 
+  inline double Uniform() {
+    return fScale*double(std::rand());
   }
 
   std::string Type() const { return "std::rand"; }
@@ -58,27 +58,27 @@ public:
 
   void SetSeed(int seed) { std::srand(seed); }
 
-private: 
-  double fScale; 
+private:
+  double fScale;
 
-}; 
+};
 
 
 
 // wrapper for clhep
 
-template <class Engine> 
-class RandomCLHEP { 
-public: 
-   RandomCLHEP(Engine & e) : 
+template <class Engine>
+class RandomCLHEP {
+public:
+   RandomCLHEP(Engine & e) :
       fRand(e)
-   { 
+   {
    }
 
   inline void RndmArray(int n, double * x) {
      fRand.flatArray(n,x);
   }
-  inline double Uniform() { 
+  inline double Uniform() {
      return fRand.flat();
   }
 
@@ -87,62 +87,62 @@ public:
 
   void SetSeed(int seed) { fRand.setSeed(seed); }
 
-private: 
-   Engine & fRand; 
+private:
+   Engine & fRand;
 
-}; 
-
-
+};
 
 
 
-template <class R> 
-void printName( const R & r) { 
+
+
+template <class R>
+void printName( const R & r) {
   std::cout << "\nRandom :\t " << r.Type() << " \t size of state = " << r.EngineSize() << std::endl;
 }
 
 // specializations for TRandom's
-void printName( const TRandom & r) { 
+void printName( const TRandom & r) {
   std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
 }
 // specializations for TRandom's
-void printName( const TRandom1 & r) { 
+void printName( const TRandom1 & r) {
   std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
 }
 // specializations for TRandom's
-void printName( const TRandom2 & r) { 
+void printName( const TRandom2 & r) {
   std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
 }
 // specializations for TRandom's
-void printName( const TRandom3 & r) { 
+void printName( const TRandom3 & r) {
   std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
 }
 
-template <class R> 
-void generate( R & r, bool array=true) { 
+template <class R>
+void generate( R & r, bool array=true) {
 
-  TStopwatch w; 
+  TStopwatch w;
 
   int n = NEVT;
   // estimate PI
-  double n1=0; 
-  double x,y; 
+  double n1=0;
+  double x,y;
   w.Start();
   // use default seeds
   // r.SetSeed(0);
   //r.SetSeed(int(pow(2,28)) );
-  if (array) { 
+  if (array) {
     double x[1000];
     double y[1000];
-    for (int i = 0; i < n; i+=1000 ) {  
+    for (int i = 0; i < n; i+=1000 ) {
       r.RndmArray(1000,x);
       r.RndmArray(1000,y);
-      for (int j = 0; j < 1000; ++j) 
-	if ( ( x[j]*x[j] + y[j]*y[j] ) <= 1.0 ) n1++;
+      for (int j = 0; j < 1000; ++j)
+       if ( ( x[j]*x[j] + y[j]*y[j] ) <= 1.0 ) n1++;
     }
-  }	
+  }
   else {
-    for (int i = 0; i < n; ++i) { 
+    for (int i = 0; i < n; ++i) {
       x=r.Uniform();
       y=r.Uniform();
       if ( ( x*x + y*y ) <= 1.0 ) n1++;
@@ -150,21 +150,21 @@ void generate( R & r, bool array=true) {
   }
   w.Stop();
 
-  printName(r); 
-  std::cout << "\tTime = " << w.RealTime()*1.0E9/NEVT << "  " 
-	    << w.CpuTime()*1.0E9/NEVT 
-	    << " (ns/call)" << std::endl;   
+  printName(r);
+  std::cout << "\tTime = " << w.RealTime()*1.0E9/NEVT << "  "
+            << w.CpuTime()*1.0E9/NEVT
+            << " (ns/call)" << std::endl;
   double piEstimate = 4.0 * double(n1)/double(n);
-  double delta = piEstimate-PI; 
+  double delta = piEstimate-PI;
   double sigma = std::sqrt( PI * (4 - PI)/double(n) );
-  std::cout << "\t\tDeltaPI = " << delta/sigma << " (sigma) " << std::endl; 
+  std::cout << "\t\tDeltaPI = " << delta/sigma << " (sigma) " << std::endl;
 }
 
 int main() {
 
-  std::cout << "***************************************************\n"; 
+  std::cout << "***************************************************\n";
   std::cout << " TEST RANDOM    NEVT = " << NEVT << std::endl;
-  std::cout << "***************************************************\n\n"; 
+  std::cout << "***************************************************\n\n";
 
 
 
@@ -181,7 +181,7 @@ int main() {
   Random<GSLRngRand>       r7;
   Random<GSLRngRanMar>     r8;
   Random<GSLRngMinStd>     r9;
-  RandomStd                r10; 
+  RandomStd                r10;
 
   TRandom                  tr0;
   TRandom1                 tr1;
@@ -252,33 +252,33 @@ int main() {
   Random<GSLRngMT>         gslRndm(4357);
   TRandom3                 rootRndm(4357);
 
-  
-  gslRndm.RndmArray(n,&v1[0]); 
-  rootRndm.RndmArray(n,&v2[0]); 
 
-  int nfail=0; 
-  for (int i = 0; i < n; ++i) { 
+  gslRndm.RndmArray(n,&v1[0]);
+  rootRndm.RndmArray(n,&v2[0]);
+
+  int nfail=0;
+  for (int i = 0; i < n; ++i) {
      double d = std::fabs(v1[i] - v2[i] );
       if (d > std::numeric_limits<double>::epsilon()*v1[i] ) nfail++;
   }
-  if (nfail > 0) { 
+  if (nfail > 0) {
      std::cout << "ERROR: Test failing comparing TRandom3 with GSL MT" << std::endl;
      return -1;
   }
   // save the generated number
   std::ofstream file("testRandom.out");
-  std::ostream & out = file; 
-  int  j = 0; 
+  std::ostream & out = file;
+  int  j = 0;
   int prec = std::cout.precision(9);
-  while ( j < n) { 
+  while ( j < n) {
      for (int l = 0; l < 8; ++l) {
-        out << std::setw(12) << v1[j+l] << ","; 
-//         int nws = int(-log10(v1[j+l])); 
+        out << std::setw(12) << v1[j+l] << ",";
+//         int nws = int(-log10(v1[j+l]));
 //         for (int k = nws; k >= 0; --k)
-//            out << " "; 
+//            out << " ";
      }
-     out << std::endl; 
-     j+= 8; 
+     out << std::endl;
+     j+= 8;
   }
   std::cout.precision(prec);
 

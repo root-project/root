@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005  
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
 
 /**********************************************************************
  *                                                                    *
@@ -21,15 +21,15 @@ void MnPlot::operator()(const std::vector<std::pair<double,double> >& points) co
    std::vector<double> x; x.reserve(points.size());
    std::vector<double> y; y.reserve(points.size());
    std::vector<char> chpt; chpt.reserve(points.size());
-   
+
    for(std::vector<std::pair<double,double> >::const_iterator ipoint = points.begin(); ipoint != points.end(); ipoint++) {
       x.push_back((*ipoint).first);
       y.push_back((*ipoint).second);
       chpt.push_back('*');
    }
-   
+
    mnplot(&(x.front()), &(y.front()), &(chpt.front()), points.size(), Width(), Length());
-   
+
 }
 
 void MnPlot::operator()(double xmin, double ymin, const std::vector<std::pair<double,double> >& points) const {
@@ -43,13 +43,13 @@ void MnPlot::operator()(double xmin, double ymin, const std::vector<std::pair<do
    std::vector<char> chpt; chpt.reserve(points.size()+2);
    chpt.push_back(' ');
    chpt.push_back('X');
-   
+
    for(std::vector<std::pair<double,double> >::const_iterator ipoint = points.begin(); ipoint != points.end(); ipoint++) {
       x.push_back((*ipoint).first);
       y.push_back((*ipoint).second);
       chpt.push_back('*');
    }
-   
+
    mnplot(&(x.front()), &(y.front()), &(chpt.front()), points.size()+2, Width(), Length());
 }
 

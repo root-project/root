@@ -78,7 +78,7 @@ private:
    //Overriders
    void    InitGL()const;
    void    DeInitGL()const;
-   
+
    void    DrawPlot()const;
    //Special type of TH3:
    void    DrawCloud()const;

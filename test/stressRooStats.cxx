@@ -165,7 +165,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    testList.push_back(new TestHypoTestCalculator1(fref, writeRef, verbose, 150, 10, 0.1));
    testList.push_back(new TestHypoTestCalculator1(fref, writeRef, verbose, 150, 400, 4.0));
 
-   // 32-36 TEST HTC SIGNIFICANCE 
+   // 32-36 TEST HTC SIGNIFICANCE
    testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose, kAsymptotic));
    testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose, kFrequentist, kSimpleLR));
    testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose, kFrequentist, kRatioLR));
@@ -189,8 +189,8 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kFrequentist, kRatioLR, 10, 0.95));
    testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kFrequentist, kProfileLROneSided, 10, 0.95));
    testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kHybrid, kSimpleLR, 10, 0.95));
- 
-   
+
+
    TString suiteType = TString::Format(" Starting S.T.R.E.S.S. %s",
                                        allTests ? "full suite" : (oneTest ? TString::Format("test %d", testNumber).Data() : "basic suite")
                                       );
@@ -379,18 +379,18 @@ int main(int argc, const char *argv[])
    RooMath::cacheCERF(kFALSE) ;
 
 
-   // set minimizer 
-    // use Minut2 if available 
-   std::string minimizerType = minimizerName; 
-   // check in case of Minuit2 and set Minuit in case we cannot use it 
-   if (minimizerType == "Minuit2") { 
+   // set minimizer
+    // use Minut2 if available
+   std::string minimizerType = minimizerName;
+   // check in case of Minuit2 and set Minuit in case we cannot use it
+   if (minimizerType == "Minuit2") {
       int prec = gErrorIgnoreLevel;
       gErrorIgnoreLevel = kFatal;
       if (gSystem->Load("libMinuit2") < 0) minimizerType = "Minuit";
       gErrorIgnoreLevel=prec;
    }
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerType.c_str());
-      
+
 
    gBenchmark = new TBenchmark();
    return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);

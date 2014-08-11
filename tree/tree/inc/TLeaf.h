@@ -79,7 +79,7 @@ public:
    virtual Int_t    GetOffset() const { return fOffset; }
    virtual void    *GetValuePointer() const { return 0; }
    virtual const char *GetTypeName() const { return ""; }
-  
+
    virtual Double_t GetValue(Int_t i = 0) const;
    virtual Long64_t GetValueLong64(Int_t i = 0) const { return GetValue(i); } //overload only when it matters.
    virtual LongDouble_t GetValueLongDouble(Int_t i = 0) const { return GetValue(i); } // overload only when it matters.

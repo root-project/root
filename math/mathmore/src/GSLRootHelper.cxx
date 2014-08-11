@@ -1,5 +1,5 @@
 // @(#)root/mathmore:$Id$
-// Authors: L. Moneta, A. Zsenei   08/2005 
+// Authors: L. Moneta, A. Zsenei   08/2005
 
  /**********************************************************************
   *                                                                    *
@@ -23,11 +23,11 @@
   **********************************************************************/
 
 // Implementation file for class GSLRootHelper
-// 
+//
 // Created by: moneta  at Sun Nov 14 21:34:15 2004
-// 
+//
 // Last update: Sun Nov 14 21:34:15 2004
-// 
+//
 
 #include "Math/GSLRootHelper.h"
 
@@ -35,26 +35,26 @@
 
 namespace ROOT {
 namespace Math {
-   
-   namespace GSLRootHelper { 
-      
-      
-      int TestInterval(double xlow, double xup, double epsAbs, double epsRel) { 
-         
-         return gsl_root_test_interval( xlow, xup, epsAbs, epsRel); 
-      } 
-      
-      int TestDelta(double x1, double x0, double epsAbs, double epsRel) { 
-         // be careful is inverted with respect to GSL (don't know why ) 
-         return gsl_root_test_delta( x1, x0, epsRel, epsAbs); 
-      } 
-      
-      int TestResidual(double f, double epsAbs) { 
-         
-         return gsl_root_test_residual( f, epsAbs); 
-      } 
-      
+
+   namespace GSLRootHelper {
+
+
+      int TestInterval(double xlow, double xup, double epsAbs, double epsRel) {
+
+         return gsl_root_test_interval( xlow, xup, epsAbs, epsRel);
+      }
+
+      int TestDelta(double x1, double x0, double epsAbs, double epsRel) {
+         // be careful is inverted with respect to GSL (don't know why )
+         return gsl_root_test_delta( x1, x0, epsRel, epsAbs);
+      }
+
+      int TestResidual(double f, double epsAbs) {
+
+         return gsl_root_test_residual( f, epsAbs);
+      }
+
    }
-   
+
 } // namespace Math
 } // namespace ROOT

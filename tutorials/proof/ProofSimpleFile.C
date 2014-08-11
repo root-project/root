@@ -105,7 +105,7 @@ void ProofSimpleFile::SlaveBegin(TTree * /*tree*/)
       Ssiz_t from = iopt + strlen("nhist=");
       if (option.Tokenize(s, from, ";") && s.IsDigit()) fNhist = s.Atoi();
    }
-   
+
    // The file for merging
    fProofFile = new TProofOutputFile("SimpleFile.root", "M");
    TNamed *out = (TNamed *) fInput->FindObject("PROOF_OUTPUTFILE");
@@ -135,7 +135,7 @@ void ProofSimpleFile::SlaveBegin(TTree * /*tree*/)
             kAbortProcess);
       return;
    }
-   
+
    // Create the histograms
    for (Int_t i=0; i < fNhist; i++) {
       fHistTop[i] = new TH1F(Form("ht%d",i), Form("ht%d",i), 100, -3., 3.);

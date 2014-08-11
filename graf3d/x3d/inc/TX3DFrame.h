@@ -29,10 +29,10 @@ class TX3DFrame : public TGMainFrame
 {
 private:
    TViewerX3D & fViewer;
-   
+
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    void   CloseWindow();
-      
+
 public:
    TX3DFrame(TViewerX3D & viewer, const TGWindow * win, UInt_t width, UInt_t height);
    ~TX3DFrame();

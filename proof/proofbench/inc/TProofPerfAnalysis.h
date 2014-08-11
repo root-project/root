@@ -88,9 +88,9 @@ public:
    TProofPerfAnalysis(TTree *tree, const char *title = "");
    virtual ~TProofPerfAnalysis();
 
-   Bool_t IsValid() const { return (fFile && fTree) ? kTRUE : kFALSE; } 
-   Bool_t WrkInfoOK() const { return (fWrksInfo.GetSize() > 0) ? kTRUE : kFALSE; } 
-   
+   Bool_t IsValid() const { return (fFile && fTree) ? kTRUE : kFALSE; }
+   Bool_t WrkInfoOK() const { return (fWrksInfo.GetSize() > 0) ? kTRUE : kFALSE; }
+
    void  EventDist();                          // Analyse event and packet distribution
    void  FileDist(Bool_t writedet = kFALSE);   // Analyse the file distribution
    void  LatencyPlot(const char *wrks = 0);    // Packet latency distribution vs time
@@ -108,11 +108,11 @@ public:
    Double_t GetMBRateAvgMax() const { return fMBRateAvgMax; }       // Max running MB processing rate
    Double_t GetEvtRateAvg() const { return fEvtRateAvg; }         // Average event processing rate
    Double_t GetMBRateAvg() const { return fMBRateAvg; }          // Average MB processing rate
-   void GetAverages(Double_t &evtmax, Double_t &mbmax, Double_t &evt, Double_t &mb) const 
+   void GetAverages(Double_t &evtmax, Double_t &mbmax, Double_t &evt, Double_t &mb) const
         { evtmax = fEvtRateAvgMax; mbmax = fMBRateAvgMax; evt = fEvtRateAvg; mb = fMBRateAvg; return; }
 
    void  Summary(Option_t *opt = "", const char *out = "");
-  
+
    void  SetDebug(Int_t d = 0);   // Setter for the verbosity level
    static void  SetgDebug(Bool_t on = kTRUE);   // Overall verbosity level
 

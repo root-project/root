@@ -1,13 +1,13 @@
 //*********************************************************************
 // Convert a THnSparse to a TTree using efficient iteration through the THnSparse
-//   and draw a THnSparse using TParallelCoord. 
+//   and draw a THnSparse using TParallelCoord.
 //  The plot will contain one line for each filled bin,
 //  with the bin's coordinates on each axis, and the bin's content on
 //  the rightmost axis.
-// 
+//
 //  Run as
 //    .L $ROOTSYS/tutorials/tree/drawsparse.C+
-// 
+//
 //  Axel.Naumann@cern.ch (2007-09-14)
 // ********************************************************************
 
@@ -108,7 +108,7 @@ void drawsparse()
    Double_t xmin[ndims] = {-5., -10., -1000., -3., 0.,   0., 0., 0.};
    Double_t xmax[ndims] = {10., 70., 3000.,   3.,   5.,  2., 2., 5.};
    THnSparse* hs = new THnSparseD("hs", "Sparse Histogram", ndims, bins, xmin, xmax);
-   
+
    // fill it
    Double_t x[ndims];
    for (Long_t i = 0; i < 100000; ++i) {
@@ -116,7 +116,7 @@ void drawsparse()
          switch (d) {
          case 0: x[d] = gRandom->Gaus()*2 + 3.; break;
          case 1:
-         case 2: 
+         case 2:
          case 3: x[d] = (x[d-1]*x[d-1] - 1.5)/1.5 + (0.5*gRandom->Rndm()); break;
          default: x[d] = sin(gRandom->Gaus()*i/1000.) + 1.;
          }

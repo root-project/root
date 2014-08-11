@@ -22,7 +22,7 @@
 //______________________________________________________________________________
 
 //______________________________________________________________________________
-GTitleFrame::GTitleFrame(const TGWindow *p, const char *mainText, 
+GTitleFrame::GTitleFrame(const TGWindow *p, const char *mainText,
                          const char *subText, UInt_t w, UInt_t h,
                          UInt_t options) : TGCompositeFrame(p, w, h, options)
 {

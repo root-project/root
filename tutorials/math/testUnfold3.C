@@ -39,17 +39,17 @@ using namespace std;
 */
 
 ///////////////////////////////////////////////////////////////////////
-// 
+//
 // Simple Test program for the class TUnfoldDensity
 //
 // 1-dimensional unfolding with background subtraction
 //
 //  the goal is to unfold the underlying "true" distribution of a variable Pt
 //
-//  the reconstructed Pt is measured in 24 bins from 4 to 28 
+//  the reconstructed Pt is measured in 24 bins from 4 to 28
 //  the generator-level Pt is unfolded into 10 bins from 6 to 26
 //    plus underflow bin from 0 to 6
-//    plus overflow bin above 26 
+//    plus overflow bin above 26
 //  there are two background sources
 //       bgr1 and bgr2
 //  the signal has a finite trigger efficiency at a threshold of 8 GeV
@@ -133,7 +133,7 @@ Double_t GenerateEvent(const Double_t *parm,
       }
       if(iType) *iType=itype;
       if(ptGen) *ptGen=ptgen;
-      
+
       // smearing in Pt with large asymmetric tail
       Double_t sigma=
          TMath::Sqrt(parm[7]*parm[7]*ptgen+parm[8]*parm[8]*ptgen*ptgen);
@@ -202,7 +202,7 @@ void testUnfold3()
   //
   //  (3) monitoring and control
   //   histGenData : data truth for bias tests
-  //   histDetMC : MC prediction 
+  //   histDetMC : MC prediction
 
   // (1) create histograms required for unfolding
   TH1D *histUnfoldInput=
@@ -314,8 +314,8 @@ void testUnfold3()
                                   &ptGen,&iTypeGen);
      if(!isTriggered) ptObs=0.0;
 
-     // (1) distribution required for unfolding 
-     
+     // (1) distribution required for unfolding
+
      if(iTypeGen==0) {
         histUnfoldMatrix->Fill(ptGen,ptObs,lumiWeight);
      } else if(iTypeGen==1) {
@@ -472,7 +472,7 @@ void testUnfold3()
         (i,TMath::Sqrt(histEmatStat->GetBinContent(i,i)));
 
      // histogram with unfolded data and total errors
-     histUnfoldTotal->SetBinContent(i,c); 
+     histUnfoldTotal->SetBinContent(i,c);
      histUnfoldTotal->SetBinError
         (i,TMath::Sqrt(histEmatTotal->GetBinContent(i,i)));
   }
@@ -506,9 +506,9 @@ void testUnfold3()
   histUnfoldInput->SetMinimum(0.0);
   histUnfoldInput->Draw("E");
   histDetMC->SetMinimum(0.0);
-  histDetMC->SetLineColor(kBlue);  
-  histDetNormBgrTotal->SetLineColor(kRed);  
-  histDetNormBgr1->SetLineColor(kCyan);  
+  histDetMC->SetLineColor(kBlue);
+  histDetNormBgrTotal->SetLineColor(kRed);
+  histDetNormBgr1->SetLineColor(kCyan);
   histDetMC->Draw("SAME HIST");
   histDetNormBgr1->Draw("SAME HIST");
   histDetNormBgrTotal->Draw("SAME HIST");
@@ -600,7 +600,7 @@ void testUnfold3()
      Double_t errData_total_unfold=histUnfoldTotal->GetBinError(i);
 
      // compare
-     
+
      std::cout<<TString::Format
         ("%3d %5.0f %8.1f +/-%5.1f +/-%5.1f +/-%5.1f (unfolding)",
          i,histDataTruth->GetBinContent(i),data_unfold,

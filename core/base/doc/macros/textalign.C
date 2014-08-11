@@ -30,10 +30,10 @@
    TText *tv2 = new TText(0.66,0.493,"Center adjusted");
    tv2->SetTextAlign(12); tv2->SetTextSize(0.12);
    tv2->Draw();
-   
+
    TText *tv3 = new TText(0.66,0.823,"Top adjusted");
    tv3->SetTextAlign(13); tv3->SetTextSize(0.12);
    tv3->Draw();
-   
+
    return Ta;
 }

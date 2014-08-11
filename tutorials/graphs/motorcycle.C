@@ -61,7 +61,7 @@ void motorcycle()
    }//while
    vInput.close();
    grin = new TGraph(vNData,x,y);
-   
+
 // draw graph
    vC1 = new TCanvas("vC1","Smooth Regression",200,10,900,700);
    vC1->Divide(2,3);

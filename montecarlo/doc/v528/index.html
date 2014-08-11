@@ -1,9 +1,9 @@
 <br/>
 <hr/>
-<a name="montecarlo"></a> 
+<a name="montecarlo"></a>
 <h3>MonteCarlo</h3>
 <h4>TDatabasePDG</h4>
-The method ReadPDGTable of TDatabasePDG was setting the stable flags for 
+The method ReadPDGTable of TDatabasePDG was setting the stable flags for
 all particles regardless of their width.
 
 <h4>TParticlePDG</h4>
@@ -14,8 +14,8 @@ while in the documentation is was indicated in nanoseconds.
 Particles with a width greater than 1e-10 have now the stable flag set to 1.
 
 <h4>TVirtualMC</h4>
-New functions added in the interface: 
-<ul> 
+New functions added in the interface:
+<ul>
 <li>For activation of collecting TGeo tracks:
 <pre>virtual void SetCollectTracks(Bool_t collectTracks);
 virtual Bool_t IsCollectTracks() const;

@@ -580,8 +580,8 @@ TProofLog *TXProofMgr::GetSessionLogs(Int_t isess, const char *stag,
    // (remote grep functionality); to filter out a pattern 'pat' use
    // pattern = "-v pat".
    // If 'rescan' is TRUE, masters will rescan the worker sandboxes for the exact
-   // paths, instead of using the save information; may be useful when the 
-   // ssave information looks wrong or incomplete. 
+   // paths, instead of using the save information; may be useful when the
+   // ssave information looks wrong or incomplete.
    // Returns a TProofLog object (to be deleted by the caller) on success,
    // 0 if something wrong happened.
 
@@ -816,12 +816,12 @@ Int_t TXProofMgr::SendMsgToUsers(const char *msg, const char *usr)
          left = (size_t) rcsk;
          if ((lseek(fileno(f), (off_t) 0, SEEK_SET) == (off_t)(-1))) {
             Error("SendMsgToUsers", "cannot rewind open file (seek to 0)");
-            fclose(f);      
+            fclose(f);
             return -1;
          }
       } else {
          Error("SendMsgToUsers", "cannot get size of open file (seek to END)");
-         fclose(f);      
+         fclose(f);
          return -1;
       }
       // Now readout from file

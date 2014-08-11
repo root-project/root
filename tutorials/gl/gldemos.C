@@ -30,7 +30,7 @@ void help()
    hdemo->AddText("4. Glbox demo shows \"glbox\" and \"glbox1\" options for TH3.");
    hdemo->AddText("5. Glparametric demo shows how to define and display parametric surfaces.");
    hdemo->AddText("You can zoom any plot: press 'J', 'K', 'j', 'k' keys, or use mouse wheel.");
-   hdemo->AddText("Rotate any plot:"); 
+   hdemo->AddText("Rotate any plot:");
    hdemo->AddText("  ---select plot with mouse cursor,");
    hdemo->AddText("  ---move mouse cursor, pressing and holding left mouse button ");
    hdemo->AddText("Pan plot:");
@@ -42,7 +42,7 @@ void help()
    hdemo->AddText("After the slice was created, you can project it on a back box");
    hdemo->AddText("  ---press key 'p' (now implemented only for surf options ).");
    hdemo->AddText("Left double click removes all slices/projections.");
-   
+
    hdemo->Draw();
 
 }

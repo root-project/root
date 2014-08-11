@@ -15,7 +15,7 @@ void fit1() {
    //Simple fitting example (1-d histogram with an interpreted function)
    //To see the output of this macro, click begin_html <a href="gif/fit1.gif">here</a>. end_html
    //Author: Rene Brun
-   
+
    TCanvas *c1 = new TCanvas("c1_fit1","The Fit Canvas",200,10,700,500);
    c1->SetGridx();
    c1->SetGridy();
@@ -37,7 +37,7 @@ void fit1() {
       file = TFile::Open("fillrandom.root");
       if (!file) return;
    }
-      
+
    //
    // The function "ls()" lists the directory contents of this file
    //

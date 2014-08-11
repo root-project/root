@@ -24,13 +24,13 @@
 ClassImp(MyDetector)
 
 //______________________________________________________________________________
-MyDetector::MyDetector() 
+MyDetector::MyDetector()
 {
    // Default constructor.
 }
 
 //______________________________________________________________________________
-MyDetector::~MyDetector() 
+MyDetector::~MyDetector()
 {
    // Destructor.
 }
@@ -88,13 +88,13 @@ void MyDetector::Init()
    scintillator[2] = new TGeoMedium("SCINT2",4, polystyrene);
    calorimeter     = new TGeoMedium("CALOR", 5, nai);
    scintillator[3] = new TGeoMedium("SCINT3",6, polystyrene);
-    
+
    TGeoMaterial *mat = new TGeoMaterial("VOID");
    TGeoMedium *med = new TGeoMedium("MED", 0, mat);
    volume[0] = gGeoManager->MakeBox("TOP", med, 40, 62, 40);
    volume[0]->SetVisibility(kFALSE);
    gGeoManager->SetTopVolume(volume[0]);
-    
+
    volume[1] = gGeoManager->MakeBox("BOX0",scintillator[0], 20.0,2.00,20.0);
    volume[1]->SetLineColor(7);
    volume[1]->SetTransparency(50);
@@ -140,10 +140,10 @@ void MyDetector::Init()
       fI[i] *= 1.0e-03; // in GeV/cm...
 
       // first factor in the Bethe-Bloch equation in MeV/cm
-      fPreconst[i] = 0.3071 * material->GetDensity() * 
+      fPreconst[i] = 0.3071 * material->GetDensity() *
                      (material->GetZ() / material->GetA());
       fPreconst[i] *= 1.0e-03; // in GeV/cm...
-    
+
       // Critical Energy in MeV
       fEc[i] = 800.0 / (material->GetZ() + 1.2);
       fEc[i] *= 1.0e-03; // in GeV...
@@ -154,11 +154,11 @@ void MyDetector::Init()
       // Time step dT in ms about 0.015 times X_0/c
       fdT[i] = 0.005 * (fX0[i] / CSpeed);
 
-      // Scatter angle 
+      // Scatter angle
       x = fdT[i] * CSpeed;
-      fTheta0[i] = TMath::Sqrt(2.0) * 13.6 * TMath::Sqrt(x / fX0[i]) * 
+      fTheta0[i] = TMath::Sqrt(2.0) * 13.6 * TMath::Sqrt(x / fX0[i]) *
                    (1.0 + 0.038 * TMath::Log(x / fX0[i]));
-      fTheta0[i] *= 1.0e-03; 
+      fTheta0[i] *= 1.0e-03;
    }
 }
 

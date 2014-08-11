@@ -81,7 +81,7 @@ void TGLEmbeddedViewer::Init(const TGWindow *parent)
    fFrame->Resize(fFrame->GetDefaultSize());
    fFrame->Resize(400, 300);
 }
- 
+
 //______________________________________________________________________________
 void TGLEmbeddedViewer::CreateFrames()
 {

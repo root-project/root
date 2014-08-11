@@ -23,7 +23,7 @@
 #endif
 #ifndef ROOT_TMatrixDSparse
 #include "TMatrixDSparse.h"
-#endif    
+#endif
 #ifndef ROOT_TArrayD
 #include "TArrayD.h"
 #endif
@@ -94,7 +94,7 @@ protected :
                            TArrayI &Aiw1,Int_t *icntl,Double_t *cntl,Int_t *info);
    static void   Solve    (const Int_t n,TArrayD &Aa,TArrayI &Aiw,TArrayD &Aw,const Int_t maxfrt,
                            TVectorD &b,TArrayI &Aiw1,const Int_t nsteps,Int_t *icntl,Int_t *info);
- 
+
    static void   InitPivot_sub1 (const Int_t n,const Int_t nz,Int_t *irn,Int_t *icn,Int_t *iw,Int_t *ipe,
                                  Int_t *iq,Int_t *flag,Int_t &iwfr,Int_t *icntl,Int_t *info);
    static void   InitPivot_sub2 (const Int_t n,Int_t *ipe,Int_t *iw,const Int_t lw,Int_t &iwfr,Int_t *nv,

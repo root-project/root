@@ -32,7 +32,7 @@ template <typename T> void testBinarySearch()
 
    for ( T elem = -1; elem <= maxint; ++elem ) {
       Long_t index = TMath::BinarySearch((Long_t) 20, k, elem);
-      
+
       T* pind;
       pind = std::lower_bound(k, k+20, elem);
       Long_t index2 = ((*pind == elem)? (pind - k): ( pind - k - 1));
