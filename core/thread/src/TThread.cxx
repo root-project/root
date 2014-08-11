@@ -54,7 +54,7 @@ static TMutex  *gMainInternalMutex = 0;
 static void ThreadInternalLock() { if (gMainInternalMutex) gMainInternalMutex->Lock(); }
 static void ThreadInternalUnLock() { if (gMainInternalMutex) gMainInternalMutex->UnLock(); }
 
-static Bool_t fgIsTearDown;
+static Bool_t fgIsTearDown(kFALSE);
 
 //------------------------------------------------------------------------------
 
@@ -479,7 +479,10 @@ TThread *TThread::Self()
 
    TTHREAD_TLS(TThread*) self = 0;
 
-   if (!self) self = GetThread(SelfId());
+   if (!self || fgIsTearDown) {
+      if (fgIsTearDown) self = 0;
+      self = GetThread(SelfId());
+   }
    return self;
 }
 
