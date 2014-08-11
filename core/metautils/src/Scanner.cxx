@@ -888,20 +888,15 @@ bool RScanner::VisitTypedefNameDecl(clang::TypedefNameDecl* D)
 //______________________________________________________________________________
 bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
 {
-   DumpDecl(D, "");
-   
    if (fScanType == EScanType::kOnePCM)
       return true;
 
-   if(fSelectionRules.IsDeclSelected(D)) {
+   if(fSelectionRules.IsDeclSelected(D) &&
+      std::find(fSelectedEnums.begin(),fSelectedEnums.end(),D) == fSelectedEnums.end()){ // Removal of duplicates.
       fSelectedEnums.push_back(D);
-#ifdef SELECTION_DEBUG
-      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
-#endif
    }
 
    return true;
-
 }
 
 //______________________________________________________________________________

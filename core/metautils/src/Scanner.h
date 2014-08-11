@@ -174,7 +174,7 @@ private:
    static int fgBadClassCounter;
    ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
    SelectionRules &fSelectionRules;
-   std::set<clang::RecordDecl*> fselectedRecordDecls; // Set for O(logN), unordered_set will be better
+   std::set<clang::RecordDecl*> fselectedRecordDecls; // Set for O(logN)
    EScanType fScanType; // Differentiate among different kind of scans
    bool fFirstPass; // This flag allows to run twice, for example in presence of dict selection and recursive template list manipulations.
 
