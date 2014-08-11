@@ -827,7 +827,7 @@ TGeoNavigator *TGeoManager::AddNavigator()
 //      Error("AddNavigator", "Navigators are locked. Use SetNavigatorsLock(false) first.");
 //      return 0;
 //   }
-   Long_t threadId = TThread::SelfId();
+   Long_t threadId = fMultiThread ? TThread::SelfId() : 0;
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    TGeoNavigatorArray *array = 0;
    if (it != fNavigators.end()) array = it->second;
@@ -867,7 +867,7 @@ TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 TGeoNavigatorArray *TGeoManager::GetListOfNavigators() const
 {
 // Get list of navigators for the calling thread.
-   Long_t threadId = TThread::SelfId();
+   Long_t threadId = fMultiThread ? TThread::SelfId() : 0;
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) return 0;
    TGeoNavigatorArray *array = it->second;
@@ -878,7 +878,7 @@ TGeoNavigatorArray *TGeoManager::GetListOfNavigators() const
 Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
 {
 // Switch to another existing navigator for the calling thread.
-   Long_t threadId = TThread::SelfId();
+   Long_t threadId = fMultiThread ? TThread::SelfId() : 0;
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) {
       Error("SetCurrentNavigator", "No navigator defined for thread %ld\n", threadId);
@@ -944,7 +944,17 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
    if (!fClosed) {
       Error("SetMaxThreads", "Cannot set maximum number of threads before closing the geometry");
       return;
-   }   
+   }
+   if (!fMultiThread) {
+      TThread::Initialize();
+      Long_t threadId = TThread::SelfId();
+      NavigatorsMap_t::const_iterator it = fNavigators.find(0);
+      if (it != fNavigators.end()) {
+         TGeoNavigatorArray *array = it->second;
+         fNavigators.erase(it);
+         fNavigators.insert(NavigatorsMap_t::value_type(threadId, array));
+      }
+   }
    if (fMaxThreads) {
       ClearThreadsMap();
       ClearThreadData();
@@ -959,6 +969,7 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
 //______________________________________________________________________________
 void TGeoManager::ClearThreadData() const
 {
+   if (!fMaxThreads) return;
    TThread::Lock();
    TIter next(fVolumes);
    TGeoVolume *vol;
@@ -983,6 +994,7 @@ void TGeoManager::ClearThreadsMap()
 {
 // Clear the current map of threads. This will be filled again by the calling
 // threads via ThreadId calls.
+   if (gGeoManager && !gGeoManager->IsMultiThread()) return;
    TThread::Lock();
    if (!fgThreadId->empty()) fgThreadId->clear();
    fgNumThreads = 0;
