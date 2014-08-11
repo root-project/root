@@ -1103,6 +1103,42 @@ bool TCling::LoadPCM(TString pcmFileName,
          dataTypes->Clear(); // Ownership was transfered to TListOfTypes.
          delete dataTypes;
       }
+
+      TObjArray *enums;
+      pcmFile->GetObject("__Enums", enums);
+      if (enums) {
+         // Cache the pointers
+         auto listOfGlobals = gROOT->GetListOfGlobals();
+         auto listOfEnums = gROOT->GetListOfEnums();
+         // Loop on enums and then on enum constants
+         for (auto selEnum: *enums){
+            const char* enumScope = selEnum->GetTitle();
+            if (strcmp(enumScope,"") == 0){
+               // This is a global enum and is added to the
+               // list of enums and its constants to the list of globals
+               if (!listOfEnums->FindObject(selEnum)){
+                  listOfEnums->Add(selEnum);
+               }
+               for (auto enumConstant: *static_cast<TEnum*>(selEnum)->GetConstants()){
+                  if (!listOfGlobals->FindObject(enumConstant)){
+                     listOfGlobals->Add(enumConstant);
+                  }
+               }
+            }
+            else {
+               // This enum is in a namespace. A TClass entry is bootstrapped if
+               // none exists yet and the enum is added to it
+               TClass* nsTClassEntry = TClass::GetClass(enumScope);
+               if (!nsTClassEntry){
+                  nsTClassEntry = new TClass(enumScope,0,TClass::kNamespaceForMeta, true);
+               }
+               nsTClassEntry->GetListOfEnums()->Add(selEnum);
+            }
+         }
+         enums->Clear();
+         delete enums;
+      }
+
       delete pcmFile;
 
       gDebug = oldDebug;
