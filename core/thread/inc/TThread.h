@@ -56,6 +56,7 @@ friend class TPosixThread;
 friend class TThreadTimer;
 friend class TThreadCleaner;
 friend class TWin32Thread;
+friend class TJoinHelper;
 
 public:
 
