@@ -1746,8 +1746,10 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             Zoom((imgX1 < imgX2) ? imgX1 : imgX2, (imgY1 < imgY2) ? imgY1 : imgY2,
                  TMath::Abs(imgX1 - imgX2) + 1, TMath::Abs(imgY1 - imgY2) + 1);
 
-            ZoomBox->Delete();
-            ZoomBox = 0;
+            if (ZoomBox) {
+               ZoomBox->Delete();
+               ZoomBox = 0;
+            }
             gPad->Modified(kTRUE);
             gPad->Update();
             break;
