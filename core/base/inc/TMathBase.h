@@ -141,10 +141,18 @@ inline Long64_t TMath::Sign(Long64_t a, Long64_t b)
    { return (b >= 0) ? Abs(a) : -Abs(a); }
 
 inline Float_t TMath::Sign(Float_t a, Float_t b)
+#if __cplusplus >= 201103
    { return std::copysign(a,b);  }
+#else
+  { return (b >= 0) ? Abs(a) : -Abs(a); }
+#endif
 
 inline Double_t TMath::Sign(Double_t a, Double_t b)
+#if __cplusplus >= 201103
    { return std::copysign(a,b);  }
+#else
+  { return (b >= 0) ? Abs(a) : -Abs(a); }
+#endif
 
 //---- Min ---------------------------------------------------------------------
 
