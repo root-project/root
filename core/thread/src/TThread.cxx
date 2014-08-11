@@ -91,7 +91,7 @@ private:
    TCondition *fC;
    Bool_t      fJoined;
 
-   static void JoinFunc(void *p);
+   static void* JoinFunc(void *p);
 
 public:
    TJoinHelper(TThread *th, void **ret);
@@ -120,10 +120,11 @@ TJoinHelper::~TJoinHelper()
 }
 
 //______________________________________________________________________________
-void TJoinHelper::JoinFunc(void *p)
+void* TJoinHelper::JoinFunc(void *p)
 {
    // Static method which runs in a separate thread to handle thread
    // joins without blocking the main thread.
+   // Return a value (zero) so that it makes a joinable thread.
 
    TJoinHelper *jp = (TJoinHelper*)p;
 
@@ -135,6 +136,8 @@ void TJoinHelper::JoinFunc(void *p)
    jp->fM->UnLock();
 
    TThread::Exit(0);
+
+   return 0;
 }
 
 //______________________________________________________________________________
