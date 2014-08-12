@@ -63,11 +63,11 @@ protected:
                         Int_t *ovec, Int_t nmatch) const;
 
    Int_t    MatchInternal(const TString& s, Int_t start,
-                          Int_t nMaxMatch, TArrayI *pos=0);
+                          Int_t nMaxMatch, TArrayI *pos=0) const;
 
    Int_t    SubstituteInternal(TString &s, const TString &replace,
                                Int_t start, Int_t nMaxMatch0,
-                               Bool_t doDollarSubst);
+                               Bool_t doDollarSubst) const;
 
 public:
    TPRegexp();
