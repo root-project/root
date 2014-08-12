@@ -1409,6 +1409,13 @@ void TCling::RegisterModule(const char* modulename,
    // but already had their type information available (using information/header
    // loaded from other modules or from class rules).
    if (!fHeaderParsingOnDemand) {
+      // This code is likely to be superseded by the similar code in LoadPCM,
+      // and have been disabled, (inadvertently or awkwardly) by
+      // commit 7903f09f3beea69e82ffba29f59fb2d656a4fd54 (Refactor the routines used for header parsing on demand)
+      // whereas it seems that a more semantically correct conditional would have
+      // been 'if this module does not have a rootpcm'.
+      // Note: this need to be review when the clang pcm are being installed.
+      //       #if defined(R__MUST_REVISIT)
       while (!fClassesToUpdate.empty()) {
          TClass *oldcl = fClassesToUpdate.back().first;
          if (oldcl->GetState() != TClass::kHasTClassInit) {
