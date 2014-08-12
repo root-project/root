@@ -180,6 +180,9 @@ TObject *TListOfEnums::FindObject(const char *name) const
 
    TObject *result = THashList::FindObject(name);
    if (!result) {
+
+      R__LOCKGUARD(gInterpreterMutex);
+
       TInterpreter::DeclId_t decl;
       if (fClass) decl = gInterpreter->GetEnum(fClass, name);
       else        decl = gInterpreter->GetEnum(0, name);
@@ -211,6 +214,8 @@ TEnum *TListOfEnums::Get(DeclId_t id, const char *name)
       } else {
          if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
       }
+
+      R__LOCKGUARD(gInterpreterMutex);
 
       // Let's see if this is a reload ...
       // can we check for reloads for enums?
@@ -302,6 +307,8 @@ void TListOfEnums::Load()
 
    // This will provoke the parsing of the headers if need be.
    if (fClass && fClass->GetClassInfo() == 0) return;
+
+   R__LOCKGUARD(gInterpreterMutex);
 
    // We need to remove the enums coming from the pcm now that we load the list.
 #if defined(R__MUST_REVISIT)

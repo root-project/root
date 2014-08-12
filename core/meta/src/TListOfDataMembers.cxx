@@ -191,6 +191,9 @@ TObject *TListOfDataMembers::FindObject(const char *name) const
          // We already have all the information, no need to search more
          return 0;
       }
+
+      R__LOCKGUARD(gInterpreterMutex);
+
       TInterpreter::DeclId_t decl;
       if (fClass) decl = gInterpreter->GetDataMember(fClass->GetClassInfo(),name);
       else        decl = gInterpreter->GetDataMember(0,name);
@@ -222,6 +225,9 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
       } else {
          if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
       }
+
+      R__LOCKGUARD(gInterpreterMutex);
+
       DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(id,fClass ? fClass->GetClassInfo() : 0);
 
       // Let's see if this is a reload ...
@@ -274,6 +280,8 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info)
       } else {
          if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
       }
+
+      R__LOCKGUARD(gInterpreterMutex);
 
       DataMemberInfo_t *dm_info = gInterpreter->DataMemberInfo_FactoryCopy(info);
 
@@ -386,6 +394,8 @@ void TListOfDataMembers::Load()
 
    // This will provoke the parsing of the headers if need be.
    if (fClass && fClass->GetClassInfo() == 0) return;
+
+   R__LOCKGUARD(gInterpreterMutex);
 
    ULong64_t currentTransaction = gInterpreter->GetInterpreterStateMarker();
    if (currentTransaction == fLastLoadMarker) {
