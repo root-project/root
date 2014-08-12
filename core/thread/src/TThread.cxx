@@ -309,6 +309,11 @@ void TThread::Init()
 
    if (fgThreadImp || fgIsTearDown) return;
 
+#if !defined (_REENTRANT)
+   // Not having it means (See TVirtualMutext.h) that the LOCKGUARD macro are empty.
+   Fatal("Init","_REENTRANT must be #define-d for TThread to work properly.");
+#endif
+
    fgThreadImp = gThreadFactory->CreateThreadImp();
    gMainInternalMutex = new TMutex(kTRUE);
 
