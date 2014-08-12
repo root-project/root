@@ -1209,7 +1209,7 @@ void TCling::RegisterModule(const char* modulename,
    if (fromRootCling) return;
 
    // Treat Aclic Libs in a special way. Do not delay the parsing.
-   bool oldfHeaderParsingOnDemand=fHeaderParsingOnDemand;
+   bool oldfHeaderParsingOnDemand = fHeaderParsingOnDemand;
    if (oldfHeaderParsingOnDemand &&
        strstr(modulename, "_ACLiC_dict") != nullptr){
       if (gDebug>1)
@@ -1407,8 +1407,8 @@ void TCling::RegisterModule(const char* modulename,
    // Now that all the header have been registered/compiled, let's
    // make sure to 'reset' the TClass that have a class init in this module
    // but already had their type information available (using information/header
-   // loaded form other modules).
-   if (!fHeaderParsingOnDemand){
+   // loaded from other modules or from class rules).
+   if (!fHeaderParsingOnDemand) {
       while (!fClassesToUpdate.empty()) {
          TClass *oldcl = fClassesToUpdate.back().first;
          if (oldcl->GetState() != TClass::kHasTClassInit) {
