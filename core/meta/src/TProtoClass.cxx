@@ -34,8 +34,9 @@ TProtoClass::TProtoClass(TClass* cl):
    fStreamerType(cl->fStreamerType), fProperty(cl->fProperty),
    fClassProperty(cl->fClassProperty)
 {
+   // Initialize a TProtoClass from a TClass.
+
    if (cl->Property() & kIsNamespace){
-      fBase=nullptr;
       fData=nullptr;
       fEnums=nullptr;
       fPRealData=nullptr;
@@ -43,7 +44,6 @@ TProtoClass::TProtoClass(TClass* cl):
       return;
    }
 
-   // Initialize a TProtoClass from a TClass.
    fPRealData = new TList();
 
    if (!cl->GetCollectionProxy()) {
@@ -116,6 +116,10 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    if (cl->fRealData || cl->fBase || cl->fData || cl->fEnums
        || cl->fSizeof != -1 || cl->fCanSplit >= 0
        || cl->fProperty != (-1) ) {
+      if (cl->fProperty & kIsNamespace){
+         if (gDebug>0) Info("FillTClass", "Returning w/o doing anything. %s is a namespace.",cl->GetName());
+         return kTRUE;
+      }
       Error("FillTClass", "TClass %s already initialized!", cl->GetName());
       return kFALSE;
    }
