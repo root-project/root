@@ -106,22 +106,22 @@ TString CompressName(const char *method_name)
    //                              Option_t * , Int_t , Int_t)");
    // returns the string "Draw(char*,char*,char*,int,int)".
 
-   static TPMERegexp *constRe = 0, *wspaceRe = 0;
-   static TVirtualMutex *lock = 0;
-
-   R__LOCKGUARD2(lock);
-
-   if (constRe == 0) {
-      constRe  = new TPMERegexp("(?<=\\(|\\s|,|&|\\*)const(?=\\s|,|\\)|&|\\*)", "go");
-      wspaceRe = new TPMERegexp("\\s+", "go");
-   }
-
    TString res(method_name);
    if (res.IsNull())
       return res;
 
-   constRe ->Substitute(res, "");
-   wspaceRe->Substitute(res, "");
+   {
+      static TVirtualMutex *  lock = 0;
+      R__LOCKGUARD2(lock);
+
+      static TPMERegexp *constRe = 0, *wspaceRe = 0;
+      if (constRe == 0) {
+         constRe  = new TPMERegexp("(?<=\\(|\\s|,|&|\\*)const(?=\\s|,|\\)|&|\\*)", "go");
+         wspaceRe = new TPMERegexp("\\s+", "go");
+      }
+      constRe ->Substitute(res, "");
+      wspaceRe->Substitute(res, "");
+   }
 
    TStringToken methargs(res, "\\(|\\)", kTRUE);
 
