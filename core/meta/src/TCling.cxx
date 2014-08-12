@@ -273,9 +273,16 @@ void TCling::UpdateEnumConstants(TEnum* enumObj, TClass* cl) const {
             value = valAPSInt.getZExtValue();
          }
 
-         // Create the TEnumConstant.
-         TEnumConstant* enumConstant = new TEnumConstant((DataMemberInfo_t*)new TClingDataMemberInfo(fInterpreter, *EDI, (TClingClassInfo*)(cl ? cl->GetClassInfo() : 0))
-                                                         , constantName, value, enumObj);
+         // Create the TEnumConstant or update it if existing
+         TEnumConstant* enumConstant = nullptr;
+         TClingClassInfo* tcCInfo = (TClingClassInfo*)(cl ? cl->GetClassInfo() : 0);
+         TClingDataMemberInfo* tcDmInfo = new TClingDataMemberInfo(fInterpreter, *EDI, tcCInfo);
+         DataMemberInfo_t* dmInfo = (DataMemberInfo_t*) tcDmInfo;
+         if (TObject* encAsTObj = enumObj->GetConstants()->FindObject(constantName)){
+            ((TEnumConstant*)encAsTObj)->Update(dmInfo);
+         } else {
+            enumConstant = new TEnumConstant(dmInfo, constantName, value, enumObj);
+         }
 
          // Add the global constants to the list of Globals.
          if (!cl) {
