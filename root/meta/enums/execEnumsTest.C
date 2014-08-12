@@ -1,4 +1,4 @@
-int checkEnums(const std::list<std::string>& tclassNames, bool load=false){
+int checkEnums(const std::list<std::string>& tclassNames, bool load, bool fillMap=false){
 
    std::cout << "Checking enumerators...\n";
 
@@ -15,14 +15,26 @@ int checkEnums(const std::list<std::string>& tclassNames, bool load=false){
          return 1;
       }
 
+      static std::map<TEnum*,std::vector<TEnumConstant*>> enumConstPtrMap;
       std::cout << "Enums found in " << tclassName << ":\n";
       for (const auto& theEnumAsTObj : *listOfEnums){
          TEnum* theEnum = (TEnum*)theEnumAsTObj;
+         if (fillMap) enumConstPtrMap[theEnum]={};
          std::cout << "  - " << theEnum->GetName() << ". The constants are:\n";
+         unsigned int constCounter=0;
          for (TObject* enConstAsTObj : *theEnum->GetConstants()){
             TEnumConstant* enConst = (TEnumConstant*)enConstAsTObj;
             std::cout << "  - " << enConst->GetName()
                       << ". Its value is " << enConst->GetValue() << std::endl;
+            if (fillMap) enumConstPtrMap[theEnum].emplace_back(enConst);
+            else {
+               auto oldAddr = enumConstPtrMap[theEnum][constCounter];
+               auto newAddr = enConst;
+               if (oldAddr != newAddr)
+                  std::cerr << "Error: the enum constant changed its address from "
+                  << oldAddr << " to " << newAddr << "!\n";
+            }
+            constCounter++;
          }
       }
    }
@@ -51,7 +63,7 @@ int execEnumsTest(){
    gSystem->Load("libenumsTestClasses_dictrflx.so");
 
    std::cout << "Begin test\n";
-   retCode+=checkEnums(tclassNames);
+   retCode+=checkEnums(tclassNames,false,true);
 
    std::cout << "\nTriggering payload parsing on purpose...\n";
    gInterpreter->AutoParse("testClass");
@@ -61,7 +73,7 @@ int execEnumsTest(){
    gInterpreter->ProcessLine("namespace testNs{enum Temperatures{kCold,kMild,kHot};};");
    gInterpreter->ProcessLine("enum Temperatures{kCold,kMild,kHot};");
    tclassNames.push_back("testNs");
-   retCode+=checkEnums(tclassNames, true);
+   retCode+=checkEnums(tclassNames, true, true);
 
    return 0;
 }
