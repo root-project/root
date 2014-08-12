@@ -311,7 +311,7 @@ void TThread::Init()
 
 #if !defined (_REENTRANT)
    // Not having it means (See TVirtualMutext.h) that the LOCKGUARD macro are empty.
-   Fatal("Init","_REENTRANT must be #define-d for TThread to work properly.");
+   ::Fatal("Init","_REENTRANT must be #define-d for TThread to work properly.");
 #endif
 
    fgThreadImp = gThreadFactory->CreateThreadImp();
