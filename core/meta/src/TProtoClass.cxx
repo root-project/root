@@ -37,7 +37,7 @@ TProtoClass::TProtoClass(TClass* cl):
    // Initialize a TProtoClass from a TClass.
 
    if (cl->Property() & kIsNamespace){
-      fData=nullptr;
+      fData=new TListOfDataMembers();
       fEnums=nullptr;
       fPRealData=nullptr;
       fOffsetStreamer=0;
