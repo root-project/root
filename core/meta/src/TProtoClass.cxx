@@ -34,6 +34,15 @@ TProtoClass::TProtoClass(TClass* cl):
    fStreamerType(cl->fStreamerType), fProperty(cl->fProperty),
    fClassProperty(cl->fClassProperty)
 {
+   if (cl->Property() & kIsNamespace){
+      fBase=nullptr;
+      fData=nullptr;
+      fEnums=nullptr;
+      fPRealData=nullptr;
+      fOffsetStreamer=0;
+      return;
+   }
+
    // Initialize a TProtoClass from a TClass.
    fPRealData = new TList();
 

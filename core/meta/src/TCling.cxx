@@ -1132,7 +1132,7 @@ bool TCling::LoadPCM(TString pcmFileName,
                if (!nsTClassEntry){
                   nsTClassEntry = new TClass(enumScope,0,TClass::kNamespaceForMeta, true);
                }
-               nsTClassEntry->GetListOfEnums()->Add(selEnum);
+               nsTClassEntry->GetListOfEnums(false)->Add(selEnum);
             }
          }
          enums->Clear();

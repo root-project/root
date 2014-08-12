@@ -2924,6 +2924,8 @@ int GenerateFullDict(std::ostream& dictStream,
    // SELECTION LOOP
    for(auto const & ns : scan.fSelectedNamespaces) {
       WriteNamespaceInit(ns, interp, dictStream);
+      auto nsName=ns.GetNamespaceDecl()->getQualifiedNameAsString().c_str();
+      EmitStreamerInfo(nsName);
    }
 
    for(auto const & selClass : scan.fSelectedClasses)
