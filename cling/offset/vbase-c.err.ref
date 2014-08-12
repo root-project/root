@@ -1,0 +1,5 @@
+The derived class does not derive from base, thus we expect different results from compiler and cling.
+Multiple paths case:
+Error in <TClingBaseClassInfo::Offset>: There are multiple paths from derived class Basement to base class Mid2.
+derived Basement -> base Mid2: TClass says -1
+The derived class does not derive from base, thus we expect different results from compiler and cling.

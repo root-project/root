@@ -5,7 +5,6 @@ ROOTTEST_ADD_TEST(roottest-cling-specialobj-assertGPad
 
 ROOTTEST_ADD_TEST(roottest-cling-specialobj-stlwrite
                   MACRO write.C
-                  DEPENDS AthIndex.h T0Result.h calib.h
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(roottest-cling-specialobj-argtwice

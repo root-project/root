@@ -8,6 +8,11 @@
 
 include(RootMacros)
 
+#-------------------------------------------------------------------------------
+# macro ROOTTEST_SETUP_MACROTEST()
+#
+# A helper macro to define the command to run a ROOT macro (.C, .C+ or .py)
+#-------------------------------------------------------------------------------
 macro(ROOTTEST_SETUP_MACROTEST)
 
   get_directory_property(DirDefs COMPILE_DEFINITIONS)
@@ -69,6 +74,11 @@ macro(ROOTTEST_SETUP_MACROTEST)
 
 endmacro(ROOTTEST_SETUP_MACROTEST)
 
+#-------------------------------------------------------------------------------
+# macro ROOTTEST_SETUP_EXECTEST()
+#
+# A helper macro to define the command to run an executable
+#-------------------------------------------------------------------------------
 macro(ROOTTEST_SETUP_EXECTEST)
 
   find_program(realexec ${ARG_EXEC}
@@ -88,10 +98,27 @@ macro(ROOTTEST_SETUP_EXECTEST)
 
 endmacro(ROOTTEST_SETUP_EXECTEST)
 
+
+#-------------------------------------------------------------------------------
+#
+# function ROOTTEST_ADD_TEST(testname 
+#                            MACRO|EXEC macro_or_command   
+#                            [MACROARG args1 arg2 ...]
+#                            [WILLFAIL]
+#                            [OUTREF stdout_reference]
+#                            [ERRREF stderr_reference]
+#                            [WORKING_DIR dir]
+#                            [COPY_TO_BUILDDIR file1 file2 ...])
+#
+# This function defines a roottest test. It adds a number of additional
+# options on top of the ROOT defined ROOT_ADD_TEST.
+#
+#-------------------------------------------------------------------------------
+
 function(ROOTTEST_ADD_TEST test)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;TEST_OUTREF_CINTSPECIFIC"
-                            "OUTREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR"
-                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
+                            "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR"
+                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS" ${ARGN})
 
   # Setup macro test.
   if(ARG_MACRO)
@@ -101,6 +128,10 @@ function(ROOTTEST_ADD_TEST test)
   # Setup executable test.
   if(ARG_EXEC)
     ROOTTEST_SETUP_EXECTEST()
+  endif()
+  
+  if(ARG_COMMAND)
+    set(command ${ARG_COMMAND})
   endif()
 
   # Reference output given?
@@ -132,13 +163,12 @@ function(ROOTTEST_ADD_TEST test)
         set(OUTREF_PATH ${OUTREF_PATH}${ROOTBITS})
       endif()
     endif()
-
-  else()
-    set(OUTREF_PATH "")
+    set(outref OUTREF ${OUTREF_PATH})
   endif()
-
-  if(ARG_OUTCNV)
-    get_filename_component(OUTCNV ${ARG_OUTCNV} ABSOLUTE)
+  
+  if(ARG_ERRREF)
+    get_filename_component(ERRREF_PATH ${ARG_ERRREF} ABSOLUTE)
+    set(errref ERRREF ${ERRREF_PATH})
   endif()
 
   # Get the real path to the output conversion script.
@@ -246,13 +276,19 @@ function(ROOTTEST_ADD_TEST test)
     get_filename_component(test_working_dir ${CMAKE_CURRENT_BINARY_DIR} ABSOLUTE)
   endif()
 
-  get_filename_component(logdir "${CMAKE_CURRENT_BINARY_DIR}/${test}.log" ABSOLUTE)
+  get_filename_component(logfile "${CMAKE_CURRENT_BINARY_DIR}/${test}.log" ABSOLUTE)
+  if(ARG_ERRREF)
+    get_filename_component(errfile "${CMAKE_CURRENT_BINARY_DIR}/${test}.err" ABSOLUTE)
+    set(errfile ERROR ${errfile})
+  endif()
 
   ROOT_ADD_TEST(${test} COMMAND ${command}
-                        OUTPUT ${logdir}
+                        OUTPUT ${logfile}
+                        ${errfile}
                         ${outcnv}
                         ${outcnvcmd}
-                        CMPOUTPUT ${OUTREF_PATH}
+                        ${outref}
+                        ${errref}
                         WORKING_DIR ${test_working_dir}
                         DIFFCMD ${ROOTTEST_DIR}/scripts/custom_diff.py
                         TIMEOUT 3600

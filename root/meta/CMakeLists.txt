@@ -9,6 +9,6 @@ ROOTTEST_COMPILE_MACRO(fornamespace.C)
 
 ROOTTEST_ADD_AUTOMACROS(DEPENDS TmpltInt0.C TmpltInt1.C TmpltFloat.C
                                 TmpltNoSpec.C Event.cxx ${COMPILE_MACRO_TEST}
-                        COPY_TO_BUILDDIR templateAutoload.rootmap)
+                        COPY_TO_BUILDDIR templateAutoload.rootmap typelist.v5.txt typelist.v6.txt)
 
 ROOTTEST_ADD_TESTDIRS()
