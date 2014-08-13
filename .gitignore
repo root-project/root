@@ -538,6 +538,10 @@ AutoDict_*.cxx
 /root/io/transient/*.*log
 /root/io/transient/missingdict_rflx.cpp
 
+# /root/io/transient/base
+/root/io/transient/base/data1.root
+/root/io/transient/base/data2.root
+
 # /root/io/tree/
 /root/io/tree/*.root
 /root/io/tree/*.out
