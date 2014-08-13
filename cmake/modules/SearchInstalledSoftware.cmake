@@ -23,9 +23,9 @@ if(NOT builtin_zlib)
    endif()
 endif()
 if(builtin_zlib)
-  set(ZLIB_LIBRARY)
-  set(ZLIB_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/core/zip/inc)
-  set(ZLIB_FOUND 1)
+  if(WIN32)
+    set(ZLIB_LIBRARY "")
+  endif()
 endif()
 
 #---Check for Freetype---------------------------------------------------------------
