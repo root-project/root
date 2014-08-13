@@ -1,4 +1,4 @@
-void build(const char *filename,const char *lib = 0, const char *obj = 0) 
+void build(const char *filename, const char *lib = 0, const char *obj = 0, const char *libname = "")
 {
    if (obj!=0 && strlen(obj) ) {
       TString s = gSystem->GetMakeSharedLib();
@@ -77,9 +77,9 @@ void build(const char *filename,const char *lib = 0, const char *obj = 0)
    int result = gSystem->CompileMacro(fname,"kc");
 #elif defined(CMakeEnvironment) && defined(CMakeBuildDir)
    // fprintf(stderr,"CmakeBuildDir: %s filename: %s", CMakeBuildDir, filename);
-   int result = gSystem->CompileMacro(filename,"kc-", "", CMakeBuildDir);
+   int result = gSystem->CompileMacro(filename,"kc-", libname, CMakeBuildDir);
 #else
-   int result = gSystem->CompileMacro(filename,"kc");
+   int result = gSystem->CompileMacro(filename,"kc", libname);
 #endif
    if (!result) gApplication->Terminate(1);
 }
