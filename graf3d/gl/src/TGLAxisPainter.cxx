@@ -626,7 +626,7 @@ void TGLAxisPainterBox::DrawAxis3D(TGLRnrCtx &rnrCtx)
 
 //______________________________________________________________________________
 void TGLAxisPainterBox::PlotStandard(      TGLRnrCtx      &rnrCtx,
-                                     const TH1            *histo,
+                                     TH1                  *histo,
                                      const TGLBoundingBox &bbox)
 {
    //

@@ -1858,12 +1858,12 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    TString opt = option;
    opt.ToUpper();
 
-   TAxis *xaxis1 = GetXaxis();
-   TAxis *xaxis2 = h2->GetXaxis();
-   TAxis *yaxis1 = GetYaxis();
-   TAxis *yaxis2 = h2->GetYaxis();
-   TAxis *zaxis1 = GetZaxis();
-   TAxis *zaxis2 = h2->GetZaxis();
+   const TAxis *xaxis1 = GetXaxis();
+   const TAxis *xaxis2 = h2->GetXaxis();
+   const TAxis *yaxis1 = GetYaxis();
+   const TAxis *yaxis2 = h2->GetYaxis();
+   const TAxis *zaxis1 = GetZaxis();
+   const TAxis *zaxis2 = h2->GetZaxis();
 
    Int_t nbinx1 = xaxis1->GetNbins();
    Int_t nbinx2 = xaxis2->GetNbins();
@@ -7396,8 +7396,8 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    Double_t prob = 0;
    TH1 *h1 = (TH1*)this;
    if (h2 == 0) return 0;
-   TAxis *axis1 = h1->GetXaxis();
-   TAxis *axis2 = h2->GetXaxis();
+   const TAxis *axis1 = h1->GetXaxis();
+   const TAxis *axis2 = h2->GetXaxis();
    Int_t ncx1   = axis1->GetNbins();
    Int_t ncx2   = axis2->GetNbins();
 

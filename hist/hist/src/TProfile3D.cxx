@@ -1185,7 +1185,7 @@ TProfile2D *TProfile3D::Project3DProfile(Option_t *option) const
 }
 
 //______________________________________________________________________________
-TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title, TAxis* projX, TAxis* projY,
+TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
                                            bool originalRange, bool useUF, bool useOF) const
 {
    // internal method to project to a 2D Profile

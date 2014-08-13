@@ -1305,10 +1305,10 @@ Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
    Double_t prb = 0;
    TH1 *h1 = (TH1*)this;
    if (h2 == 0) return 0;
-   TAxis *xaxis1 = h1->GetXaxis();
-   TAxis *xaxis2 = h2->GetXaxis();
-   TAxis *yaxis1 = h1->GetYaxis();
-   TAxis *yaxis2 = h2->GetYaxis();
+   const TAxis *xaxis1 = h1->GetXaxis();
+   const TAxis *xaxis2 = h2->GetXaxis();
+   const TAxis *yaxis1 = h1->GetYaxis();
+   const TAxis *yaxis2 = h2->GetYaxis();
    Int_t ncx1   = xaxis1->GetNbins();
    Int_t ncx2   = xaxis2->GetNbins();
    Int_t ncy1   = yaxis1->GetNbins();
@@ -2207,8 +2207,8 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    const char *expectedName = 0;
    Int_t inNbin;
    Int_t firstOutBin, lastOutBin;
-   TAxis* outAxis;
-   TAxis* inAxis;
+   const TAxis* outAxis;
+   const TAxis* inAxis;
 
 
    TString opt = option;
@@ -2555,8 +2555,8 @@ TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
 {
    // Implementation of quantiles for x or y
 
-   TAxis *outAxis = 0;
-   TAxis *inAxis = 0;
+   const TAxis *outAxis = 0;
+   const TAxis *inAxis = 0;
    if ( onX )   {
       outAxis = GetXaxis();
       inAxis = GetYaxis();

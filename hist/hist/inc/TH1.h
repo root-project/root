@@ -311,9 +311,12 @@ public:
    virtual Double_t GetRMS(Int_t axis=1) const;
    virtual Double_t GetRMSError(Int_t axis=1) const;
    virtual Double_t GetSkewness(Int_t axis=1) const;
-           TAxis*   GetXaxis() const { return &((TH1*)this)->fXaxis; }
-           TAxis*   GetYaxis() const { return &((TH1*)this)->fYaxis; }
-           TAxis*   GetZaxis() const { return &((TH1*)this)->fZaxis; }
+           TAxis*   GetXaxis()  { return &fXaxis; }
+           TAxis*   GetYaxis()  { return &fYaxis; }
+           TAxis*   GetZaxis()  { return &fZaxis; }
+     const TAxis*   GetXaxis() const { return &fXaxis; }
+     const TAxis*   GetYaxis() const { return &fYaxis; }
+     const TAxis*   GetZaxis() const { return &fZaxis; }
    virtual Double_t Integral(Option_t *option="") const;
    virtual Double_t Integral(Int_t binx1, Int_t binx2, Option_t *option="") const;
    virtual Double_t IntegralAndError(Int_t binx1, Int_t binx2, Double_t & err, Option_t *option="") const;

@@ -1430,9 +1430,10 @@ Bool_t TEfficiency::CheckBinning(const TH1& pass,const TH1& total)
    //
    //It is assumed that the passed histograms have the same dimension.
 
-   TAxis* ax1 = 0;
-   TAxis* ax2 = 0;
-
+   
+   const TAxis* ax1 = 0;
+   const TAxis* ax2 = 0;
+   
    //check binning along axis
    for(Int_t j = 0; j < pass.GetDimension(); ++j) {
       switch(j) {

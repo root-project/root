@@ -76,7 +76,7 @@ bool AdjustError(const DataOptions & option, double & error, double value = 1) {
    return true;
 }
 
-void ExamineRange(TAxis * axis, std::pair<double,double> range,int &hxfirst,int &hxlast) {
+void ExamineRange(const TAxis * axis, std::pair<double,double> range,int &hxfirst,int &hxlast) {
    // examine the range given with the pair on the given histogram axis
    // correct in case the bin values hxfirst hxlast
    double xlow   = range.first;
@@ -85,10 +85,10 @@ void ExamineRange(TAxis * axis, std::pair<double,double> range,int &hxfirst,int 
    std::cout << "xlow " << xlow << " xhigh = " << xhigh << std::endl;
 #endif
    // ignore ranges specified outside histogram range
-   int ilow = axis->FindBin(xlow);
-   int ihigh = axis->FindBin(xhigh);
-   if (ilow > hxlast || ihigh < hxfirst) {
-      Warning("ROOT::Fit::FillData","fit range is outside histogram range, no fit data for %s",axis->GetName());
+   int ilow = axis->FindFixBin(xlow);
+   int ihigh = axis->FindFixBin(xhigh);
+   if (ilow > hxlast || ihigh < hxfirst) { 
+      Warning("ROOT::Fit::FillData","fit range is outside histogram range, no fit data for %s",axis->GetName()); 
    }
    // consider only range defined with-in histogram not oustide. Always exclude underflow/overflow
    hxfirst =  std::min( std::max( ilow, hxfirst), hxlast+1) ;
@@ -102,6 +102,7 @@ void ExamineRange(TAxis * axis, std::pair<double,double> range,int &hxfirst,int 
 
 
 } // end namespace HFitInterface
+
 
 void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
 {
@@ -185,9 +186,9 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    int biny = 0;
    int binz = 0;
 
-   TAxis *xaxis  = hfit->GetXaxis();
-   TAxis *yaxis  = hfit->GetYaxis();
-   TAxis *zaxis  = hfit->GetZaxis();
+   const TAxis *xaxis  = hfit->GetXaxis();
+   const TAxis *yaxis  = hfit->GetYaxis();
+   const TAxis *zaxis  = hfit->GetZaxis();
 
    for ( binx = hxfirst; binx <= hxlast; ++binx) {
       if (useBinEdges) {

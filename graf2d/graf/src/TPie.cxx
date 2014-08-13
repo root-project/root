@@ -125,7 +125,7 @@ TPie::TPie(const TH1 *h) : TNamed(h->GetName(),h->GetTitle())
 
    Int_t i;
 
-   TAxis *axis = h->GetXaxis();
+   const TAxis *axis = h->GetXaxis();
    Int_t first = axis->GetFirst();
    Int_t last  = axis->GetLast();
    Int_t np    = last-first+1;

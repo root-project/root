@@ -49,7 +49,7 @@ public:
 
    THStack();
    THStack(const char *name, const char *title);
-   THStack(const TH1* hist, Option_t *axis="x",
+   THStack(TH1* hist, Option_t *axis="x",
            const char *name=0, const char *title=0,
            Int_t firstbin=1, Int_t lastbin=-1,
            Int_t firstbin2=1, Int_t lastbin2=-1,

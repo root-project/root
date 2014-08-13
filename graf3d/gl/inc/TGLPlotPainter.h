@@ -112,7 +112,7 @@ public:
 
 private:
    ESliceAxis                fAxisType;
-   TAxis                    *fAxis;
+   const TAxis                    *fAxis;
    mutable TGLLevelPalette   fPalette;
 
    const TGLPlotCoordinates *fCoord;
