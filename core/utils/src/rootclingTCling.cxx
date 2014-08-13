@@ -92,9 +92,12 @@ bool CloseStreamerInfoROOTFile()
                    << normName << '\n';
          return false;
       }
-      // If the class is not persistent we return success.
-      if (cl->GetClassVersion() == 0)
-         continue;
+      // We include transient classes as they could be used by a derived
+      // class which may have rules setting the member of the transient class.
+      // (And the derived class RealData *do* contain member from the transient
+      // base classes.
+//      if (cl->GetClassVersion() == 0)
+//         continue;
 
       // Let's include also proxied collections in order to delay parsing as long as possible.
       // In the first implementations, proxied collections did not result in a protoclass.
