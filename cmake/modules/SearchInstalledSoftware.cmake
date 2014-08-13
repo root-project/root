@@ -23,7 +23,9 @@ if(NOT builtin_zlib)
    endif()
 endif()
 if(builtin_zlib)
-  set(ZLIB_LIBRARY "")
+  set(ZLIB_LIBRARY)
+  set(ZLIB_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/core/zip/inc)
+  set(ZLIB_FOUND 1)
 endif()
 
 #---Check for Freetype---------------------------------------------------------------
@@ -207,7 +209,7 @@ if(mathmore OR builtin_gsl)
       GSL
       URL http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no CFLAGS=${CMAKE_C_FLAGS}
     )
     set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
     foreach(l gsl gslcblas)
