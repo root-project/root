@@ -19,10 +19,12 @@ ROOT_GENERATE_DICTIONARY(G__Core
                          ${Winnt_dict_headers}
                          ${MetaUtils_dict_headers}
                          ${Meta_dict_headers}
+                         ${TextInput_dict_headers}
                          STAGE1
                          MODULE Core
                          OPTIONS ${dict_opts}
                          LINKDEF LinkDef.h)
+message("TextInput_dict_headers=${TextInput_dict_headers}")
 
 list(REMOVE_ITEM sources TROOT.cxx roota.cxx)
 ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${sources})
