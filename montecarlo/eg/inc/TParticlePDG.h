@@ -59,7 +59,6 @@ protected:
 public:
    // ****** constructors  and destructor
    TParticlePDG();
-   TParticlePDG(int pdg_code);
    TParticlePDG(const char* Name, const char* Title, Double_t Mass,
                 Bool_t Stable, Double_t Width, Double_t Charge,
                 const char* ParticleClass, Int_t PdgCode, Int_t Anti,
