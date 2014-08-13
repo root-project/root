@@ -97,6 +97,7 @@ public:
    TDecayChannel* DecayChannel(Int_t i);
 
    TParticlePDG* AntiParticle() { return fAntiParticle; }
+   const TParticlePDG* AntiParticle() const { return fAntiParticle; }
 
    // ****** modifiers
 
