@@ -158,12 +158,11 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    Int_t includes = gEnv->GetValue("Rint.Includes", 1);
    // When the interactive ROOT starts, it can automatically load some frequently
    // used includes. However, this introduces several overheads
-   //   -A long list of cint and system files must be kept open during the session
-   //   -The initialisation takes more time (noticeable when using gdb or valgrind)
-   //   -Memory overhead of about 5 Mbytes (1/3 of the ROOT executable) when including <vector>
+   //   -The initialisation takes more time
+   //   -Memory overhead when including <vector>
    // In $ROOTSYS/etc/system.rootrc, you can set the variable Rint.Includes to 0
    // to disable the loading of these includes at startup.
-   // You can set the variable to 1 (default) to load only <iostream>, <string> and <RTypesCint.h>
+   // You can set the variable to 1 (default) to load only <iostream>, <string> and <DllImport.h>
    // You can set it to 2 to load in addition <vector> and <utility>
    // We strongly recommend setting the variable to 2 if your scripts include <vector>
    // and you execute your scripts multiple times.
@@ -172,9 +171,8 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
       ProcessLine("#include <string>", kTRUE); // for std::string std::iostream.
       ProcessLine("#include <DllImport.h>", kTRUE);// Defined R__EXTERN
       if (includes > 1) {
-         ProcessLine("#include <vector>", kTRUE);  // Needed because std::vector and std::pair are
-         ProcessLine("#include <utility>", kTRUE);    // used within the core ROOT dictionaries
-                                                   // and CINT will not be able to properly unload these files
+         ProcessLine("#include <vector>", kTRUE);
+         ProcessLine("#include <utility>", kTRUE);
       }
    }
 
