@@ -84,7 +84,7 @@ endfunction(ROOTTEST_TARGETNAME_FROM_FILE)
 #
 #-------------------------------------------------------------------------------
 function(ROOTTEST_ADD_AUTOMACROS)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDS;WILLFAIL;COPY_TO_BUILDDIR" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDS;WILLFAIL" ${ARGN})
 
   file(GLOB macros ${CMAKE_CURRENT_SOURCE_DIR}/run*.C)
   list(APPEND automacros ${macros})
@@ -105,16 +105,13 @@ function(ROOTTEST_ADD_AUTOMACROS)
   list(APPEND automacros ${macros})
 
   foreach(dep ${ARG_DEPENDS})
-    list(APPEND deplist ${dep})
-
     if(${dep} MATCHES "[.]C" OR ${dep} MATCHES "[.]cxx" OR ${dep} MATCHES "[.]h")
       ROOTTEST_COMPILE_MACRO(${dep})
-      set(add_auto_depends ${add_auto_depends} ${COMPILE_MACRO_TEST})
-      
-      list(REMOVE_ITEM deplist ${dep})
+      list(APPEND auto_depends ${COMPILE_MACRO_TEST})
+    else()
+      list(APPEND auto_depends ${dep})
     endif()
   endforeach()
-  set(add_auto_depends ${add_auto_depends} ${deplist})
 
   foreach(am ${automacros}) 
     get_filename_component(auto_macro_filename ${am} NAME)
@@ -135,25 +132,11 @@ function(ROOTTEST_ADD_AUTOMACROS)
       endif()
     endforeach()
 
-    if(ARG_COPY_TO_BUILDDIR)
-      set(copy_to_builddir COPY_TO_BUILDDIR ${ARG_COPY_TO_BUILDDIR})
-    endif()
-   
-    if(ARG_DEPENDS)
-      ROOTTEST_ADD_TEST(${targetname}-auto
-                        MACRO ${auto_macro_filename}
-                        ${outref}
-                        ${copy_to_builddir}
-                        ${arg_wf}
-                        DEPENDS ${add_auto_depends})
-
-    else()
-      ROOTTEST_ADD_TEST(${targetname}-auto
-                        MACRO ${auto_macro_filename}
-                        ${copy_to_builddir}
-                        ${arg_wf}
-                        ${outref})
-    endif()
+    ROOTTEST_ADD_TEST(${targetname}-auto
+                      MACRO ${auto_macro_filename}
+                      ${outref}
+                      ${arg_wf}
+                      DEPENDS ${auto_depends})
   endforeach()
 
 endfunction(ROOTTEST_ADD_AUTOMACROS)

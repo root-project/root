@@ -6,5 +6,5 @@
 #                  DEPENDS ${GENERATE_REFLEX_TEST})
 
 ROOTTEST_ADD_TEST(roottest-root-meta-genreflex-ROOT-5626
-                  COMMAND ${ROOT_genreflex_cmd} ${CMAKE_CURRENT_SOURCE_DIR}/classes.h -o  classes.cxx
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classes.h -o  classes.cxx
                           --select=${CMAKE_CURRENT_SOURCE_DIR}/classes_selection.xml)
