@@ -576,7 +576,7 @@ XrdCl::OpenFlags::Flags TNetXNGFile::ParseOpenMode(Option_t *modestr)
    // returns:      correctly parsed option mode
 
    using namespace XrdCl;
-   OpenFlags::Flags mode = OpenFlags::None;
+   OpenFlags::Flags mode = OpenFlags::Read;
    TString mod = ToUpper(TString(modestr));
 
    if (mod == "NEW" || mod == "CREATE")  mode = OpenFlags::New;
