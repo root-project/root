@@ -164,7 +164,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // In $ROOTSYS/etc/system.rootrc, you can set the variable Rint.Includes to 0
    // to disable the loading of these includes at startup.
    // You can set the variable to 1 (default) to load only <iostream>, <string> and <RTypesCint.h>
-   // You can set it to 2 to load in addition <vector> and <pair>
+   // You can set it to 2 to load in addition <vector> and <utility>
    // We strongly recommend setting the variable to 2 if your scripts include <vector>
    // and you execute your scripts multiple times.
    if (includes > 0) {
@@ -173,7 +173,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
       ProcessLine("#include <DllImport.h>", kTRUE);// Defined R__EXTERN
       if (includes > 1) {
          ProcessLine("#include <vector>", kTRUE);  // Needed because std::vector and std::pair are
-         ProcessLine("#include <pair>", kTRUE);    // used within the core ROOT dictionaries
+         ProcessLine("#include <utility>", kTRUE);    // used within the core ROOT dictionaries
                                                    // and CINT will not be able to properly unload these files
       }
    }
