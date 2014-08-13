@@ -44,6 +44,9 @@ if(DEFINED ROOT_SOURCE_DIR)
   get_filename_component(ROOT_INCLUDE_DIR "${ROOTSYS}/include" ABSOLUTE)
   set(ROOT_INCLUDE_DIRS ${ROOT_INCLUDE_DIR})
   set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
+  set(ROOT_genreflex_CMD ${ROOTSYS}/bin/genreflex)
+  set(ROOT_rootcint_CMD ${ROOTSYS}/bin/rootcint)
+  set(ROOT_rootcling_CMD rootcling)
 
 else()
 
