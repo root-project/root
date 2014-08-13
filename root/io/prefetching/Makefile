@@ -99,5 +99,5 @@ atlasFlushed/atlasFlushedProjectDict1.cxx: atlasFlushed/atlasFlushedLinkDef1.h
 atlasFlushed/atlasFlushedProjectDict2.cxx: atlasFlushed/atlasFlushedLinkDef2.h
 	$(CMDECHO) cd atlasFlushed ; rootcint -f atlasFlushedProjectDict2.cxx -c atlasFlushedProjectHeaders.h atlasFlushedLinkDef2.h
 
-atlasFlushed/atlasFlushed.$(DllSuf): atlasFlushedProjectDict1.$(ObjSuf) atlasFlushedProjectDict2.$(ObjSuf) atlasFlushedProjectSource.$(ObjSuf)	
+atlasFlushed/atlasFlushed.$(DllSuf): atlasFlushed/atlasFlushedProjectDict1.$(ObjSuf) atlasFlushed/atlasFlushedProjectDict2.$(ObjSuf) atlasFlushed/atlasFlushedProjectSource.$(ObjSuf)
 	$(BuildFromObjs)
