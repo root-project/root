@@ -74,10 +74,6 @@ get_filename_component(ROOTTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
 # Set the CMake module path. Here are all the custom CMake modules.
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ROOTTEST_DIR}/cmake/modules")
 
-# Include custom CMake modules.
-include(CheckCompiler)
-include(RootCTestMacros)
-
 # Find GCCXML.
 find_package(GCCXML REQUIRED)
 
