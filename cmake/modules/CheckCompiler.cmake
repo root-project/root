@@ -75,6 +75,11 @@ endif()
 
 #---Need to locate thead libraries and options to set properly some compilation flags---------------- 
 find_package(Threads)
+if(CMAKE_USE_PTHREADS_INIT)
+  set(CMAKE_THREAD_FLAG -pthread)
+else()
+  set(CMAKE_THREAD_FLAG)
+endif()
 
 #---Setup details depending opn the major platform type----------------------------------------------
 if(CMAKE_SYSTEM_NAME MATCHES Linux)
@@ -84,6 +89,9 @@ elseif(APPLE)
 elseif(WIN32)
   include(SetupWindows)
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_THREAD_FLAG}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_THREAD_FLAG}")
 
 if(cxx11)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")

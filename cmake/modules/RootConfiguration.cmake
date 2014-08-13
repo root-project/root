@@ -72,8 +72,8 @@ set(xpmlibdir -L${X11_LIBRARY_DIR})
 set(xpmlib ${X11_Xpm_LIB})
 set(enable_xft ${value${xft}})
 
-set(enable_thread yes)
-set(threadflag)
+set(enable_thread ${value${thread}})
+set(threadflag ${CMAKE_THREAD_FLAG})
 set(threadlibdir)
 set(threadlib ${CMAKE_THREAD_LIBS_INIT})
 
