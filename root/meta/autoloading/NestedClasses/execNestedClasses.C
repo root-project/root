@@ -5,7 +5,7 @@ int execNestedClasses(){
 
    CastorElectronicsMap::PrecisionItem a;
 
-   std::ifstream rootmapFile("autoload.rootmap");
+   std::ifstream rootmapFile("nestedClasses.rootmap");
    std::stringstream rootmapContent;
    rootmapContent << rootmapFile.rdbuf();
 

@@ -282,7 +282,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   if(ARG_NO_ROOTMAP)
     set(CMAKE_ROOTTEST_NOROOTMAP ON)
   else()
-      set(CMAKE_ROOTTEST_NOROOTMAP OFF)
+    set(CMAKE_ROOTTEST_NOROOTMAP OFF)
   endif()
 
   set(ROOT_genreflex_cmd ${ROOT_BINARY_DIR}/genreflex)

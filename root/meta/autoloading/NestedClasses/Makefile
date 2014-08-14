@@ -32,7 +32,7 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
-GENREFLEXCXXFLAGS += --rootmap autoload.rootmap --rootmap-lib libnestedClasses_dictrflx.$(DllSuf)
+GENREFLEXCXXFLAGS += --rootmap nestedClasses.rootmap --rootmap-lib libnestedClasses_dictrflx.$(DllSuf)
 
 execNestedClasses.log: libnestedClasses_dictrflx.$(DllSuf)
 
