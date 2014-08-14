@@ -41,7 +41,7 @@ mark_as_advanced(FORCE BUG_REPORT_URL BUILD_CLANG_FORMAT_VS_PLUGIN BUILD_SHARED_
                        GCC_INSTALL_PREFIX LIBCLANG_BUILD_STATIC TOOL_INFO_PLIST)
 #---Set into parent scope LLVM_VERSION --------------------------------------------------------------
 file(READ ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/configure _filestr)
-string(REGEX REPLACE ".*PACKAGE_VERSION='([0-9]+[.][0-9]+).*" "\\1" _llvm_version ${_filestr})
+string(REGEX REPLACE ".*PACKAGE_VERSION='([0-9]+[.][0-9]+[.][0-9]+).*" "\\1" _llvm_version ${_filestr})
 set(LLVM_VERSION ${_llvm_version} PARENT_SCOPE)
 
 #---Added some missing dependencies------------------------------------------------------------------

@@ -98,14 +98,17 @@ endforeach()
 
 
 foreach( file llvm/ADT/IntrusiveRefCntPtr.h
-              llvm/ADT/OwningPtr.h
               llvm/ADT/StringRef.h
+              llvm/ADT/SmallVector.h
+              llvm/ADT/iterator_range.h
+              llvm/Config/llvm-config.h
               llvm/Support/AlignOf.h
               llvm/Support/Allocator.h
               llvm/Support/Casting.h
               llvm/Support/Compiler.h
               llvm/Support/DataTypes.h
               llvm/Support/MathExtras.h
+              llvm/Support/Memory.h
               llvm/Support/SwapByteOrder.h
               llvm/Support/type_traits.h )
   get_filename_component(path ${file} PATH)
