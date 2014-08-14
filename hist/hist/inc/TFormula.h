@@ -87,7 +87,7 @@ private:
    Bool_t            fClingInitialized;
    Bool_t            fAllParametersSetted;
    TMethodCall*      fMethod;
-   TString           fNamePrefix;
+   TString           fClingName;     // unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
 
    TInterpreter::CallFuncIFacePtr_t::Generic_t fFuncPtr;
 

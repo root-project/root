@@ -100,6 +100,10 @@ ClassImp(TFormula)
 //*-*
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+// prefix used for function name passed to Cling    
+static const TString gNamePrefix = "T__"; 
+
 Bool_t TFormula::IsOperator(const char c)
 {
    char ops[] = { '+','^', '-','/','*','<','>','|','&','!','='};
@@ -142,7 +146,7 @@ TFormula::TFormula()
    fNdim = 0;
    fNpar = 0;
    fNumber = 0;
-   fNamePrefix = "";
+   fClingName = "";
    fFormula = "";
 }
 
@@ -151,6 +155,11 @@ TFormula::~TFormula()
    if(fMethod)
    {  
       fMethod->Delete();
+   }
+   int nLinParts = fLinearParts.GetSize(); 
+   if (nLinParts > 0) { 
+      for (int i = 0; i < nLinParts; ++i) delete fLinearParts[i]; 
+      fLinearParts.Clear();
    }
 }
 
@@ -171,7 +180,7 @@ TFormula::TFormula(const char *name, Int_t nparams, Int_t ndims)
    fNdim = ndims;
    fNpar = 0;
    fNumber = 0;
-   fNamePrefix = "";
+   fClingName = "";
    fFormula = "";
    FillDefaults();
    for(Int_t i = 0; i < nparams; ++i)
@@ -187,13 +196,13 @@ TFormula::TFormula(const TString &name, TString formula)
    fReadyToExecute = false;
    fClingInitialized = false;
    fMethod = 0;
-   fNamePrefix = "TF__";
-   fName = fNamePrefix + name;
    TNamed(fName,formula);
    fNdim = 0;
    fNpar = 0;
    fNumber = 0;
    FillDefaults();
+
+   fName = gNamePrefix + name;
 
    TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(fName);
    if (old) 
@@ -210,8 +219,13 @@ TFormula::TFormula(const TString &name, TString formula)
 
    }
    PreProcessFormula(fFormula);
+   //std::cout << "formula " << GetName() << " is preprocessed " << std::endl;
+
    fClingInput = fFormula;
    PrepareFormula(fClingInput);
+
+
+   //std::cout << "formula " << GetName() << " is prepared " << std::endl;
 
 }
 
@@ -220,13 +234,13 @@ TFormula::TFormula(const TFormula &formula) : TNamed(formula.GetName(),formula.G
    fReadyToExecute = false;
    fClingInitialized = false;
    fMethod = 0;
-   fNamePrefix = "TF__";
-   fName = fNamePrefix + formula.GetName();
    fNdim = formula.GetNdim();
    fNpar = formula.GetNpar();
    fNumber = formula.GetNumber();
    fFormula = formula.GetExpFormula();
+
    FillDefaults();
+   fName = gNamePrefix + formula.GetName();
 
    TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(formula.GetName());
    if (old) 
@@ -280,7 +294,7 @@ void TFormula::Copy(TObject &obj) const
    ((TFormula&)obj).fReadyToExecute = fReadyToExecute;
    ((TFormula&)obj).fClingInitialized = fClingInitialized;
    ((TFormula&)obj).fAllParametersSetted = fAllParametersSetted;
-   ((TFormula&)obj).fNamePrefix = fNamePrefix;
+   ((TFormula&)obj).fClingName = fClingName;
 
    if (fMethod) {
       if (((TFormula&)obj).fMethod) delete ((TFormula&)obj).fMethod;
@@ -318,10 +332,11 @@ void TFormula::PrepareEvalMethod()
       {
          prototypeArguments.Append("Double_t*");
       }
-      fMethod->InitWithPrototype(fName,prototypeArguments);
+      // init method call using real function name (cling name) which is defined in ProcessFormula
+      fMethod->InitWithPrototype(fClingName,prototypeArguments);
       if(!fMethod->IsValid())
       {
-         Error("Eval","Can't find %s function prototype with arguments %s",fName.Data(),prototypeArguments.Data());
+         Error("Eval","Can't find %s function prototype with arguments %s",fClingName.Data(),prototypeArguments.Data());
          return ;
       }
 
@@ -377,7 +392,6 @@ void TFormula::FillDefaults()
    //*-*    
 //#ifdef ROOT_CPLUSPLUS11
    
-
    const TString defvars[] = { "x","y","z","t"};
    const pair<TString,Double_t> defconsts[] = { {"pi",TMath::Pi()}, {"sqrt2",TMath::Sqrt2()},
          {"infinity",TMath::Infinity()}, {"e",TMath::E()}, {"ln10",TMath::Ln10()},
@@ -546,23 +560,35 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    //*-*    
 
    map< pair<TString,Int_t> ,pair<TString,TString> > functions; 
-   functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))","[0]*exp(({V0}-[1])/[2])*(({V0}-[1])/[2]))/(sqrt(2*pi)*[2])")));
-   functions.insert(make_pair(make_pair("gaus",2),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2)","")));
-   functions.insert(make_pair(make_pair("landau",1),make_pair("TMath::Landau({V0},[0],[1],false)","TMath::Landau({V0},[0],[1],true)")));
+   functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))","[0]*exp((({V0}-[1])/[2])*(({V0}-[1])/[2]))/(sqrt(2*pi)*[2])")));
+   functions.insert(make_pair(make_pair("landau",1),make_pair("[0]*TMath::Landau({V0},[1],[2],false)","[0]*TMath::Landau({V0},[1],[2],true)")));
    functions.insert(make_pair(make_pair("expo",1),make_pair("exp([0]+[1]*{V0})","")));
+   // 2-dimensional functions
+   functions.insert(make_pair(make_pair("gaus",2),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2)","")));
+   functions.insert(make_pair(make_pair("landau",2),make_pair("[0]*TMath::Landau({V0},[1],[2],false)*TMath::Landau({V1},[3],[4],false)","")));
+   functions.insert(make_pair(make_pair("expo",2),make_pair("exp([0]+[1]*{V0})","exp([0]+[1]*{V0}+[2]*{V1})")));
 
    map<TString,Int_t> functionsNumbers;
    functionsNumbers["gaus"] = 100;
    functionsNumbers["landau"] = 200;
    functionsNumbers["expo"] = 400;
+
+   // replace old names xygaus -> gaus[x,y]
+   formula.ReplaceAll("xygaus","gaus[x,y]");
+   formula.ReplaceAll("xylandau","landau[x,y]");
+   formula.ReplaceAll("xyexpo","expo[x,y]");
+
    for(map<pair<TString,Int_t>,pair<TString,TString> >::iterator it = functions.begin(); it != functions.end(); ++it) 
    {
 
       TString funName = it->first.first;
       Int_t funPos = formula.Index(funName);
+
+      //std::cout << formula << " ---- " << funName << "  " << funPos << std::endl;
       while(funPos != kNPOS)
       {
          fNumber = functionsNumbers[funName];
+         // check if function is normalized by looking at "n" character after function name (e.g. gausn)
          Bool_t isNormalized = (formula[funPos + funName.Length()] == 'n');
          if(isNormalized)
          {
@@ -573,7 +599,9 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          TString varList = "";
          Bool_t defaultVariable = false;
 
+         // check if function has specified the [...] e.g. gaus[x,y]
          Int_t openingBracketPos = funPos + funName.Length() + (isNormalized ? 1 : 0);
+         Int_t closingBracketPos = kNPOS;
          if(openingBracketPos > formula.Length() || formula[openingBracketPos] != '[')
          {
             dim = 1;
@@ -581,9 +609,11 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             variables[0] = "x";
             defaultVariable = true;
          }
-         else
+         else 
          {
-            varList = formula(openingBracketPos+1,formula.Index(']',funPos) - openingBracketPos - 1);
+            // in case of [..] found, assume they specify all the variables. Use it to get function dimension
+            closingBracketPos = formula.Index(']',openingBracketPos);
+            varList = formula(openingBracketPos+1,closingBracketPos - openingBracketPos - 1);
             dim = varList.CountChar(',') + 1;
             variables = new TString[dim];
             Int_t Nvar = 0;
@@ -606,6 +636,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
                variables[Nvar] = varName;
             }
          }
+         // chech if dimension obtained from [...] is compatible with existing pre-defined functions 
          if(dim != it->first.second)
          {
             pair<TString,Int_t> key = make_pair(funName,dim);
@@ -616,8 +647,13 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             }
             break;
          }
-         Int_t openingParenthesisPos = formula.Index('(',funPos);
-         Bool_t defaultCounter = (openingParenthesisPos == kNPOS);
+         // look now for the (..) brackets to get the parameter counter (e.g. gaus(0) + gaus(3) )
+         // need to start for a position 
+         Int_t openingParenthesisPos = (closingBracketPos == kNPOS) ? openingBracketPos : closingBracketPos + 1;
+         bool defaultCounter = (openingParenthesisPos > formula.Length() || formula[openingParenthesisPos] != '(');
+
+         //Int_t openingParenthesisPos = formula.Index('(',funPos);
+         //Bool_t defaultCounter = (openingParenthesisPos == kNPOS);
          Int_t counter;
          if(defaultCounter)
          {
@@ -627,6 +663,8 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          {
             counter = TString(formula(openingParenthesisPos+1,formula.Index(')',funPos) - openingParenthesisPos -1)).Atoi(); 
          }
+         //std::cout << "openingParenthesisPos  " << openingParenthesisPos << " counter is " << counter <<  std::endl; 
+
          TString body = (isNormalized ? it->second.second : it->second.first);
          if(isNormalized && body == "")
          {
@@ -697,7 +735,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
          funPos = formula.Index(funName);
       }
-
+      //std::cout << " formula is now " << formula << std::endl;
    }
 }
 void TFormula::HandleExponentiation(TString &formula)
@@ -798,9 +836,8 @@ void TFormula::HandleLinear(TString &formula)
       gROOT->GetListOfFunctions()->Remove(lin2);
       fLinearParts.Add(lin1);
       fLinearParts.Add(lin2);
+
       linPos = formula.Index("@");
-      delete lin1;
-      delete lin2;
    }
 }
 
@@ -814,7 +851,7 @@ void TFormula::PreProcessFormula(TString &formula)
    //*-*    Similar functionality should be added here.
    //*-*    
    formula.ReplaceAll("**","^");
-   formula.ReplaceAll(" ","");
+   formula.ReplaceAll(" ",""); 
    HandlePolN(formula);
    HandleParametrizedFunctions(formula);
    HandleExponentiation(formula);
@@ -980,7 +1017,7 @@ void TFormula::ProcessFormula(TString &formula)
       }
       else
       {
-         TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(fNamePrefix + fun.fName);
+         TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + fun.fName);
          if(old)
          {
             fun.fFound = true;
@@ -1024,11 +1061,11 @@ void TFormula::ProcessFormula(TString &formula)
          {
             TString name = (*paramsIt).second.GetName();
             TString pattern = TString::Format("{[%s]}",fun.GetName());
-            std::cout << "pattern is " << pattern << std::endl;
+            //std::cout << "pattern is " << pattern << std::endl;
             if(formula.Index(pattern) != kNPOS)
             {
                TString replacement = TString::Format("p[%d]",(*paramsIt).second.fArrayPos);
-               std::cout << "replace pattern  " << pattern << " with " << replacement << std::endl;
+               //std::cout << "replace pattern  " << pattern << " with " << replacement << std::endl;
                formula.ReplaceAll(pattern,replacement);
                
             }
@@ -1068,7 +1105,15 @@ void TFormula::ProcessFormula(TString &formula)
       TString argumentsPrototype = 
          TString::Format("%s%s%s",(hasVariables ? "Double_t *x" : ""), (hasBoth ? "," : ""),
                         (hasParameters  ? "Double_t *p" : ""));
-      fClingInput = TString::Format("Double_t %s(%s){ return %s ; }", fName.Data(),argumentsPrototype.Data(),formula.Data());
+      // add also pointer to function name to make it unique
+      fClingName = fName; 
+      fClingName.ReplaceAll(" ",""); // remove also white space from function name;
+      // hack for function names created with ++ in doing linear fitter. In this case use a different name
+      // shuld make to all the case where special operator character are use din the name 
+      if (fClingName.Contains("++") ) fClingName = "T__linearFunction";
+      fClingName = TString::Format("%s_%p",fClingName.Data(),  this);
+
+      fClingInput = TString::Format("Double_t %s(%s){ return %s ; }", fClingName.Data(),argumentsPrototype.Data(),formula.Data());
 
       if(inputIntoCling)
       {
@@ -1239,7 +1284,7 @@ void TFormula::DoAddParameter(const TString &name, Double_t value, Bool_t proces
    //*-*    and after that adding new will be pointless.
    //*-*    
 
-   std::cout << "adding parameter " << name << std::endl;
+   //std::cout << "adding parameter " << name << std::endl;
 
    if(fParams.find(name) != fParams.end() )
    {
