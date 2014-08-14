@@ -193,6 +193,7 @@ public:
    TStreamerBasicPointer(const char *name, const char *title, Int_t offset, Int_t dtype,
                          const char *countName, const char *countClass, Int_t version, const char *typeName);
    virtual       ~TStreamerBasicPointer();
+   TClass        *GetClassPointer() const { return 0; }
    const char    *GetCountClass()   const {return fCountClass.Data();}
    const char    *GetCountName()    const {return fCountName.Data();}
    Int_t          GetCountVersion() const {return fCountVersion;}
@@ -205,6 +206,7 @@ public:
    void           SetCountClass(const char *clname) {fCountClass = clname; }
    void           SetCountName(const char *name)    {fCountName = name;    }
    void           SetCountVersion(Int_t count)      {fCountVersion = count;}
+   virtual void   Update(const TClass * /* oldClass */, TClass * /*newClass*/ ) {}
 
    ClassDef(TStreamerBasicPointer,2)  //Streamer element for a pointer to a basic type
 };
@@ -258,9 +260,11 @@ public:
    TStreamerBasicType();
    TStreamerBasicType(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName);
    virtual       ~TStreamerBasicType();
+   TClass        *GetClassPointer() const { return 0; }
    Int_t          GetCounter() const {return fCounter;}
    ULong_t        GetMethod() const;
    Int_t          GetSize() const;
+   virtual void   Update(const TClass * /* oldClass */, TClass * /* newClass */) {}
 
    ClassDef(TStreamerBasicType,2)  //Streamer element for a basic type
 };
