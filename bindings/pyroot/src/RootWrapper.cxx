@@ -414,7 +414,7 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
 
       // it could still be that this is an anonymous enum, which is not in the list
       // provided by the class
-         if ( strstr( ((TDataMember*)mb)->GetFullTypeName(), "<anonymous>" ) != 0 ) {
+         if ( strstr( ((TDataMember*)mb)->GetFullTypeName(), "(anonymous)" ) != 0 ) {
             AddPropertyToClass( pyclass, (TDataMember*)mb, kTRUE, kTRUE );
             continue;
          }

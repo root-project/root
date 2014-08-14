@@ -2925,7 +2925,7 @@ int GenerateFullDict(std::ostream& dictStream,
    for(auto const & ns : scan.fSelectedNamespaces) {
       WriteNamespaceInit(ns, interp, dictStream);
       auto nsName=ns.GetNamespaceDecl()->getQualifiedNameAsString();
-      if (nsName.find("<anonymous>") == std::string::npos)
+      if (nsName.find("(anonymous)") == std::string::npos)
          EmitStreamerInfo(nsName.c_str());
    }
 

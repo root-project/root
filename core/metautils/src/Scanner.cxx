@@ -425,7 +425,7 @@ std::string RScanner::GetClassName(clang::RecordDecl* D) const
 
    // NO if (cls_name == "")
    // NO if (D->isAnonymousStructOrUnion())
-   // NO if (cls_name == "<anonymous>") {
+   // NO if (cls_name == "(anonymous)") {
    if (! D->getDeclName ()) {
       if (fgAnonymousClassMap.find (D) != fgAnonymousClassMap.end())
       {
