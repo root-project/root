@@ -41,11 +41,11 @@ AnalysisDeclContext::AnalysisDeclContext(AnalysisDeclContextManager *Mgr,
   : Manager(Mgr),
     D(d),
     cfgBuildOptions(buildOptions),
-    forcedBlkExprs(0),
+    forcedBlkExprs(nullptr),
     builtCFG(false),
     builtCompleteCFG(false),
-    ReferencedBlockVars(0),
-    ManagedAnalyses(0)
+    ReferencedBlockVars(nullptr),
+    ManagedAnalyses(nullptr)
 {  
   cfgBuildOptions.forcedBlkExprs = &forcedBlkExprs;
 }
@@ -54,11 +54,11 @@ AnalysisDeclContext::AnalysisDeclContext(AnalysisDeclContextManager *Mgr,
                                          const Decl *d)
 : Manager(Mgr),
   D(d),
-  forcedBlkExprs(0),
+  forcedBlkExprs(nullptr),
   builtCFG(false),
   builtCompleteCFG(false),
-  ReferencedBlockVars(0),
-  ManagedAnalyses(0)
+  ReferencedBlockVars(nullptr),
+  ManagedAnalyses(nullptr)
 {  
   cfgBuildOptions.forcedBlkExprs = &forcedBlkExprs;
 }
@@ -133,15 +133,14 @@ const ImplicitParamDecl *AnalysisDeclContext::getSelfDecl() const {
     return MD->getSelfDecl();
   if (const BlockDecl *BD = dyn_cast<BlockDecl>(D)) {
     // See if 'self' was captured by the block.
-    for (BlockDecl::capture_const_iterator it = BD->capture_begin(),
-         et = BD->capture_end(); it != et; ++it) {
-      const VarDecl *VD = it->getVariable();
+    for (const auto &I : BD->captures()) {
+      const VarDecl *VD = I.getVariable();
       if (VD->getName() == "self")
         return dyn_cast<ImplicitParamDecl>(VD);
     }    
   }
 
-  return NULL;
+  return nullptr;
 }
 
 void AnalysisDeclContext::registerForcedBlockExpression(const Stmt *stmt) {
@@ -190,6 +189,9 @@ CFG *AnalysisDeclContext::getCFG() {
 
     if (PM)
       addParentsForSyntheticStmts(cfg.get(), *PM);
+
+    // The Observer should only observe one build of the CFG.
+    getCFGBuildOptions().Observer = nullptr;
   }
   return cfg.get();
 }
@@ -206,6 +208,9 @@ CFG *AnalysisDeclContext::getUnoptimizedCFG() {
 
     if (PM)
       addParentsForSyntheticStmts(completeCFG.get(), *PM);
+
+    // The Observer should only observe one build of the CFG.
+    getCFGBuildOptions().Observer = nullptr;
   }
   return completeCFG.get();
 }
@@ -218,8 +223,8 @@ CFGStmtMap *AnalysisDeclContext::getCFGStmtMap() {
     cfgStmtMap.reset(CFGStmtMap::Build(c, &getParentMap()));
     return cfgStmtMap.get();
   }
-    
-  return 0;
+
+  return nullptr;
 }
 
 CFGReverseBlockReachabilityAnalysis *AnalysisDeclContext::getCFGReachablityAnalysis() {
@@ -230,8 +235,8 @@ CFGReverseBlockReachabilityAnalysis *AnalysisDeclContext::getCFGReachablityAnaly
     CFA.reset(new CFGReverseBlockReachabilityAnalysis(*c));
     return CFA.get();
   }
-  
-  return 0;
+
+  return nullptr;
 }
 
 void AnalysisDeclContext::dumpCFG(bool ShowColors) {
@@ -242,10 +247,8 @@ ParentMap &AnalysisDeclContext::getParentMap() {
   if (!PM) {
     PM.reset(new ParentMap(getBody()));
     if (const CXXConstructorDecl *C = dyn_cast<CXXConstructorDecl>(getDecl())) {
-      for (CXXConstructorDecl::init_const_iterator I = C->init_begin(),
-                                                   E = C->init_end();
-           I != E; ++I) {
-        PM->addStmt((*I)->getInit());
+      for (const auto *I : C->inits()) {
+        PM->addStmt(I->getInit());
       }
     }
     if (builtCFG)
@@ -398,7 +401,7 @@ const StackFrameContext *LocationContext::getCurrentStackFrame() const {
       return SFC;
     LC = LC->getParent();
   }
-  return NULL;
+  return nullptr;
 }
 
 bool LocationContext::inTopFrame() const {
@@ -461,11 +464,6 @@ public:
                             BumpVectorContext &bc)
   : BEVals(bevals), BC(bc) {}
 
-  bool IsTrackedDecl(const VarDecl *VD) {
-    const DeclContext *DC = VD->getDeclContext();
-    return IgnoredContexts.count(DC) == 0;
-  }
-
   void VisitStmt(Stmt *S) {
     for (Stmt::child_range I = S->children(); I; ++I)
       if (Stmt *child = *I)
@@ -513,9 +511,8 @@ static DeclVec* LazyInitializeReferencedDecls(const BlockDecl *BD,
   new (BV) DeclVec(BC, 10);
 
   // Go through the capture list.
-  for (BlockDecl::capture_const_iterator CI = BD->capture_begin(),
-       CE = BD->capture_end(); CI != CE; ++CI) {
-    BV->push_back(CI->getVariable(), BC);
+  for (const auto &CI : BD->captures()) {
+    BV->push_back(CI.getVariable(), BC);
   }
 
   // Find the referenced global/static variables.

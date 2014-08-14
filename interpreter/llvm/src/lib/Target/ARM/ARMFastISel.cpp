@@ -14,11 +14,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "ARM.h"
-#include "ARMBaseInstrInfo.h"
+#include "ARMBaseRegisterInfo.h"
 #include "ARMCallingConv.h"
 #include "ARMConstantPoolValue.h"
+#include "ARMISelLowering.h"
+#include "ARMMachineFunctionInfo.h"
 #include "ARMSubtarget.h"
-#include "ARMTargetMachine.h"
 #include "MCTargetDesc/ARMAddressingModes.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/CodeGen/Analysis.h"
@@ -30,18 +31,18 @@
 #include "llvm/CodeGen/MachineMemOperand.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/IR/CallSite.h"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/GetElementPtrTypeIterator.h"
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Operator.h"
-#include "llvm/Support/CallSite.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/GetElementPtrTypeIterator.h"
 #include "llvm/Target/TargetInstrInfo.h"
 #include "llvm/Target/TargetLowering.h"
 #include "llvm/Target/TargetMachine.h"
@@ -73,7 +74,7 @@ namespace {
      }
   } Address;
 
-class ARMFastISel : public FastISel {
+class ARMFastISel final : public FastISel {
 
   /// Subtarget - Keep a pointer to the ARMSubtarget around so that we can
   /// make the right decision when generating code for different targets.
@@ -104,8 +105,6 @@ class ARMFastISel : public FastISel {
 
     // Code from FastISel.cpp.
   private:
-    unsigned FastEmitInst_(unsigned MachineInstOpcode,
-                           const TargetRegisterClass *RC);
     unsigned FastEmitInst_r(unsigned MachineInstOpcode,
                             const TargetRegisterClass *RC,
                             unsigned Op0, bool Op0IsKill);
@@ -122,10 +121,6 @@ class ARMFastISel : public FastISel {
                              const TargetRegisterClass *RC,
                              unsigned Op0, bool Op0IsKill,
                              uint64_t Imm);
-    unsigned FastEmitInst_rf(unsigned MachineInstOpcode,
-                             const TargetRegisterClass *RC,
-                             unsigned Op0, bool Op0IsKill,
-                             const ConstantFP *FPImm);
     unsigned FastEmitInst_rri(unsigned MachineInstOpcode,
                               const TargetRegisterClass *RC,
                               unsigned Op0, bool Op0IsKill,
@@ -134,22 +129,15 @@ class ARMFastISel : public FastISel {
     unsigned FastEmitInst_i(unsigned MachineInstOpcode,
                             const TargetRegisterClass *RC,
                             uint64_t Imm);
-    unsigned FastEmitInst_ii(unsigned MachineInstOpcode,
-                             const TargetRegisterClass *RC,
-                             uint64_t Imm1, uint64_t Imm2);
-
-    unsigned FastEmitInst_extractsubreg(MVT RetVT,
-                                        unsigned Op0, bool Op0IsKill,
-                                        uint32_t Idx);
 
     // Backend specific FastISel code.
   private:
-    virtual bool TargetSelectInstruction(const Instruction *I);
-    virtual unsigned TargetMaterializeConstant(const Constant *C);
-    virtual unsigned TargetMaterializeAlloca(const AllocaInst *AI);
-    virtual bool tryToFoldLoadIntoMI(MachineInstr *MI, unsigned OpNo,
-                                     const LoadInst *LI);
-    virtual bool FastLowerArguments();
+    bool TargetSelectInstruction(const Instruction *I) override;
+    unsigned TargetMaterializeConstant(const Constant *C) override;
+    unsigned TargetMaterializeAlloca(const AllocaInst *AI) override;
+    bool tryToFoldLoadIntoMI(MachineInstr *MI, unsigned OpNo,
+                             const LoadInst *LI) override;
+    bool FastLowerArguments() override;
   private:
   #include "ARMGenFastISel.inc"
 
@@ -178,8 +166,6 @@ class ARMFastISel : public FastISel {
 
     // Utility routines.
   private:
-    unsigned constrainOperandRegClass(const MCInstrDesc &II, unsigned OpNum,
-                                      unsigned Op);
     bool isTypeLegal(Type *Ty, MVT &VT);
     bool isLoadTypeLegal(Type *Ty, MVT &VT);
     bool ARMEmitCmp(const Value *Src1Value, const Value *Src2Value,
@@ -202,6 +188,8 @@ class ARMFastISel : public FastISel {
     unsigned ARMMoveToIntReg(MVT VT, unsigned SrcReg);
     unsigned ARMSelectCallOp(bool UseReg);
     unsigned ARMLowerPICELF(const GlobalValue *GV, unsigned Align, MVT VT);
+
+    const TargetLowering *getTargetLowering() { return TM.getTargetLowering(); }
 
     // Call handling routines.
   private:
@@ -293,33 +281,6 @@ ARMFastISel::AddOptionalDefs(const MachineInstrBuilder &MIB) {
       AddDefaultCC(MIB);
   }
   return MIB;
-}
-
-unsigned ARMFastISel::constrainOperandRegClass(const MCInstrDesc &II,
-                                               unsigned Op, unsigned OpNum) {
-  if (TargetRegisterInfo::isVirtualRegister(Op)) {
-    const TargetRegisterClass *RegClass =
-        TII.getRegClass(II, OpNum, &TRI, *FuncInfo.MF);
-    if (!MRI.constrainRegClass(Op, RegClass)) {
-      // If it's not legal to COPY between the register classes, something
-      // has gone very wrong before we got here.
-      unsigned NewOp = createResultReg(RegClass);
-      AddOptionalDefs(BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DbgLoc,
-                              TII.get(TargetOpcode::COPY), NewOp).addReg(Op));
-      return NewOp;
-    }
-  }
-  return Op;
-}
-
-unsigned ARMFastISel::FastEmitInst_(unsigned MachineInstOpcode,
-                                    const TargetRegisterClass* RC) {
-  unsigned ResultReg = createResultReg(RC);
-  const MCInstrDesc &II = TII.get(MachineInstOpcode);
-
-  AddOptionalDefs(
-      BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DbgLoc, II, ResultReg));
-  return ResultReg;
 }
 
 unsigned ARMFastISel::FastEmitInst_r(unsigned MachineInstOpcode,
@@ -430,32 +391,6 @@ unsigned ARMFastISel::FastEmitInst_ri(unsigned MachineInstOpcode,
   return ResultReg;
 }
 
-unsigned ARMFastISel::FastEmitInst_rf(unsigned MachineInstOpcode,
-                                      const TargetRegisterClass *RC,
-                                      unsigned Op0, bool Op0IsKill,
-                                      const ConstantFP *FPImm) {
-  unsigned ResultReg = createResultReg(RC);
-  const MCInstrDesc &II = TII.get(MachineInstOpcode);
-
-  // Make sure the input operand is sufficiently constrained to be legal
-  // for this instruction.
-  Op0 = constrainOperandRegClass(II, Op0, 1);
-  if (II.getNumDefs() >= 1) {
-    AddOptionalDefs(
-        BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DbgLoc, II, ResultReg)
-            .addReg(Op0, Op0IsKill * RegState::Kill)
-            .addFPImm(FPImm));
-  } else {
-    AddOptionalDefs(BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DbgLoc, II)
-                   .addReg(Op0, Op0IsKill * RegState::Kill)
-                   .addFPImm(FPImm));
-    AddOptionalDefs(BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DbgLoc,
-                           TII.get(TargetOpcode::COPY), ResultReg)
-                   .addReg(II.ImplicitDefs[0]));
-  }
-  return ResultReg;
-}
-
 unsigned ARMFastISel::FastEmitInst_rri(unsigned MachineInstOpcode,
                                        const TargetRegisterClass *RC,
                                        unsigned Op0, bool Op0IsKill,
@@ -502,41 +437,6 @@ unsigned ARMFastISel::FastEmitInst_i(unsigned MachineInstOpcode,
                            TII.get(TargetOpcode::COPY), ResultReg)
                    .addReg(II.ImplicitDefs[0]));
   }
-  return ResultReg;
-}
-
-unsigned ARMFastISel::FastEmitInst_ii(unsigned MachineInstOpcode,
-                                      const TargetRegisterClass *RC,
-                                      uint64_t Imm1, uint64_t Imm2) {
-  unsigned ResultReg = createResultReg(RC);
-  const MCInstrDesc &II = TII.get(MachineInstOpcode);
-
-  if (II.getNumDefs() >= 1) {
-    AddOptionalDefs(
-        BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DbgLoc, II, ResultReg)
-            .addImm(Imm1)
-            .addImm(Imm2));
-  } else {
-    AddOptionalDefs(BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DbgLoc, II)
-                    .addImm(Imm1).addImm(Imm2));
-    AddOptionalDefs(BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DbgLoc,
-                            TII.get(TargetOpcode::COPY),
-                            ResultReg)
-                    .addReg(II.ImplicitDefs[0]));
-  }
-  return ResultReg;
-}
-
-unsigned ARMFastISel::FastEmitInst_extractsubreg(MVT RetVT,
-                                                 unsigned Op0, bool Op0IsKill,
-                                                 uint32_t Idx) {
-  unsigned ResultReg = createResultReg(TLI.getRegClassFor(RetVT));
-  assert(TargetRegisterInfo::isVirtualRegister(Op0) &&
-         "Cannot yet extract from physregs");
-
-  AddOptionalDefs(BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt,
-                          DbgLoc, TII.get(TargetOpcode::COPY), ResultReg)
-                  .addReg(Op0, getKillRegState(Op0IsKill), Idx));
   return ResultReg;
 }
 
@@ -690,7 +590,7 @@ unsigned ARMFastISel::ARMMaterializeGV(const GlobalValue *GV, MVT VT) {
 
   // Use movw+movt when possible, it avoids constant pool entries.
   // Non-darwin targets only support static movt relocations in FastISel.
-  if (Subtarget->useMovt() &&
+  if (Subtarget->useMovt(*FuncInfo.MF) &&
       (Subtarget->isTargetMachO() || RelocM == Reloc::Static)) {
     unsigned Opc;
     unsigned char TF = 0;
@@ -852,7 +752,7 @@ bool ARMFastISel::isLoadTypeLegal(Type *Ty, MVT &VT) {
 // Computes the address to get to an object.
 bool ARMFastISel::ARMComputeAddress(const Value *Obj, Address &Addr) {
   // Some boilerplate from the X86 FastISel.
-  const User *U = NULL;
+  const User *U = nullptr;
   unsigned Opcode = Instruction::UserOp1;
   if (const Instruction *I = dyn_cast<Instruction>(Obj)) {
     // Don't walk into other basic blocks unless the object is an alloca from
@@ -1483,7 +1383,7 @@ bool ARMFastISel::ARMEmitCmp(const Value *Src1Value, const Value *Src2Value,
       const APInt &CIVal = ConstInt->getValue();
       Imm = (isZExt) ? (int)CIVal.getZExtValue() : (int)CIVal.getSExtValue();
       // For INT_MIN/LONG_MIN (i.e., 0x80000000) we need to use a cmp, rather
-      // then a cmn, because there is no way to represent 2147483648 as a 
+      // then a cmn, because there is no way to represent 2147483648 as a
       // signed 32-bit int.
       if (Imm < 0 && Imm != (int)0x80000000) {
         isNegativeImm = true;
@@ -2041,6 +1941,7 @@ bool ARMFastISel::ProcessCallArgs(SmallVectorImpl<Value*> &Args,
   // Process the args.
   for (unsigned i = 0, e = ArgLocs.size(); i != e; ++i) {
     CCValAssign &VA = ArgLocs[i];
+    const Value *ArgVal = Args[VA.getValNo()];
     unsigned Arg = ArgRegs[VA.getValNo()];
     MVT ArgVT = ArgVTs[VA.getValNo()];
 
@@ -2101,6 +2002,11 @@ bool ARMFastISel::ProcessCallArgs(SmallVectorImpl<Value*> &Args,
     } else {
       assert(VA.isMemLoc());
       // Need to store on the stack.
+
+      // Don't emit stores for undef values.
+      if (isa<UndefValue>(ArgVal))
+        continue;
+
       Address Addr;
       Addr.BaseType = Address::RegBase;
       Addr.Base.Reg = ARM::SP;
@@ -2265,7 +2171,8 @@ unsigned ARMFastISel::getLibcallReg(const Twine &Name) {
   if (!LCREVT.isSimple()) return 0;
 
   GlobalValue *GV = new GlobalVariable(M, Type::getInt32Ty(*Context), false,
-                                       GlobalValue::ExternalLinkage, 0, Name);
+                                       GlobalValue::ExternalLinkage, nullptr,
+                                       Name);
   assert(GV->getType() == GVTy && "We miscomputed the type for the global!");
   return ARMMaterializeGV(GV, LCREVT.getSimpleVT());
 }
@@ -2369,7 +2276,7 @@ bool ARMFastISel::ARMEmitLibcall(const Instruction *I, RTLIB::Libcall Call) {
 }
 
 bool ARMFastISel::SelectCall(const Instruction *I,
-                             const char *IntrMemName = 0) {
+                             const char *IntrMemName = nullptr) {
   const CallInst *CI = cast<CallInst>(I);
   const Value *Callee = CI->getCalledValue();
 
@@ -3175,6 +3082,6 @@ namespace llvm {
       TM.Options.NoFramePointerElim = true;
       return new ARMFastISel(funcInfo, libInfo);
     }
-    return 0;
+    return nullptr;
   }
 }

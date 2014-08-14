@@ -23,20 +23,19 @@ protected:
 public:
   ARMElfTargetObjectFile() :
     TargetLoweringObjectFileELF(),
-    AttributesSection(NULL)
+    AttributesSection(nullptr)
   {}
 
-  void Initialize(MCContext &Ctx, const TargetMachine &TM) LLVM_OVERRIDE;
+  void Initialize(MCContext &Ctx, const TargetMachine &TM) override;
 
   const MCExpr *
   getTTypeGlobalReference(const GlobalValue *GV, unsigned Encoding,
                           Mangler &Mang, const TargetMachine &TM,
-                          MachineModuleInfo *MMI, MCStreamer &Streamer) const
-      LLVM_OVERRIDE;
+                          MachineModuleInfo *MMI,
+                          MCStreamer &Streamer) const override;
 
   /// \brief Describe a TLS variable address within debug info.
-  const MCExpr *getDebugThreadLocalSymbol(const MCSymbol *Sym) const
-      LLVM_OVERRIDE;
+  const MCExpr *getDebugThreadLocalSymbol(const MCSymbol *Sym) const override;
 };
 
 } // end namespace llvm

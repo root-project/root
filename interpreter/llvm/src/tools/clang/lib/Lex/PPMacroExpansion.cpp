@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Basic/Attributes.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/TargetInfo.h"
@@ -115,6 +116,15 @@ void Preprocessor::RegisterBuiltinMacros() {
   Ident__INCLUDE_LEVEL__ = RegisterBuiltinMacro(*this, "__INCLUDE_LEVEL__");
   Ident__TIMESTAMP__     = RegisterBuiltinMacro(*this, "__TIMESTAMP__");
 
+  // Microsoft Extensions.
+  if (LangOpts.MicrosoftExt) {
+    Ident__identifier = RegisterBuiltinMacro(*this, "__identifier");
+    Ident__pragma = RegisterBuiltinMacro(*this, "__pragma");
+  } else {
+    Ident__identifier = nullptr;
+    Ident__pragma = nullptr;
+  }
+
   // Clang Extensions.
   Ident__has_feature      = RegisterBuiltinMacro(*this, "__has_feature");
   Ident__has_extension    = RegisterBuiltinMacro(*this, "__has_extension");
@@ -123,6 +133,7 @@ void Preprocessor::RegisterBuiltinMacros() {
   Ident__has_include      = RegisterBuiltinMacro(*this, "__has_include");
   Ident__has_include_next = RegisterBuiltinMacro(*this, "__has_include_next");
   Ident__has_warning      = RegisterBuiltinMacro(*this, "__has_warning");
+  Ident__is_identifier    = RegisterBuiltinMacro(*this, "__is_identifier");
 
   // Modules.
   if (LangOpts.Modules) {
@@ -132,17 +143,11 @@ void Preprocessor::RegisterBuiltinMacros() {
     if (!LangOpts.CurrentModule.empty())
       Ident__MODULE__ = RegisterBuiltinMacro(*this, "__MODULE__");
     else
-      Ident__MODULE__ = 0;
+      Ident__MODULE__ = nullptr;
   } else {
-    Ident__building_module = 0;
-    Ident__MODULE__ = 0;
+    Ident__building_module = nullptr;
+    Ident__MODULE__ = nullptr;
   }
-  
-  // Microsoft Extensions.
-  if (LangOpts.MicrosoftExt) 
-    Ident__pragma = RegisterBuiltinMacro(*this, "__pragma");
-  else
-    Ident__pragma = 0;
 }
 
 /// isTrivialSingleTokenExpansion - Return true if MI, which has a single token
@@ -153,7 +158,7 @@ static bool isTrivialSingleTokenExpansion(const MacroInfo *MI,
   IdentifierInfo *II = MI->getReplacementToken(0).getIdentifierInfo();
 
   // If the token isn't an identifier, it's always literally expanded.
-  if (II == 0) return true;
+  if (!II) return true;
 
   // If the information about this identifier is out of date, update it from
   // the external source.
@@ -241,7 +246,8 @@ bool Preprocessor::HandleMacroExpandedIdentifier(Token &Identifier,
   // If this is a builtin macro, like __LINE__ or _Pragma, handle it specially.
   if (MI->isBuiltinMacro()) {
     if (Callbacks) Callbacks->MacroExpands(Identifier, MD,
-                                           Identifier.getLocation(),/*Args=*/0);
+                                           Identifier.getLocation(),
+                                           /*Args=*/nullptr);
     ExpandBuiltinMacro(Identifier);
     return true;
   }
@@ -249,7 +255,7 @@ bool Preprocessor::HandleMacroExpandedIdentifier(Token &Identifier,
   /// Args - If this is a function-like macro expansion, this contains,
   /// for each macro argument, the list of tokens that were provided to the
   /// invocation.
-  MacroArgs *Args = 0;
+  MacroArgs *Args = nullptr;
 
   // Remember where the end of the expansion occurred.  For an object-like
   // macro, this is the identifier.  For a function-like macro, this is the ')'.
@@ -267,7 +273,7 @@ bool Preprocessor::HandleMacroExpandedIdentifier(Token &Identifier,
     InMacroArgs = false;
 
     // If there was an error parsing the arguments, bail out.
-    if (Args == 0) return true;
+    if (!Args) return true;
 
     ++NumFnMacroExpanded;
   } else {
@@ -295,7 +301,8 @@ bool Preprocessor::HandleMacroExpandedIdentifier(Token &Identifier,
         for (unsigned i=0, e = DelayedMacroExpandsCallbacks.size(); i!=e; ++i) {
           MacroExpandsInfo &Info = DelayedMacroExpandsCallbacks[i];
           // FIXME: We lose macro args info with delayed callback.
-          Callbacks->MacroExpands(Info.Tok, Info.MD, Info.Range, /*Args=*/0);
+          Callbacks->MacroExpands(Info.Tok, Info.MD, Info.Range,
+                                  /*Args=*/nullptr);
         }
         DelayedMacroExpandsCallbacks.clear();
       }
@@ -311,11 +318,11 @@ bool Preprocessor::HandleMacroExpandedIdentifier(Token &Identifier,
     for (MacroDirective::DefInfo PrevDef = Def.getPreviousDefinition();
          PrevDef && !PrevDef.isUndefined();
          PrevDef = PrevDef.getPreviousDefinition()) {
-      if (PrevDef.getDirective()->isAmbiguous()) {
-        Diag(PrevDef.getMacroInfo()->getDefinitionLoc(),
-             diag::note_pp_ambiguous_macro_other)
-          << Identifier.getIdentifierInfo();
-      }
+      Diag(PrevDef.getMacroInfo()->getDefinitionLoc(),
+           diag::note_pp_ambiguous_macro_other)
+        << Identifier.getIdentifierInfo();
+      if (!PrevDef.getDirective()->isAmbiguous())
+        break;
     }
   }
 
@@ -570,7 +577,7 @@ MacroArgs *Preprocessor::ReadFunctionLikeMacroArgs(Token &MacroName,
             << MacroName.getIdentifierInfo();
           // Do not lose the EOF/EOD.  Return it to the client.
           MacroName = Tok;
-          return 0;
+          return nullptr;
         } else {
           // Do not lose the EOF/EOD.
           Token *Toks = new Token[1];
@@ -602,7 +609,7 @@ MacroArgs *Preprocessor::ReadFunctionLikeMacroArgs(Token &MacroName,
         // If this is a comment token in the argument list and we're just in
         // -C mode (not -CC mode), discard the comment.
         continue;
-      } else if (Tok.getIdentifierInfo() != 0) {
+      } else if (Tok.getIdentifierInfo() != nullptr) {
         // Reading macro arguments can cause macros that we are currently
         // expanding from to be popped off the expansion stack.  Doing so causes
         // them to be reenabled for expansion.  Here we record whether any
@@ -686,29 +693,18 @@ MacroArgs *Preprocessor::ReadFunctionLikeMacroArgs(Token &MacroName,
         DiagnosticBuilder DB =
             Diag(MacroName,
                  diag::note_init_list_at_beginning_of_macro_argument);
-        for (SmallVector<SourceRange, 4>::iterator
-                 Range = InitLists.begin(), RangeEnd = InitLists.end();
-                 Range != RangeEnd; ++Range) {
-          if (DB.hasMaxRanges())
-            break;
-          DB << *Range;
-        }
+        for (const SourceRange &Range : InitLists)
+          DB << Range;
       }
-      return 0;
+      return nullptr;
     }
     if (FixedNumArgs != MinArgsExpected)
-      return 0;
+      return nullptr;
 
     DiagnosticBuilder DB = Diag(MacroName, diag::note_suggest_parens_for_macro);
-    for (SmallVector<SourceRange, 4>::iterator
-             ParenLocation = ParenHints.begin(), ParenEnd = ParenHints.end();
-         ParenLocation != ParenEnd; ++ParenLocation) {
-      if (DB.hasMaxFixItHints())
-        break;
-      DB << FixItHint::CreateInsertion(ParenLocation->getBegin(), "(");
-      if (DB.hasMaxFixItHints())
-        break;
-      DB << FixItHint::CreateInsertion(ParenLocation->getEnd(), ")");
+    for (const SourceRange &ParenLocation : ParenHints) {
+      DB << FixItHint::CreateInsertion(ParenLocation.getBegin(), "(");
+      DB << FixItHint::CreateInsertion(ParenLocation.getEnd(), ")");
     }
     ArgTokens.swap(FixedArgTokens);
     NumActuals = FixedNumArgs;
@@ -764,7 +760,7 @@ MacroArgs *Preprocessor::ReadFunctionLikeMacroArgs(Token &MacroName,
       Diag(Tok, diag::err_too_few_args_in_macro_invoc);
       Diag(MI->getDefinitionLoc(), diag::note_macro_here)
         << MacroName.getIdentifierInfo();
-      return 0;
+      return nullptr;
     }
 
     // Add a marker EOF token to the end of the token list for this argument.
@@ -786,7 +782,7 @@ MacroArgs *Preprocessor::ReadFunctionLikeMacroArgs(Token &MacroName,
     Diag(MacroName, diag::err_too_many_args_in_macro_invoc);
     Diag(MI->getDefinitionLoc(), diag::note_macro_here)
       << MacroName.getIdentifierInfo();
-    return 0;
+    return nullptr;
   }
 
   return MacroArgs::create(MI, ArgTokens, isVarargsElided, *this);
@@ -801,7 +797,7 @@ Token *Preprocessor::cacheMacroExpandedTokens(TokenLexer *tokLexer,
                                               ArrayRef<Token> tokens) {
   assert(tokLexer);
   if (tokens.empty())
-    return 0;
+    return nullptr;
 
   size_t newIndex = MacroExpandedTokens.size();
   bool cacheNeedsToGrow = tokens.size() >
@@ -814,7 +810,7 @@ Token *Preprocessor::cacheMacroExpandedTokens(TokenLexer *tokLexer,
     for (unsigned i = 0, e = MacroExpandingLexersStack.size(); i != e; ++i) {
       TokenLexer *prevLexer;
       size_t tokIndex;
-      llvm::tie(prevLexer, tokIndex) = MacroExpandingLexersStack[i];
+      std::tie(prevLexer, tokIndex) = MacroExpandingLexersStack[i];
       prevLexer->Tokens = MacroExpandedTokens.data() + tokIndex;
     }
   }
@@ -837,7 +833,7 @@ void Preprocessor::removeCachedMacroExpandedTokensOfLastLexer() {
 /// the identifier tokens inserted.
 static void ComputeDATE_TIME(SourceLocation &DATELoc, SourceLocation &TIMELoc,
                              Preprocessor &PP) {
-  time_t TT = time(0);
+  time_t TT = time(nullptr);
   struct tm *TM = localtime(&TT);
 
   static const char * const Months[] = {
@@ -899,7 +895,7 @@ static bool HasFeature(const Preprocessor &PP, const IdentifierInfo *II) {
            .Case("attribute_unused_on_fields", true)
            .Case("blocks", LangOpts.Blocks)
            .Case("c_thread_safety_attributes", true)
-           .Case("cxx_exceptions", LangOpts.Exceptions)
+           .Case("cxx_exceptions", LangOpts.CXXExceptions)
            .Case("cxx_rtti", LangOpts.RTTI)
            .Case("enumerator_attributes", true)
            .Case("memory_sanitizer", LangOpts.Sanitize.Memory)
@@ -931,7 +927,7 @@ static bool HasFeature(const Preprocessor &PP, const IdentifierInfo *II) {
            .Case("c_atomic", LangOpts.C11)
            .Case("c_generic_selections", LangOpts.C11)
            .Case("c_static_assert", LangOpts.C11)
-           .Case("c_thread_local", 
+           .Case("c_thread_local",
                  LangOpts.C11 && PP.getTargetInfo().isTLSSupported())
            // C++11 features
            .Case("cxx_access_control_sfinae", LangOpts.CPlusPlus11)
@@ -975,12 +971,17 @@ static bool HasFeature(const Preprocessor &PP, const IdentifierInfo *II) {
            .Case("cxx_aggregate_nsdmi", LangOpts.CPlusPlus1y)
            .Case("cxx_binary_literals", LangOpts.CPlusPlus1y)
            .Case("cxx_contextual_conversions", LangOpts.CPlusPlus1y)
-           //.Case("cxx_generic_lambdas", LangOpts.CPlusPlus1y)
+           .Case("cxx_decltype_auto", LangOpts.CPlusPlus1y)
+           .Case("cxx_generic_lambdas", LangOpts.CPlusPlus1y)
            .Case("cxx_init_captures", LangOpts.CPlusPlus1y)
            .Case("cxx_relaxed_constexpr", LangOpts.CPlusPlus1y)
            .Case("cxx_return_type_deduction", LangOpts.CPlusPlus1y)
-           //.Case("cxx_runtime_arrays", LangOpts.CPlusPlus1y)
            .Case("cxx_variable_templates", LangOpts.CPlusPlus1y)
+           // C++ TSes
+           //.Case("cxx_runtime_arrays", LangOpts.CPlusPlusTSArrays)
+           //.Case("cxx_concepts", LangOpts.CPlusPlusTSConcepts)
+           // FIXME: Should this be __has_feature or __has_extension?
+           //.Case("raw_invocation_type", LangOpts.CPlusPlus)
            // Type traits
            .Case("has_nothrow_assign", LangOpts.CPlusPlus)
            .Case("has_nothrow_copy", LangOpts.CPlusPlus)
@@ -993,6 +994,7 @@ static bool HasFeature(const Preprocessor &PP, const IdentifierInfo *II) {
            .Case("is_abstract", LangOpts.CPlusPlus)
            .Case("is_base_of", LangOpts.CPlusPlus)
            .Case("is_class", LangOpts.CPlusPlus)
+           .Case("is_constructible", LangOpts.CPlusPlus)
            .Case("is_convertible_to", LangOpts.CPlusPlus)
            .Case("is_empty", LangOpts.CPlusPlus)
            .Case("is_enum", LangOpts.CPlusPlus)
@@ -1022,8 +1024,8 @@ static bool HasExtension(const Preprocessor &PP, const IdentifierInfo *II) {
 
   // If the use of an extension results in an error diagnostic, extensions are
   // effectively unavailable, so just return false here.
-  if (PP.getDiagnostics().getExtensionHandlingBehavior() ==
-      DiagnosticsEngine::Ext_Error)
+  if (PP.getDiagnostics().getExtensionHandlingBehavior() >=
+      diag::Severity::Error)
     return false;
 
   const LangOptions &LangOpts = PP.getLangOpts();
@@ -1059,20 +1061,6 @@ static bool HasExtension(const Preprocessor &PP, const IdentifierInfo *II) {
            .Case("cxx_init_captures", LangOpts.CPlusPlus11)
            .Case("cxx_variable_templates", LangOpts.CPlusPlus)
            .Default(false);
-}
-
-/// HasAttribute -  Return true if we recognize and implement the attribute
-/// specified by the given identifier.
-static bool HasAttribute(const IdentifierInfo *II, const llvm::Triple &T) {
-  StringRef Name = II->getName();
-  // Normalize the attribute name, __foo__ becomes foo.
-  if (Name.size() >= 4 && Name.startswith("__") && Name.endswith("__"))
-    Name = Name.substr(2, Name.size() - 4);
-
-  // FIXME: Do we need to handle namespaces here?
-  return llvm::StringSwitch<bool>(Name)
-#include "clang/Lex/AttrSpellings.inc"
-        .Default(false);
 }
 
 /// EvaluateHasIncludeCommon - Process a '__has_include("path")'
@@ -1175,18 +1163,18 @@ static bool EvaluateHasIncludeCommon(Token &Tok,
   // Search include directories.
   const DirectoryLookup *CurDir;
   const FileEntry *File =
-      PP.LookupFile(FilenameLoc, Filename, isAngled, LookupFrom, CurDir, NULL,
-                    NULL, NULL);
+      PP.LookupFile(FilenameLoc, Filename, isAngled, LookupFrom, CurDir,
+                    nullptr, nullptr, nullptr);
 
   // Get the result value.  A result of true means the file exists.
-  return File != 0;
+  return File != nullptr;
 }
 
 /// EvaluateHasInclude - Process a '__has_include("path")' expression.
 /// Returns true if successful.
 static bool EvaluateHasInclude(Token &Tok, IdentifierInfo *II,
                                Preprocessor &PP) {
-  return EvaluateHasIncludeCommon(Tok, II, PP, NULL);
+  return EvaluateHasIncludeCommon(Tok, II, PP, nullptr);
 }
 
 /// EvaluateHasIncludeNext - Process '__has_include_next("path")' expression.
@@ -1198,9 +1186,9 @@ static bool EvaluateHasIncludeNext(Token &Tok,
   // issue a diagnostic.
   const DirectoryLookup *Lookup = PP.GetCurDirLookup();
   if (PP.isInPrimaryFile()) {
-    Lookup = 0;
+    Lookup = nullptr;
     PP.Diag(Tok, diag::pp_include_next_in_primary);
-  } else if (Lookup == 0) {
+  } else if (!Lookup) {
     PP.Diag(Tok, diag::pp_include_next_absolute_path);
   } else {
     // Start looking up in the next directory.
@@ -1273,7 +1261,7 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
   llvm::raw_svector_ostream OS(TmpBuffer);
 
   // Set up the return result.
-  Tok.setIdentifierInfo(0);
+  Tok.setIdentifierInfo(nullptr);
   Tok.clearFlag(Token::NeedsCleaning);
 
   if (II == Ident__LINE__) {
@@ -1324,6 +1312,7 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
     }
     Tok.setKind(tok::string_literal);
   } else if (II == Ident__DATE__) {
+    Diag(Tok.getLocation(), diag::warn_pp_date_time);
     if (!DATELoc.isValid())
       ComputeDATE_TIME(DATELoc, TIMELoc, *this);
     Tok.setKind(tok::string_literal);
@@ -1333,6 +1322,7 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
                                                  Tok.getLength()));
     return;
   } else if (II == Ident__TIME__) {
+    Diag(Tok.getLocation(), diag::warn_pp_date_time);
     if (!TIMELoc.isValid())
       ComputeDATE_TIME(DATELoc, TIMELoc, *this);
     Tok.setKind(tok::string_literal);
@@ -1357,12 +1347,13 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
     OS << Depth;
     Tok.setKind(tok::numeric_constant);
   } else if (II == Ident__TIMESTAMP__) {
+    Diag(Tok.getLocation(), diag::warn_pp_date_time);
     // MSVC, ICC, GCC, VisualAge C++ extension.  The generated string should be
     // of the form "Ddd Mmm dd hh::mm::ss yyyy", which is returned by asctime.
 
     // Get the file that we are lexing out of.  If we're currently lexing from
     // a macro, dig into the include stack.
-    const FileEntry *CurFile = 0;
+    const FileEntry *CurFile = nullptr;
     PreprocessorLexer *TheLexer = getCurrentFileLexer();
 
     if (TheLexer)
@@ -1377,7 +1368,7 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
       Result = "??? ??? ?? ??:??:?? ????\n";
     }
     // Surround the string with " and strip the trailing newline.
-    OS << '"' << StringRef(Result, strlen(Result)-1) << '"';
+    OS << '"' << StringRef(Result).drop_back() << '"';
     Tok.setKind(tok::string_literal);
   } else if (II == Ident__COUNTER__) {
     // __COUNTER__ expands to a simple numeric value.
@@ -1386,12 +1377,13 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
   } else if (II == Ident__has_feature   ||
              II == Ident__has_extension ||
              II == Ident__has_builtin   ||
+             II == Ident__is_identifier ||
              II == Ident__has_attribute) {
     // The argument to these builtins should be a parenthesized identifier.
     SourceLocation StartLoc = Tok.getLocation();
 
     bool IsValid = false;
-    IdentifierInfo *FeatureII = 0;
+    IdentifierInfo *FeatureII = nullptr;
 
     // Read the '('.
     LexUnexpandedToken(Tok);
@@ -1409,11 +1401,14 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
     bool Value = false;
     if (!IsValid)
       Diag(StartLoc, diag::err_feature_check_malformed);
+    else if (II == Ident__is_identifier)
+      Value = FeatureII->getTokenID() == tok::identifier;
     else if (II == Ident__has_builtin) {
       // Check for a builtin is trivial.
       Value = FeatureII->getBuiltinID() != 0;
     } else if (II == Ident__has_attribute)
-      Value = HasAttribute(FeatureII, getTargetInfo().getTriple());
+      Value = hasAttribute(AttrSyntax::Generic, nullptr, FeatureII,
+                           getTargetInfo().getTriple(), getLangOpts());
     else if (II == Ident__has_extension)
       Value = HasExtension(*this, FeatureII);
     else {
@@ -1499,6 +1494,44 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
     IdentifierInfo *ModuleII = getIdentifierInfo(getLangOpts().CurrentModule);
     Tok.setIdentifierInfo(ModuleII);
     Tok.setKind(ModuleII->getTokenID());
+  } else if (II == Ident__identifier) {
+    SourceLocation Loc = Tok.getLocation();
+
+    // We're expecting '__identifier' '(' identifier ')'. Try to recover
+    // if the parens are missing.
+    LexNonComment(Tok);
+    if (Tok.isNot(tok::l_paren)) {
+      // No '(', use end of last token.
+      Diag(getLocForEndOfToken(Loc), diag::err_pp_expected_after)
+        << II << tok::l_paren;
+      // If the next token isn't valid as our argument, we can't recover.
+      if (!Tok.isAnnotation() && Tok.getIdentifierInfo())
+        Tok.setKind(tok::identifier);
+      return;
+    }
+
+    SourceLocation LParenLoc = Tok.getLocation();
+    LexNonComment(Tok);
+
+    if (!Tok.isAnnotation() && Tok.getIdentifierInfo())
+      Tok.setKind(tok::identifier);
+    else {
+      Diag(Tok.getLocation(), diag::err_pp_identifier_arg_not_identifier)
+        << Tok.getKind();
+      // Don't walk past anything that's not a real token.
+      if (Tok.is(tok::eof) || Tok.is(tok::eod) || Tok.isAnnotation())
+        return;
+    }
+
+    // Discard the ')', preserving 'Tok' as our result.
+    Token RParen;
+    LexNonComment(RParen);
+    if (RParen.isNot(tok::r_paren)) {
+      Diag(getLocForEndOfToken(Tok.getLocation()), diag::err_pp_expected_after)
+        << Tok.getKind() << tok::r_paren;
+      Diag(LParenLoc, diag::note_matching) << tok::l_paren;
+    }
+    return;
   } else {
     llvm_unreachable("Unknown identifier!");
   }

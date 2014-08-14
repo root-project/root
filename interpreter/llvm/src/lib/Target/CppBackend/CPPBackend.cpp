@@ -108,9 +108,9 @@ namespace {
     explicit CppWriter(formatted_raw_ostream &o) :
       ModulePass(ID), Out(o), uniqueNum(0), is_inline(false), indent_level(0){}
 
-    virtual const char *getPassName() const { return "C++ backend"; }
+    const char *getPassName() const override { return "C++ backend"; }
 
-    bool runOnModule(Module &M);
+    bool runOnModule(Module &M) override;
 
     void printProgram(const std::string& fname, const std::string& modName );
     void printModule(const std::string& fname, const std::string& modName );
@@ -283,10 +283,6 @@ void CppWriter::printLinkageType(GlobalValue::LinkageTypes LT) {
     Out << "GlobalValue::InternalLinkage"; break;
   case GlobalValue::PrivateLinkage:
     Out << "GlobalValue::PrivateLinkage"; break;
-  case GlobalValue::LinkerPrivateLinkage:
-    Out << "GlobalValue::LinkerPrivateLinkage"; break;
-  case GlobalValue::LinkerPrivateWeakLinkage:
-    Out << "GlobalValue::LinkerPrivateWeakLinkage"; break;
   case GlobalValue::AvailableExternallyLinkage:
     Out << "GlobalValue::AvailableExternallyLinkage "; break;
   case GlobalValue::LinkOnceAnyLinkage:
@@ -400,7 +396,7 @@ std::string CppWriter::getCppName(Type* Ty) {
     return I->second;
 
   // Okay, let's build a new name for this type. Start with a prefix
-  const char* prefix = 0;
+  const char* prefix = nullptr;
   switch (Ty->getTypeID()) {
   case Type::FunctionTyID:    prefix = "FuncTy_"; break;
   case Type::StructTyID:      prefix = "StructTy_"; break;
@@ -1567,16 +1563,24 @@ void CppWriter::printInstruction(const Instruction *I,
   }
   case Instruction::AtomicCmpXchg: {
     const AtomicCmpXchgInst *cxi = cast<AtomicCmpXchgInst>(I);
-    StringRef Ordering = ConvertAtomicOrdering(cxi->getOrdering());
+    StringRef SuccessOrdering =
+        ConvertAtomicOrdering(cxi->getSuccessOrdering());
+    StringRef FailureOrdering =
+        ConvertAtomicOrdering(cxi->getFailureOrdering());
     StringRef CrossThread = ConvertAtomicSynchScope(cxi->getSynchScope());
     Out << "AtomicCmpXchgInst* " << iName
         << " = new AtomicCmpXchgInst("
         << opNames[0] << ", " << opNames[1] << ", " << opNames[2] << ", "
-        << Ordering << ", " << CrossThread << ", " << bbname
+        << SuccessOrdering << ", " << FailureOrdering << ", "
+        << CrossThread << ", " << bbname
         << ");";
     nl(Out) << iName << "->setName(\"";
     printEscapedString(cxi->getName());
     Out << "\");";
+    nl(Out) << iName << "->setVolatile("
+            << (cxi->isVolatile() ? "true" : "false") << ");";
+    nl(Out) << iName << "->setWeak("
+            << (cxi->isWeak() ? "true" : "false") << ");";
     break;
   }
   case Instruction::AtomicRMW: {
@@ -1607,6 +1611,8 @@ void CppWriter::printInstruction(const Instruction *I,
     nl(Out) << iName << "->setName(\"";
     printEscapedString(rmwi->getName());
     Out << "\");";
+    nl(Out) << iName << "->setVolatile("
+            << (rmwi->isVolatile() ? "true" : "false") << ");";
     break;
   }
   case Instruction::LandingPad: {
@@ -1690,9 +1696,8 @@ void CppWriter::printFunctionUses(const Function* F) {
 
   // Print the function declarations for any functions encountered
   nl(Out) << "// Function Declarations"; nl(Out);
-  for (SmallPtrSet<GlobalValue*,64>::iterator I = gvs.begin(), E = gvs.end();
-       I != E; ++I) {
-    if (Function* Fun = dyn_cast<Function>(*I)) {
+  for (auto *GV : gvs) {
+    if (Function *Fun = dyn_cast<Function>(GV)) {
       if (!is_inline || Fun != F)
         printFunctionHead(Fun);
     }
@@ -1700,17 +1705,15 @@ void CppWriter::printFunctionUses(const Function* F) {
 
   // Print the global variable declarations for any variables encountered
   nl(Out) << "// Global Variable Declarations"; nl(Out);
-  for (SmallPtrSet<GlobalValue*,64>::iterator I = gvs.begin(), E = gvs.end();
-       I != E; ++I) {
-    if (GlobalVariable* F = dyn_cast<GlobalVariable>(*I))
+  for (auto *GV : gvs) {
+    if (GlobalVariable *F = dyn_cast<GlobalVariable>(GV))
       printVariableHead(F);
   }
 
   // Print the constants found
   nl(Out) << "// Constant Definitions"; nl(Out);
-  for (SmallPtrSet<Constant*,64>::iterator I = consts.begin(),
-         E = consts.end(); I != E; ++I) {
-    printConstant(*I);
+  for (const auto *C : consts) {
+    printConstant(C);
   }
 
   // Process the global variables definitions now that all the constants have
@@ -1718,10 +1721,9 @@ void CppWriter::printFunctionUses(const Function* F) {
   // initializers.
   if (GenerationType != GenFunction) {
     nl(Out) << "// Global Variable Definitions"; nl(Out);
-    for (SmallPtrSet<GlobalValue*,64>::iterator I = gvs.begin(), E = gvs.end();
-         I != E; ++I) {
-      if (GlobalVariable* GV = dyn_cast<GlobalVariable>(*I))
-        printVariableBody(GV);
+    for (const auto &GV : gvs) {
+      if (GlobalVariable *Var = dyn_cast<GlobalVariable>(GV))
+        printVariableBody(Var);
     }
   }
 }

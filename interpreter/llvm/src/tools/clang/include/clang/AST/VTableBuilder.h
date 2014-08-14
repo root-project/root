@@ -21,6 +21,7 @@
 #include "clang/Basic/ABI.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SetVector.h"
+#include <memory>
 #include <utility>
 
 namespace clang {
@@ -208,11 +209,11 @@ public:
   typedef llvm::DenseMap<BaseSubobject, uint64_t> AddressPointsMapTy;
 private:
   uint64_t NumVTableComponents;
-  llvm::OwningArrayPtr<VTableComponent> VTableComponents;
+  std::unique_ptr<VTableComponent[]> VTableComponents;
 
   /// \brief Contains thunks needed by vtables, sorted by indices.
   uint64_t NumVTableThunks;
-  llvm::OwningArrayPtr<VTableThunkTy> VTableThunks;
+  std::unique_ptr<VTableThunkTy[]> VTableThunks;
 
   /// \brief Address points for all vtables.
   AddressPointsMapTy AddressPoints;
@@ -296,7 +297,7 @@ public:
     ThunksMapTy::const_iterator I = Thunks.find(MD);
     if (I == Thunks.end()) {
       // We did not find a thunk for this method.
-      return 0;
+      return nullptr;
     }
 
     return &I->second;
@@ -328,7 +329,7 @@ private:
     VirtualBaseClassOffsetOffsetsMapTy;
   VirtualBaseClassOffsetOffsetsMapTy VirtualBaseClassOffsetOffsets;
 
-  void computeVTableRelatedInformation(const CXXRecordDecl *RD);
+  void computeVTableRelatedInformation(const CXXRecordDecl *RD) override;
 
 public:
   ItaniumVTableContext(ASTContext &Context);
@@ -418,7 +419,7 @@ struct VPtrInfo {
 
   /// The vptr is stored inside the non-virtual component of this virtual base.
   const CXXRecordDecl *getVBaseWithVPtr() const {
-    return ContainingVBases.empty() ? 0 : ContainingVBases.front();
+    return ContainingVBases.empty() ? nullptr : ContainingVBases.front();
   }
 };
 
@@ -457,7 +458,7 @@ public:
     uint64_t Index;
 
     MethodVFTableLocation()
-        : VBTableIndex(0), VBase(0), VFPtrOffset(CharUnits::Zero()),
+        : VBTableIndex(0), VBase(nullptr), VFPtrOffset(CharUnits::Zero()),
           Index(0) {}
 
     MethodVFTableLocation(uint64_t VBTableIndex, const CXXRecordDecl *VBase,
@@ -470,11 +471,8 @@ public:
         assert(VBase != other.VBase);
         return VBTableIndex < other.VBTableIndex;
       }
-      if (VFPtrOffset != other.VFPtrOffset)
-        return VFPtrOffset < other.VFPtrOffset;
-      if (Index != other.Index)
-        return Index < other.Index;
-      return false;
+      return std::tie(VFPtrOffset, Index) <
+             std::tie(other.VFPtrOffset, other.Index);
     }
   };
 
@@ -497,7 +495,7 @@ private:
 
   void enumerateVFPtrs(const CXXRecordDecl *ForClass, VPtrInfoVector &Result);
 
-  void computeVTableRelatedInformation(const CXXRecordDecl *RD);
+  void computeVTableRelatedInformation(const CXXRecordDecl *RD) override;
 
   void dumpMethodLocations(const CXXRecordDecl *RD,
                            const MethodVFTableLocationsTy &NewMethods,
@@ -522,11 +520,11 @@ public:
 
   const MethodVFTableLocation &getMethodVFTableLocation(GlobalDecl GD);
 
-  const ThunkInfoVectorTy *getThunkInfo(GlobalDecl GD) {
+  const ThunkInfoVectorTy *getThunkInfo(GlobalDecl GD) override {
     // Complete destructors don't have a slot in a vftable, so no thunks needed.
     if (isa<CXXDestructorDecl>(GD.getDecl()) &&
         GD.getDtorType() == Dtor_Complete)
-      return 0;
+      return nullptr;
     return VTableContextBase::getThunkInfo(GD);
   }
 

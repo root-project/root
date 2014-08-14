@@ -4,7 +4,7 @@
 
 namespace dr1 { // dr1: no
   namespace X { extern "C" void dr1_f(int a = 1); }
-  namespace Y { extern "C" void dr1_f(int a = 2); }
+  namespace Y { extern "C" void dr1_f(int a = 1); }
   using X::dr1_f; using Y::dr1_f;
   void g() {
     dr1_f(0);
@@ -25,7 +25,23 @@ namespace dr1 { // dr1: no
   }
   void X::z(int = 1) {} // expected-note {{previous}}
   namespace X {
-    void z(int = 2); // expected-error {{redefinition of default argument}}
+    void z(int = 1); // expected-error {{redefinition of default argument}}
+  }
+
+  void i(int = 1);
+  void j() {
+    void i(int = 1);
+    using dr1::i;
+    i(0);
+    // FIXME: This should be rejected, due to the ambiguous default argument.
+    i();
+  }
+  void k() {
+    using dr1::i;
+    void i(int = 1);
+    i(0);
+    // FIXME: This should be rejected, due to the ambiguous default argument.
+    i();
   }
 }
 
@@ -139,6 +155,21 @@ namespace dr12 { // dr12: sup 239
     int &b = f(e);
     int &c = f(1);
   }
+}
+
+namespace dr13 { // dr13: no
+  extern "C" void f(int);
+  void g(char);
+
+  template<typename T> struct A {
+    A(void (*fp)(T));
+  };
+  template<typename T> int h(void (T));
+
+  A<int> a1(f); // FIXME: We should reject this.
+  A<char> a2(g);
+  int a3 = h(f); // FIXME: We should reject this.
+  int a4 = h(g);
 }
 
 namespace dr14 { // dr14: yes
@@ -821,7 +852,7 @@ namespace dr77 { // dr77: yes
 namespace dr78 { // dr78: sup ????
   // Under DR78, this is valid, because 'k' has static storage duration, so is
   // zero-initialized.
-  const int k; // expected-error {{default initialization of an object of const}}
+  const int k; // expected-error {{default initialization of an object of const}} expected-note{{add an explicit initializer to initialize 'k'}}
 }
 
 // dr79: na
@@ -949,6 +980,22 @@ namespace dr90 { // dr90: yes
 namespace dr91 { // dr91: yes
   union U { friend int f(U); };
   int k = f(U());
+}
+
+namespace dr92 { // dr92: yes
+  void f() throw(int, float);
+  void (*p)() throw(int) = &f; // expected-error {{target exception specification is not superset of source}}
+  void (*q)() throw(int);
+  void (**pp)() throw() = &q; // expected-error {{exception specifications are not allowed}}
+
+  void g(void() throw());
+  void h() {
+    g(f); // expected-error {{is not superset}}
+    g(q); // expected-error {{is not superset}}
+  }
+
+  template<void() throw()> struct X {};
+  X<&f> xp; // ok
 }
 
 // dr93: na

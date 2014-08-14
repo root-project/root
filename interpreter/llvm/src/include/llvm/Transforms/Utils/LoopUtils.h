@@ -17,6 +17,7 @@
 namespace llvm {
 class AliasAnalysis;
 class BasicBlock;
+class DataLayout;
 class DominatorTree;
 class Loop;
 class LoopInfo;
@@ -32,7 +33,8 @@ BasicBlock *InsertPreheaderForLoop(Loop *L, Pass *P);
 /// will optionally update \c AliasAnalysis and \c ScalarEvolution analyses if
 /// passed into it.
 bool simplifyLoop(Loop *L, DominatorTree *DT, LoopInfo *LI, Pass *PP,
-                  AliasAnalysis *AA = 0, ScalarEvolution *SE = 0);
+                  AliasAnalysis *AA = nullptr, ScalarEvolution *SE = nullptr,
+                  const DataLayout *DL = nullptr);
 
 /// \brief Put loop into LCSSA form.
 ///
@@ -45,7 +47,7 @@ bool simplifyLoop(Loop *L, DominatorTree *DT, LoopInfo *LI, Pass *PP,
 /// If ScalarEvolution is passed in, it will be preserved.
 ///
 /// Returns true if any modifications are made to the loop.
-bool formLCSSA(Loop &L, DominatorTree &DT, ScalarEvolution *SE = 0);
+bool formLCSSA(Loop &L, DominatorTree &DT, ScalarEvolution *SE = nullptr);
 
 /// \brief Put a loop nest into LCSSA form.
 ///
@@ -56,8 +58,8 @@ bool formLCSSA(Loop &L, DominatorTree &DT, ScalarEvolution *SE = 0);
 /// If ScalarEvolution is passed in, it will be preserved.
 ///
 /// Returns true if any modifications are made to the loop.
-bool formLCSSARecursively(Loop &L, DominatorTree &DT, ScalarEvolution *SE = 0);
-
+bool formLCSSARecursively(Loop &L, DominatorTree &DT,
+                          ScalarEvolution *SE = nullptr);
 }
 
 #endif

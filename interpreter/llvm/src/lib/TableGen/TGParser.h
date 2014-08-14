@@ -85,7 +85,7 @@ class TGParser {
 
 public:
   TGParser(SourceMgr &SrcMgr, RecordKeeper &records)
-      : Lex(SrcMgr), CurMultiClass(0), Records(records), AnonCounter(0) {}
+      : Lex(SrcMgr), CurMultiClass(nullptr), Records(records), AnonCounter(0) {}
 
   /// ParseFile - Main entrypoint for parsing a tblgen file.  These parser
   /// routines return true on error, or false on success.
@@ -131,7 +131,7 @@ private:  // Semantic analysis methods.
   bool ProcessForeachDefs(Record *CurRec, SMLoc Loc, IterSet &IterVals);
 
 private:  // Parser methods.
-  bool ParseObjectList(MultiClass *MC = 0);
+  bool ParseObjectList(MultiClass *MC = nullptr);
   bool ParseObject(MultiClass *MC);
   bool ParseClass();
   bool ParseMultiClass();
@@ -167,22 +167,21 @@ private:  // Parser methods.
   SubClassReference ParseSubClassReference(Record *CurRec, bool isDefm);
   SubMultiClassReference ParseSubMultiClassReference(MultiClass *CurMC);
 
-  Init *ParseIDValue(Record *CurRec, IDParseMode Mode = ParseValueMode);
   Init *ParseIDValue(Record *CurRec, const std::string &Name, SMLoc NameLoc,
                      IDParseMode Mode = ParseValueMode);
-  Init *ParseSimpleValue(Record *CurRec, RecTy *ItemType = 0,
+  Init *ParseSimpleValue(Record *CurRec, RecTy *ItemType = nullptr,
                          IDParseMode Mode = ParseValueMode);
-  Init *ParseValue(Record *CurRec, RecTy *ItemType = 0,
+  Init *ParseValue(Record *CurRec, RecTy *ItemType = nullptr,
                    IDParseMode Mode = ParseValueMode);
-  std::vector<Init*> ParseValueList(Record *CurRec, Record *ArgsRec = 0,
-                                    RecTy *EltTy = 0);
+  std::vector<Init*> ParseValueList(Record *CurRec, Record *ArgsRec = nullptr,
+                                    RecTy *EltTy = nullptr);
   std::vector<std::pair<llvm::Init*, std::string> > ParseDagArgList(Record *);
   bool ParseOptionalRangeList(std::vector<unsigned> &Ranges);
   bool ParseOptionalBitList(std::vector<unsigned> &Ranges);
   std::vector<unsigned> ParseRangeList();
   bool ParseRangePiece(std::vector<unsigned> &Ranges);
   RecTy *ParseType();
-  Init *ParseOperation(Record *CurRec);
+  Init *ParseOperation(Record *CurRec, RecTy *ItemType);
   RecTy *ParseOperatorType();
   Init *ParseObjectName(MultiClass *CurMultiClass);
   Record *ParseClassID();

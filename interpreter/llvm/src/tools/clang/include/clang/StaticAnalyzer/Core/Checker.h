@@ -457,7 +457,7 @@ class CheckerBase : public ProgramPointTag {
   friend class ::clang::ento::CheckerManager;
 
 public:
-  StringRef getTagDescription() const;
+  StringRef getTagDescription() const override;
   CheckName getCheckName() const;
 
   /// See CheckerManager::runCheckersForPrintState.
@@ -526,7 +526,7 @@ template <typename EVENT>
 class EventDispatcher {
   CheckerManager *Mgr;
 public:
-  EventDispatcher() : Mgr(0) { }
+  EventDispatcher() : Mgr(nullptr) { }
 
   template <typename CHECKER>
   static void _register(CHECKER *checker, CheckerManager &mgr) {

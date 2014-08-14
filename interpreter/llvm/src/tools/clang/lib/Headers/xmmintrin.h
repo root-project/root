@@ -34,8 +34,8 @@ typedef int __v4si __attribute__((__vector_size__(16)));
 typedef float __v4sf __attribute__((__vector_size__(16)));
 typedef float __m128 __attribute__((__vector_size__(16)));
 
-// This header should only be included in a hosted environment as it depends on
-// a standard library to provide allocation routines.
+/* This header should only be included in a hosted environment as it depends on
+ * a standard library to provide allocation routines. */
 #if __STDC_HOSTED__
 #include <mm_malloc.h>
 #endif
@@ -589,7 +589,7 @@ _mm_set1_ps(float __w)
   return (__m128){ __w, __w, __w, __w };
 }
 
-// Microsoft specific.
+/* Microsoft specific. */
 static __inline__ __m128 __attribute__((__always_inline__, __nodebug__))
 _mm_set_ps1(float __w)
 {
@@ -905,7 +905,7 @@ _mm_cvtps_pi16(__m128 __a)
   __a = _mm_movehl_ps(__a, __a);
   __c = _mm_cvtps_pi32(__a);
   
-  return _mm_packs_pi16(__b, __c);
+  return _mm_packs_pi32(__b, __c);
 }
 
 static __inline__ __m64 __attribute__((__always_inline__, __nodebug__))

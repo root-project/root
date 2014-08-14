@@ -20,6 +20,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Triple.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/Config/config.h"
 #include "llvm/Config/llvm-config.h"
@@ -311,7 +312,7 @@ int main(int argc, char **argv) {
       } else if (Arg == "--targets-built") {
         OS << LLVM_TARGETS_BUILT << '\n';
       } else if (Arg == "--host-target") {
-        OS << LLVM_DEFAULT_TARGET_TRIPLE << '\n';
+        OS << Triple::normalize(LLVM_DEFAULT_TARGET_TRIPLE) << '\n';
       } else if (Arg == "--build-mode") {
         OS << build_mode << '\n';
       } else if (Arg == "--assertion-mode") {
@@ -345,27 +346,29 @@ int main(int argc, char **argv) {
     ComputeLibsForComponents(Components, RequiredLibs,
                              /*IncludeNonInstalled=*/IsInDevelopmentTree);
 
-    for (unsigned i = 0, e = RequiredLibs.size(); i != e; ++i) {
-      StringRef Lib = RequiredLibs[i];
-      if (i)
-        OS << ' ';
+    if (PrintLibs || PrintLibNames || PrintLibFiles) {
+      for (unsigned i = 0, e = RequiredLibs.size(); i != e; ++i) {
+        StringRef Lib = RequiredLibs[i];
+        if (i)
+          OS << ' ';
 
-      if (PrintLibNames) {
-        OS << Lib;
-      } else if (PrintLibFiles) {
-        OS << ActiveLibDir << '/' << Lib;
-      } else if (PrintLibs) {
-        // If this is a typical library name, include it using -l.
-        if (Lib.startswith("lib") && Lib.endswith(".a")) {
-          OS << "-l" << Lib.slice(3, Lib.size()-2);
-          continue;
+        if (PrintLibNames) {
+          OS << Lib;
+        } else if (PrintLibFiles) {
+          OS << ActiveLibDir << '/' << Lib;
+        } else if (PrintLibs) {
+          // If this is a typical library name, include it using -l.
+          if (Lib.startswith("lib") && Lib.endswith(".a")) {
+            OS << "-l" << Lib.slice(3, Lib.size()-2);
+            continue;
+          }
+
+          // Otherwise, print the full path.
+          OS << ActiveLibDir << '/' << Lib;
         }
-
-        // Otherwise, print the full path.
-        OS << ActiveLibDir << '/' << Lib;
       }
+      OS << '\n';
     }
-    OS << '\n';
 
     // Print SYSTEM_LIBS after --libs.
     // FIXME: Each LLVM component may have its dependent system libs.

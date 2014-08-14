@@ -29,6 +29,7 @@ CODEGENOPT(Name, Bits, Default)
 #endif
 
 CODEGENOPT(DisableIntegratedAS, 1, 0) ///< -no-integrated-as
+CODEGENOPT(CompressDebugSections, 1, 0) ///< -Wa,-compress-debug-sections
 CODEGENOPT(Autolink          , 1, 1) ///< -fno-autolink
 CODEGENOPT(AsmVerbose        , 1, 0) ///< -dA, -fverbose-asm.
 CODEGENOPT(ObjCAutoRefCountExceptions , 1, 0) ///< Whether ARC should be EH-safe.
@@ -67,7 +68,6 @@ CODEGENOPT(LessPreciseFPMAD  , 1, 0) ///< Enable less precise MAD instructions t
                                      ///< be generated.
 CODEGENOPT(MergeAllConstants , 1, 1) ///< Merge identical constants.
 CODEGENOPT(NoCommon          , 1, 0) ///< Set when -fno-common or C++ is enabled.
-CODEGENOPT(NoDwarf2CFIAsm    , 1, 0) ///< Set when -fno-dwarf2-cfi-asm is enabled.
 CODEGENOPT(NoDwarfDirectoryAsm , 1, 0) ///< Set when -fno-dwarf-directory-asm is
                                        ///< enabled.
 CODEGENOPT(NoExecStack       , 1, 0) ///< Set when -Wa,--noexecstack is enabled.
@@ -98,7 +98,7 @@ CODEGENOPT(StructPathTBAA    , 1, 0) ///< Whether or not to use struct-path TBAA
 CODEGENOPT(SaveTempLabels    , 1, 0) ///< Save temporary labels.
 CODEGENOPT(SanitizeAddressZeroBaseShadow , 1, 0) ///< Map shadow memory at zero
                                                  ///< offset in AddressSanitizer.
-CODEGENOPT(SanitizeMemoryTrackOrigins, 1, 0) ///< Enable tracking origins in
+CODEGENOPT(SanitizeMemoryTrackOrigins, 2, 0) ///< Enable tracking origins in
                                              ///< MemorySanitizer
 CODEGENOPT(SanitizeUndefinedTrapOnError, 1, 0) ///< Set on
                                                /// -fsanitize-undefined-trap-on-error
@@ -140,7 +140,7 @@ VALUE_CODEGENOPT(NumRegisterParameters, 32, 0)
 VALUE_CODEGENOPT(SSPBufferSize, 32, 0)
 
 /// The kind of generated debug info.
-ENUM_CODEGENOPT(DebugInfo, DebugInfoKind, 2, NoDebugInfo)
+ENUM_CODEGENOPT(DebugInfo, DebugInfoKind, 3, NoDebugInfo)
 
 /// Dwarf version.
 VALUE_CODEGENOPT(DwarfVersion, 3, 0)

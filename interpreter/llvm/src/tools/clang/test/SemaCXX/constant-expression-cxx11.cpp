@@ -823,6 +823,19 @@ static_assert(X() == 0, "");
 
 }
 
+struct This {
+  constexpr int f() const { return 0; }
+  static constexpr int g() { return 0; }
+  void h() {
+    constexpr int x = f(); // expected-error {{must be initialized by a constant}}
+    // expected-note@-1 {{implicit use of 'this' pointer is only allowed within the evaluation of a call to a 'constexpr' member function}}
+    constexpr int y = this->f(); // expected-error {{must be initialized by a constant}}
+    // expected-note-re@-1 {{{{^}}use of 'this' pointer}}
+    constexpr int z = g();
+    static_assert(z == 0, "");
+  }
+};
+
 }
 
 namespace Temporaries {
@@ -859,6 +872,12 @@ static_assert(f(T(5)) == 5, "");
 
 constexpr bool b(int n) { return &n; }
 static_assert(b(0), "");
+
+struct NonLiteral {
+  NonLiteral();
+  int f();
+};
+constexpr int k = NonLiteral().f(); // expected-error {{constant expression}} expected-note {{non-literal type 'Temporaries::NonLiteral'}}
 
 }
 
@@ -1158,7 +1177,7 @@ namespace ExternConstexpr {
   void f() {
     extern constexpr int i; // expected-error {{constexpr variable declaration must be a definition}}
     constexpr int j = 0;
-    constexpr int k; // expected-error {{default initialization of an object of const type}}
+    constexpr int k; // expected-error {{default initialization of an object of const type}} expected-note{{add an explicit initializer to initialize 'k'}}
   }
 }
 
@@ -1862,4 +1881,14 @@ namespace BuiltinStrlen {
   // FIXME: The diagnostic here could be better.
   constexpr char d[] = { 'f', 'o', 'o' }; // no nul terminator.
   constexpr int bad = __builtin_strlen(d); // expected-error {{constant expression}} expected-note {{one-past-the-end}}
+}
+
+namespace PR19010 {
+  struct Empty {};
+  struct Empty2 : Empty {};
+  struct Test : Empty2 {
+    constexpr Test() {}
+    Empty2 array[2];
+  };
+  void test() { constexpr Test t; }
 }

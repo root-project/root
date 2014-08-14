@@ -26,8 +26,8 @@
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
+#include <algorithm>
 #include <cassert>
-#include <cstring>
 
 namespace clang {
   class ASTContext;
@@ -131,7 +131,7 @@ public:
 };
 
 class InheritableParamAttr : public InheritableAttr {
-  virtual void anchor();
+  void anchor() override;
 protected:
   InheritableParamAttr(attr::Kind AK, SourceRange R,
                        unsigned SpellingListIndex = 0)

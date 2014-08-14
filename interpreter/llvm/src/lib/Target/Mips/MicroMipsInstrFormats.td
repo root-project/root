@@ -1,3 +1,81 @@
+//===----------------------------------------------------------------------===//
+// MicroMIPS Base Classes
+//===----------------------------------------------------------------------===//
+
+//
+// Base class for MicroMips instructions.
+// This class does not depend on the instruction size.
+//
+class MicroMipsInstBase<dag outs, dag ins, string asmstr, list<dag> pattern,
+                        InstrItinClass itin, Format f> : Instruction
+{
+  let Namespace = "Mips";
+  let DecoderNamespace = "MicroMips";
+
+  let OutOperandList = outs;
+  let InOperandList  = ins;
+
+  let AsmString   = asmstr;
+  let Pattern     = pattern;
+  let Itinerary   = itin;
+
+  let Predicates = [InMicroMips];
+
+  Format Form = f;
+}
+
+//
+// Base class for MicroMIPS 16-bit instructions.
+//
+class MicroMipsInst16<dag outs, dag ins, string asmstr, list<dag> pattern,
+               InstrItinClass itin, Format f> :
+  MicroMipsInstBase<outs, ins, asmstr, pattern, itin, f>
+{
+  let Size = 2;
+  field bits<16> Inst;
+  field bits<16> SoftFail = 0;
+  bits<6> Opcode = 0x0;
+}
+
+//===----------------------------------------------------------------------===//
+// MicroMIPS 16-bit Instruction Formats
+//===----------------------------------------------------------------------===//
+
+class MOVE_FM_MM16<bits<6> funct> {
+  bits<5> rs;
+  bits<5> rd;
+
+  bits<16> Inst;
+
+  let Inst{15-10} = funct;
+  let Inst{9-5}   = rd;
+  let Inst{4-0}   = rs;
+}
+
+class JALR_FM_MM16<bits<5> op> {
+  bits<5> rs;
+
+  bits<16> Inst;
+
+  let Inst{15-10} = 0x11;
+  let Inst{9-5}   = op;
+  let Inst{4-0}   = rs;
+}
+
+class MFHILO_FM_MM16<bits<5> funct> {
+  bits<5> rd;
+
+  bits<16> Inst;
+
+  let Inst{15-10} = 0x11;
+  let Inst{9-5}   = funct;
+  let Inst{4-0}   = rd;
+}
+
+//===----------------------------------------------------------------------===//
+// MicroMIPS 32-bit Instruction Formats
+//===----------------------------------------------------------------------===//
+
 class MMArch {
   string Arch = "micromips";
   list<dag> Pattern = [];
@@ -226,7 +304,7 @@ class JR_FM_MM<bits<8> funct> : MMArch {
   let Inst{5-0}   = 0x3c;
 }
 
-class JALR_FM_MM<bits<10> funct> : MMArch {
+class JALR_FM_MM<bits<10> funct> {
   bits<5> rs;
   bits<5> rd;
 
@@ -303,15 +381,16 @@ class SYS_FM_MM : MMArch {
   bits<32> Inst;
   let Inst{31-26} = 0x0;
   let Inst{25-16} = code_;
-  let Inst{15-6}  = 0x22b;
+  let Inst{15-6}  = 0x22d;
   let Inst{5-0}   = 0x3c;
 }
 
-class WAIT_FM_MM : MMArch {
+class WAIT_FM_MM {
+  bits<10> code_;
   bits<32> Inst;
 
   let Inst{31-26} = 0x00;
-  let Inst{25-16} = 0x00;
+  let Inst{25-16} = code_;
   let Inst{15-6}  = 0x24d;
   let Inst{5-0}   = 0x3c;
 }

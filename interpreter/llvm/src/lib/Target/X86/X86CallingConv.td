@@ -52,27 +52,27 @@ def RetCC_X86Common : CallingConv<[
   // 512-bit vectors are returned in ZMM0 and ZMM1, when they fit. ZMM2 and ZMM3
   // can only be used by ABI non-compliant code. This vector type is only
   // supported while using the AVX-512 target feature.
-  CCIfType<[v16i32, v8i64, v16f32, v8f64],
+  CCIfType<[v64i8, v32i16, v16i32, v8i64, v16f32, v8f64],
             CCAssignToReg<[ZMM0,ZMM1,ZMM2,ZMM3]>>,
 
   // MMX vector types are always returned in MM0. If the target doesn't have
   // MM0, it doesn't support these vector types.
   CCIfType<[x86mmx], CCAssignToReg<[MM0]>>,
 
-  // Long double types are always returned in ST0 (even with SSE).
-  CCIfType<[f80], CCAssignToReg<[ST0, ST1]>>
+  // Long double types are always returned in FP0 (even with SSE).
+  CCIfType<[f80], CCAssignToReg<[FP0, FP1]>>
 ]>;
 
 // X86-32 C return-value convention.
 def RetCC_X86_32_C : CallingConv<[
-  // The X86-32 calling convention returns FP values in ST0, unless marked
+  // The X86-32 calling convention returns FP values in FP0, unless marked
   // with "inreg" (used here to distinguish one kind of reg from another,
   // weirdly; this is really the sse-regparm calling convention) in which
   // case they use XMM0, otherwise it is the same as the common X86 calling
   // conv.
   CCIfInReg<CCIfSubtarget<"hasSSE2()",
     CCIfType<[f32, f64], CCAssignToReg<[XMM0,XMM1,XMM2]>>>>,
-  CCIfType<[f32,f64], CCAssignToReg<[ST0, ST1]>>,
+  CCIfType<[f32,f64], CCAssignToReg<[FP0, FP1]>>,
   CCDelegateTo<RetCC_X86Common>
 ]>;
 
@@ -252,7 +252,7 @@ def CC_X86_64_C : CallingConv<[
                                          YMM4, YMM5, YMM6, YMM7]>>>>,
 
   // The first 8 512-bit vector arguments are passed in ZMM registers.
-  CCIfNotVarArg<CCIfType<[v16i32, v8i64, v16f32, v8f64],
+  CCIfNotVarArg<CCIfType<[v64i8, v32i16, v16i32, v8i64, v16f32, v8f64],
             CCIfSubtarget<"hasAVX512()",
             CCAssignToReg<[ZMM0, ZMM1, ZMM2, ZMM3, ZMM4, ZMM5, ZMM6, ZMM7]>>>>,
 
@@ -485,15 +485,6 @@ def CC_X86_32_ThisCall_Win : CallingConv<[
   CCDelegateTo<CC_X86_32_ThisCall_Common>
 ]>;
 
-def CC_X86_CDeclMethod : CallingConv<[
-  // Promote i8/i16 arguments to i32.
-  CCIfType<[i8, i16], CCPromoteToType<i32>>,
-
-  CCCustom<"CC_X86_CDeclMethod_SRet">,
-
-  CCDelegateTo<CC_X86_32_Common>
-]>;
-
 def CC_X86_32_ThisCall : CallingConv<[
   CCIfSubtarget<"isTargetCygMing()", CCDelegateTo<CC_X86_32_ThisCall_Mingw>>,
   CCDelegateTo<CC_X86_32_ThisCall_Win>
@@ -583,7 +574,6 @@ def CC_Intel_OCL_BI : CallingConv<[
 def CC_X86_32 : CallingConv<[
   CCIfCC<"CallingConv::X86_FastCall", CCDelegateTo<CC_X86_32_FastCall>>,
   CCIfCC<"CallingConv::X86_ThisCall", CCDelegateTo<CC_X86_32_ThisCall>>,
-  CCIfCC<"CallingConv::X86_CDeclMethod", CCDelegateTo<CC_X86_CDeclMethod>>,
   CCIfCC<"CallingConv::Fast", CCDelegateTo<CC_X86_32_FastCC>>,
   CCIfCC<"CallingConv::GHC", CCDelegateTo<CC_X86_32_GHC>>,
   CCIfCC<"CallingConv::HiPE", CCDelegateTo<CC_X86_32_HiPE>>,
@@ -667,6 +657,6 @@ def CSR_64_Intel_OCL_BI       : CalleeSavedRegs<(add CSR_64,
 def CSR_64_Intel_OCL_BI_AVX    : CalleeSavedRegs<(add CSR_64,
                                                   (sequence "YMM%u", 8, 15))>;
 
-def CSR_64_Intel_OCL_BI_AVX512    : CalleeSavedRegs<(add CSR_64,
+def CSR_64_Intel_OCL_BI_AVX512 : CalleeSavedRegs<(add RBX, RDI, RSI, R14, R15,
                                                   (sequence "ZMM%u", 16, 31),
                                                   K4, K5, K6, K7)>;

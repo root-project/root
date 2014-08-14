@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "mips-asm-printer"
 #include "InstPrinter/MipsInstPrinter.h"
 #include "MCTargetDesc/MipsBaseInfo.h"
+#include "MCTargetDesc/MipsMCNaCl.h"
 #include "Mips.h"
 #include "MipsAsmPrinter.h"
 #include "MipsInstrInfo.h"
@@ -27,6 +27,7 @@
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstr.h"
+#include "llvm/CodeGen/MachineJumpTableInfo.h"
 #include "llvm/CodeGen/MachineMemOperand.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/DataLayout.h"
@@ -50,15 +51,19 @@
 
 using namespace llvm;
 
+#define DEBUG_TYPE "mips-asm-printer"
+
 MipsTargetStreamer &MipsAsmPrinter::getTargetStreamer() {
   return static_cast<MipsTargetStreamer &>(*OutStreamer.getTargetStreamer());
 }
 
 bool MipsAsmPrinter::runOnMachineFunction(MachineFunction &MF) {
+  Subtarget = &TM.getSubtarget<MipsSubtarget>();
+
   // Initialize TargetLoweringObjectFile.
-  if (Subtarget->allowMixed16_32())
-    const_cast<TargetLoweringObjectFile&>(getObjFileLowering())
+  const_cast<TargetLoweringObjectFile &>(getObjFileLowering())
       .Initialize(OutContext, TM);
+
   MipsFI = MF.getInfo<MipsFunctionInfo>();
   if (Subtarget->inMips16Mode())
     for (std::map<
@@ -72,6 +77,11 @@ bool MipsAsmPrinter::runOnMachineFunction(MachineFunction &MF) {
         StubsNeeded[Symbol] = Signature;
     }
   MCP = MF.getConstantPool();
+
+  // In NaCl, all indirect jump targets must be aligned to bundle size.
+  if (Subtarget->isTargetNaCl())
+    NaClAlignIndirectJumpTargets(MF);
+
   AsmPrinter::runOnMachineFunction(MF);
   return true;
 }
@@ -83,7 +93,46 @@ bool MipsAsmPrinter::lowerOperand(const MachineOperand &MO, MCOperand &MCOp) {
 
 #include "MipsGenMCPseudoLowering.inc"
 
+// Lower PseudoReturn/PseudoIndirectBranch/PseudoIndirectBranch64 to JR, JR_MM,
+// JALR, or JALR64 as appropriate for the target
+void MipsAsmPrinter::emitPseudoIndirectBranch(MCStreamer &OutStreamer,
+                                              const MachineInstr *MI) {
+  bool HasLinkReg = false;
+  MCInst TmpInst0;
+
+  if (Subtarget->hasMips64r6()) {
+    // MIPS64r6 should use (JALR64 ZERO_64, $rs)
+    TmpInst0.setOpcode(Mips::JALR64);
+    HasLinkReg = true;
+  } else if (Subtarget->hasMips32r6()) {
+    // MIPS32r6 should use (JALR ZERO, $rs)
+    TmpInst0.setOpcode(Mips::JALR);
+    HasLinkReg = true;
+  } else if (Subtarget->inMicroMipsMode())
+    // microMIPS should use (JR_MM $rs)
+    TmpInst0.setOpcode(Mips::JR_MM);
+  else {
+    // Everything else should use (JR $rs)
+    TmpInst0.setOpcode(Mips::JR);
+  }
+
+  MCOperand MCOp;
+
+  if (HasLinkReg) {
+    unsigned ZeroReg = Subtarget->isGP64bit() ? Mips::ZERO_64 : Mips::ZERO;
+    TmpInst0.addOperand(MCOperand::CreateReg(ZeroReg));
+  }
+
+  lowerOperand(MI->getOperand(0), MCOp);
+  TmpInst0.addOperand(MCOp);
+
+  EmitToStreamer(OutStreamer, TmpInst0);
+}
+
 void MipsAsmPrinter::EmitInstruction(const MachineInstr *MI) {
+  MipsTargetStreamer &TS = getTargetStreamer();
+  TS.setCanHaveModuleDir(false);
+
   if (MI->isDebugValue()) {
     SmallString<128> Str;
     raw_svector_ostream OS(Str);
@@ -133,6 +182,14 @@ void MipsAsmPrinter::EmitInstruction(const MachineInstr *MI) {
     if (emitPseudoExpansionLowering(OutStreamer, &*I))
       continue;
 
+    if (I->getOpcode() == Mips::PseudoReturn ||
+        I->getOpcode() == Mips::PseudoReturn64 ||
+        I->getOpcode() == Mips::PseudoIndirectBranch ||
+        I->getOpcode() == Mips::PseudoIndirectBranch64) {
+      emitPseudoIndirectBranch(OutStreamer, &*I);
+      continue;
+    }
+
     // The inMips16Mode() test is not permanent.
     // Some instructions are marked as pseudo right now which
     // would make the test fail for the wrong reason but
@@ -140,7 +197,8 @@ void MipsAsmPrinter::EmitInstruction(const MachineInstr *MI) {
     // removing another test for this situation downstream in the
     // callchain.
     //
-    if (I->isPseudo() && !Subtarget->inMips16Mode())
+    if (I->isPseudo() && !Subtarget->inMips16Mode()
+        && !isLongBranchPseudo(I->getOpcode()))
       llvm_unreachable("Pseudo opcode found in EmitInstruction()");
 
     MCInst TmpInst0;
@@ -270,11 +328,16 @@ const char *MipsAsmPrinter::getCurrentABIString() const {
 
 void MipsAsmPrinter::EmitFunctionEntryLabel() {
   MipsTargetStreamer &TS = getTargetStreamer();
+
+  // NaCl sandboxing requires that indirect call instructions are masked.
+  // This means that function entry points should be bundle-aligned.
+  if (Subtarget->isTargetNaCl())
+    EmitAlignment(std::max(MF->getAlignment(), MIPS_NACL_BUNDLE_ALIGN));
+
   if (Subtarget->inMicroMipsMode())
     TS.emitDirectiveSetMicroMips();
-  // leave out until FSF available gas has micromips changes
-  //  else
-  //    TS.emitDirectiveSetNoMicroMips();
+  else
+    TS.emitDirectiveSetNoMicroMips();
 
   if (Subtarget->inMips16Mode())
     TS.emitDirectiveSetMips16();
@@ -608,15 +671,28 @@ printFCCOperand(const MachineInstr *MI, int opNum, raw_ostream &O,
 void MipsAsmPrinter::EmitStartOfAsmFile(Module &M) {
   // TODO: Need to add -mabicalls and -mno-abicalls flags.
   // Currently we assume that -mabicalls is the default.
-  getTargetStreamer().emitDirectiveAbiCalls();
-  Reloc::Model RM = Subtarget->getRelocationModel();
-  if (RM == Reloc::Static && !Subtarget->hasMips64())
-    getTargetStreamer().emitDirectiveOptionPic0();
+  bool IsABICalls = true;
+  if (IsABICalls) {
+    getTargetStreamer().emitDirectiveAbiCalls();
+    Reloc::Model RM = TM.getRelocationModel();
+    // FIXME: This condition should be a lot more complicated that it is here.
+    //        Ideally it should test for properties of the ABI and not the ABI
+    //        itself.
+    //        For the moment, I'm only correcting enough to make MIPS-IV work.
+    if (RM == Reloc::Static && !Subtarget->isABI_N64())
+      getTargetStreamer().emitDirectiveOptionPic0();
+  }
 
   // Tell the assembler which ABI we are using
   std::string SectionName = std::string(".mdebug.") + getCurrentABIString();
   OutStreamer.SwitchSection(OutContext.getELFSection(
       SectionName, ELF::SHT_PROGBITS, 0, SectionKind::getDataRel()));
+
+  // NaN: At the moment we only support:
+  // 1. .nan legacy (default)
+  // 2. .nan 2008
+  Subtarget->isNaN2008() ? getTargetStreamer().emitDirectiveNaN2008()
+    : getTargetStreamer().emitDirectiveNaNLegacy();
 
   // TODO: handle O64 ABI
 
@@ -630,6 +706,23 @@ void MipsAsmPrinter::EmitStartOfAsmFile(Module &M) {
           OutContext.getELFSection(".gcc_compiled_long64", ELF::SHT_PROGBITS, 0,
                                    SectionKind::getDataRel()));
   }
+
+  getTargetStreamer().updateABIInfo(*Subtarget);
+
+  // We should always emit a '.module fp=...' but binutils 2.24 does not accept
+  // it. We therefore emit it when it contradicts the ABI defaults (-mfpxx or
+  // -mfp64) and omit it otherwise.
+  if (Subtarget->isABI_O32() && (Subtarget->isABI_FPXX() ||
+                                 Subtarget->isFP64bit()))
+    getTargetStreamer().emitDirectiveModuleFP();
+
+  // We should always emit a '.module [no]oddspreg' but binutils 2.24 does not
+  // accept it. We therefore emit it when it contradicts the default or an
+  // option has changed the default (i.e. FPXX) and omit it otherwise.
+  if (Subtarget->isABI_O32() && (!Subtarget->useOddSPReg() ||
+                                 Subtarget->isABI_FPXX()))
+    getTargetStreamer().emitDirectiveModuleOddSPReg(Subtarget->useOddSPReg(),
+                                                    Subtarget->isABI_O32());
 }
 
 void MipsAsmPrinter::EmitJal(MCSymbol *Symbol) {
@@ -811,7 +904,7 @@ void MipsAsmPrinter::EmitFPCallStub(
   const MCSectionELF *M = OutContext.getELFSection(
       ".mips16.call.fp." + std::string(Symbol), ELF::SHT_PROGBITS,
       ELF::SHF_ALLOC | ELF::SHF_EXECINSTR, SectionKind::getText());
-  OutStreamer.SwitchSection(M, 0);
+  OutStreamer.SwitchSection(M, nullptr);
   //
   // .align 2
   //
@@ -825,7 +918,7 @@ void MipsAsmPrinter::EmitFPCallStub(
   TS.emitDirectiveSetNoMicroMips();
   //
   // .ent __call_stub_fp_xxxx
-  // .type	__call_stub_fp_xxxx,@function
+  // .type  __call_stub_fp_xxxx,@function
   //  __call_stub_fp_xxxx:
   //
   std::string x = "__call_stub_fp_" + std::string(Symbol);
@@ -904,6 +997,34 @@ void MipsAsmPrinter::EmitEndOfAsmFile(Module &M) {
 void MipsAsmPrinter::PrintDebugValueComment(const MachineInstr *MI,
                                            raw_ostream &OS) {
   // TODO: implement
+}
+
+// Align all targets of indirect branches on bundle size.  Used only if target
+// is NaCl.
+void MipsAsmPrinter::NaClAlignIndirectJumpTargets(MachineFunction &MF) {
+  // Align all blocks that are jumped to through jump table.
+  if (MachineJumpTableInfo *JtInfo = MF.getJumpTableInfo()) {
+    const std::vector<MachineJumpTableEntry> &JT = JtInfo->getJumpTables();
+    for (unsigned I = 0; I < JT.size(); ++I) {
+      const std::vector<MachineBasicBlock*> &MBBs = JT[I].MBBs;
+
+      for (unsigned J = 0; J < MBBs.size(); ++J)
+        MBBs[J]->setAlignment(MIPS_NACL_BUNDLE_ALIGN);
+    }
+  }
+
+  // If basic block address is taken, block can be target of indirect branch.
+  for (MachineFunction::iterator MBB = MF.begin(), E = MF.end();
+                                 MBB != E; ++MBB) {
+    if (MBB->hasAddressTaken())
+      MBB->setAlignment(MIPS_NACL_BUNDLE_ALIGN);
+  }
+}
+
+bool MipsAsmPrinter::isLongBranchPseudo(int Opcode) const {
+  return (Opcode == Mips::LONG_BRANCH_LUi
+          || Opcode == Mips::LONG_BRANCH_ADDiu
+          || Opcode == Mips::LONG_BRANCH_DADDiu);
 }
 
 // Force static initialization.

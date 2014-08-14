@@ -59,7 +59,7 @@ class IdentifyingPassPtr {
   };
   bool IsInstance;
 public:
-  IdentifyingPassPtr() : P(0), IsInstance(false) {}
+  IdentifyingPassPtr() : P(nullptr), IsInstance(false) {}
   IdentifyingPassPtr(AnalysisID IDPtr) : ID(IDPtr), IsInstance(false) {}
   IdentifyingPassPtr(Pass *InstancePtr) : P(InstancePtr), IsInstance(true) {}
 
@@ -133,10 +133,6 @@ public:
     return *static_cast<TMC*>(TM);
   }
 
-  const TargetLowering *getTargetLowering() const {
-    return TM->getTargetLowering();
-  }
-
   //
   void setInitialized() { Initialized = true; }
 
@@ -151,7 +147,7 @@ public:
   void setStartStopPasses(AnalysisID Start, AnalysisID Stop) {
     StartAfter = Start;
     StopAfter = Stop;
-    Started = (StartAfter == 0);
+    Started = (StartAfter == nullptr);
   }
 
   void setDisableVerify(bool Disable) { setOpt(DisableVerify, Disable); }
@@ -218,14 +214,14 @@ public:
   /// Return NULL to select the default (generic) machine scheduler.
   virtual ScheduleDAGInstrs *
   createMachineScheduler(MachineSchedContext *C) const {
-    return 0;
+    return nullptr;
   }
 
   /// Similar to createMachineScheduler but used when postRA machine scheduling
   /// is enabled.
   virtual ScheduleDAGInstrs *
   createPostMachineScheduler(MachineSchedContext *C) const {
-    return 0;
+    return nullptr;
   }
 
 protected:
@@ -349,6 +345,8 @@ protected:
 
 /// List of target independent CodeGen pass IDs.
 namespace llvm {
+  FunctionPass *createAtomicExpandLoadLinkedPass(const TargetMachine *TM);
+
   /// \brief Create a basic TargetTransformInfo analysis pass.
   ///
   /// This pass implements the target transform info analysis using the target
@@ -372,13 +370,19 @@ namespace llvm {
 
   /// createCodeGenPreparePass - Transform the code to expose more pattern
   /// matching during instruction selection.
-  FunctionPass *createCodeGenPreparePass(const TargetMachine *TM = 0);
+  FunctionPass *createCodeGenPreparePass(const TargetMachine *TM = nullptr);
+
+  /// AtomicExpandLoadLinkedID -- FIXME
+  extern char &AtomicExpandLoadLinkedID;
 
   /// MachineLoopInfo - This pass is a loop analysis pass.
   extern char &MachineLoopInfoID;
 
   /// MachineDominators - This pass is a machine dominators analysis pass.
   extern char &MachineDominatorsID;
+
+/// MachineDominanaceFrontier - This pass is a machine dominators analysis pass.
+  extern char &MachineDominanceFrontierID;
 
   /// EdgeBundles analysis - Bundle machine CFG edges.
   extern char &EdgeBundlesID;
@@ -547,7 +551,7 @@ namespace llvm {
   /// createMachineVerifierPass - This pass verifies cenerated machine code
   /// instructions for correctness.
   ///
-  FunctionPass *createMachineVerifierPass(const char *Banner = 0);
+  FunctionPass *createMachineVerifierPass(const char *Banner = nullptr);
 
   /// createDwarfEHPass - This pass mulches exception handling code into a form
   /// adapted to code generation.  Required if using dwarf exception handling.
@@ -587,6 +591,25 @@ namespace llvm {
   /// the intrinsic for later emission to the StackMap.
   extern char &StackMapLivenessID;
 
+  /// createJumpInstrTables - This pass creates jump-instruction tables.
+  ModulePass *createJumpInstrTablesPass();
 } // End llvm namespace
+
+/// This initializer registers TargetMachine constructor, so the pass being
+/// initialized can use target dependent interfaces. Please do not move this
+/// macro to be together with INITIALIZE_PASS, which is a complete target
+/// independent initializer, and we don't want to make libScalarOpts depend
+/// on libCodeGen.
+#define INITIALIZE_TM_PASS(passName, arg, name, cfg, analysis) \
+  static void* initialize##passName##PassOnce(PassRegistry &Registry) { \
+    PassInfo *PI = new PassInfo(name, arg, & passName ::ID, \
+      PassInfo::NormalCtor_t(callDefaultCtor< passName >), cfg, analysis, \
+      PassInfo::TargetMachineCtor_t(callTargetMachineCtor< passName >)); \
+    Registry.registerPass(*PI, true); \
+    return PI; \
+  } \
+  void llvm::initialize##passName##Pass(PassRegistry &Registry) { \
+    CALL_ONCE_INITIALIZATION(initialize##passName##PassOnce) \
+  }
 
 #endif

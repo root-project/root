@@ -7,9 +7,11 @@ add_llvm_library(LLVMAnalysis
   Analysis.cpp
   BasicAliasAnalysis.cpp
   BlockFrequencyInfo.cpp
+  BlockFrequencyInfoImpl.cpp
   BranchProbabilityInfo.cpp
   CFG.cpp
   CFGPrinter.cpp
+  CGSCCPassManager.cpp
   CaptureTracking.cpp
   CostModel.cpp
   CodeMetrics.cpp
@@ -23,6 +25,7 @@ add_llvm_library(LLVMAnalysis
   InstructionSimplify.cpp
   Interval.cpp
   IntervalPartition.cpp
+  JumpInstrTableInfo.cpp
   LazyCallGraph.cpp
   LazyValueInfo.cpp
   LibCallAliasAnalysis.cpp
@@ -50,6 +53,7 @@ add_llvm_library(LLVMAnalysis
   TargetTransformInfo.cpp
   Trace.cpp
   TypeBasedAliasAnalysis.cpp
+  ScopedNoAliasAA.cpp
   ValueTracking.cpp
   )
 

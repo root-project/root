@@ -22,20 +22,21 @@
 #include "llvm/Analysis/RegionPass.h"
 #include "llvm/Bitcode/BitcodeWriterPass.h"
 #include "llvm/CodeGen/CommandFlags.h"
-#include "llvm/InitializePasses.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/IRPrintingPasses.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/LegacyPassNameParser.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/IRReader/IRReader.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/LinkAllIR.h"
 #include "llvm/LinkAllPasses.h"
 #include "llvm/MC/SubtargetFeature.h"
 #include "llvm/PassManager.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/ManagedStatic.h"
-#include "llvm/Support/PassNameParser.h"
 #include "llvm/Support/PluginLoader.h"
 #include "llvm/Support/PrettyStackTrace.h"
 #include "llvm/Support/Signals.h"
@@ -191,7 +192,10 @@ static inline void addPass(PassManagerBase &PM, Pass *P) {
   PM.add(P);
 
   // If we are verifying all of the intermediate steps, add the verifier...
-  if (VerifyEach) PM.add(createVerifierPass());
+  if (VerifyEach) {
+    PM.add(createVerifierPass());
+    PM.add(createDebugInfoVerifierPass());
+  }
 }
 
 /// AddOptimizationPasses - This routine adds optimization passes
@@ -201,7 +205,8 @@ static inline void addPass(PassManagerBase &PM, Pass *P) {
 /// OptLevel - Optimization Level
 static void AddOptimizationPasses(PassManagerBase &MPM,FunctionPassManager &FPM,
                                   unsigned OptLevel, unsigned SizeLevel) {
-  FPM.add(createVerifierPass());                  // Verify that input is correct
+  FPM.add(createVerifierPass());          // Verify that input is correct
+  MPM.add(createDebugInfoVerifierPass()); // Verify that debug info is correct
 
   PassManagerBuilder Builder;
   Builder.OptLevel = OptLevel;
@@ -210,14 +215,7 @@ static void AddOptimizationPasses(PassManagerBase &MPM,FunctionPassManager &FPM,
   if (DisableInline) {
     // No inlining pass
   } else if (OptLevel > 1) {
-    unsigned Threshold = 225;
-    if (SizeLevel == 1)      // -Os
-      Threshold = 75;
-    else if (SizeLevel == 2) // -Oz
-      Threshold = 25;
-    if (OptLevel > 2)
-      Threshold = 275;
-    Builder.Inliner = createFunctionInliningPass(Threshold);
+    Builder.Inliner = createFunctionInliningPass(OptLevel, SizeLevel);
   } else {
     Builder.Inliner = createAlwaysInlinerPass();
   }
@@ -247,6 +245,9 @@ static void AddStandardCompilePasses(PassManagerBase &PM) {
   if (StripDebug)
     addPass(PM, createStripSymbolsPass(true));
 
+  // Verify debug info only after it's (possibly) stripped.
+  PM.add(createDebugInfoVerifierPass());
+
   if (DisableOptimizations) return;
 
   // -std-compile-opts adds the same module passes as -O3.
@@ -263,6 +264,9 @@ static void AddStandardLinkPasses(PassManagerBase &PM) {
   // If the -strip-debug command line option was specified, do it.
   if (StripDebug)
     addPass(PM, createStripSymbolsPass(true));
+
+  // Verify debug info only after it's (possibly) stripped.
+  PM.add(createDebugInfoVerifierPass());
 
   if (DisableOptimizations) return;
 
@@ -292,7 +296,7 @@ static TargetMachine* GetTargetMachine(Triple TheTriple) {
                                                          Error);
   // Some modules don't specify a triple, and this is okay.
   if (!TheTarget) {
-    return 0;
+    return nullptr;
   }
 
   // Package up features to be passed to target/subtarget
@@ -311,6 +315,12 @@ static TargetMachine* GetTargetMachine(Triple TheTriple) {
                                         GetCodeGenOptLevel());
 }
 
+#ifdef LINK_POLLY_INTO_TOOLS
+namespace polly {
+void initializePollyPasses(llvm::PassRegistry &Registry);
+}
+#endif
+
 //===----------------------------------------------------------------------===//
 // main for opt
 //
@@ -326,6 +336,7 @@ int main(int argc, char **argv) {
 
   InitializeAllTargets();
   InitializeAllTargetMCs();
+  InitializeAllAsmPrinters();
 
   // Initialize passes
   PassRegistry &Registry = *PassRegistry::getPassRegistry();
@@ -342,8 +353,13 @@ int main(int argc, char **argv) {
   initializeInstrumentation(Registry);
   initializeTarget(Registry);
   // For codegen passes, only passes that do IR to IR transformation are
-  // supported. For now, just add CodeGenPrepare.
+  // supported.
   initializeCodeGenPreparePass(Registry);
+  initializeAtomicExpandLoadLinkedPass(Registry);
+
+#ifdef LINK_POLLY_INTO_TOOLS
+  polly::initializePollyPasses(Registry);
+#endif
 
   cl::ParseCommandLineOptions(argc, argv,
     "llvm .bc -> .bc modular optimizer and analysis printer\n");
@@ -356,10 +372,10 @@ int main(int argc, char **argv) {
   SMDiagnostic Err;
 
   // Load the input module...
-  OwningPtr<Module> M;
+  std::unique_ptr<Module> M;
   M.reset(ParseIRFile(InputFilename, Err, Context));
 
-  if (M.get() == 0) {
+  if (!M.get()) {
     Err.print(argv[0], errs());
     return 1;
   }
@@ -369,7 +385,7 @@ int main(int argc, char **argv) {
     M->setTargetTriple(Triple::normalize(TargetTriple));
 
   // Figure out what stream we are supposed to write to...
-  OwningPtr<tool_output_file> Out;
+  std::unique_ptr<tool_output_file> Out;
   if (NoOutput) {
     if (!OutputFilename.empty())
       errs() << "WARNING: The -o (output filename) option is ignored when\n"
@@ -439,16 +455,16 @@ int main(int argc, char **argv) {
     Passes.add(new DataLayoutPass(M.get()));
 
   Triple ModuleTriple(M->getTargetTriple());
-  TargetMachine *Machine = 0;
+  TargetMachine *Machine = nullptr;
   if (ModuleTriple.getArch())
     Machine = GetTargetMachine(Triple(ModuleTriple));
-  OwningPtr<TargetMachine> TM(Machine);
+  std::unique_ptr<TargetMachine> TM(Machine);
 
   // Add internal analysis passes from the target machine.
   if (TM.get())
     TM->addAnalysisPasses(Passes);
 
-  OwningPtr<FunctionPassManager> FPasses;
+  std::unique_ptr<FunctionPassManager> FPasses;
   if (OptLevelO1 || OptLevelO2 || OptLevelOs || OptLevelOz || OptLevelO3) {
     FPasses.reset(new FunctionPassManager(M.get()));
     if (DL)
@@ -523,7 +539,7 @@ int main(int argc, char **argv) {
     }
 
     const PassInfo *PassInf = PassList[i];
-    Pass *P = 0;
+    Pass *P = nullptr;
     if (PassInf->getTargetMachineCtor())
       P = PassInf->getTargetMachineCtor()(TM.get());
     else if (PassInf->getNormalCtor())
@@ -597,8 +613,10 @@ int main(int argc, char **argv) {
   }
 
   // Check that the module is well formed on completion of optimization
-  if (!NoVerify && !VerifyEach)
+  if (!NoVerify && !VerifyEach) {
     Passes.add(createVerifierPass());
+    Passes.add(createDebugInfoVerifierPass());
+  }
 
   // Write bitcode or assembly to the output as the last step...
   if (!NoOutput && !AnalyzeOnly) {

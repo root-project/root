@@ -178,7 +178,7 @@ DeclaratorChunk DeclaratorChunk::getFunction(bool hasProto,
   I.Kind                        = Function;
   I.Loc                         = LocalRangeBegin;
   I.EndLoc                      = LocalRangeEnd;
-  I.Fun.AttrList                = 0;
+  I.Fun.AttrList                = nullptr;
   I.Fun.hasPrototype            = hasProto;
   I.Fun.isVariadic              = EllipsisLoc.isValid();
   I.Fun.isAmbiguous             = isAmbiguous;
@@ -188,7 +188,7 @@ DeclaratorChunk DeclaratorChunk::getFunction(bool hasProto,
   I.Fun.DeleteParams            = false;
   I.Fun.TypeQuals               = TypeQuals;
   I.Fun.NumParams               = NumParams;
-  I.Fun.Params                  = 0;
+  I.Fun.Params                  = nullptr;
   I.Fun.RefQualifierIsLValueRef = RefQualifierIsLvalueRef;
   I.Fun.RefQualifierLoc         = RefQualifierLoc.getRawEncoding();
   I.Fun.ConstQualifierLoc       = ConstQualifierLoc.getRawEncoding();
@@ -197,8 +197,8 @@ DeclaratorChunk DeclaratorChunk::getFunction(bool hasProto,
   I.Fun.ExceptionSpecType       = ESpecType;
   I.Fun.ExceptionSpecLoc        = ESpecLoc.getRawEncoding();
   I.Fun.NumExceptions           = 0;
-  I.Fun.Exceptions              = 0;
-  I.Fun.NoexceptExpr            = 0;
+  I.Fun.Exceptions              = nullptr;
+  I.Fun.NoexceptExpr            = nullptr;
   I.Fun.HasTrailingReturnType   = TrailingReturnType.isUsable() ||
                                   TrailingReturnType.isInvalid();
   I.Fun.TrailingReturnType      = TrailingReturnType.get();
@@ -657,7 +657,7 @@ bool DeclSpec::SetTypeSpecType(TST T, SourceLocation TagKwLoc,
   DeclRep = Rep;
   TSTLoc = TagKwLoc;
   TSTNameLoc = TagNameLoc;
-  TypeSpecOwned = Owned && Rep != 0;
+  TypeSpecOwned = Owned && Rep != nullptr;
   return false;
 }
 
@@ -1125,14 +1125,41 @@ void DeclSpec::Finish(DiagnosticsEngine &D, Preprocessor &PP, const PrintingPoli
       ThreadHint = FixItHint::CreateRemoval(SCLoc);
     }
 
-    Diag(D, SCLoc, diag::err_friend_storage_spec)
+    Diag(D, SCLoc, diag::err_friend_decl_spec)
       << SpecName << StorageHint << ThreadHint;
 
     ClearStorageClassSpecs();
   }
 
+  // C++11 [dcl.fct.spec]p5:
+  //   The virtual specifier shall be used only in the initial
+  //   declaration of a non-static class member function;
+  // C++11 [dcl.fct.spec]p6:
+  //   The explicit specifier shall be used only in the declaration of
+  //   a constructor or conversion function within its class
+  //   definition;
+  if (isFriendSpecified() && (isVirtualSpecified() || isExplicitSpecified())) {
+    StringRef Keyword;
+    SourceLocation SCLoc;
+
+    if (isVirtualSpecified()) {
+      Keyword = "virtual";
+      SCLoc = getVirtualSpecLoc();
+    } else {
+      Keyword = "explicit";
+      SCLoc = getExplicitSpecLoc();
+    }
+
+    FixItHint Hint = FixItHint::CreateRemoval(SCLoc);
+    Diag(D, SCLoc, diag::err_friend_decl_spec)
+      << Keyword << Hint;
+
+    FS_virtual_specified = FS_explicit_specified = false;
+    FS_virtualLoc = FS_explicitLoc = SourceLocation();
+  }
+
   assert(!TypeSpecOwned || isDeclRep((TST) TypeSpecType));
- 
+
   // Okay, now we can infer the real type.
 
   // TODO: return "auto function" and other bad things based on the real type.
@@ -1142,7 +1169,7 @@ void DeclSpec::Finish(DiagnosticsEngine &D, Preprocessor &PP, const PrintingPoli
 
 bool DeclSpec::isMissingDeclaratorOk() {
   TST tst = getTypeSpecType();
-  return isDeclRep(tst) && getRepAsDecl() != 0 &&
+  return isDeclRep(tst) && getRepAsDecl() != nullptr &&
     StorageClassSpec != DeclSpec::SCS_typedef;
 }
 

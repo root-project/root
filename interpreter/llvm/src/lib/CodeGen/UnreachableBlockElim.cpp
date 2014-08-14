@@ -28,26 +28,26 @@
 #include "llvm/CodeGen/MachineLoopInfo.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/IR/CFG.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Type.h"
 #include "llvm/Pass.h"
-#include "llvm/Support/CFG.h"
 #include "llvm/Target/TargetInstrInfo.h"
 using namespace llvm;
 
 namespace {
   class UnreachableBlockElim : public FunctionPass {
-    virtual bool runOnFunction(Function &F);
+    bool runOnFunction(Function &F) override;
   public:
     static char ID; // Pass identification, replacement for typeid
     UnreachableBlockElim() : FunctionPass(ID) {
       initializeUnreachableBlockElimPass(*PassRegistry::getPassRegistry());
     }
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.addPreserved<DominatorTreeWrapperPass>();
     }
   };
@@ -95,8 +95,8 @@ bool UnreachableBlockElim::runOnFunction(Function &F) {
 
 namespace {
   class UnreachableMachineBlockElim : public MachineFunctionPass {
-    virtual bool runOnMachineFunction(MachineFunction &F);
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const;
+    bool runOnMachineFunction(MachineFunction &F) override;
+    void getAnalysisUsage(AnalysisUsage &AU) const override;
     MachineModuleInfo *MMI;
   public:
     static char ID; // Pass identification, replacement for typeid

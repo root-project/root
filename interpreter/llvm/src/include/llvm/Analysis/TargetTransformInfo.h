@@ -59,11 +59,6 @@ protected:
   /// group's stack.
   void pushTTIStack(Pass *P);
 
-  /// All pass subclasses must in their finalizePass routine call popTTIStack
-  /// to update the pointers tracking the previous TTI instance in the analysis
-  /// group's stack, and the top of the analysis group's stack.
-  void popTTIStack();
-
   /// All pass subclasses must call TargetTransformInfo::getAnalysisUsage.
   virtual void getAnalysisUsage(AnalysisUsage &AU) const;
 
@@ -110,7 +105,7 @@ public:
   /// The returned cost is defined in terms of \c TargetCostConstants, see its
   /// comments for a detailed explanation of the cost values.
   virtual unsigned getOperationCost(unsigned Opcode, Type *Ty,
-                                    Type *OpTy = 0) const;
+                                    Type *OpTy = nullptr) const;
 
   /// \brief Estimate the cost of a GEP operation when lowered.
   ///
@@ -203,11 +198,23 @@ public:
     /// The cost threshold for the unrolled loop when optimizing for size (set
     /// to UINT_MAX to disable).
     unsigned OptSizeThreshold;
+    /// The cost threshold for the unrolled loop, like Threshold, but used
+    /// for partial/runtime unrolling (set to UINT_MAX to disable).
+    unsigned PartialThreshold;
+    /// The cost threshold for the unrolled loop when optimizing for size, like
+    /// OptSizeThreshold, but used for partial/runtime unrolling (set to UINT_MAX
+    /// to disable).
+    unsigned PartialOptSizeThreshold;
     /// A forced unrolling factor (the number of concatenated bodies of the
     /// original loop in the unrolled loop body). When set to 0, the unrolling
     /// transformation will select an unrolling factor based on the current cost
     /// threshold and other factors.
     unsigned Count;
+    // Set the maximum unrolling factor. The unrolling factor may be selected
+    // using the appropriate cost threshold, but may not exceed this number
+    // (set to UINT_MAX to disable). This does not apply in cases where the
+    // loop is being fully unrolled.
+    unsigned MaxCount;
     /// Allow partial unrolling (unrolling of loops to expand the size of the
     /// loop body, not only to eliminate small constant-trip-count loops).
     bool     Partial;
@@ -302,10 +309,10 @@ public:
   /// \brief Return the expected cost of materialization for the given integer
   /// immediate of the specified type for a given instruction. The cost can be
   /// zero if the immediate can be folded into the specified instruction.
-  virtual unsigned getIntImmCost(unsigned Opcode, const APInt &Imm,
+  virtual unsigned getIntImmCost(unsigned Opc, unsigned Idx, const APInt &Imm,
                                  Type *Ty) const;
-  virtual unsigned getIntImmCost(Intrinsic::ID IID, const APInt &Imm,
-                                 Type *Ty) const;
+  virtual unsigned getIntImmCost(Intrinsic::ID IID, unsigned Idx,
+                                 const APInt &Imm, Type *Ty) const;
   /// @}
 
   /// \name Vector Target Information
@@ -315,6 +322,7 @@ public:
   enum ShuffleKind {
     SK_Broadcast,       ///< Broadcast element 0 to all other elements.
     SK_Reverse,         ///< Reverse the order of the vector.
+    SK_Alternate,       ///< Choose alternate elements from vector.
     SK_InsertSubvector, ///< InsertSubvector. Index indicates start offset.
     SK_ExtractSubvector ///< ExtractSubvector Index indicates start offset.
   };
@@ -349,7 +357,7 @@ public:
   /// The index and subtype parameters are used by the subvector insertion and
   /// extraction shuffle kinds.
   virtual unsigned getShuffleCost(ShuffleKind Kind, Type *Tp, int Index = 0,
-                                  Type *SubTp = 0) const;
+                                  Type *SubTp = nullptr) const;
 
   /// \return The expected cost of cast instructions, such as bitcast, trunc,
   /// zext, etc.
@@ -362,7 +370,7 @@ public:
 
   /// \returns The expected cost of compare and select instructions.
   virtual unsigned getCmpSelInstrCost(unsigned Opcode, Type *ValTy,
-                                      Type *CondTy = 0) const;
+                                      Type *CondTy = nullptr) const;
 
   /// \return The expected cost of vector Insert and Extract.
   /// Use -1 to indicate that there is no information on the index value.

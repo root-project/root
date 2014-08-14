@@ -87,9 +87,10 @@ Here's the short story for getting up and running quickly with LLVM:
    * ``make check-all`` --- This run the regression tests to ensure everything
      is in working order.
 
-   * It is also possible to use CMake instead of the makefiles. With CMake it is
-     possible to generate project files for several IDEs: Xcode, Eclipse CDT4,
-     CodeBlocks, Qt-Creator (use the CodeBlocks generator), KDevelop3.
+   * It is also possible to use `CMake <CMake.html>`_ instead of the makefiles.
+     With CMake it is possible to generate project files for several IDEs:
+     Xcode, Eclipse CDT4, CodeBlocks, Qt-Creator (use the CodeBlocks
+     generator), KDevelop3.
 
    * If you get an "internal compiler error (ICE)" or test failures, see
      `below`.
@@ -182,7 +183,7 @@ Package                                                     Version      Notes
    #. If you want to make changes to the configure scripts, you will need GNU
       autoconf (2.60), and consequently, GNU M4 (version 1.4 or higher). You
       will also need automake (1.9.6). We only use aclocal from that package.
-   #. Optional, adds compression/uncompression capabilities to selected LLVM
+   #. Optional, adds compression / uncompression capabilities to selected LLVM
       tools.
 
 Additionally, your compilation host is expected to have the usual plethora of
@@ -275,6 +276,89 @@ contained `a bug <http://gcc.gnu.org/bugzilla/show_bug.cgi?id=53841>`__ which
 causes Clang to refuse to compile condition_variable header file.  At the time
 of writing, this breaks LLD build.
 
+Getting a Modern Host C++ Toolchain
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This section mostly applies to Linux and older BSDs. On Mac OS X, you should
+have a sufficiently modern Xcode, or you will likely need to upgrade until you
+do. On Windows, just use Visual Studio 2012 as the host compiler, it is
+explicitly supported and widely available. FreeBSD 10.0 and newer have a modern
+Clang as the system compiler.
+
+However, some Linux distributions and some other or older BSDs sometimes have
+extremely old versions of GCC. These steps attempt to help you upgrade you
+compiler even on such a system. However, if at all possible, we encourage you
+to use a recent version of a distribution with a modern system compiler that
+meets these requirements. Note that it is tempting to to install a prior
+version of Clang and libc++ to be the host compiler, however libc++ was not
+well tested or set up to build on Linux until relatively recently. As
+a consequence, this guide suggests just using libstdc++ and a modern GCC as the
+initial host in a bootstrap, and then using Clang (and potentially libc++).
+
+The first step is to get a recent GCC toolchain installed. The most common
+distribution on which users have struggled with the version requirements is
+Ubuntu Precise, 12.04 LTS. For this distribution, one easy option is to install
+the `toolchain testing PPA`_ and use it to install a modern GCC. There is
+a really nice discussions of this on the `ask ubuntu stack exchange`_. However,
+not all users can use PPAs and there are many other distributions, so it may be
+necessary (or just useful, if you're here you *are* doing compiler development
+after all) to build and install GCC from source. It is also quite easy to do
+these days.
+
+.. _toolchain testing PPA:
+  https://launchpad.net/~ubuntu-toolchain-r/+archive/test
+.. _ask ubuntu stack exchange:
+  http://askubuntu.com/questions/271388/how-to-install-gcc-4-8-in-ubuntu-12-04-from-the-terminal
+
+Easy steps for installing GCC 4.8.2:
+
+.. code-block:: console
+
+  % wget ftp://ftp.gnu.org/gnu/gcc/gcc-4.8.2/gcc-4.8.2.tar.bz2
+  % tar -xvjf gcc-4.8.2.tar.bz2
+  % cd gcc-4.8.2
+  % ./contrib/download_prerequisites
+  % cd ..
+  % mkdir gcc-4.8.2-build
+  % cd gcc-4.8.2-build
+  % $PWD/../gcc-4.8.2/configure --prefix=$HOME/toolchains --enable-languages=c,c++
+  % make -j$(nproc)
+  % make install
+
+For more details, check out the excellent `GCC wiki entry`_, where I got most
+of this information from.
+
+.. _GCC wiki entry:
+  http://gcc.gnu.org/wiki/InstallingGCC
+
+Once you have a GCC toolchain, configure your build of LLVM to use the new
+toolchain for your host compiler and C++ standard library. Because the new
+version of libstdc++ is not on the system library search path, you need to pass
+extra linker flags so that it can be found at link time (``-L``) and at runtime
+(``-rpath``). If you are using CMake, this invocation should produce working
+binaries:
+
+.. code-block:: console
+
+  % mkdir build
+  % cd build
+  % CC=$HOME/toolchains/bin/gcc CXX=$HOME/toolchains/bin/g++ \
+    cmake .. -DCMAKE_CXX_LINK_FLAGS="-Wl,-rpath,$HOME/toolchains/lib64 -L$HOME/toolchains/lib64"
+
+If you fail to set rpath, most LLVM binaries will fail on startup with a message
+from the loader similar to ``libstdc++.so.6: version `GLIBCXX_3.4.20' not
+found``. This means you need to tweak the -rpath linker flag.
+
+When you build Clang, you will need to give *it* access to modern C++11
+standard library in order to use it as your new host in part of a bootstrap.
+There are two easy ways to do this, either build (and install) libc++ along
+with Clang and then use it with the ``-stdlib=libc++`` compile and link flag,
+or install Clang into the same prefix (``$HOME/toolchains`` above) as GCC.
+Clang will look within its own prefix for libstdc++ and use it if found. You
+can also add an explicit prefix for Clang to look in for a GCC toolchain with
+the ``--gcc-toolchain=/opt/my/gcc/prefix`` flag, passing it to both compile and
+link commands when using your just-built-Clang to bootstrap.
+
 .. _Getting Started with LLVM:
 
 Getting Started with LLVM
@@ -363,6 +447,7 @@ you can checkout it from the '``tags``' directory (instead of '``trunk``'). The
 following releases are located in the following subdirectories of the '``tags``'
 directory:
 
+* Release 3.4: **RELEASE_34/final**
 * Release 3.3: **RELEASE_33/final**
 * Release 3.2: **RELEASE_32/final**
 * Release 3.1: **RELEASE_31/final**
@@ -609,7 +694,7 @@ The following options can be used to set or enable LLVM specific options:
 
   Enables optimized compilation (debugging symbols are removed and GCC
   optimization flags are enabled). Note that this is the default setting if you
-  are using the LLVM distribution. The default behavior of an Subversion
+  are using the LLVM distribution. The default behavior of a Subversion
   checkout is to use an unoptimized build (also known as a debug build).
 
 ``--enable-debug-runtime``
@@ -627,14 +712,12 @@ The following options can be used to set or enable LLVM specific options:
 
   Controls which targets will be built and linked into llc. The default value
   for ``target_options`` is "all" which builds and links all available targets.
-  The value "host-only" can be specified to build only a native compiler (no
-  cross-compiler targets available). The "native" target is selected as the
-  target of the build host. You can also specify a comma separated list of
-  target names that you want available in llc. The target names use all lower
-  case. The current set of targets is:
+  The "host" target is selected as the target of the build host. You can also
+  specify a comma separated list of target names that you want available in llc.
+  The target names use all lower case. The current set of targets is:
 
-    ``arm, cpp, hexagon, mips, mipsel, msp430, powerpc, ptx, sparc, spu,
-    systemz, x86, x86_64, xcore``.
+    ``aarch64, arm, arm64, cpp, hexagon, mips, mipsel, mips64, mips64el, msp430,
+    powerpc, nvptx, r600, sparc, systemz, x86, x86_64, xcore``.
 
 ``--enable-doxygen``
 
@@ -642,13 +725,6 @@ The following options can be used to set or enable LLVM specific options:
   documentation from the source code. This is disabled by default because
   generating the documentation can take a long time and producess 100s of
   megabytes of output.
-
-``--with-udis86``
-
-  LLVM can use external disassembler library for various purposes (now it's used
-  only for examining code produced by JIT). This option will enable usage of
-  `udis86 <http://udis86.sourceforge.net/>`_ x86 (both 32 and 64 bits)
-  disassembler library.
 
 To configure LLVM, follow these steps:
 
@@ -672,7 +748,7 @@ builds:
 
 Debug Builds
 
-  These builds are the default when one is using an Subversion checkout and
+  These builds are the default when one is using a Subversion checkout and
   types ``gmake`` (unless the ``--enable-optimized`` option was used during
   configuration).  The build system will compile the tools and libraries with
   debugging information.  To get a Debug Build using the LLVM distribution the
@@ -1007,8 +1083,7 @@ different `tools`_.
 
 This directory contains projects that are not strictly part of LLVM but are
 shipped with LLVM. This is also the directory where you should create your own
-LLVM-based projects. See ``llvm/projects/sample`` for an example of how to set
-up your own project.
+LLVM-based projects.
 
 ``llvm/runtime``
 ----------------

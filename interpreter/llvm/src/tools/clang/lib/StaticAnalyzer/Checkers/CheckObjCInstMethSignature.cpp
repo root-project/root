@@ -93,10 +93,7 @@ static void CheckObjCInstMethSignature(const ObjCImplementationDecl *ID,
   MapTy IMeths;
   unsigned NumMethods = 0;
 
-  for (ObjCImplementationDecl::instmeth_iterator I=ID->instmeth_begin(),
-       E=ID->instmeth_end(); I!=E; ++I) {
-
-    ObjCMethodDecl *M = *I;
+  for (auto *M : ID->instance_methods()) {
     IMeths[M->getSelector()] = M;
     ++NumMethods;
   }
@@ -104,20 +101,17 @@ static void CheckObjCInstMethSignature(const ObjCImplementationDecl *ID,
   // Now recurse the class hierarchy chain looking for methods with the
   // same signatures.
   while (C && NumMethods) {
-    for (ObjCInterfaceDecl::instmeth_iterator I=C->instmeth_begin(),
-         E=C->instmeth_end(); I!=E; ++I) {
-
-      ObjCMethodDecl *M = *I;
+    for (const auto *M : C->instance_methods()) {
       Selector S = M->getSelector();
 
       MapTy::iterator MI = IMeths.find(S);
 
-      if (MI == IMeths.end() || MI->second == 0)
+      if (MI == IMeths.end() || MI->second == nullptr)
         continue;
 
       --NumMethods;
       ObjCMethodDecl *MethDerived = MI->second;
-      MI->second = 0;
+      MI->second = nullptr;
 
       CompareReturnTypes(MethDerived, M, BR, Ctx, ID, Checker);
     }

@@ -108,5 +108,30 @@ namespace Test {
 extern "C" int printf(const char *format, ...);
 // CHECK: FunctionDecl{{.*}}printf
 // CHECK-NEXT: ParmVarDecl{{.*}}format{{.*}}'const char *'
-// CHECK-NEXT: FormatAttr{{.*}}printf 1 2 Implicit
+// CHECK-NEXT: FormatAttr{{.*}}Implicit printf 1 2
+
+alignas(8) extern int x;
+extern int x;
+// CHECK: VarDecl{{.*}} x 'int'
+// CHECK: VarDecl{{.*}} x 'int'
+// CHECK-NEXT: AlignedAttr{{.*}} Inherited
+}
+
+int __attribute__((cdecl)) TestOne(void), TestTwo(void);
+// CHECK: FunctionDecl{{.*}}TestOne{{.*}}__attribute__((cdecl))
+// CHECK: FunctionDecl{{.*}}TestTwo{{.*}}__attribute__((cdecl))
+
+void func() {
+  auto Test = []() __attribute__((no_thread_safety_analysis)) {};
+  // CHECK: CXXMethodDecl{{.*}}operator() 'void (void) const'
+  // CHECK: NoThreadSafetyAnalysisAttr
+
+  // Because GNU's noreturn applies to the function type, and this lambda does
+  // not have a capture list, the call operator and the function pointer
+  // conversion should both be noreturn, but the method should not contain a
+  // NoReturnAttr because the attribute applied to the type.
+  auto Test2 = []() __attribute__((noreturn)) { while(1); };
+  // CHECK: CXXMethodDecl{{.*}}operator() 'void (void) __attribute__((noreturn)) const'
+  // CHECK-NOT: NoReturnAttr
+  // CHECK: CXXConversionDecl{{.*}}operator void (*)() __attribute__((noreturn))
 }

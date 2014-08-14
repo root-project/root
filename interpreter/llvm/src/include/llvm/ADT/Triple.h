@@ -46,7 +46,8 @@ public:
   enum ArchType {
     UnknownArch,
 
-    arm,        // ARM: arm, armv.*, xscale
+    arm,        // ARM (little endian): arm, armv.*, xscale
+    armeb,      // ARM (big endian): armeb
     aarch64,    // AArch64 (little endian): aarch64
     aarch64_be, // AArch64 (big endian): aarch64_be
     hexagon,    // Hexagon: hexagon
@@ -63,7 +64,8 @@ public:
     sparcv9,    // Sparcv9: Sparcv9
     systemz,    // SystemZ: s390x
     tce,        // TCE (http://tce.cs.tut.fi/): tce
-    thumb,      // Thumb: thumb, thumbv.*
+    thumb,      // Thumb (little endian): thumb, thumbv.*
+    thumbeb,    // Thumb (big endian): thumbeb
     x86,        // X86: i[3-9]86
     x86_64,     // X86-64: amd64, x86_64
     xcore,      // XCore: xcore
@@ -72,7 +74,23 @@ public:
     le32,       // le32: generic little-endian 32-bit CPU (PNaCl / Emscripten)
     amdil,      // amdil: amd IL
     spir,       // SPIR: standard portable IR for OpenCL 32-bit version
-    spir64      // SPIR: standard portable IR for OpenCL 64-bit version
+    spir64,     // SPIR: standard portable IR for OpenCL 64-bit version
+    kalimba     // Kalimba: generic kalimba
+  };
+  enum SubArchType {
+    NoSubArch,
+
+    ARMSubArch_v8,
+    ARMSubArch_v7,
+    ARMSubArch_v7em,
+    ARMSubArch_v7m,
+    ARMSubArch_v7s,
+    ARMSubArch_v6,
+    ARMSubArch_v6m,
+    ARMSubArch_v6t2,
+    ARMSubArch_v5,
+    ARMSubArch_v5te,
+    ARMSubArch_v4t
   };
   enum VendorType {
     UnknownVendor,
@@ -84,7 +102,10 @@ public:
     BGQ,
     Freescale,
     IBM,
-    NVIDIA
+    ImaginationTechnologies,
+    MipsTechnologies,
+    NVIDIA,
+    CSR
   };
   enum OSType {
     UnknownOS,
@@ -124,9 +145,18 @@ public:
     CODE16,
     EABI,
     EABIHF,
-    MachO,
     Android,
-    ELF
+
+    MSVC,
+    Itanium,
+    Cygnus,
+  };
+  enum ObjectFormatType {
+    UnknownObjectFormat,
+
+    COFF,
+    ELF,
+    MachO,
   };
 
 private:
@@ -134,6 +164,9 @@ private:
 
   /// The parsed arch type.
   ArchType Arch;
+
+  /// The parsed subarchitecture type.
+  SubArchType SubArch;
 
   /// The parsed vendor type.
   VendorType Vendor;
@@ -144,13 +177,16 @@ private:
   /// The parsed Environment type.
   EnvironmentType Environment;
 
+  /// The object format type.
+  ObjectFormatType ObjectFormat;
+
 public:
   /// @name Constructors
   /// @{
 
   /// \brief Default constructor is the same as an empty string and leaves all
   /// triple fields unknown.
-  Triple() : Data(), Arch(), Vendor(), OS(), Environment() {}
+  Triple() : Data(), Arch(), Vendor(), OS(), Environment(), ObjectFormat() {}
 
   explicit Triple(const Twine &Str);
   Triple(const Twine &ArchStr, const Twine &VendorStr, const Twine &OSStr);
@@ -174,6 +210,9 @@ public:
   /// getArch - Get the parsed architecture type of this triple.
   ArchType getArch() const { return Arch; }
 
+  /// getSubArch - get the parsed subarchitecture type for this triple.
+  SubArchType getSubArch() const { return SubArch; }
+
   /// getVendor - Get the parsed vendor type of this triple.
   VendorType getVendor() const { return Vendor; }
 
@@ -188,6 +227,9 @@ public:
 
   /// getEnvironment - Get the parsed environment type of this triple.
   EnvironmentType getEnvironment() const { return Environment; }
+
+  /// getFormat - Get the object format for this triple.
+  ObjectFormatType getObjectFormat() const { return ObjectFormat; }
 
   /// getOSVersion - Parse the version number from the OS name component of the
   /// triple, if present.
@@ -317,14 +359,42 @@ public:
     return isMacOSX() || isiOS();
   }
 
+  bool isOSFreeBSD() const {
+    return getOS() == Triple::FreeBSD;
+  }
+
+  bool isWindowsMSVCEnvironment() const {
+    return getOS() == Triple::Win32 &&
+           (getEnvironment() == Triple::UnknownEnvironment ||
+            getEnvironment() == Triple::MSVC);
+  }
+
+  bool isKnownWindowsMSVCEnvironment() const {
+    return getOS() == Triple::Win32 && getEnvironment() == Triple::MSVC;
+  }
+
+  bool isWindowsItaniumEnvironment() const {
+    return getOS() == Triple::Win32 && getEnvironment() == Triple::Itanium;
+  }
+
+  bool isWindowsCygwinEnvironment() const {
+    return getOS() == Triple::Cygwin ||
+           (getOS() == Triple::Win32 && getEnvironment() == Triple::Cygnus);
+  }
+
+  bool isWindowsGNUEnvironment() const {
+    return getOS() == Triple::MinGW32 ||
+           (getOS() == Triple::Win32 && getEnvironment() == Triple::GNU);
+  }
+
   /// \brief Tests for either Cygwin or MinGW OS
   bool isOSCygMing() const {
-    return getOS() == Triple::Cygwin || getOS() == Triple::MinGW32;
+    return isWindowsCygwinEnvironment() || isWindowsGNUEnvironment();
   }
 
   /// \brief Is this a "Windows" OS targeting a "MSVCRT.dll" environment.
   bool isOSMSVCRT() const {
-    return getOS() == Triple::Win32 || getOS() == Triple::MinGW32;
+    return isWindowsMSVCEnvironment() || isWindowsGNUEnvironment();
   }
 
   /// \brief Tests whether the OS is Windows.
@@ -344,18 +414,17 @@ public:
 
   /// \brief Tests whether the OS uses the ELF binary format.
   bool isOSBinFormatELF() const {
-    return !isOSBinFormatMachO() && !isOSBinFormatCOFF();
+    return getObjectFormat() == Triple::ELF;
   }
 
   /// \brief Tests whether the OS uses the COFF binary format.
   bool isOSBinFormatCOFF() const {
-    return getEnvironment() != Triple::ELF &&
-           getEnvironment() != Triple::MachO && isOSWindows();
+    return getObjectFormat() == Triple::COFF;
   }
 
   /// \brief Tests whether the environment is MachO.
   bool isOSBinFormatMachO() const {
-    return getEnvironment() == Triple::MachO || isOSDarwin();
+    return getObjectFormat() == Triple::MachO;
   }
 
   /// @}
@@ -377,6 +446,9 @@ public:
   /// setEnvironment - Set the environment (fourth) component of the triple
   /// to a known type.
   void setEnvironment(EnvironmentType Kind);
+
+  /// setObjectFormat - Set the object file format
+  void setObjectFormat(ObjectFormatType Kind);
 
   /// setTriple - Set all components to the new triple \p Str.
   void setTriple(const Twine &Str);
@@ -401,10 +473,6 @@ public:
   /// environment components with a single string.
   void setOSAndEnvironmentName(StringRef Str);
 
-  /// getArchNameForAssembler - Get an architecture name that is understood by
-  /// the target assembler.
-  const char *getArchNameForAssembler();
-
   /// @}
   /// @name Helpers to build variants of a particular triple.
   /// @{
@@ -424,6 +492,12 @@ public:
   /// \returns A new triple with a 64-bit architecture or an unknown
   ///          architecture if no such variant can be found.
   llvm::Triple get64BitArchVariant() const;
+
+  /// Get the (LLVM) name of the minimum ARM CPU for the arch we are targeting.
+  ///
+  /// \param Arch the architecture name (e.g., "armv7s"). If it is an empty
+  /// string then the triple's arch name is used.
+  const char* getARMCPUForArch(StringRef Arch = StringRef()) const;
 
   /// @}
   /// @name Static helpers for IDs.

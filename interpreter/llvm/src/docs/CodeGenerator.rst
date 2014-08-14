@@ -70,7 +70,7 @@ different pieces of this will be useful to you.  In any case, you should be
 familiar with the `target description`_ and `machine code representation`_
 classes.  If you want to add a backend for a new target, you will need to
 `implement the target description`_ classes for your new target and understand
-the `LLVM code representation <LangRef.html>`_.  If you are interested in
+the :doc:`LLVM code representation <LangRef>`.  If you are interested in
 implementing a new `code generation algorithm`_, it should only depend on the
 target-description and machine code representation classes, ensuring that it is
 portable.
@@ -172,7 +172,7 @@ architecture.  These target descriptions often have a large amount of common
 information (e.g., an ``add`` instruction is almost identical to a ``sub``
 instruction).  In order to allow the maximum amount of commonality to be
 factored out, the LLVM code generator uses the
-:doc:`TableGen <TableGenFundamentals>` tool to describe big chunks of the
+:doc:`TableGen/index` tool to describe big chunks of the
 target machine, which allows the use of domain-specific and target-specific
 abstractions to reduce the amount of repetition.
 
@@ -277,7 +277,7 @@ an associated register class.  When the register allocator runs, it replaces
 virtual registers with a physical register in the set.
 
 The target-specific implementations of these classes is auto-generated from a
-`TableGen <TableGenFundamentals.html>`_ description of the register file.
+:doc:`TableGen/index` description of the register file.
 
 .. _TargetInstrInfo:
 
@@ -1228,7 +1228,7 @@ used. Each virtual register can only be mapped to physical registers of a
 particular class. For instance, in the X86 architecture, some virtuals can only
 be allocated to 8 bit registers.  A register class is described by
 ``TargetRegisterClass`` objects.  To discover if a virtual register is
-compatible with a given physical, this code can be used:</p>
+compatible with a given physical, this code can be used:
 
 .. code-block:: c++
 
@@ -1683,7 +1683,7 @@ ones supported by the matcher), through a Requires clause:
   def : MnemonicAlias<"pushf", "pushfq">, Requires<[In64BitMode]>;
   def : MnemonicAlias<"pushf", "pushfl">, Requires<[In32BitMode]>;
 
-In this example, the mnemonic gets mapped into different a new one depending on
+In this example, the mnemonic gets mapped into a different one depending on
 the current instruction set.
 
 Instruction Aliases
@@ -1993,7 +1993,7 @@ Tail Calls
 
 This box indicates whether the target supports guaranteed tail calls.  These are
 calls marked "`tail <LangRef.html#i_call>`_" and use the fastcc calling
-convention.  Please see the `tail call section more more details`_.
+convention.  Please see the `tail call section`_ for more details.
 
 .. _feat_segstacks:
 
@@ -2011,7 +2011,7 @@ Basic support exists on the X86 backend. Currently vararg doesn't work and the
 object files are not marked the way the gold linker expects, but simple Go
 programs can be built by dragonegg.
 
-.. _tail call section more more details:
+.. _tail call section:
 
 Tail call optimization
 ----------------------
@@ -2027,7 +2027,7 @@ supported on x86/x86-64 and PowerPC. It is performed if:
 
 * Option ``-tailcallopt`` is enabled.
 
-* Platform specific constraints are met.
+* Platform-specific constraints are met.
 
 x86/x86-64 constraints:
 
@@ -2144,10 +2144,6 @@ The following target-specific calling conventions are known to backend:
 * **x86_ThisCall** --- Similar to X86_StdCall. Passes first argument in ECX,
   others via stack. Callee is responsible for stack cleaning. This convention is
   used by MSVC by default for methods in its ABI (CC ID = 70).
-
-* **X86_CDeclMethod** --- Identical to the standard x86_32 C calling convention,
-  except that an sret paramter, if present, is placed on the stack after the
-  second parameter, which must an integer or pointer.  (CC ID = 80).
 
 .. _X86 addressing mode:
 

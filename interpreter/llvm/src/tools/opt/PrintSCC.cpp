@@ -27,9 +27,9 @@
 
 #include "llvm/ADT/SCCIterator.h"
 #include "llvm/Analysis/CallGraph.h"
+#include "llvm/IR/CFG.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Pass.h"
-#include "llvm/Support/CFG.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
 
@@ -37,11 +37,11 @@ namespace {
   struct CFGSCC : public FunctionPass {
     static char ID;  // Pass identification, replacement for typeid
     CFGSCC() : FunctionPass(ID) {}
-    bool runOnFunction(Function& func);
+    bool runOnFunction(Function& func) override;
 
-    void print(raw_ostream &O, const Module* = 0) const { }
+    void print(raw_ostream &O, const Module* = nullptr) const override { }
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesAll();
     }
   };
@@ -51,12 +51,12 @@ namespace {
     CallGraphSCC() : ModulePass(ID) {}
 
     // run - Print out SCCs in the call graph for the specified module.
-    bool runOnModule(Module &M);
+    bool runOnModule(Module &M) override;
 
-    void print(raw_ostream &O, const Module* = 0) const { }
+    void print(raw_ostream &O, const Module* = nullptr) const override { }
 
     // getAnalysisUsage - This pass requires the CallGraph.
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesAll();
       AU.addRequired<CallGraphWrapperPass>();
     }
@@ -75,7 +75,7 @@ bool CFGSCC::runOnFunction(Function &F) {
   unsigned sccNum = 0;
   errs() << "SCCs for Function " << F.getName() << " in PostOrder:";
   for (scc_iterator<Function*> SCCI = scc_begin(&F); !SCCI.isAtEnd(); ++SCCI) {
-    std::vector<BasicBlock*> &nextSCC = *SCCI;
+    const std::vector<BasicBlock *> &nextSCC = *SCCI;
     errs() << "\nSCC #" << ++sccNum << " : ";
     for (std::vector<BasicBlock*>::const_iterator I = nextSCC.begin(),
            E = nextSCC.end(); I != E; ++I)

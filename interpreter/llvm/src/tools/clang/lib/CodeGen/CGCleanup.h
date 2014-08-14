@@ -96,7 +96,7 @@ public:
   enum Kind { Cleanup, Catch, Terminate, Filter };
 
   EHScope(Kind kind, EHScopeStack::stable_iterator enclosingEHScope)
-    : CachedLandingPad(0), CachedEHDispatchBlock(0),
+    : CachedLandingPad(nullptr), CachedEHDispatchBlock(nullptr),
       EnclosingEHScope(enclosingEHScope) {
     CommonBits.Kind = kind;
   }
@@ -145,12 +145,12 @@ public:
   struct Handler {
     /// A type info value, or null (C++ null, not an LLVM null pointer)
     /// for a catch-all.
-    llvm::Value *Type;
+    llvm::Constant *Type;
 
     /// The catch handler for this type.
     llvm::BasicBlock *Block;
 
-    bool isCatchAll() const { return Type == 0; }
+    bool isCatchAll() const { return Type == nullptr; }
   };
 
 private:
@@ -180,10 +180,10 @@ public:
   }
 
   void setCatchAllHandler(unsigned I, llvm::BasicBlock *Block) {
-    setHandler(I, /*catchall*/ 0, Block);
+    setHandler(I, /*catchall*/ nullptr, Block);
   }
 
-  void setHandler(unsigned I, llvm::Value *Type, llvm::BasicBlock *Block) {
+  void setHandler(unsigned I, llvm::Constant *Type, llvm::BasicBlock *Block) {
     assert(I < getNumHandlers());
     getHandlers()[I].Type = Type;
     getHandlers()[I].Block = Block;
@@ -268,7 +268,7 @@ public:
                  EHScopeStack::stable_iterator enclosingNormal,
                  EHScopeStack::stable_iterator enclosingEH)
     : EHScope(EHScope::Cleanup, enclosingEH), EnclosingNormal(enclosingNormal),
-      NormalBlock(0), ActiveFlag(0), ExtInfo(0) {
+      NormalBlock(nullptr), ActiveFlag(nullptr), ExtInfo(nullptr) {
     CleanupBits.IsNormalCleanup = isNormal;
     CleanupBits.IsEHCleanup = isEH;
     CleanupBits.IsActive = isActive;
@@ -455,7 +455,7 @@ class EHScopeStack::iterator {
   explicit iterator(char *Ptr) : Ptr(Ptr) {}
 
 public:
-  iterator() : Ptr(0) {}
+  iterator() : Ptr(nullptr) {}
 
   EHScope *get() const { 
     return reinterpret_cast<EHScope*>(Ptr);

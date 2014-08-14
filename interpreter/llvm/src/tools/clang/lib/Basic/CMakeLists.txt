@@ -4,6 +4,7 @@ set(LLVM_LINK_COMPONENTS
   )
 
 add_clang_library(clangBasic
+  Attributes.cpp
   Builtins.cpp
   CharInfo.cpp
   Diagnostic.cpp
@@ -24,6 +25,7 @@ add_clang_library(clangBasic
   Version.cpp
   VersionTuple.cpp
   VirtualFileSystem.cpp
+  Warnings.cpp
   )
 
 # Determine Subversion revision.

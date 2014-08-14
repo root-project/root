@@ -17,12 +17,9 @@
 #define LLVM_CLANG_BASIC_IDENTIFIERTABLE_H
 
 #include "clang/Basic/LLVM.h"
-#include "clang/Basic/OperatorKinds.h"
 #include "clang/Basic/TokenKinds.h"
-#include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/Support/PointerLikeTypeTraits.h"
 #include <cassert>
 #include <string>
 
@@ -428,7 +425,7 @@ public:
   /// \brief Create the identifier table, populating it with info about the
   /// language keywords for the language specified by \p LangOpts.
   IdentifierTable(const LangOptions &LangOpts,
-                  IdentifierInfoLookup* externalLookup = 0);
+                  IdentifierInfoLookup* externalLookup = nullptr);
 
   /// \brief Set the external identifier lookup mechanism.
   void setExternalIdentifierLookup(IdentifierInfoLookup *IILookup) {
@@ -625,7 +622,7 @@ class Selector {
   IdentifierInfo *getAsIdentifierInfo() const {
     if (getIdentifierInfoFlag() < MultiArg)
       return reinterpret_cast<IdentifierInfo *>(InfoPtr & ~ArgFlags);
-    return 0;
+    return nullptr;
   }
   MultiKeywordSelector *getMultiKeywordSelector() const {
     return reinterpret_cast<MultiKeywordSelector *>(InfoPtr & ~ArgFlags);
@@ -813,6 +810,8 @@ struct DenseMapInfo<clang::Selector> {
 
 template <>
 struct isPodLike<clang::Selector> { static const bool value = true; };
+
+template <typename T> class PointerLikeTypeTraits;
 
 template<>
 class PointerLikeTypeTraits<clang::Selector> {

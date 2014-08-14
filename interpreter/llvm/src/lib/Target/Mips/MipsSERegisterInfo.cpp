@@ -24,9 +24,8 @@
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
-#include "llvm/CodeGen/ValueTypes.h"
-#include "llvm/DebugInfo.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Type.h"
 #include "llvm/Support/CommandLine.h"
@@ -39,6 +38,8 @@
 #include "llvm/Target/TargetOptions.h"
 
 using namespace llvm;
+
+#define DEBUG_TYPE "mips-reg-info"
 
 MipsSERegisterInfo::MipsSERegisterInfo(const MipsSubtarget &ST)
   : MipsRegisterInfo(ST) {}
@@ -188,7 +189,7 @@ void MipsSERegisterInfo::eliminateFI(MachineBasicBlock::iterator II,
           *static_cast<const MipsSEInstrInfo *>(
                MBB.getParent()->getTarget().getInstrInfo());
       unsigned Reg = TII.loadImmediate(Offset, MBB, II, DL,
-                                       OffsetBitSize == 16 ? &NewImm : NULL);
+                                       OffsetBitSize == 16 ? &NewImm : nullptr);
       BuildMI(MBB, II, DL, TII.get(ADDu), Reg).addReg(FrameReg)
         .addReg(Reg, RegState::Kill);
 

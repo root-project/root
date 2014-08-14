@@ -63,7 +63,7 @@ public:
   bool isLongLong;
   bool isFloat;       // 1.0f
   bool isImaginary;   // 1.0i
-  bool isMicrosoftInteger;  // Microsoft suffix extension i8, i16, i32, or i64.
+  uint8_t MicrosoftInteger;  // Microsoft suffix extension i8, i16, i32, or i64.
 
   bool isIntegerLiteral() const {
     return !saw_period && !saw_exponent;
@@ -196,15 +196,16 @@ class StringLiteralParser {
   unsigned UDSuffixToken;
   unsigned UDSuffixOffset;
 public:
-  StringLiteralParser(const Token *StringToks, unsigned NumStringToks,
+  StringLiteralParser(ArrayRef<Token> StringToks,
                       Preprocessor &PP, bool Complain = true);
-  StringLiteralParser(const Token *StringToks, unsigned NumStringToks,
+  StringLiteralParser(ArrayRef<Token> StringToks,
                       const SourceManager &sm, const LangOptions &features,
-                      const TargetInfo &target, DiagnosticsEngine *diags = 0)
+                      const TargetInfo &target,
+                      DiagnosticsEngine *diags = nullptr)
     : SM(sm), Features(features), Target(target), Diags(diags),
       MaxTokenLength(0), SizeBound(0), CharByteWidth(0), Kind(tok::unknown),
       ResultPtr(ResultBuf.data()), hadError(false), Pascal(false) {
-    init(StringToks, NumStringToks);
+    init(StringToks);
   }
     
 
@@ -248,7 +249,7 @@ public:
   }
 
 private:
-  void init(const Token *StringToks, unsigned NumStringToks);
+  void init(ArrayRef<Token> StringToks);
   bool CopyStringFragment(const Token &Tok, const char *TokBegin,
                           StringRef Fragment);
   void DiagnoseLexingError(SourceLocation Loc);

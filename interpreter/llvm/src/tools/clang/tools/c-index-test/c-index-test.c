@@ -1,9 +1,10 @@
 /* c-index-test.c */
 
+#include "clang/Config/config.h"
 #include "clang-c/Index.h"
 #include "clang-c/CXCompilationDatabase.h"
 #include "clang-c/BuildSystem.h"
-#include "llvm/Config/config.h"
+#include "clang-c/Documentation.h"
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -541,33 +542,23 @@ static void DumpCXComment(CXComment Comment) {
   printf("]");
 }
 
-typedef struct {
-  const char *CommentSchemaFile;
+static void ValidateCommentXML(const char *Str, const char *CommentSchemaFile) {
 #ifdef CLANG_HAVE_LIBXML
   xmlRelaxNGParserCtxtPtr RNGParser;
   xmlRelaxNGPtr Schema;
-#endif
-} CommentXMLValidationData;
-
-static void ValidateCommentXML(const char *Str,
-                               CommentXMLValidationData *ValidationData) {
-#ifdef CLANG_HAVE_LIBXML
   xmlDocPtr Doc;
   xmlRelaxNGValidCtxtPtr ValidationCtxt;
   int status;
 
-  if (!ValidationData || !ValidationData->CommentSchemaFile)
+  if (!CommentSchemaFile)
     return;
 
-  if (!ValidationData->RNGParser) {
-    ValidationData->RNGParser =
-        xmlRelaxNGNewParserCtxt(ValidationData->CommentSchemaFile);
-    ValidationData->Schema = xmlRelaxNGParse(ValidationData->RNGParser);
-  }
-  if (!ValidationData->RNGParser) {
+  RNGParser = xmlRelaxNGNewParserCtxt(CommentSchemaFile);
+  if (!RNGParser) {
     printf(" libXMLError");
     return;
   }
+  Schema = xmlRelaxNGParse(RNGParser);
 
   Doc = xmlParseDoc((const xmlChar *) Str);
 
@@ -577,7 +568,7 @@ static void ValidateCommentXML(const char *Str,
     return;
   }
 
-  ValidationCtxt = xmlRelaxNGNewValidCtxt(ValidationData->Schema);
+  ValidationCtxt = xmlRelaxNGNewValidCtxt(Schema);
   status = xmlRelaxNGValidateDoc(ValidationCtxt, Doc);
   if (!status)
     printf(" CommentXMLValid");
@@ -589,11 +580,13 @@ static void ValidateCommentXML(const char *Str,
 
   xmlRelaxNGFreeValidCtxt(ValidationCtxt);
   xmlFreeDoc(Doc);
+  xmlRelaxNGFree(Schema);
+  xmlRelaxNGFreeParserCtxt(RNGParser);
 #endif
 }
 
 static void PrintCursorComments(CXCursor Cursor,
-                                CommentXMLValidationData *ValidationData) {
+                                const char *CommentSchemaFile) {
   {
     CXString RawComment;
     const char *RawCommentCString;
@@ -624,7 +617,7 @@ static void PrintCursorComments(CXCursor Cursor,
         CXString XML;
         XML = clang_FullComment_getAsXML(Comment);
         PrintCXStringWithPrefix("FullCommentAsXML", XML);
-        ValidateCommentXML(clang_getCString(XML), ValidationData);
+        ValidateCommentXML(clang_getCString(XML), CommentSchemaFile);
         clang_disposeString(XML);
       }
 
@@ -646,8 +639,7 @@ static int lineCol_cmp(const void *p1, const void *p2) {
   return (int)lhs->col - (int)rhs->col;
 }
 
-static void PrintCursor(CXCursor Cursor,
-                        CommentXMLValidationData *ValidationData) {
+static void PrintCursor(CXCursor Cursor, const char *CommentSchemaFile) {
   CXTranslationUnit TU = clang_Cursor_getTranslationUnit(Cursor);
   if (clang_isInvalid(Cursor.kind)) {
     CXString ks = clang_getCursorKindSpelling(Cursor.kind);
@@ -768,6 +760,8 @@ static void PrintCursor(CXCursor Cursor,
       printf(" (static)");
     if (clang_CXXMethod_isVirtual(Cursor))
       printf(" (virtual)");
+    if (clang_CXXMethod_isConst(Cursor))
+      printf(" (const)");
     if (clang_CXXMethod_isPureVirtual(Cursor))
       printf(" (pure)");
     if (clang_Cursor_isVariadic(Cursor))
@@ -866,7 +860,7 @@ static void PrintCursor(CXCursor Cursor,
         PrintRange(RefNameRange, "RefName");
     }
 
-    PrintCursorComments(Cursor, ValidationData);
+    PrintCursorComments(Cursor, CommentSchemaFile);
 
     {
       unsigned PropAttrs = clang_Cursor_getObjCPropertyAttributes(Cursor, 0);
@@ -983,7 +977,6 @@ void PrintDiagnostic(CXDiagnostic Diagnostic) {
         PrintExtent(out, start_line, start_column, end_line, end_column);
         fprintf(out, " with \"%s\"\n", clang_getCString(insertion_text));
       }
-      break;
     }
     clang_disposeString(insertion_text);
   }
@@ -1036,7 +1029,7 @@ static void PrintCursorExtent(CXCursor C) {
 typedef struct {
   CXTranslationUnit TU;
   enum CXCursorKind *Filter;
-  CommentXMLValidationData ValidationData;
+  const char *CommentSchemaFile;
 } VisitorData;
 
 
@@ -1050,7 +1043,7 @@ enum CXChildVisitResult FilteredPrintingVisitor(CXCursor Cursor,
     clang_getSpellingLocation(Loc, 0, &line, &column, 0);
     printf("// %s: %s:%d:%d: ", FileCheckPrefix,
            GetCursorSource(Cursor), line, column);
-    PrintCursor(Cursor, &Data->ValidationData);
+    PrintCursor(Cursor, Data->CommentSchemaFile);
     PrintCursorExtent(Cursor);
     if (clang_isDeclaration(Cursor.kind)) {
       enum CX_CXXAccessSpecifier access = clang_getCXXAccessSpecifier(Cursor);
@@ -1120,7 +1113,7 @@ static enum CXChildVisitResult FunctionScanVisitor(CXCursor Cursor,
       } else if (Ref.kind != CXCursor_FunctionDecl) {
         printf("// %s: %s:%d:%d: ", FileCheckPrefix, GetCursorSource(Ref),
                curLine, curColumn);
-        PrintCursor(Ref, &Data->ValidationData);
+        PrintCursor(Ref, Data->CommentSchemaFile);
         printf("\n");
       }
     }
@@ -1293,6 +1286,13 @@ static enum CXChildVisitResult PrintType(CXCursor cursor, CXCursor p,
     }
     /* Print if this is a non-POD type. */
     printf(" [isPOD=%d]", clang_isPODType(T));
+    /* Print the pointee type. */
+    {
+      CXType PT = clang_getPointeeType(T);
+      if (PT.kind != CXType_Invalid) {
+        PrintTypeAndTypeKind(PT, " [pointeetype=%s] [pointeekind=%s]");
+      }
+    }
 
     printf("\n");
   }
@@ -1324,18 +1324,25 @@ static enum CXChildVisitResult PrintTypeSize(CXCursor cursor, CXCursor p,
   }
   /* Print the record field offset if applicable. */
   {
-    const char *FieldName = clang_getCString(clang_getCursorSpelling(cursor));
+    CXString FieldSpelling = clang_getCursorSpelling(cursor);
+    const char *FieldName = clang_getCString(FieldSpelling);
     /* recurse to get the root anonymous record parent */
     CXCursor Parent, Root;
-    if (clang_getCursorKind(cursor) == CXCursor_FieldDecl ) {
-      const char *RootParentName;
-      Root = Parent = p;
+    if (clang_getCursorKind(cursor) == CXCursor_FieldDecl) {
+      CXString RootParentSpelling;
+      const char *RootParentName = 0;
+      Parent = p;
       do {
+        if (RootParentName != 0)
+          clang_disposeString(RootParentSpelling);
+
         Root = Parent;
-        RootParentName = clang_getCString(clang_getCursorSpelling(Root));
+        RootParentSpelling = clang_getCursorSpelling(Root);
+        RootParentName = clang_getCString(RootParentSpelling);
         Parent = clang_getCursorSemanticParent(Root);
-      } while ( clang_getCursorType(Parent).kind == CXType_Record &&
-                !strcmp(RootParentName, "") );
+      } while (clang_getCursorType(Parent).kind == CXType_Record &&
+               !strcmp(RootParentName, ""));
+      clang_disposeString(RootParentSpelling);
       /* if RootParentName is "", record is anonymous. */
       {
         long long Offset = clang_Type_getOffsetOf(clang_getCursorType(Root),
@@ -1343,6 +1350,7 @@ static enum CXChildVisitResult PrintTypeSize(CXCursor cursor, CXCursor p,
         printf(" [offsetof=%lld]", Offset);
       }
     }
+    clang_disposeString(FieldSpelling);
   }
   /* Print if its a bitfield */
   {
@@ -1352,6 +1360,20 @@ static enum CXChildVisitResult PrintTypeSize(CXCursor cursor, CXCursor p,
   }
   printf("\n");
   return CXChildVisit_Recurse;
+}
+
+/******************************************************************************/
+/* Mangling testing.                                                          */
+/******************************************************************************/
+
+static enum CXChildVisitResult PrintMangledName(CXCursor cursor, CXCursor p,
+                                                CXClientData d) {
+  CXString MangledName;
+  PrintCursor(cursor, NULL);
+  MangledName = clang_Cursor_getMangling(cursor);
+  printf(" [mangled=%s]\n", clang_getCString(MangledName));
+  clang_disposeString(MangledName);
+  return CXChildVisit_Continue;
 }
 
 /******************************************************************************/
@@ -1412,11 +1434,7 @@ static int perform_test_load(CXIndex Idx, CXTranslationUnit TU,
 
     Data.TU = TU;
     Data.Filter = ck;
-    Data.ValidationData.CommentSchemaFile = CommentSchemaFile;
-#ifdef CLANG_HAVE_LIBXML
-    Data.ValidationData.RNGParser = NULL;
-    Data.ValidationData.Schema = NULL;
-#endif
+    Data.CommentSchemaFile = CommentSchemaFile;
     clang_visitChildren(clang_getTranslationUnitCursor(TU), Visitor, &Data);
   }
 
@@ -1783,7 +1801,8 @@ static int checkForErrors(CXTranslationUnit TU) {
   return 0;
 }
 
-void print_completion_string(CXCompletionString completion_string, FILE *file) {
+static void print_completion_string(CXCompletionString completion_string,
+                                    FILE *file) {
   int I, N;
 
   N = clang_getNumCompletionChunks(completion_string);
@@ -1817,9 +1836,8 @@ void print_completion_string(CXCompletionString completion_string, FILE *file) {
 
 }
 
-void print_completion_result(CXCompletionResult *completion_result,
-                             CXClientData client_data) {
-  FILE *file = (FILE *)client_data;
+static void print_completion_result(CXCompletionResult *completion_result,
+                                    FILE *file) {
   CXString ks = clang_getCursorKindSpelling(completion_result->CursorKind);
   unsigned annotationCount;
   enum CXCursorKind ParentKind;
@@ -2226,7 +2244,8 @@ static int inspect_cursor_at(int argc, const char **argv) {
         }
         clang_disposeString(Spelling);
         if (clang_Cursor_getObjCSelectorIndex(Cursor) != -1)
-          printf(" Selector index=%d",clang_Cursor_getObjCSelectorIndex(Cursor));
+          printf(" Selector index=%d",
+                 clang_Cursor_getObjCSelectorIndex(Cursor));
         if (clang_Cursor_isDynamicCall(Cursor))
           printf(" Dynamic-call");
         if (Cursor.kind == CXCursor_ObjCMessageExpr) {
@@ -2246,9 +2265,9 @@ static int inspect_cursor_at(int argc, const char **argv) {
             astFilename = clang_getFileName(astFile);
             name = clang_Module_getFullName(mod);
             numHeaders = clang_Module_getNumTopLevelHeaders(TU, mod);
-            printf(" ModuleName=%s (%s) Headers(%d):",
+            printf(" ModuleName=%s (%s) system=%d Headers(%d):",
                    clang_getCString(name), clang_getCString(astFilename),
-                   numHeaders);
+                   clang_Module_isSystem(mod), numHeaders);
             clang_disposeString(name);
             clang_disposeString(astFilename);
             for (i = 0; i < numHeaders; ++i) {
@@ -2526,6 +2545,11 @@ static void importedASTS_insert(ImportedASTFilesData *p, const char *file) {
   p->filenames[p->num_files++] = strdup(file);
 }
 
+typedef struct IndexDataStringList_ {
+  struct IndexDataStringList_ *next;
+  char data[1]; /* Dynamically sized. */
+} IndexDataStringList;
+
 typedef struct {
   const char *check_prefix;
   int first_check_printed;
@@ -2533,7 +2557,19 @@ typedef struct {
   int abort;
   const char *main_filename;
   ImportedASTFilesData *importedASTs;
+  IndexDataStringList *strings;
+  CXTranslationUnit TU;
 } IndexData;
+
+static void free_client_data(IndexData *index_data) {
+  IndexDataStringList *node = index_data->strings;
+  while (node) {
+    IndexDataStringList *next = node->next;
+    free(node);
+    node = next;
+  }
+  index_data->strings = NULL;
+}
 
 static void printCheck(IndexData *data) {
   if (data->check_prefix) {
@@ -2595,8 +2631,11 @@ static unsigned digitCount(unsigned val) {
   }
 }
 
-static CXIdxClientContainer makeClientContainer(const CXIdxEntityInfo *info,
+static CXIdxClientContainer makeClientContainer(CXClientData *client_data,
+                                                const CXIdxEntityInfo *info,
                                                 CXIdxLoc loc) {
+  IndexData *index_data;
+  IndexDataStringList *node;
   const char *name;
   char *newStr;
   CXIdxClientFile file;
@@ -2607,10 +2646,18 @@ static CXIdxClientContainer makeClientContainer(const CXIdxEntityInfo *info,
     name = "<anon-tag>";
 
   clang_indexLoc_getFileLocation(loc, &file, 0, &line, &column, 0);
-  /* FIXME: free these.*/
-  newStr = (char *)malloc(strlen(name) +
-                          digitCount(line) + digitCount(column) + 3);
+
+  node =
+      (IndexDataStringList *)malloc(sizeof(IndexDataStringList) + strlen(name) +
+                                    digitCount(line) + digitCount(column) + 2);
+  newStr = node->data;
   sprintf(newStr, "%s:%d:%d", name, line, column);
+
+  /* Remember string so it can be freed later. */
+  index_data = (IndexData *)client_data;
+  node->next = index_data->strings;
+  index_data->strings = node;
+
   return (CXIdxClientContainer)newStr;
 }
 
@@ -2781,6 +2828,7 @@ static CXIdxClientFile index_enteredMainFile(CXClientData client_data,
 static CXIdxClientFile index_ppIncludedFile(CXClientData client_data,
                                             const CXIdxIncludedFileInfo *info) {
   IndexData *index_data;
+  CXModule Mod;
   index_data = (IndexData *)client_data;
   printCheck(index_data);
 
@@ -2789,8 +2837,18 @@ static CXIdxClientFile index_ppIncludedFile(CXClientData client_data,
   printf(" | name: \"%s\"", info->filename);
   printf(" | hash loc: ");
   printCXIndexLoc(info->hashLoc, client_data);
-  printf(" | isImport: %d | isAngled: %d | isModule: %d\n",
+  printf(" | isImport: %d | isAngled: %d | isModule: %d",
          info->isImport, info->isAngled, info->isModuleImport);
+  
+  Mod = clang_getModuleForFile(index_data->TU, (CXFile)info->file);
+  if (Mod) {
+    CXString str = clang_Module_getFullName(Mod);
+    const char *cstr = clang_getCString(str);
+    printf(" | module: %s", cstr);
+    clang_disposeString(str);
+  }
+
+  printf("\n");
 
   return (CXIdxClientFile)info->file;
 }
@@ -2824,8 +2882,8 @@ static CXIdxClientFile index_importedASTFile(CXClientData client_data,
   return (CXIdxClientFile)info->file;
 }
 
-static CXIdxClientContainer index_startedTranslationUnit(CXClientData client_data,
-                                                   void *reserved) {
+static CXIdxClientContainer
+index_startedTranslationUnit(CXClientData client_data, void *reserved) {
   IndexData *index_data;
   index_data = (IndexData *)client_data;
   printCheck(index_data);
@@ -2926,13 +2984,15 @@ static void index_indexDeclaration(CXClientData client_data,
   }
 
   if (info->declAsContainer)
-    clang_index_setClientContainer(info->declAsContainer,
-                              makeClientContainer(info->entityInfo, info->loc));
+    clang_index_setClientContainer(
+        info->declAsContainer,
+        makeClientContainer(client_data, info->entityInfo, info->loc));
 }
 
 static void index_indexEntityReference(CXClientData client_data,
                                        const CXIdxEntityRefInfo *info) {
-  printEntityInfo("[indexEntityReference]", client_data, info->referencedEntity);
+  printEntityInfo("[indexEntityReference]", client_data,
+                  info->referencedEntity);
   printf(" | cursor: ");
   PrintCursor(info->cursor, NULL);
   printf(" | loc: ");
@@ -2997,6 +3057,8 @@ static int index_compile_args(int num_args, const char **args,
   index_data.abort = 0;
   index_data.main_filename = "";
   index_data.importedASTs = importedASTs;
+  index_data.strings = NULL;
+  index_data.TU = NULL;
 
   index_opts = getIndexOptions();
   result = clang_indexSourceFile(idxAction, &index_data,
@@ -3009,6 +3071,7 @@ static int index_compile_args(int num_args, const char **args,
   if (index_data.fail_for_error)
     result = -1;
 
+  free_client_data(&index_data);
   return result;
 }
 
@@ -3031,6 +3094,8 @@ static int index_ast_file(const char *ast_file,
   index_data.abort = 0;
   index_data.main_filename = "";
   index_data.importedASTs = importedASTs;
+  index_data.strings = NULL;
+  index_data.TU = TU;
 
   index_opts = getIndexOptions();
   result = clang_indexTranslationUnit(idxAction, &index_data,
@@ -3040,6 +3105,7 @@ static int index_ast_file(const char *ast_file,
     result = -1;
 
   clang_disposeTranslationUnit(TU);
+  free_client_data(&index_data);
   return result;
 }
 
@@ -3856,6 +3922,7 @@ static void printDiagnosticSet(CXDiagnosticSet Diags, unsigned indent) {
     clang_disposeString(FileName);
     clang_disposeString(DiagSpelling);
     clang_disposeString(DiagOption);
+    clang_disposeString(DiagCat);
   }  
 }
 
@@ -4028,6 +4095,8 @@ int cindextest_main(int argc, const char **argv) {
   else if (argc > 2 && strcmp(argv[1], "-test-print-bitwidth") == 0)
     return perform_test_load_source(argc - 2, argv + 2, "all",
                                     PrintBitWidth, 0);
+  else if (argc > 2 && strcmp(argv[1], "-test-print-mangle") == 0)
+    return perform_test_load_tu(argv[2], "all", NULL, PrintMangledName, NULL);
   else if (argc > 1 && strcmp(argv[1], "-print-usr") == 0) {
     if (argc > 2)
       return print_usrs(argv + 2, argv + argc);
@@ -4063,13 +4132,19 @@ typedef struct thread_info {
 void thread_runner(void *client_data_v) {
   thread_info *client_data = client_data_v;
   client_data->result = cindextest_main(client_data->argc, client_data->argv);
-#ifdef __CYGWIN__
-  fflush(stdout);  /* stdout is not flushed on Cygwin. */
-#endif
+}
+
+static void flush_atexit(void) {
+  /* stdout, and surprisingly even stderr, are not always flushed on process
+   * and thread exit, particularly when the system is under heavy load. */
+  fflush(stdout);
+  fflush(stderr);
 }
 
 int main(int argc, const char **argv) {
   thread_info client_data;
+
+  atexit(flush_atexit);
 
 #ifdef CLANG_HAVE_LIBXML
   LIBXML_TEST_VERSION

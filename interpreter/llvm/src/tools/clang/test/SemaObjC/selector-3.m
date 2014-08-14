@@ -14,7 +14,7 @@
 - (void) foo
 {
   SEL a,b,c;
-  a = @selector(b1ar);  // expected-warning {{no method with selector 'b1ar' is implemented in this translation unit}}
+  a = @selector(b1ar);
   b = @selector(bar);
 }
 @end
@@ -69,7 +69,7 @@ extern SEL MySelector(SEL s);
 
 @implementation INTF
 - (void) Meth {
-  if( [cnx respondsToSelector:MySelector(@selector( _setQueue: ))] ) // expected-warning {{no method with selector '_setQueue:' is implemented in this translation unit}}
+  if( [cnx respondsToSelector:MySelector(@selector( _setQueue: ))] )
   {
   }
 
@@ -110,3 +110,27 @@ extern SEL MySelector(SEL s);
 @interface USETextSub : USEText
 - (int) invalidate : (id)arg;
 @end
+
+// rdar://16428638
+@interface I16428638
+- (int) compare: (I16428638 *) arg1; // commenting out this line avoids the warning
+@end
+
+@interface J16428638
+- (int) compare: (J16428638 *) arg1;
+@end
+
+@implementation J16428638
+- (void)method {
+    SEL s = @selector(compare:); // spurious warning
+    (void)s;
+}
+- (int) compare: (J16428638 *) arg1 {
+    return 0;
+}
+@end
+
+void test16428638() {
+    SEL s = @selector(compare:);
+    (void)s;
+}

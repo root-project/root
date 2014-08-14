@@ -26,16 +26,3 @@ hash_map<int, float> ints_to_floats; // expected-error{{declaration of 'hash_map
 @import std.hash_map;
 
 hash_map<int, float> ints_to_floats2;
-
-@import import_self.b;
-extern MyTypeA import_self_test_a; // expected-error {{must be imported from module 'import_self.a'}}
-// expected-note@import-self-a.h:1 {{here}}
-extern MyTypeC import_self_test_c;
-// FIXME: This should be valid; import_self.b re-exports import_self.d.
-extern MyTypeD import_self_test_d; // expected-error {{must be imported from module 'import_self.d'}}
-// expected-note@import-self-d.h:1 {{here}}
-
-// expected-error@Inputs/submodules/module.map:15{{header 'missing.h' not found}}
-@import missing_headers.missing;
-@import missing_headers.not_missing;
-void f() { NotMissingFunction(); };

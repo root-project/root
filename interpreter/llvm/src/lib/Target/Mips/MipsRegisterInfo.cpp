@@ -11,8 +11,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "mips-reg-info"
-
 #include "MipsRegisterInfo.h"
 #include "Mips.h"
 #include "MipsAnalyzeImmediate.h"
@@ -24,9 +22,8 @@
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
-#include "llvm/CodeGen/ValueTypes.h"
-#include "llvm/DebugInfo.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Type.h"
 #include "llvm/Support/CommandLine.h"
@@ -38,10 +35,12 @@
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Target/TargetOptions.h"
 
+using namespace llvm;
+
+#define DEBUG_TYPE "mips-reg-info"
+
 #define GET_REGINFO_TARGET_DESC
 #include "MipsGenRegisterInfo.inc"
-
-using namespace llvm;
 
 MipsRegisterInfo::MipsRegisterInfo(const MipsSubtarget &ST)
   : MipsGenRegisterInfo(Mips::RA), Subtarget(ST) {}
@@ -80,8 +79,8 @@ MipsRegisterInfo::getRegPressureLimit(const TargetRegisterClass *RC,
 //===----------------------------------------------------------------------===//
 
 /// Mips Callee Saved Registers
-const uint16_t* MipsRegisterInfo::
-getCalleeSavedRegs(const MachineFunction *MF) const {
+const MCPhysReg *
+MipsRegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
   if (Subtarget.isSingleFloat())
     return CSR_SingleFloatOnly_SaveList;
 
@@ -93,6 +92,9 @@ getCalleeSavedRegs(const MachineFunction *MF) const {
 
   if (Subtarget.isFP64bit())
     return CSR_O32_FP64_SaveList;
+
+  if (Subtarget.isFPXX())
+    return CSR_O32_FPXX_SaveList;
 
   return CSR_O32_SaveList;
 }
@@ -111,6 +113,9 @@ MipsRegisterInfo::getCallPreservedMask(CallingConv::ID) const {
   if (Subtarget.isFP64bit())
     return CSR_O32_FP64_RegMask;
 
+  if (Subtarget.isFPXX())
+    return CSR_O32_FPXX_RegMask;
+
   return CSR_O32_RegMask;
 }
 
@@ -120,11 +125,11 @@ const uint32_t *MipsRegisterInfo::getMips16RetHelperMask() {
 
 BitVector MipsRegisterInfo::
 getReservedRegs(const MachineFunction &MF) const {
-  static const uint16_t ReservedGPR32[] = {
+  static const MCPhysReg ReservedGPR32[] = {
     Mips::ZERO, Mips::K0, Mips::K1, Mips::SP
   };
 
-  static const uint16_t ReservedGPR64[] = {
+  static const MCPhysReg ReservedGPR64[] = {
     Mips::ZERO_64, Mips::K0_64, Mips::K1_64, Mips::SP_64
   };
 
@@ -200,6 +205,11 @@ getReservedRegs(const MachineFunction &MF) const {
   if (Subtarget.useSmallSection()) {
     Reserved.set(Mips::GP);
     Reserved.set(Mips::GP_64);
+  }
+
+  if (Subtarget.isABI_O32() && !Subtarget.useOddSPReg()) {
+    for (const auto &Reg : Mips::OddSPRegClass)
+      Reserved.set(Reg);
   }
 
   return Reserved;

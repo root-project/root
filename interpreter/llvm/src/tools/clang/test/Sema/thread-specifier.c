@@ -58,7 +58,7 @@ int f(__thread int t7) { // expected-error {{' is only allowed on variable decla
 }
 
 __thread typedef int t14; // expected-error-re {{cannot combine with previous '{{__thread|_Thread_local|thread_local}}' declaration specifier}}
-__thread int t15; // expected-note {{previous declaration is here}}
+__thread int t15; // expected-note {{previous definition is here}}
 extern int t15; // expected-error {{non-thread-local declaration of 't15' follows thread-local declaration}}
 extern int t16; // expected-note {{previous declaration is here}}
 __thread int t16; // expected-error {{thread-local declaration of 't16' follows non-thread-local declaration}}
@@ -101,6 +101,19 @@ struct S {
 __thread S s;
 #if !defined(CXX11)
 // expected-error@-2 {{type of thread-local variable has non-trivial destruction}}
+#if __cplusplus >= 201103L
+// expected-note@-4 {{use 'thread_local' to allow this}}
+#endif
+#endif
+#endif
+
+#ifdef __cplusplus
+struct HasCtor {
+  HasCtor();
+};
+__thread HasCtor var_with_ctor;
+#if !defined(CXX11)
+// expected-error@-2 {{initializer for thread-local variable must be a constant expression}}
 #if __cplusplus >= 201103L
 // expected-note@-4 {{use 'thread_local' to allow this}}
 #endif

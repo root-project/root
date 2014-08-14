@@ -154,13 +154,18 @@ namespace cling {
     return *m_IncrParser->getParser();
   }
 
+  clang::SourceLocation Interpreter::getNextAvailableLoc() const {
+    return m_IncrParser->getLastMemoryBufferEndLoc().getLocWithOffset(1);
+  }
+
+
   bool Interpreter::isInSyntaxOnlyMode() const {
     return getCI()->getFrontendOpts().ProgramAction
       == clang::frontend::ParseSyntaxOnly;
   }
 
   Interpreter::Interpreter(int argc, const char* const *argv,
-                           const char* llvmdir /*= 0*/) :
+                           const char* llvmdir /*= 0*/, bool noRuntime) :
     m_UniqueCounter(0), m_PrintDebug(false),
     m_DynamicLookupEnabled(false), m_RawInputEnabled(false),
     m_LastCustomPragmaDiagPopPoint(){
@@ -194,6 +199,9 @@ namespace cling {
       llvm::Module* theModule = m_IncrParser->getCodeGenerator()->GetModule();
       m_Executor.reset(new IncrementalExecutor(theModule, SemaRef.Diags));
     }
+    // Tell the diagnostic client that we are entering file parsing mode.
+    DiagnosticConsumer& DClient = getCI()->getDiagnosticClient();
+    DClient.BeginSourceFile(getCI()->getLangOpts(), &PP);
 
     llvm::SmallVector<Transaction*, 2> IncrParserTransactions;
     m_IncrParser->Initialize(IncrParserTransactions);
@@ -202,21 +210,20 @@ namespace cling {
 
     AddRuntimeIncludePaths(argv[0]);
 
-    // Tell the diagnostic client that we are entering file parsing mode.
-    DiagnosticConsumer& DClient = getCI()->getDiagnosticClient();
-    DClient.BeginSourceFile(getCI()->getLangOpts(), &PP);
-
-    if (getCI()->getLangOpts().CPlusPlus)
-      IncludeCXXRuntime();
-    else
-      IncludeCRuntime();
-
+    if (!noRuntime) {
+      if (getCI()->getLangOpts().CPlusPlus)
+        IncludeCXXRuntime();
+      else
+        IncludeCRuntime();
+    }
     // Commit the transactions, now that gCling is set up. It is needed for
     // static initialization in these transactions through local_cxa_atexit().
     for (llvm::SmallVectorImpl<Transaction*>::const_iterator
            I = IncrParserTransactions.begin(), E = IncrParserTransactions.end();
          I != E; ++I)
       m_IncrParser->commitTransaction(*I);
+
+    //setCallbacks(new AutoloadCallback(this));
   }
 
   Interpreter::~Interpreter() {
@@ -329,7 +336,7 @@ namespace cling {
                        IsSysRootRelative);
 
     Preprocessor& PP = CI->getPreprocessor();
-    ApplyHeaderSearchOptions(PP.getHeaderSearchInfo(), headerOpts,
+    clang::ApplyHeaderSearchOptions(PP.getHeaderSearchInfo(), headerOpts,
                                     PP.getLangOpts(),
                                     PP.getTargetInfo().getTriple());
   }
@@ -572,8 +579,8 @@ namespace cling {
     // ALL warnings ... but this will suffice for now (working
     // around a real bug in QT :().
     DiagnosticsEngine& Diag = getCI()->getDiagnostics();
-    Diag.setDiagnosticMapping(clang::diag::warn_field_is_uninit,
-                              clang::diag::MAP_IGNORE, SourceLocation());
+    Diag.setSeverity(clang::diag::warn_field_is_uninit,
+                     clang::diag::Severity::Ignored, SourceLocation());
     return DeclareInternal(input, CO);
   }
 
@@ -684,7 +691,7 @@ namespace cling {
     const tok::TokenKind kind = Tok.getKind();
 
     if (kind == tok::raw_identifier && !Tok.needsCleaning()) {
-      StringRef keyword(Tok.getRawIdentifierData(), Tok.getLength());
+      StringRef keyword(Tok.getRawIdentifier());
       if (keyword.equals("using")) {
         // FIXME: Using definitions and declarations should be decl extracted.
         // Until we have that, don't wrap them if they are the only input.
@@ -714,7 +721,7 @@ namespace cling {
     else if (kind == tok::hash) {
       WrapLexer.LexFromRawLexer(Tok);
       if (Tok.is(tok::raw_identifier) && !Tok.needsCleaning()) {
-        StringRef keyword(Tok.getRawIdentifierData(), Tok.getLength());
+        StringRef keyword(Tok.getRawIdentifier());
         if (keyword.equals("include"))
           return false;
       }
@@ -832,9 +839,8 @@ namespace cling {
     }
     */
     DiagnosticsEngine& Diag = getCI()->getDiagnostics();
-    Diag.setDiagnosticMapping(
-                       clang::diag::ext_nested_name_member_ref_lookup_ambiguous,
-                       clang::diag::MAP_IGNORE, SourceLocation());
+    Diag.setSeverity(clang::diag::ext_nested_name_member_ref_lookup_ambiguous,
+                     clang::diag::Severity::Ignored, SourceLocation());
 
 
     LangOptions& LO = const_cast<LangOptions&>(getCI()->getLangOpts());
@@ -955,20 +961,20 @@ namespace cling {
     // #pragma warning ignore ...
     // #pragma warning ignore ...
     // #pragma warning pop
-    SourceLocation Loc = m_IncrParser->getLastMemoryBufferEndLoc();
+    SourceLocation Loc = getNextAvailableLoc();
     DiagnosticsEngine& Diags = getCI()->getDiagnostics();
     Diags.pushMappings(Loc);
     // The source locations of #pragma warning ignore must be greater than
     // the ones from #pragma push
-    Loc = Loc.getLocWithOffset(1);
-    Diags.setDiagnosticMapping(clang::diag::warn_unused_expr,
-                               clang::diag::MAP_IGNORE, Loc);
-    Diags.setDiagnosticMapping(clang::diag::warn_unused_call,
-                               clang::diag::MAP_IGNORE, Loc);
-    Diags.setDiagnosticMapping(clang::diag::warn_unused_comparison,
-                               clang::diag::MAP_IGNORE, Loc);
-    Diags.setDiagnosticMapping(clang::diag::ext_return_has_expr,
-                               clang::diag::MAP_IGNORE, Loc);
+    //Loc = Loc.getLocWithOffset(1);
+    Diags.setSeverity(clang::diag::warn_unused_expr,
+                      clang::diag::Severity::Ignored, Loc);
+    Diags.setSeverity(clang::diag::warn_unused_call,
+                      clang::diag::Severity::Ignored, Loc);
+    Diags.setSeverity(clang::diag::warn_unused_comparison,
+                      clang::diag::Severity::Ignored, Loc);
+    Diags.setSeverity(clang::diag::ext_return_has_expr,
+                      clang::diag::Severity::Ignored, Loc);
     if (Transaction* lastT = m_IncrParser->Compile(Wrapper, CO)) {
       Loc = m_IncrParser->getLastMemoryBufferEndLoc().getLocWithOffset(1);
       // if the location was the same we are in recursive calls and to avoid an
@@ -1100,8 +1106,14 @@ namespace cling {
   }
 
   void Interpreter::setCallbacks(InterpreterCallbacks* C) {
+    if (m_Callbacks.get() == C)
+      return;
+
     // We need it to enable LookupObject callback.
-    m_Callbacks.reset(C);
+    if (!m_Callbacks)
+      m_Callbacks.reset(C);
+    else
+      m_Callbacks->setNext(C);
 
     // FIXME: We should add a multiplexer in the ASTContext, too.
     llvm::IntrusiveRefCntPtr<ExternalASTSource>
@@ -1192,7 +1204,20 @@ namespace cling {
 
   void Interpreter::GenerateAutoloadingMap(llvm::StringRef inFile,
                                            llvm::StringRef outFile,
-                                           bool enableMacros) {
+                                           bool enableMacros,
+                                           bool enableLogs) {
+
+    const char *const dummy="cling";
+    // Create an interpreter without any runtime, producing the fwd decls.
+    cling::Interpreter fwdGen(1, &dummy, nullptr, true);
+
+    // Copy the same header search options to the new instance.
+    Preprocessor& fwdGenPP = fwdGen.getCI()->getPreprocessor();
+    HeaderSearchOptions headerOpts = getCI()->getHeaderSearchOpts();
+    clang::ApplyHeaderSearchOptions(fwdGenPP.getHeaderSearchInfo(), headerOpts,
+                                    fwdGenPP.getLangOpts(),
+                                    fwdGenPP.getTargetInfo().getTriple());
+
 
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;
@@ -1201,8 +1226,9 @@ namespace cling {
     CO.DynamicScoping = 0;
     CO.Debug = isPrintingDebug();
 
-    cling::Transaction* T = m_IncrParser->Parse
-            (std::string("#include \"") + std::string(inFile) + "\"", CO);
+
+    std::string includeFile = std::string("#include \"") + inFile.str() + "\"";
+    cling::Transaction* T = fwdGen.m_IncrParser->Parse(includeFile , CO);
 
     // If this was already #included we will get a T == 0.
     if (!T)
@@ -1211,56 +1237,21 @@ namespace cling {
     std::string err;
     llvm::raw_fd_ostream out(outFile.data(), err,
                              llvm::sys::fs::OpenFlags::F_None);
-
-
-    ForwardDeclPrinter visitor(out,getSema().getSourceManager());
-
-    std::vector<std::string> macrodefs;
-    if(enableMacros) {
-      for(auto mit = T->macros_begin(); mit != T->macros_end(); ++mit) {
-        Transaction::MacroDirectiveInfo macro = *mit;
-        if ( macro.m_MD->getKind() == MacroDirective::MD_Define) {
-          const MacroInfo* MI = macro.m_MD->getMacroInfo();
-          if ( MI ->getNumTokens()>1 )
-            //FIXME: We can not display function like macros yet
-            continue;
-          out<<"#define " << macro.m_II->getName()<< ' ';
-          for (unsigned i = 0, e = MI->getNumTokens(); i != e; ++i) {
-            const Token &Tok = MI->getReplacementToken(i);
-            out << Tok.getName() << ' ';
-            macrodefs.push_back(macro.m_II->getName());
-          }
-          out << '\n';
-        }
-      }
+    if (enableLogs){
+      llvm::raw_fd_ostream log(llvm::Twine(outFile).concat(llvm::Twine(".skipped")).str().c_str(),
+                             err, llvm::sys::fs::OpenFlags::F_None);
+      log << "Generated for :" << inFile << "\n";
+      ForwardDeclPrinter visitor(out, log, fwdGen.getSema().getSourceManager(), *T);
+      visitor.printStats();
     }
-
-    for(auto dcit = T->decls_begin(); dcit != T->decls_end(); ++dcit) {
-      Transaction::DelayCallInfo& dci = *dcit;
-      if(dci.m_DGR.isNull()) {
-          break;
-      }
-      if (dci.m_Call == Transaction::kCCIHandleTopLevelDecl) {
-        for(auto dit = dci.m_DGR.begin(); dit != dci.m_DGR.end(); ++dit) {
-          clang::Decl* decl = *dit;
-
-          visitor.Visit(decl);
-          visitor.printSemiColon();
-        }
-      }
+    else {
+      llvm::raw_null_ostream sink;
+      ForwardDeclPrinter visitor(out, sink, fwdGen.getSema().getSourceManager(), *T);
     }
-    if(enableMacros) {
-      for (auto m : macrodefs ) {
-        out << "#undef " << m << "\n";
-      }
-    }
-
+    // Avoid assertion in the ~IncrementalParser.
     T->setState(Transaction::kCommitted);
-    unload(1);
+    // unload(1);
     return;
-  }
-  void Interpreter::EnableAutoloading() {
-    m_Callbacks.reset(new AutoloadCallback(this));
   }
 
 } //end namespace cling

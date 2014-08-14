@@ -27,7 +27,6 @@
 /// to reduce MOV count.
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "vec-merger"
 #include "llvm/Support/Debug.h"
 #include "AMDGPU.h"
 #include "R600InstrInfo.h"
@@ -42,12 +41,14 @@
 
 using namespace llvm;
 
+#define DEBUG_TYPE "vec-merger"
+
 namespace {
 
 static bool
 isImplicitlyDef(MachineRegisterInfo &MRI, unsigned Reg) {
-  for (MachineRegisterInfo::def_iterator It = MRI.def_begin(Reg),
-      E = MRI.def_end(); It != E; ++It) {
+  for (MachineRegisterInfo::def_instr_iterator It = MRI.def_instr_begin(Reg),
+      E = MRI.def_instr_end(); It != E; ++It) {
     return (*It).isImplicitDef();
   }
   if (MRI.isReserved(Reg)) {
@@ -107,9 +108,9 @@ private:
 public:
   static char ID;
   R600VectorRegMerger(TargetMachine &tm) : MachineFunctionPass(ID),
-  TII(0) { }
+  TII(nullptr) { }
 
-  void getAnalysisUsage(AnalysisUsage &AU) const {
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesCFG();
     AU.addRequired<MachineDominatorTree>();
     AU.addPreserved<MachineDominatorTree>();
@@ -118,11 +119,11 @@ public:
     MachineFunctionPass::getAnalysisUsage(AU);
   }
 
-  const char *getPassName() const {
+  const char *getPassName() const override {
     return "R600 Vector Registers Merge Pass";
   }
 
-  bool runOnMachineFunction(MachineFunction &Fn);
+  bool runOnMachineFunction(MachineFunction &Fn) override;
 };
 
 char R600VectorRegMerger::ID = 0;
@@ -213,8 +214,8 @@ MachineInstr *R600VectorRegMerger::RebuildVector(
   DEBUG(dbgs() << "    ->"; Pos->dump(););
 
   DEBUG(dbgs() << "  Updating Swizzle:\n");
-  for (MachineRegisterInfo::use_iterator It = MRI->use_begin(Reg),
-      E = MRI->use_end(); It != E; ++It) {
+  for (MachineRegisterInfo::use_instr_iterator It = MRI->use_instr_begin(Reg),
+      E = MRI->use_instr_end(); It != E; ++It) {
     DEBUG(dbgs() << "    ";(*It).dump(); dbgs() << "    ->");
     SwizzleInput(*It, RemapChan);
     DEBUG((*It).dump());
@@ -261,8 +262,8 @@ void R600VectorRegMerger::SwizzleInput(MachineInstr &MI,
 }
 
 bool R600VectorRegMerger::areAllUsesSwizzeable(unsigned Reg) const {
-  for (MachineRegisterInfo::use_iterator It = MRI->use_begin(Reg),
-      E = MRI->use_end(); It != E; ++It) {
+  for (MachineRegisterInfo::use_instr_iterator It = MRI->use_instr_begin(Reg),
+      E = MRI->use_instr_end(); It != E; ++It) {
     if (!canSwizzle(*It))
       return false;
   }
@@ -328,8 +329,9 @@ bool R600VectorRegMerger::runOnMachineFunction(MachineFunction &Fn) {
       if (MI->getOpcode() != AMDGPU::REG_SEQUENCE) {
         if (TII->get(MI->getOpcode()).TSFlags & R600_InstFlag::TEX_INST) {
           unsigned Reg = MI->getOperand(1).getReg();
-          for (MachineRegisterInfo::def_iterator It = MRI->def_begin(Reg),
-              E = MRI->def_end(); It != E; ++It) {
+          for (MachineRegisterInfo::def_instr_iterator
+               It = MRI->def_instr_begin(Reg), E = MRI->def_instr_end();
+               It != E; ++It) {
             RemoveMI(&(*It));
           }
         }

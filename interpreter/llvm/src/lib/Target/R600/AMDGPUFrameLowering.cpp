@@ -83,7 +83,7 @@ int AMDGPUFrameLowering::getFrameIndexOffset(const MachineFunction &MF,
   for (int i = MFI->getObjectIndexBegin(); i < UpperBound; ++i) {
     OffsetBytes = RoundUpToAlignment(OffsetBytes, MFI->getObjectAlignment(i));
     OffsetBytes += MFI->getObjectSize(i);
-    // Each regiter holds 4 bytes, so we must always align the offset to at
+    // Each register holds 4 bytes, so we must always align the offset to at
     // least 4 bytes, so that 2 frame objects won't share the same register.
     OffsetBytes = RoundUpToAlignment(OffsetBytes, 4);
   }
@@ -97,7 +97,7 @@ int AMDGPUFrameLowering::getFrameIndexOffset(const MachineFunction &MF,
 const TargetFrameLowering::SpillSlot *
 AMDGPUFrameLowering::getCalleeSavedSpillSlots(unsigned &NumEntries) const {
   NumEntries = 0;
-  return 0;
+  return nullptr;
 }
 void
 AMDGPUFrameLowering::emitPrologue(MachineFunction &MF) const {

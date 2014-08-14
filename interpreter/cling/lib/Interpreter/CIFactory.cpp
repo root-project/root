@@ -38,6 +38,8 @@
 #include <ctime>
 #include <cstdio>
 
+#include <memory>
+
 // Include the necessary headers to interface with the Windows registry and
 // environment.
 #ifdef _MSC_VER
@@ -583,15 +585,14 @@ namespace cling {
       Diags(new DiagnosticsEngine(DiagIDs, &DiagOpts,
                                   DiagnosticPrinter, /*Owns it*/ true));
     clang::driver::Driver Driver(argv[0], llvm::sys::getDefaultTargetTriple(),
-                                 "cling.out",
                                  *Diags);
     //Driver.setWarnMissingInput(false);
     Driver.setCheckInputsExist(false); // think foo.C(12)
     llvm::ArrayRef<const char*>RF(&(argvCompile[0]), argvCompile.size());
-    llvm::OwningPtr<clang::driver::Compilation>
+    std::unique_ptr<clang::driver::Compilation>
       Compilation(Driver.BuildCompilation(RF));
     const clang::driver::ArgStringList* CC1Args
-      = GetCC1Arguments(Diags.getPtr(), Compilation.get());
+      = GetCC1Arguments(Diags.get(), Compilation.get());
     if (CC1Args == NULL) {
       return 0;
     }
@@ -631,9 +632,9 @@ namespace cling {
     }
 
     // Create and setup a compiler instance.
-    llvm::OwningPtr<CompilerInstance> CI(new CompilerInstance());
+    std::unique_ptr<CompilerInstance> CI(new CompilerInstance());
     CI->setInvocation(Invocation);
-    CI->setDiagnostics(Diags.getPtr());
+    CI->setDiagnostics(Diags.get());
     {
       //
       //  Buffer the error messages while we process
@@ -654,11 +655,11 @@ namespace cling {
         return 0;
     }
     CI->setTarget(TargetInfo::CreateTargetInfo(CI->getDiagnostics(),
-                                               &Invocation->getTargetOpts()));
+                                               Invocation->TargetOpts));
     if (!CI->hasTarget()) {
       return 0;
     }
-    CI->getTarget().setForcedLangOptions(CI->getLangOpts());
+    CI->getTarget().adjust(CI->getLangOpts());
     SetClingTargetLangOpts(CI->getLangOpts(), CI->getTarget());
     if (CI->getTarget().getTriple().getOS() == llvm::Triple::Cygwin) {
       // clang "forgets" the basic arch part needed by winnt.h:
@@ -694,7 +695,8 @@ namespace cling {
       Filename = CGOptsMainFileName.c_str();
     const FileEntry* FE
       = FM.getVirtualFile(Filename, 1U << 15U, time(0));
-    FileID MainFileID = SM->createMainFileID(FE, SrcMgr::C_User);
+    FileID MainFileID = SM->createFileID(FE, SourceLocation(), SrcMgr::C_User);
+    SM->setMainFileID(MainFileID);
     const SrcMgr::SLocEntry& MainFileSLocE = SM->getSLocEntry(MainFileID);
     const SrcMgr::ContentCache* MainFileCC
       = MainFileSLocE.getFile().getContentCache();
@@ -703,18 +705,13 @@ namespace cling {
     const_cast<SrcMgr::ContentCache*>(MainFileCC)->setBuffer(buffer);
 
     // Set up the preprocessor
-    CI->createPreprocessor();
+    CI->createPreprocessor(TU_Complete);
     Preprocessor& PP = CI->getPreprocessor();
     PP.getBuiltinInfo().InitializeBuiltins(PP.getIdentifierTable(),
                                            PP.getLangOpts());
 
     // Set up the ASTContext
-    ASTContext *Ctx = new ASTContext(CI->getLangOpts(),
-                                     PP.getSourceManager(), &CI->getTarget(),
-                                     PP.getIdentifierTable(),
-                                     PP.getSelectorTable(), PP.getBuiltinInfo(),
-                                     /*size_reserve*/0, /*DelayInit*/false);
-    CI->setASTContext(Ctx);
+    CI->createASTContext();
 
     //FIXME: This is bad workaround for use-cases which need only a CI to parse
     //things, like pragmas. In that case we cannot controll the interpreter's
@@ -743,7 +740,7 @@ namespace cling {
                                                  // the JIT to crash
     CI->getCodeGenOpts().VerifyModule = 0; // takes too long
 
-    return CI.take(); // Passes over the ownership to the caller.
+    return CI.release(); // Passes over the ownership to the caller.
   }
 
   void CIFactory::SetClingCustomLangOpts(LangOptions& Opts) {
@@ -773,7 +770,7 @@ namespace cling {
                                          const TargetInfo& Target) {
     if (Target.getTriple().getOS() == llvm::Triple::Win32) {
       Opts.MicrosoftExt = 1;
-      Opts.MSCVersion = 1300;
+      Opts.MSCompatibilityVersion = 1300;
       // Should fix http://llvm.org/bugs/show_bug.cgi?id=10528
       Opts.DelayedTemplateParsing = 1;
     } else {

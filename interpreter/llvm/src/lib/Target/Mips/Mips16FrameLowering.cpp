@@ -16,6 +16,7 @@
 #include "Mips16InstrInfo.h"
 #include "MipsInstrInfo.h"
 #include "MipsRegisterInfo.h"
+#include "MipsSubtarget.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
@@ -27,6 +28,9 @@
 #include "llvm/Target/TargetOptions.h"
 
 using namespace llvm;
+
+Mips16FrameLowering::Mips16FrameLowering(const MipsSubtarget &STI)
+    : MipsFrameLowering(STI, STI.stackAlignment()) {}
 
 void Mips16FrameLowering::emitPrologue(MachineFunction &MF) const {
   MachineBasicBlock &MBB = MF.front();
@@ -48,20 +52,14 @@ void Mips16FrameLowering::emitPrologue(MachineFunction &MF) const {
   TII.makeFrame(Mips::SP, StackSize, MBB, MBBI);
 
   // emit ".cfi_def_cfa_offset StackSize"
-  MCSymbol *AdjustSPLabel = MMI.getContext().CreateTempSymbol();
-  BuildMI(MBB, MBBI, dl,
-          TII.get(TargetOpcode::PROLOG_LABEL)).addSym(AdjustSPLabel);
-  MMI.addFrameInst(
-      MCCFIInstruction::createDefCfaOffset(AdjustSPLabel, -StackSize));
+  unsigned CFIIndex = MMI.addFrameInst(
+      MCCFIInstruction::createDefCfaOffset(nullptr, -StackSize));
+  BuildMI(MBB, MBBI, dl, TII.get(TargetOpcode::CFI_INSTRUCTION))
+      .addCFIIndex(CFIIndex);
 
   const std::vector<CalleeSavedInfo> &CSI = MFI->getCalleeSavedInfo();
 
   if (CSI.size()) {
-    MCSymbol *CSLabel = MMI.getContext().CreateTempSymbol();
-    BuildMI(MBB, MBBI, dl,
-            TII.get(TargetOpcode::PROLOG_LABEL)).addSym(CSLabel);
-
-
     const std::vector<CalleeSavedInfo> &CSI = MFI->getCalleeSavedInfo();
 
     for (std::vector<CalleeSavedInfo>::const_iterator I = CSI.begin(),
@@ -69,12 +67,15 @@ void Mips16FrameLowering::emitPrologue(MachineFunction &MF) const {
       int64_t Offset = MFI->getObjectOffset(I->getFrameIdx());
       unsigned Reg = I->getReg();
       unsigned DReg = MRI->getDwarfRegNum(Reg, true);
-      MMI.addFrameInst(MCCFIInstruction::createOffset(CSLabel, DReg, Offset));
+      unsigned CFIIndex = MMI.addFrameInst(
+          MCCFIInstruction::createOffset(nullptr, DReg, Offset));
+      BuildMI(MBB, MBBI, dl, TII.get(TargetOpcode::CFI_INSTRUCTION))
+          .addCFIIndex(CFIIndex);
     }
   }
   if (hasFP(MF))
     BuildMI(MBB, MBBI, dl, TII.get(Mips::MoveR3216), Mips::S0)
-      .addReg(Mips::SP);
+      .addReg(Mips::SP).setMIFlag(MachineInstr::FrameSetup);
 
 }
 

@@ -66,10 +66,10 @@ __attribute ((objc_requires_property_definitions)) // expected-error {{'objc_req
 @property (readwrite) char isFoo; // expected-warning {{auto property synthesis will not synthesize property 'isFoo' because it is 'readwrite' but it will be synthesized 'readonly' via another property}}
 @property char Property1; // expected-warning {{auto property synthesis will not synthesize property 'Property1' because it cannot share an ivar with another synthesized property}}
 @property char Property2;
-@property (readwrite) char isNotFree;
+@property (readwrite) char isNotFree; // expected-warning {{auto property synthesis will not synthesize property 'isNotFree'}}
 @end
 
-@implementation Baz {
+@implementation Baz { // expected-note {{detected while default synthesizing properties in class implementation}}
     char _isFoo;
     char _isNotFree;
 }
@@ -104,12 +104,12 @@ __attribute ((objc_requires_property_definitions)) // expected-error {{'objc_req
 @end
 
 @interface S : B<P1>
-@property (assign,readwrite) id prop;
-@property (assign,readwrite) id prop1;
-@property (assign,readwrite) id prop2;
+@property (assign,readwrite) id prop; // expected-warning {{auto property synthesis will not synthesize property 'prop'}}
+@property (assign,readwrite) id prop1; // expected-warning {{auto property synthesis will not synthesize property 'prop1'}}
+@property (assign,readwrite) id prop2; // expected-warning {{auto property synthesis will not synthesize property 'prop2'}}
 @end
 
-@implementation S
+@implementation S // expected-note 3 {{detected while default synthesizing properties in class implementation}}
 @end
 
 // rdar://14085456
@@ -181,3 +181,35 @@ typedef NSObject<Fooing> FooObject;
 @implementation Fail // expected-warning {{auto property synthesis will not synthesize property 'muahahaha' declared in protocol 'Fooing'}} expected-warning {{auto property synthesis will not synthesize property 'hoho' declared in protocol 'SubFooling'}}
 @end
 
+// rdar://16089191
+@class NSURL;
+
+@interface Root
+- (void)setFileURL : (NSURL *) arg;
+- (void)setFile : (NSURL *) arg;
+- (NSURL *)fileSys;
+- (void)setFileSys : (NSURL *) arg;
+- (NSURL *)fileKerl;
+@end
+
+@interface SuperClass : Root
+- (NSURL *)fileURL;
+- (NSURL *)file;
+- (NSURL *)fileLog;
+- (void)setFileLog : (NSURL *) arg;
+- (void)setFileKerl : (NSURL *) arg;
+@end
+
+@protocol r16089191Protocol
+@property (readonly) NSURL *fileURL;
+@property (copy) NSURL *file;
+@property (copy) NSURL *fileSys;
+@property (copy) NSURL *fileLog;
+@property (copy) NSURL *fileKerl;
+@end
+
+@interface SubClass : SuperClass <r16089191Protocol>
+@end
+
+@implementation SubClass
+@end

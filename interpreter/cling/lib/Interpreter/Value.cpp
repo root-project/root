@@ -15,6 +15,7 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/CanonicalType.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/AST/Type.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Lookup.h"
@@ -268,7 +269,8 @@ namespace cling {
     using namespace clang;
     ASTContext& C = V.getASTContext();
     Sema& SemaR = R.getSema();
-    OverloadCandidateSet overloads((SourceLocation()));
+    OverloadCandidateSet overloads(SourceLocation(),
+                                    OverloadCandidateSet::CSK_Normal);
     QualType Ty = V.getType().getNonReferenceType();
     if (!Ty->isPointerType())
       Ty = C.getPointerType(Ty);
@@ -423,7 +425,7 @@ namespace cling {
     // the results in pipes (Savannah #99234).
 
     // Alternatively we could use llvm::errs()
-    llvm::OwningPtr<llvm::raw_ostream> Out;
+    std::unique_ptr<llvm::raw_ostream> Out;
     Out.reset(new llvm::raw_os_ostream(std::cout));
     print(*Out.get());
   }

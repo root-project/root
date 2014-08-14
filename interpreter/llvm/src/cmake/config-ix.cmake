@@ -17,6 +17,11 @@ if( UNIX AND NOT BEOS )
   # Used by check_symbol_exists:
   set(CMAKE_REQUIRED_LIBRARIES m)
 endif()
+# x86_64 FreeBSD 9.2 requires libcxxrt to be specified explicitly.
+if( CMAKE_SYSTEM MATCHES "FreeBSD-9.2-RELEASE" AND
+    CMAKE_SIZEOF_VOID_P EQUAL 8 )
+  list(APPEND CMAKE_REQUIRED_LIBRARIES "cxxrt")
+endif()
 
 # Helper macros and functions
 macro(add_cxx_include result files)
@@ -248,15 +253,9 @@ function(llvm_find_program name)
   endif(LLVM_PATH_${NAME})
 endfunction()
 
-llvm_find_program(gv)
-llvm_find_program(circo)
-llvm_find_program(twopi)
-llvm_find_program(neato)
-llvm_find_program(fdp)
-llvm_find_program(dot)
-llvm_find_program(dotty)
-llvm_find_program(xdot xdot.py)
-llvm_find_program(Graphviz)
+if (LLVM_ENABLE_DOXYGEN)
+  llvm_find_program(dot)
+endif ()
 
 if( LLVM_ENABLE_FFI )
   find_path(FFI_INCLUDE_PATH ffi.h PATHS ${FFI_INCLUDE_DIR})
@@ -299,25 +298,6 @@ if( LLVM_ENABLE_PIC )
 else()
   set(ENABLE_PIC 0)
 endif()
-
-find_package(LibXml2)
-if (LIBXML2_FOUND)
-  set(CLANG_HAVE_LIBXML 1)
-  # When cross-compiling, liblzma is not detected as a dependency for libxml2,
-  # which makes linking c-index-test fail. But for native builds, all libraries
-  # are installed and checked by CMake before Makefiles are generated and everything
-  # works according to the plan. However, if a -llzma is added to native builds,
-  # an additional requirement on the static liblzma.a is required, but will not
-  # be checked by CMake, breaking native compilation.
-  # Since this is only pertinent to cross-compilations, and there's no way CMake
-  # can check for every foreign library on every OS, we add the dep and warn the dev.
-  if ( CMAKE_CROSSCOMPILING )
-    if (NOT PC_LIBXML_VERSION VERSION_LESS "2.8.0")
-      message(STATUS "Adding LZMA as a dep to XML2 for cross-compilation, make sure liblzma.a is available.")
-      set(LIBXML2_LIBRARIES ${LIBXML2_LIBRARIES} "-llzma")
-    endif ()
-  endif ()
-endif ()
 
 check_cxx_compiler_flag("-Wno-variadic-macros" SUPPORTS_NO_VARIADIC_MACROS_FLAG)
 
@@ -366,6 +346,8 @@ elseif (LLVM_NATIVE_ARCH MATCHES "sparc")
 elseif (LLVM_NATIVE_ARCH MATCHES "powerpc")
   set(LLVM_NATIVE_ARCH PowerPC)
 elseif (LLVM_NATIVE_ARCH MATCHES "aarch64")
+  set(LLVM_NATIVE_ARCH AArch64)
+elseif (LLVM_NATIVE_ARCH MATCHES "arm64")
   set(LLVM_NATIVE_ARCH AArch64)
 elseif (LLVM_NATIVE_ARCH MATCHES "arm")
   set(LLVM_NATIVE_ARCH ARM)
@@ -480,7 +462,7 @@ set(LLVM_PREFIX ${CMAKE_INSTALL_PREFIX})
 
 if (LLVM_ENABLE_DOXYGEN)
   message(STATUS "Doxygen enabled.")
-  find_package(Doxygen)
+  find_package(Doxygen REQUIRED)
 
   if (DOXYGEN_FOUND)
     # If we find doxygen and we want to enable doxygen by default create a
@@ -498,4 +480,14 @@ if (LLVM_ENABLE_DOXYGEN)
   endif()
 else()
   message(STATUS "Doxygen disabled.")
+endif()
+
+if (LLVM_ENABLE_SPHINX)
+  message(STATUS "Sphinx enabled.")
+  find_package(Sphinx REQUIRED)
+  if (LLVM_BUILD_DOCS)
+    add_custom_target(sphinx ALL)
+  endif()
+else()
+  message(STATUS "Sphinx disabled.")
 endif()

@@ -1,6 +1,6 @@
 # If we don't need RTTI or EH, there's no reason to export anything
 # from the plugin.
-if( NOT WIN32 ) # Win32 mangles symbols differently, and
+if( NOT MSVC ) # MSVC mangles symbols differently, and
                 # PrintFunctionNames.export contains C++ symbols.
   if( NOT LLVM_REQUIRES_RTTI )
     if( NOT LLVM_REQUIRES_EH )
@@ -10,3 +10,12 @@ if( NOT WIN32 ) # Win32 mangles symbols differently, and
 endif()
 
 add_llvm_loadable_module(PrintFunctionNames PrintFunctionNames.cpp)
+
+if(LLVM_ENABLE_PLUGINS AND (WIN32 OR CYGWIN))
+  target_link_libraries(PrintFunctionNames ${cmake_2_8_12_PRIVATE}
+    clangAST
+    clangBasic
+    clangFrontend
+    LLVMSupport
+    )
+endif()

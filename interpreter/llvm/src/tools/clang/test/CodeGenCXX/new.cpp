@@ -2,6 +2,9 @@
 
 typedef __typeof__(sizeof(0)) size_t;
 
+// Declare an 'operator new' template to tickle a bug in __builtin_operator_new.
+template<typename T> void *operator new(size_t, int (*)(T));
+
 // Ensure that this declaration doesn't cause operator new to lose its
 // 'noalias' attribute.
 void *operator new[](size_t);
@@ -32,7 +35,6 @@ void *operator new(size_t, const std::nothrow_t &) throw();
 void *operator new[](size_t, const std::nothrow_t &) throw();
 void operator delete(void *, const std::nothrow_t &) throw();
 void operator delete[](void *, const std::nothrow_t &) throw();
-
 
 void t2(int* a) {
   int* b = new (a) int;
@@ -323,6 +325,15 @@ namespace N3664 {
 
     // CHECK: call i8* @_ZnamRKSt9nothrow_t(i64 3, {{.*}}) [[ATTR_NOUNWIND]]
     (void) operator new[](3, nothrow);
+  }
+}
+
+namespace builtins {
+  // CHECK-LABEL: define void @_ZN8builtins1fEv
+  void f() {
+    // CHECK: call noalias i8* @_Znwm(i64 4) [[ATTR_BUILTIN_NEW]]
+    // CHECK: call void @_ZdlPv({{.*}}) [[ATTR_BUILTIN_DELETE]]
+    __builtin_operator_delete(__builtin_operator_new(4));
   }
 }
 

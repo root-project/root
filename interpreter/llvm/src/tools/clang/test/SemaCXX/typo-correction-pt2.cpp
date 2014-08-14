@@ -5,6 +5,15 @@
 // attempt within a single file (which is to avoid having very broken files take
 // minutes to finally be rejected by the parser).
 
+namespace PR12951 {
+// If there are two corrections that have the same identifier and edit distance
+// and only differ by their namespaces, don't suggest either as a correction
+// since both are equally likely corrections.
+namespace foobar { struct Thing {}; }
+namespace bazquux { struct Thing {}; }
+void f() { Thing t; } // expected-error{{unknown type name 'Thing'}}
+}
+
 namespace bogus_keyword_suggestion {
 void test() {
    status = "OK";  // expected-error-re {{use of undeclared identifier 'status'{{$}}}}
@@ -233,4 +242,70 @@ class Baz {
    Fizbin<int> qux;  // expected-error {{unknown type name 'Fizbin'; did you mean '::shadowed_template::Fizbin'?}} \
                      // expected-error {{expected member name or ';' after declaration specifiers}}
 };
+}
+
+namespace PR18852 {
+void func() {
+  struct foo {
+    void bar() {}
+  };
+  bar();  // expected-error-re {{use of undeclared identifier 'bar'{{$}}}}
+}
+
+class Thread {
+ public:
+  void Start();
+  static void Stop();  // expected-note {{'Thread::Stop' declared here}}
+};
+
+class Manager {
+ public:
+  void Start(int);  // expected-note {{'Start' declared here}}
+  void Stop(int);  // expected-note {{'Stop' declared here}}
+};
+
+void test(Manager *m) {
+  // Don't suggest Thread::Start as a correction just because it has the same
+  // (unqualified) name and accepts the right number of args; this is a method
+  // call on an object in an unrelated class.
+  m->Start();  // expected-error-re {{too few arguments to function call, expected 1, have 0{{$}}}}
+  m->Stop();  // expected-error-re {{too few arguments to function call, expected 1, have 0{{$}}}}
+  Stop();  // expected-error {{use of undeclared identifier 'Stop'; did you mean 'Thread::Stop'?}}
+}
+
+}
+
+namespace std {
+class bernoulli_distribution {
+ public:
+  double p() const;
+};
+}
+void test() {
+  // Make sure that typo correction doesn't suggest changing 'p' to
+  // 'std::bernoulli_distribution::p' as that is most likely wrong.
+  if (p)  // expected-error-re {{use of undeclared identifier 'p'{{$}}}}
+    return;
+}
+
+namespace PR19681 {
+  struct TypoA {};
+  struct TypoB {
+    void test();
+  private:
+    template<typename T> void private_memfn(T);  // expected-note{{declared here}}
+  };
+  void TypoB::test() {
+    // FIXME: should suggest 'PR19681::TypoB::private_memfn' instead of '::PR19681::TypoB::private_memfn'
+    (void)static_cast<void(TypoB::*)(int)>(&TypoA::private_memfn);  // expected-error{{no member named 'private_memfn' in 'PR19681::TypoA'; did you mean '::PR19681::TypoB::private_memfn'?}}
+  }
+}
+
+namespace testWantFunctionLikeCasts {
+  long test(bool a) {
+    if (a)
+      return struc(5.7);  // expected-error-re {{use of undeclared identifier 'struc'{{$}}}}
+    else
+      return lon(8.0);  // expected-error {{use of undeclared identifier 'lon'; did you mean 'long'?}}
+  }
 }

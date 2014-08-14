@@ -15,15 +15,17 @@
 #include "clang/AST/DeclGroup.h"
 #include "clang/Basic/SourceLocation.h"
 
-#include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+
+#include <memory>
 
 namespace clang {
   class ASTContext;
   class Decl;
   class FunctionDecl;
   class IdentifierInfo;
+  class NamedDecl;
   class MacroDirective;
   class Preprocessor;
   struct PrintingPolicy;
@@ -123,7 +125,7 @@ namespace cling {
 
     ///\brief List of nested transactions if any.
     ///
-    llvm::OwningPtr<NestedTransactions> m_NestedTransactions;
+    std::unique_ptr<NestedTransactions> m_NestedTransactions;
 
     ///\brief The enclosing transaction if nested.
     ///
@@ -319,6 +321,10 @@ namespace cling {
         return m_DeclQueue.back().m_DGR;
       return clang::DeclGroupRef();
     }
+
+    ///\brief Returns the NamedDecl* if a Decl with name is present, 0 otherwise.
+    ///
+    clang::NamedDecl* containsNamedDecl(llvm::StringRef name) const;
 
     ///\brief Returns the current last transaction. Useful when the transaction
     /// in still incomplete.

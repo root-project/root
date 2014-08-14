@@ -403,7 +403,7 @@ namespace clang {
       typedef std::random_access_iterator_tag iterator_category;
       typedef int                 difference_type;
       
-      iterator() : Self(0), Position(0) { }
+      iterator() : Self(nullptr), Position(0) { }
       
       iterator(PreprocessingRecord *Self, int Position)
         : Self(Self), Position(Position) { }
@@ -566,28 +566,25 @@ namespace clang {
     }
         
   private:
-    virtual void MacroExpands(const Token &Id, const MacroDirective *MD,
-                              SourceRange Range, const MacroArgs *Args);
-    virtual void MacroDefined(const Token &Id, const MacroDirective *MD);
-    virtual void MacroUndefined(const Token &Id, const MacroDirective *MD);
-    virtual void InclusionDirective(SourceLocation HashLoc,
-                                    const Token &IncludeTok,
-                                    StringRef FileName,
-                                    bool IsAngled,
-                                    CharSourceRange FilenameRange,
-                                    const FileEntry *File,
-                                    StringRef SearchPath,
-                                    StringRef RelativePath,
-                                    const Module *Imported);
-    virtual void Ifdef(SourceLocation Loc, const Token &MacroNameTok,
-                       const MacroDirective *MD);
-    virtual void Ifndef(SourceLocation Loc, const Token &MacroNameTok,
-                        const MacroDirective *MD);
+    void MacroExpands(const Token &Id, const MacroDirective *MD,
+                      SourceRange Range, const MacroArgs *Args) override;
+    void MacroDefined(const Token &Id, const MacroDirective *MD) override;
+    void MacroUndefined(const Token &Id, const MacroDirective *MD) override;
+    void InclusionDirective(SourceLocation HashLoc, const Token &IncludeTok,
+                            StringRef FileName, bool IsAngled,
+                            CharSourceRange FilenameRange,
+                            const FileEntry *File, StringRef SearchPath,
+                            StringRef RelativePath,
+                            const Module *Imported) override;
+    void Ifdef(SourceLocation Loc, const Token &MacroNameTok,
+               const MacroDirective *MD) override;
+    void Ifndef(SourceLocation Loc, const Token &MacroNameTok,
+                const MacroDirective *MD) override;
     /// \brief Hook called whenever the 'defined' operator is seen.
-    virtual void Defined(const Token &MacroNameTok, const MacroDirective *MD,
-                         SourceRange Range);
+    void Defined(const Token &MacroNameTok, const MacroDirective *MD,
+                 SourceRange Range) override;
 
-    virtual void SourceRangeSkipped(SourceRange Range);
+    void SourceRangeSkipped(SourceRange Range) override;
 
     void addMacroExpansion(const Token &Id, const MacroInfo *MI,
                            SourceRange Range);

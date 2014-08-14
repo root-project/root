@@ -11,13 +11,14 @@
 //  modules for the ASTReader.
 //
 //===----------------------------------------------------------------------===//
+#include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/ModuleMap.h"
 #include "clang/Serialization/GlobalModuleIndex.h"
 #include "clang/Serialization/ModuleManager.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/system_error.h"
+#include <system_error>
 
 #ifndef NDEBUG
 #include "llvm/Support/GraphWriter.h"
@@ -32,14 +33,14 @@ ModuleFile *ModuleManager::lookup(StringRef Name) {
   if (Entry)
     return lookup(Entry);
 
-  return 0;
+  return nullptr;
 }
 
 ModuleFile *ModuleManager::lookup(const FileEntry *File) {
   llvm::DenseMap<const FileEntry *, ModuleFile *>::iterator Known
     = Modules.find(File);
   if (Known == Modules.end())
-    return 0;
+    return nullptr;
 
   return Known->second;
 }
@@ -57,7 +58,7 @@ ModuleManager::addModule(StringRef FileName, ModuleKind Type,
                          off_t ExpectedSize, time_t ExpectedModTime,
                          ModuleFile *&Module,
                          std::string &ErrorStr) {
-  Module = 0;
+  Module = nullptr;
 
   // Look for the file entry. This only fails if the expected size or
   // modification time differ.
@@ -103,13 +104,24 @@ ModuleManager::addModule(StringRef FileName, ModuleKind Type,
       New->Buffer.reset(Buffer);
     } else {
       // Open the AST file.
-      llvm::error_code ec;
+      std::error_code ec;
       if (FileName == "-") {
-        ec = llvm::MemoryBuffer::getSTDIN(New->Buffer);
+        llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> Buf =
+            llvm::MemoryBuffer::getSTDIN();
+        ec = Buf.getError();
         if (ec)
           ErrorStr = ec.message();
-      } else
-        New->Buffer.reset(FileMgr.getBufferForFile(FileName, &ErrorStr));
+        else
+          New->Buffer = std::move(Buf.get());
+      } else {
+        // Leave the FileEntry open so if it gets read again by another
+        // ModuleManager it must be the same underlying file.
+        // FIXME: Because FileManager::getFile() doesn't guarantee that it will
+        // give us an open file, this may not be 100% reliable.
+        New->Buffer.reset(FileMgr.getBufferForFile(New->File, &ErrorStr,
+                                                   /*IsVolatile*/false,
+                                                   /*ShouldClose*/false));
+      }
       
       if (!New->Buffer)
         return Missing;
@@ -134,24 +146,10 @@ ModuleManager::addModule(StringRef FileName, ModuleKind Type,
   return NewModule? NewlyLoaded : AlreadyLoaded;
 }
 
-namespace {
-  /// \brief Predicate that checks whether a module file occurs within
-  /// the given set.
-  class IsInModuleFileSet : public std::unary_function<ModuleFile *, bool> {
-    llvm::SmallPtrSet<ModuleFile *, 4> &Removed;
-
-  public:
-    IsInModuleFileSet(llvm::SmallPtrSet<ModuleFile *, 4> &Removed)
-    : Removed(Removed) { }
-
-    bool operator()(ModuleFile *MF) const {
-      return Removed.count(MF);
-    }
-  };
-}
-
-void ModuleManager::removeModules(ModuleIterator first, ModuleIterator last,
-                                  ModuleMap *modMap) {
+void ModuleManager::removeModules(
+    ModuleIterator first, ModuleIterator last,
+    llvm::SmallPtrSetImpl<ModuleFile *> &LoadedSuccessfully,
+    ModuleMap *modMap) {
   if (first == last)
     return;
 
@@ -159,9 +157,10 @@ void ModuleManager::removeModules(ModuleIterator first, ModuleIterator last,
   llvm::SmallPtrSet<ModuleFile *, 4> victimSet(first, last);
 
   // Remove any references to the now-destroyed modules.
-  IsInModuleFileSet checkInSet(victimSet);
   for (unsigned i = 0, n = Chain.size(); i != n; ++i) {
-    Chain[i]->ImportedBy.remove_if(checkInSet);
+    Chain[i]->ImportedBy.remove_if([&](ModuleFile *MF) {
+      return victimSet.count(MF);
+    });
   }
 
   // Delete the modules and erase them from the various structures.
@@ -170,11 +169,18 @@ void ModuleManager::removeModules(ModuleIterator first, ModuleIterator last,
 
     FileMgr.invalidateCache(const_cast<FileEntry*>((*victim)->File));
     if (modMap) {
-      StringRef ModuleName = llvm::sys::path::stem((*victim)->FileName);
+      StringRef ModuleName = (*victim)->ModuleName;
       if (Module *mod = modMap->findModule(ModuleName)) {
-        mod->setASTFile(0);
+        mod->setASTFile(nullptr);
       }
     }
+
+    // Files that didn't make it through ReadASTCore successfully will be
+    // rebuilt (or there was an error). Invalidate them so that we can load the
+    // new files that will be renamed over the old ones.
+    if (LoadedSuccessfully.count(*victim) == 0)
+      FileMgr.invalidateCache(const_cast<FileEntry*>((*victim)->File));
+
     delete *victim;
   }
 
@@ -195,7 +201,7 @@ ModuleManager::VisitState *ModuleManager::allocateVisitState() {
   if (FirstVisitState) {
     VisitState *Result = FirstVisitState;
     FirstVisitState = FirstVisitState->NextState;
-    Result->NextState = 0;
+    Result->NextState = nullptr;
     return Result;
   }
 
@@ -204,7 +210,7 @@ ModuleManager::VisitState *ModuleManager::allocateVisitState() {
 }
 
 void ModuleManager::returnVisitState(VisitState *State) {
-  assert(State->NextState == 0 && "Visited state is in list?");
+  assert(State->NextState == nullptr && "Visited state is in list?");
   State->NextState = FirstVisitState;
   FirstVisitState = State;
 }
@@ -233,7 +239,7 @@ void ModuleManager::moduleFileAccepted(ModuleFile *MF) {
 }
 
 ModuleManager::ModuleManager(FileManager &FileMgr)
-  : FileMgr(FileMgr), GlobalIndex(), FirstVisitState(0) { }
+  : FileMgr(FileMgr), GlobalIndex(), FirstVisitState(nullptr) {}
 
 ModuleManager::~ModuleManager() {
   for (unsigned i = 0, e = Chain.size(); i != e; ++i)
@@ -293,7 +299,7 @@ ModuleManager::visit(bool (*Visitor)(ModuleFile &M, void *UserData),
     assert(VisitOrder.size() == N && "Visitation order is wrong?");
 
     delete FirstVisitState;
-    FirstVisitState = 0;
+    FirstVisitState = nullptr;
   }
 
   VisitState *State = allocateVisitState();
@@ -395,16 +401,19 @@ bool ModuleManager::lookupModuleFile(StringRef FileName,
                                      off_t ExpectedSize,
                                      time_t ExpectedModTime,
                                      const FileEntry *&File) {
-  File = FileMgr.getFile(FileName, /*openFile=*/false, /*cacheFailure=*/false);
+  // Open the file immediately to ensure there is no race between stat'ing and
+  // opening the file.
+  File = FileMgr.getFile(FileName, /*openFile=*/true, /*cacheFailure=*/false);
 
   if (!File && FileName != "-") {
     return false;
   }
 
   if ((ExpectedSize && ExpectedSize != File->getSize()) ||
-      (ExpectedModTime && ExpectedModTime != File->getModificationTime())) {
+      (ExpectedModTime && ExpectedModTime != File->getModificationTime()))
+    // Do not destroy File, as it may be referenced. If we need to rebuild it,
+    // it will be destroyed by removeModules.
     return true;
-  }
 
   return false;
 }
@@ -444,7 +453,7 @@ namespace llvm {
     }
 
     std::string getNodeLabel(ModuleFile *M, const ModuleManager&) {
-      return llvm::sys::path::stem(M->FileName);
+      return M->ModuleName;
     }
   };
 }

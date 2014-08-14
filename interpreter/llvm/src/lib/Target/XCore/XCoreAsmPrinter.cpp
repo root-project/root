@@ -12,14 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "asm-printer"
 #include "XCore.h"
-#include "XCoreTargetStreamer.h"
 #include "InstPrinter/XCoreInstPrinter.h"
 #include "XCoreInstrInfo.h"
 #include "XCoreMCInstLower.h"
 #include "XCoreSubtarget.h"
 #include "XCoreTargetMachine.h"
+#include "XCoreTargetStreamer.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/CodeGen/AsmPrinter.h"
@@ -28,9 +27,9 @@
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/MachineJumpTableInfo.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
-#include "llvm/DebugInfo.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Mangler.h"
 #include "llvm/IR/Module.h"
@@ -47,6 +46,8 @@
 #include <cctype>
 using namespace llvm;
 
+#define DEBUG_TYPE "asm-printer"
+
 namespace {
   class XCoreAsmPrinter : public AsmPrinter {
     const XCoreSubtarget &Subtarget;
@@ -58,7 +59,7 @@ namespace {
       : AsmPrinter(TM, Streamer), Subtarget(TM.getSubtarget<XCoreSubtarget>()),
         MCInstLowering(*this) {}
 
-    virtual const char *getPassName() const {
+    const char *getPassName() const override {
       return "XCore Assembly Printer";
     }
 
@@ -70,15 +71,18 @@ namespace {
     void printOperand(const MachineInstr *MI, int opNum, raw_ostream &O);
     bool PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
                          unsigned AsmVariant, const char *ExtraCode,
-                         raw_ostream &O);
+                         raw_ostream &O) override;
+    bool PrintAsmMemoryOperand(const MachineInstr *MI, unsigned OpNum,
+                               unsigned AsmVariant, const char *ExtraCode,
+                               raw_ostream &O) override;
 
     void emitArrayBound(MCSymbol *Sym, const GlobalVariable *GV);
-    virtual void EmitGlobalVariable(const GlobalVariable *GV);
+    void EmitGlobalVariable(const GlobalVariable *GV) override;
 
-    void EmitFunctionEntryLabel();
-    void EmitInstruction(const MachineInstr *MI);
-    void EmitFunctionBodyStart();
-    void EmitFunctionBodyEnd();
+    void EmitFunctionEntryLabel() override;
+    void EmitInstruction(const MachineInstr *MI) override;
+    void EmitFunctionBodyStart() override;
+    void EmitFunctionBodyEnd() override;
   };
 } // end of anonymous namespace
 
@@ -246,6 +250,20 @@ bool XCoreAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
 
   // Otherwise fallback on the default implementation.
   return AsmPrinter::PrintAsmOperand(MI, OpNo, AsmVariant, ExtraCode, O);
+}
+
+bool XCoreAsmPrinter::
+PrintAsmMemoryOperand(const MachineInstr *MI, unsigned OpNum,
+                      unsigned AsmVariant, const char *ExtraCode,
+                      raw_ostream &O) {
+  if (ExtraCode && ExtraCode[0]) {
+    return true; // Unknown modifier.
+  }
+  printOperand(MI, OpNum, O);
+  O << '[';
+  printOperand(MI, OpNum + 1, O);
+  O << ']';
+  return false;
 }
 
 void XCoreAsmPrinter::EmitInstruction(const MachineInstr *MI) {

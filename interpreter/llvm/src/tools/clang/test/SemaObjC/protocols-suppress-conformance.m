@@ -4,8 +4,9 @@
 // to be explicitly implemented in the adopting class.
 __attribute__((objc_protocol_requires_explicit_implementation))
 @protocol Protocol
-- (void) theBestOfTimes; // expected-note 2 {{method 'theBestOfTimes' declared here}}
-@property (readonly) id theWorstOfTimes; // expected-note {{property declared here}}
+- (void) theBestOfTimes; // expected-note {{method 'theBestOfTimes' declared here}}
+@property (readonly) id theWorstOfTimes; // expected-note {{property declared here}} \
+					 // expected-warning 2 {{auto property synthesis will not synthesize property 'theWorstOfTimes'}}
 @end
 
 // In this example, ClassA adopts the protocol.  We won't
@@ -16,12 +17,12 @@ __attribute__((objc_protocol_requires_explicit_implementation))
 @property (readonly) id theWorstOfTimes;
 @end
 
-// This class subclasses ClassA (which adopts 'Protocol'),
-// but does not provide the needed implementation.
+// This class subclasses ClassA (which also adopts 'Protocol').
 @interface ClassB : ClassA <Protocol>
 @end
 
-@implementation ClassB // expected-warning {{method 'theBestOfTimes' in protocol 'Protocol' not implemented}} expected-warning {{property 'theWorstOfTimes' requires method 'theWorstOfTimes' to be defined - use @synthesize, @dynamic or provide a method implementation in this class implementation}}
+@implementation ClassB // expected-warning {{property 'theWorstOfTimes' requires method 'theWorstOfTimes' to be defined - use @synthesize, @dynamic or provide a method implementation in this class implementation}} \
+		      // expected-note {{detected while default synthesizing properties in class implementation}}
 @end
 
 @interface ClassB_Good : ClassA <Protocol>
@@ -33,7 +34,7 @@ __attribute__((objc_protocol_requires_explicit_implementation))
 @end
 
 @interface ClassB_AlsoGood : ClassA <Protocol>
-@property (readonly) id theWorstOfTimes;
+@property (readonly) id theWorstOfTimes; // expected-warning {{auto property synthesis will not synthesize property 'theWorstOfTimes' because it will be implemented by its superclass}}
 @end
 
 // Default synthesis acts as if @dynamic
@@ -41,7 +42,7 @@ __attribute__((objc_protocol_requires_explicit_implementation))
 // it is declared in ClassA.  This is okay, since
 // the author of ClassB_AlsoGood needs explicitly
 // write @property in the @interface.
-@implementation ClassB_AlsoGood // no-warning
+@implementation ClassB_AlsoGood  // expected-note 2 {{detected while default synthesizing properties in class implementation}}
 - (void) theBestOfTimes {}
 @end
 
@@ -171,4 +172,38 @@ __attribute__((objc_protocol_requires_explicit_implementation))
 __attribute__((objc_protocol_requires_explicit_implementation))  // expected-error{{attribute 'objc_protocol_requires_explicit_implementation' can only be applied to @protocol definitions, not forward declarations}}
 @protocol NotDefined;
 
+// Another complete hierarchy.
+ __attribute__((objc_protocol_requires_explicit_implementation))
+@protocol Ex2FooBar
+- (void)methodA;
+@end
+
+ __attribute__((objc_protocol_requires_explicit_implementation))
+@protocol Ex2ProtocolA
+- (void)methodB;
+@end
+
+ __attribute__((objc_protocol_requires_explicit_implementation))
+@protocol Ex2ProtocolB <Ex2ProtocolA>
+- (void)methodA; // expected-note {{method 'methodA' declared here}}
+@end
+
+// NOT required
+@protocol Ex2ProtocolC <Ex2ProtocolA>
+- (void)methodB;
+- (void)methodA;
+@end
+
+@interface Ex2ClassA <Ex2ProtocolC, Ex2FooBar>
+@end
+@implementation Ex2ClassA
+- (void)methodB {}
+- (void)methodA {}
+@end
+
+@interface Ex2ClassB : Ex2ClassA <Ex2ProtocolB>
+@end
+
+@implementation Ex2ClassB // expected-warning {{method 'methodA' in protocol 'Ex2ProtocolB' not implemented}}
+@end
 

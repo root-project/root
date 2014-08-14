@@ -36,7 +36,7 @@ Type *Type::getPrimitiveType(LLVMContext &C, TypeID IDNumber) {
   case MetadataTyID  : return getMetadataTy(C);
   case X86_MMXTyID   : return getX86_MMXTy(C);
   default:
-    return 0;
+    return nullptr;
   }
 }
 
@@ -312,8 +312,8 @@ IntegerType *IntegerType::get(LLVMContext &C, unsigned NumBits) {
   }
   
   IntegerType *&Entry = C.pImpl->IntegerTypes[NumBits];
-  
-  if (Entry == 0)
+
+  if (!Entry)
     Entry = new (C.pImpl->TypeAllocator) IntegerType(C, NumBits);
   
   return Entry;
@@ -448,7 +448,7 @@ void StructType::setName(StringRef Name) {
     if (SymbolTableEntry) {
       // Delete the old string data.
       ((EntryTy *)SymbolTableEntry)->Destroy(SymbolTable.getAllocator());
-      SymbolTableEntry = 0;
+      SymbolTableEntry = nullptr;
     }
     return;
   }
@@ -497,7 +497,7 @@ StructType *StructType::get(LLVMContext &Context, bool isPacked) {
 }
 
 StructType *StructType::get(Type *type, ...) {
-  assert(type != 0 && "Cannot create a struct type with no elements with this");
+  assert(type && "Cannot create a struct type with no elements with this");
   LLVMContext &Ctx = type->getContext();
   va_list ap;
   SmallVector<llvm::Type*, 8> StructFields;
@@ -538,7 +538,7 @@ StructType *StructType::create(ArrayRef<Type*> Elements) {
 }
 
 StructType *StructType::create(StringRef Name, Type *type, ...) {
-  assert(type != 0 && "Cannot create a struct type with no elements with this");
+  assert(type && "Cannot create a struct type with no elements with this");
   LLVMContext &Ctx = type->getContext();
   va_list ap;
   SmallVector<llvm::Type*, 8> StructFields;
@@ -576,13 +576,13 @@ bool StructType::isSized(SmallPtrSet<const Type*, 4> *Visited) const {
 
 StringRef StructType::getName() const {
   assert(!isLiteral() && "Literal structs never have names");
-  if (SymbolTableEntry == 0) return StringRef();
-  
+  if (!SymbolTableEntry) return StringRef();
+
   return ((StringMapEntry<StructType*> *)SymbolTableEntry)->getKey();
 }
 
 void StructType::setBody(Type *type, ...) {
-  assert(type != 0 && "Cannot create a struct type with no elements with this");
+  assert(type && "Cannot create a struct type with no elements with this");
   va_list ap;
   SmallVector<llvm::Type*, 8> StructFields;
   va_start(ap, type);
@@ -680,8 +680,8 @@ ArrayType *ArrayType::get(Type *elementType, uint64_t NumElements) {
   LLVMContextImpl *pImpl = ElementType->getContext().pImpl;
   ArrayType *&Entry = 
     pImpl->ArrayTypes[std::make_pair(ElementType, NumElements)];
-  
-  if (Entry == 0)
+
+  if (!Entry)
     Entry = new (pImpl->TypeAllocator) ArrayType(ElementType, NumElements);
   return Entry;
 }
@@ -709,8 +709,8 @@ VectorType *VectorType::get(Type *elementType, unsigned NumElements) {
   LLVMContextImpl *pImpl = ElementType->getContext().pImpl;
   VectorType *&Entry = ElementType->getContext().pImpl
     ->VectorTypes[std::make_pair(ElementType, NumElements)];
-  
-  if (Entry == 0)
+
+  if (!Entry)
     Entry = new (pImpl->TypeAllocator) VectorType(ElementType, NumElements);
   return Entry;
 }
@@ -734,7 +734,7 @@ PointerType *PointerType::get(Type *EltTy, unsigned AddressSpace) {
   PointerType *&Entry = AddressSpace == 0 ? CImpl->PointerTypes[EltTy]
      : CImpl->ASPointerTypes[std::make_pair(EltTy, AddressSpace)];
 
-  if (Entry == 0)
+  if (!Entry)
     Entry = new (CImpl->TypeAllocator) PointerType(EltTy, AddressSpace);
   return Entry;
 }

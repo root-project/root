@@ -29,7 +29,8 @@ Sema::Sema(llvm::BumpPtrAllocator &Allocator, const SourceManager &SourceMgr,
            DiagnosticsEngine &Diags, CommandTraits &Traits,
            const Preprocessor *PP) :
     Allocator(Allocator), SourceMgr(SourceMgr), Diags(Diags), Traits(Traits),
-    PP(PP), ThisDeclInfo(NULL), BriefCommand(NULL), HeaderfileCommand(NULL) {
+    PP(PP), ThisDeclInfo(nullptr), BriefCommand(nullptr),
+    HeaderfileCommand(nullptr) {
 }
 
 void Sema::setDecl(const Decl *D) {
@@ -482,6 +483,7 @@ HTMLEndTagComment *Sema::actOnHTMLEndTag(SourceLocation LocBegin,
   if (isHTMLEndTagForbidden(TagName)) {
     Diag(HET->getLocation(), diag::warn_doc_html_end_forbidden)
       << TagName << HET->getSourceRange();
+    HET->setIsMalformed();
     return HET;
   }
 
@@ -497,14 +499,19 @@ HTMLEndTagComment *Sema::actOnHTMLEndTag(SourceLocation LocBegin,
   if (!FoundOpen) {
     Diag(HET->getLocation(), diag::warn_doc_html_end_unbalanced)
       << HET->getSourceRange();
+    HET->setIsMalformed();
     return HET;
   }
 
   while (!HTMLOpenTags.empty()) {
-    const HTMLStartTagComment *HST = HTMLOpenTags.pop_back_val();
+    HTMLStartTagComment *HST = HTMLOpenTags.pop_back_val();
     StringRef LastNotClosedTagName = HST->getTagName();
-    if (LastNotClosedTagName == TagName)
+    if (LastNotClosedTagName == TagName) {
+      // If the start tag is malformed, end tag is malformed as well.
+      if (HST->isMalformed())
+        HET->setIsMalformed();
       break;
+    }
 
     if (isHTMLEndTagOptional(LastNotClosedTagName))
       continue;
@@ -518,16 +525,18 @@ HTMLEndTagComment *Sema::actOnHTMLEndTag(SourceLocation LocBegin,
                                                 HET->getLocation(),
                                                 &CloseLineInvalid);
 
-    if (OpenLineInvalid || CloseLineInvalid || OpenLine == CloseLine)
+    if (OpenLineInvalid || CloseLineInvalid || OpenLine == CloseLine) {
       Diag(HST->getLocation(), diag::warn_doc_html_start_end_mismatch)
         << HST->getTagName() << HET->getTagName()
         << HST->getSourceRange() << HET->getSourceRange();
-    else {
+      HST->setIsMalformed();
+    } else {
       Diag(HST->getLocation(), diag::warn_doc_html_start_end_mismatch)
         << HST->getTagName() << HET->getTagName()
         << HST->getSourceRange();
       Diag(HET->getLocation(), diag::note_doc_html_end_tag)
         << HET->getSourceRange();
+      HST->setIsMalformed();
     }
   }
 
@@ -538,6 +547,18 @@ FullComment *Sema::actOnFullComment(
                               ArrayRef<BlockContentComment *> Blocks) {
   FullComment *FC = new (Allocator) FullComment(Blocks, ThisDeclInfo);
   resolveParamCommandIndexes(FC);
+
+  // Complain about HTML tags that are not closed.
+  while (!HTMLOpenTags.empty()) {
+    HTMLStartTagComment *HST = HTMLOpenTags.pop_back_val();
+    if (isHTMLEndTagOptional(HST->getTagName()))
+      continue;
+
+    Diag(HST->getLocation(), diag::warn_doc_html_missing_end_tag)
+      << HST->getTagName() << HST->getSourceRange();
+    HST->setIsMalformed();
+  }
+
   return FC;
 }
 
@@ -603,7 +624,7 @@ void Sema::checkReturnsCommand(const BlockCommandComment *Command) {
 
 void Sema::checkBlockCommandDuplicate(const BlockCommandComment *Command) {
   const CommandInfo *Info = Traits.getCommandInfo(Command->getCommandID());
-  const BlockCommandComment *PrevCommand = NULL;
+  const BlockCommandComment *PrevCommand = nullptr;
   if (Info->IsBriefCommand) {
     if (!BriefCommand) {
       BriefCommand = Command;
@@ -703,7 +724,7 @@ void Sema::resolveParamCommandIndexes(const FullComment *FC) {
   SmallVector<ParamCommandComment *, 8> ParamVarDocs;
 
   ArrayRef<const ParmVarDecl *> ParamVars = getParamVars();
-  ParamVarDocs.resize(ParamVars.size(), NULL);
+  ParamVarDocs.resize(ParamVars.size(), nullptr);
 
   // First pass over all \\param commands: resolve all parameter names.
   for (Comment::child_iterator I = FC->child_begin(), E = FC->child_end();
@@ -792,11 +813,14 @@ bool Sema::isAnyFunctionDecl() {
 }
 
 bool Sema::isFunctionOrMethodVariadic() {
-  if (!isAnyFunctionDecl() && !isObjCMethodDecl())
+  if (!isAnyFunctionDecl() && !isObjCMethodDecl() && !isFunctionTemplateDecl())
     return false;
   if (const FunctionDecl *FD =
         dyn_cast<FunctionDecl>(ThisDeclInfo->CurrentDecl))
     return FD->isVariadic();
+  if (const FunctionTemplateDecl *FTD =
+        dyn_cast<FunctionTemplateDecl>(ThisDeclInfo->CurrentDecl))
+    return FTD->getTemplatedDecl()->isVariadic();
   if (const ObjCMethodDecl *MD =
         dyn_cast<ObjCMethodDecl>(ThisDeclInfo->CurrentDecl))
     return MD->isVariadic();
@@ -939,7 +963,7 @@ class SimpleTypoCorrector {
 public:
   SimpleTypoCorrector(StringRef Typo) :
       Typo(Typo), MaxEditDistance((Typo.size() + 2) / 3),
-      BestDecl(NULL), BestEditDistance(MaxEditDistance + 1),
+      BestDecl(nullptr), BestEditDistance(MaxEditDistance + 1),
       BestIndex(0), NextIndex(0)
   { }
 
@@ -947,7 +971,7 @@ public:
 
   const NamedDecl *getBestDecl() const {
     if (BestEditDistance > MaxEditDistance)
-      return NULL;
+      return nullptr;
 
     return BestDecl;
   }

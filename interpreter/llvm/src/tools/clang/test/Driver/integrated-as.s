@@ -29,12 +29,17 @@
 // XA_INCLUDE2: cc1as
 // XA_INCLUDE2: "-Ifoo_dir"
 
-// RUN: %clang -### -c -integrated-as -Wa,-compress-debug-sections %s 2>&1 | FileCheck --check-prefix=COMPRESS_DEBUG %s
-// RUN: %clang -### -c -integrated-as -Wa,--compress-debug-sections %s 2>&1 | FileCheck --check-prefix=COMPRESS_DEBUG %s
-// COMPRESS_DEBUG: warning: DWARF compression is not implemented
-// COMPRESS_DEBUG: -cc1as
+// RUN: %clang -### -c -integrated-as %s -gdwarf-2 2>&1 | FileCheck --check-prefix=DWARF2 %s
+// DWARF2: "-g" "-gdwarf-2"
 
-// RUN: %clang -### -c -integrated-as -Wa,-compress-debug-sections -Wno-missing-debug-compression %s 2>&1 | FileCheck --check-prefix=COMPRESS_DEBUG_QUIET %s
-// COMPRESS_DEBUG_QUIET-NOT: warning: DWARF compression is not implemented
-// COMPRESS_DEBUG_QUIET-NOT: warning: argument unused during compilation
-// COMPRESS_DEBUG_QUIET: -cc1as
+// RUN: %clang -### -c -integrated-as %s -gdwarf-3 2>&1 | FileCheck --check-prefix=DWARF3 %s
+// DWARF3: "-g" "-gdwarf-3"
+
+// RUN: %clang -### -c -integrated-as %s -gdwarf-4 2>&1 | FileCheck --check-prefix=DWARF4 %s
+// DWARF4: "-g" "-gdwarf-4"
+
+// RUN: %clang -### -c -integrated-as %s -Xassembler -gdwarf-2 2>&1 | FileCheck --check-prefix=DWARF2XASSEMBLER %s
+// DWARF2XASSEMBLER: "-gdwarf-2"
+
+// RUN: %clang -### -c -integrated-as %s -Wa,-gdwarf-2 2>&1 | FileCheck --check-prefix=DWARF2WA %s
+// DWARF2WA: "-gdwarf-2"

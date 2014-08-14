@@ -47,23 +47,24 @@
 /// \macro LLVM_MSC_PREREQ
 /// \brief Is the compiler MSVC of at least the specified version?
 /// The common \param version values to check for are:
-///  * 1600: Microsoft Visual Studio 2010 / 10.0
 ///  * 1700: Microsoft Visual Studio 2012 / 11.0
 ///  * 1800: Microsoft Visual Studio 2013 / 12.0
 #ifdef _MSC_VER
 #define LLVM_MSC_PREREQ(version) (_MSC_VER >= (version))
+
+// We require at least MSVC 2012.
+#if !LLVM_MSC_PREREQ(1700)
+#error LLVM requires at least MSVC 2012.
+#endif
+
 #else
 #define LLVM_MSC_PREREQ(version) 0
 #endif
 
-/// \brief Does the compiler support r-value references?
-/// This implies that <utility> provides the one-argument std::move;  it
-/// does not imply the existence of any other C++ library features.
-#if __has_feature(cxx_rvalue_references) || \
-    defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1600)
-#define LLVM_HAS_RVALUE_REFERENCES 1
+#ifndef _MSC_VER
+#define LLVM_NOEXCEPT noexcept
 #else
-#define LLVM_HAS_RVALUE_REFERENCES 0
+#define LLVM_NOEXCEPT
 #endif
 
 /// \brief Does the compiler support r-value reference *this?
@@ -78,31 +79,6 @@
 #define LLVM_HAS_RVALUE_REFERENCE_THIS 0
 #endif
 
-/// \macro LLVM_HAS_CXX11_TYPETRAITS
-/// \brief Does the compiler have the C++11 type traits.
-///
-/// #include <type_traits>
-///
-/// * enable_if
-/// * {true,false}_type
-/// * is_constructible
-/// * etc...
-#if defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1700)
-#define LLVM_HAS_CXX11_TYPETRAITS 1
-#else
-#define LLVM_HAS_CXX11_TYPETRAITS 0
-#endif
-
-/// \macro LLVM_HAS_CXX11_STDLIB
-/// \brief Does the compiler have the C++11 standard library.
-///
-/// Implies LLVM_HAS_RVALUE_REFERENCES, LLVM_HAS_CXX11_TYPETRAITS
-#if defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1700)
-#define LLVM_HAS_CXX11_STDLIB 1
-#else
-#define LLVM_HAS_CXX11_STDLIB 0
-#endif
-
 /// \macro LLVM_HAS_VARIADIC_TEMPLATES
 /// \brief Does this compiler support variadic templates.
 ///
@@ -111,14 +87,6 @@
 # define LLVM_HAS_VARIADIC_TEMPLATES 1
 #else
 # define LLVM_HAS_VARIADIC_TEMPLATES 0
-#endif
-
-/// llvm_move - Expands to ::std::move if the compiler supports
-/// r-value references; otherwise, expands to the argument.
-#if LLVM_HAS_RVALUE_REFERENCES
-#define llvm_move(value) (::std::move(value))
-#else
-#define llvm_move(value) (value)
 #endif
 
 /// Expands to '&' if r-value references are supported.
@@ -147,26 +115,6 @@
 #define LLVM_DELETED_FUNCTION = delete
 #else
 #define LLVM_DELETED_FUNCTION
-#endif
-
-/// LLVM_FINAL - Expands to 'final' if the compiler supports it.
-/// Use to mark classes or virtual methods as final.
-#if __has_feature(cxx_override_control) || \
-    (defined(__GXX_EXPERIMENTAL_CXX0X__) && __GNUC_PREREQ(4, 7)) || \
-    LLVM_MSC_PREREQ(1700)
-#define LLVM_FINAL final
-#else
-#define LLVM_FINAL
-#endif
-
-/// LLVM_OVERRIDE - Expands to 'override' if the compiler supports it.
-/// Use to mark virtual methods as overriding a base class method.
-#if __has_feature(cxx_override_control) || \
-    (defined(__GXX_EXPERIMENTAL_CXX0X__) && __GNUC_PREREQ(4, 7)) || \
-    LLVM_MSC_PREREQ(1700)
-#define LLVM_OVERRIDE override
-#else
-#define LLVM_OVERRIDE
 #endif
 
 #if __has_feature(cxx_constexpr) || defined(__GXX_EXPERIMENTAL_CXX0X__)
@@ -389,37 +337,6 @@
 #define LLVM_EXPLICIT explicit
 #else
 #define LLVM_EXPLICIT
-#endif
-
-/// \macro LLVM_STATIC_ASSERT
-/// \brief Expands to C/C++'s static_assert on compilers which support it.
-#if __has_feature(cxx_static_assert) || \
-    defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1600)
-# define LLVM_STATIC_ASSERT(expr, msg) static_assert(expr, msg)
-#elif __has_feature(c_static_assert)
-# define LLVM_STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
-#elif __has_extension(c_static_assert)
-# define LLVM_STATIC_ASSERT(expr, msg) LLVM_EXTENSION _Static_assert(expr, msg)
-#else
-# define LLVM_STATIC_ASSERT(expr, msg)
-#endif
-
-/// \macro LLVM_ENUM_INT_TYPE
-/// \brief Expands to colon followed by the given integral type on compilers
-/// which support C++11 strong enums.  This can be used to make enums unsigned
-/// with MSVC.
-#if __has_feature(cxx_strong_enums) || LLVM_MSC_PREREQ(1600)
-# define LLVM_ENUM_INT_TYPE(intty) : intty
-#else
-# define LLVM_ENUM_INT_TYPE(intty)
-#endif
-
-/// \brief Does the compiler support C++11 semantics for strongly typed forward
-/// declared enums?
-#if __has_feature(cxx_strong_enums) || LLVM_MSC_PREREQ(1700)
-#define LLVM_HAS_STRONG_ENUMS 1
-#else
-#define LLVM_HAS_STRONG_ENUMS 0
 #endif
 
 /// \brief Does the compiler support generalized initializers (using braced

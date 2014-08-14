@@ -37,11 +37,20 @@ module XG {
   header "g1.h"
   use XC
   use XE
+  use XJ
 }
 
 module XH {
   header "h.h"
   header "h1.h"
+  header "s.h"
   use XC
   use XE
+}
+
+module XJ {
+  header "j.h"
+}
+
+module XS {
 }

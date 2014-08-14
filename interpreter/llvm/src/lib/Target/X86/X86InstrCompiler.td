@@ -110,7 +110,7 @@ let Defs = [EAX, ESP, EFLAGS], Uses = [ESP] in
 
 // When using segmented stacks these are lowered into instructions which first
 // check if the current stacklet has enough free memory. If it does, memory is
-// allocated by bumping the stack pointer. Otherwise memory is allocated from 
+// allocated by bumping the stack pointer. Otherwise memory is allocated from
 // the heap.
 
 let Defs = [EAX, ESP, EFLAGS], Uses = [ESP] in
@@ -194,6 +194,26 @@ let hasSideEffects = 1, isBarrier = 1, isCodeGenOnly = 1,
 let isBranch = 1, isTerminator = 1, isCodeGenOnly = 1 in {
   def EH_SjLj_Setup : I<0, Pseudo, (outs), (ins brtarget:$dst),
                         "#EH_SjLj_Setup\t$dst", []>;
+}
+
+//===----------------------------------------------------------------------===//
+// Pseudo instructions used by unwind info.
+//
+let isPseudo = 1 in {
+  def SEH_PushReg : I<0, Pseudo, (outs), (ins i32imm:$reg),
+                            "#SEH_PushReg $reg", []>;
+  def SEH_SaveReg : I<0, Pseudo, (outs), (ins i32imm:$reg, i32imm:$dst),
+                            "#SEH_SaveReg $reg, $dst", []>;
+  def SEH_SaveXMM : I<0, Pseudo, (outs), (ins i32imm:$reg, i32imm:$dst),
+                            "#SEH_SaveXMM $reg, $dst", []>;
+  def SEH_StackAlloc : I<0, Pseudo, (outs), (ins i32imm:$size),
+                            "#SEH_StackAlloc $size", []>;
+  def SEH_SetFrame : I<0, Pseudo, (outs), (ins i32imm:$reg, i32imm:$offset),
+                            "#SEH_SetFrame $reg, $offset", []>;
+  def SEH_PushFrame : I<0, Pseudo, (outs), (ins i1imm:$mode),
+                            "#SEH_PushFrame $mode", []>;
+  def SEH_EndPrologue : I<0, Pseudo, (outs), (ins),
+                            "#SEH_EndPrologue", []>;
 }
 
 //===----------------------------------------------------------------------===//
@@ -371,7 +391,7 @@ let Defs = [RCX,RDI], isCodeGenOnly = 1 in {
   def REP_STOSD_64 : I<0xAB, RawFrm, (outs), (ins), "{rep;stosl|rep stosd}",
                       [(X86rep_stos i32)], IIC_REP_STOS>, REP, OpSize32,
                      Requires<[In64BitMode]>;
- 
+
   let Uses = [RAX,RCX,RDI] in
   def REP_STOSQ_64 : RI<0xAB, RawFrm, (outs), (ins), "{rep;stosq|rep stosq}",
                       [(X86rep_stos i64)], IIC_REP_STOS>, REP,
@@ -387,7 +407,8 @@ let Defs = [RCX,RDI], isCodeGenOnly = 1 in {
 // All calls clobber the non-callee saved registers. ESP is marked as
 // a use to prevent stack-pointer assignments that appear immediately
 // before calls from potentially appearing dead.
-let Defs = [EAX, ECX, EDX, FP0, FP1, FP2, FP3, FP4, FP5, FP6, ST0,
+let Defs = [EAX, ECX, EDX, FP0, FP1, FP2, FP3, FP4, FP5, FP6, FP7,
+            ST0, ST1, ST2, ST3, ST4, ST5, ST6, ST7,
             MM0, MM1, MM2, MM3, MM4, MM5, MM6, MM7,
             XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7,
             XMM8, XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15, EFLAGS],
@@ -406,7 +427,8 @@ def TLS_base_addr32 : I<0, Pseudo, (outs), (ins i32mem:$sym),
 // a use to prevent stack-pointer assignments that appear immediately
 // before calls from potentially appearing dead.
 let Defs = [RAX, RCX, RDX, RSI, RDI, R8, R9, R10, R11,
-            FP0, FP1, FP2, FP3, FP4, FP5, FP6, ST0, ST1,
+            FP0, FP1, FP2, FP3, FP4, FP5, FP6, FP7,
+            ST0, ST1, ST2, ST3, ST4, ST5, ST6, ST7,
             MM0, MM1, MM2, MM3, MM4, MM5, MM6, MM7,
             XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7,
             XMM8, XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15, EFLAGS],
@@ -500,83 +522,6 @@ def CMOV_RFP80 : I<0, Pseudo,
                                                   EFLAGS))]>;
 } // UsesCustomInserter = 1, Uses = [EFLAGS]
 
-
-//===----------------------------------------------------------------------===//
-// Atomic Instruction Pseudo Instructions
-//===----------------------------------------------------------------------===//
-
-// Pseudo atomic instructions
-
-multiclass PSEUDO_ATOMIC_LOAD_BINOP<string mnemonic> {
-  let usesCustomInserter = 1, mayLoad = 1, mayStore = 1 in {
-    let Defs = [EFLAGS, AL] in
-    def NAME#8  : I<0, Pseudo, (outs GR8:$dst),
-                    (ins i8mem:$ptr, GR8:$val),
-                    !strconcat(mnemonic, "8 PSEUDO!"), []>;
-    let Defs = [EFLAGS, AX] in
-    def NAME#16 : I<0, Pseudo,(outs GR16:$dst),
-                    (ins i16mem:$ptr, GR16:$val),
-                    !strconcat(mnemonic, "16 PSEUDO!"), []>;
-    let Defs = [EFLAGS, EAX] in
-    def NAME#32 : I<0, Pseudo, (outs GR32:$dst),
-                    (ins i32mem:$ptr, GR32:$val),
-                    !strconcat(mnemonic, "32 PSEUDO!"), []>;
-    let Defs = [EFLAGS, RAX] in
-    def NAME#64 : I<0, Pseudo, (outs GR64:$dst),
-                    (ins i64mem:$ptr, GR64:$val),
-                    !strconcat(mnemonic, "64 PSEUDO!"), []>;
-  }
-}
-
-multiclass PSEUDO_ATOMIC_LOAD_BINOP_PATS<string name, string frag> {
-  def : Pat<(!cast<PatFrag>(frag # "_8") addr:$ptr, GR8:$val),
-            (!cast<Instruction>(name # "8") addr:$ptr, GR8:$val)>;
-  def : Pat<(!cast<PatFrag>(frag # "_16") addr:$ptr, GR16:$val),
-            (!cast<Instruction>(name # "16") addr:$ptr, GR16:$val)>;
-  def : Pat<(!cast<PatFrag>(frag # "_32") addr:$ptr, GR32:$val),
-            (!cast<Instruction>(name # "32") addr:$ptr, GR32:$val)>;
-  def : Pat<(!cast<PatFrag>(frag # "_64") addr:$ptr, GR64:$val),
-            (!cast<Instruction>(name # "64") addr:$ptr, GR64:$val)>;
-}
-
-// Atomic exchange, and, or, xor
-defm ATOMAND  : PSEUDO_ATOMIC_LOAD_BINOP<"#ATOMAND">;
-defm ATOMOR   : PSEUDO_ATOMIC_LOAD_BINOP<"#ATOMOR">;
-defm ATOMXOR  : PSEUDO_ATOMIC_LOAD_BINOP<"#ATOMXOR">;
-defm ATOMNAND : PSEUDO_ATOMIC_LOAD_BINOP<"#ATOMNAND">;
-defm ATOMMAX  : PSEUDO_ATOMIC_LOAD_BINOP<"#ATOMMAX">;
-defm ATOMMIN  : PSEUDO_ATOMIC_LOAD_BINOP<"#ATOMMIN">;
-defm ATOMUMAX : PSEUDO_ATOMIC_LOAD_BINOP<"#ATOMUMAX">;
-defm ATOMUMIN : PSEUDO_ATOMIC_LOAD_BINOP<"#ATOMUMIN">;
-
-defm : PSEUDO_ATOMIC_LOAD_BINOP_PATS<"ATOMAND",  "atomic_load_and">;
-defm : PSEUDO_ATOMIC_LOAD_BINOP_PATS<"ATOMOR",   "atomic_load_or">;
-defm : PSEUDO_ATOMIC_LOAD_BINOP_PATS<"ATOMXOR",  "atomic_load_xor">;
-defm : PSEUDO_ATOMIC_LOAD_BINOP_PATS<"ATOMNAND", "atomic_load_nand">;
-defm : PSEUDO_ATOMIC_LOAD_BINOP_PATS<"ATOMMAX",  "atomic_load_max">;
-defm : PSEUDO_ATOMIC_LOAD_BINOP_PATS<"ATOMMIN",  "atomic_load_min">;
-defm : PSEUDO_ATOMIC_LOAD_BINOP_PATS<"ATOMUMAX", "atomic_load_umax">;
-defm : PSEUDO_ATOMIC_LOAD_BINOP_PATS<"ATOMUMIN", "atomic_load_umin">;
-
-multiclass PSEUDO_ATOMIC_LOAD_BINOP6432<string mnemonic> {
-  let usesCustomInserter = 1, Defs = [EFLAGS, EAX, EDX],
-      mayLoad = 1, mayStore = 1, hasSideEffects = 0 in
-    def NAME#6432 : I<0, Pseudo, (outs GR32:$dst1, GR32:$dst2),
-                      (ins i64mem:$ptr, GR32:$val1, GR32:$val2),
-                      !strconcat(mnemonic, "6432 PSEUDO!"), []>;
-}
-
-defm ATOMAND  : PSEUDO_ATOMIC_LOAD_BINOP6432<"#ATOMAND">;
-defm ATOMOR   : PSEUDO_ATOMIC_LOAD_BINOP6432<"#ATOMOR">;
-defm ATOMXOR  : PSEUDO_ATOMIC_LOAD_BINOP6432<"#ATOMXOR">;
-defm ATOMNAND : PSEUDO_ATOMIC_LOAD_BINOP6432<"#ATOMNAND">;
-defm ATOMADD  : PSEUDO_ATOMIC_LOAD_BINOP6432<"#ATOMADD">;
-defm ATOMSUB  : PSEUDO_ATOMIC_LOAD_BINOP6432<"#ATOMSUB">;
-defm ATOMMAX  : PSEUDO_ATOMIC_LOAD_BINOP6432<"#ATOMMAX">;
-defm ATOMMIN  : PSEUDO_ATOMIC_LOAD_BINOP6432<"#ATOMMIN">;
-defm ATOMUMAX : PSEUDO_ATOMIC_LOAD_BINOP6432<"#ATOMUMAX">;
-defm ATOMUMIN : PSEUDO_ATOMIC_LOAD_BINOP6432<"#ATOMUMIN">;
-defm ATOMSWAP : PSEUDO_ATOMIC_LOAD_BINOP6432<"#ATOMSWAP">;
 
 //===----------------------------------------------------------------------===//
 // Normal-Instructions-With-Lock-Prefix Pseudo Instructions
@@ -1187,9 +1132,9 @@ def or_is_add : PatFrag<(ops node:$lhs, node:$rhs), (or node:$lhs, node:$rhs),[{
     return CurDAG->MaskedValueIsZero(N->getOperand(0), CN->getAPIntValue());
 
   APInt KnownZero0, KnownOne0;
-  CurDAG->ComputeMaskedBits(N->getOperand(0), KnownZero0, KnownOne0, 0);
+  CurDAG->computeKnownBits(N->getOperand(0), KnownZero0, KnownOne0, 0);
   APInt KnownZero1, KnownOne1;
-  CurDAG->ComputeMaskedBits(N->getOperand(1), KnownZero1, KnownOne1, 0);
+  CurDAG->computeKnownBits(N->getOperand(1), KnownZero1, KnownOne1, 0);
   return (~KnownZero0 & ~KnownZero1) == 0;
 }]>;
 
@@ -1530,62 +1475,34 @@ def : Pat<(shl GR64:$src1, (i8 1)), (ADD64rr GR64:$src1, GR64:$src1)>;
 def immShift32 : ImmLeaf<i8, [{ return CountTrailingOnes_32(Imm) >= 5; }]>;
 def immShift64 : ImmLeaf<i8, [{ return CountTrailingOnes_32(Imm) >= 6; }]>;
 
-// (shl x (and y, 31)) ==> (shl x, y)
-def : Pat<(shl GR8:$src1, (and CL, immShift32)),
-          (SHL8rCL GR8:$src1)>;
-def : Pat<(shl GR16:$src1, (and CL, immShift32)),
-          (SHL16rCL GR16:$src1)>;
-def : Pat<(shl GR32:$src1, (and CL, immShift32)),
-          (SHL32rCL GR32:$src1)>;
-def : Pat<(store (shl (loadi8 addr:$dst), (and CL, immShift32)), addr:$dst),
-          (SHL8mCL addr:$dst)>;
-def : Pat<(store (shl (loadi16 addr:$dst), (and CL, immShift32)), addr:$dst),
-          (SHL16mCL addr:$dst)>;
-def : Pat<(store (shl (loadi32 addr:$dst), (and CL, immShift32)), addr:$dst),
-          (SHL32mCL addr:$dst)>;
+// Shift amount is implicitly masked.
+multiclass MaskedShiftAmountPats<SDNode frag, string name> {
+  // (shift x (and y, 31)) ==> (shift x, y)
+  def : Pat<(frag GR8:$src1, (and CL, immShift32)),
+            (!cast<Instruction>(name # "8rCL") GR8:$src1)>;
+  def : Pat<(frag GR16:$src1, (and CL, immShift32)),
+            (!cast<Instruction>(name # "16rCL") GR16:$src1)>;
+  def : Pat<(frag GR32:$src1, (and CL, immShift32)),
+            (!cast<Instruction>(name # "32rCL") GR32:$src1)>;
+  def : Pat<(store (frag (loadi8 addr:$dst), (and CL, immShift32)), addr:$dst),
+            (!cast<Instruction>(name # "8mCL") addr:$dst)>;
+  def : Pat<(store (frag (loadi16 addr:$dst), (and CL, immShift32)), addr:$dst),
+            (!cast<Instruction>(name # "16mCL") addr:$dst)>;
+  def : Pat<(store (frag (loadi32 addr:$dst), (and CL, immShift32)), addr:$dst),
+            (!cast<Instruction>(name # "32mCL") addr:$dst)>;
 
-def : Pat<(srl GR8:$src1, (and CL, immShift32)),
-          (SHR8rCL GR8:$src1)>;
-def : Pat<(srl GR16:$src1, (and CL, immShift32)),
-          (SHR16rCL GR16:$src1)>;
-def : Pat<(srl GR32:$src1, (and CL, immShift32)),
-          (SHR32rCL GR32:$src1)>;
-def : Pat<(store (srl (loadi8 addr:$dst), (and CL, immShift32)), addr:$dst),
-          (SHR8mCL addr:$dst)>;
-def : Pat<(store (srl (loadi16 addr:$dst), (and CL, immShift32)), addr:$dst),
-          (SHR16mCL addr:$dst)>;
-def : Pat<(store (srl (loadi32 addr:$dst), (and CL, immShift32)), addr:$dst),
-          (SHR32mCL addr:$dst)>;
+  // (shift x (and y, 63)) ==> (shift x, y)
+  def : Pat<(frag GR64:$src1, (and CL, immShift64)),
+            (!cast<Instruction>(name # "64rCL") GR64:$src1)>;
+  def : Pat<(store (frag (loadi64 addr:$dst), (and CL, 63)), addr:$dst),
+            (!cast<Instruction>(name # "64mCL") addr:$dst)>;
+}
 
-def : Pat<(sra GR8:$src1, (and CL, immShift32)),
-          (SAR8rCL GR8:$src1)>;
-def : Pat<(sra GR16:$src1, (and CL, immShift32)),
-          (SAR16rCL GR16:$src1)>;
-def : Pat<(sra GR32:$src1, (and CL, immShift32)),
-          (SAR32rCL GR32:$src1)>;
-def : Pat<(store (sra (loadi8 addr:$dst), (and CL, immShift32)), addr:$dst),
-          (SAR8mCL addr:$dst)>;
-def : Pat<(store (sra (loadi16 addr:$dst), (and CL, immShift32)), addr:$dst),
-          (SAR16mCL addr:$dst)>;
-def : Pat<(store (sra (loadi32 addr:$dst), (and CL, immShift32)), addr:$dst),
-          (SAR32mCL addr:$dst)>;
-
-// (shl x (and y, 63)) ==> (shl x, y)
-def : Pat<(shl GR64:$src1, (and CL, immShift64)),
-          (SHL64rCL GR64:$src1)>;
-def : Pat<(store (shl (loadi64 addr:$dst), (and CL, 63)), addr:$dst),
-          (SHL64mCL addr:$dst)>;
-
-def : Pat<(srl GR64:$src1, (and CL, immShift64)),
-          (SHR64rCL GR64:$src1)>;
-def : Pat<(store (srl (loadi64 addr:$dst), (and CL, 63)), addr:$dst),
-          (SHR64mCL addr:$dst)>;
-
-def : Pat<(sra GR64:$src1, (and CL, immShift64)),
-          (SAR64rCL GR64:$src1)>;
-def : Pat<(store (sra (loadi64 addr:$dst), (and CL, 63)), addr:$dst),
-          (SAR64mCL addr:$dst)>;
-
+defm : MaskedShiftAmountPats<shl, "SHL">;
+defm : MaskedShiftAmountPats<srl, "SHR">;
+defm : MaskedShiftAmountPats<sra, "SAR">;
+defm : MaskedShiftAmountPats<rotl, "ROL">;
+defm : MaskedShiftAmountPats<rotr, "ROR">;
 
 // (anyext (setcc_carry)) -> (setcc_carry)
 def : Pat<(i16 (anyext (i8 (X86setcc_c X86_COND_B, EFLAGS)))),
@@ -1724,20 +1641,34 @@ def : Pat<(mul (loadi64 addr:$src1), i64immSExt32:$src2),
           (IMUL64rmi32 addr:$src1, i64immSExt32:$src2)>;
 
 // Increment reg.
-def : Pat<(add GR8 :$src, 1), (INC8r     GR8 :$src)>;
-def : Pat<(add GR16:$src, 1), (INC16r    GR16:$src)>, Requires<[Not64BitMode]>;
-def : Pat<(add GR16:$src, 1), (INC64_16r GR16:$src)>, Requires<[In64BitMode]>;
-def : Pat<(add GR32:$src, 1), (INC32r    GR32:$src)>, Requires<[Not64BitMode]>;
-def : Pat<(add GR32:$src, 1), (INC64_32r GR32:$src)>, Requires<[In64BitMode]>;
-def : Pat<(add GR64:$src, 1), (INC64r    GR64:$src)>;
+// Do not make INC if it is slow
+def : Pat<(add GR8:$src, 1),
+          (INC8r GR8:$src)>, Requires<[NotSlowIncDec]>;
+def : Pat<(add GR16:$src, 1),
+          (INC16r GR16:$src)>, Requires<[NotSlowIncDec, Not64BitMode]>;
+def : Pat<(add GR16:$src, 1),
+          (INC64_16r GR16:$src)>, Requires<[NotSlowIncDec, In64BitMode]>;
+def : Pat<(add GR32:$src, 1),
+          (INC32r GR32:$src)>, Requires<[NotSlowIncDec, Not64BitMode]>;
+def : Pat<(add GR32:$src, 1),
+          (INC64_32r GR32:$src)>, Requires<[NotSlowIncDec, In64BitMode]>;
+def : Pat<(add GR64:$src, 1),
+          (INC64r GR64:$src)>, Requires<[NotSlowIncDec]>;
 
 // Decrement reg.
-def : Pat<(add GR8 :$src, -1), (DEC8r     GR8 :$src)>;
-def : Pat<(add GR16:$src, -1), (DEC16r    GR16:$src)>, Requires<[Not64BitMode]>;
-def : Pat<(add GR16:$src, -1), (DEC64_16r GR16:$src)>, Requires<[In64BitMode]>;
-def : Pat<(add GR32:$src, -1), (DEC32r    GR32:$src)>, Requires<[Not64BitMode]>;
-def : Pat<(add GR32:$src, -1), (DEC64_32r GR32:$src)>, Requires<[In64BitMode]>;
-def : Pat<(add GR64:$src, -1), (DEC64r    GR64:$src)>;
+// Do not make DEC if it is slow
+def : Pat<(add GR8:$src, -1),
+          (DEC8r GR8:$src)>, Requires<[NotSlowIncDec]>;
+def : Pat<(add GR16:$src, -1),
+          (DEC16r GR16:$src)>, Requires<[NotSlowIncDec, Not64BitMode]>;
+def : Pat<(add GR16:$src, -1),
+          (DEC64_16r GR16:$src)>, Requires<[NotSlowIncDec, In64BitMode]>;
+def : Pat<(add GR32:$src, -1),
+          (DEC32r GR32:$src)>, Requires<[NotSlowIncDec, Not64BitMode]>;
+def : Pat<(add GR32:$src, -1),
+          (DEC64_32r GR32:$src)>, Requires<[NotSlowIncDec, In64BitMode]>;
+def : Pat<(add GR64:$src, -1),
+          (DEC64r GR64:$src)>, Requires<[NotSlowIncDec]>;
 
 // or reg/reg.
 def : Pat<(or GR8 :$src1, GR8 :$src2), (OR8rr  GR8 :$src1, GR8 :$src2)>;
@@ -1839,3 +1770,9 @@ def : Pat<(cttz_zero_undef GR64:$src), (BSF64rr GR64:$src)>;
 def : Pat<(cttz_zero_undef (loadi16 addr:$src)), (BSF16rm addr:$src)>;
 def : Pat<(cttz_zero_undef (loadi32 addr:$src)), (BSF32rm addr:$src)>;
 def : Pat<(cttz_zero_undef (loadi64 addr:$src)), (BSF64rm addr:$src)>;
+
+// When HasMOVBE is enabled it is possible to get a non-legalized
+// register-register 16 bit bswap. This maps it to a ROL instruction.
+let Predicates = [HasMOVBE] in {
+ def : Pat<(bswap GR16:$src), (ROL16ri GR16:$src, (i8 8))>;
+}

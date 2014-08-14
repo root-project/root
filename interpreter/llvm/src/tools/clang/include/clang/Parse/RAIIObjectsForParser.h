@@ -51,7 +51,7 @@ namespace clang {
   public:
     /// Begin suppressing access-like checks 
     SuppressAccessChecks(Parser &P, bool activate = true)
-        : S(P.getActions()), DiagnosticPool(NULL) {
+        : S(P.getActions()), DiagnosticPool(nullptr) {
       if (activate) {
         State = S.PushParsingDeclaration(DiagnosticPool);
         Active = true;
@@ -62,7 +62,7 @@ namespace clang {
 
     void done() {
       assert(Active && "trying to end an inactive suppression");
-      S.PopParsingDeclaration(State, NULL);
+      S.PopParsingDeclaration(State, nullptr);
       Active = false;
     }
 
@@ -94,7 +94,7 @@ namespace clang {
   public:
     enum NoParent_t { NoParent };
     ParsingDeclRAIIObject(Parser &P, NoParent_t _)
-        : Actions(P.getActions()), DiagnosticPool(NULL) {
+        : Actions(P.getActions()), DiagnosticPool(nullptr) {
       push();
     }
 
@@ -110,7 +110,7 @@ namespace clang {
     /// RAII object (which is assumed to be the current top pool).
     ParsingDeclRAIIObject(Parser &P, ParsingDeclRAIIObject *other)
         : Actions(P.getActions()),
-          DiagnosticPool(other ? other->DiagnosticPool.getParent() : NULL) {
+          DiagnosticPool(other ? other->DiagnosticPool.getParent() : nullptr) {
       if (other) {
         DiagnosticPool.steal(other->DiagnosticPool);
         other->abort();
@@ -138,7 +138,7 @@ namespace clang {
     /// Signals that the context was completed without an appropriate
     /// declaration being parsed.
     void abort() {
-      pop(0);
+      pop(nullptr);
     }
 
     void complete(Decl *D) {
@@ -149,7 +149,7 @@ namespace clang {
     /// Unregister this object from Sema, but remember all the
     /// diagnostics that were emitted into it.
     void abortAndRemember() {
-      pop(0);
+      pop(nullptr);
     }
 
   private:

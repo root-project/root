@@ -16,10 +16,10 @@
 
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/IR/CFG.h"
 #include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/BranchProbability.h"
-#include "llvm/Support/CFG.h"
 
 namespace llvm {
 class LoopInfo;
@@ -45,9 +45,9 @@ public:
     initializeBranchProbabilityInfoPass(*PassRegistry::getPassRegistry());
   }
 
-  void getAnalysisUsage(AnalysisUsage &AU) const;
-  bool runOnFunction(Function &F);
-  void print(raw_ostream &OS, const Module *M = 0) const;
+  void getAnalysisUsage(AnalysisUsage &AU) const override;
+  bool runOnFunction(Function &F) override;
+  void print(raw_ostream &OS, const Module *M = nullptr) const override;
 
   /// \brief Get an edge's probability, relative to other out-edges of the Src.
   ///

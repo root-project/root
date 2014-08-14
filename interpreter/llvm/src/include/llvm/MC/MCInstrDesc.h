@@ -451,9 +451,12 @@ public:
   }
 
   /// isRematerializable - Returns true if this instruction is a candidate for
-  /// remat.  This flag is deprecated, please don't use it anymore.  If this
-  /// flag is set, the isReallyTriviallyReMaterializable() method is called to
-  /// verify the instruction is really rematable.
+  /// remat. This flag is only used in TargetInstrInfo method
+  /// isTriviallyRematerializable.
+  ///
+  /// If this flag is set, the isReallyTriviallyReMaterializable()
+  /// or isReallyTriviallyReMaterializableGeneric methods are called to verify
+  /// the instruction is really rematable.
   bool isRematerializable() const {
     return Flags & (1 << MCID::Rematerializable);
   }
@@ -464,6 +467,9 @@ public:
   /// where we would like to remat or hoist the instruction, but not if it costs
   /// more than moving the instruction into the appropriate register. Note, we
   /// are not marking copies from and to the same register class with this flag.
+  ///
+  /// This method could be called by interface TargetInstrInfo::isAsCheapAsAMove
+  /// for different subtargets.
   bool isAsCheapAsAMove() const {
     return Flags & (1 << MCID::CheapAsAMove);
   }
@@ -504,7 +510,7 @@ public:
 
   /// \brief Return the number of implicit uses this instruction has.
   unsigned getNumImplicitUses() const {
-    if (ImplicitUses == 0) return 0;
+    if (!ImplicitUses) return 0;
     unsigned i = 0;
     for (; ImplicitUses[i]; ++i) /*empty*/;
     return i;
@@ -526,7 +532,7 @@ public:
 
   /// \brief Return the number of implicit defs this instruct has.
   unsigned getNumImplicitDefs() const {
-    if (ImplicitDefs == 0) return 0;
+    if (!ImplicitDefs) return 0;
     unsigned i = 0;
     for (; ImplicitDefs[i]; ++i) /*empty*/;
     return i;
@@ -544,7 +550,7 @@ public:
   /// \brief Return true if this instruction implicitly
   /// defines the specified physical register.
   bool hasImplicitDefOfPhysReg(unsigned Reg,
-                               const MCRegisterInfo *MRI = 0) const {
+                               const MCRegisterInfo *MRI = nullptr) const {
     if (const uint16_t *ImpDefs = ImplicitDefs)
       for (; *ImpDefs; ++ImpDefs)
         if (*ImpDefs == Reg || (MRI && MRI->isSubRegister(Reg, *ImpDefs)))

@@ -293,8 +293,8 @@ public:
   /// \param Loc [in,out] - A source location which *may* be filled
   /// in with the location of the expression making this a
   /// non-modifiable lvalue, if specified.
-  isModifiableLvalueResult isModifiableLvalue(ASTContext &Ctx,
-                                              SourceLocation *Loc = 0) const;
+  isModifiableLvalueResult
+  isModifiableLvalue(ASTContext &Ctx, SourceLocation *Loc = nullptr) const;
 
   /// \brief The return type of classify(). Represents the C++11 expression
   ///        taxonomy.
@@ -372,7 +372,7 @@ public:
   /// lvalues and xvalues are collectively referred to as glvalues, while
   /// prvalues and xvalues together form rvalues.
   Classification Classify(ASTContext &Ctx) const {
-    return ClassifyImpl(Ctx, 0);
+    return ClassifyImpl(Ctx, nullptr);
   }
 
   /// \brief ClassifyModifiable - Classify this expression according to the
@@ -483,10 +483,10 @@ public:
   /// Note: This does not perform the implicit conversions required by C++11
   /// [expr.const]p5.
   bool isIntegerConstantExpr(llvm::APSInt &Result, const ASTContext &Ctx,
-                             SourceLocation *Loc = 0,
+                             SourceLocation *Loc = nullptr,
                              bool isEvaluated = true) const;
   bool isIntegerConstantExpr(const ASTContext &Ctx,
-                             SourceLocation *Loc = 0) const;
+                             SourceLocation *Loc = nullptr) const;
 
   /// isCXX98IntegralConstantExpr - Return true if this expression is an
   /// integral constant expression in C++98. Can only be used in C++.
@@ -497,8 +497,8 @@ public:
   ///
   /// Note: This does not perform the implicit conversions required by C++11
   /// [expr.const]p5.
-  bool isCXX11ConstantExpr(const ASTContext &Ctx, APValue *Result = 0,
-                           SourceLocation *Loc = 0) const;
+  bool isCXX11ConstantExpr(const ASTContext &Ctx, APValue *Result = nullptr,
+                           SourceLocation *Loc = nullptr) const;
 
   /// isPotentialConstantExpr - Return true if this function's definition
   /// might be usable in a constant expression in C++11, if it were marked
@@ -520,7 +520,10 @@ public:
 
   /// isConstantInitializer - Returns true if this expression can be emitted to
   /// IR as a constant, and thus can be used as a constant initializer in C.
-  bool isConstantInitializer(ASTContext &Ctx, bool ForRef) const;
+  /// If this expression is not constant and Culprit is non-null,
+  /// it is used to store the address of first non constant expr.
+  bool isConstantInitializer(ASTContext &Ctx, bool ForRef,
+                             const Expr **Culprit = nullptr) const;
 
   /// EvalStatus is a struct with detailed info about an evaluation in progress.
   struct EvalStatus {
@@ -537,7 +540,7 @@ public:
     /// expression *is* a constant expression, no notes will be produced.
     SmallVectorImpl<PartialDiagnosticAt> *Diag;
 
-    EvalStatus() : HasSideEffects(false), Diag(0) {}
+    EvalStatus() : HasSideEffects(false), Diag(nullptr) {}
 
     // hasSideEffects - Return true if the evaluated expression has
     // side effects.
@@ -594,7 +597,7 @@ public:
   /// integer. This must be called on an expression that constant folds to an
   /// integer.
   llvm::APSInt EvaluateKnownConstInt(const ASTContext &Ctx,
-                          SmallVectorImpl<PartialDiagnosticAt> *Diag=0) const;
+                    SmallVectorImpl<PartialDiagnosticAt> *Diag = nullptr) const;
 
   void EvaluateForOverflow(const ASTContext &Ctx) const;
 
@@ -616,7 +619,7 @@ public:
   /// constant.
   bool EvaluateWithSubstitution(APValue &Value, ASTContext &Ctx,
                                 const FunctionDecl *Callee,
-                                llvm::ArrayRef<const Expr*> Args) const;
+                                ArrayRef<const Expr*> Args) const;
 
   /// \brief Enumeration used to describe the kind of Null pointer constant
   /// returned from \c isNullPointerConstant().
@@ -699,6 +702,9 @@ public:
   /// or CastExprs, returning their operand.
   Expr *IgnoreParenCasts() LLVM_READONLY;
 
+  /// Ignore casts.  Strip off any CastExprs, returning their operand.
+  Expr *IgnoreCasts() LLVM_READONLY;
+
   /// IgnoreParenImpCasts - Ignore parentheses and implicit casts.  Strip off
   /// any ParenExpr or ImplicitCastExprs, returning their operand.
   Expr *IgnoreParenImpCasts() LLVM_READONLY;
@@ -760,6 +766,11 @@ public:
   const Expr *IgnoreParenCasts() const LLVM_READONLY {
     return const_cast<Expr*>(this)->IgnoreParenCasts();
   }
+  /// Strip off casts, but keep parentheses.
+  const Expr *IgnoreCasts() const LLVM_READONLY {
+    return const_cast<Expr*>(this)->IgnoreCasts();
+  }
+
   const Expr *IgnoreParenNoopCasts(ASTContext &Ctx) const LLVM_READONLY {
     return const_cast<Expr*>(this)->IgnoreParenNoopCasts(Ctx);
   }
@@ -806,7 +817,7 @@ class OpaqueValueExpr : public Expr {
 public:
   OpaqueValueExpr(SourceLocation Loc, QualType T, ExprValueKind VK,
                   ExprObjectKind OK = OK_Ordinary,
-                  Expr *SourceExpr = 0)
+                  Expr *SourceExpr = nullptr)
     : Expr(OpaqueValueExprClass, T, VK, OK,
            T->isDependentType(), 
            T->isDependentType() || 
@@ -950,25 +961,19 @@ public:
     computeDependence(D->getASTContext());
   }
 
-  static DeclRefExpr *Create(const ASTContext &Context,
-                             NestedNameSpecifierLoc QualifierLoc,
-                             SourceLocation TemplateKWLoc,
-                             ValueDecl *D,
-                             bool isEnclosingLocal,
-                             SourceLocation NameLoc,
-                             QualType T, ExprValueKind VK,
-                             NamedDecl *FoundD = 0,
-                             const TemplateArgumentListInfo *TemplateArgs = 0);
+  static DeclRefExpr *
+  Create(const ASTContext &Context, NestedNameSpecifierLoc QualifierLoc,
+         SourceLocation TemplateKWLoc, ValueDecl *D, bool isEnclosingLocal,
+         SourceLocation NameLoc, QualType T, ExprValueKind VK,
+         NamedDecl *FoundD = nullptr,
+         const TemplateArgumentListInfo *TemplateArgs = nullptr);
 
-  static DeclRefExpr *Create(const ASTContext &Context,
-                             NestedNameSpecifierLoc QualifierLoc,
-                             SourceLocation TemplateKWLoc,
-                             ValueDecl *D,
-                             bool isEnclosingLocal,
-                             const DeclarationNameInfo &NameInfo,
-                             QualType T, ExprValueKind VK,
-                             NamedDecl *FoundD = 0,
-                             const TemplateArgumentListInfo *TemplateArgs = 0);
+  static DeclRefExpr *
+  Create(const ASTContext &Context, NestedNameSpecifierLoc QualifierLoc,
+         SourceLocation TemplateKWLoc, ValueDecl *D, bool isEnclosingLocal,
+         const DeclarationNameInfo &NameInfo, QualType T, ExprValueKind VK,
+         NamedDecl *FoundD = nullptr,
+         const TemplateArgumentListInfo *TemplateArgs = nullptr);
 
   /// \brief Construct an empty declaration reference expression.
   static DeclRefExpr *CreateEmpty(const ASTContext &Context,
@@ -998,7 +1003,7 @@ public:
   /// that precedes the name. Otherwise, returns NULL.
   NestedNameSpecifier *getQualifier() const {
     if (!hasQualifier())
-      return 0;
+      return nullptr;
 
     return getInternalQualifierLoc().getNestedNameSpecifier();
   }
@@ -1034,7 +1039,7 @@ public:
   /// \brief Return the optional template keyword and arguments info.
   ASTTemplateKWAndArgsInfo *getTemplateKWAndArgsInfo() {
     if (!hasTemplateKWAndArgsInfo())
-      return 0;
+      return nullptr;
 
     if (hasFoundDecl())
       return reinterpret_cast<ASTTemplateKWAndArgsInfo *>(
@@ -1098,7 +1103,7 @@ public:
   /// This points to the same data as getExplicitTemplateArgs(), but
   /// returns null if there are no explicit template arguments.
   const ASTTemplateArgumentListInfo *getOptionalExplicitTemplateArgs() const {
-    if (!hasExplicitTemplateArgs()) return 0;
+    if (!hasExplicitTemplateArgs()) return nullptr;
     return &getExplicitTemplateArgs();
   }
 
@@ -1113,7 +1118,7 @@ public:
   /// template-id.
   const TemplateArgumentLoc *getTemplateArgs() const {
     if (!hasExplicitTemplateArgs())
-      return 0;
+      return nullptr;
 
     return getExplicitTemplateArgs().getTemplateArgs();
   }
@@ -1164,6 +1169,7 @@ public:
     Function,
     LFunction,  // Same as Function, but as wide string.
     FuncDName,
+    FuncSig,
     PrettyFunction,
     /// PrettyFunctionNoVirtual - The same as PrettyFunction, except that the
     /// 'virtual' keyword is omitted for virtual member functions.
@@ -1875,7 +1881,7 @@ private:
 
   explicit OffsetOfExpr(unsigned numComps, unsigned numExprs)
     : Expr(OffsetOfExprClass, EmptyShell()),
-      TSInfo(0), NumComps(numComps), NumExprs(numExprs) {}
+      TSInfo(nullptr), NumComps(numComps), NumExprs(numExprs) {}
 
 public:
 
@@ -2226,6 +2232,13 @@ public:
 
   typedef ExprIterator arg_iterator;
   typedef ConstExprIterator const_arg_iterator;
+  typedef llvm::iterator_range<arg_iterator> arg_range;
+  typedef llvm::iterator_range<const_arg_iterator> arg_const_range;
+
+  arg_range arguments() { return arg_range(arg_begin(), arg_end()); }
+  arg_const_range arguments() const {
+    return arg_const_range(arg_begin(), arg_end());
+  }
 
   arg_iterator arg_begin() { return SubExprs+PREARGS_START+getNumPreArgs(); }
   arg_iterator arg_end() {
@@ -2405,14 +2418,14 @@ public:
   /// \brief Determines whether this member expression actually had
   /// a C++ nested-name-specifier prior to the name of the member, e.g.,
   /// x->Base::foo.
-  bool hasQualifier() const { return getQualifier() != 0; }
+  bool hasQualifier() const { return getQualifier() != nullptr; }
 
   /// \brief If the member name was qualified, retrieves the
   /// nested-name-specifier that precedes the member name. Otherwise, returns
   /// NULL.
   NestedNameSpecifier *getQualifier() const {
     if (!HasQualifierOrFoundDecl)
-      return 0;
+      return nullptr;
 
     return getMemberQualifier()->QualifierLoc.getNestedNameSpecifier();
   }
@@ -2430,7 +2443,7 @@ public:
   /// \brief Return the optional template keyword and arguments info.
   ASTTemplateKWAndArgsInfo *getTemplateKWAndArgsInfo() {
     if (!HasTemplateKWAndArgsInfo)
-      return 0;
+      return nullptr;
 
     if (!HasQualifierOrFoundDecl)
       return reinterpret_cast<ASTTemplateKWAndArgsInfo *>(this + 1);
@@ -2498,7 +2511,7 @@ public:
   /// This points to the same data as getExplicitTemplateArgs(), but
   /// returns null if there are no explicit template arguments.
   const ASTTemplateArgumentListInfo *getOptionalExplicitTemplateArgs() const {
-    if (!hasExplicitTemplateArgs()) return 0;
+    if (!hasExplicitTemplateArgs()) return nullptr;
     return &getExplicitTemplateArgs();
   }
 
@@ -2506,7 +2519,7 @@ public:
   /// template-id.
   const TemplateArgumentLoc *getTemplateArgs() const {
     if (!hasExplicitTemplateArgs())
-      return 0;
+      return nullptr;
 
     return getExplicitTemplateArgs().getTemplateArgs();
   }
@@ -3433,7 +3446,7 @@ public:
 
   /// \brief Build an empty vector-shuffle expression.
   explicit ShuffleVectorExpr(EmptyShell Empty)
-    : Expr(ShuffleVectorExprClass, Empty), SubExprs(0) { }
+    : Expr(ShuffleVectorExprClass, Empty), SubExprs(nullptr) { }
 
   SourceLocation getBuiltinLoc() const { return BuiltinLoc; }
   void setBuiltinLoc(SourceLocation L) { BuiltinLoc = L; }
@@ -3843,8 +3856,8 @@ public:
     return const_cast<InitListExpr *>(this)->getInitializedFieldInUnion();
   }
   void setInitializedFieldInUnion(FieldDecl *FD) {
-    assert((FD == 0
-            || getInitializedFieldInUnion() == 0
+    assert((FD == nullptr
+            || getInitializedFieldInUnion() == nullptr
             || getInitializedFieldInUnion() == FD)
            && "Only one field of a union may be initialized at a time!");
     ArrayFillerOrUnionFieldInit = FD;
@@ -3867,10 +3880,10 @@ public:
 
   bool isSemanticForm() const { return AltForm.getInt(); }
   InitListExpr *getSemanticForm() const {
-    return isSemanticForm() ? 0 : AltForm.getPointer();
+    return isSemanticForm() ? nullptr : AltForm.getPointer();
   }
   InitListExpr *getSyntacticForm() const {
-    return isSemanticForm() ? AltForm.getPointer() : 0;
+    return isSemanticForm() ? AltForm.getPointer() : nullptr;
   }
 
   void setSyntacticForm(InitListExpr *Init) {
@@ -3896,6 +3909,7 @@ public:
 
   // Iterators
   child_range children() {
+    // FIXME: This does not include the array filler expression.
     if (InitExprs.empty()) return child_range();
     return child_range(&InitExprs[0], &InitExprs[0] + InitExprs.size());
   }
@@ -3972,7 +3986,7 @@ private:
 
   explicit DesignatedInitExpr(unsigned NumSubExprs)
     : Expr(DesignatedInitExprClass, EmptyShell()),
-      NumDesignators(0), NumSubExprs(NumSubExprs), Designators(0) { }
+      NumDesignators(0), NumSubExprs(NumSubExprs), Designators(nullptr) { }
 
 public:
   /// A field designator, e.g., ".x".
@@ -4069,7 +4083,7 @@ public:
     FieldDecl *getField() const {
       assert(Kind == FieldDesignator && "Only valid on a field designator");
       if (Field.NameOrField & 0x01)
-        return 0;
+        return nullptr;
       else
         return reinterpret_cast<FieldDecl *>(Field.NameOrField);
     }
@@ -4151,6 +4165,17 @@ public:
   const_designators_iterator designators_begin() const { return Designators; }
   const_designators_iterator designators_end() const {
     return Designators + NumDesignators;
+  }
+
+  typedef llvm::iterator_range<designators_iterator> designators_range;
+  designators_range designators() {
+    return designators_range(designators_begin(), designators_end());
+  }
+
+  typedef llvm::iterator_range<const_designators_iterator>
+          designators_const_range;
+  designators_const_range designators() const {
+    return designators_const_range(designators_begin(), designators_end());
   }
 
   typedef std::reverse_iterator<designators_iterator>
@@ -4636,7 +4661,7 @@ class PseudoObjectExpr : public Expr {
 public:
   /// NoResult - A value for the result index indicating that there is
   /// no semantic result.
-  enum LLVM_ENUM_INT_TYPE(unsigned) { NoResult = ~0U };
+  enum : unsigned { NoResult = ~0U };
 
   static PseudoObjectExpr *Create(const ASTContext &Context, Expr *syntactic,
                                   ArrayRef<Expr*> semantic,
@@ -4661,7 +4686,7 @@ public:
   /// Return the result-bearing expression, or null if there is none.
   Expr *getResultExpr() {
     if (PseudoObjectExprBits.ResultIndex == 0)
-      return 0;
+      return nullptr;
     return getSubExprsBuffer()[PseudoObjectExprBits.ResultIndex];
   }
   const Expr *getResultExpr() const {
@@ -4726,6 +4751,16 @@ public:
 #include "clang/Basic/Builtins.def"
     // Avoid trailing comma
     BI_First = 0
+  };
+
+  // The ABI values for various atomic memory orderings.
+  enum AtomicOrderingKind {
+    AO_ABI_memory_order_relaxed = 0,
+    AO_ABI_memory_order_consume = 1,
+    AO_ABI_memory_order_acquire = 2,
+    AO_ABI_memory_order_release = 3,
+    AO_ABI_memory_order_acq_rel = 4,
+    AO_ABI_memory_order_seq_cst = 5
   };
 
 private:

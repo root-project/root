@@ -14,7 +14,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "loop-extract"
 #include "llvm/Transforms/IPO.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/LoopPass.h"
@@ -30,6 +29,8 @@
 #include <set>
 using namespace llvm;
 
+#define DEBUG_TYPE "loop-extract"
+
 STATISTIC(NumExtracted, "Number of loops extracted");
 
 namespace {
@@ -42,9 +43,9 @@ namespace {
         initializeLoopExtractorPass(*PassRegistry::getPassRegistry());
       }
 
-    virtual bool runOnLoop(Loop *L, LPPassManager &LPM);
+    bool runOnLoop(Loop *L, LPPassManager &LPM) override;
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.addRequiredID(BreakCriticalEdgesID);
       AU.addRequiredID(LoopSimplifyID);
       AU.addRequired<DominatorTreeWrapperPass>();
@@ -136,7 +137,7 @@ bool LoopExtractor::runOnLoop(Loop *L, LPPassManager &LPM) {
     if (NumLoops == 0) return Changed;
     --NumLoops;
     CodeExtractor Extractor(DT, *L);
-    if (Extractor.extractCodeRegion() != 0) {
+    if (Extractor.extractCodeRegion() != nullptr) {
       Changed = true;
       // After extraction, the loop is replaced by a function call, so
       // we shouldn't try to run any more loop passes on it.
@@ -180,7 +181,7 @@ namespace {
         LoadFile(BlockFile.c_str());
     }
 
-    bool runOnModule(Module &M);
+    bool runOnModule(Module &M) override;
   };
 }
 
@@ -241,7 +242,7 @@ void BlockExtractorPass::SplitLandingPadPreds(Function *F) {
     if (!Split) continue;
 
     SmallVector<BasicBlock*, 2> NewBBs;
-    SplitLandingPadPredecessors(LPad, Parent, ".1", ".2", 0, NewBBs);
+    SplitLandingPadPredecessors(LPad, Parent, ".1", ".2", nullptr, NewBBs);
   }
 }
 

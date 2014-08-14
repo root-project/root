@@ -15,7 +15,7 @@
 #include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/StmtVisitor.h"
-#include "clang/Analysis/Analyses/PostOrderCFGView.h"
+#include "clang/Analysis/Analyses/DataflowWorklist.h"
 #include "clang/Analysis/Analyses/UninitializedValues.h"
 #include "clang/Analysis/AnalysisContext.h"
 #include "clang/Analysis/CFG.h"
@@ -34,7 +34,7 @@ using namespace clang;
 
 static bool isTrackedVar(const VarDecl *vd, const DeclContext *dc) {
   if (vd->isLocalVarDecl() && !vd->hasGlobalStorage() &&
-      !vd->isExceptionVariable() &&
+      !vd->isExceptionVariable() && !vd->isInitCapture() &&
       vd->getDeclContext() == dc) {
     QualType ty = vd->getType();
     return ty->isScalarType() || ty->isVectorType();
@@ -199,66 +199,6 @@ ValueVector::reference CFGBlockValues::operator[](const VarDecl *vd) {
 }
 
 //------------------------------------------------------------------------====//
-// Worklist: worklist for dataflow analysis.
-//====------------------------------------------------------------------------//
-
-namespace {
-class DataflowWorklist {
-  PostOrderCFGView::iterator PO_I, PO_E;
-  SmallVector<const CFGBlock *, 20> worklist;
-  llvm::BitVector enqueuedBlocks;
-public:
-  DataflowWorklist(const CFG &cfg, PostOrderCFGView &view)
-    : PO_I(view.begin()), PO_E(view.end()),
-      enqueuedBlocks(cfg.getNumBlockIDs(), true) {
-        // Treat the first block as already analyzed.
-        if (PO_I != PO_E) {
-          assert(*PO_I == &cfg.getEntry());
-          enqueuedBlocks[(*PO_I)->getBlockID()] = false;
-          ++PO_I;
-        }
-      }
-  
-  void enqueueSuccessors(const CFGBlock *block);
-  const CFGBlock *dequeue();
-};
-}
-
-void DataflowWorklist::enqueueSuccessors(const clang::CFGBlock *block) {
-  for (CFGBlock::const_succ_iterator I = block->succ_begin(),
-       E = block->succ_end(); I != E; ++I) {
-    const CFGBlock *Successor = *I;
-    if (!Successor || enqueuedBlocks[Successor->getBlockID()])
-      continue;
-    worklist.push_back(Successor);
-    enqueuedBlocks[Successor->getBlockID()] = true;
-  }
-}
-
-const CFGBlock *DataflowWorklist::dequeue() {
-  const CFGBlock *B = 0;
-
-  // First dequeue from the worklist.  This can represent
-  // updates along backedges that we want propagated as quickly as possible.
-  if (!worklist.empty())
-    B = worklist.pop_back_val();
-
-  // Next dequeue from the initial reverse post order.  This is the
-  // theoretical ideal in the presence of no back edges.
-  else if (PO_I != PO_E) {
-    B = *PO_I;
-    ++PO_I;
-  }
-  else {
-    return 0;
-  }
-
-  assert(enqueuedBlocks[B->getBlockID()] == true);
-  enqueuedBlocks[B->getBlockID()] = false;
-  return B;
-}
-
-//------------------------------------------------------------------------====//
 // Classification of DeclRefExprs as use or initialization.
 //====------------------------------------------------------------------------//
 
@@ -295,7 +235,7 @@ static FindVarResult findVar(const Expr *E, const DeclContext *DC) {
     if (const VarDecl *VD = dyn_cast<VarDecl>(DRE->getDecl()))
       if (isTrackedVar(VD, DC))
         return FindVarResult(VD, DRE);
-  return FindVarResult(0, 0);
+  return FindVarResult(nullptr, nullptr);
 }
 
 /// \brief Classify each DeclRefExpr as an initialization or a use. Any
@@ -353,7 +293,7 @@ static const DeclRefExpr *getSelfInitExpr(VarDecl *VD) {
     if (DRE && DRE->getDecl() == VD)
       return DRE;
   }
-  return 0;
+  return nullptr;
 }
 
 void ClassifyRefs::classify(const Expr *E, Class C) {
@@ -373,9 +313,8 @@ void ClassifyRefs::classify(const Expr *E, Class C) {
 }
 
 void ClassifyRefs::VisitDeclStmt(DeclStmt *DS) {
-  for (DeclStmt::decl_iterator DI = DS->decl_begin(), DE = DS->decl_end();
-       DI != DE; ++DI) {
-    VarDecl *VD = dyn_cast<VarDecl>(*DI);
+  for (auto *DI : DS->decls()) {
+    VarDecl *VD = dyn_cast<VarDecl>(DI);
     if (VD && isTrackedVar(VD))
       if (const DeclRefExpr *DRE = getSelfInitExpr(VD))
         Classification[DRE] = SelfInit;
@@ -543,7 +482,7 @@ public:
           // This block initializes the variable.
           continue;
         if (AtPredExit == MayUninitialized &&
-            vals.getValue(B, 0, vd) == Uninitialized) {
+            vals.getValue(B, nullptr, vd) == Uninitialized) {
           // This block declares the variable (uninitialized), and is reachable
           // from a block that initializes the variable. We can't guarantee to
           // give an earlier location for the diagnostic (and it appears that
@@ -633,12 +572,11 @@ void TransferFunctions::VisitObjCForCollectionStmt(ObjCForCollectionStmt *FS) {
 
 void TransferFunctions::VisitBlockExpr(BlockExpr *be) {
   const BlockDecl *bd = be->getBlockDecl();
-  for (BlockDecl::capture_const_iterator i = bd->capture_begin(),
-        e = bd->capture_end() ; i != e; ++i) {
-    const VarDecl *vd = i->getVariable();
+  for (const auto &I : bd->captures()) {
+    const VarDecl *vd = I.getVariable();
     if (!isTrackedVar(vd))
       continue;
-    if (i->isByRef()) {
+    if (I.isByRef()) {
       vals[vd] = Initialized;
       continue;
     }
@@ -694,9 +632,8 @@ void TransferFunctions::VisitBinaryOperator(BinaryOperator *BO) {
 }
 
 void TransferFunctions::VisitDeclStmt(DeclStmt *DS) {
-  for (DeclStmt::decl_iterator DI = DS->decl_begin(), DE = DS->decl_end();
-       DI != DE; ++DI) {
-    VarDecl *VD = dyn_cast<VarDecl>(*DI);
+  for (auto *DI : DS->decls()) {
+    VarDecl *VD = dyn_cast<VarDecl>(DI);
     if (VD && isTrackedVar(VD)) {
       if (getSelfInitExpr(VD)) {
         // If the initializer consists solely of a reference to itself, we
@@ -792,8 +729,8 @@ struct PruneBlocksHandler : public UninitVariablesHandler {
   /// The current block to scribble use information.
   unsigned currentBlock;
 
-  virtual void handleUseOfUninitVariable(const VarDecl *vd,
-                                         const UninitUse &use) {
+  void handleUseOfUninitVariable(const VarDecl *vd,
+                                 const UninitUse &use) override {
     hadUse[currentBlock] = true;
     hadAnyUse = true;
   }
@@ -801,7 +738,7 @@ struct PruneBlocksHandler : public UninitVariablesHandler {
   /// Called when the uninitialized variable analysis detects the
   /// idiom 'int x = x'.  All other uses of 'x' within the initializer
   /// are handled by handleUseOfUninitVariable.
-  virtual void handleSelfInit(const VarDecl *vd) {
+  void handleSelfInit(const VarDecl *vd) override {
     hadUse[currentBlock] = true;
     hadAnyUse = true;
   }
@@ -834,7 +771,7 @@ void clang::runUninitializedVariablesAnalysis(
   }
 
   // Proceed with the workist.
-  DataflowWorklist worklist(cfg, *ac.getAnalysis<PostOrderCFGView>());
+  DataflowWorklist worklist(cfg, ac);
   llvm::BitVector previouslyVisited(cfg.getNumBlockIDs());
   worklist.enqueueSuccessors(&cfg.getEntry());
   llvm::BitVector wasAnalyzed(cfg.getNumBlockIDs(), false);

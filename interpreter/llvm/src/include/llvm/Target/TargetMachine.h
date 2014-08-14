@@ -84,11 +84,6 @@ protected: // Can only create subclasses.
   ///
   const MCAsmInfo *AsmInfo;
 
-  unsigned MCRelaxAll : 1;
-  unsigned MCNoExecStack : 1;
-  unsigned MCSaveTempLabels : 1;
-  unsigned MCUseCFI : 1;
-  unsigned MCUseDwarfDirectory : 1;
   unsigned RequireStructuredCFG : 1;
 
 public:
@@ -102,7 +97,10 @@ public:
 
   /// getSubtargetImpl - virtual method implemented by subclasses that returns
   /// a reference to that target's TargetSubtargetInfo-derived member variable.
-  virtual const TargetSubtargetInfo *getSubtargetImpl() const { return 0; }
+  virtual const TargetSubtargetInfo *getSubtargetImpl() const {
+    return nullptr;
+  }
+  virtual TargetSubtargetInfo *getSubtargetImpl() { return nullptr; }
 
   mutable TargetOptions Options;
 
@@ -118,11 +116,15 @@ public:
   //
   // N.B. These objects may change during compilation. It's not safe to cache
   // them between functions.
-  virtual const TargetInstrInfo         *getInstrInfo() const { return 0; }
-  virtual const TargetFrameLowering *getFrameLowering() const { return 0; }
-  virtual const TargetLowering    *getTargetLowering() const { return 0; }
-  virtual const TargetSelectionDAGInfo *getSelectionDAGInfo() const{ return 0; }
-  virtual const DataLayout             *getDataLayout() const { return 0; }
+  virtual const TargetInstrInfo  *getInstrInfo() const { return nullptr; }
+  virtual const TargetFrameLowering *getFrameLowering() const {
+    return nullptr;
+  }
+  virtual const TargetLowering *getTargetLowering() const { return nullptr; }
+  virtual const TargetSelectionDAGInfo *getSelectionDAGInfo() const {
+    return nullptr;
+  }
+  virtual const DataLayout *getDataLayout() const { return nullptr; }
 
   /// getMCAsmInfo - Return target specific asm information.
   ///
@@ -139,63 +141,27 @@ public:
   /// not, return null.  This is kept separate from RegInfo until RegInfo has
   /// details of graph coloring register allocation removed from it.
   ///
-  virtual const TargetRegisterInfo *getRegisterInfo() const { return 0; }
+  virtual const TargetRegisterInfo *getRegisterInfo() const { return nullptr; }
 
   /// getIntrinsicInfo - If intrinsic information is available, return it.  If
   /// not, return null.
   ///
-  virtual const TargetIntrinsicInfo *getIntrinsicInfo() const { return 0; }
+  virtual const TargetIntrinsicInfo *getIntrinsicInfo() const { return nullptr;}
 
   /// getJITInfo - If this target supports a JIT, return information for it,
   /// otherwise return null.
   ///
-  virtual TargetJITInfo *getJITInfo() { return 0; }
+  virtual TargetJITInfo *getJITInfo() { return nullptr; }
 
   /// getInstrItineraryData - Returns instruction itinerary data for the target
   /// or specific subtarget.
   ///
   virtual const InstrItineraryData *getInstrItineraryData() const {
-    return 0;
+    return nullptr;
   }
 
   bool requiresStructuredCFG() const { return RequireStructuredCFG; }
   void setRequiresStructuredCFG(bool Value) { RequireStructuredCFG = Value; }
-
-  /// hasMCRelaxAll - Check whether all machine code instructions should be
-  /// relaxed.
-  bool hasMCRelaxAll() const { return MCRelaxAll; }
-
-  /// setMCRelaxAll - Set whether all machine code instructions should be
-  /// relaxed.
-  void setMCRelaxAll(bool Value) { MCRelaxAll = Value; }
-
-  /// hasMCSaveTempLabels - Check whether temporary labels will be preserved
-  /// (i.e., not treated as temporary).
-  bool hasMCSaveTempLabels() const { return MCSaveTempLabels; }
-
-  /// setMCSaveTempLabels - Set whether temporary labels will be preserved
-  /// (i.e., not treated as temporary).
-  void setMCSaveTempLabels(bool Value) { MCSaveTempLabels = Value; }
-
-  /// hasMCNoExecStack - Check whether an executable stack is not needed.
-  bool hasMCNoExecStack() const { return MCNoExecStack; }
-
-  /// setMCNoExecStack - Set whether an executabel stack is not needed.
-  void setMCNoExecStack(bool Value) { MCNoExecStack = Value; }
-
-  /// hasMCUseCFI - Check whether we should use dwarf's .cfi_* directives.
-  bool hasMCUseCFI() const { return MCUseCFI; }
-
-  /// setMCUseCFI - Set whether all we should use dwarf's .cfi_* directives.
-  void setMCUseCFI(bool Value) { MCUseCFI = Value; }
-
-  /// hasMCUseDwarfDirectory - Check whether we should use .file directives with
-  /// explicit directories.
-  bool hasMCUseDwarfDirectory() const { return MCUseDwarfDirectory; }
-
-  /// setMCUseDwarfDirectory - Set whether all we should use .file directives
-  /// with explicit directories.
-  void setMCUseDwarfDirectory(bool Value) { MCUseDwarfDirectory = Value; }
 
   /// getRelocationModel - Returns the code generation relocation model. The
   /// choices are static, PIC, and dynamic-no-pic, and target default.
@@ -222,26 +188,26 @@ public:
 
   /// getAsmVerbosityDefault - Returns the default value of asm verbosity.
   ///
-  static bool getAsmVerbosityDefault();
+  bool getAsmVerbosityDefault() const ;
 
   /// setAsmVerbosityDefault - Set the default value of asm verbosity. Default
   /// is false.
-  static void setAsmVerbosityDefault(bool);
+  void setAsmVerbosityDefault(bool);
 
   /// getDataSections - Return true if data objects should be emitted into their
   /// own section, corresponds to -fdata-sections.
-  static bool getDataSections();
+  bool getDataSections() const;
 
   /// getFunctionSections - Return true if functions should be emitted into
   /// their own section, corresponding to -ffunction-sections.
-  static bool getFunctionSections();
+  bool getFunctionSections() const;
 
   /// setDataSections - Set if the data are emit into separate sections.
-  static void setDataSections(bool);
+  void setDataSections(bool);
 
   /// setFunctionSections - Set if the functions are emit into separate
   /// sections.
-  static void setFunctionSections(bool);
+  void setFunctionSections(bool);
 
   /// \brief Register analysis passes for this target with a pass manager.
   virtual void addAnalysisPasses(PassManagerBase &) {}
@@ -263,8 +229,8 @@ public:
                                    formatted_raw_ostream &,
                                    CodeGenFileType,
                                    bool /*DisableVerify*/ = true,
-                                   AnalysisID /*StartAfter*/ = 0,
-                                   AnalysisID /*StopAfter*/ = 0) {
+                                   AnalysisID /*StartAfter*/ = nullptr,
+                                   AnalysisID /*StopAfter*/ = nullptr) {
     return true;
   }
 
@@ -312,7 +278,7 @@ public:
   /// \brief Register analysis passes for this target with a pass manager.
   ///
   /// This registers target independent analysis passes.
-  virtual void addAnalysisPasses(PassManagerBase &PM);
+  void addAnalysisPasses(PassManagerBase &PM) override;
 
   /// createPassConfig - Create a pass configuration object to be used by
   /// addPassToEmitX methods for generating a pipeline of CodeGen passes.
@@ -321,12 +287,10 @@ public:
   /// addPassesToEmitFile - Add passes to the specified pass manager to get the
   /// specified file emitted.  Typically this will involve several steps of code
   /// generation.
-  virtual bool addPassesToEmitFile(PassManagerBase &PM,
-                                   formatted_raw_ostream &Out,
-                                   CodeGenFileType FileType,
-                                   bool DisableVerify = true,
-                                   AnalysisID StartAfter = 0,
-                                   AnalysisID StopAfter = 0);
+  bool addPassesToEmitFile(PassManagerBase &PM, formatted_raw_ostream &Out,
+                           CodeGenFileType FileType, bool DisableVerify = true,
+                           AnalysisID StartAfter = nullptr,
+                           AnalysisID StopAfter = nullptr) override;
 
   /// addPassesToEmitMachineCode - Add passes to the specified pass manager to
   /// get machine code emitted.  This uses a JITCodeEmitter object to handle
@@ -334,19 +298,16 @@ public:
   /// of functions.  This method returns true if machine code emission is
   /// not supported.
   ///
-  virtual bool addPassesToEmitMachineCode(PassManagerBase &PM,
-                                          JITCodeEmitter &MCE,
-                                          bool DisableVerify = true);
+  bool addPassesToEmitMachineCode(PassManagerBase &PM, JITCodeEmitter &MCE,
+                                  bool DisableVerify = true) override;
 
   /// addPassesToEmitMC - Add passes to the specified pass manager to get
   /// machine code emitted with the MCJIT. This method returns true if machine
   /// code is not supported. It fills the MCContext Ctx pointer which can be
   /// used to build custom MCStreamer.
   ///
-  virtual bool addPassesToEmitMC(PassManagerBase &PM,
-                                 MCContext *&Ctx,
-                                 raw_ostream &OS,
-                                 bool DisableVerify = true);
+  bool addPassesToEmitMC(PassManagerBase &PM, MCContext *&Ctx,
+                         raw_ostream &OS, bool DisableVerify = true) override;
 
   /// addCodeEmitter - This pass should be overridden by the target to add a
   /// code emitter, if supported.  If this is not supported, 'true' should be

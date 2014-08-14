@@ -18,15 +18,11 @@
 
 #include "llvm/ADT/PointerIntPair.h"
 #include "llvm/Support/AlignOf.h"
-#include "llvm/Support/system_error.h"
-#include "llvm/Support/type_traits.h"
 #include <cassert>
-#if LLVM_HAS_CXX11_TYPETRAITS
+#include <system_error>
 #include <type_traits>
-#endif
 
 namespace llvm {
-#if LLVM_HAS_CXX11_TYPETRAITS && LLVM_HAS_RVALUE_REFERENCES
 template<class T, class V>
 typename std::enable_if< std::is_constructible<T, V>::value
                        , typename std::remove_reference<V>::type>::type &&
@@ -40,12 +36,6 @@ typename std::enable_if< !std::is_constructible<T, V>::value
 moveIfMoveConstructible(V &Val) {
   return Val;
 }
-#else
-template<class T, class V>
-V &moveIfMoveConstructible(V &Val) {
-  return Val;
-}
-#endif
 
 /// \brief Stores a reference that can be changed.
 template <typename T>
@@ -91,32 +81,29 @@ public:
 template<class T>
 class ErrorOr {
   template <class OtherT> friend class ErrorOr;
-  static const bool isRef = is_reference<T>::value;
-  typedef ReferenceStorage<typename remove_reference<T>::type> wrap;
+  static const bool isRef = std::is_reference<T>::value;
+  typedef ReferenceStorage<typename std::remove_reference<T>::type> wrap;
 
 public:
-  typedef typename
-    conditional< isRef
-               , wrap
-               , T
-               >::type storage_type;
+  typedef typename std::conditional<isRef, wrap, T>::type storage_type;
 
 private:
-  typedef typename remove_reference<T>::type &reference;
-  typedef const typename remove_reference<T>::type &const_reference;
-  typedef typename remove_reference<T>::type *pointer;
+  typedef typename std::remove_reference<T>::type &reference;
+  typedef const typename std::remove_reference<T>::type &const_reference;
+  typedef typename std::remove_reference<T>::type *pointer;
 
 public:
   template <class E>
-  ErrorOr(E ErrorCode, typename enable_if_c<is_error_code_enum<E>::value ||
-                                            is_error_condition_enum<E>::value,
-                                            void *>::type = 0)
+  ErrorOr(E ErrorCode,
+          typename std::enable_if<std::is_error_code_enum<E>::value ||
+                                      std::is_error_condition_enum<E>::value,
+                                  void *>::type = 0)
       : HasError(true) {
-    new (getErrorStorage()) error_code(make_error_code(ErrorCode));
+    new (getErrorStorage()) std::error_code(make_error_code(ErrorCode));
   }
 
-  ErrorOr(llvm::error_code EC) : HasError(true) {
-    new (getErrorStorage()) error_code(EC);
+  ErrorOr(std::error_code EC) : HasError(true) {
+    new (getErrorStorage()) std::error_code(EC);
   }
 
   ErrorOr(T Val) : HasError(false) {
@@ -143,7 +130,6 @@ public:
     return *this;
   }
 
-#if LLVM_HAS_RVALUE_REFERENCES
   ErrorOr(ErrorOr &&Other) {
     moveConstruct(std::move(Other));
   }
@@ -163,7 +149,6 @@ public:
     moveAssign(std::move(Other));
     return *this;
   }
-#endif
 
   ~ErrorOr() {
     if (!HasError)
@@ -178,8 +163,8 @@ public:
   reference get() { return *getStorage(); }
   const_reference get() const { return const_cast<ErrorOr<T> >(this)->get(); }
 
-  error_code getError() const {
-    return HasError ? *getErrorStorage() : error_code::success();
+  std::error_code getError() const {
+    return HasError ? *getErrorStorage() : std::error_code();
   }
 
   pointer operator ->() {
@@ -200,7 +185,7 @@ private:
     } else {
       // Get other's error.
       HasError = true;
-      new (getErrorStorage()) error_code(Other.getError());
+      new (getErrorStorage()) std::error_code(Other.getError());
     }
   }
 
@@ -223,7 +208,6 @@ private:
     new (this) ErrorOr(Other);
   }
 
-#if LLVM_HAS_RVALUE_REFERENCES
   template <class OtherT>
   void moveConstruct(ErrorOr<OtherT> &&Other) {
     if (!Other.HasError) {
@@ -233,7 +217,7 @@ private:
     } else {
       // Get other's error.
       HasError = true;
-      new (getErrorStorage()) error_code(Other.getError());
+      new (getErrorStorage()) std::error_code(Other.getError());
     }
   }
 
@@ -245,7 +229,6 @@ private:
     this->~ErrorOr();
     new (this) ErrorOr(std::move(Other));
   }
-#endif
 
   pointer toPointer(pointer Val) {
     return Val;
@@ -265,28 +248,29 @@ private:
     return reinterpret_cast<const storage_type*>(TStorage.buffer);
   }
 
-  error_code *getErrorStorage() {
+  std::error_code *getErrorStorage() {
     assert(HasError && "Cannot get error when a value exists!");
-    return reinterpret_cast<error_code*>(ErrorStorage.buffer);
+    return reinterpret_cast<std::error_code *>(ErrorStorage.buffer);
   }
 
-  const error_code *getErrorStorage() const {
+  const std::error_code *getErrorStorage() const {
     return const_cast<ErrorOr<T> *>(this)->getErrorStorage();
   }
 
 
   union {
     AlignedCharArrayUnion<storage_type> TStorage;
-    AlignedCharArrayUnion<error_code> ErrorStorage;
+    AlignedCharArrayUnion<std::error_code> ErrorStorage;
   };
   bool HasError : 1;
 };
 
-template<class T, class E>
-typename enable_if_c<is_error_code_enum<E>::value ||
-                     is_error_condition_enum<E>::value, bool>::type
-operator ==(ErrorOr<T> &Err, E Code) {
-  return error_code(Err) == Code;
+template <class T, class E>
+typename std::enable_if<std::is_error_code_enum<E>::value ||
+                            std::is_error_condition_enum<E>::value,
+                        bool>::type
+operator==(ErrorOr<T> &Err, E Code) {
+  return std::error_code(Err) == Code;
 }
 } // end namespace llvm
 

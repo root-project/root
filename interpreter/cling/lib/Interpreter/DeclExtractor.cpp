@@ -236,7 +236,8 @@ namespace cling {
           = IntegerLiteral::Create(*m_Context, ZeroInt, m_Context->IntTy,
                                    SourceLocation());
         Stmts.push_back(m_Sema->ActOnReturnStmt(ZeroLit->getExprLoc(),
-                                                ZeroLit).take());
+                                                ZeroLit,
+                                                m_Sema->getCurScope()).get());
       }
 
       // Wrap Stmts into a function body.
@@ -258,14 +259,15 @@ namespace cling {
       R.addDecl(FD);
       CXXScopeSpec CSS;
       Expr* UnresolvedLookup
-        = m_Sema->BuildDeclarationNameExpr(CSS, R, /*ADL*/ false).take();
+        = m_Sema->BuildDeclarationNameExpr(CSS, R, /*ADL*/ false).get();
       Expr* TheCall = m_Sema->ActOnCallExpr(TUScope, UnresolvedLookup, Loc,
-                                            MultiExprArg(), Loc).take();
+                                            MultiExprArg(), Loc).get();
       assert(VD && TheCall && "Missing VD or its init!");
       VD->setInit(TheCall);
 
       // We know the transaction is closed, but it is safe.
       getTransaction()->forceAppend(VD); // Add it to the transaction for codegenning
+      VD->setHidden(true);
       TUDC->addHiddenDecl(VD);
       Stmts.clear();
       return;

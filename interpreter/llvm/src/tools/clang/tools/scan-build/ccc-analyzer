@@ -71,10 +71,10 @@ my $ResultFile;
 # Remove any stale files at exit.
 END {
   if (defined $ResultFile && -z $ResultFile) {
-    `rm -f $ResultFile`;
+    unlink($ResultFile);
   }
   if (defined $CleanupFile) {
-    `rm -f $CleanupFile`;
+    unlink($CleanupFile);
   }
 }
 
@@ -127,7 +127,7 @@ sub ProcessClangFailure {
   close OUT;
   `uname -a >> $PPFile.info.txt 2>&1`;
   `$Compiler -v >> $PPFile.info.txt 2>&1`;
-  system 'mv',$ofile,"$PPFile.stderr.txt";
+  rename($ofile, "$PPFile.stderr.txt");
   return (basename $PPFile);
 }
 
@@ -150,7 +150,7 @@ sub GetCCArgs {
   close(TO_PARENT);
   my $line;
   while (<FROM_CHILD>) {
-    next if (!/-cc1/);
+    next if (!/\s"?-cc1"?\s/);
     $line = $_;
   }
 
@@ -353,6 +353,7 @@ my %CompilerLinkerOptionMap = (
   '-m32' => 0,
   '-m64' => 0,
   '-stdlib' => 0, # This is really a 1 argument, but always has '='
+  '--sysroot' => 1,
   '-target' => 1,
   '-v' => 0,
   '-mmacosx-version-min' => 0, # This is really a 1 argument, but always has '='
@@ -496,7 +497,7 @@ foreach (my $i = 0; $i < scalar(@ARGV); ++$i) {
     next;
   }
   # Handle the case where there isn't a space after -iquote
-  if ($Arg =~ /-iquote.*/) {
+  if ($Arg =~ /^-iquote.*/) {
     push @CompileOpts,$Arg;
     next;
   }
@@ -556,7 +557,7 @@ foreach (my $i = 0; $i < scalar(@ARGV); ++$i) {
     next;
   }
 
-  if ($Arg =~ /-m.*/) {
+  if ($Arg =~ /^-m.*/) {
     push @CompileOpts,$Arg;
     next;
   }

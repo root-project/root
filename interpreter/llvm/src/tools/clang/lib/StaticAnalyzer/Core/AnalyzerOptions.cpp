@@ -39,7 +39,7 @@ IPAKind AnalyzerOptions::getIPAMode() {
     // Use the User Mode to set the default IPA value.
     // Note, we have to add the string to the Config map for the ConfigDumper
     // checker to function properly.
-    const char *DefaultIPA = 0;
+    const char *DefaultIPA = nullptr;
     UserModeKind HighLevelMode = getUserMode();
     if (HighLevelMode == UMK_Shallow)
       DefaultIPA = "inlining";
@@ -140,8 +140,8 @@ bool AnalyzerOptions::mayInlineCXXAllocator() {
                           /*Default=*/false);
 }
 
-bool AnalyzerOptions::mayInlineCXXContainerCtorsAndDtors() {
-  return getBooleanOption(InlineCXXContainerCtorsAndDtors,
+bool AnalyzerOptions::mayInlineCXXContainerMethods() {
+  return getBooleanOption(InlineCXXContainerMethods,
                           "c++-container-inlining",
                           /*Default=*/false);
 }
@@ -186,6 +186,13 @@ bool AnalyzerOptions::shouldSuppressFromCXXStandardLibrary() {
 bool AnalyzerOptions::shouldReportIssuesInMainSourceFile() {
   return getBooleanOption(ReportIssuesInMainSourceFile,
                           "report-in-main-source-file",
+                          /* Default = */ false);
+}
+
+
+bool AnalyzerOptions::shouldWriteStableReportFilename() {
+  return getBooleanOption(StableReportFilename,
+                          "stable-report-filename",
                           /* Default = */ false);
 }
 

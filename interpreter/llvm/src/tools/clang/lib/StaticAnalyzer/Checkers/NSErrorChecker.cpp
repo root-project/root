@@ -42,7 +42,7 @@ class NSErrorMethodChecker
   mutable IdentifierInfo *II;
 
 public:
-  NSErrorMethodChecker() : II(0) { }
+  NSErrorMethodChecker() : II(nullptr) {}
 
   void checkASTDecl(const ObjCMethodDecl *D,
                     AnalysisManager &mgr, BugReporter &BR) const;
@@ -61,9 +61,8 @@ void NSErrorMethodChecker::checkASTDecl(const ObjCMethodDecl *D,
     II = &D->getASTContext().Idents.get("NSError"); 
 
   bool hasNSError = false;
-  for (ObjCMethodDecl::param_const_iterator
-         I = D->param_begin(), E = D->param_end(); I != E; ++I)  {
-    if (IsNSError((*I)->getType(), II)) {
+  for (const auto *I : D->params())  {
+    if (IsNSError(I->getType(), II)) {
       hasNSError = true;
       break;
     }
@@ -90,7 +89,7 @@ class CFErrorFunctionChecker
   mutable IdentifierInfo *II;
 
 public:
-  CFErrorFunctionChecker() : II(0) { }
+  CFErrorFunctionChecker() : II(nullptr) {}
 
   void checkASTDecl(const FunctionDecl *D,
                     AnalysisManager &mgr, BugReporter &BR) const;
@@ -109,9 +108,8 @@ void CFErrorFunctionChecker::checkASTDecl(const FunctionDecl *D,
     II = &D->getASTContext().Idents.get("CFErrorRef"); 
 
   bool hasCFError = false;
-  for (FunctionDecl::param_const_iterator
-         I = D->param_begin(), E = D->param_end(); I != E; ++I)  {
-    if (IsCFError((*I)->getType(), II)) {
+  for (auto I : D->params())  {
+    if (IsCFError(I->getType(), II)) {
       hasCFError = true;
       break;
     }
@@ -155,9 +153,11 @@ class NSOrCFErrorDerefChecker
     : public Checker< check::Location,
                         check::Event<ImplicitNullDerefEvent> > {
   mutable IdentifierInfo *NSErrorII, *CFErrorII;
+  mutable std::unique_ptr<NSErrorDerefBug> NSBT;
+  mutable std::unique_ptr<CFErrorDerefBug> CFBT;
 public:
   bool ShouldCheckNSError, ShouldCheckCFError;
-  NSOrCFErrorDerefChecker() : NSErrorII(0), CFErrorII(0),
+  NSOrCFErrorDerefChecker() : NSErrorII(nullptr), CFErrorII(nullptr),
                               ShouldCheckNSError(0), ShouldCheckCFError(0) { }
 
   void checkLocation(SVal loc, bool isLoad, const Stmt *S,
@@ -264,11 +264,17 @@ void NSOrCFErrorDerefChecker::checkEvent(ImplicitNullDerefEvent event) const {
 
   os  << " may be null";
 
-  BugType *bug = 0;
-  if (isNSError)
-    bug = new NSErrorDerefBug(this);
-  else
-    bug = new CFErrorDerefBug(this);
+  BugType *bug = nullptr;
+  if (isNSError) {
+    if (!NSBT)
+      NSBT.reset(new NSErrorDerefBug(this));
+    bug = NSBT.get();
+  }
+  else {
+    if (!CFBT)
+      CFBT.reset(new CFErrorDerefBug(this));
+    bug = CFBT.get();
+  }
   BugReport *report = new BugReport(*bug, os.str(), event.SinkNode);
   BR.emitReport(report);
 }

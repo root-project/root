@@ -42,8 +42,11 @@ class TestingProgressDisplay(object):
             self.progressBar.update(float(self.completed)/self.numTests,
                                     test.getFullName())
 
-        if not test.result.code.isFailure and \
-                (self.opts.quiet or self.opts.succinct):
+        shouldShow = test.result.code.isFailure or \
+            (self.opts.show_unsupported and test.result.code.name == 'UNSUPPORTED') or \
+            (self.opts.show_xfail and test.result.code.name == 'XFAIL') or \
+            (not self.opts.quiet and not self.opts.succinct)
+        if not shouldShow:
             return
 
         if self.progressBar:
@@ -136,6 +139,9 @@ def main(builtinParameters = {}):
     from optparse import OptionParser, OptionGroup
     parser = OptionParser("usage: %prog [options] {file-or-path}")
 
+    parser.add_option("", "--version", dest="show_version",
+                      help="Show version and exit",
+                      action="store_true", default=False)
     parser.add_option("-j", "--threads", dest="numThreads", metavar="N",
                       help="Number of testing threads",
                       type=int, action="store", default=None)
@@ -165,6 +171,12 @@ def main(builtinParameters = {}):
     group.add_option("", "--no-progress-bar", dest="useProgressBar",
                      help="Do not use curses based progress bar",
                      action="store_false", default=True)
+    group.add_option("", "--show-unsupported", dest="show_unsupported",
+                     help="Show unsupported tests",
+                     action="store_true", default=False)
+    group.add_option("", "--show-xfail", dest="show_xfail",
+                     help="Show tests that were expected to fail",
+                     action="store_true", default=False)
     parser.add_option_group(group)
 
     group = OptionGroup(parser, "Test Execution")
@@ -227,6 +239,10 @@ def main(builtinParameters = {}):
     parser.add_option_group(group)
 
     (opts, args) = parser.parse_args()
+
+    if opts.show_version:
+        print("lit %s" % (lit.__version__,))
+        return
 
     if not args:
         parser.error('No inputs specified')

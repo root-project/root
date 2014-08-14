@@ -39,16 +39,13 @@ namespace llvm {
   Module *getStreamedBitcodeModule(const std::string &name,
                                    DataStreamer *streamer,
                                    LLVMContext &Context,
-                                   std::string *ErrMsg = 0);
+                                   std::string *ErrMsg = nullptr);
 
-  /// getBitcodeTargetTriple - Read the header of the specified bitcode
-  /// buffer and extract just the triple information. If successful,
-  /// this returns a string and *does not* take ownership
-  /// of 'buffer'. On error, this returns "", and fills in *ErrMsg
-  /// if ErrMsg is non-null.
+  /// Read the header of the specified bitcode buffer and extract just the
+  /// triple information. If successful, this returns a string and *does not*
+  /// take ownership of 'buffer'. On error, this returns "".
   std::string getBitcodeTargetTriple(MemoryBuffer *Buffer,
-                                     LLVMContext &Context,
-                                     std::string *ErrMsg = 0);
+                                     LLVMContext &Context);
 
   /// Read the specified bitcode file, returning the module.
   /// This method *never* takes ownership of Buffer.
@@ -142,6 +139,38 @@ namespace llvm {
     BufEnd = BufPtr+Size;
     return false;
   }
+
+  const std::error_category &BitcodeErrorCategory();
+  enum class BitcodeError {
+    ConflictingMETADATA_KINDRecords,
+    CouldNotFindFunctionInStream,
+    ExpectedConstant,
+    InsufficientFunctionProtos,
+    InvalidBitcodeSignature,
+    InvalidBitcodeWrapperHeader,
+    InvalidConstantReference,
+    InvalidID, // A read identifier is not found in the table it should be in.
+    InvalidInstructionWithNoBB,
+    InvalidRecord, // A read record doesn't have the expected size or structure
+    InvalidTypeForValue, // Type read OK, but is invalid for its use
+    InvalidTYPETable,
+    InvalidType,    // We were unable to read a type
+    MalformedBlock, // We are unable to advance in the stream.
+    MalformedGlobalInitializerSet,
+    InvalidMultipleBlocks, // We found multiple blocks of a kind that should
+                           // have only one
+    NeverResolvedValueFoundInFunction,
+    NeverResolvedFunctionFromBlockAddress,
+    InvalidValue // Invalid version, inst number, attr number, etc
+  };
+  inline std::error_code make_error_code(BitcodeError E) {
+    return std::error_code(static_cast<int>(E), BitcodeErrorCategory());
+  }
+
 } // End llvm namespace
+
+namespace std {
+template <> struct is_error_code_enum<llvm::BitcodeError> : std::true_type {};
+}
 
 #endif

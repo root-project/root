@@ -128,9 +128,9 @@ class DeadStoreObs : public LiveVariables::Observer {
   AnalysisDeclContext* AC;
   ParentMap& Parents;
   llvm::SmallPtrSet<const VarDecl*, 20> Escaped;
-  OwningPtr<ReachableCode> reachableCode;
+  std::unique_ptr<ReachableCode> reachableCode;
   const CFGBlock *currentBlock;
-  OwningPtr<llvm::DenseSet<const VarDecl *> > InEH;
+  std::unique_ptr<llvm::DenseSet<const VarDecl *>> InEH;
 
   enum DeadStoreKind { Standard, Enclosing, DeadIncrement, DeadInit };
 
@@ -140,7 +140,7 @@ public:
                ParentMap &parents,
                llvm::SmallPtrSet<const VarDecl *, 20> &escaped)
       : cfg(cfg), Ctx(ctx), BR(br), Checker(checker), AC(ac), Parents(parents),
-        Escaped(escaped), currentBlock(0) {}
+        Escaped(escaped), currentBlock(nullptr) {}
 
   virtual ~DeadStoreObs() {}
 
@@ -178,7 +178,7 @@ public:
 
     SmallString<64> buf;
     llvm::raw_svector_ostream os(buf);
-    const char *BugType = 0;
+    const char *BugType = nullptr;
 
     switch (dsk) {
       case DeadInit:
@@ -255,8 +255,8 @@ public:
     return false;
   }
 
-  virtual void observeStmt(const Stmt *S, const CFGBlock *block,
-                           const LiveVariables::LivenessValues &Live) {
+  void observeStmt(const Stmt *S, const CFGBlock *block,
+                   const LiveVariables::LivenessValues &Live) override {
 
     currentBlock = block;
     
@@ -313,10 +313,8 @@ public:
     else if (const DeclStmt *DS = dyn_cast<DeclStmt>(S))
       // Iterate through the decls.  Warn if any initializers are complex
       // expressions that are not live (never used).
-      for (DeclStmt::const_decl_iterator DI=DS->decl_begin(), DE=DS->decl_end();
-           DI != DE; ++DI) {
-
-        VarDecl *V = dyn_cast<VarDecl>(*DI);
+      for (const auto *DI : DS->decls()) {
+        const auto *V = dyn_cast<VarDecl>(DI);
 
         if (!V)
           continue;
