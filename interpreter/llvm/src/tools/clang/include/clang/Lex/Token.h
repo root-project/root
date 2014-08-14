@@ -18,6 +18,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/TemplateKinds.h"
 #include "clang/Basic/TokenKinds.h"
+#include "llvm/ADT/StringRef.h"
 #include <cstdlib>
 
 namespace clang {
@@ -150,7 +151,7 @@ public:
   void startToken() {
     Kind = tok::unknown;
     Flags = 0;
-    PtrData = 0;
+    PtrData = nullptr;
     UintData = 0;
     Loc = SourceLocation();
   }
@@ -160,19 +161,19 @@ public:
            "getIdentifierInfo() on a tok::raw_identifier token!");
     assert(!isAnnotation() &&
            "getIdentifierInfo() on an annotation token!");
-    if (isLiteral()) return 0;
+    if (isLiteral()) return nullptr;
     return (IdentifierInfo*) PtrData;
   }
   void setIdentifierInfo(IdentifierInfo *II) {
     PtrData = (void*) II;
   }
 
-  /// getRawIdentifierData - For a raw identifier token (i.e., an identifier
-  /// lexed in raw mode), returns a pointer to the start of it in the text
-  /// buffer if known, null otherwise.
-  const char *getRawIdentifierData() const {
+  /// getRawIdentifier - For a raw identifier token (i.e., an identifier
+  /// lexed in raw mode), returns a reference to the text substring in the
+  /// buffer if known.
+  StringRef getRawIdentifier() const {
     assert(is(tok::raw_identifier));
-    return reinterpret_cast<const char*>(PtrData);
+    return StringRef(reinterpret_cast<const char *>(PtrData), getLength());
   }
   void setRawIdentifierData(const char *Ptr) {
     assert(is(tok::raw_identifier));

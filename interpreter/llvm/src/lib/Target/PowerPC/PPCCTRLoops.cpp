@@ -23,8 +23,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "ctrloops"
-
 #include "llvm/Transforms/Scalar.h"
 #include "PPC.h"
 #include "PPCTargetMachine.h"
@@ -39,10 +37,10 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/ValueHandle.h"
 #include "llvm/PassSupport.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
-#include "llvm/Support/ValueHandle.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetLibraryInfo.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
@@ -60,6 +58,8 @@
 #include <vector>
 
 using namespace llvm;
+
+#define DEBUG_TYPE "ctrloops"
 
 #ifndef NDEBUG
 static cl::opt<int> CTRLoopLimit("ppc-max-ctrloop", cl::Hidden, cl::init(-1));
@@ -84,16 +84,16 @@ namespace {
   public:
     static char ID;
 
-    PPCCTRLoops() : FunctionPass(ID), TM(0) {
+    PPCCTRLoops() : FunctionPass(ID), TM(nullptr) {
       initializePPCCTRLoopsPass(*PassRegistry::getPassRegistry());
     }
     PPCCTRLoops(PPCTargetMachine &TM) : FunctionPass(ID), TM(&TM) {
       initializePPCCTRLoopsPass(*PassRegistry::getPassRegistry());
     }
 
-    virtual bool runOnFunction(Function &F);
+    bool runOnFunction(Function &F) override;
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.addRequired<LoopInfo>();
       AU.addPreserved<LoopInfo>();
       AU.addRequired<DominatorTreeWrapperPass>();
@@ -128,12 +128,12 @@ namespace {
       initializePPCCTRLoopsVerifyPass(*PassRegistry::getPassRegistry());
     }
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.addRequired<MachineDominatorTree>();
       MachineFunctionPass::getAnalysisUsage(AU);
     }
 
-    virtual bool runOnMachineFunction(MachineFunction &MF);
+    bool runOnMachineFunction(MachineFunction &MF) override;
 
   private:
     MachineDominatorTree *MDT;
@@ -172,7 +172,7 @@ bool PPCCTRLoops::runOnFunction(Function &F) {
   SE = &getAnalysis<ScalarEvolution>();
   DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
   DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
-  DL = DLP ? &DLP->getDataLayout() : 0;
+  DL = DLP ? &DLP->getDataLayout() : nullptr;
   LibInfo = getAnalysisIfAvailable<TargetLibraryInfo>();
 
   bool MadeChange = false;
@@ -370,6 +370,14 @@ bool PPCCTRLoops::mightUseCTR(const Triple &TT, BasicBlock *BB) {
                 J->getOpcode() == Instruction::URem ||
                 J->getOpcode() == Instruction::SRem)) {
       return true;
+    } else if (TT.isArch32Bit() &&
+               isLargeIntegerTy(false, J->getType()->getScalarType()) &&
+               (J->getOpcode() == Instruction::Shl ||
+                J->getOpcode() == Instruction::AShr ||
+                J->getOpcode() == Instruction::LShr)) {
+      // Only on PPC32, for 128-bit integers (specifically not 64-bit
+      // integers), these might be runtime calls.
+      return true;
     } else if (isa<IndirectBrInst>(J) || isa<InvokeInst>(J)) {
       // On PowerPC, indirect jumps use the counter register.
       return true;
@@ -424,9 +432,9 @@ bool PPCCTRLoops::convertToCTRLoop(Loop *L) {
   SmallVector<BasicBlock*, 4> ExitingBlocks;
   L->getExitingBlocks(ExitingBlocks);
 
-  BasicBlock *CountedExitBlock = 0;
-  const SCEV *ExitCount = 0;
-  BranchInst *CountedExitBranch = 0;
+  BasicBlock *CountedExitBlock = nullptr;
+  const SCEV *ExitCount = nullptr;
+  BranchInst *CountedExitBranch = nullptr;
   for (SmallVectorImpl<BasicBlock *>::iterator I = ExitingBlocks.begin(),
        IE = ExitingBlocks.end(); I != IE; ++I) {
     const SCEV *EC = SE->getExitCount(L, *I);

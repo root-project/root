@@ -40,16 +40,16 @@ public:
       delete OutputFile;
   }
 
-  virtual void FileChanged(SourceLocation Loc, FileChangeReason Reason,
-                           SrcMgr::CharacteristicKind FileType,
-                           FileID PrevFID);
+  void FileChanged(SourceLocation Loc, FileChangeReason Reason,
+                   SrcMgr::CharacteristicKind FileType,
+                   FileID PrevFID) override;
 };
 }
 
 void clang::AttachHeaderIncludeGen(Preprocessor &PP, bool ShowAllHeaders,
                                    StringRef OutputPath, bool ShowDepth,
                                    bool MSStyle) {
-  raw_ostream *OutputFile = &llvm::errs();
+  raw_ostream *OutputFile = MSStyle ? &llvm::outs() : &llvm::errs();
   bool OwnsOutputFile = false;
 
   // Open the output file, if used.
@@ -131,5 +131,6 @@ void HeaderIncludesCallback::FileChanged(SourceLocation Loc,
     Msg += '\n';
 
     OutputFile->write(Msg.data(), Msg.size());
+    OutputFile->flush();
   }
 }

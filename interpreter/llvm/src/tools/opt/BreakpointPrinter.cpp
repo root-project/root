@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 #include "BreakpointPrinter.h"
 #include "llvm/ADT/StringSet.h"
-#include "llvm/DebugInfo.h"
+#include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/raw_ostream.h"
@@ -45,7 +45,7 @@ struct BreakpointPrinter : public ModulePass {
     }
   }
 
-  virtual bool runOnModule(Module &M) {
+  bool runOnModule(Module &M) override {
     TypeIdentifierMap.clear();
     NamedMDNode *CU_Nodes = M.getNamedMetadata("llvm.dbg.cu");
     if (CU_Nodes)
@@ -69,7 +69,7 @@ struct BreakpointPrinter : public ModulePass {
     return false;
   }
 
-  virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesAll();
   }
 };

@@ -15,13 +15,12 @@
 #define LLVM_ANALYSIS_MEMORYDEPENDENCEANALYSIS_H
 
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/PointerIntPair.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/ValueHandle.h"
 #include "llvm/Pass.h"
-#include "llvm/Support/ValueHandle.h"
 
 namespace llvm {
   class Function;
@@ -98,7 +97,7 @@ namespace llvm {
     PairTy Value;
     explicit MemDepResult(PairTy V) : Value(V) {}
   public:
-    MemDepResult() : Value(0, Invalid) {}
+    MemDepResult() : Value(nullptr, Invalid) {}
 
     /// get methods: These are static ctor methods for creating various
     /// MemDepResult kinds.
@@ -156,7 +155,7 @@ namespace llvm {
     /// getInst() - If this is a normal dependency, return the instruction that
     /// is depended on.  Otherwise, return null.
     Instruction *getInst() const {
-      if (Value.getInt() == Other) return NULL;
+      if (Value.getInt() == Other) return nullptr;
       return Value.getPointer();
     }
 
@@ -282,11 +281,12 @@ namespace llvm {
       /// Size - The maximum size of the dereferences of the
       /// pointer. May be UnknownSize if the sizes are unknown.
       uint64_t Size;
-      /// TBAATag - The TBAA tag associated with dereferences of the
-      /// pointer. May be null if there are no tags or conflicting tags.
-      const MDNode *TBAATag;
+      /// AATags - The AA tags associated with dereferences of the
+      /// pointer. The members may be null if there are no tags or
+      /// conflicting tags.
+      AAMDNodes AATags;
 
-      NonLocalPointerInfo() : Size(AliasAnalysis::UnknownSize), TBAATag(0) {}
+      NonLocalPointerInfo() : Size(AliasAnalysis::UnknownSize) {}
     };
 
     /// CachedNonLocalPointerInfo - This map stores the cached results of doing
@@ -325,22 +325,23 @@ namespace llvm {
     AliasAnalysis *AA;
     const DataLayout *DL;
     DominatorTree *DT;
-    OwningPtr<PredIteratorCache> PredCache;
+    std::unique_ptr<PredIteratorCache> PredCache;
+
   public:
     MemoryDependenceAnalysis();
     ~MemoryDependenceAnalysis();
     static char ID;
 
     /// Pass Implementation stuff.  This doesn't do any analysis eagerly.
-    bool runOnFunction(Function &);
+    bool runOnFunction(Function &) override;
 
     /// Clean up memory in between runs
-    void releaseMemory();
+    void releaseMemory() override;
 
     /// getAnalysisUsage - Does not modify anything.  It uses Value Numbering
     /// and Alias Analysis.
     ///
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const;
+    void getAnalysisUsage(AnalysisUsage &AU) const override;
 
     /// getDependency - Return the instruction on which a memory operation
     /// depends.  See the class comment for more details.  It is illegal to call
@@ -401,7 +402,7 @@ namespace llvm {
                                           bool isLoad,
                                           BasicBlock::iterator ScanIt,
                                           BasicBlock *BB,
-                                          Instruction *QueryInst = 0);
+                                          Instruction *QueryInst = nullptr);
 
 
     /// getLoadLoadClobberFullWidthSize - This is a little bit of analysis that

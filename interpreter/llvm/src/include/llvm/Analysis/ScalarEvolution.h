@@ -23,14 +23,14 @@
 
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/FoldingSet.h"
+#include "llvm/IR/ConstantRange.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Operator.h"
+#include "llvm/IR/ValueHandle.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Allocator.h"
-#include "llvm/Support/ConstantRange.h"
 #include "llvm/Support/DataTypes.h"
-#include "llvm/Support/ValueHandle.h"
 #include <map>
 
 namespace llvm {
@@ -207,10 +207,10 @@ namespace llvm {
     /// notified whenever a Value is deleted.
     class SCEVCallbackVH : public CallbackVH {
       ScalarEvolution *SE;
-      virtual void deleted();
-      virtual void allUsesReplacedWith(Value *New);
+      void deleted() override;
+      void allUsesReplacedWith(Value *New) override;
     public:
-      SCEVCallbackVH(Value *V, ScalarEvolution *SE = 0);
+      SCEVCallbackVH(Value *V, ScalarEvolution *SE = nullptr);
     };
 
     friend class SCEVCallbackVH;
@@ -291,7 +291,7 @@ namespace llvm {
       const SCEV *ExactNotTaken;
       PointerIntPair<ExitNotTakenInfo*, 1> NextExit;
 
-      ExitNotTakenInfo() : ExitingBlock(0), ExactNotTaken(0) {}
+      ExitNotTakenInfo() : ExitingBlock(nullptr), ExactNotTaken(nullptr) {}
 
       /// isCompleteList - Return true if all loop exits are computable.
       bool isCompleteList() const {
@@ -321,7 +321,7 @@ namespace llvm {
       const SCEV *Max;
 
     public:
-      BackedgeTakenInfo() : Max(0) {}
+      BackedgeTakenInfo() : Max(nullptr) {}
 
       /// Initialize BackedgeTakenInfo from a list of exact exit counts.
       BackedgeTakenInfo(
@@ -795,7 +795,8 @@ namespace llvm {
 
     /// forgetLoop - This method should be called by the client when it has
     /// changed a loop in a way that may effect ScalarEvolution's ability to
-    /// compute a trip count, or if the loop is deleted.
+    /// compute a trip count, or if the loop is deleted.  This call is
+    /// potentially expensive for large loop bodies.
     void forgetLoop(const Loop *L);
 
     /// forgetValue - This method should be called by the client when it has
@@ -894,11 +895,20 @@ namespace llvm {
     /// indirect operand.
     bool hasOperand(const SCEV *S, const SCEV *Op) const;
 
-    virtual bool runOnFunction(Function &F);
-    virtual void releaseMemory();
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const;
-    virtual void print(raw_ostream &OS, const Module* = 0) const;
-    virtual void verifyAnalysis() const;
+    /// Return the size of an element read or written by Inst.
+    const SCEV *getElementSize(Instruction *Inst);
+
+    /// Compute the array dimensions Sizes from the set of Terms extracted from
+    /// the memory access function of this SCEVAddRecExpr.
+    void findArrayDimensions(SmallVectorImpl<const SCEV *> &Terms,
+                             SmallVectorImpl<const SCEV *> &Sizes,
+                             const SCEV *ElementSize) const;
+
+    bool runOnFunction(Function &F) override;
+    void releaseMemory() override;
+    void getAnalysisUsage(AnalysisUsage &AU) const override;
+    void print(raw_ostream &OS, const Module* = nullptr) const override;
+    void verifyAnalysis() const override;
 
   private:
     /// Compute the backedge taken count knowing the interval difference, the

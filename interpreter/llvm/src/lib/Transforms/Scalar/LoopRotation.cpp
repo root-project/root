@@ -11,7 +11,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "loop-rotate"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/CodeMetrics.h"
@@ -20,10 +19,11 @@
 #include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/IR/CFG.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IntrinsicInst.h"
-#include "llvm/Support/CFG.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Local.h"
@@ -31,7 +31,11 @@
 #include "llvm/Transforms/Utils/ValueMapper.h"
 using namespace llvm;
 
-#define MAX_HEADER_SIZE 16
+#define DEBUG_TYPE "loop-rotate"
+
+static cl::opt<unsigned>
+DefaultRotationThreshold("rotation-max-header-size", cl::init(16), cl::Hidden,
+       cl::desc("The default maximum header size for automatic loop rotation"));
 
 STATISTIC(NumRotated, "Number of loops rotated");
 namespace {
@@ -39,12 +43,16 @@ namespace {
   class LoopRotate : public LoopPass {
   public:
     static char ID; // Pass ID, replacement for typeid
-    LoopRotate() : LoopPass(ID) {
+    LoopRotate(int SpecifiedMaxHeaderSize = -1) : LoopPass(ID) {
       initializeLoopRotatePass(*PassRegistry::getPassRegistry());
+      if (SpecifiedMaxHeaderSize == -1)
+        MaxHeaderSize = DefaultRotationThreshold;
+      else
+        MaxHeaderSize = unsigned(SpecifiedMaxHeaderSize);
     }
 
     // LCSSA form makes instruction renaming easier.
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.addPreserved<DominatorTreeWrapperPass>();
       AU.addRequired<LoopInfo>();
       AU.addPreserved<LoopInfo>();
@@ -56,11 +64,12 @@ namespace {
       AU.addRequired<TargetTransformInfo>();
     }
 
-    bool runOnLoop(Loop *L, LPPassManager &LPM);
+    bool runOnLoop(Loop *L, LPPassManager &LPM) override;
     bool simplifyLoopLatch(Loop *L);
     bool rotateLoop(Loop *L, bool SimplifiedLatch);
 
   private:
+    unsigned MaxHeaderSize;
     LoopInfo *LI;
     const TargetTransformInfo *TTI;
   };
@@ -74,13 +83,18 @@ INITIALIZE_PASS_DEPENDENCY(LoopSimplify)
 INITIALIZE_PASS_DEPENDENCY(LCSSA)
 INITIALIZE_PASS_END(LoopRotate, "loop-rotate", "Rotate Loops", false, false)
 
-Pass *llvm::createLoopRotatePass() { return new LoopRotate(); }
+Pass *llvm::createLoopRotatePass(int MaxHeaderSize) {
+  return new LoopRotate(MaxHeaderSize);
+}
 
 /// Rotate Loop L as many times as possible. Return true if
 /// the loop is rotated at least once.
 bool LoopRotate::runOnLoop(Loop *L, LPPassManager &LPM) {
   if (skipOptnoneFunction(L))
     return false;
+
+  // Save the loop metadata.
+  MDNode *LoopMD = L->getLoopID();
 
   LI = &getAnalysis<LoopInfo>();
   TTI = &getAnalysis<TargetTransformInfo>();
@@ -96,6 +110,12 @@ bool LoopRotate::runOnLoop(Loop *L, LPPassManager &LPM) {
     MadeChange = true;
     SimplifiedLatch = false;
   }
+
+  // Restore the loop metadata.
+  // NB! We presume LoopRotation DOESN'T ADD its own metadata.
+  if ((MadeChange || SimplifiedLatch) && LoopMD)
+    L->setLoopID(LoopMD);
+
   return MadeChange;
 }
 
@@ -134,7 +154,7 @@ static void RewriteUsesOfClonedInstructions(BasicBlock *OrigHeader,
     for (Value::use_iterator UI = OrigHeaderVal->use_begin(),
          UE = OrigHeaderVal->use_end(); UI != UE; ) {
       // Grab the use before incrementing the iterator.
-      Use &U = UI.getUse();
+      Use &U = *UI;
 
       // Increment the iterator before removing the use from the list.
       ++UI;
@@ -281,7 +301,7 @@ bool LoopRotate::rotateLoop(Loop *L, bool SimplifiedLatch) {
   BasicBlock *OrigLatch = L->getLoopLatch();
 
   BranchInst *BI = dyn_cast<BranchInst>(OrigHeader->getTerminator());
-  if (BI == 0 || BI->isUnconditional())
+  if (!BI || BI->isUnconditional())
     return false;
 
   // If the loop header is not one of the loop exiting blocks then
@@ -292,7 +312,7 @@ bool LoopRotate::rotateLoop(Loop *L, bool SimplifiedLatch) {
 
   // If the loop latch already contains a branch that leaves the loop then the
   // loop is already rotated.
-  if (OrigLatch == 0)
+  if (!OrigLatch)
     return false;
 
   // Rotate if either the loop latch does *not* exit the loop, or if the loop
@@ -310,7 +330,7 @@ bool LoopRotate::rotateLoop(Loop *L, bool SimplifiedLatch) {
             << " instructions: "; L->dump());
       return false;
     }
-    if (Metrics.NumInsts > MAX_HEADER_SIZE)
+    if (Metrics.NumInsts > MaxHeaderSize)
       return false;
   }
 
@@ -319,7 +339,7 @@ bool LoopRotate::rotateLoop(Loop *L, bool SimplifiedLatch) {
 
   // If the loop could not be converted to canonical form, it must have an
   // indirectbr in it, just give up.
-  if (OrigPreheader == 0)
+  if (!OrigPreheader)
     return false;
 
   // Anything ScalarEvolution may know about this loop or the PHI nodes

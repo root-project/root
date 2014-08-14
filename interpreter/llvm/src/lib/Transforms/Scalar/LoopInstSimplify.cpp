@@ -11,7 +11,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "loop-instsimplify"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/Statistic.h"
@@ -26,6 +25,8 @@
 #include "llvm/Transforms/Utils/Local.h"
 using namespace llvm;
 
+#define DEBUG_TYPE "loop-instsimplify"
+
 STATISTIC(NumSimplified, "Number of redundant instructions simplified");
 
 namespace {
@@ -36,9 +37,9 @@ namespace {
       initializeLoopInstSimplifyPass(*PassRegistry::getPassRegistry());
     }
 
-    bool runOnLoop(Loop*, LPPassManager&);
+    bool runOnLoop(Loop*, LPPassManager&) override;
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesCFG();
       AU.addRequired<LoopInfo>();
       AU.addRequiredID(LoopSimplifyID);
@@ -70,10 +71,10 @@ bool LoopInstSimplify::runOnLoop(Loop *L, LPPassManager &LPM) {
 
   DominatorTreeWrapperPass *DTWP =
       getAnalysisIfAvailable<DominatorTreeWrapperPass>();
-  DominatorTree *DT = DTWP ? &DTWP->getDomTree() : 0;
+  DominatorTree *DT = DTWP ? &DTWP->getDomTree() : nullptr;
   LoopInfo *LI = &getAnalysis<LoopInfo>();
   DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
-  const DataLayout *DL = DLP ? &DLP->getDataLayout() : 0;
+  const DataLayout *DL = DLP ? &DLP->getDataLayout() : nullptr;
   const TargetLibraryInfo *TLI = &getAnalysis<TargetLibraryInfo>();
 
   SmallVector<BasicBlock*, 8> ExitBlocks;
@@ -118,16 +119,23 @@ bool LoopInstSimplify::runOnLoop(Loop *L, LPPassManager &LPM) {
           Value *V = SimplifyInstruction(I, DL, TLI, DT);
           if (V && LI->replacementPreservesLCSSAForm(I, V)) {
             // Mark all uses for resimplification next time round the loop.
-            for (Value::use_iterator UI = I->use_begin(), UE = I->use_end();
-                 UI != UE; ++UI)
-              Next->insert(cast<Instruction>(*UI));
+            for (User *U : I->users())
+              Next->insert(cast<Instruction>(U));
 
             I->replaceAllUsesWith(V);
             LocalChanged = true;
             ++NumSimplified;
           }
         }
-        LocalChanged |= RecursivelyDeleteTriviallyDeadInstructions(I, TLI);
+        bool res = RecursivelyDeleteTriviallyDeadInstructions(I, TLI);
+        if (res) {
+          // RecursivelyDeleteTriviallyDeadInstruction can remove
+          // more than one instruction, so simply incrementing the
+          // iterator does not work. When instructions get deleted
+          // re-iterate instead.
+          BI = BB->begin(); BE = BB->end();
+          LocalChanged |= res;
+        }
 
         if (IsSubloopHeader && !isa<PHINode>(I))
           break;

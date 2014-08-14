@@ -19,6 +19,7 @@
 
 #include "llvm/Analysis/CFGPrinter.h"
 #include "llvm/Pass.h"
+#include "llvm/Support/FileSystem.h"
 using namespace llvm;
 
 namespace {
@@ -28,14 +29,14 @@ namespace {
       initializeCFGOnlyViewerPass(*PassRegistry::getPassRegistry());
     }
 
-    virtual bool runOnFunction(Function &F) {
+    bool runOnFunction(Function &F) override {
       F.viewCFG();
       return false;
     }
 
-    void print(raw_ostream &OS, const Module* = 0) const {}
+    void print(raw_ostream &OS, const Module* = nullptr) const override {}
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesAll();
     }
   };
@@ -51,14 +52,14 @@ namespace {
       initializeCFGOnlyViewerPass(*PassRegistry::getPassRegistry());
     }
 
-    virtual bool runOnFunction(Function &F) {
+    bool runOnFunction(Function &F) override {
       F.viewCFGOnly();
       return false;
     }
 
-    void print(raw_ostream &OS, const Module* = 0) const {}
+    void print(raw_ostream &OS, const Module* = nullptr) const override {}
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesAll();
     }
   };
@@ -75,7 +76,7 @@ namespace {
       initializeCFGPrinterPass(*PassRegistry::getPassRegistry());
     }
 
-    virtual bool runOnFunction(Function &F) {
+    bool runOnFunction(Function &F) override {
       std::string Filename = "cfg." + F.getName().str() + ".dot";
       errs() << "Writing '" << Filename << "'...";
       
@@ -90,9 +91,9 @@ namespace {
       return false;
     }
 
-    void print(raw_ostream &OS, const Module* = 0) const {}
+    void print(raw_ostream &OS, const Module* = nullptr) const override {}
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesAll();
     }
   };
@@ -108,8 +109,8 @@ namespace {
     CFGOnlyPrinter() : FunctionPass(ID) {
       initializeCFGOnlyPrinterPass(*PassRegistry::getPassRegistry());
     }
-    
-    virtual bool runOnFunction(Function &F) {
+
+    bool runOnFunction(Function &F) override {
       std::string Filename = "cfg." + F.getName().str() + ".dot";
       errs() << "Writing '" << Filename << "'...";
 
@@ -123,9 +124,9 @@ namespace {
       errs() << "\n";
       return false;
     }
-    void print(raw_ostream &OS, const Module* = 0) const {}
+    void print(raw_ostream &OS, const Module* = nullptr) const override {}
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesAll();
     }
   };
@@ -147,8 +148,8 @@ void Function::viewCFG() const {
 
 /// viewCFGOnly - This function is meant for use from the debugger.  It works
 /// just like viewCFG, but it does not include the contents of basic blocks
-/// into the nodes, just the label.  If you are only interested in the CFG t
-/// his can make the graph smaller.
+/// into the nodes, just the label.  If you are only interested in the CFG
+/// this can make the graph smaller.
 ///
 void Function::viewCFGOnly() const {
   ViewGraph(this, "cfg" + getName(), true);

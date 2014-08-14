@@ -41,7 +41,7 @@ struct PrintingPolicy {
       ConstantArraySizeAsWritten(false), AnonymousTagLocations(true),
       SuppressStrongLifetime(false), SuppressLifetimeQualifiers(false),
       Bool(LO.Bool), TerseOutput(false), PolishForDeclaration(false),
-      MSWChar(LO.MicrosoftExt && !LO.WChar),
+      Half(LO.Half), MSWChar(LO.MicrosoftExt && !LO.WChar),
       IncludeNewlines(true) { }
 
   /// \brief What language we're printing.
@@ -126,7 +126,7 @@ struct PrintingPolicy {
   
   /// \brief When printing an anonymous tag name, also print the location of
   /// that entity (e.g., "enum <anonymous at t.h:10:5>"). Otherwise, just 
-  /// prints "<anonymous>" for the name.
+  /// prints "(anonymous)" for the name.
   bool AnonymousTagLocations : 1;
   
   /// \brief When true, suppress printing of the __strong lifetime qualifier in
@@ -152,6 +152,10 @@ struct PrintingPolicy {
   /// declaration tag; such as, do not print attributes attached to the declaration.
   ///
   unsigned PolishForDeclaration : 1;
+
+  /// \brief When true, print the half-precision floating-point type as 'half'
+  /// instead of '__fp16'
+  unsigned Half : 1;
 
   /// \brief When true, print the built-in wchar_t type as __wchar_t. For use in
   /// Microsoft mode when wchar_t is not available.

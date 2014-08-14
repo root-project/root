@@ -14,7 +14,6 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "x86tti"
 #include "X86.h"
 #include "X86TargetMachine.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
@@ -24,8 +23,10 @@
 #include "llvm/Target/TargetLowering.h"
 using namespace llvm;
 
+#define DEBUG_TYPE "x86tti"
+
 // Declare the pass initialization routine locally as target-specific passes
-// don't havve a target-wide initialization entry point, and so we rely on the
+// don't have a target-wide initialization entry point, and so we rely on the
 // pass constructor initialization.
 namespace llvm {
 void initializeX86TTIPass(PassRegistry &);
@@ -33,7 +34,7 @@ void initializeX86TTIPass(PassRegistry &);
 
 namespace {
 
-class X86TTI LLVM_FINAL : public ImmutablePass, public TargetTransformInfo {
+class X86TTI final : public ImmutablePass, public TargetTransformInfo {
   const X86Subtarget *ST;
   const X86TargetLowering *TLI;
 
@@ -42,7 +43,7 @@ class X86TTI LLVM_FINAL : public ImmutablePass, public TargetTransformInfo {
   unsigned getScalarizationOverhead(Type *Ty, bool Insert, bool Extract) const;
 
 public:
-  X86TTI() : ImmutablePass(ID), ST(0), TLI(0) {
+  X86TTI() : ImmutablePass(ID), ST(nullptr), TLI(nullptr) {
     llvm_unreachable("This pass cannot be directly constructed");
   }
 
@@ -52,15 +53,11 @@ public:
     initializeX86TTIPass(*PassRegistry::getPassRegistry());
   }
 
-  virtual void initializePass() LLVM_OVERRIDE {
+  void initializePass() override {
     pushTTIStack(this);
   }
 
-  virtual void finalizePass() {
-    popTTIStack();
-  }
-
-  virtual void getAnalysisUsage(AnalysisUsage &AU) const LLVM_OVERRIDE {
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
     TargetTransformInfo::getAnalysisUsage(AU);
   }
 
@@ -68,7 +65,7 @@ public:
   static char ID;
 
   /// Provide necessary pointer adjustments for the two base classes.
-  virtual void *getAdjustedAnalysisPointer(const void *ID) LLVM_OVERRIDE {
+  void *getAdjustedAnalysisPointer(const void *ID) override {
     if (ID == &TargetTransformInfo::ID)
       return (TargetTransformInfo*)this;
     return this;
@@ -76,45 +73,43 @@ public:
 
   /// \name Scalar TTI Implementations
   /// @{
-  virtual PopcntSupportKind
-  getPopcntSupport(unsigned TyWidth) const LLVM_OVERRIDE;
+  PopcntSupportKind getPopcntSupport(unsigned TyWidth) const override;
 
   /// @}
 
   /// \name Vector TTI Implementations
   /// @{
 
-  virtual unsigned getNumberOfRegisters(bool Vector) const LLVM_OVERRIDE;
-  virtual unsigned getRegisterBitWidth(bool Vector) const LLVM_OVERRIDE;
-  virtual unsigned getMaximumUnrollFactor() const LLVM_OVERRIDE;
-  virtual unsigned getArithmeticInstrCost(unsigned Opcode, Type *Ty,
-                                          OperandValueKind,
-                                          OperandValueKind) const LLVM_OVERRIDE;
-  virtual unsigned getShuffleCost(ShuffleKind Kind, Type *Tp,
-                                  int Index, Type *SubTp) const LLVM_OVERRIDE;
-  virtual unsigned getCastInstrCost(unsigned Opcode, Type *Dst,
-                                    Type *Src) const LLVM_OVERRIDE;
-  virtual unsigned getCmpSelInstrCost(unsigned Opcode, Type *ValTy,
-                                      Type *CondTy) const LLVM_OVERRIDE;
-  virtual unsigned getVectorInstrCost(unsigned Opcode, Type *Val,
-                                      unsigned Index) const LLVM_OVERRIDE;
-  virtual unsigned getMemoryOpCost(unsigned Opcode, Type *Src,
-                                   unsigned Alignment,
-                                   unsigned AddressSpace) const LLVM_OVERRIDE;
+  unsigned getNumberOfRegisters(bool Vector) const override;
+  unsigned getRegisterBitWidth(bool Vector) const override;
+  unsigned getMaximumUnrollFactor() const override;
+  unsigned getArithmeticInstrCost(unsigned Opcode, Type *Ty, OperandValueKind,
+                                  OperandValueKind) const override;
+  unsigned getShuffleCost(ShuffleKind Kind, Type *Tp,
+                          int Index, Type *SubTp) const override;
+  unsigned getCastInstrCost(unsigned Opcode, Type *Dst,
+                            Type *Src) const override;
+  unsigned getCmpSelInstrCost(unsigned Opcode, Type *ValTy,
+                              Type *CondTy) const override;
+  unsigned getVectorInstrCost(unsigned Opcode, Type *Val,
+                              unsigned Index) const override;
+  unsigned getMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
+                           unsigned AddressSpace) const override;
 
-  virtual unsigned
-  getAddressComputationCost(Type *PtrTy, bool IsComplex) const LLVM_OVERRIDE;
-  
-  virtual unsigned getReductionCost(unsigned Opcode, Type *Ty,
-                                    bool IsPairwiseForm) const LLVM_OVERRIDE;
+  unsigned getAddressComputationCost(Type *PtrTy,
+                                     bool IsComplex) const override;
 
-  virtual unsigned getIntImmCost(const APInt &Imm,
-                                 Type *Ty) const LLVM_OVERRIDE;
+  unsigned getReductionCost(unsigned Opcode, Type *Ty,
+                            bool IsPairwiseForm) const override;
 
-  virtual unsigned getIntImmCost(unsigned Opcode, const APInt &Imm,
-                                 Type *Ty) const LLVM_OVERRIDE;
-  virtual unsigned getIntImmCost(Intrinsic::ID IID, const APInt &Imm,
-                                 Type *Ty) const LLVM_OVERRIDE;
+  unsigned getIntImmCost(int64_t) const;
+
+  unsigned getIntImmCost(const APInt &Imm, Type *Ty) const override;
+
+  unsigned getIntImmCost(unsigned Opcode, unsigned Idx, const APInt &Imm,
+                         Type *Ty) const override;
+  unsigned getIntImmCost(Intrinsic::ID IID, unsigned Idx, const APInt &Imm,
+                         Type *Ty) const override;
 
   /// @}
 };
@@ -149,13 +144,17 @@ unsigned X86TTI::getNumberOfRegisters(bool Vector) const {
   if (Vector && !ST->hasSSE1())
     return 0;
 
-  if (ST->is64Bit())
+  if (ST->is64Bit()) {
+    if (Vector && ST->hasAVX512())
+      return 32;
     return 16;
+  }
   return 8;
 }
 
 unsigned X86TTI::getRegisterBitWidth(bool Vector) const {
   if (Vector) {
+    if (ST->hasAVX512()) return 512;
     if (ST->hasAVX()) return 256;
     if (ST->hasSSE1()) return 128;
     return 0;
@@ -187,6 +186,21 @@ unsigned X86TTI::getArithmeticInstrCost(unsigned Opcode, Type *Ty,
 
   int ISD = TLI->InstructionOpcodeToISD(Opcode);
   assert(ISD && "Invalid opcode");
+
+  static const CostTblEntry<MVT::SimpleValueType>
+  AVX2UniformConstCostTable[] = {
+    { ISD::SDIV, MVT::v16i16,  6 }, // vpmulhw sequence
+    { ISD::UDIV, MVT::v16i16,  6 }, // vpmulhuw sequence
+    { ISD::SDIV, MVT::v8i32,  15 }, // vpmuldq sequence
+    { ISD::UDIV, MVT::v8i32,  15 }, // vpmuludq sequence
+  };
+
+  if (Op2Info == TargetTransformInfo::OK_UniformConstantValue &&
+      ST->hasAVX2()) {
+    int Idx = CostTableLookup(AVX2UniformConstCostTable, ISD, LT.second);
+    if (Idx != -1)
+      return LT.first * AVX2UniformConstCostTable[Idx].Cost;
+  }
 
   static const CostTblEntry<MVT::SimpleValueType> AVX2CostTable[] = {
     // Shifts on v4i64/v8i32 on AVX2 is legal even though we declare to
@@ -255,10 +269,19 @@ unsigned X86TTI::getArithmeticInstrCost(unsigned Opcode, Type *Ty,
     { ISD::SRA,  MVT::v16i8,  4 }, // psrlw, pand, pxor, psubb.
     { ISD::SRA,  MVT::v8i16,  1 }, // psraw.
     { ISD::SRA,  MVT::v4i32,  1 }, // psrad.
+
+    { ISD::SDIV, MVT::v8i16,  6 }, // pmulhw sequence
+    { ISD::UDIV, MVT::v8i16,  6 }, // pmulhuw sequence
+    { ISD::SDIV, MVT::v4i32, 19 }, // pmuludq sequence
+    { ISD::UDIV, MVT::v4i32, 15 }, // pmuludq sequence
   };
 
   if (Op2Info == TargetTransformInfo::OK_UniformConstantValue &&
       ST->hasSSE2()) {
+    // pmuldq sequence.
+    if (ISD == ISD::SDIV && LT.second == MVT::v4i32 && ST->hasSSE41())
+      return LT.first * 15;
+
     int Idx = CostTableLookup(SSE2UniformConstCostTable, ISD, LT.second);
     if (Idx != -1)
       return LT.first * SSE2UniformConstCostTable[Idx].Cost;
@@ -383,17 +406,117 @@ unsigned X86TTI::getArithmeticInstrCost(unsigned Opcode, Type *Ty,
 
 unsigned X86TTI::getShuffleCost(ShuffleKind Kind, Type *Tp, int Index,
                                 Type *SubTp) const {
-  // We only estimate the cost of reverse shuffles.
-  if (Kind != SK_Reverse)
+  // We only estimate the cost of reverse and alternate shuffles.
+  if (Kind != SK_Reverse && Kind != SK_Alternate)
     return TargetTransformInfo::getShuffleCost(Kind, Tp, Index, SubTp);
 
-  std::pair<unsigned, MVT> LT = TLI->getTypeLegalizationCost(Tp);
-  unsigned Cost = 1;
-  if (LT.second.getSizeInBits() > 128)
-    Cost = 3; // Extract + insert + copy.
+  if (Kind == SK_Reverse) {
+    std::pair<unsigned, MVT> LT = TLI->getTypeLegalizationCost(Tp);
+    unsigned Cost = 1;
+    if (LT.second.getSizeInBits() > 128)
+      Cost = 3; // Extract + insert + copy.
 
-  // Multiple by the number of parts.
-  return Cost * LT.first;
+    // Multiple by the number of parts.
+    return Cost * LT.first;
+  }
+
+  if (Kind == SK_Alternate) {
+    // 64-bit packed float vectors (v2f32) are widened to type v4f32.
+    // 64-bit packed integer vectors (v2i32) are promoted to type v2i64.
+    std::pair<unsigned, MVT> LT = TLI->getTypeLegalizationCost(Tp);
+
+    // The backend knows how to generate a single VEX.256 version of
+    // instruction VPBLENDW if the target supports AVX2.
+    if (ST->hasAVX2() && LT.second == MVT::v16i16)
+      return LT.first;
+
+    static const CostTblEntry<MVT::SimpleValueType> AVXAltShuffleTbl[] = {
+      {ISD::VECTOR_SHUFFLE, MVT::v4i64, 1},  // vblendpd
+      {ISD::VECTOR_SHUFFLE, MVT::v4f64, 1},  // vblendpd
+
+      {ISD::VECTOR_SHUFFLE, MVT::v8i32, 1},  // vblendps
+      {ISD::VECTOR_SHUFFLE, MVT::v8f32, 1},  // vblendps
+
+      // This shuffle is custom lowered into a sequence of:
+      //  2x  vextractf128 , 2x vpblendw , 1x vinsertf128
+      {ISD::VECTOR_SHUFFLE, MVT::v16i16, 5},
+
+      // This shuffle is custom lowered into a long sequence of:
+      //  2x vextractf128 , 4x vpshufb , 2x vpor ,  1x vinsertf128
+      {ISD::VECTOR_SHUFFLE, MVT::v32i8, 9}
+    };
+
+    if (ST->hasAVX()) {
+      int Idx = CostTableLookup(AVXAltShuffleTbl, ISD::VECTOR_SHUFFLE, LT.second);
+      if (Idx != -1)
+        return LT.first * AVXAltShuffleTbl[Idx].Cost;
+    }
+
+    static const CostTblEntry<MVT::SimpleValueType> SSE41AltShuffleTbl[] = {
+      // These are lowered into movsd.
+      {ISD::VECTOR_SHUFFLE, MVT::v2i64, 1},
+      {ISD::VECTOR_SHUFFLE, MVT::v2f64, 1},
+
+      // packed float vectors with four elements are lowered into BLENDI dag
+      // nodes. A v4i32/v4f32 BLENDI generates a single 'blendps'/'blendpd'.
+      {ISD::VECTOR_SHUFFLE, MVT::v4i32, 1},
+      {ISD::VECTOR_SHUFFLE, MVT::v4f32, 1},
+
+      // This shuffle generates a single pshufw.
+      {ISD::VECTOR_SHUFFLE, MVT::v8i16, 1},
+
+      // There is no instruction that matches a v16i8 alternate shuffle.
+      // The backend will expand it into the sequence 'pshufb + pshufb + or'.
+      {ISD::VECTOR_SHUFFLE, MVT::v16i8, 3}
+    };
+
+    if (ST->hasSSE41()) {
+      int Idx = CostTableLookup(SSE41AltShuffleTbl, ISD::VECTOR_SHUFFLE, LT.second);
+      if (Idx != -1)
+        return LT.first * SSE41AltShuffleTbl[Idx].Cost;
+    }
+
+    static const CostTblEntry<MVT::SimpleValueType> SSSE3AltShuffleTbl[] = {
+      {ISD::VECTOR_SHUFFLE, MVT::v2i64, 1},  // movsd
+      {ISD::VECTOR_SHUFFLE, MVT::v2f64, 1},  // movsd
+
+      // SSE3 doesn't have 'blendps'. The following shuffles are expanded into
+      // the sequence 'shufps + pshufd'
+      {ISD::VECTOR_SHUFFLE, MVT::v4i32, 2},
+      {ISD::VECTOR_SHUFFLE, MVT::v4f32, 2},
+
+      {ISD::VECTOR_SHUFFLE, MVT::v8i16, 3}, // pshufb + pshufb + or
+      {ISD::VECTOR_SHUFFLE, MVT::v16i8, 3}  // pshufb + pshufb + or
+    };
+ 
+    if (ST->hasSSSE3()) {
+      int Idx = CostTableLookup(SSSE3AltShuffleTbl, ISD::VECTOR_SHUFFLE, LT.second);
+      if (Idx != -1)
+        return LT.first * SSSE3AltShuffleTbl[Idx].Cost;
+    }
+
+    static const CostTblEntry<MVT::SimpleValueType> SSEAltShuffleTbl[] = {
+      {ISD::VECTOR_SHUFFLE, MVT::v2i64, 1},  // movsd
+      {ISD::VECTOR_SHUFFLE, MVT::v2f64, 1},  // movsd
+
+      {ISD::VECTOR_SHUFFLE, MVT::v4i32, 2}, // shufps + pshufd
+      {ISD::VECTOR_SHUFFLE, MVT::v4f32, 2}, // shufps + pshufd
+ 
+      // This is expanded into a long sequence of four extract + four insert.
+      {ISD::VECTOR_SHUFFLE, MVT::v8i16, 8}, // 4 x pextrw + 4 pinsrw.
+
+      // 8 x (pinsrw + pextrw + and + movb + movzb + or)
+      {ISD::VECTOR_SHUFFLE, MVT::v16i8, 48}
+    };
+
+    // Fall-back (SSE3 and SSE2). 
+    int Idx = CostTableLookup(SSEAltShuffleTbl, ISD::VECTOR_SHUFFLE, LT.second);
+    if (Idx != -1)
+      return LT.first * SSEAltShuffleTbl[Idx].Cost;
+    return TargetTransformInfo::getShuffleCost(Kind, Tp, Index, SubTp);
+  }
+
+  return TargetTransformInfo::getShuffleCost(Kind, Tp, Index, SubTp);
 }
 
 unsigned X86TTI::getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src) const {
@@ -520,9 +643,23 @@ unsigned X86TTI::getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src) const {
     { ISD::UINT_TO_FP,  MVT::v4f64, MVT::v4i8,  2 },
     { ISD::UINT_TO_FP,  MVT::v4f64, MVT::v4i16, 2 },
     { ISD::UINT_TO_FP,  MVT::v4f64, MVT::v4i32, 6 },
+    // The generic code to compute the scalar overhead is currently broken.
+    // Workaround this limitation by estimating the scalarization overhead
+    // here. We have roughly 10 instructions per scalar element.
+    // Multiply that by the vector width.
+    // FIXME: remove that when PR19268 is fixed.
+    { ISD::UINT_TO_FP,  MVT::v2f64, MVT::v2i64, 2*10 },
+    { ISD::UINT_TO_FP,  MVT::v4f64, MVT::v4i64, 4*10 },
 
-    { ISD::FP_TO_SINT,  MVT::v8i8,  MVT::v8f32, 1 },
+    { ISD::FP_TO_SINT,  MVT::v8i8,  MVT::v8f32, 7 },
     { ISD::FP_TO_SINT,  MVT::v4i8,  MVT::v4f32, 1 },
+    // This node is expanded into scalarized operations but BasicTTI is overly
+    // optimistic estimating its cost.  It computes 3 per element (one
+    // vector-extract, one scalar conversion and one vector-insert).  The
+    // problem is that the inserts form a read-modify-write chain so latency
+    // should be factored in too.  Inflating the cost per element by 1.
+    { ISD::FP_TO_UINT,  MVT::v8i32, MVT::v8f32, 8*4 },
+    { ISD::FP_TO_UINT,  MVT::v4i32, MVT::v4f64, 4*4 },
   };
 
   if (ST->hasAVX2()) {
@@ -777,6 +914,19 @@ unsigned X86TTI::getReductionCost(unsigned Opcode, Type *ValTy,
   return TargetTransformInfo::getReductionCost(Opcode, ValTy, IsPairwise);
 }
 
+/// \brief Calculate the cost of materializing a 64-bit value. This helper
+/// method might only calculate a fraction of a larger immediate. Therefore it
+/// is valid to return a cost of ZERO.
+unsigned X86TTI::getIntImmCost(int64_t Val) const {
+  if (Val == 0)
+    return TCC_Free;
+
+  if (isInt<32>(Val))
+    return TCC_Basic;
+
+  return 2 * TCC_Basic;
+}
+
 unsigned X86TTI::getIntImmCost(const APInt &Imm, Type *Ty) const {
   assert(Ty->isIntegerTy());
 
@@ -784,22 +934,56 @@ unsigned X86TTI::getIntImmCost(const APInt &Imm, Type *Ty) const {
   if (BitSize == 0)
     return ~0U;
 
-  if (Imm.getBitWidth() <= 64 &&
-      (isInt<32>(Imm.getSExtValue()) || isUInt<32>(Imm.getZExtValue())))
-    return TCC_Basic;
-  else
-    return 2 * TCC_Basic;
+  // Never hoist constants larger than 128bit, because this might lead to
+  // incorrect code generation or assertions in codegen.
+  // Fixme: Create a cost model for types larger than i128 once the codegen
+  // issues have been fixed.
+  if (BitSize > 128)
+    return TCC_Free;
+
+  if (Imm == 0)
+    return TCC_Free;
+
+  // Sign-extend all constants to a multiple of 64-bit.
+  APInt ImmVal = Imm;
+  if (BitSize & 0x3f)
+    ImmVal = Imm.sext((BitSize + 63) & ~0x3fU);
+
+  // Split the constant into 64-bit chunks and calculate the cost for each
+  // chunk.
+  unsigned Cost = 0;
+  for (unsigned ShiftVal = 0; ShiftVal < BitSize; ShiftVal += 64) {
+    APInt Tmp = ImmVal.ashr(ShiftVal).sextOrTrunc(64);
+    int64_t Val = Tmp.getSExtValue();
+    Cost += getIntImmCost(Val);
+  }
+  // We need at least one instruction to materialze the constant.
+  return std::max(1U, Cost);
 }
 
-unsigned X86TTI::getIntImmCost(unsigned Opcode, const APInt &Imm,
+unsigned X86TTI::getIntImmCost(unsigned Opcode, unsigned Idx, const APInt &Imm,
                                Type *Ty) const {
   assert(Ty->isIntegerTy());
 
   unsigned BitSize = Ty->getPrimitiveSizeInBits();
+  // There is no cost model for constants with a bit size of 0. Return TCC_Free
+  // here, so that constant hoisting will ignore this constant.
   if (BitSize == 0)
-    return ~0U;
+    return TCC_Free;
 
+  unsigned ImmIdx = ~0U;
   switch (Opcode) {
+  default: return TCC_Free;
+  case Instruction::GetElementPtr:
+    // Always hoist the base address of a GetElementPtr. This prevents the
+    // creation of new constants for every base constant that gets constant
+    // folded with the offset.
+    if (Idx == 0)
+      return 2 * TCC_Basic;
+    return TCC_Free;
+  case Instruction::Store:
+    ImmIdx = 0;
+    break;
   case Instruction::Add:
   case Instruction::Sub:
   case Instruction::Mul:
@@ -807,59 +991,74 @@ unsigned X86TTI::getIntImmCost(unsigned Opcode, const APInt &Imm,
   case Instruction::SDiv:
   case Instruction::URem:
   case Instruction::SRem:
-  case Instruction::Shl:
-  case Instruction::LShr:
-  case Instruction::AShr:
   case Instruction::And:
   case Instruction::Or:
   case Instruction::Xor:
   case Instruction::ICmp:
-    if (Imm.getBitWidth() <= 64 && isInt<32>(Imm.getSExtValue()))
+    ImmIdx = 1;
+    break;
+  // Always return TCC_Free for the shift value of a shift instruction.
+  case Instruction::Shl:
+  case Instruction::LShr:
+  case Instruction::AShr:
+    if (Idx == 1)
       return TCC_Free;
-    else
-      return X86TTI::getIntImmCost(Imm, Ty);
+    break;
   case Instruction::Trunc:
   case Instruction::ZExt:
   case Instruction::SExt:
   case Instruction::IntToPtr:
   case Instruction::PtrToInt:
   case Instruction::BitCast:
+  case Instruction::PHI:
   case Instruction::Call:
   case Instruction::Select:
   case Instruction::Ret:
   case Instruction::Load:
-  case Instruction::Store:
-    return X86TTI::getIntImmCost(Imm, Ty);
+    break;
   }
-  return TargetTransformInfo::getIntImmCost(Opcode, Imm, Ty);
+
+  if (Idx == ImmIdx) {
+    unsigned NumConstants = (BitSize + 63) / 64;
+    unsigned Cost = X86TTI::getIntImmCost(Imm, Ty);
+    return (Cost <= NumConstants * TCC_Basic)
+      ? static_cast<unsigned>(TCC_Free)
+      : Cost;
+  }
+
+  return X86TTI::getIntImmCost(Imm, Ty);
 }
 
-unsigned X86TTI::getIntImmCost(Intrinsic::ID IID, const APInt &Imm,
-                               Type *Ty) const {
+unsigned X86TTI::getIntImmCost(Intrinsic::ID IID, unsigned Idx,
+                               const APInt &Imm, Type *Ty) const {
   assert(Ty->isIntegerTy());
 
   unsigned BitSize = Ty->getPrimitiveSizeInBits();
+  // There is no cost model for constants with a bit size of 0. Return TCC_Free
+  // here, so that constant hoisting will ignore this constant.
   if (BitSize == 0)
-    return ~0U;
+    return TCC_Free;
 
   switch (IID) {
-  default: return TargetTransformInfo::getIntImmCost(IID, Imm, Ty);
+  default: return TCC_Free;
   case Intrinsic::sadd_with_overflow:
   case Intrinsic::uadd_with_overflow:
   case Intrinsic::ssub_with_overflow:
   case Intrinsic::usub_with_overflow:
   case Intrinsic::smul_with_overflow:
   case Intrinsic::umul_with_overflow:
-    if (Imm.getBitWidth() <= 64 && isInt<32>(Imm.getSExtValue()))
+    if ((Idx == 1) && Imm.getBitWidth() <= 64 && isInt<32>(Imm.getSExtValue()))
       return TCC_Free;
-    else
-      return X86TTI::getIntImmCost(Imm, Ty);
+    break;
   case Intrinsic::experimental_stackmap:
+    if ((Idx < 2) || (Imm.getBitWidth() <= 64 && isInt<64>(Imm.getSExtValue())))
+      return TCC_Free;
+    break;
   case Intrinsic::experimental_patchpoint_void:
   case Intrinsic::experimental_patchpoint_i64:
-    if (Imm.getBitWidth() <= 64 && isInt<64>(Imm.getSExtValue()))
+    if ((Idx < 4) || (Imm.getBitWidth() <= 64 && isInt<64>(Imm.getSExtValue())))
       return TCC_Free;
-    else
-      return X86TTI::getIntImmCost(Imm, Ty);
+    break;
   }
+  return X86TTI::getIntImmCost(Imm, Ty);
 }

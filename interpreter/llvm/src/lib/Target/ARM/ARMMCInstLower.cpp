@@ -14,6 +14,7 @@
 
 #include "ARM.h"
 #include "ARMAsmPrinter.h"
+#include "MCTargetDesc/ARMBaseInfo.h"
 #include "MCTargetDesc/ARMMCExpr.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/IR/Constants.h"
@@ -33,7 +34,7 @@ MCOperand ARMAsmPrinter::GetSymbolRef(const MachineOperand &MO,
                                    OutContext);
     switch (Option) {
     default: llvm_unreachable("Unknown target flag on symbol operand");
-    case 0:
+    case ARMII::MO_NO_FLAG:
       break;
     case ARMII::MO_LO16:
       Expr = MCSymbolRefExpr::Create(Symbol, MCSymbolRefExpr::VK_None,

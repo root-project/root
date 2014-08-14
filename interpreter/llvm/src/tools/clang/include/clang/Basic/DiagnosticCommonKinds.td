@@ -102,10 +102,13 @@ def ext_cxx11_longlong : Extension<
 def warn_cxx98_compat_longlong : Warning<
   "'long long' is incompatible with C++98">,
   InGroup<CXX98CompatPedantic>, DefaultIgnore;
-def err_integer_too_large : Error<
-  "integer constant is larger than the largest unsigned integer type">;
-def warn_integer_too_large_for_signed : Warning<
-  "integer constant is larger than the largest signed integer type">;
+def err_integer_literal_too_large : Error<
+  "integer literal is too large to be represented in any %select{signed |}0"
+  "integer type">;
+def ext_integer_literal_too_large_for_signed : ExtWarn<
+  "integer literal is too large to be represented in a signed integer type, "
+  "interpreting as unsigned">,
+  InGroup<DiagGroup<"implicitly-unsigned-literal">>;
 
 // Sema && AST
 def note_invalid_subexpr_in_const_expr : Note<
@@ -137,12 +140,12 @@ def err_module_file_conflict : Error<"module '%0' found in both '%1' and '%2'">;
 
 // TransformActions
 // TODO: Use a custom category name to distinguish rewriter errors.
-def err_mt_message : Error<"[rewriter] %0">;
+def err_mt_message : Error<"[rewriter] %0">, SuppressInSystemHeader;
 def warn_mt_message : Warning<"[rewriter] %0">;
 def note_mt_message : Note<"[rewriter] %0">;
 
 // ARCMigrate
-def err_arcmt_nsalloc_realloc : Error<"[rewriter] call returns pointer to GC managed memory; it will become unmanaged in ARC">;
+def warn_arcmt_nsalloc_realloc : Warning<"[rewriter] call returns pointer to GC managed memory; it will become unmanaged in ARC">;
 def err_arcmt_nsinvocation_ownership : Error<"NSInvocation's %0 is not safe to be used with an object with ownership other than __unsafe_unretained">;
 
 }

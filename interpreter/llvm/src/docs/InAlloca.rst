@@ -5,8 +5,6 @@ Design and Usage of the InAlloca Attribute
 Introduction
 ============
 
-.. Warning:: This feature is unstable and not fully implemented.
-
 The :ref:`inalloca <attr_inalloca>` attribute is designed to allow
 taking the address of an aggregate argument that is being passed by
 value through memory.  Primarily, this feature is required for
@@ -31,41 +29,39 @@ Intended Usage
 ==============
 
 The example below is the intended LLVM IR lowering for some C++ code
-that passes a default-constructed ``Foo`` object to ``g`` in the 32-bit
-Microsoft C++ ABI.
+that passes two default-constructed ``Foo`` objects to ``g`` in the
+32-bit Microsoft C++ ABI.
 
 .. code-block:: c++
 
     // Foo is non-trivial.
-    struct Foo { int a, b; Foo(); ~Foo(); Foo(const &Foo); };
+    struct Foo { int a, b; Foo(); ~Foo(); Foo(const Foo &); };
     void g(Foo a, Foo b);
     void f() {
-      f(1, Foo(), 3);
+      g(Foo(), Foo());
     }
 
 .. code-block:: llvm
 
     %struct.Foo = type { i32, i32 }
-    %callframe.f = type { %struct.Foo, %struct.Foo }
-    declare void @Foo_ctor(%Foo* %this)
-    declare void @Foo_dtor(%Foo* %this)
-    declare void @g(%Foo* inalloca %memargs)
+    declare void @Foo_ctor(%struct.Foo* %this)
+    declare void @Foo_dtor(%struct.Foo* %this)
+    declare void @g(<{ %struct.Foo, %struct.Foo }>* inalloca %memargs)
 
     define void @f() {
     entry:
       %base = call i8* @llvm.stacksave()
-      %memargs = alloca %callframe.f
-      %b = getelementptr %callframe.f*, i32 0
-      %a = getelementptr %callframe.f*, i32 1
+      %memargs = alloca <{ %struct.Foo, %struct.Foo }>
+      %b = getelementptr <{ %struct.Foo, %struct.Foo }>* %memargs, i32 1
       call void @Foo_ctor(%struct.Foo* %b)
 
       ; If a's ctor throws, we must destruct b.
-      invoke void @Foo_ctor(%struct.Foo* %arg1)
+      %a = getelementptr <{ %struct.Foo, %struct.Foo }>* %memargs, i32 0
+      invoke void @Foo_ctor(%struct.Foo* %a)
           to label %invoke.cont unwind %invoke.unwind
 
     invoke.cont:
-      store i32 1, i32* %arg0
-      call void @g(%callframe.f* inalloca %memargs)
+      call void @g(<{ %struct.Foo, %struct.Foo }>* inalloca %memargs)
       call void @llvm.stackrestore(i8* %base)
       ...
 

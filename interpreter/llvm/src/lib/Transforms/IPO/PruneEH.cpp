@@ -14,21 +14,22 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "prune-eh"
 #include "llvm/Transforms/IPO.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Analysis/CallGraphSCCPass.h"
+#include "llvm/IR/CFG.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/LLVMContext.h"
-#include "llvm/Support/CFG.h"
 #include <algorithm>
 using namespace llvm;
+
+#define DEBUG_TYPE "prune-eh"
 
 STATISTIC(NumRemoved, "Number of invokes removed");
 STATISTIC(NumUnreach, "Number of noreturn calls optimized");
@@ -41,7 +42,7 @@ namespace {
     }
 
     // runOnSCC - Analyze the SCC, performing the transformation if possible.
-    bool runOnSCC(CallGraphSCC &SCC);
+    bool runOnSCC(CallGraphSCC &SCC) override;
 
     bool SimplifyFunction(Function *F);
     void DeleteBasicBlock(BasicBlock *BB);
@@ -85,7 +86,7 @@ bool PruneEH::runOnSCC(CallGraphSCC &SCC) {
   for (CallGraphSCC::iterator I = SCC.begin(), E = SCC.end(); 
        (!SCCMightUnwind || !SCCMightReturn) && I != E; ++I) {
     Function *F = (*I)->getFunction();
-    if (F == 0) {
+    if (!F) {
       SCCMightUnwind = true;
       SCCMightReturn = true;
     } else if (F->isDeclaration() || F->mayBeOverridden()) {

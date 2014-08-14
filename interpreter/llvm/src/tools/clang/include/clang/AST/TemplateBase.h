@@ -18,6 +18,7 @@
 #include "clang/AST/TemplateName.h"
 #include "clang/AST/Type.h"
 #include "llvm/ADT/APSInt.h"
+#include "llvm/ADT/iterator_range.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -204,7 +205,7 @@ public:
   }
 
   static TemplateArgument getEmptyPack() {
-    return TemplateArgument((TemplateArgument*)0, 0);
+    return TemplateArgument((TemplateArgument*)nullptr, 0);
   }
 
   /// \brief Create a new template argument pack by copying the given set of
@@ -327,6 +328,12 @@ public:
     return Args.Args + Args.NumArgs;
   }
 
+  /// \brief Iterator range referencing all of the elements of a template
+  /// argument pack.
+  llvm::iterator_range<pack_iterator> pack_elements() const {
+    return llvm::make_range(pack_begin(), pack_end());
+  }
+
   /// \brief The number of template arguments in the given template argument
   /// pack.
   unsigned pack_size() const {
@@ -335,9 +342,9 @@ public:
   }
 
   /// \brief Return the array of arguments in this template argument pack.
-  llvm::ArrayRef<TemplateArgument> getPackAsArray() const {
+  ArrayRef<TemplateArgument> getPackAsArray() const {
     assert(getKind() == Pack);
-    return llvm::ArrayRef<TemplateArgument>(Args.Args, Args.NumArgs);
+    return ArrayRef<TemplateArgument>(Args.Args, Args.NumArgs);
   }
 
   /// \brief Determines whether two template arguments are superficially the
@@ -543,6 +550,10 @@ public:
     return Arguments[I];
   }
 
+  TemplateArgumentLoc &operator[](unsigned I) {
+    return Arguments[I];
+  }
+
   void addArgument(const TemplateArgumentLoc &Loc) {
     Arguments.push_back(Loc);
   }
@@ -567,7 +578,8 @@ struct ASTTemplateArgumentListInfo {
 
     /// Force ASTTemplateArgumentListInfo to the right alignment
     /// for the following array of TemplateArgumentLocs.
-    void *Aligner;
+    llvm::AlignedCharArray<
+        llvm::AlignOf<TemplateArgumentLoc>::Alignment, 1> Aligner;
   };
 
   /// \brief Retrieve the template arguments

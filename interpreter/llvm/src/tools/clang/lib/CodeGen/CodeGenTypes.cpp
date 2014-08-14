@@ -131,17 +131,15 @@ isSafeToConvert(const RecordDecl *RD, CodeGenTypes &CGT,
   // when a class is translated, even though they aren't embedded by-value into
   // the class.
   if (const CXXRecordDecl *CRD = dyn_cast<CXXRecordDecl>(RD)) {
-    for (CXXRecordDecl::base_class_const_iterator I = CRD->bases_begin(),
-         E = CRD->bases_end(); I != E; ++I)
-      if (!isSafeToConvert(I->getType()->getAs<RecordType>()->getDecl(),
+    for (const auto &I : CRD->bases())
+      if (!isSafeToConvert(I.getType()->getAs<RecordType>()->getDecl(),
                            CGT, AlreadyChecked))
         return false;
   }
   
   // If this type would require laying out members that are currently being laid
   // out, don't do it.
-  for (RecordDecl::field_iterator I = RD->field_begin(),
-       E = RD->field_end(); I != E; ++I)
+  for (const auto *I : RD->fields())
     if (!isSafeToConvert(I->getType(), CGT, AlreadyChecked))
       return false;
   
@@ -191,15 +189,15 @@ static bool isSafeToConvert(const RecordDecl *RD, CodeGenTypes &CGT) {
 bool CodeGenTypes::isFuncParamTypeConvertible(QualType Ty) {
   // If this isn't a tagged type, we can convert it!
   const TagType *TT = Ty->getAs<TagType>();
-  if (TT == 0) return true;
-    
+  if (!TT) return true;
+
   // Incomplete types cannot be converted.
   if (TT->isIncompleteType())
     return false;
   
   // If this is an enum, then it is always safe to convert.
   const RecordType *RT = dyn_cast<RecordType>(TT);
-  if (RT == 0) return true;
+  if (!RT) return true;
 
   // Otherwise, we have to be careful.  If it is a struct that we're in the
   // process of expanding, then we can't convert the function type.  That's ok
@@ -244,6 +242,10 @@ void CodeGenTypes::UpdateCompletedType(const TagDecl *TD) {
       if (!ConvertType(ED->getIntegerType())->isIntegerTy(32))
         TypeCache.clear();
     }
+    // If necessary, provide the full definition of a type only used with a
+    // declaration so far.
+    if (CGDebugInfo *DI = CGM.getModuleDebugInfo())
+      DI->completeType(ED);
     return;
   }
   
@@ -302,7 +304,7 @@ llvm::Type *CodeGenTypes::ConvertType(QualType T) {
     return TCI->second;
 
   // If we don't have it in the cache, convert it now.
-  llvm::Type *ResultType = 0;
+  llvm::Type *ResultType = nullptr;
   switch (Ty->getTypeClass()) {
   case Type::Record: // Handled above.
 #define TYPE(Class, Base)
@@ -627,7 +629,7 @@ llvm::StructType *CodeGenTypes::ConvertRecordDeclType(const RecordDecl *RD) {
   llvm::StructType *&Entry = RecordDeclTypes[Key];
 
   // If we don't have a StructType at all yet, create the forward declaration.
-  if (Entry == 0) {
+  if (!Entry) {
     Entry = llvm::StructType::create(getLLVMContext());
     addRecordTypeName(RD, Entry, "");
   }
@@ -636,7 +638,7 @@ llvm::StructType *CodeGenTypes::ConvertRecordDeclType(const RecordDecl *RD) {
   // If this is still a forward declaration, or the LLVM type is already
   // complete, there's nothing more to do.
   RD = RD->getDefinition();
-  if (RD == 0 || !RD->isCompleteDefinition() || !Ty->isOpaque())
+  if (!RD || !RD->isCompleteDefinition() || !Ty->isOpaque())
     return Ty;
   
   // If converting this type would cause us to infinitely loop, don't do it!
@@ -651,11 +653,10 @@ llvm::StructType *CodeGenTypes::ConvertRecordDeclType(const RecordDecl *RD) {
   
   // Force conversion of non-virtual base classes recursively.
   if (const CXXRecordDecl *CRD = dyn_cast<CXXRecordDecl>(RD)) {
-    for (CXXRecordDecl::base_class_const_iterator i = CRD->bases_begin(),
-         e = CRD->bases_end(); i != e; ++i) {
-      if (i->isVirtual()) continue;
+    for (const auto &I : CRD->bases()) {
+      if (I.isVirtual()) continue;
       
-      ConvertRecordDeclType(i->getType()->getAs<RecordType>()->getDecl());
+      ConvertRecordDeclType(I.getType()->getAs<RecordType>()->getDecl());
     }
   }
 

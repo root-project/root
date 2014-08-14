@@ -11,19 +11,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "branch-prob"
 #include "llvm/Analysis/BranchProbabilityInfo.h"
 #include "llvm/ADT/PostOrderIterator.h"
 #include "llvm/Analysis/LoopInfo.h"
+#include "llvm/IR/CFG.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Metadata.h"
-#include "llvm/Support/CFG.h"
 #include "llvm/Support/Debug.h"
 
 using namespace llvm;
+
+#define DEBUG_TYPE "branch-prob"
 
 INITIALIZE_PASS_BEGIN(BranchProbabilityInfo, "branch-prob",
                       "Branch Probability Analysis", false, true)
@@ -322,6 +323,9 @@ bool BranchProbabilityInfo::calcLoopBranchHeuristics(BasicBlock *BB) {
       InEdges.push_back(I.getSuccessorIndex());
   }
 
+  if (BackEdges.empty() && ExitingEdges.empty())
+    return false;
+
   if (uint32_t numBackEdges = BackEdges.size()) {
     uint32_t backWeight = LBH_TAKEN_WEIGHT / numBackEdges;
     if (backWeight < NORMAL_WEIGHT)
@@ -557,7 +561,7 @@ isEdgeHot(const BasicBlock *Src, const BasicBlock *Dst) const {
 BasicBlock *BranchProbabilityInfo::getHotSucc(BasicBlock *BB) const {
   uint32_t Sum = 0;
   uint32_t MaxWeight = 0;
-  BasicBlock *MaxSucc = 0;
+  BasicBlock *MaxSucc = nullptr;
 
   for (succ_iterator I = succ_begin(BB), E = succ_end(BB); I != E; ++I) {
     BasicBlock *Succ = *I;
@@ -577,7 +581,7 @@ BasicBlock *BranchProbabilityInfo::getHotSucc(BasicBlock *BB) const {
   if (BranchProbability(MaxWeight, Sum) > BranchProbability(4, 5))
     return MaxSucc;
 
-  return 0;
+  return nullptr;
 }
 
 /// Get the raw edge weight for the edge. If can't find it, return
@@ -594,11 +598,9 @@ getEdgeWeight(const BasicBlock *Src, unsigned IndexInSuccessors) const {
   return DEFAULT_WEIGHT;
 }
 
-uint32_t
-BranchProbabilityInfo::
-getEdgeWeight(const BasicBlock *Src, succ_const_iterator Dst) const {
-  size_t index = std::distance(succ_begin(Src), Dst);
-  return getEdgeWeight(Src, index);
+uint32_t BranchProbabilityInfo::getEdgeWeight(const BasicBlock *Src,
+                                              succ_const_iterator Dst) const {
+  return getEdgeWeight(Src, Dst.getSuccessorIndex());
 }
 
 /// Get the raw edge weight calculated for the block pair. This returns the sum

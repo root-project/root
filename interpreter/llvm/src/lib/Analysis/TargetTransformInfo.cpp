@@ -7,17 +7,18 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "tti"
 #include "llvm/Analysis/TargetTransformInfo.h"
+#include "llvm/IR/CallSite.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Operator.h"
-#include "llvm/Support/CallSite.h"
 #include "llvm/Support/ErrorHandling.h"
 
 using namespace llvm;
+
+#define DEBUG_TYPE "tti"
 
 // Setup the analysis group to manage the TargetTransformInfo passes.
 INITIALIZE_ANALYSIS_GROUP(TargetTransformInfo, "Target Information", NoTTI)
@@ -33,16 +34,6 @@ void TargetTransformInfo::pushTTIStack(Pass *P) {
   // Walk up the chain and update the top TTI pointer.
   for (TargetTransformInfo *PTTI = PrevTTI; PTTI; PTTI = PTTI->PrevTTI)
     PTTI->TopTTI = this;
-}
-
-void TargetTransformInfo::popTTIStack() {
-  TopTTI = 0;
-
-  // Walk up the chain and update the top TTI pointer.
-  for (TargetTransformInfo *PTTI = PrevTTI; PTTI; PTTI = PTTI->PrevTTI)
-    PTTI->TopTTI = PrevTTI;
-
-  PrevTTI = 0;
 }
 
 void TargetTransformInfo::getAnalysisUsage(AnalysisUsage &AU) const {
@@ -158,14 +149,14 @@ unsigned TargetTransformInfo::getIntImmCost(const APInt &Imm, Type *Ty) const {
   return PrevTTI->getIntImmCost(Imm, Ty);
 }
 
-unsigned TargetTransformInfo::getIntImmCost(unsigned Opcode, const APInt &Imm,
-                                            Type *Ty) const {
-  return PrevTTI->getIntImmCost(Opcode, Imm, Ty);
+unsigned TargetTransformInfo::getIntImmCost(unsigned Opc, unsigned Idx,
+                                            const APInt &Imm, Type *Ty) const {
+  return PrevTTI->getIntImmCost(Opc, Idx, Imm, Ty);
 }
 
-unsigned TargetTransformInfo::getIntImmCost(Intrinsic::ID IID, const APInt &Imm,
-                                            Type *Ty) const {
-  return PrevTTI->getIntImmCost(IID, Imm, Ty);
+unsigned TargetTransformInfo::getIntImmCost(Intrinsic::ID IID, unsigned Idx,
+                                            const APInt &Imm, Type *Ty) const {
+  return PrevTTI->getIntImmCost(IID, Idx, Imm, Ty);
 }
 
 unsigned TargetTransformInfo::getNumberOfRegisters(bool Vector) const {
@@ -241,23 +232,23 @@ unsigned TargetTransformInfo::getReductionCost(unsigned Opcode, Type *Ty,
 
 namespace {
 
-struct NoTTI LLVM_FINAL : ImmutablePass, TargetTransformInfo {
+struct NoTTI final : ImmutablePass, TargetTransformInfo {
   const DataLayout *DL;
 
-  NoTTI() : ImmutablePass(ID), DL(0) {
+  NoTTI() : ImmutablePass(ID), DL(nullptr) {
     initializeNoTTIPass(*PassRegistry::getPassRegistry());
   }
 
-  virtual void initializePass() LLVM_OVERRIDE {
+  virtual void initializePass() override {
     // Note that this subclass is special, and must *not* call initializeTTI as
     // it does not chain.
     TopTTI = this;
-    PrevTTI = 0;
+    PrevTTI = nullptr;
     DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
-    DL = DLP ? &DLP->getDataLayout() : 0;
+    DL = DLP ? &DLP->getDataLayout() : nullptr;
   }
 
-  virtual void getAnalysisUsage(AnalysisUsage &AU) const LLVM_OVERRIDE {
+  virtual void getAnalysisUsage(AnalysisUsage &AU) const override {
     // Note that this subclass is special, and must *not* call
     // TTI::getAnalysisUsage as it breaks the recursion.
   }
@@ -266,14 +257,14 @@ struct NoTTI LLVM_FINAL : ImmutablePass, TargetTransformInfo {
   static char ID;
 
   /// Provide necessary pointer adjustments for the two base classes.
-  virtual void *getAdjustedAnalysisPointer(const void *ID) LLVM_OVERRIDE {
+  virtual void *getAdjustedAnalysisPointer(const void *ID) override {
     if (ID == &TargetTransformInfo::ID)
       return (TargetTransformInfo*)this;
     return this;
   }
 
   unsigned getOperationCost(unsigned Opcode, Type *Ty,
-                            Type *OpTy) const LLVM_OVERRIDE {
+                            Type *OpTy) const override {
     switch (Opcode) {
     default:
       // By default, just classify everything as 'basic'.
@@ -330,7 +321,7 @@ struct NoTTI LLVM_FINAL : ImmutablePass, TargetTransformInfo {
   }
 
   unsigned getGEPCost(const Value *Ptr,
-                      ArrayRef<const Value *> Operands) const LLVM_OVERRIDE {
+                      ArrayRef<const Value *> Operands) const override {
     // In the basic model, we just assume that all-constant GEPs will be folded
     // into their uses via addressing modes.
     for (unsigned Idx = 0, Size = Operands.size(); Idx != Size; ++Idx)
@@ -340,7 +331,7 @@ struct NoTTI LLVM_FINAL : ImmutablePass, TargetTransformInfo {
     return TCC_Free;
   }
 
-  unsigned getCallCost(FunctionType *FTy, int NumArgs = -1) const LLVM_OVERRIDE
+  unsigned getCallCost(FunctionType *FTy, int NumArgs = -1) const override
   {
     assert(FTy && "FunctionType must be provided to this routine.");
 
@@ -356,7 +347,7 @@ struct NoTTI LLVM_FINAL : ImmutablePass, TargetTransformInfo {
     return TCC_Basic * (NumArgs + 1);
   }
 
-  unsigned getCallCost(const Function *F, int NumArgs = -1) const LLVM_OVERRIDE
+  unsigned getCallCost(const Function *F, int NumArgs = -1) const override
   {
     assert(F && "A concrete function must be provided to this routine.");
 
@@ -378,7 +369,7 @@ struct NoTTI LLVM_FINAL : ImmutablePass, TargetTransformInfo {
   }
 
   unsigned getCallCost(const Function *F,
-                       ArrayRef<const Value *> Arguments) const LLVM_OVERRIDE {
+                       ArrayRef<const Value *> Arguments) const override {
     // Simply delegate to generic handling of the call.
     // FIXME: We should use instsimplify or something else to catch calls which
     // will constant fold with these arguments.
@@ -386,7 +377,7 @@ struct NoTTI LLVM_FINAL : ImmutablePass, TargetTransformInfo {
   }
 
   unsigned getIntrinsicCost(Intrinsic::ID IID, Type *RetTy,
-                            ArrayRef<Type *> ParamTys) const LLVM_OVERRIDE {
+                            ArrayRef<Type *> ParamTys) const override {
     switch (IID) {
     default:
       // Intrinsics rarely (if ever) have normal argument setup constraints.
@@ -394,6 +385,7 @@ struct NoTTI LLVM_FINAL : ImmutablePass, TargetTransformInfo {
       // FIXME: This is wrong for libc intrinsics.
       return TCC_Basic;
 
+    case Intrinsic::assume:
     case Intrinsic::dbg_declare:
     case Intrinsic::dbg_value:
     case Intrinsic::invariant_start:
@@ -410,7 +402,7 @@ struct NoTTI LLVM_FINAL : ImmutablePass, TargetTransformInfo {
 
   unsigned
   getIntrinsicCost(Intrinsic::ID IID, Type *RetTy,
-                   ArrayRef<const Value *> Arguments) const LLVM_OVERRIDE {
+                   ArrayRef<const Value *> Arguments) const override {
     // Delegate to the generic intrinsic handling code. This mostly provides an
     // opportunity for targets to (for example) special case the cost of
     // certain intrinsics based on constants used as arguments.
@@ -421,14 +413,14 @@ struct NoTTI LLVM_FINAL : ImmutablePass, TargetTransformInfo {
     return TopTTI->getIntrinsicCost(IID, RetTy, ParamTys);
   }
 
-  unsigned getUserCost(const User *U) const LLVM_OVERRIDE {
+  unsigned getUserCost(const User *U) const override {
     if (isa<PHINode>(U))
       return TCC_Free; // Model all PHI nodes as free.
 
-    if (const GEPOperator *GEP = dyn_cast<GEPOperator>(U))
-      // In the basic model we just assume that all-constant GEPs will be
-      // folded into their uses via addressing modes.
-      return GEP->hasAllConstantIndices() ? TCC_Free : TCC_Basic;
+    if (const GEPOperator *GEP = dyn_cast<GEPOperator>(U)) {
+      SmallVector<const Value *, 4> Indices(GEP->idx_begin(), GEP->idx_end());
+      return TopTTI->getGEPCost(GEP->getPointerOperand(), Indices);
+    }
 
     if (ImmutableCallSite CS = U) {
       const Function *F = CS.getCalledFunction();
@@ -453,12 +445,12 @@ struct NoTTI LLVM_FINAL : ImmutablePass, TargetTransformInfo {
     // Otherwise delegate to the fully generic implementations.
     return getOperationCost(Operator::getOpcode(U), U->getType(),
                             U->getNumOperands() == 1 ?
-                                U->getOperand(0)->getType() : 0);
+                                U->getOperand(0)->getType() : nullptr);
   }
 
-  bool hasBranchDivergence() const LLVM_OVERRIDE { return false; }
+  bool hasBranchDivergence() const override { return false; }
 
-  bool isLoweredToCall(const Function *F) const LLVM_OVERRIDE {
+  bool isLoweredToCall(const Function *F) const override {
     // FIXME: These should almost certainly not be handled here, and instead
     // handled with the help of TLI or the target itself. This was largely
     // ported from existing analysis heuristics here so that such refactorings
@@ -489,20 +481,19 @@ struct NoTTI LLVM_FINAL : ImmutablePass, TargetTransformInfo {
     return true;
   }
 
-  void getUnrollingPreferences(Loop *,
-                               UnrollingPreferences &) const LLVM_OVERRIDE
-  { }
+  void getUnrollingPreferences(Loop *, UnrollingPreferences &) const override {
+  }
 
-  bool isLegalAddImmediate(int64_t Imm) const LLVM_OVERRIDE {
+  bool isLegalAddImmediate(int64_t Imm) const override {
     return false;
   }
 
-  bool isLegalICmpImmediate(int64_t Imm) const LLVM_OVERRIDE {
+  bool isLegalICmpImmediate(int64_t Imm) const override {
     return false;
   }
 
   bool isLegalAddressingMode(Type *Ty, GlobalValue *BaseGV, int64_t BaseOffset,
-                             bool HasBaseReg, int64_t Scale) const LLVM_OVERRIDE
+                             bool HasBaseReg, int64_t Scale) const override
   {
     // Guess that reg+reg addressing is allowed. This heuristic is taken from
     // the implementation of LSR.
@@ -510,119 +501,116 @@ struct NoTTI LLVM_FINAL : ImmutablePass, TargetTransformInfo {
   }
 
   int getScalingFactorCost(Type *Ty, GlobalValue *BaseGV, int64_t BaseOffset,
-                           bool HasBaseReg, int64_t Scale) const LLVM_OVERRIDE {
+                           bool HasBaseReg, int64_t Scale) const override {
     // Guess that all legal addressing mode are free.
     if(isLegalAddressingMode(Ty, BaseGV, BaseOffset, HasBaseReg, Scale))
       return 0;
     return -1;
   }
 
-  bool isTruncateFree(Type *Ty1, Type *Ty2) const LLVM_OVERRIDE {
+  bool isTruncateFree(Type *Ty1, Type *Ty2) const override {
     return false;
   }
 
-  bool isTypeLegal(Type *Ty) const LLVM_OVERRIDE {
+  bool isTypeLegal(Type *Ty) const override {
     return false;
   }
 
-  unsigned getJumpBufAlignment() const LLVM_OVERRIDE {
+  unsigned getJumpBufAlignment() const override {
     return 0;
   }
 
-  unsigned getJumpBufSize() const LLVM_OVERRIDE {
+  unsigned getJumpBufSize() const override {
     return 0;
   }
 
-  bool shouldBuildLookupTables() const LLVM_OVERRIDE {
+  bool shouldBuildLookupTables() const override {
     return true;
   }
 
   PopcntSupportKind
-  getPopcntSupport(unsigned IntTyWidthInBit) const LLVM_OVERRIDE {
+  getPopcntSupport(unsigned IntTyWidthInBit) const override {
     return PSK_Software;
   }
 
-  bool haveFastSqrt(Type *Ty) const LLVM_OVERRIDE {
+  bool haveFastSqrt(Type *Ty) const override {
     return false;
   }
 
-  unsigned getIntImmCost(const APInt &Imm, Type *Ty) const LLVM_OVERRIDE {
+  unsigned getIntImmCost(const APInt &Imm, Type *Ty) const override {
     return TCC_Basic;
   }
 
-  unsigned getIntImmCost(unsigned Opcode, const APInt &Imm,
-                         Type *Ty) const LLVM_OVERRIDE {
+  unsigned getIntImmCost(unsigned Opcode, unsigned Idx, const APInt &Imm,
+                         Type *Ty) const override {
     return TCC_Free;
   }
 
-  unsigned getIntImmCost(Intrinsic::ID IID, const APInt &Imm,
-                         Type *Ty) const LLVM_OVERRIDE {
+  unsigned getIntImmCost(Intrinsic::ID IID, unsigned Idx, const APInt &Imm,
+                         Type *Ty) const override {
     return TCC_Free;
   }
 
-  unsigned getNumberOfRegisters(bool Vector) const LLVM_OVERRIDE {
+  unsigned getNumberOfRegisters(bool Vector) const override {
     return 8;
   }
 
-  unsigned  getRegisterBitWidth(bool Vector) const LLVM_OVERRIDE {
+  unsigned  getRegisterBitWidth(bool Vector) const override {
     return 32;
   }
 
-  unsigned getMaximumUnrollFactor() const LLVM_OVERRIDE {
+  unsigned getMaximumUnrollFactor() const override {
     return 1;
   }
 
   unsigned getArithmeticInstrCost(unsigned Opcode, Type *Ty, OperandValueKind,
-                                  OperandValueKind) const LLVM_OVERRIDE {
+                                  OperandValueKind) const override {
     return 1;
   }
 
   unsigned getShuffleCost(ShuffleKind Kind, Type *Ty,
-                          int Index = 0, Type *SubTp = 0) const LLVM_OVERRIDE {
+                          int Index = 0, Type *SubTp = nullptr) const override {
     return 1;
   }
 
   unsigned getCastInstrCost(unsigned Opcode, Type *Dst,
-                            Type *Src) const LLVM_OVERRIDE {
+                            Type *Src) const override {
     return 1;
   }
 
-  unsigned getCFInstrCost(unsigned Opcode) const LLVM_OVERRIDE {
+  unsigned getCFInstrCost(unsigned Opcode) const override {
     return 1;
   }
 
   unsigned getCmpSelInstrCost(unsigned Opcode, Type *ValTy,
-                              Type *CondTy = 0) const LLVM_OVERRIDE {
+                              Type *CondTy = nullptr) const override {
     return 1;
   }
 
   unsigned getVectorInstrCost(unsigned Opcode, Type *Val,
-                              unsigned Index = -1) const LLVM_OVERRIDE {
+                              unsigned Index = -1) const override {
     return 1;
   }
 
-  unsigned getMemoryOpCost(unsigned Opcode,
-                           Type *Src,
-                           unsigned Alignment,
-                           unsigned AddressSpace) const LLVM_OVERRIDE {
+  unsigned getMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
+                           unsigned AddressSpace) const override {
     return 1;
   }
 
-  unsigned getIntrinsicInstrCost(Intrinsic::ID ID,
-                                 Type *RetTy,
-                                 ArrayRef<Type*> Tys) const LLVM_OVERRIDE {
+  unsigned getIntrinsicInstrCost(Intrinsic::ID ID, Type *RetTy,
+                                 ArrayRef<Type*> Tys) const override {
     return 1;
   }
 
-  unsigned getNumberOfParts(Type *Tp) const LLVM_OVERRIDE {
+  unsigned getNumberOfParts(Type *Tp) const override {
     return 0;
   }
 
-  unsigned getAddressComputationCost(Type *Tp, bool) const LLVM_OVERRIDE {
+  unsigned getAddressComputationCost(Type *Tp, bool) const override {
     return 0;
   }
 
-  unsigned getReductionCost(unsigned, Type *, bool) const LLVM_OVERRIDE {
+  unsigned getReductionCost(unsigned, Type *, bool) const override {
     return 1;
   }
 };

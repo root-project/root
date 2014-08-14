@@ -38,16 +38,28 @@ def int_arm_usat : GCCBuiltin<"__builtin_arm_usat">,
 
 def int_arm_ldrex : Intrinsic<[llvm_i32_ty], [llvm_anyptr_ty]>;
 def int_arm_strex : Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_anyptr_ty]>;
+
+def int_arm_ldaex : Intrinsic<[llvm_i32_ty], [llvm_anyptr_ty]>;
+def int_arm_stlex : Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_anyptr_ty]>;
+
 def int_arm_clrex : Intrinsic<[]>;
 
 def int_arm_strexd : Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i32_ty,
     llvm_ptr_ty]>;
 def int_arm_ldrexd : Intrinsic<[llvm_i32_ty, llvm_i32_ty], [llvm_ptr_ty]>;
 
+def int_arm_stlexd : Intrinsic<[llvm_i32_ty],
+                               [llvm_i32_ty, llvm_i32_ty, llvm_ptr_ty]>;
+def int_arm_ldaexd : Intrinsic<[llvm_i32_ty, llvm_i32_ty], [llvm_ptr_ty]>;
+
 //===----------------------------------------------------------------------===//
 // Data barrier instructions
-def int_arm_dmb : GCCBuiltin<"__builtin_arm_dmb">, Intrinsic<[], [llvm_i32_ty]>;
-def int_arm_dsb : GCCBuiltin<"__builtin_arm_dsb">, Intrinsic<[], [llvm_i32_ty]>;
+def int_arm_dmb : GCCBuiltin<"__builtin_arm_dmb">, MSBuiltin<"__dmb">,
+                  Intrinsic<[], [llvm_i32_ty]>;
+def int_arm_dsb : GCCBuiltin<"__builtin_arm_dsb">, MSBuiltin<"__dsb">,
+                  Intrinsic<[], [llvm_i32_ty]>;
+def int_arm_isb : GCCBuiltin<"__builtin_arm_isb">, MSBuiltin<"__isb">,
+                  Intrinsic<[], [llvm_i32_ty]>;
 
 //===----------------------------------------------------------------------===//
 // VFP
@@ -66,17 +78,21 @@ def int_arm_vcvtru    : Intrinsic<[llvm_float_ty], [llvm_anyfloat_ty],
 
 // Move to coprocessor
 def int_arm_mcr : GCCBuiltin<"__builtin_arm_mcr">,
+                  MSBuiltin<"_MoveToCoprocessor">,
    Intrinsic<[], [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty,
                   llvm_i32_ty, llvm_i32_ty, llvm_i32_ty], []>;
 def int_arm_mcr2 : GCCBuiltin<"__builtin_arm_mcr2">,
+                   MSBuiltin<"_MoveToCoprocessor2">,
    Intrinsic<[], [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty,
                   llvm_i32_ty, llvm_i32_ty, llvm_i32_ty], []>;
 
 // Move from coprocessor
 def int_arm_mrc : GCCBuiltin<"__builtin_arm_mrc">,
+                  MSBuiltin<"_MoveFromCoprocessor">,
    Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty,
                              llvm_i32_ty, llvm_i32_ty], []>;
 def int_arm_mrc2 : GCCBuiltin<"__builtin_arm_mrc2">,
+                   MSBuiltin<"_MoveFromCoprocessor2">,
    Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty,
                              llvm_i32_ty, llvm_i32_ty], []>;
 
@@ -114,7 +130,18 @@ def int_arm_crc32cw : Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i32_ty],
 
 //===----------------------------------------------------------------------===//
 // HINT
-def int_arm_sevl : Intrinsic<[], []>;
+
+def int_arm_hint : Intrinsic<[], [llvm_i32_ty]>;
+
+//===----------------------------------------------------------------------===//
+// RBIT
+
+def int_arm_rbit : Intrinsic<[llvm_i32_ty], [llvm_i32_ty], [IntrNoMem]>;
+
+//===----------------------------------------------------------------------===//
+// UND (reserved undefined sequence)
+
+def int_arm_undefined : Intrinsic<[], [llvm_i32_ty]>;
 
 //===----------------------------------------------------------------------===//
 // Advanced SIMD (NEON)
@@ -123,20 +150,15 @@ def int_arm_sevl : Intrinsic<[], []>;
 class Neon_1Arg_Intrinsic
   : Intrinsic<[llvm_anyvector_ty], [LLVMMatchType<0>], [IntrNoMem]>;
 class Neon_1Arg_Narrow_Intrinsic
-  : Intrinsic<[llvm_anyvector_ty],
-              [LLVMExtendedElementVectorType<0>], [IntrNoMem]>;
+  : Intrinsic<[llvm_anyvector_ty], [LLVMExtendedType<0>], [IntrNoMem]>;
 class Neon_2Arg_Intrinsic
   : Intrinsic<[llvm_anyvector_ty], [LLVMMatchType<0>, LLVMMatchType<0>],
               [IntrNoMem]>;
 class Neon_2Arg_Narrow_Intrinsic
-  : Intrinsic<[llvm_anyvector_ty],
-              [LLVMExtendedElementVectorType<0>,
-               LLVMExtendedElementVectorType<0>],
+  : Intrinsic<[llvm_anyvector_ty], [LLVMExtendedType<0>, LLVMExtendedType<0>],
               [IntrNoMem]>;
 class Neon_2Arg_Long_Intrinsic
-  : Intrinsic<[llvm_anyvector_ty],
-              [LLVMTruncatedElementVectorType<0>,
-               LLVMTruncatedElementVectorType<0>],
+  : Intrinsic<[llvm_anyvector_ty], [LLVMTruncatedType<0>, LLVMTruncatedType<0>],
               [IntrNoMem]>;
 class Neon_3Arg_Intrinsic
   : Intrinsic<[llvm_anyvector_ty],
@@ -144,9 +166,7 @@ class Neon_3Arg_Intrinsic
               [IntrNoMem]>;
 class Neon_3Arg_Long_Intrinsic
   : Intrinsic<[llvm_anyvector_ty],
-              [LLVMMatchType<0>,
-               LLVMTruncatedElementVectorType<0>,
-               LLVMTruncatedElementVectorType<0>],
+              [LLVMMatchType<0>, LLVMTruncatedType<0>, LLVMTruncatedType<0>],
               [IntrNoMem]>;
 class Neon_CvtFxToFP_Intrinsic
   : Intrinsic<[llvm_anyfloat_ty], [llvm_anyint_ty, llvm_i32_ty], [IntrNoMem]>;

@@ -28,15 +28,15 @@ namespace {
 /// \brief Numbers things which need to correspond across multiple TUs.
 /// Typically these are things like static locals, lambdas, or blocks.
 class MicrosoftNumberingContext : public MangleNumberingContext {
-  unsigned NumStaticLocals;
-
 public:
-  MicrosoftNumberingContext() : NumStaticLocals(0) { }
+  unsigned getManglingNumber(const VarDecl *VD,
+                             unsigned MSLocalManglingNumber) override {
+    return MSLocalManglingNumber;
+  }
 
-  /// Static locals are numbered by source order.
-  virtual unsigned getManglingNumber(const VarDecl *VD) {
-    assert(VD->isStaticLocal());
-    return ++NumStaticLocals;
+  unsigned getManglingNumber(const TagDecl *TD,
+                             unsigned MSLocalManglingNumber) override {
+    return MSLocalManglingNumber;
   }
 };
 
@@ -46,16 +46,16 @@ public:
   MicrosoftCXXABI(ASTContext &Ctx) : Context(Ctx) { }
 
   std::pair<uint64_t, unsigned>
-  getMemberPointerWidthAndAlign(const MemberPointerType *MPT) const;
+  getMemberPointerWidthAndAlign(const MemberPointerType *MPT) const override;
 
-  CallingConv getDefaultMethodCallConv(bool isVariadic) const {
+  CallingConv getDefaultMethodCallConv(bool isVariadic) const override {
     if (!isVariadic &&
         Context.getTargetInfo().getTriple().getArch() == llvm::Triple::x86)
       return CC_X86ThisCall;
     return CC_C;
   }
 
-  bool isNearlyEmpty(const CXXRecordDecl *RD) const {
+  bool isNearlyEmpty(const CXXRecordDecl *RD) const override {
     // FIXME: Audit the corners
     if (!RD->isDynamicClass())
       return false;
@@ -69,7 +69,7 @@ public:
       Layout.getNonVirtualSize() == PointerSize * 2;
   }    
 
-  MangleNumberingContext *createMangleNumberingContext() const {
+  MangleNumberingContext *createMangleNumberingContext() const override {
     return new MicrosoftNumberingContext();
   }
 };
@@ -93,7 +93,7 @@ static bool usesMultipleInheritanceModel(const CXXRecordDecl *RD) {
 }
 
 MSInheritanceAttr::Spelling CXXRecordDecl::calculateInheritanceModel() const {
-  if (!hasDefinition())
+  if (!hasDefinition() || isParsingBaseSpecifiers())
     return MSInheritanceAttr::Keyword_unspecified_inheritance;
   if (getNumVBases() > 0)
     return MSInheritanceAttr::Keyword_virtual_inheritance;
@@ -169,7 +169,7 @@ std::pair<uint64_t, unsigned> MicrosoftCXXABI::getMemberPointerWidthAndAlign(
   assert(Target.getTriple().getArch() == llvm::Triple::x86 ||
          Target.getTriple().getArch() == llvm::Triple::x86_64);
   unsigned Ptrs, Ints;
-  llvm::tie(Ptrs, Ints) = getMSMemberPointerSlots(MPT);
+  std::tie(Ptrs, Ints) = getMSMemberPointerSlots(MPT);
   // The nominal struct is laid out with pointers followed by ints and aligned
   // to a pointer width if any are present and an int width otherwise.
   unsigned PtrSize = Target.getPointerWidth(0);

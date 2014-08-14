@@ -44,7 +44,7 @@ public:
   ///
   /// If \p F is specified, the argument is inserted at the end of the argument
   /// list for \p F.
-  explicit Argument(Type *Ty, const Twine &Name = "", Function *F = 0);
+  explicit Argument(Type *Ty, const Twine &Name = "", Function *F = nullptr);
 
   inline const Function *getParent() const { return Parent; }
   inline       Function *getParent()       { return Parent; }
@@ -54,6 +54,16 @@ public:
   ///
   /// For example in "void foo(int a, float b)" a is 0 and b is 1.
   unsigned getArgNo() const;
+
+  /// \brief Return true if this argument has the nonnull attribute on it in
+  /// its containing function. Also returns true if at least one byte is known
+  /// to be dereferenceable and the pointer is in addrspace(0).
+  bool hasNonNullAttr() const;
+
+  /// \brief If this argument has the dereferenceable attribute on it in its
+  /// containing function, return the number of bytes known to be
+  /// dereferenceable. Otherwise, zero is returned.
+  uint64_t getDereferenceableBytes() const;
 
   /// \brief Return true if this argument has the byval attribute on it in its
   /// containing function.

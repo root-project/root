@@ -11,7 +11,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "asm-printer"
 #include "ARMInstPrinter.h"
 #include "MCTargetDesc/ARMAddressingModes.h"
 #include "MCTargetDesc/ARMBaseInfo.h"
@@ -22,6 +21,8 @@
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
+
+#define DEBUG_TYPE "asm-printer"
 
 #include "ARMGenAsmWriter.inc"
 
@@ -1091,13 +1092,13 @@ void ARMInstPrinter::printAddrModeImm12Operand(const MCInst *MI, unsigned OpNum,
   if (isSub) {
     O << ", "
       << markup("<imm:")
-      << "#-" << -OffImm
+      << "#-" << formatImm(-OffImm)
       << markup(">");
   }
   else if (AlwaysPrintImm0 || OffImm > 0) {
     O << ", "
       << markup("<imm:")
-      << "#" << OffImm
+      << "#" << formatImm(OffImm)
       << markup(">");
   }
   O << "]" << markup(">");

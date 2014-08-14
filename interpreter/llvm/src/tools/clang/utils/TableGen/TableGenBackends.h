@@ -35,7 +35,7 @@ void EmitClangAttrImpl(RecordKeeper &Records, raw_ostream &OS);
 void EmitClangAttrList(RecordKeeper &Records, raw_ostream &OS);
 void EmitClangAttrPCHRead(RecordKeeper &Records, raw_ostream &OS);
 void EmitClangAttrPCHWrite(RecordKeeper &Records, raw_ostream &OS);
-void EmitClangAttrSpellingList(RecordKeeper &Records, raw_ostream &OS);
+void EmitClangAttrHasAttrImpl(RecordKeeper &Records, raw_ostream &OS);
 void EmitClangAttrSpellingListIndex(RecordKeeper &Records, raw_ostream &OS);
 void EmitClangAttrASTVisitor(RecordKeeper &Records, raw_ostream &OS);
 void EmitClangAttrTemplateInstantiate(RecordKeeper &Records, raw_ostream &OS);
@@ -61,6 +61,9 @@ void EmitClangCommentCommandList(RecordKeeper &Records, raw_ostream &OS);
 void EmitNeon(RecordKeeper &Records, raw_ostream &OS);
 void EmitNeonSema(RecordKeeper &Records, raw_ostream &OS);
 void EmitNeonTest(RecordKeeper &Records, raw_ostream &OS);
+void EmitNeon2(RecordKeeper &Records, raw_ostream &OS);
+void EmitNeonSema2(RecordKeeper &Records, raw_ostream &OS);
+void EmitNeonTest2(RecordKeeper &Records, raw_ostream &OS);
 
 void EmitClangAttrDocs(RecordKeeper &Records, raw_ostream &OS);
 

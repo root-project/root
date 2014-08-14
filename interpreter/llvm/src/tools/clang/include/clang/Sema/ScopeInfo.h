@@ -15,6 +15,7 @@
 #ifndef LLVM_CLANG_SEMA_SCOPE_INFO_H
 #define LLVM_CLANG_SEMA_SCOPE_INFO_H
 
+#include "clang/AST/Expr.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/CapturedStmt.h"
 #include "clang/Basic/PartialDiagnostic.h"
@@ -41,8 +42,6 @@ class SwitchStmt;
 class TemplateTypeParmDecl;
 class TemplateParameterList;
 class VarDecl;
-class DeclRefExpr;
-class MemberExpr;
 class ObjCIvarRefExpr;
 class ObjCPropertyRefExpr;
 class ObjCMessageExpr;
@@ -187,8 +186,6 @@ public:
     /// Used to find the proper base profile for a given base expression.
     static BaseInfoTy getBaseInfo(const Expr *BaseE);
 
-    // For use in DenseMap.
-    friend class DenseMapInfo;
     inline WeakObjectProfileTy();
     static inline WeakObjectProfileTy getSentinel();
 
@@ -405,7 +402,7 @@ public:
     enum IsThisCapture { ThisCapture };
     Capture(IsThisCapture, bool IsNested, SourceLocation Loc,
             QualType CaptureType, Expr *Cpy)
-        : VarAndNested(0, IsNested),
+        : VarAndNested(nullptr, IsNested),
           InitExprAndCaptureKind(Cpy, Cap_This),
           Loc(Loc), EllipsisLoc(), CaptureType(CaptureType) {}
 
@@ -663,10 +660,10 @@ public:
   SourceLocation PotentialThisCaptureLocation;
 
   LambdaScopeInfo(DiagnosticsEngine &Diag)
-    : CapturingScopeInfo(Diag, ImpCap_None), Lambda(0),
-      CallOperator(0), NumExplicitCaptures(0), Mutable(false),
+    : CapturingScopeInfo(Diag, ImpCap_None), Lambda(nullptr),
+      CallOperator(nullptr), NumExplicitCaptures(0), Mutable(false),
       ExprNeedsCleanups(false), ContainsUnexpandedParameterPack(false),
-      AutoTemplateParameterDepth(0), GLTemplateParameterList(0)
+      AutoTemplateParameterDepth(0), GLTemplateParameterList(nullptr)
   {
     Kind = SK_Lambda;
   }
@@ -787,7 +784,7 @@ public:
 };
 
 FunctionScopeInfo::WeakObjectProfileTy::WeakObjectProfileTy()
-  : Base(0, false), Property(0) {}
+  : Base(nullptr, false), Property(nullptr) {}
 
 FunctionScopeInfo::WeakObjectProfileTy
 FunctionScopeInfo::WeakObjectProfileTy::getSentinel() {

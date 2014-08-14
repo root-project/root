@@ -17,8 +17,9 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Analysis/ConstantFolding.h"
 #include "llvm/Analysis/InstructionSimplify.h"
-#include "llvm/DebugInfo.h"
+#include "llvm/IR/CFG.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalVariable.h"
@@ -26,7 +27,7 @@
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Metadata.h"
-#include "llvm/Support/CFG.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
@@ -88,26 +89,28 @@ void llvm::CloneFunctionInto(Function *NewFunc, const Function *OldFunc,
     assert(VMap.count(I) && "No mapping from source argument specified!");
 #endif
 
+  // Copy all attributes other than those stored in the AttributeSet.  We need
+  // to remap the parameter indices of the AttributeSet.
+  AttributeSet NewAttrs = NewFunc->getAttributes();
+  NewFunc->copyAttributesFrom(OldFunc);
+  NewFunc->setAttributes(NewAttrs);
+
   AttributeSet OldAttrs = OldFunc->getAttributes();
   // Clone any argument attributes that are present in the VMap.
-  for (Function::const_arg_iterator I = OldFunc->arg_begin(),
-                                    E = OldFunc->arg_end();
-       I != E; ++I)
-    if (Argument *Anew = dyn_cast<Argument>(VMap[I])) {
+  for (const Argument &OldArg : OldFunc->args())
+    if (Argument *NewArg = dyn_cast<Argument>(VMap[&OldArg])) {
       AttributeSet attrs =
-          OldAttrs.getParamAttributes(I->getArgNo() + 1);
+          OldAttrs.getParamAttributes(OldArg.getArgNo() + 1);
       if (attrs.getNumSlots() > 0)
-        Anew->addAttr(attrs);
+        NewArg->addAttr(attrs);
     }
 
-  NewFunc->setAttributes(NewFunc->getAttributes()
-                         .addAttributes(NewFunc->getContext(),
-                                        AttributeSet::ReturnIndex,
-                                        OldAttrs.getRetAttributes()));
-  NewFunc->setAttributes(NewFunc->getAttributes()
-                         .addAttributes(NewFunc->getContext(),
-                                        AttributeSet::FunctionIndex,
-                                        OldAttrs.getFnAttributes()));
+  NewFunc->setAttributes(
+      NewFunc->getAttributes()
+          .addAttributes(NewFunc->getContext(), AttributeSet::ReturnIndex,
+                         OldAttrs.getRetAttributes())
+          .addAttributes(NewFunc->getContext(), AttributeSet::FunctionIndex,
+                         OldAttrs.getFnAttributes()));
 
   // Loop over all of the basic blocks in the function, cloning them as
   // appropriate.  Note that we save BE this way in order to handle cloning of
@@ -151,6 +154,54 @@ void llvm::CloneFunctionInto(Function *NewFunc, const Function *OldFunc,
                        TypeMapper, Materializer);
 }
 
+// Find the MDNode which corresponds to the DISubprogram data that described F.
+static MDNode* FindSubprogram(const Function *F, DebugInfoFinder &Finder) {
+  for (DISubprogram Subprogram : Finder.subprograms()) {
+    if (Subprogram.describes(F)) return Subprogram;
+  }
+  return nullptr;
+}
+
+// Add an operand to an existing MDNode. The new operand will be added at the
+// back of the operand list.
+static void AddOperand(MDNode *Node, Value *Operand) {
+  SmallVector<Value*, 16> Operands;
+  for (unsigned i = 0; i < Node->getNumOperands(); i++) {
+    Operands.push_back(Node->getOperand(i));
+  }
+  Operands.push_back(Operand);
+  MDNode *NewNode = MDNode::get(Node->getContext(), Operands);
+  Node->replaceAllUsesWith(NewNode);
+}
+
+// Clone the module-level debug info associated with OldFunc. The cloned data
+// will point to NewFunc instead.
+static void CloneDebugInfoMetadata(Function *NewFunc, const Function *OldFunc,
+                            ValueToValueMapTy &VMap) {
+  DebugInfoFinder Finder;
+  Finder.processModule(*OldFunc->getParent());
+
+  const MDNode *OldSubprogramMDNode = FindSubprogram(OldFunc, Finder);
+  if (!OldSubprogramMDNode) return;
+
+  // Ensure that OldFunc appears in the map.
+  // (if it's already there it must point to NewFunc anyway)
+  VMap[OldFunc] = NewFunc;
+  DISubprogram NewSubprogram(MapValue(OldSubprogramMDNode, VMap));
+
+  for (DICompileUnit CU : Finder.compile_units()) {
+    DIArray Subprograms(CU.getSubprograms());
+
+    // If the compile unit's function list contains the old function, it should
+    // also contain the new one.
+    for (unsigned i = 0; i < Subprograms.getNumElements(); i++) {
+      if ((MDNode*)Subprograms.getElement(i) == OldSubprogramMDNode) {
+        AddOperand(Subprograms, NewSubprogram);
+      }
+    }
+  }
+}
+
 /// CloneFunction - Return a copy of the specified function, but without
 /// embedding the function into another module.  Also, any references specified
 /// in the VMap are changed to refer to their mapped value instead of the
@@ -187,6 +238,9 @@ Function *llvm::CloneFunction(const Function *F, ValueToValueMapTy &VMap,
       DestI->setName(I->getName()); // Copy the name over...
       VMap[I] = DestI++;        // Add mapping to VMap
     }
+
+  if (ModuleLevelChanges)
+    CloneDebugInfoMetadata(NewF, F, VMap);
 
   SmallVector<ReturnInst*, 8> Returns;  // Ignore returns cloned.
   CloneFunctionInto(NewF, F, VMap, ModuleLevelChanges, Returns, "", CodeInfo);
@@ -305,7 +359,7 @@ void PruningFunctionCloner::CloneBlock(const BasicBlock *BB,
       // If the condition was a known constant in the callee...
       ConstantInt *Cond = dyn_cast<ConstantInt>(BI->getCondition());
       // Or is a known constant in the caller...
-      if (Cond == 0) {
+      if (!Cond) {
         Value *V = VMap[BI->getCondition()];
         Cond = dyn_cast_or_null<ConstantInt>(V);
       }
@@ -321,7 +375,7 @@ void PruningFunctionCloner::CloneBlock(const BasicBlock *BB,
   } else if (const SwitchInst *SI = dyn_cast<SwitchInst>(OldTI)) {
     // If switching on a value known constant in the caller.
     ConstantInt *Cond = dyn_cast<ConstantInt>(SI->getCondition());
-    if (Cond == 0) { // Or known constant after constant prop in the callee...
+    if (!Cond) { // Or known constant after constant prop in the callee...
       Value *V = VMap[SI->getCondition()];
       Cond = dyn_cast_or_null<ConstantInt>(V);
     }
@@ -400,7 +454,7 @@ void llvm::CloneAndPruneFunctionInto(Function *NewFunc, const Function *OldFunc,
        BI != BE; ++BI) {
     Value *V = VMap[BI];
     BasicBlock *NewBB = cast_or_null<BasicBlock>(V);
-    if (NewBB == 0) continue;  // Dead block.
+    if (!NewBB) continue;  // Dead block.
 
     // Add the new block to the new function.
     NewFunc->getBasicBlockList().push_back(NewBB);

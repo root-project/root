@@ -1,8 +1,11 @@
 set(files
   altivec.h
   ammintrin.h
+  arm_acle.h
   avxintrin.h
   avx2intrin.h
+  avx512fintrin.h
+  avx512erintrin.h
   bmiintrin.h
   bmi2intrin.h
   emmintrin.h
@@ -10,6 +13,7 @@ set(files
   float.h
   fma4intrin.h
   fmaintrin.h
+  ia32intrin.h
   immintrin.h
   iso646.h
   Intrin.h
@@ -44,7 +48,7 @@ set(files
   xopintrin.h
   cpuid.h
   unwind.h
-  module.map
+  module.modulemap
   )
 
 set(output_dir ${LLVM_LIBRARY_OUTPUT_INTDIR}/clang/${CLANG_VERSION}/include)

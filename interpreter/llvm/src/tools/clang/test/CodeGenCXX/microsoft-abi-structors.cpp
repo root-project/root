@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 -emit-llvm %s -o - -mconstructor-aliases -triple=i386-pc-win32 -fno-rtti > %t
+// RUN: %clang_cc1 -emit-llvm -fno-rtti %s -std=c++11 -o - -mconstructor-aliases -triple=i386-pc-win32 -fno-rtti > %t
 // RUN: FileCheck %s < %t
 // vftables are emitted very late, so do another pass to try to keep the checks
 // in source order.
@@ -153,7 +153,7 @@ C::~C() {
 void foo() {
   C c;
 }
-// DTORS2-LABEL: define weak x86_thiscallcc void @"\01??_EC@dtor_in_second_nvbase@@W3AEPAXI@Z"
+// DTORS2-LABEL: define linkonce_odr x86_thiscallcc void @"\01??_EC@dtor_in_second_nvbase@@W3AEPAXI@Z"
 // DTORS2:       (%"struct.dtor_in_second_nvbase::C"* %this, i32 %should_call_delete)
 //      Do an adjustment from B* to C*.
 // DTORS2:   getelementptr i8* %{{.*}}, i32 -4
@@ -406,6 +406,26 @@ void construct_b() {
 // CHECK:               (%"struct.test1::B"* {{.*}}, i32 1, i8* {{.*}}, i32 1, i32 2)
 }
 
+namespace implicit_copy_vtable {
+// This was a crash that only reproduced in ABIs without key functions.
+struct ImplicitCopy {
+  // implicit copy ctor
+  virtual ~ImplicitCopy();
+};
+void CreateCopy(ImplicitCopy *a) {
+  new ImplicitCopy(*a);
+}
+// CHECK: store {{.*}} @"\01??_7ImplicitCopy@implicit_copy_vtable@@6B@"
+
+struct MoveOnly {
+  MoveOnly(MoveOnly &&o) = default;
+  virtual ~MoveOnly();
+};
+MoveOnly &&f();
+void g() { new MoveOnly(f()); }
+// CHECK: store {{.*}} @"\01??_7MoveOnly@implicit_copy_vtable@@6B@"
+}
+
 // Dtor thunks for classes in anonymous namespaces should be internal, not
 // linkonce_odr.
 namespace {
@@ -417,6 +437,6 @@ void *getA() {
   return (void*)new A();
 }
 // CHECK: define internal x86_thiscallcc void @"\01??_GA@?A@@UAEPAXI@Z"
-// CHECK:               (%"struct.<anonymous namespace>::A"* %this, i32 %should_call_delete)
+// CHECK:               (%"struct.(anonymous namespace)::A"* %this, i32 %should_call_delete)
 // CHECK: define internal x86_thiscallcc void @"\01??1A@?A@@UAE@XZ"
-// CHECK:               (%"struct.<anonymous namespace>::A"* %this)
+// CHECK:               (%"struct.(anonymous namespace)::A"* %this)

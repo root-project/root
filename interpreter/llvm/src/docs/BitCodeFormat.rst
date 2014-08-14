@@ -688,7 +688,8 @@ global variable. The operand fields are:
   * ``weak_odr``: code 10
   * ``linkonce_odr``: code 11
   * ``available_externally``: code 12
-  * ``linker_private``: code 13
+  * deprecated : code 13
+  * deprecated : code 14
 
 * alignment*: The logarithm base 2 of the variable's requested alignment, plus 1
 
@@ -746,8 +747,6 @@ function. The operand fields are:
   * ``arm_apcscc``: code 66
   * ``arm_aapcscc``: code 67
   * ``arm_aapcs_vfpcc``: code 68
-  * ``x86_thiscallcc``: code 70
-  * ``x86_cdeclmethodcc``: code 80
 
 * isproto*: Non-zero if this entry represents a declaration rather than a
   definition
@@ -1094,7 +1093,7 @@ named type.
 VALUE_SYMTAB_BLOCK Contents
 ---------------------------
 
-The ``VALUE_SYMTAB_BLOCK`` block (id 14) ... 
+The ``VALUE_SYMTAB_BLOCK`` block (id 14) ...
 
 .. _METADATA_BLOCK:
 

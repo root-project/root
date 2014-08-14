@@ -44,7 +44,7 @@ class TargetLoweringObjectFile : public MCObjectFileInfo {
 public:
   MCContext &getContext() const { return *Ctx; }
 
-  TargetLoweringObjectFile() : MCObjectFileInfo(), Ctx(0), DL(0) {}
+  TargetLoweringObjectFile() : MCObjectFileInfo(), Ctx(nullptr), DL(nullptr) {}
 
   virtual ~TargetLoweringObjectFile();
 
@@ -68,17 +68,10 @@ public:
                                ArrayRef<Module::ModuleFlagEntry> Flags,
                                Mangler &Mang, const TargetMachine &TM) const {}
 
-  /// This hook allows targets to selectively decide not to emit the
-  /// UsedDirective for some symbols in llvm.used.
-  /// FIXME: REMOVE this (rdar://7071300)
-  virtual bool shouldEmitUsedDirectiveFor(const GlobalValue *GV, Mangler &Mang,
-                                          TargetMachine &TM) const {
-    return GV != 0;
-  }
-
   /// Given a constant with the SectionKind, return a section that it should be
   /// placed in.
-  virtual const MCSection *getSectionForConstant(SectionKind Kind) const;
+  virtual const MCSection *getSectionForConstant(SectionKind Kind,
+                                                 const Constant *C) const;
 
   /// Classify the specified global variable into a set of target independent
   /// categories embodied in SectionKind.
@@ -112,7 +105,7 @@ public:
   virtual const MCSection *getSpecialCasedSectionGlobals(const GlobalValue *GV,
                                                          SectionKind Kind,
                                                          Mangler &Mang) const {
-    return 0;
+    return nullptr;
   }
 
   /// Return an MCExpr to use for a reference to the specified global variable
@@ -138,14 +131,13 @@ public:
   getTTypeReference(const MCSymbolRefExpr *Sym, unsigned Encoding,
                     MCStreamer &Streamer) const;
 
-  virtual const MCSection *
-  getStaticCtorSection(unsigned Priority = 65535) const {
-    (void)Priority;
+  virtual const MCSection *getStaticCtorSection(unsigned Priority,
+                                                const MCSymbol *KeySym) const {
     return StaticCtorSection;
   }
-  virtual const MCSection *
-  getStaticDtorSection(unsigned Priority = 65535) const {
-    (void)Priority;
+
+  virtual const MCSection *getStaticDtorSection(unsigned Priority,
+                                                const MCSymbol *KeySym) const {
     return StaticDtorSection;
   }
 
@@ -156,7 +148,7 @@ public:
   virtual const MCExpr *
   getExecutableRelativeSymbol(const ConstantExpr *CE, Mangler &Mang,
                               const TargetMachine &TM) const {
-    return 0;
+    return nullptr;
   }
 
   /// \brief True if the section is atomized using the symbols in it.

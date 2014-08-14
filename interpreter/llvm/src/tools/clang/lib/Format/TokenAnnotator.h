@@ -41,14 +41,14 @@ public:
       : First(Line.Tokens.front().Tok), Level(Line.Level),
         InPPDirective(Line.InPPDirective),
         MustBeDeclaration(Line.MustBeDeclaration), MightBeFunctionDecl(false),
-        StartsDefinition(false), Affected(false),
-        LeadingEmptyLinesAffected(false), ChildrenAffected(false) {
+        Affected(false), LeadingEmptyLinesAffected(false),
+        ChildrenAffected(false) {
     assert(!Line.Tokens.empty());
 
     // Calculate Next and Previous for all tokens. Note that we must overwrite
     // Next and Previous for every token, as previous formatting runs might have
     // left them in a different state.
-    First->Previous = NULL;
+    First->Previous = nullptr;
     FormatToken *Current = First;
     for (std::list<UnwrappedLineNode>::const_iterator I = ++Line.Tokens.begin(),
                                                       E = Line.Tokens.end();
@@ -67,7 +67,7 @@ public:
       }
     }
     Last = Current;
-    Last->Next = NULL;
+    Last->Next = nullptr;
   }
 
   ~AnnotatedLine() {
@@ -86,7 +86,6 @@ public:
   bool InPPDirective;
   bool MustBeDeclaration;
   bool MightBeFunctionDecl;
-  bool StartsDefinition;
 
   /// \c True if this line should be formatted, i.e. intersects directly or
   /// indirectly with one of the input ranges.

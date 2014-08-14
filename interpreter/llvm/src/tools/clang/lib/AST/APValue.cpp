@@ -117,7 +117,7 @@ APValue::StructData::~StructData() {
   delete [] Elts;
 }
 
-APValue::UnionData::UnionData() : Field(0), Value(new APValue) {}
+APValue::UnionData::UnionData() : Field(nullptr), Value(new APValue) {}
 APValue::UnionData::~UnionData () {
   delete Value;
 }
@@ -403,8 +403,13 @@ void APValue::printPretty(raw_ostream &Out, ASTContext &Ctx, QualType Ty) const{
 
       if (const ValueDecl *VD = Base.dyn_cast<const ValueDecl*>())
         Out << *VD;
-      else
-        Base.get<const Expr*>()->printPretty(Out, 0, Ctx.getPrintingPolicy());
+      else {
+        assert(Base.get<const Expr *>() != nullptr &&
+               "Expecting non-null Expr");
+        Base.get<const Expr*>()->printPretty(Out, nullptr,
+                                             Ctx.getPrintingPolicy());
+      }
+
       if (!O.isZero()) {
         Out << " + " << (O / S);
         if (IsReference)
@@ -425,12 +430,13 @@ void APValue::printPretty(raw_ostream &Out, ASTContext &Ctx, QualType Ty) const{
       ElemTy = VD->getType();
     } else {
       const Expr *E = Base.get<const Expr*>();
-      E->printPretty(Out, 0, Ctx.getPrintingPolicy());
+      assert(E != nullptr && "Expecting non-null Expr");
+      E->printPretty(Out, nullptr, Ctx.getPrintingPolicy());
       ElemTy = E->getType();
     }
 
     ArrayRef<LValuePathEntry> Path = getLValuePath();
-    const CXXRecordDecl *CastToBase = 0;
+    const CXXRecordDecl *CastToBase = nullptr;
     for (unsigned I = 0, N = Path.size(); I != N; ++I) {
       if (ElemTy->getAs<RecordType>()) {
         // The lvalue refers to a class type, so the next path entry is a base
@@ -499,8 +505,7 @@ void APValue::printPretty(raw_ostream &Out, ASTContext &Ctx, QualType Ty) const{
         First = false;
       }
     }
-    for (RecordDecl::field_iterator FI = RD->field_begin();
-         FI != RD->field_end(); ++FI) {
+    for (const auto *FI : RD->fields()) {
       if (!First)
         Out << ", ";
       if (FI->isUnnamedBitfield()) continue;
@@ -623,7 +628,7 @@ ArrayRef<const CXXRecordDecl*> APValue::getMemberPointerPath() const {
 
 void APValue::MakeLValue() {
   assert(isUninit() && "Bad state change");
-  assert(sizeof(LV) <= DataSize && "LV too big");
+  static_assert(sizeof(LV) <= DataSize, "LV too big");
   new ((void*)(char*)Data.buffer) LV();
   Kind = LValue;
 }

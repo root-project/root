@@ -17,14 +17,15 @@
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/ilist_node.h"
+#include "llvm/IR/DebugLoc.h"
 #include "llvm/IR/User.h"
-#include "llvm/Support/DebugLoc.h"
 
 namespace llvm {
 
 class FastMathFlags;
 class LLVMContext;
 class MDNode;
+struct AAMDNodes;
 
 template<typename ValueSubClass, typename ItemParentClass>
   class SymbolTableListTraits;
@@ -45,10 +46,10 @@ public:
   // Out of line virtual method, so the vtable, etc has a home.
   ~Instruction();
 
-  /// use_back - Specialize the methods defined in Value, as we know that an
+  /// user_back - Specialize the methods defined in Value, as we know that an
   /// instruction can only be used by other instructions.
-  Instruction       *use_back()       { return cast<Instruction>(*use_begin());}
-  const Instruction *use_back() const { return cast<Instruction>(*use_begin());}
+  Instruction       *user_back()       { return cast<Instruction>(*user_begin());}
+  const Instruction *user_back() const { return cast<Instruction>(*user_begin());}
 
   inline const BasicBlock *getParent() const { return Parent; }
   inline       BasicBlock *getParent()       { return Parent; }
@@ -141,14 +142,14 @@ public:
   /// getMetadata - Get the metadata of given kind attached to this Instruction.
   /// If the metadata is not found then return null.
   MDNode *getMetadata(unsigned KindID) const {
-    if (!hasMetadata()) return 0;
+    if (!hasMetadata()) return nullptr;
     return getMetadataImpl(KindID);
   }
 
   /// getMetadata - Get the metadata of given kind attached to this Instruction.
   /// If the metadata is not found then return null.
   MDNode *getMetadata(StringRef Kind) const {
-    if (!hasMetadata()) return 0;
+    if (!hasMetadata()) return nullptr;
     return getMetadataImpl(Kind);
   }
 
@@ -167,6 +168,11 @@ public:
     if (hasMetadataOtherThanDebugLoc())
       getAllMetadataOtherThanDebugLocImpl(MDs);
   }
+
+  /// getAAMetadata - Fills the AAMDNodes structure with AA metadata from
+  /// this instruction. When Merge is true, the existing AA metadata is
+  /// merged with that from this instruction providing the most-general result.
+  void getAAMetadata(AAMDNodes &N, bool Merge = false) const;
 
   /// setMetadata - Set the metadata of the specified kind to the specified
   /// node.  This updates/replaces metadata if already present, or removes it if
@@ -188,6 +194,10 @@ public:
     unsigned IDs[] = {ID1, ID2};
     return dropUnknownMetadata(IDs);
   }
+
+  /// setAAMetadata - Sets the metadata on this instruction from the
+  /// AAMDNodes structure.
+  void setAAMetadata(const AAMDNodes &N);
 
   /// setDebugLoc - Set the debug location information for this instruction.
   void setDebugLoc(const DebugLoc &Loc) { DbgLoc = Loc; }
@@ -461,7 +471,7 @@ protected:
   }
 
   Instruction(Type *Ty, unsigned iType, Use *Ops, unsigned NumOps,
-              Instruction *InsertBefore = 0);
+              Instruction *InsertBefore = nullptr);
   Instruction(Type *Ty, unsigned iType, Use *Ops, unsigned NumOps,
               BasicBlock *InsertAtEnd);
   virtual Instruction *clone_impl() const = 0;

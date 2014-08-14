@@ -11,6 +11,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+#ifndef CODEGEN_ASMPRINTER_DIEHASH_H__
+#define CODEGEN_ASMPRINTER_DIEHASH_H__
+
 #include "DIE.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/Support/MD5.h"
@@ -23,6 +26,7 @@ class CompileUnit;
 /// \brief An object containing the capability of hashing and adding hash
 /// attributes onto a DIE.
 class DIEHash {
+
   // The entry for a particular attribute.
   struct AttrEntry {
     const DIEValue *Val;
@@ -85,7 +89,7 @@ class DIEHash {
   };
 
 public:
-  DIEHash(AsmPrinter *A = NULL) : AP(A) {}
+  DIEHash(AsmPrinter *A = nullptr) : AP(A) {}
 
   /// \brief Computes the ODR signature.
   uint64_t computeDIEODRSignature(const DIE &Die);
@@ -108,13 +112,17 @@ private:
   void computeHash(const DIE &Die);
 
   // Routines that add DIEValues to the hash.
-private:
+public:
+  /// \brief Adds \param Value to the hash.
+  void update(uint8_t Value) { Hash.update(Value); }
+
   /// \brief Encodes and adds \param Value to the hash as a ULEB128.
   void addULEB128(uint64_t Value);
 
   /// \brief Encodes and adds \param Value to the hash as a SLEB128.
   void addSLEB128(int64_t Value);
 
+private:
   /// \brief Adds \param Str to the hash and includes a NULL byte.
   void addString(StringRef Str);
 
@@ -128,6 +136,9 @@ private:
   /// \brief Hashes the data in a block like DIEValue, e.g. DW_FORM_block or
   /// DW_FORM_exprloc.
   void hashBlockData(const SmallVectorImpl<DIEValue *> &Values);
+
+  /// \brief Hashes the contents pointed to in the .debug_loc section.
+  void hashLocList(const DIELocList &LocList);
 
   /// \brief Hashes an individual attribute.
   void hashAttribute(AttrEntry Attr, dwarf::Tag Tag);
@@ -154,3 +165,5 @@ private:
   DenseMap<const DIE *, unsigned> Numbering;
 };
 }
+
+#endif

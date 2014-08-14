@@ -11,7 +11,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "mccodeemitter"
 #include "MCTargetDesc/X86MCTargetDesc.h"
 #include "MCTargetDesc/X86BaseInfo.h"
 #include "MCTargetDesc/X86FixupKinds.h"
@@ -26,6 +25,8 @@
 #include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
+
+#define DEBUG_TYPE "mccodeemitter"
 
 namespace {
 class X86MCCodeEmitter : public MCCodeEmitter {
@@ -150,7 +151,7 @@ public:
 
   void EncodeInstruction(const MCInst &MI, raw_ostream &OS,
                          SmallVectorImpl<MCFixup> &Fixups,
-                         const MCSubtargetInfo &STI) const;
+                         const MCSubtargetInfo &STI) const override;
 
   void EmitVEXOpcodePrefix(uint64_t TSFlags, unsigned &CurByte, int MemOperand,
                            const MCInst &MI, const MCInstrDesc &Desc,
@@ -184,42 +185,22 @@ static bool isDisp8(int Value) {
 /// isCDisp8 - Return true if this signed displacement fits in a 8-bit
 /// compressed dispacement field.
 static bool isCDisp8(uint64_t TSFlags, int Value, int& CValue) {
-  assert((TSFlags & X86II::EncodingMask) >> X86II::EncodingShift == X86II::EVEX &&
+  assert(((TSFlags & X86II::EncodingMask) >>
+          X86II::EncodingShift == X86II::EVEX) &&
          "Compressed 8-bit displacement is only valid for EVEX inst.");
 
-  unsigned CD8E = (TSFlags >> X86II::EVEX_CD8EShift) & X86II::EVEX_CD8EMask;
-  unsigned CD8V = (TSFlags >> X86II::EVEX_CD8VShift) & X86II::EVEX_CD8VMask;
-
-  if (CD8V == 0 && CD8E == 0) {
+  unsigned CD8_Scale =
+    (TSFlags >> X86II::CD8_Scale_Shift) & X86II::CD8_Scale_Mask;
+  if (CD8_Scale == 0) {
     CValue = Value;
     return isDisp8(Value);
   }
-  
-  unsigned MemObjSize = 1U << CD8E;
-  if (CD8V & 4) {
-    // Fixed vector length
-    MemObjSize *= 1U << (CD8V & 0x3);
-  } else {
-    // Modified vector length
-    bool EVEX_b = (TSFlags >> X86II::VEXShift) & X86II::EVEX_B;
-    if (!EVEX_b) {
-      unsigned EVEX_LL = ((TSFlags >> X86II::VEXShift) & X86II::VEX_L) ? 1 : 0;
-      EVEX_LL += ((TSFlags >> X86II::VEXShift) & X86II::EVEX_L2) ? 2 : 0;
-      assert(EVEX_LL < 3 && "");
 
-      unsigned NumElems = (1U << (EVEX_LL + 4)) / MemObjSize;
-      NumElems /= 1U << (CD8V & 0x3);
-
-      MemObjSize *= NumElems;
-    }
-  }
-
-  unsigned MemObjMask = MemObjSize - 1;
-  assert((MemObjSize & MemObjMask) == 0 && "Invalid memory object size.");
-
-  if (Value & MemObjMask) // Unaligned offset
+  unsigned Mask = CD8_Scale - 1;
+  assert((CD8_Scale & Mask) == 0 && "Invalid memory object size.");
+  if (Value & Mask) // Unaligned offset
     return false;
-  Value /= MemObjSize;
+  Value /= (int)CD8_Scale;
   bool Ret = (Value == (signed char)Value);
 
   if (Ret)
@@ -285,7 +266,7 @@ enum GlobalOffsetTableExprKind {
 };
 static GlobalOffsetTableExprKind
 StartsWithGlobalOffsetTable(const MCExpr *Expr) {
-  const MCExpr *RHS = 0;
+  const MCExpr *RHS = nullptr;
   if (Expr->getKind() == MCExpr::Binary) {
     const MCBinaryExpr *BE = static_cast<const MCBinaryExpr *>(Expr);
     Expr = BE->getLHS();
@@ -316,7 +297,7 @@ void X86MCCodeEmitter::
 EmitImmediate(const MCOperand &DispOp, SMLoc Loc, unsigned Size,
               MCFixupKind FixupKind, unsigned &CurByte, raw_ostream &OS,
               SmallVectorImpl<MCFixup> &Fixups, int ImmOffset) const {
-  const MCExpr *Expr = NULL;
+  const MCExpr *Expr = nullptr;
   if (DispOp.isImm()) {
     // If this is a simple integer displacement that doesn't require a
     // relocation, emit it now.
@@ -339,7 +320,13 @@ EmitImmediate(const MCOperand &DispOp, SMLoc Loc, unsigned Size,
     if (Kind != GOT_None) {
       assert(ImmOffset == 0);
 
-      FixupKind = MCFixupKind(X86::reloc_global_offset_table);
+      if (Size == 8) {
+        FixupKind = MCFixupKind(X86::reloc_global_offset_table8);
+      } else {
+        assert(Size == 4);
+        FixupKind = MCFixupKind(X86::reloc_global_offset_table);
+      }
+
       if (Kind == GOT_Normal)
         ImmOffset = CurByte;
     } else if (Expr->getKind() == MCExpr::SymbolRef) {
@@ -1421,6 +1408,8 @@ EncodeInstruction(const MCInst &MI, raw_ostream &OS,
   case X86II::MRM6r: case X86II::MRM7r: {
     if (HasVEX_4V) // Skip the register dst (which is encoded in VEX_VVVV).
       ++CurOp;
+    if (HasEVEX_K) // Skip writemask
+      ++CurOp;
     EmitByte(BaseOpcode, CurByte, OS);
     uint64_t Form = TSFlags & X86II::FormMask;
     EmitRegModRMByte(MI.getOperand(CurOp++),
@@ -1436,6 +1425,8 @@ EncodeInstruction(const MCInst &MI, raw_ostream &OS,
   case X86II::MRM6m: case X86II::MRM7m: {
     if (HasVEX_4V) // Skip the register dst (which is encoded in VEX_VVVV).
       ++CurOp;
+    if (HasEVEX_K) // Skip writemask
+      ++CurOp;
     EmitByte(BaseOpcode, CurByte, OS);
     uint64_t Form = TSFlags & X86II::FormMask;
     EmitMemModRMByte(MI, CurOp, (Form == X86II::MRMXm) ? 0 : Form-X86II::MRM0m,
@@ -1446,20 +1437,21 @@ EncodeInstruction(const MCInst &MI, raw_ostream &OS,
   case X86II::MRM_C0: case X86II::MRM_C1: case X86II::MRM_C2:
   case X86II::MRM_C3: case X86II::MRM_C4: case X86II::MRM_C8:
   case X86II::MRM_C9: case X86II::MRM_CA: case X86II::MRM_CB:
-  case X86II::MRM_D0: case X86II::MRM_D1: case X86II::MRM_D4:
-  case X86II::MRM_D5: case X86II::MRM_D6: case X86II::MRM_D8:
-  case X86II::MRM_D9: case X86II::MRM_DA: case X86II::MRM_DB:
-  case X86II::MRM_DC: case X86II::MRM_DD: case X86II::MRM_DE:
-  case X86II::MRM_DF: case X86II::MRM_E0: case X86II::MRM_E1:
-  case X86II::MRM_E2: case X86II::MRM_E3: case X86II::MRM_E4:
-  case X86II::MRM_E5: case X86II::MRM_E8: case X86II::MRM_E9:
-  case X86II::MRM_EA: case X86II::MRM_EB: case X86II::MRM_EC:
-  case X86II::MRM_ED: case X86II::MRM_EE: case X86II::MRM_F0:
-  case X86II::MRM_F1: case X86II::MRM_F2: case X86II::MRM_F3:
-  case X86II::MRM_F4: case X86II::MRM_F5: case X86II::MRM_F6:
-  case X86II::MRM_F7: case X86II::MRM_F8: case X86II::MRM_F9:
-  case X86II::MRM_FA: case X86II::MRM_FB: case X86II::MRM_FC:
-  case X86II::MRM_FD: case X86II::MRM_FE: case X86II::MRM_FF:
+  case X86II::MRM_CF: case X86II::MRM_D0: case X86II::MRM_D1:
+  case X86II::MRM_D4: case X86II::MRM_D5: case X86II::MRM_D6:
+  case X86II::MRM_D7: case X86II::MRM_D8: case X86II::MRM_D9:
+  case X86II::MRM_DA: case X86II::MRM_DB: case X86II::MRM_DC:
+  case X86II::MRM_DD: case X86II::MRM_DE: case X86II::MRM_DF:
+  case X86II::MRM_E0: case X86II::MRM_E1: case X86II::MRM_E2:
+  case X86II::MRM_E3: case X86II::MRM_E4: case X86II::MRM_E5:
+  case X86II::MRM_E8: case X86II::MRM_E9: case X86II::MRM_EA:
+  case X86II::MRM_EB: case X86II::MRM_EC: case X86II::MRM_ED:
+  case X86II::MRM_EE: case X86II::MRM_F0: case X86II::MRM_F1:
+  case X86II::MRM_F2: case X86II::MRM_F3: case X86II::MRM_F4:
+  case X86II::MRM_F5: case X86II::MRM_F6: case X86II::MRM_F7:
+  case X86II::MRM_F8: case X86II::MRM_F9: case X86II::MRM_FA:
+  case X86II::MRM_FB: case X86II::MRM_FC: case X86II::MRM_FD:
+  case X86II::MRM_FE: case X86II::MRM_FF:
     EmitByte(BaseOpcode, CurByte, OS);
 
     unsigned char MRM;
@@ -1474,11 +1466,13 @@ EncodeInstruction(const MCInst &MI, raw_ostream &OS,
     case X86II::MRM_C9: MRM = 0xC9; break;
     case X86II::MRM_CA: MRM = 0xCA; break;
     case X86II::MRM_CB: MRM = 0xCB; break;
+    case X86II::MRM_CF: MRM = 0xCF; break;
     case X86II::MRM_D0: MRM = 0xD0; break;
     case X86II::MRM_D1: MRM = 0xD1; break;
     case X86II::MRM_D4: MRM = 0xD4; break;
     case X86II::MRM_D5: MRM = 0xD5; break;
     case X86II::MRM_D6: MRM = 0xD6; break;
+    case X86II::MRM_D7: MRM = 0xD7; break;
     case X86II::MRM_D8: MRM = 0xD8; break;
     case X86II::MRM_D9: MRM = 0xD9; break;
     case X86II::MRM_DA: MRM = 0xDA; break;

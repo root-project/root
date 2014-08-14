@@ -41,7 +41,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "loop-idiom"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
@@ -61,6 +60,8 @@
 #include "llvm/Transforms/Utils/Local.h"
 using namespace llvm;
 
+#define DEBUG_TYPE "loop-idiom"
+
 STATISTIC(NumMemSet, "Number of memset's formed from loop stores");
 STATISTIC(NumMemCpy, "Number of memcpy's formed from loop load+stores");
 
@@ -78,9 +79,6 @@ namespace {
     static BranchInst *getBranch(BasicBlock *BB) {
       return dyn_cast<BranchInst>(BB->getTerminator());
     }
-
-    /// Return the condition of the branch terminating the given basic block.
-    static Value *getBrCondtion(BasicBlock *);
 
     /// Derive the precondition block (i.e the block that guards the loop
     /// preheader) from the given preheader.
@@ -114,17 +112,17 @@ namespace {
     /// the variable involved in the comparion is returned. This function will
     /// be called to see if the precondition and postcondition of the loop
     /// are in desirable form.
-    Value *matchCondition (BranchInst *Br, BasicBlock *NonZeroTarget) const;
+    Value *matchCondition(BranchInst *Br, BasicBlock *NonZeroTarget) const;
 
     /// Return true iff the idiom is detected in the loop. and 1) \p CntInst
-    /// is set to the instruction counting the pupulation bit. 2) \p CntPhi
+    /// is set to the instruction counting the population bit. 2) \p CntPhi
     /// is set to the corresponding phi node. 3) \p Var is set to the value
     /// whose population bits are being counted.
     bool detectIdiom
       (Instruction *&CntInst, PHINode *&CntPhi, Value *&Var) const;
 
     /// Insert ctpop intrinsic function and some obviously dead instructions.
-    void transform (Instruction *CntInst, PHINode *CntPhi, Value *Var);
+    void transform(Instruction *CntInst, PHINode *CntPhi, Value *Var);
 
     /// Create llvm.ctpop.* intrinsic function.
     CallInst *createPopcntIntrinsic(IRBuilderTy &IRB, Value *Val, DebugLoc DL);
@@ -141,10 +139,10 @@ namespace {
     static char ID;
     explicit LoopIdiomRecognize() : LoopPass(ID) {
       initializeLoopIdiomRecognizePass(*PassRegistry::getPassRegistry());
-      DL = 0; DT = 0; SE = 0; TLI = 0; TTI = 0;
+      DL = nullptr; DT = nullptr; SE = nullptr; TLI = nullptr; TTI = nullptr;
     }
 
-    bool runOnLoop(Loop *L, LPPassManager &LPM);
+    bool runOnLoop(Loop *L, LPPassManager &LPM) override;
     bool runOnLoopBlock(BasicBlock *BB, const SCEV *BECount,
                         SmallVectorImpl<BasicBlock*> &ExitBlocks);
 
@@ -164,7 +162,7 @@ namespace {
     /// This transformation requires natural loop information & requires that
     /// loop preheaders be inserted into the CFG.
     ///
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.addRequired<LoopInfo>();
       AU.addPreserved<LoopInfo>();
       AU.addRequiredID(LoopSimplifyID);
@@ -185,7 +183,7 @@ namespace {
       if (DL)
         return DL;
       DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
-      DL = DLP ? &DLP->getDataLayout() : 0;
+      DL = DLP ? &DLP->getDataLayout() : nullptr;
       return DL;
     }
 
@@ -250,7 +248,7 @@ static void deleteDeadInstruction(Instruction *I, ScalarEvolution &SE,
 
     for (unsigned op = 0, e = DeadInst->getNumOperands(); op != e; ++op) {
       Value *Op = DeadInst->getOperand(op);
-      DeadInst->setOperand(op, 0);
+      DeadInst->setOperand(op, nullptr);
 
       // If this operand just became dead, add it to the NowDeadInsts list.
       if (!Op->use_empty()) continue;
@@ -292,17 +290,12 @@ bool LIRUtil::isAlmostEmpty(BasicBlock *BB) {
   return false;
 }
 
-Value *LIRUtil::getBrCondtion(BasicBlock *BB) {
-  BranchInst *Br = getBranch(BB);
-  return Br ? Br->getCondition() : 0;
-}
-
 BasicBlock *LIRUtil::getPrecondBb(BasicBlock *PreHead) {
   if (BasicBlock *BB = PreHead->getSinglePredecessor()) {
     BranchInst *Br = getBranch(BB);
-    return Br && Br->isConditional() ? BB : 0;
+    return Br && Br->isConditional() ? BB : nullptr;
   }
-  return 0;
+  return nullptr;
 }
 
 //===----------------------------------------------------------------------===//
@@ -312,7 +305,7 @@ BasicBlock *LIRUtil::getPrecondBb(BasicBlock *PreHead) {
 //===----------------------------------------------------------------------===//
 
 NclPopcountRecognize::NclPopcountRecognize(LoopIdiomRecognize &TheLIR):
-  LIR(TheLIR), CurLoop(TheLIR.getLoop()), PreCondBB(0) {
+  LIR(TheLIR), CurLoop(TheLIR.getLoop()), PreCondBB(nullptr) {
 }
 
 bool NclPopcountRecognize::preliminaryScreen() {
@@ -349,25 +342,25 @@ bool NclPopcountRecognize::preliminaryScreen() {
   return true;
 }
 
-Value *NclPopcountRecognize::matchCondition (BranchInst *Br,
-                                             BasicBlock *LoopEntry) const {
+Value *NclPopcountRecognize::matchCondition(BranchInst *Br,
+                                            BasicBlock *LoopEntry) const {
   if (!Br || !Br->isConditional())
-    return 0;
+    return nullptr;
 
   ICmpInst *Cond = dyn_cast<ICmpInst>(Br->getCondition());
   if (!Cond)
-    return 0;
+    return nullptr;
 
   ConstantInt *CmpZero = dyn_cast<ConstantInt>(Cond->getOperand(1));
   if (!CmpZero || !CmpZero->isZero())
-    return 0;
+    return nullptr;
 
   ICmpInst::Predicate Pred = Cond->getPredicate();
   if ((Pred == ICmpInst::ICMP_NE && Br->getSuccessor(0) == LoopEntry) ||
       (Pred == ICmpInst::ICMP_EQ && Br->getSuccessor(1) == LoopEntry))
     return Cond->getOperand(0);
 
-  return 0;
+  return nullptr;
 }
 
 bool NclPopcountRecognize::detectIdiom(Instruction *&CntInst,
@@ -398,9 +391,9 @@ bool NclPopcountRecognize::detectIdiom(Instruction *&CntInst,
   Value *VarX1, *VarX0;
   PHINode *PhiX, *CountPhi;
 
-  DefX2 = CountInst = 0;
-  VarX1 = VarX0 = 0;
-  PhiX = CountPhi = 0;
+  DefX2 = CountInst = nullptr;
+  VarX1 = VarX0 = nullptr;
+  PhiX = CountPhi = nullptr;
   LoopEntry = *(CurLoop->block_begin());
 
   // step 1: Check if the loop-back branch is in desirable form.
@@ -447,7 +440,7 @@ bool NclPopcountRecognize::detectIdiom(Instruction *&CntInst,
 
   // step 4: Find the instruction which count the population: cnt2 = cnt1 + 1
   {
-    CountInst = NULL;
+    CountInst = nullptr;
     for (BasicBlock::iterator Iter = LoopEntry->getFirstNonPHI(),
            IterE = LoopEntry->end(); Iter != IterE; Iter++) {
       Instruction *Inst = Iter;
@@ -464,9 +457,8 @@ bool NclPopcountRecognize::detectIdiom(Instruction *&CntInst,
 
       // Check if the result of the instruction is live of the loop.
       bool LiveOutLoop = false;
-      for (Value::use_iterator I = Inst->use_begin(), E = Inst->use_end();
-             I != E;  I++) {
-        if ((cast<Instruction>(*I))->getParent() != LoopEntry) {
+      for (User *U : Inst->users()) {
+        if ((cast<Instruction>(U))->getParent() != LoopEntry) {
           LiveOutLoop = true; break;
         }
       }
@@ -602,11 +594,9 @@ void NclPopcountRecognize::transform(Instruction *CntInst,
   //  __builtin_ctpop().
   {
     SmallVector<Value *, 4> CntUses;
-    for (Value::use_iterator I = CntInst->use_begin(), E = CntInst->use_end();
-         I != E; I++) {
-      if (cast<Instruction>(*I)->getParent() != Body)
-        CntUses.push_back(*I);
-    }
+    for (User *U : CntInst->users())
+      if (cast<Instruction>(U)->getParent() != Body)
+        CntUses.push_back(U);
     for (unsigned Idx = 0; Idx < CntUses.size(); Idx++) {
       (cast<Instruction>(CntUses[Idx]))->replaceUsesOfWith(CntInst, NewCount);
     }
@@ -755,7 +745,7 @@ bool LoopIdiomRecognize::runOnLoopBlock(BasicBlock *BB, const SCEV *BECount,
 
       // If processing the store invalidated our iterator, start over from the
       // top of the block.
-      if (InstPtr == 0)
+      if (!InstPtr)
         I = BB->begin();
       continue;
     }
@@ -768,7 +758,7 @@ bool LoopIdiomRecognize::runOnLoopBlock(BasicBlock *BB, const SCEV *BECount,
 
       // If processing the memset invalidated our iterator, start over from the
       // top of the block.
-      if (InstPtr == 0)
+      if (!InstPtr)
         I = BB->begin();
       continue;
     }
@@ -795,7 +785,7 @@ bool LoopIdiomRecognize::processLoopStore(StoreInst *SI, const SCEV *BECount) {
   // random store we can't handle.
   const SCEVAddRecExpr *StoreEv =
     dyn_cast<SCEVAddRecExpr>(SE->getSCEV(StorePtr));
-  if (StoreEv == 0 || StoreEv->getLoop() != CurLoop || !StoreEv->isAffine())
+  if (!StoreEv || StoreEv->getLoop() != CurLoop || !StoreEv->isAffine())
     return false;
 
   // Check to see if the stride matches the size of the store.  If so, then we
@@ -803,7 +793,7 @@ bool LoopIdiomRecognize::processLoopStore(StoreInst *SI, const SCEV *BECount) {
   unsigned StoreSize = (unsigned)SizeInBits >> 3;
   const SCEVConstant *Stride = dyn_cast<SCEVConstant>(StoreEv->getOperand(1));
 
-  if (Stride == 0 || StoreSize != Stride->getValue()->getValue()) {
+  if (!Stride || StoreSize != Stride->getValue()->getValue()) {
     // TODO: Could also handle negative stride here someday, that will require
     // the validity check in mayLoopAccessLocation to be updated though.
     // Enable this to print exact negative strides.
@@ -852,7 +842,7 @@ processLoopMemSet(MemSetInst *MSI, const SCEV *BECount) {
   // loop, which indicates a strided store.  If we have something else, it's a
   // random store we can't handle.
   const SCEVAddRecExpr *Ev = dyn_cast<SCEVAddRecExpr>(SE->getSCEV(Pointer));
-  if (Ev == 0 || Ev->getLoop() != CurLoop || !Ev->isAffine())
+  if (!Ev || Ev->getLoop() != CurLoop || !Ev->isAffine())
     return false;
 
   // Reject memsets that are so large that they overflow an unsigned.
@@ -866,7 +856,7 @@ processLoopMemSet(MemSetInst *MSI, const SCEV *BECount) {
 
   // TODO: Could also handle negative stride here someday, that will require the
   // validity check in mayLoopAccessLocation to be updated though.
-  if (Stride == 0 || MSI->getLength() != Stride->getValue())
+  if (!Stride || MSI->getLength() != Stride->getValue())
     return false;
 
   return processLoopStridedStore(Pointer, (unsigned)SizeInBytes,
@@ -919,23 +909,23 @@ static Constant *getMemSetPatternValue(Value *V, const DataLayout &DL) {
   // array.  We could theoretically do a store to an alloca or something, but
   // that doesn't seem worthwhile.
   Constant *C = dyn_cast<Constant>(V);
-  if (C == 0) return 0;
+  if (!C) return nullptr;
 
   // Only handle simple values that are a power of two bytes in size.
   uint64_t Size = DL.getTypeSizeInBits(V->getType());
   if (Size == 0 || (Size & 7) || (Size & (Size-1)))
-    return 0;
+    return nullptr;
 
   // Don't care enough about darwin/ppc to implement this.
   if (DL.isBigEndian())
-    return 0;
+    return nullptr;
 
   // Convert to size in bytes.
   Size /= 8;
 
   // TODO: If CI is larger than 16-bytes, we can try slicing it in half to see
   // if the top and bottom are the same (e.g. for vectors and large integers).
-  if (Size > 16) return 0;
+  if (Size > 16) return nullptr;
 
   // If the constant is exactly 16 bytes, just use it.
   if (Size == 16) return C;
@@ -960,7 +950,7 @@ processLoopStridedStore(Value *DestPtr, unsigned StoreSize,
   // are stored.  A store of i32 0x01020304 can never be turned into a memset,
   // but it can be turned into memset_pattern if the target supports it.
   Value *SplatValue = isBytewiseValue(StoredVal);
-  Constant *PatternValue = 0;
+  Constant *PatternValue = nullptr;
 
   unsigned DestAS = DestPtr->getType()->getPointerAddressSpace();
 
@@ -971,13 +961,13 @@ processLoopStridedStore(Value *DestPtr, unsigned StoreSize,
       // promote the memset.
       CurLoop->isLoopInvariant(SplatValue)) {
     // Keep and use SplatValue.
-    PatternValue = 0;
+    PatternValue = nullptr;
   } else if (DestAS == 0 &&
              TLI->has(LibFunc::memset_pattern16) &&
              (PatternValue = getMemSetPatternValue(StoredVal, *DL))) {
     // Don't create memset_pattern16s with address spaces.
     // It looks like we can use PatternValue!
-    SplatValue = 0;
+    SplatValue = nullptr;
   } else {
     // Otherwise, this isn't an idiom we can transform.  For example, we can't
     // do anything with a 3-byte store.
@@ -1044,7 +1034,7 @@ processLoopStridedStore(Value *DestPtr, unsigned StoreSize,
                                         Int8PtrTy,
                                         Int8PtrTy,
                                         IntPtr,
-                                        (void*)0);
+                                        (void*)nullptr);
 
     // Otherwise we should form a memset_pattern16.  PatternValue is known to be
     // an constant array of 16-bytes.  Plop the value into a mergable global.

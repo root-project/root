@@ -22,9 +22,9 @@
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/Win64EH.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/system_error.h"
 #include <algorithm>
 #include <cstring>
+#include <system_error>
 
 using namespace llvm;
 using namespace object;
@@ -94,7 +94,7 @@ static unsigned getNumUsedSlots(const UnwindCode &UnwindCode) {
 // slots is provided.
 static void printUnwindCode(ArrayRef<UnwindCode> UCs) {
   assert(UCs.size() >= getNumUsedSlots(UCs[0]));
-  outs() <<  format("    0x%02x: ", unsigned(UCs[0].u.CodeOffset))
+  outs() <<  format("      0x%02x: ", unsigned(UCs[0].u.CodeOffset))
          << getUnwindCodeTypeName(UCs[0].getUnwindOp());
   switch (UCs[0].getUnwindOp()) {
   case UOP_PushNonVol:
@@ -157,28 +157,28 @@ static void printAllUnwindCodes(ArrayRef<UnwindCode> UCs) {
 }
 
 // Given a symbol sym this functions returns the address and section of it.
-static error_code resolveSectionAndAddress(const COFFObjectFile *Obj,
-                                           const SymbolRef &Sym,
-                                           const coff_section *&ResolvedSection,
-                                           uint64_t &ResolvedAddr) {
-  if (error_code EC = Sym.getAddress(ResolvedAddr))
+static std::error_code
+resolveSectionAndAddress(const COFFObjectFile *Obj, const SymbolRef &Sym,
+                         const coff_section *&ResolvedSection,
+                         uint64_t &ResolvedAddr) {
+  if (std::error_code EC = Sym.getAddress(ResolvedAddr))
     return EC;
   section_iterator iter(Obj->section_begin());
-  if (error_code EC = Sym.getSection(iter))
+  if (std::error_code EC = Sym.getSection(iter))
     return EC;
-  ResolvedSection = Obj->getCOFFSection(iter);
+  ResolvedSection = Obj->getCOFFSection(*iter);
   return object_error::success;
 }
 
 // Given a vector of relocations for a section and an offset into this section
 // the function returns the symbol used for the relocation at the offset.
-static error_code resolveSymbol(const std::vector<RelocationRef> &Rels,
-                                uint64_t Offset, SymbolRef &Sym) {
+static std::error_code resolveSymbol(const std::vector<RelocationRef> &Rels,
+                                     uint64_t Offset, SymbolRef &Sym) {
   for (std::vector<RelocationRef>::const_iterator I = Rels.begin(),
                                                   E = Rels.end();
                                                   I != E; ++I) {
     uint64_t Ofs;
-    if (error_code EC = I->getOffset(Ofs))
+    if (std::error_code EC = I->getOffset(Ofs))
       return EC;
     if (Ofs == Offset) {
       Sym = *I->getSymbol();
@@ -192,18 +192,17 @@ static error_code resolveSymbol(const std::vector<RelocationRef> &Rels,
 // the function resolves the symbol used for the relocation at the offset and
 // returns the section content and the address inside the content pointed to
 // by the symbol.
-static error_code getSectionContents(const COFFObjectFile *Obj,
-                                     const std::vector<RelocationRef> &Rels,
-                                     uint64_t Offset,
-                                     ArrayRef<uint8_t> &Contents,
-                                     uint64_t &Addr) {
+static std::error_code
+getSectionContents(const COFFObjectFile *Obj,
+                   const std::vector<RelocationRef> &Rels, uint64_t Offset,
+                   ArrayRef<uint8_t> &Contents, uint64_t &Addr) {
   SymbolRef Sym;
-  if (error_code EC = resolveSymbol(Rels, Offset, Sym))
+  if (std::error_code EC = resolveSymbol(Rels, Offset, Sym))
     return EC;
   const coff_section *Section;
-  if (error_code EC = resolveSectionAndAddress(Obj, Sym, Section, Addr))
+  if (std::error_code EC = resolveSectionAndAddress(Obj, Sym, Section, Addr))
     return EC;
-  if (error_code EC = Obj->getSectionContents(Section, Contents))
+  if (std::error_code EC = Obj->getSectionContents(Section, Contents))
     return EC;
   return object_error::success;
 }
@@ -211,12 +210,12 @@ static error_code getSectionContents(const COFFObjectFile *Obj,
 // Given a vector of relocations for a section and an offset into this section
 // the function returns the name of the symbol used for the relocation at the
 // offset.
-static error_code resolveSymbolName(const std::vector<RelocationRef> &Rels,
-                                    uint64_t Offset, StringRef &Name) {
+static std::error_code resolveSymbolName(const std::vector<RelocationRef> &Rels,
+                                         uint64_t Offset, StringRef &Name) {
   SymbolRef Sym;
-  if (error_code EC = resolveSymbol(Rels, Offset, Sym))
+  if (std::error_code EC = resolveSymbol(Rels, Offset, Sym))
     return EC;
-  if (error_code EC = Sym.getName(Name))
+  if (std::error_code EC = Sym.getName(Name))
     return EC;
   return object_error::success;
 }
@@ -277,9 +276,7 @@ static void printLoadConfiguration(const COFFObjectFile *Obj) {
   if (error(Obj->getRvaPtr(DataDir->RelativeVirtualAddress, IntPtr)))
     return;
 
-  const coff_load_configuration32 *LoadConf =
-      reinterpret_cast<const coff_load_configuration32 *>(IntPtr);
-
+  auto *LoadConf = reinterpret_cast<const coff_load_configuration32 *>(IntPtr);
   outs() << "Load configuration:"
          << "\n  Timestamp: " << LoadConf->TimeDateStamp
          << "\n  Major Version: " << LoadConf->MajorVersion
@@ -378,9 +375,152 @@ static void printExportTable(const COFFObjectFile *Obj) {
   }
 }
 
+// Given the COFF object file, this function returns the relocations for .pdata
+// and the pointer to "runtime function" structs.
+static bool getPDataSection(const COFFObjectFile *Obj,
+                            std::vector<RelocationRef> &Rels,
+                            const RuntimeFunction *&RFStart, int &NumRFs) {
+  for (const SectionRef &Section : Obj->sections()) {
+    StringRef Name;
+    if (error(Section.getName(Name)))
+      continue;
+    if (Name != ".pdata")
+      continue;
+
+    const coff_section *Pdata = Obj->getCOFFSection(Section);
+    for (const RelocationRef &Reloc : Section.relocations())
+      Rels.push_back(Reloc);
+
+    // Sort relocations by address.
+    std::sort(Rels.begin(), Rels.end(), RelocAddressLess);
+
+    ArrayRef<uint8_t> Contents;
+    if (error(Obj->getSectionContents(Pdata, Contents)))
+      continue;
+    if (Contents.empty())
+      continue;
+
+    RFStart = reinterpret_cast<const RuntimeFunction *>(Contents.data());
+    NumRFs = Contents.size() / sizeof(RuntimeFunction);
+    return true;
+  }
+  return false;
+}
+
+static void printWin64EHUnwindInfo(const Win64EH::UnwindInfo *UI) {
+  // The casts to int are required in order to output the value as number.
+  // Without the casts the value would be interpreted as char data (which
+  // results in garbage output).
+  outs() << "    Version: " << static_cast<int>(UI->getVersion()) << "\n";
+  outs() << "    Flags: " << static_cast<int>(UI->getFlags());
+  if (UI->getFlags()) {
+    if (UI->getFlags() & UNW_ExceptionHandler)
+      outs() << " UNW_ExceptionHandler";
+    if (UI->getFlags() & UNW_TerminateHandler)
+      outs() << " UNW_TerminateHandler";
+    if (UI->getFlags() & UNW_ChainInfo)
+      outs() << " UNW_ChainInfo";
+  }
+  outs() << "\n";
+  outs() << "    Size of prolog: " << static_cast<int>(UI->PrologSize) << "\n";
+  outs() << "    Number of Codes: " << static_cast<int>(UI->NumCodes) << "\n";
+  // Maybe this should move to output of UOP_SetFPReg?
+  if (UI->getFrameRegister()) {
+    outs() << "    Frame register: "
+           << getUnwindRegisterName(UI->getFrameRegister()) << "\n";
+    outs() << "    Frame offset: " << 16 * UI->getFrameOffset() << "\n";
+  } else {
+    outs() << "    No frame pointer used\n";
+  }
+  if (UI->getFlags() & (UNW_ExceptionHandler | UNW_TerminateHandler)) {
+    // FIXME: Output exception handler data
+  } else if (UI->getFlags() & UNW_ChainInfo) {
+    // FIXME: Output chained unwind info
+  }
+
+  if (UI->NumCodes)
+    outs() << "    Unwind Codes:\n";
+
+  printAllUnwindCodes(ArrayRef<UnwindCode>(&UI->UnwindCodes[0], UI->NumCodes));
+
+  outs() << "\n";
+  outs().flush();
+}
+
+/// Prints out the given RuntimeFunction struct for x64, assuming that Obj is
+/// pointing to an executable file.
+static void printRuntimeFunction(const COFFObjectFile *Obj,
+                                 const RuntimeFunction &RF) {
+  if (!RF.StartAddress)
+    return;
+  outs() << "Function Table:\n"
+         << format("  Start Address: 0x%04x\n",
+                   static_cast<uint32_t>(RF.StartAddress))
+         << format("  End Address: 0x%04x\n",
+                   static_cast<uint32_t>(RF.EndAddress))
+         << format("  Unwind Info Address: 0x%04x\n",
+                   static_cast<uint32_t>(RF.UnwindInfoOffset));
+  uintptr_t addr;
+  if (Obj->getRvaPtr(RF.UnwindInfoOffset, addr))
+    return;
+  printWin64EHUnwindInfo(reinterpret_cast<const Win64EH::UnwindInfo *>(addr));
+}
+
+/// Prints out the given RuntimeFunction struct for x64, assuming that Obj is
+/// pointing to an object file. Unlike executable, fields in RuntimeFunction
+/// struct are filled with zeros, but instead there are relocations pointing to
+/// them so that the linker will fill targets' RVAs to the fields at link
+/// time. This function interprets the relocations to find the data to be used
+/// in the resulting executable.
+static void printRuntimeFunctionRels(const COFFObjectFile *Obj,
+                                     const RuntimeFunction &RF,
+                                     uint64_t SectionOffset,
+                                     const std::vector<RelocationRef> &Rels) {
+  outs() << "Function Table:\n";
+  outs() << "  Start Address: ";
+  printCOFFSymbolAddress(outs(), Rels,
+                         SectionOffset +
+                             /*offsetof(RuntimeFunction, StartAddress)*/ 0,
+                         RF.StartAddress);
+  outs() << "\n";
+
+  outs() << "  End Address: ";
+  printCOFFSymbolAddress(outs(), Rels,
+                         SectionOffset +
+                             /*offsetof(RuntimeFunction, EndAddress)*/ 4,
+                         RF.EndAddress);
+  outs() << "\n";
+
+  outs() << "  Unwind Info Address: ";
+  printCOFFSymbolAddress(outs(), Rels,
+                         SectionOffset +
+                             /*offsetof(RuntimeFunction, UnwindInfoOffset)*/ 8,
+                         RF.UnwindInfoOffset);
+  outs() << "\n";
+
+  ArrayRef<uint8_t> XContents;
+  uint64_t UnwindInfoOffset = 0;
+  if (error(getSectionContents(
+          Obj, Rels, SectionOffset +
+                         /*offsetof(RuntimeFunction, UnwindInfoOffset)*/ 8,
+          XContents, UnwindInfoOffset)))
+    return;
+  if (XContents.empty())
+    return;
+
+  UnwindInfoOffset += RF.UnwindInfoOffset;
+  if (UnwindInfoOffset > XContents.size())
+    return;
+
+  auto *UI = reinterpret_cast<const Win64EH::UnwindInfo *>(XContents.data() +
+                                                           UnwindInfoOffset);
+  printWin64EHUnwindInfo(UI);
+}
+
 void llvm::printCOFFUnwindInfo(const COFFObjectFile *Obj) {
   const coff_file_header *Header;
-  if (error(Obj->getCOFFHeader(Header))) return;
+  if (error(Obj->getCOFFHeader(Header)))
+    return;
 
   if (Header->Machine != COFF::IMAGE_FILE_MACHINE_AMD64) {
     errs() << "Unsupported image machine type "
@@ -388,114 +528,24 @@ void llvm::printCOFFUnwindInfo(const COFFObjectFile *Obj) {
     return;
   }
 
-  const coff_section *Pdata = 0;
+  std::vector<RelocationRef> Rels;
+  const RuntimeFunction *RFStart;
+  int NumRFs;
+  if (!getPDataSection(Obj, Rels, RFStart, NumRFs))
+    return;
+  ArrayRef<RuntimeFunction> RFs(RFStart, NumRFs);
 
-  for (section_iterator SI = Obj->section_begin(), SE = Obj->section_end();
-       SI != SE; ++SI) {
-    StringRef Name;
-    if (error(SI->getName(Name))) continue;
+  bool IsExecutable = Rels.empty();
+  if (IsExecutable) {
+    for (const RuntimeFunction &RF : RFs)
+      printRuntimeFunction(Obj, RF);
+    return;
+  }
 
-    if (Name != ".pdata") continue;
-
-    Pdata = Obj->getCOFFSection(SI);
-    std::vector<RelocationRef> Rels;
-    for (relocation_iterator RI = SI->relocation_begin(),
-                             RE = SI->relocation_end();
-         RI != RE; ++RI)
-      Rels.push_back(*RI);
-
-    // Sort relocations by address.
-    std::sort(Rels.begin(), Rels.end(), RelocAddressLess);
-
-    ArrayRef<uint8_t> Contents;
-    if (error(Obj->getSectionContents(Pdata, Contents))) continue;
-    if (Contents.empty()) continue;
-
-    ArrayRef<RuntimeFunction> RFs(
-                  reinterpret_cast<const RuntimeFunction *>(Contents.data()),
-                                  Contents.size() / sizeof(RuntimeFunction));
-    for (const RuntimeFunction *I = RFs.begin(), *E = RFs.end(); I < E; ++I) {
-      const uint64_t SectionOffset = std::distance(RFs.begin(), I)
-                                     * sizeof(RuntimeFunction);
-
-      outs() << "Function Table:\n";
-
-      outs() << "  Start Address: ";
-      printCOFFSymbolAddress(outs(), Rels, SectionOffset +
-                             /*offsetof(RuntimeFunction, StartAddress)*/ 0,
-                             I->StartAddress);
-      outs() << "\n";
-
-      outs() << "  End Address: ";
-      printCOFFSymbolAddress(outs(), Rels, SectionOffset +
-                             /*offsetof(RuntimeFunction, EndAddress)*/ 4,
-                             I->EndAddress);
-      outs() << "\n";
-
-      outs() << "  Unwind Info Address: ";
-      printCOFFSymbolAddress(outs(), Rels, SectionOffset +
-                             /*offsetof(RuntimeFunction, UnwindInfoOffset)*/ 8,
-                             I->UnwindInfoOffset);
-      outs() << "\n";
-
-      ArrayRef<uint8_t> XContents;
-      uint64_t UnwindInfoOffset = 0;
-      if (error(getSectionContents(Obj, Rels, SectionOffset +
-                              /*offsetof(RuntimeFunction, UnwindInfoOffset)*/ 8,
-                                   XContents, UnwindInfoOffset))) continue;
-      if (XContents.empty()) continue;
-
-      UnwindInfoOffset += I->UnwindInfoOffset;
-      if (UnwindInfoOffset > XContents.size()) continue;
-
-      const Win64EH::UnwindInfo *UI =
-                            reinterpret_cast<const Win64EH::UnwindInfo *>
-                              (XContents.data() + UnwindInfoOffset);
-
-      // The casts to int are required in order to output the value as number.
-      // Without the casts the value would be interpreted as char data (which
-      // results in garbage output).
-      outs() << "  Version: " << static_cast<int>(UI->getVersion()) << "\n";
-      outs() << "  Flags: " << static_cast<int>(UI->getFlags());
-      if (UI->getFlags()) {
-          if (UI->getFlags() & UNW_ExceptionHandler)
-            outs() << " UNW_ExceptionHandler";
-          if (UI->getFlags() & UNW_TerminateHandler)
-            outs() << " UNW_TerminateHandler";
-          if (UI->getFlags() & UNW_ChainInfo)
-            outs() << " UNW_ChainInfo";
-      }
-      outs() << "\n";
-      outs() << "  Size of prolog: "
-             << static_cast<int>(UI->PrologSize) << "\n";
-      outs() << "  Number of Codes: "
-             << static_cast<int>(UI->NumCodes) << "\n";
-      // Maybe this should move to output of UOP_SetFPReg?
-      if (UI->getFrameRegister()) {
-        outs() << "  Frame register: "
-                << getUnwindRegisterName(UI->getFrameRegister())
-                << "\n";
-        outs() << "  Frame offset: "
-                << 16 * UI->getFrameOffset()
-                << "\n";
-      } else {
-        outs() << "  No frame pointer used\n";
-      }
-      if (UI->getFlags() & (UNW_ExceptionHandler | UNW_TerminateHandler)) {
-        // FIXME: Output exception handler data
-      } else if (UI->getFlags() & UNW_ChainInfo) {
-        // FIXME: Output chained unwind info
-      }
-
-      if (UI->NumCodes)
-        outs() << "  Unwind Codes:\n";
-
-      printAllUnwindCodes(ArrayRef<UnwindCode>(&UI->UnwindCodes[0],
-                          UI->NumCodes));
-
-      outs() << "\n\n";
-      outs().flush();
-    }
+  for (const RuntimeFunction &RF : RFs) {
+    uint64_t SectionOffset =
+        std::distance(RFs.begin(), &RF) * sizeof(RuntimeFunction);
+    printRuntimeFunctionRels(Obj, RF, SectionOffset, Rels);
   }
 }
 

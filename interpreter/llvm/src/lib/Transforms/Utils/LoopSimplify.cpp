@@ -37,7 +37,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "loop-simplify"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/ADT/DepthFirstIterator.h"
 #include "llvm/ADT/SetOperations.h"
@@ -49,19 +48,22 @@
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/ScalarEvolution.h"
+#include "llvm/IR/CFG.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Type.h"
-#include "llvm/Support/CFG.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/LoopUtils.h"
 using namespace llvm;
+
+#define DEBUG_TYPE "loop-simplify"
 
 STATISTIC(NumInserted, "Number of pre-header or exit blocks inserted");
 STATISTIC(NumNested  , "Number of nested loops split out");
@@ -85,7 +87,7 @@ static void placeSplitBlockCarefully(BasicBlock *NewBB,
 
   // Figure out *which* outside block to put this after.  Prefer an outside
   // block that neighbors a BB actually in the loop.
-  BasicBlock *FoundBB = 0;
+  BasicBlock *FoundBB = nullptr;
   for (unsigned i = 0, e = SplitPreds.size(); i != e; ++i) {
     Function::iterator BBI = SplitPreds[i];
     if (++BBI != NewBB->getParent()->end() &&
@@ -119,7 +121,7 @@ BasicBlock *llvm::InsertPreheaderForLoop(Loop *L, Pass *PP) {
       // If the loop is branched to from an indirect branch, we won't
       // be able to fully transform the loop, because it prohibits
       // edge splitting.
-      if (isa<IndirectBrInst>(P->getTerminator())) return 0;
+      if (isa<IndirectBrInst>(P->getTerminator())) return nullptr;
 
       // Keep track of it.
       OutsideBlocks.push_back(P);
@@ -160,14 +162,14 @@ static BasicBlock *rewriteLoopExitBlock(Loop *L, BasicBlock *Exit, Pass *PP) {
     BasicBlock *P = *I;
     if (L->contains(P)) {
       // Don't do this if the loop is exited via an indirect branch.
-      if (isa<IndirectBrInst>(P->getTerminator())) return 0;
+      if (isa<IndirectBrInst>(P->getTerminator())) return nullptr;
 
       LoopBlocks.push_back(P);
     }
   }
 
   assert(!LoopBlocks.empty() && "No edges coming in from outside the loop?");
-  BasicBlock *NewExitBB = 0;
+  BasicBlock *NewExitBB = nullptr;
 
   if (Exit->isLandingPad()) {
     SmallVector<BasicBlock*, 2> NewBBs;
@@ -211,7 +213,7 @@ static PHINode *findPHIToPartitionLoops(Loop *L, AliasAnalysis *AA,
   for (BasicBlock::iterator I = L->getHeader()->begin(); isa<PHINode>(I); ) {
     PHINode *PN = cast<PHINode>(I);
     ++I;
-    if (Value *V = SimplifyInstruction(PN, 0, 0, DT)) {
+    if (Value *V = SimplifyInstruction(PN, nullptr, nullptr, DT)) {
       // This is a degenerate PHI already, don't modify it!
       PN->replaceAllUsesWith(V);
       if (AA) AA->deleteValue(PN);
@@ -226,7 +228,7 @@ static PHINode *findPHIToPartitionLoops(Loop *L, AliasAnalysis *AA,
         // We found something tasty to remove.
         return PN;
   }
-  return 0;
+  return nullptr;
 }
 
 /// \brief If this loop has multiple backedges, try to pull one of them out into
@@ -253,14 +255,14 @@ static Loop *separateNestedLoop(Loop *L, BasicBlock *Preheader,
                                 LoopInfo *LI, ScalarEvolution *SE, Pass *PP) {
   // Don't try to separate loops without a preheader.
   if (!Preheader)
-    return 0;
+    return nullptr;
 
   // The header is not a landing pad; preheader insertion should ensure this.
   assert(!L->getHeader()->isLandingPad() &&
          "Can't insert backedge to landing pad");
 
   PHINode *PN = findPHIToPartitionLoops(L, AA, DT);
-  if (PN == 0) return 0;  // No known way to partition.
+  if (!PN) return nullptr;  // No known way to partition.
 
   // Pull out all predecessors that have varying values in the loop.  This
   // handles the case when a PHI node has multiple instances of itself as
@@ -271,7 +273,7 @@ static Loop *separateNestedLoop(Loop *L, BasicBlock *Preheader,
         !L->contains(PN->getIncomingBlock(i))) {
       // We can't split indirectbr edges.
       if (isa<IndirectBrInst>(PN->getIncomingBlock(i)->getTerminator()))
-        return 0;
+        return nullptr;
       OuterLoopPreds.push_back(PN->getIncomingBlock(i));
     }
   }
@@ -362,7 +364,7 @@ static BasicBlock *insertUniqueBackedgeBlock(Loop *L, BasicBlock *Preheader,
 
   // Unique backedge insertion currently depends on having a preheader.
   if (!Preheader)
-    return 0;
+    return nullptr;
 
   // The header is not a landing pad; preheader insertion should ensure this.
   assert(!Header->isLandingPad() && "Can't insert backedge to landing pad");
@@ -374,7 +376,7 @@ static BasicBlock *insertUniqueBackedgeBlock(Loop *L, BasicBlock *Preheader,
 
     // Indirectbr edges cannot be split, so we must fail if we find one.
     if (isa<IndirectBrInst>(P->getTerminator()))
-      return 0;
+      return nullptr;
 
     if (P != Preheader) BackedgeBlocks.push_back(P);
   }
@@ -403,7 +405,7 @@ static BasicBlock *insertUniqueBackedgeBlock(Loop *L, BasicBlock *Preheader,
     // preheader over to the new PHI node.
     unsigned PreheaderIdx = ~0U;
     bool HasUniqueIncomingValue = true;
-    Value *UniqueValue = 0;
+    Value *UniqueValue = nullptr;
     for (unsigned i = 0, e = PN->getNumIncomingValues(); i != e; ++i) {
       BasicBlock *IBB = PN->getIncomingBlock(i);
       Value *IV = PN->getIncomingValue(i);
@@ -412,7 +414,7 @@ static BasicBlock *insertUniqueBackedgeBlock(Loop *L, BasicBlock *Preheader,
       } else {
         NewPN->addIncoming(IV, IBB);
         if (HasUniqueIncomingValue) {
-          if (UniqueValue == 0)
+          if (!UniqueValue)
             UniqueValue = IV;
           else if (UniqueValue != IV)
             HasUniqueIncomingValue = false;
@@ -472,7 +474,8 @@ static BasicBlock *insertUniqueBackedgeBlock(Loop *L, BasicBlock *Preheader,
 /// explicit if they accepted the analysis directly and then updated it.
 static bool simplifyOneLoop(Loop *L, SmallVectorImpl<Loop *> &Worklist,
                             AliasAnalysis *AA, DominatorTree *DT, LoopInfo *LI,
-                            ScalarEvolution *SE, Pass *PP) {
+                            ScalarEvolution *SE, Pass *PP,
+                            const DataLayout *DL) {
   bool Changed = false;
 ReprocessLoop:
 
@@ -609,7 +612,7 @@ ReprocessLoop:
   PHINode *PN;
   for (BasicBlock::iterator I = L->getHeader()->begin();
        (PN = dyn_cast<PHINode>(I++)); )
-    if (Value *V = SimplifyInstruction(PN, 0, 0, DT)) {
+    if (Value *V = SimplifyInstruction(PN, nullptr, nullptr, DT)) {
       if (AA) AA->deleteValue(PN);
       if (SE) SE->forgetValue(PN);
       PN->replaceAllUsesWith(V);
@@ -653,7 +656,8 @@ ReprocessLoop:
         if (Inst == CI)
           continue;
         if (!L->makeLoopInvariant(Inst, AnyInvariant,
-                                 Preheader ? Preheader->getTerminator() : 0)) {
+                                  Preheader ? Preheader->getTerminator()
+                                            : nullptr)) {
           AllInvariant = false;
           break;
         }
@@ -670,7 +674,7 @@ ReprocessLoop:
       // The block has now been cleared of all instructions except for
       // a comparison and a conditional branch. SimplifyCFG may be able
       // to fold it now.
-      if (!FoldBranchToCommonDest(BI)) continue;
+      if (!FoldBranchToCommonDest(BI, DL)) continue;
 
       // Success. The block is now dead, so remove it from the loop,
       // update the dominator tree and delete it.
@@ -707,7 +711,8 @@ ReprocessLoop:
 }
 
 bool llvm::simplifyLoop(Loop *L, DominatorTree *DT, LoopInfo *LI, Pass *PP,
-                        AliasAnalysis *AA, ScalarEvolution *SE) {
+                        AliasAnalysis *AA, ScalarEvolution *SE,
+                        const DataLayout *DL) {
   bool Changed = false;
 
   // Worklist maintains our depth-first queue of loops in this nest to process.
@@ -724,7 +729,8 @@ bool llvm::simplifyLoop(Loop *L, DominatorTree *DT, LoopInfo *LI, Pass *PP,
   }
 
   while (!Worklist.empty())
-    Changed |= simplifyOneLoop(Worklist.pop_back_val(), Worklist, AA, DT, LI, SE, PP);
+    Changed |= simplifyOneLoop(Worklist.pop_back_val(), Worklist, AA, DT, LI,
+                               SE, PP, DL);
 
   return Changed;
 }
@@ -742,10 +748,11 @@ namespace {
     DominatorTree *DT;
     LoopInfo *LI;
     ScalarEvolution *SE;
+    const DataLayout *DL;
 
-    virtual bool runOnFunction(Function &F);
+    bool runOnFunction(Function &F) override;
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       // We need loop information to identify the loops...
       AU.addRequired<DominatorTreeWrapperPass>();
       AU.addPreserved<DominatorTreeWrapperPass>();
@@ -760,13 +767,7 @@ namespace {
     }
 
     /// verifyAnalysis() - Verify LoopSimplifyForm's guarantees.
-    void verifyAnalysis() const;
-
-  private:
-    bool ProcessLoop(Loop *L);
-    BasicBlock *RewriteLoopExitBlock(Loop *L, BasicBlock *Exit);
-    Loop *SeparateNestedLoop(Loop *L, BasicBlock *Preheader);
-    BasicBlock *InsertUniqueBackedgeBlock(Loop *L, BasicBlock *Preheader);
+    void verifyAnalysis() const override;
   };
 }
 
@@ -782,7 +783,7 @@ INITIALIZE_PASS_END(LoopSimplify, "loop-simplify",
 char &llvm::LoopSimplifyID = LoopSimplify::ID;
 Pass *llvm::createLoopSimplifyPass() { return new LoopSimplify(); }
 
-/// runOnLoop - Run down all loops in the CFG (recursively, but we could do
+/// runOnFunction - Run down all loops in the CFG (recursively, but we could do
 /// it in any convenient order) inserting preheaders...
 ///
 bool LoopSimplify::runOnFunction(Function &F) {
@@ -791,10 +792,12 @@ bool LoopSimplify::runOnFunction(Function &F) {
   LI = &getAnalysis<LoopInfo>();
   DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
   SE = getAnalysisIfAvailable<ScalarEvolution>();
+  DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
+  DL = DLP ? &DLP->getDataLayout() : nullptr;
 
   // Simplify each loop nest in the function.
   for (LoopInfo::iterator I = LI->begin(), E = LI->end(); I != E; ++I)
-    Changed |= simplifyLoop(*I, DT, LI, this, AA, SE);
+    Changed |= simplifyLoop(*I, DT, LI, this, AA, SE, DL);
 
   return Changed;
 }

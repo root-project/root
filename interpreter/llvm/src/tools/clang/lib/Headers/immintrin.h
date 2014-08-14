@@ -48,7 +48,7 @@
 #include <smmintrin.h>
 #endif
 
-#if defined (__AES__)
+#if defined (__AES__) || defined (__PCLMUL__)
 #include <wmmintrin.h>
 #endif
 
@@ -74,6 +74,14 @@
 
 #ifdef __FMA__
 #include <fmaintrin.h>
+#endif
+
+#ifdef __AVX512F__
+#include <avx512fintrin.h>
+#endif
+
+#ifdef __AVX512ER__
+#include <avx512erintrin.h>
 #endif
 
 #ifdef __RDRND__

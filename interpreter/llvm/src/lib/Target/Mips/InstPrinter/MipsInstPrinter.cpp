@@ -11,10 +11,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "asm-printer"
 #include "MipsInstPrinter.h"
-#include "MipsInstrInfo.h"
 #include "MCTargetDesc/MipsMCExpr.h"
+#include "MipsInstrInfo.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
@@ -23,6 +22,8 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
+
+#define DEBUG_TYPE "asm-printer"
 
 #define PRINT_ALIAS_INSTR
 #include "MipsGenAsmWriter.inc"
@@ -165,6 +166,8 @@ static void printExpr(const MCExpr *Expr, raw_ostream &OS) {
   case MCSymbolRefExpr::VK_Mips_GOT_LO16:  OS << "%got_lo("; break;
   case MCSymbolRefExpr::VK_Mips_CALL_HI16: OS << "%call_hi("; break;
   case MCSymbolRefExpr::VK_Mips_CALL_LO16: OS << "%call_lo("; break;
+  case MCSymbolRefExpr::VK_Mips_PCREL_HI16: OS << "%pcrel_hi("; break;
+  case MCSymbolRefExpr::VK_Mips_PCREL_LO16: OS << "%pcrel_lo("; break;
   }
 
   OS << SRE->getSymbol();

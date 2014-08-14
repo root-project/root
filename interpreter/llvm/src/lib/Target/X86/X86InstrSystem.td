@@ -19,7 +19,7 @@ let Defs = [RAX, RDX] in
               TB;
 
 let Defs = [RAX, RCX, RDX] in
-  def RDTSCP : I<0x01, MRM_F9, (outs), (ins), "rdtscp", []>, TB;
+  def RDTSCP : I<0x01, MRM_F9, (outs), (ins), "rdtscp", [(X86rdtscp)]>, TB;
 
 // CPU flow control instructions
 
@@ -439,7 +439,10 @@ def LLDT16m : I<0x00, MRM2m, (outs), (ins i16mem:$src),
 let SchedRW = [WriteSystem] in {
 def WRMSR : I<0x30, RawFrm, (outs), (ins), "wrmsr", [], IIC_WRMSR>, TB;
 def RDMSR : I<0x32, RawFrm, (outs), (ins), "rdmsr", [], IIC_RDMSR>, TB;
-def RDPMC : I<0x33, RawFrm, (outs), (ins), "rdpmc", [], IIC_RDPMC>, TB;
+
+let Defs = [RAX, RDX], Uses = [ECX] in
+  def RDPMC : I<0x33, RawFrm, (outs), (ins), "rdpmc", [(X86rdpmc)], IIC_RDPMC>,
+              TB;
 
 def SMSW16r : I<0x01, MRM4r, (outs GR16:$dst), (ins), 
                 "smsw{w}\t$dst", [], IIC_SMSW>, OpSize16, TB;

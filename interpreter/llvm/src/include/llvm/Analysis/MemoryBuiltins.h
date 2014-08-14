@@ -17,12 +17,12 @@
 
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/Analysis/TargetFolder.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/InstVisitor.h"
 #include "llvm/IR/Operator.h"
-#include "llvm/InstVisitor.h"
+#include "llvm/IR/ValueHandle.h"
 #include "llvm/Support/DataTypes.h"
-#include "llvm/Support/TargetFolder.h"
-#include "llvm/Support/ValueHandle.h"
 
 namespace llvm {
 class CallInst;
@@ -233,7 +233,7 @@ class ObjectSizeOffsetEvaluator
   bool RoundToAlign;
 
   SizeOffsetEvalType unknown() {
-    return std::make_pair((Value*)0, (Value*)0);
+    return std::make_pair(nullptr, nullptr);
   }
   SizeOffsetEvalType compute_(Value *V);
 

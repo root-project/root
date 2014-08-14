@@ -39,7 +39,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/StringMap.h"
-#include "llvm/Linker.h"
+#include "llvm/Linker/Linker.h"
 #include "llvm/Target/TargetOptions.h"
 #include <string>
 #include <vector>
@@ -53,11 +53,9 @@ namespace llvm {
   class TargetLibraryInfo;
   class TargetMachine;
   class raw_ostream;
-}
 
 //===----------------------------------------------------------------------===//
-/// LTOCodeGenerator - C++ class which implements the opaque lto_code_gen_t
-/// type.
+/// C++ class which implements the opaque lto_code_gen_t type.
 ///
 struct LTOCodeGenerator {
   static const char *getVersionString();
@@ -68,12 +66,12 @@ struct LTOCodeGenerator {
   // Merge given module, return true on success.
   bool addModule(struct LTOModule*, std::string &errMsg);
 
-  void setTargetOptions(llvm::TargetOptions options);
+  void setTargetOptions(TargetOptions options);
   void setDebugInfo(lto_debug_model);
   void setCodePICModel(lto_codegen_model);
-  void setInternalizeStrategy(lto_internalize_strategy);
 
   void setCpu(const char *mCpu) { MCpu = mCpu; }
+  void setAttr(const char *mAttr) { MAttr = mAttr; }
 
   void addMustPreserveSymbol(const char *sym) { MustPreserveSymbols[sym] = 1; }
 
@@ -118,52 +116,40 @@ struct LTOCodeGenerator {
 
   void setDiagnosticHandler(lto_diagnostic_handler_t, void *);
 
-  bool shouldInternalize() const {
-    return InternalizeStrategy != LTO_INTERNALIZE_NONE;
-  }
-
-  bool shouldOnlyInternalizeHidden() const {
-    return InternalizeStrategy == LTO_INTERNALIZE_HIDDEN;
-  }
-
 private:
   void initializeLTOPasses();
 
-  bool generateObjectFile(llvm::raw_ostream &out,
-                          bool disableOpt,
-                          bool disableInline,
-                          bool disableGVNLoadPRE,
-                          std::string &errMsg);
+  bool generateObjectFile(raw_ostream &out, bool disableOpt, bool disableInline,
+                          bool disableGVNLoadPRE, std::string &errMsg);
   void applyScopeRestrictions();
-  void applyRestriction(llvm::GlobalValue &GV,
-                        const llvm::ArrayRef<llvm::StringRef> &Libcalls,
-                        std::vector<const char*> &MustPreserveList,
-                        llvm::SmallPtrSet<llvm::GlobalValue*, 8> &AsmUsed,
-                        llvm::Mangler &Mangler);
+  void applyRestriction(GlobalValue &GV, const ArrayRef<StringRef> &Libcalls,
+                        std::vector<const char *> &MustPreserveList,
+                        SmallPtrSet<GlobalValue *, 8> &AsmUsed,
+                        Mangler &Mangler);
   bool determineTarget(std::string &errMsg);
 
-  static void DiagnosticHandler(const llvm::DiagnosticInfo &DI, void *Context);
+  static void DiagnosticHandler(const DiagnosticInfo &DI, void *Context);
 
-  void DiagnosticHandler2(const llvm::DiagnosticInfo &DI);
+  void DiagnosticHandler2(const DiagnosticInfo &DI);
 
-  typedef llvm::StringMap<uint8_t> StringSet;
+  typedef StringMap<uint8_t> StringSet;
 
-  llvm::LLVMContext &Context;
-  llvm::Linker Linker;
-  llvm::TargetMachine *TargetMach;
+  LLVMContext &Context;
+  Linker IRLinker;
+  TargetMachine *TargetMach;
   bool EmitDwarfDebugInfo;
   bool ScopeRestrictionsDone;
   lto_codegen_model CodeModel;
-  lto_internalize_strategy InternalizeStrategy;
   StringSet MustPreserveSymbols;
   StringSet AsmUndefinedRefs;
-  llvm::MemoryBuffer *NativeObjectFile;
+  MemoryBuffer *NativeObjectFile;
   std::vector<char *> CodegenOptions;
   std::string MCpu;
+  std::string MAttr;
   std::string NativeObjectPath;
-  llvm::TargetOptions Options;
+  TargetOptions Options;
   lto_diagnostic_handler_t DiagHandler;
   void *DiagContext;
 };
-
+}
 #endif // LTO_CODE_GENERATOR_H

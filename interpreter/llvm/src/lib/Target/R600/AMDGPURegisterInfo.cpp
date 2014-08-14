@@ -17,9 +17,9 @@
 
 using namespace llvm;
 
-AMDGPURegisterInfo::AMDGPURegisterInfo(TargetMachine &tm)
+AMDGPURegisterInfo::AMDGPURegisterInfo(const AMDGPUSubtarget &st)
 : AMDGPUGenRegisterInfo(0),
-  TM(tm)
+  ST(st)
   { }
 
 //===----------------------------------------------------------------------===//
@@ -27,10 +27,10 @@ AMDGPURegisterInfo::AMDGPURegisterInfo(TargetMachine &tm)
 // they are not supported at this time.
 //===----------------------------------------------------------------------===//
 
-const uint16_t AMDGPURegisterInfo::CalleeSavedReg = AMDGPU::NoRegister;
+const MCPhysReg AMDGPURegisterInfo::CalleeSavedReg = AMDGPU::NoRegister;
 
-const uint16_t* AMDGPURegisterInfo::getCalleeSavedRegs(const MachineFunction *MF)
-                                                                         const {
+const MCPhysReg*
+AMDGPURegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
   return &CalleeSavedReg;
 }
 
@@ -54,7 +54,7 @@ unsigned AMDGPURegisterInfo::getSubRegFromChannel(unsigned Channel) const {
     AMDGPU::sub15
   };
 
-  assert (Channel < array_lengthof(SubRegs));
+  assert(Channel < array_lengthof(SubRegs));
   return SubRegs[Channel];
 }
 

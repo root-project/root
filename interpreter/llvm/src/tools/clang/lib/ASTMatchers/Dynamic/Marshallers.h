@@ -25,7 +25,6 @@
 #include "clang/ASTMatchers/Dynamic/VariantValue.h"
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/Support/type_traits.h"
 #include <string>
 
 namespace clang {
@@ -150,8 +149,8 @@ public:
   /// would produce a trivial matcher that will either always or never match.
   /// Such matchers are excluded from code completion results.
   virtual bool isConvertibleTo(
-      ast_type_traits::ASTNodeKind Kind, unsigned *Specificity = 0,
-      ast_type_traits::ASTNodeKind *LeastDerivedKind = 0) const = 0;
+      ast_type_traits::ASTNodeKind Kind, unsigned *Specificity = nullptr,
+      ast_type_traits::ASTNodeKind *LeastDerivedKind = nullptr) const = 0;
 
   /// Returns whether the matcher will, given a matcher of any type T, yield a
   /// matcher of type T.
@@ -159,10 +158,10 @@ public:
 };
 
 inline bool isRetKindConvertibleTo(
-    llvm::ArrayRef<ast_type_traits::ASTNodeKind> RetKinds,
+    ArrayRef<ast_type_traits::ASTNodeKind> RetKinds,
     ast_type_traits::ASTNodeKind Kind, unsigned *Specificity,
     ast_type_traits::ASTNodeKind *LeastDerivedKind) {
-  for (llvm::ArrayRef<ast_type_traits::ASTNodeKind>::const_iterator
+  for (ArrayRef<ast_type_traits::ASTNodeKind>::const_iterator
            i = RetKinds.begin(),
            e = RetKinds.end();
        i != e; ++i) {
@@ -200,8 +199,8 @@ public:
   /// \param ArgKinds The types of the arguments this matcher takes.
   FixedArgCountMatcherDescriptor(
       MarshallerType Marshaller, void (*Func)(), StringRef MatcherName,
-      llvm::ArrayRef<ast_type_traits::ASTNodeKind> RetKinds,
-      llvm::ArrayRef<ArgKind> ArgKinds)
+      ArrayRef<ast_type_traits::ASTNodeKind> RetKinds,
+      ArrayRef<ArgKind> ArgKinds)
       : Marshaller(Marshaller), Func(Func), MatcherName(MatcherName),
         RetKinds(RetKinds.begin(), RetKinds.end()),
         ArgKinds(ArgKinds.begin(), ArgKinds.end()) {}
@@ -261,7 +260,7 @@ static VariantMatcher outvalueToVariantMatcher(const T &PolyMatcher,
                                                    NULL) {
   std::vector<DynTypedMatcher> Matchers;
   mergePolyMatchers(PolyMatcher, Matchers, typename T::ReturnTypes());
-  VariantMatcher Out = VariantMatcher::PolymorphicMatcher(Matchers);
+  VariantMatcher Out = VariantMatcher::PolymorphicMatcher(std::move(Matchers));
   return Out;
 }
 
@@ -393,9 +392,9 @@ public:
         DerivedKind(ast_type_traits::ASTNodeKind::getFromNodeKind<DerivedT>()) {
   }
 
-  bool isConvertibleTo(ast_type_traits::ASTNodeKind Kind, unsigned *Specificity,
-                       ast_type_traits::ASTNodeKind *LeastDerivedKind) const
-      LLVM_OVERRIDE {
+  bool
+  isConvertibleTo(ast_type_traits::ASTNodeKind Kind, unsigned *Specificity,
+                ast_type_traits::ASTNodeKind *LeastDerivedKind) const override {
     // If Kind is not a base of DerivedKind, either DerivedKind is a base of
     // Kind (in which case the match will always succeed) or Kind and
     // DerivedKind are unrelated (in which case it will always fail), so set
@@ -511,19 +510,17 @@ private:
 class OverloadedMatcherDescriptor : public MatcherDescriptor {
 public:
   OverloadedMatcherDescriptor(ArrayRef<MatcherDescriptor *> Callbacks)
-      : Overloads(Callbacks) {}
+      : Overloads(Callbacks.begin(), Callbacks.end()) {}
 
-  virtual ~OverloadedMatcherDescriptor() {
-    llvm::DeleteContainerPointers(Overloads);
-  }
+  virtual ~OverloadedMatcherDescriptor() {}
 
   virtual VariantMatcher create(const SourceRange &NameRange,
                                 ArrayRef<ParserValue> Args,
                                 Diagnostics *Error) const {
     std::vector<VariantMatcher> Constructed;
     Diagnostics::OverloadContext Ctx(Error);
-    for (size_t i = 0, e = Overloads.size(); i != e; ++i) {
-      VariantMatcher SubMatcher = Overloads[i]->create(NameRange, Args, Error);
+    for (const auto &O : Overloads) {
+      VariantMatcher SubMatcher = O->create(NameRange, Args, Error);
       if (!SubMatcher.isNull()) {
         Constructed.push_back(SubMatcher);
       }
@@ -543,10 +540,8 @@ public:
   bool isVariadic() const {
     bool Overload0Variadic = Overloads[0]->isVariadic();
 #ifndef NDEBUG
-    for (std::vector<MatcherDescriptor *>::const_iterator I = Overloads.begin(),
-                                                          E = Overloads.end();
-         I != E; ++I) {
-      assert(Overload0Variadic == (*I)->isVariadic());
+    for (const auto &O : Overloads) {
+      assert(Overload0Variadic == O->isVariadic());
     }
 #endif
     return Overload0Variadic;
@@ -555,10 +550,8 @@ public:
   unsigned getNumArgs() const {
     unsigned Overload0NumArgs = Overloads[0]->getNumArgs();
 #ifndef NDEBUG
-    for (std::vector<MatcherDescriptor *>::const_iterator I = Overloads.begin(),
-                                                          E = Overloads.end();
-         I != E; ++I) {
-      assert(Overload0NumArgs == (*I)->getNumArgs());
+    for (const auto &O : Overloads) {
+      assert(Overload0NumArgs == O->getNumArgs());
     }
 #endif
     return Overload0NumArgs;
@@ -566,27 +559,23 @@ public:
 
   void getArgKinds(ast_type_traits::ASTNodeKind ThisKind, unsigned ArgNo,
                    std::vector<ArgKind> &Kinds) const {
-    for (std::vector<MatcherDescriptor *>::const_iterator I = Overloads.begin(),
-                                                    E = Overloads.end();
-         I != E; ++I) {
-      if ((*I)->isConvertibleTo(ThisKind))
-        (*I)->getArgKinds(ThisKind, ArgNo, Kinds);
+    for (const auto &O : Overloads) {
+      if (O->isConvertibleTo(ThisKind))
+        O->getArgKinds(ThisKind, ArgNo, Kinds);
     }
   }
 
   bool isConvertibleTo(ast_type_traits::ASTNodeKind Kind, unsigned *Specificity,
                        ast_type_traits::ASTNodeKind *LeastDerivedKind) const {
-    for (std::vector<MatcherDescriptor *>::const_iterator I = Overloads.begin(),
-                                                    E = Overloads.end();
-         I != E; ++I) {
-      if ((*I)->isConvertibleTo(Kind, Specificity, LeastDerivedKind))
+    for (const auto &O : Overloads) {
+      if (O->isConvertibleTo(Kind, Specificity, LeastDerivedKind))
         return true;
     }
     return false;
   }
 
 private:
-  std::vector<MatcherDescriptor *> Overloads;
+  std::vector<std::unique_ptr<MatcherDescriptor>> Overloads;
 };
 
 /// \brief Variadic operator marshaller function.
@@ -620,7 +609,7 @@ public:
       }
       InnerArgs.push_back(Value.getMatcher());
     }
-    return VariantMatcher::VariadicOperatorMatcher(Func, InnerArgs);
+    return VariantMatcher::VariadicOperatorMatcher(Func, std::move(InnerArgs));
   }
 
   bool isVariadic() const { return true; }
@@ -637,7 +626,7 @@ public:
       *LeastDerivedKind = Kind;
     return true;
   }
-  bool isPolymorphic() const LLVM_OVERRIDE { return true; }
+  bool isPolymorphic() const override { return true; }
 
 private:
   const unsigned MinCount;
@@ -657,7 +646,7 @@ MatcherDescriptor *makeMatcherAutoMarshall(ReturnType (*Func)(),
   BuildReturnTypeVector<ReturnType>::build(RetTypes);
   return new FixedArgCountMatcherDescriptor(
       matcherMarshall0<ReturnType>, reinterpret_cast<void (*)()>(Func),
-      MatcherName, RetTypes, llvm::ArrayRef<ArgKind>());
+      MatcherName, RetTypes, None);
 }
 
 /// \brief 1-arg overload

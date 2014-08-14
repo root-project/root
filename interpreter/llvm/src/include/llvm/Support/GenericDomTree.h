@@ -23,7 +23,6 @@
 #include "llvm/ADT/GraphTraits.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/Support/CFG.h"
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
@@ -187,9 +186,9 @@ class DominatorTreeBase : public DominatorBase<NodeT> {
     assert(isReachableFromEntry(A));
 
     const DomTreeNodeBase<NodeT> *IDom;
-    while ((IDom = B->getIDom()) != 0 && IDom != A && IDom != B)
+    while ((IDom = B->getIDom()) != nullptr && IDom != A && IDom != B)
       B = IDom;   // Walk up the tree
-    return IDom != 0;
+    return IDom != nullptr;
   }
 
 protected:
@@ -206,7 +205,7 @@ protected:
     unsigned Semi;
     NodeT *Label;
 
-    InfoRec() : DFSNum(0), Parent(0), Semi(0), Label(0) {}
+    InfoRec() : DFSNum(0), Parent(0), Semi(0), Label(nullptr) {}
   };
 
   DenseMap<NodeT*, NodeT*> IDoms;
@@ -225,7 +224,7 @@ protected:
     IDoms.clear();
     this->Roots.clear();
     Vertex.clear();
-    RootNode = 0;
+    RootNode = nullptr;
   }
 
   // NewBB is split and now it has one successor. Update dominator tree to
@@ -261,7 +260,7 @@ protected:
 
     // Find NewBB's immediate dominator and create new dominator tree node for
     // NewBB.
-    NodeT *NewBBIDom = 0;
+    NodeT *NewBBIDom = nullptr;
     unsigned i = 0;
     for (i = 0; i < PredBlocks.size(); ++i)
       if (DT.isReachableFromEntry(PredBlocks[i])) {
@@ -331,6 +330,10 @@ public:
     return DomTreeNodes.lookup(BB);
   }
 
+  inline DomTreeNodeBase<NodeT> *operator[](NodeT *BB) const {
+    return getNode(BB);
+  }
+
   /// getRootNode - This returns the entry node for the CFG of the function.  If
   /// this tree represents the post-dominance relations for a function, however,
   /// this root may be a node with the block == NULL.  This is the case when
@@ -345,7 +348,7 @@ public:
   void getDescendants(NodeT *R, SmallVectorImpl<NodeT *> &Result) const {
     Result.clear();
     const DomTreeNodeBase<NodeT> *RN = getNode(R);
-    if (RN == NULL)
+    if (!RN)
       return; // If R is unreachable, it will not be present in the DOM tree.
     SmallVector<const DomTreeNodeBase<NodeT> *, 8> WL;
     WL.push_back(RN);
@@ -362,7 +365,7 @@ public:
   ///
   bool properlyDominates(const DomTreeNodeBase<NodeT> *A,
                          const DomTreeNodeBase<NodeT> *B) const {
-    if (A == 0 || B == 0)
+    if (!A || !B)
       return false;
     if (A == B)
       return false;
@@ -454,6 +457,21 @@ public:
     DomTreeNodeBase<NodeT> *NodeA = getNode(A);
     DomTreeNodeBase<NodeT> *NodeB = getNode(B);
 
+    // If we have DFS info, then we can avoid all allocations by just querying
+    // it from each IDom. Note that because we call 'dominates' twice above, we
+    // expect to call through this code at most 16 times in a row without
+    // building valid DFS information. This is important as below is a *very*
+    // slow tree walk.
+    if (DFSInfoValid) {
+      DomTreeNodeBase<NodeT> *IDomA = NodeA->getIDom();
+      while (IDomA) {
+        if (NodeB->DominatedBy(IDomA))
+          return IDomA->getBlock();
+        IDomA = IDomA->getIDom();
+      }
+      return nullptr;
+    }
+
     // Collect NodeA dominators set.
     SmallPtrSet<DomTreeNodeBase<NodeT>*, 16> NodeADoms;
     NodeADoms.insert(NodeA);
@@ -472,7 +490,7 @@ public:
       IDomB = IDomB->getIDom();
     }
 
-    return NULL;
+    return nullptr;
   }
 
   const NodeT *findNearestCommonDominator(const NodeT *A, const NodeT *B) {
@@ -490,7 +508,7 @@ public:
   /// creates a new node as a child of DomBB dominator node,linking it into
   /// the children list of the immediate dominator.
   DomTreeNodeBase<NodeT> *addNewBlock(NodeT *BB, NodeT *DomBB) {
-    assert(getNode(BB) == 0 && "Block already in dominator tree!");
+    assert(getNode(BB) == nullptr && "Block already in dominator tree!");
     DomTreeNodeBase<NodeT> *IDomNode = getNode(DomBB);
     assert(IDomNode && "Not immediate dominator specified for block!");
     DFSInfoValid = false;
@@ -637,7 +655,7 @@ protected:
     // immediate dominator.
     NodeT *IDom = getIDom(BB);
 
-    assert(IDom || this->DomTreeNodes[NULL]);
+    assert(IDom || this->DomTreeNodes[nullptr]);
     DomTreeNodeBase<NodeT> *IDomNode = getNodeForBlock(IDom);
 
     // Add a new tree node for this NodeT, and link it as a child of
@@ -660,14 +678,14 @@ public:
   void recalculate(FT& F) {
     typedef GraphTraits<FT*> TraitsTy;
     reset();
-    this->Vertex.push_back(0);
+    this->Vertex.push_back(nullptr);
 
     if (!this->IsPostDominators) {
       // Initialize root
       NodeT *entry = TraitsTy::getEntryNode(&F);
       this->Roots.push_back(entry);
-      this->IDoms[entry] = 0;
-      this->DomTreeNodes[entry] = 0;
+      this->IDoms[entry] = nullptr;
+      this->DomTreeNodes[entry] = nullptr;
 
       Calculate<FT, NodeT*>(*this, F);
     } else {
@@ -678,8 +696,8 @@ public:
           addRoot(I);
 
         // Prepopulate maps so that we don't get iterator invalidation issues later.
-        this->IDoms[I] = 0;
-        this->DomTreeNodes[I] = 0;
+        this->IDoms[I] = nullptr;
+        this->DomTreeNodes[I] = nullptr;
       }
 
       Calculate<FT, Inverse<NodeT*> >(*this, F);

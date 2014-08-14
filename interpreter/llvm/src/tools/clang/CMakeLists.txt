@@ -156,11 +156,14 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   endif()
 
   set( CLANG_BUILT_STANDALONE 1 )
+  set(BACKEND_PACKAGE_STRING "LLVM ${LLVM_PACKAGE_VERSION}")
+else()
+  set(BACKEND_PACKAGE_STRING "${PACKAGE_STRING}")
+endif()
 
-  find_package(LibXml2)
-  if (LIBXML2_FOUND)
-    set(CLANG_HAVE_LIBXML 1)
-  endif ()
+find_package(LibXml2)
+if (LIBXML2_FOUND)
+  set(CLANG_HAVE_LIBXML 1)
 endif()
 
 set(CLANG_RESOURCE_DIR "" CACHE STRING
@@ -382,15 +385,17 @@ install(DIRECTORY include/clang-c
 add_definitions( -D_GNU_SOURCE )
 
 option(CLANG_ENABLE_ARCMT "Build ARCMT." ON)
-option(CLANG_ENABLE_REWRITER "Build rewriter." ON)
-option(CLANG_ENABLE_STATIC_ANALYZER "Build static analyzer." ON)
-
-if (NOT CLANG_ENABLE_REWRITER AND CLANG_ENABLE_ARCMT)
-  message(FATAL_ERROR "Cannot disable rewriter while enabling ARCMT")
+if (CLANG_ENABLE_ARCMT)
+  set(ENABLE_CLANG_ARCMT "1")
+else()
+  set(ENABLE_CLANG_ARCMT "0")
 endif()
 
-if (NOT CLANG_ENABLE_REWRITER AND CLANG_ENABLE_STATIC_ANALYZER)
-  message(FATAL_ERROR "Cannot disable rewriter while enabling static analyzer")
+option(CLANG_ENABLE_STATIC_ANALYZER "Build static analyzer." ON)
+if (CLANG_ENABLE_STATIC_ANALYZER)
+  set(ENABLE_CLANG_STATIC_ANALYZER "1")
+else()
+  set(ENABLE_CLANG_STATIC_ANALYZER "0")
 endif()
 
 if (NOT CLANG_ENABLE_STATIC_ANALYZER AND CLANG_ENABLE_ARCMT)
@@ -399,9 +404,7 @@ endif()
 
 if(CLANG_ENABLE_ARCMT)
   add_definitions(-DCLANG_ENABLE_ARCMT)
-endif()
-if(CLANG_ENABLE_REWRITER)
-  add_definitions(-DCLANG_ENABLE_REWRITER)
+  add_definitions(-DCLANG_ENABLE_OBJC_REWRITER)
 endif()
 if(CLANG_ENABLE_STATIC_ANALYZER)
   add_definitions(-DCLANG_ENABLE_STATIC_ANALYZER)
@@ -471,15 +474,6 @@ option(CLANG_INCLUDE_DOCS "Generate build targets for the Clang docs."
   ${LLVM_INCLUDE_DOCS})
 if( CLANG_INCLUDE_DOCS )
   add_subdirectory(docs)
-endif()
-
-# Workaround for MSVS10 to avoid the Dialog Hell
-# FIXME: This could be removed with future version of CMake.
-if( CLANG_BUILT_STANDALONE AND MSVC_VERSION EQUAL 1600 )
-  set(CLANG_SLN_FILENAME "${CMAKE_CURRENT_BINARY_DIR}/Clang.sln")
-  if( EXISTS "${CLANG_SLN_FILENAME}" )
-    file(APPEND "${CLANG_SLN_FILENAME}" "\n# This should be regenerated!\n")
-  endif()
 endif()
 
 set(CLANG_ORDER_FILE "" CACHE FILEPATH

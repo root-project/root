@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "reginfo"
 #include "PPCRegisterInfo.h"
 #include "PPC.h"
 #include "PPCFrameLowering.h"
@@ -27,7 +26,6 @@
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/RegisterScavenging.h"
-#include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
@@ -43,10 +41,12 @@
 #include "llvm/Target/TargetOptions.h"
 #include <cstdlib>
 
+using namespace llvm;
+
+#define DEBUG_TYPE "reginfo"
+
 #define GET_REGINFO_TARGET_DESC
 #include "PPCGenRegisterInfo.inc"
-
-using namespace llvm;
 
 static cl::opt<bool>
 EnableBasePointer("ppc-use-base-pointer", cl::Hidden, cl::init(true),
@@ -97,7 +97,7 @@ PPCRegisterInfo::getPointerRegClass(const MachineFunction &MF, unsigned Kind)
   return &PPC::GPRCRegClass;
 }
 
-const uint16_t*
+const MCPhysReg*
 PPCRegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
   if (Subtarget.isDarwinABI())
     return Subtarget.isPPC64() ? (Subtarget.hasAltivec() ?
@@ -199,7 +199,16 @@ BitVector PPCRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   if (PPCFI->needsFP(MF))
     Reserved.set(PPC::R31);
 
-  if (hasBasePointer(MF))
+  if (hasBasePointer(MF)) {
+  	if (Subtarget.isSVR4ABI() && !Subtarget.isPPC64() &&
+        MF.getTarget().getRelocationModel() == Reloc::PIC_)
+      Reserved.set(PPC::R29);
+    else
+      Reserved.set(PPC::R30);
+  }
+
+  if (Subtarget.isSVR4ABI() && !Subtarget.isPPC64() &&
+      MF.getTarget().getRelocationModel() == Reloc::PIC_)
     Reserved.set(PPC::R30);
 
   // Reserve Altivec registers when Altivec is unavailable.
@@ -230,10 +239,31 @@ PPCRegisterInfo::getRegPressureLimit(const TargetRegisterClass *RC,
   case PPC::F8RCRegClassID:
   case PPC::F4RCRegClassID:
   case PPC::VRRCRegClassID:
+  case PPC::VFRCRegClassID:
+  case PPC::VSLRCRegClassID:
+  case PPC::VSHRCRegClassID:
     return 32 - DefaultSafety;
+  case PPC::VSRCRegClassID:
+  case PPC::VSFRCRegClassID:
+    return 64 - DefaultSafety;
   case PPC::CRRCRegClassID:
     return 8 - DefaultSafety;
   }
+}
+
+const TargetRegisterClass*
+PPCRegisterInfo::getLargestLegalSuperClass(const TargetRegisterClass *RC)const {
+  if (Subtarget.hasVSX()) {
+    // With VSX, we can inflate various sub-register classes to the full VSX
+    // register set.
+
+    if (RC == &PPC::F8RCRegClass)
+      return &PPC::VSFRCRegClass;
+    else if (RC == &PPC::VRRCRegClass)
+      return &PPC::VSRCRegClass;
+  }
+
+  return TargetRegisterInfo::getLargestLegalSuperClass(RC);
 }
 
 //===----------------------------------------------------------------------===//
@@ -822,7 +852,14 @@ unsigned PPCRegisterInfo::getBaseRegister(const MachineFunction &MF) const {
   if (!hasBasePointer(MF))
     return getFrameRegister(MF);
 
-  return Subtarget.isPPC64() ? PPC::X30 : PPC::R30;
+  if (Subtarget.isPPC64())
+    return PPC::X30;
+
+  if (Subtarget.isSVR4ABI() &&
+      MF.getTarget().getRelocationModel() == Reloc::PIC_)
+    return PPC::R29;
+
+  return PPC::R30;
 }
 
 bool PPCRegisterInfo::hasBasePointer(const MachineFunction &MF) const {
@@ -863,16 +900,6 @@ bool PPCRegisterInfo::needsStackRealignment(const MachineFunction &MF) const {
 bool PPCRegisterInfo::
 needsFrameBaseReg(MachineInstr *MI, int64_t Offset) const {
   assert(Offset < 0 && "Local offset must be negative");
-
-  unsigned FIOperandNum = 0;
-  while (!MI->getOperand(FIOperandNum).isFI()) {
-    ++FIOperandNum;
-    assert(FIOperandNum < MI->getNumOperands() &&
-           "Instr doesn't have FrameIndex operand!");
-  }
-
-  unsigned OffsetOperandNo = getOffsetONFromFION(*MI, FIOperandNum);
-  Offset += MI->getOperand(OffsetOperandNo).getImm();
 
   // It's the load/store FI references that cause issues, as it can be difficult
   // to materialize the offset if it won't fit in the literal field. Estimate
@@ -939,11 +966,8 @@ materializeFrameBaseRegister(MachineBasicBlock *MBB,
     .addFrameIndex(FrameIdx).addImm(Offset);
 }
 
-void
-PPCRegisterInfo::resolveFrameIndex(MachineBasicBlock::iterator I,
-                                   unsigned BaseReg, int64_t Offset) const {
-  MachineInstr &MI = *I;
-
+void PPCRegisterInfo::resolveFrameIndex(MachineInstr &MI, unsigned BaseReg,
+                                        int64_t Offset) const {
   unsigned FIOperandNum = 0;
   while (!MI.getOperand(FIOperandNum).isFI()) {
     ++FIOperandNum;
@@ -955,10 +979,28 @@ PPCRegisterInfo::resolveFrameIndex(MachineBasicBlock::iterator I,
   unsigned OffsetOperandNo = getOffsetONFromFION(MI, FIOperandNum);
   Offset += MI.getOperand(OffsetOperandNo).getImm();
   MI.getOperand(OffsetOperandNo).ChangeToImmediate(Offset);
+
+  MachineBasicBlock &MBB = *MI.getParent();
+  MachineFunction &MF = *MBB.getParent();
+  const TargetInstrInfo &TII = *MF.getTarget().getInstrInfo();
+  const MCInstrDesc &MCID = MI.getDesc();
+  MachineRegisterInfo &MRI = MF.getRegInfo();
+  MRI.constrainRegClass(BaseReg,
+                        TII.getRegClass(MCID, FIOperandNum, this, MF));
 }
 
 bool PPCRegisterInfo::isFrameOffsetLegal(const MachineInstr *MI,
                                          int64_t Offset) const {
+  unsigned FIOperandNum = 0;
+  while (!MI->getOperand(FIOperandNum).isFI()) {
+    ++FIOperandNum;
+    assert(FIOperandNum < MI->getNumOperands() &&
+           "Instr doesn't have FrameIndex operand!");
+  }
+
+  unsigned OffsetOperandNo = getOffsetONFromFION(*MI, FIOperandNum);
+  Offset += MI->getOperand(OffsetOperandNo).getImm();
+
   return MI->getOpcode() == PPC::DBG_VALUE || // DBG_VALUE is always Reg+Imm
          (isInt<16>(Offset) && (!usesIXAddr(*MI) || (Offset & 3) == 0));
 }

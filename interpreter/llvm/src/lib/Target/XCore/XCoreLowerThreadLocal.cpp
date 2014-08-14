@@ -20,10 +20,10 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/NoFolder.h"
+#include "llvm/IR/ValueHandle.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/CommandLine.h"
-#include "llvm/Support/NoFolder.h"
-#include "llvm/Support/ValueHandle.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 
 #define DEBUG_TYPE "xcore-lower-thread-local"
@@ -48,7 +48,7 @@ namespace {
 
     bool lowerGlobal(GlobalVariable *GV);
 
-    bool runOnModule(Module &M);
+    bool runOnModule(Module &M) override;
   };
 }
 
@@ -127,10 +127,7 @@ createReplacementInstr(ConstantExpr *CE, Instruction *Instr) {
 
 static bool replaceConstantExprOp(ConstantExpr *CE, Pass *P) {
   do {
-    SmallVector<WeakVH,8> WUsers;
-    for (Value::use_iterator I = CE->use_begin(), E = CE->use_end();
-         I != E; ++I)
-      WUsers.push_back(WeakVH(*I));
+    SmallVector<WeakVH,8> WUsers(CE->user_begin(), CE->user_end());
     std::sort(WUsers.begin(), WUsers.end());
     WUsers.erase(std::unique(WUsers.begin(), WUsers.end()), WUsers.end());
     while (!WUsers.empty())
@@ -162,9 +159,9 @@ static bool replaceConstantExprOp(ConstantExpr *CE, Pass *P) {
 
 static bool rewriteNonInstructionUses(GlobalVariable *GV, Pass *P) {
   SmallVector<WeakVH,8> WUsers;
-  for (Value::use_iterator I = GV->use_begin(), E = GV->use_end(); I != E; ++I)
-    if (!isa<Instruction>(*I))
-      WUsers.push_back(WeakVH(*I));
+  for (User *U : GV->users())
+    if (!isa<Instruction>(U))
+      WUsers.push_back(WeakVH(U));
   while (!WUsers.empty())
     if (WeakVH WU = WUsers.pop_back_val()) {
       ConstantExpr *CE = dyn_cast<ConstantExpr>(WU);
@@ -192,18 +189,19 @@ bool XCoreLowerThreadLocal::lowerGlobal(GlobalVariable *GV) {
 
   // Create replacement global.
   ArrayType *NewType = createLoweredType(GV->getType()->getElementType());
-  Constant *NewInitializer = 0;
+  Constant *NewInitializer = nullptr;
   if (GV->hasInitializer())
     NewInitializer = createLoweredInitializer(NewType,
                                               GV->getInitializer());
   GlobalVariable *NewGV =
     new GlobalVariable(*M, NewType, GV->isConstant(), GV->getLinkage(),
-                       NewInitializer, "", 0, GlobalVariable::NotThreadLocal,
+                       NewInitializer, "", nullptr,
+                       GlobalVariable::NotThreadLocal,
                        GV->getType()->getAddressSpace(),
                        GV->isExternallyInitialized());
 
   // Update uses.
-  SmallVector<User *, 16> Users(GV->use_begin(), GV->use_end());
+  SmallVector<User *, 16> Users(GV->user_begin(), GV->user_end());
   for (unsigned I = 0, E = Users.size(); I != E; ++I) {
     User *U = Users[I];
     Instruction *Inst = cast<Instruction>(U);

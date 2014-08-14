@@ -15,6 +15,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "LLVMContextImpl.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/DebugLoc.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/DiagnosticPrinter.h"
 #include "llvm/IR/Instruction.h"
@@ -65,6 +66,16 @@ LLVMContext::LLVMContext() : pImpl(new LLVMContextImpl(*this)) {
   unsigned InvariantLdId = getMDKindID("invariant.load");
   assert(InvariantLdId == MD_invariant_load && "invariant.load kind id drifted");
   (void)InvariantLdId;
+
+  // Create the 'alias.scope' metadata kind.
+  unsigned AliasScopeID = getMDKindID("alias.scope");
+  assert(AliasScopeID == MD_alias_scope && "alias.scope kind id drifted");
+  (void)AliasScopeID;
+
+  // Create the 'noalias' metadata kind.
+  unsigned NoAliasID = getMDKindID("noalias");
+  assert(NoAliasID == MD_noalias && "noalias kind id drifted");
+  (void)NoAliasID;
 }
 LLVMContext::~LLVMContext() { delete pImpl; }
 
@@ -114,6 +125,17 @@ void *LLVMContext::getDiagnosticContext() const {
   return pImpl->DiagnosticContext;
 }
 
+void LLVMContext::setYieldCallback(YieldCallbackTy Callback, void *OpaqueHandle)
+{
+  pImpl->YieldCallback = Callback;
+  pImpl->YieldOpaqueHandle = OpaqueHandle;
+}
+
+void LLVMContext::yield() {
+  if (pImpl->YieldCallback)
+    pImpl->YieldCallback(this, pImpl->YieldOpaqueHandle);
+}
+
 void LLVMContext::emitError(const Twine &ErrorStr) {
   diagnose(DiagnosticInfoInlineAsm(ErrorStr));
 }
@@ -125,10 +147,32 @@ void LLVMContext::emitError(const Instruction *I, const Twine &ErrorStr) {
 
 void LLVMContext::diagnose(const DiagnosticInfo &DI) {
   // If there is a report handler, use it.
-  if (pImpl->DiagnosticHandler != 0) {
+  if (pImpl->DiagnosticHandler) {
     pImpl->DiagnosticHandler(DI, pImpl->DiagnosticContext);
     return;
   }
+
+  // Optimization remarks are selective. They need to check whether the regexp
+  // pattern, passed via one of the -pass-remarks* flags, matches the name of
+  // the pass that is emitting the diagnostic. If there is no match, ignore the
+  // diagnostic and return.
+  switch (DI.getKind()) {
+  case llvm::DK_OptimizationRemark:
+    if (!cast<DiagnosticInfoOptimizationRemark>(DI).isEnabled())
+      return;
+    break;
+  case llvm::DK_OptimizationRemarkMissed:
+    if (!cast<DiagnosticInfoOptimizationRemarkMissed>(DI).isEnabled())
+      return;
+    break;
+  case llvm::DK_OptimizationRemarkAnalysis:
+    if (!cast<DiagnosticInfoOptimizationRemarkAnalysis>(DI).isEnabled())
+      return;
+    break;
+  default:
+    break;
+  }
+
   // Otherwise, print the message with a prefix based on the severity.
   std::string MsgStorage;
   raw_string_ostream Stream(MsgStorage);
@@ -141,6 +185,9 @@ void LLVMContext::diagnose(const DiagnosticInfo &DI) {
     exit(1);
   case DS_Warning:
     errs() << "warning: " << MsgStorage << "\n";
+    break;
+  case DS_Remark:
+    errs() << "remark: " << MsgStorage << "\n";
     break;
   case DS_Note:
     errs() << "note: " << MsgStorage << "\n";

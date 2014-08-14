@@ -65,7 +65,7 @@ namespace sys {
     /// It is safe to call this function multiple times for the same library.
     /// @brief Open a dynamic library permanently.
     static DynamicLibrary getPermanentLibrary(const char *filename,
-                                              std::string *errMsg = 0);
+                                              std::string *errMsg = nullptr);
 
     static DynamicLibrary addPermanentLibrary(void *handle);
 
@@ -75,7 +75,7 @@ namespace sys {
     ///
     /// It is safe to call this function multiple times for the same library.
     static bool LoadLibraryPermanently(const char *Filename,
-                                       std::string *ErrMsg = 0) {
+                                       std::string *ErrMsg = nullptr) {
       return !getPermanentLibrary(Filename, ErrMsg).isValid();
     }
 

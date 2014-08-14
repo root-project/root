@@ -234,6 +234,9 @@ struct C : virtual B { int c; };
 // CHECK-NEXT:   24 |     int b
 // CHECK-NEXT:      | [sizeof=28, align=4
 // CHECK-NEXT:      |  nvsize=8, nvalign=4]
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64: *** Dumping AST Record Layout
 }
 
 namespace pragma_test2 {
@@ -260,6 +263,9 @@ struct C : virtual B { int c; };
 // CHECK-NEXT:   32 |     int b
 // CHECK-NEXT:      | [sizeof=36, align=4
 // CHECK-NEXT:      |  nvsize=8, nvalign=4]
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64: *** Dumping AST Record Layout
 }
 
 namespace pragma_test3 {
@@ -284,6 +290,9 @@ struct C : virtual B { int c; };
 // CHECK-NEXT:   24 |     int b
 // CHECK-NEXT:      | [sizeof=28, align=4
 // CHECK-NEXT:      |  nvsize=8, nvalign=4]
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64: *** Dumping AST Record Layout
 }
 
 namespace pragma_test4 {
@@ -324,7 +333,88 @@ struct C : virtual B<int> { int c; };
 // CHECK-NEXT:   28 |     int b
 // CHECK-NEXT:      | [sizeof=32, align=4
 // CHECK-NEXT:      |  nvsize=8, nvalign=4]
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64: *** Dumping AST Record Layout
 }
+
+struct GA {
+	virtual void fun() {}
+};
+struct GB: public GA {};
+struct GC: public virtual GA {
+	virtual void fun() {}
+	GC() {}
+};
+struct GD: public virtual GC, public virtual GB {};
+
+// CHECK: *** Dumping AST Record Layout
+// CHECK: *** Dumping AST Record Layout
+// CHECK: *** Dumping AST Record Layout
+// CHECK: *** Dumping AST Record Layout
+// CHECK-NEXT:    0 | struct GD
+// CHECK-NEXT:    0 |   (GD vbtable pointer)
+// CHECK-NEXT:    4 |   (vtordisp for vbase GA)
+// CHECK-NEXT:    8 |   struct GA (virtual base)
+// CHECK-NEXT:    8 |     (GA vftable pointer)
+// CHECK-NEXT:   12 |   struct GC (virtual base)
+// CHECK-NEXT:   12 |     (GC vbtable pointer)
+// CHECK-NEXT:   16 |   struct GB (virtual base)
+// CHECK-NEXT:   16 |     struct GA (primary base)
+// CHECK-NEXT:   16 |       (GA vftable pointer)
+// CHECK-NEXT:      | [sizeof=20, align=4
+// CHECK-NEXT:      |  nvsize=4, nvalign=4]
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64-NEXT:    0 | struct GD
+// CHECK-X64-NEXT:    0 |   (GD vbtable pointer)
+// CHECK-X64-NEXT:   12 |   (vtordisp for vbase GA)
+// CHECK-X64-NEXT:   16 |   struct GA (virtual base)
+// CHECK-X64-NEXT:   16 |     (GA vftable pointer)
+// CHECK-X64-NEXT:   24 |   struct GC (virtual base)
+// CHECK-X64-NEXT:   24 |     (GC vbtable pointer)
+// CHECK-X64-NEXT:   32 |   struct GB (virtual base)
+// CHECK-X64-NEXT:   32 |     struct GA (primary base)
+// CHECK-X64-NEXT:   32 |       (GA vftable pointer)
+// CHECK-X64-NEXT:      | [sizeof=40, align=8
+// CHECK-X64-NEXT:      |  nvsize=8, nvalign=8]
+
+struct HA {
+  virtual void fun() {}
+};
+#pragma vtordisp(push, 2)
+struct HB : virtual HA {};
+#pragma vtordisp(pop)
+#pragma vtordisp(push, 0)
+struct HC : virtual HB {};
+#pragma vtordisp(pop)
+
+// CHECK: *** Dumping AST Record Layout
+// CHECK: *** Dumping AST Record Layout
+// CHECK: *** Dumping AST Record Layout
+// CHECK-NEXT:    0 | struct HC
+// CHECK-NEXT:    0 |   (HC vbtable pointer)
+// CHECK-NEXT:    4 |   (vtordisp for vbase HA)
+// CHECK-NEXT:    8 |   struct HA (virtual base)
+// CHECK-NEXT:    8 |     (HA vftable pointer)
+// CHECK-NEXT:   12 |   struct HB (virtual base)
+// CHECK-NEXT:   12 |     (HB vbtable pointer)
+// CHECK-NEXT:      | [sizeof=16, align=4
+// CHECK-NEXT:      |  nvsize=4, nvalign=4]
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64: *** Dumping AST Record Layout
+// CHECK-X64-NEXT:    0 | struct HC
+// CHECK-X64-NEXT:    0 |   (HC vbtable pointer)
+// CHECK-X64-NEXT:   12 |   (vtordisp for vbase HA)
+// CHECK-X64-NEXT:   16 |   struct HA (virtual base)
+// CHECK-X64-NEXT:   16 |     (HA vftable pointer)
+// CHECK-X64-NEXT:   24 |   struct HB (virtual base)
+// CHECK-X64-NEXT:   24 |     (HB vbtable pointer)
+// CHECK-X64-NEXT:      | [sizeof=32, align=8
+// CHECK-X64-NEXT:      |  nvsize=8, nvalign=8]
 
 int a[
 sizeof(A)+
@@ -335,4 +425,7 @@ sizeof(XC)+
 sizeof(pragma_test1::C)+
 sizeof(pragma_test2::C)+
 sizeof(pragma_test3::C)+
-sizeof(pragma_test4::C)];
+sizeof(pragma_test4::C)+
+sizeof(GD)+
+sizeof(HC)+
+0];

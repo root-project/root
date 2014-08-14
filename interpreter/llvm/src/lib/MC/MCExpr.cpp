@@ -7,7 +7,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "mcexpr"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/StringSwitch.h"
@@ -22,6 +21,8 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
+
+#define DEBUG_TYPE "mcexpr"
 
 namespace {
 namespace stats {
@@ -179,7 +180,14 @@ StringRef MCSymbolRefExpr::getVariantKindName(VariantKind Kind) {
   case VK_TPOFF: return "TPOFF";
   case VK_DTPOFF: return "DTPOFF";
   case VK_TLVP: return "TLVP";
+  case VK_TLVPPAGE: return "TLVPPAGE";
+  case VK_TLVPPAGEOFF: return "TLVPPAGEOFF";
+  case VK_PAGE: return "PAGE";
+  case VK_PAGEOFF: return "PAGEOFF";
+  case VK_GOTPAGE: return "GOTPAGE";
+  case VK_GOTPAGEOFF: return "GOTPAGEOFF";
   case VK_SECREL: return "SECREL32";
+  case VK_WEAKREF: return "WEAKREF";
   case VK_ARM_NONE: return "none";
   case VK_ARM_TARGET1: return "target1";
   case VK_ARM_TARGET2: return "target2";
@@ -263,6 +271,8 @@ StringRef MCSymbolRefExpr::getVariantKindName(VariantKind Kind) {
   case VK_Mips_GOT_LO16: return "GOT_LO16";
   case VK_Mips_CALL_HI16: return "CALL_HI16";
   case VK_Mips_CALL_LO16: return "CALL_LO16";
+  case VK_Mips_PCREL_HI16: return "PCREL_HI16";
+  case VK_Mips_PCREL_LO16: return "PCREL_LO16";
   case VK_COFF_IMGREL32: return "IMGREL32";
   }
   llvm_unreachable("Invalid variant kind");
@@ -277,6 +287,8 @@ MCSymbolRefExpr::getVariantKindForName(StringRef Name) {
     .Case("gotoff", VK_GOTOFF)
     .Case("GOTPCREL", VK_GOTPCREL)
     .Case("gotpcrel", VK_GOTPCREL)
+    .Case("GOT_PREL", VK_GOTPCREL)
+    .Case("got_prel", VK_GOTPCREL)
     .Case("GOTTPOFF", VK_GOTTPOFF)
     .Case("gottpoff", VK_GOTTPOFF)
     .Case("INDNTPOFF", VK_INDNTPOFF)
@@ -299,6 +311,18 @@ MCSymbolRefExpr::getVariantKindForName(StringRef Name) {
     .Case("dtpoff", VK_DTPOFF)
     .Case("TLVP", VK_TLVP)
     .Case("tlvp", VK_TLVP)
+    .Case("TLVPPAGE", VK_TLVPPAGE)
+    .Case("tlvppage", VK_TLVPPAGE)
+    .Case("TLVPPAGEOFF", VK_TLVPPAGEOFF)
+    .Case("tlvppageoff", VK_TLVPPAGEOFF)
+    .Case("PAGE", VK_PAGE)
+    .Case("page", VK_PAGE)
+    .Case("PAGEOFF", VK_PAGEOFF)
+    .Case("pageoff", VK_PAGEOFF)
+    .Case("GOTPAGE", VK_GOTPAGE)
+    .Case("gotpage", VK_GOTPAGE)
+    .Case("GOTPAGEOFF", VK_GOTPAGEOFF)
+    .Case("gotpageoff", VK_GOTPAGEOFF)
     .Case("IMGREL", VK_COFF_IMGREL32)
     .Case("imgrel", VK_COFF_IMGREL32)
     .Case("SECREL32", VK_SECREL)
@@ -425,12 +449,12 @@ void MCTargetExpr::anchor() {}
 /* *** */
 
 bool MCExpr::EvaluateAsAbsolute(int64_t &Res) const {
-  return EvaluateAsAbsolute(Res, 0, 0, 0);
+  return EvaluateAsAbsolute(Res, nullptr, nullptr, nullptr);
 }
 
 bool MCExpr::EvaluateAsAbsolute(int64_t &Res,
                                 const MCAsmLayout &Layout) const {
-  return EvaluateAsAbsolute(Res, &Layout.getAssembler(), &Layout, 0);
+  return EvaluateAsAbsolute(Res, &Layout.getAssembler(), &Layout, nullptr);
 }
 
 bool MCExpr::EvaluateAsAbsolute(int64_t &Res,
@@ -440,7 +464,7 @@ bool MCExpr::EvaluateAsAbsolute(int64_t &Res,
 }
 
 bool MCExpr::EvaluateAsAbsolute(int64_t &Res, const MCAssembler &Asm) const {
-  return EvaluateAsAbsolute(Res, &Asm, 0, 0);
+  return EvaluateAsAbsolute(Res, &Asm, nullptr, nullptr);
 }
 
 bool MCExpr::EvaluateAsAbsolute(int64_t &Res, const MCAssembler *Asm,
@@ -458,7 +482,8 @@ bool MCExpr::EvaluateAsAbsolute(int64_t &Res, const MCAssembler *Asm,
   // absolutize differences across sections and that is what the MachO writer
   // uses Addrs for.
   bool IsRelocatable =
-    EvaluateAsRelocatableImpl(Value, Asm, Layout, Addrs, /*InSet*/ Addrs);
+      EvaluateAsRelocatableImpl(Value, Asm, Layout, Addrs, /*InSet*/ Addrs,
+                                /*ForceVarExpansion*/ false);
 
   // Record the current value.
   Res = Value.getConstant();
@@ -486,8 +511,8 @@ static void AttemptToFoldSymbolOffsetDifference(const MCAssembler *Asm,
   if (!Asm->getWriter().IsSymbolRefDifferenceFullyResolved(*Asm, A, B, InSet))
     return;
 
-  MCSymbolData &AD = Asm->getSymbolData(SA);
-  MCSymbolData &BD = Asm->getSymbolData(SB);
+  const MCSymbolData &AD = Asm->getSymbolData(SA);
+  const MCSymbolData &BD = Asm->getSymbolData(SB);
 
   if (AD.getFragment() == BD.getFragment()) {
     Addend += (AD.getOffset() - BD.getOffset());
@@ -499,7 +524,7 @@ static void AttemptToFoldSymbolOffsetDifference(const MCAssembler *Asm,
 
     // Clear the symbol expr pointers to indicate we have folded these
     // operands.
-    A = B = 0;
+    A = B = nullptr;
     return;
   }
 
@@ -525,7 +550,7 @@ static void AttemptToFoldSymbolOffsetDifference(const MCAssembler *Asm,
 
   // Clear the symbol expr pointers to indicate we have folded these
   // operands.
-  A = B = 0;
+  A = B = nullptr;
 }
 
 /// \brief Evaluate the result of an add between (conceptually) two MCValues.
@@ -607,16 +632,22 @@ static bool EvaluateSymbolicAdd(const MCAssembler *Asm,
 }
 
 bool MCExpr::EvaluateAsRelocatable(MCValue &Res,
-                                   const MCAsmLayout &Layout) const {
-  return EvaluateAsRelocatableImpl(Res, &Layout.getAssembler(), &Layout,
-                                   0, false);
+                                   const MCAsmLayout *Layout) const {
+  MCAssembler *Assembler = Layout ? &Layout->getAssembler() : nullptr;
+  return EvaluateAsRelocatableImpl(Res, Assembler, Layout, nullptr, false,
+                                   /*ForceVarExpansion*/ false);
 }
 
-bool MCExpr::EvaluateAsRelocatableImpl(MCValue &Res,
-                                       const MCAssembler *Asm,
+bool MCExpr::EvaluateAsValue(MCValue &Res, const MCAsmLayout *Layout) const {
+  MCAssembler *Assembler = Layout ? &Layout->getAssembler() : nullptr;
+  return EvaluateAsRelocatableImpl(Res, Assembler, Layout, nullptr, false,
+                                   /*ForceVarExpansion*/ true);
+}
+
+bool MCExpr::EvaluateAsRelocatableImpl(MCValue &Res, const MCAssembler *Asm,
                                        const MCAsmLayout *Layout,
-                                       const SectionAddrMap *Addrs,
-                                       bool InSet) const {
+                                       const SectionAddrMap *Addrs, bool InSet,
+                                       bool ForceVarExpansion) const {
   ++stats::MCExprEvaluate;
 
   switch (getKind()) {
@@ -630,20 +661,35 @@ bool MCExpr::EvaluateAsRelocatableImpl(MCValue &Res,
   case SymbolRef: {
     const MCSymbolRefExpr *SRE = cast<MCSymbolRefExpr>(this);
     const MCSymbol &Sym = SRE->getSymbol();
+    const MCAsmInfo &MCAsmInfo = SRE->getMCAsmInfo();
 
     // Evaluate recursively if this is a variable.
     if (Sym.isVariable() && SRE->getKind() == MCSymbolRefExpr::VK_None) {
-      bool Ret = Sym.getVariableValue()->EvaluateAsRelocatableImpl(Res, Asm,
-                                                                   Layout,
-                                                                   Addrs,
-                                                                   true);
-      // If we failed to simplify this to a constant, let the target
-      // handle it.
-      if (Ret && !Res.getSymA() && !Res.getSymB())
-        return true;
+      if (Sym.getVariableValue()->EvaluateAsRelocatableImpl(
+              Res, Asm, Layout, Addrs, true, ForceVarExpansion)) {
+        const MCSymbolRefExpr *A = Res.getSymA();
+        const MCSymbolRefExpr *B = Res.getSymB();
+
+        if (MCAsmInfo.hasSubsectionsViaSymbols()) {
+          // FIXME: This is small hack. Given
+          // a = b + 4
+          // .long a
+          // the OS X assembler will completely drop the 4. We should probably
+          // include it in the relocation or produce an error if that is not
+          // possible.
+          if (!A && !B)
+            return true;
+        } else {
+          if (ForceVarExpansion)
+            return true;
+          bool IsSymbol = A && A->getSymbol().isDefined();
+          if (!IsSymbol)
+            return true;
+        }
+      }
     }
 
-    Res = MCValue::get(SRE, 0, 0);
+    Res = MCValue::get(SRE, nullptr, 0);
     return true;
   }
 
@@ -651,8 +697,8 @@ bool MCExpr::EvaluateAsRelocatableImpl(MCValue &Res,
     const MCUnaryExpr *AUE = cast<MCUnaryExpr>(this);
     MCValue Value;
 
-    if (!AUE->getSubExpr()->EvaluateAsRelocatableImpl(Value, Asm, Layout,
-                                                      Addrs, InSet))
+    if (!AUE->getSubExpr()->EvaluateAsRelocatableImpl(Value, Asm, Layout, Addrs,
+                                                      InSet, ForceVarExpansion))
       return false;
 
     switch (AUE->getOpcode()) {
@@ -685,10 +731,10 @@ bool MCExpr::EvaluateAsRelocatableImpl(MCValue &Res,
     const MCBinaryExpr *ABE = cast<MCBinaryExpr>(this);
     MCValue LHSValue, RHSValue;
 
-    if (!ABE->getLHS()->EvaluateAsRelocatableImpl(LHSValue, Asm, Layout,
-                                                  Addrs, InSet) ||
-        !ABE->getRHS()->EvaluateAsRelocatableImpl(RHSValue, Asm, Layout,
-                                                  Addrs, InSet))
+    if (!ABE->getLHS()->EvaluateAsRelocatableImpl(LHSValue, Asm, Layout, Addrs,
+                                                  InSet, ForceVarExpansion) ||
+        !ABE->getRHS()->EvaluateAsRelocatableImpl(RHSValue, Asm, Layout, Addrs,
+                                                  InSet, ForceVarExpansion))
       return false;
 
     // We only support a few operations on non-constant expressions, handle
@@ -762,7 +808,7 @@ const MCSection *MCExpr::FindAssociatedSection() const {
     if (Sym.isDefined())
       return &Sym.getSection();
 
-    return 0;
+    return nullptr;
   }
 
   case Unary:

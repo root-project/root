@@ -22,7 +22,7 @@
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/Twine.h"
-#include "llvm/Support/type_traits.h"
+#include <memory>
 #include <vector>
 
 namespace clang {
@@ -49,7 +49,8 @@ class VariantMatcher {
   class MatcherOps {
   public:
     virtual ~MatcherOps();
-    virtual bool canConstructFrom(const DynTypedMatcher &Matcher) const = 0;
+    virtual bool canConstructFrom(const DynTypedMatcher &Matcher,
+                                  bool &IsExactMatch) const = 0;
     virtual void constructFrom(const DynTypedMatcher &Matcher) = 0;
     virtual void constructVariadicOperator(
         ast_matchers::internal::VariadicOperatorFunction Func,
@@ -77,14 +78,15 @@ public:
   /// \brief Clones the provided matchers.
   ///
   /// They should be the result of a polymorphic matcher.
-  static VariantMatcher PolymorphicMatcher(ArrayRef<DynTypedMatcher> Matchers);
+  static VariantMatcher
+  PolymorphicMatcher(std::vector<DynTypedMatcher> Matchers);
 
   /// \brief Creates a 'variadic' operator matcher.
   ///
   /// It will bind to the appropriate type on getTypedMatcher<T>().
   static VariantMatcher VariadicOperatorMatcher(
       ast_matchers::internal::VariadicOperatorFunction Func,
-      ArrayRef<VariantMatcher> Args);
+      std::vector<VariantMatcher> Args);
 
   /// \brief Makes the matcher the "null" matcher.
   void reset();
@@ -144,7 +146,10 @@ private:
   public:
     typedef ast_matchers::internal::Matcher<T> MatcherT;
 
-    virtual bool canConstructFrom(const DynTypedMatcher &Matcher) const {
+    virtual bool canConstructFrom(const DynTypedMatcher &Matcher,
+                                  bool &IsExactMatch) const {
+      IsExactMatch = Matcher.getSupportedKind().isSame(
+          ast_type_traits::ASTNodeKind::getFromNodeKind<T>());
       return Matcher.canConvertTo<T>();
     }
 
@@ -169,11 +174,11 @@ private:
               Func, DynMatchers)));
     }
 
-    bool hasMatcher() const { return Out.get() != NULL; }
+    bool hasMatcher() const { return Out.get() != nullptr; }
     const MatcherT &matcher() const { return *Out; }
 
   private:
-    OwningPtr<MatcherT> Out;
+    std::unique_ptr<MatcherT> Out;
   };
 
   IntrusiveRefCntPtr<const Payload> Value;
@@ -203,6 +208,10 @@ public:
   VariantValue(unsigned Unsigned);
   VariantValue(const std::string &String);
   VariantValue(const VariantMatcher &Matchers);
+
+  /// \brief Returns true iff this is not an empty value.
+  LLVM_EXPLICIT operator bool() const { return hasValue(); }
+  bool hasValue() const { return Type != VT_Nothing; }
 
   /// \brief Unsigned value functions.
   bool isUnsigned() const;

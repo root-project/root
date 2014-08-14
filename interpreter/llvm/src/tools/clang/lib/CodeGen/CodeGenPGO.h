@@ -18,62 +18,47 @@
 #include "CodeGenModule.h"
 #include "CodeGenTypes.h"
 #include "clang/Frontend/CodeGenOptions.h"
-#include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include <memory>
 
 namespace clang {
 namespace CodeGen {
 class RegionCounter;
-
-/// The raw counter data from an instrumented PGO binary
-class PGOProfileData {
-private:
-  /// The PGO data
-  llvm::OwningPtr<llvm::MemoryBuffer> DataBuffer;
-  /// Offsets into DataBuffer for each function's counters
-  llvm::StringMap<unsigned> DataOffsets;
-  /// Execution counts for each function.
-  llvm::StringMap<uint64_t> FunctionCounts;
-  /// The maximal execution count among all functions.
-  uint64_t MaxFunctionCount;
-  CodeGenModule &CGM;
-public:
-  PGOProfileData(CodeGenModule &CGM, std::string Path);
-  /// Fill Counts with the profile data for the given function name. Returns
-  /// false on success.
-  bool getFunctionCounts(StringRef MangledName, std::vector<uint64_t> &Counts);
-  /// Return true if a function is hot. If we know nothing about the function,
-  /// return false.
-  bool isHotFunction(StringRef MangledName);
-  /// Return true if a function is cold. If we know nothing about the function,
-  /// return false.
-  bool isColdFunction(StringRef MangledName);
-};
 
 /// Per-function PGO state. This class should generally not be used directly,
 /// but instead through the CodeGenFunction and RegionCounter types.
 class CodeGenPGO {
 private:
   CodeGenModule &CGM;
+  std::unique_ptr<std::string> PrefixedFuncName;
+  StringRef RawFuncName;
+  llvm::GlobalValue::LinkageTypes VarLinkage;
 
   unsigned NumRegionCounters;
+  uint64_t FunctionHash;
   llvm::GlobalVariable *RegionCounters;
-  llvm::DenseMap<const Stmt*, unsigned> *RegionCounterMap;
-  llvm::DenseMap<const Stmt*, uint64_t> *StmtCountMap;
-  std::vector<uint64_t> *RegionCounts;
+  std::unique_ptr<llvm::DenseMap<const Stmt *, unsigned>> RegionCounterMap;
+  std::unique_ptr<llvm::DenseMap<const Stmt *, uint64_t>> StmtCountMap;
+  std::unique_ptr<std::vector<uint64_t>> RegionCounts;
   uint64_t CurrentRegionCount;
 
 public:
   CodeGenPGO(CodeGenModule &CGM)
-    : CGM(CGM), NumRegionCounters(0), RegionCounters(0), RegionCounterMap(0),
-      StmtCountMap(0), RegionCounts(0), CurrentRegionCount(0) {}
-  ~CodeGenPGO() {}
+      : CGM(CGM), NumRegionCounters(0), FunctionHash(0),
+        RegionCounters(nullptr), CurrentRegionCount(0) {}
 
   /// Whether or not we have PGO region data for the current function. This is
   /// false both when we have no data at all and when our data has been
   /// discarded.
-  bool haveRegionCounts() const { return RegionCounts != 0; }
+  bool haveRegionCounts() const { return RegionCounts != nullptr; }
+
+  /// Get the string used to identify this function in the profile data.
+  /// For functions with local linkage, this includes the main file name.
+  StringRef getFuncName() const { return StringRef(*PrefixedFuncName); }
+  std::string getFuncVarName(StringRef VarName) const {
+    return ("__llvm_profile_" + VarName + "_" + RawFuncName).str();
+  }
 
   /// Return the counter value of the current region.
   uint64_t getCurrentRegionCount() const { return CurrentRegionCount; }
@@ -118,21 +103,25 @@ public:
   /// function. Does nothing if instrumentation is not enabled and either
   /// generates global variables or associates PGO data with each of the
   /// counters depending on whether we are generating or using instrumentation.
-  void assignRegionCounters(GlobalDecl &GD);
-  /// Emit code to write counts for a given function to disk, if necessary.
-  void emitWriteoutFunction(GlobalDecl &GD);
+  void assignRegionCounters(const Decl *D, llvm::Function *Fn);
+  /// Emit static data structures for instrumentation data.
+  void emitInstrumentationData();
   /// Clean up region counter state. Must be called if assignRegionCounters is
   /// used.
   void destroyRegionCounters();
-  /// Emit the logic to register region counter write out functions. Returns a
-  /// function that implements this logic.
+  /// Emit static initialization code, if any.
   static llvm::Function *emitInitialization(CodeGenModule &CGM);
 
 private:
+  void setFuncName(llvm::Function *Fn);
   void mapRegionCounters(const Decl *D);
   void computeRegionCounts(const Decl *D);
-  void loadRegionCounts(GlobalDecl &GD, PGOProfileData *PGOData);
+  void applyFunctionAttributes(llvm::IndexedInstrProfReader *PGOReader,
+                               llvm::Function *Fn);
+  void loadRegionCounts(llvm::IndexedInstrProfReader *PGOReader,
+                        bool IsInMainFile);
   void emitCounterVariables();
+  llvm::GlobalVariable *buildDataVar();
 
   /// Emit code to increment the counter at the given index
   void emitCounterIncrement(CGBuilderTy &Builder, unsigned Counter);
@@ -140,7 +129,7 @@ private:
   /// Return the region counter for the given statement. This should only be
   /// called on statements that have a dedicated counter.
   unsigned getRegionCounter(const Stmt *S) {
-    if (RegionCounterMap == 0)
+    if (!RegionCounterMap)
       return 0;
     return (*RegionCounterMap)[S];
   }

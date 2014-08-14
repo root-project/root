@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 -triple x86_64-apple-macos10.7.0 -verify -fopenmp -ferror-limit 100 %s
+// RUN: %clang_cc1 -triple x86_64-apple-macos10.7.0 -verify -fopenmp=libiomp5 -ferror-limit 100 %s
 
 #pragma omp threadprivate // expected-error {{expected '(' after 'threadprivate'}}
 #pragma omp threadprivate( // expected-error {{expected identifier}} expected-error {{expected ')'}} expected-note {{to match this '('}}
@@ -55,17 +55,17 @@ extern IncompleteSt e;
 int &f = a; // expected-note {{'f' defined here}}
 #pragma omp threadprivate (f) // expected-error {{arguments of '#pragma omp threadprivate' cannot be of reference type 'int &'}}
 
-class Class {
+class TestClass {
   private:
     int a; // expected-note {{declared here}}
     static int b; // expected-note {{'b' declared here}}
-    Class() : a(0){}
+    TestClass() : a(0){}
   public:
-    Class (int aaa) : a(aaa) {}
+    TestClass (int aaa) : a(aaa) {}
 #pragma omp threadprivate (b, a) // expected-error {{'a' is not a global variable, static local variable or static data member}}
 } g(10);
 #pragma omp threadprivate (b) // expected-error {{use of undeclared identifier 'b'}}
-#pragma omp threadprivate (Class::b) // expected-error {{'#pragma omp threadprivate' must appear in the scope of the 'Class::b' variable declaration}}
+#pragma omp threadprivate (TestClass::b) // expected-error {{'#pragma omp threadprivate' must appear in the scope of the 'TestClass::b' variable declaration}}
 #pragma omp threadprivate (g)
 
 namespace ns {
@@ -99,19 +99,21 @@ static __thread int t; // expected-note {{'t' defined here}}
 int o; // expected-note {{candidate found by name lookup is 'o'}}
 #pragma omp threadprivate (o)
 namespace {
-int o; // expected-note {{candidate found by name lookup is '<anonymous namespace>::o'}}
+int o; // expected-note {{candidate found by name lookup is '(anonymous namespace)::o'}}
 #pragma omp threadprivate (o)
-#pragma omp threadprivate (o) // expected-error {{'#pragma omp threadprivate' must precede all references to variable '<anonymous namespace>::o'}}
+#pragma omp threadprivate (o) // expected-error {{'#pragma omp threadprivate' must precede all references to variable '(anonymous namespace)::o'}}
 }
 #pragma omp threadprivate (o) // expected-error {{reference to 'o' is ambiguous}}
 #pragma omp threadprivate (::o) // expected-error {{'#pragma omp threadprivate' must precede all references to variable 'o'}}
 
 int main(int argc, char **argv) { // expected-note {{'argc' defined here}}
 
-  int x, y = argc; // expected-note {{'y' defined here}}
+  int x, y = argc; // expected-note 2 {{'y' defined here}}
   static double d1;
   static double d2;
   static double d3; // expected-note {{'d3' defined here}}
+  static TestClass LocalClass(y); // expected-error {{variable with local storage in initial value of threadprivate variable}}
+#pragma omp threadprivate(LocalClass)
 
   d.a = a;
   d2++;

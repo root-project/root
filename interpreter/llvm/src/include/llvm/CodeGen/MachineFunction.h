@@ -20,9 +20,10 @@
 
 #include "llvm/ADT/ilist.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
+#include "llvm/IR/DebugLoc.h"
+#include "llvm/IR/Metadata.h"
 #include "llvm/Support/Allocator.h"
 #include "llvm/Support/ArrayRecycler.h"
-#include "llvm/Support/DebugLoc.h"
 #include "llvm/Support/Recycler.h"
 
 namespace llvm {
@@ -227,19 +228,14 @@ public:
   void setHasInlineAsm(bool B) {
     HasInlineAsm = B;
   }
-  
+
   /// getInfo - Keep track of various per-function pieces of information for
   /// backends that would like to do so.
   ///
   template<typename Ty>
   Ty *getInfo() {
-    if (!MFInfo) {
-        // This should be just `new (Allocator.Allocate<Ty>()) Ty(*this)', but
-        // that apparently breaks GCC 3.3.
-        Ty *Loc = static_cast<Ty*>(Allocator.Allocate(sizeof(Ty),
-                                                      AlignOf<Ty>::Alignment));
-        MFInfo = new (Loc) Ty(*this);
-    }
+    if (!MFInfo)
+      MFInfo = new (Allocator.Allocate<Ty>()) Ty(*this);
     return static_cast<Ty*>(MFInfo);
   }
 
@@ -259,6 +255,9 @@ public:
     return MBBNumbering[N];
   }
 
+  /// Should we be emitting segmented stack stuff for the function
+  bool shouldSplitStack();
+
   /// getNumBlockIDs - Return the number of MBB ID's allocated.
   ///
   unsigned getNumBlockIDs() const { return (unsigned)MBBNumbering.size(); }
@@ -268,12 +267,12 @@ public:
   /// dense, and match the ordering of the blocks within the function.  If a
   /// specific MachineBasicBlock is specified, only that block and those after
   /// it are renumbered.
-  void RenumberBlocks(MachineBasicBlock *MBBFrom = 0);
+  void RenumberBlocks(MachineBasicBlock *MBBFrom = nullptr);
   
   /// print - Print out the MachineFunction in a format suitable for debugging
   /// to the specified stream.
   ///
-  void print(raw_ostream &OS, SlotIndexes* = 0) const;
+  void print(raw_ostream &OS, SlotIndexes* = nullptr) const;
 
   /// viewCFG - This function is meant for use from the debugger.  You can just
   /// say 'call F->viewCFG()' and a ghostview window should pop up from the
@@ -296,7 +295,7 @@ public:
 
   /// verify - Run the current MachineFunction through the machine code
   /// verifier, useful for debugger use.
-  void verify(Pass *p = NULL, const char *Banner = NULL) const;
+  void verify(Pass *p = nullptr, const char *Banner = nullptr) const;
 
   // Provide accessors for the MachineBasicBlock list...
   typedef BasicBlockListType::iterator iterator;
@@ -364,7 +363,7 @@ public:
   /// implementation.
   void removeFromMBBNumbering(unsigned N) {
     assert(N < MBBNumbering.size() && "Illegal basic block #");
-    MBBNumbering[N] = 0;
+    MBBNumbering[N] = nullptr;
   }
 
   /// CreateMachineInstr - Allocate a new MachineInstr. Use this instead
@@ -389,7 +388,7 @@ public:
   /// CreateMachineBasicBlock - Allocate a new MachineBasicBlock. Use this
   /// instead of `new MachineBasicBlock'.
   ///
-  MachineBasicBlock *CreateMachineBasicBlock(const BasicBlock *bb = 0);
+  MachineBasicBlock *CreateMachineBasicBlock(const BasicBlock *bb = nullptr);
 
   /// DeleteMachineBasicBlock - Delete the given MachineBasicBlock.
   ///
@@ -401,8 +400,8 @@ public:
   MachineMemOperand *getMachineMemOperand(MachinePointerInfo PtrInfo,
                                           unsigned f, uint64_t s,
                                           unsigned base_alignment,
-                                          const MDNode *TBAAInfo = 0,
-                                          const MDNode *Ranges = 0);
+                                          const AAMDNodes &AAInfo = AAMDNodes(),
+                                          const MDNode *Ranges = nullptr);
   
   /// getMachineMemOperand - Allocate a new MachineMemOperand by copying
   /// an existing one, adjusting by an offset and using the given size.

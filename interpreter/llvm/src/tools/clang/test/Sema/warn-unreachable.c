@@ -1,4 +1,4 @@
-// RUN: %clang_cc1 %s -fsyntax-only -verify -fblocks -Wunreachable-code -Wno-unused-value -Wno-covered-switch-default -I %S/Inputs
+// RUN: %clang_cc1 %s -fsyntax-only -verify -fblocks -Wunreachable-code-aggressive -Wno-unused-value -Wno-covered-switch-default -I %S/Inputs
 
 #include "warn-unreachable.h"
 
@@ -136,7 +136,7 @@ void PR9774(int *s) {
 
 // Test case for <rdar://problem/11005770>.  We should treat code guarded
 // by 'x & 0' and 'x * 0' as unreachable.
-void calledFun();
+int calledFun();
 void test_mul_and_zero(int x) {
   if (x & 0) calledFun(); // expected-warning {{will never be executed}}
   if (0 & x) calledFun(); // expected-warning {{will never be executed}}
@@ -151,16 +151,17 @@ int test_break_preceded_by_noreturn(int i) {
   switch (i) {
     case 1:
       raze();
-      break; // no-warning
+      break; // expected-warning {{'break' will never be executed}}
     case 2:
       raze();
-      break; // no-warning
+      break; // expected-warning {{'break' will never be executed}}
       warn_here(); // expected-warning {{will never be executed}}
     case 3:
       return 1;
       break; // expected-warning {{will never be executed}}
     default:
       break;
+      break; // expected-warning {{will never be executed}}
   }
   return i;
 }
@@ -193,13 +194,205 @@ void unreachable_in_default(MyEnum e) {
 // Don't warn about trivial dead returns.
 int trivial_dead_return() {
   raze();
-  // Use the '()' to test that we unwrap such stuff
-  // when looking for dead code.
-  return ((0)); // no-warning
+  return ((0)); // expected-warning {{'return' will never be executed}}
 }
 
-MyEnum trival_dead_return_enum() {
+void trivial_dead_return_void() {
+  raze();
+  return; // expected-warning {{'return' will never be executed}}
+}
+
+MyEnum trivial_dead_return_enum() {
+  raze();
+  return Value1; // expected-warning {{'return' will never be executed}}
+}
+
+MyEnum trivial_dead_return_enum_2(int x) {
+  switch (x) {
+    case 1: return 1;
+    case 2: return 2;
+    case 3: return 3;
+    default: return 4;
+  }
+
+  return 2; // expected-warning {{will never be executed}}
+}
+
+const char *trivial_dead_return_cstr() {
+  raze();
+  return ""; // expected-warning {{return' will never be executed}}
+}
+
+char trivial_dead_return_char() {
+  raze();
+  return ' '; // expected-warning {{return' will never be executed}}
+}
+
+MyEnum nontrivial_dead_return_enum_2(int x) {
+  switch (x) {
+    case 1: return 1;
+    case 2: return 2;
+    case 3: return 3;
+    default: return 4;
+  }
+
+  return calledFun(); // expected-warning {{will never be executed}}
+}
+
+enum X { A, B, C };
+
+int covered_switch(enum X x) {
+  switch (x) {
+  case A: return 1;
+  case B: return 2;
+  case C: return 3;
+  }
+  return 4; // no-warning
+}
+
+// Test unreachable code depending on configuration values
+#define CONFIG_CONSTANT 1
+int test_config_constant(int x) {
+  if (!CONFIG_CONSTANT) {
+    calledFun(); // no-warning
+    return 1;
+  }
+  if (!1) { // expected-note {{silence by adding parentheses to mark code as explicitly dead}}
+    calledFun(); // expected-warning {{will never be executed}}
+    return 1;
+  }
+  if (sizeof(int) > sizeof(char)) {
+    calledFun(); // no-warning
+    return 1;
+  }
+  if (x > 10)
+    return CONFIG_CONSTANT ? calledFun() : calledFun(); // no-warning
+  else
+    return 1 ? // expected-note {{silence by adding parentheses to mark code as explicitly dead}}
+      calledFun() :
+      calledFun(); // expected-warning {{will never be executed}}
+}
+
+int sizeof_int(int x, int y) {
+  if (sizeof(long) == sizeof(int))
+    return 1; // no-warning
+  if (sizeof(long) != sizeof(int))
+    return 0; // no-warning
+  if (x && y && sizeof(long) < sizeof(char))
+    return 0; // no-warning
+  return 2; // no-warning
+}
+
+enum MyEnum2 {
+  ME_A = CONFIG_CONSTANT,
+  ME_B = 1
+};
+
+int test_MyEnum() {
+  if (!ME_A)
+    return 1; // no-warning
+  if (ME_A)
+    return 2; // no-warning
+  if (ME_B)
+    return 3;
+  if (!ME_B) // expected-warning {{will never be executed}}
+    return 4; // expected-warning {{will never be executed}}
+  return 5;
+}
+
+// Test for idiomatic do..while.
+int test_do_while(int x) {
+  do {
+    if (x == calledFun())
+      break;
+    ++x;
+    break;
+  }
+  while (0); // no-warning
+  return x;
+}
+
+int test_do_while_nontrivial_cond(int x) {
+  do {
+    if (x == calledFun())
+      break;
+    ++x;
+    break;
+  }
+  while (calledFun()); // expected-warning {{will never be executed}}
+  return x;
+}
+
+// Diagnostic control: -Wunreachable-code-return.
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code-return"
+
+void trivial_dead_return_void_SUPPRESSED() {
+  raze();
+  return; // no-warning
+}
+
+MyEnum trivial_dead_return_enum_SUPPRESSED() {
   raze();
   return Value1; // no-warning
 }
 
+#pragma clang diagnostic pop
+
+// Diagnostic control: -Wunreachable-code-break.
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code-break"
+
+int test_break_preceded_by_noreturn_SUPPRESSED(int i) {
+  switch (i) {
+    case 1:
+      raze();
+      break; // no-warning
+    case 2:
+      raze();
+      break; // no-warning
+      warn_here(); // expected-warning {{will never be executed}}
+    case 3:
+      return 1;
+      break; // no-warning
+    default:
+      break;
+      break; // no-warning
+  }
+  return i;
+}
+
+#pragma clang diagnostic pop
+
+// Test "silencing" with parentheses.
+void test_with_paren_silencing(int x) {
+  if (0) calledFun(); // expected-warning {{will never be executed}} expected-note {{silence by adding parentheses to mark code as explicitly dead}}
+  if ((0)) calledFun(); // no-warning
+
+  if (1) // expected-note {{silence by adding parentheses to mark code as explicitly dead}}
+    calledFun();
+  else
+    calledFun(); // expected-warning {{will never be executed}}
+
+  if ((1))
+    calledFun();
+  else
+    calledFun(); // no-warning
+  
+  if (!1) // expected-note {{silence by adding parentheses to mark code as explicitly dead}}
+    calledFun(); // expected-warning {{code will never be executed}}
+  else
+    calledFun();
+  
+  if ((!1))
+    calledFun(); // no-warning
+  else
+    calledFun();
+  
+  if (!(1))
+    calledFun(); // no-warning
+  else
+    calledFun();
+}

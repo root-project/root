@@ -25,7 +25,8 @@ DelayedDiagnostic::makeAvailability(Sema::AvailabilityDiagnostic AD,
                                     const NamedDecl *D,
                                     const ObjCInterfaceDecl *UnknownObjCClass,
                                     const ObjCPropertyDecl  *ObjCProperty,
-                                    StringRef Msg) {
+                                    StringRef Msg,
+                                    bool ObjCPropertyAccess) {
   DelayedDiagnostic DD;
   switch (AD) {
     case Sema::AD_Deprecation:
@@ -40,7 +41,7 @@ DelayedDiagnostic::makeAvailability(Sema::AvailabilityDiagnostic AD,
   DD.DeprecationData.Decl = D;
   DD.DeprecationData.UnknownObjCClass = UnknownObjCClass;
   DD.DeprecationData.ObjCProperty = ObjCProperty;
-  char *MessageData = 0;
+  char *MessageData = nullptr;
   if (Msg.size()) {
     MessageData = new char [Msg.size()];
     memcpy(MessageData, Msg.data(), Msg.size());
@@ -48,16 +49,18 @@ DelayedDiagnostic::makeAvailability(Sema::AvailabilityDiagnostic AD,
 
   DD.DeprecationData.Message = MessageData;
   DD.DeprecationData.MessageLen = Msg.size();
+  DD.DeprecationData.ObjCPropertyAccess = ObjCPropertyAccess;
   return DD;
 }
 
 void DelayedDiagnostic::Destroy() {
-  switch (Kind) {
+  switch (static_cast<DDKind>(Kind)) {
   case Access: 
     getAccessData().~AccessedEntity(); 
     break;
 
-  case Deprecation: 
+  case Deprecation:
+  case Unavailable:
     delete [] DeprecationData.Message;
     break;
 

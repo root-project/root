@@ -38,11 +38,11 @@ private:
 
 public:
   R600ExpandSpecialInstrsPass(TargetMachine &tm) : MachineFunctionPass(ID),
-    TII(0) { }
+    TII(nullptr) { }
 
-  virtual bool runOnMachineFunction(MachineFunction &MF);
+  bool runOnMachineFunction(MachineFunction &MF) override;
 
-  const char *getPassName() const {
+  const char *getPassName() const override {
     return "R600 Expand special instructions pass";
   }
 };
@@ -75,7 +75,7 @@ bool R600ExpandSpecialInstrsPass::runOnMachineFunction(MachineFunction &MF) {
     MachineBasicBlock::iterator I = MBB.begin();
     while (I != MBB.end()) {
       MachineInstr &MI = *I;
-      I = llvm::next(I);
+      I = std::next(I);
 
       // Expand LDS_*_RET instructions
       if (TII->isLDSRetInstr(MI.getOpcode())) {

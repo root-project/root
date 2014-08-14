@@ -336,7 +336,7 @@ Making a Major Change
 ---------------------
 
 When a developer begins a major new project with the aim of contributing it back
-to LLVM, s/he should inform the community with an email to the `llvmdev
+to LLVM, they should inform the community with an email to the `llvmdev
 <http://lists.cs.uiuc.edu/mailman/listinfo/llvmdev>`_ email list, to the extent
 possible. The reason for this is to:
 
@@ -435,6 +435,29 @@ etc.). The author should first submit them to the relevant project's commit
 list, development list, or LLVM bug tracker component. If someone sends you
 a patch privately, encourage them to submit it to the appropriate list first.
 
+
+IR Backwards Compatibility
+--------------------------
+
+When the IR format has to be changed, keep in mind that we try to maintain some
+backwards compatibility. The rules are intended as a balance between convenience
+for llvm users and not imposing a big burden on llvm developers:
+
+* The textual format is not backwards compatible. We don't change it too often,
+  but there are no specific promises.
+
+* The bitcode format produced by a X.Y release will be readable by all following
+  X.Z releases and the (X+1).0 release.
+
+* Newer releases can ignore features from older releases, but they cannot
+  miscompile them. For example, if nsw is ever replaced with something else,
+  dropping it would be a valid way to upgrade the IR.
+
+* Debug metadata is special in that it is currently dropped during upgrades.
+
+* Non-debug metadata is defined to be safe to drop, so a valid way to upgrade
+  it is to drop it. That is not very user friendly and a bit more effort is
+  expected, but no promises are made.
 
 .. _copyright-license-patents:
 

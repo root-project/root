@@ -60,13 +60,14 @@ namespace {
 class UnbridgedCastRewriter : public RecursiveASTVisitor<UnbridgedCastRewriter>{
   MigrationPass &Pass;
   IdentifierInfo *SelfII;
-  OwningPtr<ParentMap> StmtMap;
+  std::unique_ptr<ParentMap> StmtMap;
   Decl *ParentD;
   Stmt *Body;
-  mutable OwningPtr<ExprSet> Removables;
+  mutable std::unique_ptr<ExprSet> Removables;
 
 public:
-  UnbridgedCastRewriter(MigrationPass &pass) : Pass(pass), ParentD(0), Body(0) {
+  UnbridgedCastRewriter(MigrationPass &pass)
+    : Pass(pass), ParentD(nullptr), Body(nullptr) {
     SelfII = &Pass.Ctx.Idents.get("self");
   }
 
@@ -283,7 +284,7 @@ private:
     SourceLocation Loc = E->getExprLoc();
     assert(Loc.isMacroID());
     SourceLocation MacroBegin, MacroEnd;
-    llvm::tie(MacroBegin, MacroEnd) = SM.getImmediateExpansionRange(Loc);
+    std::tie(MacroBegin, MacroEnd) = SM.getImmediateExpansionRange(Loc);
     SourceRange SubRange = E->getSubExpr()->IgnoreParenImpCasts()->getSourceRange();
     SourceLocation InnerBegin = SM.getImmediateMacroCallerLoc(SubRange.getBegin());
     SourceLocation InnerEnd = SM.getImmediateMacroCallerLoc(SubRange.getEnd());

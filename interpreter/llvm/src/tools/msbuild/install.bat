@@ -8,7 +8,7 @@ cd /d %~dp0
 
 set PLATFORM=None
 :START
-IF %PLATFORM% == x64 GOTO END
+IF %PLATFORM% == x64 GOTO LOOPEND
 IF %PLATFORM% == Win32 SET PLATFORM=x64
 IF %PLATFORM% == None SET PLATFORM=Win32
 
@@ -30,7 +30,13 @@ IF EXIST %D% GOTO FOUND_V120
 SET D="%ProgramFiles(x86)%\MSBuild\Microsoft.Cpp\v4.0\V120\Platforms\%PLATFORM%\PlatformToolsets"
 IF EXIST %D% GOTO FOUND_V120
 
-:END
+:TRY_V140
+SET D="%ProgramFiles%\MSBuild\Microsoft.Cpp\v4.0\V140\Platforms\%PLATFORM%\PlatformToolsets"
+IF EXIST %D% GOTO FOUND_V140
+SET D="%ProgramFiles(x86)%\MSBuild\Microsoft.Cpp\v4.0\V140\Platforms\%PLATFORM%\PlatformToolsets"
+IF EXIST %D% GOTO FOUND_V140
+
+:LOOPEND
 IF %SUCCESS% == 1 goto DONE
 echo Failed to find MSBuild toolsets directory.
 goto FAILED
@@ -75,6 +81,23 @@ copy %PLATFORM%\toolset-vs2013_xp.props %D%\LLVM-vs2013_xp\toolset.props
 IF NOT %ERRORLEVEL% == 0 GOTO FAILED
 copy %PLATFORM%\toolset-vs2013_xp.targets %D%\LLVM-vs2013_xp\toolset.targets
 IF NOT %ERRORLEVEL% == 0 GOTO FAILED
+set SUCCESS=1
+GOTO TRY_V140
+
+:FOUND_V140
+IF NOT EXIST %D%\LLVM-vs2014 mkdir %D%\LLVM-vs2014
+IF NOT %ERRORLEVEL% == 0 GOTO FAILED
+copy %PLATFORM%\toolset-vs2014.props %D%\LLVM-vs2014\toolset.props
+IF NOT %ERRORLEVEL% == 0 GOTO FAILED
+copy %PLATFORM%\toolset-vs2014.targets %D%\LLVM-vs2014\toolset.targets
+IF NOT %ERRORLEVEL% == 0 GOTO FAILED
+IF NOT EXIST %D%\LLVM-vs2014_xp mkdir %D%\LLVM-vs2014_xp
+IF NOT %ERRORLEVEL% == 0 GOTO FAILED
+copy %PLATFORM%\toolset-vs2014_xp.props %D%\LLVM-vs2014_xp\toolset.props
+IF NOT %ERRORLEVEL% == 0 GOTO FAILED
+copy %PLATFORM%\toolset-vs2014_xp.targets %D%\LLVM-vs2014_xp\toolset.targets
+IF NOT %ERRORLEVEL% == 0 GOTO FAILED
+set SUCCESS=1
 GOTO START
 
 

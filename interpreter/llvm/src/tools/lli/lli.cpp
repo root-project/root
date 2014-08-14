@@ -13,7 +13,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "lli"
 #include "llvm/IR/LLVMContext.h"
 #include "RemoteMemoryManager.h"
 #include "RemoteTarget.h"
@@ -63,6 +62,8 @@
 #endif
 
 using namespace llvm;
+
+#define DEBUG_TYPE "lli"
 
 namespace {
   cl::opt<std::string>
@@ -262,7 +263,7 @@ public:
   }
   virtual ~LLIObjectCache() {}
 
-  virtual void notifyObjectCompiled(const Module *M, const MemoryBuffer *Obj) {
+  void notifyObjectCompiled(const Module *M, const MemoryBuffer *Obj) override {
     const std::string ModuleID = M->getModuleIdentifier();
     std::string CacheName;
     if (!getCacheFilename(ModuleID, CacheName))
@@ -278,22 +279,22 @@ public:
     outfile.close();
   }
 
-  virtual MemoryBuffer* getObject(const Module* M) {
+  MemoryBuffer* getObject(const Module* M) override {
     const std::string ModuleID = M->getModuleIdentifier();
     std::string CacheName;
     if (!getCacheFilename(ModuleID, CacheName))
-      return NULL;
+      return nullptr;
     // Load the object from the cache filename
-    OwningPtr<MemoryBuffer> IRObjectBuffer;
-    MemoryBuffer::getFile(CacheName.c_str(), IRObjectBuffer, -1, false);
+    ErrorOr<std::unique_ptr<MemoryBuffer>> IRObjectBuffer =
+        MemoryBuffer::getFile(CacheName.c_str(), -1, false);
     // If the file isn't there, that's OK.
     if (!IRObjectBuffer)
-      return NULL;
+      return nullptr;
     // MCJIT will want to write into this buffer, and we don't want that
     // because the file has probably just been mmapped.  Instead we make
     // a copy.  The filed-based buffer will be released when it goes
     // out of scope.
-    return MemoryBuffer::getMemBufferCopy(IRObjectBuffer->getBuffer());
+    return MemoryBuffer::getMemBufferCopy(IRObjectBuffer.get()->getBuffer());
   }
 
 private:
@@ -319,8 +320,8 @@ private:
   }
 };
 
-static ExecutionEngine *EE = 0;
-static LLIObjectCache *CacheManager = 0;
+static ExecutionEngine *EE = nullptr;
+static LLIObjectCache *CacheManager = nullptr;
 
 static void do_shutdown() {
   // Cygwin-1.5 invokes DLL's dtors before atexit handler.
@@ -414,7 +415,7 @@ int main(int argc, char **argv, char * const *envp) {
 
   // If not jitting lazily, load the whole bitcode file eagerly too.
   if (NoLazyCompilation) {
-    if (error_code EC = Mod->materializeAllPermanently()) {
+    if (std::error_code EC = Mod->materializeAllPermanently()) {
       errs() << argv[0] << ": bitcode didn't read correctly.\n";
       errs() << "Reason: " << EC.message() << "\n";
       exit(1);
@@ -449,7 +450,7 @@ int main(int argc, char **argv, char * const *envp) {
     Mod->setTargetTriple(Triple::normalize(TargetTriple));
 
   // Enable MCJIT if desired.
-  RTDyldMemoryManager *RTDyldMM = 0;
+  RTDyldMemoryManager *RTDyldMM = nullptr;
   if (UseMCJIT && !ForceInterpreter) {
     builder.setUseMCJIT(true);
     if (RemoteMCJIT)
@@ -462,7 +463,7 @@ int main(int argc, char **argv, char * const *envp) {
       errs() << "error: Remote process execution requires -use-mcjit\n";
       exit(1);
     }
-    builder.setJITMemoryManager(ForceInterpreter ? 0 :
+    builder.setJITMemoryManager(ForceInterpreter ? nullptr :
                                 JITMemoryManager::CreateDefaultMemManager());
   }
 
@@ -527,29 +528,30 @@ int main(int argc, char **argv, char * const *envp) {
   }
 
   for (unsigned i = 0, e = ExtraObjects.size(); i != e; ++i) {
-    ErrorOr<object::ObjectFile *> Obj =
+    ErrorOr<std::unique_ptr<object::ObjectFile>> Obj =
         object::ObjectFile::createObjectFile(ExtraObjects[i]);
     if (!Obj) {
       Err.print(argv[0], errs());
       return 1;
     }
-    EE->addObjectFile(Obj.get());
+    EE->addObjectFile(std::move(Obj.get()));
   }
 
   for (unsigned i = 0, e = ExtraArchives.size(); i != e; ++i) {
-    OwningPtr<MemoryBuffer> ArBuf;
-    error_code ec;
-    ec = MemoryBuffer::getFileOrSTDIN(ExtraArchives[i], ArBuf);
-    if (ec) {
+    ErrorOr<std::unique_ptr<MemoryBuffer>> ArBuf =
+        MemoryBuffer::getFileOrSTDIN(ExtraArchives[i]);
+    if (!ArBuf) {
       Err.print(argv[0], errs());
       return 1;
     }
-    object::Archive *Ar = new object::Archive(ArBuf.take(), ec);
-    if (ec || !Ar) {
-      Err.print(argv[0], errs());
+
+    ErrorOr<std::unique_ptr<object::Archive>> ArOrErr =
+        object::Archive::create(std::move(ArBuf.get()));
+    if (std::error_code EC = ArOrErr.getError()) {
+      errs() << EC.message();
       return 1;
     }
-    EE->addArchive(Ar);
+    EE->addArchive(std::move(ArOrErr.get()));
   }
 
   // If the target is Cygwin/MingW and we are generating remote code, we
@@ -662,7 +664,7 @@ int main(int argc, char **argv, char * const *envp) {
     // address space, assign the section addresses to resolve any relocations,
     // and send it to the target.
 
-    OwningPtr<RemoteTarget> Target;
+    std::unique_ptr<RemoteTarget> Target;
     if (!ChildExecPath.empty()) { // Remote execution on a child process
 #ifndef LLVM_ON_UNIX
       // FIXME: Remove this pointless fallback mode which causes tests to "pass"

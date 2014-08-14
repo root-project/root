@@ -127,7 +127,8 @@ public:
                                             const NamedDecl *D,
                                             const ObjCInterfaceDecl *UnknownObjCClass,
                                             const ObjCPropertyDecl  *ObjCProperty,
-                                            StringRef Msg);
+                                            StringRef Msg,
+                                            bool ObjCPropertyAccess);
 
 
   static DelayedDiagnostic makeAccess(SourceLocation Loc,
@@ -202,6 +203,10 @@ public:
   const ObjCPropertyDecl *getObjCProperty() const {
     return DeprecationData.ObjCProperty;
   }
+    
+  bool getObjCPropertyAccess() const {
+    return DeprecationData.ObjCPropertyAccess;
+  }
   
 private:
 
@@ -211,6 +216,7 @@ private:
     const ObjCPropertyDecl  *ObjCProperty;
     const char *Message;
     size_t MessageLen;
+    bool ObjCPropertyAccess;
   };
 
   struct FTD {
@@ -248,7 +254,7 @@ public:
 
   /// Does this pool, or any of its ancestors, contain any diagnostics?
   bool empty() const {
-    return (Diagnostics.empty() && (Parent == NULL || Parent->empty()));
+    return (Diagnostics.empty() && (!Parent || Parent->empty()));
   }
 
   /// Add a diagnostic to this pool.
@@ -261,7 +267,7 @@ public:
     if (pool.Diagnostics.empty()) return;
 
     if (Diagnostics.empty()) {
-      Diagnostics = llvm_move(pool.Diagnostics);
+      Diagnostics = std::move(pool.Diagnostics);
     } else {
       Diagnostics.append(pool.pool_begin(), pool.pool_end());
     }

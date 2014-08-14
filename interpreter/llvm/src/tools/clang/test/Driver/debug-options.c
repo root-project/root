@@ -33,14 +33,24 @@
 // RUN: %clang -### -c -g -g0 %s 2>&1 | FileCheck -check-prefix=G_NO %s
 // RUN: %clang -### -c -ggdb0 %s 2>&1 | FileCheck -check-prefix=G_NO %s
 //
+// RUN: %clang -### -c -gmlt %s 2>&1 \
+// RUN:             | FileCheck -check-prefix=GLTO_ONLY %s
 // RUN: %clang -### -c -gline-tables-only %s 2>&1 \
 // RUN:             | FileCheck -check-prefix=GLTO_ONLY %s
 // RUN: %clang -### -c -gline-tables-only %s -target x86_64-apple-darwin 2>&1 \
-// RUN:             | FileCheck -check-prefix=GLTO_ONLY_DARWIN %s
+// RUN:             | FileCheck -check-prefix=GLTO_ONLY_DWARF2 %s
+// RUN: %clang -### -c -gline-tables-only %s -target i686-pc-openbsd 2>&1 \
+// RUN:             | FileCheck -check-prefix=GLTO_ONLY_DWARF2 %s
+// RUN: %clang -### -c -gline-tables-only %s -target x86_64-pc-freebsd10.0 2>&1 \
+// RUN:             | FileCheck -check-prefix=GLTO_ONLY_DWARF2 %s
 // RUN: %clang -### -c -gline-tables-only -g %s -target x86_64-linux-gnu 2>&1 \
 // RUN:             | FileCheck -check-prefix=G_ONLY %s
 // RUN: %clang -### -c -gline-tables-only -g %s -target x86_64-apple-darwin 2>&1 \
-// RUN:             | FileCheck -check-prefix=G_ONLY_DARWIN %s
+// RUN:             | FileCheck -check-prefix=G_ONLY_DWARF2 %s
+// RUN: %clang -### -c -gline-tables-only -g %s -target i686-pc-openbsd 2>&1 \
+// RUN:             | FileCheck -check-prefix=G_ONLY_DWARF2 %s
+// RUN: %clang -### -c -gline-tables-only -g %s -target x86_64-pc-freebsd10.0 2>&1 \
+// RUN:             | FileCheck -check-prefix=G_ONLY_DWARF2 %s
 // RUN: %clang -### -c -gline-tables-only -g0 %s 2>&1 \
 // RUN:             | FileCheck -check-prefix=GLTO_NO %s
 //
@@ -58,6 +68,10 @@
 // RUN: %clang -### -fdebug-types-section -fno-debug-types-section %s 2>&1 \
 // RUN:        | FileCheck -check-prefix=NOFDTS %s
 //
+// RUN: %clang -### -g -gno-column-info %s 2>&1 \
+// RUN:        | FileCheck -check-prefix=NOCI %s
+//
+// RUN: %clang -### -g %s 2>&1 | FileCheck -check-prefix=CI %s
 //
 // G: "-cc1"
 // G: "-g"
@@ -76,21 +90,21 @@
 // GLTO_ONLY: "-gline-tables-only"
 // GLTO_ONLY-NOT: "-g"
 //
-// GLTO_ONLY_DARWIN: "-cc1"
-// GLTO_ONLY_DARWIN-NOT: "-g"
-// GLTO_ONLY_DARWIN: "-gline-tables-only"
-// GLTO_ONLY_DARWIN: "-gdwarf-2"
-// GLTO_ONLY_DARWIN-NOT: "-g"
+// GLTO_ONLY_DWARF2: "-cc1"
+// GLTO_ONLY_DWARF2-NOT: "-g"
+// GLTO_ONLY_DWARF2: "-gline-tables-only"
+// GLTO_ONLY_DWARF2: "-gdwarf-2"
+// GLTO_ONLY_DWARF2-NOT: "-g"
 //
 // G_ONLY: "-cc1"
 // G_ONLY-NOT: "-gline-tables-only"
 // G_ONLY: "-g"
 // G_ONLY-NOT: "-gline-tables-only"
 //
-// G_ONLY_DARWIN: "-cc1"
-// G_ONLY_DARWIN-NOT: "-gline-tables-only"
-// G_ONLY_DARWIN: "-gdwarf-2"
-// G_ONLY_DARWIN-NOT: "-gline-tables-only"
+// G_ONLY_DWARF2: "-cc1"
+// G_ONLY_DWARF2-NOT: "-gline-tables-only"
+// G_ONLY_DWARF2: "-gdwarf-2"
+// G_ONLY_DWARF2-NOT: "-gline-tables-only"
 //
 // GLTO_NO: "-cc1"
 // GLTO_NO-NOT: "-gline-tables-only"
@@ -104,3 +118,7 @@
 // FDTS: "-backend-option" "-generate-type-units"
 //
 // NOFDTS-NOT: "-backend-option" "-generate-type-units"
+//
+// CI: "-dwarf-column-info"
+//
+// NOCI-NOT: "-dwarf-column-info"

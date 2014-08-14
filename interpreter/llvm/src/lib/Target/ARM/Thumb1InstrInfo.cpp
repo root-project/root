@@ -12,7 +12,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "Thumb1InstrInfo.h"
-#include "ARM.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineMemOperand.h"
@@ -101,4 +100,13 @@ loadRegFromStackSlot(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
     AddDefaultPred(BuildMI(MBB, I, DL, get(ARM::tLDRspi), DestReg)
                    .addFrameIndex(FI).addImm(0).addMemOperand(MMO));
   }
+}
+
+void
+Thumb1InstrInfo::expandLoadStackGuard(MachineBasicBlock::iterator MI,
+                                      Reloc::Model RM) const {
+  if (RM == Reloc::PIC_)
+    expandLoadStackGuardBase(MI, ARM::tLDRLIT_ga_pcrel, ARM::tLDRi, RM);
+  else
+    expandLoadStackGuardBase(MI, ARM::tLDRLIT_ga_abs, ARM::tLDRi, RM);
 }

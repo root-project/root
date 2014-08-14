@@ -16,7 +16,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "pei"
 #include "PrologEpilogInserter.h"
 #include "llvm/ADT/IndexedMap.h"
 #include "llvm/ADT/STLExtras.h"
@@ -45,6 +44,8 @@
 #include <climits>
 
 using namespace llvm;
+
+#define DEBUG_TYPE "pei"
 
 char PEI::ID = 0;
 char &llvm::PrologEpilogCodeInserterID = PEI::ID;
@@ -114,7 +115,7 @@ bool PEI::runOnMachineFunction(MachineFunction &Fn) {
 
   assert(!Fn.getRegInfo().getNumVirtRegs() && "Regalloc must assign all vregs");
 
-  RS = TRI->requiresRegisterScavenging(Fn) ? new RegScavenger() : NULL;
+  RS = TRI->requiresRegisterScavenging(Fn) ? new RegScavenger() : nullptr;
   FrameIndexVirtualScavenging = TRI->requiresFrameIndexScavenging(Fn);
 
   // Calculate the MaxCallFrameSize and AdjustsStack variables for the
@@ -159,7 +160,7 @@ bool PEI::runOnMachineFunction(MachineFunction &Fn) {
   replaceFrameIndices(Fn);
 
   // If register scavenging is needed, as we've enabled doing it as a
-  // post-pass, scavenge the virtual registers that frame index elimiation
+  // post-pass, scavenge the virtual registers that frame index elimination
   // inserted.
   if (TRI->requiresRegisterScavenging(Fn) && FrameIndexVirtualScavenging)
     scavengeFrameVirtualRegs(Fn);
@@ -243,14 +244,14 @@ void PEI::calculateCalleeSavedRegisters(MachineFunction &F) {
   MachineFrameInfo *MFI = F.getFrameInfo();
 
   // Get the callee saved register list...
-  const uint16_t *CSRegs = RegInfo->getCalleeSavedRegs(&F);
+  const MCPhysReg *CSRegs = RegInfo->getCalleeSavedRegs(&F);
 
   // These are used to keep track the callee-save area. Initialize them.
   MinCSFrameIndex = INT_MAX;
   MaxCSFrameIndex = 0;
 
   // Early exit for targets which have no callee saved registers.
-  if (CSRegs == 0 || CSRegs[0] == 0)
+  if (!CSRegs || CSRegs[0] == 0)
     return;
 
   // In Naked functions we aren't going to save any registers.
@@ -267,51 +268,56 @@ void PEI::calculateCalleeSavedRegisters(MachineFunction &F) {
     }
   }
 
-  if (CSI.empty())
-    return;   // Early exit if no callee saved registers are modified!
+  if (!TFI->assignCalleeSavedSpillSlots(F, RegInfo, CSI)) {
+    // If target doesn't implement this, use generic code.
 
-  unsigned NumFixedSpillSlots;
-  const TargetFrameLowering::SpillSlot *FixedSpillSlots =
-    TFI->getCalleeSavedSpillSlots(NumFixedSpillSlots);
+    if (CSI.empty())
+      return; // Early exit if no callee saved registers are modified!
 
-  // Now that we know which registers need to be saved and restored, allocate
-  // stack slots for them.
-  for (std::vector<CalleeSavedInfo>::iterator
-         I = CSI.begin(), E = CSI.end(); I != E; ++I) {
-    unsigned Reg = I->getReg();
-    const TargetRegisterClass *RC = RegInfo->getMinimalPhysRegClass(Reg);
+    unsigned NumFixedSpillSlots;
+    const TargetFrameLowering::SpillSlot *FixedSpillSlots =
+        TFI->getCalleeSavedSpillSlots(NumFixedSpillSlots);
 
-    int FrameIdx;
-    if (RegInfo->hasReservedSpillSlot(F, Reg, FrameIdx)) {
+    // Now that we know which registers need to be saved and restored, allocate
+    // stack slots for them.
+    for (std::vector<CalleeSavedInfo>::iterator I = CSI.begin(), E = CSI.end();
+         I != E; ++I) {
+      unsigned Reg = I->getReg();
+      const TargetRegisterClass *RC = RegInfo->getMinimalPhysRegClass(Reg);
+
+      int FrameIdx;
+      if (RegInfo->hasReservedSpillSlot(F, Reg, FrameIdx)) {
+        I->setFrameIdx(FrameIdx);
+        continue;
+      }
+
+      // Check to see if this physreg must be spilled to a particular stack slot
+      // on this target.
+      const TargetFrameLowering::SpillSlot *FixedSlot = FixedSpillSlots;
+      while (FixedSlot != FixedSpillSlots + NumFixedSpillSlots &&
+             FixedSlot->Reg != Reg)
+        ++FixedSlot;
+
+      if (FixedSlot == FixedSpillSlots + NumFixedSpillSlots) {
+        // Nope, just spill it anywhere convenient.
+        unsigned Align = RC->getAlignment();
+        unsigned StackAlign = TFI->getStackAlignment();
+
+        // We may not be able to satisfy the desired alignment specification of
+        // the TargetRegisterClass if the stack alignment is smaller. Use the
+        // min.
+        Align = std::min(Align, StackAlign);
+        FrameIdx = MFI->CreateStackObject(RC->getSize(), Align, true);
+        if ((unsigned)FrameIdx < MinCSFrameIndex) MinCSFrameIndex = FrameIdx;
+        if ((unsigned)FrameIdx > MaxCSFrameIndex) MaxCSFrameIndex = FrameIdx;
+      } else {
+        // Spill it to the stack where we must.
+        FrameIdx =
+            MFI->CreateFixedSpillStackObject(RC->getSize(), FixedSlot->Offset);
+      }
+
       I->setFrameIdx(FrameIdx);
-      continue;
     }
-
-    // Check to see if this physreg must be spilled to a particular stack slot
-    // on this target.
-    const TargetFrameLowering::SpillSlot *FixedSlot = FixedSpillSlots;
-    while (FixedSlot != FixedSpillSlots+NumFixedSpillSlots &&
-           FixedSlot->Reg != Reg)
-      ++FixedSlot;
-
-    if (FixedSlot == FixedSpillSlots + NumFixedSpillSlots) {
-      // Nope, just spill it anywhere convenient.
-      unsigned Align = RC->getAlignment();
-      unsigned StackAlign = TFI->getStackAlignment();
-
-      // We may not be able to satisfy the desired alignment specification of
-      // the TargetRegisterClass if the stack alignment is smaller. Use the
-      // min.
-      Align = std::min(Align, StackAlign);
-      FrameIdx = MFI->CreateStackObject(RC->getSize(), Align, true);
-      if ((unsigned)FrameIdx < MinCSFrameIndex) MinCSFrameIndex = FrameIdx;
-      if ((unsigned)FrameIdx > MaxCSFrameIndex) MaxCSFrameIndex = FrameIdx;
-    } else {
-      // Spill it to the stack where we must.
-      FrameIdx = MFI->CreateFixedObject(RC->getSize(), FixedSlot->Offset, true);
-    }
-
-    I->setFrameIdx(FrameIdx);
   }
 
   MFI->setCalleeSavedInfo(CSI);
@@ -680,7 +686,7 @@ void PEI::insertPrologEpilogCode(MachineFunction &Fn) {
   // we've been asked for it.  This, when linked with a runtime with support
   // for segmented stacks (libgcc is one), will result in allocating stack
   // space in small chunks instead of one large contiguous block.
-  if (Fn.getTarget().Options.EnableSegmentedStacks)
+  if (Fn.shouldSplitStack())
     TFI.adjustForSegmentedStacks(Fn);
 
   // Emit additional code that is required to explicitly handle the stack in
@@ -759,14 +765,14 @@ void PEI::replaceFrameIndices(MachineBasicBlock *BB, MachineFunction &Fn,
       SPAdj += Size;
 
       MachineBasicBlock::iterator PrevI = BB->end();
-      if (I != BB->begin()) PrevI = prior(I);
+      if (I != BB->begin()) PrevI = std::prev(I);
       TFI->eliminateCallFramePseudoInstr(Fn, *BB, I);
 
       // Visit the instructions created by eliminateCallFramePseudoInstr().
       if (PrevI == BB->end())
         I = BB->begin();     // The replaced instr was the first in the block.
       else
-        I = llvm::next(PrevI);
+        I = std::next(PrevI);
       continue;
     }
 
@@ -805,7 +811,7 @@ void PEI::replaceFrameIndices(MachineBasicBlock *BB, MachineFunction &Fn,
       // use that target machine register info object to eliminate
       // it.
       TRI.eliminateFrameIndex(MI, SPAdj, i,
-                              FrameIndexVirtualScavenging ?  NULL : RS);
+                              FrameIndexVirtualScavenging ?  nullptr : RS);
 
       // Reset the iterator if we were at the beginning of the BB.
       if (AtBeginning) {
@@ -813,7 +819,7 @@ void PEI::replaceFrameIndices(MachineBasicBlock *BB, MachineFunction &Fn,
         DoIncr = false;
       }
 
-      MI = 0;
+      MI = nullptr;
       break;
     }
 
@@ -845,13 +851,14 @@ void PEI::scavengeFrameVirtualRegs(MachineFunction &Fn) {
       // We might end up here again with a NULL iterator if we scavenged a
       // register for which we inserted spill code for definition by what was
       // originally the first instruction in BB.
-      if (I == MachineBasicBlock::iterator(NULL))
+      if (I == MachineBasicBlock::iterator(nullptr))
         I = BB->begin();
 
       MachineInstr *MI = I;
-      MachineBasicBlock::iterator J = llvm::next(I);
-      MachineBasicBlock::iterator P = I == BB->begin() ?
-        MachineBasicBlock::iterator(NULL) : llvm::prior(I);
+      MachineBasicBlock::iterator J = std::next(I);
+      MachineBasicBlock::iterator P =
+                         I == BB->begin() ? MachineBasicBlock::iterator(nullptr)
+                                          : std::prev(I);
 
       // RS should process this instruction before we might scavenge at this
       // location. This is because we might be replacing a virtual register
@@ -894,7 +901,7 @@ void PEI::scavengeFrameVirtualRegs(MachineFunction &Fn) {
       // spill code will have been inserted in between I and J. This is a
       // problem because we need the spill code before I: Move I to just
       // prior to J.
-      if (I != llvm::prior(J)) {
+      if (I != std::prev(J)) {
         BB->splice(J, BB, I);
 
         // Before we move I, we need to prepare the RS to visit I again.

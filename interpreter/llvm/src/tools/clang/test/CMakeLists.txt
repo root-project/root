@@ -26,12 +26,31 @@ endif ()
 
 list(APPEND CLANG_TEST_DEPS
   clang clang-headers
-  c-index-test diagtool arcmt-test c-arcmt-test
   clang-check clang-format
+  c-index-test diagtool
   clang-tblgen
-  PrintFunctionNames
-  SampleAnalyzerPlugin
   )
+
+if (CLANG_ENABLE_ARCMT)
+  list(APPEND CLANG_TEST_DEPS
+    arcmt-test
+    c-arcmt-test
+  )
+endif ()
+
+if (ENABLE_CLANG_EXAMPLES)
+  list(APPEND CLANG_TEST_DEPS
+    clang-interpreter
+    PrintFunctionNames
+    )
+endif ()
+
+if (ENABLE_CLANG_STATIC_ANALYZER AND ENABLE_CLANG_EXAMPLES)
+  list(APPEND CLANG_TEST_DEPS
+    SampleAnalyzerPlugin
+    )
+endif ()
+
 set(CLANG_TEST_PARAMS
   clang_site_config=${CMAKE_CURRENT_BINARY_DIR}/lit.site.cfg
   )
@@ -39,7 +58,7 @@ set(CLANG_TEST_PARAMS
 if( NOT CLANG_BUILT_STANDALONE )
   list(APPEND CLANG_TEST_DEPS
     llvm-config
-    llc opt FileCheck count not llvm-symbolizer
+    llc opt FileCheck count not llvm-symbolizer llvm-profdata
     )
 endif()
 
