@@ -33,7 +33,7 @@
 #include "TDictionary.h"
 #endif
 
-
+#include <typeinfo>
 
 class TClass;
 class TEnumConstant;
@@ -62,6 +62,8 @@ public:
    Long_t                Property() const;
    void                  SetClass(TClass* cl) { fClass = cl; }
    void                  Update(DeclId_t id);
+   static TEnum*         GetEnum(const std::type_info& ti);
+   static TEnum*         GetEnum(const char* enumName);
 
    ClassDef(TEnum,2)  //Enum type class
 };
