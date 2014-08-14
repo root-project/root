@@ -44,8 +44,7 @@ public:
    };
 
    // constructor from an IFitResult
-   TFitResult(const ROOT::Fit::FitResult& f): TNamed("TFitResult","TFitResult"),
-                                              ROOT::Fit::FitResult(f) {};
+   TFitResult(const ROOT::Fit::FitResult& f);
 
    virtual ~TFitResult() {}
 

@@ -55,7 +55,7 @@ public:
    /** 
       Destructor (no operations). Function pointer is not owned
    */ 
-   virtual ~WrappedMultiTF1 () {}
+   virtual ~WrappedMultiTF1 () { if (fOwnFunc && fFunc) delete fFunc; }
 
    /** 
       Copy constructor
@@ -115,6 +115,14 @@ public:
    /// get precision value used for calculating the derivative step-size 
    static double GetDerivPrecision();
 
+   /// method to retrieve the internal function pointer
+   const TF1 * GetFunction() const { return fFunc; }
+
+   /// method to set a new function pointer and copy it inside. 
+   /// By calling this method the clas manages now the passed TF1 pointer
+   void SetAndCopyFunction(const TF1 * f = 0);
+   
+   
 
 private: 
 
@@ -130,6 +138,7 @@ private:
 
    bool fLinear;                 // flag for linear functions 
    bool fPolynomial;             // flag for polynomial functions
+   bool fOwnFunc;                 // flag to indicate we own the TF1 function pointer
    TF1 * fFunc;                   // pointer to ROOT function
    unsigned int fDim;             // cached value of dimension
    std::vector<double> fParams;   // cached vector with parameter values

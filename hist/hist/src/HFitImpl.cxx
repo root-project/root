@@ -572,7 +572,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
    } 
 
    // delete the function in the list only if 
-   // the funciton we are fitting is not in that list
+   // the function we are fitting is not in that list
    // If this is the case we re-use that function object and 
    // we do not create a new one (if delOldFunction is true)
    bool reuseOldFunction = false; 
@@ -755,7 +755,7 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * fitdata, TF1 * fitfunc,
    // need to create a wrapper for an automatic  normalized TF1 ???
    if ( fitOption.Gradient ) {
       assert ( (int) dim == fitfunc->GetNdim() );
-      fitter->SetFunction(ROOT::Math::WrappedTF1(*fitfunc) );
+      fitter->SetFunction(ROOT::Math::WrappedMultiTF1(*fitfunc) );
    }
    else 
       fitter->SetFunction(static_cast<const ROOT::Math::IParamMultiFunction &>(ROOT::Math::WrappedMultiTF1(*fitfunc, dim) ) );

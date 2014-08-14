@@ -12,6 +12,7 @@
 
 #include "Math/WrappedTF1.h"
 #include "Math/WrappedMultiTF1.h"
+#include "TClass.h"   // needed to copy the TF1 pointer
 
 #include <cmath>
 
@@ -136,6 +137,7 @@ double WrappedTF1::GetDerivPrecision( ) { return fgEps; }
 WrappedMultiTF1::WrappedMultiTF1 (TF1 & f, unsigned int dim  )  : 
    fLinear(false), 
    fPolynomial(false), 
+   fOwnFunc(false),
    fFunc(&f),
    fDim(dim),
    fParams(f.GetParameters(),f.GetParameters()+f.GetNpar())
@@ -169,11 +171,13 @@ WrappedMultiTF1::WrappedMultiTF1(const WrappedMultiTF1 & rhs) :
    BaseParamFunc(),
    fLinear(rhs.fLinear), 
    fPolynomial(rhs.fPolynomial), 
+   fOwnFunc(rhs.fOwnFunc),
    fFunc(rhs.fFunc),
    fDim(rhs.fDim),
    fParams(rhs.fParams) 
 {
    // copy constructor 
+   if (fOwnFunc) SetAndCopyFunction(rhs.fFunc);
 }
 
 
@@ -182,9 +186,16 @@ WrappedMultiTF1 & WrappedMultiTF1::operator= (const WrappedMultiTF1 & rhs) {
    if (this == &rhs) return *this;  // time saving self-test
    fLinear = rhs.fLinear;  
    fPolynomial = rhs.fPolynomial;  
-   fFunc = rhs.fFunc; 
+   fOwnFunc = rhs.fOwnFunc;
    fDim = rhs.fDim;
    fParams = rhs.fParams;
+
+   if (fOwnFunc) {
+      TF1 * oldFunc = fFunc; 
+      SetAndCopyFunction(rhs.fFunc);
+      delete oldFunc; 
+   }
+
    return *this;
 } 
 
@@ -233,6 +244,14 @@ double WrappedMultiTF1::DoParameterDerivative(const double * x, const double * p
 void WrappedMultiTF1::SetDerivPrecision(double eps) { fgEps = eps; }
 
 double WrappedMultiTF1::GetDerivPrecision( ) { return fgEps; }
+
+void WrappedMultiTF1::SetAndCopyFunction(const TF1 * f) {
+   const TF1 * funcToCopy = (f) ? f : fFunc; 
+   TF1 * fnew = (TF1*) funcToCopy->IsA()->New(); 
+   funcToCopy->Copy(*fnew); 
+   fFunc = fnew; 
+   fOwnFunc = true; 
+}
 
 
 } // end namespace Fit

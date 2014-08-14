@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TFitResult.h"
+#include "Math/WrappedMultiTF1.h"
 
 #include <iostream>
 
@@ -19,7 +20,18 @@ providing easy possibility for I/O
 
  */
 
-ClassImp(TFitResult)
+ClassImp(TFitResult);
+
+TFitResult::TFitResult(const ROOT::Fit::FitResult& f) : 
+   TNamed("TFitResult","TFitResult"),
+   ROOT::Fit::FitResult(f) 
+{
+   // constructor from an IFitResult
+   // copy the contained TF1 pointer function if it is 
+   ROOT::Math::WrappedMultiTF1 * wfunc = dynamic_cast<ROOT::Math::WrappedMultiTF1 *>(ModelFunction() );
+   if (wfunc)  wfunc->SetAndCopyFunction();
+}
+
 
 void TFitResult::Print(Option_t *option) const
 {

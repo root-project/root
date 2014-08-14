@@ -83,7 +83,7 @@ public:
    /** 
       Destructor 
    */ 
-   ~FitResult (); 
+   virtual ~FitResult (); 
 
 
 public: 
