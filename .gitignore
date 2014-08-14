@@ -80,6 +80,7 @@ AutoDict_*.cxx
 # /cling/stl/default
 /cling/stl/default/*Dict.*
 /cling/stl/default/dict*
+/cling/stl/default/VectorSort.log.tmp
 
 # /cling/stl/map
 /cling/stl/map/dict*

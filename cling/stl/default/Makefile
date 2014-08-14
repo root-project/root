@@ -21,15 +21,14 @@ dict.cc: mylist.C $(ROOTCINT)
 mylist_C.so:
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b build.C > build.log 2>&1
 
-VectorSort.log: VectorSort.C
+VectorSort.log.tmp: VectorSort.C
+	$(CMDECHO) LINES=0 $(CALLROOTEXE) -q -l -b VectorSort.C > $@ 2>&1
+
+VectorSort.log: VectorSort.log.tmp
 ifeq ($(ClingWorkAroundValuePrinterNotFullyQualified),)
-	$(CMDECHO) LINES=0 $(CALLROOTEXE) -q -l -b $(@:.log=.C) 2>&1 \
-	  | $(RemoveLeadingDirs) -e 's,^(vector,(class vector,' -e 's,::iterator)[x[:xdigit:]]*$$,::iterator),' \
-	  > $@ 2>&1
+	$(CMDECHO) $(RemoveLeadingDirs) -e 's,^(vector,(class vector,' -e 's,::iterator)[x[:xdigit:]]*$$,::iterator),' $^ > $@ 2>&1
 else
-	$(CMDECHO) LINES=0 $(CALLROOTEXE) -q -l -b $(@:.log=.C)  2>&1 \
-	  | $(RemoveLeadingDirs) -e 's,^(vector,(class vector,' -e 's,::iterator)[x[:xdigit:]]*$$,::iterator),' -e 's/const_iterator/class vector<unsigned int::const_iterator/' -e 's, @0x[a-fA-F0-9]*,,' \
-	  > $@ 2>&1
+	$(CMDECHO) $(RemoveLeadingDirs) -e 's,^(vector,(class vector,' -e 's,::iterator)[x[:xdigit:]]*$$,::iterator),' -e 's/const_iterator/class vector<unsigned int::const_iterator/' -e 's, @0x[a-fA-F0-9]*,,' $^ > $@ 2>&1
 endif
 
 VectorSort: VectorSort.log
