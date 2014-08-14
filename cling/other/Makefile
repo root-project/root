@@ -58,10 +58,5 @@ savannah54662: savannah54662.log
 assertBaseMembers:
 	$(WarnFailTest)
 
-missingXFunc.log: runmissingXFunc.C
-	$(CMDECHO) ( ! $(CALLROOTEXE) -l -b -q $^ > $@.tmp 2>&1) || handleError.sh --cmd='! $(CALLROOTEXE) -l -b -q $^' --result=$$? --log=$@.tmp
-	$(CMDECHO) sed 's,input_line_[^:]*,input_line_,g' $@.tmp > $@
-	$(CMDECHO) rm -f $@.tmp
-
 missingXFunc: missingXFunc.log
 	$(TestDiff)

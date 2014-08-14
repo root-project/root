@@ -1,5 +1,3 @@
 
 Processing runmissingXFunc.C...
-input_line_:2:2: error: use of undeclared identifier 'runmissingXFunc'
- runmissingXFunc()
- ^
+warning: cannot find function 'runmissingXFunc'(); falling back to .L
