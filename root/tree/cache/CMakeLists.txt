@@ -5,8 +5,8 @@ ROOTTEST_ADD_TEST(roottest-root-tree-cache-multiTree
 ROOTTEST_ADD_TEST(roottest-root-tree-cache-autocache
                   COPY_TO_BUILDDIR AliESDs-0.root AliESDs-1.root
                   MACRO runautocache.C
-                  OUTCNVCMD grep -v -e "no dictionary for class" -e "trying to read an emulated class (AliESDEvent)"
-                  OUTREF autocache.ref)
+                  OUTREF autocache.ref
+                  ERRREF autocache.err)
 
 ROOTTEST_ADD_TEST(roottest-root-tree-cache-cachedChain
                   MACRO runcachedchain.C
