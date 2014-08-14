@@ -46,6 +46,6 @@ ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execReadTmplt
                   COPY_TO_BUILDDIR tmplt.h
                   MACRO execReadTmplt.cxx+
                   OUTREF execReadTmplt.ref
-                  DEPPENDS roottest-root-meta-tclass-execTmpltD32 roottest-root-meta-tclass-execTmpltD32)
+                  DEPPENDS roottest-root-meta-tclass-execTmpltD32 roottest-root-meta-tclass-execTmpltD)
 
 ROOTTEST_ADD_TESTDIRS()
