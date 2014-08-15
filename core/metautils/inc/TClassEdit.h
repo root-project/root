@@ -15,6 +15,7 @@
 
 #include "RConfig.h"
 #include "RConfigure.h"
+#include <stdlib.h>
 #include <cxxabi.h>
 #include <string>
 #include <vector>
