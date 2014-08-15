@@ -15,6 +15,7 @@
 
 #include "RConfig.h"
 #include "RConfigure.h"
+#include <cxxabi.h>
 #include <string>
 #include <vector>
 
@@ -136,6 +137,28 @@ namespace TClassEdit {
    std::string ResolveTypedef(const char *tname, bool resolveAll = false);
    std::string ShortType (const char *typeDesc, int mode);
    std::string InsertStd(const char *tname);
+   inline char* DemangleName(const char* mangled_name, int& errorCode)
+   {
+   // Demangle in a portable way the name.
+   // IMPORTANT: The caller is responsible for freeing the returned const char*
+
+   errorCode=0;
+#ifdef R__WIN32
+   char *demangled_name = __unDName(0, mangled_name, 0, malloc, free, UNDNAME_COMPLETE);
+   if (!demangled_name) {
+      errorCode = -1;
+      return nullptr;
+   }
+#else
+   char *demangled_name = abi::__cxa_demangle(mangled_name, 0, 0, &errorCode);
+   if (!demangled_name || errorCode) {
+      free(demangled_name);
+      return nullptr;
+   }
+#endif
+   return demangled_name;
+   }
+   char* DemangleTypeIdName(const std::type_info& ti, int& errorCode);
 }
 
 #endif

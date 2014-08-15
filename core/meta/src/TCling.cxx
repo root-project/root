@@ -536,30 +536,6 @@ extern "C" {
 #endif
 
 //______________________________________________________________________________
-static string TCling__Demangle(const char *mangled_name, int *err)
-{
-
-   string demangled = mangled_name;
-   *err = 0;
-#ifdef R__WIN32
-   char *demangled_name = __unDName(0, mangled_name, 0, malloc, free, UNDNAME_COMPLETE);
-   if (!demangled_name) {
-      *err = -1;
-      return demangled;
-   }
-#else
-   char *demangled_name = abi::__cxa_demangle(mangled_name, 0, 0, err);
-   if (!demangled_name || *err) {
-      free(demangled_name);
-      return demangled;
-   }
-#endif
-   demangled = demangled_name;
-   free(demangled_name);
-   return demangled;
-}
-
-//______________________________________________________________________________
 static clang::ClassTemplateDecl* FindTemplateInNamespace(clang::Decl* decl)
 {
    // Find a template decl within N nested namespaces, 0<=N<inf
@@ -3292,11 +3268,9 @@ TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
    if (!gv) return 0;
 
    llvm::StringRef mangled_name = gv->getName();
-   //
-   //  Use the C++ ABI provided function to demangle the symbol name.
-   //
+
    int err = 0;
-   string scopename = TCling__Demangle(mangled_name.str().c_str(), &err);
+   char* demangled_name_c = TClassEdit::DemangleName(mangled_name.str().c_str(), err);
    if (err) {
       if (err == -2) {
          // It might simply be an unmangled global name.
@@ -3307,6 +3281,10 @@ TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
       }
       return 0;
    }
+
+   std::string scopename(demangled_name_c);
+   free(demangled_name_c);
+
    //
    //  Separate out the class or namespace part of the
    //  function name.
@@ -4467,9 +4445,11 @@ TClass *TCling::GetClass(const std::type_info& typeinfo, Bool_t load) const
    // via the usual name based interface (TClass::GetClass).
 
    int err = 0;
-   string demangled_name = TCling__Demangle(typeinfo.name(), &err);
+   char* demangled_name = TClassEdit::DemangleTypeIdName(typeinfo, err);
    if (err) return 0;
-   return TClass::GetClass(demangled_name.c_str(), load, kTRUE);
+   TClass* theClass = TClass::GetClass(demangled_name, load, kTRUE);
+   free(demangled_name);
+   return theClass;
 }
 
 //______________________________________________________________________________
@@ -4479,10 +4459,14 @@ Int_t TCling::AutoLoad(const type_info& typeinfo)
    // and 1 in case if success.
 
    int err = 0;
-   string demangled_name = TCling__Demangle(typeinfo.name(), &err);
+   char* demangled_name_c = TClassEdit::DemangleTypeIdName(typeinfo, err);
    if (err) {
       return 0;
    }
+
+   std::string demangled_name(demangled_name_c);
+   free(demangled_name_c);
+
    // AutoLoad expects (because TClass::GetClass already prepares it that way) a
    // shortened name.
    TClassEdit::TSplitType splitname( demangled_name.c_str(), (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
@@ -4743,14 +4727,15 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
       }
    }
 
-   //
-   //  Use the C++ ABI provided function to demangle the symbol name.
-   //
    int err = 0;
-   string name = TCling__Demangle(mangled_name.c_str(), &err);
+   char* demangled_name_c = TClassEdit::DemangleName(mangled_name.c_str(), err);
    if (err) {
       return 0;
    }
+
+   std::string name(demangled_name_c);
+   free(demangled_name_c);
+
    //fprintf(stderr, "demangled name: '%s'\n", demangled_name);
    //
    //  Separate out the class or namespace part of the

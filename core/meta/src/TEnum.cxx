@@ -16,37 +16,15 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <cxxabi.h>
 
 #include "TEnum.h"
 #include "TEnumConstant.h"
 #include "TInterpreter.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TROOT.h"
 
 ClassImp(TEnum)
-
-
-//______________________________________________________________________________
-inline static char* DemangleTypeIdName(const std::type_info& ti)
-{
-   // The caller owns the returned pointer
-   const char* mangled_name = ti.name();
-   int err=0;
-#ifdef R__WIN32
-   char *demangled_name = __unDName(0, mangled_name, 0, malloc, free, UNDNAME_COMPLETE);
-   if (!demangled_name) {
-      return nullptr;
-   }
-#else
-   char *demangled_name = abi::__cxa_demangle(mangled_name, 0, 0, &err);
-   if (!demangled_name || err) {
-      free(demangled_name);
-      return nullptr;
-   }
-#endif
-   return demangled_name;
-}
 
 //______________________________________________________________________________
 TEnum::TEnum(const char* name, void* info, TClass* cls)
@@ -111,9 +89,13 @@ void TEnum::Update(DeclId_t id)
 //______________________________________________________________________________
 TEnum* TEnum::GetEnum(const std::type_info& ti)
 {
-   char* demangledEnumName = DemangleTypeIdName(ti);
+   int errorCode=0;
+   char* demangledEnumName = TClassEdit::DemangleName(ti.name(),errorCode);
 
-   if (!demangledEnumName){
+   if (errorCode != 0){
+      if (!demangledEnumName){
+         free(demangledEnumName);
+      }
       std::cerr << "ERROR TEnum::GetEnum - A problem occurred while demangling name.\n";
       return nullptr;
    }
