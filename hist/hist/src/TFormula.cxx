@@ -405,12 +405,26 @@ void TFormula::FillDefaults()
          {"atan","TMath::ATan"}, {"atan2","TMath::ATan2"}, {"sqrt","TMath::Sqrt"},
          {"ceil","TMath::Ceil"}, {"floor","TMath::Floor"}, {"pow","TMath::Power"},
          {"binomial","TMath::Binomial"},{"abs","TMath::Abs"} }; 
+
+   std::vector<TString> defvars2(10);
+   for (int i = 0; i < 9; ++i) 
+      defvars2[i] = TString::Format("x[%d]",i);
+
    for(auto var : defvars)
    {
       int pos = fVars.size();
       fVars[var] = TFormulaVariable(var,0,pos);
       fClingVariables.push_back(0);
    }
+   // add also the variables definesd like x[0],x[1],x[2],...
+   // support up to x[9] - if needed extend that to higher value 
+   // const int maxdim = 10;
+   // for (int i = 0; i < maxdim;  ++i) {
+   //    TString xvar = TString::Format("x[%d]",i);
+   //    fVars[xvar] =  TFormulaVariable(xvar,0,i);
+   //    fClingVariables.push_back(0);
+   // }
+
    for(auto con : defconsts)
    {
       fConsts[con.first] = con.second;
@@ -971,9 +985,12 @@ void TFormula::ProcessFormula(TString &formula)
    //*-*    it inputs C++ code of formula into cling, and sets flag that formula is ready to evaluate.
    //*-*    
 
+   //std::cout << "Begin: formula is " << formula << std::endl;
+
    for(list<TFormulaFunction>::iterator funcsIt = fFuncs.begin(); funcsIt != fFuncs.end(); ++funcsIt)
    {
       TFormulaFunction & fun = *funcsIt;
+      //std::cout << "fun is " << fun.GetName() << std::endl;
       if(fun.fFound)
          continue;
       if(fun.IsFuncCall())
@@ -1027,18 +1044,30 @@ void TFormula::ProcessFormula(TString &formula)
             ExtractFunctors(replacement);
             formula.ReplaceAll(pattern,replacement);
             continue;
-         }  
+         }
+         // looking for default variables defined in fVars
          map<TString,TFormulaVariable>::iterator varsIt = fVars.find(fun.GetName());
          if(varsIt!= fVars.end()) 
          {
             TString name = (*varsIt).second.GetName();
             Double_t value = (*varsIt).second.fValue;
-            AddVariable(name,value);
+            AddVariable(name,value); // this set the cling variable
             if(!fVars[name].fFound)
             {
                fVars[name].fFound = true;
-               fNdim++;
+               int varDim =  (*varsIt).second.fArrayPos;  // variable dimenions (0 for x, 1 for y, 2, for z)
+               if (varDim >= fNdim) { 
+                  fNdim = varDim+1;
+                  // we need to be sure that all other variables are added with position less 
+                  for ( auto &v : fVars) { 
+                     if (v.second.fArrayPos < varDim && !v.second.fFound ) {                         
+                        AddVariable(v.first, v.second.fValue);
+                        v.second.fFound = true; 
+                     }
+                  }
+               } 
             }
+            // remove the "{.. }" added around the variable
             TString pattern = TString::Format("{%s}",name.Data());   
             TString replacement = TString::Format("x[%d]",(*varsIt).second.fArrayPos);
             formula.ReplaceAll(pattern,replacement);
@@ -1046,6 +1075,35 @@ void TFormula::ProcessFormula(TString &formula)
             fun.fFound = true; 
             continue;          
          }
+         // check for observables defined as x[0],x[1],....
+         // maybe could use a regular expression here
+         // only in case match with defined variables is not successfull
+         TString funname = fun.GetName(); 
+         if (funname.Contains("x[") && funname.Contains("]") ) { 
+            TString sdigit = funname(2,funname.Index("]") );
+            int digit = sdigit.Atoi(); 
+            if (digit >= fNdim) { 
+               fNdim = digit+1;
+               // we need to add the variables in fVars all of them before x[n]
+               for (int j = 0; j < fNdim; ++j) { 
+                  TString vname = TString::Format("x[%d]",j);
+                     if (fVars.find(vname) == fVars.end() ) { 
+                        fVars[vname] = TFormulaVariable(vname,0,j);  
+                        fVars[vname].fFound = true;
+                        AddVariable(vname,0.);
+                     }
+               }
+            }
+            //std::cout << "Found matching for " << funname  << std::endl;
+            fun.fFound = true; 
+            // remove the "{.. }" added around the variable
+            TString pattern = TString::Format("{%s}",funname.Data());   
+            formula.ReplaceAll(pattern,funname);
+            continue;
+         } 
+         //}
+
+
          map<TString,Double_t>::iterator constIt = fConsts.find(fun.GetName());
          if(constIt != fConsts.end())
          {
@@ -1075,12 +1133,15 @@ void TFormula::ProcessFormula(TString &formula)
          fun.fFound = false;
       }
    }
+   //std::cout << "End: formula is " << formula << std::endl;
+   // check that all formula components arematched otherwise emit an error
    Bool_t allFunctorsMatched = true;
    for(list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); it++)
    {
       if(!it->fFound)
       {
          allFunctorsMatched = false;
+         Warning("ProcessFormula","\"%s\" has not been matched in the formula expression",it->GetName() );
          break;
       }
    }
@@ -1094,7 +1155,7 @@ void TFormula::ProcessFormula(TString &formula)
       {
          fAllParametersSetted = true;
       }
-      // assume a function without variables is always 1-dimenional
+      // assume a function without variables is always 1-dimensional
       if (hasParameters && ! hasVariables) { 
          fNdim = 1; 
          AddVariable("x",0);
@@ -1114,6 +1175,8 @@ void TFormula::ProcessFormula(TString &formula)
       fClingName = TString::Format("%s_%p",fClingName.Data(),  this);
 
       fClingInput = TString::Format("Double_t %s(%s){ return %s ; }", fClingName.Data(),argumentsPrototype.Data(),formula.Data());
+
+      //std::cout << "cling input " << fClingInput << std::endl;
 
       if(inputIntoCling)
       {
@@ -1159,14 +1222,16 @@ void TFormula::AddVariable(const TString &name, Double_t value)
    {
       TFormulaVariable & var = fVars[name];
       var.fValue = value;
-
+      
+      // If the position is not defined in the Cling vectors, make space for it 
+      // but normally is variable is defined in fVars a slot should be also present in fClingVariables
       if(var.fArrayPos < 0)
       {
          var.fArrayPos = fVars.size();
       }
-      if(var.fArrayPos >= (int)fClingVariables.capacity())
+      if(var.fArrayPos >= (int)fClingVariables.size())
       {
-         fClingVariables.reserve(2 * fClingVariables.capacity());
+         fClingVariables.resize(var.fArrayPos+1);
       }
       fClingVariables[var.fArrayPos] = value;
    }
@@ -1579,7 +1644,7 @@ Double_t TFormula::Eval()
          TFormulaFunction fun = *it;
          if(!fun.fFound)
          {
-            printf("%s is uknown.\n",fun.GetName());
+            printf("%s is unknown.\n",fun.GetName());
          }
       }
       return -1;
