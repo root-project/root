@@ -303,35 +303,6 @@
    fun:_ZN24TEmulatedCollectionProxy12InitializeExEv
 }
 
-{
-   ROOT's list of types objects
-   Memcheck:Leak
-   fun:_Znw?
-   fun:_ZN8TStorage11ObjectAllocE?
-   fun:_ZN7TObjectnwE?
-   fun:_ZN5TCint17UpdateListOfTypesEv
-}
-
-{
-   ROOT's list of types
-   Memcheck:Leak
-   fun:_Znw?
-   fun:_ZN5TCint17UpdateListOfTypesEv
-}
-
-{
-   ROOT's list of types internals
-   Memcheck:Leak
-   fun:_Znw?
-   fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
-   fun:_ZN5TList7AddLastEP7TObject
-   fun:_ZN5TList3AddEP7TObject
-   fun:_ZN10THashTable3AddEP7TObject
-   fun:_ZN10THashTable6RehashEib
-   fun:_ZN10THashTable3AddEP7TObject
-   fun:_ZN5TCint17UpdateListOfTypesEv
-}
-
 ######### ROOT I/O
 
 {
