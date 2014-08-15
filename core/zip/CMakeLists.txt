@@ -49,7 +49,7 @@ endif()
 
 # Define all the header files which should be installed when
 # doing a "make install"
-install(FILES ${ZLIB_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES ${ZLIB_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 # Add all source files of this subdirectory to the source files
