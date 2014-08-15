@@ -31,12 +31,14 @@ int WriteFile() {
 
 	TFile *dataFile1 = new TFile("data1.root", "RECREATE");
 	dataFile1->Add(cloney1);
+   dataFile1->Write();
 	dataFile1->Close();
 	//delete dataFile1;
 	//delete cloney1;
 
 	TFile *dataFile2 = new TFile("data2.root", "RECREATE");
 	dataFile2->Add(cloney2);
+   dataFile2->Write();
 	dataFile2->Close();
 	//delete dataFile2;
 	//delete cloney2;

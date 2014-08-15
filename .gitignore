@@ -541,6 +541,7 @@ AutoDict_*.cxx
 # /root/io/transient/base
 /root/io/transient/base/data1.root
 /root/io/transient/base/data2.root
+/root/io/transient/base/data_merge.root
 
 # /root/io/tree/
 /root/io/tree/*.root
