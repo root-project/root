@@ -915,6 +915,8 @@ TCling::TCling(const char *name, const char *title)
 //    fMapNamespaces   = 0;
    fRootmapFiles = 0;
    fLockProcessLine = kTRUE;
+
+   fAllowLibLoad = !fromRootCling;
    // Disable the autoloader until it is explicitly enabled.
    SetClassAutoloading(false);
 
@@ -1185,7 +1187,7 @@ void TCling::RegisterModule(const char* modulename,
    // The value of 'triggerFunc' is used to find the shared library location.
 
    // rootcling also uses TCling for generating the dictionary ROOT files.
-   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+   static bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
    // We need the dictionary initialization but we don't want to inject the
    // declarations into the interpreter, except for those we really need for
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
@@ -2214,6 +2216,11 @@ Int_t TCling::Load(const char* filename, Bool_t system)
    // Load a library file in cling's memory.
    // if 'system' is true, the library is never unloaded.
    // Return 0 on success, -1 on failure.
+
+   if (!fAllowLibLoad) {
+      Error("Load","Trying to load library (%s) from rootcling.",filename);
+      return -1;
+   }
 
    // Used to return 0 on success, 1 on duplicate, -1 on failure, -2 on "fatal".
    R__LOCKGUARD2(gInterpreterMutex);
@@ -4502,9 +4509,18 @@ Int_t TCling::AutoLoad(const char* cls)
    R__LOCKGUARD(gInterpreterMutex);
    Int_t status = 0;
    if (!gROOT || !gInterpreter || gROOT->TestBit(TObject::kInvalidObject)) {
+      if (gDebug > 2) {
+         Info("TCling::AutoLoad",
+              "Disabled due to gROOT or gInterpreter being invalid/not ready (the class name is %s)", cls);
+      }
       return status;
    }
-   if (fClingCallbacks && !fClingCallbacks->IsAutoloadingEnabled()) {
+   if (!fAllowLibLoad) {
+      // Never load any library from rootcling/genreflex.
+      if (gDebug > 2) {
+         Info("TCling::AutoLoad",
+              "Explicitly disabled (the class name is %s)", cls);
+      }
       return 0;
    }
    // Prevent the recursion when the library dictionary are loaded.

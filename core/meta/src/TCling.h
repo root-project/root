@@ -110,6 +110,7 @@ private: // Data Members
    std::unordered_set<const clang::NamespaceDecl*> fNSFromRootmaps;   // Collection of namespaces fwd declared in the rootmaps
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
    Bool_t          fLockProcessLine;  // True if ProcessLine should lock gInterpreterMutex.
+   Bool_t          fAllowLibLoad;     // True if library load is allowed (i.e. not in rootcling)
 
    cling::Interpreter*   fInterpreter;   // The interpreter.
    cling::MetaProcessor* fMetaProcessor; // The metaprocessor.
