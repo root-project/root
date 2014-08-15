@@ -111,9 +111,13 @@ public:
    const char* fCurrentFile; //current file name being parsed
 
    TGDMLParse() { //constructor
-
+      fWorldName = 0;
+      fWorld = 0;
       fVolID = 0;
       fFILENO = 0;
+      for (Int_t i=0; i<20; i++) fFileEngine[i] = 0;
+      fStartFile = 0;
+      fCurrentFile = 0;
    }
 
    virtual ~TGDMLParse() { //destructor
