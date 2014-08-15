@@ -1959,8 +1959,10 @@ void TCling::EnableAutoLoading()
    // is used that is stored in a not yet loaded library. Uses the
    // information stored in the class/library map (typically
    // $ROOTSYS/etc/system.rootmap).
-   LoadLibraryMap();
-   SetClassAutoloading(true);
+   if (fAllowLibLoad) {
+      LoadLibraryMap();
+      SetClassAutoloading(true);
+   }
 }
 
 //______________________________________________________________________________
@@ -5459,6 +5461,7 @@ int TCling::SetClassAutoloading(int autoload) const
    // Enable/Disable the Autoloading of libraries.
    // Returns the old value, i.e whether it was enabled or not.
    if (!autoload && !fClingCallbacks) return false;
+   if (!fAllowLibLoad) return false;
 
    assert(fClingCallbacks && "We must have callbacks!");
    bool oldVal =  fClingCallbacks->IsAutoloadingEnabled();
