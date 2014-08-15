@@ -411,12 +411,13 @@ public:
          if (curr>=fMaxAddr)
             if (!ExpandStream()) return 0;
       }
-      if (*curr!='"') return 0;
+      if ((*curr!='\"') && (*curr!='\'')) return 0;
+      char quote = *curr;
       do {
          curr++;
          if (curr>=fMaxAddr)
             if (!ExpandStream()) return 0;
-         if (*curr=='"') return curr-start+1;
+         if (*curr==quote) return curr-start+1;
       } while (curr<fMaxAddr);
       return 0;
    }
