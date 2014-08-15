@@ -298,6 +298,33 @@ namespace ROOT {
       }
    };
 
+   // The global gROOT is defined to be a function (ROOT::GetROOT())
+   // which itself is dereferencing a function pointer.
+
+   // Initially this function pointer's value is & GetROOT1 whose role is to
+   // create and initialize the TROOT object itself.
+   // At the very end of the TROOT constructor the value of the funtion pointer
+   // is switch to & GetROOT2 whose role is to initialize the interpreter.
+
+   // This mechanism was primarly intented to fix the issues with order in which
+   // global TROOT and LLVM globals are initialized. TROOT was initializing
+   // Cling, but Cling could not be used yet due to LLVM globals not being
+   // initialized yet.  The solution is to delay initializing the interpreter in
+   // TROOT till after main() when all LLVM globals are initialized.
+
+   // Technically, the mechanism used actually delay the interpreter
+   // initialization until the first use of gROOT *after* the end of the
+   // TROOT constructor.
+
+   // So to delay until after the start of main, we also made sure that none
+   // of the ROOT code (mostly the dictionary code) used during library loading
+   // is using gROOT (directly or indirectly).
+
+   // In practice, the initialization of the interpreter is now delayed until
+   // the first use gROOT (or gInterpreter) after the start of main (but user
+   // could easily break this by using gROOT in their library initialization
+   // code).
+
    extern TROOT *gROOTLocal;
    TROOT *GetROOT1() {
       if (gROOTLocal)
