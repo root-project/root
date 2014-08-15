@@ -20,11 +20,11 @@
 }
 
 {
-   TCint::CreateListOfBaseClasses(TClass*)
+   TCling::CreateListOfBaseClasses(TClass*)
    Memcheck:Leak
    fun:_Znw?
    fun:_ZN8TStorage11ObjectAllocE?
-   fun:_ZN5TCint23CreateListOfBaseClassesEP6TClass
+   fun:_ZN5TCling23CreateListOfBaseClassesEP6TClass
 }
 
 {
@@ -33,7 +33,7 @@
    fun:_Znw?
    fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
    fun:_ZN5TList7AddLastEP7TObject
-   fun:_ZN5TCint23CreateListOfBaseClassesEP6TClass
+   fun:_ZN5TCling23CreateListOfBaseClassesEP6TClass
 }
 
 {
@@ -125,14 +125,14 @@
    fun:_ZN5TList7NewLinkEP7TObjectP8TObjLink
    fun:_ZN5TList7AddLastEP7TObject
    fun:_ZN5TList3AddEP7TObject
-   fun:_ZN5TCint23CreateListOfBaseClassesEP6TClass
+   fun:_ZN5TCling23CreateListOfBaseClassesEP6TClass
 }
 
 {
    TClass's list of base classes (G__DataMemberInfo elements)
    Memcheck:Leak
    fun:_Znw?
-   fun:_ZN5TCint23CreateListOfBaseClassesEP6TClass
+   fun:_ZN5TCling23CreateListOfBaseClassesEP6TClass
 }
 
 {
@@ -141,22 +141,22 @@
    fun:_Znw?
    fun:_ZN8TStorage11ObjectAllocE?
    fun:_ZN7TObjectnwE?
-   fun:_ZN5TCint23CreateListOfBaseClassesEP6TClass
+   fun:_ZN5TCling23CreateListOfBaseClassesEP6TClass
 }
 
 {
    Unloaded TClass and its fClassInfo
    Memcheck:Leak
    fun:_Znw?
-   fun:_ZN5TCint12SetClassInfoEP6TClassb
+   fun:_ZN5TCling12SetClassInfoEP6TClassb
    fun:_ZN6TClass11SetUnloadedEv
 }
 
 {
-   TClass::Init calling TCint::SetClassInfo
+   TClass::Init calling TCling::SetClassInfo
    Memcheck:Leak
    fun:_Znw?
-   fun:_ZN5TCint12SetClassInfoEP6TClassb
+   fun:_ZN5TCling12SetClassInfoEP6TClassb
    fun:_ZN6TClass4InitEPKcsPKSt9type_infoP16TVirtualIsAProxyPFvPvR16TMemberInspectorES1_S1_iib
 }
 
