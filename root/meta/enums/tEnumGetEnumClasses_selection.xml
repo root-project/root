@@ -1,0 +1,11 @@
+<lcgdict>
+   <enum name="enum1" />
+   <enum name="ns1::enum2" />
+   <enum name="ns1::ns2::enum3" />
+   <class name="class1" />
+   <enum name="class1::enum4" />
+   <class name="class3<double,1>" />
+   <enum name="class3<double,1>::enum6" />
+   <class name="ns4::class4<std::string,1>" />
+   <enum name="ns4::class4<std::string,1>::enum6"  />
+</lcgdict>
