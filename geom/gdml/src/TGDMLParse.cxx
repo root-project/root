@@ -415,9 +415,9 @@ TString TGDMLParse::GetScale(const char* unit)
    } else if (strcmp(unit, "kilometer") == 0) {
       retunit = "100000.0";
    } else if (strcmp(unit, "rad") == 0) {
-      retunit = TString::Format("%f", TMath::RadToDeg());
+      retunit = TString::Format("%.12f", TMath::RadToDeg());
    } else if (strcmp(unit, "radian") == 0) {
-      retunit = TString::Format("%f", TMath::RadToDeg());
+      retunit = TString::Format("%.12f", TMath::RadToDeg());
    } else if (strcmp(unit, "deg") == 0) {
       retunit = "1.0";
    } else if (strcmp(unit, "degree") == 0) {
@@ -425,7 +425,7 @@ TString TGDMLParse::GetScale(const char* unit)
    } else if (strcmp(unit, "pi") == 0) {
       retunit = "pi";
    } else if (strcmp(unit, "avogadro") == 0) {
-      retunit = TString::Format("%f", TMath::Na());
+      retunit = TString::Format("%.12g", TMath::Na());
    } else {
       retunit = "0";
    }
@@ -1827,7 +1827,7 @@ XMLNodePointer_t TGDMLParse::ElCone(TXMLEngine* gdml, XMLNodePointer_t node, XML
    Double_t z = Evaluate(zmaxline);
    Double_t z1 = Evaluate(zcutline);
    if (z1 <= 0) {
-      Info("ElCone", "ERROR! Parameter zcut = %f is not set properly, elcone will not be imported.", z1);
+      Info("ElCone", "ERROR! Parameter zcut = %.12g is not set properly, elcone will not be imported.", z1);
       return node;
    }
    if (z1 > z){
