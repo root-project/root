@@ -17,8 +17,11 @@ bool Compare(TH1F *draw, TH1F *loop, const char *title) {
     return false;
   }
 
-  if (draw->GetMean()!=loop->GetMean()) {
-    cout <<  title << ": incorrect mean (" << draw->GetMean() 
+  double dMean = draw->GetMean();
+  double lMean = loop->GetMean();
+  // Assume precision of 1E-6
+  if (fabs(dMean - lMean) * 1E6 > fabs(dMean + lMean)) {
+    cout <<  title << ": incorrect mean (" << draw->GetMean()
          << " vs " << loop->GetMean() << ")" << endl;
     return false;
   }
