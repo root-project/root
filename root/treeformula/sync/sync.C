@@ -12,7 +12,7 @@
 bool Compare(TH1F *draw, TH1F *loop, const char *title) {
 
   if (draw->GetEntries()!=loop->GetEntries()) {
-    cout << title << ": incorrect number of entries (" << draw->GetEntries() 
+    cout << title << ": incorrect number of entries (" << draw->GetEntries()
          << " vs " << loop->GetEntries() << ")" << endl;
     return false;
   }
@@ -32,19 +32,19 @@ bool Compare(TH1F *draw, TH1F *loop, const char *title) {
 Int_t sync(bool skipKnownFail) {
   if (!TClassTable::GetDict("Event")) {
     gSystem->Load("libEvent");
-  }     
+  }
 
   TFile * file = new TFile("Event.root");
   TTree * tree = (TTree*)file->Get("T");
 
   new TCanvas("c1");
   tree->Draw("fPx>>h3","fMatrix || fMatrix==0");
-  
+
   tree->Draw("fMatrix>>h1","fVertex>=2");
   tree->Draw("fMatrix>>h5","fPx");
   tree->Draw("fTracks.fVertex - fTracks.fVertex[][fTracks.fNpoint%3]>>h7");
 
-  
+
   TH1F * h1 = (TH1F*)gROOT->FindObject("h1");
   TH1F * h3 = (TH1F*)gROOT->FindObject("h3");
   TH1F * h5 = (TH1F*)gROOT->FindObject("h5");
@@ -81,9 +81,9 @@ Int_t sync(bool skipKnownFail) {
           h8->Fill( t->GetVertex(i2) - t->GetVertex(point) );
        }
     }
-    
 
-    ntracks = TMath::Min(ntracks,4); 
+
+    ntracks = TMath::Min(ntracks,4);
     for (int j=0; j<ntracks; j++) {
       t = (Track*) e->GetTracks()->At(j);
 
@@ -91,7 +91,7 @@ Int_t sync(bool skipKnownFail) {
          h4->Fill(t->GetPx());
          if (t->GetPx()) h6->Fill(e->GetMatrix(j,i0),t->GetPx());
       }
-      
+
       for (int k=0; k<3; k++) {
          if (t->GetVertex(k) >=2) {
             h2->Fill(e->GetMatrix(j,k));
