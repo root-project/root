@@ -889,6 +889,20 @@ void TGeoElementTable::AddElement(const char *name, const char *title, Int_t z, 
 }
 
 //______________________________________________________________________________
+void TGeoElementTable::AddElement(TGeoElement *elem)
+{
+// Add a custom element to the table.
+   if (!fList) fList = new TObjArray(128);
+   TGeoElement *orig = FindElement(elem->GetName());
+   if (orig) {
+      Error("AddElement", "Found element with same name: %s (%s). Cannot add to table.",
+             orig->GetName(), orig->GetTitle());
+      return;
+   }          
+   fList->AddAtAndExpand(elem, fNelements++);
+}   
+
+//______________________________________________________________________________
 void TGeoElementTable::AddElementRN(TGeoElementRN *elem)
 {
 // Add a radionuclide to the table and map it.
@@ -1117,9 +1131,13 @@ void TGeoElementTable::ExportElementsRN(const char *filename)
 TGeoElement *TGeoElementTable::FindElement(const char *name) const
 {
 // Search an element by symbol or full name
+   // Exact matching
+   TGeoElement *elem;
+   elem = (TGeoElement*)fList->FindObject(name);
+   if (elem) return elem;
+   // Search case insensitive by element name
    TString s(name);
    s.ToUpper();
-   TGeoElement *elem;
    elem = (TGeoElement*)fList->FindObject(s.Data());
    if (elem) return elem;
    // Search by full name
@@ -1157,6 +1175,44 @@ TGeoElementRN *TGeoElementTable::GetElementRN(Int_t a, Int_t z, Int_t iso) const
 {
 // Retreive a radionuclide by a, z, and isomeric state.
    return GetElementRN(TGeoElementRN::ENDF(a,z,iso));
+}
+
+//______________________________________________________________________________
+void TGeoElementTable::Print(Option_t *option) const
+{
+// Print table of elements. The accepted options are:
+//  ""  - prints everything by default
+//  "D" - prints default elements only
+//  "I" - prints isotopes
+//  "R" - prints radio-nuclides only if imported
+//  "U" - prints user-defined elements only
+   TString opt(option);
+   opt.ToUpper();
+   Int_t induser = HasDefaultElements() ? 113 : 0;
+   // Default elements
+   if (opt=="" || opt=="D") {
+      if (induser) printf("================\nDefault elements\n================\n");
+      for (Int_t iel=0; iel<induser; ++iel) fList->At(iel)->Print();
+   }
+   // Isotopes
+   if (opt=="" || opt=="I") {
+      if (fIsotopes) {
+         printf("================\nIsotopes\n================\n");
+         fIsotopes->Print();
+      }
+   }
+   // Radio-nuclides
+   if (opt=="" || opt=="R") {
+      if (HasRNElements()) {
+         printf("================\nRadio-nuclides\n================\n");
+         fListRN->Print();
+      }
+   }
+   // User-defined elements
+   if (opt=="" || opt=="U") {
+      if (fNelements>induser) printf("================\nUser elements\n================\n");
+      for (Int_t iel=induser; iel<fNelements; ++iel) fList->At(iel)->Print();
+   }      
 }
 
 ClassImp(TGeoBatemanSol)

@@ -397,6 +397,7 @@ public:
    };      
    void                     AddElement(const char *name, const char *title, Int_t z, Double_t a);
    void                     AddElement(const char *name, const char *title, Int_t z, Int_t n, Double_t a);
+   void                     AddElement(TGeoElement *elem);
    void                     AddElementRN(TGeoElementRN *elem);
    void                     AddIsotope(TGeoIsotope *isotope);
    void                     BuildDefaultElements();
@@ -414,6 +415,7 @@ public:
    Int_t                    GetNelements() const {return fNelements;}
    Int_t                    GetNelementsRN() const {return fNelementsRN;}
    void                     ExportElementsRN(const char *filename="");
+   virtual void             Print(Option_t *option = "") const;
 
    ClassDef(TGeoElementTable,4)              // table of elements
 };
