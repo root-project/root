@@ -1648,10 +1648,12 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params)
 {
    if (params) SetParameters(params, fNpar);
 
-   if(fNdim >= 1) fClingVariables[0] = x[0];
-   if(fNdim >= 2) fClingVariables[1] = x[1];
-   if(fNdim >= 3) fClingVariables[2] = x[2];
-   if(fNdim >= 4) fClingVariables[3] = x[3];
+   std::copy(x, x+fNdim, fClingVariables.begin() );
+
+   // if(fNdim >= 1) fClingVariables[0] = x[0];
+   // if(fNdim >= 2) fClingVariables[1] = x[1];
+   // if(fNdim >= 3) fClingVariables[2] = x[2];
+   // if(fNdim >= 4) fClingVariables[3] = x[3];
 
    // if(fNdim >= 1) SetVariable("x",x[1]);
    // if(fNdim >= 2) SetVariable("y",x[1]);
