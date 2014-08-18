@@ -58,8 +58,8 @@ for f in datfiles:
          #                        error_kw=dict(elinewidth=2,ecolor='black'))
 
          #add a legend
-        if i == 7:
-            axarr[7,1].legend((oldrec[0], rects12[0]), ('aCMA-ES', 'Minuit2'), fontsize=10 )
+        if i == 6:
+            axarr[6,1].legend((oldrec[0], rects12[0]), ('aCMA-ES', 'Minuit2'), fontsize=10 )
         aa = aa + 1
 
         
@@ -100,5 +100,5 @@ for f in datfiles:
 #        j = j + 1
 
 #plt.tight_layout()
-plt.suptitle('aCMA-ES / Minuit2 Benchmark Suite / ' + str(len(datfiles)) + ' experiments / ' + str(int(runs)) + ' runs on each\nlambda={auto, 5, 10, 20, 40, 80, 160, 320, 640, 1280}')
+plt.suptitle('aCMA-ES / Minuit2 Benchmark Suite / ' + str(len(datfiles)) + ' experiments / ' + str(int(runs)) + ' runs on each\nlambda={auto, 50, 200, auto-aipop-4-restarts}') #10, 20, 40, 80, 160, 320, 640, 1280}')
 plt.show()
