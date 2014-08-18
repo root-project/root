@@ -63,6 +63,7 @@ protected:
    Int_t       fNpfits;      //Number of points used in the fit
    Int_t       fNDF;         //Number of degrees of freedom in the fit
    Int_t       fNsave;       //Number of points used to fill array fSave
+   Int_t       fNpar;        //Number of parameters
    Double_t    fChisquare;   //Function fit chisquare
    Double_t    *fIntegral;   //![fNpx] Integral of function binned on fNpx bins
    Double_t    *fParErrors;  //[fNpar] Array of errors of the fNpar parameters
@@ -78,7 +79,7 @@ protected:
    Double_t     fMinimum;    //Minimum value for plotting
    TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
    ROOT::Math::ParamFunctor fFunctor;   //! Functor object to wrap any C++ callable object
-   TFormula    *fFormula;    //!Pointer to TFormula in case when user define formula
+   TFormula    *fFormula;    //Pointer to TFormula in case when user define formula
 
    static Bool_t fgAbsValue;  //use absolute value of function when computing integral
    static Bool_t fgRejectPoint;  //True if point must be rejected in a fit

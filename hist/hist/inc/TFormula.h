@@ -84,12 +84,12 @@ private:
    vector<Double_t>  fClingVariables;
    vector<Double_t>  fClingParameters;
    Bool_t            fReadyToExecute;
-   Bool_t            fClingInitialized;
+   Bool_t            fClingInitialized;  //! - make transient to force re-initialization in Cling when reading from a file
    Bool_t            fAllParametersSetted;
-   TMethodCall*      fMethod;
+   TMethodCall*      fMethod;        //! pointer to methocall
    TString           fClingName;     // unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
 
-   TInterpreter::CallFuncIFacePtr_t::Generic_t fFuncPtr;
+   TInterpreter::CallFuncIFacePtr_t::Generic_t fFuncPtr;   //!  function pointer
 
    void     InputFormulaIntoCling();
    void     PrepareEvalMethod();

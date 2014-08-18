@@ -423,6 +423,7 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
    fType      = 0;
    fFormula = new TFormula(name,formula);
    Int_t npar = fFormula->GetNpar();
+   fNpar = npar; 
    if (npar) {
       fParErrors = new Double_t[npar];
       fParMin    = new Double_t[npar];
@@ -490,6 +491,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar,Int_t ndim)
    fNpx        = 100;
    fType       = 2;
    fFormula    = new TFormula(name,npar,ndim);
+   fNpar       = npar; 
    if (npar > 0) {
       fParErrors  = new Double_t[npar];
       fParMin     = new Double_t[npar];
@@ -574,7 +576,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fMethodCall = 0;
    fFunctor = ROOT::Math::ParamFunctor(fcn);
    fFormula    = new TFormula(name,npar,ndim);
-
+   fNpar       = npar; 
    if (npar > 0) {
       fParErrors  = new Double_t[npar];
       fParMin     = new Double_t[npar];
@@ -646,6 +648,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
    fMethodCall = 0;
    fFunctor    = ROOT::Math::ParamFunctor(fcn);
    fFormula    = new TFormula(name,npar,ndim);
+   fNpar       = npar; 
    if (npar > 0) {
       fParErrors  = new Double_t[npar];
       fParMin     = new Double_t[npar];
@@ -706,6 +709,7 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
    fNpfits    ( 0 ),
    fNDF       ( 0 ),
    fNsave     ( 0 ),
+   fNpar      ( 0 ),
    fChisquare ( 0 ),
    fIntegral  ( 0 ),
    fParErrors ( 0 ),
@@ -747,7 +751,7 @@ void TF1::CreateFromFunctor(const char *name, Int_t npar,Int_t ndim)
       fFormula = new TFormula(name,npar,ndim);
    }
 
-   
+   fNpar = npar; 
    if (npar > 0) {
       fParErrors  = new Double_t[npar];
       fParMin     = new Double_t[npar];
@@ -832,6 +836,7 @@ TF1::TF1(const TF1 &f1) : TNamed(f1), TAttLine(f1), TAttFill(f1), TAttMarker(f1)
    fNpfits    = 0;
    fNDF       = 0;
    fNsave     = 0;
+   fNpar      = 0;
    fChisquare = 0;
    fIntegral  = 0;
    fParErrors = 0;
@@ -927,6 +932,7 @@ void TF1::Copy(TObject &obj) const
    }
    Int_t npar = 0;
    if (fFormula) npar = fFormula->GetNpar();
+   ((TF1&)obj).fNpar = npar;
    if (npar) {
       ((TF1&)obj).fParErrors = new Double_t[npar];
       ((TF1&)obj).fParMin    = new Double_t[npar];

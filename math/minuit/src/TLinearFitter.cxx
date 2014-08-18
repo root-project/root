@@ -20,7 +20,7 @@
 #include "TF2.h"
 #include "TH1.h"
 #include "TList.h"
-
+#include "TClass.h"
 
 ClassImp(TLinearFitter)
 
@@ -623,8 +623,20 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
       //general case
       for (ii=0; ii<fNfunctions; ii++){
          if (!fFunctions.IsEmpty()){
-            TFormula *f1 = (TFormula*)(fFunctions.UncheckedAt(ii));
-            fVal[ii]=f1->EvalPar(x)/e;
+            // ffunctions can be TF1 or TFormula depending on how they are created 
+            TObject * obj = fFunctions.UncheckedAt(ii);
+            if (obj->IsA() == TFormula::Class() ) {
+               TFormula *f1 = (TFormula*)(obj);
+               fVal[ii]=f1->EvalPar(x)/e;
+            }
+            else if  (obj->IsA() == TF1::Class() ) {
+               TF1 *f1 = (TF1*)(obj);
+               fVal[ii]=f1->EvalPar(x)/e;               
+            }
+            else {
+               Error("AddToDesign","Basis Function %s is of an invalid type %s",obj->GetName(),obj->IsA()->GetName());
+               return;
+            }
          } else {
             TFormula *f=(TFormula*)fInputFunction->GetLinearPart(ii);
             if (!f){

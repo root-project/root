@@ -288,6 +288,9 @@ void stress1()
    //Fit h1form with original function f1form
    h1form->Fit("f1form","q0");
 
+   // std::cout << "done formula" << std::endl;
+   // f1form->Print("v");
+
    //same operation with an interpreted function f1int
    TF1 *f1 = new TF1("f1int",f1int,-10,10,9);
    f1->SetParameters(f1params);
@@ -332,9 +335,9 @@ void stress1()
    h1int->Write();
    ntotout += local.GetBytesWritten();
    //do not close the file. should be done by the destructor automatically
-   delete h1int;
-   delete h1form;
-   delete h1diff;
+   // delete h1int;
+   // delete h1form;
+   // delete h1diff;
 }
 
 //_______________________________________________________________
@@ -347,7 +350,7 @@ void stress2()
    Float_t comp = f.GetCompressionFactor();
 
    Bool_t OK = kTRUE;
-   Long64_t lastgood = 9428;
+   Long64_t lastgood = 12383; //9428;
    if (last <lastgood-200 || last > lastgood+200 || comp <2.0 || comp > 2.4) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
@@ -378,7 +381,7 @@ void stress3()
    Long64_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
-   Long64_t lastgood = 49203;
+   Long64_t lastgood = 65547; //49203;
    if (last <lastgood-900 || last > lastgood+900 || comp <1.8 || comp > 2.4) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
