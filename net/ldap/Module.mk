@@ -69,3 +69,6 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(LDAPO): CXXFLAGS += -DLDAP_DEPRECATED $(LDAPINCDIR:%=-I%)
+ifeq ($(MACOSX_LDAP_DEPRECATED),yes)
+$(LDAPO) $(LDAPDO): CXXFLAGS += -Wno-deprecated-declarations
+endif
