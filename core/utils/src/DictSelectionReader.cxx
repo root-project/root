@@ -13,26 +13,26 @@
 #include <sstream>
 
 //______________________________________________________________________________
-DictSelectionReader::DictSelectionReader(SelectionRules& selectionRules,
-                                         const clang::ASTContext& C)
-    : fSelectionRules(selectionRules), fIsFirstPass(true)
+DictSelectionReader::DictSelectionReader(SelectionRules &selectionRules,
+      const clang::ASTContext &C)
+   : fSelectionRules(selectionRules), fIsFirstPass(true)
 {
-   clang::TranslationUnitDecl* translUnitDecl = C.getTranslationUnitDecl();
+   clang::TranslationUnitDecl *translUnitDecl = C.getTranslationUnitDecl();
    // Inspect the AST
    TraverseDecl(translUnitDecl);
 
    // Now re-inspect the AST to find autoselected classes (double-tap)
    fIsFirstPass = false;
    if (!fTemplateInstanceNamePatternsArgsToKeep.empty() ||
-       !fAutoSelectedClassFieldNames.empty() ||
-       !fNoAutoSelectedClassFieldNames.empty())
+         !fAutoSelectedClassFieldNames.empty() ||
+         !fNoAutoSelectedClassFieldNames.empty())
       TraverseDecl(translUnitDecl);
 
    // Now push all the selection rules
    for (llvm::StringMap<ClassSelectionRule>::iterator it =
             fClassNameSelectionRuleMap.begin();
-        it != fClassNameSelectionRuleMap.end();
-        ++it) {
+         it != fClassNameSelectionRuleMap.end();
+         ++it) {
       fSelectionRules.AddClassSelectionRule(it->second);
    }
 }
@@ -47,35 +47,35 @@ DictSelectionReader::DictSelectionReader(SelectionRules& selectionRules,
  * approximation.
  **/
 bool
-DictSelectionReader::InSelectionNamespace(const clang::RecordDecl& recordDecl,
-                                          const std::string& className)
+DictSelectionReader::InSelectionNamespace(const clang::RecordDecl &recordDecl,
+      const std::string &className)
 {
    // If it's not contained by 2 namespaces, drop it.
    std::list<std::pair<std::string, bool> > enclosingNamespaces;
    ROOT::TMetaUtils::ExtractEnclosingNameSpaces(recordDecl,
-                                                enclosingNamespaces);
+         enclosingNamespaces);
 
    const unsigned int nNs = enclosingNamespaces.size();
    if (nNs < 3) return false;
 
    if (enclosingNamespaces.back().second || // is inline namespace
-       enclosingNamespaces.back().first != "ROOT")
+         enclosingNamespaces.back().first != "ROOT")
       return false;
 
    enclosingNamespaces.pop_back();
    if (enclosingNamespaces.back().second || // is inline namespace
-       enclosingNamespaces.back().first != "Meta")
+         enclosingNamespaces.back().first != "Meta")
       return false;
 
    enclosingNamespaces.pop_back();
    if (enclosingNamespaces.back().second || // is inline namespace
-       enclosingNamespaces.back().first != "Selection")
+         enclosingNamespaces.back().first != "Selection")
       return false;
 
    // Exclude the special names identifying the entities of the selection syntax
    if (className != "" &&
-       (className.find("MemberAttributes") == 0 ||
-        className.find("ClassAttributes") == 0 || className.find("Keep") == 0))
+         (className.find("MemberAttributes") == 0 ||
+          className.find("ClassAttributes") == 0 || className.find("Keep") == 0))
       return false;
 
    return true;
@@ -85,11 +85,11 @@ DictSelectionReader::InSelectionNamespace(const clang::RecordDecl& recordDecl,
 /**
  * Get the pointer to the template arguments list. Return zero if not available.
  **/
-const clang::TemplateArgumentList*
-DictSelectionReader::GetTmplArgList(const clang::CXXRecordDecl& cxxRcrdDecl)
+const clang::TemplateArgumentList *
+DictSelectionReader::GetTmplArgList(const clang::CXXRecordDecl &cxxRcrdDecl)
 {
-   const clang::ClassTemplateSpecializationDecl* tmplSpecDecl =
-       llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&cxxRcrdDecl);
+   const clang::ClassTemplateSpecializationDecl *tmplSpecDecl =
+      llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&cxxRcrdDecl);
 
    if (!tmplSpecDecl) return 0;
 
@@ -104,17 +104,17 @@ DictSelectionReader::GetTmplArgList(const clang::CXXRecordDecl& cxxRcrdDecl)
  **/
 template <class T>
 unsigned int
-DictSelectionReader::ExtractTemplateArgValue(const T& myClass,
-                                             const std::string& pattern)
+DictSelectionReader::ExtractTemplateArgValue(const T &myClass,
+      const std::string &pattern)
 {
-   const clang::RecordDecl* rcrdDecl =
-       ROOT::TMetaUtils::GetUnderlyingRecordDecl(myClass.getType());
-   const clang::CXXRecordDecl* cxxRcrdDecl =
-       llvm::dyn_cast<clang::CXXRecordDecl>(rcrdDecl);
+   const clang::RecordDecl *rcrdDecl =
+      ROOT::TMetaUtils::GetUnderlyingRecordDecl(myClass.getType());
+   const clang::CXXRecordDecl *cxxRcrdDecl =
+      llvm::dyn_cast<clang::CXXRecordDecl>(rcrdDecl);
 
    if (!cxxRcrdDecl) return 0;
 
-   const clang::TemplateArgumentList* tmplArgs = GetTmplArgList(*cxxRcrdDecl);
+   const clang::TemplateArgumentList *tmplArgs = GetTmplArgList(*cxxRcrdDecl);
    if (!tmplArgs) return 0;
 
    if (std::string::npos == cxxRcrdDecl->getNameAsString().find(pattern))
@@ -131,9 +131,9 @@ DictSelectionReader::ExtractTemplateArgValue(const T& myClass,
  * autoselected. The key is the name of the class and the value the name of the
  * field. This information is used in the second pass.
  **/
-void DictSelectionReader::ManageFields(const clang::RecordDecl& recordDecl,
-                                       const std::string& className,
-                                       ClassSelectionRule& csr)
+void DictSelectionReader::ManageFields(const clang::RecordDecl &recordDecl,
+                                       const std::string &className,
+                                       ClassSelectionRule &csr)
 {
    // Iterate on the members to see if
    // 1) They are transient
@@ -142,19 +142,19 @@ void DictSelectionReader::ManageFields(const clang::RecordDecl& recordDecl,
    std::string fieldClassName;
 
    for (clang::RecordDecl::field_iterator fieldsIt = recordDecl.field_begin();
-        fieldsIt != recordDecl.field_end();
-        ++fieldsIt) {
+         fieldsIt != recordDecl.field_end();
+         ++fieldsIt) {
 
       unsigned int attrCode =
-          ExtractTemplateArgValue(**fieldsIt, "MemberAttributes");
+         ExtractTemplateArgValue(**fieldsIt, "MemberAttributes");
 
       if (attrCode == ROOT::Meta::Selection::kMemberNullProperty) continue;
 
-      if (attrCode & ROOT::Meta::Selection::kNonSplittable){
+      if (attrCode & ROOT::Meta::Selection::kNonSplittable) {
          VariableSelectionRule vsr(BaseSelectionRule::kYes);
          vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::name,
                                fieldsIt->getNameAsString());
-         vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::comment,"||");
+         vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::comment, "||");
          csr.AddFieldSelectionRule(vsr);
       }
 
@@ -168,10 +168,10 @@ void DictSelectionReader::ManageFields(const clang::RecordDecl& recordDecl,
 
       if (attrCode & ROOT::Meta::Selection::kAutoSelected)
          fAutoSelectedClassFieldNames[className].insert(
-             fieldsIt->getNameAsString());
+            fieldsIt->getNameAsString());
       else if (attrCode & ROOT::Meta::Selection::kNoAutoSelected)
          fNoAutoSelectedClassFieldNames[className].insert(
-             fieldsIt->getNameAsString());
+            fieldsIt->getNameAsString());
 
    } // end loop on fields
 }
@@ -189,9 +189,9 @@ void DictSelectionReader::ManageFields(const clang::RecordDecl& recordDecl,
  * used during the second pass.
  **/
 void
-DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl& cxxRcrdDecl,
-                                       const std::string& className,
-                                       ClassSelectionRule& csr)
+DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl &cxxRcrdDecl,
+                                       const std::string &className,
+                                       ClassSelectionRule &csr)
 {
    // Check the traits of the class. Useful information may be there
    // extract mothers, make a switchcase:
@@ -201,16 +201,16 @@ DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl& cxxRcrdDecl,
 
    for (clang::CXXRecordDecl::base_class_const_iterator baseIt =
             cxxRcrdDecl.bases_begin();
-        baseIt != cxxRcrdDecl.bases_end();
-        baseIt++) {
+         baseIt != cxxRcrdDecl.bases_end();
+         baseIt++) {
 
       if (unsigned int nArgsToKeep = ExtractTemplateArgValue(*baseIt, "Keep")) {
          std::string pattern =
-             className.substr(0, className.find_first_of("<"));
+            className.substr(0, className.find_first_of("<"));
          // Fill the structure holding the template and the number of args to
          // skip
          fTemplateInstanceNamePatternsArgsToKeep.push_back(
-             std::make_pair(pattern, nArgsToKeep));
+            std::make_pair(pattern, nArgsToKeep));
       }
 
    } // end loop on base classes
@@ -222,12 +222,12 @@ DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl& cxxRcrdDecl,
  * the selection namespace. Selection rules are directly filled as well as
  * data sructures re-used during the second pass.
  **/
-bool DictSelectionReader::FirstPass(const clang::RecordDecl& recordDecl)
+bool DictSelectionReader::FirstPass(const clang::RecordDecl &recordDecl)
 {
 
    std::string className;
    ROOT::TMetaUtils::GetQualifiedName(
-       className, *recordDecl.getTypeForDecl(), recordDecl);
+      className, *recordDecl.getTypeForDecl(), recordDecl);
 
    // Strip ROOT::Meta::Selection
    className.replace(0, 23, "");
@@ -240,7 +240,7 @@ bool DictSelectionReader::FirstPass(const clang::RecordDecl& recordDecl)
    const size_t lWedgePos(className.find_first_of("<"));
    std::string patternName("");
    if (lWedgePos != std::string::npos &&
-       llvm::isa<clang::ClassTemplateSpecializationDecl>(recordDecl)) {
+         llvm::isa<clang::ClassTemplateSpecializationDecl>(recordDecl)) {
       patternName = PatternifyName(className);
       csr.SetAttributeValue(ROOT::TMetaUtils::propNames::pattern, patternName);
 
@@ -250,14 +250,14 @@ bool DictSelectionReader::FirstPass(const clang::RecordDecl& recordDecl)
 
    ManageFields(recordDecl, className, csr);
 
-   if (const clang::CXXRecordDecl* cxxRcrdDecl =
-           llvm::dyn_cast<clang::CXXRecordDecl>(&recordDecl)) {
+   if (const clang::CXXRecordDecl *cxxRcrdDecl =
+            llvm::dyn_cast<clang::CXXRecordDecl>(&recordDecl)) {
       ManageBaseClasses(*cxxRcrdDecl, className, csr);
    }
 
    // Finally add the selection rule
    fClassNameSelectionRuleMap[patternName.empty() ? className : patternName] =
-       csr;
+      csr;
    // fSelectionRules.AddClassSelectionRule(csr);
 
    return true;
@@ -278,33 +278,33 @@ bool DictSelectionReader::FirstPass(const clang::RecordDecl& recordDecl)
  * information down to the @c AnnotatedRecordDecl creation which happens in the
  * @c RScanner .
  **/
-bool DictSelectionReader::SecondPass(const clang::RecordDecl& recordDecl)
+bool DictSelectionReader::SecondPass(const clang::RecordDecl &recordDecl)
 {
    // No interest if we are in the selction namespace
    if (InSelectionNamespace(recordDecl)) return true;
 
    std::string className;
    ROOT::TMetaUtils::GetQualifiedName(
-       className, *recordDecl.getTypeForDecl(), recordDecl);
+      className, *recordDecl.getTypeForDecl(), recordDecl);
 
    // If the class is not among those which have fields the type of which are to
    // be autoselected or excluded
    if (0 != fAutoSelectedClassFieldNames.count(className) ||
-       0 != fNoAutoSelectedClassFieldNames.count(className)) {
+         0 != fNoAutoSelectedClassFieldNames.count(className)) {
       // Iterate on fields. If the name of the field is among the ones the types
       // of which should be (no)autoselected, add a class selection rule
       std::string typeName;
-      clang::ASTContext& C = recordDecl.getASTContext();
+      clang::ASTContext &C = recordDecl.getASTContext();
       for (clang::RecordDecl::field_iterator filedsIt =
                recordDecl.field_begin();
-           filedsIt != recordDecl.field_end();
-           ++filedsIt) {
+            filedsIt != recordDecl.field_end();
+            ++filedsIt) {
          const std::string fieldName(filedsIt->getNameAsString());
          bool excluded = 1 == fNoAutoSelectedClassFieldNames[className].count(fieldName);
          bool selected = 1 == fAutoSelectedClassFieldNames[className].count(fieldName);
          if (!selected && !excluded)
             continue;
-         ClassSelectionRule aSelCsr(excluded? BaseSelectionRule::kNo : BaseSelectionRule::kYes);
+         ClassSelectionRule aSelCsr(excluded ? BaseSelectionRule::kNo : BaseSelectionRule::kYes);
          ROOT::TMetaUtils::GetFullyQualifiedTypeName(typeName, filedsIt->getType(), C);
          GetPointeeType(typeName);
          aSelCsr.SetAttributeValue(ROOT::TMetaUtils::propNames::name, typeName);
@@ -321,22 +321,22 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl& recordDecl)
 
    unsigned int nArgsToKeep;
    std::list<std::pair<std::string, unsigned int> >::iterator it =
-       fTemplateInstanceNamePatternsArgsToKeep.begin();
+      fTemplateInstanceNamePatternsArgsToKeep.begin();
    for (; it != fTemplateInstanceNamePatternsArgsToKeep.end(); ++it) {
-      std::string& pattern = it->first;
+      std::string &pattern = it->first;
       nArgsToKeep = it->second;
       // Check if we have to add a selection rule for this class
       if (className.find(pattern) == 0) {
          fClassNameSelectionRuleMap[PatternifyName(className)]
-                 .SetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep,
-                                    std::to_string(nArgsToKeep));
+         .SetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep,
+                            std::to_string(nArgsToKeep));
       }
    }
    return true;
 }
 
 //______________________________________________________________________________
-bool DictSelectionReader::VisitRecordDecl(clang::RecordDecl* recordDecl)
+bool DictSelectionReader::VisitRecordDecl(clang::RecordDecl *recordDecl)
 {
 
    if (fIsFirstPass)
@@ -351,7 +351,7 @@ bool DictSelectionReader::VisitRecordDecl(clang::RecordDecl* recordDecl)
  * e.g. myClass<double, int, ...> in the selection namespace
  * will translate into a pattern of the type myClass<*>
  **/
-inline std::string DictSelectionReader::PatternifyName(const std::string& className)
+inline std::string DictSelectionReader::PatternifyName(const std::string &className)
 {
 
    return className.substr(0, className.find_first_of("<")) + "<*>";
@@ -362,9 +362,10 @@ inline std::string DictSelectionReader::PatternifyName(const std::string& classN
 /**
  * Transform the name of the type eliminating the trailing & and *
  **/
-inline void DictSelectionReader::GetPointeeType(std::string& typeName){
-   while (typeName[typeName.size()-1] == '*' ||
-            typeName[typeName.size()-1] == '&'){
-      typeName = typeName.substr(0,typeName.size()-1);
+inline void DictSelectionReader::GetPointeeType(std::string &typeName)
+{
+   while (typeName[typeName.size() - 1] == '*' ||
+          typeName[typeName.size() - 1] == '&') {
+      typeName = typeName.substr(0, typeName.size() - 1);
    }
 }

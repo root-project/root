@@ -21,12 +21,11 @@
 
 class SelectionRules;
 class ClassSelectionRule;
-namespace clang
-{
-class ASTContext;
+namespace clang {
+   class ASTContext;
 //    class DeclContext;
-class NamespaceDecl;
-class CXXRecordDecl;
+   class NamespaceDecl;
+   class CXXRecordDecl;
 }
 
 /**
@@ -210,47 +209,48 @@ ROOT::Selection::NS::C.
  *
  **/
 class DictSelectionReader
-    : public clang::RecursiveASTVisitor<DictSelectionReader>
-{
- public:
+      : public clang::RecursiveASTVisitor<DictSelectionReader> {
+public:
    /// Take the selection rules as input (for consistency w/ other selector
    /// interfaces)
-   DictSelectionReader(SelectionRules&, const clang::ASTContext&);
+   DictSelectionReader(SelectionRules &, const clang::ASTContext &);
 
    /// Visit the entities that needs to be selected
-   bool VisitRecordDecl(clang::RecordDecl*);
+   bool VisitRecordDecl(clang::RecordDecl *);
 
-   bool shouldVisitTemplateInstantiations() const { return true; }
+   bool shouldVisitTemplateInstantiations() const {
+      return true;
+   }
 
- private:
+private:
    inline bool
-   InSelectionNamespace(const clang::RecordDecl&,
-                        const std::string& str =
-                            ""); ///< Check if in the ROOT::Selection namespace
-   inline bool FirstPass(const clang::RecordDecl&);  ///< First pass on the AST
-   inline bool SecondPass(const clang::RecordDecl&); ///< Second pass on the
-                                                     ///AST, using the
-                                                     ///information of the first
-                                                     ///one
+   InSelectionNamespace(const clang::RecordDecl &,
+                        const std::string &str =
+                           ""); ///< Check if in the ROOT::Selection namespace
+   inline bool FirstPass(const clang::RecordDecl &); ///< First pass on the AST
+   inline bool SecondPass(const clang::RecordDecl &); ///< Second pass on the
+   ///AST, using the
+   ///information of the first
+   ///one
    inline void
-   ManageFields(const clang::RecordDecl&, const std::string&,
-                ClassSelectionRule&); ///< Take care of the class fields
+   ManageFields(const clang::RecordDecl &, const std::string &,
+                ClassSelectionRule &); ///< Take care of the class fields
    inline void
-   ManageBaseClasses(const clang::CXXRecordDecl&, const std::string&,
-                     ClassSelectionRule&); ///< Take care of the class bases
+   ManageBaseClasses(const clang::CXXRecordDecl &, const std::string &,
+                     ClassSelectionRule &); ///< Take care of the class bases
    template <class T>
    inline unsigned int ExtractTemplateArgValue(
-       const T&,
-       const std::string&); ///< Extract the value of the template parameter
-   inline const clang::TemplateArgumentList* GetTmplArgList(
-       const clang::CXXRecordDecl&); ///< Get the template arguments list if any
+      const T &,
+      const std::string &); ///< Extract the value of the template parameter
+   inline const clang::TemplateArgumentList *GetTmplArgList(
+      const clang::CXXRecordDecl &); ///< Get the template arguments list if any
 
-   std::string PatternifyName(const std::string& className); ///< Transform instance
-                                                  ///< name in pattern for selection
-   void GetPointeeType(std::string& typeName); ///< Get name of the pointee type
+   std::string PatternifyName(const std::string &className); ///< Transform instance
+   ///< name in pattern for selection
+   void GetPointeeType(std::string &typeName); ///< Get name of the pointee type
 
-   SelectionRules& fSelectionRules; ///< The selection rules to be filled
-   std::set<const clang::RecordDecl*>
+   SelectionRules &fSelectionRules; ///< The selection rules to be filled
+   std::set<const clang::RecordDecl *>
    fSelectedRecordDecls; ///< The pointers of the selected RecordDecls
    std::set<std::string>
    fSpecialNames; ///< The names of the classes used for the selction syntax
@@ -260,7 +260,7 @@ class DictSelectionReader
    fNoAutoSelectedClassFieldNames; ///< Collect the autoexcluded classes
    std::list<std::pair<std::string, unsigned int> >
    fTemplateInstanceNamePatternsArgsToKeep; ///< List of pattern-# of args to
-                                            ///hide pairs
+   ///hide pairs
    llvm::StringMap<ClassSelectionRule>
    fClassNameSelectionRuleMap; /// < Map of the already built sel rules
    bool fIsFirstPass; ///< Keep trance of the number of passes through the AST

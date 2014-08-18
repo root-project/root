@@ -30,12 +30,13 @@ std::vector<std::string> gEnumsToStore;
 std::vector<std::string> gAncestorPCMsNames;
 
 extern "C"
-const char*** TROOT__GetExtraInterpreterArgs() {
+const char ** *TROOT__GetExtraInterpreterArgs()
+{
    return &TROOT::GetExtraInterpreterArgs();
 }
 
 extern "C"
-cling::Interpreter* TCling__GetInterpreter()
+cling::Interpreter *TCling__GetInterpreter()
 {
    static bool sInitialized = false;
    gROOT; // trigger initialization
@@ -43,35 +44,35 @@ cling::Interpreter* TCling__GetInterpreter()
       gCling->SetClassAutoloading(false);
       sInitialized = true;
    }
-   return ((TCling*)gCling)->GetInterpreter();
+   return ((TCling *)gCling)->GetInterpreter();
 }
 
 extern "C"
-void InitializeStreamerInfoROOTFile(const char* filename)
+void InitializeStreamerInfoROOTFile(const char *filename)
 {
    gPCMFilename = filename;
 }
 
 extern "C"
-void AddStreamerInfoToROOTFile(const char* normName)
+void AddStreamerInfoToROOTFile(const char *normName)
 {
    gClassesToStore.emplace_back(normName);
 }
 
 extern "C"
-void AddTypedefToROOTFile(const char* tdname)
+void AddTypedefToROOTFile(const char *tdname)
 {
    gTypedefsToStore.push_back(tdname);
 }
 
 extern "C"
-void AddEnumToROOTFile(const char* enumname)
+void AddEnumToROOTFile(const char *enumname)
 {
    gEnumsToStore.push_back(enumname);
 }
 
 extern "C"
-void AddAncestorPCMROOTFile(const char* pcmName)
+void AddAncestorPCMROOTFile(const char *pcmName)
 {
    gAncestorPCMsNames.emplace_back(pcmName);
 }
@@ -85,8 +86,8 @@ bool CloseStreamerInfoROOTFile()
    TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
 
    TObjArray protoClasses;
-   for (const auto& normName: gClassesToStore) {
-      TClass* cl = TClass::GetClass(normName.c_str(), kTRUE /*load*/);
+   for (const auto & normName : gClassesToStore) {
+      TClass *cl = TClass::GetClass(normName.c_str(), kTRUE /*load*/);
       if (!cl) {
          std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find class "
                    << normName << '\n';
@@ -110,8 +111,8 @@ bool CloseStreamerInfoROOTFile()
    }
 
    TObjArray typedefs;
-   for (const auto& dtname: gTypedefsToStore) {
-      TDataType* dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(dtname.c_str());
+   for (const auto & dtname : gTypedefsToStore) {
+      TDataType *dt = (TDataType *)gROOT->GetListOfTypes()->FindObject(dtname.c_str());
       if (!dt) {
          std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find typedef "
                    << dtname << '\n';
@@ -124,30 +125,30 @@ bool CloseStreamerInfoROOTFile()
       }
    }
 
+
    TObjArray enums;
-   for (const auto& enumname: gEnumsToStore) {
-      TEnum* en = nullptr;
+   for (const auto & enumname : gEnumsToStore) {
+      TEnum *en = nullptr;
       const size_t lastSepPos = enumname.find_last_of("::");
-      if (lastSepPos != std::string::npos){
-         const std::string nsName = enumname.substr(0,lastSepPos-1);
-         TClass* tclassInstance = TClass::GetClass(nsName.c_str());
-         if (!tclassInstance){
+      if (lastSepPos != std::string::npos) {
+         const std::string nsName = enumname.substr(0, lastSepPos - 1);
+         TClass *tclassInstance = TClass::GetClass(nsName.c_str());
+         if (!tclassInstance) {
             std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find TClass instance for namespace "
-                   << nsName << '\n';
+                      << nsName << '\n';
             return false;
          }
          auto enumListPtr = tclassInstance->GetListOfEnums();
-         if (!enumListPtr){
+         if (!enumListPtr) {
             std::cerr << "ERROR in CloseStreamerInfoROOTFile(): TClass instance for namespace "
-                   << nsName << " does not have any enum associated. This is an inconsistency." << '\n';
+                      << nsName << " does not have any enum associated. This is an inconsistency." << '\n';
             return false;
          }
-         const std::string unqualifiedEnumName = enumname.substr(lastSepPos+1);
-         en = (TEnum*)enumListPtr->FindObject(unqualifiedEnumName.c_str());
+         const std::string unqualifiedEnumName = enumname.substr(lastSepPos + 1);
+         en = (TEnum *)enumListPtr->FindObject(unqualifiedEnumName.c_str());
          en->SetTitle(nsName.c_str());
-      }
-      else {
-         en = (TEnum*)gROOT->GetListOfEnums()->FindObject(enumname.c_str());
+      } else {
+         en = (TEnum *)gROOT->GetListOfEnums()->FindObject(enumname.c_str());
          en->SetTitle("");
       }
       if (!en) {
