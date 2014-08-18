@@ -1106,6 +1106,18 @@ static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent, con
    // In particular we looking for possible alternative name (default template
    // parameter, typedefs template arguments, typedefed name).
 
+   // Example of inputs are
+   //   vector<int>  (*)
+   //   vector<Int_t>
+   //   vector<long long>
+   //   vector<Long_64_t> (*)
+   //   vector<int, allocator<int> >
+   //   vector<Int_t, allocator<int> >
+   //
+   //   One of the possibly expensive operation is the resolving of the typedef
+   //   which can provoke the parsing of the header files (and/or the loading
+   //   of clang pcms information).
+
    TClass *cl = 0;
 
    // We have not found the STL container yet.
@@ -1796,6 +1808,11 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
    if (!dict) {
       // Try to remove the ROOT typedefs
       // Note currently this can lead to autoloading and autoparsing.
+      // This is to support:
+      //      gROOT->GetClass("vector<std::pair<Char_t, UChar_t>")
+      // where that class is registered in the TClassTable
+      // as vector<pair<char,unsigned char> >).
+
       resolved = TClassEdit::ResolveTypedef(classname,kTRUE);
       if (resolved != classname) {
          dict = TClassTable::GetDict(resolved.Data());
