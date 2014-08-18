@@ -6,7 +6,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) $(TUTORIALSLOGS) $(TUTORIALSSTUBS) \
   $(filter-out pt_%,$(wildcard *.root *.gif *.png)) *.pdf *.ps *.svg *.py *.C *.xml *.dtd files htmldoc aliesd \
   *.tmp xpd-temp xpd-tutorial person.dtd image foam physics graphs proof mlp math tree splot spectrum matrix hist thread g4root fit gui net geom sql graphics xml gl io quadp eve aliesd files fft pythia unuran cont roofit rf*.txt rf*.tex rf*.dot MyPdf*.cxx MyPdf*.h RooGenPdfClass.* \
-  *.rs Roo*.h *.dot roostats Roo*.cxx mc
+  *.rs Roo*.h *.dot roostats Roo*.cxx mc */*.log.err
 
 # Set the list of target to make while testing.
 
@@ -94,6 +94,13 @@ ifeq ($(findstring mathmore, $(shell root-config --features)),)
   TUTORIALSTESTS_VETO += math/quasirandom
 endif
 
+ifeq ($(findstring fftw3, $(shell root-config --features)),)
+  TUTORIALSTESTS_VETO += roofit/rf208_convolution roofit/rf210_angularconv \
+     roofit/rf211_paramconv roofit/rf512_wsfactory_oper.log \
+     roofit/rf512_wsfactory_oper2
+endif
+
+
 # I believe these fail due to CINT bugs:
 TUTORIALSTESTS_VETOCINT := hist/hbars unuran/unuranDemo unuran/unuranFoamTest
 TUTORIALSTESTS_VETOCINT := $(shell echo Failing because of CINT: $(TUTORIALSTESTS_VETOCINT))
@@ -156,7 +163,7 @@ $(TUTORIALSSTUBS): %_call.C:
 
 
 $(TUTORIALSLOGS): %.log: %_call.C $(TUTDIR)/%.C
-	$(CMDECHO) $(CALLROOTEXE) -l -b -q $<  > $@ 2>&1 && ! grep -q 'There was a crash' $@ && echo "" > $@ || (mv $@ $@.err && cat $@.err && echo 'Log file has been copied to $@.err' && false)
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q $<  > $@ 2>&1 && ! grep -q 'There was a crash' $@ && echo "" > $@ || (mv $@ $@.err && cat $@.err && echo 'Log file has been copied to $@.err' && handleError.sh --cmd='Execution of $<' --result=1 --log=$@.err --test="$@" )
 
 ifneq (,$(TUTORIALSSTUBS_CC))
 $(TUTORIALSSTUBS_CC): %_call.CC:
@@ -165,7 +172,7 @@ $(TUTORIALSSTUBS_CC): %_call.CC:
 
 
 $(TUTORIALSLOGS_CC): %.clog: %_call.CC $(TUTDIR)/%.C
-	$(CMDECHO) $(CALLROOTEXE) -l -b -q $<  > $@ 2>&1 && ! grep -q 'There was a crash' $@ && echo "" > $@ || (mv $@ $@.err && cat $@.err && echo 'Log file has been copied to $@.err' && false)
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q $<  > $@ 2>&1 && ! grep -q 'There was a crash' $@ && echo "" > $@ || (mv $@ $@.err && cat $@.err && echo 'Log file has been copied to $@.err' && handleError.sh --cmd='Execution of $<' --result=1 --log=$@.err --test="$@" )
 endif
 
 # Remember that sometest.log can be made automatically from
