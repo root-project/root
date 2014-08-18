@@ -24,6 +24,9 @@ def filter(lines):
     #---Wrapper input line-------------------------------------------------------
     elif re.match(r'^In file included from input_line', line):
       continue
+    #---Addresses in cling/cint--------------------------------------------------
+    elif re.search(r'[ ]@0x[a-fA-F0-9]+', line):
+      nline = re.sub(r'[ ]@0x[a-fA-F0-9]+', '', line)
     else:
       nline = line
     #---Remove white spaces------------------------------------------------------
