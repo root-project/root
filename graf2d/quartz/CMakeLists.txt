@@ -7,6 +7,6 @@ add_definitions("-ObjC++")
 
 ROOT_GENERATE_DICTIONARY(G__Quartz "" LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(GQuartz LINKDEF LinkDef.h DEPENDENCIES )
-ROOT_LINKER_LIBRARY(GQuartz *.mm  G__Quartz.cxx LIBRARIES  "-framework Cocoa" DEPENDENCIES )
+ROOT_LINKER_LIBRARY(GQuartz *.mm  G__Quartz.cxx LIBRARIES  "-framework Cocoa" DEPENDENCIES Core)
 ROOT_INSTALL_HEADERS()
 
