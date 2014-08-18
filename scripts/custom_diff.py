@@ -24,11 +24,12 @@ def filter(lines):
     #---Wrapper input line-------------------------------------------------------
     elif re.match(r'^In file included from input_line', line):
       continue
-    #---Addresses in cling/cint--------------------------------------------------
-    elif re.search(r'[ ]@0x[a-fA-F0-9]+', line):
-      nline = re.sub(r'[ ]@0x[a-fA-F0-9]+', '', line)
     else:
       nline = line
+    #---Remove Addresses in cling/cint-------------------------------------------
+    nline = re.sub(r'[ ]@0x[a-fA-F0-9]+', '', nline)
+    #---Remove versioning in std-------------------------------------------------
+    nline = re.sub(r'std::__[0-9]::', 'std::', nline)
     #---Remove white spaces------------------------------------------------------
     nline = re.sub(r'[ ]', '', nline)
     outlines.append(nline)
