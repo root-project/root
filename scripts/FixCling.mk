@@ -29,7 +29,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundFunctionForwardDeclarations"
 
 # AutoParsing issues
 CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseUsingNamespace"
-# # CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseRecurse" #see https://sft.its.cern.ch/jira/browse/ROOT-6319
+CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseRecurse" #see https://sft.its.cern.ch/jira/browse/ROOT-6319
 #CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseDeclaration"
 CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseTooPrecise"
 
