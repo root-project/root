@@ -1,5 +1,5 @@
 # Temporarly add workaround
-add_definitions(-DClingWorkAroundAutoParseRecurse)
+# add_definitions(-DClingWorkAroundAutoParseRecurse) see https://sft.its.cern.ch/jira/browse/ROOT-6319
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(AtlasTest AtlasTest.h SELECTION AtlasTest_selection.xml NO_ROOTMAP)
 set(depends ${GENERATE_REFLEX_TEST})
