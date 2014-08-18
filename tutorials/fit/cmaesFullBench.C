@@ -181,6 +181,12 @@ public:
     ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default("cmaes");
     opts.SetIntValue("lscaling",lscaling);
   }
+
+  void set_restarts(const int &nrestarts)
+  {
+    ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default("cmaes");
+    opts.SetIntValue("restarts",nrestarts);
+  }
   
   virtual ~experiment() {}
 
@@ -270,6 +276,9 @@ public:
 	  TStopwatch timer;
 	  //histos.at(i)->Print("all");
 	  _fitFcn->SetParameters(1,1,1,6,.03,1);
+	  for (Int_t i=0;i<5000;i++) {
+	    _histos.at(pass)->Fill(_fitFcn->GetRandom());
+	  }
 	  timer.Start();
 	  TFitResultPtr r = _histos.at(pass)->Fit(_fitFcn,"QS0");  // from TH1.cxx: Q: quiet, 0: do not plot 
 	  timer.Stop();
@@ -693,8 +702,8 @@ public:
 	rfitter.Config().MinimizerOptions().SetPrintLevel(0);
 	if (fitter == "Minuit2")
 	  rfitter.Config().SetMinimizer("Minuit2","Migrad"); 
-	else if (fitter.find("cmaes")!=std::string::npos)
-	  rfitter.Config().SetMinimizer("cmaes","acmaes");
+	else //if (fitter.find("cmaes")!=std::string::npos)
+	  rfitter.Config().SetMinimizer("cmaes",fitter.c_str());//"acmaes");
 	
 	// fit FCN function directly 
 	// (specify optionally data size and flag to indicate that is a chi2 fit)
@@ -791,8 +800,10 @@ public:
 	TF3 * f3 = new TF3("f3","[0] * sin(x) + [1] * cos(y) + [2] * z",0,10,0,10,0,10);
 	f3->SetParameters(2,2,2);
 	ROOT::Fit::Fitter rfitter;
-	if (fitter.find("cmaes")!=std::string::npos)
-	  rfitter.Config().SetMinimizer("cmaes","acmaes");
+	/*if (fitter.find("cmaes")!=std::string::npos)
+	  rfitter.Config().SetMinimizer("cmaes","acmaes");*/
+	if (fitter != "Minuit2")
+	  rfitter.Config().SetMinimizer("cmaes",fitter.c_str());
 	// wrapped the TF1 in a IParamMultiFunction interface for the Fitter class
 	ROOT::Math::WrappedMultiTF1 wf(*f3,3);
 	rfitter.SetFunction(wf); 
@@ -924,7 +935,8 @@ void run_experiments(const int &n=1,
   std::cout << "Proceeding with " << n << " runs on every problems\n";
   if (lscaling > 0)
     std::cout << "Linear scaling of parameters in ON\n";
-  std::vector<int> lambdas = {-1, 5, 10, 20, 40, 80, 160, 320, 640, 1280};
+  //std::vector<int> lambdas = {-1, 5, 10, 20, 40, 80, 160, 320, 640, 1280};
+  std::vector<int> lambdas = {-1, 50, 200, -2};
   std::vector<expstats> acmaes_stats;
   std::vector<expstats> minuit2_stats;
   std::map<std::string,experiment*> mexperiments;
@@ -945,16 +957,24 @@ void run_experiments(const int &n=1,
       {
 	for (int j=0;j<(int)lambdas.size();j++)
 	  {
-	    (*mit).second->set_lambda(lambdas.at(j));
+	    std::string fitter_name = "acmaes";
+	    if (lambdas.at(j) != -2)
+	      (*mit).second->set_lambda(lambdas.at(j));
+	    else
+	      {
+		(*mit).second->set_lambda(-1);
+		(*mit).second->set_restarts(4);
+		fitter_name = "aipop";
+	      }
 	    (*mit).second->set_lscaling(lscaling);
 	    (*mit).second->Setup();
 	    if (i == 0)
 	      {
-		acmaes_stats.push_back((*mit).second->_ef("acmaes_l"+std::to_string(lambdas.at(j))));
+		acmaes_stats.push_back((*mit).second->_ef(fitter_name));//_l"+std::to_string(lambdas.at(j))));
 	      }
 	    else
 	      {
-		acmaes_stats.at(cn*(lambdas.size())+j).merge((*mit).second->_ef("acmaes_l"+std::to_string(lambdas.at(j))));
+		acmaes_stats.at(cn*(lambdas.size())+j).merge((*mit).second->_ef(fitter_name));//_l"+std::to_string(lambdas.at(j))));
 	      }
 	    (*mit).second->Cleanup();
 	  }
