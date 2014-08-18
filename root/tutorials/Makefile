@@ -156,7 +156,7 @@ $(TUTORIALSSTUBS): %_call.C:
 
 
 $(TUTORIALSLOGS): %.log: %_call.C $(TUTDIR)/%.C
-	$(CMDECHO) $(CALLROOTEXE) -l -b -q $<  > $@ 2>&1 && echo "" > $@
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q $<  > $@ 2>&1 && ! grep -q 'There was a crash' $@ && echo "" > $@ || (mv $@ $@.err && cat $@.err && echo 'Log file has been copied to $@.err' && false)
 
 ifneq (,$(TUTORIALSSTUBS_CC))
 $(TUTORIALSSTUBS_CC): %_call.CC:
@@ -165,7 +165,7 @@ $(TUTORIALSSTUBS_CC): %_call.CC:
 
 
 $(TUTORIALSLOGS_CC): %.clog: %_call.CC $(TUTDIR)/%.C
-	$(CMDECHO) $(CALLROOTEXE) -l -b -q $<  > $@ 2>&1 && echo "" > $@
+	$(CMDECHO) $(CALLROOTEXE) -l -b -q $<  > $@ 2>&1 && ! grep -q 'There was a crash' $@ && echo "" > $@ || (mv $@ $@.err && cat $@.err && echo 'Log file has been copied to $@.err' && false)
 endif
 
 # Remember that sometest.log can be made automatically from
