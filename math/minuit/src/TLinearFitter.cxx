@@ -623,7 +623,7 @@ void TLinearFitter::AddToDesign(Double_t *x, Double_t y, Double_t e)
       //general case
       for (ii=0; ii<fNfunctions; ii++){
          if (!fFunctions.IsEmpty()){
-            TF1 *f1 = (TF1*)(fFunctions.UncheckedAt(ii));
+            TFormula *f1 = (TFormula*)(fFunctions.UncheckedAt(ii));
             fVal[ii]=f1->EvalPar(x)/e;
          } else {
             TFormula *f=(TFormula*)fInputFunction->GetLinearPart(ii);
