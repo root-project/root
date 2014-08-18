@@ -104,7 +104,15 @@ def FeatureCDI      : SubtargetFeature<"avx512cd", "HasCDI", "true",
 def FeaturePFI      : SubtargetFeature<"avx512pf", "HasPFI", "true",
                       "Enable AVX-512 PreFetch Instructions",
                                       [FeatureAVX512]>;
-
+def FeatureDQI     : SubtargetFeature<"avx512dq", "HasDQI", "true",
+                      "Enable AVX-512 Doubleword and Quadword Instructions",
+                                      [FeatureAVX512]>;
+def FeatureBWI     : SubtargetFeature<"avx512bw", "HasBWI", "true",
+                      "Enable AVX-512 Byte and Word Instructions",
+                                      [FeatureAVX512]>;
+def FeatureVLX     : SubtargetFeature<"avx512vl", "HasVLX", "true",
+                      "Enable AVX-512 Vector Length eXtensions",
+                                      [FeatureAVX512]>;
 def FeaturePCLMUL  : SubtargetFeature<"pclmul", "HasPCLMUL", "true",
                          "Enable packed carry-less multiplication instructions",
                                [FeatureSSE2]>;
@@ -149,6 +157,8 @@ def FeatureADX     : SubtargetFeature<"adx", "HasADX", "true",
 def FeatureSHA     : SubtargetFeature<"sha", "HasSHA", "true",
                                       "Enable SHA instructions",
                                       [FeatureSSE2]>;
+def FeatureSGX     : SubtargetFeature<"sgx", "HasSGX", "true",
+                                      "Support SGX instructions">;
 def FeaturePRFCHW  : SubtargetFeature<"prfchw", "HasPRFCHW", "true",
                                       "Support PRFCHW instructions">;
 def FeatureRDSEED  : SubtargetFeature<"rdseed", "HasRDSEED", "true",
@@ -166,6 +176,10 @@ def FeatureCallRegIndirect : SubtargetFeature<"call-reg-indirect",
                                      "Call register indirect">;
 def FeatureLEAUsesAG : SubtargetFeature<"lea-uses-ag", "LEAUsesAG", "true",
                                    "LEA instruction needs inputs at AG stage">;
+def FeatureSlowLEA : SubtargetFeature<"slow-lea", "SlowLEA", "true",
+                                   "LEA instruction with certain arguments is slow">;
+def FeatureSlowIncDec : SubtargetFeature<"slow-incdec", "SlowIncDec", "true",
+                                   "INC and DEC instructions are slower than ADD and SUB">;
 
 //===----------------------------------------------------------------------===//
 // X86 processors supported.
@@ -195,8 +209,7 @@ def : Proc<"pentium3m",       [FeatureSSE1, FeatureSlowBTMem]>;
 def : Proc<"pentium-m",       [FeatureSSE2, FeatureSlowBTMem]>;
 def : Proc<"pentium4",        [FeatureSSE2]>;
 def : Proc<"pentium4m",       [FeatureSSE2, FeatureSlowBTMem]>;
-def : Proc<"x86-64",          [FeatureSSE2, Feature64Bit, FeatureSlowBTMem,
-                               FeatureFastUAMem]>;
+
 // Intel Core Duo.
 def : ProcessorModel<"yonah", SandyBridgeModel,
                      [FeatureSSE3, FeatureSlowBTMem]>;
@@ -227,7 +240,8 @@ def : ProcessorModel<"slm",  SLMModel, [ProcIntelSLM,
                                FeaturePCLMUL, FeatureAES,
                                FeatureCallRegIndirect,
                                FeaturePRFCHW,
-                               FeatureSlowBTMem]>;
+                               FeatureSlowLEA, FeatureSlowIncDec,
+                               FeatureSlowBTMem, FeatureFastUAMem]>;
 // "Arrandale" along with corei3 and corei5
 def : ProcessorModel<"corei7", SandyBridgeModel,
                      [FeatureSSE42, FeatureCMPXCHG16B, FeatureSlowBTMem,
@@ -269,12 +283,24 @@ def : ProcessorModel<"knl", HaswellModel,
                       FeatureCMPXCHG16B, FeatureFastUAMem, FeaturePOPCNT,
                       FeatureAES, FeaturePCLMUL, FeatureRDRAND, FeatureF16C,
                       FeatureFSGSBase, FeatureMOVBE, FeatureLZCNT, FeatureBMI,
-                      FeatureBMI2, FeatureFMA, FeatureRTM, FeatureHLE]>;
+                      FeatureBMI2, FeatureFMA, FeatureRTM, FeatureHLE,
+                      FeatureSlowIncDec]>;
+
+// SKX
+// FIXME: define SKX model
+def : ProcessorModel<"skx", HaswellModel,
+                     [FeatureAVX512, FeatureCDI,
+                      FeatureDQI, FeatureBWI, FeatureVLX,
+                      FeatureCMPXCHG16B, FeatureFastUAMem, FeaturePOPCNT,
+                      FeatureAES, FeaturePCLMUL, FeatureRDRAND, FeatureF16C,
+                      FeatureFSGSBase, FeatureMOVBE, FeatureLZCNT, FeatureBMI,
+                      FeatureBMI2, FeatureFMA, FeatureRTM, FeatureHLE,
+                      FeatureSlowIncDec, FeatureSGX]>;
 
 def : Proc<"k6",              [FeatureMMX]>;
 def : Proc<"k6-2",            [Feature3DNow]>;
 def : Proc<"k6-3",            [Feature3DNow]>;
-def : Proc<"athlon",          [Feature3DNowA, FeatureSlowBTMem, 
+def : Proc<"athlon",          [Feature3DNowA, FeatureSlowBTMem,
                                FeatureSlowSHLD]>;
 def : Proc<"athlon-tbird",    [Feature3DNowA, FeatureSlowBTMem,
                                FeatureSlowSHLD]>;
@@ -329,12 +355,33 @@ def : Proc<"bdver3",          [FeatureXOP, FeatureFMA4, FeatureCMPXCHG16B,
                                FeaturePOPCNT, FeatureBMI,  FeatureTBM,
                                FeatureFMA, FeatureFSGSBase]>;
 
+// Excavator
+def : Proc<"bdver4",          [FeatureAVX2, FeatureXOP, FeatureFMA4,
+                               FeatureCMPXCHG16B, FeatureAES, FeaturePRFCHW,
+                               FeaturePCLMUL, FeatureF16C, FeatureLZCNT,
+                               FeaturePOPCNT, FeatureBMI, FeatureBMI2,
+                               FeatureTBM, FeatureFMA, FeatureFSGSBase]>;
+
 def : Proc<"geode",           [Feature3DNowA]>;
 
 def : Proc<"winchip-c6",      [FeatureMMX]>;
 def : Proc<"winchip2",        [Feature3DNow]>;
 def : Proc<"c3",              [Feature3DNow]>;
 def : Proc<"c3-2",            [FeatureSSE1]>;
+
+// We also provide a generic 64-bit specific x86 processor model which tries to
+// be good for modern chips without enabling instruction set encodings past the
+// basic SSE2 and 64-bit ones. It disables slow things from any mainstream and
+// modern 64-bit x86 chip, and enables features that are generally beneficial.
+// 
+// We currently use the Sandy Bridge model as the default scheduling model as
+// we use it across Nehalem, Westmere, Sandy Bridge, and Ivy Bridge which
+// covers a huge swath of x86 processors. If there are specific scheduling
+// knobs which need to be tuned differently for AMD chips, we might consider
+// forming a common base for them.
+def : ProcessorModel<"x86-64", SandyBridgeModel,
+                     [FeatureSSE2, Feature64Bit, FeatureSlowBTMem,
+                      FeatureFastUAMem]>;
 
 //===----------------------------------------------------------------------===//
 // Register File Description

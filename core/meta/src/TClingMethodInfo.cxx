@@ -50,7 +50,6 @@
 
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/ADT/OwningPtr.h"
 
 #include <string>
 

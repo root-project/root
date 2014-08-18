@@ -12,12 +12,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm-objdump.h"
-#include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/DebugInfo/DIContext.h"
 #include "llvm/MC/MCAsmInfo.h"
+#include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCDisassembler.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCInstPrinter.h"
@@ -30,6 +30,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/Endian.h"
 #include "llvm/Support/Format.h"
 #include "llvm/Support/GraphWriter.h"
 #include "llvm/Support/MachO.h"
@@ -37,9 +38,9 @@
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/system_error.h"
 #include <algorithm>
 #include <cstring>
+#include <system_error>
 using namespace llvm;
 using namespace object;
 
@@ -65,7 +66,7 @@ static const Target *GetTarget(const MachOObjectFile *MachOObj) {
 
   errs() << "llvm-objdump: error: unable to get target for '" << TripleName
          << "', see --version and --triple.\n";
-  return 0;
+  return nullptr;
 }
 
 struct SymbolSorter {
@@ -147,29 +148,23 @@ static void DumpDataInCode(const char *bytes, uint64_t Size,
   }
 }
 
-static void
-getSectionsAndSymbols(const MachO::mach_header Header,
-                      MachOObjectFile *MachOObj,
-                      std::vector<SectionRef> &Sections,
-                      std::vector<SymbolRef> &Symbols,
-                      SmallVectorImpl<uint64_t> &FoundFns,
-                      uint64_t &BaseSegmentAddress) {
-  for (symbol_iterator SI = MachOObj->symbol_begin(),
-                       SE = MachOObj->symbol_end();
-       SI != SE; ++SI)
-    Symbols.push_back(*SI);
+static void getSectionsAndSymbols(const MachO::mach_header Header,
+                                  MachOObjectFile *MachOObj,
+                                  std::vector<SectionRef> &Sections,
+                                  std::vector<SymbolRef> &Symbols,
+                                  SmallVectorImpl<uint64_t> &FoundFns,
+                                  uint64_t &BaseSegmentAddress) {
+  for (const SymbolRef &Symbol : MachOObj->symbols())
+    Symbols.push_back(Symbol);
 
-  for (section_iterator SI = MachOObj->section_begin(),
-                        SE = MachOObj->section_end();
-       SI != SE; ++SI) {
-    SectionRef SR = *SI;
+  for (const SectionRef &Section : MachOObj->sections()) {
     StringRef SectName;
-    SR.getName(SectName);
-    Sections.push_back(*SI);
+    Section.getName(SectName);
+    Sections.push_back(Section);
   }
 
   MachOObjectFile::LoadCommandInfo Command =
-    MachOObj->getFirstLoadCommandInfo();
+      MachOObj->getFirstLoadCommandInfo();
   bool BaseSegmentAddressSet = false;
   for (unsigned i = 0; ; ++i) {
     if (Command.C.cmd == MachO::LC_FUNCTION_STARTS) {
@@ -201,15 +196,15 @@ static void DisassembleInputMachO2(StringRef Filename,
                                    MachOObjectFile *MachOOF);
 
 void llvm::DisassembleInputMachO(StringRef Filename) {
-  OwningPtr<MemoryBuffer> Buff;
-
-  if (error_code ec = MemoryBuffer::getFileOrSTDIN(Filename, Buff)) {
-    errs() << "llvm-objdump: " << Filename << ": " << ec.message() << "\n";
+  ErrorOr<std::unique_ptr<MemoryBuffer>> Buff =
+      MemoryBuffer::getFileOrSTDIN(Filename);
+  if (std::error_code EC = Buff.getError()) {
+    errs() << "llvm-objdump: " << Filename << ": " << EC.message() << "\n";
     return;
   }
 
-  OwningPtr<MachOObjectFile> MachOOF(static_cast<MachOObjectFile *>(
-      ObjectFile::createMachOObjectFile(Buff.take()).get()));
+  std::unique_ptr<MachOObjectFile> MachOOF =
+    std::move(ObjectFile::createMachOObjectFile(Buff.get()).get());
 
   DisassembleInputMachO2(Filename, MachOOF.get());
 }
@@ -221,21 +216,23 @@ static void DisassembleInputMachO2(StringRef Filename,
     // GetTarget prints out stuff.
     return;
   }
-  OwningPtr<const MCInstrInfo> InstrInfo(TheTarget->createMCInstrInfo());
-  OwningPtr<MCInstrAnalysis>
-    InstrAnalysis(TheTarget->createMCInstrAnalysis(InstrInfo.get()));
+  std::unique_ptr<const MCInstrInfo> InstrInfo(TheTarget->createMCInstrInfo());
+  std::unique_ptr<MCInstrAnalysis> InstrAnalysis(
+      TheTarget->createMCInstrAnalysis(InstrInfo.get()));
 
   // Set up disassembler.
-  OwningPtr<const MCRegisterInfo> MRI(TheTarget->createMCRegInfo(TripleName));
-  OwningPtr<const MCAsmInfo> AsmInfo(
+  std::unique_ptr<const MCRegisterInfo> MRI(
+      TheTarget->createMCRegInfo(TripleName));
+  std::unique_ptr<const MCAsmInfo> AsmInfo(
       TheTarget->createMCAsmInfo(*MRI, TripleName));
-  OwningPtr<const MCSubtargetInfo>
-    STI(TheTarget->createMCSubtargetInfo(TripleName, "", ""));
-  OwningPtr<const MCDisassembler> DisAsm(TheTarget->createMCDisassembler(*STI));
+  std::unique_ptr<const MCSubtargetInfo> STI(
+      TheTarget->createMCSubtargetInfo(TripleName, "", ""));
+  MCContext Ctx(AsmInfo.get(), MRI.get(), nullptr);
+  std::unique_ptr<const MCDisassembler> DisAsm(
+    TheTarget->createMCDisassembler(*STI, Ctx));
   int AsmPrinterVariant = AsmInfo->getAssemblerDialect();
-  OwningPtr<MCInstPrinter>
-    IP(TheTarget->createMCInstPrinter(AsmPrinterVariant, *AsmInfo, *InstrInfo,
-                                      *MRI, *STI));
+  std::unique_ptr<MCInstPrinter> IP(TheTarget->createMCInstPrinter(
+      AsmPrinterVariant, *AsmInfo, *InstrInfo, *MRI, *STI));
 
   if (!InstrAnalysis || !AsmInfo || !STI || !DisAsm || !IP) {
     errs() << "error: couldn't initialize disassembler for target "
@@ -285,23 +282,24 @@ static void DisassembleInputMachO2(StringRef Filename,
   raw_ostream &DebugOut = nulls();
 #endif
 
-  OwningPtr<DIContext> diContext;
+  std::unique_ptr<DIContext> diContext;
   ObjectFile *DbgObj = MachOOF;
   // Try to find debug info and set up the DIContext for it.
   if (UseDbg) {
     // A separate DSym file path was specified, parse it as a macho file,
     // get the sections and supply it to the section name parsing machinery.
     if (!DSYMFile.empty()) {
-      OwningPtr<MemoryBuffer> Buf;
-      if (error_code ec = MemoryBuffer::getFileOrSTDIN(DSYMFile, Buf)) {
-        errs() << "llvm-objdump: " << Filename << ": " << ec.message() << '\n';
+      ErrorOr<std::unique_ptr<MemoryBuffer>> Buf =
+          MemoryBuffer::getFileOrSTDIN(DSYMFile);
+      if (std::error_code EC = Buf.getError()) {
+        errs() << "llvm-objdump: " << Filename << ": " << EC.message() << '\n';
         return;
       }
-      DbgObj = ObjectFile::createMachOObjectFile(Buf.take()).get();
+      DbgObj = ObjectFile::createMachOObjectFile(Buf.get()).get().release();
     }
 
     // Setup the DIContext
-    diContext.reset(DIContext::getDWARFContext(DbgObj));
+    diContext.reset(DIContext::getDWARFContext(*DbgObj));
   }
 
   for (unsigned SectIdx = 0; SectIdx != Sections.size(); SectIdx++) {
@@ -328,16 +326,14 @@ static void DisassembleInputMachO2(StringRef Filename,
     bool symbolTableWorked = false;
 
     // Parse relocations.
-    std::vector<std::pair<uint64_t, SymbolRef> > Relocs;
-    for (relocation_iterator RI = Sections[SectIdx].relocation_begin(),
-                             RE = Sections[SectIdx].relocation_end();
-         RI != RE; ++RI) {
+    std::vector<std::pair<uint64_t, SymbolRef>> Relocs;
+    for (const RelocationRef &Reloc : Sections[SectIdx].relocations()) {
       uint64_t RelocOffset, SectionAddress;
-      RI->getOffset(RelocOffset);
+      Reloc.getOffset(RelocOffset);
       Sections[SectIdx].getAddress(SectionAddress);
       RelocOffset -= SectionAddress;
 
-      symbol_iterator RelocSym = RI->getSymbol();
+      symbol_iterator RelocSym = Reloc.getSymbol();
 
       Relocs.push_back(std::make_pair(RelocOffset, *RelocSym));
     }
@@ -427,9 +423,9 @@ static void DisassembleInputMachO2(StringRef Filename,
             DILineInfo dli =
               diContext->getLineInfoForAddress(SectAddress + Index);
             // Print valid line info if it changed.
-            if (dli != lastLine && dli.getLine() != 0)
-              outs() << "\t## " << dli.getFileName() << ':'
-                << dli.getLine() << ':' << dli.getColumn();
+            if (dli != lastLine && dli.Line != 0)
+              outs() << "\t## " << dli.FileName << ':' << dli.Line << ':'
+                     << dli.Column;
             lastLine = dli;
           }
           outs() << "\n";
@@ -463,5 +459,227 @@ static void DisassembleInputMachO2(StringRef Filename,
         }
       }
     }
+  }
+}
+
+namespace {
+struct CompactUnwindEntry {
+  uint32_t OffsetInSection;
+
+  uint64_t FunctionAddr;
+  uint32_t Length;
+  uint32_t CompactEncoding;
+  uint64_t PersonalityAddr;
+  uint64_t LSDAAddr;
+
+  RelocationRef FunctionReloc;
+  RelocationRef PersonalityReloc;
+  RelocationRef LSDAReloc;
+
+  CompactUnwindEntry(StringRef Contents, unsigned Offset, bool Is64)
+    : OffsetInSection(Offset) {
+    if (Is64)
+      read<uint64_t>(Contents.data() + Offset);
+    else
+      read<uint32_t>(Contents.data() + Offset);
+  }
+
+private:
+  template<typename T>
+  static uint64_t readNext(const char *&Buf) {
+    using llvm::support::little;
+    using llvm::support::unaligned;
+
+    uint64_t Val = support::endian::read<T, little, unaligned>(Buf);
+    Buf += sizeof(T);
+    return Val;
+  }
+
+  template<typename UIntPtr>
+  void read(const char *Buf) {
+    FunctionAddr = readNext<UIntPtr>(Buf);
+    Length = readNext<uint32_t>(Buf);
+    CompactEncoding = readNext<uint32_t>(Buf);
+    PersonalityAddr = readNext<UIntPtr>(Buf);
+    LSDAAddr = readNext<UIntPtr>(Buf);
+  }
+};
+}
+
+/// Given a relocation from __compact_unwind, consisting of the RelocationRef
+/// and data being relocated, determine the best base Name and Addend to use for
+/// display purposes.
+///
+/// 1. An Extern relocation will directly reference a symbol (and the data is
+///    then already an addend), so use that.
+/// 2. Otherwise the data is an offset in the object file's layout; try to find
+//     a symbol before it in the same section, and use the offset from there.
+/// 3. Finally, if all that fails, fall back to an offset from the start of the
+///    referenced section.
+static void findUnwindRelocNameAddend(const MachOObjectFile *Obj,
+                                      std::map<uint64_t, SymbolRef> &Symbols,
+                                      const RelocationRef &Reloc,
+                                      uint64_t Addr,
+                                      StringRef &Name, uint64_t &Addend) {
+  if (Reloc.getSymbol() != Obj->symbol_end()) {
+    Reloc.getSymbol()->getName(Name);
+    Addend = Addr;
+    return;
+  }
+
+  auto RE = Obj->getRelocation(Reloc.getRawDataRefImpl());
+  SectionRef RelocSection = Obj->getRelocationSection(RE);
+
+  uint64_t SectionAddr;
+  RelocSection.getAddress(SectionAddr);
+
+  auto Sym = Symbols.upper_bound(Addr);
+  if (Sym == Symbols.begin()) {
+    // The first symbol in the object is after this reference, the best we can
+    // do is section-relative notation.
+    RelocSection.getName(Name);
+    Addend = Addr - SectionAddr;
+    return;
+  }
+
+  // Go back one so that SymbolAddress <= Addr.
+  --Sym;
+
+  section_iterator SymSection = Obj->section_end();
+  Sym->second.getSection(SymSection);
+  if (RelocSection == *SymSection) {
+    // There's a valid symbol in the same section before this reference.
+    Sym->second.getName(Name);
+    Addend = Addr - Sym->first;
+    return;
+  }
+
+  // There is a symbol before this reference, but it's in a different
+  // section. Probably not helpful to mention it, so use the section name.
+  RelocSection.getName(Name);
+  Addend = Addr - SectionAddr;
+}
+
+static void printUnwindRelocDest(const MachOObjectFile *Obj,
+                                 std::map<uint64_t, SymbolRef> &Symbols,
+                                 const RelocationRef &Reloc,
+                                 uint64_t Addr) {
+  StringRef Name;
+  uint64_t Addend;
+
+  findUnwindRelocNameAddend(Obj, Symbols, Reloc, Addr, Name, Addend);
+
+  outs() << Name;
+  if (Addend)
+    outs() << " + " << format("0x%x", Addend);
+}
+
+static void
+printMachOCompactUnwindSection(const MachOObjectFile *Obj,
+                               std::map<uint64_t, SymbolRef> &Symbols,
+                               const SectionRef &CompactUnwind) {
+
+  assert(Obj->isLittleEndian() &&
+         "There should not be a big-endian .o with __compact_unwind");
+
+  bool Is64 = Obj->is64Bit();
+  uint32_t PointerSize = Is64 ? sizeof(uint64_t) : sizeof(uint32_t);
+  uint32_t EntrySize = 3 * PointerSize + 2 * sizeof(uint32_t);
+
+  StringRef Contents;
+  CompactUnwind.getContents(Contents);
+
+  SmallVector<CompactUnwindEntry, 4> CompactUnwinds;
+
+  // First populate the initial raw offsets, encodings and so on from the entry.
+  for (unsigned Offset = 0; Offset < Contents.size(); Offset += EntrySize) {
+    CompactUnwindEntry Entry(Contents.data(), Offset, Is64);
+    CompactUnwinds.push_back(Entry);
+  }
+
+  // Next we need to look at the relocations to find out what objects are
+  // actually being referred to.
+  for (const RelocationRef &Reloc : CompactUnwind.relocations()) {
+    uint64_t RelocAddress;
+    Reloc.getOffset(RelocAddress);
+
+    uint32_t EntryIdx = RelocAddress / EntrySize;
+    uint32_t OffsetInEntry = RelocAddress - EntryIdx * EntrySize;
+    CompactUnwindEntry &Entry = CompactUnwinds[EntryIdx];
+
+    if (OffsetInEntry == 0)
+      Entry.FunctionReloc = Reloc;
+    else if (OffsetInEntry == PointerSize + 2 * sizeof(uint32_t))
+      Entry.PersonalityReloc = Reloc;
+    else if (OffsetInEntry == 2 * PointerSize + 2 * sizeof(uint32_t))
+      Entry.LSDAReloc = Reloc;
+    else
+      llvm_unreachable("Unexpected relocation in __compact_unwind section");
+  }
+
+  // Finally, we're ready to print the data we've gathered.
+  outs() << "Contents of __compact_unwind section:\n";
+  for (auto &Entry : CompactUnwinds) {
+    outs() << "  Entry at offset " << format("0x%x", Entry.OffsetInSection)
+           << ":\n";
+
+    // 1. Start of the region this entry applies to.
+    outs() << "    start:                "
+           << format("0x%x", Entry.FunctionAddr) << ' ';
+    printUnwindRelocDest(Obj, Symbols, Entry.FunctionReloc,
+                         Entry.FunctionAddr);
+    outs() << '\n';
+
+    // 2. Length of the region this entry applies to.
+    outs() << "    length:               "
+           << format("0x%x", Entry.Length) << '\n';
+    // 3. The 32-bit compact encoding.
+    outs() << "    compact encoding:     "
+           << format("0x%08x", Entry.CompactEncoding) << '\n';
+
+    // 4. The personality function, if present.
+    if (Entry.PersonalityReloc.getObjectFile()) {
+      outs() << "    personality function: "
+             << format("0x%x", Entry.PersonalityAddr) << ' ';
+      printUnwindRelocDest(Obj, Symbols, Entry.PersonalityReloc,
+                           Entry.PersonalityAddr);
+      outs() << '\n';
+    }
+
+    // 5. This entry's language-specific data area.
+    if (Entry.LSDAReloc.getObjectFile()) {
+      outs() << "    LSDA:                 "
+             << format("0x%x", Entry.LSDAAddr) << ' ';
+      printUnwindRelocDest(Obj, Symbols, Entry.LSDAReloc, Entry.LSDAAddr);
+      outs() << '\n';
+    }
+  }
+}
+
+void llvm::printMachOUnwindInfo(const MachOObjectFile *Obj) {
+  std::map<uint64_t, SymbolRef> Symbols;
+  for (const SymbolRef &SymRef : Obj->symbols()) {
+    // Discard any undefined or absolute symbols. They're not going to take part
+    // in the convenience lookup for unwind info and just take up resources.
+    section_iterator Section = Obj->section_end();
+    SymRef.getSection(Section);
+    if (Section == Obj->section_end())
+      continue;
+
+    uint64_t Addr;
+    SymRef.getAddress(Addr);
+    Symbols.insert(std::make_pair(Addr, SymRef));
+  }
+
+  for (const SectionRef &Section : Obj->sections()) {
+    StringRef SectName;
+    Section.getName(SectName);
+    if (SectName == "__compact_unwind")
+      printMachOCompactUnwindSection(Obj, Symbols, Section);
+    else if (SectName == "__unwind_info")
+      outs() << "llvm-objdump: warning: unhandled __unwind_info section\n";
+    else if (SectName == "__eh_frame")
+      outs() << "llvm-objdump: warning: unhandled __eh_frame section\n";
+
   }
 }

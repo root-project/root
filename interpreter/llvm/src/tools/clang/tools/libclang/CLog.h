@@ -10,6 +10,7 @@
 #ifndef LLVM_LIBCLANG_CLOG_H
 #define LLVM_LIBCLANG_CLOG_H
 
+#include "clang-c/Index.h"
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
 #include "llvm/ADT/SmallString.h"
@@ -47,7 +48,7 @@ public:
     static const char *sCachedVar = ::getenv("LIBCLANG_LOGGING");
     return sCachedVar;
   }
-  static bool isLoggingEnabled() { return getEnvVar() != 0; }
+  static bool isLoggingEnabled() { return getEnvVar() != nullptr; }
   static bool isStackTracingEnabled() {
     if (const char *EnvOpt = Logger::getEnvVar())
       return llvm::StringRef(EnvOpt) == "2";
@@ -57,7 +58,7 @@ public:
                      bool trace = isStackTracingEnabled()) {
     if (isLoggingEnabled())
       return new Logger(name, trace);
-    return 0;
+    return nullptr;
   }
 
   explicit Logger(llvm::StringRef name, bool trace)

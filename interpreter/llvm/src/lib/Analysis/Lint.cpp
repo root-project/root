@@ -16,7 +16,7 @@
 // those aren't comprehensive either. Second, many conditions cannot be
 // checked statically. This pass does no dynamic instrumentation, so it
 // can't check for all possible problems.
-// 
+//
 // Another limitation is that it assumes all code will be executed. A store
 // through a null pointer in a basic block which is never reached is harmless,
 // but this pass will warn about it anyway. This is the main reason why most
@@ -26,12 +26,12 @@
 // less obvious. If an optimization pass appears to be introducing a warning,
 // it may be that the optimization pass is merely exposing an existing
 // condition in the code.
-// 
+//
 // This code may be run before instcombine. In many cases, instcombine checks
 // for the same kinds of things and turns instructions with undefined behavior
 // into unreachable (or equivalent). Because of this, this pass makes some
 // effort to look through bitcasts and so on.
-// 
+//
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Analysis/Lint.h"
@@ -42,14 +42,14 @@
 #include "llvm/Analysis/Loads.h"
 #include "llvm/Analysis/Passes.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/IR/CallSite.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/InstVisitor.h"
 #include "llvm/IR/IntrinsicInst.h"
-#include "llvm/InstVisitor.h"
 #include "llvm/Pass.h"
 #include "llvm/PassManager.h"
-#include "llvm/Support/CallSite.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetLibraryInfo.h"
@@ -113,15 +113,15 @@ namespace {
       initializeLintPass(*PassRegistry::getPassRegistry());
     }
 
-    virtual bool runOnFunction(Function &F);
+    bool runOnFunction(Function &F) override;
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesAll();
       AU.addRequired<AliasAnalysis>();
       AU.addRequired<TargetLibraryInfo>();
       AU.addRequired<DominatorTreeWrapperPass>();
     }
-    virtual void print(raw_ostream &O, const Module *M) const {}
+    void print(raw_ostream &O, const Module *M) const override {}
 
     void WriteValue(const Value *V) {
       if (!V) return;
@@ -137,8 +137,8 @@ namespace {
     // that failed.  This provides a nice place to put a breakpoint if you want
     // to see why something is not correct.
     void CheckFailed(const Twine &Message,
-                     const Value *V1 = 0, const Value *V2 = 0,
-                     const Value *V3 = 0, const Value *V4 = 0) {
+                     const Value *V1 = nullptr, const Value *V2 = nullptr,
+                     const Value *V3 = nullptr, const Value *V4 = nullptr) {
       MessagesStr << Message.str() << "\n";
       WriteValue(V1);
       WriteValue(V2);
@@ -177,7 +177,7 @@ bool Lint::runOnFunction(Function &F) {
   AA = &getAnalysis<AliasAnalysis>();
   DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
   DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
-  DL = DLP ? &DLP->getDataLayout() : 0;
+  DL = DLP ? &DLP->getDataLayout() : nullptr;
   TLI = &getAnalysis<TargetLibraryInfo>();
   visit(F);
   dbgs() << MessagesStr.str();
@@ -199,7 +199,7 @@ void Lint::visitCallSite(CallSite CS) {
   Value *Callee = CS.getCalledValue();
 
   visitMemoryReference(I, Callee, AliasAnalysis::UnknownSize,
-                       0, 0, MemRef::Callee);
+                       0, nullptr, MemRef::Callee);
 
   if (Function *F = dyn_cast<Function>(findValue(Callee, /*OffsetOk=*/false))) {
     Assert1(CS.getCallingConv() == F->getCallingConv(),
@@ -275,10 +275,10 @@ void Lint::visitCallSite(CallSite CS) {
       MemCpyInst *MCI = cast<MemCpyInst>(&I);
       // TODO: If the size is known, use it.
       visitMemoryReference(I, MCI->getDest(), AliasAnalysis::UnknownSize,
-                           MCI->getAlignment(), 0,
+                           MCI->getAlignment(), nullptr,
                            MemRef::Write);
       visitMemoryReference(I, MCI->getSource(), AliasAnalysis::UnknownSize,
-                           MCI->getAlignment(), 0,
+                           MCI->getAlignment(), nullptr,
                            MemRef::Read);
 
       // Check that the memcpy arguments don't overlap. The AliasAnalysis API
@@ -299,10 +299,10 @@ void Lint::visitCallSite(CallSite CS) {
       MemMoveInst *MMI = cast<MemMoveInst>(&I);
       // TODO: If the size is known, use it.
       visitMemoryReference(I, MMI->getDest(), AliasAnalysis::UnknownSize,
-                           MMI->getAlignment(), 0,
+                           MMI->getAlignment(), nullptr,
                            MemRef::Write);
       visitMemoryReference(I, MMI->getSource(), AliasAnalysis::UnknownSize,
-                           MMI->getAlignment(), 0,
+                           MMI->getAlignment(), nullptr,
                            MemRef::Read);
       break;
     }
@@ -310,7 +310,7 @@ void Lint::visitCallSite(CallSite CS) {
       MemSetInst *MSI = cast<MemSetInst>(&I);
       // TODO: If the size is known, use it.
       visitMemoryReference(I, MSI->getDest(), AliasAnalysis::UnknownSize,
-                           MSI->getAlignment(), 0,
+                           MSI->getAlignment(), nullptr,
                            MemRef::Write);
       break;
     }
@@ -321,17 +321,17 @@ void Lint::visitCallSite(CallSite CS) {
               &I);
 
       visitMemoryReference(I, CS.getArgument(0), AliasAnalysis::UnknownSize,
-                           0, 0, MemRef::Read | MemRef::Write);
+                           0, nullptr, MemRef::Read | MemRef::Write);
       break;
     case Intrinsic::vacopy:
       visitMemoryReference(I, CS.getArgument(0), AliasAnalysis::UnknownSize,
-                           0, 0, MemRef::Write);
+                           0, nullptr, MemRef::Write);
       visitMemoryReference(I, CS.getArgument(1), AliasAnalysis::UnknownSize,
-                           0, 0, MemRef::Read);
+                           0, nullptr, MemRef::Read);
       break;
     case Intrinsic::vaend:
       visitMemoryReference(I, CS.getArgument(0), AliasAnalysis::UnknownSize,
-                           0, 0, MemRef::Read | MemRef::Write);
+                           0, nullptr, MemRef::Read | MemRef::Write);
       break;
 
     case Intrinsic::stackrestore:
@@ -339,7 +339,7 @@ void Lint::visitCallSite(CallSite CS) {
       // stack pointer, which the compiler may read from or write to
       // at any time, so check it for both readability and writeability.
       visitMemoryReference(I, CS.getArgument(0), AliasAnalysis::UnknownSize,
-                           0, 0, MemRef::Read | MemRef::Write);
+                           0, nullptr, MemRef::Read | MemRef::Write);
       break;
     }
 }
@@ -513,7 +513,7 @@ static bool isZero(Value *V, const DataLayout *DL) {
   if (!VecTy) {
     unsigned BitWidth = V->getType()->getIntegerBitWidth();
     APInt KnownZero(BitWidth, 0), KnownOne(BitWidth, 0);
-    ComputeMaskedBits(V, KnownZero, KnownOne, DL);
+    computeKnownBits(V, KnownZero, KnownOne, DL);
     return KnownZero.isAllOnesValue();
   }
 
@@ -534,7 +534,7 @@ static bool isZero(Value *V, const DataLayout *DL) {
       return true;
 
     APInt KnownZero(BitWidth, 0), KnownOne(BitWidth, 0);
-    ComputeMaskedBits(Elem, KnownZero, KnownOne, DL);
+    computeKnownBits(Elem, KnownZero, KnownOne, DL);
     if (KnownZero.isAllOnesValue())
       return true;
   }
@@ -572,13 +572,13 @@ void Lint::visitAllocaInst(AllocaInst &I) {
 }
 
 void Lint::visitVAArgInst(VAArgInst &I) {
-  visitMemoryReference(I, I.getOperand(0), AliasAnalysis::UnknownSize, 0, 0,
-                       MemRef::Read | MemRef::Write);
+  visitMemoryReference(I, I.getOperand(0), AliasAnalysis::UnknownSize, 0,
+                       nullptr, MemRef::Read | MemRef::Write);
 }
 
 void Lint::visitIndirectBrInst(IndirectBrInst &I) {
-  visitMemoryReference(I, I.getAddress(), AliasAnalysis::UnknownSize, 0, 0,
-                       MemRef::Branchee);
+  visitMemoryReference(I, I.getAddress(), AliasAnalysis::UnknownSize, 0,
+                       nullptr, MemRef::Branchee);
 
   Assert1(I.getNumDestinations() != 0,
           "Undefined behavior: indirectbr with no destinations", &I);
@@ -603,7 +603,7 @@ void Lint::visitInsertElementInst(InsertElementInst &I) {
 void Lint::visitUnreachableInst(UnreachableInst &I) {
   // This isn't undefined behavior, it's merely suspicious.
   Assert1(&I == I.getParent()->begin() ||
-          prior(BasicBlock::iterator(&I))->mayHaveSideEffects(),
+          std::prev(BasicBlock::iterator(&I))->mayHaveSideEffects(),
           "Unusual: unreachable immediately preceded by instruction without "
           "side effects", &I);
 }
@@ -652,8 +652,7 @@ Value *Lint::findValueImpl(Value *V, bool OffsetOk,
       if (W != V)
         return findValueImpl(W, OffsetOk, Visited);
   } else if (CastInst *CI = dyn_cast<CastInst>(V)) {
-    if (CI->isNoopCast(DL ? DL->getIntPtrType(V->getContext()) :
-                            Type::getInt64Ty(V->getContext())))
+    if (CI->isNoopCast(DL))
       return findValueImpl(CI->getOperand(0), OffsetOk, Visited);
   } else if (ExtractValueInst *Ex = dyn_cast<ExtractValueInst>(V)) {
     if (Value *W = FindInsertedValue(Ex->getAggregateOperand(),
@@ -666,7 +665,7 @@ Value *Lint::findValueImpl(Value *V, bool OffsetOk,
       if (CastInst::isNoopCast(Instruction::CastOps(CE->getOpcode()),
                                CE->getOperand(0)->getType(),
                                CE->getType(),
-                               DL ? DL->getIntPtrType(V->getContext()) :
+                               DL ? DL->getIntPtrType(V->getType()) :
                                     Type::getInt64Ty(V->getContext())))
         return findValueImpl(CE->getOperand(0), OffsetOk, Visited);
     } else if (CE->getOpcode() == Instruction::ExtractValue) {

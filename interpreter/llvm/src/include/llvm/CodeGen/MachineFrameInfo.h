@@ -249,6 +249,7 @@ public:
     LocalFrameSize = 0;
     LocalFrameMaxAlign = 0;
     UseLocalStackAllocationBlock = false;
+    HasInlineAsmWithSPAdjust = false;
   }
 
   /// hasStackObjects - Return true if there are any stack objects in this
@@ -483,6 +484,9 @@ public:
   ///
   int CreateFixedObject(uint64_t Size, int64_t SPOffset, bool Immutable);
 
+  /// CreateFixedSpillStackObject - Create a spill slot at a fixed location
+  /// on the stack.  Returns an index with a negative value.
+  int CreateFixedSpillStackObject(uint64_t Size, int64_t SPOffset);
 
   /// isFixedObjectIndex - Returns true if the specified index corresponds to a
   /// fixed stack object.
@@ -518,7 +522,7 @@ public:
   /// a nonnegative identifier to represent it.
   ///
   int CreateStackObject(uint64_t Size, unsigned Alignment, bool isSS,
-                        const AllocaInst *Alloca = 0);
+                        const AllocaInst *Alloca = nullptr);
 
   /// CreateSpillStackObject - Create a new statically sized stack object that
   /// represents a spill slot, returning a nonnegative identifier to represent

@@ -1996,8 +1996,8 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
  }
 //______________________________________________________________________________
  void         TGQt::GrabButton(Window_t id, EMouseButton button, UInt_t modifier,
-                       UInt_t evmask, Window_t confine, Cursor_t cursor,
-                       Bool_t grab)
+                               UInt_t evmask, Window_t confine, Cursor_t cursor,
+                               Bool_t grab)
  {
    // Establish passive grab on a certain mouse button. That is, when a
    // certain mouse button is hit while certain modifier's (Shift, Control,
@@ -2017,6 +2017,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
 //       ,evmask,id,((TQtClientWidget*)wid(id)));
     if (id == kNone) return;
     assert(confine==kNone);
+    (void)confine; // no unused var in opimized builds.
     if (grab ) {
 //       if (cursor == kNone) {
           ((TQtClientWidget*)wid(id))->SetButtonMask(modifier,button);
@@ -2027,8 +2028,8 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
 }
 
  //______________________________________________________________________________
- void         TGQt::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
-                        Cursor_t cursor, Bool_t grab, Bool_t owner_events)
+void         TGQt::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
+                               Cursor_t cursor, Bool_t grab, Bool_t owner_events)
  {
     // Establish an active pointer grab. While an active pointer grab is in
     // effect, further pointer events are only reported to the grabbing
@@ -2052,6 +2053,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
        //-------------------------------------------------------------------
 
     assert(confine==kNone);
+    (void)confine; // no unused var in optimized builds.
     TQtClientWidget *gw = (id == kNone) ?  0: cwid(id);
     // Do we still grabbing anything ?
     if (grab) {

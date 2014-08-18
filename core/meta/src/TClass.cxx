@@ -1013,6 +1013,13 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
    // Create a TClass object. This object does not contain anything. We mimic
    // the case of a class fwd declared in the interpreter.
    R__LOCKGUARD2(gInterpreterMutex);
+
+   // Treat the case in which a TClass instance is created for a namespace
+   if (theState == kNamespaceForMeta){
+      fProperty = kIsNamespace;
+      theState = kForwardDeclared; // it immediately decays in kForwardDeclared
+   }
+
    if (theState != kForwardDeclared && theState != kEmulated)
       ::Fatal("TClass::TClass",
               "A TClass entry cannot be initialized in a state different from kForwardDeclared or kEmulated.");
@@ -2730,7 +2737,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    if (!name || !name[0]) return 0;
    R__LOCKGUARD(gInterpreterMutex);
    if (!gROOT->GetListOfClasses())  return 0;
-   if (strstr(name, "<anonymous>")) return 0;
+   if (strstr(name, "(anonymous)")) return 0;
 
    if (strncmp(name,"class ",6)==0) name += 6;
    if (strncmp(name,"struct ",7)==0) name += 7;
@@ -5521,7 +5528,9 @@ void TClass::SetUnloaded()
    // Disable the autoloader while calling SetClassInfo, to prevent
    // the library from being reloaded!
    int autoload_old = gCling->SetClassAutoloading(0);
+   int autoparse_old = gCling->SetClassAutoparsing(0);
    gInterpreter->SetClassInfo(this,kTRUE);
+   gCling->SetClassAutoparsing(autoparse_old);
    gCling->SetClassAutoloading(autoload_old);
    fDeclFileName = 0;
    fDeclFileLine = 0;

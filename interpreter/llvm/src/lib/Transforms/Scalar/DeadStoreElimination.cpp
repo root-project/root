@@ -15,7 +15,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "dse"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SetVector.h"
@@ -38,6 +37,8 @@
 #include "llvm/Transforms/Utils/Local.h"
 using namespace llvm;
 
+#define DEBUG_TYPE "dse"
+
 STATISTIC(NumFastStores, "Number of stores deleted");
 STATISTIC(NumFastOther , "Number of other instrs removed");
 
@@ -49,11 +50,11 @@ namespace {
     const TargetLibraryInfo *TLI;
 
     static char ID; // Pass identification, replacement for typeid
-    DSE() : FunctionPass(ID), AA(0), MD(0), DT(0) {
+    DSE() : FunctionPass(ID), AA(nullptr), MD(nullptr), DT(nullptr) {
       initializeDSEPass(*PassRegistry::getPassRegistry());
     }
 
-    virtual bool runOnFunction(Function &F) {
+    bool runOnFunction(Function &F) override {
       if (skipOptnoneFunction(F))
         return false;
 
@@ -69,7 +70,7 @@ namespace {
         if (DT->isReachableFromEntry(I))
           Changed |= runOnBasicBlock(*I);
 
-      AA = 0; MD = 0; DT = 0;
+      AA = nullptr; MD = nullptr; DT = nullptr;
       return Changed;
     }
 
@@ -79,7 +80,7 @@ namespace {
     void RemoveAccessedObjects(const AliasAnalysis::Location &LoadedLoc,
                                SmallSetVector<Value*, 16> &DeadStackObjects);
 
-    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+    void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesCFG();
       AU.addRequired<DominatorTreeWrapperPass>();
       AU.addRequired<AliasAnalysis>();
@@ -111,9 +112,9 @@ FunctionPass *llvm::createDeadStoreEliminationPass() { return new DSE(); }
 /// If ValueSet is non-null, remove any deleted instructions from it as well.
 ///
 static void DeleteDeadInstruction(Instruction *I,
-                                  MemoryDependenceAnalysis &MD,
-                                  const TargetLibraryInfo *TLI,
-                                  SmallSetVector<Value*, 16> *ValueSet = 0) {
+                               MemoryDependenceAnalysis &MD,
+                               const TargetLibraryInfo *TLI,
+                               SmallSetVector<Value*, 16> *ValueSet = nullptr) {
   SmallVector<Instruction*, 32> NowDeadInsts;
 
   NowDeadInsts.push_back(I);
@@ -131,7 +132,7 @@ static void DeleteDeadInstruction(Instruction *I,
 
     for (unsigned op = 0, e = DeadInst->getNumOperands(); op != e; ++op) {
       Value *Op = DeadInst->getOperand(op);
-      DeadInst->setOperand(op, 0);
+      DeadInst->setOperand(op, nullptr);
 
       // If this operand just became dead, add it to the NowDeadInsts list.
       if (!Op->use_empty()) continue;
@@ -203,13 +204,13 @@ getLocForWrite(Instruction *Inst, AliasAnalysis &AA) {
     // If we don't have target data around, an unknown size in Location means
     // that we should use the size of the pointee type.  This isn't valid for
     // memset/memcpy, which writes more than an i8.
-    if (Loc.Size == AliasAnalysis::UnknownSize && DL == 0)
+    if (Loc.Size == AliasAnalysis::UnknownSize && DL == nullptr)
       return AliasAnalysis::Location();
     return Loc;
   }
 
   IntrinsicInst *II = dyn_cast<IntrinsicInst>(Inst);
-  if (II == 0) return AliasAnalysis::Location();
+  if (!II) return AliasAnalysis::Location();
 
   switch (II->getIntrinsicID()) {
   default: return AliasAnalysis::Location(); // Unhandled intrinsic.
@@ -217,7 +218,7 @@ getLocForWrite(Instruction *Inst, AliasAnalysis &AA) {
     // If we don't have target data around, an unknown size in Location means
     // that we should use the size of the pointee type.  This isn't valid for
     // init.trampoline, which writes more than an i8.
-    if (DL == 0) return AliasAnalysis::Location();
+    if (!DL) return AliasAnalysis::Location();
 
     // FIXME: We don't know the size of the trampoline, so we can't really
     // handle it here.
@@ -359,7 +360,7 @@ static OverwriteResult isOverwrite(const AliasAnalysis::Location &Later,
       // If we have no DataLayout information around, then the size of the store
       // is inferrable from the pointee type.  If they are the same type, then
       // we know that the store is safe.
-      if (DL == 0 && Later.Ptr->getType() == Earlier.Ptr->getType())
+      if (DL == nullptr && Later.Ptr->getType() == Earlier.Ptr->getType())
         return OverwriteComplete;
 
       return OverwriteUnknown;
@@ -373,7 +374,7 @@ static OverwriteResult isOverwrite(const AliasAnalysis::Location &Later,
   // Otherwise, we have to have size information, and the later store has to be
   // larger than the earlier one.
   if (Later.Size == AliasAnalysis::UnknownSize ||
-      Earlier.Size == AliasAnalysis::UnknownSize || DL == 0)
+      Earlier.Size == AliasAnalysis::UnknownSize || DL == nullptr)
     return OverwriteUnknown;
 
   // Check to see if the later store is to the entire object (either a global,
@@ -461,7 +462,7 @@ static bool isPossibleSelfRead(Instruction *Inst,
   // Self reads can only happen for instructions that read memory.  Get the
   // location read.
   AliasAnalysis::Location InstReadLoc = getLocForRead(Inst, AA);
-  if (InstReadLoc.Ptr == 0) return false;  // Not a reading instruction.
+  if (!InstReadLoc.Ptr) return false;  // Not a reading instruction.
 
   // If the read and written loc obviously don't alias, it isn't a read.
   if (AA.isNoAlias(InstReadLoc, InstStoreLoc)) return false;
@@ -528,7 +529,7 @@ bool DSE::runOnBasicBlock(BasicBlock &BB) {
 
           DeleteDeadInstruction(SI, *MD, TLI);
 
-          if (NextInst == 0)  // Next instruction deleted.
+          if (!NextInst)  // Next instruction deleted.
             BBI = BB.begin();
           else if (BBI != BB.begin())  // Revisit this instruction if possible.
             --BBI;
@@ -543,7 +544,7 @@ bool DSE::runOnBasicBlock(BasicBlock &BB) {
     AliasAnalysis::Location Loc = getLocForWrite(Inst, *AA);
 
     // If we didn't get a useful location, fail.
-    if (Loc.Ptr == 0)
+    if (!Loc.Ptr)
       continue;
 
     while (InstDep.isDef() || InstDep.isClobber()) {
@@ -557,7 +558,7 @@ bool DSE::runOnBasicBlock(BasicBlock &BB) {
       Instruction *DepWrite = InstDep.getInst();
       AliasAnalysis::Location DepLoc = getLocForWrite(DepWrite, *AA);
       // If we didn't get a useful location, or if it isn't a size, bail out.
-      if (DepLoc.Ptr == 0)
+      if (!DepLoc.Ptr)
         break;
 
       // If we find a write that is a) removable (i.e., non-volatile), b) is
@@ -680,7 +681,7 @@ bool DSE::HandleFree(CallInst *F) {
       if (!AA->isMustAlias(F->getArgOperand(0), DepPointer))
         break;
 
-      Instruction *Next = llvm::next(BasicBlock::iterator(Dependency));
+      Instruction *Next = std::next(BasicBlock::iterator(Dependency));
 
       // DCE instructions only used to calculate that store
       DeleteDeadInstruction(Dependency, *MD, TLI);
@@ -700,22 +701,6 @@ bool DSE::HandleFree(CallInst *F) {
   }
 
   return MadeChange;
-}
-
-namespace {
-  struct CouldRef {
-    typedef Value *argument_type;
-    const CallSite CS;
-    AliasAnalysis *AA;
-
-    bool operator()(Value *I) {
-      // See if the call site touches the value.
-      AliasAnalysis::ModRefResult A =
-        AA->getModRefInfo(CS, I, getPointerSize(I, *AA));
-
-      return A == AliasAnalysis::ModRef || A == AliasAnalysis::Ref;
-    }
-  };
 }
 
 /// handleEndBlock - Remove dead stores to stack-allocated locations in the
@@ -777,7 +762,7 @@ bool DSE::handleEndBlock(BasicBlock &BB) {
               for (SmallVectorImpl<Value *>::iterator I = Pointers.begin(),
                    E = Pointers.end(); I != E; ++I) {
                 dbgs() << **I;
-                if (llvm::next(I) != E)
+                if (std::next(I) != E)
                   dbgs() << ", ";
               }
               dbgs() << '\n');
@@ -819,8 +804,13 @@ bool DSE::handleEndBlock(BasicBlock &BB) {
 
       // If the call might load from any of our allocas, then any store above
       // the call is live.
-      CouldRef Pred = { CS, AA };
-      DeadStackObjects.remove_if(Pred);
+      DeadStackObjects.remove_if([&](Value *I) {
+        // See if the call site touches the value.
+        AliasAnalysis::ModRefResult A =
+            AA->getModRefInfo(CS, I, getPointerSize(I, *AA));
+
+        return A == AliasAnalysis::ModRef || A == AliasAnalysis::Ref;
+      });
 
       // If all of the allocas were clobbered by the call then we're not going
       // to find anything else to process.
@@ -863,20 +853,6 @@ bool DSE::handleEndBlock(BasicBlock &BB) {
   return MadeChange;
 }
 
-namespace {
-  struct CouldAlias {
-    typedef Value *argument_type;
-    const AliasAnalysis::Location &LoadedLoc;
-    AliasAnalysis *AA;
-
-    bool operator()(Value *I) {
-      // See if the loaded location could alias the stack location.
-      AliasAnalysis::Location StackLoc(I, getPointerSize(I, *AA));
-      return !AA->isNoAlias(StackLoc, LoadedLoc);
-    }
-  };
-}
-
 /// RemoveAccessedObjects - Check to see if the specified location may alias any
 /// of the stack objects in the DeadStackObjects set.  If so, they become live
 /// because the location is being loaded.
@@ -896,6 +872,9 @@ void DSE::RemoveAccessedObjects(const AliasAnalysis::Location &LoadedLoc,
   }
 
   // Remove objects that could alias LoadedLoc.
-  CouldAlias Pred = { LoadedLoc, AA };
-  DeadStackObjects.remove_if(Pred);
+  DeadStackObjects.remove_if([&](Value *I) {
+    // See if the loaded location could alias the stack location.
+    AliasAnalysis::Location StackLoc(I, getPointerSize(I, *AA));
+    return !AA->isNoAlias(StackLoc, LoadedLoc);
+  });
 }

@@ -7,8 +7,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "arm-disassembler"
-
 #include "llvm/MC/MCDisassembler.h"
 #include "MCTargetDesc/ARMAddressingModes.h"
 #include "MCTargetDesc/ARMBaseInfo.h"
@@ -28,6 +26,8 @@
 #include <vector>
 
 using namespace llvm;
+
+#define DEBUG_TYPE "arm-disassembler"
 
 typedef MCDisassembler::DecodeStatus DecodeStatus;
 
@@ -90,20 +90,18 @@ class ARMDisassembler : public MCDisassembler {
 public:
   /// Constructor     - Initializes the disassembler.
   ///
-  ARMDisassembler(const MCSubtargetInfo &STI) :
-    MCDisassembler(STI) {
+  ARMDisassembler(const MCSubtargetInfo &STI, MCContext &Ctx) :
+    MCDisassembler(STI, Ctx) {
   }
 
   ~ARMDisassembler() {
   }
 
   /// getInstruction - See MCDisassembler.
-  DecodeStatus getInstruction(MCInst &instr,
-                              uint64_t &size,
-                              const MemoryObject &region,
-                              uint64_t address,
+  DecodeStatus getInstruction(MCInst &instr, uint64_t &size,
+                              const MemoryObject &region, uint64_t address,
                               raw_ostream &vStream,
-                              raw_ostream &cStream) const;
+                              raw_ostream &cStream) const override;
 };
 
 /// ThumbDisassembler - Thumb disassembler for all Thumb platforms.
@@ -111,20 +109,18 @@ class ThumbDisassembler : public MCDisassembler {
 public:
   /// Constructor     - Initializes the disassembler.
   ///
-  ThumbDisassembler(const MCSubtargetInfo &STI) :
-    MCDisassembler(STI) {
+  ThumbDisassembler(const MCSubtargetInfo &STI, MCContext &Ctx) :
+    MCDisassembler(STI, Ctx) {
   }
 
   ~ThumbDisassembler() {
   }
 
   /// getInstruction - See MCDisassembler.
-  DecodeStatus getInstruction(MCInst &instr,
-                              uint64_t &size,
-                              const MemoryObject &region,
-                              uint64_t address,
+  DecodeStatus getInstruction(MCInst &instr, uint64_t &size,
+                              const MemoryObject &region, uint64_t address,
                               raw_ostream &vStream,
-                              raw_ostream &cStream) const;
+                              raw_ostream &cStream) const override;
 
 private:
   mutable ITStatus ITBlock;
@@ -404,12 +400,16 @@ static DecodeStatus DecodeMRRC2(llvm::MCInst &Inst, unsigned Val,
                                 uint64_t Address, const void *Decoder);
 #include "ARMGenDisassemblerTables.inc"
 
-static MCDisassembler *createARMDisassembler(const Target &T, const MCSubtargetInfo &STI) {
-  return new ARMDisassembler(STI);
+static MCDisassembler *createARMDisassembler(const Target &T,
+                                             const MCSubtargetInfo &STI,
+                                             MCContext &Ctx) {
+  return new ARMDisassembler(STI, Ctx);
 }
 
-static MCDisassembler *createThumbDisassembler(const Target &T, const MCSubtargetInfo &STI) {
-  return new ThumbDisassembler(STI);
+static MCDisassembler *createThumbDisassembler(const Target &T,
+                                               const MCSubtargetInfo &STI,
+                                               MCContext &Ctx) {
+  return new ThumbDisassembler(STI, Ctx);
 }
 
 DecodeStatus ARMDisassembler::getInstruction(MCInst &MI, uint64_t &Size,
@@ -860,9 +860,13 @@ DecodeStatus ThumbDisassembler::getInstruction(MCInst &MI, uint64_t &Size,
 
 
 extern "C" void LLVMInitializeARMDisassembler() {
-  TargetRegistry::RegisterMCDisassembler(TheARMTarget,
+  TargetRegistry::RegisterMCDisassembler(TheARMLETarget,
                                          createARMDisassembler);
-  TargetRegistry::RegisterMCDisassembler(TheThumbTarget,
+  TargetRegistry::RegisterMCDisassembler(TheARMBETarget,
+                                         createARMDisassembler);
+  TargetRegistry::RegisterMCDisassembler(TheThumbLETarget,
+                                         createThumbDisassembler);
+  TargetRegistry::RegisterMCDisassembler(TheThumbBETarget,
                                          createThumbDisassembler);
 }
 
@@ -3970,7 +3974,53 @@ static DecodeStatus DecodeInstSyncBarrierOption(MCInst &Inst, unsigned Val,
 
 static DecodeStatus DecodeMSRMask(MCInst &Inst, unsigned Val,
                           uint64_t Address, const void *Decoder) {
-  if (!Val) return MCDisassembler::Fail;
+  uint64_t FeatureBits = ((const MCDisassembler*)Decoder)->getSubtargetInfo()
+                                                          .getFeatureBits();
+  if (FeatureBits & ARM::FeatureMClass) {
+    unsigned ValLow = Val & 0xff;
+
+    // Validate the SYSm value first.
+    switch (ValLow) {
+    case  0: // apsr
+    case  1: // iapsr
+    case  2: // eapsr
+    case  3: // xpsr
+    case  5: // ipsr
+    case  6: // epsr
+    case  7: // iepsr
+    case  8: // msp
+    case  9: // psp
+    case 16: // primask
+    case 20: // control
+      break;
+    case 17: // basepri
+    case 18: // basepri_max
+    case 19: // faultmask
+      if (!(FeatureBits & ARM::HasV7Ops))
+        // Values basepri, basepri_max and faultmask are only valid for v7m.
+        return MCDisassembler::Fail;
+      break;
+    default:
+      return MCDisassembler::Fail;
+    }
+
+    // The ARMv7-M architecture has an additional 2-bit mask value in the MSR
+    // instruction (bits {11,10}). The mask is used only with apsr, iapsr,
+    // eapsr and xpsr, it has to be 0b10 in other cases. Bit mask{1} indicates
+    // if the NZCVQ bits should be moved by the instruction. Bit mask{0}
+    // indicates the move for the GE{3:0} bits, the mask{0} bit can be set
+    // only if the processor includes the DSP extension.
+    if ((FeatureBits & ARM::HasV7Ops) && Inst.getOpcode() == ARM::t2MSR_M) {
+      unsigned Mask = (Val >> 10) & 3;
+      if (Mask == 0 || (Mask != 2 && ValLow > 3) ||
+          (!(FeatureBits & ARM::FeatureDSPThumb2) && Mask == 1))
+        return MCDisassembler::Fail;
+    }
+  } else {
+    // A/R class
+    if (Val == 0)
+      return MCDisassembler::Fail;
+  }
   Inst.addOperand(MCOperand::CreateImm(Val));
   return MCDisassembler::Success;
 }

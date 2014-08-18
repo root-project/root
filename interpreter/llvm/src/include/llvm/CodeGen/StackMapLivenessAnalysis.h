@@ -8,8 +8,8 @@
 //===----------------------------------------------------------------------===//
 //
 // This pass calculates the liveness for each basic block in a function and
-// attaches the register live-out information to a stackmap or patchpoint
-// intrinsic if present.
+// attaches the register live-out information to a patchpoint intrinsic (if
+// present).
 //
 //===----------------------------------------------------------------------===//
 
@@ -23,14 +23,13 @@
 namespace llvm {
 
 /// \brief This pass calculates the liveness information for each basic block in
-/// a function and attaches the register live-out information to a stackmap or
-/// patchpoint intrinsic if present.
+/// a function and attaches the register live-out information to a patchpoint
+/// intrinsic if present.
 ///
-/// This is an optional pass that has to be explicitly enabled via the
-/// -enable-stackmap-liveness and/or -enable-patchpoint-liveness flag. The pass
-/// skips functions that don't have any stackmap or patchpoint intrinsics. The
+/// This pass can be disabled via the -enable-patchpoint-liveness=false flag.
+/// The pass skips functions that don't have any patchpoint intrinsics. The
 /// information provided by this pass is optional and not required by the
-/// aformentioned intrinsics to function.
+/// aformentioned intrinsic to function.
 class StackMapLiveness : public MachineFunctionPass {
   MachineFunction *MF;
   const TargetRegisterInfo *TRI;
@@ -43,10 +42,10 @@ public:
 
   /// \brief Tell the pass manager which passes we depend on and what
   /// information we preserve.
-  virtual void getAnalysisUsage(AnalysisUsage &AU) const;
+  void getAnalysisUsage(AnalysisUsage &AU) const override;
 
   /// \brief Calculate the liveness information for the given machine function.
-  virtual bool runOnMachineFunction(MachineFunction &MF);
+  bool runOnMachineFunction(MachineFunction &MF) override;
 
 private:
   /// \brief Performs the actual liveness calculation for the function.

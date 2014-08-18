@@ -169,11 +169,6 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    fAppImp = gGuiFactory->CreateApplicationImp(appClassName, argc, argv);
    ResetBit(kProcessRemotely);
 
-   gInterpreter->UpdateListOfTypes();
-
-   // Enable autoloading
-   gInterpreter->EnableAutoLoading();
-
    // Initialize the graphics environment
    if (gClassTable->GetDict("TPad")) {
       fgGraphNeeded = kTRUE;

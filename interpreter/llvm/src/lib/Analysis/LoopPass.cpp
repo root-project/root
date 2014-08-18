@@ -15,9 +15,12 @@
 
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/IR/IRPrintingPasses.h"
+#include "llvm/IR/LLVMContext.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Timer.h"
 using namespace llvm;
+
+#define DEBUG_TYPE "loop-pass-manager"
 
 namespace {
 
@@ -33,16 +36,19 @@ public:
   PrintLoopPass(const std::string &B, raw_ostream &o)
       : LoopPass(ID), Banner(B), Out(o) {}
 
-  virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesAll();
   }
 
-  bool runOnLoop(Loop *L, LPPassManager &) {
+  bool runOnLoop(Loop *L, LPPassManager &) override {
     Out << Banner;
     for (Loop::block_iterator b = L->block_begin(), be = L->block_end();
          b != be;
          ++b) {
-      (*b)->print(Out);
+      if (*b)
+        (*b)->print(Out);
+      else
+        Out << "Printing <null> block";
     }
     return false;
   }
@@ -61,8 +67,8 @@ LPPassManager::LPPassManager()
   : FunctionPass(ID), PMDataManager() {
   skipThisLoop = false;
   redoThisLoop = false;
-  LI = NULL;
-  CurrentLoop = NULL;
+  LI = nullptr;
+  CurrentLoop = nullptr;
 }
 
 /// Delete loop from the loop queue and loop hierarchy (LoopInfo).
@@ -251,6 +257,8 @@ bool LPPassManager::runOnFunction(Function &F) {
 
         // Then call the regular verifyAnalysis functions.
         verifyPreservedAnalysis(P);
+
+        F.getContext().yield();
       }
 
       removeNotPreservedAnalysis(P);

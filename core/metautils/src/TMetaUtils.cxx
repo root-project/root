@@ -3602,7 +3602,7 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
 
    modCreation
       = ModuleMap.findOrCreateModule(moduleName.str().c_str(),
-                                     0 /*ActiveModule*/,
+                                     0 /*ActiveModule*/, /*ModuleMap*/ 0,
                                      false /*Framework*/, false /*Explicit*/);
    if (!modCreation.second && !strstr(moduleFileName, "/allDict_rdict.pcm")) {
       std::cerr << "TMetaUtils::declareModuleMap: "

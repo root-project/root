@@ -29,7 +29,7 @@ using namespace ento;
 
 namespace {
 class VLASizeChecker : public Checker< check::PreStmt<DeclStmt> > {
-  mutable OwningPtr<BugType> BT;
+  mutable std::unique_ptr<BugType> BT;
   enum VLASize_Kind { VLA_Garbage, VLA_Zero, VLA_Tainted };
 
   void reportBug(VLASize_Kind Kind,
@@ -106,7 +106,7 @@ void VLASizeChecker::checkPreStmt(const DeclStmt *DS, CheckerContext &C) const {
   
   // Check if the size is tainted.
   if (state->isTainted(sizeV)) {
-    reportBug(VLA_Tainted, SE, 0, C);
+    reportBug(VLA_Tainted, SE, nullptr, C);
     return;
   }
 
@@ -114,7 +114,7 @@ void VLASizeChecker::checkPreStmt(const DeclStmt *DS, CheckerContext &C) const {
   DefinedSVal sizeD = sizeV.castAs<DefinedSVal>();
 
   ProgramStateRef stateNotZero, stateZero;
-  llvm::tie(stateNotZero, stateZero) = state->assume(sizeD);
+  std::tie(stateNotZero, stateZero) = state->assume(sizeD);
 
   if (stateZero && !stateNotZero) {
     reportBug(VLA_Zero, SE, stateZero, C);

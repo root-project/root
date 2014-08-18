@@ -1344,12 +1344,12 @@ Double_t TH3::KolmogorovTest(const TH1 *h2, Option_t *option) const
    Double_t prb = 0;
    TH1 *h1 = (TH1*)this;
    if (h2 == 0) return 0;
-   TAxis *xaxis1 = h1->GetXaxis();
-   TAxis *xaxis2 = h2->GetXaxis();
-   TAxis *yaxis1 = h1->GetYaxis();
-   TAxis *yaxis2 = h2->GetYaxis();
-   TAxis *zaxis1 = h1->GetZaxis();
-   TAxis *zaxis2 = h2->GetZaxis();
+   const TAxis *xaxis1 = h1->GetXaxis();
+   const TAxis *xaxis2 = h2->GetXaxis();
+   const TAxis *yaxis1 = h1->GetYaxis();
+   const TAxis *yaxis2 = h2->GetYaxis();
+   const TAxis *zaxis1 = h1->GetZaxis();
+   const TAxis *zaxis2 = h2->GetZaxis();
    Int_t ncx1   = xaxis1->GetNbins();
    Int_t ncx2   = xaxis2->GetNbins();
    Int_t ncy1   = yaxis1->GetNbins();
@@ -1825,54 +1825,12 @@ TH1D *TH3::ProjectionX(const char *name, Int_t iymin, Int_t iymax,
    //
    //  implemented using Project3D
 
-
-   TString opt = option;
-   opt.ToLower();
-
-   Int_t iyminOld = GetYaxis()->GetFirst();
-   Int_t iymaxOld = GetYaxis()->GetLast();
-   Int_t izminOld = GetZaxis()->GetFirst();
-   Int_t izmaxOld = GetZaxis()->GetLast();
-
-   GetYaxis()->SetRange(iymin,iymax);
-   GetZaxis()->SetRange(izmin,izmax);
-
-   Bool_t computeErrors = GetSumw2N();
-   if (opt.Contains("e") ) {
-      computeErrors = kTRUE;
-      opt.Remove(opt.First("e"),1);
-   }
-   Bool_t originalRange = kFALSE;
-   if (opt.Contains('o') ) {
-      originalRange = kTRUE;
-      opt.Remove(opt.First("o"),1);
-   }
-
    // in case of default name append the parent name
    TString hname = name;
    if (hname == "_px") hname = TString::Format("%s%s", GetName(), name);
+   TString title =  TString::Format("%s ( Projection X )",GetTitle());
 
-   TH1D * h1 = DoProject1D(hname, GetTitle(), this->GetXaxis(), computeErrors, originalRange,true,true);
-
-   // restore original range
-   if (GetYaxis()->TestBit(TAxis::kAxisRange)) GetYaxis()->SetRange(iyminOld,iymaxOld);
-   if (GetZaxis()->TestBit(TAxis::kAxisRange)) GetZaxis()->SetRange(izminOld,izmaxOld);
-
-   // draw in current pad
-   if (h1 && opt.Contains("d")) {
-      opt.Remove(opt.First("d"),1);
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
-      if (!gPad || !gPad->FindObject(h1)) {
-         h1->Draw(opt);
-      } else {
-         h1->Paint(opt);
-      }
-      if (padsav) padsav->cd();
-   }
-
-   return h1;
+   return DoProject1D(hname, title, iymin, iymax, izmin, izmax, &fXaxis, &fYaxis, &fZaxis, option);
 }
 
 
@@ -1899,56 +1857,12 @@ TH1D *TH3::ProjectionY(const char *name, Int_t ixmin, Int_t ixmax,
    //
    //  implemented using Project3D
 
-
-   TString opt = option;
-   opt.ToLower();
-
-   Int_t ixminOld = GetXaxis()->GetFirst();
-   Int_t ixmaxOld = GetXaxis()->GetLast();
-   Int_t izminOld = GetZaxis()->GetFirst();
-   Int_t izmaxOld = GetZaxis()->GetLast();
-
-   GetXaxis()->SetRange(ixmin,ixmax);
-   GetZaxis()->SetRange(izmin,izmax);
-
-   Bool_t computeErrors = GetSumw2N();
-   if (opt.Contains("e") ) {
-      computeErrors = kTRUE;
-      opt.Remove(opt.First("e"),1);
-   }
-   Bool_t originalRange = kFALSE;
-   if (opt.Contains('o') ) {
-      originalRange = kTRUE;
-      opt.Remove(opt.First("o"),1);
-   }
-
-   // in case of default name append the parent name
    TString hname = name;
    if (hname == "_py") hname = TString::Format("%s%s", GetName(), name);
+   TString title =  TString::Format("%s ( Projection Y )",GetTitle());
 
-   TH1D * h1 = DoProject1D(hname, GetTitle(), this->GetYaxis(), computeErrors, originalRange, true, true);
-
-   // restore axis range
-   if (GetXaxis()->TestBit(TAxis::kAxisRange)) GetXaxis()->SetRange(ixminOld,ixmaxOld);
-   if (GetZaxis()->TestBit(TAxis::kAxisRange)) GetZaxis()->SetRange(izminOld,izmaxOld);
-
-   // draw in current pad
-   if (h1 && opt.Contains("d")) {
-      opt.Remove(opt.First("d"),1);
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
-      if (!gPad || !gPad->FindObject(h1)) {
-         h1->Draw(opt);
-      } else {
-         h1->Paint(opt);
-      }
-      if (padsav) padsav->cd();
-   }
-
-   return h1;
+   return DoProject1D(hname, title, ixmin, ixmax, izmin, izmax, &fYaxis, &fXaxis, &fZaxis, option);
 }
-
 
 //______________________________________________________________________________
 TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax,
@@ -1975,16 +1889,33 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax,
    //  implemented using Project3D
 
 
+   TString hname = name;
+   if (hname == "_pz") hname = TString::Format("%s%s", GetName(), name);
+   TString title =  TString::Format("%s ( Projection Z )",GetTitle());
+
+   return DoProject1D(hname, title, ixmin, ixmax, iymin, iymax, &fZaxis, &fXaxis, &fYaxis, option);
+}
+
+
+//______________________________________________________________________________
+TH1D *TH3::DoProject1D(const char* name, const char * title, int imin1, int imax1, int imin2, int imax2, 
+                       const TAxis* projAxis, const TAxis * axis1, const TAxis * axis2, Option_t * option) const 
+{
+   // internal methdod performing the projection to 1D histogram
+   // called from TH3::Project3D
+
+
    TString opt = option;
    opt.ToLower();
 
-   Int_t ixminOld = GetXaxis()->GetFirst();
-   Int_t ixmaxOld = GetXaxis()->GetLast();
-   Int_t iyminOld = GetYaxis()->GetFirst();
-   Int_t iymaxOld = GetYaxis()->GetLast();
+   Int_t iminOld1 = axis1->GetFirst();
+   Int_t imaxOld1 = axis1->GetLast();
+   Int_t iminOld2 = axis2->GetFirst();
+   Int_t imaxOld2 = axis2->GetLast();
 
-   GetXaxis()->SetRange(ixmin,ixmax);
-   GetYaxis()->SetRange(iymin,iymax);
+   // need to cast-away constness to set range 
+   const_cast<TAxis*>(axis1)->SetRange(imin1,imax1);
+   const_cast<TAxis*>(axis2)->SetRange(imin2,imax2);
 
    Bool_t computeErrors = GetSumw2N();
    if (opt.Contains("e") ) {
@@ -1997,15 +1928,11 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax,
       opt.Remove(opt.First("o"),1);
    }
 
-   // in case of default name append the parent name
-   TString hname = name;
-   if (hname == "_pz") hname = TString::Format("%s%s", GetName(), name);
+   TH1D * h1 = DoProject1D(name, title, projAxis, computeErrors, originalRange,true,true);
 
-   TH1D * h1 =  DoProject1D(hname, GetTitle(), this->GetZaxis(), computeErrors, originalRange, true, true);
-
-   // restore the range
-   if (GetXaxis()->TestBit(TAxis::kAxisRange)) GetXaxis()->SetRange(ixminOld,ixmaxOld);
-   if (GetYaxis()->TestBit(TAxis::kAxisRange)) GetYaxis()->SetRange(iyminOld,iymaxOld);
+   // restore original range
+   if (axis1->TestBit(TAxis::kAxisRange)) const_cast<TAxis*>(axis1)->SetRange(iminOld1,imaxOld1);
+   if (axis2->TestBit(TAxis::kAxisRange)) const_cast<TAxis*>(axis2)->SetRange(iminOld2,imaxOld2);
 
    // draw in current pad
    if (h1 && opt.Contains("d")) {
@@ -2024,14 +1951,13 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax,
    return h1;
 }
 
-
-//______________________________________________________________________________
-TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX,
+TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
                        bool computeErrors, bool originalRange,
                        bool useUF, bool useOF) const
 {
    // internal methdod performing the projection to 1D histogram
-   // called from TH3::Project3D
+   // called from other TH3::DoProject1D 
+
 
    // Create the projection histogram
    TH1D *h1 = 0;
@@ -2108,8 +2034,8 @@ TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX,
    if ( computeErrors ) h1->Sumw2();
 
    // Set references to the axis, so that the bucle has no branches.
-   TAxis* out1 = 0;
-   TAxis* out2 = 0;
+   const TAxis* out1 = 0;
+   const TAxis* out2 = 0;
    if ( projX == GetXaxis() ) {
       out1 = GetYaxis();
       out2 = GetZaxis();
@@ -2221,7 +2147,7 @@ TH1D *TH3::DoProject1D(const char* name, const char* title, TAxis* projX,
 
 
 //______________________________________________________________________________
-TH2D *TH3::DoProject2D(const char* name, const char * title, TAxis* projX, TAxis* projY,
+TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
                     bool computeErrors, bool originalRange,
                     bool useUF, bool useOF) const
 {
@@ -2341,7 +2267,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, TAxis* projX, TAxis
    if ( computeErrors) h2->Sumw2();
 
    // Set references to the axis, so that the bucle has no branches.
-   TAxis* out = 0;
+   const TAxis* out = 0;
    if ( projX != GetXaxis() && projY != GetXaxis() ) {
       out = GetXaxis();
    } else if ( projX != GetYaxis() && projY != GetYaxis() ) {
@@ -2681,7 +2607,7 @@ void TH3::DoFillProfileProjection(TProfile2D * p2,
 
 
 //______________________________________________________________________________
-TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis* projX, TAxis* projY,
+TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
                                           bool originalRange, bool useUF, bool useOF) const
 {
    // internal method to project to a 2D Profile
@@ -2764,7 +2690,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, TAxis*
    }
 
    // Set references to the axis, so that the loop has no branches.
-   TAxis* outAxis = 0;
+   const TAxis* outAxis = 0;
    if ( projX != GetXaxis() && projY != GetXaxis() ) {
       outAxis = GetXaxis();
    } else if ( projX != GetYaxis() && projY != GetYaxis() ) {

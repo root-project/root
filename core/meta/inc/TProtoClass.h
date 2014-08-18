@@ -48,6 +48,7 @@ public:
 private:
    TList   *fBase;     // List of base classes
    TList   *fData;     // List of data members
+   TList   *fEnums;    // List of enums in this scope
    TList   *fPRealData;// List of TProtoRealData
    Int_t    fSizeof;   // Size of the class
    Int_t    fCanSplit; // Whether this class can be split
@@ -61,7 +62,7 @@ private:
 
 public:
    TProtoClass():
-      fBase(0), fData(0), fPRealData(0), fSizeof(0), fCanSplit(0),
+      fBase(0), fData(0), fEnums(0), fPRealData(0), fSizeof(0), fCanSplit(0),
       fStreamerType(0), fProperty(0), fClassProperty(0),
       fOffsetStreamer(0)
    {}

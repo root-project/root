@@ -51,10 +51,10 @@ Major New Features
   GCC 4.7 changed the mingw ABI. Clang 3.4 and older use the GCC 4.6
   ABI. Clang 3.5 and newer use the GCC 4.7 abi.
 
-- The __has_attribute feature test is now target-aware. Older versions of Clang 
-  would return true when the attribute spelling was known, regardless of whether 
-  the attribute was available to the specific target. Clang now returns true only 
-  when the attribute pertains to the current compilation target.
+- The __has_attribute feature test is now target-aware. Older versions of Clang
+  would return true when the attribute spelling was known, regardless of whether
+  the attribute was available to the specific target. Clang now returns true
+  only when the attribute pertains to the current compilation target.
 
 
 Improvements to Clang's diagnostics
@@ -63,6 +63,9 @@ Improvements to Clang's diagnostics
 Clang's diagnostics are constantly being improved to catch more issues,
 explain them more clearly, and provide more accurate source information
 about them. The improvements since the 3.4 release include:
+
+- GCC compatibility: Clang displays a warning on unsupported gcc
+  optimization flags instead of an error.
 
 -  ...
 
@@ -87,6 +90,34 @@ and `fno-integrated-as` flags which enable and disable the integrated assembler
 respectively.  `-integrated-as` and `-no-integrated-as` are now considered
 legacy flags (but are available as an alias to prevent breaking existing users),
 and users are encouraged to switch to the equivalent new feature flag.
+
+Deprecated flags `-faddress-sanitizer`, `-fthread-sanitizer`,
+`-fcatch-undefined-behavior` and `-fbounds-checking` were removed in favor of
+`-fsanitize=` family of flags.
+
+It is now possible to get optimization reports from the major transformation
+passes via three new flags: `-Rpass`, `-Rpass-missed` and `-Rpass-analysis`.
+These flags take a POSIX regular expression which indicates the name
+of the pass (or passes) that should emit optimization remarks.
+
+The option `-u` is forwarded to the linker on gnutools toolchains.
+
+New Pragmas in Clang
+-----------------------
+
+Loop optimization hints can be specified using the new `#pragma clang loop`
+directive just prior to the desired loop. The directive allows vectorization,
+interleaving, and unrolling to be enabled or disabled. Vector width as well
+as interleave and unrolling count can be manually specified.  See language
+extensions for details.
+
+Clang now supports the `#pragma unroll` and `#pragma nounroll` directives to
+specify loop unrolling optimization hints.  Placed just prior to the desired
+loop, `#pragma unroll` directs the loop unroller to attempt to fully unroll the
+loop.  The pragma may also be specified with a positive integer parameter
+indicating the desired unroll count: `#pragma unroll _value_`.  The unroll count
+parameter can be optionally enclosed in parentheses. The directive `#pragma
+nounroll` indicates that the loop should not be unrolled.
 
 C Language Changes in Clang
 ---------------------------
@@ -134,6 +165,16 @@ libclang
 
 Static Analyzer
 ---------------
+
+The `-analyzer-config` options are now passed from scan-build through to
+ccc-analyzer and then to Clang.
+
+With the option `-analyzer-config stable-report-filename=true`,
+instead of `report-XXXXXX.html`, scan-build/clang analyzer generate
+`report-<filename>-<function, method name>-<function position>-<id>.html`.
+(id = i++ for several issues found in the same function/method).
+
+List the function/method name in the index page of scan-build.
 
 ...
 

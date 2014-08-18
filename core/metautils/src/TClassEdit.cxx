@@ -1400,4 +1400,12 @@ string TClassEdit::InsertStd(const char *tname)
    return ret;
 }
 
+//______________________________________________________________________________
+char* TClassEdit::DemangleTypeIdName(const std::type_info& ti, int& errorCode)
+{
+   // Demangle in a portable way the type id name.
+   // IMPORTANT: The caller is responsible for freeing the returned const char*
 
+   const char* mangled_name = ti.name();
+   return DemangleName(mangled_name, errorCode);
+}

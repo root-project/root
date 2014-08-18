@@ -17,7 +17,7 @@
 
 #include "clang/Frontend/FrontendAction.h"
 #include "clang/Tooling/Refactoring.h"
-#include "llvm/Support/system_error.h"
+#include <system_error>
 
 namespace clang {
 
@@ -26,6 +26,15 @@ class SourceManager;
 class DiagnosticConsumer;
 
 namespace format {
+
+enum class ParseError { Success = 0, Error, Unsuitable };
+class ParseErrorCategory final : public std::error_category {
+public:
+  const char *name() const LLVM_NOEXCEPT override;
+  std::string message(int EV) const override;
+};
+const std::error_category &getParseCategory();
+std::error_code make_error_code(ParseError e);
 
 /// \brief The \c FormatStyle is used to configure the formatting to follow
 /// specific guidelines.
@@ -58,6 +67,9 @@ struct FormatStyle {
   /// \brief The maximum number of consecutive empty lines to keep.
   unsigned MaxEmptyLinesToKeep;
 
+  /// \brief If true, empty lines at the start of blocks are kept.
+  bool KeepEmptyLinesAtTheStartOfBlocks;
+
   /// \brief The penalty for each line break introduced inside a comment.
   unsigned PenaltyBreakComment;
 
@@ -73,12 +85,22 @@ struct FormatStyle {
   /// \brief The penalty for breaking a function call after "call(".
   unsigned PenaltyBreakBeforeFirstCallParameter;
 
-  /// \brief Set whether & and * bind to the type as opposed to the variable.
-  bool PointerBindsToType;
+  /// \brief The & and * alignment style.
+  enum PointerAlignmentStyle {
+    /// Align pointer to the left.
+    PAS_Left,
+    /// Align pointer to the right.
+    PAS_Right,
+    /// Align pointer in the middle.
+    PAS_Middle
+  };
 
-  /// \brief If \c true, analyze the formatted file for the most common binding
-  /// and use \c PointerBindsToType only as fallback.
-  bool DerivePointerBinding;
+  /// Pointer and reference alignment style.
+  PointerAlignmentStyle PointerAlignment;
+
+  /// \brief If \c true, analyze the formatted file for the most common
+  /// alignment of & and *. \c PointerAlignment is then used only as fallback.
+  bool DerivePointerAlignment;
 
   /// \brief The extra indent or outdent of access modifiers, e.g. \c public:.
   int AccessModifierOffset;
@@ -104,6 +126,10 @@ struct FormatStyle {
   /// Switch statement body is always indented one level more than case labels.
   bool IndentCaseLabels;
 
+  /// \brief Indent if a function definition or declaration is wrapped after the
+  /// type.
+  bool IndentWrappedFunctionNames;
+
   /// \brief Different ways to indent namespace contents.
   enum NamespaceIndentationKind {
     /// Don't indent in namespaces.
@@ -117,7 +143,11 @@ struct FormatStyle {
   /// \brief The indentation used for namespaces.
   NamespaceIndentationKind NamespaceIndentation;
 
-  /// \brief The number of spaces to before trailing line comments.
+  /// \brief The number of spaces before trailing line comments
+  /// (\c // - comments).
+  ///
+  /// This does not affect trailing block comments (\c /**/ - comments) as those
+  /// commonly have different usage patterns and a number of special cases.
   unsigned SpacesBeforeTrailingComments;
 
   /// \brief If \c false, a function call's or function definition's parameters
@@ -152,6 +182,11 @@ struct FormatStyle {
   /// the commas with the colon.
   bool BreakConstructorInitializersBeforeComma;
 
+  /// \brief Allows contracting simple braced statements to a single line.
+  ///
+  /// E.g., this allows <tt>if (a) { return; }</tt> to be put on a single line.
+  bool AllowShortBlocksOnASingleLine;
+
   /// \brief If \c true, <tt>if (a) return;</tt> can be put on a single
   /// line.
   bool AllowShortIfStatementsOnASingleLine;
@@ -160,12 +195,23 @@ struct FormatStyle {
   /// single line.
   bool AllowShortLoopsOnASingleLine;
 
-  /// \brief If \c true, <tt>int f() { return 0; }</tt> can be put on a single
-  /// line.
-  bool AllowShortFunctionsOnASingleLine;
+  /// \brief Different styles for merging short functions containing at most one
+  /// statement.
+  enum ShortFunctionStyle {
+    /// \brief Never merge functions into a single line.
+    SFS_None,
+    /// \brief Only merge functions defined inside a class.
+    SFS_Inline,
+    /// \brief Merge all functions fitting on a single line.
+    SFS_All,
+  };
+
+  /// \brief Dependent on the value, <tt>int f() { return 0; }</tt> can be put
+  /// on a single line.
+  ShortFunctionStyle AllowShortFunctionsOnASingleLine;
 
   /// \brief Add a space after \c @property in Objective-C, i.e. use
-  /// <tt>@property (readonly)</tt> instead of <tt>@property(readonly)</tt>.
+  /// <tt>\@property (readonly)</tt> instead of <tt>\@property(readonly)</tt>.
   bool ObjCSpaceAfterProperty;
 
   /// \brief Add a space in front of an Objective-C protocol list, i.e. use
@@ -251,10 +297,6 @@ struct FormatStyle {
   /// a zero-length name is assumed.
   bool Cpp11BracedListStyle;
 
-  /// \brief If \c true, indent when breaking function declarations which
-  /// are not also definitions after the type.
-  bool IndentFunctionDeclarationAfterType;
-
   /// \brief If \c true, spaces will be inserted after '(' and before ')'.
   bool SpacesInParentheses;
 
@@ -299,6 +341,21 @@ struct FormatStyle {
   /// which should not be split into lines or otherwise changed.
   std::string CommentPragmas;
 
+  /// \brief Disables formatting at all.
+  bool DisableFormat;
+
+  /// \brief A vector of macros that should be interpreted as foreach loops
+  /// instead of as function calls.
+  ///
+  /// These are expected to be macros of the form:
+  /// \code
+  /// FOREACH(<variable-declaration>, ...)
+  ///   <loop-body>
+  /// \endcode
+  ///
+  /// For example: BOOST_FOREACH.
+  std::vector<std::string> ForEachMacros;
+
   bool operator==(const FormatStyle &R) const {
     return AccessModifierOffset == R.AccessModifierOffset &&
            ConstructorInitializerIndentWidth ==
@@ -309,6 +366,7 @@ struct FormatStyle {
                R.AllowAllParametersOfDeclarationOnNextLine &&
            AllowShortFunctionsOnASingleLine ==
                R.AllowShortFunctionsOnASingleLine &&
+           AllowShortBlocksOnASingleLine == R.AllowShortBlocksOnASingleLine &&
            AllowShortIfStatementsOnASingleLine ==
                R.AllowShortIfStatementsOnASingleLine &&
            AllowShortLoopsOnASingleLine == R.AllowShortLoopsOnASingleLine &&
@@ -325,14 +383,15 @@ struct FormatStyle {
            ColumnLimit == R.ColumnLimit &&
            ConstructorInitializerAllOnOneLineOrOnePerLine ==
                R.ConstructorInitializerAllOnOneLineOrOnePerLine &&
-           DerivePointerBinding == R.DerivePointerBinding &&
+           DerivePointerAlignment == R.DerivePointerAlignment &&
            ExperimentalAutoDetectBinPacking ==
                R.ExperimentalAutoDetectBinPacking &&
            IndentCaseLabels == R.IndentCaseLabels &&
-           IndentFunctionDeclarationAfterType ==
-               R.IndentFunctionDeclarationAfterType &&
+           IndentWrappedFunctionNames == R.IndentWrappedFunctionNames &&
            IndentWidth == R.IndentWidth && Language == R.Language &&
            MaxEmptyLinesToKeep == R.MaxEmptyLinesToKeep &&
+           KeepEmptyLinesAtTheStartOfBlocks ==
+               R.KeepEmptyLinesAtTheStartOfBlocks &&
            NamespaceIndentation == R.NamespaceIndentation &&
            ObjCSpaceAfterProperty == R.ObjCSpaceAfterProperty &&
            ObjCSpaceBeforeProtocolList == R.ObjCSpaceBeforeProtocolList &&
@@ -341,7 +400,7 @@ struct FormatStyle {
            PenaltyBreakString == R.PenaltyBreakString &&
            PenaltyExcessCharacter == R.PenaltyExcessCharacter &&
            PenaltyReturnTypeOnItsOwnLine == R.PenaltyReturnTypeOnItsOwnLine &&
-           PointerBindsToType == R.PointerBindsToType &&
+           PointerAlignment == R.PointerAlignment &&
            SpacesBeforeTrailingComments == R.SpacesBeforeTrailingComments &&
            Cpp11BracedListStyle == R.Cpp11BracedListStyle &&
            Standard == R.Standard && TabWidth == R.TabWidth &&
@@ -353,7 +412,8 @@ struct FormatStyle {
            SpaceBeforeParens == R.SpaceBeforeParens &&
            SpaceBeforeAssignmentOperators == R.SpaceBeforeAssignmentOperators &&
            ContinuationIndentWidth == R.ContinuationIndentWidth &&
-           CommentPragmas == R.CommentPragmas;
+           CommentPragmas == R.CommentPragmas &&
+           ForEachMacros == R.ForEachMacros;
   }
 };
 
@@ -383,6 +443,9 @@ FormatStyle getWebKitStyle();
 /// http://www.gnu.org/prep/standards/standards.html
 FormatStyle getGNUStyle();
 
+/// \brief Returns style indicating formatting should be not applied at all.
+FormatStyle getNoStyle();
+
 /// \brief Gets a predefined style for the specified language by name.
 ///
 /// Currently supported names: LLVM, Google, Chromium, Mozilla. Names are
@@ -399,7 +462,7 @@ bool getPredefinedStyle(StringRef Name, FormatStyle::LanguageKind Language,
 ///
 /// When \c BasedOnStyle is not present, options not present in the YAML
 /// document, are retained in \p Style.
-llvm::error_code parseConfiguration(StringRef Text, FormatStyle *Style);
+std::error_code parseConfiguration(StringRef Text, FormatStyle *Style);
 
 /// \brief Gets configuration in a YAML string.
 std::string configurationAsText(const FormatStyle &Style);
@@ -428,8 +491,8 @@ tooling::Replacements reformat(const FormatStyle &Style, StringRef Code,
 ///
 /// \param Standard determines lexing mode: LC_Cpp11 and LS_Auto turn on C++11
 /// lexing mode, LS_Cpp03 - C++03 mode.
-LangOptions getFormattingLangOpts(FormatStyle::LanguageStandard Standard =
-                                      FormatStyle::LS_Cpp11);
+LangOptions getFormattingLangOpts(
+    FormatStyle::LanguageStandard Standard = FormatStyle::LS_Cpp11);
 
 /// \brief Description to be used for help text for a llvm::cl option for
 /// specifying format style. The description is closely related to the operation
@@ -460,5 +523,10 @@ FormatStyle getStyle(StringRef StyleName, StringRef FileName,
 
 } // end namespace format
 } // end namespace clang
+
+namespace std {
+template <>
+struct is_error_code_enum<clang::format::ParseError> : std::true_type {};
+}
 
 #endif // LLVM_CLANG_FORMAT_FORMAT_H

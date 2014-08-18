@@ -119,8 +119,6 @@ TGApplication::TGApplication(const char *appClassName,
       }
    }
 
-   gInterpreter->UpdateListOfTypes();
-
    // Save current interpreter context
    gInterpreter->SaveContext();
    gInterpreter->SaveGlobalsContext();

@@ -40,15 +40,17 @@ namespace {
     virtual ~PlistDiagnostics() {}
 
     void FlushDiagnosticsImpl(std::vector<const PathDiagnostic *> &Diags,
-                              FilesMade *filesMade);
-    
-    virtual StringRef getName() const {
+                              FilesMade *filesMade) override;
+
+    virtual StringRef getName() const override {
       return "PlistDiagnostics";
     }
 
-    PathGenerationScheme getGenerationScheme() const { return Extensive; }
-    bool supportsLogicalOpControlFlow() const { return true; }
-    virtual bool supportsCrossFileDiagnostics() const {
+    PathGenerationScheme getGenerationScheme() const override {
+      return Extensive;
+    }
+    bool supportsLogicalOpControlFlow() const override { return true; }
+    bool supportsCrossFileDiagnostics() const override {
       return SupportsCrossFileDiagnostics;
     }
   };
@@ -171,8 +173,8 @@ static void ReportEvent(raw_ostream &o, const PathDiagnosticPiece& P,
   }
   
   // Output the call depth.
-  Indent(o, indent) << "<key>depth</key>"
-                    << "<integer>" << depth << "</integer>\n";
+  Indent(o, indent) << "<key>depth</key>";
+  EmitInteger(o, depth) << '\n';
 
   // Output the text.
   assert(!P.getString().empty());
@@ -290,7 +292,7 @@ void PlistDiagnostics::FlushDiagnosticsImpl(
   // ranges of the diagnostics.
   FIDMap FM;
   SmallVector<FileID, 10> Fids;
-  const SourceManager* SM = 0;
+  const SourceManager* SM = nullptr;
 
   if (!Diags.empty())
     SM = &(*(*Diags.begin())->path.begin())->getLocation().getManager();
@@ -309,7 +311,7 @@ void PlistDiagnostics::FlushDiagnosticsImpl(
 
       for (PathPieces::const_iterator I = path.begin(), E = path.end(); I != E;
            ++I) {
-        const PathDiagnosticPiece *piece = I->getPtr();
+        const PathDiagnosticPiece *piece = I->get();
         AddFID(FM, Fids, *SM, piece->getLocation().asLocation());
         ArrayRef<SourceRange> Ranges = piece->getRanges();
         for (ArrayRef<SourceRange>::iterator I = Ranges.begin(),
@@ -343,8 +345,7 @@ void PlistDiagnostics::FlushDiagnosticsImpl(
     return;
   }
 
-  // Write the plist header.
-  o << PlistHeader;
+  EmitPlistHeader(o);
 
   // Write the root object: a <dict> containing...
   //  - "clang_version", the string representation of clang version
@@ -356,11 +357,8 @@ void PlistDiagnostics::FlushDiagnosticsImpl(
   o << " <key>files</key>\n"
        " <array>\n";
 
-  for (SmallVectorImpl<FileID>::iterator I=Fids.begin(), E=Fids.end();
-       I!=E; ++I) {
-    o << "  ";
-    EmitString(o, SM->getFileEntryForID(*I)->getName()) << '\n';
-  }
+  for (FileID FID : Fids)
+    EmitString(o << "  ", SM->getFileEntryForID(FID)->getName()) << '\n';
 
   o << " </array>\n"
        " <key>diagnostics</key>\n"

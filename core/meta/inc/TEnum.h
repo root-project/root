@@ -33,7 +33,7 @@
 #include "TDictionary.h"
 #endif
 
-
+#include <typeinfo>
 
 class TClass;
 class TEnumConstant;
@@ -42,8 +42,8 @@ class TEnum : public TDictionary {
 
 private:
    THashList fConstantList;     //list of constants the enum type
-   void*     fInfo;             //interpreter implementation provided declaration
-   TClass*   fClass;            //owning class
+   void*     fInfo;             //!interpreter implementation provided declaration
+   TClass*   fClass;            //!owning class
 
 public:
 
@@ -60,7 +60,10 @@ public:
    DeclId_t              GetDeclId() const { return (DeclId_t)fInfo; }
    Bool_t                IsValid();
    Long_t                Property() const;
+   void                  SetClass(TClass* cl) { fClass = cl; }
    void                  Update(DeclId_t id);
+   static TEnum*         GetEnum(const std::type_info& ti);
+   static TEnum*         GetEnum(const char* enumName);
 
    ClassDef(TEnum,2)  //Enum type class
 };

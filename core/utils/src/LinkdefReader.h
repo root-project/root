@@ -38,15 +38,14 @@ class PragmaLinkCollector;
 class LinkdefReaderPragmaHandler;
 class PragmaExtraInclude;
 
-class LinkdefReader
-{
+class LinkdefReader {
 
 public:
    LinkdefReader(cling::Interpreter &interp,
-                 ROOT::TMetaUtils::RConstructorTypes& IOConstructorTypes);
+                 ROOT::TMetaUtils::RConstructorTypes &IOConstructorTypes);
 
    bool LoadIncludes(std::string &extraInclude);
-   bool Parse(SelectionRules& sr, llvm::StringRef code, const std::vector<std::string> &parserArgs, const char *llvmdir);
+   bool Parse(SelectionRules &sr, llvm::StringRef code, const std::vector<std::string> &parserArgs, const char *llvmdir);
 
 
 private:
@@ -60,7 +59,7 @@ private:
    long fCount; // Number of rules created so far.
    SelectionRules    *fSelectionRules;     // set of rules being filleed.
    std::string        fIncludes;           // Extra set of file to be included by the intepreter.
-   ROOT::TMetaUtils::RConstructorTypes* fIOConstructorTypesPtr; // List of values of #pragma ioctortype
+   ROOT::TMetaUtils::RConstructorTypes *fIOConstructorTypesPtr; // List of values of #pragma ioctortype
    cling::Interpreter &fInterp;            // Our interpreter
 
    enum EPragmaNames { // the processed pragma attributes
@@ -79,9 +78,9 @@ private:
       kIOCtorType,
       kIgnore,
       kUnknown
-  };
+   };
 
-   enum ECppNames{ // the processes pre-processor directives
+   enum ECppNames { // the processes pre-processor directives
       kPragma,
       kIfdef,
       kEndif,
@@ -102,10 +101,10 @@ private:
    bool AddInclude(std::string include);
    bool AddRule(std::string ruletype, std::string identifier, bool linkOn, bool requestOnlyTClass, Options *option = 0);
 
-   bool ProcessFunctionPrototype(std::string& proto, bool& name); // transforms the function prototypes to a more unified form
-   bool ProcessOperators(std::string& pattern); // transforms the operators statement to the suitable function pattern
+   bool ProcessFunctionPrototype(std::string &proto, bool &name); // transforms the function prototypes to a more unified form
+   bool ProcessOperators(std::string &pattern); // transforms the operators statement to the suitable function pattern
 
-   bool IsPatternRule(const std::string& rule_token); // is it name or pattern
+   bool IsPatternRule(const std::string &rule_token); // is it name or pattern
 };
 
 #endif

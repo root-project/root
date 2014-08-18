@@ -200,7 +200,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
    int nbins[3] = {0,0,0};
    double minRange[3] = {0.,0.,0.};
    double maxRange[3] = {0.,0.,0.};
-   TAxis* axis[3] = { h->GetXaxis(), h->GetYaxis(), h->GetZaxis() };
+   const TAxis* axis[3] = { h->GetXaxis(), h->GetYaxis(), h->GetZaxis() };
    for (int i = 0; i < ndim; ++i) {
       nbins[i]    = axis[i]->GetNbins();
       minRange[i] = axis[i]->GetXmin();

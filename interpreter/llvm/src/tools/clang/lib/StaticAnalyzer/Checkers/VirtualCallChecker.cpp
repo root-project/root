@@ -61,7 +61,7 @@ class WalkAST : public StmtVisitor<WalkAST> {
 public:
   WalkAST(const CheckerBase *checker, BugReporter &br,
           AnalysisDeclContext *ac)
-      : Checker(checker), BR(br), AC(ac), visitingCallExpr(0) {}
+      : Checker(checker), BR(br), AC(ac), visitingCallExpr(nullptr) {}
 
   bool hasWork() const { return !WList.empty(); }
 
@@ -216,8 +216,7 @@ public:
     WalkAST walker(this, BR, mgr.getAnalysisDeclContext(RD));
 
     // Check the constructors.
-    for (CXXRecordDecl::ctor_iterator I = RD->ctor_begin(), E = RD->ctor_end();
-         I != E; ++I) {
+    for (const auto *I : RD->ctors()) {
       if (!I->isCopyOrMoveConstructor())
         if (Stmt *Body = I->getBody()) {
           walker.Visit(Body);

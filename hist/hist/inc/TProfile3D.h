@@ -69,7 +69,7 @@ protected:
    //virtual void     UpdateBinContent(Int_t bin, Double_t content);
    virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const { Double_t err = GetBinError(bin); return err*err; }
 
-   virtual TProfile2D *DoProjectProfile2D(const char* name, const char * title, TAxis* projX, TAxis* projY,
+   virtual TProfile2D *DoProjectProfile2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
                                           bool originalRange, bool useUF, bool useOF) const;
 
 private:

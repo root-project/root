@@ -31,7 +31,7 @@ using namespace ento;
 
 namespace {
 class MacOSXAPIChecker : public Checker< check::PreStmt<CallExpr> > {
-  mutable OwningPtr<BugType> BT_dispatchOnce;
+  mutable std::unique_ptr<BugType> BT_dispatchOnce;
 
 public:
   void checkPreStmt(const CallExpr *CE, CheckerContext &C) const;
@@ -113,7 +113,7 @@ void MacOSXAPIChecker::checkPreStmt(const CallExpr *CE,
              "_dispatch_once",
              "dispatch_once_f",
              &MacOSXAPIChecker::CheckDispatchOnce)
-      .Default(NULL);
+      .Default(nullptr);
 
   if (SC)
     (this->*SC)(C, CE, Name);

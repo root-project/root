@@ -82,7 +82,7 @@ namespace dr304 { // dr304: yes
 #endif
 }
 
-namespace dr305 { // dr305: yes
+namespace dr305 { // dr305: no
   struct A {
     typedef A C;
   };
@@ -109,6 +109,18 @@ namespace dr305 { // dr305: yes
     x->~X<char>(); // expected-error {{no member named}}
   }
 
+  // FIXME: This appears to be valid (but allowing the nested types might be a
+  // defect).
+  template<typename> struct Nested {
+    template<typename> struct Nested {};
+  };
+  void testNested(Nested<int> n) { n.~Nested<int>(); } // expected-error {{no member named}}
+#if __cplusplus < 201103L
+  // expected-error@-2 {{ambiguous}}
+  // expected-note@-6 {{here}}
+  // expected-note@-6 {{here}}
+#endif
+
 #if __cplusplus >= 201103L
   struct Y {
     template<typename T> using T1 = Y;
@@ -127,6 +139,13 @@ namespace dr305 { // dr305: yes
     z->~T2<int>(); // expected-error {{no member named '~int'}}
     z->~T2<Z>();
   }
+
+  // FIXME: This is valid.
+  namespace Q {
+    template<typename A> struct R {};
+  }
+  template<typename A> using R = Q::R<int>;
+  void qr(Q::R<int> x) { x.~R<char>(); } // expected-error {{no member named}}
 #endif
 }
 
@@ -180,12 +199,21 @@ namespace dr313 { // dr313: dup 299 c++11
 #endif
 }
 
+namespace dr314 { // dr314: dup 1710
+  template<typename T> struct A {
+    template<typename U> struct B {};
+  };
+  template<typename T> struct C : public A<T>::template B<T> {
+    C() : A<T>::template B<T>() {}
+  };
+}
+
 // dr315: na
 // dr316: sup 1004
 
-namespace dr317 { // dr317: no
-  void f() {}
-  inline void f(); // FIXME: ill-formed
+namespace dr317 { // dr317: 3.5
+  void f() {} // expected-note {{previous}}
+  inline void f(); // expected-error {{inline declaration of 'f' follows non-inline definition}}
 
   int g();
   int n = g();
@@ -193,8 +221,8 @@ namespace dr317 { // dr317: no
 
   int h();
   int m = h();
-  int h() { return 0; }
-  inline int h(); // FIXME: ill-formed
+  int h() { return 0; } // expected-note {{previous}}
+  inline int h(); // expected-error {{inline declaration of 'h' follows non-inline definition}}
 }
 
 namespace dr318 { // dr318: sup 1310
@@ -294,6 +322,7 @@ namespace dr324 { // dr324: yes
   int *f = &(true ? s.n : s.n); // expected-error {{address of bit-field}}
   int &g = (void(), s.n); // expected-error {{non-const reference cannot bind to bit-field}}
   int *h = &(void(), s.n); // expected-error {{address of bit-field}}
+  int *i = &++s.n; // expected-error {{address of bit-field}}
 }
 
 namespace dr326 { // dr326: yes
@@ -468,6 +497,22 @@ namespace dr341 {
 }
 
 // dr342: na
+
+namespace dr343 { // dr343: no
+  // FIXME: dup 1710
+  template<typename T> struct A {
+    template<typename U> struct B {};
+  };
+  // FIXME: In these contexts, the 'template' keyword is optional.
+  template<typename T> struct C : public A<T>::B<T> { // expected-error {{use 'template'}}
+    C() : A<T>::B<T>() {} // expected-error {{use 'template'}}
+  };
+}
+
+namespace dr344 { // dr344: dup 1435
+  struct A { inline virtual ~A(); };
+  struct B { friend A::~A(); };
+}
 
 namespace dr345 { // dr345: yes
   struct A {
@@ -791,3 +836,451 @@ namespace dr368 { // dr368: yes
 }
 
 // dr370: na
+
+namespace dr372 { // dr372: no
+  namespace example1 {
+    template<typename T> struct X {
+    protected:
+      typedef T Type; // expected-note 2{{protected}}
+    };
+    template<typename T> struct Y {};
+
+    // FIXME: These two are valid; deriving from T1<T> gives Z1 access to
+    // the protected member T1<T>::Type.
+    template<typename T,
+             template<typename> class T1,
+             template<typename> class T2> struct Z1 :
+      T1<T>,
+      T2<typename T1<T>::Type> {}; // expected-error {{protected}}
+
+    template<typename T,
+             template<typename> class T1,
+             template<typename> class T2> struct Z2 :
+      T2<typename T1<T>::Type>, // expected-error {{protected}}
+      T1<T> {};
+
+    Z1<int, X, Y> z1; // expected-note {{instantiation of}}
+    Z2<int, X, Y> z2; // expected-note {{instantiation of}}
+  }
+
+  namespace example2 {
+    struct X {
+    private:
+      typedef int Type; // expected-note {{private}}
+    };
+    template<typename T> struct A {
+      typename T::Type t; // expected-error {{private}}
+    };
+    A<X> ax; // expected-note {{instantiation of}}
+  }
+
+  namespace example3 {
+    struct A {
+    protected:
+      typedef int N; // expected-note 2{{protected}}
+    };
+
+    template<typename T> struct B {};
+    template<typename U> struct C : U, B<typename U::N> {}; // expected-error {{protected}}
+    template<typename U> struct D : B<typename U::N>, U {}; // expected-error {{protected}}
+
+    C<A> x; // expected-note {{instantiation of}}
+    D<A> y; // expected-note {{instantiation of}}
+  }
+
+  namespace example4 {
+    class A {
+      class B {};
+      friend class X;
+    };
+
+    struct X : A::B {
+      A::B mx;
+      class Y {
+        A::B my;
+      };
+    };
+  }
+}
+
+namespace dr373 { // dr373: no
+  // FIXME: This is valid.
+  namespace X { int dr373; } // expected-note 2{{here}}
+  struct dr373 { // expected-note {{here}}
+    void f() {
+      using namespace dr373::X; // expected-error {{no namespace named 'X' in 'dr373::dr373'}}
+      int k = dr373; // expected-error {{does not refer to a value}}
+
+      namespace Y = dr373::X; // expected-error {{no namespace named 'X' in 'dr373::dr373'}}
+      k = Y::dr373;
+    }
+  };
+}
+
+namespace dr374 { // dr374: yes c++11
+  namespace N {
+    template<typename T> void f();
+    template<typename T> struct A { void f(); };
+  }
+  template<> void N::f<char>() {}
+  template<> void N::A<char>::f() {}
+  template<> struct N::A<int> {};
+#if __cplusplus < 201103L
+  // expected-error@-4 {{extension}} expected-note@-7 {{here}}
+  // expected-error@-4 {{extension}} expected-note@-7 {{here}}
+  // expected-error@-4 {{extension}} expected-note@-8 {{here}}
+#endif
+}
+
+// dr375: dup 345
+// dr376: na
+
+namespace dr377 { // dr377: yes
+  enum E { // expected-error {{enumeration values exceed range of largest integer}}
+    a = -__LONG_LONG_MAX__ - 1, // expected-error 0-1{{extension}}
+    b = 2 * (unsigned long long)__LONG_LONG_MAX__ // expected-error 0-2{{extension}}
+  };
+}
+
+// dr378: dup 276
+// dr379: na
+
+namespace dr381 { // dr381: yes
+  struct A {
+    int a;
+  };
+  struct B : virtual A {};
+  struct C : B {};
+  struct D : B {};
+  struct E : public C, public D {};
+  struct F : public A {};
+  void f() {
+    E e;
+    e.B::a = 0; // expected-error {{ambiguous conversion}}
+    F f;
+    f.A::a = 1;
+  }
+}
+
+namespace dr382 { // dr382: yes c++11
+  // FIXME: Should we allow this in C++98 mode?
+  struct A { typedef int T; };
+  typename A::T t;
+  typename dr382::A a;
+#if __cplusplus < 201103L
+  // expected-error@-3 {{occurs outside of a template}}
+  // expected-error@-3 {{occurs outside of a template}}
+#endif
+  typename A b; // expected-error {{expected a qualified name}}
+}
+
+namespace dr383 { // dr383: yes
+  struct A { A &operator=(const A&); };
+  struct B { ~B(); };
+  union C { C &operator=(const C&); };
+  union D { ~D(); };
+  int check[(__is_pod(A) || __is_pod(B) || __is_pod(C) || __is_pod(D)) ? -1 : 1];
+}
+
+namespace dr384 { // dr384: yes
+  namespace N1 {
+    template<typename T> struct Base {};
+    template<typename T> struct X {
+      struct Y : public Base<T> {
+        Y operator+(int) const;
+      };
+      Y f(unsigned i) { return Y() + i; }
+    };
+  }
+
+  namespace N2 {
+    struct Z {};
+    template<typename T> int *operator+(T, unsigned);
+  }
+
+  int main() {
+    N1::X<N2::Z> v;
+    v.f(0);
+  }
+}
+
+namespace dr385 { // dr385: yes
+  struct A { protected: void f(); }; 
+  struct B : A { using A::f; };
+  struct C : A { void g(B b) { b.f(); } };
+  void h(B b) { b.f(); }
+
+  struct D { int n; }; // expected-note {{member}}
+  struct E : protected D {}; // expected-note 2{{protected}}
+  struct F : E { friend int i(E); };
+  int i(E e) { return e.n; } // expected-error {{protected base}} expected-error {{protected member}}
+}
+
+namespace dr387 { // dr387: yes
+  namespace old {
+    template<typename T> class number {
+      number(int); // expected-note 2{{here}}
+      friend number gcd(number &x, number &y) {}
+    };
+
+    void g() {
+      number<double> a(3), b(4); // expected-error 2{{private}}
+      a = gcd(a, b);
+      b = gcd(3, 4); // expected-error {{undeclared}}
+    }
+  }
+
+  namespace newer {
+    template <typename T> class number {
+    public:
+      number(int);
+      friend number gcd(number x, number y) { return 0; }
+    };
+
+    void g() {
+      number<double> a(3), b(4);
+      a = gcd(a, b);
+      b = gcd(3, 4); // expected-error {{undeclared}}
+    }
+  }
+}
+
+// FIXME: dr388 needs codegen test
+
+namespace dr389 { // dr389: no
+  struct S {
+    typedef struct {} A;
+    typedef enum {} B;
+    typedef struct {} const C; // expected-note 0-2{{here}}
+    typedef enum {} const D; // expected-note 0-1{{here}}
+  };
+  template<typename> struct T {};
+
+  struct WithLinkage1 {};
+  enum WithLinkage2 {};
+  typedef struct {} *WithLinkage3a, WithLinkage3b;
+  typedef enum {} WithLinkage4a, *WithLinkage4b;
+  typedef S::A WithLinkage5;
+  typedef const S::B WithLinkage6;
+  typedef int WithLinkage7;
+  typedef void (*WithLinkage8)(WithLinkage2 WithLinkage1::*, WithLinkage5 *);
+  typedef T<WithLinkage5> WithLinkage9;
+
+  typedef struct {} *WithoutLinkage1; // expected-note 0-1{{here}}
+  typedef enum {} const WithoutLinkage2; // expected-note 0-1{{here}}
+  // These two types don't have linkage even though they are externally visible
+  // and the ODR requires them to be merged across TUs.
+  typedef S::C WithoutLinkage3;
+  typedef S::D WithoutLinkage4;
+  typedef void (*WithoutLinkage5)(int (WithoutLinkage3::*)(char));
+
+#if __cplusplus >= 201103L
+  // This has linkage even though its template argument does not.
+  // FIXME: This is probably a defect.
+  typedef T<WithoutLinkage1> WithLinkage10;
+#else
+  typedef int WithLinkage10; // dummy
+
+  typedef T<WithLinkage1> GoodArg1;
+  typedef T<WithLinkage2> GoodArg2;
+  typedef T<WithLinkage3a> GoodArg3a;
+  typedef T<WithLinkage3b> GoodArg3b;
+  typedef T<WithLinkage4a> GoodArg4a;
+  typedef T<WithLinkage4b> GoodArg4b;
+  typedef T<WithLinkage5> GoodArg5;
+  typedef T<WithLinkage6> GoodArg6;
+  typedef T<WithLinkage7> GoodArg7;
+  typedef T<WithLinkage8> GoodArg8;
+  typedef T<WithLinkage9> GoodArg9;
+
+  typedef T<WithoutLinkage1> BadArg1; // expected-error{{template argument uses}}
+  typedef T<WithoutLinkage2> BadArg2; // expected-error{{template argument uses}}
+  typedef T<WithoutLinkage3> BadArg3; // expected-error{{template argument uses}}
+  typedef T<WithoutLinkage4> BadArg4; // expected-error{{template argument uses}}
+  typedef T<WithoutLinkage5> BadArg5; // expected-error{{template argument uses}}
+#endif
+
+  extern WithLinkage1 withLinkage1;
+  extern WithLinkage2 withLinkage2;
+  extern WithLinkage3a withLinkage3a;
+  extern WithLinkage3b withLinkage3b;
+  extern WithLinkage4a withLinkage4a;
+  extern WithLinkage4b withLinkage4b;
+  extern WithLinkage5 withLinkage5;
+  extern WithLinkage6 withLinkage6;
+  extern WithLinkage7 withLinkage7;
+  extern WithLinkage8 withLinkage8;
+  extern WithLinkage9 withLinkage9;
+  extern WithLinkage10 withLinkage10;
+
+  // FIXME: These are all ill-formed.
+  extern WithoutLinkage1 withoutLinkage1;
+  extern WithoutLinkage2 withoutLinkage2;
+  extern WithoutLinkage3 withoutLinkage3;
+  extern WithoutLinkage4 withoutLinkage4;
+  extern WithoutLinkage5 withoutLinkage5;
+
+  // OK, extern "C".
+  extern "C" {
+    extern WithoutLinkage1 dr389_withoutLinkage1;
+    extern WithoutLinkage2 dr389_withoutLinkage2;
+    extern WithoutLinkage3 dr389_withoutLinkage3;
+    extern WithoutLinkage4 dr389_withoutLinkage4;
+    extern WithoutLinkage5 dr389_withoutLinkage5;
+  }
+
+  // OK, defined.
+  WithoutLinkage1 withoutLinkageDef1;
+  WithoutLinkage2 withoutLinkageDef2 = WithoutLinkage2();
+  WithoutLinkage3 withoutLinkageDef3 = {};
+  WithoutLinkage4 withoutLinkageDef4 = WithoutLinkage4();
+  WithoutLinkage5 withoutLinkageDef5;
+
+  void use(const void *);
+  void use_all() {
+    use(&withLinkage1); use(&withLinkage2); use(&withLinkage3a); use(&withLinkage3b);
+    use(&withLinkage4a); use(&withLinkage4b); use(&withLinkage5); use(&withLinkage6);
+    use(&withLinkage7); use(&withLinkage8); use(&withLinkage9); use(&withLinkage10);
+
+    use(&withoutLinkage1); use(&withoutLinkage2); use(&withoutLinkage3);
+    use(&withoutLinkage4); use(&withoutLinkage5);
+
+    use(&dr389_withoutLinkage1); use(&dr389_withoutLinkage2);
+    use(&dr389_withoutLinkage3); use(&dr389_withoutLinkage4);
+    use(&dr389_withoutLinkage5);
+
+    use(&withoutLinkageDef1); use(&withoutLinkageDef2); use(&withoutLinkageDef3);
+    use(&withoutLinkageDef4); use(&withoutLinkageDef5);
+  }
+
+  void local() {
+    // FIXME: This is ill-formed.
+    extern WithoutLinkage1 withoutLinkageLocal;
+  }
+}
+
+namespace dr390 { // dr390: yes
+  template<typename T>
+  struct A {
+    A() { f(); } // expected-warning {{call to pure virt}}
+    virtual void f() = 0; // expected-note {{here}}
+    virtual ~A() = 0;
+  };
+  template<typename T> A<T>::~A() { T::error; } // expected-error {{cannot be used prior to}}
+  template<typename T> void A<T>::f() { T::error; } // ok, not odr-used
+  struct B : A<int> { // expected-note 2{{in instantiation of}}
+    void f() {}
+  } b;
+}
+
+namespace dr391 { // dr391: yes c++11
+  // FIXME: Should this apply to C++98 too?
+  class A { A(const A&); }; // expected-note 0-1{{here}}
+  A fa();
+  const A &a = fa();
+#if __cplusplus < 201103L
+  // expected-error@-2 {{C++98 requires an accessible copy constructor}}
+#endif
+
+  struct B { B(const B&) = delete; }; // expected-error 0-1{{extension}} expected-note 0-1{{here}}
+  B fb();
+  const B &b = fb();
+#if __cplusplus < 201103L
+  // expected-error@-2 {{deleted}}
+#endif
+
+  template<typename T>
+  struct C {
+    C(const C&) { T::error; }
+  };
+  C<int> fc();
+  const C<int> &c = fc();
+}
+
+// dr392 FIXME write codegen test
+// dr394: na
+
+namespace dr395 { // dr395: yes
+  struct S {
+    template <typename T, int N>(&operator T())[N]; // expected-error {{must use a typedef}}
+    template <typename T, int N> operator(T (&)[N])(); // expected-error {{expected ')'}} expected-note {{to match this '('}} expected-error +{{}}
+    template <typename T> operator T *() const { return 0; }
+    template <typename T, typename U> operator T U::*() const { return 0; }
+    template <typename T, typename U> operator T (U::*)()() const { return 0; } // expected-error +{{}}
+  };
+
+  struct null1_t {
+    template <class T, class U> struct ptr_mem_fun_t {
+      typedef T (U::*type)();
+    };
+
+    template <class T, class U>
+    operator typename ptr_mem_fun_t<T, U>::type() const { // expected-note {{couldn't infer}}
+      return 0;
+    }
+  } null1;
+  int (S::*p)() = null1; // expected-error {{no viable conversion}}
+
+  template <typename T> using id = T; // expected-error 0-1{{extension}}
+
+  struct T {
+    template <typename T, int N> operator id<T[N]> &();
+    template <typename T, typename U> operator id<T (U::*)()>() const;
+  };
+
+  struct null2_t {
+    template<class T, class U> using ptr_mem_fun_t = T (U::*)(); // expected-error 0-1{{extension}}
+    template<class T, class U> operator ptr_mem_fun_t<T, U>() const { return 0; };
+  } null2;
+  int (S::*q)() = null2;
+}
+
+namespace dr396 { // dr396: yes
+  void f() {
+    auto int a(); // expected-error {{storage class on function}}
+    int (i); // expected-note {{previous}}
+    auto int (i); // expected-error {{redefinition}}
+#if __cplusplus >= 201103L
+  // expected-error@-4 {{'auto' storage class}} expected-error@-2 {{'auto' storage class}}
+#endif
+  }
+}
+
+// dr397: sup 1823
+
+namespace dr398 { // dr398: yes
+  namespace example1 {
+    struct S {
+      static int const I = 42;
+    };
+    template <int N> struct X {};
+    template <typename T> void f(X<T::I> *) {}
+    template <typename T> void f(X<T::J> *) {}
+    void foo() { f<S>(0); }
+  }
+
+  namespace example2 {
+    template <int I> struct X {};
+    template <template <class T> class> struct Z {};
+    template <class T> void f(typename T::Y *) {} // expected-note 2{{substitution failure}}
+    template <class T> void g(X<T::N> *) {} // expected-note {{substitution failure}}
+    template <class T> void h(Z<T::template TT> *) {} // expected-note {{substitution failure}}
+    struct A {};
+    struct B {
+      int Y;
+    };
+    struct C {
+      typedef int N;
+    };
+    struct D {
+      typedef int TT;
+    };
+
+    void test() {
+      f<A>(0); // expected-error {{no matching function}}
+      f<B>(0); // expected-error {{no matching function}}
+      g<C>(0); // expected-error {{no matching function}}
+      h<D>(0); // expected-error {{no matching function}}
+    }
+  }
+}

@@ -54,8 +54,8 @@ class SimpleStreamChecker : public Checker<check::PostCall,
 
   mutable IdentifierInfo *IIfopen, *IIfclose;
 
-  OwningPtr<BugType> DoubleCloseBugType;
-  OwningPtr<BugType> LeakBugType;
+  std::unique_ptr<BugType> DoubleCloseBugType;
+  std::unique_ptr<BugType> LeakBugType;
 
   void initIdentifierInfo(ASTContext &Ctx) const;
 
@@ -99,15 +99,15 @@ public:
   StopTrackingCallback(ProgramStateRef st) : state(st) {}
   ProgramStateRef getState() const { return state; }
 
-  bool VisitSymbol(SymbolRef sym) {
+  bool VisitSymbol(SymbolRef sym) override {
     state = state->remove<StreamMap>(sym);
     return true;
   }
 };
 } // end anonymous namespace
 
-
-SimpleStreamChecker::SimpleStreamChecker() : IIfopen(0), IIfclose(0) {
+SimpleStreamChecker::SimpleStreamChecker()
+    : IIfopen(nullptr), IIfclose(nullptr) {
   // Initialize the bug types.
   DoubleCloseBugType.reset(
       new BugType(this, "Double fclose", "Unix Stream API Error"));

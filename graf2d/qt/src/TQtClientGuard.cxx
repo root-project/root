@@ -277,6 +277,7 @@ QPixmap *TQtPixmapGuard::Pixmap(Pixmap_t id, bool needBitmap)
       thisPix = found>=0 ? fQClientGuard[found] : 0;
       assert( thisPix  &&  (!needBitmap || thisPix->isQBitmap()) ) ;
 #endif
+      (void)needBitmap; // used in asserts above.
    }
    SetCurrent(found);
    return thisPix;

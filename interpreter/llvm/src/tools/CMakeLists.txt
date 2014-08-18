@@ -1,8 +1,12 @@
-# NOTE: The tools are organized into groups of four consisting of one large and
-# three small executables. This is done to minimize memory load in parallel
-# builds.  Please retain this ordering.
-
 add_llvm_tool_subdirectory(llvm-config)
+
+# Build polly before the tools: the tools link against polly when
+# LINK_POLLY_INTO_TOOLS is set.
+if(WITH_POLLY)
+  add_llvm_external_project(polly)
+else(WITH_POLLY)
+  list(APPEND LLVM_IMPLICIT_PROJECT_IGNORE "${LLVM_MAIN_SRC_DIR}/tools/polly")
+endif(WITH_POLLY)
 
 add_llvm_tool_subdirectory(opt)
 add_llvm_tool_subdirectory(llvm-as)
@@ -26,6 +30,7 @@ add_llvm_tool_subdirectory(llvm-objdump)
 add_llvm_tool_subdirectory(llvm-readobj)
 add_llvm_tool_subdirectory(llvm-rtdyld)
 add_llvm_tool_subdirectory(llvm-dwarfdump)
+add_llvm_tool_subdirectory(llvm-vtabledump)
 if( LLVM_USE_INTEL_JITEVENTS )
   add_llvm_tool_subdirectory(llvm-jitlistener)
 else()
@@ -38,6 +43,8 @@ add_llvm_tool_subdirectory(llvm-bcanalyzer)
 add_llvm_tool_subdirectory(llvm-stress)
 add_llvm_tool_subdirectory(llvm-mcmarkup)
 
+add_llvm_tool_subdirectory(verify-uselistorder)
+
 add_llvm_tool_subdirectory(llvm-symbolizer)
 
 add_llvm_tool_subdirectory(llvm-c-test)
@@ -45,7 +52,7 @@ add_llvm_tool_subdirectory(llvm-c-test)
 add_llvm_tool_subdirectory(obj2yaml)
 add_llvm_tool_subdirectory(yaml2obj)
 
-if( NOT CYGWIN )
+if(NOT CYGWIN AND LLVM_ENABLE_PIC)
   add_llvm_tool_subdirectory(lto)
   add_llvm_tool_subdirectory(llvm-lto)
 else()
@@ -74,15 +81,10 @@ endif()
 if( NOT LLVM_INCLUDE_TOOLS STREQUAL "bootstrap-only" )
   add_llvm_external_project(lld)
   add_llvm_external_project(lldb)
-  add_llvm_external_project(polly)
 
   # Automatically add remaining sub-directories containing a 'CMakeLists.txt'
   # file as external projects.
   add_llvm_implicit_external_projects()
 endif()
-
-if( EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/cling/CMakeLists.txt )
-  add_llvm_external_project( ${CMAKE_CURRENT_SOURCE_DIR}/cling )
-endif( EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/cling/CMakeLists.txt )
 
 set(LLVM_COMMON_DEPENDS ${LLVM_COMMON_DEPENDS} PARENT_SCOPE)

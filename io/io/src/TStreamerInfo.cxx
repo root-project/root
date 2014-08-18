@@ -1873,7 +1873,7 @@ void TStreamerInfo::BuildOld()
             TString dmClassName = TClassEdit::ShortType(dm->GetTypeName(),TClassEdit::kDropStlDefault).c_str();
             dmClassName = dmClassName.Strip(TString::kTrailing, '*');
             if (dmClassName.Index("const ")==0) dmClassName.Remove(0,6);
-            TClass *elemDm = TClass::GetClass(dmClassName.Data());
+            TClass *elemDm = !dm->IsBasic() ? TClass::GetClass(dmClassName.Data()) : 0;
             if (elemDm && elemDm->GetCollectionProxy()
                 && !elemDm->IsLoaded()
                 && elemDm->GetCollectionProxy()->GetCollectionType() != ROOT::kSTLvector) {

@@ -139,7 +139,7 @@ class TGLAxisPainterBox : public TGLAxisPainter
 {
 protected:
    TGLVector3          fAxisTitlePos[3];
-   TAxis*              fAxis[3];
+   TAxis*                      fAxis[3];
 
 public:
    TGLAxisPainterBox();
@@ -148,7 +148,7 @@ public:
    void SetAxis3DTitlePos(TGLRnrCtx &rnrCtx);
    void DrawAxis3D(TGLRnrCtx &rnrCtx);
 
-   void PlotStandard(TGLRnrCtx &rnrCtx, const TH1* histo, const TGLBoundingBox& bbox);
+   void PlotStandard(TGLRnrCtx &rnrCtx, TH1* histo, const TGLBoundingBox& bbox);
 
    ClassDef(TGLAxisPainterBox, 0); // Painter of GL axes for a 3D box.
 };

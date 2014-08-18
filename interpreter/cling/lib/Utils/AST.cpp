@@ -17,9 +17,10 @@
 #include "clang/AST/DeclTemplate.h"
 
 #include "llvm/ADT/ArrayRef.h"
-#include "clang/AST/Mangle.h"
 #include "llvm/ADT/StringRef.h"
+#include "clang/AST/Mangle.h"
 
+#include <memory>
 #include <stdio.h>
 
 using namespace clang;
@@ -53,7 +54,7 @@ namespace utils {
 
     NamedDecl* D
       = cast<NamedDecl>(const_cast<Decl*>(GD.getDecl()));
-    llvm::OwningPtr<MangleContext> mangleCtx;
+    std::unique_ptr<MangleContext> mangleCtx;
     mangleCtx.reset(D->getASTContext().createMangleContext());
     if (!mangleCtx->shouldMangleDeclName(D)) {
       IdentifierInfo *II = D->getIdentifier();
@@ -129,7 +130,7 @@ namespace utils {
               // Get the location of the place we will insert.
               SourceLocation Loc
                 = newBody[indexOfLastExpr]->getLocEnd().getLocWithOffset(1);
-              Expr* DRE = S->BuildDeclRefExpr(VD, VDTy,VK_LValue, Loc).take();
+              Expr* DRE = S->BuildDeclRefExpr(VD, VDTy,VK_LValue, Loc).get();
               assert(DRE && "Cannot be null");
               indexOfLastExpr++;
               newBody.insert(newBody.begin() + indexOfLastExpr, DRE);
@@ -163,7 +164,7 @@ namespace utils {
 
     TypeSourceInfo* TSI = Ctx.getTrivialTypeSourceInfo(Ty, SourceLocation());
     Expr* Result
-      = S->BuildCStyleCastExpr(SourceLocation(), TSI,SourceLocation(),E).take();
+      = S->BuildCStyleCastExpr(SourceLocation(), TSI,SourceLocation(),E).get();
     assert(Result && "Cannot create CStyleCastPtrExpr");
     return Result;
   }

@@ -759,7 +759,7 @@ if(davix OR builtin_davix)
     if(NOT davix)
       set(davix ON CACHE BOOL "" FORCE)
     endif()
-    set(DAVIX_VERSION 0.3.4)
+    set(DAVIX_VERSION 0.3.6)
     message(STATUS "Downloading and building Davix version ${DAVIX_VERSION}")
     string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")                      # Otherwise it produces tones of warnings
     string(REPLACE "-W " "" __cxxflags "${__cxxflags} -Wno-unused-const-variable")

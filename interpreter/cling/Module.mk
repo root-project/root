@@ -24,8 +24,9 @@ CLINGETC_CLING := DynamicExprInfo.h DynamicLookupRuntimeUniverse.h \
         RuntimeUniverse.h Value.h RuntimeException.h
 
 CLINGETC_LLVM := llvm/ADT/IntrusiveRefCntPtr.h \
-        llvm/ADT/OwningPtr.h \
         llvm/ADT/StringRef.h \
+        llvm/ADT/SmallVector.h \
+	llvm/ADT/iterator_range.h \
         llvm/Config/llvm-config.h \
         llvm/Support/AlignOf.h \
         llvm/Support/Allocator.h \
@@ -33,6 +34,7 @@ CLINGETC_LLVM := llvm/ADT/IntrusiveRefCntPtr.h \
         llvm/Support/Compiler.h \
         llvm/Support/DataTypes.h \
         llvm/Support/MathExtras.h \
+        llvm/Support/Memory.h \
         llvm/Support/SwapByteOrder.h \
         llvm/Support/type_traits.h
 
@@ -84,8 +86,8 @@ endif
 CLINGEXCCXXFLAGS := -fno-exceptions
 CLINGLIBEXTRA = $(CLINGLDFLAGSEXTRA) -L$(shell $(LLVMCONFIG) --libdir) \
 	$(addprefix -lclang,\
-		Frontend Serialization Driver CodeGen Parse Sema Analysis RewriteCore AST Edit Lex Basic) \
-	$(shell $(LLVMCONFIG) --libs bitwriter jit native option ipo instrumentation objcarcopts)\
+		Frontend Serialization Driver CodeGen Parse Sema Analysis AST Edit Lex Basic) \
+	$(shell $(LLVMCONFIG) --libs bitwriter jit native option ipo instrumentation objcarcopts profiledata)\
 	$(shell $(LLVMCONFIG) --ldflags) $(shell $(LLVMCONFIG) --system-libs)
 
 ifneq (,$(filter $(ARCH),win32gcc win64gcc))

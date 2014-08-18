@@ -119,10 +119,11 @@ enum : long long {  // expected-warning{{enumeration types with a fixed underlyi
 
 class AAA {
 __declspec(dllimport) void f(void) { }
-void f2(void);
+void f2(void); // expected-note{{previous declaration is here}}
 };
 
-__declspec(dllimport) void AAA::f2(void) { // expected-error {{'dllimport' attribute can be applied only to symbol}}
+__declspec(dllimport) void AAA::f2(void) { // expected-error{{dllimport cannot be applied to non-inline function definition}}
+                                           // expected-error@-1{{redeclaration of 'AAA::f2' cannot add 'dllimport' attribute}}
 
 }
 
@@ -143,10 +144,13 @@ extern void static_func();
 void static_func(); // expected-note {{previous declaration is here}}
 
 
-static void static_func() // expected-warning {{static declaration of 'static_func' follows non-static declaration}}
+static void static_func() // expected-warning {{redeclaring non-static 'static_func' as static is a Microsoft extension}}
 {
 
 }
+
+extern const int static_var; // expected-note {{previous declaration is here}}
+static const int static_var = 3; // expected-warning {{redeclaring non-static 'static_var' as static is a Microsoft extension}}
 
 long function_prototype(int a);
 long (*function_ptr)(int a);
@@ -170,29 +174,6 @@ void pointer_to_integral_type_conv(char* ptr) {
 
    // This is bad.
    b = reinterpret_cast<bool>(ptr); // expected-error {{cast from pointer to smaller type 'bool' loses information}}
-}
-
-namespace friend_as_a_forward_decl {
-
-class A {
-  class Nested {
-    friend class B;
-    B* b;
-  };
-  B* b;
-};
-B* global_b;
-
-
-void f()
-{
-  class Local {
-    friend class Z;
-    Z* b;
-  };
-  Z* b;
-}
-
 }
 
 struct PR11150 {
@@ -303,7 +284,7 @@ struct SP9 {
   __declspec(property(get=GetV, put=SetV)) T V;
   T GetV() { return 0; }
   void SetV(T v) {}
-  void f() { V = this->V; V < this->V; }
+  bool f() { V = this->V; return V < this->V; }
   void g() { V++; }
   void h() { V*=2; }
 };

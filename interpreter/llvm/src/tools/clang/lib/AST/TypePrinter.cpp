@@ -430,7 +430,16 @@ void TypePrinter::printConstantArrayBefore(const ConstantArrayType *T,
 }
 void TypePrinter::printConstantArrayAfter(const ConstantArrayType *T, 
                                           raw_ostream &OS) {
-  OS << '[' << T->getSize().getZExtValue() << ']';
+  OS << '[';
+  if (T->getIndexTypeQualifiers().hasQualifiers()) {
+    AppendTypeQualList(OS, T->getIndexTypeCVRQualifiers());
+    OS << ' ';
+  }
+
+  if (T->getSizeModifier() == ArrayType::Static)
+    OS << "static ";
+
+  OS << T->getSize().getZExtValue() << ']';
   printAfter(T->getElementType(), OS);
 }
 
@@ -461,12 +470,12 @@ void TypePrinter::printVariableArrayAfter(const VariableArrayType *T,
   }
 
   if (T->getSizeModifier() == VariableArrayType::Static)
-    OS << "static";
+    OS << "static ";
   else if (T->getSizeModifier() == VariableArrayType::Star)
     OS << '*';
 
   if (T->getSizeExpr())
-    T->getSizeExpr()->printPretty(OS, 0, Policy);
+    T->getSizeExpr()->printPretty(OS, nullptr, Policy);
   OS << ']';
 
   printAfter(T->getElementType(), OS);
@@ -501,7 +510,7 @@ void TypePrinter::printDependentSizedArrayAfter(
                                                raw_ostream &OS) {
   OS << '[';
   if (T->getSizeExpr())
-    T->getSizeExpr()->printPretty(OS, 0, Policy);
+    T->getSizeExpr()->printPretty(OS, nullptr, Policy);
   OS << ']';
   printAfter(T->getElementType(), OS);
 }
@@ -516,7 +525,7 @@ void TypePrinter::printDependentSizedExtVectorAfter(
                                           raw_ostream &OS) { 
   OS << " __attribute__((ext_vector_type(";
   if (T->getSizeExpr())
-    T->getSizeExpr()->printPretty(OS, 0, Policy);
+    T->getSizeExpr()->printPretty(OS, nullptr, Policy);
   OS << ")))";  
   printAfter(T->getElementType(), OS);
 }
@@ -593,7 +602,8 @@ FunctionProtoType::printExceptionSpecification(raw_ostream &OS,
     OS << " noexcept";
     if (getExceptionSpecType() == EST_ComputedNoexcept) {
       OS << '(';
-      getNoexceptExpr()->printPretty(OS, 0, Policy);
+      if (getNoexceptExpr())
+        getNoexceptExpr()->printPretty(OS, nullptr, Policy);
       OS << ')';
     }
   }
@@ -761,7 +771,8 @@ void TypePrinter::printTypedefAfter(const TypedefType *T, raw_ostream &OS) { }
 void TypePrinter::printTypeOfExprBefore(const TypeOfExprType *T,
                                         raw_ostream &OS) {
   OS << "typeof ";
-  T->getUnderlyingExpr()->printPretty(OS, 0, Policy);
+  if (T->getUnderlyingExpr())
+    T->getUnderlyingExpr()->printPretty(OS, nullptr, Policy);
   spaceBeforePlaceHolder(OS);
 }
 void TypePrinter::printTypeOfExprAfter(const TypeOfExprType *T,
@@ -777,7 +788,8 @@ void TypePrinter::printTypeOfAfter(const TypeOfType *T, raw_ostream &OS) { }
 
 void TypePrinter::printDecltypeBefore(const DecltypeType *T, raw_ostream &OS) { 
   OS << "decltype(";
-  T->getUnderlyingExpr()->printPretty(OS, 0, Policy);
+  if (T->getUnderlyingExpr())
+    T->getUnderlyingExpr()->printPretty(OS, nullptr, Policy);
   OS << ')';
   spaceBeforePlaceHolder(OS);
 }
@@ -848,7 +860,7 @@ void TypePrinter::AppendScope(DeclContext *DC, raw_ostream &OS) {
     if (NS->getIdentifier())
       OS << NS->getName() << "::";
     else
-      OS << "<anonymous namespace>::";
+      OS << "(anonymous namespace)::";
   } else if (ClassTemplateSpecializationDecl *Spec
                = dyn_cast<ClassTemplateSpecializationDecl>(DC)) {
     IncludeStrongLifetimeRAII Strong(Policy);
@@ -900,13 +912,13 @@ void TypePrinter::printTag(TagDecl *D, raw_ostream &OS) {
     OS << Typedef->getIdentifier()->getName();
   } else {
     // Make an unambiguous representation for anonymous types, e.g.
-    //   <anonymous enum at /usr/include/string.h:120:9>
+    //   (anonymous enum at /usr/include/string.h:120:9)
     
     if (isa<CXXRecordDecl>(D) && cast<CXXRecordDecl>(D)->isLambda()) {
-      OS << "<lambda";
+      OS << "(lambda";
       HasKindDecoration = true;
     } else {
-      OS << "<anonymous";
+      OS << "(anonymous";
     }
     
     if (Policy.AnonymousTagLocations) {
@@ -925,7 +937,7 @@ void TypePrinter::printTag(TagDecl *D, raw_ostream &OS) {
       }
     }
     
-    OS << '>';
+    OS << ')';
   }
 
   // If this is a class template specialization, print the template
@@ -1259,13 +1271,12 @@ void TypePrinter::printObjCObjectBefore(const ObjCObjectType *T,
   print(T->getBaseType(), OS, StringRef());
   OS << '<';
   bool isFirst = true;
-  for (ObjCObjectType::qual_iterator
-         I = T->qual_begin(), E = T->qual_end(); I != E; ++I) {
+  for (const auto *I : T->quals()) {
     if (isFirst)
       isFirst = false;
     else
       OS << ',';
-    OS << (*I)->getName();
+    OS << I->getName();
   }
   OS << '>';
   spaceBeforePlaceHolder(OS);
@@ -1281,12 +1292,12 @@ void TypePrinter::printObjCObjectPointerBefore(const ObjCObjectPointerType *T,
   T->getPointeeType().getLocalQualifiers().print(OS, Policy,
                                                 /*appendSpaceIfNonEmpty=*/true);
 
+  assert(!T->isObjCSelType());
+
   if (T->isObjCIdType() || T->isObjCQualifiedIdType())
     OS << "id";
   else if (T->isObjCClassType() || T->isObjCQualifiedClassType())
     OS << "Class";
-  else if (T->isObjCSelType())
-    OS << "SEL";
   else
     OS << T->getInterfaceDecl()->getName();
   
@@ -1302,7 +1313,8 @@ void TypePrinter::printObjCObjectPointerBefore(const ObjCObjectPointerType *T,
     OS << '>';
   }
   
-  if (!T->isObjCIdType() && !T->isObjCQualifiedIdType()) {
+  if (!T->isObjCIdType() && !T->isObjCQualifiedIdType() &&
+      !T->isObjCClassType() && !T->isObjCQualifiedClassType()) {
     OS << " *"; // Don't forget the implicit pointer.
   } else {
     spaceBeforePlaceHolder(OS);
@@ -1424,7 +1436,7 @@ void QualType::dump(const char *msg) const {
   llvm::errs() << '\n';
 }
 
-LLVM_DUMP_METHOD void QualType::dump() const { dump(0); }
+LLVM_DUMP_METHOD void QualType::dump() const { dump(nullptr); }
 
 LLVM_DUMP_METHOD void Type::dump() const { QualType(this, 0).dump(); }
 

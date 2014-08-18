@@ -29,6 +29,7 @@ TEnumConstant::TEnumConstant(DataMemberInfo_t *info, const char* name, Long64_t 
 
    //Set name of constant
    this->SetName(name);
+
    // Add the constant to the enum type.
    type->AddConstant(this);
 }

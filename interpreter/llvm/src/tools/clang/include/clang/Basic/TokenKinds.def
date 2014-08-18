@@ -229,6 +229,7 @@ PUNCTUATOR(greatergreatergreater, ">>>")
 //   KEYALTIVEC - This is a keyword in AltiVec
 //   KEYBORLAND - This is a keyword if Borland extensions are enabled
 //   BOOLSUPPORT - This is a keyword if 'bool' is a built-in type
+//   HALFSUPPORT - This is a keyword if 'half' is a built-in type
 //   WCHARSUPPORT - This is a keyword if 'wchar_t' is a built-in type
 //
 KEYWORD(auto                        , KEYALL)
@@ -267,7 +268,7 @@ KEYWORD(volatile                    , KEYALL)
 KEYWORD(while                       , KEYALL)
 KEYWORD(_Alignas                    , KEYALL)
 KEYWORD(_Alignof                    , KEYALL)
-KEYWORD(_Atomic                     , KEYALL)
+KEYWORD(_Atomic                     , KEYALL|KEYNOMS)
 KEYWORD(_Bool                       , KEYNOCXX)
 KEYWORD(_Complex                    , KEYALL)
 KEYWORD(_Generic                    , KEYALL)
@@ -364,6 +365,7 @@ KEYWORD(typeof                      , KEYGNU)
 
 // MS Extensions
 KEYWORD(__FUNCDNAME__               , KEYMS)
+KEYWORD(__FUNCSIG__                 , KEYMS)
 KEYWORD(L__FUNCTION__               , KEYMS)
 TYPE_TRAIT_1(__is_interface_class, IsInterfaceClass, KEYMS)
 TYPE_TRAIT_1(__is_sealed, IsSealed, KEYMS)
@@ -492,7 +494,7 @@ KEYWORD(__pixel                     , KEYALTIVEC)
 ALIAS("__fp16", half                , KEYALL)
 
 // OpenCL Extension.
-KEYWORD(half                        , KEYOPENCL)
+KEYWORD(half                        , HALFSUPPORT)
 
 // Objective-C ARC keywords.
 KEYWORD(__bridge                     , KEYARC)
@@ -683,6 +685,11 @@ ANNOTATION(pragma_ms_pointers_to_members)
 // handles them.
 ANNOTATION(pragma_ms_vtordisp)
 
+// Annotation for all microsoft #pragmas...
+// The lexer produces these so that they only take effect when the parser
+// handles them.
+ANNOTATION(pragma_ms_pragma)
+
 // Annotation for #pragma OPENCL EXTENSION...
 // The lexer produces these so that they only take effect when the parser
 // handles them.
@@ -693,6 +700,11 @@ ANNOTATION(pragma_opencl_extension)
 // handles #pragma omp ... directives.
 ANNOTATION(pragma_openmp)
 ANNOTATION(pragma_openmp_end)
+
+// Annotations for loop pragma directives #pragma clang loop ...
+// The lexer produces these so that they only take effect when the parser
+// handles #pragma loop ... directives.
+ANNOTATION(pragma_loop_hint)
 
 // Annotations for module import translated from #include etc.
 ANNOTATION(module_include)

@@ -1,15 +1,25 @@
+//------------------------------------------------------------------------------
+// CLING - the C++ LLVM-based InterpreterG :)
+// author:  Manasij Mukherjee  <manasij7479@gmail.com>
+// author:  Vassil Vassilev <vvasilev@cern.ch>
+//
+// This file is dual-licensed: you can choose to license it under the University
+// of Illinois Open Source License or the GNU Lesser General Public License. See
+// LICENSE.TXT for details.
+//------------------------------------------------------------------------------
+
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Path.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/AST/AST.h"
+#include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Frontend/CompilerInstance.h"
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/AutoloadCallback.h"
-#include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Transaction.h"
 
 
@@ -31,33 +41,156 @@ namespace cling {
 
   }
 
-//  bool AutoloadCallback::LookupObject (TagDecl *t) {
-//    if (t->hasAttr<AnnotateAttr>())
-//      report(t->getLocation(),t->getNameAsString(),t->getAttr<AnnotateAttr>()->getAnnotation());
-//    return false;
-//  }
+  bool AutoloadCallback::LookupObject (TagDecl *t) {
+    if (t->hasAttr<AnnotateAttr>())
+      report(t->getLocation(),t->getNameAsString(),t->getAttr<AnnotateAttr>()->getAnnotation());
+    return false;
+  }
 
-  void removeDefaultArg(TemplateParameterList *Params) {
-    for (unsigned i = 0, e = Params->size(); i != e; ++i) {
-      Decl *Param = Params->getParam(i);
-      if (TemplateTypeParmDecl *TTP = dyn_cast<TemplateTypeParmDecl>(Param)) {
-              if(TTP->hasDefaultArgument())
-                TTP->setDefaultArgument(nullptr,false);
-      }
-      else if(NonTypeTemplateParmDecl *NTTP =
-                dyn_cast<NonTypeTemplateParmDecl>(Param)) {
-                  if(NTTP->hasDefaultArgument())
-                    NTTP->setDefaultArgument(nullptr,false);
-      }
+  class DefaultArgVisitor: public RecursiveASTVisitor<DefaultArgVisitor> {
+  private:
+    bool m_IsStoringState;
+    AutoloadCallback::FwdDeclsMap* m_Map;
+    clang::Preprocessor* m_PP;
+  private:
+    void InsertIntoAutoloadingState (Decl* decl, std::string annotation) {
+
+      assert(annotation != "" && "Empty annotation!");
+      assert(m_PP);
+
+      const FileEntry* FE = 0;
+      SourceLocation fileNameLoc;
+      bool isAngled = false;
+      const DirectoryLookup* LookupFrom = 0;
+      const DirectoryLookup* CurDir = 0;
+
+      FE = m_PP->LookupFile(fileNameLoc, annotation, isAngled, LookupFrom,
+                            CurDir, /*SearchPath*/0, /*RelativePath*/ 0,
+                            /*suggestedModule*/0, /*SkipCache*/false,
+                            /*OpenFile*/ false, /*CacheFail*/ false);
+
+      assert(FE && "Must have a valid FileEntry");
+
+      if (m_Map->find(FE) == m_Map->end())
+        (*m_Map)[FE] = std::vector<Decl*>();
+
+      (*m_Map)[FE].push_back(decl);
     }
-  }
-  void removeDefaultArg(FunctionDecl* fd) {
-    for (unsigned i = 0, e = fd->getNumParams(); i != e; ++i) {
-      if(fd->getParamDecl(i)->hasDefaultArg()) {
-        fd->getParamDecl(i)->setDefaultArg(nullptr);
-      }
+
+  public:
+    DefaultArgVisitor() : m_IsStoringState(false), m_Map(0) {}
+    void RemoveDefaultArgsOf(Decl* D) {
+      //D = D->getMostRecentDecl();
+      TraverseDecl(D);
+      //while ((D = D->getPreviousDecl()))
+      //  TraverseDecl(D);
     }
-  }
+
+    void TrackDefaultArgStateOf(Decl* D, AutoloadCallback::FwdDeclsMap& map,
+                                Preprocessor& PP) {
+      m_IsStoringState = true;
+      m_Map = &map;
+      m_PP = &PP;
+      TraverseDecl(D);
+      m_PP = 0;
+      m_Map = 0;
+      m_IsStoringState = false;
+    }
+
+    bool shouldVisitTemplateInstantiations() { return true; }
+
+    bool VisitDecl(Decl* D) {
+      if (!m_IsStoringState)
+        return true;
+
+      if (!D->hasAttr<AnnotateAttr>())
+        return true;
+
+      AnnotateAttr* attr = D->getAttr<AnnotateAttr>();
+      if (!attr)
+        return true;
+
+      switch (D->getKind()) {
+      default:
+        InsertIntoAutoloadingState(D, attr->getAnnotation());
+        break;
+      case Decl::Enum:
+        // EnumDecls have extra information 2 chars after the filename used
+        // for extra fixups.
+        InsertIntoAutoloadingState(D, attr->getAnnotation().drop_back(2));
+        break;
+      }
+
+      return true;
+    }
+
+    bool VisitCXXRecordDecl(CXXRecordDecl* D) {
+      if (!D->hasAttr<AnnotateAttr>())
+        return true;
+
+      VisitDecl(D);
+
+      if (ClassTemplateDecl* TmplD = D->getDescribedClassTemplate())
+        return VisitTemplateDecl(TmplD);
+      return true;
+    }
+
+    bool VisitTemplateTypeParmDecl(TemplateTypeParmDecl* D) {
+      VisitDecl(D);
+
+      if (m_IsStoringState)
+        return true;
+
+      if (D->hasDefaultArgument())
+        D->removeDefaultArgument();
+      return true;
+    }
+
+    bool VisitTemplateDecl(TemplateDecl* D) {
+      if (D->getTemplatedDecl() &&
+          !D->getTemplatedDecl()->hasAttr<AnnotateAttr>())
+        return true;
+
+      VisitDecl(D);
+
+      for(auto P: D->getTemplateParameters()->asArray())
+        TraverseDecl(P);
+      return true;
+    }
+
+    bool VisitTemplateTemplateParmDecl(TemplateTemplateParmDecl* D) {
+      VisitDecl(D);
+
+      if (m_IsStoringState)
+        return true;
+
+      if (D->hasDefaultArgument())
+        D->removeDefaultArgument();
+      return true;
+    }
+
+    bool VisitNonTypeTemplateParmDecl(NonTypeTemplateParmDecl* D) {
+      VisitDecl(D);
+
+      if (m_IsStoringState)
+        return true;
+
+      if (D->hasDefaultArgument())
+        D->removeDefaultArgument();
+      return true;
+    }
+
+    bool VisitParmVarDecl(ParmVarDecl* D) {
+      VisitDecl(D);
+
+      if (m_IsStoringState)
+        return true;
+
+      if (D->hasDefaultArg())
+        D->setDefaultArg(nullptr);
+      return true;
+    }
+  };
 
   void AutoloadCallback::InclusionDirective(clang::SourceLocation HashLoc,
                           const clang::Token &IncludeTok,
@@ -68,114 +201,56 @@ namespace cling {
                           llvm::StringRef SearchPath,
                           llvm::StringRef RelativePath,
                           const clang::Module *Imported) {
+    assert(File && "Must have a valid File");
 
-    auto iterator = m_Map.find(File->getUID());
-    if (iterator == m_Map.end())
-      return; // nothing to do, file not referred in any annotation
-    if(iterator->second.Included)
-      return; // nothing to do, file already included once
+    auto found = m_Map.find(File);
+    if (found == m_Map.end())
+     return; // nothing to do, file not referred in any annotation
 
-    iterator->second.Included = true;
-
-    for(clang::Decl* decl : iterator->second.Decls) {
-//      llvm::outs() <<"CB:"<<llvm::cast<NamedDecl>(decl)->getName() <<"\n";
-      decl->dropAttrs();
-      if(llvm::isa<clang::EnumDecl>(decl)) {
-        //do something (remove fixed type..how?)
-      }
-      if(llvm::isa<clang::ClassTemplateDecl>(decl)) {
-        clang::ClassTemplateDecl* ct = llvm::cast<clang::ClassTemplateDecl>(decl);
-//        llvm::outs() << ct->getName() <<"\n";
-        removeDefaultArg(ct->getTemplateParameters());
-      }
-      if(llvm::isa<clang::FunctionDecl>(decl)) {
-        clang::FunctionDecl* fd = llvm::cast<clang::FunctionDecl>(decl);
-        removeDefaultArg(fd);
-      }
-
+    DefaultArgVisitor defaultArgsCleaner;
+    for (auto D : found->second) {
+      defaultArgsCleaner.RemoveDefaultArgsOf(D);
     }
-
+    // Don't need to keep track of cleaned up decls from file.
+    m_Map.erase(found);
   }
 
   AutoloadCallback::AutoloadCallback(Interpreter* interp) :
     InterpreterCallbacks(interp,true,false,true), m_Interpreter(interp){
-
+//#ifdef _POSIX_C_SOURCE
+//      //Workaround for differnt expansion of macros to typedefs
+//      m_Interpreter->parse("#include <sys/types.h>");
+//#endif
   }
+
   AutoloadCallback::~AutoloadCallback() {
   }
 
-  void AutoloadCallback::InsertIntoAutoloadingState
-    (clang::Decl* decl,std::string annotation) {
-      std::string canonicalFile = DynamicLibraryManager::normalizePath(annotation);
-
-      if (canonicalFile.empty())
-        canonicalFile = annotation;
-
-      clang::Preprocessor& PP = m_Interpreter->getCI()->getPreprocessor();
-      const FileEntry* FE = 0;
-      SourceLocation fileNameLoc;
-      bool isAngled = false;
-      const DirectoryLookup* LookupFrom = 0;
-      const DirectoryLookup* CurDir = 0;
-
-      FE = PP.LookupFile(fileNameLoc, canonicalFile, isAngled, LookupFrom, CurDir,
-                        /*SearchPath*/0, /*RelativePath*/ 0,
-                        /*suggestedModule*/0, /*SkipCache*/false,
-                        /*OpenFile*/ false, /*CacheFail*/ false);
-
-      if(!FE)
-        return;
-
-      auto& stateMap = m_Map;
-      auto iterator = stateMap.find(FE->getUID());
-
-      if(iterator == stateMap.end())
-        stateMap[FE->getUID()] = FileInfo();
-
-      stateMap[FE->getUID()].Decls.push_back(decl);
-
-  }
-
-  void AutoloadCallback::HandleNamespace(NamespaceDecl* NS) {
-    std::vector<clang::Decl*> decls;
-    for(auto dit = NS->decls_begin(); dit != NS->decls_end(); ++dit)
-      decls.push_back(*dit);
-    HandleDeclVector(decls);
-  }
-
-  void AutoloadCallback::HandleClassTemplate(ClassTemplateDecl* CT) {
-    CXXRecordDecl* cxxr = CT->getTemplatedDecl();
-    if(cxxr->hasAttr<AnnotateAttr>())
-      InsertIntoAutoloadingState(CT,cxxr->getAttr<AnnotateAttr>()->getAnnotation());
-  }
-  void AutoloadCallback::HandleFunction(FunctionDecl *F) {
-    if(F->hasAttr<AnnotateAttr>())
-      InsertIntoAutoloadingState(F,F->getAttr<AnnotateAttr>()->getAnnotation());
-  }
-
-  void AutoloadCallback::HandleDeclVector(std::vector<clang::Decl*> Decls) {
-    for(auto decl : Decls ) {
-      if(auto ct = llvm::dyn_cast<ClassTemplateDecl>(decl))
-        HandleClassTemplate(ct);
-      if(auto ns = llvm::dyn_cast<NamespaceDecl>(decl))
-        HandleNamespace(ns);
-      if(auto f = llvm::dyn_cast<FunctionDecl>(decl))
-        HandleFunction(f);
-    }
-  }
   void AutoloadCallback::TransactionCommitted(const Transaction &T) {
-      for (Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
-           I != E; ++I) {
-        Transaction::DelayCallInfo DCI = *I;
-        std::vector<clang::Decl*> decls;
-        for (DeclGroupRef::iterator J = DCI.m_DGR.begin(),
-               JE = DCI.m_DGR.end(); J != JE; ++J) {
+    if (T.decls_begin() == T.decls_end())
+      return;
+    if (T.decls_begin()->m_DGR.isNull())
+      return;
 
-          decls.push_back(*J);
+    if (const NamedDecl* ND = dyn_cast<NamedDecl>(*T.decls_begin()->m_DGR.begin()))
+      if (ND->getIdentifier() && ND->getName().equals("__Cling_Autoloading_Map")) {
+        DefaultArgVisitor defaultArgsStateCollector;
+        Preprocessor& PP = m_Interpreter->getCI()->getPreprocessor();
+        for (Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
+             I != E; ++I) {
+          Transaction::DelayCallInfo DCI = *I;
+
+          // if (DCI.m_Call != Transaction::kCCIHandleTopLevelDecl)
+          //   continue;
+          if (DCI.m_DGR.isNull())
+            continue;
+
+          for (DeclGroupRef::iterator J = DCI.m_DGR.begin(),
+                 JE = DCI.m_DGR.end(); J != JE; ++J) {
+            defaultArgsStateCollector.TrackDefaultArgStateOf(*J, m_Map, PP);
+          }
         }
-        HandleDeclVector(decls);
       }
   }
 
-
-}//end namespace cling
+} //end namespace cling

@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "asm-printer"
 #include "X86IntelInstPrinter.h"
 #include "MCTargetDesc/X86BaseInfo.h"
 #include "MCTargetDesc/X86MCTargetDesc.h"
@@ -24,6 +23,8 @@
 #include "llvm/Support/FormattedStream.h"
 #include <cctype>
 using namespace llvm;
+
+#define DEBUG_TYPE "asm-printer"
 
 #include "X86GenAsmWriter1.inc"
 
@@ -162,15 +163,15 @@ void X86IntelInstPrinter::printOperand(const MCInst *MI, unsigned OpNo,
 
 void X86IntelInstPrinter::printMemReference(const MCInst *MI, unsigned Op,
                                             raw_ostream &O) {
-  const MCOperand &BaseReg  = MI->getOperand(Op);
-  unsigned ScaleVal         = MI->getOperand(Op+1).getImm();
-  const MCOperand &IndexReg = MI->getOperand(Op+2);
-  const MCOperand &DispSpec = MI->getOperand(Op+3);
-  const MCOperand &SegReg   = MI->getOperand(Op+4);
+  const MCOperand &BaseReg  = MI->getOperand(Op+X86::AddrBaseReg);
+  unsigned ScaleVal         = MI->getOperand(Op+X86::AddrScaleAmt).getImm();
+  const MCOperand &IndexReg = MI->getOperand(Op+X86::AddrIndexReg);
+  const MCOperand &DispSpec = MI->getOperand(Op+X86::AddrDisp);
+  const MCOperand &SegReg   = MI->getOperand(Op+X86::AddrSegmentReg);
   
   // If this has a segment register, print it.
   if (SegReg.getReg()) {
-    printOperand(MI, Op+4, O);
+    printOperand(MI, Op+X86::AddrSegmentReg, O);
     O << ':';
   }
   
@@ -178,7 +179,7 @@ void X86IntelInstPrinter::printMemReference(const MCInst *MI, unsigned Op,
   
   bool NeedPlus = false;
   if (BaseReg.getReg()) {
-    printOperand(MI, Op, O);
+    printOperand(MI, Op+X86::AddrBaseReg, O);
     NeedPlus = true;
   }
   
@@ -186,7 +187,7 @@ void X86IntelInstPrinter::printMemReference(const MCInst *MI, unsigned Op,
     if (NeedPlus) O << " + ";
     if (ScaleVal != 1)
       O << ScaleVal << '*';
-    printOperand(MI, Op+2, O);
+    printOperand(MI, Op+X86::AddrIndexReg, O);
     NeedPlus = true;
   }
 

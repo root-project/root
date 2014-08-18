@@ -28,8 +28,8 @@ using namespace ento;
 namespace {
 class StackAddrEscapeChecker : public Checker< check::PreStmt<ReturnStmt>,
                                                check::EndFunction > {
-  mutable OwningPtr<BuiltinBug> BT_stackleak;
-  mutable OwningPtr<BuiltinBug> BT_returnstack;
+  mutable std::unique_ptr<BuiltinBug> BT_stackleak;
+  mutable std::unique_ptr<BuiltinBug> BT_returnstack;
 
 public:
   void checkPreStmt(const ReturnStmt *RS, CheckerContext &C) const;
@@ -177,8 +177,8 @@ void StackAddrEscapeChecker::checkEndFunction(CheckerContext &Ctx) const {
     {}
     
     bool HandleBinding(StoreManager &SMgr, Store store,
-                       const MemRegion *region, SVal val) {
-      
+                       const MemRegion *region, SVal val) override {
+
       if (!isa<GlobalsSpaceRegion>(region->getMemorySpace()))
         return true;
       

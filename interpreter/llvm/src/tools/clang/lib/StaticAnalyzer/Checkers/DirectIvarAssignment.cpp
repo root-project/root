@@ -124,10 +124,7 @@ void DirectIvarAssignment::checkASTDecl(const ObjCImplementationDecl *D,
   IvarToPropertyMapTy IvarToPropMap;
 
   // Find all properties for this class.
-  for (ObjCInterfaceDecl::prop_iterator I = InterD->prop_begin(),
-      E = InterD->prop_end(); I != E; ++I) {
-    ObjCPropertyDecl *PD = *I;
-
+  for (const auto *PD : InterD->properties()) {
     // Find the corresponding IVar.
     const ObjCIvarDecl *ID = findPropertyBackingIvar(PD, InterD,
                                                      Mgr.getASTContext());
@@ -142,10 +139,7 @@ void DirectIvarAssignment::checkASTDecl(const ObjCImplementationDecl *D,
   if (IvarToPropMap.empty())
     return;
 
-  for (ObjCImplementationDecl::instmeth_iterator I = D->instmeth_begin(),
-      E = D->instmeth_end(); I != E; ++I) {
-
-    ObjCMethodDecl *M = *I;
+  for (const auto *M : D->instance_methods()) {
     AnalysisDeclContext *DCtx = Mgr.getAnalysisDeclContext(M);
 
     if ((*ShouldSkipMethod)(M))
@@ -161,14 +155,10 @@ void DirectIvarAssignment::checkASTDecl(const ObjCImplementationDecl *D,
 }
 
 static bool isAnnotatedToAllowDirectAssignment(const Decl *D) {
-  for (specific_attr_iterator<AnnotateAttr>
-       AI = D->specific_attr_begin<AnnotateAttr>(),
-       AE = D->specific_attr_end<AnnotateAttr>(); AI != AE; ++AI) {
-    const AnnotateAttr *Ann = *AI;
+  for (const auto *Ann : D->specific_attrs<AnnotateAttr>())
     if (Ann->getAnnotation() ==
         "objc_allow_direct_instance_variable_assignment")
       return true;
-  }
   return false;
 }
 
@@ -226,14 +216,9 @@ void ento::registerDirectIvarAssignment(CheckerManager &mgr) {
 // Register the checker that checks for direct accesses in functions annotated
 // with __attribute__((annotate("objc_no_direct_instance_variable_assignment"))).
 static bool AttrFilter(const ObjCMethodDecl *M) {
-  for (specific_attr_iterator<AnnotateAttr>
-           AI = M->specific_attr_begin<AnnotateAttr>(),
-           AE = M->specific_attr_end<AnnotateAttr>();
-       AI != AE; ++AI) {
-    const AnnotateAttr *Ann = *AI;
+  for (const auto *Ann : M->specific_attrs<AnnotateAttr>())
     if (Ann->getAnnotation() == "objc_no_direct_instance_variable_assignment")
       return false;
-  }
   return true;
 }
 

@@ -14,7 +14,6 @@
 
 #include "llvm/Support/Errno.h"
 #include "llvm/Support/raw_ostream.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
@@ -61,7 +60,7 @@ bool RPCChannel::createServer() {
     }
 
     // Execute the child process.
-    char *args[1] = { NULL };
+    char *args[1] = { nullptr };
     int rc = execv(ChildName.c_str(), args);
     if (rc != 0)
       perror("Error executing child process: ");
@@ -85,7 +84,7 @@ bool RPCChannel::createClient() {
   return true;
 }
 
-void RPCChannel::Wait() { wait(NULL); }
+void RPCChannel::Wait() { wait(nullptr); }
 
 static bool CheckError(int rc, size_t Size, const char *Desc) {
   if (rc < 0) {

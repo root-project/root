@@ -17,7 +17,6 @@
 #include "ARMFPUName.h"
 #include "ARMRegisterInfo.h"
 #include "ARMUnwindOpAsm.h"
-#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/MC/MCAsmBackend.h"
@@ -31,6 +30,7 @@
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCInstPrinter.h"
+#include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/MC/MCObjectStreamer.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCSection.h"
@@ -63,7 +63,7 @@ static const char *GetFPUName(unsigned ID) {
 #define ARM_FPU_NAME(NAME, ID) case ARM::ID: return NAME;
 #include "ARMFPUName.def"
   }
-  return NULL;
+  return nullptr;
 }
 
 static const char *GetArchName(unsigned ID) {
@@ -76,7 +76,7 @@ static const char *GetArchName(unsigned ID) {
 #define ARM_ARCH_ALIAS(NAME, ID) /* empty */
 #include "ARMArchName.def"
   }
-  return NULL;
+  return nullptr;
 }
 
 static const char *GetArchDefaultCPUName(unsigned ID) {
@@ -89,7 +89,7 @@ static const char *GetArchDefaultCPUName(unsigned ID) {
 #define ARM_ARCH_ALIAS(NAME, ID) /* empty */
 #include "ARMArchName.def"
   }
-  return NULL;
+  return nullptr;
 }
 
 static unsigned GetArchDefaultCPUArch(unsigned ID) {
@@ -114,32 +114,33 @@ class ARMTargetAsmStreamer : public ARMTargetStreamer {
   MCInstPrinter &InstPrinter;
   bool IsVerboseAsm;
 
-  virtual void emitFnStart();
-  virtual void emitFnEnd();
-  virtual void emitCantUnwind();
-  virtual void emitPersonality(const MCSymbol *Personality);
-  virtual void emitPersonalityIndex(unsigned Index);
-  virtual void emitHandlerData();
-  virtual void emitSetFP(unsigned FpReg, unsigned SpReg, int64_t Offset = 0);
-  virtual void emitMovSP(unsigned Reg, int64_t Offset = 0);
-  virtual void emitPad(int64_t Offset);
-  virtual void emitRegSave(const SmallVectorImpl<unsigned> &RegList,
-                           bool isVector);
-  virtual void emitUnwindRaw(int64_t Offset,
-                             const SmallVectorImpl<uint8_t> &Opcodes);
+  void emitFnStart() override;
+  void emitFnEnd() override;
+  void emitCantUnwind() override;
+  void emitPersonality(const MCSymbol *Personality) override;
+  void emitPersonalityIndex(unsigned Index) override;
+  void emitHandlerData() override;
+  void emitSetFP(unsigned FpReg, unsigned SpReg, int64_t Offset = 0) override;
+  void emitMovSP(unsigned Reg, int64_t Offset = 0) override;
+  void emitPad(int64_t Offset) override;
+  void emitRegSave(const SmallVectorImpl<unsigned> &RegList,
+                   bool isVector) override;
+  void emitUnwindRaw(int64_t Offset,
+                     const SmallVectorImpl<uint8_t> &Opcodes) override;
 
-  virtual void switchVendor(StringRef Vendor);
-  virtual void emitAttribute(unsigned Attribute, unsigned Value);
-  virtual void emitTextAttribute(unsigned Attribute, StringRef String);
-  virtual void emitIntTextAttribute(unsigned Attribute, unsigned IntValue,
-                                    StringRef StrinValue);
-  virtual void emitArch(unsigned Arch);
-  virtual void emitObjectArch(unsigned Arch);
-  virtual void emitFPU(unsigned FPU);
-  virtual void emitInst(uint32_t Inst, char Suffix = '\0');
-  virtual void finishAttributeSection();
+  void switchVendor(StringRef Vendor) override;
+  void emitAttribute(unsigned Attribute, unsigned Value) override;
+  void emitTextAttribute(unsigned Attribute, StringRef String) override;
+  void emitIntTextAttribute(unsigned Attribute, unsigned IntValue,
+                            StringRef StrinValue) override;
+  void emitArch(unsigned Arch) override;
+  void emitObjectArch(unsigned Arch) override;
+  void emitFPU(unsigned FPU) override;
+  void emitInst(uint32_t Inst, char Suffix = '\0') override;
+  void finishAttributeSection() override;
 
-  virtual void AnnotateTLSDescriptorSequence(const MCSymbolRefExpr *SRE);
+  void AnnotateTLSDescriptorSequence(const MCSymbolRefExpr *SRE) override;
+  void emitThumbSet(MCSymbol *Symbol, const MCExpr *Value) override;
 
 public:
   ARMTargetAsmStreamer(MCStreamer &S, formatted_raw_ostream &OS,
@@ -261,6 +262,10 @@ ARMTargetAsmStreamer::AnnotateTLSDescriptorSequence(const MCSymbolRefExpr *S) {
   OS << "\t.tlsdescseq\t" << S->getSymbol().getName();
 }
 
+void ARMTargetAsmStreamer::emitThumbSet(MCSymbol *Symbol, const MCExpr *Value) {
+  OS << "\t.thumb_set\t" << *Symbol << ", " << *Value << '\n';
+}
+
 void ARMTargetAsmStreamer::emitInst(uint32_t Inst, char Suffix) {
   OS << "\t.inst";
   if (Suffix)
@@ -311,7 +316,7 @@ private:
     for (size_t i = 0; i < Contents.size(); ++i)
       if (Contents[i].Tag == Attribute)
         return &Contents[i];
-    return 0;
+    return nullptr;
   }
 
   void setAttributeItem(unsigned Attribute, unsigned Value,
@@ -383,32 +388,34 @@ private:
 
   ARMELFStreamer &getStreamer();
 
-  virtual void emitFnStart();
-  virtual void emitFnEnd();
-  virtual void emitCantUnwind();
-  virtual void emitPersonality(const MCSymbol *Personality);
-  virtual void emitPersonalityIndex(unsigned Index);
-  virtual void emitHandlerData();
-  virtual void emitSetFP(unsigned FpReg, unsigned SpReg, int64_t Offset = 0);
-  virtual void emitMovSP(unsigned Reg, int64_t Offset = 0);
-  virtual void emitPad(int64_t Offset);
-  virtual void emitRegSave(const SmallVectorImpl<unsigned> &RegList,
-                           bool isVector);
-  virtual void emitUnwindRaw(int64_t Offset,
-                             const SmallVectorImpl<uint8_t> &Opcodes);
+  void emitFnStart() override;
+  void emitFnEnd() override;
+  void emitCantUnwind() override;
+  void emitPersonality(const MCSymbol *Personality) override;
+  void emitPersonalityIndex(unsigned Index) override;
+  void emitHandlerData() override;
+  void emitSetFP(unsigned FpReg, unsigned SpReg, int64_t Offset = 0) override;
+  void emitMovSP(unsigned Reg, int64_t Offset = 0) override;
+  void emitPad(int64_t Offset) override;
+  void emitRegSave(const SmallVectorImpl<unsigned> &RegList,
+                   bool isVector) override;
+  void emitUnwindRaw(int64_t Offset,
+                     const SmallVectorImpl<uint8_t> &Opcodes) override;
 
-  virtual void switchVendor(StringRef Vendor);
-  virtual void emitAttribute(unsigned Attribute, unsigned Value);
-  virtual void emitTextAttribute(unsigned Attribute, StringRef String);
-  virtual void emitIntTextAttribute(unsigned Attribute, unsigned IntValue,
-                                    StringRef StringValue);
-  virtual void emitArch(unsigned Arch);
-  virtual void emitObjectArch(unsigned Arch);
-  virtual void emitFPU(unsigned FPU);
-  virtual void emitInst(uint32_t Inst, char Suffix = '\0');
-  virtual void finishAttributeSection();
+  void switchVendor(StringRef Vendor) override;
+  void emitAttribute(unsigned Attribute, unsigned Value) override;
+  void emitTextAttribute(unsigned Attribute, StringRef String) override;
+  void emitIntTextAttribute(unsigned Attribute, unsigned IntValue,
+                            StringRef StringValue) override;
+  void emitArch(unsigned Arch) override;
+  void emitObjectArch(unsigned Arch) override;
+  void emitFPU(unsigned FPU) override;
+  void emitInst(uint32_t Inst, char Suffix = '\0') override;
+  void finishAttributeSection() override;
+  void emitLabel(MCSymbol *Symbol) override;
 
-  virtual void AnnotateTLSDescriptorSequence(const MCSymbolRefExpr *SRE);
+  void AnnotateTLSDescriptorSequence(const MCSymbolRefExpr *SRE) override;
+  void emitThumbSet(MCSymbol *Symbol, const MCExpr *Value) override;
 
   size_t calculateContentSize() const;
 
@@ -416,7 +423,7 @@ public:
   ARMTargetELFStreamer(MCStreamer &S)
     : ARMTargetStreamer(S), CurrentVendor("aeabi"), FPU(ARM::INVALID_FPU),
       Arch(ARM::INVALID_ARCH), EmittedArch(ARM::INVALID_ARCH),
-      AttributeSection(0) {}
+      AttributeSection(nullptr) {}
 };
 
 /// Extend the generic ELFStreamer class so that it can emit mapping symbols at
@@ -444,7 +451,7 @@ public:
 
   ~ARMELFStreamer() {}
 
-  virtual void FinishImpl();
+  void FinishImpl() override;
 
   // ARM exception handling directives
   void emitFnStart();
@@ -459,8 +466,8 @@ public:
   void emitRegSave(const SmallVectorImpl<unsigned> &RegList, bool isVector);
   void emitUnwindRaw(int64_t Offset, const SmallVectorImpl<uint8_t> &Opcodes);
 
-  virtual void ChangeSection(const MCSection *Section,
-                             const MCExpr *Subsection) {
+  void ChangeSection(const MCSection *Section,
+                     const MCExpr *Subsection) override {
     // We have to keep track of the mapping symbol state of any sections we
     // use. Each one should start off as EMS_None, which is provided as the
     // default constructor by DenseMap::lookup.
@@ -473,7 +480,8 @@ public:
   /// This function is the one used to emit instruction data into the ELF
   /// streamer. We override it to add the appropriate mapping symbol if
   /// necessary.
-  virtual void EmitInstruction(const MCInst& Inst, const MCSubtargetInfo &STI) {
+  void EmitInstruction(const MCInst& Inst,
+                       const MCSubtargetInfo &STI) override {
     if (IsThumb)
       EmitThumbMappingSymbol();
     else
@@ -482,7 +490,7 @@ public:
     MCELFStreamer::EmitInstruction(Inst, STI);
   }
 
-  virtual void emitInst(uint32_t Inst, char Suffix) {
+  void emitInst(uint32_t Inst, char Suffix) {
     unsigned Size;
     char Buffer[4];
     const bool LittleEndian = getContext().getAsmInfo()->isLittleEndian();
@@ -523,7 +531,7 @@ public:
   /// This is one of the functions used to emit data into an ELF section, so the
   /// ARM streamer overrides it to add the appropriate mapping symbol ($d) if
   /// necessary.
-  virtual void EmitBytes(StringRef Data) {
+  void EmitBytes(StringRef Data) override {
     EmitDataMappingSymbol();
     MCELFStreamer::EmitBytes(Data);
   }
@@ -531,12 +539,13 @@ public:
   /// This is one of the functions used to emit data into an ELF section, so the
   /// ARM streamer overrides it to add the appropriate mapping symbol ($d) if
   /// necessary.
-  virtual void EmitValueImpl(const MCExpr *Value, unsigned Size) {
+  void EmitValueImpl(const MCExpr *Value, unsigned Size,
+                     const SMLoc &Loc) override {
     EmitDataMappingSymbol();
     MCELFStreamer::EmitValueImpl(Value, Size);
   }
 
-  virtual void EmitAssemblerFlag(MCAssemblerFlag Flag) {
+  void EmitAssemblerFlag(MCAssemblerFlag Flag) override {
     MCELFStreamer::EmitAssemblerFlag(Flag);
 
     switch (Flag) {
@@ -599,13 +608,9 @@ private:
     Symbol->setVariableValue(Value);
   }
 
-  void EmitThumbFunc(MCSymbol *Func) {
-    // FIXME: Anything needed here to flag the function as thumb?
-
+  void EmitThumbFunc(MCSymbol *Func) override {
     getAssembler().setIsThumbFunc(Func);
-
-    MCSymbolData &SD = getAssembler().getOrCreateSymbolData(*Func);
-    SD.setFlags(SD.getFlags() | ELF_Other_ThumbFunc);
+    EmitSymbolAttribute(Func, MCSA_ELF_TypeFunction);
   }
 
   // Helper functions for ARM exception handling directives
@@ -980,10 +985,36 @@ void ARMTargetELFStreamer::finishAttributeSection() {
   Contents.clear();
   FPU = ARM::INVALID_FPU;
 }
+
+void ARMTargetELFStreamer::emitLabel(MCSymbol *Symbol) {
+  ARMELFStreamer &Streamer = getStreamer();
+  if (!Streamer.IsThumb)
+    return;
+
+  const MCSymbolData &SD = Streamer.getOrCreateSymbolData(Symbol);
+  unsigned Type = MCELF::GetType(SD);
+  if (Type == ELF_STT_Func || Type == ELF_STT_GnuIFunc)
+    Streamer.EmitThumbFunc(Symbol);
+}
+
 void
 ARMTargetELFStreamer::AnnotateTLSDescriptorSequence(const MCSymbolRefExpr *S) {
   getStreamer().EmitFixup(S, FK_Data_4);
 }
+
+void ARMTargetELFStreamer::emitThumbSet(MCSymbol *Symbol, const MCExpr *Value) {
+  if (const MCSymbolRefExpr *SRE = dyn_cast<MCSymbolRefExpr>(Value)) {
+    const MCSymbol &Sym = SRE->getSymbol();
+    if (!Sym.isDefined()) {
+      getStreamer().EmitAssignment(Symbol, Value);
+      return;
+    }
+  }
+
+  getStreamer().EmitThumbFunc(Symbol);
+  getStreamer().EmitAssignment(Symbol, Value);
+}
+
 void ARMTargetELFStreamer::emitInst(uint32_t Inst, char Suffix) {
   getStreamer().emitInst(Inst, Suffix);
 }
@@ -1012,7 +1043,7 @@ inline void ARMELFStreamer::SwitchToEHSection(const char *Prefix,
   }
 
   // Get .ARM.extab or .ARM.exidx section
-  const MCSectionELF *EHSection = NULL;
+  const MCSectionELF *EHSection = nullptr;
   if (const MCSymbol *Group = FnSection.getGroup()) {
     EHSection = getContext().getELFSection(
       EHSecName, Type, Flags | ELF::SHF_GROUP, Kind,
@@ -1049,9 +1080,9 @@ void ARMELFStreamer::EmitFixup(const MCExpr *Expr, MCFixupKind Kind) {
 }
 
 void ARMELFStreamer::Reset() {
-  ExTab = NULL;
-  FnStart = NULL;
-  Personality = NULL;
+  ExTab = nullptr;
+  FnStart = nullptr;
+  Personality = nullptr;
   PersonalityIndex = ARM::EHABI::NUM_PERSONALITY_INDEX;
   FPReg = ARM::SP;
   FPOffset = 0;
@@ -1065,7 +1096,7 @@ void ARMELFStreamer::Reset() {
 }
 
 void ARMELFStreamer::emitFnStart() {
-  assert(FnStart == 0);
+  assert(FnStart == nullptr);
   FnStart = getContext().CreateTempSymbol();
   EmitLabel(FnStart);
 }
@@ -1104,11 +1135,14 @@ void ARMELFStreamer::emitFnEnd() {
     // the second word of exception index table entry.  The size of the unwind
     // opcodes should always be 4 bytes.
     assert(PersonalityIndex == ARM::EHABI::AEABI_UNWIND_CPP_PR0 &&
-           "Compact model must use __aeabi_cpp_unwind_pr0 as personality");
+           "Compact model must use __aeabi_unwind_cpp_pr0 as personality");
     assert(Opcodes.size() == 4u &&
-           "Unwind opcode size for __aeabi_cpp_unwind_pr0 must be equal to 4");
-    EmitBytes(StringRef(reinterpret_cast<const char*>(Opcodes.data()),
-                        Opcodes.size()));
+           "Unwind opcode size for __aeabi_unwind_cpp_pr0 must be equal to 4");
+    uint64_t Intval = Opcodes[0] |
+                      Opcodes[1] << 8 |
+                      Opcodes[2] << 16 |
+                      Opcodes[3] << 24;
+    EmitIntValue(Intval, Opcodes.size());
   }
 
   // Switch to the section containing FnStart
@@ -1127,7 +1161,7 @@ void ARMELFStreamer::EmitPersonalityFixup(StringRef Name) {
   const MCSymbolRefExpr *PersonalityRef = MCSymbolRefExpr::Create(
       PersonalitySym, MCSymbolRefExpr::VK_ARM_NONE, getContext());
 
-  AddValueSymbols(PersonalityRef);
+  visitUsedExpr(*PersonalityRef);
   MCDataFragment *DF = getOrCreateDataFragment();
   DF->getFixups().push_back(MCFixup::Create(DF->getContents().size(),
                                             PersonalityRef,
@@ -1180,8 +1214,15 @@ void ARMELFStreamer::FlushUnwindOpcodes(bool NoHandlerData) {
   }
 
   // Emit unwind opcodes
-  EmitBytes(StringRef(reinterpret_cast<const char *>(Opcodes.data()),
-                      Opcodes.size()));
+  assert((Opcodes.size() % 4) == 0 &&
+         "Unwind opcode size for __aeabi_cpp_unwind_pr0 must be multiple of 4");
+  for (unsigned I = 0; I != Opcodes.size(); I += 4) {
+    uint64_t Intval = Opcodes[I] |
+                      Opcodes[I + 1] << 8 |
+                      Opcodes[I + 2] << 16 |
+                      Opcodes[I + 3] << 24;
+    EmitIntValue(Intval, 4);
+  }
 
   // According to ARM EHABI section 9.2, if the __aeabi_unwind_cpp_pr1() or
   // __aeabi_unwind_cpp_pr2() is used, then the handler data must be emitted
@@ -1283,14 +1324,18 @@ void ARMELFStreamer::emitUnwindRaw(int64_t Offset,
 namespace llvm {
 
 MCStreamer *createMCAsmStreamer(MCContext &Ctx, formatted_raw_ostream &OS,
-                                bool isVerboseAsm, bool useCFI,
-                                bool useDwarfDirectory,
+                                bool isVerboseAsm, bool useDwarfDirectory,
                                 MCInstPrinter *InstPrint, MCCodeEmitter *CE,
                                 MCAsmBackend *TAB, bool ShowInst) {
-  MCStreamer *S =
-      llvm::createAsmStreamer(Ctx, OS, isVerboseAsm, useCFI, useDwarfDirectory,
-                              InstPrint, CE, TAB, ShowInst);
+  MCStreamer *S = llvm::createAsmStreamer(
+      Ctx, OS, isVerboseAsm, useDwarfDirectory, InstPrint, CE, TAB, ShowInst);
   new ARMTargetAsmStreamer(*S, OS, *InstPrint, isVerboseAsm);
+  return S;
+}
+
+MCStreamer *createARMNullStreamer(MCContext &Ctx) {
+  MCStreamer *S = llvm::createNullStreamer(Ctx);
+  new ARMTargetStreamer(*S);
   return S;
 }
 

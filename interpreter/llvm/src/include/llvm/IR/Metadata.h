@@ -17,8 +17,10 @@
 #define LLVM_IR_METADATA_H
 
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/FoldingSet.h"
 #include "llvm/ADT/ilist_node.h"
+#include "llvm/ADT/iterator_range.h"
 #include "llvm/IR/Value.h"
 
 namespace llvm {
@@ -28,7 +30,7 @@ template<typename ValueSubClass, typename ItemParentClass>
   class SymbolTableListTraits;
 
 
-enum LLVMConstants LLVM_ENUM_INT_TYPE(uint32_t) {
+enum LLVMConstants : uint32_t {
   DEBUG_METADATA_VERSION = 1  // Current debug info version number.
 };
 
@@ -65,6 +67,57 @@ public:
   }
 };
 
+/// AAMDNodes - A collection of metadata nodes that might be associated with a
+/// memory access used by the alias-analysis infrastructure.
+struct AAMDNodes {
+  AAMDNodes(MDNode *T = nullptr, MDNode *S = nullptr, MDNode *N = nullptr)
+    : TBAA(T), Scope(S), NoAlias(N) {}
+
+  bool operator == (const AAMDNodes &A) const {
+    return equals(A);
+  }
+
+  bool operator != (const AAMDNodes &A) const {
+    return !equals(A);
+  }
+
+  operator bool() const {
+    return TBAA || Scope || NoAlias;
+  }
+
+  /// TBAA - The tag for type-based alias analysis.
+  MDNode *TBAA;
+
+  /// Scope - The tag for alias scope specification (used with noalias).
+  MDNode *Scope;
+
+  /// NoAlias - The tag specifying the noalias scope.
+  MDNode *NoAlias;
+
+protected:
+  bool equals(const AAMDNodes &A) const {
+    return TBAA == A.TBAA && Scope == A.Scope && NoAlias == A.NoAlias;
+  }
+};
+
+// Specialize DenseMapInfo for AAMDNodes.
+template<>
+struct DenseMapInfo<AAMDNodes> {
+  static inline AAMDNodes getEmptyKey() {
+    return AAMDNodes(DenseMapInfo<MDNode *>::getEmptyKey(), 0, 0);
+  }
+  static inline AAMDNodes getTombstoneKey() {
+    return AAMDNodes(DenseMapInfo<MDNode *>::getTombstoneKey(), 0, 0);
+  }
+  static unsigned getHashValue(const AAMDNodes &Val) {
+    return DenseMapInfo<MDNode *>::getHashValue(Val.TBAA) ^
+           DenseMapInfo<MDNode *>::getHashValue(Val.Scope) ^
+           DenseMapInfo<MDNode *>::getHashValue(Val.NoAlias);
+  }
+  static bool isEqual(const AAMDNodes &LHS, const AAMDNodes &RHS) {
+    return LHS == RHS;
+  }
+};
 
 class MDNodeOperand;
 
@@ -169,7 +222,10 @@ public:
   bool isTBAAVtableAccess() const;
 
   /// Methods for metadata merging.
+  static MDNode *concatenate(MDNode *A, MDNode *B);
+  static MDNode *intersect(MDNode *A, MDNode *B);
   static MDNode *getMostGenericTBAA(MDNode *A, MDNode *B);
+  static AAMDNodes getMostGenericAA(const AAMDNodes &A, const AAMDNodes &B);
   static MDNode *getMostGenericFPMath(MDNode *A, MDNode *B);
   static MDNode *getMostGenericRange(MDNode *A, MDNode *B);
 private:
@@ -207,6 +263,42 @@ class NamedMDNode : public ilist_node<NamedMDNode> {
 
   explicit NamedMDNode(const Twine &N);
 
+  template<class T1, class T2>
+  class op_iterator_impl :
+      public std::iterator<std::bidirectional_iterator_tag, T2> {
+    const NamedMDNode *Node;
+    unsigned Idx;
+    op_iterator_impl(const NamedMDNode *N, unsigned i) : Node(N), Idx(i) { }
+
+    friend class NamedMDNode;
+
+  public:
+    op_iterator_impl() : Node(nullptr), Idx(0) { }
+
+    bool operator==(const op_iterator_impl &o) const { return Idx == o.Idx; }
+    bool operator!=(const op_iterator_impl &o) const { return Idx != o.Idx; }
+    op_iterator_impl &operator++() {
+      ++Idx;
+      return *this;
+    }
+    op_iterator_impl operator++(int) {
+      op_iterator_impl tmp(*this);
+      operator++();
+      return tmp;
+    }
+    op_iterator_impl &operator--() {
+      --Idx;
+      return *this;
+    }
+    op_iterator_impl operator--(int) {
+      op_iterator_impl tmp(*this);
+      operator--();
+      return tmp;
+    }
+
+    T1 operator*() const { return Node->getOperand(Idx); }
+  };
+
 public:
   /// eraseFromParent - Drop all references and remove the node from parent
   /// module.
@@ -235,10 +327,28 @@ public:
   StringRef getName() const;
 
   /// print - Implement operator<< on NamedMDNode.
-  void print(raw_ostream &ROS, AssemblyAnnotationWriter *AAW = 0) const;
+  void print(raw_ostream &ROS) const;
 
   /// dump() - Allow printing of NamedMDNodes from the debugger.
   void dump() const;
+
+  // ---------------------------------------------------------------------------
+  // Operand Iterator interface...
+  //
+  typedef op_iterator_impl<MDNode*, MDNode> op_iterator;
+  op_iterator op_begin() { return op_iterator(this, 0); }
+  op_iterator op_end()   { return op_iterator(this, getNumOperands()); }
+
+  typedef op_iterator_impl<const MDNode*, MDNode> const_op_iterator;
+  const_op_iterator op_begin() const { return const_op_iterator(this, 0); }
+  const_op_iterator op_end()   const { return const_op_iterator(this, getNumOperands()); }
+
+  inline iterator_range<op_iterator>  operands() {
+    return iterator_range<op_iterator>(op_begin(), op_end());
+  }
+  inline iterator_range<const_op_iterator> operands() const {
+    return iterator_range<const_op_iterator>(op_begin(), op_end());
+  }
 };
 
 } // end llvm namespace

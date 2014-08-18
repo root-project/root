@@ -65,7 +65,7 @@ class SpillPlacement  : public MachineFunctionPass {
 public:
   static char ID; // Pass identification, replacement for typeid.
 
-  SpillPlacement() : MachineFunctionPass(ID), nodes(0) {}
+  SpillPlacement() : MachineFunctionPass(ID), nodes(nullptr) {}
   ~SpillPlacement() { releaseMemory(); }
 
   /// BorderConstraint - A basic block has separate constraints for entry and
@@ -147,9 +147,9 @@ public:
   }
 
 private:
-  virtual bool runOnMachineFunction(MachineFunction&);
-  virtual void getAnalysisUsage(AnalysisUsage&) const;
-  virtual void releaseMemory();
+  bool runOnMachineFunction(MachineFunction&) override;
+  void getAnalysisUsage(AnalysisUsage&) const override;
+  void releaseMemory() override;
 
   void activate(unsigned);
 };

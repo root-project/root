@@ -170,6 +170,9 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
   if(CMAKE_ROOTTEST_NOROOTMAP)
     set(rootmapname )
     set(rootmapopts )
+  elseif(DEFINED CMAKE_ROOTTEST_NOROOTMAP)  # Follow the roottest dictionary library naming
+    set(rootmapname ${dictionary}.rootmap)
+    set(rootmapopts --rootmap=${rootmapname} --rootmap-lib=${libprefix}${dictionary}_dictrflx)
   else()
     set(rootmapname ${dictionary}Dict.rootmap)
     set(rootmapopts --rootmap=${rootmapname} --rootmap-lib=${libprefix}${dictionary}Dict)
@@ -361,10 +364,13 @@ endfunction()
 #---ROOT_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT] LIBRARIES library1 library2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_LINKER_LIBRARY library)
-  CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT" "TYPE" "LIBRARIES;DEPENDENCIES"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT;TEST" "TYPE" "LIBRARIES;DEPENDENCIES"  ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
   if(NOT ARG_TYPE)
     set(ARG_TYPE SHARED)
+  endif()
+  if(ARG_TEST) # we are building a test, so add EXCLUDE_FROM_ALL
+    set(_all EXCLUDE_FROM_ALL)
   endif()
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
     include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
@@ -401,7 +407,7 @@ function(ROOT_LINKER_LIBRARY library)
       endforeach()
     endif()
     #---create a shared library with the .def file------------------------
-    add_library(${library} SHARED ${lib_srcs})
+    add_library(${library} ${_all} SHARED ${lib_srcs})
     target_link_libraries(${library} ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
     set_target_properties(${library} PROPERTIES ${ROOT_LIBRARY_PROPERTIES} LINK_FLAGS -DEF:${library}.def)
     #---set the .def file as generated------------------------------------
@@ -412,7 +418,7 @@ function(ROOT_LINKER_LIBRARY library)
                        ARGS -o ${library}.def ${libprefix}${library} ${lib_objs}
                        DEPENDS bindexplib )
   else()
-    add_library( ${library} ${ARG_TYPE} ${lib_srcs})
+    add_library( ${library} ${_all} ${ARG_TYPE} ${lib_srcs})
     if(ARG_TYPE STREQUAL SHARED)
       set_target_properties(${library} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
     endif()
@@ -429,6 +435,7 @@ function(ROOT_LINKER_LIBRARY library)
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
   set_target_properties(${library} PROPERTIES LINK_INTERFACE_LIBRARIES "${ARG_DEPENDENCIES}")
   #----Installation details-------------------------------------------------------
+  if(NOT ARG_TEST)
   if(ARG_CMAKENOEXPORT)
     install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
                                LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -458,6 +465,7 @@ function(ROOT_LINKER_LIBRARY library)
               DESTINATION ${CMAKE_INSTALL_BINDIR}
               COMPONENT libraries)
     endif()
+  endif()
   endif()
 endfunction()
 
@@ -709,7 +717,7 @@ endmacro()
 function(ROOT_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR"
                              "TIMEOUT;BUILD;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC"
-                             "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;CMPOUTPUT;FAILREGEX;LABELS"
+                             "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;OUTREF;ERRREF;FAILREGEX;LABELS"
                             ${ARGN})
 
   #- Handle COMMAND argument
@@ -759,8 +767,12 @@ function(ROOT_ADD_TEST test)
     set(_command ${_command} -DOUT=${ARG_OUTPUT})
   endif()
 
-  if(ARG_CMPOUTPUT)
-    set(_command ${_command} -DCMPOUTPUT=${ARG_CMPOUTPUT})
+  if(ARG_OUTREF)
+    set(_command ${_command} -DOUTREF=${ARG_OUTREF})
+  endif()
+
+  if(ARG_ERRREF)
+    set(_command ${_command} -DERRREF=${ARG_ERRREF})
   endif()
 
   if(ARG_ERROR)

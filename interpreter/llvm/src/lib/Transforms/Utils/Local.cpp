@@ -20,12 +20,14 @@
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/MemoryBuiltins.h"
 #include "llvm/Analysis/ValueTracking.h"
-#include "llvm/DIBuilder.h"
-#include "llvm/DebugInfo.h"
+#include "llvm/IR/CFG.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/DIBuilder.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Dominators.h"
+#include "llvm/IR/GetElementPtrTypeIterator.h"
 #include "llvm/IR/GlobalAlias.h"
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/IRBuilder.h"
@@ -35,13 +37,13 @@
 #include "llvm/IR/MDBuilder.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Operator.h"
-#include "llvm/Support/CFG.h"
+#include "llvm/IR/ValueHandle.h"
 #include "llvm/Support/Debug.h"
-#include "llvm/Support/GetElementPtrTypeIterator.h"
 #include "llvm/Support/MathExtras.h"
-#include "llvm/Support/ValueHandle.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
+
+#define DEBUG_TYPE "local"
 
 STATISTIC(NumRemoved, "Number of unreachable basic blocks removed");
 
@@ -159,7 +161,7 @@ bool llvm::ConstantFoldTerminator(BasicBlock *BB, bool DeleteDeadConditions,
       // Otherwise, check to see if the switch only branches to one destination.
       // We do this by reseting "TheOnlyDest" to null when we find two non-equal
       // destinations.
-      if (i.getCaseSuccessor() != TheOnlyDest) TheOnlyDest = 0;
+      if (i.getCaseSuccessor() != TheOnlyDest) TheOnlyDest = nullptr;
     }
 
     if (CI && !TheOnlyDest) {
@@ -180,7 +182,7 @@ bool llvm::ConstantFoldTerminator(BasicBlock *BB, bool DeleteDeadConditions,
         // Found case matching a constant operand?
         BasicBlock *Succ = SI->getSuccessor(i);
         if (Succ == TheOnlyDest)
-          TheOnlyDest = 0;  // Don't modify the first branch to TheOnlyDest
+          TheOnlyDest = nullptr; // Don't modify the first branch to TheOnlyDest
         else
           Succ->removePredecessor(BB);
       }
@@ -233,7 +235,7 @@ bool llvm::ConstantFoldTerminator(BasicBlock *BB, bool DeleteDeadConditions,
 
       for (unsigned i = 0, e = IBI->getNumDestinations(); i != e; ++i) {
         if (IBI->getDestination(i) == TheOnlyDest)
-          TheOnlyDest = 0;
+          TheOnlyDest = nullptr;
         else
           IBI->getDestination(i)->removePredecessor(IBI->getParent());
       }
@@ -299,6 +301,14 @@ bool llvm::isInstructionTriviallyDead(Instruction *I,
     if (II->getIntrinsicID() == Intrinsic::lifetime_start ||
         II->getIntrinsicID() == Intrinsic::lifetime_end)
       return isa<UndefValue>(II->getArgOperand(1));
+
+    // Assumptions are dead if their condition is trivially true.
+    if (II->getIntrinsicID() == Intrinsic::assume) {
+      if (ConstantInt *Cond = dyn_cast<ConstantInt>(II->getArgOperand(0)))
+        return !Cond->isZero();
+
+      return false;
+    }
   }
 
   if (isAllocLikeFn(I, TLI)) return true;
@@ -331,7 +341,7 @@ llvm::RecursivelyDeleteTriviallyDeadInstructions(Value *V,
     // dead as we go.
     for (unsigned i = 0, e = I->getNumOperands(); i != e; ++i) {
       Value *OpV = I->getOperand(i);
-      I->setOperand(i, 0);
+      I->setOperand(i, nullptr);
 
       if (!OpV->use_empty()) continue;
 
@@ -354,8 +364,8 @@ llvm::RecursivelyDeleteTriviallyDeadInstructions(Value *V,
 /// true when there are no uses or multiple uses that all refer to the same
 /// value.
 static bool areAllUsesEqual(Instruction *I) {
-  Value::use_iterator UI = I->use_begin();
-  Value::use_iterator UE = I->use_end();
+  Value::user_iterator UI = I->user_begin();
+  Value::user_iterator UE = I->user_end();
   if (UI == UE)
     return true;
 
@@ -376,7 +386,7 @@ bool llvm::RecursivelyDeleteDeadPHINode(PHINode *PN,
                                         const TargetLibraryInfo *TLI) {
   SmallPtrSet<Instruction*, 4> Visited;
   for (Instruction *I = PN; areAllUsesEqual(I) && !I->mayHaveSideEffects();
-       I = cast<Instruction>(*I->use_begin())) {
+       I = cast<Instruction>(*I->user_begin())) {
     if (I->use_empty())
       return RecursivelyDeleteTriviallyDeadInstructions(I, TLI);
 
@@ -506,6 +516,11 @@ void llvm::MergeBasicBlockIntoOnlyPred(BasicBlock *DestBB, Pass *P) {
   // Splice all the instructions from PredBB to DestBB.
   PredBB->getTerminator()->eraseFromParent();
   DestBB->getInstList().splice(DestBB->begin(), PredBB->getInstList());
+
+  // If the PredBB is the entry block of the function, move DestBB up to
+  // become the entry block after we erase PredBB.
+  if (PredBB == &DestBB->getParent()->getEntryBlock())
+    DestBB->moveAfter(PredBB);
 
   if (P) {
     if (DominatorTreeWrapperPass *DTWP =
@@ -752,10 +767,9 @@ bool llvm::TryToSimplifyUncondBranchFromEmptyBlock(BasicBlock *BB) {
   if (!Succ->getSinglePredecessor()) {
     BasicBlock::iterator BBI = BB->begin();
     while (isa<PHINode>(*BBI)) {
-      for (Value::use_iterator UI = BBI->use_begin(), E = BBI->use_end();
-           UI != E; ++UI) {
-        if (PHINode* PN = dyn_cast<PHINode>(*UI)) {
-          if (PN->getIncomingBlock(UI) != BB)
+      for (Use &U : BBI->uses()) {
+        if (PHINode* PN = dyn_cast<PHINode>(U.getUser())) {
+          if (PN->getIncomingBlock(U) != BB)
             return false;
         } else {
           return false;
@@ -895,24 +909,26 @@ static unsigned enforceKnownAlignment(Value *V, unsigned Align,
     return PrefAlign;
   }
 
-  if (GlobalValue *GV = dyn_cast<GlobalValue>(V)) {
+  if (auto *GO = dyn_cast<GlobalObject>(V)) {
     // If there is a large requested alignment and we can, bump up the alignment
     // of the global.
-    if (GV->isDeclaration()) return Align;
+    if (GO->isDeclaration())
+      return Align;
     // If the memory we set aside for the global may not be the memory used by
     // the final program then it is impossible for us to reliably enforce the
     // preferred alignment.
-    if (GV->isWeakForLinker()) return Align;
+    if (GO->isWeakForLinker())
+      return Align;
 
-    if (GV->getAlignment() >= PrefAlign)
-      return GV->getAlignment();
+    if (GO->getAlignment() >= PrefAlign)
+      return GO->getAlignment();
     // We can only increase the alignment of the global if it has no alignment
     // specified or if it is not assigned a section.  If it is assigned a
     // section, the global could be densely packed with other objects in the
     // section, increasing the alignment could cause padding issues.
-    if (!GV->hasSection() || GV->getAlignment() == 0)
-      GV->setAlignment(PrefAlign);
-    return GV->getAlignment();
+    if (!GO->hasSection() || GO->getAlignment() == 0)
+      GO->setAlignment(PrefAlign);
+    return GO->getAlignment();
   }
 
   return Align;
@@ -929,7 +945,7 @@ unsigned llvm::getOrEnforceKnownAlignment(Value *V, unsigned PrefAlign,
   unsigned BitWidth = DL ? DL->getPointerTypeSizeInBits(V->getType()) : 64;
 
   APInt KnownZero(BitWidth, 0), KnownOne(BitWidth, 0);
-  ComputeMaskedBits(V, KnownZero, KnownOne, DL);
+  computeKnownBits(V, KnownZero, KnownOne, DL);
   unsigned TrailZ = KnownZero.countTrailingOnes();
 
   // Avoid trouble with ridiculously large TrailZ values, such as
@@ -982,10 +998,10 @@ bool llvm::ConvertDebugDeclareToDebugValue(DbgDeclareInst *DDI,
   if (LdStHasDebugValue(DIVar, SI))
     return true;
 
-  Instruction *DbgVal = NULL;
+  Instruction *DbgVal = nullptr;
   // If an argument is zero extended then use argument directly. The ZExt
   // may be zapped by an optimization pass in future.
-  Argument *ExtendedArg = NULL;
+  Argument *ExtendedArg = nullptr;
   if (ZExtInst *ZExt = dyn_cast<ZExtInst>(SI->getOperand(0)))
     ExtendedArg = dyn_cast<Argument>(ZExt->getOperand(0));
   if (SExtInst *SExt = dyn_cast<SExtInst>(SI->getOperand(0)))
@@ -994,14 +1010,7 @@ bool llvm::ConvertDebugDeclareToDebugValue(DbgDeclareInst *DDI,
     DbgVal = Builder.insertDbgValueIntrinsic(ExtendedArg, 0, DIVar, SI);
   else
     DbgVal = Builder.insertDbgValueIntrinsic(SI->getOperand(0), 0, DIVar, SI);
-
-  // Propagate any debug metadata from the store onto the dbg.value.
-  DebugLoc SIDL = SI->getDebugLoc();
-  if (!SIDL.isUnknown())
-    DbgVal->setDebugLoc(SIDL);
-  // Otherwise propagate debug metadata from dbg.declare.
-  else
-    DbgVal->setDebugLoc(DDI->getDebugLoc());
+  DbgVal->setDebugLoc(DDI->getDebugLoc());
   return true;
 }
 
@@ -1021,15 +1030,14 @@ bool llvm::ConvertDebugDeclareToDebugValue(DbgDeclareInst *DDI,
   Instruction *DbgVal =
     Builder.insertDbgValueIntrinsic(LI->getOperand(0), 0,
                                     DIVar, LI);
-
-  // Propagate any debug metadata from the store onto the dbg.value.
-  DebugLoc LIDL = LI->getDebugLoc();
-  if (!LIDL.isUnknown())
-    DbgVal->setDebugLoc(LIDL);
-  // Otherwise propagate debug metadata from dbg.declare.
-  else
-    DbgVal->setDebugLoc(DDI->getDebugLoc());
+  DbgVal->setDebugLoc(DDI->getDebugLoc());
   return true;
+}
+
+/// Determine whether this alloca is either a VLA or an array.
+static bool isArray(AllocaInst *AI) {
+  return AI->isArrayAllocation() ||
+    AI->getType()->getElementType()->isArrayTy();
 }
 
 /// LowerDbgDeclare - Lowers llvm.dbg.declare intrinsics into appropriate set
@@ -1037,35 +1045,39 @@ bool llvm::ConvertDebugDeclareToDebugValue(DbgDeclareInst *DDI,
 bool llvm::LowerDbgDeclare(Function &F) {
   DIBuilder DIB(*F.getParent());
   SmallVector<DbgDeclareInst *, 4> Dbgs;
-  for (Function::iterator FI = F.begin(), FE = F.end(); FI != FE; ++FI)
-    for (BasicBlock::iterator BI = FI->begin(), BE = FI->end(); BI != BE; ++BI) {
-      if (DbgDeclareInst *DDI = dyn_cast<DbgDeclareInst>(BI))
+  for (auto &FI : F)
+    for (BasicBlock::iterator BI : FI)
+      if (auto DDI = dyn_cast<DbgDeclareInst>(BI))
         Dbgs.push_back(DDI);
-    }
+
   if (Dbgs.empty())
     return false;
 
-  for (SmallVectorImpl<DbgDeclareInst *>::iterator I = Dbgs.begin(),
-         E = Dbgs.end(); I != E; ++I) {
-    DbgDeclareInst *DDI = *I;
+  for (auto &I : Dbgs) {
+    DbgDeclareInst *DDI = I;
     AllocaInst *AI = dyn_cast_or_null<AllocaInst>(DDI->getAddress());
     // If this is an alloca for a scalar variable, insert a dbg.value
     // at each load and store to the alloca and erase the dbg.declare.
-    if (AI && !AI->isArrayAllocation()) {
-
-      // We only remove the dbg.declare intrinsic if all uses are
-      // converted to dbg.value intrinsics.
-      bool RemoveDDI = true;
-      for (Value::use_iterator UI = AI->use_begin(), E = AI->use_end();
-           UI != E; ++UI)
-        if (StoreInst *SI = dyn_cast<StoreInst>(*UI))
+    // The dbg.values allow tracking a variable even if it is not
+    // stored on the stack, while the dbg.declare can only describe
+    // the stack slot (and at a lexical-scope granularity). Later
+    // passes will attempt to elide the stack slot.
+    if (AI && !isArray(AI)) {
+      for (User *U : AI->users())
+        if (StoreInst *SI = dyn_cast<StoreInst>(U))
           ConvertDebugDeclareToDebugValue(DDI, SI, DIB);
-        else if (LoadInst *LI = dyn_cast<LoadInst>(*UI))
+        else if (LoadInst *LI = dyn_cast<LoadInst>(U))
           ConvertDebugDeclareToDebugValue(DDI, LI, DIB);
-        else
-          RemoveDDI = false;
-      if (RemoveDDI)
-        DDI->eraseFromParent();
+        else if (CallInst *CI = dyn_cast<CallInst>(U)) {
+	  // This is a call by-value or some other instruction that
+	  // takes a pointer to the variable. Insert a *value*
+	  // intrinsic that describes the alloca.
+	  auto DbgVal =
+	    DIB.insertDbgValueIntrinsic(AI, 0,
+					DIVariable(DDI->getVariable()), CI);
+	  DbgVal->setDebugLoc(DDI->getDebugLoc());
+	}
+      DDI->eraseFromParent();
     }
   }
   return true;
@@ -1075,12 +1087,11 @@ bool llvm::LowerDbgDeclare(Function &F) {
 /// alloca 'V', if any.
 DbgDeclareInst *llvm::FindAllocaDbgDeclare(Value *V) {
   if (MDNode *DebugNode = MDNode::getIfExists(V->getContext(), V))
-    for (Value::use_iterator UI = DebugNode->use_begin(),
-         E = DebugNode->use_end(); UI != E; ++UI)
-      if (DbgDeclareInst *DDI = dyn_cast<DbgDeclareInst>(*UI))
+    for (User *U : DebugNode->users())
+      if (DbgDeclareInst *DDI = dyn_cast<DbgDeclareInst>(U))
         return DDI;
 
-  return 0;
+  return nullptr;
 }
 
 bool llvm::replaceDbgDeclareForAlloca(AllocaInst *AI, Value *NewAllocaAddress,
@@ -1180,6 +1191,26 @@ static bool markAliveBlocks(BasicBlock *BB,
     // instructions into LLVM unreachable insts.  The instruction combining pass
     // canonicalizes unreachable insts into stores to null or undef.
     for (BasicBlock::iterator BBI = BB->begin(), E = BB->end(); BBI != E;++BBI){
+      // Assumptions that are known to be false are equivalent to unreachable.
+      // Also, if the condition is undefined, then we make the choice most
+      // beneficial to the optimizer, and choose that to also be unreachable.
+      if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(BBI))
+        if (II->getIntrinsicID() == Intrinsic::assume) {
+          bool MakeUnreachable = false;
+          if (isa<UndefValue>(II->getArgOperand(0)))
+            MakeUnreachable = true;
+          else if (ConstantInt *Cond =
+                   dyn_cast<ConstantInt>(II->getArgOperand(0)))
+            MakeUnreachable = Cond->isZero();
+
+          if (MakeUnreachable) { 
+            // Don't insert a call to llvm.trap right before the unreachable.
+            changeToUnreachable(BBI, false);
+            Changed = true;
+            break;
+          }
+        }
+
       if (CallInst *CI = dyn_cast<CallInst>(BBI)) {
         if (CI->doesNotReturn()) {
           // If we found a call to a no-return function, insert an unreachable

@@ -39,8 +39,9 @@ MCAsmInfo::MCAsmInfo() {
   SeparatorString = ";";
   CommentString = "#";
   LabelSuffix = ":";
-  DebugLabelSuffix = ":";
+  UseAssignmentForEHBegin = false;
   PrivateGlobalPrefix = "L";
+  LinkerPrivateGlobalPrefix = "";
   InlineAsmStart = "APP";
   InlineAsmEnd = "NO_APP";
   Code16Directive = ".code16";
@@ -60,8 +61,8 @@ MCAsmInfo::MCAsmInfo() {
   UsesELFSectionDirectiveForBSS = false;
   AlignmentIsInBytes = true;
   TextAlignFillValue = 0;
-  GPRel64Directive = 0;
-  GPRel32Directive = 0;
+  GPRel64Directive = nullptr;
+  GPRel32Directive = nullptr;
   GlobalDirective = "\t.globl\t";
   HasSetDirective = true;
   HasAggressiveSymbolFolding = true;
@@ -71,7 +72,7 @@ MCAsmInfo::MCAsmInfo() {
   HasSingleParameterDotFile = true;
   HasIdentDirective = false;
   HasNoDeadStrip = false;
-  WeakRefDirective = 0;
+  WeakRefDirective = nullptr;
   HasWeakDefDirective = false;
   HasWeakDefCanBeHiddenDirective = false;
   HasLinkOnceDirective = false;
@@ -81,6 +82,7 @@ MCAsmInfo::MCAsmInfo() {
   HasLEB128 = false;
   SupportsDebugInformation = false;
   ExceptionsType = ExceptionHandling::None;
+  WinEHEncodingType = WinEH::EncodingType::ET_Invalid;
   DwarfUsesRelocationsAcrossSections = true;
   DwarfFDESymbolsUseAbsDiff = false;
   DwarfRegNumForCFI = false;
@@ -98,8 +100,10 @@ MCAsmInfo::MCAsmInfo() {
   //   - MCAsmInfoDarwin is handling this case
   // - Generic_GCC toolchains enable the integrated assembler on a per
   //   architecture basis.
-  //   - The target subclasses for AArch64, ARM, and X86  handle these cases
+  //   - The target subclasses for AArch64, ARM, and X86 handle these cases
   UseIntegratedAssembler = false;
+
+  CompressDebugSections = false;
 }
 
 MCAsmInfo::~MCAsmInfo() {

@@ -805,10 +805,10 @@ void TQtPointerGrabber::ActivateGrabbing(bool on)
 #endif
    }
    fIsActive = on;
-   // Make sure the result is correct
-   QWidget *grabber = QWidget::mouseGrabber();
 
-   assert ( !fPointerGrabber->isVisible() || (fIsActive) || (!fIsActive && !grabber) );
+   // Make sure the result is correct
+   assert ( !fPointerGrabber->isVisible() || (fIsActive)
+            || (!fIsActive && !QWidget::mouseGrabber()) );
 }
 //______________________________________________________________________________
 void  TQtPointerGrabber::SetGrabPointer(TQtClientWidget *grabber

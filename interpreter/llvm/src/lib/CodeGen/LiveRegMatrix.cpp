@@ -11,7 +11,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "regalloc"
 #include "llvm/CodeGen/LiveRegMatrix.h"
 #include "RegisterCoalescer.h"
 #include "llvm/ADT/Statistic.h"
@@ -24,6 +23,8 @@
 #include "llvm/Target/TargetRegisterInfo.h"
 
 using namespace llvm;
+
+#define DEBUG_TYPE "regalloc"
 
 STATISTIC(NumAssigned   , "Number of registers assigned");
 STATISTIC(NumUnassigned , "Number of registers unassigned");
@@ -67,7 +68,7 @@ void LiveRegMatrix::releaseMemory() {
     Matrix[i].clear();
     // No need to clear Queries here, since LiveIntervalUnion::Query doesn't
     // have anything important to clear and LiveRegMatrix's runOnFunction()
-    // does a OwningPtr::reset anyways.
+    // does a std::unique_ptr::reset anyways.
   }
 }
 

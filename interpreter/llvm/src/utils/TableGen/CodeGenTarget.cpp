@@ -133,7 +133,7 @@ std::string llvm::getQualifiedName(const Record *R) {
 /// getTarget - Return the current instance of the Target class.
 ///
 CodeGenTarget::CodeGenTarget(RecordKeeper &records)
-  : Records(records), RegBank(0), SchedModels(0) {
+  : Records(records), RegBank(nullptr), SchedModels(nullptr) {
   std::vector<Record*> Targets = Records.getAllDerivedDefinitions("Target");
   if (Targets.size() == 0)
     PrintFatalError("ERROR: No 'Target' subclasses defined!");
@@ -173,7 +173,8 @@ Record *CodeGenTarget::getInstructionSet() const {
 Record *CodeGenTarget::getAsmParser() const {
   std::vector<Record*> LI = TargetRec->getValueAsListOfDefs("AssemblyParsers");
   if (AsmParserNum >= LI.size())
-    PrintFatalError("Target does not have an AsmParser #" + utostr(AsmParserNum) + "!");
+    PrintFatalError("Target does not have an AsmParser #" +
+                    Twine(AsmParserNum) + "!");
   return LI[AsmParserNum];
 }
 
@@ -184,7 +185,8 @@ Record *CodeGenTarget::getAsmParserVariant(unsigned i) const {
   std::vector<Record*> LI =
     TargetRec->getValueAsListOfDefs("AssemblyParserVariants");
   if (i >= LI.size())
-    PrintFatalError("Target does not have an AsmParserVariant #" + utostr(i) + "!");
+    PrintFatalError("Target does not have an AsmParserVariant #" + Twine(i) +
+                    "!");
   return LI[i];
 }
 
@@ -202,7 +204,8 @@ unsigned CodeGenTarget::getAsmParserVariantCount() const {
 Record *CodeGenTarget::getAsmWriter() const {
   std::vector<Record*> LI = TargetRec->getValueAsListOfDefs("AssemblyWriters");
   if (AsmWriterNum >= LI.size())
-    PrintFatalError("Target does not have an AsmWriter #" + utostr(AsmWriterNum) + "!");
+    PrintFatalError("Target does not have an AsmWriter #" +
+                    Twine(AsmWriterNum) + "!");
   return LI[AsmWriterNum];
 }
 
@@ -223,7 +226,7 @@ const CodeGenRegister *CodeGenTarget::getRegisterByName(StringRef Name) const {
   const StringMap<CodeGenRegister*> &Regs = getRegBank().getRegistersByName();
   StringMap<CodeGenRegister*>::const_iterator I = Regs.find(Name);
   if (I == Regs.end())
-    return 0;
+    return nullptr;
   return I->second;
 }
 
@@ -284,20 +287,9 @@ GetInstByName(const char *Name,
 
   DenseMap<const Record*, CodeGenInstruction*>::const_iterator
     I = Insts.find(Rec);
-  if (Rec == 0 || I == Insts.end())
-    PrintFatalError(std::string("Could not find '") + Name + "' instruction!");
+  if (!Rec || I == Insts.end())
+    PrintFatalError(Twine("Could not find '") + Name + "' instruction!");
   return I->second;
-}
-
-namespace {
-/// SortInstByName - Sorting predicate to sort instructions by name.
-///
-struct SortInstByName {
-  bool operator()(const CodeGenInstruction *Rec1,
-                  const CodeGenInstruction *Rec2) const {
-    return Rec1->TheDef->getName() < Rec2->TheDef->getName();
-  }
-};
 }
 
 /// \brief Return all of the instructions defined by the target, ordered by
@@ -305,27 +297,12 @@ struct SortInstByName {
 void CodeGenTarget::ComputeInstrsByEnum() const {
   // The ordering here must match the ordering in TargetOpcodes.h.
   static const char *const FixedInstrs[] = {
-    "PHI",
-    "INLINEASM",
-    "PROLOG_LABEL",
-    "EH_LABEL",
-    "GC_LABEL",
-    "KILL",
-    "EXTRACT_SUBREG",
-    "INSERT_SUBREG",
-    "IMPLICIT_DEF",
-    "SUBREG_TO_REG",
-    "COPY_TO_REGCLASS",
-    "DBG_VALUE",
-    "REG_SEQUENCE",
-    "COPY",
-    "BUNDLE",
-    "LIFETIME_START",
-    "LIFETIME_END",
-    "STACKMAP",
-    "PATCHPOINT",
-    0
-  };
+      "PHI",          "INLINEASM",     "CFI_INSTRUCTION",  "EH_LABEL",
+      "GC_LABEL",     "KILL",          "EXTRACT_SUBREG",   "INSERT_SUBREG",
+      "IMPLICIT_DEF", "SUBREG_TO_REG", "COPY_TO_REGCLASS", "DBG_VALUE",
+      "REG_SEQUENCE", "COPY",          "BUNDLE",           "LIFETIME_START",
+      "LIFETIME_END", "STACKMAP",      "PATCHPOINT",       "LOAD_STACK_GUARD",
+      nullptr};
   const DenseMap<const Record*, CodeGenInstruction*> &Insts = getInstructions();
   for (const char *const *p = FixedInstrs; *p; ++p) {
     const CodeGenInstruction *Instr = GetInstByName(*p, Insts, Records);
@@ -346,8 +323,10 @@ void CodeGenTarget::ComputeInstrsByEnum() const {
 
   // All of the instructions are now in random order based on the map iteration.
   // Sort them by name.
-  std::sort(InstrsByEnum.begin()+EndOfPredefines, InstrsByEnum.end(),
-            SortInstByName());
+  std::sort(InstrsByEnum.begin() + EndOfPredefines, InstrsByEnum.end(),
+            [](const CodeGenInstruction *Rec1, const CodeGenInstruction *Rec2) {
+    return Rec1->TheDef->getName() < Rec2->TheDef->getName();
+  });
 }
 
 
@@ -471,6 +450,7 @@ CodeGenIntrinsic::CodeGenIntrinsic(Record *R) {
   isCommutative = false;
   canThrow = false;
   isNoReturn = false;
+  isNoDuplicate = false;
 
   if (DefName.size() <= 4 ||
       std::string(DefName.begin(), DefName.begin() + 4) != "int_")
@@ -480,6 +460,8 @@ CodeGenIntrinsic::CodeGenIntrinsic(Record *R) {
 
   if (R->getValue("GCCBuiltinName"))  // Ignore a missing GCCBuiltinName field.
     GCCBuiltinName = R->getValueAsString("GCCBuiltinName");
+  if (R->getValue("MSBuiltinName"))   // Ignore a missing MSBuiltinName field.
+    MSBuiltinName = R->getValueAsString("MSBuiltinName");
 
   TargetPrefix = R->getValueAsString("TargetPrefix");
   Name = R->getValueAsString("LLVMName");
@@ -522,8 +504,8 @@ CodeGenIntrinsic::CodeGenIntrinsic(Record *R) {
       // It only makes sense to use the extended and truncated vector element
       // variants with iAny types; otherwise, if the intrinsic is not
       // overloaded, all the types can be specified directly.
-      assert(((!TyEl->isSubClassOf("LLVMExtendedElementVectorType") &&
-               !TyEl->isSubClassOf("LLVMTruncatedElementVectorType")) ||
+      assert(((!TyEl->isSubClassOf("LLVMExtendedType") &&
+               !TyEl->isSubClassOf("LLVMTruncatedType")) ||
               VT == MVT::iAny || VT == MVT::vAny) &&
              "Expected iAny or vAny type");
     } else {
@@ -556,8 +538,8 @@ CodeGenIntrinsic::CodeGenIntrinsic(Record *R) {
       // It only makes sense to use the extended and truncated vector element
       // variants with iAny types; otherwise, if the intrinsic is not
       // overloaded, all the types can be specified directly.
-      assert(((!TyEl->isSubClassOf("LLVMExtendedElementVectorType") &&
-               !TyEl->isSubClassOf("LLVMTruncatedElementVectorType")) ||
+      assert(((!TyEl->isSubClassOf("LLVMExtendedType") &&
+               !TyEl->isSubClassOf("LLVMTruncatedType")) ||
               VT == MVT::iAny || VT == MVT::vAny) &&
              "Expected iAny or vAny type");
     } else
@@ -595,6 +577,8 @@ CodeGenIntrinsic::CodeGenIntrinsic(Record *R) {
       isCommutative = true;
     else if (Property->getName() == "Throws")
       canThrow = true;
+    else if (Property->getName() == "IntrNoDuplicate")
+      isNoDuplicate = true;
     else if (Property->getName() == "IntrNoReturn")
       isNoReturn = true;
     else if (Property->isSubClassOf("NoCapture")) {

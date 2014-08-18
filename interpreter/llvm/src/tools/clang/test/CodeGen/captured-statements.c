@@ -48,14 +48,28 @@ void test2(int x) {
 // CHECK-2:   %i = alloca i32
 
 // Capture array
-void test3() {
+void test3(int size) {
   int arr[] = {1, 2, 3, 4, 5};
+  int vla_arr[size];
   #pragma clang __debug captured
   {
-    arr[2] = arr[1];
+    arr[2] = vla_arr[size - 1];
   }
   // CHECK-3: test3
   // CHECK-3: alloca [5 x i32]
+  // CHECK-3: call void @__captured_stmt
+}
+
+// Capture VLA array
+void test4(int size, int vla_arr[size]) {
+  #pragma clang __debug captured
+  {
+    vla_arr[0] = 1;
+  }
+  // CHECK-3: test4([[INT:i.+]] {{.*}}[[SIZE:%.+]], [[INT]]*
+  // CHECK-3: store [[INT]] {{.*}}[[SIZE]], [[INT]]* [[SIZE_ADDR:%.+]],
+  // CHECK-3: [[REF:%.+]] = getelementptr inbounds
+  // CHECK-3: store [[INT]]* [[SIZE_ADDR]], [[INT]]** [[REF]]
   // CHECK-3: call void @__captured_stmt
 }
 

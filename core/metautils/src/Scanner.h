@@ -65,6 +65,7 @@ public:
    typedef std::vector<clang::TypedefNameDecl*> TypedefColl_t;
    typedef std::vector<clang::FunctionDecl*> FunctionColl_t;
    typedef std::vector<clang::VarDecl*> VariableColl_t;
+   typedef std::vector<clang::EnumDecl*> EnumColl_t;
    typedef void (*DeclCallback)(const char *type);
 
    enum class EScanType : char {kNormal, kTwoPasses, kOnePCM};
@@ -119,6 +120,7 @@ public:
    TypedefColl_t   fSelectedTypedefs;
    FunctionColl_t  fSelectedFunctions;
    VariableColl_t  fSelectedVariables;
+   EnumColl_t      fSelectedEnums;
 
    virtual ~ RScanner ();
 
@@ -172,7 +174,7 @@ private:
    static int fgBadClassCounter;
    ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
    SelectionRules &fSelectionRules;
-   std::set<clang::RecordDecl*> fselectedRecordDecls; // Set for O(logN), unordered_set will be better
+   std::set<clang::RecordDecl*> fselectedRecordDecls; // Set for O(logN)
    EScanType fScanType; // Differentiate among different kind of scans
    bool fFirstPass; // This flag allows to run twice, for example in presence of dict selection and recursive template list manipulations.
 

@@ -35,8 +35,9 @@ NamedDecl *Parser::ParseCXXInlineMethodDef(AccessSpecifier AS,
          "Current token not a '{', ':', '=', or 'try'!");
 
   MultiTemplateParamsArg TemplateParams(
-          TemplateInfo.TemplateParams ? TemplateInfo.TemplateParams->data() : 0,
-          TemplateInfo.TemplateParams ? TemplateInfo.TemplateParams->size() : 0);
+      TemplateInfo.TemplateParams ? TemplateInfo.TemplateParams->data()
+                                  : nullptr,
+      TemplateInfo.TemplateParams ? TemplateInfo.TemplateParams->size() : 0);
 
   NamedDecl *FnD;
   D.setFunctionDefinitionKind(DefinitionKind);
@@ -45,7 +46,7 @@ NamedDecl *Parser::ParseCXXInlineMethodDef(AccessSpecifier AS,
                                           TemplateParams);
   else {
     FnD = Actions.ActOnCXXMemberDeclarator(getCurScope(), AS, D,
-                                           TemplateParams, 0,
+                                           TemplateParams, nullptr,
                                            VS, ICIS_NoInit);
     if (FnD) {
       Actions.ProcessDeclAttributeList(getCurScope(), FnD, AccessAttrs);
@@ -65,7 +66,7 @@ NamedDecl *Parser::ParseCXXInlineMethodDef(AccessSpecifier AS,
   if (TryConsumeToken(tok::equal)) {
     if (!FnD) {
       SkipUntil(tok::semi);
-      return 0;
+      return nullptr;
     }
 
     bool Delete = false;
@@ -262,7 +263,8 @@ void Parser::LateParsedMemberInitializer::ParseLexedMemberInitializers() {
 /// delayed (such as default arguments) and parse them.
 void Parser::ParseLexedMethodDeclarations(ParsingClass &Class) {
   bool HasTemplateScope = !Class.TopLevelClass && Class.TemplateScope;
-  ParseScope ClassTemplateScope(this, Scope::TemplateParamScope, HasTemplateScope);
+  ParseScope ClassTemplateScope(this, Scope::TemplateParamScope,
+                                HasTemplateScope);
   TemplateParameterDepthRAII CurTemplateDepthTracker(TemplateParameterDepth);
   if (HasTemplateScope) {
     Actions.ActOnReenterTemplateScope(getCurScope(), Class.TagOrTemplate);
@@ -275,14 +277,16 @@ void Parser::ParseLexedMethodDeclarations(ParsingClass &Class) {
   ParseScope ClassScope(this, Scope::ClassScope|Scope::DeclScope,
                         HasClassScope);
   if (HasClassScope)
-    Actions.ActOnStartDelayedMemberDeclarations(getCurScope(), Class.TagOrTemplate);
+    Actions.ActOnStartDelayedMemberDeclarations(getCurScope(),
+                                                Class.TagOrTemplate);
 
   for (size_t i = 0; i < Class.LateParsedDeclarations.size(); ++i) {
     Class.LateParsedDeclarations[i]->ParseLexedMethodDeclarations();
   }
 
   if (HasClassScope)
-    Actions.ActOnFinishDelayedMemberDeclarations(getCurScope(), Class.TagOrTemplate);
+    Actions.ActOnFinishDelayedMemberDeclarations(getCurScope(),
+                                                 Class.TagOrTemplate);
 }
 
 void Parser::ParseLexedMethodDeclaration(LateParsedMethodDeclaration &LM) {
@@ -302,7 +306,7 @@ void Parser::ParseLexedMethodDeclaration(LateParsedMethodDeclaration &LM) {
                             Scope::FunctionDeclarationScope | Scope::DeclScope);
   for (unsigned I = 0, N = LM.DefaultArgs.size(); I != N; ++I) {
     // Introduce the parameter into scope.
-    Actions.ActOnDelayedCXXMethodParameter(getCurScope(), 
+    Actions.ActOnDelayedCXXMethodParameter(getCurScope(),
                                            LM.DefaultArgs[I].Param);
 
     if (CachedTokens *Toks = LM.DefaultArgs[I].Toks) {
@@ -333,7 +337,8 @@ void Parser::ParseLexedMethodDeclaration(LateParsedMethodDeclaration &LM) {
       } else
         DefArgResult = ParseAssignmentExpression();
       if (DefArgResult.isInvalid())
-        Actions.ActOnParamDefaultArgumentError(LM.DefaultArgs[I].Param);
+        Actions.ActOnParamDefaultArgumentError(LM.DefaultArgs[I].Param,
+                                               EqualLoc);
       else {
         if (!TryConsumeToken(tok::cxx_defaultarg_end)) {
           // The last two tokens are the terminator and the saved value of
@@ -345,7 +350,7 @@ void Parser::ParseLexedMethodDeclaration(LateParsedMethodDeclaration &LM) {
                            (*Toks)[Toks->size() - 3].getLocation());
         }
         Actions.ActOnParamDefaultArgument(LM.DefaultArgs[I].Param, EqualLoc,
-                                          DefArgResult.take());
+                                          DefArgResult.get());
       }
 
       assert(!PP.getSourceManager().isBeforeInTranslationUnit(origLoc,
@@ -357,7 +362,7 @@ void Parser::ParseLexedMethodDeclaration(LateParsedMethodDeclaration &LM) {
         ConsumeAnyToken();
 
       delete Toks;
-      LM.DefaultArgs[I].Toks = 0;
+      LM.DefaultArgs[I].Toks = nullptr;
     }
   }
 
@@ -431,7 +436,7 @@ void Parser::ParseLexedMethodDef(LexedMethod &LM) {
     // Error recovery.
     if (!Tok.is(tok::l_brace)) {
       FnScope.Exit();
-      Actions.ActOnFinishFunctionBody(LM.D, 0);
+      Actions.ActOnFinishFunctionBody(LM.D, nullptr);
       while (Tok.getLocation() != origLoc && Tok.isNot(tok::eof))
         ConsumeAnyToken();
       return;
@@ -463,6 +468,9 @@ void Parser::ParseLexedMethodDef(LexedMethod &LM) {
       while (Tok.getLocation() != origLoc && Tok.isNot(tok::eof))
         ConsumeAnyToken();
   }
+
+  if (CXXMethodDecl *MD = dyn_cast_or_null<CXXMethodDecl>(LM.D))
+    Actions.ActOnFinishInlineMethodDef(MD);
 }
 
 /// ParseLexedMemberInitializers - We finished parsing the member specification
@@ -528,7 +536,7 @@ void Parser::ParseLexedMemberInitializer(LateParsedMemberInitializer &MI) {
                                               EqualLoc);
 
   Actions.ActOnFinishCXXInClassMemberInitializer(MI.Field, EqualLoc,
-                                                 Init.release());
+                                                 Init.get());
 
   // The next token should be our artificial terminating EOF token.
   if (Tok.isNot(tok::eof)) {
@@ -830,8 +838,9 @@ bool Parser::ConsumeAndStoreConditional(CachedTokens &Toks) {
   ConsumeToken();
 
   while (Tok.isNot(tok::colon)) {
-    if (!ConsumeAndStoreUntil(tok::question, tok::colon, Toks, /*StopAtSemi*/true,
-                              /*ConsumeFinalToken*/false))
+    if (!ConsumeAndStoreUntil(tok::question, tok::colon, Toks,
+                              /*StopAtSemi=*/true,
+                              /*ConsumeFinalToken=*/false))
       return false;
 
     // If we found a nested conditional, consume it.
@@ -919,15 +928,15 @@ bool Parser::ConsumeAndStoreInitializer(CachedTokens &Toks,
                                                ? tok::semi : tok::r_paren);
         Sema::TentativeAnalysisScope Scope(Actions);
 
-        TPResult Result = TPResult::Error();
+        TPResult Result = TPResult::Error;
         ConsumeToken();
         switch (CIK) {
         case CIK_DefaultInitializer:
           Result = TryParseInitDeclaratorList();
           // If we parsed a complete, ambiguous init-declarator-list, this
           // is only syntactically-valid if it's followed by a semicolon.
-          if (Result == TPResult::Ambiguous() && Tok.isNot(tok::semi))
-            Result = TPResult::False();
+          if (Result == TPResult::Ambiguous && Tok.isNot(tok::semi))
+            Result = TPResult::False;
           break;
 
         case CIK_DefaultArgument:
@@ -936,13 +945,13 @@ bool Parser::ConsumeAndStoreInitializer(CachedTokens &Toks,
               &InvalidAsDeclaration, /*VersusTemplateArgument*/true);
           // If this is an expression or a declaration with a missing
           // 'typename', assume it's not a declaration.
-          if (Result == TPResult::Ambiguous() && InvalidAsDeclaration)
-            Result = TPResult::False();
+          if (Result == TPResult::Ambiguous && InvalidAsDeclaration)
+            Result = TPResult::False;
           break;
         }
 
         // If what follows could be a declaration, it is a declaration.
-        if (Result != TPResult::False() && Result != TPResult::Error()) {
+        if (Result != TPResult::False && Result != TPResult::Error) {
           PA.Revert();
           return true;
         }
@@ -1005,6 +1014,7 @@ bool Parser::ConsumeAndStoreInitializer(CachedTokens &Toks,
         Toks.push_back(Tok);
         ConsumeToken();
         if (Tok.is(tok::less)) {
+          ++AngleCount;
           ++KnownTemplateCount;
           Toks.push_back(Tok);
           ConsumeToken();

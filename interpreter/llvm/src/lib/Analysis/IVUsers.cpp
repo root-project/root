@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "iv-users"
 #include "llvm/Analysis/IVUsers.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Analysis/LoopPass.h"
@@ -28,6 +27,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 using namespace llvm;
+
+#define DEBUG_TYPE "iv-users"
 
 char IVUsers::ID = 0;
 INITIALIZE_PASS_BEGIN(IVUsers, "iv-users",
@@ -84,7 +85,7 @@ static bool isInteresting(const SCEV *S, const Instruction *I, const Loop *L,
 static bool isSimplifiedLoopNest(BasicBlock *BB, const DominatorTree *DT,
                                  const LoopInfo *LI,
                                  SmallPtrSet<Loop*,16> &SimpleLoopNests) {
-  Loop *NearestLoop = 0;
+  Loop *NearestLoop = nullptr;
   for (DomTreeNode *Rung = DT->getNode(BB);
        Rung; Rung = Rung->getIDom()) {
     BasicBlock *DomBB = Rung->getBlock();
@@ -142,9 +143,8 @@ bool IVUsers::AddUsersImpl(Instruction *I,
     return false;
 
   SmallPtrSet<Instruction *, 4> UniqueUsers;
-  for (Value::use_iterator UI = I->use_begin(), E = I->use_end();
-       UI != E; ++UI) {
-    Instruction *User = cast<Instruction>(*UI);
+  for (Use &U : I->uses()) {
+    Instruction *User = cast<Instruction>(U.getUser());
     if (!UniqueUsers.insert(User))
       continue;
 
@@ -157,7 +157,7 @@ bool IVUsers::AddUsersImpl(Instruction *I,
     BasicBlock *UseBB = User->getParent();
     // A phi's use is live out of its predecessor block.
     if (PHINode *PHI = dyn_cast<PHINode>(User)) {
-      unsigned OperandNo = UI.getOperandNo();
+      unsigned OperandNo = U.getOperandNo();
       unsigned ValNo = PHINode::getIncomingValueNumForOperand(OperandNo);
       UseBB = PHI->getIncomingBlock(ValNo);
     }
@@ -186,15 +186,34 @@ bool IVUsers::AddUsersImpl(Instruction *I,
 
     if (AddUserToIVUsers) {
       // Okay, we found a user that we cannot reduce.
-      IVUses.push_back(new IVStrideUse(this, User, I));
-      IVStrideUse &NewUse = IVUses.back();
+      IVStrideUse &NewUse = AddUser(User, I);
       // Autodetect the post-inc loop set, populating NewUse.PostIncLoops.
       // The regular return value here is discarded; instead of recording
       // it, we just recompute it when we need it.
+      const SCEV *OriginalISE = ISE;
       ISE = TransformForPostIncUse(NormalizeAutodetect,
                                    ISE, User, I,
                                    NewUse.PostIncLoops,
                                    *SE, *DT);
+
+      // PostIncNormalization effectively simplifies the expression under
+      // pre-increment assumptions. Those assumptions (no wrapping) might not
+      // hold for the post-inc value. Catch such cases by making sure the
+      // transformation is invertible.
+      if (OriginalISE != ISE) {
+        const SCEV *DenormalizedISE =
+          TransformForPostIncUse(Denormalize, ISE, User, I,
+              NewUse.PostIncLoops, *SE, *DT);
+
+        // If we normalized the expression, but denormalization doesn't give the
+        // original one, discard this user.
+        if (OriginalISE != DenormalizedISE) {
+          DEBUG(dbgs() << "   DISCARDING (NORMALIZATION ISN'T INVERTIBLE): "
+                       << *ISE << '\n');
+          IVUses.pop_back();
+          return false;
+        }
+      }
       DEBUG(if (SE->getSCEV(I) != ISE)
               dbgs() << "   NORMALIZED TO: " << *ISE << '\n');
     }
@@ -235,7 +254,7 @@ bool IVUsers::runOnLoop(Loop *l, LPPassManager &LPM) {
   DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
   SE = &getAnalysis<ScalarEvolution>();
   DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
-  DL = DLP ? &DLP->getDataLayout() : 0;
+  DL = DLP ? &DLP->getDataLayout() : nullptr;
 
   // Find all uses of induction variables in this loop, and categorize
   // them by stride.  Start by finding all of the PHI nodes in the header for
@@ -268,7 +287,10 @@ void IVUsers::print(raw_ostream &OS, const Module *M) const {
       OS << ")";
     }
     OS << " in  ";
-    UI->getUser()->print(OS);
+    if (UI->getUser())
+      UI->getUser()->print(OS);
+    else
+      OS << "Printing <null> User";
     OS << '\n';
   }
 }
@@ -311,16 +333,16 @@ static const SCEVAddRecExpr *findAddRecForLoop(const SCEV *S, const Loop *L) {
          I != E; ++I)
       if (const SCEVAddRecExpr *AR = findAddRecForLoop(*I, L))
         return AR;
-    return 0;
+    return nullptr;
   }
 
-  return 0;
+  return nullptr;
 }
 
 const SCEV *IVUsers::getStride(const IVStrideUse &IU, const Loop *L) const {
   if (const SCEVAddRecExpr *AR = findAddRecForLoop(getExpr(IU), L))
     return AR->getStepRecurrence(*SE);
-  return 0;
+  return nullptr;
 }
 
 void IVStrideUse::transformToPostInc(const Loop *L) {

@@ -180,6 +180,9 @@ TObject *TListOfFunctionTemplates::FindObject(const char *name) const
 
    TObject *result = THashList::FindObject(name);
    if (!result) {
+
+      R__LOCKGUARD(gInterpreterMutex);
+
       TInterpreter::DeclId_t decl;
       if (fClass) decl = gInterpreter->GetFunctionTemplate(fClass->GetClassInfo(),name);
       else        decl = gInterpreter->GetFunctionTemplate(0,name);
@@ -193,6 +196,9 @@ TList* TListOfFunctionTemplates::GetListForObjectNonConst(const char* name)
 {
    // Return the set of overloads for this name, collecting all available ones.
    // Can construct and insert new TFunction-s.
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    TList* overloads = (TList*)fOverloads.FindObject(name);
    TExMap overloadsSet;
    Bool_t wasEmpty = true;
@@ -257,6 +263,9 @@ TFunctionTemplate *TListOfFunctionTemplates::Get(DeclId_t id)
       } else {
          if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
       }
+
+      R__LOCKGUARD(gInterpreterMutex);
+
       FuncTempInfo_t *m = gInterpreter->FuncTempInfo_Factory(id);
 
       // Let's see if this is a reload ...

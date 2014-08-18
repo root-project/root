@@ -22,6 +22,7 @@
 #define LLVM_CODEGEN_LIVEDEBUGVARIABLES_H
 
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/IR/DebugInfo.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 
 namespace llvm {
@@ -32,6 +33,7 @@ class VirtRegMap;
 
 class LiveDebugVariables : public MachineFunctionPass {
   void *pImpl;
+  DenseMap<const Function*, DISubprogram> FunctionDIs;
 public:
   static char ID; // Pass identification, replacement for typeid
 
@@ -61,9 +63,10 @@ public:
 
 private:
 
-  virtual bool runOnMachineFunction(MachineFunction &);
-  virtual void releaseMemory();
-  virtual void getAnalysisUsage(AnalysisUsage &) const;
+  bool runOnMachineFunction(MachineFunction &) override;
+  void releaseMemory() override;
+  void getAnalysisUsage(AnalysisUsage &) const override;
+  bool doInitialization(Module &) override;
 
 };
 

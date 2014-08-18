@@ -324,7 +324,7 @@ namespace narrowing {
   template<typename T> T v = {1234};  // expected-warning {{implicit conversion from 'int' to 'char' changes value from 1234 to}}
 #ifndef PRECXX11
   // expected-error@-2 {{constant expression evaluates to 1234 which cannot be narrowed to type 'char'}}\
-  // expected-note@-2 {{override this message by inserting an explicit cast}}
+  // expected-note@-2 {{insert an explicit cast to silence this issue}}
 #endif
   int k = v<char>;        // expected-note {{in instantiation of variable template specialization 'narrowing::v<char>' requested here}}
 }
@@ -441,3 +441,20 @@ namespace PR18530 {
   template<typename T> int a;
   int a<int>; // expected-error {{requires 'template<>'}}
 }
+
+namespace PR19152 {
+#ifndef PRECXX11
+  template<typename T> const auto x = 1;
+  static_assert(x<int> == 1, "");
+#endif
+}
+
+namespace PR19169 {
+  template <typename T> int* f();
+  template <typename T> void f();
+  template<> int f<double>; // expected-error {{no variable template matches specialization; did you mean to use 'f' as function template instead?}}
+  
+  template <typename T> void g();
+  template<> int g<double>; // expected-error {{no variable template matches specialization; did you mean to use 'g' as function template instead?}}
+}
+

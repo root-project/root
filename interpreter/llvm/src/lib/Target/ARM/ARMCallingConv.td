@@ -65,7 +65,7 @@ def FastCC_ARM_APCS : CallingConv<[
   CCIfType<[f32], CCAssignToReg<[S0, S1, S2, S3, S4, S5, S6, S7, S8,
                                  S9, S10, S11, S12, S13, S14, S15]>>,
 
-  // CPRCs may be allocated to co-processor registers or the stack – they
+  // CPRCs may be allocated to co-processor registers or the stack - they
   // may never be allocated to core registers. 
   CCIfType<[f32], CCAssignToStackWithShadow<4, 4, [Q0, Q1, Q2, Q3]>>,
   CCIfType<[f64], CCAssignToStackWithShadow<8, 4, [Q0, Q1, Q2, Q3]>>,
@@ -173,6 +173,9 @@ def CC_ARM_AAPCS_VFP : CallingConv<[
   // Handle all vector types as either f64 or v2f64.
   CCIfType<[v1i64, v2i32, v4i16, v8i8, v2f32], CCBitConvertToType<f64>>,
   CCIfType<[v2i64, v4i32, v8i16, v16i8, v4f32], CCBitConvertToType<v2f64>>,
+
+  // HFAs are passed in a contiguous block of registers, or on the stack
+  CCIfConsecutiveRegs<CCCustom<"CC_ARM_AAPCS_Custom_HA">>,
 
   CCIfType<[v2f64], CCAssignToReg<[Q0, Q1, Q2, Q3]>>,
   CCIfType<[f64], CCAssignToReg<[D0, D1, D2, D3, D4, D5, D6, D7]>>,

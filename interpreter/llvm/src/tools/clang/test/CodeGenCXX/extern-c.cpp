@@ -59,10 +59,17 @@ extern "C" {
 
   // CHECK-NOT: @unused
   // CHECK-NOT: @duplicate_internal
-  // CHECK: @internal_var = alias internal i32* @_Z12internal_var
+  // CHECK: @internal_var = internal alias i32* @_Z12internal_var
   // CHECK-NOT: @unused
   // CHECK-NOT: @duplicate_internal
-  // CHECK: @internal_fn = alias internal i32 ()* @_Z11internal_fnv
+  // CHECK: @internal_fn = internal alias i32 ()* @_Z11internal_fnv
   // CHECK-NOT: @unused
   // CHECK-NOT: @duplicate_internal
+}
+
+namespace PR19411 {
+  struct A { void f(); };
+  extern "C" void A::f() { void g(); g(); }
+  // CHECK-LABEL: @_ZN7PR194111A1fEv(
+  // CHECK: call void @g()
 }

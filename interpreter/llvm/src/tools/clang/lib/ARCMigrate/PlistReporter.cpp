@@ -16,6 +16,22 @@ using namespace clang;
 using namespace arcmt;
 using namespace markup;
 
+static StringRef getLevelName(DiagnosticsEngine::Level Level) {
+  switch (Level) {
+  case DiagnosticsEngine::Ignored:
+    llvm_unreachable("ignored");
+  case DiagnosticsEngine::Note:
+    return "note";
+  case DiagnosticsEngine::Remark:
+  case DiagnosticsEngine::Warning:
+    return "warning";
+  case DiagnosticsEngine::Fatal:
+  case DiagnosticsEngine::Error:
+    return "error";
+  }
+  llvm_unreachable("Invalid DiagnosticsEngine level!");
+}
+
 void arcmt::writeARCDiagsToPlist(const std::string &outPath,
                                  ArrayRef<StoredDiagnostic> diags,
                                  SourceManager &SM,
@@ -47,8 +63,7 @@ void arcmt::writeARCDiagsToPlist(const std::string &outPath,
     return;
   }
 
-  // Write the plist header.
-  o << PlistHeader;
+  EmitPlistHeader(o);
 
   // Write the root object: a <dict> containing...
   //  - "files", an <array> mapping from FIDs to file names
@@ -57,11 +72,8 @@ void arcmt::writeARCDiagsToPlist(const std::string &outPath,
        " <key>files</key>\n"
        " <array>\n";
 
-  for (SmallVectorImpl<FileID>::iterator I=Fids.begin(), E=Fids.end();
-       I!=E; ++I) {
-    o << "  ";
-    EmitString(o, SM.getFileEntryForID(*I)->getName()) << '\n';
-  }
+  for (FileID FID : Fids)
+    EmitString(o << "  ", SM.getFileEntryForID(FID)->getName()) << '\n';
 
   o << " </array>\n"
        " <key>diagnostics</key>\n"
@@ -84,12 +96,7 @@ void arcmt::writeARCDiagsToPlist(const std::string &outPath,
     EmitString(o, DiagIDs.getCategoryNameFromID(
                           DiagIDs.getCategoryNumberForDiag(D.getID()))) << '\n';
     o << "   <key>type</key>";
-    if (D.getLevel() >= DiagnosticsEngine::Error)
-      EmitString(o, "error") << '\n';
-    else if (D.getLevel() == DiagnosticsEngine::Warning)
-      EmitString(o, "warning") << '\n';
-    else
-      EmitString(o, "note") << '\n';
+    EmitString(o, getLevelName(D.getLevel())) << '\n';
 
     // Output the location of the bug.
     o << "  <key>location</key>\n";

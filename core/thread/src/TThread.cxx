@@ -54,20 +54,30 @@ static TMutex  *gMainInternalMutex = 0;
 static void ThreadInternalLock() { if (gMainInternalMutex) gMainInternalMutex->Lock(); }
 static void ThreadInternalUnLock() { if (gMainInternalMutex) gMainInternalMutex->UnLock(); }
 
+static Bool_t fgIsTearDown(kFALSE);
 
 //------------------------------------------------------------------------------
 
 // Set gGlobalMutex to 0 when Thread library gets unloaded
-class TGlobalMutexGuard {
+class TThreadTearDownGuard {
 public:
-   TGlobalMutexGuard() { }
-   ~TGlobalMutexGuard() {
+   TThreadTearDownGuard() { fgIsTearDown = kFALSE; }
+   ~TThreadTearDownGuard() {
+      // Note: we could insert here a wait for all thread to be finished.
+      // this is questionable though as we need to balance between fixing a
+      // user error (the thread was let lose and the caller did not explicit wait)
+      // and the risk that we can not terminate a failing process.
+
+      fgIsTearDown = kTRUE;
       TVirtualMutex *m = gGlobalMutex;
       gGlobalMutex = 0;
       delete m;
+      TThreadImp *imp = TThread::fgThreadImp;
+      TThread::fgThreadImp = 0;
+      delete imp;
    }
 };
-static TGlobalMutexGuard gGlobalMutexGuardInit;
+static TThreadTearDownGuard gTearDownGuard;
 
 //------------------------------------------------------------------------------
 
@@ -81,7 +91,7 @@ private:
    TCondition *fC;
    Bool_t      fJoined;
 
-   static void JoinFunc(void *p);
+   static void* JoinFunc(void *p);
 
 public:
    TJoinHelper(TThread *th, void **ret);
@@ -110,10 +120,11 @@ TJoinHelper::~TJoinHelper()
 }
 
 //______________________________________________________________________________
-void TJoinHelper::JoinFunc(void *p)
+void* TJoinHelper::JoinFunc(void *p)
 {
    // Static method which runs in a separate thread to handle thread
    // joins without blocking the main thread.
+   // Return a value (zero) so that it makes a joinable thread.
 
    TJoinHelper *jp = (TJoinHelper*)p;
 
@@ -125,6 +136,8 @@ void TJoinHelper::JoinFunc(void *p)
    jp->fM->UnLock();
 
    TThread::Exit(0);
+
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -162,6 +175,10 @@ Int_t TJoinHelper::Join()
    }
 
    fM->UnLock();
+
+   // And wait for the help to finish to avoid the risk that it is still
+   // running when the main tread is finished (and the thread library unloaded!)
+   TThread::fgThreadImp->Join(fH, 0);
 
    return fRc;
 }
@@ -290,7 +307,12 @@ void TThread::Init()
 {
    // Initialize global state and variables once.
 
-   if (fgThreadImp) return;
+   if (fgThreadImp || fgIsTearDown) return;
+
+#if !defined (_REENTRANT) && !defined (WIN32)
+   // Not having it means (See TVirtualMutext.h) that the LOCKGUARD macro are empty.
+   ::Fatal("Init","_REENTRANT must be #define-d for TThread to work properly.");
+#endif
 
    fgThreadImp = gThreadFactory->CreateThreadImp();
    gMainInternalMutex = new TMutex(kTRUE);
@@ -462,7 +484,10 @@ TThread *TThread::Self()
 
    TTHREAD_TLS(TThread*) self = 0;
 
-   if (!self) self = GetThread(SelfId());
+   if (!self || fgIsTearDown) {
+      if (fgIsTearDown) self = 0;
+      self = GetThread(SelfId());
+   }
    return self;
 }
 
@@ -511,6 +536,7 @@ Long_t TThread::SelfId()
 {
    // Static method returning the id for the current thread.
 
+   if (fgIsTearDown) return -1;
    if (!fgThreadImp) Init();
 
    return fgThreadImp->SelfId();

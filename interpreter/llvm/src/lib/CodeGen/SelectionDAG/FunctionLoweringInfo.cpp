@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "function-lowering-info"
 #include "llvm/CodeGen/FunctionLoweringInfo.h"
 #include "llvm/ADT/PostOrderIterator.h"
 #include "llvm/CodeGen/Analysis.h"
@@ -21,8 +20,8 @@
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
-#include "llvm/DebugInfo.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
@@ -32,12 +31,15 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
+#include "llvm/Target/TargetFrameLowering.h"
 #include "llvm/Target/TargetInstrInfo.h"
 #include "llvm/Target/TargetLowering.h"
 #include "llvm/Target/TargetOptions.h"
 #include "llvm/Target/TargetRegisterInfo.h"
 #include <algorithm>
 using namespace llvm;
+
+#define DEBUG_TYPE "function-lowering-info"
 
 /// isUsedOutsideOfDefiningBlock - Return true if this instruction is used by
 /// PHI nodes or outside of the basic block that defines it, or used by a
@@ -46,16 +48,15 @@ static bool isUsedOutsideOfDefiningBlock(const Instruction *I) {
   if (I->use_empty()) return false;
   if (isa<PHINode>(I)) return true;
   const BasicBlock *BB = I->getParent();
-  for (Value::const_use_iterator UI = I->use_begin(), E = I->use_end();
-        UI != E; ++UI) {
-    const User *U = *UI;
+  for (const User *U : I->users())
     if (cast<Instruction>(U)->getParent() != BB || isa<PHINode>(U))
       return true;
-  }
+
   return false;
 }
 
-void FunctionLoweringInfo::set(const Function &fn, MachineFunction &mf) {
+void FunctionLoweringInfo::set(const Function &fn, MachineFunction &mf,
+                               SelectionDAG *DAG) {
   const TargetLowering *TLI = TM.getTargetLowering();
 
   Fn = &fn;
@@ -98,6 +99,43 @@ void FunctionLoweringInfo::set(const Function &fn, MachineFunction &mf) {
   for (; BB != EB; ++BB)
     for (BasicBlock::const_iterator I = BB->begin(), E = BB->end();
          I != E; ++I) {
+      // Look for dynamic allocas.
+      if (const AllocaInst *AI = dyn_cast<AllocaInst>(I)) {
+        if (!AI->isStaticAlloca()) {
+          unsigned Align = std::max(
+              (unsigned)TLI->getDataLayout()->getPrefTypeAlignment(
+                AI->getAllocatedType()),
+              AI->getAlignment());
+          unsigned StackAlign = TM.getFrameLowering()->getStackAlignment();
+          if (Align <= StackAlign)
+            Align = 0;
+          // Inform the Frame Information that we have variable-sized objects.
+          MF->getFrameInfo()->CreateVariableSizedObject(Align ? Align : 1, AI);
+        }
+      }
+
+      // Look for inline asm that clobbers the SP register.
+      if (isa<CallInst>(I) || isa<InvokeInst>(I)) {
+        ImmutableCallSite CS(I);
+        if (isa<InlineAsm>(CS.getCalledValue())) {
+          unsigned SP = TLI->getStackPointerRegisterToSaveRestore();
+          std::vector<TargetLowering::AsmOperandInfo> Ops =
+            TLI->ParseConstraints(CS);
+          for (size_t I = 0, E = Ops.size(); I != E; ++I) {
+            TargetLowering::AsmOperandInfo &Op = Ops[I];
+            if (Op.Type == InlineAsm::isClobber) {
+              // Clobbers don't have SDValue operands, hence SDValue().
+              TLI->ComputeConstraintToUse(Op, SDValue(), DAG);
+              std::pair<unsigned, const TargetRegisterClass*> PhysReg =
+                TLI->getRegForInlineAsmConstraint(Op.ConstraintCode,
+                                                  Op.ConstraintVT);
+              if (PhysReg.first == SP)
+                MF->getFrameInfo()->setHasInlineAsmWithSPAdjust(true);
+            }
+          }
+        }
+      }
+
       // Mark values used outside their block as exported, by allocating
       // a virtual register for them.
       if (isUsedOutsideOfDefiningBlock(I))
@@ -246,11 +284,11 @@ unsigned FunctionLoweringInfo::CreateRegs(Type *Ty) {
 const FunctionLoweringInfo::LiveOutInfo *
 FunctionLoweringInfo::GetLiveOutRegInfo(unsigned Reg, unsigned BitWidth) {
   if (!LiveOutRegInfo.inBounds(Reg))
-    return NULL;
+    return nullptr;
 
   LiveOutInfo *LOI = &LiveOutRegInfo[Reg];
   if (!LOI->IsValid)
-    return NULL;
+    return nullptr;
 
   if (BitWidth > LOI->KnownZero.getBitWidth()) {
     LOI->NumSignBits = 1;

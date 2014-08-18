@@ -27,6 +27,31 @@ This page lists the attributes currently supported by Clang.
 }];
 }
 
+def SectionDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+The ``section`` attribute allows you to specify a specific section a
+global variable or function should be in after translation.
+  }];
+  let Heading = "section (gnu::section, __declspec(allocate))";
+}
+
+def InitSegDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+The attribute applied by ``pragma init_seg()`` controls the section into
+which global initialization function pointers are emitted.  It is only
+available with ``-fms-extensions``.  Typically, this function pointer is
+emitted into ``.CRT$XCU`` on Windows.  The user can change the order of
+initialization by using a different section name with the same
+``.CRT$XC`` prefix and a suffix that sorts lexicographically before or
+after the standard ``.CRT$XCU`` sections.  See the init_seg_
+documentation on MSDN for more information.
+
+.. _init_seg: http://msdn.microsoft.com/en-us/library/7977wcck(v=vs.110).aspx
+  }];
+}
+
 def TLSModelDocs : Documentation {
   let Category = DocCatVariable;
   let Content = [{
@@ -42,20 +67,37 @@ TLS models are mutually exclusive.
   }];
 }
 
+def ThreadDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+The ``__declspec(thread)`` attribute declares a variable with thread local
+storage.  It is available under the ``-fms-extensions`` flag for MSVC
+compatibility.  Documentation for the Visual C++ attribute is available on MSDN_.
+
+.. _MSDN: http://msdn.microsoft.com/en-us/library/9w1sdazb.aspx
+
+In Clang, ``__declspec(thread)`` is generally equivalent in functionality to the
+GNU ``__thread`` keyword.  The variable must not have a destructor and must have
+a constant initializer, if any.  The attribute only applies to variables
+declared with static storage duration, such as globals, class static data
+members, and static locals.
+  }];
+}
+
 def CarriesDependencyDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{
 The ``carries_dependency`` attribute specifies dependency propagation into and
 out of functions.
 
-When specified on a function or Objective-C method, the ``carries_depedency``
+When specified on a function or Objective-C method, the ``carries_dependency``
 attribute means that the return value carries a dependency out of the function, 
 so that the implementation need not constrain ordering upon return from that
 function. Implementations of the function and its caller may choose to preserve
 dependencies instead of emitting memory ordering instructions such as fences.
 
 Note, this attribute does not change the meaning of the program, but may result
-in generatation of more efficient code.
+in generation of more efficient code.
   }];
 }
 
@@ -141,7 +183,7 @@ the type.
 
 The enable_if expression is evaluated as if it were the body of a
 bool-returning constexpr function declared with the arguments of the function
-it is being applied to, then called with the parameters at the callsite. If the
+it is being applied to, then called with the parameters at the call site. If the
 result is false or could not be determined through constant expression
 evaluation, then this overload will not be chosen and the provided string may
 be used in a diagnostic if the compile fails as a result.
@@ -346,6 +388,15 @@ of the condition.
   }];
 }
 
+def NoSplitStackDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``no_split_stack`` attribute disables the emission of the split stack
+preamble for a particular function. It has no effect if ``-fsplit-stack``
+is not specified.
+  }];
+}
+
 def ObjCRequiresSuperDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{
@@ -389,6 +440,27 @@ implementation of an override in a subclass does not call super.  For example:
    - (void) AnnotMeth{};
                       ^
   }];
+}
+
+def ObjCRuntimeNameDocs : Documentation {
+    let Category = DocCatFunction;
+    let Content = [{
+By default, the Objective-C interface or protocol identifier is used
+in the metadata name for that object. The `objc_runtime_name`
+attribute allows annotated interfaces or protocols to use the
+specified string argument in the object's metadata name instead of the
+default name.
+        
+**Usage**: ``__attribute__((objc_runtime_name("MyLocalName")))``.  This attribute
+can only be placed before an @protocol or @interface declaration:
+        
+.. code-block:: objc
+        
+  __attribute__((objc_runtime_name("MyLocalName")))
+  @interface Message
+  @end
+        
+    }];
 }
 
 def AvailabilityDocs : Documentation {
@@ -577,6 +649,15 @@ The semantics are as follows:
   }];
 }
 
+def PcsDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+On ARM targets, this can attribute can be used to select calling conventions,
+similar to ``stdcall`` on x86. Valid parameter values are "aapcs" and
+"aapcs-vfp".
+  }];
+}
+
 def DocCatConsumed : DocumentationCategory<"Consumed Annotation Checking"> {
   let Content = [{
 Clang supports additional attributes for checking basic resource management
@@ -590,7 +671,7 @@ def SetTypestateDocs : Documentation {
   let Category = DocCatConsumed;
   let Content = [{
 Annotate methods that transition an object into a new state with
-``__attribute__((set_typestate(new_state)))``.  The new new state must be
+``__attribute__((set_typestate(new_state)))``.  The new state must be
 unconsumed, consumed, or unknown.
   }];
 }
@@ -656,6 +737,8 @@ def NoSanitizeAddressDocs : Documentation {
   // heading to be specified. The most common spelling is sufficient.
   let Heading = "no_sanitize_address (no_address_safety_analysis, gnu::no_address_safety_analysis, gnu::no_sanitize_address)";
   let Content = [{
+.. _langext-address_sanitizer:
+
 Use ``__attribute__((no_sanitize_address))`` on a function declaration to
 specify that address safety instrumentation (e.g. AddressSanitizer) should
 not be applied to that function.
@@ -665,6 +748,8 @@ not be applied to that function.
 def NoSanitizeThreadDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{
+.. _langext-thread_sanitizer:
+
 Use ``__attribute__((no_sanitize_thread))`` on a function declaration to
 specify that checks for data races on plain (non-atomic) memory accesses should
 not be inserted by ThreadSanitizer. The function is still instrumented by the
@@ -675,6 +760,8 @@ tool to avoid false positives and provide meaningful stack traces.
 def NoSanitizeMemoryDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{
+.. _langext-memory_sanitizer:
+
 Use ``__attribute__((no_sanitize_memory))`` on a function declaration to
 specify that checks for uninitialized memory should not be inserted 
 (e.g. by MemorySanitizer). The function may still be instrumented by the tool
@@ -828,6 +915,15 @@ expression is compared to the type tag.  There are two supported flags:
   }];
 }
 
+def FlattenDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``flatten`` attribute causes calls within the attributed function to
+be inlined unless it is impossible to do so, for example if the body of the
+callee is unavailable or if the callee has the ``noinline`` attribute.
+  }];
+}
+
 def FormatDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{
@@ -853,7 +949,7 @@ Clang implements two kinds of checks with this attribute.
    Clang implements this mostly the same way as GCC, but there is a difference
    for functions that accept a ``va_list`` argument (for example, ``vprintf``).
    GCC does not emit ``-Wformat-nonliteral`` warning for calls to such
-   fuctions.  Clang does not warn if the format string comes from a function
+   functions.  Clang does not warn if the format string comes from a function
    parameter, where the function is annotated with a compatible attribute,
    otherwise it warns.  For example:
 
@@ -937,3 +1033,86 @@ an error:
   struct S {};
 }];
 }
+
+def OptnoneDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``optnone`` attribute suppresses essentially all optimizations
+on a function or method, regardless of the optimization level applied to
+the compilation unit as a whole.  This is particularly useful when you
+need to debug a particular function, but it is infeasible to build the
+entire application without optimization.  Avoiding optimization on the
+specified function can improve the quality of the debugging information
+for that function.
+
+This attribute is incompatible with the ``always_inline`` attribute.
+  }];
+}
+
+def LoopHintDocs : Documentation {
+  let Category = DocCatStmt;
+  let Heading = "#pragma clang loop";
+  let Content = [{
+The ``#pragma clang loop`` directive allows loop optimization hints to be
+specified for the subsequent loop. The directive allows vectorization,
+interleaving, and unrolling to be enabled or disabled. Vector width as well
+as interleave and unrolling count can be manually specified. See
+`language extensions
+<http://clang.llvm.org/docs/LanguageExtensions.html#extensions-for-loop-hint-optimizations>`_
+for details.
+  }];
+}
+
+def UnrollHintDocs : Documentation {
+  let Category = DocCatStmt;
+  let Heading = "#pragma unroll, #pragma nounroll";
+  let Content = [{
+Loop unrolling optimization hints can be specified with ``#pragma unroll`` and
+``#pragma nounroll``. The pragma is placed immediately before a for, while,
+do-while, or c++11 range-based for loop.
+
+Specifying ``#pragma unroll`` without a parameter directs the loop unroller to
+attempt to fully unroll the loop if the trip count is known at compile time:
+
+.. code-block:: c++
+
+  #pragma unroll
+  for (...) {
+    ...
+  }
+
+Specifying the optional parameter, ``#pragma unroll _value_``, directs the
+unroller to unroll the loop ``_value_`` times.  The parameter may optionally be
+enclosed in parentheses:
+
+.. code-block:: c++
+
+  #pragma unroll 16
+  for (...) {
+    ...
+  }
+
+  #pragma unroll(16)
+  for (...) {
+    ...
+  }
+
+Specifying ``#pragma nounroll`` indicates that the loop should not be unrolled:
+
+.. code-block:: c++
+
+  #pragma nounroll
+  for (...) {
+    ...
+  }
+
+``#pragma unroll`` and ``#pragma unroll _value_`` have identical semantics to
+``#pragma clang loop unroll(full)`` and
+``#pragma clang loop unroll_count(_value_)`` respectively. ``#pragma nounroll``
+is equivalent to ``#pragma clang loop unroll(disable)``.  See
+`language extensions
+<http://clang.llvm.org/docs/LanguageExtensions.html#extensions-for-loop-hint-optimizations>`_
+for further details including limitations of the unroll hints.
+  }];
+}
+

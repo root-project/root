@@ -51,7 +51,7 @@ TDataType *TListOfTypes::FindType(const char *name) const
 
    TDataType *result = static_cast<TDataType*>(THashTable::FindObject(name));
    if (!result) {
-      R__LOCKGUARD2(gCollectionMutex);
+      R__LOCKGUARD2(gInterpreterMutex);
 
       int old = gInterpreter->SetClassAutoloading(false);
       TypedefInfo_t  *info = gInterpreter->TypedefInfo_Factory(name);

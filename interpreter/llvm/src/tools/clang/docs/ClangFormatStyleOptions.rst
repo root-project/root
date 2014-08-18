@@ -106,9 +106,24 @@ the configuration (without a prefix: ``Auto``).
   Allow putting all parameters of a function declaration onto
   the next line even if ``BinPackParameters`` is ``false``.
 
-**AllowShortFunctionsOnASingleLine** (``bool``)
-  If ``true``, ``int f() { return 0; }`` can be put on a single
-  line.
+**AllowShortBlocksOnASingleLine** (``bool``)
+  Allows contracting simple braced statements to a single line.
+
+  E.g., this allows ``if (a) { return; }`` to be put on a single line.
+
+**AllowShortFunctionsOnASingleLine** (``ShortFunctionStyle``)
+  Dependent on the value, ``int f() { return 0; }`` can be put
+  on a single line.
+
+  Possible values:
+
+  * ``SFS_None`` (in configuration: ``None``)
+    Never merge functions into a single line.
+  * ``SFS_Inline`` (in configuration: ``Inline``)
+    Only merge functions defined inside a class.
+  * ``SFS_All`` (in configuration: ``All``)
+    Merge all functions fitting on a single line.
+
 
 **AllowShortIfStatementsOnASingleLine** (``bool``)
   If ``true``, ``if (a) return;`` can be put on a single
@@ -196,9 +211,12 @@ the configuration (without a prefix: ``Auto``).
   the parentheses of a function call with that name. If there is no name,
   a zero-length name is assumed.
 
-**DerivePointerBinding** (``bool``)
-  If ``true``, analyze the formatted file for the most common binding
-  and use ``PointerBindsToType`` only as fallback.
+**DerivePointerAlignment** (``bool``)
+  If ``true``, analyze the formatted file for the most common
+  alignment of & and \*. ``PointerAlignment`` is then used only as fallback.
+
+**DisableFormat** (``bool``)
+  Disables formatting at all.
 
 **ExperimentalAutoDetectBinPacking** (``bool``)
   If ``true``, clang-format detects whether function calls and
@@ -212,18 +230,33 @@ the configuration (without a prefix: ``Auto``).
   NOTE: This is an experimental flag, that might go away or be renamed. Do
   not use this in config files, etc. Use at your own risk.
 
+**ForEachMacros** (``std::vector<std::string>``)
+  A vector of macros that should be interpreted as foreach loops
+  instead of as function calls.
+
+  These are expected to be macros of the form:
+  \code
+  FOREACH(<variable-declaration>, ...)
+  <loop-body>
+  \endcode
+
+  For example: BOOST_FOREACH.
+
 **IndentCaseLabels** (``bool``)
   Indent case labels one level from the switch statement.
 
   When ``false``, use the same indentation level as for the switch statement.
   Switch statement body is always indented one level more than case labels.
 
-**IndentFunctionDeclarationAfterType** (``bool``)
-  If ``true``, indent when breaking function declarations which
-  are not also definitions after the type.
-
 **IndentWidth** (``unsigned``)
   The number of columns to use for indentation.
+
+**IndentWrappedFunctionNames** (``bool``)
+  Indent if a function definition or declaration is wrapped after the
+  type.
+
+**KeepEmptyLinesAtTheStartOfBlocks** (``bool``)
+  If true, empty lines at the start of blocks are kept.
 
 **Language** (``LanguageKind``)
   Language, this format style is targeted at.
@@ -259,7 +292,7 @@ the configuration (without a prefix: ``Auto``).
 
 **ObjCSpaceAfterProperty** (``bool``)
   Add a space after ``@property`` in Objective-C, i.e. use
-  ``@property (readonly)`` instead of ``@property(readonly)``.
+  ``\@property (readonly)`` instead of ``\@property(readonly)``.
 
 **ObjCSpaceBeforeProtocolList** (``bool``)
   Add a space in front of an Objective-C protocol list, i.e. use
@@ -284,8 +317,18 @@ the configuration (without a prefix: ``Auto``).
   Penalty for putting the return type of a function onto its own
   line.
 
-**PointerBindsToType** (``bool``)
-  Set whether & and * bind to the type as opposed to the variable.
+**PointerAlignment** (``PointerAlignmentStyle``)
+  Pointer and reference alignment style.
+
+  Possible values:
+
+  * ``PAS_Left`` (in configuration: ``Left``)
+    Align pointer to the left.
+  * ``PAS_Right`` (in configuration: ``Right``)
+    Align pointer to the right.
+  * ``PAS_Middle`` (in configuration: ``Middle``)
+    Align pointer in the middle.
+
 
 **SpaceBeforeAssignmentOperators** (``bool``)
   If ``false``, spaces will be removed before assignment operators.
@@ -311,7 +354,11 @@ the configuration (without a prefix: ``Auto``).
   If ``true``, spaces may be inserted into '()'.
 
 **SpacesBeforeTrailingComments** (``unsigned``)
-  The number of spaces to before trailing line comments.
+  The number of spaces before trailing line comments
+  (``//`` - comments).
+
+  This does not affect trailing block comments (``/**/`` - comments) as those
+  commonly have different usage patterns and a number of special cases.
 
 **SpacesInAngles** (``bool``)
   If ``true``, spaces will be inserted after '<' and before '>' in

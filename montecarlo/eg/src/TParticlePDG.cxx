@@ -70,32 +70,6 @@ TParticlePDG::TParticlePDG()
 }
 
 //______________________________________________________________________________
-TParticlePDG::TParticlePDG(Int_t )
-{
-   // empty for the time  being
-
-   fPdgCode      = 0;
-   fMass         = 0;
-   fCharge       = 0;
-   fLifetime     = 0;
-   fWidth        = 0;
-   fParity       = 0;
-   fSpin         = 0;
-   fIsospin      = 0;
-   fI3           = 0;
-   fStrangeness  = 0;
-   fCharm        = 0;
-   fBeauty       = 0;
-   fTop          = 0;
-   fY            = 0;
-   fX            = 0;
-   fStable       = 0;
-   fDecayList    = 0;
-   fTrackingCode = 0;
-   fAntiParticle = 0;
-}
-
-//______________________________________________________________________________
 TParticlePDG::TParticlePDG(const char* Name, const char* Title, Double_t aMass,
                            Bool_t aStable, Double_t aWidth, Double_t aCharge,
                            const char* aParticleClass, Int_t aPdgCode, Int_t Anti,

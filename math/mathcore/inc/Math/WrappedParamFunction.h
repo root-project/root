@@ -211,8 +211,6 @@ private:
    /// evaluate the function (re-implement for being more efficient)
    double DoEval(const double * x) const {
 
-      unsigned int npar = NPar();
-
 //       std::cout << this << fDim << " x : ";
 //       std::ostream_iterator<double> oix(std::cout," ,  ");
 //       std::copy(x, x+fDim, oix);
@@ -223,7 +221,7 @@ private:
 
       for (unsigned int i = 0; i < fDim; ++i) {
          unsigned int j = fVarIndices[i];
-         assert ( j  < npar + fDim);
+         assert ( j  < NPar() + fDim);
          fX[ j ] = x[i];
       }
 //       std::cout << "X : (";

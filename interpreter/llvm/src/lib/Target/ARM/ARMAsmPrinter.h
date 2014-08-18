@@ -10,14 +10,16 @@
 #ifndef ARMASMPRINTER_H
 #define ARMASMPRINTER_H
 
-#include "ARM.h"
-#include "ARMTargetMachine.h"
+#include "ARMSubtarget.h"
 #include "llvm/CodeGen/AsmPrinter.h"
-#include "llvm/Support/Compiler.h"
+#include "llvm/Target/TargetMachine.h"
 
 namespace llvm {
 
+class ARMFunctionInfo;
 class MCOperand;
+class MachineConstantPool;
+class MachineOperand;
 
 namespace ARM {
   enum DW_ISA {
@@ -45,41 +47,41 @@ class LLVM_LIBRARY_VISIBILITY ARMAsmPrinter : public AsmPrinter {
   bool InConstantPool;
 public:
   explicit ARMAsmPrinter(TargetMachine &TM, MCStreamer &Streamer)
-    : AsmPrinter(TM, Streamer), AFI(NULL), MCP(NULL), InConstantPool(false) {
-      Subtarget = &TM.getSubtarget<ARMSubtarget>();
-    }
+    : AsmPrinter(TM, Streamer), AFI(nullptr), MCP(nullptr),
+      InConstantPool(false) {
+    Subtarget = &TM.getSubtarget<ARMSubtarget>();
+  }
 
-  virtual const char *getPassName() const LLVM_OVERRIDE {
+  const char *getPassName() const override {
     return "ARM Assembly / Object Emitter";
   }
 
   void printOperand(const MachineInstr *MI, int OpNum, raw_ostream &O,
-                    const char *Modifier = 0);
+                    const char *Modifier = nullptr);
 
-  virtual bool PrintAsmOperand(const MachineInstr *MI, unsigned OpNum,
-                               unsigned AsmVariant, const char *ExtraCode,
-                               raw_ostream &O) LLVM_OVERRIDE;
-  virtual bool PrintAsmMemoryOperand(const MachineInstr *MI, unsigned OpNum,
-                                     unsigned AsmVariant, const char *ExtraCode,
-                                     raw_ostream &O) LLVM_OVERRIDE;
+  bool PrintAsmOperand(const MachineInstr *MI, unsigned OpNum,
+                       unsigned AsmVariant, const char *ExtraCode,
+                       raw_ostream &O) override;
+  bool PrintAsmMemoryOperand(const MachineInstr *MI, unsigned OpNum,
+                             unsigned AsmVariant, const char *ExtraCode,
+                             raw_ostream &O) override;
 
-  virtual void emitInlineAsmEnd(const MCSubtargetInfo &StartInfo,
-                                const MCSubtargetInfo *EndInfo) const
-      LLVM_OVERRIDE;
+  void emitInlineAsmEnd(const MCSubtargetInfo &StartInfo,
+                        const MCSubtargetInfo *EndInfo) const override;
 
   void EmitJumpTable(const MachineInstr *MI);
   void EmitJump2Table(const MachineInstr *MI);
-  virtual void EmitInstruction(const MachineInstr *MI) LLVM_OVERRIDE;
-  virtual bool runOnMachineFunction(MachineFunction &F) LLVM_OVERRIDE;
+  void EmitInstruction(const MachineInstr *MI) override;
+  bool runOnMachineFunction(MachineFunction &F) override;
 
-  virtual void EmitConstantPool() LLVM_OVERRIDE {
+  void EmitConstantPool() override {
     // we emit constant pools customly!
   }
-  virtual void EmitFunctionBodyEnd() LLVM_OVERRIDE;
-  virtual void EmitFunctionEntryLabel() LLVM_OVERRIDE;
-  virtual void EmitStartOfAsmFile(Module &M) LLVM_OVERRIDE;
-  virtual void EmitEndOfAsmFile(Module &M) LLVM_OVERRIDE;
-  virtual void EmitXXStructor(const Constant *CV) LLVM_OVERRIDE;
+  void EmitFunctionBodyEnd() override;
+  void EmitFunctionEntryLabel() override;
+  void EmitStartOfAsmFile(Module &M) override;
+  void EmitEndOfAsmFile(Module &M) override;
+  void EmitXXStructor(const Constant *CV) override;
 
   // lowerOperand - Convert a MachineOperand into the equivalent MCOperand.
   bool lowerOperand(const MachineOperand &MO, MCOperand &MCOp);
@@ -98,7 +100,7 @@ private:
                                    const MachineInstr *MI);
 
 public:
-  virtual unsigned getISAEncoding() LLVM_OVERRIDE {
+  unsigned getISAEncoding() override {
     // ARM/Darwin adds ISA to the DWARF info for each function.
     if (!Subtarget->isTargetMachO())
       return 0;
@@ -117,8 +119,7 @@ private:
 public:
   /// EmitMachineConstantPoolValue - Print a machine constantpool value to
   /// the .s file.
-  virtual void
-    EmitMachineConstantPoolValue(MachineConstantPoolValue *MCPV) LLVM_OVERRIDE;
+  void EmitMachineConstantPoolValue(MachineConstantPoolValue *MCPV) override;
 };
 } // end namespace llvm
 

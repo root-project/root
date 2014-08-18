@@ -19,29 +19,29 @@
 #include "clang/Basic/LLVM.h"
 
 namespace llvm {
-  class Constant;
-  class Type;
-  class Value;
+class Constant;
+class Type;
+class Value;
 }
 
 namespace clang {
-  class CastExpr;
-  class CXXConstructorDecl;
-  class CXXDestructorDecl;
-  class CXXMethodDecl;
-  class CXXRecordDecl;
-  class FieldDecl;
-  class MangleContext;
+class CastExpr;
+class CXXConstructorDecl;
+class CXXDestructorDecl;
+class CXXMethodDecl;
+class CXXRecordDecl;
+class FieldDecl;
+class MangleContext;
 
 namespace CodeGen {
-  class CodeGenFunction;
-  class CodeGenModule;
+class CodeGenFunction;
+class CodeGenModule;
 
 /// \brief Implements C++ ABI-specific code generation functions.
 class CGCXXABI {
 protected:
   CodeGenModule &CGM;
-  OwningPtr<MangleContext> MangleCtx;
+  std::unique_ptr<MangleContext> MangleCtx;
 
   CGCXXABI(CodeGenModule &CGM)
     : CGM(CGM), MangleCtx(CGM.getContext().createMangleContext()) {}
@@ -93,8 +93,9 @@ public:
   /// when called virtually, and code generation does not support the case.
   virtual bool HasThisReturn(GlobalDecl GD) const { return false; }
 
-  /// Returns true if the given record type should be returned indirectly.
-  virtual bool isReturnTypeIndirect(const CXXRecordDecl *RD) const = 0;
+  /// If the C++ ABI requires the given type be returned in a particular way,
+  /// this method sets RetAI and returns true.
+  virtual bool classifyReturnType(CGFunctionInfo &FI) const = 0;
 
   /// Specify how one should pass an argument of a record type.
   enum RecordArgABI {
@@ -111,8 +112,16 @@ public:
     RAA_Indirect
   };
 
+  /// Returns true if C++ allows us to copy the memory of an object of type RD
+  /// when it is passed as an argument.
+  bool canCopyArgument(const CXXRecordDecl *RD) const;
+
   /// Returns how an argument of the given record type should be passed.
   virtual RecordArgABI getRecordArgABI(const CXXRecordDecl *RD) const = 0;
+
+  /// Returns true if the implicit 'sret' parameter comes after the implicit
+  /// 'this' parameter of C++ instance methods.
+  virtual bool isSRetParameterAfterThis() const { return false; }
 
   /// Find the LLVM type used to represent the given member pointer
   /// type.
@@ -198,6 +207,30 @@ public:
                                               llvm::Value *ptr,
                                               QualType type) = 0;
 
+  virtual llvm::Constant *getAddrOfRTTIDescriptor(QualType Ty) = 0;
+
+  virtual bool shouldTypeidBeNullChecked(bool IsDeref,
+                                         QualType SrcRecordTy) = 0;
+  virtual void EmitBadTypeidCall(CodeGenFunction &CGF) = 0;
+  virtual llvm::Value *EmitTypeid(CodeGenFunction &CGF, QualType SrcRecordTy,
+                                  llvm::Value *ThisPtr,
+                                  llvm::Type *StdTypeInfoPtrTy) = 0;
+
+  virtual bool shouldDynamicCastCallBeNullChecked(bool SrcIsPtr,
+                                                  QualType SrcRecordTy) = 0;
+
+  virtual llvm::Value *
+  EmitDynamicCastCall(CodeGenFunction &CGF, llvm::Value *Value,
+                      QualType SrcRecordTy, QualType DestTy,
+                      QualType DestRecordTy, llvm::BasicBlock *CastEnd) = 0;
+
+  virtual llvm::Value *EmitDynamicCastToVoid(CodeGenFunction &CGF,
+                                             llvm::Value *Value,
+                                             QualType SrcRecordTy,
+                                             QualType DestTy) = 0;
+
+  virtual bool EmitBadCastCall(CodeGenFunction &CGF) = 0;
+
   virtual llvm::Value *GetVirtualBaseClassOffset(CodeGenFunction &CGF,
                                                  llvm::Value *This,
                                                  const CXXRecordDecl *ClassDecl,
@@ -258,10 +291,12 @@ public:
   }
 
   /// Perform ABI-specific "this" argument adjustment required prior to
-  /// a virtual function call.
-  virtual llvm::Value *adjustThisArgumentForVirtualCall(CodeGenFunction &CGF,
-                                                        GlobalDecl GD,
-                                                        llvm::Value *This) {
+  /// a call of a virtual function.
+  /// The "VirtualCall" argument is true iff the call itself is virtual.
+  virtual llvm::Value *
+  adjustThisArgumentForVirtualFunctionCall(CodeGenFunction &CGF, GlobalDecl GD,
+                                           llvm::Value *This,
+                                           bool VirtualCall) {
     return This;
   }
 
@@ -348,7 +383,8 @@ public:
   /// base tables.
   virtual void emitVirtualInheritanceTables(const CXXRecordDecl *RD) = 0;
 
-  virtual void setThunkLinkage(llvm::Function *Thunk, bool ForVTable) = 0;
+  virtual void setThunkLinkage(llvm::Function *Thunk, bool ForVTable,
+                               GlobalDecl GD, bool ReturnAdjustment) = 0;
 
   virtual llvm::Value *performThisAdjustment(CodeGenFunction &CGF,
                                              llvm::Value *This,
@@ -366,10 +402,6 @@ public:
 
   /// Gets the deleted virtual member call name.
   virtual StringRef GetDeletedVirtualCallName() = 0;
-
-  /// \brief Returns true iff static data members that are initialized in the
-  /// class definition should have linkonce linkage.
-  virtual bool isInlineInitializedStaticDataMemberLinkOnce() { return false; }
 
   /**************************** Array cookies ******************************/
 
@@ -473,14 +505,15 @@ public:
   ///        initialization or non-trivial destruction for thread_local
   ///        variables, a function to perform the initialization. Otherwise, 0.
   virtual void EmitThreadLocalInitFuncs(
-      llvm::ArrayRef<std::pair<const VarDecl *, llvm::GlobalVariable *> > Decls,
+      ArrayRef<std::pair<const VarDecl *, llvm::GlobalVariable *> > Decls,
       llvm::Function *InitFunc);
 
   /// Emit a reference to a non-local thread_local variable (including
   /// triggering the initialization of all thread_local variables in its
   /// translation unit).
-  virtual LValue EmitThreadLocalDeclRefExpr(CodeGenFunction &CGF,
-                                            const DeclRefExpr *DRE);
+  virtual LValue EmitThreadLocalVarDeclLValue(CodeGenFunction &CGF,
+                                              const VarDecl *VD,
+                                              QualType LValType);
 };
 
 // Create an instance of a C++ ABI class:

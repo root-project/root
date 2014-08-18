@@ -64,13 +64,14 @@ bool FileRemapper::initFromFile(StringRef filePath, DiagnosticsEngine &Diag,
     return false;
 
   std::vector<std::pair<const FileEntry *, const FileEntry *> > pairs;
-  
-  OwningPtr<llvm::MemoryBuffer> fileBuf;
-  if (llvm::MemoryBuffer::getFile(infoFile.c_str(), fileBuf))
+
+  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> fileBuf =
+      llvm::MemoryBuffer::getFile(infoFile.c_str());
+  if (!fileBuf)
     return report("Error opening file: " + infoFile, Diag);
   
   SmallVector<StringRef, 64> lines;
-  fileBuf->getBuffer().split(lines, "\n");
+  fileBuf.get()->getBuffer().split(lines, "\n");
 
   for (unsigned idx = 0; idx+3 <= lines.size(); idx += 3) {
     StringRef fromFilename = lines[idx];
@@ -111,7 +112,7 @@ bool FileRemapper::initFromFile(StringRef filePath, DiagnosticsEngine &Diag,
 bool FileRemapper::flushToDisk(StringRef outputDir, DiagnosticsEngine &Diag) {
   using namespace llvm::sys;
 
-  if (fs::create_directory(outputDir) != llvm::errc::success)
+  if (fs::create_directory(outputDir))
     return report("Could not create directory: " + outputDir, Diag);
 
   std::string infoFile = getRemapInfoFile(outputDir);
@@ -204,22 +205,6 @@ void FileRemapper::applyMappings(PreprocessorOptions &PPOpts) const {
   }
 
   PPOpts.RetainRemappedFileBuffers = true;
-}
-
-void FileRemapper::transferMappingsAndClear(PreprocessorOptions &PPOpts) {
-  for (MappingsTy::iterator
-         I = FromToMappings.begin(), E = FromToMappings.end(); I != E; ++I) {
-    if (const FileEntry *FE = I->second.dyn_cast<const FileEntry *>()) {
-      PPOpts.addRemappedFile(I->first->getName(), FE->getName());
-    } else {
-      llvm::MemoryBuffer *mem = I->second.get<llvm::MemoryBuffer *>();
-      PPOpts.addRemappedFile(I->first->getName(), mem);
-    }
-    I->second = Target();
-  }
-
-  PPOpts.RetainRemappedFileBuffers = false;
-  clear();
 }
 
 void FileRemapper::remap(StringRef filePath, llvm::MemoryBuffer *memBuf) {

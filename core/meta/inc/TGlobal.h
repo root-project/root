@@ -29,7 +29,7 @@
 class TGlobal : public TDictionary {
 
 private:
-   DataMemberInfo_t  *fInfo;      //pointer to CINT data member info
+   DataMemberInfo_t  *fInfo;      //!pointer to CINT data member info
 
 public:
    TGlobal(DataMemberInfo_t *info = 0);
@@ -47,7 +47,7 @@ public:
    virtual Long_t Property() const;
    virtual bool   Update(DataMemberInfo_t *info);
 
-   ClassDef(TGlobal,0)  //Global variable class
+   ClassDef(TGlobal,2)  //Global variable class
 };
 
    //Class to map the "funcky" globals and be able to add them to the list of globals.

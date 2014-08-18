@@ -318,8 +318,8 @@ Rint.History:            $(HOME)/.root_hist
 #    including <vector>
 # You can set the variable below to 0 to disable the loading of these
 # includes at startup. You can set the variable to 1 (default) to load
-# only <iostream> , <string> and <RTypesCint.h>. You can set it to 2 to
-# load in addition <vector> and <pair>.  We strongly recommend setting
+# only <iostream>, <string> and <DllImport.h>. You can set it to 2 to
+# load in addition <vector> and <utility>.  We strongly recommend setting
 # the variable to 2 if your scripts include <vector> and you execute
 # your scripts multiple times.
 Rint.Includes:      1

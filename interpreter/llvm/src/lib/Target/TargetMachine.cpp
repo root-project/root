@@ -21,29 +21,12 @@
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCCodeGenInfo.h"
 #include "llvm/MC/MCContext.h"
+#include "llvm/MC/MCTargetOptions.h"
 #include "llvm/MC/SectionKind.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Target/TargetLowering.h"
 #include "llvm/Target/TargetLoweringObjectFile.h"
 using namespace llvm;
-
-//---------------------------------------------------------------------------
-// Command-line options that tend to be useful on more than one back-end.
-//
-
-namespace llvm {
-  bool HasDivModLibcall;
-  bool AsmVerbosityDefault(false);
-}
-
-static cl::opt<bool>
-DataSections("fdata-sections",
-  cl::desc("Emit data into separate sections"),
-  cl::init(false));
-static cl::opt<bool>
-FunctionSections("ffunction-sections",
-  cl::desc("Emit functions into separate sections"),
-  cl::init(false));
 
 //---------------------------------------------------------------------------
 // TargetMachine Class
@@ -53,12 +36,7 @@ TargetMachine::TargetMachine(const Target &T,
                              StringRef TT, StringRef CPU, StringRef FS,
                              const TargetOptions &Options)
   : TheTarget(T), TargetTriple(TT), TargetCPU(CPU), TargetFS(FS),
-    CodeGenInfo(0), AsmInfo(0),
-    MCRelaxAll(false),
-    MCNoExecStack(false),
-    MCSaveTempLabels(false),
-    MCUseCFI(true),
-    MCUseDwarfDirectory(false),
+    CodeGenInfo(nullptr), AsmInfo(nullptr),
     RequireStructuredCFG(false),
     Options(Options) {
 }
@@ -89,6 +67,8 @@ void TargetMachine::resetTargetOptions(const MachineFunction *MF) const {
   RESET_OPTION(NoNaNsFPMath, "no-nans-fp-math");
   RESET_OPTION(UseSoftFloat, "use-soft-float");
   RESET_OPTION(DisableTailCalls, "disable-tail-calls");
+
+  TO.MCOptions.SanitizeAddress = F->hasFnAttribute(Attribute::SanitizeAddress);
 }
 
 /// getRelocationModel - Returns the code generation relocation model. The
@@ -108,8 +88,8 @@ CodeModel::Model TargetMachine::getCodeModel() const {
 }
 
 /// Get the IR-specified TLS model for Var.
-static TLSModel::Model getSelectedTLSModel(const GlobalVariable *Var) {
-  switch (Var->getThreadLocalMode()) {
+static TLSModel::Model getSelectedTLSModel(const GlobalValue *GV) {
+  switch (GV->getThreadLocalMode()) {
   case GlobalVariable::NotThreadLocal:
     llvm_unreachable("getSelectedTLSModel for non-TLS variable");
     break;
@@ -126,19 +106,13 @@ static TLSModel::Model getSelectedTLSModel(const GlobalVariable *Var) {
 }
 
 TLSModel::Model TargetMachine::getTLSModel(const GlobalValue *GV) const {
-  // If GV is an alias then use the aliasee for determining
-  // thread-localness.
-  if (const GlobalAlias *GA = dyn_cast<GlobalAlias>(GV))
-    GV = GA->resolveAliasedGlobal(false);
-  const GlobalVariable *Var = cast<GlobalVariable>(GV);
-
-  bool isLocal = Var->hasLocalLinkage();
-  bool isDeclaration = Var->isDeclaration();
+  bool isLocal = GV->hasLocalLinkage();
+  bool isDeclaration = GV->isDeclaration();
   bool isPIC = getRelocationModel() == Reloc::PIC_;
   bool isPIE = Options.PositionIndependentExecutable;
   // FIXME: what should we do for protected and internal visibility?
   // For variables, is internal different from hidden?
-  bool isHidden = Var->hasHiddenVisibility();
+  bool isHidden = GV->hasHiddenVisibility();
 
   TLSModel::Model Model;
   if (isPIC && !isPIE) {
@@ -154,7 +128,7 @@ TLSModel::Model TargetMachine::getTLSModel(const GlobalValue *GV) const {
   }
 
   // If the user specified a more specific model, use that.
-  TLSModel::Model SelectedModel = getSelectedTLSModel(Var);
+  TLSModel::Model SelectedModel = getSelectedTLSModel(GV);
   if (SelectedModel > Model)
     return SelectedModel;
 
@@ -174,28 +148,28 @@ void TargetMachine::setOptLevel(CodeGenOpt::Level Level) const {
     CodeGenInfo->setOptLevel(Level);
 }
 
-bool TargetMachine::getAsmVerbosityDefault() {
-  return AsmVerbosityDefault;
+bool TargetMachine::getAsmVerbosityDefault() const {
+  return Options.MCOptions.AsmVerbose;
 }
 
 void TargetMachine::setAsmVerbosityDefault(bool V) {
-  AsmVerbosityDefault = V;
+  Options.MCOptions.AsmVerbose = V;
 }
 
-bool TargetMachine::getFunctionSections() {
-  return FunctionSections;
+bool TargetMachine::getFunctionSections() const {
+  return Options.FunctionSections;
 }
 
-bool TargetMachine::getDataSections() {
-  return DataSections;
+bool TargetMachine::getDataSections() const {
+  return Options.DataSections;
 }
 
 void TargetMachine::setFunctionSections(bool V) {
-  FunctionSections = V;
+  Options.FunctionSections = V;
 }
 
 void TargetMachine::setDataSections(bool V) {
-  DataSections = V;
+  Options.DataSections = V;
 }
 
 void TargetMachine::getNameWithPrefix(SmallVectorImpl<char> &Name,

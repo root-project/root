@@ -18,13 +18,13 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/DebugInfo.h"
 #include "llvm/CodeGen/AsmPrinter.h"
+#include "llvm/CodeGen/LexicalScopes.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
-#include "llvm/CodeGen/LexicalScopes.h"
+#include "llvm/IR/DebugInfo.h"
+#include "llvm/IR/DebugLoc.h"
 #include "llvm/MC/MCStreamer.h"
-#include "llvm/Support/DebugLoc.h"
 #include "llvm/Target/TargetLoweringObjectFile.h"
 
 namespace llvm {
@@ -32,13 +32,13 @@ namespace llvm {
 class WinCodeViewLineTables : public AsmPrinterHandler {
   AsmPrinter *Asm;
   DebugLoc PrevInstLoc;
-  LexicalScopes LScopes;
 
   // For each function, store a vector of labels to its instructions, as well as
   // to the end of the function.
   struct FunctionInfo {
     SmallVector<MCSymbol *, 10> Instrs;
     MCSymbol *End;
+    FunctionInfo() : End(nullptr) {}
   } *CurFn;
 
   typedef DenseMap<const Function *, FunctionInfo> FnDebugInfoTy;
@@ -104,7 +104,7 @@ class WinCodeViewLineTables : public AsmPrinterHandler {
   void maybeRecordLocation(DebugLoc DL, const MachineFunction *MF);
 
   void clear() {
-    assert(CurFn == 0);
+    assert(CurFn == nullptr);
     FileNameRegistry.clear();
     InstrInfo.clear();
   }
@@ -122,22 +122,22 @@ public:
       free(I->second);
   }
 
-  virtual void setSymbolSize(const llvm::MCSymbol *, uint64_t) {}
+  void setSymbolSize(const llvm::MCSymbol *, uint64_t) override {}
 
   /// \brief Emit the COFF section that holds the line table information.
-  virtual void endModule();
+  void endModule() override;
 
   /// \brief Gather pre-function debug information.
-  virtual void beginFunction(const MachineFunction *MF);
+  void beginFunction(const MachineFunction *MF) override;
 
   /// \brief Gather post-function debug information.
-  virtual void endFunction(const MachineFunction *);
+  void endFunction(const MachineFunction *) override;
 
   /// \brief Process beginning of an instruction.
-  virtual void beginInstruction(const MachineInstr *MI);
+  void beginInstruction(const MachineInstr *MI) override;
 
   /// \brief Process end of an instruction.
-  virtual void endInstruction() {}
+  void endInstruction() override {}
 };
 } // End of namespace llvm
 

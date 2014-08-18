@@ -273,9 +273,16 @@ void TCling::UpdateEnumConstants(TEnum* enumObj, TClass* cl) const {
             value = valAPSInt.getZExtValue();
          }
 
-         // Create the TEnumConstant.
-         TEnumConstant* enumConstant = new TEnumConstant((DataMemberInfo_t*)new TClingDataMemberInfo(fInterpreter, *EDI, (TClingClassInfo*)(cl ? cl->GetClassInfo() : 0))
-                                                         , constantName, value, enumObj);
+         // Create the TEnumConstant or update it if existing
+         TEnumConstant* enumConstant = nullptr;
+         TClingClassInfo* tcCInfo = (TClingClassInfo*)(cl ? cl->GetClassInfo() : 0);
+         TClingDataMemberInfo* tcDmInfo = new TClingDataMemberInfo(fInterpreter, *EDI, tcCInfo);
+         DataMemberInfo_t* dmInfo = (DataMemberInfo_t*) tcDmInfo;
+         if (TObject* encAsTObj = enumObj->GetConstants()->FindObject(constantName)){
+            ((TEnumConstant*)encAsTObj)->Update(dmInfo);
+         } else {
+            enumConstant = new TEnumConstant(dmInfo, constantName, value, enumObj);
+         }
 
          // Add the global constants to the list of Globals.
          if (!cl) {
@@ -527,30 +534,6 @@ extern "C" {
                    unsigned short int flags);
 }
 #endif
-
-//______________________________________________________________________________
-static string TCling__Demangle(const char *mangled_name, int *err)
-{
-
-   string demangled = mangled_name;
-   *err = 0;
-#ifdef R__WIN32
-   char *demangled_name = __unDName(0, mangled_name, 0, malloc, free, UNDNAME_COMPLETE);
-   if (!demangled_name) {
-      *err = -1;
-      return demangled;
-   }
-#else
-   char *demangled_name = abi::__cxa_demangle(mangled_name, 0, 0, err);
-   if (!demangled_name || *err) {
-      free(demangled_name);
-      return demangled;
-   }
-#endif
-   demangled = demangled_name;
-   free(demangled_name);
-   return demangled;
-}
 
 //______________________________________________________________________________
 static clang::ClassTemplateDecl* FindTemplateInNamespace(clang::Decl* decl)
@@ -932,6 +915,8 @@ TCling::TCling(const char *name, const char *title)
 //    fMapNamespaces   = 0;
    fRootmapFiles = 0;
    fLockProcessLine = kTRUE;
+
+   fAllowLibLoad = !fromRootCling;
    // Disable the autoloader until it is explicitly enabled.
    SetClassAutoloading(false);
 
@@ -1103,6 +1088,42 @@ bool TCling::LoadPCM(TString pcmFileName,
          dataTypes->Clear(); // Ownership was transfered to TListOfTypes.
          delete dataTypes;
       }
+
+      TObjArray *enums;
+      pcmFile->GetObject("__Enums", enums);
+      if (enums) {
+         // Cache the pointers
+         auto listOfGlobals = gROOT->GetListOfGlobals();
+         auto listOfEnums = gROOT->GetListOfEnums();
+         // Loop on enums and then on enum constants
+         for (auto selEnum: *enums){
+            const char* enumScope = selEnum->GetTitle();
+            if (strcmp(enumScope,"") == 0){
+               // This is a global enum and is added to the
+               // list of enums and its constants to the list of globals
+               if (!listOfEnums->FindObject(selEnum)){
+                  listOfEnums->Add(selEnum);
+               }
+               for (auto enumConstant: *static_cast<TEnum*>(selEnum)->GetConstants()){
+                  if (!listOfGlobals->FindObject(enumConstant)){
+                     listOfGlobals->Add(enumConstant);
+                  }
+               }
+            }
+            else {
+               // This enum is in a namespace. A TClass entry is bootstrapped if
+               // none exists yet and the enum is added to it
+               TClass* nsTClassEntry = TClass::GetClass(enumScope);
+               if (!nsTClassEntry){
+                  nsTClassEntry = new TClass(enumScope,0,TClass::kNamespaceForMeta, true);
+               }
+               nsTClassEntry->GetListOfEnums(false)->Add(selEnum);
+            }
+         }
+         enums->Clear();
+         delete enums;
+      }
+
       delete pcmFile;
 
       gDebug = oldDebug;
@@ -1166,14 +1187,14 @@ void TCling::RegisterModule(const char* modulename,
    // The value of 'triggerFunc' is used to find the shared library location.
 
    // rootcling also uses TCling for generating the dictionary ROOT files.
-   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+   static bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
    // We need the dictionary initialization but we don't want to inject the
    // declarations into the interpreter, except for those we really need for
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
    if (fromRootCling) return;
 
    // Treat Aclic Libs in a special way. Do not delay the parsing.
-   bool oldfHeaderParsingOnDemand=fHeaderParsingOnDemand;
+   bool oldfHeaderParsingOnDemand = fHeaderParsingOnDemand;
    if (oldfHeaderParsingOnDemand &&
        strstr(modulename, "_ACLiC_dict") != nullptr){
       if (gDebug>1)
@@ -1371,8 +1392,15 @@ void TCling::RegisterModule(const char* modulename,
    // Now that all the header have been registered/compiled, let's
    // make sure to 'reset' the TClass that have a class init in this module
    // but already had their type information available (using information/header
-   // loaded form other modules).
-   if (!fHeaderParsingOnDemand){
+   // loaded from other modules or from class rules).
+   if (!fHeaderParsingOnDemand) {
+      // This code is likely to be superseded by the similar code in LoadPCM,
+      // and have been disabled, (inadvertently or awkwardly) by
+      // commit 7903f09f3beea69e82ffba29f59fb2d656a4fd54 (Refactor the routines used for header parsing on demand)
+      // whereas it seems that a more semantically correct conditional would have
+      // been 'if this module does not have a rootpcm'.
+      // Note: this need to be review when the clang pcm are being installed.
+      //       #if defined(R__MUST_REVISIT)
       while (!fClassesToUpdate.empty()) {
          TClass *oldcl = fClassesToUpdate.back().first;
          if (oldcl->GetState() != TClass::kHasTClassInit) {
@@ -1931,8 +1959,10 @@ void TCling::EnableAutoLoading()
    // is used that is stored in a not yet loaded library. Uses the
    // information stored in the class/library map (typically
    // $ROOTSYS/etc/system.rootmap).
-   LoadLibraryMap();
-   SetClassAutoloading(true);
+   if (fAllowLibLoad) {
+      LoadLibraryMap();
+      SetClassAutoloading(true);
+   }
 }
 
 //______________________________________________________________________________
@@ -2188,6 +2218,11 @@ Int_t TCling::Load(const char* filename, Bool_t system)
    // Load a library file in cling's memory.
    // if 'system' is true, the library is never unloaded.
    // Return 0 on success, -1 on failure.
+
+   if (!fAllowLibLoad) {
+      Error("Load","Trying to load library (%s) from rootcling.",filename);
+      return -1;
+   }
 
    // Used to return 0 on success, 1 on duplicate, -1 on failure, -2 on "fatal".
    R__LOCKGUARD2(gInterpreterMutex);
@@ -3242,11 +3277,9 @@ TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
    if (!gv) return 0;
 
    llvm::StringRef mangled_name = gv->getName();
-   //
-   //  Use the C++ ABI provided function to demangle the symbol name.
-   //
+
    int err = 0;
-   string scopename = TCling__Demangle(mangled_name.str().c_str(), &err);
+   char* demangled_name_c = TClassEdit::DemangleName(mangled_name.str().c_str(), err);
    if (err) {
       if (err == -2) {
          // It might simply be an unmangled global name.
@@ -3257,6 +3290,10 @@ TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
       }
       return 0;
    }
+
+   std::string scopename(demangled_name_c);
+   free(demangled_name_c);
+
    //
    //  Separate out the class or namespace part of the
    //  function name.
@@ -4417,9 +4454,11 @@ TClass *TCling::GetClass(const std::type_info& typeinfo, Bool_t load) const
    // via the usual name based interface (TClass::GetClass).
 
    int err = 0;
-   string demangled_name = TCling__Demangle(typeinfo.name(), &err);
+   char* demangled_name = TClassEdit::DemangleTypeIdName(typeinfo, err);
    if (err) return 0;
-   return TClass::GetClass(demangled_name.c_str(), load, kTRUE);
+   TClass* theClass = TClass::GetClass(demangled_name, load, kTRUE);
+   free(demangled_name);
+   return theClass;
 }
 
 //______________________________________________________________________________
@@ -4429,10 +4468,14 @@ Int_t TCling::AutoLoad(const type_info& typeinfo)
    // and 1 in case if success.
 
    int err = 0;
-   string demangled_name = TCling__Demangle(typeinfo.name(), &err);
+   char* demangled_name_c = TClassEdit::DemangleTypeIdName(typeinfo, err);
    if (err) {
       return 0;
    }
+
+   std::string demangled_name(demangled_name_c);
+   free(demangled_name_c);
+
    // AutoLoad expects (because TClass::GetClass already prepares it that way) a
    // shortened name.
    TClassEdit::TSplitType splitname( demangled_name.c_str(), (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
@@ -4468,9 +4511,18 @@ Int_t TCling::AutoLoad(const char* cls)
    R__LOCKGUARD(gInterpreterMutex);
    Int_t status = 0;
    if (!gROOT || !gInterpreter || gROOT->TestBit(TObject::kInvalidObject)) {
+      if (gDebug > 2) {
+         Info("TCling::AutoLoad",
+              "Disabled due to gROOT or gInterpreter being invalid/not ready (the class name is %s)", cls);
+      }
       return status;
    }
-   if (fClingCallbacks && !fClingCallbacks->IsAutoloadingEnabled()) {
+   if (!fAllowLibLoad) {
+      // Never load any library from rootcling/genreflex.
+      if (gDebug > 2) {
+         Info("TCling::AutoLoad",
+              "Explicitly disabled (the class name is %s)", cls);
+      }
       return 0;
    }
    // Prevent the recursion when the library dictionary are loaded.
@@ -4693,14 +4745,15 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
       }
    }
 
-   //
-   //  Use the C++ ABI provided function to demangle the symbol name.
-   //
    int err = 0;
-   string name = TCling__Demangle(mangled_name.c_str(), &err);
+   char* demangled_name_c = TClassEdit::DemangleName(mangled_name.c_str(), err);
    if (err) {
       return 0;
    }
+
+   std::string name(demangled_name_c);
+   free(demangled_name_c);
+
    //fprintf(stderr, "demangled name: '%s'\n", demangled_name);
    //
    //  Separate out the class or namespace part of the
@@ -5408,6 +5461,7 @@ int TCling::SetClassAutoloading(int autoload) const
    // Enable/Disable the Autoloading of libraries.
    // Returns the old value, i.e whether it was enabled or not.
    if (!autoload && !fClingCallbacks) return false;
+   if (!fAllowLibLoad) return false;
 
    assert(fClingCallbacks && "We must have callbacks!");
    bool oldVal =  fClingCallbacks->IsAutoloadingEnabled();

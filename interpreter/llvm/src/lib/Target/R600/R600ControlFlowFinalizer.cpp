@@ -12,9 +12,9 @@
 /// computing their address on the fly ; it also sets STACK_SIZE info.
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "r600cf"
 #include "llvm/Support/Debug.h"
 #include "AMDGPU.h"
+#include "AMDGPUSubtarget.h"
 #include "R600Defines.h"
 #include "R600InstrInfo.h"
 #include "R600MachineFunctionInfo.h"
@@ -25,6 +25,8 @@
 #include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
+
+#define DEBUG_TYPE "r600cf"
 
 namespace {
 
@@ -468,25 +470,25 @@ private:
 
 public:
   R600ControlFlowFinalizer(TargetMachine &tm) : MachineFunctionPass(ID),
-    TII (0), TRI(0),
+    TII (nullptr), TRI(nullptr),
     ST(tm.getSubtarget<AMDGPUSubtarget>()) {
       const AMDGPUSubtarget &ST = tm.getSubtarget<AMDGPUSubtarget>();
       MaxFetchInst = ST.getTexVTXClauseSize();
   }
 
-  virtual bool runOnMachineFunction(MachineFunction &MF) {
+  bool runOnMachineFunction(MachineFunction &MF) override {
     TII=static_cast<const R600InstrInfo *>(MF.getTarget().getInstrInfo());
     TRI=static_cast<const R600RegisterInfo *>(MF.getTarget().getRegisterInfo());
     R600MachineFunctionInfo *MFI = MF.getInfo<R600MachineFunctionInfo>();
 
-    CFStack CFStack(ST, MFI->ShaderType);
+    CFStack CFStack(ST, MFI->getShaderType());
     for (MachineFunction::iterator MB = MF.begin(), ME = MF.end(); MB != ME;
         ++MB) {
       MachineBasicBlock &MBB = *MB;
       unsigned CfCount = 0;
       std::vector<std::pair<unsigned, std::set<MachineInstr *> > > LoopStack;
       std::vector<MachineInstr * > IfThenElseStack;
-      if (MFI->ShaderType == 1) {
+      if (MFI->getShaderType() == ShaderType::VERTEX) {
         BuildMI(MBB, MBB.begin(), MBB.findDebugLoc(MBB.begin()),
             getHWInstrDesc(CF_CALL_FS));
         CfCount++;
@@ -501,13 +503,13 @@ public:
           DEBUG(dbgs() << CfCount << ":"; I->dump(););
           FetchClauses.push_back(MakeFetchClause(MBB, I));
           CfCount++;
-          LastAlu.back() = 0;
+          LastAlu.back() = nullptr;
           continue;
         }
 
         MachineBasicBlock::iterator MI = I;
         if (MI->getOpcode() != AMDGPU::ENDIF)
-          LastAlu.back() = 0;
+          LastAlu.back() = nullptr;
         if (MI->getOpcode() == AMDGPU::CF_ALU)
           LastAlu.back() = MI;
         I++;
@@ -558,7 +560,7 @@ public:
           break;
         }
         case AMDGPU::IF_PREDICATE_SET: {
-          LastAlu.push_back(0);
+          LastAlu.push_back(nullptr);
           MachineInstr *MIb = BuildMI(MBB, MI, MBB.findDebugLoc(MI),
               getHWInstrDesc(CF_JUMP))
               .addImm(0)
@@ -665,7 +667,7 @@ public:
     return false;
   }
 
-  const char *getPassName() const {
+  const char *getPassName() const override {
     return "R600 Control Flow Finalizer Pass";
   }
 };

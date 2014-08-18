@@ -1,20 +1,19 @@
+//--------------------------------------------------------------------*- C++ -*-
+// CLING - the C++ LLVM-based InterpreterG :)
+// author:  Manasij Mukherjee  <manasij7479@gmail.com>
+// author:  Vassil Vassilev <vvasilev@cern.ch>
+//
+// This file is dual-licensed: you can choose to license it under the University
+// of Illinois Open Source License or the GNU Lesser General Public License. See
+// LICENSE.TXT for details.
+//------------------------------------------------------------------------------
+
 #ifndef CLING_AUTOLOAD_CALLBACK_H
 #define CLING_AUTOLOAD_CALLBACK_H
 
 #include "cling/Interpreter/InterpreterCallbacks.h"
-#include <map>
 
-#if 0
-This feature is disabled by default until stable.
-To enable, execute the following code as runtime input.
-Note that, for now, the T meta command will cause the interpreter to segfault,
-unless these objects are loaded.
-
-.rawInput 0
-#include "cling/Interpreter/AutoloadCallback.h"
-gCling->setCallbacks(new cling::AutoloadCallback(gCling));
-
-#endif
+#include "llvm/ADT/DenseMap.h"
 
 namespace clang {
   class Decl;
@@ -33,12 +32,12 @@ namespace cling {
   public:
       AutoloadCallback(cling::Interpreter* interp);
       ~AutoloadCallback();
-//    using cling::InterpreterCallbacks::LookupObject;
+    using cling::InterpreterCallbacks::LookupObject;
       //^to get rid of bogus warning : "-Woverloaded-virtual"
       //virtual functions ARE meant to be overriden!
 
 //    bool LookupObject (clang::LookupResult &R, clang::Scope *);
-//    bool LookupObject (clang::TagDecl* t);
+    bool LookupObject (clang::TagDecl* t);
 
     void InclusionDirective(clang::SourceLocation HashLoc,
                             const clang::Token &IncludeTok,
@@ -51,25 +50,15 @@ namespace cling {
                             const clang::Module *Imported);
     void TransactionCommitted(const Transaction& T);
 
+    typedef llvm::DenseMap<const clang::FileEntry*, std::vector<clang::Decl*> > FwdDeclsMap;
   private:
-    struct FileInfo {
-      FileInfo():Included(false){}
-      bool Included;
-      std::vector<clang::Decl*> Decls;
-    };
-
     // The key is the Unique File ID obtained from the source manager.
-    std::map<unsigned,FileInfo> m_Map;
+    FwdDeclsMap m_Map;
 
     Interpreter* m_Interpreter;
 //    AutoloadingStateInfo m_State;
 
     void report(clang::SourceLocation l, std::string name,std::string header);
-    void InsertIntoAutoloadingState(clang::Decl* decl,std::string annotation);
-    void HandleDeclVector(std::vector<clang::Decl*> Decls);
-    void HandleNamespace(clang::NamespaceDecl* NS);
-    void HandleClassTemplate(clang::ClassTemplateDecl* CT);
-    void HandleFunction(clang::FunctionDecl* F);
   };
 } // end namespace cling
 

@@ -58,7 +58,7 @@ static bool IsStdString(QualType T) {
 
   const TypedefNameDecl *TD = TT->getDecl();
 
-  if (!InNamespace(TD, "std"))
+  if (!TD->isInStdNamespace())
     return false;
 
   return TD->getName() == "string";
@@ -145,8 +145,8 @@ static void CheckStringRefAssignedTemporary(const Decl *D, BugReporter &BR,
 void StringRefCheckerVisitor::VisitDeclStmt(DeclStmt *S) {
   VisitChildren(S);
 
-  for (DeclStmt::decl_iterator I = S->decl_begin(), E = S->decl_end();I!=E; ++I)
-    if (VarDecl *VD = dyn_cast<VarDecl>(*I))
+  for (auto *I : S->decls())
+    if (VarDecl *VD = dyn_cast<VarDecl>(I))
       VisitVarDecl(VD);
 }
 
@@ -201,9 +201,7 @@ static bool IsPartOfAST(const CXXRecordDecl *R) {
   if (IsClangStmt(R) || IsClangType(R) || IsClangDecl(R) || IsClangAttr(R))
     return true;
 
-  for (CXXRecordDecl::base_class_const_iterator I = R->bases_begin(),
-                                                E = R->bases_end(); I!=E; ++I) {
-    CXXBaseSpecifier BS = *I;
+  for (const auto &BS : R->bases()) {
     QualType T = BS.getType();
     if (const RecordType *baseT = T->getAs<RecordType>()) {
       CXXRecordDecl *baseD = cast<CXXRecordDecl>(baseT->getDecl());
@@ -237,10 +235,9 @@ static void CheckASTMemory(const CXXRecordDecl *R, BugReporter &BR,
   if (!IsPartOfAST(R))
     return;
 
-  for (RecordDecl::field_iterator I = R->field_begin(), E = R->field_end();
-       I != E; ++I) {
+  for (auto *I : R->fields()) {
     ASTFieldVisitor walker(R, BR, Checker);
-    walker.Visit(*I);
+    walker.Visit(I);
   }
 }
 
@@ -254,9 +251,8 @@ void ASTFieldVisitor::Visit(FieldDecl *D) {
 
   if (const RecordType *RT = T->getAs<RecordType>()) {
     const RecordDecl *RD = RT->getDecl()->getDefinition();
-    for (RecordDecl::field_iterator I = RD->field_begin(), E = RD->field_end();
-         I != E; ++I)
-      Visit(*I);
+    for (auto *I : RD->fields())
+      Visit(I);
   }
 
   FieldChain.pop_back();

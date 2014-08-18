@@ -19,8 +19,7 @@
 #include "llvm/Support/Endian.h"
 
 namespace llvm {
-  template <typename T>
-  class ArrayRef;
+template <typename T> class ArrayRef;
 
 namespace object {
 class ImportDirectoryEntryRef;
@@ -66,8 +65,8 @@ struct coff_file_header {
 /// The 32-bit PE header that follows the COFF header.
 struct pe32_header {
   support::ulittle16_t Magic;
-  uint8_t  MajorLinkerVersion;
-  uint8_t  MinorLinkerVersion;
+  uint8_t MajorLinkerVersion;
+  uint8_t MinorLinkerVersion;
   support::ulittle32_t SizeOfCode;
   support::ulittle32_t SizeOfInitializedData;
   support::ulittle32_t SizeOfUninitializedData;
@@ -100,8 +99,8 @@ struct pe32_header {
 /// The 64-bit PE header that follows the COFF header.
 struct pe32plus_header {
   support::ulittle16_t Magic;
-  uint8_t  MajorLinkerVersion;
-  uint8_t  MinorLinkerVersion;
+  uint8_t MajorLinkerVersion;
+  uint8_t MinorLinkerVersion;
   support::ulittle32_t SizeOfCode;
   support::ulittle32_t SizeOfInitializedData;
   support::ulittle32_t SizeOfUninitializedData;
@@ -193,19 +192,50 @@ struct coff_symbol {
   } Name;
 
   support::ulittle32_t Value;
-  support::little16_t SectionNumber;
+  support::ulittle16_t SectionNumber;
 
   support::ulittle16_t Type;
 
-  support::ulittle8_t  StorageClass;
-  support::ulittle8_t  NumberOfAuxSymbols;
+  support::ulittle8_t StorageClass;
+  support::ulittle8_t NumberOfAuxSymbols;
 
-  uint8_t getBaseType() const {
-    return Type & 0x0F;
+  uint8_t getBaseType() const { return Type & 0x0F; }
+
+  uint8_t getComplexType() const { return (Type & 0xF0) >> 4; }
+
+  bool isFunctionDefinition() const {
+    return StorageClass == COFF::IMAGE_SYM_CLASS_EXTERNAL &&
+           getBaseType() == COFF::IMAGE_SYM_TYPE_NULL &&
+           getComplexType() == COFF::IMAGE_SYM_DTYPE_FUNCTION &&
+           !COFF::isReservedSectionNumber(SectionNumber);
   }
 
-  uint8_t getComplexType() const {
-    return (Type & 0xF0) >> 4;
+  bool isFunctionLineInfo() const {
+    return StorageClass == COFF::IMAGE_SYM_CLASS_FUNCTION;
+  }
+
+  bool isWeakExternal() const {
+    return StorageClass == COFF::IMAGE_SYM_CLASS_WEAK_EXTERNAL ||
+           (StorageClass == COFF::IMAGE_SYM_CLASS_EXTERNAL &&
+            SectionNumber == COFF::IMAGE_SYM_UNDEFINED && Value == 0);
+  }
+
+  bool isFileRecord() const {
+    return StorageClass == COFF::IMAGE_SYM_CLASS_FILE;
+  }
+
+  bool isSectionDefinition() const {
+    // C++/CLI creates external ABS symbols for non-const appdomain globals.
+    // These are also followed by an auxiliary section definition.
+    bool isAppdomainGlobal = StorageClass == COFF::IMAGE_SYM_CLASS_EXTERNAL &&
+                             SectionNumber == COFF::IMAGE_SYM_ABSOLUTE;
+    bool isOrdinarySection =
+        StorageClass == COFF::IMAGE_SYM_CLASS_STATIC && Value == 0;
+    return isAppdomainGlobal || isOrdinarySection;
+  }
+
+  bool isCLRToken() const {
+    return StorageClass == COFF::IMAGE_SYM_CLASS_CLR_TOKEN;
   }
 };
 
@@ -220,6 +250,13 @@ struct coff_section {
   support::ulittle16_t NumberOfRelocations;
   support::ulittle16_t NumberOfLinenumbers;
   support::ulittle32_t Characteristics;
+
+  // Returns true if the actual number of relocations is stored in
+  // VirtualAddress field of the first relocation table entry.
+  bool hasExtendedRelocations() const {
+    return Characteristics & COFF::IMAGE_SCN_LNK_NRELOC_OVFL &&
+        NumberOfRelocations == UINT16_MAX;
+  };
 };
 
 struct coff_relocation {
@@ -228,10 +265,30 @@ struct coff_relocation {
   support::ulittle16_t Type;
 };
 
+struct coff_aux_function_definition {
+  support::ulittle32_t TagIndex;
+  support::ulittle32_t TotalSize;
+  support::ulittle32_t PointerToLinenumber;
+  support::ulittle32_t PointerToNextFunction;
+  char Unused[2];
+};
+
+struct coff_aux_bf_and_ef_symbol {
+  char Unused1[4];
+  support::ulittle16_t Linenumber;
+  char Unused2[6];
+  support::ulittle32_t PointerToNextFunction;
+  char Unused3[2];
+};
+
 struct coff_aux_weak_external {
   support::ulittle32_t TagIndex;
   support::ulittle32_t Characteristics;
   char Unused[10];
+};
+
+struct coff_aux_file {
+  char FileName[18];
 };
 
 struct coff_aux_section_definition {
@@ -242,6 +299,13 @@ struct coff_aux_section_definition {
   support::ulittle16_t Number;
   support::ulittle8_t Selection;
   char Unused[3];
+};
+
+struct coff_aux_clr_token {
+  support::ulittle8_t AuxType;
+  support::ulittle8_t Reserved;
+  support::ulittle32_t SymbolTableIndex;
+  char Unused[12];
 };
 
 struct coff_load_configuration32 {
@@ -278,156 +342,153 @@ private:
   friend class ImportDirectoryEntryRef;
   friend class ExportDirectoryEntryRef;
   const coff_file_header *COFFHeader;
-  const pe32_header      *PE32Header;
-  const pe32plus_header  *PE32PlusHeader;
-  const data_directory   *DataDirectory;
-  const coff_section     *SectionTable;
-  const coff_symbol      *SymbolTable;
-  const char             *StringTable;
-        uint32_t          StringTableSize;
+  const pe32_header *PE32Header;
+  const pe32plus_header *PE32PlusHeader;
+  const data_directory *DataDirectory;
+  const coff_section *SectionTable;
+  const coff_symbol *SymbolTable;
+  const char *StringTable;
+  uint32_t StringTableSize;
   const import_directory_table_entry *ImportDirectory;
-        uint32_t          NumberOfImportDirectory;
+  uint32_t NumberOfImportDirectory;
   const export_directory_table_entry *ExportDirectory;
 
-        error_code        getString(uint32_t offset, StringRef &Res) const;
+  std::error_code getString(uint32_t offset, StringRef &Res) const;
 
-  const coff_symbol      *toSymb(DataRefImpl Symb) const;
-  const coff_section     *toSec(DataRefImpl Sec) const;
-  const coff_relocation  *toRel(DataRefImpl Rel) const;
+  const coff_symbol *toSymb(DataRefImpl Symb) const;
+  const coff_section *toSec(DataRefImpl Sec) const;
+  const coff_relocation *toRel(DataRefImpl Rel) const;
 
-        error_code        initSymbolTablePtr();
-        error_code        initImportTablePtr();
-        error_code        initExportTablePtr();
+  std::error_code initSymbolTablePtr();
+  std::error_code initImportTablePtr();
+  std::error_code initExportTablePtr();
 
 protected:
-  void moveSymbolNext(DataRefImpl &Symb) const LLVM_OVERRIDE;
-  error_code getSymbolName(DataRefImpl Symb, StringRef &Res) const
-      LLVM_OVERRIDE;
-  error_code getSymbolAddress(DataRefImpl Symb, uint64_t &Res) const
-      LLVM_OVERRIDE;
-  error_code getSymbolFileOffset(DataRefImpl Symb, uint64_t &Res) const
-      LLVM_OVERRIDE;
-  error_code getSymbolSize(DataRefImpl Symb, uint64_t &Res) const LLVM_OVERRIDE;
-  uint32_t getSymbolFlags(DataRefImpl Symb) const LLVM_OVERRIDE;
-  error_code getSymbolType(DataRefImpl Symb, SymbolRef::Type &Res) const
-      LLVM_OVERRIDE;
-  error_code getSymbolSection(DataRefImpl Symb, section_iterator &Res) const
-      LLVM_OVERRIDE;
-  error_code getSymbolValue(DataRefImpl Symb, uint64_t &Val) const
-      LLVM_OVERRIDE;
-  void moveSectionNext(DataRefImpl &Sec) const LLVM_OVERRIDE;
-  error_code getSectionName(DataRefImpl Sec, StringRef &Res) const
-      LLVM_OVERRIDE;
-  error_code getSectionAddress(DataRefImpl Sec, uint64_t &Res) const
-      LLVM_OVERRIDE;
-  error_code getSectionSize(DataRefImpl Sec, uint64_t &Res) const LLVM_OVERRIDE;
-  error_code getSectionContents(DataRefImpl Sec, StringRef &Res) const
-      LLVM_OVERRIDE;
-  error_code getSectionAlignment(DataRefImpl Sec, uint64_t &Res) const
-      LLVM_OVERRIDE;
-  error_code isSectionText(DataRefImpl Sec, bool &Res) const LLVM_OVERRIDE;
-  error_code isSectionData(DataRefImpl Sec, bool &Res) const LLVM_OVERRIDE;
-  error_code isSectionBSS(DataRefImpl Sec, bool &Res) const LLVM_OVERRIDE;
-  error_code isSectionVirtual(DataRefImpl Sec, bool &Res) const LLVM_OVERRIDE;
-  error_code isSectionZeroInit(DataRefImpl Sec, bool &Res) const LLVM_OVERRIDE;
-  error_code isSectionReadOnlyData(DataRefImpl Sec, bool &Res) const
-      LLVM_OVERRIDE;
-  error_code isSectionRequiredForExecution(DataRefImpl Sec, bool &Res) const
-      LLVM_OVERRIDE;
-  error_code sectionContainsSymbol(DataRefImpl Sec, DataRefImpl Symb,
-                                   bool &Result) const LLVM_OVERRIDE;
-  relocation_iterator section_rel_begin(DataRefImpl Sec) const LLVM_OVERRIDE;
-  relocation_iterator section_rel_end(DataRefImpl Sec) const LLVM_OVERRIDE;
+  void moveSymbolNext(DataRefImpl &Symb) const override;
+  std::error_code getSymbolName(DataRefImpl Symb,
+                                StringRef &Res) const override;
+  std::error_code getSymbolAddress(DataRefImpl Symb,
+                                   uint64_t &Res) const override;
+  std::error_code getSymbolSize(DataRefImpl Symb, uint64_t &Res) const override;
+  uint32_t getSymbolFlags(DataRefImpl Symb) const override;
+  std::error_code getSymbolType(DataRefImpl Symb,
+                                SymbolRef::Type &Res) const override;
+  std::error_code getSymbolSection(DataRefImpl Symb,
+                                   section_iterator &Res) const override;
+  void moveSectionNext(DataRefImpl &Sec) const override;
+  std::error_code getSectionName(DataRefImpl Sec,
+                                 StringRef &Res) const override;
+  std::error_code getSectionAddress(DataRefImpl Sec,
+                                    uint64_t &Res) const override;
+  std::error_code getSectionSize(DataRefImpl Sec, uint64_t &Res) const override;
+  std::error_code getSectionContents(DataRefImpl Sec,
+                                     StringRef &Res) const override;
+  std::error_code getSectionAlignment(DataRefImpl Sec,
+                                      uint64_t &Res) const override;
+  std::error_code isSectionText(DataRefImpl Sec, bool &Res) const override;
+  std::error_code isSectionData(DataRefImpl Sec, bool &Res) const override;
+  std::error_code isSectionBSS(DataRefImpl Sec, bool &Res) const override;
+  std::error_code isSectionVirtual(DataRefImpl Sec, bool &Res) const override;
+  std::error_code isSectionZeroInit(DataRefImpl Sec, bool &Res) const override;
+  std::error_code isSectionReadOnlyData(DataRefImpl Sec,
+                                        bool &Res) const override;
+  std::error_code isSectionRequiredForExecution(DataRefImpl Sec,
+                                                bool &Res) const override;
+  std::error_code sectionContainsSymbol(DataRefImpl Sec, DataRefImpl Symb,
+                                        bool &Result) const override;
+  relocation_iterator section_rel_begin(DataRefImpl Sec) const override;
+  relocation_iterator section_rel_end(DataRefImpl Sec) const override;
 
-  void moveRelocationNext(DataRefImpl &Rel) const LLVM_OVERRIDE;
-  error_code getRelocationAddress(DataRefImpl Rel, uint64_t &Res) const
-      LLVM_OVERRIDE;
-  error_code getRelocationOffset(DataRefImpl Rel, uint64_t &Res) const
-      LLVM_OVERRIDE;
-  symbol_iterator getRelocationSymbol(DataRefImpl Rel) const LLVM_OVERRIDE;
-  error_code getRelocationType(DataRefImpl Rel, uint64_t &Res) const
-      LLVM_OVERRIDE;
-  error_code getRelocationTypeName(DataRefImpl Rel,
-                                   SmallVectorImpl<char> &Result) const
-      LLVM_OVERRIDE;
-  error_code getRelocationValueString(DataRefImpl Rel,
-                                      SmallVectorImpl<char> &Result) const
-      LLVM_OVERRIDE;
+  void moveRelocationNext(DataRefImpl &Rel) const override;
+  std::error_code getRelocationAddress(DataRefImpl Rel,
+                                       uint64_t &Res) const override;
+  std::error_code getRelocationOffset(DataRefImpl Rel,
+                                      uint64_t &Res) const override;
+  symbol_iterator getRelocationSymbol(DataRefImpl Rel) const override;
+  std::error_code getRelocationType(DataRefImpl Rel,
+                                    uint64_t &Res) const override;
+  std::error_code
+  getRelocationTypeName(DataRefImpl Rel,
+                        SmallVectorImpl<char> &Result) const override;
+  std::error_code
+  getRelocationValueString(DataRefImpl Rel,
+                           SmallVectorImpl<char> &Result) const override;
 
-  error_code getLibraryNext(DataRefImpl LibData, LibraryRef &Result) const
-      LLVM_OVERRIDE;
-  error_code getLibraryPath(DataRefImpl LibData, StringRef &Result) const
-      LLVM_OVERRIDE;
+  std::error_code getLibraryNext(DataRefImpl LibData,
+                                 LibraryRef &Result) const override;
+  std::error_code getLibraryPath(DataRefImpl LibData,
+                                 StringRef &Result) const override;
 
 public:
-  COFFObjectFile(MemoryBuffer *Object, error_code &EC, bool BufferOwned = true);
-  basic_symbol_iterator symbol_begin_impl() const LLVM_OVERRIDE;
-  basic_symbol_iterator symbol_end_impl() const LLVM_OVERRIDE;
-  library_iterator needed_library_begin() const LLVM_OVERRIDE;
-  library_iterator needed_library_end() const LLVM_OVERRIDE;
-  section_iterator section_begin() const LLVM_OVERRIDE;
-  section_iterator section_end() const LLVM_OVERRIDE;
+  COFFObjectFile(std::unique_ptr<MemoryBuffer> Object, std::error_code &EC);
+  basic_symbol_iterator symbol_begin_impl() const override;
+  basic_symbol_iterator symbol_end_impl() const override;
+  library_iterator needed_library_begin() const override;
+  library_iterator needed_library_end() const override;
+  section_iterator section_begin() const override;
+  section_iterator section_end() const override;
 
-  const coff_section *getCOFFSection(section_iterator &It) const;
-  const coff_symbol *getCOFFSymbol(symbol_iterator &It) const;
-  const coff_relocation *getCOFFRelocation(relocation_iterator &It) const;
+  const coff_section *getCOFFSection(const SectionRef &Section) const;
+  const coff_symbol *getCOFFSymbol(const SymbolRef &Symbol) const;
+  const coff_relocation *getCOFFRelocation(const RelocationRef &Reloc) const;
 
-  uint8_t getBytesInAddress() const LLVM_OVERRIDE;
-  StringRef getFileFormatName() const LLVM_OVERRIDE;
-  unsigned getArch() const LLVM_OVERRIDE;
-  StringRef getLoadName() const LLVM_OVERRIDE;
+  uint8_t getBytesInAddress() const override;
+  StringRef getFileFormatName() const override;
+  unsigned getArch() const override;
+  StringRef getLoadName() const override;
 
   import_directory_iterator import_directory_begin() const;
   import_directory_iterator import_directory_end() const;
   export_directory_iterator export_directory_begin() const;
   export_directory_iterator export_directory_end() const;
 
-  error_code getHeader(const coff_file_header *&Res) const;
-  error_code getCOFFHeader(const coff_file_header *&Res) const;
-  error_code getPE32Header(const pe32_header *&Res) const;
-  error_code getPE32PlusHeader(const pe32plus_header *&Res) const;
-  error_code getDataDirectory(uint32_t index, const data_directory *&Res) const;
-  error_code getSection(int32_t index, const coff_section *&Res) const;
-  error_code getSymbol(uint32_t index, const coff_symbol *&Res) const;
+  std::error_code getHeader(const coff_file_header *&Res) const;
+  std::error_code getCOFFHeader(const coff_file_header *&Res) const;
+  std::error_code getPE32Header(const pe32_header *&Res) const;
+  std::error_code getPE32PlusHeader(const pe32plus_header *&Res) const;
+  std::error_code getDataDirectory(uint32_t index,
+                                   const data_directory *&Res) const;
+  std::error_code getSection(int32_t index, const coff_section *&Res) const;
+  std::error_code getSymbol(uint32_t index, const coff_symbol *&Res) const;
   template <typename T>
-  error_code getAuxSymbol(uint32_t index, const T *&Res) const {
+  std::error_code getAuxSymbol(uint32_t index, const T *&Res) const {
     const coff_symbol *s;
-    error_code ec = getSymbol(index, s);
-    Res = reinterpret_cast<const T*>(s);
+    std::error_code ec = getSymbol(index, s);
+    Res = reinterpret_cast<const T *>(s);
     return ec;
   }
-  error_code getSymbolName(const coff_symbol *symbol, StringRef &Res) const;
+  std::error_code getSymbolName(const coff_symbol *symbol,
+                                StringRef &Res) const;
   ArrayRef<uint8_t> getSymbolAuxData(const coff_symbol *symbol) const;
 
-  error_code getSectionName(const coff_section *Sec, StringRef &Res) const;
-  error_code getSectionContents(const coff_section *Sec,
-                                ArrayRef<uint8_t> &Res) const;
+  std::error_code getSectionName(const coff_section *Sec, StringRef &Res) const;
+  std::error_code getSectionContents(const coff_section *Sec,
+                                     ArrayRef<uint8_t> &Res) const;
 
-  error_code getVaPtr(uint64_t VA, uintptr_t &Res) const;
-  error_code getRvaPtr(uint32_t Rva, uintptr_t &Res) const;
-  error_code getHintName(uint32_t Rva, uint16_t &Hint, StringRef &Name) const;
+  std::error_code getVaPtr(uint64_t VA, uintptr_t &Res) const;
+  std::error_code getRvaPtr(uint32_t Rva, uintptr_t &Res) const;
+  std::error_code getHintName(uint32_t Rva, uint16_t &Hint,
+                              StringRef &Name) const;
 
-  static inline bool classof(const Binary *v) {
-    return v->isCOFF();
-  }
+  static inline bool classof(const Binary *v) { return v->isCOFF(); }
 };
 
 // The iterator for the import directory table.
 class ImportDirectoryEntryRef {
 public:
-  ImportDirectoryEntryRef() : OwningObject(0) {}
+  ImportDirectoryEntryRef() : OwningObject(nullptr) {}
   ImportDirectoryEntryRef(const import_directory_table_entry *Table, uint32_t I,
                           const COFFObjectFile *Owner)
       : ImportTable(Table), Index(I), OwningObject(Owner) {}
 
   bool operator==(const ImportDirectoryEntryRef &Other) const;
   void moveNext();
-  error_code getName(StringRef &Result) const;
+  std::error_code getName(StringRef &Result) const;
 
-  error_code
+  std::error_code
   getImportTableEntry(const import_directory_table_entry *&Result) const;
 
-  error_code
+  std::error_code
   getImportLookupEntry(const import_lookup_table_entry32 *&Result) const;
 
 private:
@@ -439,7 +500,7 @@ private:
 // The iterator for the export directory table entry.
 class ExportDirectoryEntryRef {
 public:
-  ExportDirectoryEntryRef() : OwningObject(0) {}
+  ExportDirectoryEntryRef() : OwningObject(nullptr) {}
   ExportDirectoryEntryRef(const export_directory_table_entry *Table, uint32_t I,
                           const COFFObjectFile *Owner)
       : ExportTable(Table), Index(I), OwningObject(Owner) {}
@@ -447,11 +508,11 @@ public:
   bool operator==(const ExportDirectoryEntryRef &Other) const;
   void moveNext();
 
-  error_code getDllName(StringRef &Result) const;
-  error_code getOrdinalBase(uint32_t &Result) const;
-  error_code getOrdinal(uint32_t &Result) const;
-  error_code getExportRVA(uint32_t &Result) const;
-  error_code getSymbolName(StringRef &Result) const;
+  std::error_code getDllName(StringRef &Result) const;
+  std::error_code getOrdinalBase(uint32_t &Result) const;
+  std::error_code getOrdinal(uint32_t &Result) const;
+  std::error_code getExportRVA(uint32_t &Result) const;
+  std::error_code getSymbolName(StringRef &Result) const;
 
 private:
   const export_directory_table_entry *ExportTable;

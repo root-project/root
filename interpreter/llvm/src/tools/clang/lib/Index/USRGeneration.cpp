@@ -11,6 +11,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/DeclVisitor.h"
+#include "clang/Lex/PreprocessingRecord.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
@@ -21,6 +22,30 @@ using namespace clang::index;
 //===----------------------------------------------------------------------===//
 // USR generation.
 //===----------------------------------------------------------------------===//
+
+/// \returns true on error.
+static bool printLoc(llvm::raw_ostream &OS, SourceLocation Loc,
+                     const SourceManager &SM, bool IncludeOffset) {
+  if (Loc.isInvalid()) {
+    return true;
+  }
+  Loc = SM.getExpansionLoc(Loc);
+  const std::pair<FileID, unsigned> &Decomposed = SM.getDecomposedLoc(Loc);
+  const FileEntry *FE = SM.getFileEntryForID(Decomposed.first);
+  if (FE) {
+    OS << llvm::sys::path::filename(FE->getName());
+  } else {
+    // This case really isn't interesting.
+    return true;
+  }
+  if (IncludeOffset) {
+    // Use the offest into the FileID to represent the location.  Using
+    // a line/column can cause us to look back at the original source file,
+    // which is expensive.
+    OS << '@' << Decomposed.second;
+  }
+  return false;
+}
 
 namespace {
 class USRGenerator : public ConstDeclVisitor<USRGenerator> {
@@ -84,7 +109,7 @@ public:
   bool ShouldGenerateLocation(const NamedDecl *D);
 
   bool isLocal(const NamedDecl *D) {
-    return D->getParentFunctionOrMethod() != 0;
+    return D->getParentFunctionOrMethod() != nullptr;
   }
 
   /// Generate the string component containing the location of the
@@ -104,16 +129,6 @@ public:
   /// Generate a USR for an Objective-C class category.
   void GenObjCCategory(StringRef cls, StringRef cat) {
     generateUSRForObjCCategory(cls, cat, Out);
-  }
-  /// Generate a USR fragment for an Objective-C instance variable.  The
-  /// complete USR can be created by concatenating the USR for the
-  /// encompassing class with this USR fragment.
-  void GenObjCIvar(StringRef ivar) {
-    generateUSRForObjCIvar(ivar, Out);
-  }
-  /// Generate a USR fragment for an Objective-C method.
-  void GenObjCMethod(StringRef sel, bool isInstanceMethod) {
-    generateUSRForObjCMethod(sel, isInstanceMethod, Out);
   }
   /// Generate a USR fragment for an Objective-C property.
   void GenObjCProperty(StringRef prop) {
@@ -205,12 +220,9 @@ void USRGenerator::VisitFunctionDecl(const FunctionDecl *D) {
   }
 
   // Mangle in type information for the arguments.
-  for (FunctionDecl::param_const_iterator I = D->param_begin(),
-                                          E = D->param_end();
-       I != E; ++I) {
+  for (auto PD : D->params()) {
     Out << '#';
-    if (ParmVarDecl *PD = *I)
-      VisitType(PD->getType());
+    VisitType(PD->getType());
   }
   if (D->isVariadic())
     Out << '.';
@@ -478,7 +490,7 @@ bool USRGenerator::GenLoc(const Decl *D, bool IncludeOffset) {
   if (generatedLoc)
     return IgnoreResults;
   generatedLoc = true;
-  
+
   // Guard against null declarations in invalid code.
   if (!D) {
     IgnoreResults = true;
@@ -488,29 +500,10 @@ bool USRGenerator::GenLoc(const Decl *D, bool IncludeOffset) {
   // Use the location of canonical decl.
   D = D->getCanonicalDecl();
 
-  const SourceManager &SM = Context->getSourceManager();
-  SourceLocation L = D->getLocStart();
-  if (L.isInvalid()) {
-    IgnoreResults = true;
-    return true;
-  }
-  L = SM.getExpansionLoc(L);
-  const std::pair<FileID, unsigned> &Decomposed = SM.getDecomposedLoc(L);
-  const FileEntry *FE = SM.getFileEntryForID(Decomposed.first);
-  if (FE) {
-    Out << llvm::sys::path::filename(FE->getName());
-  }
-  else {
-    // This case really isn't interesting.
-    IgnoreResults = true;
-    return true;
-  }
-  if (IncludeOffset) {
-    // Use the offest into the FileID to represent the location.  Using
-    // a line/column can cause us to look back at the original source file,
-    // which is expensive.
-    Out << '@' << Decomposed.second;
-  }
+  IgnoreResults =
+      IgnoreResults || printLoc(Out, D->getLocStart(),
+                                Context->getSourceManager(), IncludeOffset);
+
   return IgnoreResults;
 }
 
@@ -641,11 +634,8 @@ void USRGenerator::VisitType(QualType T) {
     if (const FunctionProtoType *FT = T->getAs<FunctionProtoType>()) {
       Out << 'F';
       VisitType(FT->getReturnType());
-      for (FunctionProtoType::param_type_iterator I = FT->param_type_begin(),
-                                                  E = FT->param_type_end();
-           I != E; ++I) {
-        VisitType(*I);
-      }
+      for (const auto &I : FT->param_types())
+        VisitType(I);
       if (FT->isVariadic())
         Out << '.';
       return;
@@ -757,9 +747,8 @@ void USRGenerator::VisitTemplateArgument(const TemplateArgument &Arg) {
       
   case TemplateArgument::Pack:
     Out << 'p' << Arg.pack_size();
-    for (TemplateArgument::pack_iterator P = Arg.pack_begin(), PEnd = Arg.pack_end();
-         P != PEnd; ++P)
-      VisitTemplateArgument(*P);
+    for (const auto &P : Arg.pack_elements())
+      VisitTemplateArgument(P);
     break;
       
   case TemplateArgument::Type:
@@ -815,3 +804,26 @@ bool clang::index::generateUSRForDecl(const Decl *D,
   UG.Visit(D);
   return UG.ignoreResults();
 }
+
+bool clang::index::generateUSRForMacro(const MacroDefinition *MD,
+                                       const SourceManager &SM,
+                                       SmallVectorImpl<char> &Buf) {
+  // Don't generate USRs for things with invalid locations.
+  if (!MD || MD->getLocation().isInvalid())
+    return true;
+
+  llvm::raw_svector_ostream Out(Buf);
+
+  // Assume that system headers are sane.  Don't put source location
+  // information into the USR if the macro comes from a system header.
+  SourceLocation Loc = MD->getLocation();
+  bool ShouldGenerateLocation = !SM.isInSystemHeader(Loc);
+
+  Out << getUSRSpacePrefix();
+  if (ShouldGenerateLocation)
+    printLoc(Out, Loc, SM, /*IncludeOffset=*/true);
+  Out << "@macro@";
+  Out << MD->getName()->getName();
+  return false;
+}
+

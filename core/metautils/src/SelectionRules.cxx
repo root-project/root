@@ -305,16 +305,23 @@ const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::NamespaceDecl *D
 }
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::EnumDecl *D) const
-{
-   // Currently rootcling does not need any information enums.
+{  
+   // Currently rootcling does not need any information on enums, except
+   // for the PCM / proto classes that register them to build TEnums without
+   // parsing. This can be removed once (real) PCMs are available.
    // Note that the code below was *not* properly matching the case
    //   typedef enum { ... } abc;
    // as the typedef is stored as an anonymous EnumDecl in clang.
    // It is likely that using a direct lookup on the name would
    // return the appropriate typedef (and then we would need to
    // select 'both' the typedef and the anonymous enums.
-   return 0;
-#if 0
+
+#if defined(R__MUST_REVISIT)
+# if R__MUST_REVISIT(6,4)
+   "Can become no-op once PCMs are available."
+# endif
+#endif
+
    std::string str_name;   // name of the Decl
    std::string qual_name;  // fully qualified name of the Decl
    GetDeclName(D, str_name, qual_name);
@@ -333,7 +340,8 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::EnumDecl *D) cons
          return IsLinkdefEnumSelected(D, qual_name);
       return IsEnumSelected(D, qual_name);
    }
-#endif
+
+   return 0;
 }
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::VarDecl* D) const
@@ -891,24 +899,18 @@ const BaseSelectionRule *SelectionRules::IsFunSelected(clang::FunctionDecl* D, c
 
 const BaseSelectionRule *SelectionRules::IsEnumSelected(clang::EnumDecl* D, const std::string& qual_name) const
 {
-   std::list<VariableSelectionRule>::const_iterator it;
-   std::list<VariableSelectionRule>::const_iterator it_end;
-
-   it = fEnumSelectionRules.begin();
-   it_end = fEnumSelectionRules.end();
-
    const BaseSelectionRule *selector = 0;
 
    // iterate through all the rules
    // we call this method only for genrefex variables, functions and enums - it is simpler than the class case:
    // if we have No - it is veto even if we have explicit yes as well
-   for(; it != it_end; ++it) {
-      if (BaseSelectionRule::kNoMatch != it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false)) {
-         if (it->GetSelected() == BaseSelectionRule::kNo) {
+   for(const auto& rule: fEnumSelectionRules) {
+      if (BaseSelectionRule::kNoMatch != rule.Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false)) {
+         if (rule.GetSelected() == BaseSelectionRule::kNo) {
             // The rule did explicitly request to not select this entity.
             return 0;
          } else {
-            selector = &(*it);
+            selector = &rule;
          }
       }
    }

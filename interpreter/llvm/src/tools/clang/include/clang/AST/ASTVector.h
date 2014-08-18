@@ -45,15 +45,30 @@ protected:
 
 public:
   // Default ctor - Initialize to empty.
-  ASTVector() : Begin(0), End(0), Capacity(0, false) {}
+  ASTVector() : Begin(nullptr), End(nullptr), Capacity(nullptr, false) {}
+
+  ASTVector(ASTVector &&O) : Begin(O.Begin), End(O.End), Capacity(O.Capacity) {
+    O.Begin = O.End = nullptr;
+    O.Capacity.setPointer(nullptr);
+    O.Capacity.setInt(false);
+  }
 
   ASTVector(const ASTContext &C, unsigned N)
-      : Begin(0), End(0), Capacity(0, false) {
+      : Begin(nullptr), End(nullptr), Capacity(nullptr, false) {
     reserve(C, N);
   }
 
+  ASTVector &operator=(ASTVector &&RHS) {
+    ASTVector O(std::move(RHS));
+    using std::swap;
+    swap(Begin, O.Begin);
+    swap(End, O.End);
+    swap(Capacity, O.Capacity);
+    return *this;
+  }
+
   ~ASTVector() {
-    if (llvm::is_class<T>::value) {
+    if (std::is_class<T>::value) {
       // Destroy the constructed elements in the vector.
       destroy_range(Begin, End);
     }
@@ -123,7 +138,7 @@ public:
   }
 
   void clear() {
-    if (llvm::is_class<T>::value) {
+    if (std::is_class<T>::value) {
       destroy_range(Begin, End);
     }
     End = Begin;
@@ -368,7 +383,7 @@ void ASTVector<T>::grow(const ASTContext &C, size_t MinSize) {
   T *NewElts = new (C, llvm::alignOf<T>()) T[NewCapacity];
 
   // Copy the elements over.
-  if (llvm::is_class<T>::value) {
+  if (std::is_class<T>::value) {
     std::uninitialized_copy(Begin, End, NewElts);
     // Destroy the original elements.
     destroy_range(Begin, End);

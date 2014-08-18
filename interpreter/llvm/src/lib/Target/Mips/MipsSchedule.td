@@ -28,6 +28,7 @@ def II_ADD_D            : InstrItinClass;
 def II_ADD_S            : InstrItinClass;
 def II_AND              : InstrItinClass;
 def II_ANDI             : InstrItinClass;
+def II_BADDU            : InstrItinClass;
 def II_CEIL             : InstrItinClass;
 def II_CFC1             : InstrItinClass;
 def II_CLO              : InstrItinClass;
@@ -38,6 +39,7 @@ def II_C_CC_D           : InstrItinClass; // Any c.<cc>.d instruction
 def II_C_CC_S           : InstrItinClass; // Any c.<cc>.s instruction
 def II_DADDIU           : InstrItinClass;
 def II_DADDU            : InstrItinClass;
+def II_DADD             : InstrItinClass;
 def II_DDIV             : InstrItinClass;
 def II_DDIVU            : InstrItinClass;
 def II_DIV              : InstrItinClass;
@@ -46,6 +48,7 @@ def II_DIV_D            : InstrItinClass;
 def II_DIV_S            : InstrItinClass;
 def II_DMFC1            : InstrItinClass;
 def II_DMTC1            : InstrItinClass;
+def II_DMUL             : InstrItinClass;
 def II_DMULT            : InstrItinClass;
 def II_DMULTU           : InstrItinClass;
 def II_DROTR            : InstrItinClass;
@@ -61,6 +64,7 @@ def II_DSRL             : InstrItinClass;
 def II_DSRL32           : InstrItinClass;
 def II_DSRLV            : InstrItinClass;
 def II_DSUBU            : InstrItinClass;
+def II_DSUB             : InstrItinClass;
 def II_FLOOR            : InstrItinClass;
 def II_LB               : InstrItinClass;
 def II_LBU              : InstrItinClass;
@@ -120,6 +124,7 @@ def II_NMSUB_S          : InstrItinClass;
 def II_NOR              : InstrItinClass;
 def II_OR               : InstrItinClass;
 def II_ORI              : InstrItinClass;
+def II_POP              : InstrItinClass;
 def II_RDHWR            : InstrItinClass;
 def II_RESTORE          : InstrItinClass;
 def II_ROTR             : InstrItinClass;
@@ -134,6 +139,8 @@ def II_SDR              : InstrItinClass;
 def II_SDXC1            : InstrItinClass;
 def II_SEB              : InstrItinClass;
 def II_SEH              : InstrItinClass;
+def II_SEQ_SNE          : InstrItinClass; // seq and sne
+def II_SEQI_SNEI        : InstrItinClass; // seqi and snei
 def II_SH               : InstrItinClass;
 def II_SLL              : InstrItinClass;
 def II_SLLV             : InstrItinClass;
@@ -167,6 +174,7 @@ def MipsGenericItineraries : ProcessorItineraries<[ALU, IMULDIV], [], [
   InstrItinData<II_ADDIU           , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_ADDU            , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_AND             , [InstrStage<1,  [ALU]>]>,
+  InstrItinData<II_BADDU           , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_SLL             , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_SRA             , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_SRL             , [InstrStage<1,  [ALU]>]>,
@@ -179,6 +187,7 @@ def MipsGenericItineraries : ProcessorItineraries<[ALU, IMULDIV], [], [
   InstrItinData<II_CLZ             , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_DADDIU          , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_DADDU           , [InstrStage<1,  [ALU]>]>,
+  InstrItinData<II_DADD            , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_DSLL            , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_DSRL            , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_DSRA            , [InstrStage<1,  [ALU]>]>,
@@ -186,6 +195,7 @@ def MipsGenericItineraries : ProcessorItineraries<[ALU, IMULDIV], [], [
   InstrItinData<II_DSRLV           , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_DSRAV           , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_DSUBU           , [InstrStage<1,  [ALU]>]>,
+  InstrItinData<II_DSUB            , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_DROTR           , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_DROTRV          , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_LUI             , [InstrStage<1,  [ALU]>]>,
@@ -197,6 +207,7 @@ def MipsGenericItineraries : ProcessorItineraries<[ALU, IMULDIV], [], [
   InstrItinData<II_MOVZ            , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_NOR             , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_OR              , [InstrStage<1,  [ALU]>]>,
+  InstrItinData<II_POP             , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_RDHWR           , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_SUBU            , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_XOR             , [InstrStage<1,  [ALU]>]>,
@@ -223,7 +234,10 @@ def MipsGenericItineraries : ProcessorItineraries<[ALU, IMULDIV], [], [
   InstrItinData<II_SDR             , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_SD              , [InstrStage<1,  [ALU]>]>,
   InstrItinData<II_SAVE            , [InstrStage<1,  [ALU]>]>,
+  InstrItinData<II_SEQ_SNE         , [InstrStage<1,  [ALU]>]>,
+  InstrItinData<II_SEQI_SNEI       , [InstrStage<1,  [ALU]>]>,
   InstrItinData<IIBranch           , [InstrStage<1,  [ALU]>]>,
+  InstrItinData<II_DMUL            , [InstrStage<17, [IMULDIV]>]>,
   InstrItinData<II_DMULT           , [InstrStage<17, [IMULDIV]>]>,
   InstrItinData<II_DMULTU          , [InstrStage<17, [IMULDIV]>]>,
   InstrItinData<II_MADD            , [InstrStage<17, [IMULDIV]>]>,

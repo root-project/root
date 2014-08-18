@@ -254,6 +254,11 @@ let neverHasSideEffects = 1 in
 def MMX_MOVQ64rr : MMXI<0x6F, MRMSrcReg, (outs VR64:$dst), (ins VR64:$src),
                         "movq\t{$src, $dst|$dst, $src}", [],
                         IIC_MMX_MOVQ_RR>;
+let isCodeGenOnly = 1, ForceDisassemble = 1, hasSideEffects = 0 in {
+def MMX_MOVQ64rr_REV : MMXI<0x7F, MRMDestReg, (outs VR64:$dst), (ins VR64:$src),
+                        "movq\t{$src, $dst|$dst, $src}", [],
+                        IIC_MMX_MOVQ_RR>;
+}
 } // SchedRW
 
 let SchedRW = [WriteLoad] in {
@@ -262,11 +267,12 @@ def MMX_MOVQ64rm : MMXI<0x6F, MRMSrcMem, (outs VR64:$dst), (ins i64mem:$src),
                         "movq\t{$src, $dst|$dst, $src}",
                         [(set VR64:$dst, (load_mmx addr:$src))],
                         IIC_MMX_MOVQ_RM>;
+} // SchedRW
+let SchedRW = [WriteStore] in
 def MMX_MOVQ64mr : MMXI<0x7F, MRMDestMem, (outs), (ins i64mem:$dst, VR64:$src),
                         "movq\t{$src, $dst|$dst, $src}",
                         [(store (x86mmx VR64:$src), addr:$dst)],
                         IIC_MMX_MOVQ_RM>;
-} // SchedRW
 
 let SchedRW = [WriteMove] in {
 def MMX_MOVDQ2Qrr : MMXSDIi8<0xD6, MRMSrcReg, (outs VR64:$dst),

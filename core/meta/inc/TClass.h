@@ -125,7 +125,8 @@ public:
       kHasTClassInit,   // The class has a TClass proper bootstrap coming from a run
                         // through rootcling/genreflex/TMetaUtils and the library
                         // containing this dictionary has been loaded in memory.
-      kLoaded = kHasTClassInit
+      kLoaded = kHasTClassInit,
+      kNamespaceForMeta // Very transient state necessary to bootstrap namespace entries in ROOT Meta w/o interpreter information
    };
 
 private:

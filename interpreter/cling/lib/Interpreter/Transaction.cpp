@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 // CLING - the C++ LLVM-based InterpreterG :)
-// author:  Vassil Vassilev <vvasielv@cern.ch>
+// author:  Vassil Vassilev <vvasilev@cern.ch>
 //
 // This file is dual-licensed: you can choose to license it under the University
 // of Illinois Open Source License or the GNU Lesser General Public License. See
@@ -55,6 +55,16 @@ namespace cling {
                && "All nested transactions must be committed!");
         delete (*m_NestedTransactions)[i];
       }
+  }
+
+  NamedDecl* Transaction::containsNamedDecl(llvm::StringRef name) const {
+    for (auto I = decls_begin(), E = decls_end(); I < E; ++I)
+      for (auto DI : I->m_DGR) {
+        if (NamedDecl* ND = dyn_cast<NamedDecl>(DI))
+          if (name.equals(ND->getNameAsString()))
+            return ND;
+      }
+    return 0;
   }
 
   void Transaction::addNestedTransaction(Transaction* nested) {

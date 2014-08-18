@@ -34,6 +34,20 @@ void t8() {
 void t9() {
   __asm nop __asm nop ; __asm nop
 }
+void t10() {
+  __asm {
+    mov eax, 0
+    __asm {
+      mov eax, 1
+      {
+        mov eax, 2
+      }
+    }
+  }
+}
+void t11() {
+  do { __asm mov eax, 0 __asm { __asm mov edx, 1 } } while(0);
+}
 int t_fail() { // expected-note {{to match this}}
   __asm 
-  __asm { // expected-error 3 {{expected}} expected-note {{to match this}}
+  __asm { // expected-error 2 {{expected}} expected-note {{to match this}}

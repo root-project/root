@@ -80,7 +80,6 @@ RegistryMaps::RegistryMaps() {
   // findAll
   //
   // Other:
-  // loc
   // equals
   // equalsNode
 
@@ -89,6 +88,7 @@ RegistryMaps::RegistryMaps() {
   REGISTER_OVERLOADED_2(hasType);
   REGISTER_OVERLOADED_2(isDerivedFrom);
   REGISTER_OVERLOADED_2(isSameOrDerivedFrom);
+  REGISTER_OVERLOADED_2(loc);
   REGISTER_OVERLOADED_2(pointsTo);
   REGISTER_OVERLOADED_2(references);
   REGISTER_OVERLOADED_2(thisPointerType);
@@ -149,6 +149,7 @@ RegistryMaps::RegistryMaps() {
   REGISTER_MATCHER(equalsBoundNode);
   REGISTER_MATCHER(explicitCastExpr);
   REGISTER_MATCHER(expr);
+  REGISTER_MATCHER(exprWithCleanups);
   REGISTER_MATCHER(fieldDecl);
   REGISTER_MATCHER(floatLiteral);
   REGISTER_MATCHER(forEach);
@@ -188,12 +189,14 @@ RegistryMaps::RegistryMaps() {
   REGISTER_MATCHER(hasEitherOperand);
   REGISTER_MATCHER(hasElementType);
   REGISTER_MATCHER(hasFalseExpression);
+  REGISTER_MATCHER(hasGlobalStorage);
   REGISTER_MATCHER(hasImplicitDestinationType);
   REGISTER_MATCHER(hasIncrement);
   REGISTER_MATCHER(hasIndex);
   REGISTER_MATCHER(hasInitializer);
   REGISTER_MATCHER(hasLHS);
   REGISTER_MATCHER(hasLocalQualifiers);
+  REGISTER_MATCHER(hasLocalStorage);
   REGISTER_MATCHER(hasLoopInit);
   REGISTER_MATCHER(hasMethod);
   REGISTER_MATCHER(hasName);
@@ -324,17 +327,12 @@ static llvm::ManagedStatic<RegistryMaps> RegistryData;
 } // anonymous namespace
 
 // static
-llvm::Optional<MatcherCtor>
-Registry::lookupMatcherCtor(StringRef MatcherName, const SourceRange &NameRange,
-                            Diagnostics *Error) {
+llvm::Optional<MatcherCtor> Registry::lookupMatcherCtor(StringRef MatcherName) {
   ConstructorMap::const_iterator it =
       RegistryData->constructors().find(MatcherName);
-  if (it == RegistryData->constructors().end()) {
-    Error->addError(NameRange, Error->ET_RegistryNotFound) << MatcherName;
-    return llvm::Optional<MatcherCtor>();
-  }
-
-  return it->second;
+  return it == RegistryData->constructors().end()
+             ? llvm::Optional<MatcherCtor>()
+             : it->second;
 }
 
 namespace {
@@ -365,7 +363,7 @@ struct ReverseSpecificityThenName {
 }
 
 std::vector<MatcherCompletion> Registry::getCompletions(
-    llvm::ArrayRef<std::pair<MatcherCtor, unsigned> > Context) {
+    ArrayRef<std::pair<MatcherCtor, unsigned> > Context) {
   ASTNodeKind InitialTypes[] = {
     ASTNodeKind::getFromNodeKind<Decl>(),
     ASTNodeKind::getFromNodeKind<QualType>(),
@@ -375,12 +373,12 @@ std::vector<MatcherCompletion> Registry::getCompletions(
     ASTNodeKind::getFromNodeKind<NestedNameSpecifierLoc>(),
     ASTNodeKind::getFromNodeKind<TypeLoc>()
   };
-  llvm::ArrayRef<ASTNodeKind> InitialTypesRef(InitialTypes);
+  ArrayRef<ASTNodeKind> InitialTypesRef(InitialTypes);
 
   // Starting with the above seed of acceptable top-level matcher types, compute
   // the acceptable type set for the argument indicated by each context element.
   std::set<ASTNodeKind> TypeSet(InitialTypesRef.begin(), InitialTypesRef.end());
-  for (llvm::ArrayRef<std::pair<MatcherCtor, unsigned> >::iterator
+  for (ArrayRef<std::pair<MatcherCtor, unsigned> >::iterator
            CtxI = Context.begin(),
            CtxE = Context.end();
        CtxI != CtxE; ++CtxI) {

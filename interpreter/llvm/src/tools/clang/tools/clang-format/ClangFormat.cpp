@@ -68,7 +68,8 @@ FallbackStyle("fallback-style",
               cl::desc("The name of the predefined style used as a\n"
                        "fallback in case clang-format is invoked with\n"
                        "-style=file, but can not find the .clang-format\n"
-                       "file to use."),
+                       "file to use.\n"
+                       "Use -fallback-style=none to skip formatting."),
               cl::init("LLVM"), cl::cat(ClangFormatCategory));
 
 static cl::opt<std::string>
@@ -102,7 +103,7 @@ static cl::list<std::string> FileNames(cl::Positional, cl::desc("[<file> ...]"),
 namespace clang {
 namespace format {
 
-static FileID createInMemoryFile(StringRef FileName, const MemoryBuffer *Source,
+static FileID createInMemoryFile(StringRef FileName, MemoryBuffer *Source,
                                  SourceManager &Sources, FileManager &Files) {
   const FileEntry *Entry = Files.getVirtualFile(FileName == "-" ? "<stdin>" :
                                                     FileName,
@@ -208,11 +209,13 @@ static bool format(StringRef FileName) {
       IntrusiveRefCntPtr<DiagnosticIDs>(new DiagnosticIDs),
       new DiagnosticOptions);
   SourceManager Sources(Diagnostics, Files);
-  OwningPtr<MemoryBuffer> Code;
-  if (error_code ec = MemoryBuffer::getFileOrSTDIN(FileName, Code)) {
-    llvm::errs() << ec.message() << "\n";
+  ErrorOr<std::unique_ptr<MemoryBuffer>> CodeOrErr =
+      MemoryBuffer::getFileOrSTDIN(FileName);
+  if (std::error_code EC = CodeOrErr.getError()) {
+    llvm::errs() << EC.message() << "\n";
     return true;
   }
+  std::unique_ptr<llvm::MemoryBuffer> Code = std::move(CodeOrErr.get());
   if (Code->getBufferSize() == 0)
     return false; // Empty files are formatted correctly.
   FileID ID = createInMemoryFile(FileName, Code.get(), Sources, Files);
@@ -246,8 +249,8 @@ static bool format(StringRef FileName) {
         return true;
     } else {
       if (Cursor.getNumOccurrences() != 0)
-        outs() << "{ \"Cursor\": " << tooling::shiftedCodePosition(
-                                          Replaces, Cursor) << " }\n";
+        outs() << "{ \"Cursor\": "
+               << tooling::shiftedCodePosition(Replaces, Cursor) << " }\n";
       Rewrite.getEditBuffer(ID).write(outs());
     }
   }

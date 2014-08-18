@@ -78,7 +78,7 @@ namespace cling {
     Sema* TheSema = &CI->getSema();
     // Register the AST Transformers
     m_ASTTransformers.push_back(new AutoSynthesizer(TheSema));
-    //m_ASTTransformers.push_back(new AutoloadingTransform(TheSema,m_Interpreter));
+    m_ASTTransformers.push_back(new AutoloadingTransform(TheSema));
     m_ASTTransformers.push_back(new EvaluateTSynthesizer(TheSema));
     m_ASTTransformers.push_back(new ValuePrinterSynthesizer(TheSema, 0));
     m_ASTTransformers.push_back(new DeclExtractor(TheSema));
@@ -125,7 +125,8 @@ namespace cling {
       m_CI->createPCHExternalASTSource(PCHFileName,
                                        true /*DisablePCHValidation*/,
                                        true /*AllowPCHWithCompilerErrors*/,
-                                       0 /*DeserializationListener*/);
+                                       0 /*DeserializationListener*/,
+                                       true /*OwnsDeserializationListener*/);
       if (Transaction* EndedT = endTransaction(CurT))
         result.push_back(EndedT);
     }
@@ -640,10 +641,10 @@ namespace cling {
     SourceLocation NewLoc = getLastMemoryBufferEndLoc().getLocWithOffset(1);
 
     // Create FileID for the current buffer
-    FileID FID = SM.createFileIDForMemBuffer(m_MemoryBuffers.back(),
-                                             SrcMgr::C_User,
-                                             /*LoadedID*/0,
-                                             /*LoadedOffset*/0, NewLoc);
+    FileID FID = SM.createFileID(m_MemoryBuffers.back(),
+                                 SrcMgr::C_User,
+                                 /*LoadedID*/0,
+                                 /*LoadedOffset*/0, NewLoc);
 
     PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
     m_Consumer->getTransaction()->setBufferFID(FID);

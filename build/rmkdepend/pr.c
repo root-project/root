@@ -78,9 +78,11 @@ boolean dot, failOK;
       included_by(file, newfile);
       if (!(newfile->i_flags & SEARCHED)) {
          newfile->i_flags |= SEARCHED;
-         content = getfile(newfile->i_file);
-         find_includes(content, newfile, file_red, 0, failOK);
-         freefile(content);
+         if (strncmp(newfile->i_file, "/usr/include/", 13)) {
+            content = getfile(newfile->i_file);
+            find_includes(content, newfile, file_red, 0, failOK);
+            freefile(content);
+         }
       }
    }
 }

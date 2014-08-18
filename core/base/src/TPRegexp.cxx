@@ -304,7 +304,7 @@ Int_t TPRegexp::ReplaceSubs(const TString &s, TString &final,
 
 //______________________________________________________________________________
 Int_t TPRegexp::MatchInternal(const TString &s, Int_t start,
-                              Int_t nMaxMatch, TArrayI *pos)
+                              Int_t nMaxMatch, TArrayI *pos) const
 {
    // Perform the actual matching - protected method.
 
@@ -392,7 +392,7 @@ TObjArray *TPRegexp::MatchS(const TString &s, const TString &mods,
 //______________________________________________________________________________
 Int_t TPRegexp::SubstituteInternal(TString &s, const TString &replacePattern,
                                    Int_t start, Int_t nMaxMatch,
-                                   Bool_t doDollarSubst)
+                                   Bool_t doDollarSubst) const
 {
    // Perform pattern substitution with optional back-ref replacement
    // - protected method.
