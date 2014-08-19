@@ -1940,6 +1940,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
             break;
          default:
             assert(0);
+            pClass = 0; // we should never end here
             break;
          }
          if (!pClass) {
@@ -2120,6 +2121,7 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, ostream& out)
             break;
          default:
             assert(0);
+            pClass = 0;  // we should never reach here
             break;
          }
          if (!pClass) {
