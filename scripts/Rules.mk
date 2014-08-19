@@ -642,7 +642,7 @@ endif
 ROOTV=$(ROOTTEST_LOC)/root_version
 ROOTVFILE=$(ROOTTEST_HOME)/root_version
 ifeq ($(ROOTTEST_CHECKED_VERSION),)
-   export ROOTTEST_CHECKED_VERSION:= $(shell echo $(ROOTSYS) && (echo "$(ROOTSYS)" | diff - "$(ROOTVFILE)" 2> /dev/null && echo "--- Using ROOT from $(ROOTSYS)" >&2) || (echo "--- Switching to ROOT from $(ROOTSYS)" >&2; echo "---            (previously "`cat "$(ROOTVFILE)"`")" >&2; echo "$(ROOTSYS)" > $(ROOTVFILE) ); )
+   export ROOTTEST_CHECKED_VERSION:= $(shell echo $(ROOTSYS) && (echo "$(ROOTSYS)" | diff - "$(ROOTVFILE)" 2> /dev/null && echo "--- Using ROOT from $(ROOTSYS)" >&2) || (echo "--- Switching to ROOT from $(ROOTSYS)" >&2; if [ -f "$(ROOTVFILE)" ]; then echo "---            (previously "`cat "$(ROOTVFILE)"`")" >&2; fi; echo "$(ROOTSYS)" > $(ROOTVFILE) ); )
 
 ifneq ($(TIME),)
    CPUFILE=/proc/cpuinfo
