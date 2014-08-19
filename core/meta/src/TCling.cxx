@@ -1885,11 +1885,18 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
                                                 *fNormalizedCtxt);
             baseCl = TClass::GetClass(sBaseName.c_str());
          }
+         if(!baseCl){
+            std::string qualNameForDiag;
+            ROOT::TMetaUtils::GetQualifiedName(qualNameForDiag, *baseDecl);
+            baseCl = TClass::GetClass(qualNameForDiag.c_str());
+         }
       }
 
       if (!baseCl){
+         std::string qualNameForDiag;
+         ROOT::TMetaUtils::GetQualifiedName(qualNameForDiag, *baseDecl);
          Error("InspectMembers",
-               "Cannot find TClass for base class %s", baseDecl->getNameAsString().c_str() );
+               "Cannot find TClass for base class %s", qualNameForDiag.c_str() );
       }
 
       int64_t baseOffset;
@@ -2838,20 +2845,22 @@ Bool_t TCling::CheckClassTemplate(const char *name)
 }
 
 //______________________________________________________________________________
-void TCling::CreateListOfBaseClasses(TClass* cl) const
+void TCling::CreateListOfBaseClasses(TClass *cl) const
 {
    // Create list of pointers to base class(es) for TClass cl.
    R__LOCKGUARD2(gInterpreterMutex);
    if (cl->fBase) {
       return;
    }
-   cl->fBase = new TList;
    TClingClassInfo tci(fInterpreter, cl->GetName());
    TClingBaseClassInfo t(fInterpreter, &tci);
+   // This is put here since TClingBaseClassInfo can trigger a
+   // TClass::ResetCaches, which deallocates cl->fBase
+   cl->fBase = new TList;
    while (t.Next()) {
       // if name cannot be obtained no use to put in list
       if (t.IsValid() && t.Name()) {
-         TClingBaseClassInfo* a = new TClingBaseClassInfo(t);
+         TClingBaseClassInfo *a = new TClingBaseClassInfo(t);
          cl->fBase->Add(new TBaseClass((BaseClassInfo_t *)a, cl));
       }
    }
