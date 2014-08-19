@@ -26,13 +26,11 @@ VectorSort.log.tmp: VectorSort.C
 
 VectorSort.log: VectorSort.log.tmp
 ifeq ($(ClingWorkAroundValuePrinterNotFullyQualified),)
-	$(CMDECHO) $(RemoveLeadingDirs) -e 's,^(vector,(class vector,' -e 's,::iterator)[x[:xdigit:]]*$$,::iterator),' $^ > $@ 2>&1
+	$(CMDECHO) $(RemoveLeadingDirs) -e 's,^(vector,(class vector,' -e 's,::iterator)[x[:xdigit:]]*$$,::iterator),' -e 's/::__1//g' $^ > $@ 2>&1
 else
-	$(CMDECHO) $(RemoveLeadingDirs) -e 's,^(vector,(class vector,' -e 's,::iterator)[x[:xdigit:]]*$$,::iterator),' -e 's/const_iterator/class vector<unsigned int::const_iterator/' -e 's, @0x[a-fA-F0-9]*,,' $^ > $@ 2>&1
+	$(CMDECHO) $(RemoveLeadingDirs) -e 's,^(vector,(class vector,' -e 's,::iterator)[x[:xdigit:]]*$$,::iterator),' -e 's/::__1//g' -e 's, @0x[a-fA-F0-9]*,,' $^ > $@ 2>&1
 endif
 
 VectorSort: VectorSort.log
-ifeq ($(ClingWorkAroundJITandInline),)
 	$(TestDiffCintSpecific)
-endif
 
