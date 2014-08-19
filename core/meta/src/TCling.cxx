@@ -4668,8 +4668,9 @@ Int_t TCling::AutoParse(const char *cls)
    if (strchr(cls, '<')) {
       int nestedLoc = 0;
       TClassEdit::GetSplit(cls, autoparseKeys, nestedLoc, TClassEdit::kDropTrailStar);
+   } else {
+      autoparseKeys.emplace_back(cls);
    }
-   autoparseKeys.emplace_back(cls);
 
    for (const auto & apKeyStr : autoparseKeys) {
       const char *apKey = apKeyStr.c_str();
