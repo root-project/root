@@ -54,7 +54,7 @@ void exampleFunctor() {
    // TF1 * f2 = new TF1("f2",MyDerivFunc(f1), xmin, xmax,0); // only for C++ compiled mode
 
    MyDerivFunc * deriv = new MyDerivFunc(f1);
-   TF1 * f2 = new TF1("f2",deriv, xmin, xmax, 0, "MyDerivFunc");
+   TF1 * f2 = new TF1("f2",deriv, xmin, xmax, 0);
 
    f2->SetLineColor(kBlue);
    f2->Draw("same");
@@ -69,7 +69,7 @@ void exampleFunctor() {
    // TF1 * f3 = new TF1("f3",intg,&MyIntegFunc::Integral,xmin,xmax, 0); // only for C++ compiled mode
 
    MyIntegFunc * intg = new MyIntegFunc(f1);
-   TF1 * f3 = new TF1("f3",intg,&MyIntegFunc::Integral, xmin, xmax, 0, "MyIntegFunc","Integral");
+   TF1 * f3 = new TF1("f3",intg,&MyIntegFunc::Integral, xmin, xmax, 0);
 
    f3->SetLineColor(kRed);
    f3->Draw("same");

@@ -577,7 +577,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    //*-*    
 
    map< pair<TString,Int_t> ,pair<TString,TString> > functions; 
-   functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))","[0]*exp((({V0}-[1])/[2])*(({V0}-[1])/[2]))/(sqrt(2*pi)*[2])")));
+   functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))","[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))/(sqrt(2*pi)*[2])")));
    functions.insert(make_pair(make_pair("landau",1),make_pair("[0]*TMath::Landau({V0},[1],[2],false)","[0]*TMath::Landau({V0},[1],[2],true)")));
    functions.insert(make_pair(make_pair("expo",1),make_pair("exp([0]+[1]*{V0})","")));
    // 2-dimensional functions
@@ -835,42 +835,54 @@ void TFormula::HandleExponentiation(TString &formula)
    }
 }
 
+// handle linear functions defined with the operator ++
 void TFormula::HandleLinear(TString &formula)
 {
    formula.ReplaceAll("++","@");
    Int_t linPos = formula.Index("@");
    Int_t NofLinParts = formula.CountChar((int)'@');
-   fLinearParts.Expand(NofLinParts * 2);
+   fLinearParts.Expand(NofLinParts + 1);
    Int_t Nlinear = 0;
+   bool first = true; 
    while(linPos != kNPOS)
    {
       SetBit(kLinear,1);
-      Int_t temp = linPos - 1;
-      while(temp >= 0 && formula[temp] != '@')
-      {
-         temp--;
+      // analyze left part only the first time
+      Int_t temp = 0; 
+      TString left; 
+      if (first) { 
+         temp = linPos - 1;
+         while(temp >= 0 && formula[temp] != '@')
+         {
+            temp--;
+         }
+         left = formula(temp+1,linPos - (temp +1));
       }
-      TString left = formula(temp+1,linPos - (temp +1));
       temp = linPos + 1;
       while(temp < formula.Length() && formula[temp] != '@')
       {
          temp++;
       }
       TString right = formula(linPos+1,temp - (linPos+1));
-      TString pattern = TString::Format("%s@%s",left.Data(),right.Data());
-      TString replacement = TString::Format("([%d]*(%s))+([%d]*(%s))",Nlinear,left.Data(),Nlinear+1,right.Data());
+
+      TString pattern     = (first) ? TString::Format("%s@%s",left.Data(),right.Data()) : TString::Format("@%s",right.Data());
+      TString replacement = (first) ? TString::Format("([%d]*(%s))+([%d]*(%s))",Nlinear,left.Data(),Nlinear+1,right.Data()) : TString::Format("+([%d]*(%s))",Nlinear,right.Data());
+      Nlinear += (first) ? 2 : 1;
+         
       formula.ReplaceAll(pattern,replacement);
-      Nlinear += 2;
-      TFormula *lin1 = new TFormula("__linear1",left);
+      if (first) { 
+         TFormula *lin1 = new TFormula("__linear1",left);
+         lin1->SetBit(kNotGlobal,1);
+         gROOT->GetListOfFunctions()->Remove(lin1);
+         fLinearParts.Add(lin1);
+      }
       TFormula *lin2 = new TFormula("__linear2",right);
-      lin1->SetBit(kNotGlobal,1);
       lin2->SetBit(kNotGlobal,1);
-      gROOT->GetListOfFunctions()->Remove(lin1);
       gROOT->GetListOfFunctions()->Remove(lin2);
-      fLinearParts.Add(lin1);
       fLinearParts.Add(lin2);
 
       linPos = formula.Index("@");
+      first = false; 
    }
 }
 
