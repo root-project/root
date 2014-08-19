@@ -163,11 +163,13 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
         || fElements[narg-1][0]=='['
         || 0 == fElements[narg-1].compare(0,6,"const*")
         || 0 == fElements[narg-1].compare(0,6,"const&")
+        || 0 == fElements[narg-1].compare(0,6,"const[")
         )
        ) {
       if ((mode&1)==0) tailLoc = narg-1;
-      narg--;
    }
+   else { assert(fElements[narg-1].empty()); };
+   narg--;
    mode &= (~1);
 
    if (fNestedLocation) narg--;
@@ -341,6 +343,9 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    }
    // tail is not a type name, just [2], &, * etc.
    if (tailLoc) answ += fElements[tailLoc];
+   if (answ == "std::pair<unsigned int,std::string,>") {
+      fprintf(stderr,"For %s got %s\n",fName,answ.c_str());
+   }
 }
 
 
@@ -668,6 +673,60 @@ string TClassEdit::GetLong64_Name(const string& original)
 }
 
 //______________________________________________________________________________
+static void R__FindTrailing(std::string &full,  /*modified*/
+                            std::string &stars /* the literal output */
+                            )
+{
+   const char *t = full.c_str();
+   const unsigned int tlen( full.size() );
+
+   const char *starloc = t + tlen - 1;
+   bool hasconst = false;
+   if ( (*starloc)=='t'
+       && (starloc-t) > 5 && 0 == strncmp((starloc-5),"const",5)
+       && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
+      // we are ending on a const.
+      starloc -= 4;
+      if ((*starloc-1)==' ') {
+         // Take the space too.
+         starloc--;
+      }
+      hasconst = true;
+   }
+   if ( hasconst || (*starloc)=='*' || (*starloc)=='&' || (*starloc)==']' ) {
+      bool isArray = ( (*starloc)==']' );
+      while( (*(starloc-1))=='*' || (*(starloc-1))=='&' || (*(starloc-1))=='t' || isArray) {
+         if (isArray) {
+            starloc--;
+            isArray = ! ( (*starloc)=='[' );
+         } else if ( (*(starloc-1))=='t' ) {
+            if ( (starloc-1-t) > 5 && 0 == strncmp((starloc-5),"const",5)
+                && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
+               // we have a const.
+               starloc -= 5;
+               if ((*starloc-1)==' ') {
+                  // Take the space too.
+                  starloc--;
+               }
+            } else {
+               break;
+            }
+         } else {
+            starloc--;
+         }
+      }
+      stars = starloc;
+      const unsigned int starlen = strlen(starloc);
+      full.erase(tlen-starlen,starlen);
+   } else if (hasconst) {
+      stars = starloc;
+      const unsigned int starlen = strlen(starloc);
+      full.erase(tlen-starlen,starlen);
+   }
+
+}
+
+//______________________________________________________________________________
 int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLoc, EModType mode)
 {
    ///////////////////////////////////////////////////////////////////////////
@@ -764,7 +823,13 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
          }
          if (offset < full.length()) {
             // Copy the trailing text.
-            output.back().append(full.substr(offset+1));
+            string right( full.substr(offset+1) );
+            string stars;
+            R__FindTrailing(right, stars);
+            output.back().append(right);
+            output.push_back(stars);
+         } else {
+            output.push_back("");
          }
          return output.size();
       }
@@ -774,60 +839,16 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
       unsigned int offset = (0==strncmp("const ",full.c_str(),6)) ? 6 : 0;
       RemoveStd( full, offset );
    }
-   const char *t = full.c_str();
-   const char *c = strchr(t,'<');
 
    string stars;
-   const unsigned int tlen( full.size() );
-   if ( tlen > 0 ) {
-      const char *starloc = t + tlen - 1;
-      bool hasconst = false;
-      if ( (*starloc)=='t'
-          && (starloc-t) > 5 && 0 == strncmp((starloc-5),"const",5)
-          && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
-         // we are ending on a const.
-         starloc -= 4;
-         if ((*starloc-1)==' ') {
-            // Take the space too.
-            starloc--;
-         }
-         hasconst = true;
-      }
-      if ( hasconst || (*starloc)=='*' || (*starloc)=='&' || (*starloc)==']' ) {
-         bool isArray = ( (*starloc)==']' );
-         while( (*(starloc-1))=='*' || (*(starloc-1))=='&' || (*(starloc-1))=='t' || isArray) {
-            if (isArray) {
-               starloc--;
-               isArray = ! ( (*starloc)=='[' );
-            } else if ( (*(starloc-1))=='t' ) {
-               if ( (starloc-1-t) > 5 && 0 == strncmp((starloc-5),"const",5)
-                   && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
-                  // we have a const.
-                  starloc -= 5;
-                  if ((*starloc-1)==' ') {
-                     // Take the space too.
-                     starloc--;
-                  }
-               } else {
-                  break;
-               }
-            } else {
-               starloc--;
-            }
-         }
-         stars = starloc;
-         const unsigned int starlen = strlen(starloc);
-         full.erase(tlen-starlen,starlen);
-      } else if (hasconst) {
-         stars = starloc;
-         const unsigned int starlen = strlen(starloc);
-         full.erase(tlen-starlen,starlen);
-      }
+   if ( !full.empty() ) {
+      R__FindTrailing(full, stars);
    }
 
+   const char *c = strchr(full.c_str(),'<');
    if (c) {
       //we have 'something<'
-      output.push_back(string(full,0,c-t));
+      output.push_back(string(full,0,c - full.c_str()));
 
       const char *cursor;
       int level = 0;
@@ -866,7 +887,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
       output.push_back(full);
    }
 
-   if (stars.length()) output.push_back(stars);
+   if (!output.empty()) output.push_back(stars);
    return output.size();
 }
 

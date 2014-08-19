@@ -699,8 +699,10 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
       newname.Append("<");
       newname.Append(inside[1]);
       for(unsigned int j=2; j<narg; ++j) {
-         newname.Append(",");
-         newname.Append(inside[j]);
+         if (!inside[j].empty()) {
+            newname.Append(",");
+            newname.Append(inside[j]);
+         }
       }
       if (newname[newname.Length()-1]=='>') {
          newname.Append(" >");
