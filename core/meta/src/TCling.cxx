@@ -1885,11 +1885,6 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
                                                 *fNormalizedCtxt);
             baseCl = TClass::GetClass(sBaseName.c_str());
          }
-         if(!baseCl){
-            std::string qualNameForDiag;
-            ROOT::TMetaUtils::GetQualifiedName(qualNameForDiag, *baseDecl);
-            baseCl = TClass::GetClass(qualNameForDiag.c_str());
-         }
       }
 
       if (!baseCl){
