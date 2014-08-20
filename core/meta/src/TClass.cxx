@@ -2770,6 +2770,10 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    }
 
    TClassEdit::TSplitType splitname( name, TClassEdit::kLong64 );
+   std::string normalizedName;
+   TClassEdit::GetNormalizedName( normalizedName, name);
+
+   Bool_t isStl = TClassEdit::IsSTLCont( normalizedName.c_str() );
 
    if (!cl) {
       // Try the name where we strip out the STL default template arguments
@@ -2817,7 +2821,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       //we may pass here in case of a dummy class created by TVirtualStreamerInfo
       load = kTRUE;
 
-      if (splitname.IsSTLCont()) {
+      if (isStl) {
 
          TClassRef clref = cl;
          std::string itypename;
@@ -2859,7 +2863,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    } else {
 
-      if (!splitname.IsSTLCont()) {
+      if (!isStl) {
 
          // If the name is actually an STL container we prefer the
          // short name rather than the true name (at least) in
@@ -2900,7 +2904,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    if (cl) return cl;  // If we found the class but we already have a dummy class use it.
 
-   if (splitname.IsSTLCont()) {
+   if (isStl) {
 
       return gROOT->FindSTLClass(name,kTRUE,silent);
 
