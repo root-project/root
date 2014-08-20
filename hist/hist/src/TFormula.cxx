@@ -946,6 +946,13 @@ void TFormula::ExtractFunctors(TString &formula)
          fFuncs.push_back(TFormulaFunction(param));
          continue;
       }
+      // case of strings
+      if (formula[i] == '\"') { 
+         // look for next instance of "\"
+         do {
+            i++;
+         } while(formula[i] != '\"');
+      }
       if(isalpha(formula[i]) && !IsOperator(formula[i])) 
       {
          while( IsFunctionNameChar(formula[i]) && i < formula.Length())
@@ -984,6 +991,50 @@ void TFormula::ExtractFunctors(TString &formula)
          }
          else
          {
+
+            // check if function is provided by gROOT
+            TFormula *f = (TFormula*)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + name);
+            if (f) { 
+               TString replacementFormula = f->GetExpFormula(); 
+               // analyze expression string 
+               PreProcessFormula(replacementFormula);
+               // we need to define different parameters if we use the unnamed default parameters ([0])
+               // I need to replace all the terms in the functor for backward compatibility of the case
+               // f1("[0]*x") f2("[0]*x") f1+f2 - it is weird but it is better to support
+               //std::cout << "current number of parameter is " << fNpar << std::endl;
+               int nparOffset = 0; 
+               if (fParams.find("0") != fParams.end() ) { 
+                  nparOffset = fNpar; 
+                  for (int jpar = 0; jpar < f->GetNpar(); ++jpar ) { 
+                     TString oldName = TString::Format("[%s]",f->GetParName(jpar));
+                     TString newName = TString::Format("[%d]",nparOffset+jpar);
+                     //std::cout << "replace - paramters " << f->GetParName(jpar) << " with " <<  newName << std::endl;
+                     replacementFormula.ReplaceAll(oldName,newName);
+                  }
+               }
+               ExtractFunctors(replacementFormula); 
+               // set parameter value from replacement formula
+               for (int jpar = 0; jpar < f->GetNpar(); ++jpar) { 
+                  if (nparOffset> 0) { 
+                     // parameter have an offset- so take this into accound
+                     TString newName = TString::Format("%d",nparOffset+jpar);
+                     SetParameter(newName,  f->GetParameter(jpar) );
+                  }
+                  else 
+                     // names are the same between current formula and replaced one
+                     SetParameter(f->GetParName(jpar),  f->GetParameter(jpar) );
+               }
+
+               formula.Replace(i-name.Length(),name.Length(), replacementFormula, replacementFormula.Length());
+               // move forward the index i of the main loop
+               i += replacementFormula.Length()-name.Length();
+
+               // we have extracted all the functor for "fname"
+               //std::cout << " i = " << i << " f[i] = " << formula[i] << " - " << formula << std::endl; 
+               continue;
+            }
+
+            // add now functor in 
             TString replacement = TString::Format("{%s}",name.Data());
             formula.Replace(i-name.Length(),name.Length(),replacement,replacement.Length());
             i += 2;
@@ -1016,12 +1067,12 @@ void TFormula::ProcessFormula(TString &formula)
    //*-*    it inputs C++ code of formula into cling, and sets flag that formula is ready to evaluate.
    //*-*    
 
-   //std::cout << "Begin: formula is " << formula << std::endl;
+   std::cout << "Begin: formula is " << formula << std::endl;
 
    for(list<TFormulaFunction>::iterator funcsIt = fFuncs.begin(); funcsIt != fFuncs.end(); ++funcsIt)
    {
       TFormulaFunction & fun = *funcsIt;
-      //std::cout << "fun is " << fun.GetName() << std::endl;
+      std::cout << "fun is " << fun.GetName() << std::endl;
       if(fun.fFound)
          continue;
       if(fun.IsFuncCall())
@@ -1060,6 +1111,18 @@ void TFormula::ProcessFormula(TString &formula)
          }
          if(!fun.fFound)
          {
+            // try to look into all the global functions in gROOT
+            TFunction * f = (TFunction*) gROOT->GetListOfGlobalFunctions(true)->FindObject(fun.fName);
+            // if found a function with matching arguments
+            if (f && fun.GetNargs() <=  f->GetNargs() && fun.GetNargs() >=  f->GetNargs() - f->GetNargsOpt() )
+            { 
+               fun.fFound = true;
+               break;
+            }
+         }
+               
+         if(!fun.fFound)
+         {
             Error("TFormula","Could not find %s function with %d argument(s)",fun.GetName(),fun.GetNargs());
          }
       }
@@ -1068,6 +1131,8 @@ void TFormula::ProcessFormula(TString &formula)
          TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + fun.fName);
          if(old)
          {
+            // we should not go here (this analysis is done before in ExtractFunctors) 
+            assert(false);
             fun.fFound = true;
             TString pattern = TString::Format("{%s}",fun.GetName());
             TString replacement = old->GetExpFormula();
@@ -1390,6 +1455,7 @@ void TFormula::DoAddParameter(const TString &name, Double_t value, Bool_t proces
 
    //std::cout << "adding parameter " << name << std::endl;
 
+   // if parameter is already defined in fParams - just set the new value
    if(fParams.find(name) != fParams.end() )
    {
       TFormulaVariable & par = fParams[name];
@@ -1406,6 +1472,7 @@ void TFormula::DoAddParameter(const TString &name, Double_t value, Bool_t proces
    }
    else
    {
+      // new parameter defined
       fNpar++;
       //TFormulaVariable(name,value,fParams.size());
       int pos = fParams.size(); 
@@ -1821,15 +1888,16 @@ void TFormula::Print(Option_t *option) const
    }
    if(!fAllParametersSetted)
    {
-      Info("Print","Not all parameters are setted.");
-      for(map<TString,TFormulaVariable>::const_iterator it = fParams.begin(); it != fParams.end(); ++it)
-      {
-         pair<TString,TFormulaVariable> param = *it;
-         if(!param.second.fFound)
-         {
-            printf("%s has default value %lf\n",param.first.Data(),param.second.GetInitialValue());
-         }
-      }  
+      // we can skip this 
+      // Info("Print","Not all parameters are setted.");
+      // for(map<TString,TFormulaVariable>::const_iterator it = fParams.begin(); it != fParams.end(); ++it)
+      // {
+      //    pair<TString,TFormulaVariable> param = *it;
+      //    if(!param.second.fFound)
+      //    {
+      //       printf("%s has default value %lf\n",param.first.Data(),param.second.GetInitialValue());
+      //    }
+      // }  
 
    }
 
