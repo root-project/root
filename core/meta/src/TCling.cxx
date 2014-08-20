@@ -4668,13 +4668,11 @@ Int_t TCling::AutoParse(const char *cls)
    Int_t nHheadersParsed = 0;
 
    // Loop on the possible autoparse keys
-   std::vector<std::string> autoparseKeys;
+   std::vector<std::string> autoparseKeys({cls});
    if (strchr(cls, '<')) {
       int nestedLoc = 0;
       TClassEdit::GetSplit(cls, autoparseKeys, nestedLoc, TClassEdit::kDropTrailStar);
    }
-
-   autoparseKeys.emplace_back(cls);
 
    for (const auto & apKeyStr : autoparseKeys) {
       const char *apKey = apKeyStr.c_str();
