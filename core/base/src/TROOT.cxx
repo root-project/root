@@ -1100,7 +1100,7 @@ const char *TROOT::FindObjectPathName(const TObject *) const
 }
 
 //______________________________________________________________________________
-static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent, const char *outername)
+static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent)
 {
    // return a TClass object corresponding to 'name' assuming it is an STL container.
    // In particular we looking for possible alternative name (default template
@@ -1118,66 +1118,16 @@ static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent, con
    //   which can provoke the parsing of the header files (and/or the loading
    //   of clang pcms information).
 
+   // Remove std::, allocator, typedef, add Long64_t, etc. in just one call.
+   std::string normalized;
+   TClassEdit::GetNormalizedName(normalized, name);
+
    TClass *cl = 0;
-
-   // We have not found the STL container yet.
-   // First we are going to look for a similar name but different 'default' template
-   // parameter (differences due to different STL implementation)
-
-   string defaultname( TClassEdit::ShortType( name, TClassEdit::kDropStlDefault ) ) ;
-
-   if (defaultname != name) {
-      cl = (TClass*)gROOT->GetListOfClasses()->FindObject(defaultname.c_str());
-      if (load && !cl) cl = gROOT->LoadClass(defaultname.c_str(), silent);
-   }
-
-   if (cl==0) {
-
-      // now look for a typedef
-      // well for now the typedefing in CINT has some issues
-      // for examples if we generated the dictionary for
-      //    set<string,someclass> then set<string> is typedef to it (instead of set<string,less<string> >)
-
-      TDataType *objType = gROOT->GetType(name, load);
-      if (objType) {
-         const char *typedfName = objType->GetTypeName();
-         if (typedfName) {
-            string defaultTypedefName(TClassEdit::ShortType(typedfName, TClassEdit::kDropStlDefault));
-
-            if (strcmp(typedfName, name) && defaultTypedefName == name) {
-               cl = (TClass*)gROOT->GetListOfClasses()->FindObject(typedfName);
-               if (load && !cl) cl = gROOT->LoadClass(typedfName, silent);
-            }
-         }
-      }
-   }
-   if (cl==0) {
-      // Try the alternate name where all the typedefs are resolved:
-
-      std::string altname;
-      gInterpreter->GetInterpreterTypeName(name,altname,kTRUE);
-      if (altname.length() && altname != name && altname != outername) {
-         cl = TClass::GetClass(altname.c_str(),load,silent);
-      }
-   }
-   if (cl==0) {
-      // Try with Long64_t instead of long long
-      string long64name = TClassEdit::GetLong64_Name( name );
-      if ( long64name != name && long64name != outername ) return R__FindSTLClass( long64name.c_str(), load, silent, outername);
-   }
-   if (cl == 0) {
-      TString resolvedName = TClassEdit::ResolveTypedef(name,kFALSE).c_str();
-      if (resolvedName != name && resolvedName != outername) cl = TClass::GetClass(resolvedName,load,silent);
-   }
-   if (cl == 0 && (strncmp(name,"std::",5)==0)) {
-      // CINT sometime ignores the std namespace for stl containers,
-      // so let's try without it.
-      if (strlen(name+5)) cl = TClass::GetClass(name+5,load,silent);
-   }
+   if (normalized != name) cl = TClass::GetClass(normalized.c_str(),load,silent);
 
    if (load && cl==0) {
       // Create an Emulated class for this container.
-      cl = gInterpreter->GenerateTClass(defaultname.c_str(), kTRUE, silent);
+      cl = gInterpreter->GenerateTClass(normalized.c_str(), kTRUE, silent);
    }
 
    return cl;
@@ -1190,7 +1140,7 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load, Bool_t silent) const
    // In particular we looking for possible alternative name (default template
    // parameter, typedefs template arguments, typedefed name).
 
-   return R__FindSTLClass(name,load,silent,name);
+   return R__FindSTLClass(name,load,silent);
 }
 
 //______________________________________________________________________________
