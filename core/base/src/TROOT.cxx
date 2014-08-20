@@ -1100,7 +1100,7 @@ const char *TROOT::FindObjectPathName(const TObject *) const
 }
 
 //______________________________________________________________________________
-static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent)
+TClass *TROOT::FindSTLClass(const char *name, Bool_t load, Bool_t silent) const
 {
    // return a TClass object corresponding to 'name' assuming it is an STL container.
    // In particular we looking for possible alternative name (default template
@@ -1131,16 +1131,6 @@ static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent)
    }
 
    return cl;
-}
-
-//______________________________________________________________________________
-TClass *TROOT::FindSTLClass(const char *name, Bool_t load, Bool_t silent) const
-{
-   // return a TClass object corresponding to 'name' assuming it is an STL container.
-   // In particular we looking for possible alternative name (default template
-   // parameter, typedefs template arguments, typedefed name).
-
-   return R__FindSTLClass(name,load,silent);
 }
 
 //______________________________________________________________________________
