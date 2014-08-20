@@ -851,6 +851,7 @@ TCling::TCling(const char *name, const char *title)
 #endif // ROOTINCDIR
       clingArgsStorage.push_back("-I");
       clingArgsStorage.push_back(include);
+      clingArgsStorage.push_back("-Wno-undefined-inline");
    }
 
    std::vector<const char*> interpArgs;
