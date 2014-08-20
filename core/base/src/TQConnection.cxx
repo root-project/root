@@ -321,8 +321,7 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t param)
    // ExecuteMethod the method for the specified object and
    // with single argument value.
 
-   Long_t arg = reinterpret_cast<Long_t>(&param);
-   ExecuteMethod(object, &arg, 1);
+   ExecuteMethod(object, &param, 1);
 
 }
 
@@ -332,8 +331,8 @@ inline void TQSlot::ExecuteMethod(void *object, Long64_t param)
    // ExecuteMethod the method for the specified object and
    // with single argument value.
 
-   Long_t arg = reinterpret_cast<Long_t>(&param);
-   ExecuteMethod(object, &arg, 1);
+   Long_t *arg = reinterpret_cast<Long_t *>(&param);
+   ExecuteMethod(object, arg, 1);
 
 }
 
@@ -343,8 +342,8 @@ inline void TQSlot::ExecuteMethod(void *object, Double_t param)
    // ExecuteMethod the method for the specified object and
    // with single argument value.
 
-   Long_t arg = reinterpret_cast<Long_t>(&param);
-   ExecuteMethod(object, &arg, 1);
+   Long_t *arg = reinterpret_cast<Long_t *>(&param);
+   ExecuteMethod(object, arg, 1);
 
 }
 
