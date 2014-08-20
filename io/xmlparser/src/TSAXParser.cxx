@@ -141,8 +141,7 @@ void TSAXParser::OnEndElement(const char *name)
 {
    //Emit a signal for OnEndElement, where name is the Element's name.
 
-   Long_t args = (Long_t)name;
-   Emit("OnEndElement(const char *)", &args);
+   Emit("OnEndElement(const char *)", name);
 }
 
 //______________________________________________________________________________
@@ -151,8 +150,7 @@ void TSAXParser::OnCharacters(const char *characters)
    // Emit a signal for OnCharacters, where characters are the characters
    // outside of tags.
 
-   Long_t args = (Long_t)characters;
-   Emit("OnCharacters(const char *)", &args);
+   Emit("OnCharacters(const char *)", characters);
 }
 
 //______________________________________________________________________________
@@ -160,8 +158,7 @@ void TSAXParser::OnComment(const char *text)
 {
    // Emit a signal for OnComment, where text is the comment.
 
-   Long_t args = (Long_t)text;
-   Emit("OnComment(const char *)", &args);
+   Emit("OnComment(const char *)", text);
 }
 
 //______________________________________________________________________________
@@ -169,8 +166,7 @@ void TSAXParser::OnWarning(const char *text)
 {
    // Emit a signal for OnWarning, where text is the warning.
 
-   Long_t args = (Long_t)text;
-   Emit("OnWarning(const char *)", &args);
+   Emit("OnWarning(const char *)", text);
 }
 
 //______________________________________________________________________________
@@ -179,8 +175,7 @@ Int_t TSAXParser::OnError(const char *text)
    // Emit a signal for OnError, where text is the error and it returns the
    // Parse Error Code, see TXMLParser.
 
-   Long_t args = (Long_t)text;
-   Emit("OnError(const char *)", &args);
+   Emit("OnError(const char *)", text);
    return -3;
 }
 
@@ -190,8 +185,7 @@ Int_t TSAXParser::OnFatalError(const char *text)
    // Emit a signal for OnFactalError, where text is the error and it
    // returns the Parse Error Code, see TXMLParser.
 
-   Long_t args = (Long_t)text;
-   Emit("OnFatalError(const char *)", &args);
+   Emit("OnFatalError(const char *)", text);
    return -4;
 }
 
