@@ -1803,7 +1803,7 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
 
    VoidFuncPtr_t dict = TClassTable::GetDict(classname);
 
-   TString resolved;
+   std::string resolved;
 
    if (!dict) {
       // Try to remove the ROOT typedefs
@@ -1813,9 +1813,9 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
       // where that class is registered in the TClassTable
       // as vector<pair<char,unsigned char> >).
 
-      resolved = TClassEdit::ResolveTypedef(classname,kTRUE);
+      TClassEdit::GetNormalizedName(resolved, classname);
       if (resolved != classname) {
-         dict = TClassTable::GetDict(resolved.Data());
+         dict = TClassTable::GetDict(resolved.c_str());
       } else {
          resolved.Clear();
       }
@@ -1825,8 +1825,8 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
          dict = TClassTable::GetDict(classname);
          if (!dict) {
             // Try the typedefs again.
-            if (resolved.Length()) {
-               dict = TClassTable::GetDict(resolved.Data());
+            if (!resolved.empty()) {
+               dict = TClassTable::GetDict(resolved.c_str());
             }
          }
       }
