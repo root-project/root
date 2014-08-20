@@ -83,14 +83,14 @@ using namespace std;
 static unsigned long long wrapper_serial = 0LL;
 static const string indent_string("   ");
 
-static map<const FunctionDecl*, void*> wrapper_store;
-static map<const Decl*, void*> ctor_wrapper_store;
-static map<const Decl*, void*> dtor_wrapper_store;
+static map<const FunctionDecl *, void *> wrapper_store;
+static map<const Decl *, void *> ctor_wrapper_store;
+static map<const Decl *, void *> dtor_wrapper_store;
 
 static
 inline
 void
-indent(ostringstream& buf, int indent_level)
+indent(ostringstream &buf, int indent_level)
 {
    for (int i = 0; i < indent_level; ++i) {
       buf << indent_string;
@@ -99,10 +99,10 @@ indent(ostringstream& buf, int indent_level)
 
 static
 void
-EvaluateExpr(cling::Interpreter& interp, const Expr* E, cling::Value& V)
+EvaluateExpr(cling::Interpreter &interp, const Expr *E, cling::Value &V)
 {
    // Evaluate an Expr* and return its cling::Value
-   ASTContext& C = interp.getCI()->getASTContext();
+   ASTContext &C = interp.getCI()->getASTContext();
    APSInt res;
    if (E->EvaluateAsInt(res, C, /*AllowSideEffects*/Expr::SE_NoSideEffects)) {
       // IntTy or maybe better E->getType()?
@@ -127,152 +127,152 @@ EvaluateExpr(cling::Interpreter& interp, const Expr* E, cling::Value& V)
 }
 
 namespace {
-template <typename returnType>
-returnType sv_to(const cling::Value& val)
-{
-   QualType QT = val.getType().getDesugaredType(val.getASTContext());
-   if (QT->isMemberPointerType()) {
-      const MemberPointerType* MPT = QT->getAs<MemberPointerType>();
-      if (MPT->isMemberDataPointer()) {
-         return (returnType) (ptrdiff_t)val.getPtr();
+   template <typename returnType>
+   returnType sv_to(const cling::Value &val)
+   {
+      QualType QT = val.getType().getDesugaredType(val.getASTContext());
+      if (QT->isMemberPointerType()) {
+         const MemberPointerType *MPT = QT->getAs<MemberPointerType>();
+         if (MPT->isMemberDataPointer()) {
+            return (returnType)(ptrdiff_t)val.getPtr();
+         }
+         return (returnType)(long) val.getPtr();
       }
-      return (returnType) (long) val.getPtr();
-   }
-   if (QT->isPointerType() || QT->isArrayType() || QT->isRecordType() ||
-         QT->isReferenceType()) {
-      return (returnType) (long) val.getPtr();
-   }
-   if (const EnumType* ET = dyn_cast<EnumType>(&*QT)) {
-      if (ET->getDecl()->getIntegerType()->hasSignedIntegerRepresentation())
-         return (returnType) val.getLL();
-      else
-         return (returnType) val.getULL();
-   }
-   if (const BuiltinType* BT =
-            dyn_cast<BuiltinType>(&*QT)) {
-      //
-      //  WARNING!!!
-      //
-      //  This switch is organized in order-of-declaration
-      //  so that the produced assembly code is optimal.
-      //  Do not reorder!
-      //
-      switch (BT->getKind()) {
-         case BuiltinType::Void:
-            // CINT used to expect a result of 0.
-            return (returnType) 0;
-            break;
-            //
-            //  Unsigned Types
-            //
-         case BuiltinType::Bool:
-         case BuiltinType::Char_U: // char on targets where it is unsigned
-         case BuiltinType::UChar:
-            return (returnType) val.getULL();
-            break;
-
-         case BuiltinType::WChar_U:
-            // wchar_t on targets where it is unsigned
-            // The standard doesn't allow to specify signednedd of wchar_t
-            // thus this maps simply to wchar_t.
-            return (returnType) (wchar_t) val.getULL();
-            break;
-
-         case BuiltinType::Char16:
-         case BuiltinType::Char32:
-         case BuiltinType::UShort:
-         case BuiltinType::UInt:
-         case BuiltinType::ULong:
-         case BuiltinType::ULongLong:
-            return (returnType) val.getULL();
-            break;
-
-         case BuiltinType::UInt128:
-            // __uint128_t
-            break;
-
-            //
-            //  Signed Types
-            //
-         case BuiltinType::Char_S: // char on targets where it is signed
-         case BuiltinType::SChar:
+      if (QT->isPointerType() || QT->isArrayType() || QT->isRecordType() ||
+            QT->isReferenceType()) {
+         return (returnType)(long) val.getPtr();
+      }
+      if (const EnumType *ET = dyn_cast<EnumType>(&*QT)) {
+         if (ET->getDecl()->getIntegerType()->hasSignedIntegerRepresentation())
             return (returnType) val.getLL();
-            break;
+         else
+            return (returnType) val.getULL();
+      }
+      if (const BuiltinType *BT =
+               dyn_cast<BuiltinType>(&*QT)) {
+         //
+         //  WARNING!!!
+         //
+         //  This switch is organized in order-of-declaration
+         //  so that the produced assembly code is optimal.
+         //  Do not reorder!
+         //
+         switch (BT->getKind()) {
+            case BuiltinType::Void:
+               // CINT used to expect a result of 0.
+               return (returnType) 0;
+               break;
+               //
+               //  Unsigned Types
+               //
+            case BuiltinType::Bool:
+            case BuiltinType::Char_U: // char on targets where it is unsigned
+            case BuiltinType::UChar:
+               return (returnType) val.getULL();
+               break;
 
-         case BuiltinType::WChar_S:
+            case BuiltinType::WChar_U:
+               // wchar_t on targets where it is unsigned
+               // The standard doesn't allow to specify signednedd of wchar_t
+               // thus this maps simply to wchar_t.
+               return (returnType)(wchar_t) val.getULL();
+               break;
+
+            case BuiltinType::Char16:
+            case BuiltinType::Char32:
+            case BuiltinType::UShort:
+            case BuiltinType::UInt:
+            case BuiltinType::ULong:
+            case BuiltinType::ULongLong:
+               return (returnType) val.getULL();
+               break;
+
+            case BuiltinType::UInt128:
+               // __uint128_t
+               break;
+
+               //
+               //  Signed Types
+               //
+            case BuiltinType::Char_S: // char on targets where it is signed
+            case BuiltinType::SChar:
+               return (returnType) val.getLL();
+               break;
+
+            case BuiltinType::WChar_S:
                // wchar_t on targets where it is signed
                // The standard doesn't allow to specify signednedd of wchar_t
                // thus this maps simply to wchar_t.
-            return (returnType) (wchar_t) val.getLL();
-            break;
+               return (returnType)(wchar_t) val.getLL();
+               break;
 
-         case BuiltinType::Short:
-         case BuiltinType::Int:
-         case BuiltinType::Long:
-         case BuiltinType::LongLong:
-            return (returnType) val.getLL();
-            break;
+            case BuiltinType::Short:
+            case BuiltinType::Int:
+            case BuiltinType::Long:
+            case BuiltinType::LongLong:
+               return (returnType) val.getLL();
+               break;
 
-         case BuiltinType::Int128:
-            break;
+            case BuiltinType::Int128:
+               break;
 
-         case BuiltinType::Half:
-            // half in OpenCL, __fp16 in ARM NEON
-            break;
+            case BuiltinType::Half:
+               // half in OpenCL, __fp16 in ARM NEON
+               break;
 
-         case BuiltinType::Float:
-            return (returnType) val.getFloat();
-            break;
-         case BuiltinType::Double:
-            return (returnType) val.getDouble();
-            break;
-         case BuiltinType::LongDouble:
-            return (returnType) val.getLongDouble();
-            break;
+            case BuiltinType::Float:
+               return (returnType) val.getFloat();
+               break;
+            case BuiltinType::Double:
+               return (returnType) val.getDouble();
+               break;
+            case BuiltinType::LongDouble:
+               return (returnType) val.getLongDouble();
+               break;
 
-         case BuiltinType::NullPtr:
-            return (returnType) 0;
-            break;
+            case BuiltinType::NullPtr:
+               return (returnType) 0;
+               break;
 
-         default:
-            break;
+            default:
+               break;
+         }
       }
+      Error("TClingCallFunc::sv_to", "Invalid Type!");
+      QT->dump();
+      return 0;
    }
-   Error("TClingCallFunc::sv_to", "Invalid Type!");
-   QT->dump();
-   return 0;
-}
 
-static
-long long sv_to_long_long(const cling::Value& val) {
-   return sv_to<long long>(val);
-}
-static
-unsigned long long sv_to_ulong_long(const cling::Value& val) {
-   return sv_to<unsigned long long>(val);
-}
+   static
+   long long sv_to_long_long(const cling::Value &val)
+   {
+      return sv_to<long long>(val);
+   }
+   static
+   unsigned long long sv_to_ulong_long(const cling::Value &val)
+   {
+      return sv_to<unsigned long long>(val);
+   }
 
 } // unnamed namespace.
 
-void*
-TClingCallFunc::compile_wrapper(const string& wrapper_name, const string& wrapper,
-                bool withAccessControl/*=true*/)
+void *TClingCallFunc::compile_wrapper(const string &wrapper_name, const string &wrapper,
+                                      bool withAccessControl/*=true*/)
 {
    return fInterp->compileFunction(wrapper_name, wrapper, false /*ifUnique*/,
                                    withAccessControl);
 }
 
-void
-TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
-                  ostringstream& callbuf, string& type_name,
-                  bool& isReference, bool& isPointer, int indent_level,
-                  bool forArgument)
+void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
+                                       ostringstream &callbuf, string &type_name,
+                                       bool &isReference, bool &isPointer, int indent_level,
+                                       bool forArgument)
 {
    //
    //  Collect information about type type of a function parameter
    //  needed for building the wrapper function.
    //
-   const FunctionDecl* FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = fMethod->GetMethodDecl();
    PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
    isReference = false;
    if (QT->isRecordType() && forArgument) {
@@ -297,8 +297,7 @@ TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
       }
       typedefbuf << "typedef " << fp_typedef_name << ";\n";
       return;
-   }
-   else if (QT->isMemberPointerType()) {
+   } else if (QT->isMemberPointerType()) {
       string mp_typedef_name;
       {
          ostringstream nm;
@@ -313,12 +312,10 @@ TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
       }
       typedefbuf << "typedef " << mp_typedef_name << ";\n";
       return;
-   }
-   else if (QT->isPointerType()) {
+   } else if (QT->isPointerType()) {
       isPointer = true;
       QT = cast<clang::PointerType>(QT)->getPointeeType();
-   }
-   else if (QT->isReferenceType()) {
+   } else if (QT->isReferenceType()) {
       isReference = true;
       QT = cast<ReferenceType>(QT)->getPointeeType();
    }
@@ -342,33 +339,31 @@ TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
    ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
 }
 
-void
-TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream& typedefbuf,
-               ostringstream& callbuf, const string& class_name,
-               int indent_level)
+void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
+                                    ostringstream &callbuf, const string &class_name,
+                                    int indent_level)
 {
    // Make a code string that follows this pattern:
    //
    // new ClassName(args...)
    //
-   const FunctionDecl* FD = fMethod->GetMethodDecl();
+   const FunctionDecl *FD = fMethod->GetMethodDecl();
 
    callbuf << "new " << class_name << "(";
    for (unsigned i = 0U; i < N; ++i) {
-      const ParmVarDecl* PVD = FD->getParamDecl(i);
+      const ParmVarDecl *PVD = FD->getParamDecl(i);
       QualType Ty = PVD->getType();
       QualType QT = Ty.getCanonicalType();
       string type_name;
       bool isReference = false;
       bool isPointer = false;
       collect_type_info(QT, typedefbuf, callbuf, type_name,
-                        isReference, isPointer, indent_level,true);
+                        isReference, isPointer, indent_level, true);
       if (i) {
          callbuf << ',';
          if (i % 2) {
             callbuf << ' ';
-         }
-         else {
+         } else {
             callbuf << "\n";
             for (int j = 0; j <= indent_level; ++j) {
                callbuf << indent_string;
@@ -381,34 +376,31 @@ TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream& typedefbuf,
       } else if (isPointer) {
          callbuf << "*(" << type_name.c_str() << "**)args["
                  << i << "]";
-      }
-      else {
+      } else {
          callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
       }
    }
    callbuf << ")";
 }
 
-void
-TClingCallFunc::make_narg_call(const unsigned N, ostringstream& typedefbuf,
-               ostringstream& callbuf, const string& class_name,
-               int indent_level)
+void TClingCallFunc::make_narg_call(const unsigned N, ostringstream &typedefbuf,
+                                    ostringstream &callbuf, const string &class_name,
+                                    int indent_level)
 {
    //
    // Make a code string that follows this pattern:
    //
    // ((<class>*)obj)-><method>(*(<arg-i-type>*)args[i], ...)
    //
-   const FunctionDecl* FD = fMethod->GetMethodDecl();
-   if (const CXXMethodDecl* MD = dyn_cast<CXXMethodDecl>(FD)) {
+   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   if (const CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(FD)) {
       // This is a class, struct, or union member.
       if (MD->isConst())
          callbuf << "((const " << class_name << "*)obj)->";
       else
          callbuf << "((" << class_name << "*)obj)->";
-   }
-   else if (const NamedDecl* ND =
-               dyn_cast<NamedDecl>(FD->getDeclContext())) {
+   } else if (const NamedDecl *ND =
+                 dyn_cast<NamedDecl>(FD->getDeclContext())) {
       // This is a namespace member.
       (void) ND;
       callbuf << class_name << "::";
@@ -423,7 +415,7 @@ TClingCallFunc::make_narg_call(const unsigned N, ostringstream& typedefbuf,
       callbuf << name << "(";
    }
    for (unsigned i = 0U; i < N; ++i) {
-      const ParmVarDecl* PVD = FD->getParamDecl(i);
+      const ParmVarDecl *PVD = FD->getParamDecl(i);
       QualType Ty = PVD->getType();
       QualType QT = Ty.getCanonicalType();
       string type_name;
@@ -435,8 +427,7 @@ TClingCallFunc::make_narg_call(const unsigned N, ostringstream& typedefbuf,
          callbuf << ',';
          if (i % 2) {
             callbuf << ' ';
-         }
-         else {
+         } else {
             callbuf << "\n";
             for (int j = 0; j <= indent_level; ++j) {
                callbuf << indent_string;
@@ -449,8 +440,7 @@ TClingCallFunc::make_narg_call(const unsigned N, ostringstream& typedefbuf,
       } else if (isPointer) {
          callbuf << "*(" << type_name.c_str() << "**)args["
                  << i << "]";
-      }
-      else {
+      } else {
          // pointer falls back to non-pointer case; the argument preserves
          // the "pointerness" (i.e. doesn't refernce the value).
          callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
@@ -459,9 +449,8 @@ TClingCallFunc::make_narg_call(const unsigned N, ostringstream& typedefbuf,
    callbuf << ")";
 }
 
-void
-TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string& class_name,
-                           ostringstream& buf, int indent_level)
+void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &class_name,
+      ostringstream &buf, int indent_level)
 {
    // Make a code string that follows this pattern:
    //
@@ -535,9 +524,8 @@ TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string& class
    buf << "}\n";
 }
 
-void
-TClingCallFunc::make_narg_call_with_return(const unsigned N, const string& class_name,
-                           ostringstream& buf, int indent_level)
+void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &class_name,
+      ostringstream &buf, int indent_level)
 {
    // Make a code string that follows this pattern:
    //
@@ -548,8 +536,8 @@ TClingCallFunc::make_narg_call_with_return(const unsigned N, const string& class
    //    ((class_name*)obj)->func(args...);
    // }
    //
-   const FunctionDecl* FD = fMethod->GetMethodDecl();
-   if (const CXXConstructorDecl* CD = dyn_cast<CXXConstructorDecl>(FD)) {
+   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   if (const CXXConstructorDecl *CD = dyn_cast<CXXConstructorDecl>(FD)) {
       (void) CD;
       make_narg_ctor_with_return(N, class_name, buf, indent_level);
       return;
@@ -568,8 +556,7 @@ TClingCallFunc::make_narg_call_with_return(const unsigned N, const string& class
       }
       callbuf << "return;\n";
       buf << typedefbuf.str() << callbuf.str();
-   }
-   else {
+   } else {
       for (int i = 0; i < indent_level; ++i) {
          buf << indent_string;
       }
@@ -596,11 +583,9 @@ TClingCallFunc::make_narg_call_with_return(const unsigned N, const string& class
          callbuf << "(" << type_name.c_str();
          if (isReference) {
             callbuf << "*) (&";
-         }
-         else if (isPointer) {
+         } else if (isPointer) {
             callbuf << "*) (";
-         }
-         else {
+         } else {
             callbuf << ") (";
          }
          //
@@ -652,24 +637,22 @@ TClingCallFunc::make_narg_call_with_return(const unsigned N, const string& class
    }
 }
 
-tcling_callfunc_Wrapper_t
-TClingCallFunc::make_wrapper()
+tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
 {
-   const FunctionDecl* FD = fMethod->GetMethodDecl();
-   ASTContext& Context = FD->getASTContext();
+   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   ASTContext &Context = FD->getASTContext();
    PrintingPolicy Policy(Context.getPrintingPolicy());
    //
    //  Get the class or namespace name.
    //
    string class_name;
-   if (const TypeDecl* TD =
+   if (const TypeDecl *TD =
             dyn_cast<TypeDecl>(FD->getDeclContext())) {
       // This is a class, struct, or union member.
       QualType QT(TD->getTypeForDecl(), 0);
       ROOT::TMetaUtils::GetNormalizedName(class_name, QT, *fInterp, fNormCtxt);
-   }
-   else if (const NamedDecl* ND =
-               dyn_cast<NamedDecl>(FD->getDeclContext())) {
+   } else if (const NamedDecl *ND =
+                 dyn_cast<NamedDecl>(FD->getDeclContext())) {
       // This is a namespace member.
       raw_string_ostream stream(class_name);
       ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
@@ -680,7 +663,7 @@ TClingCallFunc::make_wrapper()
    //  instantiate and codegen this function.
    //
    bool needInstantiation = false;
-   const FunctionDecl* Definition = 0;
+   const FunctionDecl *Definition = 0;
    if (!FD->isDefined(Definition)) {
       FunctionDecl::TemplatedKind TK = FD->getTemplatedKind();
       switch (TK) {
@@ -723,7 +706,7 @@ TClingCallFunc::make_wrapper()
                   //return 0;
                   break;
                }
-               const FunctionDecl* Pattern =
+               const FunctionDecl *Pattern =
                   FD->getTemplateInstantiationPattern();
                if (!Pattern) {
                   Error("TClingCallFunc::make_wrapper",
@@ -735,20 +718,19 @@ TClingCallFunc::make_wrapper()
                TemplateSpecializationKind PTSK =
                   Pattern->getTemplateSpecializationKind();
                if (
-                     // The pattern is an ordinary member function.
-                     (PTK == FunctionDecl::TK_NonTemplate) ||
-                     // The pattern is an explicit specialization, and
-                     // so is not a template.
-                     ((PTK != FunctionDecl::TK_FunctionTemplate) &&
-                      ((PTSK == TSK_Undeclared) ||
-                       (PTSK == TSK_ExplicitSpecialization)))
+                  // The pattern is an ordinary member function.
+                  (PTK == FunctionDecl::TK_NonTemplate) ||
+                  // The pattern is an explicit specialization, and
+                  // so is not a template.
+                  ((PTK != FunctionDecl::TK_FunctionTemplate) &&
+                   ((PTSK == TSK_Undeclared) ||
+                    (PTSK == TSK_ExplicitSpecialization)))
                ) {
                   // Note: This might be ok, the body might be defined
                   //       in a library, and all we have seen is the
                   //       header file.
                   break;
-               }
-               else if (!Pattern->hasBody()) {
+               } else if (!Pattern->hasBody()) {
                   Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a member function "
                         "instantiation with no body!");
@@ -777,7 +759,7 @@ TClingCallFunc::make_wrapper()
                   //return 0;
                   break;
                }
-               const FunctionDecl* Pattern =
+               const FunctionDecl *Pattern =
                   FD->getTemplateInstantiationPattern();
                if (!Pattern) {
                   Error("TClingCallFunc::make_wrapper",
@@ -789,13 +771,13 @@ TClingCallFunc::make_wrapper()
                TemplateSpecializationKind PTSK =
                   Pattern->getTemplateSpecializationKind();
                if (
-                     // The pattern is an ordinary member function.
-                     (PTK == FunctionDecl::TK_NonTemplate) ||
-                     // The pattern is an explicit specialization, and
-                     // so is not a template.
-                     ((PTK != FunctionDecl::TK_FunctionTemplate) &&
-                      ((PTSK == TSK_Undeclared) ||
-                       (PTSK == TSK_ExplicitSpecialization)))
+                  // The pattern is an ordinary member function.
+                  (PTK == FunctionDecl::TK_NonTemplate) ||
+                  // The pattern is an explicit specialization, and
+                  // so is not a template.
+                  ((PTK != FunctionDecl::TK_FunctionTemplate) &&
+                   ((PTSK == TSK_Undeclared) ||
+                    (PTSK == TSK_ExplicitSpecialization)))
                ) {
                   // Note: This might be ok, the body might be defined
                   //       in a library, and all we have seen is the
@@ -834,7 +816,7 @@ TClingCallFunc::make_wrapper()
                   //return 0;
                   break;
                }
-               const FunctionDecl* Pattern =
+               const FunctionDecl *Pattern =
                   FD->getTemplateInstantiationPattern();
                if (!Pattern) {
                   Error("TClingCallFunc::make_wrapper",
@@ -846,13 +828,13 @@ TClingCallFunc::make_wrapper()
                TemplateSpecializationKind PTSK =
                   Pattern->getTemplateSpecializationKind();
                if (
-                     // The pattern is an ordinary member function.
-                     (PTK == FunctionDecl::TK_NonTemplate) ||
-                     // The pattern is an explicit specialization, and
-                     // so is not a template.
-                     ((PTK != FunctionDecl::TK_FunctionTemplate) &&
-                      ((PTSK == TSK_Undeclared) ||
-                       (PTSK == TSK_ExplicitSpecialization)))
+                  // The pattern is an ordinary member function.
+                  (PTK == FunctionDecl::TK_NonTemplate) ||
+                  // The pattern is an explicit specialization, and
+                  // so is not a template.
+                  ((PTK != FunctionDecl::TK_FunctionTemplate) &&
+                   ((PTSK == TSK_Undeclared) ||
+                    (PTSK == TSK_ExplicitSpecialization)))
                ) {
                   // Note: This might be ok, the body might be defined
                   //       in a library, and all we have seen is the
@@ -898,8 +880,8 @@ TClingCallFunc::make_wrapper()
       //
    }
    if (needInstantiation) {
-      clang::FunctionDecl* FDmod = const_cast<clang::FunctionDecl*>(FD);
-      clang::Sema& S = fInterp->getSema();
+      clang::FunctionDecl *FDmod = const_cast<clang::FunctionDecl *>(FD);
+      clang::Sema &S = fInterp->getSema();
       // Could trigger deserialization of decls.
       cling::Interpreter::PushTransactionRAII RAII(fInterp);
       S.InstantiateFunctionDefinition(SourceLocation(), FDmod,
@@ -920,8 +902,7 @@ TClingCallFunc::make_wrapper()
                   Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a deleted function!");
                   return 0;
-               }
-               else if (Definition->isLateTemplateParsed()) {
+               } else if (Definition->isLateTemplateParsed()) {
                   Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a late template parsed "
                         "function!");
@@ -952,8 +933,7 @@ TClingCallFunc::make_wrapper()
                         "Cannot make wrapper for a deleted member function "
                         "of a specialization!");
                   return 0;
-               }
-               else if (Definition->isLateTemplateParsed()) {
+               } else if (Definition->isLateTemplateParsed()) {
                   Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a late template parsed "
                         "member function of a specialization!");
@@ -977,8 +957,7 @@ TClingCallFunc::make_wrapper()
                         "Cannot make wrapper for a deleted function "
                         "template specialization!");
                   return 0;
-               }
-               else if (Definition->isLateTemplateParsed()) {
+               } else if (Definition->isLateTemplateParsed()) {
                   Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a late template parsed "
                         "function template specialization!");
@@ -1005,8 +984,7 @@ TClingCallFunc::make_wrapper()
                         "Cannot make wrapper for a deleted dependent function "
                         "template specialization!");
                   return 0;
-               }
-               else if (Definition->isLateTemplateParsed()) {
+               } else if (Definition->isLateTemplateParsed()) {
                   Error("TClingCallFunc::make_wrapper",
                         "Cannot make wrapper for a late template parsed "
                         "dependent function template specialization!");
@@ -1061,8 +1039,7 @@ TClingCallFunc::make_wrapper()
    if (min_args == num_params) {
       // No parameters with defaults.
       make_narg_call_with_return(num_params, class_name, buf, indent_level);
-   }
-   else {
+   } else {
       // We need one function call clause compiled for every
       // possible number of arguments per call.
       for (unsigned N = min_args; N <= num_params; ++N) {
@@ -1086,15 +1063,14 @@ TClingCallFunc::make_wrapper()
    //
    //  Compile the wrapper code.
    //
-   void* F = compile_wrapper(wrapper_name, wrapper);
+   void *F = compile_wrapper(wrapper_name, wrapper);
    if (F) {
       wrapper_store.insert(make_pair(FD, F));
    }
    return (tcling_callfunc_Wrapper_t)F;
 }
 
-tcling_callfunc_ctor_Wrapper_t
-TClingCallFunc::make_ctor_wrapper(const TClingClassInfo* info)
+tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingClassInfo *info)
 {
    // Make a code string that follows this pattern:
    //
@@ -1135,7 +1111,7 @@ TClingCallFunc::make_ctor_wrapper(const TClingClassInfo* info)
    // CINT did.
    //
    //--
-   ASTContext& Context = info->GetDecl()->getASTContext();
+   ASTContext &Context = info->GetDecl()->getASTContext();
    PrintingPolicy Policy(Context.getPrintingPolicy());
    Policy.SuppressTagKeyword = true;
    Policy.SuppressUnwrittenScope = true;
@@ -1143,12 +1119,11 @@ TClingCallFunc::make_ctor_wrapper(const TClingClassInfo* info)
    //  Get the class or namespace name.
    //
    string class_name;
-   if (const TypeDecl* TD = dyn_cast<TypeDecl>(info->GetDecl())) {
+   if (const TypeDecl *TD = dyn_cast<TypeDecl>(info->GetDecl())) {
       // This is a class, struct, or union member.
       QualType QT(TD->getTypeForDecl(), 0);
       ROOT::TMetaUtils::GetNormalizedName(class_name, QT, *fInterp, fNormCtxt);
-   }
-   else if (const NamedDecl* ND = dyn_cast<NamedDecl>(info->GetDecl())) {
+   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(info->GetDecl())) {
       // This is a namespace member.
       raw_string_ostream stream(class_name);
       ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
@@ -1248,7 +1223,7 @@ TClingCallFunc::make_ctor_wrapper(const TClingClassInfo* info)
    //
    //  Compile the wrapper code.
    //
-   void* F = compile_wrapper(wrapper_name, wrapper,
+   void *F = compile_wrapper(wrapper_name, wrapper,
                              /*withAccessControl=*/false);
    if (F) {
       ctor_wrapper_store.insert(make_pair(info->GetDecl(), F));
@@ -1257,7 +1232,7 @@ TClingCallFunc::make_ctor_wrapper(const TClingClassInfo* info)
 }
 
 tcling_callfunc_dtor_Wrapper_t
-TClingCallFunc::make_dtor_wrapper(const TClingClassInfo* info)
+TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
 {
    // Make a code string that follows this pattern:
    //
@@ -1286,7 +1261,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo* info)
    // }
    //
    //--
-   ASTContext& Context = info->GetDecl()->getASTContext();
+   ASTContext &Context = info->GetDecl()->getASTContext();
    PrintingPolicy Policy(Context.getPrintingPolicy());
    Policy.SuppressTagKeyword = true;
    Policy.SuppressUnwrittenScope = true;
@@ -1294,12 +1269,11 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo* info)
    //  Get the class or namespace name.
    //
    string class_name;
-   if (const TypeDecl* TD = dyn_cast<TypeDecl>(info->GetDecl())) {
+   if (const TypeDecl *TD = dyn_cast<TypeDecl>(info->GetDecl())) {
       // This is a class, struct, or union member.
       QualType QT(TD->getTypeForDecl(), 0);
       ROOT::TMetaUtils::GetNormalizedName(class_name, QT, *fInterp, fNormCtxt);
-   }
-   else if (const NamedDecl* ND = dyn_cast<NamedDecl>(info->GetDecl())) {
+   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(info->GetDecl())) {
       // This is a namespace member.
       raw_string_ostream stream(class_name);
       ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
@@ -1409,7 +1383,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo* info)
    //
    //  Compile the wrapper code.
    //
-   void* F = compile_wrapper(wrapper_name, wrapper,
+   void *F = compile_wrapper(wrapper_name, wrapper,
                              /*withAccessControl=*/false);
    if (F) {
       dtor_wrapper_store.insert(make_pair(info->GetDecl(), F));
@@ -1441,16 +1415,15 @@ public:
       signed char sc;
       char c;
       bool b;
-      void* vp;
+      void *vp;
    } u;
 };
 
-void
-TClingCallFunc::exec(void* address, void* ret) const
+void TClingCallFunc::exec(void *address, void *ret) const
 {
    SmallVector<ValHolder, 8> vh_ary;
-   SmallVector<void*, 8> vp_ary;
-   const FunctionDecl* FD = fMethod->GetMethodDecl();
+   SmallVector<void *, 8> vp_ary;
+   const FunctionDecl *FD = fMethod->GetMethodDecl();
 
    //
    //  Convert the arguments from cling::Value to their
@@ -1460,16 +1433,16 @@ TClingCallFunc::exec(void* address, void* ret) const
    unsigned num_params = FD->getNumParams();
    unsigned num_args = fArgVals.size();
 
-   if (num_args < FD->getMinRequiredArguments ()) {
+   if (num_args < FD->getMinRequiredArguments()) {
       Error("TClingCallFunc::exec",
             "Not enough arguments provided for %s (%d instead of the minimum %d)",
             fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())),
-            num_args,FD->getMinRequiredArguments ());
+            num_args, FD->getMinRequiredArguments());
       return;
    }
    if (address == 0 && dyn_cast<CXXMethodDecl>(FD)
-       && !(dyn_cast<CXXMethodDecl>(FD))->isStatic()
-       && !dyn_cast<CXXConstructorDecl>(FD)) {
+         && !(dyn_cast<CXXMethodDecl>(FD))->isStatic()
+         && !dyn_cast<CXXConstructorDecl>(FD)) {
       Error("TClingCallFunc::exec",
             "The method %s is called without an object.",
             fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())));
@@ -1480,39 +1453,34 @@ TClingCallFunc::exec(void* address, void* ret) const
    for (unsigned i = 0U; i < num_args; ++i) {
       QualType Ty;
       if (i < num_params) {
-         const ParmVarDecl* PVD = FD->getParamDecl(i);
+         const ParmVarDecl *PVD = FD->getParamDecl(i);
          Ty = PVD->getType();
-      }
-      else {
+      } else {
          Ty = fArgVals[i].getType();
       }
       QualType QT = Ty.getCanonicalType();
       if (QT->isReferenceType()) {
          ValHolder vh;
-         vh.u.vp = (void*) sv_to_ulong_long(fArgVals[i]);
+         vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
          vh_ary.push_back(vh);
          vp_ary.push_back(&vh_ary.back());
-      }
-      else if (QT->isMemberPointerType()) {
+      } else if (QT->isMemberPointerType()) {
          ValHolder vh;
-         vh.u.vp = (void*) sv_to_ulong_long(fArgVals[i]);
+         vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
          vh_ary.push_back(vh);
          vp_ary.push_back(&vh_ary.back());
-      }
-      else if (QT->isPointerType() || QT->isArrayType()) {
+      } else if (QT->isPointerType() || QT->isArrayType()) {
          ValHolder vh;
-         vh.u.vp = (void*) sv_to_ulong_long(fArgVals[i]);
+         vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
          vh_ary.push_back(vh);
          vp_ary.push_back(&vh_ary.back());
-      }
-      else if (QT->isRecordType()) {
+      } else if (QT->isRecordType()) {
          ValHolder vh;
-         vh.u.vp = (void*) sv_to_ulong_long(fArgVals[i]);
+         vh.u.vp = (void *) sv_to_ulong_long(fArgVals[i]);
          vh_ary.push_back(vh);
          vp_ary.push_back(&vh_ary.back());
-      }
-      else if (const EnumType* ET =
-                  dyn_cast<EnumType>(&*QT)) {
+      } else if (const EnumType *ET =
+                    dyn_cast<EnumType>(&*QT)) {
          // Note: We may need to worry about the underlying type
          //       of the enum here.
          (void) ET;
@@ -1520,9 +1488,8 @@ TClingCallFunc::exec(void* address, void* ret) const
          vh.u.i = (int) sv_to_long_long(fArgVals[i]);
          vh_ary.push_back(vh);
          vp_ary.push_back(&vh_ary.back());
-      }
-      else if (const BuiltinType* BT =
-                  dyn_cast<BuiltinType>(&*QT)) {
+      } else if (const BuiltinType *BT =
+                    dyn_cast<BuiltinType>(&*QT)) {
          //
          //  WARNING!!!
          //
@@ -1888,45 +1855,45 @@ TClingCallFunc::exec(void* address, void* ret) const
                }
                break;
          }
-      }
-      else {
+      } else {
          Error("TClingCallFunc::exec(void*)",
                "Invalid type (unrecognized)!");
          QT->dump();
          return;
       }
    }
-   (*fWrapper)(address, (int)num_args, (void**)vp_ary.data(), ret);
+   (*fWrapper)(address, (int)num_args, (void **)vp_ary.data(), ret);
 }
 
 template <typename T>
-void TClingCallFunc::execWithLL(void* address, clang::QualType QT,
-                                cling::Value* val) const {
+void TClingCallFunc::execWithLL(void *address, clang::QualType QT,
+                                cling::Value *val) const
+{
    T ret; // leave uninit for valgrind's sake!
    exec(address, &ret);
    val->getLL() = ret;
 }
 
 template <typename T>
-void TClingCallFunc::execWithULL(void* address, clang::QualType QT,
-                                 cling::Value* val) const {
+void TClingCallFunc::execWithULL(void *address, clang::QualType QT,
+                                 cling::Value *val) const
+{
    T ret; // leave uninit for valgrind's sake!
    exec(address, &ret);
    val->getULL() = ret;
 }
 
-void
-TClingCallFunc::exec_with_valref_return(void* address, cling::Value* ret) const
+void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret) const
 {
    if (!ret) {
       exec(address, 0);
       return;
    }
-   const FunctionDecl* FD = fMethod->GetMethodDecl();
-   ASTContext& Context = FD->getASTContext();
+   const FunctionDecl *FD = fMethod->GetMethodDecl();
+   ASTContext &Context = FD->getASTContext();
 
-   if (const CXXConstructorDecl* CD = dyn_cast<CXXConstructorDecl>(FD)) {
-      const TypeDecl* TD = dyn_cast<TypeDecl>(CD->getDeclContext());
+   if (const CXXConstructorDecl *CD = dyn_cast<CXXConstructorDecl>(FD)) {
+      const TypeDecl *TD = dyn_cast<TypeDecl>(CD->getDeclContext());
       QualType ClassTy(TD->getTypeForDecl(), 0);
       QualType QT = Context.getLValueReferenceType(ClassTy);
       *ret = cling::Value(QT, *fInterp);
@@ -1939,9 +1906,8 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::Value* ret) const
       *ret = cling::Value(QT, *fInterp);
       exec(address, &ret->getPtr());
       return;
-   }
-   else if (QT->isMemberPointerType()) {
-      const MemberPointerType* MPT = QT->getAs<MemberPointerType>();
+   } else if (QT->isMemberPointerType()) {
+      const MemberPointerType *MPT = QT->getAs<MemberPointerType>();
       if (MPT->isMemberDataPointer()) {
          // A member data pointer is a actually a struct with one
          // member of ptrdiff_t, the offset from the base of the object
@@ -1956,27 +1922,23 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::Value* ret) const
       *ret = cling::Value(QT, *fInterp);
       exec(address, &ret->getPtr());
       return;
-   }
-   else if (QT->isPointerType() || QT->isArrayType()) {
+   } else if (QT->isPointerType() || QT->isArrayType()) {
       // Note: ArrayType is an illegal function return value type.
       *ret = cling::Value(QT, *fInterp);
       exec(address, &ret->getPtr());
       return;
-   }
-   else if (QT->isRecordType()) {
+   } else if (QT->isRecordType()) {
       *ret = cling::Value(QT, *fInterp);
       exec(address, ret->getPtr());
       return;
-   }
-   else if (const EnumType* ET = dyn_cast<EnumType>(&*QT)) {
+   } else if (const EnumType *ET = dyn_cast<EnumType>(&*QT)) {
       // Note: We may need to worry about the underlying type
       //       of the enum here.
       (void) ET;
       *ret = cling::Value(QT, *fInterp);
       execWithLL<int>(address, QT, ret);
       return;
-   }
-   else if (const BuiltinType* BT = dyn_cast<BuiltinType>(&*QT)) {
+   } else if (const BuiltinType *BT = dyn_cast<BuiltinType>(&*QT)) {
       *ret = cling::Value(QT, *fInterp);
       switch (BT->getKind()) {
          case BuiltinType::Void:
@@ -2063,7 +2025,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::Value* ret) const
             execWithLL<long>(address, QT, ret);
             return;
             break;
-        case BuiltinType::LongLong:
+         case BuiltinType::LongLong:
             execWithLL<long long>(address, QT, ret);
             return;
             break;
@@ -2109,14 +2071,13 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::Value* ret) const
    return;
 }
 
-void
-TClingCallFunc::EvaluateArgList(const string& ArgList)
+void TClingCallFunc::EvaluateArgList(const string &ArgList)
 {
-   SmallVector<Expr*, 4> exprs;
+   SmallVector<Expr *, 4> exprs;
    fInterp->getLookupHelper().findArgList(ArgList, exprs,
                                           gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                                           : cling::LookupHelper::NoDiagnostics);
-   for (SmallVectorImpl<Expr*>::const_iterator I = exprs.begin(),
+   for (SmallVectorImpl<Expr *>::const_iterator I = exprs.begin(),
          E = exprs.end(); I != E; ++I) {
       cling::Value val;
       EvaluateExpr(*fInterp, *I, val);
@@ -2124,7 +2085,7 @@ TClingCallFunc::EvaluateArgList(const string& ArgList)
          // Bad expression, all done.
          Error("TClingCallFunc::EvaluateArgList",
                "Bad expression in parameter %d of '%s'!",
-               (int) (I - exprs.begin()),
+               (int)(I - exprs.begin()),
                ArgList.c_str());
          return;
       }
@@ -2132,8 +2093,7 @@ TClingCallFunc::EvaluateArgList(const string& ArgList)
    }
 }
 
-void
-TClingCallFunc::Exec(void* address, TInterpreterValue* interpVal/*=0*/)
+void TClingCallFunc::Exec(void *address, TInterpreterValue *interpVal/*=0*/)
 {
    IFacePtr();
    if (!fWrapper) {
@@ -2145,12 +2105,12 @@ TClingCallFunc::Exec(void* address, TInterpreterValue* interpVal/*=0*/)
       exec(address, 0);
       return;
    }
-   cling::Value* val = reinterpret_cast<cling::Value*>(interpVal->GetValAddr());
+   cling::Value *val = reinterpret_cast<cling::Value *>(interpVal->GetValAddr());
    exec_with_valref_return(address, val);
 }
 
 template <typename T>
-T TClingCallFunc::ExecT(void* address)
+T TClingCallFunc::ExecT(void *address)
 {
    IFacePtr();
    if (!fWrapper) {
@@ -2164,33 +2124,29 @@ T TClingCallFunc::ExecT(void* address)
       // Sometimes we are called on a function returning void!
       return 0;
    }
-   const FunctionDecl* decl = fMethod->GetMethodDecl();
+   const FunctionDecl *decl = fMethod->GetMethodDecl();
    if (decl->getReturnType().getCanonicalType()->isRecordType())
-      ((TCling*)gCling)->RegisterTemporary(ret);
+      ((TCling *)gCling)->RegisterTemporary(ret);
    return sv_to<T>(ret);
 }
 
-Long_t
-TClingCallFunc::ExecInt(void* address)
+Long_t TClingCallFunc::ExecInt(void *address)
 {
    return ExecT<long>(address);
 }
 
-long long
-TClingCallFunc::ExecInt64(void* address)
+long long TClingCallFunc::ExecInt64(void *address)
 {
    return ExecT<long long>(address);
 }
 
-double
-TClingCallFunc::ExecDouble(void* address)
+double TClingCallFunc::ExecDouble(void *address)
 {
    return ExecT<double>(address);
 }
 
-void
-TClingCallFunc::ExecWithArgsAndReturn(void* address, const void* args[] /*= 0*/,
-                                      int nargs /*= 0*/, void* ret/*= 0*/)
+void TClingCallFunc::ExecWithArgsAndReturn(void *address, const void *args[] /*= 0*/,
+      int nargs /*= 0*/, void *ret/*= 0*/)
 {
    IFacePtr();
    if (!fWrapper) {
@@ -2198,11 +2154,10 @@ TClingCallFunc::ExecWithArgsAndReturn(void* address, const void* args[] /*= 0*/,
             "Called with no wrapper, not implemented!");
       return;
    }
-   (*fWrapper)(address, nargs, const_cast<void**>(args), ret);
+   (*fWrapper)(address, nargs, const_cast<void **>(args), ret);
 }
 
-void
-TClingCallFunc::ExecWithReturn(void* address, void* ret/*= 0*/)
+void TClingCallFunc::ExecWithReturn(void *address, void *ret/*= 0*/)
 {
    IFacePtr();
    if (!fWrapper) {
@@ -2213,15 +2168,14 @@ TClingCallFunc::ExecWithReturn(void* address, void* ret/*= 0*/)
    exec(address, ret);
 }
 
-void*
-TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo* info, void* address /*=0*/,
-                       unsigned long nary /*= 0UL*/)
+void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info, void *address /*=0*/,
+      unsigned long nary /*= 0UL*/)
 {
    if (!info->IsValid()) {
       Error("TClingCallFunc::ExecDefaultConstructor", "Invalid class info!");
       return 0;
    }
-   const Decl* D = info->GetDecl();
+   const Decl *D = info->GetDecl();
    //if (!info->HasDefaultConstructor()) {
    //   // FIXME: We might have a ROOT ioctor, we might
    //   //        have to check for that here.
@@ -2230,12 +2184,11 @@ TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo* info, void* addres
    //         info->Name());
    //   return 0;
    //}
-   map<const Decl*, void*>::iterator I = ctor_wrapper_store.find(D);
+   map<const Decl *, void *>::iterator I = ctor_wrapper_store.find(D);
    tcling_callfunc_ctor_Wrapper_t wrapper = 0;
    if (I != ctor_wrapper_store.end()) {
       wrapper = (tcling_callfunc_ctor_Wrapper_t) I->second;
-   }
-   else {
+   } else {
       wrapper = make_ctor_wrapper(info);
    }
    if (!wrapper) {
@@ -2243,26 +2196,24 @@ TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo* info, void* addres
             "Called with no wrapper, not implemented!");
       return 0;
    }
-   void* obj = 0;
+   void *obj = 0;
    (*wrapper)(&obj, address, nary);
    return obj;
 }
 
-void
-TClingCallFunc::ExecDestructor(const TClingClassInfo* info, void* address /*=0*/,
-               unsigned long nary /*= 0UL*/, bool withFree /*= true*/)
+void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /*=0*/,
+                                    unsigned long nary /*= 0UL*/, bool withFree /*= true*/)
 {
    if (!info->IsValid()) {
       Error("TClingCallFunc::ExecDestructor", "Invalid class info!");
       return;
    }
-   const Decl* D = info->GetDecl();
-   map<const Decl*, void*>::iterator I = dtor_wrapper_store.find(D);
+   const Decl *D = info->GetDecl();
+   map<const Decl *, void *>::iterator I = dtor_wrapper_store.find(D);
    tcling_callfunc_dtor_Wrapper_t wrapper = 0;
    if (I != dtor_wrapper_store.end()) {
       wrapper = (tcling_callfunc_dtor_Wrapper_t) I->second;
-   }
-   else {
+   } else {
       wrapper = make_dtor_wrapper(info);
    }
    if (!wrapper) {
@@ -2273,14 +2224,13 @@ TClingCallFunc::ExecDestructor(const TClingClassInfo* info, void* address /*=0*/
    (*wrapper)(address, nary, withFree);
 }
 
-TClingMethodInfo*
+TClingMethodInfo *
 TClingCallFunc::FactoryMethod() const
 {
    return new TClingMethodInfo(*fMethod);
 }
 
-void
-TClingCallFunc::Init()
+void TClingCallFunc::Init()
 {
    delete fMethod;
    fMethod = 0;
@@ -2288,8 +2238,7 @@ TClingCallFunc::Init()
    ResetArg();
 }
 
-void
-TClingCallFunc::Init(TClingMethodInfo* minfo)
+void TClingCallFunc::Init(TClingMethodInfo *minfo)
 {
    delete fMethod;
    fMethod = new TClingMethodInfo(*minfo);
@@ -2297,25 +2246,22 @@ TClingCallFunc::Init(TClingMethodInfo* minfo)
    ResetArg();
 }
 
-void*
-TClingCallFunc::InterfaceMethod()
+void *TClingCallFunc::InterfaceMethod()
 {
    if (!IsValid()) {
       return 0;
    }
-   const FunctionDecl* decl = fMethod->GetMethodDecl();
-   map<const FunctionDecl*, void*>::iterator I = wrapper_store.find(decl);
+   const FunctionDecl *decl = fMethod->GetMethodDecl();
+   map<const FunctionDecl *, void *>::iterator I = wrapper_store.find(decl);
    if (I != wrapper_store.end()) {
       fWrapper = (tcling_callfunc_Wrapper_t) I->second;
-   }
-   else {
+   } else {
       fWrapper = make_wrapper();
    }
-   return (void*)fWrapper;
+   return (void *)fWrapper;
 }
 
-bool
-TClingCallFunc::IsValid() const
+bool TClingCallFunc::IsValid() const
 {
    if (!fMethod) {
       return false;
@@ -2323,66 +2269,59 @@ TClingCallFunc::IsValid() const
    return fMethod->IsValid();
 }
 
-TInterpreter::CallFuncIFacePtr_t
-TClingCallFunc::IFacePtr() {
+TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
+{
    if (!IsValid()) {
       Error("TClingCallFunc::IFacePtr(kind)",
             "Attempt to get interface while invalid.");
       return TInterpreter::CallFuncIFacePtr_t();
    }
-   const FunctionDecl* decl = fMethod->GetMethodDecl();
-   map<const FunctionDecl*, void*>::iterator I =
+   const FunctionDecl *decl = fMethod->GetMethodDecl();
+   map<const FunctionDecl *, void *>::iterator I =
       wrapper_store.find(decl);
    if (I != wrapper_store.end()) {
       fWrapper = (tcling_callfunc_Wrapper_t) I->second;
-   }
-   else {
+   } else {
       fWrapper = make_wrapper();
    }
    return TInterpreter::CallFuncIFacePtr_t(fWrapper);
 }
 
 
-void
-TClingCallFunc::ResetArg()
+void TClingCallFunc::ResetArg()
 {
    fArgVals.clear();
 }
 
-void
-TClingCallFunc::SetArg(long param)
+void TClingCallFunc::SetArg(long param)
 {
-   ASTContext& C = fInterp->getCI()->getASTContext();
+   ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.LongTy, *fInterp));
    fArgVals.back().getLL() = param;
 }
 
-void
-TClingCallFunc::SetArg(double param)
+void TClingCallFunc::SetArg(double param)
 {
-   ASTContext& C = fInterp->getCI()->getASTContext();
+   ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.DoubleTy, *fInterp));
    fArgVals.back().getDouble() = param;
 }
 
-void
-TClingCallFunc::SetArg(long long param)
+void TClingCallFunc::SetArg(long long param)
 {
-   ASTContext& C = fInterp->getCI()->getASTContext();
+   ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.LongLongTy, *fInterp));
    fArgVals.back().getLL() = param;
 }
 
-void
-TClingCallFunc::SetArg(unsigned long long param)
+void TClingCallFunc::SetArg(unsigned long long param)
 {
-   ASTContext& C = fInterp->getCI()->getASTContext();
+   ASTContext &C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.UnsignedLongLongTy, *fInterp));
    fArgVals.back().getULL() = param;
 }
 
-void
-TClingCallFunc::SetArgArray(long* paramArr, int nparam)
+void TClingCallFunc::SetArgArray(long *paramArr, int nparam)
 {
    ResetArg();
    for (int i = 0; i < nparam; ++i) {
@@ -2390,23 +2329,20 @@ TClingCallFunc::SetArgArray(long* paramArr, int nparam)
    }
 }
 
-void
-TClingCallFunc::SetArgs(const char* params)
+void TClingCallFunc::SetArgs(const char *params)
 {
    ResetArg();
    EvaluateArgList(params);
 }
 
-void
-TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method, const char* arglist,
-        long* poffset)
+void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, const char *arglist,
+                             long *poffset)
 {
    SetFunc(info, method, arglist, false, poffset);
 }
 
-void
-TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method, const char* arglist,
-        bool objectIsConst, long* poffset)
+void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, const char *arglist,
+                             bool objectIsConst, long *poffset)
 {
    fWrapper = 0;
    delete fMethod;
@@ -2435,8 +2371,7 @@ TClingCallFunc::SetFunc(const TClingClassInfo* info, const char* method, const c
    EvaluateArgList(arglist);
 }
 
-void
-TClingCallFunc::SetFunc(const TClingMethodInfo* info)
+void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
 {
    fWrapper = 0;
    delete fMethod;
@@ -2447,18 +2382,16 @@ TClingCallFunc::SetFunc(const TClingMethodInfo* info)
    }
 }
 
-void
-TClingCallFunc::SetFuncProto(const TClingClassInfo* info, const char* method,
-             const char* proto, long* poffset,
-             EFunctionMatchMode mode/*=kConversionMatch*/)
+void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *method,
+                                  const char *proto, long *poffset,
+                                  EFunctionMatchMode mode/*=kConversionMatch*/)
 {
    SetFuncProto(info, method, proto, false, poffset, mode);
 }
 
-void
-TClingCallFunc::SetFuncProto(const TClingClassInfo* info, const char* method,
-             const char* proto, bool objectIsConst, long* poffset,
-             EFunctionMatchMode mode/*=kConversionMatch*/)
+void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *method,
+                                  const char *proto, bool objectIsConst, long *poffset,
+                                  EFunctionMatchMode mode/*=kConversionMatch*/)
 {
    fWrapper = 0;
    delete fMethod;
@@ -2479,19 +2412,17 @@ TClingCallFunc::SetFuncProto(const TClingClassInfo* info, const char* method,
    }
 }
 
-void
-TClingCallFunc::SetFuncProto(const TClingClassInfo* info, const char* method,
-             const llvm::SmallVectorImpl<clang::QualType>& proto, long* poffset,
-             EFunctionMatchMode mode/*=kConversionMatch*/)
+void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *method,
+                                  const llvm::SmallVectorImpl<clang::QualType> &proto, long *poffset,
+                                  EFunctionMatchMode mode/*=kConversionMatch*/)
 {
    SetFuncProto(info, method, proto, false, poffset, mode);
 }
 
-void
-TClingCallFunc::SetFuncProto(const TClingClassInfo* info, const char* method,
-             const llvm::SmallVectorImpl<clang::QualType>& proto,
-             bool objectIsConst, long* poffset,
-             EFunctionMatchMode mode/*=kConversionMatch*/)
+void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *method,
+                                  const llvm::SmallVectorImpl<clang::QualType> &proto,
+                                  bool objectIsConst, long *poffset,
+                                  EFunctionMatchMode mode/*=kConversionMatch*/)
 {
    delete fMethod;
    fMethod = new TClingMethodInfo(fInterp);
