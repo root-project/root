@@ -258,17 +258,13 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
                       VoidFuncPtr_t dict, Int_t pragmabits)
 {
    // Add a class to the class table (this is a static function).
+   // Note that the given cname *must* be already normalized.
 
    if (!gClassTable)
       new TClassTable;
 
-   // Only register the name without the default STL template arguments ...
-   TClassEdit::TSplitType splitname( cname, TClassEdit::kLong64 );
-   std::string shortName;
-   splitname.ShortType(shortName, TClassEdit::kDropStlDefault);
-
    // check if already in table, if so return
-   TClassRec *r = FindElementImpl(shortName.c_str(), kTRUE);
+   TClassRec *r = FindElementImpl(cname, kTRUE);
    if (r->fName && r->fInfo) {
       if ( strcmp(r->fInfo->name(),typeid(ROOT::TForNamespace).name())==0
            && strcmp(info.name(),typeid(ROOT::TForNamespace).name())==0 ) {
@@ -277,13 +273,13 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
          return;
       }
 //       if (splitname.IsSTLCont()==0) {
-      if (!TClassEdit::IsStdClass(shortName.c_str())) {
+      if (!TClassEdit::IsStdClass(cname)) {
          // Warn only for class that are not STD classes
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }
       return;
    } else if (ROOT::gROOTLocal && gCling) {
-      TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(shortName.c_str());
+      TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(cname);
       if (oldcl) { //  && oldcl->GetClassInfo()) {
          // As a work-around to ROOT-6012, we need to register the class even if
          // it is not a template instance, because a forward declaration in the header
@@ -299,7 +295,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
       }
    }
 
-   if (!r->fName) r->fName = StrDup(shortName.c_str());
+   if (!r->fName) r->fName = StrDup(cname);
    r->fId   = id;
    r->fBits = pragmabits;
    r->fDict = dict;
