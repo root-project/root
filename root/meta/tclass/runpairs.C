@@ -75,7 +75,8 @@ void readfile(const char*filename="pairs.root",int debug = 0) {
    f->GetObject("myr",r);
 }
  
-void runpairs(int what=3, const char*filename="pairs.root",int debug = 0) {
+void runpairs(int what=7, const char*filename="pairs.root",int debug = 0) {
+   if (what&4) readfile("pairs_v5.root",debug);
    if (what&1) write2file(filename,debug);
    if (what&2) readfile(filename,debug);
 }
