@@ -370,7 +370,7 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam)
 
    void *address = 0;
    R__LOCKGUARD2(gInterpreterMutex);
-   gCling->CallFunc_SetArgArray(fFunc, paramArr, nparam);
+   if (paramArr) gCling->CallFunc_SetArgArray(fFunc, paramArr, nparam);
    if (object) address = (void *)((Long_t)object + fOffset);
    fExecuting++;
    gCling->CallFunc_Exec(fFunc, address);
