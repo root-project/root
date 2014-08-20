@@ -286,6 +286,9 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
             unsigned int offset = (0==strncmp("const ",fElements[i].c_str(),6)) ? 6 : 0;
             RemoveStd( fElements[i], offset );
          }
+         if (mode&kResolveTypedef) {
+            fElements[i] = ResolveTypedef(fElements[i].c_str(),true);
+         }
          continue;
       }
       bool hasconst = 0==strncmp("const ",fElements[i].c_str(),6);
@@ -628,7 +631,7 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, const char *name)
 
    // Remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
    TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
-   splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
+   splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kResolveTypedef);
 
    // Depending on how the user typed their code, in particular typedef
    // declarations, we may end up with an explicit '::' being
