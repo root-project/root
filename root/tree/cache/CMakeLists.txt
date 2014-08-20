@@ -6,7 +6,7 @@ ROOTTEST_ADD_TEST(roottest-root-tree-cache-autocache
                   COPY_TO_BUILDDIR AliESDs-0.root AliESDs-1.root
                   MACRO runautocache.C
                   OUTREF autocache.ref
-                  ERRREF autocache.err)
+                  ERRREF autocache.eref)
 
 ROOTTEST_ADD_TEST(roottest-root-tree-cache-cachedChain
                   MACRO runcachedchain.C
