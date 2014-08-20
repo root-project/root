@@ -1789,10 +1789,11 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
    // either from the TClassTable or from the list of generator.
    // If silent is 'true', do not warn about missing dictionary for the class.
    // (typically used for class that are used only for transient members)
+   //
+   // The 'requestedname' is expected to be already normalized.
 
    // This function does not (and should not) attempt to check in the
    // list of loaded classes or in the typedef.
-
 
    // We need to cache the requested name as in some case this function is
    // called with gROOT->LoadClass(cl->GetName()) and the loading of a library,
@@ -1803,32 +1804,9 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
 
    VoidFuncPtr_t dict = TClassTable::GetDict(classname);
 
-   std::string resolved;
-
-   if (!dict) {
-      // Try to remove the ROOT typedefs
-      // Note currently this can lead to autoloading and autoparsing.
-      // This is to support:
-      //      gROOT->GetClass("vector<std::pair<Char_t, UChar_t>")
-      // where that class is registered in the TClassTable
-      // as vector<pair<char,unsigned char> >).
-
-      TClassEdit::GetNormalizedName(resolved, classname);
-      if (resolved != classname) {
-         dict = TClassTable::GetDict(resolved.c_str());
-      } else {
-         resolved.Clear();
-      }
-   }
    if (!dict) {
       if (gInterpreter->AutoLoad(classname)) {
          dict = TClassTable::GetDict(classname);
-         if (!dict) {
-            // Try the typedefs again.
-            if (!resolved.empty()) {
-               dict = TClassTable::GetDict(resolved.c_str());
-            }
-         }
       }
    }
 
