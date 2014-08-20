@@ -234,7 +234,8 @@ const char *DirectoryLookup::getName() const {
 static const FileEntry *
 getFileAndSuggestModule(HeaderSearch &HS, StringRef FileName,
                         const DirectoryEntry *Dir, bool IsSystemHeaderDir,
-                        ModuleMap::KnownHeader *SuggestedModule) {
+                        ModuleMap::KnownHeader *SuggestedModule,
+                        bool OpenFile) {
   // If we have a module map that might map this header, load it and
   // check whether we'll have a suggestion for a module.
   HS.hasModuleMap(FileName, Dir, IsSystemHeaderDir);
@@ -255,7 +256,7 @@ getFileAndSuggestModule(HeaderSearch &HS, StringRef FileName,
     return File;
   }
 
-  return HS.getFileMgr().getFile(FileName, /*openFile=*/true);
+  return HS.getFileMgr().getFile(FileName, OpenFile);
 }
 
 /// LookupFile - Lookup the specified file in this search path, returning it
@@ -290,7 +291,7 @@ const FileEntry *DirectoryLookup::LookupFile(
 
     return getFileAndSuggestModule(HS, TmpDir.str(), getDir(),
                                    isSystemHeaderDirectory(),
-                                   SuggestedModule);
+                                   SuggestedModule, OpenFile);
   }
 
   if (isFramework())
@@ -636,7 +637,7 @@ const FileEntry *HeaderSearch::LookupFile(
       if (const FileEntry *FE =
               getFileAndSuggestModule(*this, TmpDir.str(), Includer->getDir(),
                                       IncluderIsSystemHeader,
-                                      SuggestedModule)) {
+                                      SuggestedModule, OpenFile)) {
         // Leave CurDir unset.
         // This file is a system header or C++ unfriendly if the old file is.
         //
