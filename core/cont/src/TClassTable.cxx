@@ -421,15 +421,17 @@ TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
    // Find a class by name in the class table (using hash of name). Returns
    // 0 if the class is not in the table. Unless arguments insert is true in
    // which case a new entry is created and returned.
+   // cname can be any spelling of the class name.  See FindElementImpl if the
+   // name is already normalized.
 
    if (!fgTable) return 0;
 
-   // Only register the name without the default STL template arguments ...
-   TClassEdit::TSplitType splitname( cname, TClassEdit::kLong64 );
-   std::string shortName;
-   splitname.ShortType(shortName, TClassEdit::kDropStlDefault);
+   // The recorded name is normalized, let's make sure we convert the
+   // input accordingly.
+   std::string normalized;
+   TClassEdit::GetNormalizedName(normalized,cname);
 
-   return FindElementImpl(shortName.c_str(), insert);
+   return FindElementImpl(normalized.c_str(), insert);
 }
 
 //______________________________________________________________________________
