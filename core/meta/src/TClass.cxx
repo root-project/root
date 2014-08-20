@@ -2735,17 +2735,19 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    // Returns 0 in case class is not found.
 
    if (!name || !name[0]) return 0;
-   R__LOCKGUARD(gInterpreterMutex);
-   if (!gROOT->GetListOfClasses())  return 0;
-   if (strstr(name, "(anonymous)")) return 0;
 
+   if (strstr(name, "(anonymous)")) return 0;
    if (strncmp(name,"class ",6)==0) name += 6;
    if (strncmp(name,"struct ",7)==0) name += 7;
+
+   R__LOCKGUARD(gInterpreterMutex);
+
+   if (!gROOT->GetListOfClasses())  return 0;
 
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
 
    // Early return to release the lock without having to execute the
-   // long-ish TSplitType
+   // long-ish normalization.
    if (cl && cl->IsLoaded()) return cl;
 
    // To avoid spurrious auto parsing, let's check if the name as-is is
@@ -2756,9 +2758,12 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       // authoritive.
       if (!load) return 0;
 
-      TClass *loadedcl = gROOT->LoadClass(name,silent);
-
-      if (loadedcl) return loadedcl;
+      (dict)();
+      TClass *loadedcl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
+      if (loadedcl) {
+         loadedcl->PostLoadCheck();
+         return loadedcl;
+      }
 
       // We should really not fall through to here, but if we do, let's just
       // continue as before ...
