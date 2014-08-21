@@ -34,7 +34,7 @@ def executeGenreflex(XMLFileName,headerName):
   genreflex emptyHeader.h  --quiet -o dict.cxx -s experimentsSelectionXMLs/mySelection.xml
   """
   retcode=0
-  dictName=XMLFileName+"dummy_dict.cxx"
+  dictName=os.path.basename(XMLFileName)+"dummy_dict.cxx"
   genreflexCommand="genreflex %s -o %s -s %s " %(headerName,dictName, XMLFileName)
   print "Parsing %s" %XMLFileName
   try:
