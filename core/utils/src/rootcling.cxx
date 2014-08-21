@@ -210,6 +210,11 @@ const char *rootClingHelp =
 #include <windows.h>
 #include <Tlhelp32.h> // for MAX_MODULE_NAME32
 #include <process.h>
+#define PATH_MAX _MAX_PATH
+#ifdef interface
+// prevent error coming from clang/AST/Attrs.inc
+#undef interface
+#endif
 #endif
 
 #include <errno.h>
@@ -272,6 +277,8 @@ const std::string gPathSeparator(ROOT::TMetaUtils::GetPathSeparator());
 
 #if defined(R__WIN32)
 #include "cygpath.h"
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
 #else
 #include <unistd.h>
 #endif
@@ -460,7 +467,7 @@ void AnnotateFieldDecl(clang::FieldDecl &decl,
             }
             // END ROOT PCMS
 
-            if ((name == propNames::transient && value == "true") or
+            if ((name == propNames::transient && value == "true") ||
                   (name == propNames::persistent && value == "false")) { // special case
                userDefinedProperty = propNames::comment + propNames::separator + "!";
                // This next line is here to use the root pcms. Indeed we need to annotate the AST
