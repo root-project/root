@@ -1563,7 +1563,7 @@ TClass::~TClass()
    delete fCollectionProxy;
    delete fIsAMethod;
    delete fSchemaRules;
-   if (fConversionStreamerInfo) {
+   if (fConversionStreamerInfo.load()) {
       std::map<std::string, TObjArray*>::iterator it;
       std::map<std::string, TObjArray*>::iterator end = (*fConversionStreamerInfo).end();
       for( it = (*fConversionStreamerInfo).begin(); it != end; ++it ) {
@@ -3789,7 +3789,7 @@ void TClass::ls(Option_t *options) const
    if (strstr(options,"streamerinfo")!=0) {
       GetStreamerInfos()->ls(options);
 
-      if (fConversionStreamerInfo) {
+      if (fConversionStreamerInfo.load()) {
          std::map<std::string, TObjArray*>::iterator it;
          std::map<std::string, TObjArray*>::iterator end = (*fConversionStreamerInfo).end();
          for( it = (*fConversionStreamerInfo).begin(); it != end; ++it ) {
@@ -5097,7 +5097,7 @@ TVirtualStreamerInfo* TClass::DetermineCurrentStreamerInfo()
    // Determine and set pointer to current TVirtualStreamerInfo
 
    R__LOCKGUARD2(gInterpreterMutex);
-   if(!fCurrentInfo) {
+   if(!fCurrentInfo.load()) {
      fCurrentInfo=(TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion));
    }
    return fCurrentInfo;
@@ -6213,7 +6213,7 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
    // Check if we already have it
    //----------------------------------------------------------------------------
    TObjArray* arr = 0;
-   if (fConversionStreamerInfo) {
+   if (fConversionStreamerInfo.load()) {
       std::map<std::string, TObjArray*>::iterator it;
       R__LOCKGUARD(gInterpreterMutex);
 
@@ -6267,7 +6267,7 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
    //----------------------------------------------------------------------------
    if (!arr) {
       arr = new TObjArray(version+10, -1);
-      if (!fConversionStreamerInfo) {
+      if (!fConversionStreamerInfo.load()) {
          fConversionStreamerInfo = new std::map<std::string, TObjArray*>();
       }
       (*fConversionStreamerInfo)[cl->GetName()] = arr;
@@ -6306,7 +6306,7 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
    //----------------------------------------------------------------------------
    TObjArray* arr = 0;
    TVirtualStreamerInfo* info = 0;
-   if (fConversionStreamerInfo) {
+   if (fConversionStreamerInfo.load()) {
       std::map<std::string, TObjArray*>::iterator it;
 
       R__LOCKGUARD(gInterpreterMutex);
@@ -6356,7 +6356,7 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
    //----------------------------------------------------------------------------
    if (!arr) {
       arr = new TObjArray(16, -2);
-      if (!fConversionStreamerInfo) {
+      if (!fConversionStreamerInfo.load()) {
          fConversionStreamerInfo = new std::map<std::string, TObjArray*>();
       }
       (*fConversionStreamerInfo)[cl->GetName()] = arr;
@@ -6421,7 +6421,7 @@ Bool_t TClass::HasDefaultConstructor() const
    if (fCollectionProxy) {
       return kTRUE;
    }
-   if (fCurrentInfo) {
+   if (fCurrentInfo.load()) {
       // Emulated class, we know how to construct them via the TStreamerInfo
       return kTRUE;
    }

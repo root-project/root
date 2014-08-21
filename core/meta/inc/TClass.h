@@ -343,7 +343,7 @@ public:
    ClassInfo_t       *GetClassInfo() const { if (fCanLoadClassInfo) LoadClassInfo(); return fClassInfo; }
    const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
    TVirtualStreamerInfo     *GetCurrentStreamerInfo() {
-      if (fCurrentInfo) return fCurrentInfo;
+      if (fCurrentInfo.load()) return fCurrentInfo;
       else return DetermineCurrentStreamerInfo();
    }
    TVirtualStreamerInfo     *GetLastReadInfo() const { return fLastReadInfo; }
