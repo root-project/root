@@ -11,6 +11,9 @@ ROOT_GENERATE_DICTIONARY(G__${libname}    Math/SMatrix.h     Math/SVector.h
 ROOT_GENERATE_DICTIONARY(G__${libname}32  Math/SMatrix.h     Math/SVector.h 
                                           Math/SMatrixDfwd.h Math/SMatrixFfwd.h LINKDEF LinkDefD32.h)
 
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+  set_source_files_properties(G__${libname}.cxx G__${libname}32.cxx COMPILE_FLAGS "-Wno-array-bounds" )
+endif()
 
 ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef.h )
 ROOT_LINKER_LIBRARY(${libname} G__${libname}.cxx G__${libname}32.cxx LIBRARIES Core Cint)
