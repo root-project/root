@@ -16,7 +16,18 @@
 #include "RConfig.h"
 #include "RConfigure.h"
 #include <stdlib.h>
+#ifdef R__WIN32
+#ifndef UNDNAME_COMPLETE
+#define UNDNAME_COMPLETE 0x0000
+#endif
+extern "C" {
+   char *__unDName(char *demangled, const char *mangled, int out_len,
+                   void * (* pAlloc )(size_t), void (* pFree )(void *),
+                   unsigned short int flags);
+}
+#else
 #include <cxxabi.h>
+#endif
 #include <string>
 #include <vector>
 
