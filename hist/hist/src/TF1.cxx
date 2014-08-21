@@ -25,6 +25,7 @@
 #include "TClass.h"
 #include "TMethodCall.h"
 #include "TF1Helper.h"
+#include "TVirtualMutex.h"
 #include "Math/WrappedFunction.h"
 #include "Math/WrappedTF1.h"
 #include "Math/BrentRootFinder.h"
@@ -515,9 +516,9 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
    fMethodCall = 0;
    fNdim       = 1;
 
-   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   gROOT->GetListOfFunctions()->Remove(f1old);
-   SetName(name);
+   //Don't call SetName since it would just be TNamed::SetName which would
+   // attempt to refresh gPad which is not necessary
+   fName = name;
 
    if (gStyle) {
       SetLineColor(gStyle->GetFuncColor());
@@ -532,7 +533,12 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
       fMethodCall = new TMethodCall();
       fMethodCall->InitWithPrototype(name,"Double_t*,Double_t*");
       fNumber = -1;
-      gROOT->GetListOfFunctions()->Add(this);
+      {
+         R__LOCKGUARD2(gROOTMutex);
+         TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
+         gROOT->GetListOfFunctions()->Remove(f1old);
+         gROOT->GetListOfFunctions()->Add(this);
+      }
       if (! fMethodCall->IsValid() ) {
          Error("TF1","No function found with the signature %s(Double_t*,Double_t*)",name);
       }
@@ -599,11 +605,16 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    fMaximum    = -1111;
    fNdim       = 1;
 
-   // Store formula in linked list of formula in ROOT
-   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   gROOT->GetListOfFunctions()->Remove(f1old);
-   SetName(name);
-   gROOT->GetListOfFunctions()->Add(this);
+   //Don't call SetName since it would just be TNamed::SetName which would
+   // attempt to refresh gPad which is not necessary
+   fName = name;
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      // Store formula in linked list of formula in ROOT
+      TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
+      gROOT->GetListOfFunctions()->Remove(f1old);
+      gROOT->GetListOfFunctions()->Add(this);
+   }
 
    if (!gStyle) return;
    SetLineColor(gStyle->GetFuncColor());
@@ -670,12 +681,16 @@ TF1::TF1(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
    fMaximum    = -1111;
    fNdim       = 1;
 
-   // Store formula in linked list of formula in ROOT
-   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   gROOT->GetListOfFunctions()->Remove(f1old);
-   SetName(name);
-   gROOT->GetListOfFunctions()->Add(this);
-
+   //Don't call SetName since it would just be TNamed::SetName which would
+   // attempt to refresh gPad which is not necessary
+   fName = name;
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      // Store formula in linked list of formula in ROOT
+     TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
+     gROOT->GetListOfFunctions()->Remove(f1old);
+     gROOT->GetListOfFunctions()->Add(this);
+   }
    if (!gStyle) return;
    SetLineColor(gStyle->GetFuncColor());
    SetLineWidth(gStyle->GetFuncWidth());
@@ -755,11 +770,16 @@ void TF1::CreateFromFunctor(const char *name, Int_t npar)
       fParMax    = 0;
    }
 
-   // Store formula in linked list of formula in ROOT
-   TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
-   gROOT->GetListOfFunctions()->Remove(f1old);
-   SetName(name);
-   gROOT->GetListOfFunctions()->Add(this);
+   //Don't call SetName since it would just be TNamed::SetName which would
+   // attempt to refresh gPad which is not necessary
+   fName = name;
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      // Store formula in linked list of formula in ROOT
+      TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(name);
+      gROOT->GetListOfFunctions()->Remove(f1old);
+      gROOT->GetListOfFunctions()->Add(this);
+   }
 
    if (!gStyle) return;
    SetLineColor(gStyle->GetFuncColor());
@@ -2297,6 +2317,7 @@ void TF1::InitStandardFunctions()
    // Create the basic function objects
 
    TF1 *f1;
+   R__LOCKGUARD2(gROOTMutex);
    if (!gROOT->GetListOfFunctions()->FindObject("gaus")) {
       f1 = new TF1("gaus","gaus",-1,1);       f1->SetParameters(1,0,1);
       f1 = new TF1("gausn","gausn",-1,1);     f1->SetParameters(1,0,1);
