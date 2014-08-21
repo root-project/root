@@ -153,7 +153,11 @@ std::ostream& TMVA::kNN::operator<<(std::ostream& os, const TMVA::kNN::Event& ev
 
 
 
+#if __cplusplus > 199711L
+thread_local TRandom3 TMVA::kNN::ModulekNN::fgRndm(1);
+#else
 TRandom3 TMVA::kNN::ModulekNN::fgRndm(1);
+#endif
 
 //-------------------------------------------------------------------------------------------
 TMVA::kNN::ModulekNN::ModulekNN()
@@ -378,7 +382,11 @@ Bool_t TMVA::kNN::ModulekNN::Find(const UInt_t nfind, const std::string &option)
       return kFALSE;
    }
    
+#if __cplusplus > 199711L
+   static thread_local std::map<Short_t, UInt_t>::const_iterator cit = fCount.end();
+#else
    static std::map<Short_t, UInt_t>::const_iterator cit = fCount.end();
+#endif
 
    if (cit == fCount.end()) {
       cit = fCount.begin();
