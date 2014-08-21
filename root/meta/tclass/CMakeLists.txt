@@ -42,10 +42,12 @@ ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execTmpltD32
                   MACRO execTmpltD32.cxx+
                   OUTREF execTmpltD32.ref)
 
+ROOTTEST_COMPILE_MACRO(execReadTmplt.cxx)
+
 ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execReadTmplt
                   COPY_TO_BUILDDIR tmplt.h
                   MACRO execReadTmplt.cxx+
                   OUTREF execReadTmplt.ref
-                  DEPPENDS roottest-root-meta-tclass-execTmpltD32 roottest-root-meta-tclass-execTmpltD)
+                  DEPPENDS ${COMPILE_MACRO_TEST} roottest-root-meta-tclass-execTmpltD32 roottest-root-meta-tclass-execTmpltD)
 
 ROOTTEST_ADD_TESTDIRS()

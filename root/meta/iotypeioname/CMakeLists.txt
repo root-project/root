@@ -1,4 +1,4 @@
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(classes classes.h SELECTION classes_selection.xml LIBNAME libclassesDict)
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(classes classes.h SELECTION classes_selection.xml)
 
 #---Copy from source to binary some of the files
 configure_file(example.xml . COPYONLY)

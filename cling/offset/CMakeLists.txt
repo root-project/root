@@ -4,9 +4,11 @@ ROOTTEST_ADD_TEST(roottest-cling-offset-vbase-interpreted
                   ERRREF vbase-i.err.ref
                   LABELS roottest regression cling)
 
+ROOTTEST_COMPILE_MACRO(runvbase.C)
 ROOTTEST_ADD_TEST(roottest-cling-offset-vbase-compiled
                   MACRO runvbase.C+
                   OUTREF vbase-c.out.ref
                   ERRREF vbase-c.err.ref
-                  LABELS roottest regression cling)
+                  LABELS roottest regression cling
+                  DEPENDS ${COMPILE_MACRO_TEST})
 
