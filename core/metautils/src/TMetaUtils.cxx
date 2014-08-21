@@ -4410,7 +4410,9 @@ const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::v
    clang::Sema &sema = ncInterp->getSema();
    cling::Transaction theTransaction(sema);
    for (auto decl : decls) {
-      theTransaction.append((clang::Decl *)decl);
+      // again waiting for cling
+      Decl *ncDecl = const_cast<clang::Decl *>(decl);
+      theTransaction.append(ncDecl);
       if (auto *tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl)) {
          theTransaction.append(tsd->getSpecializedTemplate());
       }
