@@ -54,7 +54,8 @@ if(NOT ROOT_roofit_FOUND)
 endif()
 
 if(NOT ROOT_unuran_FOUND)
-  set(unuran_veto  math/testrandom.C unuran/unuranDemo.C unuran/unuranFoamTest.C)
+  set(unuran_veto  math/testrandom.C unuran/unuranDemo.C unuran/unuranFoamTest.C
+                   math/multidimSampling.C)
 endif()
 
 if(NOT ROOT_xml_FOUND)
