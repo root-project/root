@@ -17,6 +17,9 @@ def filter(lines):
     #---Processing line from interpreter (root.exe)------------------------------
     if re.match(r'^Processing ', line):
       continue
+    #---ACLiC info---------------------------------------------------------------
+    if re.match(r'^Info in <\w+::ACLiC>: creating shared library', line):
+      continue
     #---Compilation error--------------------------------------------------------
     elif re.search(r': error:', line):
       nline = re.sub(r'\S+/', '', line)

@@ -26,6 +26,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
                -e "gSystem->AddDynamicPath(\"${CMAKE_CURRENT_BINARY_DIR}\")"
                -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_SOURCE_DIR}\")"
                -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
+               ${RootExeOptions}
                -q -l -b) 
 
   set(root_buildcmd root.exe ${RootExeDefines} -q -l -b)
@@ -35,9 +36,9 @@ macro(ROOTTEST_SETUP_MACROTEST)
     string(REPLACE "+" "" compile_name "${ARG_MACRO}")
     get_filename_component(realfp ${compile_name} REALPATH)
 
-    ROOTTEST_COMPILE_MACRO(${compile_name})
-
-    set(depends ${depends} ${COMPILE_MACRO_TEST})
+    #---Do not compile the macro beforehand
+    #ROOTTEST_COMPILE_MACRO(${compile_name})
+    #set(depends ${depends} ${COMPILE_MACRO_TEST})
 
     if(DEFINED ARG_MACROARG)
       set(realfp "${realfp}(${ARG_MACROARG})") 
@@ -132,6 +133,10 @@ function(ROOTTEST_ADD_TEST test)
   
   if(ARG_COMMAND)
     set(command ${ARG_COMMAND})
+    if(ARG_OUTREF)
+      set(checkstdout CHECKOUT)
+      set(checkstderr CHECKERR)
+    endif()
   endif()
 
   # Reference output given?

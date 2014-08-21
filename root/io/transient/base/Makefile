@@ -70,7 +70,7 @@ execWriteFile_cxx.$(DllSuf): libbase.$(DllSuf)
 
 execWriteFile_cxx.$(DllSuf): CALLROOTEXEBUILD +=  -e 'gSystem->Load("libbase");'
 
-execWriteFile.clog: CALLROOTEXE +=  -e 'gSystem->Load("libbase");'
+execWriteFile.clog: CALLROOTEXE +=  -e 'gSystem->Load("libbase")'
 
 hadd_autoload.log: execWriteFile.success
 	$(CMDECHO) hadd -f data_merge.root data1.root data2.root > $@ 2>&1 || (cat $@ && exit 1)
