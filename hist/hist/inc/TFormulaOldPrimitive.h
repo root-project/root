@@ -50,7 +50,7 @@ public:
    typedef Double_t (TObject::*TFunc110)(Double_t,Double_t) const;
    typedef Double_t (TObject::*TFunc1110)(Double_t,Double_t,Double_t) const;
 protected:
-   static TObjArray * fgListOfFunction;                   //!list of global primitive formulas 
+   static TObjArray * fgListOfFunction;                   //!list of global primitive formulas
    static Int_t       BuildBasicFormulas();               //build list of basic formulas
    union {
       GenFuncG    fFuncG;                                 //!pointer to the TFormulaOld generic function
@@ -64,7 +64,7 @@ protected:
       TFunc110    fTFunc110;                              //! pointer to member function
       TFunc1110   fTFunc1110;                             //! pointer to member function
    };
-   Int_t      fType;                                      //type of the function  
+   Int_t      fType;                                      //type of the function
    Int_t      fNArguments;                                //number of arguments
    Int_t      fNParameters;                               //number of parameters
    Bool_t     fIsStatic;                                  // indication if the function is static
@@ -75,14 +75,14 @@ public:
    TFormulaOldPrimitive();
    TFormulaOldPrimitive(const char *name,const char *formula, GenFunc0 fpointer);
    TFormulaOldPrimitive(const char *name,const char *formula, GenFunc10 fpointer);
-   TFormulaOldPrimitive(const char *name,const char *formula, GenFunc110 fpointer); 
+   TFormulaOldPrimitive(const char *name,const char *formula, GenFunc110 fpointer);
    TFormulaOldPrimitive(const char *name,const char *formula, GenFunc1110 fpointer);
-   TFormulaOldPrimitive(const char *name,const char *formula, GenFuncG fpointer,Int_t npar);  
-   TFormulaOldPrimitive(const char *name,const char *formula, TFunc0 fpointer);  
-   TFormulaOldPrimitive(const char *name,const char *formula, TFunc10 fpointer);  
-   TFormulaOldPrimitive(const char *name,const char *formula, TFunc110 fpointer);  
-   TFormulaOldPrimitive(const char *name,const char *formula, TFunc1110 fpointer);  
-   TFormulaOldPrimitive(const char *name,const char *formula, TFuncG fpointer);  
+   TFormulaOldPrimitive(const char *name,const char *formula, GenFuncG fpointer,Int_t npar);
+   TFormulaOldPrimitive(const char *name,const char *formula, TFunc0 fpointer);
+   TFormulaOldPrimitive(const char *name,const char *formula, TFunc10 fpointer);
+   TFormulaOldPrimitive(const char *name,const char *formula, TFunc110 fpointer);
+   TFormulaOldPrimitive(const char *name,const char *formula, TFunc1110 fpointer);
+   TFormulaOldPrimitive(const char *name,const char *formula, TFuncG fpointer);
    static Int_t AddFormula(TFormulaOldPrimitive * formula);
    static TFormulaOldPrimitive* FindFormula(const char* name);
    static TFormulaOldPrimitive* FindFormula(const char* name, const char *args);
@@ -91,7 +91,7 @@ public:
    Double_t Eval(TObject *o,  Double_t *x);      //eval member function
    Double_t Eval(Double_t *x, Double_t *param);  //eval primitive parametric function
 
-   ClassDef(TFormulaOldPrimitive,0)  //The primitive formula 
+   ClassDef(TFormulaOldPrimitive,0)  //The primitive formula
 };
 
 #endif

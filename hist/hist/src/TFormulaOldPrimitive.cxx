@@ -24,15 +24,15 @@ ClassImp(TFormulaOldPrimitive)
 //______________________________________________________________________________
 // The Formula Primitive class
 //
-//    Helper class for TFormulaOld to speed up TFormulaOld evaluation  
-//    TFormulaOld can use all functions registered in the list of TFormulaOldPrimitives 
+//    Helper class for TFormulaOld to speed up TFormulaOld evaluation
+//    TFormulaOld can use all functions registered in the list of TFormulaOldPrimitives
 //    User can add new function to the list of primitives
-//    if FormulaPrimitive with given name is already defined new primitive is ignored  
+//    if FormulaPrimitive with given name is already defined new primitive is ignored
 //    Example:
 //      TFormulaOldPrimitive::AddFormula(new TFormulaOldPrimitive("Pow2","Pow2",TFastFun::Pow2));
 //      TF1 f1("f1","Pow2(x)");
-//      
-//    
+//
+//
 //
 //    TFormulaOldPrimitive is used to get direct acces to the function pointers
 //    GenFunc     -  pointers  to the static function
@@ -86,7 +86,7 @@ TFormulaOldPrimitive::TFormulaOldPrimitive(const char *name,const char *formula,
 
 
 //______________________________________________________________________________
-TFormulaOldPrimitive::TFormulaOldPrimitive(const char *name,const char *formula, 
+TFormulaOldPrimitive::TFormulaOldPrimitive(const char *name,const char *formula,
                                      GenFunc10 fpointer) : TNamed(name,formula),
                                                            fFunc10(fpointer),
                                                            fType(10),fNArguments(1),fNParameters(0),fIsStatic(kTRUE)
@@ -108,7 +108,7 @@ TFormulaOldPrimitive::TFormulaOldPrimitive(const char *name,const char *formula,
 
 
 //______________________________________________________________________________
-TFormulaOldPrimitive::TFormulaOldPrimitive(const char *name,const char *formula, 
+TFormulaOldPrimitive::TFormulaOldPrimitive(const char *name,const char *formula,
                                      GenFunc1110 fpointer) : TNamed(name,formula),
                                                              fFunc1110(fpointer),
                                                              fType(1110),fNArguments(3),fNParameters(0),fIsStatic(kTRUE)
@@ -119,7 +119,7 @@ TFormulaOldPrimitive::TFormulaOldPrimitive(const char *name,const char *formula,
 
 
 //______________________________________________________________________________
-TFormulaOldPrimitive::TFormulaOldPrimitive(const char *name,const char *formula, 
+TFormulaOldPrimitive::TFormulaOldPrimitive(const char *name,const char *formula,
                                      GenFuncG fpointer,Int_t npar) : TNamed(name,formula),
                                                                      fFuncG(fpointer),
                                                                      fType(-1),fNArguments(2),fNParameters(npar),fIsStatic(kTRUE)
@@ -218,7 +218,7 @@ Double_t TFormulaOldPrimitive::Eval(Double_t* x)
       return fFunc1110(x[0],x[1],x[2]);
    }
    return 0;
-} 
+}
 
 
 //______________________________________________________________________________
@@ -263,7 +263,7 @@ namespace TFastFun {
    inline   Double_t FPoln(Double_t *x, Double_t *param, Int_t npar);
    Double_t FPol0(Double_t * /*x*/, Double_t *param){ return param[0];}
    Double_t FPol1(Double_t *x, Double_t *param){ return param[0]+param[1]*x[0];}
-   Double_t FPol2(Double_t *x, Double_t *param){ return param[0]+x[0]*(param[1]+param[2]*x[0]);} 
+   Double_t FPol2(Double_t *x, Double_t *param){ return param[0]+x[0]*(param[1]+param[2]*x[0]);}
    Double_t FPol3(Double_t *x, Double_t *param){ return param[0]+x[0]*(param[1]+x[0]*(param[2]+param[3]*x[0]));}
    Double_t FPol4(Double_t *x, Double_t *param){ RTFastFun__POLY(4)}
    Double_t FPol5(Double_t *x, Double_t *param){ RTFastFun__POLY(5)}
@@ -277,7 +277,7 @@ namespace TFastFun {
    Double_t PlusXY(Double_t x,Double_t y){return x+y;}
    Double_t MinusXY(Double_t x,Double_t y){return x-y;}
    Double_t MultXY(Double_t x,Double_t y){return x*y;}
-   Double_t DivXY(Double_t x, Double_t y){return TMath::Abs(y)>0 ? x/y:0;} 
+   Double_t DivXY(Double_t x, Double_t y){return TMath::Abs(y)>0 ? x/y:0;}
    Double_t XpYpZ(Double_t x, Double_t y, Double_t z){ return x+y+z;}
    Double_t XxYxZ(Double_t x, Double_t y, Double_t z){ return x*y*z;}
    Double_t XxYpZ(Double_t x, Double_t y, Double_t z){ return x*(y+z);}
@@ -287,7 +287,7 @@ namespace TFastFun {
    Double_t Landau(Double_t x, Double_t mean, Double_t sigma){return TMath::Landau(x,mean,sigma,kFALSE);}
    Double_t Landaun(Double_t x, Double_t mean, Double_t sigma){return TMath::Landau(x,mean,sigma,kTRUE);}
    Double_t Sqrt(Double_t x) {return x>0?sqrt(x):0;}
-   //  
+   //
    Double_t Sign(Double_t x){return (x<0)? -1:1;}
    Double_t Nint(Double_t x){return TMath::Nint(x);}
    Double_t Abs(Double_t x){return TMath::Abs(x);}
@@ -310,7 +310,7 @@ TFormulaOldPrimitive* TFormulaOldPrimitive::FindFormula(const char* name)
    // Find the formula in the list of formulas.
    if (!fgListOfFunction) {
       BuildBasicFormulas();
-   }      
+   }
    Int_t nobjects = fgListOfFunction->GetEntries();
    for (Int_t i = 0; i < nobjects; ++i) {
       TFormulaOldPrimitive *formula = (TFormulaOldPrimitive*)fgListOfFunction->At(i);
@@ -324,7 +324,7 @@ TFormulaOldPrimitive* TFormulaOldPrimitive::FindFormula(const char* name)
 TFormulaOldPrimitive* TFormulaOldPrimitive::FindFormula(const char* name, UInt_t nargs)
 {
    // Find the formula in the list of formulas.
-   
+
    if (!fgListOfFunction) {
       BuildBasicFormulas();
    }
@@ -344,7 +344,7 @@ TFormulaOldPrimitive* TFormulaOldPrimitive::FindFormula(const char* name, UInt_t
 TFormulaOldPrimitive* TFormulaOldPrimitive::FindFormula(const char* name, const char *args)
 {
    // Find the formula in the list of formulas.
-   
+
    // let's count the argument(s)
    if (args) {
       Int_t nargs = 0;
@@ -374,11 +374,11 @@ Double_t TFastFun::FPoln(Double_t *x, Double_t *param, Int_t npar)
 {
    // FPoln.
 
-   Double_t res = 0; Double_t temp=1;                                  
-   for (Int_t j=npar ;j>=0;j--) {                                            
-      res  += temp*param[j];                                           
-      temp *= *x;                                                  
-   }                                                                   
+   Double_t res = 0; Double_t temp=1;
+   for (Int_t j=npar ;j>=0;j--) {
+      res  += temp*param[j];
+      temp *= *x;
+   }
    return res;
 }
 
@@ -396,7 +396,7 @@ Double_t TFastFun::Gaus(Double_t x, Double_t mean, Double_t sigma)
 
 //______________________________________________________________________________
 Double_t TFastFun::Gausn(Double_t x, Double_t mean, Double_t sigma)
-{ 
+{
    // Normalize gauss.
 
    if (sigma == 0)  return 0;
@@ -417,7 +417,7 @@ Int_t TFormulaOldPrimitive::BuildBasicFormulas()
 #ifdef R__COMPLETE_MEM_TERMINATION
    static TFormulaOldPrimitiveCleanup gCleanup(&fgListOfFunction);
 #endif
-   
+
    //
    // logical
    //
@@ -450,11 +450,11 @@ Int_t TFormulaOldPrimitive::BuildBasicFormulas()
    // polynoms
    //
    //
-   AddFormula(new TFormulaOldPrimitive("Pol0","Pol0",(GenFuncG)TFastFun::FPol0,1)); 
-   AddFormula(new TFormulaOldPrimitive("Pol1","Pol1",(GenFuncG)TFastFun::FPol1,2)); 
-   AddFormula(new TFormulaOldPrimitive("Pol2","Pol2",(GenFuncG)TFastFun::FPol2,3));                   
-   AddFormula(new TFormulaOldPrimitive("Pol3","Pol3",(GenFuncG)TFastFun::FPol3,4));                       
-   AddFormula(new TFormulaOldPrimitive("Pol4","Pol4",(GenFuncG)TFastFun::FPol4,5));   
+   AddFormula(new TFormulaOldPrimitive("Pol0","Pol0",(GenFuncG)TFastFun::FPol0,1));
+   AddFormula(new TFormulaOldPrimitive("Pol1","Pol1",(GenFuncG)TFastFun::FPol1,2));
+   AddFormula(new TFormulaOldPrimitive("Pol2","Pol2",(GenFuncG)TFastFun::FPol2,3));
+   AddFormula(new TFormulaOldPrimitive("Pol3","Pol3",(GenFuncG)TFastFun::FPol3,4));
+   AddFormula(new TFormulaOldPrimitive("Pol4","Pol4",(GenFuncG)TFastFun::FPol4,5));
    AddFormula(new TFormulaOldPrimitive("Pol5","Pol5",(GenFuncG)TFastFun::FPol5,6));
    AddFormula(new TFormulaOldPrimitive("Pol6","Pol6",(GenFuncG)TFastFun::FPol6,7));
    AddFormula(new TFormulaOldPrimitive("Pol7","Pol7",(GenFuncG)TFastFun::FPol7,8));
@@ -463,10 +463,10 @@ Int_t TFormulaOldPrimitive::BuildBasicFormulas()
    AddFormula(new TFormulaOldPrimitive("Pol10","Pol10",(GenFuncG)TFastFun::FPol10,11));
    //
    // pows
-   AddFormula(new TFormulaOldPrimitive("Pow2","Pow2",TFastFun::Pow2));                        
-   AddFormula(new TFormulaOldPrimitive("Pow3","Pow3",TFastFun::Pow3));                   
-   AddFormula(new TFormulaOldPrimitive("Pow4","Pow4",TFastFun::Pow4));                        
-   AddFormula(new TFormulaOldPrimitive("Pow5","Pow5",TFastFun::Pow5));                         
+   AddFormula(new TFormulaOldPrimitive("Pow2","Pow2",TFastFun::Pow2));
+   AddFormula(new TFormulaOldPrimitive("Pow3","Pow3",TFastFun::Pow3));
+   AddFormula(new TFormulaOldPrimitive("Pow4","Pow4",TFastFun::Pow4));
+   AddFormula(new TFormulaOldPrimitive("Pow5","Pow5",TFastFun::Pow5));
    //
    //
    AddFormula(new TFormulaOldPrimitive("TMath::Cos","TMath::Cos",cos));              // 10
@@ -483,7 +483,7 @@ Int_t TFormulaOldPrimitive::BuildBasicFormulas()
    AddFormula(new TFormulaOldPrimitive("atan","atan",atan));                         // 15
    AddFormula(new TFormulaOldPrimitive("TMath::ATan2","TMath::ATan2",atan2));        // 16
    AddFormula(new TFormulaOldPrimitive("atan2","atan2",atan2));                      // 16
-   //   kpow      = 20, ksq = 21, ksqrt     = 22, 
+   //   kpow      = 20, ksq = 21, ksqrt     = 22,
    AddFormula(new TFormulaOldPrimitive("pow","pow",TMath::Power));                 //20
    AddFormula(new TFormulaOldPrimitive("sq","sq",TFastFun::Pow2));                 //21
    AddFormula(new TFormulaOldPrimitive("sqrt","sqrt",TFastFun::Sqrt));             //22
@@ -494,7 +494,7 @@ Int_t TFormulaOldPrimitive::BuildBasicFormulas()
    AddFormula(new TFormulaOldPrimitive("log","log",TMath::Log));                           //30
    AddFormula(new TFormulaOldPrimitive("exp","exp",TMath::Exp));                           //31
    AddFormula(new TFormulaOldPrimitive("log10","log10",TMath::Log10));                     //32
-   //  
+   //
    //    cosh        70                  acosh        73
    //    sinh        71                  asinh        74
    //    tanh        72                  atanh        75
@@ -511,7 +511,7 @@ Int_t TFormulaOldPrimitive::BuildBasicFormulas()
    AddFormula(new TFormulaOldPrimitive("acosh","acosH",TMath::ASinH));                         // 74
    AddFormula(new TFormulaOldPrimitive("TMath::ATanH","TMath::ATanh",TMath::ATanH));           // 75
    AddFormula(new TFormulaOldPrimitive("atanh","atanh",TMath::ATanH));                         // 75
-   //  
+   //
    AddFormula(new TFormulaOldPrimitive("TMath::Abs","TMath::Abs",TMath::Abs));
    AddFormula(new TFormulaOldPrimitive("TMath::BreitWigner","TMath::BreitWigner",TMath::BreitWigner));
 
