@@ -106,7 +106,7 @@ static const TString gNamePrefix = "T__";
 
 Bool_t TFormula::IsOperator(const char c)
 {
-   char ops[] = { '+','^', '-','/','*','<','>','|','&','!','='};
+   char ops[] = { '+','^', '-','/','*','<','>','|','&','!','=','?'};
    Int_t opsLen = sizeof(ops)/sizeof(char);
    for(Int_t i = 0; i < opsLen; ++i)
       if(ops[i] == c)
@@ -929,6 +929,8 @@ void TFormula::ExtractFunctors(TString &formula)
    TString body = "";
    for(Int_t i = 0 ; i < formula.Length(); ++i )
    {
+
+      //std::cout << "loop on character : " << i << " " << formula[i] << std::endl;
       if(formula[i] == '[')
       {
          Int_t tmp = i;
@@ -955,6 +957,8 @@ void TFormula::ExtractFunctors(TString &formula)
       }
       if(isalpha(formula[i]) && !IsOperator(formula[i])) 
       {
+         //std::cout << "character : " << i << " " << formula[i] << " is not an operator and is alpha " << std::endl;
+
          while( IsFunctionNameChar(formula[i]) && i < formula.Length())
          {
             name.Append(formula[i++]);
@@ -991,6 +995,8 @@ void TFormula::ExtractFunctors(TString &formula)
          }
          else
          {
+
+            //std::cout << "check if character : " << i << " " << formula[i] << " from name " << name << "  is a function " << std::endl;
 
             // check if function is provided by gROOT
             TFormula *f = (TFormula*)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + name);
@@ -1067,12 +1073,12 @@ void TFormula::ProcessFormula(TString &formula)
    //*-*    it inputs C++ code of formula into cling, and sets flag that formula is ready to evaluate.
    //*-*    
 
-   std::cout << "Begin: formula is " << formula << std::endl;
+   //std::cout << "Begin: formula is " << formula << " list of functors " << fFuncs.size() << std::endl;
 
    for(list<TFormulaFunction>::iterator funcsIt = fFuncs.begin(); funcsIt != fFuncs.end(); ++funcsIt)
    {
       TFormulaFunction & fun = *funcsIt;
-      std::cout << "fun is " << fun.GetName() << std::endl;
+      //std::cout << "fun is " << fun.GetName() << std::endl;
       if(fun.fFound)
          continue;
       if(fun.IsFuncCall())
@@ -1117,7 +1123,6 @@ void TFormula::ProcessFormula(TString &formula)
             if (f && fun.GetNargs() <=  f->GetNargs() && fun.GetNargs() >=  f->GetNargs() - f->GetNargsOpt() )
             { 
                fun.fFound = true;
-               break;
             }
          }
                
