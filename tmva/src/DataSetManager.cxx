@@ -52,7 +52,8 @@ using std::endl;
 
 //_______________________________________________________________________
 TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput )
-   : fDataInput(dataInput),
+   : fDatasetFactory(0),
+     fDataInput(dataInput),
      fDataSetInfoCollection(),
      fLogger( new MsgLogger("DataSetManager", kINFO) )
 {
@@ -65,8 +66,8 @@ TMVA::DataSetManager::~DataSetManager()
    // destructor
 //   fDataSetInfoCollection.SetOwner(); // DSMTEST --> created a segfault because the DataSetInfo-objects got deleted twice
 
-   TMVA::DataSetFactory::destroyInstance();
-   
+   DataSetFactory::destroyNewInstance(fDatasetFactory);
+
    delete fLogger;
 }
 
@@ -78,18 +79,19 @@ TMVA::DataSet* TMVA::DataSetManager::CreateDataSet( const TString& dsiName )
    if (!dsi) Log() << kFATAL << "DataSetInfo object '" << dsiName << "' not found" << Endl;
 
    // factory to create dataset from datasetinfo and datainput
-   return TMVA::DataSetFactory::Instance().CreateDataSet( *dsi, fDataInput );
+   if(!fDatasetFactory) { fDatasetFactory = DataSetFactory::NewInstance(); }
+   return fDatasetFactory->CreateDataSet( *dsi, fDataInput );
 }
 
 //_______________________________________________________________________
-TMVA::DataSetInfo* TMVA::DataSetManager::GetDataSetInfo(const TString& dsiName) 
+TMVA::DataSetInfo* TMVA::DataSetManager::GetDataSetInfo(const TString& dsiName)
 {
    // returns datasetinfo object for given name
    return (DataSetInfo*)fDataSetInfoCollection.FindObject( dsiName );
 }
 
 //_______________________________________________________________________
-TMVA::DataSetInfo& TMVA::DataSetManager::AddDataSetInfo(DataSetInfo& dsi) 
+TMVA::DataSetInfo& TMVA::DataSetManager::AddDataSetInfo(DataSetInfo& dsi)
 {
    // stores a copy of the dataset info object
 

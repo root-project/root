@@ -40,20 +40,30 @@
 
 #include <assert.h>
 
+#include <memory>
+
 // ROOT include(s):
 
 ClassImp(TMVA::MsgLogger)
 
 // declaration of global variables
 // this is the hard-coded maximum length of the source names
-UInt_t                                 TMVA::MsgLogger::fgMaxSourceSize = 25;
-Bool_t                                 TMVA::MsgLogger::fgInhibitOutput = kFALSE;
+const UInt_t                           TMVA::MsgLogger::fgMaxSourceSize = 25;
 
 const std::string                      TMVA::MsgLogger::fgPrefix = "--- ";
 const std::string                      TMVA::MsgLogger::fgSuffix = ": ";
-std::map<TMVA::EMsgType, std::string>* TMVA::MsgLogger::fgTypeMap  = 0;
-std::map<TMVA::EMsgType, std::string>* TMVA::MsgLogger::fgColorMap = 0;
-Int_t                                  TMVA::MsgLogger::fgInstanceCounter = 0;
+#if __cplusplus > 199711L
+std::atomic<Bool_t>                                       TMVA::MsgLogger::fgInhibitOutput{kFALSE};
+std::atomic<const std::map<TMVA::EMsgType, std::string>*> TMVA::MsgLogger::fgTypeMap{0};
+std::atomic<const std::map<TMVA::EMsgType, std::string>*> TMVA::MsgLogger::fgColorMap{0};
+#else
+Bool_t                                       TMVA::MsgLogger::fgInhibitOutput = kFALSE;
+const std::map<TMVA::EMsgType, std::string>* TMVA::MsgLogger::fgTypeMap  = 0;
+const std::map<TMVA::EMsgType, std::string>* TMVA::MsgLogger::fgColorMap = 0;
+#endif
+static std::auto_ptr<const std::map<TMVA::EMsgType, std::string> > gOwnTypeMap;
+static std::auto_ptr<const std::map<TMVA::EMsgType, std::string> > gOwnColorMap;
+ 
 
 void   TMVA::MsgLogger::InhibitOutput() { fgInhibitOutput = kTRUE;  }
 void   TMVA::MsgLogger::EnableOutput()  { fgInhibitOutput = kFALSE; }
@@ -65,7 +75,6 @@ TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
      fMinType   ( minType )
 {
    // constructor
-   fgInstanceCounter++;
    InitMaps();   
 }
 
@@ -77,7 +86,6 @@ TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
      fMinType   ( minType )
 {
    // constructor
-   fgInstanceCounter++;
    InitMaps();
 }
 
@@ -89,7 +97,6 @@ TMVA::MsgLogger::MsgLogger( EMsgType minType )
      fMinType   ( minType )
 {
    // constructor
-   fgInstanceCounter++;
    InitMaps();
 }
 
@@ -101,7 +108,6 @@ TMVA::MsgLogger::MsgLogger( const MsgLogger& parent )
      fObjSource(0)
 {
    // copy constructor
-   fgInstanceCounter++;
    InitMaps();
    *this = parent;
 }
@@ -110,12 +116,6 @@ TMVA::MsgLogger::MsgLogger( const MsgLogger& parent )
 TMVA::MsgLogger::~MsgLogger()
 {
    // destructor
-   fgInstanceCounter--;
-   if (fgInstanceCounter == 0) {
-      // last MsgLogger instance has been deleted, can also delete the maps
-      delete fgTypeMap;  fgTypeMap  = 0;
-      delete fgColorMap; fgColorMap = 0;
-   }
 }
 
 //_______________________________________________________________________
@@ -202,14 +202,14 @@ void TMVA::MsgLogger::WriteMsg( EMsgType type, const std::string& line ) const
 
    std::map<EMsgType, std::string>::const_iterator stype;
 
-   if ((stype = fgTypeMap->find( type )) != fgTypeMap->end()) {
+   if ((stype = fgTypeMap.load()->find( type )) != fgTypeMap.load()->end()) {
       if (!gConfig().IsSilent() || type==kFATAL) {
          if (gConfig().UseColor()) {
             // no text for INFO or VERBOSE
             if (type == kINFO || type == kVERBOSE)
                std::cout << fgPrefix << line << std::endl; // no color for info
             else
-               std::cout << fgColorMap->find( type )->second << fgPrefix << "<"
+ 	       std::cout << fgColorMap.load()->find( type )->second << fgPrefix << "<"
                          << stype->second << "> " << line  << "\033[0m" << std::endl;
          }
          else {
@@ -239,24 +239,45 @@ TMVA::MsgLogger& TMVA::MsgLogger::Endmsg( MsgLogger& logger )
 void TMVA::MsgLogger::InitMaps()
 {
    // Create the message type and color maps
-   if (fgTypeMap != 0 && fgColorMap != 0) return;
 
-   fgTypeMap  = new std::map<TMVA::EMsgType, std::string>();
-   fgColorMap = new std::map<TMVA::EMsgType, std::string>();
+   if(!fgTypeMap) {
+     std::map<TMVA::EMsgType, std::string>*tmp  = new std::map<TMVA::EMsgType, std::string>();
    
-   (*fgTypeMap)[kVERBOSE]  = std::string("VERBOSE");
-   (*fgTypeMap)[kDEBUG]    = std::string("DEBUG");
-   (*fgTypeMap)[kINFO]     = std::string("INFO");
-   (*fgTypeMap)[kWARNING]  = std::string("WARNING");
-   (*fgTypeMap)[kERROR]    = std::string("ERROR");
-   (*fgTypeMap)[kFATAL]    = std::string("FATAL");
-   (*fgTypeMap)[kSILENT]   = std::string("SILENT");
+     (*tmp)[kVERBOSE]  = std::string("VERBOSE");
+     (*tmp)[kDEBUG]    = std::string("DEBUG");
+     (*tmp)[kINFO]     = std::string("INFO");
+     (*tmp)[kWARNING]  = std::string("WARNING");
+     (*tmp)[kERROR]    = std::string("ERROR");
+     (*tmp)[kFATAL]    = std::string("FATAL");
+     (*tmp)[kSILENT]   = std::string("SILENT");
+     const std::map<TMVA::EMsgType, std::string>* expected=0;
+     if(fgTypeMap.compare_exchange_strong(expected,tmp)) {
+       //Have the global own this
+       gOwnTypeMap.reset(tmp);
+     } else {
+       //Another thread beat us in creating the instance
+       delete tmp;
+     }
+   }
 
-   (*fgColorMap)[kVERBOSE] = std::string("");
-   (*fgColorMap)[kDEBUG]   = std::string("\033[34m");
-   (*fgColorMap)[kINFO]    = std::string("");
-   (*fgColorMap)[kWARNING] = std::string("\033[1;31m");
-   (*fgColorMap)[kERROR]   = std::string("\033[31m");
-   (*fgColorMap)[kFATAL]   = std::string("\033[37;41;1m");
-   (*fgColorMap)[kSILENT]  = std::string("\033[30m");
+   if(!fgColorMap) {
+     std::map<TMVA::EMsgType, std::string>*tmp  = new std::map<TMVA::EMsgType, std::string>();
+
+     (*tmp)[kVERBOSE] = std::string("");
+     (*tmp)[kDEBUG]   = std::string("\033[34m");
+     (*tmp)[kINFO]    = std::string("");
+     (*tmp)[kWARNING] = std::string("\033[1;31m");
+     (*tmp)[kERROR]   = std::string("\033[31m");
+     (*tmp)[kFATAL]   = std::string("\033[37;41;1m");
+     (*tmp)[kSILENT]  = std::string("\033[30m");
+
+     const std::map<TMVA::EMsgType, std::string>* expected=0;
+     if(fgColorMap.compare_exchange_strong(expected,tmp)) {
+       //Have the global own this
+       gOwnColorMap.reset(tmp);
+     } else {
+       //Another thread beat us in creating the instance
+       delete tmp;
+     }
+   }
 }
