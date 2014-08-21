@@ -950,7 +950,10 @@ TObject *TROOT::FindObject(const char *name) const
 
    temp   = fFiles->FindObject(name);       if (temp) return temp;
    temp   = fMappedFiles->FindObject(name); if (temp) return temp;
-   temp   = fFunctions->FindObject(name);   if (temp) return temp;
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      temp   = fFunctions->FindObject(name);   if (temp) return temp;
+   }
    temp   = fGeometries->FindObject(name);  if (temp) return temp;
    temp   = fCanvases->FindObject(name);    if (temp) return temp;
    temp   = fStyles->FindObject(name);      if (temp) return temp;
@@ -1003,6 +1006,7 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
       where = fMappedFiles;
    }
    if (!temp) {
+      R__LOCKGUARD2(gROOTMutex);
       temp  = fFunctions->FindObject(name);
       where = fFunctions;
    }
@@ -1210,11 +1214,15 @@ TObject *TROOT::GetFunction(const char *name) const
       return 0;
    }
 
-   TObject *f1 = fFunctions->FindObject(name);
-   if (f1) return f1;
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      TObject *f1 = fFunctions->FindObject(name);
+      if (f1) return f1;
+   }
 
    gROOT->ProcessLine("TF1::InitStandardFunctions();");
 
+   R__LOCKGUARD2(gROOTMutex);
    return fFunctions->FindObject(name);
 }
 
