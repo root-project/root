@@ -148,8 +148,11 @@ namespace TMVA {
 
       private:
 
+#if __cplusplus > 199711L
+         static thread_local TRandom3 fgRndm;
+#else
          static TRandom3 fgRndm;
-
+#endif
          UInt_t fDimn;
 
          Node<Event> *fTree;

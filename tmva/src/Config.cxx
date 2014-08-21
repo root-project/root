@@ -31,7 +31,11 @@
 
 ClassImp(TMVA::Config)
 
+#if __cplusplus > 199711L
+std::atomic<TMVA::Config*> TMVA::Config::fgConfigPtr{ 0 };
+#else
 TMVA::Config* TMVA::Config::fgConfigPtr = 0;
+#endif
 
 TMVA::Config& TMVA::gConfig() { return TMVA::Config::Instance(); }
 
@@ -71,13 +75,29 @@ TMVA::Config::~Config()
 void TMVA::Config::DestroyInstance()
 {
    // static function: destroy TMVA instance
+#if __cplusplus > 199711L
+  delete fgConfigPtr.exchange(0);
+#else
    if (fgConfigPtr != 0) { delete fgConfigPtr; fgConfigPtr = 0;}
+#endif
 }
 
 //_______________________________________________________________________
 TMVA::Config& TMVA::Config::Instance()
 {
    // static function: returns  TMVA instance
+#if __cplusplus > 199711L
+  if(!fgConfigPtr) {
+    TMVA::Config* tmp = new Config();
+    TMVA::Config* expected = 0;
+    if(! fgConfigPtr.compare_exchange_strong(expected,tmp) ) {
+      //another thread beat us to the switch
+      delete tmp;
+    }
+  }
+  return *fgConfigPtr;
+#else
    return fgConfigPtr ? *fgConfigPtr :*(fgConfigPtr = new Config());
+#endif
 }
 

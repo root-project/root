@@ -90,8 +90,7 @@ namespace TMVA {
       Int_t    fNbins;        // when >0 : number of bins (discrete interval); when ==0 continuous interval
 
    private:
-      static MsgLogger* fgLogger;   // message logger
-      MsgLogger& Log() const { return *fgLogger; }          
+      MsgLogger& Log() const;          
 
       ClassDef(Interval,0)    // Interval definition, continous and discrete
    };

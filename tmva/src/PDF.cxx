@@ -49,7 +49,11 @@
 const Int_t    TMVA::PDF::fgNbin_PdfHist      = 10000;
 const Bool_t   TMVA::PDF::fgManualIntegration = kTRUE;
 const Double_t TMVA::PDF::fgEpsilon           = 1.0e-12;
+#if __cplusplus > 199711L
+thread_local TMVA::PDF* TMVA::PDF::fgThisPDF  = 0;
+#else
 TMVA::PDF*     TMVA::PDF::fgThisPDF           = 0;
+#endif
 
 ClassImp(TMVA::PDF)
 

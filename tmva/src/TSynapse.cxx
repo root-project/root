@@ -40,8 +40,6 @@ static const Int_t fgUNINITIALIZED = -1;
 
 ClassImp(TMVA::TSynapse);
 
-TMVA::MsgLogger* TMVA::TSynapse::fgLogger = 0;
-
 //______________________________________________________________________________
 TMVA::TSynapse::TSynapse()
    : fWeight( 0 ),
@@ -54,7 +52,6 @@ TMVA::TSynapse::TSynapse()
 {
    // constructor
    fWeight     = fgUNINITIALIZED;
-   if (!fgLogger) fgLogger = new MsgLogger("TSynapse");
 }
 
 
@@ -107,4 +104,15 @@ void TMVA::TSynapse::CalculateDelta()
    // calculate/adjust the error field for this synapse
    fDelta += fPostNeuron->GetDelta() * fPreNeuron->GetActivationValue();
    fCount++;
+}
+
+//______________________________________________________________________________
+TMVA::MsgLogger& TMVA::TSynapse::Log() const 
+{
+#if __cplusplus > 199711L
+  static thread_local MsgLogger logger("TSynapse");  //! message logger, static to save resources
+#else
+  static MsgLogger logger("TSynapse");               //! message logger, static to save resources
+#endif
+  return logger;
 }

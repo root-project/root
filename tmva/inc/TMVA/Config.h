@@ -36,7 +36,9 @@
 // Singleton class for global configuration settings used by TMVA       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
+#if __cplusplus > 199711L
+#include <atomic>
+#endif
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
 #endif
@@ -103,16 +105,27 @@ namespace TMVA {
 
       // private constructor
       Config();
+      Config( const Config& );
+      Config& operator=( const Config&);
       virtual ~Config();
+#if __cplusplus > 199711L
+      static std::atomic<Config*> fgConfigPtr;
+#else
       static Config* fgConfigPtr;
-                  
+#endif                  
    private:
 
+#if __cplusplus > 199711L
+      std::atomic<Bool_t> fUseColoredConsole;     // coloured standard output
+      std::atomic<Bool_t> fSilent;                // no output at all
+      std::atomic<Bool_t> fWriteOptionsReference; // if set true: Configurable objects write file with option reference
+      std::atomic<Bool_t> fDrawProgressBar;       // draw progress bar to indicate training evolution
+#else
       Bool_t fUseColoredConsole;     // coloured standard output
       Bool_t fSilent;                // no output at all
       Bool_t fWriteOptionsReference; // if set true: Configurable objects write file with option reference
       Bool_t fDrawProgressBar;       // draw progress bar to indicate training evolution
-
+#endif
       mutable MsgLogger* fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }
          
