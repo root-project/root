@@ -185,7 +185,7 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
    // if tag isn't empty, check if everything is OK with the tag format
    if (!out.empty()){
       bool isTagOk = CheckIsTagOK(out);
-      if (tagIsComment or tagIsXMLDecl){
+      if (tagIsComment || tagIsXMLDecl){
          out="";
          return GetNextTag(file,out,lineCount);
       }
@@ -367,7 +367,7 @@ bool XMLReader::GetAttributes(const std::string& tag, std::vector<Attributes>& o
 
             }
          }
-         else if (isspace(c) and !inString) continue;
+         else if (isspace(c) && !inString) continue;
          else if (c == '"') {
             inString=!inString;
             lastsymbol = '"';

@@ -753,7 +753,7 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
 
    // At this point tagDecl must be well defined
    const bool isLinkDefFile =  IsLinkdefFile();
-   if (not ( isLinkDefFile || tagDecl->isClass() || tagDecl->isStruct() ))
+   if (!( isLinkDefFile || tagDecl->isClass() || tagDecl->isStruct() ))
       return 0; // Union for Genreflex
 
    const ClassSelectionRule *selector = 0;
