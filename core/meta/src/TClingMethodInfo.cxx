@@ -207,7 +207,11 @@ void *TClingMethodInfo::InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt 
 bool TClingMethodInfo::IsValid() const
 {
    if (fSingleDecl) return fSingleDecl;
-   else if (fTemplateSpecIter) return *(*fTemplateSpecIter);
+   else if (fTemplateSpecIter) {
+      // Could trigger deserialization of decls.
+      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      return *(*fTemplateSpecIter);
+   }
    return *fIter;
 }
 
@@ -554,6 +558,8 @@ const char *TClingMethodInfo::Title()
    // Iterate over the redeclarations, we can have muliple definitions in the
    // redecl chain (came from merging of pcms).
    const FunctionDecl *FD = GetMethodDecl();
+   // Could trigger deserialization of decls.
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
    if (const FunctionDecl *AnnotFD
        = ROOT::TMetaUtils::GetAnnotatedRedeclarable(FD)) {
       if (AnnotateAttr *A = AnnotFD->getAttr<AnnotateAttr>()) {
