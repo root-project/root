@@ -61,9 +61,7 @@ extern "C" {
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
-   : InterpreterCallbacks(interp, /*enableExternalSemaSourceCallbacks*/true,
-                          /*enableDeserializationListenerCallbacks*/true,
-                          /*enablePPCallbacks*/true),
+   : InterpreterCallbacks(interp),
      fLastLookupCtx(0), fROOTSpecialNamespace(0),
      fFirstRun(true), fIsAutoloading(false), fIsAutoloadingRecursively(false),
      fPPOldFlag(false), fPPChanged(false) {
