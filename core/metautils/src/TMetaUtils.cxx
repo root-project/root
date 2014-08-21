@@ -4387,11 +4387,12 @@ const std::string ROOT::TMetaUtils::AST2SourceTools::Decl2FwdDecl(const clang::D
       const cling::Interpreter &interp)
 {
    // Ugly const removal: wrong cling interfaces
+   clang::Decl *ncDecl = const_cast<clang::Decl *>(&decl);
    cling::Interpreter *ncInterp = const_cast<cling::Interpreter *>(&interp);
    clang::Sema &sema = ncInterp->getSema();
    cling::Transaction theTransaction(sema);
-   theTransaction.append((clang::Decl *)&decl);
-   if (auto *tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&decl)) {
+   theTransaction.append(ncDecl);
+   if (auto *tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(ncDecl)) {
       theTransaction.append(tsd->getSpecializedTemplate());
    }
    std::string newFwdDecl;
