@@ -4402,7 +4402,7 @@ const std::string ROOT::TMetaUtils::AST2SourceTools::Decl2FwdDecl(const clang::D
 }
 
 //______________________________________________________________________________
-const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> decls,
+const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> &decls,
       const cling::Interpreter &interp)
 {
    // Ugly const removal: wrong cling interfaces
