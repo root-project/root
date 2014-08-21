@@ -94,6 +94,7 @@ foreach(file  Interpreter/DynamicExprInfo.h
               Interpreter/Value.h)
   get_filename_component(path ${file} PATH)
   list(APPEND files_to_copy COMMAND cmake -E copy ${clinginclude}/cling/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
+  set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${file})
   install(FILES ${clinginclude}/cling/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
 endforeach()
 
@@ -125,6 +126,7 @@ foreach( file llvm/ADT/IntrusiveRefCntPtr.h
     list(APPEND files_to_copy COMMAND cmake -E copy ${llvminclude-bin}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
     install(FILES ${llvminclude-bin}/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
   endif()
+  set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${file})
 endforeach()
 
 add_custom_target(LLVMRES COMMAND cmake -E make_directory

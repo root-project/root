@@ -81,8 +81,9 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 #---Global PCH-----------------------------------------------------------------------------------
 get_property(__allTargets GLOBAL PROPERTY ROOT_DICTIONARY_TARGETS)
 get_property(__allFiles GLOBAL PROPERTY ROOT_DICTIONARY_FILES)
+get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
 add_custom_command(OUTPUT include/allLinkDef.h include/allHeaders.h cppflags.txt
-                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${CMAKE_SOURCE_DIR} '*'
+                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${CMAKE_SOURCE_DIR} "." ${__clingetcpch}
                    DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${__allFiles})
 set(__cxxflags -D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DLDAP_DEPRECATED -DQT3_SUPPORT -Wno-deprecated
                -Iinclude -Ietc -Ietc/cling -I${CMAKE_SOURCE_DIR})
