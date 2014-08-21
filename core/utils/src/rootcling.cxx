@@ -3412,6 +3412,8 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 {
    // Generate the fwd declarations of the selected entities
 
+   std::string newFwdDeclString;
+
    using namespace ROOT::TMetaUtils::AST2SourceTools;
 
    const char *emptyString = "\"\"";
@@ -3424,6 +3426,8 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 
    for (auto const & annRcd : scan.fSelectedClasses) {
       const auto rcdDeclPtr = annRcd.GetRecordDecl();
+//       newFwdDeclString += Decl2FwdDecl(*rcdDeclPtr,interp);
+
       int retCode = FwdDeclFromRcdDecl(*rcdDeclPtr, interp, buffer);
       if (-1 == retCode) {
          ROOT::TMetaUtils::Error("GenerateFwdDeclString",
@@ -3452,6 +3456,7 @@ std::string GenerateFwdDeclString(const RScanner &scan,
    // Functions
 //    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
 //       int retCode = FwdDeclFromFcnDecl(*fcnDeclPtr, interp, buffer);
+//       newFwdDeclString += Decl2FwdDecl(*fcnDeclPtr,interp);
 //       if (-1 == retCode){
 //          ROOT::TMetaUtils::Error("GenerateFwdDeclString",
 //                                  "Error generating fwd decl for function  %s\n",
@@ -3463,6 +3468,12 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 //    }
 
    if (fwdDeclString.empty()) fwdDeclString = emptyString;
+
+//    std::cout << "\n======================" << std::endl
+//              << "OLD: " << fwdDeclString
+//              << "\n======================" << std::endl
+//              << "NEW: " << newFwdDeclString
+//              << "\n======================" << std::endl;
 
    return fwdDeclString;
 }
