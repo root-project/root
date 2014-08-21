@@ -39,6 +39,10 @@
 #include <string>
 namespace std {} using namespace std;
 
+#ifdef R__WIN32
+#define thread_local static
+#endif
+
 const Int_t kMaxLen = 1024;
 
 static TString &IncludeNameBuffer() {
