@@ -123,7 +123,9 @@ class TProtoClass;
 #include <utility>
 #include <vector>
 
+#ifndef R__WIN32
 #include <cxxabi.h>
+#endif
 #include <limits.h>
 #include <stdio.h>
 
@@ -138,9 +140,7 @@ class TProtoClass;
 
 #if defined(__CYGWIN__)
 #include <sys/cygwin.h>
-#endif
-
-#if defined(__CYGWIN__) || defined (R__WIN32)
+#define HMODULE void *
 extern "C" {
    __declspec(dllimport) void * __stdcall GetCurrentProcess();
    __declspec(dllimport) bool __stdcall EnumProcessModules(void *, void **, unsigned long, unsigned long *);
@@ -159,9 +159,26 @@ extern "C" {
 #ifndef STDERR_FILENO
 # define STDERR_FILENO 2
 #endif
+#ifndef R__WIN32
 //#if defined(HAVE_UNISTD_H)
 # include <unistd.h>
 //#endif
+#else
+#include "Windows4Root.h"
+#include <Psapi.h>
+#undef GetModuleFileName
+#define RTLD_DEFAULT ((void *) -2)
+#define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
+#define dlopen(library_name, flags) ::LoadLibraryEx(library_name, NULL, DONT_RESOLVE_DLL_REFERENCES)
+#define dlclose(library) ::FreeLibrary((HMODULE)library)
+char *dlerror() {
+   static char Msg[1000];
+   FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
+	             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg,
+				 sizeof(Msg), NULL);
+   return Msg;
+}
+#endif
 #endif
 
 
@@ -2087,7 +2104,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
 void TCling::UpdateListOfLoadedSharedLibraries()
 {
 #if defined(R__WIN32) || defined(__CYGWIN__)
-   void *hModules[1024];
+   HMODULE hModules[1024];
    void *hProcess;
    unsigned long cbModules;
    unsigned int i;
@@ -2099,7 +2116,14 @@ void TCling::UpdateListOfLoadedSharedLibraries()
       wchar_t winname[bufsize];
       char posixname[bufsize];
       ::GetModuleFileNameExW(hProcess, hModules[i], winname, bufsize);
+#if defined(__CYGWIN__)
       cygwin_conv_path(CCP_WIN_W_TO_POSIX, winname, posixname, bufsize);
+#else
+      std::wstring wpath = winname;
+      std::replace(wpath.begin(), wpath.end(), '\\', '/');
+      string path(wpath.begin(), wpath.end());
+      strncpy(posixname, path.c_str(), bufsize);
+#endif
       if (!fSharedLibs.Contains(posixname)) {
          RegisterLoadedSharedLibrary(posixname);
       }
@@ -2185,7 +2209,7 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        || strstr(filename, "/usr/lib/libpam")
        || strstr(filename, "/usr/lib/libOpenScriptingUtil"))
       return;
-#elif defined(__CYGWIN__) || defined(R__WIN32)
+#elif defined(__CYGWIN__)
    // Check that this is not a system library
    static const int bufsize = 260;
    char posixwindir[bufsize];
@@ -2196,6 +2220,9 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
       snprintf(posixwindir, sizeof(posixwindir), "/Windows/");
    if (strstr(filename, posixwindir) ||
        strstr(filename, "/usr/bin/cyg"))
+      return;
+#elif defined(R__WIN32)
+   if (strstr(filename, "/Windows/"))
       return;
 #elif defined (R__LINUX)
    if (strstr(filename, "/ld-linux")
