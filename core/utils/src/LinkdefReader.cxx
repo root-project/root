@@ -145,7 +145,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
             VariableSelectionRule vsr(fCount++, fInterp);
             if (linkOn) {
                vsr.SetAttributeValue("pattern", "*");
-               vsr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
+               vsr.SetSelected(BaseSelectionRule::kYes);
                fSelectionRules->AddVariableSelectionRule(vsr);
             } else {
                if (fSelectionRules->GetHasFileNameRule()) { // only if we had previous defined_in -> create that
@@ -162,7 +162,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
 
             EnumSelectionRule esr(fCount++, fInterp);
             if (linkOn) {
-               esr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
+               esr.SetSelected(BaseSelectionRule::kYes);
                esr.SetAttributeValue("pattern", "*");
                fSelectionRules->AddEnumSelectionRule(esr);
 
@@ -184,7 +184,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
             FunctionSelectionRule fsr(fCount++, fInterp);
             fsr.SetAttributeValue("pattern", "*");
             if (linkOn) {
-               fsr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
+               fsr.SetSelected(BaseSelectionRule::kYes);
                fSelectionRules->AddFunctionSelectionRule(fsr);
             } else {
                if (fSelectionRules->GetHasFileNameRule()) {
@@ -206,8 +206,8 @@ bool LinkdefReader::AddRule(std::string ruletype,
                ClassSelectionRule csr(fCount++, fInterp), csr2(fCount++, fInterp);
                csr.SetAttributeValue("pattern", "*");
                csr2.SetAttributeValue("pattern", "*::*");
-               csr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
-               csr2.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
+               csr.SetSelected(BaseSelectionRule::kYes);
+               csr2.SetSelected(BaseSelectionRule::kYes);
 
                fSelectionRules->AddClassSelectionRule(csr);
                fSelectionRules->AddClassSelectionRule(csr2);
@@ -247,21 +247,21 @@ bool LinkdefReader::AddRule(std::string ruletype,
             VariableSelectionRule vsr(fCount++, fInterp);
             vsr.SetAttributeValue("pattern", "*");
             vsr.SetAttributeValue("file_name", identifier);
-            if (linkOn) vsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
+            if (linkOn) vsr.SetSelected(BaseSelectionRule::kYes);
             else vsr.SetSelected(BaseSelectionRule::kNo);
             fSelectionRules->AddVariableSelectionRule(vsr);
 
             EnumSelectionRule esr(fCount++, fInterp);
             esr.SetAttributeValue("pattern", "*");
             esr.SetAttributeValue("file_name", identifier);
-            if (linkOn) esr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
+            if (linkOn) esr.SetSelected(BaseSelectionRule::kYes);
             else esr.SetSelected(BaseSelectionRule::kNo);
             fSelectionRules->AddEnumSelectionRule(esr);
 
             FunctionSelectionRule fsr(fCount++, fInterp);
             fsr.SetAttributeValue("pattern", "*");
             fsr.SetAttributeValue("file_name", identifier);
-            if (linkOn) fsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
+            if (linkOn) fsr.SetSelected(BaseSelectionRule::kYes);
             else fsr.SetSelected(BaseSelectionRule::kNo);
             fSelectionRules->AddFunctionSelectionRule(fsr);
 
@@ -272,8 +272,8 @@ bool LinkdefReader::AddRule(std::string ruletype,
             csr.SetAttributeValue("file_name", identifier);
             csr2.SetAttributeValue("file_name", identifier);
             if (linkOn) {
-               csr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
-               csr2.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
+               csr.SetSelected(BaseSelectionRule::kYes);
+               csr2.SetSelected(BaseSelectionRule::kYes);
             } else {
                csr.SetSelected(BaseSelectionRule::kNo);
                csr2.SetSelected(BaseSelectionRule::kNo);
@@ -293,7 +293,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
             }
             //std::cout<<"function selection rule for "<<identifier<<" ("<<(name_or_proto?"name":"proto_name")<<") to be impl."<<std::endl;
             FunctionSelectionRule fsr(fCount++, fInterp);
-            if (linkOn) fsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
+            if (linkOn) fsr.SetSelected(BaseSelectionRule::kYes);
             else fsr.SetSelected(BaseSelectionRule::kNo);
             if (identifier.at(identifier.length() - 1) == '*') fsr.SetAttributeValue("pattern", identifier);
             else if (name_or_proto) fsr.SetAttributeValue("name", identifier);
@@ -329,7 +329,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
 //            std::cout<<"function selection rule for "<<identifier<<" (proto_pattern) to be impl."<<std::endl;
 
             FunctionSelectionRule fsr(fCount++, fInterp);
-            if (linkOn) fsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
+            if (linkOn) fsr.SetSelected(BaseSelectionRule::kYes);
             else fsr.SetSelected(BaseSelectionRule::kNo);
             fsr.SetAttributeValue("proto_pattern", identifier);
             fSelectionRules->AddFunctionSelectionRule(fsr);
@@ -338,7 +338,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
       case kGlobal: {
 //           std::cout<<"variable selection rule for "<<identifier<<" to be impl."<<std::endl;
             VariableSelectionRule vsr(fCount++, fInterp);
-            if (linkOn) vsr.SetSelected(BaseSelectionRule::BaseSelectionRule::BaseSelectionRule::kYes);
+            if (linkOn) vsr.SetSelected(BaseSelectionRule::kYes);
             else vsr.SetSelected(BaseSelectionRule::kNo);
             if (IsPatternRule(identifier)) vsr.SetAttributeValue("pattern", identifier);
             else vsr.SetAttributeValue("name", identifier);
@@ -349,7 +349,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
 //            std::cout<<"enum selection rule for "<<identifier<<" to be impl."<<std::endl;
 
             EnumSelectionRule esr(fCount++, fInterp);
-            if (linkOn) esr.SetSelected(BaseSelectionRule::BaseSelectionRule::kYes);
+            if (linkOn) esr.SetSelected(BaseSelectionRule::kYes);
             else esr.SetSelected(BaseSelectionRule::kNo);
             if (IsPatternRule(identifier)) esr.SetAttributeValue("pattern", identifier);
             else esr.SetAttributeValue("name", identifier);
