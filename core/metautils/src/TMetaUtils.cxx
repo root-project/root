@@ -44,11 +44,11 @@
 #include "clang/Sema/Sema.h"
 
 #include "cling/Interpreter/LookupHelper.h"
+#include "cling/Interpreter/Transaction.h"
+#include "cling/Interpreter/Interpreter.h"
 
 #include "llvm/Support/Path.h"
 #include "llvm/Support/FileSystem.h"
-
-#include "cling/Interpreter/Interpreter.h"
 
 // Intentionally access non-public header ...
 #include "../../../interpreter/llvm/src/tools/clang/lib/Sema/HackForDefaultTemplateArg.h"
@@ -4383,6 +4383,46 @@ const std::string& ROOT::TMetaUtils::GetPathSeparator()
 }
 
 //______________________________________________________________________________
+const std::string ROOT::TMetaUtils::AST2SourceTools::Decl2FwdDecl(const clang::Decl &decl,
+      const cling::Interpreter &interp)
+{
+   // Ugly const removal: wrong cling interfaces
+   cling::Interpreter *ncInterp = const_cast<cling::Interpreter *>(&interp);
+   clang::Sema &sema = ncInterp->getSema();
+   cling::Transaction theTransaction(sema);
+   theTransaction.append((clang::Decl *)&decl);
+   if (auto *tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&decl)) {
+      theTransaction.append(tsd->getSpecializedTemplate());
+   }
+   std::string newFwdDecl;
+   llvm::raw_string_ostream llvmOstr(newFwdDecl);
+   ncInterp->forwardDeclare(theTransaction, llvmOstr, true, nullptr);
+   llvmOstr.flush();
+   return newFwdDecl;
+}
+
+//______________________________________________________________________________
+const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> decls,
+      const cling::Interpreter &interp)
+{
+   // Ugly const removal: wrong cling interfaces
+   cling::Interpreter *ncInterp = const_cast<cling::Interpreter *>(&interp);
+   clang::Sema &sema = ncInterp->getSema();
+   cling::Transaction theTransaction(sema);
+   for (auto decl : decls) {
+      theTransaction.append((clang::Decl *)decl);
+      if (auto *tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(decl)) {
+         theTransaction.append(tsd->getSpecializedTemplate());
+      }
+   }
+   std::string newFwdDecl;
+   llvm::raw_string_ostream llvmOstr(newFwdDecl);
+   ncInterp->forwardDeclare(theTransaction, llvmOstr, true, nullptr);
+   llvmOstr.flush();
+   return newFwdDecl;
+}
+
+//______________________________________________________________________________
 int ROOT::TMetaUtils::AST2SourceTools::EncloseInNamespaces(const clang::Decl& decl,
                                                            std::string& defString)
 {
@@ -4638,6 +4678,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
       }
       defString = argsFwdDecl + defString;
       return retCode;
+
    }
 
    defString = "class " + recordDecl.getNameAsString() + ";";
@@ -4647,6 +4688,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
       FwdDeclFromRcdDecl(*rcd, interpreter,defString);
    }
    defString = argsFwdDecl + defString;
+
    return 0;
 }
 
@@ -4778,6 +4820,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionD
                                                           const cling::Interpreter& interp,
                                                           std::string& defString)
 {
+
    // Transform a function decl into a C++ forward declaration
    // In some situation, we bail out:
    // - CANNOT FWD DECLARE FUNCTIONS TWICE IF DEF ARGS PRESENT: if def args present
@@ -4786,8 +4829,9 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionD
 
    if (clang::FunctionDecl::TemplatedKind::TK_NonTemplate != fcnDecl.getTemplatedKind() ||
        llvm::isa<clang::CXXMethodDecl>(fcnDecl) ||
-       fcnDecl.isExternC())
+       fcnDecl.isExternC()){
       return 1;
+   }
 
    // Extract the fwd declaration of a function
    defString = fcnDecl.getNameAsString();
@@ -4843,5 +4887,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromFcnDecl(const clang::FunctionD
    ROOT::TMetaUtils::GetFullyQualifiedTypeName(retQtAsString, retQt, interp);
    defString = retQtAsString + " " + defString;
 
-   return EncloseInNamespaces(fcnDecl, defString);
+   auto retCode = EncloseInNamespaces(fcnDecl, defString);
+
+   return retCode;
 }

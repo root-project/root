@@ -672,6 +672,13 @@ const std::string& GetPathSeparator();
 namespace AST2SourceTools {
 
 //______________________________________________________________________________
+const std::string Decl2FwdDecl(const clang::Decl& decl,
+                               const cling::Interpreter& interp);
+//______________________________________________________________________________
+const std::string Decls2FwdDecls(const std::vector<clang::Decl*>& decls,
+                                 const cling::Interpreter& interp);
+
+//______________________________________________________________________________
 int PrepareArgsForFwdDecl(std::string& templateArgs,
                           const clang::TemplateParameterList& tmplParamList,
                           const cling::Interpreter& interpreter);
