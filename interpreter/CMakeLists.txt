@@ -23,8 +23,13 @@ endif()
 set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
 
 #---Create a softlink of cling inside the tools of llvm----------------------------------------------
-execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-                ${CMAKE_SOURCE_DIR}/interpreter/cling ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/cling)
+if(WIN32)
+  execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory
+                  ${CMAKE_SOURCE_DIR}/interpreter/cling ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/cling)
+else()
+  execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+                  ${CMAKE_SOURCE_DIR}/interpreter/cling ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/cling)
+endif()
 
 #---Add the sub-directory exclusing all the targets from all-----------------------------------------
 add_subdirectory(llvm/src EXCLUDE_FROM_ALL)
