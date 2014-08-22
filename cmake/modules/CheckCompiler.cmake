@@ -63,15 +63,18 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
+include(CheckCXXCompilerFlag)
 #---Check for cxx11 option------------------------------------------------------------
 if(cxx11)
-  include(CheckCXXCompilerFlag)
   CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CXX11)
   if(NOT HAS_CXX11)
     message(STATUS "Current compiler does not suppport -std=c++11 option. Switching OFF cxx11 option")
     set(cxx11 OFF CACHE BOOL "" FORCE)
   endif()
 endif()
+
+#---Check for other compiler flags-------------------------------------------------------------------
+CHECK_CXX_COMPILER_FLAG("-Wno-array-bounds" CXX_HAS_Wno-array-bounds)
 
 #---Need to locate thead libraries and options to set properly some compilation flags---------------- 
 find_package(Threads)
