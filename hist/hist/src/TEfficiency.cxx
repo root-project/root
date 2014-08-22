@@ -2539,7 +2539,8 @@ Double_t TEfficiency::GetEfficiencyErrorLow(Int_t bin) const
          Double_t prob = 0.5 * (1.- fConfLevel);
          Double_t delta = ROOT::Math::normal_quantile_c(prob, sigma);
 
-         return (eff - delta > 0) ? delta : 0;
+         // avoid to return errors which makes eff-err < 0
+         return (eff - delta < 0) ? eff : delta;
       }
    }
    else
@@ -2618,7 +2619,7 @@ Double_t TEfficiency::GetEfficiencyErrorUp(Int_t bin) const
          Double_t prob = 0.5 * (1.- fConfLevel);
          Double_t delta = ROOT::Math::normal_quantile_c(prob, sigma);
 
-         return (eff + delta < 1) ? delta : 1;
+         return (eff + delta > 1) ? 1.-eff : delta;
       }
    }
    else
