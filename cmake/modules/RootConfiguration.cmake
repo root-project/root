@@ -10,7 +10,7 @@ foreach(v 0 OFF NO FALSE N IGNORE NOTFOUND)
 endforeach()
 
 set(ROOT_DICTTYPE cint)
-set(ROOT_CONFIGARGS "")
+#set(ROOT_CONFIGARGS "")
 set(top_srcdir ${CMAKE_SOURCE_DIR})
 set(top_builddir ${CMAKE_BINARY_DIR})
 set(architecture ${ROOT_ARCHITECTURE})
