@@ -2803,15 +2803,6 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
          if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
       }
 
-      if (!cl) {
-         // Try after autoparsing the template.
-         std::string::size_type posLess = resolvedName.find('<');
-         if (posLess != std::string::npos) {
-            if (gCling->AutoParse(resolvedName.substr(0, posLess).c_str())) {
-               return TClass::GetClass(resolvedName.c_str(), load, silent);
-            }
-         }
-      }
    }
 
    if (cl) {
@@ -2849,6 +2840,14 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
       return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
 
+   }
+
+   // Check the interpreter only after autoparsing the template if any.
+   {
+      std::string::size_type posLess = normalizedName.find('<');
+      if (posLess != std::string::npos) {
+         gCling->AutoParse(normalizedName.substr(0, posLess).c_str());
+      }
    }
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
