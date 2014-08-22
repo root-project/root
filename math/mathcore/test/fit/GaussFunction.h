@@ -65,7 +65,8 @@ private:
       return a*std::exp(-0.5*y*y);
    }
 
-   double DoDerivative(const double *x, unsigned int icoord) const { 
+   double DoDerivative(const double *x, unsigned int icoord) const {
+      (void)icoord;
       assert (icoord == 0); 
       double dGdx = -(*this)(x) * (x[0]-mean())/(sigma()*sigma());
       return dGdx; 
