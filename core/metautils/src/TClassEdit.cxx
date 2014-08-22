@@ -958,7 +958,9 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 
       if (*c == '<' || *c == '(')   lev++;
       if (lev==0 && !isalnum(*c)) {
-         if (!strchr("*&:_$ []-@",*c)) break;
+         if (!strchr("*&:._$ []-@",*c)) break;
+         // '.' is used as a module/namespace separator by PyROOT, see
+         // TPyClassGenerator::GetClass.
       }
       if (c[0]=='>' && result.size() && result[result.size()-1]=='>') result+=" ";
 
