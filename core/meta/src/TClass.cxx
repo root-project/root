@@ -2921,9 +2921,6 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       }
    }
 
-   if (!strcmp(name, "long long")||!strcmp(name,"unsigned long long"))
-      return 0; // reject long longs
-
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
    if (gInterpreter->CheckClassInfo(name)) {
       // Get the normalized name based on the decl (currently the only way
