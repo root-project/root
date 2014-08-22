@@ -4397,7 +4397,7 @@ const std::string ROOT::TMetaUtils::AST2SourceTools::Decl2FwdDecl(const clang::D
    }
    std::string newFwdDecl;
    llvm::raw_string_ostream llvmOstr(newFwdDecl);
-   ncInterp->forwardDeclare(theTransaction, llvmOstr, true, nullptr);
+   ncInterp->forwardDeclare(theTransaction, sema.getSourceManager(), llvmOstr, true, nullptr);
    llvmOstr.flush();
    return newFwdDecl;
 }
@@ -4420,7 +4420,7 @@ const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::v
    }
    std::string newFwdDecl;
    llvm::raw_string_ostream llvmOstr(newFwdDecl);
-   ncInterp->forwardDeclare(theTransaction, llvmOstr, true, nullptr);
+   ncInterp->forwardDeclare(theTransaction, sema.getSourceManager(), llvmOstr, true, nullptr);
    llvmOstr.flush();
    return newFwdDecl;
 }
