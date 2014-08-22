@@ -477,8 +477,12 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
          result.clear();
          dest.getAsStringInternal(result, policy);
          // Strip the std::
-         if (strncmp(result.c_str(), "std::", 5) == 0) {
-            result = result.substr(5);
+         unsigned long offset = 0;
+         if (strncmp(result.c_str(), "const ", 6) == 0) {
+            offset = 6;
+         }
+         if (strncmp(result.c_str()+offset, "std::", 5) == 0) {
+            result.erase(offset,5);
          }
          if (result.length() > 2 && result.compare(result.length()-2,2," &")==0) {
             result[result.length()-2] = '&';
