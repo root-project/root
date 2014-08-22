@@ -6,7 +6,7 @@ set(valueON yes)
 set(valueOFF no)
 
 set(ROOT_DICTTYPE cint)
-set(ROOT_CONFIGARGS "")
+#set(ROOT_CONFIGARGS "")
 set(top_srcdir ${CMAKE_SOURCE_DIR})
 set(top_builddir ${CMAKE_BINARY_DIR})
 set(architecture ${ROOT_ARCHITECTURE})
