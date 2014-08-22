@@ -2908,17 +2908,6 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
       return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
 
-   } else if ( strncmp(name,"std::",5)==0 ) {
-
-      return TClass::GetClass(name+5,load);
-
-   } else if ( strstr(name,"std::") != 0 ) {
-
-      // Let's try without the std:: in the template parameters.
-      TString rname( TClassEdit::ResolveTypedef(name,kTRUE) );
-      if (rname != name) {
-         return TClass::GetClass( rname, load );
-      }
    }
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
