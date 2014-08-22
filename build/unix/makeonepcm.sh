@@ -21,7 +21,7 @@ done
 
 for dict in `find $modules -name 'G__*.cxx' 2> /dev/null | grep -v /G__Cling.cxx  | grep -v core/metautils/src/G__std_`; do
     dirname=`dirname $dict`                   # to get foo/src
-    dirname=`echo $dirname | sed 's,/src$,,'` # to get foo/
+    dirname=`echo $dirname | sed -e 's,/src$,,' -e 's,^[.]/,,' ` # to get foo/
 
     case $dirname in
         graf2d/qt | math/fftw | math/foam | math/fumili | math/mlp | math/quadp | math/splot | math/unuran | math/vc | math/vdt) continue;;
