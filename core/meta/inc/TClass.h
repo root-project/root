@@ -274,7 +274,6 @@ private:
 
 protected:
    TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
-   static THashTable        *GetClassTypedefHash();
    void                      GetMissingDictionariesForBaseClasses(TCollection& result, TCollection& visited, bool recurse);
    void                      GetMissingDictionariesForMembers(TCollection& result, TCollection& visited, bool recurse);
    void                      GetMissingDictionariesWithRecursionCheck(TCollection& result, TCollection& visited, bool recurse);
@@ -462,7 +461,6 @@ public:
    static void           AddClassToDeclIdMap(TDictionary::DeclId_t id, TClass* cl);
    static void           RemoveClass(TClass *cl);
    static void           RemoveClassDeclId(TDictionary::DeclId_t id);
-   static TClass        *GetClassOrAlias(const char *name);
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(ClassInfo_t *info, Bool_t load = kTRUE, Bool_t silent = kFALSE);

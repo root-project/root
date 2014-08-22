@@ -2679,51 +2679,6 @@ TVirtualIsAProxy* TClass::GetIsAProxy() const
    return fIsA;
 }
 
-
-//______________________________________________________________________________
-TClass *TClass::GetClassOrAlias(const char *name)
-{
-   // Static method returning pointer to TClass of the specified class name.
-   // Also checks for possible template alias names (e.g. vector<Int_t>
-   // vs. vector<int>). Otherwise acts like GetClass(name, false).
-
-   if (strncmp(name,"class ",6)==0) name += 6;
-   if (strncmp(name,"struct ",7)==0) name += 7;
-
-   Bool_t load = kFALSE;
-   if (strchr(name, '<') && TClass::GetClassTypedefHash()) {
-      // We have a template which may have duplicates.
-      TString resolvedName(TClassEdit::ResolveTypedef(TClassEdit::ShortType(name,
-                                  TClassEdit::kDropStlDefault).c_str(), kTRUE));
-      if (resolvedName != name) {
-         TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName);
-         if (cl) {
-            load = kTRUE;
-         }
-      }
-      if (!load) {
-         TIter next(TClass::GetClassTypedefHash()->GetListForObject(resolvedName));
-         while (TClass::TNameMapNode* htmp =
-                static_cast<TClass::TNameMapNode*>(next())) {
-            if (resolvedName == htmp->String()) {
-               TClass* cl = TClass::GetClass(htmp->fOrigName, kFALSE);
-               if (cl) {
-                  // we found at least one equivalent.
-                  // let's force a reload
-                  load = kTRUE;
-                  break;
-               }
-            }
-         }
-      }
-   }
-   if (gROOT->GetListOfClasses()->GetEntries() == 0) {
-      // Nothing to find, let's not get yourself in trouble.
-      return 0;
-   }
-   return TClass::GetClass(name, load);
-}
-
 //______________________________________________________________________________
 TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 {
@@ -2850,12 +2805,6 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       delete ncl;
    }
    return 0;
-}
-
-//______________________________________________________________________________
-THashTable *TClass::GetClassTypedefHash() {
-   // Return the class' names massaged with TClassEdit::ShortType with kDropStlDefault.
-   return fgClassTypedefHash;
 }
 
 //______________________________________________________________________________
