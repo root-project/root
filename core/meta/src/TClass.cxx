@@ -2703,7 +2703,11 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    // Early return to release the lock without having to execute the
    // long-ish normalization.
-   if (cl && cl->IsLoaded()) return cl;
+   if (cl) {
+      if (cl->IsLoaded() || cl->TestBit(kUnloading)) return cl;
+      //we may pass here in case of a dummy class created by TVirtualStreamerInfo
+      load = kTRUE;
+   }
 
    // To avoid spurrious auto parsing, let's check if the name as-is is
    // known in the TClassTable.
@@ -2711,7 +2715,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    if (dict) {
       // The name is normalized, so the result of the first search is
       // authoritative.
-      if (!load) return 0;
+      if (!cl && !load) return 0;
 
       (dict)();
       TClass *loadedcl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
@@ -2725,25 +2729,24 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    }
 
    std::string normalizedName;
-   TClassEdit::GetNormalizedName(normalizedName, name);
-
-   Bool_t isStl = TClassEdit::IsSTLCont( normalizedName.c_str() );
 
    if (!cl) {
+      TClassEdit::GetNormalizedName(normalizedName, name);
       // Try the normalized name.
       if (normalizedName != name) {
          cl = (TClass*)gROOT->GetListOfClasses()->FindObject(normalizedName.c_str());
-      }
+
+         if (cl) {
+            if (cl->IsLoaded() || cl->TestBit(kUnloading)) return cl;
+
+            //we may pass here in case of a dummy class created by TVirtualStreamerInfo
+            load = kTRUE;
+         }
+     }
+   } else {
+      normalizedName = cl->GetName(); // Use the fact that all TClass names are normalized.
    }
 
-   if (cl) {
-
-      if (cl->IsLoaded() || cl->TestBit(kUnloading)) return cl;
-
-      //we may pass here in case of a dummy class created by TVirtualStreamerInfo
-      load = kTRUE;
-
-   }
 
    if (!load) return 0;
 
@@ -2767,7 +2770,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    if (cl) return cl;  // If we found the class but we already have a dummy class use it.
 
-   if (isStl) {
+   if (TClassEdit::IsSTLCont( normalizedName.c_str() )) {
 
       return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
 
