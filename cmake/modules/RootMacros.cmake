@@ -334,6 +334,15 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
 
 endmacro(ROOTTEST_GENERATE_REFLEX_DICTIONARY)
 
+#-------------------------------------------------------------------------------
+#
+# macro ROOTTEST_GENERATE_EXECUTABLE(<executable> 
+#                                    [LIBRARIES lib1 lib2 ...]
+#                                    [COMPILE_FLAGS flag1 flag2 ...]
+#                                    [DEPENDS ...]  )
+# This macro generates an executable the the building of it becames a test
+#
+#-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_EXECUTABLE executable)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES;COMPILE_FLAGS;DEPENDS" ${ARGN})
 
@@ -371,3 +380,18 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
            COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR} ${executable}/fast)
 
 endmacro()
+
+#-------------------------------------------------------------------------------
+#
+# function ROOTTEST_ADD_OLDTEST()
+#
+# This function defines a single tests in the current directory that calls the legacy
+# make system to run the defined tests.
+#
+#-------------------------------------------------------------------------------
+function(ROOTTEST_ADD_OLDTEST)
+  ROOTTEST_TARGETNAME_FROM_FILE(testdirname .)
+  ROOTTEST_ADD_TEST(${testdirname}
+                    COMMAND make
+                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
+endfunction()
