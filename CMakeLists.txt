@@ -74,6 +74,9 @@ set(ROOTTEST_ENV_LIBRARYPATH ${ROOT_LIBRARY_DIR})
 # Resolve symbolic links for the ROOTTEST_DIR variable.
 get_filename_component(ROOTTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
 
+# Set some variables that customizes the behaviour of the ROOT macros
+set(CMAKE_ROOTTEST_DICT ON)
+
 # Set the CMake module path. Here are all the custom CMake modules.
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ROOTTEST_DIR}/cmake/modules")
 
