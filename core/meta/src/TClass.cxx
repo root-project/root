@@ -2896,9 +2896,21 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    if (!load) return 0;
 
+// This assertion currently fails because of
+//   TClass *c1 = TClass::GetClass("basic_iostream<char,char_traits<char> >");
+//   TClass *c2 = TClass::GetClass("std::iostream");
+// where the TClassEdit normalized name of iostream is basic_iostream<char>
+// i.e missing the addition of the default parameter.  This is because TClingLookupHelper
+// uses only 'part' of TMetaUtils::GetNormalizedName.
+
+//   if (cl && normalizedName != cl->GetName() ) {
+//      ::Fatal("TClass::GetClass","The existing name (%s) for %s is different from the normalized name: %s\n",
+//            cl->GetName(), name, normalizedName.c_str());
+//   }
+
    TClass *loadedcl = 0;
    if (cl) loadedcl = gROOT->LoadClass(cl->GetName(),silent);
-   else    loadedcl = gROOT->LoadClass(name,silent);
+   else    loadedcl = gROOT->LoadClass(normalizedName.c_str(),silent);
 
    if (loadedcl) return loadedcl;
 
