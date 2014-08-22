@@ -162,6 +162,7 @@ public:
    */
   template<class IT>
   void SetComponents(IT begin, IT end) {
+    (void)end;
     IT a = begin; IT b = ++begin; IT c = ++begin;
     assert (++begin==end);
     SetComponents (*a, *b, *c);
@@ -173,6 +174,7 @@ public:
    */
   template<class IT>
   void GetComponents(IT begin, IT end) const {
+    (void)end;
     IT a = begin; IT b = ++begin; IT c = ++begin;
     assert (++begin==end);
     GetComponents (*a, *b, *c);

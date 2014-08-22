@@ -114,6 +114,7 @@ public:
    */
    template<class IT>
    void SetComponents(IT begin, IT end) {
+      (void)end;
       IT a = begin; IT b = ++begin; IT c = ++begin;
       fAxis.SetCoordinates(*a,*b,*c);
       fAngle = *(++begin); 
@@ -129,6 +130,7 @@ public:
    */
    template<class IT>
    void GetComponents(IT begin, IT end) const {
+      (void)end;
       IT a = begin; IT b = ++begin; IT c = ++begin;
       fAxis.GetCoordinates(*a,*b,*c);
       *(++begin) = fAngle;  

@@ -132,6 +132,7 @@ public:
    */
    template<class IT>
    void SetComponents(IT begin, IT end) {
+      (void)end;
       fPhi   = *begin++;
       fTheta = *begin++;
       fPsi   = *begin++;
@@ -145,6 +146,7 @@ public:
    */
    template<class IT>
    void GetComponents(IT begin, IT end) const {
+      (void)end; 
       *begin++ = fPhi;
       *begin++ = fTheta;
       *begin++ = fPsi;

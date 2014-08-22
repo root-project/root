@@ -109,6 +109,7 @@ public:
    */
    template<class IT>
    void SetComponents(IT begin, IT end) {
+      (void)end;
       fU = *begin++;
       fI = *begin++;
       fJ = *begin++;
@@ -122,6 +123,7 @@ public:
    */
    template<class IT>
    void GetComponents(IT begin, IT end) const {
+      (void)end;
       *begin++ = fU;
       *begin++ = fI;
       *begin++ = fJ;

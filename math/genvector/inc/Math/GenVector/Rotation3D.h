@@ -260,11 +260,12 @@ public:
    */
    template<class IT>
    void SetComponents(IT begin, IT end) {
-      for (int i = 0; i <9; ++i) { 
+      (void)end;
+      for (int i = 0; i <9; ++i) {
          fM[i] = *begin;
          ++begin;  
       }
-      assert (end==begin);
+      assert(end==begin);
    }
 
    /**
@@ -272,13 +273,13 @@ public:
       and another to the end of the desired data (9 past start).
    */
    template<class IT>
-
    void GetComponents(IT begin, IT end) const {
-      for (int i = 0; i <9; ++i) { 
+      (void)end;
+      for (int i = 0; i <9; ++i) {
          *begin = fM[i];
          ++begin; 
       }
-      assert (end==begin);
+      assert(end==begin);
    }
 
    /**

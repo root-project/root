@@ -311,7 +311,8 @@ public:
    */
    template<class IT>
    void SetComponents(IT begin, IT end) {
-      for (int i = 0; i <12; ++i) { 
+      (void)end;
+      for (int i = 0; i <12; ++i) {
          fM[i] = *begin;
          ++begin; 
       }
@@ -324,7 +325,8 @@ public:
    */
    template<class IT>
    void GetComponents(IT begin, IT end) const {
-      for (int i = 0; i <12; ++i) { 
+      (void)end;
+      for (int i = 0; i <12; ++i) {
          *begin = fM[i];
          ++begin;  
       }
