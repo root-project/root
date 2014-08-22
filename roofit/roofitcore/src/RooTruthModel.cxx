@@ -244,6 +244,7 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
 
 
   // Code must be 1
+  (void)code;
   assert(code==1) ;
 
   // Unconvoluted PDF
@@ -359,7 +360,7 @@ void RooTruthModel::generateEvent(Int_t code)
   // Implement internal generator for observable x,
   // x=0 for all events following definition
   // of delta function
-
+  (void)code;
   assert(code==1) ;
   Double_t zero(0.) ;
   x = zero ;

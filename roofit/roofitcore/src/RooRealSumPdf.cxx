@@ -383,6 +383,7 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
      std::auto_ptr<RooArgSet> nset(  _normIntMgr.nameSet1ByIndex(code-1)->select(*vars) );
      RooArgSet dummy;
      Int_t code2 = getAnalyticalIntegralWN(*iset,dummy,nset.get(),rangeName);
+     (void)code2;
      assert(code==code2); // must have revived the right (sterilized) slot...
      cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
      assert(cache!=0);

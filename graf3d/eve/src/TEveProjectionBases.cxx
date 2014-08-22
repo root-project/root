@@ -212,7 +212,7 @@ void TEveProjected::UnRefProjectable(TEveProjectable* assumed_parent, bool notif
    // Remove reference to projectable.
 
    static const TEveException eH("TEveProjected::UnRefProjectable ");
-
+   (void)assumed_parent;
    assert(fProjectable == assumed_parent);
 
    if (notifyParent) fProjectable->RemoveProjected(this);

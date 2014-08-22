@@ -114,6 +114,7 @@ Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
   static const double sqrtPiOver2 = 1.2533141373;
   static const double sqrt2 = 1.4142135624;
 
+  (void)code;
   assert(code==1);
   double result = 0.0;
   bool useLog = false;
@@ -192,6 +193,7 @@ Int_t RooCBShape::getMaxVal(const RooArgSet& vars) const
 //_____________________________________________________________________________
 Double_t RooCBShape::maxVal(Int_t code) const
 {
+  (void)code;
   assert(code==1) ;
 
   // The maximum value for given (m0,alpha,n,sigma)

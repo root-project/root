@@ -71,6 +71,7 @@ Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVa
 //_____________________________________________________________________________
 void RooLandau::generateEvent(Int_t code)
 {
+  (void)code;
   assert(code==1) ;
   Double_t xgen ;
   while(1) {    

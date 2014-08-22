@@ -224,7 +224,7 @@ Int_t RooPoisson::getGenerator(const RooArgSet& directVars, RooArgSet &generateV
 void RooPoisson::generateEvent(Int_t code)
 {
   // Implement internal generator using TRandom::Poisson 
-
+  (void)code;
   assert(code==1) ;
   Double_t xgen ;
   while(1) {    

@@ -1057,9 +1057,8 @@ RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 	      << " and rangeName " << (rangeName?rangeName:"<none>") << endl;
 
   // determine which observables need to be integrated over ...
-  Int_t nComb = 1 << (_nDim); 
-  assert(code>=1 && code<nComb) ;
-
+  (void)code;
+  assert(code>=1 && code<(1<<(_nDim))) ;
   vector<Bool_t> doInt(_nDim,kTRUE);
 
   // get BoxInfo

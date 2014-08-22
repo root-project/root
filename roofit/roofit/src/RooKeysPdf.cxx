@@ -338,6 +338,7 @@ Int_t RooKeysPdf::getAnalyticalIntegral(
 
 Double_t RooKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 {
+  (void)code;
   assert(1 == code);
   // this code is based on _lookupTable and uses linear interpolation, just as
   // evaluate(); integration is done using the trapez rule
@@ -384,6 +385,7 @@ Int_t RooKeysPdf::getMaxVal(const RooArgSet& vars) const
 
 Double_t RooKeysPdf::maxVal(Int_t code) const
 {
+  (void)code;
   assert(1 == code);
   Double_t max = -std::numeric_limits<Double_t>::max();
   for (Int_t i = 0; i <= _nPoints; ++i)

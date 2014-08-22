@@ -227,6 +227,7 @@ Int_t RooHistFunc::getMaxVal(const RooArgSet& vars) const
 //_____________________________________________________________________________
 Double_t RooHistFunc::maxVal(Int_t code) const 
 {
+  (void)code;
   assert(code==1) ;
 
   Double_t max(-1) ;

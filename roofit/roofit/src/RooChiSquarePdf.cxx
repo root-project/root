@@ -87,6 +87,7 @@ Int_t RooChiSquarePdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& anal
 //_____________________________________________________________________________
 Double_t RooChiSquarePdf::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
+  (void)code;
   assert(code==1) ;
   Double_t xmin = _x.min(rangeName); Double_t xmax = _x.max(rangeName);
 

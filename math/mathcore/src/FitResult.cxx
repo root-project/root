@@ -582,7 +582,7 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
       for (unsigned int kdim = 0; kdim < ndim; ++kdim) { 
          unsigned int i = ipoint * stride1 + kdim * stride2; 
          assert(i < ndim*n); 
-         xpoint[kdim] = x[ipoint * stride1 + kdim * stride2]; 
+         xpoint[kdim] = x[i];
       }
 
       // calculate gradient of fitted function w.r.t the parameters

@@ -246,7 +246,7 @@ Double_t RooParamHistFunc::analyticalIntegralWN(Int_t code, const RooArgSet* /*n
 {
   // Implement analytical integrations by doing appropriate weighting from  component integrals
   // functions to integrators of components
-
+  (void)code;
   assert(code==1) ;
 
   RooFIter iter = _p.fwdIterator() ;

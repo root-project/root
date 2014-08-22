@@ -127,6 +127,7 @@ Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 //_____________________________________________________________________________
 Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
+  (void)code;
   assert(1 == code);
 
   // the full range of the function is mapped to the normalised [-1, 1] range

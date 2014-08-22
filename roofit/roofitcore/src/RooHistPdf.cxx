@@ -507,6 +507,7 @@ Int_t RooHistPdf::getMaxVal(const RooArgSet& vars) const
 //_____________________________________________________________________________
 Double_t RooHistPdf::maxVal(Int_t code) const 
 {
+  (void)code;
   assert(code==1) ;
 
   Double_t max(-1) ;

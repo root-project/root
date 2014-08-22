@@ -822,6 +822,7 @@ Int_t RooGExpModel::getGenerator(const RooArgSet& directVars, RooArgSet &generat
 //_____________________________________________________________________________
 void RooGExpModel::generateEvent(Int_t code)
 {
+  (void)code;
   assert(code==1) ;
   Double_t xgen ;
   while(1) {

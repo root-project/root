@@ -495,6 +495,7 @@ Int_t RooGaussModel::getGenerator(const RooArgSet& directVars, RooArgSet &genera
 //_____________________________________________________________________________
 void RooGaussModel::generateEvent(Int_t code)
 {
+  (void)code;
   assert(code==1) ;
   Double_t xmin = x.min();
   Double_t xmax = x.max();

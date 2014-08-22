@@ -201,6 +201,7 @@ Int_t RooNonCentralChiSquare::getAnalyticalIntegral(RooArgSet& allVars, RooArgSe
 //_____________________________________________________________________________
 Double_t RooNonCentralChiSquare::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
+   (void)code;
    assert(code==1 );
    //  cout << "evaluating analytic integral" << endl;
    Double_t xmin = x.min(rangeName); 

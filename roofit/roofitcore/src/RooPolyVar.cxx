@@ -167,7 +167,7 @@ Int_t RooPolyVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 Double_t RooPolyVar::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   // Calculate and return analytical integral over x
-
+  (void)code;
   assert(code==1) ;
 
   Double_t sum(0) ;

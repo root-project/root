@@ -113,6 +113,7 @@ Int_t RooEfficiency::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 //_____________________________________________________________________________
 Double_t RooEfficiency::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
 {
+  (void)code;
   assert(code==1) ;
   return 1.0 ;
 }

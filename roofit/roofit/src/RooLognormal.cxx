@@ -99,6 +99,7 @@ Int_t RooLognormal::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 //_____________________________________________________________________________
 Double_t RooLognormal::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
+  (void)code;
   assert(code==1) ;
 
   static const Double_t root2 = sqrt(2.) ;
@@ -124,6 +125,7 @@ Int_t RooLognormal::getGenerator(const RooArgSet& directVars, RooArgSet &generat
 //_____________________________________________________________________________
 void RooLognormal::generateEvent(Int_t code)
 {
+  (void)code;
   assert(code==1) ;
 
   Double_t xgen ;

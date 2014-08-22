@@ -102,6 +102,7 @@ Int_t RooArgusBG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 //_____________________________________________________________________________
 Double_t RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
 {
+  (void)code;
   assert(code==1);
   // Formula for integration over m when p=0.5
   static const Double_t pi = atan2(0.0,-1.0);

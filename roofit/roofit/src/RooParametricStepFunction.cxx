@@ -130,6 +130,7 @@ Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooAr
 //_____________________________________________________________________________
 Double_t RooParametricStepFunction::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
+  (void)code;
   assert(code==1) ;
   
   // Case without range is trivial: p.d.f is by construction normalized 

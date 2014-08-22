@@ -103,6 +103,7 @@ Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVar
 //_____________________________________________________________________________
 void RooDecay::generateEvent(Int_t code)
 {
+  (void)code;
   assert(code==1) ;
 
   // Generate delta-t dependent

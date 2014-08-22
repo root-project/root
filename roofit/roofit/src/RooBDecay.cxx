@@ -220,6 +220,7 @@ Int_t RooBDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVa
 //_____________________________________________________________________________
 void RooBDecay::generateEvent(Int_t code)
 {
+  (void)code;
   assert(code==1);
   Double_t gammamin = 1/_tau-TMath::Abs(_dgamma)/2;
   while(1) {

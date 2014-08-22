@@ -101,6 +101,7 @@ Int_t RooGamma::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, c
 //_____________________________________________________________________________
 Double_t RooGamma::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
+  (void)code;
   assert(code==1) ;
 
  //integral of the Gamma distribution via ROOT::Math
@@ -125,6 +126,7 @@ Int_t RooGamma::getGenerator(const RooArgSet& directVars, RooArgSet &generateVar
 //_____________________________________________________________________________
 void RooGamma::generateEvent(Int_t code)
 {
+  (void)code;
   assert(code==1) ;
 //algorithm adapted from code example in:
 //Marsaglia, G. and Tsang, W. W.

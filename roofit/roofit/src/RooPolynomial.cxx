@@ -156,6 +156,7 @@ Int_t RooPolynomial::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 //_____________________________________________________________________________
 Double_t RooPolynomial::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
+  (void)code;
   assert(code==1) ;
 
   Int_t order(_lowestOrder) ;

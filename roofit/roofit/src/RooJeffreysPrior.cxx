@@ -190,6 +190,7 @@ Int_t RooJeffreysPrior::getAnalyticalIntegral(RooArgSet& /*allVars*/, RooArgSet&
 //_____________________________________________________________________________
 Double_t RooJeffreysPrior::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
 {
+  (void)code;
   assert(code==1 );
   //cout << "evaluating analytic integral" << endl;
   return 1.;

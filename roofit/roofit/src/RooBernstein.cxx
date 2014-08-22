@@ -138,6 +138,7 @@ Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 //_____________________________________________________________________________
 Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
+  (void)code;
   assert(code==1) ;
   Double_t xmin = _x.min(rangeName); Double_t xmax = _x.max(rangeName);
   Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
