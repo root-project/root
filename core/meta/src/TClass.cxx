@@ -2926,11 +2926,14 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
    if (gInterpreter->CheckClassInfo(name)) {
+      // Get the normalized name based on the decl (currently the only way
+      // to get the part to drop the default arguments as requested by the user)
       std::string alternative;
       gInterpreter->GetInterpreterTypeName(name,alternative,kTRUE);
       const char *altname = alternative.c_str();
       if ( strncmp(altname,"std::",5)==0 ) {
-         // Don't add std::, we almost always remove it.
+         // For namespace (for example std::__1), GetInterpreterTypeName does
+         // not strip std::, so we must do it explicitly here.
          altname += 5;
       }
       if (strcmp(altname,name)!=0) {
