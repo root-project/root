@@ -2710,7 +2710,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    VoidFuncPtr_t dict = TClassTable::GetDictNorm(name);
    if (dict) {
       // The name is normalized, so the result of the first search is
-      // authoritive.
+      // authoritative.
       if (!load) return 0;
 
       (dict)();
