@@ -2906,7 +2906,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    if (isStl) {
 
-      return gROOT->FindSTLClass(name,kTRUE,silent);
+      return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
 
    } else if ( strncmp(name,"std::",5)==0 ) {
 
