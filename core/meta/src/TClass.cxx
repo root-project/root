@@ -2769,40 +2769,16 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       // continue as before ...
    }
 
-   TClassEdit::TSplitType splitname( name, TClassEdit::kLong64 );
    std::string normalizedName;
-   TClassEdit::GetNormalizedName( normalizedName, name);
+   TClassEdit::GetNormalizedName(normalizedName, name);
 
    Bool_t isStl = TClassEdit::IsSTLCont( normalizedName.c_str() );
 
    if (!cl) {
-      // Try the name where we strip out the STL default template arguments
-      std::string resolvedName;
-      splitname.ShortType(resolvedName, TClassEdit::kDropStlDefault);
-      if (resolvedName != name) {
-         cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
-      } else {
-         // Signal that the resolved name is identical.
-         resolvedName.clear();
+      // Try the normalized name.
+      if (normalizedName != name) {
+         cl = (TClass*)gROOT->GetListOfClasses()->FindObject(normalizedName.c_str());
       }
-      if (!cl) {
-         // Attempt to resolve typedefs
-         TDataType* dataType = (TDataType*)gROOT->GetListOfTypes()->FindObject(name);
-         if (resolvedName.empty()) {
-            // Make it available to Long64_t resolution below.
-            resolvedName = name;
-         } else if (!dataType) {
-            dataType = (TDataType*)gROOT->GetListOfTypes()->FindObject(resolvedName.c_str());
-         }
-         if (dataType)
-            cl = (TClass*)gROOT->GetListOfClasses()->FindObject(dataType->GetFullTypeName());
-      }
-      if (!cl) {
-         // Try with Long64_t
-         resolvedName = TClassEdit::GetLong64_Name(resolvedName);
-         if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
-      }
-
    }
 
    if (cl) {
