@@ -28,6 +28,7 @@ int execCheckNaming(){
   // but does not have to remove them (this is the job of ShortType
   // or the name normalization routine). 
   const std::vector<const char*> tceTypedefNames={"const std::string&",
+                                           "const string&",
                                            "A<B>[2]",
                                            "X<A<B>[2]>"};
 
