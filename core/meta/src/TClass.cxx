@@ -2705,6 +2705,23 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    // long-ish normalization.
    if (cl) {
       if (cl->IsLoaded() || cl->TestBit(kUnloading)) return cl;
+
+      // We could speed-up some of the search by adding (the equivalent of)
+      //
+      //    if (cl->GetState() == kInterpreter) return cl
+      //
+      // In this case, if a ROOT dictionary was available when the TClass
+      // was first request it would have been used and if a ROOT dictonary is
+      // loaded later on TClassTable::Add will take care of updating the TClass.
+      // So as far as ROOT dictionary are concerned, if the current TClass is
+      // in interpreted state, we are sure there is nothing to load.
+      //
+      // However (see TROOT::LoadClass), the TClass can also be loaded/provided
+      // by a user provided TClassGenerator.  We have no way of knowing whether
+      // those do (or even can) behave the same way as the ROOT dictionary and
+      // have the 'dictionary is now available for use' step informa the existing
+      // TClass that their dictionary is now available.
+
       //we may pass here in case of a dummy class created by TVirtualStreamerInfo
       load = kTRUE;
    }
