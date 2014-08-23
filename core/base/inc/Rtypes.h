@@ -62,7 +62,9 @@ typedef void (*MemberStreamerFunc_t)(TBuffer&, void*, Int_t); // Streamer functi
 // This class is used to implement proxy around collection classes.
 class TVirtualCollectionProxy;
 
-typedef void (*VoidFuncPtr_t)();  //pointer to void function
+typedef void    (*VoidFuncPtr_t)();  //pointer to void function
+typedef TClass* (*DictFuncPtr_t)();  //pointer to dictionary function
+// NOTE: the previous name must be changed.
 
 
 //---- constants ---------------------------------------------------------------
@@ -149,7 +151,7 @@ namespace ROOT {
                               const char *dfil, const char *ifil,
                               Int_t dl, Int_t il);
    extern void AddClass(const char *cname, Version_t id, const type_info &info,
-                        VoidFuncPtr_t dict, Int_t pragmabits);
+                        DictFuncPtr_t dict, Int_t pragmabits);
    extern void RemoveClass(const char *cname);
    extern void ResetClassVersion(TClass*, const char*, Short_t);
 
@@ -176,7 +178,7 @@ namespace ROOT {
    public:
       virtual ~TInitBehavior() { }
       virtual void Register(const char *cname, Version_t id, const type_info &info,
-                            VoidFuncPtr_t dict, Int_t pragmabits) const = 0;
+                            DictFuncPtr_t dict, Int_t pragmabits) const = 0;
       virtual void Unregister(const char *classname) const = 0;
       virtual TClass *CreateClass(const char *cname, Version_t id,
                                   const type_info &info, TVirtualIsAProxy *isa,
@@ -187,7 +189,7 @@ namespace ROOT {
    class TDefaultInitBehavior : public TInitBehavior {
    public:
       virtual void Register(const char *cname, Version_t id, const type_info &info,
-                            VoidFuncPtr_t dict, Int_t pragmabits) const {
+                            DictFuncPtr_t dict, Int_t pragmabits) const {
          ROOT::AddClass(cname, id, info, dict, pragmabits);
       }
       virtual void Unregister(const char *classname) const {
@@ -223,7 +225,7 @@ public: \
    static TClass *Class(); \
    static const char *Class_Name(); \
    static Version_t Class_Version() { return id; } \
-   static void Dictionary(); \
+   static TClass *Dictionary(); \
    virtual TClass *IsA() const { return name::Class(); } \
    virtual void ShowMembers(TMemberInspector&insp) const { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
    virtual void Streamer(TBuffer&); \
@@ -240,7 +242,7 @@ public: \
 static TClass *Class(); \
 static const char *Class_Name(); \
 static Version_t Class_Version() { return id; } \
-static void Dictionary(); \
+static TClass *Dictionary(); \
 TClass *IsA() const { return name::Class(); } \
 void ShowMembers(TMemberInspector&insp) const { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
 void Streamer(TBuffer&); \
@@ -255,7 +257,7 @@ public: \
    static TClass *Class() { static TClass* sIsA = 0; if (!sIsA) sIsA = TClass::GetClass(#name); return sIsA; } \
    static const char *Class_Name() { return #name; } \
    static Version_t Class_Version() { return id; } \
-   static void Dictionary() {} \
+   static TClass *Dictionary() { return 0; } \
    virtual TClass *IsA() const { return name::Class(); } \
    virtual void ShowMembers(TMemberInspector&insp) const { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
    virtual void Streamer(TBuffer&) { Error ("Streamer", "Cannot stream interpreted class."); } \

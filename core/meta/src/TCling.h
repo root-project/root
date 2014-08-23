@@ -128,7 +128,7 @@ private: // Data Members
       }
    };
    std::set<TClass*> fModTClasses;
-   std::vector<std::pair<TClass*,VoidFuncPtr_t> > fClassesToUpdate;
+   std::vector<std::pair<TClass*,DictFuncPtr_t> > fClassesToUpdate;
    void* fAutoLoadCallBack;
    ULong64_t fTransactionCount; // Cling counter for commited or unloaded transactions which changed the AST.
    std::unordered_set<std::string> fSeenRootmapEntry;
@@ -195,7 +195,7 @@ public: // Public Interface
                           void (*triggerFunc)(),
                           const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                           const char** classesHeaders);
-   void    RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict);
+   void    RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict);
    void    UnRegisterTClassUpdate(const TClass *oldcl);
 
    Int_t   SetClassSharedLibs(const char *cls, const char *libs);

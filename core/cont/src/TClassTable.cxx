@@ -255,7 +255,7 @@ namespace ROOT { class TForNamespace {}; } // Dummy class to give a typeid to na
 
 //______________________________________________________________________________
 void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
-                      VoidFuncPtr_t dict, Int_t pragmabits)
+                      DictFuncPtr_t dict, Int_t pragmabits)
 {
    // Add a class to the class table (this is a static function).
    // Note that the given cname *must* be already normalized.
@@ -455,7 +455,7 @@ Int_t TClassTable::GetPragmaBits(const char *cname)
 }
 
 //______________________________________________________________________________
-VoidFuncPtr_t TClassTable::GetDict(const char *cname)
+DictFuncPtr_t TClassTable::GetDict(const char *cname)
 {
    // Given the class name returns the Dictionary() function of a class
    // (uses hash of name).
@@ -471,7 +471,7 @@ VoidFuncPtr_t TClassTable::GetDict(const char *cname)
 }
 
 //______________________________________________________________________________
-VoidFuncPtr_t TClassTable::GetDict(const type_info& info)
+DictFuncPtr_t TClassTable::GetDict(const type_info& info)
 {
    // Given the type_info returns the Dictionary() function of a class
    // (uses hash of type_info::name()).
@@ -487,7 +487,7 @@ VoidFuncPtr_t TClassTable::GetDict(const type_info& info)
 }
 
 //______________________________________________________________________________
-VoidFuncPtr_t TClassTable::GetDictNorm(const char *cname)
+DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
 {
    // Given the normalized class name returns the Dictionary() function of a class
    // (uses hash of name).
@@ -619,7 +619,7 @@ void TClassTable::Terminate()
 //______________________________________________________________________________
 void ROOT::AddClass(const char *cname, Version_t id,
                     const type_info& info,
-                    VoidFuncPtr_t dict,
+                    DictFuncPtr_t dict,
                     Int_t pragmabits)
 {
    // Global function called by the ctor of a class's init class

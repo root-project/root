@@ -1393,7 +1393,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
               << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "void " << clsname << "::Dictionary()" << std::endl << "{" << std::endl;
+   dictStream << "TClass *" << clsname << "::Dictionary()" << std::endl << "{" << std::endl;
 
    // Trigger autoloading if dictionary is split
    if (autoLoad)
@@ -1401,6 +1401,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
                  << "   gInterpreter->AutoLoad(\"" << fullname << "\");\n";
    dictStream    << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
                  << "*)0x0)->GetClass();" << std::endl
+                 << "   return fgIsA;\n"
                  << "}" << std::endl << std::endl
 
                  << "//_______________________________________"
@@ -1467,7 +1468,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 #endif
 
    if (!Namespace__HasMethod(cl, "Dictionary", interp))
-      dictStream << "      static void " << mappedname.c_str() << "_Dictionary();" << std::endl;
+      dictStream << "      static TClass *" << mappedname.c_str() << "_Dictionary();" << std::endl;
    dictStream << std::endl
 
               << "      // Function generating the singleton type initializer" << std::endl
@@ -1517,8 +1518,8 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 
    if (!Namespace__HasMethod(cl, "Dictionary", interp)) {
       dictStream <<  std::endl << "      // Dictionary for non-ClassDef classes" << std::endl
-                 << "      static void " << mappedname.c_str() << "_Dictionary() {" << std::endl
-                 << "         GenerateInitInstance()->GetClass();" << std::endl
+                 << "      static TClass *" << mappedname.c_str() << "_Dictionary() {" << std::endl
+                 << "         return GenerateInitInstance()->GetClass();" << std::endl
                  << "      }" << std::endl << std::endl;
    }
 

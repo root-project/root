@@ -141,7 +141,7 @@ public:
                                    void (* /*triggerFunc*/)(),
                                    const FwdDeclArgsToKeepCollection_t& fwdDeclArgsToKeep,
                                    const char** classesHeaders) = 0;
-   virtual void     RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict) = 0;
+   virtual void     RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict) = 0;
    virtual void     UnRegisterTClassUpdate(const TClass *oldcl) = 0;
    virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0;
    virtual void     SetGetline(const char*(*getlineFunc)(const char* prompt),

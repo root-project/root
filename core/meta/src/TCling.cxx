@@ -1080,7 +1080,7 @@ bool TCling::LoadPCM(TString pcmFileName,
                // or interpreted; we now have more information available.
                // Make that available.
                if (existingCl->GetState() != TClass::kHasTClassInit) {
-                  VoidFuncPtr_t dict = gClassTable->GetDict(proto->GetName());
+                  DictFuncPtr_t dict = gClassTable->GetDict(proto->GetName());
                   if (!dict) {
                      ::Error("TCling::LoadPCM", "Inconsistent TClassTable for %s",
                              proto->GetName());
@@ -1424,7 +1424,7 @@ void TCling::RegisterModule(const char* modulename,
          if (oldcl->GetState() != TClass::kHasTClassInit) {
             // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
             TString classname = oldcl->GetName();
-            VoidFuncPtr_t dict = fClassesToUpdate.back().second;
+            DictFuncPtr_t dict = fClassesToUpdate.back().second;
             fClassesToUpdate.pop_back();
             // Calling func could manipulate the list so, let maintain the list
             // then call the dictionary function.
@@ -1459,7 +1459,7 @@ void TCling::RegisterModule(const char* modulename,
 }
 
 //______________________________________________________________________________
-void TCling::RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict)
+void TCling::RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict)
 {
    // Register classes that already existed prior to their dictionary loading
    // and that already had a ClassInfo (and thus would not be refresh via
@@ -1474,7 +1474,7 @@ void TCling::UnRegisterTClassUpdate(const TClass *oldcl)
    // If the dictionary is loaded, we can remove the class from the list
    // (otherwise the class might be loaded twice).
 
-   typedef std::vector<std::pair<TClass*,VoidFuncPtr_t> >::iterator iterator;
+   typedef std::vector<std::pair<TClass*,DictFuncPtr_t> >::iterator iterator;
    iterator stop = fClassesToUpdate.end();
    for(iterator i = fClassesToUpdate.begin();
        i != stop;
@@ -4759,7 +4759,7 @@ Int_t TCling::AutoParse(const char *cls)
          if (oldcl->GetState() != TClass::kHasTClassInit) {
             // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
             TString classname = oldcl->GetName();
-            VoidFuncPtr_t dict = fClassesToUpdate.back().second;
+            DictFuncPtr_t dict = fClassesToUpdate.back().second;
             fClassesToUpdate.pop_back();
             // Calling func could manipulate the list so, let maintain the list
             // then call the dictionary function.

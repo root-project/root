@@ -465,8 +465,8 @@ public:
    static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(ClassInfo_t *info, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static Bool_t         GetClass(DeclId_t id, std::vector<TClass*> &classes);
-   static VoidFuncPtr_t  GetDict (const char *cname);
-   static VoidFuncPtr_t  GetDict (const type_info &info);
+   static DictFuncPtr_t  GetDict (const char *cname);
+   static DictFuncPtr_t  GetDict (const type_info &info);
 
    static Int_t       AutoBrowse(TObject *obj, TBrowser *browser);
    static ENewType    IsCallingNew();

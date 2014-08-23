@@ -1742,7 +1742,7 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
    // the same effect (change/delete requestedname).
    TString classname(requestedname);
 
-   VoidFuncPtr_t dict = TClassTable::GetDictNorm(classname);
+   DictFuncPtr_t dict = TClassTable::GetDictNorm(classname);
 
    if (!dict) {
       if (gInterpreter->AutoLoad(classname)) {

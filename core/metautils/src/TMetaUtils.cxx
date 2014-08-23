@@ -1464,7 +1464,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    if (!ClassInfo__HasMethod(decl,"Dictionary",interp) || IsTemplate(*decl))
    {
-      finalString << "   static void " << mappedname.c_str() << "_Dictionary();\n"
+      finalString << "   static TClass *" << mappedname.c_str() << "_Dictionary();\n"
                   << "   static void " << mappedname.c_str() << "_TClassManip(TClass*);\n";
 
 
@@ -1724,11 +1724,11 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    if (!ClassInfo__HasMethod(decl,"Dictionary",interp) || IsTemplate(*decl)) {
       finalString <<  "\n" << "   // Dictionary for non-ClassDef classes" << "\n"
-                  << "   static void " << mappedname << "_Dictionary() {\n"
+                  << "   static TClass *" << mappedname << "_Dictionary() {\n"
                   << "      TClass* theClass ="
                   << "::ROOT::GenerateInitInstanceLocal((const " << csymbol << "*)0x0)->GetClass();\n"
                   << "      " << mappedname << "_TClassManip(theClass);\n";
-
+      finalString << "   return theClass;\n";
       finalString << "   }\n\n";
 
       // Now manipulate tclass in order to percolate the properties expressed as

@@ -40,7 +40,7 @@ namespace ROOT {
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname,
                                         const char *declFileName, Int_t declFileLine,
                                         const type_info &info, const TInitBehavior  *action,
-                                        VoidFuncPtr_t dictionary,
+                                        DictFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
@@ -60,7 +60,7 @@ namespace ROOT {
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
                                         const char *declFileName, Int_t declFileLine,
                                         const type_info &info, const TInitBehavior  *action,
-                                        VoidFuncPtr_t dictionary,
+                                        DictFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
@@ -83,7 +83,7 @@ namespace ROOT {
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
                                         const char *declFileName, Int_t declFileLine,
                                         const TInitBehavior  *action,
-                                        VoidFuncPtr_t dictionary, Int_t pragmabits)
+                                        DictFuncPtr_t dictionary, Int_t pragmabits)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(typeid(TForNamespace)),
