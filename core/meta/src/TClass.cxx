@@ -2734,8 +2734,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       // authoritative.
       if (!cl && !load) return 0;
 
-      (dict)();
-      TClass *loadedcl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
+      TClass *loadedcl = (dict)();
       if (loadedcl) {
          loadedcl->PostLoadCheck();
          return loadedcl;
@@ -2865,8 +2864,7 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
 
    DictFuncPtr_t dict = TClassTable::GetDict(typeinfo);
    if (dict) {
-      (dict)();
-      cl = GetClass(typeinfo,kFALSE);
+      cl = (dict)();
       if (cl) cl->PostLoadCheck();
       return cl;
    }

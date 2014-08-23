@@ -1751,8 +1751,7 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
    }
 
    if (dict) {
-      (dict)();
-      TClass *ncl = TClass::GetClass(classname, kFALSE, silent);
+      TClass *ncl = (dict)();
       if (ncl) ncl->PostLoadCheck();
       return ncl;
    }

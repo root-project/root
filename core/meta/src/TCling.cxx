@@ -1086,8 +1086,7 @@ bool TCling::LoadPCM(TString pcmFileName,
                              proto->GetName());
                   } else {
                      // This will replace the existing TClass.
-                     (*dict)();
-                     TClass *ncl = (TClass*)gROOT->GetListOfClasses()->FindObject(proto->GetName());
+                     TClass *ncl = (*dict)();
                      if (ncl) ncl->PostLoadCheck();
 
                   }
@@ -1423,13 +1422,11 @@ void TCling::RegisterModule(const char* modulename,
          TClass *oldcl = fClassesToUpdate.back().first;
          if (oldcl->GetState() != TClass::kHasTClassInit) {
             // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
-            TString classname = oldcl->GetName();
             DictFuncPtr_t dict = fClassesToUpdate.back().second;
             fClassesToUpdate.pop_back();
             // Calling func could manipulate the list so, let maintain the list
             // then call the dictionary function.
-            dict();
-            TClass *ncl = TClass::GetClass(classname, kFALSE, kTRUE);
+            TClass *ncl = dict();
             if (ncl) ncl->PostLoadCheck();
          } else {
             fClassesToUpdate.pop_back();
@@ -4758,13 +4755,11 @@ Int_t TCling::AutoParse(const char *cls)
          TClass *oldcl = fClassesToUpdate.back().first;
          if (oldcl->GetState() != TClass::kHasTClassInit) {
             // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
-            TString classname = oldcl->GetName();
             DictFuncPtr_t dict = fClassesToUpdate.back().second;
             fClassesToUpdate.pop_back();
             // Calling func could manipulate the list so, let maintain the list
             // then call the dictionary function.
-            dict();
-            TClass *ncl = TClass::GetClass(classname, kFALSE, kTRUE);
+            TClass *ncl = dict();
             if (ncl) ncl->PostLoadCheck();
          } else {
             fClassesToUpdate.pop_back();
