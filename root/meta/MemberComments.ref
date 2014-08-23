@@ -90,7 +90,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	Class_Version	 : 0
       Version_t TArrow::Class_Version()
  OBJ: TMethod	Dictionary	 : 0
-      void TArrow::Dictionary()
+      TClass* TArrow::Dictionary()
  OBJ: TMethod	IsA	 : 0
       TClass* TArrow::IsA() const
  OBJ: TMethod	ShowMembers	 : 0
@@ -190,7 +190,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	Class_Version	 : 0
       Version_t TLine::Class_Version()
  OBJ: TMethod	Dictionary	 : 0
-      void TLine::Dictionary()
+      TClass* TLine::Dictionary()
  OBJ: TMethod	IsA	 : 0
       TClass* TLine::IsA() const
  OBJ: TMethod	ShowMembers	 : 0
@@ -376,7 +376,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	Class_Version	 : 0
       Version_t TObject::Class_Version()
  OBJ: TMethod	Dictionary	 : 0
-      void TObject::Dictionary()
+      TClass* TObject::Dictionary()
  OBJ: TMethod	IsA	 : 0
       TClass* TObject::IsA() const
  OBJ: TMethod	ShowMembers	 : 0
@@ -432,7 +432,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	Class_Version	 : 0
       Version_t TAttLine::Class_Version()
  OBJ: TMethod	Dictionary	 : 0
-      void TAttLine::Dictionary()
+      TClass* TAttLine::Dictionary()
  OBJ: TMethod	IsA	 : 0
       TClass* TAttLine::IsA() const
  OBJ: TMethod	ShowMembers	 : 0
@@ -480,7 +480,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	Class_Version	 : 0
       Version_t TAttBBox2D::Class_Version()
  OBJ: TMethod	Dictionary	 : 0
-      void TAttBBox2D::Dictionary()
+      TClass* TAttBBox2D::Dictionary()
  OBJ: TMethod	IsA	 : 0
       TClass* TAttBBox2D::IsA() const
  OBJ: TMethod	ShowMembers	 : 0
@@ -538,7 +538,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	Class_Version	 : 0
       Version_t TAttFill::Class_Version()
  OBJ: TMethod	Dictionary	 : 0
-      void TAttFill::Dictionary()
+      TClass* TAttFill::Dictionary()
  OBJ: TMethod	IsA	 : 0
       TClass* TAttFill::IsA() const
  OBJ: TMethod	ShowMembers	 : 0
