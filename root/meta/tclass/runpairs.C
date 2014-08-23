@@ -19,13 +19,25 @@ void whatis(TVirtualCollectionProxy* p) {
 
 void check(TClass *c) {
    if (c==0) {
-      cerr << "Missing class in check\n";
+      cerr << "Error: Missing class in check\n";
+      return;
    }
    TVirtualCollectionProxy *p = c->GetCollectionProxy();
    string bad = typeid(TEmulatedCollectionProxy).name();
    string what = typeid(*p).name();
    if (bad==what) {
-      cerr << "We have an emulated proxy for class " << c->GetName() << endl;
+      cerr << "Error: We have an emulated proxy for class " << c->GetName() << endl;
+   }
+}
+
+void checkRegular(TClass *c, const char *expectedname)
+{
+   if (c==0) {
+      cerr << "Error: Missing the class: " << expectedname << '\n';
+      return;
+   }
+   if (strcmp(c->GetName(),expectedname)!=0) {
+      cerr << "Error: The name for " << expectedname << " is unexpectedly: " << c->GetName() << '\n';
    }
 }
 
@@ -50,6 +62,7 @@ public:
 #pragma link C++ class std::pair<Char_t, UChar_t>+;
 #pragma link C++ class regular+;
 #pragma link C++ class tp<Int_t>+;
+#pragma link C++ class tp<Long_t>+;
 #endif
 
 #include <TFile.h>
@@ -69,6 +82,7 @@ void readfile(const char*filename="pairs.root",int debug = 0) {
       whatis(TClass::GetClass("vector<std::pair<Char_t, UChar_t> >")->GetCollectionProxy());
       cout << "tp<Int_t> " << (void*) TClass::GetClass("tp<Int_t>") << endl;
    }
+   checkRegular(TClass::GetClass("tp<Int_t>"),"tp<int>");
    check(TClass::GetClass("vector<Int_t>"));
    check(TClass::GetClass("vector<std::pair<Char_t, UChar_t> >"));
    regular *r;
@@ -76,6 +90,8 @@ void readfile(const char*filename="pairs.root",int debug = 0) {
 }
  
 void runpairs(int what=7, const char*filename="pairs.root",int debug = 0) {
+   checkRegular(TClass::GetClass("tp<Long_t>"),"tp<long>");
+
    if (what&4) readfile("pairs_v5.root",debug);
    if (what&1) write2file(filename,debug);
    if (what&2) readfile(filename,debug);

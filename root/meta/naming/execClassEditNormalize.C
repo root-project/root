@@ -49,13 +49,41 @@ bool test(const std::string &input)
    TClassEdit::GetNormalizedName(output,input.c_str());
 
    if (input != output) {
-      fprintf(stdout,"discrepancy:\n%s\n%s\n",input.c_str(),output.c_str());
+      fprintf(stdout,"discrepancy:\n\texpected: %s\n\tgot: %s\n",input.c_str(),output.c_str());
+      return false;
+   }
+   return true;
+}
+
+bool test(const std::string &input,const char *expected)
+{
+   std::string output;
+   TClassEdit::GetNormalizedName(output,input.c_str());
+
+   if (output != expected) {
+      fprintf(stdout,"discrepancy:\n\texpected: %s\n\tgot: %s\n",expected,output.c_str());
       return false;
    }
    return true;
 }
 
 int execClassEditNormalize() {
+
+   if (!test("const std::string","const string")) return 20;
+   if (!test("pair<const std::string,int>","pair<const string,int>")) return 19;
+   if (!test("allocator<pair<const std::string,int> >","allocator<pair<const string,int> >")) return 18;
+
+   if (!test("vector<Int_t, my_allocator<int> >","vector<int,my_allocator<int> >")) return 17;
+   if (!test("vector<Int_t, allocator<int> >","vector<int>")) return 17;
+   if (!test("vector<int, allocator<int> >","vector<int>")) return 16;
+
+   if (!test("Int_t","int")) return 15;
+   if (!test("Double32_t","Double32_t")) return 14;
+
+   if (!test("templ<Int_t>","templ<int>")) return 13;
+   if (!test("templ<Long64_t>","templ<Long64_t>")) return 12;
+   if (!test("templ<long long>","templ<Long64_t>")) return 11;
+   if (!test("templ<Double32_t>","templ<Double32_t>")) return 10;
 
    std::string input7 = "tempname<&ComplexElement::level>";
    if (!test(input7)) return 9;
