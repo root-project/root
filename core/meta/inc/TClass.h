@@ -221,6 +221,9 @@ private:
    void ForceReload (TClass* oldcl);
    void LoadClassInfo() const;
 
+   static TClass     *LoadClassDefault(const char *requestedname, Bool_t silent);
+   static TClass     *LoadClassCustom(const char *requestedname, Bool_t silent);
+
    void               SetClassVersion(Version_t version);
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
    TVirtualStreamerInfo* DetermineCurrentStreamerInfo();
@@ -410,6 +413,7 @@ public:
    Bool_t             IsStartingWithTObject() const;
    Bool_t             IsVersioned() const { return !( GetClassVersion()<=1 && IsForeign() ); }
    Bool_t             IsTObject() const;
+   static TClass     *LoadClass(const char *requestedname, Bool_t silent);
    void               ls(Option_t *opt="") const;
    void               MakeCustomMenuList();
    Bool_t             MatchLegacyCheckSum(UInt_t checksum) const;

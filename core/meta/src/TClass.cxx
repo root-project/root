@@ -2745,6 +2745,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    }
 
    std::string normalizedName;
+   Bool_t checkTable = kFALSE;
 
    if (!cl) {
       TClassEdit::GetNormalizedName(normalizedName, name);
@@ -2758,11 +2759,12 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
             //we may pass here in case of a dummy class created by TVirtualStreamerInfo
             load = kTRUE;
          }
+         checkTable = kTRUE;
      }
    } else {
       normalizedName = cl->GetName(); // Use the fact that all TClass names are normalized.
+      checkTable = load && (normalizedName != name);
    }
-
 
    if (!load) return 0;
 
@@ -2778,17 +2780,27 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 //            cl->GetName(), name, normalizedName.c_str());
 //   }
 
-   TClass *loadedcl = gROOT->LoadClass(normalizedName.c_str(),silent);
-
+   TClass *loadedcl = 0;
+   if (checkTable) {
+      loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
+   } else {
+      if (gInterpreter->AutoLoad(normalizedName.c_str())) {
+         loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
+      }
+   }
    if (loadedcl) return loadedcl;
 
-   if (cl) return cl;  // If we found the class but we already have a dummy class use it.
+   // See if the TClassGenerator can produce the TClass we need.
+   loadedcl = LoadClassCustom(normalizedName.c_str(),silent);
+   if (loadedcl) return loadedcl;
 
+   // We have not been able to find a loaded TClass, return the Emulated
+   // TClass if we have one.
+   if (cl) return cl;
 
    if (TClassEdit::IsSTLCont( normalizedName.c_str() )) {
 
       return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
-
    }
 
    // Check the interpreter only after autoparsing the template if any.
@@ -5034,6 +5046,82 @@ TClass *TClass::Load(TBuffer &b)
 
    delete [] s;
    return cl;
+}
+
+//______________________________________________________________________________
+TClass *TClass::LoadClass(const char *requestedname, Bool_t silent)
+{
+   // Helper function used by TClass::GetClass().
+   // This function attempts to load the dictionary for 'classname'
+   // either from the TClassTable or from the list of generator.
+   // If silent is 'true', do not warn about missing dictionary for the class.
+   // (typically used for class that are used only for transient members)
+   //
+   // The 'requestedname' is expected to be already normalized.
+
+   // This function does not (and should not) attempt to check in the
+   // list of loaded classes or in the typedef.
+
+   TClass *result = LoadClassDefault(requestedname, silent);
+
+   if (result) return result;
+   else return LoadClassCustom(requestedname,silent);
+}
+
+//______________________________________________________________________________
+TClass *TClass::LoadClassDefault(const char *requestedname, Bool_t /* silent */)
+{
+   // Helper function used by TClass::GetClass().
+   // This function attempts to load the dictionary for 'classname' from
+   // the TClassTable or the autoloader.
+   // If silent is 'true', do not warn about missing dictionary for the class.
+   // (typically used for class that are used only for transient members)
+   //
+   // The 'requestedname' is expected to be already normalized.
+
+   // This function does not (and should not) attempt to check in the
+   // list of loaded classes or in the typedef.
+
+   DictFuncPtr_t dict = TClassTable::GetDictNorm(requestedname);
+
+   if (!dict) {
+      if (gInterpreter->AutoLoad(requestedname)) {
+         dict = TClassTable::GetDictNorm(requestedname);
+      }
+   }
+
+   if (dict) {
+      TClass *ncl = (dict)();
+      if (ncl) ncl->PostLoadCheck();
+      return ncl;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TClass *TClass::LoadClassCustom(const char *requestedname, Bool_t silent)
+{
+   // Helper function used by TClass::GetClass().
+   // This function attempts to load the dictionary for 'classname'
+   // from the list of generator.
+   // If silent is 'true', do not warn about missing dictionary for the class.
+   // (typically used for class that are used only for transient members)
+   //
+   // The 'requestedname' is expected to be already normalized.
+
+   // This function does not (and should not) attempt to check in the
+   // list of loaded classes or in the typedef.
+
+   TIter next(gROOT->GetListOfClassGenerators());
+   TClassGenerator *gen;
+   while ((gen = (TClassGenerator*) next())) {
+      TClass *cl = gen->GetClass(requestedname, kTRUE, silent);
+      if (cl) {
+         cl->PostLoadCheck();
+         return cl;
+      }
+   }
+   return 0;
 }
 
 //______________________________________________________________________________

@@ -251,7 +251,7 @@ Int_t TPluginHandler::LoadPlugin()
       return gROOT->LoadMacro(fPlugin);
    } else {
       // first call also loads dependent libraries declared via the rootmap file
-      if (gROOT->LoadClass(fClass)) return 0;
+      if (TClass::LoadClass(fClass, /* silent = */ kFALSE)) return 0;
       return gROOT->LoadClass(fClass, fPlugin);
    }
 }

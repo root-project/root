@@ -3159,7 +3159,7 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
 
       if (0 == GenerateDictionary(classname.c_str(),includes)) {
          // 0 means success.
-         cl = gROOT->LoadClass(classnam.c_str(), silent);
+         cl = TClass::LoadClass(classnam.c_str(), silent);
          if (cl == 0) {
             Error("GenerateTClass","Even though the dictionary generation for %s seemed successfull we can't find the TClass bootstrap!",classname.c_str());
          }

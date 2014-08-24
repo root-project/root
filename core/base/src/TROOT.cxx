@@ -1732,40 +1732,7 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
    //
    // The 'requestedname' is expected to be already normalized.
 
-   // This function does not (and should not) attempt to check in the
-   // list of loaded classes or in the typedef.
-
-   // We need to cache the requested name as in some case this function is
-   // called with gROOT->LoadClass(cl->GetName()) and the loading of a library,
-   // for example via the autoloader, can result in our argument becoming invalid.
-   // In addition the call to the dictionary function (dict()) might also have
-   // the same effect (change/delete requestedname).
-   TString classname(requestedname);
-
-   DictFuncPtr_t dict = TClassTable::GetDictNorm(classname);
-
-   if (!dict) {
-      if (gInterpreter->AutoLoad(classname)) {
-         dict = TClassTable::GetDictNorm(classname);
-      }
-   }
-
-   if (dict) {
-      TClass *ncl = (dict)();
-      if (ncl) ncl->PostLoadCheck();
-      return ncl;
-   }
-
-   TIter next(fClassGenerators);
-   TClassGenerator *gen;
-   while ((gen = (TClassGenerator*) next())) {
-      TClass *cl = gen->GetClass(classname, kTRUE, silent);
-      if (cl) {
-         cl->PostLoadCheck();
-         return cl;
-      }
-   }
-   return 0;
+   return TClass::LoadClass(requestedname, silent);
 }
 
 //______________________________________________________________________________
