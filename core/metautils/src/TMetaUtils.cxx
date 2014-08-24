@@ -342,7 +342,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 
    // For comparison purposes.
    TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
-   splitname1.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
+   splitname1.ShortType(fRequestedName, 0);
 
    TMetaUtils::GetNormalizedName( fNormalizedName, clang::QualType(requestedType,0), interpreter, normCtxt);
    if ( 0!=TMetaUtils::RemoveTemplateArgsFromName( fNormalizedName, nTemplateArgsToSkip) ){
@@ -370,7 +370,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 
    // For comparison purposes.
    TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
-   splitname1.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
+   splitname1.ShortType(fRequestedName, 0);
 
    TMetaUtils::GetNormalizedName( fNormalizedName, clang::QualType(requestedType,0), interpreter, normCtxt);
 
@@ -398,8 +398,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
    // const char *current = requestName;
    // Strips spaces and std::
    if (requestName && requestName[0]) {
-      TClassEdit::TSplitType splitname(requestName,(TClassEdit::EModType)(TClassEdit::kDropAllDefault | TClassEdit::kLong64 | TClassEdit::kDropStd));
-      splitname.ShortType( fRequestedName, TClassEdit::kDropAllDefault | TClassEdit::kLong64 | TClassEdit::kDropStd );
+      TClassEdit::TSplitType splitname(requestName,(TClassEdit::EModType)( TClassEdit::kLong64 | TClassEdit::kDropStd));
+      splitname.ShortType( fRequestedName, TClassEdit::kLong64 | TClassEdit::kDropStd );
 
       fNormalizedName = fRequestedName;
    } else {
