@@ -4528,11 +4528,13 @@ Int_t TCling::AutoLoad(const char* cls)
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
 
+   R__LOCKGUARD(gInterpreterMutex);
+
    if (gClassTable->GetDictNorm(cls)) {
       // The library is alreday loaded as the class's dictionary is known.
       // Return success.
       // Note: the name (cls) is expected to be normalized as it comes either
-      // a callbacks (that can/should calculate the normalized name from the
+      // from a callbacks (that can/should calculate the normalized name from the
       // decl) or from TClass::GetClass (which does also calculate the normalized
       // name).
       return 1;
@@ -4542,7 +4544,7 @@ Int_t TCling::AutoLoad(const char* cls)
       Info("TCling::AutoLoad",
            "Trying to autoload for %s", cls);
    }
-   R__LOCKGUARD(gInterpreterMutex);
+
    Int_t status = 0;
    if (!gROOT || !gInterpreter || gROOT->TestBit(TObject::kInvalidObject)) {
       if (gDebug > 2) {
