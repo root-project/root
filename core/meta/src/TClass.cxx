@@ -2784,7 +2784,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    if (checkTable) {
       loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
    } else {
-      if (gInterpreter->AutoLoad(normalizedName.c_str())) {
+      if (gInterpreter->AutoLoad(normalizedName.c_str(),kTRUE)) {
          loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
       }
    }
@@ -2898,7 +2898,7 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
       // Re-disable, we just meant to test
       gCling->SetClassAutoloading(0);
    }
-   if (autoload_old && gInterpreter->AutoLoad(typeinfo)) {
+   if (autoload_old && gInterpreter->AutoLoad(typeinfo,kTRUE)) {
       // Disable autoload to avoid potential infinite recursion
       gCling->SetClassAutoloading(0);
       cl = GetClass(typeinfo, load);
@@ -5085,7 +5085,7 @@ TClass *TClass::LoadClassDefault(const char *requestedname, Bool_t /* silent */)
    DictFuncPtr_t dict = TClassTable::GetDictNorm(requestedname);
 
    if (!dict) {
-      if (gInterpreter->AutoLoad(requestedname)) {
+      if (gInterpreter->AutoLoad(requestedname,kTRUE)) {
          dict = TClassTable::GetDictNorm(requestedname);
       }
    }

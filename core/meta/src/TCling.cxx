@@ -4492,7 +4492,7 @@ TClass *TCling::GetClass(const std::type_info& typeinfo, Bool_t load) const
 }
 
 //______________________________________________________________________________
-Int_t TCling::AutoLoad(const type_info& typeinfo)
+Int_t TCling::AutoLoad(const type_info& typeinfo, Bool_t knowDictNotLoaded /* = kFALSE */)
 {
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
@@ -4516,21 +4516,21 @@ Int_t TCling::AutoLoad(const type_info& typeinfo)
    Int_t result = AutoLoad(demangled_name.c_str());
    if (result == 0) {
       demangled_name = TClassEdit::GetLong64_Name(demangled_name);
-      result = AutoLoad(demangled_name.c_str());
+      result = AutoLoad(demangled_name.c_str(), knowDictNotLoaded);
    }
 
    return result;
 }
 
 //______________________________________________________________________________
-Int_t TCling::AutoLoad(const char* cls)
+Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
 {
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   if (gClassTable->GetDictNorm(cls)) {
+   if (!knowDictNotLoaded && gClassTable->GetDictNorm(cls)) {
       // The library is alreday loaded as the class's dictionary is known.
       // Return success.
       // Note: the name (cls) is expected to be normalized as it comes either

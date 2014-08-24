@@ -148,8 +148,8 @@ public: // Public Interface
    void    AddIncludePath(const char* path);
    void   *GetAutoLoadCallBack() const { return fAutoLoadCallBack; }
    void   *SetAutoLoadCallBack(void* cb) { void* prev = fAutoLoadCallBack; fAutoLoadCallBack = cb; return prev; }
-   Int_t   AutoLoad(const char* cls);
-   Int_t   AutoLoad(const std::type_info& typeinfo);
+   Int_t   AutoLoad(const char *classname, Bool_t knowDictNotLoaded = kFALSE);
+   Int_t   AutoLoad(const std::type_info& typeinfo, Bool_t knowDictNotLoaded = kFALSE);
    Int_t   AutoParse(const char* cls);
    void*   LazyFunctionCreatorAutoload(const std::string& mangled_name);
    Bool_t  IsAutoLoadNamespaceCandidate(const char* name);

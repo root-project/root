@@ -99,8 +99,8 @@ public:
    virtual void     AddIncludePath(const char *path) = 0;
    virtual void    *SetAutoLoadCallBack(void* /*cb*/) { return 0; }
    virtual void    *GetAutoLoadCallBack() const { return 0; }
-   virtual Int_t    AutoLoad(const char *classname) = 0;
-   virtual Int_t    AutoLoad(const std::type_info& typeinfo) = 0;
+   virtual Int_t    AutoLoad(const char *classname, Bool_t knowDictNotLoaded = kFALSE) = 0;
+   virtual Int_t    AutoLoad(const std::type_info& typeinfo, Bool_t knowDictNotLoaded = kFALSE) = 0;
    virtual Int_t    AutoParse(const char* cls) = 0;
    virtual void     ClearFileBusy() = 0;
    virtual void     ClearStack() = 0; // Delete existing temporary values
