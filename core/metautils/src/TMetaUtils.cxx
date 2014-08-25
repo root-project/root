@@ -482,6 +482,9 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
    if (!t.isNull()) {
       clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetConfig(), true /* fully qualify */);
       if (!dest.isNull() && dest != t) {
+         // Since our input is not a template instance name, rather than going through the full
+         // TMetaUtils::GetNormalizedName, we just do the 'strip leading std' and fix
+         // white space.
          clang::PrintingPolicy policy(fInterpreter->getCI()->getASTContext().getPrintingPolicy());
          policy.SuppressTagKeyword = true; // Never get the class or struct keyword
          policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.

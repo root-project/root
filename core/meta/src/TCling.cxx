@@ -854,6 +854,11 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
       return true;
    }
 
+   if (gCling->GetClassSharedLibs( inner.c_str() )) {
+      // This is a class name.
+      return true;
+   }
+
    return false;
 }
 
