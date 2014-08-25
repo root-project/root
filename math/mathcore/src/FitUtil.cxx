@@ -374,7 +374,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
    for (unsigned int i = 0; i < n; ++ i) { 
 
 
-      double y, invError; 
+      double y = 0, invError = 1.; 
       // in case of no error in y invError=1 is returned
       const double * x1 = data.GetPoint(i,y, invError);
 
