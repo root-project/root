@@ -2017,6 +2017,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
 //    fprintf(stderr,"TGQt::GrabButton \"0x%x\" id=%x QWidget = %p\n"
 //       ,evmask,id,((TQtClientWidget*)wid(id)));
     if (id == kNone) return;
+    (void)confine;
     assert(confine==kNone);
     if (grab ) {
 //       if (cursor == kNone) {
@@ -2051,7 +2052,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
        //-------------------------------------------------------------------
        // For either value of owner_events, unreported events are discarded.
        //-------------------------------------------------------------------
-
+    (void)confine;
     assert(confine==kNone);
     TQtClientWidget *gw = (id == kNone) ?  0: cwid(id);
     // Do we still grabbing anything ?

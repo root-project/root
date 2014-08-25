@@ -106,7 +106,9 @@ Int_t TTableDescriptor::AddAt(const void *c)
    // Append one row pointed by "c" to the descriptor
 
    if (!c) return -1;
-   assert(MakeCommentField() != 0);
+   TDataSet *cmnt = MakeCommentField();
+   (void)cmnt;
+   assert(cmnt!=0);
 
    return TTable::AddAt(c);
 }

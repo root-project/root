@@ -266,6 +266,7 @@ void TQtPixmapGuard::Disconnect(QPixmap *w, int found)
 QPixmap *TQtPixmapGuard::Pixmap(Pixmap_t id, bool needBitmap)
 {
    // Find QPixmap by ROOT pixmap id
+   (void)needBitmap;
    QPixmap *thisPix = 0;
    int found = -1;
    if (id) {
