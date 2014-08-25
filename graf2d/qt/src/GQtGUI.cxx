@@ -2016,6 +2016,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
 //    fprintf(stderr,"TGQt::GrabButton \"0x%x\" id=%x QWidget = %p\n"
 //       ,evmask,id,((TQtClientWidget*)wid(id)));
     if (id == kNone) return;
+    (void)confine;
     assert(confine==kNone);
     (void)confine; // no unused var in opimized builds.
     if (grab ) {
@@ -2051,7 +2052,7 @@ void         TGQt::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
        //-------------------------------------------------------------------
        // For either value of owner_events, unreported events are discarded.
        //-------------------------------------------------------------------
-
+    (void)confine;
     assert(confine==kNone);
     (void)confine; // no unused var in optimized builds.
     TQtClientWidget *gw = (id == kNone) ?  0: cwid(id);
