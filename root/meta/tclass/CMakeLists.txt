@@ -12,6 +12,7 @@ ROOTTEST_ADD_TEST(roottest-root-meta-tclass-runtempParse
                   DEPENDS tempParse.C)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-tclass-runpairs
+                  COPY_TO_BUILDDIR  pairs_v5.root
                   MACRO runpairs.C+
                   OUTREF pairs.ref)
 
