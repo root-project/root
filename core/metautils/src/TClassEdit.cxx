@@ -163,11 +163,13 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
         || fElements[narg-1][0]=='['
         || 0 == fElements[narg-1].compare(0,6,"const*")
         || 0 == fElements[narg-1].compare(0,6,"const&")
+        || 0 == fElements[narg-1].compare(0,6,"const[")
         )
        ) {
       if ((mode&1)==0) tailLoc = narg-1;
-      narg--;
    }
+   else { assert(fElements[narg-1].empty()); };
+   narg--;
    mode &= (~1);
 
    if (fNestedLocation) narg--;
@@ -284,6 +286,9 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
             unsigned int offset = (0==strncmp("const ",fElements[i].c_str(),6)) ? 6 : 0;
             RemoveStd( fElements[i], offset );
          }
+         if (mode&kResolveTypedef) {
+            fElements[i] = ResolveTypedef(fElements[i].c_str(),true);
+         }
          continue;
       }
       bool hasconst = 0==strncmp("const ",fElements[i].c_str(),6);
@@ -300,6 +305,12 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
 
    if (!fElements[0].empty()) {answ += fElements[0]; answ +="<";}
 
+#if 0
+   // This code is no longer use, the moral equivalent would be to get
+   // the 'fixed' number of argument the user told us to ignore and drop those.
+   // However, the name we get here might be (usually) normalized enough that
+   // this is not necessary (at the very least nothing break in roottest with
+   // the aforementioned new code).
    if (mode & kDropAllDefault) {
       int nargNonDefault = 0;
       std::string nonDefName = answ;
@@ -323,6 +334,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       if (nargNonDefault < narg)
          narg = nargNonDefault;
    }
+#endif
 
    { for (int i=1;i<narg-1; i++) { answ += fElements[i]; answ+=",";} }
    if (narg>1) { answ += fElements[narg-1]; }
@@ -341,6 +353,9 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    }
    // tail is not a type name, just [2], &, * etc.
    if (tailLoc) answ += fElements[tailLoc];
+   if (answ == "std::pair<unsigned int,std::string,>") {
+      fprintf(stderr,"For %s got %s\n",fName,answ.c_str());
+   }
 }
 
 
@@ -623,7 +638,7 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, const char *name)
 
    // Remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
    TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
-   splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
+   splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kResolveTypedef);
 
    // Depending on how the user typed their code, in particular typedef
    // declarations, we may end up with an explicit '::' being
@@ -665,6 +680,60 @@ string TClassEdit::GetLong64_Name(const string& original)
       result.replace(pos, longlong_len, "Long64_t");
    }
    return result;
+}
+
+//______________________________________________________________________________
+static void R__FindTrailing(std::string &full,  /*modified*/
+                            std::string &stars /* the literal output */
+                            )
+{
+   const char *t = full.c_str();
+   const unsigned int tlen( full.size() );
+
+   const char *starloc = t + tlen - 1;
+   bool hasconst = false;
+   if ( (*starloc)=='t'
+       && (starloc-t) > 5 && 0 == strncmp((starloc-5),"const",5)
+       && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
+      // we are ending on a const.
+      starloc -= 4;
+      if ((*starloc-1)==' ') {
+         // Take the space too.
+         starloc--;
+      }
+      hasconst = true;
+   }
+   if ( hasconst || (*starloc)=='*' || (*starloc)=='&' || (*starloc)==']' ) {
+      bool isArray = ( (*starloc)==']' );
+      while( (*(starloc-1))=='*' || (*(starloc-1))=='&' || (*(starloc-1))=='t' || isArray) {
+         if (isArray) {
+            starloc--;
+            isArray = ! ( (*starloc)=='[' );
+         } else if ( (*(starloc-1))=='t' ) {
+            if ( (starloc-1-t) > 5 && 0 == strncmp((starloc-5),"const",5)
+                && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
+               // we have a const.
+               starloc -= 5;
+               if ((*starloc-1)==' ') {
+                  // Take the space too.
+                  starloc--;
+               }
+            } else {
+               break;
+            }
+         } else {
+            starloc--;
+         }
+      }
+      stars = starloc;
+      const unsigned int starlen = strlen(starloc);
+      full.erase(tlen-starlen,starlen);
+   } else if (hasconst) {
+      stars = starloc;
+      const unsigned int starlen = strlen(starloc);
+      full.erase(tlen-starlen,starlen);
+   }
+
 }
 
 //______________________________________________________________________________
@@ -764,7 +833,13 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
          }
          if (offset < full.length()) {
             // Copy the trailing text.
-            output.back().append(full.substr(offset+1));
+            string right( full.substr(offset+1) );
+            string stars;
+            R__FindTrailing(right, stars);
+            output.back().append(right);
+            output.push_back(stars);
+         } else {
+            output.push_back("");
          }
          return output.size();
       }
@@ -774,60 +849,16 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
       unsigned int offset = (0==strncmp("const ",full.c_str(),6)) ? 6 : 0;
       RemoveStd( full, offset );
    }
-   const char *t = full.c_str();
-   const char *c = strchr(t,'<');
 
    string stars;
-   const unsigned int tlen( full.size() );
-   if ( tlen > 0 ) {
-      const char *starloc = t + tlen - 1;
-      bool hasconst = false;
-      if ( (*starloc)=='t'
-          && (starloc-t) > 5 && 0 == strncmp((starloc-5),"const",5)
-          && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
-         // we are ending on a const.
-         starloc -= 4;
-         if ((*starloc-1)==' ') {
-            // Take the space too.
-            starloc--;
-         }
-         hasconst = true;
-      }
-      if ( hasconst || (*starloc)=='*' || (*starloc)=='&' || (*starloc)==']' ) {
-         bool isArray = ( (*starloc)==']' );
-         while( (*(starloc-1))=='*' || (*(starloc-1))=='&' || (*(starloc-1))=='t' || isArray) {
-            if (isArray) {
-               starloc--;
-               isArray = ! ( (*starloc)=='[' );
-            } else if ( (*(starloc-1))=='t' ) {
-               if ( (starloc-1-t) > 5 && 0 == strncmp((starloc-5),"const",5)
-                   && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
-                  // we have a const.
-                  starloc -= 5;
-                  if ((*starloc-1)==' ') {
-                     // Take the space too.
-                     starloc--;
-                  }
-               } else {
-                  break;
-               }
-            } else {
-               starloc--;
-            }
-         }
-         stars = starloc;
-         const unsigned int starlen = strlen(starloc);
-         full.erase(tlen-starlen,starlen);
-      } else if (hasconst) {
-         stars = starloc;
-         const unsigned int starlen = strlen(starloc);
-         full.erase(tlen-starlen,starlen);
-      }
+   if ( !full.empty() ) {
+      R__FindTrailing(full, stars);
    }
 
+   const char *c = strchr(full.c_str(),'<');
    if (c) {
       //we have 'something<'
-      output.push_back(string(full,0,c-t));
+      output.push_back(string(full,0,c - full.c_str()));
 
       const char *cursor;
       int level = 0;
@@ -866,7 +897,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
       output.push_back(full);
    }
 
-   if (stars.length()) output.push_back(stars);
+   if (!output.empty()) output.push_back(stars);
    return output.size();
 }
 
@@ -934,7 +965,9 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 
       if (*c == '<' || *c == '(')   lev++;
       if (lev==0 && !isalnum(*c)) {
-         if (!strchr("*&:_$ []-@",*c)) break;
+         if (!strchr("*&:._$ []-@",*c)) break;
+         // '.' is used as a module/namespace separator by PyROOT, see
+         // TPyClassGenerator::GetClass.
       }
       if (c[0]=='>' && result.size() && result[result.size()-1]=='>') result+=" ";
 

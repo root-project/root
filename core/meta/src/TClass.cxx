@@ -2679,51 +2679,6 @@ TVirtualIsAProxy* TClass::GetIsAProxy() const
    return fIsA;
 }
 
-
-//______________________________________________________________________________
-TClass *TClass::GetClassOrAlias(const char *name)
-{
-   // Static method returning pointer to TClass of the specified class name.
-   // Also checks for possible template alias names (e.g. vector<Int_t>
-   // vs. vector<int>). Otherwise acts like GetClass(name, false).
-
-   if (strncmp(name,"class ",6)==0) name += 6;
-   if (strncmp(name,"struct ",7)==0) name += 7;
-
-   Bool_t load = kFALSE;
-   if (strchr(name, '<') && TClass::GetClassTypedefHash()) {
-      // We have a template which may have duplicates.
-      TString resolvedName(TClassEdit::ResolveTypedef(TClassEdit::ShortType(name,
-                                  TClassEdit::kDropStlDefault).c_str(), kTRUE));
-      if (resolvedName != name) {
-         TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName);
-         if (cl) {
-            load = kTRUE;
-         }
-      }
-      if (!load) {
-         TIter next(TClass::GetClassTypedefHash()->GetListForObject(resolvedName));
-         while (TClass::TNameMapNode* htmp =
-                static_cast<TClass::TNameMapNode*>(next())) {
-            if (resolvedName == htmp->String()) {
-               TClass* cl = TClass::GetClass(htmp->fOrigName, kFALSE);
-               if (cl) {
-                  // we found at least one equivalent.
-                  // let's force a reload
-                  load = kTRUE;
-                  break;
-               }
-            }
-         }
-      }
-   }
-   if (gROOT->GetListOfClasses()->GetEntries() == 0) {
-      // Nothing to find, let's not get yourself in trouble.
-      return 0;
-   }
-   return TClass::GetClass(name, load);
-}
-
 //______________________________________________________________________________
 TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 {
@@ -2735,213 +2690,160 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    // Returns 0 in case class is not found.
 
    if (!name || !name[0]) return 0;
-   R__LOCKGUARD(gInterpreterMutex);
-   if (!gROOT->GetListOfClasses())  return 0;
-   if (strstr(name, "(anonymous)")) return 0;
 
+   if (strstr(name, "(anonymous)")) return 0;
    if (strncmp(name,"class ",6)==0) name += 6;
    if (strncmp(name,"struct ",7)==0) name += 7;
+
+   R__LOCKGUARD(gInterpreterMutex);
+
+   if (!gROOT->GetListOfClasses())  return 0;
 
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
 
    // Early return to release the lock without having to execute the
-   // long-ish TSplitType
-   if (cl && cl->IsLoaded()) return cl;
+   // long-ish normalization.
+   if (cl) {
+      if (cl->IsLoaded() || cl->TestBit(kUnloading)) return cl;
+
+      // We could speed-up some of the search by adding (the equivalent of)
+      //
+      //    if (cl->GetState() == kInterpreter) return cl
+      //
+      // In this case, if a ROOT dictionary was available when the TClass
+      // was first request it would have been used and if a ROOT dictonary is
+      // loaded later on TClassTable::Add will take care of updating the TClass.
+      // So as far as ROOT dictionary are concerned, if the current TClass is
+      // in interpreted state, we are sure there is nothing to load.
+      //
+      // However (see TROOT::LoadClass), the TClass can also be loaded/provided
+      // by a user provided TClassGenerator.  We have no way of knowing whether
+      // those do (or even can) behave the same way as the ROOT dictionary and
+      // have the 'dictionary is now available for use' step informa the existing
+      // TClass that their dictionary is now available.
+
+      //we may pass here in case of a dummy class created by TVirtualStreamerInfo
+      load = kTRUE;
+   }
 
    // To avoid spurrious auto parsing, let's check if the name as-is is
    // known in the TClassTable.
-   VoidFuncPtr_t dict = TClassTable::GetDictNorm(name);
+   DictFuncPtr_t dict = TClassTable::GetDictNorm(name);
    if (dict) {
       // The name is normalized, so the result of the first search is
-      // authoritive.
-      if (!load) return 0;
+      // authoritative.
+      if (!cl && !load) return 0;
 
-      TClass *loadedcl = gROOT->LoadClass(name,silent);
-
-      if (loadedcl) return loadedcl;
+      TClass *loadedcl = (dict)();
+      if (loadedcl) {
+         loadedcl->PostLoadCheck();
+         return loadedcl;
+      }
 
       // We should really not fall through to here, but if we do, let's just
       // continue as before ...
    }
 
-   TClassEdit::TSplitType splitname( name, TClassEdit::kLong64 );
+   std::string normalizedName;
+   Bool_t checkTable = kFALSE;
 
    if (!cl) {
-      // Try the name where we strip out the STL default template arguments
-      std::string resolvedName;
-      splitname.ShortType(resolvedName, TClassEdit::kDropStlDefault);
-      if (resolvedName != name) {
-         cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
-      } else {
-         // Signal that the resolved name is identical.
-         resolvedName.clear();
-      }
-      if (!cl) {
-         // Attempt to resolve typedefs
-         TDataType* dataType = (TDataType*)gROOT->GetListOfTypes()->FindObject(name);
-         if (resolvedName.empty()) {
-            // Make it available to Long64_t resolution below.
-            resolvedName = name;
-         } else if (!dataType) {
-            dataType = (TDataType*)gROOT->GetListOfTypes()->FindObject(resolvedName.c_str());
-         }
-         if (dataType)
-            cl = (TClass*)gROOT->GetListOfClasses()->FindObject(dataType->GetFullTypeName());
-      }
-      if (!cl) {
-         // Try with Long64_t
-         resolvedName = TClassEdit::GetLong64_Name(resolvedName);
-         if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
-      }
-
-      if (!cl) {
-         // Try after autoparsing the template.
-         std::string::size_type posLess = resolvedName.find('<');
-         if (posLess != std::string::npos) {
-            if (gCling->AutoParse(resolvedName.substr(0, posLess).c_str())) {
-               return TClass::GetClass(resolvedName.c_str(), load, silent);
-            }
-         }
-      }
-   }
-
-   if (cl) {
-
-      if (cl->IsLoaded() || cl->TestBit(kUnloading)) return cl;
-
-      //we may pass here in case of a dummy class created by TVirtualStreamerInfo
-      load = kTRUE;
-
-      if (splitname.IsSTLCont()) {
-
-         TClassRef clref = cl;
-         std::string itypename;
-         gCling->GetInterpreterTypeName(name,itypename,kTRUE);
-         // Protect again possible library loading
-         if (clref->IsLoaded()) {
-            return clref;
-         }
-         if (itypename.length()) {
-            std::string altname( TClassEdit::ShortType(itypename.c_str(), TClassEdit::kDropStlDefault) );
-            if (altname != name && altname != cl->GetName()) {
-
-               // Remove the existing (soon to be invalid) TClass object to
-               // avoid an infinite recursion.
-               gROOT->GetListOfClasses()->Remove(cl);
-               TClass **persistentRef = cl->fPersistentRef.exchange(0);
-               TClass *newcl = GetClass(altname.c_str(),load);
-
-               // Pass along the persistentRef.  It would safe to change it here
-               // as we own the lock and nobody else can find the new TClass
-               // until we release the lock ... However, it was already captured
-               // by the TClassRef in the CollectionProxy so the ref must be
-               // deleted only after the ForceReload
-               persistentRef = newcl->fPersistentRef.exchange(persistentRef);
-               *(newcl->fPersistentRef) = newcl;
-               // Force a refresh
-               *persistentRef = 0;
-
-               // since the name are different but we got a TClass, we assume
-               // we need to replace and delete this class.
-               assert(newcl!=cl);
-               newcl->ForceReload(cl);
-
-               delete persistentRef;
-               return newcl;
-            }
-         }
-      }
-
-   } else {
-
-      if (!splitname.IsSTLCont()) {
-
-         // If the name is actually an STL container we prefer the
-         // short name rather than the true name (at least) in
-         // a first try!
-
-         TDataType *objType = gROOT->GetType(name, kTRUE);
-         if (objType) {
-            TString typdfName = objType->GetTypeName();
-            if (typdfName.Length() && typdfName != name) {
-               cl = TClass::GetClass(typdfName, load);
-               return cl;
-            }
-         }
-
-      } else {
-
-         cl = gROOT->FindSTLClass(name,kFALSE,silent);
+      TClassEdit::GetNormalizedName(normalizedName, name);
+      // Try the normalized name.
+      if (normalizedName != name) {
+         cl = (TClass*)gROOT->GetListOfClasses()->FindObject(normalizedName.c_str());
 
          if (cl) {
-            if (cl->IsLoaded()) return cl;
+            if (cl->IsLoaded() || cl->TestBit(kUnloading)) return cl;
 
             //we may pass here in case of a dummy class created by TVirtualStreamerInfo
-            //return TClass::GetClass(cl->GetName(),kTRUE);
-            return TClass::GetClass(cl->GetName(),kTRUE);
+            load = kTRUE;
          }
-
-      }
-
+         checkTable = kTRUE;
+     }
+   } else {
+      normalizedName = cl->GetName(); // Use the fact that all TClass names are normalized.
+      checkTable = load && (normalizedName != name);
    }
 
    if (!load) return 0;
 
-   TClass *loadedcl = 0;
-   if (cl) loadedcl = gROOT->LoadClass(cl->GetName(),silent);
-   else    loadedcl = gROOT->LoadClass(name,silent);
+// This assertion currently fails because of
+//   TClass *c1 = TClass::GetClass("basic_iostream<char,char_traits<char> >");
+//   TClass *c2 = TClass::GetClass("std::iostream");
+// where the TClassEdit normalized name of iostream is basic_iostream<char>
+// i.e missing the addition of the default parameter.  This is because TClingLookupHelper
+// uses only 'part' of TMetaUtils::GetNormalizedName.
 
+//   if (!cl) {
+//      TDataType* dataType = (TDataType*)gROOT->GetListOfTypes()->FindObject(name);
+//      TClass *altcl = dataType ? (TClass*)gROOT->GetListOfClasses()->FindObject(dataType->GetFullTypeName()) : 0;
+//      if (altcl && normalizedName != altcl->GetName())
+//         ::Fatal("TClass::GetClass","The existing name (%s) for %s is different from the normalized name: %s\n",
+//                 altcl->GetName(), name, normalizedName.c_str());
+//   }
+
+   TClass *loadedcl = 0;
+   if (checkTable) {
+      loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
+   } else {
+      if (gInterpreter->AutoLoad(normalizedName.c_str(),kTRUE)) {
+         loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
+      }
+   }
    if (loadedcl) return loadedcl;
 
-   if (cl) return cl;  // If we found the class but we already have a dummy class use it.
+   // See if the TClassGenerator can produce the TClass we need.
+   loadedcl = LoadClassCustom(normalizedName.c_str(),silent);
+   if (loadedcl) return loadedcl;
 
-   if (splitname.IsSTLCont()) {
+   // We have not been able to find a loaded TClass, return the Emulated
+   // TClass if we have one.
+   if (cl) return cl;
 
-      return gROOT->FindSTLClass(name,kTRUE,silent);
+   if (TClassEdit::IsSTLCont( normalizedName.c_str() )) {
 
-   } else if ( strncmp(name,"std::",5)==0 ) {
+      return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
+   }
 
-      return TClass::GetClass(name+5,load);
-
-   } else if ( strstr(name,"std::") != 0 ) {
-
-      // Let's try without the std:: in the template parameters.
-      TString rname( TClassEdit::ResolveTypedef(name,kTRUE) );
-      if (rname != name) {
-         return TClass::GetClass( rname, load );
+   // Check the interpreter only after autoparsing the template if any.
+   {
+      std::string::size_type posLess = normalizedName.find('<');
+      if (posLess != std::string::npos) {
+         gCling->AutoParse(normalizedName.substr(0, posLess).c_str());
       }
    }
 
-   if (!strcmp(name, "long long")||!strcmp(name,"unsigned long long"))
-      return 0; // reject long longs
-
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
-   if (gInterpreter->CheckClassInfo(name)) {
+   if (gInterpreter->CheckClassInfo(normalizedName.c_str())) {
+      // Get the normalized name based on the decl (currently the only way
+      // to get the part to add or drop the default arguments as requested by the user)
       std::string alternative;
-      gInterpreter->GetInterpreterTypeName(name,alternative,kTRUE);
+      gInterpreter->GetInterpreterTypeName(normalizedName.c_str(),alternative,kTRUE);
       const char *altname = alternative.c_str();
       if ( strncmp(altname,"std::",5)==0 ) {
-         // Don't add std::, we almost always remove it.
+         // For namespace (for example std::__1), GetInterpreterTypeName does
+         // not strip std::, so we must do it explicitly here.
          altname += 5;
       }
-      if (strcmp(altname,name)!=0) {
+      if (altname != normalizedName && strcmp(altname,name) != 0) {
          // altname now contains the full name of the class including a possible
          // namespace if there has been a using namespace statement.
+
+         // At least in the case C<string [2]> (normalized) vs C<string[2]> (altname)
+         // the TClassEdit normalization and the TMetaUtils normalization leads to
+         // two different space layout.  To avoid an infinite recursion, we also
+         // add the test on (altname != name)
+
          return GetClass(altname,load);
       }
-      TClass *ncl = gInterpreter->GenerateTClass(name, /* emulation = */ kFALSE, silent);
+      TClass *ncl = gInterpreter->GenerateTClass(normalizedName.c_str(), /* emulation = */ kFALSE, silent);
       if (!ncl->IsZombie()) {
          return ncl;
       }
       delete ncl;
    }
    return 0;
-}
-
-//______________________________________________________________________________
-THashTable *TClass::GetClassTypedefHash() {
-   // Return the class' names massaged with TClassEdit::ShortType with kDropStlDefault.
-   return fgClassTypedefHash;
 }
 
 //______________________________________________________________________________
@@ -2975,10 +2877,9 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
 
    if (!load) return 0;
 
-   VoidFuncPtr_t dict = TClassTable::GetDict(typeinfo);
+   DictFuncPtr_t dict = TClassTable::GetDict(typeinfo);
    if (dict) {
-      (dict)();
-      cl = GetClass(typeinfo,kFALSE);
+      cl = (dict)();
       if (cl) cl->PostLoadCheck();
       return cl;
    }
@@ -3000,7 +2901,7 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
       // Re-disable, we just meant to test
       gCling->SetClassAutoloading(0);
    }
-   if (autoload_old && gInterpreter->AutoLoad(typeinfo)) {
+   if (autoload_old && gInterpreter->AutoLoad(typeinfo,kTRUE)) {
       // Disable autoload to avoid potential infinite recursion
       gCling->SetClassAutoloading(0);
       cl = GetClass(typeinfo, load);
@@ -3081,7 +2982,7 @@ Bool_t TClass::GetClass(DeclId_t id, std::vector<TClass*> &classes)
 }
 
 //______________________________________________________________________________
-VoidFuncPtr_t  TClass::GetDict (const char *cname)
+DictFuncPtr_t  TClass::GetDict (const char *cname)
 {
    // Return a pointer to the dictionary loading function generated by
    // rootcint
@@ -3090,7 +2991,7 @@ VoidFuncPtr_t  TClass::GetDict (const char *cname)
 }
 
 //______________________________________________________________________________
-VoidFuncPtr_t  TClass::GetDict (const type_info& info)
+DictFuncPtr_t  TClass::GetDict (const type_info& info)
 {
    // Return a pointer to the dictionary loading function generated by
    // rootcint
@@ -5148,6 +5049,82 @@ TClass *TClass::Load(TBuffer &b)
 
    delete [] s;
    return cl;
+}
+
+//______________________________________________________________________________
+TClass *TClass::LoadClass(const char *requestedname, Bool_t silent)
+{
+   // Helper function used by TClass::GetClass().
+   // This function attempts to load the dictionary for 'classname'
+   // either from the TClassTable or from the list of generator.
+   // If silent is 'true', do not warn about missing dictionary for the class.
+   // (typically used for class that are used only for transient members)
+   //
+   // The 'requestedname' is expected to be already normalized.
+
+   // This function does not (and should not) attempt to check in the
+   // list of loaded classes or in the typedef.
+
+   TClass *result = LoadClassDefault(requestedname, silent);
+
+   if (result) return result;
+   else return LoadClassCustom(requestedname,silent);
+}
+
+//______________________________________________________________________________
+TClass *TClass::LoadClassDefault(const char *requestedname, Bool_t /* silent */)
+{
+   // Helper function used by TClass::GetClass().
+   // This function attempts to load the dictionary for 'classname' from
+   // the TClassTable or the autoloader.
+   // If silent is 'true', do not warn about missing dictionary for the class.
+   // (typically used for class that are used only for transient members)
+   //
+   // The 'requestedname' is expected to be already normalized.
+
+   // This function does not (and should not) attempt to check in the
+   // list of loaded classes or in the typedef.
+
+   DictFuncPtr_t dict = TClassTable::GetDictNorm(requestedname);
+
+   if (!dict) {
+      if (gInterpreter->AutoLoad(requestedname,kTRUE)) {
+         dict = TClassTable::GetDictNorm(requestedname);
+      }
+   }
+
+   if (dict) {
+      TClass *ncl = (dict)();
+      if (ncl) ncl->PostLoadCheck();
+      return ncl;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TClass *TClass::LoadClassCustom(const char *requestedname, Bool_t silent)
+{
+   // Helper function used by TClass::GetClass().
+   // This function attempts to load the dictionary for 'classname'
+   // from the list of generator.
+   // If silent is 'true', do not warn about missing dictionary for the class.
+   // (typically used for class that are used only for transient members)
+   //
+   // The 'requestedname' is expected to be already normalized.
+
+   // This function does not (and should not) attempt to check in the
+   // list of loaded classes or in the typedef.
+
+   TIter next(gROOT->GetListOfClassGenerators());
+   TClassGenerator *gen;
+   while ((gen = (TClassGenerator*) next())) {
+      TClass *cl = gen->GetClass(requestedname, kTRUE, silent);
+      if (cl) {
+         cl->PostLoadCheck();
+         return cl;
+      }
+   }
+   return 0;
 }
 
 //______________________________________________________________________________

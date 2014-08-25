@@ -809,6 +809,61 @@ namespace{
 }
 
 //______________________________________________________________________________
+bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
+                                           std::string &result)
+{
+   // Try hard to avoid looking up in the Cling database as this could enduce
+   // an unwanted autoparsing.
+   std::string inner;
+   result.clear();
+
+   unsigned long offset = 0;
+   if (strncmp(tname.c_str(), "const ", 6) == 0) {
+      offset = 6;
+   }
+   unsigned long end = tname.length();
+   while( end && (tname[end-1]=='&' || tname[end-1]=='*' || tname[end-1]==']') ) {
+      if ( tname[end-1]==']' ) {
+         --end;
+         while ( end && tname[end-1]!='[' ) --end;
+      }
+      --end;
+   }
+   inner = tname.substr(offset,end-offset);
+   //if (strchr(tname.c_str(),'[')!=0) fprintf(stderr,"DEBUG: checking on %s vs %s %lu %lu\n",tname.c_str(),inner.c_str(),offset,end);
+   if (gROOT->GetListOfClasses()->FindObject(inner.c_str())
+       || TClassTable::GetDictNorm(inner.c_str()) ) {
+      // This is a known class.
+      return true;
+   }
+
+   THashTable *typeTable = dynamic_cast<THashTable*>( gROOT->GetListOfTypes() );
+   TDataType *type = (TDataType *)typeTable->THashTable::FindObject( inner.c_str() );
+   if (type) {
+      // This is a raw type and an already loaded typedef.
+      if (offset) result = "const ";
+      result += type->GetFullTypeName();
+      if ( end != tname.length() ) {
+         result += tname.substr(end,tname.length()-end);
+      }
+      return true;
+   }
+   THashList *enumTable = dynamic_cast<THashList*>( gROOT->GetListOfEnums() );
+   if (enumTable->THashList::FindObject( inner.c_str() ) ) {
+      // This is a known enum.
+      return true;
+   }
+
+   if (gCling->GetClassSharedLibs( inner.c_str() )) {
+      // This is a class name.
+      return true;
+   }
+
+   return false;
+}
+
+
+//______________________________________________________________________________
 TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
@@ -923,7 +978,7 @@ TCling::TCling(const char *name, const char *title)
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
-   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt);
+   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck);
    TClassEdit::Init(fLookupHelper);
 
    // Initialize the cling interpreter interface.
@@ -1080,14 +1135,13 @@ bool TCling::LoadPCM(TString pcmFileName,
                // or interpreted; we now have more information available.
                // Make that available.
                if (existingCl->GetState() != TClass::kHasTClassInit) {
-                  VoidFuncPtr_t dict = gClassTable->GetDict(proto->GetName());
+                  DictFuncPtr_t dict = gClassTable->GetDict(proto->GetName());
                   if (!dict) {
                      ::Error("TCling::LoadPCM", "Inconsistent TClassTable for %s",
                              proto->GetName());
                   } else {
                      // This will replace the existing TClass.
-                     (*dict)();
-                     TClass *ncl = (TClass*)gROOT->GetListOfClasses()->FindObject(proto->GetName());
+                     TClass *ncl = (*dict)();
                      if (ncl) ncl->PostLoadCheck();
 
                   }
@@ -1423,13 +1477,11 @@ void TCling::RegisterModule(const char* modulename,
          TClass *oldcl = fClassesToUpdate.back().first;
          if (oldcl->GetState() != TClass::kHasTClassInit) {
             // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
-            TString classname = oldcl->GetName();
-            VoidFuncPtr_t dict = fClassesToUpdate.back().second;
+            DictFuncPtr_t dict = fClassesToUpdate.back().second;
             fClassesToUpdate.pop_back();
             // Calling func could manipulate the list so, let maintain the list
             // then call the dictionary function.
-            dict();
-            TClass *ncl = TClass::GetClass(classname, kFALSE, kTRUE);
+            TClass *ncl = dict();
             if (ncl) ncl->PostLoadCheck();
          } else {
             fClassesToUpdate.pop_back();
@@ -1459,7 +1511,7 @@ void TCling::RegisterModule(const char* modulename,
 }
 
 //______________________________________________________________________________
-void TCling::RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict)
+void TCling::RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict)
 {
    // Register classes that already existed prior to their dictionary loading
    // and that already had a ClassInfo (and thus would not be refresh via
@@ -1474,7 +1526,7 @@ void TCling::UnRegisterTClassUpdate(const TClass *oldcl)
    // If the dictionary is loaded, we can remove the class from the list
    // (otherwise the class might be loaded twice).
 
-   typedef std::vector<std::pair<TClass*,VoidFuncPtr_t> >::iterator iterator;
+   typedef std::vector<std::pair<TClass*,DictFuncPtr_t> >::iterator iterator;
    iterator stop = fClassesToUpdate.end();
    for(iterator i = fClassesToUpdate.begin();
        i != stop;
@@ -2875,8 +2927,9 @@ void TCling::CreateListOfBaseClasses(TClass *cl) const
    if (cl->fBase) {
       return;
    }
-   TClingClassInfo tci(fInterpreter, cl->GetName());
-   TClingBaseClassInfo t(fInterpreter, &tci);
+   TClingClassInfo *tci = (TClingClassInfo *)cl->GetClassInfo();
+   if (!tci) return;
+   TClingBaseClassInfo t(fInterpreter, tci);
    // This is put here since TClingBaseClassInfo can trigger a
    // TClass::ResetCaches, which deallocates cl->fBase
    cl->fBase = new TList;
@@ -3161,7 +3214,7 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
 
       if (0 == GenerateDictionary(classname.c_str(),includes)) {
          // 0 means success.
-         cl = gROOT->LoadClass(classnam.c_str(), silent);
+         cl = TClass::LoadClass(classnam.c_str(), silent);
          if (cl == 0) {
             Error("GenerateTClass","Even though the dictionary generation for %s seemed successfull we can't find the TClass bootstrap!",classname.c_str());
          }
@@ -4494,7 +4547,7 @@ TClass *TCling::GetClass(const std::type_info& typeinfo, Bool_t load) const
 }
 
 //______________________________________________________________________________
-Int_t TCling::AutoLoad(const type_info& typeinfo)
+Int_t TCling::AutoLoad(const type_info& typeinfo, Bool_t knowDictNotLoaded /* = kFALSE */)
 {
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
@@ -4518,21 +4571,27 @@ Int_t TCling::AutoLoad(const type_info& typeinfo)
    Int_t result = AutoLoad(demangled_name.c_str());
    if (result == 0) {
       demangled_name = TClassEdit::GetLong64_Name(demangled_name);
-      result = AutoLoad(demangled_name.c_str());
+      result = AutoLoad(demangled_name.c_str(), knowDictNotLoaded);
    }
 
    return result;
 }
 
 //______________________________________________________________________________
-Int_t TCling::AutoLoad(const char* cls)
+Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
 {
    // Load library containing the specified class. Returns 0 in case of error
    // and 1 in case if success.
 
-   if (gClassTable->GetDict(cls)) {
+   R__LOCKGUARD(gInterpreterMutex);
+
+   if (!knowDictNotLoaded && gClassTable->GetDictNorm(cls)) {
       // The library is alreday loaded as the class's dictionary is known.
       // Return success.
+      // Note: the name (cls) is expected to be normalized as it comes either
+      // from a callbacks (that can/should calculate the normalized name from the
+      // decl) or from TClass::GetClass (which does also calculate the normalized
+      // name).
       return 1;
    }
 
@@ -4540,7 +4599,7 @@ Int_t TCling::AutoLoad(const char* cls)
       Info("TCling::AutoLoad",
            "Trying to autoload for %s", cls);
    }
-   R__LOCKGUARD(gInterpreterMutex);
+
    Int_t status = 0;
    if (!gROOT || !gInterpreter || gROOT->TestBit(TObject::kInvalidObject)) {
       if (gDebug > 2) {
@@ -4753,13 +4812,11 @@ Int_t TCling::AutoParse(const char *cls)
          TClass *oldcl = fClassesToUpdate.back().first;
          if (oldcl->GetState() != TClass::kHasTClassInit) {
             // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
-            TString classname = oldcl->GetName();
-            VoidFuncPtr_t dict = fClassesToUpdate.back().second;
+            DictFuncPtr_t dict = fClassesToUpdate.back().second;
             fClassesToUpdate.pop_back();
             // Calling func could manipulate the list so, let maintain the list
             // then call the dictionary function.
-            dict();
-            TClass *ncl = TClass::GetClass(classname, kFALSE, kTRUE);
+            TClass *ncl = dict();
             if (ncl) ncl->PostLoadCheck();
          } else {
             fClassesToUpdate.pop_back();
@@ -4883,7 +4940,8 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
          return;
       }
       clang::QualType type( td->getTypeForDecl(), 0 );
-      ROOT::TMetaUtils::GetFullyQualifiedTypeName(name,type,*fInterpreter);
+
+      ROOT::TMetaUtils::GetNormalizedName(name, type, *fInterpreter, *fNormalizedCtxt);
    } else {
       name = ND->getNameAsString();
    }

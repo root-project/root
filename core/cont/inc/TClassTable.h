@@ -36,7 +36,7 @@ public:
    char            *fName;
    Version_t        fId;
    Int_t            fBits;
-   VoidFuncPtr_t    fDict;
+   DictFuncPtr_t    fDict;
    const type_info *fInfo;
    TProtoClass     *fProto;
    TClassRec       *fNext;
@@ -78,16 +78,16 @@ public:
    ~TClassTable();
 
    static void          Add(const char *cname, Version_t id,
-                            const type_info &info, VoidFuncPtr_t dict,
+                            const type_info &info, DictFuncPtr_t dict,
                             Int_t pragmabits);
    static void          Add(TProtoClass *protoClass);
    static char         *At(int index);
    int                  Classes();
    static Version_t     GetID(const char *cname);
    static Int_t         GetPragmaBits(const char *name);
-   static VoidFuncPtr_t GetDict(const char *cname);
-   static VoidFuncPtr_t GetDict(const type_info& info);
-   static VoidFuncPtr_t GetDictNorm(const char *cname);
+   static DictFuncPtr_t GetDict(const char *cname);
+   static DictFuncPtr_t GetDict(const type_info& info);
+   static DictFuncPtr_t GetDictNorm(const char *cname);
    static TProtoClass  *GetProto(const char *cname);
    static void          Init();
    static char         *Next();
@@ -102,7 +102,7 @@ public:
 R__EXTERN TClassTable *gClassTable;
 
 namespace ROOT {
-   extern void AddClass(const char *cname, Version_t id, VoidFuncPtr_t dict,
+   extern void AddClass(const char *cname, Version_t id, DictFuncPtr_t dict,
                         Int_t pragmabits);
    extern void RemoveClass(const char *cname);
 }

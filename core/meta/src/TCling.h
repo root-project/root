@@ -128,7 +128,7 @@ private: // Data Members
       }
    };
    std::set<TClass*> fModTClasses;
-   std::vector<std::pair<TClass*,VoidFuncPtr_t> > fClassesToUpdate;
+   std::vector<std::pair<TClass*,DictFuncPtr_t> > fClassesToUpdate;
    void* fAutoLoadCallBack;
    ULong64_t fTransactionCount; // Cling counter for commited or unloaded transactions which changed the AST.
    std::unordered_set<std::string> fSeenRootmapEntry;
@@ -148,8 +148,8 @@ public: // Public Interface
    void    AddIncludePath(const char* path);
    void   *GetAutoLoadCallBack() const { return fAutoLoadCallBack; }
    void   *SetAutoLoadCallBack(void* cb) { void* prev = fAutoLoadCallBack; fAutoLoadCallBack = cb; return prev; }
-   Int_t   AutoLoad(const char* cls);
-   Int_t   AutoLoad(const std::type_info& typeinfo);
+   Int_t   AutoLoad(const char *classname, Bool_t knowDictNotLoaded = kFALSE);
+   Int_t   AutoLoad(const std::type_info& typeinfo, Bool_t knowDictNotLoaded = kFALSE);
    Int_t   AutoParse(const char* cls);
    void*   LazyFunctionCreatorAutoload(const std::string& mangled_name);
    Bool_t  IsAutoLoadNamespaceCandidate(const char* name);
@@ -195,7 +195,7 @@ public: // Public Interface
                           void (*triggerFunc)(),
                           const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                           const char** classesHeaders);
-   void    RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict);
+   void    RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict);
    void    UnRegisterTClassUpdate(const TClass *oldcl);
 
    Int_t   SetClassSharedLibs(const char *cls, const char *libs);

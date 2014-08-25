@@ -136,13 +136,19 @@ public:
 
 //______________________________________________________________________________
 class TClingLookupHelper : public TClassEdit::TInterpreterLookupHelper {
+public:
+   typedef bool (*ExistingTypeCheck_t)(const std::string &tname, std::string &result);
+
 private:
    cling::Interpreter *fInterpreter;
    TNormalizedCtxt    *fNormalizedCtxt;
+   ExistingTypeCheck_t fExistingTypeCheck;
    const int          *fPDebug; // debug flag, might change at runtime thus *
    bool WantDiags() const { return fPDebug && *fPDebug > 5; }
+
 public:
    TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt,
+                      ExistingTypeCheck_t existingTypeCheck,
                       const int *pgDebug = 0);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
    virtual void GetPartiallyDesugaredName(std::string &nameLong);

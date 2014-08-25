@@ -342,7 +342,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 
    // For comparison purposes.
    TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
-   splitname1.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
+   splitname1.ShortType(fRequestedName, 0);
 
    TMetaUtils::GetNormalizedName( fNormalizedName, clang::QualType(requestedType,0), interpreter, normCtxt);
    if ( 0!=TMetaUtils::RemoveTemplateArgsFromName( fNormalizedName, nTemplateArgsToSkip) ){
@@ -370,7 +370,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 
    // For comparison purposes.
    TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
-   splitname1.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
+   splitname1.ShortType(fRequestedName, 0);
 
    TMetaUtils::GetNormalizedName( fNormalizedName, clang::QualType(requestedType,0), interpreter, normCtxt);
 
@@ -398,8 +398,8 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
    // const char *current = requestName;
    // Strips spaces and std::
    if (requestName && requestName[0]) {
-      TClassEdit::TSplitType splitname(requestName,(TClassEdit::EModType)(TClassEdit::kDropAllDefault | TClassEdit::kLong64 | TClassEdit::kDropStd));
-      splitname.ShortType( fRequestedName, TClassEdit::kDropAllDefault | TClassEdit::kLong64 | TClassEdit::kDropStd );
+      TClassEdit::TSplitType splitname(requestName,(TClassEdit::EModType)( TClassEdit::kLong64 | TClassEdit::kDropStd));
+      splitname.ShortType( fRequestedName, TClassEdit::kLong64 | TClassEdit::kDropStd );
 
       fNormalizedName = fRequestedName;
    } else {
@@ -412,8 +412,10 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 //______________________________________________________________________________
 TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter,
                                        TNormalizedCtxt &normCtxt,
+                                       ExistingTypeCheck_t existingTypeCheck,
                                        const int* pgDebug /*= 0*/):
-   fInterpreter(&interpreter),fNormalizedCtxt(&normCtxt), fPDebug(pgDebug)
+   fInterpreter(&interpreter),fNormalizedCtxt(&normCtxt),
+   fExistingTypeCheck(existingTypeCheck), fPDebug(pgDebug)
 {
 }
 
@@ -462,11 +464,27 @@ bool TClingLookupHelper::IsDeclaredScope(const std::string &base)
 bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname,
                                                                     std::string &result)
 {
+   // We assume that we have a simple type:
+   // [const] typename[*&][const]
+
+   // Try hard to avoid looking up in the Cling database as this could enduce
+   // an unwanted autoparsing.
+   if (fExistingTypeCheck && fExistingTypeCheck(tname,result)) {
+      return result.length() != 0;
+   }
+
+   // Since we already check via other means (TClassTable which is populated by
+   // the dictonary loading, and the gROOT list of classes and enums, which are
+   // populated via TProtoClass/Enum, we should be able to disable the autoloading
+   // ... which requires access to libCore or libCling ...
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    clang::QualType t = lh.findType(tname.c_str(), ToLHDS(WantDiags()));
    if (!t.isNull()) {
       clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetConfig(), true /* fully qualify */);
       if (!dest.isNull() && dest != t) {
+         // Since our input is not a template instance name, rather than going through the full
+         // TMetaUtils::GetNormalizedName, we just do the 'strip leading std' and fix
+         // white space.
          clang::PrintingPolicy policy(fInterpreter->getCI()->getASTContext().getPrintingPolicy());
          policy.SuppressTagKeyword = true; // Never get the class or struct keyword
          policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
@@ -477,8 +495,12 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
          result.clear();
          dest.getAsStringInternal(result, policy);
          // Strip the std::
-         if (strncmp(result.c_str(), "std::", 5) == 0) {
-            result = result.substr(5);
+         unsigned long offset = 0;
+         if (strncmp(result.c_str(), "const ", 6) == 0) {
+            offset = 6;
+         }
+         if (strncmp(result.c_str()+offset, "std::", 5) == 0) {
+            result.erase(offset,5);
          }
          if (result.length() > 2 && result.compare(result.length()-2,2," &")==0) {
             result[result.length()-2] = '&';
@@ -1460,7 +1482,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    if (!ClassInfo__HasMethod(decl,"Dictionary",interp) || IsTemplate(*decl))
    {
-      finalString << "   static void " << mappedname.c_str() << "_Dictionary();\n"
+      finalString << "   static TClass *" << mappedname.c_str() << "_Dictionary();\n"
                   << "   static void " << mappedname.c_str() << "_TClassManip(TClass*);\n";
 
 
@@ -1720,11 +1742,11 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    if (!ClassInfo__HasMethod(decl,"Dictionary",interp) || IsTemplate(*decl)) {
       finalString <<  "\n" << "   // Dictionary for non-ClassDef classes" << "\n"
-                  << "   static void " << mappedname << "_Dictionary() {\n"
+                  << "   static TClass *" << mappedname << "_Dictionary() {\n"
                   << "      TClass* theClass ="
                   << "::ROOT::GenerateInitInstanceLocal((const " << csymbol << "*)0x0)->GetClass();\n"
                   << "      " << mappedname << "_TClassManip(theClass);\n";
-
+      finalString << "   return theClass;\n";
       finalString << "   }\n\n";
 
       // Now manipulate tclass in order to percolate the properties expressed as
@@ -3522,7 +3544,8 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    std::string normalizedNameStep1;
    normalizedType.getAsStringInternal(normalizedNameStep1,policy);
 
-   // Still remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
+   // Still remove the std:: and default template argument for STL container and
+   // normalize the location and amount of white spaces.
    TClassEdit::TSplitType splitname(normalizedNameStep1.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
    splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
 

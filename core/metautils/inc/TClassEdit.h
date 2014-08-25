@@ -83,7 +83,8 @@ namespace TClassEdit {
       kDropAllDefault   = 1<<7, /* Drop default template parameter even in non STL classes */
       kLong64           = 1<<8, /* replace all 'long long' with Long64_t. */
       kDropStd          = 1<<9, /* Drop any std:: */
-      kKeepOuterConst   = 1<<10 /* Make sure to keep the const keyword even outside the template parameters */
+      kKeepOuterConst   = 1<<10,/* Make sure to keep the const keyword even outside the template parameters */
+      kResolveTypedef   = 1<<11 /* Strip all typedef except Double32_t and co. */
    };
 
    enum ESTLType {

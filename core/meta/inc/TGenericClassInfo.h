@@ -42,7 +42,7 @@ namespace ROOT {
       const char                 *fClassName;
       const char                 *fDeclFileName;
       Int_t                       fDeclFileLine;
-      VoidFuncPtr_t               fDictionary;
+      DictFuncPtr_t               fDictionary;
       const type_info            &fInfo;
       const char                 *fImplFileName;
       Int_t                       fImplFileLine;
@@ -70,19 +70,19 @@ namespace ROOT {
       TGenericClassInfo(const char *fullClassname,
                        const char *declFileName, Int_t declFileLine,
                        const type_info &info, const TInitBehavior *action,
-                       VoidFuncPtr_t dictionary,
+                       DictFuncPtr_t dictionary,
                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                        const char *declFileName, Int_t declFileLine,
                        const type_info &info, const TInitBehavior *action,
-                       VoidFuncPtr_t dictionary,
+                       DictFuncPtr_t dictionary,
                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                         const char *declFileName, Int_t declFileLine,
                         const TInitBehavior *action,
-                        VoidFuncPtr_t dictionary, Int_t pragmabits);
+                        DictFuncPtr_t dictionary, Int_t pragmabits);
 
       void Init(Int_t pragmabits);
       ~TGenericClassInfo();

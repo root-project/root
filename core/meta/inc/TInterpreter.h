@@ -99,8 +99,8 @@ public:
    virtual void     AddIncludePath(const char *path) = 0;
    virtual void    *SetAutoLoadCallBack(void* /*cb*/) { return 0; }
    virtual void    *GetAutoLoadCallBack() const { return 0; }
-   virtual Int_t    AutoLoad(const char *classname) = 0;
-   virtual Int_t    AutoLoad(const std::type_info& typeinfo) = 0;
+   virtual Int_t    AutoLoad(const char *classname, Bool_t knowDictNotLoaded = kFALSE) = 0;
+   virtual Int_t    AutoLoad(const std::type_info& typeinfo, Bool_t knowDictNotLoaded = kFALSE) = 0;
    virtual Int_t    AutoParse(const char* cls) = 0;
    virtual void     ClearFileBusy() = 0;
    virtual void     ClearStack() = 0; // Delete existing temporary values
@@ -141,7 +141,7 @@ public:
                                    void (* /*triggerFunc*/)(),
                                    const FwdDeclArgsToKeepCollection_t& fwdDeclArgsToKeep,
                                    const char** classesHeaders) = 0;
-   virtual void     RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict) = 0;
+   virtual void     RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict) = 0;
    virtual void     UnRegisterTClassUpdate(const TClass *oldcl) = 0;
    virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0;
    virtual void     SetGetline(const char*(*getlineFunc)(const char* prompt),
