@@ -29,7 +29,7 @@ ostream& operator << (ostream& out, ROOT::Fit::BinData& bd)
    const unsigned int npoints( bd.NPoints() );
    for ( unsigned int i = 0; i < npoints; ++i )
    {
-      double value, error;
+      double value = 0, error = 0;
       const double *x = bd.GetPoint(i, value, error);
       for ( unsigned int j = 0; j < ndim; ++j )
       {
@@ -49,7 +49,7 @@ int findBin(ROOT::Fit::BinData& bd, const double *x)
 
    for ( unsigned int i = 0; i < npoints; ++i )
    {
-      double value1, error1;
+      double value1 = 0, error1 = 0;
       const double *x1 = bd.GetPoint(i, value1, error1);
       bool thisIsIt = true;
       for ( unsigned int j = 0; j < ndim; ++j )
@@ -75,12 +75,12 @@ bool operator ==(ROOT::Fit::BinData& bd1, ROOT::Fit::BinData& bd2)
 
    for ( unsigned int i = 0; i < npoints && equals; ++i )
    {
-      double value1, error1;
+      double value1 = 0, error1 = 0 ;
       const double *x1 = bd1.GetPoint(i, value1, error1);
 
       int bin = findBin(bd2, x1);
 
-      double value2 = 0, error2;
+      double value2 = 0, error2 = 0;
       const double *x2 = bd2.GetPoint(bin, value2, error2);
 
       equals &= ( value1 == value2 );
