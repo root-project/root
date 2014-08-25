@@ -705,7 +705,7 @@ static void R__FindTrailing(std::string &full,  /*modified*/
    }
    if ( hasconst || (*starloc)=='*' || (*starloc)=='&' || (*starloc)==']' ) {
       bool isArray = ( (*starloc)==']' );
-      while( (*(starloc-1))=='*' || (*(starloc-1))=='&' || (*(starloc-1))=='t' || isArray) {
+      while( t<=(starloc-1) && ((*(starloc-1))=='*' || (*(starloc-1))=='&' || (*(starloc-1))=='t' || isArray)) {
          if (isArray) {
             starloc--;
             isArray = ! ( (*starloc)=='[' );
