@@ -473,6 +473,10 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
       return result.length() != 0;
    }
 
+   // Since we already check via other means (TClassTable which is populated by
+   // the dictonary loading, and the gROOT list of classes and enums, which are
+   // populated via TProtoClass/Enum, we should be able to disable the autoloading
+   // ... which requires access to libCore or libCling ...
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    clang::QualType t = lh.findType(tname.c_str(), ToLHDS(WantDiags()));
    if (!t.isNull()) {
