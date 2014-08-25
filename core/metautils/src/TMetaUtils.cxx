@@ -412,8 +412,10 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 //______________________________________________________________________________
 TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter,
                                        TNormalizedCtxt &normCtxt,
+                                       ExistingTypeCheck_t existingTypeCheck,
                                        const int* pgDebug /*= 0*/):
-   fInterpreter(&interpreter),fNormalizedCtxt(&normCtxt), fPDebug(pgDebug)
+   fInterpreter(&interpreter),fNormalizedCtxt(&normCtxt),
+   fExistingTypeCheck(existingTypeCheck), fPDebug(pgDebug)
 {
 }
 
@@ -462,6 +464,15 @@ bool TClingLookupHelper::IsDeclaredScope(const std::string &base)
 bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname,
                                                                     std::string &result)
 {
+   // We assume that we have a simple type:
+   // [const] typename[*&][const]
+
+   // Try hard to avoid looking up in the Cling database as this could enduce
+   // an unwanted autoparsing.
+   if (fExistingTypeCheck && fExistingTypeCheck(tname,result)) {
+      return result.length() != 0;
+   }
+
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    clang::QualType t = lh.findType(tname.c_str(), ToLHDS(WantDiags()));
    if (!t.isNull()) {

@@ -809,6 +809,56 @@ namespace{
 }
 
 //______________________________________________________________________________
+bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
+                                           std::string &result)
+{
+   // Try hard to avoid looking up in the Cling database as this could enduce
+   // an unwanted autoparsing.
+   std::string inner;
+   result.clear();
+
+   unsigned long offset = 0;
+   if (strncmp(tname.c_str(), "const ", 6) == 0) {
+      offset = 6;
+   }
+   unsigned long end = tname.length();
+   while( end && (tname[end-1]=='&' || tname[end-1]=='*' || tname[end-1]==']') ) {
+      if ( tname[end-1]==']' ) {
+         --end;
+         while ( end && tname[end-1]!='[' ) --end;
+      }
+      --end;
+   }
+   inner = tname.substr(offset,end-offset);
+   //if (strchr(tname.c_str(),'[')!=0) fprintf(stderr,"DEBUG: checking on %s vs %s %lu %lu\n",tname.c_str(),inner.c_str(),offset,end);
+   if (gROOT->GetListOfClasses()->FindObject(inner.c_str())
+       || TClassTable::GetDictNorm(inner.c_str()) ) {
+      // This is a known class.
+      return true;
+   }
+
+   THashTable *typeTable = dynamic_cast<THashTable*>( gROOT->GetListOfTypes() );
+   TDataType *type = (TDataType *)typeTable->THashTable::FindObject( inner.c_str() );
+   if (type) {
+      // This is a raw type and an already loaded typedef.
+      if (offset) result = "const ";
+      result += type->GetFullTypeName();
+      if ( end != tname.length() ) {
+         result += tname.substr(end,tname.length()-end);
+      }
+      return true;
+   }
+   THashList *enumTable = dynamic_cast<THashList*>( gROOT->GetListOfEnums() );
+   if (enumTable->THashList::FindObject( inner.c_str() ) ) {
+      // This is a known enum.
+      return true;
+   }
+
+   return false;
+}
+
+
+//______________________________________________________________________________
 TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
@@ -923,7 +973,7 @@ TCling::TCling(const char *name, const char *title)
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
-   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt);
+   fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck);
    TClassEdit::Init(fLookupHelper);
 
    // Initialize the cling interpreter interface.
