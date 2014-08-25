@@ -2775,9 +2775,12 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 // i.e missing the addition of the default parameter.  This is because TClingLookupHelper
 // uses only 'part' of TMetaUtils::GetNormalizedName.
 
-//   if (cl && normalizedName != cl->GetName() ) {
-//      ::Fatal("TClass::GetClass","The existing name (%s) for %s is different from the normalized name: %s\n",
-//            cl->GetName(), name, normalizedName.c_str());
+//   if (!cl) {
+//      TDataType* dataType = (TDataType*)gROOT->GetListOfTypes()->FindObject(name);
+//      TClass *altcl = dataType ? (TClass*)gROOT->GetListOfClasses()->FindObject(dataType->GetFullTypeName()) : 0;
+//      if (altcl && normalizedName != altcl->GetName())
+//         ::Fatal("TClass::GetClass","The existing name (%s) for %s is different from the normalized name: %s\n",
+//                 altcl->GetName(), name, normalizedName.c_str());
 //   }
 
    TClass *loadedcl = 0;
