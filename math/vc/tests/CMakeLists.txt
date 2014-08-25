@@ -1,4 +1,5 @@
 include(AddFileDependencies)
+cmake_policy(SET CMP0042 OLD)
 
 add_custom_target(build_tests ALL VERBATIM)
 
