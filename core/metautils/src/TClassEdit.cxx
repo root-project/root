@@ -305,6 +305,12 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
 
    if (!fElements[0].empty()) {answ += fElements[0]; answ +="<";}
 
+#if 0
+   // This code is no longer use, the moral equivalent would be to get
+   // the 'fixed' number of argument the user told us to ignore and drop those.
+   // However, the name we get here might be (usually) normalized enough that
+   // this is not necessary (at the very least nothing break in roottest with
+   // the aforementioned new code).
    if (mode & kDropAllDefault) {
       int nargNonDefault = 0;
       std::string nonDefName = answ;
@@ -328,6 +334,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       if (nargNonDefault < narg)
          narg = nargNonDefault;
    }
+#endif
 
    { for (int i=1;i<narg-1; i++) { answ += fElements[i]; answ+=",";} }
    if (narg>1) { answ += fElements[narg-1]; }
