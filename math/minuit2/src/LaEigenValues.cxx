@@ -30,7 +30,9 @@ LAVector eigenvalues(const LASymMatrix& mat) {
          tmp(i*nrow + j) = mat(i,j);
       }
 
-   assert(mneigen(tmp.Data(), nrow, nrow, work.size(), work.Data(), 1.e-6) == 0);
+   int info = mneigen(tmp.Data(), nrow, nrow, work.size(), work.Data(), 1.e-6);
+   (void)info;
+   assert(info == 0);
    
    LAVector result(nrow);
    for(unsigned int i = 0; i < nrow; i++) result(i) = work(i);
