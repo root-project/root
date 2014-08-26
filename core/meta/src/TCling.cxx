@@ -4772,36 +4772,39 @@ Int_t TCling::AutoParse(const char *cls)
               "Starting autoparse for %s\n", apKey);
       }
       if (fLookedUpClasses.insert(normNameHash).second) {
-         auto const &hNamesPtrs = fClassesHeadersMap[normNameHash];
-         if (gDebug > 1) {
-            Info("TCling::AutoParse",
-                 "We can proceed for %s. We have %s headers.\n", apKey, std::to_string(hNamesPtrs.size()).c_str());
-         }
-         for (auto & hName : hNamesPtrs) {
-            if (fParsedPayloadsAddresses.count(hName) == 1) continue;
-            if (0 != fPayloads.count(normNameHash)) {
-               if (gDebug > 0) {
-                  Info("AutoParse",
-                       "Parsing full payload for %s", apKey);
-               }
-               auto cRes = ExecAutoParse(hName, kFALSE, fInterpreter);
-               if (cRes != cling::Interpreter::kSuccess) {
-                  if (hName[0] == '\n')
-                     Error("AutoParse", "Error parsing payload code for class %s with content:\n%s", apKey, hName);
-               } else {
-                  fParsedPayloadsAddresses.insert(hName);
-                  nHheadersParsed++;
-               }
-            } else if (!IsLoaded(hName)) {
-               if (gDebug > 0) {
-                  Info("AutoParse",
-                       "Parsing single header %s", hName);
-               }
-               auto cRes = ExecAutoParse(hName, kTRUE, fInterpreter);
-               if (cRes != cling::Interpreter::kSuccess) {
-                  Error("AutoParse", "Error parsing headerfile %s for class %s.", hName, apKey);
-               } else {
-                  nHheadersParsed++;
+         auto const &iter = fClassesHeadersMap.find(normNameHash);
+         if (iter != fClassesHeadersMap.end()) {
+            auto const &hNamesPtrs = fClassesHeadersMap[normNameHash];
+            if (gDebug > 1) {
+               Info("TCling::AutoParse",
+                    "We can proceed for %s. We have %s headers.\n", apKey, std::to_string(hNamesPtrs.size()).c_str());
+            }
+            for (auto & hName : hNamesPtrs) {
+               if (fParsedPayloadsAddresses.count(hName) == 1) continue;
+               if (0 != fPayloads.count(normNameHash)) {
+                  if (gDebug > 0) {
+                     Info("AutoParse",
+                          "Parsing full payload for %s", apKey);
+                  }
+                  auto cRes = ExecAutoParse(hName, kFALSE, fInterpreter);
+                  if (cRes != cling::Interpreter::kSuccess) {
+                     if (hName[0] == '\n')
+                        Error("AutoParse", "Error parsing payload code for class %s with content:\n%s", apKey, hName);
+                  } else {
+                     fParsedPayloadsAddresses.insert(hName);
+                     nHheadersParsed++;
+                  }
+               } else if (!IsLoaded(hName)) {
+                  if (gDebug > 0) {
+                     Info("AutoParse",
+                          "Parsing single header %s", hName);
+                  }
+                  auto cRes = ExecAutoParse(hName, kTRUE, fInterpreter);
+                  if (cRes != cling::Interpreter::kSuccess) {
+                     Error("AutoParse", "Error parsing headerfile %s for class %s.", hName, apKey);
+                  } else {
+                     nHheadersParsed++;
+                  }
                }
             }
          }
