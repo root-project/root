@@ -4763,6 +4763,7 @@ Int_t TCling::AutoParse(const char *cls)
    autoparseKeys.emplace_back(cls);
 
    for (const auto & apKeyStr : autoparseKeys) {
+      if (apKeyStr.empty()) continue;
       const char *apKey = apKeyStr.c_str();
       std::size_t normNameHash(fStringHashFunction(apKey));
       // If the class was not looked up
