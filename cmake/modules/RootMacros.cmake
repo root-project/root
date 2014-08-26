@@ -115,11 +115,10 @@ function(ROOTTEST_ADD_AUTOMACROS)
 
   foreach(am ${automacros}) 
     get_filename_component(auto_macro_filename ${am} NAME)
-    get_filename_component(auto_macro_refname  ${am} NAME_WE)
-    set(auto_macro_refname ${auto_macro_refname}.ref)
+    get_filename_component(auto_macro_name  ${am} NAME_WE)
 
-    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${auto_macro_refname})
-      set(outref OUTREF ${auto_macro_refname})
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${auto_macro_name}.ref)
+      set(outref OUTREF ${auto_macro_name}.ref)
     else()
       set(outref "")
     endif()
@@ -133,7 +132,7 @@ function(ROOTTEST_ADD_AUTOMACROS)
     endforeach()
 
     ROOTTEST_ADD_TEST(${targetname}-auto
-                      MACRO ${auto_macro_filename}
+                      MACRO ${auto_macro_filename}${${auto_macro_name}-suffix}
                       ${outref}
                       ${arg_wf}
                       DEPENDS ${auto_depends})

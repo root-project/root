@@ -4,5 +4,8 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(classes classes.h SELECTION classes_selectio
 configure_file(exectypeDefAutoloading.rootmap . COPYONLY)
 configure_file(aRootmap.rootmap . COPYONLY)
 
+#--With ACLiC---------------------------------------------------------
+set(execTypeinfo-suffix +)
+
 ROOTTEST_ADD_AUTOMACROS(DEPENDS ${GENERATE_REFLEX_TEST})
 ROOTTEST_ADD_TESTDIRS()
