@@ -6,7 +6,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) $(TUTORIALSLOGS) $(TUTORIALSSTUBS) \
   $(filter-out pt_%,$(wildcard *.root *.gif *.png)) *.pdf *.ps *.svg *.py *.C *.xml *.dtd files htmldoc aliesd \
   *.tmp xpd-temp xpd-tutorial person.dtd image foam physics graphs proof mlp math tree splot spectrum matrix hist thread g4root fit gui net geom sql graphics xml gl io quadp eve aliesd files fft pythia unuran cont roofit rf*.txt rf*.tex rf*.dot MyPdf*.cxx MyPdf*.h RooGenPdfClass.* \
-  *.rs Roo*.h *.dot roostats Roo*.cxx mc */*.log.err
+  *.rs Roo*.h *.dot roostats Roo*.cxx mc */*.log.err code.root
 
 # Set the list of target to make while testing.
 
