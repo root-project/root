@@ -162,6 +162,40 @@ TFileThreadLocal gFile;
 
 //////////////////////////////////////////////////////////////////////////
 //
+// Wrapper class around the replacement for the gPerfStats pointer.
+//
+//////////////////////////////////////////////////////////////////////////
+class TPerfStats;
+struct TPerfStatsThreadLocal
+{
+   operator TPerfStats*() { return TPerfStats::CurrentPerfStats(); }
+   operator bool() { return 0!=TPerfStats::CurrentPerfStats(); }
+   
+   // Emulate the pointer behavior
+   TPerfStats*  operator->() { return TPerfStats::CurrentPerfStats(); }
+   TPerfStats*& operator=(TPerfStats *other) { return (TPerfStats::CurrentPerfStats() = other); }
+   bool operator!=(const TPerfStats *other) const { return (TPerfStats::CurrentPerfStats() != other); }
+   bool operator!=(TPerfStats *other) const { return (TPerfStats::CurrentPerfStats() != other); }
+   bool operator==(const TPerfStats *other) const { return (TPerfStats::CurrentPerfStats() == other); }
+   bool operator==(TPerfStats *other) const { return (TPerfStats::CurrentPerfStats() == other); }
+};
+
+// Pretty printing routine for CINT
+int G__ateval(TPerfStatsThreadLocal &) {
+   TPerfStats *dir  = TPerfStats::CurrentPerfStats();
+   if (dir) {
+      printf("(class TPerfStats*)%p\n",(void*)dir);
+   } else {
+      printf("(class TPerfStats*)0x0\n",(void*)dir);
+   }
+   return 1;
+}
+
+TPerfStatsThreadLocal gPerfStats;
+
+
+//////////////////////////////////////////////////////////////////////////
+//
 // Wrapper class around the replacement for the gInterpreter pointer.
 //
 //////////////////////////////////////////////////////////////////////////

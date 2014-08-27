@@ -242,6 +242,8 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tr
    file->Seek(pos);
    TFileCacheRead *pf = file->GetCacheRead(tree);
    if (pf) {
+      TVirtualPerfStats* temp = gPerfStats;
+      if (tree->GetPerfStats()) gPerfStats = tree->GetPerfStats();
       Int_t st = pf->ReadBuffer(buffer,pos,len);
       if (st < 0) {
          return 1;
@@ -260,12 +262,17 @@ Int_t TBasket::LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tr
             return 1;
          }
       }
+      gPerfStats = temp;
       // fOffset might have been changed via TFileCacheRead::ReadBuffer(), reset it
       file->SetOffset(pos + len);
    } else {
+      TVirtualPerfStats* temp = gPerfStats;
+      if (tree->GetPerfStats() != 0) gPerfStats = tree->GetPerfStats();
       if (file->ReadBuffer(buffer,len)) {
+         gPerfStats = temp;
          return 1; //error while reading
       }
+      else gPerfStats = temp;
    }
 
    fBufferRef->SetReadMode();
@@ -469,6 +476,8 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    }
    
    if (pf) {
+      TVirtualPerfStats* temp = gPerfStats;
+      if (fBranch->GetTree()->GetPerfStats() != 0) gPerfStats = fBranch->GetTree()->GetPerfStats();
       Int_t st = pf->ReadBuffer(readBufferRef->Buffer(),pos,len);
       if (st < 0) {
          return 1;
@@ -486,11 +495,16 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
             return 1;
          }
       }
+      gPerfStats = temp;
    } else {
       // Read from the file and unstream the header information.
+      TVirtualPerfStats* temp = gPerfStats;
+      if (fBranch->GetTree()->GetPerfStats() != 0) gPerfStats = fBranch->GetTree()->GetPerfStats();
       if (file->ReadBuffer(readBufferRef->Buffer(),pos,len)) {
+         gPerfStats = temp;
          return 1;
       }
+      else gPerfStats = temp;
    }
    Streamer(*readBufferRef);
    if (IsZombie()) {
@@ -576,9 +590,12 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
          return 1;
       }
       len = fObjlen+fKeylen;
+      TVirtualPerfStats* temp = gPerfStats;
+      if (fBranch->GetTree()->GetPerfStats() != 0) gPerfStats = fBranch->GetTree()->GetPerfStats();
       if (R__unlikely(gPerfStats)) {
          gPerfStats->UnzipEvent(fBranch->GetTree(),pos,start,nintot,fObjlen);
       }
+      gPerfStats = temp;
    } else {
       // Nothing is compressed - copy over wholesale.
       memcpy(rawUncompressedBuffer, rawCompressedBuffer, len);

@@ -89,6 +89,7 @@ class TStreamerInfo;
 class TTreeCache;
 class TTreeCloner;
 class TFileMergeInfo;
+class TVirtualPerfStats;
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -135,6 +136,7 @@ protected:
    TArrayI        fIndex;             //  Index of sorted values
    TVirtualIndex *fTreeIndex;         //  Pointer to the tree Index (if any)
    TList         *fFriends;           //  pointer to list of friend elements
+   TVirtualPerfStats *fPerfStats;      //! pointer to the current perf stats object
    TList         *fUserInfo;          //  pointer to a list of user objects associated to this Tree
    TVirtualTreePlayer *fPlayer;       //! Pointer to current Tree player
    TList         *fClones;            //! List of cloned trees which share our addresses
@@ -415,6 +417,7 @@ public:
    TObject                *GetNotify() const { return fNotify; }
    TVirtualTreePlayer     *GetPlayer();
    virtual Int_t           GetPacketSize() const { return fPacketSize; }
+   virtual TVirtualPerfStats *GetPerfStats() const { return fPerfStats; }
    virtual Long64_t        GetReadEntry()  const { return fReadEntry; }
    virtual Long64_t        GetReadEvent()  const { return fReadEntry; }
    virtual Int_t           GetScanField()  const { return fScanField; }
@@ -537,9 +540,10 @@ public:
    virtual void            SetNotify(TObject* obj) { fNotify = obj; }
    virtual void            SetObject(const char* name, const char* title);
    virtual void            SetParallelUnzip(Bool_t opt=kTRUE, Float_t RelSize=-1);
+   virtual void            SetPerfStats(TVirtualPerfStats* perf);
    virtual void            SetScanField(Int_t n = 50) { fScanField = n; } // *MENU*
    virtual void            SetTimerInterval(Int_t msec = 333) { fTimerInterval=msec; }
-   virtual void            SetTreeIndex(TVirtualIndex*index);
+   virtual void            SetTreeIndex(TVirtualIndex* index);
    virtual void            SetWeight(Double_t w = 1, Option_t* option = "");
    virtual void            SetUpdate(Int_t freq = 0) { fUpdate = freq; }
    virtual void            Show(Long64_t entry = -1, Int_t lenmax = 20);
