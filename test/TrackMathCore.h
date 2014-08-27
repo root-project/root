@@ -48,7 +48,7 @@ public:
       double * itr = begin;
       fPos.SetCoordinates(itr, itr+3); itr +=3;
       fVec.SetCoordinates(itr,itr+4); itr+=4;
-      assert(itr == end);
+      R__ASSERT(itr == end);
    }
 
    enum {  kSize =        3 + 4    };
