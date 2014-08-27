@@ -4777,7 +4777,7 @@ Int_t TCling::AutoParse(const char *cls)
             auto const &hNamesPtrs = fClassesHeadersMap[normNameHash];
             if (gDebug > 1) {
                Info("TCling::AutoParse",
-                    "We can proceed for %s. We have %s headers.\n", apKey, std::to_string(hNamesPtrs.size()).c_str());
+                    "We can proceed for %s. We have %s headers.", apKey, std::to_string(hNamesPtrs.size()).c_str());
             }
             for (auto & hName : hNamesPtrs) {
                if (fParsedPayloadsAddresses.count(hName) == 1) continue;
