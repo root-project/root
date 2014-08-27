@@ -317,7 +317,7 @@ function(ROOT_LINKER_LIBRARY library)
     #---create a custom pre-link command that runs bindexplib
     add_custom_command(TARGET ${library} PRE_LINK
                        COMMAND bindexplib
-                       ARGS -o ${library}.def ${libprefix}${library} ${lib_objs}
+                       ARGS -o ${library}.def $<TARGET_FILE_NAME:${library}> ${lib_objs}
                        DEPENDS bindexplib )
   else()
     add_library( ${library} ${ARG_TYPE} ${lib_srcs})

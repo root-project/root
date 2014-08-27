@@ -50,7 +50,7 @@ ostream& operator << (ostream& out, ROOT::Fit::BinData& bd)
    const unsigned int npoints( bd.NPoints() );
    for ( unsigned int i = 0; i < npoints; ++i )
    {
-      double value, error;
+      double value = 0, error = 0;
       const double *x = bd.GetPoint(i, value, error);
       for ( unsigned int j = 0; j < ndim; ++j )
       {
