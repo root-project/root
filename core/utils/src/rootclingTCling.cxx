@@ -27,7 +27,7 @@ std::string gPCMFilename;
 std::vector<std::string> gClassesToStore;
 std::vector<std::string> gTypedefsToStore;
 std::vector<std::string> gEnumsToStore;
-std::vector<std::string> gAncestorPCMsNames;
+std::vector<std::string> gAncestorPCMNames;
 
 extern "C"
 const char ** *TROOT__GetExtraInterpreterArgs()
@@ -74,7 +74,7 @@ void AddEnumToROOTFile(const char *enumname)
 extern "C"
 void AddAncestorPCMROOTFile(const char *pcmName)
 {
-   gAncestorPCMsNames.emplace_back(pcmName);
+   gAncestorPCMNames.emplace_back(pcmName);
 }
 
 extern "C"
@@ -170,7 +170,7 @@ bool CloseStreamerInfoROOTFile()
    typedefs.Write("__Typedefs", TObject::kSingleKey);
    enums.Write("__Enums", TObject::kSingleKey);
 
-   dictFile.WriteObjectAny(&gAncestorPCMsNames, "std::vector<std::string>", "__AncestorPCMsNames");
+   dictFile.WriteObjectAny(&gAncestorPCMNames, "std::vector<std::string>", "__AncestorPCMNames");
 
 
    return true;
