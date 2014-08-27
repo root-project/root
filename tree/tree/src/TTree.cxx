@@ -362,6 +362,7 @@
 #include "TEmulatedCollectionProxy.h"
 #include "TVirtualFitter.h"
 #include "TVirtualIndex.h"
+#include "TVirtualPerfStats.h"
 #include "TVirtualPad.h"
 #include "TBranchSTL.h"
 #include "TSchemaRuleSet.h"
@@ -648,6 +649,7 @@ TTree::TTree()
 , fIndex()
 , fTreeIndex(0)
 , fFriends(0)
+, fPerfStats(0)
 , fUserInfo(0)
 , fPlayer(0)
 , fClones(0)
@@ -719,6 +721,7 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fIndex()
 , fTreeIndex(0)
 , fFriends(0)
+, fPerfStats(0)
 , fUserInfo(0)
 , fPlayer(0)
 , fClones(0)
@@ -8002,6 +8005,11 @@ void TTree::SetParallelUnzip(Bool_t opt, Float_t RelSize)
 
 }
 
+//______________________________________________________________________________
+void TTree::SetPerfStats(TVirtualPerfStats *perf)
+{
+   fPerfStats = perf;
+}
 //______________________________________________________________________________
 void TTree::SetTreeIndex(TVirtualIndex* index)
 {

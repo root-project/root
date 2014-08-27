@@ -134,6 +134,7 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
 
    fName   = name;
    fTree   = T;
+   T->SetPerfStats(this);
    fNleaves= T->GetListOfLeaves()->GetEntries();
    fFile   = T->GetCurrentFile();
    fGraphIO  = new TGraphErrors(0);
