@@ -1,11 +1,14 @@
 
 Processing execCheckNaming.C...
 Check TClassEdit::ResolveTypedef
-@const std::string&@ --> @const string&@
+@const Something_t&@ --> @const std::Something&@
+@const std::Something&@ --> @const std::Something&@
 @const string&@ --> @const string&@
 @A<B>[2]@ --> @A<B>[2]@
 @X<A<B>[2]>@ --> @X<A<B>[2]>@
 Check TClassEdit::ShortType
+@const std::Something&@ --> @const std::Something&@
+@const std::Something  &@ --> @const std::Something&@
 @const std::string&@ --> @const std::string&@
 @const std::string &@ --> @const std::string&@
 @const std::string    &@ --> @const std::string&@

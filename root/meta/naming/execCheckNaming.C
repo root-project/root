@@ -8,6 +8,11 @@ during the development, testing and production phase of ROOT6.
 
 #include <algorithm>
 
+namespace std {
+   class Something {};
+   typedef Something Something_t;
+}
+
 void checkTypedef(const std::string& name)
 {
    std::cout << "@" << name << "@ --> @" << TClassEdit::ResolveTypedef(name.c_str()) << "@" <<  std::endl;
@@ -27,13 +32,16 @@ int execCheckNaming(){
   // However, (at least for now), it is allowed to remove some spaces
   // but does not have to remove them (this is the job of ShortType
   // or the name normalization routine). 
-  const std::vector<const char*> tceTypedefNames={"const std::string&",
+  const std::vector<const char*> tceTypedefNames={"const Something_t&",
+                                           "const std::Something&",
                                            "const string&",
                                            "A<B>[2]",
                                            "X<A<B>[2]>"};
 
 
-  const std::vector<const char*> tceNames={"const std::string&",
+  const std::vector<const char*> tceNames={"const std::Something&",
+                                           "const std::Something  &",
+                                           "const std::string&",
                                            "const std::string &",
                                            "const std::string    &",
                                            "A<B>[2]",
