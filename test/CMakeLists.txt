@@ -44,8 +44,8 @@ ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree Hist Net)
 ROOT_ADD_TEST(test-event COMMAND eventexe)
 
 #---hsimple------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(hsimple hsimple.cxx LIBRARIES RIO Tree Hist)
-ROOT_ADD_TEST(test-hsimple COMMAND hsimple)
+#ROOT_EXECUTABLE(hsimple hsimple.cxx LIBRARIES RIO Tree Hist)
+#ROOT_ADD_TEST(test-hsimple COMMAND hsimple)
 
 #--minexam-------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(minexam minexam.cxx LIBRARIES Minuit)
