@@ -392,5 +392,6 @@ function(ROOTTEST_ADD_OLDTEST)
   ROOTTEST_TARGETNAME_FROM_FILE(testdirname .)
   ROOTTEST_ADD_TEST(${testdirname}
                     COMMAND make
-                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR} )
+                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+                    DEPENDS roottest-root-io-event)
 endfunction()
