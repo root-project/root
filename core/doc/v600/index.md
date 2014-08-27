@@ -145,6 +145,9 @@ version 5 and rootcling in version 6:
     to public. In particular this means that code compiled as part of
     the dictionary no longer has access to protected and private members
     of a class (except where allowed by the C++ standard).
+    In particular, this means that the code used for read rules (#pragma read)
+    can no longer access private member unless they have been mentioned as a
+    target of the rule.
 -   rootcling no longer considers a friend declaration to be a
     declaration for the friended function. In particular this means that
     rootcling may now issue:
