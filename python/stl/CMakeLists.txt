@@ -3,5 +3,6 @@ if(ROOT_python_FOUND)
                     MACRO PyROOT_stltests.py
                     PRECMD root -b -q -l -e .L\ StlTypes.C+
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                    OUTREF PyROOT_stltests.ref)
+                    # OUTREF PyROOT_stltests.ref
+                    )
 endif()

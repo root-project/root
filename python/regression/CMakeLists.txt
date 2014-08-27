@@ -11,6 +11,7 @@ if(ROOT_python_FOUND)
                                          -e .L\ ULongLong.C+
                                          -e .L\ Till.C+
                                          -e .L\ CoralAttributeList.C+
-                    OUTREF PyROOT_regressiontests.ref)
+                    # OUTREF PyROOT_regressiontests.ref
+                    )
 
 endif()
