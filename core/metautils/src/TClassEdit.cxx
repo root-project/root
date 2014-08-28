@@ -353,11 +353,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    }
    // tail is not a type name, just [2], &, * etc.
    if (tailLoc) answ += fElements[tailLoc];
-   if (answ == "std::pair<unsigned int,std::string,>") {
-      fprintf(stderr,"For %s got %s\n",fName,answ.c_str());
-   }
 }
-
 
 //______________________________________________________________________________
 ROOT::ESTLType TClassEdit::STLKind(const char *type, size_t len)
