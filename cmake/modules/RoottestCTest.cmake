@@ -8,7 +8,7 @@
 
 # Set the CTest build name.
 set(CTEST_BUILD_NAME ${ROOT_ARCHITECTURE}-${CMAKE_BUILD_TYPE})
-message("-- Set CTest build name to: ${CTEST_BUILD_NAME}")
+#message("-- Set CTest build name to: ${CTEST_BUILD_NAME}")
 
 # Enable the creation and submission of dashboards.
 include(CTest)

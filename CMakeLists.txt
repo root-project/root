@@ -30,7 +30,6 @@ endif()
 # Check, if ROOTSYS is set.
 if(NOT DEFINED ROOTSYS)
   set(ROOTSYS $ENV{ROOTSYS})
-
   if(NOT DEFINED ROOTSYS)
     message(FATAL_ERROR "ROOTSYS is not set!")
   endif()
@@ -40,18 +39,16 @@ endif()
 # If ROOT_SOURCE_DIR is not set, search for an installation.
 if(DEFINED ROOT_SOURCE_DIR)
   find_package(ROOT REQUIRED)
-
   get_filename_component(ROOT_INCLUDE_DIR "${ROOTSYS}/include" ABSOLUTE)
   set(ROOT_INCLUDE_DIRS ${ROOT_INCLUDE_DIR})
   set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
   set(ROOT_genreflex_CMD ${ROOTSYS}/bin/genreflex)
   set(ROOT_rootcint_CMD ${ROOTSYS}/bin/rootcint)
   set(ROOT_rootcling_CMD rootcling)
-
 else()
-
   find_package(ROOT REQUIRED COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore
                              HINTS ${ROOTSYS}/etc/cmake)
+  set(CMAKE_CXX_FLAGS ${ROOT_CXX_FLAGS})
 endif()
 
 get_filename_component(ROOT_BINARY_DIR  "${ROOTSYS}/bin" ABSOLUTE)
