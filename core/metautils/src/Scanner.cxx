@@ -709,6 +709,10 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       return true;
    }
 
+   // Do not select unnamed records.
+   if (!recordDecl->getIdentifier())
+      return true;
+
    if (fScanType == EScanType::kOnePCM && ROOT::TMetaUtils::IsStdClass(*recordDecl))
       return true;
 
