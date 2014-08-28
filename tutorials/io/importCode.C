@@ -1,7 +1,7 @@
 #include "TFile.h"
 #include "TSystem.h"
 #include "TMacro.h"
-      
+
 void importdir(const char *dirname) {
   //Example of script showing how to create a ROOT file with subdirectories.
   //The script scans a given directory tree and recreates the
@@ -9,7 +9,7 @@ void importdir(const char *dirname) {
   //All source files of type .h,cxx,c,dat,py are imported as TMacro objects
   //see also other tutorial readCode.C
   //Author: Rene Brun
-         
+
    char *slash = (char*)strrchr(dirname,'/');
    char *locdir;
    if (slash) locdir = slash+1;
@@ -50,6 +50,6 @@ void importdir(const char *dirname) {
 }
 void importCode() {
    TFile *f = new TFile("code.root","recreate");
-   importdir("../../../root"); //change the directory as you like
+   importdir("../tutorials"); //change the directory as you like
    delete f;
 }
