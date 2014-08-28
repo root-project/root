@@ -680,6 +680,12 @@ ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
 endif
 
+ifeq ($(USECONFIG),FALSE)
+all: tutorials/hsimple.root
+tutorials/hsimple.root: rootexecs
+	(cd tutorials; ! ../bin/root -l -q -b -n -x hsimple.C)
+endif
+
 all:            rootexecs postbin
 	@echo " "
 	@echo "   ============================================================"
@@ -1191,6 +1197,8 @@ install: all
 	   $(INSTALLDATA) build/misc/root-help.el $(DESTDIR)$(ELISPDIR); \
 	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDATA) $(ROOT_SRCDIR)/geom/gdml/*.py $(DESTDIR)$(LIBDIR); \
+	   (cd $(DESTDIR)$(TUTDIR); \
+	      LD_LIBRARY_PATH=$(DESTDIR)$(LIBDIR) ! $(DESTDIR)$(BINDIR)/root -l -b -q -n -x hsimple.C)
 	fi
 
 uninstall:
