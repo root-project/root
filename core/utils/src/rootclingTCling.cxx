@@ -56,7 +56,9 @@ void InitializeStreamerInfoROOTFile(const char *filename)
 extern "C"
 void AddStreamerInfoToROOTFile(const char *normName)
 {
-   gClassesToStore.emplace_back(normName);
+   // Filter unnamed and (anonymous) classes.
+   if (normName && normName[0] && normName[0] != '(')
+      gClassesToStore.emplace_back(normName);
 }
 
 extern "C"
