@@ -1188,13 +1188,8 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
 
    int len = strlen(tname);
    string input(tname);
-#ifdef R__SSTREAM
    // This is the modern implementation
    stringstream answ;
-#else
-   // This is deprecated in the C++ standard
-   strstream answ;
-#endif
 
    int prev = 0;
    if (len > 5 && strncmp(tname,"std::",5) == 0) {
@@ -1242,15 +1237,8 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
    } else {
       answ << last;
    }
-#ifndef R__SSTREAM
-   // Deprecated case
-   answ << ends;
-   std::string ret = answ.str();
-   answ.freeze(false);
-   return ret;
-#else
+
    return answ.str();
-#endif
 
 }
 
