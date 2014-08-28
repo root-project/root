@@ -14,7 +14,7 @@ filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: static class TClass *Class();
 (compiled)     (NA):(NA) 0 public: static const char *Class_Name();
 (compiled)     (NA):(NA) 0 public: static Version_t Class_Version();
-(compiled)     (NA):(NA) 0 public: static void Dictionary();
+(compiled)     (NA):(NA) 0 public: static class TClass *Dictionary();
 (compiled)     (NA):(NA) 0 public: virtual class TClass *IsA() const;
 (compiled)     (NA):(NA) 0 public: virtual void ShowMembers(class TMemberInspector &insp) const;
 (compiled)     (NA):(NA) 0 public: virtual void Streamer(class TBuffer &);
@@ -38,7 +38,7 @@ filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: static class TClass *Class();
 (compiled)     (NA):(NA) 0 public: static const char *Class_Name();
 (compiled)     (NA):(NA) 0 public: static Version_t Class_Version();
-(compiled)     (NA):(NA) 0 public: static void Dictionary();
+(compiled)     (NA):(NA) 0 public: static class TClass *Dictionary();
 (compiled)     (NA):(NA) 0 public: virtual class TClass *IsA() const;
 (compiled)     (NA):(NA) 0 public: virtual void ShowMembers(class TMemberInspector &insp) const;
 (compiled)     (NA):(NA) 0 public: virtual void Streamer(class TBuffer &);
@@ -62,7 +62,7 @@ filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: static class TClass *Class();
 (compiled)     (NA):(NA) 0 public: static const char *Class_Name();
 (compiled)     (NA):(NA) 0 public: static Version_t Class_Version();
-(compiled)     (NA):(NA) 0 public: static void Dictionary();
+(compiled)     (NA):(NA) 0 public: static class TClass *Dictionary();
 (compiled)     (NA):(NA) 0 public: virtual class TClass *IsA() const;
 (compiled)     (NA):(NA) 0 public: virtual void ShowMembers(class TMemberInspector &insp) const;
 (compiled)     (NA):(NA) 0 public: virtual void Streamer(class TBuffer &);
