@@ -418,6 +418,12 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in
                ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/RootUseFile.cmake.in
                ${CMAKE_BINARY_DIR}/ROOTUseFile.cmake @ONLY)
+
+#---Compiler flags (because user apps are a bit dependent on them...)----------------------------------------
+set(ROOT_COMPILER_FLAG_HINTS "#
+set(ROOT_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\")
+set(ROOT_EXE_LINKER_FLAGS \"${CMAKE_EXE_LINKER_FLAGS}\")")
+
 #---To be used from the binary tree--------------------------------------------------------------------------
 get_property(buildtree_include_dirs GLOBAL PROPERTY ROOT_INCLUDE_DIRS)
 list(REMOVE_DUPLICATES buildtree_include_dirs)
@@ -548,6 +554,12 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
               
 install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
+
+if(NOT gnuinstall)
+  install(FILES ${CMAKE_BINARY_DIR}/config/Makefile.comp
+                ${CMAKE_BINARY_DIR}/config/Makefile.config
+                DESTINATION config)
+endif()
 
 endfunction()
 RootConfigure()

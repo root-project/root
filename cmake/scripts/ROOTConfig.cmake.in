@@ -51,6 +51,12 @@ endif()
 #
 get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
+#-----------------------------------------------------------------------
+# Provide *recommended* compiler flags used by this build of ROOT
+# Don't mess with the actual CMAKE_CXX_FLAGS!!!
+# It's up to the user what to do with these
+@ROOT_COMPILER_FLAG_HINTS@
+
 #----------------------------------------------------------------------------
 # Configure the path to the ROOT headers, using a relative path if possible.
 # This is only known at CMake time, so we expand a CMake supplied variable.

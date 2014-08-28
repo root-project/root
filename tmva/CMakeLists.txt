@@ -65,8 +65,13 @@ install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
                             REGEX "LinkDef" EXCLUDE )
 set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
-#if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
-#  install(DIRECTORY test DESTINATION ${CMAKE_INSTALL_DOCDIR}/tmva PATTERN ".svn" EXCLUDE)
-#endif()
+if(NOT gnuinstall)
+  install(DIRECTORY test DESTINATION tmva 
+  FILES_MATCHING PATTERN "*.C" 
+                 PATTERN "*.gif" 
+                 PATTERN "*.png" 
+                 PATTERN "README"
+                 PATTERN "data" EXCLUDE)
+endif()
 
 
