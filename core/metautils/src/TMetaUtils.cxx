@@ -4668,6 +4668,10 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromRcdDecl(const clang::RecordDec
    if (ROOT::TMetaUtils::IsStdClass(recordDecl) && !acceptStl)
       return 0;
 
+   // Do not fwd declare unnamed decls.
+   if (!recordDecl.getIdentifier())
+      return 0;
+
    // We may need to fwd declare the arguments of the template
    std::string argsFwdDecl;
 
@@ -4730,7 +4734,16 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTypeDefNameDecl(const clang::T
 
    std::string buffer = tdnDecl.getNameAsString();
    std::string underlyingName;
-   auto underlyingType = tdnDecl.getUnderlyingType();
+   auto underlyingType = tdnDecl.getUnderlyingType().getCanonicalType();
+   if (const clang::TagType* TT
+       = llvm::dyn_cast<clang::TagType>(underlyingType.getTypePtr())) {
+      if (clang::NamedDecl* ND = TT->getDecl()) {
+         if (!ND->getIdentifier()) {
+            // No fwd decl for unnamed underlying entities.
+            return 0;
+         }
+      }
+   }
 
    TNormalizedCtxt nCtxt(interpreter.getLookupHelper());
    ROOT::TMetaUtils::GetNormalizedName(underlyingName,
