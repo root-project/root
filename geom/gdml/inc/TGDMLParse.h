@@ -102,7 +102,7 @@ public:
 class TGDMLParse : public TObject {
 public:
 
-   const char* fWorldName; //top volume of geometry name
+   TString fWorldName; 
    TGeoVolume* fWorld; //top volume of geometry
    int fVolID;   //volume ID, incremented as assigned.
    int fFILENO; //Holds which level of file the parser is at
@@ -111,7 +111,7 @@ public:
    const char* fCurrentFile; //current file name being parsed
 
    TGDMLParse() { //constructor
-      fWorldName = 0;
+      fWorldName = "";
       fWorld = 0;
       fVolID = 0;
       fFILENO = 0;
@@ -148,9 +148,11 @@ private:
    XMLNodePointer_t  SclProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
 
    //'materials' section
-   XMLNodePointer_t  IsoProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn);
-   XMLNodePointer_t  EleProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn, Bool_t hasIsotopes);
-   XMLNodePointer_t  MatProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr, int z);
+  XMLNodePointer_t  IsoProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn);
+  XMLNodePointer_t  EleProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn, Bool_t hasIsotopes, Bool_t hasIsotopesExtended);
+  //XMLNodePointer_t  EleProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLNodePointer_t parentn);
+  XMLNodePointer_t  MatProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr,  int z);
+  //XMLNodePointer_t  MatProcess(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
 
    //'solids' section
    XMLNodePointer_t  BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr, int num);
