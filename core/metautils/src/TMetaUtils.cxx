@@ -509,6 +509,10 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
             result[result.length()-2] = '&';
             result.erase(result.length()-1);
          }
+         if (result.length() > 2 && result.compare(result.length()-2,2," *")==0) {
+            result[result.length()-2] = '&';
+            result.erase(result.length()-1);
+         }
          return true;
       }
    }
