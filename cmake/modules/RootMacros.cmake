@@ -84,25 +84,9 @@ endfunction(ROOTTEST_TARGETNAME_FROM_FILE)
 #
 #-------------------------------------------------------------------------------
 function(ROOTTEST_ADD_AUTOMACROS)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDS;WILLFAIL" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDS;WILLFAIL;EXCLUDE" ${ARGN})
 
-  file(GLOB macros ${CMAKE_CURRENT_SOURCE_DIR}/run*.C)
-  list(APPEND automacros ${macros})
-
-  file(GLOB macros ${CMAKE_CURRENT_SOURCE_DIR}/run*.cxx)
-  list(APPEND automacros ${macros})
-
-  file(GLOB macros ${CMAKE_CURRENT_SOURCE_DIR}/assert*.C)
-  list(APPEND automacros ${macros})
-
-  file(GLOB macros ${CMAKE_CURRENT_SOURCE_DIR}/assert*.cxx)
-  list(APPEND automacros ${macros})
-
-  file(GLOB macros ${CMAKE_CURRENT_SOURCE_DIR}/exec*.C)
-  list(APPEND automacros ${macros})
-
-  file(GLOB macros ${CMAKE_CURRENT_SOURCE_DIR}/exec*.cxx)
-  list(APPEND automacros ${macros})
+  file(GLOB automacros run*.C run*.cxx assert*.C assert*.cxx exec*.C exec*.cxx)
 
   foreach(dep ${ARG_DEPENDS})
     if(${dep} MATCHES "[.]C" OR ${dep} MATCHES "[.]cxx" OR ${dep} MATCHES "[.]h")
@@ -112,11 +96,11 @@ function(ROOTTEST_ADD_AUTOMACROS)
       list(APPEND auto_depends ${dep})
     endif()
   endforeach()
-
-  foreach(am ${automacros}) 
+  
+  foreach(am ${automacros})
     get_filename_component(auto_macro_filename ${am} NAME)
     get_filename_component(auto_macro_name  ${am} NAME_WE)
-
+    
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${auto_macro_name}.ref)
       set(outref OUTREF ${auto_macro_name}.ref)
     else()
@@ -126,16 +110,26 @@ function(ROOTTEST_ADD_AUTOMACROS)
     ROOTTEST_TARGETNAME_FROM_FILE(targetname ${auto_macro_filename})
 
     foreach(wf ${ARG_WILLFAIL})
-      if(${wf} STREQUAL ${targetname}-auto)
+      if(${auto_macro_name} MATCHES ${wf})
         set(arg_wf WILLFAIL)
       endif()
     endforeach()
+    
+    set(selected 1)
+    foreach(excl ${ARG_EXCLUDE})
+      if(${auto_macro_name} MATCHES ${excl})
+        set(selected 0)
+        break()
+      endif()
+    endforeach()
 
-    ROOTTEST_ADD_TEST(${targetname}-auto
-                      MACRO ${auto_macro_filename}${${auto_macro_name}-suffix}
-                      ${outref}
-                      ${arg_wf}
-                      DEPENDS ${auto_depends})
+    if(selected)
+      ROOTTEST_ADD_TEST(${targetname}-auto
+                        MACRO ${auto_macro_filename}${${auto_macro_name}-suffix}
+                        ${outref}
+                        ${arg_wf}
+                        DEPENDS ${auto_depends})
+    endif()
   endforeach()
 
 endfunction(ROOTTEST_ADD_AUTOMACROS)

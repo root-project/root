@@ -1,0 +1,2 @@
+Error in <TStreamerInfo::Build>: The class "Event" is interpreted and for its the data member "fObjects", we do not have a dictionary for the collection "list<Track>", we will not be able to read or write this data member.
+Error in <TStreamerInfo::Build>: The class "Event" is interpreted and for its the data member "fPointers", we do not have a dictionary for the collection "list<Track*>", we will not be able to read or write this data member.
