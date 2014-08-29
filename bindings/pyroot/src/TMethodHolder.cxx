@@ -20,6 +20,7 @@
 
 // Standard
 #include <assert.h>
+#include <string.h>
 #include <exception>
 #include <string>
 
@@ -361,14 +362,14 @@ Int_t PyROOT::TMethodHolder::GetPriority()
       if ( ! (Bool_t)arg ) {
       // happens for builtin types (and namespaces, but those can never be an
       // argument), NOT for unknown classes as that concept no longer exists
-         if ( aname == "void*" || aname == "void**" )
+         if ( strstr( aname.c_str(), "void*" ) )
          // TODO: figure out in general all void* converters
             priority -= 100;  // void*/void** shouldn't be too greedy
-         else if ( aname == "float" )
+         else if ( strstr( aname.c_str(), "float" ) )
             priority -= 30;   // double preferred over float (no float in python)
-         else if ( aname == "long double" )
+         else if ( strstr( aname.c_str(), "long double" ) )
             priority -= 15;   // id, but better than float
-         else if ( aname == "double" )
+         else if ( strstr( aname.c_str(), "double" ) )
             priority -= 10;   // char, int, long preferred over double
 
       } else if ( ! arg.IsComplete() ) {
