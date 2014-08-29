@@ -55,7 +55,7 @@ public:
    // returns the entry number (or -1 once the end of the tree
    // is reached).
    class Iterator_t:
-      public std::iterator<std::input_iterator_tag, Long64_t, Long64_t> {
+      public std::iterator<std::input_iterator_tag, const Long64_t, Long64_t> {
    private:
       Long64_t fEntry; // Entry number of the tree referenced by this iterator; -1 is invalid.
       TTreeReader* fReader; // The reader we select the entries on.
@@ -104,7 +104,7 @@ public:
          return *this;
       }
 
-      Long64_t operator*() {
+      const Long64_t& operator*() {
          // Set the entry number in the reader and return it.
          if (IsValid()) {
             // If we cannot access that entry, mark the iterator invalid.
@@ -115,7 +115,13 @@ public:
          // There really is no data in this iterator; return the number.
          return fEntry;
       }
+
+      const Long64_t& operator*() const {
+         return **const_cast<Iterator_t*>(this);
+      }
    };
+
+   typedef Iterator_t iterator;
 
    enum EEntryStatus {
       kEntryValid = 0, // data read okay
