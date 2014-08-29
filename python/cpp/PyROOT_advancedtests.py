@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 02/18/14
+# Last: 08/29/14
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -25,6 +25,7 @@ __all__ = [
    'Cpp11PointerContainers',
    'Cpp12NamespaceLazyFunctions',
    'Cpp13OverloadedNewDelete',
+   'Cpp14CopyConstructorOrdering',
 ]
 
 gROOT.LoadMacro( "AdvancedCpp.C+" )
@@ -525,6 +526,52 @@ class Cpp13OverloadedNewDelete( MyTestCase ):
       self.assertEqual( cppyy.gbl.PR_StaticStuff(int).describe(), 'StaticStuff::s_data -> 123')
       del m; gc.collect()
       self.assertEqual( cppyy.gbl.PR_StaticStuff(int).describe(), 'StaticStuff::s_data -> 321')
+
+
+### Copy constructor ordering determines overload ============================
+class Cpp14CopyConstructorOrdering( MyTestCase ):
+   def test1NoUserCCtor( self ):
+      """Overload with implicit copy ctor"""
+
+      import cppyy
+      m1 = cppyy.gbl.MyCopyingClass1()
+      m2 = cppyy.gbl.MyCopyingClass1(2, 2)
+
+      self.assertEqual( float(m1), -2. )
+      self.assertEqual( float(m2),  4. )
+
+      m3 = cppyy.gbl.MyCopyingClass1( m2 )
+      self.assertEqual( m3.m_d1, m2.m_d1 )
+      self.assertEqual( m3.m_d2, m2.m_d2 )
+
+   def test2NoUserCCtor( self ):
+      """Overload with user provided cctor second"""
+
+      import cppyy
+      m1 = cppyy.gbl.MyCopyingClass2()
+      m2 = cppyy.gbl.MyCopyingClass2(2, 2)
+
+      self.assertEqual( float(m1), -2. )
+      self.assertEqual( float(m2),  4. )
+
+      m3 = cppyy.gbl.MyCopyingClass2( m2 )
+      self.assertEqual( m3.m_d1, m2.m_d1 )
+      self.assertEqual( m3.m_d2, m2.m_d2 )
+
+   def test3NoUserCCtor( self ):
+      """Overload with user provided cctor first"""
+
+      import cppyy
+      m1 = cppyy.gbl.MyCopyingClass3()
+      m2 = cppyy.gbl.MyCopyingClass3(2, 2)
+
+      self.assertEqual( float(m1), -2. )
+      self.assertEqual( float(m2),  4. )
+
+      m3 = cppyy.gbl.MyCopyingClass3( m2 )
+      self.assertEqual( m3.m_d1, m2.m_d1 )
+      self.assertEqual( m3.m_d2, m2.m_d2 )
+
 
 ## actual test run
 if __name__ == '__main__':

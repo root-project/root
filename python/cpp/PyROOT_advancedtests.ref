@@ -24,6 +24,9 @@ Assignment operator on pointers ... ok
 Lazy lookup of late created functions ... ok
 Lazy lookup of late created overloaded functions ... ok
 Use of custom new/delete ... ok
+Overload with implicit copy ctor ... ok
+Overload with user provided cctor second ... ok
+Overload with user provided cctor first ... ok
 
 ----------------------------------------------------------------------
 

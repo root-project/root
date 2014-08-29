@@ -2,7 +2,7 @@
   File: roottest/python/cpp/AdvancedCpp.C
   Author: WLavrijsen@lbl.gov
   Created: 06/04/05
-  Last: 07/24/14
+  Last: 08/29/14
 */
 
 #include "TString.h"
@@ -253,3 +253,34 @@ namespace NS_PR_Lumi {
    TString PR_Lumi2 = "NS::2 C++ global lumi";
    TString PR_GetLumi2() { return PR_Lumi2; }
 }
+
+
+// copy constructor orderings
+class MyCopyingClass1 {
+public:
+   MyCopyingClass1() : m_d1(-1.), m_d2(-1) {}
+   MyCopyingClass1(const double d1, const double d2 = 42.) : m_d1(d1), m_d2(d2) {}
+// no user-provided cctor
+   operator double() { return m_d1+m_d2; }
+   double m_d1, m_d2;
+};
+
+class MyCopyingClass2 {
+public:
+   MyCopyingClass2() : m_d1(-1.), m_d2(-1) {}
+// cctor after ctor with default
+   MyCopyingClass2(const double d1, const double d2 = 42.) : m_d1(d1), m_d2(d2) {}
+   MyCopyingClass2(const MyCopyingClass2& s) : m_d1(s.m_d1), m_d2(s.m_d2) {}
+   operator double() { return m_d1+m_d2; }
+   double m_d1, m_d2;
+};
+
+class MyCopyingClass3 {
+public:
+   MyCopyingClass3() : m_d1(-1.), m_d2(-1) {}
+// cctor before ctor with default
+   MyCopyingClass3(const MyCopyingClass3& s) : m_d1(s.m_d1), m_d2(s.m_d2) {}
+   MyCopyingClass3(const double d1, const double d2 = 42.) : m_d1(d1), m_d2(d2) {}
+   operator double() { return m_d1+m_d2; }
+   double m_d1, m_d2;
+};
