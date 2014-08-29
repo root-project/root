@@ -27,7 +27,6 @@
 ClassImp(TVirtualMC)
 
 TMCThreadLocal TVirtualMC* TVirtualMC::fgMC=0;
-TMCThreadLocal TVirtualMC* gMC;
 
 //_____________________________________________________________________________
 TVirtualMC::TVirtualMC(const char *name, const char *title,
@@ -45,7 +44,6 @@ TVirtualMC::TVirtualMC(const char *name, const char *title,
       Warning("TVirtualMC","Cannot initialise twice MonteCarlo class");
    } else {
       fgMC=this;
-      gMC=this;
 
       fApplication = TVirtualMCApplication::Instance();
 
@@ -78,7 +76,6 @@ TVirtualMC::~TVirtualMC()
    // Destructor
    //
    fgMC=0;
-   gMC=0;
 }
 
 //
