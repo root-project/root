@@ -682,7 +682,7 @@ endif
 
 ifeq ($(USECONFIG),FALSE)
 all: tutorials/hsimple.root
-tutorials/hsimple.root: rootexecs
+tutorials/hsimple.root: rootexecs postbin
 	(cd tutorials; ! ../bin/root -l -q -b -n -x hsimple.C)
 endif
 
