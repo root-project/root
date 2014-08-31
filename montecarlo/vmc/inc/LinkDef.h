@@ -5,7 +5,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ global gMC;
+//#pragma link C++ global gMC;
 
 #pragma link C++ enum PDG_t;
 #pragma link C++ enum TMCProcess;
