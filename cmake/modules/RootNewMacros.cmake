@@ -520,6 +520,16 @@ function(ROOT_EXECUTABLE executable)
     else()
       install(TARGETS ${executable} EXPORT ${CMAKE_PROJECT_NAME}Exports RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
     endif()
+    if(WIN32 AND CMAKE_GENERATOR MATCHES "Visual Studio")
+      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${executable}.pdb
+              CONFIGURATIONS Debug
+              DESTINATION ${CMAKE_INSTALL_BINDIR}
+              COMPONENT applications)
+      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${executable}.pdb
+              CONFIGURATIONS RelWithDebInfo
+              DESTINATION ${CMAKE_INSTALL_BINDIR}
+              COMPONENT applications)
+    endif()
   endif()
 endfunction()
 
