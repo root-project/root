@@ -69,13 +69,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---Get the list of header files-------------------------
   set(headerfiles)
   foreach(fp ${ARG_UNPARSED_ARGUMENTS})
-    file(GLOB files ${fp})
-    if(files)
+    if(${fp} MATCHES "[*?]") # Is this header a globbing expression?
+      file(GLOB files ${fp})
       foreach(f ${files})
-        if(NOT f MATCHES LinkDef)
-          find_file(headerFile ${f} PATHS ${incdirs})
-          set(headerfiles ${headerfiles} ${headerFile})
-          unset(headerFile CACHE)
+        if(NOT f MATCHES LinkDef) # skip LinkDefs from globbing result
+          set(headerfiles ${headerfiles} ${f})
         endif()
       endforeach()
     else()
