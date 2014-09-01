@@ -328,7 +328,7 @@ void TGVerticalLayout::Layout()
             top += extra_space;
 
          if (x > 32768) x = bw + 1;
-         if (y > 32768) y = bw + 1;
+         //if (y > 32768) y = bw + 1;
          if (size.fWidth > 32768)
             size.fWidth = 1;
          if (size.fHeight > 32768)
