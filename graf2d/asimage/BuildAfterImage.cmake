@@ -85,7 +85,7 @@ else()
     set(AFTER_CFLAGS "${AFTER_CFLAGS} -DHAVE_FREETYPE_FREETYPE")
   endif()
   #---copy files from source directory to build directory------------------------------
-  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/libAfterImage
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/libAfterImage/configure
                      COMMAND cmake -E copy_directory  ${CMAKE_CURRENT_SOURCE_DIR}/src/libAfterImage libAfterImage)
 
   #---configure and make --------------------------------------------------------------
@@ -93,7 +93,7 @@ else()
                    COMMAND GNUMAKE=make CC=${AFTER_CC} CFLAGS=${AFTER_CFLAGS} ./configure --with-ttf ${TTFINCLUDE} --with-afterbase=no --without-svg --disable-glx ${AFTER_MMX} ${AFTER_DBG} --with-builtin-ungif  --with-jpeg ${JPEGINCLUDE} --with-png ${PNGINCLUDE} ${TIFFINCLUDE} # > /dev/null 2>& 1
                    COMMAND make > /dev/null 2>& 1
                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libAfterImage
-                   DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/libAfterImage
+                   DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/libAfterImage/configure
                   )
 endif()
 
