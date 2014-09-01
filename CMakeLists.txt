@@ -115,13 +115,14 @@ add_dependencies(onepcm ${__allTargets})
 install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
 #---hsimple.root---------------------------------------------------------------------------------
-include_directories(io/io/inc core/base/inc core/clib/inc core/meta/inc core/cont/inc hist/hist/inc 
-                    math/matrix/inc tree/tree/inc core/metautils/inc core/thread/inc math/mathcore/inc)
-ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx LIBRARIES RIO Tree Hist)
-add_custom_target(hsimple ALL DEPENDS hsimple.root
-                  COMMAND ${CMAKE_COMMAND} -E copy_if_different hsimple.root tutorials/hsimple.root)
-add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe)
-install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tutorials)
+#include_directories(io/io/inc core/base/inc core/clib/inc core/meta/inc core/cont/inc hist/hist/inc
+#                    math/matrix/inc tree/tree/inc core/metautils/inc core/thread/inc math/mathcore/inc)
+#ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx LIBRARIES RIO Tree Hist)
+#add_dependencies(hsimple.exe onepcm)
+#add_custom_target(hsimple ALL DEPENDS hsimple.root
+#                  COMMAND ${CMAKE_COMMAND} -E copy_if_different hsimple.root tutorials/hsimple.root)
+#add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe)
+#install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tutorials)
 
 #---Configure and install various files neded later and for clients -----------------------------
 include(RootConfiguration)
