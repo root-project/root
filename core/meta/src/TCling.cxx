@@ -814,7 +814,6 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
 {
    // Try hard to avoid looking up in the Cling database as this could enduce
    // an unwanted autoparsing.
-   std::string inner;
    result.clear();
 
    unsigned long offset = 0;
@@ -829,32 +828,44 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
       }
       --end;
    }
-   inner = tname.substr(offset,end-offset);
-   //if (strchr(tname.c_str(),'[')!=0) fprintf(stderr,"DEBUG: checking on %s vs %s %lu %lu\n",tname.c_str(),inner.c_str(),offset,end);
-   if (gROOT->GetListOfClasses()->FindObject(inner.c_str())
-       || TClassTable::GetDictNorm(inner.c_str()) ) {
+   std::string innerbuf;
+   const char *inner;
+   if (end != tname.length()) {
+      innerbuf = tname.substr(offset,end-offset);
+      inner = innerbuf.c_str();
+   } else {
+      inner = tname.c_str()+offset;
+   }
+
+   //if (strchr(tname.c_str(),'[')!=0) fprintf(stderr,"DEBUG: checking on %s vs %s %lu %lu\n",tname.c_str(),inner,offset,end);
+   if (gROOT->GetListOfClasses()->FindObject(inner)
+       || TClassTable::GetDictNorm(inner) ) {
       // This is a known class.
       return true;
    }
 
    THashTable *typeTable = dynamic_cast<THashTable*>( gROOT->GetListOfTypes() );
-   TDataType *type = (TDataType *)typeTable->THashTable::FindObject( inner.c_str() );
+   TDataType *type = (TDataType *)typeTable->THashTable::FindObject( inner );
    if (type) {
       // This is a raw type and an already loaded typedef.
+      if (strcmp(inner,type->GetFullTypeName() == 0) {
+         return true;
+      }
       if (offset) result = "const ";
       result += type->GetFullTypeName();
       if ( end != tname.length() ) {
          result += tname.substr(end,tname.length()-end);
       }
+      if (result == tname) result.clear();
       return true;
    }
    THashList *enumTable = dynamic_cast<THashList*>( gROOT->GetListOfEnums() );
-   if (enumTable->THashList::FindObject( inner.c_str() ) ) {
+   if (enumTable->THashList::FindObject( inner ) ) {
       // This is a known enum.
       return true;
    }
 
-   if (gCling->GetClassSharedLibs( inner.c_str() )) {
+   if (gCling->GetClassSharedLibs( inner )) {
       // This is a class name.
       return true;
    }
