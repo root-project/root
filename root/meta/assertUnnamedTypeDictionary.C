@@ -1,4 +1,4 @@
-int assertUnnamedTypeDict() {
+int assertUnnamedTypeDictionary() {
    if (gROOT->ProcessLine(".L UnnamedTypes.h+s")) {
       Error("assertUnnamedTypeDict()", "Error building library.");
       return 1;
