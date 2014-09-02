@@ -4583,7 +4583,8 @@ Int_t TCling::AutoLoad(const type_info& typeinfo, Bool_t knowDictNotLoaded /* = 
    TClassEdit::TSplitType splitname( demangled_name.c_str(), (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
    splitname.ShortType(demangled_name, TClassEdit::kDropStlDefault | TClassEdit::kDropStd);
 
-   // No need to worry anout typedef, they aren't any ...
+   // No need to worry about typedef, they aren't any ... but there are
+   // inlined namespaces ...
 
    Int_t result = AutoLoad(demangled_name.c_str());
    if (result == 0) {
