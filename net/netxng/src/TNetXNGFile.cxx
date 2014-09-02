@@ -372,7 +372,7 @@ Bool_t TNetXNGFile::ReadBuffer(char *buffer, Long64_t position, Int_t length)
    }
 
    // Bump the globals
-   fOffset     += length;
+   fOffset     += bytesRead;
    fBytesRead  += bytesRead;
    fgBytesRead += bytesRead;
    fReadCalls  ++;
