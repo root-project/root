@@ -17,11 +17,7 @@ Double_t fitf(Double_t *x, Double_t *par)
 }
 void myfit()
 {
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
-   dir.ReplaceAll("myfit.C","../hsimple.C");
-   dir.ReplaceAll("/./","/");
-   if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());
-   TFile *hsimple = (TFile*)gROOT->ProcessLineFast("hsimple(1)");
+   TFile* hsimple = TFile::Open("hsimple.root");
    if (!hsimple) return;
 
    TCanvas *c1 = new TCanvas("c1","the fit canvas",500,400);
