@@ -487,23 +487,26 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
    // We assume that we have a simple type:
    // [const] typename[*&][const]
 
+   if (tname.empty()) return false;
+
    // Try hard to avoid looking up in the Cling database as this could enduce
    // an unwanted autoparsing.
    if (fExistingTypeCheck && fExistingTypeCheck(tname,result)) {
-      return result.length() != 0;
+      return ! result.empty();
    }
 
    // Since we already check via other means (TClassTable which is populated by
    // the dictonary loading, and the gROOT list of classes and enums, which are
-   // populated via TProtoClass/Enum, we should be able to disable the autoloading
+   // populated via TProtoClass/Enum), we should be able to disable the autoloading
    // ... which requires access to libCore or libCling ...
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    clang::QualType t = lh.findType(tname.c_str(), ToLHDS(WantDiags()));
    // Technically we ought to try:
    //   if (t.isNull()) t =  lh.findType(TClassEdit::InsertStd(tname), ToLHDS(WantDiags()));
    // at least until the 'normalized name' contains the std:: prefix.
+
    if (!t.isNull()) {
-      clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetConfig(), true /* fully qualify */);
+      clang::QualType dest = TMetaUtils::GetNormalizedType(t, *fInterpreter, *fNormalizedCtxt);
       if (!dest.isNull() && dest != t) {
          // Since our input is not a template instance name, rather than going through the full
          // TMetaUtils::GetNormalizedName, we just do the 'strip leading std' and fix
@@ -525,14 +528,30 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
          if (strncmp(result.c_str()+offset, "std::", 5) == 0) {
             result.erase(offset,5);
          }
-         if (result.length() > 2 && result.compare(result.length()-2,2," &")==0) {
-            result[result.length()-2] = '&';
-            result.erase(result.length()-1);
+         for(unsigned int i = 1; i<result.length(); ++i) {
+            if (result[i]=='s') {
+               if (result[i-1]=='<' || result[i-1]==',' || result[i-1]==' ') {
+                  if (result.compare(i,5,"std::",5) == 0) {
+                     result.erase(i,5);
+                  }
+               }
+            }
+            if (result[i]==' ') {
+               if (result[i-1] == ',') {
+                  result.erase(i,1);
+                  --i;
+               } else if ( (i+1) < result.length() &&
+                          (result[i+1]=='*' || result[i+1]=='&' || result[i+1]=='[') ) {
+                  result.erase(i,1);
+                  --i;
+               }
+            }
          }
-         if (result.length() > 2 && result.compare(result.length()-2,2," *")==0) {
-            result[result.length()-2] = '&';
-            result.erase(result.length()-1);
-         }
+
+//         std::string alt;
+//         TMetaUtils::GetNormalizedName(alt, dest, *fInterpreter, *fNormalizedCtxt);
+//         if (alt != result) fprintf(stderr,"norm: %s vs result=%s\n",alt.c_str(),result.c_str());
+
          return true;
       }
    }
