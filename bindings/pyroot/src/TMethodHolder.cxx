@@ -133,7 +133,10 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
    //                     std::string arguments will mask the const char* ones,
    //                     even though the extra default arguments differ
       if ( fClass.Name() == "string" && fMethod.Name() == "string" &&
-           ( fullType == "const std::string&" || fullType == "const std::string &" ) ) {
+           // Note with the improve naming normalization we should see only
+           // the spelling "const string&" (but soon it will be "const std::string&")
+           ( fullType == "const std::string&" || fullType == "const std::string &"
+             || fullType == "const string&" || fullType == "const string &" ) ) {
          fConverters[ iarg ] = new TStrictRootObjectConverter( "string", kFALSE ); // TODO: this is sooo wrong
    // -- CLING WORKAROUND
       } else
