@@ -353,6 +353,7 @@ Bool_t TNetXNGFile::ReadBuffer(char *buffer, Long64_t position, Int_t length)
       return kTRUE;
 
    // Try to read from cache
+   fOffset = position;
    Int_t status;
    if ((status = ReadBufferViaCache(buffer, length))) {
       if (status == 2)
