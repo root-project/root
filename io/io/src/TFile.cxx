@@ -3390,6 +3390,8 @@ void TFile::ReadStreamerInfo()
             if (mode==1) {
                TObject *obj = (TObject*)info;
                if (strcmp(obj->GetName(),"listOfRules")==0) {
+#if 0
+                  // Completely ignore the rules for now.
                   TList *listOfRules = (TList*)obj;
                   TObjLink *rulelnk = listOfRules->FirstLink();
                   while (rulelnk) {
@@ -3397,6 +3399,7 @@ void TFile::ReadStreamerInfo()
                      TClass::AddRule( rule->String().Data() );
                      rulelnk = rulelnk->Next();
                   }
+#endif
                } else {
                   Warning("ReadStreamerInfo","%s has a %s in the list of TStreamerInfo.", GetName(), info->IsA()->GetName());
                }
