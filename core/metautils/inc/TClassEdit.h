@@ -104,6 +104,9 @@ namespace TClassEdit {
    public:
       TInterpreterLookupHelper() { }
       virtual ~TInterpreterLookupHelper() { }
+
+      virtual bool ExistingTypeCheck(const std::string & /*tname*/,
+                                     std::string & /*result*/) = 0;
       virtual void GetPartiallyDesugaredName(std::string & /*nameLong*/) = 0;
       virtual bool IsAlreadyPartiallyDesugaredName(const std::string & /*nondef*/,
                                                    const std::string & /*nameLong*/) = 0;

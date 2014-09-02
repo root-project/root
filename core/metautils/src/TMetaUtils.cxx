@@ -422,6 +422,19 @@ TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter,
 }
 
 //______________________________________________________________________________
+bool TClingLookupHelper::ExistingTypeCheck(const std::string &tname,
+                                           std::string &result)
+{
+   // Helper routine to ry hard to avoid looking up in the Cling database as
+   // this could enduce an unwanted autoparsing.
+
+   if (tname.empty()) return false;
+
+   if (fExistingTypeCheck) return fExistingTypeCheck(tname,result);
+   else return false;
+}
+
+//______________________________________________________________________________
 void TClingLookupHelper::GetPartiallyDesugaredName(std::string &nameLong)
 {
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
