@@ -1,6 +1,12 @@
 # %ROOTTEST-duration%:3
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
+  export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
+  ifeq ($(strip $(ROOTTEST_HOME)),)
+     export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+  endif
+  ifeq ($(strip $(ROOTTEST_HOME)),)
+     $(error The head of roottest was not found.  Set ROOTTEST_HOME)
+  endif
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk

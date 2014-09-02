@@ -11,6 +11,12 @@
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME:=$(shell expr $(CURDIR) : '\(.*/roottest/\)')
+   ifeq ($(strip $(ROOTTEST_HOME)),)
+      export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+   endif
+   ifeq ($(strip $(ROOTTEST_HOME)),)
+      $(error The head of roottest was not found.  Set ROOTTEST_HOME)
+   endif
 endif
 
 # Note that not-yet release test directory are listed in
