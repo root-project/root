@@ -517,7 +517,7 @@ endif
 ##### Compiler directives and run-control file #####
 
 COMPILEDATA   = include/compiledata.h
-RGITCOMMITH  := core/base/src/RGitCommit.h
+RGITCOMMITH   = core/base/src/RGitCommit.h
 ROOTRC        = etc/system.rootrc
 ROOTMAP       = etc/system.rootmap
 ROOTPCH       = etc/allDict.cxx.pch
@@ -812,6 +812,8 @@ $(RGITCOMMITH): $(filter-out core/base/src/TROOT.o,$(COREO)) $(COREDO) $(PCREDEP
 	@if test -r $@; then \
 	  if ! diff $@.tmp $@ > /dev/null 2>&1; then \
 	    mv $@.tmp $@; \
+	  else \
+	    rm -f $@.tmp; \
 	  fi; \
 	else \
 	    mv $@.tmp $@; \
