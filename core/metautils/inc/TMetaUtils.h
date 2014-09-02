@@ -151,9 +151,11 @@ public:
                       ExistingTypeCheck_t existingTypeCheck,
                       const int *pgDebug = 0);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
+
+   virtual bool ExistingTypeCheck(const std::string &tname, std::string &result);
    virtual void GetPartiallyDesugaredName(std::string &nameLong);
    virtual bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong);
-   virtual bool IsDeclaredScope(const std::string &base);
+   virtual bool IsDeclaredScope(const std::string &base, bool &isInlined);
    virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result);
 };
 
@@ -540,6 +542,14 @@ void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, c
 // Return the type with all parts fully qualified (most typedefs),
 // including template arguments, appended to name, without using the interpreter
 void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, const clang::ASTContext &);
+
+//______________________________________________________________________________
+// Return the type normalized for ROOT,
+// keeping only the ROOT opaque typedef (Double32_t, etc.) and
+// adding default template argument for all types except those explicitly
+// requested to be drop by the user.
+// Default template for STL collections are not yet removed by this routine.
+clang::QualType GetNormalizedType(const clang::QualType &type, const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt);
 
 //______________________________________________________________________________
 // Return the type name normalized for ROOT,
