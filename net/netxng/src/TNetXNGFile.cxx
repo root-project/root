@@ -164,8 +164,15 @@ TNetXNGFile::TNetXNGFile(const char *url,
       return;
    }
 
+   if( (fMode & OpenFlags::New) || (fMode & OpenFlags::Delete) ||
+       (fMode & OpenFlags::Update) )
+      fWritable = true;
+
    // Initialize the file
-   TFile::Init(false);
+   bool create = false;
+   if( (fMode & OpenFlags::New) || (fMode & OpenFlags::Delete) )
+      create = true;
+   TFile::Init(create);
 
    // Get the vector read limits
    GetVectorReadLimits();
@@ -532,6 +539,12 @@ Bool_t TNetXNGFile::WriteBuffer(const char *buffer, Int_t length)
    if (!IsUseable())
       return kTRUE;
 
+   if (!fWritable) {
+      if (gDebug > 1)
+         Info("WriteBuffer", "file not writable");
+      return kTRUE;
+   }
+
    // Check the write cache
    Int_t status;
    if ((status = WriteBufferViaCache(buffer, length))) {
@@ -553,6 +566,30 @@ Bool_t TNetXNGFile::WriteBuffer(const char *buffer, Int_t length)
    fgBytesWrite += length;
 
    return kFALSE;
+}
+
+//_____________________________________________________________________________
+void TNetXNGFile::Flush()
+{
+   if (!IsUseable())
+      return;
+
+   if (!fWritable) {
+      if (gDebug > 1)
+         Info("Flush", "file not writable - do nothing");
+      return;
+   }
+
+   FlushWriteCache();
+
+   //
+   // Flush via the remote xrootd
+   XrdCl::XRootDStatus status = fFile->Sync();
+   if( !status.IsOK() )
+      Error("Flush", "%s", status.ToStr().c_str());
+
+   if (gDebug > 1)
+      Info("Flush", "XrdClient::Sync succeeded.");
 }
 
 //______________________________________________________________________________

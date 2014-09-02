@@ -62,6 +62,7 @@ public:
    virtual Int_t    ReOpen(Option_t *modestr);
    virtual Bool_t   IsOpen() const;
    virtual Bool_t   WriteBuffer(const char *buffer, Int_t length);
+   virtual void     Flush();
    virtual Bool_t   ReadBuffer(char *buffer, Int_t length);
    virtual Bool_t   ReadBuffer(char *buffer, Long64_t position, Int_t length);
    virtual Bool_t   ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
