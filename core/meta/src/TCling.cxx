@@ -848,11 +848,17 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
    TDataType *type = (TDataType *)typeTable->THashTable::FindObject( inner );
    if (type) {
       // This is a raw type and an already loaded typedef.
-      if (strcmp(inner,type->GetFullTypeName() == 0) {
+      const char *newname = type->GetFullTypeName();
+      if (type->GetType() == kLong64_t) {
+         newname = "Long64_t";
+      } else if (type->GetType() == kULong64_t) {
+         newname = "ULong64_t";
+      }
+      if (strcmp(inner,newname) == 0) {
          return true;
       }
       if (offset) result = "const ";
-      result += type->GetFullTypeName();
+      result += newname;
       if ( end != tname.length() ) {
          result += tname.substr(end,tname.length()-end);
       }
