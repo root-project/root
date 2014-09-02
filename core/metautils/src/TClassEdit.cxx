@@ -28,6 +28,39 @@ static size_t StdLen(const std::string &name, size_t pos = 0)
    size_t len = 0;
    if (name.compare(pos,5,"std::")==0) {
       len = 5;
+
+      // TODO: This is likely to induce unwanted autoparsing, those are reduced
+      // by the caching of the result.
+      if (gInterpreterHelper) {
+         for(size_t i = pos+5; i < name.length(); ++i) {
+            if (name[i] == '<') break;
+            if (name[i] == ':') {
+               bool isInlined;
+               std::string scope(name.substr(pos,i-pos));
+               std::string scoperesult;
+               // We assume that we are called in already serialized code.
+               // Note: should we also cache the negative answers?
+               static std::set<std::string> gInlined;
+
+               if (gInlined.find(scope) != gInlined.end()) {
+                  len = i - pos;
+                  if (i+1<name.length() && name[i+1]==':') {
+                     len += 2;
+                  }
+               }
+               if (!gInterpreterHelper->ExistingTypeCheck(scope, scoperesult)
+                   && gInterpreterHelper->IsDeclaredScope(scope,isInlined)) {
+                  if (isInlined) {
+                     gInlined.insert(scope);
+                     len = i - pos;
+                     if (i+1<name.length() && name[i+1]==':') {
+                        len += 2;
+                     }
+                  }
+               }
+            }
+         }
+      }
    }
 
    return len;
