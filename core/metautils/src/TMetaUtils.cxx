@@ -78,14 +78,16 @@ static clang::NestedNameSpecifier* AddDefaultParametersNNS(const clang::ASTConte
       }
 
       clang::QualType addDefault =
-      ROOT::TMetaUtils::AddDefaultParameters(clang::QualType(scope_type,0), interpreter, normCtxt );
+         ROOT::TMetaUtils::AddDefaultParameters(clang::QualType(scope_type,0), interpreter, normCtxt );
       // NOTE: Should check whether the type has changed or not.
-      return clang::NestedNameSpecifier::Create(Ctx,outer_scope,
-                                                false /* template keyword wanted */,
-                                                addDefault.getTypePtr());
+      if (addDefault.getTypePtr() != scope_type)
+         return clang::NestedNameSpecifier::Create(Ctx,outer_scope,
+                                                   false /* template keyword wanted */,
+                                                   addDefault.getTypePtr());
    }
    return scope;
-                                                                             }
+}
+
 //______________________________________________________________________________
 static bool CheckDefinition(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *context)
 {
@@ -2540,6 +2542,8 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
    const clang::ASTContext& Ctx = interpreter.getCI()->getASTContext();
 
+   clang::QualType originalType = instanceType;
+
    // In case of name* we need to strip the pointer first, add the default and attach
    // the pointer once again.
    if (llvm::isa<clang::PointerType>(instanceType.getTypePtr())) {
@@ -2569,6 +2573,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    }
 
    // Treat the Scope.
+   bool prefix_changed = false;
    clang::NestedNameSpecifier* prefix = 0;
    clang::Qualifiers prefix_qualifiers = instanceType.getLocalQualifiers();
    const clang::ElaboratedType* etype
@@ -2576,6 +2581,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    if (etype) {
       // We have to also handle the prefix.
       prefix = AddDefaultParametersNNS(Ctx, etype->getQualifier(), interpreter, normCtxt);
+      prefix_changed = prefix != etype->getQualifier();
       instanceType = clang::QualType(etype->getNamedType().getTypePtr(),0);
    }
 
@@ -2588,6 +2594,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    const clang::ClassTemplateSpecializationDecl* TSTdecl
       = llvm::dyn_cast_or_null<const clang::ClassTemplateSpecializationDecl>(instanceType.getTypePtr()->getAsCXXRecordDecl());
 
+   bool mightHaveChanged = false;
    if (TST && TSTdecl) {
 
       clang::Sema& S = interpreter.getCI()->getSema();
@@ -2599,7 +2606,6 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
       unsigned int dropDefault = normCtxt.GetConfig().DropDefaultArg(*Template);
 
-      bool mightHaveChanged = false;
       llvm::SmallVector<clang::TemplateArgument, 4> desArgs;
       unsigned int Idecl = 0, Edecl = TSTdecl->getTemplateArgs().size();
       unsigned int maxAddArg = TSTdecl->getTemplateArgs().size() - dropDefault;
@@ -2714,6 +2720,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       }
    }
 
+   if (!prefix_changed && !mightHaveChanged) return originalType;
    if (prefix) {
       instanceType = Ctx.getElaboratedType(clang::ETK_None,prefix,instanceType);
       instanceType = Ctx.getQualifiedType(instanceType,prefix_qualifiers);
@@ -3402,15 +3409,18 @@ static void KeepNParams(clang::QualType& normalizedType,
    }
 
    // Treat the Scope (factorise the code out to reuse it in AddDefaultParameters)
+   bool prefix_changed = false;
    clang::NestedNameSpecifier* prefix = nullptr;
    clang::Qualifiers prefix_qualifiers = normalizedType.getLocalQualifiers();
    const clang::ElaboratedType* etype
       = llvm::dyn_cast<clang::ElaboratedType>(normalizedType.getTypePtr());
    if (etype) {
       // We have to also handle the prefix.
+      // TODO: we ought to be running KeepNParams
       prefix = AddDefaultParametersNNS(astCtxt, etype->getQualifier(), interp, normCtxt);
+      prefix_changed = prefix != etype->getQualifier();
       normalizedType = clang::QualType(etype->getNamedType().getTypePtr(),0);
-      }
+   }
 
    TemplateParameterList* tParsPtr = ctd->getTemplateParameters();
    const TemplateParameterList& tPars = *tParsPtr;
@@ -3439,6 +3449,8 @@ static void KeepNParams(clang::QualType& normalizedType,
 
    const int nArgs = tArgs.size();
    const int nNormArgs = normalizedTst->getNumArgs();
+
+   bool mightHaveChanged = false;
 
    // becomes true when a parameter has a value equal to its default
    for (int index = 0; index != nArgs; ++index) {
@@ -3473,11 +3485,13 @@ static void KeepNParams(clang::QualType& normalizedType,
                         thisArgQualType,
                         interp,
                         normCtxt);
+            mightHaveChanged = (thisNormQualType != thisArgQualType);
             NormTArg = TemplateArgument(thisNormQualType);
          }
          argsToKeep.push_back(NormTArg);
          continue;
       } else { // Here we should not break but rather check if the value is the default one.
+         mightHaveChanged = true;
          break;
       }
 
@@ -3492,22 +3506,33 @@ static void KeepNParams(clang::QualType& normalizedType,
       } else if (argKind == clang::TemplateArgument::Integral){
          equal = areEqualValues(tArg, *tParPtr);
       }
-      if (!equal){
+      if (!equal) {
          argsToKeep.push_back(NormTArg);
+      } else {
+         mightHaveChanged = true;
       }
 
 
    } // of loop over parameters and arguments
 
-   // now, let's remanipulate our Qualtype
-   Qualifiers qualifiers = normalizedType.getLocalQualifiers();
-   normalizedType = astCtxt.getTemplateSpecializationType(theTemplateName,
-                                                          argsToKeep.data(),
-                                                          argsToKeep.size(),
-                                                          normalizedType.getTypePtr()->getCanonicalTypeInternal());
-   normalizedType = astCtxt.getQualifiedType(normalizedType, qualifiers);
+   if (!prefix_changed && !mightHaveChanged) {
+      normalizedType = originalNormalizedType;
+      return;
+   }
 
-    if (prefix) {
+   // now, let's remanipulate our Qualtype
+   if (mightHaveChanged) {
+      Qualifiers qualifiers = normalizedType.getLocalQualifiers();
+      normalizedType = astCtxt.getTemplateSpecializationType(theTemplateName,
+                                                             argsToKeep.data(),
+                                                             argsToKeep.size(),
+                                                             normalizedType.getTypePtr()->getCanonicalTypeInternal());
+      normalizedType = astCtxt.getQualifiedType(normalizedType, qualifiers);
+   }
+
+   // Here we have (prefix_changed==true || mightHaveChanged), in both case
+   // we need to reconstruct the type.
+   if (prefix) {
       normalizedType = astCtxt.getElaboratedType(clang::ETK_None,prefix,normalizedType);
       normalizedType = astCtxt.getQualifiedType(normalizedType,prefix_qualifiers);
    }
@@ -4208,8 +4233,8 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
          // Check if the type needs more desugaring and recurse.
          if (llvm::isa<clang::SubstTemplateTypeParmType>(SubTy)
              || llvm::isa<clang::TemplateSpecializationType>(SubTy)) {
-            mightHaveChanged = true;
             clang::QualType newSubTy = ReSubstTemplateArg(SubTy,instance);
+            mightHaveChanged = SubTy != newSubTy;
             if (!newSubTy.isNull()) {
                desArgs.push_back(clang::TemplateArgument(newSubTy));
             }
