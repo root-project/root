@@ -654,6 +654,7 @@ D: contributed to the TMatrix classes (InvertPosDef)
 
 N: Valeriy Onuchin
 E: onuchin@sirius.ihep.su
+D: port of ROOT GUI to Win32 using Win32 version of GDK/GLIB
 D: various contributions to GUI classes (scrolled text in TGTextEntry)
 D: implementation of Qt like signals and slots mechanism (TQObject,
 D: TQConnection, etc.)
