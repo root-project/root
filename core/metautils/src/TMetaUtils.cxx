@@ -544,9 +544,17 @@ ROOT::TMetaUtils::TNormalizedCtxt::TNormalizedCtxt(const cling::LookupHelper &lh
       fTypeWithAlternative.insert(toSkip.getTypePtr());
    }
    toSkip = lh.findType("Long64_t", cling::LookupHelper::WithDiagnostics);
-   if (!toSkip.isNull()) fConfig.m_toSkip.insert(toSkip.getTypePtr());
+   if (!toSkip.isNull()) {
+      fConfig.m_toSkip.insert(toSkip.getTypePtr());
+      clang::QualType canon = toSkip->getCanonicalTypeInternal();
+      fConfig.m_toReplace.insert(std::make_pair(canon.getTypePtr(),toSkip.getTypePtr()));
+   }
    toSkip = lh.findType("ULong64_t", cling::LookupHelper::WithDiagnostics);
-   if (!toSkip.isNull()) fConfig.m_toSkip.insert(toSkip.getTypePtr());
+   if (!toSkip.isNull()) {
+      fConfig.m_toSkip.insert(toSkip.getTypePtr());
+      clang::QualType canon = toSkip->getCanonicalTypeInternal();
+      fConfig.m_toReplace.insert(std::make_pair(canon.getTypePtr(),toSkip.getTypePtr()));
+   }
    toSkip = lh.findType("string", cling::LookupHelper::WithDiagnostics);
    if (!toSkip.isNull()) fConfig.m_toSkip.insert(toSkip.getTypePtr());
    toSkip = lh.findType("std::string", cling::LookupHelper::WithDiagnostics);
