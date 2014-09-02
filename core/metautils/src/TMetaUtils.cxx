@@ -3515,6 +3515,28 @@ static void KeepNParams(clang::QualType& normalizedType,
 }
 
 //______________________________________________________________________________
+clang::QualType ROOT::TMetaUtils::GetNormalizedType(const clang::QualType &type, const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt)
+{
+   // Return the type normalized for ROOT,
+   // keeping only the ROOT opaque typedef (Double32_t, etc.) and
+   // adding default template argument for all types except those explicitly
+   // requested to be drop by the user.
+   // Default template for STL collections are not yet removed by this routine.
+
+   clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
+
+   clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, normCtxt.GetConfig(), true /* fully qualify */);
+
+   // Readd missing default template parameters
+   normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, interpreter, normCtxt);
+
+   // Get the number of arguments to keep in case they are not default.
+   KeepNParams(normalizedType,type,interpreter,normCtxt);
+
+   return normalizedType;
+}
+
+//______________________________________________________________________________
 void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::QualType &type, const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt)
 {
    // Return the type name normalized for ROOT,
@@ -3530,16 +3552,9 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
       return;
    }
 
+   clang::QualType normalizedType = GetNormalizedType(type,interpreter,normCtxt);
+
    clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
-
-   clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, normCtxt.GetConfig(), true /* fully qualify */);
-
-   // Readd missing default template parameters
-   normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, interpreter, normCtxt);
-
-   // Get the number of arguments to keep in case they are not default.
-   KeepNParams(normalizedType,type,interpreter,normCtxt);
-
    clang::PrintingPolicy policy(ctxt.getPrintingPolicy());
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword
    policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.

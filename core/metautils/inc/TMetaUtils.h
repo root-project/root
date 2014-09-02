@@ -542,6 +542,14 @@ void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, c
 void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, const clang::ASTContext &);
 
 //______________________________________________________________________________
+// Return the type normalized for ROOT,
+// keeping only the ROOT opaque typedef (Double32_t, etc.) and
+// adding default template argument for all types except those explicitly
+// requested to be drop by the user.
+// Default template for STL collections are not yet removed by this routine.
+clang::QualType GetNormalizedType(const clang::QualType &type, const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt);
+
+//______________________________________________________________________________
 // Return the type name normalized for ROOT,
 // keeping only the ROOT opaque typedef (Double32_t, etc.) and
 // adding default template argument for all types except the STL collections
