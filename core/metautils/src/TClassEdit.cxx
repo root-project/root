@@ -675,6 +675,16 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, const char *name)
    if (norm_name.length()>2 && norm_name[0]==':' && norm_name[1]==':') {
       norm_name.erase(0,2);
    }
+
+   if (gInterpreterHelper) {
+      // See if the expanded name itself is a typedef.
+      std::string typeresult;
+      if (gInterpreterHelper->ExistingTypeCheck(norm_name, typeresult)
+          || gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(norm_name, typeresult)) {
+
+         if (!typeresult.empty()) norm_name = typeresult;
+      }
+   }
 }
 
 //______________________________________________________________________________
