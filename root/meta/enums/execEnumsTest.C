@@ -1,3 +1,13 @@
+#include <list>
+#include "TEnumConstant.h"
+#include "TClass.h"
+#include "TList.h"
+#include "TEnum.h"
+#include "TROOT.h"
+#include "TInterpreter.h"
+#include "TSystem.h"
+#include <iostream>
+
 int checkEnums(const std::list<std::string>& tclassNames, bool load, bool fillMap=false){
 
    std::cout << "Checking enumerators...\n";
