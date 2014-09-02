@@ -465,13 +465,18 @@ bool TClingLookupHelper::IsAlreadyPartiallyDesugaredName(const std::string &nond
 }
 
 //______________________________________________________________________________
-bool TClingLookupHelper::IsDeclaredScope(const std::string &base)
+bool TClingLookupHelper::IsDeclaredScope(const std::string &base, bool &isInlined)
 {
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
-   if (!lh.findScope(base.c_str(), ToLHDS(WantDiags()), 0)) {
+   const clang::Decl *scope = lh.findScope(base.c_str(), ToLHDS(WantDiags()), 0);
+
+   if (!scope) {
       // the nesting namespace is not declared
+      isInlined = false;
       return false;
    }
+   const clang::NamespaceDecl *nsdecl = llvm::dyn_cast<clang::NamespaceDecl>(scope);
+   isInlined = nsdecl && nsdecl->isInline();
    return true;
 }
 

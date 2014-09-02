@@ -155,7 +155,7 @@ public:
    virtual bool ExistingTypeCheck(const std::string &tname, std::string &result);
    virtual void GetPartiallyDesugaredName(std::string &nameLong);
    virtual bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong);
-   virtual bool IsDeclaredScope(const std::string &base);
+   virtual bool IsDeclaredScope(const std::string &base, bool &isInlined);
    virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result);
 };
 

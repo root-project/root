@@ -110,7 +110,7 @@ namespace TClassEdit {
       virtual void GetPartiallyDesugaredName(std::string & /*nameLong*/) = 0;
       virtual bool IsAlreadyPartiallyDesugaredName(const std::string & /*nondef*/,
                                                    const std::string & /*nameLong*/) = 0;
-      virtual bool IsDeclaredScope(const std::string & /*base*/) = 0;
+      virtual bool IsDeclaredScope(const std::string & /*base*/, bool & /*isInlined*/) = 0;
       virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string & /*tname*/,
                                                               std::string & /*result*/) = 0;
    };
