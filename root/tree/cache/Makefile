@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog multi.root autocache1.root autocache2.root autocache.err  tree1ps.root tree2ps.root tree3ps.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog multi.root autocache1.root autocache2.root autocache.elog  tree1ps.root tree2ps.root tree3ps.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -73,9 +73,8 @@ cachedchain: cachedchain.log
 	$(TestDiff)
 
 autocache.log: runautocache.C
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l runautocache.C > autocache.out 2> autocache.err
-	$(CMDECHO) grep -v -e 'no dictionary for class' -e 'trying to read an emulated class (AliESDEvent)' autocache.err >> autocache.out || true
-	$(CMDECHO) mv autocache.out autocache.log
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runautocache.C > autocache.log 2> autocache.elog
+	$(CMDECHO) grep -v -e 'no dictionary for class' -e 'trying to read an emulated class (AliESDEvent)' autocache.elog >> autocache.raw.log || true
 
 autocache: autocache.log
 	$(TestDiff)
