@@ -23,7 +23,7 @@ add_definitions(${CLING_CXXFLAGS})
 ROOT_OBJECT_LIBRARY(MetaUtils ${sources})
 ROOT_OBJECT_LIBRARY(MetaUtilsLLVM ${sources_llvm})
 
-add_dependencies(MetaUtils CLING)
+add_dependencies(MetaUtils CLING move_headers)
 add_dependencies(MetaUtilsLLVM CLING)
 
 ROOT_INSTALL_HEADERS()
