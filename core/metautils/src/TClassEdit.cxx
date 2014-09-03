@@ -1208,6 +1208,13 @@ static void ResolveTypedefImpl(const char *tname,
 
    bool constprefix = false;
 
+   if (tname[cursor]==' ') {
+      if (!modified) {
+         modified = true;
+         result += string(tname,0,cursor);
+      }
+      while (tname[cursor]==' ') ++cursor;
+   }
 
    if (tname[cursor]=='c' && (cursor+6<len)) {
       if (strncmp(tname+cursor,"const ",6) == 0) {
