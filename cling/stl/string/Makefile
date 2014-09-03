@@ -7,9 +7,9 @@ CLEAN_TARGETS += *.out *.so *.d $(ALL_LIBRARIES) *.log
 TEST_TARGETS += stringPassingTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
+   export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
    ifeq ($(strip $(ROOTTEST_HOME)),)
-      export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/
+      export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
    endif
    ifeq ($(strip $(ROOTTEST_HOME)),)
       $(error The head of roottest was not found.  Set ROOTTEST_HOME)
