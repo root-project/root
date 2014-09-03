@@ -127,8 +127,8 @@ int execResolveTypedef()
    testing("Long64_t",TClassEdit::ResolveTypedef("vector<Long64_t>::value_type"));
    testing("Long64_t",TClassEdit::ResolveTypedef("vector<long long>::value_type"));
 
-   testing("_Rb_tree_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*",TClassEdit::ResolveTypedef("_Rb_tree_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*"));
-   testing("_Rb_tree_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*",TClassEdit::ResolveTypedef("_Rb_tree_iterator<pair<const UInt_t,TGLPhysicalShape*> >::_Base_ptr*"));
+   testing("testing_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*",TClassEdit::ResolveTypedef("testing_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*"));
+   testing("testing_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*",TClassEdit::ResolveTypedef("testing_iterator<pair<const UInt_t,TGLPhysicalShape*> >::_Base_ptr*"));
 
    // Known failure: the Long64_t is not yet propagated to the template's typedef :(
    // testing("NS::Inner<Long64_t,Object>",TClassEdit::ResolveTypedef("Wrapper<Long64_t>::Point_t"));

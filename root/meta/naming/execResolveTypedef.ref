@@ -51,8 +51,8 @@ Test 48 The result is correct: vec<Long64_t>
 Test 49 The result is correct: vec<Long64_t>
 Test 50 The result is correct: Long64_t
 Test 51 The result is correct: Long64_t
-Test 52 The result is correct: _Rb_tree_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*
-Test 53 The result is correct: _Rb_tree_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*
+Test 52 The result is correct: testing_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*
+Test 53 The result is correct: testing_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*
 Starting GetNormalizedName tests
 Test 54 The result is correct: NS::Inner<long,Object>
 Test 55 The result is correct: NS::Inner<long,Object>
