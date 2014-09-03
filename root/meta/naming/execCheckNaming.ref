@@ -14,4 +14,5 @@ Check TClassEdit::ShortType
 @const std::string    &@ --> @const std::string&@
 @A<B>[2]@ --> @A<B>[2]@
 @X<A<B>[2]>@ --> @X<A<B>[2]>@
+@__shared_ptr<TObject>@ --> @__shared_ptr<TObject>@
 (int) 0

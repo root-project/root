@@ -133,6 +133,22 @@ int execResolveTypedef()
    // Known failure: the Long64_t is not yet propagated to the template's typedef :(
    // testing("NS::Inner<Long64_t,Object>",TClassEdit::ResolveTypedef("Wrapper<Long64_t>::Point_t"));
 
+   testing(                           "!=<const Roo*,const Roo*,vector<RooFunction> >",
+           TClassEdit::ResolveTypedef("!=<const Roo*, const Roo*, std::vector<RooFunction> >"));
+
+   // TClassEdit::ResolveTypedef's job is *not* (yet?) to clean up the spaces.
+   //testing(                           "!=<const Roo*,const Roo*,std::vector<RooFunction> >",
+   //        TClassEdit::ResolveTypedef("!=<const Roo *, const Roo *, std::vector<RooFunction >>"));
+
+   //testing("!=<const RooStats::HistFactory::PreprocessFunction*,const RooStats::HistFactory::PreprocessFunction*,std::vector<RooStats::HistFactory::PreprocessFunction> >",
+   //        TClassEdit::ResolveTypedef("!=<const RooStats::HistFactory::PreprocessFunction*,const RooStats::HistFactory::PreprocessFunction*,std::vector<RooStats::HistFactory::PreprocessFunction> >"));
+   //testing(                           "!=<const RooStats::HistFactory::PreprocessFunction*,const RooStats::HistFactory::PreprocessFunction*,std::vector<RooStats::HistFactory::PreprocessFunction> >",
+   //        TClassEdit::ResolveTypedef("!=<const RooStats::HistFactory::PreprocessFunction *, const RooStats::HistFactory::PreprocessFunction *, std::vector<RooStats::HistFactory::PreprocessFunction >>"));
+
+   testing("vec<const int>",TClassEdit::ResolveTypedef("vec< const int>"));
+   testing("vec<const int>",TClassEdit::ResolveTypedef("vec<  const int>"));
+   testing("vec<const int>",TClassEdit::ResolveTypedef("vec< const Int_t>"));
+
    printf("Starting GetNormalizedName tests\n");
 
    std::string output;
@@ -153,7 +169,6 @@ int execResolveTypedef()
 
    TClassEdit::GetNormalizedName(output,"Wrapper<Long64_t>::PointDefault_t");
    testing("NS::Inner<Long64_t,Object>",output);
-
 
    TClassEdit::GetNormalizedName(output,"pair<vector<Long_t>,vector<Long_t>::value_type>");
    testing("pair<vector<long>,long>",output);

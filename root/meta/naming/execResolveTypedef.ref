@@ -53,12 +53,16 @@ Test 50 The result is correct: Long64_t
 Test 51 The result is correct: Long64_t
 Test 52 The result is correct: testing_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*
 Test 53 The result is correct: testing_iterator<pair<const unsigned int,TGLPhysicalShape*> >::_Base_ptr*
+Test 54 The result is correct: !=<const Roo*,const Roo*,vector<RooFunction> >
+Test 55 The result is correct: vec<const int>
+Test 56 The result is correct: vec<const int>
+Test 57 The result is correct: vec<const int>
 Starting GetNormalizedName tests
-Test 54 The result is correct: NS::Inner<long,Object>
-Test 55 The result is correct: NS::Inner<long,Object>
-Test 56 The result is correct: NS::Inner<Long64_t,Object>
-Test 57 The result is correct: NS::Inner<Long64_t,Object>
-Test 58 The result is correct: NS::Inner<Long64_t,Object>
-Test 59 The result is correct: NS::Inner<Long64_t,Object>
-Test 60 The result is correct: pair<vector<long>,long>
+Test 58 The result is correct: NS::Inner<long,Object>
+Test 59 The result is correct: NS::Inner<long,Object>
+Test 60 The result is correct: NS::Inner<Long64_t,Object>
+Test 61 The result is correct: NS::Inner<Long64_t,Object>
+Test 62 The result is correct: NS::Inner<Long64_t,Object>
+Test 63 The result is correct: NS::Inner<Long64_t,Object>
+Test 64 The result is correct: pair<vector<long>,long>
 (int) 0

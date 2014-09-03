@@ -45,7 +45,8 @@ int execCheckNaming(){
                                            "const std::string &",
                                            "const std::string    &",
                                            "A<B>[2]",
-                                           "X<A<B>[2]>"};  
+                                           "X<A<B>[2]>",
+                                           "__shared_ptr<TObject>"};
 
   std::cout << "Check TClassEdit::ResolveTypedef\n";
   for (auto& name : tceTypedefNames)
