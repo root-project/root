@@ -122,7 +122,7 @@ TEnum *TEnum::GetEnum(const char *enumName)
       strncpy(enScopeName, enumName, enScopeNameSize);
       enScopeName[enScopeNameSize] = '\0';
       if (TClass *scope = TClass::GetClass(enScopeName)) {
-         if (TEnum *en = static_cast<TEnum *>(scope->GetListOfEnums()->FindObject(enName))) {
+         if (TEnum *en = static_cast<TEnum *>(scope->GetListOfEnums(false)->FindObject(enName))) {
             delete [] enScopeName;
             return en;
          }
