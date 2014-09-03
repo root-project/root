@@ -1979,6 +1979,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
          ROOT::TMetaUtils::GetQualifiedName(qualNameForDiag, *baseDecl);
          Error("InspectMembers",
                "Cannot find TClass for base class %s", qualNameForDiag.c_str() );
+         continue;
       }
 
       int64_t baseOffset;
@@ -2012,6 +2013,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       } else {
          baseOffset = recLayout.getBaseClassOffset(baseDecl).getQuantity();
       }
+      // TOFIX: baseCl can be null here!
       if (baseCl->IsLoaded()) {
          // For loaded class, CallShowMember will (especially for TObject)
          // call the virtual ShowMember rather than the class specific version
