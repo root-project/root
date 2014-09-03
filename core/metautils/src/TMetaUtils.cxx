@@ -2639,8 +2639,18 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    const clang::ClassTemplateSpecializationDecl* TSTdecl
       = llvm::dyn_cast_or_null<const clang::ClassTemplateSpecializationDecl>(instanceType.getTypePtr()->getAsCXXRecordDecl());
 
+   // Don't add the default paramater onto std classes.
+   // We really need this for __shared_ptr which add a enum constant value which
+   // is spelled in its 'numeral' form and thus the resulting type name is
+   // incorrect.  We also can used this for any of the STL collections where we
+   // know we don't want the default argument.   For the other members of the
+   // std namespace this is dubious (because TMetaUtils::GetNormalizedName would
+   // not drop those defaults).  [I.e. the real test ought to be is std and
+   // name is __shared_ptr or vector or list or set or etc.]
+   bool isStd = TSTdecl && IsStdClass(*TSTdecl);
+
    bool mightHaveChanged = false;
-   if (TST && TSTdecl) {
+   if (TST && TSTdecl && !isStd) {
 
       clang::Sema& S = interpreter.getCI()->getSema();
       clang::TemplateDecl *Template = TSTdecl->getSpecializedTemplate()->getMostRecentDecl();
