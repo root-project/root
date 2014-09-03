@@ -2145,8 +2145,9 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingStatus("STARTED",kTRUE);
 
-   if (selector->GetAbort() != TSelector::kAbortProcess
-       && (selector->Version() != 0 || selector->GetStatus() != -1)) {
+   Bool_t process = (selector->GetAbort() != TSelector::kAbortProcess &&
+                    (selector->Version() != 0 || selector->GetStatus() != -1)) ? kTRUE : kFALSE;
+   if (process) {
 
       Long64_t readbytesatstart = 0;
       readbytesatstart = TFile::GetFileBytesRead();
@@ -2220,16 +2221,20 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       }
    }
 
-   if (selector->Version() != 0 || selector->GetStatus() != -1) {
+   process = (selector->GetAbort() != TSelector::kAbortProcess &&
+             (selector->Version() != 0 || selector->GetStatus() != -1)) ? kTRUE : kFALSE;
+   Long64_t res = (process) ? 0 : -1;
+   if (process) {
       selector->SlaveTerminate();   //<==call user termination function
       selector->Terminate();        //<==call user termination function
+      res = selector->GetStatus();
    }
    fTree->SetNotify(0); // Detach the selector from the tree.
    fSelectorUpdate = 0;
    if (gMonitoringWriter)
       gMonitoringWriter->SendProcessingStatus("DONE");
 
-   return selector->GetStatus();
+   return res;
 }
 
 //______________________________________________________________________________
