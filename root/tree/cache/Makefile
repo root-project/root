@@ -1,13 +1,13 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog multi.root autocache1.root autocache2.root autocache.err
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog multi.root autocache1.root autocache2.root autocache.err  tree1ps.root tree2ps.root tree3ps.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += multiTree mytest cachedchain autocache
+TEST_TARGETS += multiTree mytest cachedchain autocache perfstattest
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -36,7 +36,7 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
-
+include $(ROOTTEST_HOME)/scripts/Event.mk
 
 # The name of this target should be changed according to the test being run.  Any name changes
 #  should also be reflected in the TEST_TARGETS variable above.
@@ -86,3 +86,10 @@ multiTree: multiTree.log
 ifneq ($(ClingWorkAroundMissingAutoLoading),)
 multiTree.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
 endif
+
+perfstattest.log: runperfstattest.C ./libEvent.$(DllSuf)
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runperfstattest.C 2>&1 \
+	| grep -v -e 'no dictionary for class' -e 'trying to read an emulated class (AliESDEvent)'  > perfstattest.log
+
+perfstattest: perfstattest.log
+	$(TestDiff)
