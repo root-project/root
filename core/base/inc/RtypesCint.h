@@ -170,7 +170,7 @@ struct TPerfStatsThreadLocal
 {
    operator TPerfStats*() { return TPerfStats::CurrentPerfStats(); }
    operator bool() { return 0!=TPerfStats::CurrentPerfStats(); }
-   
+
    // Emulate the pointer behavior
    TPerfStats*  operator->() { return TPerfStats::CurrentPerfStats(); }
    TPerfStats*& operator=(TPerfStats *other) { return (TPerfStats::CurrentPerfStats() = other); }
