@@ -16,7 +16,7 @@ cp etc/gitinfo.txt etc/root-$ROOTVERS/etc/
 cd etc
 tar -r -vf ../../$TARFILE root-$ROOTVERS/etc/gitinfo.txt
 cd ..
-rm -rf etc/root
+rm -rf etc/root-$ROOTVERS
 cd ..
 gzip $TARFILE
 
