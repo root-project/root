@@ -4003,7 +4003,16 @@ bool ROOT::TMetaUtils::IsStdDropDefaultClass(const clang::RecordDecl &cl)
    // its default parameter dropped.
 
    // Might need to reduce it to shared_ptr and STL collection.s
-   return cling::utils::Analyze::IsStdClass(cl);
+   if (cling::utils::Analyze::IsStdClass(cl)) {
+      static const char *names[] =
+      {  "shared_ptr", "__shared_ptr",
+         "vector", "list", "deque", "map", "multimap", "set", "multiset", "bitset"};
+      llvm::StringRef clname(cl.getName());
+      for(auto &&name : names) {
+         if (clname == name) return true;
+      }
+   }
+   return false;
 }
 
 //______________________________________________________________________________
