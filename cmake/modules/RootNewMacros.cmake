@@ -445,24 +445,12 @@ function(ROOT_LINKER_LIBRARY library)
                                LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
                                ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
                                COMPONENT libraries)
-    #install(EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION cmake/modules)
   endif()
   if(WIN32 AND ARG_TYPE STREQUAL SHARED)
-    if(CMAKE_GENERATOR MATCHES "Visual Studio")
-      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
-              CONFIGURATIONS Debug
-              DESTINATION ${CMAKE_INSTALL_BINDIR}
-              COMPONENT libraries)
-      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
-              CONFIGURATIONS RelWithDebInfo
-              DESTINATION ${CMAKE_INSTALL_BINDIR}
-              COMPONENT libraries)
-    else()
       install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
               CONFIGURATIONS Debug RelWithDebInfo
               DESTINATION ${CMAKE_INSTALL_BINDIR}
               COMPONENT libraries)
-    endif()
   endif()
   endif()
 endfunction()
@@ -635,19 +623,15 @@ function(ROOT_EXECUTABLE executable)
   endif()
 
   #----Installation details------------------------------------------------------
-  if((NOT ARG_NOINSTALL) AND (NOT ARG_TEST) )
+  if(NOT ARG_NOINSTALL AND CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     if(ARG_CMAKENOEXPORT)
       install(TARGETS ${executable} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
     else()
       install(TARGETS ${executable} EXPORT ${CMAKE_PROJECT_NAME}Exports RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
     endif()
-    if(WIN32 AND CMAKE_GENERATOR MATCHES "Visual Studio")
+    if(WIN32)
       install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${executable}.pdb
-              CONFIGURATIONS Debug
-              DESTINATION ${CMAKE_INSTALL_BINDIR}
-              COMPONENT applications)
-      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${executable}.pdb
-              CONFIGURATIONS RelWithDebInfo
+              CONFIGURATIONS Debug RelWithDebInfo
               DESTINATION ${CMAKE_INSTALL_BINDIR}
               COMPONENT applications)
     endif()
