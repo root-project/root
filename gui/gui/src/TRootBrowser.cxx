@@ -489,6 +489,8 @@ void TRootBrowser::CloseWindow()
 {
    // Called when window is closed via the window manager.
 
+   TQObject::Disconnect("TCanvas", "ProcessedEvent(Int_t,Int_t,Int_t,TObject*)",
+                        this, "EventInfo(Int_t, Int_t, Int_t, TObject*)");
    CloseTabs();
    DeleteWindow();
 }
