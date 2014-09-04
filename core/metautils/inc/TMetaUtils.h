@@ -607,6 +607,11 @@ const clang::TagDecl* GetAnnotatedRedeclarable(const clang::TagDecl* TND);
 bool IsStdClass(const clang::RecordDecl &cl);
 
 //______________________________________________________________________________
+// Return true, if the decl is part of the std namespace and we want
+// its default parameter dropped.
+bool IsStdDropDefaultClass(const clang::RecordDecl &cl);
+
+//______________________________________________________________________________
 // See if the CXXRecordDecl matches the current of any of the previous CXXRecordDecls
 bool MatchWithDeclOrAnyOfPrevious(const clang::CXXRecordDecl &cl, const clang::CXXRecordDecl &currentCl);
 

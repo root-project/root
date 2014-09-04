@@ -2647,10 +2647,10 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    // std namespace this is dubious (because TMetaUtils::GetNormalizedName would
    // not drop those defaults).  [I.e. the real test ought to be is std and
    // name is __shared_ptr or vector or list or set or etc.]
-   bool isStd = TSTdecl && IsStdClass(*TSTdecl);
+   bool isStdDropDefault = TSTdecl && IsStdDropDefaultClass(*TSTdecl);
 
    bool mightHaveChanged = false;
-   if (TST && TSTdecl && !isStd) {
+   if (TST && TSTdecl && !isStdDropDefault) {
 
       clang::Sema& S = interpreter.getCI()->getSema();
       clang::TemplateDecl *Template = TSTdecl->getSpecializedTemplate()->getMostRecentDecl();
@@ -3317,6 +3317,9 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
    ClassTemplateSpecializationDecl* TSTdecl
       = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(tArgQualType->getAsCXXRecordDecl());
 
+   if(!TSTdecl) // nothing more to be tried. They are different indeed.
+      return false;
+
    TemplateDecl *Template = tst->getTemplateName().getAsTemplateDecl();
 
    // Take the template location
@@ -3350,8 +3353,8 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
       }
 
       ClassTemplateSpecializationDecl* nTSTdecl
-      = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(newArg.getAsType()->getAsCXXRecordDecl());
-         std::cout << "nSTdecl is " << nTSTdecl << std::endl;
+         = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(newArg.getAsType()->getAsCXXRecordDecl());
+//         std::cout << "nSTdecl is " << nTSTdecl << std::endl;
 
       isEqual =  nTSTdecl->getMostRecentDecl() == TSTdecl->getMostRecentDecl() ||
                  tParQualType.getTypePtr() == newArg.getAsType().getTypePtr();
@@ -3364,9 +3367,9 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
 
 //______________________________________________________________________________
 static bool areEqualValues(const clang::TemplateArgument& tArg,
-                    const clang::NamedDecl& tPar)
+                           const clang::NamedDecl& tPar)
 {
-   std::cout << "Are equal values?\n";
+   //   std::cout << "Are equal values?\n";
    using namespace clang;
    const NonTypeTemplateParmDecl* nttpdPtr = llvm::dyn_cast<NonTypeTemplateParmDecl>(&tPar);
    if (!nttpdPtr) return false;
@@ -3384,9 +3387,9 @@ static bool areEqualValues(const clang::TemplateArgument& tArg,
 
    const int value = tArg.getAsIntegral().getLimitedValue();
 
-   std::cout << (value == defaultValueAPSInt ? "yes!":"no")  << std::endl;
+   //   std::cout << (value == defaultValueAPSInt ? "yes!":"no")  << std::endl;
    return  value == defaultValueAPSInt;
-   }
+}
 
 //______________________________________________________________________________
 static bool isTypeWithDefault(const clang::NamedDecl* nDecl)
@@ -3495,6 +3498,10 @@ static void KeepNParams(clang::QualType& normalizedType,
       return;
    }
 
+   const clang::ClassTemplateSpecializationDecl* TSTdecl
+      = llvm::dyn_cast_or_null<const clang::ClassTemplateSpecializationDecl>(normalizedType.getTypePtr()->getAsCXXRecordDecl());
+   bool isStdDropDefault = TSTdecl && IsStdDropDefaultClass(*TSTdecl);
+
    // Loop over the template parameters and arguments recursively.
    // We go down the two lanes: the one of template parameters (decls) and the
    // one of template arguments (QualTypes) in parallel. The former are a
@@ -3523,6 +3530,7 @@ static void KeepNParams(clang::QualType& normalizedType,
       TemplateArgument NormTArg(normalizedTst->getArgs()[index]);
 
       bool shouldKeepArg = nArgsToKeep < 0 || index < nArgsToKeep;
+      if (isStdDropDefault) shouldKeepArg = false;
 
       // Nothing to do here: either this parameter has no default, or we have to keep it.
       // FIXME: Temporary measure to get Atlas started with this.
@@ -3545,9 +3553,13 @@ static void KeepNParams(clang::QualType& normalizedType,
          }
          argsToKeep.push_back(NormTArg);
          continue;
-      } else { // Here we should not break but rather check if the value is the default one.
-         mightHaveChanged = true;
-         break;
+      } else {
+         if (!isStdDropDefault) {
+            // Here we should not break but rather check if the value is the default one.
+            mightHaveChanged = true;
+            break;
+         }
+         // For std, we want to check the default args values.
       }
 
       // Now, we keep it only if it not is equal to its default, expressed in the arg
@@ -3982,6 +3994,16 @@ bool ROOT::TMetaUtils::IsStdClass(const clang::RecordDecl &cl)
    // Return true, if the decl is part of the std namespace.
 
   return cling::utils::Analyze::IsStdClass(cl);
+}
+
+//______________________________________________________________________________
+bool ROOT::TMetaUtils::IsStdDropDefaultClass(const clang::RecordDecl &cl)
+{
+   // Return true, if the decl is part of the std namespace and we want
+   // its default parameter dropped.
+
+   // Might need to reduce it to shared_ptr and STL collection.s
+   return cling::utils::Analyze::IsStdClass(cl);
 }
 
 //______________________________________________________________________________
