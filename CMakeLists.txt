@@ -125,8 +125,8 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTAL
 
 #---hsimple.root---------------------------------------------------------------------------------
 add_custom_target(hsimple ALL DEPENDS hsimple.root)
-add_custom_command(OUTPUT hsimple.root DEPENDS root.exe
-                  COMMAND bin/root.exe -l -q -b -n -x tutorials/hsimple.C || true VERBATIM)
+add_custom_command(OUTPUT hsimple.root
+                  COMMAND root.exe -l -q -b -n -x tutorials/hsimple.C || true VERBATIM)
 install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tutorials)
 
 #---Configure and install various files neded later and for clients -----------------------------
