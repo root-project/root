@@ -11,8 +11,8 @@ build/unix/gitinfo.sh
 
 git archive -v -o ../$TARFILE --prefix=root-$ROOTVERS/ $CURVERS
 
-mkdir -p etc/root/etc
-cp etc/gitinfo.txt etc/root/etc/
+mkdir -p etc/root-$ROOTVERS/etc
+cp etc/gitinfo.txt etc/root-$ROOTVERS/etc/
 cd etc
 tar -r -vf ../../$TARFILE root-$ROOTVERS/etc/gitinfo.txt
 cd ..
