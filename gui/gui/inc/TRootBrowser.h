@@ -137,6 +137,7 @@ public:
    virtual void      CloseTab(Int_t id);
    virtual void      CloseTabs();
    void              DoTab(Int_t id);
+   void              EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
    TGFrame          *GetActFrame() const { return (TGFrame *)fEditFrame; }
    TGFrame          *GetToolbarFrame() const { return (TGFrame *)fToolbarFrame; }
    TGStatusBar      *GetStatusBar() const { return fStatusBar; }
