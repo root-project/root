@@ -880,7 +880,7 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
 }
 
 //______________________________________________________________________________
-TCling::TUniqueString::TUniqueString(Long64_t size=0)
+TCling::TUniqueString::TUniqueString(Long64_t size)
 {
    fContent.reserve(size);
 }
