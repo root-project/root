@@ -86,9 +86,9 @@ ifneq ($(ClingWorkAroundMissingAutoLoading),)
 multiTree.log: CALLROOTEXE += -e 'gSystem->Load("libTreePlayer");'
 endif
 
-perfstattest.log: runperfstattest.C ./libEvent.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l runperfstattest.C 2>&1 \
-	| grep -v -e 'no dictionary for class' -e 'trying to read an emulated class (AliESDEvent)'  > perfstattest.log
+#execperfstattest_cxx.$(DllSuf): ./libEvent.$(DllSuf)
+#execperfstattest_cxx.$(DllSuf): CALLROOTEXEBUILD += -e 'gSystem->Load("libEvent");'
 
-perfstattest: perfstattest.log
-	$(TestDiff)
+execperfstattest.log: ./libEvent.$(DllSuf)
+execperfstattest.log: CALLROOTEXE += -e 'gSystem->Load("libEvent")'
+

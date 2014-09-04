@@ -7,6 +7,8 @@
 #include "TSystem.h"
 #include "TTreePerfStats.h"
 #include "TROOT.h"
+#include <iostream>
+
 #if defined(__CINT__) && !defined(__MAKECINT__) 
 #include "libEvent.so"
 #else 
@@ -95,8 +97,8 @@ void simultaneous(){
 
    TFile *f = TFile::Open("perftest.root");
 
-   S = (TTree*)f->Get("tree1");
-   T = (TTree*)f->Get("tree2");
+   auto S = (TTree*)f->Get("tree1");
+   auto T = (TTree*)f->Get("tree2");
    Long64_t nentries = T->GetEntries();
 
    S->SetCacheSize(10000000);
@@ -126,7 +128,7 @@ void simultaneous(){
 }
 
 
-int runperfstattest() {
+int execperfstattest() {
    Event::Reset(); // Allow for re-run this script by cleaning static variables.
    write();
    Event::Reset(); // Allow for re-run this script by cleaning static variables.
