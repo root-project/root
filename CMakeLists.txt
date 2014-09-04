@@ -123,11 +123,11 @@ set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
 add_dependencies(onepcm ${__allTargets})
 install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
-#---hsimple.root---------------------------------------------------------------------------------
+#---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 add_custom_target(hsimple ALL DEPENDS hsimple.root)
-add_custom_command(OUTPUT hsimple.root
-                  COMMAND root.exe -l -q -b -n -x tutorials/hsimple.C || true VERBATIM)
-install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tutorials)
+ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
+add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe)
+install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION {CMAKE_INSTALL_TUTDIR} COMPONENT tutorials)
 
 #---Configure and install various files neded later and for clients -----------------------------
 include(RootConfiguration)
