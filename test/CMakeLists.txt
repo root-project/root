@@ -8,10 +8,6 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 project(test)
 find_package(ROOT REQUIRED)
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-
 #---Copy the CTestCustom.cmake file into the build directory---------------------------------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
@@ -188,13 +184,15 @@ ROOT_ADD_TEST(test-stressiterators COMMAND stressIterators FAILREGEX "FAILED")
 ROOT_EXECUTABLE(stressInterpreter stressInterpreter.cxx LIBRARIES Core)
 if(WIN32)
   set(cleantmpfiles POSTCMD cmd /c del AutoDict_*)
-  set(cfgdir /${CMAKE_BUILD_TYPE})
+  set(setenvironment "")
+else()
+  set(setenvironment ENVIRONMENT PATH=${CMAKE_BINARY_DIR}/bin${cfgdir}:$ENV{PATH})
 endif()
 ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
               PRECMD ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/stressInterpreter.cxx 
                                               $<TARGET_FILE_DIR:stressInterpreter>/stressInterpreter.cxx
               ${cleantmpfiles}
-              ENVIRONMENT PATH=${CMAKE_BINARY_DIR}/bin${cfgdir}#$ENV{PATH}
+              ${setenvironment}
               FAILREGEX "FAILED|Error")
 
 #--stressHepix-------------------------------------------------------------------------------
