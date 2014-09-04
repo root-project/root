@@ -879,6 +879,28 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
    return false;
 }
 
+//______________________________________________________________________________
+TCling::TUniqueString::TUniqueString(Long64_t size=0)
+{
+   fContent.reserve(size);
+}
+
+//______________________________________________________________________________
+inline const char *TCling::TUniqueString::Data()
+{
+   return fContent.c_str();
+}
+
+//______________________________________________________________________________
+inline bool TCling::TUniqueString::Append(const std::string& str)
+{
+   // Append string to the storage if not added already.
+   bool notPresent = fLinesHashSet.emplace(fHashFunc(str)).second;
+   if (notPresent){
+      fContent+=str;
+   }
+   return notPresent;
+}
 
 //______________________________________________________________________________
 TCling::TCling(const char *name, const char *title)
@@ -4023,34 +4045,8 @@ const char* TCling::TypeName(const char* typeDesc)
    return t;
 }
 
-namespace {
-   using namespace clang;
-
-   class ExtVisibleStorageAdder: public RecursiveASTVisitor<ExtVisibleStorageAdder>{
-      // This class is to be considered an helper for autoloading.
-      // It is a recursive visitor is used to inspect namespaces coming from
-      // forward declarations in rootmaps and to set the external visible
-      // storage flag for them.
-   public:
-      ExtVisibleStorageAdder(std::unordered_set<const NamespaceDecl*>& nsSet): fNSSet(nsSet) {};
-      bool VisitNamespaceDecl(NamespaceDecl* nsDecl) {
-         // We want to enable the external lookup for this namespace
-         // because it may shadow the lookup of other names contained
-         // in that namespace
-         nsDecl->setHasExternalVisibleStorage();
-         fNSSet.insert(nsDecl);
-         return true;
-      }
-   private:
-      std::unordered_set<const NamespaceDecl*>& fNSSet;
-
-   };
-
-
-}
-
 //______________________________________________________________________________
-int TCling::ReadRootmapFile(const char *rootmapfile)
+int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString)
 {
    // Read and parse a rootmapfile in its new format, and return 0 in case of
    // success, -1 if the file has already been read, and -3 in case its format
@@ -4061,39 +4057,26 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
 
    if (rootmapfile && *rootmapfile) {
 
-      ExtVisibleStorageAdder evsAdder(fNSFromRootmaps);
-
       // Add content of a specific rootmap file
       if (fRootmapFiles->FindObject(rootmapfile)) return -1;
       std::ifstream file(rootmapfile);
-      TString lib_name = "";
-      std::string line;
+      std::string line; line.reserve(200);
+      std::string lib_name; line.reserve(100);
+      bool newFormat=false;
       while (getline(file, line, '\n')) {
-         if ((line.substr(0, 8) == "Library.") ||
-             (line.substr(0, 8) == "Declare.")) {
+         if (!newFormat &&
+             (strstr(line.c_str(),"Library.")!=nullptr || strstr(line.c_str(),"Declare.")!=nullptr)) {
             file.close();
             return -3; // old format
          }
+         newFormat=true;
+
          if (line.substr(0, 9) == "{ decls }") {
             // forward declarations
 
             while (getline(file, line, '\n')) {
                if (line[0] == '[') break;
-               if (line.empty()) continue;
-               if (fSeenRootmapEntry.find(line) != fSeenRootmapEntry.end()) continue;
-               cling::Transaction* T = 0;
-               cling::Interpreter::CompilationResult compRes= fInterpreter->declare(line.c_str(), &T);
-               assert(cling::Interpreter::kSuccess == compRes &&
-                      "A declaration in a rootmap could not be compiled");
-               if (compRes!=cling::Interpreter::kSuccess || 0 == T){
-                  Warning("ReadRootmapFile",
-                          "Problems in %s declaring string '%s' were encountered.", rootmapfile, line.c_str()) ;
-                  continue;
-               }
-
-               if (NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(T->getFirstDecl().getSingleDecl())) {
-                  evsAdder.TraverseDecl(NSD);
-               }
+               uniqueString->Append(line);
             }
          }
          const char firstChar=line[0];
@@ -4104,50 +4087,53 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
             if (libs == "")
                continue;
             lib_name = libs;
-            TString delim(" ");
-            TObjArray* tokens = lib_name.Tokenize(delim);
-            const char* lib = ((TObjString *)tokens->At(0))->GetName();
             if (gDebug > 3) {
+               TString lib_nameTstr(100);
+               TObjArray* tokens = lib_nameTstr.Tokenize(" ");
+               const char* lib = ((TObjString *)tokens->At(0))->GetName();
                const char* wlib = gSystem->DynamicPathName(lib, kTRUE);
                if (wlib) {
-                  Info("ReadRootmapFile", "new section for %s", lib_name.Data());
+                  Info("ReadRootmapFile", "new section for %s", lib_nameTstr.Data());
                }
                else {
-                  Info("ReadRootmapFile", "section for %s (library does not exist)", lib_name.Data());
+                  Info("ReadRootmapFile", "section for %s (library does not exist)", lib_nameTstr.Data());
                }
                delete[] wlib;
+               delete tokens;
             }
-            delete tokens;
          }
-         else if ( 0 != keyLenMap.count(firstChar) ){
-            unsigned int keyLen = keyLenMap.at(firstChar);
-            std::string keyname = line.substr(keyLen, line.length()-keyLen);
+         else {
+            auto keyLenIt = keyLenMap.find(firstChar);
+            if (keyLenIt == keyLenMap.end()) continue;
+            unsigned int keyLen = keyLenIt->second;
+            // Do not make a copy, just start after the key
+            const char *keyname = line.c_str()+keyLen;
             if (gDebug > 6)
-               Info("ReadRootmapFile", "class %s in %s", keyname.c_str(), lib_name.Data());
-            TEnvRec* isThere = fMapfile->Lookup(keyname.c_str());
+               Info("ReadRootmapFile", "class %s in %s", keyname, lib_name.c_str());
+            TEnvRec* isThere = fMapfile->Lookup(keyname);
             if (isThere){
                if(lib_name != isThere->GetValue()){ // the same key for two different libs
                   if (firstChar == 'n') {
                      if (gDebug > 3)
                         Info("ReadRootmapFile", "namespace %s found in %s is already in %s",
-                           keyname.c_str(), lib_name.Data(), isThere->GetValue());
-                  } else if (!TClassEdit::IsSTLCont(keyname.c_str())) {
+                           keyname, lib_name.c_str(), isThere->GetValue());
+                  } else if (!TClassEdit::IsSTLCont(keyname)) {
                      Warning("ReadRootmapFile", "%s %s found in %s is already in %s", line.substr(0, keyLen).c_str(),
-                           keyname.c_str(), lib_name.Data(), isThere->GetValue());
+                           keyname, lib_name.c_str(), isThere->GetValue());
                   }
                } else { // the same key for the same lib
                   if (gDebug > 3)
-                        Info("ReadRootmapFile","Key %s was already defined for %s", keyname.c_str(), lib_name.Data());
+                        Info("ReadRootmapFile","Key %s was already defined for %s", keyname, lib_name.c_str());
                }
 
             } else {
-               fMapfile->SetValue(keyname.c_str(), lib_name.Data());
+               fMapfile->SetValue(keyname, lib_name.c_str());
             }
          }
-         fSeenRootmapEntry.insert(line);
       }
       file.close();
    }
+
    return 0;
 }
 
@@ -4208,6 +4194,31 @@ void TCling::InitRootmapFile(const char *name)
    fMapfile->IgnoreDuplicates(ignore);
 }
 
+
+namespace {
+   using namespace clang;
+
+   class ExtVisibleStorageAdder: public RecursiveASTVisitor<ExtVisibleStorageAdder>{
+      // This class is to be considered an helper for autoloading.
+      // It is a recursive visitor is used to inspect namespaces coming from
+      // forward declarations in rootmaps and to set the external visible
+      // storage flag for them.
+   public:
+      ExtVisibleStorageAdder(std::unordered_set<const NamespaceDecl*>& nsSet): fNSSet(nsSet) {};
+      bool VisitNamespaceDecl(NamespaceDecl* nsDecl) {
+         // We want to enable the external lookup for this namespace
+         // because it may shadow the lookup of other names contained
+         // in that namespace
+         nsDecl->setHasExternalVisibleStorage();
+         fNSSet.insert(nsDecl);
+         return true;
+      }
+   private:
+      std::unordered_set<const NamespaceDecl*>& fNSSet;
+
+   };
+}
+
 //______________________________________________________________________________
 Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 {
@@ -4227,6 +4238,12 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
       fRootmapFiles->SetOwner();
       InitRootmapFile(".rootmap");
    }
+
+   // Prepare a list of all forward declarations for cling
+   // For some experiments it is easily as big as 500k characters. To be on the
+   // safe side, we go for 1M.
+   TUniqueString uniqueString(1048576);
+
    // Load all rootmap files in the dynamic load path ((DY)LD_LIBRARY_PATH, etc.).
    // A rootmap file must end with the string ".rootmap".
    TString ldpath = gSystem->GetDynamicPath();
@@ -4266,7 +4283,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
                            if (gDebug > 4) {
                               Info("LoadLibraryMap", "   rootmap file: %s", p.Data());
                            }
-                           Int_t ret = ReadRootmapFile(p);
+                           Int_t ret = ReadRootmapFile(p,&uniqueString);
                            if (ret == 0)
                               fRootmapFiles->Add(new TNamed(gSystem->BaseName(f), p.Data()));
                            if (ret == -3) {
@@ -4300,7 +4317,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
       }
    }
    if (rootmapfile && *rootmapfile) {
-      Int_t res = ReadRootmapFile(gSystem->BaseName(rootmapfile));
+      Int_t res = ReadRootmapFile(gSystem->BaseName(rootmapfile),&uniqueString);
       if (res == 0) {
          //TString p = gSystem->ConcatFileName(gSystem->pwd(), rootmapfile);
          //fRootmapFiles->Add(new TNamed(gSystem->BaseName(rootmapfile), p.Data()));
@@ -4363,6 +4380,28 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
          fInterpreter->declare(cls.Data());
       }
    }
+
+   // Process the forward declarations collected
+   cling::Transaction* T = nullptr;
+   auto compRes= fInterpreter->declare(uniqueString.Data(), &T);
+   assert(cling::Interpreter::kSuccess == compRes && "A declaration in a rootmap could not be compiled");
+
+   if (compRes!=cling::Interpreter::kSuccess){
+      Warning("LoadLibraryMap",
+               "Problems in %s declaring '%s' were encountered.", rootmapfile, uniqueString.Data()) ;
+   }
+
+   if (T){
+      ExtVisibleStorageAdder evsAdder(fNSFromRootmaps);
+      for (auto declIt = T->decls_begin(); declIt < T->decls_end(); ++declIt) {
+         if (NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(declIt->m_DGR.getSingleDecl())) {
+            evsAdder.TraverseDecl(NSD);
+            }
+      }
+   }
+
+   // clear duplicates
+
    return 0;
 }
 
