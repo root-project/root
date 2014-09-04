@@ -5,7 +5,7 @@ ROOTVERS=`cat build/version_number | sed -e 's/\//\./'`
 TYPE=source
 TARFILE=root_v$ROOTVERS.$TYPE.tar
 
-git co $CURVERS
+git checkout $CURVERS
 # generate etc/gitinfo.txt
 build/unix/gitinfo.sh
 
