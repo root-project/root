@@ -5,6 +5,8 @@ ROOT_USE_PACKAGE(core/cont)
 ROOT_USE_PACKAGE(core/thread)
 ROOT_USE_PACKAGE(cint/cint)
 
+include_directories(${CMAKE_BINARY_DIR}/include)   # All headers have been moved
+
 set(CINTSTLDLLNAMES
     vector 
     vectorbool 
@@ -141,8 +143,8 @@ foreach(_name ${CINTSTLDLLNAMES})
                                 )                                
                                 
     add_Library(${_name}Dict SHARED ${Dictionary}.cxx )
-    set_Target_properties(${_name}Dict PROPERTIES PREFIX ${libprefix} SUFFIX ${libsuffix} FOLDER Dictionaries)
-	install(TARGETS ${_name}Dict RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    set_Target_properties(${_name}Dict PROPERTIES PREFIX ${libprefix} SUFFIX ${libsuffix} FOLDER Dictionaries MACOSX_RPATH 1)
+    install(TARGETS ${_name}Dict RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
                                  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
                                  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
@@ -159,7 +161,7 @@ foreach(_name ${CINTSTLDLLNAMES})
   endif()
 
   add_Library(${_name} SHARED ${LoaderName} ${OutFileName} )
-  set_target_properties(${_name} PROPERTIES PREFIX "" SUFFIX ".dll" FOLDER Dictionaries)
+  set_target_properties(${_name} PROPERTIES PREFIX "" SUFFIX ".dll" FOLDER Dictionaries MACOSX_RPATH 1)
   if(explicitlink)
     target_link_libraries(${_name} Cint)
   endif()
@@ -184,7 +186,7 @@ foreach(_name ${CINTINCDLLNAMES})
                                 COMPILE_FLAGS "${CINTDLLCFLAGS} -I${CMAKE_SOURCE_DIR}/cint/cint/inc"
                                )
     add_Library(${_name} SHARED ${OutFileName})
-    set_target_properties(${_name} PROPERTIES PREFIX "" SUFFIX ".dll" FOLDER Dictionaries)
+    set_target_properties(${_name} PROPERTIES PREFIX "" SUFFIX ".dll" FOLDER Dictionaries MACOSX_RPATH 1)
     if(explicitlink)
       target_link_libraries(${_name} Cint ${CMAKE_M_LIBS})
     endif()
@@ -202,7 +204,7 @@ foreach(_name ${CINTINCDLLNAMES})
                                )
 
     add_Library(${_name} SHARED ${OutFileName})
-    set_target_properties(${_name} PROPERTIES PREFIX "" SUFFIX ".dll" FOLDER Dictionaries)
+    set_target_properties(${_name} PROPERTIES PREFIX "" SUFFIX ".dll" FOLDER Dictionaries MACOSX_RPATH 1)
     if(explicitlink)
       target_link_libraries(${_name} Cint)
     endif()
@@ -242,7 +244,7 @@ foreach(_name ${CINTINCDLLNAMES})
                                )
 
     add_library(${_name} SHARED ${OutFileName} ${CMAKE_SOURCE_DIR}/cint/cint/lib/posix/exten.c)
-    set_target_properties(${_name} PROPERTIES PREFIX "" SUFFIX ".dll" FOLDER Dictionaries)
+    set_target_properties(${_name} PROPERTIES PREFIX "" SUFFIX ".dll" FOLDER Dictionaries MACOSX_RPATH 1)
     if(explicitlink)
       target_link_libraries(${_name} Cint)
     endif()

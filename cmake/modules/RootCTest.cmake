@@ -12,19 +12,6 @@ include(CTest)
 #---A number of operations to allow running the tests from the build directory-----------------------
 set(ROOT_DIR ${CMAKE_BINARY_DIR})
 
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc)
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons)
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts)
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros)
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tutorials ${CMAKE_BINARY_DIR}/tutorials)
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/cint/reflex/python/genreflex ${CMAKE_BINARY_DIR}/lib/python/genreflex)
-
-
-#---Install the headers which are needed to run the tests from the binary tree-----------------
-add_custom_target(move_headers ALL ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
-                                   -DCOMPONENTS="headers"
-                                   -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake )
-
 #---Test products should not be poluting the standard destinations--------------------------------
 unset(CMAKE_LIBRARY_OUTPUT_DIRECTORY)
 unset(CMAKE_ARCHIVE_OUTPUT_DIRECTORY)

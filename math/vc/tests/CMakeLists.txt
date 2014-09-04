@@ -1,4 +1,8 @@
 include(AddFileDependencies)
+if(CMAKE_VERSION VERSION_GREATER 3.0.0)
+  cmake_policy(SET CMP0042 OLD)
+endif()
+
 
 add_definitions(-DCOMPILE_FOR_UNIT_TESTS) # -DVC_CHECK_ALIGNMENT)
 if(Vc_COMPILER_IS_MSVC)

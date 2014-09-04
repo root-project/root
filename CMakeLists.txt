@@ -1,5 +1,5 @@
 #---Check if cmake has the required version-----------------------------------------------------
-cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8.8 FATAL_ERROR)
 cmake_policy(SET CMP0005 NEW)
 #---Set name of the project to "ROOT". Has to be done after check of cmake version--------------
 project(ROOT)
@@ -64,6 +64,15 @@ foreach(var ${variables})
   endif()
 endforeach()
 
+#---Move (copy) the headers and other directories to binary tree---------------------------------
+add_custom_target(move_headers  COMMAND ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR} -DCOMPONENTS="headers"
+                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake
+                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
+                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
+                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
+                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
+                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tutorials ${CMAKE_BINARY_DIR}/tutorials)
+
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
 add_subdirectory (cint)
@@ -92,10 +101,15 @@ endif()
 if(roofit)
   add_subdirectory(roofit)
 endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
-include(PostInstalledSoftware)
+#---hsimple.root---------------------------------------------------------------------------------
+add_custom_target(hsimple ALL DEPENDS hsimple.root)
+ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
+add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe)
+install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION {CMAKE_INSTALL_TUTDIR} COMPONENT tutorials)
 
 #---Configure and install various files neded later and for clients -----------------------------
 include(RootConfiguration)
@@ -105,8 +119,8 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(FILES LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
   install(DIRECTORY README DESTINATION ${CMAKE_INSTALL_DOCDIR} PATTERN ".svn" EXCLUDE)
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
-                         PATTERN ".svn" EXCLUDE 
-                         REGEX system.rootrc EXCLUDE 
+                         PATTERN ".svn" EXCLUDE
+                         REGEX system.rootrc EXCLUDE
                          REGEX root.mimes EXCLUDE)
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR} PATTERN ".svn" EXCLUDE)
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR} PATTERN ".svn" EXCLUDE)

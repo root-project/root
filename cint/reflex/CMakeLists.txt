@@ -29,6 +29,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
   #---install headers--------------------------------------------------------
   #ROOT_INSTALL_HEADERS()
   install(DIRECTORY inc/Reflex/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Reflex
+                            COMPONENT headers
                             PATTERN ".svn" EXCLUDE
                             PATTERN "Makefile.am" EXCLUDE
                             REGEX "LinkDef" EXCLUDE )

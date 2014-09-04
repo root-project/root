@@ -23,6 +23,7 @@ list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/DaemonUtils.cxx
 add_library(rsa STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/rsaaux.cxx
                        ${CMAKE_CURRENT_SOURCE_DIR}/src/rsalib.cxx
                        ${CMAKE_CURRENT_SOURCE_DIR}/src/rsafun.cxx)
+add_dependencies(rsa move_headers)
 
 ROOT_GENERATE_DICTIONARY(G__RootAuth ${headers} LINKDEF LinkDefRoot.h)
 ROOT_GENERATE_ROOTMAP(RootAuth LINKDEF LinkDefRoot.h DEPENDENCIES Net RIO )

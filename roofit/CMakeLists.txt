@@ -16,9 +16,6 @@ if(mathmore OR ROOT_mathmore_FOUND)
   ROOT_USE_PACKAGE(math/mathmore)	
 endif()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/roofit/inc) 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/roofitcore/inc) 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/roostats/inc) 
 
 add_subdirectory(roofitcore)
 add_subdirectory(roofit)
