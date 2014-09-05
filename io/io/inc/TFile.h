@@ -86,11 +86,12 @@ protected:
    TMap            *fCacheReadMap;   //!Pointer to the read cache (if any)
    TFileCacheWrite *fCacheWrite;     //!Pointer to the write cache (if any)
    Long64_t         fArchiveOffset;  //!Offset at which file starts in archive
-   Bool_t           fIsArchive;      //!True if this is a pure archive file
-   Bool_t           fNoAnchorInName; //!True if we don't want to force the anchor to be appended to the file name
-   Bool_t           fIsRootFile;     //!True is this is a ROOT file, raw file otherwise
-   Bool_t           fInitDone;       //!True if the file has been initialized
-   Bool_t           fMustFlush;      //!True if the file buffers must be flushed
+   Bool_t           fIsArchive : 1;  //!True if this is a pure archive file
+   Bool_t           fNoAnchorInName : 1; //!True if we don't want to force the anchor to be appended to the file name
+   Bool_t           fIsRootFile : 1; //!True is this is a ROOT file, raw file otherwise
+   Bool_t           fInitDone : 1;   //!True if the file has been initialized
+   Bool_t           fMustFlush : 1;  //!True if the file buffers must be flushed
+   Bool_t           fIsPcmFile : 1;  //!True if the file is a ROOT pcm file.
    TFileOpenHandle *fAsyncHandle;    //!For proper automatic cleanup
    EAsyncOpenStatus fAsyncOpenStatus; //!Status of an asynchronous open request
    TUrl             fUrl;            //!URL of file
