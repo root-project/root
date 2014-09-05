@@ -2278,16 +2278,11 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
             TClass* clbase = element->GetClassPointer();
             if ((clbase == TObject::Class()) && cl->CanIgnoreTObjectStreamer()) {
                // Note: TStreamerInfo::Compile() leaves this element
-               //       out of the compiled info, although it does
-               //       exists in the non-compiled info.  We must
-               //       account for the fact that this element is
-               //       missing in the compiled streamer info by
-               //       making sure that we do not consume an id
-               //       number for it.
+               //       out of the optimized info, although it does
+               //       exists in the non-compiled  and non-optimized info.
                // FIXME: The test that TStreamerInfo::Compile() uses
                //        is element->GetType() < 0, so that is what
                //        we should do as well.
-               --id;
                continue;
             }
             if (clbase->GetListOfRealData()->GetSize() == 0) {

@@ -2338,17 +2338,6 @@ void TStreamerInfo::Compile()
       if (!element) {
          break;
       }
-      if (element->GetType() < 0) {
-         // -- Skip an ignored TObject base class.
-         // Note: The only allowed negative value here is -1,
-         // and signifies that Build() has found a TObject
-         // base class and TClass::IgnoreTObjectStreamer() was
-         // called.  In this case the compiled version of the
-         // elements omits the TObject base class element,
-         // which has to be compensated for by TTree::Bronch()
-         // when it is making branches for a split object.
-         continue;
-      }
 
       Int_t asize = element->GetSize();
       if (element->GetArrayLength()) {
@@ -2368,6 +2357,7 @@ void TStreamerInfo::Compile()
       // try to group consecutive members of the same type
       if (!TestBit(kCannotOptimize)
           && (keep >= 0)
+          && (element->GetType() >=0)
           && (element->GetType() < 10)
           && (fComp[fNdata].fType == fComp[fNdata].fNewType)
           && (fComp[keep].fMethod == 0)
@@ -2406,6 +2396,21 @@ void TStreamerInfo::Compile()
          fComp[keep].fType = element->GetType() + kRegrouped;
          isOptimized = kTRUE;
          previousOptimized = kTRUE;
+      } else if (element->GetType() < 0) {
+
+         // -- Deal with an ignored TObject base class.
+         // Note: The only allowed negative value here is -1,
+         // and signifies that Build() has found a TObject
+         // base class and TClass::IgnoreTObjectStreamer() was
+         // called.  In this case the compiled version of the
+         // elements omits the TObject base class element,
+         // which has to be compensated for by TTree::Bronch()
+         // when it is making branches for a split object.
+         fComp[fNslots - (++optiOut) ] = fComp[fNdata]; // Copy the 'ignored' element.
+         fCompFull[fNfulldata] = &(fComp[fNslots - optiOut]);
+         keep = -1;
+         previousOptimized = kFALSE;
+
       } else {
          if (fComp[fNdata].fNewType != fComp[fNdata].fType) {
             if (fComp[fNdata].fNewType > 0) {
@@ -2444,14 +2449,14 @@ void TStreamerInfo::Compile()
    }
 
    for (i = 0; i < fNdata; ++i) {
-      if (!fCompOpt[i]->fElem) {
+      if (!fCompOpt[i]->fElem || fCompOpt[i]->fElem->GetType()< 0) {
          continue;
       }
       AddReadAction(fReadObjectWise, i, fCompOpt[i]);
       AddWriteAction(fWriteObjectWise, i, fCompOpt[i]);
    }
    for (i = 0; i < fNfulldata; ++i) {
-      if (!fCompFull[i]->fElem) {
+      if (!fCompFull[i]->fElem || fCompFull[i]->fElem->GetType()< 0) {
          continue;
       }
       AddReadAction(fReadMemberWise, i, fCompFull[i]);
