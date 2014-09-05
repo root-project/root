@@ -4071,7 +4071,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
          }
          newFormat=true;
 
-         if (line.substr(0, 9) == "{ decls }") {
+         if (line.compare(0, 9, "{ decls }") == 0) {
             // forward declarations
 
             while (getline(file, line, '\n')) {
@@ -4082,11 +4082,12 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
          const char firstChar=line[0];
          if (firstChar == '[') {
             // new section (library)
-            std::string libs = line.substr(1, line.find(']')-1);
-            while( libs[0] == ' ' ) libs.replace(0, 1, "");
-            if (libs == "")
-               continue;
-            lib_name = libs;
+            auto brpos = line.find(']');
+            if (brpos == string::npos) continue;
+            lib_name = line.substr(1, brpos-1);
+            size_t nspaces = 0;
+            while( lib_name[nspaces] == ' ' ) ++nspaces;
+            if (nspaces) lib_name.replace(0, nspaces, "");
             if (gDebug > 3) {
                TString lib_nameTstr(100);
                TObjArray* tokens = lib_nameTstr.Tokenize(" ");
