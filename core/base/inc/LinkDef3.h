@@ -104,7 +104,7 @@
 #pragma link C++ global kCutBuffer;
 #pragma link C++ global kMaxPixel;
 
-#pragma link C++ global gPerfStats;
+// #pragma link C++ global gPerfStats;
 #pragma link C++ global gMonitoringWriter;
 #pragma link C++ global gMonitoringReader;
 
