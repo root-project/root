@@ -339,7 +339,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
-  if(CMAKE_ROOTTEST_DICT)
+  if(CMAKE_ROOTTEST_DICT OR (NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY))
     add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
   else()
     add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
@@ -433,25 +433,23 @@ function(ROOT_LINKER_LIBRARY library)
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
   set_target_properties(${library} PROPERTIES LINK_INTERFACE_LIBRARIES "${ARG_DEPENDENCIES}")
   #----Installation details-------------------------------------------------------
-  if(NOT ARG_TEST)
-  if(ARG_CMAKENOEXPORT)
-    install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-                               LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                               ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                               COMPONENT libraries)
-  else()
-    install(TARGETS ${library} EXPORT ${CMAKE_PROJECT_NAME}Exports
-                               RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-                               LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                               ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                               COMPONENT libraries)
-  endif()
-  if(WIN32 AND ARG_TYPE STREQUAL SHARED)
+  if(NOT ARG_TEST AND CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+    if(ARG_CMAKENOEXPORT)
+      install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
+                                 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+                                 ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+    else()
+      install(TARGETS ${library} EXPORT ${CMAKE_PROJECT_NAME}Exports
+                                 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
+                                 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+                                 ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+    endif()
+    if(WIN32 AND ARG_TYPE STREQUAL SHARED)
       install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
-              CONFIGURATIONS Debug RelWithDebInfo
-              DESTINATION ${CMAKE_INSTALL_BINDIR}
-              COMPONENT libraries)
-  endif()
+                    CONFIGURATIONS Debug RelWithDebInfo
+                    DESTINATION ${CMAKE_INSTALL_BINDIR}
+                    COMPONENT libraries)
+    endif()
   endif()
 endfunction()
 
@@ -504,10 +502,9 @@ function(ROOT_MODULE_LIBRARY library)
   set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
   target_link_libraries(${library} ${ARG_LIBRARIES})
   #----Installation details-------------------------------------------------------
-  install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-                             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                             COMPONENT libraries)
+  install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
+                             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+                             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
