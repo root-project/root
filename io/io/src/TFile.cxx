@@ -3459,6 +3459,15 @@ void TFile::SetReadStreamerInfo(Bool_t readinfo)
 }
 
 //______________________________________________________________________________
+Bool_t TFile::GetReadStreamerInfo()
+{
+   // static function to get the value of fgReadInfo.
+   // See TFile::SetReadStreamerInfo for more documentation.
+
+   return fgReadInfo;
+}
+
+//______________________________________________________________________________
 void TFile::ShowStreamerInfo()
 {
    // Show the StreamerInfo of all classes written to this file.

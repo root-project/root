@@ -281,6 +281,7 @@ public:
    static void         SetFileReadCalls(Int_t readcalls = 0);
    static void         SetReadaheadSize(Int_t bufsize = 256000);
    static void         SetReadStreamerInfo(Bool_t readinfo=kTRUE);
+   static Bool_t       GetReadStreamerInfo();
 
    static Long64_t     GetFileCounter();
    static void         IncrementFileCounter();
