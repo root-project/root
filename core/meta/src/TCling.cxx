@@ -1154,7 +1154,7 @@ bool TCling::LoadPCM(TString pcmFileName,
       }
 
       TDirectory::TContext ctxt(0);
-      TFile *pcmFile = new TFile(pcmFileName,"READ");
+      TFile *pcmFile = new TFile(pcmFileName+"?filetype=pcm","READ");
       TObjArray *protoClasses;
       pcmFile->GetObject("__ProtoClasses", protoClasses);
       if (protoClasses) {

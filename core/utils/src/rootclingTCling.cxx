@@ -163,7 +163,7 @@ bool CloseStreamerInfoROOTFile()
    }
 
    // Don't use TFile::Open(); we don't need plugins.
-   TFile dictFile(gPCMFilename.c_str(), "RECREATE");
+   TFile dictFile( (gPCMFilename + "?filetype=pcm").c_str(), "RECREATE");
    if (dictFile.IsZombie())
       return false;
    // Instead of plugins:

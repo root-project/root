@@ -178,6 +178,7 @@ TFile::TFile() : TDirectoryFile(), fInfoCache(0)
    fIsArchive       = kFALSE;
    fInitDone        = kFALSE;
    fMustFlush       = kTRUE;
+   fIsPcmFile       = kFALSE;
    fAsyncHandle     = 0;
    fAsyncOpenStatus = kAOSNotAsync;
    SetBit(kBinaryFile, kTRUE);
@@ -325,6 +326,11 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    if (strstr(fUrl.GetOptions(), "filetype=raw"))
       fIsRootFile = kFALSE;
 
+   // if option contains filetype=pcm then go into ROOT PCM file mode
+   fIsPcmFile = kFALSE;
+   if (strstr(fUrl.GetOptions(), "filetype=pcm"))
+      fIsPcmFile = kTRUE;
+
    // Init initialization control flag
    fInitDone   = kFALSE;
    fMustFlush  = kTRUE;
@@ -364,13 +370,13 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fArchiveOffset = 0;
    fIsArchive     = kFALSE;
    fArchive       = 0;
-   if (fIsRootFile && fOption != "NEW" && fOption != "CREATE"
+   if (fIsRootFile && !fIsPcmFile && fOption != "NEW" && fOption != "CREATE"
        && fOption != "RECREATE") {
       // If !gPluginMgr then we are at startup and cannot handle plugins
       // as TArchiveFile yet.
       fArchive = gPluginMgr ? TArchiveFile::Open(fUrl.GetUrl(), this) : 0;
       if (fArchive) {
-        fname1 = fArchive->GetArchiveName();
+         fname1 = fArchive->GetArchiveName();
          // if no archive member is specified then this TFile is just used
          // to read the archive contents
          if (!strlen(fArchive->GetMemberName()))
@@ -1272,6 +1278,8 @@ TList *TFile::GetStreamerInfoList()
    //   TStreamerInfo *info = (TStreamerInfo*)list->FindObject("MyClass");
    //   Int_t classversionid = info->GetClassVersion();
    //   delete list;
+
+   if (fIsPcmFile) return 0; // No schema evolution for ROOT PCM files.
 
    TList *list = 0;
    if (fSeekInfo) {
@@ -3517,6 +3525,7 @@ void TFile::WriteStreamerInfo()
    //if (!gFile) return;
    if (!fWritable) return;
    if (!fClassIndex) return;
+   if (fIsPcmFile) return; // No schema evolution for ROOT PCM files.
    //no need to update the index if no new classes added to the file
    if (fClassIndex->fArray[0] == 0) return;
    if (gDebug > 0) Info("WriteStreamerInfo", "called for file %s",GetName());
