@@ -876,7 +876,9 @@ endfunction()
 #----------------------------------------------------------------------------
 macro(ROOT_ADD_BUILTIN_DEPENDENCIES target EXTERNAL)
   add_custom_command(OUTPUT ${${EXTERNAL}_LIBRARIES} DEPENDS ${EXTERNAL})
-  add_custom_target(${EXTERNAL}LIBS DEPENDS ${${EXTERNAL}_LIBRARIES})
+  if(NOT TARGET ${EXTERNAL}LIBS)
+    add_custom_target(${EXTERNAL}LIBS DEPENDS ${${EXTERNAL}_LIBRARIES})
+  endif()
   add_dependencies(${target} ${EXTERNAL}LIBS)
 endmacro()
 
