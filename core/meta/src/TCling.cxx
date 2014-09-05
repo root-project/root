@@ -1154,17 +1154,9 @@ bool TCling::LoadPCM(TString pcmFileName,
       }
 
       TDirectory::TContext ctxt(0);
-      // Here we speed up the reading of the pcm: this has an impact on the
-      // startup time. We do not need to check the streamerinfo: by
-      // construction the rootpcms have been created with this very root
-      // version.
-      Bool_t readStreamerInfoOld (TFile::GetReadStreamerInfo());
-      TFile::SetReadStreamerInfo(false);
-      TFile pcmFile(pcmFileName,"READ");
-      TFile::SetReadStreamerInfo(readStreamerInfoOld);
-
+      TFile *pcmFile = new TFile(pcmFileName,"READ");
       TObjArray *protoClasses;
-      pcmFile.GetObject("__ProtoClasses", protoClasses);
+      pcmFile->GetObject("__ProtoClasses", protoClasses);
       if (protoClasses) {
          for (auto proto : *protoClasses) {
             TClassTable::Add((TProtoClass*)proto);
@@ -1200,7 +1192,7 @@ bool TCling::LoadPCM(TString pcmFileName,
       }
 
       TObjArray *dataTypes;
-      pcmFile.GetObject("__Typedefs", dataTypes);
+      pcmFile->GetObject("__Typedefs", dataTypes);
       if (dataTypes) {
          for (auto typedf: *dataTypes)
             gROOT->GetListOfTypes()->Add(typedf);
@@ -1209,7 +1201,7 @@ bool TCling::LoadPCM(TString pcmFileName,
       }
 
       TObjArray *enums;
-      pcmFile.GetObject("__Enums", enums);
+      pcmFile->GetObject("__Enums", enums);
       if (enums) {
          // Cache the pointers
          auto listOfGlobals = gROOT->GetListOfGlobals();
@@ -1242,6 +1234,8 @@ bool TCling::LoadPCM(TString pcmFileName,
          enums->Clear();
          delete enums;
       }
+
+      delete pcmFile;
 
       gDebug = oldDebug;
    } else {
