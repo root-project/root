@@ -75,7 +75,7 @@ public:
 
    void           ClearText();
    Bool_t         LoadBuffer(const char *buf) { return fTextEdit->LoadBuffer(buf); }
-   void           LoadFile(char *fname = 0);
+   void           LoadFile(const char *fname = 0);
    void           SaveFile(const char *fname);
    Bool_t         SaveFileAs();
    void           PrintText();
