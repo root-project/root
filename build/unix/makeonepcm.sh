@@ -49,6 +49,9 @@ for dict in `find $modules -name 'G__*.cxx' 2> /dev/null | grep -v /G__Cling.cxx
 #ifdef emit
 # undef emit
 #endif
+#ifdef signals
+# undef signals
+#endif
 EOF
     elif ! test "$dirname" = "`echo $dirname| sed 's,net/ldap,,'`"; then
         # ldap; undef Debug afterwards
