@@ -650,7 +650,7 @@ def cleanup():
  # it is done before any ROOT libraries are off-loaded, with unspecified
  # order of static object destruction; 
    gROOT = sys.modules[ 'libPyROOT' ].gROOT
-   gROOT.EndOfProcessCleanups()
+   gROOT.EndOfProcessCleanups(True)
    del gROOT
 
  # cleanup cached python strings
