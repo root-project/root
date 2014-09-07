@@ -740,14 +740,14 @@ void TROOT::CloseFiles()
 }
 
 //______________________________________________________________________________
-void TROOT::EndOfProcessCleanups()
+void TROOT::EndOfProcessCleanups(bool altInterpreter /* = false */)
 {
    // Execute the cleanups necessary at the end of the process, in particular
    // those that must be executed before the library start being unloaded.
 
    CloseFiles();
    
-   if (gInterpreter) {
+   if (gInterpreter && !altInterpreter) {
       gInterpreter->ResetGlobals();
    }
 
