@@ -10,6 +10,7 @@
 // ROOT
 #include "TObject.h"
 #include "TBufferFile.h"      // for pickling
+#include "TROOT.h"
 
 // Standard
 #include <algorithm>
@@ -23,13 +24,15 @@ namespace PyROOT {
 //____________________________________________________________________________
 void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
 // Destroy the held C++ object, if owned; does not deallocate the proxy.
-   if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
-      if ( ! (pyobj->fFlags & ObjectProxy::kIsValue) )
-         pyobj->ObjectIsA()->Destructor( pyobj->fObject );
-      else
+   if ( gROOT && !gROOT->TestBit(TObject::kInvalidObject ) ) {
+      if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
+         if ( ! (pyobj->fFlags & ObjectProxy::kIsValue) )
+            pyobj->ObjectIsA()->Destructor( pyobj->fObject );
+         else
+            delete (TInterpreterValue*)pyobj->fObject;
+      } else if ( pyobj->fFlags & ObjectProxy::kIsValue )
          delete (TInterpreterValue*)pyobj->fObject;
-   } else if ( pyobj->fFlags & ObjectProxy::kIsValue )
-      delete (TInterpreterValue*)pyobj->fObject;
+   }
    pyobj->fObject = NULL;
 }
 
