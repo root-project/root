@@ -255,7 +255,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---Get the list of definitions---------------------------
   get_directory_property(defs COMPILE_DEFINITIONS)
   foreach( d ${defs})
-   if(NOT d MATCHES "=")
+   if((NOT d MATCHES "=") AND (NOT d MATCHES "^[$]<.*>$")) # avoid generator expressions
      set(definitions ${definitions} -D${d})
    endif()
   endforeach()
