@@ -1118,6 +1118,8 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
    XMLAttrPointer_t attr;
    XMLNodePointer_t subchild;
+   XMLNodePointer_t subsubchild;
+
    XMLNodePointer_t child = gdml->GetChild(node);
    TString name;
    TString solidname = "";
@@ -1368,19 +1370,19 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 // END: reflectedSolid
 
          vol->AddNode(lv, fVolID, transform);
-   } else if ((strcmp(gdml->GetNodeName(child), "divisionvol")) == 0) {
-
-         TString divVolref = "";
-         Int_t axis = 0;
-         TString number = "";
-         TString width = "";
-         TString offset = "";
-         TString lunit = "mm";
-
-         attr = gdml->GetFirstAttr(child);
-
-         while (attr != 0) {
-
+      } else if ((strcmp(gdml->GetNodeName(child), "divisionvol")) == 0) {
+	
+	TString divVolref = "";
+	Int_t axis = 0;
+	TString number = "";
+	TString width = "";
+	TString offset = "";
+	TString lunit = "mm";
+	
+	attr = gdml->GetFirstAttr(child);
+	
+	while (attr != 0) {
+	  
             tempattr = gdml->GetAttrName(attr);
             tempattr.ToLower();
 
@@ -1398,7 +1400,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
             attr = gdml->GetNextAttr(attr);
 
-         }
+	}
 
          subchild = gdml->GetChild(child);
 
@@ -1432,8 +1434,10 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          fVolID = fVolID + 1;
          Double_t xlo, xhi;
          vol->GetShape()->GetAxisRange(axis, xlo, xhi);
+
          Int_t ndiv = (Int_t)Evaluate(numberline);
          Double_t start = xlo + (Double_t)Evaluate(offsetline);
+
          Double_t step = (Double_t)Evaluate(widthline);
          Int_t numed = 0;
          TGeoVolume *old = fvolmap[NameShort(reftemp)];
@@ -1454,6 +1458,158 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          fvolmap[NameShort(reftemp)] = divvol;
 
       }//end of Division else if
+
+
+      else if ((strcmp(gdml->GetNodeName(child), "replicavol")) == 0) {
+	
+	TString divVolref = "";
+	Int_t axis = 0;
+	TString number = "";
+	TString width = "";
+	TString offset = "";
+	TString wunit = "mm";
+	TString ounit = "mm";
+	Double_t wvalue = 0;
+	Double_t ovalue = 0;
+       
+
+	attr = gdml->GetFirstAttr(child);
+	
+	while (attr != 0) {
+	  
+            tempattr = gdml->GetAttrName(attr);
+            tempattr.ToLower();
+
+            if (tempattr == "number") {
+	      number = gdml->GetAttrValue(attr);
+	    }
+            attr = gdml->GetNextAttr(attr);
+	}
+
+	subchild = gdml->GetChild(child);
+
+         while (subchild != 0) {
+            tempattr = gdml->GetNodeName(subchild);
+            tempattr.ToLower();
+
+            if (tempattr == "volumeref") {
+	      reftemp = gdml->GetAttr(subchild, "ref");
+	      if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+		reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+	      }
+	      divVolref = reftemp;
+	    }
+	    
+	    if (tempattr == "replicate_along_axis") {
+	      subsubchild = gdml->GetChild(subchild);
+	      
+	      while (subsubchild != 0) {
+		if ((strcmp(gdml->GetNodeName(subsubchild), "width")) == 0) {
+		  attr = gdml->GetFirstAttr(subsubchild);
+		  while (attr != 0) {
+		    tempattr = gdml->GetAttrName(attr);
+		    tempattr.ToLower();
+		    if (tempattr == "value") {
+		      wvalue = Evaluate(gdml->GetAttrValue(attr));
+		    }
+		    else if (tempattr == "unit"){
+		      wunit = gdml->GetAttrValue(attr);
+		    } 
+		    
+		    attr = gdml->GetNextAttr(attr);
+		  }
+		}
+		else if ((strcmp(gdml->GetNodeName(subsubchild), "offset")) == 0) {
+		  attr = gdml->GetFirstAttr(subsubchild);
+		  while (attr != 0) {
+		    tempattr = gdml->GetAttrName(attr);
+		    tempattr.ToLower();
+		    if (tempattr == "value") {
+		      ovalue = Evaluate(gdml->GetAttrValue(attr));
+		    }
+		    else if (tempattr == "unit"){
+		      ounit = gdml->GetAttrValue(attr);
+		    } 
+		    attr = gdml->GetNextAttr(attr);
+		  }
+		}
+		
+		else if ((strcmp(gdml->GetNodeName(subsubchild), "direction")) == 0) {
+		  attr = gdml->GetFirstAttr(subsubchild);
+		  while (attr != 0) {
+		    tempattr = gdml->GetAttrName(attr);
+		    tempattr.ToLower();
+		    if (tempattr == "x") {
+		      axis = 1;
+		    }
+		    else if (tempattr == "y"){
+		      axis = 2;
+		    }
+		    else if (tempattr == "z"){
+		      axis = 3;
+		    }
+		    else if (tempattr == "rho"){
+		      axis = 1;
+		    }
+		    else if (tempattr == "phi"){
+		      axis = 2;
+		    }
+
+		    attr = gdml->GetNextAttr(attr);
+		  }
+		}
+		
+	      subsubchild = gdml->GetNext(subsubchild);
+	      }
+
+	    }
+
+	    
+	    subchild = gdml->GetNext(subchild);
+	 }
+      
+      
+         TString numberline = "";
+         TString widthline = "";
+         TString offsetline = "";
+         TString retwunit;
+	 TString retounit;
+         retwunit = GetScale(wunit);
+	 retounit = GetScale(ounit);
+
+         numberline = TString::Format("%s", number.Data());
+         widthline = TString::Format("(%.12g)*%s", wvalue, retwunit.Data());
+         offsetline = TString::Format("(%.12g)*%s", ovalue, retounit.Data());
+
+         fVolID = fVolID + 1;
+         Double_t xlo, xhi;
+         vol->GetShape()->GetAxisRange(axis, xlo, xhi);
+
+         Int_t ndiv = (Int_t)Evaluate(numberline);
+         Double_t start = xlo + (Double_t)Evaluate(offsetline);
+
+         Double_t step = (Double_t)Evaluate(widthline);
+         Int_t numed = 0;
+         TGeoVolume *old = fvolmap[NameShort(reftemp)];
+         if (old) {
+            // We need to recreate the content of the divided volume
+            old = fvolmap[NameShort(reftemp)];
+            // medium id
+            numed = old->GetMedium()->GetId();
+         }
+         TGeoVolume *divvol = vol->Divide(NameShort(reftemp), axis, ndiv, start, step, numed);
+         if (!divvol) {
+            Fatal("VolProcess", "Cannot divide volume %s", vol->GetName());
+            return child;
+         }
+         if (old && old->GetNdaughters()) {
+            divvol->ReplayCreation(old);
+         }
+         fvolmap[NameShort(reftemp)] = divvol;
+
+	 } //End of replicavol
+
+
 
       child = gdml->GetNext(child);
    }
