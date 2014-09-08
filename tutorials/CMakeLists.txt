@@ -15,6 +15,9 @@ if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
   else()
     set(ROOT_environ PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
   endif()
+else()                       # testing using an installation
+  include(${ROOT_USE_FILE})
+  enable_testing()
 endif()
 
 #---Copy the CTestCustom.cmake file into the build directory--------
@@ -30,14 +33,6 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogon.C "{
   gSystem->SetBuildDir(\".\", kTRUE);
 }")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootalias.C "")
-
-#---Definition of the helper function--------------------------------
-function(ROOT_ADD_TUTORIAL macrofile rc)
-  string(REPLACE ".C" "" name ${macrofile})
-  string(REPLACE "/" "-" name ${name})
-  ROOT_ADD_TEST(tutorial-${name} COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${macrofile}
-                PASSRC ${rc} FAILREGEX "Error in" "error:" LABELS tutorial)
-endfunction()
 
 #---Tutorials disabled depending on the build components-------------
 if(NOT ROOT_minuit2_FOUND)

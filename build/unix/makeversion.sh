@@ -5,31 +5,22 @@
 #
 # Author: Fons Rademakers, 28/4/2000
 
-CINT=cint/cint/main/cint_tmp
+CINT=$1/bin/cint_tmp
 SCRIPT=build/version.cxx
+VERSION=`cat build/version_number`
 
 $CINT $SCRIPT
 
 if test "x`uname | grep -i cygwin`" != "x"; then
-    echo 'Need to run "dos2unix base/inc/RVersion.h"'
     dos2unix core/base/inc/RVersion.h
 fi
 
-echo "Update also doc/vXXX/index.html to `cat build/version_number`."
+echo "Committing changes."
+git commit core/base/inc/RVersion.h build/version_number \
+  -m "Update ROOT version files to v$VERSION." || exit 1
+
+echo "Update also doc/vXXX/index.html to $VERSION."
 echo ""
-echo "New version is `cat build/version_number`. Updating dependencies..."
-
-# compile all files that were out-of-date prior to makeversion.sh
-make -o core/base/inc/RVersion.h
-
-# touch all files that don't need recompilation (need to do this 3 times
-# to walk through chain of dependencies)
-make -s -t; make -s -t; make -s -t
-
-# recompile only core/base/src/TROOT.cxx
-touch core/base/src/TROOT.cxx
-touch core/base/inc/TVersionCheck.h
-touch rootx/src/rootxx.cxx
-make -j `bin/root-config --ncpu`
-
-echo "root-config --version reports: `bin/root-config --prefix=. --version`"
+echo "New version is $VERSION."
+echo "See http://root.cern.ch/drupal/howtorelease for the next steps,"
+echo "for instance tagging if this is a release."

@@ -111,6 +111,15 @@ ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
 add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe)
 install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 
+#---version--------------------------------------------------------------------------------------
+add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh ${CMAKE_BINARY_DIR}
+                          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+#---distribution commands------------------------------------------------------------------------
+add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh
+                          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_custom_target(dist COMMAND cpack --config CPackConfig.cmake)
+
 #---Configure and install various files neded later and for clients -----------------------------
 include(RootConfiguration)
 
