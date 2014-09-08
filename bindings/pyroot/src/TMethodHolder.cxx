@@ -545,7 +545,7 @@ Bool_t PyROOT::TMethodHolder::SetMethodArgs( PyObject* args, Long_t user )
 PyObject* PyROOT::TMethodHolder::Execute( void* self, Bool_t release_gil )
 {
 // call the interface method
-   R__LOCKGUARD2( gGlobalMutex );
+   R__LOCKGUARD2( gInterpreterMutex );
    PyObject* result = 0;
 
    if ( Utility::gSignalPolicy == Utility::kFast ) {
