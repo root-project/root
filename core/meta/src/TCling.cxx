@@ -4804,7 +4804,9 @@ Int_t TCling::AutoParse(const char *cls)
    }
 
    // The catalogue of headers is in the dictionary
-   AutoLoad(cls);
+   if (fClingCallbacks->IsAutoloadingEnabled()) {
+      AutoLoad(cls);
+   }
 
    // Prevent the recursion when the library dictionary are loaded.
    Int_t oldAutoloadValue = SetClassAutoloading(false);
