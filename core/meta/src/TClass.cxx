@@ -2748,7 +2748,9 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    Bool_t checkTable = kFALSE;
 
    if (!cl) {
+      int oldAutoloadVal = gCling->SetClassAutoloading(false);
       TClassEdit::GetNormalizedName(normalizedName, name);
+      gCling->SetClassAutoloading(oldAutoloadVal);
       // Try the normalized name.
       if (normalizedName != name) {
          cl = (TClass*)gROOT->GetListOfClasses()->FindObject(normalizedName.c_str());
