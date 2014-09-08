@@ -626,7 +626,7 @@ if(builtin_xrootd)
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
   install(DIRECTORY ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/ DESTINATION ${CMAKE_INSTALL_LIBDIR}
                     COMPONENT libraries
-                    FILES_MATCHING PATTERN "libXrd*${CMAKE_SHARED_LIBRARY_SUFFIX}")
+                    FILES_MATCHING PATTERN "libXrd*")
   set(xrootd ON CACHE BOOL "" FORCE)
 endif()
 if(xrootd AND xrootd_versionnum VERSION_GREATER 300030005)

@@ -109,7 +109,7 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 add_custom_target(hsimple ALL DEPENDS hsimple.root)
 ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
 add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe)
-install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tutorials)
+install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 
 #---Configure and install various files neded later and for clients -----------------------------
 include(RootConfiguration)
