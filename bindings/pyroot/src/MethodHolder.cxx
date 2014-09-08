@@ -628,7 +628,7 @@ template< class T, class M >
 PyObject* PyROOT::TMethodHolder< T, M >::Execute( void* self, Bool_t release_gil )
 {
 // call the interface method
-   R__LOCKGUARD2( gCINTMutex );
+   //R__LOCKGUARD2( gCINTMutex );
    TempLevelGuard_t g;
 
    PyObject* result = 0;
