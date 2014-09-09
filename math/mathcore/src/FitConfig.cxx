@@ -155,13 +155,9 @@ void FitConfig::SetParamsSettings(unsigned int npar, const double *params, const
          step = 0.3*std::fabs(val);   // step size is 30% of par value
          //double step = 2.0*std::fabs(val);   // step size is 30% of par value
          if (val ==  0) step  =  0.3;
-	 std::cout << "new step1=" << step << std::endl;
       }
       else
-	{
-	  std::cout << "new step2=" << step << std::endl;
 	  step = vstep[i];
-	}
 
       if (createNew)
          fSettings.push_back( ParameterSettings("Par_" + ROOT::Math::Util::ToString(i), val, step ) );
