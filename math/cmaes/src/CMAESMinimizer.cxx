@@ -349,10 +349,10 @@ namespace ROOT
 					 const std::string &fplot,
 					 const bool &withnumgradient)
     {
-      cmaparams._algo = fMinimizer;
+      cmaparams.set_algo(fMinimizer);
       if (gDebug > 0)
-	cmaparams._quiet = false;
-      else cmaparams._quiet = true;
+	cmaparams.set_quiet(false);
+      else cmaparams.set_quiet(true);
       for (auto mit=fFixedVariables.begin();mit!=fFixedVariables.end();mit++)
 	cmaparams.set_fixed_p((*mit).first,(*mit).second);
       cmaparams.set_edm(true); // always activate EDM computation.
@@ -365,8 +365,8 @@ namespace ROOT
 	cmaparams.set_restarts(nrestarts);
       if (ftarget > 0.0)
 	cmaparams.set_ftarget(ftarget);
-      cmaparams._fplot = fplot;
-      cmaparams._with_gradient = withnumgradient;
+      cmaparams.set_fplot(fplot);
+      cmaparams.set_gradient(withnumgradient);
     }
     
     bool TCMAESMinimizer::Minimize()
@@ -505,20 +505,20 @@ namespace ROOT
 	      fCMAparams = cmaparams;
 	    }
 	}
-      Info("CMAESMinimizer","optimization status=%i",fCMAsols._run_status);
-      if (fCMAsols._edm > 10*Tolerance()) // XXX: max edm seems to be left to each minimizer's internal implementation...
+      Info("CMAESMinimizer","optimization status=%i",fCMAsols.run_status());
+      if (fCMAsols.edm() > 10*Tolerance()) // XXX: max edm seems to be left to each minimizer's internal implementation...
 	fStatus = 3;
-      else if (fCMAsols._run_status == 0 || fCMAsols._run_status == 1)
+      else if (fCMAsols.run_status() == 0 || fCMAsols.run_status() == 1)
 	fStatus = 0;
-      else if (fCMAsols._run_status == 7 || fCMAsols._run_status == 9)
+      else if (fCMAsols.run_status() == 7 || fCMAsols.run_status() == 9)
 	fStatus = 4; // reached budget limit.
       else fStatus = 5;
-      return fCMAsols._run_status >= 0; // above 0 are partial successes at worst.
+      return fCMAsols.run_status() >= 0; // above 0 are partial successes at worst.
     }
 
     double TCMAESMinimizer::MinValue() const
     {
-      return fCMAsols.best_candidate()._fvalue;
+      return fCMAsols.best_candidate().get_fvalue();
     }
 
     const double* TCMAESMinimizer::X() const
@@ -530,13 +530,13 @@ namespace ROOT
       if (fWithLinearScaling)
 	{
 	  if (fWithBounds)
-	    x = bc.get_x_pheno<GenoPheno<pwqBoundStrategy,linScalingStrategy>>(fCMAparams_lb);
-	  else x = bc.get_x_pheno<GenoPheno<NoBoundStrategy,linScalingStrategy>>(fCMAparams_l);
+	    x = bc.get_x_pheno_dvec<GenoPheno<pwqBoundStrategy,linScalingStrategy>>(fCMAparams_lb);
+	  else x = bc.get_x_pheno_dvec<GenoPheno<NoBoundStrategy,linScalingStrategy>>(fCMAparams_l);
 	}
       else
 	{
 	  if (fWithBounds)
-	    x = bc.get_x_pheno<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>(fCMAparams_b);
+	    x = bc.get_x_pheno_dvec<GenoPheno<pwqBoundStrategy,NoScalingStrategy>>(fCMAparams_b);
 	  else x = bc.get_x_dvec();
 	}
       for (int i=0;i<fDim;i++)
@@ -549,7 +549,7 @@ namespace ROOT
       // XXX: cannot recompute it here as there's no access to the optimizer itself.
       //      instead this is returning the value computed at the end of last optimization call
       //      and stored within the solution object.
-      return fCMAsols._edm;
+      return fCMAsols.edm();
     }
     
     const double* TCMAESMinimizer::Errors() const
@@ -561,18 +561,18 @@ namespace ROOT
 	{
 	  if (fWithBounds)
 	    {
-	      vgdiag = fCMAparams_lb._gp.pheno(dVec(fCMAsols._sigma*fCMAsols._cov.diagonal()));
+	      vgdiag = fCMAparams_lb.get_gp().pheno(dVec(fCMAsols.sigma()*fCMAsols.cov_ref().diagonal()));
 	    }
 	  else
 	    {
-	      vgdiag = fCMAparams_l._gp.pheno(dVec(fCMAsols._sigma*fCMAsols._cov.diagonal()));
+	      vgdiag = fCMAparams_l.get_gp().pheno(dVec(fCMAsols.sigma()*fCMAsols.cov_ref().diagonal()));
 	    }
 	}
       else if (fWithBounds)
 	{
-	  vgdiag = fCMAparams_b._gp.pheno(dVec(fCMAsols._sigma*fCMAsols._cov.diagonal()));
+	  vgdiag = fCMAparams_b.get_gp().pheno(dVec(fCMAsols.sigma()*fCMAsols.cov_ref().diagonal()));
 	}
-      else vgdiag = fCMAsols._sigma*fCMAsols._cov.diagonal();
+      else vgdiag = fCMAsols.sigma()*fCMAsols.cov_ref().diagonal();
       for (int i=0;i<fDim;i++)
 	fErrors.push_back(std::sqrt(std::abs(vgdiag(i)))); // abs for numerical errors that bring the sqrt below 0.
       return &fErrors.front();
@@ -580,23 +580,23 @@ namespace ROOT
     
     unsigned int TCMAESMinimizer::NCalls() const
     {
-      return fCMAsols._nevals;
+      return fCMAsols.nevals();
     }
 
     double TCMAESMinimizer::CovMatrix(unsigned int i, unsigned int j) const
     {
-      return fCMAsols._cov(i,j);
+      return fCMAsols.cov_ref()(i,j);
     }
 
     bool TCMAESMinimizer::GetCovMatrix(double *cov) const
     {
-      std::copy(fCMAsols._cov.data(),fCMAsols._cov.data()+fCMAsols._cov.size(),cov);
+      std::copy(fCMAsols.cov_data(),fCMAsols.cov_data()+fCMAsols.cov_ref().size(),cov);
       return true;
     }
 
     double TCMAESMinimizer::Correlation(unsigned int i, unsigned int j) const
     {
-      return std::sqrt(std::abs(fCMAsols._cov(i,i)*fCMAsols._cov(j,j)));
+      return std::sqrt(std::abs(fCMAsols.cov_ref()(i,i)*fCMAsols.cov_ref()(j,j)));
     }
 
     double TCMAESMinimizer::GlobalCC(unsigned int i) const
@@ -605,10 +605,10 @@ namespace ROOT
       // \rho_k^2 = 1 - [C_{kk}C_{kk}^{-1}]^{-1}
       if (fGlobalCC.empty()) // need to pre-compute the vector coefficient
 	{
-	  dMat covinv = fCMAsols._cov.inverse();
+	  dMat covinv = fCMAsols.cov_ref().inverse();
 	  for (int i=0;i<covinv.rows();i++)
 	    {
-	      double denom = covinv(i,i)*fCMAsols._cov(i,i);
+	      double denom = covinv(i,i)*fCMAsols.cov_ref()(i,i);
 	      if (denom < 1.0 && denom > 0.0)
 		fGlobalCC.push_back(0.0);
 	      else fGlobalCC.push_back(std::sqrt(1.0 - 1.0/denom));
