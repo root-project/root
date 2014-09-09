@@ -235,14 +235,14 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(const char* className, const c
   RooAbsArg* var ;
   while((var=(RooAbsArg*)iter->Next())) {
     if (dynamic_cast<RooAbsReal*>(var)) {
-      argList += Form(",*((RooAbsReal*)%p)",var) ;
+      argList += Form(",*((RooAbsReal*)0x%lx)",(ULong_t)var) ;
     }
   }
   iter->Reset() ;
   // Next pass the RooAbsCategory arguments in the list order
   while((var=(RooAbsArg*)iter->Next())) {
     if (dynamic_cast<RooAbsCategory*>(var)) {
-      argList += Form(",*((RooAbsCategory*)%p)",var) ;
+      argList += Form(",*((RooAbsCategory*)0x%lx)",(ULong_t)var) ;
     }
   }
   delete iter ;
@@ -335,14 +335,14 @@ RooAbsPdf* RooClassFactory::makePdfInstance(const char* className, const char* n
   RooAbsArg* var ;
   while((var=(RooAbsArg*)iter->Next())) {
     if (dynamic_cast<RooAbsReal*>(var)) {
-      argList += Form(",*((RooAbsReal*)%p)",var) ;
+      argList += Form(",*((RooAbsReal*)0x%lx)",(ULong_t)var) ;
     }
   }
   iter->Reset() ;
   // Next pass the RooAbsCategory arguments in the list order
   while((var=(RooAbsArg*)iter->Next())) {
     if (dynamic_cast<RooAbsCategory*>(var)) {
-      argList += Form(",*((RooAbsCategory*)%p)",var) ;
+      argList += Form(",*((RooAbsCategory*)0x%lx)",(ULong_t)var) ;
     }
   }
   delete iter ;

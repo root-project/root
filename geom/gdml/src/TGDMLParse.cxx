@@ -164,6 +164,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* name = gdml->GetNodeName(node);
    XMLNodePointer_t parentn = gdml->GetParent(node);
    const char* parent = gdml->GetNodeName(parentn);
+   XMLNodePointer_t childtmp = 0;
 
    const char* posistr = "position";
    const char* setustr = "setup";
@@ -201,6 +202,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* ellistr = "ellipsoid";
    const char* elcnstr = "elcone";
    Bool_t hasIsotopes;
+   Bool_t hasIsotopesExtended;
 
    if ((strcmp(name, posistr)) == 0) {
       node = PosProcess(gdml, node, attr);
@@ -214,23 +216,51 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
       node = ConProcess(gdml, node, attr);
    } else if ((strcmp(name, varistr)) == 0) {
       node = ConProcess(gdml, node, attr);
-   } else if ((strcmp(name, elemstr) == 0) && !gdml->HasAttr(node, "Z")) {
-      hasIsotopes = kTRUE;
-      node = EleProcess(gdml, node, parentn, hasIsotopes);
-   } else if (((strcmp(name, "atom")) == 0) && ((strcmp(parent, elemstr)) == 0)) {
-      hasIsotopes = kFALSE;
-      node = EleProcess(gdml, node, parentn, hasIsotopes);
-   } else if (((strcmp(name, "atom")) == 0) && ((strcmp(parent, istpstr)) == 0)) {
+   } 
+   //*************eleprocess********************************                                                                                                                                      
+
+   else if (((strcmp(name, "atom")) == 0) && ((strcmp(parent, elemstr)) == 0)) {
+     hasIsotopes = kFALSE;
+     hasIsotopesExtended = kFALSE;
+     node = EleProcess(gdml, node, parentn, hasIsotopes, hasIsotopesExtended);
+   }
+   else if ((strcmp(name, elemstr) == 0) && !gdml->HasAttr(node, "Z")) {
+     hasIsotopes = kTRUE;
+     hasIsotopesExtended = kFALSE;
+     node = EleProcess(gdml, node, parentn, hasIsotopes, hasIsotopesExtended);
+   }
+
+   else if ((strcmp(name, elemstr) == 0) && gdml->HasAttr(node, "Z")) {
+     childtmp = gdml->GetChild(node);
+     if ((strcmp(gdml->GetNodeName(childtmp), "fraction") == 0) ){
+       hasIsotopes = kFALSE;
+       hasIsotopesExtended = kTRUE;
+       node = EleProcess(gdml, node, parentn, hasIsotopes, hasIsotopesExtended);}
+   }
+
+   //********isoprocess******************************  
+
+   else if (((strcmp(name, "atom")) == 0) && ((strcmp(parent, istpstr)) == 0)) {
       node = IsoProcess(gdml, node, parentn);
-   } else if ((strcmp(name, matestr)) == 0) {
-      if (gdml->HasAttr(node, "Z")) {
-         int z = 1;
-         node = MatProcess(gdml, node, attr, z);
-      } else {
-         int z = 0;
-         node = MatProcess(gdml, node, attr, z);
-      }
-   } else if ((strcmp(name, volustr)) == 0) {
+   } 
+
+   //********matprocess***********************************                                                                                                                                        
+   else if ((strcmp(name, matestr)) == 0 && gdml->HasAttr(node, "Z")) {
+     childtmp = gdml->GetChild(node);
+     if ((strcmp(gdml->GetNodeName(childtmp), "fraction") == 0) || (strcmp(gdml->GetNodeName(childtmp), "D") == 0)){
+       int z = 0;
+       node = MatProcess(gdml, node, attr, z);}
+     else if ((strcmp(gdml->GetNodeName(childtmp), "atom") == 0) || (strcmp(gdml->GetNodeName(childtmp), "D") == 0)){
+       int z = 1;
+       node = MatProcess(gdml, node, attr, z);}
+   }
+   else if ((strcmp(name, matestr)) == 0 && !gdml->HasAttr(node, "Z")) {
+     int z = 0;
+     node = MatProcess(gdml, node, attr, z);
+   }
+    
+   //********************************************* 
+   else if ((strcmp(name, volustr)) == 0) {
       node = VolProcess(gdml, node);
    } else if ((strcmp(name, bboxstr)) == 0) {
       node = Box(gdml, node, attr);
@@ -380,9 +410,9 @@ XMLNodePointer_t TGDMLParse::ConProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       attr = gdml->GetNextAttr(attr);
    }
 
-   if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-      name = TString::Format("%s_%s", name.Data(), fCurrentFile);
-   }
+   //if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+   // name = TString::Format("%s_%s", name.Data(), fCurrentFile);
+   //}
 
    fformvec.push_back(new TFormula(name, value));
 
@@ -666,323 +696,407 @@ XMLNodePointer_t TGDMLParse::IsoProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 }
 
 //___________________________________________________________
-XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,   XMLNodePointer_t parentn, Bool_t hasIsotopes)
+//XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,   XMLNodePointer_t parentn, Bool_t hasIsotopes)
+XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,   XMLNodePointer_t parentn, Bool_t hasIsotopes, Bool_t hasIsotopesExtended)
+
 {
-   //In the materials section of the GDML file, elements can be declared.
-   //when the element keyword is found, this function is called, and the
-   //name and values of the element are converted into type TGeoElement and
-   //stored in felemap map using the name as its key.
+                                          
+  //when the element keyword is found, this function is called, and the                                                                                                                      
+  //name and values of the element are converted into type TGeoElement and                                                                                                                   
+  //stored in felemap map using the name as its key.                                                                                                                                         
 
-   TString z = "0";
-   TString name = "";
-   TString formula = "";
-   TString atom = "0";
-   TString tempattr;
-   Int_t   ncompo = 0;
-   typedef FracMap::iterator fractions;
-   FracMap fracmap;
+  TString z = "0";
+  TString name = "";
+  TString formula = "";
+  TString atom = "0";
+  TString tempattr;
+  Int_t   ncompo = 0;
+  typedef FracMap::iterator fractions;
+  FracMap fracmap;
 
-   XMLNodePointer_t child = 0;
+  XMLNodePointer_t child = 0;
 
-   //obtain attributes for the element
+  //obtain attributes for the element                                                                                                                                                        
 
-   XMLAttrPointer_t attr = gdml->GetFirstAttr(node);
+  XMLAttrPointer_t attr = gdml->GetFirstAttr(node);
 
-   if (hasIsotopes) {
-      // Get the name of the element
-      while (attr != 0) {
-         tempattr = gdml->GetAttrName(attr);
-         if (tempattr == "name") {
-            name = gdml->GetAttrValue(attr);
-            if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-               name = TString::Format("%s_%s", name.Data(), fCurrentFile);
-            }
-            break;
-         }
-         attr = gdml->GetNextAttr(attr);
-      }
-      // Get component isotopes. Loop all children.
-      child = gdml->GetChild(node);
-      while (child != 0) {
-         // Check for fraction node name
-         if ((strcmp(gdml->GetNodeName(child), "fraction")) == 0) {
-            Double_t n = 0;
-            TString ref = "";
-            ncompo = ncompo + 1;
-            attr = gdml->GetFirstAttr(child);
-            while (attr != 0) {
-               tempattr = gdml->GetAttrName(attr);
-               tempattr.ToLower();
-               if (tempattr == "n") {
-                  n = Evaluate(gdml->GetAttrValue(attr));
-               } else if (tempattr == "ref") {
-                  ref = gdml->GetAttrValue(attr);
-                  if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-                     ref = TString::Format("%s_%s", ref.Data(), fCurrentFile);
-                  }
-               }
-               attr = gdml->GetNextAttr(attr);
-            } // loop on child attributes
-            fracmap[ref.Data()] = n;
-         }
-         child = gdml->GetNext(child);
-      } // loop on children
-      // Create TGeoElement - note: Object(name, title) corresponds to Element(formula, name)
-      TGeoElement *ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
-      for (fractions f = fracmap.begin(); f != fracmap.end(); f++) {
-         if (fisomap.find(f->first) != fisomap.end()) {
-            ele->AddIsotope((TGeoIsotope*)fisomap[f->first], f->second);
-         }
-      }
-      felemap[name.Data()] = ele;
-      return child;
-   }
-
-   attr = gdml->GetFirstAttr(parentn);
-   while (attr != 0) {
-
+  if (hasIsotopes) {
+                                                                                                                                         
+    // Get the name of the element                                                                                                                                                           
+    while (attr != 0) {
       tempattr = gdml->GetAttrName(attr);
-      tempattr.ToLower();
+      if (tempattr == "name") {
+	name = gdml->GetAttrValue(attr);
+                                                                                                                           
+	if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+	  name = TString::Format("%s_%s", name.Data(), fCurrentFile);
+	}
+	break;
+      }
+      attr = gdml->GetNextAttr(attr);
+    }
+    // Get component isotopes. Loop all children.                                                                                                                                            
+    child = gdml->GetChild(node);
+    while (child != 0) {
+
+      // Check for fraction node name                                                                                                                                                        
+      if ((strcmp(gdml->GetNodeName(child), "fraction")) == 0) {
+	Double_t n = 0;
+	TString ref = "";
+	ncompo = ncompo + 1;
+	attr = gdml->GetFirstAttr(child);
+	while (attr != 0) {
+	  tempattr = gdml->GetAttrName(attr);
+	  tempattr.ToLower();
+	  if (tempattr == "n") {
+	    n = Evaluate(gdml->GetAttrValue(attr));
+	  } else if (tempattr == "ref") {
+	    ref = gdml->GetAttrValue(attr);
+	    if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+	      ref = TString::Format("%s_%s", ref.Data(), fCurrentFile);
+	    }
+	  }
+	  attr = gdml->GetNextAttr(attr);
+	} // loop on child attributes                                                                                                                                                        
+	fracmap[ref.Data()] = n;
+      }
+      child = gdml->GetNext(child);
+    } // loop on children  
+    // Create TGeoElement - note: Object(name, title) corresponds to Element(formula, name)                                                                                                  
+    TGeoElement *ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
+    for (fractions f = fracmap.begin(); f != fracmap.end(); f++) {
+      if (fisomap.find(f->first) != fisomap.end()) {
+	ele->AddIsotope((TGeoIsotope*)fisomap[f->first], f->second);
+      }
+    }
+    felemap[name.Data()] = ele;
+    return child;
+  } // hasisotopes end loop                                                                                                                                                                  
+
+  //*************************   
+
+
+  if (hasIsotopesExtended) {
+                                                                                                                             
+    while (attr != 0) {
+      tempattr = gdml->GetAttrName(attr);
 
       if (tempattr == "name") {
-         name = gdml->GetAttrValue(attr);
-      } else if (tempattr == "z") {
-         z = gdml->GetAttrValue(attr);
-      } else if (tempattr == "formula") {
-         formula = gdml->GetAttrValue(attr);
+	name = gdml->GetAttrValue(attr);
+                                                                                                                   
+	if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+	  name = TString::Format("%s_%s", name.Data(), fCurrentFile);
+	}
+	break;
       }
-
       attr = gdml->GetNextAttr(attr);
-   }
+    }
+    // Get component isotopes. Loop all children.                                                                                                                                            
+    child = gdml->GetChild(node);
+    while (child != 0) {
 
-   //get the atom value for the element
-
-   attr = gdml->GetFirstAttr(node);
-
-   while (attr != 0) {
-
-      tempattr = gdml->GetAttrName(attr);
-      tempattr.ToLower();
-
-      if (tempattr == "value") {
-         atom = gdml->GetAttrValue(attr);
+      // Check for fraction node name                                                                                                                                                        
+      if ((strcmp(gdml->GetNodeName(child), "fraction")) == 0) {                                                                                                                         
+	Double_t n = 0;
+	TString ref = "";
+	ncompo = ncompo + 1;
+	attr = gdml->GetFirstAttr(child);
+	while (attr != 0) {
+	  tempattr = gdml->GetAttrName(attr);
+	  tempattr.ToLower();
+	  if (tempattr == "n") {
+	    n = Evaluate(gdml->GetAttrValue(attr));
+	  } else if (tempattr == "ref") {
+	    ref = gdml->GetAttrValue(attr);
+	    if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+	      ref = TString::Format("%s_%s", ref.Data(), fCurrentFile);
+	    }
+	  }
+	  attr = gdml->GetNextAttr(attr);
+	} // loop on child attributes                                                                                                                                                        
+	fracmap[ref.Data()] = n;
       }
+      child = gdml->GetNext(child);
+    } // loop on children            
+    // Create TGeoElement - note: Object(name, title) corresponds to Element(formula, name)                                                                                                  
+    TGeoElement *ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
+    for (fractions f = fracmap.begin(); f != fracmap.end(); f++) {
+      if (fisomap.find(f->first) != fisomap.end()) {
+	ele->AddIsotope((TGeoIsotope*)fisomap[f->first], f->second);
+      }
+    }
+    felemap[name.Data()] = ele;
+    return child;
+  } // hasisotopesExtended end loop                                                                                                                                                          
 
-      attr = gdml->GetNextAttr(attr);
-   }
 
-   if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-      name = TString::Format("%s_%s", name.Data(), fCurrentFile);
-   }
 
-   Int_t z2 = (Int_t)Evaluate(z);
-   Double_t atom2 = Evaluate(atom);
+  //***************************                                                                                                                                                              
 
-   TGeoElement* ele = new TGeoElement(formula, NameShort(name), z2 , atom2);
+  attr = gdml->GetFirstAttr(parentn);
+  while (attr != 0) {
 
-   felemap[name.Data()] = ele;
+    tempattr = gdml->GetAttrName(attr);
+    tempattr.ToLower();
 
-   return node;
+    if (tempattr == "name") {
+      name = gdml->GetAttrValue(attr);
+                                                                                                                               
+    } else if (tempattr == "z") {
+      z = gdml->GetAttrValue(attr);
+    } else if (tempattr == "formula") {
+      formula = gdml->GetAttrValue(attr);
+    }
+
+    attr = gdml->GetNextAttr(attr);
+  }
+
+  //get the atom value for the element                                                                                                                                                       
+
+  attr = gdml->GetFirstAttr(node);
+
+  while (attr != 0) {
+
+    tempattr = gdml->GetAttrName(attr);
+    tempattr.ToLower();
+
+    if (tempattr == "value") {
+      atom = gdml->GetAttrValue(attr);
+    }
+
+    attr = gdml->GetNextAttr(attr);
+  }
+
+  if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+    name = TString::Format("%s_%s", name.Data(), fCurrentFile);
+  }
+
+  Int_t z2 = (Int_t)Evaluate(z);
+  Double_t atom2 = Evaluate(atom);
+
+  TGeoElement* ele = new TGeoElement(formula, NameShort(name), z2 , atom2);
+
+  felemap[name.Data()] = ele;
+
+  return node;
+
 }
 
 //_________________________________________________________________________
-XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,   XMLAttrPointer_t attr, int z)
+XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,   XMLAttrPointer_t attr,  int z)
 {
-   //In the materials section of the GDML file, materials can be declared.
-   //when the material keyword is found, this function is called, and the
-   //name and values of the material are converted into type TGeoMaterial
-   //and stored in fmatmap map using the name as its key. Mixtures can also
-   // be declared, and they are converted to TGeoMixture and stored in
-   //fmixmap.   These mixtures and materials are then all converted into one
-   //common type - TGeoMedium.   The map fmedmap is then built up of all the
-   //mixtures and materials.
+  //In the materials section of the GDML file, materials can be declared.                                                                                                                    
+  //when the material keyword is found, this function is called, and the                                                                                                                     
+  //name and values of the material are converted into type TGeoMaterial                                                                                                                     
+  //and stored in fmatmap map using the name as its key. Mixtures can also                                                                                                                   
+  // be declared, and they are converted to TGeoMixture and stored in                                                                                                                        
+  //fmixmap.   These mixtures and materials are then all converted into one                                                                                                                  
+  //common type - TGeoMedium.   The map fmedmap is then built up of all the                                                                                                                  
+  //mixtures and materials.                                                                                                                                                                  
 
-//!Map to hold fractions while being processed
-   typedef FracMap::iterator fractions;
-   FracMap fracmap;
+  //!Map to hold fractions while being processed                                                                                                                                                
+  typedef FracMap::iterator fractions;
+//  typedef FracMap::iterator i;
+  FracMap fracmap;
 
-   static int medid = 0;
-   XMLNodePointer_t child = gdml->GetChild(node);
-   TString tempattr = "";
-   Int_t ncompo = 0, mixflag = 2;
-   Double_t density = 0;
-   TString name = "";
-   TGeoMixture* mix = 0;
-   TGeoMaterial* mat = 0;
-   TString tempconst = "";
-   TString matname;
-   Bool_t composite = kFALSE;
+  static int medid = 0;
+  XMLNodePointer_t child = gdml->GetChild(node);
+  TString tempattr = "";
+  Int_t ncompo = 0, mixflag = 2;
+  Double_t density = 0;
+  TString name = "";
+  TGeoMixture* mix = 0;
+  TGeoMaterial* mat = 0;
+  TString tempconst = "";
+  TString matname;
+  Bool_t composite = kFALSE;
 
-   if (z == 1) {
-      Double_t a = 0;
-      Double_t d = 0;
+  if (z == 1) {
+    Double_t a = 0;
+    Double_t d = 0;
 
-      while (child != 0) {
-         attr = gdml->GetFirstAttr(child);
+    while (child != 0) {
+      attr = gdml->GetFirstAttr(child);
 
-         if ((strcmp(gdml->GetNodeName(child), "atom")) == 0) {
-            while (attr != 0) {
-               tempattr = gdml->GetAttrName(attr);
-               tempattr.ToLower();
+      if ((strcmp(gdml->GetNodeName(child), "atom")) == 0) {
+        while (attr != 0) {
+          tempattr = gdml->GetAttrName(attr);
+          tempattr.ToLower();
 
-               if (tempattr == "value") {
-                  a = Evaluate(gdml->GetAttrValue(attr));
-               }
-               attr = gdml->GetNextAttr(attr);
-            }
-         }
-
-         if ((strcmp(gdml->GetNodeName(child), "D")) == 0) {
-            while (attr != 0) {
-               tempattr = gdml->GetAttrName(attr);
-               tempattr.ToLower();
-
-               if (tempattr == "value") {
-                  d = Evaluate(gdml->GetAttrValue(attr));
-               }
-               attr = gdml->GetNextAttr(attr);
-            }
-         }
-         child = gdml->GetNext(child);
+          if (tempattr == "value") {
+            a = Evaluate(gdml->GetAttrValue(attr));
+          }
+          attr = gdml->GetNextAttr(attr);
+        }
       }
 
-      //still in the is Z else...but not in the while..
+      if ((strcmp(gdml->GetNodeName(child), "D")) == 0) {
+        while (attr != 0) {
+          tempattr = gdml->GetAttrName(attr);
+          tempattr.ToLower();
 
-      name = gdml->GetAttr(node, "name");
-
-      if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-         name = TString::Format("%s_%s", name.Data(), fCurrentFile);
+          if (tempattr == "value") {
+            d = Evaluate(gdml->GetAttrValue(attr));
+          }
+          attr = gdml->GetNextAttr(attr);
+        }
       }
+      child = gdml->GetNext(child);
+    }
+    //still in the is Z else...but not in the while..                                                                                                                                         
 
-      //CHECK FOR CONSTANTS
-      tempconst = gdml->GetAttr(node, "Z");
+    name = gdml->GetAttr(node, "name");                                                                                                                          
 
-      Double_t valZ = Evaluate(tempconst);
-      TString tmpname = name;
-      //deal with special case - Z of vacuum is always 0
-      tmpname.ToLower();
-      if (tmpname == "vacuum") {
-         valZ = 0;
-      }
-      mat = new TGeoMaterial(NameShort(name), a, valZ, d);
-      mixflag = 0;
-      //Note: Object(name, title) corresponds to Element(formula, name)
-      TGeoElement* mat_ele = new TGeoElement(NameShort(name), NameShort(name), atoi(tempconst), a);
-      felemap[name.Data()] = mat_ele;
-   }
+    if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+      name = TString::Format("%s_%s", name.Data(), fCurrentFile);
+    }
 
-   else if (z == 0) {
-      while (child != 0) {
-         attr = gdml->GetFirstAttr(child);
-         if ((strcmp(gdml->GetNodeName(child), "fraction")) == 0) {
-            Double_t n = 0;
-            TString ref = "";
-            ncompo = ncompo + 1;
+    //CHECK FOR CONSTANTS                                                                                                                                                                     
+    tempconst = gdml->GetAttr(node, "Z");
 
-            while (attr != 0) {
-               tempattr = gdml->GetAttrName(attr);
-               tempattr.ToLower();
+    Double_t valZ = Evaluate(tempconst);
 
-               if (tempattr == "n") {
-                  n = Evaluate(gdml->GetAttrValue(attr));
-               } else if (tempattr == "ref") {
-                  ref = gdml->GetAttrValue(attr);
-                  if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-                     ref = TString::Format("%s_%s", ref.Data(), fCurrentFile);
-                  }
+    TString tmpname = name;
+    //deal with special case - Z of vacuum is always 0                                                                                                                                        
+    tmpname.ToLower();
+    if (tmpname == "vacuum") {
+      valZ = 0;
+    }
+    mat = new TGeoMaterial(NameShort(name), a, valZ, d);
+    mixflag = 0;
+    //Note: Object(name, title) corresponds to Element(formula, name)   
+    TGeoElement* mat_ele = new TGeoElement(NameShort(name), NameShort(name), atoi(tempconst), a);
+    felemap[name.Data()] = mat_ele;
 
-               }
+  }
 
-               attr = gdml->GetNextAttr(attr);
+  else if (z == 0) {
+    while (child != 0) {
+      attr = gdml->GetFirstAttr(child);
+
+      if ((strcmp(gdml->GetNodeName(child), "fraction")) == 0) {
+        Double_t n = 0;
+        TString ref = "";
+        ncompo = ncompo + 1;
+
+        while (attr != 0) {
+          tempattr = gdml->GetAttrName(attr);
+          tempattr.ToLower();
+
+          if (tempattr == "n") {
+            n = Evaluate(gdml->GetAttrValue(attr));
+          } else if (tempattr == "ref") {
+            ref = gdml->GetAttrValue(attr);
+            if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+              ref = TString::Format("%s_%s", ref.Data(), fCurrentFile);
             }
 
-            fracmap[ref.Data()] = n;
-         }
+          }
 
-         else if ((strcmp(gdml->GetNodeName(child), "composite")) == 0) {
-            composite = kTRUE;
-            Double_t n = 0;
-            TString ref = "";
-            ncompo = ncompo + 1;
+          attr = gdml->GetNextAttr(attr);
+        }
+        fracmap[ref.Data()] = n;
 
-            while (attr != 0) {
-               tempattr = gdml->GetAttrName(attr);
-               tempattr.ToLower();
-
-               if (tempattr == "n") {
-                  n = Evaluate(gdml->GetAttrValue(attr));
-               } else if (tempattr == "ref") {
-                  ref = gdml->GetAttrValue(attr);
-               }
-
-               attr = gdml->GetNextAttr(attr);
-            }
-
-            fracmap[ref.Data()] = n;
-         }
-
-         else if ((strcmp(gdml->GetNodeName(child), "D")) == 0) {
-            while (attr != 0) {
-               tempattr = gdml->GetAttrName(attr);
-               tempattr.ToLower();
-
-               if (tempattr == "value") {
-                  density = Evaluate(gdml->GetAttrValue(attr));
-               }
-
-               attr = gdml->GetNextAttr(attr);
-            }
-         }
-
-         child = gdml->GetNext(child);
       }
 
-      //still in the not Z else...but not in the while..
+      else if ((strcmp(gdml->GetNodeName(child), "composite")) == 0) {
+        composite = kTRUE;
+        Double_t n = 0;
+        TString ref = "";
+        ncompo = ncompo + 1;
 
-      name = gdml->GetAttr(node, "name");
-      if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-         name = TString::Format("%s_%s", name.Data(), fCurrentFile);
-      }
-      mix = new TGeoMixture(NameShort(name), 0 /*ncompo*/, density);
-      mixflag = 1;
-      Int_t natoms;
-      Double_t weight;
+        while (attr != 0) {
+          tempattr = gdml->GetAttrName(attr);
+          tempattr.ToLower();
 
-      for (fractions f = fracmap.begin(); f != fracmap.end(); f++) {
-         matname = f->first;
-         matname = NameShort(matname);
-         TGeoMaterial *mattmp = (TGeoMaterial*)gGeoManager->GetListOfMaterials()->FindObject(matname);
-         if (mattmp || (felemap.find(f->first) != felemap.end())) {
-            if (composite) {
-               natoms = (Int_t)f->second;
-               mix->AddElement(felemap[f->first], natoms);
-            } else {
-               weight = f->second;
-               if (mattmp) mix->AddElement(mattmp, weight);
-               else        mix->AddElement(felemap[f->first], weight);
+          if (tempattr == "n") {
+            n = Evaluate(gdml->GetAttrValue(attr));
+          } else if (tempattr == "ref") {
+            ref = gdml->GetAttrValue(attr);
+            if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+              ref = TString::Format("%s_%s", ref.Data(), fCurrentFile);
             }
-         } else {
-            // mix->DefineElement(i, fmixmap[f->first], f->second); BUG IN PYTHON???
-         }
+          }
+
+          attr = gdml->GetNextAttr(attr);
+        }
+
+        fracmap[ref.Data()] = n;
+
+      }
+      else if ((strcmp(gdml->GetNodeName(child), "D")) == 0) {
+        while (attr != 0) {
+          tempattr = gdml->GetAttrName(attr);
+          tempattr.ToLower();
+
+          if (tempattr == "value") {
+            density = Evaluate(gdml->GetAttrValue(attr));
+          }
+
+          attr = gdml->GetNextAttr(attr);
+        }
       }
 
-   }//end of not Z else
+      child = gdml->GetNext(child);
+    }
+    //still in the not Z else...but not in the while..                                                                                                                                        
 
-   medid = medid + 1;
+    name = gdml->GetAttr(node, "name");
+    if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+      name = TString::Format("%s_%s", name.Data(), fCurrentFile);
+    }
+    //mix = new TGeoMixture(NameShort(name), 0 /*ncompo*/, density);                                                                                                                          
+    mix = new TGeoMixture(NameShort(name), ncompo, density);
+    mixflag = 1;
+    Int_t natoms;
+    Double_t weight;
 
-   TGeoMedium* med = 0;
+    for (fractions f = fracmap.begin(); f != fracmap.end(); f++) {
+      matname = f->first;
+      matname = NameShort(matname);                                                                                                           
 
-   if (mixflag == 1) {
-      fmixmap[name.Data()] = mix;
-      med = new TGeoMedium(NameShort(name), medid, mix);
-   } else if (mixflag == 0) {
-      fmatmap[name.Data()] = mat;
-      med = new TGeoMedium(NameShort(name), medid, mat);
-   }
+      TGeoMaterial *mattmp = (TGeoMaterial*)gGeoManager->GetListOfMaterials()->FindObject(matname);
 
-   fmedmap[name.Data()] = med;
+      if (mattmp || (felemap.find(f->first) != felemap.end())) {
+        if (composite) {
+          natoms = (Int_t)f->second;
+	  
+          mix->AddElement(felemap[f->first], natoms);
+	  
+        }
 
-   return child;
+        else {
+          weight = f->second;
+          if (mattmp){
+
+            mix->AddElement(mattmp, weight);
+          }
+          else{
+           
+	    mix->AddElement(felemap[f->first], weight);
+          }
+	}
+      }
+    }
+
+  }//end of not Z else                                                                                                                                                                        
+
+  medid = medid + 1;
+
+  TGeoMedium* med = 0;
+
+  if (mixflag == 1) {
+    fmixmap[name.Data()] = mix;
+    med = new TGeoMedium(NameShort(name), medid, mix);
+  } else if (mixflag == 0) {
+    fmatmap[name.Data()] = mat;
+    med = new TGeoMedium(NameShort(name), medid, mat);
+  }
+
+  fmedmap[name.Data()] = med;
+
+  return child;
+
 }
 
 //____________________________________________________________
@@ -1004,6 +1118,8 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
    XMLAttrPointer_t attr;
    XMLNodePointer_t subchild;
+   XMLNodePointer_t subsubchild;
+
    XMLNodePointer_t child = gdml->GetChild(node);
    TString name;
    TString solidname = "";
@@ -1081,108 +1197,136 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          TGeoScale* scl = 0;
 
          subchild = gdml->GetChild(child);
-
+	 
          while (subchild != 0) {
-            tempattr = gdml->GetNodeName(subchild);
-            tempattr.ToLower();
+	  
+	   tempattr = gdml->GetNodeName(subchild);
+	   tempattr.ToLower();
+	   
+	   if (tempattr == "volumeref") {
+	     reftemp = gdml->GetAttr(subchild, "ref");
+	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+	     }
+	     
+	     lv = fvolmap[reftemp.Data()];
+	     
+	     volref = reftemp;
+	    
+	   }
 
-            if (tempattr == "volumeref") {
-               reftemp = gdml->GetAttr(subchild, "ref");
-               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-               }
-               lv = fvolmap[reftemp.Data()];
-               volref = reftemp;
-            } else if (tempattr == "file") {
 
-               const char* filevol;
-               const char* prevfile = fCurrentFile;
+	   else if (tempattr == "file") {
+	    
+ 
+	     const char* filevol;
+	     const char* prevfile = fCurrentFile;
+	     
+	     fCurrentFile = gdml->GetAttr(subchild, "name");
+	     filevol = gdml->GetAttr(subchild, "volname");
+   
 
-               fCurrentFile = gdml->GetAttr(subchild, "name");
-               filevol = gdml->GetAttr(subchild, "volname");
+	     TXMLEngine* gdml2 = new TXMLEngine;
+	     gdml2->SetSkipComments(kTRUE);
+	     
+	     XMLDocPointer_t filedoc1 = gdml2->ParseFile(fCurrentFile);
+	     if (filedoc1 == 0) {
+	       Fatal("VolProcess", "Bad filename given %s", fCurrentFile);
+	     }
+	     // take access to main node
+	     XMLNodePointer_t mainnode2 = gdml2->DocGetRootElement(filedoc1);
+	     //increase depth counter + add DOM pointer
+	     fFILENO = fFILENO + 1;
+	     fFileEngine[fFILENO] = gdml2;
+	     
+	     if (ffilemap.find(fCurrentFile) != ffilemap.end()) {
+	       volref = ffilemap[fCurrentFile];
+	       
+	     } else {
+	       volref = ParseGDML(gdml2, mainnode2);
+	       
+	       ffilemap[fCurrentFile] = volref;
+	     }
+	     
+	     if (filevol) {
+	     
+	     volref = filevol;
+	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+	     	 volref = TString::Format("%s_%s", volref.Data(), fCurrentFile);
+	     }
+	     
+	     }
+	    
+	     fFILENO = fFILENO - 1;
+	     gdml = fFileEngine[fFILENO];
+	     fCurrentFile = prevfile;
+	    
+	     lv = fvolmap[volref.Data()];
+	     //File tree complete - Release memory before exit
+	     
+	     
+	     gdml->FreeDoc(filedoc1);
+	     delete gdml2;
+	   } 
 
-               TXMLEngine* gdml2 = new TXMLEngine;
-               gdml2->SetSkipComments(kTRUE);
 
-               XMLDocPointer_t filedoc1 = gdml2->ParseFile(fCurrentFile);
-               if (filedoc1 == 0) {
-                  Fatal("VolProcess", "Bad filename given %s", fCurrentFile);
-               }
-               // take access to main node
-               XMLNodePointer_t mainnode2 = gdml2->DocGetRootElement(filedoc1);
-               //increase depth counter + add DOM pointer
-               fFILENO = fFILENO + 1;
-               fFileEngine[fFILENO] = gdml2;
+	   else if (tempattr == "position") {
 
-               if (ffilemap.find(fCurrentFile) != ffilemap.end()) {
-                  volref = ffilemap[fCurrentFile];
-               } else {
-                  volref = ParseGDML(gdml2, mainnode2);
-                  ffilemap[fCurrentFile] = volref;
-               }
+	     attr = gdml->GetFirstAttr(subchild);
+	     PosProcess(gdml, subchild, attr);
+	     reftemp = gdml->GetAttr(subchild, "name");
+	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+	     }
+	     pos = fposmap[reftemp.Data()];
+	   } else if (tempattr == "positionref") {
+	     
+	     reftemp = gdml->GetAttr(subchild, "ref");
+	     
+	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+	     }
+	     if (fposmap.find(reftemp.Data()) != fposmap.end()) pos = fposmap[reftemp.Data()];
+	     else std::cout << "ERROR! Physvol's position " << reftemp << " not found!" << std::endl;
+	   } else if (tempattr == "rotation") {
+	     
+	     attr = gdml->GetFirstAttr(subchild);
+	     RotProcess(gdml, subchild, attr);
+	     reftemp = gdml->GetAttr(subchild, "name");
+	     
+	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+	     }
+	     rot = frotmap[reftemp.Data()];
+	   } else if (tempattr == "rotationref") {
+	     reftemp = gdml->GetAttr(subchild, "ref");
+	    
 
-               if (filevol) {
-                  volref = filevol;
-                  if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-                     volref = TString::Format("%s_%s", volref.Data(), fCurrentFile);
-                  }
-               }
-
-               fFILENO = fFILENO - 1;
-               gdml = fFileEngine[fFILENO];
-               fCurrentFile = prevfile;
-               lv = fvolmap[volref.Data()];
-               //File tree complete - Release memory before exit
-               gdml->FreeDoc(filedoc1);
-               delete gdml2;
-            } else if (tempattr == "position") {
-               attr = gdml->GetFirstAttr(subchild);
-               PosProcess(gdml, subchild, attr);
-               reftemp = gdml->GetAttr(subchild, "name");
-               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-               }
-               pos = fposmap[reftemp.Data()];
-            } else if (tempattr == "positionref") {
-               reftemp = gdml->GetAttr(subchild, "ref");
-               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-               }
-               if (fposmap.find(reftemp.Data()) != fposmap.end()) pos = fposmap[reftemp.Data()];
-               else std::cout << "ERROR! Physvol's position " << reftemp << " not found!" << std::endl;
-            } else if (tempattr == "rotation") {
-               attr = gdml->GetFirstAttr(subchild);
-               RotProcess(gdml, subchild, attr);
-               reftemp = gdml->GetAttr(subchild, "name");
-               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-               }
-               rot = frotmap[reftemp.Data()];
-            } else if (tempattr == "rotationref") {
-               reftemp = gdml->GetAttr(subchild, "ref");
-               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-               }
-               if (frotmap.find(reftemp.Data()) != frotmap.end()) rot = frotmap[reftemp.Data()];
-               else std::cout << "ERROR! Physvol's rotation " << reftemp << " not found!" << std::endl;
-            } else if (tempattr == "scale") {
-               attr = gdml->GetFirstAttr(subchild);
-               SclProcess(gdml, subchild, attr);
-               reftemp = gdml->GetAttr(subchild, "name");
-               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-               }
-               scl = fsclmap[reftemp.Data()];
-            } else if (tempattr == "scaleref") {
-               reftemp = gdml->GetAttr(subchild, "ref");
-               if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-                  reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
-               }
-               if (fsclmap.find(reftemp.Data()) != fsclmap.end()) scl = fsclmap[reftemp.Data()];
-               else std::cout << "ERROR! Physvol's scale " << reftemp << " not found!" << std::endl;
-            }
-
-            subchild = gdml->GetNext(subchild);
+	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+	     }
+	     if (frotmap.find(reftemp.Data()) != frotmap.end()) rot = frotmap[reftemp.Data()];
+	     else std::cout << "ERROR! Physvol's rotation " << reftemp << " not found!" << std::endl;
+	   } else if (tempattr == "scale") {
+	    
+	     attr = gdml->GetFirstAttr(subchild);
+	     SclProcess(gdml, subchild, attr);
+	     reftemp = gdml->GetAttr(subchild, "name");
+	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+	     }
+	     scl = fsclmap[reftemp.Data()];
+	   } else if (tempattr == "scaleref") {
+	    
+	     reftemp = gdml->GetAttr(subchild, "ref");
+	     if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+	       reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+	     }
+	     if (fsclmap.find(reftemp.Data()) != fsclmap.end()) scl = fsclmap[reftemp.Data()];
+	     else std::cout << "ERROR! Physvol's scale " << reftemp << " not found!" << std::endl;
+	   }
+	   
+	   subchild = gdml->GetNext(subchild);
          }
 
          //ADD PHYSVOL TO GEOMETRY
@@ -1227,18 +1371,18 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
          vol->AddNode(lv, fVolID, transform);
       } else if ((strcmp(gdml->GetNodeName(child), "divisionvol")) == 0) {
-
-         TString divVolref = "";
-         Int_t axis = 0;
-         TString number = "";
-         TString width = "";
-         TString offset = "";
-         TString lunit = "mm";
-
-         attr = gdml->GetFirstAttr(child);
-
-         while (attr != 0) {
-
+	
+	TString divVolref = "";
+	Int_t axis = 0;
+	TString number = "";
+	TString width = "";
+	TString offset = "";
+	TString lunit = "mm";
+	
+	attr = gdml->GetFirstAttr(child);
+	
+	while (attr != 0) {
+	  
             tempattr = gdml->GetAttrName(attr);
             tempattr.ToLower();
 
@@ -1256,7 +1400,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 
             attr = gdml->GetNextAttr(attr);
 
-         }
+	}
 
          subchild = gdml->GetChild(child);
 
@@ -1290,8 +1434,10 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          fVolID = fVolID + 1;
          Double_t xlo, xhi;
          vol->GetShape()->GetAxisRange(axis, xlo, xhi);
+
          Int_t ndiv = (Int_t)Evaluate(numberline);
          Double_t start = xlo + (Double_t)Evaluate(offsetline);
+
          Double_t step = (Double_t)Evaluate(widthline);
          Int_t numed = 0;
          TGeoVolume *old = fvolmap[NameShort(reftemp)];
@@ -1312,6 +1458,158 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine* gdml, XMLNodePointer_t node)
          fvolmap[NameShort(reftemp)] = divvol;
 
       }//end of Division else if
+
+
+      else if ((strcmp(gdml->GetNodeName(child), "replicavol")) == 0) {
+	
+	TString divVolref = "";
+	Int_t axis = 0;
+	TString number = "";
+	TString width = "";
+	TString offset = "";
+	TString wunit = "mm";
+	TString ounit = "mm";
+	Double_t wvalue = 0;
+	Double_t ovalue = 0;
+       
+
+	attr = gdml->GetFirstAttr(child);
+	
+	while (attr != 0) {
+	  
+            tempattr = gdml->GetAttrName(attr);
+            tempattr.ToLower();
+
+            if (tempattr == "number") {
+	      number = gdml->GetAttrValue(attr);
+	    }
+            attr = gdml->GetNextAttr(attr);
+	}
+
+	subchild = gdml->GetChild(child);
+
+         while (subchild != 0) {
+            tempattr = gdml->GetNodeName(subchild);
+            tempattr.ToLower();
+
+            if (tempattr == "volumeref") {
+	      reftemp = gdml->GetAttr(subchild, "ref");
+	      if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+		reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+	      }
+	      divVolref = reftemp;
+	    }
+	    
+	    if (tempattr == "replicate_along_axis") {
+	      subsubchild = gdml->GetChild(subchild);
+	      
+	      while (subsubchild != 0) {
+		if ((strcmp(gdml->GetNodeName(subsubchild), "width")) == 0) {
+		  attr = gdml->GetFirstAttr(subsubchild);
+		  while (attr != 0) {
+		    tempattr = gdml->GetAttrName(attr);
+		    tempattr.ToLower();
+		    if (tempattr == "value") {
+		      wvalue = Evaluate(gdml->GetAttrValue(attr));
+		    }
+		    else if (tempattr == "unit"){
+		      wunit = gdml->GetAttrValue(attr);
+		    } 
+		    
+		    attr = gdml->GetNextAttr(attr);
+		  }
+		}
+		else if ((strcmp(gdml->GetNodeName(subsubchild), "offset")) == 0) {
+		  attr = gdml->GetFirstAttr(subsubchild);
+		  while (attr != 0) {
+		    tempattr = gdml->GetAttrName(attr);
+		    tempattr.ToLower();
+		    if (tempattr == "value") {
+		      ovalue = Evaluate(gdml->GetAttrValue(attr));
+		    }
+		    else if (tempattr == "unit"){
+		      ounit = gdml->GetAttrValue(attr);
+		    } 
+		    attr = gdml->GetNextAttr(attr);
+		  }
+		}
+		
+		else if ((strcmp(gdml->GetNodeName(subsubchild), "direction")) == 0) {
+		  attr = gdml->GetFirstAttr(subsubchild);
+		  while (attr != 0) {
+		    tempattr = gdml->GetAttrName(attr);
+		    tempattr.ToLower();
+		    if (tempattr == "x") {
+		      axis = 1;
+		    }
+		    else if (tempattr == "y"){
+		      axis = 2;
+		    }
+		    else if (tempattr == "z"){
+		      axis = 3;
+		    }
+		    else if (tempattr == "rho"){
+		      axis = 1;
+		    }
+		    else if (tempattr == "phi"){
+		      axis = 2;
+		    }
+
+		    attr = gdml->GetNextAttr(attr);
+		  }
+		}
+		
+	      subsubchild = gdml->GetNext(subsubchild);
+	      }
+
+	    }
+
+	    
+	    subchild = gdml->GetNext(subchild);
+	 }
+      
+      
+         TString numberline = "";
+         TString widthline = "";
+         TString offsetline = "";
+         TString retwunit;
+	 TString retounit;
+         retwunit = GetScale(wunit);
+	 retounit = GetScale(ounit);
+
+         numberline = TString::Format("%s", number.Data());
+         widthline = TString::Format("(%.12g)*%s", wvalue, retwunit.Data());
+         offsetline = TString::Format("(%.12g)*%s", ovalue, retounit.Data());
+
+         fVolID = fVolID + 1;
+         Double_t xlo, xhi;
+         vol->GetShape()->GetAxisRange(axis, xlo, xhi);
+
+         Int_t ndiv = (Int_t)Evaluate(numberline);
+         Double_t start = xlo + (Double_t)Evaluate(offsetline);
+
+         Double_t step = (Double_t)Evaluate(widthline);
+         Int_t numed = 0;
+         TGeoVolume *old = fvolmap[NameShort(reftemp)];
+         if (old) {
+            // We need to recreate the content of the divided volume
+            old = fvolmap[NameShort(reftemp)];
+            // medium id
+            numed = old->GetMedium()->GetId();
+         }
+         TGeoVolume *divvol = vol->Divide(NameShort(reftemp), axis, ndiv, start, step, numed);
+         if (!divvol) {
+            Fatal("VolProcess", "Cannot divide volume %s", vol->GetName());
+            return child;
+         }
+         if (old && old->GetNdaughters()) {
+            divvol->ReplayCreation(old);
+         }
+         fvolmap[NameShort(reftemp)] = divvol;
+
+	 } //End of replicavol
+
+
 
       child = gdml->GetNext(child);
    }
@@ -1576,30 +1874,36 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 }
 
 //________________________________________________________
-XMLNodePointer_t   TGDMLParse::TopProcess(TXMLEngine* gdml, XMLNodePointer_t node)
+XMLNodePointer_t TGDMLParse::TopProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 {
    //In the setup section of the GDML file, the top volume need to be
    //declared. when the setup keyword is found, this function is called,
    //and the top volume ref is taken and 'world' is set
 
-   const char* name = gdml->GetAttr(node, "name");
-   gGeoManager->SetName(name);
-   XMLNodePointer_t child = gdml->GetChild(node);
+  const char* name = gdml->GetAttr(node, "name");
+  gGeoManager->SetName(name);
+  XMLNodePointer_t child = gdml->GetChild(node);
+  TString reftemp = "";
 
-   while (child != 0) {
+  while (child != 0) {
+    
+    if ((strcmp(gdml->GetNodeName(child), "world") == 0)) {
+      //const char* reftemp;
+      //TString reftemp = "";
+      reftemp = gdml->GetAttr(child, "ref");	 	
 
-      if ((strcmp(gdml->GetNodeName(child), "world") == 0)) {
-         const char* reftemp;
-         reftemp = gdml->GetAttr(child, "ref");
-         if ((strcmp(fCurrentFile, fStartFile)) != 0) {
-            reftemp = TString::Format("%s_%s", reftemp, fCurrentFile);
-         }
-         fWorld = fvolmap[reftemp];
-         fWorldName = reftemp;
+      
+      if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+      reftemp = TString::Format("%s_%s", reftemp.Data(), fCurrentFile);
+     
       }
-      child = gdml->GetNext(child);
-   }
-   return node;
+      fWorld = fvolmap[reftemp.Data()]; 
+      fWorldName = reftemp.Data();
+      
+    }
+    child = gdml->GetNext(child);
+  }
+  return node;
 }
 
 //___________________________________________________________________
@@ -1740,10 +2044,10 @@ XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, 
       z1 = Evaluate(zcut1line);
    }
    if (zcut2 == "") {
-      z2 = radius;
+	   z2 = radius;
    } else {
-      zcut2line = TString::Format("(%s)*%s", zcut2.Data(), retunit.Data());
-      z2 = Evaluate(zcut2line);
+	   zcut2line = TString::Format("(%s)*%s", zcut2.Data(), retunit.Data());
+	   z2 = Evaluate(zcut2line);
    }
 
    TGeoSphere *sph = new TGeoSphere(0, radius);

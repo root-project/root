@@ -547,6 +547,8 @@ namespace cling {
                                        (void*)(intptr_t) locate_cling_executable
                                                );
     }
+    // FIXME: Handle cases, where the cling is part of a library/framework.
+    // There we can't rely on the find executable logic.
     if (!llvm::sys::fs::is_directory(resource_path.str())) {
       llvm::errs()
         << "ERROR in cling::CIFactory::createCI():\n  resource directory "

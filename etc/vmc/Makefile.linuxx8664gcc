@@ -22,7 +22,7 @@ AWK	  = awk
 # starting from root.2.22 on Linux the flags -fno-rtti -fno-exceptions are
 # not necessary any more
 #
-CXXOPTS       = $(OPT) -Wall -W -fPIC -pipe -Woverloaded-virtual -m64
+CXXOPTS       = $(OPT) -std=c++11 -Wall -W -fPIC -pipe -Woverloaded-virtual -m64
 COPT	      = $(OPT) -m64 -fPIC
 
 ifneq (,$(findstring g95,$(F77)))

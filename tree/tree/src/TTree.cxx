@@ -362,6 +362,7 @@
 #include "TEmulatedCollectionProxy.h"
 #include "TVirtualFitter.h"
 #include "TVirtualIndex.h"
+#include "TVirtualPerfStats.h"
 #include "TVirtualPad.h"
 #include "TBranchSTL.h"
 #include "TSchemaRuleSet.h"
@@ -648,6 +649,7 @@ TTree::TTree()
 , fIndex()
 , fTreeIndex(0)
 , fFriends(0)
+, fPerfStats(0)
 , fUserInfo(0)
 , fPlayer(0)
 , fClones(0)
@@ -719,6 +721,7 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fIndex()
 , fTreeIndex(0)
 , fFriends(0)
+, fPerfStats(0)
 , fUserInfo(0)
 , fPlayer(0)
 , fClones(0)
@@ -2266,16 +2269,11 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
             TClass* clbase = element->GetClassPointer();
             if ((clbase == TObject::Class()) && cl->CanIgnoreTObjectStreamer()) {
                // Note: TStreamerInfo::Compile() leaves this element
-               //       out of the compiled info, although it does
-               //       exists in the non-compiled info.  We must
-               //       account for the fact that this element is
-               //       missing in the compiled streamer info by
-               //       making sure that we do not consume an id
-               //       number for it.
+               //       out of the optimized info, although it does
+               //       exists in the non-compiled  and non-optimized info.
                // FIXME: The test that TStreamerInfo::Compile() uses
                //        is element->GetType() < 0, so that is what
                //        we should do as well.
-               --id;
                continue;
             }
             if (clbase->GetListOfRealData()->GetSize() == 0) {
@@ -8002,6 +8000,11 @@ void TTree::SetParallelUnzip(Bool_t opt, Float_t RelSize)
 
 }
 
+//______________________________________________________________________________
+void TTree::SetPerfStats(TVirtualPerfStats *perf)
+{
+   fPerfStats = perf;
+}
 //______________________________________________________________________________
 void TTree::SetTreeIndex(TVirtualIndex* index)
 {

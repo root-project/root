@@ -523,7 +523,7 @@ endif
 ##### Compiler directives and run-control file #####
 
 COMPILEDATA   = include/compiledata.h
-RGITCOMMITH  := core/base/src/RGitCommit.h
+RGITCOMMITH   = core/base/src/RGitCommit.h
 ROOTRC        = etc/system.rootrc
 ROOTMAP       = etc/system.rootmap
 ROOTPCH       = etc/allDict.cxx.pch
@@ -686,6 +686,12 @@ ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
 endif
 
+ifeq ($(USECONFIG),FALSE)
+all: tutorials/hsimple.root
+tutorials/hsimple.root: rootexecs postbin
+	@(cd tutorials; ! ../bin/root -l -q -b -n -x hsimple.C)
+endif
+
 all:            rootexecs postbin
 	@echo " "
 	@echo "   ============================================================"
@@ -812,6 +818,8 @@ $(RGITCOMMITH): $(filter-out core/base/src/TROOT.o,$(COREO)) $(COREDO) $(PCREDEP
 	@if test -r $@; then \
 	  if ! diff $@.tmp $@ > /dev/null 2>&1; then \
 	    mv $@.tmp $@; \
+	  else \
+	    rm -f $@.tmp; \
 	  fi; \
 	else \
 	    mv $@.tmp $@; \
@@ -1096,7 +1104,7 @@ releasenotes:
 	@$(MAKERELNOTES)
 
 $(ROOTPCH): $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
-	@$(MAKEONEPCM) $(ROOT_SRCDIR) "$(filter-out graf2d/qt math/fftw math/foam math/fumili math/mlp math/quadp math/splot math/unuran math/vc math/vdt,$(filter interpreter/% core/% io/io net/net math/% hist/% tree/% graf2d/% graf3d/gl gui/gui gui/fitpanel rootx bindings/pyroot roofit/% tmva main,$(MODULES)))" $(CLINGETCPCH)
+	@$(MAKEONEPCM) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH)
 
 ifeq ($(BUILDX11),yes)
 ifeq ($(BUILDASIMAGE),yes)
@@ -1197,6 +1205,8 @@ install: all
 	   $(INSTALLDATA) build/misc/root-help.el $(DESTDIR)$(ELISPDIR); \
 	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDATA) $(ROOT_SRCDIR)/geom/gdml/*.py $(DESTDIR)$(LIBDIR); \
+	   (cd $(DESTDIR)$(TUTDIR); \
+	      LD_LIBRARY_PATH=$(DESTDIR)$(LIBDIR):$$LD_LIBRARY_PATH && ! $(DESTDIR)$(BINDIR)/root -l -b -q -n -x hsimple.C); \
 	fi
 
 uninstall:

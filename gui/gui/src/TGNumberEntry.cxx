@@ -1943,7 +1943,8 @@ TGNumberEntry::TGNumberEntry(const TGWindow *parent,
    // create gui elements
    fNumericEntry = new TGNumberEntryField(this, id, val, style, attr,
                                           limits, min, max);
-   fNumericEntry->Connect("ReturnPressed()", "TGNumberEntry", this, "ValueSet(Long_t)");
+   fNumericEntry->Connect("ReturnPressed()", "TGNumberEntry", this,
+                          "ValueSet(Long_t=0)");
    fNumericEntry->Associate(fMsgWindow);
    AddFrame(fNumericEntry, 0);
    fButtonUp = new TGRepeatFireButton(this, fPicUp, 1,

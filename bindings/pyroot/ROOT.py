@@ -658,11 +658,9 @@ def cleanup():
 
  # run part the gROOT shutdown sequence ... running it here ensures that
  # it is done before any ROOT libraries are off-loaded, with unspecified
- # order of static object destruction; so far it only seemed needed for
- # sockets with PROOF, whereas files should not be touched this early ...
+ # order of static object destruction; 
    gROOT = sys.modules[ 'libPyROOT' ].gROOT
-   if isCocoa: gROOT.GetListOfCanvases().Delete()
-   gROOT.CloseFiles()
+   gROOT.EndOfProcessCleanups()
    del gROOT
 
  # cleanup cached python strings

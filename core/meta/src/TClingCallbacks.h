@@ -91,7 +91,7 @@ public:
                                 llvm::StringRef canonicalName);
 
 private:
-   bool tryAutoloadInternal(llvm::StringRef Name, clang::LookupResult &R,
+   bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R,
                             clang::Scope *S, bool noLookup=false);
    bool tryFindROOTSpecialInternal(clang::LookupResult &R, clang::Scope *S);
    bool tryResolveAtRuntimeInternal(clang::LookupResult &R, clang::Scope *S);

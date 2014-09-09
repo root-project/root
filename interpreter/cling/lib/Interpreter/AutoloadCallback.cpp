@@ -13,7 +13,9 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/AST/AST.h"
+#include "clang/AST/ASTContext.h" // for operator new[](unsigned long, ASTCtx..)
 #include "clang/AST/RecursiveASTVisitor.h"
+#include "clang/AST/DeclVisitor.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Frontend/CompilerInstance.h"
 
@@ -47,7 +49,7 @@ namespace cling {
     return false;
   }
 
-  class DefaultArgVisitor: public RecursiveASTVisitor<DefaultArgVisitor> {
+  class AutoloadingVisitor: public RecursiveASTVisitor<AutoloadingVisitor> {
   private:
     bool m_IsStoringState;
     AutoloadCallback::FwdDeclsMap* m_Map;
@@ -78,7 +80,7 @@ namespace cling {
     }
 
   public:
-    DefaultArgVisitor() : m_IsStoringState(false), m_Map(0) {}
+    AutoloadingVisitor() : m_IsStoringState(false), m_Map(0) {}
     void RemoveDefaultArgsOf(Decl* D) {
       //D = D->getMostRecentDecl();
       TraverseDecl(D);
@@ -117,6 +119,21 @@ namespace cling {
       case Decl::Enum:
         // EnumDecls have extra information 2 chars after the filename used
         // for extra fixups.
+          EnumDecl* ED = cast<EnumDecl>(D);
+          if (ED->isFixed()) {
+            StringRef str = ED->getAttr<AnnotateAttr>()->getAnnotation();
+            char ch = str.back();
+//            str.drop_back(2);
+            ED->getAttr<AnnotateAttr>()->setAnnotation(ED->getASTContext(), str);
+            struct EnumDeclDerived: public EnumDecl {
+              static void setFixed(EnumDecl* ED, bool value = true) {
+                ((EnumDeclDerived*)ED)->IsFixed = value;
+              }
+            };
+
+            if (ch != '1')
+              EnumDeclDerived::setFixed(ED, false);
+          }
         InsertIntoAutoloadingState(D, attr->getAnnotation().drop_back(2));
         break;
       }
@@ -201,26 +218,20 @@ namespace cling {
                           llvm::StringRef SearchPath,
                           llvm::StringRef RelativePath,
                           const clang::Module *Imported) {
-    assert(File && "Must have a valid File");
+    // If File is 0 this means that the #included file doesn't exist.
+    if (!File)
+      return;
 
     auto found = m_Map.find(File);
     if (found == m_Map.end())
      return; // nothing to do, file not referred in any annotation
 
-    DefaultArgVisitor defaultArgsCleaner;
+    AutoloadingVisitor defaultArgsCleaner;
     for (auto D : found->second) {
       defaultArgsCleaner.RemoveDefaultArgsOf(D);
     }
     // Don't need to keep track of cleaned up decls from file.
     m_Map.erase(found);
-  }
-
-  AutoloadCallback::AutoloadCallback(Interpreter* interp) :
-    InterpreterCallbacks(interp,true,false,true), m_Interpreter(interp){
-//#ifdef _POSIX_C_SOURCE
-//      //Workaround for differnt expansion of macros to typedefs
-//      m_Interpreter->parse("#include <sys/types.h>");
-//#endif
   }
 
   AutoloadCallback::~AutoloadCallback() {
@@ -234,7 +245,7 @@ namespace cling {
 
     if (const NamedDecl* ND = dyn_cast<NamedDecl>(*T.decls_begin()->m_DGR.begin()))
       if (ND->getIdentifier() && ND->getName().equals("__Cling_Autoloading_Map")) {
-        DefaultArgVisitor defaultArgsStateCollector;
+        AutoloadingVisitor defaultArgsStateCollector;
         Preprocessor& PP = m_Interpreter->getCI()->getPreprocessor();
         for (Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
              I != E; ++I) {
@@ -245,10 +256,20 @@ namespace cling {
           if (DCI.m_DGR.isNull())
             continue;
 
-          for (DeclGroupRef::iterator J = DCI.m_DGR.begin(),
-                 JE = DCI.m_DGR.end(); J != JE; ++J) {
-            defaultArgsStateCollector.TrackDefaultArgStateOf(*J, m_Map, PP);
-          }
+          if (const NamedDecl* ND = dyn_cast<NamedDecl>(*T.decls_begin()->m_DGR.begin()))
+            if (ND->getIdentifier()
+                && ND->getName().equals("__Cling_Autoloading_Map")) {
+
+              for (Transaction::const_iterator I = T.decls_begin(),
+                     E = T.decls_end(); I != E; ++I) {
+                Transaction::DelayCallInfo DCI = *I;
+                for (DeclGroupRef::iterator J = DCI.m_DGR.begin(),
+                       JE = DCI.m_DGR.end(); J != JE; ++J) {
+                    defaultArgsStateCollector.TrackDefaultArgStateOf(*J, m_Map, PP);
+                }
+              }
+            }
+
         }
       }
   }

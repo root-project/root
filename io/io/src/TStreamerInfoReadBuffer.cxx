@@ -1649,6 +1649,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
             delete ((TBufferFile&)b).PopDataCache();
             continue;
 
+         case -1:
+            // -- Skip an ignored TObject base class.
+            continue;
+
          default: {
             int ans = -1;
 

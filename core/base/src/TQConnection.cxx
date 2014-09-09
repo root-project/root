@@ -62,7 +62,9 @@ public:
    TQSlot(const char *class_name, const char *funcname);
    virtual ~TQSlot();
 
-   const char *GetName() const { return fName.Data(); }
+   const char *GetName() const {
+      return fName.Data();
+   }
 
    void ExecuteMethod(void *object);
    void ExecuteMethod(void *object, Int_t nargs, va_list ap);
@@ -71,10 +73,14 @@ public:
    void ExecuteMethod(void *object, Double_t param);
    void ExecuteMethod(void *object, const char *params);
    void ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam = -1);
-   void Print(Option_t *opt= "") const;
-   void ls(Option_t *opt= "") const { Print(opt); }
+   void Print(Option_t *opt = "") const;
+   void ls(Option_t *opt = "") const {
+      Print(opt);
+   }
 
-   Bool_t IsExecuting() const { return fExecuting > 0; }
+   Bool_t IsExecuting() const {
+      return fExecuting > 0;
+   }
 };
 
 
@@ -102,7 +108,7 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
 
    fName = method_name;
 
-   char *method = new char[strlen(method_name)+1];
+   char *method = new char[strlen(method_name) + 1];
    if (method) strcpy(method, method_name);
 
    char *proto;
@@ -111,14 +117,14 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
 
    // separate method and protoype strings
 
-   if ((proto = strchr(method,'('))) {
+   if ((proto = strchr(method, '('))) {
 
       // substitute first '(' symbol with '\0'
       *proto++ = '\0';
 
       // last ')' symbol with '\0'
-      if ((tmp = strrchr(proto,')'))) *tmp = '\0';
-      if ((params = strchr(proto,'='))) *params = ' ';
+      if ((tmp = strrchr(proto, ')'))) * tmp = '\0';
+      if ((params = strchr(proto, '='))) * params = ' ';
    }
 
    R__LOCKGUARD2(gInterpreterMutex);
@@ -129,19 +135,19 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
 
    if (cl) {
       if (params) {
-         gCling->CallFunc_SetFunc(fFunc,cl->GetClassInfo(), method, params, &fOffset);
+         gCling->CallFunc_SetFunc(fFunc, cl->GetClassInfo(), method, params, &fOffset);
          fMethod = cl->GetMethod(method, params);
       } else {
-         gCling->CallFunc_SetFuncProto(fFunc,cl->GetClassInfo(), method, proto, &fOffset);
+         gCling->CallFunc_SetFuncProto(fFunc, cl->GetClassInfo(), method, proto, &fOffset);
          fMethod = cl->GetMethodWithPrototype(method, proto);
       }
    } else {
       fClass = gCling->ClassInfo_Factory();
       if (params) {
-         gCling->CallFunc_SetFunc(fFunc,fClass, (char*)funcname, params, &fOffset);
+         gCling->CallFunc_SetFunc(fFunc, fClass, (char *)funcname, params, &fOffset);
          fMethod = gROOT->GetGlobalFunction(funcname, params, kFALSE);
       } else {
-         gCling->CallFunc_SetFuncProto(fFunc,fClass, (char*)funcname, proto, &fOffset);
+         gCling->CallFunc_SetFuncProto(fFunc, fClass, (char *)funcname, proto, &fOffset);
          fMethod = gROOT->GetGlobalFunctionWithPrototype(funcname, proto, kFALSE);
       }
    }
@@ -171,7 +177,7 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    fName      = funcname;
    fExecuting = 0;
 
-   char *method = new char[strlen(funcname)+1];
+   char *method = new char[strlen(funcname) + 1];
    if (method) strcpy(method, funcname);
 
    char *proto;
@@ -180,10 +186,10 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
 
    // separate method and protoype strings
 
-   if ((proto =  strchr(method,'('))) {
+   if ((proto =  strchr(method, '('))) {
       *proto++ = '\0';
-      if ((tmp = strrchr(proto,')'))) *tmp  = '\0';
-      if ((params = strchr(proto,'='))) *params = ' ';
+      if ((tmp = strrchr(proto, ')'))) * tmp  = '\0';
+      if ((params = strchr(proto, '='))) * params = ' ';
    }
 
    R__LOCKGUARD2(gInterpreterMutex);
@@ -196,18 +202,18 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    if (!class_name)
       ;                       // function
    else {
-      gCling->ClassInfo_Init(fClass,class_name);   // class
+      gCling->ClassInfo_Init(fClass, class_name);  // class
       cl = TClass::GetClass(class_name);
    }
 
    if (params) {
-      gCling->CallFunc_SetFunc(fFunc,fClass, method, params, &fOffset);
+      gCling->CallFunc_SetFunc(fFunc, fClass, method, params, &fOffset);
       if (cl)
          fMethod = cl->GetMethod(method, params);
       else
          fMethod = gROOT->GetGlobalFunction(method, params, kTRUE);
    } else {
-      gCling->CallFunc_SetFuncProto(fFunc,fClass, method, proto , &fOffset);
+      gCling->CallFunc_SetFuncProto(fFunc, fClass, method, proto , &fOffset);
       if (cl)
          fMethod = cl->GetMethodWithPrototype(method, proto);
       else
@@ -235,14 +241,8 @@ inline void TQSlot::ExecuteMethod(void *object)
    // ExecuteMethod the method (with preset arguments) for
    // the specified object.
 
-   void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
-   R__LOCKGUARD2(gInterpreterMutex);
-   fExecuting++;
-   gCling->CallFunc_Exec(fFunc,address);
-   fExecuting--;
-   if (!TestBit(kNotDeleted) && !fExecuting)
-      gCling->CallFunc_Delete(fFunc);
+   ExecuteMethod(object, nullptr, 0);
+
 }
 
 //______________________________________________________________________________
@@ -259,7 +259,7 @@ inline void TQSlot::ExecuteMethod(void *object, Int_t nargs, va_list ap)
    }
 
    if (nargs < fMethod->GetNargs() - fMethod->GetNargsOpt() ||
-       nargs > fMethod->GetNargs()) {
+         nargs > fMethod->GetNargs()) {
       Error("ExecuteMethod", "nargs (%d) not consistent with expected number of arguments ([%d-%d])",
             nargs, fMethod->GetNargs() - fMethod->GetNargsOpt(),
             fMethod->GetNargs());
@@ -278,38 +278,38 @@ inline void TQSlot::ExecuteMethod(void *object, Int_t nargs, va_list ap)
       R__VA_COPY(local_ap, ap);
 
       for (int i = 0; i < nargs; i++) {
-         arg = (TMethodArg*) next();
+         arg = (TMethodArg *) next();
          TString type = arg->GetFullTypeName();
          TDataType *dt = gROOT->GetType(type);
          if (dt)
             type = dt->GetFullTypeName();
          if (arg->Property() & (kIsPointer | kIsArray | kIsReference))
-            gCling->CallFunc_SetArg(fFunc,(Long_t) va_arg(local_ap, void*));
+            gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, void *));
          else if (type == "bool")
-            gCling->CallFunc_SetArg(fFunc,(Long_t) va_arg(local_ap, int));  // bool is promoted to int
+            gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int)); // bool is promoted to int
          else if (type == "char" || type == "unsigned char")
-            gCling->CallFunc_SetArg(fFunc,(Long_t) va_arg(local_ap, int));  // char is promoted to int
+            gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int)); // char is promoted to int
          else if (type == "short" || type == "unsigned short")
-            gCling->CallFunc_SetArg(fFunc,(Long_t) va_arg(local_ap, int));  // short is promoted to int
+            gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int)); // short is promoted to int
          else if (type == "int" || type == "unsigned int")
-            gCling->CallFunc_SetArg(fFunc,(Long_t) va_arg(local_ap, int));
+            gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, int));
          else if (type == "long" || type == "unsigned long")
-            gCling->CallFunc_SetArg(fFunc,(Long_t) va_arg(local_ap, long));
+            gCling->CallFunc_SetArg(fFunc, (Long_t) va_arg(local_ap, long));
          else if (type == "long long")
-            gCling->CallFunc_SetArg(fFunc,(Long64_t) va_arg(local_ap, Long64_t));
+            gCling->CallFunc_SetArg(fFunc, (Long64_t) va_arg(local_ap, Long64_t));
          else if (type == "unsigned long long")
-            gCling->CallFunc_SetArg(fFunc,(ULong64_t) va_arg(local_ap, ULong64_t));
+            gCling->CallFunc_SetArg(fFunc, (ULong64_t) va_arg(local_ap, ULong64_t));
          else if (type == "float")
-            gCling->CallFunc_SetArg(fFunc,(Double_t) va_arg(local_ap, double));  // float is promoted to double
+            gCling->CallFunc_SetArg(fFunc, (Double_t) va_arg(local_ap, double)); // float is promoted to double
          else if (type == "double")
-            gCling->CallFunc_SetArg(fFunc,(Double_t) va_arg(local_ap, double));
+            gCling->CallFunc_SetArg(fFunc, (Double_t) va_arg(local_ap, double));
       }
       va_end(local_ap);
    }
 
-   if (object) address = (void*)((Long_t)object + fOffset);
+   if (object) address = (void *)((Long_t)object + fOffset);
    fExecuting++;
-   gCling->CallFunc_Exec(fFunc,address);
+   gCling->CallFunc_Exec(fFunc, address);
    fExecuting--;
    if (!TestBit(kNotDeleted) && !fExecuting)
       gCling->CallFunc_Delete(fFunc);
@@ -321,16 +321,8 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t param)
    // ExecuteMethod the method for the specified object and
    // with single argument value.
 
-   void *address = 0;
-   R__LOCKGUARD2(gInterpreterMutex);
-   gCling->CallFunc_ResetArg(fFunc);
-   gCling->CallFunc_SetArg(fFunc,param);
-   if (object) address = (void*)((Long_t)object + fOffset);
-   fExecuting++;
-   gCling->CallFunc_Exec(fFunc,address);
-   fExecuting--;
-   if (!TestBit(kNotDeleted) && !fExecuting)
-      gCling->CallFunc_Delete(fFunc);
+   ExecuteMethod(object, &param, 1);
+
 }
 
 //______________________________________________________________________________
@@ -339,16 +331,9 @@ inline void TQSlot::ExecuteMethod(void *object, Long64_t param)
    // ExecuteMethod the method for the specified object and
    // with single argument value.
 
-   void *address = 0;
-   R__LOCKGUARD2(gInterpreterMutex);
-   gCling->CallFunc_ResetArg(fFunc);
-   gCling->CallFunc_SetArg(fFunc,param);
-   if (object) address = (void*)((Long_t)object + fOffset);
-   fExecuting++;
-   gCling->CallFunc_Exec(fFunc,address);
-   fExecuting--;
-   if (!TestBit(kNotDeleted) && !fExecuting)
-      gCling->CallFunc_Delete(fFunc);
+   Long_t *arg = reinterpret_cast<Long_t *>(&param);
+   ExecuteMethod(object, arg, 1);
+
 }
 
 //______________________________________________________________________________
@@ -357,16 +342,9 @@ inline void TQSlot::ExecuteMethod(void *object, Double_t param)
    // ExecuteMethod the method for the specified object and
    // with single argument value.
 
-   void *address = 0;
-   R__LOCKGUARD2(gInterpreterMutex);
-   gCling->CallFunc_ResetArg(fFunc);
-   gCling->CallFunc_SetArg(fFunc,param);
-   if (object) address = (void*)((Long_t)object + fOffset);
-   fExecuting++;
-   gCling->CallFunc_Exec(fFunc,address);
-   fExecuting--;
-   if (!TestBit(kNotDeleted) && !fExecuting)
-      gCling->CallFunc_Delete(fFunc);
+   Long_t *arg = reinterpret_cast<Long_t *>(&param);
+   ExecuteMethod(object, arg, 1);
+
 }
 
 //______________________________________________________________________________
@@ -374,16 +352,9 @@ inline void TQSlot::ExecuteMethod(void *object, const char *param)
 {
    // ExecuteMethod the method for the specified object and text param.
 
-   void *address = 0;
-   R__LOCKGUARD2(gInterpreterMutex);
-   gTQSlotParams = (char*)param;
-   gCling->CallFunc_SetArgs(fFunc,"gTQSlotParams");
-   if (object) address = (void*)((Long_t)object + fOffset);
-   fExecuting++;
-   gCling->CallFunc_Exec(fFunc,address);
-   fExecuting--;
-   if (!TestBit(kNotDeleted) && !fExecuting)
-      gCling->CallFunc_Delete(fFunc);
+   Long_t arg = reinterpret_cast<Long_t>(param);
+   ExecuteMethod(object, &arg, 1);
+
 }
 
 //______________________________________________________________________________
@@ -399,10 +370,10 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam)
 
    void *address = 0;
    R__LOCKGUARD2(gInterpreterMutex);
-   gCling->CallFunc_SetArgArray(fFunc,paramArr, nparam);
-   if (object) address = (void*)((Long_t)object + fOffset);
+   if (paramArr) gCling->CallFunc_SetArgArray(fFunc, paramArr, nparam);
+   if (object) address = (void *)((Long_t)object + fOffset);
    fExecuting++;
-   gCling->CallFunc_Exec(fFunc,address);
+   gCling->CallFunc_Exec(fFunc, address);
    fExecuting--;
    if (!TestBit(kNotDeleted) && !fExecuting)
       gCling->CallFunc_Delete(fFunc);
@@ -413,8 +384,8 @@ void TQSlot::Print(Option_t *) const
 {
    // Print info about slot.
 
-   std::cout <<IsA()->GetName() << "\t" << GetName() << "\t"
-   << "Number of Connections = " << References() << std::endl;
+   std::cout << IsA()->GetName() << "\t" << GetName() << "\t"
+             << "Number of Connections = " << References() << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -423,8 +394,12 @@ class TQSlotPool {
 private:
    THashTable *fTable;
 public:
-   TQSlotPool() { fTable = new THashTable(50); }
-   virtual ~TQSlotPool() { fTable->Clear("nodelete"); }
+   TQSlotPool() {
+      fTable = new THashTable(50);
+   }
+   virtual ~TQSlotPool() {
+      fTable->Clear("nodelete");
+   }
 
    TQSlot  *New(const char *class_name, const char *funcname);
    TQSlot  *New(TClass *cl, const char *method, const char *func);
@@ -440,7 +415,7 @@ TQSlot *TQSlotPool::New(const char *class_name, const char *funcname)
    name += "::";
    name += funcname;
 
-   TQSlot *slot = (TQSlot*)fTable->FindObject(name.Data());
+   TQSlot *slot = (TQSlot *)fTable->FindObject(name.Data());
 
    if (!slot) {
       slot = new TQSlot(class_name, funcname);
@@ -466,7 +441,7 @@ TQSlot *TQSlotPool::New(TClass *cl, const char *method, const char *func)
       name += func;
    }
 
-   TQSlot *slot = (TQSlot*)fTable->FindObject(name.Data());
+   TQSlot *slot = (TQSlot *)fTable->FindObject(name.Data());
 
    if (!slot) {
       slot = new TQSlot(cl, method, func);
@@ -559,7 +534,7 @@ TQConnection::~TQConnection()
    TIter next(this);
    TList *list;
 
-   while ((list = (TList*)next())) {
+   while ((list = (TList *)next())) {
       list->Remove(this);
       if (list->IsEmpty()) delete list;   // delete empty list
    }
@@ -593,7 +568,7 @@ void TQConnection::ls(Option_t *option) const
    // connected to this connection.
 
    std::cout << "\t" <<  IsA()->GetName() << "\t" << GetName() << std::endl;
-   ((TQConnection*)this)->R__FOR_EACH(TList,ls)(option);
+   ((TQConnection *)this)->R__FOR_EACH(TList, ls)(option);
 }
 
 //______________________________________________________________________________

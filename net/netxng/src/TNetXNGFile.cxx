@@ -164,8 +164,15 @@ TNetXNGFile::TNetXNGFile(const char *url,
       return;
    }
 
+   if( (fMode & OpenFlags::New) || (fMode & OpenFlags::Delete) ||
+       (fMode & OpenFlags::Update) )
+      fWritable = true;
+
    // Initialize the file
-   TFile::Init(false);
+   bool create = false;
+   if( (fMode & OpenFlags::New) || (fMode & OpenFlags::Delete) )
+      create = true;
+   TFile::Init(create);
 
    // Get the vector read limits
    GetVectorReadLimits();
@@ -346,6 +353,7 @@ Bool_t TNetXNGFile::ReadBuffer(char *buffer, Long64_t position, Int_t length)
       return kTRUE;
 
    // Try to read from cache
+   fOffset = position;
    Int_t status;
    if ((status = ReadBufferViaCache(buffer, length))) {
       if (status == 2)
@@ -365,7 +373,7 @@ Bool_t TNetXNGFile::ReadBuffer(char *buffer, Long64_t position, Int_t length)
    }
 
    // Bump the globals
-   fOffset     += length;
+   fOffset     += bytesRead;
    fBytesRead  += bytesRead;
    fgBytesRead += bytesRead;
    fReadCalls  ++;
@@ -532,6 +540,12 @@ Bool_t TNetXNGFile::WriteBuffer(const char *buffer, Int_t length)
    if (!IsUseable())
       return kTRUE;
 
+   if (!fWritable) {
+      if (gDebug > 1)
+         Info("WriteBuffer", "file not writable");
+      return kTRUE;
+   }
+
    // Check the write cache
    Int_t status;
    if ((status = WriteBufferViaCache(buffer, length))) {
@@ -555,6 +569,30 @@ Bool_t TNetXNGFile::WriteBuffer(const char *buffer, Int_t length)
    return kFALSE;
 }
 
+//_____________________________________________________________________________
+void TNetXNGFile::Flush()
+{
+   if (!IsUseable())
+      return;
+
+   if (!fWritable) {
+      if (gDebug > 1)
+         Info("Flush", "file not writable - do nothing");
+      return;
+   }
+
+   FlushWriteCache();
+
+   //
+   // Flush via the remote xrootd
+   XrdCl::XRootDStatus status = fFile->Sync();
+   if( !status.IsOK() )
+      Error("Flush", "%s", status.ToStr().c_str());
+
+   if (gDebug > 1)
+      Info("Flush", "XrdClient::Sync succeeded.");
+}
+
 //______________________________________________________________________________
 void TNetXNGFile::Seek(Long64_t offset, ERelativeTo position)
 {
@@ -576,7 +614,7 @@ XrdCl::OpenFlags::Flags TNetXNGFile::ParseOpenMode(Option_t *modestr)
    // returns:      correctly parsed option mode
 
    using namespace XrdCl;
-   OpenFlags::Flags mode = OpenFlags::None;
+   OpenFlags::Flags mode = OpenFlags::Read;
    TString mod = ToUpper(TString(modestr));
 
    if (mod == "NEW" || mod == "CREATE")  mode = OpenFlags::New;

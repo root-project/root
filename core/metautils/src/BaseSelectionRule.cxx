@@ -81,8 +81,8 @@ static bool R__match_filename(const char *srcname,const char *filename)
    }
 
 #ifdef G__WIN32
-   G__FastAllocString i1name(_MAX_PATH);
-   G__FastAllocString fullfile(_MAX_PATH);
+   char i1name[_MAX_PATH];
+   char fullfile[_MAX_PATH];
    _fullpath( i1name, srcname, _MAX_PATH );
    _fullpath( fullfile, filename, _MAX_PATH );
    if((stricmp(i1name, fullfile)==0)) return 1;
@@ -182,7 +182,9 @@ void BaseSelectionRule::PrintAttributes(int level) const
 {
    PrintAttributes(std::cout, level);
 }
+#ifndef G__WIN32
 #include <unistd.h>
+#endif
 BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *decl,
                                                        const std::string& name,
                                                        const std::string& prototype,

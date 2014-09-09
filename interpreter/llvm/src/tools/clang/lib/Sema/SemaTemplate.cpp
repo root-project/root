@@ -1465,8 +1465,11 @@ bool Sema::CheckTemplateParameterList(TemplateParameterList *NewParams,
       // C++ [temp.param]p12:
       //   A template-parameter shall not be given default arguments
       //   by two different declarations in the same scope.
+
+#if 0 // Disable until Diag is rewired
       Diag(NewDefaultLoc, diag::err_template_param_default_arg_redefinition);
       Diag(OldDefaultLoc, diag::note_template_param_prev_default_arg);
+#endif
       Invalid = true;
     } else if (MissingDefaultArg && TPC != TPC_FunctionTemplate) {
       // C++ [temp.param]p11:

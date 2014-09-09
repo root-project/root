@@ -46,6 +46,33 @@ ROOT_CHECK_OUT_OF_SOURCE_BUILD()
 include(SearchInstalledSoftware)
 ROOT_SHOW_OPTIONS()
 
+#---Populate the configure arguments returned by 'root-config --config'-------------------------
+get_cmake_property(variables CACHE_VARIABLES)
+foreach(var ${variables})
+  if((var MATCHES "_(LIBRARIES|LIBRARY|INCLUDE)") AND (NOT "${${var}}" STREQUAL "") AND
+     (NOT "${var}" MATCHES "NOTFOUND"))
+    if (var MATCHES "^QT_")
+      # filter out the very long list of Qt libraries and include dirs
+      if (var MATCHES "(QT_LIBRARY_DIR|QT_QTCORE_INCLUDE_DIR)")
+        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
+      endif()
+    else()
+      if ((NOT var MATCHES "_(DOCS|TESTS|INSTALL)") AND (NOT var MATCHES "^_"))
+        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
+      endif()
+    endif()
+  endif()
+endforeach()
+
+#---Move (copy) the headers and other directories to binary tree---------------------------------
+add_custom_target(move_headers  COMMAND ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR} -DCOMPONENTS="headers"
+                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake
+                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
+                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
+                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
+                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
+                                COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/tutorials ${CMAKE_BINARY_DIR}/tutorials)
+
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
 add_subdirectory (interpreter)
@@ -81,8 +108,9 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 #---Global PCH-----------------------------------------------------------------------------------
 get_property(__allTargets GLOBAL PROPERTY ROOT_DICTIONARY_TARGETS)
 get_property(__allFiles GLOBAL PROPERTY ROOT_DICTIONARY_FILES)
+get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
 add_custom_command(OUTPUT include/allLinkDef.h include/allHeaders.h cppflags.txt
-                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${CMAKE_SOURCE_DIR} '*'
+                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${CMAKE_SOURCE_DIR} "." ${__clingetcpch}
                    DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${__allFiles})
 set(__cxxflags -D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DLDAP_DEPRECATED -DQT3_SUPPORT -Wno-deprecated
                -Iinclude -Ietc -Ietc/cling -I${CMAKE_SOURCE_DIR})
@@ -95,9 +123,22 @@ set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
 add_dependencies(onepcm ${__allTargets})
 install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
-#------------------------------------------------------------------------------------------------
+#---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
+add_custom_target(hsimple ALL DEPENDS hsimple.root)
+add_dependencies(hsimple onepcm)
+ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
+add_custom_command(OUTPUT hsimple.root COMMAND hsimple.exe)
+install(FILES ${CMAKE_BINARY_DIR}/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 
-include(PostInstalledSoftware)
+#---version--------------------------------------------------------------------------------------
+add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh ${CMAKE_BINARY_DIR}
+                          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+#add_dependencies(version root.exe)
+
+#---distribution commands------------------------------------------------------------------------
+add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh
+                          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+add_custom_target(dist COMMAND cpack --config CPackConfig.cmake)
 
 #---Configure and install various files neded later and for clients -----------------------------
 include(RootConfiguration)
@@ -105,7 +146,7 @@ include(RootConfiguration)
 #---Installation of project-wise artifacts-------------------------------------------------------
 if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(FILES LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
-  install(DIRECTORY README/ DESTINATION ${CMAKE_INSTALL_DOCDIR} PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY README DESTINATION ${CMAKE_INSTALL_DOCDIR} PATTERN ".svn" EXCLUDE)
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
                          PATTERN ".svn" EXCLUDE
                          REGEX system.rootrc EXCLUDE
@@ -115,7 +156,7 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR} PATTERN ".svn" EXCLUDE)
   install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR} PATTERN ".svn" EXCLUDE)
   install(DIRECTORY test/      DESTINATION ${CMAKE_INSTALL_TESTDIR} COMPONENT tests PATTERN ".svn" EXCLUDE)
-  install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tutorials PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests PATTERN ".svn" EXCLUDE)
   install(DIRECTORY cmake/modules DESTINATION ${CMAKE_INSTALL_CMAKEDIR} PATTERN ".svn" EXCLUDE)
   install(FILES build/misc/root.m4 DESTINATION ${CMAKE_INSTALL_ACLOCALDIR})
 endif()

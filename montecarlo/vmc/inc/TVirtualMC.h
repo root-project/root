@@ -877,11 +877,7 @@ private:
    ClassDef(TVirtualMC,1)  //Interface to Monte Carlo
 };
 
-#if !defined(__CINT__)
-R__EXTERN TMCThreadLocal TVirtualMC *gMC;
-#else
-R__EXTERN                TVirtualMC *gMC;
-#endif
+#define gMC (TVirtualMC::GetMC())
 
 #endif //ROOT_TVirtualMC
 

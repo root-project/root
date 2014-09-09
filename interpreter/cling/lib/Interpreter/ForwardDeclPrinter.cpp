@@ -197,9 +197,14 @@ namespace cling {
       Out() << "__module_private__ ";
     }
     QualType q = D->getTypeSourceInfo()->getType();
-    q.removeLocalRestrict();
-    q.print(Out(), m_Policy, D->getName());
-    q.addRestrict();
+    if (q.isRestrictQualified()){
+      q.removeLocalRestrict();
+      q.print(Out(), m_Policy, "");
+      Out() << " __restrict " << D->getName(); //TODO: Find some policy that does this automatically
+    }
+    else {
+      q.print(Out(), m_Policy, D->getName());
+    }
     prettyPrintAttributes(D);
 //      Indent() << ";\n";
     skipCurrentDecl(false);
@@ -896,7 +901,8 @@ namespace cling {
 
   void ForwardDeclPrinter::
   VisitClassTemplateSpecializationDecl(ClassTemplateSpecializationDecl* D) {
-
+    D->printName(Log());
+    Log() << " ClassTemplateSpecialization : Skipped by default\n";
 //    if (shouldSkip(D)) {
 //      skipCurrentDecl();
 //      return;
@@ -908,7 +914,7 @@ namespace cling {
 //    VisitCXXRecordDecl(D->getCanonicalDecl());
 
 //    Out() << "<";
-//    for (uint i=0; i < iargs.size(); ++i){
+//    for (unsigned int i=0; i < iargs.size(); ++i){
 //      if (iargs[i].getKind() == TemplateArgument::Pack)
 //        continue;
 //      if (i != 0 )
@@ -958,7 +964,7 @@ namespace cling {
 
   bool ForwardDeclPrinter::hasDefaultArgument(FunctionDecl *D) {
     auto N = D->getNumParams();
-    for (uint i=0; i < N; ++i) {
+    for (unsigned int i=0; i < N; ++i) {
       if (D->getParamDecl(i)->hasDefaultArg())
         return true;
     }
@@ -981,28 +987,31 @@ namespace cling {
           if (m_IncompatibleNames.find
                   (tst->getTemplateName().getAsTemplateDecl()->getName())
                   != m_IncompatibleNames.end()) {
-//            Log() << "Function : Incompatible Type\n";
+              D->printName(Log());
+            Log() << " Function : Incompatible Type\n";
             return true;
           }
-          for (uint i = 0; i < tst->getNumArgs(); ++i ) {
+          for (unsigned int i = 0; i < tst->getNumArgs(); ++i ) {
             const TemplateArgument& arg = tst->getArg(i);
             TemplateArgument::ArgKind kind = arg.getKind();
             if (kind == TemplateArgument::ArgKind::Type){
               if (m_IncompatibleNames.find(arg.getAsType().getAsString())
                       != m_IncompatibleNames.end()){
-//                Log() << D->getName() << " Function : Incompatible Type\n";
+                  D->printName(Log());
+                Log() << D->getName() << " Function : Incompatible Type in template argument list\n";
                 return true;
               }
             }
             if (kind == TemplateArgument::ArgKind::Expression) {
-              Expr* expr = arg.getAsExpr();
+              //Expr* expr = arg.getAsExpr();
               //TODO: Traverse this expr
             }
          }
 
       }
       if (isIncompatibleType(D->getParamDecl(i)->getType())){
-//        Log() << "Function : Incompatible Type\n";
+        D->printName(Log());
+        Log() << " Function : Incompatible Type in argument list\n";
         param = true;
       }
     }
@@ -1021,7 +1030,8 @@ namespace cling {
         //Implement that if important functions are marked so.
         //Not important, as users do not need hints
         //about using Deleted functions
-//      Log() <<"Function : Other\n";
+      D->printName(Log());
+      Log() << " Function : Other\n";
       return true;
     }
     return false;
@@ -1048,7 +1058,7 @@ namespace cling {
     if (const TemplateSpecializationType* tst
             = dyn_cast<TemplateSpecializationType>
             (D->getTypeSourceInfo()->getType().getTypePtr())){
-      for (uint i = 0; i < tst->getNumArgs(); ++i ) {
+      for (unsigned int i = 0; i < tst->getNumArgs(); ++i ) {
         const TemplateArgument& arg = tst->getArg(i);
         if (arg.getKind() == TemplateArgument::ArgKind::Type)
           if (m_IncompatibleNames.find(arg.getAsType().getAsString())
@@ -1070,7 +1080,7 @@ namespace cling {
               ->getPointeeType().getTypePtr()->castAs<clang::FunctionType>();
       bool result = isIncompatibleType(ft->getReturnType(),false);
       if (const FunctionProtoType* fpt = dyn_cast<FunctionProtoType>(ft)){
-        for (uint i = 0; i < fpt->getNumParams(); ++i){
+        for (unsigned int i = 0; i < fpt->getNumParams(); ++i){
           result = result || isIncompatibleType(fpt->getParamType(i),false);
           if (result){
             m_IncompatibleNames.insert(D->getName());
@@ -1087,7 +1097,7 @@ namespace cling {
                                  ->castAs<clang::FunctionType>();
         bool result = isIncompatibleType(ft->getReturnType(),false);
         if (const FunctionProtoType* fpt = dyn_cast<FunctionProtoType>(ft)){
-          for (uint i = 0; i < fpt->getNumParams(); ++i){
+          for (unsigned int i = 0; i < fpt->getNumParams(); ++i){
             result = result || isIncompatibleType(fpt->getParamType(i),false);
             if (result){
               m_IncompatibleNames.insert(D->getName());
@@ -1118,7 +1128,12 @@ namespace cling {
     return false;
   }
   bool ForwardDeclPrinter::shouldSkip(EnumDecl *D) {
-    return D->getName().size() == 0;
+    if (D->getName().size() == 0){
+      D->printName(Log());
+      Log() << "Enum: Empty name\n";
+      return true;
+    }
+    return false;
   }
   void ForwardDeclPrinter::skipCurrentDecl(bool skip) {
     if (skip) {
@@ -1134,7 +1149,7 @@ namespace cling {
 
     }
     const TemplateArgumentList& iargs = D->getTemplateInstantiationArgs();
-    for (uint i = 0; i < iargs.size(); ++i) {
+    for (unsigned int i = 0; i < iargs.size(); ++i) {
       const TemplateArgument& arg = iargs[i];
       if (arg.getKind() == TemplateArgument::ArgKind::Type)
         if (m_IncompatibleNames.find(arg.getAsType().getAsString())
@@ -1215,6 +1230,8 @@ namespace cling {
   }
   bool ForwardDeclPrinter::shouldSkip(TypeAliasTemplateDecl *D) {
     m_IncompatibleNames.insert(D->getName());
+    D->printName(Log());
+    Log() << " TypeAliasTemplateDecl: Always Skipped\n";
     return true;
   }
 

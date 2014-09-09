@@ -28,6 +28,39 @@ static size_t StdLen(const std::string &name, size_t pos = 0)
    size_t len = 0;
    if (name.compare(pos,5,"std::")==0) {
       len = 5;
+
+      // TODO: This is likely to induce unwanted autoparsing, those are reduced
+      // by the caching of the result.
+      if (gInterpreterHelper) {
+         for(size_t i = pos+5; i < name.length(); ++i) {
+            if (name[i] == '<') break;
+            if (name[i] == ':') {
+               bool isInlined;
+               std::string scope(name.substr(pos,i-pos));
+               std::string scoperesult;
+               // We assume that we are called in already serialized code.
+               // Note: should we also cache the negative answers?
+               static std::set<std::string> gInlined;
+
+               if (gInlined.find(scope) != gInlined.end()) {
+                  len = i - pos;
+                  if (i+1<name.length() && name[i+1]==':') {
+                     len += 2;
+                  }
+               }
+               if (!gInterpreterHelper->ExistingTypeCheck(scope, scoperesult)
+                   && gInterpreterHelper->IsDeclaredScope(scope,isInlined)) {
+                  if (isInlined) {
+                     gInlined.insert(scope);
+                     len = i - pos;
+                     if (i+1<name.length() && name[i+1]==':') {
+                        len += 2;
+                     }
+                  }
+               }
+            }
+         }
+      }
    }
 
    return len;
@@ -163,11 +196,13 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
         || fElements[narg-1][0]=='['
         || 0 == fElements[narg-1].compare(0,6,"const*")
         || 0 == fElements[narg-1].compare(0,6,"const&")
+        || 0 == fElements[narg-1].compare(0,6,"const[")
         )
        ) {
       if ((mode&1)==0) tailLoc = narg-1;
-      narg--;
    }
+   else { assert(fElements[narg-1].empty()); };
+   narg--;
    mode &= (~1);
 
    if (fNestedLocation) narg--;
@@ -284,6 +319,9 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
             unsigned int offset = (0==strncmp("const ",fElements[i].c_str(),6)) ? 6 : 0;
             RemoveStd( fElements[i], offset );
          }
+         if (mode&kResolveTypedef) {
+            fElements[i] = ResolveTypedef(fElements[i].c_str(),true);
+         }
          continue;
       }
       bool hasconst = 0==strncmp("const ",fElements[i].c_str(),6);
@@ -300,6 +338,12 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
 
    if (!fElements[0].empty()) {answ += fElements[0]; answ +="<";}
 
+#if 0
+   // This code is no longer use, the moral equivalent would be to get
+   // the 'fixed' number of argument the user told us to ignore and drop those.
+   // However, the name we get here might be (usually) normalized enough that
+   // this is not necessary (at the very least nothing break in roottest with
+   // the aforementioned new code).
    if (mode & kDropAllDefault) {
       int nargNonDefault = 0;
       std::string nonDefName = answ;
@@ -323,6 +367,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       if (nargNonDefault < narg)
          narg = nargNonDefault;
    }
+#endif
 
    { for (int i=1;i<narg-1; i++) { answ += fElements[i]; answ+=",";} }
    if (narg>1) { answ += fElements[narg-1]; }
@@ -342,7 +387,6 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    // tail is not a type name, just [2], &, * etc.
    if (tailLoc) answ += fElements[tailLoc];
 }
-
 
 //______________________________________________________________________________
 ROOT::ESTLType TClassEdit::STLKind(const char *type, size_t len)
@@ -623,13 +667,23 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, const char *name)
 
    // Remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
    TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
-   splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
+   splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kResolveTypedef);
 
    // Depending on how the user typed their code, in particular typedef
    // declarations, we may end up with an explicit '::' being
    // part of the result string.  For consistency, we must remove it.
    if (norm_name.length()>2 && norm_name[0]==':' && norm_name[1]==':') {
       norm_name.erase(0,2);
+   }
+
+   if (gInterpreterHelper) {
+      // See if the expanded name itself is a typedef.
+      std::string typeresult;
+      if (gInterpreterHelper->ExistingTypeCheck(norm_name, typeresult)
+          || gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(norm_name, typeresult)) {
+
+         if (!typeresult.empty()) norm_name = typeresult;
+      }
    }
 }
 
@@ -665,6 +719,60 @@ string TClassEdit::GetLong64_Name(const string& original)
       result.replace(pos, longlong_len, "Long64_t");
    }
    return result;
+}
+
+//______________________________________________________________________________
+static void R__FindTrailing(std::string &full,  /*modified*/
+                            std::string &stars /* the literal output */
+                            )
+{
+   const char *t = full.c_str();
+   const unsigned int tlen( full.size() );
+
+   const char *starloc = t + tlen - 1;
+   bool hasconst = false;
+   if ( (*starloc)=='t'
+       && (starloc-t) > 5 && 0 == strncmp((starloc-5),"const",5)
+       && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
+      // we are ending on a const.
+      starloc -= 4;
+      if ((*starloc-1)==' ') {
+         // Take the space too.
+         starloc--;
+      }
+      hasconst = true;
+   }
+   if ( hasconst || (*starloc)=='*' || (*starloc)=='&' || (*starloc)==']' ) {
+      bool isArray = ( (*starloc)==']' );
+      while( t<=(starloc-1) && ((*(starloc-1))=='*' || (*(starloc-1))=='&' || (*(starloc-1))=='t' || isArray)) {
+         if (isArray) {
+            starloc--;
+            isArray = ! ( (*starloc)=='[' );
+         } else if ( (*(starloc-1))=='t' ) {
+            if ( (starloc-1-t) > 5 && 0 == strncmp((starloc-5),"const",5)
+                && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
+               // we have a const.
+               starloc -= 5;
+               if ((*starloc-1)==' ') {
+                  // Take the space too.
+                  starloc--;
+               }
+            } else {
+               break;
+            }
+         } else {
+            starloc--;
+         }
+      }
+      stars = starloc;
+      const unsigned int starlen = strlen(starloc);
+      full.erase(tlen-starlen,starlen);
+   } else if (hasconst) {
+      stars = starloc;
+      const unsigned int starlen = strlen(starloc);
+      full.erase(tlen-starlen,starlen);
+   }
+
 }
 
 //______________________________________________________________________________
@@ -764,7 +872,13 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
          }
          if (offset < full.length()) {
             // Copy the trailing text.
-            output.back().append(full.substr(offset+1));
+            string right( full.substr(offset+1) );
+            string stars;
+            R__FindTrailing(right, stars);
+            output.back().append(right);
+            output.push_back(stars);
+         } else {
+            output.push_back("");
          }
          return output.size();
       }
@@ -774,60 +888,16 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
       unsigned int offset = (0==strncmp("const ",full.c_str(),6)) ? 6 : 0;
       RemoveStd( full, offset );
    }
-   const char *t = full.c_str();
-   const char *c = strchr(t,'<');
 
    string stars;
-   const unsigned int tlen( full.size() );
-   if ( tlen > 0 ) {
-      const char *starloc = t + tlen - 1;
-      bool hasconst = false;
-      if ( (*starloc)=='t'
-          && (starloc-t) > 5 && 0 == strncmp((starloc-5),"const",5)
-          && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
-         // we are ending on a const.
-         starloc -= 4;
-         if ((*starloc-1)==' ') {
-            // Take the space too.
-            starloc--;
-         }
-         hasconst = true;
-      }
-      if ( hasconst || (*starloc)=='*' || (*starloc)=='&' || (*starloc)==']' ) {
-         bool isArray = ( (*starloc)==']' );
-         while( (*(starloc-1))=='*' || (*(starloc-1))=='&' || (*(starloc-1))=='t' || isArray) {
-            if (isArray) {
-               starloc--;
-               isArray = ! ( (*starloc)=='[' );
-            } else if ( (*(starloc-1))=='t' ) {
-               if ( (starloc-1-t) > 5 && 0 == strncmp((starloc-5),"const",5)
-                   && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
-                  // we have a const.
-                  starloc -= 5;
-                  if ((*starloc-1)==' ') {
-                     // Take the space too.
-                     starloc--;
-                  }
-               } else {
-                  break;
-               }
-            } else {
-               starloc--;
-            }
-         }
-         stars = starloc;
-         const unsigned int starlen = strlen(starloc);
-         full.erase(tlen-starlen,starlen);
-      } else if (hasconst) {
-         stars = starloc;
-         const unsigned int starlen = strlen(starloc);
-         full.erase(tlen-starlen,starlen);
-      }
+   if ( !full.empty() ) {
+      R__FindTrailing(full, stars);
    }
 
+   const char *c = strchr(full.c_str(),'<');
    if (c) {
       //we have 'something<'
-      output.push_back(string(full,0,c-t));
+      output.push_back(string(full,0,c - full.c_str()));
 
       const char *cursor;
       int level = 0;
@@ -866,7 +936,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
       output.push_back(full);
    }
 
-   if (stars.length()) output.push_back(stars);
+   if (!output.empty()) output.push_back(stars);
    return output.size();
 }
 
@@ -934,7 +1004,9 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 
       if (*c == '<' || *c == '(')   lev++;
       if (lev==0 && !isalnum(*c)) {
-         if (!strchr("*&:_$ []-@",*c)) break;
+         if (!strchr("*&:._$ []-@",*c)) break;
+         // '.' is used as a module/namespace separator by PyROOT, see
+         // TPyClassGenerator::GetClass.
       }
       if (c[0]=='>' && result.size() && result[result.size()-1]=='>') result+=" ";
 
@@ -1070,30 +1142,266 @@ bool TClassEdit::IsVectorBool(const char *name) {
 }
 
 //______________________________________________________________________________
-namespace {
-   static bool ShouldReplace(const char *name)
-   {
-      // This helper function indicates whether we really want to replace
-      // a type.
-
-      // In cling, looking up 'unsigned' by itself will point to a type
-      // 'unsigned int' ... so because of the simplistic parsing of ResolveTypedef
-      // this is cause 'unsigned int' (as input) to be replace with 'unsigned int int'
-      const char *excludelist [] = {"Char_t","Short_t","Int_t","Long_t","Float_t",
-                                    "Int_t","Double_t","Double32_t","Float16_t",
-                                    "UChar_t","UShort_t","UInt_t","ULong_t","UInt_t",
-                                    "Long64_t","ULong64_t","Bool_t","unsigned"};
-
-      for (unsigned int i=0; i < sizeof(excludelist)/sizeof(excludelist[0]); ++i) {
-         if (strcmp(name,excludelist[i])==0) return false;
+static void ResolveTypedefProcessType(const char *tname,
+                                      unsigned int /* len */,
+                                      unsigned int cursor,
+                                      bool constprefix,
+                                      unsigned int start_of_type,
+                                      unsigned int end_of_type,
+                                      unsigned int mod_start_of_type,
+                                      bool &modified,
+                                      std::string &result)
+{
+   std::string type(modified && (mod_start_of_type < result.length()) ?
+                    result.substr(mod_start_of_type, string::npos)
+                    : string(tname, start_of_type, end_of_type == 0 ? cursor - start_of_type : end_of_type - start_of_type));  // we need to try to avoid this copy
+   string typeresult;
+   if (gInterpreterHelper->ExistingTypeCheck(type, typeresult)
+       || gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(type, typeresult)) {
+      // it is a known type
+      if (!typeresult.empty()) {
+         // and it is a typedef, we need to replace it in the output.
+         if (modified) {
+            result.replace(mod_start_of_type, string::npos,
+                           typeresult);
+         }
+         else {
+            modified = true;
+            mod_start_of_type = start_of_type;
+            result += string(tname,0,start_of_type);
+            if (constprefix && typeresult.compare(0,6,"const ",6) == 0) {
+               result += typeresult.substr(6,string::npos);
+            } else {
+               result += typeresult;
+            }
+         }
       }
-
-      return true;
+      if (modified) {
+         // result += type;
+         if (end_of_type != 0) {
+            result += std::string(tname,end_of_type,cursor-end_of_type);
+         }
+      }
+   } else {
+      // no change needed.
+      if (modified) {
+         // result += type;
+         if (end_of_type != 0) {
+            result += std::string(tname,end_of_type,cursor-end_of_type);
+         }
+      }
    }
 }
 
 //______________________________________________________________________________
-string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
+static void ResolveTypedefImpl(const char *tname,
+                               unsigned int len,
+                               unsigned int &cursor,
+                               bool &modified,
+                               std::string &result)
+{
+
+   // Need to parse and deal with
+   // A::B::C< D, E::F, G::H<I,J>::K::L >::M
+   // where E might be replace by N<O,P>
+   // and G::H<I,J>::K or G might be a typedef.
+
+   bool constprefix = false;
+
+   if (tname[cursor]==' ') {
+      if (!modified) {
+         modified = true;
+         result += string(tname,0,cursor);
+      }
+      while (tname[cursor]==' ') ++cursor;
+   }
+
+   if (tname[cursor]=='c' && (cursor+6<len)) {
+      if (strncmp(tname+cursor,"const ",6) == 0) {
+         cursor += 6;
+         if (modified) result += "const ";
+      }
+      constprefix = true;
+   }
+
+   // When either of those two is true, we should probably go to modified
+   // mode. (Otherwise we rely on somebody else to strip the std::)
+   if (len > 5 && strncmp(tname+cursor,"std::",5) == 0) {
+      cursor += 5;
+   }
+   if (len > 2 && strncmp(tname+cursor,"::",2) == 0) {
+      cursor += 2;
+      len -= 2;
+   }
+
+   unsigned int start_of_type = cursor;
+   unsigned int end_of_type = 0;
+   unsigned int mod_start_of_type = result.length();
+   unsigned int prevScope = cursor;
+   for ( ; cursor<len; ++cursor) {
+      switch (tname[cursor]) {
+         case ':': {
+            if ((cursor+1)>=len || tname[cursor+1]!=':') {
+               // we expected another ':', malformed, give up.
+               if (modified) result += (tname+prevScope);
+               return;
+            }
+            string scope;
+            if (modified) {
+               scope = result.substr(mod_start_of_type, string::npos);
+               scope += std::string(tname+prevScope,cursor-prevScope);
+            } else {
+               scope = std::string(tname, start_of_type, cursor - start_of_type); // we need to try to avoid this copy
+            }
+            std::string scoperesult;
+            bool isInlined = false;
+            if (gInterpreterHelper->ExistingTypeCheck(scope, scoperesult)
+                ||gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(scope, scoperesult)) {
+               // it is a known type
+               if (!scoperesult.empty()) {
+                  // and it is a typedef
+                  if (modified) {
+                     if (constprefix && scoperesult.compare(0,6,"const ",6) != 0) mod_start_of_type -= 6;
+                     result.replace(mod_start_of_type, string::npos,
+                                    scoperesult);
+                     result += "::";
+                  } else {
+                     modified = true;
+                     mod_start_of_type = start_of_type;
+                     result += string(tname,0,start_of_type);
+                     //if (constprefix) result += "const ";
+                     result += scoperesult;
+                     result += "::";
+                  }
+               } else if (modified) {
+                  result += std::string(tname+prevScope,cursor+1-prevScope);
+               }
+            } else if (!gInterpreterHelper->IsDeclaredScope(scope,isInlined)) {
+               // the nesting namespace is not declared
+               if (modified) result += (tname+prevScope);
+               // Unfortunately, this is too harsh .. what about:
+               //    unknown::wrapper<Int_t>
+               return;
+            } else if (isInlined) {
+               // humm ... just skip it.
+               if (!modified) {
+                  modified = true;
+                  mod_start_of_type = start_of_type;
+                  result += string(tname,0,start_of_type);
+                  //if (constprefix) result += "const ";
+                  result += string(tname,start_of_type,prevScope - start_of_type);
+               }
+            } else if (modified) {
+               result += std::string(tname+prevScope,cursor+1-prevScope);
+            }
+            // Consume the 1st semi colon, the 2nd will be consume by the for loop.
+            ++cursor;
+            prevScope = cursor+1;
+            break;
+         }
+         case '<': {
+            // push information on stack
+            if (modified) {
+               result += std::string(tname+prevScope,cursor+1-prevScope);
+               // above includes the '<' .... result += '<';
+            }
+            do {
+               ++cursor;
+               ResolveTypedefImpl(tname,len,cursor,modified,result);
+            } while( cursor<len && tname[cursor] == ',' );
+
+            while (cursor<len && tname[cursor+1]==' ') ++cursor;
+
+            // Since we already checked the type, skip the next section
+            // (respective the scope section and final type processing section)
+            // as they would re-do the same job.
+            if (cursor+2<len && tname[cursor+1]==':' && tname[cursor+2]==':') {
+               if (modified) result += "::";
+               cursor += 2;
+               prevScope = cursor+1;
+            }
+            if ( (cursor+1)<len && tname[cursor+1] == ',') {
+               ++cursor;
+               if (modified) result += ',';
+               return;
+            }
+            if ( (cursor+1)<len && tname[cursor+1] == '>') {
+               ++cursor;
+               if (modified) result += " >";
+               return;
+            }
+            if ( (cursor+1) >= len) {
+               return;
+            }
+            break;
+         }
+         case ' ': {
+            end_of_type = cursor;
+            ++cursor;
+            // let's see if we have 'long long' or 'unsigned int' or 'signed char' or what not.
+            while (cursor<len && tname[cursor] == ' ') ++cursor;
+
+            if (cursor!=len && tname[cursor] != '*' && tname[cursor] != '&'
+                && !(strncmp(tname+cursor,"const",5) == 0 && ((cursor+5)==len || tname[cursor+5] == ' ' || tname[cursor+5] == '*' || tname[cursor+5] == '&')) ) {
+               // the type is not ended yet.
+               end_of_type = 0;
+               break;
+            }
+            // Intentional fall through;
+         }
+         case '*':
+         case '&': {
+            if (tname[cursor] != ' ') end_of_type = cursor;
+            // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
+            if (strncmp(tname+cursor,"const",5) == 0) {
+               if ((cursor+5)==len || tname[cursor+5] == ' ' || tname[cursor+5] == '*' || tname[cursor+5] == '&') {
+                  cursor += 5;
+               }
+            }
+            while (cursor+1<len &&
+                   (tname[cursor+1] == ' ' || tname[cursor+1] == '*' || tname[cursor+1] == '&')) {
+               ++cursor;
+               // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
+               if (strncmp(tname+cursor,"const",5) == 0) {
+                  if ((cursor+5)==len || tname[cursor+5] == ' ' || tname[cursor+5] == '*' || tname[cursor+5] == '&') {
+                     cursor += 5;
+                  }
+               }
+            }
+            break;
+         }
+         case ',': {
+            if (modified && prevScope) {
+               result += std::string(tname+prevScope,(end_of_type == 0 ? cursor : end_of_type)-prevScope);
+            }
+            ResolveTypedefProcessType(tname,len,cursor,constprefix,start_of_type,end_of_type,mod_start_of_type,
+                                      modified, result);
+            if (modified) result += ',';
+            return;
+         }
+         case '>': {
+            if (modified && prevScope) {
+               result += std::string(tname+prevScope,(end_of_type == 0 ? cursor : end_of_type)-prevScope);
+            }
+            ResolveTypedefProcessType(tname,len,cursor,constprefix,start_of_type,end_of_type,mod_start_of_type,
+                                      modified, result);
+            if (modified) result += '>';
+            return;
+         }
+         default:
+            end_of_type = 0;
+      }
+   }
+
+   if (prevScope && modified) result += std::string(tname+prevScope,(end_of_type == 0 ? cursor : end_of_type)-prevScope);
+
+   ResolveTypedefProcessType(tname,len,cursor,constprefix,start_of_type,end_of_type,mod_start_of_type,
+                             modified, result);
+}
+
+
+//______________________________________________________________________________
+string TClassEdit::ResolveTypedef(const char *tname, bool /* resolveAll */)
 {
 
    // Return the name of type 'tname' with all its typedef components replaced
@@ -1102,127 +1410,26 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
    //    vector<MyObjTypedef> return vector<MyObj>
    //
 
-   if ( tname==0 || tname[0]==0 ) return "";
+   if ( tname==0 || tname[0]==0 || !gInterpreterHelper) return "";
 
-   if ( strchr(tname,'<')==0 && (tname[strlen(tname)-1]!='*') ) {
+   std::string result;
 
-      if (strcmp(tname,"Double32_t")==0 || strcmp(tname,"Float16_t")==0) {
-         return tname;
-      }
-
-      if ( strchr(tname,':')!=0 ) {
-         // We have a namespace and we have to check it first :(
-
-         int slen = strlen(tname);
-         for(int k=0;k<slen;++k) {
-            if (tname[k]==':') {
-               // NOTE: there is a missing increment of k, which means that
-               // this next steps prevents to look at typedef define in a scope.
-               if (k+1>=slen || tname[k+1]!=':') {
-                  // we expected another ':'
-                  return tname;
-               }
-               if (k) {
-                  string base(tname, 0, k);
-                  if (base=="std") {
-                     // std is not declared but is also ignored by CINT!
-                     // NOTE: this is probably no longer necessary.
-                     tname += 5;
-                     break;
-                  } else {
-                     if (base.compare(0,6,"const ") == 0) {
-                        base.erase(0,6);
-                     }
-                     if (gInterpreterHelper &&
-                         !gInterpreterHelper->IsDeclaredScope(base)) {
-                        // the nesting namespace is not declared
-                        return tname;
-                     }
-                  }
-                  // Consume the 2nd semi colon
-                  ++k;
-               }
-            }
-         }
-      }
-
-      // We have a very simple type
-
-      if (resolveAll || ShouldReplace(tname)) {
-         string result, tsnam = tname;
-         if (gInterpreterHelper &&
-             gInterpreterHelper->GetPartiallyDesugaredNameWithScopeHandling(tsnam, result))
-            return result;
-      }
-      return tname;
+   // Check if we already know it is a normalized typename or a registered
+   // typedef (i.e. known to gROOT).
+   if (gInterpreterHelper->ExistingTypeCheck(tname, result))
+   {
+      if (result.empty()) return tname;
+      else return result;
    }
 
-   int len = strlen(tname);
-   string input(tname);
-#ifdef R__SSTREAM
-   // This is the modern implementation
-   stringstream answ;
-#else
-   // This is deprecated in the C++ standard
-   strstream answ;
-#endif
+   unsigned int len = strlen(tname);
 
-   int prev = 0;
-   if (len > 5 && strncmp(tname,"std::",5) == 0) {
-      prev = 5;
-   }
-   for (int i=prev; i<len; ++i) {
-      switch (tname[i]) {
-         case ':': {
-           if ( strncmp(tname+prev,"std::",5) == 0 ) {
-              prev += 5;
-              ++i;
-           }
-           break;
-         }
-         case '<': {
-            char keep = input[i];
-            string temp( input, prev,i-prev );
-            answ << temp;
-            answ << keep;
-            prev = i+1;
-            break; // We do not have a complete type yet.
-         }
-         case '>':
-         case '*':
-         case ' ':
-         case '&':
-         case ',':
-         {
-            char keep = input[i];
-            string temp( input, prev,i-prev );
+   unsigned int cursor = 0;
+   bool modified = false;
+   ResolveTypedefImpl(tname,len,cursor,modified,result);
 
-            if ( (resolveAll&&(temp!="Double32_t")&&(temp!="Float16_t")) || ShouldReplace(temp.c_str())) {
-               answ << ResolveTypedef( temp.c_str(), resolveAll);
-            } else {
-               answ << temp;
-            }
-            answ << keep;
-            prev = i+1;
-         }
-      }
-   }
-   const char *last = &(input.c_str()[prev]);
-   if ((resolveAll&&(strcmp(last,"Double32_t")!=0)&&(strcmp(last,"Float16_t")!=0)) || ShouldReplace(last)) {
-      answ << ResolveTypedef( last, resolveAll);
-   } else {
-      answ << last;
-   }
-#ifndef R__SSTREAM
-   // Deprecated case
-   answ << ends;
-   std::string ret = answ.str();
-   answ.freeze(false);
-   return ret;
-#else
-   return answ.str();
-#endif
-
+   if (!modified) return tname;
+   else return result;
 }
 
 

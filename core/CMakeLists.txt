@@ -86,6 +86,7 @@ set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
 
 ROOT_OBJECT_LIBRARY(BaseTROOT ${CMAKE_SOURCE_DIR}/core/base/src/TROOT.cxx ${CMAKE_BINARY_DIR}/include/RGitCommit.h)
 add_dependencies(BaseTROOT gitcommit)
+install(FILES ${CMAKE_BINARY_DIR}/include/RGitCommit.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 #----------------------------------------------------------------------------------------
 
 if(WIN32)

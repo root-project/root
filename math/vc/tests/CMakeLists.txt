@@ -1,4 +1,7 @@
 include(AddFileDependencies)
+if(CMAKE_VERSION VERSION_GREATER 3.0.0)
+  cmake_policy(SET CMP0042 OLD)
+endif()
 
 add_custom_target(build_tests ALL VERBATIM)
 

@@ -1,4 +1,13 @@
-//TODO: Adapted from DeclPrinter, may need to be rewritten
+//--------------------------------------------------------------------*- C++ -*-
+// CLING - the C++ LLVM-based InterpreterG :)
+// author:  Manasij Mukherjee  <manasij7479@gmail.com>
+// author:  Vassil Vassilev <vvasilev@cern.ch>
+//
+// This file is dual-licensed: you can choose to license it under the University
+// of Illinois Open Source License or the GNU Lesser General Public License. See
+// LICENSE.TXT for details.
+//------------------------------------------------------------------------------
+
 #ifndef CLING_AUTOLOADING_VISITOR_H
 #define CLING_AUTOLOADING_VISITOR_H
 
@@ -11,8 +20,8 @@
 ///\brief Generates forward declarations for a Decl or Transaction
 ///       by implementing a DeclVisitor
 ///
-///\Important Points:
-///\1. Nested name specifiers: Since there doesn't seem to be a way
+/// Important Points:
+/// 1. Nested name specifiers: Since there doesn't seem to be a way
 ///    to forward declare B in the following example:
 ///    class A { class B{};};
 ///    We have chosen to skip all declarations using B.
@@ -20,7 +29,8 @@
 ///    like when B is defined within a namespace.
 ///    The fix for this issue dhould go in isIncompatibleType,
 ///    which currently just searches for "::" in the type name.
-///\2. Function arguments having an EnumConstant as a default value
+///
+/// 2. Function arguments having an EnumConstant as a default value
 ///    are printed in the following way:
 ///    enum E {E_a, E_b};
 ///    void foo(E e = E_b){}
@@ -28,6 +38,21 @@
 ///    enum E : unsigned int;
 ///    void foo(E e = E(1));
 ///    1 is the integral value of E_b.
+///
+/// 3. Decls, in general, are skipped when they depend on things
+///    that were previously skipped.
+///    The set of strings, m_IncompatibleNames facilitate this.
+///    Examine the shouldSkip functions to see why specific types
+///    are skipped.
+///
+/// 4. Log file:
+///    The name of the file depends on the name of the file where
+///    the forward declarations are written.
+///    So, fwd.h produces a corresponding fwd.h.skipped, when
+///    output logging is enabled.
+///    The log messages are written in the shouldSkip functions to
+///    simplify the design.
+///
 ///
 
 namespace clang {

@@ -11,15 +11,15 @@
 
 #include "cling-compiledata.h"
 #include "DynamicLookup.h"
+#include "ForwardDeclPrinter.h"
 #include "IncrementalExecutor.h"
 #include "IncrementalParser.h"
-#include "ForwardDeclPrinter.h"
+#include "MultiplexInterpreterCallbacks.h"
 
 #include "cling/Interpreter/CIFactory.h"
 #include "cling/Interpreter/ClangInternalState.h"
 #include "cling/Interpreter/CompilationOptions.h"
 #include "cling/Interpreter/DynamicLibraryManager.h"
-#include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
@@ -223,7 +223,7 @@ namespace cling {
          I != E; ++I)
       m_IncrParser->commitTransaction(*I);
 
-    //setCallbacks(new AutoloadCallback(this));
+    setCallbacks(new AutoloadCallback(this));
   }
 
   Interpreter::~Interpreter() {
@@ -966,15 +966,14 @@ namespace cling {
     Diags.pushMappings(Loc);
     // The source locations of #pragma warning ignore must be greater than
     // the ones from #pragma push
-    //Loc = Loc.getLocWithOffset(1);
     Diags.setSeverity(clang::diag::warn_unused_expr,
-                      clang::diag::Severity::Ignored, Loc);
+                      clang::diag::Severity::Ignored, SourceLocation());
     Diags.setSeverity(clang::diag::warn_unused_call,
-                      clang::diag::Severity::Ignored, Loc);
+                      clang::diag::Severity::Ignored, SourceLocation());
     Diags.setSeverity(clang::diag::warn_unused_comparison,
-                      clang::diag::Severity::Ignored, Loc);
+                      clang::diag::Severity::Ignored, SourceLocation());
     Diags.setSeverity(clang::diag::ext_return_has_expr,
-                      clang::diag::Severity::Ignored, Loc);
+                      clang::diag::Severity::Ignored, SourceLocation());
     if (Transaction* lastT = m_IncrParser->Compile(Wrapper, CO)) {
       Loc = m_IncrParser->getLastMemoryBufferEndLoc().getLocWithOffset(1);
       // if the location was the same we are in recursive calls and to avoid an
@@ -1106,25 +1105,16 @@ namespace cling {
   }
 
   void Interpreter::setCallbacks(InterpreterCallbacks* C) {
-    if (m_Callbacks.get() == C)
-      return;
-
     // We need it to enable LookupObject callback.
-    if (!m_Callbacks)
-      m_Callbacks.reset(C);
-    else
-      m_Callbacks->setNext(C);
+    if (!m_Callbacks) {
+      m_Callbacks.reset(new MultiplexInterpreterCallbacks(this));
+      // FIXME: Move to the InterpreterCallbacks.cpp;
+      if (DynamicLibraryManager* DLM = getDynamicLibraryManager())
+        DLM->setCallbacks(m_Callbacks.get());
+    }
 
-    // FIXME: We should add a multiplexer in the ASTContext, too.
-    llvm::IntrusiveRefCntPtr<ExternalASTSource>
-      astContextExternalSource(getSema().getExternalSource());
-    clang::ASTContext& Ctx = getSema().getASTContext();
-    // FIXME: This is a gross hack. We must make multiplexer in the astcontext,
-    // or a derived class that extends what we need.
-    Ctx.ExternalSource.resetWithoutRelease(); // FIXME: make sure we delete it.
-    Ctx.setExternalSource(astContextExternalSource);
-    if (DynamicLibraryManager* DLM = getDynamicLibraryManager())
-      DLM->setCallbacks(C);
+    static_cast<MultiplexInterpreterCallbacks*>(m_Callbacks.get())
+      ->addCallback(C);
   }
 
   const Transaction* Interpreter::getFirstTransaction() const {
@@ -1207,9 +1197,12 @@ namespace cling {
                                            bool enableMacros,
                                            bool enableLogs) {
 
-    const char *const dummy="cling";
+    const char *const dummy="cling_fwd_declarator";
     // Create an interpreter without any runtime, producing the fwd decls.
-    cling::Interpreter fwdGen(1, &dummy, nullptr, true);
+    // FIXME: CIFactory appends extra 3 folders to the llvmdir.
+    std::string llvmdir
+      = getCI()->getHeaderSearchOpts().ResourceDir + "/../../../";
+    cling::Interpreter fwdGen(1, &dummy, llvmdir.c_str(), true);
 
     // Copy the same header search options to the new instance.
     Preprocessor& fwdGenPP = fwdGen.getCI()->getPreprocessor();
@@ -1237,21 +1230,26 @@ namespace cling {
     std::string err;
     llvm::raw_fd_ostream out(outFile.data(), err,
                              llvm::sys::fs::OpenFlags::F_None);
-    if (enableLogs){
-      llvm::raw_fd_ostream log(llvm::Twine(outFile).concat(llvm::Twine(".skipped")).str().c_str(),
+    llvm::raw_fd_ostream log((outFile + ".skipped").str().c_str(),
                              err, llvm::sys::fs::OpenFlags::F_None);
-      log << "Generated for :" << inFile << "\n";
-      ForwardDeclPrinter visitor(out, log, fwdGen.getSema().getSourceManager(), *T);
-      visitor.printStats();
-    }
-    else {
-      llvm::raw_null_ostream sink;
-      ForwardDeclPrinter visitor(out, sink, fwdGen.getSema().getSourceManager(), *T);
-    }
+    log << "Generated for :" << inFile << "\n";
+    forwardDeclare(*T, fwdGen.getCI()->getSourceManager(), out, enableMacros,
+                   &log);
+  }
+
+  void Interpreter::forwardDeclare(Transaction& T, SourceManager& SM,
+                                   llvm::raw_ostream& out,
+                                   bool enableMacros /*=false*/,
+                                   llvm::raw_ostream* logs /*=0*/) const {
+    llvm::raw_null_ostream null;
+    if (!logs)
+      logs = &null;
+
+    ForwardDeclPrinter visitor(out, *logs, SM, T);
+    visitor.printStats();
+
     // Avoid assertion in the ~IncrementalParser.
-    T->setState(Transaction::kCommitted);
-    // unload(1);
-    return;
+    T.setState(Transaction::kCommitted);
   }
 
 } //end namespace cling

@@ -1100,85 +1100,37 @@ const char *TROOT::FindObjectPathName(const TObject *) const
 }
 
 //______________________________________________________________________________
-static TClass *R__FindSTLClass(const char *name, Bool_t load, Bool_t silent, const char *outername)
-{
-   // return a TClass object corresponding to 'name' assuming it is an STL container.
-   // In particular we looking for possible alternative name (default template
-   // parameter, typedefs template arguments, typedefed name).
-
-   TClass *cl = 0;
-
-   // We have not found the STL container yet.
-   // First we are going to look for a similar name but different 'default' template
-   // parameter (differences due to different STL implementation)
-
-   string defaultname( TClassEdit::ShortType( name, TClassEdit::kDropStlDefault ) ) ;
-
-   if (defaultname != name) {
-      cl = (TClass*)gROOT->GetListOfClasses()->FindObject(defaultname.c_str());
-      if (load && !cl) cl = gROOT->LoadClass(defaultname.c_str(), silent);
-   }
-
-   if (cl==0) {
-
-      // now look for a typedef
-      // well for now the typedefing in CINT has some issues
-      // for examples if we generated the dictionary for
-      //    set<string,someclass> then set<string> is typedef to it (instead of set<string,less<string> >)
-
-      TDataType *objType = gROOT->GetType(name, load);
-      if (objType) {
-         const char *typedfName = objType->GetTypeName();
-         if (typedfName) {
-            string defaultTypedefName(TClassEdit::ShortType(typedfName, TClassEdit::kDropStlDefault));
-
-            if (strcmp(typedfName, name) && defaultTypedefName == name) {
-               cl = (TClass*)gROOT->GetListOfClasses()->FindObject(typedfName);
-               if (load && !cl) cl = gROOT->LoadClass(typedfName, silent);
-            }
-         }
-      }
-   }
-   if (cl==0) {
-      // Try the alternate name where all the typedefs are resolved:
-
-      std::string altname;
-      gInterpreter->GetInterpreterTypeName(name,altname,kTRUE);
-      if (altname.length() && altname != name && altname != outername) {
-         cl = TClass::GetClass(altname.c_str(),load,silent);
-      }
-   }
-   if (cl==0) {
-      // Try with Long64_t instead of long long
-      string long64name = TClassEdit::GetLong64_Name( name );
-      if ( long64name != name && long64name != outername ) return R__FindSTLClass( long64name.c_str(), load, silent, outername);
-   }
-   if (cl == 0) {
-      TString resolvedName = TClassEdit::ResolveTypedef(name,kFALSE).c_str();
-      if (resolvedName != name && resolvedName != outername) cl = TClass::GetClass(resolvedName,load,silent);
-   }
-   if (cl == 0 && (strncmp(name,"std::",5)==0)) {
-      // CINT sometime ignores the std namespace for stl containers,
-      // so let's try without it.
-      if (strlen(name+5)) cl = TClass::GetClass(name+5,load,silent);
-   }
-
-   if (load && cl==0) {
-      // Create an Emulated class for this container.
-      cl = gInterpreter->GenerateTClass(defaultname.c_str(), kTRUE, silent);
-   }
-
-   return cl;
-}
-
-//______________________________________________________________________________
 TClass *TROOT::FindSTLClass(const char *name, Bool_t load, Bool_t silent) const
 {
    // return a TClass object corresponding to 'name' assuming it is an STL container.
    // In particular we looking for possible alternative name (default template
    // parameter, typedefs template arguments, typedefed name).
 
-   return R__FindSTLClass(name,load,silent,name);
+   // Example of inputs are
+   //   vector<int>  (*)
+   //   vector<Int_t>
+   //   vector<long long>
+   //   vector<Long_64_t> (*)
+   //   vector<int, allocator<int> >
+   //   vector<Int_t, allocator<int> >
+   //
+   //   One of the possibly expensive operation is the resolving of the typedef
+   //   which can provoke the parsing of the header files (and/or the loading
+   //   of clang pcms information).
+
+   // Remove std::, allocator, typedef, add Long64_t, etc. in just one call.
+   std::string normalized;
+   TClassEdit::GetNormalizedName(normalized, name);
+
+   TClass *cl = 0;
+   if (normalized != name) cl = TClass::GetClass(normalized.c_str(),load,silent);
+
+   if (load && cl==0) {
+      // Create an Emulated class for this container.
+      cl = gInterpreter->GenerateTClass(normalized.c_str(), kTRUE, silent);
+   }
+
+   return cl;
 }
 
 //______________________________________________________________________________
@@ -1777,61 +1729,10 @@ TClass *TROOT::LoadClass(const char *requestedname, Bool_t silent) const
    // either from the TClassTable or from the list of generator.
    // If silent is 'true', do not warn about missing dictionary for the class.
    // (typically used for class that are used only for transient members)
+   //
+   // The 'requestedname' is expected to be already normalized.
 
-   // This function does not (and should not) attempt to check in the
-   // list of loaded classes or in the typedef.
-
-
-   // We need to cache the requested name as in some case this function is
-   // called with gROOT->LoadClass(cl->GetName()) and the loading of a library,
-   // for example via the autoloader, can result in our argument becoming invalid.
-   // In addition the call to the dictionary function (dict()) might also have
-   // the same effect (change/delete requestedname).
-   TString classname(requestedname);
-
-   VoidFuncPtr_t dict = TClassTable::GetDict(classname);
-
-   TString resolved;
-
-   if (!dict) {
-      // Try to remove the ROOT typedefs
-      // Note currently this can lead to autoloading and autoparsing.
-      resolved = TClassEdit::ResolveTypedef(classname,kTRUE);
-      if (resolved != classname) {
-         dict = TClassTable::GetDict(resolved.Data());
-      } else {
-         resolved.Clear();
-      }
-   }
-   if (!dict) {
-      if (gInterpreter->AutoLoad(classname)) {
-         dict = TClassTable::GetDict(classname);
-         if (!dict) {
-            // Try the typedefs again.
-            if (resolved.Length()) {
-               dict = TClassTable::GetDict(resolved.Data());
-            }
-         }
-      }
-   }
-
-   if (dict) {
-      (dict)();
-      TClass *ncl = TClass::GetClass(classname, kFALSE, silent);
-      if (ncl) ncl->PostLoadCheck();
-      return ncl;
-   }
-
-   TIter next(fClassGenerators);
-   TClassGenerator *gen;
-   while ((gen = (TClassGenerator*) next())) {
-      TClass *cl = gen->GetClass(classname, kTRUE, silent);
-      if (cl) {
-         cl->PostLoadCheck();
-         return cl;
-      }
-   }
-   return 0;
+   return TClass::LoadClass(requestedname, silent);
 }
 
 //______________________________________________________________________________

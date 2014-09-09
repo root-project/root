@@ -136,18 +136,26 @@ public:
 
 //______________________________________________________________________________
 class TClingLookupHelper : public TClassEdit::TInterpreterLookupHelper {
+public:
+   typedef bool (*ExistingTypeCheck_t)(const std::string &tname, std::string &result);
+
 private:
    cling::Interpreter *fInterpreter;
    TNormalizedCtxt    *fNormalizedCtxt;
+   ExistingTypeCheck_t fExistingTypeCheck;
    const int          *fPDebug; // debug flag, might change at runtime thus *
    bool WantDiags() const { return fPDebug && *fPDebug > 5; }
+
 public:
    TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt,
+                      ExistingTypeCheck_t existingTypeCheck,
                       const int *pgDebug = 0);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
+
+   virtual bool ExistingTypeCheck(const std::string &tname, std::string &result);
    virtual void GetPartiallyDesugaredName(std::string &nameLong);
    virtual bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong);
-   virtual bool IsDeclaredScope(const std::string &base);
+   virtual bool IsDeclaredScope(const std::string &base, bool &isInlined);
    virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result);
 };
 
@@ -536,6 +544,14 @@ void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, c
 void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, const clang::ASTContext &);
 
 //______________________________________________________________________________
+// Return the type normalized for ROOT,
+// keeping only the ROOT opaque typedef (Double32_t, etc.) and
+// adding default template argument for all types except those explicitly
+// requested to be drop by the user.
+// Default template for STL collections are not yet removed by this routine.
+clang::QualType GetNormalizedType(const clang::QualType &type, const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt);
+
+//______________________________________________________________________________
 // Return the type name normalized for ROOT,
 // keeping only the ROOT opaque typedef (Double32_t, etc.) and
 // adding default template argument for all types except the STL collections
@@ -589,6 +605,11 @@ const clang::TagDecl* GetAnnotatedRedeclarable(const clang::TagDecl* TND);
 //______________________________________________________________________________
 // Return true if the decl is part of the std namespace.
 bool IsStdClass(const clang::RecordDecl &cl);
+
+//______________________________________________________________________________
+// Return true, if the decl is part of the std namespace and we want
+// its default parameter dropped.
+bool IsStdDropDefaultClass(const clang::RecordDecl &cl);
 
 //______________________________________________________________________________
 // See if the CXXRecordDecl matches the current of any of the previous CXXRecordDecls
@@ -670,6 +691,13 @@ const std::string& GetPathSeparator();
 
 //______________________________________________________________________________
 namespace AST2SourceTools {
+
+//______________________________________________________________________________
+const std::string Decl2FwdDecl(const clang::Decl& decl,
+                               const cling::Interpreter& interp);
+//______________________________________________________________________________
+const std::string Decls2FwdDecls(const std::vector<const clang::Decl*> &decls,
+                                 const cling::Interpreter& interp);
 
 //______________________________________________________________________________
 int PrepareArgsForFwdDecl(std::string& templateArgs,

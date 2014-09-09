@@ -158,7 +158,7 @@ def fetch_llvm():
     def get_fresh_llvm():
         exec_subprocess_call('git clone %s %s'%(LLVM_GIT_URL, srcdir), workdir)
 
-        exec_subprocess_call('git checkout ROOT-patches-r%s'%(LLVMRevision), srcdir)
+        exec_subprocess_call('git checkout cling-patches-r%s'%(LLVMRevision), srcdir)
 
     def update_old_llvm():
         exec_subprocess_call('git stash', srcdir)
@@ -167,9 +167,9 @@ def fetch_llvm():
 
         exec_subprocess_call('git fetch --tags', srcdir)
 
-        exec_subprocess_call('git checkout ROOT-patches-r%s'%(LLVMRevision), srcdir)
+        exec_subprocess_call('git checkout cling-patches-r%s'%(LLVMRevision), srcdir)
 
-        exec_subprocess_call('git pull origin refs/tags/ROOT-patches-r%s'%(LLVMRevision), srcdir)
+        exec_subprocess_call('git pull origin refs/tags/cling-patches-r%s'%(LLVMRevision), srcdir)
 
     if os.path.isdir(srcdir):
         update_old_llvm()
@@ -181,7 +181,7 @@ def fetch_clang():
     def get_fresh_clang():
         exec_subprocess_call('git clone %s'%(CLANG_GIT_URL), os.path.join(srcdir, 'tools'))
 
-        exec_subprocess_call('git checkout ROOT-patches-r%s'%(LLVMRevision), os.path.join(srcdir, 'tools', 'clang'))
+        exec_subprocess_call('git checkout cling-patches-r%s'%(LLVMRevision), os.path.join(srcdir, 'tools', 'clang'))
 
     def update_old_clang():
         exec_subprocess_call('git stash', os.path.join(srcdir, 'tools', 'clang'))
@@ -190,9 +190,9 @@ def fetch_clang():
 
         exec_subprocess_call('git fetch --tags', os.path.join(srcdir, 'tools', 'clang'))
 
-        exec_subprocess_call('git checkout ROOT-patches-r%s'%(LLVMRevision), os.path.join(srcdir, 'tools', 'clang'))
+        exec_subprocess_call('git checkout cling-patches-r%s'%(LLVMRevision), os.path.join(srcdir, 'tools', 'clang'))
 
-        exec_subprocess_call('git pull origin refs/tags/ROOT-patches-r%s'%(LLVMRevision), os.path.join(srcdir, 'tools', 'clang'))
+        exec_subprocess_call('git pull origin refs/tags/cling-patches-r%s'%(LLVMRevision), os.path.join(srcdir, 'tools', 'clang'))
 
     if os.path.isdir(os.path.join(srcdir, 'tools', 'clang')):
         update_old_clang()
@@ -293,21 +293,33 @@ def compile(arg):
     if platform.system() == 'Windows':
         CMAKE = os.path.join(TMP_PREFIX, 'bin', 'cmake', 'bin', 'cmake.exe')
 
-        box_draw("Configure Cling with CMake and generate Visual Studio 11 project files")
-        exec_subprocess_call('%s -G "Visual Studio 11" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%s ..\%s'%(CMAKE, TMP_PREFIX, os.path.basename(srcdir)), LLVM_OBJ_ROOT)
+        if args['create_dev_env'] == 'debug':
+            box_draw("Configure Cling with CMake and generate Visual Studio 11 project files")
+            exec_subprocess_call('%s -G "Visual Studio 11" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=%s ..\%s'%(CMAKE, TMP_PREFIX, os.path.basename(srcdir)), LLVM_OBJ_ROOT)
 
-        box_draw("Building Cling (using %s cores)"%(cores))
-        exec_subprocess_call('%s --build . --target clang --config Release'%(CMAKE), LLVM_OBJ_ROOT)
+            box_draw("Building Cling (using %s cores)"%(cores))
+            exec_subprocess_call('%s --build . --target clang --config Debug'%(CMAKE), LLVM_OBJ_ROOT)
 
-        exec_subprocess_call('%s --build . --target cling --config Release'%(CMAKE), LLVM_OBJ_ROOT)
+            exec_subprocess_call('%s --build . --target cling --config Debug'%(CMAKE), LLVM_OBJ_ROOT)
 
-        box_draw("Install compiled binaries to prefix (using %s cores)"%(cores))
-        exec_subprocess_call('%s --build . --target INSTALL --config Release'%(CMAKE), LLVM_OBJ_ROOT)
+        else:
+            box_draw("Configure Cling with CMake and generate Visual Studio 11 project files")
+            exec_subprocess_call('%s -G "Visual Studio 11" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%s ..\%s'%(CMAKE, TMP_PREFIX, os.path.basename(srcdir)), LLVM_OBJ_ROOT)
+
+            box_draw("Building Cling (using %s cores)"%(cores))
+            exec_subprocess_call('%s --build . --target clang --config Release'%(CMAKE), LLVM_OBJ_ROOT)
+
+            exec_subprocess_call('%s --build . --target cling --config Release'%(CMAKE), LLVM_OBJ_ROOT)
+
+            box_draw("Install compiled binaries to prefix (using %s cores)"%(cores))
+            exec_subprocess_call('%s --build . --target INSTALL --config Release'%(CMAKE), LLVM_OBJ_ROOT)
 
     else:
         box_draw("Configure Cling with GNU Make")
-        if OS == 'Darwin' and REV.startswith('10.8'):
-            exec_subprocess_call('%s/configure --disable-compiler-version-checks --with-python=%s --enable-targets=host --prefix=%s --enable-optimized=yes'%(srcdir, PYTHON, TMP_PREFIX), LLVM_OBJ_ROOT)
+
+        if args['create_dev_env'] == 'debug':
+            exec_subprocess_call('%s/configure --disable-compiler-version-checks --with-python=%s --enable-targets=host --prefix=%s --enable-cxx11'%(srcdir, PYTHON, TMP_PREFIX), LLVM_OBJ_ROOT)
+
         else:
             exec_subprocess_call('%s/configure --disable-compiler-version-checks --with-python=%s --enable-targets=host --prefix=%s --enable-optimized=yes --enable-cxx11'%(srcdir, PYTHON, TMP_PREFIX), LLVM_OBJ_ROOT)
 
@@ -1250,8 +1262,8 @@ end tell
 
 parser = argparse.ArgumentParser(description='Cling Packaging Tool')
 parser.add_argument('-c', '--check-requirements', help='Check if packages required by the script are installed', action='store_true')
-parser.add_argument('--current-dev', help='Package the latest development snapshot in one of these formats: tar | deb | nsis')
-parser.add_argument('--last-stable', help='Package the last stable snapshot in one of these formats: tar | deb | nsis')
+parser.add_argument('--current-dev', help='Package the latest development snapshot in one of these formats: tar | deb | nsis | rpm | dmg | pkg')
+parser.add_argument('--last-stable', help='Package the last stable snapshot in one of these formats: tar | deb | nsis | rpm | dmg | pkg')
 parser.add_argument('--tarball-tag', help='Package the snapshot of a given tag in a tarball (.tar.bz2)')
 parser.add_argument('--deb-tag', help='Package the snapshot of a given tag in a Debian package (.deb)')
 parser.add_argument('--rpm-tag', help='Package the snapshot of a given tag in an RPM package (.rpm)')
@@ -1264,6 +1276,7 @@ parser.add_argument('--with-clang-url', action='store', help='Specify an alterna
 parser.add_argument('--with-cling-url', action='store', help='Specify an alternate URL of Cling repo', default='http://root.cern.ch/git/cling.git')
 
 parser.add_argument('--no-test', help='Do not run test suite of Cling', action='store_true')
+parser.add_argument('--create-dev-env', help='Set up a release/debug environment')
 
 if platform.system() != 'Windows':
     parser.add_argument('--with-workdir', action='store', help='Specify an alternate working directory for CPT', default=os.path.expanduser(os.path.join('~', 'ec', 'build')))
@@ -1500,7 +1513,7 @@ if args['current_dev']:
         tarball()
         cleanup()
 
-    elif args['current_dev'] == 'deb':
+    elif args['current_dev'] == 'deb' or (args['current_dev'] == 'pkg' and DIST == 'Ubuntu'):
         compile(os.path.join(workdir, 'cling-' + VERSION))
         install_prefix()
         if args['no_test'] != True:
@@ -1509,7 +1522,7 @@ if args['current_dev']:
         debianize()
         cleanup()
 
-    elif args['current_dev'] == 'rpm':
+    elif args['current_dev'] == 'rpm' or (args['current_dev'] == 'pkg' and platform.dist()[0] == 'redhat'):
         compile(os.path.join(workdir, 'cling-' + VERSION.replace('-' + REVISION[:7], '')))
         install_prefix()
         if args['no_test'] != True:
@@ -1518,7 +1531,7 @@ if args['current_dev']:
         rpm_build()
         cleanup()
 
-    elif args['current_dev'] == 'nsis':
+    elif args['current_dev'] == 'nsis' or (args['current_dev'] == 'pkg' and OS == 'Windows'):
         get_win_dep()
         compile(os.path.join(workdir, 'cling-' + RELEASE + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
@@ -1528,7 +1541,7 @@ if args['current_dev']:
         build_nsis()
         cleanup()
 
-    elif args['current_dev'] == 'dmg':
+    elif args['current_dev'] == 'dmg' or (args['current_dev'] == 'pkg' and OS == 'Darwin'):
         compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
         if args['no_test'] != True:
@@ -1557,7 +1570,7 @@ if args['last_stable']:
         tarball()
         cleanup()
 
-    elif args['last_stable'] == 'deb':
+    elif args['last_stable'] == 'deb' or (args['last_stable'] == 'pkg' and DIST == 'Ubuntu'):
         set_version()
         compile(os.path.join(workdir, 'cling-' + VERSION))
         install_prefix()
@@ -1567,7 +1580,7 @@ if args['last_stable']:
         debianize()
         cleanup()
 
-    elif args['last_stable'] == 'rpm':
+    elif args['last_stable'] == 'rpm' or (args['last_stable'] == 'pkg' and platform.dist()[0] == 'redhat'):
         set_version()
         compile(os.path.join(workdir, 'cling-' + VERSION))
         install_prefix()
@@ -1577,7 +1590,7 @@ if args['last_stable']:
         rpm_build()
         cleanup()
 
-    elif args['last_stable'] == 'nsis':
+    elif args['last_stable'] == 'nsis' or (args['last_stable'] == 'pkg' and OS == 'Windows'):
         set_version()
         get_win_dep()
         compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine() + '-' + VERSION))
@@ -1588,7 +1601,7 @@ if args['last_stable']:
         build_nsis()
         cleanup()
 
-    elif args['last_stable'] == 'dmg':
+    elif args['last_stable'] == 'dmg' or (args['last_stable'] == 'pkg' and OS == 'Darwin'):
         set_version()
         compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
@@ -1669,6 +1682,23 @@ if args['dmg_tag']:
         test_cling()
     make_dmg()
     cleanup()
+
+if args['create_dev_env']:
+    fetch_llvm()
+    fetch_clang()
+    fetch_cling('master')
+    set_version()
+    if OS == 'Windows':
+        get_win_dep()
+        compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION))
+    else:
+        if DIST == 'Scientific Linux CERN SLC':
+            compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
+        else:
+            compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
+    install_prefix()
+    if args['no_test'] != True:
+        test_cling()
 
 if args['make_proper']:
     # This is an internal option in CPT, meant to be integrated into Cling's build system.

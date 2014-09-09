@@ -11,6 +11,7 @@
 #include "Math/Vector4D.h"
 #include "Math/SMatrix.h"
 #include "Rtypes.h" // for Double32_t
+#include "TError.h"
 
 #include <vector>
 #include <string>
@@ -48,7 +49,7 @@ public:
       double * itr = begin;
       fPos.SetCoordinates(itr, itr+3); itr +=3;
       fVec.SetCoordinates(itr,itr+4); itr+=4;
-      assert(itr == end);
+      R__ASSERT(itr == end);
    }
 
    enum {  kSize =        3 + 4    };
@@ -108,7 +109,7 @@ public:
       double * itr = begin;
       fPos.SetCoordinates(itr, itr+3); itr +=3;
       fVec.SetCoordinates(itr,itr+4); itr+=4;
-      assert(itr == end);
+      R__ASSERT(itr == end);
 
    }
 
@@ -161,7 +162,7 @@ public:
       fVec.SetCoordinates(itr,itr+4); itr+=4;
       fMat = Matrix4D(itr,itr+16); itr += 16;
       fSymMat = SymMatrix6D(itr,itr+21);
-      assert(itr+21 == end);
+      R__ASSERT(itr+21 == end);
    }
 
    enum {  kSize =
@@ -237,7 +238,7 @@ public:
       fVec.SetCoordinates(itr,itr+4); itr+=4;
       fMat = Matrix4D32(itr,itr+16); itr += 16;
       fSymMat = SymMatrix6D32(itr,itr+21);
-      assert(itr+21 == end);
+      R__ASSERT(itr+21 == end);
 
    }
 
@@ -308,7 +309,7 @@ public:
          fTrks.push_back(T(itr, itr + T::kSize) );
          itr += T::kSize;
        }
-       assert( itr == iend);
+       R__ASSERT( itr == iend);
      }
 
    enum {  kLen = 3, kSize =  kLen*T::kSize };

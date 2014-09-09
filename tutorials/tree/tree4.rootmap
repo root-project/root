@@ -1,0 +1,7 @@
+{ decls }
+
+[ $ROOTSYS/test/libEvent.so ]
+
+class Event
+
+

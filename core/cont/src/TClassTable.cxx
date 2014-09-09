@@ -255,20 +255,16 @@ namespace ROOT { class TForNamespace {}; } // Dummy class to give a typeid to na
 
 //______________________________________________________________________________
 void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
-                      VoidFuncPtr_t dict, Int_t pragmabits)
+                      DictFuncPtr_t dict, Int_t pragmabits)
 {
    // Add a class to the class table (this is a static function).
+   // Note that the given cname *must* be already normalized.
 
    if (!gClassTable)
       new TClassTable;
 
-   // Only register the name without the default STL template arguments ...
-   TClassEdit::TSplitType splitname( cname, TClassEdit::kLong64 );
-   std::string shortName;
-   splitname.ShortType(shortName, TClassEdit::kDropStlDefault);
-
    // check if already in table, if so return
-   TClassRec *r = FindElementImpl(shortName.c_str(), kTRUE);
+   TClassRec *r = FindElementImpl(cname, kTRUE);
    if (r->fName && r->fInfo) {
       if ( strcmp(r->fInfo->name(),typeid(ROOT::TForNamespace).name())==0
            && strcmp(info.name(),typeid(ROOT::TForNamespace).name())==0 ) {
@@ -277,13 +273,13 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
          return;
       }
 //       if (splitname.IsSTLCont()==0) {
-      if (!TClassEdit::IsStdClass(shortName.c_str())) {
+      if (!TClassEdit::IsStdClass(cname)) {
          // Warn only for class that are not STD classes
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }
       return;
    } else if (ROOT::gROOTLocal && gCling) {
-      TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(shortName.c_str());
+      TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(cname);
       if (oldcl) { //  && oldcl->GetClassInfo()) {
          // As a work-around to ROOT-6012, we need to register the class even if
          // it is not a template instance, because a forward declaration in the header
@@ -299,7 +295,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
       }
    }
 
-   if (!r->fName) r->fName = StrDup(shortName.c_str());
+   if (!r->fName) r->fName = StrDup(cname);
    r->fId   = id;
    r->fBits = pragmabits;
    r->fDict = dict;
@@ -425,15 +421,17 @@ TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
    // Find a class by name in the class table (using hash of name). Returns
    // 0 if the class is not in the table. Unless arguments insert is true in
    // which case a new entry is created and returned.
+   // cname can be any spelling of the class name.  See FindElementImpl if the
+   // name is already normalized.
 
    if (!fgTable) return 0;
 
-   // Only register the name without the default STL template arguments ...
-   TClassEdit::TSplitType splitname( cname, TClassEdit::kLong64 );
-   std::string shortName;
-   splitname.ShortType(shortName, TClassEdit::kDropStlDefault);
+   // The recorded name is normalized, let's make sure we convert the
+   // input accordingly.
+   std::string normalized;
+   TClassEdit::GetNormalizedName(normalized,cname);
 
-   return FindElementImpl(shortName.c_str(), insert);
+   return FindElementImpl(normalized.c_str(), insert);
 }
 
 //______________________________________________________________________________
@@ -457,7 +455,7 @@ Int_t TClassTable::GetPragmaBits(const char *cname)
 }
 
 //______________________________________________________________________________
-VoidFuncPtr_t TClassTable::GetDict(const char *cname)
+DictFuncPtr_t TClassTable::GetDict(const char *cname)
 {
    // Given the class name returns the Dictionary() function of a class
    // (uses hash of name).
@@ -473,7 +471,7 @@ VoidFuncPtr_t TClassTable::GetDict(const char *cname)
 }
 
 //______________________________________________________________________________
-VoidFuncPtr_t TClassTable::GetDict(const type_info& info)
+DictFuncPtr_t TClassTable::GetDict(const type_info& info)
 {
    // Given the type_info returns the Dictionary() function of a class
    // (uses hash of type_info::name()).
@@ -489,7 +487,7 @@ VoidFuncPtr_t TClassTable::GetDict(const type_info& info)
 }
 
 //______________________________________________________________________________
-VoidFuncPtr_t TClassTable::GetDictNorm(const char *cname)
+DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
 {
    // Given the normalized class name returns the Dictionary() function of a class
    // (uses hash of name).
@@ -621,7 +619,7 @@ void TClassTable::Terminate()
 //______________________________________________________________________________
 void ROOT::AddClass(const char *cname, Version_t id,
                     const type_info& info,
-                    VoidFuncPtr_t dict,
+                    DictFuncPtr_t dict,
                     Int_t pragmabits)
 {
    // Global function called by the ctor of a class's init class

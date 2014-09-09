@@ -425,7 +425,7 @@ Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version]\
  [--cflags] [--auxcflags] [--ldflags] [--new] [--nonew] [--libs]\
  [--glibs] [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir]\
  [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch]\
- [--platform] [--config] [--features] [--ncpu] [--svn-revision]\
+ [--platform] [--config] [--features] [--ncpu] [--git-revision]\
  [--python-version] [--cc] [--cxx] [--f77] [--ld ] [--help]"
 
 if test $# -eq 0; then
@@ -520,6 +520,15 @@ while test $# -gt 0; do
          out="$out `sed -n 's,.*ROOT_RELEASE *\"\(.*\)\".*,\1,p' < ${incdir}/RVersion.h`"
       else
          echo "cannot read ${incdir}/RVersion.h"
+         exit 1
+      fi
+      ;;
+    --git-revision)
+      ### Output the git revision number.  If RGitCommit.h can not be found, give up.
+      if test -r ${incdir}/RGitCommit.h; then
+         out="$out `sed -n 's,.*ROOT_GIT_COMMIT *\"\(.*\)\".*,\1,p' < ${incdir}/RGitCommit.h`"
+      else
+         echo "cannot read ${incdir}/RGitCommit.h"
          exit 1
       fi
       ;;
@@ -785,7 +794,7 @@ while test $# -gt 0; do
       echo "  --features            Print list of all supported features"
       echo "  --has-<feature>       Test if <feature> is compiled in"
       echo "  --version             Print the ROOT version"
-      echo "  --svn-revision        Print the ROOT SVN revision number"
+      echo "  --git-revision        Print the ROOT git revision number"
       echo "  --python-version      Print the Python version used by ROOT"
       echo "  --npcu                Print number of available (hyperthreaded) cores"
       echo "  --cc                  Print alternative C compiler specified when ROOT was built"

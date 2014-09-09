@@ -325,7 +325,8 @@ void TThread::Init()
 
    // Create the single global mutex
    gGlobalMutex = new TMutex(kTRUE);
-   gCling->SetAlloclockfunc(CINT_alloc_lock);
+   // We need to make sure that gCling is initialized.
+   TInterpreter::Instance()->SetAlloclockfunc(CINT_alloc_lock);
    gCling->SetAllocunlockfunc(CINT_alloc_unlock);
 
    //To avoid deadlocks, gInterpreterMutex and gROOTMutex need

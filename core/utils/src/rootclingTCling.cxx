@@ -27,7 +27,7 @@ std::string gPCMFilename;
 std::vector<std::string> gClassesToStore;
 std::vector<std::string> gTypedefsToStore;
 std::vector<std::string> gEnumsToStore;
-std::vector<std::string> gAncestorPCMsNames;
+std::vector<std::string> gAncestorPCMNames;
 
 extern "C"
 const char ** *TROOT__GetExtraInterpreterArgs()
@@ -56,7 +56,9 @@ void InitializeStreamerInfoROOTFile(const char *filename)
 extern "C"
 void AddStreamerInfoToROOTFile(const char *normName)
 {
-   gClassesToStore.emplace_back(normName);
+   // Filter unnamed and (anonymous) classes.
+   if (normName && normName[0] && normName[0] != '(')
+      gClassesToStore.emplace_back(normName);
 }
 
 extern "C"
@@ -74,7 +76,7 @@ void AddEnumToROOTFile(const char *enumname)
 extern "C"
 void AddAncestorPCMROOTFile(const char *pcmName)
 {
-   gAncestorPCMsNames.emplace_back(pcmName);
+   gAncestorPCMNames.emplace_back(pcmName);
 }
 
 extern "C"
@@ -161,7 +163,7 @@ bool CloseStreamerInfoROOTFile()
    }
 
    // Don't use TFile::Open(); we don't need plugins.
-   TFile dictFile(gPCMFilename.c_str(), "RECREATE");
+   TFile dictFile( (gPCMFilename + "?filetype=pcm").c_str(), "RECREATE");
    if (dictFile.IsZombie())
       return false;
    // Instead of plugins:
@@ -170,7 +172,7 @@ bool CloseStreamerInfoROOTFile()
    typedefs.Write("__Typedefs", TObject::kSingleKey);
    enums.Write("__Enums", TObject::kSingleKey);
 
-   dictFile.WriteObjectAny(&gAncestorPCMsNames, "std::vector<std::string>", "__AncestorPCMsNames");
+   dictFile.WriteObjectAny(&gAncestorPCMNames, "std::vector<std::string>", "__AncestorPCMNames");
 
 
    return true;

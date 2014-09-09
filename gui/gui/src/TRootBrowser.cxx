@@ -121,6 +121,9 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, UInt_t width,
       InitPlugins(opt);
       MapWindow();
    }
+   TQObject::Connect("TCanvas", "ProcessedEvent(Int_t,Int_t,Int_t,TObject*)",
+                     "TRootBrowser", this,
+                     "EventInfo(Int_t, Int_t, Int_t, TObject*)");
    gVirtualX->SetInputFocus(GetId());
 }
 
@@ -142,6 +145,9 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, Int_t x, Int_t y,
       InitPlugins(opt);
       MapWindow();
    }
+   TQObject::Connect("TCanvas", "ProcessedEvent(Int_t,Int_t,Int_t,TObject*)",
+                     "TRootBrowser", this,
+                     "EventInfo(Int_t, Int_t, Int_t, TObject*)");
    gVirtualX->SetInputFocus(GetId());
 }
 
@@ -267,8 +273,8 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    // status bar
    fStatusBar = new TGStatusBar(this, 400, 20);
-   Int_t parts[] = { 26, 74 };
-   fStatusBar->SetParts(parts, 2);
+   int parts[] = { 33, 10, 10, 47 };
+   fStatusBar->SetParts(parts, 4);
    AddFrame(fStatusBar, fLH6);
 
    fNbInitPlugins = 0;
@@ -483,6 +489,8 @@ void TRootBrowser::CloseWindow()
 {
    // Called when window is closed via the window manager.
 
+   TQObject::Disconnect("TCanvas", "ProcessedEvent(Int_t,Int_t,Int_t,TObject*)",
+                        this, "EventInfo(Int_t, Int_t, Int_t, TObject*)");
    CloseTabs();
    DeleteWindow();
 }
@@ -496,6 +504,30 @@ void TRootBrowser::DoTab(Int_t id)
    if ((sender) && (sender == fTabRight)) {
       SwitchMenus(sender->GetTabContainer(id));
    }
+}
+
+//______________________________________________________________________________
+void TRootBrowser::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
+{
+   // Display a tooltip with infos about the primitive below the cursor.
+
+   const Int_t kTMAX=256;
+   static char atext[kTMAX];
+   if (selected == 0 || event == kMouseLeave) {
+      SetStatusText("", 0);
+      SetStatusText("", 1);
+      SetStatusText("", 2);
+      SetStatusText("", 3);
+      return;
+   }
+   SetStatusText(selected->GetTitle(), 0);
+   SetStatusText(selected->GetName(), 1);
+   if (event == kKeyPress)
+      snprintf(atext, kTMAX, "%c", (char) px);
+   else
+      snprintf(atext, kTMAX, "%d,%d", px, py);
+   SetStatusText(atext, 2);
+   SetStatusText(selected->GetObjectInfo(px,py), 3);
 }
 
 //______________________________________________________________________________

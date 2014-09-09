@@ -50,6 +50,6 @@ void importdir(const char *dirname) {
 }
 void importCode() {
    TFile *f = new TFile("code.root","recreate");
-   importdir("../../../root"); //change the directory as you like
+   importdir("../tutorials"); //change the directory as you like
    delete f;
 }

@@ -611,6 +611,9 @@ if(builtin_xrootd)
                        ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/ DESTINATION ${CMAKE_INSTALL_LIBDIR}
+                    COMPONENT libraries
+                    FILES_MATCHING PATTERN "libXrd*${CMAKE_SHARED_LIBRARY_SUFFIX}")
   set(xrootd ON CACHE BOOL "" FORCE)
 endif()
 if(xrootd AND xrootd_versionnum VERSION_GREATER 300030005)
@@ -638,7 +641,11 @@ if(cling)
   endif()
 
   set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
-  set(CLING_CXXFLAGS "-fvisibility-inlines-hidden -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
+  if(MSVC)
+    set(CLING_CXXFLAGS "-D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNOMINMAX")
+  else()
+    set(CLING_CXXFLAGS "-fvisibility-inlines-hidden -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
+  endif()
   if (CMAKE_COMPILER_IS_GNUCXX)
     set(CLING_CXXFLAGS "${CLING_CXXFLAGS} -Wno-missing-field-initializers")
   endif()

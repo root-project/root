@@ -304,7 +304,7 @@ Bool_t THttpServer::CreateEngine(const char *engine)
       clname = "TDabcEngine";
 
    // ensure that required engine class exists before we try to create it
-   TClass *engine_class = gROOT->LoadClass(clname.Data());
+   TClass *engine_class = TClass::GetClass(clname.Data());
    if (engine_class == 0) return kFALSE;
 
    THttpEngine *eng = (THttpEngine *) engine_class->New();

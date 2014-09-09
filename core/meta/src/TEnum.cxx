@@ -118,14 +118,16 @@ TEnum *TEnum::GetEnum(const char *enumName)
       // All of this C gymnastic is to avoid allocations on the heap
       const char *enName = lastPos + 1;
       auto enScopeNameSize = ((Long64_t)lastPos - (Long64_t)enumName) / sizeof(char) - 1;
-      char enScopeName[enScopeNameSize + 1]; // +1 for the terminating character '\0'
+      char *enScopeName = new char[enScopeNameSize + 1]; // +1 for the terminating character '\0'
       strncpy(enScopeName, enumName, enScopeNameSize);
       enScopeName[enScopeNameSize] = '\0';
       if (TClass *scope = TClass::GetClass(enScopeName)) {
-         if (TEnum *en = static_cast<TEnum *>(scope->GetListOfEnums()->FindObject(enName))) {
+         if (TEnum *en = static_cast<TEnum *>(scope->GetListOfEnums(false)->FindObject(enName))) {
+            delete [] enScopeName;
             return en;
          }
       }
+      delete [] enScopeName;
    } else {
       // We don't have any scope: this is a global enum
       if (TEnum *en = static_cast<TEnum *>(gROOT->GetListOfEnums()->FindObject(enumName)))

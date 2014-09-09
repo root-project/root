@@ -9,11 +9,8 @@
 // RUN: cat %s | %cling -I%S -Xclang -verify
 // Test FwdPrinterTest
 
-#include "cling/Interpreter/Interpreter.h"
-gCling->GenerateAutoloadingMap("Def2.h","test_auto_forwarding.h");
-.undo 1
-gCling->EnableAutoloading();
-#include "test_auto_forwarding.h"
+.T Def2.h fwd_Def2.h
+#include "fwd_Def2.h"
 #include "Def2.h"
 
 .T Enum.h fwd_enums.h

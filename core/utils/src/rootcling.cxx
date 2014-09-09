@@ -210,6 +210,11 @@ const char *rootClingHelp =
 #include <windows.h>
 #include <Tlhelp32.h> // for MAX_MODULE_NAME32
 #include <process.h>
+#define PATH_MAX _MAX_PATH
+#ifdef interface
+// prevent error coming from clang/AST/Attrs.inc
+#undef interface
+#endif
 #endif
 
 #include <errno.h>
@@ -272,6 +277,8 @@ const std::string gPathSeparator(ROOT::TMetaUtils::GetPathSeparator());
 
 #if defined(R__WIN32)
 #include "cygpath.h"
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
 #else
 #include <unistd.h>
 #endif
@@ -460,7 +467,7 @@ void AnnotateFieldDecl(clang::FieldDecl &decl,
             }
             // END ROOT PCMS
 
-            if ((name == propNames::transient && value == "true") or
+            if ((name == propNames::transient && value == "true") ||
                   (name == propNames::persistent && value == "false")) { // special case
                userDefinedProperty = propNames::comment + propNames::separator + "!";
                // This next line is here to use the root pcms. Indeed we need to annotate the AST
@@ -1386,7 +1393,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
               << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "void " << clsname << "::Dictionary()" << std::endl << "{" << std::endl;
+   dictStream << "TClass *" << clsname << "::Dictionary()" << std::endl << "{" << std::endl;
 
    // Trigger autoloading if dictionary is split
    if (autoLoad)
@@ -1394,6 +1401,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
                  << "   gInterpreter->AutoLoad(\"" << fullname << "\");\n";
    dictStream    << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
                  << "*)0x0)->GetClass();" << std::endl
+                 << "   return fgIsA;\n"
                  << "}" << std::endl << std::endl
 
                  << "//_______________________________________"
@@ -1460,7 +1468,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 #endif
 
    if (!Namespace__HasMethod(cl, "Dictionary", interp))
-      dictStream << "      static void " << mappedname.c_str() << "_Dictionary();" << std::endl;
+      dictStream << "      static TClass *" << mappedname.c_str() << "_Dictionary();" << std::endl;
    dictStream << std::endl
 
               << "      // Function generating the singleton type initializer" << std::endl
@@ -1510,8 +1518,8 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 
    if (!Namespace__HasMethod(cl, "Dictionary", interp)) {
       dictStream <<  std::endl << "      // Dictionary for non-ClassDef classes" << std::endl
-                 << "      static void " << mappedname.c_str() << "_Dictionary() {" << std::endl
-                 << "         GenerateInitInstance()->GetClass();" << std::endl
+                 << "      static TClass *" << mappedname.c_str() << "_Dictionary() {" << std::endl
+                 << "         return GenerateInitInstance()->GetClass();" << std::endl
                  << "      }" << std::endl << std::endl;
    }
 
@@ -3412,6 +3420,8 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 {
    // Generate the fwd declarations of the selected entities
 
+   std::string newFwdDeclString;
+
    using namespace ROOT::TMetaUtils::AST2SourceTools;
 
    const char *emptyString = "\"\"";
@@ -3424,6 +3434,8 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 
    for (auto const & annRcd : scan.fSelectedClasses) {
       const auto rcdDeclPtr = annRcd.GetRecordDecl();
+//       newFwdDeclString += Decl2FwdDecl(*rcdDeclPtr,interp);
+
       int retCode = FwdDeclFromRcdDecl(*rcdDeclPtr, interp, buffer);
       if (-1 == retCode) {
          ROOT::TMetaUtils::Error("GenerateFwdDeclString",
@@ -3452,6 +3464,7 @@ std::string GenerateFwdDeclString(const RScanner &scan,
    // Functions
 //    for (auto const& fcnDeclPtr : scan.fSelectedFunctions){
 //       int retCode = FwdDeclFromFcnDecl(*fcnDeclPtr, interp, buffer);
+//       newFwdDeclString += Decl2FwdDecl(*fcnDeclPtr,interp);
 //       if (-1 == retCode){
 //          ROOT::TMetaUtils::Error("GenerateFwdDeclString",
 //                                  "Error generating fwd decl for function  %s\n",
@@ -3463,6 +3476,12 @@ std::string GenerateFwdDeclString(const RScanner &scan,
 //    }
 
    if (fwdDeclString.empty()) fwdDeclString = emptyString;
+
+//    std::cout << "\n======================" << std::endl
+//              << "OLD: " << fwdDeclString
+//              << "\n======================" << std::endl
+//              << "NEW: " << newFwdDeclString
+//              << "\n======================" << std::endl;
 
    return fwdDeclString;
 }
@@ -3919,7 +3938,7 @@ int RootCling(int argc,
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
-   ROOT::TMetaUtils::TClingLookupHelper helper(interp, normCtxt);
+   ROOT::TMetaUtils::TClingLookupHelper helper(interp, normCtxt, 0);
    TClassEdit::Init(&helper);
 
    // flags used only for the pragma parser:

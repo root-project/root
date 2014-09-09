@@ -234,7 +234,8 @@ const char *DirectoryLookup::getName() const {
 static const FileEntry *
 getFileAndSuggestModule(HeaderSearch &HS, StringRef FileName,
                         const DirectoryEntry *Dir, bool IsSystemHeaderDir,
-                        ModuleMap::KnownHeader *SuggestedModule) {
+                        ModuleMap::KnownHeader *SuggestedModule,
+                        bool OpenFile) {
   // If we have a module map that might map this header, load it and
   // check whether we'll have a suggestion for a module.
   HS.hasModuleMap(FileName, Dir, IsSystemHeaderDir);
@@ -255,7 +256,7 @@ getFileAndSuggestModule(HeaderSearch &HS, StringRef FileName,
     return File;
   }
 
-  return HS.getFileMgr().getFile(FileName, /*openFile=*/true);
+  return HS.getFileMgr().getFile(FileName, OpenFile);
 }
 
 /// LookupFile - Lookup the specified file in this search path, returning it
@@ -287,25 +288,10 @@ const FileEntry *DirectoryLookup::LookupFile(
       RelativePath->clear();
       RelativePath->append(Filename.begin(), Filename.end());
     }
-    
-    // If we have a module map that might map this header, load it and
-    // check whether we'll have a suggestion for a module.
-    HS.hasModuleMap(TmpDir, getDir(), isSystemHeaderDirectory());
-    if (SuggestedModule) {
-      const FileEntry *File = HS.getFileMgr().getFile(TmpDir.str(),
-                                                      /*openFile=*/false);
-      if (!File)
-        return File;
-      
-      // If there is a module that corresponds to this header, suggest it.
-      *SuggestedModule = HS.findModuleForHeader(File);
-      if (!SuggestedModule->getModule() &&
-          HS.hasModuleMap(TmpDir, getDir(), isSystemHeaderDirectory()))
-        *SuggestedModule = HS.findModuleForHeader(File);
-      return File;
-    }
-    
-    return HS.getFileMgr().getFile(TmpDir.str(), OpenFile);
+
+    return getFileAndSuggestModule(HS, TmpDir.str(), getDir(),
+                                   isSystemHeaderDirectory(),
+                                   SuggestedModule, OpenFile);
   }
 
   if (isFramework())
@@ -649,7 +635,9 @@ const FileEntry *HeaderSearch::LookupFile(
       bool IncluderIsSystemHeader =
           getFileInfo(Includer).DirInfo != SrcMgr::C_User;
       if (const FileEntry *FE =
-          FileMgr.getFile(TmpDir.str(), OpenFile, CacheFailures)) {
+              getFileAndSuggestModule(*this, TmpDir.str(), Includer->getDir(),
+                                      IncluderIsSystemHeader,
+                                      SuggestedModule, OpenFile)) {
         // Leave CurDir unset.
         // This file is a system header or C++ unfriendly if the old file is.
         //

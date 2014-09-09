@@ -28,7 +28,7 @@ AWK           = awk
 # starting from root.2.22 on Linux the flags -fno-rtti -fno-exceptions are
 # not necessary any more
 #
-CXXOPTS       = $(OPT)
+CXXOPTS       = $(OPT) -std=c++11
 COPT          = $(OPT)
 FOPT          = $(OPT)
 

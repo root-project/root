@@ -22,7 +22,7 @@ AWK	  = awk
 # starting from root.2.22 on Linux the flags -fno-rtti -fno-exceptions are
 # not necessary any more
 #
-CXXOPTS       = $(OPT) -Wall -fPIC -pipe
+CXXOPTS       = $(OPT) -std=c++11 -Wall -fPIC -pipe
 COPT	      = $(OPT) -fPIC
 FOPT	      = $(OPT) -fno-second-underscore -fno-f2c
 

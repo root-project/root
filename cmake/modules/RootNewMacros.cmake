@@ -244,8 +244,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   get_directory_property(incdirs INCLUDE_DIRECTORIES)
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(includedirs -I${CMAKE_SOURCE_DIR}
-                    -I${CMAKE_CURRENT_SOURCE_DIR}/inc
-                    -I${CMAKE_SOURCE_DIR}/io/io/inc
                     -I${CMAKE_BINARY_DIR}/include)
   else()
     set(includedirs -I${CMAKE_CURRENT_SOURCE_DIR}/inc)
@@ -257,7 +255,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---Get the list of definitions---------------------------
   get_directory_property(defs COMPILE_DEFINITIONS)
   foreach( d ${defs})
-   if(NOT d MATCHES "=")
+   if((NOT d MATCHES "=") AND (NOT d MATCHES "^[$]<.*>$")) # avoid generator expressions
      set(definitions ${definitions} -D${d})
    endif()
   endforeach()
@@ -341,7 +339,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
-  if(CMAKE_ROOTTEST_DICT)
+  if(CMAKE_ROOTTEST_DICT OR (NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY))
     add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
   else()
     add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
@@ -371,9 +369,6 @@ function(ROOT_LINKER_LIBRARY library)
   endif()
   if(ARG_TEST) # we are building a test, so add EXCLUDE_FROM_ALL
     set(_all EXCLUDE_FROM_ALL)
-  endif()
-  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-    include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
   endif()
   include_directories(${CMAKE_BINARY_DIR}/include)                # This is a copy and certainly should last one
   set(library_name ${library})
@@ -431,41 +426,30 @@ function(ROOT_LINKER_LIBRARY library)
   if(TARGET G__${library})
     add_dependencies(${library} G__${library})
   endif()
+  if(TARGET move_headers)
+    add_dependencies(${library} move_headers)
+  endif()
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
   set_target_properties(${library} PROPERTIES LINK_INTERFACE_LIBRARIES "${ARG_DEPENDENCIES}")
   #----Installation details-------------------------------------------------------
-  if(NOT ARG_TEST)
-  if(ARG_CMAKENOEXPORT)
-    install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-                               LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                               ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                               COMPONENT libraries)
-  else()
-    install(TARGETS ${library} EXPORT ${CMAKE_PROJECT_NAME}Exports
-                               RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-                               LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                               ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                               COMPONENT libraries)
-    #install(EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION cmake/modules)
-  endif()
-  if(WIN32 AND ARG_TYPE STREQUAL SHARED)
-    if(CMAKE_GENERATOR MATCHES "Visual Studio")
-      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
-              CONFIGURATIONS Debug
-              DESTINATION ${CMAKE_INSTALL_BINDIR}
-              COMPONENT libraries)
-      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
-              CONFIGURATIONS RelWithDebInfo
-              DESTINATION ${CMAKE_INSTALL_BINDIR}
-              COMPONENT libraries)
+  if(NOT ARG_TEST AND CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+    if(ARG_CMAKENOEXPORT)
+      install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
+                                 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+                                 ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     else()
-      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
-              CONFIGURATIONS Debug RelWithDebInfo
-              DESTINATION ${CMAKE_INSTALL_BINDIR}
-              COMPONENT libraries)
+      install(TARGETS ${library} EXPORT ${CMAKE_PROJECT_NAME}Exports
+                                 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
+                                 LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+                                 ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     endif()
-  endif()
+    if(WIN32 AND ARG_TYPE STREQUAL SHARED)
+      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
+                    CONFIGURATIONS Debug RelWithDebInfo
+                    DESTINATION ${CMAKE_INSTALL_BINDIR}
+                    COMPONENT libraries)
+    endif()
   endif()
 endfunction()
 
@@ -474,12 +458,15 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 function(ROOT_OBJECT_LIBRARY library)
   ROOT_GET_SOURCES(lib_srcs src ${ARGN})
-  include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
   include_directories(AFTER ${CMAKE_BINARY_DIR}/include)
   add_library( ${library} OBJECT ${lib_srcs})
   if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
      add_dependencies(${library} ${CMAKE_MATCH_2})
   endif()
+  if(TARGET move_headers)
+    add_dependencies(${library} move_headers)
+  endif()
+
   #--- Fill the property OBJECTS with all the object files
   #    This is needed becuase the generator expression $<TARGET_OBJECTS:target>
   #    does not get expanded when used in custom command dependencies
@@ -507,53 +494,23 @@ endfunction()
 function(ROOT_MODULE_LIBRARY library)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES" ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
-  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-    include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-  endif()
   include_directories(${CMAKE_BINARY_DIR}/include)
   add_library( ${library} SHARED ${lib_srcs})
+  if(TARGET move_headers)
+    add_dependencies(${library} move_headers)
+  endif()
   set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
   target_link_libraries(${library} ${ARG_LIBRARIES})
   #----Installation details-------------------------------------------------------
-  install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-                             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                             COMPONENT libraries)
+  install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
+                             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+                             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_USE_PACKAGE( package )
 #---------------------------------------------------------------------------------------------------
 macro( ROOT_USE_PACKAGE package )
-  if(IntegratedBuild)
-    if( EXISTS ${CMAKE_SOURCE_DIR}/${package}/CMakeLists.txt)
-      set(_use_packages ${_use_packages} ${package})
-      if(EXISTS ${CMAKE_SOURCE_DIR}/${package}/inc )
-        include_directories( ${CMAKE_SOURCE_DIR}/${package}/inc )
-      endif()
-      set_property(GLOBAL APPEND PROPERTY ROOT_BUILDTREE_PACKAGES ${package})
-      file(READ ${CMAKE_SOURCE_DIR}/${package}/CMakeLists.txt file_contents)
-      string( REGEX MATCHALL "ROOT_USE_PACKAGE[ ]*[(][ ]*([^ )])+" vars ${file_contents})
-      foreach( var ${vars})
-        string(REGEX REPLACE "ROOT_USE_PACKAGE[ ]*[(][ ]*([^ )])" "\\1" p ${var})
-        #---avoid calling the same one at the same directory level ---------------------------------
-        list(FIND _use_packages ${p} _done)
-        if(_done EQUAL -1)
-          ROOT_USE_PACKAGE(${p})
-        endif()
-      endforeach()
-    else()
-      find_package(${package})
-      GET_PROPERTY(parent DIRECTORY PROPERTY PARENT_DIRECTORY)
-      if(parent)
-        set(${package}_environment  ${${package}_environment} PARENT_SCOPE)
-       else()
-        set(${package}_environment  ${${package}_environment} )
-      endif()
-      include_directories( ${${package}_INCLUDE_DIRS} )
-      link_directories( ${${package}_LIBRARY_DIRS} )
-    endif()
-  endif()
 endmacro()
 
 #---------------------------------------------------------------------------------------------------
@@ -644,9 +601,6 @@ function(ROOT_EXECUTABLE executable)
     message("Target ${executable} already exists. Renaming target name to ${executable}_new")
     set(executable ${executable}_new)
   endif()
-  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-    include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-  endif()
   if(ARG_TEST) # we are building a test, so add EXCLUDE_FROM_ALL
     set(_all EXCLUDE_FROM_ALL)
   endif()
@@ -661,12 +615,22 @@ function(ROOT_EXECUTABLE executable)
   if (ARG_ADDITIONAL_COMPILE_FLAGS)
     set_target_properties(${executable} PROPERTIES COMPILE_FLAGS ${ARG_ADDITIONAL_COMPILE_FLAGS})
   endif()
+  if(TARGET move_headers)
+    add_dependencies(${executable} move_headers)
+  endif()
+
   #----Installation details------------------------------------------------------
-  if((NOT ARG_NOINSTALL) AND (NOT ARG_TEST) )
+  if(NOT ARG_NOINSTALL AND CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     if(ARG_CMAKENOEXPORT)
       install(TARGETS ${executable} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
     else()
       install(TARGETS ${executable} EXPORT ${CMAKE_PROJECT_NAME}Exports RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+    endif()
+    if(WIN32)
+      install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${executable}.pdb
+              CONFIGURATIONS Debug RelWithDebInfo
+              DESTINATION ${CMAKE_INSTALL_BINDIR}
+              COMPONENT applications)
     endif()
   endif()
 endfunction()
@@ -909,7 +873,9 @@ endfunction()
 #----------------------------------------------------------------------------
 macro(ROOT_ADD_BUILTIN_DEPENDENCIES target EXTERNAL)
   add_custom_command(OUTPUT ${${EXTERNAL}_LIBRARIES} DEPENDS ${EXTERNAL})
-  add_custom_target(${EXTERNAL}LIBS DEPENDS ${${EXTERNAL}_LIBRARIES})
+  if(NOT TARGET ${EXTERNAL}LIBS)
+    add_custom_target(${EXTERNAL}LIBS DEPENDS ${${EXTERNAL}_LIBRARIES})
+  endif()
   add_dependencies(${target} ${EXTERNAL}LIBS)
 endmacro()
 

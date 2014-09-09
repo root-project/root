@@ -6,7 +6,9 @@ ROOT_USE_PACKAGE(io/io)
 
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/../metautils/src ${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
-add_definitions(${CLING_CXXFLAGS} -Wno-shadow -Wno-unused-parameter)
+if(NOT MSVC)
+  add_definitions(${CLING_CXXFLAGS} -Wno-shadow -Wno-unused-parameter)
+endif()
 ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           src/TModuleGenerator.cxx src/rootcling.cxx src/rootclingTCling.cxx
                           ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
@@ -40,8 +42,8 @@ set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
                          "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint;${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex")
 
 if(CMAKE_HOST_UNIX)
-  install(CODE "execute_process(COMMAND ln -f rootcling rootcint WORKING_DIRECTORY \$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR})")
-  install(CODE "execute_process(COMMAND ln -f rootcling genreflex WORKING_DIRECTORY \$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR})")
+  install(CODE "execute_process(COMMAND ln -f rootcling rootcint WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
+  install(CODE "execute_process(COMMAND ln -f rootcling genreflex WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
 else()
   install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
                     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
@@ -51,7 +53,11 @@ endif()
 add_custom_command(OUTPUT rootcling_tmp.cxx
                    COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx ${CMAKE_CURRENT_BINARY_DIR}/rootcling_tmp.cxx
                    DEPENDS  ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx)
-set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=\"\\\"${CMAKE_BINARY_DIR}/etc/cling\\\"\"")
+if(WIN32)
+  set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX -DROOT_STAGE1_BUILD '-DR__LLVMRESOURCEDIR=\"${CMAKE_BINARY_DIR}/etc/cling\"'")
+else()
+  set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD '-DR__LLVMRESOURCEDIR=\"${CMAKE_BINARY_DIR}/etc/cling\"'")
+endif()
 ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/DictSelectionReader.cxx
                               src/TModuleGenerator.cxx ${CMAKE_CURRENT_BINARY_DIR}/rootcling_tmp.cxx
                               ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
@@ -88,6 +94,7 @@ foreach(file  Interpreter/DynamicExprInfo.h
               Interpreter/Value.h)
   get_filename_component(path ${file} PATH)
   list(APPEND files_to_copy COMMAND cmake -E copy ${clinginclude}/cling/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
+  set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${file})
   install(FILES ${clinginclude}/cling/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
 endforeach()
 
@@ -119,6 +126,7 @@ foreach( file llvm/ADT/IntrusiveRefCntPtr.h
     list(APPEND files_to_copy COMMAND cmake -E copy ${llvminclude-bin}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
     install(FILES ${llvminclude-bin}/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
   endif()
+  set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${file})
 endforeach()
 
 add_custom_target(LLVMRES COMMAND cmake -E make_directory

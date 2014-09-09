@@ -221,6 +221,9 @@ private:
    void ForceReload (TClass* oldcl);
    void LoadClassInfo() const;
 
+   static TClass     *LoadClassDefault(const char *requestedname, Bool_t silent);
+   static TClass     *LoadClassCustom(const char *requestedname, Bool_t silent);
+
    void               SetClassVersion(Version_t version);
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
    TVirtualStreamerInfo* DetermineCurrentStreamerInfo();
@@ -274,7 +277,6 @@ private:
 
 protected:
    TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
-   static THashTable        *GetClassTypedefHash();
    void                      GetMissingDictionariesForBaseClasses(TCollection& result, TCollection& visited, bool recurse);
    void                      GetMissingDictionariesForMembers(TCollection& result, TCollection& visited, bool recurse);
    void                      GetMissingDictionariesWithRecursionCheck(TCollection& result, TCollection& visited, bool recurse);
@@ -343,7 +345,7 @@ public:
    ClassInfo_t       *GetClassInfo() const { if (fCanLoadClassInfo) LoadClassInfo(); return fClassInfo; }
    const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
    TVirtualStreamerInfo     *GetCurrentStreamerInfo() {
-      if (fCurrentInfo) return fCurrentInfo;
+      if (fCurrentInfo.load()) return fCurrentInfo;
       else return DetermineCurrentStreamerInfo();
    }
    TVirtualStreamerInfo     *GetLastReadInfo() const { return fLastReadInfo; }
@@ -411,6 +413,7 @@ public:
    Bool_t             IsStartingWithTObject() const;
    Bool_t             IsVersioned() const { return !( GetClassVersion()<=1 && IsForeign() ); }
    Bool_t             IsTObject() const;
+   static TClass     *LoadClass(const char *requestedname, Bool_t silent);
    void               ls(Option_t *opt="") const;
    void               MakeCustomMenuList();
    Bool_t             MatchLegacyCheckSum(UInt_t checksum) const;
@@ -462,13 +465,12 @@ public:
    static void           AddClassToDeclIdMap(TDictionary::DeclId_t id, TClass* cl);
    static void           RemoveClass(TClass *cl);
    static void           RemoveClassDeclId(TDictionary::DeclId_t id);
-   static TClass        *GetClassOrAlias(const char *name);
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(ClassInfo_t *info, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static Bool_t         GetClass(DeclId_t id, std::vector<TClass*> &classes);
-   static VoidFuncPtr_t  GetDict (const char *cname);
-   static VoidFuncPtr_t  GetDict (const type_info &info);
+   static DictFuncPtr_t  GetDict (const char *cname);
+   static DictFuncPtr_t  GetDict (const type_info &info);
 
    static Int_t       AutoBrowse(TObject *obj, TBrowser *browser);
    static ENewType    IsCallingNew();

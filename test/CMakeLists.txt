@@ -8,10 +8,6 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 project(test)
 find_package(ROOT REQUIRED)
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-
 #---Copy the CTestCustom.cmake file into the build directory---------------------------------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
@@ -44,8 +40,8 @@ ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree Hist Net)
 ROOT_ADD_TEST(test-event COMMAND eventexe)
 
 #---hsimple------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(hsimple hsimple.cxx LIBRARIES RIO Tree Hist)
-ROOT_ADD_TEST(test-hsimple COMMAND hsimple)
+#ROOT_EXECUTABLE(hsimple hsimple.cxx LIBRARIES RIO Tree Hist)
+#ROOT_ADD_TEST(test-hsimple COMMAND hsimple)
 
 #--minexam-------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(minexam minexam.cxx LIBRARIES Minuit)

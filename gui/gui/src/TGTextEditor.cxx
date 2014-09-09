@@ -252,7 +252,7 @@ TGTextEditor::TGTextEditor(const char *filename, const TGWindow *p, UInt_t w,
       fToolBar->Layout();
    }
    if (filename) {
-      LoadFile((char *)filename);
+      LoadFile(filename);
    }
    MapWindow();
 }
@@ -497,7 +497,7 @@ void TGTextEditor::DataChanged()
 }
 
 //______________________________________________________________________________
-void TGTextEditor::LoadFile(char *fname)
+void TGTextEditor::LoadFile(const char *fname)
 {
    // Load a file into the editor. If fname is 0, a TGFileDialog will popup.
 

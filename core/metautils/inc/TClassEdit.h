@@ -16,7 +16,18 @@
 #include "RConfig.h"
 #include "RConfigure.h"
 #include <stdlib.h>
+#ifdef R__WIN32
+#ifndef UNDNAME_COMPLETE
+#define UNDNAME_COMPLETE 0x0000
+#endif
+extern "C" {
+   char *__unDName(char *demangled, const char *mangled, int out_len,
+                   void * (* pAlloc )(size_t), void (* pFree )(void *),
+                   unsigned short int flags);
+}
+#else
 #include <cxxabi.h>
+#endif
 #include <string>
 #include <vector>
 
@@ -72,7 +83,8 @@ namespace TClassEdit {
       kDropAllDefault   = 1<<7, /* Drop default template parameter even in non STL classes */
       kLong64           = 1<<8, /* replace all 'long long' with Long64_t. */
       kDropStd          = 1<<9, /* Drop any std:: */
-      kKeepOuterConst   = 1<<10 /* Make sure to keep the const keyword even outside the template parameters */
+      kKeepOuterConst   = 1<<10,/* Make sure to keep the const keyword even outside the template parameters */
+      kResolveTypedef   = 1<<11 /* Strip all typedef except Double32_t and co. */
    };
 
    enum ESTLType {
@@ -92,10 +104,13 @@ namespace TClassEdit {
    public:
       TInterpreterLookupHelper() { }
       virtual ~TInterpreterLookupHelper() { }
+
+      virtual bool ExistingTypeCheck(const std::string & /*tname*/,
+                                     std::string & /*result*/) = 0;
       virtual void GetPartiallyDesugaredName(std::string & /*nameLong*/) = 0;
       virtual bool IsAlreadyPartiallyDesugaredName(const std::string & /*nondef*/,
                                                    const std::string & /*nameLong*/) = 0;
-      virtual bool IsDeclaredScope(const std::string & /*base*/) = 0;
+      virtual bool IsDeclaredScope(const std::string & /*base*/, bool & /*isInlined*/) = 0;
       virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string & /*tname*/,
                                                               std::string & /*result*/) = 0;
    };

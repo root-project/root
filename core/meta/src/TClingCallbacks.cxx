@@ -61,9 +61,7 @@ extern "C" {
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
-   : InterpreterCallbacks(interp, /*enableExternalSemaSourceCallbacks*/true,
-                          /*enableDeserializationListenerCallbacks*/true,
-                          /*enablePPCallbacks*/true),
+   : InterpreterCallbacks(interp),
      fLastLookupCtx(0), fROOTSpecialNamespace(0),
      fFirstRun(true), fIsAutoloading(false), fIsAutoloadingRecursively(false),
      fPPOldFlag(false), fPPChanged(false) {
@@ -103,7 +101,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
    DeclarationName Name = &SemaR.getASTContext().Idents.get(localString.c_str());
    LookupResult RHeader(SemaR, Name, sLoc, Sema::LookupOrdinaryName);
 
-   bool success = tryAutoloadInternal(localString, RHeader, SemaR.getCurScope(),true);
+   bool success = tryAutoParseInternal(localString, RHeader, SemaR.getCurScope(),true);
 
    if (success || !FileName.startswith("T")) return;
 
@@ -113,7 +111,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
    localString.resize(localString.size()-2); // 2 chars: '.','h'
    Name = &SemaR.getASTContext().Idents.get(localString.c_str());
    LookupResult RReconnstructedClassName(SemaR, Name, SourceLocation(), Sema::LookupOrdinaryName);
-   tryAutoloadInternal(localString, RReconnstructedClassName, SemaR.getCurScope());
+   tryAutoParseInternal(localString, RReconnstructedClassName, SemaR.getCurScope());
 
 
 }
@@ -205,7 +203,7 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
    if (m_Interpreter->getSema().getDiagnostics().hasErrorOccurred())
       return false;
 
-   if (tryAutoloadInternal(R.getLookupName().getAsString(), R, S))
+   if (tryAutoParseInternal(R.getLookupName().getAsString(), R, S))
       return true; // happiness.
 
    // If the autoload wasn't successful try ROOT specials.
@@ -263,7 +261,7 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    S.setEntity(const_cast<DeclContext*>(DC));
    Sema::ContextAndScopeRAII pushedDCAndS(SemaR, const_cast<DeclContext*>(DC), &S);
 
-   if (tryAutoloadInternal(qualName, R, SemaR.getCurScope())) {
+   if (tryAutoParseInternal(qualName, R, SemaR.getCurScope())) {
       llvm::SmallVector<NamedDecl*, 4> lookupResults;
       for(LookupResult::iterator I = R.begin(), E = R.end(); I < E; ++I)
          lookupResults.push_back(*I);
@@ -321,7 +319,7 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 //
 // returns true when a declaration is found and no error should be emitted.
 //
-bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
+bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R,
                                           Scope *S, bool noLookup) {
    Sema &SemaR = m_Interpreter->getSema();
 
@@ -342,7 +340,7 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
 
      bool lookupSuccess = false;
      if (getenv("ROOT_MODULES")) {
-        if (TCling__AutoLoadCallback(Name.data())) {
+        if (TCling__AutoParseCallback(Name.data())) {
            lookupSuccess = noLookup || SemaR.LookupName(R, S);
         }
      }
@@ -364,7 +362,7 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
         // wrapper function so the parent context must be the global.
         Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(),
                                                SemaR.TUScope);
-        if (TCling__AutoLoadCallback(Name.data())) {
+        if (TCling__AutoParseCallback(Name.data())) {
            pushedDCAndS.pop();
            cleanupRAII.pop();
            lookupSuccess = noLookup || SemaR.LookupName(R, S);

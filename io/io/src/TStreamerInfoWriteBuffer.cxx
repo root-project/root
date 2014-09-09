@@ -788,6 +788,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
             }
 #endif
             continue;
+         case -1:
+            // -- Skip an ignored TObject base class.
+            continue;
          default:
             Error("WriteBuffer","The element %s::%s type %d (%s) is not supported yet\n",GetName(),aElement->GetFullName(),compinfo[i]->fType,aElement->GetTypeName());
             continue;

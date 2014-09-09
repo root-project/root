@@ -30,8 +30,9 @@ namespace cling {
 namespace cling {
   class AutoloadCallback : public cling::InterpreterCallbacks {
   public:
-      AutoloadCallback(cling::Interpreter* interp);
-      ~AutoloadCallback();
+    AutoloadCallback(cling::Interpreter* interp)
+      : InterpreterCallbacks(interp) { }
+    ~AutoloadCallback();
     using cling::InterpreterCallbacks::LookupObject;
       //^to get rid of bogus warning : "-Woverloaded-virtual"
       //virtual functions ARE meant to be overriden!
@@ -55,7 +56,6 @@ namespace cling {
     // The key is the Unique File ID obtained from the source manager.
     FwdDeclsMap m_Map;
 
-    Interpreter* m_Interpreter;
 //    AutoloadingStateInfo m_State;
 
     void report(clang::SourceLocation l, std::string name,std::string header);
