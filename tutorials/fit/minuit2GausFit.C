@@ -54,7 +54,7 @@ void testGausFit( std::string type = "Minuit2", int n = 1000) {
 
   c1->cd(1);
   cout << "\nDo Fit 1\n";
-  h1->Fit("gaus","Q");
+  h1->Fit("gaus","V");
   h1->Draw();
   c1->cd(2);
   cout << "\nDo Fit 2\n";
