@@ -11,8 +11,9 @@ if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
                    ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
                    ROOTSYS=${CMAKE_BINARY_DIR}
                    PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
-  else()
-    set(ROOT_environ PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
+else()                       # testing using an installation
+  include(${ROOT_USE_FILE})
+  enable_testing()
 endif()
 
 #---Copy the CTestCustom.cmake file into the build directory--------
