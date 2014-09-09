@@ -128,8 +128,6 @@ namespace ROOT
     
     bool TCMAESMinimizer::SetVariable(unsigned int ivar, const std::string & name, double val, double step)
     {
-      std::cout << " add parameter " << name << "  " <<  val << " step " << step << std::endl;
-      
       if (ivar > fInitialX.size() ) {
 	MATH_ERROR_MSG("TCMAESMinimizer::SetVariable","ivar out of range");
 	return false;
@@ -426,11 +424,6 @@ namespace ROOT
 	  }*/
       //debug
 
-      std::cout << "initial sigmas=";
-      for (int i=0;i<fInitialSigma.size();i++)
-	std::cout << fInitialSigma.at(i) << " ";
-      std::cout << std::endl;
-      
       double sigma0 = *std::min_element(fInitialSigma.begin(),fInitialSigma.end());
       double sigma0scaled = 1e-1; // default value.
       if (!fWithLinearScaling)
