@@ -69,11 +69,11 @@ public:
 	double fdiff = _fmin.at(i)-stats._fmin.at(i);
 	double ffdiff = fabs(fdiff);
 	// should compare to tolerance but unable to access it.
-	if (ffdiff < 1e-2 || fdiff < -1e-2) // ftol appears to default to 0.01
+	if (ffdiff < 1e-1 || fdiff < -1e-1) // ftol appears to default to 0.01
 	  ++_found;
-	if (ffdiff > 1e-2 && fdiff < 0.0) // ftol as 0.01
+	if (ffdiff > 1e-1 && fdiff < 0.0) // ftol as 0.01
 	  ++_isuccs;
-	else if (ffdiff < 1e-2)
+	else if (ffdiff < 1e-1)
 	  ++_iequals;
 	else ++_ifails;
 	_fdiff.push_back(fdiff);
@@ -168,8 +168,8 @@ public:
   experiment(const std::string &name)
     :_name(name)
   {
-    /*ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default("cmaes");
-      opts.SetRealValue("sigma",0.1);*/
+    ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default("cmaes");
+    opts.SetRealValue("sigma",0.1);
   }
 
   void set_lambda(const int &lambda)
@@ -220,14 +220,16 @@ public:
 	  h1->Fill( _x.at(i) );
 	  h1bis->Fill( _x.at(i) );
 	}
+	delete ((TF1 *)(gROOT->GetFunction("gaus")));
 	TStopwatch timer;
 	timer.Start();
-	TFitResultPtr r1 = h1->Fit("gaus","S0");
+	TFitResultPtr r1 = h1->Fit("gaus","VS0");
 	timer.Stop();
 	Double_t cputime1 = timer.CpuTime();
+	delete ((TF1 *)(gROOT->GetFunction("gaus")));
 	TStopwatch timer2;
 	timer2.Start();
-	TFitResultPtr r2 = h1bis->Fit("gaus","LS0");
+	TFitResultPtr r2 = h1bis->Fit("gaus","VLS0");
 	timer2.Stop();
 	Double_t cputime2 = timer2.CpuTime();
 	
@@ -284,11 +286,11 @@ public:
 	      histo->Fill(_xs.at(pass).at(j));
 	      mhisto->Fill(_xs.at(pass).at(j));
 	    }
-	  timer.Start();
-	  TFitResultPtr r = histo->Fit(fitFcn,"QS0");  // from TH1.cxx: Q: quiet, 0: do not plot 
+	  /*timer.Start();
+	  TFitResultPtr r = histo->Fit(fitFcn,"VS0");  // from TH1.cxx: Q: quiet, 0: do not plot 
 	  timer.Stop();
 	  Double_t cputime = timer.CpuTime();
-	  stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
+	  stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());*/
 	  delete histo;
 	  delete fitFcn;
 	}
@@ -296,7 +298,7 @@ public:
 	timer.Start();
 	TF1 *fitFcn = new TF1("fitFcn",lorentz_fit_e::fitFunction,0,3,6);
 	fitFcn->SetParameters(1,1,1,6,.03,1);
-	TFitResultPtr r = mhisto->Fit(fitFcn,"QS0");
+	TFitResultPtr r = mhisto->Fit(fitFcn,"VS0");
 	timer.Stop();
 	double cputime = timer.CpuTime();
 	stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
@@ -375,7 +377,7 @@ public:
 	fitFcn->SetParameters(100,0,0,2,7);
 	fitFcn->Update();
 	timer.Start();
-	TFitResultPtr r = _histo->Fit("fitFcn","S0");
+	TFitResultPtr r = _histo->Fit("fitFcn","VS0");
 	timer.Stop();
 	Double_t cputime = timer.CpuTime();
 	printf("%s : RT=%7.3f s, Cpu=%7.3f s\n",fitter.c_str(),timer.RealTime(),cputime);
@@ -562,12 +564,12 @@ public:
 	TStopwatch timer;
 	timer.Start();
 	TVirtualFitter::SetDefaultFitter(fitter.c_str());
-	TFitResultPtr r1 = h1->Fit(func1,"S0");
+	TFitResultPtr r1 = h1->Fit(func1,"VS0");
 	timer.Stop();
 	Double_t cputime1 = timer.CpuTime();
 	TStopwatch timer2;
 	timer2.Start();
-	TFitResultPtr r2 = h2->Fit(func2,"S0");
+	TFitResultPtr r2 = h2->Fit(func2,"VS0");
 	timer2.Stop();
 	Double_t cputime2 = timer2.CpuTime();
 	expstats stats("fit2dhist",r1->NTotalParameters(),_lambda);
@@ -903,7 +905,7 @@ public:
 	//Fit h2 with original function f2
 	TStopwatch timer;
 	timer.Start();
-	TFitResultPtr r = h2->Fit("f2","S0");
+	TFitResultPtr r = h2->Fit("f2","VS0");
 	timer.Stop();
 	Double_t cputime = timer.CpuTime();
 	expstats stats("fit2",r->NTotalParameters(),_lambda);
@@ -951,25 +953,25 @@ public:
 };
 fit2_e gfit2;
 
-void cmaesFullBench(const int &n=10,
+void cmaesFullBench(const int &n=100,
 		    const int &lscaling=1)
 {
   std::cout << "Proceeding with " << n << " runs on every problems\n";
   if (lscaling > 0)
     std::cout << "Linear scaling of parameters in ON\n";
   //std::vector<int> lambdas = {-1, 5, 10, 20, 40, 80, 160, 320, 640, 1280};
-  std::vector<int> lambdas = {-1, 50, 200, -2};
+  std::vector<int> lambdas = {-1, 50, 200, -2, -3};
   std::vector<expstats> acmaes_stats;
   std::vector<expstats> minuit2_stats;
   std::map<std::string,experiment*> mexperiments;
-  mexperiments.insert(std::pair<std::string,experiment*>(ggauss_fit._name,&ggauss_fit));
+  //mexperiments.insert(std::pair<std::string,experiment*>(ggauss_fit._name,&ggauss_fit));
   mexperiments.insert(std::pair<std::string,experiment*>(glorentz_fit._name,&glorentz_fit));
-  mexperiments.insert(std::pair<std::string,experiment*>(gfit2._name,&gfit2));
+  /*mexperiments.insert(std::pair<std::string,experiment*>(gfit2._name,&gfit2));
   mexperiments.insert(std::pair<std::string,experiment*>(ggauss2D_fit._name,&ggauss2D_fit));
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2a._name,&gfit2a));
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2dhist._name,&gfit2dhist));
   mexperiments.insert(std::pair<std::string,experiment*>(gcombined_fit._name,&gcombined_fit));
-  mexperiments.insert(std::pair<std::string,experiment*>(gex3d._name,&gex3d));
+  mexperiments.insert(std::pair<std::string,experiment*>(gex3d._name,&gex3d));*/
   int nexp = mexperiments.size();
   int cn = 0;
   std::map<std::string,experiment*>::iterator mit = mexperiments.begin();
@@ -982,13 +984,19 @@ void cmaesFullBench(const int &n=10,
 	  for (int j=0;j<(int)lambdas.size();j++)
 	    {
 	      std::string fitter_name = "acmaes";
-	      if (lambdas.at(j) != -2)
+	      if (lambdas.at(j) >= -1)
 		(*mit).second->set_lambda(lambdas.at(j));
-	      else
+	      else if (lambdas.at(j) == -2)
 		{
 		  (*mit).second->set_lambda(-1);
 		  (*mit).second->set_restarts(4);
 		  fitter_name = "aipop";
+		}
+	      else if (lambdas.at(j) == -3)
+		{
+		  (*mit).second->set_lambda(-1);
+		  (*mit).second->set_restarts(10);
+		  fitter_name = "abipop";
 		}
 	      (*mit).second->set_lscaling(lscaling);
 	      
@@ -1023,7 +1031,7 @@ void cmaesFullBench(const int &n=10,
 	  acmaes_stats.at(k).print_diff(std::cout);
 	  acmaes_stats.at(k).print_avg_to_file();
 	}
-      minuit2_stats.at(i).diff(acmaes_stats.at(i*lambdas.size()));
+      minuit2_stats.at(i).diff(acmaes_stats.at(i*lambdas.size()+lambdas.size()-1));
       minuit2_stats.at(i).print_avg_to_file();
     }
 }
