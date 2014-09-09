@@ -483,7 +483,8 @@ bool Sema::MergeCXXFunctionDecl(FunctionDecl *New, FunctionDecl *Old,
           Invalid = false;
         }
       }
-      
+
+#if 0 // Disable until Diag is rewired
       // FIXME: If we knew where the '=' was, we could easily provide a fix-it 
       // hint here. Alternatively, we could walk the type-source information
       // for NewParam to find the last source location in the type... but it
@@ -507,6 +508,7 @@ bool Sema::MergeCXXFunctionDecl(FunctionDecl *New, FunctionDecl *Old,
       
       Diag(OldParam->getLocation(), diag::note_previous_definition)
         << OldParam->getDefaultArgRange();
+#endif
     } else if (OldParamHasDfl) {
       // Merge the old default argument into the new parameter.
       // It's important to use getInit() here;  getDefaultArg()
