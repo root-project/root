@@ -3540,13 +3540,12 @@ TString TCling::GetMangledNameWithPrototype(TClass* cl, const char* method,
    // prototype, i.e. "char*,int,float". If the class is 0 the global function
    // list will be searched.
    R__LOCKGUARD2(gInterpreterMutex);
-   Long_t offset;
    if (cl) {
       return ((TClingClassInfo*)cl->GetClassInfo())->
-         GetMethod(method, proto, objectIsConst, &offset, mode).GetMangledName();
+         GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).GetMangledName();
    }
    TClingClassInfo gcl(fInterpreter);
-   return gcl.GetMethod(method, proto, objectIsConst, &offset, mode).GetMangledName();
+   return gcl.GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).GetMangledName();
 }
 
 //______________________________________________________________________________
@@ -3636,14 +3635,12 @@ void* TCling::GetInterfaceMethodWithPrototype(TClass* cl, const char* method,
    R__LOCKGUARD2(gInterpreterMutex);
    void* f;
    if (cl) {
-      Long_t offset;
       f = ((TClingClassInfo*)cl->GetClassInfo())->
-         GetMethod(method, proto, objectIsConst, &offset, mode).InterfaceMethod(*fNormalizedCtxt);
+         GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).InterfaceMethod(*fNormalizedCtxt);
    }
    else {
-      Long_t offset;
       TClingClassInfo gcl(fInterpreter);
-      f = gcl.GetMethod(method, proto, objectIsConst, &offset, mode).InterfaceMethod(*fNormalizedCtxt);
+      f = gcl.GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).InterfaceMethod(*fNormalizedCtxt);
    }
    return f;
 }
@@ -3660,13 +3657,11 @@ TInterpreter::DeclId_t TCling::GetFunctionWithValues(ClassInfo_t *opaque_cl, con
    DeclId_t f;
    TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
    if (cl) {
-      Long_t offset;
-      f = cl->GetMethodWithArgs(method, params, objectIsConst, &offset).GetDeclId();
+      f = cl->GetMethodWithArgs(method, params, objectIsConst, 0 /*poffset*/).GetDeclId();
    }
    else {
-      Long_t offset;
       TClingClassInfo gcl(fInterpreter);
-      f = gcl.GetMethod(method, params, objectIsConst, &offset).GetDeclId();
+      f = gcl.GetMethod(method, params, objectIsConst, 0 /*poffset*/).GetDeclId();
    }
    return f;
 }
@@ -3684,13 +3679,11 @@ TInterpreter::DeclId_t TCling::GetFunctionWithPrototype(ClassInfo_t *opaque_cl, 
    DeclId_t f;
    TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
    if (cl) {
-      Long_t offset;
-      f = cl->GetMethod(method, proto, objectIsConst, &offset, mode).GetDeclId();
+      f = cl->GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).GetDeclId();
    }
    else {
-      Long_t offset;
       TClingClassInfo gcl(fInterpreter);
-      f = gcl.GetMethod(method, proto, objectIsConst, &offset, mode).GetDeclId();
+      f = gcl.GetMethod(method, proto, objectIsConst, 0 /*poffset*/, mode).GetDeclId();
    }
    return f;
 }
