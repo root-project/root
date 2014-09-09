@@ -9,6 +9,7 @@ CINT=$1/bin/cint_tmp
 SCRIPT=build/version.cxx
 VERSION=`cat build/version_number`
 
+build/unix/gitinfo.sh
 $CINT $SCRIPT
 
 if test "x`uname | grep -i cygwin`" != "x"; then
