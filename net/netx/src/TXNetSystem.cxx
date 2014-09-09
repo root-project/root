@@ -33,6 +33,8 @@
 #include "TXNetFile.h"
 #include "TXNetSystem.h"
 
+#include "XrdOuc/XrdOucString.hh"
+#include "XrdClient/XrdClientVector.hh"
 #include "XrdClient/XrdClientAdmin.hh"
 #include "XrdClient/XrdClientConn.hh"
 #include "XrdClient/XrdClientConst.hh"
@@ -48,8 +50,10 @@ Bool_t TXNetSystem::fgRootdBC = kTRUE;
 THashList TXNetSystem::fgAddrFQDN;
 THashList TXNetSystem::fgAdminHash;
 
+typedef XrdClientVector<XrdOucString> VecString_t;
+
 //_____________________________________________________________________________
-TXNetSystem::TXNetSystem(Bool_t owner) : TNetSystem(owner)
+TXNetSystem::TXNetSystem(Bool_t owner) : TNetSystem(owner), fDirList(0)
 {
    // Create system management class without connecting to server.
 
@@ -58,12 +62,11 @@ TXNetSystem::TXNetSystem(Bool_t owner) : TNetSystem(owner)
    fIsXRootd = kFALSE;
    fDir = "";
    fDirp = 0;
-   fDirListValid = kFALSE;
    fUrl = "";
 }
 
 //_____________________________________________________________________________
-TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
+TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner), fDirList(0)
 {
    // Create system management class and connect to server specified by url.
 
@@ -72,7 +75,6 @@ TXNetSystem::TXNetSystem(const char *url, Bool_t owner) : TNetSystem(owner)
    fIsXRootd = kFALSE;
    fDir = "";
    fDirp = 0;
-   fDirListValid = kFALSE;
    fUrl = url;
 
    fgAddrFQDN.SetOwner();
@@ -260,9 +262,12 @@ void TXNetSystem::FreeDirectory(void *dirp)
       }
       fDir = "";
       fDirp = 0;
-      fDirListValid = kFALSE;
       fDirEntry = "";
-      fDirList.Clear();
+      if (fDirList) {
+         ((VecString_t*)fDirList)->Clear();
+         delete ((VecString_t*)fDirList);
+         fDirList = 0;
+      }
       return;
    }
 
@@ -309,23 +314,24 @@ const char* TXNetSystem::GetDirEntry(void *dirp)
       }
 
       // Only request new directory listing the first time called
-      if (!fDirListValid) {
+      if (!fDirList) {
          TXNetSystemConnectGuard cg(this, fUrl);
          if (cg.IsValid()) {
-            Bool_t ok = cg.ClientAdmin()->DirList(fDir, fDirList);
+            fDirList = new VecString_t;
+            Bool_t ok = cg.ClientAdmin()->DirList(fDir, *(VecString_t*)fDirList);
             cg.ClientAdmin()->GoBackToRedirector();
-            if (ok) {
-               fDirListValid = kTRUE;
-            } else {
+            if (!ok) {
                cg.NotifyLastError();
+               delete (VecString_t*)fDirList;
+               fDirList = 0;
                return 0;
             }
          }
       }
 
       // Return entries one by one with each call of method
-      if (fDirList.GetSize() > 0) {
-         fDirEntry = fDirList.Pop_front().c_str();
+      if (fDirList && ((VecString_t*)fDirList)->GetSize() > 0) {
+         fDirEntry = ((VecString_t*)fDirList)->Pop_front().c_str();
          return fDirEntry.Data();
       }
       return 0;   // until all of them have been returned
