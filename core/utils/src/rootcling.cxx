@@ -2164,31 +2164,20 @@ static bool InjectModuleUtilHeader(const char *argv0,
 {
    // Write the extra header injected into the module:
    // umbrella header if (umbrella) else content header.
-   const std::string &hdrName
-      = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
-   {
-      std::ofstream out(hdrName);
-      if (!out) {
-         ROOT::TMetaUtils::Error(0, "%s: failed to open header output %s\n",
-                                 argv0, hdrName.c_str());
-         return false;
-      }
-      if (umbrella) {
-         // This will duplicate the -D,-U from clingArgs - but as they are surrounded
-         // by #ifndef there is no problem here.
-         modGen.WriteUmbrellaHeader(out);
-      } else {
-         modGen.WriteContentHeader(out);
-      }
+   std::ostringstream out;
+   if (umbrella) {
+      // This will duplicate the -D,-U from clingArgs - but as they are surrounded
+      // by #ifndef there is no problem here.
+      modGen.WriteUmbrellaHeader(out);
+   } else {
+      modGen.WriteContentHeader(out);
    }
-   {
-      std::string includeDirective("#include \"");
-      includeDirective += hdrName + "\"";
-      if (interp.declare(includeDirective) != cling::Interpreter::kSuccess) {
-         ROOT::TMetaUtils::Error(0, "%s: compilation failure (%s)\n", argv0,
-                                 hdrName.c_str());
-         return false;
-      }
+   if (interp.declare(out.str()) != cling::Interpreter::kSuccess) {
+      const std::string &hdrName
+         = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
+      ROOT::TMetaUtils::Error(0, "%s: compilation failure (%s)\n", argv0,
+                              hdrName.c_str());
+      return false;
    }
    return true;
 }
