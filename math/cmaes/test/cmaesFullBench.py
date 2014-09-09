@@ -69,11 +69,11 @@ for f in datfiles:
     #axarr[i,j].set_xlim(-width,len(ind)+width)
     axarr[i,j].set_ylim(0)
     #axarr[i,j+1].set_xlim(-width,len(ind)+width)
-    axarr[i,j+1].set_ylim(top=10)
-    if i == 4:
-        axarr[i,j+1].set_ylim(top=20)
+    axarr[i,j+1].set_ylim(top=runs)
+    if i == 4 or i == 6:
+        axarr[i,j+1].set_ylim(top=2*runs)
     if i == 7:
-        axarr[i,j+1].set_ylim(top=200)    
+        axarr[i,j+1].set_ylim(top=100)    
     #axarr[i,j].set_ylabel('Scores')
     axarr[i,j].set_title(f + " / " + str(dat[0,0]) + "-D",fontsize=12)
     #axarr[i,j].set_xticks(ind+width)
@@ -100,5 +100,5 @@ for f in datfiles:
 #        j = j + 1
 
 #plt.tight_layout()
-plt.suptitle('aCMA-ES / Minuit2 Benchmark Suite / ' + str(len(datfiles)) + ' experiments / ' + str(int(runs)) + ' runs on each\nlambda={auto, 50, 200, auto-aipop-4-restarts}') #10, 20, 40, 80, 160, 320, 640, 1280}')
+plt.suptitle('aCMA-ES / Minuit2 Benchmark Suite / ' + str(len(datfiles)) + ' experiments / ' + str(int(runs)) + ' runs on each\nlambda={auto, 50, 200, auto-aipop-4-restarts, auto-abipop-10-restarts}') #10, 20, 40, 80, 160, 320, 640, 1280}')
 plt.show()
