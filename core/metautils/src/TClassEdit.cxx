@@ -342,8 +342,8 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    // This code is no longer use, the moral equivalent would be to get
    // the 'fixed' number of argument the user told us to ignore and drop those.
    // However, the name we get here might be (usually) normalized enough that
-   // this is not necessary (at the very least nothing break in roottest with
-   // the aforementioned new code).
+   // this is not necessary (at the very least nothing break in roottest without
+   // the aforementioned new code or this old code).
    if (mode & kDropAllDefault) {
       int nargNonDefault = 0;
       std::string nonDefName = answ;
