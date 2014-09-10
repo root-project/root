@@ -2522,17 +2522,17 @@ if test "x$enable_cxx11" = "xyes"; then
     check_cxxopt -std=c++11
     if test $cxxopt_result -eq 0 ; then
         enable_cxx11="no"
-	result "no"
+        result "no"
         result "`basename $0`: c++11 mode is requested but the current compiler does not support it."
         exit 1
     else
-	usecxx11="define"
+        usecxx11="define"
         # on OS X libcxx is required for C++11 support with clang
         # so turn the option on when using clang
         if test "x$platform" = "xmacosx" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
             enable_libcxx="yes"
         fi
-	result "yes"
+        result "yes"
     fi
 fi
 
@@ -3275,7 +3275,7 @@ if test ! "x$enable_oracle" = "xno"; then
        $ORACLE ${ORACLE:+$ORACLE/lib} $ORACLELIBDIR \
        /usr/local/lib /usr/lib /usr/lib/oracle/*/client/lib
     if test "x$found_lib" = "x"; then
-	oraclelib=""
+        oraclelib=""
     elif test ! "x$oraclelib" = "x"; then
         oraclelib="$oraclelib $found_lib"
     fi
@@ -3350,8 +3350,8 @@ if test ! "x$enable_sqlite" = "xno"; then
         /usr/include /usr/local/include \
         /usr/include/sqlite /usr/local/include/sqlite /usr/local/sqlite/include \
         /usr/include/sqlite3 /usr/local/include/sqlite3 /usr/local/sqlite3/include \
-	/usr/sqlite /opt/sqlite /opt/sqlite3/include \
-	/usr/sqlite3 /opt/sqlite3 /opt/sqlite/include
+        /usr/sqlite /opt/sqlite /opt/sqlite3/include \
+        /usr/sqlite3 /opt/sqlite3 /opt/sqlite/include
     sqliteinc=$found_hdr
     sqliteincdir=$found_dir
 
@@ -4933,7 +4933,7 @@ if test "x$enable_xrootd" = "xyes" ; then
          fi
          if test "x$oldver" = "xyes" ; then
             decver=`echo $tmpver | sed 's|[^0-9]||g' | cut -c1-8`
-	       fi
+         fi
       fi
    fi
    if test "x$xrdver" = "xunknown" ; then
@@ -6096,15 +6096,21 @@ if test "x$enable_vc" = "xyes"; then
     message "Checking required compiler/assembler workarounds"
     # with GCC and Open64 check the binutils version. If it's less than 2.18.93 the assembler doesn't know xgetbv
     case $arch in
-	macos*)
-	    ;;
-	*)
-	    as=`${altcxx} -print-prog-name=as`
-            as_version=`${as} --version|head -n1|sed -e 's/^.*)//' -e 's/^.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/'|awk -F. '{print ($1*1000+$2)*1000+$3}'`
-	    if test $as_version -lt 2018093; then
-		vcflags="$vcflags -DVC_NO_XGETBV"
-	    fi
-	    ;;
+    macos*)
+        ;;
+    solaris*)
+        enable_vc="no"
+        ;;
+    aix*)
+        enable_vc="no"
+        ;;
+    *)
+       as=`${altcxx} -print-prog-name=as`
+       as_version=`${as} --version|head -n1|sed -e 's/^.*)//' -e 's/^.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/'|awk -F. '{print ($1*1000+$2)*1000+$3}'`
+       if test $as_version -lt 2018093; then
+           vcflags="$vcflags -DVC_NO_XGETBV"
+       fi
+       ;;
     esac
     invoke_preprocessor <<EOF
 #define _MAKE_VERSION(A, B, C) A##.##B##.##C
@@ -6217,17 +6223,17 @@ EOF
 
     # check for ABI version compiler flags
     case $compiler in
-	GCC)
-	    message "Checking ABI version compiler flags"
-	    abiversioncxxflag=""
-	    for flag in '-fabi-version=0' '-fabi-version=4'; do
-		check_cxxopt $flag
-		if test $cxxopt_result -eq 1; then
-		    abiversioncxxflag="$flag"
-		    break;
-		fi
-	    done
-	    test -n "$abiversioncxxflag" && result "$abiversioncxxflag" || result 'N/A'
+    GCC)
+       message "Checking ABI version compiler flags"
+       abiversioncxxflag=""
+       for flag in '-fabi-version=0' '-fabi-version=4'; do
+          check_cxxopt $flag
+          if test $cxxopt_result -eq 1; then
+             abiversioncxxflag="$flag"
+             break;
+          fi
+       done
+       test -n "$abiversioncxxflag" && result "$abiversioncxxflag" || result 'N/A'
     esac
 fi
 
