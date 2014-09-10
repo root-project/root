@@ -109,7 +109,7 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
    if (fEnums) fEnums->Delete(opt);
    delete fEnums; fEnums = 0;
 }
-#include <iostream>
+
 //______________________________________________________________________________
 Bool_t TProtoClass::FillTClass(TClass* cl) {
    // Move data from this TProtoClass into cl.
