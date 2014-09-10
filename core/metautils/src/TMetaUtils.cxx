@@ -2594,10 +2594,13 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    if (llvm::isa<clang::PointerType>(instanceType.getTypePtr())) {
       // Get the qualifiers.
       clang::Qualifiers quals = instanceType.getQualifiers();
-      instanceType = AddDefaultParameters(instanceType->getPointeeType(), interpreter, normCtxt);
-      instanceType = Ctx.getPointerType(instanceType);
-      // Add back the qualifiers.
-      instanceType = Ctx.getQualifiedType(instanceType, quals);
+      clang::QualType newPointee = AddDefaultParameters(instanceType->getPointeeType(), interpreter, normCtxt);
+      if (newPointee != instanceType->getPointeeType()) {
+         instanceType = Ctx.getPointerType(newPointee);
+         // Add back the qualifiers.
+         instanceType = Ctx.getQualifiedType(instanceType, quals);
+      }
+      return instanceType;
    }
 
    // In case of Int_t& we need to strip the pointer first, desugar and attach
@@ -2606,15 +2609,18 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       // Get the qualifiers.
       bool isLValueRefTy = llvm::isa<clang::LValueReferenceType>(instanceType.getTypePtr());
       clang::Qualifiers quals = instanceType.getQualifiers();
-      instanceType = AddDefaultParameters(instanceType->getPointeeType(), interpreter, normCtxt);
+      clang::QualType newPointee = AddDefaultParameters(instanceType->getPointeeType(), interpreter, normCtxt);
 
-      // Add the r- or l- value reference type back to the desugared one
-      if (isLValueRefTy)
-        instanceType = Ctx.getLValueReferenceType(instanceType);
-      else
-        instanceType = Ctx.getRValueReferenceType(instanceType);
-      // Add back the qualifiers.
-      instanceType = Ctx.getQualifiedType(instanceType, quals);
+      if (newPointee != instanceType->getPointeeType()) {
+         // Add the r- or l- value reference type back to the desugared one
+         if (isLValueRefTy)
+            instanceType = Ctx.getLValueReferenceType(newPointee);
+         else
+            instanceType = Ctx.getRValueReferenceType(newPointee);
+         // Add back the qualifiers.
+         instanceType = Ctx.getQualifiedType(instanceType, quals);
+      }
+      return instanceType;
    }
 
    // Treat the Scope.
