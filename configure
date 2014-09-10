@@ -5083,7 +5083,7 @@ if test "x$enable_xrootd" = "xyes" ; then
          fi
          if test "x$oldver" = "xyes" ; then
             decver=`echo $tmpver | sed 's|[^0-9]||g' | cut -c1-8`
-	       fi
+         fi
       fi
    fi
    if test "x$xrdver" = "xunknown" ; then
@@ -6246,18 +6246,18 @@ if test "x$enable_vc" = "xyes"; then
     message "Checking required compiler/assembler workarounds"
     # with GCC and Open64 check the binutils version. If it's less than 2.18.93 the assembler doesn't know xgetbv
     case $arch in
-	macos*)
-	    ;;
-	linuxppc*)
-	    enable_vc="no"
-	    ;;
-	*)
-	    as=`${altcxx} -print-prog-name=as`
-            as_version=`${as} --version|head -n1|sed -e 's/^.*)//' -e 's/^.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/'|awk -F. '{print ($1*1000+$2)*1000+$3}'`
-	    if test $as_version -lt 2018093; then
-		vcflags="$vcflags -DVC_NO_XGETBV"
-	    fi
-	    ;;
+    macos*)
+       ;;
+    linuxppc*)
+       enable_vc="no"
+       ;;
+    *)
+       as=`${altcxx} -print-prog-name=as`
+       as_version=`${as} --version|head -n1|sed -e 's/^.*)//' -e 's/^.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/'|awk -F. '{print ($1*1000+$2)*1000+$3}'`
+       if test $as_version -lt 2018093; then
+          vcflags="$vcflags -DVC_NO_XGETBV"
+       fi
+       ;;
     esac
     invoke_preprocessor <<EOF
 #define _MAKE_VERSION(A, B, C) A##.##B##.##C
@@ -6370,17 +6370,17 @@ EOF
 
     # check for ABI version compiler flags
     case $compiler in
-	GCC)
-	    message "Checking ABI version compiler flags"
-	    abiversioncxxflag=""
-	    for flag in '-fabi-version=0' '-fabi-version=4'; do
-		check_cxxopt $flag
-		if test $cxxopt_result -eq 1; then
-		    abiversioncxxflag="$flag"
-		    break;
-		fi
-	    done
-	    test -n "$abiversioncxxflag" && result "$abiversioncxxflag" || result 'N/A'
+    GCC)
+       message "Checking ABI version compiler flags"
+       abiversioncxxflag=""
+       for flag in '-fabi-version=0' '-fabi-version=4'; do
+          check_cxxopt $flag
+          if test $cxxopt_result -eq 1; then
+             abiversioncxxflag="$flag"
+             break;
+          fi
+       done
+       test -n "$abiversioncxxflag" && result "$abiversioncxxflag" || result 'N/A'
     esac
 fi
 
