@@ -10,6 +10,7 @@
 #include "ClassB_ex2.h"
 #include "ClassC_ex2.h"
 #include "ClassD_ex2.h"
+#include "testSelectNoInstance.h"
 
 namespace {
    struct DUMMY_INSTANTIATION {
@@ -26,6 +27,8 @@ namespace {
 
       std::vector< Atlas::ClassA< Atlas::ClassD< Atlas::ClassB > > > dummy9;
       std::vector< Atlas::ClassA< Atlas::ClassD< Atlas::ClassC > > > dummy10;
+
+      MyDataVector<float> dummy11;
    };
 }
 

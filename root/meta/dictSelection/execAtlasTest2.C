@@ -17,6 +17,7 @@ This test has been adapted from code provided by Attila Krasznahorkay.
 #include "ClassB_ex2.h"
 #include "ClassC_ex2.h"
 #include "ClassD_ex2.h"
+#include "testSelectNoInstance.h"
 
 void printMembers( TClass* cl ) {
 
@@ -69,6 +70,9 @@ int execAtlasTest2() {
    printDictionary< Atlas::ClassA< Atlas::ClassD< Atlas::ClassC > > >();
    printDictionary< std::vector< Atlas::ClassA< Atlas::ClassD< Atlas::ClassB > > > >();
    printDictionary< std::vector< Atlas::ClassA< Atlas::ClassD< Atlas::ClassC > > > >();
+   printDictionary< MyClass >();
+   printDictionary< MyClass2 >();
+   printDictionary< MyDataVector<float, double> >();
 
    return 0;
 }

@@ -23,4 +23,9 @@ Members of class Atlas::ClassA<Atlas::ClassD<Atlas::ClassC> >
   - int m_pers; // persistent = Yes
 Members of class vector<Atlas::ClassA<Atlas::ClassD<Atlas::ClassB> > >
 Members of class vector<Atlas::ClassA<Atlas::ClassD<Atlas::ClassC> > >
+Members of class MyClass
+Members of class MyClass2
+Members of class MyDataVector<float>
+  - MyClass m_isMostDerived; // persistent = No
+  - MyClass2 m_isNonSplit; // persistent = Yes
 (int) 0

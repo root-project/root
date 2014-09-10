@@ -13,4 +13,6 @@
   <class name="std::vector<Atlas::ClassA<Atlas::ClassD<Atlas::ClassB> > >" />
   <class name="std::vector<Atlas::ClassA<Atlas::ClassD<Atlas::ClassC> > >" />
 
+  <class pattern="MyDataVector<float, *>" />
+
 </lcgdict>
